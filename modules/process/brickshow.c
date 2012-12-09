@@ -87,11 +87,17 @@ typedef struct {
     GtkWidget *update;
     GtkWidget *gupdate;
     GtkWidget *drawarea;
+    GtkWidget *graph;
+    GwyGraphModel *gmodel;
     GwyContainer *mydata;
     GwyContainer *data;
     GwyBrick *brick;
     gboolean computed;
+    gboolean gcomputed;
     gboolean in_init;
+    gint gcol;
+    gint grow;
+    gint glev;
 } BrickshowControls;
 
 static gboolean module_register                    (void);
@@ -117,13 +123,15 @@ static void     brickshow_load_args               (GwyContainer *container,
                                                     BrickshowArgs *args);
 static void     brickshow_save_args               (GwyContainer *container,
                                                     BrickshowArgs *args);
-static void     type_changed_cb               (GtkWidget *combo, 
+static void     type_changed_cb                   (GtkWidget *combo, 
                                                    BrickshowControls *controls);
-static void     gtype_changed_cb               (GtkWidget *combo, 
+static void     gtype_changed_cb                   (GtkWidget *combo, 
                                                    BrickshowControls *controls);
 static void     page_switched                      (BrickshowControls *controls,
                                                     GtkNotebookPage *page,
                                                     gint pagenum);
+static void     graph_selection_finished_cb        (GwySelection *selection,
+                                                    BrickshowControls *controls);
 
 
 static const BrickshowArgs brickshow_defaults = {
@@ -200,6 +208,7 @@ brickshow_dialog(BrickshowArgs *args,
   
     GtkWidget *dialog, *table, *hbox, *label, *notebook, *msgdialog;
     GwyDataField *dfield;
+    GwyDataLine *dline;
     BrickshowControls controls;
     gint response;
     gdouble zoomval;
@@ -207,13 +216,15 @@ brickshow_dialog(BrickshowArgs *args,
     gboolean temp;
     gint row, newid;
     gchar description[50];
-    GwyContainer *newdata;
+    GwyContainer *newdata = NULL;
+    GwyVectorLayer *vlayer = NULL;
+    GwySelection *selection;
 
     controls.in_init = TRUE;
     controls.args = args;
     controls.data = data;
     controls.brick = NULL;
-    controls.computed = FALSE; 
+    controls.computed = controls.gcomputed = FALSE; 
     controls.args->active_page = 0;
 
     dialog = gtk_dialog_new_with_buttons(_("Volume data"), NULL, 0, NULL);
@@ -367,6 +378,14 @@ brickshow_dialog(BrickshowArgs *args,
                                         gwy_data_field_get_yres(dfield));
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.gview), zoomval);
 
+    vlayer = g_object_new(g_type_from_name("GwyLayerPoint"), NULL);
+    gwy_vector_layer_set_selection_key(vlayer, "1/select/graph/point");
+    gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.gview), vlayer);
+    selection = gwy_vector_layer_ensure_selection(vlayer);
+    g_signal_connect(selection, "finished", 
+                     G_CALLBACK(graph_selection_finished_cb), &controls);
+
+
     gtk_box_pack_start(GTK_BOX(hbox), controls.gview, FALSE, FALSE, 4);
 
     table = gtk_table_new(11, 4, FALSE);
@@ -375,6 +394,14 @@ brickshow_dialog(BrickshowArgs *args,
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
     row = 0;
+
+    controls.gmodel = gwy_graph_model_new();
+    controls.graph = gwy_graph_new(controls.gmodel);
+    gtk_widget_set_size_request(controls.graph, 300, 200);
+    gtk_table_attach(GTK_TABLE(table), controls.graph,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    row++; 
 
     
     label = gtk_label_new(_("Graph cut direction:"));
@@ -488,23 +515,19 @@ brickshow_dialog(BrickshowArgs *args,
 
     if (response == GTK_RESPONSE_OK)
     {
-        if (!controls.computed) {
-            preview(&controls, args);
-        }
-
         if (controls.computed) {
             dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
                                                                      "/0/data"));
 
 
             if (args->type == CUT_DIRX) 
-                g_snprintf(description, sizeof(description), _("X cross-section at xpos %d"), 
+                g_snprintf(description, sizeof(description), _("X cross-section at x: %d"), 
                            (gint)(args->xpos/100.0*(gwy_brick_get_xres(controls.brick)-1))); 
             else if (args->type == CUT_DIRY) 
-                g_snprintf(description, sizeof(description), _("Y cross-section at ypos %d"), 
+                g_snprintf(description, sizeof(description), _("Y cross-section at y: %d"), 
                            (gint)(args->ypos/100.0*(gwy_brick_get_yres(controls.brick)-1))); 
             else if (args->type == CUT_DIRZ) 
-                g_snprintf(description, sizeof(description), _("Z cross-section at zpos %d"), 
+                g_snprintf(description, sizeof(description), _("Z cross-section at z: %d"), 
                            (gint)(args->zpos/100.0*(gwy_brick_get_zres(controls.brick)-1))); 
             else if (args->type == PROJ_DIRX) 
                 g_snprintf(description, sizeof(description), _("X direction sum")); 
@@ -536,7 +559,57 @@ brickshow_dialog(BrickshowArgs *args,
 
             }
         }
+        if (controls.gcomputed) {
+            GwyGraphModel *gmodel;
+            GwyGraphCurveModel *gcmodel;
 
+
+            dline = GWY_DATA_LINE(gwy_container_get_object_by_name(controls.mydata,
+                                                                     "/1/graph"));
+
+
+            gmodel = gwy_graph_model_new();
+            gwy_graph_model_set_units_from_data_line(gmodel, dline);
+
+            if (args->gtype == GRAPH_DIRX)
+                g_snprintf(description, sizeof(description), _("X graph at y: %d z: %d"), 
+                           controls.grow, controls.glev);
+            else if (args->gtype == GRAPH_DIRY)
+                g_snprintf(description, sizeof(description), _("Y graph at x: %d z: %d"), 
+                           controls.gcol, controls.glev);
+            else if (args->gtype == GRAPH_DIRZ)
+                g_snprintf(description, sizeof(description), _("Z graph at x: %d y: %d"), 
+                           controls.gcol, controls.grow);
+
+            g_object_set(gmodel,
+                         "title", description,
+                         "axis-label-left", _("w"),
+                         "axis-label-bottom", "x",
+                         NULL);
+
+            gcmodel = gwy_graph_curve_model_new();
+            gwy_graph_curve_model_set_data_from_dataline(gcmodel, dline, -1, -1);
+            g_object_set(gcmodel, "description", _("Brick graph"), 
+                                  "mode", GWY_GRAPH_CURVE_LINE, 
+                                  NULL);
+            gwy_graph_model_add_curve(gmodel, gcmodel);
+            gwy_object_unref(gcmodel);
+
+            if (newdata)
+               gwy_app_data_browser_add_graph_model(gmodel, newdata, TRUE);
+            else if (data)
+               gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+            else {
+                newid = 0;
+                newdata = gwy_container_new();
+                gwy_app_data_browser_add(newdata);
+                gwy_app_data_browser_reset_visibility(newdata,
+                                                      GWY_VISIBILITY_RESET_SHOW_ALL);
+                g_object_unref(newdata);
+                gwy_app_data_browser_add_graph_model(gmodel, newdata, TRUE);
+            }
+            gwy_object_unref(gmodel);
+        }
     }
 
     gtk_widget_destroy(dialog);
@@ -553,6 +626,84 @@ page_switched(BrickshowControls *controls,
         return;
 
     controls->args->active_page = pagenum;
+    preview(controls, controls->args);
+
+}
+
+static void
+graph_selection_finished_cb(GwySelection *selection,
+                            BrickshowControls *controls)
+{
+    gdouble sel[2];
+    gint col, row, lev;
+    GwyGraphCurveModel *cmodel;
+    GwyDataLine *dline;
+    BrickshowArgs *args = controls->args;
+
+    if (!gwy_selection_get_object(selection, 0, sel)) return;
+
+    dline = gwy_data_line_new(1, 1, FALSE);
+
+    if (args->gtype == GRAPH_DIRX) {
+        row = controls->grow = gwy_brick_rtoj(controls->brick, sel[0]);
+        lev = controls->glev = gwy_brick_rtok(controls->brick, sel[1]);
+
+        gwy_brick_extract_line(controls->brick, dline,
+                                0,
+                                row,
+                                lev,
+                                gwy_brick_get_xres(controls->brick),
+                                row,
+                                lev,       
+                                0);
+   } else if (args->gtype == GRAPH_DIRY) {
+        col = controls->gcol = gwy_brick_rtoi(controls->brick, sel[0]);
+        lev = controls->glev = gwy_brick_rtok(controls->brick, sel[1]);
+
+        gwy_brick_extract_line(controls->brick, dline,
+                                col,
+                                0,
+                                lev,
+                                col,
+                                gwy_brick_get_yres(controls->brick),
+                                lev,       
+                                0);
+   } else if (args->gtype == GRAPH_DIRZ) {
+        col = controls->gcol = gwy_brick_rtoi(controls->brick, sel[0]);
+        row = controls->grow = gwy_brick_rtoj(controls->brick, sel[1]);
+
+        gwy_brick_extract_line(controls->brick, dline,
+                                col,
+                                row,
+                                0,
+                                col,
+                                row,
+                                gwy_brick_get_zres(controls->brick),       
+                                0);
+    } 
+
+
+    gwy_graph_model_remove_all_curves(controls->gmodel);
+
+    cmodel = gwy_graph_curve_model_new();
+    gwy_graph_curve_model_set_data_from_dataline(cmodel, dline, 0, 0);
+
+    g_object_set(cmodel,
+                 "mode", GWY_GRAPH_CURVE_LINE,
+                 "description", "Brick graph",
+                 NULL);
+    g_object_set(controls->gmodel,
+                 /*"si-unit-x", gwy_data_line_get_si_unit_x(dline),
+                 "si-unit-x", gwy_data_line_get_si_unit_x(dline),*/
+                 "axis-label-bottom", "x",
+                 "axis-label-left", "y",
+                 NULL);
+
+
+    gwy_graph_model_add_curve(controls->gmodel, cmodel);
+    gwy_container_set_object_by_name(controls->mydata, "/1/graph", dline);
+   
+    controls->gcomputed = TRUE;
 
 }
 
@@ -592,7 +743,7 @@ type_changed_cb(GtkWidget *combo, BrickshowControls *controls)
 static void
 gtype_changed_cb(GtkWidget *combo, BrickshowControls *controls)
 {
-    controls->args->type = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
+    controls->args->gtype = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     brickshow_invalidate(controls);
 
 }
@@ -632,7 +783,9 @@ brickshow_dialog_update_values(BrickshowControls *controls,
 static void
 brickshow_invalidate(BrickshowControls *controls)
 {
-    controls->computed = FALSE;
+    if (controls->args->active_page == 0) controls->computed = FALSE;
+    else if (controls->args->active_page == 1) controls->gcomputed = FALSE;
+
 
     /* create preview if instant updates are on */
     if (controls->args->update && !controls->in_init) {
@@ -754,14 +907,14 @@ preview(BrickshowControls *controls,
 {
     GwyDataField  *dfield;
     gchar message[50];
+    gdouble zoomval;
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
-                                                             "/0/data"));
 
     if (!controls->brick) return;
 
     if (args->active_page == 0) {
-
+        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                                 "/0/data"));
 
         if (args->type == CUT_DIRX) {
             gwy_brick_extract_plane(controls->brick, dfield,
@@ -819,22 +972,65 @@ preview(BrickshowControls *controls,
                                 0);
         }
 
-
-
         g_snprintf(message, sizeof(message), "Shown range %g to %g", 
                    gwy_data_field_get_min(dfield), 
                    gwy_data_field_get_max(dfield));
         gtk_label_set_text(GTK_LABEL(controls->info), message);
 
         gwy_data_field_data_changed(dfield);
-
+        
+        zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
+                                            gwy_data_field_get_yres(dfield));
+        gwy_data_view_set_zoom(GWY_DATA_VIEW(controls->view), zoomval);
 
         controls->computed = TRUE;
-    } else if (args->active_page == 1)
+    } 
+    else if (args->active_page == 1)
     {
-        //printf("3D view updated\n");
+       dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                                 "/1/data"));
+
+       if (args->gtype == GRAPH_DIRX) {
+           gwy_brick_sum_plane(controls->brick, dfield,
+                               0, 
+                               0, 
+                               0,
+                               -1,
+                               gwy_brick_get_yres(controls->brick), 
+                               gwy_brick_get_zres(controls->brick), 
+                               0);
+       } else if (args->gtype == GRAPH_DIRY) {
+           gwy_brick_sum_plane(controls->brick, dfield,
+                               0, 
+                               0, 
+                               0,
+                               gwy_brick_get_xres(controls->brick),
+                               -1, 
+                               gwy_brick_get_zres(controls->brick), 
+                               0);
+       } else if (args->gtype == GRAPH_DIRZ) {
+           gwy_brick_sum_plane(controls->brick, dfield,
+                               0, 
+                               0, 
+                               0, 
+                               gwy_brick_get_xres(controls->brick), 
+                               gwy_brick_get_yres(controls->brick), 
+                               -1, 
+                               0);
+       }
+
+       gwy_data_field_data_changed(dfield);
+       
+       zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
+                                           gwy_data_field_get_yres(dfield));
+       gwy_data_view_set_zoom(GWY_DATA_VIEW(controls->gview), zoomval);
+
+
     }
-}
+    else if (args->active_page == 2)
+    {
+    }
+ }
 
 static const gchar xpos_key[]       = "/module/brickshow/xpos";
 static const gchar ypos_key[]       = "/module/brickshow/ypos";

@@ -1635,13 +1635,12 @@ gwy_brick_sum_plane(const GwyBrick *brick,
 
     bdata = brick->data;
     gwy_data_field_clear(target);
-    ddata = gwy_data_field_get_data(target);
-
-   
 
     if (width==-1 && height>0 && depth>0)
     {
         gwy_data_field_resample(target, height, depth, GWY_INTERPOLATION_NONE);
+        ddata = gwy_data_field_get_data(target);
+
 
         g_return_if_fail((jstart+height) <= brick->yres);
         g_return_if_fail((kstart+depth) <= brick->zres);
@@ -1660,6 +1659,7 @@ gwy_brick_sum_plane(const GwyBrick *brick,
     if (width>0 && height==-1 && depth>0)
     {
         gwy_data_field_resample(target, width, depth, GWY_INTERPOLATION_NONE);
+        ddata = gwy_data_field_get_data(target);
 
         g_return_if_fail((istart+width) <= brick->xres);
         g_return_if_fail((kstart+depth) <= brick->zres);
@@ -1678,6 +1678,7 @@ gwy_brick_sum_plane(const GwyBrick *brick,
     if (width>0 && height>0 && depth==-1)
     {
         gwy_data_field_resample(target, width, height, GWY_INTERPOLATION_NONE);
+        ddata = gwy_data_field_get_data(target);
 
         g_return_if_fail((istart+width) <= brick->xres);
         g_return_if_fail((jstart+height) <= brick->yres);
@@ -1725,20 +1726,20 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
     g_return_if_fail(GWY_IS_BRICK(brick));
 
 
-    g_return_if_fail(istart>=0 && istart<brick->xres &&
-                     jstart>=0 && jstart<brick->yres &&
-                     kstart>=0 && kstart<brick->zres &&
-                     iend>=0 && iend<brick->xres &&
-                     jend>=0 && jend<brick->yres &&
-                     kend>=0 && kend<brick->zres);
+    g_return_if_fail(istart>=0 && istart<=brick->xres &&
+                     jstart>=0 && jstart<=brick->yres &&
+                     kstart>=0 && kstart<=brick->zres &&
+                     iend>=0 && iend<=brick->xres &&
+                     jend>=0 && jend<=brick->yres &&
+                     kend>=0 && kend<=brick->zres);
 
     bdata = brick->data;
-    ddata = gwy_data_line_get_data(target);
 
 
     if ((jstart == jend) && (kstart == kend))
     {
         gwy_data_line_resample(target, abs(iend-istart), GWY_INTERPOLATION_NONE);
+        ddata = gwy_data_line_get_data(target);
        
         row = jstart;
         lev = kstart;
@@ -1757,6 +1758,7 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
     if ((istart == iend) && (kstart == kend))
     {
         gwy_data_line_resample(target, abs(jend-jstart), GWY_INTERPOLATION_NONE);
+        ddata = gwy_data_line_get_data(target);
         
         col = istart;
         lev = kstart;
@@ -1775,6 +1777,7 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
     if ((istart == iend) && (jstart == jend))
     {
         gwy_data_line_resample(target, abs(kend-kstart), GWY_INTERPOLATION_NONE);
+        ddata = gwy_data_line_get_data(target);
         
         col = istart;
         row = jstart;
