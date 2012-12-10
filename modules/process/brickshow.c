@@ -99,6 +99,7 @@ typedef struct {
     gint gcol;
     gint grow;
     gint glev;
+    gdouble rm[3][3];
 } BrickshowControls;
 
 static gboolean module_register                    (void);
@@ -241,6 +242,9 @@ brickshow_dialog(BrickshowArgs *args,
     controls.brick = NULL;
     controls.computed = controls.gcomputed = FALSE; 
     controls.args->active_page = 0;
+    controls.rm[0][0] = controls.rm[1][1] = controls.rm[2][2] = 1;
+    controls.rm[1][0] = controls.rm[2][0] = controls.rm[0][1] = controls.rm[0][2] = 0;
+    controls.rm[1][2] = controls.rm[2][1] = 0;
 
     dialog = gtk_dialog_new_with_buttons(_("Volume data"), NULL, 0, NULL);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
@@ -1071,6 +1075,61 @@ convert_3d2d(gdouble x, gdouble y, gdouble z, gdouble *px, gdouble *py)
      *py = 150*(y/(z+3)) + CY;
 }
 
+
+static void
+zrotmatrix(gdouble m[3][3], gdouble theta)
+{
+    m[0][0] = cos(theta);
+    m[1][0] = sin(theta);
+    m[2][0] = 0;
+
+    m[0][1] = -sin(theta);
+    m[1][1] = cos(theta);
+    m[2][1] = 0;
+
+    m[0][2] = 0;
+    m[1][2] = 0;
+    m[2][2] = 1;
+}
+
+static void
+mmultm(gdouble a[3][3], gdouble b[3][3], gdouble result[3][3])
+{
+    gint i, j, k;
+    for(i = 0; i < 3; i++)
+    {
+        for(j = 0; j < 3; j++)
+        {
+            for(k = 0; k < 3; k++)
+            {
+                result[i][j] += a[i][k]*b[k][j];
+            }
+        }
+    }
+}
+
+static void
+mmultv(gdouble m[3][3], gdouble x, gdouble y, gdouble z,
+       gdouble *px, gdouble *py, gdouble *pz)
+{
+    *px = m[0][0]*x + m[0][1]*y + m[0][2]*z;
+    *py = m[1][0]*x + m[1][1]*y + m[1][2]*z;
+    *pz = m[2][0]*x + m[2][1]*y + m[2][2]*z;
+}
+
+static void
+mcopy(gdouble a[3][3], gdouble b[3][3])
+{   
+    gint i, j;
+    for(i = 0; i < 3; i++)
+    {
+        for(j = 0; j < 3; j++)
+        {
+            b[i][j] = a[i][j];
+        }
+    }
+}
+
 static gboolean
 //p3d_on_draw_event(GtkWidget *widget, cairo_t *cr, 
 //              BrickshowControls *controls)
@@ -1079,6 +1138,7 @@ p3d_on_draw_event(GtkWidget *widget, GdkEventExpose *event, BrickshowControls *c
     cairo_t *cr = gdk_cairo_create(gtk_widget_get_window(widget));
     gdouble sx, sy;
     gdouble x[12], y[12], z[12];
+    gdouble px, py, pz;
     gint i, n = 11;
     
     x[0] = -1; y[0] = -1; z[0] = -1;
@@ -1091,19 +1151,22 @@ p3d_on_draw_event(GtkWidget *widget, GdkEventExpose *event, BrickshowControls *c
     x[7] = 1; y[7] = -1; z[7] = -1;
     x[8] = -1; y[8] = -1; z[8] = -1;
     x[9] = -1; y[9] = 1; z[9] = -1;
-    x[10] = 1; y[10] = 1; z[10] = -1; 
+    x[10] = 1; y[10] = 1; z[10] = -1;
 
     cairo_set_source_rgb(cr, 0, 0, 0);
     cairo_set_line_width (cr, 0.5);
 
-    convert_3d2d(-1, -1, -1, &sx, &sy);
+    mmultv(controls->rm, -1, -1, -1, &px, &py, &pz);
+    convert_3d2d(px, py, pz, &sx, &sy);
     cairo_move_to(cr, sx, sy);
 
     for (i= 0; i<n; i++) {
-        convert_3d2d(x[i], y[i], z[i], &sx, &sy);
+        mmultv(controls->rm, x[i], y[i], z[i], &px, &py, &pz);
+        convert_3d2d(px, py, pz, &sx, &sy);
         cairo_line_to(cr, sx, sy);
     }
-    
+
+
     cairo_stroke(cr);
     cairo_destroy(cr);
 
@@ -1129,8 +1192,14 @@ p3d_moved(GtkWidget *widget, GdkEventMotion *event,
 {
     if (((event->state & GDK_BUTTON1_MASK) == GDK_BUTTON1_MASK))
     printf("motion, button   %u on %g %g  \n", event->state, event->x, event->y);
-        
-    //gtk_widget_queue_draw(widget);
+    
+    gdouble rotm[3][3], rot[3][3];
+    
+    zrotmatrix(rotm, 0.05); 
+    mmultm(controls->rm, rotm, rot);
+    mcopy(rot, controls->rm);
+     
+    gtk_widget_queue_draw(widget);
 
     return TRUE;
 }
