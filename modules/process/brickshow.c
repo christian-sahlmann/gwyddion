@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include <gtk/gtk.h>
+#include <cairo.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/arithmetic.h>
@@ -132,6 +133,20 @@ static void     page_switched                      (BrickshowControls *controls,
                                                     gint pagenum);
 static void     graph_selection_finished_cb        (GwySelection *selection,
                                                     BrickshowControls *controls);
+
+//static gboolean p3d_on_draw_event                  (GtkWidget *widget, 
+//                                                   cairo_t *cr, 
+//                                                   BrickshowControls *controls);
+static gboolean p3d_on_draw_event                  (GtkWidget *widget, 
+                                                    GdkEventExpose *event, 
+                                                    BrickshowControls *controls);
+static gboolean p3d_clicked                        (GtkWidget *widget, 
+                                                   GdkEventButton *event,
+                                                   BrickshowControls *controls);
+static gboolean p3d_moved                         (GtkWidget *widget, 
+                                                   GdkEventMotion *event,
+                                                   BrickshowControls *controls);
+
 
 
 static const BrickshowArgs brickshow_defaults = {
@@ -444,8 +459,18 @@ brickshow_dialog(BrickshowArgs *args,
                                hbox,
                                gtk_label_new(_("3D view")));
 
-    /*
-    controls.drawarea = gtk_label_new("Here comes the widget");
+    
+    controls.drawarea = gtk_drawing_area_new();
+    gtk_widget_add_events(controls.drawarea, GDK_BUTTON_PRESS_MASK | GDK_POINTER_MOTION_MASK);
+
+    g_signal_connect(GTK_DRAWING_AREA(controls.drawarea), "expose-event", //should be "draw" for newer Gtk+
+                     G_CALLBACK(p3d_on_draw_event), &controls);  
+    g_signal_connect(controls.drawarea, "button-press-event", 
+                     G_CALLBACK(p3d_clicked), &controls);
+    g_signal_connect(controls.drawarea, "motion-notify-event", 
+                     G_CALLBACK(p3d_moved), &controls);
+
+
     gtk_box_pack_start(GTK_BOX(hbox), controls.drawarea, FALSE, FALSE, 4);
     gtk_widget_set_size_request(controls.drawarea, PREVIEW_SIZE, PREVIEW_SIZE);
 
@@ -456,7 +481,7 @@ brickshow_dialog(BrickshowArgs *args,
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
     row = 0;
-    */
+   
     
 
     brickshow_invalidate(&controls);
@@ -1031,8 +1056,85 @@ preview(BrickshowControls *controls,
     }
     else if (args->active_page == 2)
     {
+
+
     }
  }
+
+#define CX 200
+#define CY 200
+
+static void
+convert_3d2d(gdouble x, gdouble y, gdouble z, gdouble *px, gdouble *py)
+{
+     *px = 100*(x/z) + CX;
+     *py = 100*(y/z) + CY;
+}
+
+static gboolean
+//p3d_on_draw_event(GtkWidget *widget, cairo_t *cr, 
+//              BrickshowControls *controls)
+p3d_on_draw_event(GtkWidget *widget, GdkEventExpose *event, BrickshowControls *controls)
+{
+    cairo_t *cr = gdk_cairo_create(gtk_widget_get_window(widget));
+    gdouble sx, sy;
+    gdouble x[12], y[12], z[12];
+    gint i, n = 11;
+    
+    x[0] = 0; y[0] = 0; z[0] = 0;
+    x[1] = 1; y[1] = 0; z[1] = 0;
+    x[2] = 1; y[2] = 1; z[2] = 0;
+    x[3] = 1; y[3] = 1; z[3] = 1;
+    x[4] = 0; y[4] = 1; z[4] = 1;
+    x[5] = 0; y[5] = 0; z[5] = 1;
+    x[6] = 1; y[6] = 0; z[6] = 1;
+    x[7] = 1; y[7] = 0; z[7] = 0;
+    x[8] = 0; y[8] = 0; z[8] = 0;
+    x[9] = 0; y[9] = 1; z[9] = 0;
+    x[10] = 1; y[10] = 1; z[10] = 0; 
+
+    cairo_set_source_rgb(cr, 0, 0, 0);
+    cairo_set_line_width (cr, 0.5);
+
+    convert_3d2d(0, 0, 0, &sx, &sy);
+    cairo_move_to(cr, sx, sy);
+
+    for (i= 0; i<n; i++) {
+        convert_3d2d(x[i], y[i], z[i], &sx, &sy);
+        cairo_line_to(cr, sx, sy);
+    }
+    
+    cairo_stroke(cr);
+    cairo_destroy(cr);
+
+    return FALSE;
+}
+
+static gboolean 
+p3d_clicked(GtkWidget *widget, GdkEventButton *event,
+                 BrickshowControls *controls)
+{
+    printf("clicked by button %d on %g %g\n", event->button, event->x, event->y);
+        
+    //gtk_widget_queue_draw(widget);
+
+    return TRUE;
+}
+
+
+
+static gboolean 
+p3d_moved(GtkWidget *widget, GdkEventMotion *event,
+                 BrickshowControls *controls)
+{
+    if (((event->state & GDK_BUTTON1_MASK) == GDK_BUTTON1_MASK))
+    printf("motion, button   %u on %g %g  \n", event->state, event->x, event->y);
+        
+    //gtk_widget_queue_draw(widget);
+
+    return TRUE;
+}
+
 
 static const gchar xpos_key[]       = "/module/brickshow/xpos";
 static const gchar ypos_key[]       = "/module/brickshow/ypos";
