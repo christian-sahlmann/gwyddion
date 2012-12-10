@@ -1067,8 +1067,8 @@ preview(BrickshowControls *controls,
 static void
 convert_3d2d(gdouble x, gdouble y, gdouble z, gdouble *px, gdouble *py)
 {
-     *px = 100*(x/z) + CX;
-     *py = 100*(y/z) + CY;
+     *px = 150*(x/(z+3)) + CX;
+     *py = 150*(y/(z+3)) + CY;
 }
 
 static gboolean
@@ -1081,22 +1081,22 @@ p3d_on_draw_event(GtkWidget *widget, GdkEventExpose *event, BrickshowControls *c
     gdouble x[12], y[12], z[12];
     gint i, n = 11;
     
-    x[0] = 0; y[0] = 0; z[0] = 0;
-    x[1] = 1; y[1] = 0; z[1] = 0;
-    x[2] = 1; y[2] = 1; z[2] = 0;
+    x[0] = -1; y[0] = -1; z[0] = -1;
+    x[1] = 1; y[1] = -1; z[1] = -1;
+    x[2] = 1; y[2] = 1; z[2] = -1;
     x[3] = 1; y[3] = 1; z[3] = 1;
-    x[4] = 0; y[4] = 1; z[4] = 1;
-    x[5] = 0; y[5] = 0; z[5] = 1;
-    x[6] = 1; y[6] = 0; z[6] = 1;
-    x[7] = 1; y[7] = 0; z[7] = 0;
-    x[8] = 0; y[8] = 0; z[8] = 0;
-    x[9] = 0; y[9] = 1; z[9] = 0;
-    x[10] = 1; y[10] = 1; z[10] = 0; 
+    x[4] = -1; y[4] = 1; z[4] = 1;
+    x[5] = -1; y[5] = -1; z[5] = 1;
+    x[6] = 1; y[6] = -1; z[6] = 1;
+    x[7] = 1; y[7] = -1; z[7] = -1;
+    x[8] = -1; y[8] = -1; z[8] = -1;
+    x[9] = -1; y[9] = 1; z[9] = -1;
+    x[10] = 1; y[10] = 1; z[10] = -1; 
 
     cairo_set_source_rgb(cr, 0, 0, 0);
     cairo_set_line_width (cr, 0.5);
 
-    convert_3d2d(0, 0, 0, &sx, &sy);
+    convert_3d2d(-1, -1, -1, &sx, &sy);
     cairo_move_to(cr, sx, sy);
 
     for (i= 0; i<n; i++) {
