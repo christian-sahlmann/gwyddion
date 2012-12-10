@@ -96,6 +96,7 @@ static void  gwy_tool_spectro_data_switched   (GwyTool *gwytool,
                                                GwyDataView *data_view);
 static void  gwy_tool_spectro_spectra_switched(GwyTool *gwytool,
                                                GwySpectra *spectra);
+static void  gwy_tool_spectro_fill_locations  (GwyToolSpectro *tool);
 static void  gwy_tool_spectro_response        (GwyTool *tool,
                                                gint response_id);
 static void  gwy_tool_spectro_tree_sel_changed(GtkTreeSelection *selection,
@@ -133,7 +134,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Point Spectrum, extracts point spectra to a graph."),
     "Owain Davies <owain.davies@blueyonder.co.uk>",
-    "0.3",
+    "0.4",
     "Owain Davies, David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -401,6 +402,9 @@ gwy_tool_spectro_data_switched(GwyTool *gwytool,
     }
 
     gwy_graph_model_remove_all_curves(tool->gmodel);
+
+    if (plain_tool->data_field && tool->spectra)
+        gwy_tool_spectro_fill_locations(tool);
 }
 
 static void
@@ -413,7 +417,6 @@ gwy_tool_spectro_spectra_switched(GwyTool *gwytool,
     GwyNullStore *store;
     GString *str;
     guint nspec, i;
-    gdouble coords[2];
 
     gwy_debug("spectra: %p", spectra);
 
@@ -467,10 +470,7 @@ gwy_tool_spectro_spectra_switched(GwyTool *gwytool,
     /* Update point layer selection */
     gwy_selection_clear(plain_tool->selection);
     gwy_null_store_set_n_rows(store, 0);
-    for (i = 0; i < nspec; i++) {
-        gwy_spectra_itoxy(tool->spectra, i, &coords[0], &coords[1]);
-        gwy_selection_set_object(plain_tool->selection, i, coords);
-    }
+    gwy_tool_spectro_fill_locations(tool);
     gwy_null_store_set_n_rows(store, nspec);
 
     /* Update tree view selection */
@@ -495,6 +495,32 @@ gwy_tool_spectro_spectra_switched(GwyTool *gwytool,
     gwy_tool_spectro_update_header(tool, COLUMN_Y, str, "y",
                                    plain_tool->coord_format);
     g_string_free(str, TRUE);
+}
+
+/* May be called either when the selection is empty or already filled but of
+ * correct size. */
+static void
+gwy_tool_spectro_fill_locations(GwyToolSpectro *tool)
+{
+    GwyPlainTool *plain_tool;
+    GwyDataField *dfield;
+    gdouble xoff, yoff;
+    gint i, nspec;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    dfield = plain_tool->data_field;
+    g_return_if_fail(dfield);
+
+    nspec = gwy_spectra_get_n_spectra(tool->spectra);
+    xoff = gwy_data_field_get_xoffset(plain_tool->data_field);
+    yoff = gwy_data_field_get_yoffset(plain_tool->data_field);
+    for (i = 0; i < nspec; i++) {
+        gdouble coords[2];
+        gwy_spectra_itoxy(tool->spectra, i, &coords[0], &coords[1]);
+        coords[0] -= xoff;
+        coords[1] -= yoff;
+        gwy_selection_set_object(plain_tool->selection, i, coords);
+    }
 }
 
 static void
