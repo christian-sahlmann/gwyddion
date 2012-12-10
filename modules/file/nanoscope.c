@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004-2011 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004-2012 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -159,6 +159,7 @@ static GwySIUnit*      get_physical_scale     (GHashTable *hash,
 static GwySIUnit*      get_spec_ordinate_scale(GHashTable *hash,
                                                GHashTable *scanlist,
                                                gdouble *scale,
+                                               gboolean *convert_to_force,
                                                GError **error);
 static GwySIUnit*      get_spec_abscissa_scale(GHashTable *hash,
                                                GHashTable *forcelist,
@@ -807,7 +808,7 @@ hash_to_curve(GHashTable *hash,
     gint xres, bpp, offset, size;
     gdouble xreal, xoff, q = 1.0;
     gdouble *data;
-    gboolean size_ok, use_global;
+    gboolean size_ok, use_global, convert_to_force = FALSE;
 
     if (!require_keys(hash, error,
                       "Samps/line", "Data offset", "Data length",
@@ -886,17 +887,29 @@ hash_to_curve(GHashTable *hash,
         }
     }
 
-    if (!(unitz = get_spec_ordinate_scale(hash, scanlist, &q, error)))
+    val = g_hash_table_lookup(hash, "@4:Image Data");
+    if (spectype == NANOSCOPE_SPECTRA_FZ
+        && gwy_strequal(val->hard_value_str, "Deflection Error"))
+        convert_to_force = TRUE;
+
+    if (!(unitz = get_spec_ordinate_scale(hash, scanlist, &q, &convert_to_force,
+                                          error)))
         return NULL;
 
     gmodel = gwy_graph_model_new();
     // TODO: Spectrum type.
-    val = g_hash_table_lookup(hash, "@4:Image Data");
     if (spectype == NANOSCOPE_SPECTRA_IV) {
         g_object_set(gmodel,
                      "title", "I-V spectrum",
                      "axis-label-bottom", "Voltage",
                      "axis-label-left", val->hard_value_str,
+                     NULL);
+    }
+    else if (convert_to_force) {
+        g_object_set(gmodel,
+                     "title", "F-Z spectrum",
+                     "axis-label-bottom", "Distance",
+                     "axis-label-left", "Force",
                      NULL);
     }
     else if (spectype == NANOSCOPE_SPECTRA_FZ) {
@@ -977,6 +990,7 @@ static GwySIUnit*
 get_spec_ordinate_scale(GHashTable *hash,
                         GHashTable *scanlist,
                         gdouble *scale,
+                        gboolean *convert_to_force,
                         GError **error)
 {
     GwySIUnit *siunit, *siunit2;
@@ -991,12 +1005,14 @@ get_spec_ordinate_scale(GHashTable *hash,
 
     /* Resolve reference to a soft scale */
     if (val->soft_scale) {
+        gwy_debug("Soft scale %s", val->soft_scale);
         key = g_strdup_printf("@%s", val->soft_scale);
         if ((!scanlist || !(sval = g_hash_table_lookup(scanlist, key)))) {
             g_warning("`%s' not found", key);
             g_free(key);
             /* XXX */
             *scale = val->hard_value;
+            *convert_to_force = FALSE;
             return gwy_si_unit_new("");
         }
 
@@ -1018,6 +1034,16 @@ get_spec_ordinate_scale(GHashTable *hash,
 
         if (g_str_has_prefix(val->hard_scale_units, "log("))
             gwy_si_unit_set_from_string(siunit, "");
+
+        if (*convert_to_force
+            && (sval = g_hash_table_lookup(hash, "Spring Constant"))) {
+            gwy_debug("Spring Constant: %g", sval->hard_value);
+            // FIXME: Whatever.  For some reason this means Force.
+            *scale *= 10.0*sval->hard_value;
+            gwy_si_unit_set_from_string(siunit, "N");
+        }
+        else
+            *convert_to_force = FALSE;
     }
     else {
         /* FIXME: Is this possible for I-V too? */
@@ -1025,6 +1051,7 @@ get_spec_ordinate_scale(GHashTable *hash,
          * the quantity is something in the hard units (seen for Potential). */
         siunit = gwy_si_unit_new_parse(val->hard_value_units, &q);
         *scale = val->hard_value * pow10(q);
+        *convert_to_force = FALSE;
     }
 
     return siunit;
