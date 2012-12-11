@@ -99,7 +99,12 @@ typedef struct {
     gint gcol;
     gint grow;
     gint glev;
+    gdouble rpx;
+    gdouble rpy;
     gdouble rm[3][3];
+    gdouble px[20];
+    gdouble py[20];
+    gdouble pz[20];
 } BrickshowControls;
 
 static gboolean module_register                    (void);
@@ -1075,6 +1080,37 @@ convert_3d2d(gdouble x, gdouble y, gdouble z, gdouble *px, gdouble *py)
      *py = 150*(y/(z+3)) + CY;
 }
 
+static void
+xrotmatrix(gdouble m[3][3], gdouble theta)
+{
+    m[0][0] = 1;
+    m[1][0] = 0;
+    m[2][0] = 0;
+
+    m[0][1] = 0;
+    m[1][1] = cos(theta);
+    m[2][1] = -sin(theta);
+
+    m[0][2] = 0;
+    m[1][2] = sin(theta);
+    m[2][2] = cos(theta);
+}
+
+static void
+yrotmatrix(gdouble m[3][3], gdouble theta)
+{
+    m[0][0] = cos(theta);
+    m[1][0] = 0;
+    m[2][0] = sin(theta);
+
+    m[0][1] = 0;
+    m[1][1] = 1;
+    m[2][1] = 0;
+
+    m[0][2] = -sin(theta);
+    m[1][2] = 0;
+    m[2][2] = cos(theta);
+}
 
 static void
 zrotmatrix(gdouble m[3][3], gdouble theta)
@@ -1096,6 +1132,15 @@ static void
 mmultm(gdouble a[3][3], gdouble b[3][3], gdouble result[3][3])
 {
     gint i, j, k;
+
+    for(i = 0; i < 3; i++)
+    {
+        for(j = 0; j < 3; j++)
+        {
+            result[i][j] = 0;
+        }
+    }
+
     for(i = 0; i < 3; i++)
     {
         for(j = 0; j < 3; j++)
@@ -1137,9 +1182,9 @@ p3d_on_draw_event(GtkWidget *widget, GdkEventExpose *event, BrickshowControls *c
 {
     cairo_t *cr = gdk_cairo_create(gtk_widget_get_window(widget));
     gdouble sx, sy;
-    gdouble x[12], y[12], z[12];
+    gdouble x[17], y[17], z[17];
     gdouble px, py, pz;
-    gint i, n = 11;
+    gint i, j, n = 13;
     
     x[0] = -1; y[0] = -1; z[0] = -1;
     x[1] = 1; y[1] = -1; z[1] = -1;
@@ -1152,6 +1197,8 @@ p3d_on_draw_event(GtkWidget *widget, GdkEventExpose *event, BrickshowControls *c
     x[8] = -1; y[8] = -1; z[8] = -1;
     x[9] = -1; y[9] = 1; z[9] = -1;
     x[10] = 1; y[10] = 1; z[10] = -1;
+    x[11] = -1; y[11] = 1; z[11] = -1;
+    x[12] = 1; y[12] = 1; z[12] = 1;
 
     cairo_set_source_rgb(cr, 0, 0, 0);
     cairo_set_line_width (cr, 0.5);
@@ -1166,6 +1213,17 @@ p3d_on_draw_event(GtkWidget *widget, GdkEventExpose *event, BrickshowControls *c
         cairo_line_to(cr, sx, sy);
     }
 
+/*    printf("___matrix___\n");
+    for (i=0; i<3; i++)
+    {
+        for (j=0; j<3; j++)
+        {
+            printf("%g ", controls->rm[i][j]);
+
+        }
+        printf("\n");
+    }
+*/
 
     cairo_stroke(cr);
     cairo_destroy(cr);
@@ -1177,8 +1235,9 @@ static gboolean
 p3d_clicked(GtkWidget *widget, GdkEventButton *event,
                  BrickshowControls *controls)
 {
-    printf("clicked by button %d on %g %g\n", event->button, event->x, event->y);
-        
+
+    controls->rpx = event->x;
+    controls->rpy = event->y;    
     //gtk_widget_queue_draw(widget);
 
     return TRUE;
@@ -1190,16 +1249,26 @@ static gboolean
 p3d_moved(GtkWidget *widget, GdkEventMotion *event,
                  BrickshowControls *controls)
 {
-    if (((event->state & GDK_BUTTON1_MASK) == GDK_BUTTON1_MASK))
-    printf("motion, button   %u on %g %g  \n", event->state, event->x, event->y);
-    
+    gdouble diffx;
+    gdouble diffy;
     gdouble rotm[3][3], rot[3][3];
-    
-    zrotmatrix(rotm, 0.05); 
-    mmultm(controls->rm, rotm, rot);
-    mcopy(rot, controls->rm);
-     
-    gtk_widget_queue_draw(widget);
+
+    if (((event->state & GDK_BUTTON1_MASK) == GDK_BUTTON1_MASK))
+    {
+
+        diffx = event->x - controls->rpx;
+        diffy = event->y - controls->rpy;
+        controls->rpx = event->x;
+        controls->rpy = event->y;
+
+        xrotmatrix(rotm, -0.02*diffy); 
+        mmultm(controls->rm, rotm, rot);
+
+        yrotmatrix(rotm, 0.02*diffx);
+        mmultm(rot, rotm, controls->rm);
+
+        gtk_widget_queue_draw(widget);
+    }
 
     return TRUE;
 }
