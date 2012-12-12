@@ -26,6 +26,7 @@
 #include <libprocess/arithmetic.h>
 #include <libprocess/stats.h>
 #include <libprocess/brick.h>
+#include <libprocess/filters.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
@@ -36,6 +37,7 @@
 #include <app/gwyapp.h>
 
 #define BRICKSHOW_RUN_MODES (GWY_RUN_INTERACTIVE)
+#define MAXPIX 600
 
 typedef enum {
     CUT_DIRX = 0,
@@ -104,9 +106,13 @@ typedef struct {
     gdouble rpx;
     gdouble rpy;
     gdouble rm[3][3];
-    gdouble px[20];
-    gdouble py[20];
-    gdouble pz[20];
+    gdouble *px;
+    gdouble *py;
+    gdouble *pz;
+    gdouble *ps;
+    gdouble *wpx;
+    gdouble *wpy;
+    gdouble *wpz;
     gint nps;
 } BrickshowControls;
 
@@ -115,6 +121,7 @@ static void     brickshow                         (GwyContainer *data,
                                                     GwyRunType run);
 static void     brickshow_dialog                  (BrickshowArgs *args,
                                                     GwyContainer *data,
+                                                    GwyDataField *original_dfield,
                                                     gint id);
 
 static void     brickshow_dialog_update_controls  (BrickshowControls *controls,
@@ -160,6 +167,11 @@ static void p3d_yview_cb                          (BrickshowControls *controls);
 static void p3d_zview_cb                          (BrickshowControls *controls);
 static void perspective_change_cb                 (BrickshowControls *controls);
 
+static void p3d_set_axes                          (BrickshowControls *controls);
+static void p3d_add_wireframe                     (BrickshowControls *controls);
+
+static void create_brick_from_datafield           (BrickshowControls *controls,
+                                                   GwyDataField *dfield);
 
 static const BrickshowArgs brickshow_defaults = {
     CUT_DIRX,
@@ -169,6 +181,7 @@ static const BrickshowArgs brickshow_defaults = {
     50,
     TRUE,
     0,
+    TRUE,
 };
 
 static GwyModuleInfo module_info = {
@@ -201,15 +214,18 @@ static void
 brickshow(GwyContainer *data, GwyRunType run)
 {
     BrickshowArgs args;
+    GwyDataField *dfield = NULL;
     gint id;
 
     g_return_if_fail(run & BRICKSHOW_RUN_MODES);
 
     brickshow_load_args(gwy_app_settings_get(), &args);
    
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &id, 0);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id, 
+                                     0);
 
-    brickshow_dialog(&args, data, id);
+    brickshow_dialog(&args, data, dfield, id);
     brickshow_save_args(gwy_app_settings_get(), &args);
 }
 
@@ -217,6 +233,7 @@ brickshow(GwyContainer *data, GwyRunType run)
 static void
 brickshow_dialog(BrickshowArgs *args,
                   GwyContainer *data,
+                  GwyDataField *original_dfield,
                   gint id)
 {
     static const GwyEnum types[] = {
@@ -256,6 +273,17 @@ brickshow_dialog(BrickshowArgs *args,
     controls.rm[0][0] = controls.rm[1][1] = controls.rm[2][2] = 1;
     controls.rm[1][0] = controls.rm[2][0] = controls.rm[0][1] = controls.rm[0][2] = 0;
     controls.rm[1][2] = controls.rm[2][1] = 0;
+    controls.px = NULL;
+    controls.py = NULL;
+    controls.pz = NULL;
+    controls.ps = NULL;
+    controls.nps = 0;
+
+    /*if there was a datafield, create a brick from it*/ 
+    if (original_dfield) create_brick_from_datafield(&controls, original_dfield);
+
+ 
+    /*dialogue controls*/
 
     dialog = gtk_dialog_new_with_buttons(_("Volume data"), NULL, 0, NULL);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
@@ -474,8 +502,7 @@ brickshow_dialog(BrickshowArgs *args,
                                hbox,
                                gtk_label_new(_("3D view")));
 
-    
-    controls.drawarea = gtk_drawing_area_new();
+      controls.drawarea = gtk_drawing_area_new();
     gtk_widget_add_events(controls.drawarea, GDK_BUTTON_PRESS_MASK | GDK_POINTER_MOTION_MASK);
 
     g_signal_connect(GTK_DRAWING_AREA(controls.drawarea), "expose-event", //should be "draw" for newer Gtk+
@@ -525,31 +552,10 @@ brickshow_dialog(BrickshowArgs *args,
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(p3d_zview_cb), &controls);
 
+    p3d_set_axes(&controls);
+    p3d_add_wireframe(&controls);
 
     row++;
-
-    /*test wireframe*/
-    controls.px[0] = -1; controls.py[0] = -1; controls.pz[0] = -1;
-    controls.px[1] = 1; controls.py[1] = -1; controls.pz[1] = -1;
-    controls.px[2] = 1; controls.py[2] = 1; controls.pz[2] = -1;
-    controls.px[3] = 1; controls.py[3] = 1; controls.pz[3] = 1;
-    controls.px[4] = -1; controls.py[4] = 1; controls.pz[4] = 1;
-    controls.px[5] = -1; controls.py[5] = -1; controls.pz[5] = 1;
-    controls.px[6] = 1; controls.py[6] = -1; controls.pz[6] = 1;
-    controls.px[7] = 1; controls.py[7] = -1; controls.pz[7] = -1;
-    controls.px[8] = -1; controls.py[8] = -1; controls.pz[8] = -1;
-    controls.px[9] = -1; controls.py[9] = -1; controls.pz[9] = 1;
-    controls.px[10] = -1; controls.py[10] = -1; controls.pz[10] = -1;
-    controls.px[11] = -1; controls.py[11] = 1; controls.pz[11] = -1;
-    controls.px[12] = -1; controls.py[12] = 1; controls.pz[12] = 1;
-    controls.px[13] = -1; controls.py[13] = 1; controls.pz[13] = -1;
-    controls.px[14] = 1; controls.py[14] = 1; controls.pz[14] = -1;
-    controls.px[15] = 1; controls.py[15] = 1; controls.pz[15] = 1;
-    controls.px[16] = 1; controls.py[16] = -1; controls.pz[16] = 1;
-    
-    controls.nps = 17;
-
-      
 
     brickshow_invalidate(&controls);
     controls.in_init = FALSE;
@@ -994,6 +1000,60 @@ brickshow_load_data(BrickshowControls *controls,
 
 }
 
+static void 
+create_brick_from_datafield(BrickshowControls *controls, GwyDataField *dfield)
+{
+    gint xres, yres, zres;
+    gint col, row, lev;
+    gdouble ratio, *bdata, *ddata;
+    gdouble xreal, yreal, zreal, offset;
+    GwyDataField *lowres;
+    
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    zres = MAX(xres, yres);
+
+    if ((xres*yres)>(MAXPIX*MAXPIX))
+    {
+        ratio = (MAXPIX*MAXPIX)/(gdouble)(xres*yres);
+        lowres = gwy_data_field_new_alike(dfield, TRUE);
+        gwy_data_field_copy(dfield, lowres, TRUE);
+        xres *= ratio;
+        yres *= ratio;
+        gwy_data_field_resample(lowres, xres, yres, GWY_INTERPOLATION_BILINEAR);
+    }
+    else lowres = dfield;
+
+    zres = MAX(xres, yres);
+
+    xreal = gwy_data_field_get_xreal(dfield);
+    yreal = gwy_data_field_get_yreal(dfield);
+    offset = gwy_data_field_get_min(dfield);
+    zreal = gwy_data_field_get_max(dfield) - offset;
+    
+
+    //printf("Data field of res %d %d\n to brick z %d, real %g %g %g\n", xres, yres, zres, xreal, yreal, zreal);
+
+    controls->brick = gwy_brick_new(xres, yres, zres, xres, yres, zres, TRUE);
+
+    ddata = gwy_data_field_get_data(dfield);
+    bdata = gwy_brick_get_data(controls->brick);
+
+    for (col=0; col<xres; col++)
+    {
+        for (row=0; row<yres; row++)
+        {
+            for (lev=0; lev<zres; lev++) {
+                if (ddata[col + xres*row]<(lev*zreal/zres + offset)) bdata[col + xres*row + xres*yres*lev] = 1;
+                
+            }
+        }
+    }
+
+
+}
+
+
 
 static void
 preview(BrickshowControls *controls,
@@ -1257,7 +1317,8 @@ p3d_on_draw_event(GtkWidget *widget, GdkEventExpose *event, BrickshowControls *c
 
     for (i= 1; i<controls->nps; i++) {
         convert_3d2d(controls->px[i], controls->py[i], controls->pz[i], &sx, &sy, controls->args->perspective);
-        cairo_line_to(cr, sx, sy);
+        if (controls->ps[i]) cairo_line_to(cr, sx, sy);
+        else cairo_move_to(cr, sx, sy);
     }
 
     cairo_stroke(cr);
@@ -1362,6 +1423,81 @@ p3d_zview_cb(BrickshowControls *controls)
     gtk_widget_queue_draw(controls->drawarea);
 
 }
+
+static void 
+p3d_set_axes(BrickshowControls *controls)
+{
+
+    if (controls->px==NULL || controls->nps<17) 
+       controls->px = (gdouble *)g_malloc(17*sizeof(gdouble));
+    if (controls->py==NULL || controls->nps<17) 
+       controls->py = (gdouble *)g_malloc(17*sizeof(gdouble));
+    if (controls->pz==NULL || controls->nps<17) 
+       controls->pz = (gdouble *)g_malloc(17*sizeof(gdouble));
+    if (controls->ps==NULL || controls->nps<17) 
+       controls->ps = (gdouble *)g_malloc(17*sizeof(gdouble));
+
+    controls->px[0] = -1; controls->py[0] = -1; controls->pz[0] = -1; controls->ps[0] = 0;
+    controls->px[1] = 1; controls->py[1] = -1; controls->pz[1] = -1; controls->ps[1] = 1;
+    controls->px[2] = 1; controls->py[2] = 1; controls->pz[2] = -1; controls->ps[2] = 1;
+    controls->px[3] = 1; controls->py[3] = 1; controls->pz[3] = 1; controls->ps[3] = 1;
+    controls->px[4] = -1; controls->py[4] = 1; controls->pz[4] = 1; controls->ps[4] = 1;
+    controls->px[5] = -1; controls->py[5] = -1; controls->pz[5] = 1; controls->ps[5] = 1;
+    controls->px[6] = 1; controls->py[6] = -1; controls->pz[6] = 1; controls->ps[6] = 1;
+    controls->px[7] = 1; controls->py[7] = -1; controls->pz[7] = -1; controls->ps[7] = 1;
+    controls->px[8] = -1; controls->py[8] = -1; controls->pz[8] = -1; controls->ps[8] = 1;
+    controls->px[9] = -1; controls->py[9] = -1; controls->pz[9] = 1; controls->ps[9] = 1;
+    controls->px[10] = -1; controls->py[10] = -1; controls->pz[10] = -1; controls->ps[10] = 1;
+    controls->px[11] = -1; controls->py[11] = 1; controls->pz[11] = -1; controls->ps[11] = 1;
+    controls->px[12] = -1; controls->py[12] = 1; controls->pz[12] = 1; controls->ps[12] = 1;
+    controls->px[13] = -1; controls->py[13] = 1; controls->pz[13] = -1; controls->ps[13] = 0;
+    controls->px[14] = 1; controls->py[14] = 1; controls->pz[14] = -1; controls->ps[14] = 1;
+    controls->px[15] = 1; controls->py[15] = 1; controls->pz[15] = 1; controls->ps[15] = 0;
+    controls->px[16] = 1; controls->py[16] = -1; controls->pz[16] = 1; controls->ps[16] = 1;
+
+    controls->nps = 17;
+
+}
+
+static void 
+p3d_add_wireframe(BrickshowControls *controls)
+{
+    gint actual_nps = controls->nps;
+    GwyDataField *cut;
+    gdouble threshold;
+    gint i, spacing = 20;
+    gint xres, yres, zres;
+   
+  
+    if (controls->brick == NULL) {
+        printf("No brick\n");
+        return;
+    } 
+  
+    xres = gwy_brick_get_xres(controls->brick);
+    yres = gwy_brick_get_yres(controls->brick);
+    zres = gwy_brick_get_zres(controls->brick);
+    cut = gwy_data_field_new(1, 1, 1, 1, FALSE);
+
+    threshold = (gwy_brick_get_min(controls->brick) + gwy_brick_get_max(controls->brick))/2;
+
+    for (i=0; i<xres; i+=spacing)
+    {
+        //gwy_brick_extract_plane(controls->brick, cut, i, 0, 0, -1, yres, zres, FALSE);
+        gwy_data_field_threshold(cut, threshold, 0, 1);
+
+        /*increase allocation if necessary*/
+        if (controls->nps - actual_nps<1000) {
+            actual_nps += 1000;
+            controls->px = g_realloc(controls->px, (actual_nps*sizeof(gdouble)));
+            controls->py = g_realloc(controls->py, (actual_nps*sizeof(gdouble)));
+            controls->pz = g_realloc(controls->pz, (actual_nps*sizeof(gdouble)));
+            controls->ps = g_realloc(controls->ps, (actual_nps*sizeof(gdouble)));
+        }
+    }
+
+}
+
 
 
 static const gchar xpos_key[]       = "/module/brickshow/xpos";
