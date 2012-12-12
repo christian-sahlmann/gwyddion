@@ -71,6 +71,7 @@ typedef struct {
     gdouble zpos;
     gboolean update;
     gint active_page;
+    gboolean perspective;
 } BrickshowArgs;
 
 typedef struct {
@@ -89,6 +90,7 @@ typedef struct {
     GtkWidget *gupdate;
     GtkWidget *drawarea;
     GtkWidget *graph;
+    GtkWidget *perspective;
     GwyGraphModel *gmodel;
     GwyContainer *mydata;
     GwyContainer *data;
@@ -153,7 +155,10 @@ static gboolean p3d_clicked                        (GtkWidget *widget,
 static gboolean p3d_moved                         (GtkWidget *widget, 
                                                    GdkEventMotion *event,
                                                    BrickshowControls *controls);
-
+static void p3d_xview_cb                          (BrickshowControls *controls);
+static void p3d_yview_cb                          (BrickshowControls *controls);
+static void p3d_zview_cb                          (BrickshowControls *controls);
+static void perspective_change_cb                 (BrickshowControls *controls);
 
 
 static const BrickshowArgs brickshow_defaults = {
@@ -228,7 +233,7 @@ brickshow_dialog(BrickshowArgs *args,
         { N_("Z direction"), GRAPH_DIRZ, },
     };
   
-    GtkWidget *dialog, *table, *hbox, *label, *notebook, *msgdialog;
+    GtkWidget *dialog, *table, *hbox, *label, *notebook, *msgdialog, *button;
     GwyDataField *dfield;
     GwyDataLine *dline;
     BrickshowControls controls;
@@ -491,7 +496,38 @@ brickshow_dialog(BrickshowArgs *args,
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
     row = 0;
-   
+
+    controls.perspective = gtk_check_button_new_with_mnemonic(_("apply perspective"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.perspective),
+                                 args->perspective);
+    gtk_table_attach(GTK_TABLE(table), controls.perspective,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls.perspective, "toggled",
+                             G_CALLBACK(perspective_change_cb), &controls);
+    row++;
+
+
+    button = gtk_button_new_with_mnemonic(_("X view"));
+    gtk_table_attach(GTK_TABLE(table), button,
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(p3d_xview_cb), &controls);
+
+    button = gtk_button_new_with_mnemonic(_("Y view"));
+    gtk_table_attach(GTK_TABLE(table), button,
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(p3d_yview_cb), &controls);
+
+    button = gtk_button_new_with_mnemonic(_("Z view"));
+    gtk_table_attach(GTK_TABLE(table), button,
+                     2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(p3d_zview_cb), &controls);
+
+
+    row++;
+
     /*test wireframe*/
     controls.px[0] = -1; controls.py[0] = -1; controls.pz[0] = -1;
     controls.px[1] = 1; controls.py[1] = -1; controls.pz[1] = -1;
@@ -1096,11 +1132,18 @@ preview(BrickshowControls *controls,
 #define CY 200
 
 static void
-convert_3d2d(gdouble x, gdouble y, gdouble z, gdouble *px, gdouble *py)
+convert_3d2d(gdouble x, gdouble y, gdouble z, gdouble *px, gdouble *py, gboolean perspective)
 {
-     *px = 150*(x/(z+3)) + CX;
-     *py = 150*(y/(z+3)) + CY;
+    if (perspective) {
+        *px = 160*(x/(z+3)) + CX;
+        *py = 160*(y/(z+3)) + CY;
+    } else {
+        *px = 80*x + CX;
+        *py = 80*y + CY;
+    }
 }
+
+
 
 static void
 xrotmatrix(gdouble m[3][3], gdouble theta)
@@ -1209,11 +1252,11 @@ p3d_on_draw_event(GtkWidget *widget, GdkEventExpose *event, BrickshowControls *c
     cairo_set_source_rgb(cr, 0, 0, 0);
     cairo_set_line_width (cr, 0.5);
 
-    convert_3d2d(controls->px[0], controls->py[0], controls->pz[0], &sx, &sy);
+    convert_3d2d(controls->px[0], controls->py[0], controls->pz[0], &sx, &sy, controls->args->perspective);
     cairo_move_to(cr, sx, sy);
 
     for (i= 1; i<controls->nps; i++) {
-        convert_3d2d(controls->px[i], controls->py[i], controls->pz[i], &sx, &sy);
+        convert_3d2d(controls->px[i], controls->py[i], controls->pz[i], &sx, &sy, controls->args->perspective);
         cairo_line_to(cr, sx, sy);
     }
 
@@ -1235,15 +1278,34 @@ p3d_clicked(GtkWidget *widget, GdkEventButton *event,
     return TRUE;
 }
 
+static void rotate(BrickshowControls *controls, gdouble x, gdouble y, gdouble z)
+{
+    gdouble rotx[3][3], roty[3][3], rotz[3][3], rotbuf[3][3];
+    gdouble px, py, pz;
+    gint i;
 
+    xrotmatrix(rotx, x);
+    yrotmatrix(roty, y);
+    zrotmatrix(rotz, z);
+
+    mmultm(rotx, roty, rotbuf);
+    mmultm(rotbuf, rotz, controls->rm);
+    
+    for (i=0; i<controls->nps; i++)
+    {
+        mmultv(controls->rm, controls->px[i], controls->py[i], controls->pz[i], &px, &py, &pz);
+        controls->px[i] = px;
+        controls->py[i] = py;
+        controls->pz[i] = pz;
+    }
+
+}
 
 static gboolean 
 p3d_moved(GtkWidget *widget, GdkEventMotion *event,
                  BrickshowControls *controls)
 {
-    gdouble diffx, diffy, px, py, pz;
-    gdouble rotm[3][3], rot[3][3];
-    gint i;
+    gdouble diffx, diffy;
 
     if (((event->state & GDK_BUTTON1_MASK) == GDK_BUTTON1_MASK))
     {
@@ -1256,22 +1318,49 @@ p3d_moved(GtkWidget *widget, GdkEventMotion *event,
         controls->rpx = event->x;
         controls->rpy = event->y;
 
-        xrotmatrix(rot, -0.02*diffy); 
-        yrotmatrix(rotm, 0.02*diffx);
-        mmultm(rot, rotm, controls->rm);
-
-        for (i=0; i<controls->nps; i++)
-        {
-            mmultv(controls->rm, controls->px[i], controls->py[i], controls->pz[i], &px, &py, &pz);
-            controls->px[i] = px;
-            controls->py[i] = py;
-            controls->pz[i] = pz;
-        }
+        rotate(controls, -0.02*diffy, 0.02*diffx, 0);
 
         gtk_widget_queue_draw(widget);
     }
 
     return TRUE;
+}
+
+static void
+perspective_change_cb(BrickshowControls *controls)
+{
+    controls->args->perspective
+            = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->perspective));
+
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->perspective), controls->args->perspective);
+
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      RESPONSE_PREVIEW,
+                                      !controls->args->perspective);
+
+    gtk_widget_queue_draw(controls->drawarea);
+}
+
+static void 
+p3d_xview_cb(BrickshowControls *controls)
+{
+
+}
+
+static void 
+p3d_yview_cb(BrickshowControls *controls)
+{
+    rotate(controls, 0, G_PI/2, 0);
+    gtk_widget_queue_draw(controls->drawarea);
+
+}
+
+static void 
+p3d_zview_cb(BrickshowControls *controls)
+{
+    rotate(controls, 0, 0, G_PI/2);
+    gtk_widget_queue_draw(controls->drawarea);
+
 }
 
 
@@ -1281,6 +1370,7 @@ static const gchar zpos_key[]       = "/module/brickshow/zpos";
 static const gchar type_key[]    = "/module/brickshow/dirtype";
 static const gchar gtype_key[]    = "/module/brickshow/dirgtype";
 static const gchar update_key[] = "/module/brickshow/update";
+static const gchar perspective_key[] = "/module/brickshow/perspective";
 
 static void
 brickshow_sanitize_args(BrickshowArgs *args)
@@ -1291,6 +1381,7 @@ brickshow_sanitize_args(BrickshowArgs *args)
     args->type = MIN(args->type, PROJ_DIRZ);
     args->gtype = MIN(args->gtype, GRAPH_DIRZ);
     args->update = !!args->update;
+    args->perspective = !!args->perspective;
 }
 
 static void
@@ -1305,6 +1396,7 @@ brickshow_load_args(GwyContainer *container,
     gwy_container_gis_double_by_name(container, ypos_key, &args->ypos);
     gwy_container_gis_double_by_name(container, zpos_key, &args->zpos);
     gwy_container_gis_boolean_by_name(container, update_key, &args->update);
+    gwy_container_gis_boolean_by_name(container, perspective_key, &args->perspective);
     brickshow_sanitize_args(args);
 }
 
@@ -1318,6 +1410,7 @@ brickshow_save_args(GwyContainer *container,
     gwy_container_set_double_by_name(container, ypos_key, args->ypos);
     gwy_container_set_double_by_name(container, zpos_key, args->zpos);
     gwy_container_set_boolean_by_name(container, update_key, args->update);
+    gwy_container_set_boolean_by_name(container, perspective_key, args->perspective);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
