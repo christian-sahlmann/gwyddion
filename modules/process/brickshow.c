@@ -1026,17 +1026,17 @@ create_brick_from_datafield(BrickshowControls *controls, GwyDataField *dfield)
 
     zres = MAX(xres, yres);
 
-    xreal = gwy_data_field_get_xreal(dfield);
-    yreal = gwy_data_field_get_yreal(dfield);
-    offset = gwy_data_field_get_min(dfield);
-    zreal = gwy_data_field_get_max(dfield) - offset;
+    xreal = gwy_data_field_get_xreal(lowres);
+    yreal = gwy_data_field_get_yreal(lowres);
+    offset = gwy_data_field_get_min(lowres);
+    zreal = gwy_data_field_get_max(lowres) - offset;
     
 
     //printf("Data field of res %d %d\n to brick z %d, real %g %g %g\n", xres, yres, zres, xreal, yreal, zreal);
 
     controls->brick = gwy_brick_new(xres, yres, zres, xres, yres, zres, TRUE);
 
-    ddata = gwy_data_field_get_data(dfield);
+    ddata = gwy_data_field_get_data(lowres);
     bdata = gwy_brick_get_data(controls->brick);
 
     for (col=0; col<xres; col++)
