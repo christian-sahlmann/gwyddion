@@ -1534,7 +1534,6 @@ gwy_brick_extract_plane(const GwyBrick *brick,
                      kstart>=0 && kstart<brick->zres);
 
     bdata = brick->data;
-    ddata = gwy_data_field_get_data(target);
 
 
     if (width==-1 && height>0 && depth>0)
@@ -1543,6 +1542,7 @@ gwy_brick_extract_plane(const GwyBrick *brick,
         g_return_if_fail((kstart+depth) <= brick->zres);
 
         gwy_data_field_resample(target, height, depth, GWY_INTERPOLATION_NONE);
+        ddata = gwy_data_field_get_data(target);
         gwy_data_field_set_xreal(target, brick->yreal);
         gwy_data_field_set_yreal(target, brick->zreal);
 
@@ -1563,6 +1563,7 @@ gwy_brick_extract_plane(const GwyBrick *brick,
         g_return_if_fail((kstart+depth) <= brick->zres);
 
         gwy_data_field_resample(target, width, depth, GWY_INTERPOLATION_NONE);
+        ddata = gwy_data_field_get_data(target);
         gwy_data_field_set_xreal(target, brick->xreal);
         gwy_data_field_set_yreal(target, brick->zreal);
 
@@ -1582,6 +1583,7 @@ gwy_brick_extract_plane(const GwyBrick *brick,
         g_return_if_fail((jstart+height) <= brick->yres);
 
         gwy_data_field_resample(target, width, height, GWY_INTERPOLATION_NONE);
+        ddata = gwy_data_field_get_data(target);
         gwy_data_field_set_xreal(target, brick->xreal);
         gwy_data_field_set_yreal(target, brick->yreal);
 

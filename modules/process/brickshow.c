@@ -1483,8 +1483,10 @@ p3d_add_wireframe(BrickshowControls *controls)
 
     for (i=0; i<xres; i+=spacing)
     {
-        //gwy_brick_extract_plane(controls->brick, cut, i, 0, 0, -1, yres, zres, FALSE);
+        gwy_brick_extract_plane(controls->brick, cut, i, 0, 0, -1, yres, zres, FALSE);
         gwy_data_field_threshold(cut, threshold, 0, 1);
+
+        /*here comes the algorithm*/
 
         /*increase allocation if necessary*/
         if (controls->nps - actual_nps<1000) {
