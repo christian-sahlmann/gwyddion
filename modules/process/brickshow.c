@@ -989,15 +989,21 @@ brickshow_load_data(BrickshowControls *controls,
             //g_free(text); FIXME: something is wrong - this leads to segfault
 
             gtk_widget_destroy(dialog);
+            
             brickshow_invalidate(controls);
-        }
+            
+            controls->nps = 0;
+            p3d_set_axes(controls);
+            p3d_add_wireframe(controls);
+
+    }
         g_free(filename);
     } else {
       gtk_widget_destroy(dialog);
 
     }
 
-
+    
 }
 
 static void 
@@ -1463,10 +1469,11 @@ static void
 p3d_add_wireframe(BrickshowControls *controls)
 {
     gint actual_nps = controls->nps;
-    GwyDataField *cut;
-    gdouble threshold;
-    gint i, spacing = 20;
+    GwyDataField *cut, *visited;
+    gdouble threshold, *data, *vdata;
+    gint col, row, i, spacing = 40;
     gint xres, yres, zres;
+    gboolean move;
    
   
     if (controls->brick == NULL) {
@@ -1479,24 +1486,105 @@ p3d_add_wireframe(BrickshowControls *controls)
     zres = gwy_brick_get_zres(controls->brick);
     cut = gwy_data_field_new(1, 1, 1, 1, FALSE);
 
+    visited = gwy_data_field_new(yres, zres, yres, zres, FALSE);
+
     threshold = (gwy_brick_get_min(controls->brick) + gwy_brick_get_max(controls->brick))/2;
 
+    printf("building wireframe\n");
     for (i=0; i<xres; i+=spacing)
     {
         gwy_brick_extract_plane(controls->brick, cut, i, 0, 0, -1, yres, zres, FALSE);
+        data = gwy_data_field_get_data(cut);
+
+        gwy_data_field_clear(visited);
+        vdata = gwy_data_field_get_data(visited);
+
         gwy_data_field_threshold(cut, threshold, 0, 1);
 
-        /*here comes the algorithm*/
+        move = 1;
 
-        /*increase allocation if necessary*/
-        if (controls->nps - actual_nps<1000) {
-            actual_nps += 1000;
-            controls->px = g_realloc(controls->px, (actual_nps*sizeof(gdouble)));
-            controls->py = g_realloc(controls->py, (actual_nps*sizeof(gdouble)));
-            controls->pz = g_realloc(controls->pz, (actual_nps*sizeof(gdouble)));
-            controls->ps = g_realloc(controls->ps, (actual_nps*sizeof(gdouble)));
+        /*here comes the algorithm*/
+        for (col=1; col<yres; col++)
+        {
+            for (row=1; row<zres; row++)
+            {
+                if (data[col + yres*row]>threshold && 
+                    (data[col-1 + yres*row]<threshold || data[col + yres*(row-1)]<threshold))
+                {
+                    /*increase allocation if necessary*/
+                    if (controls->nps - actual_nps<1000) {
+                        actual_nps += 1000;
+                        controls->px = g_realloc(controls->px, (actual_nps*sizeof(gdouble)));
+                        controls->py = g_realloc(controls->py, (actual_nps*sizeof(gdouble)));
+                        controls->pz = g_realloc(controls->pz, (actual_nps*sizeof(gdouble)));
+                        controls->ps = g_realloc(controls->ps, (actual_nps*sizeof(gdouble)));
+                    }
+ 
+                    controls->px[controls->nps] = 2*(gdouble)i/(gdouble)xres - 1;
+                    controls->py[controls->nps] = 2*(gdouble)col/(gdouble)yres - 1;
+                    controls->pz[controls->nps] = 2*(gdouble)row/(gdouble)zres - 1;
+                    if (move) {
+                        controls->ps[controls->nps] = 0; 
+                        move = 0;
+                    }
+                    else controls->ps[controls->nps] = 1;
+
+                    controls->nps += 1;
+
+
+               }
+            }
         }
     }
+
+    gwy_data_field_resample(visited, xres, zres, GWY_INTERPOLATION_NONE);
+
+    for (i=0; i<yres; i+=spacing)
+    {
+        gwy_brick_extract_plane(controls->brick, cut, 0, i, 0, xres, -1, zres, FALSE);
+        data = gwy_data_field_get_data(cut);
+
+        gwy_data_field_clear(visited);
+        vdata = gwy_data_field_get_data(visited);
+
+        gwy_data_field_threshold(cut, threshold, 0, 1);
+
+        move = 1;
+
+        /*here comes the algorithm*/
+        for (col=1; col<xres; col++)
+        {
+            for (row=1; row<zres; row++)
+            {
+                if (data[col + xres*row]>threshold && 
+                    (data[col-1 + xres*row]<threshold || data[col + xres*(row-1)]<threshold))
+                {
+                    /*increase allocation if necessary*/
+                    if (controls->nps - actual_nps<1000) {
+                        actual_nps += 1000;
+                        controls->px = g_realloc(controls->px, (actual_nps*sizeof(gdouble)));
+                        controls->py = g_realloc(controls->py, (actual_nps*sizeof(gdouble)));
+                        controls->pz = g_realloc(controls->pz, (actual_nps*sizeof(gdouble)));
+                        controls->ps = g_realloc(controls->ps, (actual_nps*sizeof(gdouble)));
+                    }
+ 
+                    controls->px[controls->nps] = 2*(gdouble)col/(gdouble)xres - 1;
+                    controls->py[controls->nps] = 2*(gdouble)i/(gdouble)yres - 1;
+                    controls->pz[controls->nps] = 2*(gdouble)row/(gdouble)zres - 1;
+                    if (move) {
+                        controls->ps[controls->nps] = 0; 
+                        move = 0;
+                    }
+                    else controls->ps[controls->nps] = 1;
+
+                    controls->nps += 1;
+
+
+               }
+            }
+        }
+    }
+    printf("we have %d segments at the end\n", controls->nps);
 
 }
 
