@@ -270,8 +270,8 @@ separate_arrays(GArray *spectra,
         GwySpectrum *spec = &g_array_index(spectra, GwySpectrum, i);
 
         (*curves)[i] = spec->ydata;
-        (*coords)[2*i + 0] = spec->y;
-        (*coords)[2*i + 1] = spec->x;
+        (*coords)[2*i + 0] = spec->x;
+        (*coords)[2*i + 1] = spec->y;
         if (spec->selected)
             (*selected)[i/isize] |= 1 << (i % isize);
     }
