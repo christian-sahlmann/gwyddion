@@ -38,6 +38,7 @@
 
 #define BRICKSHOW_RUN_MODES (GWY_RUN_INTERACTIVE)
 #define MAXPIX 600
+#define MAXSIMPLIFY 5
 
 typedef enum {
     CUT_DIRX = 0,
@@ -1201,11 +1202,11 @@ static void
 convert_3d2d(gdouble x, gdouble y, gdouble z, gdouble *px, gdouble *py, gboolean perspective)
 {
     if (perspective) {
-        *px = 160*(x/(z+3)) + CX;
-        *py = 160*(y/(z+3)) + CY;
+        *px = 320*(x/(z+4)) + CX;
+        *py = 320*(y/(z+4)) + CY;
     } else {
-        *px = 80*x + CX;
-        *py = 80*y + CY;
+        *px = 160*x + CX;
+        *py = 160*y + CY;
     }
 }
 
@@ -1465,6 +1466,49 @@ p3d_set_axes(BrickshowControls *controls)
 
 }
 
+gint simplify(gdouble *px, gdouble *py, gdouble *pz, gdouble *ps, gint nps)
+{
+    gint i;
+    gdouble *nx, *ny, *nz, *ns;
+    gint newn;
+   
+
+    nx = g_malloc(nps*sizeof(gdouble));
+    ny = g_malloc(nps*sizeof(gdouble));
+    nz = g_malloc(nps*sizeof(gdouble));
+    ns = g_malloc(nps*sizeof(gdouble));
+     
+   
+
+    nx[0] = px[0]; ny[0] = py[0]; nz[0] = pz[0]; ns[0] = ps[0];
+    nx[1] = px[1]; ny[1] = py[1]; nz[1] = pz[1]; ns[1] = ps[1];
+
+    newn = 2;
+
+    for (i=2; i<nps; i++)
+    {
+        if (ps[i] == 0 || !((px[i]-px[i-1]) == (px[i-1]-px[i-2]) 
+                             && (py[i]-py[i-1]) == (py[i-1]-py[i-2]) 
+                             && (pz[i]-pz[i-1]) == (pz[i-1]-pz[i-2]))) 
+        {
+            nx[newn] = px[i];
+            ny[newn] = py[i];
+            nz[newn] = pz[i];
+            ns[newn] = ps[i];
+            newn++;
+        } 
+    }
+
+    for (i=0; i<newn; i++) {
+        px[i] = nx[i];
+        py[i] = ny[i];
+        pz[i] = nz[i];
+        ps[i] = ns[i];
+    }
+
+    return newn;
+}
+
 static void 
 p3d_add_wireframe(BrickshowControls *controls)
 {
@@ -1584,7 +1628,12 @@ p3d_add_wireframe(BrickshowControls *controls)
             }
         }
     }
-    printf("we have %d segments at the end\n", controls->nps);
+//    printf("we have %d segments at the end\nRunning simplification:\n", controls->nps);
+
+    controls->nps = simplify(controls->px, controls->py, controls->pz, controls->ps, controls->nps);
+    
+//    printf("we have %d segments after simplification\n", controls->nps);
+
 
 }
 
