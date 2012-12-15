@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-11-24 03:58+0100\n"
-"PO-Revision-Date: 2012-11-24 16:37+0300\n"
+"POT-Creation-Date: 2012-12-15 03:58+0100\n"
+"PO-Revision-Date: 2012-12-15 12:43+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -902,6 +902,7 @@ msgstr "точек"
 #: modules/file/pixmap.c:3036
 #: modules/file/rawfile.c:398
 #: modules/process/angle_dist.c:170
+#: modules/process/brickshow.c:297
 #: modules/process/calcoefs_new.c:347
 #: modules/process/calibrate.c:296
 #: modules/process/col_synth.c:299
@@ -912,6 +913,7 @@ msgstr "точек"
 #: modules/process/dwt.c:164
 #: modules/process/dwtanisotropy.c:183
 #: modules/process/edge.c:633
+#: modules/process/extend.c:196
 #: modules/process/facet-level.c:283
 #: modules/process/facet_analysis.c:273
 #: modules/process/fft.c:277
@@ -1523,6 +1525,7 @@ msgid "Channels"
 msgstr "Каналы"
 
 #: app/data-browser.c:4101
+#: modules/process/brickshow.c:415
 msgid "Graphs"
 msgstr "Графики"
 
@@ -2606,6 +2609,7 @@ msgstr "Экспортировать текст"
 #: modules/file/pixmap.c:3138
 #: modules/file/rawfile.c:719
 #: modules/file/rawxyz.c:669
+#: modules/process/extend.c:262
 #: modules/process/fft_filter_1d.c:295
 #: modules/process/grain_dist.c:305
 #: modules/process/grain_edge.c:269
@@ -2695,7 +2699,7 @@ msgstr "Экспортированные данные Burleigh (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:225
 #: modules/file/burleigh_exp.c:266
-#: modules/file/nanoscope.c:1246
+#: modules/file/nanoscope.c:1283
 #: modules/file/omicron.c:397
 #: modules/file/shimadzu.c:453
 msgid "Missing colon in header line."
@@ -3049,7 +3053,7 @@ msgstr "Неподдерживаемый формат отсчёта"
 #: modules/file/gwytiff.h:829
 #: modules/file/matfile.c:275
 #: modules/file/matfile.c:297
-#: modules/file/psia.c:342
+#: modules/file/psia.c:348
 msgid "File is truncated."
 msgstr "Файл усечен."
 
@@ -3766,7 +3770,7 @@ msgid "NanoObserver data (.nao)"
 msgstr "Данные NanoObserver (.nao)"
 
 #: modules/file/nanoobserver.c:180
-#: modules/file/nanoscantech.c:151
+#: modules/file/nanoscantech.c:156
 msgid "Minizip cannot open the file as a ZIP file."
 msgstr "Minizip не может открыть файл как архив ZIP."
 
@@ -3775,42 +3779,42 @@ msgid "File Scan/Measure.xml is missing in the zip file."
 msgstr "Файл Scan/Measure.xml отсутствует в zip-архиве."
 
 #: modules/file/nanoobserver.c:545
-#: modules/file/nanoscantech.c:488
+#: modules/file/nanoscantech.c:546
 msgid "Unknown error"
 msgstr "Неизвестная ошибка"
 
 #: modules/file/nanoobserver.c:550
-#: modules/file/nanoscantech.c:493
+#: modules/file/nanoscantech.c:551
 msgid "End of file"
 msgstr "Конец файла"
 
 #: modules/file/nanoobserver.c:552
-#: modules/file/nanoscantech.c:495
+#: modules/file/nanoscantech.c:553
 msgid "End of list of files"
 msgstr "Конец списка файлов"
 
 #: modules/file/nanoobserver.c:554
-#: modules/file/nanoscantech.c:497
+#: modules/file/nanoscantech.c:555
 msgid "Parameter error"
 msgstr "Ошибка параметра"
 
 #: modules/file/nanoobserver.c:556
-#: modules/file/nanoscantech.c:499
+#: modules/file/nanoscantech.c:557
 msgid "Bad zip file"
 msgstr "Плохой файл zip"
 
 #: modules/file/nanoobserver.c:558
-#: modules/file/nanoscantech.c:501
+#: modules/file/nanoscantech.c:559
 msgid "Internal error"
 msgstr "Внутренняя ошибка"
 
 #: modules/file/nanoobserver.c:560
-#: modules/file/nanoscantech.c:503
+#: modules/file/nanoscantech.c:561
 msgid "CRC error"
 msgstr "Ошибка контрольной суммы"
 
 #: modules/file/nanoobserver.c:563
-#: modules/file/nanoscantech.c:506
+#: modules/file/nanoscantech.c:564
 #, c-format
 msgid "Minizip error while reading the zip file: %s."
 msgstr "Ошибка minizip при чтении zip-файла: %s."
@@ -3832,11 +3836,11 @@ msgstr "Элемент верхнего уровня не ‘scan’."
 msgid "Wrong size of Base64 encoded data."
 msgstr "Неправильный размер данных, кодированных Base64."
 
-#: modules/file/nanoscantech.c:77
+#: modules/file/nanoscantech.c:82
 msgid "Imports NanoScanTech .nstdat files."
 msgstr "Импортирует файлы NanoScanTech .nstdat"
 
-#: modules/file/nanoscantech.c:90
+#: modules/file/nanoscantech.c:95
 msgid "NanoScanTech data (.nstdat)"
 msgstr "Данные NanoScanTech (.nstdat)"
 
@@ -3848,19 +3852,19 @@ msgstr "Импортирует файлы данных Digital Instruments Nanos
 msgid "Nanoscope II files"
 msgstr "Файлы Nanoscope II"
 
-#: modules/file/nanoscope.c:178
+#: modules/file/nanoscope.c:180
 msgid "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
 msgstr "Импортирует файлы данных Veeco (Digital Instruments) Nanoscope версии 3 или более новой."
 
-#: modules/file/nanoscope.c:192
+#: modules/file/nanoscope.c:194
 msgid "Nanoscope III files"
 msgstr "Файлы Nanoscope III"
 
-#: modules/file/nanoscope.c:257
+#: modules/file/nanoscope.c:259
 msgid "File is not a Nanoscope file, or it is a unknown subtype."
 msgstr "Файл не является файлом Nanoscope или неизвестного подтипа."
 
-#: modules/file/nanoscope.c:264
+#: modules/file/nanoscope.c:266
 msgid ""
 "File has been damaged by change of line endings, resulting in corruption of the binary part of the file.\n"
 "\n"
@@ -3870,18 +3874,18 @@ msgstr ""
 "\n"
 "Обычно это происходит если файл был воспринят как текст при передаче по электронной почте в несжатом виде, по FTP в ASCII-режиме (используйте binary), сжат с помощью команды 'Послать в сжатую папку' в некоторых версиях MS Windows, или при других способах передачи файла, которые используют платформо-независимое сохранение текста."
 
-#: modules/file/nanoscope.c:530
-#: modules/file/nanoscope.c:546
+#: modules/file/nanoscope.c:532
+#: modules/file/nanoscope.c:548
 msgid "Cannot parse `Scan size' field."
 msgstr "Не удаётся распознать поле `Scan size'."
 
-#: modules/file/nanoscope.c:1155
+#: modules/file/nanoscope.c:1192
 #: modules/file/nrrdfile.c:1013
 #, c-format
 msgid "Garbage after data sample #%u."
 msgstr "Мусор после элемента данных #%u."
 
-#: modules/file/nanoscope.c:1236
+#: modules/file/nanoscope.c:1273
 msgid "Truncated header line."
 msgstr "Обрезанная строка заголовка."
 
@@ -4417,24 +4421,24 @@ msgstr "Импорт файлов данных Pacific Nanotechnology PNI."
 msgid "PNI files (.pni)"
 msgstr "Файлы PNI (.pni)"
 
-#: modules/file/psia.c:236
+#: modules/file/psia.c:242
 msgid "Imports Park Systems data files."
 msgstr "Импортирует файлы данных Park Systems."
 
-#: modules/file/psia.c:249
+#: modules/file/psia.c:255
 msgid "Park Systems data files (.tiff, .tif)"
 msgstr "Файлы данных Park Systems (.tiff, .tif)"
 
-#: modules/file/psia.c:332
+#: modules/file/psia.c:338
 msgid "Data tag is missing."
 msgstr "Тег данных отсутствует."
 
-#: modules/file/psia.c:508
+#: modules/file/psia.c:491
 #, c-format
 msgid "Header is too short (only %lu bytes)."
 msgstr "Заголовок слишком короткий (всего %lu байт)."
 
-#: modules/file/psia.c:621
+#: modules/file/psia.c:606
 #, c-format
 msgid "Spectroscopy header is too short (only %lu bytes)."
 msgstr "Заголовок спектроскопии слишком короткий (всего %lu байт)."
@@ -4564,6 +4568,7 @@ msgstr "Предустановки"
 #: modules/file/rawfile.c:540
 #: modules/file/rawxyz.c:435
 #: modules/process/arithmetic.c:227
+#: modules/process/brickshow.c:294
 #: modules/process/calcoefs_view.c:332
 #: modules/process/convolution_filter.c:243
 #: modules/process/deposit_synth.c:682
@@ -4916,21 +4921,25 @@ msgid "Field"
 msgstr "Поле"
 
 #: modules/file/rawxyz.c:690
+#: modules/process/extend.c:278
 #: modules/process/polydistort.c:283
 msgid "_Exterior type:"
 msgstr "Тип _внешней части:"
 
 #: modules/file/rawxyz.c:698
+#: modules/process/extend.c:271
 #: modules/process/polydistort.c:276
 msgid "exterior|Border"
 msgstr "Граница"
 
 #: modules/file/rawxyz.c:700
+#: modules/process/extend.c:273
 #: modules/process/polydistort.c:278
 msgid "exterior|Mirror"
 msgstr "Зеркальная"
 
 #: modules/file/rawxyz.c:702
+#: modules/process/extend.c:275
 #: modules/process/polydistort.c:280
 msgid "exterior|Periodic"
 msgstr "Периодический"
@@ -6135,6 +6144,188 @@ msgstr "/_Базовые действия/Обнулить _смещения"
 msgid "Null horizontall offsets, moving the origin to the upper left corner"
 msgstr "Обнуляет смещения по горизонтали, перемещая начало координат в верхний левый угол"
 
+#: modules/process/brickshow.c:190
+msgid "Loads and shows a brick (3D volume data)."
+msgstr "Загружает и показывает блок (трёхмерные объёмные данные)."
+
+#: modules/process/brickshow.c:204
+msgid "/_Bricks/Load and show..."
+msgstr "/_Блоки/_Загрузить и сохранить..."
+
+#: modules/process/brickshow.c:208
+msgid "Load and show 3D data"
+msgstr "Загрузить и показать трёхмерные данные"
+
+#: modules/process/brickshow.c:240
+msgid "X cross-section"
+msgstr "Сечение по X"
+
+#: modules/process/brickshow.c:241
+msgid "Y cross-section"
+msgstr "Сечение по Y"
+
+#: modules/process/brickshow.c:242
+msgid "Z cross-section"
+msgstr "Сечение по Z"
+
+#: modules/process/brickshow.c:243
+#: modules/process/brickshow.c:631
+msgid "X direction sum"
+msgstr "Сумма по направлению X"
+
+#: modules/process/brickshow.c:244
+#: modules/process/brickshow.c:633
+msgid "Y direction sum"
+msgstr "Сумма по направлению Y"
+
+#: modules/process/brickshow.c:245
+#: modules/process/brickshow.c:635
+msgid "Z direction sum"
+msgstr "Сумма по направлению Z"
+
+#: modules/process/brickshow.c:248
+msgid "X direction"
+msgstr "Направление X"
+
+#: modules/process/brickshow.c:249
+msgid "Y direction"
+msgstr "Направление Y"
+
+#: modules/process/brickshow.c:250
+msgid "Z direction"
+msgstr "Направление Z"
+
+#: modules/process/brickshow.c:288
+msgid "Volume data"
+msgstr "Объёмные данные"
+
+#: modules/process/brickshow.c:290
+msgid "_Load"
+msgstr "_Загрузить"
+
+#: modules/process/brickshow.c:302
+msgid "_Extract projection"
+msgstr "_Извлечь проекцию"
+
+#: modules/process/brickshow.c:321
+msgid "Projections"
+msgstr "Проекции"
+
+#: modules/process/brickshow.c:359
+msgid "X position"
+msgstr "Положение по X"
+
+#: modules/process/brickshow.c:366
+msgid "Y position"
+msgstr "Положение по Y"
+
+#: modules/process/brickshow.c:373
+msgid "Z position"
+msgstr "Положение по Z"
+
+#: modules/process/brickshow.c:379
+msgid "Shown cut direction:"
+msgstr "Показано направление разреза:"
+
+#: modules/process/brickshow.c:389
+#: modules/process/brickshow.c:475
+msgid "Show mode:"
+msgstr "Режим отображения:"
+
+#: modules/process/brickshow.c:395
+#: modules/process/brickshow.c:481
+#: modules/process/calcoefs_view.c:583
+#: modules/process/deposit_synth.c:686
+#: modules/process/edge.c:710
+#: modules/process/fft_filter_1d.c:333
+#: modules/process/grain_edge.c:285
+#: modules/process/grain_mark.c:376
+#: modules/process/grain_rem_threshold.c:370
+#: modules/process/mark_with.c:355
+#: modules/process/polydistort.c:336
+#: modules/process/scars.c:574
+#: modules/process/synth.h:483
+msgid "I_nstant updates"
+msgstr "Мгновенное об_новление"
+
+#: modules/process/brickshow.c:404
+#: modules/process/brickshow.c:490
+#: modules/process/calcoefs_load.c:239
+msgid "No data loaded"
+msgstr "Данные не загружены"
+
+#: modules/process/brickshow.c:465
+msgid "Graph cut direction:"
+msgstr "Режим сечения графика:"
+
+#: modules/process/brickshow.c:503
+msgid "3D view"
+msgstr "Просмотр 3D"
+
+#: modules/process/brickshow.c:527
+msgid "apply perspective"
+msgstr "добавить перспективу"
+
+#: modules/process/brickshow.c:537
+msgid "X view"
+msgstr "Вид X"
+
+#: modules/process/brickshow.c:543
+msgid "Y view"
+msgstr "Вид Y"
+
+#: modules/process/brickshow.c:549
+msgid "Z view"
+msgstr "Вид Z"
+
+#: modules/process/brickshow.c:622
+#, c-format
+msgid "X cross-section at x: %d"
+msgstr "Сечение по X при x: %d"
+
+#: modules/process/brickshow.c:625
+#, c-format
+msgid "Y cross-section at y: %d"
+msgstr "Сечение по Y при y: %d"
+
+#: modules/process/brickshow.c:628
+#, c-format
+msgid "Z cross-section at z: %d"
+msgstr "Сечение по Z при z: %d"
+
+#: modules/process/brickshow.c:673
+#, c-format
+msgid "X graph at y: %d z: %d"
+msgstr "График X при y: %d z: %d"
+
+#: modules/process/brickshow.c:676
+#, c-format
+msgid "Y graph at x: %d z: %d"
+msgstr "График Y при x: %d z: %d"
+
+#: modules/process/brickshow.c:679
+#, c-format
+msgid "Z graph at x: %d y: %d"
+msgstr "График Z при x: %d y: %d"
+
+#: modules/process/brickshow.c:684
+msgid "w"
+msgstr "w"
+
+#: modules/process/brickshow.c:690
+msgid "Brick graph"
+msgstr "График блока"
+
+#: modules/process/brickshow.c:941
+msgid "Load volume data"
+msgstr "Загрузить объёмные данные"
+
+#: modules/process/brickshow.c:958
+#: modules/process/calcoefs_load.c:330
+#, c-format
+msgid "Error loading file '%s'"
+msgstr "Ошибка загрузки файла '%s'"
+
 #: modules/process/calcoefs_load.c:79
 msgid "Load calibration data from text file"
 msgstr "Загружает данные калибровки из текстового файла"
@@ -6168,10 +6359,6 @@ msgstr "Загрузить данные калибровки"
 msgid "Calibration name:"
 msgstr "Имя калибровки:"
 
-#: modules/process/calcoefs_load.c:239
-msgid "No data loaded"
-msgstr "Данные не загружены"
-
 #: modules/process/calcoefs_load.c:266
 #: modules/process/calcoefs_new.c:634
 #: modules/process/calcoefs_simple.c:537
@@ -6194,11 +6381,6 @@ msgstr "Добавить"
 #: modules/process/calcoefs_load.c:315
 msgid "Load calibration data"
 msgstr "Загрузить данные калибровки"
-
-#: modules/process/calcoefs_load.c:330
-#, c-format
-msgid "Error loading file '%s'"
-msgstr "Ошибка загрузки файла '%s'"
 
 #: modules/process/calcoefs_load.c:389
 msgid "Error: not enough points."
@@ -6443,20 +6625,6 @@ msgstr "Интерполяция:"
 #: modules/process/calcoefs_view.c:573
 msgid "Crop to actual data"
 msgstr "Обрезать до действительных данных"
-
-#: modules/process/calcoefs_view.c:583
-#: modules/process/deposit_synth.c:686
-#: modules/process/edge.c:710
-#: modules/process/fft_filter_1d.c:333
-#: modules/process/grain_edge.c:285
-#: modules/process/grain_mark.c:376
-#: modules/process/grain_rem_threshold.c:370
-#: modules/process/mark_with.c:355
-#: modules/process/polydistort.c:336
-#: modules/process/scars.c:574
-#: modules/process/synth.h:483
-msgid "I_nstant updates"
-msgstr "Мгновенное об_новление"
 
 #: modules/process/calcoefs_view.c:695
 msgid "Shown part has zero range."
@@ -7273,6 +7441,65 @@ msgstr "_ЛГ после свёртки"
 #: modules/process/edge.c:704
 msgid "Detected st_ep"
 msgstr "Найденная с_тупень"
+
+#: modules/process/extend.c:112
+msgid "Extends image by adding borders."
+msgstr "Расширяет изображение добавлением границ."
+
+#: modules/process/extend.c:126
+msgid "/_Basic Operations/E_xtend..."
+msgstr "/_Базовые действия/Рас_ширить..."
+
+#: modules/process/extend.c:130
+msgid "Extend by adding borders"
+msgstr "Расширить добавлением границ"
+
+#: modules/process/extend.c:182
+msgid "Extended"
+msgstr "Расширенное"
+
+#: modules/process/extend.c:195
+msgid "Extend"
+msgstr "Расширить"
+
+#: modules/process/extend.c:217
+msgid "Borders"
+msgstr "Границы"
+
+#: modules/process/extend.c:223
+msgid "_Up:"
+msgstr "_Верх:"
+
+#: modules/process/extend.c:230
+msgid "_Down:"
+msgstr "_Низ:"
+
+#: modules/process/extend.c:237
+msgid "_Left:"
+msgstr "_Слева:"
+
+#: modules/process/extend.c:244
+msgid "_Right:"
+msgstr "С_права:"
+
+#: modules/process/extend.c:251
+msgid "Extend _symetrically"
+msgstr "Расширить си_мметрично"
+
+#: modules/process/extend.c:270
+#: modules/tools/linestats.c:151
+msgid "Mean"
+msgstr "Среднее"
+
+#: modules/process/extend.c:286
+#: modules/tools/crop.c:210
+msgid "Keep lateral offsets"
+msgstr "Сохранять пространственные смещения"
+
+#: modules/process/extend.c:296
+#: modules/tools/crop.c:221
+msgid "Create new channel"
+msgstr "Создать новый канал"
 
 #: modules/process/facet-level.c:67
 msgid "Automatic facet-orientation based levelling. Levels data to make facets point up."
@@ -10417,14 +10644,6 @@ msgstr "Кадрировать"
 msgid "Crop data"
 msgstr "Кадрировать данные"
 
-#: modules/tools/crop.c:210
-msgid "Keep lateral offsets"
-msgstr "Сохранять пространственные смещения"
-
-#: modules/tools/crop.c:221
-msgid "Create new channel"
-msgstr "Создать новый канал"
-
 #: modules/tools/distance.c:101
 msgid "Distance measurement tool, measures distances and angles."
 msgstr "Инструмент измерения расстояний, измеряет расстояния и углы."
@@ -10602,10 +10821,6 @@ msgstr "Установить плоскость в _нуль"
 msgid "Row/column statistical function tool, mean values, medians, maxima, minima, RMS, ..., of rows or columns."
 msgstr "Функция статистики по строке/столбцу, средние, срединные, максимумы, минимумы. среднеквадратичные, и т.п., строк и столбцов."
 
-#: modules/tools/linestats.c:151
-msgid "Mean"
-msgstr "Среднее"
-
 #: modules/tools/linestats.c:152
 msgid "Median"
 msgstr "Медианное"
@@ -10666,7 +10881,7 @@ msgstr "Среднее:"
 #: modules/tools/linestats.c:346
 #: modules/tools/profile.c:388
 #: modules/tools/sfunctions.c:376
-#: modules/tools/spectro.c:306
+#: modules/tools/spectro.c:307
 msgid "<b>Options</b>"
 msgstr "<b>Параметры</b>"
 
@@ -11235,27 +11450,27 @@ msgstr "Рассчитать одномерные статистические �
 msgid "_Separate uncertainty"
 msgstr "_Разделить погрешности"
 
-#: modules/tools/spectro.c:134
+#: modules/tools/spectro.c:135
 msgid "Point Spectrum, extracts point spectra to a graph."
 msgstr "Спектр в точке, извлечь спектры в точке в график."
 
-#: modules/tools/spectro.c:172
+#: modules/tools/spectro.c:173
 msgid "Point Spectroscopy"
 msgstr "Спектроскопия в точке"
 
-#: modules/tools/spectro.c:173
+#: modules/tools/spectro.c:174
 msgid "Extract and view point spectroscopy data"
 msgstr "Извлечь и посмотреть данные спектроскопии в точке"
 
-#: modules/tools/spectro.c:322
+#: modules/tools/spectro.c:323
 msgid "_Separate spectra"
 msgstr "Разделить _спектры"
 
-#: modules/tools/spectro.c:332
+#: modules/tools/spectro.c:333
 msgid "_Average spectra"
 msgstr "_Усреднить спектры"
 
-#: modules/tools/spectro.c:442
+#: modules/tools/spectro.c:445
 msgid "Spectroscopy"
 msgstr "Спектроскопия"
 
