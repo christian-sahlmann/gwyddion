@@ -43,6 +43,9 @@ void gwy_data_field_min_of_fields   (GwyDataField *result,
 void gwy_data_field_max_of_fields   (GwyDataField *result,
                                      GwyDataField *operand1,
                                      GwyDataField *operand2);
+void gwy_data_field_hypot_of_fields (GwyDataField *result,
+                                     GwyDataField *operand1,
+                                     GwyDataField *operand2);
 
 GwyDataCompatibilityFlags
 gwy_data_field_check_compatibility(GwyDataField *data_field1,

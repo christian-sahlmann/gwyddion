@@ -19,7 +19,7 @@
  */
 
 #include "config.h"
-#include <math.h>
+#include <libgwyddion/gwymath.h>
 #include <libprocess/arithmetic.h>
 #include "gwyprocessinternal.h"
 
@@ -260,6 +260,44 @@ gwy_data_field_max_of_fields(GwyDataField *result,
     }
     else
         gwy_data_field_invalidate(result);
+}
+
+/**
+ * gwy_data_field_hypot_of_fields:
+ * @result: A data field to put the result to.  May be one of @operand1,
+ *          @operand2.
+ * @operand1: First data field operand.
+ * @operand2: Second data field operand.
+ *
+ * Finds point-wise hypotenuse of two data fields.
+ *
+ * Since: 2.31
+ **/
+void
+gwy_data_field_hypot_of_fields(GwyDataField *result,
+                               GwyDataField *operand1,
+                               GwyDataField *operand2)
+{
+    gdouble *p, *q, *r;
+    gint xres, yres, i;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(result));
+    g_return_if_fail
+        (!gwy_data_field_check_compatibility(result, operand1,
+                                             GWY_DATA_COMPATIBILITY_RES));
+    g_return_if_fail
+        (!gwy_data_field_check_compatibility(result, operand2,
+                                             GWY_DATA_COMPATIBILITY_RES));
+
+    xres = result->xres;
+    yres = result->yres;
+    r = result->data;
+    p = operand1->data;
+    q = operand2->data;
+    for (i = xres*yres; i; i--, p++, q++, r++)
+        *r = hypot(*p, *q);
+
+    gwy_data_field_invalidate(result);
 }
 
 /**
