@@ -123,6 +123,7 @@ void gwy_data_field_area_filter_sobel       (GwyDataField *data_field,
                                              gint row,
                                              gint width,
                                              gint height);
+void gwy_data_field_filter_sobel_total      (GwyDataField *data_field);
 void gwy_data_field_filter_prewitt          (GwyDataField *data_field,
                                              GwyOrientation orientation);
 void gwy_data_field_area_filter_prewitt     (GwyDataField *data_field,
@@ -131,6 +132,7 @@ void gwy_data_field_area_filter_prewitt     (GwyDataField *data_field,
                                              gint row,
                                              gint width,
                                              gint height);
+void gwy_data_field_filter_prewitt_total    (GwyDataField *data_field);
 void gwy_data_field_filter_dechecker        (GwyDataField *data_field);
 void gwy_data_field_area_filter_dechecker   (GwyDataField *data_field,
                                              gint col,

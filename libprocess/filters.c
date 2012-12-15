@@ -25,6 +25,7 @@
 #include <libprocess/filters.h>
 #include <libprocess/stats.h>
 #include <libprocess/linestats.h>
+#include <libprocess/arithmetic.h>
 #include "gwyprocessinternal.h"
 
 static gint thin_data_field(GwyDataField *data_field);
@@ -1228,7 +1229,7 @@ gwy_data_field_filter_laplacian_of_gaussians(GwyDataField *data_field)
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
  *
- * Filters a rectangular part of a data field with Sobel filter.
+ * Filters a rectangular part of a data field with a directional Sobel filter.
  **/
 void
 gwy_data_field_area_filter_sobel(GwyDataField *data_field,
@@ -1261,7 +1262,7 @@ gwy_data_field_area_filter_sobel(GwyDataField *data_field,
  * @data_field: A data field to apply the filter to.
  * @orientation: Filter orientation.
  *
- * Filters a data field with Sobel filter.
+ * Filters a data field with a directional Sobel filter.
  **/
 void
 gwy_data_field_filter_sobel(GwyDataField *data_field,
@@ -1274,6 +1275,30 @@ gwy_data_field_filter_sobel(GwyDataField *data_field,
 }
 
 /**
+ * gwy_data_field_filter_sobel_total:
+ * @data_field: A data field to apply the filter to.
+ *
+ * Filters a data field with total Sobel filter.
+ *
+ * Since: 2.31
+ **/
+void
+gwy_data_field_filter_sobel_total(GwyDataField *data_field)
+{
+    GwyDataField *workspace;
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    workspace = gwy_data_field_duplicate(data_field);
+    gwy_data_field_area_filter_sobel(data_field, GWY_ORIENTATION_HORIZONTAL,
+                                     0, 0,
+                                     data_field->xres, data_field->yres);
+    gwy_data_field_area_filter_sobel(workspace, GWY_ORIENTATION_VERTICAL,
+                                     0, 0,
+                                     data_field->xres, data_field->yres);
+    gwy_data_field_hypot_of_fields(data_field, data_field, workspace);
+    g_object_unref(workspace);
+}
+
+/**
  * gwy_data_field_area_filter_prewitt:
  * @data_field: A data field to apply the filter to.
  * @orientation: Filter orientation.
@@ -1282,7 +1307,8 @@ gwy_data_field_filter_sobel(GwyDataField *data_field,
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
  *
- * Filters a rectangular part of a data field with Prewitt filter.
+ * Filters a rectangular part of a data field with a directional Prewitt
+ * filter.
  **/
 void
 gwy_data_field_area_filter_prewitt(GwyDataField *data_field,
@@ -1324,6 +1350,30 @@ gwy_data_field_filter_prewitt(GwyDataField *data_field,
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     gwy_data_field_area_filter_prewitt(data_field, orientation, 0, 0,
                                        data_field->xres, data_field->yres);
+}
+
+/**
+ * gwy_data_field_filter_prewitt_total:
+ * @data_field: A data field to apply the filter to.
+ *
+ * Filters a data field with total Prewitt filter.
+ *
+ * Since: 2.31
+ **/
+void
+gwy_data_field_filter_prewitt_total(GwyDataField *data_field)
+{
+    GwyDataField *workspace;
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    workspace = gwy_data_field_duplicate(data_field);
+    gwy_data_field_area_filter_prewitt(data_field, GWY_ORIENTATION_HORIZONTAL,
+                                       0, 0,
+                                       data_field->xres, data_field->yres);
+    gwy_data_field_area_filter_prewitt(workspace, GWY_ORIENTATION_VERTICAL,
+                                       0, 0,
+                                       data_field->xres, data_field->yres);
+    gwy_data_field_hypot_of_fields(data_field, data_field, workspace);
+    g_object_unref(workspace);
 }
 
 /**
