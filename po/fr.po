@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-12-14 03:58+0100\n"
-"PO-Revision-Date: 2012-12-14 16:18+0100\n"
+"POT-Creation-Date: 2012-12-17 03:58+0100\n"
+"PO-Revision-Date: 2012-12-17 23:35+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -900,7 +900,7 @@ msgstr "pixels"
 #: modules/file/pixmap.c:3036
 #: modules/file/rawfile.c:398
 #: modules/process/angle_dist.c:170
-#: modules/process/brickshow.c:297
+#: modules/process/brickshow.c:298
 #: modules/process/calcoefs_new.c:347
 #: modules/process/calibrate.c:296
 #: modules/process/col_synth.c:299
@@ -910,7 +910,7 @@ msgstr "pixels"
 #: modules/process/drift.c:230
 #: modules/process/dwt.c:164
 #: modules/process/dwtanisotropy.c:183
-#: modules/process/edge.c:633
+#: modules/process/edge.c:667
 #: modules/process/extend.c:196
 #: modules/process/facet-level.c:283
 #: modules/process/facet_analysis.c:273
@@ -1523,7 +1523,7 @@ msgid "Channels"
 msgstr "Canaux"
 
 #: app/data-browser.c:4101
-#: modules/process/brickshow.c:415
+#: modules/process/brickshow.c:416
 msgid "Graphs"
 msgstr "Graphes"
 
@@ -4566,12 +4566,12 @@ msgstr "Préréglages"
 #: modules/file/rawfile.c:540
 #: modules/file/rawxyz.c:435
 #: modules/process/arithmetic.c:227
-#: modules/process/brickshow.c:294
+#: modules/process/brickshow.c:295
 #: modules/process/calcoefs_view.c:332
 #: modules/process/convolution_filter.c:243
 #: modules/process/deposit_synth.c:682
 #: modules/process/drift.c:227
-#: modules/process/edge.c:630
+#: modules/process/edge.c:664
 #: modules/process/fft_filter_1d.c:197
 #: modules/process/grain_edge.c:214
 #: modules/process/grain_mark.c:259
@@ -6140,101 +6140,100 @@ msgstr "/Opérations _basiques/Supprimer l'offset"
 msgid "Null horizontall offsets, moving the origin to the upper left corner"
 msgstr "Annule les décalages horizontaux en déplaçant l'origine dans le coin en haut à gauche"
 
-#: modules/process/brickshow.c:190
+#: modules/process/brickshow.c:191
 msgid "Loads and shows a brick (3D volume data)."
 msgstr "Charge et affiche des données volumiques"
 
-#: modules/process/brickshow.c:204
+#: modules/process/brickshow.c:205
 #, fuzzy
 msgid "/_Bricks/Load and show..."
 msgstr "/Cu_be de données/Charger et afficher..."
 
-#: modules/process/brickshow.c:208
+#: modules/process/brickshow.c:209
 msgid "Load and show 3D data"
 msgstr "Charger et afficher des données 3D"
 
-#: modules/process/brickshow.c:240
+#: modules/process/brickshow.c:241
 msgid "X cross-section"
 msgstr "Section X"
 
-#: modules/process/brickshow.c:241
+#: modules/process/brickshow.c:242
 msgid "Y cross-section"
 msgstr "Section Y"
 
-#: modules/process/brickshow.c:242
+#: modules/process/brickshow.c:243
 msgid "Z cross-section"
 msgstr "Section Z"
 
-#: modules/process/brickshow.c:243
-#: modules/process/brickshow.c:631
+#: modules/process/brickshow.c:244
+#: modules/process/brickshow.c:632
 msgid "X direction sum"
 msgstr "Somme selon X"
 
-#: modules/process/brickshow.c:244
-#: modules/process/brickshow.c:633
+#: modules/process/brickshow.c:245
+#: modules/process/brickshow.c:634
 msgid "Y direction sum"
 msgstr "Somme selon Y"
 
-#: modules/process/brickshow.c:245
-#: modules/process/brickshow.c:635
+#: modules/process/brickshow.c:246
+#: modules/process/brickshow.c:636
 msgid "Z direction sum"
 msgstr "Somme selon Z"
 
-#: modules/process/brickshow.c:248
+#: modules/process/brickshow.c:249
 msgid "X direction"
 msgstr "Direction X"
 
-#: modules/process/brickshow.c:249
+#: modules/process/brickshow.c:250
 msgid "Y direction"
 msgstr "Direction Y"
 
-#: modules/process/brickshow.c:250
+#: modules/process/brickshow.c:251
 msgid "Z direction"
 msgstr "Direction Z"
 
-#: modules/process/brickshow.c:288
+#: modules/process/brickshow.c:289
 msgid "Volume data"
 msgstr "Données volumiques"
 
-#: modules/process/brickshow.c:290
+#: modules/process/brickshow.c:291
 msgid "_Load"
 msgstr "Charger"
 
-#: modules/process/brickshow.c:302
-#, fuzzy
+#: modules/process/brickshow.c:303
 msgid "_Extract projection"
 msgstr "_Extraire la projection"
 
-#: modules/process/brickshow.c:321
+#: modules/process/brickshow.c:322
 msgid "Projections"
 msgstr "Intersections"
 
-#: modules/process/brickshow.c:359
+#: modules/process/brickshow.c:360
 msgid "X position"
 msgstr "Position X"
 
-#: modules/process/brickshow.c:366
+#: modules/process/brickshow.c:367
 msgid "Y position"
 msgstr "Position Y"
 
-#: modules/process/brickshow.c:373
+#: modules/process/brickshow.c:374
 msgid "Z position"
 msgstr "Position Z"
 
-#: modules/process/brickshow.c:379
+#: modules/process/brickshow.c:380
 msgid "Shown cut direction:"
 msgstr "Direction de coupe affichée :"
 
-#: modules/process/brickshow.c:389
-#: modules/process/brickshow.c:475
+#: modules/process/brickshow.c:390
+#: modules/process/brickshow.c:476
 msgid "Show mode:"
 msgstr "Mode d'affichage : "
 
-#: modules/process/brickshow.c:395
-#: modules/process/brickshow.c:481
+#: modules/process/brickshow.c:396
+#: modules/process/brickshow.c:482
 #: modules/process/calcoefs_view.c:583
 #: modules/process/deposit_synth.c:686
-#: modules/process/edge.c:710
+#: modules/process/edge.c:744
 #: modules/process/fft_filter_1d.c:333
 #: modules/process/grain_edge.c:285
 #: modules/process/grain_mark.c:376
@@ -6246,82 +6245,81 @@ msgstr "Mode d'affichage : "
 msgid "I_nstant updates"
 msgstr "Mise à jour instantanée"
 
-#: modules/process/brickshow.c:404
-#: modules/process/brickshow.c:490
+#: modules/process/brickshow.c:405
+#: modules/process/brickshow.c:491
 #: modules/process/calcoefs_load.c:239
 msgid "No data loaded"
 msgstr "Aucunes données chargées"
 
-#: modules/process/brickshow.c:465
+#: modules/process/brickshow.c:466
 msgid "Graph cut direction:"
 msgstr "Direction de coupe du graphe :"
 
-#: modules/process/brickshow.c:503
+#: modules/process/brickshow.c:504
 msgid "3D view"
 msgstr "Vue 3D"
 
-#: modules/process/brickshow.c:527
-#, fuzzy
+#: modules/process/brickshow.c:528
 msgid "apply perspective"
-msgstr "Appliquer une perspective"
+msgstr "Appliquer la perspective"
 
-#: modules/process/brickshow.c:537
+#: modules/process/brickshow.c:538
 msgid "X view"
 msgstr "Vue X"
 
-#: modules/process/brickshow.c:543
+#: modules/process/brickshow.c:544
 msgid "Y view"
 msgstr "Vue Y"
 
-#: modules/process/brickshow.c:549
+#: modules/process/brickshow.c:550
 msgid "Z view"
 msgstr "Vue Z"
 
-#: modules/process/brickshow.c:622
+#: modules/process/brickshow.c:623
 #, c-format
 msgid "X cross-section at x: %d"
 msgstr "Section X pour x : %d"
 
-#: modules/process/brickshow.c:625
+#: modules/process/brickshow.c:626
 #, c-format
 msgid "Y cross-section at y: %d"
 msgstr "Section Y pour y : %d"
 
-#: modules/process/brickshow.c:628
+#: modules/process/brickshow.c:629
 #, c-format
 msgid "Z cross-section at z: %d"
 msgstr "Section Z pour z : %d"
 
-#: modules/process/brickshow.c:673
+#: modules/process/brickshow.c:674
 #, c-format
 msgid "X graph at y: %d z: %d"
 msgstr "Graphe X pour y : %d z : %d"
 
-#: modules/process/brickshow.c:676
+#: modules/process/brickshow.c:677
 #, c-format
 msgid "Y graph at x: %d z: %d"
 msgstr "Graphe Y pour x : %d z : %d"
 
-#: modules/process/brickshow.c:679
+#: modules/process/brickshow.c:680
 #, c-format
 msgid "Z graph at x: %d y: %d"
 msgstr "Graphe Z pour x : %d y : %d"
 
-#: modules/process/brickshow.c:684
+#: modules/process/brickshow.c:685
 #, fuzzy
 msgid "w"
 msgstr "w"
 
-#: modules/process/brickshow.c:690
+#: modules/process/brickshow.c:691
 #, fuzzy
 msgid "Brick graph"
 msgstr "Graphe d'un cube de données"
 
-#: modules/process/brickshow.c:941
+#: modules/process/brickshow.c:942
 msgid "Load volume data"
 msgstr "Charger des données volumiques"
 
-#: modules/process/brickshow.c:958
+#: modules/process/brickshow.c:959
 #: modules/process/calcoefs_load.c:330
 #, c-format
 msgid "Error loading file '%s'"
@@ -7325,120 +7323,136 @@ msgstr "Seuil du ratio X/Y :"
 msgid "Low level exclude limit:"
 msgstr "Limite basse d'exclusion :"
 
-#: modules/process/edge.c:147
+#: modules/process/edge.c:151
 msgid "Several edge detection methods (Laplacian of Gaussian, Canny, and some experimental), creates presentation."
 msgstr "Plusieurs méthode de détection de bord (Laplacien d'une Gaussienne, Canny, et d'autres expérimentales), création de présentations."
 
-#: modules/process/edge.c:162
+#: modules/process/edge.c:166
 msgid "/_Presentation/_Edge Detection/_Laplacian of Gaussian"
 msgstr "/_Présentation/Dét_ection de bord/_Laplacien d'une Gaussienne"
 
-#: modules/process/edge.c:166
+#: modules/process/edge.c:170
 msgid "Laplacian of Gaussian step detection presentation"
 msgstr "Détection de bord par Laplacien d'une Gaussienne"
 
-#: modules/process/edge.c:170
+#: modules/process/edge.c:174
 msgid "/_Presentation/_Edge Detection/_Canny"
 msgstr "/_Présentation/Dét_ection de bord/_Canny"
 
-#: modules/process/edge.c:174
+#: modules/process/edge.c:178
 msgid "Canny edge detection presentation"
 msgstr "Détection de bord par Canny"
 
-#: modules/process/edge.c:177
+#: modules/process/edge.c:181
 msgid "/_Presentation/_Edge Detection/_RMS"
 msgstr "/_Présentation/Dét_ection de bord/_RMS"
 
-#: modules/process/edge.c:181
+#: modules/process/edge.c:185
 msgid "Local RMS value based step detection presentation"
 msgstr "Détection de bord basée sur la valeur RMS locale"
 
-#: modules/process/edge.c:185
+#: modules/process/edge.c:189
 msgid "/_Presentation/_Edge Detection/RMS _Edge"
 msgstr "/_Présentation/Dét_ection de bord/Bord RMS"
 
-#: modules/process/edge.c:189
+#: modules/process/edge.c:193
 msgid "Local RMS value based step detection with postprocessing"
 msgstr "Détection de bord basée sur la valeur RMS locale avec post-traitement"
 
-#: modules/process/edge.c:193
+#: modules/process/edge.c:197
 msgid "/_Presentation/_Edge Detection/Local _Nonlinearity"
 msgstr "/_Présentation/Dét_ection de bord/_Non-linéarité locale"
 
-#: modules/process/edge.c:197
+#: modules/process/edge.c:201
 msgid "Local nonlinearity based edge detection presentation"
 msgstr "Détection de bord basée sur la non-linéarité locale"
 
-#: modules/process/edge.c:201
+#: modules/process/edge.c:205
 msgid "/_Presentation/_Edge Detection/_Hough Lines"
 msgstr "/_Présentation/Dét_ection de bord/Lignes de _Hough"
 
-#: modules/process/edge.c:206
+#: modules/process/edge.c:210
 msgid "Hough lines presentation"
 msgstr "Lignes de Hough"
 
-#: modules/process/edge.c:209
+#: modules/process/edge.c:213
 msgid "/_Presentation/_Edge Detection/_Harris Corner"
 msgstr "/_Présentation/Dét_ection de bord/Coin de _Harris"
 
-#: modules/process/edge.c:214
+#: modules/process/edge.c:218
 msgid "Harris corner presentation"
 msgstr "Coin de Harris"
 
-#: modules/process/edge.c:217
+#: modules/process/edge.c:221
 msgid "/_Presentation/_Edge Detection/_Inclination"
 msgstr "/_Présentation/Dét_ection de bord/_Inclinaison"
 
-#: modules/process/edge.c:221
+#: modules/process/edge.c:225
 msgid "Local inclination visualization presentation"
 msgstr "Visualisation de l'inclinaison locale"
 
-#: modules/process/edge.c:225
+#: modules/process/edge.c:229
 msgid "/_Presentation/_Edge Detection/_Step"
 msgstr "/_Présentation/Dét_ection de bord/_Saut"
 
-#: modules/process/edge.c:229
+#: modules/process/edge.c:233
 msgid "Fine step detection presentation"
 msgstr "Détection fine des sauts"
 
-#: modules/process/edge.c:241
+#: modules/process/edge.c:236
+msgid "/_Presentation/_Edge Detection/_Sobel"
+msgstr "/_Présentation/Dét_ection de bord/_Sobel"
+
+#: modules/process/edge.c:240
+msgid "Sobel edge presentation"
+msgstr "Détection de bord par gradient Sobel"
+
+#: modules/process/edge.c:243
+msgid "/_Presentation/_Edge Detection/_Prewitt"
+msgstr "/_Présentation/Dét_ection de bord/_Prewitt"
+
+#: modules/process/edge.c:247
+msgid "Prewitt edge presentation"
+msgstr "Détection de bord par gradient Prewitt"
+
+#: modules/process/edge.c:259
 msgid "/_Presentation/_Edge Detection/_Zero Crossing..."
 msgstr "/_Présentation/Dét_ection de bord/Coupure à _zéro..."
 
-#: modules/process/edge.c:245
+#: modules/process/edge.c:263
 msgid "Zero crossing step detection presentation"
 msgstr "Détection du passage à zéro"
 
-#: modules/process/edge.c:627
+#: modules/process/edge.c:661
 msgid "Zero Crossing Step Detection"
 msgstr "Détection de saut par coupure à zéro"
 
-#: modules/process/edge.c:677
+#: modules/process/edge.c:711
 msgid "_Gaussian FWHM:"
 msgstr "FWHM _gaussienne :"
 
-#: modules/process/edge.c:686
+#: modules/process/edge.c:720
 msgid "_Threshold:"
 msgstr "Seuil :"
 
-#: modules/process/edge.c:686
+#: modules/process/edge.c:720
 msgid "NRMS"
 msgstr "NRMS"
 
-#: modules/process/edge.c:693
+#: modules/process/edge.c:727
 msgid "verb|Display"
 msgstr "Afficher"
 
-#: modules/process/edge.c:702
+#: modules/process/edge.c:736
 #: modules/process/fft_filter_2d.c:394
 msgid "Original _image"
 msgstr "_Image originale"
 
-#: modules/process/edge.c:703
+#: modules/process/edge.c:737
 msgid "_LoG convolved"
 msgstr "Convoluer par le Laplacien d'une Gaussienne (LoG)"
 
-#: modules/process/edge.c:704
+#: modules/process/edge.c:738
 msgid "Detected st_ep"
 msgstr "Saut dét_ecté"
 
