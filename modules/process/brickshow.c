@@ -75,6 +75,7 @@ typedef struct {
     gboolean update;
     gint active_page;
     gboolean perspective;
+    gdouble size;
 } BrickshowArgs;
 
 typedef struct {
@@ -89,6 +90,7 @@ typedef struct {
     GtkObject *xpos;
     GtkObject *ypos;
     GtkObject *zpos;
+    GtkObject *size;
     GtkWidget *update;
     GtkWidget *gupdate;
     GtkWidget *drawarea;
@@ -183,6 +185,7 @@ static const BrickshowArgs brickshow_defaults = {
     TRUE,
     0,
     TRUE,
+    50,
 };
 
 static GwyModuleInfo module_info = {
@@ -524,6 +527,15 @@ brickshow_dialog(BrickshowArgs *args,
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
     row = 0;
+
+    controls.size = gtk_adjustment_new(args->size,
+                                            1, 100, 1, 10, 0);
+    gwy_table_attach_hscale(table, row++, _("Zoom"), "%",
+                            controls.size, 0);
+    g_signal_connect_swapped(controls.size, "value-changed",
+                             G_CALLBACK(brickshow_invalidate), &controls);
+    row++;
+
 
     controls.perspective = gtk_check_button_new_with_mnemonic(_("apply perspective"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.perspective),
@@ -877,6 +889,9 @@ brickshow_dialog_update_values(BrickshowControls *controls,
 
     args->update
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->update));
+
+    args->size
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
 }
 
 static void
@@ -886,8 +901,8 @@ brickshow_invalidate(BrickshowControls *controls)
     else if (controls->args->active_page == 1) controls->gcomputed = FALSE;
 
 
-    /* create preview if instant updates are on */
-    if (controls->args->update && !controls->in_init) {
+    /* create preview if instant updates are on for the rest, 3d is instantly updated always*/
+    if (controls->args->active_page == 2 || (controls->args->update && !controls->in_init)) {
         brickshow_dialog_update_values(controls, controls->args);
         preview(controls, controls->args);
     }
@@ -1190,23 +1205,25 @@ preview(BrickshowControls *controls,
     }
     else if (args->active_page == 2)
     {
-
-
+       gtk_widget_queue_draw(controls->drawarea);
     }
  }
+
+
+
 
 #define CX 200
 #define CY 200
 
 static void
-convert_3d2d(gdouble x, gdouble y, gdouble z, gdouble *px, gdouble *py, gboolean perspective)
+convert_3d2d(gdouble x, gdouble y, gdouble z, gdouble *px, gdouble *py, gboolean perspective, gdouble size)
 {
     if (perspective) {
-        *px = 320*(x/(z+4)) + CX;
-        *py = 320*(y/(z+4)) + CY;
+        *px = 8*size*(x/(z+4)) + CX;
+        *py = 8*size*(y/(z+4)) + CY;
     } else {
-        *px = 160*x + CX;
-        *py = 160*y + CY;
+        *px = 3*size*x + CX;
+        *py = 3*size*y + CY;
     }
 }
 
@@ -1319,11 +1336,11 @@ p3d_on_draw_event(GtkWidget *widget, GdkEventExpose *event, BrickshowControls *c
     cairo_set_source_rgb(cr, 0, 0, 0);
     cairo_set_line_width (cr, 0.5);
 
-    convert_3d2d(controls->px[0], controls->py[0], controls->pz[0], &sx, &sy, controls->args->perspective);
+    convert_3d2d(controls->px[0], controls->py[0], controls->pz[0], &sx, &sy, controls->args->perspective, controls->args->size);
     cairo_move_to(cr, sx, sy);
 
     for (i= 1; i<controls->nps; i++) {
-        convert_3d2d(controls->px[i], controls->py[i], controls->pz[i], &sx, &sy, controls->args->perspective);
+        convert_3d2d(controls->px[i], controls->py[i], controls->pz[i], &sx, &sy, controls->args->perspective, controls->args->size);
         if (controls->ps[i]) cairo_line_to(cr, sx, sy);
         else cairo_move_to(cr, sx, sy);
     }
@@ -1368,6 +1385,9 @@ static void rotate(BrickshowControls *controls, gdouble x, gdouble y, gdouble z)
     }
 
 }
+
+
+
 
 static gboolean 
 p3d_moved(GtkWidget *widget, GdkEventMotion *event,
@@ -1646,6 +1666,7 @@ static const gchar type_key[]    = "/module/brickshow/dirtype";
 static const gchar gtype_key[]    = "/module/brickshow/dirgtype";
 static const gchar update_key[] = "/module/brickshow/update";
 static const gchar perspective_key[] = "/module/brickshow/perspective";
+static const gchar size_key[] = "/module/brickshow/size";
 
 static void
 brickshow_sanitize_args(BrickshowArgs *args)
@@ -1653,6 +1674,7 @@ brickshow_sanitize_args(BrickshowArgs *args)
     args->xpos = CLAMP(args->xpos, 0, 100);
     args->ypos = CLAMP(args->ypos, 0, 100);
     args->zpos = CLAMP(args->zpos, 0, 100);
+    args->size = CLAMP(args->size, 1, 100);
     args->type = MIN(args->type, PROJ_DIRZ);
     args->gtype = MIN(args->gtype, GRAPH_DIRZ);
     args->update = !!args->update;
@@ -1670,6 +1692,7 @@ brickshow_load_args(GwyContainer *container,
     gwy_container_gis_double_by_name(container, xpos_key, &args->xpos);
     gwy_container_gis_double_by_name(container, ypos_key, &args->ypos);
     gwy_container_gis_double_by_name(container, zpos_key, &args->zpos);
+    gwy_container_gis_double_by_name(container, size_key, &args->size);
     gwy_container_gis_boolean_by_name(container, update_key, &args->update);
     gwy_container_gis_boolean_by_name(container, perspective_key, &args->perspective);
     brickshow_sanitize_args(args);
@@ -1684,6 +1707,7 @@ brickshow_save_args(GwyContainer *container,
     gwy_container_set_double_by_name(container, xpos_key, args->xpos);
     gwy_container_set_double_by_name(container, ypos_key, args->ypos);
     gwy_container_set_double_by_name(container, zpos_key, args->zpos);
+    gwy_container_set_double_by_name(container, size_key, args->size);
     gwy_container_set_boolean_by_name(container, update_key, args->update);
     gwy_container_set_boolean_by_name(container, perspective_key, args->perspective);
 }
