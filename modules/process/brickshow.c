@@ -76,6 +76,7 @@ typedef struct {
     gint active_page;
     gboolean perspective;
     gdouble size;
+    gdouble zscale;
 } BrickshowArgs;
 
 typedef struct {
@@ -91,6 +92,7 @@ typedef struct {
     GtkObject *ypos;
     GtkObject *zpos;
     GtkObject *size;
+    GtkObject *zscale;
     GtkWidget *update;
     GtkWidget *gupdate;
     GtkWidget *drawarea;
@@ -186,6 +188,7 @@ static const BrickshowArgs brickshow_defaults = {
     0,
     TRUE,
     50,
+    100,
 };
 
 static GwyModuleInfo module_info = {
@@ -533,6 +536,14 @@ brickshow_dialog(BrickshowArgs *args,
     gwy_table_attach_hscale(table, row++, _("Zoom"), "%",
                             controls.size, 0);
     g_signal_connect_swapped(controls.size, "value-changed",
+                             G_CALLBACK(brickshow_invalidate), &controls);
+    row++;
+
+    controls.zscale = gtk_adjustment_new(args->zscale,
+                                            1, 100, 1, 10, 0);
+    gwy_table_attach_hscale(table, row++, _("Z scale"), "%",
+                            controls.zscale, 0);
+    g_signal_connect_swapped(controls.zscale, "value-changed",
                              G_CALLBACK(brickshow_invalidate), &controls);
     row++;
 
@@ -892,6 +903,8 @@ brickshow_dialog_update_values(BrickshowControls *controls,
 
     args->size
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
+    args->zscale
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->zscale));
 }
 
 static void
@@ -1464,23 +1477,23 @@ p3d_set_axes(BrickshowControls *controls)
     if (controls->ps==NULL || controls->nps<17) 
        controls->ps = (gdouble *)g_malloc(17*sizeof(gdouble));
 
-    controls->px[0] = -1; controls->py[0] = -1; controls->pz[0] = -1; controls->ps[0] = 0;
-    controls->px[1] = 1; controls->py[1] = -1; controls->pz[1] = -1; controls->ps[1] = 1;
-    controls->px[2] = 1; controls->py[2] = 1; controls->pz[2] = -1; controls->ps[2] = 1;
-    controls->px[3] = 1; controls->py[3] = 1; controls->pz[3] = 1; controls->ps[3] = 1;
-    controls->px[4] = -1; controls->py[4] = 1; controls->pz[4] = 1; controls->ps[4] = 1;
-    controls->px[5] = -1; controls->py[5] = -1; controls->pz[5] = 1; controls->ps[5] = 1;
-    controls->px[6] = 1; controls->py[6] = -1; controls->pz[6] = 1; controls->ps[6] = 1;
-    controls->px[7] = 1; controls->py[7] = -1; controls->pz[7] = -1; controls->ps[7] = 1;
-    controls->px[8] = -1; controls->py[8] = -1; controls->pz[8] = -1; controls->ps[8] = 1;
-    controls->px[9] = -1; controls->py[9] = -1; controls->pz[9] = 1; controls->ps[9] = 1;
-    controls->px[10] = -1; controls->py[10] = -1; controls->pz[10] = -1; controls->ps[10] = 1;
-    controls->px[11] = -1; controls->py[11] = 1; controls->pz[11] = -1; controls->ps[11] = 1;
-    controls->px[12] = -1; controls->py[12] = 1; controls->pz[12] = 1; controls->ps[12] = 1;
-    controls->px[13] = -1; controls->py[13] = 1; controls->pz[13] = -1; controls->ps[13] = 0;
-    controls->px[14] = 1; controls->py[14] = 1; controls->pz[14] = -1; controls->ps[14] = 1;
-    controls->px[15] = 1; controls->py[15] = 1; controls->pz[15] = 1; controls->ps[15] = 0;
-    controls->px[16] = 1; controls->py[16] = -1; controls->pz[16] = 1; controls->ps[16] = 1;
+    controls->px[0] = -1; controls->py[0] = -1; controls->pz[0] = -controls->args->zscale/100.0; controls->ps[0] = 0;
+    controls->px[1] = 1; controls->py[1] = -1; controls->pz[1] = -controls->args->zscale/100.0; controls->ps[1] = 1;
+    controls->px[2] = 1; controls->py[2] = 1; controls->pz[2] = -controls->args->zscale/100.0; controls->ps[2] = 1;
+    controls->px[3] = 1; controls->py[3] = 1; controls->pz[3] = controls->args->zscale/100.0; controls->ps[3] = 1;
+    controls->px[4] = -1; controls->py[4] = 1; controls->pz[4] = controls->args->zscale/100.0; controls->ps[4] = 1;
+    controls->px[5] = -1; controls->py[5] = -1; controls->pz[5] = controls->args->zscale/100.0; controls->ps[5] = 1;
+    controls->px[6] = 1; controls->py[6] = -1; controls->pz[6] = controls->args->zscale/100.0; controls->ps[6] = 1;
+    controls->px[7] = 1; controls->py[7] = -1; controls->pz[7] = -controls->args->zscale/100.0; controls->ps[7] = 1;
+    controls->px[8] = -1; controls->py[8] = -1; controls->pz[8] = -controls->args->zscale/100.0; controls->ps[8] = 1;
+    controls->px[9] = -1; controls->py[9] = -1; controls->pz[9] = controls->args->zscale/100.0; controls->ps[9] = 1;
+    controls->px[10] = -1; controls->py[10] = -1; controls->pz[10] = -controls->args->zscale/100.0; controls->ps[10] = 1;
+    controls->px[11] = -1; controls->py[11] = 1; controls->pz[11] = -controls->args->zscale/100.0; controls->ps[11] = 1;
+    controls->px[12] = -1; controls->py[12] = 1; controls->pz[12] = controls->args->zscale/100.0; controls->ps[12] = 1;
+    controls->px[13] = -1; controls->py[13] = 1; controls->pz[13] = -controls->args->zscale/100.0; controls->ps[13] = 0;
+    controls->px[14] = 1; controls->py[14] = 1; controls->pz[14] = -controls->args->zscale/100.0; controls->ps[14] = 1;
+    controls->px[15] = 1; controls->py[15] = 1; controls->pz[15] = controls->args->zscale/100.0; controls->ps[15] = 0;
+    controls->px[16] = 1; controls->py[16] = -1; controls->pz[16] = controls->args->zscale/100.0; controls->ps[16] = 1;
 
     controls->nps = 17;
 
@@ -1586,7 +1599,7 @@ p3d_add_wireframe(BrickshowControls *controls)
  
                     controls->px[controls->nps] = 2*(gdouble)i/(gdouble)xres - 1;
                     controls->py[controls->nps] = 2*(gdouble)col/(gdouble)yres - 1;
-                    controls->pz[controls->nps] = 2*(gdouble)row/(gdouble)zres - 1;
+                    controls->pz[controls->nps] = controls->args->zscale/100.0*(2*(gdouble)row/(gdouble)zres - 1);
                     if (move) {
                         controls->ps[controls->nps] = 0; 
                         move = 0;
@@ -1634,7 +1647,7 @@ p3d_add_wireframe(BrickshowControls *controls)
  
                     controls->px[controls->nps] = 2*(gdouble)col/(gdouble)xres - 1;
                     controls->py[controls->nps] = 2*(gdouble)i/(gdouble)yres - 1;
-                    controls->pz[controls->nps] = 2*(gdouble)row/(gdouble)zres - 1;
+                    controls->pz[controls->nps] = controls->args->zscale/100.0*(2*(gdouble)row/(gdouble)zres - 1);
                     if (move) {
                         controls->ps[controls->nps] = 0; 
                         move = 0;
@@ -1667,6 +1680,7 @@ static const gchar gtype_key[]    = "/module/brickshow/dirgtype";
 static const gchar update_key[] = "/module/brickshow/update";
 static const gchar perspective_key[] = "/module/brickshow/perspective";
 static const gchar size_key[] = "/module/brickshow/size";
+static const gchar zscale_key[] = "/module/brickshow/zscale";
 
 static void
 brickshow_sanitize_args(BrickshowArgs *args)
@@ -1675,6 +1689,7 @@ brickshow_sanitize_args(BrickshowArgs *args)
     args->ypos = CLAMP(args->ypos, 0, 100);
     args->zpos = CLAMP(args->zpos, 0, 100);
     args->size = CLAMP(args->size, 1, 100);
+    args->zscale = CLAMP(args->zscale, 1, 100);
     args->type = MIN(args->type, PROJ_DIRZ);
     args->gtype = MIN(args->gtype, GRAPH_DIRZ);
     args->update = !!args->update;
@@ -1693,6 +1708,7 @@ brickshow_load_args(GwyContainer *container,
     gwy_container_gis_double_by_name(container, ypos_key, &args->ypos);
     gwy_container_gis_double_by_name(container, zpos_key, &args->zpos);
     gwy_container_gis_double_by_name(container, size_key, &args->size);
+    gwy_container_gis_double_by_name(container, zscale_key, &args->zscale);
     gwy_container_gis_boolean_by_name(container, update_key, &args->update);
     gwy_container_gis_boolean_by_name(container, perspective_key, &args->perspective);
     brickshow_sanitize_args(args);
@@ -1708,6 +1724,7 @@ brickshow_save_args(GwyContainer *container,
     gwy_container_set_double_by_name(container, ypos_key, args->ypos);
     gwy_container_set_double_by_name(container, zpos_key, args->zpos);
     gwy_container_set_double_by_name(container, size_key, args->size);
+    gwy_container_set_double_by_name(container, zscale_key, args->zscale);
     gwy_container_set_boolean_by_name(container, update_key, args->update);
     gwy_container_set_boolean_by_name(container, perspective_key, args->perspective);
 }
