@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-12-15 03:58+0100\n"
-"PO-Revision-Date: 2012-12-15 12:43+0300\n"
+"POT-Creation-Date: 2012-12-16 03:58+0100\n"
+"PO-Revision-Date: 2012-12-16 14:08+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -902,7 +902,7 @@ msgstr "точек"
 #: modules/file/pixmap.c:3036
 #: modules/file/rawfile.c:398
 #: modules/process/angle_dist.c:170
-#: modules/process/brickshow.c:297
+#: modules/process/brickshow.c:298
 #: modules/process/calcoefs_new.c:347
 #: modules/process/calibrate.c:296
 #: modules/process/col_synth.c:299
@@ -912,7 +912,7 @@ msgstr "точек"
 #: modules/process/drift.c:230
 #: modules/process/dwt.c:164
 #: modules/process/dwtanisotropy.c:183
-#: modules/process/edge.c:633
+#: modules/process/edge.c:667
 #: modules/process/extend.c:196
 #: modules/process/facet-level.c:283
 #: modules/process/facet_analysis.c:273
@@ -1525,7 +1525,7 @@ msgid "Channels"
 msgstr "Каналы"
 
 #: app/data-browser.c:4101
-#: modules/process/brickshow.c:415
+#: modules/process/brickshow.c:416
 msgid "Graphs"
 msgstr "Графики"
 
@@ -4568,12 +4568,12 @@ msgstr "Предустановки"
 #: modules/file/rawfile.c:540
 #: modules/file/rawxyz.c:435
 #: modules/process/arithmetic.c:227
-#: modules/process/brickshow.c:294
+#: modules/process/brickshow.c:295
 #: modules/process/calcoefs_view.c:332
 #: modules/process/convolution_filter.c:243
 #: modules/process/deposit_synth.c:682
 #: modules/process/drift.c:227
-#: modules/process/edge.c:630
+#: modules/process/edge.c:664
 #: modules/process/fft_filter_1d.c:197
 #: modules/process/grain_edge.c:214
 #: modules/process/grain_mark.c:259
@@ -6144,99 +6144,99 @@ msgstr "/_Базовые действия/Обнулить _смещения"
 msgid "Null horizontall offsets, moving the origin to the upper left corner"
 msgstr "Обнуляет смещения по горизонтали, перемещая начало координат в верхний левый угол"
 
-#: modules/process/brickshow.c:190
+#: modules/process/brickshow.c:191
 msgid "Loads and shows a brick (3D volume data)."
 msgstr "Загружает и показывает блок (трёхмерные объёмные данные)."
 
-#: modules/process/brickshow.c:204
+#: modules/process/brickshow.c:205
 msgid "/_Bricks/Load and show..."
 msgstr "/_Блоки/_Загрузить и сохранить..."
 
-#: modules/process/brickshow.c:208
+#: modules/process/brickshow.c:209
 msgid "Load and show 3D data"
 msgstr "Загрузить и показать трёхмерные данные"
 
-#: modules/process/brickshow.c:240
+#: modules/process/brickshow.c:241
 msgid "X cross-section"
 msgstr "Сечение по X"
 
-#: modules/process/brickshow.c:241
+#: modules/process/brickshow.c:242
 msgid "Y cross-section"
 msgstr "Сечение по Y"
 
-#: modules/process/brickshow.c:242
+#: modules/process/brickshow.c:243
 msgid "Z cross-section"
 msgstr "Сечение по Z"
 
-#: modules/process/brickshow.c:243
-#: modules/process/brickshow.c:631
+#: modules/process/brickshow.c:244
+#: modules/process/brickshow.c:632
 msgid "X direction sum"
 msgstr "Сумма по направлению X"
 
-#: modules/process/brickshow.c:244
-#: modules/process/brickshow.c:633
+#: modules/process/brickshow.c:245
+#: modules/process/brickshow.c:634
 msgid "Y direction sum"
 msgstr "Сумма по направлению Y"
 
-#: modules/process/brickshow.c:245
-#: modules/process/brickshow.c:635
+#: modules/process/brickshow.c:246
+#: modules/process/brickshow.c:636
 msgid "Z direction sum"
 msgstr "Сумма по направлению Z"
 
-#: modules/process/brickshow.c:248
+#: modules/process/brickshow.c:249
 msgid "X direction"
 msgstr "Направление X"
 
-#: modules/process/brickshow.c:249
+#: modules/process/brickshow.c:250
 msgid "Y direction"
 msgstr "Направление Y"
 
-#: modules/process/brickshow.c:250
+#: modules/process/brickshow.c:251
 msgid "Z direction"
 msgstr "Направление Z"
 
-#: modules/process/brickshow.c:288
+#: modules/process/brickshow.c:289
 msgid "Volume data"
 msgstr "Объёмные данные"
 
-#: modules/process/brickshow.c:290
+#: modules/process/brickshow.c:291
 msgid "_Load"
 msgstr "_Загрузить"
 
-#: modules/process/brickshow.c:302
+#: modules/process/brickshow.c:303
 msgid "_Extract projection"
 msgstr "_Извлечь проекцию"
 
-#: modules/process/brickshow.c:321
+#: modules/process/brickshow.c:322
 msgid "Projections"
 msgstr "Проекции"
 
-#: modules/process/brickshow.c:359
+#: modules/process/brickshow.c:360
 msgid "X position"
 msgstr "Положение по X"
 
-#: modules/process/brickshow.c:366
+#: modules/process/brickshow.c:367
 msgid "Y position"
 msgstr "Положение по Y"
 
-#: modules/process/brickshow.c:373
+#: modules/process/brickshow.c:374
 msgid "Z position"
 msgstr "Положение по Z"
 
-#: modules/process/brickshow.c:379
+#: modules/process/brickshow.c:380
 msgid "Shown cut direction:"
 msgstr "Показано направление разреза:"
 
-#: modules/process/brickshow.c:389
-#: modules/process/brickshow.c:475
+#: modules/process/brickshow.c:390
+#: modules/process/brickshow.c:476
 msgid "Show mode:"
 msgstr "Режим отображения:"
 
-#: modules/process/brickshow.c:395
-#: modules/process/brickshow.c:481
+#: modules/process/brickshow.c:396
+#: modules/process/brickshow.c:482
 #: modules/process/calcoefs_view.c:583
 #: modules/process/deposit_synth.c:686
-#: modules/process/edge.c:710
+#: modules/process/edge.c:744
 #: modules/process/fft_filter_1d.c:333
 #: modules/process/grain_edge.c:285
 #: modules/process/grain_mark.c:376
@@ -6248,79 +6248,79 @@ msgstr "Режим отображения:"
 msgid "I_nstant updates"
 msgstr "Мгновенное об_новление"
 
-#: modules/process/brickshow.c:404
-#: modules/process/brickshow.c:490
+#: modules/process/brickshow.c:405
+#: modules/process/brickshow.c:491
 #: modules/process/calcoefs_load.c:239
 msgid "No data loaded"
 msgstr "Данные не загружены"
 
-#: modules/process/brickshow.c:465
+#: modules/process/brickshow.c:466
 msgid "Graph cut direction:"
 msgstr "Режим сечения графика:"
 
-#: modules/process/brickshow.c:503
+#: modules/process/brickshow.c:504
 msgid "3D view"
 msgstr "Просмотр 3D"
 
-#: modules/process/brickshow.c:527
+#: modules/process/brickshow.c:528
 msgid "apply perspective"
 msgstr "добавить перспективу"
 
-#: modules/process/brickshow.c:537
+#: modules/process/brickshow.c:538
 msgid "X view"
 msgstr "Вид X"
 
-#: modules/process/brickshow.c:543
+#: modules/process/brickshow.c:544
 msgid "Y view"
 msgstr "Вид Y"
 
-#: modules/process/brickshow.c:549
+#: modules/process/brickshow.c:550
 msgid "Z view"
 msgstr "Вид Z"
 
-#: modules/process/brickshow.c:622
+#: modules/process/brickshow.c:623
 #, c-format
 msgid "X cross-section at x: %d"
 msgstr "Сечение по X при x: %d"
 
-#: modules/process/brickshow.c:625
+#: modules/process/brickshow.c:626
 #, c-format
 msgid "Y cross-section at y: %d"
 msgstr "Сечение по Y при y: %d"
 
-#: modules/process/brickshow.c:628
+#: modules/process/brickshow.c:629
 #, c-format
 msgid "Z cross-section at z: %d"
 msgstr "Сечение по Z при z: %d"
 
-#: modules/process/brickshow.c:673
+#: modules/process/brickshow.c:674
 #, c-format
 msgid "X graph at y: %d z: %d"
 msgstr "График X при y: %d z: %d"
 
-#: modules/process/brickshow.c:676
+#: modules/process/brickshow.c:677
 #, c-format
 msgid "Y graph at x: %d z: %d"
 msgstr "График Y при x: %d z: %d"
 
-#: modules/process/brickshow.c:679
+#: modules/process/brickshow.c:680
 #, c-format
 msgid "Z graph at x: %d y: %d"
 msgstr "График Z при x: %d y: %d"
 
-#: modules/process/brickshow.c:684
+#: modules/process/brickshow.c:685
 msgid "w"
 msgstr "w"
 
-#: modules/process/brickshow.c:690
+#: modules/process/brickshow.c:691
 msgid "Brick graph"
 msgstr "График блока"
 
-#: modules/process/brickshow.c:941
+#: modules/process/brickshow.c:942
 msgid "Load volume data"
 msgstr "Загрузить объёмные данные"
 
-#: modules/process/brickshow.c:958
+#: modules/process/brickshow.c:959
 #: modules/process/calcoefs_load.c:330
 #, c-format
 msgid "Error loading file '%s'"
@@ -7325,120 +7325,136 @@ msgstr "Порог отношения X/Y:"
 msgid "Low level exclude limit:"
 msgstr "Предел исключения низкого уровня:"
 
-#: modules/process/edge.c:147
+#: modules/process/edge.c:151
 msgid "Several edge detection methods (Laplacian of Gaussian, Canny, and some experimental), creates presentation."
 msgstr "Несколько методов обнаружения границ (лапласиан гауссианов, Канни и несколько экспериментальных), создают презентации."
 
-#: modules/process/edge.c:162
+#: modules/process/edge.c:166
 msgid "/_Presentation/_Edge Detection/_Laplacian of Gaussian"
 msgstr "/_Презентации/Поиск _края/_Лапласиан гауссианов"
 
-#: modules/process/edge.c:166
+#: modules/process/edge.c:170
 msgid "Laplacian of Gaussian step detection presentation"
 msgstr "Презентация \"Лапласиан гауссианов\" для нахождения ступеней."
 
-#: modules/process/edge.c:170
+#: modules/process/edge.c:174
 msgid "/_Presentation/_Edge Detection/_Canny"
 msgstr "/_Презентации/Поиск _края/_Канни"
 
-#: modules/process/edge.c:174
+#: modules/process/edge.c:178
 msgid "Canny edge detection presentation"
 msgstr "Презентация поиска краёв Канни"
 
-#: modules/process/edge.c:177
+#: modules/process/edge.c:181
 msgid "/_Presentation/_Edge Detection/_RMS"
 msgstr "/_Презентации/Поиск _края/_Среднеквадратичное отклонение"
 
-#: modules/process/edge.c:181
+#: modules/process/edge.c:185
 msgid "Local RMS value based step detection presentation"
 msgstr "Презентация поиска кромок по локальному значению среднеквадратичного отклонения"
 
-#: modules/process/edge.c:185
+#: modules/process/edge.c:189
 msgid "/_Presentation/_Edge Detection/RMS _Edge"
 msgstr "/_Презентации/Поиск _края/Кромка среднеквадратичного _отклонения"
 
-#: modules/process/edge.c:189
+#: modules/process/edge.c:193
 msgid "Local RMS value based step detection with postprocessing"
 msgstr "Обнаружение кромки по локальному значению среднеквадратичного отклонения с постобработкой"
 
-#: modules/process/edge.c:193
+#: modules/process/edge.c:197
 msgid "/_Presentation/_Edge Detection/Local _Nonlinearity"
 msgstr "/_Презентации/Поиск _края/Локальная _нелинейность"
 
-#: modules/process/edge.c:197
+#: modules/process/edge.c:201
 msgid "Local nonlinearity based edge detection presentation"
 msgstr "Презентация поиска краёв по локальной нелинейности"
 
-#: modules/process/edge.c:201
+#: modules/process/edge.c:205
 msgid "/_Presentation/_Edge Detection/_Hough Lines"
 msgstr "/_Презентации/Поиск _края/Линии _Хафа"
 
-#: modules/process/edge.c:206
+#: modules/process/edge.c:210
 msgid "Hough lines presentation"
 msgstr "Презентация линии Хафа"
 
-#: modules/process/edge.c:209
+#: modules/process/edge.c:213
 msgid "/_Presentation/_Edge Detection/_Harris Corner"
 msgstr "/_Презентации/Поиск _края/_Угол Харриса"
 
-#: modules/process/edge.c:214
+#: modules/process/edge.c:218
 msgid "Harris corner presentation"
 msgstr "Презентация угол Харриса"
 
-#: modules/process/edge.c:217
+#: modules/process/edge.c:221
 msgid "/_Presentation/_Edge Detection/_Inclination"
 msgstr "/_Презентации/Поиск _края/Н_аклон"
 
-#: modules/process/edge.c:221
+#: modules/process/edge.c:225
 msgid "Local inclination visualization presentation"
 msgstr "Презентация \"визуализация локального наклона\""
 
-#: modules/process/edge.c:225
+#: modules/process/edge.c:229
 msgid "/_Presentation/_Edge Detection/_Step"
 msgstr "/_Презентация/Поиск к_раёв/С_тупень"
 
-#: modules/process/edge.c:229
+#: modules/process/edge.c:233
 msgid "Fine step detection presentation"
 msgstr "Презентация поиска малых ступеней"
 
-#: modules/process/edge.c:241
+#: modules/process/edge.c:236
+msgid "/_Presentation/_Edge Detection/_Sobel"
+msgstr "/_Презентация/Поиск к_раёв/Со_бел"
+
+#: modules/process/edge.c:240
+msgid "Sobel edge presentation"
+msgstr "Презентация \"градиент Собела\""
+
+#: modules/process/edge.c:243
+msgid "/_Presentation/_Edge Detection/_Prewitt"
+msgstr "/_Презентация/Поиск к_раёв/П_ревитт"
+
+#: modules/process/edge.c:247
+msgid "Prewitt edge presentation"
+msgstr "Презентация \"градиент Превитта\""
+
+#: modules/process/edge.c:259
 msgid "/_Presentation/_Edge Detection/_Zero Crossing..."
 msgstr "/_Презентации/Поиск _края/_Пересечение нуля..."
 
-#: modules/process/edge.c:245
+#: modules/process/edge.c:263
 msgid "Zero crossing step detection presentation"
 msgstr "презенация \"Обнаружение ступени по пересечению нуля\""
 
-#: modules/process/edge.c:627
+#: modules/process/edge.c:661
 msgid "Zero Crossing Step Detection"
 msgstr "Обнаружение ступени по пересечению нуля"
 
-#: modules/process/edge.c:677
+#: modules/process/edge.c:711
 msgid "_Gaussian FWHM:"
 msgstr "Ширина на половине высоты _гауссиан:"
 
-#: modules/process/edge.c:686
+#: modules/process/edge.c:720
 msgid "_Threshold:"
 msgstr "_Пороговое значение:"
 
-#: modules/process/edge.c:686
+#: modules/process/edge.c:720
 msgid "NRMS"
 msgstr "ср. квадр. в окр."
 
-#: modules/process/edge.c:693
+#: modules/process/edge.c:727
 msgid "verb|Display"
 msgstr "Показать"
 
-#: modules/process/edge.c:702
+#: modules/process/edge.c:736
 #: modules/process/fft_filter_2d.c:394
 msgid "Original _image"
 msgstr "Исходное _изображение"
 
-#: modules/process/edge.c:703
+#: modules/process/edge.c:737
 msgid "_LoG convolved"
 msgstr "_ЛГ после свёртки"
 
-#: modules/process/edge.c:704
+#: modules/process/edge.c:738
 msgid "Detected st_ep"
 msgstr "Найденная с_тупень"
 
