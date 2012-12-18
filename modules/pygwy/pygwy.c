@@ -183,6 +183,20 @@ check_pygtk_availability(void)
     return TRUE;
 }
 
+static void
+check_duplicit_wrappers(const PyMethodDef* func)
+{
+    GHashTable *seen = g_hash_table_new(g_str_hash, g_str_equal);
+    while (func->ml_name) {
+        if (g_hash_table_lookup(seen, (gpointer)func->ml_name))
+            g_warning("Duplicit pygwy function %s.", func->ml_name);
+        else
+            g_hash_table_insert(seen, (gpointer)func->ml_name,
+                                GUINT_TO_POINTER(TRUE));
+        func++;
+    }
+    g_hash_table_destroy(seen);
+}
 
 void
 pygwy_initialize(void)
@@ -190,7 +204,10 @@ pygwy_initialize(void)
     PyObject *m;
 
     if (!Py_IsInitialized()) {
-        gwy_debug("Initializing Python interpreter" );
+        gwy_debug("Checking function table sanity");
+        check_duplicit_wrappers(pygwy_functions);
+
+        gwy_debug("Initializing Python interpreter");
         // Do not register signal handlers
         Py_InitializeEx(0);
         gwy_debug("Add main module");
