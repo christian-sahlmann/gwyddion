@@ -9,6 +9,9 @@ Libraries:
   sampling-independent and correspond to the formula in user guide.
 - libgwyprocess: Double-free error if the initial Delaunay triangulation step
   fails was corrected.
+- libgwyprocess: Swapped x and y coordinates of spectra in serialisation were
+  fixed.
+- libgwydgets: Crashs upon clicking colour selection buttons were fixed.
 
 Modules:
 - APE DAX (new): Imports APE Research DAX files.
@@ -20,9 +23,11 @@ Modules:
 - Omicron flat: Crash while reading files with up and down traces but no
                 retrace was fixed.
 - Createc: Conversion of raw data to physical values was corrected.
+- Nanoscope: F-Z spectra are imported (experimental).
 - Pixmap: Manual font size range was extended.
 - Raw XYZ: Tolerance for ‘regular grid’ (which is not triangulated) was
   increased to 5% of pixel size to help people with poorly rounded data.
+- Edge: New Sobel and Prewitt classic edge detection functions.
 
 Other:
 - Crash on Win32 while loading TIFF images was hopefully fixed.
