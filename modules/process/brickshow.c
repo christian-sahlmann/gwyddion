@@ -154,7 +154,11 @@ static void     page_switched                      (BrickshowControls *controls,
                                                     gint pagenum);
 static void     graph_selection_finished_cb        (GwySelection *selection,
                                                     BrickshowControls *controls);
-
+static void     p3d_build                           (BrickshowControls *controls,
+                                                     BrickshowArgs *args);
+static void     p3d_prepare_wdata                   (BrickshowControls *controls,
+                                                     BrickshowArgs *args);
+static void     brickshow_zscale_cb                (BrickshowControls *controls);
 //static gboolean p3d_on_draw_event                  (GtkWidget *widget, 
 //                                                   cairo_t *cr, 
 //                                                   BrickshowControls *controls);
@@ -284,10 +288,14 @@ brickshow_dialog(BrickshowArgs *args,
     controls.py = NULL;
     controls.pz = NULL;
     controls.ps = NULL;
-    controls.nps = 0;
+    controls.wpx = NULL;
+    controls.wpy = NULL;
+    controls.wpz = NULL;
+     controls.nps = 0;
 
     /*if there was a datafield, create a brick from it*/ 
     if (original_dfield) create_brick_from_datafield(&controls, original_dfield);
+
 
  
     /*dialogue controls*/
@@ -544,7 +552,7 @@ brickshow_dialog(BrickshowArgs *args,
     gwy_table_attach_hscale(table, row++, _("Z scale"), "%",
                             controls.zscale, 0);
     g_signal_connect_swapped(controls.zscale, "value-changed",
-                             G_CALLBACK(brickshow_invalidate), &controls);
+                             G_CALLBACK(brickshow_zscale_cb), &controls);
     row++;
 
 
@@ -576,8 +584,8 @@ brickshow_dialog(BrickshowArgs *args,
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(p3d_zview_cb), &controls);
 
-    p3d_set_axes(&controls);
-    p3d_add_wireframe(&controls);
+    p3d_build(&controls, args);
+    p3d_prepare_wdata(&controls, args);
 
     row++;
 
@@ -903,8 +911,15 @@ brickshow_dialog_update_values(BrickshowControls *controls,
 
     args->size
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
-    args->zscale
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->zscale));
+}
+
+static void
+brickshow_zscale_cb(BrickshowControls *controls)
+{
+    controls->args->zscale = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->zscale));
+    p3d_prepare_wdata(controls, controls->args);
+
+    preview(controls, controls->args);
 }
 
 static void
@@ -1018,17 +1033,18 @@ brickshow_load_data(BrickshowControls *controls,
             //g_free(text); FIXME: something is wrong - this leads to segfault
 
             gtk_widget_destroy(dialog);
-            
-            brickshow_invalidate(controls);
-            
-            controls->nps = 0;
-            p3d_set_axes(controls);
-            p3d_add_wireframe(controls);
 
-    }
+            brickshow_invalidate(controls);
+
+            controls->nps = 0;
+
+            p3d_build(controls, args);
+            p3d_prepare_wdata(controls, args);
+
+        }
         g_free(filename);
     } else {
-      gtk_widget_destroy(dialog);
+        gtk_widget_destroy(dialog);
 
     }
 
@@ -1232,8 +1248,8 @@ static void
 convert_3d2d(gdouble x, gdouble y, gdouble z, gdouble *px, gdouble *py, gboolean perspective, gdouble size)
 {
     if (perspective) {
-        *px = 8*size*(x/(z+4)) + CX;
-        *py = 8*size*(y/(z+4)) + CY;
+        *px = 9*size*(x/(z+4)) + CX;
+        *py = 9*size*(y/(z+4)) + CY;
     } else {
         *px = 3*size*x + CX;
         *py = 3*size*y + CY;
@@ -1349,11 +1365,11 @@ p3d_on_draw_event(GtkWidget *widget, GdkEventExpose *event, BrickshowControls *c
     cairo_set_source_rgb(cr, 0, 0, 0);
     cairo_set_line_width (cr, 0.5);
 
-    convert_3d2d(controls->px[0], controls->py[0], controls->pz[0], &sx, &sy, controls->args->perspective, controls->args->size);
+    convert_3d2d(controls->wpx[0], controls->wpy[0], controls->wpz[0], &sx, &sy, controls->args->perspective, controls->args->size);
     cairo_move_to(cr, sx, sy);
 
     for (i= 1; i<controls->nps; i++) {
-        convert_3d2d(controls->px[i], controls->py[i], controls->pz[i], &sx, &sy, controls->args->perspective, controls->args->size);
+        convert_3d2d(controls->wpx[i], controls->wpy[i], controls->wpz[i], &sx, &sy, controls->args->perspective, controls->args->size);
         if (controls->ps[i]) cairo_line_to(cr, sx, sy);
         else cairo_move_to(cr, sx, sy);
     }
@@ -1391,10 +1407,10 @@ static void rotate(BrickshowControls *controls, gdouble x, gdouble y, gdouble z)
     
     for (i=0; i<controls->nps; i++)
     {
-        mmultv(controls->rm, controls->px[i], controls->py[i], controls->pz[i], &px, &py, &pz);
-        controls->px[i] = px;
-        controls->py[i] = py;
-        controls->pz[i] = pz;
+        mmultv(controls->rm, controls->wpx[i], controls->wpy[i], controls->wpz[i], &px, &py, &pz);
+        controls->wpx[i] = px;
+        controls->wpy[i] = py;
+        controls->wpz[i] = pz;
     }
 
 }
@@ -1446,11 +1462,16 @@ static void
 p3d_xview_cb(BrickshowControls *controls)
 {
 
+    p3d_prepare_wdata(controls, controls->args);
+    rotate(controls, G_PI/2, 0, 0);
+    gtk_widget_queue_draw(controls->drawarea);
+
 }
 
 static void 
 p3d_yview_cb(BrickshowControls *controls)
 {
+    p3d_prepare_wdata(controls, controls->args);
     rotate(controls, 0, G_PI/2, 0);
     gtk_widget_queue_draw(controls->drawarea);
 
@@ -1459,6 +1480,7 @@ p3d_yview_cb(BrickshowControls *controls)
 static void 
 p3d_zview_cb(BrickshowControls *controls)
 {
+    p3d_prepare_wdata(controls, controls->args);
     rotate(controls, 0, 0, G_PI/2);
     gtk_widget_queue_draw(controls->drawarea);
 
@@ -1542,6 +1564,29 @@ gint simplify(gdouble *px, gdouble *py, gdouble *pz, gdouble *ps, gint nps)
     return newn;
 }
 
+static void     
+p3d_build(BrickshowControls *controls, G_GNUC_UNUSED BrickshowArgs *args)
+{
+    p3d_set_axes(controls);
+    p3d_add_wireframe(controls);
+
+}
+
+
+static void     
+p3d_prepare_wdata(BrickshowControls *controls, BrickshowArgs *args)
+{
+    gint i;
+
+    for (i=0; i<controls->nps; i++) 
+    {
+        controls->wpx[i] = controls->px[i];
+        controls->wpy[i] = controls->py[i];
+        controls->wpz[i] = controls->pz[i]*args->zscale/100.0;
+    }
+
+}
+
 static void 
 p3d_add_wireframe(BrickshowControls *controls)
 {
@@ -1599,7 +1644,7 @@ p3d_add_wireframe(BrickshowControls *controls)
  
                     controls->px[controls->nps] = 2*(gdouble)i/(gdouble)xres - 1;
                     controls->py[controls->nps] = 2*(gdouble)col/(gdouble)yres - 1;
-                    controls->pz[controls->nps] = controls->args->zscale/100.0*(2*(gdouble)row/(gdouble)zres - 1);
+                    controls->pz[controls->nps] = 2*(gdouble)row/(gdouble)zres - 1;
                     if (move) {
                         controls->ps[controls->nps] = 0; 
                         move = 0;
@@ -1647,7 +1692,7 @@ p3d_add_wireframe(BrickshowControls *controls)
  
                     controls->px[controls->nps] = 2*(gdouble)col/(gdouble)xres - 1;
                     controls->py[controls->nps] = 2*(gdouble)i/(gdouble)yres - 1;
-                    controls->pz[controls->nps] = controls->args->zscale/100.0*(2*(gdouble)row/(gdouble)zres - 1);
+                    controls->pz[controls->nps] = 2*(gdouble)row/(gdouble)zres - 1;
                     if (move) {
                         controls->ps[controls->nps] = 0; 
                         move = 0;
@@ -1664,7 +1709,17 @@ p3d_add_wireframe(BrickshowControls *controls)
 //    printf("we have %d segments at the end\nRunning simplification:\n", controls->nps);
 
     controls->nps = simplify(controls->px, controls->py, controls->pz, controls->ps, controls->nps);
-    
+   
+
+    if (controls->wpx) g_free(controls->wpx);
+    if (controls->wpy) g_free(controls->wpy);
+    if (controls->wpz) g_free(controls->wpz);
+
+    controls->wpx = (gdouble *) g_malloc(controls->nps*sizeof(gdouble));
+    controls->wpy = (gdouble *) g_malloc(controls->nps*sizeof(gdouble));
+    controls->wpz = (gdouble *) g_malloc(controls->nps*sizeof(gdouble));
+
+
 //    printf("we have %d segments after simplification\n", controls->nps);
 
 
