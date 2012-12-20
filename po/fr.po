@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-12-17 03:58+0100\n"
-"PO-Revision-Date: 2012-12-17 23:35+0100\n"
+"POT-Creation-Date: 2012-12-19 03:58+0100\n"
+"PO-Revision-Date: 2012-12-19 22:49+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -540,11 +540,11 @@ msgstr "Universel"
 
 #: libprocess/gwyprocessenums.c:166
 msgid "Scale adaptive"
-msgstr "Echelle adaptative"
+msgstr "Échelle adaptative"
 
 #: libprocess/gwyprocessenums.c:167
 msgid "Scale and space adaptive"
-msgstr "Echelle et espace adaptatifs"
+msgstr "Échelle et espace adaptatifs"
 
 #. TRANSLATORS: Interpolation type (AKA nearest neighbour)
 #: libprocess/gwyprocessenums.c:206
@@ -649,7 +649,7 @@ msgstr "Dilatation"
 #: libprocess/morph_lib.c:235
 #: libprocess/morph_lib.c:528
 msgid "Erosion"
-msgstr "Erosion"
+msgstr "Érosion"
 
 #: libprocess/morph_lib.c:305
 msgid "Certainty map"
@@ -793,15 +793,15 @@ msgstr "θ :"
 #: libgwydgets/gwy3dwindow.c:773
 #: modules/process/cwt.c:147
 msgid "_Scale:"
-msgstr "Echelle :"
+msgstr "Échelle :"
 
 #: libgwydgets/gwy3dwindow.c:780
 msgid "_Value scale:"
-msgstr "Echelle de hauteur :"
+msgstr "Échelle de hauteur :"
 
 #: libgwydgets/gwy3dwindow.c:783
 msgid "Make _1:1"
-msgstr "Echelle _1:1"
+msgstr "Échelle _1:1"
 
 #: libgwydgets/gwy3dwindow.c:791
 msgid "Show _axes"
@@ -821,7 +821,7 @@ msgstr "Projection _orthographique"
 
 #: libgwydgets/gwy3dwindow.c:834
 msgid "_Lighting"
-msgstr "Eclairage"
+msgstr "Éclairage"
 
 #: libgwydgets/gwy3dwindow.c:835
 msgid "_Gradient"
@@ -900,7 +900,7 @@ msgstr "pixels"
 #: modules/file/pixmap.c:3036
 #: modules/file/rawfile.c:398
 #: modules/process/angle_dist.c:170
-#: modules/process/brickshow.c:298
+#: modules/process/brickshow.c:304
 #: modules/process/calcoefs_new.c:347
 #: modules/process/calibrate.c:296
 #: modules/process/col_synth.c:299
@@ -1045,7 +1045,7 @@ msgstr "Type de _ligne :"
 
 #: libgwydgets/gwygraphareadialog.c:166
 msgid "Line t_hickness:"
-msgstr "Epaisseur de ligne :"
+msgstr "Épaisseur de ligne :"
 
 #: libgwydgets/gwygraphareadialog.c:382
 msgid "Set Curve Color"
@@ -1073,7 +1073,7 @@ msgstr "Asterisque"
 
 #: libgwydgets/gwygraphareadialog.c:535
 msgid "Star"
-msgstr "Etoile"
+msgstr "Étoile"
 
 #: libgwydgets/gwygraphareadialog.c:536
 msgid "Triangle up"
@@ -1149,7 +1149,7 @@ msgstr "Style de ligne"
 
 #: libgwydgets/gwygraphlabeldialog.c:73
 msgid "Frame thickness:"
-msgstr "Epaisseur de la grille"
+msgstr "Épaisseur de la grille"
 
 #: libgwydgets/gwygraphlabeldialog.c:80
 msgid "_Reversed layout"
@@ -1351,12 +1351,12 @@ msgstr "Nom :"
 
 #: libgwymodule/gwymodulebrowser.c:270
 msgid "Failure:"
-msgstr "Echec :"
+msgstr "Échec :"
 
 #: app/about.c:56
 #, c-format
 msgid "About %s"
-msgstr "A propos de %s"
+msgstr "À propos de %s"
 
 #: app/about.c:91
 msgid "An SPM data visualization and analysis tool."
@@ -1523,7 +1523,7 @@ msgid "Channels"
 msgstr "Canaux"
 
 #: app/data-browser.c:4101
-#: modules/process/brickshow.c:416
+#: modules/process/brickshow.c:422
 msgid "Graphs"
 msgstr "Graphes"
 
@@ -1648,7 +1648,7 @@ msgstr "_Sensible à la casse"
 
 #: app/glmaterial-editor.c:90
 msgid "GL Material Editor"
-msgstr "Editeur de matériau GL"
+msgstr "Éditeur de matériau GL"
 
 #: app/glmaterial-editor.c:91
 #, c-format
@@ -1673,7 +1673,7 @@ msgstr "Br_illance :"
 
 #: app/gradient-editor.c:124
 msgid "Color Gradient Editor"
-msgstr "Editeur de gradient"
+msgstr "Éditeur de gradient"
 
 #: app/gradient-editor.c:125
 #, c-format
@@ -1941,7 +1941,7 @@ msgstr "Enregistrer les méta-données"
 
 #: app/resource-editor.c:134
 msgid "Edit selected item"
-msgstr "Editer l'élément sélectionné"
+msgstr "Éditer l'élément sélectionné"
 
 #: app/resource-editor.c:140
 #: modules/process/convolution_filter.c:511
@@ -2063,15 +2063,15 @@ msgstr "Fichier→ Fusionner importe toute les données du fichier sélectionné
 
 #: app/tips.c:123
 msgid "Your favorite false color gradient can be set as default in the gradient editor: Edit → Color Gradients.  The default gradient is shown in bold face."
-msgstr "Votre gradient favori peut être réglé par défaut dans l'éditeur de gradient : Editer → Gradients.  Le gradient par défaut est affiché en gras."
+msgstr "Votre gradient favori peut être réglé par défaut dans l'éditeur de gradient : Éditer → Gradients.  Le gradient par défaut est affiché en gras."
 
 #: app/tips.c:129
 msgid "Your favorite GL material can be set as default in the material editor: Edit → GL Materials.  The default material is shown in bold face."
-msgstr "Votre matériau GL favori peut être réglé par défaut dans l'éditeur de matériau : Editer → Matériau GL.  Le matériau par défaut est affiché en gras."
+msgstr "Votre matériau GL favori peut être réglé par défaut dans l'éditeur de matériau : Éditer → Matériau GL.  Le matériau par défaut est affiché en gras."
 
 #: app/tips.c:135
 msgid "Edit → Default Mask Color sets the default mask color.  This color is used when a mask is created on data that have not had a mask before."
-msgstr "Editer → Couleur de Masque par Défaut permet de choisir la couleur de masque. Cette couleur est utilisée lorsqu'un masque est créé sur des données sur lesquelles aucun masque n'est appliqué."
+msgstr "Éditer → Couleur de Masque par Défaut permet de choisir la couleur de masque. Cette couleur est utilisée lorsqu'un masque est créé sur des données sur lesquelles aucun masque n'est appliqué."
 
 #: app/tips.c:141
 msgid "Each channel has its own metadata."
@@ -2227,7 +2227,7 @@ msgstr "L'outil Mesure de Grain est idéal pour examiner des grains individuelle
 
 #: app/tips.c:337
 msgid "Mask Editor tool can create, edit, invert, grow and shrink masks."
-msgstr "L'Editeur de Masque permet de créer, éditer, inverser, dilater ou éroder les masques."
+msgstr "L'Éditeur de Masque permet de créer, éditer, inverser, dilater ou éroder les masques."
 
 #: app/tips.c:341
 msgid "Color Range tool offers several false color scale mapping modes and can make any of them the default mode."
@@ -2291,7 +2291,7 @@ msgstr "_Fichier"
 
 #: app/toolbox.c:611
 msgid "_Edit"
-msgstr "_Editer"
+msgstr "_Éditer"
 
 #: app/toolbox.c:621
 msgid "_Meta"
@@ -2315,7 +2315,7 @@ msgstr "/As_tuce du jour"
 
 #: app/toolbox.c:703
 msgid "/_About Gwyddion"
-msgstr "/_A propos de Gwyddion"
+msgstr "/_À propos de Gwyddion"
 
 #: app/toolbox.c:742
 msgid "/_Open..."
@@ -2925,7 +2925,7 @@ msgstr "Import de fichier annulé par l'utilisateur."
 
 #: modules/file/err.h:185
 msgid "Missing header."
-msgstr "EN-tête manquant."
+msgstr "En-tête manquant."
 
 #: modules/file/ezdfile.c:123
 msgid "Imports Nanosurf EZD and NID data files."
@@ -2937,7 +2937,7 @@ msgstr "Nanosurf (.ezd, .nid)"
 
 #: modules/file/ezdfile.c:301
 msgid "Garbage before first header section."
-msgstr "Eléments inutiles avant la première section d'en-tête."
+msgstr "Éléments inutiles avant la première section d'en-tête."
 
 #: modules/file/ezdfile.c:312
 #: modules/file/nanoscope-ii.c:251
@@ -3126,7 +3126,7 @@ msgstr "Entier (32 bits)"
 
 #: modules/file/hdrimage.cc:444
 msgid "_Z scale:"
-msgstr "Echelle _Z :"
+msgstr "Échelle _Z :"
 
 #: modules/file/hdrimage.cc:473
 msgid "Representable"
@@ -3263,7 +3263,7 @@ msgstr "_Mesures identiques"
 #: modules/file/pixmap.c:1188
 #: modules/file/rawfile.c:686
 msgid "_Z-scale (per sample unit):"
-msgstr "Echelle _Z (par unité d'échantillon) :"
+msgstr "Échelle _Z (par unité d'échantillon) :"
 
 #: modules/file/hdrimage.cc:2493
 #: modules/file/pixmap.c:1438
@@ -4286,7 +4286,7 @@ msgstr "Exporter %s"
 
 #: modules/file/pixmap.c:3063
 msgid "Scaling"
-msgstr "Echelle"
+msgstr "Échelle"
 
 #: modules/file/pixmap.c:3072
 msgid "_Zoom:"
@@ -4334,7 +4334,7 @@ msgstr "Exporter en niveaux de gris 1_6 bits"
 
 #: modules/file/pixmap.c:3197
 msgid "Lateral Scale"
-msgstr "Echelle latérale"
+msgstr "Échelle latérale"
 
 #: modules/file/pixmap.c:3204
 #: modules/file/pixmap.c:3319
@@ -4347,7 +4347,7 @@ msgstr "G_raduations"
 
 #: modules/file/pixmap.c:3206
 msgid "_Inset scale bar"
-msgstr "Echelle"
+msgstr "Échelle"
 
 #: modules/file/pixmap.c:3211
 msgid "Color:"
@@ -4401,7 +4401,7 @@ msgstr "Valeur d'échelle"
 
 #: modules/file/pixmap.c:3320
 msgid "_False color ruler"
-msgstr "Echelle de couleurs"
+msgstr "Échelle de couleurs"
 
 #: modules/file/pltfile.c:71
 msgid "Imports Nanosurf PLT files."
@@ -4429,7 +4429,7 @@ msgstr "Park Systems (.tiff, .tif)"
 
 #: modules/file/psia.c:338
 msgid "Data tag is missing."
-msgstr "Etiquette de données manquante."
+msgstr "Étiquette de données manquante."
 
 #: modules/file/psia.c:491
 #, c-format
@@ -4566,7 +4566,7 @@ msgstr "Préréglages"
 #: modules/file/rawfile.c:540
 #: modules/file/rawxyz.c:435
 #: modules/process/arithmetic.c:227
-#: modules/process/brickshow.c:295
+#: modules/process/brickshow.c:301
 #: modules/process/calcoefs_view.c:332
 #: modules/process/convolution_filter.c:243
 #: modules/process/deposit_synth.c:682
@@ -4613,7 +4613,7 @@ msgstr "Taille _verticale :"
 #: modules/file/rawfile.c:616
 #: modules/file/rawxyz.c:604
 msgid "S_quare sample"
-msgstr "Echantillon carré"
+msgstr "Échantillon carré"
 
 #: modules/file/rawfile.c:722
 msgid "_Automatically offer raw data import of unknown files"
@@ -5974,7 +5974,7 @@ msgstr "_Nombre de pas :"
 #: modules/process/angle_dist.c:195
 #: modules/process/slope_dist.c:242
 msgid "_Logarithmic value scale"
-msgstr "Echelle _logarithmique"
+msgstr "Échelle _logarithmique"
 
 #: modules/process/angle_dist.c:201
 #: modules/process/slope_dist.c:248
@@ -6126,7 +6126,7 @@ msgstr "Tourner les données de 90 degrés dans le sens direct"
 
 #: modules/process/basicops.c:112
 msgid "/_Basic Operations/S_quare Samples"
-msgstr "/Opérations _basiques/Echantillons carrés"
+msgstr "/Opérations _basiques/Échantillons carrés"
 
 #: modules/process/basicops.c:116
 msgid "Resample data with non-1:1 aspect ratio to square samples"
@@ -6140,97 +6140,97 @@ msgstr "/Opérations _basiques/Supprimer l'offset"
 msgid "Null horizontall offsets, moving the origin to the upper left corner"
 msgstr "Annule les décalages horizontaux en déplaçant l'origine dans le coin en haut à gauche"
 
-#: modules/process/brickshow.c:191
+#: modules/process/brickshow.c:197
 msgid "Loads and shows a brick (3D volume data)."
 msgstr "Charge et affiche des données volumiques"
 
-#: modules/process/brickshow.c:205
+#: modules/process/brickshow.c:211
 #, fuzzy
 msgid "/_Bricks/Load and show..."
 msgstr "/Cu_be de données/Charger et afficher..."
 
-#: modules/process/brickshow.c:209
+#: modules/process/brickshow.c:215
 msgid "Load and show 3D data"
 msgstr "Charger et afficher des données 3D"
 
-#: modules/process/brickshow.c:241
+#: modules/process/brickshow.c:247
 msgid "X cross-section"
 msgstr "Section X"
 
-#: modules/process/brickshow.c:242
+#: modules/process/brickshow.c:248
 msgid "Y cross-section"
 msgstr "Section Y"
 
-#: modules/process/brickshow.c:243
+#: modules/process/brickshow.c:249
 msgid "Z cross-section"
 msgstr "Section Z"
 
-#: modules/process/brickshow.c:244
-#: modules/process/brickshow.c:632
+#: modules/process/brickshow.c:250
+#: modules/process/brickshow.c:655
 msgid "X direction sum"
 msgstr "Somme selon X"
 
-#: modules/process/brickshow.c:245
-#: modules/process/brickshow.c:634
+#: modules/process/brickshow.c:251
+#: modules/process/brickshow.c:657
 msgid "Y direction sum"
 msgstr "Somme selon Y"
 
-#: modules/process/brickshow.c:246
-#: modules/process/brickshow.c:636
+#: modules/process/brickshow.c:252
+#: modules/process/brickshow.c:659
 msgid "Z direction sum"
 msgstr "Somme selon Z"
 
-#: modules/process/brickshow.c:249
+#: modules/process/brickshow.c:255
 msgid "X direction"
 msgstr "Direction X"
 
-#: modules/process/brickshow.c:250
+#: modules/process/brickshow.c:256
 msgid "Y direction"
 msgstr "Direction Y"
 
-#: modules/process/brickshow.c:251
+#: modules/process/brickshow.c:257
 msgid "Z direction"
 msgstr "Direction Z"
 
-#: modules/process/brickshow.c:289
+#: modules/process/brickshow.c:295
 msgid "Volume data"
 msgstr "Données volumiques"
 
-#: modules/process/brickshow.c:291
+#: modules/process/brickshow.c:297
 msgid "_Load"
 msgstr "Charger"
 
-#: modules/process/brickshow.c:303
+#: modules/process/brickshow.c:309
 msgid "_Extract projection"
 msgstr "_Extraire la projection"
 
-#: modules/process/brickshow.c:322
+#: modules/process/brickshow.c:328
 msgid "Projections"
 msgstr "Intersections"
 
-#: modules/process/brickshow.c:360
+#: modules/process/brickshow.c:366
 msgid "X position"
 msgstr "Position X"
 
-#: modules/process/brickshow.c:367
+#: modules/process/brickshow.c:373
 msgid "Y position"
 msgstr "Position Y"
 
-#: modules/process/brickshow.c:374
+#: modules/process/brickshow.c:380
 msgid "Z position"
 msgstr "Position Z"
 
-#: modules/process/brickshow.c:380
+#: modules/process/brickshow.c:386
 msgid "Shown cut direction:"
 msgstr "Direction de coupe affichée :"
 
-#: modules/process/brickshow.c:390
-#: modules/process/brickshow.c:476
+#: modules/process/brickshow.c:396
+#: modules/process/brickshow.c:482
 msgid "Show mode:"
 msgstr "Mode d'affichage : "
 
-#: modules/process/brickshow.c:396
-#: modules/process/brickshow.c:482
+#: modules/process/brickshow.c:402
+#: modules/process/brickshow.c:488
 #: modules/process/calcoefs_view.c:583
 #: modules/process/deposit_synth.c:686
 #: modules/process/edge.c:744
@@ -6245,81 +6245,89 @@ msgstr "Mode d'affichage : "
 msgid "I_nstant updates"
 msgstr "Mise à jour instantanée"
 
-#: modules/process/brickshow.c:405
-#: modules/process/brickshow.c:491
+#: modules/process/brickshow.c:411
+#: modules/process/brickshow.c:497
 #: modules/process/calcoefs_load.c:239
 msgid "No data loaded"
 msgstr "Aucunes données chargées"
 
-#: modules/process/brickshow.c:466
+#: modules/process/brickshow.c:472
 msgid "Graph cut direction:"
 msgstr "Direction de coupe du graphe :"
 
-#: modules/process/brickshow.c:504
+#: modules/process/brickshow.c:510
 msgid "3D view"
 msgstr "Vue 3D"
 
-#: modules/process/brickshow.c:528
+#: modules/process/brickshow.c:536
+msgid "Zoom"
+msgstr "Zoom"
+
+#: modules/process/brickshow.c:544
+msgid "Z scale"
+msgstr "Échelle Z"
+
+#: modules/process/brickshow.c:551
 msgid "apply perspective"
 msgstr "Appliquer la perspective"
 
-#: modules/process/brickshow.c:538
+#: modules/process/brickshow.c:561
 msgid "X view"
 msgstr "Vue X"
 
-#: modules/process/brickshow.c:544
+#: modules/process/brickshow.c:567
 msgid "Y view"
 msgstr "Vue Y"
 
-#: modules/process/brickshow.c:550
+#: modules/process/brickshow.c:573
 msgid "Z view"
 msgstr "Vue Z"
 
-#: modules/process/brickshow.c:623
+#: modules/process/brickshow.c:646
 #, c-format
 msgid "X cross-section at x: %d"
 msgstr "Section X pour x : %d"
 
-#: modules/process/brickshow.c:626
+#: modules/process/brickshow.c:649
 #, c-format
 msgid "Y cross-section at y: %d"
 msgstr "Section Y pour y : %d"
 
-#: modules/process/brickshow.c:629
+#: modules/process/brickshow.c:652
 #, c-format
 msgid "Z cross-section at z: %d"
 msgstr "Section Z pour z : %d"
 
-#: modules/process/brickshow.c:674
+#: modules/process/brickshow.c:697
 #, c-format
 msgid "X graph at y: %d z: %d"
 msgstr "Graphe X pour y : %d z : %d"
 
-#: modules/process/brickshow.c:677
+#: modules/process/brickshow.c:700
 #, c-format
 msgid "Y graph at x: %d z: %d"
 msgstr "Graphe Y pour x : %d z : %d"
 
-#: modules/process/brickshow.c:680
+#: modules/process/brickshow.c:703
 #, c-format
 msgid "Z graph at x: %d y: %d"
 msgstr "Graphe Z pour x : %d y : %d"
 
-#: modules/process/brickshow.c:685
+#: modules/process/brickshow.c:708
 #, fuzzy
 msgid "w"
 msgstr "w"
 
-#: modules/process/brickshow.c:691
+#: modules/process/brickshow.c:714
 #, fuzzy
 msgid "Brick graph"
 msgstr "Graphe d'un cube de données"
 
-#: modules/process/brickshow.c:942
+#: modules/process/brickshow.c:970
 msgid "Load volume data"
 msgstr "Charger des données volumiques"
 
-#: modules/process/brickshow.c:959
+#: modules/process/brickshow.c:987
 #: modules/process/calcoefs_load.c:330
 #, c-format
 msgid "Error loading file '%s'"
@@ -6369,7 +6377,7 @@ msgstr "La calibration '%s' existe déjà"
 #: modules/process/calcoefs_new.c:636
 #: modules/process/calcoefs_simple.c:539
 msgid "Overwrite"
-msgstr "Ecraser"
+msgstr "Écraser"
 
 #: modules/process/calcoefs_load.c:269
 #: modules/process/calcoefs_new.c:637
@@ -6558,7 +6566,7 @@ msgstr "Recalibration numérique des données AFM"
 
 #: modules/process/calcoefs_stage.c:93
 msgid "/Cali_bration/_3D Calibration/_Get From Stage map..."
-msgstr "/Cali_bration/Calibration _3D/A partir de la carte d'erreur de platine..."
+msgstr "/Cali_bration/Calibration _3D/À partir de la carte d'erreur de platine..."
 
 #: modules/process/calcoefs_stage.c:97
 msgid "Stage error mapping"
@@ -6753,7 +6761,7 @@ msgstr "Hauteur _Y :"
 
 #: modules/process/calibrate.c:359
 msgid "_Square samples"
-msgstr "Echantillons carrés"
+msgstr "Échantillons carrés"
 
 #: modules/process/calibrate.c:394
 msgid "Value Range"
@@ -7188,7 +7196,7 @@ msgstr "Ajouter à partir du canal courant"
 
 #: modules/process/drift.c:155
 msgid "Evaluates and/or correct thermal drift in fast scan axis."
-msgstr "Evalue et/ou corrige la dérive thermique dans l'axe rapide de scan"
+msgstr "Évalue et/ou corrige la dérive thermique dans l'axe rapide de scan"
 
 #: modules/process/drift.c:169
 msgid "/_Correct Data/Compensate _Drift..."
@@ -7196,7 +7204,7 @@ msgstr "/_Correction des données/Compenser la _dérive..."
 
 #: modules/process/drift.c:173
 msgid "Evaluate/correct thermal drift in fast scan axis"
-msgstr "Evaluer / corriger la dérive thermique dans l'axe rapide de scan"
+msgstr "Évaluer / corriger la dérive thermique dans l'axe rapide de scan"
 
 #: modules/process/drift.c:225
 msgid "Compensate Drift"
@@ -7745,7 +7753,7 @@ msgstr "Soustraire un rectangle au masque de filtrage"
 
 #: modules/process/fft_filter_2d.c:390
 msgid "_FFT mask editor"
-msgstr "Editeur de masque _FFT"
+msgstr "Éditeur de masque _FFT"
 
 #: modules/process/fft_filter_2d.c:398
 msgid "Fi_ltered image"
@@ -8133,7 +8141,7 @@ msgstr "Ajuster la surface"
 
 #: modules/process/fractal.c:269
 msgid "From:"
-msgstr "A partir de :"
+msgstr "À partir de :"
 
 #: modules/process/fractal.c:269
 #: modules/process/fractal.c:516
@@ -8229,7 +8237,7 @@ msgstr "O_rdonnée"
 
 #: modules/process/grain_dist.c:149
 msgid "Evaluates distribution of grains (continuous parts of mask)."
-msgstr "Evalue la distribution des grains (parties continues du masque)."
+msgstr "Évalue la distribution des grains (parties continues du masque)."
 
 #: modules/process/grain_dist.c:171
 msgid "/_Grains/_Distributions..."
@@ -9358,11 +9366,11 @@ msgstr "En bas"
 
 #: modules/process/merge.c:129
 msgid "adverb|Right"
-msgstr "A droite"
+msgstr "À droite"
 
 #: modules/process/merge.c:130
 msgid "adverb|Left"
-msgstr "A gauche"
+msgstr "À gauche"
 
 #: modules/process/merge.c:134
 msgid "Correlation"
@@ -9602,7 +9610,7 @@ msgstr "Apprentissage..."
 #: modules/process/neural.c:1185
 #: modules/process/neural.c:1349
 msgid "Evaluating..."
-msgstr "Evaluation..."
+msgstr "Évaluation..."
 
 #: modules/process/neural.c:1273
 #: modules/process/pid.c:333
@@ -9996,7 +10004,7 @@ msgstr "Attacher de nouvelles données comme présentation"
 
 #: modules/process/presentationops.c:92
 msgid "/_Presentation/_Logscale"
-msgstr "/_Présentation/Echelle _logarithmique"
+msgstr "/_Présentation/Échelle _logarithmique"
 
 #: modules/process/presentationops.c:96
 msgid "Creates a presentation with logarithmic color scale"
@@ -10036,7 +10044,7 @@ msgstr "Pivoter de l'angle :"
 
 #: modules/process/rotate.c:297
 msgid "E_xpand result to fit complete data"
-msgstr "Etendre le résultat pour ajuster toutes les données"
+msgstr "Étendre le résultat pour ajuster toutes les données"
 
 #: modules/process/scale.c:91
 msgid "Scales data by arbitrary factor."
@@ -10044,7 +10052,7 @@ msgstr "Met les données à l'échelle selon un facteur quelconque."
 
 #: modules/process/scale.c:105
 msgid "/_Basic Operations/_Scale..."
-msgstr "/Opérations _basiques/Echelle..."
+msgstr "/Opérations _basiques/Échelle..."
 
 #: modules/process/scale.c:109
 msgid "Scale data"
@@ -10295,7 +10303,7 @@ msgstr "_Amplitude :"
 
 #: modules/process/synth.h:442
 msgid "_Lateral scale:"
-msgstr "Echelle _latérale :"
+msgstr "Échelle _latérale :"
 
 #: modules/process/synth.h:536
 msgid "Randomi_ze"
@@ -10631,22 +10639,22 @@ msgstr "Commande "
 msgid "Pygwy, the Gwyddion Python wrapper."
 msgstr "Pygwy, l'interface Python pour Gwyddion"
 
-#: pygwy.c:520
+#: pygwy.c:537
 msgid "Function written in Python"
 msgstr "Fonction écrite en Python"
 
-#: pygwy.c:566
+#: pygwy.c:583
 msgid "Graph function written in Python"
 msgstr "Fonction graphique écrite en Python"
 
-#: pygwy.c:976
+#: pygwy.c:993
 #, c-format
 msgid ""
 "Pygwy plugin: %s (%s)\n"
 "Export failed."
 msgstr ""
 "Plg-in Pygwy : %s (%s)\n"
-"Echec de l'export."
+"Échec de l'export."
 
 #: modules/tools/crop.c:82
 msgid "Crop tool, crops data to smaller size."
@@ -10766,7 +10774,7 @@ msgstr "Visualisation des couleurs"
 
 #: modules/tools/icolorange.c:152
 msgid "Stretch color range to part of data"
-msgstr "Etale la plage de visualisation sur une partie des données"
+msgstr "Étale la plage de visualisation sur une partie des données"
 
 #: modules/tools/icolorange.c:219
 msgid "Full color range from minimum to maximum"
@@ -10913,11 +10921,11 @@ msgstr "Outil d'édition de masque, permet de modifier des parties du masque de 
 
 #: modules/tools/maskedit.c:213
 msgid "Mask Editor"
-msgstr "Editeur de masque"
+msgstr "Éditeur de masque"
 
 #: modules/tools/maskedit.c:214
 msgid "Edit mask"
-msgstr "Editer le masque"
+msgstr "Éditer le masque"
 
 #: modules/tools/maskedit.c:326
 msgid "Set mask to selection"
@@ -10965,7 +10973,7 @@ msgstr "Effacer les parties continues d'un masque"
 
 #: modules/tools/maskedit.c:408
 msgid "Editor"
-msgstr "Editeur"
+msgstr "Éditeur"
 
 #: modules/tools/maskedit.c:413
 msgid "_Shapes"
@@ -11005,7 +11013,7 @@ msgstr "Remplir les _vides"
 
 #: modules/tools/maskedit.c:577
 msgid "Grow/Shrink"
-msgstr "Dilater / Eroder"
+msgstr "Dilater / Éroder"
 
 #: modules/tools/maskedit.c:586
 msgid "_Grow"
@@ -11013,7 +11021,7 @@ msgstr "Dilater"
 
 #: modules/tools/maskedit.c:594
 msgid "Shrin_k"
-msgstr "Eroder"
+msgstr "Éroder"
 
 #: modules/tools/maskedit.c:609
 msgid "_Amount:"
@@ -11021,7 +11029,7 @@ msgstr "Qu_antité :"
 
 #: modules/tools/maskedit.c:616
 msgid "Shrink from _border"
-msgstr "Eroder à partir du _bord"
+msgstr "Éroder à partir du _bord"
 
 #: modules/tools/maskedit.c:627
 msgid "_Prevent grain merging by growing"
@@ -11043,7 +11051,7 @@ msgstr "Met à niveau les lignes en utilisant les intersections des lignes défi
 #: modules/tools/profile.c:405
 #: modules/tools/roughness.c:860
 msgid "_Thickness:"
-msgstr "Epaisseur :"
+msgstr "Épaisseur :"
 
 #: modules/tools/polynom.c:92
 msgid "Polynomial line level tool, fits polynomials to X or Y profiles and subtracts them."
