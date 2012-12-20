@@ -118,6 +118,9 @@ typedef struct {
     gdouble *wpx;
     gdouble *wpy;
     gdouble *wpz;
+    gdouble xangle;
+    gdouble yangle;
+    gdouble zangle;
     gint nps;
 } BrickshowControls;
 
@@ -291,6 +294,7 @@ brickshow_dialog(BrickshowArgs *args,
     controls.wpx = NULL;
     controls.wpy = NULL;
     controls.wpz = NULL;
+    controls.xangle = controls.yangle = controls.zangle = 0;
      controls.nps = 0;
 
     /*if there was a datafield, create a brick from it*/ 
@@ -913,14 +917,6 @@ brickshow_dialog_update_values(BrickshowControls *controls,
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
 }
 
-static void
-brickshow_zscale_cb(BrickshowControls *controls)
-{
-    controls->args->zscale = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->zscale));
-    p3d_prepare_wdata(controls, controls->args);
-
-    preview(controls, controls->args);
-}
 
 static void
 brickshow_invalidate(BrickshowControls *controls)
@@ -1353,6 +1349,35 @@ mcopy(gdouble a[3][3], gdouble b[3][3])
     }
 }
 
+/*static gdouble
+mdet(gdouble m[3][3])
+{
+    return (m[0][0] * m[1][1] * m[2][2]) + (m[1][0] * m[2][1] * m[3][2]) + (m[2][0] * m[3][1] * m[4][2])
+           - (m[0][2] * m[1][1] * m[2][0]) - (m[1][2] * m[2][1] * m[3][0]) - (m[2][2] * m[3][1] * m[4][0]);
+}
+
+static gboolean
+minv(gdouble m[3][3], gdouble ret[3][3])
+{
+    gdouble ddet = 1.0/mdet(m);
+
+    if (det == 0) return FALSE;
+
+    ret[0][0] =  ((m[1][1]*m[2][2])-(m[1][2]*m[2][1]))*ddet;
+    ret[0][1] = -((m[1][0]*m[2][2])-(m[1][2]*m[2][0]))*ddet;
+    ret[0][2] =  ((m[1][0]*m[2][1])-(m[1][1]*m[2][0]))*ddet;
+
+    ret[1][0] = -((m[0][1]*m[2][2])-(m[0][2]*m[2][1]))*ddet;
+    ret[1][1] =  ((m[0][0]*m[2][2])-(m[0][2]*m[2][0]))*ddet;
+    ret[1][2] = -((m[0][0]*m[2][1])-(m[0][1]*m[2][0]))*ddet;
+
+    ret[2][0] =  ((m[0][1]*m[1][2])-(m[0][2]*m[1][1]))*ddet;
+    ret[2][1] = -((m[0][0]*m[1][2])-(m[0][2]*m[1][0]))*ddet;
+    ret[2][2] =  ((m[0][0]*m[1][1])-(m[0][1]*m[1][0]))*ddet;
+
+    return TRUE;
+}*/
+
 static gboolean
 //p3d_on_draw_event(GtkWidget *widget, cairo_t *cr, 
 //              BrickshowControls *controls)
@@ -1365,10 +1390,10 @@ p3d_on_draw_event(GtkWidget *widget, GdkEventExpose *event, BrickshowControls *c
     cairo_set_source_rgb(cr, 0, 0, 0);
     cairo_set_line_width (cr, 0.5);
 
-    convert_3d2d(controls->wpx[0], controls->wpy[0], controls->wpz[0], &sx, &sy, controls->args->perspective, controls->args->size);
+    convert_3d2d(controls->wpx[3], controls->wpy[3], controls->wpz[3], &sx, &sy, controls->args->perspective, controls->args->size);
     cairo_move_to(cr, sx, sy);
 
-    for (i= 1; i<controls->nps; i++) {
+    for (i=4; i<controls->nps; i++) {
         convert_3d2d(controls->wpx[i], controls->wpy[i], controls->wpz[i], &sx, &sy, controls->args->perspective, controls->args->size);
         if (controls->ps[i]) cairo_line_to(cr, sx, sy);
         else cairo_move_to(cr, sx, sy);
@@ -1392,6 +1417,29 @@ p3d_clicked(GtkWidget *widget, GdkEventButton *event,
     return TRUE;
 }
 
+static void rotatem(BrickshowControls *controls)
+{
+    gdouble px, py, pz, im[3][3];
+    gint i;
+
+    im[0][0] = controls->rm[0][0]; im[0][1] = controls->rm[1][0]; im[0][2] = controls->rm[2][0];
+    im[1][0] = controls->rm[0][1]; im[1][1] = controls->rm[1][1]; im[1][2] = controls->rm[2][1];
+    im[2][0] = controls->rm[0][2]; im[2][1] = controls->rm[1][2]; im[2][2] = controls->rm[2][2];
+
+    /*printf("rotation matrix:\n%g %g %g\n%g %g %g\n%g %g %g\n--------------\n",
+           controls->rm[0][0], controls->rm[0][1], controls->rm[0][2],
+           controls->rm[1][0], controls->rm[1][1], controls->rm[1][2],
+           controls->rm[2][0], controls->rm[2][1], controls->rm[2][2]);
+*/
+    for (i=0; i<controls->nps; i++)
+    {
+        mmultv(im, controls->wpx[i], controls->wpy[i], controls->wpz[i], &px, &py, &pz);
+        controls->wpx[i] = px;
+        controls->wpy[i] = py;
+        controls->wpz[i] = pz;
+    }
+}
+
 static void rotate(BrickshowControls *controls, gdouble x, gdouble y, gdouble z)
 {
     gdouble rotx[3][3], roty[3][3], rotz[3][3], rotbuf[3][3];
@@ -1413,8 +1461,37 @@ static void rotate(BrickshowControls *controls, gdouble x, gdouble y, gdouble z)
         controls->wpz[i] = pz;
     }
 
+
+    
+    controls->rm[0][0] = controls->wpx[0];
+    controls->rm[0][1] = controls->wpy[0];
+    controls->rm[0][2] = controls->wpz[0];
+
+    controls->rm[1][0] = controls->wpx[1];
+    controls->rm[1][1] = controls->wpy[1];
+    controls->rm[1][2] = controls->wpz[1];
+
+    controls->rm[2][0] = controls->wpx[2];
+    controls->rm[2][1] = controls->wpy[2];
+    controls->rm[2][2] = controls->wpz[2];
+
+
+   // printf("total rotation by angle %g %g %g (%g %g %g), rotating by %g %g %g\n", controls->xangle, 
+   //        controls->yangle, 
+   //        controls->zangle,
+   //        controls->wpx[0], controls->wpy[1], controls->wpz[2], x, y, z);
+
 }
 
+static void
+brickshow_zscale_cb(BrickshowControls *controls)
+{
+    controls->args->zscale = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->zscale));
+    p3d_prepare_wdata(controls, controls->args);
+    rotatem(controls);
+
+    preview(controls, controls->args);
+}
 
 
 
@@ -1489,35 +1566,40 @@ p3d_zview_cb(BrickshowControls *controls)
 static void 
 p3d_set_axes(BrickshowControls *controls)
 {
+    gint i = 0;
 
-    if (controls->px==NULL || controls->nps<17) 
-       controls->px = (gdouble *)g_malloc(17*sizeof(gdouble));
-    if (controls->py==NULL || controls->nps<17) 
-       controls->py = (gdouble *)g_malloc(17*sizeof(gdouble));
-    if (controls->pz==NULL || controls->nps<17) 
-       controls->pz = (gdouble *)g_malloc(17*sizeof(gdouble));
-    if (controls->ps==NULL || controls->nps<17) 
-       controls->ps = (gdouble *)g_malloc(17*sizeof(gdouble));
+    if (controls->px==NULL || controls->nps<21) 
+       controls->px = (gdouble *)g_malloc(21*sizeof(gdouble));
+    if (controls->py==NULL || controls->nps<21) 
+       controls->py = (gdouble *)g_malloc(21*sizeof(gdouble));
+    if (controls->pz==NULL || controls->nps<21) 
+       controls->pz = (gdouble *)g_malloc(21*sizeof(gdouble));
+    if (controls->ps==NULL || controls->nps<21) 
+       controls->ps = (gdouble *)g_malloc(21*sizeof(gdouble));
 
-    controls->px[0] = -1; controls->py[0] = -1; controls->pz[0] = -controls->args->zscale/100.0; controls->ps[0] = 0;
-    controls->px[1] = 1; controls->py[1] = -1; controls->pz[1] = -controls->args->zscale/100.0; controls->ps[1] = 1;
-    controls->px[2] = 1; controls->py[2] = 1; controls->pz[2] = -controls->args->zscale/100.0; controls->ps[2] = 1;
-    controls->px[3] = 1; controls->py[3] = 1; controls->pz[3] = controls->args->zscale/100.0; controls->ps[3] = 1;
-    controls->px[4] = -1; controls->py[4] = 1; controls->pz[4] = controls->args->zscale/100.0; controls->ps[4] = 1;
-    controls->px[5] = -1; controls->py[5] = -1; controls->pz[5] = controls->args->zscale/100.0; controls->ps[5] = 1;
-    controls->px[6] = 1; controls->py[6] = -1; controls->pz[6] = controls->args->zscale/100.0; controls->ps[6] = 1;
-    controls->px[7] = 1; controls->py[7] = -1; controls->pz[7] = -controls->args->zscale/100.0; controls->ps[7] = 1;
-    controls->px[8] = -1; controls->py[8] = -1; controls->pz[8] = -controls->args->zscale/100.0; controls->ps[8] = 1;
-    controls->px[9] = -1; controls->py[9] = -1; controls->pz[9] = controls->args->zscale/100.0; controls->ps[9] = 1;
-    controls->px[10] = -1; controls->py[10] = -1; controls->pz[10] = -controls->args->zscale/100.0; controls->ps[10] = 1;
-    controls->px[11] = -1; controls->py[11] = 1; controls->pz[11] = -controls->args->zscale/100.0; controls->ps[11] = 1;
-    controls->px[12] = -1; controls->py[12] = 1; controls->pz[12] = controls->args->zscale/100.0; controls->ps[12] = 1;
-    controls->px[13] = -1; controls->py[13] = 1; controls->pz[13] = -controls->args->zscale/100.0; controls->ps[13] = 0;
-    controls->px[14] = 1; controls->py[14] = 1; controls->pz[14] = -controls->args->zscale/100.0; controls->ps[14] = 1;
-    controls->px[15] = 1; controls->py[15] = 1; controls->pz[15] = controls->args->zscale/100.0; controls->ps[15] = 0;
-    controls->px[16] = 1; controls->py[16] = -1; controls->pz[16] = controls->args->zscale/100.0; controls->ps[16] = 1;
+    controls->px[i] = 1; controls->py[i] = 0; controls->pz[i] = 0; controls->ps[i] = 0; i++;
+    controls->px[i] = 0; controls->py[i] = 1; controls->pz[i] = 0; controls->ps[i] = 0; i++;
+    controls->px[i] = 0; controls->py[i] = 0; controls->pz[i] = 1; controls->ps[i] = 0; i++;
 
-    controls->nps = 17;
+    controls->px[i] = -1; controls->py[i] = -1; controls->pz[i] = -1; controls->ps[i] = 0; i++;
+    controls->px[i] = 1; controls->py[i] = -1; controls->pz[i] = -1; controls->ps[i] = 1; i++;
+    controls->px[i] = 1; controls->py[i] = 1; controls->pz[i] = -1; controls->ps[i] = 1; i++;
+    controls->px[i] = 1; controls->py[i] = 1; controls->pz[i] = 1; controls->ps[i] = 1; i++;
+    controls->px[i] = -1; controls->py[i] = 1; controls->pz[i] = 1; controls->ps[i] = 1; i++;
+    controls->px[i] = -1; controls->py[i] = -1; controls->pz[i] = 1; controls->ps[i] = 1; i++;
+    controls->px[i] = 1; controls->py[i] = -1; controls->pz[i] = 1; controls->ps[i] = 1; i++;
+    controls->px[i] = 1; controls->py[i] = -1; controls->pz[i] = -1; controls->ps[i] = 1; i++;
+    controls->px[i] = -1; controls->py[i] = -1; controls->pz[i] = -1; controls->ps[i] = 1; i++;
+    controls->px[i] = -1; controls->py[i] = -1; controls->pz[i] = 1; controls->ps[i] = 1; i++;
+    controls->px[i] = -1; controls->py[i] = -1; controls->pz[i] = -1; controls->ps[i] = 1; i++;
+    controls->px[i] = -1; controls->py[i] = 1; controls->pz[i] = -1; controls->ps[i] = 1; i++;
+    controls->px[i] = -1; controls->py[i] = 1; controls->pz[i] = 1; controls->ps[i] = 1; i++;
+    controls->px[i] = -1; controls->py[i] = 1; controls->pz[i] = -1; controls->ps[i] = 0; i++;
+    controls->px[i] = 1; controls->py[i] = 1; controls->pz[i] = -1; controls->ps[i] = 1; i++;
+    controls->px[i] = 1; controls->py[i] = 1; controls->pz[i] = 1; controls->ps[i] = 0; i++;
+    controls->px[i] = 1; controls->py[i] = -1; controls->pz[i] = 1; controls->ps[i] = 1; 
+
+    controls->nps = 21;
 
 }
 
@@ -1534,13 +1616,12 @@ gint simplify(gdouble *px, gdouble *py, gdouble *pz, gdouble *ps, gint nps)
     ns = g_malloc(nps*sizeof(gdouble));
      
    
+    for (i=0; i<6; i++) {
+        nx[i] = px[i]; ny[i] = py[i]; nz[i] = pz[i]; ns[i] = ps[i];
+    }
+    newn = 6;
 
-    nx[0] = px[0]; ny[0] = py[0]; nz[0] = pz[0]; ns[0] = ps[0];
-    nx[1] = px[1]; ny[1] = py[1]; nz[1] = pz[1]; ns[1] = ps[1];
-
-    newn = 2;
-
-    for (i=2; i<nps; i++)
+    for (i=6; i<nps; i++)
     {
         if (ps[i] == 0 || !((px[i]-px[i-1]) == (px[i-1]-px[i-2]) 
                              && (py[i]-py[i-1]) == (py[i-1]-py[i-2]) 
@@ -1578,7 +1659,13 @@ p3d_prepare_wdata(BrickshowControls *controls, BrickshowArgs *args)
 {
     gint i;
 
-    for (i=0; i<controls->nps; i++) 
+    for (i=0; i<3; i++) {
+        controls->wpx[i] = controls->px[i];
+        controls->wpy[i] = controls->py[i];
+        controls->wpz[i] = controls->pz[i];
+    }
+
+    for (i=3; i<controls->nps; i++) 
     {
         controls->wpx[i] = controls->px[i];
         controls->wpy[i] = controls->py[i];
