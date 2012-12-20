@@ -1399,6 +1399,32 @@ p3d_on_draw_event(GtkWidget *widget, GdkEventExpose *event, BrickshowControls *c
         else cairo_move_to(cr, sx, sy);
     }
 
+    /*axes description*/
+    cairo_select_font_face (cr, "Sans", CAIRO_FONT_SLANT_NORMAL,
+                                                           CAIRO_FONT_WEIGHT_BOLD);
+    cairo_set_font_size (cr, 12.0);
+
+    convert_3d2d(controls->wpx[3], controls->wpy[3], controls->wpz[3], &sx, &sy, controls->args->perspective, controls->args->size);
+    if (sx<=200) sx -= 12; else sx += 12;
+    cairo_move_to (cr, sx, sy);
+    cairo_show_text (cr, "0");
+
+    convert_3d2d(controls->wpx[4], controls->wpy[4], controls->wpz[4], &sx, &sy, controls->args->perspective, controls->args->size);
+    if (sx<=200) sx -= 12; else sx += 12;
+    cairo_move_to (cr, sx, sy);
+    cairo_show_text (cr, "x");
+
+    convert_3d2d(controls->wpx[14], controls->wpy[14], controls->wpz[14], &sx, &sy, controls->args->perspective, controls->args->size);
+    if (sx<=200) sx -= 12; else sx += 12;
+    cairo_move_to (cr, sx, sy);
+    cairo_show_text (cr, "y");
+
+    convert_3d2d(controls->wpx[8], controls->wpy[8], controls->wpz[8], &sx, &sy, controls->args->perspective, controls->args->size);
+    if (sx<=200) sx -= 12; else sx += 12;
+    cairo_move_to (cr, sx, sy);
+    cairo_show_text (cr, "z");
+
+
     cairo_stroke(cr);
     cairo_destroy(cr);
 
@@ -1540,7 +1566,7 @@ p3d_xview_cb(BrickshowControls *controls)
 {
 
     p3d_prepare_wdata(controls, controls->args);
-    rotate(controls, G_PI/2, 0, 0);
+    rotate(controls, 0, G_PI/2, 0);
     gtk_widget_queue_draw(controls->drawarea);
 
 }
@@ -1549,7 +1575,7 @@ static void
 p3d_yview_cb(BrickshowControls *controls)
 {
     p3d_prepare_wdata(controls, controls->args);
-    rotate(controls, 0, G_PI/2, 0);
+    rotate(controls, G_PI/2, 0, 0);
     gtk_widget_queue_draw(controls->drawarea);
 
 }
@@ -1599,7 +1625,7 @@ p3d_set_axes(BrickshowControls *controls)
     controls->px[i] = 1; controls->py[i] = 1; controls->pz[i] = 1; controls->ps[i] = 0; i++;
     controls->px[i] = 1; controls->py[i] = -1; controls->pz[i] = 1; controls->ps[i] = 1; 
 
-    controls->nps = 21;
+    controls->nps = 20;
 
 }
 
@@ -1699,7 +1725,6 @@ p3d_add_wireframe(BrickshowControls *controls)
 
     threshold = (gwy_brick_get_min(controls->brick) + gwy_brick_get_max(controls->brick))/2;
 
-    printf("building wireframe\n");
     for (i=0; i<xres; i+=spacing)
     {
         gwy_brick_extract_plane(controls->brick, cut, i, 0, 0, -1, yres, zres, FALSE);
