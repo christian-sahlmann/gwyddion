@@ -19,6 +19,8 @@
  */
 
 /* FIXME: What about .spm and .stm extensions?  Too generic? */
+/* FIXME: Assuming cp1251 as 8bit encoding (only in material name) */
+
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-nanoeducator-spm">
@@ -280,7 +282,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanoeducator data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -396,6 +398,10 @@ nanoedu_load(const gchar *filename,
                                          "m", "m", q*Nanometer, error);
         if (!dfield)
             goto finish;
+
+        /* Setting data field offsets: */
+        gwy_data_field_set_xoffset(dfield, params.x_offset * Nanometer);
+        gwy_data_field_set_yoffset(dfield, params.y_offset * Nanometer);
 
         gwy_container_set_object_by_name(container, "/0/data", dfield);
         gwy_container_set_string_by_name(container, "/0/data/title",
@@ -571,6 +577,10 @@ nanoedu_load(const gchar *filename,
                                           "m", units, q, error);
         if (!dfield)
             goto finish;
+
+        /* Setting data field offsets: */
+        gwy_data_field_set_xoffset(dfield, params.x_offset * Nanometer);
+        gwy_data_field_set_yoffset(dfield, params.y_offset * Nanometer);
 
         gwy_container_set_object_by_name(container, "/1/data", dfield);
         title = gwy_enuml_to_string(params.aqui_add,
@@ -1247,7 +1257,9 @@ nanoedu_read_meta(const NanoeduFileHeader *header,
                                                      param->second));
     if (strlen(param->material))
         gwy_container_set_string_by_name(meta, "Material",
-                                         g_strdup(param->material));
+                                         g_convert(param->material, -1,
+                                                   "UTF-8", "cp1251",
+                                                   NULL, NULL, NULL));
     if (strlen(param->scanner_name))
         gwy_container_set_string_by_name(meta, "Scanner number",
                                          g_strdup(param->scanner_name));
