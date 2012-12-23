@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-12-16 03:58+0100\n"
-"PO-Revision-Date: 2012-12-16 14:08+0300\n"
+"POT-Creation-Date: 2012-12-23 03:58+0100\n"
+"PO-Revision-Date: 2012-12-23 11:39+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -902,7 +902,7 @@ msgstr "точек"
 #: modules/file/pixmap.c:3036
 #: modules/file/rawfile.c:398
 #: modules/process/angle_dist.c:170
-#: modules/process/brickshow.c:298
+#: modules/process/brickshow.c:316
 #: modules/process/calcoefs_new.c:347
 #: modules/process/calibrate.c:296
 #: modules/process/col_synth.c:299
@@ -1525,7 +1525,7 @@ msgid "Channels"
 msgstr "Каналы"
 
 #: app/data-browser.c:4101
-#: modules/process/brickshow.c:416
+#: modules/process/brickshow.c:434
 msgid "Graphs"
 msgstr "Графики"
 
@@ -3647,56 +3647,56 @@ msgstr "Номер изображения в названии %u не соотв
 msgid "Label string length %u is larger than 20."
 msgstr "Длина строки названия %u больше, чем 20."
 
-#: modules/file/nanoeducator.c:281
+#: modules/file/nanoeducator.c:283
 msgid "Imports Nanoeducator data files."
 msgstr "Импортирует файлы данных Nanoeducator."
 
-#: modules/file/nanoeducator.c:294
+#: modules/file/nanoeducator.c:296
 msgid "Nanoeducator files (.mspm, .spm, .stm)"
 msgstr "Файлы Nanoeducator (.mspm, .spm, .stm)"
 
-#: modules/file/nanoeducator.c:352
+#: modules/file/nanoeducator.c:354
 #: modules/file/unisoku.c:288
 msgid "format version"
 msgstr "версия формата"
 
-#: modules/file/nanoeducator.c:380
-#: modules/file/nanoeducator.c:417
-#: modules/file/nanoeducator.c:521
+#: modules/file/nanoeducator.c:382
+#: modules/file/nanoeducator.c:423
+#: modules/file/nanoeducator.c:527
 msgid "Image data starts past the end of file."
 msgstr "Данные изображения начинаются после конца файла."
 
-#: modules/file/nanoeducator.c:459
+#: modules/file/nanoeducator.c:465
 msgid "Spectra data starts past the end of file."
 msgstr "Данные спектроскопии начинаются после конца файла."
 
-#: modules/file/nanoeducator.c:626
+#: modules/file/nanoeducator.c:636
 #: modules/file/opdfile.c:268
 #: modules/file/sensofar.c:256
 #: modules/file/witec-asc.c:154
 msgid "File header is truncated"
 msgstr "Заголовок файла усечён"
 
-#: modules/file/nanoeducator.c:685
+#: modules/file/nanoeducator.c:695
 msgid "Parameter header is truncated"
 msgstr "Заголовок параметров усечён"
 
-#: modules/file/nanoeducator.c:910
+#: modules/file/nanoeducator.c:920
 #: modules/process/curvature.c:442
 #: modules/tools/profile.c:805
 #, c-format
 msgid "Profile %d"
 msgstr "Профиль %d"
 
-#: modules/file/nanoeducator.c:1023
+#: modules/file/nanoeducator.c:1033
 msgid "F-D spectra"
 msgstr "Спектры сила-расстояние"
 
-#: modules/file/nanoeducator.c:1114
+#: modules/file/nanoeducator.c:1124
 msgid "I-V spectra"
 msgstr "Спектры ВАХ"
 
-#: modules/file/nanoeducator.c:1196
+#: modules/file/nanoeducator.c:1206
 msgid "I-Z spectra"
 msgstr "Спектры I-Z"
 
@@ -4568,7 +4568,7 @@ msgstr "Предустановки"
 #: modules/file/rawfile.c:540
 #: modules/file/rawxyz.c:435
 #: modules/process/arithmetic.c:227
-#: modules/process/brickshow.c:295
+#: modules/process/brickshow.c:313
 #: modules/process/calcoefs_view.c:332
 #: modules/process/convolution_filter.c:243
 #: modules/process/deposit_synth.c:682
@@ -6144,96 +6144,96 @@ msgstr "/_Базовые действия/Обнулить _смещения"
 msgid "Null horizontall offsets, moving the origin to the upper left corner"
 msgstr "Обнуляет смещения по горизонтали, перемещая начало координат в верхний левый угол"
 
-#: modules/process/brickshow.c:191
+#: modules/process/brickshow.c:204
 msgid "Loads and shows a brick (3D volume data)."
 msgstr "Загружает и показывает блок (трёхмерные объёмные данные)."
 
-#: modules/process/brickshow.c:205
+#: modules/process/brickshow.c:218
 msgid "/_Bricks/Load and show..."
 msgstr "/_Блоки/_Загрузить и сохранить..."
 
-#: modules/process/brickshow.c:209
+#: modules/process/brickshow.c:222
 msgid "Load and show 3D data"
 msgstr "Загрузить и показать трёхмерные данные"
 
-#: modules/process/brickshow.c:241
+#: modules/process/brickshow.c:254
 msgid "X cross-section"
 msgstr "Сечение по X"
 
-#: modules/process/brickshow.c:242
+#: modules/process/brickshow.c:255
 msgid "Y cross-section"
 msgstr "Сечение по Y"
 
-#: modules/process/brickshow.c:243
+#: modules/process/brickshow.c:256
 msgid "Z cross-section"
 msgstr "Сечение по Z"
 
-#: modules/process/brickshow.c:244
-#: modules/process/brickshow.c:632
+#: modules/process/brickshow.c:257
+#: modules/process/brickshow.c:667
 msgid "X direction sum"
 msgstr "Сумма по направлению X"
 
-#: modules/process/brickshow.c:245
-#: modules/process/brickshow.c:634
+#: modules/process/brickshow.c:258
+#: modules/process/brickshow.c:669
 msgid "Y direction sum"
 msgstr "Сумма по направлению Y"
 
-#: modules/process/brickshow.c:246
-#: modules/process/brickshow.c:636
+#: modules/process/brickshow.c:259
+#: modules/process/brickshow.c:671
 msgid "Z direction sum"
 msgstr "Сумма по направлению Z"
 
-#: modules/process/brickshow.c:249
+#: modules/process/brickshow.c:262
 msgid "X direction"
 msgstr "Направление X"
 
-#: modules/process/brickshow.c:250
+#: modules/process/brickshow.c:263
 msgid "Y direction"
 msgstr "Направление Y"
 
-#: modules/process/brickshow.c:251
+#: modules/process/brickshow.c:264
 msgid "Z direction"
 msgstr "Направление Z"
 
-#: modules/process/brickshow.c:289
+#: modules/process/brickshow.c:307
 msgid "Volume data"
 msgstr "Объёмные данные"
 
-#: modules/process/brickshow.c:291
+#: modules/process/brickshow.c:309
 msgid "_Load"
 msgstr "_Загрузить"
 
-#: modules/process/brickshow.c:303
+#: modules/process/brickshow.c:321
 msgid "_Extract projection"
 msgstr "_Извлечь проекцию"
 
-#: modules/process/brickshow.c:322
+#: modules/process/brickshow.c:340
 msgid "Projections"
 msgstr "Проекции"
 
-#: modules/process/brickshow.c:360
+#: modules/process/brickshow.c:378
 msgid "X position"
 msgstr "Положение по X"
 
-#: modules/process/brickshow.c:367
+#: modules/process/brickshow.c:385
 msgid "Y position"
 msgstr "Положение по Y"
 
-#: modules/process/brickshow.c:374
+#: modules/process/brickshow.c:392
 msgid "Z position"
 msgstr "Положение по Z"
 
-#: modules/process/brickshow.c:380
+#: modules/process/brickshow.c:398
 msgid "Shown cut direction:"
 msgstr "Показано направление разреза:"
 
-#: modules/process/brickshow.c:390
-#: modules/process/brickshow.c:476
+#: modules/process/brickshow.c:408
+#: modules/process/brickshow.c:494
 msgid "Show mode:"
 msgstr "Режим отображения:"
 
-#: modules/process/brickshow.c:396
-#: modules/process/brickshow.c:482
+#: modules/process/brickshow.c:414
+#: modules/process/brickshow.c:500
 #: modules/process/calcoefs_view.c:583
 #: modules/process/deposit_synth.c:686
 #: modules/process/edge.c:744
@@ -6248,79 +6248,87 @@ msgstr "Режим отображения:"
 msgid "I_nstant updates"
 msgstr "Мгновенное об_новление"
 
-#: modules/process/brickshow.c:405
-#: modules/process/brickshow.c:491
+#: modules/process/brickshow.c:423
+#: modules/process/brickshow.c:509
 #: modules/process/calcoefs_load.c:239
 msgid "No data loaded"
 msgstr "Данные не загружены"
 
-#: modules/process/brickshow.c:466
+#: modules/process/brickshow.c:484
 msgid "Graph cut direction:"
 msgstr "Режим сечения графика:"
 
-#: modules/process/brickshow.c:504
+#: modules/process/brickshow.c:522
 msgid "3D view"
 msgstr "Просмотр 3D"
 
-#: modules/process/brickshow.c:528
+#: modules/process/brickshow.c:548
+msgid "Zoom"
+msgstr "Увеличение"
+
+#: modules/process/brickshow.c:556
+msgid "Z scale"
+msgstr "Масштаб по Z"
+
+#: modules/process/brickshow.c:563
 msgid "apply perspective"
 msgstr "добавить перспективу"
 
-#: modules/process/brickshow.c:538
+#: modules/process/brickshow.c:573
 msgid "X view"
 msgstr "Вид X"
 
-#: modules/process/brickshow.c:544
+#: modules/process/brickshow.c:579
 msgid "Y view"
 msgstr "Вид Y"
 
-#: modules/process/brickshow.c:550
+#: modules/process/brickshow.c:585
 msgid "Z view"
 msgstr "Вид Z"
 
-#: modules/process/brickshow.c:623
+#: modules/process/brickshow.c:658
 #, c-format
 msgid "X cross-section at x: %d"
 msgstr "Сечение по X при x: %d"
 
-#: modules/process/brickshow.c:626
+#: modules/process/brickshow.c:661
 #, c-format
 msgid "Y cross-section at y: %d"
 msgstr "Сечение по Y при y: %d"
 
-#: modules/process/brickshow.c:629
+#: modules/process/brickshow.c:664
 #, c-format
 msgid "Z cross-section at z: %d"
 msgstr "Сечение по Z при z: %d"
 
-#: modules/process/brickshow.c:674
+#: modules/process/brickshow.c:709
 #, c-format
 msgid "X graph at y: %d z: %d"
 msgstr "График X при y: %d z: %d"
 
-#: modules/process/brickshow.c:677
+#: modules/process/brickshow.c:712
 #, c-format
 msgid "Y graph at x: %d z: %d"
 msgstr "График Y при x: %d z: %d"
 
-#: modules/process/brickshow.c:680
+#: modules/process/brickshow.c:715
 #, c-format
 msgid "Z graph at x: %d y: %d"
 msgstr "График Z при x: %d y: %d"
 
-#: modules/process/brickshow.c:685
+#: modules/process/brickshow.c:720
 msgid "w"
 msgstr "w"
 
-#: modules/process/brickshow.c:691
+#: modules/process/brickshow.c:726
 msgid "Brick graph"
 msgstr "График блока"
 
-#: modules/process/brickshow.c:942
+#: modules/process/brickshow.c:981
 msgid "Load volume data"
 msgstr "Загрузить объёмные данные"
 
-#: modules/process/brickshow.c:959
+#: modules/process/brickshow.c:998
 #: modules/process/calcoefs_load.c:330
 #, c-format
 msgid "Error loading file '%s'"
@@ -10631,15 +10639,15 @@ msgstr "Команда"
 msgid "Pygwy, the Gwyddion Python wrapper."
 msgstr "Pygwy, оболочка Python в Gwyddion."
 
-#: pygwy.c:520
+#: pygwy.c:537
 msgid "Function written in Python"
 msgstr "Функция на языке Python"
 
-#: pygwy.c:566
+#: pygwy.c:583
 msgid "Graph function written in Python"
 msgstr "Графическая функция на языке Python"
 
-#: pygwy.c:976
+#: pygwy.c:993
 #, c-format
 msgid ""
 "Pygwy plugin: %s (%s)\n"
