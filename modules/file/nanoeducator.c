@@ -247,7 +247,6 @@ static GwySpectra*    nanoedu_read_fd_spectra(const guchar *pos_buffer,
                                               gint nspectra,
                                               gint res,
                                               gdouble xy_step,
-                                              gdouble yreal,
                                               gdouble xscale,
                                               gdouble yscale,
                                               GError **error);
@@ -257,7 +256,6 @@ static GwySpectra*    nanoedu_read_iv_spectra(const guchar *pos_buffer,
                                               gsize data_size,
                                               gint nspectra,
                                               gint res,
-                                              gdouble yreal,
                                               gdouble xscale,
                                               gdouble yscale,
                                               gdouble vscale,
@@ -269,7 +267,6 @@ static GwySpectra*    nanoedu_read_iz_spectra(const guchar *pos_buffer,
                                               gint nspectra,
                                               gint res,
                                               gdouble xy_step,
-                                              gdouble yreal,
                                               gdouble xscale,
                                               gdouble yscale,
                                               gint sp_type,
@@ -401,7 +398,8 @@ nanoedu_load(const gchar *filename,
 
         /* Setting data field offsets: */
         gwy_data_field_set_xoffset(dfield, params.x_offset * Nanometer);
-        gwy_data_field_set_yoffset(dfield, params.y_offset * Nanometer);
+        gwy_data_field_set_yoffset(dfield, - params.y_offset * Nanometer
+                                              - scale * header.topo_ny);
 
         gwy_container_set_object_by_name(container, "/0/data", dfield);
         gwy_container_set_string_by_name(container, "/0/data/title",
@@ -478,7 +476,7 @@ nanoedu_load(const gchar *filename,
                                               size - header.spec_offset,
                                               params.n_spectra_lines,
                                               params.n_spectrum_points,
-                                              Nanometer*q, scale*header.topo_ny,
+                                              Nanometer*q,
                                               Nanometer*qx, Nanometer*qy,
                                               error);
         else if ((params.spectroscopy_type == 1)
@@ -490,7 +488,7 @@ nanoedu_load(const gchar *filename,
                                               size - header.spec_offset,
                                               params.n_spectra_lines,
                                               params.n_spectrum_points,
-                                              Nanometer*q, scale*header.topo_ny,
+                                              Nanometer*q,
                                               Nanometer*qx, Nanometer*qy,
                                               params.spectroscopy_type,
                                               error);
@@ -501,7 +499,6 @@ nanoedu_load(const gchar *filename,
                                               size - header.spec_offset,
                                               params.n_spectra_lines,
                                               params.n_spectrum_points,
-                                              scale*header.topo_ny,
                                               Nanometer*qx, Nanometer*qy,
                                               1e-3 * params.discr_z_mvolt,
                                               error);
@@ -580,7 +577,8 @@ nanoedu_load(const gchar *filename,
 
         /* Setting data field offsets: */
         gwy_data_field_set_xoffset(dfield, params.x_offset * Nanometer);
-        gwy_data_field_set_yoffset(dfield, params.y_offset * Nanometer);
+        gwy_data_field_set_yoffset(dfield, - params.y_offset * Nanometer
+                                             - scale*header.addsurf_ny);
 
         gwy_container_set_object_by_name(container, "/1/data", dfield);
         title = gwy_enuml_to_string(params.aqui_add,
@@ -1002,7 +1000,7 @@ static GwySpectra*
 nanoedu_read_fd_spectra(const guchar *pos_buffer, gsize pos_size,
                         const guchar *data_buffer, gsize data_size,
                         gint nspectra, gint res,
-                        gdouble xy_step, gdouble yreal,
+                        gdouble xy_step,
                         gdouble xscale, gdouble yscale,
                         GError **error)
 {
@@ -1036,8 +1034,8 @@ nanoedu_read_fd_spectra(const guchar *pos_buffer, gsize pos_size,
      * The backward one is really stored backwards, so we revert it upon
      * reading. */
     for (i = 0; i < nspectra; i++) {
-        x = xscale*GINT16_FROM_LE(p16[pointstep*i]);
-        y = yreal - yscale*GINT16_FROM_LE(p16[pointstep*i + 1]);
+        x = xscale * GINT16_FROM_LE(p16[pointstep*i]);
+        y = - yscale * GINT16_FROM_LE(p16[pointstep*i + 1]);
         n = (pointstep == 3) ? GINT16_FROM_LE(p16[pointstep*i + 2]) : 1;
         gwy_debug("FD spec%d [%g,%g] %dpts", i, x, y, n);
 
@@ -1098,7 +1096,6 @@ static GwySpectra*
 nanoedu_read_iv_spectra(const guchar *pos_buffer, gsize pos_size,
                         const guchar *data_buffer, gsize data_size,
                         gint nspectra, gint res,
-                        gdouble yreal,
                         gdouble xscale, gdouble yscale,
                         gdouble vscale,
                         GError **error)
@@ -1124,8 +1121,8 @@ nanoedu_read_iv_spectra(const guchar *pos_buffer, gsize pos_size,
     gwy_spectra_set_title(spectra, _("I-V spectra"));
 
     for (i = 0; i < nspectra; i++) {
-        x = xscale*GINT16_FROM_LE(p16[pointstep*i]);
-        y = yreal - yscale*GINT16_FROM_LE(p16[pointstep*i + 1]);
+        x = xscale * GINT16_FROM_LE(p16[pointstep*i]);
+        y = - yscale * GINT16_FROM_LE(p16[pointstep*i + 1]);
         n = (pointstep == 3) ? GINT16_FROM_LE(p16[pointstep*i + 2]) : 1;
         gwy_debug("IV spec%d [%g,%g] %dpts", i, x, y, n);
 
@@ -1180,7 +1177,7 @@ static GwySpectra*
 nanoedu_read_iz_spectra(const guchar *pos_buffer, gsize pos_size,
                         const guchar *data_buffer, gsize data_size,
                         gint nspectra, gint res,
-                        gdouble xy_step, gdouble yreal,
+                        gdouble xy_step,
                         gdouble xscale, gdouble yscale,
                         gint sp_type,
                         GError **error)
@@ -1206,8 +1203,8 @@ nanoedu_read_iz_spectra(const guchar *pos_buffer, gsize pos_size,
     gwy_spectra_set_title(spectra, _("I-Z spectra"));
 
     for (i = 0; i < nspectra; i++) {
-        x = xscale*GINT16_FROM_LE(p16[pointstep*i]);
-        y = yreal - yscale*GINT16_FROM_LE(p16[pointstep*i + 1]);
+        x = xscale * GINT16_FROM_LE(p16[pointstep*i]);
+        y = - yscale * GINT16_FROM_LE(p16[pointstep*i + 1]);
         n = (pointstep == 3) ? GINT16_FROM_LE(p16[pointstep*i + 2]) : 1;
         gwy_debug("IZ spec%d [%g,%g] %dpts", i, x, y, n);
 
