@@ -1,7 +1,7 @@
 2.31 (0000-00-00)
 Libraries:
 - libgwyprocess: Bogus normalisation/possible crash in gwy_data_field_area_dh()
-  in presence of mask on non-square area was fixed.
+  in presence of mask on non-square area was fixed. 
   distribution if the area contains no data due to masking.
 - libgwyprocess: gwy_data_field_area_dh() returns a reasonable empty
   distribution if the area contains no data due to masking.
