@@ -56,7 +56,7 @@
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 
 /*Structures*/
-typedef struct{
+typedef struct {
     gint XRes;
     gint YRes;
     gdouble XReal;
@@ -64,41 +64,34 @@ typedef struct{
 } APEDAX_ScanSize;
 
 /*Prototypes*/
-static gboolean module_register (void);
-
-static gint apedax_detect(const GwyFileDetectInfo *fileinfo,
-                           gboolean only_name);
-
-static GwyContainer* apedax_load(const gchar *filename,
-                                 GwyRunType mode,
-                                 GError **error);
-
-static GwyContainer* apedax_get_meta(guchar *scanXmlContent,
-                                     gsize contentSize,
-                                     APEDAX_ScanSize *scanSize);
-
-static guchar* apedax_get_file_content(unzFile uFile,
-                                         unz_file_info *uFileInfo,
-                                         gsize *size,
-                                         GError **error);
-
-static gchar* apedax_get_xml_field_as_string(xmlDocPtr doc,
-                                         const gchar *fieldXPath);
-
-static GwyDataField* apedax_get_data_field(unzFile uFile,
-                                           const gchar *chFileName,
-                                           const APEDAX_ScanSize *scanSize,
-                                           gchar *zUnit,
-                                           gdouble scale,
-                                           GError **error);
-
-static void apedax_get_channels_data(unzFile uFile,
-                                     guchar *scanXmlContent,
-                                     gsize contentSize,
-                                     GwyContainer *container,
-                                     GwyContainer * meta,
-                                     const APEDAX_ScanSize *scanSize,
-                                     GError **error);
+static gboolean      module_register               (void);
+static gint          apedax_detect                 (const GwyFileDetectInfo *fileinfo,
+                                                    gboolean only_name);
+static GwyContainer* apedax_load                   (const gchar *filename,
+                                                    GwyRunType mode,
+                                                    GError **error);
+static GwyContainer* apedax_get_meta               (guchar *scanXmlContent,
+                                                    gsize contentSize,
+                                                    APEDAX_ScanSize *scanSize);
+static guchar*       apedax_get_file_content       (unzFile uFile,
+                                                    unz_file_info *uFileInfo,
+                                                    gsize *size,
+                                                    GError **error);
+static gchar*        apedax_get_xml_field_as_string(xmlDocPtr doc,
+                                                    const gchar *fieldXPath);
+static GwyDataField* apedax_get_data_field         (unzFile uFile,
+                                                    const gchar *chFileName,
+                                                    const APEDAX_ScanSize *scanSize,
+                                                    gchar *zUnit,
+                                                    gdouble scale,
+                                                    GError **error);
+static void          apedax_get_channels_data      (unzFile uFile,
+                                                    guchar *scanXmlContent,
+                                                    gsize contentSize,
+                                                    GwyContainer *container,
+                                                    GwyContainer * meta,
+                                                    const APEDAX_ScanSize *scanSize,
+                                                    GError **error);
 
 /*Informations about the module*/
 
@@ -141,8 +134,8 @@ apedax_detect(const GwyFileDetectInfo *fileinfo,
     if (only_name)
         return score;
 
-    if (fileinfo->file_size > MAGIC_SIZE &&
-        memcmp(fileinfo->head,MAGIC,MAGIC_SIZE) == 0)
+    if (fileinfo->file_size > MAGIC_SIZE
+        && memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) == 0)
         score += 30;
     else
         return 0;
@@ -155,7 +148,7 @@ apedax_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
     }
 
-    if (unzLocateFile(uFile,"scan.xml",0) == UNZ_OK) {
+    if (unzLocateFile(uFile, "scan.xml", 0) == UNZ_OK) {
         score += 30;
     } else {
         score = 0;
@@ -190,14 +183,14 @@ apedax_load(const gchar *filename,
     uFile = unzOpen(filename);
 
     if (uFile == NULL) {
-        err_FILE_TYPE(error,"DAX");
+        err_FILE_TYPE(error, "DAX");
         unzClose(uFile);
         return NULL;
     }
 
     gwy_debug("Locating the XML file");
-    if (unzLocateFile(uFile,"scan.xml",0) != UNZ_OK){
-        err_FILE_TYPE(error,"DAX");
+    if (unzLocateFile(uFile, "scan.xml", 0) != UNZ_OK) {
+        err_FILE_TYPE(error, "DAX");
         unzClose(uFile);
         return NULL;
     }
@@ -219,14 +212,14 @@ apedax_load(const gchar *filename,
     buffer = apedax_get_file_content(uFile, &uFileInfo, &size, error);
 
     container = gwy_container_new();
-    
-    meta = apedax_get_meta(buffer,size,&scanSize);
+
+    meta = apedax_get_meta(buffer, size, &scanSize);
 
     if (meta == NULL) {
         gwy_debug("Metadata Container is NULL");
         g_object_unref(container);
         g_free(buffer);
-        err_FILE_TYPE(error,"DAX");
+        err_FILE_TYPE(error, "DAX");
         unzClose(uFile);
         return NULL;
     }
@@ -251,9 +244,9 @@ apedax_load(const gchar *filename,
 
 static guchar*
 apedax_get_file_content(unzFile uFile,
-                          unz_file_info *uFileInfo,
-                          gsize *size,
-                          GError **error)
+                        unz_file_info *uFileInfo,
+                        gsize *size,
+                        GError **error)
 {
     guchar *buffer = NULL;
 
@@ -265,12 +258,12 @@ apedax_get_file_content(unzFile uFile,
 
     *size = (gsize)(uFileInfo->uncompressed_size);
 
-    buffer = g_new(guchar,*size + 1);
+    buffer = g_new(guchar, *size + 1);
     buffer[*size] = '\0';
 
     if (buffer && unzOpenCurrentFile(uFile) == UNZ_OK) {
         gint readsize = 0;
-        readsize = unzReadCurrentFile(uFile,buffer,*size);
+        readsize = unzReadCurrentFile(uFile, buffer, *size);
         *size = readsize;
     }
 
@@ -293,7 +286,7 @@ apedax_get_meta(guchar *scanXmlContent,
     if (scanXmlContent == NULL || contentSize == 0)
         return NULL;
 
-    meta = gwy_container_new(); 
+    meta = gwy_container_new();
 
     gwy_debug("Parsing the XML file");
     doc = xmlReadMemory(scanXmlContent,
@@ -302,7 +295,7 @@ apedax_get_meta(guchar *scanXmlContent,
                         NULL,
                         0);
 
-    if (doc == NULL) 
+    if (doc == NULL)
         goto fail;
 
     /*Check for the right XML root*/
@@ -311,40 +304,42 @@ apedax_get_meta(guchar *scanXmlContent,
     if (cur == NULL)
         goto fail;
 
-    if (xmlStrcmp(cur->name,(const xmlChar*)"Scan"))
+    if (xmlStrcmp(cur->name, (const xmlChar*)"Scan"))
         goto fail;
 
     gwy_debug("Populating metadata container");
 
     /*File Version*/
     buffer = apedax_get_xml_field_as_string(doc,
-                                        "/Scan/Header/FileVersion");
+                                            "/Scan/Header/FileVersion");
 
     if (buffer) {
         gwy_container_set_string_by_name(meta,
                                          "File Version",
                                          g_strdup(buffer));
         g_free(buffer);
-    } else {
+    }
+    else {
         goto fail;
     }
 
     /*SPM Mode*/
     buffer = apedax_get_xml_field_as_string(doc,
-                                        "/Scan/Header/SpmMode");
+                                            "/Scan/Header/SpmMode");
 
     if (buffer) {
         gwy_container_set_string_by_name(meta,
                                          "SPM Mode",
                                          g_strdup(buffer));
         g_free(buffer);
-    } else {
+    }
+    else {
         goto fail;
     }
 
     /*Remark*/
     buffer = apedax_get_xml_field_as_string(doc,
-                                        "/Scan/Header/Remark");
+                                            "/Scan/Header/Remark");
 
     if (buffer) {
         gwy_container_set_string_by_name(meta,
@@ -355,47 +350,51 @@ apedax_get_meta(guchar *scanXmlContent,
 
     /*Number of columns (XRes)*/
     buffer = apedax_get_xml_field_as_string(doc,
-                                        "/Scan/Header/ScanSize/XRes");
+                                            "/Scan/Header/ScanSize/XRes");
 
     if (buffer) {
-        scanSize->XRes = (gint)g_ascii_strtod(buffer,NULL);
+        scanSize->XRes = (gint)g_ascii_strtod(buffer, NULL);
         g_free(buffer);
-    } else {
+    }
+    else {
         goto fail;
     }
 
     /*Number of rows (YRes)*/
     buffer = apedax_get_xml_field_as_string(doc,
-                                        "/Scan/Header/ScanSize/YRes");
+                                            "/Scan/Header/ScanSize/YRes");
 
     if (buffer) {
-        scanSize->YRes = (gint)g_ascii_strtod(buffer,NULL);
+        scanSize->YRes = (gint)g_ascii_strtod(buffer, NULL);
         g_free(buffer);
-    } else {
+    }
+    else {
         goto fail;
     }
 
     /*Width in nanometers*/
     buffer = apedax_get_xml_field_as_string(doc,
-                                        "/Scan/Header/ScanSize/X");
+                                            "/Scan/Header/ScanSize/X");
 
     if (buffer) {
-        scanSize->XReal = g_ascii_strtod(buffer,NULL);
+        scanSize->XReal = g_ascii_strtod(buffer, NULL);
         scanSize->XReal *= 1e-9; /*nm to m conversion*/
         g_free(buffer);
-    } else {
+    }
+    else {
         goto fail;
     }
 
     /*Height in nanometers*/
     buffer = apedax_get_xml_field_as_string(doc,
-                                        "/Scan/Header/ScanSize/Y");
+                                            "/Scan/Header/ScanSize/Y");
 
     if (buffer) {
-        scanSize->YReal = g_ascii_strtod(buffer,NULL);
-        scanSize->YReal *= 1e-9; /*nm to m conversion*/                                                         
+        scanSize->YReal = g_ascii_strtod(buffer, NULL);
+        scanSize->YReal *= 1e-9; /*nm to m conversion*/
         g_free(buffer);
-    } else {
+    }
+    else {
         goto fail;
     }
 
@@ -410,16 +409,15 @@ fail:
         xmlFreeDoc(doc);
     gwy_object_unref(meta);
     return NULL;
-
 }
 
 static gchar*
-apedax_get_xml_field_as_string(xmlDocPtr doc,const gchar *fieldXPath)
+apedax_get_xml_field_as_string(xmlDocPtr doc, const gchar *fieldXPath)
 {
     gchar *fieldString = NULL;
     xmlChar *xFieldString = NULL;
-	xmlXPathContextPtr context;
-	xmlXPathObjectPtr pathObj;
+    xmlXPathContextPtr context;
+    xmlXPathObjectPtr pathObj;
     xmlNodeSetPtr nodeset;
 
     context = xmlXPathNewContext(doc);
@@ -427,7 +425,7 @@ apedax_get_xml_field_as_string(xmlDocPtr doc,const gchar *fieldXPath)
     if (context == NULL)
         return NULL;
 
-    pathObj = xmlXPathEvalExpression((const xmlChar*)fieldXPath,context);
+    pathObj = xmlXPathEvalExpression((const xmlChar*)fieldXPath, context);
 
     if (pathObj == NULL) {
         xmlXPathFreeContext(context);
@@ -443,7 +441,6 @@ apedax_get_xml_field_as_string(xmlDocPtr doc,const gchar *fieldXPath)
     nodeset = pathObj->nodesetval;
 
     if (nodeset->nodeNr == 1) {
-
         xFieldString = xmlNodeListGetString(doc,
                                             nodeset->nodeTab[0]->xmlChildrenNode,
                                             1);
@@ -498,7 +495,7 @@ apedax_get_data_field(unzFile uFile,
 
     unzGoToFirstFile(uFile);
 
-    if (unzLocateFile(uFile, chFileName,0) != UNZ_OK) {
+    if (unzLocateFile(uFile, chFileName, 0) != UNZ_OK) {
         gwy_debug("Binary file not found");
         err_NO_DATA(error);
         return NULL;
@@ -516,7 +513,7 @@ apedax_get_data_field(unzFile uFile,
         return NULL;
     }
 
-    buffer = apedax_get_file_content(uFile,&uFileInfo,&size,error);
+    buffer = apedax_get_file_content(uFile, &uFileInfo, &size, error);
 
     if (buffer == NULL) {
         err_NO_DATA(error);
@@ -524,17 +521,17 @@ apedax_get_data_field(unzFile uFile,
     }
 
     if (err_SIZE_MISMATCH(error, expectedSize, size, FALSE)) {
-       return NULL; 
+       return NULL;
     }
 
-    dfield = gwy_data_field_new(scanSize->XRes,scanSize->YRes,
-                                scanSize->XReal,scanSize->YReal,
+    dfield = gwy_data_field_new(scanSize->XRes, scanSize->YRes,
+                                scanSize->XReal, scanSize->YReal,
                                 FALSE);
 
     data = gwy_data_field_get_data(dfield);
 
     xyUnit = gwy_data_field_get_si_unit_xy(dfield);
-    gwy_si_unit_set_from_string(xyUnit,"m");
+    gwy_si_unit_set_from_string(xyUnit, "m");
 
     zSIUnit = gwy_data_field_get_si_unit_z(dfield);
     gwy_si_unit_set_from_string(zSIUnit, zUnit);
@@ -560,12 +557,12 @@ apedax_get_channels_data(unzFile uFile,
                          GwyContainer *container,
                          GwyContainer *meta,
                          const APEDAX_ScanSize *scanSize,
-                         GError **error){
-
+                         GError **error)
+{
     xmlDocPtr doc = NULL;
     xmlNodePtr cur = NULL;
-	xmlXPathContextPtr context;
-	xmlXPathObjectPtr pathObj;
+    xmlXPathContextPtr context;
+    xmlXPathObjectPtr pathObj;
     xmlNodeSetPtr nodeset;
     xmlChar *buffer = NULL;
     gchar key[256];
@@ -597,7 +594,7 @@ apedax_get_channels_data(unzFile uFile,
     if (context == NULL)
         goto fail;
 
-    pathObj = xmlXPathEvalExpression("/Scan/Channels/Channel",context);
+    pathObj = xmlXPathEvalExpression("/Scan/Channels/Channel", context);
 
     if (pathObj == NULL) {
         xmlXPathFreeContext(context);
@@ -618,7 +615,7 @@ apedax_get_channels_data(unzFile uFile,
         goto fail;
 
     for (i = 0; i < nodeset->nodeNr; i++) {
-        
+
         cur = nodeset->nodeTab[i]->xmlChildrenNode;
 
         while (cur) {
@@ -639,7 +636,7 @@ apedax_get_channels_data(unzFile uFile,
             if (gwy_strequal((gchar*)cur->name, "DataUnit")) {
                 buffer = xmlNodeListGetString(doc, cur->xmlChildrenNode, 1);
                 zUnitString = g_strdup((gchar*)buffer);
-                zUnit = gwy_si_unit_new_parse(zUnitString , &power10);
+                zUnit = gwy_si_unit_new_parse(zUnitString, &power10);
                 xFree(buffer);
                 g_object_unref(zUnit);
             }
@@ -680,10 +677,10 @@ apedax_get_channels_data(unzFile uFile,
     return;
 
 fail:
-    err_FILE_TYPE(error,"DAX");
+    err_FILE_TYPE(error, "DAX");
     if (doc)
         xmlFreeDoc(doc);
     return;
-
 }
 
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
