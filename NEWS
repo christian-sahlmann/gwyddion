@@ -23,9 +23,11 @@ Modules:
 - Omicron flat: Crash while reading files with up and down traces but no
                 retrace was fixed.
 - Createc: Conversion of raw data to physical values was corrected.
-- Nanoeducator: Keeping offsets of datafields, Material recoding from cp1251.
-- Nanoscantech: New standard scan names (inside Attributes) supported,
-  Units and scan names recoding from cp1251.
+- Nanoeducator: Keep relative coordinates of datafields,
+                Material description decoding from cp1251,
+                Attempt to fix current scale in spectroscopy.
+- Nanoscantech: Scan names of new standard (inside Attributes) supported,
+                Units and scan names recoding from cp1251.
 - Nanoscope: F-Z spectra are imported (experimental).
 - Pixmap: Manual font size range was extended.
 - Raw XYZ: Tolerance for ‘regular grid’ (which is not triangulated) was
