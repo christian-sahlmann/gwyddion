@@ -259,6 +259,7 @@ static GwySpectra*    nanoedu_read_iv_spectra(const guchar *pos_buffer,
                                               gdouble xscale,
                                               gdouble yscale,
                                               gdouble vscale,
+                                              gdouble iscale,
                                               GError **error);
 static GwySpectra*    nanoedu_read_iz_spectra(const guchar *pos_buffer,
                                               gsize pos_size,
@@ -269,6 +270,7 @@ static GwySpectra*    nanoedu_read_iz_spectra(const guchar *pos_buffer,
                                               gdouble xy_step,
                                               gdouble xscale,
                                               gdouble yscale,
+                                              gdouble iscale,
                                               gint sp_type,
                                               GError **error);
 static GwyContainer* nanoedu_read_meta       (const NanoeduFileHeader *header,
@@ -490,6 +492,7 @@ nanoedu_load(const gchar *filename,
                                               params.n_spectrum_points,
                                               Nanometer*q,
                                               Nanometer*qx, Nanometer*qy,
+                                              4.0*NanoAmpere/params.nA_D,
                                               params.spectroscopy_type,
                                               error);
         else
@@ -500,7 +503,8 @@ nanoedu_load(const gchar *filename,
                                               params.n_spectra_lines,
                                               params.n_spectrum_points,
                                               Nanometer*qx, Nanometer*qy,
-                                              1e-3 * params.discr_z_mvolt,
+                                              1e-3*params.discr_z_mvolt,
+                                              4.0*NanoAmpere/params.nA_D,
                                               error);
 
         if (!spectra)
@@ -1087,6 +1091,7 @@ make_iv_spectrum(gint res, gdouble xy_step,
         v = d16[2*j+1];
         data[j] = q*GINT16_FROM_LE(v);
     }
+
     gwy_data_line_set_offset(dline, xy_step*GINT16_FROM_LE(d16[0]));
 
     return dline;
@@ -1097,7 +1102,7 @@ nanoedu_read_iv_spectra(const guchar *pos_buffer, gsize pos_size,
                         const guchar *data_buffer, gsize data_size,
                         gint nspectra, gint res,
                         gdouble xscale, gdouble yscale,
-                        gdouble vscale,
+                        gdouble vscale, gdouble iscale,
                         GError **error)
 {
     gint i, j, n, pointstep;
@@ -1132,7 +1137,7 @@ nanoedu_read_iv_spectra(const guchar *pos_buffer, gsize pos_size,
         for (j = 0; j < n; j++) {
             dline = make_iv_spectrum(res, vscale,
                                      d16 + 2*(i*n+j)*res,
-                                     1e-12);
+                                     iscale);
             gwy_spectra_add_spectrum(spectra, dline, x, y);
             g_object_unref(dline);
         }
@@ -1179,6 +1184,7 @@ nanoedu_read_iz_spectra(const guchar *pos_buffer, gsize pos_size,
                         gint nspectra, gint res,
                         gdouble xy_step,
                         gdouble xscale, gdouble yscale,
+                        gdouble iscale,
                         gint sp_type,
                         GError **error)
 {
@@ -1213,12 +1219,12 @@ nanoedu_read_iz_spectra(const guchar *pos_buffer, gsize pos_size,
                 /* two directions in new format */
                 dline = make_iz_spectrum(res, xy_step,
                                         d16 + 4*(i*n+j)*res,
-                                        1e-12);
+                                        iscale);
                 gwy_spectra_add_spectrum(spectra, dline, x, y);
                 g_object_unref(dline);
                 dline = make_iz_spectrum(res, xy_step,
                                          d16 + 4*(i*n+j)*res + 2*res,
-                                         1e-12);
+                                         iscale);
                 gwy_spectra_add_spectrum(spectra, dline, x, y);
                 g_object_unref(dline);
             }
@@ -1226,7 +1232,7 @@ nanoedu_read_iz_spectra(const guchar *pos_buffer, gsize pos_size,
                 /* one direction */
                 dline = make_iz_spectrum(res, xy_step,
                                         d16 + 2*(i*n+j)*res,
-                                        1e-12);
+                                        iscale);
                 gwy_spectra_add_spectrum(spectra, dline, x, y);
                 g_object_unref(dline);
             }
