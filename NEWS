@@ -18,18 +18,19 @@ Modules:
 - VTK export (new): Exports fields as VTK structured grid files.
 - Extend (new): Extends a field by adding borders using several methods.
 - Seiko: Files starting ‘NPXZ000AFM’ are recognised and imported.  XQP phase
-         files should be read with a correct value scale and units.
+  files should be read with a correct value scale and units.
 - Shimadzu: Files of different version than 2 are recognised and loaded.
 - Omicron flat: Crash while reading files with up and down traces but no
-                retrace was fixed.
+  retrace was fixed.
 - Createc: Conversion of raw data to physical values was corrected.
 - Nanoeducator: Keep relative coordinates of datafields,
-                Material description decoding from cp1251,
-                Attempt to fix current scale in spectroscopy.
+  Material description decoding from CP1251,
+  Attempt to fix current scale in spectroscopy.
 - Nanoscantech: Scan names of new standard (inside Attributes) supported,
-                Units and scan names recoding from cp1251.
+  Units and scan names recoding from CP1251.
 - Nanoscope: F-Z spectra are imported (experimental).
-- Pixmap: Manual font size range was extended.
+- Pixmap: Manual font size range was extended.  Inset bar length is
+  remembered and used the next time if possible.
 - Raw XYZ: Tolerance for ‘regular grid’ (which is not triangulated) was
   increased to 5% of pixel size to help people with poorly rounded data.
 - Edge: New Sobel and Prewitt classic edge detection functions.
