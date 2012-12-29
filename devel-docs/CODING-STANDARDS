@@ -63,6 +63,20 @@ Scope:
   }
 
 
+Types:
+- Standalone structures, unions and enums are typedef-ed and type indentifiers
+  are used:
+
+  typedef struct {
+      gint i;
+      gint j;
+  } CoupleOfInts;
+
+  CoupleOfInts var;
+
+  Bare struct foo, enum foo, etc. are not used.
+
+
 Prefixes:
 - No identifiers start with prefixes colliding with some standard or
   possibly used library.  Identifiers colliding with libc functions are
