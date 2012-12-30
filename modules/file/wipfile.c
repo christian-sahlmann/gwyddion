@@ -41,7 +41,7 @@
 
 /**
  * [FILE-MAGIC-USERGUIDE]
- * WIPfile
+ * WITec Project data
  * .wip
  * Read SPS
  **/
@@ -270,7 +270,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports WItec Project data files."),
-    "dn2010 <dn2010@gmail.com>",
+    "Daniil Bratashov <dn2010@gmail.com>",
     "0.3",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov",
     "2010",
