@@ -2949,6 +2949,7 @@ gwy_3d_draw_fmscaletex(Gwy3DView *view)
   cairo_surface_t* surf;
   gdouble min, max;
   gboolean noticks;
+  GwySIUnit *zunit;
 
   glTranslatef(width, 0, 0);
 
@@ -2966,11 +2967,12 @@ gwy_3d_draw_fmscaletex(Gwy3DView *view)
       noticks = FALSE;
   };
 
+  zunit = gwy_data_field_get_si_unit_z(GWY_DATA_FIELD(view->ovlays[0]->data_field));
   surf = gwy_3d_fmscaletex(height,
                            min,
                            max,
                            size,
-                           gwy_data_field_get_si_unit_z(view->data_field),
+                           zunit,
                            view->gradient,
                            FALSE,
                            &width, &height, noticks);
