@@ -567,7 +567,7 @@ gwy_app_file_chooser_add_type_list(GwyAppFileChooser *chooser)
     /* Give it some reasonable size. FIXME: hack. */
     gtk_widget_show_all(vbox);
     gtk_widget_size_request(scwin, &req);
-    gtk_widget_set_size_request(scwin, -1, 2*req.height + 20);
+    gtk_widget_set_size_request(scwin, -1, req.height + 100);
 
     gwy_app_file_chooser_select_type(chooser);
     gwy_app_file_chooser_type_changed(chooser, selection);
