@@ -99,6 +99,7 @@ file_LTLIBRARIES = \
 	mifile.la \
 	mulfile.la \
 	nanoeducator.la \
+	nanomagnetics.la \
 	nanonics.la \
 	nanonis.la \
 	$(nanoobserver_module) \
@@ -221,6 +222,7 @@ miffile_la_SOURCES       = miffile.c
 mifile_la_SOURCES        = mifile.c
 mulfile_la_SOURCES       = mulfile.c
 nanoeducator_la_SOURCES  = nanoeducator.c
+nanomagnetics_la_SOURCES = nanomagnetics.c
 nanonics_la_SOURCES      = nanonics.c
 nanonis_la_SOURCES       = nanonis.c
 nanoscan_la_SOURCES      = nanoscan.c
