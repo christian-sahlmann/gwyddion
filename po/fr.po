@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-12-19 03:58+0100\n"
-"PO-Revision-Date: 2012-12-19 22:49+0100\n"
+"POT-Creation-Date: 2013-01-05 03:58+0100\n"
+"PO-Revision-Date: 2013-01-05 18:57+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -896,11 +896,11 @@ msgstr "pixels"
 
 #: libgwydgets/gwy3dwindow.c:1116
 #: modules/file/hdrimage.cc:2149
-#: modules/file/pixmap.c:1052
-#: modules/file/pixmap.c:3036
+#: modules/file/pixmap.c:1054
+#: modules/file/pixmap.c:3051
 #: modules/file/rawfile.c:398
 #: modules/process/angle_dist.c:170
-#: modules/process/brickshow.c:304
+#: modules/process/brickshow.c:316
 #: modules/process/calcoefs_new.c:347
 #: modules/process/calibrate.c:296
 #: modules/process/col_synth.c:299
@@ -1286,7 +1286,7 @@ msgstr "Aperçu"
 
 #: libgwymodule/gwymodule-file.c:535
 #: modules/file/err.h:40
-#: modules/file/pixmap.c:762
+#: modules/file/pixmap.c:764
 #, c-format
 msgid "Cannot open file for reading: %s."
 msgstr "Impossible d'ouvrir le fichier pour le lire : %s."
@@ -1523,7 +1523,7 @@ msgid "Channels"
 msgstr "Canaux"
 
 #: app/data-browser.c:4101
-#: modules/process/brickshow.c:422
+#: modules/process/brickshow.c:434
 msgid "Graphs"
 msgstr "Graphes"
 
@@ -2556,11 +2556,11 @@ msgstr "FileDescEnd n'a pas de FileDescBegin correspondant."
 msgid "FileDescBegin has no corresponding FileDescEnd."
 msgstr "FileDescBegin n'a pas de FileDescEnd correspondant."
 
-#: modules/file/apedaxfile.c:108
+#: modules/file/apedaxfile.c:101
 msgid "Imports A.P.E. Research DAX data files."
 msgstr "Importe les fichiers A.P.E. Research DAX."
 
-#: modules/file/apedaxfile.c:121
+#: modules/file/apedaxfile.c:114
 msgid "A.P.E. Research DAX Files (.dax)"
 msgstr "A.P.E. Research DAX (.dax)"
 
@@ -2604,7 +2604,7 @@ msgid "Export Text"
 msgstr "Exporter au format texte"
 
 #: modules/file/asciiexport.c:272
-#: modules/file/pixmap.c:3138
+#: modules/file/pixmap.c:3153
 #: modules/file/rawfile.c:719
 #: modules/file/rawxyz.c:669
 #: modules/process/extend.c:262
@@ -3158,48 +3158,48 @@ msgstr "Le type de données OpenEXR %u est invalide ou non supportée."
 
 #: modules/file/hdrimage.cc:1404
 #: modules/file/hdrimage.cc:1413
-#: modules/file/pixmap.c:1552
-#: modules/file/pixmap.c:1562
+#: modules/file/pixmap.c:1554
+#: modules/file/pixmap.c:1564
 #, c-format
 msgid "libpng initialization error (in %s)"
 msgstr "Erreur d'initialisation de libpng (dans %s)"
 
 #: modules/file/hdrimage.cc:1422
-#: modules/file/pixmap.c:1622
+#: modules/file/pixmap.c:1624
 msgid "libpng error occured"
 msgstr "Une erreur s'est produite dans libpng"
 
 #. TRANSLATORS: Dialog title; %s is PNG, TIFF, ...
 #: modules/file/hdrimage.cc:2146
-#: modules/file/pixmap.c:1049
+#: modules/file/pixmap.c:1051
 #, c-format
 msgid "Import %s"
 msgstr "Importer %s"
 
 #: modules/file/hdrimage.cc:2173
-#: modules/file/pixmap.c:1075
+#: modules/file/pixmap.c:1077
 msgid "Image Information"
 msgstr "Information sur l'image"
 
 #: modules/file/hdrimage.cc:2182
-#: modules/file/pixmap.c:1082
+#: modules/file/pixmap.c:1084
 msgid "Horizontal size:"
 msgstr "Taille horizontale :"
 
 #: modules/file/hdrimage.cc:2182
 #: modules/file/hdrimage.cc:2188
-#: modules/file/pixmap.c:1082
-#: modules/file/pixmap.c:1088
+#: modules/file/pixmap.c:1084
+#: modules/file/pixmap.c:1090
 msgid "px"
 msgstr "px"
 
 #: modules/file/hdrimage.cc:2188
-#: modules/file/pixmap.c:1088
+#: modules/file/pixmap.c:1090
 msgid "Vertical size:"
 msgstr "Taille verticale :"
 
 #: modules/file/hdrimage.cc:2193
-#: modules/file/pixmap.c:1093
+#: modules/file/pixmap.c:1095
 msgid "Channels:"
 msgstr "Canaux :"
 
@@ -3208,7 +3208,7 @@ msgid "Pages:"
 msgstr "Pages : "
 
 #: modules/file/hdrimage.cc:2226
-#: modules/file/pixmap.c:1124
+#: modules/file/pixmap.c:1126
 #: modules/file/rawfile.c:622
 #: modules/file/rawxyz.c:568
 #: modules/process/dimensions.h:465
@@ -3216,8 +3216,8 @@ msgid "Physical Dimensions"
 msgstr "Dimensions physiques"
 
 #: modules/file/hdrimage.cc:2240
-#: modules/file/pixmap.c:1134
-#: modules/file/pixmap.c:3081
+#: modules/file/pixmap.c:1136
+#: modules/file/pixmap.c:3096
 #: modules/file/rawfile.c:631
 #: modules/process/crosscor.c:196
 #: modules/process/deposit_synth.c:457
@@ -3228,8 +3228,8 @@ msgstr "Largeur :"
 
 #: modules/file/hdrimage.cc:2266
 #: modules/file/hdrimage.cc:2331
-#: modules/file/pixmap.c:1156
-#: modules/file/pixmap.c:1211
+#: modules/file/pixmap.c:1158
+#: modules/file/pixmap.c:1213
 #: modules/file/rawfile.c:654
 #: modules/file/rawfile.c:710
 #: modules/process/calcoefs_new.c:383
@@ -3245,7 +3245,7 @@ msgid "verb|Change"
 msgstr "Changer"
 
 #: modules/file/hdrimage.cc:2281
-#: modules/file/pixmap.c:1169
+#: modules/file/pixmap.c:1171
 #: modules/file/rawfile.c:667
 #: modules/process/crosscor.c:202
 #: modules/process/dimensions.h:475
@@ -3253,20 +3253,20 @@ msgid "H_eight:"
 msgstr "Hauteur :"
 
 #: modules/file/hdrimage.cc:2290
-#: modules/file/pixmap.c:1176
+#: modules/file/pixmap.c:1178
 #: modules/file/rawfile.c:674
 #: modules/file/rawxyz.c:549
 msgid "Identical _measures"
 msgstr "_Mesures identiques"
 
 #: modules/file/hdrimage.cc:2304
-#: modules/file/pixmap.c:1188
+#: modules/file/pixmap.c:1190
 #: modules/file/rawfile.c:686
 msgid "_Z-scale (per sample unit):"
 msgstr "Échelle _Z (par unité d'échantillon) :"
 
 #: modules/file/hdrimage.cc:2493
-#: modules/file/pixmap.c:1438
+#: modules/file/pixmap.c:1440
 #: modules/file/rawfile.c:1320
 #: modules/process/calcoefs_new.c:775
 #: modules/process/calcoefs_simple.c:1188
@@ -3277,7 +3277,7 @@ msgid "Change Units"
 msgstr "Changer les unités"
 
 #: modules/file/hdrimage.cc:2507
-#: modules/file/pixmap.c:1452
+#: modules/file/pixmap.c:1454
 #: modules/file/rawfile.c:1334
 #: modules/process/calcoefs_new.c:788
 #: modules/process/calcoefs_simple.c:1201
@@ -3645,58 +3645,66 @@ msgstr "Le numéro d'image dans le label %u ne correspond pas au nombre %u dans 
 msgid "Label string length %u is larger than 20."
 msgstr "La longueur du label %u est supérieure à 20."
 
-#: modules/file/nanoeducator.c:281
+#: modules/file/nanoeducator.c:282
 msgid "Imports Nanoeducator data files."
 msgstr "Importe les fichiers Nanoeducator."
 
-#: modules/file/nanoeducator.c:294
+#: modules/file/nanoeducator.c:295
 msgid "Nanoeducator files (.mspm, .spm, .stm)"
 msgstr "Nanoeducator (.spm)"
 
-#: modules/file/nanoeducator.c:352
+#: modules/file/nanoeducator.c:353
 #: modules/file/unisoku.c:288
 msgid "format version"
 msgstr "version de format"
 
-#: modules/file/nanoeducator.c:380
-#: modules/file/nanoeducator.c:417
-#: modules/file/nanoeducator.c:521
+#: modules/file/nanoeducator.c:381
+#: modules/file/nanoeducator.c:423
+#: modules/file/nanoeducator.c:528
 msgid "Image data starts past the end of file."
 msgstr "Les données de l'image commencent après la fin du fichier."
 
-#: modules/file/nanoeducator.c:459
+#: modules/file/nanoeducator.c:465
 msgid "Spectra data starts past the end of file."
 msgstr "Les données du spectre commencent après la fin du fichier."
 
-#: modules/file/nanoeducator.c:626
+#: modules/file/nanoeducator.c:638
 #: modules/file/opdfile.c:268
 #: modules/file/sensofar.c:256
 #: modules/file/witec-asc.c:154
 msgid "File header is truncated"
 msgstr "L'en-tête de fichier est tronqué."
 
-#: modules/file/nanoeducator.c:685
+#: modules/file/nanoeducator.c:697
 msgid "Parameter header is truncated"
 msgstr "L'en-tête de paramètre est tronqué."
 
-#: modules/file/nanoeducator.c:910
+#: modules/file/nanoeducator.c:922
 #: modules/process/curvature.c:442
 #: modules/tools/profile.c:805
 #, c-format
 msgid "Profile %d"
 msgstr "Profil %d"
 
-#: modules/file/nanoeducator.c:1023
+#: modules/file/nanoeducator.c:1035
 msgid "F-D spectra"
 msgstr "Spectres F-D"
 
-#: modules/file/nanoeducator.c:1114
+#: modules/file/nanoeducator.c:1126
 msgid "I-V spectra"
 msgstr "Spectres I-V"
 
-#: modules/file/nanoeducator.c:1196
+#: modules/file/nanoeducator.c:1209
 msgid "I-Z spectra"
 msgstr "Spectres I-Z"
+
+#: modules/file/nanomagnetics.c:468
+msgid "Imports Nanomagnetics' NMI file format version 3"
+msgstr "Importe les fichiers Nanomagnetics NMI version 3"
+
+#: modules/file/nanomagnetics.c:481
+msgid "Nanomagnetics File (.nmi)"
+msgstr "Nanomagnetics (.nmi)"
 
 #: modules/file/nanonics.c:94
 msgid "Imports Nanonics NAN data files."
@@ -4149,125 +4157,125 @@ msgstr "Des dossiers emboîtés ont été trouvés"
 msgid "Truncated data in block %s"
 msgstr "Données tronquées dans le bloc %s"
 
-#: modules/file/pixmap.c:356
+#: modules/file/pixmap.c:358
 msgid "All channels"
 msgstr "Tous les canaux"
 
-#: modules/file/pixmap.c:357
+#: modules/file/pixmap.c:359
 msgid "Red"
 msgstr "Rouge"
 
-#: modules/file/pixmap.c:358
+#: modules/file/pixmap.c:360
 msgid "Green"
 msgstr "Vert"
 
-#: modules/file/pixmap.c:359
+#: modules/file/pixmap.c:361
 msgid "Blue"
 msgstr "Bleu"
 
-#: modules/file/pixmap.c:360
+#: modules/file/pixmap.c:362
 msgid "Value (max)"
 msgstr "Valeur (max)"
 
-#: modules/file/pixmap.c:361
+#: modules/file/pixmap.c:363
 msgid "RGB sum"
 msgstr "Somme RVB"
 
-#: modules/file/pixmap.c:362
+#: modules/file/pixmap.c:364
 msgid "Luma"
 msgstr "Luma"
 
-#: modules/file/pixmap.c:363
+#: modules/file/pixmap.c:365
 msgid "Alpha"
 msgstr "Alpha"
 
-#: modules/file/pixmap.c:375
+#: modules/file/pixmap.c:377
 msgid "Portable Network Graphics (.png)"
 msgstr "PNG (.png)"
 
-#: modules/file/pixmap.c:381
+#: modules/file/pixmap.c:383
 msgid "JPEG (.jpeg,.jpg)"
 msgstr "JPEG (.jpeg, .jpg)"
 
-#: modules/file/pixmap.c:387
+#: modules/file/pixmap.c:389
 msgid "TIFF (.tiff,.tif)"
 msgstr "TIFF (.tiff, .tif)"
 
-#: modules/file/pixmap.c:393
+#: modules/file/pixmap.c:395
 msgid "Portable Pixmap (.ppm,.pnm)"
 msgstr "PPM (.ppm, .pnm)"
 
-#: modules/file/pixmap.c:399
+#: modules/file/pixmap.c:401
 msgid "Windows or OS2 Bitmap (.bmp)"
 msgstr "BMP (.bmp)"
 
-#: modules/file/pixmap.c:405
+#: modules/file/pixmap.c:407
 msgid "TARGA (.tga,.targa)"
 msgstr "TARGA (.tga, .targa)"
 
-#: modules/file/pixmap.c:418
+#: modules/file/pixmap.c:420
 msgid "Graphics Interchange Format (.gif)"
 msgstr "GIF (.gif)"
 
-#: modules/file/pixmap.c:422
+#: modules/file/pixmap.c:424
 msgid "JPEG 2000 (.jpx)"
 msgstr "JPEG 2000 (.jpx)"
 
-#: modules/file/pixmap.c:426
+#: modules/file/pixmap.c:428
 msgid "PCX (.pcx)"
 msgstr "PCX (.pcx)"
 
-#: modules/file/pixmap.c:430
+#: modules/file/pixmap.c:432
 msgid "X Pixmap (.xpm)"
 msgstr "XPM (.xpm)"
 
-#: modules/file/pixmap.c:434
+#: modules/file/pixmap.c:436
 msgid "Sun raster image (.ras)"
 msgstr "Sun raster (.ras)"
 
-#: modules/file/pixmap.c:438
+#: modules/file/pixmap.c:440
 msgid "Apple icon (.icns)"
 msgstr "Icône Apple (.icns)"
 
-#: modules/file/pixmap.c:462
+#: modules/file/pixmap.c:464
 msgid "Renders data into pixmap images and imports data from pixmap images. It supports the following image formats for export: PNG, JPEG, TIFF, PPM, BMP, TARGA. Import support relies on GDK and thus may be installation-dependent."
 msgstr "Exporte les données sous forme d'images et importe des données à partir d'une image. Les formats d'image suivants sont supportés pour l'export : PNG, JPEG, TIFF, PPM, BMP, TARGA. L'import dépend de GDK et peut ainsi dépendre de l'installation."
 
-#: modules/file/pixmap.c:756
+#: modules/file/pixmap.c:758
 #, c-format
 msgid "Pixmap has not registered file type `%s'."
 msgstr "L'image ne peut enregistrée avec le type de fichier `%s'."
 
-#: modules/file/pixmap.c:771
+#: modules/file/pixmap.c:773
 #, c-format
 msgid "Cannot get pixbuf loader: %s."
 msgstr "Chargeur d'image non disponible : %s."
 
-#: modules/file/pixmap.c:784
-#: modules/file/pixmap.c:797
+#: modules/file/pixmap.c:786
+#: modules/file/pixmap.c:799
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr "Le chargeur d'image refuse les données : %s."
 
-#: modules/file/pixmap.c:1221
+#: modules/file/pixmap.c:1223
 msgid "Warning: Colorful images cannot be reliably mapped to meaningful values."
 msgstr "Attention : des valeurs correctes ne peuvent être appliquées de manière fiable à des images en couleurs ."
 
-#: modules/file/pixmap.c:1240
+#: modules/file/pixmap.c:1242
 msgid "verb|Use"
 msgstr "Utiliser"
 
-#: modules/file/pixmap.c:1240
+#: modules/file/pixmap.c:1242
 msgid "as data"
 msgstr "en tant que données"
 
-#: modules/file/pixmap.c:1709
-#: modules/file/pixmap.c:1737
+#: modules/file/pixmap.c:1711
+#: modules/file/pixmap.c:1739
 #, c-format
 msgid "Pixbuf save failed: %s."
 msgstr "La sauvegarde de l'image à échoué : %s."
 
-#: modules/file/pixmap.c:2147
+#: modules/file/pixmap.c:2149
 msgid "Image is too large to be stored as TARGA."
 msgstr "L'image est trop grande pour être enregistrée au format TARGA"
 
@@ -4275,24 +4283,24 @@ msgstr "L'image est trop grande pour être enregistrée au format TARGA"
 msgid "Data must be displayed in a window for pixmap export."
 msgstr "Les données doivent affichées dans une fenêtre pour l'export vers un format image."
 
-#: modules/file/pixmap.c:2951
+#: modules/file/pixmap.c:2966
 msgid "Change Inset Color"
 msgstr "Changer l'échelle de couleurs"
 
-#: modules/file/pixmap.c:3033
+#: modules/file/pixmap.c:3048
 #, c-format
 msgid "Export %s"
 msgstr "Exporter %s"
 
-#: modules/file/pixmap.c:3063
+#: modules/file/pixmap.c:3078
 msgid "Scaling"
 msgstr "Échelle"
 
-#: modules/file/pixmap.c:3072
+#: modules/file/pixmap.c:3087
 msgid "_Zoom:"
 msgstr "_Zoom :"
 
-#: modules/file/pixmap.c:3090
+#: modules/file/pixmap.c:3105
 #: modules/process/col_synth.c:399
 #: modules/process/grain_mark.c:308
 #: modules/process/grain_rem_threshold.c:282
@@ -4304,102 +4312,102 @@ msgstr "_Zoom :"
 msgid "_Height:"
 msgstr "_Hauteur :"
 
-#: modules/file/pixmap.c:3098
+#: modules/file/pixmap.c:3113
 msgid "Font:"
 msgstr "Police :"
 
-#: modules/file/pixmap.c:3113
+#: modules/file/pixmap.c:3128
 msgid "Scale text _proportionally"
 msgstr "Mettre le texte _proportionnellement à l'échelle"
 
-#: modules/file/pixmap.c:3128
+#: modules/file/pixmap.c:3143
 msgid "_Font size:"
 msgstr "Taille de police :"
 
-#: modules/file/pixmap.c:3142
+#: modules/file/pixmap.c:3157
 msgid "Draw _mask"
 msgstr "Dessiner le _masque"
 
-#: modules/file/pixmap.c:3151
+#: modules/file/pixmap.c:3166
 msgid "Draw _selection"
 msgstr "Dessiner la _sélection"
 
-#: modules/file/pixmap.c:3167
+#: modules/file/pixmap.c:3182
 msgid "Grayscale Mode"
 msgstr "Mode niveaux de gris"
 
-#: modules/file/pixmap.c:3171
+#: modules/file/pixmap.c:3186
 msgid "Export as 1_6 bit grayscale"
 msgstr "Exporter en niveaux de gris 1_6 bits"
 
-#: modules/file/pixmap.c:3197
+#: modules/file/pixmap.c:3212
 msgid "Lateral Scale"
 msgstr "Échelle latérale"
 
-#: modules/file/pixmap.c:3204
-#: modules/file/pixmap.c:3319
+#: modules/file/pixmap.c:3219
+#: modules/file/pixmap.c:3334
 msgid "ruler|_None"
 msgstr "_Aucune"
 
-#: modules/file/pixmap.c:3205
+#: modules/file/pixmap.c:3220
 msgid "_Rulers"
 msgstr "G_raduations"
 
-#: modules/file/pixmap.c:3206
+#: modules/file/pixmap.c:3221
 msgid "_Inset scale bar"
 msgstr "Échelle"
 
-#: modules/file/pixmap.c:3211
+#: modules/file/pixmap.c:3226
 msgid "Color:"
 msgstr "Couleur :"
 
-#: modules/file/pixmap.c:3227
+#: modules/file/pixmap.c:3242
 #: modules/process/immerse.c:322
 msgid "Position:"
 msgstr "Position :"
 
-#: modules/file/pixmap.c:3232
+#: modules/file/pixmap.c:3247
 msgid "left"
 msgstr "gauche"
 
-#: modules/file/pixmap.c:3236
+#: modules/file/pixmap.c:3251
 msgid "center"
 msgstr "centre"
 
-#: modules/file/pixmap.c:3240
+#: modules/file/pixmap.c:3255
 msgid "right"
 msgstr "droite"
 
-#: modules/file/pixmap.c:3245
+#: modules/file/pixmap.c:3260
 msgid "top"
 msgstr "haut"
 
-#: modules/file/pixmap.c:3257
+#: modules/file/pixmap.c:3272
 msgid "bottom"
 msgstr "bas"
 
-#: modules/file/pixmap.c:3268
+#: modules/file/pixmap.c:3283
 #: modules/process/lno_synth.c:1065
 msgid "_Length:"
 msgstr "_Longueur :"
 
-#: modules/file/pixmap.c:3284
+#: modules/file/pixmap.c:3299
 msgid "_Auto"
 msgstr "_Auto"
 
-#: modules/file/pixmap.c:3292
+#: modules/file/pixmap.c:3307
 msgid "Draw _ticks"
 msgstr "Afficher les gradua_tions"
 
-#: modules/file/pixmap.c:3302
+#: modules/file/pixmap.c:3317
 msgid "Draw _label"
 msgstr "Dessiner les _labels"
 
-#: modules/file/pixmap.c:3312
+#: modules/file/pixmap.c:3327
 msgid "Value Scale"
 msgstr "Valeur d'échelle"
 
-#: modules/file/pixmap.c:3320
+#: modules/file/pixmap.c:3335
 msgid "_False color ruler"
 msgstr "Échelle de couleurs"
 
@@ -4566,7 +4574,7 @@ msgstr "Préréglages"
 #: modules/file/rawfile.c:540
 #: modules/file/rawxyz.c:435
 #: modules/process/arithmetic.c:227
-#: modules/process/brickshow.c:301
+#: modules/process/brickshow.c:313
 #: modules/process/calcoefs_view.c:332
 #: modules/process/convolution_filter.c:243
 #: modules/process/deposit_synth.c:682
@@ -6140,97 +6148,97 @@ msgstr "/Opérations _basiques/Supprimer l'offset"
 msgid "Null horizontall offsets, moving the origin to the upper left corner"
 msgstr "Annule les décalages horizontaux en déplaçant l'origine dans le coin en haut à gauche"
 
-#: modules/process/brickshow.c:197
+#: modules/process/brickshow.c:204
 msgid "Loads and shows a brick (3D volume data)."
 msgstr "Charge et affiche des données volumiques"
 
-#: modules/process/brickshow.c:211
+#: modules/process/brickshow.c:218
 #, fuzzy
 msgid "/_Bricks/Load and show..."
 msgstr "/Cu_be de données/Charger et afficher..."
 
-#: modules/process/brickshow.c:215
+#: modules/process/brickshow.c:222
 msgid "Load and show 3D data"
 msgstr "Charger et afficher des données 3D"
 
-#: modules/process/brickshow.c:247
+#: modules/process/brickshow.c:254
 msgid "X cross-section"
 msgstr "Section X"
 
-#: modules/process/brickshow.c:248
+#: modules/process/brickshow.c:255
 msgid "Y cross-section"
 msgstr "Section Y"
 
-#: modules/process/brickshow.c:249
+#: modules/process/brickshow.c:256
 msgid "Z cross-section"
 msgstr "Section Z"
 
-#: modules/process/brickshow.c:250
-#: modules/process/brickshow.c:655
+#: modules/process/brickshow.c:257
+#: modules/process/brickshow.c:667
 msgid "X direction sum"
 msgstr "Somme selon X"
 
-#: modules/process/brickshow.c:251
-#: modules/process/brickshow.c:657
+#: modules/process/brickshow.c:258
+#: modules/process/brickshow.c:669
 msgid "Y direction sum"
 msgstr "Somme selon Y"
 
-#: modules/process/brickshow.c:252
-#: modules/process/brickshow.c:659
+#: modules/process/brickshow.c:259
+#: modules/process/brickshow.c:671
 msgid "Z direction sum"
 msgstr "Somme selon Z"
 
-#: modules/process/brickshow.c:255
+#: modules/process/brickshow.c:262
 msgid "X direction"
 msgstr "Direction X"
 
-#: modules/process/brickshow.c:256
+#: modules/process/brickshow.c:263
 msgid "Y direction"
 msgstr "Direction Y"
 
-#: modules/process/brickshow.c:257
+#: modules/process/brickshow.c:264
 msgid "Z direction"
 msgstr "Direction Z"
 
-#: modules/process/brickshow.c:295
+#: modules/process/brickshow.c:307
 msgid "Volume data"
 msgstr "Données volumiques"
 
-#: modules/process/brickshow.c:297
+#: modules/process/brickshow.c:309
 msgid "_Load"
 msgstr "Charger"
 
-#: modules/process/brickshow.c:309
+#: modules/process/brickshow.c:321
 msgid "_Extract projection"
 msgstr "_Extraire la projection"
 
-#: modules/process/brickshow.c:328
+#: modules/process/brickshow.c:340
 msgid "Projections"
 msgstr "Intersections"
 
-#: modules/process/brickshow.c:366
+#: modules/process/brickshow.c:378
 msgid "X position"
 msgstr "Position X"
 
-#: modules/process/brickshow.c:373
+#: modules/process/brickshow.c:385
 msgid "Y position"
 msgstr "Position Y"
 
-#: modules/process/brickshow.c:380
+#: modules/process/brickshow.c:392
 msgid "Z position"
 msgstr "Position Z"
 
-#: modules/process/brickshow.c:386
+#: modules/process/brickshow.c:398
 msgid "Shown cut direction:"
 msgstr "Direction de coupe affichée :"
 
-#: modules/process/brickshow.c:396
-#: modules/process/brickshow.c:482
+#: modules/process/brickshow.c:408
+#: modules/process/brickshow.c:494
 msgid "Show mode:"
 msgstr "Mode d'affichage : "
 
-#: modules/process/brickshow.c:402
-#: modules/process/brickshow.c:488
+#: modules/process/brickshow.c:414
+#: modules/process/brickshow.c:500
 #: modules/process/calcoefs_view.c:583
 #: modules/process/deposit_synth.c:686
 #: modules/process/edge.c:744
@@ -6245,89 +6253,89 @@ msgstr "Mode d'affichage : "
 msgid "I_nstant updates"
 msgstr "Mise à jour instantanée"
 
-#: modules/process/brickshow.c:411
-#: modules/process/brickshow.c:497
+#: modules/process/brickshow.c:423
+#: modules/process/brickshow.c:509
 #: modules/process/calcoefs_load.c:239
 msgid "No data loaded"
 msgstr "Aucunes données chargées"
 
-#: modules/process/brickshow.c:472
+#: modules/process/brickshow.c:484
 msgid "Graph cut direction:"
 msgstr "Direction de coupe du graphe :"
 
-#: modules/process/brickshow.c:510
+#: modules/process/brickshow.c:522
 msgid "3D view"
 msgstr "Vue 3D"
 
-#: modules/process/brickshow.c:536
+#: modules/process/brickshow.c:548
 msgid "Zoom"
 msgstr "Zoom"
 
-#: modules/process/brickshow.c:544
+#: modules/process/brickshow.c:556
 msgid "Z scale"
 msgstr "Échelle Z"
 
-#: modules/process/brickshow.c:551
+#: modules/process/brickshow.c:563
 msgid "apply perspective"
 msgstr "Appliquer la perspective"
 
-#: modules/process/brickshow.c:561
+#: modules/process/brickshow.c:573
 msgid "X view"
 msgstr "Vue X"
 
-#: modules/process/brickshow.c:567
+#: modules/process/brickshow.c:579
 msgid "Y view"
 msgstr "Vue Y"
 
-#: modules/process/brickshow.c:573
+#: modules/process/brickshow.c:585
 msgid "Z view"
 msgstr "Vue Z"
 
-#: modules/process/brickshow.c:646
+#: modules/process/brickshow.c:658
 #, c-format
 msgid "X cross-section at x: %d"
 msgstr "Section X pour x : %d"
 
-#: modules/process/brickshow.c:649
+#: modules/process/brickshow.c:661
 #, c-format
 msgid "Y cross-section at y: %d"
 msgstr "Section Y pour y : %d"
 
-#: modules/process/brickshow.c:652
+#: modules/process/brickshow.c:664
 #, c-format
 msgid "Z cross-section at z: %d"
 msgstr "Section Z pour z : %d"
 
-#: modules/process/brickshow.c:697
+#: modules/process/brickshow.c:709
 #, c-format
 msgid "X graph at y: %d z: %d"
 msgstr "Graphe X pour y : %d z : %d"
 
-#: modules/process/brickshow.c:700
+#: modules/process/brickshow.c:712
 #, c-format
 msgid "Y graph at x: %d z: %d"
 msgstr "Graphe Y pour x : %d z : %d"
 
-#: modules/process/brickshow.c:703
+#: modules/process/brickshow.c:715
 #, c-format
 msgid "Z graph at x: %d y: %d"
 msgstr "Graphe Z pour x : %d y : %d"
 
-#: modules/process/brickshow.c:708
+#: modules/process/brickshow.c:720
 #, fuzzy
 msgid "w"
 msgstr "w"
 
-#: modules/process/brickshow.c:714
+#: modules/process/brickshow.c:726
 #, fuzzy
 msgid "Brick graph"
 msgstr "Graphe d'un cube de données"
 
-#: modules/process/brickshow.c:970
+#: modules/process/brickshow.c:981
 msgid "Load volume data"
 msgstr "Charger des données volumiques"
 
-#: modules/process/brickshow.c:987
+#: modules/process/brickshow.c:998
 #: modules/process/calcoefs_load.c:330
 #, c-format
 msgid "Error loading file '%s'"
