@@ -296,6 +296,9 @@ static gint          nmi_detect               (const GwyFileDetectInfo *fileinfo
 static GwyContainer* nmi_load                 (const gchar *filename,
                                                GwyRunType mode,
                                                GError **error);
+static gsize         read_footer              (NMIParameters *params,
+                                               const guchar **p,
+                                               gsize size);
 static void          populate_meta_data       (GwyContainer *meta,
                                                NMIParameters *params,
                                                NMIChannelParameters *chparams);
@@ -617,214 +620,7 @@ nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
         size -= (chparams->Width * chparams->Height * 4 + 4);
     }
 
-    /*Read Footer: do not raise an error even if footer is not present or is malformed. */
-    if (params.SpmType == SPM_RtShpm
-        || params.SpmType == SPM_LtShpm
-        || params.SpmType == SPM_TemNano) {
-        /* SHPM */
-        if (size > 1) {
-            params.HallStatus = gwy_get_gboolean8(&p);
-            size -= 1;
-        }
-        if (size > 4) {
-            params.HeadLiftOffDist = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.HeadLiftOffV = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.UserEnteredHeadLiftoffLateralValue
-                = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.UserEnteredHallCurrent = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.UserEnteredHallAmpBW = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 1) {
-            params.UserEnteredSwitchInfraRedLed
-                = gwy_get_gboolean8(&p);
-            size -= 1;
-        }
-        if (size > 4) {
-            params.UserEnteredHallAmpGain = gwy_get_gint32_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.UserEnteredLightIntensity = gwy_get_gint32_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.hallOffset = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.hallAmpGain = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.hallAmpBandWidth = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.headLiftOffVoltage = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        params.SoftwareVersion = get_string_LEB128(&p, &size);
-        params.MotorCardVersion = get_string_LEB128(&p, &size);
-        params.ScanDacCardVersion = get_string_LEB128(&p, &size);
-        params.PllVersion = get_string_LEB128(&p, &size);
-    }
-    else if (params.SpmType == SPM_NcAfm) {
-        /*NCAFM */
-        if (size > 1) {
-            params.LaserOn = gwy_get_gboolean8(&p);
-            size -= 1;
-        }
-        if (size > 1) {
-            params.LaserFanOn = gwy_get_gboolean8(&p);
-            size -= 1;
-        }
-        if (size > 1) {
-            params.LaserRF_State = gwy_get_gboolean8(&p);
-            size -= 1;
-        }
-        if (size > 1) {
-            params.LockQuad = gwy_get_gboolean8(&p);
-            size -= 1;
-        }
-        if (size > 4) {
-            params.UserEnteredLaserPower = gwy_get_gint32_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.UserEnteredPhotoGain = gwy_get_gint32_le(&p);
-            size -= 4;
-        }
-    }
-    else {
-        /*AFM */
-        if (size > 4) {
-            params.DDS2FeedbackPhase = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 1) {
-            params.PLL_FeedbackOn = gwy_get_gboolean8(&p);
-            size -= 1;
-        }
-        if (size > 4) {
-            params.PLL_LockRangeResolution = gwy_get_gint32_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.UserEnteredPLL_CenterFreq = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.UserEnteredDacValueA = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.UserEnteredDacValueB = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 1) {
-            params.UserEnteredPLL_NegativePolarity
-                = gwy_get_gboolean8(&p);
-            size -= 1;
-        }
-        if (size > 1) {
-            params.UserEnteredPLL_ConstExc = gwy_get_gboolean8(&p);
-            size -= 1;
-        }
-        if (size > 4) {
-            params.UserEnteredFeedbackGain = gwy_get_gint32_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.UserEnteredOscAmp = gwy_get_gint32_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.UserEnteredFOffset = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.UserEnteredRMS = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.power = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.f = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.amp = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.vpd = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.vRef = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.vSignal = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.fiberVoltage = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.reflectivity = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.photoGain = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.interferenceSlope = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.oscillationAmp = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.hallOffset = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.hallAmpGain = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.hallAmpBandWidth = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        if (size > 4) {
-            params.headLiftOffVoltage = gwy_get_gfloat_le(&p);
-            size -= 4;
-        }
-        /* if (size>4) { params.SSRMGain = gwy_get_gdouble_le(&p); size -= 4; } Delibrately commented out */
-        params.SoftwareVersion = get_string_LEB128(&p, &size);
-        params.MotorCardVersion = get_string_LEB128(&p, &size);
-        params.ScanDacCardVersion = get_string_LEB128(&p, &size);
-        params.PllVersion = get_string_LEB128(&p, &size);
-    }
+    size = read_footer(&params, &p, size);
 
     /* Read channels all over again, scale the values, set the units and
      * metadata */
@@ -873,6 +669,222 @@ nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
     gwy_file_abandon_contents(buffer, originalsize, NULL);
 
     return container;
+}
+
+/* Read Footer: do not raise an error even if footer is not present or is
+ * malformed. */
+static gsize
+read_footer(NMIParameters *params, const guchar **p, gsize size)
+{
+    if (params->SpmType == SPM_RtShpm
+        || params->SpmType == SPM_LtShpm
+        || params->SpmType == SPM_TemNano) {
+        /* SHPM */
+        if (size > 1) {
+            params->HallStatus = gwy_get_gboolean8(p);
+            size -= 1;
+        }
+        if (size > 4) {
+            params->HeadLiftOffDist = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->HeadLiftOffV = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->UserEnteredHeadLiftoffLateralValue
+                = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->UserEnteredHallCurrent = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->UserEnteredHallAmpBW = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 1) {
+            params->UserEnteredSwitchInfraRedLed
+                = gwy_get_gboolean8(p);
+            size -= 1;
+        }
+        if (size > 4) {
+            params->UserEnteredHallAmpGain = gwy_get_gint32_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->UserEnteredLightIntensity = gwy_get_gint32_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->hallOffset = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->hallAmpGain = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->hallAmpBandWidth = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->headLiftOffVoltage = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        params->SoftwareVersion = get_string_LEB128(p, &size);
+        params->MotorCardVersion = get_string_LEB128(p, &size);
+        params->ScanDacCardVersion = get_string_LEB128(p, &size);
+        params->PllVersion = get_string_LEB128(p, &size);
+    }
+    else if (params->SpmType == SPM_NcAfm) {
+        /*NCAFM */
+        if (size > 1) {
+            params->LaserOn = gwy_get_gboolean8(p);
+            size -= 1;
+        }
+        if (size > 1) {
+            params->LaserFanOn = gwy_get_gboolean8(p);
+            size -= 1;
+        }
+        if (size > 1) {
+            params->LaserRF_State = gwy_get_gboolean8(p);
+            size -= 1;
+        }
+        if (size > 1) {
+            params->LockQuad = gwy_get_gboolean8(p);
+            size -= 1;
+        }
+        if (size > 4) {
+            params->UserEnteredLaserPower = gwy_get_gint32_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->UserEnteredPhotoGain = gwy_get_gint32_le(p);
+            size -= 4;
+        }
+    }
+    else {
+        /*AFM */
+        if (size > 4) {
+            params->DDS2FeedbackPhase = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 1) {
+            params->PLL_FeedbackOn = gwy_get_gboolean8(p);
+            size -= 1;
+        }
+        if (size > 4) {
+            params->PLL_LockRangeResolution = gwy_get_gint32_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->UserEnteredPLL_CenterFreq = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->UserEnteredDacValueA = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->UserEnteredDacValueB = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 1) {
+            params->UserEnteredPLL_NegativePolarity
+                = gwy_get_gboolean8(p);
+            size -= 1;
+        }
+        if (size > 1) {
+            params->UserEnteredPLL_ConstExc = gwy_get_gboolean8(p);
+            size -= 1;
+        }
+        if (size > 4) {
+            params->UserEnteredFeedbackGain = gwy_get_gint32_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->UserEnteredOscAmp = gwy_get_gint32_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->UserEnteredFOffset = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->UserEnteredRMS = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->power = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->f = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->amp = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->vpd = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->vRef = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->vSignal = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->fiberVoltage = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->reflectivity = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->photoGain = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->interferenceSlope = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->oscillationAmp = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->hallOffset = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->hallAmpGain = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->hallAmpBandWidth = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->headLiftOffVoltage = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        /* if (size>4) { params->SSRMGain = gwy_get_gdouble_le(p); size -= 4; } Delibrately commented out */
+        params->SoftwareVersion = get_string_LEB128(p, &size);
+        params->MotorCardVersion = get_string_LEB128(p, &size);
+        params->ScanDacCardVersion = get_string_LEB128(p, &size);
+        params->PllVersion = get_string_LEB128(p, &size);
+    }
+
+    return size;
 }
 
 /*
@@ -1425,11 +1437,11 @@ cleanup_data_fields(GwyDataField **dfields, gint no_of_channels)
 {
     gint i;
 
-    for (i = 0; i < no_of_channels; i++) {
+    for (i = 0; i < no_of_channels; i++)
         gwy_object_unref(dfields[i]);
-    }
     g_free(dfields);
 }
+
 /* XXX: calc_real_ordinate() was originally written to perform the complex
  * procedure to transform each individual data value.  A milion times.  It
  * should be rewritten to just return the scale and offset but that's ugly.  So
@@ -1506,7 +1518,7 @@ calc_real_ordinate_base(const NMIParameters *params,
         }
         else {
             *z = (val + 10.0)/20.0;
-            *z = *z*360.0 - 180.0;
+            *z = (*z)*360.0 - 180.0;
             *unit = UNIT_degree;
         }
     }
