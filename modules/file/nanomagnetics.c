@@ -63,9 +63,6 @@
 
 #define DCSTEP (10/32768.0)
 
-#define SPMTYPEOPTION 0
-
-/* ENUMS */
 typedef enum {
     SPM_RtShpm,
     SPM_LtShpm,
@@ -83,25 +80,6 @@ typedef enum {
     SPM_None
 } NMISpmType;
 
-/* XXX XXX XXX: Completely unsafe.  The metadata code assumes that all
- * numerated values are from the list here.  Must be protected! */
-static const gchar *SpmTypesStrings[] = {
-    "RtShpm",
-    "LtShpm",
-    "RtQtfAfm",
-    "LtQtfAfm",
-    "LtAfm",
-    "NcAfm",
-    "LaserAfm",
-    "LtMfm",
-    "TemNano",
-    "Stm",
-    "Afm",
-    "QShpm",
-    "RtQShpm",
-    "None"
-};
-
 typedef enum {
     LASER_NonContact,
     LASER_Contact,
@@ -111,16 +89,6 @@ typedef enum {
     LASER_LaserMfm,
     LASER_Efm
 } NMILaserMode;
-
-static const gchar *LaserModesStrings[] = {
-    "NonContact",
-    "Contact",
-    "Ffm",
-    "Dynamic",
-    "LaserStm",
-    "LaserMfm",
-    "Efm"
-};
 
 typedef enum {
     SCAN_NormalScan,
@@ -133,17 +101,6 @@ typedef enum {
     SCAN_Default
 } NMIScanType;
 
-static const gchar *ScanTypesStrings[] = {
-    "NormalScan",
-    "FastScan",
-    "RealTimeScan",
-    "MotorScan",
-    "SpectroscopyScan",
-    "MfmScan",
-    "EfmScan",
-    "Default"
-};
-
 typedef enum {
     FEEDBACK_Tunneling,
     FEEDBACK_AfmChannel,
@@ -153,15 +110,6 @@ typedef enum {
     FEEDBACK_Default
 } NMIFeedbackChannelType;
 
-static const gchar *FeedbackChannelTypesStrings[] = {
-    "Tunneling",
-    "AfmChannel",
-    "ExternalMode",
-    "ExternalMode2",
-    "ContactMode",
-    "Default"
-};
-
 typedef enum {
     LT_Contact,
     LT_NonContact,
@@ -170,15 +118,6 @@ typedef enum {
     LT_PrFM,
     LT_SSRM
 } NMILtMode;
-
-static const gchar *LtModesStrings[] = {
-    "Contact",
-    "NonContact",
-    "Dynamic",
-    "LtStm",
-    "PrFM",
-    "SSRM"
-};
 
 typedef enum {
     CHANNEL_TunnelCurrent,
@@ -202,28 +141,6 @@ typedef enum {
     CHANNEL_Default
 } NMIChannel;
 
-static const gchar *ChannelsStrings[] = {
-    "TunnelCurrent",
-    "HallVoltage",
-    "Vz",
-    "Vz4",
-    "Ipd",
-    "IpdRef",
-    "IpdSig",
-    "Various",
-    "I_HallAdc",
-    "V_HallAdc",
-    "Spare0",
-    "Spare1",
-    "Spare2",
-    "Spare3",
-    "Spare4",
-    "Spare5",
-    "Spare6",
-    "Spare7",
-    "Default"
-};
-
 typedef enum {
     MODE_Afm,
     MODE_Shpm,
@@ -240,57 +157,25 @@ typedef enum {
     MODE_Default
 } NMIMode;
 
-static const gchar *ModesStrings[] = {
-    "Afm",
-    "Shpm",
-    "ConstantCurrentMode",
-    "ConstantHeightMode",
-    "Spare0",
-    "Spare1",
-    "Spare2",
-    "Spare3",
-    "Spare4",
-    "Spare5",
-    "Spare6",
-    "Spare7",
-    "Default"
-};
-
 typedef enum {
-    UNIT_volt,
-    UNIT_ampere,
-    UNIT_hertz,
+    UNIT_unknown = -1,   /* Our addition; unit could not be determined. */
+    UNIT_Volt,
+    UNIT_Ampere,
+    UNIT_Hertz,
     UNIT_metre,
-    UNIT_gauss,
+    UNIT_Gauss,
     UNIT_levels,
     UNIT_degree
 } NMIUnit;
 
-static const gchar *UnitsStrings[] = {
-    "V",
-    "A",
-    "Hz",
-    "m",
-    "G",
-    "levels",
-    "degrees"
-};
-
-static const gchar *boolStrings[] = {
-    "False",
-    "True"
-};
-
-/* END ENUMS */
-
 /* PARAMETER STRUCTS */
 
 typedef struct {
-    gfloat X, Y;
+    gdouble X, Y;
 } NMIVector2D;
 
 typedef struct {
-    gfloat X, Y, Z;
+    gdouble X, Y, Z;
 } NMIVector3D;
 
 typedef struct {
@@ -306,84 +191,84 @@ typedef struct {
     NMILaserMode LaserMode;
     NMIScanType ScanType;
     NMITimeStamp DateTime;
-    gfloat HallProbeOffsetInGauss;
-    gfloat kFiber;
-    gfloat iHall;
-    gfloat rHall;
-    gfloat Temperature;
+    gdouble HallProbeOffsetInGauss;
+    gdouble kFiber;
+    gdouble iHall;
+    gdouble rHall;
+    gdouble Temperature;
     NMIVector3D HighVoltageAmplifier;
     NMIVector3D PiezoCoefficient;
     NMIVector3D HeatCoefficient;
     NMIVector2D HysAlpha, HysBeta;
     guint32 numAverages;
     gint32 LockIn;
-    gfloat DataPointsDelay;
+    gdouble DataPointsDelay;
     NMIVector2D CompensationValue;
     NMIVector2D CompensationPercentage;
     gboolean NanoLithoStatus;
-    gfloat NanoLithoBiasV;
-    gfloat NanoLithoPulseLength;
+    gdouble NanoLithoBiasV;
+    gdouble NanoLithoPulseLength;
     gint32 MFM_ScanType;
-    gfloat MFM_HeadLiftOff;
+    gdouble MFM_HeadLiftOff;
     gboolean ForwardScanFeedbackOn;
     gboolean BackwardScanFeedbackOn;
     gboolean QuadratureLockTryCheck;
     NMIFeedbackChannelType FeedbackChannel;
-    gfloat vzChannel;
+    gdouble vzChannel;
     gboolean hysteresisEnabled;
     gboolean creepCorrectionEnabled;
     NMIVector2D OffsetInstanceIV;
     NMIVector2D OffsetInstanceFD;
     gint32 LaserDriver;
-    gfloat FreqQ;
-    gfloat FN, FL, FT, GH;
-    gfloat ScanSpeed, ScanAngle;
+    gdouble FreqQ;
+    gdouble FN, FL, FT, GH;
+    gdouble ScanSpeed, ScanAngle;
     NMIVector2D ScanOffset;
     NMIVector3D Position;
-    gfloat iT, biasV, giV, rSignal, rRef;
+    gdouble iT, biasV, giV, rSignal, rRef;
     guint16 PhotoGain, DigitalGain, LoopGain;
     gint32 gVirt;
-    gfloat Field, FieldRate, FieldApp, FieldMode;
-    gfloat PiezoPolinomCoeffs[5];
-    gfloat xHysPiezoPolinomCoeffs[5];
-    gfloat yHysPiezoPolinomCoeffs[5];
+    gdouble Field, FieldRate, FieldApp, FieldMode;
+    gdouble PiezoPolinomCoeffs[5];
+    gdouble xHysPiezoPolinomCoeffs[5];
+    gdouble yHysPiezoPolinomCoeffs[5];
     NMILtMode LtMode;
     gint32 P_value, I_value, D_value, G_value, ScaleXY;
-    gfloat CenterFreq, FeedBackValue;
+    gdouble CenterFreq, FeedBackValue;
     /* in footer: AFM */
-    gfloat DDS2FeedbackPhase;
+    gdouble DDS2FeedbackPhase;
     gboolean PLL_FeedbackOn;
     gint32 PLL_LockRangeResolution;
-    gfloat UserEnteredPLL_CenterFreq;
-    gfloat UserEnteredDacValueA, UserEnteredDacValueB;
+    gdouble UserEnteredPLL_CenterFreq;
+    gdouble UserEnteredDacValueA, UserEnteredDacValueB;
     gboolean UserEnteredPLL_NegativePolarity;
     gboolean UserEnteredPLL_ConstExc;
     gint32 UserEnteredFeedbackGain;
     gint32 UserEnteredOscAmp;
-    gfloat UserEnteredFOffset;
-    gfloat UserEnteredRMS;
-    gfloat power, f, amp, vpd, vRef, vSignal, fiberVoltage;
-    gfloat reflectivity, photoGain, interferenceSlope;
-    gfloat oscillationAmp;
+    gdouble UserEnteredFOffset;
+    gdouble UserEnteredRMS;
+    gdouble power, f, amp, vpd, vRef, vSignal, fiberVoltage;
+    gdouble reflectivity, photoGain, interferenceSlope;
+    gdouble oscillationAmp;
     gint64 SSRMGain;
     /* in footer: NCAFM mode */
     gboolean LaserOn, LaserFanOn, LaserRF_State, LockQuad;
     gint32 UserEnteredLaserPower, UserEnteredPhotoGain;
     /* in footer: SHPM mode */
     gboolean HallStatus;
-    gfloat HeadLiftOffDist;
-    gfloat HeadLiftOffV;
-    gfloat UserEnteredHeadLiftoffLateralValue;
-    gfloat UserEnteredHallCurrent;
-    gfloat UserEnteredHallAmpBW;
+    gdouble HeadLiftOffDist;
+    gdouble HeadLiftOffV;
+    gdouble UserEnteredHeadLiftoffLateralValue;
+    gdouble UserEnteredHallCurrent;
+    gdouble UserEnteredHallAmpBW;
     gboolean UserEnteredSwitchInfraRedLed;
     gint32 UserEnteredHallAmpGain;
     gint32 UserEnteredLightIntensity;
     /* Common to AFM and SHPM modes */
-    gfloat hallOffset;
-    gfloat hallAmpGain;
-    gfloat hallAmpBandWidth;
-    gfloat headLiftOffVoltage;
+    gdouble hallOffset;
+    gdouble hallAmpGain;
+    gdouble hallAmpBandWidth;
+    gdouble headLiftOffVoltage;
     gchar *SoftwareVersion;
     gchar *MotorCardVersion;
     gchar *ScanDacCardVersion;
@@ -394,8 +279,8 @@ typedef struct {
     gchar *Name;
     gint32 Width;
     gint32 Height;
-    gfloat RealWidth;
-    gfloat RealHeight;
+    gdouble RealWidth;
+    gdouble RealHeight;
     NMIVector2D Volt;
     NMIChannel Channel;
     guint16 Gain;
@@ -405,15 +290,12 @@ typedef struct {
 /* END PARAMETER STRUCTS */
 
 
-/* FUNCTION DECLARATIONS */
 static gboolean      module_register          (void);
 static gint          nmi_detect               (const GwyFileDetectInfo *fileinfo,
                                                gboolean only_name);
 static GwyContainer* nmi_load                 (const gchar *filename,
                                                GwyRunType mode,
                                                GError **error);
-static gchar*        get_string               (const guchar **p,
-                                               gsize *size);
 static void          populate_meta_data       (GwyContainer *meta,
                                                NMIParameters *params,
                                                NMIChannelParameters *chparams);
@@ -422,45 +304,51 @@ static void          cleanup_channels         (NMIChannelParameters *channels,
                                                gint no_of_channels);
 static void          cleanup_data_fields      (GwyDataField **dfields,
                                                gint no_of_channels);
-
-/* functions for getting units */
-static NMIUnit get_unit      (NMIParameters *params,
-                              NMIChannelParameters *chparams);
-static NMIUnit get_unit_base (NMIParameters *params,
-                              NMIChannel channel);
-static NMIUnit get_unit_AFM  (NMIParameters *params,
-                              NMIChannel channel);
-static NMIUnit get_unit_NCAFM(NMIParameters *params,
-                              NMIChannel channel);
-static NMIUnit get_unit_SHPM (NMIParameters *params,
-                              NMIChannel channel);
-
-/* functions for calculating true height */
-static gboolean calculate_real_height      (gdouble *z,
-                                            const NMIParameters *params,
-                                            const NMIChannelParameters *chparams);
-static gboolean calculate_real_height_base (gint numAdds,
-                                            gint16 gain,
-                                            gdouble *z,
-                                            const NMIParameters *params,
-                                            NMIChannel channel);
-static gboolean calculate_real_height_AFM  (int numAdds,
-                                            guint16 gain,
-                                            gdouble *z,
-                                            const NMIParameters *params,
-                                            NMIChannel channel);
-static gboolean calculate_real_height_NCAFM(int numAdds,
-                                            guint16 gain,
-                                            gdouble *z,
-                                            const NMIParameters *params,
-                                            NMIChannel channel);
-static gboolean calculate_real_height_SHPM (int numAdds,
-                                            guint16 gain,
-                                            gdouble *z,
-                                            const NMIParameters *params,
-                                            NMIChannel channel);
-
-/* MODULE BOILERPLATE */
+static void          get_ordinate_scale       (const NMIParameters *params,
+                                               const NMIChannelParameters *chparams,
+                                               gdouble *q,
+                                               gdouble *z0,
+                                               NMIUnit *unit);
+static gboolean      calc_real_ordinate       (const NMIParameters *params,
+                                               const NMIChannelParameters *chparams,
+                                               gdouble *z,
+                                               NMIUnit *unit);
+static gboolean      calc_real_ordinate_base  (const NMIParameters *params,
+                                               NMIChannel channel,
+                                               gint numAdds,
+                                               gint16 gain,
+                                               gdouble *z,
+                                               NMIUnit *unit);
+static gboolean      calc_real_ordinate_AFM   (const NMIParameters *params,
+                                               NMIChannel channel,
+                                               gint numAdds,
+                                               guint16 gain,
+                                               gdouble *z,
+                                               NMIUnit *unit);
+static gboolean      calc_real_ordinate_NCAFM (const NMIParameters *params,
+                                               NMIChannel channel,
+                                               gint numAdds,
+                                               guint16 gain,
+                                               gdouble *z,
+                                               NMIUnit *unit);
+static gboolean      calc_real_ordinate_SHPM  (const NMIParameters *params,
+                                               NMIChannel channel,
+                                               gint numAdds,
+                                               guint16 gain,
+                                               gdouble *z,
+                                               NMIUnit *unit);
+static gboolean      is_laser_mode            (NMISpmType spm_type,
+                                               NMILtMode lt_mode,
+                                               NMILaserMode laser_mode);
+static gboolean      is_hall_channel          (NMIChannel channel,
+                                               gboolean also_Vz4,
+                                               gboolean also_HallVoltage);
+static gdouble       convert_hall             (gdouble val,
+                                               const NMIParameters *params);
+static gdouble       convert_pll              (gdouble val,
+                                               const NMIParameters *params);
+static gchar*        get_string_LEB128        (const guchar **p,
+                                               gsize *size);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -500,600 +388,6 @@ nmi_detect(const GwyFileDetectInfo * fileinfo, gboolean only_name)
     return 0;
 }
 
-/* END MODULE BOILERPLATE */
-
-
-/*
-   similar to gwy_get_<type>_le with LEB128 encodings as length of string
-   prefixed to the actual string arguments: buffer; returns: string (which
-   needs to be freed up later)
-*/
-static gchar*
-get_string(const guchar **p, gsize *size)
-{
-    /* decode LEB128 number (pseudocode from wikipedia) */
-    gulong result = 0;
-    guint shift = 0;
-    guchar byte;
-    gchar *strng;
-    glong i;
-
-    while (TRUE) {
-        if (*size < 1) {
-            return NULL;
-        }
-        byte = (guint) (**p);
-        *p += 1;
-        *size -= 1;
-        result |= ((byte & 0x7F) << shift);
-        if ((byte & 0x80) == 0) {
-            break;
-        }
-        shift += 7;
-    }
-    /*allocate memory and read string into it */
-    if (*size < result) {
-        return NULL;
-    }
-    strng = g_malloc(result + 1);
-    for (i = 0; i < result; i++) {
-        strng[i] = (*p)[i];
-    }
-    strng[i] = 0;
-    *p += result;
-    *size -= result;
-    return strng;
-}
-
-
-/*
-  Populate metadata
-*/
-static void
-populate_meta_data(GwyContainer *meta,
-                   NMIParameters *params,
-                   NMIChannelParameters *chparams)
-{
-    gwy_container_set_string_by_name(meta, "Name of scan",
-                                     g_strdup(params->Name));
-    gwy_container_set_string_by_name(meta, "Info",
-                                     g_strdup(params->Info));
-    gwy_container_set_string_by_name(meta, "Number of Channels",
-                                     g_strdup_printf("%u",
-                                                     params->numImages));
-    gwy_container_set_string_by_name(meta, "SPM Type",
-                                     g_strdup(SpmTypesStrings
-                                              [params->SpmType]));
-    gwy_container_set_string_by_name(meta, "Laser Mode",
-                                     g_strdup(LaserModesStrings
-                                              [params->LaserMode]));
-    gwy_container_set_string_by_name(meta, "Scan Type",
-                                     g_strdup(ScanTypesStrings
-                                              [params->ScanType]));
-    gwy_container_set_string_by_name(meta, "Date and Time",
-                                     g_strdup_printf("%u-%u-%u %u:%u:%u",
-                                                     params->DateTime.
-                                                     year,
-                                                     params->DateTime.
-                                                     month,
-                                                     params->DateTime.
-                                                     date,
-                                                     params->DateTime.
-                                                     hour,
-                                                     params->DateTime.
-                                                     minute,
-                                                     params->DateTime.
-                                                     second)
-        );
-    gwy_container_set_string_by_name(meta, "Hall Probe offset in Gauss",
-                                     g_strdup_printf("%f",
-                                                     params->HallProbeOffsetInGauss));
-    gwy_container_set_string_by_name(meta, "kFiber",
-                                     g_strdup_printf("%f",
-                                                     params->kFiber));
-    gwy_container_set_string_by_name(meta, "iHall",
-                                     g_strdup_printf("%f",
-                                                     params->iHall));
-    gwy_container_set_string_by_name(meta, "rHall",
-                                     g_strdup_printf("%f",
-                                                     params->rHall));
-    gwy_container_set_string_by_name(meta, "Temperature",
-                                     g_strdup_printf("%f",
-                                                     params->Temperature));
-    gwy_container_set_string_by_name(meta, "Piezo High Voltage Amplifier X",
-                                     g_strdup_printf("%f",
-                                                     params->HighVoltageAmplifier.
-                                                     X));
-    gwy_container_set_string_by_name(meta, "Piezo High Voltage Amplifier Y",
-                                     g_strdup_printf("%f",
-                                                     params->HighVoltageAmplifier.
-                                                     Y));
-    gwy_container_set_string_by_name(meta, "Piezo High Voltage Amplifier Z",
-                                     g_strdup_printf("%f",
-                                                     params->HighVoltageAmplifier.
-                                                     Z));
-    gwy_container_set_string_by_name(meta, "Piezo Coefficients X(T)",
-                                     g_strdup_printf("%f",
-                                                     params->PiezoCoefficient.X));
-    gwy_container_set_string_by_name(meta, "Piezo Coefficients Y(T)",
-                                     g_strdup_printf("%f",
-                                                     params->PiezoCoefficient.Y));
-    gwy_container_set_string_by_name(meta, "Piezo Coefficients Z(T)",
-                                     g_strdup_printf("%f",
-                                                     params->PiezoCoefficient.Z));
-    gwy_container_set_string_by_name(meta, "Piezo Heat Coefficient X",
-                                     g_strdup_printf("%f",
-                                                     params->HeatCoefficient.X));
-    gwy_container_set_string_by_name(meta, "Piezo Heat Coefficient Y",
-                                     g_strdup_printf("%f",
-                                                     params->HeatCoefficient.Y));
-    gwy_container_set_string_by_name(meta, "Piezo Heat Coefficient Z",
-                                     g_strdup_printf("%f",
-                                                     params->HeatCoefficient.Z));
-    gwy_container_set_string_by_name(meta, "Piezo Hysterisis Parameters AlphaX",
-                                     g_strdup_printf("%f",
-                                                     params->HysAlpha.X));
-    gwy_container_set_string_by_name(meta, "Piezo Hysterisis Parameters AlphaY",
-                                     g_strdup_printf("%f",
-                                                     params->HysAlpha.Y));
-    gwy_container_set_string_by_name(meta, "Piezo Hysterisis Parameters BetaX",
-                                     g_strdup_printf("%f",
-                                                     params->HysBeta.X));
-    gwy_container_set_string_by_name(meta, "Piezo Hysterisis Parameters BetaY",
-                                     g_strdup_printf("%f",
-                                                     params->HysBeta.Y));
-    gwy_container_set_string_by_name(meta, "Number of averages",
-                                     g_strdup_printf("%u",
-                                                     params->numAverages));
-    gwy_container_set_string_by_name(meta, "LockIn",
-                                     g_strdup_printf("%u",
-                                                     params->LockIn));
-    gwy_container_set_string_by_name(meta, "DataPointsDelay",
-                                     g_strdup_printf("%f",
-                                                     params->DataPointsDelay));
-    gwy_container_set_string_by_name(meta, "Compensation Value X",
-                                     g_strdup_printf("%f",
-                                                     params->CompensationValue.X));
-    gwy_container_set_string_by_name(meta, "Compensation Value Y",
-                                     g_strdup_printf("%f",
-                                                     params->CompensationValue.Y));
-    gwy_container_set_string_by_name(meta, "Compensation Percentage X",
-                                     g_strdup_printf("%f",
-                                                     params->CompensationPercentage.
-                                                     X));
-    gwy_container_set_string_by_name(meta, "Compensation Percentage Y",
-                                     g_strdup_printf("%f",
-                                                     params->CompensationPercentage.
-                                                     Y));
-    gwy_container_set_string_by_name(meta, "NanoLithoStatus",
-                                     g_strdup(boolStrings
-                                              [(gint)params->NanoLithoStatus]));
-    gwy_container_set_string_by_name(meta, "NanoLithoBiasV",
-                                     g_strdup(boolStrings
-                                              [(gint)params->NanoLithoBiasV]));
-    gwy_container_set_string_by_name(meta, "NanoLithoPulseLength",
-                                     g_strdup_printf("%f",
-                                                     params->NanoLithoPulseLength));
-    gwy_container_set_string_by_name(meta, "MFM ScanType",
-                                     g_strdup_printf("%d",
-                                                     params->MFM_ScanType));
-    gwy_container_set_string_by_name(meta, "MFM HeadLiftOff",
-                                     g_strdup_printf("%f",
-                                                     params->MFM_HeadLiftOff));
-    gwy_container_set_string_by_name(meta, "Forward Scan Feedback On",
-                                     g_strdup(boolStrings
-                                              [(gint)params->ForwardScanFeedbackOn]));
-    gwy_container_set_string_by_name(meta, "Backward Scan Feedback On",
-                                     g_strdup(boolStrings
-                                              [(gint)params->BackwardScanFeedbackOn]));
-    gwy_container_set_string_by_name(meta, "Quadrature Lock Try Check",
-                                     g_strdup(boolStrings
-                                              [(gint)params->QuadratureLockTryCheck]));
-    gwy_container_set_string_by_name(meta, "Feedback Channel",
-                                     g_strdup(FeedbackChannelTypesStrings
-                                              [params->FeedbackChannel]));
-    gwy_container_set_string_by_name(meta, "Vz Channel",
-                                     g_strdup_printf("%f",
-                                                     params->vzChannel));
-    gwy_container_set_string_by_name(meta, "Hysteresis Enabled",
-                                     g_strdup(boolStrings
-                                              [(gint)params->hysteresisEnabled]));
-    gwy_container_set_string_by_name(meta, "Creep Correction Enabled",
-                                     g_strdup(boolStrings
-                                              [(gint)params->creepCorrectionEnabled]));
-    gwy_container_set_string_by_name(meta, "OffsetInstanceIV (X)",
-                                     g_strdup_printf("%f",
-                                                     params->OffsetInstanceIV.X));
-    gwy_container_set_string_by_name(meta, "OffsetInstanceIV (Y)",
-                                     g_strdup_printf("%f",
-                                                     params->OffsetInstanceIV.Y));
-    gwy_container_set_string_by_name(meta, "OffsetInstanceFD (X)",
-                                     g_strdup_printf("%f",
-                                                     params->OffsetInstanceFD.X));
-    gwy_container_set_string_by_name(meta, "OffsetInstanceFD (Y)",
-                                     g_strdup_printf("%f",
-                                                     params->OffsetInstanceFD.Y));
-    gwy_container_set_string_by_name(meta, "Laser Driver",
-                                     g_strdup_printf("%d",
-                                                     params->LaserDriver));
-    gwy_container_set_string_by_name(meta, "FreqQ",
-                                     g_strdup_printf("%f",
-                                                     params->FreqQ));
-    gwy_container_set_string_by_name(meta, "FN",
-                                     g_strdup_printf("%f",
-                                                     params->FN));
-    gwy_container_set_string_by_name(meta, "FL",
-                                     g_strdup_printf("%f",
-                                                     params->FL));
-    gwy_container_set_string_by_name(meta, "FT",
-                                     g_strdup_printf("%f",
-                                                     params->FT));
-    gwy_container_set_string_by_name(meta, "GH",
-                                     g_strdup_printf("%f",
-                                                     params->GH));
-    gwy_container_set_string_by_name(meta, "Scan Speed",
-                                     g_strdup_printf("%f",
-                                                     params->ScanSpeed));
-    gwy_container_set_string_by_name(meta, "ScanAngle",
-                                     g_strdup_printf("%f",
-                                                     params->ScanAngle));
-    gwy_container_set_string_by_name(meta, "Scan Offset X",
-                                     g_strdup_printf("%f",
-                                                     params->ScanOffset.X));
-    gwy_container_set_string_by_name(meta, "Scan Offset Y",
-                                     g_strdup_printf("%f",
-                                                     params->ScanOffset.Y));
-    gwy_container_set_string_by_name(meta, "Position X",
-                                     g_strdup_printf("%f",
-                                                     params->Position.X));
-    gwy_container_set_string_by_name(meta, "Position Y",
-                                     g_strdup_printf("%f",
-                                                     params->Position.Y));
-    gwy_container_set_string_by_name(meta, "Position Z",
-                                     g_strdup_printf("%f",
-                                                     params->Position.Z));
-    gwy_container_set_string_by_name(meta, "iT",
-                                     g_strdup_printf("%f",
-                                                     params->iT));
-    gwy_container_set_string_by_name(meta, "biasV",
-                                     g_strdup_printf("%f",
-                                                     params->biasV));
-    gwy_container_set_string_by_name(meta, "giV",
-                                     g_strdup_printf("%f",
-                                                     params->giV));
-    gwy_container_set_string_by_name(meta, "rSignal",
-                                     g_strdup_printf("%f",
-                                                     params->rSignal));
-    gwy_container_set_string_by_name(meta, "rRef",
-                                     g_strdup_printf("%f",
-                                                     params->rRef));
-    gwy_container_set_string_by_name(meta, "PhotoGain",
-                                     g_strdup_printf("%d",
-                                                     params->PhotoGain));
-    gwy_container_set_string_by_name(meta, "DigitalGain",
-                                     g_strdup_printf("%d",
-                                                     params->DigitalGain));
-    gwy_container_set_string_by_name(meta, "LoopGain",
-                                     g_strdup_printf("%d",
-                                                     params->LoopGain));
-    gwy_container_set_string_by_name(meta, "gVirt",
-                                     g_strdup_printf("%d",
-                                                     params->gVirt));
-    gwy_container_set_string_by_name(meta, "Field",
-                                     g_strdup_printf("%f",
-                                                     params->Field));
-    gwy_container_set_string_by_name(meta, "FieldRate",
-                                     g_strdup_printf("%f",
-                                                     params->FieldRate));
-    gwy_container_set_string_by_name(meta, "FieldApp",
-                                     g_strdup_printf("%f",
-                                                     params->FieldApp));
-    gwy_container_set_string_by_name(meta, "FieldMode",
-                                     g_strdup_printf("%f",
-                                                     params->FieldMode));
-    gwy_container_set_string_by_name(meta, "Piezo Polinom Coefficients a0",
-                                     g_strdup_printf("%f",
-                                                     params->PiezoPolinomCoeffs[0]));
-    gwy_container_set_string_by_name(meta, "Piezo Polinom Coefficients a1",
-                                     g_strdup_printf("%f",
-                                                     params->PiezoPolinomCoeffs[1]));
-    gwy_container_set_string_by_name(meta, "Piezo Polinom Coefficients a2",
-                                     g_strdup_printf("%f",
-                                                     params->PiezoPolinomCoeffs[2]));
-    gwy_container_set_string_by_name(meta, "Piezo Polinom Coefficients a3",
-                                     g_strdup_printf("%f",
-                                                     params->PiezoPolinomCoeffs[3]));
-    gwy_container_set_string_by_name(meta, "Piezo Polinom Coefficients a4",
-                                     g_strdup_printf("%f",
-                                                     params->PiezoPolinomCoeffs[4]));
-    gwy_container_set_string_by_name(meta,
-                                     "Piezo Hysterisis Polinom Coefficients Xa",
-                                     g_strdup_printf("%f",
-                                                     params->xHysPiezoPolinomCoeffs
-                                                     [0]));
-    gwy_container_set_string_by_name(meta,
-                                     "Piezo Hysterisis Polinom Coefficients Xb",
-                                     g_strdup_printf("%f",
-                                                     params->xHysPiezoPolinomCoeffs
-                                                     [1]));
-    gwy_container_set_string_by_name(meta,
-                                     "Piezo Hysterisis Polinom Coefficients Xc",
-                                     g_strdup_printf("%f",
-                                                     params->xHysPiezoPolinomCoeffs
-                                                     [2]));
-    gwy_container_set_string_by_name(meta,
-                                     "Piezo Hysterisis Polinom Coefficients Xd",
-                                     g_strdup_printf("%f",
-                                                     params->xHysPiezoPolinomCoeffs
-                                                     [3]));
-    gwy_container_set_string_by_name(meta,
-                                     "Piezo Hysterisis Polinom Coefficients Xe",
-                                     g_strdup_printf("%f",
-                                                     params->xHysPiezoPolinomCoeffs
-                                                     [4]));
-    gwy_container_set_string_by_name(meta,
-                                     "Piezo Hysterisis Polinom Coefficients Ya",
-                                     g_strdup_printf("%f",
-                                                     params->yHysPiezoPolinomCoeffs
-                                                     [0]));
-    gwy_container_set_string_by_name(meta,
-                                     "Piezo Hysterisis Polinom Coefficients Yb",
-                                     g_strdup_printf("%f",
-                                                     params->yHysPiezoPolinomCoeffs
-                                                     [1]));
-    gwy_container_set_string_by_name(meta,
-                                     "Piezo Hysterisis Polinom Coefficients Yc",
-                                     g_strdup_printf("%f",
-                                                     params->yHysPiezoPolinomCoeffs
-                                                     [2]));
-    gwy_container_set_string_by_name(meta,
-                                     "Piezo Hysterisis Polinom Coefficients Yd",
-                                     g_strdup_printf("%f",
-                                                     params->yHysPiezoPolinomCoeffs
-                                                     [3]));
-    gwy_container_set_string_by_name(meta,
-                                     "Piezo Hysterisis Polinom Coefficients Ye",
-                                     g_strdup_printf("%f",
-                                                     params->yHysPiezoPolinomCoeffs
-                                                     [4]));
-    gwy_container_set_string_by_name(meta, "LtMode",
-                                     g_strdup(LtModesStrings
-                                              [params->LtMode]));
-    gwy_container_set_string_by_name(meta, "P_value",
-                                     g_strdup_printf("%d",
-                                                     params->P_value));
-    gwy_container_set_string_by_name(meta, "I_value",
-                                     g_strdup_printf("%d",
-                                                     params->I_value));
-    gwy_container_set_string_by_name(meta, "D_value",
-                                     g_strdup_printf("%d",
-                                                     params->D_value));
-    gwy_container_set_string_by_name(meta, "G_value",
-                                     g_strdup_printf("%d",
-                                                     params->G_value));
-    gwy_container_set_string_by_name(meta, "ScaleXY",
-                                     g_strdup_printf("%d",
-                                                     params->ScaleXY));
-    gwy_container_set_string_by_name(meta, "CenterFreq",
-                                     g_strdup_printf("%f",
-                                                     params->CenterFreq));
-    gwy_container_set_string_by_name(meta, "FeedbackValue",
-                                     g_strdup_printf("%f",
-                                                     params->FeedBackValue));
-    if (params->SpmType == SPM_RtShpm
-        || params->SpmType == SPM_LtShpm
-        || params->SpmType == SPM_TemNano) {
-        /* SHPM */
-        gwy_container_set_string_by_name(meta, "HallStatus",
-                                         g_strdup(boolStrings
-                                                  [(gint)params->HallStatus]));
-        gwy_container_set_string_by_name(meta, "HeadLiftOffDist",
-                                         g_strdup_printf("%f",
-                                                         params->HeadLiftOffDist));
-        gwy_container_set_string_by_name(meta, "HeadLiftOffV",
-                                         g_strdup_printf("%f",
-                                                         params->HeadLiftOffV));
-        gwy_container_set_string_by_name(meta,
-                                         "UserEnteredHeadLiftoffLateralValue",
-                                         g_strdup_printf("%f",
-                                                         params->UserEnteredHeadLiftoffLateralValue));
-        gwy_container_set_string_by_name(meta, "UserEnteredHallCurrent",
-                                         g_strdup_printf("%f",
-                                                         params->UserEnteredHallCurrent));
-        gwy_container_set_string_by_name(meta, "UserEnteredHallAmpBW",
-                                         g_strdup_printf("%f",
-                                                         params->UserEnteredHallAmpBW));
-        gwy_container_set_string_by_name(meta, "UserEnteredSwitchInfraRedLed",
-                                         g_strdup(boolStrings
-                                                  [(gint)params->UserEnteredSwitchInfraRedLed]));
-        gwy_container_set_string_by_name(meta, "UserEnteredHallAmpGain",
-                                         g_strdup_printf("%d",
-                                                         params->UserEnteredHallAmpGain));
-        gwy_container_set_string_by_name(meta, "UserEnteredLightIntensity",
-                                         g_strdup_printf("%d",
-                                                         params->UserEnteredLightIntensity));
-        gwy_container_set_string_by_name(meta, "Hall Offset",
-                                         g_strdup_printf("%f",
-                                                         params->hallOffset));
-        gwy_container_set_string_by_name(meta, "HallAmpGain",
-                                         g_strdup_printf("%f",
-                                                         params->hallAmpGain));
-        gwy_container_set_string_by_name(meta, "HallAmpBandwidth",
-                                         g_strdup_printf("%f",
-                                                         params->hallAmpBandWidth));
-        gwy_container_set_string_by_name(meta, "HeadLiftOffVoltage",
-                                         g_strdup_printf("%f",
-                                                         params->headLiftOffVoltage));
-        gwy_container_set_string_by_name(meta, "Software Version",
-                                         g_strdup(params->SoftwareVersion));
-        gwy_container_set_string_by_name(meta, "Motor Card Version",
-                                         g_strdup(params->MotorCardVersion));
-        gwy_container_set_string_by_name(meta, "Scan DAC Card Version",
-                                         g_strdup(params->ScanDacCardVersion));
-        gwy_container_set_string_by_name(meta, "PLL Version",
-                                         g_strdup(params->PllVersion));
-    }
-    else if (params->SpmType == SPM_NcAfm) {
-        /*NCAFM */
-        gwy_container_set_string_by_name(meta, "Laser On",
-                                         g_strdup(boolStrings
-                                                  [params->LaserOn]));
-        gwy_container_set_string_by_name(meta, "Laser Fan On",
-                                         g_strdup(boolStrings
-                                                  [params->LaserFanOn]));
-        gwy_container_set_string_by_name(meta, "Laser RF State",
-                                         g_strdup(boolStrings
-                                                  [params->LaserRF_State]));
-        gwy_container_set_string_by_name(meta, "Lock Quad",
-                                         g_strdup(boolStrings
-                                                  [params->LockQuad]));
-        gwy_container_set_string_by_name(meta, "UserEnteredLaserPower",
-                                         g_strdup_printf("%d",
-                                                         params->UserEnteredLaserPower));
-        gwy_container_set_string_by_name(meta, "UserEnteredPhotoGain",
-                                         g_strdup_printf("%d",
-                                                         params->UserEnteredPhotoGain));
-    }
-    else {
-        /*AFM */
-        gwy_container_set_string_by_name(meta, "DDS2FeedbackPhase",
-                                         g_strdup_printf("%f",
-                                                         params->DDS2FeedbackPhase));
-        gwy_container_set_string_by_name(meta, "PLL Feedback On",
-                                         g_strdup(boolStrings
-                                                  [params->PLL_FeedbackOn]));
-        gwy_container_set_string_by_name(meta, "PLL LockRange Resolution",
-                                         g_strdup_printf("%d",
-                                                         params->PLL_LockRangeResolution));
-        gwy_container_set_string_by_name(meta, "UserEntered PLL Center Freq",
-                                         g_strdup_printf("%f",
-                                                         params->UserEnteredPLL_CenterFreq));
-        gwy_container_set_string_by_name(meta, "UserEnteredDacValueA",
-                                         g_strdup_printf("%f",
-                                                         params->UserEnteredDacValueA));
-        gwy_container_set_string_by_name(meta, "UserEnteredDacValueB",
-                                         g_strdup_printf("%f",
-                                                         params->UserEnteredDacValueB));
-        gwy_container_set_string_by_name(meta,
-                                         "UserEnteredPLL_NegativePolarity",
-                                         g_strdup(boolStrings
-                                                  [params->UserEnteredPLL_NegativePolarity]));
-        gwy_container_set_string_by_name(meta, "UserEnteredPLL_ConstExc",
-                                         g_strdup(boolStrings
-                                                  [params->UserEnteredPLL_ConstExc]));
-        gwy_container_set_string_by_name(meta, "UserEnteredFeedbackGain",
-                                         g_strdup_printf("%d",
-                                                         params->UserEnteredFeedbackGain));
-        gwy_container_set_string_by_name(meta, "UserEnteredFOffset",
-                                         g_strdup_printf("%d",
-                                                         params->UserEnteredOscAmp));
-        gwy_container_set_string_by_name(meta, "UserEnteredFOffset",
-                                         g_strdup_printf("%f",
-                                                         params->UserEnteredFOffset));
-        gwy_container_set_string_by_name(meta, "UserEnteredRMS",
-                                         g_strdup_printf("%f",
-                                                         params->UserEnteredRMS));
-        gwy_container_set_string_by_name(meta, "power",
-                                         g_strdup_printf("%f",
-                                                         params->power));
-        gwy_container_set_string_by_name(meta, "f",
-                                         g_strdup_printf("%f",
-                                                         params->f));
-        gwy_container_set_string_by_name(meta, "amp",
-                                         g_strdup_printf("%f",
-                                                         params->amp));
-        gwy_container_set_string_by_name(meta, "vpd",
-                                         g_strdup_printf("%f",
-                                                         params->vpd));
-        gwy_container_set_string_by_name(meta, "vRef",
-                                         g_strdup_printf("%f",
-                                                         params->vRef));
-        gwy_container_set_string_by_name(meta, "vSignal",
-                                         g_strdup_printf("%f",
-                                                         params->vSignal));
-        gwy_container_set_string_by_name(meta, "FiberVoltage",
-                                         g_strdup_printf("%f",
-                                                         params->fiberVoltage));
-        gwy_container_set_string_by_name(meta, "Reflectivity",
-                                         g_strdup_printf("%f",
-                                                         params->reflectivity));
-        gwy_container_set_string_by_name(meta, "PhotoGain",
-                                         g_strdup_printf("%f",
-                                                         params->photoGain));
-        gwy_container_set_string_by_name(meta, "Interference Slope",
-                                         g_strdup_printf("%f",
-                                                         params->interferenceSlope));
-        gwy_container_set_string_by_name(meta, "OscillationAmp",
-                                         g_strdup_printf("%f",
-                                                         params->oscillationAmp));
-        /*gwy_container_set_string_by_name(meta, "SSRMGain", g_strdup_printf("%d", params->SSRMGain)); */
-        gwy_container_set_string_by_name(meta, "Hall Offset",
-                                         g_strdup_printf("%f",
-                                                         params->hallOffset));
-        gwy_container_set_string_by_name(meta, "HallAmpGain",
-                                         g_strdup_printf("%f",
-                                                         params->hallAmpGain));
-        gwy_container_set_string_by_name(meta, "HallAmpBandwidth",
-                                         g_strdup_printf("%f",
-                                                         params->hallAmpBandWidth));
-        gwy_container_set_string_by_name(meta, "HeadLiftOffVoltage",
-                                         g_strdup_printf("%f",
-                                                         params->headLiftOffVoltage));
-        gwy_container_set_string_by_name(meta, "Software Version",
-                                         g_strdup(params->SoftwareVersion));
-        gwy_container_set_string_by_name(meta, "Motor Card Version",
-                                         g_strdup(params->MotorCardVersion));
-        gwy_container_set_string_by_name(meta, "Scan DAC Card Version",
-                                         g_strdup(params->ScanDacCardVersion));
-        gwy_container_set_string_by_name(meta, "PLL Version",
-                                         g_strdup(params->PllVersion));
-    }
-    gwy_container_set_string_by_name(meta, "Scan Area",
-                                     g_strdup_printf("%f X %f",
-                                                     chparams->RealWidth,
-                                                     chparams-> RealHeight));
-    gwy_container_set_string_by_name(meta, "Resolution",
-                                     g_strdup_printf("%d X %d",
-                                                     chparams->Width,
-                                                     chparams->Height));
-}
-
-/* Cleanup */
-
-static void
-cleanup_global_parameters(NMIParameters *params)
-{
-    g_free(params->Name);
-    g_free(params->Info);
-    g_free(params->SoftwareVersion);
-    g_free(params->MotorCardVersion);
-    g_free(params->ScanDacCardVersion);
-    g_free(params->PllVersion);
-}
-
-static void
-cleanup_channels(NMIChannelParameters *channels, gint no_of_channels)
-{
-    gint i;
-
-    for (i = 0; i < no_of_channels; i++) {
-        g_free(channels[i].Name);
-    }
-    g_free(channels);
-}
-
-static void
-cleanup_data_fields(GwyDataField **dfields, gint no_of_channels)
-{
-    gint i;
-
-    for (i = 0; i < no_of_channels; i++) {
-        gwy_object_unref(dfields[i]);
-    }
-    g_free(dfields);
-}
-
-
 /* THE MAIN FUNCTION */
 static GwyContainer *
 nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
@@ -1105,9 +399,8 @@ nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
     GwyContainer *container, *meta;
     const guint32 *rawdata;
     GwyDataField **dfields;
-    GwySIUnit *unit;
     gdouble *data;
-    int channelnumber, i;       /*loop counters */
+    gint channelno, i;       /*loop counters */
     NMIParameters params;
     NMIChannelParameters *channel_params;
 
@@ -1135,7 +428,7 @@ nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
     p = buffer + MAGIC_SIZE;
     size -= MAGIC_SIZE;
 
-    params.Name = get_string(&p, &size);
+    params.Name = get_string_LEB128(&p, &size);
     if (params.Name == NULL) {
         err_TOO_SHORT(error);
         gwy_file_abandon_contents(buffer, originalsize, NULL);
@@ -1143,7 +436,7 @@ nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
         return NULL;
     }
 
-    params.Info = get_string(&p, &size);
+    params.Info = get_string_LEB128(&p, &size);
     if (params.Info == NULL) {
         err_TOO_SHORT(error);
         gwy_file_abandon_contents(buffer, originalsize, NULL);
@@ -1159,9 +452,9 @@ nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
     }
 
     params.numImages = gwy_get_guint32_le(&p);
-    params.SpmType = gwy_get_gint32_le(&p) % 14;
-    params.LaserMode = gwy_get_gint32_le(&p) % 7;
-    params.ScanType = gwy_get_gint32_le(&p) % 8;
+    params.SpmType = gwy_get_gint32_le(&p);
+    params.LaserMode = gwy_get_gint32_le(&p);
+    params.ScanType = gwy_get_gint32_le(&p);
     params.DateTime.year = gwy_get_guint32_le(&p);
     params.DateTime.month = gwy_get_guint32_le(&p);
     params.DateTime.date = gwy_get_guint32_le(&p);
@@ -1201,7 +494,7 @@ nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
     params.ForwardScanFeedbackOn = gwy_get_gboolean8(&p);
     params.BackwardScanFeedbackOn = gwy_get_gboolean8(&p);
     params.QuadratureLockTryCheck = gwy_get_gboolean8(&p);
-    params.FeedbackChannel = gwy_get_gint32_le(&p) % 6;
+    params.FeedbackChannel = gwy_get_gint32_le(&p);
     params.vzChannel = gwy_get_gfloat_le(&p);
     params.hysteresisEnabled = gwy_get_gboolean8(&p);
     params.creepCorrectionEnabled = gwy_get_gboolean8(&p);
@@ -1264,11 +557,10 @@ nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
     channel_params = g_new0(NMIChannelParameters, params.numImages);
 
     /*Channels start */
-    for (channelnumber = 0; channelnumber < params.numImages;
-         channelnumber++) {
-        NMIChannelParameters *chparams = channel_params + channelnumber;
+    for (channelno = 0; channelno < params.numImages; channelno++) {
+        NMIChannelParameters *chparams = channel_params + channelno;
 
-        chparams->Name = get_string(&p, &size);
+        chparams->Name = get_string_LEB128(&p, &size);
         if (chparams->Name == NULL) {
             err_TOO_SHORT(error);
             gwy_file_abandon_contents(buffer, originalsize, NULL);
@@ -1298,16 +590,16 @@ nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
         size -= 30;
 
         /*now read data */
-        dfields[channelnumber]
-            = gwy_data_field_new(chparams->Width,
-                                 chparams->Height,
-                                 chparams->RealWidth * 1.0e-10,
-                                 chparams->RealHeight * 1.0e-10,
-                                 FALSE);
-        data = gwy_data_field_get_data(dfields[channelnumber]);
+        dfields[channelno] = gwy_data_field_new(chparams->Width,
+                                                chparams->Height,
+                                                chparams->RealWidth * 1.0e-10,
+                                                chparams->RealHeight * 1.0e-10,
+                                                FALSE);
+        data = gwy_data_field_get_data(dfields[channelno]);
 
-        if (size < chparams->Width * chparams->Height * 4 + 4) {
-            err_TOO_SHORT(error);
+        if (err_SIZE_MISMATCH(error,
+                              chparams->Width * chparams->Height * 4 + 4, size,
+                              FALSE)) {
             gwy_file_abandon_contents(buffer, originalsize, NULL);
             cleanup_channels(channel_params, params.numImages);
             cleanup_data_fields(dfields, params.numImages);
@@ -1384,10 +676,10 @@ nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
             params.headLiftOffVoltage = gwy_get_gfloat_le(&p);
             size -= 4;
         }
-        params.SoftwareVersion = get_string(&p, &size);
-        params.MotorCardVersion = get_string(&p, &size);
-        params.ScanDacCardVersion = get_string(&p, &size);
-        params.PllVersion = get_string(&p, &size);
+        params.SoftwareVersion = get_string_LEB128(&p, &size);
+        params.MotorCardVersion = get_string_LEB128(&p, &size);
+        params.ScanDacCardVersion = get_string_LEB128(&p, &size);
+        params.PllVersion = get_string_LEB128(&p, &size);
     }
     else if (params.SpmType == SPM_NcAfm) {
         /*NCAFM */
@@ -1528,56 +820,49 @@ nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
             size -= 4;
         }
         /* if (size>4) { params.SSRMGain = gwy_get_gdouble_le(&p); size -= 4; } Delibrately commented out */
-        params.SoftwareVersion = get_string(&p, &size);
-        params.MotorCardVersion = get_string(&p, &size);
-        params.ScanDacCardVersion = get_string(&p, &size);
-        params.PllVersion = get_string(&p, &size);
+        params.SoftwareVersion = get_string_LEB128(&p, &size);
+        params.MotorCardVersion = get_string_LEB128(&p, &size);
+        params.ScanDacCardVersion = get_string_LEB128(&p, &size);
+        params.PllVersion = get_string_LEB128(&p, &size);
     }
 
     /* Read channels all over again, scale the values, set the units and
      * metadata */
     container = gwy_container_new();
-    for (channelnumber = 0; channelnumber < params.numImages;
-         channelnumber++) {
-        NMIChannelParameters *chparams = channel_params + channelnumber;
-        /* XXX: calculate_real_height() was originally written to perform the
-         * complex procedure to transform each individual data value.  A milion
-         * times.  It should be rewritten to just return the scale and offset
-         * but that's ugly.  So we get them from it by assuming it's a linear
-         * transformation. */
-        gdouble offset = 0.0, factor = 1.0;
-        if (calculate_real_height(&offset, &params, chparams)
-            && calculate_real_height(&factor, &params, chparams))
-            factor -= offset;
-        else
-            factor = offset = 0.0;
+    for (channelno = 0; channelno < params.numImages; channelno++) {
+        NMIChannelParameters *chparams = channel_params + channelno;
+        GwyDataField *dfield = dfields[channelno];
+        gchar buf[48];
+        NMIUnit unit;
+        gdouble q, z0;
 
-        data = gwy_data_field_get_data(dfields[channelnumber]);
+        get_ordinate_scale(&params, chparams, &q, &z0, &unit);
+        data = gwy_data_field_get_data(dfield);
         for (i = 0; i < chparams->Width * chparams->Height; i++)
-            data[i] = factor*data[i] + offset;
+            data[i] = q*data[i] + z0;
 
-        unit = gwy_si_unit_new("m");
-        gwy_data_field_set_si_unit_xy(dfields[channelnumber], unit);
-        g_object_unref(unit);
+        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
+        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield),
+                                    gwy_enuml_to_string(unit,
+                                                        "V", UNIT_Volt,
+                                                        "A", UNIT_Ampere,
+                                                        "Hz", UNIT_Hertz,
+                                                        "m", UNIT_metre,
+                                                        "G", UNIT_Gauss,
+                                                        "levels", UNIT_levels,
+                                                        "deg", UNIT_degree,
+                                                        NULL));
 
-        unit = gwy_si_unit_new(UnitsStrings[get_unit(&params, chparams)]);
-        gwy_data_field_set_si_unit_z(dfields[channelnumber], unit);
-        g_object_unref(unit);
-
-        gwy_container_set_object_by_name(container,
-                                         g_strdup_printf("/%d/data",
-                                                         channelnumber),
-                                         dfields[channelnumber]);
-        gwy_container_set_string_by_name(container,
-                                         g_strdup_printf("/%d/data/title",
-                                                         channelnumber),
+        g_snprintf(buf, sizeof(buf), "/%d/data", channelno);
+        gwy_container_set_object_by_name(container, buf, dfield);
+        g_snprintf(buf, sizeof(buf), "/%d/data/title", channelno);
+        gwy_container_set_string_by_name(container, buf,
                                          g_strdup(chparams->Name));
         /* set metadata */
         meta = gwy_container_new();
         populate_meta_data(meta, &params, chparams);
-        gwy_container_set_object_by_name(container,
-                                         g_strdup_printf("/%d/meta",
-                                                         channelnumber), meta);
+        g_snprintf(buf, sizeof(buf), "/%d/meta", channelno);
+        gwy_container_set_object_by_name(container, buf, meta);
         g_object_unref(meta);
     }
 
@@ -1590,28 +875,766 @@ nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
     return container;
 }
 
-
 /*
-  Get the units of a particular channel based on
-  the channel type and spm scan type
+  Populate metadata
 */
-static NMIUnit
-get_unit(NMIParameters *params, NMIChannelParameters *chparams)
+#define fmtbool(x) g_strdup((x) ? "True" : "False")
+
+static void
+populate_meta_data(GwyContainer *meta,
+                   NMIParameters *params,
+                   NMIChannelParameters *chparams)
 {
+    const gchar *s;
+
+    gwy_container_set_string_by_name(meta, "Name of scan",
+                                     g_strdup(params->Name));
+    gwy_container_set_string_by_name(meta, "Info",
+                                     g_strdup(params->Info));
+    gwy_container_set_string_by_name(meta, "Number of Channels",
+                                     g_strdup_printf("%u", params->numImages));
+
+    s = gwy_enuml_to_string(params->SpmType,
+                            "RtShpm", SPM_RtShpm,
+                            "LtShpm", SPM_LtShpm,
+                            "RtQtfAfm", SPM_RtQtfAfm,
+                            "LtQtfAfm", SPM_LtQtfAfm,
+                            "LtAfm", SPM_LtAfm,
+                            "NcAfm", SPM_NcAfm,
+                            "LaserAfm", SPM_LaserAfm,
+                            "LtMfm", SPM_LtMfm,
+                            "TemNano", SPM_TemNano,
+                            "Stm", SPM_Stm,
+                            "Afm", SPM_Afm,
+                            "QShpm", SPM_QShpm,
+                            "RtQShpm", SPM_RtQShpm,
+                            "None", SPM_None,
+                            NULL);
+    gwy_container_set_string_by_name(meta, "SPM Type",
+                                     g_strdup(s ? s : "Unknown"));
+
+    s = gwy_enuml_to_string(params->LaserMode,
+                            "NonContact", LASER_NonContact,
+                            "Contact", LASER_Contact,
+                            "Ffm", LASER_Ffm,
+                            "Dynamic", LASER_Dynamic,
+                            "LaserStm", LASER_LaserStm,
+                            "LaserMfm", LASER_LaserMfm,
+                            "Efm", LASER_Efm,
+                            NULL);
+    gwy_container_set_string_by_name(meta, "Laser Mode",
+                                     g_strdup(s ? s : "Unknown"));
+
+    s = gwy_enuml_to_string(params->ScanType,
+                            "NormalScan", SCAN_NormalScan,
+                            "FastScan", SCAN_FastScan,
+                            "RealTimeScan", SCAN_RealTimeScan,
+                            "MotorScan", SCAN_MotorScan,
+                            "SpectroscopyScan", SCAN_SpectroscopyScan,
+                            "MfmScan", SCAN_MfmScan,
+                            "EfmScan", SCAN_EfmScan,
+                            "Default", SCAN_Default,
+                            NULL);
+    gwy_container_set_string_by_name(meta, "Scan Type",
+                                     g_strdup(s ? s : "Unknown"));
+
+    gwy_container_set_string_by_name(meta, "Date and Time",
+                                     g_strdup_printf("%u-%u-%u %u:%u:%u",
+                                                     params->DateTime.
+                                                     year,
+                                                     params->DateTime.
+                                                     month,
+                                                     params->DateTime.
+                                                     date,
+                                                     params->DateTime.
+                                                     hour,
+                                                     params->DateTime.
+                                                     minute,
+                                                     params->DateTime.
+                                                     second));
+    gwy_container_set_string_by_name(meta, "Hall Probe offset in Gauss",
+                                     g_strdup_printf("%g",
+                                                     params->HallProbeOffsetInGauss));
+    gwy_container_set_string_by_name(meta, "kFiber",
+                                     g_strdup_printf("%g",
+                                                     params->kFiber));
+    gwy_container_set_string_by_name(meta, "iHall",
+                                     g_strdup_printf("%g",
+                                                     params->iHall));
+    gwy_container_set_string_by_name(meta, "rHall",
+                                     g_strdup_printf("%g",
+                                                     params->rHall));
+    gwy_container_set_string_by_name(meta, "Temperature",
+                                     g_strdup_printf("%g",
+                                                     params->Temperature));
+    gwy_container_set_string_by_name(meta, "Piezo High Voltage Amplifier X",
+                                     g_strdup_printf("%g",
+                                                     params->HighVoltageAmplifier.
+                                                     X));
+    gwy_container_set_string_by_name(meta, "Piezo High Voltage Amplifier Y",
+                                     g_strdup_printf("%g",
+                                                     params->HighVoltageAmplifier.
+                                                     Y));
+    gwy_container_set_string_by_name(meta, "Piezo High Voltage Amplifier Z",
+                                     g_strdup_printf("%g",
+                                                     params->HighVoltageAmplifier.
+                                                     Z));
+    gwy_container_set_string_by_name(meta, "Piezo Coefficients X(T)",
+                                     g_strdup_printf("%g",
+                                                     params->PiezoCoefficient.X));
+    gwy_container_set_string_by_name(meta, "Piezo Coefficients Y(T)",
+                                     g_strdup_printf("%g",
+                                                     params->PiezoCoefficient.Y));
+    gwy_container_set_string_by_name(meta, "Piezo Coefficients Z(T)",
+                                     g_strdup_printf("%g",
+                                                     params->PiezoCoefficient.Z));
+    gwy_container_set_string_by_name(meta, "Piezo Heat Coefficient X",
+                                     g_strdup_printf("%g",
+                                                     params->HeatCoefficient.X));
+    gwy_container_set_string_by_name(meta, "Piezo Heat Coefficient Y",
+                                     g_strdup_printf("%g",
+                                                     params->HeatCoefficient.Y));
+    gwy_container_set_string_by_name(meta, "Piezo Heat Coefficient Z",
+                                     g_strdup_printf("%g",
+                                                     params->HeatCoefficient.Z));
+    gwy_container_set_string_by_name(meta, "Piezo Hysterisis Parameters AlphaX",
+                                     g_strdup_printf("%g",
+                                                     params->HysAlpha.X));
+    gwy_container_set_string_by_name(meta, "Piezo Hysterisis Parameters AlphaY",
+                                     g_strdup_printf("%g",
+                                                     params->HysAlpha.Y));
+    gwy_container_set_string_by_name(meta, "Piezo Hysterisis Parameters BetaX",
+                                     g_strdup_printf("%g",
+                                                     params->HysBeta.X));
+    gwy_container_set_string_by_name(meta, "Piezo Hysterisis Parameters BetaY",
+                                     g_strdup_printf("%g",
+                                                     params->HysBeta.Y));
+    gwy_container_set_string_by_name(meta, "Number of averages",
+                                     g_strdup_printf("%u",
+                                                     params->numAverages));
+    gwy_container_set_string_by_name(meta, "LockIn",
+                                     g_strdup_printf("%u",
+                                                     params->LockIn));
+    gwy_container_set_string_by_name(meta, "DataPointsDelay",
+                                     g_strdup_printf("%g",
+                                                     params->DataPointsDelay));
+    gwy_container_set_string_by_name(meta, "Compensation Value X",
+                                     g_strdup_printf("%g",
+                                                     params->CompensationValue.X));
+    gwy_container_set_string_by_name(meta, "Compensation Value Y",
+                                     g_strdup_printf("%g",
+                                                     params->CompensationValue.Y));
+    gwy_container_set_string_by_name(meta, "Compensation Percentage X",
+                                     g_strdup_printf("%g",
+                                                     params->CompensationPercentage.
+                                                     X));
+    gwy_container_set_string_by_name(meta, "Compensation Percentage Y",
+                                     g_strdup_printf("%g",
+                                                     params->CompensationPercentage.
+                                                     Y));
+    gwy_container_set_string_by_name(meta, "NanoLithoStatus",
+                                     fmtbool(params->NanoLithoStatus));
+    gwy_container_set_string_by_name(meta, "NanoLithoBiasV",
+                                     fmtbool(params->NanoLithoBiasV));
+    gwy_container_set_string_by_name(meta, "NanoLithoPulseLength",
+                                     g_strdup_printf("%g",
+                                                     params->NanoLithoPulseLength));
+    gwy_container_set_string_by_name(meta, "MFM ScanType",
+                                     g_strdup_printf("%d",
+                                                     params->MFM_ScanType));
+    gwy_container_set_string_by_name(meta, "MFM HeadLiftOff",
+                                     g_strdup_printf("%g",
+                                                     params->MFM_HeadLiftOff));
+    gwy_container_set_string_by_name(meta, "Forward Scan Feedback On",
+                                     fmtbool(params->ForwardScanFeedbackOn));
+    gwy_container_set_string_by_name(meta, "Backward Scan Feedback On",
+                                     fmtbool(params->BackwardScanFeedbackOn));
+    gwy_container_set_string_by_name(meta, "Quadrature Lock Try Check",
+                                     fmtbool(params->QuadratureLockTryCheck));
+
+    s = gwy_enuml_to_string(params->FeedbackChannel,
+                            "Tunneling", FEEDBACK_Tunneling,
+                            "AfmChannel", FEEDBACK_AfmChannel,
+                            "ExternalMode", FEEDBACK_ExternalMode,
+                            "ExternalMode2", FEEDBACK_ExternalMode2,
+                            "ContactMode", FEEDBACK_ContactMode,
+                            "Default", FEEDBACK_Default,
+                            NULL);
+    gwy_container_set_string_by_name(meta, "Feedback Channel",
+                                     g_strdup(s ? s : "Unknown"));
+
+    gwy_container_set_string_by_name(meta, "Vz Channel",
+                                     g_strdup_printf("%g", params->vzChannel));
+    gwy_container_set_string_by_name(meta, "Hysteresis Enabled",
+                                     fmtbool(params->hysteresisEnabled));
+    gwy_container_set_string_by_name(meta, "Creep Correction Enabled",
+                                     fmtbool(params->creepCorrectionEnabled));
+    gwy_container_set_string_by_name(meta, "OffsetInstanceIV (X)",
+                                     g_strdup_printf("%g",
+                                                     params->OffsetInstanceIV.X));
+    gwy_container_set_string_by_name(meta, "OffsetInstanceIV (Y)",
+                                     g_strdup_printf("%g",
+                                                     params->OffsetInstanceIV.Y));
+    gwy_container_set_string_by_name(meta, "OffsetInstanceFD (X)",
+                                     g_strdup_printf("%g",
+                                                     params->OffsetInstanceFD.X));
+    gwy_container_set_string_by_name(meta, "OffsetInstanceFD (Y)",
+                                     g_strdup_printf("%g",
+                                                     params->OffsetInstanceFD.Y));
+    gwy_container_set_string_by_name(meta, "Laser Driver",
+                                     g_strdup_printf("%d",
+                                                     params->LaserDriver));
+    gwy_container_set_string_by_name(meta, "FreqQ",
+                                     g_strdup_printf("%g", params->FreqQ));
+    gwy_container_set_string_by_name(meta, "FN",
+                                     g_strdup_printf("%g", params->FN));
+    gwy_container_set_string_by_name(meta, "FL",
+                                     g_strdup_printf("%g", params->FL));
+    gwy_container_set_string_by_name(meta, "FT",
+                                     g_strdup_printf("%g", params->FT));
+    gwy_container_set_string_by_name(meta, "GH",
+                                     g_strdup_printf("%g", params->GH));
+    gwy_container_set_string_by_name(meta, "Scan Speed",
+                                     g_strdup_printf("%g", params->ScanSpeed));
+    gwy_container_set_string_by_name(meta, "ScanAngle",
+                                     g_strdup_printf("%g", params->ScanAngle));
+    gwy_container_set_string_by_name(meta, "Scan Offset X",
+                                     g_strdup_printf("%g",
+                                                     params->ScanOffset.X));
+    gwy_container_set_string_by_name(meta, "Scan Offset Y",
+                                     g_strdup_printf("%g",
+                                                     params->ScanOffset.Y));
+    gwy_container_set_string_by_name(meta, "Position X",
+                                     g_strdup_printf("%g",
+                                                     params->Position.X));
+    gwy_container_set_string_by_name(meta, "Position Y",
+                                     g_strdup_printf("%g",
+                                                     params->Position.Y));
+    gwy_container_set_string_by_name(meta, "Position Z",
+                                     g_strdup_printf("%g",
+                                                     params->Position.Z));
+    gwy_container_set_string_by_name(meta, "iT",
+                                     g_strdup_printf("%g", params->iT));
+    gwy_container_set_string_by_name(meta, "biasV",
+                                     g_strdup_printf("%g", params->biasV));
+    gwy_container_set_string_by_name(meta, "giV",
+                                     g_strdup_printf("%g", params->giV));
+    gwy_container_set_string_by_name(meta, "rSignal",
+                                     g_strdup_printf("%g", params->rSignal));
+    gwy_container_set_string_by_name(meta, "rRef",
+                                     g_strdup_printf("%g", params->rRef));
+    gwy_container_set_string_by_name(meta, "PhotoGain",
+                                     g_strdup_printf("%d", params->PhotoGain));
+    gwy_container_set_string_by_name(meta, "DigitalGain",
+                                     g_strdup_printf("%d",
+                                                     params->DigitalGain));
+    gwy_container_set_string_by_name(meta, "LoopGain",
+                                     g_strdup_printf("%d", params->LoopGain));
+    gwy_container_set_string_by_name(meta, "gVirt",
+                                     g_strdup_printf("%d", params->gVirt));
+    gwy_container_set_string_by_name(meta, "Field",
+                                     g_strdup_printf("%g", params->Field));
+    gwy_container_set_string_by_name(meta, "FieldRate",
+                                     g_strdup_printf("%g", params->FieldRate));
+    gwy_container_set_string_by_name(meta, "FieldApp",
+                                     g_strdup_printf("%g", params->FieldApp));
+    gwy_container_set_string_by_name(meta, "FieldMode",
+                                     g_strdup_printf("%g", params->FieldMode));
+    gwy_container_set_string_by_name(meta, "Piezo Polinom Coefficients a0",
+                                     g_strdup_printf("%g",
+                                                     params->PiezoPolinomCoeffs[0]));
+    gwy_container_set_string_by_name(meta, "Piezo Polinom Coefficients a1",
+                                     g_strdup_printf("%g",
+                                                     params->PiezoPolinomCoeffs[1]));
+    gwy_container_set_string_by_name(meta, "Piezo Polinom Coefficients a2",
+                                     g_strdup_printf("%g",
+                                                     params->PiezoPolinomCoeffs[2]));
+    gwy_container_set_string_by_name(meta, "Piezo Polinom Coefficients a3",
+                                     g_strdup_printf("%g",
+                                                     params->PiezoPolinomCoeffs[3]));
+    gwy_container_set_string_by_name(meta, "Piezo Polinom Coefficients a4",
+                                     g_strdup_printf("%g",
+                                                     params->PiezoPolinomCoeffs[4]));
+    gwy_container_set_string_by_name(meta,
+                                     "Piezo Hysterisis Polinom Coefficients Xa",
+                                     g_strdup_printf("%g",
+                                                     params->xHysPiezoPolinomCoeffs
+                                                     [0]));
+    gwy_container_set_string_by_name(meta,
+                                     "Piezo Hysterisis Polinom Coefficients Xb",
+                                     g_strdup_printf("%g",
+                                                     params->xHysPiezoPolinomCoeffs
+                                                     [1]));
+    gwy_container_set_string_by_name(meta,
+                                     "Piezo Hysterisis Polinom Coefficients Xc",
+                                     g_strdup_printf("%g",
+                                                     params->xHysPiezoPolinomCoeffs
+                                                     [2]));
+    gwy_container_set_string_by_name(meta,
+                                     "Piezo Hysterisis Polinom Coefficients Xd",
+                                     g_strdup_printf("%g",
+                                                     params->xHysPiezoPolinomCoeffs
+                                                     [3]));
+    gwy_container_set_string_by_name(meta,
+                                     "Piezo Hysterisis Polinom Coefficients Xe",
+                                     g_strdup_printf("%g",
+                                                     params->xHysPiezoPolinomCoeffs
+                                                     [4]));
+    gwy_container_set_string_by_name(meta,
+                                     "Piezo Hysterisis Polinom Coefficients Ya",
+                                     g_strdup_printf("%g",
+                                                     params->yHysPiezoPolinomCoeffs
+                                                     [0]));
+    gwy_container_set_string_by_name(meta,
+                                     "Piezo Hysterisis Polinom Coefficients Yb",
+                                     g_strdup_printf("%g",
+                                                     params->yHysPiezoPolinomCoeffs
+                                                     [1]));
+    gwy_container_set_string_by_name(meta,
+                                     "Piezo Hysterisis Polinom Coefficients Yc",
+                                     g_strdup_printf("%g",
+                                                     params->yHysPiezoPolinomCoeffs
+                                                     [2]));
+    gwy_container_set_string_by_name(meta,
+                                     "Piezo Hysterisis Polinom Coefficients Yd",
+                                     g_strdup_printf("%g",
+                                                     params->yHysPiezoPolinomCoeffs
+                                                     [3]));
+    gwy_container_set_string_by_name(meta,
+                                     "Piezo Hysterisis Polinom Coefficients Ye",
+                                     g_strdup_printf("%g",
+                                                     params->yHysPiezoPolinomCoeffs
+                                                     [4]));
+
+    s = gwy_enuml_to_string(params->LtMode,
+                            "Contact", LT_Contact,
+                            "NonContact", LT_NonContact,
+                            "Dynamic", LT_Dynamic,
+                            "LtStm", LT_LtStm,
+                            "PrFM", LT_PrFM,
+                            "SSRM", LT_SSRM,
+                            NULL);
+    gwy_container_set_string_by_name(meta, "LtMode",
+                                     g_strdup(s ? s : "Unknown"));
+
+    gwy_container_set_string_by_name(meta, "P_value",
+                                     g_strdup_printf("%d", params->P_value));
+    gwy_container_set_string_by_name(meta, "I_value",
+                                     g_strdup_printf("%d", params->I_value));
+    gwy_container_set_string_by_name(meta, "D_value",
+                                     g_strdup_printf("%d", params->D_value));
+    gwy_container_set_string_by_name(meta, "G_value",
+                                     g_strdup_printf("%d", params->G_value));
+    gwy_container_set_string_by_name(meta, "ScaleXY",
+                                     g_strdup_printf("%d", params->ScaleXY));
+    gwy_container_set_string_by_name(meta, "CenterFreq",
+                                     g_strdup_printf("%g", params->CenterFreq));
+    gwy_container_set_string_by_name(meta, "FeedbackValue",
+                                     g_strdup_printf("%g",
+                                                     params->FeedBackValue));
     if (params->SpmType == SPM_RtShpm
         || params->SpmType == SPM_LtShpm
         || params->SpmType == SPM_TemNano) {
         /* SHPM */
-        return get_unit_SHPM(params, chparams->Channel);
+        gwy_container_set_string_by_name(meta, "HallStatus",
+                                         fmtbool(params->HallStatus));
+        gwy_container_set_string_by_name(meta, "HeadLiftOffDist",
+                                         g_strdup_printf("%g",
+                                                         params->HeadLiftOffDist));
+        gwy_container_set_string_by_name(meta, "HeadLiftOffV",
+                                         g_strdup_printf("%g",
+                                                         params->HeadLiftOffV));
+        gwy_container_set_string_by_name(meta,
+                                         "UserEnteredHeadLiftoffLateralValue",
+                                         g_strdup_printf("%g",
+                                                         params->UserEnteredHeadLiftoffLateralValue));
+        gwy_container_set_string_by_name(meta, "UserEnteredHallCurrent",
+                                         g_strdup_printf("%g",
+                                                         params->UserEnteredHallCurrent));
+        gwy_container_set_string_by_name(meta, "UserEnteredHallAmpBW",
+                                         g_strdup_printf("%g",
+                                                         params->UserEnteredHallAmpBW));
+        gwy_container_set_string_by_name(meta, "UserEnteredSwitchInfraRedLed",
+                                         fmtbool(params->UserEnteredSwitchInfraRedLed));
+        gwy_container_set_string_by_name(meta, "UserEnteredHallAmpGain",
+                                         g_strdup_printf("%d",
+                                                         params->UserEnteredHallAmpGain));
+        gwy_container_set_string_by_name(meta, "UserEnteredLightIntensity",
+                                         g_strdup_printf("%d",
+                                                         params->UserEnteredLightIntensity));
+        gwy_container_set_string_by_name(meta, "Hall Offset",
+                                         g_strdup_printf("%g",
+                                                         params->hallOffset));
+        gwy_container_set_string_by_name(meta, "HallAmpGain",
+                                         g_strdup_printf("%g",
+                                                         params->hallAmpGain));
+        gwy_container_set_string_by_name(meta, "HallAmpBandwidth",
+                                         g_strdup_printf("%g",
+                                                         params->hallAmpBandWidth));
+        gwy_container_set_string_by_name(meta, "HeadLiftOffVoltage",
+                                         g_strdup_printf("%g",
+                                                         params->headLiftOffVoltage));
+        gwy_container_set_string_by_name(meta, "Software Version",
+                                         g_strdup(params->SoftwareVersion));
+        gwy_container_set_string_by_name(meta, "Motor Card Version",
+                                         g_strdup(params->MotorCardVersion));
+        gwy_container_set_string_by_name(meta, "Scan DAC Card Version",
+                                         g_strdup(params->ScanDacCardVersion));
+        gwy_container_set_string_by_name(meta, "PLL Version",
+                                         g_strdup(params->PllVersion));
     }
     else if (params->SpmType == SPM_NcAfm) {
         /*NCAFM */
-        return get_unit_NCAFM(params, chparams->Channel);
+        gwy_container_set_string_by_name(meta, "Laser On",
+                                         fmtbool(params->LaserOn));
+        gwy_container_set_string_by_name(meta, "Laser Fan On",
+                                         fmtbool(params->LaserFanOn));
+        gwy_container_set_string_by_name(meta, "Laser RF State",
+                                         fmtbool(params->LaserRF_State));
+        gwy_container_set_string_by_name(meta, "Lock Quad",
+                                         fmtbool(params->LockQuad));
+        gwy_container_set_string_by_name(meta, "UserEnteredLaserPower",
+                                         g_strdup_printf("%d",
+                                                         params->UserEnteredLaserPower));
+        gwy_container_set_string_by_name(meta, "UserEnteredPhotoGain",
+                                         g_strdup_printf("%d",
+                                                         params->UserEnteredPhotoGain));
     }
     else {
         /*AFM */
-        return get_unit_AFM(params, chparams->Channel);
+        gwy_container_set_string_by_name(meta, "DDS2FeedbackPhase",
+                                         g_strdup_printf("%g",
+                                                         params->DDS2FeedbackPhase));
+        gwy_container_set_string_by_name(meta, "PLL Feedback On",
+                                         fmtbool(params->PLL_FeedbackOn));
+        gwy_container_set_string_by_name(meta, "PLL LockRange Resolution",
+                                         g_strdup_printf("%d",
+                                                         params->PLL_LockRangeResolution));
+        gwy_container_set_string_by_name(meta, "UserEntered PLL Center Freq",
+                                         g_strdup_printf("%g",
+                                                         params->UserEnteredPLL_CenterFreq));
+        gwy_container_set_string_by_name(meta, "UserEnteredDacValueA",
+                                         g_strdup_printf("%g",
+                                                         params->UserEnteredDacValueA));
+        gwy_container_set_string_by_name(meta, "UserEnteredDacValueB",
+                                         g_strdup_printf("%g",
+                                                         params->UserEnteredDacValueB));
+        gwy_container_set_string_by_name(meta,
+                                         "UserEnteredPLL_NegativePolarity",
+                                         fmtbool(params->UserEnteredPLL_NegativePolarity));
+        gwy_container_set_string_by_name(meta, "UserEnteredPLL_ConstExc",
+                                         fmtbool(params->UserEnteredPLL_ConstExc));
+        gwy_container_set_string_by_name(meta, "UserEnteredFeedbackGain",
+                                         g_strdup_printf("%d",
+                                                         params->UserEnteredFeedbackGain));
+        gwy_container_set_string_by_name(meta, "UserEnteredFOffset",
+                                         g_strdup_printf("%d",
+                                                         params->UserEnteredOscAmp));
+        gwy_container_set_string_by_name(meta, "UserEnteredFOffset",
+                                         g_strdup_printf("%g",
+                                                         params->UserEnteredFOffset));
+        gwy_container_set_string_by_name(meta, "UserEnteredRMS",
+                                         g_strdup_printf("%g",
+                                                         params->UserEnteredRMS));
+        gwy_container_set_string_by_name(meta, "power",
+                                         g_strdup_printf("%g", params->power));
+        gwy_container_set_string_by_name(meta, "f",
+                                         g_strdup_printf("%g", params->f));
+        gwy_container_set_string_by_name(meta, "amp",
+                                         g_strdup_printf("%g", params->amp));
+        gwy_container_set_string_by_name(meta, "vpd",
+                                         g_strdup_printf("%g", params->vpd));
+        gwy_container_set_string_by_name(meta, "vRef",
+                                         g_strdup_printf("%g", params->vRef));
+        gwy_container_set_string_by_name(meta, "vSignal",
+                                         g_strdup_printf("%g",
+                                                         params->vSignal));
+        gwy_container_set_string_by_name(meta, "FiberVoltage",
+                                         g_strdup_printf("%g",
+                                                         params->fiberVoltage));
+        gwy_container_set_string_by_name(meta, "Reflectivity",
+                                         g_strdup_printf("%g",
+                                                         params->reflectivity));
+        gwy_container_set_string_by_name(meta, "PhotoGain",
+                                         g_strdup_printf("%g",
+                                                         params->photoGain));
+        gwy_container_set_string_by_name(meta, "Interference Slope",
+                                         g_strdup_printf("%g",
+                                                         params->interferenceSlope));
+        gwy_container_set_string_by_name(meta, "OscillationAmp",
+                                         g_strdup_printf("%g",
+                                                         params->oscillationAmp));
+        /*gwy_container_set_string_by_name(meta, "SSRMGain", g_strdup_printf("%d", params->SSRMGain)); */
+        gwy_container_set_string_by_name(meta, "Hall Offset",
+                                         g_strdup_printf("%g",
+                                                         params->hallOffset));
+        gwy_container_set_string_by_name(meta, "HallAmpGain",
+                                         g_strdup_printf("%g",
+                                                         params->hallAmpGain));
+        gwy_container_set_string_by_name(meta, "HallAmpBandwidth",
+                                         g_strdup_printf("%g",
+                                                         params->hallAmpBandWidth));
+        gwy_container_set_string_by_name(meta, "HeadLiftOffVoltage",
+                                         g_strdup_printf("%g",
+                                                         params->headLiftOffVoltage));
+        gwy_container_set_string_by_name(meta, "Software Version",
+                                         g_strdup(params->SoftwareVersion));
+        gwy_container_set_string_by_name(meta, "Motor Card Version",
+                                         g_strdup(params->MotorCardVersion));
+        gwy_container_set_string_by_name(meta, "Scan DAC Card Version",
+                                         g_strdup(params->ScanDacCardVersion));
+        gwy_container_set_string_by_name(meta, "PLL Version",
+                                         g_strdup(params->PllVersion));
     }
+    gwy_container_set_string_by_name(meta, "Scan Area",
+                                     g_strdup_printf("%g X %g",
+                                                     chparams->RealWidth,
+                                                     chparams-> RealHeight));
+    gwy_container_set_string_by_name(meta, "Resolution",
+                                     g_strdup_printf("%d X %d",
+                                                     chparams->Width,
+                                                     chparams->Height));
+}
+
+/* Cleanup */
+
+static void
+cleanup_global_parameters(NMIParameters *params)
+{
+    g_free(params->Name);
+    g_free(params->Info);
+    g_free(params->SoftwareVersion);
+    g_free(params->MotorCardVersion);
+    g_free(params->ScanDacCardVersion);
+    g_free(params->PllVersion);
+}
+
+static void
+cleanup_channels(NMIChannelParameters *channels, gint no_of_channels)
+{
+    gint i;
+
+    for (i = 0; i < no_of_channels; i++) {
+        g_free(channels[i].Name);
+    }
+    g_free(channels);
+}
+
+static void
+cleanup_data_fields(GwyDataField **dfields, gint no_of_channels)
+{
+    gint i;
+
+    for (i = 0; i < no_of_channels; i++) {
+        gwy_object_unref(dfields[i]);
+    }
+    g_free(dfields);
+}
+/* XXX: calc_real_ordinate() was originally written to perform the complex
+ * procedure to transform each individual data value.  A milion times.  It
+ * should be rewritten to just return the scale and offset but that's ugly.  So
+ * we get them from it by assuming it's a linear transformation. */
+static void
+get_ordinate_scale(const NMIParameters *params,
+                   const NMIChannelParameters *chparams,
+                   gdouble *q, gdouble *z0, NMIUnit *unit)
+{
+    *z0 = 0.0;
+    *q = 1.0;
+
+    /* Sets the unit twice.  Who cares... */
+    if (calc_real_ordinate(params, chparams, q, unit)
+        && calc_real_ordinate(params, chparams, z0, unit))
+        *q -= *z0;
+    else {
+        g_warning("Cannot determine ordinate scale");
+        *q = *z0 = 0.0;
+        *unit = UNIT_unknown;
+    }
+}
+
+static gboolean
+calc_real_ordinate(const NMIParameters *params,
+                   const NMIChannelParameters *chparams,
+                   gdouble *z, NMIUnit *unit)
+{
+    gint32 num_adds = chparams->NumAdds, gain = chparams->Gain;
+    NMIChannel channel = chparams->Channel;
+
+    if (calc_real_ordinate_base(params, channel, num_adds, gain, z, unit))
+        return TRUE;
+
+    if (params->SpmType == SPM_RtShpm
+        || params->SpmType == SPM_LtShpm
+        || params->SpmType == SPM_TemNano)
+        return calc_real_ordinate_SHPM(params, channel, num_adds, gain,
+                                       z, unit);
+
+    if (params->SpmType == SPM_NcAfm)
+        return calc_real_ordinate_NCAFM(params, channel, num_adds, gain,
+                                        z, unit);
+
+    return calc_real_ordinate_AFM(params, channel, num_adds, gain, z, unit);
+}
+
+static gboolean
+calc_real_ordinate_base(const NMIParameters *params,
+                        NMIChannel channel, gint numAdds, gint16 gain,
+                        gdouble *z, NMIUnit *unit)
+{
+    gdouble num = *z - 32768.0*numAdds;
+    gdouble val = num * DCSTEP/gain;
+
+    gwy_debug("%u", channel);
+    if (channel == CHANNEL_TunnelCurrent) {
+        *z = 1e-9*DCSTEP * (num - 32768)/0.1;
+        *unit = UNIT_Ampere;
+    }
+    else if (channel == CHANNEL_Vz) {
+        *z = 1e-10*val * (params->HighVoltageAmplifier.Z
+                          * params->gVirt * params->PiezoCoefficient.Z);
+        *unit = UNIT_metre;
+    }
+    else if (channel == CHANNEL_Spare0) {
+        *z = val;
+        *unit = UNIT_Volt;
+    }
+    else if (channel == CHANNEL_Spare1) {
+        if (is_laser_mode(params->SpmType, params->LtMode, params->LaserMode)) {
+            *z = val;
+            *unit = UNIT_Volt;
+        }
+        else {
+            *z = (val + 10.0)/20.0;
+            *z = *z*360.0 - 180.0;
+            *unit = UNIT_degree;
+        }
+    }
+    else if (channel == CHANNEL_Spare2) {
+        *z = val;
+        *unit = UNIT_Volt;
+        if (params->SpmType == SPM_LtAfm && params->LtMode == LT_SSRM) {
+            *z /= params->SSRMGain;
+            *unit = UNIT_Ampere;
+        }
+    }
+    else if (channel >= CHANNEL_Spare3 && channel <= CHANNEL_Spare7) {
+        *z = val;
+        *unit = UNIT_Volt;
+    }
+    else {
+        if (params->SpmType != SPM_None)
+            return FALSE;
+
+        *z = convert_hall(val, params);
+        *unit = UNIT_Gauss;
+        return TRUE;
+    }
+
+    *z /= numAdds;
+    return TRUE;
+}
+
+static gboolean
+calc_real_ordinate_AFM(const NMIParameters *params,
+                       NMIChannel channel, gint numAdds, guint16 gain,
+                       gdouble *z, NMIUnit *unit)
+{
+    gdouble num = *z - 32768.0*numAdds;
+    gdouble val = num * DCSTEP/gain;
+
+    gwy_debug("%u, %g %g", channel, num, val);
+    if (channel != CHANNEL_HallVoltage) {
+        if (channel == CHANNEL_Spare1) {
+            if (params->SpmType != SPM_LtQtfAfm) {
+                *z = convert_hall(val, params);
+                *unit = UNIT_Gauss;
+            }
+            else {
+                *z = convert_pll(val, params);
+                *unit = UNIT_Hertz;
+            }
+            *z /= numAdds;
+            return TRUE;
+        }
+        else {
+            if (!is_hall_channel(channel, TRUE, FALSE)) {
+                *z = num/numAdds;
+                *unit = UNIT_levels;
+                return TRUE;
+            }
+        }
+    }
+
+    if (params->SpmType != SPM_LtAfm || params->LtMode != LT_Dynamic) {
+        if (params->SpmType == SPM_LaserAfm
+            && params->LaserMode != LASER_NonContact
+            && params->LaserMode != LASER_Ffm) {
+            if (params->SpmType != SPM_LaserAfm
+                || params->LaserMode != LASER_LaserStm) {
+                *z = val;
+                *unit = UNIT_Volt;
+            }
+            else {
+                *z = val * (params->HighVoltageAmplifier.Z
+                            * params->gVirt * params->HeatCoefficient.Z);
+                *unit = UNIT_metre;
+            }
+        }
+        else {
+            *z = convert_pll(val, params);
+            *unit = UNIT_Hertz;
+        }
+    }
+    else {
+        *z = val;
+        *unit = UNIT_Volt;
+    }
+
+    *z /= numAdds;
+    return TRUE;
+}
+
+static gboolean
+calc_real_ordinate_NCAFM(G_GNUC_UNUSED const NMIParameters *params,
+                         NMIChannel channel, gint numAdds, guint16 gain,
+                         gdouble *z, NMIUnit *unit)
+{
+    gdouble num = *z - 32768.0*numAdds;
+    gdouble val = num * DCSTEP/gain;
+
+    gwy_debug("%u", channel);
+    if (is_hall_channel(channel, TRUE, TRUE)) {
+        *z = val;
+        *unit = UNIT_Volt;
+    }
+    else {
+        *z = num;
+        *unit = UNIT_levels;
+    }
+    *z /= numAdds;
+    return TRUE;
+}
+
+static gboolean
+calc_real_ordinate_SHPM(const NMIParameters *params,
+                        NMIChannel channel, gint numAdds, guint16 gain,
+                        gdouble *z, NMIUnit *unit)
+{
+    gdouble num = *z - 32768.0*numAdds;
+    gdouble val = num * DCSTEP/gain;
+
+    gwy_debug("%u", channel);
+    if (is_hall_channel(channel, TRUE, TRUE)) {
+        *z = convert_hall(val, params);
+        *unit = UNIT_Gauss;
+    }
+    else {
+        *z = num;
+        *unit = UNIT_levels;
+    }
+    *z /= numAdds;
+    return TRUE;
 }
 
 static gboolean
@@ -1667,318 +1690,42 @@ convert_pll(gdouble val, const NMIParameters *params)
                   * (params->PLL_LockRangeResolution + 1))/20.0;
 }
 
-static NMIUnit
-get_unit_base(NMIParameters *params, NMIChannel channel)
+/*
+   similar to gwy_get_<type>_le with LEB128 encodings as length of string
+   prefixed to the actual string arguments: buffer; returns: string (which
+   needs to be freed up later)
+*/
+static gchar*
+get_string_LEB128(const guchar **p, gsize *size)
 {
-    NMIUnit measure, measure1 = -1;
-    gboolean mSpmType, mLtMode;
+    /* decode LEB128 number (pseudocode from wikipedia) */
+    gulong result = 0;
+    guint shift = 0;
+    guchar byte;
+    gchar *strng;
+    glong i;
 
-    if (channel == CHANNEL_TunnelCurrent)
-        measure1 = UNIT_ampere;
-    else if (channel == CHANNEL_Vz)
-        measure1 = UNIT_metre;
-    else if (channel == CHANNEL_Spare0)
-        measure1 = UNIT_volt;
-    else if (channel == CHANNEL_Spare1) {
-        if (is_laser_mode(params->SpmType, params->LtMode, params->LaserMode))
-            measure1 = UNIT_volt;
-        else
-            measure1 = UNIT_degree;
+    while (TRUE) {
+        if (*size < 1)
+            return NULL;
+        byte = (guint)(**p);
+        *p += 1;
+        *size -= 1;
+        result |= ((byte & 0x7F) << shift);
+        if ((byte & 0x80) == 0)
+            break;
+        shift += 7;
     }
-    else if (channel == CHANNEL_Spare2) {
-        if (params->SpmType != SPM_LtAfm)
-            mLtMode = TRUE;
-        else
-            mLtMode = params->LtMode != LT_SSRM;
-        if (mLtMode)
-            measure1 = UNIT_volt;
-        else
-            measure1 = UNIT_ampere;
-    }
-    else if (channel >= CHANNEL_Spare3 && channel <= CHANNEL_Spare7)
-        measure1 = UNIT_volt;
-    else {
-        measure1 = -1;
-        if (params->SpmType != SPM_None)
-            measure = measure1;
-        else {
-            measure1 = UNIT_gauss;
-            measure = measure1;
-        }
-        return measure;
-    }
-    if (measure1 != -1)
-        mSpmType = TRUE;
-    else
-        mSpmType = params->SpmType != SPM_None;
-    if (mSpmType)
-        measure = measure1;
-    else {
-        measure1 = UNIT_gauss;
-        measure = measure1;
-    }
-    return measure;
-}
-
-/*AFM UNITS */
-static NMIUnit
-get_unit_AFM(NMIParameters *params, NMIChannel channel)
-{
-    NMIUnit measure;
-    gboolean ltMode, laserMode, flag, ret_measure1 = FALSE;
-    NMIUnit measure1 = get_unit_base(params, channel);
-
-    if (measure1 != -1)
-        return measure1;
-    if (channel != CHANNEL_HallVoltage) {
-        if (channel == CHANNEL_Spare1) {
-            if (params->SpmType != SPM_LtQtfAfm)
-                measure1 = UNIT_gauss;
-            else
-                measure1 = UNIT_hertz;
-            ret_measure1 = TRUE;
-        }
-        else {
-            if (channel == CHANNEL_Vz4 || channel == CHANNEL_IpdRef
-                || channel == CHANNEL_IpdSig || channel == CHANNEL_Various
-                || channel == CHANNEL_I_HallAdc
-                || channel == CHANNEL_V_HallAdc || channel == CHANNEL_Default)
-                ret_measure1 = FALSE;
-            else {
-                measure1 = UNIT_levels;
-                ret_measure1 = TRUE;
-            }
-        }
-    }
-
-    if (ret_measure1) {
-        measure = measure1;
-        return measure;
-    }
-
-    if (params->SpmType != SPM_LtAfm)
-        ltMode = TRUE;
-    else
-        ltMode = params->LtMode != LT_Dynamic;
-    if (ltMode) {
-        if (params->SpmType != SPM_LaserAfm)
-            laserMode = FALSE;
-        else {
-            if (params->SpmType != SPM_LaserAfm)
-                laserMode = TRUE;
-            else {
-                if (params->LaserMode == LASER_NonContact)
-                    laserMode = FALSE;
-                else
-                    laserMode = params->LaserMode != LASER_Ffm;
-            }
-        }
-        if (laserMode) {
-            if (params->SpmType != SPM_LaserAfm)
-                flag = TRUE;
-            else
-                flag = params->LaserMode != LASER_LaserStm;
-            if (flag)
-                measure1 = UNIT_volt;
-            else
-                measure1 = UNIT_metre;
-        }
-        else
-            measure1 = UNIT_hertz;
-    }
-    else
-        measure1 = UNIT_volt;
-
-    measure = measure1;
-    return measure;
-}
-
-/* NCAFM */
-static NMIUnit
-get_unit_NCAFM(NMIParameters *params, NMIChannel channel)
-{
-    NMIUnit measure;
-    NMIUnit measure1 = get_unit_base(params, channel);
-
-    if (measure1 != -1)
-        return measure1;
-    if (channel == CHANNEL_HallVoltage || channel == CHANNEL_Vz4
-        || channel == CHANNEL_IpdRef || channel == CHANNEL_IpdSig
-        || channel == CHANNEL_Various || channel == CHANNEL_I_HallAdc
-        || channel == CHANNEL_V_HallAdc || channel == CHANNEL_Default)
-        measure1 = UNIT_volt;
-    else
-        measure1 = UNIT_levels;
-    measure = measure1;
-    return measure;
-}
-
-
-/*SHPM */
-static NMIUnit
-get_unit_SHPM(NMIParameters *params, NMIChannel channel)
-{
-    NMIUnit measure = get_unit_base(params, channel);
-
-    if (measure != -1)
-        return measure;
-
-    if (is_hall_channel(channel, FALSE, TRUE))
-        return UNIT_gauss;
-    else
-        return UNIT_levels;
-}
-
-/*end units */
-
-
-/* CALCULATE REAL HEIGHT */
-
-static gboolean
-calculate_real_height(gdouble *z,
-                      const NMIParameters *params,
-                      const NMIChannelParameters *chparams)
-{
-    gint32 num_adds = chparams->NumAdds, gain = chparams->Gain;
-    NMIChannel channel = chparams->Channel;
-
-    if (calculate_real_height_base(num_adds, gain, z, params, channel))
-        return TRUE;
-
-    if (params->SpmType == SPM_RtShpm
-        || params->SpmType == SPM_LtShpm
-        || params->SpmType == SPM_TemNano)
-        return calculate_real_height_SHPM(num_adds, gain, z, params, channel);
-
-    if (params->SpmType == SPM_NcAfm)
-        return calculate_real_height_NCAFM(num_adds, gain, z, params, channel);
-
-    return calculate_real_height_AFM(num_adds, gain, z, params, channel);
-}
-
-static gboolean
-calculate_real_height_base(gint numAdds, gint16 gain, gdouble *z,
-                           const NMIParameters *params,
-                           const NMIChannel channel)
-{
-    gdouble num = *z - 32768.0*numAdds;
-    gdouble val = num * DCSTEP/gain;
-
-    gwy_debug("%u", channel);
-    if (channel == CHANNEL_TunnelCurrent)
-        *z = 1e-9*DCSTEP * (num - 32768)/0.1;
-    else if (channel == CHANNEL_Vz)
-        *z = 1e-10*val * (params->HighVoltageAmplifier.Z
-                          * params->gVirt * params->PiezoCoefficient.Z);
-    else if (channel == CHANNEL_Spare0)
-        *z = val;
-    else if (channel == CHANNEL_Spare1) {
-        if (is_laser_mode(params->SpmType, params->LtMode, params->LaserMode))
-            *z = val;
-        else {
-            *z = (val + 10.0)/20.0;
-            *z = *z*360.0 - 180.0;
-        }
-    }
-    else if (channel == CHANNEL_Spare2) {
-        *z = val;
-        if (params->SpmType == SPM_LtAfm && params->LtMode == LT_SSRM)
-            *z /= params->SSRMGain;
-    }
-    else if (channel >= CHANNEL_Spare3 && channel <= CHANNEL_Spare7)
-        *z = val;
-    else {
-        if (params->SpmType != SPM_None)
-            return FALSE;
-
-        *z = convert_hall(val, params);
-        return TRUE;
-    }
-
-    *z /= numAdds;
-    return TRUE;
-}
-
-static gboolean
-calculate_real_height_AFM(int numAdds, guint16 gain, gdouble *z,
-                          const NMIParameters *params,
-                          NMIChannel channel)
-{
-    gdouble num = *z - 32768.0*numAdds;
-    gdouble val = num * DCSTEP/gain;
-
-    gwy_debug("%u, %g %g", channel, num, val);
-    if (channel != CHANNEL_HallVoltage) {
-        if (channel == CHANNEL_Spare1) {
-            if (params->SpmType != SPM_LtQtfAfm)
-                *z = convert_hall(val, params);
-            else
-                *z = convert_pll(val, params);
-            *z /= numAdds;
-            return TRUE;
-        }
-        else {
-            if (!is_hall_channel(channel, TRUE, FALSE)) {
-                *z = num/numAdds;
-                return TRUE;
-            }
-        }
-    }
-
-    if (params->SpmType != SPM_LtAfm || params->LtMode != LT_Dynamic) {
-        if (params->SpmType == SPM_LaserAfm
-            && params->LaserMode != LASER_NonContact
-            && params->LaserMode != LASER_Ffm) {
-            if (params->SpmType != SPM_LaserAfm
-                || params->LaserMode != LASER_LaserStm)
-                *z = val;
-            else
-                *z = val * (params->HighVoltageAmplifier.Z
-                            * params->gVirt * params->HeatCoefficient.Z);
-        }
-        else
-            *z = convert_pll(val, params);
-    }
-    else
-        *z = val;
-
-    *z /= numAdds;
-
-    return TRUE;
-}
-
-static gboolean
-calculate_real_height_NCAFM(int numAdds, guint16 gain, gdouble *z,
-                            const NMIParameters *params,
-                            NMIChannel channel)
-{
-    gdouble num = *z - 32768.0*numAdds;
-    gdouble val = num * DCSTEP/gain;
-
-    gwy_debug("%u", channel);
-    if (is_hall_channel(channel, TRUE, TRUE))
-        *z = val;
-    else
-        *z = num;
-    *z /= numAdds;
-    return TRUE;
-}
-
-static gboolean
-calculate_real_height_SHPM(int numAdds, guint16 gain, gdouble *z,
-                           const NMIParameters *params,
-                           NMIChannel channel)
-{
-    gdouble num = *z - 32768.0*numAdds;
-    gdouble val = num * DCSTEP/gain;
-
-    gwy_debug("%u", channel);
-    if (is_hall_channel(channel, TRUE, TRUE))
-        *z = convert_hall(val, params);
-    else
-        *z = num;
-    *z /= numAdds;
-    return TRUE;
+    /*allocate memory and read string into it */
+    if (*size < result)
+        return NULL;
+    strng = g_new(gchar, result + 1);
+    for (i = 0; i < result; i++)
+        strng[i] = (*p)[i];
+    strng[i] = 0;
+    *p += result;
+    *size -= result;
+    return strng;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
