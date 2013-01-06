@@ -135,7 +135,8 @@ lowercase_with_underscores:
 
 ===== Indentaion and grouping =======================================
 
-Indentation unit is 4 spaces.  Tabs are not used.
+Indentation unit is 4 spaces.  Tabs are not used.  Empty lines are not
+indented (and, generally, trailing spaces are avoided).
 
 Functions:
 - Function return type starts in the first column.
