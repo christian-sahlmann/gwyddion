@@ -3,6 +3,9 @@
  *  Copyright (C) 2007,2008 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
+ *  ``Distribute'' and ``Replace'' options added
+ *   by Sameer Grover  (sameer.grover.1@gmail.com)
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
@@ -25,6 +28,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <libprocess/linestats.h>
+#include <libprocess/gwyprocess.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libprocess/interpolation.h>
 #include <libgwydgets/gwydgetutils.h>
@@ -57,6 +61,8 @@ typedef struct {
     gboolean do_correct;
     gboolean exclude_linear;
     GwyInterpolationType interp;
+    gboolean distribute;
+    gboolean replace;
 } DriftArgs;
 
 typedef struct {
@@ -74,6 +80,8 @@ typedef struct {
     GwyDataLine *drift;
     gboolean computed;
     DriftArgs *args;
+    GtkWidget *distribute;
+    GtkWidget *replace;
 } DriftControls;
 
 static gboolean      module_register              (void);
@@ -147,6 +155,8 @@ static const DriftArgs drift_defaults = {
     TRUE,
     FALSE,
     GWY_INTERPOLATION_BSPLINE,
+    FALSE,
+    FALSE
 };
 
 static GwyModuleInfo module_info = {
@@ -154,7 +164,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Evaluates and/or correct thermal drift in fast scan axis."),
     "Petr Klapetek <petr@klapetek.cz>, Yeti <yeti@gwyddion.net>",
-    "2.3",
+    "3.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2007",
 };
@@ -269,7 +279,7 @@ drift_dialog(DriftArgs *args,
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
-    table = gtk_table_new(9, 4, FALSE);
+    table = gtk_table_new(11, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -352,6 +362,24 @@ drift_dialog(DriftArgs *args,
                      G_CALLBACK(mask_color_change_cb), &controls);
     row++;
 
+    controls.distribute = gtk_check_button_new_with_label(_("Distribute"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.distribute),
+                                 args->distribute);
+    gtk_table_attach(GTK_TABLE(table), controls.distribute, 0, 3,
+                     row, row +1, GTK_FILL, 0, 0, 0);
+    g_signal_connect(controls.distribute, "toggled",
+                     G_CALLBACK(drift_invalidate), &controls);
+    row++;
+
+    controls.replace = gtk_check_button_new_with_label(_("Replace"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.replace),
+                                 args->replace);
+    gtk_table_attach(GTK_TABLE(table), controls.replace, 0, 3,
+                     row, row +1, GTK_FILL, 0, 0, 0);
+    g_signal_connect(controls.replace, "toggled",
+                     G_CALLBACK(drift_invalidate), &controls);
+    row++;
+
     controls.computed = FALSE;
     /* Set up initial layer keys properly */
     preview_type_changed(NULL, &controls);
@@ -403,6 +431,7 @@ drift_dialog(DriftArgs *args,
     }
 }
 
+
 /* XXX: Eats result and drift */
 static void
 run_noninteractive(DriftArgs *args,
@@ -414,6 +443,20 @@ run_noninteractive(DriftArgs *args,
                    GwyDataLine *drift,
                    gint id)
 {
+    const guint compat_flags = (GWY_DATA_COMPATIBILITY_RES
+                                | GWY_DATA_COMPATIBILITY_REAL
+                                | GWY_DATA_COMPATIBILITY_LATERAL);
+
+    /* for the loop */
+    gint *all_channels;
+    gint channel_counter;
+    GwyDataField *dfield_master; /*The master field for drift calculation */
+
+    /* variables for temporary storage */
+    gint id_ctr, newid;
+    GQuark key;
+    GString *str = g_string_new("");
+
     if (!args->do_correct && !args->do_graph) {
         gwy_object_unref(result);
         gwy_object_unref(drift);
@@ -425,38 +468,122 @@ run_noninteractive(DriftArgs *args,
         result = gwy_data_field_duplicate(dfield);
         drift = gwy_data_line_new(1, 1.0, FALSE);
         drift_do(args, dfield, result, drift);
+        gwy_object_unref(result); /* wasteful but simplifies code a great deal*/
     }
+
+    g_string_printf(str, "/%d/data", id);
+    dfield_master = gwy_container_get_object_by_name(data, str->str);
 
     if (args->do_correct) {
-        gint newid;
+        all_channels = gwy_app_data_browser_get_data_ids(data);
+        channel_counter = 0;
 
-        newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
-        gwy_app_set_data_field_title(data, newid, _("Drift-corrected"));
-        gwy_app_sync_data_items(data, data, id, newid, FALSE,
-                                GWY_DATA_ITEM_GRADIENT,
-                                GWY_DATA_ITEM_RANGE,
-                                GWY_DATA_ITEM_MASK_COLOR,
-                                GWY_DATA_ITEM_REAL_SQUARE,
-                                0);
-
-        if (mfield) {
-            mfield = gwy_data_field_duplicate(mfield);
-            apply_drift(mfield, drift, GWY_INTERPOLATION_ROUND);
-            gwy_container_set_object(data, gwy_app_get_mask_key_for_id(newid),
-                                     mfield);
-            g_object_unref(mfield);
+        /* undo option is available only if replace is selected */
+        if (args->replace)  {
+            GArray *undo_quarks;
+            undo_quarks = g_array_new(FALSE, FALSE, sizeof(GQuark));
+            while (all_channels[channel_counter] != -1)  {
+            id_ctr = all_channels[channel_counter];
+            g_string_printf(str, "/%d/data", id_ctr);
+            dfield = gwy_container_get_object_by_name(data, str->str);
+            if (gwy_data_field_check_compatibility(dfield, dfield_master,
+                                                   compat_flags)) {
+                channel_counter += 1;
+                continue;
+            }
+            if ((!args->distribute && id_ctr == id) || args->distribute) {
+                key = gwy_app_get_data_key_for_id(id_ctr);
+                g_array_append_val(undo_quarks, key);
+                key = gwy_app_get_mask_key_for_id(id_ctr);
+                if (gwy_container_contains(data, key))  {
+                    g_array_append_val(undo_quarks, key);
+                }
+                key = gwy_app_get_show_key_for_id(id_ctr);
+                if (gwy_container_contains(data, key))  {
+                    g_array_append_val(undo_quarks, key);
+                }
+            }
+            channel_counter += 1;
+            }
+            gwy_app_undo_qcheckpointv(data, undo_quarks->len,
+                                      (GQuark*)undo_quarks->data);
+            g_array_free(undo_quarks, TRUE);
         }
+        /* undo ends */
 
-        if (sfield) {
-            sfield = gwy_data_field_duplicate(sfield);
-            apply_drift(sfield, drift, args->interp);
-            gwy_container_set_object(data, gwy_app_get_show_key_for_id(newid),
-                                     sfield);
-            g_object_unref(sfield);
+        /* do drift correction */
+        channel_counter = 0;
+        while (all_channels[channel_counter] != -1)  {
+            id_ctr = all_channels[channel_counter];
+            g_string_printf(str, "/%d/data", id_ctr);
+            dfield = gwy_container_get_object_by_name(data, str->str);
+            if (gwy_data_field_check_compatibility(dfield, dfield_master,
+                                                   compat_flags)) {
+                channel_counter += 1;
+                continue;
+            }
+            if (!args->distribute && all_channels[channel_counter] != id)  {
+                channel_counter += 1;
+                continue;
+            }
+            /* drift correct *this* channel */
+            if (args->replace)  {
+                apply_drift(dfield, drift, args->interp);
+                gwy_data_field_data_changed(dfield);
+                g_string_printf(str, "/%d/mask", id_ctr);
+                if (gwy_container_gis_object_by_name(data, str->str, &mfield)) {
+                    apply_drift(mfield, drift, GWY_INTERPOLATION_ROUND);
+                    gwy_data_field_data_changed(mfield);
+                }
+                g_string_printf(str, "/%d/show", id_ctr);
+                if (gwy_container_gis_object_by_name(data, str->str, &sfield)) {
+                    apply_drift(sfield, drift, args->interp);
+                    gwy_data_field_data_changed(sfield);
+                }
+            }
+            else if (!args->replace)  {
+                result = gwy_data_field_duplicate(dfield);
+                apply_drift(result, drift, args->interp);
+                newid = gwy_app_data_browser_add_data_field(result, data,
+                                                            !args->distribute);
+                g_string_printf(str, "/%d/data/title", id_ctr);
+                g_string_printf(str, "%s (%s)",
+                               gwy_container_get_string_by_name(data, str->str),
+                               _("Drift-corrected"));
+                gwy_app_set_data_field_title(data, newid, g_strdup(str->str));
+                gwy_app_sync_data_items(data, data, id_ctr, newid, FALSE,
+                                        GWY_DATA_ITEM_GRADIENT,
+                                        GWY_DATA_ITEM_RANGE,
+                                        GWY_DATA_ITEM_MASK_COLOR,
+                                        GWY_DATA_ITEM_REAL_SQUARE,
+                                        0);
+                gwy_object_unref(result);
+                g_string_printf(str, "/%d/mask", id_ctr);
+                if (gwy_container_gis_object_by_name(data,
+                                                     str->str,
+                                                     &mfield))  {
+                    mfield = gwy_data_field_duplicate(mfield);
+                    apply_drift(mfield, drift, GWY_INTERPOLATION_ROUND);
+                    gwy_container_set_object(data,
+                                             gwy_app_get_mask_key_for_id(newid),
+                                             mfield);
+                    gwy_object_unref(mfield);
+                }
+                g_string_printf(str, "/%d/show", id_ctr);
+                if (gwy_container_gis_object_by_name(data, str->str, &sfield)) {
+                    sfield = gwy_data_field_duplicate(sfield);
+                    apply_drift(sfield, drift, args->interp);
+                    gwy_container_set_object(data,
+                                             gwy_app_get_show_key_for_id(newid),
+                                             sfield);
+                    gwy_object_unref(sfield);
+                }
+            }
+            channel_counter += 1;
         }
-
+        g_free(all_channels);
     }
-    g_object_unref(result);
+    g_string_free(str, TRUE);
 
     if (args->do_graph) {
         GwyGraphModel *gmodel;
@@ -495,6 +622,11 @@ drift_dialog_update_controls(DriftControls *controls,
                                  args->exclude_linear);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
                                   args->interp);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->distribute),
+                                 args->distribute);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->replace),
+                                 args->replace);
+
 }
 
 static void
@@ -508,6 +640,10 @@ drift_dialog_update_values(DriftControls *controls,
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->do_correct));
     args->exclude_linear
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->exclude_linear));
+    args->distribute
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->distribute));
+    args->replace
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->replace));
 }
 
 static void
@@ -947,6 +1083,8 @@ static const gchar exclude_linear_key[] = "/module/drift/exclude-linear";
 static const gchar interp_key[]         = "/module/drift/interp";
 static const gchar preview_type_key[]   = "/module/drift/preview-type";
 static const gchar range_key[]          = "/module/drift/range";
+static const gchar distribute_key[]     = "/module/drift/distribute";
+static const gchar replace_key[]        = "/module/drift/replace";
 
 static void
 drift_sanitize_args(DriftArgs *args)
@@ -958,6 +1096,8 @@ drift_sanitize_args(DriftArgs *args)
     args->interp = gwy_enum_sanitize_value(args->interp,
                                            GWY_TYPE_INTERPOLATION_TYPE);
     args->preview_type = MAX(args->preview_type, PREVIEW_LAST);
+    args->distribute = !!args->distribute;
+    args->replace = !!args->replace;
 }
 
 static void
@@ -975,6 +1115,10 @@ drift_load_args(GwyContainer *container,
     gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
     gwy_container_gis_enum_by_name(container, preview_type_key,
                                    &args->preview_type);
+    gwy_container_gis_boolean_by_name(container, distribute_key,
+                                      &args->distribute);
+    gwy_container_gis_boolean_by_name(container, replace_key,
+                                      &args->replace);
     drift_sanitize_args(args);
 }
 
@@ -991,6 +1135,10 @@ drift_save_args(GwyContainer *container,
     gwy_container_set_enum_by_name(container, interp_key, args->interp);
     gwy_container_set_enum_by_name(container, preview_type_key,
                                    args->preview_type);
+    gwy_container_set_boolean_by_name(container, distribute_key,
+                                      args->distribute);
+    gwy_container_set_boolean_by_name(container, replace_key,
+                                      args->replace);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
