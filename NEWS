@@ -37,6 +37,8 @@ Modules:
 - Raw XYZ: Tolerance for ‘regular grid’ (which is not triangulated) was
   increased to 5% of pixel size to help people with poorly rounded data.
 - Edge: New Sobel and Prewitt classic edge detection functions.
+- Drift correction: Correction can be applied to all compatible channels
+  and channels can be directly replaced with corrected ones.
 
 Other:
 - Crash on Win32 while loading TIFF images was hopefully fixed.
