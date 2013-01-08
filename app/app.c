@@ -1076,6 +1076,8 @@ gwy_app_3d_window_export(Gwy3DWindow *gwy3dwindow)
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
                                         gwy_app_get_current_directory());
     gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog), filename_sys);
+    gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(dialog),
+                                                   TRUE);
     g_free(filename_sys);
 
     g_signal_connect(dialog, "response",
