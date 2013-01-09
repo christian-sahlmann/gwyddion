@@ -83,6 +83,9 @@ load_modules(void)
 static gboolean
 reload_libraries(void)
 {
+    /* Do not do it on Win32 because the libs must be fully resolved there and
+     * because the library names are different (with -0). */
+#ifndef G_OS_WIN32
     static const gchar *const gwyddion_libs[] = {
         "libgwyddion2", "libgwyprocess2", "libgwydraw2", "libgwydgets2",
         "libgwymodule2", "libgwyapp2",
@@ -102,6 +105,7 @@ reload_libraries(void)
         g_module_make_resident(modhandle);
         g_free(filename);
     }
+#endif
 
     return TRUE;
 }
@@ -118,7 +122,6 @@ initgwy(void)
     /* gwybatch.c */
     /* This requires a display.  */
     gtk_init(NULL, NULL);
-    //gtk_parse_args(NULL, NULL);
     gwy_widgets_type_init();
     gwy_undo_set_enabled(FALSE);
     gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GRADIENT));
