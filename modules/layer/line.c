@@ -168,7 +168,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of arbitrary straight lines."),
     "Yeti <yeti@gwyddion.net>",
-    "3.3",
+    "3.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -456,9 +456,9 @@ gwy_layer_line_draw_object(GwyVectorLayer *layer,
 
             case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
             xl0 = floor((xy[0] + xd)*width/xreal);
-            yl0 = floor((xy[1] + xd)*height/yreal);
+            yl0 = floor((xy[1] + yd)*height/yreal);
             xl1 = floor((xy[0] - xd)*width/xreal);
-            yl1 = floor((xy[1] - xd)*height/yreal);
+            yl1 = floor((xy[1] - yd)*height/yreal);
             break;
 
             default:
@@ -478,9 +478,9 @@ gwy_layer_line_draw_object(GwyVectorLayer *layer,
 
             case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
             xl0 = floor((xy[2] + xd)*width/xreal);
-            yl0 = floor((xy[3] + xd)*height/yreal);
+            yl0 = floor((xy[3] + yd)*height/yreal);
             xl1 = floor((xy[2] - xd)*width/xreal);
-            yl1 = floor((xy[3] - xd)*height/yreal);
+            yl1 = floor((xy[3] - yd)*height/yreal);
             break;
 
             default:
