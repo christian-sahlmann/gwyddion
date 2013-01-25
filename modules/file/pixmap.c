@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004-2012 David Necas (Yeti).
+ *  Copyright (C) 2004-2013 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -466,9 +466,9 @@ static GwyModuleInfo module_info = {
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.21",
+    "7.22",
     "David Nečas (Yeti)",
-    "2004-2012",
+    "2004-2013",
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -2670,6 +2670,17 @@ draw_selection_changed(GtkToggleButton *check,
 }
 
 static void
+update_font_size_to_zoom(PixmapSaveControls *controls)
+{
+    gdouble zoom = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->zoom));
+    gdouble s = FONT_SIZE*zoom;
+    gdouble lower = 0.5*s, upper = 5.0*s;
+    GtkSpinButton *spin = GTK_SPIN_BUTTON(controls->font_size);
+    GtkAdjustment *adj = gtk_spin_button_get_adjustment(spin);
+    g_object_set(adj, "lower", lower, "upper", upper, NULL);
+}
+
+static void
 zoom_changed(GtkAdjustment *adj,
              PixmapSaveControls *controls)
 {
@@ -2685,6 +2696,7 @@ zoom_changed(GtkAdjustment *adj,
                              zoom*controls->args->xres);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height),
                              zoom*controls->args->yres);
+    update_font_size_to_zoom(controls);
     if (controls->args->scale_font)
         gtk_spin_button_set_value(GTK_SPIN_BUTTON(controls->font_size),
                                   zoom*FONT_SIZE);
@@ -3143,6 +3155,7 @@ pixmap_save_dialog(GwyContainer *data,
                                                      _("_Font size:"), NULL,
                                                      adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls.font_size), 2);
+    update_font_size_to_zoom(&controls);
     gwy_table_hscale_set_sensitive(GTK_OBJECT(controls.font_size),
                                    !args->scale_font);
     g_signal_connect(adj, "value-changed",
