@@ -2673,11 +2673,15 @@ static void
 update_font_size_to_zoom(PixmapSaveControls *controls)
 {
     gdouble zoom = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->zoom));
-    gdouble s = FONT_SIZE*zoom;
+    gdouble s = FONT_SIZE*zoom, v;
     gdouble lower = 0.5*s, upper = 5.0*s;
     GtkSpinButton *spin = GTK_SPIN_BUTTON(controls->font_size);
     GtkAdjustment *adj = gtk_spin_button_get_adjustment(spin);
     g_object_set(adj, "lower", lower, "upper", upper, NULL);
+    // This does not clamp the value.  Fix it manually.
+    v = gtk_adjustment_get_value(adj);
+    if (v < lower || v > upper)
+        gtk_adjustment_set_value(adj, CLAMP(v, lower, upper));
 }
 
 static void
