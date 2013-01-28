@@ -2700,13 +2700,15 @@ zoom_changed(GtkAdjustment *adj,
                              zoom*controls->args->xres);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height),
                              zoom*controls->args->yres);
-    update_font_size_to_zoom(controls);
     if (controls->args->scale_font)
         gtk_spin_button_set_value(GTK_SPIN_BUTTON(controls->font_size),
                                   zoom*FONT_SIZE);
-    else if (controls->args->xytype != PIXMAP_NONE
+    else {
+        update_font_size_to_zoom(controls);
+        if (controls->args->xytype != PIXMAP_NONE
              || controls->args->ztype != PIXMAP_NONE)
-        save_update_preview(controls);
+            save_update_preview(controls);
+    }
     controls->in_update = FALSE;
 }
 
@@ -2768,6 +2770,7 @@ font_changed(GtkFontButton *button,
         adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->font_size));
         controls->in_update = TRUE;
         gtk_adjustment_set_value(adj, size);
+        update_font_size_to_zoom(controls);
         controls->in_update = FALSE;
     }
 
