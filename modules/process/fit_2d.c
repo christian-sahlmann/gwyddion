@@ -72,6 +72,7 @@ typedef struct {
     gboolean par_fix[MAX_PARAMS];
     GwyFit2DDisplayType display_type;
     GwyFit2DFunctionType function_type;
+    GwySIValueFormat *valform;
 } Fit2DArgs;
 
 typedef struct {
@@ -83,6 +84,7 @@ typedef struct {
     GtkWidget **param_res;
     GtkWidget **param_err;
     GtkWidget **param_fit;
+    GtkWidget **unit;
     GtkWidget **covar;
     GtkWidget *chisq;
     GtkWidget *menu_display;
@@ -196,6 +198,7 @@ fit_2d(GwyContainer *data, GwyRunType run)
 {
     Fit2DArgs args;
     GwyDataField *dfield;
+    GwySIUnit *siunitxy, *siunitz;
     gint id;
 
     g_return_if_fail(run & FIT_2D_RUN_MODES);
@@ -209,6 +212,15 @@ fit_2d(GwyContainer *data, GwyRunType run)
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield);
+
+
+    siunitxy = gwy_data_field_get_si_unit_xy(dfield);
+    siunitz = gwy_data_field_get_si_unit_z(dfield);
+    if (gwy_si_unit_equal(siunitxy, siunitz))
+        args.valform = gwy_data_field_get_value_format_xy(dfield,
+                              GWY_SI_UNIT_FORMAT_VFMARKUP, NULL);
+    else args.valform = NULL;
+
 
     fit_2d_dialog(&args, data, dfield, id);
     fit_2d_save_args(gwy_app_settings_get(), &args);
@@ -235,6 +247,7 @@ fit_2d_dialog(Fit2DArgs *args,
     controls.args = args;
     controls.original_field = dfield;
     controls.original_id = id;
+
     dialog = gtk_dialog_new_with_buttons(_("Fit Sphere"), NULL, 0,
                                          gwy_sgettext("verb|_Fit"),
                                          RESPONSE_FIT,
@@ -315,7 +328,7 @@ fit_2d_dialog(Fit2DArgs *args,
 
     gtk_container_add(GTK_CONTAINER(vbox), table);
 
-    table = gtk_table_new(4, 6, FALSE);
+    table = gtk_table_new(5, 6, FALSE);
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), " ");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -335,9 +348,15 @@ fit_2d_dialog(Fit2DArgs *args,
     gtk_table_attach(GTK_TABLE(table), label, 3, 4, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
-    label = gwy_label_new_header(_("Fix"));
+    label = gwy_label_new_header(_("Unit"));
     gtk_table_attach(GTK_TABLE(table), label, 4, 5, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+
+    label = gwy_label_new_header(_("Fix"));
+    gtk_table_attach(GTK_TABLE(table), label, 5, 6, 0, 1,
+                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+
+
 
     controls.param_des = g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++) {
@@ -377,6 +396,18 @@ fit_2d_dialog(Fit2DArgs *args,
                          GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
     }
 
+    controls.unit = g_new(GtkWidget*, MAX_PARAMS);
+    for (i = 0; i < MAX_PARAMS; i++) {
+        if (args->valform)
+           controls.unit[i] = gtk_label_new(g_strdup(args->valform->units));
+        else
+           controls.unit[i] = gtk_label_new(_("N.A.")); 
+        gtk_table_attach(GTK_TABLE(table), controls.unit[i],
+                         4, 5, i+1, i+2,
+                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+    }
+
+
     controls.param_fit = g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++) {
         controls.param_fit[i] = gtk_check_button_new();
@@ -385,7 +416,7 @@ fit_2d_dialog(Fit2DArgs *args,
         g_signal_connect(controls.param_fit[i], "toggled",
                          G_CALLBACK(toggle_changed_cb), &args->par_fix[i]);
         gtk_table_attach(GTK_TABLE(table), controls.param_fit[i],
-                         4, 5, i+1, i+2,
+                         5, 6, i+1, i+2,
                          GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
     }
     gtk_container_add(GTK_CONTAINER(vbox), table);
@@ -499,10 +530,17 @@ guess(Fit2DControls *controls, Fit2DArgs *args)
     gint i, j;
     gchar buffer[20];
 
+
     if (args->function_type == GWY_FIT_2D_FIT_SPHERE_UP)
         guess_sphere_up(controls->original_field, 4, args->par_init);
     else
         guess_sphere_down(controls->original_field, 4, args->par_init);
+
+
+    if (args->valform) {
+        for (i=0; i<4; i++) args->par_init[i]/=args->valform->magnitude; //convert to formatted value after guess
+    }
+
 
     gtk_label_set_text(GTK_LABEL(controls->param_des[0]), _("Radius"));
     gtk_label_set_text(GTK_LABEL(controls->param_des[1]), _("X center"));
@@ -530,9 +568,9 @@ guess(Fit2DControls *controls, Fit2DArgs *args)
 static void
 plot_inits(Fit2DControls *controls, Fit2DArgs *args)
 {
-    gint i;
+    gint i, nparams;
     gboolean fres;
-    gdouble *data;
+    gdouble *data, param[4];
     GwyNLFitFunc fitfunc;
     Fit2DDimData dimdata;
 
@@ -552,8 +590,16 @@ plot_inits(Fit2DControls *controls, Fit2DArgs *args)
     fit2d_fill_dimdata(&dimdata, controls->fit_field);
     data = gwy_data_field_get_data(controls->fit_field);
 
+    nparams = 4;
+    memcpy(param, args->par_init, nparams*sizeof(gdouble));
+
+    if (args->valform) {
+        for (i=0; i<nparams; i++)  param[i] *= args->valform->magnitude;
+    }
+
+
     for (i = 0; i < dimdata.xres*dimdata.yres; i++)
-        data[i] = fitfunc((gdouble)i, 4, args->par_init, &dimdata, &fres);
+        data[i] = fitfunc((gdouble)i, 4, param, &dimdata, &fres);
 
     controls->is_fitted = TRUE;
 
@@ -592,6 +638,11 @@ fit_2d_run(Fit2DControls *controls,
     nparams = 4;
     memcpy(param, args->par_init, nparams*sizeof(gdouble));
 
+    if (args->valform) {
+        for (i=0; i<nparams; i++)  param[i] *= args->valform->magnitude;
+    }
+
+
     if (param[0] <= 0) {
         dialog = gtk_message_dialog_new(GTK_WINDOW(controls->dialog),
                                         GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -626,9 +677,20 @@ fit_2d_run(Fit2DControls *controls,
     for (i = 0; i < 4; i++) {
         args->par_res[i] = param[i];
         args->par_err[i] = err[i];
-        g_snprintf(buffer, sizeof(buffer), "%.3g", param[i]);
+        if (!args->valform) {
+            g_snprintf(buffer, sizeof(buffer), "%.3g", param[i]);
+        }
+        else {
+            g_snprintf(buffer, sizeof(buffer), "%.3g", param[i]/args->valform->magnitude);
+        }
+
         gtk_label_set_text(GTK_LABEL(controls->param_res[i]), buffer);
-        g_snprintf(buffer, sizeof(buffer), "%.3g", err[i]);
+
+        if (!args->valform)
+            g_snprintf(buffer, sizeof(buffer), "%.3g", err[i]);
+        else
+            g_snprintf(buffer, sizeof(buffer), "%.3g", err[i]/args->valform->magnitude);
+
         gtk_label_set_text(GTK_LABEL(controls->param_err[i]), buffer);
     }
     if (controls->fitter->covar) {
@@ -1011,12 +1073,22 @@ create_results_window(Fit2DControls *controls, Fit2DArgs *args)
             attach_label(tab, _("Z center"), i, 0, 0.0);
         value = args->par_res[i];
         sigma = args->par_err[i];
-        mag = gwy_math_humanize_numbers(sigma/12, fabs(value), &precision);
-        g_string_printf(str, "%.*f", precision, value/mag);
-        attach_label(tab, str->str, i, 2, 1.0);
-        g_string_printf(str, "%.*f", precision, sigma/mag);
-        attach_label(tab, str->str, i, 4, 1.0);
-        attach_label(tab, format_magnitude(su, mag), i, 5, 0.0);
+
+        if (!args->valform) {
+            mag = gwy_math_humanize_numbers(sigma/12, fabs(value), &precision);
+            g_string_printf(str, "%.*f", precision, value/mag);
+            attach_label(tab, str->str, i, 2, 1.0);
+            g_string_printf(str, "%.*f", precision, sigma/mag);
+            attach_label(tab, str->str, i, 4, 1.0);
+            attach_label(tab, format_magnitude(su, mag), i, 5, 0.0);
+        } else {
+            g_string_printf(str, "%.3g", value/args->valform->magnitude);
+            attach_label(tab, str->str, i, 2, 1.0);
+            g_string_printf(str, "%.3g", sigma/args->valform->magnitude);
+            attach_label(tab, str->str, i, 4, 1.0);
+            g_string_printf(str, "%s", args->valform->units);
+            attach_label(tab, str->str, i, 5, 1.0);
+        }
     }
     row++;
 
@@ -1087,8 +1159,13 @@ create_fit_report(Fit2DControls *controls, Fit2DArgs *args)
         if (i == 3)
             s = gwy_strreplace(_("Z center"), "<sub>", "", (gsize)-1);
         s2 = gwy_strreplace(s, "</sub>", "", (gsize)-1);
-        g_string_append_printf(report, "%s = %g ± %g\n",
+        if (!args->valform)
+           g_string_append_printf(report, "%s = %g ± %g\n",
                                s2, args->par_res[i], args->par_err[i]);
+        else            
+            g_string_append_printf(report, "%s = (%g ± %g) %s\n",
+                               s2, args->par_res[i]/args->valform->magnitude, args->par_err[i]/args->valform->magnitude, args->valform->units);
+
         g_free(s2);
         g_free(s);
     }
