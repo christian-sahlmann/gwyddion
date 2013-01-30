@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2013-01-05 03:58+0100\n"
-"PO-Revision-Date: 2013-01-05 18:57+0100\n"
+"POT-Creation-Date: 2013-01-30 03:58+0100\n"
+"PO-Revision-Date: 2013-01-30 20:55+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -897,7 +897,7 @@ msgstr "pixels"
 #: libgwydgets/gwy3dwindow.c:1116
 #: modules/file/hdrimage.cc:2149
 #: modules/file/pixmap.c:1054
-#: modules/file/pixmap.c:3051
+#: modules/file/pixmap.c:3070
 #: modules/file/rawfile.c:398
 #: modules/process/angle_dist.c:170
 #: modules/process/brickshow.c:316
@@ -907,7 +907,7 @@ msgstr "pixels"
 #: modules/process/curvature.c:602
 #: modules/process/cwt.c:132
 #: modules/process/deposit_synth.c:359
-#: modules/process/drift.c:230
+#: modules/process/drift.c:240
 #: modules/process/dwt.c:164
 #: modules/process/dwtanisotropy.c:183
 #: modules/process/edge.c:667
@@ -1162,7 +1162,7 @@ msgstr "Graphe"
 
 #: libgwydgets/gwygraphwindow.c:158
 #: modules/file/hdrimage.cc:470
-#: modules/process/fit_2d.c:677
+#: modules/process/fit_2d.c:739
 msgid "Data"
 msgstr "Données"
 
@@ -2604,7 +2604,7 @@ msgid "Export Text"
 msgstr "Exporter au format texte"
 
 #: modules/file/asciiexport.c:272
-#: modules/file/pixmap.c:3153
+#: modules/file/pixmap.c:3173
 #: modules/file/rawfile.c:719
 #: modules/file/rawxyz.c:669
 #: modules/process/extend.c:262
@@ -3217,7 +3217,7 @@ msgstr "Dimensions physiques"
 
 #: modules/file/hdrimage.cc:2240
 #: modules/file/pixmap.c:1136
-#: modules/file/pixmap.c:3096
+#: modules/file/pixmap.c:3115
 #: modules/file/rawfile.c:631
 #: modules/process/crosscor.c:196
 #: modules/process/deposit_synth.c:457
@@ -3698,11 +3698,11 @@ msgstr "Spectres I-V"
 msgid "I-Z spectra"
 msgstr "Spectres I-Z"
 
-#: modules/file/nanomagnetics.c:468
+#: modules/file/nanomagnetics.c:359
 msgid "Imports Nanomagnetics' NMI file format version 3"
 msgstr "Importe les fichiers Nanomagnetics NMI version 3"
 
-#: modules/file/nanomagnetics.c:481
+#: modules/file/nanomagnetics.c:372
 msgid "Nanomagnetics File (.nmi)"
 msgstr "Nanomagnetics (.nmi)"
 
@@ -4283,24 +4283,24 @@ msgstr "L'image est trop grande pour être enregistrée au format TARGA"
 msgid "Data must be displayed in a window for pixmap export."
 msgstr "Les données doivent affichées dans une fenêtre pour l'export vers un format image."
 
-#: modules/file/pixmap.c:2966
+#: modules/file/pixmap.c:2985
 msgid "Change Inset Color"
 msgstr "Changer l'échelle de couleurs"
 
-#: modules/file/pixmap.c:3048
+#: modules/file/pixmap.c:3067
 #, c-format
 msgid "Export %s"
 msgstr "Exporter %s"
 
-#: modules/file/pixmap.c:3078
+#: modules/file/pixmap.c:3097
 msgid "Scaling"
 msgstr "Échelle"
 
-#: modules/file/pixmap.c:3087
+#: modules/file/pixmap.c:3106
 msgid "_Zoom:"
 msgstr "_Zoom :"
 
-#: modules/file/pixmap.c:3105
+#: modules/file/pixmap.c:3124
 #: modules/process/col_synth.c:399
 #: modules/process/grain_mark.c:308
 #: modules/process/grain_rem_threshold.c:282
@@ -4312,102 +4312,102 @@ msgstr "_Zoom :"
 msgid "_Height:"
 msgstr "_Hauteur :"
 
-#: modules/file/pixmap.c:3113
+#: modules/file/pixmap.c:3132
 msgid "Font:"
 msgstr "Police :"
 
-#: modules/file/pixmap.c:3128
+#: modules/file/pixmap.c:3147
 msgid "Scale text _proportionally"
 msgstr "Mettre le texte _proportionnellement à l'échelle"
 
-#: modules/file/pixmap.c:3143
+#: modules/file/pixmap.c:3162
 msgid "_Font size:"
 msgstr "Taille de police :"
 
-#: modules/file/pixmap.c:3157
+#: modules/file/pixmap.c:3177
 msgid "Draw _mask"
 msgstr "Dessiner le _masque"
 
-#: modules/file/pixmap.c:3166
+#: modules/file/pixmap.c:3186
 msgid "Draw _selection"
 msgstr "Dessiner la _sélection"
 
-#: modules/file/pixmap.c:3182
+#: modules/file/pixmap.c:3202
 msgid "Grayscale Mode"
 msgstr "Mode niveaux de gris"
 
-#: modules/file/pixmap.c:3186
+#: modules/file/pixmap.c:3206
 msgid "Export as 1_6 bit grayscale"
 msgstr "Exporter en niveaux de gris 1_6 bits"
 
-#: modules/file/pixmap.c:3212
+#: modules/file/pixmap.c:3232
 msgid "Lateral Scale"
 msgstr "Échelle latérale"
 
-#: modules/file/pixmap.c:3219
-#: modules/file/pixmap.c:3334
+#: modules/file/pixmap.c:3239
+#: modules/file/pixmap.c:3354
 msgid "ruler|_None"
 msgstr "_Aucune"
 
-#: modules/file/pixmap.c:3220
+#: modules/file/pixmap.c:3240
 msgid "_Rulers"
 msgstr "G_raduations"
 
-#: modules/file/pixmap.c:3221
+#: modules/file/pixmap.c:3241
 msgid "_Inset scale bar"
 msgstr "Échelle"
 
-#: modules/file/pixmap.c:3226
+#: modules/file/pixmap.c:3246
 msgid "Color:"
 msgstr "Couleur :"
 
-#: modules/file/pixmap.c:3242
+#: modules/file/pixmap.c:3262
 #: modules/process/immerse.c:322
 msgid "Position:"
 msgstr "Position :"
 
-#: modules/file/pixmap.c:3247
+#: modules/file/pixmap.c:3267
 msgid "left"
 msgstr "gauche"
 
-#: modules/file/pixmap.c:3251
+#: modules/file/pixmap.c:3271
 msgid "center"
 msgstr "centre"
 
-#: modules/file/pixmap.c:3255
+#: modules/file/pixmap.c:3275
 msgid "right"
 msgstr "droite"
 
-#: modules/file/pixmap.c:3260
+#: modules/file/pixmap.c:3280
 msgid "top"
 msgstr "haut"
 
-#: modules/file/pixmap.c:3272
+#: modules/file/pixmap.c:3292
 msgid "bottom"
 msgstr "bas"
 
-#: modules/file/pixmap.c:3283
+#: modules/file/pixmap.c:3303
 #: modules/process/lno_synth.c:1065
 msgid "_Length:"
 msgstr "_Longueur :"
 
-#: modules/file/pixmap.c:3299
+#: modules/file/pixmap.c:3319
 msgid "_Auto"
 msgstr "_Auto"
 
-#: modules/file/pixmap.c:3307
+#: modules/file/pixmap.c:3327
 msgid "Draw _ticks"
 msgstr "Afficher les gradua_tions"
 
-#: modules/file/pixmap.c:3317
+#: modules/file/pixmap.c:3337
 msgid "Draw _label"
 msgstr "Dessiner les _labels"
 
-#: modules/file/pixmap.c:3327
+#: modules/file/pixmap.c:3347
 msgid "Value Scale"
 msgstr "Valeur d'échelle"
 
-#: modules/file/pixmap.c:3335
+#: modules/file/pixmap.c:3355
 msgid "_False color ruler"
 msgstr "Échelle de couleurs"
 
@@ -4578,7 +4578,7 @@ msgstr "Préréglages"
 #: modules/process/calcoefs_view.c:332
 #: modules/process/convolution_filter.c:243
 #: modules/process/deposit_synth.c:682
-#: modules/process/drift.c:227
+#: modules/process/drift.c:237
 #: modules/process/edge.c:664
 #: modules/process/fft_filter_1d.c:197
 #: modules/process/grain_edge.c:214
@@ -4902,7 +4902,7 @@ msgid "_Value units:"
 msgstr "Unités de valeur :"
 
 #: modules/file/rawxyz.c:673
-#: modules/process/drift.c:290
+#: modules/process/drift.c:300
 #: modules/process/dwt.c:203
 #: modules/process/dwtanisotropy.c:200
 #: modules/process/fft_filter_1d.c:328
@@ -5490,7 +5490,7 @@ msgstr "Ajuster le graphe"
 #: modules/graph/graph_cd.c:213
 #: modules/graph/graph_fdfit.c:252
 #: modules/graph/graph_fit.c:257
-#: modules/process/fit_2d.c:239
+#: modules/process/fit_2d.c:252
 msgid "verb|_Fit"
 msgstr "Ajuster"
 
@@ -5517,7 +5517,7 @@ msgstr "Paramètre"
 #: modules/graph/graph_cd.c:280
 #: modules/graph/graph_fdfit.c:335
 #: modules/graph/graph_fit.c:335
-#: modules/process/fit_2d.c:334
+#: modules/process/fit_2d.c:347
 msgid "Error"
 msgstr "Erreur"
 
@@ -5542,7 +5542,7 @@ msgstr "_Dessiner un cercle entier"
 #: modules/graph/graph_cd.c:373
 #: modules/graph/graph_fdfit.c:482
 #: modules/graph/graph_fit.c:492
-#: modules/process/fit_2d.c:931
+#: modules/process/fit_2d.c:993
 msgid "Save Fit Report"
 msgstr "Sauver le rapport d'ajustement"
 
@@ -5562,6 +5562,7 @@ msgstr "Il faut sélectionner plus de points que de paramètres d'ajustement"
 #: modules/graph/graph_cd.c:691
 #: modules/graph/graph_fdfit.c:779
 #: modules/graph/graph_fit.c:803
+#: modules/process/fit_2d.c:404
 #: modules/tools/grainmeasure.c:215
 #: modules/tools/readvalue.c:576
 #: modules/tools/readvalue.c:577
@@ -5743,37 +5744,37 @@ msgstr "Ajuster la courbe FD"
 
 #: modules/graph/graph_fdfit.c:256
 #: modules/graph/graph_fit.c:261
-#: modules/process/fit_2d.c:241
+#: modules/process/fit_2d.c:254
 msgid "verb|_Estimate"
 msgstr "_Estimer"
 
 #: modules/graph/graph_fdfit.c:258
 #: modules/graph/graph_fit.c:263
-#: modules/process/fit_2d.c:243
+#: modules/process/fit_2d.c:256
 msgid "_Plot Inits"
 msgstr "Initialiser"
 
 #: modules/graph/graph_fdfit.c:331
 #: modules/graph/graph_fit.c:331
-#: modules/process/fit_2d.c:338
+#: modules/process/fit_2d.c:355
 msgid "Fix"
 msgstr "Fixe"
 
 #: modules/graph/graph_fdfit.c:337
 #: modules/graph/graph_fit.c:337
-#: modules/process/fit_2d.c:325
+#: modules/process/fit_2d.c:338
 msgid "Initial"
 msgstr "Initial"
 
 #: modules/graph/graph_fdfit.c:348
 #: modules/graph/graph_fit.c:348
-#: modules/process/fit_2d.c:410
+#: modules/process/fit_2d.c:441
 msgid "χ<sup>2</sup> result:"
 msgstr "Résultat χ<sup>2</sup> :"
 
 #: modules/graph/graph_fdfit.c:364
 #: modules/graph/graph_fit.c:364
-#: modules/process/fit_2d.c:393
+#: modules/process/fit_2d.c:424
 msgid "Correlation Matrix"
 msgstr "Matrice de corrélation"
 
@@ -7202,55 +7203,55 @@ msgstr "_Remplacer le canal courant"
 msgid "_Start from the current channel"
 msgstr "Ajouter à partir du canal courant"
 
-#: modules/process/drift.c:155
+#: modules/process/drift.c:165
 msgid "Evaluates and/or correct thermal drift in fast scan axis."
 msgstr "Évalue et/ou corrige la dérive thermique dans l'axe rapide de scan"
 
-#: modules/process/drift.c:169
+#: modules/process/drift.c:179
 msgid "/_Correct Data/Compensate _Drift..."
 msgstr "/_Correction des données/Compenser la _dérive..."
 
-#: modules/process/drift.c:173
+#: modules/process/drift.c:183
 msgid "Evaluate/correct thermal drift in fast scan axis"
 msgstr "Évaluer / corriger la dérive thermique dans l'axe rapide de scan"
 
-#: modules/process/drift.c:225
+#: modules/process/drift.c:235
 msgid "Compensate Drift"
 msgstr "Compenser la dérive"
 
-#: modules/process/drift.c:280
+#: modules/process/drift.c:290
 msgid "_Search range:"
 msgstr "Plage de recherche :"
 
-#: modules/process/drift.c:280
+#: modules/process/drift.c:290
 msgid "rows"
 msgstr "lignes"
 
-#: modules/process/drift.c:297
+#: modules/process/drift.c:307
 msgid "Plot drift _graph"
 msgstr "Afficher le graphe de dérive"
 
-#: modules/process/drift.c:307
+#: modules/process/drift.c:317
 msgid "Correct _data"
 msgstr "Corriger les _données"
 
-#: modules/process/drift.c:317
+#: modules/process/drift.c:327
 msgid "_Exclude linear skew"
 msgstr "_Exclure l'asymétrie linéaire"
 
-#: modules/process/drift.c:327
+#: modules/process/drift.c:337
 msgid "Preview type"
 msgstr "Type de prévisualisation"
 
-#: modules/process/drift.c:336
+#: modules/process/drift.c:346
 msgid "Correc_ted data"
 msgstr "Données corrigées"
 
-#: modules/process/drift.c:337
+#: modules/process/drift.c:347
 msgid "Drift _lines"
 msgstr "Lignes de dérive"
 
-#: modules/process/drift.c:348
+#: modules/process/drift.c:358
 #: modules/process/facet_analysis.c:410
 #: modules/process/grain_edge.c:278
 #: modules/process/grain_mark.c:369
@@ -7260,19 +7261,27 @@ msgstr "Lignes de dérive"
 msgid "_Mask color:"
 msgstr "Couleur de _masque :"
 
-#: modules/process/drift.c:434
+#: modules/process/drift.c:365
+msgid "Distribute"
+msgstr "Distribuer"
+
+#: modules/process/drift.c:374
+msgid "Replace"
+msgstr "Remplacer"
+
+#: modules/process/drift.c:552
 msgid "Drift-corrected"
 msgstr "Dérive corrigée"
 
-#: modules/process/drift.c:468
+#: modules/process/drift.c:595
 msgid "Drift"
 msgstr "Dérive"
 
-#: modules/process/drift.c:469
+#: modules/process/drift.c:596
 msgid "drift"
 msgstr "dérive"
 
-#: modules/process/drift.c:475
+#: modules/process/drift.c:602
 msgid "x-axis drift"
 msgstr "dérive selon l'axe x"
 
@@ -7734,7 +7743,7 @@ msgid "Filtered Data"
 msgstr "Données filtrées"
 
 #: modules/process/fft_filter_2d.c:315
-#: modules/process/fit_2d.c:679
+#: modules/process/fit_2d.c:741
 #: modules/process/neural.c:558
 msgid "Difference"
 msgstr "Différence"
@@ -7941,111 +7950,116 @@ msgstr "Activer le multiplicateur _puissance"
 msgid "Po_wer:"
 msgstr "Puissance :"
 
-#: modules/process/fit_2d.c:171
+#: modules/process/fit_2d.c:173
 msgid "2D fitting"
 msgstr "Ajustement 2D"
 
-#: modules/process/fit_2d.c:185
+#: modules/process/fit_2d.c:187
 msgid "/_Level/_Fit Sphere..."
 msgstr "/Niveau/Ajuster la sphère..."
 
-#: modules/process/fit_2d.c:189
+#: modules/process/fit_2d.c:191
 msgid "Fit by sphere"
 msgstr "Ajuster par une sphère."
 
-#: modules/process/fit_2d.c:238
+#: modules/process/fit_2d.c:251
 msgid "Fit Sphere"
 msgstr "Sphère d'ajustement"
 
-#: modules/process/fit_2d.c:284
+#: modules/process/fit_2d.c:297
 msgid "Fitting Parameters"
 msgstr "Paramètres d'ajustement"
 
-#: modules/process/fit_2d.c:289
+#: modules/process/fit_2d.c:302
 msgid "Function type:"
 msgstr "Type de fonction :"
 
-#: modules/process/fit_2d.c:302
+#: modules/process/fit_2d.c:315
 msgid "Preview type:"
 msgstr "Type de prévisualisation :"
 
-#: modules/process/fit_2d.c:329
+#: modules/process/fit_2d.c:342
 #: modules/process/fractal.c:282
 #: modules/process/mark_with.c:258
 #: modules/process/neural.c:557
 msgid "Result"
 msgstr "Résultat"
 
-#: modules/process/fit_2d.c:507
-#: modules/process/fit_2d.c:1005
-#: modules/process/fit_2d.c:1082
+#: modules/process/fit_2d.c:351
+#, fuzzy
+msgid "Unit"
+msgstr "Unités"
+
+#: modules/process/fit_2d.c:545
+#: modules/process/fit_2d.c:1067
+#: modules/process/fit_2d.c:1154
 msgid "Radius"
 msgstr "Rayon"
 
-#: modules/process/fit_2d.c:508
-#: modules/process/fit_2d.c:1007
-#: modules/process/fit_2d.c:1084
+#: modules/process/fit_2d.c:546
+#: modules/process/fit_2d.c:1069
+#: modules/process/fit_2d.c:1156
 msgid "X center"
 msgstr "Centre X"
 
-#: modules/process/fit_2d.c:509
-#: modules/process/fit_2d.c:1009
-#: modules/process/fit_2d.c:1086
+#: modules/process/fit_2d.c:547
+#: modules/process/fit_2d.c:1071
+#: modules/process/fit_2d.c:1158
 msgid "Y center"
 msgstr "Centre Y"
 
-#: modules/process/fit_2d.c:510
-#: modules/process/fit_2d.c:1011
-#: modules/process/fit_2d.c:1088
+#: modules/process/fit_2d.c:548
+#: modules/process/fit_2d.c:1073
+#: modules/process/fit_2d.c:1160
 msgid "Z center"
 msgstr "Centre Z"
 
-#: modules/process/fit_2d.c:600
+#: modules/process/fit_2d.c:651
 #, c-format
 msgid "%s: Radius cannot be null or negative."
 msgstr "%s : le rayon ne peut être nul ou négatif."
 
-#: modules/process/fit_2d.c:668
+#: modules/process/fit_2d.c:730
 msgid "Fitted sphere"
 msgstr "Sphère d'ajustement"
 
-#: modules/process/fit_2d.c:678
+#: modules/process/fit_2d.c:740
 msgid "Fit result"
 msgstr "Résultat de l'ajustement"
 
-#: modules/process/fit_2d.c:691
+#: modules/process/fit_2d.c:753
 msgid "Sphere (up)"
 msgstr "Sphère (haut)"
 
-#: modules/process/fit_2d.c:692
+#: modules/process/fit_2d.c:754
 msgid "Sphere (down)"
 msgstr "Sphère (bas)"
 
-#: modules/process/fit_2d.c:967
+#: modules/process/fit_2d.c:1029
 msgid "Fit results"
 msgstr "Résultats de l'ajustement"
 
-#: modules/process/fit_2d.c:979
+#: modules/process/fit_2d.c:1041
 msgid "<b>Data:</b>"
 msgstr "<b>Données :</b>"
 
-#: modules/process/fit_2d.c:987
+#: modules/process/fit_2d.c:1049
 msgid "<b>Function:</b>"
 msgstr "<b>Fonction :</b>"
 
-#: modules/process/fit_2d.c:994
+#: modules/process/fit_2d.c:1056
 msgid "<b>Results</b>"
 msgstr "<b>Resultats</b>"
 
-#: modules/process/fit_2d.c:1023
+#: modules/process/fit_2d.c:1095
 msgid "Residual sum:"
 msgstr "Somme résiduelle :"
 
-#: modules/process/fit_2d.c:1031
+#: modules/process/fit_2d.c:1103
 msgid "<b>Correlation Matrix</b>"
 msgstr "<b>Matrice de corrélation</b>"
 
-#: modules/process/fit_2d.c:1066
+#: modules/process/fit_2d.c:1138
 msgid ""
 "\n"
 "===== Fit Results =====\n"
@@ -8053,20 +8067,20 @@ msgstr ""
 "\n"
 "===== Resultats de l'ajustement =====\n"
 
-#: modules/process/fit_2d.c:1070
+#: modules/process/fit_2d.c:1142
 #, c-format
 msgid "Data: %s\n"
 msgstr "Données : %s\n"
 
-#: modules/process/fit_2d.c:1073
+#: modules/process/fit_2d.c:1145
 msgid "Fitted function: sphere (orientation up)\n"
 msgstr "Fonction ajustée : sphère (orientée vers le haut)\n"
 
-#: modules/process/fit_2d.c:1075
+#: modules/process/fit_2d.c:1147
 msgid "Fitted function: sphere (orientation down)\n"
 msgstr "Fonction ajustée : sphère (orientée vers le bas)\n"
 
-#: modules/process/fit_2d.c:1077
+#: modules/process/fit_2d.c:1149
 msgid ""
 "\n"
 "Results\n"
@@ -8074,7 +8088,7 @@ msgstr ""
 "\n"
 "Résultats\n"
 
-#: modules/process/fit_2d.c:1095
+#: modules/process/fit_2d.c:1172
 #, c-format
 msgid ""
 "\n"
@@ -8083,7 +8097,7 @@ msgstr ""
 "\n"
 "Somme résiduelle :   %g\n"
 
-#: modules/process/fit_2d.c:1097
+#: modules/process/fit_2d.c:1174
 msgid ""
 "\n"
 "Correlation matrix\n"
