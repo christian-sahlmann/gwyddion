@@ -121,6 +121,9 @@ typedef struct {
     gdouble xangle;
     gdouble yangle;
     gdouble zangle;
+    gdouble bwidth;
+    gdouble bheight;
+    gdouble bdepth;
     gint nps;
 } BrickshowControls;
 
@@ -1025,7 +1028,6 @@ brickshow_load_data(BrickshowControls *controls,
                 }
             }
 
-            //printf("brick loaded\n");
             //g_free(text); FIXME: something is wrong - this leads to segfault
 
             gtk_widget_destroy(dialog);
@@ -1593,6 +1595,7 @@ static void
 p3d_set_axes(BrickshowControls *controls)
 {
     gint i = 0;
+    gint max;
 
     if (controls->px==NULL || controls->nps<21) 
        controls->px = (gdouble *)g_malloc(21*sizeof(gdouble));
@@ -1602,6 +1605,16 @@ p3d_set_axes(BrickshowControls *controls)
        controls->pz = (gdouble *)g_malloc(21*sizeof(gdouble));
     if (controls->ps==NULL || controls->nps<21) 
        controls->ps = (gdouble *)g_malloc(21*sizeof(gdouble));
+
+    controls->bwidth = controls->bheight = controls->bdepth = 1;
+
+    if (controls->brick) {
+       max = MAX(MAX(gwy_brick_get_xres(controls->brick), gwy_brick_get_yres(controls->brick)), gwy_brick_get_zres(controls->brick));
+
+       controls->bwidth = (gdouble)gwy_brick_get_xres(controls->brick)/(gdouble)max;
+       controls->bheight = (gdouble)gwy_brick_get_yres(controls->brick)/(gdouble)max;
+       controls->bdepth = (gdouble)gwy_brick_get_zres(controls->brick)/(gdouble)max;
+    }
 
     controls->px[i] = 1; controls->py[i] = 0; controls->pz[i] = 0; controls->ps[i] = 0; i++;
     controls->px[i] = 0; controls->py[i] = 1; controls->pz[i] = 0; controls->ps[i] = 0; i++;
@@ -1624,6 +1637,12 @@ p3d_set_axes(BrickshowControls *controls)
     controls->px[i] = 1; controls->py[i] = 1; controls->pz[i] = -1; controls->ps[i] = 1; i++;
     controls->px[i] = 1; controls->py[i] = 1; controls->pz[i] = 1; controls->ps[i] = 0; i++;
     controls->px[i] = 1; controls->py[i] = -1; controls->pz[i] = 1; controls->ps[i] = 1; 
+
+    for (i=0; i<20; i++) {
+        controls->px[i] *= controls->bwidth;
+        controls->py[i] *= controls->bheight;
+        controls->pz[i] *= controls->bdepth;
+    }
 
     controls->nps = 20;
 
@@ -1674,6 +1693,11 @@ gint simplify(gdouble *px, gdouble *py, gdouble *pz, gdouble *ps, gint nps)
 static void     
 p3d_build(BrickshowControls *controls, G_GNUC_UNUSED BrickshowArgs *args)
 {
+    if (controls->brick == NULL) {
+        printf("No brick\n");
+        return;
+    }
+
     p3d_set_axes(controls);
     p3d_add_wireframe(controls);
 
@@ -1684,6 +1708,12 @@ static void
 p3d_prepare_wdata(BrickshowControls *controls, BrickshowArgs *args)
 {
     gint i;
+
+    if (controls->brick == NULL) {
+        printf("No brick\n");
+        return;
+    }
+
 
     for (i=0; i<3; i++) {
         controls->wpx[i] = controls->px[i];
@@ -1697,6 +1727,98 @@ p3d_prepare_wdata(BrickshowControls *controls, BrickshowArgs *args)
         controls->wpy[i] = controls->py[i];
         controls->wpz[i] = controls->pz[i]*args->zscale/100.0;
     }
+
+}
+
+static gboolean
+gothere(BrickshowControls *controls, gint *actual_nps, gdouble *data, gdouble *vdata, gint xres, gint yres, gint zres, gint col, gint row, gint dir, gint tval, gboolean *move, gdouble threshold)
+{
+    if (vdata[col+xres*row] == 1) return FALSE;
+
+    if (row < 1 || row>=(yres-1)) return FALSE;
+    if (col < 1 || col>=(xres-1)) return FALSE;
+
+
+    if (dir == 0) /*y const*/ {
+        if (data[col + yres*row]>threshold &&
+                                     (data[col-1 + yres*row]<threshold || data[col + yres*(row-1)]<threshold 
+                                      || data[col+1 + yres*row]<threshold || data[col + yres*(row+1)]<threshold
+                                      || data[col+1 + yres*(row+1)]<threshold || data[col-1 + yres*(row-1)]<threshold
+                                      || data[col+1 + yres*(row-1)]<threshold || data[col-1 + yres*(row+1)]<threshold)) return TRUE; 
+
+    } else if (dir == 1) /*y const*/ {
+        if (data[col + xres*row]>threshold &&
+                                     (data[col-1 + xres*row]<threshold || data[col + xres*(row-1)]<threshold 
+                                      || data[col+1 + xres*row]<threshold || data[col + xres*(row+1)]<threshold
+                                      || data[col+1 + xres*(row+1)]<threshold || data[col-1 + xres*(row-1)]<threshold
+                                      || data[col+1 + xres*(row-1)]<threshold || data[col-1 + xres*(row+1)]<threshold)) return TRUE; 
+    } else {
+        if (data[col + xres*row]>threshold &&
+                                     (data[col-1 + xres*row]<threshold || data[col + xres*(row-1)]<threshold 
+                                      || data[col+1 + xres*row]<threshold || data[col + xres*(row+1)]<threshold
+                                      || data[col+1 + xres*(row+1)]<threshold || data[col-1 + xres*(row-1)]<threshold
+                                      || data[col+1 + xres*(row-1)]<threshold || data[col-1 + xres*(row+1)]<threshold)) return TRUE; 
+     }
+
+    vdata[col+xres*row] = 1;
+    return FALSE;
+ 
+}
+
+static void
+visitme(BrickshowControls *controls, gint *actual_nps, gdouble *data, gdouble *vdata, gint xres, gint yres, gint zres, gint col, gint row, gint dir, gint tval, gboolean *move, gdouble threshold)
+{
+    /*detect ad add a segment of necessary*/
+    //printf("pos %d %d ", col, row);
+
+    /*increase allocation if necessary*/
+    if (((*actual_nps)-controls->nps)<1000) {
+        (*actual_nps) += 1000;
+        controls->px = g_realloc(controls->px, ((*actual_nps)*sizeof(gdouble)));
+        controls->py = g_realloc(controls->py, ((*actual_nps)*sizeof(gdouble)));
+        controls->pz = g_realloc(controls->pz, ((*actual_nps)*sizeof(gdouble)));
+        controls->ps = g_realloc(controls->ps, ((*actual_nps)*sizeof(gdouble)));
+    }
+
+    if (dir == 0) /*y const*/ {
+        controls->px[controls->nps] = 2*controls->bwidth*(gdouble)tval/(gdouble)xres - controls->bwidth;
+        controls->py[controls->nps] = 2*controls->bheight*(gdouble)col/(gdouble)yres - controls->bheight;
+        controls->pz[controls->nps] = 2*controls->bdepth*(gdouble)row/(gdouble)zres - controls->bdepth;
+    } else if (dir==1) /*y const*/ {
+        controls->px[controls->nps] = 2*controls->bwidth*(gdouble)col/(gdouble)xres - controls->bwidth;
+        controls->py[controls->nps] = 2*controls->bheight*(gdouble)tval/(gdouble)yres - controls->bheight;
+        controls->pz[controls->nps] = 2*controls->bdepth*(gdouble)row/(gdouble)zres - controls->bdepth;
+    } else {
+        controls->px[controls->nps] = 2*controls->bwidth*(gdouble)col/(gdouble)xres - controls->bwidth;
+        controls->py[controls->nps] = 2*controls->bheight*(gdouble)row/(gdouble)yres - controls->bheight;
+        controls->pz[controls->nps] = 2*controls->bdepth*(gdouble)tval/(gdouble)zres - controls->bdepth;
+    }
+    if (*move) {
+        controls->ps[controls->nps] = 0; 
+        *move = 0;
+    }
+    else controls->ps[controls->nps] = 1;
+
+    controls->nps += 1;
+    vdata[col+xres*row] = 1;
+
+    /*go to neighbor positions*/
+    if (gothere(controls, actual_nps, data, vdata, xres, yres, zres, col+1, row, dir, tval, move, threshold))  
+        visitme(controls, actual_nps, data, vdata, xres, yres, zres, col+1, row, dir, tval, move, threshold);
+    else if (gothere(controls, actual_nps, data, vdata, xres, yres, zres, col-1, row, dir, tval, move, threshold))
+             visitme(controls, actual_nps, data, vdata, xres, yres, zres, col-1, row, dir, tval, move, threshold);
+    else if (gothere(controls, actual_nps, data, vdata, xres, yres, zres, col, row+1, dir, tval, move, threshold))
+             visitme(controls, actual_nps, data, vdata, xres, yres, zres, col, row+1, dir, tval, move, threshold);
+    else if (gothere(controls, actual_nps, data, vdata, xres, yres, zres, col, row-1, dir, tval, move, threshold))
+             visitme(controls, actual_nps, data, vdata, xres, yres, zres, col, row-1, dir, tval, move, threshold);
+    else if (gothere(controls, actual_nps, data, vdata, xres, yres, zres, col+1, row+1, dir, tval, move, threshold))
+             visitme(controls, actual_nps, data, vdata, xres, yres, zres, col+1, row+1, dir, tval, move, threshold);
+    else if (gothere(controls, actual_nps, data, vdata, xres, yres, zres, col-1, row-1, dir, tval, move, threshold))
+             visitme(controls, actual_nps, data, vdata, xres, yres, zres, col-1, row-1, dir, tval, move, threshold);
+    else if (gothere(controls, actual_nps, data, vdata, xres, yres, zres, col+1, row-1, dir, tval, move, threshold))
+             visitme(controls, actual_nps, data, vdata, xres, yres, zres, col+1, row-1, dir, tval, move, threshold);
+    else if (gothere(controls, actual_nps, data, vdata, xres, yres, zres, col-1, row+1, dir, tval, move, threshold))
+             visitme(controls, actual_nps, data, vdata, xres, yres, zres, col-1, row+1, dir, tval, move, threshold);
 
 }
 
@@ -1723,6 +1845,7 @@ p3d_add_wireframe(BrickshowControls *controls)
 
     visited = gwy_data_field_new(yres, zres, yres, zres, FALSE);
 
+    printf("brick min %g, max %g\n", gwy_brick_get_min(controls->brick), gwy_brick_get_max(controls->brick));
     threshold = (gwy_brick_get_min(controls->brick) + gwy_brick_get_max(controls->brick))/2;
 
     for (i=0; i<xres; i+=spacing)
@@ -1742,31 +1865,9 @@ p3d_add_wireframe(BrickshowControls *controls)
         {
             for (row=1; row<zres; row++)
             {
-                if (data[col + yres*row]>threshold && 
-                    (data[col-1 + yres*row]<threshold || data[col + yres*(row-1)]<threshold))
-                {
-                    /*increase allocation if necessary*/
-                    if (controls->nps - actual_nps<1000) {
-                        actual_nps += 1000;
-                        controls->px = g_realloc(controls->px, (actual_nps*sizeof(gdouble)));
-                        controls->py = g_realloc(controls->py, (actual_nps*sizeof(gdouble)));
-                        controls->pz = g_realloc(controls->pz, (actual_nps*sizeof(gdouble)));
-                        controls->ps = g_realloc(controls->ps, (actual_nps*sizeof(gdouble)));
-                    }
- 
-                    controls->px[controls->nps] = 2*(gdouble)i/(gdouble)xres - 1;
-                    controls->py[controls->nps] = 2*(gdouble)col/(gdouble)yres - 1;
-                    controls->pz[controls->nps] = 2*(gdouble)row/(gdouble)zres - 1;
-                    if (move) {
-                        controls->ps[controls->nps] = 0; 
-                        move = 0;
-                    }
-                    else controls->ps[controls->nps] = 1;
-
-                    controls->nps += 1;
-
-
-               }
+                move = 1;
+                if (gothere(controls, &actual_nps, data, vdata, xres, yres, zres, col, row, 0, i, &move, threshold))
+                    visitme(controls, &actual_nps, data, vdata, xres, yres, zres, col, row, 0, i, &move, threshold);
             }
         }
     }
@@ -1790,31 +1891,35 @@ p3d_add_wireframe(BrickshowControls *controls)
         {
             for (row=1; row<zres; row++)
             {
-                if (data[col + xres*row]>threshold && 
-                    (data[col-1 + xres*row]<threshold || data[col + xres*(row-1)]<threshold))
-                {
-                    /*increase allocation if necessary*/
-                    if (controls->nps - actual_nps<1000) {
-                        actual_nps += 1000;
-                        controls->px = g_realloc(controls->px, (actual_nps*sizeof(gdouble)));
-                        controls->py = g_realloc(controls->py, (actual_nps*sizeof(gdouble)));
-                        controls->pz = g_realloc(controls->pz, (actual_nps*sizeof(gdouble)));
-                        controls->ps = g_realloc(controls->ps, (actual_nps*sizeof(gdouble)));
-                    }
- 
-                    controls->px[controls->nps] = 2*(gdouble)col/(gdouble)xres - 1;
-                    controls->py[controls->nps] = 2*(gdouble)i/(gdouble)yres - 1;
-                    controls->pz[controls->nps] = 2*(gdouble)row/(gdouble)zres - 1;
-                    if (move) {
-                        controls->ps[controls->nps] = 0; 
-                        move = 0;
-                    }
-                    else controls->ps[controls->nps] = 1;
+                    move = 1;
+                    if (gothere(controls, &actual_nps, data, vdata, xres, yres, zres, col, row, 1, i, &move, threshold))
+                        visitme(controls, &actual_nps, data, vdata, xres, yres, zres, col, row, 1, i, &move, threshold);                
+            }
+        }
+    }
 
-                    controls->nps += 1;
+    gwy_data_field_resample(visited, xres, yres, GWY_INTERPOLATION_NONE);
 
+    for (i=0; i<yres; i+=spacing)
+    {
+        gwy_brick_extract_plane(controls->brick, cut, 0, 0, i, xres, yres, -1, FALSE);
+        data = gwy_data_field_get_data(cut);
 
-               }
+        gwy_data_field_clear(visited);
+        vdata = gwy_data_field_get_data(visited);
+
+        gwy_data_field_threshold(cut, threshold, 0, 1);
+
+        move = 1;
+
+        /*here comes the algorithm*/
+        for (col=1; col<xres; col++)
+        {
+            for (row=1; row<yres; row++)
+            {
+                    move = 1;
+                    if (gothere(controls, &actual_nps, data, vdata, xres, yres, zres, col, row, 2, i, &move, threshold))
+                        visitme(controls, &actual_nps, data, vdata, xres, yres, zres, col, row, 2, i, &move, threshold);                
             }
         }
     }
