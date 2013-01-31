@@ -77,6 +77,7 @@ typedef struct {
     gboolean perspective;
     gdouble size;
     gdouble zscale;
+    gdouble threshold;
 } BrickshowArgs;
 
 typedef struct {
@@ -98,6 +99,7 @@ typedef struct {
     GtkWidget *drawarea;
     GtkWidget *graph;
     GtkWidget *perspective;
+    GtkObject *threshold;
     GwyGraphModel *gmodel;
     GwyContainer *mydata;
     GwyContainer *data;
@@ -165,6 +167,7 @@ static void     p3d_build                           (BrickshowControls *controls
 static void     p3d_prepare_wdata                   (BrickshowControls *controls,
                                                      BrickshowArgs *args);
 static void     brickshow_zscale_cb                (BrickshowControls *controls);
+static void     brickshow_threshold_cb                (BrickshowControls *controls);
 //static gboolean p3d_on_draw_event                  (GtkWidget *widget, 
 //                                                   cairo_t *cr, 
 //                                                   BrickshowControls *controls);
@@ -199,6 +202,7 @@ static const BrickshowArgs brickshow_defaults = {
     TRUE,
     50,
     100,
+    0.5,
 };
 
 static GwyModuleInfo module_info = {
@@ -554,6 +558,14 @@ brickshow_dialog(BrickshowArgs *args,
                              G_CALLBACK(brickshow_invalidate), &controls);
     row++;
 
+    controls.threshold = gtk_adjustment_new(args->threshold,
+                                            1, 100, 1, 10, 0);
+    gwy_table_attach_hscale(table, row++, _("Wireframe threshold"), "%",
+                            controls.threshold, 0);
+    g_signal_connect_swapped(controls.threshold, "value-changed",
+                             G_CALLBACK(brickshow_threshold_cb), &controls);
+    row++;
+
     controls.zscale = gtk_adjustment_new(args->zscale,
                                             1, 100, 1, 10, 0);
     gwy_table_attach_hscale(table, row++, _("Z scale"), "%",
@@ -561,6 +573,7 @@ brickshow_dialog(BrickshowArgs *args,
     g_signal_connect_swapped(controls.zscale, "value-changed",
                              G_CALLBACK(brickshow_zscale_cb), &controls);
     row++;
+
 
 
     controls.perspective = gtk_check_button_new_with_mnemonic(_("apply perspective"));
@@ -1521,6 +1534,18 @@ brickshow_zscale_cb(BrickshowControls *controls)
     preview(controls, controls->args);
 }
 
+static void
+brickshow_threshold_cb(BrickshowControls *controls)
+{
+    controls->args->threshold = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold));
+
+    p3d_build(controls, controls->args);
+    p3d_prepare_wdata(controls, controls->args);
+    rotatem(controls);
+
+    preview(controls, controls->args);
+}
+
 
 
 static gboolean 
@@ -1846,7 +1871,7 @@ p3d_add_wireframe(BrickshowControls *controls)
     visited = gwy_data_field_new(yres, zres, yres, zres, FALSE);
 
     printf("brick min %g, max %g\n", gwy_brick_get_min(controls->brick), gwy_brick_get_max(controls->brick));
-    threshold = (gwy_brick_get_min(controls->brick) + gwy_brick_get_max(controls->brick))/2;
+    threshold = gwy_brick_get_min(controls->brick) + (gwy_brick_get_max(controls->brick) - gwy_brick_get_min(controls->brick))/100.0*controls->args->threshold;
 
     for (i=0; i<xres; i+=spacing)
     {
