@@ -81,6 +81,7 @@ file_LTLIBRARIES = \
 	gdeffile.la \
 	gsffile.la \
 	gwyfile.la \
+        gxyzffile.la \
 	hdf4file.la \
 	hdrimage.la \
 	hitachi-afm.la \
@@ -205,6 +206,7 @@ ezdfile_la_SOURCES       = ezdfile.c
 gdeffile_la_SOURCES      = gdeffile.c
 gsffile_la_SOURCES       = gsffile.c
 gwyfile_la_SOURCES       = gwyfile.c
+gxyzffile_la_SOURCES     = gxyzffile.c
 hdrimage_la_SOURCES      = hdrimage.cc gwytiff.h image-keys.h
 hdf4file_la_SOURCES      = hdf4file.c
 hitachi_afm_la_SOURCES   = hitachi-afm.c
