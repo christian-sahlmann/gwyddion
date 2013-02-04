@@ -1,7 +1,7 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek, Niv Levy.
+ *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net, nivl2000@gmail.com.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -174,8 +174,8 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports network Common Data Form (netCDF) files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
-    "David Nečas (Yeti) & Petr Klapetek",
+    "0.5",
+    "David Nečas (Yeti), Petr Klapetek & Niv Levy",
     "2006",
 };
 
@@ -241,7 +241,7 @@ gxsm_load(const gchar *filename,
           GError **error)
 {
     static const gchar *dimensions[] = { "time", "value", "dimy", "dimx" };
-    GwyContainer *data = NULL;
+    GwyContainer *data = NULL, *meta = NULL;
     GwyDataField *dfield;
     GwySIUnit *siunit;
     NetCDF cdffile;
@@ -310,6 +310,30 @@ gxsm_load(const gchar *filename,
         g_object_unref(siunit);
     }
 
+    // add the offsets - mostly important for adding spectra later
+    if ((siunit = read_real_size(&cdffile, "offsetx", &real, &power10))) {
+        /* some minimal checking */
+        if (!(fabs(real) >= 0)) {
+            g_warning("x offset reading failed, not using it");
+        }
+        else {
+            gwy_data_field_set_xoffset(dfield, real*pow10(power10)
+                                       - 0.5*gwy_data_field_get_xreal(dfield));
+        }
+        g_object_unref(siunit);
+    }
+    if ((siunit = read_real_size(&cdffile, "offsety", &real, &power10))) {
+        /* some minimal checking */
+        if (!(fabs(real) >= 0)) {
+            g_warning("y offset reading failed, not using it");
+        }
+        else {
+            gwy_data_field_set_yoffset(dfield, real*pow10(power10)
+                                       - 0.5*gwy_data_field_get_yreal(dfield));
+        }
+        g_object_unref(siunit);
+    }
+
     if ((siunit = read_real_size(&cdffile, "rangez", &real, &power10))) {
         /* rangez seems to be some bogus value, take only units */
         gwy_data_field_set_si_unit_z(dfield, siunit);
@@ -323,14 +347,73 @@ gxsm_load(const gchar *filename,
     }
 
     data = gwy_container_new();
-    gwy_container_set_object_by_name(data, "/0/data", dfield);
-    g_object_unref(dfield);
-
     if ((attr = cdffile_get_attr(var->attrs, var->nattrs, "long_name"))
         && attr->type == NC_CHAR
         && attr->nelems) {
         gwy_container_set_string_by_name(data, "/0/data/title",
                                          g_strndup(attr->values, attr->nelems));
+    }
+    meta = gwy_container_new();
+    gwy_container_set_object_by_name(data, "/0/meta", meta);
+    g_object_unref(meta);
+    //flip the data if we're reading a right to left scan!
+    if ((var = cdffile_get_var(&cdffile, "basename"))) {
+        /* FIXME - i should do something safer - even a name including this
+         * would be a problem! */
+        if (g_strstr_len(cdffile.buffer + var->begin, var->vsize, "-Xm-")
+            && !g_strstr_len(cdffile.buffer + var->begin, var->vsize, "-Xp-")) {
+            gwy_debug("gxsm netcdf: data field since basename contains "
+                      "'-Xm-' and not '-Xp-'");
+            // flip horizontally
+            gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
+            gwy_container_set_string_by_name(meta, "Fast scan",
+                                             g_strdup("right to left"));
+        }
+        else {
+            /* just assume it left to right (default scan direction) in this
+             * case */
+            gwy_container_set_string_by_name(meta, "Fast scan",
+                                             g_strdup("left to right"));
+        }
+    }
+    gwy_container_set_object_by_name(data, "/0/data", dfield);
+    g_object_unref(dfield);
+    // Add some more meta data
+    if ((var = cdffile_get_var(&cdffile, "comment"))) {
+        /* not sure if this would be a valid string, so create a new one with
+         * fixed length */
+        gwy_container_set_string_by_name(meta, "Comments",
+                                         g_strndup(cdffile.buffer + var->begin,
+                                                   var->vsize));
+    }
+    if ((var = cdffile_get_var(&cdffile, "dateofscan"))) {
+        /* not sure if this would be a valid string, so create a new one with
+         * fixed length */
+        gwy_container_set_string_by_name(meta, "Date and time",
+                                         g_strndup(cdffile.buffer + var->begin,
+                                                   var->vsize));
+    }
+    /* NOTE: i know this is bad as it's hardware dependent (i.e. only someone
+     * using the sranger 2 dsp gets this); but since these details depend in
+     * gxsm on the plugin, i see no better option */
+    if ((siunit = read_real_size(&cdffile, "sranger_mk2_hwi_bias",
+                                 &real, &power10))) {
+        gwy_container_set_string_by_name(meta, "V_bias",
+                                         g_strdup_printf("%5.2g V",
+                                                         real*pow10(power10)));
+        g_object_unref(siunit);
+    }
+    if ((siunit = read_real_size(&cdffile, "sranger_mk2_hwi_mix0_current_set_point",
+                                 &real, &power10))) {
+        gwy_container_set_string_by_name(meta, "I_setpoint",
+                                         g_strdup_printf("%5.2g A",
+                                                         real*pow10(power10)));
+        g_object_unref(siunit);
+    }
+    if ((var = cdffile_get_var(&cdffile, "spm_scancontrol"))) {
+        gwy_container_set_string_by_name(meta, "Slow scan",
+                                         g_strndup(cdffile.buffer + var->begin,
+                                                   var->vsize));
     }
 
 gxsm_load_fail:
