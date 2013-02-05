@@ -1,5 +1,5 @@
 /*
- *  $Id: gxyzf.c 14315 2012-11-18 14:25:33Z yeti-dn $
+ *  $Id$
  *  Copyright (C) 2013 David Necas (Yeti).
  *
  *  This program is free software; you can redistribute it and/or modify
