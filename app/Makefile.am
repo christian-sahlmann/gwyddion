@@ -152,7 +152,7 @@ gwyddion_LDADD = @COMMON_LDFLAGS@ @GTKGLEXT_LIBS@ @FFTW3_LIBS@ @UNIQUE_LIBS@ @BA
 	$(libgwyddion)
 
 # This is ugly a bit, but uses only very basic sed constructs
-authors.h: ${top_srcdir}/AUTHORS
+authors.h: ${top_srcdir}/AUTHORS ${top_srcdir}/NEWS
 	$(AM_V_GEN){ \
 		echo '/* This is a GENERATED file */'; \
 		echo '/*< private_header >*/'; \
@@ -167,6 +167,10 @@ authors.h: ${top_srcdir}/AUTHORS
 			-e 's/^[ =].*//' -e t -e 's/^$$//' -e t \
 			-e 's/ *<.*//' -e 's/.*/    "&\\n"/' -e p -e '}' \
 			${top_srcdir}/AUTHORS; \
+		echo ';'; \
+		echo 'static const gchar releasedate[] ='; \
+		sed -n -e '1s/^.*(/    "/' -e '1s/)/"/' -e '1p' -e '1q' \
+			${top_srcdir}/NEWS; \
 		echo ';'; \
 	} >authors.h
 

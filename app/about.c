@@ -46,21 +46,20 @@ gwy_app_about(void)
     GtkWidget *vbox, *hbox, *widget, *credits, *text, *notebook;
     GtkTextBuffer *buff;
     GtkTextIter iter;
-    gchar *s, *s2;
+    GString *str = g_string_new(NULL);
     gint size;
 
     if (about) {
         gtk_window_present(GTK_WINDOW(about));
         return;
     }
-    s = g_strdup_printf(_("About %s"), g_get_application_name());
-    about = gtk_dialog_new_with_buttons(s,
+    g_string_printf(str, _("About %s"), g_get_application_name());
+    about = gtk_dialog_new_with_buttons(str->str,
                                         GTK_WINDOW(gwy_app_main_window_get()),
                                         GTK_DIALOG_NO_SEPARATOR
                                         | GTK_DIALOG_DESTROY_WITH_PARENT,
                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                         NULL);
-    g_free(s);
     gtk_dialog_set_default_response(GTK_DIALOG(about), GTK_RESPONSE_CLOSE);
     gtk_container_set_border_width(GTK_CONTAINER(about), 6);
     gtk_window_set_transient_for(GTK_WINDOW(about),
@@ -86,22 +85,20 @@ gwy_app_about(void)
     widget = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(widget), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(vbox), widget, FALSE, FALSE, 0);
-    s2 = g_strdup_printf("<big><b>%s</b> %s</big>\n",
-                         g_get_application_name(), GWY_VERSION_STRING);
-    s = g_strconcat(s2, _("An SPM data visualization and analysis tool."),
-                    NULL);
-    gtk_label_set_markup(GTK_LABEL(widget), s);
-    g_free(s);
-    g_free(s2);
+    g_string_printf(str, "<big><b>%s %s</b></big>\n",
+                    g_get_application_name(), GWY_VERSION_STRING);
+    /* TRANSLATORS: %s is replaced with date in ISO format YYYY-MM-DD. */
+    g_string_append_printf(str, _("Released %s\n"), releasedate);
+    g_string_append(str, _("An SPM data visualization and analysis tool."));
+    gtk_label_set_markup(GTK_LABEL(widget), str->str);
 
     widget = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(widget), 0.0, 0.5);
     gtk_misc_set_padding(GTK_MISC(widget), 2, 6);
     gtk_box_pack_start(GTK_BOX(vbox), widget, FALSE, FALSE, 0);
-    s = g_strdup_printf(_("<i>%s</i>\nReport bugs to: <i>%s</i>"),
-                        PACKAGE_URL, PACKAGE_BUGREPORT);
-    gtk_label_set_markup(GTK_LABEL(widget), s);
-    g_free(s);
+    g_string_printf(str, "<i>%s</i>\n%s <i>%s</i>",
+                    PACKAGE_URL, _("Report bugs to:"), PACKAGE_BUGREPORT);
+    gtk_label_set_markup(GTK_LABEL(widget), str->str);
     gtk_label_set_selectable(GTK_LABEL(widget), TRUE);
 
     notebook = gtk_notebook_new();
@@ -136,17 +133,16 @@ gwy_app_about(void)
 
     buff = gtk_text_buffer_new(NULL);
     gtk_text_buffer_get_end_iter(buff, &iter);
-    s = g_strdup_printf(
-            _("%s is free software; "
-              "you can redistribute it and/or modify it "
-              "under the terms of the GNU General Public License "
-              "as published by the Free Software Foundation; "
-              "either version 2 of the License, or (at your option) "
-              "any later version. For full license text see file COPYING "
-              "included in the source tarball."),
-            g_get_application_name());
-    gtk_text_buffer_insert(buff, &iter, s, -1);
-    g_free(s);
+    g_string_printf(str,
+                    _("%s is free software; "
+                      "you can redistribute it and/or modify it "
+                      "under the terms of the GNU General Public License "
+                      "as published by the Free Software Foundation; "
+                      "either version 2 of the License, or (at your option) "
+                      "any later version. For full license text see file "
+                      "COPYING included in the source tarball."),
+                    g_get_application_name());
+    gtk_text_buffer_insert(buff, &iter, str->str, str->len);
 
     text = gtk_text_view_new_with_buffer(buff);
     g_object_unref(buff);
@@ -170,6 +166,7 @@ gwy_app_about(void)
     gtk_text_view_set_editable(GTK_TEXT_VIEW(text), FALSE);
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text), GTK_WRAP_WORD);
     gtk_container_add(GTK_CONTAINER(credits), text);
+    g_string_free(str, TRUE);
 
     gtk_widget_show_all(about);
 
