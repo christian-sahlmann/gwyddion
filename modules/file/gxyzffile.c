@@ -59,10 +59,8 @@ static gint          gxyzf_detect       (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* gxyzf_load         (const gchar *filename,
                                          GwyRunType mode,
                                          GError **error);
-static int           compare_xy         (const void *pa,
-                                         const void *pb);
 static void          estimate_dimensions(GHashTable *hash,
-                                         const gdouble *points,
+                                         gdouble *points,
                                          guint pointlen,
                                          guint npoints,
                                          guint *xres,
@@ -71,6 +69,12 @@ static void          estimate_dimensions(GHashTable *hash,
                                          gdouble *yoff,
                                          gdouble *xreal,
                                          gdouble *yreal);
+static guint         estimate_res       (const gdouble *points,
+                                         guint pointlen,
+                                         guint npoints,
+                                         gdouble *off,
+                                         gdouble *real,
+                                         gdouble *dispersion);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -188,11 +192,22 @@ gxyzf_load(const gchar *filename,
     }
 
     points = (gdouble*)datap;
-    qsort(points, npoints, pointsize, compare_xy);
 
     estimate_dimensions(hash, points, pointlen, npoints,
                         &xres, &yres, &xoff, &yoff, &xreal, &yreal);
 
+#if 0
+    container = gwy_container_new();
+    for (i = 0; i < pointlen; i++) {
+        guint k;
+        dfield = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
+        for (k = 0; k < xres*yres; k++)
+            dfield->data[k] = points[k*pointlen + i];
+        gwy_container_set_object(container, gwy_app_get_data_key_for_id(i),
+                                 dfield);
+        g_object_unref(dfield);
+    }
+#endif
     err_NO_DATA(error);
 
 fail:
@@ -209,31 +224,15 @@ fail:
     return container;
 }
 
-static int
-compare_xy(const void *pa, const void *pb)
-{
-    const gdouble *a = (const gdouble*)pa, *b = (const gdouble*)pb;
-    gdouble va = a[1], vb = b[1];
-    if (va < vb)
-        return -1;
-    if (va > vb)
-        return 1;
-    va = a[0];
-    vb = b[0];
-    if (va < vb)
-        return -1;
-    if (va > vb)
-        return 1;
-    return 0;
-}
-
 static void
 estimate_dimensions(GHashTable *hash,
-                    const gdouble *points, guint pointlen, guint npoints,
+                    gdouble *points, guint pointlen, guint npoints,
                     guint *xres, guint *yres,
                     gdouble *xoff, gdouble *yoff,
                     gdouble *xreal, gdouble *yreal)
 {
+    guint estxres, estyres;
+    gdouble shx, shy;
     const gchar *value;
 
     /* Take resolution hints that NMM stores in the files, if possible. */
@@ -248,21 +247,80 @@ estimate_dimensions(GHashTable *hash,
         if (err_DIMENSION(NULL, *yres))
             *yres = 0;
     }
-    gwy_debug("xres hint %u, yres hint %u", *xres, *yres);
-    *xres = *yres = 0;   // force estimate
+    gwy_debug("hint xres %u, hint %u", *xres, *yres);
+
+    estxres = estimate_res(points, pointlen, npoints, xoff, xreal, &shx);
+    estyres = estimate_res(points+1, pointlen, npoints, yoff, yreal, &shy);
+    gwy_debug("estimated xres %u (width=%g), yres %u (width=%g)",
+              estxres, shx, estyres, shy);
 
     if (!*xres || !*yres) {
-        gdouble x0 = points[0], xprev = x0;
-        guint i;
-        *yres = 1;
-        for (i = 1; i < npoints; i++) {
-            gdouble x = points[i*pointlen];
-            if (fabs(x - x0) < fabs(x - xprev))
-                (*yres)++;
-            xprev = x;
+        if (shx < shy) {
+            *xres = estxres;
+            *yres = npoints/estxres;
         }
-        gwy_debug("estimated yres %u", *yres);
+        else {
+            *xres = npoints/estyres;
+            *yres = estyres;
+        }
     }
+
+    gwy_debug("final xres %u, hint %u", *xres, *yres);
+}
+
+static guint
+estimate_res(const gdouble *points, guint pointlen, guint npoints,
+             gdouble *off, gdouble *real, gdouble *dispersion)
+{
+    guint n = (guint)(sqrt(5000.0*npoints) + 1), i, res, prev;
+    gdouble min = G_MAXDOUBLE, max = G_MINDOUBLE, d, s2;
+    const gdouble *p = points;
+    guint *counts;
+
+    for (i = 0; i < npoints; i++) {
+        gdouble v = *p;
+        if (v < min)
+            min = v;
+        if (v > max)
+            max = v;
+        p += pointlen;
+    }
+    d = max - min;
+    min -= 1e-9*d;
+    max += 1e-9*d;
+
+    counts = g_new0(guint, n);
+    p = points;
+    for (i = 0; i < npoints; i++) {
+        guint j = (guint)((*p - min)/(max - min)*n);
+        counts[j]++;
+        p += pointlen;
+    }
+
+    res = 2;
+    prev = 0;
+    s2 = 0.0;
+    for (i = 1; i < n-1; i++) {
+        if (counts[i] > counts[i-1] && counts[i] > counts[i+1]) {
+            s2 += (gdouble)(i - prev)*(i - prev);
+            res++;
+            prev = i;
+        }
+    }
+    g_free(counts);
+
+    s2 += (gdouble)(n - prev)*(n - prev);
+    s2 /= (res - 1);
+    s2 -= (gdouble)n*n/(res - 1.0)/(res - 1.0);
+    s2 = sqrt(MAX(s2, 0.0));
+
+    gwy_debug("%u %g %u", res, s2, n);
+    *dispersion = s2;
+
+    *off = min;
+    *real = max - min;
+
+    return res;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
