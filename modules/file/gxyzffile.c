@@ -53,22 +53,39 @@
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 #define EXTENSION ".gxyzf"
 
+typedef struct {
+    gint xres;
+    gint yres;
+    gdouble xoff;
+    gdouble yoff;
+    gdouble xreal;
+    gdouble yreal;
+} GridInfo;
+
 static gboolean      module_register    (void);
 static gint          gxyzf_detect       (const GwyFileDetectInfo *fileinfo,
                                          gboolean only_name);
 static GwyContainer* gxyzf_load         (const gchar *filename,
                                          GwyRunType mode,
                                          GError **error);
+static gboolean      search             (const GridInfo *ginfo,
+                                         GSList **grid,
+                                         const gdouble *points,
+                                         guint pointlen,
+                                         gint irange,
+                                         gint jrange,
+                                         gdouble x,
+                                         gdouble y,
+                                         guint *k);
+static GSList**      sort_into_grid     (const gdouble *points,
+                                         guint pointlen,
+                                         guint npoints,
+                                         const GridInfo *ginfo);
 static void          estimate_dimensions(GHashTable *hash,
                                          gdouble *points,
                                          guint pointlen,
                                          guint npoints,
-                                         guint *xres,
-                                         guint *yres,
-                                         gdouble *xoff,
-                                         gdouble *yoff,
-                                         gdouble *xreal,
-                                         gdouble *yreal);
+                                         GridInfo *ginfo);
 static guint         estimate_res       (const gdouble *points,
                                          guint pointlen,
                                          guint npoints,
@@ -121,7 +138,7 @@ gxyzf_load(const gchar *filename,
          GError **error)
 {
     GwyContainer *container = NULL;
-    GwyDataField *dfield;
+    GwyDataField **dfields = NULL;
     GwyTextHeaderParser parser;
     GHashTable *hash = NULL;
     guchar *p, *value, *buffer = NULL, *header = NULL, *datap;
@@ -129,9 +146,10 @@ gxyzf_load(const gchar *filename,
     gsize size;
     GError *err = NULL;
     GwySIUnit **zunits = NULL;
-    GwySIUnit *xyunit = NULL;
-    guint nchan = 0, pointlen, pointsize, npoints, i, xres, yres;
-    gdouble xoff, xreal, yoff, yreal;
+    GwySIUnit *xyunit = NULL, *zunit = NULL;
+    guint nchan = 0, pointlen, pointsize, npoints, i, j, id;
+    GridInfo ginfo;
+    GSList **grid = NULL;
 
     if (!g_file_get_contents(filename, (gchar**)&buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -183,89 +201,229 @@ gxyzf_load(const gchar *filename,
     value = g_hash_table_lookup(hash, "XYUnits");
     xyunit = gwy_si_unit_new(value);
 
-    zunits = g_new(GwySIUnit*, nchan);
-    for (i = 0; i < nchan; i++) {
-        gchar buf[16];
-        g_snprintf(buf, sizeof(buf), "ZUnits%u", i);
-        value = g_hash_table_lookup(hash, buf);
-        zunits[i] = gwy_si_unit_new(value);
+    /* If there is ZUnits it applies to all channels. */
+    if ((value = g_hash_table_lookup(hash, "ZUnits")))
+        zunit = gwy_si_unit_new(value);
+    else {
+        zunits = g_new0(GwySIUnit*, nchan);
+        for (id = 0; id < nchan; id++) {
+            gchar buf[16];
+            g_snprintf(buf, sizeof(buf), "ZUnits%u", id+1);
+            value = g_hash_table_lookup(hash, buf);
+            zunits[id] = gwy_si_unit_new(value);
+        }
     }
 
     points = (gdouble*)datap;
 
-    estimate_dimensions(hash, points, pointlen, npoints,
-                        &xres, &yres, &xoff, &yoff, &xreal, &yreal);
+    estimate_dimensions(hash, points, pointlen, npoints, &ginfo);
 
-#if 0
+    dfields = g_new0(GwyDataField*, nchan);
+    for (id = 0; id < nchan; id++) {
+        GwySIUnit *unit;
+
+        dfields[id] = gwy_data_field_new(ginfo.xres, ginfo.yres,
+                                         ginfo.xreal, ginfo.yreal,
+                                         FALSE);
+        gwy_data_field_set_xoffset(dfields[id], ginfo.xoff);
+        gwy_data_field_set_yoffset(dfields[id], ginfo.yoff);
+        unit = gwy_data_field_get_si_unit_z(dfields[id]);
+        if (zunit)
+            gwy_serializable_clone(G_OBJECT(zunit), G_OBJECT(unit));
+        else
+            gwy_serializable_clone(G_OBJECT(zunits[id]), G_OBJECT(unit));
+        unit = gwy_data_field_get_si_unit_xy(dfields[id]);
+        gwy_serializable_clone(G_OBJECT(xyunit), G_OBJECT(unit));
+    }
+
+    grid = sort_into_grid(points, pointlen, npoints, &ginfo);
+
+    for (i = 0; i < ginfo.yres; i++) {
+        gdouble y = (i + 0.5)*ginfo.yreal/ginfo.yres + ginfo.yoff;
+        for (j = 0; j < ginfo.xres; j++) {
+            gdouble x = (j + 0.5)*ginfo.xreal/ginfo.xres + ginfo.xoff;
+            gint irange = 3, jrange = 3;
+            guint k = G_MAXUINT;
+
+            while (!search(&ginfo, grid, points, pointlen, irange, jrange,
+                           x, y, &k)) {
+                irange = 2*irange - 1;
+                jrange = 2*jrange - 1;
+            }
+            g_assert(k != G_MAXUINT);
+
+            for (id = 0; id < nchan; id++) {
+                dfields[id]->data[i*ginfo.xres + j] = points[k*pointlen + id+2];
+            }
+        }
+    }
+
     container = gwy_container_new();
-    for (i = 0; i < pointlen; i++) {
+    for (id = 0; id < nchan; id++) {
+        gchar buf[32];
+        gwy_container_set_object(container, gwy_app_get_data_key_for_id(id),
+                                 dfields[id]);
+        g_snprintf(buf, sizeof(buf), "Title%u", id+1);
+        if ((value = g_hash_table_lookup(hash, buf))) {
+            g_snprintf(buf, sizeof(buf), "/%d/data/title", id);
+            gwy_container_set_string_by_name(container, buf, g_strdup(value));
+        }
+    }
+
+    /* Visualise the raw data.
+     * XXX: Crashes if xres and yres do not match raw data! */
+    for (id = 0; id < pointlen; id++) {
+        GwyDataField *dfield = gwy_data_field_new(ginfo.xres, ginfo.yres,
+                                                  1.0, 1.0, FALSE);
+        gchar buf[32];
         guint k;
-        dfield = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
-        for (k = 0; k < xres*yres; k++)
-            dfield->data[k] = points[k*pointlen + i];
-        gwy_container_set_object(container, gwy_app_get_data_key_for_id(i),
+
+        for (k = 0; k < ginfo.xres*ginfo.yres; k++)
+            dfield->data[k] = points[k*pointlen + id];
+        gwy_container_set_object(container,
+                                 gwy_app_get_data_key_for_id(nchan+id),
                                  dfield);
         g_object_unref(dfield);
+
+        g_snprintf(buf, sizeof(buf), "/%d/data/title", nchan+id);
+        if (id == 0)
+            gwy_container_set_string_by_name(container, buf, g_strdup("X"));
+        else if (id == 1)
+            gwy_container_set_string_by_name(container, buf, g_strdup("Y"));
+        else
+            gwy_container_set_string_by_name(container, buf,
+                                             g_strdup_printf("Raw %u", id-1));
     }
-#endif
-    err_NO_DATA(error);
 
 fail:
     g_free(buffer);
     if (hash)
         g_hash_table_destroy(hash);
+    gwy_object_unref(xyunit);
+    gwy_object_unref(zunit);
     if (zunits) {
         for (i = 0; i < nchan; i++)
             gwy_object_unref(zunits[i]);
         g_free(zunits);
     }
-    gwy_object_unref(xyunit);
+    if (dfields) {
+        for (i = 0; i < nchan; i++)
+            gwy_object_unref(dfields[i]);
+        g_free(dfields);
+    }
+    if (grid) {
+        for (i = 0; i < npoints; i++)
+            g_slist_free(grid[i]);
+        g_free(grid);
+    }
 
     return container;
+}
+
+static gboolean
+search(const GridInfo *ginfo, GSList **grid,
+       const gdouble *points, guint pointlen,
+       gint irange, gint jrange,
+       gdouble x, gdouble y, guint *k)
+{
+    gint xres = ginfo->xres, yres = ginfo->yres;
+    gdouble xq = xres/ginfo->xreal, xo = ginfo->xoff;
+    gdouble yq = yres/ginfo->yreal, yo = ginfo->yoff;
+    gint xi = (gint)floor(xq*(x - xo)), yi = (gint)floor(yq*(y - yo));
+    gint xfrom = MAX(xi - jrange, 0), xto = MIN(xi + jrange, xres-1),
+         yfrom = MAX(yi - irange, 0), yto = MIN(yi + irange, yres-1);
+    gdouble safedist = fmin((irange + 0.5)/yq, (jrange + 0.5)/xq),
+            safedist2 = safedist*safedist;
+    gdouble mind2 = G_MAXDOUBLE;
+    gint i, j;
+
+    for (i = yfrom; i <= yto; i++) {
+        for (j = xfrom; j <= xto; j++) {
+            GSList *l;
+
+            for (l = grid[i*xres + j]; l; l = g_slist_next(l)) {
+                guint kk = GPOINTER_TO_UINT(l->data);
+                const gdouble *pt = points + pointlen*kk;
+                gdouble dx = x - pt[0], dy = y - pt[1];
+                gdouble d2 = dx*dx + dy*dy;
+                if (d2 < mind2 && d2 < safedist2) {
+                    mind2 = d2;
+                    *k = kk;
+                    break;
+                }
+            }
+        }
+    }
+
+    return mind2 < G_MAXDOUBLE;
+}
+
+static GSList**
+sort_into_grid(const gdouble *points, guint pointlen, guint npoints,
+               const GridInfo *ginfo)
+{
+    GSList **grid = g_new(GSList*, ginfo->xres*ginfo->yres);
+    gdouble xq = ginfo->xres/ginfo->xreal, xo = ginfo->xoff;
+    gdouble yq = ginfo->yres/ginfo->yreal, yo = ginfo->yoff;
+    guint i;
+
+    for (i = 0; i < npoints; i++) {
+        gdouble x = points[i*pointlen], y = points[i*pointlen + 1];
+        guint xi = (guint)floor(xq*(x - xo)), yi = (guint)floor(yq*(y - yo));
+        guint k = yi*ginfo->xres + xi;
+
+        grid[k] = g_slist_prepend(grid[k], GUINT_TO_POINTER(i));
+    }
+
+    return grid;
 }
 
 static void
 estimate_dimensions(GHashTable *hash,
                     gdouble *points, guint pointlen, guint npoints,
-                    guint *xres, guint *yres,
-                    gdouble *xoff, gdouble *yoff,
-                    gdouble *xreal, gdouble *yreal)
+                    GridInfo *ginfo)
 {
-    guint estxres, estyres;
+    guint xres, yres, estxres, estyres;
     gdouble shx, shy;
     const gchar *value;
 
     /* Take resolution hints that NMM stores in the files, if possible. */
-    *xres = *yres = 0;
+    xres = yres = 0;
     if ((value = g_hash_table_lookup(hash, "XRes"))) {
-        *xres = atoi(value);
-        if (err_DIMENSION(NULL, *xres))
-            *xres = 0;
+        xres = atoi(value);
+        if (err_DIMENSION(NULL, xres))
+            xres = 0;
     }
     if ((value = g_hash_table_lookup(hash, "YRes"))) {
-        *yres = atoi(value);
-        if (err_DIMENSION(NULL, *yres))
-            *yres = 0;
+        yres = atoi(value);
+        if (err_DIMENSION(NULL, yres))
+            yres = 0;
     }
-    gwy_debug("hint xres %u, hint %u", *xres, *yres);
+    gwy_debug("hint xres %u, hint %u", xres, yres);
 
-    estxres = estimate_res(points, pointlen, npoints, xoff, xreal, &shx);
-    estyres = estimate_res(points+1, pointlen, npoints, yoff, yreal, &shy);
+    estxres = estimate_res(points, pointlen, npoints,
+                           &ginfo->xoff, &ginfo->xreal, &shx);
+    estyres = estimate_res(points+1, pointlen, npoints,
+                           &ginfo->yoff, &ginfo->yreal, &shy);
     gwy_debug("estimated xres %u (width=%g), yres %u (width=%g)",
               estxres, shx, estyres, shy);
 
-    if (!*xres || !*yres) {
+    if (!xres || !yres) {
         if (shx < shy) {
-            *xres = estxres;
-            *yres = npoints/estxres;
+            xres = estxres;
+            yres = npoints/estxres;
         }
         else {
-            *xres = npoints/estyres;
-            *yres = estyres;
+            xres = npoints/estyres;
+            yres = estyres;
         }
     }
 
-    gwy_debug("final xres %u, hint %u", *xres, *yres);
+    ginfo->xres = xres;
+    ginfo->yres = yres;
+    gwy_debug("final xres %u, hint %u", ginfo->xres, ginfo->yres);
+    gwy_debug("xreal %g, xoff %g", ginfo->xreal, ginfo->xoff);
+    gwy_debug("yreal %g, yoff %g", ginfo->yreal, ginfo->yoff);
 }
 
 static guint
@@ -319,6 +477,9 @@ estimate_res(const gdouble *points, guint pointlen, guint npoints,
 
     *off = min;
     *real = max - min;
+    d = *real/res;
+    *off -= 0.4999*d;
+    *real += 0.4999*d;
 
     return res;
 }
