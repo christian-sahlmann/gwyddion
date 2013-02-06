@@ -19,6 +19,7 @@ Modules:
 - APE DAX (new): Imports APE Research DAX files.
 - Nanomagnetics (new): Imports Nanomagnetics NMI files.
 - VTK export (new): Exports fields as VTK structured grid files.
+- Magellan (new): Imports FEI Magellan SEM images.
 - Extend (new): Extends a field by adding borders using several methods.
 - Seiko: Files starting ‘NPXZ000AFM’ are recognised and imported.  XQP phase
   files should be read with a correct value scale and units.
@@ -32,7 +33,7 @@ Modules:
 - Nanoscantech: Scan names of new standard (inside Attributes) supported,
   Units and scan names recoding from CP1251.
 - Nanoscope: F-Z spectra are imported (experimental).
-- Pixmap: Manual font size range was extended.  Inset bar length is
+- Pixmap: Manual font size range is limited by zoom.  Inset bar length is
   remembered and used the next time if possible.
 - Raw XYZ: Tolerance for ‘regular grid’ (which is not triangulated) was
   increased to 5% of pixel size to help people with poorly rounded data.
@@ -40,6 +41,9 @@ Modules:
 - Drift correction: Correction can be applied to all compatible channels
   and channels can be directly replaced with corrected ones.
 - Line layer: Thick line end markers are drawn correctly to image targets.
+- NetCDF: GXSM file metadata support was improved, images are flipped when
+  appropriate.
+- Fit sphere: Units of resulting quantities are set correctly.
 
 Other:
 - Crash on Win32 while loading TIFF images was hopefully fixed.
