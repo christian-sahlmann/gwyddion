@@ -149,7 +149,7 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
     GError *err = NULL;
     guint spp, ch, dir_num = 0;
     gdouble *data;
-    double z_axis = 1.0, xy_axis, factor;
+    gdouble z_axis = 1.0, xy_axis, factor;
     GQuark quark;
     GString *key;
 
