@@ -43,14 +43,18 @@ enum {
     MAGELLAN_TIFF_TAG = 34682
 };
 
-static gboolean      module_register (void);
-static gint          mgl_detect      (const GwyFileDetectInfo *fileinfo,
-                                      gboolean only_name);
-static GwyContainer* mgl_load        (const gchar *filename,
-                                      GwyRunType mode,
-                                      GError **error);
-static GwyContainer* mgl_load_tiff   (const GwyTIFF *tiff,
-                                      GError **error);
+static gboolean      module_register(void);
+static gint          mgl_detect     (const GwyFileDetectInfo *fileinfo,
+                                     gboolean only_name);
+static GwyContainer* mgl_load       (const gchar *filename,
+                                     GwyRunType mode,
+                                     GError **error);
+static GwyContainer* mgl_load_tiff  (const GwyTIFF *tiff,
+                                     GError **error);
+static GwyContainer* get_meta       (GHashTable *hash);
+static void          add_meta       (gpointer hkey,
+                                     gpointer hvalue,
+                                     gpointer user_data);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -126,7 +130,7 @@ mgl_load(const gchar *filename,
 static GwyContainer*
 mgl_load_tiff(const GwyTIFF *tiff, GError **error)
 {
-    GwyContainer *container = NULL;
+    GwyContainer *container = NULL, *meta;
     GwyDataField *dfield;
     GwyTIFFImageReader *reader = NULL;
     GwyTextHeaderParser parser;
@@ -222,7 +226,11 @@ mgl_load_tiff(const GwyTIFF *tiff, GError **error)
                                                          NULL));
         }
 
-        // TODO: Metadata
+        if ((meta = get_meta(hash))) {
+            g_string_printf(key, "/%d/meta", dir_num);
+            gwy_container_set_object_by_name(container, key->str, meta);
+            g_object_unref(meta);
+        }
     }
 
     if (!container)
@@ -239,6 +247,35 @@ fail:
     }
 
     return container;
+}
+
+static GwyContainer*
+get_meta(GHashTable *hash)
+{
+    GwyContainer *meta = gwy_container_new();
+    g_hash_table_foreach(hash, add_meta, meta);
+    if (gwy_container_get_n_items(meta))
+        return meta;
+
+    g_object_unref(meta);
+    return NULL;
+}
+
+static void
+add_meta(gpointer hkey, gpointer hvalue, gpointer user_data)
+{
+    gchar *value = hvalue, *skey = hkey;
+
+    if (!strlen(value))
+        return;
+
+    if (gwy_strequal(skey, "User::UserTextUnicode")
+        || g_str_has_prefix(skey, "PrivateFei::"))
+        return;
+
+    value = g_convert(value, -1, "UTF-8", "ISO-8859-1", NULL, NULL, NULL);
+    if (value)
+        gwy_container_set_string_by_name(GWY_CONTAINER(user_data), skey, value);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
