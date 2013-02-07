@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2013-01-30 03:58+0100\n"
-"PO-Revision-Date: 2013-01-30 20:55+0100\n"
+"POT-Creation-Date: 2013-02-07 03:58+0100\n"
+"PO-Revision-Date: 2013-02-07 22:26+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -900,7 +900,7 @@ msgstr "pixels"
 #: modules/file/pixmap.c:3070
 #: modules/file/rawfile.c:398
 #: modules/process/angle_dist.c:170
-#: modules/process/brickshow.c:316
+#: modules/process/brickshow.c:323
 #: modules/process/calcoefs_new.c:347
 #: modules/process/calibrate.c:296
 #: modules/process/col_synth.c:299
@@ -1358,86 +1358,87 @@ msgstr "Échec :"
 msgid "About %s"
 msgstr "À propos de %s"
 
+#. TRANSLATORS: %s is replaced with date in ISO format YYYY-MM-DD.
 #: app/about.c:91
+#, c-format
+msgid "Released %s\n"
+msgstr "Version %s\n"
+
+#: app/about.c:92
 msgid "An SPM data visualization and analysis tool."
 msgstr "Un outil de visualisation et d'analyse de données SPM."
 
-#: app/about.c:101
-#, c-format
-msgid ""
-"<i>%s</i>\n"
-"Report bugs to: <i>%s</i>"
-msgstr ""
-"<i>%s</i>\n"
-"Rapporter les erreurs à : <i>%s</i>"
+#: app/about.c:100
+msgid "Report bugs to:"
+msgstr "Rapporter les erreurs à : "
 
-#: app/about.c:118
+#: app/about.c:115
 msgid "Credits"
 msgstr "Crédits"
 
-#: app/about.c:135
+#: app/about.c:132
 msgid "License"
 msgstr "Licence"
 
-#: app/about.c:140
+#: app/about.c:137
 #, c-format
 msgid "%s is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version. For full license text see file COPYING included in the source tarball."
 msgstr "%s est un logiciel libre ; vous pouvez le distribuer et/ou le modifier selon les termes de la licence GNU/GPL telle que publiée par la Free Software Foundation ; soit selon la version 2 de cette licence, ou (à votre choix) toute version ultérieure. Pour obtenir le texte complet de la licence reportez vous au fichier COPYING inclus dans le code source."
 
-#: app/about.c:163
+#: app/about.c:159
 msgid "Features"
 msgstr "Fonctionnalités"
 
-#: app/about.c:222
+#: app/about.c:219
 msgid "Developers"
 msgstr "Dévelopeurs"
 
-#: app/about.c:223
+#: app/about.c:220
 msgid "Translators"
 msgstr "Traducteurs"
 
-#: app/about.c:227
+#: app/about.c:224
 msgid "Development is supported by the Czech Metrology Institute: "
 msgstr "Le dévelopement est supporté par l'Institut Tchèque de Métrologie : "
 
+#: app/about.c:251
 #: app/about.c:254
-#: app/about.c:257
 msgid "OpenGL 3D View"
 msgstr "Vue 3D OpenGL"
 
-#: app/about.c:258
-#: app/about.c:272
-#: app/about.c:292
+#: app/about.c:255
+#: app/about.c:269
+#: app/about.c:289
 msgid "not available\n"
 msgstr "non disponible\n"
 
+#: app/about.c:260
 #: app/about.c:263
-#: app/about.c:266
 msgid "Fast Fourier Transform"
 msgstr "Transformée de Fourier Rapide (FFT)"
 
-#: app/about.c:267
+#: app/about.c:264
 msgid "built-in SimpleFFT\n"
 msgstr "Algorithme SimpleFFT interne\n"
 
-#: app/about.c:275
+#: app/about.c:272
 msgid "X11 protocol\n"
 msgstr "Protocole X11\n"
 
-#: app/about.c:277
+#: app/about.c:274
 msgid "Win32 protocol\n"
 msgstr "Protocole Win32\n"
 
-#: app/about.c:279
+#: app/about.c:276
 msgid "LibUnique\n"
 msgstr "LibUnique\n"
 
-#: app/about.c:283
+#: app/about.c:280
 msgid "Remote Control"
 msgstr "Contrôle à distance"
 
-#: app/about.c:287
-#: app/about.c:291
+#: app/about.c:284
+#: app/about.c:288
 msgid "Python Scripting Interface"
 msgstr "Interface de script Python"
 
@@ -1523,7 +1524,7 @@ msgid "Channels"
 msgstr "Canaux"
 
 #: app/data-browser.c:4101
-#: modules/process/brickshow.c:434
+#: modules/process/brickshow.c:441
 msgid "Graphs"
 msgstr "Graphes"
 
@@ -2506,6 +2507,7 @@ msgstr "La valeur de balise d'en-tête ‘%s’ ne se termine pas par des caract
 #: modules/file/gdeffile.c:169
 #: modules/file/gdeffile.c:193
 #: modules/file/gsffile.c:152
+#: modules/file/gxyzffile.c:168
 #: modules/file/iso28600.c:1029
 #: modules/file/pt3file.c:481
 #: modules/file/pt3file.c:583
@@ -3055,6 +3057,19 @@ msgstr "Format non supporté"
 msgid "File is truncated."
 msgstr "Le fichier est tronqué."
 
+#: modules/file/gxyzffile.c:99
+msgid "Imports Gwyddion XYZ field files."
+msgstr "Importe les fichiers Gwyddion XYZ."
+
+#: modules/file/gxyzffile.c:112
+msgid "GwyXYZ data files"
+msgstr "Données GwyXYZ"
+
+#: modules/file/gxyzffile.c:195
+#, fuzzy, c-format
+msgid "Data size %lu is not a multiple of point size %u."
+msgstr "La taille des données %u ne correspond pas au nombre de points de données %u×%u."
+
 #: modules/file/hdf4file.c:338
 msgid "Imports Hierarchical Data Format (HDF) files, version 4."
 msgstr "Importe les fichiers Hierarchical Data Format (HDF) version 4."
@@ -3466,6 +3481,14 @@ msgstr "L'élément de premier niveau n'est pas ‘TiffTagDescData’."
 #, c-format
 msgid "XML parsing failed: %s"
 msgstr "L'analyse du fichier XML à échoué : %s"
+
+#: modules/file/magellan.c:62
+msgid "Imports FEI Magellan SEM images."
+msgstr "Importe les fichiers FEI Magellan SEM."
+
+#: modules/file/magellan.c:75
+msgid "FEI Magellan SEM image (.tif)"
+msgstr "FEI Magellan SEM (.tif)"
 
 #: modules/file/mapvue.c:455
 msgid "Imports MapVue data files (.map)."
@@ -3920,22 +3943,22 @@ msgstr "La variable `%s' fait référence à des données invalides ou inexistan
 msgid "NetCDF records are not supported."
 msgstr "L'enregistrement au format NetCDF n'est pas supporté."
 
-#: modules/file/netcdf.c:580
+#: modules/file/netcdf.c:663
 #, c-format
 msgid "File ended unexpectedly inside `%s'."
 msgstr "Le fichier s'est terminé de manière inattendue dans `%s'."
 
-#: modules/file/netcdf.c:589
+#: modules/file/netcdf.c:672
 #, c-format
 msgid "Expected `%s' array or `ABSENT'."
 msgstr "Tableau `%s' attendu ou `ABSENT'."
 
-#: modules/file/netcdf.c:597
+#: modules/file/netcdf.c:680
 #, c-format
 msgid "Array `%s' has non-zero number of elements in spite of being absent."
 msgstr "Le tableau `%s', bien qu'absent, possède un nombre d'élément non nul."
 
-#: modules/file/netcdf.c:656
+#: modules/file/netcdf.c:739
 msgid "More than one record dimension found."
 msgstr "Plus d'une dimension d'enregistrement a été trouvée."
 
@@ -4574,7 +4597,7 @@ msgstr "Préréglages"
 #: modules/file/rawfile.c:540
 #: modules/file/rawxyz.c:435
 #: modules/process/arithmetic.c:227
-#: modules/process/brickshow.c:313
+#: modules/process/brickshow.c:320
 #: modules/process/calcoefs_view.c:332
 #: modules/process/convolution_filter.c:243
 #: modules/process/deposit_synth.c:682
@@ -6149,97 +6172,97 @@ msgstr "/Opérations _basiques/Supprimer l'offset"
 msgid "Null horizontall offsets, moving the origin to the upper left corner"
 msgstr "Annule les décalages horizontaux en déplaçant l'origine dans le coin en haut à gauche"
 
-#: modules/process/brickshow.c:204
+#: modules/process/brickshow.c:211
 msgid "Loads and shows a brick (3D volume data)."
 msgstr "Charge et affiche des données volumiques"
 
-#: modules/process/brickshow.c:218
+#: modules/process/brickshow.c:225
 #, fuzzy
 msgid "/_Bricks/Load and show..."
 msgstr "/Cu_be de données/Charger et afficher..."
 
-#: modules/process/brickshow.c:222
+#: modules/process/brickshow.c:229
 msgid "Load and show 3D data"
 msgstr "Charger et afficher des données 3D"
 
-#: modules/process/brickshow.c:254
+#: modules/process/brickshow.c:261
 msgid "X cross-section"
 msgstr "Section X"
 
-#: modules/process/brickshow.c:255
+#: modules/process/brickshow.c:262
 msgid "Y cross-section"
 msgstr "Section Y"
 
-#: modules/process/brickshow.c:256
+#: modules/process/brickshow.c:263
 msgid "Z cross-section"
 msgstr "Section Z"
 
-#: modules/process/brickshow.c:257
-#: modules/process/brickshow.c:667
+#: modules/process/brickshow.c:264
+#: modules/process/brickshow.c:683
 msgid "X direction sum"
 msgstr "Somme selon X"
 
-#: modules/process/brickshow.c:258
-#: modules/process/brickshow.c:669
+#: modules/process/brickshow.c:265
+#: modules/process/brickshow.c:685
 msgid "Y direction sum"
 msgstr "Somme selon Y"
 
-#: modules/process/brickshow.c:259
-#: modules/process/brickshow.c:671
+#: modules/process/brickshow.c:266
+#: modules/process/brickshow.c:687
 msgid "Z direction sum"
 msgstr "Somme selon Z"
 
-#: modules/process/brickshow.c:262
+#: modules/process/brickshow.c:269
 msgid "X direction"
 msgstr "Direction X"
 
-#: modules/process/brickshow.c:263
+#: modules/process/brickshow.c:270
 msgid "Y direction"
 msgstr "Direction Y"
 
-#: modules/process/brickshow.c:264
+#: modules/process/brickshow.c:271
 msgid "Z direction"
 msgstr "Direction Z"
 
-#: modules/process/brickshow.c:307
+#: modules/process/brickshow.c:314
 msgid "Volume data"
 msgstr "Données volumiques"
 
-#: modules/process/brickshow.c:309
+#: modules/process/brickshow.c:316
 msgid "_Load"
 msgstr "Charger"
 
-#: modules/process/brickshow.c:321
+#: modules/process/brickshow.c:328
 msgid "_Extract projection"
 msgstr "_Extraire la projection"
 
-#: modules/process/brickshow.c:340
+#: modules/process/brickshow.c:347
 msgid "Projections"
 msgstr "Intersections"
 
-#: modules/process/brickshow.c:378
+#: modules/process/brickshow.c:385
 msgid "X position"
 msgstr "Position X"
 
-#: modules/process/brickshow.c:385
+#: modules/process/brickshow.c:392
 msgid "Y position"
 msgstr "Position Y"
 
-#: modules/process/brickshow.c:392
+#: modules/process/brickshow.c:399
 msgid "Z position"
 msgstr "Position Z"
 
-#: modules/process/brickshow.c:398
+#: modules/process/brickshow.c:405
 msgid "Shown cut direction:"
 msgstr "Direction de coupe affichée :"
 
-#: modules/process/brickshow.c:408
-#: modules/process/brickshow.c:494
+#: modules/process/brickshow.c:415
+#: modules/process/brickshow.c:501
 msgid "Show mode:"
 msgstr "Mode d'affichage : "
 
-#: modules/process/brickshow.c:414
-#: modules/process/brickshow.c:500
+#: modules/process/brickshow.c:421
+#: modules/process/brickshow.c:507
 #: modules/process/calcoefs_view.c:583
 #: modules/process/deposit_synth.c:686
 #: modules/process/edge.c:744
@@ -6254,89 +6277,94 @@ msgstr "Mode d'affichage : "
 msgid "I_nstant updates"
 msgstr "Mise à jour instantanée"
 
-#: modules/process/brickshow.c:423
-#: modules/process/brickshow.c:509
+#: modules/process/brickshow.c:430
+#: modules/process/brickshow.c:516
 #: modules/process/calcoefs_load.c:239
 msgid "No data loaded"
 msgstr "Aucunes données chargées"
 
-#: modules/process/brickshow.c:484
+#: modules/process/brickshow.c:491
 msgid "Graph cut direction:"
 msgstr "Direction de coupe du graphe :"
 
-#: modules/process/brickshow.c:522
+#: modules/process/brickshow.c:529
 msgid "3D view"
 msgstr "Vue 3D"
 
-#: modules/process/brickshow.c:548
+#: modules/process/brickshow.c:555
 msgid "Zoom"
 msgstr "Zoom"
 
-#: modules/process/brickshow.c:556
+#: modules/process/brickshow.c:563
+#, fuzzy
+msgid "Wireframe threshold"
+msgstr "Seuil de la grille"
+
+#: modules/process/brickshow.c:571
 msgid "Z scale"
 msgstr "Échelle Z"
 
-#: modules/process/brickshow.c:563
+#: modules/process/brickshow.c:579
 msgid "apply perspective"
 msgstr "Appliquer la perspective"
 
-#: modules/process/brickshow.c:573
+#: modules/process/brickshow.c:589
 msgid "X view"
 msgstr "Vue X"
 
-#: modules/process/brickshow.c:579
+#: modules/process/brickshow.c:595
 msgid "Y view"
 msgstr "Vue Y"
 
-#: modules/process/brickshow.c:585
+#: modules/process/brickshow.c:601
 msgid "Z view"
 msgstr "Vue Z"
 
-#: modules/process/brickshow.c:658
+#: modules/process/brickshow.c:674
 #, c-format
 msgid "X cross-section at x: %d"
 msgstr "Section X pour x : %d"
 
-#: modules/process/brickshow.c:661
+#: modules/process/brickshow.c:677
 #, c-format
 msgid "Y cross-section at y: %d"
 msgstr "Section Y pour y : %d"
 
-#: modules/process/brickshow.c:664
+#: modules/process/brickshow.c:680
 #, c-format
 msgid "Z cross-section at z: %d"
 msgstr "Section Z pour z : %d"
 
-#: modules/process/brickshow.c:709
+#: modules/process/brickshow.c:725
 #, c-format
 msgid "X graph at y: %d z: %d"
 msgstr "Graphe X pour y : %d z : %d"
 
-#: modules/process/brickshow.c:712
+#: modules/process/brickshow.c:728
 #, c-format
 msgid "Y graph at x: %d z: %d"
 msgstr "Graphe Y pour x : %d z : %d"
 
-#: modules/process/brickshow.c:715
+#: modules/process/brickshow.c:731
 #, c-format
 msgid "Z graph at x: %d y: %d"
 msgstr "Graphe Z pour x : %d y : %d"
 
-#: modules/process/brickshow.c:720
+#: modules/process/brickshow.c:736
 #, fuzzy
 msgid "w"
 msgstr "w"
 
-#: modules/process/brickshow.c:726
+#: modules/process/brickshow.c:742
 #, fuzzy
 msgid "Brick graph"
 msgstr "Graphe d'un cube de données"
 
-#: modules/process/brickshow.c:981
+#: modules/process/brickshow.c:997
 msgid "Load volume data"
 msgstr "Charger des données volumiques"
 
-#: modules/process/brickshow.c:998
+#: modules/process/brickshow.c:1014
 #: modules/process/calcoefs_load.c:330
 #, c-format
 msgid "Error loading file '%s'"
@@ -9597,9 +9625,8 @@ msgid "Power of source _Z:"
 msgstr "Puissance de la source _Z :"
 
 #: modules/process/neural.c:664
-#, fuzzy
 msgid "_Fixed units:"
-msgstr "Unités fixes :"
+msgstr "Unités _fixées :"
 
 #: modules/process/neural.c:674
 msgid "Networks"
