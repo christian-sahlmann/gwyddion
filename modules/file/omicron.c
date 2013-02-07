@@ -857,10 +857,10 @@ omicron_read_cs_data(OmicronFile *ofile,
             i = 0;
         }
         if (strstr(line, "BEGIN") && !strstr(line, "COORD")) {
+            gdouble real = ((channel->end - channel->start)*channel->npoints
+                            /(channel->npoints - 1));
             /* Read spectroscopy points */
-            dline = gwy_data_line_new(channel->npoints,
-                                      channel->end - channel->start,
-                                      FALSE);
+            dline = gwy_data_line_new(channel->npoints, real, FALSE);
             gwy_data_line_set_offset(dline, (channel->start));
             data = gwy_data_line_get_data(dline);
             j = 0;
