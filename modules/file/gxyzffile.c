@@ -39,6 +39,8 @@
 #define DEBUG 1
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
@@ -66,6 +68,10 @@ static gboolean      module_register    (void);
 static gint          gxyzf_detect       (const GwyFileDetectInfo *fileinfo,
                                          gboolean only_name);
 static GwyContainer* gxyzf_load         (const gchar *filename,
+                                         GwyRunType mode,
+                                         GError **error);
+static gboolean      gxyzf_export       (GwyContainer *container,
+                                         const gchar *filename,
                                          GwyRunType mode,
                                          GError **error);
 static gboolean      search             (const GridInfo *ginfo,
@@ -113,7 +119,7 @@ module_register(void)
                            (GwyFileDetectFunc)&gxyzf_detect,
                            (GwyFileLoadFunc)&gxyzf_load,
                            NULL,
-                           NULL);
+                           (GwyFileSaveFunc)&gxyzf_export);
 
     return TRUE;
 }
@@ -320,6 +326,130 @@ fail:
     return container;
 }
 
+static inline void
+append_double(gdouble *target, const gdouble v)
+{
+    union { guchar pp[8]; double d; } u;
+    u.d = v;
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+    GWY_SWAP(guchar, z.pp[0], z.pp[7]);
+    GWY_SWAP(guchar, z.pp[1], z.pp[6]);
+    GWY_SWAP(guchar, z.pp[2], z.pp[5]);
+    GWY_SWAP(guchar, z.pp[3], z.pp[4]);
+#endif
+    *target = u.d;
+}
+
+/* NB: We only export the current channel even though the format can, in
+ * principle, represent multiple channels at the same coordinates. */
+static gboolean
+gxyzf_export(GwyContainer *container,
+             const gchar *filename,
+             G_GNUC_UNUSED GwyRunType mode,
+             GError **error)
+{
+    static const gchar zeroes[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    GString *header = NULL;
+    gdouble *ddbl = NULL;
+    guint i, j, k, xres, yres, padding;
+    gint id;
+    GwyDataField *dfield;
+    const gdouble *d;
+    gdouble xreal, yreal, xoff, yoff;
+    gchar *s;
+    GwySIUnit *unit, *emptyunit;
+    FILE *fh;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
+    if (!dfield) {
+        err_NO_CHANNEL_EXPORT(error);
+        return FALSE;
+    }
+
+    if (!(fh = g_fopen(filename, "wb"))) {
+        err_OPEN_WRITE(error);
+        return FALSE;
+    }
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    xreal = gwy_data_field_get_xreal(dfield);
+    yreal = gwy_data_field_get_yreal(dfield);
+    xoff = gwy_data_field_get_xoffset(dfield);
+    yoff = gwy_data_field_get_yoffset(dfield);
+
+    header = g_string_new(MAGIC);
+    g_string_append_printf(header, "NChannels = %u\n", 1);
+    g_string_append_printf(header, "NPoints = %u\n", xres*yres);
+
+    emptyunit = gwy_si_unit_new(NULL);
+    unit = gwy_data_field_get_si_unit_xy(dfield);
+    if (!gwy_si_unit_equal(unit, emptyunit)) {
+        s = gwy_si_unit_get_string(unit, GWY_SI_UNIT_FORMAT_PLAIN);
+        g_string_append_printf(header, "XYUnits = %s\n", s);
+        g_free(s);
+    }
+    unit = gwy_data_field_get_si_unit_z(dfield);
+    if (!gwy_si_unit_equal(unit, emptyunit)) {
+        s = gwy_si_unit_get_string(unit, GWY_SI_UNIT_FORMAT_PLAIN);
+        g_string_append_printf(header, "ZUnits1 = %s\n", s);
+        g_free(s);
+    }
+    g_object_unref(emptyunit);
+
+    s = gwy_app_get_data_field_title(container, id);
+    g_string_append_printf(header, "Title1 = %s\n", s);
+    g_free(s);
+
+    g_string_append_printf(header, "XRes = %u\n", xres);
+    g_string_append_printf(header, "YRes = %u\n", yres);
+
+    if (fwrite(header->str, 1, header->len, fh) != header->len) {
+        err_WRITE(error);
+        goto fail;
+    }
+
+    padding = 8 - (header->len % 8);
+    if (fwrite(zeroes, 1, padding, fh) != padding) {
+        err_WRITE(error);
+        goto fail;
+    }
+    g_string_free(header, TRUE);
+    header = NULL;
+
+    ddbl = g_new(gdouble, 3*xres*yres);
+    d = gwy_data_field_get_data_const(dfield);
+    k = 0;
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            append_double(ddbl + k++, (j + 0.5)*xreal/xres + xoff);
+            append_double(ddbl + k++, (i + 0.5)*yreal/yres + yoff);
+            append_double(ddbl + k++, *(d++));
+        }
+    }
+
+    if (fwrite(ddbl, sizeof(gdouble), 3*xres*yres, fh) != 3*xres*yres) {
+        err_WRITE(error);
+        goto fail;
+    }
+    g_free(ddbl);
+    fclose(fh);
+
+    return TRUE;
+
+fail:
+    if (fh)
+        fclose(fh);
+    g_unlink(filename);
+    if (header)
+        g_string_free(header, TRUE);
+    g_free(ddbl);
+
+    return FALSE;
+}
+
 static gboolean
 search(const GridInfo *ginfo, GSList **grid,
        const gdouble *points, guint pointlen,
@@ -362,7 +492,7 @@ static GSList**
 sort_into_grid(const gdouble *points, guint pointlen, guint npoints,
                const GridInfo *ginfo)
 {
-    GSList **grid = g_new(GSList*, ginfo->xres*ginfo->yres);
+    GSList **grid = g_new0(GSList*, ginfo->xres*ginfo->yres);
     gdouble xq = ginfo->xres/ginfo->xreal, xo = ginfo->xoff;
     gdouble yq = ginfo->yres/ginfo->yreal, yo = ginfo->yoff;
     guint i;
@@ -399,7 +529,7 @@ estimate_dimensions(GHashTable *hash,
         if (err_DIMENSION(NULL, yres))
             yres = 0;
     }
-    gwy_debug("hint xres %u, hint %u", xres, yres);
+    gwy_debug("hint xres %u, yres %u", xres, yres);
 
     estxres = estimate_res(points, pointlen, npoints,
                            &ginfo->xoff, &ginfo->xreal, &shx);
@@ -421,7 +551,7 @@ estimate_dimensions(GHashTable *hash,
 
     ginfo->xres = xres;
     ginfo->yres = yres;
-    gwy_debug("final xres %u, hint %u", ginfo->xres, ginfo->yres);
+    gwy_debug("final xres %u, yres %u", ginfo->xres, ginfo->yres);
     gwy_debug("xreal %g, xoff %g", ginfo->xreal, ginfo->xoff);
     gwy_debug("yreal %g, yoff %g", ginfo->yreal, ginfo->yoff);
 }

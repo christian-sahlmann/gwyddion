@@ -296,7 +296,7 @@ gsf_export(GwyContainer *container,
            G_GNUC_UNUSED GwyRunType mode,
            GError **error)
 {
-    gchar zeroes[4] = { 0, 0, 0, 0 };
+    static const gchar zeroes[4] = { 0, 0, 0, 0 };
     GString *header = NULL;
     gfloat *dfl = NULL;
     guint i, xres, yres, padding;
