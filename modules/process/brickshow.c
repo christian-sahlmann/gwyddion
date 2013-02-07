@@ -271,7 +271,7 @@ brickshow_dialog(BrickshowArgs *args,
         { N_("Z direction"), GRAPH_DIRZ, },
     };
   
-    GtkWidget *dialog, *table, *hbox, *label, *notebook, *msgdialog, *button;
+    GtkWidget *dialog, *table, *hbox, *label, *notebook, *button;
     GwyDataField *dfield;
     GwyDataLine *dline;
     BrickshowControls controls;
@@ -1049,6 +1049,11 @@ brickshow_load_data(BrickshowControls *controls,
 
             controls->nps = 0;
 
+            controls->rm[0][0] = controls->rm[1][1] = controls->rm[2][2] = 1;
+            controls->rm[1][0] = controls->rm[2][0] = controls->rm[0][1] = controls->rm[0][2] = 0;
+            controls->rm[1][2] = controls->rm[2][1] = 0;
+            controls->xangle = controls->yangle = controls->zangle = 0;
+   
             p3d_build(controls, args);
             p3d_prepare_wdata(controls, args);
 
@@ -1068,7 +1073,7 @@ create_brick_from_datafield(BrickshowControls *controls, GwyDataField *dfield)
     gint xres, yres, zres;
     gint col, row, lev;
     gdouble ratio, *bdata, *ddata;
-    gdouble xreal, yreal, zreal, offset;
+    gdouble zreal, offset;
     GwyDataField *lowres;
     
     xres = gwy_data_field_get_xres(dfield);
@@ -1088,8 +1093,6 @@ create_brick_from_datafield(BrickshowControls *controls, GwyDataField *dfield)
 
     zres = MAX(xres, yres);
 
-    xreal = gwy_data_field_get_xreal(lowres);
-    yreal = gwy_data_field_get_yreal(lowres);
     offset = gwy_data_field_get_min(lowres);
     zreal = gwy_data_field_get_max(lowres) - offset;
     
@@ -1351,18 +1354,6 @@ mmultv(gdouble m[3][3], gdouble x, gdouble y, gdouble z,
     *pz = m[2][0]*x + m[2][1]*y + m[2][2]*z;
 }
 
-static void
-mcopy(gdouble a[3][3], gdouble b[3][3])
-{   
-    gint i, j;
-    for(i = 0; i < 3; i++)
-    {
-        for(j = 0; j < 3; j++)
-        {
-            b[i][j] = a[i][j];
-        }
-    }
-}
 
 /*static gdouble
 mdet(gdouble m[3][3])
@@ -1396,7 +1387,7 @@ minv(gdouble m[3][3], gdouble ret[3][3])
 static gboolean
 //p3d_on_draw_event(GtkWidget *widget, cairo_t *cr, 
 //              BrickshowControls *controls)
-p3d_on_draw_event(GtkWidget *widget, GdkEventExpose *event, BrickshowControls *controls)
+p3d_on_draw_event(GtkWidget *widget, G_GNUC_UNUSED GdkEventExpose *event, BrickshowControls *controls)
 {
     cairo_t *cr = gdk_cairo_create(gtk_widget_get_window(widget));
     gdouble sx, sy;
@@ -1447,7 +1438,7 @@ p3d_on_draw_event(GtkWidget *widget, GdkEventExpose *event, BrickshowControls *c
 }
 
 static gboolean 
-p3d_clicked(GtkWidget *widget, GdkEventButton *event,
+p3d_clicked(G_GNUC_UNUSED GtkWidget *widget, GdkEventButton *event,
                  BrickshowControls *controls)
 {
 
@@ -1663,7 +1654,7 @@ p3d_set_axes(BrickshowControls *controls)
     controls->px[i] = 1; controls->py[i] = 1; controls->pz[i] = 1; controls->ps[i] = 0; i++;
     controls->px[i] = 1; controls->py[i] = -1; controls->pz[i] = 1; controls->ps[i] = 1; 
 
-    for (i=0; i<20; i++) {
+    for (i=3; i<20; i++) {
         controls->px[i] *= controls->bwidth;
         controls->py[i] *= controls->bheight;
         controls->pz[i] *= controls->bdepth;
@@ -1719,12 +1710,15 @@ static void
 p3d_build(BrickshowControls *controls, G_GNUC_UNUSED BrickshowArgs *args)
 {
     if (controls->brick == NULL) {
-        printf("No brick\n");
+        //printf("No brick\n");
         return;
     }
 
+
+    gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Building wireframe model..."));
     p3d_set_axes(controls);
     p3d_add_wireframe(controls);
+    gwy_app_wait_finish();
 
 }
 
@@ -1735,7 +1729,7 @@ p3d_prepare_wdata(BrickshowControls *controls, BrickshowArgs *args)
     gint i;
 
     if (controls->brick == NULL) {
-        printf("No brick\n");
+        //printf("No brick\n");
         return;
     }
 
@@ -1756,7 +1750,7 @@ p3d_prepare_wdata(BrickshowControls *controls, BrickshowArgs *args)
 }
 
 static gboolean
-gothere(BrickshowControls *controls, gint *actual_nps, gdouble *data, gdouble *vdata, gint xres, gint yres, gint zres, gint col, gint row, gint dir, gint tval, gboolean *move, gdouble threshold)
+gothere(gdouble *data, gdouble *vdata, gint xres, gint yres, gint col, gint row, gint dir, gdouble threshold)
 {
     if (vdata[col+xres*row] == 1) return FALSE;
 
@@ -1828,21 +1822,21 @@ visitme(BrickshowControls *controls, gint *actual_nps, gdouble *data, gdouble *v
     vdata[col+xres*row] = 1;
 
     /*go to neighbor positions*/
-    if (gothere(controls, actual_nps, data, vdata, xres, yres, zres, col+1, row, dir, tval, move, threshold))  
-        visitme(controls, actual_nps, data, vdata, xres, yres, zres, col+1, row, dir, tval, move, threshold);
-    else if (gothere(controls, actual_nps, data, vdata, xres, yres, zres, col-1, row, dir, tval, move, threshold))
+    if (gothere(data, vdata, xres, yres, col+1, row, dir, threshold))  
+        visitme(controls, actual_nps,data, vdata, xres, yres, zres, col+1, row, dir, tval, move, threshold);
+    else if (gothere(data, vdata, xres, yres, col-1, row, dir, threshold))
              visitme(controls, actual_nps, data, vdata, xres, yres, zres, col-1, row, dir, tval, move, threshold);
-    else if (gothere(controls, actual_nps, data, vdata, xres, yres, zres, col, row+1, dir, tval, move, threshold))
+    else if (gothere(data, vdata, xres, yres, col, row+1, dir, threshold))
              visitme(controls, actual_nps, data, vdata, xres, yres, zres, col, row+1, dir, tval, move, threshold);
-    else if (gothere(controls, actual_nps, data, vdata, xres, yres, zres, col, row-1, dir, tval, move, threshold))
+    else if (gothere(data, vdata, xres, yres, col, row-1, dir, threshold))
              visitme(controls, actual_nps, data, vdata, xres, yres, zres, col, row-1, dir, tval, move, threshold);
-    else if (gothere(controls, actual_nps, data, vdata, xres, yres, zres, col+1, row+1, dir, tval, move, threshold))
+    else if (gothere(data, vdata, xres, yres, col+1, row+1, dir, threshold))
              visitme(controls, actual_nps, data, vdata, xres, yres, zres, col+1, row+1, dir, tval, move, threshold);
-    else if (gothere(controls, actual_nps, data, vdata, xres, yres, zres, col-1, row-1, dir, tval, move, threshold))
+    else if (gothere(data, vdata, xres, yres, col-1, row-1, dir, threshold))
              visitme(controls, actual_nps, data, vdata, xres, yres, zres, col-1, row-1, dir, tval, move, threshold);
-    else if (gothere(controls, actual_nps, data, vdata, xres, yres, zres, col+1, row-1, dir, tval, move, threshold))
+    else if (gothere(data, vdata, xres, yres, col+1, row-1, dir, threshold))
              visitme(controls, actual_nps, data, vdata, xres, yres, zres, col+1, row-1, dir, tval, move, threshold);
-    else if (gothere(controls, actual_nps, data, vdata, xres, yres, zres, col-1, row+1, dir, tval, move, threshold))
+    else if (gothere(data, vdata, xres, yres, col-1, row+1, dir, threshold))
              visitme(controls, actual_nps, data, vdata, xres, yres, zres, col-1, row+1, dir, tval, move, threshold);
 
 }
@@ -1859,7 +1853,7 @@ p3d_add_wireframe(BrickshowControls *controls)
    
   
     if (controls->brick == NULL) {
-        printf("No brick\n");
+        //printf("No brick\n");
         return;
     } 
   
@@ -1870,8 +1864,9 @@ p3d_add_wireframe(BrickshowControls *controls)
 
     visited = gwy_data_field_new(yres, zres, yres, zres, FALSE);
 
-    printf("brick min %g, max %g\n", gwy_brick_get_min(controls->brick), gwy_brick_get_max(controls->brick));
-    threshold = gwy_brick_get_min(controls->brick) + (gwy_brick_get_max(controls->brick) - gwy_brick_get_min(controls->brick))/100.0*controls->args->threshold;
+    //printf("brick min %g, max %g\n", gwy_brick_get_min(controls->brick), gwy_brick_get_max(controls->brick));
+    threshold = gwy_brick_get_min(controls->brick) 
+        + (gwy_brick_get_max(controls->brick) - gwy_brick_get_min(controls->brick))/100.0*controls->args->threshold;
 
     for (i=0; i<xres; i+=spacing)
     {
@@ -1891,7 +1886,7 @@ p3d_add_wireframe(BrickshowControls *controls)
             for (row=1; row<zres; row++)
             {
                 move = 1;
-                if (gothere(controls, &actual_nps, data, vdata, xres, yres, zres, col, row, 0, i, &move, threshold))
+                if (gothere(data, vdata, xres, yres, col, row, 0, threshold))
                     visitme(controls, &actual_nps, data, vdata, xres, yres, zres, col, row, 0, i, &move, threshold);
             }
         }
@@ -1917,7 +1912,7 @@ p3d_add_wireframe(BrickshowControls *controls)
             for (row=1; row<zres; row++)
             {
                     move = 1;
-                    if (gothere(controls, &actual_nps, data, vdata, xres, yres, zres, col, row, 1, i, &move, threshold))
+                    if (gothere(data, vdata, xres, yres, col, row, 1, threshold))
                         visitme(controls, &actual_nps, data, vdata, xres, yres, zres, col, row, 1, i, &move, threshold);                
             }
         }
@@ -1943,7 +1938,7 @@ p3d_add_wireframe(BrickshowControls *controls)
             for (row=1; row<yres; row++)
             {
                     move = 1;
-                    if (gothere(controls, &actual_nps, data, vdata, xres, yres, zres, col, row, 2, i, &move, threshold))
+                    if (gothere(data, vdata, xres, yres, col, row, 2, threshold))
                         visitme(controls, &actual_nps, data, vdata, xres, yres, zres, col, row, 2, i, &move, threshold);                
             }
         }
