@@ -11,6 +11,8 @@ Libraries:
   fails was corrected.
 - libgwyprocess: Swapped x and y coordinates of spectra in serialisation were
   fixed.
+- libgwyprocess: Added brick (3D) data support backported from Gwyddion 3 development 
+  branch.
 - libgwydgets: Crashs upon clicking colour selection buttons were fixed.
 - libgwydgets: 3D view false colour axis shows overlay, not height units in the
   overlay mode.
@@ -44,6 +46,8 @@ Modules:
 - NetCDF: GXSM file metadata support was improved, images are flipped when
   appropriate.
 - Fit sphere: Units of resulting quantities are set correctly.
+- Brickshow: Added a simple module for loading, visualising and data extracting
+  from 3D volume data (Bricks)
 
 Other:
 - Crash on Win32 while loading TIFF images was hopefully fixed.
