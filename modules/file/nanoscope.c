@@ -1044,6 +1044,10 @@ get_spec_ordinate_scale(GHashTable *hash,
         }
         else
             *convert_to_force = FALSE;
+
+        // FIXME: Have no idea why.
+        if (gwy_strequal(val->soft_scale, "Sens. ZsensSens"))
+            *scale *= 5.0;
     }
     else {
         /* FIXME: Is this possible for I-V too? */
