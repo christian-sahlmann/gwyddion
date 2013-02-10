@@ -1514,11 +1514,17 @@ gwy_3d_window_labels_reset_clicked(Gwy3DWindow *window)
 
     id = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(window->labels_menu));
     label = gwy_3d_view_get_label(GWY_3D_VIEW(window->gwy3dview), id);
-    /* TODO: This is not reflected by the controls now */
     gwy_3d_label_reset(label);
-
+    gtk_entry_set_text(GTK_ENTRY(window->labels_text),
+                       gwy_3d_label_get_text(label));
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(window->labels_delta_x),
+                              label->delta_x);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(window->labels_delta_y),
+                              label->delta_y);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(window->labels_size),
+                              label->size);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(window->labels_autosize),
-                                 TRUE);
+                                 !label->fixed_size);
 }
 
 static void
