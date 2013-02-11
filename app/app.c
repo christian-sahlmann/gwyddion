@@ -1100,6 +1100,8 @@ gwy_app_3d_view_set_defaults(Gwy3DView *gwy3dview)
                                       setup->axes_visible);
     gwy_container_set_boolean_by_name(settings, "/app/3d/labels-visible",
                                       setup->labels_visible);
+    gwy_container_set_boolean_by_name(settings, "/app/3d/fmscale-visible",
+                                      setup->fmscale_visible);
     gwy_container_set_double_by_name(settings, "/app/3d/rotation-x",
                                      setup->rotation_x);
     gwy_container_set_double_by_name(settings, "/app/3d/rotation-y",
@@ -1148,6 +1150,9 @@ _gwy_app_3d_view_init_setup(GwyContainer *container,
     if (gwy_container_gis_boolean_by_name(settings, "/app/3d/labels-visible",
                                           &boolvalue))
         g_object_set(setup, "labels-visible", boolvalue, NULL);
+    if (gwy_container_gis_boolean_by_name(settings, "/app/3d/fmscale-visible",
+                                          &boolvalue))
+        g_object_set(setup, "fmscale-visible", boolvalue, NULL);
     if (gwy_container_gis_double_by_name(settings, "/app/3d/rotation-x",
                                          &dblvalue))
         g_object_set(setup, "rotation-x", dblvalue, NULL);
