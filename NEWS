@@ -1,4 +1,7 @@
 2.31 (0000-00-00)
+Application:
+- Translations updated: Czech, French, Russian.
+
 Libraries:
 - libgwyprocess: Bogus normalisation/possible crash in gwy_data_field_area_dh()
   in presence of mask on non-square area was fixed.
@@ -16,6 +19,8 @@ Libraries:
 - libgwydgets: Crashs upon clicking colour selection buttons were fixed.
 - libgwydgets: 3D view false colour axis shows overlay, not height units in the
   overlay mode.
+- libgwyapp: Visibility of false colour bar and mask are included in 3D view
+  settings saved by ‘Set Defaults’.
 
 Modules:
 - APE DAX (new): Imports APE Research DAX files.
@@ -23,6 +28,8 @@ Modules:
 - VTK export (new): Exports fields as VTK structured grid files.
 - Magellan (new): Imports FEI Magellan SEM images.
 - Extend (new): Extends a field by adding borders using several methods.
+- Brickshow (new): Added a simple module for loading, visualising and data
+  extracting from 3D volume data (Bricks)
 - Seiko: Files starting ‘NPXZ000AFM’ are recognised and imported.  XQP phase
   files should be read with a correct value scale and units.
 - Shimadzu: Files of different version than 2 are recognised and loaded.
@@ -46,8 +53,7 @@ Modules:
 - NetCDF: GXSM file metadata support was improved, images are flipped when
   appropriate.
 - Fit sphere: Units of resulting quantities are set correctly.
-- Brickshow: Added a simple module for loading, visualising and data extracting
-  from 3D volume data (Bricks)
+- Omicron: Abscissae of single point spectra were corrected to match SCALA.
 
 Other:
 - Crash on Win32 while loading TIFF images was hopefully fixed.
