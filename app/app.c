@@ -69,7 +69,7 @@ static gboolean   gwy_app_graph_popup_menu_popup_mouse(GtkWidget *menu,
 static void       gwy_app_graph_popup_menu_popup_key  (GtkWidget *menu,
                                                        GtkWidget *graph);
 static void       gwy_app_3d_window_export            (Gwy3DWindow *window);
-static void       gwy_app_3d_view_set_defaults        (Gwy3DView *gwy3dview);
+static void       gwy_app_3d_window_set_defaults      (Gwy3DWindow *window);
 static void       gwy_app_save_3d_export              (GtkWidget *dialog,
                                                        gint response,
                                                        Gwy3DWindow *gwy3dwindow);
@@ -210,7 +210,7 @@ static gboolean
 gwy_app_confirm_quit(void)
 {
     GSList *unsaved = NULL;
-    gboolean ok;
+    gboolean ok G_GNUC_UNUSED;
 
     /* gwy_app_data_window_foreach((GFunc)gather_unsaved_cb, &unsaved); */
     if (!unsaved)
@@ -781,11 +781,9 @@ void
 _gwy_app_3d_window_setup(Gwy3DWindow *window3d)
 {
     GtkTooltips *tooltips;
-    Gwy3DView *view3d;
     GtkWidget *button;
 
     gwy_app_add_main_accel_group(GTK_WINDOW(window3d));
-    view3d = GWY_3D_VIEW(gwy_3d_window_get_3d_view(window3d));
     tooltips = gwy_3d_window_class_get_tooltips();
 
     button = gwy_stock_like_button_new(gwy_sgettext("verb|Save"),
@@ -806,7 +804,8 @@ _gwy_app_3d_window_setup(Gwy3DWindow *window3d)
                          _("Set the current view setup as the default"), NULL);
     gwy_3d_window_add_action_widget(GWY_3D_WINDOW(window3d), button);
     g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(gwy_app_3d_view_set_defaults), view3d);
+                             G_CALLBACK(gwy_app_3d_window_set_defaults),
+                             window3d);
 
     gwy_app_3d_window_add_overlay_menu(GWY_3D_WINDOW(window3d));
 }
@@ -822,6 +821,8 @@ gwy_app_3d_window_add_overlay_menu(Gwy3DWindow *gwy3dwindow)
     gint activeid = -1;
     const guchar *key;
     gchar refkey[40];
+    gboolean showmask = FALSE;
+    GwyContainer *settings;
 
     view = GWY_3D_VIEW(gwy_3d_window_get_3d_view(gwy3dwindow));
     lay = gtk_hbox_new(FALSE, 5);
@@ -855,21 +856,28 @@ gwy_app_3d_window_add_overlay_menu(Gwy3DWindow *gwy3dwindow)
     gwy_app_3d_window_set_data2(gwy3dwindow, activeid, FALSE);
 
     g_signal_connect_swapped(menu, "changed",
-                     G_CALLBACK(gwy_app_3d_window_update_chooser), gwy3dwindow);
+                             G_CALLBACK(gwy_app_3d_window_update_chooser),
+                             gwy3dwindow);
 
     gtk_box_pack_start(GTK_BOX(lay), menu, FALSE, FALSE, 0);
     g_object_set_data(G_OBJECT(lay), "c", menu);
 
     menu = gtk_check_button_new_with_mnemonic(_("_Show mask"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(menu), FALSE);
+    settings = gwy_app_settings_get();
+    gwy_container_gis_boolean_by_name(settings, "/app/3d/show-mask", &showmask);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(menu), showmask);
 
     g_signal_connect_swapped(menu, "toggled",
-                     G_CALLBACK(gwy_app_3d_window_update_chooser),
-                     gwy3dwindow);
+                             G_CALLBACK(gwy_app_3d_window_update_chooser),
+                             gwy3dwindow);
     gtk_box_pack_start(GTK_BOX(lay), menu, FALSE, FALSE, 0);
     g_object_set_data(G_OBJECT(lay), "m", menu);
 
     gwy_3d_window_set_overlay_chooser(gwy3dwindow, lay);
+    /* XXX: Gross! It does not take initial state of the checkbox into
+     * account.*/
+    if (showmask)
+        gwy_app_3d_window_update_chooser(gwy3dwindow);
 }
 
 /* set overlay source to channel id for Gwy3DView in gwy3dwindow.
@@ -1087,12 +1095,16 @@ gwy_app_3d_window_export(Gwy3DWindow *gwy3dwindow)
 }
 
 static void
-gwy_app_3d_view_set_defaults(Gwy3DView *gwy3dview)
+gwy_app_3d_window_set_defaults(Gwy3DWindow *window)
 {
+    Gwy3DView *view;
     Gwy3DSetup *setup;
+    GObject *lay;
+    GtkToggleButton *toggle;
     GwyContainer *settings;
 
-    setup = gwy_3d_view_get_setup(gwy3dview);
+    view = (Gwy3DView*)gwy_3d_window_get_3d_view(window);
+    setup = gwy_3d_view_get_setup(view);
     g_return_if_fail(GWY_IS_3D_SETUP(setup));
 
     settings = gwy_app_settings_get();
@@ -1118,6 +1130,11 @@ gwy_app_3d_view_set_defaults(Gwy3DView *gwy3dview)
                                    setup->visualization);
     gwy_container_set_enum_by_name(settings, "/app/3d/projection",
                                    setup->projection);
+
+    lay = G_OBJECT(window->dataov_menu);
+    toggle = GTK_TOGGLE_BUTTON(g_object_get_data(lay, "m"));
+    gwy_container_set_boolean_by_name(settings, "/app/3d/show-mask",
+                                      gtk_toggle_button_get_active(toggle));
 }
 
 gboolean
