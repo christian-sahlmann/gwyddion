@@ -864,6 +864,48 @@ gwy_brick_set_zoffset(GwyBrick *brick,
 }
 
 /**
+ * gwy_brick_set_xreal:
+ * @brick: A data brick.
+ * @xreal: New real x dimensions value
+ *
+ * Sets the real x dimension of a brick.
+*/
+void            
+gwy_brick_set_xreal(GwyBrick *brick, gdouble xreal)
+{
+    brick->xreal = xreal;
+}
+
+/**
+ * gwy_brick_set_yreal:
+ * @brick: A data brick.
+ * @yreal: New real y dimensions value
+ *
+ * Sets the real y dimension of a brick.
+*/
+
+void            
+gwy_brick_set_yreal(GwyBrick *brick, gdouble yreal)
+{
+    brick->yreal = yreal;
+}
+
+/**
+ * gwy_brick_set_zreal:
+ * @brick: A data brick.
+ * @zreal: New real z dimensions value
+ *
+ * Sets the real z dimension of a brick.
+*/
+
+void            
+gwy_brick_set_zreal(GwyBrick *brick, gdouble zreal)
+{
+    brick->zreal = zreal;
+}
+
+
+/**
  * gwy_brick_get_si_unit_x:
  * @brick: A data brick.
  *
@@ -1738,7 +1780,7 @@ void
 gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
                        gint istart, gint jstart, gint kstart,
                        gint iend, gint jend, gint kend,
-                       gboolean keep_offsets)
+                       G_GNUC_UNUSED gboolean keep_offsets)
 {
     gint col, row, lev;
     gdouble *bdata, *ddata;

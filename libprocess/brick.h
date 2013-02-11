@@ -93,24 +93,24 @@ GwyBrick*   gwy_brick_new                   (gint xres, gint yres, gint zres,
 GwyBrick*   gwy_brick_new_alike             (GwyBrick *model,
                                              gboolean nullme);
 
-GwyBrick*       gwy_brick_new_part    (const GwyBrick *brick,
+/*GwyBrick*       gwy_brick_new_part    (const GwyBrick *brick,
                                        const GwyBrickPart *bpart,
-                                       gboolean keep_offsets);
-void            gwy_brick_set_size    (GwyBrick *brick,
+                                       gboolean keep_offsets);*/
+/*void            gwy_brick_set_size    (GwyBrick *brick,
                                        guint xres,
                                        guint yres,
                                        guint zres,
-                                       gboolean clear);
+                                       gboolean clear);*/
 void            gwy_brick_data_changed(GwyBrick *brick);
-void            gwy_brick_copy        (const GwyBrick *src,
+/*void            gwy_brick_copy        (const GwyBrick *src,
                                        const GwyBrickPart *srcpart,
                                        GwyBrick *dest,
                                        guint destcol,
                                        guint destrow,
-                                       guint destlevel);
-void            gwy_brick_copy_full   (const GwyBrick *src,
-                                       GwyBrick *dest);
-void            gwy_brick_invalidate  (GwyBrick *brick);
+                                       guint destlevel);*/
+/*void            gwy_brick_copy_full   (const GwyBrick *src,
+                                       GwyBrick *dest);*/
+/*void            gwy_brick_invalidate  (GwyBrick *brick);*/
 
 void            gwy_brick_resample    (GwyBrick *brick,
                                        gint xres,
@@ -128,6 +128,14 @@ gdouble            gwy_brick_get_zreal   (GwyBrick *brick);
 
 
 
+gdouble   gwy_brick_get_xoffset(GwyBrick *brick);
+gdouble   gwy_brick_get_yoffset(GwyBrick *brick);
+gdouble   gwy_brick_get_zoffset(GwyBrick *brick);
+
+
+const gdouble*    gwy_brick_get_data_const(GwyBrick *brick);
+
+
 void            gwy_brick_set_xreal   (GwyBrick *brick,
                                        gdouble xreal);
 void            gwy_brick_set_yreal   (GwyBrick *brick,
@@ -141,10 +149,24 @@ void            gwy_brick_set_yoffset (GwyBrick *brick,
 void            gwy_brick_set_zoffset (GwyBrick *brick,
                                        gdouble zoffset);
 
+
+
 GwySIUnit*        gwy_brick_get_si_unit_x(GwyBrick *brick);
 GwySIUnit*        gwy_brick_get_si_unit_y(GwyBrick *brick);
 GwySIUnit*        gwy_brick_get_si_unit_z(GwyBrick *brick);
 GwySIUnit*        gwy_brick_get_si_unit_w(GwyBrick *brick);
+
+void              gwy_brick_set_si_unit_x(GwyBrick *brick,
+                                          GwySIUnit *si_unit);
+void              gwy_brick_set_si_unit_y(GwyBrick *brick,
+                                          GwySIUnit *si_unit);
+void              gwy_brick_set_si_unit_z(GwyBrick *brick,
+                                          GwySIUnit *si_unit);
+void              gwy_brick_set_si_unit_w(GwyBrick *brick,
+                                          GwySIUnit *si_unit);
+
+
+
 
 gdouble         gwy_brick_get_min     (GwyBrick *brick);
 gdouble         gwy_brick_get_max     (GwyBrick *brick);
