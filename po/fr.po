@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2013-02-07 03:58+0100\n"
-"PO-Revision-Date: 2013-02-07 22:26+0100\n"
+"POT-Creation-Date: 2013-02-10 03:58+0100\n"
+"PO-Revision-Date: 2013-02-10 14:09+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -2507,7 +2507,7 @@ msgstr "La valeur de balise d'en-tête ‘%s’ ne se termine pas par des caract
 #: modules/file/gdeffile.c:169
 #: modules/file/gdeffile.c:193
 #: modules/file/gsffile.c:152
-#: modules/file/gxyzffile.c:168
+#: modules/file/gxyzffile.c:174
 #: modules/file/iso28600.c:1029
 #: modules/file/pt3file.c:481
 #: modules/file/pt3file.c:583
@@ -2699,7 +2699,7 @@ msgstr "Burleigh données exportées (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:225
 #: modules/file/burleigh_exp.c:266
-#: modules/file/nanoscope.c:1283
+#: modules/file/nanoscope.c:1287
 #: modules/file/omicron.c:397
 #: modules/file/shimadzu.c:453
 msgid "Missing colon in header line."
@@ -3057,18 +3057,18 @@ msgstr "Format non supporté"
 msgid "File is truncated."
 msgstr "Le fichier est tronqué."
 
-#: modules/file/gxyzffile.c:99
+#: modules/file/gxyzffile.c:105
 msgid "Imports Gwyddion XYZ field files."
 msgstr "Importe les fichiers Gwyddion XYZ."
 
-#: modules/file/gxyzffile.c:112
+#: modules/file/gxyzffile.c:118
 msgid "GwyXYZ data files"
 msgstr "Données GwyXYZ"
 
-#: modules/file/gxyzffile.c:195
-#, fuzzy, c-format
+#: modules/file/gxyzffile.c:201
+#, c-format
 msgid "Data size %lu is not a multiple of point size %u."
-msgstr "La taille des données %u ne correspond pas au nombre de points de données %u×%u."
+msgstr "La taille des données %u n'est pas un multiple de la taille de point %u."
 
 #: modules/file/hdf4file.c:338
 msgid "Imports Hierarchical Data Format (HDF) files, version 4."
@@ -3908,13 +3908,13 @@ msgstr ""
 msgid "Cannot parse `Scan size' field."
 msgstr "Impossible d'analyser le champ `Scan size'."
 
-#: modules/file/nanoscope.c:1192
+#: modules/file/nanoscope.c:1196
 #: modules/file/nrrdfile.c:1013
 #, c-format
 msgid "Garbage after data sample #%u."
 msgstr "Données erronées après l'échantillon #%u."
 
-#: modules/file/nanoscope.c:1273
+#: modules/file/nanoscope.c:1277
 msgid "Truncated header line."
 msgstr "Ligne d'en-tête tronquée."
 
@@ -6296,9 +6296,8 @@ msgid "Zoom"
 msgstr "Zoom"
 
 #: modules/process/brickshow.c:563
-#, fuzzy
 msgid "Wireframe threshold"
-msgstr "Seuil de la grille"
+msgstr "Seuil du modèle filaire"
 
 #: modules/process/brickshow.c:571
 msgid "Z scale"
@@ -6369,6 +6368,10 @@ msgstr "Charger des données volumiques"
 #, c-format
 msgid "Error loading file '%s'"
 msgstr "Erreur lors du chargement du fichier '%s'"
+
+#: modules/process/brickshow.c:1718
+msgid "Building wireframe model..."
+msgstr "Construction du modèle filaire..."
 
 #: modules/process/calcoefs_load.c:79
 msgid "Load calibration data from text file"
@@ -9901,12 +9904,11 @@ msgstr "Simulation PID"
 
 #: modules/process/pid.c:211
 msgid "_Proportional:"
-msgstr "_Proportionnel :"
+msgstr "_Proportionnelle :"
 
 #: modules/process/pid.c:217
-#, fuzzy
 msgid "_Integral:"
-msgstr "_Intégration :"
+msgstr "_Intégrale :"
 
 #: modules/process/pid.c:223
 msgid "_Integration steps:"
@@ -9922,11 +9924,11 @@ msgstr "Rapport de vitesse PID/scan :"
 
 #: modules/process/pid.c:249
 msgid "Force strength:"
-msgstr ""
+msgstr "Force de résistance :"
 
 #: modules/process/pid.c:255
 msgid "Force setpoint:"
-msgstr ""
+msgstr "Force de consigne :"
 
 #: modules/process/pid.c:357
 msgid "Scanning..."
