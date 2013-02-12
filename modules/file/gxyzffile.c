@@ -36,7 +36,7 @@
  * Read[1]
  * [1] XYZ data are interpolated to a regular grid upon import.
  **/
-#define DEBUG 1
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
