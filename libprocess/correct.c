@@ -670,7 +670,7 @@ gwy_data_field_distort(GwyDataField *source,
                 v = gwy_interpolation_interpolate_2d(x, y, suplen, coeff,
                                                      interp);
             }
-            data[newj + xres*newi] = v;
+            data[newj + newxres*newi] = v;
         }
     }
 
