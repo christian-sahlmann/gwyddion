@@ -24,7 +24,7 @@
  * .tiff, .tif
  * Read
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
@@ -420,7 +420,7 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
 
     psia_free_image_header(&header);
 
-    psia_read_spectra(container, tiff, header.data_type, version);
+    /* psia_read_spectra(container, tiff, header.data_type, version); */
 
     return container;
 }
