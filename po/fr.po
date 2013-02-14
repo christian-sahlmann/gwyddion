@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2013-02-10 03:58+0100\n"
-"PO-Revision-Date: 2013-02-10 14:09+0100\n"
+"PO-Revision-Date: 2013-02-14 08:46+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -3068,7 +3068,7 @@ msgstr "Données GwyXYZ"
 #: modules/file/gxyzffile.c:201
 #, c-format
 msgid "Data size %lu is not a multiple of point size %u."
-msgstr "La taille des données %u n'est pas un multiple de la taille de point %u."
+msgstr "La taille des données %lu n'est pas un multiple de la taille de point %u."
 
 #: modules/file/hdf4file.c:338
 msgid "Imports Hierarchical Data Format (HDF) files, version 4."
