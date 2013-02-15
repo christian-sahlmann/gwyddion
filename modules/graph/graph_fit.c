@@ -67,6 +67,7 @@ typedef struct {
     gboolean auto_estimate;
     gboolean auto_plot;
     gboolean plot_full;
+    gboolean out_diff;
     GwyGraphModel *graph_model;
     GwyDataLine *xdata;
     GwyDataLine *ydata;
@@ -104,6 +105,7 @@ typedef struct {
     GtkWidget *auto_estimate;
     GtkWidget *auto_plot;
     GtkWidget *plot_full;
+    GtkWidget *out_diff;
     gboolean in_update;
 } FitControls;
 
@@ -128,6 +130,8 @@ static void        auto_estimate_changed     (GtkToggleButton *check,
 static void        auto_plot_changed         (GtkToggleButton *check,
                                               FitControls *controls);
 static void        plot_full_changed         (GtkToggleButton *check,
+                                              FitControls *controls);
+static void        out_diff_changed          (GtkToggleButton *check,
                                               FitControls *controls);
 static void        function_changed          (GtkComboBox *combo,
                                               FitControls *controls);
@@ -204,7 +208,6 @@ fit(GwyGraph *graph)
 
     args.auto_estimate = TRUE;
     args.auto_plot = TRUE;
-    args.plot_full = FALSE;
     args.parent_graph = graph;
     args.xdata = gwy_data_line_new(1, 1.0, FALSE);
     args.ydata = gwy_data_line_new(1, 1.0, FALSE);
@@ -299,7 +302,7 @@ fit_dialog(FitArgs *args)
     gtk_box_pack_start(GTK_BOX(hbox), align, FALSE, FALSE, 0);
     g_signal_connect(align, "size-request", G_CALLBACK(grow_width), NULL);
 
-    table = gtk_table_new(8, 2, FALSE);
+    table = gtk_table_new(9, 2, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_add(GTK_CONTAINER(align), table);
@@ -445,6 +448,16 @@ fit_dialog(FitArgs *args)
                      0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     g_signal_connect(controls.plot_full, "toggled",
                      G_CALLBACK(plot_full_changed), &controls);
+    row++;
+
+    controls.out_diff
+        = gtk_check_button_new_with_mnemonic(_("Create a difference graph"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.out_diff),
+                                 args->out_diff);
+    gtk_table_attach(GTK_TABLE(table), controls.out_diff,
+                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect(controls.out_diff, "toggled",
+                     G_CALLBACK(out_diff_changed), &controls);
     row++;
 
     /* Auto-update */
@@ -874,6 +887,13 @@ plot_full_changed(GtkToggleButton *check,
              && !controls->args->is_fitted
              && !controls->args->is_estimated)
         fit_estimate(controls);
+}
+
+static void
+out_diff_changed(GtkToggleButton *check,
+                 FitControls *controls)
+{
+    controls->args->out_diff = gtk_toggle_button_get_active(check);
 }
 
 static void
@@ -1346,6 +1366,7 @@ static const gchar preset_key[]        = "/module/graph_fit/preset";
 static const gchar auto_estimate_key[] = "/module/graph_fit/auto_estimate";
 static const gchar auto_plot_key[]     = "/module/graph_fit/auto_plot";
 static const gchar plot_full_key[]     = "/module/graph_fit/plot_full";
+static const gchar out_diff_key[]      = "/module/graph_fit/out_diff";
 
 static void
 load_args(GwyContainer *container,
@@ -1365,6 +1386,8 @@ load_args(GwyContainer *container,
                                       &args->auto_plot);
     gwy_container_gis_boolean_by_name(container, plot_full_key,
                                       &args->plot_full);
+    gwy_container_gis_boolean_by_name(container, out_diff_key,
+                                      &args->out_diff);
 }
 
 static void
@@ -1383,6 +1406,8 @@ save_args(GwyContainer *container,
                                       args->auto_plot);
     gwy_container_set_boolean_by_name(container, plot_full_key,
                                       args->plot_full);
+    gwy_container_set_boolean_by_name(container, out_diff_key,
+                                      args->out_diff);
 }
 
 /************************* fit report *****************************/
