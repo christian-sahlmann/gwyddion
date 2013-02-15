@@ -676,7 +676,7 @@ load_detached_file(const gchar *datafile,
 
     if (gzcompressed) {
 #ifdef HAVE_ZLIB
-        gzFile *cfile = gzopen(datafile, "rb");
+        gzFile cfile = gzopen(datafile, "rb");
         gsize prevsize, toread;
         gssize readbytes;
 
