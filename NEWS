@@ -14,13 +14,15 @@ Libraries:
   fails was corrected.
 - libgwyprocess: Swapped x and y coordinates of spectra in serialisation were
   fixed.
-- libgwyprocess: Added brick (3D) data support backported from Gwyddion 3 development 
-  branch.
+- libgwyprocess: Added brick (3D) data support backported from Gwyddion 3
+  development branch.
 - libgwydgets: Crashs upon clicking colour selection buttons were fixed.
 - libgwydgets: 3D view false colour axis shows overlay, not height units in the
   overlay mode.
 - libgwyapp: Visibility of false colour bar and mask are included in 3D view
   settings saved by ‘Set Defaults’.
+- libgwyprocess: gwy_data_field_distort() actually works for destination
+  field of different size than source.
 
 Modules:
 - APE DAX (new): Imports APE Research DAX files.
@@ -54,6 +56,10 @@ Modules:
   appropriate.
 - Fit sphere: Units of resulting quantities are set correctly.
 - Omicron: Abscissae of single point spectra were corrected to match SCALA.
+- Graph fit: It is possible to plot the difference between data and fit to
+  a new graph.
+- Graph fit, FD fit and Critical dimension: Curve and controls were switched,
+  controls should no longer jump around, interfering with selection.
 
 Other:
 - Crash on Win32 while loading TIFF images was hopefully fixed.
