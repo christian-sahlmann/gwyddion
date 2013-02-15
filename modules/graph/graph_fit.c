@@ -109,69 +109,72 @@ typedef struct {
     gboolean in_update;
 } FitControls;
 
-static gboolean    module_register           (void);
-static void        fit                       (GwyGraph *graph);
-static void        fit_dialog                (FitArgs *args);
-static void        fit_controls_free         (FitControls *controls);
-static void        grow_width                (GObject *obj,
-                                              GtkRequisition *req);
-static void        fit_fetch_entry           (FitControls *controls);
-static void        fit_param_row_create      (FitControls *controls,
-                                              gint i,
-                                              GtkTable *table,
-                                              gint row);
-static void        fit_param_row_destroy     (FitControls *controls,
-                                              gint i);
-static void        fit_do                    (FitControls *controls);
-static void        curve_changed             (GtkComboBox *combo,
-                                              FitControls *controls);
-static void        auto_estimate_changed     (GtkToggleButton *check,
-                                              FitControls *controls);
-static void        auto_plot_changed         (GtkToggleButton *check,
-                                              FitControls *controls);
-static void        plot_full_changed         (GtkToggleButton *check,
-                                              FitControls *controls);
-static void        out_diff_changed          (GtkToggleButton *check,
-                                              FitControls *controls);
-static void        function_changed          (GtkComboBox *combo,
-                                              FitControls *controls);
-static void        range_changed             (GtkWidget *entry,
-                                              FitControls *controls);
-static void        fit_limit_selection       (FitControls *controls,
-                                              gboolean curve_switch);
-static void        fit_get_full_x_range      (FitControls *controls,
-                                              gdouble *xmin,
-                                              gdouble *xmax);
-static void        param_initial_activate    (GtkWidget *entry,
-                                              gpointer user_data);
-static void        fix_changed               (GtkToggleButton *button,
-                                              FitControls *controls);
-static void        copy_param                (GObject *button,
-                                              FitControls *controls);
-static void        fit_plot_curve            (FitArgs *args);
-static void        fit_set_state             (FitControls *controls,
-                                              gboolean is_fitted,
-                                              gboolean is_estimated);
-static void        fit_estimate              (FitControls *controls);
-static void        fit_param_row_update_value(FitControls *controls,
-                                              gint i,
-                                              gboolean errorknown);
-static void        graph_selected            (GwySelection* selection,
-                                              gint i,
-                                              FitControls *controls);
-static gint        normalize_data            (FitArgs *args);
-static GtkWidget*  function_selector_new     (GCallback callback,
-                                              gpointer cbdata,
-                                              gint current);
-static GtkWidget*  curve_selector_new        (GwyGraphModel *gmodel,
-                                              GCallback callback,
-                                              FitControls *controls,
-                                              gint current);
-static void        load_args                 (GwyContainer *container,
-                                              FitArgs *args);
-static void        save_args                 (GwyContainer *container,
-                                              FitArgs *args);
-static GString*    create_fit_report         (FitArgs *args);
+static gboolean   module_register           (void);
+static void       fit                       (GwyGraph *graph);
+static void       fit_dialog                (FitArgs *args,
+                                             GwyContainer *container);
+static void       fit_controls_free         (FitControls *controls);
+static void       grow_width                (GObject *obj,
+                                             GtkRequisition *req);
+static void       fit_fetch_entry           (FitControls *controls);
+static void       fit_param_row_create      (FitControls *controls,
+                                             gint i,
+                                             GtkTable *table,
+                                             gint row);
+static void       fit_param_row_destroy     (FitControls *controls,
+                                             gint i);
+static void       fit_do                    (FitControls *controls);
+static void       curve_changed             (GtkComboBox *combo,
+                                             FitControls *controls);
+static void       auto_estimate_changed     (GtkToggleButton *check,
+                                             FitControls *controls);
+static void       auto_plot_changed         (GtkToggleButton *check,
+                                             FitControls *controls);
+static void       plot_full_changed         (GtkToggleButton *check,
+                                             FitControls *controls);
+static void       out_diff_changed          (GtkToggleButton *check,
+                                             FitControls *controls);
+static void       function_changed          (GtkComboBox *combo,
+                                             FitControls *controls);
+static void       range_changed             (GtkWidget *entry,
+                                             FitControls *controls);
+static void       fit_limit_selection       (FitControls *controls,
+                                             gboolean curve_switch);
+static void       fit_get_full_x_range      (FitControls *controls,
+                                             gdouble *xmin,
+                                             gdouble *xmax);
+static void       param_initial_activate    (GtkWidget *entry,
+                                             gpointer user_data);
+static void       fix_changed               (GtkToggleButton *button,
+                                             FitControls *controls);
+static void       copy_param                (GObject *button,
+                                             FitControls *controls);
+static void       fit_plot_curve            (FitArgs *args);
+static void       fit_set_state             (FitControls *controls,
+                                             gboolean is_fitted,
+                                             gboolean is_estimated);
+static void       fit_estimate              (FitControls *controls);
+static void       fit_param_row_update_value(FitControls *controls,
+                                             gint i,
+                                             gboolean errorknown);
+static void       graph_selected            (GwySelection* selection,
+                                             gint i,
+                                             FitControls *controls);
+static gint       normalize_data            (FitArgs *args);
+static void       create_difference_graph   (FitArgs *args,
+                                             GwyContainer *container);
+static GtkWidget* function_selector_new     (GCallback callback,
+                                             gpointer cbdata,
+                                             gint current);
+static GtkWidget* curve_selector_new        (GwyGraphModel *gmodel,
+                                             GCallback callback,
+                                             FitControls *controls,
+                                             gint current);
+static void       load_args                 (GwyContainer *container,
+                                             FitArgs *args);
+static void       save_args                 (GwyContainer *container,
+                                             FitArgs *args);
+static GString*   create_fit_report         (FitArgs *args);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -201,8 +204,10 @@ module_register(void)
 static void
 fit(GwyGraph *graph)
 {
-    GwyContainer *settings;
+    GwyContainer *settings, *container;
     FitArgs args;
+
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &container, 0);
 
     memset(&args, 0, sizeof(FitArgs));
 
@@ -215,7 +220,7 @@ fit(GwyGraph *graph)
 
     settings = gwy_app_settings_get();
     load_args(settings, &args);
-    fit_dialog(&args);
+    fit_dialog(&args, container);
     save_args(settings, &args);
 
     g_object_unref(args.xdata);
@@ -228,7 +233,7 @@ fit(GwyGraph *graph)
 }
 
 static void
-fit_dialog(FitArgs *args)
+fit_dialog(FitArgs *args, GwyContainer *container)
 {
     GtkWidget *label, *dialog, *hbox, *hbox2, *table, *align, *expander;
     GtkTable *table2;
@@ -504,6 +509,8 @@ fit_dialog(FitArgs *args)
             if (args->is_fitted && args->fitter->covar) {
                 cmodel = gwy_graph_model_get_curve(args->graph_model, 1);
                 gwy_graph_model_add_curve(gmodel, cmodel);
+                if (args->out_diff)
+                    create_difference_graph(args, container);
             }
             gtk_widget_destroy(dialog);
             break;
@@ -1360,6 +1367,34 @@ normalize_data(FitArgs *args)
     }
 
     return j;
+}
+
+static void
+create_difference_graph(FitArgs *args, GwyContainer *container)
+{
+    GwyGraphModel *gmodel = args->graph_model;
+    GwyGraphCurveModel *cmodel_data = gwy_graph_model_get_curve(gmodel, 0);
+    GwyGraphCurveModel *cmodel_fit = gwy_graph_model_get_curve(gmodel, 1);
+    GwyGraphCurveModel *cmodel;
+    const gdouble *xs, *yds, *yfs;
+    gdouble *ys;
+    gint ns, i;
+
+    gmodel = gwy_graph_model_duplicate(gmodel);
+    gwy_graph_model_remove_curve(gmodel, 1);
+    cmodel = gwy_graph_model_get_curve(gmodel, 0);
+    ns = gwy_graph_curve_model_get_ndata(cmodel);
+    xs = gwy_graph_curve_model_get_xdata(cmodel_data);
+    yds = gwy_graph_curve_model_get_ydata(cmodel_data);
+    yfs = gwy_graph_curve_model_get_ydata(cmodel_fit);
+    ys = g_new(gdouble, ns);
+    for (i = 0; i < ns; i++)
+        ys[i] = yds[i] - yfs[i];
+
+    gwy_graph_curve_model_set_data(cmodel, xs, ys, ns);
+    g_free(ys);
+    gwy_app_data_browser_add_graph_model(gmodel, container, TRUE);
+    g_object_unref(gmodel);
 }
 
 static const gchar preset_key[]        = "/module/graph_fit/preset";
