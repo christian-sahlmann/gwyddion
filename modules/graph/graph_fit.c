@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2007 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2007,2013 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -111,6 +111,8 @@ static gboolean    module_register           (void);
 static void        fit                       (GwyGraph *graph);
 static void        fit_dialog                (FitArgs *args);
 static void        fit_controls_free         (FitControls *controls);
+static void        grow_width                (GObject *obj,
+                                              GtkRequisition *req);
 static void        fit_fetch_entry           (FitControls *controls);
 static void        fit_param_row_create      (FitControls *controls,
                                               gint i,
@@ -172,7 +174,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Fit graph with function"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -272,10 +274,35 @@ fit_dialog(FitArgs *args)
     hbox = gtk_hbox_new(FALSE, 2);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 0);
 
+    /* Graph */
+    args->graph_model = gwy_graph_model_new_alike(gmodel);
+    controls.graph = gwy_graph_new(args->graph_model);
+    g_object_unref(args->graph_model);
+    gtk_widget_set_size_request(controls.graph, 400, 300);
+
+    gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
+    gtk_box_pack_start(GTK_BOX(hbox), controls.graph, TRUE, TRUE, 0);
+    gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);
+
+    area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls.graph)));
+    selection = gwy_graph_area_get_selection(area, GWY_GRAPH_STATUS_XSEL);
+    gwy_selection_set_max_objects(selection, 1);
+    g_signal_connect(selection, "changed",
+                     G_CALLBACK(graph_selected), &controls);
+
+    gwy_graph_model_add_curve(controls.args->graph_model,
+                              gwy_graph_model_get_curve(gmodel, args->curve));
+    args->fitfunc = NULL;
+
+    /* Controls */
+    align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
+    gtk_box_pack_start(GTK_BOX(hbox), align, FALSE, FALSE, 0);
+    g_signal_connect(align, "size-request", G_CALLBACK(grow_width), NULL);
+
     table = gtk_table_new(8, 2, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
-    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(align), table);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     row = 0;
 
@@ -443,25 +470,6 @@ fit_dialog(FitArgs *args)
     g_signal_connect(controls.auto_plot, "toggled",
                      G_CALLBACK(auto_plot_changed), &controls);
 
-    /* Graph */
-    args->graph_model = gwy_graph_model_new_alike(gmodel);
-    controls.graph = gwy_graph_new(args->graph_model);
-    g_object_unref(args->graph_model);
-    gtk_widget_set_size_request(controls.graph, 400, 300);
-
-    gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
-    gtk_box_pack_start(GTK_BOX(hbox), controls.graph, TRUE, TRUE, 0);
-    gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);
-
-    area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls.graph)));
-    selection = gwy_graph_area_get_selection(area, GWY_GRAPH_STATUS_XSEL);
-    gwy_selection_set_max_objects(selection, 1);
-    g_signal_connect(selection, "changed",
-                     G_CALLBACK(graph_selected), &controls);
-
-    gwy_graph_model_add_curve(controls.args->graph_model,
-                              gwy_graph_model_get_curve(gmodel, args->curve));
-    args->fitfunc = NULL;
     function_changed(GTK_COMBO_BOX(controls.function), &controls);
     graph_selected(selection, -1, &controls);
 
@@ -532,6 +540,16 @@ fit_fetch_entry(FitControls *controls)
         && GTK_IS_ENTRY(entry)
         && g_object_get_data(G_OBJECT(entry), "id"))
         gtk_widget_activate(entry);
+}
+
+static void
+grow_width(GObject *obj, GtkRequisition *req)
+{
+    guint width = GPOINTER_TO_UINT(g_object_get_data(obj, "req-width"));
+    if (width > req->width)
+        gtk_widget_set_size_request(GTK_WIDGET(obj), width, -1);
+    else if (width < req->width)
+        g_object_set_data(obj, "req-width", GUINT_TO_POINTER(req->width));
 }
 
 static void
