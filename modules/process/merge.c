@@ -89,6 +89,7 @@ static gboolean merge_data_filter    (GwyContainer *data,
                                       gint id,
                                       gpointer user_data);
 static gboolean merge_do             (MergeArgs *args);
+static void     merge_do_uncorrelated(MergeArgs *args);
 static void     merge_direction_cb   (GtkWidget *combo,
                                       MergeArgs *args);
 static void     merge_mode_cb        (GtkWidget *combo,
@@ -154,7 +155,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Merges two images."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -190,8 +191,12 @@ merge(GwyContainer *data, GwyRunType run)
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.op1.id, 0);
     args.op2 = args.op1;
 
-    if (merge_dialog(&args))
-        merge_do(&args);
+    if (merge_dialog(&args)) {
+        if (args.mode == GWY_MERGE_MODE_NONE)
+            merge_do_uncorrelated(&args);
+        else
+            merge_do(&args);
+    }
 
     merge_save_args(settings, &args);
 }
@@ -460,16 +465,15 @@ merge_do(MergeArgs *args)
 
     find_score_maximum(correlation_score, &max_col, &max_row);
     gwy_debug("c: %d %d %dx%d  k: %d %d %dx%d res: %d %d\n",
-           cdata.x,
-           cdata.y,
-           cdata.width,
-           cdata.height,
-           kdata.x,
-           kdata.y,
-           kdata.width,
-           kdata.height,
-           max_col, max_row
-            );
+              cdata.x,
+              cdata.y,
+              cdata.width,
+              cdata.height,
+              kdata.x,
+              kdata.y,
+              kdata.width,
+              kdata.height,
+              max_col, max_row);
     /* enlarge result field to fit the new data */
     switch (real_dir) {
         case GWY_MERGE_DIRECTION_UP:
@@ -505,9 +509,9 @@ merge_do(MergeArgs *args)
                       (MAX(0, (max_row - cdata.height/2)) + yres2/2) -
                       (MIN(0, (max_row - cdata.height/2)) - yres2/2));
         gwy_debug("%d %d %d %d\n",
-               yres1, yres2,
-               (MAX(0, (max_row - cdata.height/2)) + yres2/2),
-               (MIN(0, (max_row - cdata.height/2)) - yres2/2));
+                  yres1, yres2,
+                  (MAX(0, (max_row - cdata.height/2)) + yres2/2),
+                  (MIN(0, (max_row - cdata.height/2)) - yres2/2));
         gwy_debug("newyres: %d, yshift: %d\n", newyres, yshift);
 
         px2 = 0;
@@ -523,9 +527,9 @@ merge_do(MergeArgs *args)
                       (MAX(0, (max_row - cdata.height/2)) + yres2/2) -
                       (MIN(0, (max_row - cdata.height/2)) - yres2/2));
         gwy_debug("%d %d %d %d\n",
-               yres1, yres2,
-               (MAX(0, (max_row - cdata.height/2)) + yres2/2),
-               (MIN(0, (max_row - cdata.height/2)) - yres2/2));
+                  yres1, yres2,
+                  (MAX(0, (max_row - cdata.height/2)) + yres2/2),
+                  (MIN(0, (max_row - cdata.height/2)) - yres2/2));
         gwy_debug("newyres: %d\n, yshift: %d", newyres, yshift);
 
 
@@ -540,14 +544,8 @@ merge_do(MergeArgs *args)
         break;
     }
 
-
-    gwy_data_field_resample(result, newxres, newyres,
-                            GWY_INTERPOLATION_NONE);
-
-    put_fields(dfield1, dfield2, result, args->boundary,
-               px1, py1,
-               px2, py2);
-
+    gwy_data_field_resample(result, newxres, newyres, GWY_INTERPOLATION_NONE);
+    put_fields(dfield1, dfield2, result, real_boundary, px1, py1, px2, py2);
 
     /* set right output */
     if (result) {
@@ -570,6 +568,74 @@ merge_do(MergeArgs *args)
     return TRUE;
 }
 
+static void
+merge_do_uncorrelated(MergeArgs *args)
+{
+    GwyContainer *data;
+    GwyDataField *dfield1, *dfield2, *result;
+    gint newxres, newyres, xres1, xres2, yres1, yres2;
+    GQuark quark;
+    gint newid;
+    gdouble m;
+
+    quark = gwy_app_get_data_key_for_id(args->op1.id);
+    dfield1 = GWY_DATA_FIELD(gwy_container_get_object(args->op1.data, quark));
+
+    quark = gwy_app_get_data_key_for_id(args->op2.id);
+    dfield2 = GWY_DATA_FIELD(gwy_container_get_object(args->op2.data, quark));
+
+    xres1 = gwy_data_field_get_xres(dfield1);
+    xres2 = gwy_data_field_get_xres(dfield2);
+    yres1 = gwy_data_field_get_yres(dfield1);
+    yres2 = gwy_data_field_get_yres(dfield2);
+    result = gwy_data_field_new_alike(dfield1, FALSE);
+    m = MIN(gwy_data_field_get_min(dfield1), gwy_data_field_get_min(dfield2));
+
+    if (args->direction == GWY_MERGE_DIRECTION_UP
+        || args->direction == GWY_MERGE_DIRECTION_DOWN) {
+        newxres = MAX(xres1, xres2);
+        newyres = yres1 + yres2;
+    }
+    else if (args->direction == GWY_MERGE_DIRECTION_LEFT
+          || args->direction == GWY_MERGE_DIRECTION_RIGHT) {
+        newxres = xres1 + xres2;
+        newyres = MAX(yres1, yres2);
+    }
+    else {
+        g_return_if_reached();
+    }
+
+    gwy_data_field_resample(result, newxres, newyres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_fill(result, m);
+
+    if (args->direction == GWY_MERGE_DIRECTION_UP) {
+        gwy_data_field_area_copy(dfield2, result, 0, 0, xres2, yres2, 0, 0);
+        gwy_data_field_area_copy(dfield1, result, 0, 0, xres1, yres1, 0, yres2);
+    }
+    else if (args->direction == GWY_MERGE_DIRECTION_DOWN) {
+        gwy_data_field_area_copy(dfield1, result, 0, 0, xres1, yres1, 0, 0);
+        gwy_data_field_area_copy(dfield2, result, 0, 0, xres2, yres2, 0, yres1);
+    }
+    else if (args->direction == GWY_MERGE_DIRECTION_LEFT) {
+        gwy_data_field_area_copy(dfield2, result, 0, 0, xres2, yres2, 0, 0);
+        gwy_data_field_area_copy(dfield1, result, 0, 0, xres1, yres1, xres2, 0);
+    }
+    else if (args->direction == GWY_MERGE_DIRECTION_RIGHT) {
+        gwy_data_field_area_copy(dfield1, result, 0, 0, xres1, yres1, 0, 0);
+        gwy_data_field_area_copy(dfield2, result, 0, 0, xres2, yres2, xres1, 0);
+    }
+
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
+    newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
+    gwy_app_set_data_field_title(data, newid, _("Merged images"));
+    gwy_app_sync_data_items(args->op1.data, data, args->op1.id, newid,
+                            FALSE,
+                            GWY_DATA_ITEM_PALETTE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_RANGE,
+                            0);
+    g_object_unref(result);
+}
 
 static void
 put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
