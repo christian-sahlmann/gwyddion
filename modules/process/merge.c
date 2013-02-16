@@ -154,7 +154,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Merges two images."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -391,18 +391,18 @@ merge_do(MergeArgs *args)
         cdata.x = 0;
         cdata.y = 0;
         cdata.width = xres1;
-        cdata.height = yres1/3;
+        cdata.height = yres1/2;
         kdata.width = MIN(xres2, cdata.width/2);
         kdata.height = MIN(yres2, cdata.height/3);
         kdata.x = MAX(0, xres2/2 - kdata.width/2);
-        kdata.y = MAX(0, yres2  - cdata.height/2);
+        kdata.y = MAX(0, yres2 - cdata.height/3);
         break;
 
         case GWY_MERGE_DIRECTION_DOWN:
         cdata.x = 0;
-        cdata.y = yres1 - (yres1/3);
+        cdata.y = yres1 - (yres1/2);
         cdata.width = xres1;
-        cdata.height = yres1/3;
+        cdata.height = yres1/2;
         kdata.width = MIN(xres2, cdata.width/2);
         kdata.height = MIN(yres2, cdata.height/3);
         kdata.x = MAX(0, xres2/2 - kdata.width/2);
@@ -410,9 +410,9 @@ merge_do(MergeArgs *args)
         break;
 
         case GWY_MERGE_DIRECTION_RIGHT:
-        cdata.x = xres1 - (xres1/3);
+        cdata.x = xres1 - (xres1/2);
         cdata.y = 0;
-        cdata.width = xres1/3;
+        cdata.width = xres1/2;
         cdata.height = yres1;
         kdata.width = MIN(xres2, cdata.width/3);
         kdata.height = MIN(yres2, cdata.height/2);
@@ -423,7 +423,7 @@ merge_do(MergeArgs *args)
         case GWY_MERGE_DIRECTION_LEFT:
         cdata.x = 0;
         cdata.y = 0;
-        cdata.width = xres1/3;
+        cdata.width = xres1/2;
         cdata.height = yres1;
         kdata.width = MIN(xres2, cdata.width/3);
         kdata.height = MIN(yres2, cdata.height/2);
