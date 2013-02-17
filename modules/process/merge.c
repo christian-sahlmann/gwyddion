@@ -498,7 +498,7 @@ merge_do(MergeArgs *args)
 
         px2 = xshift;
         py1 = 0;
-        px1 = xshift + ((max_col - kdata.width/2) - kdata.x);
+        px1 = xshift - ((max_col - kdata.width/2) - kdata.x);
         py2 = cdata.y + (max_row - kdata.height/2);
         break;
 
@@ -706,7 +706,7 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
 
         if (py1 < py2) {
             res_rect.y = py2;
-            res_rect.height = MAX(MIN(yres1, yres2),
+            res_rect.height = MIN(MIN(yres1, yres2),
                                   py1 + yres1 - py2 - (yres1 - yres2));
         }
         else {
@@ -815,6 +815,11 @@ merge_boundary(GwyDataField *dfield1,
     gint col, row;
     gdouble weight, val1, val2;
 
+    gwy_debug("%d,%d %d,%d %d,%d %dx%d", f1_pos.x, f1_pos.y,
+                                         f2_pos.x, f2_pos.y,
+                                         res_rect.x, res_rect.y,
+                                         res_rect.width,
+                                         res_rect.height);
     for (col = 0; col < res_rect.width; col++) {
         for (row = 0; row < res_rect.height; row++) {
 
