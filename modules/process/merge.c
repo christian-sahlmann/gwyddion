@@ -479,10 +479,10 @@ merge_do(MergeArgs *args)
                       (MIN(0, (max_col - cdata.width/2)) - xres2/2));
         newyres = yres1 + yres2 - max_row - kdata.height/2;
 
+        px1 = xshift - max_col + kdata.width/2 + kdata.x;
+        py1 = yres2 - max_row - kdata.height/2;
         px2 = xshift;
         py2 = 0;
-        px1 = xshift - ((max_col - kdata.width/2) - kdata.x);
-        py1 = yres2 - max_row - kdata.height/2;
         break;
 
         case GWY_MERGE_DIRECTION_DOWN:
@@ -492,10 +492,28 @@ merge_do(MergeArgs *args)
                       (MIN(0, (max_col - cdata.width/2)) - xres2/2));
         newyres = cdata.y + (max_row - kdata.height/2) + yres2;;
 
-        px2 = xshift;
+        px1 = xshift - max_col + kdata.width/2 + kdata.x;
         py1 = 0;
-        px1 = xshift - ((max_col - kdata.width/2) - kdata.x);
-        py2 = cdata.y + (max_row - kdata.height/2);
+        px2 = xshift;
+        py2 = cdata.y + max_row - kdata.height/2;
+        break;
+
+        case GWY_MERGE_DIRECTION_RIGHT:
+        yshift = MAX(0,  (max_row - cdata.height/2) + (yres1 - yres2)/2);
+        newxres = cdata.x + (max_col - kdata.width/2) + xres2;
+        newyres = MAX(MAX(yres1, yres2),
+                      (MAX(0, (max_row - cdata.height/2)) + yres2/2) -
+                      (MIN(0, (max_row - cdata.height/2)) - yres2/2));
+        gwy_debug("%d %d %d %d",
+                  yres1, yres2,
+                  (MAX(0, (max_row - cdata.height/2)) + yres2/2),
+                  (MIN(0, (max_row - cdata.height/2)) - yres2/2));
+        gwy_debug("newyres: %d, yshift: %d", newyres, yshift);
+
+        px1 = 0;
+        py1 = yshift - max_row + kdata.height/2 + kdata.y;
+        px2 = cdata.x + max_col - kdata.width/2;;
+        py2 = yshift;
         break;
 
         case GWY_MERGE_DIRECTION_LEFT:
@@ -510,29 +528,10 @@ merge_do(MergeArgs *args)
                   (MIN(0, (max_row - cdata.height/2)) - yres2/2));
         gwy_debug("newyres: %d, yshift: %d", newyres, yshift);
 
+        px1 = xres2 - max_col - kdata.width/2;
+        py1 = yshift - max_row + kdata.height/2 + kdata.y;
         px2 = 0;
         py2 = yshift;
-        px1 = xres2 - max_col - kdata.width/2;
-        py1 = yshift - ((max_row - kdata.height/2) - kdata.y);
-        break;
-
-        case GWY_MERGE_DIRECTION_RIGHT:
-        yshift = MAX(0,  -(max_row - cdata.height/2) - (yres1 - yres2)/2);
-        newxres = cdata.x + (max_col - kdata.width/2) + xres2;
-        newyres = MAX(MAX(yres1, yres2),
-                      (MAX(0, (max_row - cdata.height/2)) + yres2/2) -
-                      (MIN(0, (max_row - cdata.height/2)) - yres2/2));
-        gwy_debug("%d %d %d %d",
-                  yres1, yres2,
-                  (MAX(0, (max_row - cdata.height/2)) + yres2/2),
-                  (MIN(0, (max_row - cdata.height/2)) - yres2/2));
-        gwy_debug("newyres: %d, yshift: %d", newyres, yshift);
-
-
-        px1 = 0;
-        py1 = yshift;
-        px2 = cdata.x + (max_col - kdata.width/2);
-        py2 = yshift + ((max_row - kdata.height/2) - kdata.y);
         break;
 
         default:
@@ -702,8 +701,7 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
 
         if (py1 < py2) {
             res_rect.y = py2;
-            res_rect.height = MIN(MIN(yres1, yres2),
-                                  py1 + yres1 - py2 - (yres1 - yres2));
+            res_rect.height = py1 + yres1 - py2;
         }
         else {
             res_rect.y = py1;
