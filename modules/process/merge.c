@@ -670,9 +670,8 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
     w2 = gwy_data_field_get_xres(dfield2);
     h2 = gwy_data_field_get_yres(dfield2);
 
-
     if (boundary == GWY_MERGE_BOUNDARY_SMOOTH
-        || boundary == GWY_MERGE_BOUNDARY_FIRST) {
+        || boundary == GWY_MERGE_BOUNDARY_SECOND) {
         gwy_data_field_area_copy(dfield1, result,
                                  x1, y1_, w1, h1,
                                  px1, py1);
