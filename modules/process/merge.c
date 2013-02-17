@@ -490,15 +490,15 @@ merge_do(MergeArgs *args)
         break;
 
         case GWY_MERGE_DIRECTION_DOWN:
-        xshift = MAX(0,  -(max_col - cdata.width/2) - (xres1 - xres2)/2);
+        xshift = MAX(0,  (max_col - cdata.width/2) + (xres1 - xres2)/2);
         newxres =  MAX(MAX(xres1, xres2),
                       (MAX(0, (max_col - cdata.width/2)) + xres2/2) -
                       (MIN(0, (max_col - cdata.width/2)) - xres2/2));
         newyres = cdata.y + (max_row - kdata.height/2) + yres2;;
 
-        px1 = xshift;
+        px2 = xshift;
         py1 = 0;
-        px2 = xshift + ((max_col - kdata.width/2) - kdata.x);
+        px1 = xshift + ((max_col - kdata.width/2) - kdata.x);
         py2 = cdata.y + (max_row - kdata.height/2);
         break;
 
