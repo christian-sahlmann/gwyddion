@@ -350,8 +350,8 @@ merge_do(MergeArgs *args)
     gint xshift, yshift;
     GQuark quark;
     gint newid;
-    GwyMergeDirectionType real_dir;
-    GwyMergeBoundaryType real_boundary;
+    GwyMergeDirectionType real_dir = args->direction;
+    GwyMergeBoundaryType real_boundary = args->boundary;
     gint px1, py1, px2, py2;
 
     quark = gwy_app_get_data_key_for_id(args->op1.id);
@@ -375,12 +375,8 @@ merge_do(MergeArgs *args)
 
         if (args->boundary == GWY_MERGE_BOUNDARY_FIRST)
             real_boundary = GWY_MERGE_BOUNDARY_SECOND;
-        if (args->boundary == GWY_MERGE_BOUNDARY_SECOND)
+        else if (args->boundary == GWY_MERGE_BOUNDARY_SECOND)
             real_boundary = GWY_MERGE_BOUNDARY_FIRST;
-    }
-    else {
-        real_dir = args->direction;
-        real_boundary = args->boundary;
     }
 
     result = gwy_data_field_new_alike(dfield1, FALSE);
@@ -464,7 +460,7 @@ merge_do(MergeArgs *args)
     }
 
     find_score_maximum(correlation_score, &max_col, &max_row);
-    gwy_debug("c: %d %d %dx%d  k: %d %d %dx%d res: %d %d\n",
+    gwy_debug("c: %d %d %dx%d  k: %d %d %dx%d res: %d %d",
               cdata.x,
               cdata.y,
               cdata.width,
@@ -508,11 +504,11 @@ merge_do(MergeArgs *args)
         newyres = MAX(MAX(yres1, yres2),
                       (MAX(0, (max_row - cdata.height/2)) + yres2/2) -
                       (MIN(0, (max_row - cdata.height/2)) - yres2/2));
-        gwy_debug("%d %d %d %d\n",
+        gwy_debug("%d %d %d %d",
                   yres1, yres2,
                   (MAX(0, (max_row - cdata.height/2)) + yres2/2),
                   (MIN(0, (max_row - cdata.height/2)) - yres2/2));
-        gwy_debug("newyres: %d, yshift: %d\n", newyres, yshift);
+        gwy_debug("newyres: %d, yshift: %d", newyres, yshift);
 
         px2 = 0;
         py2 = yshift;
@@ -526,11 +522,11 @@ merge_do(MergeArgs *args)
         newyres = MAX(MAX(yres1, yres2),
                       (MAX(0, (max_row - cdata.height/2)) + yres2/2) -
                       (MIN(0, (max_row - cdata.height/2)) - yres2/2));
-        gwy_debug("%d %d %d %d\n",
+        gwy_debug("%d %d %d %d",
                   yres1, yres2,
                   (MAX(0, (max_row - cdata.height/2)) + yres2/2),
                   (MIN(0, (max_row - cdata.height/2)) - yres2/2));
-        gwy_debug("newyres: %d\n, yshift: %d", newyres, yshift);
+        gwy_debug("newyres: %d, yshift: %d", newyres, yshift);
 
 
         px1 = 0;
@@ -650,6 +646,7 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
     gint x1, x2, y1_, y2, w1, w2, h1, h2;
     gint xres1, xres2, yres1, yres2;
 
+    gwy_debug("px1: %u, py1: %u, px2: %u, py2: %u", px1, py1, px2, py2);
     xres1 = gwy_data_field_get_xres(dfield1);
     yres1 = gwy_data_field_get_yres(dfield1);
     xres2 = gwy_data_field_get_xres(dfield2);
@@ -815,11 +812,14 @@ merge_boundary(GwyDataField *dfield1,
     gint col, row;
     gdouble weight, val1, val2;
 
-    gwy_debug("%d,%d %d,%d %d,%d %dx%d", f1_pos.x, f1_pos.y,
-                                         f2_pos.x, f2_pos.y,
-                                         res_rect.x, res_rect.y,
-                                         res_rect.width,
-                                         res_rect.height);
+    gwy_debug("dfield1: %u x %u at (%u, %u)",
+              dfield1->xres, dfield1->yres, f1_pos.x, f1_pos.y);
+    gwy_debug("dfield2: %u x %u at (%u, %u)",
+              dfield2->xres, dfield2->yres, f2_pos.x, f2_pos.y);
+    gwy_debug("result: %u x %u", result->xres, result->yres);
+    gwy_debug("rect in result : %u x %u at (%u,%u)",
+              res_rect.width, res_rect.height, res_rect.x, res_rect.y);
+
     for (col = 0; col < res_rect.width; col++) {
         for (row = 0; row < res_rect.height; row++) {
 
