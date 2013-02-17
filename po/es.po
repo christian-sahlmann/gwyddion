@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2013-02-16 03:58+0100\n"
-"PO-Revision-Date: 2013-02-16 15:21+0100\n"
+"PO-Revision-Date: 2013-02-17 15:57+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: the gwyiddion team <es@li.com>\n"
 "Language: es\n"
@@ -837,11 +837,11 @@ msgstr ""
 
 #: libgwydgets/gwy3dwindow.c:917
 msgid "_Light φ:"
-msgstr ""
+msgstr "_Luz φ:"
 
 #: libgwydgets/gwy3dwindow.c:925
 msgid "L_ight θ:"
-msgstr ""
+msgstr "L_uz θ:"
 
 #: libgwydgets/gwy3dwindow.c:1018
 msgid "X-axis"
@@ -979,7 +979,7 @@ msgstr ""
 #. TRANSLATORS: Countable (more false colour gradients).
 #: libgwydgets/gwydatawindow.c:874
 msgid "More..."
-msgstr ""
+msgstr "Más..."
 
 #: libgwydgets/gwydatawindow.c:903
 #: libgwydgets/gwyoptionmenus.c:827
@@ -995,11 +995,11 @@ msgstr ""
 #: libgwydgets/gwygraphwindowmeasuredialog.c:576
 #: modules/tools/selectionmanager.c:258
 msgid "Points"
-msgstr ""
+msgstr "Puntos"
 
 #: libgwydgets/gwydgetenums.c:48
 msgid "Line + points"
-msgstr ""
+msgstr "Líneas + puntos"
 
 #: libgwydgets/gwydgetutils.c:563
 msgid "Change Mask Color"
@@ -1467,7 +1467,6 @@ msgid "_Physically Square"
 msgstr ""
 
 #: app/app.c:789
-#, fuzzy
 msgid "verb|Save"
 msgstr "Guardar"
 
@@ -2442,7 +2441,7 @@ msgstr ""
 
 #: modules/file/aistfile.c:119
 msgid "Imports AIST-NT data files."
-msgstr ""
+msgstr "Importa AIST-NT archivos de datos."
 
 #: modules/file/aistfile.c:132
 msgid "AIST-NT files (.aist)"
@@ -2450,7 +2449,7 @@ msgstr ""
 
 #: modules/file/alicona.c:138
 msgid "Imports Alicona Imaging AL3D files."
-msgstr ""
+msgstr "Importa Alicona Imaging AL3D archivos."
 
 #: modules/file/alicona.c:151
 msgid "Alicona Imaging AL3D files (.al3d)"
@@ -2510,7 +2509,7 @@ msgstr ""
 
 #: modules/file/ambfile.c:74
 msgid "Imports Ambios AMB data files."
-msgstr ""
+msgstr "Importa Ambios AMB archivos de datos."
 
 #: modules/file/ambfile.c:87
 msgid "Ambios amb files (.amb)"
@@ -2546,7 +2545,7 @@ msgstr ""
 
 #: modules/file/apedaxfile.c:101
 msgid "Imports A.P.E. Research DAX data files."
-msgstr ""
+msgstr "Importa A.P.E. Research DAX archivos de datos."
 
 #: modules/file/apedaxfile.c:114
 msgid "A.P.E. Research DAX Files (.dax)"
@@ -2554,7 +2553,7 @@ msgstr ""
 
 #: modules/file/apefile.c:168
 msgid "Imports APE (Applied Physics and Engineering) data files."
-msgstr ""
+msgstr "Importa APE (Applied Physics and Engineering) archivos de datos."
 
 #: modules/file/apefile.c:181
 msgid "APE files (.dat)"
@@ -2622,7 +2621,7 @@ msgstr ""
 
 #: modules/file/assing-afm.c:69
 msgid "Imports Assing AFM data files."
-msgstr ""
+msgstr "Importa Assing AFM archivos de datos."
 
 #: modules/file/assing-afm.c:82
 msgid "Assing AFM files (.afm)"
@@ -2630,7 +2629,7 @@ msgstr ""
 
 #: modules/file/attocube.c:74
 msgid "Imports Attocube Systems ASC files."
-msgstr ""
+msgstr "Importa Attocube Systems ASC archivos."
 
 #: modules/file/attocube.c:87
 msgid "Attocube ASCII files (.asc)"
@@ -2638,7 +2637,7 @@ msgstr ""
 
 #: modules/file/bcrfile.c:129
 msgid "Imports Image Metrology BCR data files."
-msgstr ""
+msgstr "Importa Image Metrology BCR archivos de datos."
 
 #: modules/file/bcrfile.c:142
 msgid "BCR files (.bcr, .bcrf)"
@@ -2656,7 +2655,7 @@ msgstr ""
 
 #: modules/file/burleigh.c:119
 msgid "Imports Burleigh IMG data files version 2.1."
-msgstr ""
+msgstr "Importa Burleigh IMG archivos de datos versión 2.1."
 
 #: modules/file/burleigh.c:132
 msgid "Burleigh 2.1 files (.img)"
@@ -2693,7 +2692,7 @@ msgstr ""
 
 #: modules/file/codevfile.c:71
 msgid "Imports Code V interferogram files."
-msgstr ""
+msgstr "Importa Code V interferogram archivos."
 
 #: modules/file/codevfile.c:84
 msgid "Code V interferogram files (.int)"
@@ -2701,7 +2700,7 @@ msgstr ""
 
 #: modules/file/createc.c:124
 msgid "Imports Createc data files."
-msgstr ""
+msgstr "Importa Createc archivos de datos."
 
 #: modules/file/createc.c:137
 msgid "Createc files (.dat)"
@@ -2729,7 +2728,7 @@ msgstr ""
 
 #: modules/file/csmfile.c:82
 msgid "Imports Benyuan CSM data files."
-msgstr ""
+msgstr "Importa Benyuan CSM archivos de datos."
 
 #: modules/file/csmfile.c:95
 msgid "Benyuan CSM files (.csm)"
@@ -2777,7 +2776,7 @@ msgstr ""
 
 #: modules/file/dmefile.c:121
 msgid "Imports Danish Micro Engineering (DME) data files."
-msgstr ""
+msgstr "Importa Danish Micro Engineering (DME) archivos de datos."
 
 #: modules/file/dmefile.c:134
 msgid "DME files (.img)"
@@ -2833,7 +2832,7 @@ msgstr ""
 
 #: modules/file/ecsfile.c:84
 msgid "Imports ECS IMG files."
-msgstr ""
+msgstr "Importa ECS IMG archivos."
 
 #: modules/file/ecsfile.c:97
 msgid "ECS files (.img)"
@@ -2917,7 +2916,7 @@ msgstr ""
 
 #: modules/file/ezdfile.c:123
 msgid "Imports Nanosurf EZD and NID data files."
-msgstr ""
+msgstr "Importa Nanosurf EZD y NID archivos de datos."
 
 #: modules/file/ezdfile.c:136
 msgid "Nanosurf files (.ezd, .nid)"
@@ -2942,7 +2941,7 @@ msgstr ""
 
 #: modules/file/gdeffile.c:123
 msgid "Imports DME GDEF data files."
-msgstr ""
+msgstr "Importa DME GDEF archivos de datos."
 
 #: modules/file/gdeffile.c:136
 msgid "DME GDEF files (.gdf)"
@@ -3058,7 +3057,7 @@ msgstr ""
 
 #: modules/file/hdf4file.c:338
 msgid "Imports Hierarchical Data Format (HDF) files, version 4."
-msgstr ""
+msgstr "Importa Hierarchical Data Format (HDF) archivos, versión 4."
 
 #: modules/file/hdf4file.c:359
 msgid "Psi HDF4 files (.hdf)"
@@ -3293,7 +3292,7 @@ msgstr "Nuevas_unidades"
 
 #: modules/file/hitachi-afm.c:97
 msgid "Imports Hitachi AFM files."
-msgstr ""
+msgstr "Importa Hitachi AFM archivos."
 
 #: modules/file/hitachi-afm.c:112
 msgid "Hitachi AFM files (.afm)"
@@ -3310,7 +3309,7 @@ msgstr ""
 
 #: modules/file/hitachi-sem.c:75
 msgid "Imports Hitachi S-3700 and S-4800 SEM files."
-msgstr ""
+msgstr "Importa Hitachi S-3700 y S-4800 SEM archivos."
 
 #: modules/file/hitachi-sem.c:88
 msgid "Hitachi SEM files (.txt + image)"
@@ -3334,11 +3333,11 @@ msgstr ""
 
 #: modules/file/igorfile.c:198
 msgid "Imports Igor binary waves (.ibw)."
-msgstr ""
+msgstr "Importa Igor binary waves (.ibw)."
 
 #: modules/file/igorfile.c:211
 msgid "Igor binary waves (.ibw)"
-msgstr ""
+msgstr "Igor binary waves (.ibw)"
 
 #: modules/file/igorfile.c:271
 #, c-format
@@ -3365,7 +3364,7 @@ msgstr ""
 
 #: modules/file/intematix.c:128
 msgid "Imports Intematix SDF data files."
-msgstr ""
+msgstr "Importa Intematix SDF archivos de datos."
 
 #: modules/file/intematix.c:141
 msgid "Intematix SDF data files (.sdf)"
@@ -3431,7 +3430,7 @@ msgstr ""
 
 #: modules/file/jeol.c:529
 msgid "Imports JEOL data files."
-msgstr ""
+msgstr "Importa JEOL archivos de datos."
 
 #: modules/file/jeol.c:542
 msgid "JEOL data files (.tif)"
@@ -3455,7 +3454,7 @@ msgstr ""
 
 #: modules/file/lextfile.c:86
 msgid "Imports LEXT data files."
-msgstr ""
+msgstr "Importa LEXT archivos de datos."
 
 #: modules/file/lextfile.c:99
 msgid "Olympus LEXT OLS4000 (.lext)"
@@ -3481,7 +3480,7 @@ msgstr ""
 
 #: modules/file/mapvue.c:455
 msgid "Imports MapVue data files (.map)."
-msgstr ""
+msgstr "Importa MapVue archivos de datos (.map)."
 
 #: modules/file/mapvue.c:468
 msgid "MapVue files (.map)"
@@ -3536,7 +3535,7 @@ msgstr ""
 
 #: modules/file/matfile.c:222
 msgid "Imports Matlab MAT files v5."
-msgstr ""
+msgstr "Importa Matlab MAT v5 archivos."
 
 #: modules/file/matfile.c:235
 msgid "Matlab MAT 5 files (.mat)"
@@ -3590,7 +3589,7 @@ msgstr ""
 
 #: modules/file/miffile.c:194
 msgid "Imports DME MIF data files."
-msgstr ""
+msgstr "Importa DME MIF archivos de datos."
 
 #: modules/file/miffile.c:207
 msgid "DME MIF files (.mif)"
@@ -3628,7 +3627,7 @@ msgstr ""
 
 #: modules/file/mifile.c:165
 msgid "Imports Molecular Imaging MI data files."
-msgstr ""
+msgstr "Importa Molecular Imaging MI archivos de datos."
 
 #: modules/file/mifile.c:178
 msgid "PicoView Data Files (.mi)"
@@ -3640,7 +3639,7 @@ msgstr "Gráfico Espectroscópico"
 
 #: modules/file/mulfile.c:150
 msgid "Imports Aarhus MUL files."
-msgstr ""
+msgstr "Importa Aarhus MUL archivos."
 
 #: modules/file/mulfile.c:163
 msgid "Aarhus MUL files (.mul)"
@@ -3659,7 +3658,7 @@ msgstr ""
 
 #: modules/file/nanoeducator.c:282
 msgid "Imports Nanoeducator data files."
-msgstr ""
+msgstr "Importa Nanoeducator archivos de datos."
 
 #: modules/file/nanoeducator.c:295
 msgid "Nanoeducator files (.mspm, .spm, .stm)"
@@ -3711,9 +3710,8 @@ msgid "I-Z spectra"
 msgstr ""
 
 #: modules/file/nanomagnetics.c:359
-#, fuzzy
 msgid "Imports Nanomagnetics' NMI file format version 3"
-msgstr "Importa archivo en formato Sensofar PLu, versión 2000 o más nuevo. "
+msgstr "Importa Nanomagnetics' NMI archivos, versión 3."
 
 #: modules/file/nanomagnetics.c:372
 msgid "Nanomagnetics File (.nmi)"
@@ -3721,7 +3719,7 @@ msgstr ""
 
 #: modules/file/nanonics.c:94
 msgid "Imports Nanonics NAN data files."
-msgstr ""
+msgstr "Importa Nanonics NAN archivos de datos."
 
 #: modules/file/nanonics.c:107
 msgid "Nanonics files (.nan)"
@@ -3746,7 +3744,7 @@ msgstr ""
 
 #: modules/file/nanonis.c:109
 msgid "Imports Nanonis SXM data files."
-msgstr ""
+msgstr "Importa Nanonis SXM archivos de datos."
 
 #: modules/file/nanonis.c:129
 msgid "Nanonis SXM files (.sxm)"
@@ -3840,7 +3838,7 @@ msgstr ""
 
 #: modules/file/nanoscan.c:195
 msgid "Imports NanoScan XML files."
-msgstr ""
+msgstr "Importa NanoScan XML archivos."
 
 #: modules/file/nanoscan.c:208
 msgid "NanoScan XML files (.xml)"
@@ -3857,7 +3855,7 @@ msgstr ""
 
 #: modules/file/nanoscantech.c:82
 msgid "Imports NanoScanTech .nstdat files."
-msgstr ""
+msgstr "Importa NanoScanTech .nstdat archivos."
 
 #: modules/file/nanoscantech.c:95
 msgid "NanoScanTech data (.nstdat)"
@@ -3865,11 +3863,11 @@ msgstr ""
 
 #: modules/file/nanoscope-ii.c:79
 msgid "Imports Digital Instruments Nanoscope II data files."
-msgstr ""
+msgstr "Importa Digital Instruments Nanoscope II archivos de datos."
 
 #: modules/file/nanoscope-ii.c:92
 msgid "Nanoscope II files"
-msgstr ""
+msgstr "Nanoscope II archivos"
 
 #: modules/file/nanoscope.c:180
 msgid "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
@@ -3877,7 +3875,7 @@ msgstr "Importa Veeco (Digital Instruments) Nanoscope archivos de datos, versió
 
 #: modules/file/nanoscope.c:194
 msgid "Nanoscope III files"
-msgstr ""
+msgstr "Nanoscope III archivos"
 
 #: modules/file/nanoscope.c:259
 msgid "File is not a Nanoscope file, or it is a unknown subtype."
@@ -3907,7 +3905,7 @@ msgstr ""
 
 #: modules/file/nanotop.c:106
 msgid "Imports NANOTOP AFM files"
-msgstr ""
+msgstr "Importa NANOTOP AFM archivos."
 
 #: modules/file/nanotop.c:119
 msgid "Nanotop files (.spm)"
@@ -3915,7 +3913,7 @@ msgstr ""
 
 #: modules/file/netcdf.c:175
 msgid "Imports network Common Data Form (netCDF) files."
-msgstr ""
+msgstr "Importa network Common Data Form (netCDF) archivos."
 
 #: modules/file/netcdf.c:188
 msgid "GSXM netCDF files (.nc)"
@@ -4024,7 +4022,7 @@ msgstr ""
 
 #: modules/file/nt-mdt.c:694
 msgid "Imports NT-MDT data files."
-msgstr ""
+msgstr "Importa NT-MDT archivos de datos."
 
 #: modules/file/nt-mdt.c:707
 msgid "NT-MDT files (.mdt)"
@@ -4096,7 +4094,7 @@ msgstr ""
 
 #: modules/file/ols.c:66
 msgid "Imports OLS data files."
-msgstr ""
+msgstr "Importa OLS archivos de datos."
 
 #: modules/file/ols.c:79
 msgid "Olympus LEXT OLS3000 (.ols)"
@@ -4120,7 +4118,7 @@ msgstr ""
 
 #: modules/file/omicronflat.c:157
 msgid "Imports Omicron flat files."
-msgstr ""
+msgstr "Importa Omicron flat archivos."
 
 #: modules/file/omicronflat.c:170
 msgid "Omicron flat files (*.*_flat)"
@@ -4144,7 +4142,7 @@ msgstr ""
 
 #: modules/file/opdfile.c:180
 msgid "Imports Wyko OPD and ASC files."
-msgstr ""
+msgstr "Importa Wyko OPD y ASC archivos."
 
 #: modules/file/opdfile.c:193
 msgid "Wyko OPD files (.opd)"
@@ -4226,7 +4224,7 @@ msgstr "TARGA (.tga,.targa)"
 
 #: modules/file/pixmap.c:420
 msgid "Graphics Interchange Format (.gif)"
-msgstr ""
+msgstr "Graphics Interchange Format (.gif)"
 
 #: modules/file/pixmap.c:424
 msgid "JPEG 2000 (.jpx)"
@@ -4242,7 +4240,7 @@ msgstr "X Pixmap (.xpm)"
 
 #: modules/file/pixmap.c:436
 msgid "Sun raster image (.ras)"
-msgstr ""
+msgstr "Sun raster imagen (.ras)"
 
 #: modules/file/pixmap.c:440
 msgid "Apple icon (.icns)"
@@ -4424,7 +4422,7 @@ msgstr ""
 
 #: modules/file/pltfile.c:71
 msgid "Imports Nanosurf PLT files."
-msgstr ""
+msgstr "Importa Nanosurf PLT archivos."
 
 #: modules/file/pltfile.c:84
 msgid "Nanosurf PLT files (.plt)"
@@ -4432,7 +4430,7 @@ msgstr ""
 
 #: modules/file/pnifile.c:112
 msgid "Imports Pacific Nanotechnology PNI data files."
-msgstr ""
+msgstr "Importa Pacific Nanotechnology PNI archivos de datos."
 
 #: modules/file/pnifile.c:125
 msgid "PNI files (.pni)"
@@ -4440,7 +4438,7 @@ msgstr ""
 
 #: modules/file/psia.c:242
 msgid "Imports Park Systems data files."
-msgstr ""
+msgstr "Importa Park Systems archivos de datos."
 
 #: modules/file/psia.c:255
 msgid "Park Systems data files (.tiff, .tif)"
@@ -4462,7 +4460,7 @@ msgstr ""
 
 #: modules/file/pt3file.c:290
 msgid "Imports SymPhoTime data files, version 2.0."
-msgstr ""
+msgstr "Importa SymPhoTime archivos de datos, versión 2.0."
 
 #: modules/file/pt3file.c:303
 msgid "PicoHarp files (.pt3)"
@@ -4503,7 +4501,7 @@ msgstr ""
 
 #: modules/file/quesant.c:62
 msgid "Imports Quesant file format."
-msgstr ""
+msgstr "Importa Quesant archivos."
 
 #: modules/file/quesant.c:75
 msgid "Quesant files (.afm)"
@@ -4976,7 +4974,7 @@ msgstr ""
 
 #: modules/file/rhk-sm3.c:228
 msgid "Imports RHK Technology SM3 data files."
-msgstr ""
+msgstr "Importa RHK Technology SM3 archivos de datos."
 
 #: modules/file/rhk-sm3.c:248
 msgid "RHK SM3 files (.sm3)"
@@ -5011,7 +5009,7 @@ msgstr ""
 
 #: modules/file/rhk-sm4.c:373
 msgid "Imports RHK Technology SM4 data files."
-msgstr ""
+msgstr "Importa RHK Technology SM4 archivos de datos."
 
 #: modules/file/rhk-sm4.c:393
 msgid "RHK SM4 files (.sm4)"
@@ -5039,7 +5037,7 @@ msgstr ""
 
 #: modules/file/rhk-spm32.c:169
 msgid "Imports RHK Technology SPM32 data files."
-msgstr ""
+msgstr "Importa RHK Technology SPM32 archivos de datos."
 
 #: modules/file/rhk-spm32.c:189
 msgid "RHK SPM32 files (.sm2)"
@@ -5073,7 +5071,7 @@ msgstr ""
 
 #: modules/file/robotics.c:73
 msgid "Imports Automation & Robotics Dual Lensmapper data files"
-msgstr ""
+msgstr "Importa Automation & Robotics Dual Lensmapper archivos de datos."
 
 #: modules/file/robotics.c:86
 msgid "Dual Lensmapper files"
@@ -5081,7 +5079,7 @@ msgstr ""
 
 #: modules/file/sdfile.c:156
 msgid "Imports Surfstand group SDF (Surface Data File) files."
-msgstr ""
+msgstr "Importa Surfstand group SDF (Surface Data File) archivos."
 
 #: modules/file/sdfile.c:171
 msgid "Surfstand SDF files, binary (.sdf)"
@@ -5121,7 +5119,7 @@ msgstr ""
 
 #: modules/file/seiko.c:95
 msgid "Imports Seiko XQB, XQD, XQT and XQP files."
-msgstr ""
+msgstr "Importa Seiko XQB, XQD, XQT y XQP archivos."
 
 #: modules/file/seiko.c:108
 msgid "Seiko files (.xqb, .xqd, .xqt, .xqp)"
@@ -5154,7 +5152,7 @@ msgstr ""
 
 #: modules/file/shimadzu.c:120
 msgid "Imports Shimadzu SPM data files."
-msgstr ""
+msgstr "Importa Shimadzu SPM archivos de datos."
 
 #: modules/file/shimadzu.c:133
 msgid "Shimadzu files"
@@ -5167,7 +5165,7 @@ msgstr ""
 
 #: modules/file/sicmfile.c:193
 msgid "Imports IonScope SICM data files."
-msgstr ""
+msgstr "Importa IonScope SICM archivos de datos."
 
 #: modules/file/sicmfile.c:207
 msgid "IonScope SICM files (.img)"
@@ -5175,7 +5173,7 @@ msgstr ""
 
 #: modules/file/sis.c:454
 msgid "Imports SIS (Surface Imaging Systems) data files."
-msgstr ""
+msgstr "Importa SIS (Surface Imaging Systems) archivos de datos."
 
 #: modules/file/sis.c:467
 msgid "SIS files (.sis)"
@@ -5212,7 +5210,7 @@ msgstr ""
 
 #: modules/file/spip-asc.c:75
 msgid "Imports SPIP ASC files."
-msgstr ""
+msgstr "Importa SPIP ASC archivos."
 
 #: modules/file/spip-asc.c:88
 msgid "SPIP ASCII files (.asc)"
@@ -5253,7 +5251,7 @@ msgstr ""
 
 #: modules/file/stmprg.c:224
 msgid "Imports Omicron STMPRG data files (tp ta)."
-msgstr ""
+msgstr "Importa Omicron STMPRG archivos de datos (tp ta)."
 
 #: modules/file/stmprg.c:237
 msgid "Omicron STMPRG files (tp ta)"
@@ -5341,7 +5339,7 @@ msgstr ""
 
 #: modules/file/stpfile.c:133
 msgid "Imports Molecular Imaging STP data files."
-msgstr ""
+msgstr "Importa Molecular Imaging STP archivos de datos."
 
 #: modules/file/stpfile.c:146
 msgid "STP files (.stp)"
@@ -5349,7 +5347,7 @@ msgstr ""
 
 #: modules/file/surffile.c:285
 msgid "Imports Surf data files."
-msgstr ""
+msgstr "Importa Surf archivos de datos."
 
 #: modules/file/surffile.c:298
 msgid "Surf files (.sur)"
@@ -5409,7 +5407,7 @@ msgstr ""
 
 #: modules/file/wipfile.c:272
 msgid "Imports WItec Project data files."
-msgstr ""
+msgstr "Importa WItec Project archivos de datos."
 
 #: modules/file/wipfile.c:285
 msgid "WItec Project files (.wip)"
@@ -5425,7 +5423,7 @@ msgstr ""
 
 #: modules/file/witfile.c:210
 msgid "Imports WITec WIT data files."
-msgstr ""
+msgstr "Importa WITec WIT archivos de datos."
 
 #: modules/file/witfile.c:223
 msgid "WITec files (.wit)"
@@ -5433,7 +5431,7 @@ msgstr ""
 
 #: modules/file/wsffile.c:74
 msgid "Imports WSF ASCII files."
-msgstr ""
+msgstr "Importa WSF ASCII archivos."
 
 #: modules/file/wsffile.c:87
 msgid "WSF ASCII files (.wsf)"
@@ -5445,7 +5443,7 @@ msgstr ""
 
 #: modules/file/wsxmfile.c:82
 msgid "Imports Nanotec WSxM data files."
-msgstr ""
+msgstr "Importa Nanotec WSxM archivos de datos."
 
 #: modules/file/wsxmfile.c:95
 msgid "WSXM files (.tom)"
@@ -5466,7 +5464,7 @@ msgstr ""
 
 #: modules/file/zeiss.c:63
 msgid "Imports Carl Zeiss SEM images."
-msgstr ""
+msgstr "Importa Carl Zeiss SEM imágenes."
 
 #: modules/file/zeiss.c:76
 msgid "Carl Zeiss SEM scans (.tif)"
@@ -6284,7 +6282,7 @@ msgstr "_Curva de Gráfico:"
 
 #: modules/process/brickshow.c:529
 msgid "3D view"
-msgstr ""
+msgstr "Vista 3D"
 
 #: modules/process/brickshow.c:555
 msgid "Zoom"
@@ -7291,9 +7289,8 @@ msgid "Distribute"
 msgstr ""
 
 #: modules/process/drift.c:374
-#, fuzzy
 msgid "Replace"
-msgstr "¿Sustituir Archivo?"
+msgstr "Sustituir"
 
 #: modules/process/drift.c:552
 msgid "Drift-corrected"
@@ -7988,9 +7985,8 @@ msgid "Fit by sphere"
 msgstr ""
 
 #: modules/process/fit_2d.c:251
-#, fuzzy
 msgid "Fit Sphere"
-msgstr "Aproxima Gráfico"
+msgstr "Aproxima esfera"
 
 #: modules/process/fit_2d.c:297
 msgid "Fitting Parameters"
@@ -9554,9 +9550,8 @@ msgid "NN training error"
 msgstr ""
 
 #: modules/process/neural.c:518
-#, fuzzy
 msgid "_Model:"
-msgstr "Modelo de punta"
+msgstr "_Modelo:"
 
 #: modules/process/neural.c:528
 msgid "_Signal:"
@@ -9573,9 +9568,8 @@ msgid "Preview:"
 msgstr ""
 
 #: modules/process/neural.c:555
-#, fuzzy
 msgid "Model"
-msgstr "Modelo de punta"
+msgstr "Modelo"
 
 #: modules/process/neural.c:556
 msgid "Signal"
@@ -10184,7 +10178,7 @@ msgstr ""
 #: modules/process/scars.c:536
 #: modules/process/threshold.c:353
 msgid "RMS"
-msgstr ""
+msgstr "RMS"
 
 #: modules/process/scars.c:536
 msgid "_Soft threshold:"
@@ -10421,11 +10415,11 @@ msgstr ""
 
 #: modules/process/tilt.c:179
 msgid "_X:"
-msgstr ""
+msgstr "_X:"
 
 #: modules/process/tilt.c:188
 msgid "_Y:"
-msgstr ""
+msgstr "_Y:"
 
 #: modules/process/tilt.c:198
 msgid "Angles"
@@ -10741,7 +10735,7 @@ msgstr ""
 
 #: modules/tools/filter.c:210
 msgid "Kuwahara"
-msgstr ""
+msgstr "Kuwahara"
 
 #: modules/tools/filter.c:211
 msgid "Dechecker"
