@@ -1,6 +1,6 @@
 2.31 (0000-00-00)
 Application:
-- Translations updated: Czech, French, Russian.
+- Translations updated: Czech, French, Russian, Spanish.
 
 Libraries:
 - libgwyprocess: Bogus normalisation/possible crash in gwy_data_field_area_dh()
@@ -60,6 +60,10 @@ Modules:
   a new graph.
 - Graph fit, FD fit and Critical dimension: Curve and controls were switched,
   controls should no longer jump around, interfering with selection.
+- Merge: ‘None’ merge mode which does not do any correlation search was
+  actually implemented.  Critical warnings and wrong smooth merging for some
+  image combinations were fixed.  ‘Second’ really means the image selected in
+  the dialog now.
 
 Other:
 - Crash on Win32 while loading TIFF images was hopefully fixed.
