@@ -1389,7 +1389,7 @@ static gboolean
 //              BrickshowControls *controls)
 p3d_on_draw_event(GtkWidget *widget, G_GNUC_UNUSED GdkEventExpose *event, BrickshowControls *controls)
 {
-    cairo_t *cr = gdk_cairo_create(gtk_widget_get_window(widget));
+    cairo_t *cr = gdk_cairo_create(GDK_WINDOW(widget->window));
     gdouble sx, sy;
     gint i;
     
