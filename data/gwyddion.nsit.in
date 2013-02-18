@@ -1,6 +1,7 @@
 ; Gwyddion NSIS installer with bundled Gtk+ and stuff.
 ; This needs to be expanded by expandsi to obtain the actual SetOutDir, File,
-; Delete and RMDir commands (that's why the extension is nsit, not nsi).
+; Delete and RMDir commands (that's why the extension is nsit, not nsi).  It
+; also expands ARCH to either win32 or win64.
 ; Written by Yeti.  Public domain.
 
 !define GTK_BIN_VERSION "2.10.0"
