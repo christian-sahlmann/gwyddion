@@ -62,6 +62,8 @@ Gianfranco Gallizia <gianfranco.gallizia@aperesearch.com>
     APE DAX import module.
 Sameer Grover <sameer.grover.1@gmail.com>
     Nanomagnetics NMI import module, drift correction improvements.
+Niv Levy <nivl2000@gmail.com>
+    NetCDF import improvements.
 
 
 === Translators ===
