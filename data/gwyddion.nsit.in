@@ -6,7 +6,7 @@
 !define GTK_BIN_VERSION "2.10.0"
 !define PANGO_BIN_VERSION "1.6.0"
 
-!define PRODUCT_VERSION "@PACKAGE_VERSION@"
+!define PRODUCT_VERSION "@PACKAGE_VERSION@.%ARCH%"
 !define PRODUCT_BIN_VERSION "2.0"
 !define PRODUCT_NAME "Gwyddion"
 !define PRODUCT_PUBLISHER "Gwyddion developers"
