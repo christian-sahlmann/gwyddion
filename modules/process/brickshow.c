@@ -1664,6 +1664,7 @@ p3d_set_axes(BrickshowControls *controls)
 
 }
 
+static
 gint simplify(gdouble *px, gdouble *py, gdouble *pz, gdouble *ps, gint nps)
 {
     gint i;
