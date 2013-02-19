@@ -5,6 +5,7 @@ alicona	managing-files
 ambfile	managing-files
 anfatec	managing-files
 angle_dist	statistical-analysis	angle-distribution
+apedaxfile	managing-files
 apefile	managing-files
 arithmetic	multidata	data-arithmetic
 asciiexport	managing-files
@@ -42,6 +43,7 @@ dwtanisotropy	integral-transforms	dwt
 ecsfile	managing-files
 edge	filters-presentations	edge
 ellipse	selections
+extend	basic-operations	extend
 ezdfile	managing-files
 facet-level	leveling-and-background	facet-level
 facet_analysis	statistical-analysis	facet-analysis
@@ -76,6 +78,7 @@ graph_level	graph-processing
 graph_stats	graph-processing
 gsffile	gsf
 gwyfile	managing-files
+gxyzffile	managing-files
 hdf4file	managing-files
 hdrimage	managing-files
 hitachi-afm	managing-files
@@ -98,6 +101,7 @@ linecorrect	editing-correction	line-correction
 linestats	statistical-analysis	line-stats
 lno_synth	synthetic	line-noise-synthetis
 local_contrast	filters-presentations	local-contrast
+magellan	managing-files
 mapvue	managing-files
 mark_with	presentations-masks
 maskcor	multidata	mask-by-correlation
@@ -113,6 +117,7 @@ miffile	managing-files
 mifile	managing-files
 mulfile	managing-files
 nanoeducator	managing-files
+nanomagnetics	managing-files
 nanonics	managing-files
 nanonis	managing-files
 nanoobserver	managing-files
@@ -192,6 +197,7 @@ tip_model	tip-convolution-artefacts	tip-model
 tipops	tip-convolution-artefacts	tip-operations
 unisoku	managing-files
 unrotate	editing-correction	unrotate
+vtkfile	managing-files
 wipfile	managing-files
 witec-asc	managing-files
 witfile	managing-files
