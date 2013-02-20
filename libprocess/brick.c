@@ -3,7 +3,7 @@
  *  Copyright (C) 2012 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
- *  Originally based on Yeti's implementation for Gwyddion 3 branch, 
+ *  Originally based on Yeti's implementation for Gwyddion 3 branch,
  *  backported and modified for test use in Gwyddion 2 branch.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -42,14 +42,14 @@ enum {
 static void        gwy_brick_finalize         (GObject *object);
 static void        gwy_brick_serializable_init(GwySerializableIface *iface);
 static GByteArray* gwy_brick_serialize        (GObject *obj,
-                                                   GByteArray *buffer);
+                                               GByteArray *buffer);
 static gsize       gwy_brick_get_size         (GObject *obj);
 static GObject*    gwy_brick_deserialize      (const guchar *buffer,
-                                                   gsize size,
-                                                   gsize *position);
+                                               gsize size,
+                                               gsize *position);
 static GObject*    gwy_brick_duplicate_real   (GObject *object);
 static void        gwy_brick_clone_real       (GObject *source,
-                                                   GObject *copy);
+                                               GObject *copy);
 
 static guint brick_signals[LAST_SIGNAL] = { 0 };
 
@@ -74,14 +74,14 @@ gwy_brick_class_init(GwyBrickClass *klass)
 
     gobject_class->finalize = gwy_brick_finalize;
 
-/**
- * GwyBrick::data-changed:
- * @gwydataline: The #GwyBrick which received the signal.
- *
- * The ::data-changed signal is never emitted by data line itself.  It
- * is intended as a means to notify others data line users they should
- * update themselves.
- */
+    /**
+     * GwyBrick::data-changed:
+     * @gwydataline: The #GwyBrick which received the signal.
+     *
+     * The ::data-changed signal is never emitted by data line itself.  It
+     * is intended as a means to notify others data line users they should
+     * update themselves.
+     */
     brick_signals[DATA_CHANGED]
         = g_signal_new("data-changed",
                        G_OBJECT_CLASS_TYPE(gobject_class),
@@ -124,6 +124,8 @@ gwy_brick_finalize(GObject *object)
  * Creates a new data brick.
  *
  * Returns: A newly created data brick.
+ *
+ * Since: 2.31
  **/
 GwyBrick*
 gwy_brick_new(gint xres, gint yres, gint zres, gdouble xreal, gdouble yreal, gdouble zreal, gboolean nullme)
@@ -160,10 +162,12 @@ gwy_brick_new(gint xres, gint yres, gint zres, gdouble xreal, gdouble yreal, gdo
  * data.
  *
  * Returns: A newly created data brick.
+ *
+ * Since: 2.31
  **/
 GwyBrick*
 gwy_brick_new_alike(GwyBrick *model,
-                        gboolean nullme)
+                    gboolean nullme)
 {
     GwyBrick *brick;
 
@@ -199,7 +203,7 @@ gwy_brick_new_alike(GwyBrick *model,
 
 static GByteArray*
 gwy_brick_serialize(GObject *obj,
-                        GByteArray *buffer)
+                    GByteArray *buffer)
 {
     GwyBrick *brick;
     guint32 datasize;
@@ -295,8 +299,8 @@ gwy_brick_get_size(GObject *obj)
 
 static GObject*
 gwy_brick_deserialize(const guchar *buffer,
-                          gsize size,
-                          gsize *position)
+                      gsize size,
+                      gsize *position)
 {
     guint32 datasize;
     gint xres, yres, zres;
@@ -337,7 +341,7 @@ gwy_brick_deserialize(const guchar *buffer,
     }
     if (datasize != (guint)(xres * yres * zres)) {
         g_critical("Serialized %s size mismatch %u != %u",
-              GWY_BRICK_TYPE_NAME, datasize, xres*yres*zres);
+                   GWY_BRICK_TYPE_NAME, datasize, xres*yres*zres);
         g_free(data);
         gwy_object_unref(si_unit_x);
         gwy_object_unref(si_unit_y);
@@ -407,8 +411,8 @@ gwy_brick_clone_real(GObject *source, GObject *copy)
     brick = GWY_BRICK(source);
     clone = GWY_BRICK(copy);
 
-    if (clone->xres != brick->xres 
-        || clone->yres != brick->yres 
+    if (clone->xres != brick->xres
+        || clone->yres != brick->yres
         || clone->zres != brick->zres) {
         clone->xres = brick->xres;
         clone->yres = brick->yres;
@@ -464,6 +468,8 @@ gwy_brick_clone_real(GObject *source, GObject *copy)
  * @brick: A data brick.
  *
  * Emits signal "data_changed" on a data brick.
+ *
+ * Since: 2.31
  **/
 void
 gwy_brick_data_changed(GwyBrick *brick)
@@ -484,13 +490,15 @@ gwy_brick_data_changed(GwyBrick *brick)
  * In other words changes the size of three dimensional field related with data
  * brick. The original values are used for resampling using a requested
  * interpolation alorithm.
+ *
+ * Since: 2.31
  **/
 void
 gwy_brick_resample(GwyBrick *brick,
-                       gint xres,
-                       gint yres,
-                       gint zres,
-                       GwyInterpolationType interpolation)
+                   gint xres,
+                   gint yres,
+                   gint zres,
+                   GwyInterpolationType interpolation)
 {
     gdouble *bdata, *data;
     gint row, col, lev;
@@ -524,11 +532,11 @@ gwy_brick_resample(GwyBrick *brick,
         {
             for (row=0; row<yres; row++)
             {
-                for (lev=0; lev<zres; lev++) 
-                    bdata[col + xres*row + xres*yres*lev] 
-                       = data[MIN((gint)(xratio*col + 0.5), brick->xres-1) 
-                          + xres*MIN((gint)(yratio*row + 0.5), brick->yres-1) 
-                          + xres*yres*MIN((gint)(zratio*lev + 0.5), brick->zres-1)];
+                for (lev=0; lev<zres; lev++)
+                    bdata[col + xres*row + xres*yres*lev]
+                        = data[MIN((gint)(xratio*col + 0.5), brick->xres-1)
+                        + xres*MIN((gint)(yratio*row + 0.5), brick->yres-1)
+                        + xres*yres*MIN((gint)(zratio*lev + 0.5), brick->zres-1)];
             }
         }
 
@@ -562,6 +570,8 @@ gwy_brick_resample(GwyBrick *brick,
  * real coordinates.
  *
  * Returns: Value interpolated in the data brick.
+ *
+ * Since: 2.31
  **/
 gdouble
 gwy_brick_get_dval(GwyBrick *a, gdouble x, gdouble y, gdouble z, gint interpolation)
@@ -577,9 +587,9 @@ gwy_brick_get_dval(GwyBrick *a, gdouble x, gdouble y, gdouble z, gint interpolat
 
     switch (interpolation) {
         case GWY_INTERPOLATION_ROUND:
-        return a->data[MIN((gint)(x + 0.5), a->xres-1) 
-                          + a->xres*MIN((gint)(y + 0.5), a->yres-1) 
-                          + a->xres*a->yres*MIN((gint)(z + 0.5), a->zres-1)]; 
+        return a->data[MIN((gint)(x + 0.5), a->xres-1)
+            + a->xres*MIN((gint)(y + 0.5), a->yres-1)
+            + a->xres*a->yres*MIN((gint)(z + 0.5), a->zres-1)];
         break;
     }
     return 0.0;
@@ -604,6 +614,8 @@ gwy_brick_get_dval(GwyBrick *a, gdouble x, gdouble y, gdouble z, gint interpolat
  * pixel coordinates.
  *
  * Returns: Value interpolated in the data brick.
+ *
+ * Since: 2.31
  **/
 gdouble
 gwy_brick_get_dval_real(GwyBrick *a, gdouble x, gdouble y, gdouble z, gint interpolation)
@@ -626,9 +638,9 @@ gwy_brick_get_dval_real(GwyBrick *a, gdouble x, gdouble y, gdouble z, gint inter
 
     switch (interpolation) {
         case GWY_INTERPOLATION_ROUND:
-        return a->data[MIN((gint)(x*xratio + 0.5), a->xres-1) 
-                          + a->xres*MIN((gint)(y*yratio + 0.5), a->yres-1) 
-                          + a->xres*a->yres*MIN((gint)(z*zratio + 0.5), a->zres-1)]; 
+        return a->data[MIN((gint)(x*xratio + 0.5), a->xres-1)
+            + a->xres*MIN((gint)(y*yratio + 0.5), a->yres-1)
+            + a->xres*a->yres*MIN((gint)(z*zratio + 0.5), a->zres-1)];
         break;
     }
     return 0.0;
@@ -648,6 +660,8 @@ gwy_brick_get_dval_real(GwyBrick *a, gdouble x, gdouble y, gdouble z, gint inter
  * gwy_brick_get_data_const() if you are not going to change the data.
  *
  * Returns: The data as an array of doubles of length gwy_brick_get_res().
+ *
+ * Since: 2.31
  **/
 gdouble*
 gwy_brick_get_data(GwyBrick *brick)
@@ -669,6 +683,8 @@ gwy_brick_get_data(GwyBrick *brick)
  * Use gwy_brick_get_data() if you want to change the data.
  *
  * Returns: The data as an array of doubles of length gwy_brick_get_res().
+ *
+ * Since: 2.31
  **/
 const gdouble*
 gwy_brick_get_data_const(GwyBrick *brick)
@@ -684,6 +700,8 @@ gwy_brick_get_data_const(GwyBrick *brick)
  * Gets the x resolution of a data brick.
  *
  * Returns: Resolution (number of data points).
+ *
+ * Since: 2.31
  **/
 gint
 gwy_brick_get_xres(GwyBrick *brick)
@@ -699,6 +717,8 @@ gwy_brick_get_xres(GwyBrick *brick)
  * Gets the y resolution of a data brick.
  *
  * Returns: Resolution (number of data points).
+ *
+ * Since: 2.31
  **/
 gint
 gwy_brick_get_yres(GwyBrick *brick)
@@ -713,6 +733,8 @@ gwy_brick_get_yres(GwyBrick *brick)
  * Gets the z resolution of a data brick.
  *
  * Returns: Resolution (number of data points).
+ *
+ * Since: 2.31
  **/
 gint
 gwy_brick_get_zres(GwyBrick *brick)
@@ -728,6 +750,8 @@ gwy_brick_get_zres(GwyBrick *brick)
  * Gets the physical size of a data brick in the x direction.
  *
  * Returns: Real size of a data brick the x direction.
+ *
+ * Since: 2.31
  **/
 gdouble
 gwy_brick_get_xreal(GwyBrick *brick)
@@ -743,6 +767,8 @@ gwy_brick_get_xreal(GwyBrick *brick)
  * Gets the physical size of a data brick in the y direction.
  *
  * Returns: Real size of a data brick the y direction.
+ *
+ * Since: 2.31
  **/
 gdouble
 gwy_brick_get_yreal(GwyBrick *brick)
@@ -757,6 +783,8 @@ gwy_brick_get_yreal(GwyBrick *brick)
  * Gets the physical size of a data brick in the z direction.
  *
  * Returns: Real size of a data brick the z direction.
+ *
+ * Since: 2.31
  **/
 gdouble
 gwy_brick_get_zreal(GwyBrick *brick)
@@ -772,6 +800,8 @@ gwy_brick_get_zreal(GwyBrick *brick)
  * Gets the offset of data brick origin in x direction.
  *
  * Returns: Offset value.
+ *
+ * Since: 2.31
  **/
 gdouble
 gwy_brick_get_xoffset(GwyBrick *brick)
@@ -787,6 +817,8 @@ gwy_brick_get_xoffset(GwyBrick *brick)
  * Gets the offset of data brick origin in y direction.
  *
  * Returns: Offset value.
+ *
+ * Since: 2.31
  **/
 gdouble
 gwy_brick_get_yoffset(GwyBrick *brick)
@@ -802,6 +834,8 @@ gwy_brick_get_yoffset(GwyBrick *brick)
  * Gets the offset of data brick origin in z direction.
  *
  * Returns: Offset value.
+ *
+ * Since: 2.31
  **/
 gdouble
 gwy_brick_get_zoffset(GwyBrick *brick)
@@ -819,10 +853,12 @@ gwy_brick_get_zoffset(GwyBrick *brick)
  *
  * Note offsets don't affect any calculation, nor functions like
  * gwy_brick_rtoi().
+ *
+ * Since: 2.31
  **/
 void
 gwy_brick_set_xoffset(GwyBrick *brick,
-                         gdouble xoffset)
+                      gdouble xoffset)
 {
     g_return_if_fail(GWY_IS_BRICK(brick));
     brick->xoff = xoffset;
@@ -837,10 +873,12 @@ gwy_brick_set_xoffset(GwyBrick *brick,
  *
  * Note offsets don't affect any calculation, nor functions like
  * gwy_brick_rtoi().
+ *
+ * Since: 2.31
  **/
 void
 gwy_brick_set_yoffset(GwyBrick *brick,
-                         gdouble yoffset)
+                      gdouble yoffset)
 {
     g_return_if_fail(GWY_IS_BRICK(brick));
     brick->yoff = yoffset;
@@ -854,10 +892,12 @@ gwy_brick_set_yoffset(GwyBrick *brick,
  *
  * Note offsets don't affect any calculation, nor functions like
  * gwy_brick_rtoi().
+ *
+ * Since: 2.31
  **/
 void
 gwy_brick_set_zoffset(GwyBrick *brick,
-                         gdouble zoffset)
+                      gdouble zoffset)
 {
     g_return_if_fail(GWY_IS_BRICK(brick));
     brick->zoff = zoffset;
@@ -869,8 +909,10 @@ gwy_brick_set_zoffset(GwyBrick *brick,
  * @xreal: New real x dimensions value
  *
  * Sets the real x dimension of a brick.
-*/
-void            
+ *
+ * Since: 2.31
+ **/
+void
 gwy_brick_set_xreal(GwyBrick *brick, gdouble xreal)
 {
     brick->xreal = xreal;
@@ -882,9 +924,10 @@ gwy_brick_set_xreal(GwyBrick *brick, gdouble xreal)
  * @yreal: New real y dimensions value
  *
  * Sets the real y dimension of a brick.
-*/
-
-void            
+ *
+ * Since: 2.31
+ **/
+void
 gwy_brick_set_yreal(GwyBrick *brick, gdouble yreal)
 {
     brick->yreal = yreal;
@@ -896,9 +939,10 @@ gwy_brick_set_yreal(GwyBrick *brick, gdouble yreal)
  * @zreal: New real z dimensions value
  *
  * Sets the real z dimension of a brick.
-*/
-
-void            
+ *
+ * Since: 2.31
+ **/
+void
 gwy_brick_set_zreal(GwyBrick *brick, gdouble zreal)
 {
     brick->zreal = zreal;
@@ -913,6 +957,8 @@ gwy_brick_set_zreal(GwyBrick *brick, gdouble zreal)
  *
  * Returns: SI unit corresponding to the lateral (X) dimension of the data
  *          brick.  Its reference count is not incremented.
+ *
+ * Since: 2.31
  **/
 GwySIUnit*
 gwy_brick_get_si_unit_x(GwyBrick *brick)
@@ -933,6 +979,8 @@ gwy_brick_get_si_unit_x(GwyBrick *brick)
  *
  * Returns: SI unit corresponding to the lateral (Y) dimension of the data
  *          brick.  Its reference count is not incremented.
+ *
+ * Since: 2.31
  **/
 GwySIUnit*
 gwy_brick_get_si_unit_y(GwyBrick *brick)
@@ -953,6 +1001,8 @@ gwy_brick_get_si_unit_y(GwyBrick *brick)
  *
  * Returns: SI unit corresponding to the "height" (Z) dimension of the data
  *          brick.  Its reference count is not incremented.
+ *
+ * Since: 2.31
  **/
 GwySIUnit*
 gwy_brick_get_si_unit_z(GwyBrick *brick)
@@ -973,6 +1023,8 @@ gwy_brick_get_si_unit_z(GwyBrick *brick)
  *
  * Returns: SI unit corresponding to the "value" of the data
  *          brick.  Its reference count is not incremented.
+ *
+ * Since: 2.31
  **/
 GwySIUnit*
 gwy_brick_get_si_unit_w(GwyBrick *brick)
@@ -995,10 +1047,12 @@ gwy_brick_get_si_unit_w(GwyBrick *brick)
  *
  * It does not assume a reference on @si_unit, instead it adds its own
  * reference.
+ *
+ * Since: 2.31
  **/
 void
 gwy_brick_set_si_unit_x(GwyBrick *brick,
-                            GwySIUnit *si_unit)
+                        GwySIUnit *si_unit)
 {
     g_return_if_fail(GWY_IS_BRICK(brick));
     g_return_if_fail(GWY_IS_SI_UNIT(si_unit));
@@ -1020,10 +1074,12 @@ gwy_brick_set_si_unit_x(GwyBrick *brick,
  *
  * It does not assume a reference on @si_unit, instead it adds its own
  * reference.
+ *
+ * Since: 2.31
  **/
 void
 gwy_brick_set_si_unit_y(GwyBrick *brick,
-                            GwySIUnit *si_unit)
+                        GwySIUnit *si_unit)
 {
     g_return_if_fail(GWY_IS_BRICK(brick));
     g_return_if_fail(GWY_IS_SI_UNIT(si_unit));
@@ -1045,10 +1101,12 @@ gwy_brick_set_si_unit_y(GwyBrick *brick,
  *
  * It does not assume a reference on @si_unit, instead it adds its own
  * reference.
+ *
+ * Since: 2.31
  **/
 void
 gwy_brick_set_si_unit_z(GwyBrick *brick,
-                            GwySIUnit *si_unit)
+                        GwySIUnit *si_unit)
 {
     g_return_if_fail(GWY_IS_BRICK(brick));
     g_return_if_fail(GWY_IS_SI_UNIT(si_unit));
@@ -1070,10 +1128,12 @@ gwy_brick_set_si_unit_z(GwyBrick *brick,
  *
  * It does not assume a reference on @si_unit, instead it adds its own
  * reference.
+ *
+ * Since: 2.31
  **/
 void
 gwy_brick_set_si_unit_w(GwyBrick *brick,
-                            GwySIUnit *si_unit)
+                        GwySIUnit *si_unit)
 {
     g_return_if_fail(GWY_IS_BRICK(brick));
     g_return_if_fail(GWY_IS_SI_UNIT(si_unit));
@@ -1095,11 +1155,13 @@ gwy_brick_set_si_unit_w(GwyBrick *brick,
  *
  * Returns: The value format.  If @format is %NULL, a newly allocated format
  *          is returned, otherwise (modified) @format itself is returned.
+ *
+ * Since: 2.31
  **/
 GwySIValueFormat*
 gwy_brick_get_value_format_x(GwyBrick *brick,
-                                 GwySIUnitFormatStyle style,
-                                 GwySIValueFormat *format)
+                             GwySIUnitFormatStyle style,
+                             GwySIValueFormat *format)
 {
     gdouble max, unit;
 
@@ -1108,8 +1170,8 @@ gwy_brick_get_value_format_x(GwyBrick *brick,
     max = brick->xreal;
     unit = brick->xreal/brick->xres;
     return gwy_si_unit_get_format_with_resolution
-                                   (gwy_brick_get_si_unit_x(brick),
-                                    style, max, unit, format);
+        (gwy_brick_get_si_unit_x(brick),
+         style, max, unit, format);
 }
 
 /**
@@ -1122,11 +1184,13 @@ gwy_brick_get_value_format_x(GwyBrick *brick,
  *
  * Returns: The value format.  If @format is %NULL, a newly allocated format
  *          is returned, otherwise (modified) @format itself is returned.
+ *
+ * Since: 2.31
  **/
 GwySIValueFormat*
 gwy_brick_get_value_format_y(GwyBrick *brick,
-                                 GwySIUnitFormatStyle style,
-                                 GwySIValueFormat *format)
+                             GwySIUnitFormatStyle style,
+                             GwySIValueFormat *format)
 {
     gdouble max, unit;
 
@@ -1135,8 +1199,8 @@ gwy_brick_get_value_format_y(GwyBrick *brick,
     max = brick->yreal;
     unit = brick->yreal/brick->yres;
     return gwy_si_unit_get_format_with_resolution
-                                   (gwy_brick_get_si_unit_y(brick),
-                                    style, max, unit, format);
+        (gwy_brick_get_si_unit_y(brick),
+         style, max, unit, format);
 }
 
 /**
@@ -1149,11 +1213,13 @@ gwy_brick_get_value_format_y(GwyBrick *brick,
  *
  * Returns: The value format.  If @format is %NULL, a newly allocated format
  *          is returned, otherwise (modified) @format itself is returned.
+ *
+ * Since: 2.31
  **/
 GwySIValueFormat*
 gwy_brick_get_value_format_z(GwyBrick *brick,
-                                 GwySIUnitFormatStyle style,
-                                 GwySIValueFormat *format)
+                             GwySIUnitFormatStyle style,
+                             GwySIValueFormat *format)
 {
     gdouble max, unit;
 
@@ -1162,8 +1228,8 @@ gwy_brick_get_value_format_z(GwyBrick *brick,
     max = brick->zreal;
     unit = brick->zreal/brick->zres;
     return gwy_si_unit_get_format_with_resolution
-                                   (gwy_brick_get_si_unit_z(brick),
-                                    style, max, unit, format);
+        (gwy_brick_get_si_unit_z(brick),
+         style, max, unit, format);
 }
 
 
@@ -1172,6 +1238,8 @@ gwy_brick_get_value_format_z(GwyBrick *brick,
  * @brick: A data brick.
  *
  * Returns: The minimum value within the brick.
+ *
+ * Since: 2.31
  **/
 gdouble
 gwy_brick_get_min(GwyBrick *brick)
@@ -1191,6 +1259,8 @@ gwy_brick_get_min(GwyBrick *brick)
  * @brick: A data brick.
  *
  * Returns: The maximum value within the brick.
+ *
+ * Since: 2.31
  **/
 gdouble
 gwy_brick_get_max(GwyBrick *brick)
@@ -1204,7 +1274,7 @@ gwy_brick_get_max(GwyBrick *brick)
     }
     return max;
 }
-  
+
 /**
  * gwy_brick_get_value_format_w:
  * @brick: A data brick.
@@ -1218,11 +1288,13 @@ gwy_brick_get_max(GwyBrick *brick)
  *
  * Returns: The value format.  If @format is %NULL, a newly allocated format
  *          is returned, otherwise (modified) @format itself is returned.
+ *
+ * Since: 2.31
  **/
 GwySIValueFormat*
 gwy_brick_get_value_format_w(GwyBrick *brick,
-                                 GwySIUnitFormatStyle style,
-                                 GwySIValueFormat *format)
+                             GwySIUnitFormatStyle style,
+                             GwySIValueFormat *format)
 {
     gdouble max, min;
 
@@ -1251,6 +1323,8 @@ gwy_brick_get_value_format_w(GwyBrick *brick,
  * have to use gwy_brick_itor(@brick, @pixpos + 0.5) for that.
  *
  * Returns: @pixpos in real coordinates.
+ *
+ * Since: 2.31
  **/
 gdouble
 gwy_brick_itor(GwyBrick *brick, gdouble pixpos)
@@ -1270,6 +1344,8 @@ gwy_brick_itor(GwyBrick *brick, gdouble pixpos)
  * have to use gwy_brick_itor(@brick, @pixpos + 0.5) for that.
  *
  * Returns: @pixpos in real coordinates.
+ *
+ * Since: 2.31
  **/
 gdouble
 gwy_brick_jtor(GwyBrick *brick, gdouble pixpos)
@@ -1288,6 +1364,8 @@ gwy_brick_jtor(GwyBrick *brick, gdouble pixpos)
  * have to use gwy_brick_itor(@brick, @pixpos + 0.5) for that.
  *
  * Returns: @pixpos in real coordinates.
+ *
+ * Since: 2.31
  **/
 gdouble
 gwy_brick_ktor(GwyBrick *brick, gdouble pixpos)
@@ -1305,6 +1383,8 @@ gwy_brick_ktor(GwyBrick *brick, gdouble pixpos)
  * That is it maps range [0..x real-size] to range [0..x resolution].
  *
  * Returns: @realpos in pixel coordinates.
+ *
+ * Since: 2.31
  **/
 gdouble
 gwy_brick_rtoi(GwyBrick *brick, gdouble realpos)
@@ -1322,6 +1402,8 @@ gwy_brick_rtoi(GwyBrick *brick, gdouble realpos)
  * That is it maps range [0..y real-size] to range [0..y resolution].
  *
  * Returns: @realpos in pixel coordinates.
+ *
+ * Since: 2.31
  **/
 gdouble
 gwy_brick_rtoj(GwyBrick *brick, gdouble realpos)
@@ -1339,6 +1421,8 @@ gwy_brick_rtoj(GwyBrick *brick, gdouble realpos)
  * That is it maps range [0..z real-size] to range [0..z resolution].
  *
  * Returns: @realpos in pixel coordinates.
+ *
+ * Since: 2.31
  **/
 gdouble
 gwy_brick_rtok(GwyBrick *brick, gdouble realpos)
@@ -1360,12 +1444,14 @@ gwy_brick_rtok(GwyBrick *brick, gdouble realpos)
  * directly instead.
  *
  * Returns: Value at given index.
+ *
+ * Since: 2.31
  **/
 gdouble
 gwy_brick_get_val(GwyBrick *brick,
-                      gint col,
-                      gint row,
-                      gint lev)
+                  gint col,
+                  gint row,
+                  gint lev)
 {
     g_return_val_if_fail(col >= 0 && col < (brick->xres)
                          && row>=0 && row < (brick->yres)
@@ -1388,17 +1474,18 @@ gwy_brick_get_val(GwyBrick *brick,
  * Get raw data buffer with gwy_brick_get_data_const() and access it
  * directly instead.
  *
+ * Since: 2.31
  **/
 void
 gwy_brick_set_val(GwyBrick *brick,
-                      gint col,
-                      gint row,
-                      gint lev,
-                      gdouble value)
+                  gint col,
+                  gint row,
+                  gint lev,
+                  gdouble value)
 {
     g_return_if_fail(col >= 0 && col < (brick->xres)
-                         && row>=0 && row < (brick->yres)
-                         && lev>=0 && lev < (brick->zres));
+                     && row>=0 && row < (brick->yres)
+                     && lev>=0 && lev < (brick->zres));
 
     brick->data[col + brick->xres*row + brick->xres*brick->yres*lev] = value;
 }
@@ -1417,12 +1504,14 @@ gwy_brick_set_val(GwyBrick *brick,
  * directly instead.
  *
  * Returns: Value at given index.
+ *
+ * Since: 2.31
  **/
 gdouble
 gwy_brick_get_val_real(GwyBrick *brick,
-                      gdouble x,
-                      gdouble y,
-                      gdouble z)
+                       gdouble x,
+                       gdouble y,
+                       gdouble z)
 {
     gint col = gwy_brick_rtoi(brick, x);
     gint row = gwy_brick_rtoj(brick, y);
@@ -1448,21 +1537,22 @@ gwy_brick_get_val_real(GwyBrick *brick,
  * Get raw data buffer with gwy_brick_get_data_const() and access it
  * directly instead.
  *
+ * Since: 2.31
  **/
 void
 gwy_brick_set_val_real(GwyBrick *brick,
-                      gdouble x,
-                      gdouble y,
-                      gdouble z,
-                      gdouble value)
+                       gdouble x,
+                       gdouble y,
+                       gdouble z,
+                       gdouble value)
 {
     gint col = gwy_brick_rtoi(brick, x);
     gint row = gwy_brick_rtoj(brick, y);
     gint lev = gwy_brick_rtok(brick, z);
 
     g_return_if_fail(col >= 0 && col < (brick->xres)
-                         && row>=0 && row < (brick->yres)
-                         && lev>=0 && lev < (brick->zres));
+                     && row>=0 && row < (brick->yres)
+                     && lev>=0 && lev < (brick->zres));
 
     brick->data[col + brick->xres*row + brick->xres*brick->yres*lev] = value;
 }
@@ -1475,10 +1565,12 @@ gwy_brick_set_val_real(GwyBrick *brick,
  * @value: Value to fill data brick with.
  *
  * Fills a data brick with specified value.
+ *
+ * Since: 2.31
  **/
 void
 gwy_brick_fill(GwyBrick *brick,
-                   gdouble value)
+               gdouble value)
 {
     gint i;
 
@@ -1492,6 +1584,8 @@ gwy_brick_fill(GwyBrick *brick,
  * @brick: A data brick.
  *
  * Fills a data brick with zeroes.
+ *
+ * Since: 2.31
  **/
 void
 gwy_brick_clear(GwyBrick *brick)
@@ -1506,10 +1600,12 @@ gwy_brick_clear(GwyBrick *brick)
  * @value: Value to be added.
  *
  * Adds a specified value to all values in a data brick.
+ *
+ * Since: 2.31
  **/
 void
 gwy_brick_add(GwyBrick *brick,
-                  gdouble value)
+              gdouble value)
 {
     gint i;
 
@@ -1524,10 +1620,12 @@ gwy_brick_add(GwyBrick *brick,
  * @value: Value to multiply data brick with.
  *
  * Multiplies all values in a data brick with a specified value.
+ *
+ * Since: 2.31
  **/
 void
 gwy_brick_multiply(GwyBrick *brick,
-                       gdouble value)
+                   gdouble value)
 {
     gint i;
 
@@ -1540,8 +1638,8 @@ gwy_brick_multiply(GwyBrick *brick,
  * gwy_brick_extract_plane:
  * @brick: A data brick.
  * @target: Datafield to be filled by extracted plane. It will be resampled if necessary.
- * @istart: column where to start (pixel coordinates). 
- * @jstart: row where to start (pixel coordinates). 
+ * @istart: column where to start (pixel coordinates).
+ * @jstart: row where to start (pixel coordinates).
  * @kstart: level where to start (pixel coordinates).
  * @width: pixel width of extracted plane. If @width is -1, the yz plane will be extracted.
  * @height: pixel height of extracted plane.  If @height is -1, the xz plane will be extracted
@@ -1550,11 +1648,13 @@ gwy_brick_multiply(GwyBrick *brick,
  *
  * Extract a plane (GwyDataField) from the brick. One value of set (@width, @height, @depth) needs
  * to be -1, determining the plane orientation.
+ *
+ * Since: 2.31
  **/
-void           
+void
 gwy_brick_extract_plane(const GwyBrick *brick,
                         GwyDataField *target,
-                        gint istart, 
+                        gint istart,
                         gint jstart,
                         gint kstart,
                         gint width,
@@ -1618,7 +1718,7 @@ gwy_brick_extract_plane(const GwyBrick *brick,
             }
         }
     }
- 
+
     if (width>0 && height>0 && depth==-1)
     {
         g_return_if_fail((istart+width) <= brick->xres);
@@ -1640,7 +1740,7 @@ gwy_brick_extract_plane(const GwyBrick *brick,
         }
     }
 
-    
+
 }
 
 
@@ -1648,8 +1748,8 @@ gwy_brick_extract_plane(const GwyBrick *brick,
  * gwy_brick_sum_plane:
  * @brick: A data brick.
  * @target: Datafield to be filled by summed plane. It will be resampled if necessary.
- * @istart: column where to start (pixel coordinates). 
- * @jstart: row where to start (pixel coordinates). 
+ * @istart: column where to start (pixel coordinates).
+ * @jstart: row where to start (pixel coordinates).
  * @kstart: level where to start (pixel coordinates).
  * @width: pixel width of summed plane. If @width is -1, the yz planes will be summed.
  * @height: pixel height of summed plane.  If @height is -1, the xz planes will be summed
@@ -1660,17 +1760,19 @@ gwy_brick_extract_plane(const GwyBrick *brick,
  * to be -1, determining the plane orientation. In contrast to gwy_brick_extract_plane, the appropriate start coordinate
  * (e.g. @istart if @width = -1) is not used for single plane extraction, but the planes are accumulated in whole range
  * (0..xres for given example)
+ *
+ * Since: 2.31
  **/
-void           
+void
 gwy_brick_sum_plane(const GwyBrick *brick,
-                        GwyDataField *target,
-                        gint istart, 
-                        gint jstart,
-                        gint kstart,
-                        gint width,
-                        gint height,
-                        gint depth,
-                        G_GNUC_UNUSED gboolean keep_offsets)
+                    GwyDataField *target,
+                    gint istart,
+                    gint jstart,
+                    gint kstart,
+                    gint width,
+                    gint height,
+                    gint depth,
+                    G_GNUC_UNUSED gboolean keep_offsets)
 {
     gint col, row, lev;
     gdouble *bdata, *ddata;
@@ -1733,7 +1835,7 @@ gwy_brick_sum_plane(const GwyBrick *brick,
             }
         }
     }
- 
+
     if (width>0 && height>0 && depth==-1)
     {
         g_return_if_fail((istart+width) <= brick->xres);
@@ -1756,27 +1858,28 @@ gwy_brick_sum_plane(const GwyBrick *brick,
         }
     }
 
-    
+
 }
 
 /**
  * gwy_brick_extract_line:
  * @brick: A data brick.
  * @target: Dataline to be filled by extracted line. It will be resampled if necessary.
- * @istart: column where to start (pixel coordinates). 
- * @jstart: row where to start (pixel coordinates). 
+ * @istart: column where to start (pixel coordinates).
+ * @jstart: row where to start (pixel coordinates).
  * @kstart: level where to start (pixel coordinates).
- * @iend: column where to start (pixel coordinates). 
- * @jend: row where to start (pixel coordinates). 
+ * @iend: column where to start (pixel coordinates).
+ * @jend: row where to start (pixel coordinates).
  * @kend: level where to start (pixel coordinates).
  * @keep_offsets: keep physical offsets in extracted line
  *
  * Extract a line (GwyDataField) from the brick. Only line orientations parallel to coordinate
- * axes are supported now, i.e. two of the start coordinates need to be same as end ones. 
- * 
+ * axes are supported now, i.e. two of the start coordinates need to be same as end ones.
+ *
+ * Since: 2.31
  **/
 
-void           
+void
 gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
                        gint istart, gint jstart, gint kstart,
                        gint iend, gint jend, gint kend,
@@ -1802,7 +1905,7 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
     {
         gwy_data_line_resample(target, abs(iend-istart), GWY_INTERPOLATION_NONE);
         ddata = gwy_data_line_get_data(target);
-       
+
         row = jstart;
         lev = kstart;
         if (iend>=istart)
@@ -1821,7 +1924,7 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
     {
         gwy_data_line_resample(target, abs(jend-jstart), GWY_INTERPOLATION_NONE);
         ddata = gwy_data_line_get_data(target);
-        
+
         col = istart;
         lev = kstart;
         if (jend>=jstart)
@@ -1840,7 +1943,7 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
     {
         gwy_data_line_resample(target, abs(kend-kstart), GWY_INTERPOLATION_NONE);
         ddata = gwy_data_line_get_data(target);
-        
+
         col = istart;
         row = jstart;
         if (kend>=kstart)
@@ -1858,8 +1961,6 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
 
 }
 
-
-
 /************************** Documentation ****************************/
 
 /**
@@ -1867,8 +1968,8 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
  * @title: GwyBrick
  * @short_description: Three-dimensioanl data representation
  *
- * #GwyBrick represents 3D data arrays in Gwyddion. It is typically useful
- * for different volume data obtained from SPMs, like in force volume measurements.
+ * #GwyBrick represents 3D data arrays in Gwyddion. It is typically useful for
+ * different volume data obtained from SPMs, like in force volume measurements.
  **/
 
 /**
@@ -1876,6 +1977,8 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
  *
  * The #GwyBrick struct contains private data only and should be accessed
  * using the functions below.
+ *
+ * Since: 2.31
  **/
 
 /**
@@ -1884,6 +1987,8 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
  *
  * Convenience macro doing gwy_serializable_duplicate() with all the necessary
  * typecasting.
+ *
+ * Since: 2.31
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
