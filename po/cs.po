@@ -4,8 +4,8 @@ msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2013-02-11 03:58+0100\n"
-"PO-Revision-Date: 2013-02-11 11:49+0100\n"
-"Last-Translator: Petr Klapetek <klapetek@gwyddion.net>\n"
+"PO-Revision-Date: 2013-02-21 10:06+0100\n"
+"Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "Language: cs\n"
 "MIME-Version: 1.0\n"
@@ -1253,20 +1253,6 @@ msgstr "Jméno:"
 #: libgwymodule/gwymodulebrowser.c:270
 msgid "Failure:"
 msgstr "Selhání:"
-
-#: libgwymodule/gwymodule-file.c:535 modules/file/err.h:40
-#: modules/file/pixmap.c:762
-#, c-format
-msgid "Cannot open file for reading: %s."
-msgstr "Soubor nelze otevřít pro čtení: %s."
-
-#: libgwymodule/gwymodule-file.c:544
-msgid "No module can load this file type."
-msgstr "Žádný modul nedokáže načíst tento typ souboru."
-
-#: libgwymodule/gwymodule-file.c:651
-msgid "No module can save to this file type."
-msgstr "Žádný modul nedokáže zapsat tento typ souboru."
 
 #: app/about.c:56
 #, c-format
@@ -3943,14 +3929,6 @@ msgstr "Po datovém vzorku č. %u následují nesmysly."
 #: modules/file/nanoscope.c:1277
 msgid "Truncated header line."
 msgstr "Předčasně ukončený řádek hlavičky."
-
-#: modules/file/nanoscope-ii.c:79
-msgid "Imports Digital Instruments Nanoscope II data files."
-msgstr "Načítá datové soubory Digital Instruments Nanoscope II."
-
-#: modules/file/nanoscope-ii.c:92
-msgid "Nanoscope II files"
-msgstr "Nanoscope II soubory."
 
 #: modules/file/nanotop.c:106
 msgid "Imports NANOTOP AFM files"
@@ -7289,34 +7267,6 @@ msgstr ""
 "Velikost %d není mocnina dvou,\n"
 "pro DWT budou data přeškálována na %d×%d."
 
-#: modules/process/dwtanisotropy.c:78
-msgid "2D DWT anisotropy detection based on X/Y components ratio."
-msgstr "Detekce anisotropie založená na poměru X/Y komponentů"
-
-#: modules/process/dwtanisotropy.c:92
-msgid "/_Integral Transforms/DWT _Anisotropy..."
-msgstr "/_Integrální transformace/DWT _anisotropie"
-
-#: modules/process/dwtanisotropy.c:96
-msgid "DWT anisotropy detection"
-msgstr "Detekce anisotropie pomocí DWT"
-
-#: modules/process/dwtanisotropy.c:130
-msgid "DWT Anisotropy"
-msgstr "DWT anisotropie"
-
-#: modules/process/dwtanisotropy.c:182
-msgid "2D DWT Anisotropy"
-msgstr "2D DWT detekce anisotropie"
-
-#: modules/process/dwtanisotropy.c:212
-msgid "X/Y ratio threshold:"
-msgstr "práh poměru X/Y:"
-
-#: modules/process/dwtanisotropy.c:220
-msgid "Low level exclude limit:"
-msgstr "Spodní limit rozkladu:"
-
 #: modules/process/edge.c:151
 msgid ""
 "Several edge detection methods (Laplacian of Gaussian, Canny, and some "
@@ -7497,70 +7447,6 @@ msgstr "Do_prava:"
 #: modules/process/extend.c:251
 msgid "Extend _symetrically"
 msgstr "Rozšířit _symetricky"
-
-#: modules/process/extend.c:270 modules/tools/linestats.c:151
-msgid "Mean"
-msgstr "Střední hodnota"
-
-#: modules/process/extend.c:286 modules/tools/crop.c:210
-msgid "Keep lateral offsets"
-msgstr "_Zachovat podélné posunutí"
-
-#: modules/process/extend.c:296 modules/tools/crop.c:221
-msgid "Create new channel"
-msgstr "Vytvořit nový kanál"
-
-#: modules/process/facet-level.c:67
-msgid ""
-"Automatic facet-orientation based levelling. Levels data to make facets "
-"point up."
-msgstr ""
-
-#: modules/process/extend.c:126
-#, fuzzy
-msgid "/_Basic Operations/E_xtend..."
-msgstr "/_Jednoduché operace/_Naklonění..."
-
-#: modules/process/extend.c:130
-msgid "Extend by adding borders"
-msgstr ""
-
-#: modules/process/extend.c:182
-#, fuzzy
-msgid "Extended"
-msgstr "Vnější"
-
-#: modules/process/extend.c:195
-#, fuzzy
-msgid "Extend"
-msgstr "Vnější"
-
-#: modules/process/extend.c:217
-msgid "Borders"
-msgstr ""
-
-#: modules/process/extend.c:223
-msgid "_Up:"
-msgstr ""
-
-#: modules/process/extend.c:230
-#, fuzzy
-msgid "_Down:"
-msgstr "Dolů"
-
-#: modules/process/extend.c:237
-msgid "_Left:"
-msgstr ""
-
-#: modules/process/extend.c:244
-#, fuzzy
-msgid "_Right:"
-msgstr "_Výška:"
-
-#: modules/process/extend.c:251
-#, fuzzy
-msgid "Extend _symetrically"
-msgstr "S_ymetrické"
 
 #: modules/process/extend.c:270 modules/tools/linestats.c:151
 msgid "Mean"
@@ -10699,27 +10585,6 @@ msgstr "Spustit skript (Ctrl-E)"
 #: modules/pygwy/pygwy-console.c:380
 msgid "Command"
 msgstr "Příkaz"
-
-#: pygwy.c:99
-msgid "Pygwy, the Gwyddion Python wrapper."
-msgstr "Pygwy, pythonní rozhraní ke Gwyddionu."
-
-#: pygwy.c:537
-msgid "Function written in Python"
-msgstr "Funkce napsaná v Pythonu"
-
-#: pygwy.c:583
-msgid "Graph function written in Python"
-msgstr "Grafová funkce napsaná v Pythonu"
-
-#: pygwy.c:993
-#, c-format
-msgid ""
-"Pygwy plugin: %s (%s)\n"
-"Export failed."
-msgstr ""
-"Pygwy plugin: %s (%s)\n"
-"Export se nezdařil."
 
 #: modules/tools/crop.c:82
 msgid "Crop tool, crops data to smaller size."
