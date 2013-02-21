@@ -73,6 +73,8 @@ Other:
   --enable-home-installation configure option.
 - Standalone gwy python module on Win32 no nonger tries to load non-existent
   Gwyddion libraries.
+- MS Windows executables are available also as 64bit.  They are still
+  somewhat experimental and do not include Python scripting support.
 
 
 2.30 (2012-09-21)
