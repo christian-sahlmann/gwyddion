@@ -16,7 +16,7 @@ Libraries:
   fixed.
 - libgwyprocess: Added brick (3D) data support backported from Gwyddion 3
   development branch.
-- libgwydgets: Crashs upon clicking colour selection buttons were fixed.
+- libgwydgets: Crashes upon clicking colour selection buttons were fixed.
 - libgwydgets: 3D view false colour axis shows overlay, not height units in the
   overlay mode.
 - libgwyapp: Visibility of false colour bar and mask are included in 3D view
@@ -32,6 +32,7 @@ Modules:
 - Extend (new): Extends a field by adding borders using several methods.
 - Brickshow (new): Added a simple module for loading, visualising and data
   extracting from 3D volume data (Bricks)
+- GWYXYZF (new): Imports and export Gwyddion Simple XYZ files.
 - Seiko: Files starting ‘NPXZ000AFM’ are recognised and imported.  XQP phase
   files should be read with a correct value scale and units.
 - Shimadzu: Files of different version than 2 are recognised and loaded.
