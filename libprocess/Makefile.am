@@ -11,7 +11,7 @@ endif
 
 libgwyprocess2include_HEADERS = \
 	arithmetic.h \
-        brick.h \
+	brick.h \
 	cdline.h \
 	correct.h \
 	correlation.h \
@@ -92,7 +92,7 @@ libgwyprocess2_la_LIBADD = $(libgwyprocess_libadd)
 
 libgwyprocess2_la_SOURCES = \
 	arithmetic.c \
-        brick.c \
+	brick.c \
 	natural.c \
 	cdline.c \
 	correct.c \
