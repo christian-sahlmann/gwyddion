@@ -40,6 +40,13 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Burleigh, see http://www.physik.uni-freiburg.de/~doerr/readimg
+ * # Not sure if any later version might exist with the same signature.
+ * 0 string \xff\x06@\0 Burleigh SPM data, version 2
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Burleigh IMG v2.1
  * .img

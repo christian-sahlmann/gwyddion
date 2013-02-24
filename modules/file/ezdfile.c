@@ -33,6 +33,14 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Nanosurf EZD.
+ * 0 string [DataSet]\x0d\x0a
+ * >&0 string Version=
+ * >>&0 regex [0-9]+ Nanosurf EZD SPM data version %s
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Nanosurf EZD, NID
  * .ezd .nid

@@ -29,6 +29,12 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # DME GDEF.
+ * 0 string GDEF\0 Danish Micro Engineering General Data Exchange Format data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * DME GDEF
  * .gdf

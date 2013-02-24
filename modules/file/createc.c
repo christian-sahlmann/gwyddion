@@ -24,7 +24,6 @@
  */
 
 /* TODO:
- * - multiple images
  * - constant height or current
  * - saving
 */
@@ -34,10 +33,19 @@
  * <mime-type type="application/x-createc-spm">
  *   <comment>Createc SPM data</comment>
  *   <magic priority="80">
- *     <match type="string" offset="0" value="[Parameter]"/>
- *     <match type="string" offset="0" value="[Paramco32]"/>
+ *     <match type="string" offset="0" value="[Parameter]\r\nDAC-Type"/>
+ *     <match type="string" offset="0" value="[Paramet32]\r\nDAC-Type"/>
+ *     <match type="string" offset="0" value="[Paramco32]\r\nDAC-Type"/>
  *   </magic>
  * </mime-type>
+ **/
+
+/**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Createc SPM.
+ * 0 string [Parameter]\x0d\x0aDAC-Type Createc SPM data, 16bit int data
+ * 0 string [Paramet32]\x0d\x0aDAC-Type Createc SPM data, 32bit float data
+ * 0 string [Paramco32]\x0d\x0aDAC-Type Createc SPM data, 32bit float data, compressed
  **/
 
 /**

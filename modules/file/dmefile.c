@@ -29,6 +29,15 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # DME Rasterscope.
+ * # Using just RSCOPE at the beginning is a bit rough, look also for the date
+ * # field.
+ * 0 string RSCOPE
+ * >16 regex [0-9]{2}-[0-9]{2}-[0-9]{2} Danish Micro Engineering Rasterscope SPM data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * DME Rasterscope
  * .img

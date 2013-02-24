@@ -43,6 +43,15 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Image Metrology BCR 3423/1/0/184/4/91-BCR-DK(30).
+ * 0 string fileformat\ =\ bcrstm\x0a SPM data exchange format BCR, 16bit int data, ASCII
+ * 0 string fileformat\ =\ bcrf\x0a SPM data exchange format BCR, 32bit float data, ASCII
+ * 0 lestring16 fileformat\ =\ bcrstm_unicode\x0a SPM data exchange format BCR, 16bit int data, Unicode
+ * 0 lestring16 fileformat\ =\ bcrf_unicode\x0a SPM data exchange format BCR, 32bit float data, Unicode
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Image Metrology BCR, BCRF
  * .bcr .bcrf
