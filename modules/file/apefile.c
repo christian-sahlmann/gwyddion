@@ -23,7 +23,7 @@
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-ape-spm">
- *   <comment>APE SPM data</comment>
+ *   <comment>A.P.E. Research SPM data</comment>
  *   <magic priority="80">
  *     <match type="string" offset="234" value="APERES"/>
  *   </magic>
@@ -42,8 +42,18 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # A.P.E. Research old SPM data (old DAT).
+ * # This detects version 2.x files since some x.  Not sure about which.  Older
+ * # versions lack the APERES and cannot be recognised reliably.
+ * 0 byte =2
+ * >3 leshort <5
+ * >>234 string APERES A.P.E. Research SPM data, DAT version 2
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
- * APE Research DAT
+ * A.P.E. Research DAT
  * .dat
  * Read
  **/

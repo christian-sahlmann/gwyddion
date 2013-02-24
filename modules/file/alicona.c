@@ -30,6 +30,14 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Alicona Imaging surfaces.
+ * 0 string AliconaImaging\x00\x0d\x0a Alicona Imaging surface data
+ * >17 string Version\0\0\0\0\0\0\0\0\0\0\0\0\0
+ * >>37 string >\0 version %s
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Alicona Imaging AL3D data
  * .al3d
@@ -173,8 +181,8 @@ al3d_detect(const GwyFileDetectInfo *fileinfo,
 
 static GwyContainer*
 al3d_load(const gchar *filename,
-         G_GNUC_UNUSED GwyRunType mode,
-         GError **error)
+          G_GNUC_UNUSED GwyRunType mode,
+          GError **error)
 {
     GwyContainer *container = NULL;
     GwyDataField *field = NULL;

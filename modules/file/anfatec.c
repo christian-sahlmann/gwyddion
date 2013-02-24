@@ -29,6 +29,15 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Anfatec SPM data parameters (normally accompained with an unidentifiable
+ * # INT data file).
+ * 0 search/160 ;ANFATEC\ Parameterfile\x0d\x0a Anfatec SPM data parameters
+ * >&0 search/8 Version\x20:\x20
+ * >>&0 regex [0-9.]+ version %s
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Anfatec
  * .par .int

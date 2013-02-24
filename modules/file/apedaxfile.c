@@ -22,6 +22,22 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-ape-dax-spm">
+ *   <comment>A.P.E. Research DAX SPM data</comment>
+ *   <glob pattern="*.dax"/>
+ *   <glob pattern="*.DAX"/>
+ * </mime-type>
+ **/
+
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * A.P.E. Research DAX
+ * .dax
+ * Read
+ **/
+
 /*Includes*/
 
 #include "config.h"

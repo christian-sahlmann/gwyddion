@@ -31,6 +31,12 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Ambios/TrueMap surface (profiles?) data.
+ * 0 string Binary\ TrueMap\ Data\ File\ \\\ Ambios\ File\ Format\x0d\x0a Ambios/TrueMap surface topography data.
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Ambios AMB
  * .amb
