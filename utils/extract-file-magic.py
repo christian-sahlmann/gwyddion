@@ -70,7 +70,7 @@ mclasses = {
 <mime-info xmlns='http://www.freedesktop.org/standards/shared-mime-info'>''',
         'footer': '</mime-info>'
     },
-    'FILE': {
+    'FILEMAGIC': {
         'comment': '# %s',
     },
     'USERGUIDE': {
