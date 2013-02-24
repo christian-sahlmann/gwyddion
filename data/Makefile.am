@@ -89,6 +89,11 @@ file-format-table.xml: $(top_srcdir)/utils/extract-file-magic.py $(file_magic_so
 	$(AM_V_GEN)$(PYTHON) $(top_srcdir)/utils/extract-file-magic.py \
 	  USERGUIDE $(file_magic_sources) >file-format-table.xml
 
+# File format table for file(1) magic
+magic: $(top_srcdir)/utils/extract-file-magic.py $(file_magic_sources)
+	$(AM_V_GEN)$(PYTHON) $(top_srcdir)/utils/extract-file-magic.py \
+	  FILEMAGIC $(file_magic_sources) >magic
+
 # Generate Gnome thumbnailer schemas
 gwyddion-thumbnailer.schemas.in: thumbnailer-schemas.xsl $(srcdir)/gwyddion.xml
 	$(AM_V_GEN)$(XSLTPROC) $(srcdir)/thumbnailer-schemas.xsl $(srcdir)/gwyddion.xml \
