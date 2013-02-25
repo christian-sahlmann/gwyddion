@@ -30,6 +30,12 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Gwyddion simple XYZ files (GXYZF), see http://gwyddion.net/
+ * 0 string Gwyddion\ XYZ\ Field\ 1.0\x0d\x0a Gwyddion XYZ field SPM data version 1.0
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Gwyddion XYZ data
  * .gxyzf

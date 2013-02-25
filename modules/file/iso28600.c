@@ -30,6 +30,12 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # ISO 28600:2011
+ * 0 string ISO/TC\ 201\ SPM\ data\ transfer\ format ISO 28600:2011 SPM data transfer format
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * ISO 28600:2011 SPM data transfer format
  * .spm

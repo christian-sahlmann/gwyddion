@@ -33,10 +33,11 @@
 
 /**
  * [FILE-MAGIC-FILEMAGIC]
- * # Gwyddion native formats (serialised data containers).
- * 0 string GWYOGwyContainer\0 Gwyddion SPM data, version 1
- * 0 string GWYPGwyContainer\0 Gwyddion SPM data, version 2
- * 0 string GWYQGwyContainer\0 Gwyddion SPM data, version 3
+ * # Gwyddion native formats (serialised data containers),
+ * # see http://gwyddion.net/
+ * 0 string GWYOGwyContainer\0 Gwyddion SPM data version 1
+ * 0 string GWYPGwyContainer\0 Gwyddion SPM data version 2
+ * 0 string GWYQGwyContainer\0 Gwyddion SPM data version 3
  **/
 
 /**

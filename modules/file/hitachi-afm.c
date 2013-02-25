@@ -34,6 +34,15 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Hitachi AFM data.
+ * # Look also at the date field before deciding.
+ * 0 string AFM/Ver.\x20
+ * >32 regex [0-9]{4}/[0-9]{2}/[0-9]{2}
+ * >>9 regex [0-9.]+ Hitachi AFM data version %s
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Hitachi AFM
  * .afm

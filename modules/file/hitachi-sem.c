@@ -28,6 +28,14 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Hitachi SEM header.  Usually accompanied with an unidentifiable data
+ * # file.
+ * 0 string [SemImageFile]\x0d\x0a
+ * >&0 search/160 \x0d\x0aSerialNumber= Hitachi SEM text header
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Hitachi S-3700 and S-4800 SEM data
  * .txt + image
