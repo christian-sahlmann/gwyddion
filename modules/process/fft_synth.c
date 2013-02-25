@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2007,2009,2010 David Necas (Yeti).
+ *  Copyright (C) 2007,2009,2010,2013 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -60,6 +60,8 @@ typedef struct {
     gdouble sigma;
     gboolean gauss_enable;
     gdouble gauss_tau;
+    gboolean lorentz_enable;
+    gdouble lorentz_tau;
     gboolean power_enable;
     gdouble power_p;
 } FFTSynthArgs;
@@ -79,18 +81,27 @@ typedef struct {
     GtkObject *sigma;
     GtkWidget *sigma_units;
     GtkWidget *sigma_init;
+
     GtkObject *freq_min;
     GtkWidget *freq_min_value;
     GtkWidget *freq_min_units;
     GtkObject *freq_max;
     GtkWidget *freq_max_value;
     GtkWidget *freq_max_units;
+
     GtkWidget *gauss_enable;
     GtkObject *gauss_tau;
     GtkWidget *gauss_tau_value;
     GtkWidget *gauss_tau_units;
+
     GtkWidget *power_enable;
     GtkObject *power_p;
+
+    GtkWidget *lorentz_enable;
+    GtkObject *lorentz_tau;
+    GtkWidget *lorentz_tau_value;
+    GtkWidget *lorentz_tau_units;
+
     GwyContainer *mydata;
     GwyDataField *surface;
     gdouble zscale;
@@ -132,6 +143,8 @@ static void          freq_max_changed      (FFTSynthControls *controls,
 static void          update_freq_max_value (FFTSynthControls *controls);
 static void          gauss_enable_changed  (FFTSynthControls *controls,
                                             GtkToggleButton *button);
+static void          lorentz_enable_changed(FFTSynthControls *controls,
+                                            GtkToggleButton *button);
 static void          power_enable_changed  (FFTSynthControls *controls,
                                             GtkToggleButton *button);
 static void          power_p_changed       (FFTSynthControls *controls,
@@ -163,6 +176,7 @@ static const FFTSynthArgs fft_synth_defaults = {
     0.0, G_SQRT2*G_PI,
     1.0,
     FALSE, 10.0,
+    FALSE, 10.0,
     FALSE, 1.5,
 };
 
@@ -173,7 +187,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates random surfaces using spectral synthesis."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -396,7 +410,7 @@ fft_synth_dialog(FFTSynthArgs *args,
         g_signal_connect_swapped(controls.dims->add, "toggled",
                                  G_CALLBACK(fft_synth_invalidate), &controls);
 
-    table = gtk_table_new(12 + (dfield_template ? 1 : 0), 5, FALSE);
+    table = gtk_table_new(14 + (dfield_template ? 1 : 0), 5, FALSE);
     controls.table = GTK_TABLE(table);
     gtk_table_set_row_spacings(controls.table, 2);
     gtk_table_set_col_spacings(controls.table, 6);
@@ -483,6 +497,29 @@ fft_synth_dialog(FFTSynthArgs *args,
     gwy_table_hscale_set_sensitive(controls.gauss_tau, args->gauss_enable);
     gtk_widget_set_sensitive(controls.gauss_tau_value, args->gauss_enable);
     gtk_widget_set_sensitive(controls.gauss_tau_units, args->gauss_enable);
+
+    controls.lorentz_enable
+        = gtk_check_button_new_with_mnemonic(_("Enable _Lorentz multiplier"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.lorentz_enable),
+                                 args->lorentz_enable);
+    gtk_table_attach(GTK_TABLE(table), controls.lorentz_enable,
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls.lorentz_enable, "toggled",
+                             G_CALLBACK(lorentz_enable_changed), &controls);
+    row++;
+
+    controls.lorentz_tau = gtk_adjustment_new(args->lorentz_tau,
+                                              1.0, 1000.0, 0.1, 10.0, 0);
+    row = gwy_synth_attach_lateral(&controls, row,
+                                   controls.lorentz_tau, &args->lorentz_tau,
+                                   _("_Autocorrelation length:"),
+                                   GWY_HSCALE_LOG,
+                                   NULL,
+                                   &controls.lorentz_tau_value,
+                                   &controls.lorentz_tau_units);
+    gwy_table_hscale_set_sensitive(controls.lorentz_tau, args->lorentz_enable);
+    gtk_widget_set_sensitive(controls.lorentz_tau_value, args->lorentz_enable);
+    gtk_widget_set_sensitive(controls.lorentz_tau_units, args->lorentz_enable);
 
     controls.power_enable
         = gtk_check_button_new_with_mnemonic(_("Enable _power multiplier"));
@@ -685,6 +722,19 @@ gauss_enable_changed(FFTSynthControls *controls,
 }
 
 static void
+lorentz_enable_changed(FFTSynthControls *controls,
+                       GtkToggleButton *button)
+{
+    FFTSynthArgs *args = controls->args;
+
+    args->lorentz_enable = gtk_toggle_button_get_active(button);
+    gwy_table_hscale_set_sensitive(controls->lorentz_tau, args->lorentz_enable);
+    gtk_widget_set_sensitive(controls->lorentz_tau_value, args->lorentz_enable);
+    gtk_widget_set_sensitive(controls->lorentz_tau_units, args->lorentz_enable);
+    fft_synth_invalidate(controls);
+}
+
+static void
 power_enable_changed(FFTSynthControls *controls,
                      GtkToggleButton *button)
 {
@@ -776,8 +826,8 @@ fft_synth_do(const FFTSynthArgs *args,
 {
     GRand *rng;
     gdouble *re, *im;
-    gdouble power_p, gauss_tau, freq_min, freq_max;
-    gboolean power_enable, gauss_enable;
+    gdouble power_p, gauss_tau, lorentz_tau, freq_min, freq_max;
+    gboolean power_enable, gauss_enable, lorentz_enable;
     gint xres, yres, i, j, k;
 
     rng = g_rand_new();
@@ -796,6 +846,8 @@ fft_synth_do(const FFTSynthArgs *args,
     power_p = args->power_p;
     gauss_enable = args->gauss_enable;
     gauss_tau = args->gauss_tau*G_PI/2.0;
+    lorentz_enable = args->lorentz_enable;
+    lorentz_tau = args->lorentz_tau*G_PI/2.0;
 
     k = 0;
     for (i = 0; i < yres; i++) {
@@ -815,11 +867,19 @@ fft_synth_do(const FFTSynthArgs *args,
                 gdouble phi = 2.0*G_PI*g_rand_double(rng);
                 gdouble s, c;
 
+                /* Note we construct Fourier coefficients, not PSDF.  So things
+                 * may appear square-rooted. */
                 if (power_enable)
                     f /= pow(r, power_p);
                 if (gauss_enable) {
                     gdouble t = r*gauss_tau;
                     f /= exp(0.5*t*t);
+                }
+                /* This is actually something that gives exponential ACF. */
+                if (lorentz_enable) {
+                    gdouble t = r*lorentz_tau;
+                    t = 1.0 + t*t;
+                    f /= sqrt(sqrt(t*t*t));
                 }
 
                 _gwy_sincos(phi, &s, &c);
@@ -837,18 +897,20 @@ fft_synth_do(const FFTSynthArgs *args,
     g_rand_free(rng);
 }
 
-static const gchar prefix[]           = "/module/fft_synth";
-static const gchar active_page_key[]  = "/module/fft_synth/active_page";
-static const gchar update_key[]       = "/module/fft_synth/update";
-static const gchar randomize_key[]    = "/module/fft_synth/randomize";
-static const gchar seed_key[]         = "/module/fft_synth/seed";
-static const gchar freq_min_key[]     = "/module/fft_synth/freq_min";
-static const gchar freq_max_key[]     = "/module/fft_synth/freq_max";
-static const gchar sigma_key[]        = "/module/fft_synth/sigma";
-static const gchar gauss_enable_key[] = "/module/fft_synth/gauss_enable";
-static const gchar gauss_tau_key[]    = "/module/fft_synth/gauss_tau";
-static const gchar power_enable_key[] = "/module/fft_synth/power_enable";
-static const gchar power_p_key[]      = "/module/fft_synth/power_p";
+static const gchar prefix[]             = "/module/fft_synth";
+static const gchar active_page_key[]    = "/module/fft_synth/active_page";
+static const gchar update_key[]         = "/module/fft_synth/update";
+static const gchar randomize_key[]      = "/module/fft_synth/randomize";
+static const gchar seed_key[]           = "/module/fft_synth/seed";
+static const gchar freq_min_key[]       = "/module/fft_synth/freq_min";
+static const gchar freq_max_key[]       = "/module/fft_synth/freq_max";
+static const gchar sigma_key[]          = "/module/fft_synth/sigma";
+static const gchar gauss_enable_key[]   = "/module/fft_synth/gauss_enable";
+static const gchar gauss_tau_key[]      = "/module/fft_synth/gauss_tau";
+static const gchar lorentz_enable_key[] = "/module/fft_synth/lorentz_enable";
+static const gchar lorentz_tau_key[]    = "/module/fft_synth/lorentz_tau";
+static const gchar power_enable_key[]   = "/module/fft_synth/power_enable";
+static const gchar power_p_key[]        = "/module/fft_synth/power_p";
 
 static void
 fft_synth_sanitize_args(FFTSynthArgs *args)
@@ -863,6 +925,8 @@ fft_synth_sanitize_args(FFTSynthArgs *args)
     args->sigma = CLAMP(args->sigma, 0.001, 10000.0);
     args->gauss_enable = !!args->gauss_enable;
     args->gauss_tau = CLAMP(args->gauss_tau, 1.0, 1000.0);
+    args->lorentz_enable = !!args->lorentz_enable;
+    args->lorentz_tau = CLAMP(args->lorentz_tau, 1.0, 1000.0);
     args->power_enable = !!args->power_enable;
     args->power_p = CLAMP(args->power_p, 0.0, 5.0);
 }
@@ -887,6 +951,10 @@ fft_synth_load_args(GwyContainer *container,
                                       &args->gauss_enable);
     gwy_container_gis_double_by_name(container, gauss_tau_key,
                                      &args->gauss_tau);
+    gwy_container_gis_boolean_by_name(container, lorentz_enable_key,
+                                      &args->lorentz_enable);
+    gwy_container_gis_double_by_name(container, lorentz_tau_key,
+                                     &args->lorentz_tau);
     gwy_container_gis_boolean_by_name(container, power_enable_key,
                                       &args->power_enable);
     gwy_container_gis_double_by_name(container, power_p_key, &args->power_p);
@@ -915,6 +983,10 @@ fft_synth_save_args(GwyContainer *container,
                                       args->gauss_enable);
     gwy_container_set_double_by_name(container, gauss_tau_key,
                                      args->gauss_tau);
+    gwy_container_set_boolean_by_name(container, lorentz_enable_key,
+                                      args->lorentz_enable);
+    gwy_container_set_double_by_name(container, lorentz_tau_key,
+                                     args->lorentz_tau);
     gwy_container_set_boolean_by_name(container, power_enable_key,
                                       args->power_enable);
     gwy_container_set_double_by_name(container, power_p_key, args->power_p);
