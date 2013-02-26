@@ -37,6 +37,12 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Molecular Imaging old STP format
+ * 0 string UK\ SOFT\x0d\x0a Molecular Imaging STP image SPM data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Molecular Imaging STP
  * .stp

@@ -29,6 +29,12 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Zygo MetroPro
+ * 0 belong 0x881b036f Zygo MetroPro surface profilometry data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Zygo MetroPro DAT
  * .dat

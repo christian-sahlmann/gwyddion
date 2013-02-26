@@ -39,6 +39,14 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # MicroProf FRT has binary and text data files.
+ * 0 string FRTM_ MicroProf FRT profilometry data
+ * 0 string HeaderLines=
+ * >&0 search/80 ScanMode= MicroProf FRT profilometry text data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * MicroProf TXT
  * .txt

@@ -35,6 +35,13 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Molecular Imaging new MI format
+ * 0 string fileType\ \ \ \ \ \ Image\x0a Molecular Imaging MI image SPM data
+ * 0 string fileType\ \ \ \ \ \ Spectroscopy\x0a Molecular Imaging MI spectroscopy SPM data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Molecular Imaging MI
  * .mi

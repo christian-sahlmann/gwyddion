@@ -24,10 +24,21 @@
  *   <comment>MapVue data file</comment>
  *   <magic priority="80">
  *     <match type="string" offset="0" value="\x57\x04\x02\x00"/>
+ *     <match type="string" offset="0" value="\xae\x08\x02\x00"/>
  *   </magic>
  *   <glob pattern="*.map"/>
  *   <glob pattern="*.MAP"/>
  * </mime-type>
+ **/
+
+/**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # MapVue
+ * # This is actually image type (dec 1111 for phase or 2222 for intensity)
+ * # plus the first reference tag (dec 2).
+ * 2 leshort 2
+ * >0 leshort 1111 MapVue profilometry data (phase)
+ * >0 leshort 2222 MapVue profilometry data (intensity)
  **/
 
 /**

@@ -42,6 +42,12 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Danish Micro Engineering MIF
+ * 0 string MIF\x01\x00 Danish Micro Engineering MIF SPM data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * DME MIF
  * .mif
