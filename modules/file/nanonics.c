@@ -31,6 +31,12 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Nanonics
+ * 0 string NAN\ File\x0a-Start\ Header- Nanonics NAN SPM data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Nanonics NAN
  * .nan

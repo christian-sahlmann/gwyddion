@@ -30,6 +30,15 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Aarhus MUL
+ * # This is actually the number and address of the first data as there is no
+ * # real magic header.  It should be constant though.
+ * # Conflicts with the TARGA rule.
+ * 0 string \x01\x00\x03\x00\x00\x00 Aarhus MUL SPM data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Aarhus MUL
  * .mul

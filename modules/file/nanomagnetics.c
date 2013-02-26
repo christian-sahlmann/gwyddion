@@ -39,6 +39,15 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Nanomagnetics
+ * # The magic header reads NMI3; there may be NMIx for other values of x but
+ * # I've never seen them.  Not very specific, unfortunately, it's followed by
+ * # some LEB128 encoded weirdness so it's difficult to improve.
+ * 0 belong 0x4e4d4933 Nanomagnetics NMI SPM data version 3
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Nanomagnetics NMI
  * .nmi
@@ -423,7 +432,7 @@ nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
     }
 
     if (memcmp(buffer, MAGIC, MAGIC_SIZE) != 0) {
-        err_FILE_TYPE(error, "Simple");
+        err_FILE_TYPE(error, "Nanomagnetics");
         gwy_file_abandon_contents(buffer, originalsize, NULL);
         return NULL;
     }

@@ -32,6 +32,14 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # NanoScanTech
+ * # A ZIP archive, we have to look for 0.lsdlsd as the first file.
+ * 0 string PK\x03\x04
+ * >30 string 0.lsdlsd NanoScanTech NSTDAT SPM data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * NanoScanTech
  * .nstdat

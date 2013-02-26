@@ -24,13 +24,20 @@
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-nanoeducator-spm">
- *   <comment>Nanoedu SPM data</comment>
+ *   <comment>Nanoeducator SPM data</comment>
  *   <magic priority="80">
  *     <match type="string" offset="0" value="\x19(C) STM Data File System \x00\x00\x00\x00"/>
  *   </magic>
  *   <glob pattern="*.mspm"/>
  *   <glob pattern="*.MSPM"/>
  * </mime-type>
+ **/
+
+/**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Nanoeducator
+ * # The copyright (whatever it means in a data file) seems constant.
+ * 0 string \x19(C)\ STM\ Data\ File\ System\ \0\0\0\0 Nanoeducator SPM data
  **/
 
 /**

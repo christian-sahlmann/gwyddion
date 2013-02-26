@@ -30,6 +30,14 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Nanoscope III
+ * # Two header variants.
+ * 0 string \\*File\ list\x0d\x0a Nanoscope III SPM binary data
+ * 0 string ?*File\ list\x0d\x0a Nanoscope III SPM text data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Veeco Nanoscope III
  * .001 .002 etc.

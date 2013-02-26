@@ -29,6 +29,12 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Old Nanoscope II
+ * 0 string Data_File_Type\ 7\x0d\x0a Nanoscope II SPM data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Veeco Nanoscope II
  * .001 .002 etc.

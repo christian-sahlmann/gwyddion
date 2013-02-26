@@ -27,6 +27,14 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # NanoObserver
+ * # A ZIP archive, we have to look for Scan/Measure.xml as the first file.
+ * 0 string PK\x03\x04
+ * >30 string Scan/Measure.xml Nanomagnetics NMI SPM data version 3
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * NanoObserver
  * .nao

@@ -33,6 +33,13 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Nanonis
+ * 0 string :NANONIS_VERSION:\x0a Nanonis SXM data
+ * >&0 regex [0-9]+ version %s
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Nanonis SXM
  * .sxm

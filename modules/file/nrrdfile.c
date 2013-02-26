@@ -31,6 +31,16 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Nearly raw raster data
+ * # Metaformat, see http://teem.sourceforge.net/nrrd/format.html
+ * 0 string NRRD000 Nearly Raw Raster Data
+ * >&0 regex [0-9]+ version %s
+ * >&0 search/200 data\ file:\x20 text header for
+ * >>&0 regex [^\x0d\x0a]+ %s
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Nearly raw raster data (NRRD)
  * .nrrd
