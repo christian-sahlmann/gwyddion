@@ -1,3 +1,12 @@
+2.32 (0000-00-00)
+Application:
+- Translations updated: Spanish.
+
+Modules:
+- Spectral synthesis: A ‘Lorentzian’ multiplier leading to exponential ACF
+  was added.
+
+
 2.31 (2013-02-21)
 Application:
 - Translations updated: Czech, French, Russian, Spanish.
