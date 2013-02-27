@@ -40,6 +40,17 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Seiko
+ * # Several variants, not sure if assignable to specific microscopy types.
+ * # More can perhaps exist.
+ * 0 string SPIZ000AFM Seiko SII SPM data
+ * 0 string SPIZ000DFM Seiko SII SPM data
+ * 0 string NPXZ000AFM Seiko SII SPM data
+ * 0 string NPXZ000DFM Seiko SII SPM data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Seiko SII
  * .xqb .xqd .xqt .xqp

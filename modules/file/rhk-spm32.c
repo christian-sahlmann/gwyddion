@@ -31,6 +31,12 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # RHK SM2
+ * 0 string STiMage\ 3.1 RHK Technology SM2 data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * RHK Instruments SM2
  * .sm2

@@ -41,6 +41,18 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Shimadzu
+ * # It has two variants: binary and text.  The text header seems to identify
+ * # text version clearly but the `binary' version can be present in both.
+ * 0 string Shimadzu\ SPM\ File\ Format\ Version\x20
+ * >&0 regex [0-9.]+ Shimadzu SPM data version %s
+ * 0 string ASCII:
+ * >8 search/1 Shimadzu\ SPM\ File\ Format\ Version\x20
+ * >&0 regex [0-9.]+ Shimadzu SPM text data version %s
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Shimadzu
  * .sph .spp .001 .002 etc.

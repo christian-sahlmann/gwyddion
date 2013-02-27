@@ -35,6 +35,13 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Robotics
+ * # Quite unspecific.
+ * 0 string File\ version:\x090 Automation and Robotics Dual Lens Mapper data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Automation and Robotics Dual Lens Mapper
  * .mcr .mct .mce

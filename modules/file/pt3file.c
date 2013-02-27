@@ -32,6 +32,12 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # SymPhoTime
+ * 0 string PicoHarp\ 300 SymPhoTime TTTR v2.0 data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * SymPhoTime TTTR v2.0 data
  * .pt3

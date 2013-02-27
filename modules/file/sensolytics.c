@@ -32,6 +32,21 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Sensolytics
+ * # Apparently any kind of EOL can appear.
+ * 0 string #\ Sensolytics:\x20
+ * >&0 string 1.1\x0d Sensolytics line scan data
+ * >&0 string 1.1\x0a Sensolytics line scan data
+ * >&0 string 1.2\x0d Sensolytics image data
+ * >&0 string 1.2\x0a Sensolytics image data
+ * >&0 string 1.3\x0d Sensolytics potentiostat data
+ * >&0 string 1.3\x0a Sensolytics potentiostat data
+ * >&0 string 1.4\x0d Sensolytics frequency spectra data
+ * >&0 string 1.4\x0a Sensolytics frequen spectra data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Sensolytics DAT
  * .dat

@@ -31,6 +31,13 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # RHK SM4
+ * # The same as SM3, but with different numbers.
+ * 2 lestring16 STiMage\ 005. RHK Technology SM4 data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * RHK Instruments SM4
  * .sm4

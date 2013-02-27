@@ -31,6 +31,12 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # SIS
+ * 0 string SIS&STB\ \ SIScan Surface Imaging Systems SPM data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Surface Imaging Systems
  * .sis

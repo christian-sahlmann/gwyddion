@@ -29,6 +29,12 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Quesant
+ * 0 string \x02\x00\x00\x00\x01\x00\x00\x00 Quesant AFM data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Quesant AFM
  * .afm

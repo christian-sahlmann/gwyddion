@@ -31,6 +31,13 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # RHK SM3
+ * # The same as SM2, but in UTF-16.
+ * 2 lestring16 STiMage\ 004. RHK Technology SM3 data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * RHK Instruments SM3
  * .sm3
