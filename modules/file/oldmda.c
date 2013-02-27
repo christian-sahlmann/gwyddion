@@ -34,6 +34,13 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # NT-MDT old MDA spectra
+ * 0 string \x3c?xml
+ * >&20 search/60 \x3cMDAList\x3e NT-MDT old MDA spectra text data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * NT-MDT old MDA
  * .sxml .dat

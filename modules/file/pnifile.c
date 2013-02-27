@@ -32,6 +32,14 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Nano-R PNI
+ * # Have at least two variants, the first might be prone to false positives.
+ * 0 string \0\0\0\0001.0 Pacific Nanotechlology Nano-R SPM data
+ * 0 string \xcd\xcd\xcd\xcd1.0 Pacific Nanotechlology Nano-R SPM data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Pacific Nanotechnology PNI
  * .pni

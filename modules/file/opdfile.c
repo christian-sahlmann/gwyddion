@@ -42,6 +42,14 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Wyko/Veeco OPD
+ * # It has binary and text variants.
+ * 0 string \x01\x00Directory Vision surface profilometry OPD binary data
+ * 0 string Wyko\ ASCII\ Data\ File\ Format\ 0\x090\x091 Vision surface profilometry OPD text data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Wyko OPD
  * .opd

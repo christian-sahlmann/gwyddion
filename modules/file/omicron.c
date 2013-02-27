@@ -24,11 +24,22 @@
  * <mime-type type="application/x-omicron-spm">
  *   <comment>Omicron SCALA data parameters</comment>
  *   <magic priority="80">
- *     <match type="string" offset="0:160" value="Omicron SPM Control"/>
+ *     <match type="string" offset="0" value=";">
+ *       <match type="string" offset="0:160" value="Omicron SPM Control"/>
+ *     </match>
  *   </magic>
  *   <glob pattern="*.par"/>
  *   <glob pattern="*.PAR"/>
  * </mime-type>
+ **/
+
+/**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Old Omicron SCALA
+ * # Usually accompanied by an unidentifiable data file.
+ * # Must search for string, it starts with some ;-commented lines.
+ * 0 byte 0x3b
+ * >&0 search/160 Omicron\ SPM\ Control Omicron SCALA SPM parameters text header
  **/
 
 /**

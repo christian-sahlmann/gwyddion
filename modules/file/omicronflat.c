@@ -36,6 +36,12 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Omicron flat data format.
+ * 0 string FLAT0100 Omicron flat SPM data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Omicron flat format
  * .*_flat

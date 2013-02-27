@@ -32,6 +32,14 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Nanosurf PLT
+ * # Must look for some header strings, the entire file is text
+ * 0 string #Channel:\x20
+ * >&0 search/40 #Frame\x20\x20:\x20 Nanosurf PLT SPM text data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Nanosurf PLT
  * .plt

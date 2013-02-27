@@ -31,6 +31,13 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Omicron MATRIX data format.
+ * 0 string ONTMATRX0101TLKB Omicron MATRIX SPM image data
+ * 0 string ONTMATRX0101ATEM Omicron MATRIX SPM parameter data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Omicron MATRIX
  * .mtrx
@@ -206,8 +213,9 @@ static gboolean module_register(void)
     return TRUE;
 }
 
-static gint matrix_detect(const GwyFileDetectInfo *fileinfo,
-                          gboolean only_name)
+static gint
+matrix_detect(const GwyFileDetectInfo *fileinfo,
+              gboolean only_name)
 {
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase,

@@ -32,6 +32,12 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # NT-MDT
+ * 0 belong 0x01b093ff NT-MDT SPM data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * NT-MDT
  * .mdt
