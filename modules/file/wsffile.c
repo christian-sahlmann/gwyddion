@@ -22,11 +22,21 @@
  * <mime-type type="application/x-wsf-spm">
  *   <comment>WSF SPM data</comment>
  *   <magic priority="80">
- *     <match type="string" offset="0:160" value="\nPixels in x:"/>
+ *     <match type="string" offset="0:160" value="\nPixels in X:">
+ *         <match type="string" offset="0:240" value="\nLines in Y:"/>
+ *     </match>
  *   </magic>
  *   <glob pattern="*.wsf"/>
  *   <glob pattern="*.WSF"/>
  * </mime-type>
+ **/
+
+/**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # WSF
+ * # Actually, I'm not sure what the acronym stands for.  But we recognise it.
+ * 0 search/160 \x0aPixels\ in\ X:
+ * >&0 search/160 \x0aLines\ in\ Y: WSF AFM text data
  **/
 
 /**

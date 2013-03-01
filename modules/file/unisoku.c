@@ -31,6 +31,13 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Unisoku
+ * # Usually accompanied with an unidentifiable data file.
+ * 0 string :STM\ data\x0d\x0a Unisoku STM text header
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Unisoku
  * .hdr .dat

@@ -40,6 +40,12 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # WITec
+ * 0 string WIT_PRCT WITec Project data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * WITec Project data
  * .wip

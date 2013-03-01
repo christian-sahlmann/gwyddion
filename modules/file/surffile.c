@@ -31,6 +31,12 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Surf
+ * 0 string DIGITAL\ SURF Digital Surf SPM data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Surf
  * .sur

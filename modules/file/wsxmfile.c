@@ -31,6 +31,12 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # WsXM
+ * 0 string WSxM\ file\ copyright\ Nanotec\ Electronica\x0d\x0aSxM\ Image\ file\x0d\x0a Nanotec WSxM SPM data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Nanotec WSxM
  * .tom

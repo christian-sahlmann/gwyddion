@@ -36,6 +36,12 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # FEI TIA/Emispec
+ * 0 string \x49\x49\x97\x01 FEI Tecnai imaging and analysis (S)TEM data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * FEI Tecnai imaging and analysis (former Emispec) data
  * .ser

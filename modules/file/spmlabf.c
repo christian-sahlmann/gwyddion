@@ -22,11 +22,17 @@
  * <mime-type type="application/x-spmlab-float-spm">
  *   <comment>SPMLab floating-point SPM data</comment>
  *   <magic priority="80">
- *     <match type="string" offset="0" value="[DataVersion]\r\nProgram=SPMLab"/>
+ *     <match type="string" offset="0" value="[Data Version]\r\nProgram=SPMLab"/>
  *   </magic>
  *   <glob pattern="*.flt"/>
  *   <glob pattern="*.FLT"/>
  * </mime-type>
+ **/
+
+/**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # SpmLab floating point.
+ * 0 string [Data\ Version]\x0d\x0aProgram=SPMLab SpmLab floating-point SPM data
  **/
 
 /**

@@ -30,6 +30,12 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # WITec ASCII export
+ * 0 string //Exported\ ASCII-File WITec exported text data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * WITec ASCII export
  * .dat

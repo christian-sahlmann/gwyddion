@@ -83,6 +83,16 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # SpmLab
+ * # Not very specific.  Can we remember the version somehow to prevent
+ * # matching it twice?
+ * 0 string \x23R
+ * >2 regex [3-7]\.[0-9]+\x23\x20[0-9]+
+ * >>2 regex [3-7]\.[0-9]+ Thermicroscopes SpmLab SPM data version %s
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Thermicroscopes SPMLab R4-R7
  * .tfr .ffr etc.

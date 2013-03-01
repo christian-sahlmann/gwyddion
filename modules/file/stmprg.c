@@ -37,6 +37,13 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Omicron STMPRG
+ * # Not very specific.  Usually accompanied with an unidentifiable data file.
+ * 0 string MPAR Omicron STMPRG parameter data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Omicron STMPRG
  * tp* ta*

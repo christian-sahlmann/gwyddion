@@ -53,6 +53,16 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # SPML
+ * # XML-based, look for a SPML tag.
+ * 0 string \x3c?xml
+ * >&0 search/80 \x3cSPML
+ * >>&0 search/160 http://spml.net/SPML Scanning Probe Microscopy Markup Language
+ * >>>&0 regex [0-9.]+ version %s
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * SPML (Scanning Probe Microscopy Markup Language)
  * .xml
