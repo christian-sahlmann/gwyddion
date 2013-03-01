@@ -43,7 +43,7 @@
  * >&0 string 1.3\x0d Sensolytics potentiostat data
  * >&0 string 1.3\x0a Sensolytics potentiostat data
  * >&0 string 1.4\x0d Sensolytics frequency spectra data
- * >&0 string 1.4\x0a Sensolytics frequen spectra data
+ * >&0 string 1.4\x0a Sensolytics frequency spectra data
  **/
 
 /**
