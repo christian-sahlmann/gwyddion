@@ -37,8 +37,8 @@
  * # Attocube ASCII data.
  * # There can be, unforutnately, various things after Daisy.  But the next
  * # line starts with a date.
- * 0 string #\x20Daisy\x20
- * >&0 search/80 #\x20
+ * 0 string \x23\x20Daisy\x20
+ * >&0 search/80 \x23\x20
  * >>&0 regex [0-9]{4}-[0-9]{2}-[0-9]{2} Attocube SPM ASCII data
  **/
 

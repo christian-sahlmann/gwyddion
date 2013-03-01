@@ -35,7 +35,7 @@
  * [FILE-MAGIC-FILEMAGIC]
  * # Sensolytics
  * # Apparently any kind of EOL can appear.
- * 0 string #\ Sensolytics:\x20
+ * 0 string \x23\x20Sensolytics:\x20
  * >&0 string 1.1\x0d Sensolytics line scan data
  * >&0 string 1.1\x0a Sensolytics line scan data
  * >&0 string 1.2\x0d Sensolytics image data
