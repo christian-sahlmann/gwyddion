@@ -5,6 +5,7 @@ Application:
 Modules:
 - Spectral synthesis: A ‘Lorentzian’ multiplier leading to exponential ACF
   was added.
+- WSxM: Files with wrong ‘Image header size’ field are imported correctly.
 
 
 2.31 (2013-02-21)
@@ -2280,7 +2281,7 @@ Modules:
 - APEfile (new): Applied Physics and Engineering data file import.
 - BCRfile (new): Image Metrology BCR data file import.
 - RHK-SPM32 (new): RHK SPM32 data file import.
-- WSxMfile (new): Nanotec WSxM data file import.
+- WSxM (new): Nanotec WSxM data file import.
 - EZDFile (new): Nanosurf EZD data file import.
 - Nanoident analyse (new): Analyses nanoindent structures (volume, surfaces,
   etc.).

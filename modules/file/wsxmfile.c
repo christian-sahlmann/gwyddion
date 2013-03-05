@@ -39,7 +39,7 @@
 /**
  * [FILE-MAGIC-USERGUIDE]
  * Nanotec WSxM
- * .tom
+ * .tom, .stp
  * Read
  **/
 
@@ -63,6 +63,7 @@
 #define MAGIC_SIZE (MAGIC1_SIZE + MAGIC2_SIZE)
 
 #define SIZE_HEADER "Image header size:"
+#define HEADER_END "[Header end]\r\n"
 
 typedef enum {
     WSXM_DATA_INT16,
@@ -87,7 +88,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanotec WSxM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.10",
+    "0.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -108,8 +109,8 @@ module_register(void)
 }
 
 /* Return pointer to character after newline */
-static const char
-*read_newline(const char *str)
+static const char*
+read_newline(const char *str)
 {
     if (str[0] == '\n')
         return &str[1];
@@ -120,8 +121,9 @@ static const char
 }
 
 /* Return pointer to character after magic */
-static const char
-*wsxmfile_check_magic(const char *head) {
+static const char*
+wsxmfile_check_magic(const char *head)
+{
     const char *rest;
 
     if (!memcmp(head, MAGIC1, MAGIC1_SIZE)
@@ -199,6 +201,18 @@ wsxmfile_load(const gchar *filename,
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
+
+    /* Unfortunately, some programs miscalculate the header size so we cannot
+     * use it even for a sanity check.  Must look for [Header end]. */
+    p = gwy_memmem(buffer, size, HEADER_END, sizeof(HEADER_END)-1);
+    if (!p) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Expected header end marker ‘%s’ was not found."),
+                    HEADER_END);
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
+    header_size = ((guchar*)p - buffer) + sizeof(HEADER_END)-1;
 
     header = g_strndup(buffer, header_size);
     p = strchr(header, '[');
