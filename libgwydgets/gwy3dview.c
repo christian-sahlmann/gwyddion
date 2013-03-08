@@ -1011,9 +1011,11 @@ gwy_3d_view_gradient_disconnect(Gwy3DView *gwy3dview)
 static void
 gwy_3d_view_gradient_changed(Gwy3DView *gwy3dview)
 {
+    Gwy3DVisualization visualization = gwy3dview->setup->visualization;
     gwy3dview->changed |= GWY_3D_GRADIENT;
-    if (gwy3dview->setup->visualization == GWY_3D_VISUALIZATION_GRADIENT
-        || gwy3dview->setup->visualization == GWY_3D_VISUALIZATION_OVERLAY)
+    if (visualization == GWY_3D_VISUALIZATION_GRADIENT
+        || visualization == GWY_3D_VISUALIZATION_OVERLAY
+        || visualization == GWY_3D_VISUALIZATION_OVERLAY_NO_LIGHT)
         gwy_3d_view_update_lists(gwy3dview);
 }
 
@@ -2012,6 +2014,7 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
     GdkPixbuf* pixbuf;
     guchar* data2pixels;
     gboolean freepixbuf = FALSE;
+    Gwy3DVisualization visualization = gwy3dview->setup->visualization;
 
     if (!dfield && shape == GWY_3D_SHAPE_REDUCED)
         return;
@@ -2034,8 +2037,9 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
 
     gwy_3d_calculate_pixel_sizes(dfield, &dx, &dy);
     res = MAX(xres*dx, yres*dy);
-    if (gwy3dview->setup->visualization == GWY_3D_VISUALIZATION_OVERLAY
-         && gwy3dview->ovlays) {
+    if ((visualization == GWY_3D_VISUALIZATION_OVERLAY
+         || visualization == GWY_3D_VISUALIZATION_OVERLAY_NO_LIGHT)
+        && gwy3dview->ovlays) {
         gint l;
         GdkPixbuf* lpb;
         pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, 0, 8, xres, yres);
@@ -2950,10 +2954,12 @@ gwy_3d_draw_fmscaletex(Gwy3DView *view)
   gdouble min, max;
   gboolean noticks;
   GwySIUnit *zunit;
+  Gwy3DVisualization visualization = view->setup->visualization;
 
   glTranslatef(width, 0, 0);
 
-  if (view->setup->visualization == GWY_3D_VISUALIZATION_OVERLAY
+  if ((visualization == GWY_3D_VISUALIZATION_OVERLAY
+       || visualization == GWY_3D_VISUALIZATION_OVERLAY_NO_LIGHT)
       && view->ovlays
       && view->ovlays[0]) {
       gwy_layer_basic_get_range(GWY_LAYER_BASIC(view->ovlays[0]),

@@ -2,6 +2,9 @@
 Application:
 - Translations updated: Spanish.
 
+Libraries:
+- libgwydgets: 3D view can display data overlays without any lighting.
+
 Modules:
 - Spectral synthesis: A ‘Lorentzian’ multiplier leading to exponential ACF
   was added.

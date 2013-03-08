@@ -81,10 +81,17 @@ gwy_graph_curve_type_get_enum(void)
 
 /**
  * Gwy3DVisualization:
- * @GWY_3D_VISUALIZATION_GRADIENT: Data is displayed with color corresponding
+ * @GWY_3D_VISUALIZATION_GRADIENT: Data are displayed with color corresponding
  *                                 to 2D view.
- * @GWY_3D_VISUALIZATION_LIGHTING: Data is displayed as an uniform material
+ * @GWY_3D_VISUALIZATION_LIGHTING: Data are displayed as an uniform material
  *                                 with some lighting.
+ * @GWY_3D_VISUALIZATION_OVERLAY: Data are displayed with grading and lighting,
+ *                                with colour possibly taken from a differen
+ *                                data field. (Since 2.26)
+ * @GWY_3D_VISUALIZATION_OVERLAY_NO_LIGHT: Data are displayed with grading and
+ *                                         lighting, with colour possibly taken
+ *                                         from a differen data field. (Since
+ *                                         2.32)
  *
  * 3D View data visualization type.
  **/
