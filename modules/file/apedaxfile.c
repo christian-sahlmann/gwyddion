@@ -60,16 +60,30 @@
 #include "err.h"
 
 /*Macros*/
-
-/*
- * TODO: find out why if using xmlFree instead of xmlMemFree
- *       Gwyddion doesn't load the module
- */
-#define xFree xmlFree
-
 #define EXTENSION ".dax"
 #define MAGIC "PK\x03\x04"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
+#define REGPATTERN "^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-2][0-9]:[0-6][0-9]:[0-6][0-9])[^+-]*([+-][0-9]{2}:[0-9]{2})$"
+
+/*Enums*/
+typedef enum {
+    SPM_MODE_SNOM = 0,
+    SPM_MODE_AFM_NONCONTACT = 1,
+    SPM_MODE_AFM_CONTACT = 2,
+    SPM_MODE_STM = 3,
+    SPM_MODE_PHASE_DETECT_AFM = 4,
+    SPM_MODE_LAST
+} SPMModeType;
+
+/*SPM Modes Labels*/
+static const GwyEnum spm_modes[] = {
+    { "SNOM",                  SPM_MODE_SNOM },
+    { "AFM Non-contact",       SPM_MODE_AFM_NONCONTACT },
+    { "AFM Contact",           SPM_MODE_AFM_CONTACT },
+    { "STM",                   SPM_MODE_STM },
+    { "Phase detection AFM",   SPM_MODE_PHASE_DETECT_AFM },
+};
+
 
 /*Structures*/
 typedef struct {
@@ -108,6 +122,7 @@ static void          apedax_get_channels_data      (unzFile uFile,
                                                     GwyContainer * meta,
                                                     const APEDAX_ScanSize *scanSize,
                                                     GError **error);
+static gchar*        apedax_format_date             (const gchar* datefield);
 
 /*Informations about the module*/
 
@@ -298,6 +313,7 @@ apedax_get_meta(guchar *scanXmlContent,
     xmlDocPtr doc = NULL;
     xmlNodePtr cur = NULL;
     gchar* buffer = NULL;
+    gint currentSPMMode = -1;
 
     if (scanXmlContent == NULL || contentSize == 0)
         return NULL;
@@ -347,9 +363,35 @@ apedax_get_meta(guchar *scanXmlContent,
         gwy_container_set_string_by_name(meta,
                                          "SPM Mode",
                                          g_strdup(buffer));
+
+        currentSPMMode = gwy_string_to_enum(buffer,
+                                            spm_modes,
+                                            G_N_ELEMENTS(spm_modes));
+
         g_free(buffer);
     }
     else {
+        goto fail;
+    }
+
+    /*Date*/
+    buffer = apedax_get_xml_field_as_string(doc,
+                                            "/Scan/Header/Date");
+
+    if (buffer) {
+
+        gchar *datestring = apedax_format_date(buffer);
+
+        if (datestring != NULL) {
+            gwy_container_set_string_by_name(meta,
+                                             "Date",
+                                             g_strdup(datestring));
+            g_free(datestring);
+        }
+
+        g_free(buffer);
+
+    } else {
         goto fail;
     }
 
@@ -363,6 +405,69 @@ apedax_get_meta(guchar *scanXmlContent,
                                          g_strdup(buffer));
         g_free(buffer);
     }
+
+    /*Tip Oscillation Frequency*/
+    switch (currentSPMMode) {
+        case SPM_MODE_SNOM:
+        case SPM_MODE_AFM_NONCONTACT:
+            buffer = apedax_get_xml_field_as_string(doc,
+                                                    "/Scan/Header/TipOscFreq");
+            if (buffer) {
+                gwy_container_set_string_by_name(meta,
+                                                 "Tip Oscillation Frequency",
+                                                 g_strdup(buffer));
+                g_free(buffer);
+            }
+
+            break;
+        default:
+            /*Do Nothing*/
+            break;
+    }
+
+    /*VPmt1*/
+    if (currentSPMMode != SPM_MODE_STM) {
+        buffer = apedax_get_xml_field_as_string(doc,
+                                                "/Scan/Header/VPmt1");
+        if (buffer) {
+
+            switch (currentSPMMode) {
+                case SPM_MODE_SNOM:
+                    gwy_container_set_string_by_name(meta,
+                                                     "PMT 1 Voltage",
+                                                     g_strdup(buffer));
+                    break;
+                case SPM_MODE_AFM_CONTACT:
+                case SPM_MODE_AFM_NONCONTACT:
+                    gwy_container_set_string_by_name(meta,
+                                                     "BIAS DC Voltage",
+                                                     g_strdup(buffer));
+
+                    break;
+                default:
+                    g_free(buffer);
+                    goto get_resolution;
+                    break;
+            }
+
+        g_free(buffer);
+
+        }
+    }
+
+    /*VPmt2*/
+    if (currentSPMMode == SPM_MODE_SNOM) {
+        buffer = apedax_get_xml_field_as_string(doc,
+                                                "/Scan/Header/VPmt2");
+        if (buffer) {
+            gwy_container_set_string_by_name(meta,
+                                             "PMT 2 Voltage",
+                                             g_strdup(buffer));
+            g_free(buffer);
+        }
+    }
+
+get_resolution:
 
     /*Number of columns (XRes)*/
     buffer = apedax_get_xml_field_as_string(doc,
@@ -461,7 +566,7 @@ apedax_get_xml_field_as_string(xmlDocPtr doc, const gchar *fieldXPath)
                                             nodeset->nodeTab[0]->xmlChildrenNode,
                                             1);
         fieldString = g_strdup((gchar*)xFieldString);
-        xFree(xFieldString);
+        xmlFree(xFieldString);
     }
 
     xmlXPathFreeObject(pathObj);
@@ -640,27 +745,27 @@ apedax_get_channels_data(unzFile uFile,
                 buffer = xmlNodeListGetString(doc, cur->xmlChildrenNode, 1);
                 g_snprintf(key, sizeof(key), "/%d/data/title", i);
                 gwy_container_set_string_by_name(container, key, g_strdup(buffer));
-                xFree(buffer);
+                xmlFree(buffer);
             }
             /*Factor*/
             if (gwy_strequal((gchar*)cur->name, "ConversionFactor")) {
                 buffer = xmlNodeListGetString(doc, cur->xmlChildrenNode, 1);
                 scaleFactor = g_ascii_strtod((gchar*)buffer, NULL);
-                xFree(buffer);
+                xmlFree(buffer);
             }
             /*Unit*/
             if (gwy_strequal((gchar*)cur->name, "DataUnit")) {
                 buffer = xmlNodeListGetString(doc, cur->xmlChildrenNode, 1);
                 zUnitString = g_strdup((gchar*)buffer);
                 zUnit = gwy_si_unit_new_parse(zUnitString, &power10);
-                xFree(buffer);
+                xmlFree(buffer);
                 g_object_unref(zUnit);
             }
             /*Binary file name*/
             if (gwy_strequal((gchar*)cur->name, "BINFile")) {
                 buffer = xmlNodeListGetString(doc, cur->xmlChildrenNode, 1);
                 binFileName = g_strdup((gchar*)buffer);
-                xFree(buffer);
+                xmlFree(buffer);
             }
             cur = cur->next;
         }
@@ -697,6 +802,26 @@ fail:
     if (doc)
         xmlFreeDoc(doc);
     return;
+}
+
+static gchar*
+apedax_format_date(const gchar* datefield)
+{
+    GRegex *re;
+    gchar *result;
+    GError *re_err = NULL;
+
+    gwy_debug("Compiling the Regular expression.");
+    re = g_regex_new(REGPATTERN, 0, 0, &re_err);
+    g_assert_no_error(re_err);
+    result = g_regex_replace(re, datefield, -1, 0, "\\3-\\2-\\1 \\4 \\5", 0,
+                             &re_err);
+    if (re_err) {
+        g_warning("Invalid date field (%s)", re_err->message);
+        g_clear_error(&re_err);
+    }
+    g_regex_unref(re);
+    return result;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
