@@ -1,5 +1,6 @@
 2.32 (0000-00-00)
 Application:
+- GLib 2.14 is now required.
 - Translations updated: Spanish.
 
 Libraries:
@@ -9,6 +10,7 @@ Modules:
 - Spectral synthesis: A ‘Lorentzian’ multiplier leading to exponential ACF
   was added.
 - WSxM: Files with wrong ‘Image header size’ field are imported correctly.
+- APE DAX: Metadata import was improved.
 
 
 2.31 (2013-02-21)
