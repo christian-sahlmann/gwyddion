@@ -27,6 +27,7 @@ Prerequisities:
   to compile Gtk+, but what is good enough for Gtk+ should be good enough for
   Gwyddion), GNU toolchain is the prefered one
 - Gtk+-2.8 or newer, including development files
+  GLib-2.14 or newer, including development files
   http://www.gtk.org/
 - pkg-config 0.16 or newer
   http://pkgconfig.freedesktop.org/

@@ -2,8 +2,8 @@
 import sys, re
 
 max_versions = {
-    'glib': (2, 12),
-    'gobject': (2, 12),
+    'glib': (2, 14),
+    'gobject': (2, 14),
     'pango': (1, 10),
     'gdk': (2, 8),
     'gdk-pixbuf': (2, 8),
