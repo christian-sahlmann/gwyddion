@@ -7,6 +7,7 @@ Libraries:
 - libgwydgets: 3D view can display data overlays without any lighting.
 
 Modules:
+- Tescan (new): Imports Tescan MIRA SEM images.
 - Spectral synthesis: A ‘Lorentzian’ multiplier leading to exponential ACF
   was added.
 - WSxM: Files with wrong ‘Image header size’ field are imported correctly.

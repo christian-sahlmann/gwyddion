@@ -146,6 +146,7 @@ file_LTLIBRARIES = \
 	stmprg.la \
 	stpfile.la \
 	surffile.la \
+	tescan.la \
 	tiaser.la \
 	unisoku.la \
 	vtkfile.la \
@@ -269,6 +270,7 @@ stmprg_la_SOURCES        = stmprg.c
 stpfile_la_SOURCES       = stpfile.c
 surffile_la_SOURCES      = surffile.c
 tiaser_la_SOURCES        = tiaser.c
+tescan_la_SOURCES        = tescan.c
 unisoku_la_SOURCES       = unisoku.c
 vtkfile_la_SOURCES       = vtkfile.c
 wipfile_la_SOURCES       = wipfile.c
