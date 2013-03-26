@@ -24,7 +24,7 @@
  * .tif
  * Read
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <stdlib.h>
 #include <libgwyddion/gwymath.h>
@@ -44,6 +44,27 @@ enum {
     TESCAN_TIFF_TAG = 50431,
 };
 
+typedef enum {
+    TESCAN_BLOCK_LAST = 0,
+    TESCAN_BLOCK_THUMBNAIL = 1, /* JPEG */
+    TESCAN_BLOCK_MAIN = 2,
+    TESCAN_BLOCK_SEM = 3,
+    TESCAN_BLOCK_GAMA = 4,
+    TESCAN_BLOCK_FIB = 5,
+    TESCAN_BLOCK_NTYPES,
+} TescanBlockType;
+
+typedef struct {
+    TescanBlockType type;
+    guint32 size;
+    const guchar *data;
+} TescanBlock;
+
+typedef struct {
+    GHashTable *target;
+    const gchar *prefix;
+} BlockCopyInfo;
+
 static gboolean            module_register      (void);
 static gint                tsc_detect           (const GwyFileDetectInfo *fileinfo,
                                                  gboolean only_name);
@@ -55,8 +76,15 @@ static GwyContainer*       tsc_load_tiff        (GwyTIFF *tiff,
                                                  GError **error);
 static const GwyTIFFEntry* tsc_find_header      (GwyTIFF *tiff,
                                                  GError **error);
-static GHashTable*         tsc_parse_text_fields(GwyTIFF *tiff,
-                                                 const GwyTIFFEntry *entry);
+static GArray*             tsc_get_blocks       (GwyTIFF *tiff,
+                                                 const GwyTIFFEntry *entry,
+                                                 GError **error);
+static void                tsc_parse_text_fields(GHashTable *globalhash,
+                                                 const gchar *prefix,
+                                                 TescanBlock *block);
+static void                copy_with_prefix     (gpointer hkey,
+                                                 gpointer hvalue,
+                                                 gpointer user_data);
 static GwyContainer*       get_meta             (GHashTable *hash);
 static void                add_meta             (gpointer hkey,
                                                  gpointer hvalue,
@@ -144,33 +172,48 @@ tsc_load_tiff(GwyTIFF *tiff, const GwyTIFFEntry *entry, GError **error)
     GwyContainer *container = NULL, *meta;
     GwyDataField *dfield;
     GwyTIFFImageReader *reader = NULL;
-    GHashTable *hash;
+    GHashTable *hash = NULL;
+    GArray *blocks = NULL;
     gint i;
     const gchar *value;
     gdouble *data;
     gdouble xstep, ystep;
 
-    hash = tsc_parse_text_fields(tiff, entry);
+    if (!(blocks = tsc_get_blocks(tiff, entry, error)))
+        goto fail;
 
-    if ((value = g_hash_table_lookup(hash, "PixelSizeX"))) {
-        gwy_debug("PixelSizeX %s", value);
+    hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    for (i = 0; i < blocks->len; i++) {
+        TescanBlock *block = &g_array_index(blocks, TescanBlock, i);
+        if (block->type == TESCAN_BLOCK_MAIN)
+            tsc_parse_text_fields(hash, "Main", block);
+        else if (block->type == TESCAN_BLOCK_SEM)
+            tsc_parse_text_fields(hash, "SEM", block);
+        else if (block->type == TESCAN_BLOCK_GAMA)
+            tsc_parse_text_fields(hash, "GAMA", block);
+        else if (block->type == TESCAN_BLOCK_FIB)
+            tsc_parse_text_fields(hash, "FIB", block);
+    }
+
+    if ((value = g_hash_table_lookup(hash, "Main::PixelSizeX"))) {
+        gwy_debug("Main::PixelSizeX %s", value);
         xstep = g_strtod(value, NULL);
         if (!((xstep = fabs(xstep)) > 0))
             g_warning("Real pixel width is 0.0, fixing to 1.0");
     }
     else {
-        err_MISSING_FIELD(error, "PixelSizeX");
+        err_MISSING_FIELD(error, "Main::PixelSizeX");
         goto fail;
     }
 
-    if ((value = g_hash_table_lookup(hash, "PixelSizeY"))) {
-        gwy_debug("PixelSizeY %s", value);
+    if ((value = g_hash_table_lookup(hash, "Main::PixelSizeY"))) {
+        gwy_debug("Main::PixelSizeY %s", value);
         ystep = g_strtod(value, NULL);
         if (!((ystep = fabs(ystep)) > 0))
             g_warning("Real pixel height is 0.0, fixing to 1.0");
     }
     else {
-        err_MISSING_FIELD(error, "PixelSizeY");
+        err_MISSING_FIELD(error, "Main::PixelSizeY");
         goto fail;
     }
 
@@ -206,7 +249,10 @@ tsc_load_tiff(GwyTIFF *tiff, const GwyTIFFEntry *entry, GError **error)
     }
 
 fail:
-    g_hash_table_destroy(hash);
+    if (hash)
+        g_hash_table_destroy(hash);
+    if (blocks)
+        g_array_free(blocks, TRUE);
     if (reader) {
         gwy_tiff_image_reader_free(reader);
         reader = NULL;
@@ -238,45 +284,88 @@ tsc_find_header(GwyTIFF *tiff, GError **error)
     return entry;
 }
 
-static GHashTable*
-tsc_parse_text_fields(GwyTIFF *tiff, const GwyTIFFEntry *entry)
+static GArray*
+tsc_get_blocks(GwyTIFF *tiff, const GwyTIFFEntry *entry, GError **error)
 {
-    const guchar *p = entry->value;
-    guint len = entry->count, pos;
-    const gchar *eol = tiff->data + tiff->get_guint32(&p), *buf = eol;
-    GHashTable *hash = g_hash_table_new_full(g_str_hash, g_str_equal,
-                                             g_free, g_free);
+    const guchar *t = entry->value;
+    const guchar *p = tiff->data + tiff->get_guint32(&t);
+    const guchar *end = p + entry->count;
+    GArray *blocks = g_array_new(FALSE, FALSE, sizeof(TescanBlock));
+    gboolean seen_last = FALSE;
 
-    /* Cannot start at the first byte anyway. */
-    eol += 2;
-    do {
-        /* Try to find things that look like Key=Value\r\n.
-         * They are embedded in some binary rubbish. */
-        guint eqpos = 0, eqcount = 0;
-        pos = eol - buf;
-        if (!(eol = gwy_memmem(eol, len - pos, "\r\n", 2)))
-            break;
-        pos = (eol - buf) - 1;
-        while (pos && buf[pos] >= 0x20 && buf[pos] < 0x7f) {
-            if (buf[pos] == '=') {
-                eqpos = pos;
-                eqcount++;
-            }
-            pos--;
-        }
-        pos++;
-        /* Both key and value must be nonempty.  Otherwise accept anything. */
-        if (eqpos > pos && eqpos+1 < (guint)(eol - buf) && eqcount == 1) {
-            gchar *key = g_strndup(buf + pos, eqpos - pos);
-            gchar *value = g_strndup(buf + eqpos+1, (eol - buf) - (eqpos+1));
-            gwy_debug("<%s>=<%s>", key, value);
-            g_hash_table_insert(hash, key, value);
+    while (p < end) {
+        TescanBlock block;
+
+        if (seen_last)
+            g_warning("The terminating block is not really last.");
+
+        if ((end - p) < 6) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Parameter header is truncated"));
+            goto fail;
         }
 
-        eol += 2;
-    } while ((guint)(eol - buf) < len);
+        block.size = tiff->get_guint32(&p);
+        block.type = tiff->get_guint16(&p);
+        gwy_debug("block of type %u and size %u", block.type, block.size);
+        /* FIXME: Emit a better message for block.size < 2? */
+        if (block.size > (gulong)(end - p) + 2 || block.size < 2) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Parameter header is truncated"));
+            goto fail;
+        }
+        if (block.type >= TESCAN_BLOCK_NTYPES)
+            g_warning("Unknown block type %u.", block.type);
+        if (block.type == TESCAN_BLOCK_LAST)
+            seen_last = TRUE;
 
-    return hash;
+        block.data = p;
+        g_array_append_val(blocks, block);
+        p += block.size - 2;
+    }
+    if (!seen_last)
+        g_warning("Have not seen the terminating block.");
+
+    return blocks;
+
+fail:
+    g_array_free(blocks, TRUE);
+    return NULL;
+}
+
+static void
+tsc_parse_text_fields(GHashTable *globalhash, const gchar *prefix,
+                      TescanBlock *block)
+{
+    BlockCopyInfo block_copy_info;
+    GwyTextHeaderParser parser;
+    GHashTable *hash;
+    gchar *data;
+
+    data = g_new(gchar, block->size-1);
+    memcpy(data, block->data, block->size-2);
+    data[block->size-2] = '\0';
+
+    gwy_clear(&parser, 1);
+    parser.key_value_separator = "=";
+    hash = gwy_text_header_parse(data, &parser, NULL, NULL);
+
+    block_copy_info.target = globalhash;
+    block_copy_info.prefix = prefix;
+    g_hash_table_foreach(hash, copy_with_prefix, &block_copy_info);
+
+    g_free(data);
+    g_hash_table_destroy(hash);
+}
+
+static void
+copy_with_prefix(gpointer hkey, gpointer hvalue, gpointer user_data)
+{
+    BlockCopyInfo *block_copy_info = (BlockCopyInfo*)user_data;
+    gchar *key = g_strconcat(block_copy_info->prefix, "::", hkey, NULL);
+    g_hash_table_insert(block_copy_info->target, key, g_strdup(hvalue));
 }
 
 static GwyContainer*
