@@ -813,7 +813,7 @@ apedax_format_date(const gchar* datefield)
 
     gwy_debug("Compiling the Regular expression.");
     re = g_regex_new(REGPATTERN, 0, 0, &re_err);
-    g_assert_no_error(re_err);
+    g_assert(!re_err);
     result = g_regex_replace(re, datefield, -1, 0, "\\3-\\2-\\1 \\4 \\5", 0,
                              &re_err);
     if (re_err) {
