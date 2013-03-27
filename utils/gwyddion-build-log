@@ -28,6 +28,8 @@ cat >build_project_nopygwy.ignore <<':'
 ^[0-9]\+ translated messages
 \.\.\. done
 ^/usr/bin/glib-mkenums: ./.*.h:[0-9]*: lowercase_name is deprecated, use underscore_name
+In file included from gwy.c:[0-9]*:0:
+In file included from pygwy.c:[0-9]*:0:
 ':'
 :
 
