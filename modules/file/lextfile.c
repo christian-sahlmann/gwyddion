@@ -71,21 +71,22 @@ typedef struct {
     GHashTable *hash;
 } LextFile;
 
-static gboolean      module_register (void);
-static gint          lext_detect      (const GwyFileDetectInfo *fileinfo,
-                                      gboolean only_name);
-static GwyContainer* lext_load        (const gchar *filename,
-                                      GwyRunType mode,
-                                      GError **error);
-static GwyContainer* lext_load_tiff   (const GwyTIFF *tiff,
-                                      GError **error);
+static gboolean      module_register   (void);
+static gint          lext_detect       (const GwyFileDetectInfo *fileinfo,
+                                        gboolean only_name);
+static GwyContainer* lext_load         (const gchar *filename,
+                                        GwyRunType mode,
+                                        GError **error);
+static GwyContainer* lext_load_tiff    (const GwyTIFF *tiff,
+                                        GError **error);
+static const gchar*  guess_image0_title(const GwyTIFF *tiff);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     module_register,
     N_("Imports LEXT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2010",
 };
@@ -232,7 +233,7 @@ lext_load_tiff(const GwyTIFF *tiff, GError **error)
     LextFile lfile;
     gchar *comment = NULL;
     gchar *title = NULL;
-    const gchar *value;
+    const gchar *value, *image0title;
     GError *err = NULL;
     guint dir_num = 0;
     GString *key;
@@ -259,6 +260,9 @@ lext_load_tiff(const GwyTIFF *tiff, GError **error)
         goto fail;
     }
 
+    image0title = guess_image0_title(tiff);
+    gwy_debug("guessed image0 type: %s", image0title ? image0title : "UNKNOWN");
+
     for (dir_num = 0; dir_num < gwy_tiff_get_n_dirs(tiff); dir_num++) {
         double xscale, yscale, zfactor;
         GQuark quark;
@@ -268,15 +272,24 @@ lext_load_tiff(const GwyTIFF *tiff, GError **error)
         g_free(title);
         title = NULL;
 
-        if (!gwy_tiff_get_string(tiff, dir_num, GWY_TIFFTAG_IMAGE_DESCRIPTION,
-                                 &title)) {
-            g_warning("Directory %u has no ImageDescription.", dir_num);
-            continue;
+        if (!dir_num) {
+            if (image0title)
+                title = g_strdup(image0title);
+            else
+                continue;
+        }
+        else {
+            if (!gwy_tiff_get_string(tiff, dir_num,
+                                     GWY_TIFFTAG_IMAGE_DESCRIPTION,
+                                     &title)) {
+                g_warning("Directory %u has no ImageDescription.", dir_num);
+                continue;
+            }
         }
 
-        /* Ignore the first directory, thumbnail and anything called INVALID */
-        if (dir_num == 0)
-            continue;
+        /* Ignore the first directory, thumbnail and anything called INVALID.
+         * FIXME: INVALID is probably the mask of invalid pixels and we might
+         * want to import it. */
         gwy_debug("Channel <%s>", title);
         titlecase_channel_name(title);
         if (gwy_stramong(title, "Thumbnail", "Invalid", NULL))
@@ -369,6 +382,72 @@ fail:
         g_markup_parse_context_free(context);
 
     return container;
+}
+
+static const gchar*
+guess_image0_title(const GwyTIFF *tiff)
+{
+    enum {
+        IMAGE_COLOR,
+        IMAGE_THUMBNAIL,
+        IMAGE_INTENSITY,
+        IMAGE_HEIGHT,
+        IMAGE_INVALID,
+        N_IMAGES
+    };
+    guint seen = 0, xres, yres, spp, bpp0, dir_num;
+
+    /* Only read the first value of BitsPerSample if it's a tuple. */
+    if (!gwy_tiff_get_uint(tiff, 0, GWY_TIFFTAG_IMAGE_WIDTH, &xres)
+        || !gwy_tiff_get_uint(tiff, 0, GWY_TIFFTAG_IMAGE_LENGTH, &yres)
+        || !gwy_tiff_get_uint(tiff, 0, GWY_TIFFTAG_SAMPLES_PER_PIXEL, &spp)
+        || !gwy_tiff_get_uint(tiff, 0, GWY_TIFFTAG_BITS_PER_SAMPLE, &bpp0))
+        return NULL;
+
+    for (dir_num = 1; dir_num < gwy_tiff_get_n_dirs(tiff); dir_num++) {
+        gchar *title = NULL;
+        if (!gwy_tiff_get_string(tiff, dir_num, GWY_TIFFTAG_IMAGE_DESCRIPTION,
+                                 &title))
+            continue;
+
+        titlecase_channel_name(title);
+        if (gwy_strequal(title, "Color"))
+            seen |= 1 << IMAGE_COLOR;
+        else if (gwy_strequal(title, "Thumbnail"))
+            seen |= 1 << IMAGE_THUMBNAIL;
+        else if (gwy_strequal(title, "Height"))
+            seen |= 1 << IMAGE_HEIGHT;
+        else if (gwy_strequal(title, "Intensity"))
+            seen |= 1 << IMAGE_INTENSITY;
+        else if (gwy_strequal(title, "Invalid"))
+            seen |= 1 << IMAGE_INVALID;
+        g_free(title);
+    }
+
+    if (xres == 128 && yres == 128 && spp == 3 && bpp0 == 8) {
+        if (!(seen & (1 << IMAGE_THUMBNAIL)))
+            return "Thumbnail";
+        return NULL;
+    }
+    if (spp == 3 && bpp0 == 8) {
+        if (!(seen & (1 << IMAGE_COLOR)))
+            return "Color";
+        return NULL;
+    }
+    if (spp == 1 && bpp0 == 1) {
+        if (!(seen & (1 << IMAGE_INVALID)))
+            return "Invalid";
+        return NULL;
+    }
+    if (spp == 1 && bpp0 == 16) {
+        if (!(seen & (1 << IMAGE_INTENSITY)))
+            return "Intensity";
+        if (!(seen & (1 << IMAGE_HEIGHT)))
+            return "Intensity";
+        return NULL;
+    }
+
+    return NULL;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -12,6 +12,8 @@ Modules:
   was added.
 - WSxM: Files with wrong ‘Image header size’ field are imported correctly.
 - APE DAX: Metadata import was improved.
+- LEXT: Tries to import image 0, even though its data type can be only
+  estimated.
 
 
 2.31 (2013-02-21)
