@@ -1243,7 +1243,7 @@ gwy_axis_normalscale(GwyAxis *a)
             reqmax = 1.0;
         }
         else {
-            range = reqmax;
+            range = fabs(reqmax);
             reqmax += range/2.0;
             reqmin -= range/2.0;
         }
