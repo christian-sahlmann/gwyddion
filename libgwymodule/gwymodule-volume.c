@@ -71,6 +71,8 @@ static GHashTable *volume_funcs = NULL;
  * Should modules ever become unloadable they will get a chance to clean-up.
  *
  * Returns: Normally %TRUE; %FALSE on failure.
+ *
+ * Since: 2.32
  **/
 gboolean
 gwy_volume_func_register(const gchar *name,
@@ -129,6 +131,8 @@ gwy_volume_func_register(const gchar *name,
  * @run: How the function should be run.
  *
  * Runs a volume data processing function identified by @name.
+ *
+ * Since: 2.32
  **/
 void
 gwy_volume_func_run(const gchar *name,
@@ -160,6 +164,8 @@ gwy_volume_func_user_cb(gpointer key,
  * @user_data: Data to pass to @function.
  *
  * Calls a function for each volume function.
+ *
+ * Since: 2.32
  **/
 void
 gwy_volume_func_foreach(GFunc function,
@@ -182,6 +188,8 @@ gwy_volume_func_foreach(GFunc function,
  * Checks whether a volume data processing function exists.
  *
  * Returns: %TRUE if function @name exists, %FALSE otherwise.
+ *
+ * Since: 2.32
  **/
 gboolean
 gwy_volume_func_exists(const gchar *name)
@@ -196,6 +204,8 @@ gwy_volume_func_exists(const gchar *name)
  * Returns run modes supported by a volume data processing function.
  *
  * Returns: The run mode bit mask.
+ *
+ * Since: 2.32
  **/
 GwyRunType
 gwy_volume_func_get_run_types(const gchar *name)
@@ -218,6 +228,8 @@ gwy_volume_func_get_run_types(const gchar *name)
  * i.e., without any leading "/Volume Data".
  *
  * Returns: The menu path.  The returned string is owned by the module.
+ *
+ * Since: 2.32
  **/
 const gchar*
 gwy_volume_func_get_menu_path(const gchar *name)
@@ -237,6 +249,8 @@ gwy_volume_func_get_menu_path(const gchar *name)
  * Gets stock icon id of a volume data processing  function.
  *
  * Returns: The stock icon id.  The returned string is owned by the module.
+ *
+ * Since: 2.32
  **/
 const gchar*
 gwy_volume_func_get_stock_id(const gchar *name)
@@ -257,6 +271,8 @@ gwy_volume_func_get_stock_id(const gchar *name)
  * Gets tooltip for a volume data processing function.
  *
  * Returns: The tooltip.  The returned string is owned by the module.
+ *
+ * Since: 2.32
  **/
 const gchar*
 gwy_volume_func_get_tooltip(const gchar *name)
@@ -278,6 +294,8 @@ gwy_volume_func_get_tooltip(const gchar *name)
  *
  * Returns: The menu item sensitivity mask (a combination of #GwyMenuSensFlags
  *          flags).
+ *
+ * Since: 2.32
  **/
 guint
 gwy_volume_func_get_sensitivity_mask(const gchar *name)
@@ -313,6 +331,8 @@ _gwy_volume_func_remove(const gchar *name)
  * #GwyContainer with data and either modify it or create a new data from it.
  * In this regard, they are quite similar to regular (two-dimensional) data
  * processing functions but they live in separate menus, toolbars, etc.
+ *
+ * Volume data processing functions were introduced in version 2.32.
  **/
 
 /**
@@ -328,6 +348,8 @@ _gwy_volume_func_remove(const gchar *name)
  *              even %GWY_MENU_FLAG_VOLUME.
  *
  * Information about one volume data processing function.
+ *
+ * Since: 2.32
  **/
 
 /**
@@ -338,6 +360,8 @@ _gwy_volume_func_remove(const gchar *name)
  *        (single-function modules can safely ignore this argument).
  *
  * The type of volume data processing function.
+ *
+ * Since: 2.32
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
