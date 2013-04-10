@@ -451,8 +451,8 @@ _gwy_app_analyse_data_key(const gchar *strkey,
 
         if (gwy_strequal(s + i, "/visible"))
             *type = KEY_IS_BRICK_VISIBLE;
-        else if (gwy_strequal(s + i, "/thumbnail"))
-            *type = KEY_IS_BRICK_THUMBNAIL;
+        else if (gwy_strequal(s + i, "/preview"))
+            *type = KEY_IS_BRICK_PREVIEW;
         else if (gwy_strequal(s + i, "/title"))
             *type = KEY_IS_BRICK_TITLE;
         else if (!s[i])
