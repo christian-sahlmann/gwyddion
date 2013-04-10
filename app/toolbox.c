@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006,2013 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -57,7 +57,8 @@ typedef enum {
     GWY_APP_FUNC_TYPE_BUILTIN,
     GWY_APP_FUNC_TYPE_PROC,
     GWY_APP_FUNC_TYPE_GRAPH,
-    GWY_APP_FUNC_TYPE_TOOL
+    GWY_APP_FUNC_TYPE_TOOL,
+    GWY_APP_FUNC_TYPE_VOLUME
 } GwyAppFuncType;
 
 typedef struct {
@@ -105,7 +106,7 @@ static GtkTargetEntry dnd_target_table[] = {
 
 /* Translatability hack, intltool seems overkill at this point. */
 #define GWY_TOOLBOX_IGNORE(x) /* */
-GWY_TOOLBOX_IGNORE((_("View"), _("Data Process"), _("Graph"), _("Tools")))
+GWY_TOOLBOX_IGNORE((_("View"), _("Data Process"), _("Graph"), _("Tools"), _("Volume")))
 
 /* FIXME: A temporary hack. */
 static void
@@ -304,6 +305,7 @@ toolbox_ui_start_item(GwyAppToolboxBuilder *builder,
         { "builtin", GWY_APP_FUNC_TYPE_BUILTIN, },
         { "proc",    GWY_APP_FUNC_TYPE_PROC,    },
         { "graph",   GWY_APP_FUNC_TYPE_GRAPH,   },
+        { "volume",  GWY_APP_FUNC_TYPE_VOLUME,  },
         { "tool",    GWY_APP_FUNC_TYPE_TOOL,    },
     };
 
@@ -377,6 +379,17 @@ toolbox_ui_start_item(GwyAppToolboxBuilder *builder,
         action.tooltip = gwy_graph_func_get_tooltip(func);
         action.callback = G_CALLBACK(gwy_app_run_graph_func);
         action.sens = gwy_graph_func_get_sensitivity_mask(func);
+        break;
+
+        case GWY_APP_FUNC_TYPE_VOLUME:
+        if (!gwy_graph_func_exists(func)) {
+            g_warning("Function volume::%s does not exist", func);
+            return;
+        }
+        action.stock_id = gwy_volume_func_get_stock_id(func);
+        action.tooltip = gwy_volume_func_get_tooltip(func);
+        action.callback = G_CALLBACK(gwy_app_run_volume_func);
+        action.sens = gwy_volume_func_get_sensitivity_mask(func);
         break;
 
         case GWY_APP_FUNC_TYPE_TOOL:
@@ -616,6 +629,9 @@ gwy_app_toolbox_create(void)
 
     menu = gwy_app_build_graph_menu(accel_group);
     toolbox_add_menubar(container, menu, _("_Graph"));
+
+    menu = gwy_app_build_volume_menu(accel_group);
+    toolbox_add_menubar(container, menu, _("_Volume Data"));
 
     toolbox_add_menubar(container,
                         gwy_app_menu_create_meta_menu(accel_group), _("_Meta"));
