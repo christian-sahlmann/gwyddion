@@ -22,6 +22,7 @@ libgwymodule2include_HEADERS = \
 	gwymodule-layer.h \
 	gwymodule-process.h \
 	gwymodule-tool.h \
+	gwymodule-volume.h \
 	gwymodulebrowser.h \
 	gwymoduleenums.h \
 	gwymoduleloader.h \
@@ -79,6 +80,7 @@ libgwymodule2_la_SOURCES = \
 	gwymodule-layer.c \
 	gwymodule-process.c \
 	gwymodule-tool.c \
+	gwymodule-volume.c \
 	gwymodulebrowser.c \
 	gwymoduleloader.c \
 	gwymoduletypes.c

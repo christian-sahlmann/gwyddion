@@ -29,6 +29,7 @@
 #include <libgwymodule/gwymodule-layer.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <libgwymodule/gwymodule-tool.h>
+#include <libgwymodule/gwymodule-volume.h>
 #include <libgwymodule/gwymodulebrowser.h>
 
 #endif /* __GWY_MODULE_H__ */

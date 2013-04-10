@@ -33,6 +33,7 @@ G_BEGIN_DECLS
 #define GWY_MODULE_PREFIX_TOOL     "tool::"
 #define GWY_MODULE_PREFIX_GRAPH    "graph::"
 #define GWY_MODULE_PREFIX_LAYER    "layer::"
+#define GWY_MODULE_PREFIX_VOLUME   "volume::"
 
 /* internal module info */
 typedef struct {
@@ -70,6 +71,9 @@ gboolean _gwy_graph_func_remove             (const gchar *name);
 
 G_GNUC_INTERNAL
 gboolean _gwy_layer_func_remove             (const gchar *name);
+
+G_GNUC_INTERNAL
+gboolean _gwy_volume_func_remove            (const gchar *name);
 
 G_END_DECLS
 
