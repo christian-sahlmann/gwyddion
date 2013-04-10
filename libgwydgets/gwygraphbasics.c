@@ -326,8 +326,10 @@ gwy_graph_draw_curve(GdkDrawable *drawable,
         points[n].x = x_data_to_pixel(specs, gcmodel->xdata[i]);
         points[n].y = y_data_to_pixel(specs, gcmodel->ydata[i]);
         /* Split the line into segments that do not stick out of the area */
-        if (points[n].x >= -specs->width && points[n].x <= 2*specs->width
-            && points[n].y >= -specs->height && points[n].y <= 2*specs->height)
+        if (points[n].x >= -3*specs->width
+            && points[n].x <= 4*specs->width
+            && points[n].y >= -3*specs->height
+            && points[n].y <= 4*specs->height)
             n++;
         else if (n) {
             gwy_graph_draw_curve_segment(points, n, drawable, gc,
