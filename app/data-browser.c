@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek, Chris Anderson
+ *  Copyright (C) 2006-2013 David Necas (Yeti), Petr Klapetek, Chris Anderson
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net, sidewinderasu@gmail.com.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -60,6 +60,8 @@
 
 /* Single point spectra prefix.  This one is sane and should remain so. */
 #define SPECTRA_PREFIX "/sps"
+#define BRICK_PREFIX "/brick"
+
 
 enum {
     THUMB_TIMEOUT = 100,
@@ -71,6 +73,7 @@ enum {
     PAGE_CHANNELS,
     PAGE_GRAPHS,
     PAGE_SPECTRA,
+    PAGE_VOLUME,
     NPAGES,
     PAGE_NOPAGE = G_MAXINT-1,
 };
@@ -402,9 +405,8 @@ _gwy_app_analyse_data_key(const gchar *strkey,
         if (!i || (s[i] && s[i] != GWY_CONTAINER_PATHSEP))
             return -1;
 
-        if (gwy_strequal(s + i, "/visible")) {
+        if (gwy_strequal(s + i, "/visible"))
             *type = KEY_IS_GRAPH_VISIBLE;
-        }
         else if (!s[i])
             *type = KEY_IS_GRAPH;
         else
@@ -425,11 +427,36 @@ _gwy_app_analyse_data_key(const gchar *strkey,
         if (!i || (s[i] && s[i] != GWY_CONTAINER_PATHSEP))
             return -1;
 
-        if (gwy_strequal(s + i, "/visible")) {
+        if (gwy_strequal(s + i, "/visible"))
             *type = KEY_IS_SPECTRA_VISIBLE;
-        }
         else if (!s[i])
             *type = KEY_IS_SPECTRA;
+        else
+            return -1;
+
+        if (len)
+            *len = (s + i) - strkey;
+
+        return atoi(s);
+    }
+
+    /* Brick */
+    if (g_str_has_prefix(strkey, BRICK_PREFIX GWY_CONTAINER_PATHSEP_STR)) {
+        s = strkey + sizeof(SPECTRA_PREFIX);
+        /* Do not use strtol, it allows queer stuff like spaces */
+        for (i = 0; g_ascii_isdigit(s[i]); i++)
+            ;
+        if (!i || (s[i] && s[i] != GWY_CONTAINER_PATHSEP))
+            return -1;
+
+        if (gwy_strequal(s + i, "/visible"))
+            *type = KEY_IS_BRICK_VISIBLE;
+        else if (gwy_strequal(s + i, "/thumbnail"))
+            *type = KEY_IS_BRICK_THUMBNAIL;
+        else if (gwy_strequal(s + i, "/title"))
+            *type = KEY_IS_BRICK_TITLE;
+        else if (!s[i])
+            *type = KEY_IS_BRICK;
         else
             return -1;
 
@@ -5353,6 +5380,25 @@ gwy_app_get_spectra_key_for_id(gint id)
 }
 
 /**
+ * gwy_app_get_brick_key_for_id:
+ * @id: Data brick number in container.
+ *
+ * Calculates data brick quark identifier from its id.
+ *
+ * Returns: The quark key identifying data brick number @id.
+ *
+ * Since: 2.32
+ **/
+GQuark
+gwy_app_get_brick_key_for_id(gint id)
+{
+    static GQuark quarks[16] = { 0, };
+
+    return gwy_app_get_any_key_for_id(id, BRICK_PREFIX "/%d",
+                                      G_N_ELEMENTS(quarks), quarks);
+}
+
+/**
  * gwy_app_set_data_field_title:
  * @data: A data container.
  * @id: The data channel id.
@@ -6791,6 +6837,10 @@ gwy_app_data_browser_remove_spectra_watch(gulong id)
  * @GWY_APP_SPECTRA_KEY: Quark corresponding to the single point spectra.
  * @GWY_APP_SPECTRA_ID: Number (id) of the the single point spectra in its
  *                      container.
+ * @GWY_APP_BRICK: Data brick (volume data) (Since 2.32).
+ * @GWY_APP_BRICK_KEY: Quark corresponding to the data brick (Since 2.32).
+ * @GWY_APP_BRICK_ID: Number (id) of the the data brick in its container.
+ *                    (Since 2.32)
  *
  * Types of current objects that can be requested with
  * gwy_app_data_browser_get_current().

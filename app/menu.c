@@ -1280,9 +1280,9 @@ gwy_app_get_tooltips(void)
  * @GWY_MENU_FLAG_DATA_MASK: There is a mask on the data.
  * @GWY_MENU_FLAG_DATA_SHOW: There is a presentation on the data.
  * @GWY_MENU_FLAG_3D: A 3D view is present.
- * @GWY_MENU_FLAG_FILE: A file is open, with any type of data (Since: 2.5).
+ * @GWY_MENU_FLAG_FILE: A file is open, with any type of data (Since 2.5).
  * @GWY_MENU_FLAG_VOLUME: There is at least one volume data window present
- *                        (Since: 2.32).
+ *                        (Since 2.32).
  * @GWY_MENU_FLAG_MASK: All the bits combined.
  *
  * Global application sensitivity flags.

@@ -1,29 +1,17 @@
 # @(#) $Id$
 
-SUBDIRS = \
-	file \
-	graph \
-	layer \
-	process \
-	tools \
-	volume \
-	pygwy
+# Put sources that are for some reason disabled yet present in svn checkouts
+# here.  This makes them distributed and translations of their messages are
+# kept.  If we remove them completely, various bits can get lost.
+disabled_sources =
 
-moduledir = $(pkglibdir)/modules
+volumedir = $(pkglibdir)/modules/volume
 
-if ENABLE_PLUGIN_PROXY
-plugin_proxy_module = plugin-proxy.la
-plugin_proxy_sources =
-else
-plugin_proxy_module =
-plugin_proxy_sources = plugin-proxy.c
-endif
-
-module_LTLIBRARIES = \
-	$(plugin_proxy_module)
+volume_LTLIBRARIES = \
+	volume_extract.la
 
 EXTRA_DIST = \
-	$(plugin_proxy_sources)
+	$(disabled_sources)
 
 if OS_WIN32
 no_undefined = -no-undefined
@@ -31,7 +19,7 @@ endif
 
 AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"Module\"
 AM_CFLAGS = @COMMON_CFLAGS@
-AM_LDFLAGS = -avoid-version -module $(no_undefined)
+AM_LDFLAGS = -avoid-version -module $(no_undefined) $(module_libadd)
 
 if MODULE_DEPENDENCIES
 module_libadd = \
@@ -44,11 +32,8 @@ module_libadd = \
 	@GTK_LIBS@
 endif
 
-
-if ENABLE_PLUGIN_PROXY
-plugin_proxy_la_SOURCES = plugin-proxy.c
-plugin_proxy_la_LIBADD = $(module_libadd)
-endif
+volume_extract_la_SOURCES = volume_extract.c
 
 clean-local:
 	rm -f core.* *~
+
