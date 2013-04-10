@@ -483,7 +483,7 @@ gchar**
 gwy_app_settings_get_module_dirs(void)
 {
     const gchar *module_types[] = {
-        "layer", "file", "process", "graph", "tool"
+        "layer", "file", "process", "graph", "tool", "volume"
     };
     gchar **module_dirs;
     gchar *p;
