@@ -3441,7 +3441,7 @@ gwy_app_data_browser_spectra_toggled(G_GNUC_UNUSED GtkCellRendererToggle *render
     g_return_if_fail(proxy);
 
     path = gtk_tree_path_new_from_string(path_str);
-    model = GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store);
+    model = GTK_TREE_MODEL(proxy->lists[PAGE_SPECTRA].store);
     gtk_tree_model_get_iter(model, &iter, path);
     gtk_tree_path_free(path);
 
@@ -3667,6 +3667,180 @@ gwy_app_data_browser_construct_spectra(GwyAppDataBrowser *browser)
      * current spectra. */
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_spectra_selected),
+                     browser);
+
+    /* DnD */
+    gtk_tree_view_enable_model_drag_source(treeview,
+                                           GDK_BUTTON1_MASK,
+                                           dnd_target_table,
+                                           G_N_ELEMENTS(dnd_target_table),
+                                           GDK_ACTION_COPY);
+
+    return retval;
+}
+
+/**************************************************************************
+ *
+ * Brick treeview
+ *
+ **************************************************************************/
+
+static void
+gwy_app_data_browser_brick_toggled(G_GNUC_UNUSED GtkCellRendererToggle *renderer,
+                                   gchar *path_str,
+                                   GwyAppDataBrowser *browser)
+{
+    GwyAppDataProxy *proxy;
+    GtkTreeIter iter;
+    GtkTreePath *path;
+    GtkTreeModel *model;
+
+    gwy_debug("Toggled brick row %s", path_str);
+    proxy = browser->current;
+    g_return_if_fail(proxy);
+
+    path = gtk_tree_path_new_from_string(path_str);
+    model = GTK_TREE_MODEL(proxy->lists[PAGE_VOLUME].store);
+    gtk_tree_model_get_iter(model, &iter, path);
+    gtk_tree_path_free(path);
+
+    g_warning("Don't have widgets to visualise bricks yet...");
+}
+
+static void
+gwy_app_data_browser_brick_name_edited(GtkCellRenderer *renderer,
+                                       const gchar *strpath,
+                                       const gchar *text,
+                                       GwyAppDataBrowser *browser)
+{
+    GwyAppDataProxy *proxy;
+    GtkTreeModel *model;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    gchar *title;
+    gint id;
+
+    g_return_if_fail(browser->current);
+    proxy = browser->current;
+    model = GTK_TREE_MODEL(proxy->lists[PAGE_VOLUME].store);
+
+    path = gtk_tree_path_new_from_string(strpath);
+    gtk_tree_model_get_iter(model, &iter, path);
+    gtk_tree_path_free(path);
+
+    gtk_tree_model_get(model, &iter, MODEL_ID, &id, -1);
+    title = g_strstrip(g_strdup(text));
+    if (!*title) {
+        g_free(title);
+        /* BRICK TODO gwy_app_set_data_field_title(proxy->container, id, NULL); */
+    }
+    else {
+        gchar key[32];
+
+        g_snprintf(key, sizeof(key), "/brick/%d/title", id);
+        gwy_container_set_string_by_name(proxy->container, key, title);
+    }
+
+    gwy_app_data_list_disable_edit(renderer);
+}
+
+static void
+gwy_app_data_browser_brick_render_title(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                                        GtkCellRenderer *renderer,
+                                        GtkTreeModel *model,
+                                        GtkTreeIter *iter,
+                                        gpointer userdata)
+{
+    GwyAppDataBrowser *browser = (GwyAppDataBrowser*)userdata;
+    const guchar *title = "BRICK TODO";
+    GwyContainer *data;
+    gchar key[32];
+    gint id;
+
+    /* XXX: browser->current must match what is visible in the browser */
+    data = browser->current->container;
+    gtk_tree_model_get(model, iter, MODEL_ID, &id, -1);
+    g_snprintf(key, sizeof(key), "/brick/%d/title", id);
+    gwy_container_gis_string_by_name(data, key, &title);
+    g_object_set(renderer, "text", title, NULL);
+}
+
+static GtkWidget*
+gwy_app_data_browser_construct_bricks(GwyAppDataBrowser *browser)
+{
+    static const GtkTargetEntry dnd_target_table[] = { GTK_TREE_MODEL_ROW };
+
+    GtkWidget *retval;
+    GtkTreeView *treeview;
+    GtkCellRenderer *renderer;
+    GtkTreeViewColumn *column;
+    GtkTreeSelection *selection;
+
+    /* Construct the GtkTreeView that will display data channels */
+    retval = gtk_tree_view_new();
+    treeview = GTK_TREE_VIEW(retval);
+    g_signal_connect(treeview, "row-activated",
+                     G_CALLBACK(gwy_app_data_list_row_activated), NULL);
+
+    /* Add the thumbnail column */
+    renderer = gtk_cell_renderer_pixbuf_new();
+    column = gtk_tree_view_column_new_with_attributes("Thumbnail", renderer,
+                                                      NULL);
+    gtk_tree_view_column_set_visible(column, FALSE);
+    gtk_tree_view_append_column(treeview, column);
+
+    /* Add the visibility column */
+    renderer = gtk_cell_renderer_toggle_new();
+    g_object_set(renderer, "activatable", TRUE, NULL);
+    g_signal_connect(renderer, "toggled",
+                     G_CALLBACK(gwy_app_data_browser_brick_toggled), browser);
+    column = gtk_tree_view_column_new_with_attributes("Visible", renderer,
+                                                      NULL);
+    gtk_tree_view_column_set_cell_data_func
+        (column, renderer,
+         gwy_app_data_browser_render_visible, browser, NULL);
+    gtk_tree_view_append_column(treeview, column);
+
+    /* Add the title column */
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer,
+                 "ellipsize", PANGO_ELLIPSIZE_END,
+                 "ellipsize-set", TRUE,
+                 NULL);
+    g_signal_connect(renderer, "edited",
+                     G_CALLBACK(gwy_app_data_browser_brick_name_edited),
+                     browser);
+    g_signal_connect(renderer, "editing-canceled",
+                     G_CALLBACK(gwy_app_data_list_disable_edit), NULL);
+    column = gtk_tree_view_column_new_with_attributes("Title", renderer,
+                                                      NULL);
+    gtk_tree_view_column_set_expand(column, TRUE);
+    gtk_tree_view_column_set_cell_data_func
+        (column, renderer,
+         gwy_app_data_browser_brick_render_title, browser, NULL);
+    g_object_set_qdata(G_OBJECT(column), column_id_quark, "title");
+    gtk_tree_view_append_column(treeview, column);
+
+    /* BRICK TODO Add the flags column */
+#if 0
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "width-chars", 4, NULL);
+    column = gtk_tree_view_column_new_with_attributes("Points", renderer,
+                                                      NULL);
+    gtk_tree_view_column_set_cell_data_func
+        (column, renderer,
+         gwy_app_data_browser_brick_render_npoints, browser, NULL);
+    gtk_tree_view_append_column(treeview, column);
+#endif
+
+    gtk_tree_view_set_headers_visible(treeview, FALSE);
+
+    /* Selection */
+    selection = gtk_tree_view_get_selection(treeview);
+    g_object_set_qdata(G_OBJECT(selection), page_id_quark,
+                       GINT_TO_POINTER(PAGE_VOLUME + 1));
+    g_signal_connect(selection, "changed",
+                     G_CALLBACK(gwy_app_data_browser_selection_changed),
                      browser);
 
     /* DnD */
@@ -4150,6 +4324,20 @@ gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
     browser->lists[PAGE_SPECTRA]
         = gwy_app_data_browser_construct_spectra(browser);
     gtk_container_add(GTK_CONTAINER(scwin), browser->lists[PAGE_SPECTRA]);
+
+    /* Bricks (volume data) */
+    box_page = gtk_vbox_new(FALSE, 0);
+    label = gtk_label_new(_("Volume"));
+    gtk_notebook_append_page(GTK_NOTEBOOK(browser->notebook), box_page, label);
+
+    scwin = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
+                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_box_pack_start(GTK_BOX(box_page), scwin, TRUE, TRUE, 0);
+
+    browser->lists[PAGE_VOLUME]
+        = gwy_app_data_browser_construct_bricks(browser);
+    gtk_container_add(GTK_CONTAINER(scwin), browser->lists[PAGE_VOLUME]);
 
     /* Buttons */
     hbox = gwy_app_data_browser_construct_buttons(browser);
