@@ -535,6 +535,10 @@ gwy_axis_realize(GtkWidget *widget)
                                     &attributes, attributes_mask);
     gdk_window_set_user_data(widget->window, widget);
 
+    /* Force widget to listen to relevant events.  Works around oxygen
+     * misdetection of ‘empty’ areas.  See KDE bug #317292. */
+    gtk_widget_add_events(widget, attributes.event_mask);
+
     widget->style = gtk_style_attach(widget->style, widget->window);
 
     /* set background to white forever */
