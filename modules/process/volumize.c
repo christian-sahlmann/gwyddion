@@ -90,13 +90,14 @@ volumize(GwyContainer *data, GwyRunType run)
     g_return_if_fail(run & VOLUMIZE_RUN_MODES);
 
     //volumize_load_args(gwy_app_settings_get(), &args);
-   
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_DATA_FIELD_ID, &id, 
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
 
     brick = create_brick_from_datafield(dfield);
-
+    /* Use showit=TRUE once we thin it's safe */
+    gwy_app_data_browser_add_brick(brick, data, FALSE);
+    g_object_unref(brick);
     //volumize_save_args(gwy_app_settings_get(), &args);
 }
 
@@ -111,7 +112,7 @@ create_brick_from_datafield(GwyDataField *dfield)
     gboolean freeme = FALSE;
     GwyDataField *lowres;
     GwyBrick *brick;
-    
+
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     zres = MAX(xres, yres);
@@ -132,7 +133,7 @@ create_brick_from_datafield(GwyDataField *dfield)
 
     offset = gwy_data_field_get_min(lowres);
     zreal = gwy_data_field_get_max(lowres) - offset;
-    
+
     brick = gwy_brick_new(xres, yres, zres, xres, yres, zres, TRUE);
 
     ddata = gwy_data_field_get_data(lowres);
@@ -144,7 +145,7 @@ create_brick_from_datafield(GwyDataField *dfield)
         {
             for (lev=0; lev<zres; lev++) {
                 if (ddata[col + xres*row]<(lev*zreal/zres + offset)) bdata[col + xres*row + xres*yres*lev] = 1;
-                
+
             }
         }
     }
