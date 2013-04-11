@@ -453,6 +453,8 @@ _gwy_app_analyse_data_key(const gchar *strkey,
             *type = KEY_IS_BRICK_VISIBLE;
         else if (gwy_strequal(s + i, "/preview"))
             *type = KEY_IS_BRICK_PREVIEW;
+        else if (gwy_strequal(s + i, "/preview/palette"))
+            *type = KEY_IS_BRICK_PREVIEW_PALETTE;
         else if (gwy_strequal(s + i, "/title"))
             *type = KEY_IS_BRICK_TITLE;
         else if (!s[i])
@@ -4026,6 +4028,10 @@ gwy_app_data_browser_copy_object(GwyAppDataProxy *srcproxy,
             g_object_unref(spectra);
         }
         break;
+
+        case PAGE_VOLUME:
+        gwy_app_data_browser_copy_volume(srcproxy->container, id, container);
+        break;
     }
 
     if (!destproxy)
@@ -5453,6 +5459,59 @@ gwy_app_data_browser_add_spectra(GwySpectra *spectra,
     return list->last;
 }
 
+/**
+ * gwy_app_data_browser_add_brick:
+ * @brick: A data brick to add.
+ * @data: A data container to add @brick to.
+ *        It can be %NULL to add the data field to current data container.
+ * @showit: %TRUE to display it immediately, %FALSE to just add it.
+ *
+ * Adds a volume data brick to a data container.
+ *
+ * Returns: The id of the data brick in the container.
+ *
+ * Since: 2.32
+ **/
+gint
+gwy_app_data_browser_add_brick(GwyBrick *brick,
+                               GwyContainer *data,
+                               gboolean showit)
+{
+    GwyAppDataBrowser *browser;
+    GwyAppDataProxy *proxy;
+    GwyAppDataList *list;
+    GtkTreeIter iter;
+    gchar key[24];
+
+    g_return_val_if_fail(GWY_IS_BRICK(brick), -1);
+    g_return_val_if_fail(!data || GWY_IS_CONTAINER(data), -1);
+
+    browser = gwy_app_get_data_browser();
+    if (data)
+        proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    else
+        proxy = browser->current;
+    if (!proxy) {
+        g_critical("Data container is unknown to data browser.");
+        return -1;
+    }
+
+    list = &proxy->lists[PAGE_VOLUME];
+    g_snprintf(key, sizeof(key), "/%d/data", list->last + 1);
+    /* This invokes "item-changed" callback that will finish the work.
+     * Among other things, it will update proxy->lists[PAGE_VOLUME].last. */
+    gwy_container_set_object_by_name(proxy->container, key, brick);
+
+    if (showit && !gui_disabled) {
+        gwy_app_data_proxy_find_object(list->store, list->last, &iter);
+        proxy->resetting_visibility = TRUE;
+        gwy_app_data_proxy_channel_set_visible(proxy, &iter, TRUE);
+        proxy->resetting_visibility = FALSE;
+    }
+
+    return list->last;
+}
+
 static GQuark
 gwy_app_get_any_key_for_id(gint id,
                            const gchar *format,
@@ -6390,6 +6449,54 @@ gwy_app_data_browser_copy_channel(GwyContainer *source,
                             GWY_DATA_ITEM_SELECTIONS,
                             GWY_DATA_ITEM_CALDATA,
                             0);
+
+    return newid;
+}
+
+/**
+ * gwy_app_data_browser_copy_volume:
+ * @source: Source container.
+ * @id: Volume data brick id.
+ * @dest: Target container (may be identical to source).
+ *
+ * Copies volume brick data including all auxiliary data.
+ *
+ * Returns: The id of the copy.
+ *
+ * Since: 2.32
+ **/
+gint
+gwy_app_data_browser_copy_volume(GwyContainer *source,
+                                 gint id,
+                                 GwyContainer *dest)
+{
+    GwyBrick *brick;
+    GQuark key;
+    gint newid;
+
+    g_return_val_if_fail(GWY_IS_CONTAINER(source), -1);
+    g_return_val_if_fail(GWY_IS_CONTAINER(dest), -1);
+    key = gwy_app_get_brick_key_for_id(id);
+    brick = gwy_container_get_object(source, key);
+    g_return_val_if_fail(GWY_IS_BRICK(brick), -1);
+
+    brick = gwy_brick_duplicate(brick);
+    newid = gwy_app_data_browser_add_brick(brick, dest, TRUE);
+    g_object_unref(brick);
+
+    /* BRICK TODO: Do something like
+    gwy_app_sync_data_items(source, dest, id, newid, FALSE,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_RANGE_TYPE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_REAL_SQUARE,
+                            GWY_DATA_ITEM_META,
+                            GWY_DATA_ITEM_TITLE,
+                            GWY_DATA_ITEM_SELECTIONS,
+                            GWY_DATA_ITEM_CALDATA,
+                            0);
+    */
 
     return newid;
 }

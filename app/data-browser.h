@@ -23,6 +23,7 @@
 
 #include <gtk/gtkwindow.h>
 #include <libprocess/datafield.h>
+#include <libprocess/brick.h>
 #include <libprocess/spectra.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwygraph.h>
@@ -105,6 +106,9 @@ gint   gwy_app_data_browser_add_graph_model (GwyGraphModel *gmodel,
 gint   gwy_app_data_browser_add_spectra     (GwySpectra *spectra,
                                              GwyContainer *data,
                                              gboolean showit);
+gint   gwy_app_data_browser_add_brick       (GwyBrick *brick,
+                                             GwyContainer *data,
+                                             gboolean showit);
 void   gwy_app_data_browser_get_current     (GwyAppWhat what,
                                              ...);
 gint*  gwy_app_data_browser_get_data_ids    (GwyContainer *data);
@@ -132,6 +136,9 @@ void   gwy_app_sync_data_items              (GwyContainer *source,
                                              gboolean delete_too,
                                              ...);
 gint   gwy_app_data_browser_copy_channel    (GwyContainer *source,
+                                             gint id,
+                                             GwyContainer *dest);
+gint   gwy_app_data_browser_copy_volume     (GwyContainer *source,
                                              gint id,
                                              GwyContainer *dest);
 GQuark gwy_app_get_data_key_for_id          (gint id);
