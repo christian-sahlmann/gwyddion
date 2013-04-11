@@ -5497,7 +5497,7 @@ gwy_app_data_browser_add_brick(GwyBrick *brick,
     }
 
     list = &proxy->lists[PAGE_VOLUME];
-    g_snprintf(key, sizeof(key), "/%d/data", list->last + 1);
+    g_snprintf(key, sizeof(key), "/brick/%d", list->last + 1);
     /* This invokes "item-changed" callback that will finish the work.
      * Among other things, it will update proxy->lists[PAGE_VOLUME].last. */
     gwy_container_set_object_by_name(proxy->container, key, brick);
