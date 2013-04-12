@@ -183,6 +183,9 @@ static gboolean gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
 static gboolean gwy_app_data_proxy_graph_set_visible(GwyAppDataProxy *proxy,
                                                      GtkTreeIter *iter,
                                                      gboolean visible);
+static gboolean gwy_app_data_proxy_brick_set_visible(GwyAppDataProxy *proxy,
+                                                     GtkTreeIter *iter,
+                                                     gboolean visible);
 static GwyAppDataAssociation* gwy_app_data_assoc_find   (GList **assoclist,
                                                          GObject *object);
 static GwyAppDataAssociation* gwy_app_data_assoc_get    (GList **assoclist,
@@ -202,6 +205,7 @@ static void     gwy_app_data_browser_copy_other(GtkTreeModel *model,
                                                 GwyContainer *container);
 static gboolean gwy_app_data_browser_select_data_view2(GwyDataView *data_view);
 static gboolean gwy_app_data_browser_select_graph2    (GwyGraph *graph);
+static gboolean gwy_app_data_browser_select_volume2   (GwyDataView *data_view);
 static const gchar*
 gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
                                               gint channel);
@@ -3860,6 +3864,7 @@ gwy_app_data_browser_brick_toggled(G_GNUC_UNUSED GtkCellRendererToggle *renderer
     GtkTreeIter iter;
     GtkTreePath *path;
     GtkTreeModel *model;
+    gboolean active, toggled;
 
     gwy_debug("Toggled brick row %s", path_str);
     proxy = browser->current;
@@ -3870,7 +3875,13 @@ gwy_app_data_browser_brick_toggled(G_GNUC_UNUSED GtkCellRendererToggle *renderer
     gtk_tree_model_get_iter(model, &iter, path);
     gtk_tree_path_free(path);
 
-    g_warning("Don't have widgets to visualise bricks yet...");
+    active = gtk_cell_renderer_toggle_get_active(renderer);
+    proxy->resetting_visibility = TRUE;
+    toggled = gwy_app_data_proxy_brick_set_visible(proxy, &iter, !active);
+    proxy->resetting_visibility = FALSE;
+    g_assert(toggled);
+
+    gwy_app_data_proxy_maybe_finalize(proxy);
 }
 
 static void
@@ -3988,6 +3999,202 @@ gwy_app_data_browser_render_brick(G_GNUC_UNUSED GtkTreeViewColumn *column,
 
     g_object_unref(pixbuf);
 }
+
+/**
+ * gwy_app_data_browser_volume_deleted:
+ * @data_window: A data window that was deleted.
+ *
+ * Destroys a deleted data window, updating proxy.
+ *
+ * This functions makes sure various updates happen in reasonable order,
+ * simple gtk_widget_destroy() on the data window would not do that.
+ *
+ * Returns: Always %TRUE to be usable as terminal event handler.
+ **/
+static gboolean
+gwy_app_data_browser_volume_deleted(GwyDataWindow *data_window)
+{
+    GwyAppDataBrowser *browser;
+    GwyAppDataProxy *proxy;
+    GwyAppDataList *list;
+    GwyAppKeyType type;
+    GwyContainer *data;
+    GwyDataView *data_view;
+    GwyPixmapLayer *layer;
+    GtkTreeIter iter;
+    const gchar *strkey;
+    GObject *object;
+    GQuark quark;
+    gint i;
+
+    gwy_debug("Data window %p deleted", data_window);
+    data_view = gwy_data_window_get_data_view(data_window);
+    data = gwy_data_view_get_data(data_view);
+    layer = gwy_data_view_get_base_layer(data_view);
+    strkey = gwy_pixmap_layer_get_data_key(layer);
+    quark = g_quark_from_string(strkey);
+    g_return_val_if_fail(data && quark, TRUE);
+
+    i = _gwy_app_analyse_data_key(strkey, &type, NULL);
+    g_return_val_if_fail(i >= 0 && type == KEY_IS_BRICK_PREVIEW, TRUE);
+    quark = gwy_app_get_brick_key_for_id(i);
+    object = gwy_container_get_object(data, quark);
+
+    browser = gwy_app_get_data_browser();
+    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    list = &proxy->lists[PAGE_VOLUME];
+    if (!gwy_app_data_proxy_find_object(list->store, i, &iter)) {
+        g_critical("Cannot find brick %p (%d)", object, i);
+        return TRUE;
+    }
+
+    proxy->resetting_visibility = TRUE;
+    gwy_app_data_proxy_brick_set_visible(proxy, &iter, FALSE);
+    proxy->resetting_visibility = FALSE;
+    gwy_app_data_proxy_maybe_finalize(proxy);
+
+    return TRUE;
+}
+
+/**
+ * gwy_app_data_browser_create_volume:
+ * @browser: A data browser.
+ * @id: The channel id.
+ *
+ * Creates a data window for a data brick when its visibility is switched on.
+ *
+ * This is actually `make visible', should not be used outside
+ * gwy_app_data_proxy_brick_set_visible().
+ *
+ * Returns: The data view (NOT data window).
+ **/
+static GtkWidget*
+gwy_app_data_browser_create_volume(GwyAppDataBrowser *browser,
+                                   GwyAppDataProxy *proxy,
+                                   gint id)
+{
+    /*
+    static const GtkTargetEntry dnd_target_table[] = { GTK_TREE_MODEL_ROW };
+    */
+
+    GtkWidget *data_view, *data_window, *brickcontrols, *vbox;
+    GObject *brick = NULL;
+    GwyDataField *preview = NULL;
+    GwyPixmapLayer *layer;
+    GwyLayerBasic *layer_basic;
+    gchar key[48];
+
+    g_snprintf(key, sizeof(key), "/brick/%d", id);
+    gwy_container_gis_object_by_name(proxy->container, key, &brick);
+    g_return_val_if_fail(GWY_IS_BRICK(brick), NULL);
+
+    g_snprintf(key, sizeof(key), "/brick/%d/preview", id);
+    gwy_container_gis_object_by_name(proxy->container, key, &preview);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(preview), NULL);
+
+    layer = gwy_layer_basic_new();
+    layer_basic = GWY_LAYER_BASIC(layer);
+    gwy_pixmap_layer_set_data_key(layer, key);
+    g_snprintf(key, sizeof(key), "/brick/%d/preview/palette", id);
+    gwy_layer_basic_set_gradient_key(layer_basic, key);
+
+    data_view = gwy_data_view_new(proxy->container);
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(data_view),
+                                  gwy_pixmap_layer_get_data_key(layer));
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view), layer);
+
+    data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
+    gwy_app_update_data_window_title(GWY_DATA_VIEW(data_view), id);
+
+    gwy_app_data_proxy_update_visibility(brick, TRUE);
+    g_signal_connect_swapped(data_window, "focus-in-event",
+                             G_CALLBACK(gwy_app_data_browser_select_volume2),
+                             data_view);
+    g_signal_connect(data_window, "delete-event",
+                     G_CALLBACK(gwy_app_data_browser_volume_deleted), NULL);
+
+    /* BRICK TODO
+    _gwy_app_data_window_setup(GWY_DATA_WINDOW(data_window));
+    */
+    brickcontrols = gtk_label_new("OMG WTF there are bricks EVERYWHERE!");
+    vbox = gtk_bin_get_child(GTK_BIN(data_window));
+    gtk_box_pack_start(GTK_BOX(vbox), brickcontrols, FALSE, FALSE, 0);
+    gtk_box_reorder_child(GTK_BOX(vbox), brickcontrols, 0);
+
+    /* Channel DnD */
+    /*
+    gtk_drag_dest_set(data_window, GTK_DEST_DEFAULT_ALL,
+                      dnd_target_table, G_N_ELEMENTS(dnd_target_table),
+                      GDK_ACTION_COPY);
+    g_signal_connect(data_window, "drag-data-received",
+                     G_CALLBACK(gwy_app_window_dnd_data_received), browser);
+                     */
+
+    /* FIXME: A silly place for this? */
+    gwy_app_data_browser_set_file_present(browser, TRUE);
+    gtk_widget_show_all(data_window);
+    _gwy_app_brick_view_set_current(GWY_DATA_VIEW(data_view));
+
+    return data_view;
+}
+
+static gboolean
+gwy_app_data_proxy_brick_set_visible(GwyAppDataProxy *proxy,
+                                     GtkTreeIter *iter,
+                                     gboolean visible)
+{
+    GwyAppDataList *list;
+    GtkTreeModel *model;
+    GtkWidget *widget, *window/*, *succ*/;
+    GObject *object;
+    gint id;
+
+    list = &proxy->lists[PAGE_VOLUME];
+    model = GTK_TREE_MODEL(list->store);
+
+    gtk_tree_model_get(model, iter,
+                       MODEL_WIDGET, &widget,
+                       MODEL_OBJECT, &object,
+                       MODEL_ID, &id,
+                       -1);
+    if (visible == (widget != NULL)) {
+        g_object_unref(object);
+        gwy_object_unref(widget);
+        return FALSE;
+    }
+
+    if (visible) {
+        widget = gwy_app_data_browser_create_volume(proxy->parent, proxy, id);
+        gtk_list_store_set(list->store, iter, MODEL_WIDGET, widget, -1);
+        list->visible_count++;
+    }
+    else {
+        gwy_app_data_proxy_update_visibility(object, FALSE);
+        window = gtk_widget_get_ancestor(widget, GWY_TYPE_DATA_WINDOW);
+        /* succ = gwy_app_widget_queue_manage(widget, TRUE); */
+        gtk_widget_destroy(window);
+        gtk_list_store_set(list->store, iter, MODEL_WIDGET, NULL, -1);
+        g_object_unref(widget);
+        list->visible_count--;
+
+        /* BRICK TODO
+         * Using the widget type was not the brightest idea.  Must
+         * differentiate channel and volume DataViews.  */
+        /* FIXME */
+        /*
+        if (succ)
+            gwy_app_data_browser_select_data_view(GWY_DATA_VIEW(succ));
+        else
+            _gwy_app_data_view_set_current(NULL);
+            */
+    }
+    g_object_unref(object);
+
+    gwy_debug("visible_count: %d", list->visible_count);
+
+    return TRUE;
+}
+
 
 static GtkWidget*
 gwy_app_data_browser_construct_bricks(GwyAppDataBrowser *browser)
@@ -4884,6 +5091,52 @@ gwy_app_data_browser_select_spectra(GwySpectra *spectra)
     _gwy_app_spectra_set_current(spectra);
 }
 
+/**
+ * gwy_app_data_browser_select_volume:
+ * @data_view: A data view widget showing a preview of volume data.
+ *
+ * Switches application data browser to display container of data
+ * and selects @data_view's volume data in the graph list.
+ *
+ * Since: 2.32
+ **/
+void
+gwy_app_data_browser_select_volume(GwyDataView *data_view)
+{
+    GwyAppDataBrowser *browser;
+    GwyAppDataProxy *proxy;
+    GwyPixmapLayer *layer;
+    GwyContainer *data;
+    const gchar *strkey;
+    GwyAppKeyType type;
+    gint i;
+
+    browser = gwy_app_get_data_browser();
+
+    data = gwy_data_view_get_data(data_view);
+    gwy_app_data_browser_switch_data(data);
+
+    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    g_return_if_fail(proxy);
+
+    layer = gwy_data_view_get_base_layer(data_view);
+    strkey = gwy_pixmap_layer_get_data_key(layer);
+    i = _gwy_app_analyse_data_key(strkey, &type, NULL);
+    g_return_if_fail(i >= 0 && type == KEY_IS_BRICK_PREVIEW);
+    proxy->lists[PAGE_VOLUME].active = i;
+
+    gwy_app_data_browser_select_object(browser, proxy, PAGE_VOLUME);
+    /* BRICK TODO gwy_app_widget_queue_manage(GTK_WIDGET(data_view), FALSE); */
+    _gwy_app_brick_view_set_current(data_view);
+}
+
+static gboolean
+gwy_app_data_browser_select_volume2(GwyDataView *data_view)
+{
+    gwy_app_data_browser_select_volume(data_view);
+    return FALSE;
+}
+
 static GwyAppDataProxy*
 gwy_app_data_browser_select(GwyContainer *data,
                             gint id,
@@ -5026,6 +5279,7 @@ gwy_app_data_browser_reset_visibility(GwyContainer *data,
         &gwy_app_data_proxy_channel_set_visible,
         &gwy_app_data_proxy_graph_set_visible,
         NULL,
+        &gwy_app_data_proxy_brick_set_visible,
     };
 
     GwyAppDataBrowser *browser;

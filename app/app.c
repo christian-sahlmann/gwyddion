@@ -1230,6 +1230,33 @@ _gwy_app_spectra_set_current(GwySpectra *spectra)
 
 /*****************************************************************************
  *                                                                           *
+ *     Bricks                                                                *
+ *                                                                           *
+ *****************************************************************************/
+
+/**
+ * _gwy_app_brick_view_set_current:
+ * @window: Data window showin brick preview, can be %NULL.
+ *
+ * Updates application state upon switch to new brick view.
+ **/
+void
+_gwy_app_brick_view_set_current(GwyDataView *data_view)
+{
+    gwy_debug("%p", data_view);
+
+    if (!data_view) {
+        gwy_app_sensitivity_set_state(GWY_MENU_FLAG_VOLUME, 0);
+        return;
+    }
+
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+
+    gwy_app_sensitivity_set_state(GWY_MENU_FLAG_VOLUME, GWY_MENU_FLAG_VOLUME);
+}
+
+/*****************************************************************************
+ *                                                                           *
  *     Miscellaneous                                                         *
  *                                                                           *
  *****************************************************************************/
