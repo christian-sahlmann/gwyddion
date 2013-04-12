@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek, Chris Anderson
+ *  Copyright (C) 2006-2013 David Necas (Yeti), Petr Klapetek, Chris Anderson
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net, sidewinderasu@gmail.com.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -107,6 +107,7 @@ gint   gwy_app_data_browser_add_spectra     (GwySpectra *spectra,
                                              GwyContainer *data,
                                              gboolean showit);
 gint   gwy_app_data_browser_add_brick       (GwyBrick *brick,
+                                             GwyDataField *preview,
                                              GwyContainer *data,
                                              gboolean showit);
 void   gwy_app_data_browser_get_current     (GwyAppWhat what,

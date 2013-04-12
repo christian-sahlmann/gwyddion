@@ -207,6 +207,7 @@ gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
                                               gint channel);
 static void gwy_app_data_browser_show_real   (GwyAppDataBrowser *browser);
 static void gwy_app_data_browser_hide_real   (GwyAppDataBrowser *browser);
+static GwyDataField* create_simple_brick_preview_field(GwyBrick *brick);
 static GdkPixbuf* gwy_app_get_graph_thumbnail(GwyContainer *data,
                                               gint id,
                                               gint max_width,
@@ -5473,6 +5474,10 @@ gwy_app_data_browser_get_keep_invisible(GwyContainer *data)
  *
  * Adds a data field to a data container.
  *
+ * The data browser takes a reference to @dfield so usually you will want to
+ * release your reference, especially when done as the ‘create output’ step of
+ * a module function.
+ *
  * Returns: The id of the data field in the container.
  **/
 gint
@@ -5523,6 +5528,10 @@ gwy_app_data_browser_add_data_field(GwyDataField *dfield,
  * @showit: %TRUE to display it immediately, %FALSE to just add it.
  *
  * Adds a graph model to a data container.
+ *
+ * The data browser takes a reference to @gmodel so usually you will want to
+ * release your reference, especially when done as the ‘create output’ step of
+ * a module function.
  *
  * Returns: The id of the graph model in the container.
  **/
@@ -5575,6 +5584,10 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
  *
  * Adds a spectra object to a data container.
  *
+ * The data browser takes a reference to @spectra so usually you will want to
+ * release your reference, especially when done as the ‘create output’ step of
+ * a module function.
+ *
  * Returns: The id of the spectra object in the container.
  *
  * Since: 2.7
@@ -5622,11 +5635,21 @@ gwy_app_data_browser_add_spectra(GwySpectra *spectra,
 /**
  * gwy_app_data_browser_add_brick:
  * @brick: A data brick to add.
+ * @preview: Preview data field.  It may be %NULL to create some
+ *           of 2D summary preview automatically.  If non-%NULL, its dimensions
+ *           should match those of brick planes.  You must
+ *           <emphasis>not</emphasis> pass a field which already represents a
+ *           channel.  If you want a to show the same field as an existing
+ *           channel you must create a copy with gwy_data_field_duplicate().
  * @data: A data container to add @brick to.
  *        It can be %NULL to add the data field to current data container.
  * @showit: %TRUE to display it immediately, %FALSE to just add it.
  *
  * Adds a volume data brick to a data container.
+ *
+ * The data browser takes a reference to @brick (and @preview if given) so
+ * usually you will want to release your reference, especially when done as the
+ * ‘create output’ step of a module function.
  *
  * Returns: The id of the data brick in the container.
  *
@@ -5634,6 +5657,7 @@ gwy_app_data_browser_add_spectra(GwySpectra *spectra,
  **/
 gint
 gwy_app_data_browser_add_brick(GwyBrick *brick,
+                               GwyDataField *preview,
                                GwyContainer *data,
                                gboolean showit)
 {
@@ -5641,10 +5665,13 @@ gwy_app_data_browser_add_brick(GwyBrick *brick,
     GwyAppDataProxy *proxy;
     GwyAppDataList *list;
     GtkTreeIter iter;
-    gchar key[24];
+    gchar key[32];
+    gint xres, yres;
+    gboolean must_free_preview = FALSE;
 
     g_return_val_if_fail(GWY_IS_BRICK(brick), -1);
     g_return_val_if_fail(!data || GWY_IS_CONTAINER(data), -1);
+    g_return_val_if_fail(!preview || GWY_IS_DATA_FIELD(data), -1);
 
     browser = gwy_app_get_data_browser();
     if (data)
@@ -5656,11 +5683,32 @@ gwy_app_data_browser_add_brick(GwyBrick *brick,
         return -1;
     }
 
+    xres = gwy_brick_get_xres(brick);
+    yres = gwy_brick_get_yres(brick);
+    if (preview) {
+        if (gwy_data_field_get_xres(preview) != xres
+            || gwy_data_field_get_yres(preview) != yres) {
+            g_warning("Preview field dimensions differ from "
+                      "brick plane dimensions.");
+            /* XXX: With some care this may actually work.  But we do not
+             * consider it sane anyway. */
+        }
+    }
+    else {
+        preview = create_simple_brick_preview_field(brick);
+        must_free_preview = TRUE;
+    }
+
     list = &proxy->lists[PAGE_VOLUME];
     g_snprintf(key, sizeof(key), "/brick/%d", list->last + 1);
     /* This invokes "item-changed" callback that will finish the work.
      * Among other things, it will update proxy->lists[PAGE_VOLUME].last. */
     gwy_container_set_object_by_name(proxy->container, key, brick);
+
+    g_snprintf(key, sizeof(key), "/brick/%d/preview", list->last + 1);
+    gwy_container_set_object_by_name(proxy->container, key, preview);
+    if (must_free_preview)
+        g_object_unref(preview);
 
     if (showit && !gui_disabled) {
         gwy_app_data_proxy_find_object(list->store, list->last, &iter);
@@ -6631,7 +6679,9 @@ gwy_app_data_browser_copy_volume(GwyContainer *source,
                                  GwyContainer *dest)
 {
     GwyBrick *brick;
+    GwyDataField *preview = NULL;
     GQuark key;
+    gchar *strkey;
     gint newid;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(source), -1);
@@ -6640,9 +6690,16 @@ gwy_app_data_browser_copy_volume(GwyContainer *source,
     brick = gwy_container_get_object(source, key);
     g_return_val_if_fail(GWY_IS_BRICK(brick), -1);
 
+    /* Do this explicitly to prevent calculation of auto preview field. */
+    strkey = g_strconcat(g_quark_to_string(key), "/preview", NULL);
+    if (gwy_container_gis_object_by_name(source, strkey, (GObject**)&preview))
+        preview = gwy_data_field_duplicate(preview);
+    g_free(strkey);
+
     brick = gwy_brick_duplicate(brick);
-    newid = gwy_app_data_browser_add_brick(brick, dest, TRUE);
+    newid = gwy_app_data_browser_add_brick(brick, preview, dest, TRUE);
     g_object_unref(brick);
+    gwy_object_unref(preview);
 
     /* BRICK TODO: Do something like
     gwy_app_sync_data_items(source, dest, id, newid, FALSE,
@@ -6772,6 +6829,21 @@ gwy_app_data_browser_shut_down(void)
         for (i = 0; i < NPAGES; i++)
             gtk_tree_view_set_model(GTK_TREE_VIEW(browser->lists[i]), NULL);
     }
+}
+
+static GwyDataField*
+create_simple_brick_preview_field(GwyBrick *brick)
+{
+    gint xres = gwy_brick_get_xres(brick);
+    gint yres = gwy_brick_get_yres(brick);
+    gint zres = gwy_brick_get_zres(brick);
+    gdouble xreal = gwy_brick_get_xreal(brick);
+    gdouble yreal = gwy_brick_get_yreal(brick);
+    GwyDataField *preview = gwy_data_field_new(xres, yres, xreal, yreal,
+                                               FALSE);
+
+    gwy_brick_sum_plane(brick, preview, 0, 0, 0, xres, yres, zres, FALSE);
+    return preview;
 }
 
 /************** FIXME: where this belongs to? ***************************/
@@ -7186,36 +7258,6 @@ gwy_app_data_browser_remove_channel_watch(gulong id)
 {
     gwy_app_data_browser_remove_watch(&channel_watchers, id);
 }
-
-/*
-gulong
-gwy_app_data_browser_add_graph_watch(GwyAppDataWatchFunc function,
-                                     gpointer user_data)
-{
-    return gwy_app_data_browser_add_watch(&graph_watchers,
-                                          function, user_data);
-}
-
-void
-gwy_app_data_browser_remove_graph_watch(gulong id)
-{
-    gwy_app_data_browser_remove_watch(&graph_watchers, id);
-}
-
-gulong
-gwy_app_data_browser_add_spectra_watch(GwyAppDataWatchFunc function,
-                                       gpointer user_data)
-{
-    return gwy_app_data_browser_add_watch(&spectra_watchers,
-                                          function, user_data);
-}
-
-void
-gwy_app_data_browser_remove_spectra_watch(gulong id)
-{
-    gwy_app_data_browser_remove_watch(&spectra_watchers, id);
-}
-*/
 
 /************************** Documentation ****************************/
 

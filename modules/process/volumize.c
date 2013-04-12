@@ -96,8 +96,10 @@ volumize(GwyContainer *data, GwyRunType run)
 
     brick = create_brick_from_datafield(dfield);
     /* Use showit=TRUE once we thin it's safe */
-    gwy_app_data_browser_add_brick(brick, data, FALSE);
+    dfield = gwy_data_field_duplicate(dfield);
+    gwy_app_data_browser_add_brick(brick, dfield, data, FALSE);
     g_object_unref(brick);
+    g_object_unref(dfield);
     //volumize_save_args(gwy_app_settings_get(), &args);
 }
 
