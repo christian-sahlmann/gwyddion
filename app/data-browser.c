@@ -73,7 +73,7 @@ enum {
     PAGE_CHANNELS,
     PAGE_GRAPHS,
     PAGE_SPECTRA,
-    PAGE_VOLUME,
+    PAGE_VOLUMES,
     NPAGES,
     PAGE_NOPAGE = G_MAXINT-1,
 };
@@ -1125,10 +1125,10 @@ gwy_app_data_proxy_brick_changed(GwyDataField *brick,
     g_return_if_fail(quark);
     id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &type, NULL);
     g_return_if_fail(id >= 0);
-    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_VOLUME].store, id,
+    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_VOLUMES].store, id,
                                         &iter))
         return;
-    gtk_list_store_set(proxy->lists[PAGE_VOLUME].store, &iter,
+    gtk_list_store_set(proxy->lists[PAGE_VOLUMES].store, &iter,
                        MODEL_TIMESTAMP, gwy_get_timestamp(),
                        -1);
 }
@@ -1151,7 +1151,7 @@ gwy_app_data_proxy_connect_brick(GwyAppDataProxy *proxy,
     gchar key[24];
     GQuark quark;
 
-    gwy_app_data_proxy_add_object(&proxy->lists[PAGE_VOLUME], id, iter,
+    gwy_app_data_proxy_add_object(&proxy->lists[PAGE_VOLUMES], id, iter,
                                   object);
     g_snprintf(key, sizeof(key), "/%d/data", id);
     gwy_debug("%p: %d in %p", object, id, proxy->container);
@@ -1177,7 +1177,7 @@ gwy_app_data_proxy_disconnect_brick(GwyAppDataProxy *proxy,
 {
     GObject *object;
 
-    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_VOLUME].store), iter,
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_VOLUMES].store), iter,
                        MODEL_OBJECT, &object,
                        -1);
     gwy_debug("%p: from %p", object, proxy->container);
@@ -1187,7 +1187,7 @@ gwy_app_data_proxy_disconnect_brick(GwyAppDataProxy *proxy,
                                          gwy_app_data_proxy_brick_changed,
                                          proxy);
     g_object_unref(object);
-    gtk_list_store_remove(proxy->lists[PAGE_VOLUME].store, iter);
+    gtk_list_store_remove(proxy->lists[PAGE_VOLUMES].store, iter);
 }
 
 /**
@@ -1206,14 +1206,14 @@ gwy_app_data_proxy_reconnect_brick(GwyAppDataProxy *proxy,
 {
     GObject *old;
 
-    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_VOLUME].store), iter,
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_VOLUMES].store), iter,
                        MODEL_OBJECT, &old,
                        -1);
     g_signal_handlers_disconnect_by_func(old,
                                          gwy_app_data_proxy_brick_changed,
                                          proxy);
     gwy_app_data_proxy_switch_object_data(proxy, old, object);
-    gtk_list_store_set(proxy->lists[PAGE_VOLUME].store, iter,
+    gtk_list_store_set(proxy->lists[PAGE_VOLUMES].store, iter,
                        MODEL_OBJECT, object,
                        -1);
     g_signal_connect(object, "data-changed",
@@ -1564,7 +1564,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
 
         case KEY_IS_BRICK:
         gwy_container_gis_object(data, quark, &object);
-        pageno = PAGE_VOLUME;
+        pageno = PAGE_VOLUMES;
         list = &proxy->lists[pageno];
         found = gwy_app_data_proxy_find_object(list->store, id, &iter);
         gwy_debug("Brick <%s>: %s in container, %s in list store",
@@ -3871,7 +3871,7 @@ gwy_app_data_browser_brick_toggled(G_GNUC_UNUSED GtkCellRendererToggle *renderer
     g_return_if_fail(proxy);
 
     path = gtk_tree_path_new_from_string(path_str);
-    model = GTK_TREE_MODEL(proxy->lists[PAGE_VOLUME].store);
+    model = GTK_TREE_MODEL(proxy->lists[PAGE_VOLUMES].store);
     gtk_tree_model_get_iter(model, &iter, path);
     gtk_tree_path_free(path);
 
@@ -3899,7 +3899,7 @@ gwy_app_data_browser_brick_name_edited(GtkCellRenderer *renderer,
 
     g_return_if_fail(browser->current);
     proxy = browser->current;
-    model = GTK_TREE_MODEL(proxy->lists[PAGE_VOLUME].store);
+    model = GTK_TREE_MODEL(proxy->lists[PAGE_VOLUMES].store);
 
     path = gtk_tree_path_new_from_string(strpath);
     gtk_tree_model_get_iter(model, &iter, path);
@@ -4042,7 +4042,7 @@ gwy_app_data_browser_volume_deleted(GwyDataWindow *data_window)
 
     browser = gwy_app_get_data_browser();
     proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
-    list = &proxy->lists[PAGE_VOLUME];
+    list = &proxy->lists[PAGE_VOLUMES];
     if (!gwy_app_data_proxy_find_object(list->store, i, &iter)) {
         g_critical("Cannot find brick %p (%d)", object, i);
         return TRUE;
@@ -4149,7 +4149,7 @@ gwy_app_data_proxy_brick_set_visible(GwyAppDataProxy *proxy,
     GObject *object;
     gint id;
 
-    list = &proxy->lists[PAGE_VOLUME];
+    list = &proxy->lists[PAGE_VOLUMES];
     model = GTK_TREE_MODEL(list->store);
 
     gtk_tree_model_get(model, iter,
@@ -4270,7 +4270,7 @@ gwy_app_data_browser_construct_bricks(GwyAppDataBrowser *browser)
     /* Selection */
     selection = gtk_tree_view_get_selection(treeview);
     g_object_set_qdata(G_OBJECT(selection), page_id_quark,
-                       GINT_TO_POINTER(PAGE_VOLUME + 1));
+                       GINT_TO_POINTER(PAGE_VOLUMES + 1));
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
                      browser);
@@ -4459,7 +4459,7 @@ gwy_app_data_browser_copy_object(GwyAppDataProxy *srcproxy,
         }
         break;
 
-        case PAGE_VOLUME:
+        case PAGE_VOLUMES:
         gwy_app_data_browser_copy_volume(srcproxy->container, id, container);
         break;
     }
@@ -4771,9 +4771,9 @@ gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
                                    GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     gtk_box_pack_start(GTK_BOX(box_page), scwin, TRUE, TRUE, 0);
 
-    browser->lists[PAGE_VOLUME]
+    browser->lists[PAGE_VOLUMES]
         = gwy_app_data_browser_construct_bricks(browser);
-    gtk_container_add(GTK_CONTAINER(scwin), browser->lists[PAGE_VOLUME]);
+    gtk_container_add(GTK_CONTAINER(scwin), browser->lists[PAGE_VOLUMES]);
 
     /* Buttons */
     hbox = gwy_app_data_browser_construct_buttons(browser);
@@ -5123,9 +5123,9 @@ gwy_app_data_browser_select_volume(GwyDataView *data_view)
     strkey = gwy_pixmap_layer_get_data_key(layer);
     i = _gwy_app_analyse_data_key(strkey, &type, NULL);
     g_return_if_fail(i >= 0 && type == KEY_IS_BRICK_PREVIEW);
-    proxy->lists[PAGE_VOLUME].active = i;
+    proxy->lists[PAGE_VOLUMES].active = i;
 
-    gwy_app_data_browser_select_object(browser, proxy, PAGE_VOLUME);
+    gwy_app_data_browser_select_object(browser, proxy, PAGE_VOLUMES);
     /* BRICK TODO gwy_app_widget_queue_manage(GTK_WIDGET(data_view), FALSE); */
     _gwy_app_brick_view_set_current(data_view);
 }
@@ -6015,11 +6015,11 @@ gwy_app_data_browser_add_brick(GwyBrick *brick,
         must_free_preview = TRUE;
     }
 
-    list = &proxy->lists[PAGE_VOLUME];
+    list = &proxy->lists[PAGE_VOLUMES];
     id = list->last + 1;
     g_snprintf(key, sizeof(key), "/brick/%d", id);
     /* This invokes "item-changed" callback that will finish the work.
-     * Among other things, it will update proxy->lists[PAGE_VOLUME].last. */
+     * Among other things, it will update proxy->lists[PAGE_VOLUMES].last. */
     gwy_container_set_object_by_name(proxy->container, key, brick);
 
     g_snprintf(key, sizeof(key), "/brick/%d/preview", id);
@@ -6285,11 +6285,12 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
 {
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *current = NULL;
-    GwyAppDataList *channels = NULL, *graphs = NULL, *spectras = NULL;
+    GwyAppDataList *channels = NULL, *graphs = NULL, *spectras = NULL,
+                   *volumes = NULL;
     GtkTreeIter iter;
     GObject *object, **otarget;
     /* Cache the current object by type */
-    GObject *dfield = NULL, *gmodel = NULL, *spectra = NULL;
+    GObject *dfield = NULL, *gmodel = NULL, *spectra = NULL, *brick = NULL;
     GQuark quark, *qtarget;
     gint *itarget;
     va_list ap;
@@ -6305,6 +6306,7 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
             channels = &current->lists[PAGE_CHANNELS];
             graphs = &current->lists[PAGE_GRAPHS];
             spectras = &current->lists[PAGE_SPECTRA];
+            volumes = &current->lists[PAGE_VOLUMES];
         }
     }
 
@@ -6336,6 +6338,20 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
                 && gwy_app_data_proxy_find_object(graphs->store,
                                                   graphs->active, &iter)) {
                 gtk_tree_model_get(GTK_TREE_MODEL(graphs->store), &iter,
+                                   MODEL_WIDGET, otarget,
+                                   -1);
+                if (*otarget)
+                    g_object_unref(*otarget);
+            }
+            break;
+
+            case GWY_APP_VOLUME_VIEW:
+            otarget = va_arg(ap, GObject**);
+            *otarget = NULL;
+            if (volumes
+                && gwy_app_data_proxy_find_object(volumes->store,
+                                                  volumes->active, &iter)) {
+                gtk_tree_model_get(GTK_TREE_MODEL(volumes->store), &iter,
                                    MODEL_WIDGET, otarget,
                                    -1);
                 if (*otarget)
@@ -6486,6 +6502,43 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
                 case GWY_APP_SPECTRA_ID:
                 itarget = va_arg(ap, gint*);
                 *itarget = spectra ? spectras->active : -1;
+                break;
+
+                default:
+                /* Hi, gcc */
+                break;
+            }
+            break;
+
+            case GWY_APP_BRICK:
+            case GWY_APP_BRICK_KEY:
+            case GWY_APP_BRICK_ID:
+            if (!brick
+                && current
+                && gwy_app_data_proxy_find_object(volumes->store,
+                                                  volumes->active, &iter)) {
+                gtk_tree_model_get(GTK_TREE_MODEL(volumes->store), &iter,
+                                   MODEL_OBJECT, &object, -1);
+                brick = object;
+                g_object_unref(object);
+            }
+            switch (what) {
+                case GWY_APP_BRICK:
+                otarget = va_arg(ap, GObject**);
+                *otarget = brick;
+                break;
+
+                case GWY_APP_BRICK_KEY:
+                qtarget = va_arg(ap, GQuark*);
+                *qtarget = 0;
+                if (brick)
+                    *qtarget = GPOINTER_TO_UINT(g_object_get_qdata
+                                                       (brick, own_key_quark));
+                break;
+
+                case GWY_APP_BRICK_ID:
+                itarget = va_arg(ap, gint*);
+                *itarget = brick ? volumes->active : -1;
                 break;
 
                 default:
@@ -7690,6 +7743,8 @@ gwy_app_data_browser_remove_channel_watch(gulong id)
  * @GWY_APP_SPECTRA_KEY: Quark corresponding to the single point spectra.
  * @GWY_APP_SPECTRA_ID: Number (id) of the the single point spectra in its
  *                      container.
+ * @GWY_APP_VOLUME_VIEW: Data view widget (shows preview of volume data)
+ *                       (Since 2.32).
  * @GWY_APP_BRICK: Data brick (volume data) (Since 2.32).
  * @GWY_APP_BRICK_KEY: Quark corresponding to the data brick (Since 2.32).
  * @GWY_APP_BRICK_ID: Number (id) of the the data brick in its container.
