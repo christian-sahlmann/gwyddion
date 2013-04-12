@@ -20,7 +20,7 @@
 
 /* XXX: The purpose of this file is to contain all ugliness from the rest of
  * source files.  And indeed it has managed to gather lots of it. */
-
+#define DEBUG 1
 #include <stdio.h>
 
 #include "config.h"
@@ -442,7 +442,7 @@ _gwy_app_analyse_data_key(const gchar *strkey,
 
     /* Brick */
     if (g_str_has_prefix(strkey, BRICK_PREFIX GWY_CONTAINER_PATHSEP_STR)) {
-        s = strkey + sizeof(SPECTRA_PREFIX);
+        s = strkey + sizeof(BRICK_PREFIX);
         /* Do not use strtol, it allows queer stuff like spaces */
         for (i = 0; g_ascii_isdigit(s[i]); i++)
             ;
@@ -1095,6 +1095,124 @@ gwy_app_data_proxy_reconnect_spectra(GwyAppDataProxy *proxy,
 }
 
 /**
+ * gwy_app_data_proxy_brick_changed:
+ * @brick: The data field representing a brick.
+ * @proxy: Data proxy.
+ *
+ * Updates brick display in the data browser when brick data change.
+ **/
+static void
+gwy_app_data_proxy_brick_changed(GwyDataField *brick,
+                                 GwyAppDataProxy *proxy)
+{
+    GwyAppKeyType type;
+    GtkTreeIter iter;
+    GQuark quark;
+    gint id;
+
+    gwy_debug("proxy=%p brick=%p", proxy, brick);
+    quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(brick),
+                                                own_key_quark));
+    g_return_if_fail(quark);
+    id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &type, NULL);
+    g_return_if_fail(id >= 0);
+    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_VOLUME].store, id,
+                                        &iter))
+        return;
+    gtk_list_store_set(proxy->lists[PAGE_VOLUME].store, &iter,
+                       MODEL_TIMESTAMP, gwy_get_timestamp(),
+                       -1);
+}
+
+/**
+ * gwy_app_data_proxy_connect_brick:
+ * @proxy: Data proxy.
+ * @id: Channel id.
+ * @object: The data field to add (passed as #GObject).
+ *
+ * Adds a data field as brick of specified id, setting qdata and connecting
+ * signals.
+ **/
+static void
+gwy_app_data_proxy_connect_brick(GwyAppDataProxy *proxy,
+                                 gint id,
+                                 GtkTreeIter *iter,
+                                 GObject *object)
+{
+    gchar key[24];
+    GQuark quark;
+
+    gwy_app_data_proxy_add_object(&proxy->lists[PAGE_VOLUME], id, iter,
+                                  object);
+    g_snprintf(key, sizeof(key), "/%d/data", id);
+    gwy_debug("%p: %d in %p", object, id, proxy->container);
+    quark = g_quark_from_string(key);
+    g_object_set_qdata(object, container_quark, proxy->container);
+    g_object_set_qdata(object, own_key_quark, GUINT_TO_POINTER(quark));
+
+    g_signal_connect(object, "data-changed",
+                     G_CALLBACK(gwy_app_data_proxy_brick_changed), proxy);
+}
+
+/**
+ * gwy_app_data_proxy_disconnect_brick:
+ * @proxy: Data proxy.
+ * @iter: Tree iterator pointing to the brick in @proxy's list store.
+ *
+ * Disconnects signals from a brick data field, removes qdata and finally
+ * removes it from the data proxy list store.
+ **/
+static void
+gwy_app_data_proxy_disconnect_brick(GwyAppDataProxy *proxy,
+                                    GtkTreeIter *iter)
+{
+    GObject *object;
+
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_VOLUME].store), iter,
+                       MODEL_OBJECT, &object,
+                       -1);
+    gwy_debug("%p: from %p", object, proxy->container);
+    g_object_set_qdata(object, container_quark, NULL);
+    g_object_set_qdata(object, own_key_quark, NULL);
+    g_signal_handlers_disconnect_by_func(object,
+                                         gwy_app_data_proxy_brick_changed,
+                                         proxy);
+    g_object_unref(object);
+    gtk_list_store_remove(proxy->lists[PAGE_VOLUME].store, iter);
+}
+
+/**
+ * gwy_app_data_proxy_reconnect_brick:
+ * @proxy: Data proxy.
+ * @iter: Tree iterator pointing to the brick in @proxy's list store.
+ * @object: The data field representing the brick (passed as #GObject).
+ *
+ * Updates data proxy's list store when the data field representing a brick
+ * is switched for another data field.
+ **/
+static void
+gwy_app_data_proxy_reconnect_brick(GwyAppDataProxy *proxy,
+                                   GtkTreeIter *iter,
+                                   GObject *object)
+{
+    GObject *old;
+
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_VOLUME].store), iter,
+                       MODEL_OBJECT, &old,
+                       -1);
+    g_signal_handlers_disconnect_by_func(old,
+                                         gwy_app_data_proxy_brick_changed,
+                                         proxy);
+    gwy_app_data_proxy_switch_object_data(proxy, old, object);
+    gtk_list_store_set(proxy->lists[PAGE_VOLUME].store, iter,
+                       MODEL_OBJECT, object,
+                       -1);
+    g_signal_connect(object, "data-changed",
+                     G_CALLBACK(gwy_app_data_proxy_brick_changed), proxy);
+    g_object_unref(old);
+}
+
+/**
  * gwy_app_data_proxy_scan_data:
  * @key: Container quark key.
  * @value: Value at @key.
@@ -1411,7 +1529,6 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             pageno = -1;
         break;
 
-
         case KEY_IS_SHOW:
         gwy_container_gis_object(data, quark, &object);
         pageno = PAGE_CHANNELS;
@@ -1433,6 +1550,29 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         }
         /* Prevent thumbnail update */
         if (!found)
+            pageno = -1;
+        break;
+
+        case KEY_IS_BRICK:
+        gwy_container_gis_object(data, quark, &object);
+        pageno = PAGE_VOLUME;
+        list = &proxy->lists[pageno];
+        found = gwy_app_data_proxy_find_object(list->store, id, &iter);
+        gwy_debug("Brick <%s>: %s in container, %s in list store",
+                  strkey,
+                  object ? "present" : "missing",
+                  found ? "present" : "missing");
+        g_return_if_fail(object || found);
+        if (object && !found)
+            gwy_app_data_proxy_connect_brick(proxy, id, &iter, object);
+        else if (!object && found)
+            gwy_app_data_proxy_disconnect_brick(proxy, &iter);
+        else if (object && found) {
+            gwy_app_data_proxy_reconnect_brick(proxy, &iter, object);
+            gwy_list_store_row_changed(list->store, &iter, NULL, -1);
+        }
+        /* Prevent thumbnail update */
+        if (!object)
             pageno = -1;
         break;
 
@@ -1504,6 +1644,21 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         }
         break;
 
+        case KEY_IS_BRICK_TITLE:
+        gwy_debug("BRICK TODO KEY_IS_BRICK_TITLE");
+        pageno = -1;
+        break;
+
+        case KEY_IS_BRICK_PREVIEW:
+        gwy_debug("BRICK TODO KEY_IS_BRICK_PREVIEW");
+        pageno = -1;
+        break;
+
+        case KEY_IS_BRICK_PREVIEW_PALETTE:
+        gwy_debug("BRICK TODO KEY_IS_BRICK_PREVIEW_PALETTE");
+        pageno = -1;
+        break;
+
         case KEY_IS_DATA_VISIBLE:
         if (!proxy->resetting_visibility) {
             pageno = PAGE_CHANNELS;
@@ -1530,6 +1685,11 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             }
             pageno = -1;
         }
+        break;
+
+        case KEY_IS_BRICK_VISIBLE:
+        gwy_debug("BRICK TODO KEY_IS_BRICK_VISIBLE");
+        pageno = -1;
         break;
 
         default:
