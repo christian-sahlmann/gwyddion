@@ -36,7 +36,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
-#define VOLUMIZE_RUN_MODES (GWY_RUN_NONINTERACTIVE)
+#define VOLUMIZE_RUN_MODES (GWY_RUN_IMMEDIATE)
 #define MAXPIX 600
 
 typedef struct {
@@ -44,10 +44,10 @@ typedef struct {
 } VolumizeArgs;
 
 
-static gboolean module_register                    (void);
-static void     volumize                         (GwyContainer *data,
-                                                    GwyRunType run);
-static GwyBrick* create_brick_from_datafield      (GwyDataField *dfield);
+static gboolean  module_register            (void);
+static void      volumize                   (GwyContainer *data,
+                                             GwyRunType run);
+static GwyBrick* create_brick_from_datafield(GwyDataField *dfield);
 
 static const VolumizeArgs volumize_defaults = {
     0,
@@ -56,7 +56,7 @@ static const VolumizeArgs volumize_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Converts datafield to 3D volume data)."),
+    N_("Converts datafield to 3D volume data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -73,7 +73,7 @@ module_register(void)
                               N_("/_Basic Operations/Volumize..."),
                               NULL,
                               VOLUMIZE_RUN_MODES,
-                              0,
+                              GWY_MENU_FLAG_DATA,
                               N_("Convert datafield to 3D data"));
 
     return TRUE;
