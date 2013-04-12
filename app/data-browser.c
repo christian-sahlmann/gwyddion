@@ -212,6 +212,10 @@ static GdkPixbuf* gwy_app_get_graph_thumbnail(GwyContainer *data,
                                               gint id,
                                               gint max_width,
                                               gint max_height);
+static GdkPixbuf* gwy_app_get_brick_thumbnail(GwyContainer *data,
+                                              gint id,
+                                              gint max_width,
+                                              gint max_height);
 static void gwy_app_data_browser_notify_watch(GList *watchers,
                                               GwyContainer *container,
                                               gint id,
@@ -2840,8 +2844,7 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
     column = gtk_tree_view_column_new_with_attributes("Thumbnail", renderer,
                                                       NULL);
     gtk_tree_view_column_set_cell_data_func
-        (column, renderer,
-         gwy_app_data_browser_render_channel, browser, NULL);
+        (column, renderer, gwy_app_data_browser_render_channel, browser, NULL);
     gtk_tree_view_append_column(treeview, column);
 
     /* Add the visibility column */
@@ -3928,6 +3931,64 @@ gwy_app_data_browser_brick_render_title(G_GNUC_UNUSED GtkTreeViewColumn *column,
     g_object_set(renderer, "text", title, NULL);
 }
 
+static void
+gwy_app_data_browser_render_brick(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                                  GtkCellRenderer *renderer,
+                                  GtkTreeModel *model,
+                                  GtkTreeIter *iter,
+                                  G_GNUC_UNUSED gpointer userdata)
+{
+    GwyContainer *container;
+    GObject *object;
+    GdkPixbuf *pixbuf;
+    gdouble timestamp, *pbuf_timestamp = NULL;
+    GtkWidget *data_view;
+    gint id;
+
+    gtk_tree_model_get(model, iter,
+                       MODEL_ID, &id,
+                       MODEL_OBJECT, &object,
+                       MODEL_TIMESTAMP, &timestamp,
+                       MODEL_THUMBNAIL, &pixbuf,
+                       MODEL_WIDGET, &data_view,
+                       -1);
+
+    container = g_object_get_qdata(object, container_quark);
+    g_object_unref(object);
+
+    if (pixbuf) {
+        pbuf_timestamp = (gdouble*)g_object_get_data(G_OBJECT(pixbuf),
+                                                     "timestamp");
+        if (*pbuf_timestamp >= timestamp) {
+            g_object_set(renderer, "pixbuf", pixbuf, NULL);
+            g_object_unref(pixbuf);
+            gwy_object_unref(data_view);
+            return;
+        }
+    }
+
+    pixbuf = gwy_app_get_brick_thumbnail(container, id,
+                                         THUMB_SIZE, THUMB_SIZE);
+    pbuf_timestamp = g_new(gdouble, 1);
+    *pbuf_timestamp = gwy_get_timestamp();
+    g_object_set_data_full(G_OBJECT(pixbuf), "timestamp", pbuf_timestamp,
+                           g_free);
+    gtk_list_store_set(GTK_LIST_STORE(model), iter,
+                       MODEL_THUMBNAIL, pixbuf,
+                       -1);
+    g_object_set(renderer, "pixbuf", pixbuf, NULL);
+
+    if (data_view) {
+        GtkWidget *window = gtk_widget_get_toplevel(data_view);
+
+        if (window && GTK_IS_WINDOW(window))
+            gtk_window_set_icon(GTK_WINDOW(window), pixbuf);
+        g_object_unref(data_view);
+    }
+
+    g_object_unref(pixbuf);
+}
+
 static GtkWidget*
 gwy_app_data_browser_construct_bricks(GwyAppDataBrowser *browser)
 {
@@ -3949,7 +4010,8 @@ gwy_app_data_browser_construct_bricks(GwyAppDataBrowser *browser)
     renderer = gtk_cell_renderer_pixbuf_new();
     column = gtk_tree_view_column_new_with_attributes("Thumbnail", renderer,
                                                       NULL);
-    gtk_tree_view_column_set_visible(column, FALSE);
+    gtk_tree_view_column_set_cell_data_func
+        (column, renderer, gwy_app_data_browser_render_brick, browser, NULL);
     gtk_tree_view_append_column(treeview, column);
 
     /* Add the visibility column */
@@ -5666,12 +5728,12 @@ gwy_app_data_browser_add_brick(GwyBrick *brick,
     GwyAppDataList *list;
     GtkTreeIter iter;
     gchar key[32];
-    gint xres, yres;
+    gint xres, yres, id;
     gboolean must_free_preview = FALSE;
 
     g_return_val_if_fail(GWY_IS_BRICK(brick), -1);
     g_return_val_if_fail(!data || GWY_IS_CONTAINER(data), -1);
-    g_return_val_if_fail(!preview || GWY_IS_DATA_FIELD(data), -1);
+    g_return_val_if_fail(!preview || GWY_IS_DATA_FIELD(preview), -1);
 
     browser = gwy_app_get_data_browser();
     if (data)
@@ -5700,12 +5762,13 @@ gwy_app_data_browser_add_brick(GwyBrick *brick,
     }
 
     list = &proxy->lists[PAGE_VOLUME];
-    g_snprintf(key, sizeof(key), "/brick/%d", list->last + 1);
+    id = list->last + 1;
+    g_snprintf(key, sizeof(key), "/brick/%d", id);
     /* This invokes "item-changed" callback that will finish the work.
      * Among other things, it will update proxy->lists[PAGE_VOLUME].last. */
     gwy_container_set_object_by_name(proxy->container, key, brick);
 
-    g_snprintf(key, sizeof(key), "/brick/%d/preview", list->last + 1);
+    g_snprintf(key, sizeof(key), "/brick/%d/preview", id);
     gwy_container_set_object_by_name(proxy->container, key, preview);
     if (must_free_preview)
         g_object_unref(preview);
@@ -7033,6 +7096,45 @@ gwy_app_get_channel_thumbnail(GwyContainer *data,
                              255);
         g_object_unref(mask);
     }
+
+    return pixbuf;
+}
+
+static GdkPixbuf*
+gwy_app_get_brick_thumbnail(GwyContainer *data,
+                            gint id,
+                            gint max_width,
+                            gint max_height)
+{
+    GwyBrick *brick;
+    GwyDataField *dfield = NULL;
+    const guchar *gradient = NULL;
+    GdkPixbuf *pixbuf;
+    gchar key[48];
+
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
+    g_return_val_if_fail(id >= 0, NULL);
+    g_return_val_if_fail(max_width > 1 && max_height > 1, NULL);
+
+    if (!gwy_container_gis_object(data, gwy_app_get_brick_key_for_id(id),
+                                  &brick))
+        return NULL;
+
+    g_snprintf(key, sizeof(key), "/brick/%d/preview", id);
+    /* FIXME: Render black square for now if no preview field is present. */
+    if (!gwy_container_gis_object_by_name(data, key, &dfield)) {
+        pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
+                                max_width, max_height);
+        gdk_pixbuf_fill(pixbuf, 0);
+        return pixbuf;
+    }
+
+    g_snprintf(key, sizeof(key), "/brick/%d/preview/palette", id);
+    gwy_container_gis_string_by_name(data, key, &gradient);
+
+    pixbuf = render_data_thumbnail(dfield, gradient,
+                                   GWY_LAYER_BASIC_RANGE_FULL,
+                                   max_width, max_height, NULL, NULL);
 
     return pixbuf;
 }
