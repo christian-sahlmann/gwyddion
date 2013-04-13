@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2013-03-16 03:58+0100\n"
-"PO-Revision-Date: 2013-03-16 20:46+0300\n"
+"POT-Creation-Date: 2013-04-13 03:58+0200\n"
+"PO-Revision-Date: 2013-04-13 15:00+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -123,11 +123,11 @@ msgstr "vdW: параболоид"
 
 #: libgwyddion/gwyinventory.c:1310
 #: libgwydgets/gwygraphwindow.c:611
-#: app/data-browser.c:1724
-#: app/data-browser.c:2476
-#: app/data-browser.c:3301
-#: app/data-browser.c:3451
-#: app/data-browser.c:5374
+#: app/data-browser.c:1922
+#: app/data-browser.c:2674
+#: app/data-browser.c:3498
+#: app/data-browser.c:3648
+#: app/data-browser.c:6192
 #: app/resource-editor.c:366
 #: modules/process/convolution_filter.c:699
 msgid "Untitled"
@@ -439,6 +439,8 @@ msgid "Area"
 msgstr "Площадь"
 
 #: libprocess/gwygrainvalue.c:1057
+#: app/data-browser.c:4766
+#: app/toolbox.c:109
 msgid "Volume"
 msgstr "Объём"
 
@@ -1166,7 +1168,7 @@ msgid "_Reversed layout"
 msgstr "_Обратное расположение"
 
 #: libgwydgets/gwygraphwindow.c:151
-#: app/toolbox.c:108
+#: app/toolbox.c:109
 msgid "Graph"
 msgstr "График"
 
@@ -1509,40 +1511,40 @@ msgstr "Не удалось сохранить трёхмерный вид в `%
 msgid "Export 3D View"
 msgstr "Экспортировать трёхмерный вид"
 
-#: app/data-browser.c:4004
+#: app/data-browser.c:4641
 msgid "Extract to a new file"
 msgstr "Извлечь в новый файл"
 
-#: app/data-browser.c:4005
+#: app/data-browser.c:4642
 msgid "Duplicate"
 msgstr "Сделать копию"
 
-#: app/data-browser.c:4006
+#: app/data-browser.c:4643
 msgid "Delete"
 msgstr "Удалить"
 
-#: app/data-browser.c:4051
+#: app/data-browser.c:4688
 msgid "Data Browser"
-msgstr "Просмотр данных"
+msgstr "Браузер данных"
 
-#: app/data-browser.c:4074
+#: app/data-browser.c:4711
 msgid "Close file"
 msgstr "Закрыть файл"
 
-#: app/data-browser.c:4087
+#: app/data-browser.c:4724
 msgid "Channels"
 msgstr "Каналы"
 
-#: app/data-browser.c:4101
+#: app/data-browser.c:4738
 #: modules/process/brickshow.c:441
 msgid "Graphs"
 msgstr "Графики"
 
-#: app/data-browser.c:4115
+#: app/data-browser.c:4752
 msgid "Spectra"
 msgstr "Спектры"
 
-#: app/data-browser.c:5412
+#: app/data-browser.c:6230
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Неизвестный канал %d"
@@ -1889,33 +1891,38 @@ msgstr "Скрыть"
 msgid "Hide tool dialog (Esc)"
 msgstr "Убрать диалог инструментов (Esc)"
 
-#: app/menu.c:558
-#: app/toolbox.c:615
+#: app/menu.c:559
+#: app/toolbox.c:628
 msgid "_Data Process"
 msgstr "_Обработка данных"
 
-#: app/menu.c:600
-#: app/toolbox.c:618
+#: app/menu.c:601
+#: app/toolbox.c:631
 msgid "_Graph"
 msgstr "_График"
 
-#: app/menu.c:633
+#: app/menu.c:646
+#: app/toolbox.c:634
+msgid "_Volume Data"
+msgstr "_Объёмные данные"
+
+#: app/menu.c:678
 msgid "Re-show Last"
 msgstr "Повторить с настройкой последний"
 
-#: app/menu.c:648
+#: app/menu.c:693
 msgid "Repeat Last"
 msgstr "Повторить последний"
 
-#: app/menu.c:776
+#: app/menu.c:821
 msgid "Repeat"
 msgstr "Повторить"
 
-#: app/menu.c:782
+#: app/menu.c:827
 msgid "Re-show"
 msgstr "Перепоказать"
 
-#: app/menu.c:991
+#: app/menu.c:1099
 msgid "_Document history"
 msgstr "_Предыдущие документы"
 
@@ -2146,15 +2153,15 @@ msgstr "Нажатие Ctrl-C копирует изображение канал
 
 #: app/tips.c:216
 msgid "Dragging channels or graphs from Data Browser to a window copies them to the corresponding file."
-msgstr "Перетаскивание каналов и графиков из просмотра данных в окно копирует их в соответствующий файл."
+msgstr "Перетаскивание каналов и графиков из браузера данных в окно копирует их в соответствующий файл."
 
 #: app/tips.c:221
 msgid "Meta → Show Data Browser brings back a closed Data Browser."
-msgstr "Мета → Показать просмотр данных возвращает обратно закрытое окно просмотра данных."
+msgstr "Мета → Показать браузер данных возвращает обратно закрытое окно браузера данных."
 
 #: app/tips.c:225
 msgid "Channels and graphs can be renamed by double-clicking on their name in Data Browser."
-msgstr "Каналы и графики можно переименовать двойным щелчком по их названию в просмотре данных."
+msgstr "Каналы и графики можно переименовать двойным щелчком по их названию в браузере данных."
 
 #: app/tips.c:231
 msgid "Facet Level offers to use/exclude the masked area if a mask is present on the data."
@@ -2268,131 +2275,131 @@ msgstr "_Пред. совет"
 msgid "_Next Tip"
 msgstr "_Следующий совет"
 
-#: app/toolbox.c:108
+#: app/toolbox.c:109
 msgid "View"
 msgstr "Вид"
 
-#: app/toolbox.c:108
+#: app/toolbox.c:109
 msgid "Data Process"
 msgstr "Обработка данных"
 
-#: app/toolbox.c:108
+#: app/toolbox.c:109
 msgid "Tools"
 msgstr "Инструменты"
 
-#: app/toolbox.c:164
+#: app/toolbox.c:165
 msgid "Display a 3D view of data"
 msgstr "Показать трехмерный вид данных"
 
-#: app/toolbox.c:171
+#: app/toolbox.c:172
 msgid "Zoom in"
 msgstr "Приблизить"
 
-#: app/toolbox.c:175
+#: app/toolbox.c:176
 msgid "Zoom 1:1"
 msgstr "Масштаб 1:1"
 
-#: app/toolbox.c:179
+#: app/toolbox.c:180
 msgid "Zoom out"
 msgstr "Отдалить"
 
-#: app/toolbox.c:609
+#: app/toolbox.c:622
 msgid "_File"
 msgstr "_Файл"
 
-#: app/toolbox.c:611
+#: app/toolbox.c:624
 msgid "_Edit"
 msgstr "_Правка"
 
-#: app/toolbox.c:621
+#: app/toolbox.c:637
 msgid "_Meta"
 msgstr "_Мета"
 
-#: app/toolbox.c:664
+#: app/toolbox.c:680
 msgid "/Show _Data Browser"
-msgstr "/Показать просмотр _данных"
+msgstr "/Показать браузер _данных"
 
-#: app/toolbox.c:672
+#: app/toolbox.c:688
 msgid "/_Metadata Browser"
 msgstr "/Просмотр _метаданных"
 
-#: app/toolbox.c:680
+#: app/toolbox.c:696
 msgid "/Module _Browser"
 msgstr "/_Просмотр модулей"
 
-#: app/toolbox.c:695
+#: app/toolbox.c:711
 msgid "/_Tip of the Day"
 msgstr "/_Совет дня"
 
-#: app/toolbox.c:703
+#: app/toolbox.c:719
 msgid "/_About Gwyddion"
 msgstr "О программе Gwyddion"
 
-#: app/toolbox.c:742
+#: app/toolbox.c:758
 msgid "/_Open..."
 msgstr "/_Открыть..."
 
-#: app/toolbox.c:750
+#: app/toolbox.c:766
 msgid "/_Merge..."
 msgstr "/Объ_единить..."
 
-#: app/toolbox.c:758
+#: app/toolbox.c:774
 msgid "/Open _Recent"
 msgstr "/_Последние файлы"
 
-#: app/toolbox.c:766
+#: app/toolbox.c:782
 msgid "/_Save"
 msgstr "/_Сохранить"
 
-#: app/toolbox.c:774
+#: app/toolbox.c:790
 msgid "/Save _As..."
 msgstr "/Сохранить _как..."
 
-#: app/toolbox.c:790
+#: app/toolbox.c:806
 msgid "/_Quit"
 msgstr "/_Выйти"
 
-#: app/toolbox.c:836
+#: app/toolbox.c:852
 msgid "/_Undo"
 msgstr "/_Отменить"
 
-#: app/toolbox.c:844
+#: app/toolbox.c:860
 msgid "/_Redo"
 msgstr "/_Повторить"
 
-#: app/toolbox.c:860
+#: app/toolbox.c:876
 msgid "/Default Mask _Color..."
 msgstr "/_Цвет маски по умолчанию..."
 
-#: app/toolbox.c:868
+#: app/toolbox.c:884
 msgid "/Color _Gradients..."
 msgstr "/Цветовые _градиенты..."
 
-#: app/toolbox.c:876
+#: app/toolbox.c:892
 msgid "/G_L Materials..."
 msgstr "/_Материалы OpenGL..."
 
-#: app/toolbox.c:884
+#: app/toolbox.c:900
 msgid "/_Keyboard Shortcuts"
 msgstr "/_Комбинации клавиш"
 
-#: app/toolbox.c:1138
+#: app/toolbox.c:1154
 msgid "Change Default Mask Color"
 msgstr "Изменить цвет маски по умолчанию"
 
-#: app/toolbox.c:1166
+#: app/toolbox.c:1182
 msgid "OpenGL 3D graphics not available"
 msgstr "Трёхмерная графика OpenGL не доступна"
 
-#: app/toolbox.c:1171
+#: app/toolbox.c:1187
 msgid "OpenGL was disabled with a command-line option."
 msgstr "OpenGL был отключен опцией командной строки."
 
-#: app/toolbox.c:1179
+#: app/toolbox.c:1195
 msgid "Initialization of OpenGL failed.  Check output of <tt>glxinfo</tt> and warning messages printed to console during Gwyddion startup."
 msgstr "Инициализация OpenGL не удалась. Проверьте вывод <tt>glxinfo</tt> и предупреждения, которые выводились на консоль при старте Gwyddion."
 
-#: app/toolbox.c:1186
+#: app/toolbox.c:1202
 msgid "This version of Gwyddion was built without OpenGL support."
 msgstr "Эта версия Gwyddion была собрана без поддержки OpenGL"
 
@@ -3474,19 +3481,19 @@ msgstr "Изображения сканирований JPK (.jpk)"
 msgid "File does not contain grid dimensions."
 msgstr "Файл не содержит размеров сетки"
 
-#: modules/file/lextfile.c:86
+#: modules/file/lextfile.c:87
 msgid "Imports LEXT data files."
 msgstr "Импортирует файлы данных LEXT."
 
-#: modules/file/lextfile.c:99
+#: modules/file/lextfile.c:100
 msgid "Olympus LEXT OLS4000 (.lext)"
 msgstr "Olympus LEXT OLS4000 (.lext)"
 
-#: modules/file/lextfile.c:167
+#: modules/file/lextfile.c:168
 msgid "Top-level element is not ‘TiffTagDescData’."
 msgstr "Элемент верхнего уровня не ‘TiffTagDescData’."
 
-#: modules/file/lextfile.c:257
+#: modules/file/lextfile.c:258
 #: modules/file/nanoscan.c:273
 #, c-format
 msgid "XML parsing failed: %s"
@@ -3709,6 +3716,8 @@ msgid "File header is truncated"
 msgstr "Заголовок файла усечён"
 
 #: modules/file/nanoeducator.c:704
+#: modules/file/tescan.c:305
+#: modules/file/tescan.c:316
 msgid "Parameter header is truncated"
 msgstr "Заголовок параметров усечён"
 
@@ -5388,6 +5397,14 @@ msgstr "Импортирует файлы данных Surf."
 #: modules/file/surffile.c:304
 msgid "Surf files (.sur)"
 msgstr "Файлы Surf (.sur)"
+
+#: modules/file/tescan.c:96
+msgid "Imports Tescan SEM images."
+msgstr "Импортирует изображения Tescan SEM."
+
+#: modules/file/tescan.c:109
+msgid "Tescan MIRA SEM image (.tif)"
+msgstr "Изображение Tescan MIRA SEM (.tif)"
 
 #: modules/file/tiaser.c:178
 msgid "Imports FEI Tecnai imaging and analysis (former Emispec) files."
@@ -10642,6 +10659,18 @@ msgstr "_Предполагаемая:"
 msgid "Correction:"
 msgstr "Поправка:"
 
+#: modules/process/volumize.c:59
+msgid "Converts datafield to 3D volume data."
+msgstr "Конвертирует поле данных в трёхмерные объёмные данные."
+
+#: modules/process/volumize.c:73
+msgid "/_Basic Operations/Volumize..."
+msgstr "/_Базовые действия/_Придать объём..."
+
+#: modules/process/volumize.c:77
+msgid "Convert datafield to 3D data"
+msgstr "Превратить поле данных в трёхмерные данные"
+
 #: modules/process/xydenoise.c:69
 msgid "Denoises measurement on basis of two orthogonal scans."
 msgstr "Удаляет шум измерения на основе двух сканов в перпендикулярных направлениях."
@@ -11704,4 +11733,16 @@ msgstr ""
 "Площадь проекции:    %s\n"
 "Наклон θ:     %s\n"
 "Наклон φ:     %s\n"
+
+#: modules/volume/volume_extract.c:37
+msgid "Extracts one-dimensional and two-dimensional sections of volume data."
+msgstr "Извлекает одномерные и двумерные сечения из объёмных данных."
+
+#: modules/volume/volume_extract.c:51
+msgid "/_Extract Section"
+msgstr "/_Извлечь сечение"
+
+#: modules/volume/volume_extract.c:55
+msgid "Extract one-dimensional and two-dimensional sections of volume data."
+msgstr "Извлечь одномерные и двумерные сечения из объёмных данных."
 
