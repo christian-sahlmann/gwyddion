@@ -1255,6 +1255,12 @@ _gwy_app_brick_view_set_current(GwyDataView *data_view)
     gwy_app_sensitivity_set_state(GWY_MENU_FLAG_VOLUME, GWY_MENU_FLAG_VOLUME);
 }
 
+void
+_gwy_app_brick_window_setup(GwyDataWindow *data_window)
+{
+    gwy_app_add_main_accel_group(GTK_WINDOW(data_window));
+}
+
 /*****************************************************************************
  *                                                                           *
  *     Miscellaneous                                                         *

@@ -4118,9 +4118,7 @@ gwy_app_data_browser_create_volume(GwyAppDataBrowser *browser,
     g_signal_connect(data_window, "delete-event",
                      G_CALLBACK(gwy_app_data_browser_volume_deleted), NULL);
 
-    /* BRICK TODO
-    _gwy_app_data_window_setup(GWY_DATA_WINDOW(data_window));
-    */
+    _gwy_app_brick_window_setup(GWY_DATA_WINDOW(data_window));
     brickcontrols = gtk_label_new("OMG WTF there are bricks EVERYWHERE!");
     vbox = gtk_bin_get_child(GTK_BIN(data_window));
     gtk_box_pack_start(GTK_BOX(vbox), brickcontrols, FALSE, FALSE, 0);
