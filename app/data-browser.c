@@ -1799,6 +1799,11 @@ gwy_app_data_proxy_finalize(gpointer user_data)
     gwy_app_data_proxy_finalize_list
         (GTK_TREE_MODEL(proxy->lists[PAGE_SPECTRA].store),
          MODEL_OBJECT, &gwy_app_data_proxy_spectra_changed, proxy);
+    /* BRICK TODO: if we connect to the preview field we must disconnect
+     * here too. */
+    gwy_app_data_proxy_finalize_list
+        (GTK_TREE_MODEL(proxy->lists[PAGE_VOLUMES].store),
+         MODEL_OBJECT, &gwy_app_data_proxy_brick_changed, proxy);
 
     g_object_unref(proxy->container);
     g_free(proxy);
@@ -4301,7 +4306,7 @@ gwy_app_data_browser_delete_object(GwyAppDataProxy *proxy,
     GObject *object;
     GtkWidget *widget;
     GwyContainer *data;
-    gchar key[32];
+    gchar key[48];
     gint i;
 
     data = proxy->container;
@@ -4333,6 +4338,12 @@ gwy_app_data_browser_delete_object(GwyAppDataProxy *proxy,
 
             case PAGE_SPECTRA:
             /* FIXME */
+            break;
+
+            case PAGE_VOLUMES:
+            proxy->resetting_visibility = TRUE;
+            gwy_app_data_proxy_brick_set_visible(proxy, iter, FALSE);
+            proxy->resetting_visibility = FALSE;
             break;
         }
         gwy_app_data_proxy_maybe_finalize(proxy);
@@ -4392,6 +4403,11 @@ gwy_app_data_browser_delete_object(GwyAppDataProxy *proxy,
         g_snprintf(key, sizeof(key), "%s/%d", SPECTRA_PREFIX, i);
         gwy_container_remove_by_prefix(data, key);
         break;
+
+        case PAGE_VOLUMES:
+        g_snprintf(key, sizeof(key), "%s/%d", BRICK_PREFIX, i);
+        gwy_container_remove_by_prefix(data, key);
+        break;
     }
     g_object_unref(object);
 
@@ -4405,6 +4421,10 @@ gwy_app_data_browser_delete_object(GwyAppDataProxy *proxy,
         break;
 
         case PAGE_SPECTRA:
+        gwy_app_data_list_update_last(&proxy->lists[pageno], -1);
+        break;
+
+        case PAGE_VOLUMES:
         gwy_app_data_list_update_last(&proxy->lists[pageno], -1);
         break;
     }
@@ -5982,7 +6002,7 @@ gwy_app_data_browser_add_brick(GwyBrick *brick,
     GwyAppDataList *list;
     GtkTreeIter iter;
     gchar key[32];
-    gint xres, yres, id;
+    gint xres, yres;
     gboolean must_free_preview = FALSE;
 
     g_return_val_if_fail(GWY_IS_BRICK(brick), -1);
@@ -6016,13 +6036,12 @@ gwy_app_data_browser_add_brick(GwyBrick *brick,
     }
 
     list = &proxy->lists[PAGE_VOLUMES];
-    id = list->last + 1;
-    g_snprintf(key, sizeof(key), "/brick/%d", id);
+    g_snprintf(key, sizeof(key), "/brick/%d", list->last + 1);
     /* This invokes "item-changed" callback that will finish the work.
      * Among other things, it will update proxy->lists[PAGE_VOLUMES].last. */
     gwy_container_set_object_by_name(proxy->container, key, brick);
 
-    g_snprintf(key, sizeof(key), "/brick/%d/preview", id);
+    g_snprintf(key, sizeof(key), "/brick/%d/preview", list->last);
     gwy_container_set_object_by_name(proxy->container, key, preview);
     if (must_free_preview)
         g_object_unref(preview);
