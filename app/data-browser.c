@@ -6049,7 +6049,7 @@ gwy_app_data_browser_add_brick(GwyBrick *brick,
     if (showit && !gui_disabled) {
         gwy_app_data_proxy_find_object(list->store, list->last, &iter);
         proxy->resetting_visibility = TRUE;
-        gwy_app_data_proxy_channel_set_visible(proxy, &iter, TRUE);
+        gwy_app_data_proxy_brick_set_visible(proxy, &iter, TRUE);
         proxy->resetting_visibility = FALSE;
     }
 
