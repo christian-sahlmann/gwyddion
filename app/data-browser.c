@@ -1276,6 +1276,14 @@ gwy_app_data_proxy_scan_data(gpointer key,
         gwy_app_data_proxy_connect_spectra(proxy, i, &iter, object);
         break;
 
+        case KEY_IS_BRICK:
+        gwy_debug("Found brick %d (%s)", i, strkey);
+        g_return_if_fail(G_VALUE_HOLDS_OBJECT(gvalue));
+        object = g_value_get_object(gvalue);
+        g_return_if_fail(GWY_IS_BRICK(object));
+        gwy_app_data_proxy_connect_brick(proxy, i, &iter, object);
+        break;
+
         case KEY_IS_MASK:
         gwy_debug("Found mask %d (%s)", i, strkey);
         g_return_if_fail(G_VALUE_HOLDS_OBJECT(gvalue));

@@ -25,6 +25,7 @@
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <libprocess/spectra.h>
+#include <libprocess/brick.h>
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwy3dwindow.h>
 #include <libgwydgets/gwygraphwindow.h>
