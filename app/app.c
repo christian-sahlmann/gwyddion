@@ -1272,8 +1272,8 @@ _gwy_app_brick_window_setup(GwyDataWindow *data_window)
     button = gtk_button_new_with_mnemonic(_("_Change Preview"));
     GTK_WIDGET_UNSET_FLAGS(button, GTK_CAN_FOCUS);
     gtk_box_pack_end(GTK_BOX(hbox), button, FALSE, FALSE, 0);
-    g_signal_connect(button, "clicked",
-                     G_CALLBACK(change_brick_preview), data_window);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(change_brick_preview), data_window);
 
     label = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -1286,7 +1286,87 @@ _gwy_app_brick_window_setup(GwyDataWindow *data_window)
 static void
 change_brick_preview(GwyDataWindow *data_window)
 {
-    g_printerr("BRICK TODO\n");
+    GtkWidget *dialog, *label, *table;
+    GwyContainer *data;
+    GwyDataField *preview;
+    GwyBrick *brick;
+    GSList *group;
+    gint response, type, id;
+    gchar key[40];
+
+    dialog = gtk_dialog_new_with_buttons(_("Change Volume Data Preview"),
+                                         GTK_WINDOW(data_window),
+                                         GTK_DIALOG_MODAL
+                                         | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                         NULL);
+    table = gtk_table_new(5, 1, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
+    label = gtk_label_new(_("Preview quantity:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 0, 0);
+    group = gwy_radio_buttons_createl(NULL, NULL, 0,
+                                      _("Mean"), 0,
+                                      _("Minimum"), 1,
+                                      _("Maximum"), 2,
+                                      _("RMS"), 3,
+                                      NULL);
+    gwy_radio_buttons_attach_to_table(group, GTK_TABLE(table), 1, 1);
+    gtk_widget_show_all(dialog);
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    type = gwy_radio_buttons_get_current(group);
+    gtk_widget_destroy(dialog);
+    if (response != GTK_RESPONSE_OK)
+        return;
+
+    gwy_app_data_browser_get_current(GWY_APP_BRICK, &brick,
+                                     GWY_APP_BRICK_ID, &id,
+                                     GWY_APP_CONTAINER, &data,
+                                     0);
+    g_return_if_fail(GWY_IS_BRICK(brick));
+    g_return_if_fail(id >= 0);
+
+    g_snprintf(key, sizeof(key), "/brick/%d/preview", id);
+    if (!gwy_container_gis_object_by_name(data, key, (GObject**)&preview)) {
+        g_warning("No preview field found for brick %d.", id);
+        return;
+    }
+
+    if (type == 0)
+        gwy_brick_mean_plane(brick, preview,
+                             0, 0, 0,
+                             gwy_brick_get_xres(brick),
+                             gwy_brick_get_yres(brick),
+                             -1,
+                             TRUE);
+    else if (type == 1)
+        gwy_brick_min_plane(brick, preview,
+                            0, 0, 0,
+                            gwy_brick_get_xres(brick),
+                            gwy_brick_get_yres(brick),
+                            -1,
+                            TRUE);
+    else if (type == 2)
+        gwy_brick_max_plane(brick, preview,
+                            0, 0, 0,
+                            gwy_brick_get_xres(brick),
+                            gwy_brick_get_yres(brick),
+                            -1,
+                            TRUE);
+    else if (type == 3)
+        gwy_brick_rms_plane(brick, preview,
+                            0, 0, 0,
+                            gwy_brick_get_xres(brick),
+                            gwy_brick_get_yres(brick),
+                            -1,
+                            TRUE);
+    else {
+        g_return_if_reached();
+    }
+
+    gwy_data_field_data_changed(preview);
 }
 
 /*****************************************************************************

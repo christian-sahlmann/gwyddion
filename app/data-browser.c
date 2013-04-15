@@ -7558,7 +7558,7 @@ create_simple_brick_preview_field(GwyBrick *brick)
     GwyDataField *preview = gwy_data_field_new(xres, yres, xreal, yreal,
                                                FALSE);
 
-    gwy_brick_sum_plane(brick, preview, 0, 0, 0, xres, yres, zres, FALSE);
+    gwy_brick_mean_plane(brick, preview, 0, 0, 0, xres, yres, zres, FALSE);
     return preview;
 }
 
