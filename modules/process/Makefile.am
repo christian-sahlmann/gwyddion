@@ -85,7 +85,7 @@ process_LTLIBRARIES = \
 	tip_model.la \
 	tipops.la \
 	unrotate.la \
-        volumize.la \
+	volumize.la \
 	xydenoise.la
 
 EXTRA_DIST = \

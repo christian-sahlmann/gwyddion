@@ -95,9 +95,8 @@ volumize(GwyContainer *data, GwyRunType run)
                                      0);
 
     brick = create_brick_from_datafield(dfield);
-    /* Use showit=TRUE once we thin it's safe */
     dfield = gwy_data_field_duplicate(dfield);
-    gwy_app_data_browser_add_brick(brick, dfield, data, FALSE);
+    gwy_app_data_browser_add_brick(brick, dfield, data, TRUE);
     g_object_unref(brick);
     g_object_unref(dfield);
     //volumize_save_args(gwy_app_settings_get(), &args);
@@ -110,7 +109,7 @@ create_brick_from_datafield(GwyDataField *dfield)
     gint xres, yres, zres;
     gint col, row, lev;
     gdouble ratio, *bdata, *ddata;
-    gdouble zreal, offset;
+    gdouble xreal, yreal, zreal, offset;
     gboolean freeme = FALSE;
     GwyDataField *lowres;
     GwyBrick *brick;
@@ -119,8 +118,7 @@ create_brick_from_datafield(GwyDataField *dfield)
     yres = gwy_data_field_get_yres(dfield);
     zres = MAX(xres, yres);
 
-    if ((xres*yres)>(MAXPIX*MAXPIX))
-    {
+    if (xres*yres > MAXPIX*MAXPIX) {
         ratio = (MAXPIX*MAXPIX)/(gdouble)(xres*yres);
         lowres = gwy_data_field_new_alike(dfield, TRUE);
         gwy_data_field_copy(dfield, lowres, TRUE);
@@ -129,29 +127,32 @@ create_brick_from_datafield(GwyDataField *dfield)
         freeme = TRUE;
         gwy_data_field_resample(lowres, xres, yres, GWY_INTERPOLATION_BILINEAR);
     }
-    else lowres = dfield;
+    else
+        lowres = dfield;
 
     zres = MAX(xres, yres);
 
+    xreal = gwy_data_field_get_xreal(dfield);
+    yreal = gwy_data_field_get_yreal(dfield);
     offset = gwy_data_field_get_min(lowres);
     zreal = gwy_data_field_get_max(lowres) - offset;
 
-    brick = gwy_brick_new(xres, yres, zres, xres, yres, zres, TRUE);
+    brick = gwy_brick_new(xres, yres, zres, xreal, yreal, zreal, TRUE);
 
     ddata = gwy_data_field_get_data(lowres);
     bdata = gwy_brick_get_data(brick);
 
-    for (col=0; col<xres; col++)
-    {
-        for (row=0; row<yres; row++)
-        {
-            for (lev=0; lev<zres; lev++) {
-                if (ddata[col + xres*row]<(lev*zreal/zres + offset)) bdata[col + xres*row + xres*yres*lev] = 1;
+    for (lev = 0; lev < zres; lev++) {
+        for (row = 0; row < yres; row++) {
+            for (col = 0; col < xres; col++) {
+                if (ddata[col + xres*row] < lev*zreal/zres + offset)
+                    bdata[col + xres*row + xres*yres*lev] = 1;
 
             }
         }
     }
-    if (freeme) gwy_object_unref(lowres);
+    if (freeme)
+        gwy_object_unref(lowres);
 
     return brick;
 
