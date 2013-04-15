@@ -150,8 +150,9 @@ struct _GwyAppDataProxy {
     struct _GwyAppDataBrowser *parent;
     GwyContainer *container;
     GwyAppDataList lists[NPAGES];
-    GList *associated3d;
-    GList *associated_mask;
+    GList *associated_3d;       /* of a channel */
+    GList *associated_mask;     /* of a channel */
+    GList *associated_preview;  /* of a volume */
 };
 
 static GwyAppDataBrowser* gwy_app_get_data_browser        (void);
@@ -177,6 +178,8 @@ static void gwy_app_update_3d_window_title  (Gwy3DWindow *window3d,
                                              gint id);
 static void gwy_app_update_data_range_type(GwyDataView *data_view,
                                            gint id);
+static void gwy_app_update_brick_window_title(GwyDataView *data_view,
+                                              gint id);
 static gboolean gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
                                                        GtkTreeIter *iter,
                                                        gboolean visible);
@@ -241,6 +244,7 @@ static GList *channel_watchers = NULL;
 /*
 static GList *graph_watchers = NULL;
 static GList *spectra_watchers = NULL;
+static GList *volume_watchers = NULL;
 */
 
 /* Use doubles for timestamps.  They have 53bit mantisa, which is sufficient
@@ -1221,6 +1225,118 @@ gwy_app_data_proxy_reconnect_brick(GwyAppDataProxy *proxy,
     g_object_unref(old);
 }
 
+static void
+gwy_app_data_proxy_preview_changed(GObject *preview,
+                                   GwyAppDataProxy *proxy)
+{
+    GwyAppKeyType type;
+    GtkTreeIter iter;
+    GQuark quark;
+    gint id;
+
+    gwy_debug("proxy=%p preview=%p", proxy, preview);
+    quark = GPOINTER_TO_UINT(g_object_get_qdata(preview, own_key_quark));
+    g_return_if_fail(quark);
+    id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &type, NULL);
+    g_return_if_fail(id >= 0 && type == KEY_IS_BRICK_PREVIEW);
+
+    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_VOLUMES].store, id,
+                                        &iter))
+        return;
+    gtk_list_store_set(proxy->lists[PAGE_VOLUMES].store, &iter,
+                       MODEL_TIMESTAMP, gwy_get_timestamp(),
+                       -1);
+}
+
+static void
+gwy_app_data_proxy_connect_preview(GwyAppDataProxy *proxy,
+                                   gint id,
+                                   GObject *object)
+{
+    GwyAppDataAssociation *assoc;
+    GtkTreeIter iter;
+    gchar key[32];
+    GQuark quark;
+
+    g_snprintf(key, sizeof(key), BRICK_PREFIX "/%d/preview", id);
+    gwy_debug("%p: %d in %p", object, id, proxy->container);
+    quark = g_quark_from_string(key);
+    g_object_set_qdata(object, container_quark, proxy->container);
+    g_object_set_qdata(object, own_key_quark, GUINT_TO_POINTER(quark));
+
+    g_object_ref(object);
+    g_signal_connect(object, "data-changed",
+                     G_CALLBACK(gwy_app_data_proxy_preview_changed), proxy);
+    assoc = g_slice_new(GwyAppDataAssociation);
+    assoc->object = object;
+    assoc->id = id;
+    proxy->associated_preview = g_list_prepend(proxy->associated_preview,
+                                               assoc);
+
+    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_VOLUMES].store, id,
+                                        &iter))
+        return;
+    gtk_list_store_set(proxy->lists[PAGE_VOLUMES].store, &iter,
+                       MODEL_TIMESTAMP, gwy_get_timestamp(),
+                       -1);
+}
+
+static void
+gwy_app_data_proxy_disconnect_preview(GwyAppDataProxy *proxy,
+                                      gint id)
+{
+    GwyAppDataAssociation *assoc;
+    GList *item;
+    GtkTreeIter iter;
+    GObject *object;
+
+    gwy_debug("%u: from %p", id, proxy->container);
+    assoc = gwy_app_data_assoc_get(&proxy->associated_preview, id);
+    g_return_if_fail(assoc);
+    object = assoc->object;
+    g_object_set_qdata(object, container_quark, NULL);
+    g_object_set_qdata(object, own_key_quark, NULL);
+    g_signal_handlers_disconnect_by_func(object,
+                                         gwy_app_data_proxy_preview_changed,
+                                         proxy);
+    item = proxy->associated_preview;
+    proxy->associated_preview = g_list_remove_link(proxy->associated_preview,
+                                                   item);
+    g_slice_free(GwyAppDataAssociation, assoc);
+    g_list_free_1(item);
+    g_object_unref(object);
+
+    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_VOLUMES].store, id,
+                                        &iter))
+        return;
+    gtk_list_store_set(proxy->lists[PAGE_VOLUMES].store, &iter,
+                       MODEL_TIMESTAMP, gwy_get_timestamp(),
+                       -1);
+}
+
+static void
+gwy_app_data_proxy_reconnect_preview(GwyAppDataProxy *proxy,
+                                     gint id,
+                                     GObject *object)
+{
+    GwyAppDataAssociation *assoc;
+    GObject *old;
+
+    gwy_debug("%p: %d in %p", object, id, proxy->container);
+    assoc = gwy_app_data_assoc_get(&proxy->associated_preview, id);
+    g_return_if_fail(assoc);
+    old = G_OBJECT(assoc->object);
+    g_object_ref(object);
+    g_signal_handlers_disconnect_by_func(old,
+                                         gwy_app_data_proxy_preview_changed,
+                                         proxy);
+    gwy_app_data_proxy_switch_object_data(proxy, old, object);
+    assoc->object = object;
+    g_signal_connect(object, "data-changed",
+                     G_CALLBACK(gwy_app_data_proxy_preview_changed), proxy);
+    g_object_unref(old);
+}
+
 /**
  * gwy_app_data_proxy_scan_data:
  * @key: Container quark key.
@@ -1588,9 +1704,8 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             gwy_app_data_proxy_reconnect_brick(proxy, &iter, object);
             gwy_list_store_row_changed(list->store, &iter, NULL, -1);
         }
-        /* Prevent thumbnail update */
-        if (!object)
-            pageno = -1;
+        /* Prevent thumbnail update, it depends on the preview field */
+        pageno = -1;
         break;
 
         case KEY_IS_TITLE:
@@ -1662,18 +1777,44 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         break;
 
         case KEY_IS_BRICK_TITLE:
-        gwy_debug("BRICK TODO KEY_IS_BRICK_TITLE");
+        pageno = PAGE_VOLUMES;
+        list = &proxy->lists[pageno];
+        found = gwy_app_data_proxy_find_object(list->store, id, &iter);
+        if (found) {
+            gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
+                               MODEL_WIDGET, &data_view,
+                               -1);
+        }
+        /* XXX: This is not a good place to do that, DataProxy should be
+         * non-GUI */
+        if (data_view) {
+            gwy_app_update_brick_window_title(data_view, id);
+            g_object_unref(data_view);
+        }
+        /* Prevent thumbnail update */
         pageno = -1;
         break;
 
         case KEY_IS_BRICK_PREVIEW:
-        gwy_debug("BRICK TODO KEY_IS_BRICK_PREVIEW");
-        pageno = -1;
+        gwy_container_gis_object(data, quark, &object);
+        pageno = PAGE_VOLUMES;
+        list = &proxy->lists[pageno];
+        found = !!gwy_app_data_assoc_get(&proxy->associated_preview, id);
+        if (object && !found)
+            gwy_app_data_proxy_connect_preview(proxy, id, object);
+        else if (!object && found)
+            gwy_app_data_proxy_disconnect_preview(proxy, id);
+        else if (object && found)
+            gwy_app_data_proxy_reconnect_preview(proxy, id, object);
         break;
 
         case KEY_IS_BRICK_PREVIEW_PALETTE:
-        gwy_debug("BRICK TODO KEY_IS_BRICK_PREVIEW_PALETTE");
-        pageno = -1;
+        pageno = PAGE_VOLUMES;
+        list = &proxy->lists[pageno];
+        found = gwy_app_data_proxy_find_object(list->store, id, &iter);
+        /* Prevent thumbnail update */
+        if (!found)
+            pageno = -1;
         break;
 
         case KEY_IS_DATA_VISIBLE:
@@ -1705,8 +1846,17 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         break;
 
         case KEY_IS_BRICK_VISIBLE:
-        gwy_debug("BRICK TODO KEY_IS_BRICK_VISIBLE");
-        pageno = -1;
+        if (!proxy->resetting_visibility) {
+            pageno = PAGE_VOLUMES;
+            list = &proxy->lists[pageno];
+            found = gwy_app_data_proxy_find_object(list->store, id, &iter);
+            if (found) {
+                gboolean visible = FALSE;
+                gwy_container_gis_boolean(data, quark, &visible);
+                gwy_app_data_proxy_brick_set_visible(proxy, &iter, visible);
+            }
+            pageno = -1;
+        }
         break;
 
         default:
@@ -2719,6 +2869,21 @@ gwy_app_data_proxy_update_window_titles(GwyAppDataProxy *proxy)
             }
         } while (gtk_tree_model_iter_next(model, &iter));
     }
+
+    list = &proxy->lists[PAGE_VOLUMES];
+    model = GTK_TREE_MODEL(list->store);
+    if (gtk_tree_model_get_iter_first(model, &iter)) {
+        do {
+            gtk_tree_model_get(model, &iter,
+                               MODEL_ID, &id,
+                               MODEL_WIDGET, &data_view,
+                               -1);
+            if (data_view) {
+                gwy_app_update_brick_window_title(data_view, id);
+                g_object_unref(data_view);
+            }
+        } while (gtk_tree_model_iter_next(model, &iter));
+    }
 }
 
 static gboolean
@@ -2996,7 +3161,7 @@ gwy_app_data_proxy_find_3d(GwyAppDataProxy *proxy,
 {
     GList *l;
 
-    for (l = proxy->associated3d; l; l = g_list_next(l)) {
+    for (l = proxy->associated_3d; l; l = g_list_next(l)) {
         GwyApp3DAssociation *assoc = (GwyApp3DAssociation*)l->data;
 
         if (assoc->window == window3d)
@@ -3012,7 +3177,7 @@ gwy_app_data_proxy_get_3d(GwyAppDataProxy *proxy,
 {
     GList *l;
 
-    for (l = proxy->associated3d; l; l = g_list_next(l)) {
+    for (l = proxy->associated_3d; l; l = g_list_next(l)) {
         GwyApp3DAssociation *assoc = (GwyApp3DAssociation*)l->data;
 
         if (assoc->id == id)
@@ -3045,7 +3210,7 @@ gwy_app_data_proxy_3d_destroyed(Gwy3DWindow *window3d,
 
     assoc = (GwyApp3DAssociation*)item->data;
     g_free(assoc);
-    proxy->associated3d = g_list_delete_link(proxy->associated3d, item);
+    proxy->associated_3d = g_list_delete_link(proxy->associated_3d, item);
 }
 
 static void
@@ -3059,7 +3224,7 @@ gwy_app_data_proxy_channel_destroy_3d(GwyAppDataProxy *proxy,
     if (!l)
         return;
 
-    proxy->associated3d = g_list_remove_link(proxy->associated3d, l);
+    proxy->associated_3d = g_list_remove_link(proxy->associated_3d, l);
     assoc = (GwyApp3DAssociation*)l->data;
     gwy_app_widget_queue_manage(GTK_WIDGET(assoc->window), TRUE);
     g_signal_handlers_disconnect_by_func(assoc->window,
@@ -3073,10 +3238,10 @@ gwy_app_data_proxy_channel_destroy_3d(GwyAppDataProxy *proxy,
 static void
 gwy_app_data_proxy_destroy_all_3d(GwyAppDataProxy *proxy)
 {
-    while (proxy->associated3d) {
+    while (proxy->associated_3d) {
         GwyApp3DAssociation *assoc;
 
-        assoc = (GwyApp3DAssociation*)proxy->associated3d->data;
+        assoc = (GwyApp3DAssociation*)proxy->associated_3d->data;
         gwy_app_data_proxy_channel_destroy_3d(proxy, assoc->id);
     }
 }
@@ -3138,7 +3303,7 @@ gwy_app_data_browser_create_3d(G_GNUC_UNUSED GwyAppDataBrowser *browser,
     assoc = g_new(GwyApp3DAssociation, 1);
     assoc->window = GWY_3D_WINDOW(window3d);
     assoc->id = id;
-    proxy->associated3d = g_list_prepend(proxy->associated3d, assoc);
+    proxy->associated_3d = g_list_prepend(proxy->associated_3d, assoc);
 
     _gwy_app_3d_window_setup(GWY_3D_WINDOW(window3d));
     gwy_app_data_proxy_select_3d(GWY_3D_WINDOW(window3d));
@@ -3942,7 +4107,7 @@ gwy_app_data_browser_brick_render_title(G_GNUC_UNUSED GtkTreeViewColumn *column,
                                         gpointer userdata)
 {
     GwyAppDataBrowser *browser = (GwyAppDataBrowser*)userdata;
-    const guchar *title = "BRICK TODO";
+    const guchar *title = _("Untitled");
     GwyContainer *data;
     gchar key[32];
     gint id;
@@ -4117,7 +4282,7 @@ gwy_app_data_browser_create_volume(GwyAppDataBrowser *browser,
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view), layer);
 
     data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
-    gwy_app_update_data_window_title(GWY_DATA_VIEW(data_view), id);
+    gwy_app_update_brick_window_title(GWY_DATA_VIEW(data_view), id);
 
     gwy_app_data_proxy_update_visibility(brick, TRUE);
     g_signal_connect_swapped(data_window, "focus-in-event",
@@ -4206,7 +4371,6 @@ gwy_app_data_proxy_brick_set_visible(GwyAppDataProxy *proxy,
     return TRUE;
 }
 
-
 static GtkWidget*
 gwy_app_data_browser_construct_bricks(GwyAppDataBrowser *browser)
 {
@@ -4294,6 +4458,43 @@ gwy_app_data_browser_construct_bricks(GwyAppDataBrowser *browser)
                                            GDK_ACTION_COPY);
 
     return retval;
+}
+
+static void
+gwy_app_update_brick_window_title(GwyDataView *data_view,
+                                  gint id)
+{
+    GtkWidget *data_window;
+    GwyContainer *data;
+    const guchar *filename;
+    gchar *title, *bname, *btitle;
+
+    data_window = gtk_widget_get_ancestor(GTK_WIDGET(data_view),
+                                          GWY_TYPE_DATA_WINDOW);
+    if (!data_window) {
+        g_warning("GwyDataView has no GwyDataWindow ancestor");
+        return;
+    }
+
+    data = gwy_data_view_get_data(data_view);
+    btitle = gwy_app_get_brick_title(data, id);
+    if (gwy_container_gis_string(data, filename_quark, &filename)) {
+        bname = g_path_get_basename(filename);
+        title = g_strdup_printf("%s [%s]", bname, btitle);
+        g_free(bname);
+    }
+    else {
+        GwyAppDataBrowser *browser;
+        GwyAppDataProxy *proxy;
+
+        browser = gwy_app_get_data_browser();
+        proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+        title = g_strdup_printf("%s %d [%s]",
+                                _("Untitled"), proxy->untitled_no, btitle);
+    }
+    gwy_data_window_set_data_name(GWY_DATA_WINDOW(data_window), title);
+    g_free(btitle);
+    g_free(title);
 }
 
 /**************************************************************************
@@ -6273,6 +6474,72 @@ gwy_app_get_data_field_title(GwyContainer *data,
                              gint id)
 {
     return g_strdup(gwy_app_data_browser_figure_out_channel_title(data, id));
+}
+
+/**
+ * gwy_app_set_brick_title:
+ * @data: A data container.
+ * @id: The data channel id.
+ * @name: The title to set.  It can be %NULL to use somthing like "Untitled".
+ *        The id will be appended to it or (replaced in it if it already ends
+ *        with digits).
+ *
+ * Sets volume data title.
+ *
+ * Since: 2.32
+ **/
+void
+gwy_app_set_brick_title(GwyContainer *data,
+                        gint id,
+                        const gchar *name)
+{
+    gchar key[32], *title;
+    const gchar *p;
+
+    if (!name) {
+        name = _("Untitled");
+        p = name + strlen(name);
+    }
+    else {
+        p = name + strlen(name);
+        while (p > name && g_ascii_isdigit(*p))
+            p--;
+        if (!g_ascii_isspace(*p))
+            p = name + strlen(name);
+    }
+    title = g_strdup_printf("%.*s %d", (gint)(p - name), name, id);
+    g_snprintf(key, sizeof(key), BRICK_PREFIX "/%d/title", id);
+    gwy_container_set_string_by_name(data, key, title);
+}
+
+/**
+ * gwy_app_get_brick_title:
+ * @data: A data container.
+ * @id: Volume data brick id.
+ *
+ * Gets a volume data brick title.
+ *
+ * Returns: The brick title as a newly allocated string.
+ *
+ * Since: 2.32
+ **/
+gchar*
+gwy_app_get_brick_title(GwyContainer *data,
+                        gint id)
+{
+    const guchar *title = NULL;
+    static gchar buf[40];
+
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
+    g_return_val_if_fail(id >= 0, NULL);
+
+    g_snprintf(buf, sizeof(buf), BRICK_PREFIX "/%d/title", id);
+    gwy_container_gis_string_by_name(data, buf, &title);
+
+    if (title)
+        return g_strdup(title);
+
+    return g_strdup_printf(_("Unknown volume %d"), id + 1);
 }
 
 /**

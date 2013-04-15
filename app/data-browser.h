@@ -132,29 +132,34 @@ gulong gwy_app_data_browser_add_channel_watch   (GwyAppDataWatchFunc function,
                                                  gpointer user_data);
 void   gwy_app_data_browser_remove_channel_watch(gulong id);
 
-void   gwy_app_sync_data_items              (GwyContainer *source,
-                                             GwyContainer *dest,
-                                             gint from_id,
-                                             gint to_id,
-                                             gboolean delete_too,
-                                             ...);
-gint   gwy_app_data_browser_copy_channel    (GwyContainer *source,
-                                             gint id,
-                                             GwyContainer *dest);
-gint   gwy_app_data_browser_copy_volume     (GwyContainer *source,
-                                             gint id,
-                                             GwyContainer *dest);
-GQuark gwy_app_get_data_key_for_id          (gint id);
-GQuark gwy_app_get_mask_key_for_id          (gint id);
-GQuark gwy_app_get_show_key_for_id          (gint id);
-GQuark gwy_app_get_graph_key_for_id         (gint id);
-GQuark gwy_app_get_spectra_key_for_id       (gint id);
-GQuark gwy_app_get_brick_key_for_id         (gint id);
-void   gwy_app_set_data_field_title         (GwyContainer *data,
-                                             gint id,
-                                             const gchar *name);
-gchar* gwy_app_get_data_field_title         (GwyContainer *data,
-                                             gint id);
+void   gwy_app_sync_data_items          (GwyContainer *source,
+                                         GwyContainer *dest,
+                                         gint from_id,
+                                         gint to_id,
+                                         gboolean delete_too,
+                                         ...);
+gint   gwy_app_data_browser_copy_channel(GwyContainer *source,
+                                         gint id,
+                                         GwyContainer *dest);
+gint   gwy_app_data_browser_copy_volume (GwyContainer *source,
+                                         gint id,
+                                         GwyContainer *dest);
+GQuark gwy_app_get_data_key_for_id      (gint id);
+GQuark gwy_app_get_mask_key_for_id      (gint id);
+GQuark gwy_app_get_show_key_for_id      (gint id);
+GQuark gwy_app_get_graph_key_for_id     (gint id);
+GQuark gwy_app_get_spectra_key_for_id   (gint id);
+GQuark gwy_app_get_brick_key_for_id     (gint id);
+void   gwy_app_set_data_field_title     (GwyContainer *data,
+                                         gint id,
+                                         const gchar *name);
+gchar* gwy_app_get_data_field_title     (GwyContainer *data,
+                                         gint id);
+void   gwy_app_set_brick_title          (GwyContainer *data,
+                                         gint id,
+                                         const gchar *name);
+gchar* gwy_app_get_brick_title          (GwyContainer *data,
+                                         gint id);
 
 void       gwy_app_data_browser_show        (void);
 void       gwy_app_data_browser_restore     (void);
