@@ -357,19 +357,31 @@ gwy_app_widget_queue_manage(GtkWidget *widget, gboolean remv)
 
     GList *item;
     GType type;
-    gboolean is_volume;
+    GtkWidget *window;
+    gboolean is_dataview, is_volume = FALSE, isvol;
 
     type = G_TYPE_FROM_INSTANCE(widget);
-    /* XXX: This is a very dirty hack.  Brick windows should get their own
-     * type... */
-    is_volume = !!g_object_get_data(G_OBJECT(widget), "gwy-brick-info");
+    /* XXX: Differentiation by the "gwy-brick-info" data is a very dirty hack.
+     * Brick windows should get their own class... */
+    is_dataview = GWY_IS_DATA_VIEW(widget);
+    if (is_dataview) {
+        window = gtk_widget_get_toplevel(widget);
+        is_volume = !!g_object_get_data(G_OBJECT(window), "gwy-brick-info");
+    }
+    gwy_debug("%s, is-volume: %d", g_type_name(type), is_volume);
 
     if (remv) {
         list = g_list_remove(list, widget);
         for (item = list; item; item = g_list_next(item)) {
-            if (G_TYPE_FROM_INSTANCE(item->data) == type
-                && (!!g_object_get_data(G_OBJECT(item->data), "gwy-brick-info")
-                    == is_volume))
+            if (G_TYPE_FROM_INSTANCE(item->data) != type)
+                continue;
+
+            if (!is_dataview)
+                return GTK_WIDGET(item->data);
+
+            window = gtk_widget_get_toplevel(GTK_WIDGET(item->data));
+            isvol = !!g_object_get_data(G_OBJECT(window), "gwy-brick-info");
+            if (isvol == is_volume)
                 return GTK_WIDGET(item->data);
         }
         return NULL;
@@ -1558,6 +1570,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         }
         return;
     }
+    gwy_debug("key: <%s>", strkey);
 
     switch (type) {
         case KEY_IS_DATA:
@@ -1713,16 +1726,16 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             gwy_app_data_proxy_reconnect_brick(proxy, &iter, object);
             gwy_list_store_row_changed(list->store, &iter, NULL, -1);
         }
-        if (found) {
+        if (object && found) {
             gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
                                MODEL_WIDGET, &data_view,
                                -1);
-        }
-        /* XXX: This is not a good place to do that, DataProxy should be
-         * non-GUI */
-        if (data_view) {
-            update_brick_info(data, id, data_view);
-            g_object_unref(data_view);
+            /* XXX: This is not a good place to do that, DataProxy should be
+             * non-GUI */
+            if (data_view) {
+                update_brick_info(data, id, data_view);
+                g_object_unref(data_view);
+            }
         }
         /* Prevent thumbnail update, it depends on the preview field */
         pageno = -1;
@@ -1826,6 +1839,8 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             gwy_app_data_proxy_disconnect_preview(proxy, id);
         else if (object && found)
             gwy_app_data_proxy_reconnect_preview(proxy, id, object);
+        if (!found)
+            pageno = -1;
         break;
 
         case KEY_IS_BRICK_PREVIEW_PALETTE:
