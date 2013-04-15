@@ -26,7 +26,6 @@
 #include <libprocess/datafield.h>
 #include <libprocess/dataline.h>
 
-
 G_BEGIN_DECLS
 
 #define GWY_TYPE_BRICK            (gwy_brick_get_type())
@@ -201,8 +200,8 @@ gdouble        gwy_brick_rtok                  (GwyBrick *brick,
                                                     gdouble realpos);
 
 gdouble        gwy_brick_get_val               (GwyBrick *brick,
-                                                    gint col, 
-                                                    gint row, 
+                                                    gint col,
+                                                    gint row,
                                                     gint lev);
 void           gwy_brick_set_val               (GwyBrick *brick,
                                                     gint col,
@@ -210,8 +209,8 @@ void           gwy_brick_set_val               (GwyBrick *brick,
                                                     gint lev,
                                                     gdouble value);
 gdouble        gwy_brick_get_val_real               (GwyBrick *brick,
-                                                     gdouble x, 
-                                                     gdouble y, 
+                                                     gdouble x,
+                                                     gdouble y,
                                                      gdouble z);
 void           gwy_brick_set_val_real               (GwyBrick *brick,
                                                      gdouble x,
@@ -238,7 +237,7 @@ void           gwy_brick_add                   (GwyBrick *brick,
 
 void           gwy_brick_extract_plane(const GwyBrick *brick,
                                        GwyDataField *target,
-                                       gint istart, 
+                                       gint istart,
                                        gint jstart,
                                        gint kstart,
                                        gint width,
@@ -247,18 +246,58 @@ void           gwy_brick_extract_plane(const GwyBrick *brick,
                                        gboolean keep_offsets);
 
 void           gwy_brick_sum_plane(const GwyBrick *brick,
-                                       GwyDataField *target,
-                                       gint istart, 
-                                       gint jstart,
-                                       gint kstart,
-                                       gint width,
-                                       gint height,
-                                       gint depth,
-                                       gboolean keep_offsets);
+                                   GwyDataField *target,
+                                   gint istart,
+                                   gint jstart,
+                                   gint kstart,
+                                   gint width,
+                                   gint height,
+                                   gint depth,
+                                   gboolean keep_offsets);
+
+void           gwy_brick_min_plane(const GwyBrick *brick,
+                                   GwyDataField *target,
+                                   gint istart,
+                                   gint jstart,
+                                   gint kstart,
+                                   gint width,
+                                   gint height,
+                                   gint depth,
+                                   gboolean keep_offsets);
+
+void           gwy_brick_max_plane(const GwyBrick *brick,
+                                   GwyDataField *target,
+                                   gint istart,
+                                   gint jstart,
+                                   gint kstart,
+                                   gint width,
+                                   gint height,
+                                   gint depth,
+                                   gboolean keep_offsets);
+
+void           gwy_brick_mean_plane(const GwyBrick *brick,
+                                    GwyDataField *target,
+                                    gint istart,
+                                    gint jstart,
+                                    gint kstart,
+                                    gint width,
+                                    gint height,
+                                    gint depth,
+                                    gboolean keep_offsets);
+
+void           gwy_brick_rms_plane(const GwyBrick *brick,
+                                   GwyDataField *target,
+                                   gint istart,
+                                   gint jstart,
+                                   gint kstart,
+                                   gint width,
+                                   gint height,
+                                   gint depth,
+                                   gboolean keep_offsets);
 
 void           gwy_brick_extract_line(const GwyBrick *brick,
                                        GwyDataLine *target,
-                                       gint istart, 
+                                       gint istart,
                                        gint jstart,
                                        gint kstart,
                                        gint iend,
@@ -271,6 +310,4 @@ G_END_DECLS
 
 #endif /* __GWY_BRICK_H__ */
 
-
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
