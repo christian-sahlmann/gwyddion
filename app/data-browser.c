@@ -183,12 +183,15 @@ static void gwy_app_update_brick_window_title(GwyDataView *data_view,
 static gboolean gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
                                                        GtkTreeIter *iter,
                                                        gboolean visible);
-static gboolean gwy_app_data_proxy_graph_set_visible(GwyAppDataProxy *proxy,
-                                                     GtkTreeIter *iter,
-                                                     gboolean visible);
-static gboolean gwy_app_data_proxy_brick_set_visible(GwyAppDataProxy *proxy,
-                                                     GtkTreeIter *iter,
-                                                     gboolean visible);
+static gboolean gwy_app_data_proxy_graph_set_visible  (GwyAppDataProxy *proxy,
+                                                       GtkTreeIter *iter,
+                                                       gboolean visible);
+static gboolean gwy_app_data_proxy_brick_set_visible  (GwyAppDataProxy *proxy,
+                                                       GtkTreeIter *iter,
+                                                       gboolean visible);
+static void     update_brick_info                     (GwyContainer *data,
+                                                       gint id,
+                                                       GwyDataView *data_view);
 static GwyAppDataAssociation* gwy_app_data_assoc_find   (GList **assoclist,
                                                          GObject *object);
 static GwyAppDataAssociation* gwy_app_data_assoc_get    (GList **assoclist,
@@ -354,13 +357,19 @@ gwy_app_widget_queue_manage(GtkWidget *widget, gboolean remv)
 
     GList *item;
     GType type;
+    gboolean is_volume;
 
     type = G_TYPE_FROM_INSTANCE(widget);
+    /* XXX: This is a very dirty hack.  Brick windows should get their own
+     * type... */
+    is_volume = !!g_object_get_data(G_OBJECT(widget), "gwy-brick-info");
 
     if (remv) {
         list = g_list_remove(list, widget);
         for (item = list; item; item = g_list_next(item)) {
-            if (G_TYPE_FROM_INSTANCE(item->data) == type)
+            if (G_TYPE_FROM_INSTANCE(item->data) == type
+                && (!!g_object_get_data(G_OBJECT(item->data), "gwy-brick-info")
+                    == is_volume))
                 return GTK_WIDGET(item->data);
         }
         return NULL;
@@ -1704,6 +1713,17 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             gwy_app_data_proxy_reconnect_brick(proxy, &iter, object);
             gwy_list_store_row_changed(list->store, &iter, NULL, -1);
         }
+        if (found) {
+            gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
+                               MODEL_WIDGET, &data_view,
+                               -1);
+        }
+        /* XXX: This is not a good place to do that, DataProxy should be
+         * non-GUI */
+        if (data_view) {
+            update_brick_info(data, id, data_view);
+            g_object_unref(data_view);
+        }
         /* Prevent thumbnail update, it depends on the preview field */
         pageno = -1;
         break;
@@ -1957,8 +1977,7 @@ gwy_app_data_proxy_finalize(gpointer user_data)
     gwy_app_data_proxy_finalize_list
         (GTK_TREE_MODEL(proxy->lists[PAGE_SPECTRA].store),
          MODEL_OBJECT, &gwy_app_data_proxy_spectra_changed, proxy);
-    /* BRICK TODO: if we connect to the preview field we must disconnect
-     * here too. */
+    /* BRICK TODO: do we need to disconnect from the preview field here? */
     gwy_app_data_proxy_finalize_list
         (GTK_TREE_MODEL(proxy->lists[PAGE_VOLUMES].store),
          MODEL_OBJECT, &gwy_app_data_proxy_brick_changed, proxy);
@@ -4087,7 +4106,7 @@ gwy_app_data_browser_brick_name_edited(GtkCellRenderer *renderer,
     title = g_strstrip(g_strdup(text));
     if (!*title) {
         g_free(title);
-        /* BRICK TODO gwy_app_set_data_field_title(proxy->container, id, NULL); */
+        gwy_app_set_brick_title(proxy->container, id, NULL);
     }
     else {
         gchar key[32];
@@ -4255,7 +4274,7 @@ gwy_app_data_browser_create_volume(GwyAppDataBrowser *browser,
     static const GtkTargetEntry dnd_target_table[] = { GTK_TREE_MODEL_ROW };
     */
 
-    GtkWidget *data_view, *data_window, *brickcontrols, *vbox;
+    GtkWidget *data_view, *data_window;
     GObject *brick = NULL;
     GwyDataField *preview = NULL;
     GwyPixmapLayer *layer;
@@ -4292,13 +4311,9 @@ gwy_app_data_browser_create_volume(GwyAppDataBrowser *browser,
                      G_CALLBACK(gwy_app_data_browser_volume_deleted), NULL);
 
     _gwy_app_brick_window_setup(GWY_DATA_WINDOW(data_window));
-    brickcontrols = gtk_label_new("OMG WTF there are bricks EVERYWHERE!");
-    vbox = gtk_bin_get_child(GTK_BIN(data_window));
-    gtk_box_pack_start(GTK_BOX(vbox), brickcontrols, FALSE, FALSE, 0);
-    gtk_box_reorder_child(GTK_BOX(vbox), brickcontrols, 0);
 
     /* Channel DnD */
-    /*
+    /* BRICK TODO
     gtk_drag_dest_set(data_window, GTK_DEST_DEFAULT_ALL,
                       dnd_target_table, G_N_ELEMENTS(dnd_target_table),
                       GDK_ACTION_COPY);
@@ -4309,9 +4324,38 @@ gwy_app_data_browser_create_volume(GwyAppDataBrowser *browser,
     /* FIXME: A silly place for this? */
     gwy_app_data_browser_set_file_present(browser, TRUE);
     gtk_widget_show_all(data_window);
+    update_brick_info(proxy->container, id, GWY_DATA_VIEW(data_view));
     _gwy_app_brick_view_set_current(GWY_DATA_VIEW(data_view));
 
     return data_view;
+}
+
+static void
+update_brick_info(GwyContainer *data,
+                  gint id,
+                  GwyDataView *data_view)
+{
+    GtkWidget *infolabel, *window;
+    GwyBrick *brick = NULL;
+    gchar *info, *unit;
+
+    window = gtk_widget_get_toplevel(GTK_WIDGET(data_view));
+    g_return_if_fail(GWY_IS_DATA_WINDOW(window));
+    infolabel = GTK_WIDGET(g_object_get_data(G_OBJECT(window),
+                                             "gwy-brick-info"));
+    if (!infolabel)
+        return;
+    if (!gwy_container_gis_object(data, gwy_app_get_brick_key_for_id(id),
+                                  (GObject**)&brick))
+        return;
+
+    unit = gwy_si_unit_get_string(gwy_brick_get_si_unit_z(brick),
+                                  GWY_SI_UNIT_FORMAT_MARKUP);
+    info = g_strdup_printf("Z levels: %d, Z unit: %s",
+                           gwy_brick_get_zres(brick), unit);
+    g_free(unit);
+    gtk_label_set_text(GTK_LABEL(infolabel), info);
+    g_free(info);
 }
 
 static gboolean
@@ -4321,7 +4365,7 @@ gwy_app_data_proxy_brick_set_visible(GwyAppDataProxy *proxy,
 {
     GwyAppDataList *list;
     GtkTreeModel *model;
-    GtkWidget *widget, *window/*, *succ*/;
+    GtkWidget *widget, *window, *succ;
     GObject *object;
     gint id;
 
@@ -4347,22 +4391,17 @@ gwy_app_data_proxy_brick_set_visible(GwyAppDataProxy *proxy,
     else {
         gwy_app_data_proxy_update_visibility(object, FALSE);
         window = gtk_widget_get_ancestor(widget, GWY_TYPE_DATA_WINDOW);
-        /* succ = gwy_app_widget_queue_manage(widget, TRUE); */
+        succ = gwy_app_widget_queue_manage(widget, TRUE);
         gtk_widget_destroy(window);
         gtk_list_store_set(list->store, iter, MODEL_WIDGET, NULL, -1);
         g_object_unref(widget);
         list->visible_count--;
 
-        /* BRICK TODO
-         * Using the widget type was not the brightest idea.  Must
-         * differentiate channel and volume DataViews.  */
         /* FIXME */
-        /*
         if (succ)
-            gwy_app_data_browser_select_data_view(GWY_DATA_VIEW(succ));
+            gwy_app_data_browser_select_volume(GWY_DATA_VIEW(succ));
         else
             _gwy_app_data_view_set_current(NULL);
-            */
     }
     g_object_unref(object);
 
@@ -5353,7 +5392,7 @@ gwy_app_data_browser_select_volume(GwyDataView *data_view)
     proxy->lists[PAGE_VOLUMES].active = i;
 
     gwy_app_data_browser_select_object(browser, proxy, PAGE_VOLUMES);
-    /* BRICK TODO gwy_app_widget_queue_manage(GTK_WIDGET(data_view), FALSE); */
+    gwy_app_widget_queue_manage(GTK_WIDGET(data_view), FALSE);
     _gwy_app_brick_view_set_current(data_view);
 }
 

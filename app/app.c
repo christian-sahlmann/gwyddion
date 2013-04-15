@@ -70,6 +70,7 @@ static void       gwy_app_graph_popup_menu_popup_key  (GtkWidget *menu,
                                                        GtkWidget *graph);
 static void       gwy_app_3d_window_export            (Gwy3DWindow *window);
 static void       gwy_app_3d_window_set_defaults      (Gwy3DWindow *window);
+static void       change_brick_preview                (GwyDataWindow *data_window);
 static void       gwy_app_save_3d_export              (GtkWidget *dialog,
                                                        gint response,
                                                        Gwy3DWindow *gwy3dwindow);
@@ -1258,7 +1259,34 @@ _gwy_app_brick_view_set_current(GwyDataView *data_view)
 void
 _gwy_app_brick_window_setup(GwyDataWindow *data_window)
 {
+    GtkWidget *vbox, *hbox, *button, *label;
+
     gwy_app_add_main_accel_group(GTK_WINDOW(data_window));
+
+    hbox = gtk_hbox_new(FALSE, 0);
+
+    vbox = gtk_bin_get_child(GTK_BIN(data_window));
+    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 2);
+    gtk_box_reorder_child(GTK_BOX(vbox), hbox, 0);
+
+    button = gtk_button_new_with_mnemonic(_("_Change Preview"));
+    GTK_WIDGET_UNSET_FLAGS(button, GTK_CAN_FOCUS);
+    gtk_box_pack_end(GTK_BOX(hbox), button, FALSE, FALSE, 0);
+    g_signal_connect(button, "clicked",
+                     G_CALLBACK(change_brick_preview), data_window);
+
+    label = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
+    gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+
+    g_object_set_data(G_OBJECT(data_window), "gwy-brick-info", label);
+}
+
+static void
+change_brick_preview(GwyDataWindow *data_window)
+{
+    g_printerr("BRICK TODO\n");
 }
 
 /*****************************************************************************
