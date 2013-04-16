@@ -143,6 +143,7 @@ amb_load(const gchar *filename,
     xres = gwy_get_guint32_le(&p);
     p = buffer + YRES_OFFSET;
     yres = gwy_get_guint32_le(&p);
+    gwy_debug("xres: %u yres: %u", xres, yres);
     /* The four bytes after might be a float, then there are four more bytes. */
     if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
         goto fail;
