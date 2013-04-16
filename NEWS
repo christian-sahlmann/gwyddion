@@ -10,6 +10,7 @@ Libraries:
 - libgwyapp: Support for volume data and functions were added to the data
   browser and menu constructors.
 - libgwymodule: Volume data processing module management functions were added.
+- libgwyprocess: Summary statistical functions for bricks were added.
 
 Modules:
 - Tescan (new): Imports Tescan MIRA SEM images.
@@ -19,6 +20,8 @@ Modules:
 - APE DAX: Metadata import was improved.
 - LEXT: Tries to import image 0, even though its data type can be only
   estimated.
+- Pixmap: Crashing when run from standalone python script was fixed.
+- PSIA: Vertical flipping of data was corrected.
 
 
 2.31 (2013-02-21)
