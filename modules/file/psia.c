@@ -241,7 +241,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports Park Systems data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -397,6 +397,12 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
     q = pow10(power10)*header.data_gain;
     psia_read_data_field(dfield, data, header.data_type, q, header.z_scale, z0);
 
+    gwy_data_field_invert(dfield, header.scan_up, !header.forward, FALSE);
+    if (header.swap_xy) {
+        gwy_data_field_rotate(dfield, 0.5*G_PI, GWY_INTERPOLATION_ROUND);
+        gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
+    }
+
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
@@ -522,6 +528,7 @@ psia_read_image_header(const guchar *p,
     header->forward = gwy_get_guint32_le(&p);
     header->scan_up = gwy_get_guint32_le(&p);
     header->swap_xy = gwy_get_guint32_le(&p);
+    gwy_debug("forward: %d, upward: %d, swapxy: %d", header->forward, header->scan_up, header->swap_xy);
     header->xreal = gwy_get_gdouble_le(&p);
     header->yreal = gwy_get_gdouble_le(&p);
     gwy_debug("xreal: %g, yreal: %g", header->xreal, header->yreal);
@@ -782,7 +789,7 @@ psia_read_spectra(GwyContainer *container,
         off = lines[driving_source_index]->data[0];
         real = lines[driving_source_index]->data[res-1] - off;
         for (i = 0; i < nsources; i++) {
-            const PSIASpectroscopyChannel *channel = specheader.channel + i;
+            //const PSIASpectroscopyChannel *channel = specheader.channel + i;
             // TODO: Set units
             if (i != driving_source_index) {
                 gwy_data_line_set_real(lines[i], real);
