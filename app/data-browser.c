@@ -4167,6 +4167,21 @@ gwy_app_data_browser_brick_render_title(G_GNUC_UNUSED GtkTreeViewColumn *column,
 }
 
 static void
+gwy_app_data_browser_brick_render_nlevels(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                                          GtkCellRenderer *renderer,
+                                          GtkTreeModel *model,
+                                          GtkTreeIter *iter,
+                                          G_GNUC_UNUSED gpointer userdata)
+{
+    GwyBrick *brick;
+    gchar buf[20];
+
+    gtk_tree_model_get(model, iter, MODEL_OBJECT, &brick, -1);
+    g_snprintf(buf, sizeof(buf), "%d", gwy_brick_get_zres(brick));
+    g_object_set(renderer, "text", buf, NULL);
+}
+
+static void
 gwy_app_data_browser_render_brick(G_GNUC_UNUSED GtkTreeViewColumn *column,
                                   GtkCellRenderer *renderer,
                                   GtkTreeModel *model,
@@ -4489,17 +4504,14 @@ gwy_app_data_browser_construct_bricks(GwyAppDataBrowser *browser)
     g_object_set_qdata(G_OBJECT(column), column_id_quark, "title");
     gtk_tree_view_append_column(treeview, column);
 
-    /* BRICK TODO Add the flags column */
-#if 0
     renderer = gtk_cell_renderer_text_new();
-    g_object_set(renderer, "width-chars", 4, NULL);
-    column = gtk_tree_view_column_new_with_attributes("Points", renderer,
+    g_object_set(renderer, "width-chars", 5, NULL);
+    column = gtk_tree_view_column_new_with_attributes("Levels", renderer,
                                                       NULL);
     gtk_tree_view_column_set_cell_data_func
         (column, renderer,
-         gwy_app_data_browser_brick_render_npoints, browser, NULL);
+         gwy_app_data_browser_brick_render_nlevels, browser, NULL);
     gtk_tree_view_append_column(treeview, column);
-#endif
 
     gtk_tree_view_set_headers_visible(treeview, FALSE);
 
