@@ -397,7 +397,9 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
     q = pow10(power10)*header.data_gain;
     psia_read_data_field(dfield, data, header.data_type, q, header.z_scale, z0);
 
-    gwy_data_field_invert(dfield, header.scan_up, !header.forward, FALSE);
+    /* XXX: Ignore header.forward since it seems the right thing to do based
+     * on comparison with some MS Windows preview program. */
+    gwy_data_field_invert(dfield, header.scan_up, FALSE, FALSE);
     if (header.swap_xy) {
         gwy_data_field_rotate(dfield, 0.5*G_PI, GWY_INTERPOLATION_ROUND);
         gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
