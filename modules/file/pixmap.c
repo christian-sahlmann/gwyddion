@@ -302,14 +302,16 @@ static gboolean          pixmap_save_targa               (GwyContainer *data,
                                                           const gchar *filename,
                                                           GwyRunType mode,
                                                           GError **error);
-static GdkPixbuf*        hruler                          (gint size,
+static GdkPixbuf*        hruler                          (GtkWidget *widget,
+                                                          gint size,
                                                           gint extra,
                                                           gdouble real,
                                                           gdouble zoom,
                                                           gdouble offset,
                                                           const gchar *font,
                                                           GwySIUnit *siunit);
-static GdkPixbuf*        vruler                          (gint size,
+static GdkPixbuf*        vruler                          (GtkWidget *widget,
+                                                          gint size,
                                                           gint extra,
                                                           gdouble real,
                                                           gdouble zoom,
@@ -317,13 +319,15 @@ static GdkPixbuf*        vruler                          (gint size,
                                                           const gchar *font,
                                                           GwySIUnit *siunit);
 static gint              gwy_pixmap_step_to_prec         (gdouble d);
-static GdkPixbuf*        fmscale                         (gint size,
+static GdkPixbuf*        fmscale                         (GtkWidget *widget,
+                                                          gint size,
                                                           gdouble bot,
                                                           gdouble top,
                                                           gdouble zoom,
                                                           const gchar *font,
                                                           GwySIUnit *siunit);
-static GdkPixbuf*        scalebar                        (gint size,
+static GdkPixbuf*        scalebar                        (GtkWidget *widget,
+                                                          gint size,
                                                           const gchar *length,
                                                           gdouble real,
                                                           gdouble zoom,
@@ -331,7 +335,8 @@ static GdkPixbuf*        scalebar                        (gint size,
                                                           const gchar *font,
                                                           gboolean draw_ticks,
                                                           gboolean draw_label);
-static GdkDrawable*      prepare_drawable                (gint width,
+static GdkDrawable*      prepare_drawable                (GtkWidget *widget,
+                                                          gint width,
                                                           gint height,
                                                           gint lw,
                                                           GdkGC **gc);
@@ -2293,6 +2298,7 @@ pixmap_draw_presentational(GwyContainer *data,
     GdkPixbuf *pixbuf, *datapixbuf, *tmpixbuf;
     GdkPixbuf *hrpixbuf = NULL, *vrpixbuf = NULL, *scalepixbuf = NULL;
     GwySIUnit *siunit_xy, *siunit_z;
+    GtkWidget *widget;
     guchar *pixels;
     gint zwidth, zheight, hrh, vrw, scw, y, lw;
     gboolean has_presentation, inverted = FALSE;
@@ -2324,6 +2330,7 @@ pixmap_draw_presentational(GwyContainer *data,
         return pixbuf;
     }
 
+    widget = GTK_WIDGET(args->data_view);
     g_return_val_if_fail(gwy_data_view_get_data(args->data_view) == data, NULL);
     layer = gwy_data_view_get_base_layer(args->data_view);
     g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), NULL);
@@ -2351,7 +2358,7 @@ pixmap_draw_presentational(GwyContainer *data,
         GdkPixbuf *sbpixbuf;
         gint sbw, sbh, sbx, sby;
 
-        sbpixbuf = scalebar(zwidth, args->inset_length,
+        sbpixbuf = scalebar(widget, zwidth, args->inset_length,
                             gwy_data_field_get_xreal(args->dfield),
                             fontzoom, &args->inset_color, args->font,
                             args->inset_draw_ticks, args->inset_draw_label);
@@ -2384,12 +2391,12 @@ pixmap_draw_presentational(GwyContainer *data,
         return datapixbuf;
 
     if (args->xytype == PIXMAP_RULERS) {
-        hrpixbuf = hruler(zwidth + 2*lw, border,
+        hrpixbuf = hruler(widget, zwidth + 2*lw, border,
                           gwy_data_field_get_xreal(args->dfield),
                           fontzoom, gwy_data_field_get_xoffset(args->dfield),
                           args->font, siunit_xy);
         hrh = gdk_pixbuf_get_height(hrpixbuf);
-        vrpixbuf = vruler(zheight + 2*lw, border,
+        vrpixbuf = vruler(widget, zheight + 2*lw, border,
                           gwy_data_field_get_yreal(args->dfield),
                           fontzoom, gwy_data_field_get_yoffset(args->dfield),
                           args->font, siunit_xy);
@@ -2406,8 +2413,8 @@ pixmap_draw_presentational(GwyContainer *data,
         else
             siunit_z = gwy_data_field_get_si_unit_z(args->dfield);
         gwy_layer_basic_get_range(GWY_LAYER_BASIC(layer), &min, &max);
-        scalepixbuf = fmscale(zheight + 2*lw, min, max, fontzoom, args->font,
-                              siunit_z);
+        scalepixbuf = fmscale(widget, zheight + 2*lw, min, max,
+                              fontzoom, args->font, siunit_z);
         inverted = min > max;
         scw = gdk_pixbuf_get_width(scalepixbuf);
         if (has_presentation)
@@ -3467,7 +3474,8 @@ format_layout(PangoLayout *layout,
 }
 
 static GdkPixbuf*
-hruler(gint size,
+hruler(GtkWidget *widget,
+       gint size,
        gint extra,
        gdouble real,
        gdouble zoom,
@@ -3520,7 +3528,7 @@ hruler(gint size,
     lw = ZOOM2LW(zoom);
     l = MAX(PANGO_PIXELS(logical1.height), PANGO_PIXELS(logical2.height));
     height = l + 2*zoom + tick + 2;
-    drawable = prepare_drawable(size + extra, height, lw, &gc);
+    drawable = prepare_drawable(widget, size + extra, height, lw, &gc);
 
     from = offset;
     from = ceil(from/(base*step) - 1e-15)*(base*step);
@@ -3557,7 +3565,7 @@ hruler(gint size,
 }
 
 static GdkPixbuf*
-vruler(gint size,
+vruler(GtkWidget *widget, gint size,
        gint extra,
        gdouble real,
        gdouble zoom,
@@ -3614,7 +3622,7 @@ vruler(gint size,
     tick = zoom*TICK_LENGTH;
     lw = ZOOM2LW(zoom);
     width = l + 2*zoom + tick + 2;
-    drawable = prepare_drawable(width, size + extra, lw, &gc);
+    drawable = prepare_drawable(widget, width, size + extra, lw, &gc);
 
     from = offset;
     from = ceil(from/(base*step) - 1e-15)*(base*step);
@@ -3658,7 +3666,7 @@ gwy_pixmap_step_to_prec(gdouble d) {
 }
 
 static GdkPixbuf*
-fmscale(gint size,
+fmscale(GtkWidget *widget, gint size,
         gdouble bot,
         gdouble top,
         gdouble zoom,
@@ -3722,7 +3730,7 @@ fmscale(gint size,
     tick = zoom*TICK_LENGTH; /* physical tick length */
     lw = ZOOM2LW(zoom); /* line width */
     width = l + 2*zoom + tick + 2;
-    drawable = prepare_drawable(width, size, lw, &gc);
+    drawable = prepare_drawable(widget, width, size, lw, &gc);
 
     /* bottom text and line */
     format_layout(layout, &logical1, s, "%.*f",
@@ -3775,7 +3783,8 @@ fmscale(gint size,
 }
 
 static GdkPixbuf*
-scalebar(gint size,
+scalebar(GtkWidget *widget,
+         gint size,
          const gchar *length,
          gdouble real,
          gdouble zoom,
@@ -3827,7 +3836,7 @@ scalebar(gint size,
         return pixbuf;
     }
 
-    drawable = prepare_drawable(width, height, lw, &gc);
+    drawable = prepare_drawable(widget, width, height, lw, &gc);
 
     if (draw_ticks) {
         gdk_draw_line(drawable, gc, lw/2, 0, lw/2, tick);
@@ -3872,39 +3881,24 @@ scalebar(gint size,
 }
 
 static GdkDrawable*
-prepare_drawable(gint width,
+prepare_drawable(GtkWidget *widget,
+                 gint width,
                  gint height,
                  gint lw,
                  GdkGC **gc)
 {
-    GtkWidget *widget;
     GdkWindow *window;
     GdkDrawable *drawable;
     GdkColormap *cmap;
     GdkColor fg;
-    gboolean destroywidget = FALSE;
 
     /* FIXME: this creates a drawable with *SCREEN* bit depth
      * We should render a pixmap with Pango FT2 and use that */
-    widget = gwy_app_main_window_get();
-    if (!widget) {
-        /* We were called from python gwy module without any GUI running.
-         * Cheat. */
-        widget = gtk_window_new(GTK_WINDOW_POPUP);
-        gtk_widget_set_size_request(widget, 1, 1);
-        gtk_window_set_default_size(GTK_WINDOW(widget), 1, 1);
-        gtk_window_resize(GTK_WINDOW(widget), 1, 1);
-        gtk_widget_realize(widget);
-        destroywidget = TRUE;
-    }
     window = widget->window;
     drawable = GDK_DRAWABLE(gdk_pixmap_new(GDK_DRAWABLE(window),
                                            width, height, -1));
     cmap = gdk_drawable_get_colormap(drawable);
     *gc = gdk_gc_new(drawable);
-
-    if (destroywidget)
-        gtk_widget_destroy(widget);
 
     fg.red = 0xffff;
     fg.green = 0xffff;
