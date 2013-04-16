@@ -1379,7 +1379,7 @@ mmultv(gdouble m[3][3], gdouble x, gdouble y, gdouble z,
 }
 
 
-/*static gdouble
+static gdouble
 mdet(gdouble m[3][3])
 {
     return (m[0][0] * m[1][1] * m[2][2]) + (m[1][0] * m[2][1] * m[3][2]) + (m[2][0] * m[3][1] * m[4][2])
@@ -1391,7 +1391,7 @@ minv(gdouble m[3][3], gdouble ret[3][3])
 {
     gdouble ddet = 1.0/mdet(m);
 
-    if (det == 0) return FALSE;
+    if (ddet == 0) return FALSE;
 
     ret[0][0] =  ((m[1][1]*m[2][2])-(m[1][2]*m[2][1]))*ddet;
     ret[0][1] = -((m[1][0]*m[2][2])-(m[1][2]*m[2][0]))*ddet;
@@ -1406,7 +1406,46 @@ minv(gdouble m[3][3], gdouble ret[3][3])
     ret[2][2] =  ((m[0][0]*m[1][1])-(m[0][1]*m[1][0]))*ddet;
 
     return TRUE;
-}*/
+}
+
+
+
+static gdouble 
+raysum(BrickshowControls *controls, gdouble pos[3], gdouble dir[3], gdouble min, gdouble max)
+{
+    gint xres, yres, zres;
+    gdouble diff, mult;
+    gdouble sum = 0;
+    gdouble posd, posx, posy, posz, xreal, yreal, zreal;
+    GwyBrick *brick = controls->brick;
+
+    xres = gwy_brick_get_xres(brick);
+    yres = gwy_brick_get_yres(brick);
+    zres = gwy_brick_get_zres(brick);
+    xreal = gwy_brick_get_xreal(brick);
+    yreal = gwy_brick_get_yreal(brick);
+    zreal = gwy_brick_get_zreal(brick);
+
+    diff = xreal/(gdouble)xres;
+  
+
+    mult = 1.0/(max-min)/(gdouble)zres;
+    //printf("%g %g %g\n", mult, min, max);
+    for (posd=0; posd<zres; posd+=1)    //all in pixel coordinates
+    {
+        posx = pos[0] + dir[0]*posd;
+        posy = pos[1] + dir[1]*posd;
+        posz = pos[2] + dir[2]*posd;
+
+//        printf("posd %g  pos %g %g %g\n", posd, posx, posy, posz);
+
+        if (posx>=0 && posy>=0 && posz>=0 && posx<xres && posy<yres && posz<zres)
+            sum += (gwy_brick_get_val(brick, (gint)posx, (gint)posy, (gint)posz)-min);
+
+    }
+    sum *= mult;
+    return sum;
+}
 
 static gboolean
 //p3d_on_draw_event(GtkWidget *widget, cairo_t *cr, 
@@ -1416,6 +1455,9 @@ p3d_on_draw_event(GtkWidget *widget, G_GNUC_UNUSED GdkEventExpose *event, Bricks
     cairo_t *ci, *cr = gdk_cairo_create(GDK_WINDOW(widget->window));
     gdouble sx, sy;
     gint i, j;
+    gdouble pos[3], dir[3], min, max, val, xoff, yoff, zoff;
+    gdouble px, py, pz, dx, dy, dz;
+    gdouble inv[3][3];
 
     if (!controls->render || controls->in_move) {
 
@@ -1473,9 +1515,33 @@ p3d_on_draw_event(GtkWidget *widget, G_GNUC_UNUSED GdkEventExpose *event, Bricks
         cairo_set_source_rgb(ci, 0, 0, 0);
         cairo_fill(ci);
 
+        min = gwy_brick_get_min(controls->brick);
+        max = gwy_brick_get_max(controls->brick);
+        xoff = PREVIEW_SIZE/2 - gwy_brick_get_xres(controls->brick)/2;
+        yoff = PREVIEW_SIZE/2 - gwy_brick_get_yres(controls->brick)/2;
+        zoff = PREVIEW_SIZE/2 - gwy_brick_get_zres(controls->brick)/2;
+
         for (i=0; i<PREVIEW_SIZE; i++) {
             for (j=0; j<PREVIEW_SIZE; j++) {
-                cairo_set_source_rgb(ci, (gdouble)i/(gdouble)PREVIEW_SIZE, 0, (gdouble)(i*j)/(gdouble)(PREVIEW_SIZE*PREVIEW_SIZE));
+                pos[0] = i - xoff;
+                pos[1] = j - yoff;
+                pos[2] = -5 - zoff;
+                dir[0] = 0;
+                dir[1] = 0;
+                dir[2] = 1;
+
+                mmultv(controls->rm, pos[0], pos[1], pos[2], &px, &py, &pz);
+                mmultv(controls->rm, dir[0], dir[1], dir[2], &dx, &dy, &dz);
+
+                //if (i==(PREVIEW_SIZE/2) && j==(PREVIEW_SIZE/2)) {
+                    //printf("orig pos: %g %g %g    dir %g %g %g\n", px, py, pz, dx, dy, dz);
+                //}
+                    pos[0] = px; pos[1] = py; pos[2] = pz;
+                    dir[0] = dx; dir[1] = dy; dir[2] = dz;
+                    val = raysum(controls, pos, dir, min, max);
+               
+
+                cairo_set_source_rgb(ci, val, val, val);
                 cairo_rectangle(ci, i, j, 1, 1);
                 cairo_fill(ci);
             }
@@ -1576,10 +1642,10 @@ static void rotate(BrickshowControls *controls, gdouble x, gdouble y, gdouble z)
     controls->rm[2][2] = controls->wpz[2];
 
 
-   // printf("total rotation by angle %g %g %g (%g %g %g), rotating by %g %g %g\n", controls->xangle, 
-   //        controls->yangle, 
-   //        controls->zangle,
-   //        controls->wpx[0], controls->wpy[1], controls->wpz[2], x, y, z);
+//    printf("total rotation by angle %g %g %g (%g %g %g), rotating by %g %g %g\n", controls->xangle, 
+//           controls->yangle, 
+//           controls->zangle,
+//           controls->wpx[0], controls->wpy[1], controls->wpz[2], x, y, z);
 
 }
 
