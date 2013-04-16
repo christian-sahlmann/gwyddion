@@ -466,7 +466,7 @@ static GwyModuleInfo module_info = {
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.22",
+    "7.23",
     "David Nečas (Yeti)",
     "2004-2013",
 };
@@ -3877,18 +3877,34 @@ prepare_drawable(gint width,
                  gint lw,
                  GdkGC **gc)
 {
+    GtkWidget *widget;
     GdkWindow *window;
     GdkDrawable *drawable;
     GdkColormap *cmap;
     GdkColor fg;
+    gboolean destroywidget = FALSE;
 
     /* FIXME: this creates a drawable with *SCREEN* bit depth
      * We should render a pixmap with Pango FT2 and use that */
-    window = gwy_app_main_window_get()->window;
+    widget = gwy_app_main_window_get();
+    if (!widget) {
+        /* We were called from python gwy module without any GUI running.
+         * Cheat. */
+        widget = gtk_window_new(GTK_WINDOW_POPUP);
+        gtk_widget_set_size_request(widget, 1, 1);
+        gtk_window_set_default_size(GTK_WINDOW(widget), 1, 1);
+        gtk_window_resize(GTK_WINDOW(widget), 1, 1);
+        gtk_widget_realize(widget);
+        destroywidget = TRUE;
+    }
+    window = widget->window;
     drawable = GDK_DRAWABLE(gdk_pixmap_new(GDK_DRAWABLE(window),
                                            width, height, -1));
     cmap = gdk_drawable_get_colormap(drawable);
     *gc = gdk_gc_new(drawable);
+
+    if (destroywidget)
+        gtk_widget_destroy(widget);
 
     fg.red = 0xffff;
     fg.green = 0xffff;
