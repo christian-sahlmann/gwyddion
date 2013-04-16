@@ -95,6 +95,13 @@ enum {
     MODEL_N_COLUMNS
 };
 
+typedef enum {
+    GWY_BRICK_ITEM_PREVIEW,
+    GWY_BRICK_ITEM_GRADIENT,
+    GWY_BRICK_ITEM_META,
+    GWY_BRICK_ITEM_TITLE,
+} GwyBrickItem;
+
 typedef struct _GwyAppDataBrowser GwyAppDataBrowser;
 typedef struct _GwyAppDataProxy   GwyAppDataProxy;
 
@@ -218,18 +225,24 @@ gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
 static void gwy_app_data_browser_show_real   (GwyAppDataBrowser *browser);
 static void gwy_app_data_browser_hide_real   (GwyAppDataBrowser *browser);
 static GwyDataField* create_simple_brick_preview_field(GwyBrick *brick);
-static GdkPixbuf* gwy_app_get_graph_thumbnail(GwyContainer *data,
-                                              gint id,
-                                              gint max_width,
-                                              gint max_height);
-static GdkPixbuf* gwy_app_get_brick_thumbnail(GwyContainer *data,
-                                              gint id,
-                                              gint max_width,
-                                              gint max_height);
-static void gwy_app_data_browser_notify_watch(GList *watchers,
-                                              GwyContainer *container,
-                                              gint id,
-                                              GwyDataWatchEventType event);
+static GdkPixbuf* gwy_app_get_graph_thumbnail      (GwyContainer *data,
+                                                    gint id,
+                                                    gint max_width,
+                                                    gint max_height);
+static GdkPixbuf* gwy_app_get_brick_thumbnail      (GwyContainer *data,
+                                                    gint id,
+                                                    gint max_width,
+                                                    gint max_height);
+static void       gwy_app_data_browser_notify_watch(GList *watchers,
+                                                    GwyContainer *container,
+                                                    gint id,
+                                                    GwyDataWatchEventType event);
+static void       gwy_app_sync_brick_items         (GwyContainer *source,
+                                                    GwyContainer *dest,
+                                                    gint from_id,
+                                                    gint to_id,
+                                                    gboolean delete_too,
+                                                    ...);
 
 static GQuark container_quark    = 0;
 static GQuark own_key_quark      = 0;
@@ -1992,7 +2005,6 @@ gwy_app_data_proxy_finalize(gpointer user_data)
     gwy_app_data_proxy_finalize_list
         (GTK_TREE_MODEL(proxy->lists[PAGE_SPECTRA].store),
          MODEL_OBJECT, &gwy_app_data_proxy_spectra_changed, proxy);
-    /* BRICK TODO: do we need to disconnect from the preview field here? */
     gwy_app_data_proxy_finalize_list
         (GTK_TREE_MODEL(proxy->lists[PAGE_VOLUMES].store),
          MODEL_OBJECT, &gwy_app_data_proxy_brick_changed, proxy);
@@ -4285,9 +4297,7 @@ gwy_app_data_browser_create_volume(GwyAppDataBrowser *browser,
                                    GwyAppDataProxy *proxy,
                                    gint id)
 {
-    /*
     static const GtkTargetEntry dnd_target_table[] = { GTK_TREE_MODEL_ROW };
-    */
 
     GtkWidget *data_view, *data_window;
     GObject *brick = NULL;
@@ -4327,14 +4337,11 @@ gwy_app_data_browser_create_volume(GwyAppDataBrowser *browser,
 
     _gwy_app_brick_window_setup(GWY_DATA_WINDOW(data_window));
 
-    /* Channel DnD */
-    /* BRICK TODO
     gtk_drag_dest_set(data_window, GTK_DEST_DEFAULT_ALL,
                       dnd_target_table, G_N_ELEMENTS(dnd_target_table),
                       GDK_ACTION_COPY);
     g_signal_connect(data_window, "drag-data-received",
                      G_CALLBACK(gwy_app_window_dnd_data_received), browser);
-                     */
 
     /* FIXME: A silly place for this? */
     gwy_app_data_browser_set_file_present(browser, TRUE);
@@ -7180,7 +7187,6 @@ gwy_app_sync_data_items(GwyContainer *source,
         "cal_xerr", "cal_yerr", "cal_zerr", "cal_xunc", "cal_yunc", "cal_zunc",
     };
 
-
     GwyDataItem what;
     gchar key_from[40];
     gchar key_to[40];
@@ -7292,7 +7298,6 @@ gwy_app_sync_data_items(GwyContainer *source,
             }
             break;
 
-
             case GWY_DATA_ITEM_SELECTIONS:
             for (i = 0; i < G_N_ELEMENTS(sel_keys); i++) {
                 g_snprintf(key_from, sizeof(key_from), "/%d/select/%s",
@@ -7377,6 +7382,89 @@ gwy_app_data_browser_copy_channel(GwyContainer *source,
     return newid;
 }
 
+static void
+gwy_app_sync_brick_items(GwyContainer *source,
+                         GwyContainer *dest,
+                         gint from_id,
+                         gint to_id,
+                         gboolean delete_too,
+                         ...)
+{
+
+    GwyBrickItem what;
+    gchar key_from[40];
+    gchar key_to[40];
+    const guchar *name;
+    GObject *obj;
+    va_list ap;
+
+    g_return_if_fail(GWY_IS_CONTAINER(source));
+    g_return_if_fail(GWY_IS_CONTAINER(dest));
+    g_return_if_fail(from_id >= 0 && to_id >= 0);
+    if (source == dest && from_id == to_id)
+        return;
+
+    va_start(ap, delete_too);
+    while ((what = va_arg(ap, GwyDataItem))) {
+        switch (what) {
+            case GWY_BRICK_ITEM_PREVIEW:
+            g_snprintf(key_from, sizeof(key_from),
+                       BRICK_PREFIX "/%d/preview", from_id);
+            g_snprintf(key_to, sizeof(key_to),
+                       BRICK_PREFIX "/%d/preview", to_id);
+            if (gwy_container_gis_object_by_name(source, key_from, &obj)) {
+                obj = gwy_serializable_duplicate(obj);
+                gwy_container_set_object_by_name(dest, key_to, obj);
+                g_object_unref(obj);
+            }
+            else if (delete_too)
+                gwy_container_remove_by_name(dest, key_to);
+            break;
+
+            case GWY_BRICK_ITEM_GRADIENT:
+            g_snprintf(key_from, sizeof(key_from),
+                       BRICK_PREFIX "/%d/preview/palette", from_id);
+            g_snprintf(key_to, sizeof(key_to),
+                       BRICK_PREFIX "/%d/preview/palette", to_id);
+            if (gwy_container_gis_string_by_name(source, key_from, &name))
+                gwy_container_set_string_by_name(dest, key_to, g_strdup(name));
+            else if (delete_too)
+                gwy_container_remove_by_name(dest, key_to);
+            break;
+
+            case GWY_BRICK_ITEM_TITLE:
+            g_snprintf(key_from, sizeof(key_from),
+                       BRICK_PREFIX "/%d/title", from_id);
+            g_snprintf(key_to, sizeof(key_to),
+                       BRICK_PREFIX "/%d/title", to_id);
+            if (gwy_container_gis_string_by_name(source, key_from, &name))
+                gwy_container_set_string_by_name(dest, key_to, g_strdup(name));
+            else if (delete_too)
+                gwy_container_remove_by_name(dest, key_to);
+            break;
+
+            case GWY_BRICK_ITEM_META:
+            g_snprintf(key_from, sizeof(key_from),
+                       BRICK_PREFIX "/%d/meta", from_id);
+            g_snprintf(key_to, sizeof(key_to),
+                       BRICK_PREFIX "/%d/meta", to_id);
+            if (gwy_container_gis_object_by_name(source, key_from, &obj)) {
+                obj = gwy_serializable_duplicate(obj);
+                gwy_container_set_object_by_name(dest, key_to, obj);
+                g_object_unref(obj);
+            }
+            else if (delete_too)
+                gwy_container_remove_by_name(dest, key_to);
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
+    }
+    va_end(ap);
+}
+
 /**
  * gwy_app_data_browser_copy_volume:
  * @source: Source container.
@@ -7417,19 +7505,12 @@ gwy_app_data_browser_copy_volume(GwyContainer *source,
     g_object_unref(brick);
     gwy_object_unref(preview);
 
-    /* BRICK TODO: Do something like
-    gwy_app_sync_data_items(source, dest, id, newid, FALSE,
-                            GWY_DATA_ITEM_GRADIENT,
-                            GWY_DATA_ITEM_RANGE,
-                            GWY_DATA_ITEM_RANGE_TYPE,
-                            GWY_DATA_ITEM_MASK_COLOR,
-                            GWY_DATA_ITEM_REAL_SQUARE,
-                            GWY_DATA_ITEM_META,
-                            GWY_DATA_ITEM_TITLE,
-                            GWY_DATA_ITEM_SELECTIONS,
-                            GWY_DATA_ITEM_CALDATA,
-                            0);
-    */
+    gwy_app_sync_brick_items(source, dest, id, newid, FALSE,
+                             GWY_BRICK_ITEM_PREVIEW,
+                             GWY_BRICK_ITEM_GRADIENT,
+                             GWY_BRICK_ITEM_META,
+                             GWY_BRICK_ITEM_TITLE,
+                             0);
 
     return newid;
 }
