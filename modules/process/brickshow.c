@@ -78,6 +78,7 @@ typedef struct {
     gboolean render;
     gdouble size;
     gdouble zscale;
+    gdouble opacity;
     gdouble threshold;
 } BrickshowArgs;
 
@@ -95,6 +96,7 @@ typedef struct {
     GtkObject *zpos;
     GtkObject *size;
     GtkObject *zscale;
+    GtkObject *opacity;
     GtkWidget *update;
     GtkWidget *gupdate;
     GtkWidget *drawarea;
@@ -171,6 +173,7 @@ static void     p3d_build                           (BrickshowControls *controls
 static void     p3d_prepare_wdata                   (BrickshowControls *controls,
                                                      BrickshowArgs *args);
 static void     brickshow_zscale_cb                (BrickshowControls *controls);
+static void     brickshow_opacity_cb                (BrickshowControls *controls);
 static void     brickshow_threshold_cb                (BrickshowControls *controls);
 //static gboolean p3d_on_draw_event                  (GtkWidget *widget, 
 //                                                   cairo_t *cr, 
@@ -211,6 +214,7 @@ static const BrickshowArgs brickshow_defaults = {
     TRUE,
     50,
     100,
+    50,
     0.5,
 };
 
@@ -585,6 +589,15 @@ brickshow_dialog(BrickshowArgs *args,
                             controls.zscale, 0);
     g_signal_connect_swapped(controls.zscale, "value-changed",
                              G_CALLBACK(brickshow_zscale_cb), &controls);
+    row++;
+
+
+    controls.opacity = gtk_adjustment_new(args->opacity,
+                                            1, 100, 1, 10, 0);
+    gwy_table_attach_hscale(table, row++, _("Opacity scale"), "%",
+                            controls.opacity, 0);
+    g_signal_connect_swapped(controls.opacity, "value-changed",
+                             G_CALLBACK(brickshow_opacity_cb), &controls);
     row++;
 
 
@@ -1416,34 +1429,34 @@ raysum(BrickshowControls *controls, gdouble pos[3], gdouble dir[3], gdouble min,
     gint xres, yres, zres;
     gdouble diff, mult;
     gdouble sum = 0;
-    gdouble posd, posx, posy, posz, xreal, yreal, zreal;
+    gdouble posd, posx, posy, posz;
     GwyBrick *brick = controls->brick;
+    gint brick_xoffset, brick_yoffset, brick_zoffset;
 
     xres = gwy_brick_get_xres(brick);
     yres = gwy_brick_get_yres(brick);
     zres = gwy_brick_get_zres(brick);
-    xreal = gwy_brick_get_xreal(brick);
-    yreal = gwy_brick_get_yreal(brick);
-    zreal = gwy_brick_get_zreal(brick);
-
-    diff = xreal/(gdouble)xres;
   
+    brick_xoffset = xres/2;
+    brick_yoffset = yres/2;
+    brick_zoffset = zres/2;
 
-    mult = 1.0/(max-min)/(gdouble)zres;
+    mult = 3.0/(max-min)/(xres + yres + zres);
     //printf("%g %g %g\n", mult, min, max);
-    for (posd=0; posd<zres; posd+=1)    //all in pixel coordinates
+    for (posd=0; posd<(3*zres); posd+=1)    //all in pixel coordinates
     {
-        posx = pos[0] + dir[0]*posd;
-        posy = pos[1] + dir[1]*posd;
-        posz = pos[2] + dir[2]*posd;
+        posx = pos[0] + dir[0]*posd + brick_xoffset;
+        posy = pos[1] + dir[1]*posd + brick_yoffset;
+        posz = pos[2] + dir[2]*posd + brick_zoffset;
 
-//        printf("posd %g  pos %g %g %g\n", posd, posx, posy, posz);
+        if (sum >= 1) continue;
+
+//        printf("posd %g  pos %g %g %g dir %g %g %g\n", posd, posx, posy, posz, dir[0], dir[1], dir[2]);
 
         if (posx>=0 && posy>=0 && posz>=0 && posx<xres && posy<yres && posz<zres)
-            sum += (gwy_brick_get_val(brick, (gint)posx, (gint)posy, (gint)posz)-min);
+            sum += (gwy_brick_get_val(brick, (gint)posx, (gint)posy, (gint)posz)-min)*mult*controls->args->opacity/5.0;
 
     }
-    sum *= mult;
     return sum;
 }
 
@@ -1455,11 +1468,12 @@ p3d_on_draw_event(GtkWidget *widget, G_GNUC_UNUSED GdkEventExpose *event, Bricks
     cairo_t *ci, *cr = gdk_cairo_create(GDK_WINDOW(widget->window));
     gdouble sx, sy;
     gint i, j;
-    gdouble pos[3], dir[3], min, max, val, xoff, yoff, zoff;
+    gdouble pos[3], dir[3], min, max, val, xoff, yoff;
+    gdouble cpos[3], cdir[3];
     gdouble px, py, pz, dx, dy, dz;
     gdouble inv[3][3];
 
-    if (!controls->render || controls->in_move) {
+    if (!controls->args->render || controls->in_move) {
 
         cairo_rectangle(cr, 0.0, 0.0, PREVIEW_SIZE, PREVIEW_SIZE);
         cairo_set_source_rgb(cr, 0, 0, 0);
@@ -1517,29 +1531,34 @@ p3d_on_draw_event(GtkWidget *widget, G_GNUC_UNUSED GdkEventExpose *event, Bricks
 
         min = gwy_brick_get_min(controls->brick);
         max = gwy_brick_get_max(controls->brick);
-        xoff = PREVIEW_SIZE/2 - gwy_brick_get_xres(controls->brick)/2;
-        yoff = PREVIEW_SIZE/2 - gwy_brick_get_yres(controls->brick)/2;
-        zoff = PREVIEW_SIZE/2 - gwy_brick_get_zres(controls->brick)/2;
+        xoff = PREVIEW_SIZE/2;
+        yoff = PREVIEW_SIZE/2;
+
+        cpos[0] = 0;
+        cpos[1] = 0;
+        cpos[2] = -100;
+        val = sqrt(cpos[0]*cpos[0] + cpos[1]*cpos[1] + cpos[2]*cpos[2]);
+        cdir[0] = -cpos[0]/val;
+        cdir[1] = -cpos[1]/val;
+        cdir[2] = -cpos[2]/val;
+        mmultv(controls->rm, cdir[0], cdir[1], cdir[2], &dx, &dy, &dz);
 
         for (i=0; i<PREVIEW_SIZE; i++) {
             for (j=0; j<PREVIEW_SIZE; j++) {
                 pos[0] = i - xoff;
                 pos[1] = j - yoff;
-                pos[2] = -5 - zoff;
-                dir[0] = 0;
-                dir[1] = 0;
-                dir[2] = 1;
+                pos[2] = -20;
 
                 mmultv(controls->rm, pos[0], pos[1], pos[2], &px, &py, &pz);
-                mmultv(controls->rm, dir[0], dir[1], dir[2], &dx, &dy, &dz);
+                //mmultv(controls->rm, dir[0], dir[1], dir[2], &dx, &dy, &dz);
 
-                //if (i==(PREVIEW_SIZE/2) && j==(PREVIEW_SIZE/2)) {
-                    //printf("orig pos: %g %g %g    dir %g %g %g\n", px, py, pz, dx, dy, dz);
-                //}
+               // if (i==(PREVIEW_SIZE/2) && j==(PREVIEW_SIZE/2)) {
+               //     printf("orig pos: %g %g %g    dir %g %g %g\n", px, py, pz, dx, dy, dz);
+                
                     pos[0] = px; pos[1] = py; pos[2] = pz;
                     dir[0] = dx; dir[1] = dy; dir[2] = dz;
                     val = raysum(controls, pos, dir, min, max);
-               
+                //}
 
                 cairo_set_source_rgb(ci, val, val, val);
                 cairo_rectangle(ci, i, j, 1, 1);
@@ -1653,6 +1672,16 @@ static void
 brickshow_zscale_cb(BrickshowControls *controls)
 {
     controls->args->zscale = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->zscale));
+    p3d_prepare_wdata(controls, controls->args);
+    rotatem(controls);
+
+    preview(controls, controls->args);
+}
+
+static void
+brickshow_opacity_cb(BrickshowControls *controls)
+{
+    controls->args->opacity = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->opacity));
     p3d_prepare_wdata(controls, controls->args);
     rotatem(controls);
 
@@ -2122,6 +2151,7 @@ static const gchar perspective_key[] = "/module/brickshow/perspective";
 static const gchar render_key[] = "/module/brickshow/render";
 static const gchar size_key[] = "/module/brickshow/size";
 static const gchar zscale_key[] = "/module/brickshow/zscale";
+static const gchar opacity_key[] = "/module/brickshow/opacity";
 
 static void
 brickshow_sanitize_args(BrickshowArgs *args)
@@ -2131,6 +2161,7 @@ brickshow_sanitize_args(BrickshowArgs *args)
     args->zpos = CLAMP(args->zpos, 0, 100);
     args->size = CLAMP(args->size, 1, 100);
     args->zscale = CLAMP(args->zscale, 1, 100);
+    args->opacity = CLAMP(args->opacity, 1, 100);
     args->type = MIN(args->type, PROJ_DIRZ);
     args->gtype = MIN(args->gtype, GRAPH_DIRZ);
     args->update = !!args->update;
@@ -2151,6 +2182,7 @@ brickshow_load_args(GwyContainer *container,
     gwy_container_gis_double_by_name(container, zpos_key, &args->zpos);
     gwy_container_gis_double_by_name(container, size_key, &args->size);
     gwy_container_gis_double_by_name(container, zscale_key, &args->zscale);
+    gwy_container_gis_double_by_name(container, zscale_key, &args->opacity);
     gwy_container_gis_boolean_by_name(container, update_key, &args->update);
     gwy_container_gis_boolean_by_name(container, perspective_key, &args->perspective);
     gwy_container_gis_boolean_by_name(container, render_key, &args->render);
