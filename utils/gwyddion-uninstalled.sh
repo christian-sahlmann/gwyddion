@@ -26,7 +26,7 @@ mkdir \
 # Modules
 echo "Modules..."
 mkdir "$GWYDDION_LIBDIR/gwyddion/modules"
-for t in file graph layer process tool; do
+for t in file graph layer process tool volume; do
   mkdir "$GWYDDION_LIBDIR/gwyddion/modules/$t"
   if test $t = tool; then
     d=tools
