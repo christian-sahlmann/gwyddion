@@ -1502,6 +1502,7 @@ p3d_on_draw_event(GtkWidget *widget, G_GNUC_UNUSED GdkEventExpose *event, Extrac
 
         minv(controls->rm, inv);
 
+        /*
         printf("matrix _________________________\n");
         printf("%g     %g    %g\n", controls->rm[0][0], controls->rm[1][0], controls->rm[2][0]);
         printf("%g     %g    %g\n", controls->rm[0][1], controls->rm[1][1], controls->rm[2][1]);
@@ -1511,6 +1512,7 @@ p3d_on_draw_event(GtkWidget *widget, G_GNUC_UNUSED GdkEventExpose *event, Extrac
         printf("%g     %g    %g\n", inv[0][0], inv[1][0], inv[2][0]);
         printf("%g     %g    %g\n", inv[0][1], inv[1][1], inv[2][1]);
         printf("%g     %g    %g\n", inv[0][2], inv[1][2], inv[2][2]);
+        */
 
         cpos[0] = 0;
         cpos[1] = 0;
@@ -1531,8 +1533,8 @@ p3d_on_draw_event(GtkWidget *widget, G_GNUC_UNUSED GdkEventExpose *event, Extrac
                 //mmultv(controls->rm, pos[0], pos[1], pos[2], &px, &py, &pz);
                 mmultv(inv, pos[0], pos[1], pos[2], &px, &py, &pz);
 
-                if (i==(PREVIEW_SIZE/2) && j==(PREVIEW_SIZE/2)) 
-                    printf("orig pos: %g %g %g    dir %g %g %g\n", px, py, pz, dx, dy, dz);
+        //        if (i==(PREVIEW_SIZE/2) && j==(PREVIEW_SIZE/2)) 
+        //            printf("orig pos: %g %g %g    dir %g %g %g\n", px, py, pz, dx, dy, dz);
                 
                     pos[0] = px; pos[1] = py; pos[2] = pz;
                     dir[0] = dx; dir[1] = dy; dir[2] = dz;
