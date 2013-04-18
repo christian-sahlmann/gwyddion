@@ -25,4 +25,46 @@
   <xi:include href="xml/gwymoduleutils-file.xml"/>
   <xi:include href="xml/validate.xml"/>
   <xi:include href="xml/wait.xml"/>
+  <!-- API INDICES BEGIN -->
+  <index id="api-index-full">
+    <title>Index of all symbols</title>
+    <xi:include href="xml/api-index-full.xml"><xi:fallback /></xi:include>
+  </index>
+  <index id="api-index-deprecated" role="deprecated">
+    <title>Index of deprecated symbols</title>
+    <xi:include href="xml/api-index-deprecated.xml"><xi:fallback /></xi:include>
+  </index>
+  <index id="api-index-2-3" role="2.3">
+    <title>Index of new symbols in 2.3</title>
+    <xi:include href="xml/api-index-2.3.xml"><xi:fallback /></xi:include>
+  </index>
+  <index id="api-index-2-7" role="2.7">
+    <title>Index of new symbols in 2.7</title>
+    <xi:include href="xml/api-index-2.7.xml"><xi:fallback /></xi:include>
+  </index>
+  <index id="api-index-2-9" role="2.9">
+    <title>Index of new symbols in 2.9</title>
+    <xi:include href="xml/api-index-2.9.xml"><xi:fallback /></xi:include>
+  </index>
+  <index id="api-index-2-14" role="2.14">
+    <title>Index of new symbols in 2.14</title>
+    <xi:include href="xml/api-index-2.14.xml"><xi:fallback /></xi:include>
+  </index>
+  <index id="api-index-2-18" role="2.18">
+    <title>Index of new symbols in 2.18</title>
+    <xi:include href="xml/api-index-2.18.xml"><xi:fallback /></xi:include>
+  </index>
+  <index id="api-index-2-21" role="2.21">
+    <title>Index of new symbols in 2.21</title>
+    <xi:include href="xml/api-index-2.21.xml"><xi:fallback /></xi:include>
+  </index>
+  <index id="api-index-2-23" role="2.23">
+    <title>Index of new symbols in 2.23</title>
+    <xi:include href="xml/api-index-2.23.xml"><xi:fallback /></xi:include>
+  </index>
+  <index id="api-index-2-32" role="2.32">
+    <title>Index of new symbols in 2.32</title>
+    <xi:include href="xml/api-index-2.32.xml"><xi:fallback /></xi:include>
+  </index>
+  <!-- API INDICES END -->
 </book>
