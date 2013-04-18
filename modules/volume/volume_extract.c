@@ -1350,8 +1350,23 @@ mdet(gdouble m[3][3])
 static gboolean
 minv(gdouble m[3][3], gdouble ret[3][3])
 {
-    gdouble ddet = 1.0/mdet(m);
+    ret[0][0] = m[0][0];
+    ret[1][1] = m[1][1];
+    ret[2][2] = m[2][2];
 
+    ret[0][1] = m[1][0];
+    ret[0][2] = m[2][0];
+    ret[1][2] = m[2][1];
+
+    ret[1][0] = m[0][1];
+    ret[2][0] = m[0][2];
+    ret[2][1] = m[1][2];
+
+
+
+    //gdouble ddet = 1.0/mdet(m);
+
+    /*
     if (ddet == 0) return FALSE;
 
     ret[0][0] =  ((m[1][1]*m[2][2])-(m[1][2]*m[2][1]))*ddet;
@@ -1365,6 +1380,7 @@ minv(gdouble m[3][3], gdouble ret[3][3])
     ret[2][0] =  ((m[0][1]*m[1][2])-(m[0][2]*m[1][1]))*ddet;
     ret[2][1] = -((m[0][0]*m[1][2])-(m[0][2]*m[1][0]))*ddet;
     ret[2][2] =  ((m[0][0]*m[1][1])-(m[0][1]*m[1][0]))*ddet;
+    */
 
     return TRUE;
 }
@@ -1482,6 +1498,20 @@ p3d_on_draw_event(GtkWidget *widget, G_GNUC_UNUSED GdkEventExpose *event, Extrac
         xoff = PREVIEW_SIZE/2;
         yoff = PREVIEW_SIZE/2;
 
+
+
+        minv(controls->rm, inv);
+
+        printf("matrix _________________________\n");
+        printf("%g     %g    %g\n", controls->rm[0][0], controls->rm[1][0], controls->rm[2][0]);
+        printf("%g     %g    %g\n", controls->rm[0][1], controls->rm[1][1], controls->rm[2][1]);
+        printf("%g     %g    %g\n", controls->rm[0][2], controls->rm[1][2], controls->rm[2][2]);
+
+        printf("inverse matrix _________________________\n");
+        printf("%g     %g    %g\n", inv[0][0], inv[1][0], inv[2][0]);
+        printf("%g     %g    %g\n", inv[0][1], inv[1][1], inv[2][1]);
+        printf("%g     %g    %g\n", inv[0][2], inv[1][2], inv[2][2]);
+
         cpos[0] = 0;
         cpos[1] = 0;
         cpos[2] = -100;
@@ -1489,7 +1519,8 @@ p3d_on_draw_event(GtkWidget *widget, G_GNUC_UNUSED GdkEventExpose *event, Extrac
         cdir[0] = -cpos[0]/val;
         cdir[1] = -cpos[1]/val;
         cdir[2] = -cpos[2]/val;
-        mmultv(controls->rm, cdir[0], cdir[1], cdir[2], &dx, &dy, &dz);
+        //mmultv(controls->rm, cdir[0], cdir[1], cdir[2], &dx, &dy, &dz);
+        mmultv(inv, cdir[0], cdir[1], cdir[2], &dx, &dy, &dz);
 
         for (i=0; i<PREVIEW_SIZE; i++) {
             for (j=0; j<PREVIEW_SIZE; j++) {
@@ -1497,11 +1528,11 @@ p3d_on_draw_event(GtkWidget *widget, G_GNUC_UNUSED GdkEventExpose *event, Extrac
                 pos[1] = j - yoff;
                 pos[2] = -20;
 
-                mmultv(controls->rm, pos[0], pos[1], pos[2], &px, &py, &pz);
-                //mmultv(controls->rm, dir[0], dir[1], dir[2], &dx, &dy, &dz);
+                //mmultv(controls->rm, pos[0], pos[1], pos[2], &px, &py, &pz);
+                mmultv(inv, pos[0], pos[1], pos[2], &px, &py, &pz);
 
-               // if (i==(PREVIEW_SIZE/2) && j==(PREVIEW_SIZE/2)) {
-               //     printf("orig pos: %g %g %g    dir %g %g %g\n", px, py, pz, dx, dy, dz);
+                if (i==(PREVIEW_SIZE/2) && j==(PREVIEW_SIZE/2)) 
+                    printf("orig pos: %g %g %g    dir %g %g %g\n", px, py, pz, dx, dy, dz);
                 
                     pos[0] = px; pos[1] = py; pos[2] = pz;
                     dir[0] = dx; dir[1] = dy; dir[2] = dz;
