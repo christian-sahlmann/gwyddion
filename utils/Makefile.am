@@ -23,6 +23,7 @@ EXTRA_DIST = \
 	vim-syn-gen.py \
 	gwyddion.nsi.template \
 	generate-gwyddion-nsi.py \
+	update-api-indices.py \
 	bundler.in \
 	mkosxlauncher.in
 
