@@ -222,7 +222,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports raw XYZ data files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -1700,6 +1700,8 @@ check_regular_grid(RawXYZFile *rfile)
     return TRUE;
 }
 
+static const gchar xres_key[]          = "/module/rawxyz/xres";
+static const gchar yres_key[]          = "/module/rawxyz/yres";
 static const gchar exterior_key[]      = "/module/rawxyz/exterior";
 static const gchar interpolation_key[] = "/module/rawxyz/interpolation";
 static const gchar xy_units_key[]      = "/module/rawxyz/xy-units";
@@ -1714,6 +1716,8 @@ rawxyz_sanitize_args(RawXYZArgs *args)
     if (args->exterior != GWY_EXTERIOR_MIRROR_EXTEND
         && args->exterior != GWY_EXTERIOR_PERIODIC)
         args->exterior = GWY_EXTERIOR_BORDER_EXTEND;
+    args->xres = CLAMP(args->xres, 2, 16384);
+    args->yres = CLAMP(args->yres, 2, 16384);
 }
 
 static void
@@ -1729,6 +1733,8 @@ rawxyz_load_args(GwyContainer *container,
                                      (const guchar**)&args->xy_units);
     gwy_container_gis_string_by_name(container, z_units_key,
                                      (const guchar**)&args->z_units);
+    gwy_container_gis_int32_by_name(container, xres_key, &args->xres);
+    gwy_container_gis_int32_by_name(container, yres_key, &args->yres);
 
     rawxyz_sanitize_args(args);
     args->xy_units = g_strdup(args->xy_units ? args->xy_units : "");
@@ -1746,6 +1752,8 @@ rawxyz_save_args(GwyContainer *container,
                                      g_strdup(args->xy_units));
     gwy_container_set_string_by_name(container, z_units_key,
                                      g_strdup(args->z_units));
+    gwy_container_set_int32_by_name(container, xres_key, args->xres);
+    gwy_container_set_int32_by_name(container, yres_key, args->yres);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
