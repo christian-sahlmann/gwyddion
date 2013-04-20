@@ -4438,7 +4438,7 @@ gwy_app_data_proxy_brick_set_visible(GwyAppDataProxy *proxy,
         if (succ)
             gwy_app_data_browser_select_volume(GWY_DATA_VIEW(succ));
         else
-            _gwy_app_data_view_set_current(NULL);
+            _gwy_app_brick_view_set_current(NULL);
     }
     g_object_unref(object);
 
