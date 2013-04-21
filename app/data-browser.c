@@ -355,68 +355,6 @@ gwy_app_data_browser_set_file_present(GwyAppDataBrowser *browser,
 }
 
 /**
- * gwy_app_widget_queue_manage:
- * @widget: Widget to add or remove.
- * @remv: %TRUE to remove, %FALSE to add.
- *
- * Adds or removes widget to queue.
- *
- * If a new widget is added, it becomes the new head.  If the added widget
- * is already present, it is just moved to the head.
- *
- * Returns: The first widget in the queue of the same type as @widget.  The
- *          returned value is interesting only when @remove is %TRUE, for
- *          adding the returned value is always equal to @widget.
- **/
-static GtkWidget*
-gwy_app_widget_queue_manage(GtkWidget *widget, gboolean remv)
-{
-    static GList *list = NULL;
-
-    GList *item;
-    GType type;
-    GtkWidget *window;
-    gboolean is_dataview, is_volume = FALSE, isvol;
-
-    type = G_TYPE_FROM_INSTANCE(widget);
-    /* XXX: Differentiation by the "gwy-brick-info" data is a very dirty hack.
-     * Brick windows should get their own class... */
-    is_dataview = GWY_IS_DATA_VIEW(widget);
-    if (is_dataview) {
-        window = gtk_widget_get_toplevel(widget);
-        is_volume = !!g_object_get_data(G_OBJECT(window), "gwy-brick-info");
-    }
-    gwy_debug("%s, is-volume: %d", g_type_name(type), is_volume);
-
-    if (remv) {
-        list = g_list_remove(list, widget);
-        for (item = list; item; item = g_list_next(item)) {
-            if (G_TYPE_FROM_INSTANCE(item->data) != type)
-                continue;
-
-            if (!is_dataview)
-                return GTK_WIDGET(item->data);
-
-            window = gtk_widget_get_toplevel(GTK_WIDGET(item->data));
-            isvol = !!g_object_get_data(G_OBJECT(window), "gwy-brick-info");
-            if (isvol == is_volume)
-                return GTK_WIDGET(item->data);
-        }
-        return NULL;
-    }
-
-    item = g_list_find(list, widget);
-    if (item) {
-        list = g_list_remove_link(list, item);
-        list = g_list_concat(item, list);
-    }
-    else
-        list = g_list_prepend(list, widget);
-
-    return widget;
-}
-
-/**
  * _gwy_app_analyse_data_key:
  * @strkey: String container key.
  * @type: Location to store data type to.
@@ -2971,7 +2909,6 @@ gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
     else {
         gwy_app_data_proxy_update_visibility(object, FALSE);
         window = gtk_widget_get_ancestor(widget, GWY_TYPE_DATA_WINDOW);
-        gwy_app_widget_queue_manage(widget, TRUE);
         gtk_widget_destroy(window);
         gtk_list_store_set(list->store, iter, MODEL_WIDGET, NULL, -1);
         g_object_unref(widget);
@@ -3270,23 +3207,12 @@ gwy_app_data_proxy_get_3d(GwyAppDataProxy *proxy,
     return NULL;
 }
 
-static gboolean
-gwy_app_data_proxy_select_3d(Gwy3DWindow *window3d)
-{
-    gwy_app_widget_queue_manage(GTK_WIDGET(window3d), FALSE);
-
-    return FALSE;
-}
-
 static void
 gwy_app_data_proxy_3d_destroyed(Gwy3DWindow *window3d,
                                 GwyAppDataProxy *proxy)
 {
     GwyApp3DAssociation *assoc;
     GList *item;
-
-    /* XXX: The return value is not useful for anything -- yet? */
-    gwy_app_widget_queue_manage(GTK_WIDGET(window3d), TRUE);
 
     item = gwy_app_data_proxy_find_3d(proxy, window3d);
     g_return_if_fail(item);
@@ -3309,7 +3235,6 @@ gwy_app_data_proxy_channel_destroy_3d(GwyAppDataProxy *proxy,
 
     proxy->associated_3d = g_list_remove_link(proxy->associated_3d, l);
     assoc = (GwyApp3DAssociation*)l->data;
-    gwy_app_widget_queue_manage(GTK_WIDGET(assoc->window), TRUE);
     g_signal_handlers_disconnect_by_func(assoc->window,
                                          gwy_app_data_proxy_3d_destroyed,
                                          proxy);
@@ -3378,8 +3303,6 @@ gwy_app_data_browser_create_3d(G_GNUC_UNUSED GwyAppDataBrowser *browser,
 
     gwy_app_update_3d_window_title(GWY_3D_WINDOW(window3d), id);
 
-    g_signal_connect(window3d, "focus-in-event",
-                     G_CALLBACK(gwy_app_data_proxy_select_3d), NULL);
     g_signal_connect(window3d, "destroy",
                      G_CALLBACK(gwy_app_data_proxy_3d_destroyed), proxy);
 
@@ -3389,7 +3312,6 @@ gwy_app_data_browser_create_3d(G_GNUC_UNUSED GwyAppDataBrowser *browser,
     proxy->associated_3d = g_list_prepend(proxy->associated_3d, assoc);
 
     _gwy_app_3d_window_setup(GWY_3D_WINDOW(window3d));
-    gwy_app_data_proxy_select_3d(GWY_3D_WINDOW(window3d));
     gtk_widget_show_all(window3d);
 
     return window3d;
@@ -3682,7 +3604,6 @@ gwy_app_data_proxy_graph_set_visible(GwyAppDataProxy *proxy,
     else {
         gwy_app_data_proxy_update_visibility(object, FALSE);
         window = gtk_widget_get_toplevel(widget);
-        gwy_app_widget_queue_manage(widget, TRUE);
         gtk_widget_destroy(window);
         gtk_list_store_set(list->store, iter, MODEL_WIDGET, NULL, -1);
         g_object_unref(widget);
@@ -4478,7 +4399,6 @@ gwy_app_data_proxy_brick_set_visible(GwyAppDataProxy *proxy,
     else {
         gwy_app_data_proxy_update_visibility(object, FALSE);
         window = gtk_widget_get_ancestor(widget, GWY_TYPE_DATA_WINDOW);
-        gwy_app_widget_queue_manage(widget, TRUE);
         gtk_widget_destroy(window);
         gtk_list_store_set(list->store, iter, MODEL_WIDGET, NULL, -1);
         g_object_unref(widget);
@@ -5298,7 +5218,6 @@ gwy_app_data_browser_select_data_view(GwyDataView *data_view)
     proxy->lists[PAGE_CHANNELS].active = i;
 
     gwy_app_data_browser_select_object(browser, proxy, PAGE_CHANNELS);
-    gwy_app_widget_queue_manage(GTK_WIDGET(data_view), FALSE);
     _gwy_app_data_view_set_current(data_view);
     update_channel_sens();
 
@@ -5393,7 +5312,6 @@ gwy_app_data_browser_select_graph(GwyGraph *graph)
     proxy->lists[PAGE_GRAPHS].active = i;
 
     gwy_app_data_browser_select_object(browser, proxy, PAGE_GRAPHS);
-    gwy_app_widget_queue_manage(GTK_WIDGET(graph), FALSE);
     update_graph_sens();
 }
 
@@ -5482,7 +5400,6 @@ gwy_app_data_browser_select_volume(GwyDataView *data_view)
     proxy->lists[PAGE_VOLUMES].active = i;
 
     gwy_app_data_browser_select_object(browser, proxy, PAGE_VOLUMES);
-    gwy_app_widget_queue_manage(GTK_WIDGET(data_view), FALSE);
 }
 
 static gboolean
