@@ -177,7 +177,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates particles using simple dynamical model"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "Petr Klapetek",
     "2010",
 };
@@ -309,9 +309,10 @@ run_noninteractive(DepositSynthArgs *args,
         else {
             if (data) {
                 newid = gwy_app_data_browser_add_data_field(out, data, TRUE);
-                gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
-                                        GWY_DATA_ITEM_GRADIENT,
-                                        0);
+                if (oldid != -1)
+                    gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
+                                            GWY_DATA_ITEM_GRADIENT,
+                                            0);
                 gwy_app_set_data_field_title(data, newid, _("Generated"));
 
             }
@@ -379,13 +380,10 @@ deposit_synth_dialog(DepositSynthArgs *args,
                                 dimsargs->measure*PREVIEW_SIZE,
                                 FALSE);
 
-
-    if (data)
+    if (dfield_template && dimsargs->add) {
         gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
                                 GWY_DATA_ITEM_PALETTE,
                                 0);
-
-    if (dfield_template && dimsargs->add) {
         dfield = surface_for_preview(controls.original, PREVIEW_SIZE);
         gwy_data_field_data_changed(dfield);
     }
@@ -941,9 +939,8 @@ showit(GwyDataField *lfield, GwyDataField *dfield, gdouble *rdisizes, gdouble *r
        gint oxres, gdouble oxreal, gint oyres, gdouble oyreal, gint add, gint xres, gint yres)
 {
     gint i, m, n;
-    gdouble sum, surface, lsurface, csurface;
+    gdouble sum, surface, lsurface;
     gint disize;
-    gdouble rdisize;
 
     for (i=0; i<ndata; i++)
     {
@@ -953,9 +950,7 @@ showit(GwyDataField *lfield, GwyDataField *dfield, gdouble *rdisizes, gdouble *r
         if (xdata[i]<0 || ydata[i]<0 || xdata[i]>=xres || ydata[i]>=yres) continue;
         if (rz[i]>(gwy_data_field_get_val(lfield, xdata[i], ydata[i])+6*rdisizes[i])) continue;
 
-        csurface = gwy_data_field_get_val(lfield, xdata[i], ydata[i]);
         disize = (gint)((gdouble)oxres*rdisizes[i]/oxreal);
-        rdisize = rdisizes[i];
 
         for (m=(xdata[i]-disize); m<(xdata[i]+disize); m++)
 
@@ -1025,7 +1020,7 @@ deposit_synth_do(const DepositSynthArgs *args,
     gdouble xreal, yreal, oxreal, oyreal, diff;
     gdouble size, width;
     gdouble mass=1,  timestep = 1, rxv, ryv, rzv;
-    gint mdisize, add, presetval;
+    gint add, presetval;
     gint *xdata, *ydata;
     gdouble *disizes, *rdisizes;
     gdouble *rx, *ry, *rz;
@@ -1065,7 +1060,6 @@ deposit_synth_do(const DepositSynthArgs *args,
     diff = oxreal/oxres/10;
 
     add = CLAMP(gwy_data_field_rtoi(dfield, size + width), 0, oxres/4);
-    mdisize = gwy_data_field_rtoi(dfield, size);
     xres = oxres + 2*add;
     yres = oyres + 2*add;
     xreal = xres*oxreal/(gdouble)oxres;

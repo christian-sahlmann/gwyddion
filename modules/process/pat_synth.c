@@ -240,7 +240,7 @@ static GwyModuleInfo module_info = {
     N_("Generates surfaces representing simple patterns "
        "(steps, ridges, ...)."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti)",
     "2010",
 };
@@ -356,9 +356,10 @@ run_noninteractive(PatSynthArgs *args,
     if (!replace) {
         if (data) {
             newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
-            gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
-                                    GWY_DATA_ITEM_GRADIENT,
-                                    0);
+            if (oldid != -1)
+                gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
+                                        GWY_DATA_ITEM_GRADIENT,
+                                        0);
         }
         else {
             newid = 0;
@@ -419,11 +420,10 @@ pat_synth_dialog(PatSynthArgs *args,
                                 dimsargs->measure*PREVIEW_SIZE,
                                 TRUE);
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
-    if (data)
+    if (dfield_template) {
         gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
                                 GWY_DATA_ITEM_PALETTE,
                                 0);
-    if (dfield_template) {
         controls.surface = gwy_synth_surface_for_preview(dfield_template,
                                                          PREVIEW_SIZE);
         controls.zscale = 3.0*gwy_data_field_get_rms(dfield_template);
