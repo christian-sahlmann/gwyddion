@@ -27,6 +27,8 @@ Modules:
 - Pixmap: Crashing when run from standalone python script was fixed.
 - PSIA: Vertical flipping of data was corrected.
 - Raw XYZ: User-selected resolutions are remembered.
+- All synthesis: Fixed Critical warnings/crash when the current file has no
+  channels.
 
 
 2.31 (2013-02-21)
