@@ -5399,6 +5399,7 @@ gwy_app_data_browser_select_volume(GwyDataView *data_view)
     proxy->lists[PAGE_VOLUMES].active = i;
 
     gwy_app_data_browser_select_object(browser, proxy, PAGE_VOLUMES);
+    update_brick_sens();
 }
 
 static gboolean
