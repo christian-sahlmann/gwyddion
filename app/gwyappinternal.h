@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004,2013 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -87,11 +87,7 @@ void     _gwy_app_brick_window_setup          (GwyDataWindow *data_window);
 G_GNUC_INTERNAL
 void     _gwy_app_data_view_set_current       (GwyDataView *data_view);
 G_GNUC_INTERNAL
-void     _gwy_app_graph_set_current           (GwyGraph *graph);
-G_GNUC_INTERNAL
 void     _gwy_app_spectra_set_current         (GwySpectra *spectra);
-G_GNUC_INTERNAL
-void     _gwy_app_brick_view_set_current      (GwyDataView *data_view);
 
 G_GNUC_INTERNAL
 GwySensitivityGroup* _gwy_app_sensitivity_get_group(void);

@@ -190,15 +190,18 @@ static void gwy_app_update_brick_window_title(GwyDataView *data_view,
 static gboolean gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
                                                        GtkTreeIter *iter,
                                                        gboolean visible);
+static void     update_channel_sens                   (void);
 static gboolean gwy_app_data_proxy_graph_set_visible  (GwyAppDataProxy *proxy,
                                                        GtkTreeIter *iter,
                                                        gboolean visible);
+static void     update_graph_sens                     (void);
 static gboolean gwy_app_data_proxy_brick_set_visible  (GwyAppDataProxy *proxy,
                                                        GtkTreeIter *iter,
                                                        gboolean visible);
 static void     update_brick_info                     (GwyContainer *data,
                                                        gint id,
                                                        GwyDataView *data_view);
+static void     update_brick_sens                     (void);
 static GwyAppDataAssociation* gwy_app_data_assoc_find   (GList **assoclist,
                                                          GObject *object);
 static GwyAppDataAssociation* gwy_app_data_assoc_get    (GList **assoclist,
@@ -207,6 +210,7 @@ static GList* gwy_app_data_proxy_find_3d(GwyAppDataProxy *proxy,
                                          Gwy3DWindow *window3d);
 static GList* gwy_app_data_proxy_get_3d (GwyAppDataProxy *proxy,
                                          gint id);
+static void   update_all_sens           (void);
 static void     gwy_app_data_browser_copy_object(GwyAppDataProxy *srcproxy,
                                                  guint pageno,
                                                  GtkTreeModel *model,
@@ -302,6 +306,7 @@ gwy_app_data_proxy_compare_data(gconstpointer a,
  *
  * Returns: -1, 1 or 0 according to alphabetical order.
  **/
+G_GNUC_UNUSED
 static gint
 gwy_app_data_proxy_compare(gconstpointer a,
                            gconstpointer b)
@@ -2789,6 +2794,7 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
     gwy_app_data_browser_set_file_present(browser, TRUE);
     gtk_widget_show_all(data_window);
     _gwy_app_data_view_set_current(GWY_DATA_VIEW(data_view));
+    update_channel_sens();
 
     return data_view;
 }
@@ -2939,7 +2945,7 @@ gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
 {
     GwyAppDataList *list;
     GtkTreeModel *model;
-    GtkWidget *widget, *window, *succ;
+    GtkWidget *widget, *window;
     GObject *object;
     gint id;
 
@@ -2965,17 +2971,12 @@ gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
     else {
         gwy_app_data_proxy_update_visibility(object, FALSE);
         window = gtk_widget_get_ancestor(widget, GWY_TYPE_DATA_WINDOW);
-        succ = gwy_app_widget_queue_manage(widget, TRUE);
+        gwy_app_widget_queue_manage(widget, TRUE);
         gtk_widget_destroy(window);
         gtk_list_store_set(list->store, iter, MODEL_WIDGET, NULL, -1);
         g_object_unref(widget);
         list->visible_count--;
-
-        /* FIXME */
-        if (succ)
-            gwy_app_data_browser_select_data_view(GWY_DATA_VIEW(succ));
-        else
-            _gwy_app_data_view_set_current(NULL);
+        update_channel_sens();
     }
     g_object_unref(object);
 
@@ -3176,6 +3177,42 @@ gwy_app_data_assoc_get(GList **assoclist, gint id)
     }
 
     return NULL;
+}
+
+static void
+update_channel_sens(void)
+{
+    GwyMenuSensFlags mask = (GWY_MENU_FLAG_DATA
+                             | GWY_MENU_FLAG_UNDO
+                             | GWY_MENU_FLAG_REDO
+                             | GWY_MENU_FLAG_DATA_MASK
+                             | GWY_MENU_FLAG_DATA_SHOW);
+    GwyMenuSensFlags flags = 0;
+    GwyContainer *data;
+    GwyDataView *dataview;
+    GwyDataField *maskfield, *presentation;
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data,
+                                     GWY_APP_DATA_VIEW, &dataview,
+                                     GWY_APP_MASK_FIELD, &maskfield,
+                                     GWY_APP_SHOW_FIELD, &presentation,
+                                     0);
+
+    if (!data || !dataview) {
+        gwy_app_sensitivity_set_state(mask, flags);
+        return;
+    }
+
+    flags |= GWY_MENU_FLAG_DATA;
+    if (gwy_undo_container_has_undo(data))
+        flags |= GWY_MENU_FLAG_UNDO;
+    if (gwy_undo_container_has_redo(data))
+        flags |= GWY_MENU_FLAG_REDO;
+    if (maskfield)
+        flags |= GWY_MENU_FLAG_DATA_SHOW;
+    if (presentation)
+        flags |= GWY_MENU_FLAG_DATA_MASK;
+
+    gwy_app_sensitivity_set_state(mask, flags);
 }
 
 /**************************************************************************
@@ -3607,7 +3644,7 @@ gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
     /* FIXME: A silly place for this? */
     gwy_app_data_browser_set_file_present(browser, TRUE);
     gtk_widget_show_all(graph_window);
-    _gwy_app_graph_set_current(GWY_GRAPH(graph));
+    update_graph_sens();
 
     return graph;
 }
@@ -3619,7 +3656,7 @@ gwy_app_data_proxy_graph_set_visible(GwyAppDataProxy *proxy,
 {
     GwyAppDataList *list;
     GtkTreeModel *model;
-    GtkWidget *widget, *window, *succ;
+    GtkWidget *widget, *window;
     GObject *object;
     gint id;
 
@@ -3645,17 +3682,12 @@ gwy_app_data_proxy_graph_set_visible(GwyAppDataProxy *proxy,
     else {
         gwy_app_data_proxy_update_visibility(object, FALSE);
         window = gtk_widget_get_toplevel(widget);
-        succ = gwy_app_widget_queue_manage(widget, TRUE);
+        gwy_app_widget_queue_manage(widget, TRUE);
         gtk_widget_destroy(window);
         gtk_list_store_set(list->store, iter, MODEL_WIDGET, NULL, -1);
         g_object_unref(widget);
         list->visible_count--;
-
-        /* FIXME */
-        if (succ)
-            gwy_app_data_browser_select_graph(GWY_GRAPH(succ));
-        else
-            _gwy_app_graph_set_current(NULL);
+        update_graph_sens();
     }
     g_object_unref(object);
 
@@ -3812,6 +3844,15 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
                                            GDK_ACTION_COPY);
 
     return retval;
+}
+
+static void
+update_graph_sens(void)
+{
+    GwyMenuSensFlags flags = GWY_MENU_FLAG_GRAPH;
+    GwyGraph *graph;
+    gwy_app_data_browser_get_current(GWY_APP_GRAPH, &graph, 0);
+    gwy_app_sensitivity_set_state(flags, graph ? flags : 0);
 }
 
 /**************************************************************************
@@ -4362,7 +4403,7 @@ gwy_app_data_browser_create_volume(GwyAppDataBrowser *browser,
     gwy_app_data_browser_set_file_present(browser, TRUE);
     gtk_widget_show_all(data_window);
     update_brick_info(proxy->container, id, GWY_DATA_VIEW(data_view));
-    _gwy_app_brick_view_set_current(GWY_DATA_VIEW(data_view));
+    update_brick_sens();
 
     return data_view;
 }
@@ -4395,6 +4436,15 @@ update_brick_info(GwyContainer *data,
     g_free(info);
 }
 
+static void
+update_brick_sens(void)
+{
+    GwyMenuSensFlags flags = GWY_MENU_FLAG_VOLUME;
+    GwyDataView *dataview;
+    gwy_app_data_browser_get_current(GWY_APP_VOLUME_VIEW, &dataview, 0);
+    gwy_app_sensitivity_set_state(flags, dataview ? flags : 0);
+}
+
 static gboolean
 gwy_app_data_proxy_brick_set_visible(GwyAppDataProxy *proxy,
                                      GtkTreeIter *iter,
@@ -4402,7 +4452,7 @@ gwy_app_data_proxy_brick_set_visible(GwyAppDataProxy *proxy,
 {
     GwyAppDataList *list;
     GtkTreeModel *model;
-    GtkWidget *widget, *window, *succ;
+    GtkWidget *widget, *window;
     GObject *object;
     gint id;
 
@@ -4428,17 +4478,12 @@ gwy_app_data_proxy_brick_set_visible(GwyAppDataProxy *proxy,
     else {
         gwy_app_data_proxy_update_visibility(object, FALSE);
         window = gtk_widget_get_ancestor(widget, GWY_TYPE_DATA_WINDOW);
-        succ = gwy_app_widget_queue_manage(widget, TRUE);
+        gwy_app_widget_queue_manage(widget, TRUE);
         gtk_widget_destroy(window);
         gtk_list_store_set(list->store, iter, MODEL_WIDGET, NULL, -1);
         g_object_unref(widget);
         list->visible_count--;
-
-        /* FIXME */
-        if (succ)
-            gwy_app_data_browser_select_volume(GWY_DATA_VIEW(succ));
-        else
-            _gwy_app_brick_view_set_current(NULL);
+        update_brick_sens();
     }
     g_object_unref(object);
 
@@ -5169,6 +5214,7 @@ gwy_app_data_browser_switch_data(GwyContainer *data)
             gwy_app_data_browser_set_file_present(browser, FALSE);
         }
         browser->current = NULL;
+        update_all_sens();
         return;
     }
 
@@ -5189,6 +5235,15 @@ gwy_app_data_browser_switch_data(GwyContainer *data)
                           (GTK_TREE_VIEW(browser->lists[i]), &proxy->lists[i]);
         gwy_app_data_browser_set_file_present(browser, TRUE);
     }
+    update_all_sens();
+}
+
+static void
+update_all_sens(void)
+{
+    update_graph_sens();
+    update_channel_sens();
+    update_brick_sens();
 }
 
 static void
@@ -5245,6 +5300,7 @@ gwy_app_data_browser_select_data_view(GwyDataView *data_view)
     gwy_app_data_browser_select_object(browser, proxy, PAGE_CHANNELS);
     gwy_app_widget_queue_manage(GTK_WIDGET(data_view), FALSE);
     _gwy_app_data_view_set_current(data_view);
+    update_channel_sens();
 
     /* Restore the last used spectra.  If the reference is dangling, remove
      * it from the container. */
@@ -5338,7 +5394,7 @@ gwy_app_data_browser_select_graph(GwyGraph *graph)
 
     gwy_app_data_browser_select_object(browser, proxy, PAGE_GRAPHS);
     gwy_app_widget_queue_manage(GTK_WIDGET(graph), FALSE);
-    _gwy_app_graph_set_current(graph);
+    update_graph_sens();
 }
 
 static gboolean
@@ -5427,7 +5483,6 @@ gwy_app_data_browser_select_volume(GwyDataView *data_view)
 
     gwy_app_data_browser_select_object(browser, proxy, PAGE_VOLUMES);
     gwy_app_widget_queue_manage(GTK_WIDGET(data_view), FALSE);
-    _gwy_app_brick_view_set_current(data_view);
 }
 
 static gboolean
@@ -5460,7 +5515,6 @@ gwy_app_data_browser_select(GwyContainer *data,
     gwy_app_data_browser_select_object(browser, proxy, pageno);
 
     return proxy;
-
 }
 
 /**
@@ -5469,24 +5523,18 @@ gwy_app_data_browser_select(GwyContainer *data,
  * @id: Number (id) of the data field in @data to select.
  *
  * Makes a data field (channel) current in the data browser.
+ *
+ * <warning>This function does not do what you might expect.  Selecting a data
+ * object which is not displayed in any view makes it just possible to delete
+ * or duplicate in the data browser.  Module functions can be only run on
+ * visible data.</warning>
  **/
 void
 gwy_app_data_browser_select_data_field(GwyContainer *data,
                                        gint id)
 {
-    GwyAppDataProxy *proxy;
-    GwyDataView *data_view;
     GtkTreeIter iter;
-
-    proxy = gwy_app_data_browser_select(data, id, PAGE_CHANNELS, &iter);
-
-    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_CHANNELS].store), &iter,
-                       MODEL_WIDGET, &data_view,
-                       -1);
-    if (data_view) {
-        _gwy_app_data_view_set_current(data_view);
-        g_object_unref(data_view);
-    }
+    gwy_app_data_browser_select(data, id, PAGE_CHANNELS, &iter);
 }
 
 /**
@@ -5495,24 +5543,18 @@ gwy_app_data_browser_select_data_field(GwyContainer *data,
  * @id: Number (id) of the graph model in @data to select.
  *
  * Makes a graph model (channel) current in the data browser.
+ *
+ * <warning>This function does not do what you might expect.  Selecting a data
+ * object which is not displayed in any view makes it just possible to delete
+ * or duplicate in the data browser.  Module functions can be only run on
+ * visible data.</warning>
  **/
 void
 gwy_app_data_browser_select_graph_model(GwyContainer *data,
                                         gint id)
 {
-    GwyAppDataProxy *proxy;
-    GwyGraph *graph;
     GtkTreeIter iter;
-
-    proxy = gwy_app_data_browser_select(data, id, PAGE_GRAPHS, &iter);
-
-    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store), &iter,
-                       MODEL_WIDGET, &graph,
-                       -1);
-    if (graph) {
-        _gwy_app_graph_set_current(graph);
-        g_object_unref(graph);
-    }
+    gwy_app_data_browser_select(data, id, PAGE_GRAPHS, &iter);
 }
 
 static void

@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006,2013 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -282,40 +282,8 @@ gwy_app_confirm_quit_dialog(GSList *unsaved)
 void
 _gwy_app_data_view_set_current(GwyDataView *data_view)
 {
-    GwyMenuSensFlags mask = (GWY_MENU_FLAG_DATA
-                             | GWY_MENU_FLAG_UNDO
-                             | GWY_MENU_FLAG_REDO
-                             | GWY_MENU_FLAG_DATA_MASK
-                             | GWY_MENU_FLAG_DATA_SHOW);
-    GwyMenuSensFlags state = GWY_MENU_FLAG_DATA;
-    GwyPixmapLayer *layer;
-    GwyContainer *data;
-
-    gwy_debug("%p", data_view);
-
     if (current_tool)
         gwy_tool_data_switched(current_tool, data_view);
-
-    if (!data_view) {
-        gwy_app_sensitivity_set_state(mask, 0);
-        return;
-    }
-
-    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
-
-    data = gwy_data_view_get_data(data_view);
-    if (gwy_undo_container_has_undo(data))
-        state |= GWY_MENU_FLAG_UNDO;
-    if (gwy_undo_container_has_redo(data))
-        state |= GWY_MENU_FLAG_REDO;
-
-    layer = gwy_data_view_get_base_layer(data_view);
-    if (gwy_layer_basic_get_has_presentation(GWY_LAYER_BASIC(layer)))
-        state |= GWY_MENU_FLAG_DATA_SHOW;
-    if (gwy_data_view_get_alpha_layer(data_view))
-        state |= GWY_MENU_FLAG_DATA_MASK;
-
-    gwy_app_sensitivity_set_state(mask, state);
 }
 
 void
@@ -707,27 +675,6 @@ _gwy_app_graph_window_setup(GwyGraphWindow *graph_window)
     g_signal_connect_swapped(graph, "popup-menu",
                              G_CALLBACK(gwy_app_graph_popup_menu_popup_key),
                              popup_menu);
-}
-
-/**
- * _gwy_app_graph_set_current:
- * @window: Graph, can be %NULL.
- *
- * Updates application state upon switch to new graph.
- **/
-void
-_gwy_app_graph_set_current(GwyGraph *graph)
-{
-    gwy_debug("%p", graph);
-
-    if (!graph) {
-        gwy_app_sensitivity_set_state(GWY_MENU_FLAG_GRAPH, 0);
-        return;
-    }
-
-    g_return_if_fail(GWY_IS_GRAPH(graph));
-
-    gwy_app_sensitivity_set_state(GWY_MENU_FLAG_GRAPH, GWY_MENU_FLAG_GRAPH);
 }
 
 static gboolean
@@ -1214,19 +1161,6 @@ _gwy_app_spectra_set_current(GwySpectra *spectra)
 {
     if (current_tool)
         gwy_tool_spectra_switched(current_tool, spectra);
-
-    if (!spectra) {
-        /*
-        gwy_app_sensitivity_set_state(GWY_MENU_FLAG_SPECTRA, 0);
-         */
-        return;
-    }
-
-    g_return_if_fail(GWY_IS_SPECTRA(spectra));
-
-    /*
-    gwy_app_sensitivity_set_state(GWY_MENU_FLAG_SPECTRA, GWY_MENU_FLAG_SPECTRA);
-    */
 }
 
 /*****************************************************************************
@@ -1234,27 +1168,6 @@ _gwy_app_spectra_set_current(GwySpectra *spectra)
  *     Bricks                                                                *
  *                                                                           *
  *****************************************************************************/
-
-/**
- * _gwy_app_brick_view_set_current:
- * @window: Data window showin brick preview, can be %NULL.
- *
- * Updates application state upon switch to new brick view.
- **/
-void
-_gwy_app_brick_view_set_current(GwyDataView *data_view)
-{
-    gwy_debug("%p", data_view);
-
-    if (!data_view) {
-        gwy_app_sensitivity_set_state(GWY_MENU_FLAG_VOLUME, 0);
-        return;
-    }
-
-    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
-
-    gwy_app_sensitivity_set_state(GWY_MENU_FLAG_VOLUME, GWY_MENU_FLAG_VOLUME);
-}
 
 void
 _gwy_app_brick_window_setup(GwyDataWindow *data_window)
