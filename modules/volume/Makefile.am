@@ -8,7 +8,8 @@ disabled_sources =
 volumedir = $(pkglibdir)/modules/volume
 
 volume_LTLIBRARIES = \
-	volume_extract.la
+	volume_extract.la \
+        volume_invert.la
 
 EXTRA_DIST = \
 	$(disabled_sources)
@@ -33,6 +34,7 @@ module_libadd = \
 endif
 
 volume_extract_la_SOURCES = volume_extract.c
+volume_invert_la_SOURCES = volume_invert.c
 
 clean-local:
 	rm -f core.* *~
