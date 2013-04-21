@@ -20,7 +20,6 @@
 
 /* XXX: The purpose of this file is to contain all ugliness from the rest of
  * source files.  And indeed it has managed to gather lots of it. */
-#define DEBUG 1
 #include <stdio.h>
 
 #include "config.h"
