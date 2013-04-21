@@ -11,6 +11,10 @@ Libraries:
   browser and menu constructors.
 - libgwymodule: Volume data processing module management functions were added.
 - libgwyprocess: Summary statistical functions for bricks were added.
+- libgwyapp: Toolbox items sensitivity corresponds to data available in the
+  current file, not globally.  This fixes a long-standing bug when it was
+  possible to run a module function for a type of data for which
+  gwy_app_data_browser_get_current() did not actually give anything.
 
 Modules:
 - Tescan (new): Imports Tescan MIRA SEM images.
@@ -22,6 +26,7 @@ Modules:
   estimated.
 - Pixmap: Crashing when run from standalone python script was fixed.
 - PSIA: Vertical flipping of data was corrected.
+- Raw XYZ: User-selected resolutions are remembered.
 
 
 2.31 (2013-02-21)
