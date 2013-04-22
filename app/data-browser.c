@@ -3144,9 +3144,9 @@ update_channel_sens(void)
     if (gwy_undo_container_has_redo(data))
         flags |= GWY_MENU_FLAG_REDO;
     if (maskfield)
-        flags |= GWY_MENU_FLAG_DATA_SHOW;
-    if (presentation)
         flags |= GWY_MENU_FLAG_DATA_MASK;
+    if (presentation)
+        flags |= GWY_MENU_FLAG_DATA_SHOW;
 
     gwy_app_sensitivity_set_state(mask, flags);
 }
