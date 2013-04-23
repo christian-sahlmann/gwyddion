@@ -82,6 +82,7 @@ typedef struct {
     gboolean in_update;
     GtkWidget *xyunits;
     GtkWidget *zunits;
+    GtkWidget *ok;
 } CalibrateControls;
 
 static gboolean    module_register           (void);
@@ -286,7 +287,7 @@ static gboolean
 calibrate_dialog(CalibrateArgs *args,
                  GwyDataField *dfield)
 {
-    enum { RESPONSE_RESET = 1 };
+    enum { RESPONSE_RESET = 1};
     GtkWidget *dialog, *spin, *table, *label;
     GwySIUnit *unit;
     CalibrateControls controls;
@@ -295,8 +296,9 @@ calibrate_dialog(CalibrateArgs *args,
     dialog = gtk_dialog_new_with_buttons(_("Dimensions and Units"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+
+    controls.ok = gtk_dialog_add_button(GTK_DIALOG(dialog), GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     controls.args = args;
@@ -402,7 +404,7 @@ calibrate_dialog(CalibrateArgs *args,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     controls.zreal = gtk_adjustment_new(args->zreal/pow10(args->zexponent),
-                                        0.01, 10000, 1, 10, 0);
+                                        -10000, 10000, 1, 10, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.zreal), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
     gtk_table_attach(GTK_TABLE(table), spin,
@@ -461,7 +463,7 @@ calibrate_dialog(CalibrateArgs *args,
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     row++;
 
-    controls.zratio = gtk_adjustment_new(args->zratio, 0.001, 1000, 0.1, 1, 0);
+    controls.zratio = gtk_adjustment_new(args->zratio, -1000, 1000, 0.1, 1, 0);
     spin = gwy_table_attach_spinbutton(table, row,
                                        _("_Z calibration factor:"), "",
                                        controls.zratio);
@@ -620,7 +622,9 @@ zratio_changed_cb(GtkAdjustment *adj,
     controls->in_update = TRUE;
     args->zratio = gtk_adjustment_get_value(adj)
                    * pow10(args->zexponent - args->zorigexp);
+
     args->zreal = args->zratio * args->zorig;
+
     calibrate_dialog_update(controls, args);
     controls->in_update = FALSE;
 }
@@ -919,6 +923,9 @@ calibrate_dialog_update(CalibrateControls *controls,
     else
         g_snprintf(buffer, sizeof(buffer), "× 10<sup>%d</sup>", e);
     gtk_label_set_markup(GTK_LABEL(controls->zpower10), buffer);
+
+    if (args->zratio == 0 || args->zreal == 0) gtk_widget_set_sensitive(controls->ok, FALSE);
+    else gtk_widget_set_sensitive(controls->ok, TRUE);
 }
 
 static const gchar xratio_key[] = "/module/calibrate/xratio";
