@@ -85,6 +85,7 @@ process_LTLIBRARIES = \
 	tipops.la \
 	unrotate.la \
 	volumize.la \
+        volumize_layers.la \
 	xydenoise.la
 
 EXTRA_DIST = \
@@ -187,6 +188,7 @@ tip_model_la_SOURCES           = tip_model.c
 tipops_la_SOURCES              = tipops.c
 unrotate_la_SOURCES            = unrotate.c
 volumize_la_SOURCES            = volumize.c
+volumize_layers_la_SOURCES            = volumize_layers.c
 xydenoise_la_SOURCES           = xydenoise.c
 
 clean-local:
