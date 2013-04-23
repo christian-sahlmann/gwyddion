@@ -518,7 +518,7 @@ gwy_brick_resample(GwyBrick *brick,
         return;
     }
 
-    bdata = g_new(gdouble, brick->xres * brick->yres * brick->zres);
+    bdata = g_new(gdouble, xres * yres * zres);
     data = brick->data;
 
     xratio = (gdouble)brick->xres/xres;
@@ -533,10 +533,10 @@ gwy_brick_resample(GwyBrick *brick,
             for (row=0; row<yres; row++)
             {
                 for (lev=0; lev<zres; lev++)
-                    bdata[col + xres*row + xres*yres*lev]
-                        = data[MIN((gint)(xratio*col + 0.5), brick->xres-1)
-                        + xres*MIN((gint)(yratio*row + 0.5), brick->yres-1)
-                        + xres*yres*MIN((gint)(zratio*lev + 0.5), brick->zres-1)];
+                    bdata[col + xres*row + xres*yres*lev] = gwy_brick_get_val(brick, MIN((gint)(xratio*col + 0.5), brick->xres-1), MIN((gint)(yratio*row + 0.5), brick->yres-1), MIN((gint)(zratio*lev + 0.5), brick->zres-1));
+                     //   = data[MIN(MIN((gint)(xratio*col + 0.5), brick->xres-1)
+                     //   + xres*MIN((gint)(yratio*row + 0.5), brick->yres-1)
+                     //   + xres*yres*MIN((gint)(zratio*lev + 0.5), brick->zres-1), brick->xres*brick->yres*brick->zres - 1)];
             }
         }
 
