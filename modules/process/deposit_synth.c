@@ -166,8 +166,8 @@ static inline gboolean gwy_data_field_inside(GwyDataField *data_field, gint i, g
 static const DepositSynthArgs deposit_synth_defaults = {
     PAGE_DIMENSIONS,
     42, TRUE, FALSE,
-    1, 1,
     10, 0,
+    10, 100,
 };
 
 static const GwyDimensionArgs dims_defaults = GWY_DIMENSION_ARGS_INIT;
@@ -441,7 +441,7 @@ deposit_synth_dialog(DepositSynthArgs *args,
 
     controls.size = gtk_adjustment_new(args->size/pow10(controls.dims->args->xypow10),
                                         0, 100.0, 0.1, 1.0, 0);
-    spin = gwy_table_attach_hscale(table, row, _("R_adius:"), controls.dims->args->xyunits,
+    spin = gwy_table_attach_hscale(table, row, _("Particle r_adius:"), controls.dims->args->xyunits,
                                    controls.size, GWY_HSCALE_DEFAULT);
     gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), FALSE);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 4);
@@ -452,7 +452,7 @@ deposit_synth_dialog(DepositSynthArgs *args,
 
     controls.width = gtk_adjustment_new(args->width/pow10(controls.dims->args->xypow10),
                                         0, 100.0, 0.1, 1.0, 0);
-    spin = gwy_table_attach_hscale(table, row, _("_Width:"), controls.dims->args->xyunits,
+    spin = gwy_table_attach_hscale(table, row, _("Distribution _width:"), controls.dims->args->xyunits,
                                    controls.width, GWY_HSCALE_DEFAULT);
     gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), FALSE);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 4);
@@ -463,7 +463,7 @@ deposit_synth_dialog(DepositSynthArgs *args,
 
     controls.coverage = gtk_adjustment_new(args->coverage,
                                            0.0, 100, 0.1, 1, 0);
-    gwy_table_attach_hscale(table, row, _("_Coverage:"),
+    gwy_table_attach_hscale(table, row, _("Surface _coverage:"),
                             "%",
                             controls.coverage, GWY_HSCALE_DEFAULT);
     g_signal_connect_swapped(controls.coverage, "value-changed",
@@ -472,7 +472,7 @@ deposit_synth_dialog(DepositSynthArgs *args,
 
     controls.revise = gtk_adjustment_new(args->revise,
                                            0.0, 10000, 1, 10, 0);
-    gwy_table_attach_hscale(table, row, _("_Revise:"),
+    gwy_table_attach_hscale(table, row, _("_Relax steps:"),
                             "",
                             controls.revise, GWY_HSCALE_DEFAULT);
     g_signal_connect_swapped(controls.revise, "value-changed",
@@ -905,7 +905,7 @@ preview(DepositSynthControls *controls)
     gwy_app_wait_finish();
 
     if (ndata>=0 && success) g_snprintf(message, sizeof(message), "%d particles deposited", ndata);
-    else if (ndata>=0 && !success) g_snprintf(message, sizeof(message), "Not all deposited (%d), try revise", ndata);
+    else if (ndata>=0 && !success) g_snprintf(message, sizeof(message), "Not all deposited (%d), try more relax steps", ndata);
     else if (ndata==RES_TOO_MANY) g_snprintf(message, sizeof(message), "Error: too many particles.");
     else if (ndata==RES_TOO_FEW) g_snprintf(message, sizeof(message), "Error: no particles.");
     else if (ndata==RES_TOO_LARGE) g_snprintf(message, sizeof(message), "Error: particles too large.");
@@ -984,8 +984,12 @@ get_lj_potential_spheres(gdouble ax, gdouble ay, gdouble az, gdouble bx, gdouble
                     + (ay-by)*(ay-by)
                     + (az-bz)*(az-bz));
 
-    if ((asize>0 && bsize>0) && dist > asize/100)
-    return (asize)*3e-5*(pow(sigma, 12)/pow(dist, 6) - pow(sigma, 6)/pow(dist, 3)); //corrected for particle size
+    if ((asize>0 && bsize>0) && dist > asize/100) {
+        gdouble s2 = sigma*sigma, s4 = s2*s2, s6 = s4*s2, s12 = s6*s6;
+        gdouble d3 = dist*dist*dist, d6 = d3*d3;
+        return (asize)*2e-5*(s12/d6 - s6/d3); //corrected for particle size
+    }
+    //return (asize)*3e-5*(pow(sigma, 12)/pow(dist, 6) - pow(sigma, 6)/pow(dist, 3)); //corrected for particle size
     else return 0;
 }
 
@@ -1003,7 +1007,12 @@ integrate_lj_substrate(GwyDataField *lfield, gdouble ax, gdouble ay, gdouble az,
     dist = sqrt((az-zval)*(az-zval));
 
     if (size>0 && dist > size/100)
-    return size*1e-3*(pow(sigma, 12)/45.0/pow(dist, 9) - pow(sigma, 6)/6.0/pow(dist, 3)); //corrected for particle size
+    {
+        gdouble s2 = sigma*sigma, s4 = s2*s2, s6 = s4*s2, s12 = s6*s6;
+        gdouble d3 = dist*dist*dist, d9 = d3*d3*d3;
+        return size*1.0e-3*(s12/d9/45.0 - s6/d3/6.0); //corrected for particle size
+    }
+    //return size*1e-3*(pow(sigma, 12)/45.0/pow(dist, 9) - pow(sigma, 6)/6.0/pow(dist, 3)); //corrected for particle size
     else return 0;
 }
 
@@ -1329,19 +1338,21 @@ deposit_synth_do(const DepositSynthArgs *args,
 
         gwy_data_field_copy(zlfield, lfield, 0);
 
-        if (showfield) {
-            showit(lfield, zdfield, rdisizes, rx, ry, rz, xdata, ydata, ndata,
-                   oxres, oxreal, oyres, oyreal, add, xres, yres);
-            if (surface) gwy_object_unref(surface);
-            surface = surface_for_preview(dfield, PREVIEW_SIZE);
-            gwy_data_field_copy(surface, showfield, FALSE);
-            gwy_data_field_data_changed(showfield);
-        }
+        if (i%10 == 0) {
+            if (showfield) {
+                showit(lfield, zdfield, rdisizes, rx, ry, rz, xdata, ydata, ndata,
+                       oxres, oxreal, oyres, oyreal, add, xres, yres);
+                if (surface) gwy_object_unref(surface);
+                surface = surface_for_preview(dfield, PREVIEW_SIZE);
+                gwy_data_field_copy(surface, showfield, FALSE);
+                gwy_data_field_data_changed(showfield);
+            }
 
-        gwy_data_field_area_copy(lfield, dfield, add, add, oxres, oyres, 0, 0);
-        gwy_data_field_data_changed(dfield);
-        while (gtk_events_pending())
-                    gtk_main_iteration();
+            gwy_data_field_area_copy(lfield, dfield, add, add, oxres, oyres, 0, 0);
+            gwy_data_field_data_changed(dfield);
+            while (gtk_events_pending())
+                gtk_main_iteration();
+        }
 
 
         if (!gwy_app_wait_set_fraction((gdouble)i/(gdouble)args->revise)) break;
@@ -1419,7 +1430,7 @@ deposit_synth_sanitize_args(DepositSynthArgs *args)
     args->size = CLAMP(args->size, 0.0, 100); //FIXME this should be absolute value!
     args->width = CLAMP(args->width, 0.0, 100); //here as well
     args->coverage = CLAMP(args->coverage, 0, 100);
-    args->revise = CLAMP(args->revise, 0, 1000);;
+    args->revise = CLAMP(args->revise, 0, 10000);;
 }
 
 static void
