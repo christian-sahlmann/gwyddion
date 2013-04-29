@@ -77,6 +77,7 @@ typedef enum {
     NANOSCOPE_FILE_TYPE_BIN,
     NANOSCOPE_FILE_TYPE_TXT,
     NANOSCOPE_FILE_TYPE_FORCE_BIN,
+    NANOSCOPE_FILE_TYPE_FORCE_VOLUME,
     NANOSCOPE_FILE_TYPE_BROKEN
 } NanoscopeFileType;
 
@@ -115,6 +116,8 @@ typedef struct {
     GHashTable *hash;
     GwyDataField *data_field;
     GwyGraphModel *graph_model;
+    GwyBrick *brick;
+    GwyBrick *second_brick;
 } NanoscopeData;
 
 static gboolean        module_register        (void);
@@ -142,6 +145,16 @@ static GwyGraphModel*  hash_to_curve          (GHashTable *hash,
                                                guint bufsize,
                                                gchar *buffer,
                                                gint gxres,
+                                               GError **error);
+static GwyBrick*  hash_to_brick               (GHashTable *hash,
+                                               GHashTable *forcelist,
+                                               GHashTable *scanlist,
+                                               GHashTable *scannerlist,
+                                               NanoscopeFileType file_type,
+                                               guint bufsize,
+                                               gchar *buffer,
+                                               gint gxres,
+                                               GwyBrick *second_brick,
                                                GError **error);
 static gboolean        read_text_data         (guint n,
                                                gdouble *data,
@@ -181,6 +194,8 @@ static GwyContainer*   nanoscope_get_metadata (GHashTable *hash,
                                                GList *list);
 static NanoscopeValue* parse_value            (const gchar *key,
                                                gchar *line);
+GwyDataField*          preview_from_brick     (GwyBrick *brick);
+
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -235,7 +250,7 @@ nanoscope_load(const gchar *filename,
     GError *err = NULL;
     gchar *buffer = NULL;
     gchar *p;
-    const gchar *self;
+    const gchar *self, *fvol;
     gsize size = 0;
     NanoscopeFileType file_type;
     NanoscopeData *ndata;
@@ -245,6 +260,7 @@ nanoscope_load(const gchar *filename,
     GList *l, *list = NULL;
     gint i, xres = 0, yres = 0;
     gboolean ok;
+    GwyDataField *preview;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -292,8 +308,15 @@ nanoscope_load(const gchar *filename,
     while ((hash = read_hash(&p, &err))) {
         ndata = g_new0(NanoscopeData, 1);
         ndata->hash = hash;
+
+        fvol = g_hash_table_lookup(hash, "Start context");
+        if (fvol && gwy_strequal(((NanoscopeValue *)fvol)->hard_value_str, "FVOL")) {
+            file_type = NANOSCOPE_FILE_TYPE_FORCE_VOLUME;
+        }
+
         list = g_list_append(list, ndata);
     }
+
     if (err) {
         g_propagate_error(error, err);
         ok = FALSE;
@@ -341,6 +364,17 @@ nanoscope_load(const gchar *filename,
                                                xres,
                                                error);
             ok = ok && ndata->graph_model;
+        } 
+        else if (file_type == NANOSCOPE_FILE_TYPE_FORCE_VOLUME) {
+            ndata->brick = hash_to_brick(hash, forcelist, scanlist,
+                                         scannerlist,
+                                         file_type,
+                                         size, buffer,
+                                         xres,
+                                         ndata->second_brick,
+                                         error);
+            ok = ok && ndata->brick;
+
         }
         else {
             ndata->data_field = hash_to_data_field(hash, scannerlist, scanlist,
@@ -396,6 +430,24 @@ nanoscope_load(const gchar *filename,
                 GQuark quark = gwy_app_get_graph_key_for_id(i+1);
                 gwy_container_set_object(container, quark, ndata->graph_model);
                 i++;
+            } 
+            else if (ndata->brick) {
+                GQuark quark = gwy_app_get_brick_key_for_id(i+1);
+                preview = preview_from_brick(ndata->brick);
+                gwy_app_data_browser_add_brick(ndata->brick,
+                                               preview,
+                                               container,
+                                               TRUE);
+                g_object_unref(ndata->brick);
+                g_object_unref(preview);
+                i++;
+
+                if (ndata->second_brick) {
+                    quark = gwy_app_get_brick_key_for_id(i+1);
+                    i++;
+
+
+                }
             }
         }
         if (!i)
@@ -667,6 +719,40 @@ hash_to_data_field(GHashTable *hash,
     g_object_unref(unitxy);
 
     return dfield;
+}
+
+
+static GwyBrick*  
+hash_to_brick(GHashTable *hash,
+              GHashTable *forcelist,
+              GHashTable *scanlist,
+              GHashTable *scannerlist,
+              NanoscopeFileType file_type,
+              guint bufsize,
+              gchar *buffer,
+              gint gxres,
+              GwyBrick *second_brick,
+              GError **error)
+{
+    GwyBrick *brick;
+
+    printf("Loading brick\n");
+    second_brick = NULL;
+
+    brick = gwy_brick_new(100, 100, 100, 100, 100, 100, 0);
+
+    return brick;
+}
+
+GwyDataField *preview_from_brick(GwyBrick *brick)
+{
+    GwyDataField *dfield = gwy_data_field_new(10, 10, 10, 10, FALSE);
+
+    gwy_brick_sum_plane(brick, dfield, 0, 0, 0, gwy_brick_get_xres(brick), 
+                        gwy_brick_get_yres(brick), -1, FALSE);
+
+    return dfield;
+
 }
 
 #define CHECK_AND_APPLY(op, hash, key)                     \
