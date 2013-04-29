@@ -148,12 +148,9 @@ static GwyGraphModel*  hash_to_curve          (GHashTable *hash,
                                                GError **error);
 static GwyBrick*  hash_to_brick               (GHashTable *hash,
                                                GHashTable *forcelist,
-                                               GHashTable *scanlist,
-                                               GHashTable *scannerlist,
                                                NanoscopeFileType file_type,
                                                guint bufsize,
                                                gchar *buffer,
-                                               gint gxres,
                                                GwyBrick *second_brick,
                                                GError **error);
 static gboolean        read_text_data         (guint n,
@@ -171,6 +168,11 @@ static GHashTable*     read_hash              (gchar **buffer,
 static void            get_scan_list_res      (GHashTable *hash,
                                                gint *xres,
                                                gint *yres);
+static void            get_fvol_res           (GHashTable *hash,
+                                               gint *xres, 
+                                               gint *yres, 
+                                               gint *zres,
+                                               gint *offset);
 static GwySIUnit*      get_physical_scale     (GHashTable *hash,
                                                GHashTable *scannerlist,
                                                GHashTable *scanlist,
@@ -258,9 +260,10 @@ nanoscope_load(const gchar *filename,
     GHashTable *hash, *scannerlist = NULL, *scanlist = NULL, *forcelist = NULL,
                *contrlist = NULL;
     GList *l, *list = NULL;
-    gint i, xres = 0, yres = 0;
+    gint i, xres = 0, yres = 0, zres = 0, offset = 0;
     gboolean ok;
     GwyDataField *preview;
+    gchar *prevkey;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -347,7 +350,7 @@ nanoscope_load(const gchar *filename,
             get_scan_list_res(hash, &xres, &yres);
             scanlist = hash;
         }
-        if (gwy_stramong(self, "Ciao force list", NULL)) {
+         if (gwy_stramong(self, "Ciao force list", NULL)) {
             get_scan_list_res(hash, &xres, &yres);
             forcelist = hash;
         }
@@ -366,11 +369,9 @@ nanoscope_load(const gchar *filename,
             ok = ok && ndata->graph_model;
         } 
         else if (file_type == NANOSCOPE_FILE_TYPE_FORCE_VOLUME) {
-            ndata->brick = hash_to_brick(hash, forcelist, scanlist,
-                                         scannerlist,
+            ndata->brick = hash_to_brick(hash, forcelist,
                                          file_type,
                                          size, buffer,
-                                         xres,
                                          ndata->second_brick,
                                          error);
             ok = ok && ndata->brick;
@@ -433,13 +434,12 @@ nanoscope_load(const gchar *filename,
             } 
             else if (ndata->brick) {
                 GQuark quark = gwy_app_get_brick_key_for_id(i+1);
+
                 preview = preview_from_brick(ndata->brick);
-                gwy_app_data_browser_add_brick(ndata->brick,
-                                               preview,
-                                               container,
-                                               TRUE);
-                g_object_unref(ndata->brick);
-                g_object_unref(preview);
+                prevkey = g_strconcat(g_quark_to_string(quark), "/preview", NULL);
+                gwy_container_set_object(container, quark, ndata->brick);
+                gwy_container_set_object(container, g_quark_from_string(prevkey), preview);
+
                 i++;
 
                 if (ndata->second_brick) {
@@ -486,6 +486,7 @@ get_scan_list_res(GHashTable *hash,
         *yres = GWY_ROUND(val->hard_value);
     gwy_debug("Global xres, yres = %d, %d", *xres, *yres);
 }
+
 
 static void
 add_metadata(gpointer hkey,
@@ -721,22 +722,35 @@ hash_to_data_field(GHashTable *hash,
     return dfield;
 }
 
-
 static GwyBrick*  
-hash_to_brick(GHashTable *hash,
-              GHashTable *forcelist,
-              GHashTable *scanlist,
-              GHashTable *scannerlist,
-              NanoscopeFileType file_type,
-              guint bufsize,
-              gchar *buffer,
-              gint gxres,
-              GwyBrick *second_brick,
+hash_to_brick (GHashTable *hash, GHashTable *forcelist,
+               NanoscopeFileType file_type,
+               guint bufsize,
+               gchar *buffer,
+               GwyBrick *second_brick,
               GError **error)
 {
     GwyBrick *brick;
+    NanoscopeValue *val;
+    gint sv1, sv2;
+    gchar *s, *end;
 
     printf("Loading brick\n");
+
+    /* scan size */
+    val = g_hash_table_lookup(forcelist, "Samps/line");
+    sv1 = g_ascii_strtod(val->hard_value_str, &end);
+    printf("parsing %s\n", val->hard_value_str);
+    if (errno || *end != ' ') {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Cannot parse `Samps/line' field."));
+        return NULL;
+    }
+    s = end+1;
+    sv2 = g_ascii_strtod(s, &end);
+
+    printf("sv1 %d sv2 %d\n", sv1, sv2);
+
     second_brick = NULL;
 
     brick = gwy_brick_new(100, 100, 100, 100, 100, 100, 0);
