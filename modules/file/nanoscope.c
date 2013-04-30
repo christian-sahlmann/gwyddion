@@ -750,6 +750,14 @@ hash_to_brick (GHashTable *hash, GHashTable *forcelist, GHashTable *scanlist,
 
     printf("Loading brick\n");
 
+    if (!require_keys(hash, error, "Number of lines",
+                      NULL))
+    {
+        printf("missing number of lines!\n");
+        return NULL;
+    }
+
+
     /* scan size */
     val = g_hash_table_lookup(filist, "Samps/line");
     if (val) {
@@ -1464,11 +1472,14 @@ read_hash(gchar **buffer,
     }
 
     /* Fix random stuff in Nanoscope E files */
+    
     if ((value = g_hash_table_lookup(hash, "Samps/line"))
         && !g_hash_table_lookup(hash, "Number of lines")
         && value->hard_value_units
         && g_ascii_isdigit(value->hard_value_units[0])) {
         NanoscopeValue *val;
+
+        printf("#%##@@&$*^@^@!!!!!\n");
 
         val = g_new0(NanoscopeValue, 1);
         val->hard_value = g_ascii_strtod(value->hard_value_units, NULL);
