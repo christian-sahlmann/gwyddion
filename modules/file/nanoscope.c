@@ -44,8 +44,8 @@
  * Read SPS:Limited[1]
  * [1] Spectra curves are imported as graphs, positional information is lost.
  **/
-
 #include "config.h"
+#define DEBUG 1
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
@@ -146,10 +146,9 @@ static GwyGraphModel*  hash_to_curve          (GHashTable *hash,
                                                gchar *buffer,
                                                gint gxres,
                                                GError **error);
-static GwyBrick*  hash_to_brick               (GHashTable *hash,
+static GwyBrick*       hash_to_brick          (GHashTable *hash,
                                                GHashTable *forcelist,
                                                GHashTable *scanlist,
-                                               GHashTable *filist,
                                                NanoscopeFileType file_type,
                                                guint bufsize,
                                                gchar *buffer,
@@ -170,11 +169,6 @@ static GHashTable*     read_hash              (gchar **buffer,
 static void            get_scan_list_res      (GHashTable *hash,
                                                gint *xres,
                                                gint *yres);
-static void            get_fvol_res           (GHashTable *hash,
-                                               gint *xres, 
-                                               gint *yres, 
-                                               gint *zres,
-                                               gint *offset);
 static GwySIUnit*      get_physical_scale     (GHashTable *hash,
                                                GHashTable *scannerlist,
                                                GHashTable *scanlist,
@@ -198,8 +192,7 @@ static GwyContainer*   nanoscope_get_metadata (GHashTable *hash,
                                                GList *list);
 static NanoscopeValue* parse_value            (const gchar *key,
                                                gchar *line);
-GwyDataField*          preview_from_brick     (GwyBrick *brick);
-
+static GwyDataField*   preview_from_brick     (GwyBrick *brick);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -254,19 +247,18 @@ nanoscope_load(const gchar *filename,
     GError *err = NULL;
     gchar *buffer = NULL;
     gchar *p;
-    const gchar *self, *fvol;
+    const gchar *self;
     gsize size = 0;
     NanoscopeFileType file_type;
     NanoscopeData *ndata;
     NanoscopeValue *val;
     GHashTable *hash, *scannerlist = NULL, *scanlist = NULL, *forcelist = NULL,
-               *contrlist = NULL, *filist = NULL;
+               *contrlist = NULL;
     GList *l, *list = NULL;
-    gint i, xres = 0, yres = 0, zres = 0, offset = 0;
+    gint i, xres = 0, yres = 0;
     gboolean ok;
     GwyDataField *preview;
     gchar *prevkey;
-    gboolean fvpars = FALSE;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -314,13 +306,11 @@ nanoscope_load(const gchar *filename,
     while ((hash = read_hash(&p, &err))) {
         ndata = g_new0(NanoscopeData, 1);
         ndata->hash = hash;
-
-        fvol = g_hash_table_lookup(hash, "Start context");
-        if (fvol && gwy_strequal(((NanoscopeValue *)fvol)->hard_value_str, "FVOL")) {
-            file_type = NANOSCOPE_FILE_TYPE_FORCE_VOLUME;
-        }
-
         list = g_list_append(list, ndata);
+
+        val = g_hash_table_lookup(hash, "Start context");
+        if (val && gwy_strequal(val->hard_value_str, "FVOL"))
+            file_type = NANOSCOPE_FILE_TYPE_FORCE_VOLUME;
     }
 
     if (err) {
@@ -334,7 +324,6 @@ nanoscope_load(const gchar *filename,
         ndata = (NanoscopeData*)l->data;
         hash = ndata->hash;
         self = g_hash_table_lookup(hash, "#self");
-        //printf("self: %s\n", self);
         /* The alternate names were found in files written by some beast
          * called Nanoscope E software */
         if (gwy_strequal(self, "Scanner list")
@@ -348,10 +337,6 @@ nanoscope_load(const gchar *filename,
         if (gwy_strequal(self, "Controller list")) {
             contrlist = hash;
             continue;
-        }
-        if (gwy_strequal(self, "Ciao force image list")) {
-            filist = hash;
-            fvpars = TRUE;
         }
         if (gwy_stramong(self, "Ciao scan list", "Afm list", "Stm list",
                          "NC Afm list", NULL)) {
@@ -367,7 +352,7 @@ nanoscope_load(const gchar *filename,
                           "Ciao force image list", "Image list", NULL))
             continue;
 
-
+        gwy_debug("processing hash %s", self);
         if (file_type == NANOSCOPE_FILE_TYPE_FORCE_BIN) {
             ndata->graph_model = hash_to_curve(hash, forcelist, scanlist,
                                                scannerlist,
@@ -376,11 +361,12 @@ nanoscope_load(const gchar *filename,
                                                xres,
                                                error);
             ok = ok && ndata->graph_model;
-        } 
+        }
         else if (file_type == NANOSCOPE_FILE_TYPE_FORCE_VOLUME) {
-            if (!fvpars) continue;
+            if (!gwy_strequal(self, "Ciao force image list"))
+                continue;
 
-            ndata->brick = hash_to_brick(hash, forcelist, scanlist, filist,
+            ndata->brick = hash_to_brick(hash, forcelist, scanlist,
                                          file_type,
                                          size, buffer,
                                          ndata->second_brick,
@@ -441,7 +427,7 @@ nanoscope_load(const gchar *filename,
                 GQuark quark = gwy_app_get_graph_key_for_id(i+1);
                 gwy_container_set_object(container, quark, ndata->graph_model);
                 i++;
-            } 
+            }
             else if (ndata->brick) {
                 GQuark quark = gwy_app_get_brick_key_for_id(i+1);
 
@@ -732,96 +718,96 @@ hash_to_data_field(GHashTable *hash,
     return dfield;
 }
 
-static GwyBrick*  
-hash_to_brick (GHashTable *hash, GHashTable *forcelist, GHashTable *scanlist,
-               GHashTable *filist,
-               NanoscopeFileType file_type,
-               guint bufsize,
-               gchar *buffer,
-               GwyBrick *second_brick,
+static GwyBrick*
+hash_to_brick(GHashTable *hash, GHashTable *forcelist, GHashTable *scanlist,
+              NanoscopeFileType file_type,
+              guint bufsize,
+              gchar *buffer,
+              GwyBrick *second_brick,
               GError **error)
 {
     GwyBrick *brick, *allbrick;
     NanoscopeValue *val;
-    gint sv;
-    gchar *s;
     gdouble *data, *data1, *dat2;
-    gint xres, yres, zres, offset, length;
+    guint xres, yres, zres, offset, length, bpp, i, j, l;
+    gint16 *d;
+    gdouble q;
 
-    printf("Loading brick\n");
+    gwy_debug("Loading brick");
 
-    if (!require_keys(hash, error, "Number of lines",
+    if (!require_keys(hash, error, "Samps/line", "Data offset", "Data length",
                       NULL))
-    {
-        printf("missing number of lines!\n");
+        return NULL;
+    if (!require_keys(forcelist, error, "force/line", NULL))
+        return NULL;
+    if (!require_keys(scanlist, error, "Scan size", NULL))
+        return NULL;
+
+    /* scan size */
+    val = g_hash_table_lookup(hash, "Data offset");
+    offset = GWY_ROUND(val->hard_value);
+    gwy_debug("data offset %u", offset);
+
+    val = g_hash_table_lookup(hash, "Data length");
+    length = GWY_ROUND(val->hard_value);
+    gwy_debug("data length %u", length);
+
+    val = g_hash_table_lookup(hash, "Samps/line");
+    zres = GWY_ROUND(val->hard_value);
+    gwy_debug("samples in force line %u", zres);
+
+    val = g_hash_table_lookup(forcelist, "force/line");
+    xres = GWY_ROUND(val->hard_value);
+    gwy_debug("force curves per line %u", xres);
+
+    val = g_hash_table_lookup(hash, "Bytes/pixel");
+    bpp = val ? GWY_ROUND(val->hard_value) : 2;
+    if (bpp != 2) {
+        err_UNSUPPORTED(error, "Bytes/pixel");
         return NULL;
     }
 
+    /* FIXME: It is not clear how we should get yres.  Just divide the total
+     * data size with all the known sizes and hope for the best. */
+    yres = length/(xres*zres*bpp*2);
 
-    /* scan size */
-    val = g_hash_table_lookup(filist, "Samps/line");
-    if (val) {
-        sv = g_ascii_strtod(val->hard_value_str, NULL);
-        printf("samples in force line %d\n", sv);
-        zres = sv;
-    }
+    if (err_DIMENSION(error, xres)
+        || err_DIMENSION(error, yres)
+        || err_DIMENSION(error, zres))
+        return NULL;
 
-    val = g_hash_table_lookup(filist, "Data offset");
-    if (val) {
-        sv = g_ascii_strtod(val->hard_value_str, NULL);
-        printf("data offset %d\n", sv);
-        offset = sv;
-    }
-
-    val = g_hash_table_lookup(filist, "Data length");
-    if (val) {
-        sv = g_ascii_strtod(val->hard_value_str, NULL);
-        printf("data length %d\n", sv);
-        length = sv;
-    }
-
-    val = g_hash_table_lookup(scanlist, "Samps/line");
-    if (val) {
-        sv = g_ascii_strtod(val->hard_value_str, NULL);
-        printf("image samples/line %d\n", sv);
-    }
-
-    val = g_hash_table_lookup(hash, "Number of lines");
-    if (val) {
-        sv = g_ascii_strtod(val->hard_value_str, NULL);
-        printf("number of image lines %d (%s)\n", sv, val->hard_value_str);
-        yres = sv;
-    }
-
-    val = g_hash_table_lookup(forcelist, "force/line");
-    if (val) {
-        sv = g_ascii_strtod(val->hard_value_str, NULL);
-        printf("force curves per image line %d\n", sv);
-        xres = sv;
-    }
-
+    if (err_SIZE_MISMATCH(error, offset + length, bufsize, FALSE))
+        return NULL;
 
     second_brick = NULL;
 
     allbrick = gwy_brick_new(xres, yres, zres, xres, yres, zres, 0);
     data = gwy_brick_get_data(allbrick);
 
-    printf("brick size expected to be %dx%dx%d (two bricks loaded), data length %d, expected %d\n", xres, yres, zres, length, xres*yres*zres*2*2);
+    gwy_debug("brick size expected to be %dx%dx%d (two bricks loaded), data length %d, expected %d", xres, yres, zres, length, xres*yres*zres*bpp*2);
 
-    if (!read_binary_data(xres*yres*zres, data, buffer + offset, 2, error)) {
-        printf("error reading brick\n");
+    q = 1.0/(1 << (8*bpp));
+    d = (gint16*)(buffer + offset);
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            for (l = 0; l < zres; l++) {
+                data[(l*yres + i)*xres + j] = q*GINT16_FROM_LE(*d);
+                d++;
+            }
+            /* Retrace */
+            d += zres;
+        }
     }
-
-
 
     return allbrick;
 }
 
-GwyDataField *preview_from_brick(GwyBrick *brick)
+static GwyDataField*
+preview_from_brick(GwyBrick *brick)
 {
     GwyDataField *dfield = gwy_data_field_new(10, 10, 10, 10, FALSE);
 
-    gwy_brick_sum_plane(brick, dfield, 0, 0, 0, gwy_brick_get_xres(brick), 
+    gwy_brick_sum_plane(brick, dfield, 0, 0, 0, gwy_brick_get_xres(brick),
                         gwy_brick_get_yres(brick), -1, FALSE);
 
     return dfield;
@@ -999,7 +985,6 @@ hash_to_curve(GHashTable *hash,
     bpp = val ? GWY_ROUND(val->hard_value) : 2;
 
     /* scan size */
-
     offset = size = 0;
     if (file_type == NANOSCOPE_FILE_TYPE_FORCE_BIN) {
         val = g_hash_table_lookup(hash, "Data offset");
@@ -1152,7 +1137,6 @@ hash_to_curve(GHashTable *hash,
  * get \@SENS in Ciao scan list -> SOFT
  * the factor is HARD*SOFT
  */
-
 static GwySIUnit*
 get_spec_ordinate_scale(GHashTable *hash,
                         GHashTable *scanlist,
@@ -1472,15 +1456,11 @@ read_hash(gchar **buffer,
     }
 
     /* Fix random stuff in Nanoscope E files */
-    
     if ((value = g_hash_table_lookup(hash, "Samps/line"))
         && !g_hash_table_lookup(hash, "Number of lines")
         && value->hard_value_units
         && g_ascii_isdigit(value->hard_value_units[0])) {
         NanoscopeValue *val;
-
-        printf("#%##@@&$*^@^@!!!!!\n");
-
         val = g_new0(NanoscopeValue, 1);
         val->hard_value = g_ascii_strtod(value->hard_value_units, NULL);
         val->hard_value_str = value->hard_value_units;
@@ -1651,4 +1631,3 @@ parse_value(const gchar *key, gchar *line)
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
