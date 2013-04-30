@@ -1398,6 +1398,14 @@ gwy_app_data_proxy_scan_data(gpointer key,
         g_return_if_fail(GWY_IS_SELECTION(object));
         break;
 
+        case KEY_IS_BRICK_PREVIEW:
+        gwy_debug("Found brick preview %d (%s)", i, strkey);
+        g_return_if_fail(G_VALUE_HOLDS_OBJECT(gvalue));
+        object = g_value_get_object(gvalue);
+        g_return_if_fail(GWY_IS_DATA_FIELD(object));
+        gwy_app_data_proxy_connect_preview(proxy, i, object);
+        break;
+
         default:
         break;
     }
