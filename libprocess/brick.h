@@ -92,9 +92,11 @@ GwyBrick*   gwy_brick_new                   (gint xres, gint yres, gint zres,
 GwyBrick*   gwy_brick_new_alike             (GwyBrick *model,
                                              gboolean nullme);
 
-/*GwyBrick*       gwy_brick_new_part    (const GwyBrick *brick,
-                                       const GwyBrickPart *bpart,
-                                       gboolean keep_offsets);*/
+GwyBrick*       gwy_brick_new_part    (const GwyBrick *brick,
+                                       gint xpos, gint ypos, gint zpos,
+                                       gint xres, gint yres, gint zres,
+                                       gboolean keep_offsets);
+
 /*void            gwy_brick_set_size    (GwyBrick *brick,
                                        guint xres,
                                        guint yres,

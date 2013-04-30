@@ -200,6 +200,75 @@ gwy_brick_new_alike(GwyBrick *model,
     return brick;
 }
 
+/**
+ * gwy_brick_new_part:
+ * @brick: A data brick to take data from
+ * @xpos: x position where to start from
+ * @ypos: y position where to start from
+ * @zpos: z position where to start from
+ * @xres: x resolution (width) to be extracted
+ * @yres: y resolution (height) to be extracted
+ * @zres: z resolution (depth) to be extracted
+ *
+ * Creates a new data brick as a part of existing one.
+ *
+ * Use gwy_brick_duplicate() if you want to copy a whole data brick.
+ *
+ * Returns: A newly created data brick.
+ *
+ * Since: 2.32
+ **/
+GwyBrick*       
+gwy_brick_new_part(const GwyBrick *brick,
+                   gint xpos, gint ypos, gint zpos,
+                   gint xres, gint yres, gint zres,
+                   gboolean keep_offsets)
+{
+    GwyBrick *part;
+    gint col, row, lev;
+    gdouble *bdata, *pdata;
+    g_return_val_if_fail(GWY_IS_BRICK(brick), NULL);
+
+    g_return_val_if_fail(xpos >= 0 && ypos >=0 && zpos >=0 
+                         && xres >=0 && yres >=0 && zres >= 0,
+                         NULL);
+    g_return_val_if_fail(((xpos + xres) <= brick->xres) 
+                         && ((ypos + yres) <= brick->yres)
+                         && ((zpos + zres) <= brick->zres), 
+                         NULL);
+
+    part = gwy_brick_new(xres, yres, zres, 
+                         brick->xreal*xres/brick->xres,
+                         brick->yreal*yres/brick->yres,
+                         brick->zreal*zres/brick->zres,
+                         FALSE);
+    
+    pdata = part->data;
+    bdata = brick->data;
+
+    for (lev = 0; lev < zres; lev++) {
+        for (row = 0; row < yres; row++) {
+            for (col = 0; col < xres; col++) {
+                    pdata[col + xres*row + xres*yres*lev] 
+                        = bdata[col + xpos + brick->xres*(row + ypos) + brick->xres*brick->yres*(lev + zpos)];
+            }
+        }
+    }
+
+    if (brick->si_unit_x)
+        part->si_unit_x = gwy_si_unit_duplicate(brick->si_unit_x);
+    if (brick->si_unit_y)
+        part->si_unit_y = gwy_si_unit_duplicate(brick->si_unit_y);
+    if (brick->si_unit_z)
+        part->si_unit_z = gwy_si_unit_duplicate(brick->si_unit_z);
+    if (brick->si_unit_w)
+        part->si_unit_w = gwy_si_unit_duplicate(brick->si_unit_w);
+
+
+    return part;
+
+}
+
 
 static GByteArray*
 gwy_brick_serialize(GObject *obj,
