@@ -148,6 +148,8 @@ static GwyGraphModel*  hash_to_curve          (GHashTable *hash,
                                                GError **error);
 static GwyBrick*  hash_to_brick               (GHashTable *hash,
                                                GHashTable *forcelist,
+                                               GHashTable *scanlist,
+                                               GHashTable *filist,
                                                NanoscopeFileType file_type,
                                                guint bufsize,
                                                gchar *buffer,
@@ -258,12 +260,13 @@ nanoscope_load(const gchar *filename,
     NanoscopeData *ndata;
     NanoscopeValue *val;
     GHashTable *hash, *scannerlist = NULL, *scanlist = NULL, *forcelist = NULL,
-               *contrlist = NULL;
+               *contrlist = NULL, *filist = NULL;
     GList *l, *list = NULL;
     gint i, xres = 0, yres = 0, zres = 0, offset = 0;
     gboolean ok;
     GwyDataField *preview;
     gchar *prevkey;
+    gboolean fvpars = FALSE;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -331,6 +334,7 @@ nanoscope_load(const gchar *filename,
         ndata = (NanoscopeData*)l->data;
         hash = ndata->hash;
         self = g_hash_table_lookup(hash, "#self");
+        //printf("self: %s\n", self);
         /* The alternate names were found in files written by some beast
          * called Nanoscope E software */
         if (gwy_strequal(self, "Scanner list")
@@ -345,6 +349,10 @@ nanoscope_load(const gchar *filename,
             contrlist = hash;
             continue;
         }
+        if (gwy_strequal(self, "Ciao force image list")) {
+            filist = hash;
+            fvpars = TRUE;
+        }
         if (gwy_stramong(self, "Ciao scan list", "Afm list", "Stm list",
                          "NC Afm list", NULL)) {
             get_scan_list_res(hash, &xres, &yres);
@@ -354,10 +362,11 @@ nanoscope_load(const gchar *filename,
             get_scan_list_res(hash, &xres, &yres);
             forcelist = hash;
         }
-        if (!gwy_stramong(self, "Ciao image list", "AFM image list",
+        if (!gwy_stramong(self, "AFM image list", "Ciao image list",
                           "STM image list", "NCAFM image list",
                           "Ciao force image list", "Image list", NULL))
             continue;
+
 
         if (file_type == NANOSCOPE_FILE_TYPE_FORCE_BIN) {
             ndata->graph_model = hash_to_curve(hash, forcelist, scanlist,
@@ -369,13 +378,14 @@ nanoscope_load(const gchar *filename,
             ok = ok && ndata->graph_model;
         } 
         else if (file_type == NANOSCOPE_FILE_TYPE_FORCE_VOLUME) {
-            ndata->brick = hash_to_brick(hash, forcelist,
+            if (!fvpars) continue;
+
+            ndata->brick = hash_to_brick(hash, forcelist, scanlist, filist,
                                          file_type,
                                          size, buffer,
                                          ndata->second_brick,
                                          error);
             ok = ok && ndata->brick;
-
         }
         else {
             ndata->data_field = hash_to_data_field(hash, scannerlist, scanlist,
@@ -723,39 +733,80 @@ hash_to_data_field(GHashTable *hash,
 }
 
 static GwyBrick*  
-hash_to_brick (GHashTable *hash, GHashTable *forcelist,
+hash_to_brick (GHashTable *hash, GHashTable *forcelist, GHashTable *scanlist,
+               GHashTable *filist,
                NanoscopeFileType file_type,
                guint bufsize,
                gchar *buffer,
                GwyBrick *second_brick,
               GError **error)
 {
-    GwyBrick *brick;
+    GwyBrick *brick, *allbrick;
     NanoscopeValue *val;
-    gint sv1, sv2;
-    gchar *s, *end;
+    gint sv;
+    gchar *s;
+    gdouble *data, *data1, *dat2;
+    gint xres, yres, zres, offset, length;
 
     printf("Loading brick\n");
 
     /* scan size */
-    val = g_hash_table_lookup(forcelist, "Samps/line");
-    sv1 = g_ascii_strtod(val->hard_value_str, &end);
-    printf("parsing %s\n", val->hard_value_str);
-    if (errno || *end != ' ') {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Cannot parse `Samps/line' field."));
-        return NULL;
+    val = g_hash_table_lookup(filist, "Samps/line");
+    if (val) {
+        sv = g_ascii_strtod(val->hard_value_str, NULL);
+        printf("samples in force line %d\n", sv);
+        zres = sv;
     }
-    s = end+1;
-    sv2 = g_ascii_strtod(s, &end);
 
-    printf("sv1 %d sv2 %d\n", sv1, sv2);
+    val = g_hash_table_lookup(filist, "Data offset");
+    if (val) {
+        sv = g_ascii_strtod(val->hard_value_str, NULL);
+        printf("data offset %d\n", sv);
+        offset = sv;
+    }
+
+    val = g_hash_table_lookup(filist, "Data length");
+    if (val) {
+        sv = g_ascii_strtod(val->hard_value_str, NULL);
+        printf("data length %d\n", sv);
+        length = sv;
+    }
+
+    val = g_hash_table_lookup(scanlist, "Samps/line");
+    if (val) {
+        sv = g_ascii_strtod(val->hard_value_str, NULL);
+        printf("image samples/line %d\n", sv);
+    }
+
+    val = g_hash_table_lookup(hash, "Number of lines");
+    if (val) {
+        sv = g_ascii_strtod(val->hard_value_str, NULL);
+        printf("number of image lines %d (%s)\n", sv, val->hard_value_str);
+        yres = sv;
+    }
+
+    val = g_hash_table_lookup(forcelist, "force/line");
+    if (val) {
+        sv = g_ascii_strtod(val->hard_value_str, NULL);
+        printf("force curves per image line %d\n", sv);
+        xres = sv;
+    }
+
 
     second_brick = NULL;
 
-    brick = gwy_brick_new(100, 100, 100, 100, 100, 100, 0);
+    allbrick = gwy_brick_new(xres, yres, zres, xres, yres, zres, 0);
+    data = gwy_brick_get_data(allbrick);
 
-    return brick;
+    printf("brick size expected to be %dx%dx%d (two bricks loaded), data length %d, expected %d\n", xres, yres, zres, length, xres*yres*zres*2*2);
+
+    if (!read_binary_data(xres*yres*zres, data, buffer + offset, 2, error)) {
+        printf("error reading brick\n");
+    }
+
+
+
+    return allbrick;
 }
 
 GwyDataField *preview_from_brick(GwyBrick *brick)
