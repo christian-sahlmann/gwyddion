@@ -36,7 +36,7 @@
 #include <libgwymodule/gwymodule-volume.h>
 #include <app/gwyapp.h>
 
-#define VOLUME_INVERT_RUN_MODES (GWY_RUN_NONINTERACTIVE)
+#define VOLUME_INVERT_RUN_MODES (GWY_RUN_IMMEDIATE)
 
 static gboolean module_register                    (void);
 static void     volume_invert                         (GwyContainer *data,
