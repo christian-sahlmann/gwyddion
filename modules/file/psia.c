@@ -397,9 +397,7 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
     q = pow10(power10)*header.data_gain;
     psia_read_data_field(dfield, data, header.data_type, q, header.z_scale, z0);
 
-    /* XXX: Ignore header.forward since it seems the right thing to do based
-     * on comparison with some MS Windows preview program. */
-    gwy_data_field_invert(dfield, header.scan_up, FALSE, FALSE);
+    gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
     if (header.swap_xy) {
         gwy_data_field_rotate(dfield, 0.5*G_PI, GWY_INTERPOLATION_ROUND);
         gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
@@ -879,8 +877,8 @@ psia_get_metadata(PSIAImageHeader *header,
                                               : "Top to bottom"));
     gwy_container_set_string_by_name(meta, "Line direction",
                                      g_strdup(header->forward
-                                              ? "Forward"
-                                              : "Backward"));
+                                              ? "Left to right"
+                                              : "Right to left"));
     gwy_container_set_string_by_name(meta, "Sine scan",
                                      g_strdup(header->sine_scan
                                               ? "Yes"
