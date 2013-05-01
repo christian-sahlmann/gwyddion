@@ -2078,7 +2078,7 @@ p3d_add_wireframe(ExtractControls *controls)
 
     gwy_data_field_resample(visited, xres, yres, GWY_INTERPOLATION_NONE);
 
-    for (i=0; i<yres; i+=spacing)
+    for (i=0; i<zres; i+=spacing)
     {
         gwy_brick_extract_plane(controls->brick, cut, 0, 0, i, xres, yres, -1, FALSE);
         data = gwy_data_field_get_data(cut);
