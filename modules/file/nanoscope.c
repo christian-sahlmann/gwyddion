@@ -152,7 +152,7 @@ static GwyBrick*       hash_to_brick          (GHashTable *hash,
                                                NanoscopeFileType file_type,
                                                guint bufsize,
                                                gchar *buffer,
-                                               GwyBrick *second_brick,
+                                               GwyBrick **second_brick,
                                                GError **error);
 static gboolean        read_text_data         (guint n,
                                                gdouble *data,
@@ -258,7 +258,7 @@ nanoscope_load(const gchar *filename,
     gint i, xres = 0, yres = 0;
     gboolean ok;
     GwyDataField *preview;
-    gchar *prevkey;
+    gchar *prevkey, *titlekey;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -369,7 +369,7 @@ nanoscope_load(const gchar *filename,
             ndata->brick = hash_to_brick(hash, forcelist, scanlist,
                                          file_type,
                                          size, buffer,
-                                         ndata->second_brick,
+                                         &ndata->second_brick,
                                          error);
             ok = ok && ndata->brick;
         }
@@ -433,13 +433,21 @@ nanoscope_load(const gchar *filename,
 
                 preview = preview_from_brick(ndata->brick);
                 prevkey = g_strconcat(g_quark_to_string(quark), "/preview", NULL);
+                titlekey = g_strconcat(g_quark_to_string(quark), "/title", NULL);
                 gwy_container_set_object(container, quark, ndata->brick);
                 gwy_container_set_object(container, g_quark_from_string(prevkey), preview);
+                gwy_container_set_string(container, g_quark_from_string(titlekey), g_strdup("Approach"));
 
                 i++;
 
                 if (ndata->second_brick) {
                     quark = gwy_app_get_brick_key_for_id(i+1);
+                    preview = preview_from_brick(ndata->second_brick);
+                    prevkey = g_strconcat(g_quark_to_string(quark), "/preview", NULL);
+                    titlekey = g_strconcat(g_quark_to_string(quark), "/title", NULL);
+                    gwy_container_set_object(container, quark, ndata->second_brick);
+                    gwy_container_set_object(container, g_quark_from_string(prevkey), preview);
+                    gwy_container_set_string(container, g_quark_from_string(titlekey), g_strdup("Retract"));
                     i++;
 
 
@@ -720,15 +728,15 @@ hash_to_data_field(GHashTable *hash,
 
 static GwyBrick*
 hash_to_brick(GHashTable *hash, GHashTable *forcelist, GHashTable *scanlist,
-              NanoscopeFileType file_type,
+              G_GNUC_UNUSED NanoscopeFileType file_type,
               guint bufsize,
               gchar *buffer,
-              GwyBrick *second_brick,
+              GwyBrick **second_brick,
               GError **error)
 {
-    GwyBrick *brick, *allbrick;
+    GwyBrick *brick;
     NanoscopeValue *val;
-    gdouble *data, *data1, *dat2;
+    gdouble *adata, *rdata;
     guint xres, yres, zres, offset, length, bpp, i, j, l;
     gint16 *d;
     gdouble q;
@@ -779,27 +787,36 @@ hash_to_brick(GHashTable *hash, GHashTable *forcelist, GHashTable *scanlist,
     if (err_SIZE_MISMATCH(error, offset + length, bufsize, FALSE))
         return NULL;
 
-    second_brick = NULL;
 
-    allbrick = gwy_brick_new(xres, yres, zres, xres, yres, zres, 0);
-    data = gwy_brick_get_data(allbrick);
+    brick = gwy_brick_new(xres, yres, zres, xres, yres, zres, 0);
+    adata = gwy_brick_get_data(brick);
 
-    gwy_debug("brick size expected to be %dx%dx%d (two bricks loaded), data length %d, expected %d", xres, yres, zres, length, xres*yres*zres*bpp*2);
+    /*up to now it seems that second brick is always present*/
+
+    *second_brick = gwy_brick_new(xres, yres, zres, xres, yres, zres, 0);
+    rdata = gwy_brick_get_data(*second_brick);
+
+
+    //gwy_debug("brick size expected to be %dx%dx%d (two bricks loaded), data length %d, expected %d", xres, yres, zres, length, xres*yres*zres*bpp*2);
 
     q = 1.0/(1 << (8*bpp));
     d = (gint16*)(buffer + offset);
     for (i = 0; i < yres; i++) {
         for (j = 0; j < xres; j++) {
+            /* Approach curves */
             for (l = 0; l < zres; l++) {
-                data[(l*yres + i)*xres + j] = q*GINT16_FROM_LE(*d);
+                adata[(l*yres + i)*xres + j] = q*GINT16_FROM_LE(*d);
                 d++;
             }
-            /* Retrace */
-            d += zres;
+            /* Retract curves */
+            //d += zres;
+            for (l = 0; l < zres; l++) {
+                rdata[(l*yres + i)*xres + j] = q*GINT16_FROM_LE(*d);
+                d++;
+            }
         }
     }
-
-    return allbrick;
+    return brick;
 }
 
 static GwyDataField*
