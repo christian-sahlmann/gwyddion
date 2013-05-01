@@ -806,6 +806,8 @@ hash_to_brick(GHashTable *hash, GHashTable *forcelist, GHashTable *scanlist,
             /* Approach curves */
             for (l = 0; l < zres; l++) {
                 adata[(l*yres + i)*xres + j] = q*GINT16_FROM_LE(*d);
+                if (l==zres-1 && GINT16_FROM_LE(*d)==-32768) //a bug in PF-QNM data?
+                    adata[(l*yres + i)*xres + j] = adata[((l-1)*yres + i)*xres + j];
                 d++;
             }
             /* Retract curves */
