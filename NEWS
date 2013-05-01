@@ -34,6 +34,7 @@ Modules:
 - Volumize_layers (new): crarte 3D volume data from set of 2D data
 - Show and extract (new): show 3D volume data and extract some projections
 - Volume invert (new): invert value in a 3D volume
+- Nanoscope: basic support for Force Volume data
 
 
 2.31 (2013-02-21)
