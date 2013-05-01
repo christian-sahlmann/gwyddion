@@ -843,6 +843,9 @@ graph_selection_finished_cb(GwySelection *selection,
                                 row,
                                 lev,       
                                 0);
+        gwy_data_line_set_si_unit_x(dline, gwy_brick_get_si_unit_x(controls->brick));
+        gwy_data_line_set_si_unit_y(dline, gwy_brick_get_si_unit_w(controls->brick));
+
    } else if (args->gtype == GRAPH_DIRY) {
         col = controls->gcol = gwy_brick_rtoi(controls->brick, sel[0]);
         lev = controls->glev = gwy_brick_rtok(controls->brick, sel[1]);
@@ -855,6 +858,9 @@ graph_selection_finished_cb(GwySelection *selection,
                                 gwy_brick_get_yres(controls->brick),
                                 lev,       
                                 0);
+        gwy_data_line_set_si_unit_x(dline, gwy_brick_get_si_unit_y(controls->brick));
+        gwy_data_line_set_si_unit_y(dline, gwy_brick_get_si_unit_w(controls->brick));
+
    } else if (args->gtype == GRAPH_DIRZ) {
         col = controls->gcol = gwy_brick_rtoi(controls->brick, sel[0]);
         row = controls->grow = gwy_brick_rtoj(controls->brick, sel[1]);
@@ -867,6 +873,8 @@ graph_selection_finished_cb(GwySelection *selection,
                                 row,
                                 gwy_brick_get_zres(controls->brick),       
                                 0);
+        gwy_data_line_set_si_unit_x(dline, gwy_brick_get_si_unit_z(controls->brick));
+        gwy_data_line_set_si_unit_y(dline, gwy_brick_get_si_unit_w(controls->brick));
     } 
 
 
@@ -1129,6 +1137,9 @@ preview(ExtractControls *controls,
                                     gwy_brick_get_yres(controls->brick), 
                                     gwy_brick_get_zres(controls->brick), 
                                     0);
+            gwy_data_field_set_si_unit_xy(dfield, gwy_brick_get_si_unit_z(controls->brick));
+            gwy_data_field_set_si_unit_z(dfield, gwy_brick_get_si_unit_w(controls->brick));
+
         } else if (args->type == CUT_DIRY) {
             gwy_brick_extract_plane(controls->brick, dfield,
                                     0, 
@@ -1138,6 +1149,9 @@ preview(ExtractControls *controls,
                                     -1, 
                                     gwy_brick_get_zres(controls->brick), 
                                     0);
+            gwy_data_field_set_si_unit_xy(dfield, gwy_brick_get_si_unit_x(controls->brick));
+            gwy_data_field_set_si_unit_z(dfield, gwy_brick_get_si_unit_w(controls->brick));
+
         } else if (args->type == CUT_DIRZ) {
             gwy_brick_extract_plane(controls->brick, dfield,
                                     0, 
@@ -1147,6 +1161,9 @@ preview(ExtractControls *controls,
                                     gwy_brick_get_yres(controls->brick), 
                                     -1, 
                                     0);
+            gwy_data_field_set_si_unit_xy(dfield, gwy_brick_get_si_unit_x(controls->brick));
+            gwy_data_field_set_si_unit_z(dfield, gwy_brick_get_si_unit_w(controls->brick));
+
         } else if (args->type == PROJ_DIRX) {
             gwy_brick_sum_plane(controls->brick, dfield,
                                 0, 
@@ -1156,6 +1173,9 @@ preview(ExtractControls *controls,
                                 gwy_brick_get_yres(controls->brick), 
                                 gwy_brick_get_zres(controls->brick), 
                                 0);
+            gwy_data_field_set_si_unit_xy(dfield, gwy_brick_get_si_unit_z(controls->brick));
+            gwy_data_field_set_si_unit_z(dfield, gwy_brick_get_si_unit_w(controls->brick));
+
         } else if (args->type == PROJ_DIRY) {
             gwy_brick_sum_plane(controls->brick, dfield,
                                 0, 
@@ -1165,6 +1185,9 @@ preview(ExtractControls *controls,
                                 -1, 
                                 gwy_brick_get_zres(controls->brick), 
                                 0);
+            gwy_data_field_set_si_unit_xy(dfield, gwy_brick_get_si_unit_x(controls->brick));
+            gwy_data_field_set_si_unit_z(dfield, gwy_brick_get_si_unit_w(controls->brick));
+
         } else if (args->type == PROJ_DIRZ) {
             gwy_brick_sum_plane(controls->brick, dfield,
                                 0, 
@@ -1174,6 +1197,9 @@ preview(ExtractControls *controls,
                                 gwy_brick_get_yres(controls->brick), 
                                 -1, 
                                 0);
+            gwy_data_field_set_si_unit_xy(dfield, gwy_brick_get_si_unit_x(controls->brick));
+            gwy_data_field_set_si_unit_z(dfield, gwy_brick_get_si_unit_w(controls->brick));
+
         }
 
         g_snprintf(message, sizeof(message), "Shown range %g to %g", 
