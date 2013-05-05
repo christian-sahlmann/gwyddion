@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2013-04-28 03:58+0200\n"
-"PO-Revision-Date: 2013-04-28 22:34+0100\n"
+"POT-Creation-Date: 2013-05-03 03:58+0200\n"
+"PO-Revision-Date: 2013-05-05 17:07+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -123,14 +123,14 @@ msgstr "vdW : parabole"
 
 #: libgwyddion/gwyinventory.c:1310
 #: libgwydgets/gwygraphwindow.c:611
-#: app/data-browser.c:2073
-#: app/data-browser.c:2826
-#: app/data-browser.c:3674
-#: app/data-browser.c:3833
-#: app/data-browser.c:4117
-#: app/data-browser.c:4530
-#: app/data-browser.c:6450
-#: app/data-browser.c:6532
+#: app/data-browser.c:2081
+#: app/data-browser.c:2834
+#: app/data-browser.c:3682
+#: app/data-browser.c:3841
+#: app/data-browser.c:4125
+#: app/data-browser.c:4538
+#: app/data-browser.c:6458
+#: app/data-browser.c:6540
 #: app/resource-editor.c:366
 #: modules/process/convolution_filter.c:699
 msgid "Untitled"
@@ -442,7 +442,7 @@ msgid "Area"
 msgstr "Surface"
 
 #: libprocess/gwygrainvalue.c:1057
-#: app/data-browser.c:5030
+#: app/data-browser.c:5038
 #: app/toolbox.c:109
 msgid "Volume"
 msgstr "Volume"
@@ -953,6 +953,7 @@ msgstr "pixels"
 #: modules/process/tip_model.c:170
 #: modules/process/unrotate.c:226
 #: modules/process/volumize_layers.c:211
+#: modules/volume/volume_calibrate.c:359
 #: modules/volume/volume_extract.c:338
 msgid "_Reset"
 msgstr "_Remise à zéro"
@@ -1522,9 +1523,8 @@ msgid "Change Volume Data Preview"
 msgstr "Modifier la prévisualisation des données volumiques"
 
 #: app/app.c:1220
-#, fuzzy
 msgid "Preview quantity:"
-msgstr "Type de prévisualisation :"
+msgstr "Quantité prévisualisée :"
 
 #: app/app.c:1224
 #: modules/process/extend.c:270
@@ -1555,45 +1555,45 @@ msgstr "Maximum"
 msgid "RMS"
 msgstr "RMS"
 
-#: app/data-browser.c:4905
+#: app/data-browser.c:4913
 msgid "Extract to a new file"
 msgstr "Extraire en tant que nouveau fichier"
 
-#: app/data-browser.c:4906
+#: app/data-browser.c:4914
 msgid "Duplicate"
 msgstr "Dupliquer"
 
-#: app/data-browser.c:4907
+#: app/data-browser.c:4915
 msgid "Delete"
 msgstr "Supprimer"
 
-#: app/data-browser.c:4952
+#: app/data-browser.c:4960
 msgid "Data Browser"
 msgstr "Navigateur de données"
 
-#: app/data-browser.c:4975
+#: app/data-browser.c:4983
 msgid "Close file"
 msgstr "Fermer le fichier"
 
-#: app/data-browser.c:4988
+#: app/data-browser.c:4996
 msgid "Channels"
 msgstr "Canaux"
 
-#: app/data-browser.c:5002
+#: app/data-browser.c:5010
 #: modules/volume/volume_extract.c:456
 msgid "Graphs"
 msgstr "Graphes"
 
-#: app/data-browser.c:5016
+#: app/data-browser.c:5024
 msgid "Spectra"
 msgstr "Spectres"
 
-#: app/data-browser.c:6488
+#: app/data-browser.c:6496
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Canal inconnu %d"
 
-#: app/data-browser.c:6574
+#: app/data-browser.c:6582
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Volume %d inconnu"
@@ -2765,7 +2765,7 @@ msgstr "Burleigh données exportées (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:225
 #: modules/file/burleigh_exp.c:266
-#: modules/file/nanoscope.c:1295
+#: modules/file/nanoscope.c:1457
 #: modules/file/omicron.c:408
 #: modules/file/shimadzu.c:465
 msgid "Missing colon in header line."
@@ -3301,7 +3301,6 @@ msgstr "Dimensions physiques"
 #: modules/file/pixmap.c:3122
 #: modules/file/rawfile.c:631
 #: modules/process/crosscor.c:196
-#: modules/process/deposit_synth.c:455
 #: modules/process/dimensions.h:471
 #: modules/process/tip_blind.c:264
 msgid "_Width:"
@@ -3322,6 +3321,10 @@ msgstr "Largeur :"
 #: modules/process/calibrate.c:340
 #: modules/process/calibrate.c:421
 #: modules/process/dimensions.h:159
+#: modules/volume/volume_calibrate.c:402
+#: modules/volume/volume_calibrate.c:429
+#: modules/volume/volume_calibrate.c:456
+#: modules/volume/volume_calibrate.c:534
 msgid "verb|Change"
 msgstr "Changer"
 
@@ -3354,6 +3357,7 @@ msgstr "Échelle _Z (par unité d'échantillon) :"
 #: modules/process/calcoefs_view.c:1392
 #: modules/process/calibrate.c:819
 #: modules/process/dimensions.h:193
+#: modules/volume/volume_calibrate.c:1005
 msgid "Change Units"
 msgstr "Changer les unités"
 
@@ -3365,6 +3369,7 @@ msgstr "Changer les unités"
 #: modules/process/calcoefs_view.c:1405
 #: modules/process/calibrate.c:833
 #: modules/process/dimensions.h:206
+#: modules/volume/volume_calibrate.c:1019
 msgid "New _units:"
 msgstr "Nouvelles _unités :"
 
@@ -3950,19 +3955,19 @@ msgstr "Importe les fichiers Digital Instruments Nanoscope II."
 msgid "Nanoscope II files"
 msgstr "Nanoscope II"
 
-#: modules/file/nanoscope.c:188
+#: modules/file/nanoscope.c:200
 msgid "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
 msgstr "Importe les fichiers Veeco (Digital Instruments) Nanoscope, version 3 ou plus."
 
-#: modules/file/nanoscope.c:202
+#: modules/file/nanoscope.c:214
 msgid "Nanoscope III files"
 msgstr "Nanoscope III"
 
-#: modules/file/nanoscope.c:267
+#: modules/file/nanoscope.c:281
 msgid "File is not a Nanoscope file, or it is a unknown subtype."
 msgstr "Le fichier n'est pas un fichier Nanoscope, ou est d'un sous-type inconnu."
 
-#: modules/file/nanoscope.c:274
+#: modules/file/nanoscope.c:288
 msgid ""
 "File has been damaged by change of line endings, resulting in corruption of the binary part of the file.\n"
 "\n"
@@ -3972,18 +3977,18 @@ msgstr ""
 "\n"
 "Cela arrive typiquement lorsque le fichier est traité comme du texte lors d'un envoi incompressé par e-mail, un transfert FTP en mode ascii (uilisez le binaire), compressé avec ‘Envoyer vers un dossier compressé’ dans certaines versions de MS Windows, ou tout autre transfert de fichier qui essaie d'enregistrer en texte indépendamment de la plateforme."
 
-#: modules/file/nanoscope.c:540
-#: modules/file/nanoscope.c:556
+#: modules/file/nanoscope.c:597
+#: modules/file/nanoscope.c:613
 msgid "Cannot parse `Scan size' field."
 msgstr "Impossible d'analyser le champ `Scan size'."
 
-#: modules/file/nanoscope.c:1204
+#: modules/file/nanoscope.c:1366
 #: modules/file/nrrdfile.c:1023
 #, c-format
 msgid "Garbage after data sample #%u."
 msgstr "Données erronées après l'échantillon #%u."
 
-#: modules/file/nanoscope.c:1285
+#: modules/file/nanoscope.c:1447
 msgid "Truncated header line."
 msgstr "Ligne d'en-tête tronquée."
 
@@ -4524,12 +4529,12 @@ msgstr "Park Systems (.tiff, .tif)"
 msgid "Data tag is missing."
 msgstr "Étiquette de données manquante."
 
-#: modules/file/psia.c:499
+#: modules/file/psia.c:497
 #, c-format
 msgid "Header is too short (only %lu bytes)."
 msgstr "L'en-tête est trop court (seulement %lu octets)."
 
-#: modules/file/psia.c:615
+#: modules/file/psia.c:613
 #, c-format
 msgid "Spectroscopy header is too short (only %lu bytes)."
 msgstr "L'en-tête de spectroscopie est trop court (seulement %lu octets)."
@@ -6309,7 +6314,7 @@ msgid "Load calibration data"
 msgstr "Charger des données de calibration"
 
 #: modules/process/calcoefs_load.c:330
-#: modules/volume/volume_extract.c:1051
+#: modules/volume/volume_extract.c:1059
 #, c-format
 msgid "Error loading file '%s'"
 msgstr "Erreur lors du chargement du fichier '%s'"
@@ -6421,12 +6426,14 @@ msgstr "Détail"
 #: modules/process/calcoefs_simple.c:369
 #: modules/process/calcoefs_view.c:507
 #: modules/process/calibrate.c:368
+#: modules/volume/volume_calibrate.c:466
 msgid "_X offset:"
 msgstr "Décalage _X :"
 
 #: modules/process/calcoefs_simple.c:396
 #: modules/process/calcoefs_view.c:533
 #: modules/process/calibrate.c:381
+#: modules/volume/volume_calibrate.c:479
 msgid "_Y offset:"
 msgstr "Décalage _Y :"
 
@@ -6440,6 +6447,7 @@ msgstr "P_ériode Y :"
 
 #: modules/process/calcoefs_simple.c:436
 #: modules/process/calcoefs_view.c:545
+#: modules/volume/volume_calibrate.c:493
 msgid "_Z offset:"
 msgstr "Décalage _Z :"
 
@@ -6677,10 +6685,12 @@ msgid "/_Basic Operations/_Dimensions and Units..."
 msgstr "/Opérations _basiques/_Dimensions et unités..."
 
 #: modules/process/calibrate.c:164
+#: modules/volume/volume_calibrate.c:193
 msgid "Change physical dimensions, units or value scale"
 msgstr "Modifie les dimensions latérales, les unités ou l'échelle."
 
 #: modules/process/calibrate.c:283
+#: modules/volume/volume_calibrate.c:345
 msgid "Recalibrated Data"
 msgstr "Données recalibrées"
 
@@ -6689,14 +6699,17 @@ msgid "Dimensions and Units"
 msgstr "Dimensions et unités"
 
 #: modules/process/calibrate.c:315
+#: modules/volume/volume_calibrate.c:377
 msgid "New Real Dimensions"
 msgstr "Nouvelles dimensions réelles"
 
 #: modules/process/calibrate.c:320
+#: modules/volume/volume_calibrate.c:382
 msgid "_X range:"
 msgstr "Largeur _X :"
 
 #: modules/process/calibrate.c:347
+#: modules/volume/volume_calibrate.c:409
 msgid "_Y range:"
 msgstr "Hauteur _Y :"
 
@@ -6705,10 +6718,12 @@ msgid "_Square samples"
 msgstr "Échantillons carrés"
 
 #: modules/process/calibrate.c:396
+#: modules/volume/volume_calibrate.c:509
 msgid "Value Range"
 msgstr "Plage de valeurs"
 
 #: modules/process/calibrate.c:401
+#: modules/volume/volume_calibrate.c:436
 msgid "_Z range:"
 msgstr "Plage _Z : "
 
@@ -6717,18 +6732,22 @@ msgid "Z shi_ft:"
 msgstr "Décalage Z :"
 
 #: modules/process/calibrate.c:445
+#: modules/volume/volume_calibrate.c:558
 msgid "Calibration Coefficients"
 msgstr "Coefficients de calibration"
 
 #: modules/process/calibrate.c:452
+#: modules/volume/volume_calibrate.c:565
 msgid "_X calibration factor:"
 msgstr "Facteur de calibration _X :"
 
 #: modules/process/calibrate.c:460
+#: modules/volume/volume_calibrate.c:573
 msgid "_Y calibration factor:"
 msgstr "Facteur de calibration _Y :"
 
 #: modules/process/calibrate.c:468
+#: modules/volume/volume_calibrate.c:581
 msgid "_Z calibration factor:"
 msgstr "Facteur de calibration _Z :"
 
@@ -7086,16 +7105,21 @@ msgid "Particle Generation"
 msgstr "Génération de particules"
 
 #: modules/process/deposit_synth.c:444
-msgid "R_adius:"
-msgstr "R_ayon :"
+msgid "Particle r_adius:"
+msgstr "_Rayon des particules :"
+
+#: modules/process/deposit_synth.c:455
+msgid "Distribution _width:"
+msgstr "Largeur de distribution :"
 
 #: modules/process/deposit_synth.c:466
-msgid "_Coverage:"
-msgstr "_Couverture :"
+msgid "Surface _coverage:"
+msgstr "Taux de _couverture :"
 
 #: modules/process/deposit_synth.c:475
-msgid "_Revise:"
-msgstr "_Remanier :"
+#, fuzzy
+msgid "_Relax steps:"
+msgstr "Passes d'_intégration :"
 
 #: modules/process/deposit_synth.c:702
 #: modules/process/synth.h:518
@@ -7918,7 +7942,6 @@ msgid "Result"
 msgstr "Résultat"
 
 #: modules/process/fit_2d.c:351
-#, fuzzy
 msgid "Unit"
 msgstr "Unité"
 
@@ -11618,6 +11641,31 @@ msgstr ""
 "Inclinaison θ :      %s\n"
 "Inclinaison φ :      %s\n"
 
+#: modules/volume/volume_calibrate.c:175
+#, fuzzy
+msgid "Recalibrate volume data dimensions or value range."
+msgstr "Recalibre les dimensions latérales ou la valeur d'échelle."
+
+#: modules/volume/volume_calibrate.c:189
+msgid "/_Dimensions and Units..."
+msgstr "/_Dimensions et unités..."
+
+#: modules/volume/volume_calibrate.c:358
+msgid "Volume Dimensions and Units"
+msgstr "Dimensions et unités du volume"
+
+#: modules/volume/volume_calibrate.c:514
+msgid "_Value range:"
+msgstr "Plage :"
+
+#: modules/volume/volume_calibrate.c:543
+msgid "Value shi_ft:"
+msgstr "Décalage :"
+
+#: modules/volume/volume_calibrate.c:589
+msgid "_Value calibration factor:"
+msgstr "Facteur de calibration :"
+
 #: modules/volume/volume_extract.c:222
 msgid "Shows and/or extracts a section of volume data"
 msgstr "Affiche et/ou extrait une section de données volumiques"
@@ -11790,11 +11838,11 @@ msgstr "w"
 msgid "Brick graph"
 msgstr "Graphe d'un cube de données"
 
-#: modules/volume/volume_extract.c:1034
+#: modules/volume/volume_extract.c:1042
 msgid "Load volume data"
 msgstr "Charger des données volumiques"
 
-#: modules/volume/volume_extract.c:1876
+#: modules/volume/volume_extract.c:1902
 msgid "Building wireframe model..."
 msgstr "Construction du modèle filaire..."
 
@@ -11809,6 +11857,15 @@ msgstr "/_Inverser les valeurs..."
 #: modules/volume/volume_invert.c:68
 msgid "Invert value in volume data"
 msgstr "Inverser les valeurs dans les données volumiques"
+
+#~ msgid "R_adius:"
+#~ msgstr "R_ayon :"
+
+#~ msgid "_Coverage:"
+#~ msgstr "_Couverture :"
+
+#~ msgid "_Revise:"
+#~ msgstr "_Remanier :"
 
 #~ msgid "Loads and shows a brick (3D volume data)."
 #~ msgstr "Charge et affiche des données volumiques"
