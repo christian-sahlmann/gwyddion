@@ -447,6 +447,8 @@ _gwy_app_analyse_data_key(const gchar *strkey,
             *type = KEY_IS_BRICK_PREVIEW_PALETTE;
         else if (gwy_strequal(s + i, "/title"))
             *type = KEY_IS_BRICK_TITLE;
+        else if (gwy_strequal(s + i, "/meta"))
+            *type = KEY_IS_BRICK_META;
         else if (!s[i])
             *type = KEY_IS_BRICK;
         else
@@ -525,8 +527,8 @@ _gwy_app_analyse_data_key(const gchar *strkey,
         *type = KEY_IS_CALDATA;
         n += strlen("data/");
     }
-     else if (gwy_strequal(s, "meta"))
-        *type = KEY_IS_META;
+    else if (gwy_strequal(s, "meta"))
+        *type = KEY_IS_CHANNEL_META;
     else if (gwy_strequal(s, "data/realsquare"))
         *type = KEY_IS_REAL_SQUARE;
     else if (gwy_strequal(s, "sps-id"))
@@ -5904,7 +5906,7 @@ gwy_app_data_merge_copy_2(gpointer key,
                                           g_value_get_boolean(gvalue));
         break;
 
-        case KEY_IS_META:
+        case KEY_IS_CHANNEL_META:
         g_snprintf(buf, sizeof(buf), "/%d/meta", id2);
         gwy_container_set_object_by_name(dest, buf, g_value_get_object(gvalue));
         break;

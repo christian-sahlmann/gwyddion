@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2007 David Necas (Yeti).
+ *  Copyright (C) 2007-2013 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -248,7 +248,8 @@ validate_item_pass1(gpointer hash_key,
             g_array_append_val(info->volumes, id);
         break;
 
-        case KEY_IS_META:
+        case KEY_IS_CHANNEL_META:
+        case KEY_IS_BRICK_META:
         check_type(gvalue, GWY_TYPE_CONTAINER, key, errors);
         break;
 
@@ -314,11 +315,10 @@ in_array(GArray *array,
 
 static void
 validate_item_pass2(gpointer hash_key,
-                    gpointer hash_value,
+                    G_GNUC_UNUSED gpointer hash_value,
                     gpointer user_data)
 {
     GQuark key = GPOINTER_TO_UINT(hash_key);
-    GValue *gvalue = (GValue*)hash_value;
     GwyDataValidationInfo *info = (GwyDataValidationInfo*)user_data;
     GSList **errors;
     const gchar *strkey;
@@ -336,7 +336,7 @@ validate_item_pass2(gpointer hash_key,
     switch (type) {
         case KEY_IS_MASK:
         case KEY_IS_SHOW:
-        case KEY_IS_META:
+        case KEY_IS_CHANNEL_META:
         case KEY_IS_TITLE:
         case KEY_IS_PALETTE:
         case KEY_IS_3D_PALETTE:
@@ -368,7 +368,6 @@ validate_item_pass2(gpointer hash_key,
         break;
 
         case KEY_IS_SPECTRA_VISIBLE:
-        check_type(gvalue, G_TYPE_BOOLEAN, key, errors);
         if (!in_array(info->spectra, id))
             *errors = g_slist_prepend(*errors,
                                       FAIL(GWY_DATA_ERROR_STRAY_SECONDARY_DATA,
@@ -376,6 +375,18 @@ validate_item_pass2(gpointer hash_key,
                                            _("no spectra %d exists for %s"),
                                            id, strkey));
         break;
+
+        case KEY_IS_BRICK_VISIBLE:
+        case KEY_IS_BRICK_TITLE:
+        case KEY_IS_BRICK_PREVIEW:
+        case KEY_IS_BRICK_PREVIEW_PALETTE:
+        case KEY_IS_BRICK_META:
+        if (!in_array(info->volumes, id))
+            *errors = g_slist_prepend(*errors,
+                                      FAIL(GWY_DATA_ERROR_STRAY_SECONDARY_DATA,
+                                           key,
+                                           _("no brick %d exists for %s"),
+                                           id, strkey));
 
         default:
         break;
