@@ -82,7 +82,6 @@ module_register(void)
 static void
 volumize(GwyContainer *data, GwyRunType run)
 {
-    VolumizeArgs args;
     GwyDataField *dfield = NULL;
     GwyBrick *brick;
     gint id;
@@ -138,6 +137,13 @@ create_brick_from_datafield(GwyDataField *dfield)
     zreal = gwy_data_field_get_max(lowres) - offset;
 
     brick = gwy_brick_new(xres, yres, zres, xreal, yreal, zreal, TRUE);
+
+    gwy_serializable_clone(G_OBJECT(gwy_data_field_get_si_unit_xy(dfield)),
+                           G_OBJECT(gwy_brick_get_si_unit_x(brick)));
+    gwy_serializable_clone(G_OBJECT(gwy_data_field_get_si_unit_xy(dfield)),
+                           G_OBJECT(gwy_brick_get_si_unit_y(brick)));
+    gwy_serializable_clone(G_OBJECT(gwy_data_field_get_si_unit_z(dfield)),
+                           G_OBJECT(gwy_brick_get_si_unit_w(brick)));
 
     ddata = gwy_data_field_get_data(lowres);
     bdata = gwy_brick_get_data(brick);
