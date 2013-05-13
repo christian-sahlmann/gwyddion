@@ -1805,7 +1805,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             gwy_app_data_proxy_disconnect_preview(proxy, id);
         else if (object && found)
             gwy_app_data_proxy_reconnect_preview(proxy, id, object);
-        if (!found)
+        if (!found || !object)
             pageno = -1;
         break;
 
