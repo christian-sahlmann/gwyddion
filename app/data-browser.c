@@ -1943,8 +1943,10 @@ gwy_app_data_proxy_finalize(gpointer user_data)
     browser = gwy_app_data_browser;
     if (browser == proxy->parent) {
         /* FIXME: This is crude. */
-        if (browser->current == proxy)
+        if (browser->current == proxy) {
             gwy_app_data_browser_switch_data(NULL);
+            _gwy_app_data_view_set_current(NULL);
+        }
 
         browser->proxy_list = g_list_remove(browser->proxy_list, proxy);
     }
