@@ -86,23 +86,32 @@ static gboolean   gwy_meta_find_key             (MetadataBrowser *browser,
 static void       gwy_meta_save_items           (MetadataBrowser *browser);
 
 /**
- * gwy_app_metadata_browser:
- * @data: A data window to show metadata of.
+ * gwy_app_metadata_browser_for_channel:
+ * @data: A data container.
+ * @id: Id of a channel in @data to show metadata for.
  *
- * Shows a simple metadata browser.
+ * Shows a simple metadata browser for a channel.
+ *
+ * If the metadata browser is already shown for this channel it is just raised
+ * and given focus.  Otherwise, a new window is created.
+ *
+ * Returns: The metadata browser (owned by the library).  Usually, you can
+ *          ignore the return value.
+ *
+ * Since: 2.32
  **/
-void
-gwy_app_metadata_browser(GwyContainer *data,
-                         gint id)
+GtkWidget*
+gwy_app_metadata_browser_for_channel(GwyContainer *data,
+                                     gint id)
 {
     MetadataBrowser *browser;
     GtkWidget *scroll, *vbox, *hbox;
     GtkRequisition request;
 
-    g_return_if_fail(GWY_IS_CONTAINER(data));
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
     if ((browser = gwy_meta_switch_data(NULL, data, id))) {
         gtk_window_present(GTK_WINDOW(browser->window));
-        return;
+        return browser->window;
     }
 
     browser = g_new0(MetadataBrowser, 1);
@@ -157,6 +166,8 @@ gwy_app_metadata_browser(GwyContainer *data,
 
     gwy_meta_switch_data(browser, data, id);
     gtk_widget_show_all(browser->window);
+
+    return browser->window;
 }
 
 static gint

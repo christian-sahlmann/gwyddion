@@ -1059,7 +1059,7 @@ gwy_app_meta_browser(void)
     gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data,
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      0);
-    gwy_app_metadata_browser(data, id);
+    gwy_app_metadata_browser_for_channel(data, id);
 }
 
 static void

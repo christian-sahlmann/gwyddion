@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2013 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2013 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -18,30 +18,19 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef __GWY_APP_GWYAPP_H__
-#define __GWY_APP_GWYAPP_H__
+#ifndef __GWY_APP_META_H__
+#define __GWY_APP_META_H__
 
-#include <app/gwyapptypes.h>
+#include <gtk/gtk.h>
+#include <libgwyddion/gwycontainer.h>
 
-#include <app/app.h>
-#include <app/data-browser.h>
-#include <app/datachooser.h>
-#include <app/file.h>
-#include <app/filelist.h>
-#include <app/funcuse.h>
-#include <app/glmaterial-editor.h>
-#include <app/gradient-editor.h>
-#include <app/gwytool.h>
-#include <app/gwyplaintool.h>
-#include <app/menu.h>
-#include <app/meta.h>
-#include <app/resource-editor.h>
-#include <app/settings.h>
-#include <app/undo.h>
-#include <app/validate.h>
-#include <app/wait.h>
+G_BEGIN_DECLS
 
-#endif /* __GWY_APP_GWYAPP_H__ */
+GtkWidget *gwy_app_metadata_browser_for_channel(GwyContainer *data,
+                                                gint id);
+
+G_END_DECLS
+
+#endif /* __GWY_APP_META_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-

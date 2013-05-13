@@ -35,6 +35,7 @@ libgwyapp2include_HEADERS = \
 	gwyplaintool.h \
 	gwytool.h \
 	menu.h \
+	meta.h \
 	resource-editor.h \
 	settings.h \
 	undo.h \
@@ -122,6 +123,7 @@ libgwyapp2_la_SOURCES = \
 	gwyplaintool.c \
 	gwytool.c \
 	menu.c \
+	meta.c \
 	settings.c \
 	resource-editor.c \
 	undo.c \
@@ -133,7 +135,6 @@ gwyddion_SOURCES = \
 	gwyddion.c \
 	ige-mac-menu.c \
 	mac_integration.c \
-	meta.c \
 	remote.c \
 	remote-unique.c \
 	remote-win32.c \
