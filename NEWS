@@ -2,6 +2,8 @@
 Application:
 - GLib 2.14 is now required.
 - Translations updated: French, Russian, Spanish.
+- Metadata browser is no longer present in Meta menu.  Access it via the
+  right-click (Shift-F10) context menu of data (and volume) windows.
 
 Libraries:
 - libgwydgets: 3D view can display data overlays without any lighting.
@@ -15,6 +17,9 @@ Libraries:
   current file, not globally.  This fixes a long-standing bug when it was
   possible to run a module function for a type of data for which
   gwy_app_data_browser_get_current() did not actually give anything.
+- libgwyapp: Public functions to display metadata browser were added.
+- libgwyapp: Editing data titles in data browser can be invoked using mouse
+  again (a double-click activation followed by a normal click).
 
 Modules:
 - Tescan (new): Imports Tescan MIRA SEM images.
