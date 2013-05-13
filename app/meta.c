@@ -194,7 +194,7 @@ metadata_browser_new(void)
     hbox = gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
-    browser->save = gwy_stock_like_button_new(_("_Save"), GTK_STOCK_SAVE);
+    browser->save = gwy_stock_like_button_new(_("_Export"), GTK_STOCK_SAVE);
     gtk_box_pack_start(GTK_BOX(hbox), browser->save, TRUE, TRUE, 0);
     g_signal_connect_swapped(browser->save, "clicked",
                              G_CALLBACK(gwy_meta_save_items), browser);
