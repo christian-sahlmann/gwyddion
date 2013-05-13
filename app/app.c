@@ -48,8 +48,6 @@ static GQuark corner_item_quark = 0;
 static gboolean   gwy_app_main_window_save_position   (void);
 static void       gwy_app_main_window_restore_position(void);
 static gboolean   gwy_app_confirm_quit                (void);
-static void       gather_unsaved_cb                   (GwyDataWindow *data_window,
-                                                       GSList **unsaved);
 static gboolean   gwy_app_confirm_quit_dialog         (GSList *unsaved);
 static GtkWidget* gwy_app_menu_data_popup_create      (GtkAccelGroup *accel_group);
 static GtkWidget* gwy_app_menu_data_corner_create     (GtkAccelGroup *accel_group);
@@ -214,24 +212,12 @@ gwy_app_confirm_quit(void)
     GSList *unsaved = NULL;
     gboolean ok G_GNUC_UNUSED;
 
-    /* gwy_app_data_window_foreach((GFunc)gather_unsaved_cb, &unsaved); */
     if (!unsaved)
         return TRUE;
     ok = gwy_app_confirm_quit_dialog(unsaved);
     g_slist_free(unsaved);
 
     return TRUE;
-}
-
-/* TODO: We must gather containers (== files), not windows (== channels) */
-static void
-gather_unsaved_cb(GwyDataWindow *data_window,
-                  GSList **unsaved)
-{
-    GwyContainer *data = gwy_data_window_get_data(data_window);
-
-    if (gwy_undo_container_get_modified(data))
-        *unsaved = g_slist_prepend(*unsaved, data_window);
 }
 
 static gboolean
