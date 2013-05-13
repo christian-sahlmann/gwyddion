@@ -21,6 +21,7 @@
 #include "config.h"
 #include <string.h>
 #include <stdarg.h>
+#include <math.h>
 #include <gdk/gdkkeysyms.h>
 #include <gtk/gtk.h>
 
@@ -39,6 +40,15 @@ enum {
     ITEM_PIXELSQUARE,
     ITEM_REALSQUARE
 };
+
+typedef enum {
+    BRICK_PREVIEW_MEAN,
+    BRICK_PREVIEW_MINIMUM,
+    BRICK_PREVIEW_MAXIMUM,
+    BRICK_PREVIEW_RMS,
+    BRICK_PREVIEW_CHANNEL,
+    BRICK_PREVIEW_SECTION,
+} BrickPreviewType;
 
 static GtkWidget *gwy_app_main_window = NULL;
 
@@ -1221,43 +1231,84 @@ _gwy_app_brick_window_setup(GwyDataWindow *data_window)
     g_object_set_data(G_OBJECT(data_window), "gwy-brick-info", label);
 }
 
+static gboolean
+brick_preview_filter(GwyContainer *data,
+                     gint id,
+                     gpointer user_data)
+{
+    GwyDataField *field;
+    GQuark key = gwy_app_get_data_key_for_id(id);
+    GwySIUnit *funit, *bunit;
+    GwyBrick *brick = (GwyBrick*)user_data;
+
+    field = GWY_DATA_FIELD(gwy_container_get_object(data, key));
+    g_return_val_if_fail(field, FALSE);
+
+    if (field->xres != brick->xres
+        || field->yres != brick->yres
+        || ABS(log(field->xreal/brick->xreal)) > 1e-6
+        || ABS(log(field->yreal/brick->yreal)) > 1e-6)
+        return FALSE;
+
+    bunit = gwy_brick_get_si_unit_x(brick);
+    funit = gwy_data_field_get_si_unit_xy(field);
+    if (!gwy_si_unit_equal(bunit, funit))
+        return FALSE;
+    bunit = gwy_brick_get_si_unit_y(brick);
+    if (!gwy_si_unit_equal(bunit, funit))
+        return FALSE;
+
+    return TRUE;
+}
+
+static void
+update_brick_preview_sens(BrickPreviewType type,
+                          GObject *dialog)
+{
+    GwyDataChooser *chooser;
+    GtkWidget *widget;
+    gboolean ok = TRUE;
+
+    widget = GTK_WIDGET(g_object_get_data(dialog, "channel-chooser"));
+    chooser = GWY_DATA_CHOOSER(widget);
+    gtk_widget_set_sensitive(widget, type == BRICK_PREVIEW_CHANNEL);
+
+    widget = GTK_WIDGET(g_object_get_data(dialog, "section-scale"));
+    gtk_widget_set_sensitive(widget, type == BRICK_PREVIEW_SECTION);
+    widget = GTK_WIDGET(g_object_get_data(dialog, "section-spin"));
+    gtk_widget_set_sensitive(widget, type == BRICK_PREVIEW_SECTION);
+    widget = GTK_WIDGET(g_object_get_data(dialog, "section-units"));
+    gtk_widget_set_sensitive(widget, type == BRICK_PREVIEW_SECTION);
+
+    if (type == BRICK_PREVIEW_CHANNEL) {
+        gint id;
+        GwyContainer *container = gwy_data_chooser_get_active(chooser, &id);
+        ok = !!container;
+    }
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_OK, ok);
+}
+
+static void
+brick_preview_type_changed(GtkRadioButton *button,
+                           GObject *dialog)
+{
+    GSList *group = gtk_radio_button_get_group(button);
+    BrickPreviewType type = gwy_radio_buttons_get_current(group);
+    update_brick_preview_sens(type, dialog);
+}
+
 static void
 change_brick_preview(GwyDataWindow *data_window)
 {
-    GtkWidget *dialog, *label, *table;
-    GwyContainer *data;
+    GtkAdjustment *leveladj;
+    GtkWidget *dialog, *label, *table, *chooser, *scale, *spin;
+    GwyContainer *data, *cdata;
     GwyDataField *preview;
     GwyBrick *brick;
-    GSList *group;
-    gint response, type, id;
+    GSList *group, *l;
+    gint response, id, cid, i, level;
+    BrickPreviewType type;
     gchar key[40];
-
-    dialog = gtk_dialog_new_with_buttons(_("Change Volume Data Preview"),
-                                         GTK_WINDOW(data_window),
-                                         GTK_DIALOG_MODAL
-                                         | GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
-                                         NULL);
-    table = gtk_table_new(5, 1, FALSE);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
-    label = gtk_label_new(_("Preview quantity:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 0, 0);
-    group = gwy_radio_buttons_createl(NULL, NULL, 0,
-                                      _("Mean"), 0,
-                                      _("Minimum"), 1,
-                                      _("Maximum"), 2,
-                                      _("RMS"), 3,
-                                      NULL);
-    gwy_radio_buttons_attach_to_table(group, GTK_TABLE(table), 1, 1);
-    gtk_widget_show_all(dialog);
-    response = gtk_dialog_run(GTK_DIALOG(dialog));
-    type = gwy_radio_buttons_get_current(group);
-    gtk_widget_destroy(dialog);
-    if (response != GTK_RESPONSE_OK)
-        return;
 
     gwy_app_data_browser_get_current(GWY_APP_BRICK, &brick,
                                      GWY_APP_BRICK_ID, &id,
@@ -1266,44 +1317,121 @@ change_brick_preview(GwyDataWindow *data_window)
     g_return_if_fail(GWY_IS_BRICK(brick));
     g_return_if_fail(id >= 0);
 
+    dialog = gtk_dialog_new_with_buttons(_("Change Volume Data Preview"),
+                                         GTK_WINDOW(data_window),
+                                         GTK_DIALOG_MODAL
+                                         | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                         NULL);
+    table = gtk_table_new(5, 4, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 8);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
+    label = gtk_label_new(_("Preview quantity:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 0, 0);
+    type = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(brick),
+                                              "gwy-preview-type"));
+    level = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(brick),
+                                              "gwy-preview-level"));
+    group = gwy_radio_buttons_createl(G_CALLBACK(brick_preview_type_changed),
+                                      dialog,
+                                      type,
+                                      _("Mean"), BRICK_PREVIEW_MEAN,
+                                      _("Minimum"), BRICK_PREVIEW_MINIMUM,
+                                      _("Maximum"), BRICK_PREVIEW_MAXIMUM,
+                                      _("RMS"), BRICK_PREVIEW_RMS,
+                                      _("Channel:"), BRICK_PREVIEW_CHANNEL,
+                                      _("Section:"), BRICK_PREVIEW_SECTION,
+                                      NULL);
+    l = group;
+    i = 1;
+    while (l) {
+        gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(l->data),
+                         0, 1, i, i+1, GTK_FILL, 0, 0, 0);
+        i++;
+        l = g_slist_next(l);
+    }
+    chooser = gwy_data_chooser_new_channels();
+    gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(chooser),
+                                &brick_preview_filter, brick, NULL);
+    gtk_table_attach(GTK_TABLE(table), chooser,
+                     1, 4, 5, 6, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_object_set_data(G_OBJECT(dialog), "channel-chooser", chooser);
+
+    leveladj = (GtkAdjustment*)gtk_adjustment_new(level, 0, brick->zres-1,
+                                                  1, 10, 0);
+    scale = gtk_hscale_new(leveladj);
+    gtk_scale_set_draw_value(GTK_SCALE(scale), FALSE);
+    gtk_widget_set_size_request(scale, 120, -1);
+    gtk_table_attach(GTK_TABLE(table), scale,
+                     1, 2, 6, 7, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_object_set_data(G_OBJECT(dialog), "section-scale", scale);
+    spin = gtk_spin_button_new(leveladj, 0.0, 0);
+    gtk_table_attach(GTK_TABLE(table), spin, 2, 3, 6, 7, GTK_FILL, 0, 0, 0);
+    g_object_set_data(G_OBJECT(dialog), "section-spin", spin);
+    label = gtk_label_new("px");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 3, 4, 6, 7, GTK_FILL, 0, 0, 0);
+    g_object_set_data(G_OBJECT(dialog), "section-units", label);
+
+    update_brick_preview_sens(gwy_radio_buttons_get_current(group),
+                              G_OBJECT(dialog));
+
+    gtk_widget_show_all(dialog);
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    type = gwy_radio_buttons_get_current(group);
+    cdata = gwy_data_chooser_get_active(GWY_DATA_CHOOSER(chooser), &cid);
+    level = gwy_adjustment_get_int(leveladj);
+    level = CLAMP(level, 0, brick->zres-1);
+    gtk_widget_destroy(dialog);
+    if (response != GTK_RESPONSE_OK)
+        return;
+
     g_snprintf(key, sizeof(key), "/brick/%d/preview", id);
     if (!gwy_container_gis_object_by_name(data, key, (GObject**)&preview)) {
         g_warning("No preview field found for brick %d.", id);
         return;
     }
 
-    if (type == 0)
+    if (type == BRICK_PREVIEW_MEAN)
         gwy_brick_mean_plane(brick, preview,
                              0, 0, 0,
-                             gwy_brick_get_xres(brick),
-                             gwy_brick_get_yres(brick),
-                             -1,
+                             brick->xres, brick->yres, -1,
                              TRUE);
-    else if (type == 1)
+    else if (type == BRICK_PREVIEW_MINIMUM)
         gwy_brick_min_plane(brick, preview,
                             0, 0, 0,
-                            gwy_brick_get_xres(brick),
-                            gwy_brick_get_yres(brick),
-                            -1,
+                            brick->xres, brick->yres, -1,
                             TRUE);
-    else if (type == 2)
+    else if (type == BRICK_PREVIEW_MAXIMUM)
         gwy_brick_max_plane(brick, preview,
                             0, 0, 0,
-                            gwy_brick_get_xres(brick),
-                            gwy_brick_get_yres(brick),
-                            -1,
+                            brick->xres, brick->yres, -1,
                             TRUE);
-    else if (type == 3)
+    else if (type == BRICK_PREVIEW_RMS)
         gwy_brick_rms_plane(brick, preview,
                             0, 0, 0,
-                            gwy_brick_get_xres(brick),
-                            gwy_brick_get_yres(brick),
-                            -1,
+                            brick->xres, brick->yres, -1,
                             TRUE);
+    else if (type == BRICK_PREVIEW_CHANNEL) {
+        GQuark quark = gwy_app_get_data_key_for_id(cid);
+        GObject *field = gwy_container_get_object(cdata, quark);
+        gwy_serializable_clone(field, G_OBJECT(preview));
+    }
+    else if (type == BRICK_PREVIEW_SECTION)
+        gwy_brick_extract_plane(brick, preview,
+                                0, 0, level,
+                                brick->xres, brick->yres, -1,
+                                TRUE);
     else {
         g_return_if_reached();
     }
 
+    g_object_set_data(G_OBJECT(brick),
+                      "gwy-preview-type", GUINT_TO_POINTER(type));
+    g_object_set_data(G_OBJECT(brick),
+                      "gwy-preview-level", GUINT_TO_POINTER(level));
     gwy_data_field_data_changed(preview);
 }
 
