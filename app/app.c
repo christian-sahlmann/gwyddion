@@ -83,6 +83,7 @@ static gboolean   gwy_app_3d_window_data2_filter      (GwyContainer *data2,
                                                        gint id2,
                                                        gpointer user_data);
 static void       gwy_app_data_window_reset_zoom      (void);
+static void       channel_metadata_browser            (void);
 static void       gwy_app_change_mask_color_cb        (void);
 
 /*****************************************************************************
@@ -383,6 +384,10 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
         {
             N_("Zoom _1:1"), gwy_app_data_window_reset_zoom,
             NULL, 0, 0
+        },
+        {
+            N_("Metadata _Browser..."), channel_metadata_browser,
+            NULL, GDK_B, GDK_CONTROL_MASK | GDK_SHIFT_MASK
         },
     };
     GwySensitivityGroup *sensgroup;
@@ -1338,6 +1343,23 @@ gwy_app_data_window_reset_zoom(void)
     window = gtk_widget_get_ancestor(view, GWY_TYPE_DATA_WINDOW);
     g_return_if_fail(window);
     gwy_data_window_set_zoom(GWY_DATA_WINDOW(window), 10000);
+}
+
+static void
+channel_metadata_browser(void)
+{
+    GtkWidget *view;
+    GwyContainer *container;
+    gint id;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &view,
+                                     GWY_APP_CONTAINER, &container,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
+    if (!view || !container || id == -1)
+        return;
+
+    gwy_app_metadata_browser_for_channel(container, id);
 }
 
 static void

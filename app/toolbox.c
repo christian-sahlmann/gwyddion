@@ -84,7 +84,6 @@ static void       toolbox_dnd_data_received    (GtkWidget *widget,
                                                 guint info,
                                                 guint time_,
                                                 gpointer user_data);
-static void       gwy_app_meta_browser         (void);
 static void       delete_app_window            (void);
 static void       gwy_app_zoom_set_cb          (gpointer user_data);
 static void       gwy_app_undo_cb              (void);
@@ -685,14 +684,6 @@ gwy_app_menu_create_meta_menu(GtkAccelGroup *accel_group)
             NULL
         },
         {
-            N_("/_Metadata Browser"),
-            NULL,
-            gwy_app_meta_browser,
-            0,
-            "<Item>",
-            NULL
-        },
-        {
             N_("/Module _Browser"),
             NULL,
             gwy_module_browser,
@@ -734,10 +725,6 @@ gwy_app_menu_create_meta_menu(GtkAccelGroup *accel_group)
 #endif
     gtk_item_factory_create_items(item_factory,
                                   G_N_ELEMENTS(menu_items), menu_items, NULL);
-
-    set_sensitivity(item_factory,
-                    "<meta>/Metadata Browser", GWY_MENU_FLAG_DATA,
-                    NULL);
 
     return gtk_item_factory_get_widget(item_factory, "<meta>");
 }
@@ -1048,18 +1035,6 @@ toolbox_dnd_data_received(G_GNUC_UNUSED GtkWidget *widget,
         g_idle_add(toolbox_dnd_open_files, files);
     else
         g_ptr_array_free(files, TRUE);
-}
-
-static void
-gwy_app_meta_browser(void)
-{
-    GwyContainer *data;
-    gint id;
-
-    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data,
-                                     GWY_APP_DATA_FIELD_ID, &id,
-                                     0);
-    gwy_app_metadata_browser_for_channel(data, id);
 }
 
 static void
