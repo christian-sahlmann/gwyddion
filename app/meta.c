@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2013 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -36,6 +36,11 @@ enum {
     META_VALUE
 };
 
+typedef enum {
+    BROWSER_DATA_CHANNEL,
+    BROWSER_DATA_VOLUME,
+} BrowserDataType;
+
 typedef struct {
     GQuark quark;
     gchar *value;
@@ -55,35 +60,40 @@ typedef struct {
     GtkWidget *save;
 } MetadataBrowser;
 
-static void       gwy_meta_browser_construct    (MetadataBrowser *browser);
-static MetadataBrowser* gwy_meta_switch_data    (MetadataBrowser *browser,
-                                                 GwyContainer *data,
-                                                 gint id);
-static void       gwy_meta_cell_edited          (GtkCellRendererText *renderer,
-                                                 const gchar *strpath,
-                                                 const gchar *text,
-                                                 MetadataBrowser *browser);
-static void       gwy_meta_browser_cell_renderer(GtkTreeViewColumn *column,
-                                                 GtkCellRenderer *cell,
-                                                 GtkTreeModel *model,
-                                                 GtkTreeIter *piter,
-                                                 gpointer data);
-static void       gwy_meta_browser_add_line     (gpointer hkey,
-                                                 GValue *value,
-                                                 GSList **slist);
-static void       gwy_meta_item_changed         (GwyContainer *container,
-                                                 GQuark quark,
-                                                 MetadataBrowser *browser);
-static void       gwy_meta_new_item             (MetadataBrowser *browser);
-static void       gwy_meta_delete_item          (MetadataBrowser *browser);
-static void       gwy_meta_destroy              (MetadataBrowser *browser);
-static void       gwy_meta_data_finalized       (MetadataBrowser *browser);
-static void       gwy_meta_focus_iter           (MetadataBrowser *browser,
-                                                 GtkTreeIter *iter);
-static gboolean   gwy_meta_find_key             (MetadataBrowser *browser,
-                                                 GQuark quark,
-                                                 GtkTreeIter *iter);
-static void       gwy_meta_save_items           (MetadataBrowser *browser);
+static GtkWidget*       get_metadata_browser          (GwyContainer *data,
+                                                       BrowserDataType type,
+                                                       gint id);
+static MetadataBrowser* metadata_browser_new          (void);
+static void             gwy_meta_browser_construct    (MetadataBrowser *browser);
+static MetadataBrowser* gwy_meta_switch_data          (MetadataBrowser *browser,
+                                                       GwyContainer *data,
+                                                       BrowserDataType type,
+                                                       gint id);
+static void             gwy_meta_cell_edited          (GtkCellRendererText *renderer,
+                                                       const gchar *strpath,
+                                                       const gchar *text,
+                                                       MetadataBrowser *browser);
+static void             gwy_meta_browser_cell_renderer(GtkTreeViewColumn *column,
+                                                       GtkCellRenderer *cell,
+                                                       GtkTreeModel *model,
+                                                       GtkTreeIter *piter,
+                                                       gpointer data);
+static void             gwy_meta_browser_add_line     (gpointer hkey,
+                                                       GValue *value,
+                                                       GSList **slist);
+static void             gwy_meta_item_changed         (GwyContainer *container,
+                                                       GQuark quark,
+                                                       MetadataBrowser *browser);
+static void             gwy_meta_new_item             (MetadataBrowser *browser);
+static void             gwy_meta_delete_item          (MetadataBrowser *browser);
+static void             gwy_meta_destroy              (MetadataBrowser *browser);
+static void             gwy_meta_data_finalized       (MetadataBrowser *browser);
+static void             gwy_meta_focus_iter           (MetadataBrowser *browser,
+                                                       GtkTreeIter *iter);
+static gboolean         gwy_meta_find_key             (MetadataBrowser *browser,
+                                                       GQuark quark,
+                                                       GtkTreeIter *iter);
+static void             gwy_meta_save_items           (MetadataBrowser *browser);
 
 /**
  * gwy_app_metadata_browser_for_channel:
@@ -104,15 +114,56 @@ GtkWidget*
 gwy_app_metadata_browser_for_channel(GwyContainer *data,
                                      gint id)
 {
+    return get_metadata_browser(data, BROWSER_DATA_CHANNEL, id);
+}
+
+/**
+ * gwy_app_metadata_browser_for_volume:
+ * @data: A data container.
+ * @id: Id of volume data in @data to show metadata for.
+ *
+ * Shows a simple metadata browser for volume data.
+ *
+ * If the metadata browser is already shown for this volume data it is just
+ * raised and given focus.  Otherwise, a new window is created.
+ *
+ * Returns: The metadata browser (owned by the library).  Usually, you can
+ *          ignore the return value.
+ *
+ * Since: 2.32
+ **/
+GtkWidget*
+gwy_app_metadata_browser_for_volume(GwyContainer *data,
+                                    gint id)
+{
+    return get_metadata_browser(data, BROWSER_DATA_VOLUME, id);
+}
+
+static GtkWidget*
+get_metadata_browser(GwyContainer *data,
+                     BrowserDataType type,
+                     gint id)
+{
     MetadataBrowser *browser;
-    GtkWidget *scroll, *vbox, *hbox;
-    GtkRequisition request;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
-    if ((browser = gwy_meta_switch_data(NULL, data, id))) {
+    g_return_val_if_fail(id >= 0, NULL);
+    if ((browser = gwy_meta_switch_data(NULL, data, type, id))) {
         gtk_window_present(GTK_WINDOW(browser->window));
         return browser->window;
     }
+    browser = metadata_browser_new();
+    gwy_meta_switch_data(browser, data, type, id);
+    gtk_widget_show_all(browser->window);
+    return browser->window;
+}
+
+static MetadataBrowser*
+metadata_browser_new(void)
+{
+    MetadataBrowser *browser;
+    GtkWidget *scroll, *vbox, *hbox;
+    GtkRequisition request;
 
     browser = g_new0(MetadataBrowser, 1);
     gwy_meta_browser_construct(browser);
@@ -164,10 +215,7 @@ gwy_app_metadata_browser_for_channel(GwyContainer *data,
     g_signal_connect_swapped(browser->close, "clicked",
                              G_CALLBACK(gtk_widget_destroy), browser->window);
 
-    gwy_meta_switch_data(browser, data, id);
-    gtk_widget_show_all(browser->window);
-
-    return browser->window;
+    return browser;
 }
 
 static gint
@@ -199,13 +247,21 @@ gwy_meta_equal_func(GtkTreeModel *model,
 static void
 gwy_meta_update_title(MetadataBrowser *browser,
                       GwyContainer *data,
+                      BrowserDataType type,
                       gint id)
 {
     gchar *title, *dataname;
     GtkTreeModel *model;
     GtkTreeIter iter;
 
-    dataname = gwy_app_get_data_field_title(data, id);
+    if (type == BROWSER_DATA_CHANNEL)
+        dataname = gwy_app_get_data_field_title(data, id);
+    else if (type == BROWSER_DATA_VOLUME)
+        dataname = gwy_app_get_brick_title(data, id);
+    else {
+        g_return_if_reached();
+    }
+
     title = g_strdup_printf(_("Metadata of %s (%s)"),
                             dataname, g_get_application_name());
     gtk_window_set_title(GTK_WINDOW(browser->window), title);
@@ -222,6 +278,7 @@ gwy_meta_update_title(MetadataBrowser *browser,
 static MetadataBrowser*
 gwy_meta_switch_data(MetadataBrowser *browser,
                      GwyContainer *data,
+                     BrowserDataType type,
                      gint id)
 {
     GwyContainer *meta;
@@ -229,9 +286,16 @@ gwy_meta_switch_data(MetadataBrowser *browser,
     GtkTreeView *treeview;
     GtkTreeIter iter;
     GSList *fixlist, *l;
-    gchar key[24];
+    gchar key[32];
 
-    g_snprintf(key, sizeof(key), "/%d/meta", id);
+    if (type == BROWSER_DATA_CHANNEL)
+        g_snprintf(key, sizeof(key), "/%d/meta", id);
+    else if (type == BROWSER_DATA_VOLUME)
+        g_snprintf(key, sizeof(key), "/brick/%d/meta", id);
+    else {
+        g_return_val_if_reached(NULL);
+    }
+
     if (gwy_container_gis_object_by_name(data, key, &meta)) {
         if (!browser)
             browser = g_object_get_data(G_OBJECT(meta), "metadata-browser");
@@ -299,7 +363,7 @@ gwy_meta_switch_data(MetadataBrowser *browser,
     gtk_tree_view_set_search_equal_func(treeview, gwy_meta_equal_func,
                                         browser, NULL);
 
-    gwy_meta_update_title(browser, data, id);
+    gwy_meta_update_title(browser, data, type, id);
 
     return browser;
 }
