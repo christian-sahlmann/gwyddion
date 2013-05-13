@@ -649,5 +649,13 @@ gwy_meta_save_items(MetadataBrowser *browser)
     g_string_free(str_to_save, TRUE);
 
 }
-/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:meta
+ * @title: meta
+ * @short_description: Metadata browser
+ **/
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
