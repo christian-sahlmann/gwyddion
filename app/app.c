@@ -69,6 +69,12 @@ static void       gwy_app_graph_popup_menu_popup_key  (GtkWidget *menu,
 static void       gwy_app_3d_window_export            (Gwy3DWindow *window);
 static void       gwy_app_3d_window_set_defaults      (Gwy3DWindow *window);
 static void       change_brick_preview                (GwyDataWindow *data_window);
+static GtkWidget* gwy_app_menu_brick_popup_create     (GtkAccelGroup *accel_group);
+static gboolean   gwy_app_brick_popup_menu_popup_mouse(GtkWidget *menu,
+                                                       GdkEventButton *event,
+                                                       GwyDataView *data_view);
+static void       gwy_app_brick_popup_menu_popup_key  (GtkWidget *menu,
+                                                       GtkWidget *data_window);
 static void       gwy_app_save_3d_export              (GtkWidget *dialog,
                                                        gint response,
                                                        Gwy3DWindow *gwy3dwindow);
@@ -81,8 +87,9 @@ static gboolean   gwy_app_3d_window_data2_filter      (GwyContainer *data2,
                                                        gint id2,
                                                        gpointer user_data);
 static void       gwy_app_data_window_reset_zoom      (void);
-static void       channel_metadata_browser            (void);
-static void       gwy_app_change_mask_color_cb        (void);
+static void       gwy_app_volume_window_reset_zoom    (void);
+static void       metadata_browser                    (gpointer pwhat);
+static void       gwy_app_change_mask_color           (void);
 
 /*****************************************************************************
  *                                                                           *
@@ -352,7 +359,7 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
             "mask_remove", GDK_K, GDK_CONTROL_MASK
         },
         {
-            N_("Mask _Color..."),  gwy_app_change_mask_color_cb,
+            N_("Mask _Color..."),  gwy_app_change_mask_color,
             NULL, 0, 0
         },
         {
@@ -372,8 +379,9 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
             NULL, 0, 0
         },
         {
-            N_("Metadata _Browser..."), channel_metadata_browser,
-            NULL, GDK_B, GDK_CONTROL_MASK | GDK_SHIFT_MASK
+            N_("Metadata _Browser..."),
+            metadata_browser, GUINT_TO_POINTER(GWY_APP_DATA_FIELD),
+            GDK_B, GDK_CONTROL_MASK | GDK_SHIFT_MASK
         },
     };
     GwySensitivityGroup *sensgroup;
@@ -408,7 +416,7 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
         else {
             item = gtk_menu_item_new_with_mnemonic(_(menu_items[i].label));
 
-            if (menu_items[i].callback == gwy_app_change_mask_color_cb)
+            if (menu_items[i].callback == gwy_app_change_mask_color)
                 gwy_sensitivity_group_add_widget(sensgroup, item,
                                                  GWY_MENU_FLAG_DATA_MASK);
         }
@@ -1163,9 +1171,35 @@ _gwy_app_spectra_set_current(GwySpectra *spectra)
 void
 _gwy_app_brick_window_setup(GwyDataWindow *data_window)
 {
+    static GtkWidget *popup_menu = NULL;
+
+    GtkAccelGroup *accel_group;
+    GwyDataView *data_view;
+    GtkWidget *main_window;
     GtkWidget *vbox, *hbox, *button, *label;
 
+    if (!popup_menu
+        && (main_window = gwy_app_main_window_get())) {
+
+        g_return_if_fail(GTK_IS_WINDOW(main_window));
+        accel_group = GTK_ACCEL_GROUP(g_object_get_data(G_OBJECT(main_window),
+                                                        "accel_group"));
+
+        if (accel_group && !popup_menu) {
+            popup_menu = gwy_app_menu_brick_popup_create(accel_group);
+            gtk_widget_show_all(popup_menu);
+        }
+    }
+
     gwy_app_add_main_accel_group(GTK_WINDOW(data_window));
+
+    data_view = gwy_data_window_get_data_view(data_window);
+    g_signal_connect_swapped(data_view, "button-press-event",
+                             G_CALLBACK(gwy_app_brick_popup_menu_popup_mouse),
+                             popup_menu);
+    g_signal_connect_swapped(data_window, "popup-menu",
+                             G_CALLBACK(gwy_app_brick_popup_menu_popup_key),
+                             popup_menu);
 
     hbox = gtk_hbox_new(FALSE, 0);
 
@@ -1273,6 +1307,112 @@ change_brick_preview(GwyDataWindow *data_window)
     gwy_data_field_data_changed(preview);
 }
 
+static GtkWidget*
+gwy_app_menu_brick_popup_create(GtkAccelGroup *accel_group)
+{
+    static struct {
+        const gchar *label;
+        gpointer callback;
+        gpointer cbdata;
+        guint key;
+        GdkModifierType mods;
+    }
+    const menu_items[] = {
+        {
+            N_("Zoom _1:1"), gwy_app_volume_window_reset_zoom,
+            NULL, 0, 0
+        },
+        {
+            N_("Metadata _Browser..."),
+            metadata_browser, GUINT_TO_POINTER(GWY_APP_BRICK),
+            GDK_B, GDK_CONTROL_MASK | GDK_SHIFT_MASK
+        },
+    };
+    GwySensitivityGroup *sensgroup;
+    GtkWidget *menu, *item;
+    const gchar *name;
+    guint i, mask;
+
+    menu = gtk_menu_new();
+    if (accel_group)
+        gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
+    sensgroup = gwy_app_sensitivity_get_group();
+    for (i = 0; i < G_N_ELEMENTS(menu_items); i++) {
+        if (menu_items[i].callback == gwy_app_run_volume_func
+            && !gwy_volume_func_get_run_types((gchar*)menu_items[i].cbdata)) {
+            g_warning("Brick function <%s> for "
+                      "data view context menu is not available.",
+                      (const gchar*)menu_items[i].cbdata);
+            continue;
+        }
+        if (menu_items[i].callback == gwy_app_run_volume_func) {
+            name = _(gwy_volume_func_get_menu_path(menu_items[i].cbdata));
+            name = strrchr(name, '/');
+            if (!name) {
+                g_warning("Invalid translated menu path for <%s>",
+                          (const gchar*)menu_items[i].cbdata);
+                continue;
+            }
+            item = gtk_menu_item_new_with_mnemonic(name + 1);
+            mask = gwy_volume_func_get_sensitivity_mask(menu_items[i].cbdata);
+            gwy_sensitivity_group_add_widget(sensgroup, item, mask);
+        }
+        else {
+            item = gtk_menu_item_new_with_mnemonic(_(menu_items[i].label));
+        }
+
+        if (menu_items[i].key)
+            gtk_widget_add_accelerator(item, "activate", accel_group,
+                                       menu_items[i].key, menu_items[i].mods,
+                                       GTK_ACCEL_VISIBLE | GTK_ACCEL_LOCKED);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+        g_signal_connect_swapped(item, "activate",
+                                 G_CALLBACK(menu_items[i].callback),
+                                 menu_items[i].cbdata);
+    }
+
+    return menu;
+}
+
+static gboolean
+gwy_app_brick_popup_menu_popup_mouse(GtkWidget *menu,
+                                     GdkEventButton *event,
+                                     GwyDataView *data_view)
+{
+    if (event->button != 3)
+        return FALSE;
+
+    gwy_app_data_browser_select_volume(data_view);
+    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
+                   event->button, event->time);
+
+    return TRUE;
+}
+
+static void
+gwy_app_brick_popup_menu_position(G_GNUC_UNUSED GtkMenu *menu,
+                                  gint *x,
+                                  gint *y,
+                                  gboolean *push_in,
+                                  GtkWidget *window)
+{
+    GwyDataView *data_view;
+
+    data_view = gwy_data_window_get_data_view(GWY_DATA_WINDOW(window));
+    gdk_window_get_origin(GTK_WIDGET(data_view)->window, x, y);
+    *push_in = TRUE;
+}
+
+static void
+gwy_app_brick_popup_menu_popup_key(GtkWidget *menu,
+                                   GtkWidget *data_window)
+{
+    gtk_menu_popup(GTK_MENU(menu), NULL, NULL,
+                   (GtkMenuPositionFunc)gwy_app_brick_popup_menu_position,
+                   data_window,
+                   0, gtk_get_current_event_time());
+}
+
 /*****************************************************************************
  *                                                                           *
  *     Miscellaneous                                                         *
@@ -1332,24 +1472,49 @@ gwy_app_data_window_reset_zoom(void)
 }
 
 static void
-channel_metadata_browser(void)
+gwy_app_volume_window_reset_zoom(void)
 {
+    GtkWidget *window, *view;
+
+    gwy_app_data_browser_get_current(GWY_APP_VOLUME_VIEW, &view, 0);
+    window = gtk_widget_get_ancestor(view, GWY_TYPE_DATA_WINDOW);
+    g_return_if_fail(window);
+    gwy_data_window_set_zoom(GWY_DATA_WINDOW(window), 10000);
+}
+
+static void
+metadata_browser(gpointer pwhat)
+{
+    GwyAppWhat what = GPOINTER_TO_UINT(pwhat);
     GtkWidget *view;
     GwyContainer *container;
     gint id;
 
-    gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &view,
-                                     GWY_APP_CONTAINER, &container,
-                                     GWY_APP_DATA_FIELD_ID, &id,
-                                     0);
+    if (what == GWY_APP_DATA_FIELD)
+        gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &view,
+                                         GWY_APP_CONTAINER, &container,
+                                         GWY_APP_DATA_FIELD_ID, &id,
+                                         0);
+    else if (what == GWY_APP_BRICK)
+        gwy_app_data_browser_get_current(GWY_APP_VOLUME_VIEW, &view,
+                                         GWY_APP_CONTAINER, &container,
+                                         GWY_APP_BRICK_ID, &id,
+                                         0);
+    else {
+        g_return_if_reached();
+    }
+
     if (!view || !container || id == -1)
         return;
 
-    gwy_app_metadata_browser_for_channel(container, id);
+    if (what == GWY_APP_DATA_FIELD)
+        gwy_app_metadata_browser_for_channel(container, id);
+    else if (what == GWY_APP_BRICK)
+        gwy_app_metadata_browser_for_volume(container, id);
 }
 
 static void
-gwy_app_change_mask_color_cb(void)
+gwy_app_change_mask_color(void)
 {
     GwyDataView *data_view;
 
