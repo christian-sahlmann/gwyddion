@@ -422,7 +422,7 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
         }
         else {
             /* XXX: else what? */
-            g_warning("Cannot invert covariance matrix");
+            //g_warning("Cannot invert covariance matrix");
             sumr = -1.0;
         }
     }

@@ -1712,7 +1712,7 @@ gwy_nlfit_preset_fit(GwyNLFitPreset *preset,
                                  preset->builtin->nparams, param,
                                  fixed_param, NULL, preset) >= 0.0;
 
-    if (ok && err) {
+    if (ok && err && fitter->covar) {
     /* FIXME: builtin */
         for (i = 0; i < preset->builtin->nparams; i++)
             err[i] = gwy_math_nlfit_get_sigma(fitter, i);
