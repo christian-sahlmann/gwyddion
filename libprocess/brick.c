@@ -2457,16 +2457,18 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
 
         row = jstart;
         lev = kstart;
-        if (iend>=istart)
+        if (iend>=istart) 
             for (col = 0; col<(iend-istart); col++)
             {
                 ddata[col] = bdata[col + istart + brick->xres*(row) + brick->xres*brick->yres*(lev)];
             }
-        else
+        else 
             for (col = 0; col<(istart-iend); col++)
             {
                 ddata[col] = bdata[iend - col - 1 + brick->xres*(row) + brick->xres*brick->yres*(lev)];
             }
+        gwy_data_line_set_offset(target, MIN(istart,iend)*brick->xreal/(gdouble)brick->xres);
+        gwy_data_line_set_real(target, (gdouble)abs(iend-istart)*brick->xreal/(gdouble)brick->xres);
     }
 
     if ((istart == iend) && (kstart == kend))
@@ -2476,16 +2478,18 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
 
         col = istart;
         lev = kstart;
-        if (jend>=jstart)
+        if (jend>=jstart) 
             for (row = 0; row<(jend-jstart); row++)
             {
                 ddata[row] = bdata[col + brick->xres*(row + jstart) + brick->xres*brick->yres*(lev)];
             }
-        else
+        else 
             for (row = 0; row<(jstart-jend); row++)
             {
                 ddata[row] = bdata[col + brick->xres*(jstart - row - 1) + brick->xres*brick->yres*(lev)];
             }
+        gwy_data_line_set_offset(target, MIN(jstart,jend)*brick->yreal/(gdouble)brick->yres);
+        gwy_data_line_set_real(target, (gdouble)abs(jend-jstart)*brick->yreal/(gdouble)brick->yres);
     }
 
     if ((istart == iend) && (jstart == jend))
@@ -2495,16 +2499,18 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
 
         col = istart;
         row = jstart;
-        if (kend>=kstart)
+        if (kend>=kstart) 
             for (lev = 0; lev<(kend-kstart); lev++)
             {
                 ddata[lev] = bdata[col + brick->xres*(row) + brick->xres*brick->yres*(lev + kstart)];
             }
-        else
+        else 
             for (lev = 0; lev<(kstart-kend); lev++)
             {
                 ddata[lev] = bdata[col + brick->xres*(row) + brick->xres*brick->yres*(kend - lev - 1)];
             }
+        gwy_data_line_set_offset(target, MIN(kstart, kend)*brick->zreal/(gdouble)brick->zres);
+        gwy_data_line_set_real(target, (gdouble)abs(kend-kstart)*brick->zreal/(gdouble)brick->zres);
     }
 
 
