@@ -737,9 +737,10 @@ hash_to_brick(GHashTable *hash, GHashTable *forcelist, GHashTable *scanlist,
     GwyBrick *brick;
     NanoscopeValue *val;
     gdouble *adata, *rdata;
-    guint xres, yres, zres, offset, length, bpp, i, j, l;
+    guint xres, yres, zres, offset, length, bpp, i, j, l, st;
     gint16 *d;
     gdouble q;
+    gdouble *storage;
 
     gwy_debug("Loading brick");
 
@@ -801,23 +802,45 @@ hash_to_brick(GHashTable *hash, GHashTable *forcelist, GHashTable *scanlist,
 
     q = 1.0/(1 << (8*bpp));
     d = (gint16*)(buffer + offset);
+
+    storage = (gdouble*) malloc((xres*yres*zres*2 + 100) * sizeof(gdouble));
+    st = 0;
+
     for (i = 0; i < yres; i++) {
         for (j = 0; j < xres; j++) {
             /* Approach curves */
             for (l = 0; l < zres; l++) {
-                adata[(l*yres + i)*xres + j] = q*GINT16_FROM_LE(*d);
-                if (l==zres-1 && GINT16_FROM_LE(*d)==-32768) //a bug in PF-QNM data?
-                    adata[(l*yres + i)*xres + j] = adata[((l-1)*yres + i)*xres + j];
+                storage[st++] = q*GINT16_FROM_LE(*d);
                 d++;
             }
             /* Retract curves */
-            //d += zres;
             for (l = 0; l < zres; l++) {
-                rdata[(l*yres + i)*xres + j] = q*GINT16_FROM_LE(*d);
+                storage[st + zres-l-1] = q*GINT16_FROM_LE(*d);
                 d++;
+            }
+            st += zres;
+        }
+    }
+
+    st = 47; //ad hoc fix
+    
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            // Approach curves 
+            for (l = 0; l < zres; l++) {
+                adata[(l*yres + i)*xres + j] = storage[st++];
+                if (adata[(l*yres + i)*xres + j]<-0.45) adata[(l*yres + i)*xres + j] = storage[st-2]; //strange PF/QNM value?
+            }
+            // Retract curves 
+            for (l = 0; l < zres; l++) {
+                rdata[((zres-l-1)*yres + i)*xres + j] = storage[st++];
             }
         }
     }
+    
+
+ 
+    g_free(storage);
     return brick;
 }
 
