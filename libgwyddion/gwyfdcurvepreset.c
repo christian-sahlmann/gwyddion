@@ -331,6 +331,42 @@ parcapella_guess(gint n_dat,
     *fres = TRUE;
 }
 
+/******************* hertz paraboloid ********************************/
+static gdouble
+hertzpar_func(gdouble x,
+                G_GNUC_UNUSED gint n_param,
+                const gdouble *b,
+                G_GNUC_UNUSED gpointer user_data,
+                gboolean *fres)
+{
+    /*xc, R, E */
+    *fres = TRUE;
+    return 1.3333333*b[2]*sqrt(b[1]*(x-b[0])*(x-b[0])*(x-b[0]));
+}
+
+static void
+hertzpar_guess(gint n_dat,
+                 const gdouble *x,
+                 const gdouble *y,
+                 gdouble *param,
+                 gboolean *fres)
+{
+    gint i;
+    gdouble xmin = x[0], xmax = x[n_dat - 1];
+
+    param[1] = y[0]/n_dat;
+
+    for (i = 1; i < n_dat; i++) {
+        if (x[i] < xmin) xmin = x[i];
+        if (x[i] > xmax) xmax = x[i];
+        param[1] += y[i]/n_dat;
+    }
+    param[0] = xmin;;
+    param[1] = 100;
+    param[2] = 100e-9;
+
+    *fres = TRUE;
+}
 
 
 /******************* sphtiptap ********************************/
@@ -738,6 +774,12 @@ static const GwyNLFitParam hsphhertz_params[] = {
     { "nu", 1, 0, },
 };
 
+static const GwyNLFitParam hertzpar_params[] = {
+    { "xc", 0, 1, },
+    { "R", 0, 1, },
+    { "Er", 1, 0, },
+};
+
 
 
 static const GwyNLFitPresetBuiltin fitting_presets[] = {
@@ -859,6 +901,19 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         NULL,
         G_N_ELEMENTS(parcapella_params),
         parcapella_params,
+    },
+     {
+        N_("contact: Hertz (paraboloid)"),
+        "<i>f</i>(<i>x</i>) "
+        "= 4/3 E sqrt(R(<i>x</i>-<i>x<sub>c</sub></i>)<sup>3</sup>) ",
+        &hertzpar_func,
+        NULL,
+        &hertzpar_guess,
+        NULL,
+        NULL,
+        NULL,
+        G_N_ELEMENTS(hertzpar_params),
+        hertzpar_params,
     },
      /*    {
         "vdW: sphere3",
