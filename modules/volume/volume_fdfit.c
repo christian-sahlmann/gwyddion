@@ -873,8 +873,10 @@ volfit_plot_curve(VolfitArgs *args)
     xd = gwy_data_line_get_data(args->xdata);
     yd = gwy_data_line_get_data(args->ydata);
 
-    for (i = 0; i < n; i++)
+    for (i = 0; i < n; i++) {
         yd[i] = gwy_nlfit_preset_get_value(args->volfitfunc, xd[i], param, &ok);
+        //printf("yd %g\n", yd[i]);
+    }
 
     if (gwy_graph_model_get_n_curves(args->graph_model) == 2)
         cmodel = gwy_graph_model_get_curve(args->graph_model, 1);
