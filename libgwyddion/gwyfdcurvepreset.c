@@ -341,7 +341,8 @@ hertzpar_func(gdouble x,
 {
     /*xc, R, E */
     *fres = TRUE;
-    return 1.3333333*b[2]*sqrt(b[1]*(x-b[0])*(x-b[0])*(x-b[0]));
+    if ((b[0]-x)>0) return 1.3333333*b[2]*sqrt(b[1]*(b[0]-x)*(b[0]-x)*(b[0]-x));
+    else return 0;
 }
 
 static void
@@ -352,18 +353,14 @@ hertzpar_guess(gint n_dat,
                  gboolean *fres)
 {
     gint i;
-    gdouble xmin = x[0], xmax = x[n_dat - 1];
-
-    param[1] = y[0]/n_dat;
+    gdouble xmax = x[n_dat - 1];
 
     for (i = 1; i < n_dat; i++) {
-        if (x[i] < xmin) xmin = x[i];
         if (x[i] > xmax) xmax = x[i];
-        param[1] += y[i]/n_dat;
     }
-    param[0] = xmin;;
-    param[1] = 100;
-    param[2] = 100e-9;
+    param[0] = xmax;
+    param[1] = 10e-9;
+    param[2] = 10e6;
 
     *fres = TRUE;
 }
@@ -775,9 +772,9 @@ static const GwyNLFitParam hsphhertz_params[] = {
 };
 
 static const GwyNLFitParam hertzpar_params[] = {
-    { "xc", 0, 1, },
-    { "R", 0, 1, },
-    { "Er", 1, 0, },
+    { "xc", 3.0/2.0, 0, },
+    { "R", 0.5, 0, },
+    { "Er", 0, 1, },
 };
 
 
