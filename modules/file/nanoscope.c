@@ -741,6 +741,10 @@ hash_to_brick(GHashTable *hash, GHashTable *forcelist, GHashTable *scanlist,
     gint16 *d;
     gdouble q;
     gdouble *storage;
+    gdouble newl;
+    gdouble *abuf, *rbuf;
+    gint floorv;
+    gdouble rest;
 
     gwy_debug("Loading brick");
 
@@ -823,7 +827,8 @@ hash_to_brick(GHashTable *hash, GHashTable *forcelist, GHashTable *scanlist,
     }
 
     st = 47; //ad hoc fix
-    
+   
+    /*split data again with this strange shift*/ 
     for (i = 0; i < yres; i++) {
         for (j = 0; j < xres; j++) {
             // Approach curves 
@@ -838,8 +843,30 @@ hash_to_brick(GHashTable *hash, GHashTable *forcelist, GHashTable *scanlist,
         }
     }
     
+    /*remove sine distortion from the data*/
+    abuf = (gdouble *)g_malloc(zres*sizeof(gdouble));
+    rbuf = (gdouble *)g_malloc(zres*sizeof(gdouble));
 
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            for (l = 0; l < zres; l++) {
+                newl = zres*(asin(2.0*(gdouble)l/(gdouble)zres-1.0)+G_PI/2)/G_PI;
+                floorv = floor(newl);
+                rest = newl - floorv;
+                abuf[l] = (1.0 - rest)*adata[(floorv*yres + i)*xres + j] + rest*adata[((floorv+1)*yres + i)*xres + j];
+                rbuf[l] = (1.0 - rest)*rdata[(floorv*yres + i)*xres + j] + rest*rdata[((floorv+1)*yres + i)*xres + j];
+                //abuf[l] = adata[((gint)newl*yres + i)*xres + j];
+                //rbuf[l] = rdata[((gint)newl*yres + i)*xres + j];
+            }
+            for (l = 0; l < zres; l++) {
+                adata[(l*yres + i)*xres + j] = abuf[l];
+                rdata[(l*yres + i)*xres + j] = rbuf[l];
+            }
+         }
+    }
  
+    g_free(abuf);
+    g_free(rbuf);
     g_free(storage);
     return brick;
 }
