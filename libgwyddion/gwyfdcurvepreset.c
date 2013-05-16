@@ -772,9 +772,9 @@ static const GwyNLFitParam hsphhertz_params[] = {
 };
 
 static const GwyNLFitParam hertzpar_params[] = {
-    { "xc", 3.0/2.0, 0, },
-    { "R", 0.5, 0, },
-    { "Er", 0, 1, },
+    { "xc", 1, 0, },
+    { "R", -1, 0, },
+    { "Er", -1, 1, },
 };
 
 
