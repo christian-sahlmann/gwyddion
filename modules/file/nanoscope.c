@@ -149,6 +149,7 @@ static GwyGraphModel*  hash_to_curve          (GHashTable *hash,
 static GwyBrick*       hash_to_brick          (GHashTable *hash,
                                                GHashTable *forcelist,
                                                GHashTable *scanlist,
+                                               GHashTable *scannerlist,
                                                NanoscopeFileType file_type,
                                                guint bufsize,
                                                gchar *buffer,
@@ -253,7 +254,7 @@ nanoscope_load(const gchar *filename,
     NanoscopeData *ndata;
     NanoscopeValue *val;
     GHashTable *hash, *scannerlist = NULL, *scanlist = NULL, *forcelist = NULL,
-               *contrlist = NULL;
+               *contrlist = NULL, *equipmentlist = NULL;
     GList *l, *list = NULL;
     gint i, xres = 0, yres = 0;
     gboolean ok;
@@ -331,7 +332,11 @@ nanoscope_load(const gchar *filename,
             scannerlist = hash;
             continue;
         }
-        if (gwy_strequal(self, "File list")) {
+        if (gwy_strequal(self, "Equipment list")) {
+            equipmentlist = hash;
+            continue;
+        }
+         if (gwy_strequal(self, "File list")) {
             continue;
         }
         if (gwy_strequal(self, "Controller list")) {
@@ -366,7 +371,7 @@ nanoscope_load(const gchar *filename,
             if (!gwy_strequal(self, "Ciao force image list"))
                 continue;
 
-            ndata->brick = hash_to_brick(hash, forcelist, scanlist,
+            ndata->brick = hash_to_brick(hash, forcelist, scanlist, equipmentlist,
                                          file_type,
                                          size, buffer,
                                          &ndata->second_brick,
@@ -727,7 +732,7 @@ hash_to_data_field(GHashTable *hash,
 }
 
 static GwyBrick*
-hash_to_brick(GHashTable *hash, GHashTable *forcelist, GHashTable *scanlist,
+hash_to_brick(GHashTable *hash, GHashTable *forcelist, GHashTable *scanlist, GHashTable *scannerlist,
               G_GNUC_UNUSED NanoscopeFileType file_type,
               guint bufsize,
               gchar *buffer,
@@ -744,6 +749,7 @@ hash_to_brick(GHashTable *hash, GHashTable *forcelist, GHashTable *scanlist,
     gdouble newl;
     gdouble *abuf, *rbuf;
     gint floorv;
+    gboolean continuous = FALSE;
     gdouble rest;
 
     gwy_debug("Loading brick");
@@ -755,6 +761,13 @@ hash_to_brick(GHashTable *hash, GHashTable *forcelist, GHashTable *scanlist,
         return NULL;
     if (!require_keys(scanlist, error, "Scan size", NULL))
         return NULL;
+
+    if (val = g_hash_table_lookup(scanlist, "Capture Mode")) {
+        if (strstr(val->hard_value_str, "Continuous")) {
+            continuous = TRUE;
+        }
+    }
+
 
     /* scan size */
     val = g_hash_table_lookup(hash, "Data offset");
@@ -826,7 +839,10 @@ hash_to_brick(GHashTable *hash, GHashTable *forcelist, GHashTable *scanlist,
         }
     }
 
-    st = 47; //ad hoc fix
+
+    if (continuous) {
+        st = 47; //ad hoc fix, this should be detected automaticallz
+    } else st = 0;
    
     /*split data again with this strange shift*/ 
     for (i = 0; i < yres; i++) {
@@ -842,31 +858,32 @@ hash_to_brick(GHashTable *hash, GHashTable *forcelist, GHashTable *scanlist,
             }
         }
     }
-    
-    /*remove sine distortion from the data*/
-    abuf = (gdouble *)g_malloc(zres*sizeof(gdouble));
-    rbuf = (gdouble *)g_malloc(zres*sizeof(gdouble));
 
-    for (i = 0; i < yres; i++) {
-        for (j = 0; j < xres; j++) {
-            for (l = 0; l < zres; l++) {
-                newl = zres*(asin(2.0*(gdouble)l/(gdouble)zres-1.0)+G_PI/2)/G_PI;
-                floorv = floor(newl);
-                rest = newl - floorv;
-                abuf[l] = (1.0 - rest)*adata[(floorv*yres + i)*xres + j] + rest*adata[((floorv+1)*yres + i)*xres + j];
-                rbuf[l] = (1.0 - rest)*rdata[(floorv*yres + i)*xres + j] + rest*rdata[((floorv+1)*yres + i)*xres + j];
-                //abuf[l] = adata[((gint)newl*yres + i)*xres + j];
-                //rbuf[l] = rdata[((gint)newl*yres + i)*xres + j];
+    if (continuous) {
+        /*remove sine distortion from the data*/
+        abuf = (gdouble *)g_malloc(zres*sizeof(gdouble));
+        rbuf = (gdouble *)g_malloc(zres*sizeof(gdouble));
+
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++) {
+                for (l = 0; l < zres; l++) {
+                    newl = zres*(asin(2.0*(gdouble)l/(gdouble)zres-1.0)+G_PI/2)/G_PI;
+                    floorv = floor(newl);
+                    rest = newl - floorv;
+                    abuf[l] = (1.0 - rest)*adata[(floorv*yres + i)*xres + j] + rest*adata[((floorv+1)*yres + i)*xres + j];
+                    rbuf[l] = (1.0 - rest)*rdata[(floorv*yres + i)*xres + j] + rest*rdata[((floorv+1)*yres + i)*xres + j];
+                }
+                for (l = 0; l < zres; l++) {
+                    adata[(l*yres + i)*xres + j] = abuf[l];
+                    rdata[(l*yres + i)*xres + j] = rbuf[l];
+                }
             }
-            for (l = 0; l < zres; l++) {
-                adata[(l*yres + i)*xres + j] = abuf[l];
-                rdata[(l*yres + i)*xres + j] = rbuf[l];
-            }
-         }
+        }
+
+        g_free(abuf);
+        g_free(rbuf);
+
     }
- 
-    g_free(abuf);
-    g_free(rbuf);
     g_free(storage);
     return brick;
 }
