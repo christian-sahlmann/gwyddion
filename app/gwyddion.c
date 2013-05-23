@@ -98,106 +98,75 @@ main(int argc, char *argv[])
     GTimer *timer;
 
     sneaking_thread_init();
-    setup_logging();
-    g_message("%s setup_logging()", G_STRLOC);
     // If I print a debugging messages that's because some wants to see it
     // you idiots.
     g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
-    g_message("%s g_setenv()", G_STRLOC);
     timer = g_timer_new();
-    g_message("%s g_timer_new()", G_STRLOC);
     gwy_app_check_version();
-    g_message("%s gwy_app_check_version()", G_STRLOC);
 
     gwy_osx_init_handler(&argc);
     gwy_osx_set_locale();
-    g_message("%s gwy_osx_set_locale()", G_STRLOC);
 
     process_preinit_options(&argc, &argv, &app_options);
-    g_message("%s process_preinit_options()", G_STRLOC);
-    //if (app_options.log_to_file)
-    //    setup_logging();
+    if (app_options.log_to_file)
+        setup_logging();
     gwy_debug_objects_enable(app_options.debug_objects);
-    g_message("%s gwy_debug_objects_enable()", G_STRLOC);
     /* TODO: handle failure */
     gwy_app_settings_create_config_dir(NULL);
-    g_message("%s gwy_app_settings_create_config_dir()", G_STRLOC);
     debug_time(timer, "init");
-    g_message("%s debug_time()", G_STRLOC);
     setup_locale_from_win32_registry();
-    g_message("%s setup_locale_from_win32_registry()", G_STRLOC);
     gtk_init(&argc, &argv);
-    g_message("%s gtk_init()", G_STRLOC);
     debug_time(timer, "gtk_init()");
     gwy_remote_do(app_options.remote, argc - 1, argv + 1);
-    g_message("%s gwy_remote_do()", G_STRLOC);
     gwy_app_init(&argc, &argv);
-    g_message("%s gwy_app_init()", G_STRLOC);
     debug_time(timer, "gwy_app_init()");
 
     settings_file = gwy_app_settings_get_settings_filename();
     has_settings = g_file_test(settings_file, G_FILE_TEST_IS_REGULAR);
     gwy_debug("Text settings file is `%s'. Do we have it: %s",
               settings_file, has_settings ? "TRUE" : "FALSE");
-    g_message("%s g_file_test()", G_STRLOC);
 
     gwy_app_splash_start(!app_options.no_splash && !app_options.check);
-    g_message("%s gwy_app_splash_start()", G_STRLOC);
     debug_time(timer, "create splash");
 
     accel_file = g_build_filename(gwy_get_user_dir(), "ui", "accel_map", NULL);
-    g_message("%s g_build_filename()", G_STRLOC);
     gtk_accel_map_load(accel_file);
-    g_message("%s gtk_accel_map_load()", G_STRLOC);
     debug_time(timer, "load accel map");
 
     gwy_app_splash_set_message(_("Loading document history"));
-    g_message("%s gwy_app_splash_set_message()", G_STRLOC);
     recent_file_file = gwy_app_settings_get_recent_file_list_filename();
-    g_message("%s gwy_app_settings_get_recent_file_list_filename()", G_STRLOC);
     gwy_app_recent_file_list_load(recent_file_file);
-    g_message("%s gwy_app_recent_file_list_load()", G_STRLOC);
     debug_time(timer, "load document history");
 
     gwy_app_splash_set_message_prefix(_("Registering "));
     gwy_app_splash_set_message(_("stock items"));
     gwy_stock_register_stock_items();
-    g_message("%s gwy_stock_register_stock_items()", G_STRLOC);
     debug_time(timer, "register stock items");
 
     gwy_app_splash_set_message(_("color gradients"));
     gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GRADIENT));
-    g_message("%s gwy_resource_class_load()", G_STRLOC);
     gwy_app_splash_set_message(_("GL materials"));
     gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GL_MATERIAL));
-    g_message("%s gwy_resource_class_load()", G_STRLOC);
     gwy_app_splash_set_message(_("grain quantities"));
     gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GRAIN_VALUE));
-    g_message("%s gwy_resource_class_load()", G_STRLOC);
     gwy_app_splash_set_message(_("calibrations"));
     gwy_resource_class_load(g_type_class_peek(GWY_TYPE_CALIBRATION));
-    g_message("%s gwy_resource_class_load()", G_STRLOC);
     gwy_app_splash_set_message_prefix(NULL);
     debug_time(timer, "load resources");
 
     gwy_app_splash_set_message(_("Loading settings"));
     if (has_settings)
         settings_ok = gwy_app_settings_load(settings_file, &settings_err);
-    g_message("%s gwy_app_settings_load()", G_STRLOC);
     gwy_debug("Loading settings was: %s", settings_ok ? "OK" : "Not OK");
     gwy_app_settings_get();
-    g_message("%s gwy_app_settings_get()", G_STRLOC);
     debug_time(timer, "load settings");
 
     gwy_app_splash_set_message(_("Registering modules"));
     module_dirs = gwy_app_settings_get_module_dirs();
-    g_message("%s gwy_app_settings_get_module_dirs()", G_STRLOC);
     gwy_module_register_modules((const gchar**)module_dirs);
-    g_message("%s gwy_module_register_modules()", G_STRLOC);
     /* The Python initialisation somehow overrides SIGINT and Gwyddion can no
      * longer be terminated with Ctrl-C.  Fix it. */
     signal(SIGINT, SIG_DFL);
-    g_message("%s signal()", G_STRLOC);
     /* TODO: The Python initialisation also overrides where the warnings go.
      * Restore the handlers. */
     debug_time(timer, "register modules");
@@ -216,21 +185,16 @@ main(int argc, char *argv[])
 
     gwy_app_splash_set_message(_("Initializing GUI"));
     toolbox = gwy_app_toolbox_create();
-    g_message("%s gwy_app_toolbox_create()", G_STRLOC);
     debug_time(timer, "create toolbox");
     gwy_app_data_browser_restore();
-    g_message("%s gwy_app_data_browser_restore()", G_STRLOC);
     debug_time(timer, "init data-browser");
     /* A dirty trick, it constructs the recent files menu as a side effect. */
     gwy_app_recent_file_list_update(NULL, NULL, NULL, 0);
-    g_message("%s gwy_app_recent_file_list_update()", G_STRLOC);
     debug_time(timer, "create recent files menu");
     gwy_app_splash_finish();
-    g_message("%s gwy_app_splash_finish()", G_STRLOC);
     debug_time(timer, "destroy splash");
 
     open_command_line_files(argc - 1, argv + 1);
-    g_message("%s open_command_line_files()", G_STRLOC);
     if (has_settings && !settings_ok) {
         warn_broken_settings_file(toolbox,
                                   settings_file, settings_err->message);
