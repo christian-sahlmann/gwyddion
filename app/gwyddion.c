@@ -684,6 +684,10 @@ sneaking_thread_init(void)
         gwy_debug("GLib is not >= 2.24.0; says %s", version_mismatch);
         return;
     }
+    if (glib_check_version(2, 32, 0)) {
+        gwy_debug("GLib is >= 2.32.0");
+        return;
+    }
 
     main_module = g_module_open(NULL, G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL);
     if (!main_module) {
