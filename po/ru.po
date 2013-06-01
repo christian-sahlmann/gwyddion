@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2013-05-06 03:58+0200\n"
-"PO-Revision-Date: 2013-05-06 08:54+0300\n"
+"POT-Creation-Date: 2013-06-01 03:58+0200\n"
+"PO-Revision-Date: 2013-06-01 19:29+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -85,52 +85,56 @@ msgstr "Стек не является исполняемым"
 msgid "Unresolved identifiers"
 msgstr "Неразрешенные идентификаторы"
 
-#: libgwyddion/gwyfdcurvepreset.c:745
+#: libgwyddion/gwyfdcurvepreset.c:784
 msgid "vdW: semisphere"
 msgstr "vdW: полусфера"
 
-#: libgwyddion/gwyfdcurvepreset.c:760
+#: libgwyddion/gwyfdcurvepreset.c:799
 msgid "vdW: pyramide"
 msgstr "vdW: пирамида"
 
-#: libgwyddion/gwyfdcurvepreset.c:773
+#: libgwyddion/gwyfdcurvepreset.c:812
 msgid "vdW: truncated pyramid"
 msgstr "vdW: усечёная пирамида"
 
-#: libgwyddion/gwyfdcurvepreset.c:786
+#: libgwyddion/gwyfdcurvepreset.c:825
 msgid "vdW: sphere"
 msgstr "vdW: сфера"
 
-#: libgwyddion/gwyfdcurvepreset.c:799
+#: libgwyddion/gwyfdcurvepreset.c:838
 msgid "vdW: offset sphere"
 msgstr "vdW: смещёная сфера"
 
-#: libgwyddion/gwyfdcurvepreset.c:812
+#: libgwyddion/gwyfdcurvepreset.c:851
 msgid "vdW: two spheres"
 msgstr "vdW: две сферы"
 
-#: libgwyddion/gwyfdcurvepreset.c:825
+#: libgwyddion/gwyfdcurvepreset.c:864
 msgid "vdW: cone"
 msgstr "vdW: конус"
 
-#: libgwyddion/gwyfdcurvepreset.c:838
+#: libgwyddion/gwyfdcurvepreset.c:877
 msgid "vdW: cylinder"
 msgstr "vdW: цилиндр"
 
-#: libgwyddion/gwyfdcurvepreset.c:851
+#: libgwyddion/gwyfdcurvepreset.c:890
 msgid "vdW: paraboloid"
 msgstr "vdW: параболоид"
 
+#: libgwyddion/gwyfdcurvepreset.c:903
+msgid "contact: Hertz (paraboloid)"
+msgstr "контакт: Герц (параболоид)"
+
 #: libgwyddion/gwyinventory.c:1310
 #: libgwydgets/gwygraphwindow.c:611
-#: app/data-browser.c:2081
-#: app/data-browser.c:2834
-#: app/data-browser.c:3682
-#: app/data-browser.c:3841
-#: app/data-browser.c:4125
-#: app/data-browser.c:4538
-#: app/data-browser.c:6458
-#: app/data-browser.c:6540
+#: app/data-browser.c:2086
+#: app/data-browser.c:2849
+#: app/data-browser.c:3697
+#: app/data-browser.c:3856
+#: app/data-browser.c:4140
+#: app/data-browser.c:4553
+#: app/data-browser.c:6473
+#: app/data-browser.c:6555
 #: app/resource-editor.c:366
 #: modules/process/convolution_filter.c:699
 msgid "Untitled"
@@ -430,7 +434,7 @@ msgid "Position"
 msgstr "Позиция"
 
 #: libprocess/gwygrainvalue.c:1055
-#: app/meta.c:305
+#: app/meta.c:380
 #: modules/process/curvature.c:742
 #: modules/tools/level3.c:461
 #: modules/tools/readvalue.c:274
@@ -442,8 +446,8 @@ msgid "Area"
 msgstr "Площадь"
 
 #: libprocess/gwygrainvalue.c:1057
-#: app/data-browser.c:5038
-#: app/toolbox.c:109
+#: app/data-browser.c:5053
+#: app/toolbox.c:108
 msgid "Volume"
 msgstr "Объём"
 
@@ -1173,7 +1177,7 @@ msgid "_Reversed layout"
 msgstr "_Обратное расположение"
 
 #: libgwydgets/gwygraphwindow.c:151
-#: app/toolbox.c:109
+#: app/toolbox.c:108
 msgid "Graph"
 msgstr "График"
 
@@ -1255,7 +1259,7 @@ msgid "Preferred"
 msgstr "Предпочтительное"
 
 #: libgwydgets/gwyoptionmenus.c:469
-#: app/meta.c:304
+#: app/meta.c:379
 #: modules/file/rawfile.c:956
 #: modules/process/convolution_filter.c:546
 #: modules/process/neural.c:412
@@ -1459,7 +1463,7 @@ msgstr "Удалённое управление"
 msgid "Python Scripting Interface"
 msgstr "Скриптовый интерфейс Python"
 
-#: app/app.c:256
+#: app/app.c:260
 #, c-format
 msgid ""
 "Some data are unsaved:\n"
@@ -1470,71 +1474,77 @@ msgstr ""
 "%s\n"
 "Действительно выйти?"
 
-#: app/app.c:368
+#: app/app.c:372
 msgid "Mask _Color..."
 msgstr "_Цвет маски..."
 
-#: app/app.c:384
+#: app/app.c:388
+#: app/app.c:1450
 msgid "Zoom _1:1"
 msgstr "Масштаб _1:1"
 
-#: app/app.c:581
+#: app/app.c:392
+#: app/app.c:1454
+msgid "Metadata _Browser..."
+msgstr "Просмотр _метаданных"
+
+#: app/app.c:590
 msgid "Pi_xelwise Square"
 msgstr "Квадратные _пиксели"
 
-#: app/app.c:591
+#: app/app.c:600
 msgid "_Physically Square"
 msgstr "Равные _масштабы осей"
 
-#: app/app.c:737
+#: app/app.c:746
 msgid "verb|Save"
 msgstr "Сохранить"
 
-#: app/app.c:740
-#: app/app.c:744
+#: app/app.c:749
+#: app/app.c:753
 msgid "Save 3D view to an image"
 msgstr "Сохранить трёхмерный вид в изображение"
 
-#: app/app.c:750
+#: app/app.c:759
 msgid "Set as Default"
 msgstr "Использовать по умолчанию"
 
-#: app/app.c:752
+#: app/app.c:761
 msgid "Set the current view setup as the default"
 msgstr "Установить текущие настройки вида как настройки по умолчанию"
 
-#: app/app.c:813
+#: app/app.c:822
 msgid "_Show mask"
 msgstr "Показывать _маску"
 
-#: app/app.c:981
+#: app/app.c:990
 #, c-format
 msgid "Saving of 3D view to `%s' failed"
 msgstr "Не удалось сохранить трёхмерный вид в `%s'"
 
-#: app/app.c:1025
+#: app/app.c:1034
 msgid "Export 3D View"
 msgstr "Экспортировать трёхмерный вид"
 
-#: app/app.c:1185
+#: app/app.c:1220
 msgid "_Change Preview"
 msgstr "_Изменить изображение предпросмотра"
 
-#: app/app.c:1210
+#: app/app.c:1320
 msgid "Change Volume Data Preview"
 msgstr "Изменить изображение предпросмотра для объёмных данных"
 
-#: app/app.c:1220
+#: app/app.c:1330
 msgid "Preview quantity:"
 msgstr "Величина для предпросмотра:"
 
-#: app/app.c:1224
+#: app/app.c:1340
 #: modules/process/extend.c:270
 #: modules/tools/linestats.c:151
 msgid "Mean"
 msgstr "Среднее"
 
-#: app/app.c:1225
+#: app/app.c:1341
 #: modules/process/polydistort.c:275
 #: modules/tools/filter.c:208
 #: modules/tools/icolorange.c:385
@@ -1542,7 +1552,7 @@ msgstr "Среднее"
 msgid "Minimum"
 msgstr "Минимум"
 
-#: app/app.c:1226
+#: app/app.c:1342
 #: modules/file/nt-mdt.c:2800
 #: modules/tools/filter.c:209
 #: modules/tools/icolorange.c:396
@@ -1550,52 +1560,61 @@ msgstr "Минимум"
 msgid "Maximum"
 msgstr "Максимум"
 
-#: app/app.c:1227
+#: app/app.c:1343
 #: modules/process/scars.c:529
 #: modules/process/scars.c:536
 #: modules/process/threshold.c:353
 msgid "RMS"
 msgstr "Ср. квадр."
 
-#: app/data-browser.c:4913
+#: app/app.c:1344
+#: modules/file/asciiexport.c:185
+msgid "Channel:"
+msgstr "Канал:"
+
+#: app/app.c:1345
+msgid "Section:"
+msgstr "Сечение:"
+
+#: app/data-browser.c:4928
 msgid "Extract to a new file"
 msgstr "Извлечь в новый файл"
 
-#: app/data-browser.c:4914
+#: app/data-browser.c:4929
 msgid "Duplicate"
 msgstr "Сделать копию"
 
-#: app/data-browser.c:4915
+#: app/data-browser.c:4930
 msgid "Delete"
 msgstr "Удалить"
 
-#: app/data-browser.c:4960
+#: app/data-browser.c:4975
 msgid "Data Browser"
 msgstr "Браузер данных"
 
-#: app/data-browser.c:4983
+#: app/data-browser.c:4998
 msgid "Close file"
 msgstr "Закрыть файл"
 
-#: app/data-browser.c:4996
+#: app/data-browser.c:5011
 msgid "Channels"
 msgstr "Каналы"
 
-#: app/data-browser.c:5010
+#: app/data-browser.c:5025
 #: modules/volume/volume_extract.c:456
 msgid "Graphs"
 msgstr "Графики"
 
-#: app/data-browser.c:5024
+#: app/data-browser.c:5039
 msgid "Spectra"
 msgstr "Спектры"
 
-#: app/data-browser.c:6496
+#: app/data-browser.c:6511
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Неизвестный канал %d"
 
-#: app/data-browser.c:6582
+#: app/data-browser.c:6597
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Неизвестный объём %d"
@@ -1943,17 +1962,17 @@ msgid "Hide tool dialog (Esc)"
 msgstr "Убрать диалог инструментов (Esc)"
 
 #: app/menu.c:559
-#: app/toolbox.c:628
+#: app/toolbox.c:627
 msgid "_Data Process"
 msgstr "_Обработка данных"
 
 #: app/menu.c:601
-#: app/toolbox.c:631
+#: app/toolbox.c:630
 msgid "_Graph"
 msgstr "_График"
 
 #: app/menu.c:646
-#: app/toolbox.c:634
+#: app/toolbox.c:633
 msgid "_Volume Data"
 msgstr "_Объёмные данные"
 
@@ -1977,34 +1996,34 @@ msgstr "Перепоказать"
 msgid "_Document history"
 msgstr "_Предыдущие документы"
 
-#: app/meta.c:137
-msgid "_Save"
-msgstr "_Сохранить"
+#: app/meta.c:197
+msgid "_Export"
+msgstr "_Экспорт"
 
-#: app/meta.c:143
+#: app/meta.c:203
 msgid "_New"
 msgstr "Новый _элемент"
 
-#: app/meta.c:148
+#: app/meta.c:208
 #: modules/file/rawfile.c:1019
 #: modules/process/neural.c:709
 msgid "_Delete"
 msgstr "_Удалить"
 
-#: app/meta.c:153
+#: app/meta.c:213
 msgid "_Close"
 msgstr "_Закрыть"
 
-#: app/meta.c:198
+#: app/meta.c:265
 #, c-format
 msgid "Metadata of %s (%s)"
 msgstr "Метаданные %s (%s)"
 
-#: app/meta.c:515
+#: app/meta.c:590
 msgid "New item"
 msgstr "Новый элемент"
 
-#: app/meta.c:633
+#: app/meta.c:708
 msgid "Save Metadata"
 msgstr "Сохранить метаданные"
 
@@ -2326,131 +2345,127 @@ msgstr "_Пред. совет"
 msgid "_Next Tip"
 msgstr "_Следующий совет"
 
-#: app/toolbox.c:109
+#: app/toolbox.c:108
 msgid "View"
 msgstr "Вид"
 
-#: app/toolbox.c:109
+#: app/toolbox.c:108
 msgid "Data Process"
 msgstr "Обработка данных"
 
-#: app/toolbox.c:109
+#: app/toolbox.c:108
 msgid "Tools"
 msgstr "Инструменты"
 
-#: app/toolbox.c:165
+#: app/toolbox.c:164
 msgid "Display a 3D view of data"
 msgstr "Показать трехмерный вид данных"
 
-#: app/toolbox.c:172
+#: app/toolbox.c:171
 msgid "Zoom in"
 msgstr "Приблизить"
 
-#: app/toolbox.c:176
+#: app/toolbox.c:175
 msgid "Zoom 1:1"
 msgstr "Масштаб 1:1"
 
-#: app/toolbox.c:180
+#: app/toolbox.c:179
 msgid "Zoom out"
 msgstr "Отдалить"
 
-#: app/toolbox.c:622
+#: app/toolbox.c:621
 msgid "_File"
 msgstr "_Файл"
 
-#: app/toolbox.c:624
+#: app/toolbox.c:623
 msgid "_Edit"
 msgstr "_Правка"
 
-#: app/toolbox.c:637
+#: app/toolbox.c:636
 msgid "_Meta"
 msgstr "_Мета"
 
-#: app/toolbox.c:680
+#: app/toolbox.c:679
 msgid "/Show _Data Browser"
 msgstr "/Показать браузер _данных"
 
-#: app/toolbox.c:688
-msgid "/_Metadata Browser"
-msgstr "/Просмотр _метаданных"
-
-#: app/toolbox.c:696
+#: app/toolbox.c:687
 msgid "/Module _Browser"
 msgstr "/_Просмотр модулей"
 
-#: app/toolbox.c:711
+#: app/toolbox.c:702
 msgid "/_Tip of the Day"
 msgstr "/_Совет дня"
 
-#: app/toolbox.c:719
+#: app/toolbox.c:710
 msgid "/_About Gwyddion"
 msgstr "О программе Gwyddion"
 
-#: app/toolbox.c:758
+#: app/toolbox.c:745
 msgid "/_Open..."
 msgstr "/_Открыть..."
 
-#: app/toolbox.c:766
+#: app/toolbox.c:753
 msgid "/_Merge..."
 msgstr "/Объ_единить..."
 
-#: app/toolbox.c:774
+#: app/toolbox.c:761
 msgid "/Open _Recent"
 msgstr "/_Последние файлы"
 
-#: app/toolbox.c:782
+#: app/toolbox.c:769
 msgid "/_Save"
 msgstr "/_Сохранить"
 
-#: app/toolbox.c:790
+#: app/toolbox.c:777
 msgid "/Save _As..."
 msgstr "/Сохранить _как..."
 
-#: app/toolbox.c:806
+#: app/toolbox.c:793
 msgid "/_Quit"
 msgstr "/_Выйти"
 
-#: app/toolbox.c:852
+#: app/toolbox.c:839
 msgid "/_Undo"
 msgstr "/_Отменить"
 
-#: app/toolbox.c:860
+#: app/toolbox.c:847
 msgid "/_Redo"
 msgstr "/_Повторить"
 
-#: app/toolbox.c:876
+#: app/toolbox.c:863
 msgid "/Default Mask _Color..."
 msgstr "/_Цвет маски по умолчанию..."
 
-#: app/toolbox.c:884
+#: app/toolbox.c:871
 msgid "/Color _Gradients..."
 msgstr "/Цветовые _градиенты..."
 
-#: app/toolbox.c:892
+#: app/toolbox.c:879
 msgid "/G_L Materials..."
 msgstr "/_Материалы OpenGL..."
 
-#: app/toolbox.c:900
+#: app/toolbox.c:887
 msgid "/_Keyboard Shortcuts"
 msgstr "/_Комбинации клавиш"
 
-#: app/toolbox.c:1154
+#: app/toolbox.c:1129
 msgid "Change Default Mask Color"
 msgstr "Изменить цвет маски по умолчанию"
 
-#: app/toolbox.c:1182
+#: app/toolbox.c:1157
 msgid "OpenGL 3D graphics not available"
 msgstr "Трёхмерная графика OpenGL не доступна"
 
-#: app/toolbox.c:1187
+#: app/toolbox.c:1162
 msgid "OpenGL was disabled with a command-line option."
 msgstr "OpenGL был отключен опцией командной строки."
 
-#: app/toolbox.c:1195
+#: app/toolbox.c:1170
 msgid "Initialization of OpenGL failed.  Check output of <tt>glxinfo</tt> and warning messages printed to console during Gwyddion startup."
 msgstr "Инициализация OpenGL не удалась. Проверьте вывод <tt>glxinfo</tt> и предупреждения, которые выводились на консоль при старте Gwyddion."
 
-#: app/toolbox.c:1202
+#: app/toolbox.c:1177
 msgid "This version of Gwyddion was built without OpenGL support."
 msgstr "Эта версия Gwyddion была собрана без поддержки OpenGL"
 
@@ -2476,45 +2491,50 @@ msgstr "отсутствует канал %d для %s"
 msgid "no graph %d exists for %s"
 msgstr "отсутствует график %d для %s"
 
-#: app/validate.c:376
+#: app/validate.c:375
 #, c-format
 msgid "no spectra %d exists for %s"
 msgstr "отсутствует спектр %d для %s"
 
-#: app/validate.c:430
+#: app/validate.c:388
+#, c-format
+msgid "no brick %d exists for %s"
+msgstr "отсутствует блок %d для %s"
+
+#: app/validate.c:441
 #, c-format
 msgid "ref_count is %d for %s"
 msgstr "ref_count равен %d для %s"
 
-#: app/validate.c:611
+#: app/validate.c:622
 msgid "Invalid item key format"
 msgstr "Неверный формат кода позиции"
 
-#: app/validate.c:612
+#: app/validate.c:623
 msgid "Item key contains invalid characters"
 msgstr "Код позиции содержит неверные символы"
 
-#: app/validate.c:613
+#: app/validate.c:624
 msgid "Item key does not belong to any known data"
 msgstr "Код позиции не принадлежит ни одному виду известных данных"
 
-#: app/validate.c:614
+#: app/validate.c:625
 msgid "Wrong data item id"
 msgstr "Неверный идентификатор элемента данных"
 
-#: app/validate.c:615
+#: app/validate.c:626
 msgid "Unexpected data item type"
 msgstr "Неожиданный тип элемента данных"
 
-#: app/validate.c:616
+#: app/validate.c:627
 msgid "String value is not valid UTF-8"
 msgstr "Строчное значение не является правильным UTF-8"
 
-#: app/validate.c:617
+#: app/validate.c:628
 msgid "Object has several references"
 msgstr "Несколько ссылок на объект"
 
-#: app/validate.c:618
+#: app/validate.c:629
 msgid "Secondary data item has no primary data"
 msgstr "Вторичный элемент данных не имеет первичных данных"
 
@@ -2650,10 +2670,6 @@ msgstr "Экспортирует данные как простую матриц
 msgid "ASCII data matrix (.txt)"
 msgstr "Матрица данных ASCII (.txt)"
 
-#: modules/file/asciiexport.c:185
-msgid "Channel:"
-msgstr "Канал:"
-
 #: modules/file/asciiexport.c:191
 #: modules/file/asciiexport.c:206
 msgid "Width:"
@@ -2767,7 +2783,7 @@ msgstr "Экспортированные данные Burleigh (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:225
 #: modules/file/burleigh_exp.c:266
-#: modules/file/nanoscope.c:1457
+#: modules/file/nanoscope.c:1524
 #: modules/file/omicron.c:408
 #: modules/file/shimadzu.c:465
 msgid "Missing colon in header line."
@@ -3957,19 +3973,19 @@ msgstr "Импортирует файлы данных Digital Instruments Nanos
 msgid "Nanoscope II files"
 msgstr "Файлы Nanoscope II"
 
-#: modules/file/nanoscope.c:200
+#: modules/file/nanoscope.c:201
 msgid "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
 msgstr "Импортирует файлы данных Veeco (Digital Instruments) Nanoscope версии 3 или более новой."
 
-#: modules/file/nanoscope.c:214
+#: modules/file/nanoscope.c:215
 msgid "Nanoscope III files"
 msgstr "Файлы Nanoscope III"
 
-#: modules/file/nanoscope.c:281
+#: modules/file/nanoscope.c:282
 msgid "File is not a Nanoscope file, or it is a unknown subtype."
 msgstr "Файл не является файлом Nanoscope или неизвестного подтипа."
 
-#: modules/file/nanoscope.c:288
+#: modules/file/nanoscope.c:289
 msgid ""
 "File has been damaged by change of line endings, resulting in corruption of the binary part of the file.\n"
 "\n"
@@ -3979,18 +3995,18 @@ msgstr ""
 "\n"
 "Обычно это происходит если файл был воспринят как текст при передаче по электронной почте в несжатом виде, по FTP в ASCII-режиме (используйте binary), сжат с помощью команды 'Послать в сжатую папку' в некоторых версиях MS Windows, или при других способах передачи файла, которые используют платформо-независимое сохранение текста."
 
-#: modules/file/nanoscope.c:597
-#: modules/file/nanoscope.c:613
+#: modules/file/nanoscope.c:602
+#: modules/file/nanoscope.c:618
 msgid "Cannot parse `Scan size' field."
 msgstr "Не удаётся распознать поле `Scan size'."
 
-#: modules/file/nanoscope.c:1366
+#: modules/file/nanoscope.c:1433
 #: modules/file/nrrdfile.c:1023
 #, c-format
 msgid "Garbage after data sample #%u."
 msgstr "Мусор после элемента данных #%u."
 
-#: modules/file/nanoscope.c:1447
+#: modules/file/nanoscope.c:1514
 msgid "Truncated header line."
 msgstr "Обрезанная строка заголовка."
 
@@ -5593,6 +5609,7 @@ msgstr "Аппроксимировать график"
 #: modules/graph/graph_fdfit.c:254
 #: modules/graph/graph_fit.c:267
 #: modules/process/fit_2d.c:252
+#: modules/volume/volume_fdfit.c:301
 msgid "verb|_Fit"
 msgstr "_Аппрокс."
 
@@ -5606,6 +5623,7 @@ msgstr "График:"
 #: modules/graph/graph_cd.c:275
 #: modules/graph/graph_fdfit.c:319
 #: modules/graph/graph_fit.c:332
+#: modules/volume/volume_fdfit.c:406
 msgid "F_unction:"
 msgstr "_Функция:"
 
@@ -5613,6 +5631,7 @@ msgstr "_Функция:"
 #: modules/graph/graph_fdfit.c:360
 #: modules/graph/graph_fit.c:368
 #: modules/process/curvature.c:725
+#: modules/volume/volume_fdfit.c:447
 msgid "Parameter"
 msgstr "Параметр"
 
@@ -5620,6 +5639,7 @@ msgstr "Параметр"
 #: modules/graph/graph_fdfit.c:362
 #: modules/graph/graph_fit.c:370
 #: modules/process/fit_2d.c:347
+#: modules/volume/volume_fdfit.c:449
 msgid "Error"
 msgstr "Ошибка"
 
@@ -5627,6 +5647,7 @@ msgstr "Ошибка"
 #: modules/graph/graph_cut.c:191
 #: modules/graph/graph_fdfit.c:414
 #: modules/graph/graph_fit.c:422
+#: modules/volume/volume_fdfit.c:501
 msgid "Range:"
 msgstr "Диапазон:"
 
@@ -5634,6 +5655,7 @@ msgstr "Диапазон:"
 #: modules/graph/graph_cut.c:202
 #: modules/graph/graph_fdfit.c:425
 #: modules/graph/graph_fit.c:433
+#: modules/volume/volume_fdfit.c:512
 msgid "range|to"
 msgstr "–"
 
@@ -5645,6 +5667,7 @@ msgstr "_Рисовать полный круг"
 #: modules/graph/graph_fdfit.c:490
 #: modules/graph/graph_fit.c:520
 #: modules/process/fit_2d.c:993
+#: modules/volume/volume_fdfit.c:574
 msgid "Save Fit Report"
 msgstr "Сохранить отчёт аппроксимации"
 
@@ -5652,12 +5675,14 @@ msgstr "Сохранить отчёт аппроксимации"
 #: modules/graph/graph_cd.c:1132
 #: modules/graph/graph_fdfit.c:708
 #: modules/graph/graph_fit.c:752
+#: modules/volume/volume_fdfit.c:896
 msgid "Fit"
 msgstr "Аппроксимация"
 
 #: modules/graph/graph_cd.c:554
 #: modules/graph/graph_fdfit.c:748
 #: modules/graph/graph_fit.c:792
+#: modules/volume/volume_fdfit.c:967
 msgid "It is necessary to select more data points than free fit parameters"
 msgstr "Необходимо выбрать больше точек данных, чем возможных параметров аппроксимации"
 
@@ -5675,18 +5700,21 @@ msgstr "Необходимо выбрать больше точек данных
 #: modules/tools/stats.c:1054
 #: modules/tools/stats.c:1061
 #: modules/tools/stats.c:1063
+#: modules/volume/volume_fdfit.c:1123
 msgid "N.A."
 msgstr "недоступно"
 
 #: modules/graph/graph_cd.c:1018
 #: modules/graph/graph_fdfit.c:1382
 #: modules/graph/graph_fit.c:1485
+#: modules/volume/volume_fdfit.c:1711
 msgid "===== Fit Results ====="
 msgstr "===== Результаты аппроксимации ====="
 
 #: modules/graph/graph_cd.c:1022
 #: modules/graph/graph_fdfit.c:1386
 #: modules/graph/graph_fit.c:1489
+#: modules/volume/volume_fdfit.c:1715
 #, c-format
 msgid "Data:             %s\n"
 msgstr "Данные:            %s\n"
@@ -5694,6 +5722,7 @@ msgstr "Данные:            %s\n"
 #: modules/graph/graph_cd.c:1025
 #: modules/graph/graph_fdfit.c:1389
 #: modules/graph/graph_fit.c:1492
+#: modules/volume/volume_fdfit.c:1718
 #, c-format
 msgid "Number of points: %d of %d\n"
 msgstr "Число точек: %d из %d\n"
@@ -5701,6 +5730,7 @@ msgstr "Число точек: %d из %d\n"
 #: modules/graph/graph_cd.c:1029
 #: modules/graph/graph_fdfit.c:1393
 #: modules/graph/graph_fit.c:1496
+#: modules/volume/volume_fdfit.c:1722
 #, c-format
 msgid "X range:          %.*f to %.*f %s\n"
 msgstr "Диапазон X:          от %.*f до %.*f %s\n"
@@ -5708,6 +5738,7 @@ msgstr "Диапазон X:          от %.*f до %.*f %s\n"
 #: modules/graph/graph_cd.c:1035
 #: modules/graph/graph_fdfit.c:1399
 #: modules/graph/graph_fit.c:1502
+#: modules/volume/volume_fdfit.c:1728
 #, c-format
 msgid "Fitted function:  %s\n"
 msgstr "Аппроксимирующая функция:  %s\n"
@@ -5715,6 +5746,7 @@ msgstr "Аппроксимирующая функция:  %s\n"
 #: modules/graph/graph_cd.c:1038
 #: modules/graph/graph_fdfit.c:1402
 #: modules/graph/graph_fit.c:1505
+#: modules/volume/volume_fdfit.c:1731
 msgid "Results\n"
 msgstr "Результаты\n"
 
@@ -5841,73 +5873,86 @@ msgid "Fit a force-distance curve"
 msgstr "Аппроксимировать кривую сила-расстояние"
 
 #: modules/graph/graph_fdfit.c:251
+#: modules/volume/volume_fdfit.c:298
 msgid "Fit FD Curve"
 msgstr "Аппроксимировать кривую сила-расстояние"
 
 #: modules/graph/graph_fdfit.c:258
 #: modules/graph/graph_fit.c:271
 #: modules/process/fit_2d.c:254
+#: modules/volume/volume_fdfit.c:305
 msgid "verb|_Estimate"
 msgstr "О_ценить"
 
 #: modules/graph/graph_fdfit.c:260
 #: modules/graph/graph_fit.c:273
 #: modules/process/fit_2d.c:256
+#: modules/volume/volume_fdfit.c:307
 msgid "_Plot Inits"
 msgstr "_Исходный"
 
 #: modules/graph/graph_fdfit.c:358
 #: modules/graph/graph_fit.c:366
 #: modules/process/fit_2d.c:355
+#: modules/volume/volume_fdfit.c:445
 msgid "Fix"
 msgstr "Править"
 
 #: modules/graph/graph_fdfit.c:364
 #: modules/graph/graph_fit.c:372
 #: modules/process/fit_2d.c:338
+#: modules/volume/volume_fdfit.c:451
 msgid "Initial"
 msgstr "Исходное"
 
 #: modules/graph/graph_fdfit.c:375
 #: modules/graph/graph_fit.c:383
 #: modules/process/fit_2d.c:441
+#: modules/volume/volume_fdfit.c:462
 msgid "χ<sup>2</sup> result:"
 msgstr "Результирующее χ<sup>2</sup>:"
 
 #: modules/graph/graph_fdfit.c:391
 #: modules/graph/graph_fit.c:399
 #: modules/process/fit_2d.c:424
+#: modules/volume/volume_fdfit.c:478
 msgid "Correlation Matrix"
 msgstr "Матрица корреляции"
 
 #: modules/graph/graph_fdfit.c:446
 #: modules/graph/graph_fit.c:474
+#: modules/volume/volume_fdfit.c:533
 msgid "Instant:"
 msgstr "Сразу:"
 
 #: modules/graph/graph_fdfit.c:449
 #: modules/graph/graph_fit.c:477
+#: modules/volume/volume_fdfit.c:536
 msgid "e_stimate"
 msgstr "о_ценивать"
 
 #: modules/graph/graph_fdfit.c:456
 #: modules/graph/graph_fit.c:484
+#: modules/volume/volume_fdfit.c:543
 msgid "p_lot"
 msgstr "ст_роить"
 
 #: modules/graph/graph_fdfit.c:707
 #: modules/graph/graph_fit.c:751
+#: modules/volume/volume_fdfit.c:895
 msgid "Estimate"
 msgstr "Оценка"
 
 #: modules/graph/graph_fdfit.c:1429
 #: modules/graph/graph_fit.c:1532
+#: modules/volume/volume_fdfit.c:1758
 #, c-format
 msgid "Residual sum:   %g\n"
 msgstr "Остаточная сумма:   %g\n"
 
 #: modules/graph/graph_fdfit.c:1432
 #: modules/graph/graph_fit.c:1535
+#: modules/volume/volume_fdfit.c:1761
 msgid "Correlation matrix\n"
 msgstr "Матрица корреляции\n"
 
@@ -11846,6 +11891,30 @@ msgstr "Загрузить объёмные данные"
 #: modules/volume/volume_extract.c:1902
 msgid "Building wireframe model..."
 msgstr "Строится каркасная модель..."
+
+#: modules/volume/volume_fdfit.c:199
+msgid "Evaluate volume force-distance data"
+msgstr "Рассчитать объёмные данные сила-расстояние"
+
+#: modules/volume/volume_fdfit.c:213
+msgid "/_Evaluate FD data..."
+msgstr "/_Рассчитать данные сила-расстояние..."
+
+#: modules/volume/volume_fdfit.c:217
+msgid "Evaluate force-distance volume data"
+msgstr "Рассчитывает объёмные данные сила-расстояние"
+
+#: modules/volume/volume_fdfit.c:369
+msgid "Curve _xpos:"
+msgstr "Положение _X кривой:"
+
+#: modules/volume/volume_fdfit.c:387
+msgid "Curve _ypos:"
+msgstr "Положение _Y кривой:"
+
+#: modules/volume/volume_fdfit.c:1074
+msgid "It is necessary to select more data points than free volfit parameters"
+msgstr "Необходимо выбрать больше точек данных, чем возможных параметров аппроксимации"
 
 #: modules/volume/volume_invert.c:50
 msgid "Inverts value in volume data"
