@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2013-05-16 03:58+0200\n"
-"PO-Revision-Date: 2013-06-10 23:32+0100\n"
+"PO-Revision-Date: 2013-06-23 23:31+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -11686,9 +11686,8 @@ msgstr ""
 "Inclinaison φ :      %s\n"
 
 #: modules/volume/volume_calibrate.c:175
-#, fuzzy
 msgid "Recalibrate volume data dimensions or value range."
-msgstr "Recalibre les dimensions latérales ou la valeur d'échelle."
+msgstr "Recalibre les dimensions des données volumiques ou la plage de valeurs."
 
 #: modules/volume/volume_calibrate.c:189
 msgid "/_Dimensions and Units..."
@@ -11891,33 +11890,28 @@ msgid "Building wireframe model..."
 msgstr "Construction du modèle filaire..."
 
 #: modules/volume/volume_fdfit.c:199
-#, fuzzy
 msgid "Evaluate volume force-distance data"
-msgstr "Ajuster les données forcedistance"
+msgstr "Évaluer les données force-distance volumiques"
 
 #: modules/volume/volume_fdfit.c:213
 msgid "/_Evaluate FD data..."
 msgstr "/_Évaluer les données F/D (force/distance)..."
 
 #: modules/volume/volume_fdfit.c:217
-#, fuzzy
 msgid "Evaluate force-distance volume data"
-msgstr "Ajuster les données forcedistance"
+msgstr "Évaluer les données force-distance volumiques"
 
 #: modules/volume/volume_fdfit.c:369
-#, fuzzy
 msgid "Curve _xpos:"
-msgstr "Courbes"
+msgstr "Courbe _xpos :"
 
 #: modules/volume/volume_fdfit.c:387
-#, fuzzy
 msgid "Curve _ypos:"
-msgstr "Courbes"
+msgstr "Courbe _ypos :"
 
 #: modules/volume/volume_fdfit.c:1072
-#, fuzzy
 msgid "It is necessary to select more data points than free volfit parameters"
-msgstr "Il faut sélectionner plus de points que de paramètres d'ajustement"
+msgstr "Il faut sélectionner plus de points que de paramètres volfit libres"
 
 #: modules/volume/volume_invert.c:50
 msgid "Inverts value in volume data"
