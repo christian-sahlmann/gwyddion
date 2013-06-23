@@ -428,13 +428,13 @@ read_aist_curve(const guchar **p, gsize *size, AistContext *context)
         xdata = (const gdouble *)data;
         ydata = xdata + curve.res;
     }
-    
+
     xdatacal = g_new(gdouble, curve.res);
     ydatacal = g_new(gdouble, curve.res);
     for (i = 0; i < curve.res; i++) {
-		xdatacal[i] = xdata[i]*qx;
-		ydatacal[i] = ydata[i]*qy;
-	}
+        xdatacal[i] = xdata[i]*qx;
+        ydatacal[i] = ydata[i]*qy;
+    }
 
     gcmodel = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_data(gcmodel, xdatacal, ydatacal, curve.res);
@@ -693,10 +693,10 @@ read_qt_byte_array(const guchar **p, gsize *size,
     if (!read_qt_int(p, size, len))
         return FALSE;
 
-	/* There can be empty array with length of -1 */
-	if (-1 == *len) 
-		return TRUE;
-	
+    /* There can be empty array with length of -1 */
+    if (-1 == *len)
+        return TRUE;
+
     if (*size < *len)
         return FALSE;
 
