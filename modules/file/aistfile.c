@@ -101,7 +101,7 @@ static gboolean      read_qt_byte      (const guchar **p,
                                         guint *value);
 static gboolean      read_qt_int       (const guchar **p,
                                         gsize *size,
-                                        guint *value);
+                                        gint *value);
 static gboolean      read_qt_double    (const guchar **p,
                                         gsize *size,
                                         gdouble *value);
@@ -118,7 +118,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports AIST-NT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -382,9 +382,10 @@ read_aist_curve(const guchar **p, gsize *size, AistContext *context)
     GwyGraphCurveModel *gcmodel;
     GwySIUnit *xunit, *yunit;
     gboolean ok = FALSE;
-    guint len, viewlen;
+    guint len, viewlen, i;
     const guchar *data, *viewdata;
     const gdouble *xdata, *ydata;
+    gdouble *xdatacal, *ydatacal;
     gdouble *must_free = NULL;
     gdouble qx, qy;
     GQuark quark;
@@ -424,17 +425,26 @@ read_aist_curve(const guchar **p, gsize *size, AistContext *context)
         gwy_memcpy_byte_swap(data, (guchar*)must_free, 8, 2*curve.res, 7);
     }
     else if (G_BYTE_ORDER == G_LITTLE_ENDIAN) {
-        xdata = (const gdouble*)data;
+        xdata = (const gdouble *)data;
         ydata = xdata + curve.res;
     }
+    
+    xdatacal = g_new(gdouble, curve.res);
+    ydatacal = g_new(gdouble, curve.res);
+    for (i = 0; i < curve.res; i++) {
+		xdatacal[i] = xdata[i]*qx;
+		ydatacal[i] = ydata[i]*qy;
+	}
 
     gcmodel = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, curve.res);
+    gwy_graph_curve_model_set_data(gcmodel, xdatacal, ydatacal, curve.res);
     g_object_set(gcmodel,
                  "mode", GWY_GRAPH_CURVE_LINE,
                  "description", curve.common.description,
                  NULL);
     g_free(must_free);
+    g_free(xdatacal);
+    g_free(ydatacal);
 
     gmodel = gwy_graph_model_new();
     gwy_graph_model_add_curve(gmodel, gcmodel);
@@ -617,15 +627,15 @@ read_qt_string(const guchar **p, gsize *size, gchar **value)
 }
 
 static gboolean
-read_qt_int(const guchar **p, gsize *size, guint *value)
+read_qt_int(const guchar **p, gsize *size, gint *value)
 {
     *value = 0;
-    if (*size < sizeof(guint32))
+    if (*size < sizeof(gint32))
         return FALSE;
 
-    *value = gwy_get_guint32_be(p);
+    *value = gwy_get_gint32_be(p);
     gwy_debug("QInt data: %u", *value);
-    *size -= sizeof(guint32);
+    *size -= sizeof(gint32);
 
     return TRUE;
 }
@@ -683,6 +693,10 @@ read_qt_byte_array(const guchar **p, gsize *size,
     if (!read_qt_int(p, size, len))
         return FALSE;
 
+	/* There can be empty array with length of -1 */
+	if (-1 == *len) 
+		return TRUE;
+	
     if (*size < *len)
         return FALSE;
 
