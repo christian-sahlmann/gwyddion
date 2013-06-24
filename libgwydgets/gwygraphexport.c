@@ -152,8 +152,8 @@ gwy_graph_export_postscript(GwyGraph *graph,
              /(gdouble)size*PANGO_SCALE;
     labelw = graph->area->lab->reqwidth*fontsize/(gdouble)size*PANGO_SCALE
              - 0.08*fontsize*fontsize;
-    labelx = width - areax - labelw - 5;
-    labely = height - areay - labelh - 5;
+    labelx = areax + areaw - labelw - 5;
+    labely = areay + areah - labelh - 5;
 
 
     /*write header*/
