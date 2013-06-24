@@ -2044,7 +2044,7 @@ gwy_axis_export_vector(GwyAxis *axis, gint xmin, gint ymin,
         g_string_append(plotlabel, " [");
         if (axis->magnification_string->len) {
             gchar *mag = gwy_strreplace(axis->magnification_string->str,
-                                        "µ", "u", (gsize)-1);
+                                        "µ", ")show /mu glyphshow (", (gsize)-1);
             g_string_append(plotlabel, mag);
             g_free(mag);
         }
