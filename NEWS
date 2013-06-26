@@ -20,8 +20,14 @@ Libraries:
 - libgwyapp: Public functions to display metadata browser were added.
 - libgwyapp: Editing data titles in data browser can be invoked using mouse
   again (a double-click activation followed by a normal click).
+- libgwydgets: Graph PostScript tries to avoid some non-ASCII characters; the
+  key position was corrected fixed.
 
 Modules:
+- Volumize (new): Create a simple 3D volume data from 2D data.
+- Volumize_layers (new): Create 3D volume data from set of 2D data.
+- Show and extract (new): Show 3D volume data and extract some projections.
+- Volume invert (new): Invert value in a 3D volume.
 - Tescan (new): Imports Tescan MIRA SEM images.
 - Spectral synthesis: A ‘Lorentzian’ multiplier leading to exponential ACF
   was added.
@@ -34,12 +40,10 @@ Modules:
 - Raw XYZ: User-selected resolutions are remembered.
 - All synthesis: Fixed Critical warnings/crash when the current file has no
   channels.
-- Dimensions and Units: allow negative z calibration factor or range
-- Volumize (new): create a simple 3D volume data from 2D data
-- Volumize_layers (new): crarte 3D volume data from set of 2D data
-- Show and extract (new): show 3D volume data and extract some projections
-- Volume invert (new): invert value in a 3D volume
-- Nanoscope: basic support for Force Volume data
+- Dimensions and Units: Allow negative z calibration factor or range.
+- Nanoscope: Basic support for Force Volume data was added.
+- Points layer: Can draw point numbers.
+- Spectro tool: Spectra points are numbered.
 
 
 2.31 (2013-02-21)
