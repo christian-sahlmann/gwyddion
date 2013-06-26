@@ -46,6 +46,7 @@ enum {
     PROP_DRAW_MARKER,
     PROP_MARKER_RADIUS,
     PROP_DRAW_AS_VECTOR,
+    PROP_POINT_NUMBERS,
 };
 
 typedef struct _GwyLayerPoint          GwyLayerPoint;
@@ -59,10 +60,19 @@ struct _GwyLayerPoint {
     GdkCursor *near_cursor;
     GdkCursor *move_cursor;
 
+    /* Text rendering, these are approximate values */
+    PangoFontDescription *fontdesc;
+    gint digit_width;
+    gint digit_height;
+
     /* Properties */
     gboolean draw_marker;
     guint marker_radius;
     gboolean draw_as_vector;
+    gboolean point_numbers;
+
+    /* Dynamic state */
+    GPtrArray *point_labels;
 };
 
 struct _GwyLayerPointClass {
@@ -77,59 +87,73 @@ struct _GwySelectionPointClass {
     GwySelectionClass parent_class;
 };
 
-static gboolean module_register                   (void);
-static GType    gwy_layer_point_get_type          (void) G_GNUC_CONST;
-static GType    gwy_selection_point_get_type      (void) G_GNUC_CONST;
-static gboolean gwy_selection_point_crop_object   (GwySelection *selection,
-                                                   gint i,
-                                                   gpointer user_data);
-static void     gwy_selection_point_crop          (GwySelection *selection,
-                                                   gdouble xmin,
-                                                   gdouble ymin,
-                                                   gdouble xmax,
-                                                   gdouble ymax);
-static void     gwy_layer_point_set_property      (GObject *object,
-                                                   guint prop_id,
-                                                   const GValue *value,
-                                                   GParamSpec *pspec);
-static void     gwy_layer_point_get_property      (GObject*object,
-                                                   guint prop_id,
-                                                   GValue *value,
-                                                   GParamSpec *pspec);
-static void     gwy_layer_point_draw              (GwyVectorLayer *layer,
-                                                   GdkDrawable *drawable,
-                                                   GwyRenderingTarget target);
-static void     gwy_layer_point_draw_object       (GwyVectorLayer *layer,
-                                                   GdkDrawable *drawable,
-                                                   GwyRenderingTarget target,
-                                                   gint i);
-static void     gwy_layer_point_draw_point        (GwyVectorLayer *layer,
-                                                   GdkDrawable *drawable,
-                                                   GwyDataView *data_view,
-                                                   GwyRenderingTarget target,
-                                                   const gdouble *xy);
-static void     gwy_layer_point_draw_vector       (GwyVectorLayer *layer,
-                                                   GdkDrawable *drawable,
-                                                   GwyDataView *data_view,
-                                                   GwyRenderingTarget target,
-                                                   const gdouble *xy);
-static gboolean gwy_layer_point_motion_notify     (GwyVectorLayer *layer,
-                                                   GdkEventMotion *event);
-static gboolean gwy_layer_point_button_pressed    (GwyVectorLayer *layer,
-                                                   GdkEventButton *event);
-static gboolean gwy_layer_point_button_released   (GwyVectorLayer *layer,
-                                                   GdkEventButton *event);
-static void     gwy_layer_point_set_draw_marker   (GwyLayerPoint *layer,
-                                                   gboolean draw_marker);
-static void     gwy_layer_point_set_marker_radius (GwyLayerPoint *layer,
-                                                   guint radius);
-static void     gwy_layer_point_set_draw_as_vector(GwyLayerPoint *layer,
-                                                   gboolean draw_as_vector);
-static void     gwy_layer_point_realize           (GwyDataViewLayer *dlayer);
-static void     gwy_layer_point_unrealize         (GwyDataViewLayer *dlayer);
-static gint     gwy_layer_point_near_point        (GwyVectorLayer *layer,
-                                                   gdouble xreal,
-                                                   gdouble yreal);
+static gboolean   module_register                   (void);
+static GType      gwy_layer_point_get_type          (void)                       G_GNUC_CONST;
+static GType      gwy_selection_point_get_type      (void)                       G_GNUC_CONST;
+static gboolean   gwy_selection_point_crop_object   (GwySelection *selection,
+                                                     gint i,
+                                                     gpointer user_data);
+static void       gwy_selection_point_crop          (GwySelection *selection,
+                                                     gdouble xmin,
+                                                     gdouble ymin,
+                                                     gdouble xmax,
+                                                     gdouble ymax);
+static void       gwy_layer_point_set_property      (GObject *object,
+                                                     guint prop_id,
+                                                     const GValue *value,
+                                                     GParamSpec *pspec);
+static void       gwy_layer_point_get_property      (GObject*object,
+                                                     guint prop_id,
+                                                     GValue *value,
+                                                     GParamSpec *pspec);
+static void       gwy_layer_point_draw              (GwyVectorLayer *layer,
+                                                     GdkDrawable *drawable,
+                                                     GwyRenderingTarget target);
+static void       gwy_layer_point_draw_object       (GwyVectorLayer *layer,
+                                                     GdkDrawable *drawable,
+                                                     GwyRenderingTarget target,
+                                                     gint i);
+static void       gwy_layer_point_draw_point        (GwyVectorLayer *layer,
+                                                     GdkDrawable *drawable,
+                                                     GwyDataView *data_view,
+                                                     GwyRenderingTarget target,
+                                                     const gdouble *xy);
+static void       gwy_layer_point_draw_vector       (GwyVectorLayer *layer,
+                                                     GdkDrawable *drawable,
+                                                     GwyDataView *data_view,
+                                                     GwyRenderingTarget target,
+                                                     const gdouble *xy);
+static void       gwy_layer_point_setup_label       (GwyLayerPoint *layer,
+                                                     GdkDrawable *drawable,
+                                                     gint i);
+static void       gwy_layer_point_draw_label        (GwyVectorLayer *layer,
+                                                     GdkDrawable *drawable,
+                                                     gdouble zoom,
+                                                     gint i,
+                                                     gint xt,
+                                                     gint yt);
+static GdkPixbuf* gwy_layer_point_render_string_bw  (GwyLayerPoint *layer,
+                                                     gdouble zoom,
+                                                     const gchar *markup);
+static gboolean   gwy_layer_point_motion_notify     (GwyVectorLayer *layer,
+                                                     GdkEventMotion *event);
+static gboolean   gwy_layer_point_button_pressed    (GwyVectorLayer *layer,
+                                                     GdkEventButton *event);
+static gboolean   gwy_layer_point_button_released   (GwyVectorLayer *layer,
+                                                     GdkEventButton *event);
+static void       gwy_layer_point_set_draw_marker   (GwyLayerPoint *layer,
+                                                     gboolean draw_marker);
+static void       gwy_layer_point_set_marker_radius (GwyLayerPoint *layer,
+                                                     guint radius);
+static void       gwy_layer_point_set_draw_as_vector(GwyLayerPoint *layer,
+                                                     gboolean draw_as_vector);
+static void       gwy_layer_point_set_point_numbers (GwyLayerPoint *layer,
+                                                     gboolean point_numbers);
+static void       gwy_layer_point_realize           (GwyDataViewLayer *dlayer);
+static void       gwy_layer_point_unrealize         (GwyDataViewLayer *dlayer);
+static gint       gwy_layer_point_near_point        (GwyVectorLayer *layer,
+                                                     gdouble xreal,
+                                                     gdouble yreal);
 
 /* Allow to express intent. */
 #define gwy_layer_point_undraw        gwy_layer_point_draw
@@ -141,7 +165,7 @@ static GwyModuleInfo module_info = {
     N_("Layer allowing selection of several points, displayed as crosses "
        "or inivisible."),
     "Yeti <yeti@gwyddion.net>",
-    "3.0",
+    "3.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -214,6 +238,16 @@ gwy_layer_point_class_init(GwyLayerPointClass *klass)
                               "Whether to draw makers as lines from the origin",
                               FALSE,
                               G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_POINT_NUMBERS,
+         g_param_spec_boolean("point-numbers",
+                              "Number points",
+                              "Whether to attach numbers to the points.",
+                              FALSE,
+                              G_PARAM_READWRITE));
+
 }
 
 static void
@@ -276,6 +310,10 @@ gwy_layer_point_set_property(GObject *object,
         gwy_layer_point_set_draw_as_vector(layer, g_value_get_boolean(value));
         break;
 
+        case PROP_POINT_NUMBERS:
+        gwy_layer_point_set_point_numbers(layer, g_value_get_boolean(value));
+        break;
+
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -301,6 +339,10 @@ gwy_layer_point_get_property(GObject*object,
 
         case PROP_DRAW_AS_VECTOR:
         g_value_set_boolean(value, layer->draw_as_vector);
+        break;
+
+        case PROP_POINT_NUMBERS:
+        g_value_set_boolean(value, layer->point_numbers);
         break;
 
         default:
@@ -336,24 +378,53 @@ gwy_layer_point_draw_object(GwyVectorLayer *layer,
                             gint i)
 {
     GwyDataView *data_view;
+    GwyLayerPoint *layer_point;
     gdouble xy[OBJECT_SIZE];
     gboolean has_object;
+    gint xi, yi, xi1, yi1, width, height;
+    gdouble zoom;
 
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     g_return_if_fail(data_view);
 
-    if (!GWY_LAYER_POINT(layer)->draw_marker)
+    layer_point = GWY_LAYER_POINT(layer);
+    if (!layer_point->draw_marker)
         return;
 
     gwy_debug("%d", i);
     has_object = gwy_selection_get_object(layer->selection, i, xy);
     g_return_if_fail(has_object);
 
-    if (GWY_LAYER_POINT(layer)->draw_as_vector)
+    if (layer_point->draw_as_vector)
         gwy_layer_point_draw_vector(layer, drawable, data_view, target, xy);
     else
         gwy_layer_point_draw_point(layer, drawable, data_view, target, xy);
+
+    if (!layer_point->point_numbers)
+        return;
+
+    gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xi, &yi);
+    switch (target) {
+        case GWY_RENDERING_TARGET_SCREEN:
+        gwy_layer_point_setup_label(layer_point, drawable, i);
+        gdk_draw_drawable(drawable, layer->gc,
+                          g_ptr_array_index(layer_point->point_labels, i),
+                          0, 0, xi, yi, -1, -1);
+        break;
+
+        case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
+        gdk_drawable_get_size(drawable, &width, &height);
+        gwy_data_view_get_pixel_data_sizes(data_view, &xi1, &yi1);
+        zoom = sqrt(((gdouble)(width*height))/(xi1*yi1));
+
+        gwy_layer_point_draw_label(layer, drawable, zoom, i, xi, yi);
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
 }
 
 static void
@@ -446,6 +517,135 @@ gwy_layer_point_draw_vector(GwyVectorLayer *layer,
         break;
     }
     gdk_draw_line(drawable, layer->gc, xi0, yi0, xi1, yi1);
+}
+
+static void
+gwy_layer_point_setup_label(GwyLayerPoint *layer_point,
+                            GdkDrawable *drawable,
+                            gint i)
+{
+    GdkPixmap *pixmap;
+    GdkPixbuf *pixbuf;
+    gchar buffer[8];
+    GdkGC *gc;
+
+    if (!layer_point->point_labels)
+        layer_point->point_labels = g_ptr_array_new();
+
+    if (i < layer_point->point_labels->len
+        && GDK_IS_DRAWABLE(g_ptr_array_index(layer_point->point_labels, i)))
+        return;
+
+    if (i >= layer_point->point_labels->len)
+        g_ptr_array_set_size(layer_point->point_labels, i+1);
+
+    g_snprintf(buffer, sizeof(buffer), "%d", i+1);
+    pixbuf = gwy_layer_point_render_string_bw(layer_point, 1.0, buffer);
+    pixmap = gdk_pixmap_new(drawable,
+                            gdk_pixbuf_get_width(pixbuf),
+                            gdk_pixbuf_get_height(pixbuf),
+                            -1);
+    g_ptr_array_index(layer_point->point_labels, i) = pixmap;
+
+    gc = gdk_gc_new(GDK_DRAWABLE(pixmap));
+    gdk_gc_set_function(gc, GDK_COPY);
+    gdk_draw_pixbuf(pixmap, gc, pixbuf, 0, 0, 0, 0, -1, -1,
+                    GDK_RGB_DITHER_NONE, 0, 0);
+    g_object_unref(gc);
+    g_object_unref(pixbuf);
+}
+
+static void
+gwy_layer_point_draw_label(GwyVectorLayer *layer,
+                           GdkDrawable *drawable,
+                           gdouble zoom,
+                           gint i,
+                           gint xt,
+                           gint yt)
+{
+    GwyLayerPoint *layer_point;
+    GdkGCValues gcvalues;
+    GdkPixbuf *pixbuf;
+    gchar buffer[48];
+
+    layer_point = GWY_LAYER_POINT(layer);
+    g_snprintf(buffer, sizeof(buffer), "<span size=\"%d\">%d</span>",
+               GWY_ROUND(MAX(2048.0, zoom*12*1024)), i+1);
+    pixbuf = gwy_layer_point_render_string_bw(layer_point, zoom, buffer);
+
+    gdk_gc_get_values(layer->gc, &gcvalues);
+    gdk_gc_set_function(layer->gc, GDK_XOR);
+    gdk_draw_pixbuf(drawable, layer->gc, pixbuf, 0, 0, xt, yt, -1, -1,
+                    GDK_RGB_DITHER_NONE, 0, 0);
+    gdk_gc_set_values(layer->gc, &gcvalues, GDK_GC_FUNCTION);
+    g_object_unref(pixbuf);
+}
+
+static GdkPixbuf*
+gwy_layer_point_render_string_bw(GwyLayerPoint *layer,
+                                 gdouble zoom,
+                                 const gchar *markup)
+{
+    PangoLayout *layout;
+    GdkPixbuf *pixbuf;
+    gint wwidth, wheight, wstride, cwidth, cheight, pstride;
+    cairo_t *cr;
+    cairo_surface_t *surface;
+    guchar *data, *pixels;
+    gint i, j;
+
+    wwidth = GWY_ROUND(3*(zoom*layer->digit_width));
+    wstride = (wwidth + 31)/32*4;
+    wwidth = wstride*8;
+    wheight = GWY_ROUND(1.5*zoom*layer->digit_height);
+    gwy_debug("w-layout size: %d %d", wwidth, wheight);
+
+    data = g_new0(guchar, wstride*wheight);
+    surface = cairo_image_surface_create_for_data(data, CAIRO_FORMAT_A1,
+                                                  wwidth, wheight, wstride);
+    cr = cairo_create(surface);
+    cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
+
+    layout = pango_cairo_create_layout(cr);
+    pango_layout_set_font_description(layout, layer->fontdesc);
+    pango_layout_set_markup(layout, markup, -1);
+    pango_layout_get_pixel_size(layout, &cwidth, &cheight);
+    pango_cairo_show_layout(cr, layout);
+
+    gwy_debug("c-layout size: %d %d", cwidth, cheight);
+    if (cwidth > wwidth || cheight > wheight) {
+        g_warning("Cairo image surface is not large enough for text");
+        cwidth = MIN(cwidth, wwidth);
+        cheight = MIN(cheight, wheight);
+    }
+
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, cwidth, cheight);
+    pstride = gdk_pixbuf_get_rowstride(pixbuf);
+    pixels = gdk_pixbuf_get_pixels(pixbuf);
+    gdk_pixbuf_fill(pixbuf, 0x00000000);
+
+    for (i = 0; i < cheight; i++) {
+        const guint32 *crow = (const guint32*)(data + wstride*i);
+        guchar *prow = pixels + pstride*i;
+        guint32 bit;
+
+        bit = 1;
+        for (j = 0; j < cwidth; j++) {
+            prow[0] = prow[1] = prow[2] = (*crow & bit) ? 255 : 0;
+            if (!(bit <<= 1)) {
+                bit = 1;
+                crow++;
+            }
+            prow += 3;
+        }
+    }
+
+    g_object_unref(layout);
+    cairo_destroy(cr);
+    cairo_surface_destroy(surface);
+    g_free(data);
+
+    return pixbuf;
 }
 
 static gboolean
@@ -697,10 +897,38 @@ gwy_layer_point_set_draw_as_vector(GwyLayerPoint *layer,
 }
 
 static void
+gwy_layer_point_set_point_numbers(GwyLayerPoint *layer,
+                                  gboolean point_numbers)
+{
+    GwyVectorLayer *vector_layer;
+    GtkWidget *parent;
+
+    g_return_if_fail(GWY_IS_LAYER_POINT(layer));
+    vector_layer = GWY_VECTOR_LAYER(layer);
+    parent = GWY_DATA_VIEW_LAYER(layer)->parent;
+
+    if (point_numbers == layer->point_numbers)
+        return;
+
+    if (parent && GTK_WIDGET_REALIZED(parent))
+        gwy_layer_point_undraw(vector_layer, parent->window,
+                              GWY_RENDERING_TARGET_SCREEN);
+    layer->point_numbers = point_numbers;
+    if (parent && GTK_WIDGET_REALIZED(parent))
+        gwy_layer_point_draw(vector_layer, parent->window,
+                            GWY_RENDERING_TARGET_SCREEN);
+    g_object_notify(G_OBJECT(layer), "point-numbers");
+}
+
+static void
 gwy_layer_point_realize(GwyDataViewLayer *dlayer)
 {
+    PangoFontDescription *fontdesc;
+    PangoContext *context;
+    PangoLayout *layout;
     GwyLayerPoint *layer;
     GdkDisplay *display;
+    gint size;
 
     gwy_debug("");
 
@@ -709,18 +937,45 @@ gwy_layer_point_realize(GwyDataViewLayer *dlayer)
     display = gtk_widget_get_display(dlayer->parent);
     layer->near_cursor = gdk_cursor_new_for_display(display, GDK_FLEUR);
     layer->move_cursor = gdk_cursor_new_for_display(display, GDK_CROSS);
+
+    context = gtk_widget_get_pango_context(dlayer->parent);
+    fontdesc = pango_context_get_font_description(context);
+    layer->fontdesc = pango_font_description_copy(fontdesc);
+    size = pango_font_description_get_size(layer->fontdesc);
+    pango_font_description_set_size(layer->fontdesc, (gint)(1.22*size + 0.5));
+    pango_font_description_set_weight(layer->fontdesc, PANGO_WEIGHT_BOLD);
+    layout = pango_layout_new(context);
+    pango_layout_set_font_description(layout, layer->fontdesc);
+    pango_layout_set_text(layout, "0123456789", -1);
+    pango_layout_get_pixel_size(layout,
+                                &layer->digit_width, &layer->digit_height);
+    layer->digit_width /= 10;
+    g_object_unref(layout);
 }
 
 static void
 gwy_layer_point_unrealize(GwyDataViewLayer *dlayer)
 {
     GwyLayerPoint *layer;
+    guint i;
 
     gwy_debug("");
 
     layer = GWY_LAYER_POINT(dlayer);
     gdk_cursor_unref(layer->near_cursor);
     gdk_cursor_unref(layer->move_cursor);
+
+    if (layer->point_labels) {
+        for (i = 0; i < layer->point_labels->len; i++)
+            gwy_object_unref(g_ptr_array_index(layer->point_labels, i));
+        g_ptr_array_free(layer->point_labels, TRUE);
+        layer->point_labels = NULL;
+    }
+
+    if (layer->fontdesc) {
+        pango_font_description_free(layer->fontdesc);
+        layer->fontdesc = NULL;
+    }
 
     GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_point_parent_class)->unrealize(dlayer);
 }
