@@ -44,6 +44,7 @@ Modules:
 - Nanoscope: Basic support for Force Volume data was added.
 - Points layer: Can draw point numbers.
 - Spectro tool: Spectra points are numbered.
+- Omicron: Positions of grid spectra points were corrected.
 
 
 2.31 (2013-02-21)
