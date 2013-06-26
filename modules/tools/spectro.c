@@ -134,7 +134,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Point Spectrum, extracts point spectra to a graph."),
     "Owain Davies <owain.davies@blueyonder.co.uk>",
-    "0.4",
+    "0.5",
     "Owain Davies, David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -390,6 +390,7 @@ gwy_tool_spectro_data_switched(GwyTool *gwytool,
         gwy_object_set_or_reset(plain_tool->layer,
                                 tool->layer_type,
                                 "editable", FALSE,
+                                "point-numbers", TRUE,
                                 "focus", -1,
                                 NULL);
     }
