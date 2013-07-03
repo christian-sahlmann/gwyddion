@@ -51,6 +51,7 @@ typedef struct {
 
 typedef struct {
     PolyLevelArgs *args;
+    GtkWidget *dialog;
     GtkObject *col_degree;
     GtkObject *row_degree;
     GtkObject *max_degree;
@@ -62,44 +63,61 @@ typedef struct {
     GtkWidget *leveled_view;
     GtkWidget *bg_view;
     GwyContainer *data;
+    GtkWidget *coeffvbox;
+    GtkListStore *coeffmodel;
     gboolean in_update;
 } PolyLevelControls;
 
-static gboolean module_register                  (void);
-static void     poly_level                       (GwyContainer *data,
-                                                  GwyRunType run);
-static void     poly_level_do                    (GwyContainer *data,
-                                                  GwyDataField *dfield,
-                                                  GwyDataField *mfield,
-                                                  GQuark quark,
-                                                  gint oldid,
-                                                  const PolyLevelArgs *args);
-static gboolean poly_level_dialog                (PolyLevelArgs *args,
-                                                  GwyContainer *data,
-                                                  GwyDataField *dfield,
-                                                  GwyDataField *mfield,
-                                                  gint id);
-static void     poly_level_dialog_update         (PolyLevelControls *controls,
-                                                  PolyLevelArgs *args);
-static void     poly_level_update_values         (PolyLevelControls *controls,
-                                                  PolyLevelArgs *args);
-static void     poly_level_type_changed          (GtkToggleButton *button,
-                                                  PolyLevelControls *controls);
-static void     poly_level_same_degree_changed   (GtkWidget *button,
-                                                  PolyLevelControls *controls);
-static void     poly_level_degree_changed        (GtkObject *spin,
-                                                  PolyLevelControls *controls);
-static void     poly_level_max_degree_changed    (GtkObject *spin,
-                                                  PolyLevelControls *controls);
-static void     poly_level_masking_changed       (GtkToggleButton *button,
-                                                  PolyLevelControls *controls);
-static void     poly_level_update_preview        (PolyLevelControls *controls,
-                                                  PolyLevelArgs *args);
-static void     load_args                        (GwyContainer *container,
-                                                  PolyLevelArgs *args);
-static void     save_args                        (GwyContainer *container,
-                                                  PolyLevelArgs *args);
-static void     sanitize_args                    (PolyLevelArgs *args);
+static gboolean module_register               (void);
+static void     poly_level                    (GwyContainer *data,
+                                               GwyRunType run);
+static void     poly_level_do                 (GwyContainer *data,
+                                               GwyDataField *dfield,
+                                               GwyDataField *mfield,
+                                               GQuark quark,
+                                               gint oldid,
+                                               const PolyLevelArgs *args);
+static gboolean poly_level_dialog             (PolyLevelArgs *args,
+                                               GwyContainer *data,
+                                               GwyDataField *dfield,
+                                               GwyDataField *mfield,
+                                               gint id);
+static void     create_coeff_view             (PolyLevelControls *controls,
+                                               GtkBox *hbox);
+static void     render_coeff_name             (GtkTreeViewColumn *column,
+                                               GtkCellRenderer *renderer,
+                                               GtkTreeModel *model,
+                                               GtkTreeIter *iter,
+                                               gpointer user_data);
+static void     render_coeff_value            (GtkTreeViewColumn *column,
+                                               GtkCellRenderer *renderer,
+                                               GtkTreeModel *model,
+                                               GtkTreeIter *iter,
+                                               gpointer user_data);
+static void     poly_level_dialog_update      (PolyLevelControls *controls,
+                                               PolyLevelArgs *args);
+static void     poly_level_update_values      (PolyLevelControls *controls,
+                                               PolyLevelArgs *args);
+static void     poly_level_type_changed       (GtkToggleButton *button,
+                                               PolyLevelControls *controls);
+static void     poly_level_same_degree_changed(GtkWidget *button,
+                                               PolyLevelControls *controls);
+static void     poly_level_degree_changed     (GtkObject *spin,
+                                               PolyLevelControls *controls);
+static void     poly_level_max_degree_changed (GtkObject *spin,
+                                               PolyLevelControls *controls);
+static void     poly_level_masking_changed    (GtkToggleButton *button,
+                                               PolyLevelControls *controls);
+static void     poly_level_update_preview     (PolyLevelControls *controls,
+                                               PolyLevelArgs *args);
+static void     save_coeffs                   (PolyLevelControls *controls);
+static void     copy_coeffs                   (PolyLevelControls *controls);
+static gchar*   create_report                 (PolyLevelControls *controls);
+static void     load_args                     (GwyContainer *container,
+                                               PolyLevelArgs *args);
+static void     save_args                     (GwyContainer *container,
+                                               PolyLevelArgs *args);
+static void     sanitize_args                 (PolyLevelArgs *args);
 
 static const PolyLevelArgs poly_level_defaults = {
     3,
@@ -116,7 +134,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Subtracts polynomial background."),
     "Yeti <yeti@gwyddion.net>",
-    "2.5",
+    "3.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -168,7 +186,8 @@ static void
 poly_level_do_independent(GwyDataField *dfield,
                           GwyDataField *result,
                           GwyDataField *bg,
-                          gint col_degree, gint row_degree)
+                          gint col_degree, gint row_degree,
+                          GtkListStore *coeffmodel)
 {
     gint i;
     gdouble *coeffs;
@@ -185,6 +204,21 @@ poly_level_do_independent(GwyDataField *dfield,
         gwy_data_field_data_changed(bg);
     }
 
+    /* XXX XXX XXX: Must convert coeffs from Legendre to normal first. */
+    if (coeffmodel) {
+        GtkTreeIter iter;
+        guint j, k = 0;
+
+        gtk_list_store_clear(coeffmodel);
+        for (i = 0; i <= row_degree; i++) {
+            for (j = 0; j <= col_degree; j++) {
+                gtk_list_store_insert_with_values(coeffmodel, &iter, k,
+                                                  0, j, 1, i, 2, coeffs[k], -1);
+                k++;
+            }
+        }
+    }
+
     g_free(coeffs);
 }
 
@@ -192,7 +226,8 @@ static void
 poly_level_do_maximum(GwyDataField *dfield,
                       GwyDataField *result,
                       GwyDataField *bg,
-                      gint max_degree)
+                      gint max_degree,
+                      GtkListStore *coeffmodel)
 {
     gint i;
     gdouble *coeffs;
@@ -209,6 +244,20 @@ poly_level_do_maximum(GwyDataField *dfield,
         gwy_data_field_data_changed(bg);
     }
 
+    if (coeffmodel) {
+        GtkTreeIter iter;
+        guint j, k = 0;
+
+        gtk_list_store_clear(coeffmodel);
+        for (i = 0; i <= max_degree; i++) {
+            for (j = 0; j <= max_degree - i; j++) {
+                gtk_list_store_insert_with_values(coeffmodel, &iter, k,
+                                                  0, j, 1, i, 2, coeffs[k], -1);
+                k++;
+            }
+        }
+    }
+
     g_free(coeffs);
 }
 
@@ -217,7 +266,8 @@ poly_level_do_with_mask(GwyDataField *dfield,
                         GwyDataField *mask,
                         GwyDataField *result,
                         GwyDataField *bg,
-                        const PolyLevelArgs *args)
+                        const PolyLevelArgs *args,
+                        GtkListStore *coeffmodel)
 {
     gint *term_powers;
     gdouble *coeffs;
@@ -258,6 +308,19 @@ poly_level_do_with_mask(GwyDataField *dfield,
         gwy_data_field_data_changed(bg);
     }
 
+    if (coeffmodel) {
+        GtkTreeIter iter;
+
+        gtk_list_store_clear(coeffmodel);
+        for (k = 0; k < nterms; k++) {
+            gtk_list_store_insert_with_values(coeffmodel, &iter, k,
+                                              0, term_powers[2*k+1],
+                                              1, term_powers[2*k],
+                                              2, coeffs[k],
+                                              -1);
+        }
+    }
+
     g_free(coeffs);
     g_free(term_powers);
 }
@@ -278,12 +341,12 @@ poly_level_do(GwyContainer *data,
         bg = gwy_data_field_new_alike(dfield, TRUE);
 
     if (mfield && args->masking != GWY_MASK_IGNORE)
-        poly_level_do_with_mask(dfield, mfield, dfield, bg, args);
+        poly_level_do_with_mask(dfield, mfield, dfield, bg, args, NULL);
     else if (args->independent)
         poly_level_do_independent(dfield, dfield, bg,
-                                  args->col_degree, args->row_degree);
+                                  args->col_degree, args->row_degree, NULL);
     else
-        poly_level_do_maximum(dfield, dfield, bg, args->max_degree);
+        poly_level_do_maximum(dfield, dfield, bg, args->max_degree, NULL);
 
     if (!args->do_extract)
         return;
@@ -361,7 +424,7 @@ poly_level_dialog(PolyLevelArgs *args,
         { N_("Independent degrees"),  TRUE,  },
         { N_("Limited total degree"), FALSE, },
     };
-    GtkWidget *dialog, *table, *label, *hbox;
+    GtkWidget *dialog, *table, *label, *hbox, *vbox;
     GwyPixmapLayer *layer;
     PolyLevelControls controls;
     gint response;
@@ -378,10 +441,18 @@ poly_level_dialog(PolyLevelArgs *args,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    controls.dialog = dialog;
 
     hbox = gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 0);
+
+    vbox = gtk_vbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
+    create_coeff_view(&controls, GTK_BOX(hbox));
+
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
     table = gtk_table_new(2, 2, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
@@ -427,7 +498,7 @@ poly_level_dialog(PolyLevelArgs *args,
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), table, TRUE, TRUE, 0);
     row = 0;
 
     controls.type_group
@@ -543,6 +614,116 @@ poly_level_dialog(PolyLevelArgs *args,
     gtk_widget_destroy(dialog);
 
     return TRUE;
+}
+
+static void
+create_coeff_view(PolyLevelControls *controls,
+                  GtkBox *hbox)
+{
+    GtkWidget *treeview, *button, *hbox2, *scwin, *label;
+    GtkTreeViewColumn *column;
+    GtkCellRenderer *renderer;
+    GtkTreeSelection *selection;
+    GtkTooltips *tips;
+
+    tips = gwy_app_get_tooltips();
+
+    controls->coeffvbox = gtk_vbox_new(FALSE, 0);
+    gtk_box_pack_start(hbox, controls->coeffvbox, FALSE, FALSE, 0);
+    gtk_container_set_border_width(GTK_CONTAINER(controls->coeffvbox), 4);
+
+    label = gtk_label_new(_("Polynomial Coefficients"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(controls->coeffvbox), label, FALSE, FALSE, 0);
+
+    scwin = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
+                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_box_pack_start(GTK_BOX(controls->coeffvbox), scwin, TRUE, TRUE, 0);
+
+    controls->coeffmodel = gtk_list_store_new(3,
+                                              G_TYPE_UINT,
+                                              G_TYPE_UINT,
+                                              G_TYPE_DOUBLE);
+    treeview = gtk_tree_view_new_with_model(GTK_TREE_MODEL(controls->coeffmodel));
+    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(treeview), FALSE);
+    gtk_container_add(GTK_CONTAINER(scwin), treeview);
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_NONE);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_expand(column, FALSE);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "xalign", 0.0, NULL);
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_coeff_name, controls, NULL);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_expand(column, TRUE);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "xalign", 1.0, NULL);
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_coeff_value, controls, NULL);
+
+    hbox2 = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(controls->coeffvbox), hbox2, FALSE, FALSE, 0);
+
+    button = gtk_button_new();
+    gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
+    gtk_tooltips_set_tip(tips, button, _("Save table to a file"), NULL);
+    gtk_container_add(GTK_CONTAINER(button),
+                      gtk_image_new_from_stock(GTK_STOCK_SAVE,
+                                               GTK_ICON_SIZE_SMALL_TOOLBAR));
+    gtk_box_pack_end(GTK_BOX(hbox2), button, FALSE, FALSE, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(save_coeffs), controls);
+
+    button = gtk_button_new();
+    gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
+    gtk_tooltips_set_tip(tips, button, _("Copy table to clipboard"), NULL);
+    gtk_container_add(GTK_CONTAINER(button),
+                      gtk_image_new_from_stock(GTK_STOCK_COPY,
+                                               GTK_ICON_SIZE_SMALL_TOOLBAR));
+    gtk_box_pack_end(GTK_BOX(hbox2), button, FALSE, FALSE, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(copy_coeffs), controls);
+}
+
+static void
+render_coeff_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                  GtkCellRenderer *renderer,
+                  GtkTreeModel *model,
+                  GtkTreeIter *iter,
+                  G_GNUC_UNUSED gpointer user_data)
+{
+    guint i, j;
+    guchar buf[24];
+
+    gtk_tree_model_get(model, iter, 0, &j, 1, &i, -1);
+    g_snprintf(buf, sizeof(buf), "a<sub>%u,%u</sub>", j, i);
+    g_object_set(renderer, "markup", buf, NULL);
+}
+
+static void
+render_coeff_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                   GtkCellRenderer *renderer,
+                   GtkTreeModel *model,
+                   GtkTreeIter *iter,
+                   gpointer user_data)
+{
+    PolyLevelControls *controls = (PolyLevelControls*)user_data;
+    gdouble c;
+    guchar buf[40];
+
+    /* TODO: units */
+    gtk_tree_model_get(model, iter, 2, &c, -1);
+    g_snprintf(buf, sizeof(buf), "%g", c);
+    g_object_set(renderer, "markup", buf, NULL);
 }
 
 static void
@@ -719,12 +900,66 @@ poly_level_update_preview(PolyLevelControls *controls,
     gwy_data_field_clear(bg);
 
     if (mask && args->masking != GWY_MASK_IGNORE)
-        poly_level_do_with_mask(source, mask, leveled, bg, args);
+        poly_level_do_with_mask(source, mask, leveled, bg, args,
+                                controls->coeffmodel);
     else if (args->independent)
         poly_level_do_independent(source, leveled, bg,
-                                  args->col_degree, args->row_degree);
+                                  args->col_degree, args->row_degree,
+                                  controls->coeffmodel);
     else
-        poly_level_do_maximum(source, leveled, bg, args->max_degree);
+        poly_level_do_maximum(source, leveled, bg, args->max_degree,
+                              controls->coeffmodel);
+}
+
+static void
+save_coeffs(PolyLevelControls *controls)
+{
+    gchar *text;
+
+    text = create_report(controls);
+    gwy_save_auxiliary_data(_("Save Table"),
+                            GTK_WINDOW(controls->dialog), -1, text);
+    g_free(text);
+}
+
+static void
+copy_coeffs(PolyLevelControls *controls)
+{
+    GtkClipboard *clipboard;
+    GdkDisplay *display;
+    gchar *text;
+
+    text = create_report(controls);
+    display = gtk_widget_get_display(controls->dialog);
+    clipboard = gtk_clipboard_get_for_display(display, GDK_SELECTION_CLIPBOARD);
+    gtk_clipboard_set_text(clipboard, text, -1);
+    g_free(text);
+}
+
+static gchar*
+create_report(PolyLevelControls *controls)
+{
+    GtkTreeIter iter;
+    GString *text;
+    gchar *retval;
+    GtkTreeModel *model = GTK_TREE_MODEL(controls->coeffmodel);
+
+    if (!gtk_tree_model_get_iter_first(model, &iter))
+        return g_strdup("");
+
+    text = g_string_new(NULL);
+    do {
+        guint i, j;
+        gdouble v;
+        gtk_tree_model_get(model, &iter, 0, &j, 1, &i, 2, &v, -1);
+        g_string_append_printf(text, "a[%u,%u] = %g\n",
+                               j, i, v);
+    } while (gtk_tree_model_iter_next(model, &iter));
+
+    retval = text->str;
+    g_string_free(text, FALSE);
+
+    return retval;
 }
 
 static const gchar col_degree_key[]  = "/module/polylevel/col_degree";
