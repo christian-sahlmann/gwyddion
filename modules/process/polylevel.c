@@ -64,6 +64,7 @@ typedef struct {
     GtkWidget *bg_view;
     GwyContainer *data;
     GtkWidget *coeffvbox;
+    GtkWidget *coefflist;
     GtkListStore *coeffmodel;
     GwyDataField *dfield;
     gboolean in_update;
@@ -191,92 +192,6 @@ poly_level(GwyContainer *data, GwyRunType run)
 }
 
 static void
-poly_level_do_independent(GwyDataField *dfield,
-                          GwyDataField *result,
-                          GwyDataField *bg,
-                          gint col_degree, gint row_degree,
-                          GtkListStore *coeffmodel)
-{
-    gint i;
-    gdouble *coeffs;
-
-    coeffs = gwy_data_field_fit_legendre(dfield, col_degree, row_degree, NULL);
-    gwy_data_field_subtract_legendre(result, col_degree, row_degree, coeffs);
-    gwy_data_field_data_changed(result);
-
-    if (bg) {
-        /* Invert coeffs, we do not have anything like add_polynomial() */
-        for (i = 0; i < (col_degree + 1)*(row_degree + 1); i++)
-            coeffs[i] = -coeffs[i];
-        gwy_data_field_subtract_legendre(bg, col_degree, row_degree, coeffs);
-        gwy_data_field_data_changed(bg);
-    }
-
-    /* XXX XXX XXX: Must convert coeffs from Legendre to normal first. */
-    if (coeffmodel) {
-        GtkTreeIter iter;
-        guint j, k = 0;
-
-        gtk_list_store_clear(coeffmodel);
-        for (i = 0; i <= row_degree; i++) {
-            for (j = 0; j <= col_degree; j++) {
-                gtk_list_store_insert_with_values(coeffmodel, &iter, k,
-                                                  0, j, 1, i, 2, coeffs[k], -1);
-                k++;
-            }
-        }
-    }
-
-    g_free(coeffs);
-}
-
-static void
-poly_level_do_maximum(GwyDataField *dfield,
-                      GwyDataField *result,
-                      GwyDataField *bg,
-                      gint max_degree,
-                      GtkListStore *coeffmodel)
-{
-    gint i;
-    gdouble *coeffs;
-
-    coeffs = gwy_data_field_fit_poly_max(dfield, max_degree, NULL);
-    gwy_data_field_subtract_poly_max(result, max_degree, coeffs);
-    gwy_data_field_data_changed(result);
-
-    if (bg) {
-        /* Invert coeffs, we do not have anything like add_polynomial() */
-        for (i = 0; i < (max_degree + 1)*(max_degree + 2)/2; i++)
-            coeffs[i] = -coeffs[i];
-        gwy_data_field_subtract_poly_max(bg, max_degree, coeffs);
-        gwy_data_field_data_changed(bg);
-    }
-
-    if (coeffmodel) {
-        GtkTreeIter iter;
-        guint j, k = 0;
-
-        /* Invert back. */
-        if (bg) {
-            for (i = 0; i < (max_degree + 1)*(max_degree + 2)/2; i++)
-                coeffs[i] = -coeffs[i];
-        }
-
-        gtk_list_store_clear(coeffmodel);
-        for (i = 0; i <= max_degree; i++) {
-            for (j = 0; j <= max_degree - i; j++) {
-                gtk_list_store_insert_with_values(coeffmodel, &iter, k,
-                                                  0, j, 1, i, 2, coeffs[k], -1);
-                k++;
-            }
-        }
-        convert_coefficients_to_real(dfield, coeffmodel);
-    }
-
-    g_free(coeffs);
-}
-
-static void
 poly_level_do_with_mask(GwyDataField *dfield,
                         GwyDataField *mask,
                         GwyDataField *result,
@@ -287,6 +202,9 @@ poly_level_do_with_mask(GwyDataField *dfield,
     gint *term_powers;
     gdouble *coeffs;
     gint nterms, i, j, k;
+
+    if (args->masking == GWY_MASK_IGNORE)
+        mask = NULL;
 
     k = 0;
     if (args->independent) {
@@ -310,10 +228,15 @@ poly_level_do_with_mask(GwyDataField *dfield,
         }
     }
 
-    coeffs = gwy_data_field_fit_poly(dfield, mask, nterms, term_powers,
-                                     args->masking == GWY_MASK_EXCLUDE, NULL);
-    gwy_data_field_subtract_poly(result, nterms, term_powers, coeffs);
-    gwy_data_field_data_changed(result);
+    {
+        GTimer *timer = g_timer_new();
+        coeffs = gwy_data_field_fit_poly(dfield, mask, nterms, term_powers,
+                                         args->masking == GWY_MASK_EXCLUDE, NULL);
+        g_printerr("%g\n", g_timer_elapsed(timer, NULL));
+        g_timer_destroy(timer);
+        gwy_data_field_subtract_poly(result, nterms, term_powers, coeffs);
+        gwy_data_field_data_changed(result);
+    }
 
     if (bg) {
         for (i = 0; i < nterms; i++) {
@@ -331,7 +254,6 @@ poly_level_do_with_mask(GwyDataField *dfield,
             for (i = 0; i < nterms; i++)
                 coeffs[i] = -coeffs[i];
         }
-
 
         gtk_list_store_clear(coeffmodel);
         for (k = 0; k < nterms; k++) {
@@ -363,13 +285,7 @@ poly_level_do(GwyContainer *data,
     if (args->do_extract)
         bg = gwy_data_field_new_alike(dfield, TRUE);
 
-    if (mfield && args->masking != GWY_MASK_IGNORE)
-        poly_level_do_with_mask(dfield, mfield, dfield, bg, args, NULL);
-    else if (args->independent)
-        poly_level_do_independent(dfield, dfield, bg,
-                                  args->col_degree, args->row_degree, NULL);
-    else
-        poly_level_do_maximum(dfield, dfield, bg, args->max_degree, NULL);
+    poly_level_do_with_mask(dfield, mfield, dfield, bg, args, NULL);
 
     if (!args->do_extract)
         return;
@@ -669,7 +585,10 @@ create_coeff_view(PolyLevelControls *controls,
                                               G_TYPE_UINT,
                                               G_TYPE_UINT,
                                               G_TYPE_DOUBLE);
-    treeview = gtk_tree_view_new_with_model(GTK_TREE_MODEL(controls->coeffmodel));
+    controls->coefflist = treeview = gtk_tree_view_new();
+    gtk_tree_view_set_model(GTK_TREE_VIEW(treeview),
+                            GTK_TREE_MODEL(controls->coeffmodel));
+    g_object_unref(controls->coeffmodel);
     gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(treeview), FALSE);
     gtk_container_add(GTK_CONTAINER(scwin), treeview);
 
@@ -924,16 +843,13 @@ poly_level_update_preview(PolyLevelControls *controls,
     gwy_data_field_copy(source, leveled, FALSE);
     gwy_data_field_clear(bg);
 
-    if (mask && args->masking != GWY_MASK_IGNORE)
-        poly_level_do_with_mask(source, mask, leveled, bg, args,
-                                controls->coeffmodel);
-    else if (args->independent)
-        poly_level_do_independent(source, leveled, bg,
-                                  args->col_degree, args->row_degree,
-                                  controls->coeffmodel);
-    else
-        poly_level_do_maximum(source, leveled, bg, args->max_degree,
-                              controls->coeffmodel);
+    g_object_ref(controls->coeffmodel);
+    gtk_tree_view_set_model(GTK_TREE_VIEW(controls->coefflist), NULL);
+    poly_level_do_with_mask(source, mask, leveled, bg, args,
+                            controls->coeffmodel);
+    gtk_tree_view_set_model(GTK_TREE_VIEW(controls->coefflist),
+                            GTK_TREE_MODEL(controls->coeffmodel));
+    g_object_unref(controls->coeffmodel);
 }
 
 static void
