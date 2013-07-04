@@ -1402,7 +1402,7 @@ gwy_data_field_area_fit_poly(GwyDataField *data_field,
                              gdouble *coeffs)
 {
     const gdouble *data, *mask;
-    gint xres, yres, r, c, i, j, k;
+    gint xres, yres, r, c, i, j;
     gdouble *m, *p;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
@@ -1439,6 +1439,7 @@ gwy_data_field_area_fit_poly(GwyDataField *data_field,
             gdouble x = 2*c/(width - 1.0) - 1.0;
             gdouble z = data[(row + r)*xres + (col + c)];
             gdouble w = 1.0;
+            gdouble *mk = m;
 
             if (mask) {
                 w = mask[(row + r)*xres + (col + c)];
@@ -1455,11 +1456,14 @@ gwy_data_field_area_fit_poly(GwyDataField *data_field,
                        * pow_int(y, term_powers[2*i + 1]);
             }
 
-            k = 0;
             for (i = 0; i < nterms; i++) {
-                for (j = 0; j <= i; j++)
-                    m[k++] += w*p[i]*p[j];
-                coeffs[i] += z*w*p[i];
+                gdouble wpwi = w*p[i];
+                gdouble *pj = p;
+
+                for (j = i+1; j; j--, pj++)
+                    *(mk++) += wpwi*(*pj);
+
+                coeffs[i] += z*wpwi;
             }
         }
     }
