@@ -228,15 +228,10 @@ poly_level_do_with_mask(GwyDataField *dfield,
         }
     }
 
-    {
-        GTimer *timer = g_timer_new();
-        coeffs = gwy_data_field_fit_poly(dfield, mask, nterms, term_powers,
-                                         args->masking == GWY_MASK_EXCLUDE, NULL);
-        g_printerr("%g\n", g_timer_elapsed(timer, NULL));
-        g_timer_destroy(timer);
-        gwy_data_field_subtract_poly(result, nterms, term_powers, coeffs);
-        gwy_data_field_data_changed(result);
-    }
+    coeffs = gwy_data_field_fit_poly(dfield, mask, nterms, term_powers,
+                                     args->masking == GWY_MASK_EXCLUDE, NULL);
+    gwy_data_field_subtract_poly(result, nterms, term_powers, coeffs);
+    gwy_data_field_data_changed(result);
 
     if (bg) {
         for (i = 0; i < nterms; i++) {
