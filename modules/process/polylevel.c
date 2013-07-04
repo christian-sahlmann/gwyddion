@@ -65,6 +65,7 @@ typedef struct {
     GwyContainer *data;
     GtkWidget *coeffvbox;
     GtkListStore *coeffmodel;
+    GwyDataField *dfield;
     gboolean in_update;
 } PolyLevelControls;
 
@@ -110,6 +111,11 @@ static void     poly_level_masking_changed    (GtkToggleButton *button,
                                                PolyLevelControls *controls);
 static void     poly_level_update_preview     (PolyLevelControls *controls,
                                                PolyLevelArgs *args);
+static void convert_coefficients_to_real(GwyDataField *dfield,
+                             GtkListStore *store);
+static gchar* format_coefficient(PolyLevelControls *controls,
+                   gint j, gint i, gdouble v,
+                   GwySIUnitFormatStyle style);
 static void     save_coeffs                   (PolyLevelControls *controls);
 static void     copy_coeffs                   (PolyLevelControls *controls);
 static gchar*   create_report                 (PolyLevelControls *controls);
@@ -256,6 +262,7 @@ poly_level_do_maximum(GwyDataField *dfield,
                 k++;
             }
         }
+        convert_coefficients_to_real(dfield, coeffmodel);
     }
 
     g_free(coeffs);
@@ -319,6 +326,7 @@ poly_level_do_with_mask(GwyDataField *dfield,
                                               2, coeffs[k],
                                               -1);
         }
+        convert_coefficients_to_real(dfield, coeffmodel);
     }
 
     g_free(coeffs);
@@ -432,6 +440,7 @@ poly_level_dialog(PolyLevelArgs *args,
 
     controls.args = args;
     controls.in_update = TRUE;
+    controls.dfield = dfield;
     controls.data = create_preview_data(data, dfield, mfield, id);
 
     dialog = gtk_dialog_new_with_buttons(_("Remove Polynomial Background"),
@@ -717,13 +726,14 @@ render_coeff_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
                    gpointer user_data)
 {
     PolyLevelControls *controls = (PolyLevelControls*)user_data;
-    gdouble c;
-    guchar buf[40];
+    guint i, j;
+    gdouble v;
+    gchar *buf;
 
-    /* TODO: units */
-    gtk_tree_model_get(model, iter, 2, &c, -1);
-    g_snprintf(buf, sizeof(buf), "%g", c);
+    gtk_tree_model_get(model, iter, 0, &j, 1, &i, 2, &v, -1);
+    buf = format_coefficient(controls, j, i, v, GWY_SI_UNIT_FORMAT_VFMARKUP);
     g_object_set(renderer, "markup", buf, NULL);
+    g_free(buf);
 }
 
 static void
@@ -912,6 +922,93 @@ poly_level_update_preview(PolyLevelControls *controls,
 }
 
 static void
+convert_coefficients_to_real(GwyDataField *dfield,
+                             GtkListStore *store)
+{
+    gdouble cx = dfield->xoff + 0.5*dfield->xreal,
+            cy = dfield->yoff + 0.5*dfield->yreal,
+            bx = 0.5*dfield->xreal*(1.0 - 1.0/dfield->xres),
+            by = 0.5*dfield->yreal*(1.0 - 1.0/dfield->yres);
+    GtkTreeModel *model = GTK_TREE_MODEL(store);
+    guint n = gtk_tree_model_iter_n_children(model, NULL);
+    gdouble *coeffs;
+    guint *powermap;
+    GtkTreeIter iter;
+    guint k;
+
+    if (!gtk_tree_model_get_iter_first(model, &iter))
+        return;
+
+    coeffs = g_new0(gdouble, n);
+    powermap = g_new0(guint, 2*n);
+    k = 0;
+
+    do {
+        guint i, j;
+        gtk_tree_model_get(model, &iter, 0, &j, 1, &i, -1);
+        powermap[k++] = j;
+        powermap[k++] = i;
+    } while (gtk_tree_model_iter_next(model, &iter));
+
+    gtk_tree_model_get_iter_first(model, &iter);
+    do {
+        guint i, j, m, l;
+        gdouble v, combjm = 1, cxpow = 1.0;
+
+        gtk_tree_model_get(model, &iter, 0, &j, 1, &i, 2, &v, -1);
+        v /= pow(bx, j) * pow(by, i);
+        for (m = 0; m <= j; m++) {
+            gdouble combil = 1, cypow = 1.0;
+            for (l = 0; l <= i; l++) {
+                gdouble vml = v*combjm*combil*cxpow*cypow;
+                for (k = 0; k < n; k++) {
+                    if (powermap[2*k] == j - m
+                        && powermap[2*k + 1] == i - l) {
+                        coeffs[k] += vml;
+                        break;
+                    }
+                }
+                g_assert(k < n);
+                cypow *= cy;
+                combjm *= (i - l - 1.0)/(l + 1.0);
+            }
+            cxpow *= cx;
+            combjm *= (j - m - 1.0)/(m + 1.0);
+        }
+    } while (gtk_tree_model_iter_next(model, &iter));
+
+    gtk_tree_model_get_iter_first(model, &iter);
+    k = 0;
+    do {
+        gtk_list_store_set(store, &iter, 2, coeffs[k], -1);
+        k++;
+    } while (gtk_tree_model_iter_next(model, &iter));
+
+    g_free(powermap);
+    g_free(coeffs);
+}
+
+static gchar*
+format_coefficient(PolyLevelControls *controls,
+                   gint j, gint i, gdouble v,
+                   GwySIUnitFormatStyle style)
+{
+    GwySIUnit *zunit = gwy_data_field_get_si_unit_z(controls->dfield),
+              *xyunit = gwy_data_field_get_si_unit_xy(controls->dfield);
+    GwySIUnit *unit = gwy_si_unit_power_multiply(zunit, 1, xyunit, -(i + j),
+                                                 NULL);
+    GwySIValueFormat *vf = gwy_si_unit_get_format_with_digits(unit, style,
+                                                              fabs(v), 4, NULL);
+    gchar *retval = g_strdup_printf("%.*f%s%s",
+                                    vf->precision, v/vf->magnitude,
+                                    *vf->units ? " " : "", vf->units);
+    gwy_si_unit_value_format_free(vf);
+    g_object_unref(unit);
+
+    return retval;
+}
+
+static void
 save_coeffs(PolyLevelControls *controls)
 {
     gchar *text;
@@ -951,9 +1048,11 @@ create_report(PolyLevelControls *controls)
     do {
         guint i, j;
         gdouble v;
+        gchar *buf;
         gtk_tree_model_get(model, &iter, 0, &j, 1, &i, 2, &v, -1);
-        g_string_append_printf(text, "a[%u,%u] = %g\n",
-                               j, i, v);
+        buf = format_coefficient(controls, j, i, v, GWY_SI_UNIT_FORMAT_PLAIN);
+        g_string_append_printf(text, "a[%u,%u] = %s\n", j, i, buf);
+        g_free(buf);
     } while (gtk_tree_model_iter_next(model, &iter));
 
     retval = text->str;
