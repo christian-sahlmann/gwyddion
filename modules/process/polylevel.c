@@ -111,11 +111,13 @@ static void     poly_level_masking_changed    (GtkToggleButton *button,
                                                PolyLevelControls *controls);
 static void     poly_level_update_preview     (PolyLevelControls *controls,
                                                PolyLevelArgs *args);
-static void convert_coefficients_to_real(GwyDataField *dfield,
-                             GtkListStore *store);
-static gchar* format_coefficient(PolyLevelControls *controls,
-                   gint j, gint i, gdouble v,
-                   GwySIUnitFormatStyle style);
+static void     convert_coefficients_to_real  (GwyDataField *dfield,
+                                               GtkListStore *store);
+static gchar*   format_coefficient            (PolyLevelControls *controls,
+                                               gint j,
+                                               gint i,
+                                               gdouble v,
+                                               GwySIUnitFormatStyle style);
 static void     save_coeffs                   (PolyLevelControls *controls);
 static void     copy_coeffs                   (PolyLevelControls *controls);
 static gchar*   create_report                 (PolyLevelControls *controls);
@@ -982,11 +984,11 @@ convert_coefficients_to_real(GwyDataField *dfield,
                     }
                 }
                 g_assert(k < n);
-                cypow *= cy;
-                combjm *= (i - l - 1.0)/(l + 1.0);
+                cypow *= -cy;
+                combil *= (i - l)/(l + 1.0);
             }
-            cxpow *= cx;
-            combjm *= (j - m - 1.0)/(m + 1.0);
+            cxpow *= -cx;
+            combjm *= (j - m)/(m + 1.0);
         }
     } while (gtk_tree_model_iter_next(model, &iter));
 
