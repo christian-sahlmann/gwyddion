@@ -254,6 +254,12 @@ poly_level_do_maximum(GwyDataField *dfield,
         GtkTreeIter iter;
         guint j, k = 0;
 
+        /* Invert back. */
+        if (bg) {
+            for (i = 0; i < (max_degree + 1)*(max_degree + 2)/2; i++)
+                coeffs[i] = -coeffs[i];
+        }
+
         gtk_list_store_clear(coeffmodel);
         for (i = 0; i <= max_degree; i++) {
             for (j = 0; j <= max_degree - i; j++) {
@@ -317,6 +323,13 @@ poly_level_do_with_mask(GwyDataField *dfield,
 
     if (coeffmodel) {
         GtkTreeIter iter;
+
+        /* Invert back. */
+        if (bg) {
+            for (i = 0; i < nterms; i++)
+                coeffs[i] = -coeffs[i];
+        }
+
 
         gtk_list_store_clear(coeffmodel);
         for (k = 0; k < nterms; k++) {
