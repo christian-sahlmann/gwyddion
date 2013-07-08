@@ -114,7 +114,7 @@ s94_load(const gchar *filename,
     gsize size = 0;
     GError *err = NULL;
     guint xres, yres;
-    gdouble xreal, yreal, zscale;
+    gdouble xreal, yreal, zscale, min, max;
     GwyDataField *dfield;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -153,18 +153,20 @@ s94_load(const gchar *filename,
 
     p = buffer + ZSCALE_OFFSET;
     // FIXME: Just a wild guess based on a single file.
-    zscale = 1e-9/(95200*gwy_get_gdouble_le(&p));
+    zscale = 1e-9/(50.0*gwy_get_gdouble_le(&p));
     if (!(zscale >= 0.0)) {
         // Just a random guess.
         g_warning("Bogus z scale, fixing to 1 AA");
-        zscale = 1e-10;
+        zscale = 1e-9/50.0;
     }
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     gwy_convert_raw_data(buffer + HEADER_LEN, xres*yres,
                          1, GWY_RAW_DATA_SINT16, GWY_BYTE_ORDER_LITTLE_ENDIAN,
-                         dfield->data, zscale, 0.0);
-
+                         dfield->data, 1.0, 0.0);
+    gwy_data_field_get_min_max(dfield, &min, &max);
+    if (max > min)
+        gwy_data_field_multiply(dfield, zscale/(max - min));
 
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), "m");
