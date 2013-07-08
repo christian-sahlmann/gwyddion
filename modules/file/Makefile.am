@@ -132,6 +132,7 @@ file_LTLIBRARIES = \
 	rhk-sm4.la \
 	rhk-spm32.la \
 	robotics.la \
+	s94file.la \
 	sdfile.la \
 	seiko.la \
 	sensofar.la \
@@ -256,6 +257,7 @@ rhk_sm3_la_SOURCES       = rhk-sm3.c
 rhk_sm4_la_SOURCES       = rhk-sm4.c
 rhk_spm32_la_SOURCES     = rhk-spm32.c
 robotics_la_SOURCES      = robotics.c
+s94file_la_SOURCES       = s94file.c
 sdfile_la_SOURCES        = sdfile.c
 seiko_la_SOURCES         = seiko.c
 sensofar_la_SOURCES      = sensofar.c
