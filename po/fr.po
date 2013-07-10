@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2013-05-16 03:58+0200\n"
-"PO-Revision-Date: 2013-06-23 23:31+0100\n"
+"POT-Creation-Date: 2013-07-10 03:58+0200\n"
+"PO-Revision-Date: 2013-07-10 21:49+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -85,43 +85,43 @@ msgstr "La pile n'est pas exécutable"
 msgid "Unresolved identifiers"
 msgstr "Identifiants non résolus"
 
-#: libgwyddion/gwyfdcurvepreset.c:787
+#: libgwyddion/gwyfdcurvepreset.c:784
 msgid "vdW: semisphere"
 msgstr "vdW : hémisphère"
 
-#: libgwyddion/gwyfdcurvepreset.c:802
+#: libgwyddion/gwyfdcurvepreset.c:799
 msgid "vdW: pyramide"
 msgstr "vdW : pyramide"
 
-#: libgwyddion/gwyfdcurvepreset.c:815
+#: libgwyddion/gwyfdcurvepreset.c:812
 msgid "vdW: truncated pyramid"
 msgstr "vdW : pyramide tronquée"
 
-#: libgwyddion/gwyfdcurvepreset.c:828
+#: libgwyddion/gwyfdcurvepreset.c:825
 msgid "vdW: sphere"
 msgstr "vdW : sphère"
 
-#: libgwyddion/gwyfdcurvepreset.c:841
+#: libgwyddion/gwyfdcurvepreset.c:838
 msgid "vdW: offset sphere"
 msgstr "vdW : sphère décalée"
 
-#: libgwyddion/gwyfdcurvepreset.c:854
+#: libgwyddion/gwyfdcurvepreset.c:851
 msgid "vdW: two spheres"
 msgstr "vdW : deux sphères"
 
-#: libgwyddion/gwyfdcurvepreset.c:867
+#: libgwyddion/gwyfdcurvepreset.c:864
 msgid "vdW: cone"
 msgstr "vdW : cône"
 
-#: libgwyddion/gwyfdcurvepreset.c:880
+#: libgwyddion/gwyfdcurvepreset.c:877
 msgid "vdW: cylinder"
 msgstr "vdW : cylindre"
 
-#: libgwyddion/gwyfdcurvepreset.c:893
+#: libgwyddion/gwyfdcurvepreset.c:890
 msgid "vdW: paraboloid"
 msgstr "vdW : parabole"
 
-#: libgwyddion/gwyfdcurvepreset.c:906
+#: libgwyddion/gwyfdcurvepreset.c:903
 msgid "contact: Hertz (paraboloid)"
 msgstr "contact : Hertz (paraboloïde)"
 
@@ -946,7 +946,7 @@ msgstr "pixels"
 #: modules/process/pat_synth.c:403
 #: modules/process/pid.c:196
 #: modules/process/polydistort.c:219
-#: modules/process/polylevel.c:376
+#: modules/process/polylevel.c:374
 #: modules/process/rotate.c:264
 #: modules/process/scale.c:193
 #: modules/process/scars.c:469
@@ -2781,7 +2781,7 @@ msgstr "Burleigh données exportées (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:225
 #: modules/file/burleigh_exp.c:266
-#: modules/file/nanoscope.c:1480
+#: modules/file/nanoscope.c:1524
 #: modules/file/omicron.c:408
 #: modules/file/shimadzu.c:465
 msgid "Missing colon in header line."
@@ -3971,19 +3971,19 @@ msgstr "Importe les fichiers Digital Instruments Nanoscope II."
 msgid "Nanoscope II files"
 msgstr "Nanoscope II"
 
-#: modules/file/nanoscope.c:200
+#: modules/file/nanoscope.c:201
 msgid "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
 msgstr "Importe les fichiers Veeco (Digital Instruments) Nanoscope, version 3 ou plus."
 
-#: modules/file/nanoscope.c:214
+#: modules/file/nanoscope.c:215
 msgid "Nanoscope III files"
 msgstr "Nanoscope III"
 
-#: modules/file/nanoscope.c:281
+#: modules/file/nanoscope.c:282
 msgid "File is not a Nanoscope file, or it is a unknown subtype."
 msgstr "Le fichier n'est pas un fichier Nanoscope, ou est d'un sous-type inconnu."
 
-#: modules/file/nanoscope.c:288
+#: modules/file/nanoscope.c:289
 msgid ""
 "File has been damaged by change of line endings, resulting in corruption of the binary part of the file.\n"
 "\n"
@@ -3993,18 +3993,18 @@ msgstr ""
 "\n"
 "Cela arrive typiquement lorsque le fichier est traité comme du texte lors d'un envoi incompressé par e-mail, un transfert FTP en mode ascii (uilisez le binaire), compressé avec ‘Envoyer vers un dossier compressé’ dans certaines versions de MS Windows, ou tout autre transfert de fichier qui essaie d'enregistrer en texte indépendamment de la plateforme."
 
-#: modules/file/nanoscope.c:597
-#: modules/file/nanoscope.c:613
+#: modules/file/nanoscope.c:602
+#: modules/file/nanoscope.c:618
 msgid "Cannot parse `Scan size' field."
 msgstr "Impossible d'analyser le champ `Scan size'."
 
-#: modules/file/nanoscope.c:1389
+#: modules/file/nanoscope.c:1433
 #: modules/file/nrrdfile.c:1023
 #, c-format
 msgid "Garbage after data sample #%u."
 msgstr "Données erronées après l'échantillon #%u."
 
-#: modules/file/nanoscope.c:1470
+#: modules/file/nanoscope.c:1514
 msgid "Truncated header line."
 msgstr "Ligne d'en-tête tronquée."
 
@@ -5183,6 +5183,14 @@ msgstr "Importe les fichiers Automation & Robotics Dual Lensmapper"
 msgid "Dual Lensmapper files"
 msgstr "Dual Lensmapper"
 
+#: modules/file/s94file.c:58
+msgid "Imports S94 STM data files."
+msgstr "Importe les fichiers S94 STM."
+
+#: modules/file/s94file.c:71
+msgid "S94 STM files (.s94)"
+msgstr "S94 STM (.s94)"
+
 #: modules/file/sdfile.c:156
 msgid "Imports Surfstand group SDF (Surface Data File) files."
 msgstr "Importe les fichiers Surfstand group SDF (Surface Data File)."
@@ -5671,14 +5679,14 @@ msgstr "Sauver le rapport d'ajustement"
 #: modules/graph/graph_cd.c:1132
 #: modules/graph/graph_fdfit.c:708
 #: modules/graph/graph_fit.c:752
-#: modules/volume/volume_fdfit.c:894
+#: modules/volume/volume_fdfit.c:896
 msgid "Fit"
 msgstr "Ajustement"
 
 #: modules/graph/graph_cd.c:554
 #: modules/graph/graph_fdfit.c:748
 #: modules/graph/graph_fit.c:792
-#: modules/volume/volume_fdfit.c:965
+#: modules/volume/volume_fdfit.c:967
 msgid "It is necessary to select more data points than free fit parameters"
 msgstr "Il faut sélectionner plus de points que de paramètres d'ajustement"
 
@@ -5696,21 +5704,21 @@ msgstr "Il faut sélectionner plus de points que de paramètres d'ajustement"
 #: modules/tools/stats.c:1054
 #: modules/tools/stats.c:1061
 #: modules/tools/stats.c:1063
-#: modules/volume/volume_fdfit.c:1121
+#: modules/volume/volume_fdfit.c:1123
 msgid "N.A."
 msgstr "N. A."
 
 #: modules/graph/graph_cd.c:1018
 #: modules/graph/graph_fdfit.c:1382
 #: modules/graph/graph_fit.c:1485
-#: modules/volume/volume_fdfit.c:1709
+#: modules/volume/volume_fdfit.c:1711
 msgid "===== Fit Results ====="
 msgstr "===== Résultats de l'ajustement ====="
 
 #: modules/graph/graph_cd.c:1022
 #: modules/graph/graph_fdfit.c:1386
 #: modules/graph/graph_fit.c:1489
-#: modules/volume/volume_fdfit.c:1713
+#: modules/volume/volume_fdfit.c:1715
 #, c-format
 msgid "Data:             %s\n"
 msgstr "Donnée :             %s\n"
@@ -5718,7 +5726,7 @@ msgstr "Donnée :             %s\n"
 #: modules/graph/graph_cd.c:1025
 #: modules/graph/graph_fdfit.c:1389
 #: modules/graph/graph_fit.c:1492
-#: modules/volume/volume_fdfit.c:1716
+#: modules/volume/volume_fdfit.c:1718
 #, c-format
 msgid "Number of points: %d of %d\n"
 msgstr "Nombrer de points : %d sur %d\n"
@@ -5726,7 +5734,7 @@ msgstr "Nombrer de points : %d sur %d\n"
 #: modules/graph/graph_cd.c:1029
 #: modules/graph/graph_fdfit.c:1393
 #: modules/graph/graph_fit.c:1496
-#: modules/volume/volume_fdfit.c:1720
+#: modules/volume/volume_fdfit.c:1722
 #, c-format
 msgid "X range:          %.*f to %.*f %s\n"
 msgstr "Plage X :          %.*f jusqu'à %.*f %s\n"
@@ -5734,7 +5742,7 @@ msgstr "Plage X :          %.*f jusqu'à %.*f %s\n"
 #: modules/graph/graph_cd.c:1035
 #: modules/graph/graph_fdfit.c:1399
 #: modules/graph/graph_fit.c:1502
-#: modules/volume/volume_fdfit.c:1726
+#: modules/volume/volume_fdfit.c:1728
 #, c-format
 msgid "Fitted function:  %s\n"
 msgstr "Fonction ajustée :  %s\n"
@@ -5742,7 +5750,7 @@ msgstr "Fonction ajustée :  %s\n"
 #: modules/graph/graph_cd.c:1038
 #: modules/graph/graph_fdfit.c:1402
 #: modules/graph/graph_fit.c:1505
-#: modules/volume/volume_fdfit.c:1729
+#: modules/volume/volume_fdfit.c:1731
 msgid "Results\n"
 msgstr "Resultats\n"
 
@@ -5935,20 +5943,20 @@ msgstr "graphe"
 
 #: modules/graph/graph_fdfit.c:707
 #: modules/graph/graph_fit.c:751
-#: modules/volume/volume_fdfit.c:893
+#: modules/volume/volume_fdfit.c:895
 msgid "Estimate"
 msgstr "Estimation"
 
 #: modules/graph/graph_fdfit.c:1429
 #: modules/graph/graph_fit.c:1532
-#: modules/volume/volume_fdfit.c:1756
+#: modules/volume/volume_fdfit.c:1758
 #, c-format
 msgid "Residual sum:   %g\n"
 msgstr "Somme résiduelle :   %g\n"
 
 #: modules/graph/graph_fdfit.c:1432
 #: modules/graph/graph_fit.c:1535
-#: modules/volume/volume_fdfit.c:1759
+#: modules/volume/volume_fdfit.c:1761
 msgid "Correlation matrix\n"
 msgstr "Matrice de corrélation\n"
 
@@ -6008,7 +6016,7 @@ msgstr "Couche permettant de sélectionner des zones elliptiques."
 msgid "Layer allowing selection of arbitrary straight lines."
 msgstr "Couche permettant de sélectionner des lignes droites."
 
-#: modules/layer/point.c:141
+#: modules/layer/point.c:165
 msgid "Layer allowing selection of several points, displayed as crosses or inivisible."
 msgstr "Couche permettant de sélectionner plusieurs points, sous forme de croix ou invisibles."
 
@@ -7077,7 +7085,7 @@ msgstr "Afficher le graphe"
 #: modules/process/level.c:268
 #: modules/process/linecorrect.c:287
 #: modules/process/neural.c:591
-#: modules/process/polylevel.c:494
+#: modules/process/polylevel.c:500
 #: modules/tools/sfunctions.c:457
 #: modules/tools/stats.c:365
 msgid "Masking Mode"
@@ -7085,6 +7093,7 @@ msgstr "Mode Masque"
 
 #: modules/process/curvature.c:753
 #: modules/process/grain_dist.c:854
+#: modules/process/polylevel.c:616
 #: modules/tools/distance.c:227
 #: modules/tools/roughness.c:824
 #: modules/tools/stats.c:426
@@ -7093,6 +7102,7 @@ msgstr "Sauver le tableau"
 
 #: modules/process/curvature.c:758
 #: modules/process/grain_dist.c:859
+#: modules/process/polylevel.c:626
 #: modules/tools/distance.c:232
 #: modules/tools/roughness.c:829
 #: modules/tools/stats.c:431
@@ -8999,8 +9009,8 @@ msgstr "Interpolation laplacienne..."
 
 #: modules/process/level_grains.c:224
 #: modules/process/median-bg.c:163
-#: modules/process/polylevel.c:296
-#: modules/process/polylevel.c:420
+#: modules/process/polylevel.c:293
+#: modules/process/polylevel.c:426
 #: modules/process/sphere-revolve.c:197
 msgid "Background"
 msgstr "Arrière-plan"
@@ -9015,7 +9025,7 @@ msgstr "Quantité à mettre à niveau :"
 
 #: modules/process/level_grains.c:268
 #: modules/process/median-bg.c:212
-#: modules/process/polylevel.c:485
+#: modules/process/polylevel.c:491
 #: modules/process/sphere-revolve.c:259
 msgid "E_xtract background"
 msgstr "E_xtraire l'arrière-plan"
@@ -9943,49 +9953,58 @@ msgstr "Coefficients Y"
 msgid "Distorted"
 msgstr "Distordu"
 
-#: modules/process/polylevel.c:117
+#: modules/process/polylevel.c:144
 msgid "Subtracts polynomial background."
 msgstr "Soustrait l'arrière-plan polynomial."
 
-#: modules/process/polylevel.c:131
+#: modules/process/polylevel.c:158
 msgid "/_Level/_Polynomial Background..."
 msgstr "/Niveau/Arrière-plan _polynomial..."
 
-#: modules/process/polylevel.c:135
+#: modules/process/polylevel.c:162
 msgid "Remove polynomial background"
 msgstr "Supprimer l'arrière-plan polynomial"
 
-#: modules/process/polylevel.c:361
+#: modules/process/polylevel.c:358
 msgid "Independent degrees"
 msgstr "Degrés indépendants"
 
-#: modules/process/polylevel.c:362
+#: modules/process/polylevel.c:359
 msgid "Limited total degree"
 msgstr "Degré total limité"
 
-#: modules/process/polylevel.c:374
+#: modules/process/polylevel.c:372
 msgid "Remove Polynomial Background"
 msgstr "Supprimer l'arrière-plan polynomial"
 
-#: modules/process/polylevel.c:415
+#: modules/process/polylevel.c:421
 msgid "Leveled data"
 msgstr "Données mises à niveau"
 
-#: modules/process/polylevel.c:445
+#: modules/process/polylevel.c:451
 msgid "_Horizontal polynom degree:"
 msgstr "Degré du polynôme _horizontal : "
 
-#: modules/process/polylevel.c:453
+#: modules/process/polylevel.c:459
 msgid "_Vertical polynom degree:"
 msgstr "Degré du polynôme _vertical : "
 
-#: modules/process/polylevel.c:459
+#: modules/process/polylevel.c:465
 msgid "_Same degrees"
 msgstr "Degré_s identiques"
 
-#: modules/process/polylevel.c:477
+#: modules/process/polylevel.c:483
 msgid "_Maximum polynom degree:"
 msgstr "Degré _maximum du polynôme"
+
+#: modules/process/polylevel.c:570
+msgid "Polynomial Coefficients"
+msgstr "Coefficients polynomiaux"
+
+#: modules/process/polylevel.c:943
+#: modules/tools/distance.c:519
+msgid "Save Table"
+msgstr "Sauver le tableau"
 
 #: modules/process/presentationops.c:57
 msgid "Basic operations with presentation: extraction, removal."
@@ -10726,10 +10745,6 @@ msgstr "Outil de mesure de distance, mesure des distances et des angles."
 #: modules/tools/distance.c:131
 msgid "Measure distances and directions between points"
 msgstr "Mesure de distances et de directions entre des points"
-
-#: modules/tools/distance.c:519
-msgid "Save Table"
-msgstr "Sauver le tableau"
 
 #: modules/tools/filter.c:98
 msgid "Filter tool, processes selected part of data with a filter (conservative denoise, mean, median. Kuwahara, minimum, maximum)."
@@ -11545,7 +11560,7 @@ msgstr "_Spectres séparés"
 msgid "_Average spectra"
 msgstr "Moyenner les spectres"
 
-#: modules/tools/spectro.c:445
+#: modules/tools/spectro.c:446
 msgid "Spectroscopy"
 msgstr "Spectroscopie"
 
@@ -11909,7 +11924,7 @@ msgstr "Courbe _xpos :"
 msgid "Curve _ypos:"
 msgstr "Courbe _ypos :"
 
-#: modules/volume/volume_fdfit.c:1072
+#: modules/volume/volume_fdfit.c:1074
 msgid "It is necessary to select more data points than free volfit parameters"
 msgstr "Il faut sélectionner plus de points que de paramètres volfit libres"
 
