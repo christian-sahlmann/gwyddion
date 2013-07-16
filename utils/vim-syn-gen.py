@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # vim-syn-gen.py -- Generate vim syntax highligting from gtk-doc documentation
-# Written by Yeti <yeti@physics.muni.cz>, last changed: 2006-11-20.
-# This file is in the public domain.
+# Written by Yeti <yeti@physics.muni.cz>, 2005 and later.
+# This script is in the public domain.
 import re, glob, time, sys, os, pwd
 
 # To find modules in directory it was symlinked to.
@@ -11,9 +11,11 @@ options = {
     'filter_regexp': r'^_',
 }
 
-if len(sys.argv) != 2:
+if len(sys.argv) not in range(2, 4):
     print """\
-Usage: %s config-file.py >something.vim
+Usage: %s config-file.py [OUTPUT.vim]
+If output is unspecified, dumps the vim syntax file to the standard output.
+
 Config-file options:
   syntax_name       Vim syntax name (mandatory)
   file_glob         SOMETHING-decl.txt files to scan (mandatory)
@@ -49,6 +51,14 @@ if options.has_key('url'):
     url_line = '" URL: %s\n' % options['url']
 else:
     url_line = ''
+
+# Output redirection
+if len(sys.argv) == 3:
+    outputfilename = sys.argv[2]
+    outputfile = file(outputfilename, 'w')
+else:
+    outputfilename = None
+    outputfile = sys.stdout
 
 # Default highlighting
 types = {
@@ -86,31 +96,22 @@ deprecation_options_template = """\
 
 footer_template = """
 " Default highlighting
-if version >= 508 || !exists("did_%s_syntax_inits")
-  if version < 508
-    let did_%s_syntax_inits = 1
-    command -nargs=+ HiLink hi link <args>
-  else
-    command -nargs=+ HiLink hi def link <args>
-  endif
 %s
 %s
-  delcommand HiLink
-endif
 """
 
 deprecation_hi_link_template = """\
-  if exists("%s_deprecated_errors")
+if exists("%s_deprecated_errors")
 %s
-  elseif exists("%s_enable_deprecated")
+elseif exists("%s_enable_deprecated")
 %s
-  endif
+endif
 """
 
 normalize = lambda x: x.title().replace('_', '')
 
-hi_link_template = '  HiLink %s%s %s'
-hi_link_template_v = '    HiLink %s%s%s %s'
+hi_link_template = 'hi def link %s%s %s'
+hi_link_template_v = '    hi def link %s%s%s %s'
 
 re_decl = re.compile(r'<(?P<type>' + r'|'.join(types.keys()) + r')>\n'
                      + r'<NAME>(?P<ident>\w+)</NAME>\n'
@@ -122,24 +123,51 @@ re_param_macro = re.compile(r'^\s*#\s*define\s+\w+\(', re.M)
 re_ident_macro = re.compile(r'^\s*#\s*define\s+\w+\s+'
                             + r'(?P<ident>[A-Za-z_]\w+)\s*$', re.M)
 re_filter = re.compile(options['filter_regexp'])
+re_deprecated = re.compile(r'^\s*<keyword\b.* name="(?P<name>.*?)".* deprecated=".*/>\s*$')
+
+def output(s):
+    outputfile.write(s)
+    outputfile.write('\n')
 
 def types_present(decldict, value=''):
     pt = [t for t, d in decldict.items()
           if [k for k, v in d.items() if v == value]]
     return dict([(x, types[x]) for x in pt])
 
-def print_decls(decldict, value=''):
+def deprecated_from_devhelp2(filename):
+    dh2glob = os.path.join(os.path.dirname(filename), 'html', '*.devhelp2')
+    dh2files = list(glob.glob(dh2glob))
+    if not dh2files:
+        return set()
+    if len(dh2files) > 1:
+        sys.stderr.write("Multiple devhelp2 files %s" % ', '.join(dh2files))
+
+    deprecated = set()
+    for f in dh2files:
+        for line in file(f):
+            m = re_deprecated.search(line)
+            if not m:
+                continue
+
+            name = m.group('name').strip()
+            name = re.sub(r'\s*\(\s*\)$', '', name)
+            name = name.split()[-1]
+            deprecated.add(name)
+    return deprecated
+
+def output_decls(decldict, value=''):
     for t, d in decldict.items():
         d = [k for k, v in d.items() if v == value]
         if not d:
             continue
         d.sort()
-        print 'syn keyword %s%s%s %s' % (syntax_name, value,
-                                         normalize(t), ' '.join(d))
+        output('syn keyword %s%s%s %s' % (syntax_name, value,
+                                          normalize(t), ' '.join(d)))
 
-def override(decldict, overides, create_new):
-    for o, v in overides.items():
-        v = v.upper()
+def override(decldict, overrides, create_new):
+    for o, v in overrides.items():
+        if v:
+            v = v.upper()
         has_it = False
         for k, d in decldict.items():
             if d.has_key(o):
@@ -148,7 +176,7 @@ def override(decldict, overides, create_new):
                 else:
                     has_it = True
                     del d[o]
-        if create_new or has_it:
+        if (create_new or has_it) and v:
             decldict[v][o] = 1
 
 decls = dict([(x, {}) for x in types])
@@ -162,6 +190,7 @@ for filename in glob.glob(options['file_glob']):
         if re_filter.search(d['ident']):
             continue
 
+        # NB: This only works with gtk-doc up to 1.17 or so.
         if d['body'].find('<DEPRECATED/>') > -1:
             value = 'Deprecated'
         else:
@@ -179,6 +208,11 @@ for filename in glob.glob(options['file_glob']):
         if d['type'] == 'ENUM':
             for e in re_enum.finditer(d['body']):
                 decls['CONSTANT'][e.group('ident')] = value
+
+    for depr in deprecated_from_devhelp2(filename):
+        for x in types:
+            if depr in decls[x]:
+                decls[x][depr] = 'Deprecated'
 
 # Kill macros if the same symbol also exists as a regular function
 # (this fixes things like g_file_test()).
@@ -204,10 +238,22 @@ for macro, body in identdefs.items():
             decls['MACRO'][macro] = decls['DEFINE'][macro]
             del decls['DEFINE'][macro]
 
+# Kill types that are named FooPrivate where Foo is also a type.  This keeps
+# symbols such as GPrivate and GStaticPrivate but gets rid of various rubbish.
+todelete = []
+for symbol in decls['STRUCT'].keys():
+    privsymbol = symbol + 'Private'
+    if privsymbol in decls['STRUCT']:
+        todelete.append(privsymbol)
+
+for symbol in todelete:
+    del decls['STRUCT'][symbol]
+del todelete
+
 if options.has_key('supplement'):
     override(decls, options['supplement'], True)
 
-if options.has_key('overide'):
+if options.has_key('override'):
     override(decls, options['override'], False)
 
 # Find types that are really present
@@ -237,12 +283,11 @@ if deprecated_types:
                                                           hi_links_depA)
 else:
     deprecated_hi_links = ''
-footer = footer_template % (syntax_name, syntax_name, hi_links,
-                            deprecated_hi_links)
+footer = footer_template % (hi_links, deprecated_hi_links)
 
-# Print!
-print header
-print_decls(decls)
+# Dump!
+output(header)
+output_decls(decls)
 if deprecated_types:
-    print_decls(decls, 'Deprecated')
-print footer
+    output_decls(decls, 'Deprecated')
+output(footer)
