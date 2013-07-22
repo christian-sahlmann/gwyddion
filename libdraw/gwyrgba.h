@@ -62,6 +62,10 @@ void          gwy_rgba_set_gdk_gc_fg            (const GwyRGBA *rgba,
                                                  GdkGC *gc);
 void          gwy_rgba_set_gdk_gc_bg            (const GwyRGBA *rgba,
                                                  GdkGC *gc);
+void          gwy_rgba_to_hex6                  (const GwyRGBA *rgba,
+                                                 gchar *hexout);
+void          gwy_rgba_to_hex8                  (const GwyRGBA *rgba,
+                                                 gchar *hexout);
 
 G_END_DECLS
 

@@ -27,6 +27,7 @@
 
 #define float_to_gdk(c) ((guint16)((c)*65535.999999))
 #define float_from_gdk(c) ((c)/65535.0)
+#define float_to_hex(c) ((guint8)((c)*255.9999999))
 
 static void gwy_rgba_compute_color_quarks (const gchar *prefix,
                                            GQuark quarks[4]);
@@ -346,6 +347,59 @@ gwy_rgba_compute_color_quarks(const gchar *prefix,
     strcpy(key + len + 1, "alpha");
     quarks[3] = g_quark_from_string(key);
 }
+
+/**
+ * gwy_rgba_to_hex6:
+ * @rgba: A RGBA color.  Its alpha component is ignored, only RGB is used.
+ * @hexout: Buffer at least seven character long where the hexadecimal
+ *          representation (e.g. "ff0000" for red) will be stored.
+ *
+ * Formats the R, G and B components of a RGBA color to hexadecimal string.
+ *
+ * The component order is R, G and B.  The output has always exactly 6 bytes
+ * and does not include any "#" prefix which is used in some contexts.
+ *
+ * Since: 2.32
+ **/
+void
+gwy_rgba_to_hex6(const GwyRGBA *rgba,
+                 gchar *hexout)
+{
+    g_return_if_fail(rgba);
+    g_return_if_fail(hexout);
+    g_snprintf(hexout, 7, "%02x%02x%02x",
+               float_to_gdk(rgba->r),
+               float_to_gdk(rgba->g),
+               float_to_gdk(rgba->b));
+}
+
+/**
+ * gwy_rgba_to_hex8:
+ * @rgba: A RGBA color.
+ * @hexout: Buffer at least nine character long where the hexadecimal
+ *          representation (e.g. "ffff0000" for opaque red) will be stored.
+ *
+ * Formats all components of a RGBA color to hexadecimal string.
+ *
+ * The component order is A, R, G and B.  Note that while this order is a
+ * common it is by no means universal.  The output has always exactly 8 bytes
+ * and does not include any "#" prefix which is used in some contexts.
+ *
+ * Since: 2.32
+ **/
+void
+gwy_rgba_to_hex8(const GwyRGBA *rgba,
+                 gchar *hexout)
+{
+    g_return_if_fail(rgba);
+    g_return_if_fail(hexout);
+    g_snprintf(hexout, 9, "%02x%02x%02x%02x",
+               float_to_gdk(rgba->a),
+               float_to_gdk(rgba->r),
+               float_to_gdk(rgba->g),
+               float_to_gdk(rgba->b));
+}
+
 
 /************************** Documentation ****************************/
 
