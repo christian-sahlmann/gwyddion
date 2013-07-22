@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2007 Owain Davies, David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2013 Owain Davies, David Necas (Yeti), Petr Klapetek.
  *  E-mail: owain.davies@blueyonder.co.uk, yeti@gwyddion.net,
  *          klapetek@gwyddion.net.
  *
@@ -76,6 +76,7 @@ struct _GwyToolSpectro {
     GtkWidget *separate;
     GtkWidget *average;
     GtkWidget *apply;
+    GdkPixbuf *colorpixbuf;
     gulong layer_object_chosen_id;
     gboolean ignore_tree_selection;
 
@@ -120,6 +121,11 @@ static void  gwy_tool_spectro_render_cell     (GtkCellLayout *layout,
                                                GtkTreeModel *model,
                                                GtkTreeIter *iter,
                                                gpointer user_data);
+static void  gwy_tool_spectro_render_color    (GtkCellLayout *layout,
+                                               GtkCellRenderer *renderer,
+                                               GtkTreeModel *model,
+                                               GtkTreeIter *iter,
+                                               gpointer user_data);
 static void  gwy_tool_spectro_options_expanded(GtkExpander *expander,
                                                GParamSpec *pspec,
                                                GwyToolSpectro *tool);
@@ -134,7 +140,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Point Spectrum, extracts point spectra to a graph."),
     "Owain Davies <owain.davies@blueyonder.co.uk>",
-    "0.5",
+    "0.6",
     "Owain Davies, David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -202,6 +208,7 @@ gwy_tool_spectro_finalize(GObject *object)
                                       tool->args.average);
 
     gtk_tree_view_set_model(tool->treeview, NULL);
+    gwy_object_unref(tool->colorpixbuf);
     gwy_object_unref(tool->model);
     gwy_object_unref(tool->spectra);
     gwy_debug("id: %u", (guint)tool->layer_object_chosen_id);
@@ -216,6 +223,7 @@ gwy_tool_spectro_init(GwyToolSpectro *tool)
 {
     GwyPlainTool *plain_tool;
     GwyContainer *settings;
+    gint width, height;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     tool->layer_type = gwy_plain_tool_check_layer_type(plain_tool,
@@ -234,6 +242,11 @@ gwy_tool_spectro_init(GwyToolSpectro *tool)
                                       &tool->args.separate);
     gwy_container_gis_boolean_by_name(settings, average_key,
                                       &tool->args.average);
+
+    gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
+    height |= 1;
+    tool->colorpixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8,
+                                       height, height);
 
     tool->spectra = NULL;
 
@@ -282,6 +295,18 @@ gwy_tool_spectro_init_dialog(GwyToolSpectro *tool)
         gtk_cell_layout_set_cell_data_func(GTK_CELL_LAYOUT(column), renderer,
                                            gwy_tool_spectro_render_cell, tool,
                                            NULL);
+        if (i == COLUMN_I) {
+            renderer = gtk_cell_renderer_pixbuf_new();
+            g_object_set(renderer, "pixbuf", tool->colorpixbuf, NULL);
+            gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column),
+                                       renderer, FALSE);
+            gtk_cell_layout_set_cell_data_func(GTK_CELL_LAYOUT(column),
+                                               renderer,
+                                               gwy_tool_spectro_render_color,
+                                               tool,
+                                               NULL);
+        }
+
         label = gtk_label_new(NULL);
         gtk_label_set_markup(GTK_LABEL(label), column_titles[i]);
         gtk_tree_view_column_set_widget(column, label);
@@ -767,6 +792,42 @@ gwy_tool_spectro_render_cell(GtkCellLayout *layout,
         g_snprintf(buf, sizeof(buf), "%.3g", val);
 
     g_object_set(renderer, "text", buf, NULL);
+}
+
+static void
+gwy_tool_spectro_render_color(G_GNUC_UNUSED GtkCellLayout *layout,
+                              G_GNUC_UNUSED GtkCellRenderer *renderer,
+                              GtkTreeModel *model,
+                              GtkTreeIter *iter,
+                              gpointer user_data)
+{
+    GwyToolSpectro *tool = (GwyToolSpectro*)user_data;
+    GtkTreeSelection *sel = gtk_tree_view_get_selection(tool->treeview);
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *gcmodel;
+    GwyRGBA *rgba;
+    guint idx, pixel, n, i;
+
+    pixel = 0;
+    if (gtk_tree_selection_iter_is_selected(sel, iter)) {
+        gmodel = tool->gmodel;
+        gtk_tree_model_get(model, iter, 0, &idx, -1);
+        n = gwy_graph_model_get_n_curves(gmodel);
+        for (i = 0; i < n; i++) {
+            gcmodel = gwy_graph_model_get_curve(tool->gmodel, i);
+            if (GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(gcmodel),
+                                                   "sid")) == idx) {
+                g_object_get(gcmodel, "color", &rgba, NULL);
+                pixel = 0xff
+                    | ((guint32)(guchar)floor(255.99999*rgba->b) << 8)
+                    | ((guint32)(guchar)floor(255.99999*rgba->g) << 16)
+                    | ((guint32)(guchar)floor(255.99999*rgba->r) << 24);
+                gwy_rgba_free(rgba);
+                break;
+            }
+        }
+    }
+    gdk_pixbuf_fill(tool->colorpixbuf, pixel);
 }
 
 static void
