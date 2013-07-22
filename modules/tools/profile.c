@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2013 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -86,6 +86,7 @@ struct _GwyToolProfile {
     GwyDataLine *line;
     GtkWidget *graph;
     GwyGraphModel *gmodel;
+    GdkPixbuf *colorpixbuf;
 
     GtkWidget *options;
     GtkObject *thickness;
@@ -128,47 +129,50 @@ struct _GwyToolProfileClass {
 
 static gboolean module_register(void);
 
-static GType  gwy_tool_profile_get_type             (void) G_GNUC_CONST;
-static void   gwy_tool_profile_finalize             (GObject *object);
-static void   gwy_tool_profile_init_dialog          (GwyToolProfile *tool);
-static void   gwy_tool_profile_data_switched        (GwyTool *gwytool,
-                                                     GwyDataView *data_view);
-static void   gwy_tool_profile_response             (GwyTool *tool,
-                                                     gint response_id);
-static void   gwy_tool_profile_data_changed         (GwyPlainTool *plain_tool);
-static void   gwy_tool_profile_selection_changed    (GwyPlainTool *plain_tool,
-                                                     gint hint);
-static void   gwy_tool_profile_update_curve         (GwyToolProfile *tool,
-                                                     gint i);
-static void   gwy_tool_profile_update_all_curves    (GwyToolProfile *tool);
-static void   gwy_tool_profile_render_cell          (GtkCellLayout *layout,
-                                                     GtkCellRenderer *renderer,
-                                                     GtkTreeModel *model,
-                                                     GtkTreeIter *iter,
-                                                     gpointer user_data);
-static void   gwy_tool_profile_options_expanded     (GtkExpander *expander,
-                                                     GParamSpec *pspec,
-                                                     GwyToolProfile *tool);
-static void   gwy_tool_profile_thickness_changed    (GwyToolProfile *tool,
-                                                     GtkAdjustment *adj);
-static void   gwy_tool_profile_resolution_changed   (GwyToolProfile *tool,
-                                                     GtkAdjustment *adj);
-static void   gwy_tool_profile_fixres_changed       (GtkToggleButton *check,
-                                                     GwyToolProfile *tool);
-static void   gwy_tool_profile_separate_changed     (GtkToggleButton *check,
-                                                     GwyToolProfile *tool);
-//static void   gwy_tool_profile_export_changed     (GtkToggleButton *check,
-//                                                     GwyToolProfile *tool);
-static void   gwy_tool_profile_both_changed     (GtkToggleButton *check,
-                                                     GwyToolProfile *tool);
-static void   gwy_tool_profile_interpolation_changed(GtkComboBox *combo,
-                                                     GwyToolProfile *tool);
-static void   gwy_tool_profile_apply                (GwyToolProfile *tool);
-static GtkWidget*   menu_display           (GCallback callback,
-                                            gpointer cbdata,
-                                            GwyCCDisplayType current);
-static void         display_changed        (GtkComboBox *combo,
-                                            GwyToolProfile *tool);
+static GType      gwy_tool_profile_get_type             (void)                      G_GNUC_CONST;
+static void       gwy_tool_profile_finalize             (GObject *object);
+static void       gwy_tool_profile_init_dialog          (GwyToolProfile *tool);
+static void       gwy_tool_profile_data_switched        (GwyTool *gwytool,
+                                                         GwyDataView *data_view);
+static void       gwy_tool_profile_response             (GwyTool *tool,
+                                                         gint response_id);
+static void       gwy_tool_profile_data_changed         (GwyPlainTool *plain_tool);
+static void       gwy_tool_profile_selection_changed    (GwyPlainTool *plain_tool,
+                                                         gint hint);
+static void       gwy_tool_profile_update_curve         (GwyToolProfile *tool,
+                                                         gint i);
+static void       gwy_tool_profile_update_all_curves    (GwyToolProfile *tool);
+static void       gwy_tool_profile_render_cell          (GtkCellLayout *layout,
+                                                         GtkCellRenderer *renderer,
+                                                         GtkTreeModel *model,
+                                                         GtkTreeIter *iter,
+                                                         gpointer user_data);
+static void       gwy_tool_profile_render_color         (GtkCellLayout *layout,
+                                                         GtkCellRenderer *renderer,
+                                                         GtkTreeModel *model,
+                                                         GtkTreeIter *iter,
+                                                         gpointer user_data);
+static void       gwy_tool_profile_options_expanded     (GtkExpander *expander,
+                                                         GParamSpec *pspec,
+                                                         GwyToolProfile *tool);
+static void       gwy_tool_profile_thickness_changed    (GwyToolProfile *tool,
+                                                         GtkAdjustment *adj);
+static void       gwy_tool_profile_resolution_changed   (GwyToolProfile *tool,
+                                                         GtkAdjustment *adj);
+static void       gwy_tool_profile_fixres_changed       (GtkToggleButton *check,
+                                                         GwyToolProfile *tool);
+static void       gwy_tool_profile_separate_changed     (GtkToggleButton *check,
+                                                         GwyToolProfile *tool);
+static void       gwy_tool_profile_both_changed         (GtkToggleButton *check,
+                                                         GwyToolProfile *tool);
+static void       gwy_tool_profile_interpolation_changed(GtkComboBox *combo,
+                                                         GwyToolProfile *tool);
+static void       gwy_tool_profile_apply                (GwyToolProfile *tool);
+static GtkWidget* menu_display                          (GCallback callback,
+                                                         gpointer cbdata,
+                                                         GwyCCDisplayType current);
+static void       display_changed                       (GtkComboBox *combo,
+                                                         GwyToolProfile *tool);
 
 
 static GwyModuleInfo module_info = {
@@ -176,7 +180,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Profile tool, creates profile graphs from selected lines."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.12",
+    "2.13",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -187,7 +191,7 @@ static const gchar options_visible_key[] = "/module/profile/options_visible";
 static const gchar resolution_key[]      = "/module/profile/resolution";
 static const gchar separate_key[]        = "/module/profile/separate";
 static const gchar export_key[]          = "/module/profile/export";
-static const gchar both_key[]          = "/module/profile/both";
+static const gchar both_key[]            = "/module/profile/both";
 static const gchar thickness_key[]       = "/module/profile/thickness";
 
 static const ToolArgs default_args = {
@@ -261,13 +265,12 @@ gwy_tool_profile_finalize(GObject *object)
     gwy_container_set_boolean_by_name(settings, both_key,
                                       tool->args.both);
 
-
-
     gwy_object_unref(tool->line);
     if (tool->model) {
         gtk_tree_view_set_model(tool->treeview, NULL);
         gwy_object_unref(tool->model);
     }
+    gwy_object_unref(tool->colorpixbuf);
     gwy_object_unref(tool->gmodel);
     if (tool->pixel_format)
         gwy_si_unit_value_format_free(tool->pixel_format);
@@ -280,6 +283,7 @@ gwy_tool_profile_init(GwyToolProfile *tool)
 {
     GwyPlainTool *plain_tool;
     GwyContainer *settings;
+    gint width, height;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     tool->layer_type_line = gwy_plain_tool_check_layer_type(plain_tool,
@@ -312,7 +316,10 @@ gwy_tool_profile_init(GwyToolProfile *tool)
     gwy_container_gis_boolean_by_name(settings, both_key,
                                       &tool->args.both);
 
-
+    gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
+    height |= 1;
+    tool->colorpixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
+                                       height, height);
 
     tool->pixel_format = g_new0(GwySIValueFormat, 1);
     tool->pixel_format->magnitude = 1.0;
@@ -365,12 +372,22 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
         g_object_set_data(G_OBJECT(column), "id", GUINT_TO_POINTER(i));
         renderer = gtk_cell_renderer_text_new();
         g_object_set(renderer, "xalign", 1.0, NULL);
-        if (i == COLUMN_I)
-            g_object_set(renderer, "foreground-set", TRUE, NULL);
         gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
         gtk_cell_layout_set_cell_data_func(GTK_CELL_LAYOUT(column), renderer,
                                            gwy_tool_profile_render_cell, tool,
                                            NULL);
+        if (i == COLUMN_I) {
+            renderer = gtk_cell_renderer_pixbuf_new();
+            g_object_set(renderer, "pixbuf", tool->colorpixbuf, NULL);
+            gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column),
+                                       renderer, FALSE);
+            gtk_cell_layout_set_cell_data_func(GTK_CELL_LAYOUT(column),
+                                               renderer,
+                                               gwy_tool_profile_render_color,
+                                               tool,
+                                               NULL);
+        }
+
         label = gtk_label_new(NULL);
         gtk_label_set_markup(GTK_LABEL(label), column_titles[i]);
         gtk_tree_view_column_set_widget(column, label);
@@ -882,16 +899,8 @@ gwy_tool_profile_render_cell(GtkCellLayout *layout,
     id = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(layout), "id"));
     gtk_tree_model_get(model, iter, 0, &idx, -1);
     if (id == COLUMN_I) {
-        GwyGraphCurveModel *gcmodel;
-        GwyRGBA *rgba;
-        GdkColor gdkcolor;
-
         g_snprintf(buf, sizeof(buf), "%d", idx + 1);
-        gcmodel = gwy_graph_model_get_curve(tool->gmodel, idx);
-        g_object_get(gcmodel, "color", &rgba, NULL);
-        gwy_rgba_to_gdk_color(rgba, &gdkcolor);
-        g_object_set(renderer, "foreground-gdk", &gdkcolor, "text", buf, NULL);
-        gwy_rgba_free(rgba);
+        g_object_set(renderer, "text", buf, NULL);
         return;
     }
 
@@ -927,6 +936,29 @@ gwy_tool_profile_render_cell(GtkCellLayout *layout,
         g_snprintf(buf, sizeof(buf), "%.3g", val);
 
     g_object_set(renderer, "text", buf, NULL);
+}
+
+static void
+gwy_tool_profile_render_color(G_GNUC_UNUSED GtkCellLayout *layout,
+                              G_GNUC_UNUSED GtkCellRenderer *renderer,
+                              GtkTreeModel *model,
+                              GtkTreeIter *iter,
+                              gpointer user_data)
+{
+    GwyToolProfile *tool = (GwyToolProfile*)user_data;
+    GwyGraphCurveModel *gcmodel;
+    GwyRGBA *rgba;
+    guint idx, pixel;
+
+    gtk_tree_model_get(model, iter, 0, &idx, -1);
+    gcmodel = gwy_graph_model_get_curve(tool->gmodel, idx);
+    g_object_get(gcmodel, "color", &rgba, NULL);
+    pixel = 0xff
+        | ((guint32)(guchar)floor(255.99999*rgba->b) << 8)
+        | ((guint32)(guchar)floor(255.99999*rgba->g) << 16)
+        | ((guint32)(guchar)floor(255.99999*rgba->r) << 24);
+    gwy_rgba_free(rgba);
+    gdk_pixbuf_fill(tool->colorpixbuf, pixel);
 }
 
 static void
