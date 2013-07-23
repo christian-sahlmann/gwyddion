@@ -140,7 +140,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Point Spectrum, extracts point spectra to a graph."),
     "Owain Davies <owain.davies@blueyonder.co.uk>",
-    "0.6",
+    "0.7",
     "Owain Davies, David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -429,8 +429,11 @@ gwy_tool_spectro_data_switched(GwyTool *gwytool,
 
     gwy_graph_model_remove_all_curves(tool->gmodel);
 
-    if (plain_tool->data_field && tool->spectra)
+    if (plain_tool->data_field && tool->spectra) {
+        guint nspec = gwy_spectra_get_n_spectra(tool->spectra);
+        gwy_selection_set_max_objects(plain_tool->selection, nspec);
         gwy_tool_spectro_fill_locations(tool);
+    }
 }
 
 static void
@@ -474,6 +477,8 @@ gwy_tool_spectro_spectra_switched(GwyTool *gwytool,
         tool->ignore_tree_selection = FALSE;
         gwy_tool_spectro_tree_sel_changed(selection, tool);
         gwy_object_unref(tool->spectra);
+        if (plain_tool->selection)
+            gwy_selection_clear(plain_tool->selection);
         return;
     }
 
