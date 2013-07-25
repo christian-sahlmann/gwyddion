@@ -737,6 +737,7 @@ static gdouble wip_pixel_to_lambda(gint i,
 
     return lambda;
 }
+
 static GwyGraphModel * wip_read_graph(GNode *node)
 {
     WIPGraph *header;

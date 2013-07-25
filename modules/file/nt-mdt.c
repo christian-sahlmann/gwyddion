@@ -52,6 +52,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <libprocess/spectra.h>
+#include <libprocess/brick.h>
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwygraphbasics.h>
 #include <libgwymodule/gwymodule-file.h>
@@ -445,9 +446,11 @@ static GwySpectra*    extract_sps_curve     (MDTScannedDataFrame *dataframe,
 static GwyDataField*  extract_mda_data      (MDTMDAFrame *dataframe);
 static GwyGraphModel* extract_mda_spectrum  (MDTMDAFrame *dataframe,
                                              guint number);
-static GwyContainer*  extract_raman_image   (MDTMDAFrame *dataframe,
+static GwyContainer*  extract_raman_image_old (MDTMDAFrame *dataframe,
                                              guint number,
                                              GwyRunType mode);
+static GwyBrick *     extract_raman_image   (MDTMDAFrame *dataframe,
+                                             guint number);
 static GwyDataField*  extract_raman_image_max    (MDTMDAFrame *dataframe);
 static GwyDataField*  extract_raman_image_avg    (MDTMDAFrame *dataframe);
 static GwyDataField*  extract_raman_image_maxpos (MDTMDAFrame *dataframe);
@@ -762,10 +765,11 @@ mdt_load(const gchar *filename,
     gsize size;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
-    GwyContainer *meta, *data = NULL, *image = NULL;
+    GwyBrick *brick = NULL;
+    GwyContainer *meta, *data = NULL;
     MDTFile mdtfile;
     GString *key;
-    guint n, i, j, numpoints;
+    guint n, i; 
 
     gwy_debug("");
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -845,14 +849,12 @@ mdt_load(const gchar *filename,
             }
             else if (mdaframe->nDimensions == 3 && mdaframe->nMesurands == 3) {
                 /* raman images */
-                if ((image = extract_raman_image(mdaframe, i+1, mode))) {
-                    dfield = gwy_container_get_object_by_name(image,
-                                                             "/0/data");
-                    g_object_ref(dfield);
-                    g_string_printf(key, "/%d/data", n);
-                    gwy_container_set_object_by_name(data, key->str,
-                                                     dfield);
-                    g_object_unref(dfield);
+                if ((brick = extract_raman_image(mdaframe, i+1))) {
+                    g_string_printf(key, "/brick/%d", n);
+                    gwy_container_set_object_by_name(data,
+                                                     key->str,
+                                                     brick);
+                   g_object_unref(brick);
 
                     if (mdaframe->title) {
                         g_string_append(key, "/title");
@@ -864,25 +866,13 @@ mdt_load(const gchar *filename,
                     else
                         gwy_app_channel_title_fall_back(data, n);
 
+					dfield = extract_raman_image_avg(mdaframe);
+                    g_string_printf(key,"/brick/%d/preview", n);
+                    gwy_container_set_object_by_name(data,
+                                                     key->str,
+                                                     dfield);
+                    g_object_unref(dfield);
                     n++;
-                    numpoints = 0;
-                    gwy_container_gis_int32_by_name(image, "/numpoints",
-                                                    &numpoints);
-
-                    for (j = 0; j < numpoints; j++) {
-                        GwyGraphModel *gmodel;
-
-                        g_string_printf(key, "/%d/spectrum", j);
-                        gmodel = gwy_container_get_object_by_name(image,
-                                                              key->str);
-                        g_object_ref(gmodel);
-                        g_string_printf(key, "/0/graph/graph/%d", n+1);
-                        gwy_container_set_object_by_name(data,
-                                                      key->str, gmodel);
-                        g_object_unref(gmodel);
-                        n++;
-                    }
-                    g_object_unref(image);
                 }
             }
         }
@@ -2779,7 +2769,7 @@ mdt_image_view_button_press_cb(G_GNUC_UNUSED GtkWidget *view,
 }
 
 static GwyContainer *
-extract_raman_image(MDTMDAFrame *dataframe,
+extract_raman_image_old(MDTMDAFrame *dataframe,
                     guint number, GwyRunType mode)
 {
     GtkWidget *dialog, *hbox, *vbox;
@@ -2954,6 +2944,132 @@ extract_raman_image(MDTMDAFrame *dataframe,
     gwy_selection_clear(controls.selection);
 
     return result;
+}
+
+static GwyBrick *
+extract_raman_image(MDTMDAFrame *dataframe,
+                    guint number)
+{
+    GwyBrick *brick;
+    gint power10x, power10y, power10z, power10w;
+    GwySIUnit *siunitx, *siunity, *siunitz, *siunitw;
+    const guchar *p, *px;
+    const gchar *cunit;
+    gchar *unit;
+    gint xres, yres, zres;
+    gint i, j, k;
+    gdouble xreal, yreal, zscale, wscale, w;
+    gdouble *data;
+    MDTMDACalibration *xAxis, *yAxis, *zAxis, *wAxis;
+    gchar *framename;
+
+    xAxis = &dataframe->dimensions[0];
+    yAxis = &dataframe->dimensions[1];
+    zAxis = &dataframe->mesurands[1];
+    wAxis = &dataframe->mesurands[0];
+    xres  = (xAxis->maxIndex - xAxis->minIndex + 1);
+    yres  = (yAxis->maxIndex - yAxis->minIndex + 1);
+    zres  = 1024;
+
+    if (xAxis->unit && xAxis->unitLen) {
+        unit = g_strndup(xAxis->unit, xAxis->unitLen);
+        siunitx = gwy_si_unit_new_parse(unit, &power10x);
+        g_free(unit);
+    }
+    else {
+        cunit = gwy_flat_enum_to_string(unitCodeForSiCode(xAxis->siUnit),
+                                        G_N_ELEMENTS(mdt_units),
+                                        mdt_units, mdt_units_name);
+        siunitx = gwy_si_unit_new_parse(cunit, &power10x);
+    }
+    gwy_debug("x unit power %d", power10x);
+
+    if (yAxis->unit && yAxis->unitLen) {
+        unit = g_strndup(yAxis->unit, yAxis->unitLen);
+        siunity = gwy_si_unit_new_parse(unit, &power10y);
+        g_free(unit);
+    }
+    else {
+        cunit = gwy_flat_enum_to_string(unitCodeForSiCode(yAxis->siUnit),
+                                        G_N_ELEMENTS(mdt_units),
+                                        mdt_units, mdt_units_name);
+        siunity = gwy_si_unit_new_parse(cunit, &power10y);
+    }
+    gwy_debug("y unit power %d", power10y);
+
+    if (zAxis->unit && zAxis->unitLen) {
+        unit = g_strndup(zAxis->unit, zAxis->unitLen);
+        siunitz = gwy_si_unit_new_parse(unit, &power10z);
+        g_free(unit);
+    }
+    else {
+        cunit = gwy_flat_enum_to_string(unitCodeForSiCode(zAxis->siUnit),
+                                        G_N_ELEMENTS(mdt_units),
+                                        mdt_units, mdt_units_name);
+        siunitz = gwy_si_unit_new_parse(cunit, &power10z);
+    }
+    gwy_debug("z unit power %d", power10z);
+
+    if (wAxis->unit && wAxis->unitLen) {
+        unit = g_strndup(wAxis->unit, wAxis->unitLen);
+        siunitw = gwy_si_unit_new_parse(unit, &power10w);
+        g_free(unit);
+    }
+    else {
+        cunit = gwy_flat_enum_to_string(unitCodeForSiCode(wAxis->siUnit),
+                                        G_N_ELEMENTS(mdt_units),
+                                        mdt_units, mdt_units_name);
+        siunitw = gwy_si_unit_new_parse(cunit, &power10w);
+    }
+    gwy_debug("w unit power %d", power10w);
+
+    if (dataframe->title_len && dataframe->title) {
+        framename = g_strdup_printf("%s (%u)",
+                                    dataframe->title, number);
+    }
+    else
+        framename = g_strdup_printf("Unknown spectral image (%d)",
+                                    number);
+
+    xreal = pow10(power10x) * xAxis->scale;
+    yreal = pow10(power10y) * yAxis->scale;
+    zscale = pow10(power10z) * zAxis->scale;
+    wscale = pow10(power10w) * wAxis->scale;
+
+    brick = gwy_brick_new(xres, yres, zres,
+                          xreal * xres,
+                          yreal * yres,
+                          zscale * zres,
+                          TRUE);
+
+    px = p + xres * yres * zres * sizeof(gfloat);
+    data = gwy_brick_get_data(brick);
+    /*
+    for (k = 0; k < 1024; k++) {
+            xspectra[k] = (gdouble)gwy_get_gfloat_le(&px);
+        }
+    */
+
+    for (k = 0; k < zres; k++) {
+        p = (guchar *)dataframe->image;
+        p += k * sizeof(gfloat);
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++) {
+                w = (gdouble)gwy_get_gfloat_le(&p);
+                w *= wscale;                
+                *(data++) = w;
+                p += (zres - 1) * sizeof(gfloat);
+
+            }
+        }
+    }
+
+    gwy_brick_set_si_unit_x(brick, siunitx);
+    gwy_brick_set_si_unit_y(brick, siunity);
+    gwy_brick_set_si_unit_z(brick, siunitz);
+    gwy_brick_set_si_unit_w(brick, siunitw);
+
+    return brick;
 }
 
 static void
