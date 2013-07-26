@@ -70,7 +70,7 @@ struct _GwyBrick {
     GwySIUnit *si_unit_z;
     GwySIUnit *si_unit_w;
 
-    gpointer reserved1;
+    gpointer priv;
     gint int1;
 };
 
@@ -306,6 +306,11 @@ void           gwy_brick_extract_line(const GwyBrick *brick,
                                        gint jend,
                                        gint kend,
                                        gboolean keep_offsets);
+
+GwyDataLine * gwy_brick_get_zcalibration(const GwyBrick *brick);
+
+void          gwy_brick_set_zcalibration(const GwyBrick *brick,
+                                        GwyDataLine *calibration);
 
 
 G_END_DECLS

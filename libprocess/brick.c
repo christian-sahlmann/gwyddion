@@ -33,6 +33,9 @@
 
 #define GWY_BRICK_TYPE_NAME "GwyBrick"
 
+typedef struct {
+    GwyDataLine *ZCalibration;
+} GwyBrickPrivate;
 
 enum {
     DATA_CHANGED,
@@ -74,6 +77,8 @@ gwy_brick_class_init(GwyBrickClass *klass)
 
     gobject_class->finalize = gwy_brick_finalize;
 
+    g_type_class_add_private(klass, sizeof(GwyBrickPrivate));
+
     /**
      * GwyBrick::data-changed:
      * @gwydataline: The #GwyBrick which received the signal.
@@ -96,6 +101,8 @@ static void
 gwy_brick_init(GwyBrick *brick)
 {
     gwy_debug_objects_creation(G_OBJECT(brick));
+
+    brick->priv = G_TYPE_INSTANCE_GET_PRIVATE(brick, GWY_TYPE_BRICK, GwyBrickPrivate);
 }
 
 static void
@@ -218,7 +225,7 @@ gwy_brick_new_alike(GwyBrick *model,
  *
  * Since: 2.32
  **/
-GwyBrick*       
+GwyBrick*
 gwy_brick_new_part(const GwyBrick *brick,
                    gint xpos, gint ypos, gint zpos,
                    gint xres, gint yres, gint zres,
@@ -229,27 +236,27 @@ gwy_brick_new_part(const GwyBrick *brick,
     gdouble *bdata, *pdata;
     g_return_val_if_fail(GWY_IS_BRICK(brick), NULL);
 
-    g_return_val_if_fail(xpos >= 0 && ypos >=0 && zpos >=0 
+    g_return_val_if_fail(xpos >= 0 && ypos >=0 && zpos >=0
                          && xres >=0 && yres >=0 && zres >= 0,
                          NULL);
-    g_return_val_if_fail(((xpos + xres) <= brick->xres) 
+    g_return_val_if_fail(((xpos + xres) <= brick->xres)
                          && ((ypos + yres) <= brick->yres)
-                         && ((zpos + zres) <= brick->zres), 
+                         && ((zpos + zres) <= brick->zres),
                          NULL);
 
-    part = gwy_brick_new(xres, yres, zres, 
+    part = gwy_brick_new(xres, yres, zres,
                          brick->xreal*xres/brick->xres,
                          brick->yreal*yres/brick->yres,
                          brick->zreal*zres/brick->zres,
                          FALSE);
-    
+
     pdata = part->data;
     bdata = brick->data;
 
     for (lev = 0; lev < zres; lev++) {
         for (row = 0; row < yres; row++) {
             for (col = 0; col < xres; col++) {
-                    pdata[col + xres*row + xres*yres*lev] 
+                    pdata[col + xres*row + xres*yres*lev]
                         = bdata[col + xpos + brick->xres*(row + ypos) + brick->xres*brick->yres*(lev + zpos)];
             }
         }
@@ -2457,12 +2464,12 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
 
         row = jstart;
         lev = kstart;
-        if (iend>=istart) 
+        if (iend>=istart)
             for (col = 0; col<(iend-istart); col++)
             {
                 ddata[col] = bdata[col + istart + brick->xres*(row) + brick->xres*brick->yres*(lev)];
             }
-        else 
+        else
             for (col = 0; col<(istart-iend); col++)
             {
                 ddata[col] = bdata[iend - col - 1 + brick->xres*(row) + brick->xres*brick->yres*(lev)];
@@ -2478,12 +2485,12 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
 
         col = istart;
         lev = kstart;
-        if (jend>=jstart) 
+        if (jend>=jstart)
             for (row = 0; row<(jend-jstart); row++)
             {
                 ddata[row] = bdata[col + brick->xres*(row + jstart) + brick->xres*brick->yres*(lev)];
             }
-        else 
+        else
             for (row = 0; row<(jstart-jend); row++)
             {
                 ddata[row] = bdata[col + brick->xres*(jstart - row - 1) + brick->xres*brick->yres*(lev)];
@@ -2499,12 +2506,12 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
 
         col = istart;
         row = jstart;
-        if (kend>=kstart) 
+        if (kend>=kstart)
             for (lev = 0; lev<(kend-kstart); lev++)
             {
                 ddata[lev] = bdata[col + brick->xres*(row) + brick->xres*brick->yres*(lev + kstart)];
             }
-        else 
+        else
             for (lev = 0; lev<(kstart-kend); lev++)
             {
                 ddata[lev] = bdata[col + brick->xres*(row) + brick->xres*brick->yres*(kend - lev - 1)];
@@ -2516,12 +2523,48 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
 
 }
 
+/**
+ * gwy_brick_get_zcalibration:
+ * @brick: A data brick.
+ *
+ * Gets the z-axis non-linear calibration of a data brick.
+ *
+ * Returns: Z Calibration (non-linear Z-axis values as ordinates).
+ *
+ * Since: 2.32
+ **/
+GwyDataLine * gwy_brick_get_zcalibration(const GwyBrick *brick) {
+    GwyBrickPrivate *priv;
+
+    priv = (GwyBrickPrivate *)brick->priv;
+
+    return priv->ZCalibration;
+}
+
+/**
+ * gwy_brick_set_zcalibration:
+ * @brick: A data brick.
+ * @calibration: GwyDataLine pointer with z-axis non-linear calibration
+ *               of a data brick (values are stored as ordinates).
+ *
+ * Sets the z-axis non-linear calibration of a data brick.
+ *
+ * Since: 2.32
+ **/
+void gwy_brick_set_zcalibration(const GwyBrick *brick, GwyDataLine *calibration) {
+    GwyBrickPrivate *priv;
+
+    priv = (GwyBrickPrivate *)brick->priv;
+    priv->ZCalibration = calibration;
+}
+
+
 /************************** Documentation ****************************/
 
 /**
  * SECTION:brick
  * @title: GwyBrick
- * @short_description: Three-dimensioanl data representation
+ * @short_description: Three-dimensional data representation
  *
  * #GwyBrick represents 3D data arrays in Gwyddion. It is typically useful for
  * different volume data obtained from SPMs, like in force volume measurements.

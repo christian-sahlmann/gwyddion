@@ -769,7 +769,7 @@ mdt_load(const gchar *filename,
     GwyContainer *meta, *data = NULL;
     MDTFile mdtfile;
     GString *key;
-    guint n, i; 
+    guint n, i;
 
     gwy_debug("");
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -866,7 +866,7 @@ mdt_load(const gchar *filename,
                     else
                         gwy_app_channel_title_fall_back(data, n);
 
-					dfield = extract_raman_image_avg(mdaframe);
+                    dfield = extract_raman_image_avg(mdaframe);
                     g_string_printf(key,"/brick/%d/preview", n);
                     gwy_container_set_object_by_name(data,
                                                      key->str,
@@ -2316,10 +2316,7 @@ static GwyDataField *extract_raman_image_max(MDTMDAFrame *dataframe)
 {
     guint xsize, ysize;
     const guchar *p;
-    // const guchar *px;
     guint i, j, k;
-    // gdouble xspectra[1024]; currently unused
-    // gdouble yspectra[1024];
     gdouble y, ymax;
     GwyDataField *dfield;
     gdouble *data;
@@ -2381,12 +2378,7 @@ static GwyDataField *extract_raman_image_max(MDTMDAFrame *dataframe)
 
     ymax = 0.0;
     p = (guchar *)dataframe->image;
-    /*
-    px = p + 1024*xsize*ysize*sizeof(gfloat);
-    for (k = 0; k < 1024; k++) {
-            xspectra[k] = (gdouble)gwy_get_gfloat_le(&px);
-        }
-    */
+
     for (i = 0; i < ysize; i++) {
         for (j = 0; j < xsize; j++) {
             ymax = 0.0;
@@ -2395,7 +2387,6 @@ static GwyDataField *extract_raman_image_max(MDTMDAFrame *dataframe)
                 y *= zscale;
                 if (y > ymax)
                     ymax = y;
-                // yspectra[k] = y;
             }
             *(data++) = ymax;
         }
@@ -2410,7 +2401,6 @@ static GwyDataField *extract_raman_image_maxpos(MDTMDAFrame *dataframe)
     const guchar *p, *px;
     guint i, j, k, kposition;
     gdouble xspectra[1024];
-    // gdouble yspectra[1024];
     gdouble y;
     GwyDataField *dfield;
     gdouble *data;
@@ -2498,9 +2488,7 @@ static GwyDataField *extract_raman_image_avg (MDTMDAFrame *dataframe)
 {
     guint xsize, ysize;
     const guchar *p;
-    // const guchar *px;
     guint i, j, k;
-    // gdouble xspectra[1024], yspectra[1024];
     gdouble y, sum;
     GwyDataField *dfield;
     gdouble *data;
@@ -2561,12 +2549,6 @@ static GwyDataField *extract_raman_image_avg (MDTMDAFrame *dataframe)
     data = gwy_data_field_get_data(dfield);
 
     p = (guchar *)dataframe->image;
-    /*
-    px = p + 1024*xsize*ysize*sizeof(gfloat);
-    for (k = 0; k < 1024; k++) {
-        xspectra[k] = (gdouble)gwy_get_gfloat_le(&px);
-    }
-    */
 
     for (i = 0; i < ysize; i++) {
         for (j = 0; j < xsize; j++) {
@@ -2960,8 +2942,8 @@ extract_raman_image(MDTMDAFrame *dataframe,
     gint i, j, k;
     gdouble xreal, yreal, zscale, wscale, w;
     gdouble *data;
+    GwyDataLine *cal;
     MDTMDACalibration *xAxis, *yAxis, *zAxis, *wAxis;
-    gchar *framename;
 
     xAxis = &dataframe->dimensions[0];
     yAxis = &dataframe->dimensions[1];
@@ -3023,6 +3005,7 @@ extract_raman_image(MDTMDAFrame *dataframe,
     }
     gwy_debug("w unit power %d", power10w);
 
+    /*
     if (dataframe->title_len && dataframe->title) {
         framename = g_strdup_printf("%s (%u)",
                                     dataframe->title, number);
@@ -3030,6 +3013,7 @@ extract_raman_image(MDTMDAFrame *dataframe,
     else
         framename = g_strdup_printf("Unknown spectral image (%d)",
                                     number);
+    */
 
     xreal = pow10(power10x) * xAxis->scale;
     yreal = pow10(power10y) * yAxis->scale;
@@ -3042,13 +3026,7 @@ extract_raman_image(MDTMDAFrame *dataframe,
                           zscale * zres,
                           TRUE);
 
-    px = p + xres * yres * zres * sizeof(gfloat);
     data = gwy_brick_get_data(brick);
-    /*
-    for (k = 0; k < 1024; k++) {
-            xspectra[k] = (gdouble)gwy_get_gfloat_le(&px);
-        }
-    */
 
     for (k = 0; k < zres; k++) {
         p = (guchar *)dataframe->image;
@@ -3056,13 +3034,23 @@ extract_raman_image(MDTMDAFrame *dataframe,
         for (i = 0; i < yres; i++) {
             for (j = 0; j < xres; j++) {
                 w = (gdouble)gwy_get_gfloat_le(&p);
-                w *= wscale;                
+                w *= wscale;
                 *(data++) = w;
                 p += (zres - 1) * sizeof(gfloat);
 
             }
         }
     }
+
+    p = (guchar *)dataframe->image;
+    px = p + xres * yres * zres * sizeof(gfloat);
+    cal = gwy_data_line_new(zres, zres, FALSE);
+    data = gwy_data_line_get_data(cal);
+    for (k = 0; k < zres; k++) {
+        *(data++) = (gdouble)gwy_get_gfloat_le(&px);
+    }
+    gwy_data_line_set_si_unit_y(cal, siunitz);
+    gwy_brick_set_zcalibration(brick, cal);
 
     gwy_brick_set_si_unit_x(brick, siunitx);
     gwy_brick_set_si_unit_y(brick, siunity);
