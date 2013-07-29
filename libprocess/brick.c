@@ -100,9 +100,14 @@ gwy_brick_class_init(GwyBrickClass *klass)
 static void
 gwy_brick_init(GwyBrick *brick)
 {
+    GwyBrickPrivate *priv;
+
     gwy_debug_objects_creation(G_OBJECT(brick));
 
-    brick->priv = G_TYPE_INSTANCE_GET_PRIVATE(brick, GWY_TYPE_BRICK, GwyBrickPrivate);
+    priv = brick->priv = G_TYPE_INSTANCE_GET_PRIVATE(brick,
+                                                     GWY_TYPE_BRICK,
+                                                     GwyBrickPrivate);
+    priv->ZCalibration = NULL;
 }
 
 static void
@@ -2536,6 +2541,8 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
 GwyDataLine * gwy_brick_get_zcalibration(const GwyBrick *brick) {
     GwyBrickPrivate *priv;
 
+    g_return_if_fail(GWY_IS_BRICK(brick));
+
     priv = (GwyBrickPrivate *)brick->priv;
 
     return priv->ZCalibration;
@@ -2554,7 +2561,12 @@ GwyDataLine * gwy_brick_get_zcalibration(const GwyBrick *brick) {
 void gwy_brick_set_zcalibration(const GwyBrick *brick, GwyDataLine *calibration) {
     GwyBrickPrivate *priv;
 
+    g_return_if_fail(GWY_IS_BRICK(brick));
+    g_return_if_fail(GWY_IS_DATA_LINE(calibration));
+
     priv = (GwyBrickPrivate *)brick->priv;
+    gwy_object_unref(priv->ZCalibration);
+    g_object_ref(calibration);
     priv->ZCalibration = calibration;
 }
 
