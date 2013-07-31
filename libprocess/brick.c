@@ -2538,10 +2538,12 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
  *
  * Since: 2.32
  **/
-GwyDataLine * gwy_brick_get_zcalibration(const GwyBrick *brick) {
+GwyDataLine*
+gwy_brick_get_zcalibration(const GwyBrick *brick)
+{
     GwyBrickPrivate *priv;
 
-    g_return_if_fail(GWY_IS_BRICK(brick));
+    g_return_val_if_fail(GWY_IS_BRICK(brick), NULL);
 
     priv = (GwyBrickPrivate *)brick->priv;
 
