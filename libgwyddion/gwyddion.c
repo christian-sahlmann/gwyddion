@@ -41,7 +41,9 @@ gwy_type_init(void)
     if (types_initialized)
         return;
 
+#if (!GLIB_CHECK_VERSION(2, 36, 0))
     g_type_init();
+#endif
 
     g_type_class_peek(GWY_TYPE_SI_UNIT);
     g_type_class_peek(GWY_TYPE_CONTAINER);
