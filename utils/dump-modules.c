@@ -203,7 +203,7 @@ main(int argc,
     GSList *m, *modules = NULL;
     gsize i;
 
-    g_type_init();
+    gwy_type_init();
     if (argc < 2) {
         g_printerr("Need user guide map.\n");
         return 1;
