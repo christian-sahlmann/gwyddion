@@ -28,8 +28,11 @@ cat >build_project_nopygwy.ignore <<':'
 ^[0-9]\+ translated messages
 \.\.\. done
 ^/usr/bin/glib-mkenums: ./.*.h:[0-9]*: lowercase_name is deprecated, use underscore_name
-In file included from gwy.c:[0-9]*:0:
-In file included from pygwy.c:[0-9]*:0:
+In file included from gwy\.c:[0-9]*:0:
+In file included from pygwy\.c:[0-9]*:0:
+from gwy\.c:[0-9]*:
+from pygwy\.c:[0-9]*:
+^[ ^]*$
 ':'
 :
 
@@ -45,11 +48,8 @@ cat >build_documentation.ignore <<':'
 ^  These can be found in [a-z]\+-unused\.txt\.
 ^  They should be added to [a-z]\+-sections\.txt in the appropriate place\.
 ^ID recommended on sect2:
-':'
-:
-
-cat >check_deps_versions.ignore <<':'
-WARNING: Malformed symbol name: "The Poke() method" (type=method) in gio.
+^ *main *(int argc, char \*argv\[\])$
+^[ ^]*$
 ':'
 :
 
@@ -75,7 +75,8 @@ cat >install_to_tmp.ignore <<':'
 :
 
 cat >check_deps_versions.ignore <<':'
-^./libgwyddion/gwyutils.c:[0-9]\+: glib-2.16 required for g_win32_get_package_installation_directory_of_module
+^WARNING: Malformed symbol name: "The Poke() method" (type=method) in gio.
+^libgwyddion/gwyutils.c:[0-9]*: glib-2.16 required for g_win32_get_package_installation_directory_of_module
 ':'
 :
 
