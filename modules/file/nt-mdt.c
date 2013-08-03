@@ -3031,15 +3031,13 @@ extract_raman_image(MDTMDAFrame *dataframe,
     for (k = 0; k < zres; k++) {
         p = (guchar *)dataframe->image;
         p += k * sizeof(gfloat);
-        for (i = 0; i < yres; i++) {
+        for (i = 0; i < yres; i++) 
             for (j = 0; j < xres; j++) {
                 w = (gdouble)gwy_get_gfloat_le(&p);
-                w *= wscale;
-                *(data++) = w;
+                *(data++) = w * wscale;
                 p += (zres - 1) * sizeof(gfloat);
 
             }
-        }
     }
 
     p = (guchar *)dataframe->image;

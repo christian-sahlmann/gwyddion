@@ -221,6 +221,7 @@ gwy_brick_new_alike(GwyBrick *model,
  * @xres: x resolution (width) to be extracted
  * @yres: y resolution (height) to be extracted
  * @zres: z resolution (depth) to be extracted
+ * @keep_offsets: keep offsets of data during extraction
  *
  * Creates a new data brick as a part of existing one.
  *
@@ -276,6 +277,14 @@ gwy_brick_new_part(const GwyBrick *brick,
     if (brick->si_unit_w)
         part->si_unit_w = gwy_si_unit_duplicate(brick->si_unit_w);
 
+    if (keep_offsets) {
+        gwy_brick_set_xoffset(part, (gdouble)xpos * brick->xreal
+                            / brick->xres + brick->xoff);
+        gwy_brick_set_yoffset(part, (gdouble)ypos * brick->yreal
+                            / brick->yres + brick->yoff);
+        gwy_brick_set_zoffset(part, (gdouble)zpos * brick->zreal
+                            / brick->zres + brick->zoff);
+    }
 
     return part;
 
@@ -581,7 +590,7 @@ gwy_brick_resample(GwyBrick *brick,
                    gint zres,
                    GwyInterpolationType interpolation)
 {
-    gdouble *bdata, *data;
+    gdouble *bdata;
     gint row, col, lev;
     gdouble xratio, yratio, zratio;
 
@@ -600,7 +609,6 @@ gwy_brick_resample(GwyBrick *brick,
     }
 
     bdata = g_new(gdouble, xres * yres * zres);
-    data = brick->data;
 
     xratio = (gdouble)brick->xres/xres;
     yratio = (gdouble)brick->yres/yres;
@@ -615,9 +623,6 @@ gwy_brick_resample(GwyBrick *brick,
             {
                 for (lev=0; lev<zres; lev++)
                     bdata[col + xres*row + xres*yres*lev] = gwy_brick_get_val(brick, MIN((gint)(xratio*col + 0.5), brick->xres-1), MIN((gint)(yratio*row + 0.5), brick->yres-1), MIN((gint)(zratio*lev + 0.5), brick->zres-1));
-                     //   = data[MIN(MIN((gint)(xratio*col + 0.5), brick->xres-1)
-                     //   + xres*MIN((gint)(yratio*row + 0.5), brick->yres-1)
-                     //   + xres*yres*MIN((gint)(zratio*lev + 0.5), brick->zres-1), brick->xres*brick->yres*brick->zres - 1)];
             }
         }
 
