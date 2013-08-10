@@ -797,6 +797,18 @@ gwy_data_window_resize_view(GwyDataWindow *data_window)
 {
     GtkRequisition req;
     GtkWidget *widget;
+    GwyPixmapLayer *layer;
+    const gchar *key;
+    GwyDataView *view;
+
+    if ((view = GWY_DATA_VIEW(data_window->data_view))
+         && (layer = gwy_data_view_get_base_layer(view))
+         && (key = gwy_pixmap_layer_get_data_key(layer))) {
+        gdouble min, max;
+        gwy_layer_basic_get_range(GWY_LAYER_BASIC(layer), &min, &max);
+        gwy_color_axis_set_range(GWY_COLOR_AXIS(data_window->coloraxis),
+                                 min, max);
+    }
 
     widget = GTK_WIDGET(data_window);
     GTK_WIDGET_CLASS(gwy_data_window_parent_class)->size_request(widget, &req);
