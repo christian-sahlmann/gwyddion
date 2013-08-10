@@ -23,6 +23,8 @@ Libraries:
 - libgwydgets: Graph PostScript tries to avoid some non-ASCII characters; the
   key position was corrected fixed.
 - libgwyprocess: 2D ACF normalisation (off by 1/√xres) was corrected.
+- libgwydgets: Data window updates color axis range also after resize, fixing
+  range not being updated after an in-place Crop.
 
 Modules:
 - Volumize (new): Create a simple 3D volume data from 2D data.
