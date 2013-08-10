@@ -2711,11 +2711,11 @@ gwy_data_field_area_2dacf(GwyDataField *data_field,
     src = g_new(gdouble, 4*ysize);
     dst = src + 2*ysize;
 #ifdef HAVE_FFTW3
-    q = 1.0/ysize;
+    q = sqrt(xsize)/ysize;
     plan = fftw_plan_dft_1d(ysize, (fftw_complex*)src, (fftw_complex*)dst,
                             FFTW_FORWARD, _GWY_FFTW_PATIENCE);
 #else
-    q = sqrt(ysize);
+    q = sqrt(xsize*ysize);
 #endif
     for (j = 0; j < xsize; j++) {
         for (i = 0; i < height; i++) {
