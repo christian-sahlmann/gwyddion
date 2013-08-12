@@ -20,9 +20,8 @@
 
 /*
  * This file implements a complete implementation Nanomagnetics' NMI file
- * format (version 3) SPM version 1.14.6 (Build 6) has been used to reverse
- * engineer the file format.
-
+ * format (version 3 and version 5)
+ *
  * Suggestions/Comments welcome at sameer.grover.1@gmail.com
  */
 
@@ -32,6 +31,7 @@
  *   <comment>Nanomagnetics AFM data</comment>
  *   <magic priority="100">
  *     <match type="string" offset="0" value="NMI3"/>
+ *     <match type="string" offset="0" value="NMI5"/>
  *   </magic>
  *   <glob pattern="*.nmi"/>
  *   <glob pattern="*.NMI"/>
@@ -41,10 +41,11 @@
 /**
  * [FILE-MAGIC-FILEMAGIC]
  * # Nanomagnetics
- * # The magic header reads NMI3; there may be NMIx for other values of x but
- * # I've never seen them.  Not very specific, unfortunately, it's followed by
- * # some LEB128 encoded weirdness so it's difficult to improve.
- * 0 belong 0x4e4d4933 Nanomagnetics NMI SPM data version 3
+ * # The magic header reads NMI3 and NMI5; there may be NMIx for other
+ * # values of x but I've never seen them.  Not very specific,
+ * # unfortunately, it's followed by some LEB128 encoded weirdness so
+ * # it's difficult to improve.  * 0 belong 0x4e4d4933 Nanomagnetics
+ * # NMI SPM data version 3
  **/
 
 /**
@@ -67,8 +68,9 @@
 
 #define EXTENSION ".nmi"
 
-#define MAGIC "NMI3"
-#define MAGIC_SIZE (sizeof(MAGIC) - 1)
+#define MAGIC3 "NMI3"
+#define MAGIC5 "NMI5"
+#define MAGIC_SIZE (sizeof(MAGIC3) - 1)
 
 #define DCSTEP (10/32768.0)
 
@@ -177,6 +179,11 @@ typedef enum {
     UNIT_degree
 } NMIUnit;
 
+typedef enum {
+    LFM_Volt,
+    LFM_Newton
+} NMILFMDataDisplayMode; /*new in version 5 */
+
 /* PARAMETER STRUCTS */
 
 typedef struct {
@@ -192,6 +199,8 @@ typedef struct {
 } NMITimeStamp;
 
 typedef struct {
+    /* Version number - 3 or 5 */
+    gint NMIversion;
     /* in header */
     gchar *Name;
     gchar *Info;
@@ -242,7 +251,14 @@ typedef struct {
     gdouble xHysPiezoPolinomCoeffs[5];
     gdouble yHysPiezoPolinomCoeffs[5];
     NMILtMode LtMode;
-    gint32 P_value, I_value, D_value, G_value, ScaleXY;
+    /* for version 3 only */
+    gint32 P_value, I_value, D_value, G_value;
+    /* end version 3 only */
+    /* for version 5 only*/
+    gint32 Ch1_P_value, Ch1_I_value, Ch1_D_value, Ch1_Div_value;
+    gint32 Ch2_P_value, Ch2_I_value, Ch2_D_value, Ch2_Div_value;
+    /* end for version 5 only */
+    gint32 ScaleXY;
     gdouble CenterFreq, FeedBackValue;
     /* in footer: AFM */
     gdouble DDS2FeedbackPhase;
@@ -266,7 +282,9 @@ typedef struct {
     /* in footer: SHPM mode */
     gboolean HallStatus;
     gdouble HeadLiftOffDist;
+    gdouble UserEnteredHeadLiftOffDist; /* new in version 5 */
     gdouble HeadLiftOffV;
+    gdouble UserEnteredHeadLiftOffV; /* new in version 5 */
     gdouble UserEnteredHeadLiftoffLateralValue;
     gdouble UserEnteredHallCurrent;
     gdouble UserEnteredHallAmpBW;
@@ -282,6 +300,23 @@ typedef struct {
     gchar *MotorCardVersion;
     gchar *ScanDacCardVersion;
     gchar *PllVersion;
+    /* common to all modes - new in version 5 */
+    gint32 PolynemDeg;
+    gboolean closedLoop_NegativePolarityX;
+    gboolean closedLoop_NegativePolarityY;
+    gdouble closedLoop_px, closedLoop_ix, closedLoop_dx;
+    gdouble closedLoop_py, closedLoop_iy, closedLoop_dy;
+    gdouble closedLoopDelay;
+    gdouble DigitalLockInFrequency;
+    gdouble DigitalLockInAmplitude;
+    gdouble DigitalLockInPhase;
+    gdouble DigitalLockInExpand;
+    gdouble DigitalLockInSensitivity;
+    gdouble DigitalLockInOffset;
+    gdouble LFMDisplacementVoltageRatio;
+    gdouble LFMCantileverSpringConstant;
+    NMILFMDataDisplayMode LFMDataDisplayMode;
+    /* end common to all modes - new in version 5 */
 } NMIParameters;
 
 typedef struct {
@@ -365,9 +400,9 @@ static gchar*        get_string_LEB128        (const guchar **p,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Imports Nanomagnetics' NMI file format version 3"),
+    N_("Imports Nanomagnetics' NMI file format version 3 and 5"),
     "Sameer Grover <sameer.grover.1@gmail.com>",
-    "1.0",
+    "1.1",
     "Sameer Grover, Tata Institute of Fundamental Research",
     "2012",
 };
@@ -394,7 +429,8 @@ nmi_detect(const GwyFileDetectInfo * fileinfo, gboolean only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
 
     if (fileinfo->buffer_len > MAGIC_SIZE
-        && memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) == 0)
+        && (memcmp(fileinfo->head, MAGIC3, MAGIC_SIZE) == 0
+            || memcmp(fileinfo->head, MAGIC5, MAGIC_SIZE) == 0))
         return 100;
 
     return 0;
@@ -415,6 +451,7 @@ nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
     gint channelno, i;       /*loop counters */
     NMIParameters params;
     NMIChannelParameters *channel_params;
+    gint headersize = 376;   /* v3 size, just to silence gcc warning */
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -431,10 +468,19 @@ nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
         return NULL;
     }
 
-    if (memcmp(buffer, MAGIC, MAGIC_SIZE) != 0) {
+    if (memcmp(buffer, MAGIC3, MAGIC_SIZE) != 0 
+        && memcmp(buffer, MAGIC5, MAGIC_SIZE) != 0) {
         err_FILE_TYPE(error, "Nanomagnetics");
         gwy_file_abandon_contents(buffer, originalsize, NULL);
         return NULL;
+    }
+
+    /* Set appropriate version number */
+    if (memcmp(buffer, MAGIC3, MAGIC_SIZE) == 0) {
+        params.NMIversion = 3;
+    }
+    else {
+        params.NMIversion = 5;
     }
 
     p = buffer + MAGIC_SIZE;
@@ -456,7 +502,14 @@ nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
         return NULL;
     }
 
-    if (size < 376) {
+    if (params.NMIversion == 3) {
+        headersize = 376;
+    }
+    else if (params.NMIversion == 5) {
+        headersize = 392;
+    }
+
+    if (size < headersize) {
         err_TOO_SHORT(error);
         gwy_file_abandon_contents(buffer, originalsize, NULL);
         cleanup_global_parameters(&params);
@@ -522,11 +575,11 @@ nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
     params.GH = gwy_get_gfloat_le(&p);
     params.ScanSpeed = gwy_get_gfloat_le(&p);
     params.ScanAngle = gwy_get_gfloat_le(&p);
-    params.ScanOffset.X = gwy_get_gfloat_le(&p);;
-    params.ScanOffset.Y = gwy_get_gfloat_le(&p);;
-    params.Position.X = gwy_get_gfloat_le(&p);;
-    params.Position.Y = gwy_get_gfloat_le(&p);;
-    params.Position.Z = gwy_get_gfloat_le(&p);;
+    params.ScanOffset.X = gwy_get_gfloat_le(&p);
+    params.ScanOffset.Y = gwy_get_gfloat_le(&p);
+    params.Position.X = gwy_get_gfloat_le(&p);
+    params.Position.Y = gwy_get_gfloat_le(&p);
+    params.Position.Z = gwy_get_gfloat_le(&p);
     params.iT = gwy_get_gfloat_le(&p);
     params.biasV = gwy_get_gfloat_le(&p);
     params.giV = gwy_get_gfloat_le(&p);
@@ -556,14 +609,26 @@ nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
     params.yHysPiezoPolinomCoeffs[3] = gwy_get_gfloat_le(&p);
     params.yHysPiezoPolinomCoeffs[4] = gwy_get_gfloat_le(&p);
     params.LtMode = gwy_get_gint32_le(&p) % 6;
-    params.P_value = gwy_get_gint32_le(&p);
-    params.I_value = gwy_get_gint32_le(&p);
-    params.D_value = gwy_get_gint32_le(&p);
-    params.G_value = gwy_get_gint32_le(&p);
+    if (params.NMIversion == 3) {
+        params.P_value = gwy_get_gint32_le(&p);
+        params.I_value = gwy_get_gint32_le(&p);
+        params.D_value = gwy_get_gint32_le(&p);
+        params.G_value = gwy_get_gint32_le(&p);
+    }
+    else if (params.NMIversion == 5) {
+        params.Ch1_P_value = gwy_get_gint32_le(&p);
+        params.Ch1_I_value = gwy_get_gint32_le(&p);
+        params.Ch1_D_value = gwy_get_gint32_le(&p);
+        params.Ch1_Div_value = gwy_get_gint32_le(&p);
+        params.Ch2_P_value = gwy_get_gint32_le(&p);
+        params.Ch2_I_value = gwy_get_gint32_le(&p);
+        params.Ch2_D_value = gwy_get_gint32_le(&p);
+        params.Ch2_Div_value = gwy_get_gint32_le(&p);
+    }
     params.ScaleXY = gwy_get_gint32_le(&p);
     params.CenterFreq = gwy_get_gfloat_le(&p);
     params.FeedBackValue = gwy_get_gfloat_le(&p);
-    size -= 376;
+    size -= headersize;
 
     dfields = g_new0(GwyDataField*, params.numImages);
     channel_params = g_new0(NMIChannelParameters, params.numImages);
@@ -626,6 +691,11 @@ nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
 
         p += (chparams->Width * chparams->Height * 4);
         chparams->NumAdds = gwy_get_gint32_le(&p);
+        /* don't understand this completely but have to do this to get
+           it to work */
+        if (params.NMIversion == 5) {
+            chparams->NumAdds = 1;
+        }
         size -= (chparams->Width * chparams->Height * 4 + 4);
     }
 
@@ -697,9 +767,21 @@ read_footer(NMIParameters *params, const guchar **p, gsize size)
             params->HeadLiftOffDist = gwy_get_gfloat_le(p);
             size -= 4;
         }
+        if (params->NMIversion == 5) {
+            if (size > 4) {
+                params->UserEnteredHeadLiftOffDist = gwy_get_gfloat_le(p);
+                size -= 4;
+            }
+        }
         if (size > 4) {
             params->HeadLiftOffV = gwy_get_gfloat_le(p);
             size -= 4;
+        }
+        if (params->NMIversion == 5) {
+            if (size > 4) {
+                params->UserEnteredHeadLiftOffV = gwy_get_gfloat_le(p);
+                size -= 4;
+            }
         }
         if (size > 4) {
             params->UserEnteredHeadLiftoffLateralValue
@@ -892,7 +974,84 @@ read_footer(NMIParameters *params, const guchar **p, gsize size)
         params->ScanDacCardVersion = get_string_LEB128(p, &size);
         params->PllVersion = get_string_LEB128(p, &size);
     }
-
+    if (params->NMIversion == 5) { /* version 5 only */
+        if (size > 4) {
+            params->PolynemDeg = gwy_get_gint32_le(p);
+            size -= 4;
+        }
+        if (size > 1) {
+            params->closedLoop_NegativePolarityX = gwy_get_gboolean8(p);
+            size -= 1;
+        }
+        if (size > 1) {
+            params->closedLoop_NegativePolarityY = gwy_get_gboolean8(p);
+            size -= 1;
+        }
+        if (size > 4) {
+            params->closedLoop_px = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->closedLoop_ix = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->closedLoop_dx = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->closedLoop_py = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->closedLoop_iy = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->closedLoop_dy = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->closedLoopDelay = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->DigitalLockInFrequency = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->DigitalLockInAmplitude = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->DigitalLockInPhase = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->DigitalLockInExpand = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->DigitalLockInSensitivity = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->DigitalLockInOffset = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->LFMDisplacementVoltageRatio = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->LFMCantileverSpringConstant = gwy_get_gfloat_le(p);
+            size -= 4;
+        }
+        if (size > 4) {
+            params->LFMDataDisplayMode = gwy_get_gint32_le(p);
+            size -= 4;
+        }
+    }  /* end version 5 only */
     return size;
 }
 
@@ -961,18 +1120,12 @@ populate_meta_data(GwyContainer *meta,
 
     gwy_container_set_string_by_name(meta, "Date and Time",
                                      g_strdup_printf("%u-%u-%u %u:%u:%u",
-                                                     params->DateTime.
-                                                     year,
-                                                     params->DateTime.
-                                                     month,
-                                                     params->DateTime.
-                                                     date,
-                                                     params->DateTime.
-                                                     hour,
-                                                     params->DateTime.
-                                                     minute,
-                                                     params->DateTime.
-                                                     second));
+                                                     params->DateTime.year,
+                                                     params->DateTime.month,
+                                                     params->DateTime.date,
+                                                     params->DateTime.hour,
+                                                     params->DateTime.minute,
+                                                     params->DateTime.second));
     gwy_container_set_string_by_name(meta, "Hall Probe offset in Gauss",
                                      g_strdup_printf("%g",
                                                      params->HallProbeOffsetInGauss));
@@ -1047,12 +1200,10 @@ populate_meta_data(GwyContainer *meta,
                                                      params->CompensationValue.Y));
     gwy_container_set_string_by_name(meta, "Compensation Percentage X",
                                      g_strdup_printf("%g",
-                                                     params->CompensationPercentage.
-                                                     X));
+                                                     params->CompensationPercentage.X));
     gwy_container_set_string_by_name(meta, "Compensation Percentage Y",
                                      g_strdup_printf("%g",
-                                                     params->CompensationPercentage.
-                                                     Y));
+                                                     params->CompensationPercentage.Y));
     gwy_container_set_string_by_name(meta, "NanoLithoStatus",
                                      fmtbool(params->NanoLithoStatus));
     gwy_container_set_string_by_name(meta, "NanoLithoBiasV",
@@ -1237,15 +1388,34 @@ populate_meta_data(GwyContainer *meta,
                             NULL);
     gwy_container_set_string_by_name(meta, "LtMode",
                                      g_strdup(s ? s : "Unknown"));
-
-    gwy_container_set_string_by_name(meta, "P_value",
-                                     g_strdup_printf("%d", params->P_value));
-    gwy_container_set_string_by_name(meta, "I_value",
-                                     g_strdup_printf("%d", params->I_value));
-    gwy_container_set_string_by_name(meta, "D_value",
-                                     g_strdup_printf("%d", params->D_value));
-    gwy_container_set_string_by_name(meta, "G_value",
-                                     g_strdup_printf("%d", params->G_value));
+    if (params->NMIversion == 3) {
+        gwy_container_set_string_by_name(meta, "P_value",
+                                         g_strdup_printf("%d", params->P_value));
+        gwy_container_set_string_by_name(meta, "I_value",
+                                         g_strdup_printf("%d", params->I_value));
+        gwy_container_set_string_by_name(meta, "D_value",
+                                         g_strdup_printf("%d", params->D_value));
+        gwy_container_set_string_by_name(meta, "G_value",
+                                         g_strdup_printf("%d", params->G_value));
+    }
+    else if (params->NMIversion == 5) {
+        gwy_container_set_string_by_name(meta, "Ch1_P_value",
+                                         g_strdup_printf("%d", params->Ch1_P_value));
+        gwy_container_set_string_by_name(meta, "Ch1_I_value",
+                                         g_strdup_printf("%d", params->Ch1_I_value));
+        gwy_container_set_string_by_name(meta, "Ch1_D_value",
+                                         g_strdup_printf("%d", params->Ch1_D_value));
+        gwy_container_set_string_by_name(meta, "Ch1_Div_value",
+                                         g_strdup_printf("%d", params->Ch1_Div_value));
+        gwy_container_set_string_by_name(meta, "Ch2_P_value",
+                                         g_strdup_printf("%d", params->Ch2_P_value));
+        gwy_container_set_string_by_name(meta, "Ch2_I_value",
+                                         g_strdup_printf("%d", params->Ch2_I_value));
+        gwy_container_set_string_by_name(meta, "Ch2_D_value",
+                                         g_strdup_printf("%d", params->Ch2_D_value));
+        gwy_container_set_string_by_name(meta, "Ch2_Div_value",
+                                         g_strdup_printf("%d", params->Ch2_Div_value));
+    }
     gwy_container_set_string_by_name(meta, "ScaleXY",
                                      g_strdup_printf("%d", params->ScaleXY));
     gwy_container_set_string_by_name(meta, "CenterFreq",
@@ -1262,9 +1432,19 @@ populate_meta_data(GwyContainer *meta,
         gwy_container_set_string_by_name(meta, "HeadLiftOffDist",
                                          g_strdup_printf("%g",
                                                          params->HeadLiftOffDist));
+        if (params->NMIversion == 5) {
+            gwy_container_set_string_by_name(meta, "UserEnteredHeadLiftOffDist",
+                                             g_strdup_printf("%g",
+                                                             params->UserEnteredHeadLiftOffDist));
+        }
         gwy_container_set_string_by_name(meta, "HeadLiftOffV",
                                          g_strdup_printf("%g",
                                                          params->HeadLiftOffV));
+        if (params->NMIversion == 5) {
+            gwy_container_set_string_by_name(meta, "UserEnteredHeadLiftOffV",
+                                             g_strdup_printf("%g",
+                                                             params->UserEnteredHeadLiftOffV));
+        }
         gwy_container_set_string_by_name(meta,
                                          "UserEnteredHeadLiftoffLateralValue",
                                          g_strdup_printf("%g",
@@ -1407,14 +1587,76 @@ populate_meta_data(GwyContainer *meta,
         gwy_container_set_string_by_name(meta, "PLL Version",
                                          g_strdup(params->PllVersion));
     }
+    if (params->NMIversion == 5) {
+        gwy_container_set_string_by_name(meta, "PolynemDeg", 
+                                         g_strdup_printf("%d", 
+                                                         params->PolynemDeg));
+        gwy_container_set_string_by_name(meta, "closedLoop_NegativePolarityX",
+                                         fmtbool(params->closedLoop_NegativePolarityX));
+        gwy_container_set_string_by_name(meta, "closedLoop_NegativePolarityY",
+                                         fmtbool(params->closedLoop_NegativePolarityY));
+        gwy_container_set_string_by_name(meta, "closedLoop_px",
+                                         g_strdup_printf("%g",
+                                                         params->closedLoop_px));
+        gwy_container_set_string_by_name(meta, "closedLoop_ix",
+                                         g_strdup_printf("%g",
+                                                         params->closedLoop_ix));
+        gwy_container_set_string_by_name(meta, "closedLoop_dx",
+                                         g_strdup_printf("%g",
+                                                         params->closedLoop_dx));
+        gwy_container_set_string_by_name(meta, "closedLoop_py",
+                                         g_strdup_printf("%g",
+                                                         params->closedLoop_py));
+        gwy_container_set_string_by_name(meta, "closedLoop_iy",
+                                         g_strdup_printf("%g",
+                                                         params->closedLoop_iy));
+        gwy_container_set_string_by_name(meta, "closedLoop_dy",
+                                         g_strdup_printf("%g",
+                                                         params->closedLoop_dy));
+        gwy_container_set_string_by_name(meta, "closedLoopDelay",
+                                         g_strdup_printf("%g",
+                                                         params->closedLoopDelay));
+        gwy_container_set_string_by_name(meta, "DigitalLockInFrequency",
+                                         g_strdup_printf("%g",
+                                                         params->DigitalLockInFrequency));
+        gwy_container_set_string_by_name(meta, "DigitalLockInAmplitude",
+                                         g_strdup_printf("%g",
+                                                         params->DigitalLockInFrequency));
+        gwy_container_set_string_by_name(meta, "DigitalLockInPhase",
+                                         g_strdup_printf("%g",
+                                                         params->DigitalLockInFrequency));
+        gwy_container_set_string_by_name(meta, "DigitalLockInExpand",
+                                         g_strdup_printf("%g",
+                                                         params->DigitalLockInExpand));
+        gwy_container_set_string_by_name(meta, "DigitalLockInSensitivity",
+                                         g_strdup_printf("%g",
+                                                         params->DigitalLockInSensitivity));
+        gwy_container_set_string_by_name(meta, "DigitalLockInOffset",
+                                         g_strdup_printf("%g",
+                                                         params->DigitalLockInOffset));
+        gwy_container_set_string_by_name(meta, "LFMDisplacementVoltageRatio",
+                                         g_strdup_printf("%g",
+                                                         params->LFMDisplacementVoltageRatio));
+        gwy_container_set_string_by_name(meta, "LFMCantileverSpringConstant",
+                                         g_strdup_printf("%g",
+                                                         params->LFMCantileverSpringConstant));
+        s = gwy_enuml_to_string(params->LFMDataDisplayMode,
+                                "Volt", LFM_Volt,
+                                "Newton", LFM_Newton,
+                                NULL);
+        gwy_container_set_string_by_name(meta, "LFMDataDisplayMode",
+                                         g_strdup(s ? s : "Unknown"));
+    }
     gwy_container_set_string_by_name(meta, "Scan Area",
                                      g_strdup_printf("%g X %g",
                                                      chparams->RealWidth,
-                                                     chparams-> RealHeight));
+                                                     chparams->RealHeight));
     gwy_container_set_string_by_name(meta, "Resolution",
                                      g_strdup_printf("%d X %d",
                                                      chparams->Width,
                                                      chparams->Height));
+    gwy_container_set_string_by_name(meta, "NMIversion",
+                                     g_strdup_printf("%d", params->NMIversion));
 }
 
 /* Cleanup */
