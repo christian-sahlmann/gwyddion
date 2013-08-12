@@ -52,6 +52,7 @@ Modules:
 - Polynomial level: Coefficients are shown and can be exported to a file.
 - Profile, Spectro tools: Curve colours are shown as small swatches in the
   table.
+- Nanomagnetics: Support for version 5 files was added.
 
 
 2.31 (2013-02-21)
