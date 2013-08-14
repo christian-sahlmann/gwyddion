@@ -277,7 +277,7 @@ xydenoise_do(XYdenoiseArgs *args)
     gwy_data_field_2dfft(rx, ix, result, iresult,
                          window, GWY_TRANSFORM_DIRECTION_BACKWARD, interp,
                          FALSE, 0);
-    
+
     gwy_app_wait_set_fraction(0.9);
 
     data = args->op1.data;
