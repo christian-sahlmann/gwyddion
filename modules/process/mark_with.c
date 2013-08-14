@@ -801,7 +801,7 @@ static const gchar mark_with_key[] = "/module/mark_with/mark_with";
 static const gchar operation_key[] = "/module/mark_with/operation";
 static const gchar min_key[]       = "/module/mark_with/min";
 static const gchar max_key[]       = "/module/mark_with/max";
-static const gchar update_key[]    = "/module/fft_filter_1d/update";
+static const gchar update_key[]    = "/module/mask_with/update";
 
 static void
 mark_sanitize_args(MarkArgs *args)
