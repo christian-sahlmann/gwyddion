@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2013-07-10 03:58+0200\n"
-"PO-Revision-Date: 2013-07-10 21:38+0300\n"
+"POT-Creation-Date: 2013-08-15 03:58+0200\n"
+"PO-Revision-Date: 2013-08-15 10:35+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -998,11 +998,11 @@ msgid "Label Text"
 msgstr "Текст надписи"
 
 #. TRANSLATORS: Countable (more false colour gradients).
-#: libgwydgets/gwydatawindow.c:874
+#: libgwydgets/gwydatawindow.c:886
 msgid "More..."
 msgstr "Дополнительно..."
 
-#: libgwydgets/gwydatawindow.c:903
+#: libgwydgets/gwydatawindow.c:915
 #: libgwydgets/gwyoptionmenus.c:827
 msgid "Choose Color Gradient"
 msgstr "Выбор градиента"
@@ -1553,7 +1553,7 @@ msgid "Minimum"
 msgstr "Минимум"
 
 #: app/app.c:1342
-#: modules/file/nt-mdt.c:2800
+#: modules/file/nt-mdt.c:2772
 #: modules/tools/filter.c:209
 #: modules/tools/icolorange.c:396
 #: modules/tools/linestats.c:154
@@ -1823,27 +1823,27 @@ msgstr "Загружается список предыдущих докумен�
 
 #: app/gwyddion.c:141
 msgid "Registering "
-msgstr "Регистрируем"
+msgstr "Регистрация"
 
 #: app/gwyddion.c:142
 msgid "stock items"
-msgstr "основные элементы"
+msgstr "основных элементов"
 
 #: app/gwyddion.c:146
 msgid "color gradients"
-msgstr "Цветовые градиенты"
+msgstr "цветовых градиентов"
 
 #: app/gwyddion.c:148
 msgid "GL materials"
-msgstr "Материалы GL"
+msgstr "материалов GL"
 
 #: app/gwyddion.c:150
 msgid "grain quantities"
-msgstr "величины зёрен"
+msgstr "величин зёрен"
 
 #: app/gwyddion.c:152
 msgid "calibrations"
-msgstr "калибровки"
+msgstr "калибровок"
 
 #: app/gwyddion.c:157
 msgid "Loading settings"
@@ -1855,11 +1855,11 @@ msgstr "Регистрация модулей"
 
 #: app/gwyddion.c:186
 msgid "Initializing GUI"
-msgstr "Инициализируется графический интерфейс"
+msgstr "Инициализация графического интерфейса"
 
 #: app/gwyddion.c:395
 msgid "Could not read settings."
-msgstr "Не удается считать настройки"
+msgstr "Не удается считать настройки."
 
 #: app/gwyddion.c:398
 #, c-format
@@ -3795,7 +3795,7 @@ msgstr "Заголовок параметров усечён"
 
 #: modules/file/nanoeducator.c:929
 #: modules/process/curvature.c:442
-#: modules/tools/profile.c:805
+#: modules/tools/profile.c:822
 #, c-format
 msgid "Profile %d"
 msgstr "Профиль %d"
@@ -3812,11 +3812,11 @@ msgstr "Спектры ВАХ"
 msgid "I-Z spectra"
 msgstr "Спектры I-Z"
 
-#: modules/file/nanomagnetics.c:368
-msgid "Imports Nanomagnetics' NMI file format version 3"
-msgstr "Импортирует формат файлов Nanomagnetics' NMI, версии 3"
+#: modules/file/nanomagnetics.c:403
+msgid "Imports Nanomagnetics' NMI file format version 3 and 5"
+msgstr "Импортирует формат файлов Nanomagnetics' NMI, версий 3 и 5"
 
-#: modules/file/nanomagnetics.c:381
+#: modules/file/nanomagnetics.c:416
 msgid "Nanomagnetics File (.nmi)"
 msgstr "Файлы Nanomagnetics (.nmi)"
 
@@ -4127,46 +4127,46 @@ msgstr "Поле %s заголовка оси содержит слишком м
 msgid "Per-axis header field %s contains too few items."
 msgstr "Поле %s заголовка оси содержит слишком мало элементов."
 
-#: modules/file/nt-mdt.c:700
+#: modules/file/nt-mdt.c:703
 msgid "Imports NT-MDT data files."
 msgstr "Импорт файлов данных NT-MDT"
 
-#: modules/file/nt-mdt.c:713
+#: modules/file/nt-mdt.c:716
 msgid "NT-MDT files (.mdt)"
 msgstr "Файлы NT-MDT (.mdt)"
 
-#: modules/file/nt-mdt.c:1162
+#: modules/file/nt-mdt.c:1152
 msgid "Frame is too short for Frame Mode."
 msgstr "Фрейм слишком короткий для режима фреймов."
 
-#: modules/file/nt-mdt.c:1176
+#: modules/file/nt-mdt.c:1166
 msgid "Frame is too short for dots or data."
 msgstr "Фрейм слишком короткий для точек или данных."
 
-#: modules/file/nt-mdt.c:1435
+#: modules/file/nt-mdt.c:1425
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Достигнут конец файла в заголовке фрейма #%u."
 
-#: modules/file/nt-mdt.c:1443
+#: modules/file/nt-mdt.c:1433
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Достигнут конец файла в данных фрейма #%u."
 
-#: modules/file/nt-mdt.c:1478
+#: modules/file/nt-mdt.c:1468
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "Фрейм #%u слишком короткий чтобы быть заголовком сканированных данных."
 
-#: modules/file/nt-mdt.c:2801
+#: modules/file/nt-mdt.c:2773
 msgid "Max. position"
 msgstr "Положение максимума"
 
-#: modules/file/nt-mdt.c:2802
+#: modules/file/nt-mdt.c:2774
 msgid "Average"
 msgstr "Среднее"
 
-#: modules/file/nt-mdt.c:2815
+#: modules/file/nt-mdt.c:2787
 msgid "Raman Image Import"
 msgstr "Импорт изображений КР"
 
@@ -5024,7 +5024,7 @@ msgstr "Единицы измерения _значения:"
 #: modules/process/scale.c:247
 #: modules/process/unrotate.c:281
 #: modules/tools/linestats.c:400
-#: modules/tools/profile.c:443
+#: modules/tools/profile.c:460
 #: modules/tools/roughness.c:870
 #: modules/tools/sfunctions.c:430
 msgid "_Interpolation type:"
@@ -6681,32 +6681,32 @@ msgid "Triangulation..."
 msgstr "Триангуляция..."
 
 #: modules/process/calcoefs_view.c:1132
-#: modules/tools/profile.c:1096
+#: modules/tools/profile.c:1128
 msgid "X correction"
 msgstr "Поправка по X"
 
 #: modules/process/calcoefs_view.c:1133
-#: modules/tools/profile.c:1097
+#: modules/tools/profile.c:1129
 msgid "Y correction"
 msgstr "Поправка по Y"
 
 #: modules/process/calcoefs_view.c:1134
-#: modules/tools/profile.c:1098
+#: modules/tools/profile.c:1130
 msgid "Z correction"
 msgstr "Поправка по Z"
 
 #: modules/process/calcoefs_view.c:1135
-#: modules/tools/profile.c:1099
+#: modules/tools/profile.c:1131
 msgid "X uncertainty"
 msgstr "Погрешность X"
 
 #: modules/process/calcoefs_view.c:1136
-#: modules/tools/profile.c:1100
+#: modules/tools/profile.c:1132
 msgid "Y uncertainty"
 msgstr "Погрешность Y"
 
 #: modules/process/calcoefs_view.c:1137
-#: modules/tools/profile.c:1101
+#: modules/tools/profile.c:1133
 msgid "Z uncertainty"
 msgstr "Погрешность Z"
 
@@ -7900,7 +7900,7 @@ msgstr "Сечение ФСПМ"
 #: modules/process/fft_profile.c:271
 #: modules/process/grain_dist.c:333
 #: modules/tools/linestats.c:375
-#: modules/tools/profile.c:415
+#: modules/tools/profile.c:432
 #: modules/tools/sfunctions.c:405
 msgid "_Fix res.:"
 msgstr "_Фикс. разр.:"
@@ -10974,9 +10974,9 @@ msgid "Average:"
 msgstr "Среднее:"
 
 #: modules/tools/linestats.c:346
-#: modules/tools/profile.c:388
+#: modules/tools/profile.c:405
 #: modules/tools/sfunctions.c:376
-#: modules/tools/spectro.c:307
+#: modules/tools/spectro.c:332
 msgid "<b>Options</b>"
 msgstr "<b>Параметры</b>"
 
@@ -11119,7 +11119,7 @@ msgid "Level rows using intersections with given lines"
 msgstr "Выровнять строки используя пересечения с заданными линиями"
 
 #: modules/tools/pathlevel.c:258
-#: modules/tools/profile.c:405
+#: modules/tools/profile.c:422
 #: modules/tools/roughness.c:860
 msgid "_Thickness:"
 msgstr "_Толщина:"
@@ -11164,72 +11164,72 @@ msgstr "_Исключить область если выбрано"
 msgid "(otherwise it will be used for fitting)"
 msgstr "(иначе она будет использована для аппроксимации)"
 
-#: modules/tools/profile.c:177
+#: modules/tools/profile.c:181
 msgid "Profile tool, creates profile graphs from selected lines."
 msgstr "Инструмент профиля, создает графики профилей вдоль выбранных линий."
 
-#: modules/tools/profile.c:226
-#: modules/tools/profile.c:496
+#: modules/tools/profile.c:230
+#: modules/tools/profile.c:513
 msgid "Profiles"
 msgstr "Профили"
 
-#: modules/tools/profile.c:227
+#: modules/tools/profile.c:231
 msgid "Extract profiles"
 msgstr "Извлечь профили"
 
-#: modules/tools/profile.c:430
+#: modules/tools/profile.c:447
 msgid "_Separate profiles"
 msgstr "_Разделить профили"
 
-#: modules/tools/profile.c:459
+#: modules/tools/profile.c:476
 msgid "_Calibration data:"
 msgstr "Данные _калибровки:"
 
-#: modules/tools/profile.c:473
+#: modules/tools/profile.c:490
 msgid "_Show profile"
 msgstr "_Показать профиль"
 
-#: modules/tools/profile.c:822
+#: modules/tools/profile.c:839
 #, c-format
 msgid "X error %d"
 msgstr "Ошибка по X %d"
 
-#: modules/tools/profile.c:825
+#: modules/tools/profile.c:842
 #, c-format
 msgid "Y error %d"
 msgstr "Ошибка по Y %d"
 
-#: modules/tools/profile.c:828
+#: modules/tools/profile.c:845
 #, c-format
 msgid "Z error %d"
 msgstr "Ошибка по Z %d"
 
-#: modules/tools/profile.c:831
+#: modules/tools/profile.c:848
 #, c-format
 msgid "X uncertainty %d"
 msgstr "Погрешность по X %d"
 
-#: modules/tools/profile.c:834
+#: modules/tools/profile.c:851
 #, c-format
 msgid "Y uncertainty %d"
 msgstr "Погрешность по Y %d"
 
-#: modules/tools/profile.c:837
+#: modules/tools/profile.c:854
 #, c-format
 msgid "Z uncertainty %d"
 msgstr "Погрешность по Z %d"
 
-#: modules/tools/profile.c:840
+#: modules/tools/profile.c:857
 #, c-format
 msgid "Zunc up bound %d"
 msgstr "Верхняя граница погрешности Z %d"
 
-#: modules/tools/profile.c:843
+#: modules/tools/profile.c:860
 #, c-format
 msgid "Zunc low bound %d"
 msgstr "Нижняя граница погрешности Z %d"
 
-#: modules/tools/profile.c:1095
+#: modules/tools/profile.c:1127
 msgid "calib-data|None"
 msgstr "Нет"
 
@@ -11545,27 +11545,27 @@ msgstr "Рассчитать одномерные статистические �
 msgid "_Separate uncertainty"
 msgstr "_Разделить погрешности"
 
-#: modules/tools/spectro.c:135
+#: modules/tools/spectro.c:141
 msgid "Point Spectrum, extracts point spectra to a graph."
 msgstr "Спектр в точке, извлечь спектры в точке в график."
 
-#: modules/tools/spectro.c:173
+#: modules/tools/spectro.c:179
 msgid "Point Spectroscopy"
 msgstr "Спектроскопия в точке"
 
-#: modules/tools/spectro.c:174
+#: modules/tools/spectro.c:180
 msgid "Extract and view point spectroscopy data"
 msgstr "Извлечь и посмотреть данные спектроскопии в точке"
 
-#: modules/tools/spectro.c:323
+#: modules/tools/spectro.c:348
 msgid "_Separate spectra"
 msgstr "Разделить _спектры"
 
-#: modules/tools/spectro.c:333
+#: modules/tools/spectro.c:358
 msgid "_Average spectra"
 msgstr "_Усреднить спектры"
 
-#: modules/tools/spectro.c:446
+#: modules/tools/spectro.c:474
 msgid "Spectroscopy"
 msgstr "Спектроскопия"
 
