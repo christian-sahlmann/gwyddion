@@ -53,6 +53,8 @@ Modules:
 - Profile, Spectro tools: Curve colours are shown as small swatches in the
   table.
 - Nanomagnetics: Support for version 5 files was added.
+- Arithmetic: It is possible to use ‘x’ and ‘y’ in the expressions for real
+  coordinates in the image.
 
 
 2.31 (2013-02-21)

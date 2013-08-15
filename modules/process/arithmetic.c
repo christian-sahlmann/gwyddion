@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2010 David Necas (Yeti).
+ *  Copyright (C) 2003-2013 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -62,7 +62,7 @@ enum {
 };
 
 enum {
-    ARITHMETIC_NARGS = NARGS * ARITHMETIC_NVARS
+    ARITHMETIC_NARGS = NARGS * ARITHMETIC_NVARS + 2  /* 2 for x and y */
 };
 
 enum {
@@ -132,6 +132,8 @@ static void          arithmetic_need_data         (const ArithmeticArgs *args,
 static void          arithmetic_update_history    (ArithmeticArgs *args);
 static void          arithmetic_fix_mask_field    (ArithmeticArgs *args,
                                                    GwyDataField *mfield);
+static GwyDataField* make_x                       (GwyDataField *dfield);
+static GwyDataField* make_y                       (GwyDataField *dfield);
 static GwyDataField* make_x_der                   (GwyDataField *dfield);
 static GwyDataField* make_y_der                   (GwyDataField *dfield);
 
@@ -143,7 +145,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Simple arithmetic operations with data fields."),
     "Yeti <yeti@gwyddion.net>",
-    "3.0",
+    "3.1",
     "David Nečas (Yeti)",
     "2004",
 };
@@ -200,7 +202,7 @@ arithmetic(GwyContainer *data, GwyRunType run)
     arithmetic_save_args(settings, &args);
     g_ptr_array_free(args.ok_masks, TRUE);
     gwy_expr_free(args.expr);
-    for (i = 0; i < NARGS*ARITHMETIC_NVARS; i++)
+    for (i = 0; i < ARITHMETIC_NARGS; i++)
         g_free(args.name[i]);
 }
 
@@ -341,6 +343,8 @@ arithmetic_dialog(GwyContainer *data,
 
         row++;
     }
+    args->name[NARGS*ARITHMETIC_NVARS + 0] = g_strdup("x");
+    args->name[NARGS*ARITHMETIC_NVARS + 1] = g_strdup("y");
 
     hbox2 = gtk_hbox_new(FALSE, 6);
     gtk_table_attach(GTK_TABLE(table), hbox2, 0, 2, row, row+1,
@@ -676,6 +680,20 @@ arithmetic_do(ArithmeticArgs *args)
         d[args->pos[i]] = gwy_data_field_get_data_const(dfield);
     }
 
+    i = NARGS*ARITHMETIC_NVARS + 0;
+    if (args->pos[i]) {
+        dfield = make_x(data_fields[0]);
+        data_fields[i] = dfield;
+        d[args->pos[i]] = gwy_data_field_get_data_const(dfield);
+    }
+
+    i = NARGS*ARITHMETIC_NVARS + 1;
+    if (args->pos[i]) {
+        dfield = make_y(data_fields[0]);
+        data_fields[i] = dfield;
+        d[args->pos[i]] = gwy_data_field_get_data_const(dfield);
+    }
+
     /* Execute */
     gwy_expr_vector_execute(args->expr, n, d, r);
 
@@ -718,6 +736,12 @@ arithmetic_need_data(const ArithmeticArgs *args,
         if (args->pos[i])
             need_data[i % NARGS] = TRUE;
     }
+
+    // When x and y are needed, always take them from field 1.  This also
+    // ensures the expression is considered to be a field expression.
+    if (args->pos[NARGS*ARITHMETIC_NVARS + 0]
+        || args->pos[NARGS*ARITHMETIC_NVARS + 1])
+        need_data[0] = TRUE;
 }
 
 static void
@@ -741,6 +765,55 @@ arithmetic_fix_mask_field(ArithmeticArgs *args,
         gwy_data_field_clamp(mfield, 0.0, 1.0);
 
     g_ptr_array_add(args->ok_masks, mfield);
+}
+
+static GwyDataField*
+make_x(GwyDataField *dfield)
+{
+    GwyDataField *result;
+    gdouble dx, xoff;
+    guint xres, yres, i, j;
+    gdouble *data;
+
+    result = gwy_data_field_new_alike(dfield, FALSE);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    dx = gwy_data_field_get_xmeasure(dfield);
+    xoff = gwy_data_field_get_xoffset(dfield);
+    data = gwy_data_field_get_data(result);
+
+    for (j = 0; j < xres; j++)
+        data[j] = (j + 0.5)*dx + xoff;
+
+    for (i = 1; i < yres; i++)
+        memcpy(data + i*xres, data, xres*sizeof(gdouble));
+
+    return result;
+}
+
+static GwyDataField*
+make_y(GwyDataField *dfield)
+{
+    GwyDataField *result;
+    gdouble dy, yoff;
+    guint xres, yres, i, j;
+    gdouble *data;
+
+    result = gwy_data_field_new_alike(dfield, FALSE);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    dy = gwy_data_field_get_ymeasure(dfield);
+    yoff = gwy_data_field_get_yoffset(dfield);
+    data = gwy_data_field_get_data(result);
+
+    for (i = 0; i < yres; i++) {
+        gdouble y = (i + 0.5)*dy + yoff;
+        gdouble *rrow = data + i*xres;
+        for (j = 0; j < xres; j++, rrow++)
+            *rrow = y;
+    }
+
+    return result;
 }
 
 static GwyDataField*
