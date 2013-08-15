@@ -55,6 +55,7 @@ Modules:
 - Nanomagnetics: Support for version 5 files was added.
 - Arithmetic: It is possible to use ‘x’ and ‘y’ in the expressions for real
   coordinates in the image.
+- Dimensions and Units: Can create a new channel or modify the current one.
 
 
 2.31 (2013-02-21)
