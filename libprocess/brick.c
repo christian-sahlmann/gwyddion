@@ -299,7 +299,7 @@ gwy_brick_serialize(GObject *obj,
     guint32 datasize;
     guint32 num_items = 1;
     gdouble *pxoff, *pyoff, *pzoff;
-    GPtrArray *calibrations;
+    gpointer *calibrations = NULL;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_BRICK(obj), NULL);
@@ -318,13 +318,16 @@ gwy_brick_serialize(GObject *obj,
     pzoff = brick->zoff ? &brick->zoff : NULL;
     datasize = brick->xres * brick->yres * brick->zres;
     priv = (GwyBrickPrivate *)brick->priv;
-    g_return_val_if_fail(GWY_IS_DATA_LINE(priv->ZCalibration), NULL);
+    
+    g_return_val_if_fail(!priv->ZCalibration
+                         || GWY_IS_DATA_LINE(priv->ZCalibration), NULL);  
     if (!priv->ZCalibration)
         num_items = 0;
-
-    calibrations = g_ptr_array_sized_new(num_items);
-    if (priv->ZCalibration)
-        g_ptr_array_add(calibrations, priv->ZCalibration);
+	else {
+		calibrations = g_new(gpointer, 1);
+		*calibrations = priv->ZCalibration;
+	}
+    
     {
         GwySerializeSpec spec[] = {
             { 'i', "xres", &brick->xres, NULL, },
@@ -341,7 +344,7 @@ gwy_brick_serialize(GObject *obj,
             { 'o', "si_unit_z", &brick->si_unit_z, NULL, },
             { 'o', "si_unit_w", &brick->si_unit_w, NULL, },
             { 'D', "data", &brick->data, &datasize, },
-            { 'O', "calibration", &calibrations->pdata, &num_items, },
+            { 'O', "calibration", &calibrations, &num_items, },
         };
 
         return gwy_serialize_pack_object_struct(buffer,
@@ -357,7 +360,7 @@ gwy_brick_get_size(GObject *obj)
     GwyBrickPrivate *priv;
     guint32 datasize;
     guint32 num_items = 1;
-    GPtrArray *calibrations;
+    gpointer *calibrations = NULL;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_BRICK(obj), 0);
@@ -375,12 +378,13 @@ gwy_brick_get_size(GObject *obj)
 
     datasize = brick->xres * brick->yres * brick->zres;
     priv = (GwyBrickPrivate *)brick->priv;
+
     if (!priv->ZCalibration)
         num_items = 0;
-
-    calibrations = g_ptr_array_sized_new(num_items);
-    if (priv->ZCalibration)
-        g_ptr_array_add(calibrations, priv->ZCalibration);
+    else {
+		calibrations = g_new(gpointer, 1);
+		*calibrations = priv->ZCalibration;
+	}
 
     {
         GwySerializeSpec spec[] = {
@@ -398,7 +402,7 @@ gwy_brick_get_size(GObject *obj)
             { 'o', "si_unit_z", &brick->si_unit_z, NULL, },
             { 'o', "si_unit_w", &brick->si_unit_w, NULL, },
             { 'D', "data", &brick->data, &datasize, },
-            { 'O', "calibration", &calibrations->pdata, &num_items, },
+            { 'O', "calibration", &calibrations, &num_items, },
         };
 
         return gwy_serialize_get_struct_size(GWY_BRICK_TYPE_NAME,
