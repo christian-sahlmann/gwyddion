@@ -182,6 +182,7 @@ gwy_brick_new_alike(GwyBrick *model,
                     gboolean nullme)
 {
     GwyBrick *brick;
+    GwyBrickPrivate *priv, *new_priv;
 
     g_return_val_if_fail(GWY_IS_BRICK(model), NULL);
     brick = g_object_new(GWY_TYPE_BRICK, NULL);
@@ -208,6 +209,12 @@ gwy_brick_new_alike(GwyBrick *model,
         brick->si_unit_z = gwy_si_unit_duplicate(model->si_unit_z);
     if (model->si_unit_w)
         brick->si_unit_w = gwy_si_unit_duplicate(model->si_unit_w);
+
+    priv = model->priv;
+    new_priv = brick->priv;
+    if (priv->ZCalibration)
+        new_priv->ZCalibration
+                          = gwy_data_line_duplicate(priv->ZCalibration);
 
     return brick;
 }
@@ -318,16 +325,16 @@ gwy_brick_serialize(GObject *obj,
     pzoff = brick->zoff ? &brick->zoff : NULL;
     datasize = brick->xres * brick->yres * brick->zres;
     priv = (GwyBrickPrivate *)brick->priv;
-    
+
     g_return_val_if_fail(!priv->ZCalibration
-                         || GWY_IS_DATA_LINE(priv->ZCalibration), NULL);  
+                         || GWY_IS_DATA_LINE(priv->ZCalibration), NULL);
     if (!priv->ZCalibration)
         num_items = 0;
-	else {
-		calibrations = g_new(gpointer, 1);
-		*calibrations = priv->ZCalibration;
-	}
-    
+    else {
+        calibrations = g_new(gpointer, 1);
+        *calibrations = priv->ZCalibration;
+    }
+
     {
         GwySerializeSpec spec[] = {
             { 'i', "xres", &brick->xres, NULL, },
@@ -382,9 +389,9 @@ gwy_brick_get_size(GObject *obj)
     if (!priv->ZCalibration)
         num_items = 0;
     else {
-		calibrations = g_new(gpointer, 1);
-		*calibrations = priv->ZCalibration;
-	}
+        calibrations = g_new(gpointer, 1);
+        *calibrations = priv->ZCalibration;
+    }
 
     {
         GwySerializeSpec spec[] = {
@@ -531,6 +538,7 @@ static void
 gwy_brick_clone_real(GObject *source, GObject *copy)
 {
     GwyBrick *brick, *clone;
+    GwyBrickPrivate *priv, *clone_priv;
 
     g_return_if_fail(GWY_IS_BRICK(source));
     g_return_if_fail(GWY_IS_BRICK(copy));
@@ -588,6 +596,16 @@ gwy_brick_clone_real(GObject *source, GObject *copy)
     else if (!brick->si_unit_w && clone->si_unit_w)
         gwy_object_unref(clone->si_unit_w);
 
+    priv = brick->priv;
+    clone_priv = clone->priv;
+    if (priv->ZCalibration && clone_priv->ZCalibration)
+        gwy_serializable_clone(G_OBJECT(priv->ZCalibration),
+                               G_OBJECT(clone_priv->ZCalibration));
+    else if (priv->ZCalibration && !clone_priv->ZCalibration)
+        clone_priv->ZCalibration
+                          = gwy_data_line_duplicate(priv->ZCalibration);
+    else if (!priv->ZCalibration && clone_priv->ZCalibration)
+        gwy_object_unref(clone_priv->ZCalibration);
 }
 
 /**
