@@ -121,7 +121,7 @@ static GwyModuleInfo module_info = {
        "color scale should map to, either on data or on height distribution "
        "histogram."),
     "Yeti <yeti@gwyddion.net>",
-    "3.11",
+    "3.12",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -439,7 +439,7 @@ gwy_tool_color_range_data_switched(GwyTool *gwytool,
     tool->data_switch = FALSE;
     gwy_debug("B");
 
-    if (ignore || plain_tool->init_failed)
+    if (plain_tool->init_failed)
         return;
 
     if (data_view) {
@@ -454,10 +454,15 @@ gwy_tool_color_range_data_switched(GwyTool *gwytool,
         gtk_widget_set_sensitive(GTK_WIDGET(tool->histogram), FALSE);
         gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmin), FALSE);
         gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmax), FALSE);
+        gwy_selection_clear(tool->graph_selection);
     }
 
     tool = GWY_TOOL_COLOR_RANGE(gwytool);
     gwy_tool_color_range_update_histogram(tool);
+
+    if (ignore)
+        return;
+
     range_type = gwy_tool_color_range_get_range_type(tool);
     if (data_view) {
         if (range_type == GWY_LAYER_BASIC_RANGE_FIXED) {
@@ -827,7 +832,7 @@ gwy_tool_color_range_update_histogram(GwyToolColorRange *tool)
     gwy_data_field_dh(plain_tool->data_field, tool->heightdist, 0);
     /* rescale to sqrt to make more readable  */
     gwy_data_line_sqrt(tool->heightdist);
-  
+
     gwy_graph_curve_model_set_data_from_dataline(cmodel, tool->heightdist,
                                                  0, 0);
 }

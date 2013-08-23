@@ -3917,8 +3917,10 @@ gwy_app_data_browser_spectra_selected(GtkTreeSelection *selection,
         g_return_if_fail(i >= 0 && type == KEY_IS_SPECTRA);
         browser->current->lists[PAGE_SPECTRA].active = id;
     }
-    else
+    else {
         id = -1;
+        data = NULL;  /* and gcc is stupid */
+    }
 
     /* XXX: Do not delete the reference when i == -1 because this can happen
      * on descruction.  Must prevent it or handle it differently. */
@@ -4620,6 +4622,8 @@ gwy_app_data_browser_delete_object(GwyAppDataProxy *proxy,
      * too */
     switch (pageno) {
         case PAGE_CHANNELS:
+        g_snprintf(key, sizeof(key), "/%d/data", i);
+        gwy_container_remove_by_name(data, key);
         /* XXX: Cannot just remove /0, because all graphs are under
          * GRAPH_PREFIX == "/0/graph/graph" */
         if (i) {
@@ -4658,7 +4662,7 @@ gwy_app_data_browser_delete_object(GwyAppDataProxy *proxy,
             gwy_container_remove_by_prefix(data, key);
             g_snprintf(key, sizeof(key), "/%d/cal_zerr", i);
             gwy_container_remove_by_prefix(data, key);
-             }
+        }
         break;
 
         case PAGE_GRAPHS:

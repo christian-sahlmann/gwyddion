@@ -343,9 +343,12 @@ gwy_plain_tool_data_item_changed(GwyContainer *container,
             = g_signal_connect_swapped(plain_tool->data_field, "data-changed",
                                        G_CALLBACK(gwy_plain_tool_data_changed),
                                        plain_tool);
+        gwy_plain_tool_data_changed(plain_tool);
     }
-
-    gwy_plain_tool_data_changed(plain_tool);
+    else {
+        /* No data field means we disconnect completely. */
+        gwy_tool_data_switched(GWY_TOOL(plain_tool), NULL);
+    }
 }
 
 static void

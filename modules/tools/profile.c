@@ -571,8 +571,7 @@ gwy_tool_profile_data_switched(GwyTool *gwytool,
             && gwy_container_gis_object_by_name(plain_tool->container, zekey, &(tool->zerr))
             && gwy_container_gis_object_by_name(plain_tool->container, xukey, &(tool->xunc))
             && gwy_container_gis_object_by_name(plain_tool->container, yukey, &(tool->yunc))
-            && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc)))
-        {
+            && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc))) {
             tool->has_calibration = TRUE;
             tool->line_xerr = gwy_data_line_new(gwy_data_field_get_xres(plain_tool->data_field),
                                                 gwy_data_field_get_xreal(plain_tool->data_field), 0);
@@ -580,7 +579,8 @@ gwy_tool_profile_data_switched(GwyTool *gwytool,
             gtk_widget_show(tool->callabel);
             gtk_widget_show(tool->both);
             //gtk_widget_show(tool->export);
-        } else {
+        }
+        else {
             tool->has_calibration = FALSE;
             gtk_widget_hide(tool->menu_display);
             gtk_widget_hide(tool->callabel);
