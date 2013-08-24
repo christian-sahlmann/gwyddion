@@ -1805,6 +1805,7 @@ gwy_brick_extract_plane(const GwyBrick *brick,
 {
     gint col, row, lev;
     gdouble *bdata, *ddata;
+    GwySIUnit *si_unit;
 
     g_return_if_fail(GWY_IS_BRICK(brick));
 
@@ -1881,7 +1882,11 @@ gwy_brick_extract_plane(const GwyBrick *brick,
         }
     }
 
+    si_unit = gwy_brick_get_si_unit_x((GwyBrick *)brick);
+    gwy_data_field_set_si_unit_xy(target, si_unit);
 
+    si_unit = gwy_brick_get_si_unit_w((GwyBrick *)brick);
+    gwy_data_field_set_si_unit_z(target, si_unit);
 }
 
 /**
@@ -1923,6 +1928,7 @@ gwy_brick_sum_plane(const GwyBrick *brick,
 {
     gint col, row, lev;
     gdouble *bdata, *ddata;
+    GwySIUnit *si_unit;
 
     g_return_if_fail(GWY_IS_BRICK(brick));
 
@@ -1998,6 +2004,12 @@ gwy_brick_sum_plane(const GwyBrick *brick,
             }
         }
     }
+
+    si_unit = gwy_brick_get_si_unit_x((GwyBrick *)brick);
+    gwy_data_field_set_si_unit_xy(target, si_unit);
+
+    si_unit = gwy_brick_get_si_unit_w((GwyBrick *)brick);
+    gwy_data_field_set_si_unit_z(target, si_unit);
 }
 
 /**
@@ -2039,6 +2051,7 @@ gwy_brick_min_plane(const GwyBrick *brick,
 {
     gint col, row, lev;
     gdouble *bdata, *ddata;
+    GwySIUnit *si_unit;
 
     g_return_if_fail(GWY_IS_BRICK(brick));
 
@@ -2118,6 +2131,12 @@ gwy_brick_min_plane(const GwyBrick *brick,
             }
         }
     }
+
+    si_unit = gwy_brick_get_si_unit_x((GwyBrick *)brick);
+    gwy_data_field_set_si_unit_xy(target, si_unit);
+
+    si_unit = gwy_brick_get_si_unit_w((GwyBrick *)brick);
+    gwy_data_field_set_si_unit_z(target, si_unit);
 }
 
 /**
@@ -2159,6 +2178,7 @@ gwy_brick_max_plane(const GwyBrick *brick,
 {
     gint col, row, lev;
     gdouble *bdata, *ddata;
+    GwySIUnit *si_unit;
 
     g_return_if_fail(GWY_IS_BRICK(brick));
 
@@ -2238,6 +2258,12 @@ gwy_brick_max_plane(const GwyBrick *brick,
             }
         }
     }
+
+    si_unit = gwy_brick_get_si_unit_x((GwyBrick *)brick);
+    gwy_data_field_set_si_unit_xy(target, si_unit);
+
+    si_unit = gwy_brick_get_si_unit_w((GwyBrick *)brick);
+    gwy_data_field_set_si_unit_z(target, si_unit);
 }
 
 /**
@@ -2279,6 +2305,7 @@ gwy_brick_mean_plane(const GwyBrick *brick,
 {
     gint col, row, lev;
     gdouble *ddata;
+    GwySIUnit *si_unit;
 
     g_return_if_fail(GWY_IS_BRICK(brick));
 
@@ -2329,6 +2356,12 @@ gwy_brick_mean_plane(const GwyBrick *brick,
             }
         }
     }
+
+    si_unit = gwy_brick_get_si_unit_x((GwyBrick *)brick);
+    gwy_data_field_set_si_unit_xy(target, si_unit);
+
+    si_unit = gwy_brick_get_si_unit_w((GwyBrick *)brick);
+    gwy_data_field_set_si_unit_z(target, si_unit);
 }
 
 /**
@@ -2371,6 +2404,7 @@ gwy_brick_rms_plane(const GwyBrick *brick,
     gint col, row, lev;
     gdouble *bdata, *ddata, *mdata;
     GwyDataField *meanfield;
+    GwySIUnit *si_unit;
 
     g_return_if_fail(GWY_IS_BRICK(brick));
 
@@ -2480,6 +2514,12 @@ gwy_brick_rms_plane(const GwyBrick *brick,
     }
 
     g_object_unref(meanfield);
+
+    si_unit = gwy_brick_get_si_unit_x((GwyBrick *)brick);
+    gwy_data_field_set_si_unit_xy(target, si_unit);
+
+    si_unit = gwy_brick_get_si_unit_w((GwyBrick *)brick);
+    gwy_data_field_set_si_unit_z(target, si_unit);
 }
 
 /**
@@ -2508,6 +2548,7 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
 {
     gint col, row, lev;
     gdouble *bdata, *ddata;
+    GwySIUnit *si_unit;
 
     g_return_if_fail(GWY_IS_BRICK(brick));
 
@@ -2585,7 +2626,11 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
         gwy_data_line_set_real(target, (gdouble)abs(kend-kstart)*brick->zreal/(gdouble)brick->zres);
     }
 
+    si_unit = gwy_brick_get_si_unit_z((GwyBrick *)brick);
+    gwy_data_line_set_si_unit_x(target, si_unit);
 
+    si_unit = gwy_brick_get_si_unit_w((GwyBrick *)brick);
+    gwy_data_line_set_si_unit_y(target, si_unit);
 }
 
 /**
