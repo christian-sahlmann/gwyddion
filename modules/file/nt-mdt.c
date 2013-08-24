@@ -769,7 +769,7 @@ mdt_load(const gchar *filename,
     GwyContainer *meta, *data = NULL;
     MDTFile mdtfile;
     GString *key;
-    guint n, i;
+    guint n, i, xres, yres;
 
     gwy_debug("");
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -854,7 +854,6 @@ mdt_load(const gchar *filename,
                     gwy_container_set_object_by_name(data,
                                                      key->str,
                                                      brick);
-                   g_object_unref(brick);
 
                     if (mdaframe->title) {
                         g_string_append(key, "/title");
@@ -866,11 +865,18 @@ mdt_load(const gchar *filename,
                     else
                         gwy_app_channel_title_fall_back(data, n);
 
-                    dfield = extract_raman_image_avg(mdaframe);
+                    xres = gwy_brick_get_xres(brick);
+                    yres = gwy_brick_get_yres(brick);
+                    dfield = gwy_data_field_new(xres, yres,
+                                                1.0, 1.0, FALSE);
+                    gwy_brick_mean_plane(brick, dfield,
+                                         0, 0, 0,
+                                         xres, yres, -1, FALSE);
                     g_string_printf(key,"/brick/%d/preview", n);
                     gwy_container_set_object_by_name(data,
                                                      key->str,
                                                      dfield);
+                    g_object_unref(brick);
                     g_object_unref(dfield);
                     n++;
                 }
@@ -3031,7 +3037,7 @@ extract_raman_image(MDTMDAFrame *dataframe,
     for (k = 0; k < zres; k++) {
         p = (guchar *)dataframe->image;
         p += k * sizeof(gfloat);
-        for (i = 0; i < yres; i++) 
+        for (i = 0; i < yres; i++)
             for (j = 0; j < xres; j++) {
                 w = (gdouble)gwy_get_gfloat_le(&p);
                 *(data++) = w * wscale;
