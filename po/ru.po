@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2013-08-15 03:58+0200\n"
-"PO-Revision-Date: 2013-08-15 10:35+0300\n"
+"PO-Revision-Date: 2013-08-25 13:04+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -11897,7 +11897,7 @@ msgstr "w"
 
 #: modules/volume/volume_extract.c:779
 msgid "Brick graph"
-msgstr "График блока"
+msgstr "График сечения блока"
 
 #: modules/volume/volume_extract.c:1042
 msgid "Load volume data"

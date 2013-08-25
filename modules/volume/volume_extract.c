@@ -132,7 +132,7 @@ typedef struct {
     gdouble bdepth;
     gint nps;
     gboolean in_move;
-    cairo_surface_t *image; 
+    cairo_surface_t *image;
 } ExtractControls;
 
 static gboolean module_register                    (void);
@@ -159,9 +159,9 @@ static void     extract_load_args               (GwyContainer *container,
                                                     ExtractArgs *args);
 static void     extract_save_args               (GwyContainer *container,
                                                     ExtractArgs *args);
-static void     type_changed_cb                   (GtkWidget *combo, 
+static void     type_changed_cb                   (GtkWidget *combo,
                                                    ExtractControls *controls);
-static void     gtype_changed_cb                   (GtkWidget *combo, 
+static void     gtype_changed_cb                   (GtkWidget *combo,
                                                    ExtractControls *controls);
 static void     page_switched                      (ExtractControls *controls,
                                                     GtkNotebookPage *page,
@@ -175,19 +175,19 @@ static void     p3d_prepare_wdata                   (ExtractControls *controls,
 static void     extract_zscale_cb                (ExtractControls *controls);
 static void     extract_opacity_cb                (ExtractControls *controls);
 static void     extract_threshold_cb                (ExtractControls *controls);
-//static gboolean p3d_on_draw_event                  (GtkWidget *widget, 
-//                                                   cairo_t *cr, 
+//static gboolean p3d_on_draw_event                  (GtkWidget *widget,
+//                                                   cairo_t *cr,
 //                                                   ExtractControls *controls);
-static gboolean p3d_on_draw_event                  (GtkWidget *widget, 
-                                                    GdkEventExpose *event, 
+static gboolean p3d_on_draw_event                  (GtkWidget *widget,
+                                                    GdkEventExpose *event,
                                                     ExtractControls *controls);
-static gboolean p3d_clicked                        (GtkWidget *widget, 
+static gboolean p3d_clicked                        (GtkWidget *widget,
                                                    GdkEventButton *event,
                                                    ExtractControls *controls);
-static gboolean p3d_released                        (GtkWidget *widget, 
+static gboolean p3d_released                        (GtkWidget *widget,
                                                    GdkEventButton *event,
                                                    ExtractControls *controls);
-static gboolean p3d_moved                         (GtkWidget *widget, 
+static gboolean p3d_moved                         (GtkWidget *widget,
                                                    GdkEventMotion *event,
                                                    ExtractControls *controls);
 static void p3d_xview_cb                          (ExtractControls *controls);
@@ -253,9 +253,9 @@ extract(GwyContainer *data, GwyRunType run)
     g_return_if_fail(run & EXTRACT_RUN_MODES);
 
     extract_load_args(gwy_app_settings_get(), &args);
-   
+
     gwy_app_data_browser_get_current(GWY_APP_BRICK, &brick,
-                                     GWY_APP_BRICK_ID, &id, 
+                                     GWY_APP_BRICK_ID, &id,
                                      0);
 
 
@@ -285,7 +285,7 @@ extract_dialog(ExtractArgs *args,
         { N_("Y direction"), GRAPH_DIRY, },
         { N_("Z direction"), GRAPH_DIRZ, },
     };
-  
+
     GtkWidget *dialog, *table, *hbox, *label, *notebook, *button;
     GwyDataField *dfield;
     GwyDataLine *dline;
@@ -304,7 +304,7 @@ extract_dialog(ExtractArgs *args,
     controls.args = args;
     controls.data = data;
     controls.brick = brick;
-    controls.computed = controls.gcomputed = FALSE; 
+    controls.computed = controls.gcomputed = FALSE;
     controls.args->active_page = 0;
     controls.rm[0][0] = controls.rm[1][1] = controls.rm[2][2] = 1;
     controls.rm[1][0] = controls.rm[2][0] = controls.rm[0][1] = controls.rm[0][2] = 0;
@@ -323,7 +323,7 @@ extract_dialog(ExtractArgs *args,
 
     g_return_if_fail(GWY_IS_BRICK(controls.brick));
 
- 
+
     /*dialogue controls*/
 
     dialog = gtk_dialog_new_with_buttons(_("Volume data"), NULL, 0, NULL);
@@ -340,15 +340,15 @@ extract_dialog(ExtractArgs *args,
                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
 
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
-                          gwy_stock_like_button_new(_("_Extract projection"), 
-                                                    GTK_STOCK_OK), 
+                          gwy_stock_like_button_new(_("_Extract projection"),
+                                                    GTK_STOCK_OK),
                           GTK_RESPONSE_OK);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_CANCEL);
     controls.dialog = dialog;
 
 
     notebook = gtk_notebook_new();
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), notebook, 
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), notebook,
                        TRUE, TRUE, 4);
     g_signal_connect_swapped(notebook, "switch-page",
                                  G_CALLBACK(page_switched), &controls);
@@ -362,8 +362,8 @@ extract_dialog(ExtractArgs *args,
                                gtk_label_new(_("Projections")));
 
     controls.mydata = gwy_container_new();
-    dfield = gwy_data_field_new(PREVIEW_SIZE, PREVIEW_SIZE, 
-                                PREVIEW_SIZE, PREVIEW_SIZE, 
+    dfield = gwy_data_field_new(PREVIEW_SIZE, PREVIEW_SIZE,
+                                PREVIEW_SIZE, PREVIEW_SIZE,
                                 TRUE);
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
 
@@ -371,7 +371,7 @@ extract_dialog(ExtractArgs *args,
                             GWY_DATA_ITEM_PALETTE,
                             0);
 
-    
+
     controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
     g_object_set(layer,
@@ -455,8 +455,8 @@ extract_dialog(ExtractArgs *args,
                                hbox,
                                gtk_label_new(_("Graphs")));
 
-    dfield = gwy_data_field_new(PREVIEW_SIZE, PREVIEW_SIZE, 
-                                PREVIEW_SIZE, PREVIEW_SIZE, 
+    dfield = gwy_data_field_new(PREVIEW_SIZE, PREVIEW_SIZE,
+                                PREVIEW_SIZE, PREVIEW_SIZE,
                                 TRUE);
     gwy_container_set_object_by_name(controls.mydata, "/1/data", dfield);
 
@@ -481,7 +481,7 @@ extract_dialog(ExtractArgs *args,
     gwy_vector_layer_set_selection_key(vlayer, "1/select/graph/point");
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.gview), vlayer);
     selection = gwy_vector_layer_ensure_selection(vlayer);
-    g_signal_connect(selection, "finished", 
+    g_signal_connect(selection, "finished",
                      G_CALLBACK(graph_selection_finished_cb), &controls);
 
 
@@ -500,9 +500,9 @@ extract_dialog(ExtractArgs *args,
     gtk_table_attach(GTK_TABLE(table), controls.graph,
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    row++; 
+    row++;
 
-    
+
     label = gtk_label_new(_("Graph cut direction:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -547,12 +547,12 @@ extract_dialog(ExtractArgs *args,
     gtk_widget_add_events(controls.drawarea, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_POINTER_MOTION_MASK);
 
     g_signal_connect(GTK_DRAWING_AREA(controls.drawarea), "expose-event", //should be "draw" for newer Gtk+
-                     G_CALLBACK(p3d_on_draw_event), &controls);  
-    g_signal_connect(controls.drawarea, "button-press-event", 
+                     G_CALLBACK(p3d_on_draw_event), &controls);
+    g_signal_connect(controls.drawarea, "button-press-event",
                      G_CALLBACK(p3d_clicked), &controls);
-    g_signal_connect(controls.drawarea, "button-release-event", 
+    g_signal_connect(controls.drawarea, "button-release-event",
                      G_CALLBACK(p3d_released), &controls);
-     g_signal_connect(controls.drawarea, "motion-notify-event", 
+     g_signal_connect(controls.drawarea, "motion-notify-event",
                      G_CALLBACK(p3d_moved), &controls);
 
 
@@ -707,21 +707,21 @@ extract_dialog(ExtractArgs *args,
                                                                      "/0/data"));
 
 
-            if (args->type == CUT_DIRX) 
-                g_snprintf(description, sizeof(description), _("X cross-section at x: %d"), 
-                           (gint)(args->xpos/100.0*(gwy_brick_get_xres(controls.brick)-1))); 
-            else if (args->type == CUT_DIRY) 
-                g_snprintf(description, sizeof(description), _("Y cross-section at y: %d"), 
-                           (gint)(args->ypos/100.0*(gwy_brick_get_yres(controls.brick)-1))); 
-            else if (args->type == CUT_DIRZ) 
-                g_snprintf(description, sizeof(description), _("Z cross-section at z: %d"), 
-                           (gint)(args->zpos/100.0*(gwy_brick_get_zres(controls.brick)-1))); 
-            else if (args->type == PROJ_DIRX) 
-                g_snprintf(description, sizeof(description), _("X direction sum")); 
-            else if (args->type == PROJ_DIRY) 
-                g_snprintf(description, sizeof(description), _("Y direction sum")); 
-            else if (args->type == PROJ_DIRZ) 
-                g_snprintf(description, sizeof(description), _("Z direction sum")); 
+            if (args->type == CUT_DIRX)
+                g_snprintf(description, sizeof(description), _("X cross-section at x: %d"),
+                           (gint)(args->xpos/100.0*(gwy_brick_get_xres(controls.brick)-1)));
+            else if (args->type == CUT_DIRY)
+                g_snprintf(description, sizeof(description), _("Y cross-section at y: %d"),
+                           (gint)(args->ypos/100.0*(gwy_brick_get_yres(controls.brick)-1)));
+            else if (args->type == CUT_DIRZ)
+                g_snprintf(description, sizeof(description), _("Z cross-section at z: %d"),
+                           (gint)(args->zpos/100.0*(gwy_brick_get_zres(controls.brick)-1)));
+            else if (args->type == PROJ_DIRX)
+                g_snprintf(description, sizeof(description), _("X direction sum"));
+            else if (args->type == PROJ_DIRY)
+                g_snprintf(description, sizeof(description), _("Y direction sum"));
+            else if (args->type == PROJ_DIRZ)
+                g_snprintf(description, sizeof(description), _("Z direction sum"));
 
             if (data) {
 
@@ -733,7 +733,7 @@ extract_dialog(ExtractArgs *args,
                 gwy_app_set_data_field_title(data, newid, description);
 
             }
-            else { 
+            else {
                 newid = 0;
                 newdata = gwy_container_new();
                 gwy_container_set_object(newdata, gwy_app_get_data_key_for_id(newid),
@@ -759,13 +759,13 @@ extract_dialog(ExtractArgs *args,
             gwy_graph_model_set_units_from_data_line(gmodel, dline);
 
             if (args->gtype == GRAPH_DIRX)
-                g_snprintf(description, sizeof(description), _("X graph at y: %d z: %d"), 
+                g_snprintf(description, sizeof(description), _("X graph at y: %d z: %d"),
                            controls.grow, controls.glev);
             else if (args->gtype == GRAPH_DIRY)
-                g_snprintf(description, sizeof(description), _("Y graph at x: %d z: %d"), 
+                g_snprintf(description, sizeof(description), _("Y graph at x: %d z: %d"),
                            controls.gcol, controls.glev);
             else if (args->gtype == GRAPH_DIRZ)
-                g_snprintf(description, sizeof(description), _("Z graph at x: %d y: %d"), 
+                g_snprintf(description, sizeof(description), _("Z graph at x: %d y: %d"),
                            controls.gcol, controls.grow);
 
             g_object_set(gmodel,
@@ -776,8 +776,8 @@ extract_dialog(ExtractArgs *args,
 
             gcmodel = gwy_graph_curve_model_new();
             gwy_graph_curve_model_set_data_from_dataline(gcmodel, dline, -1, -1);
-            g_object_set(gcmodel, "description", _("Brick graph"), 
-                                  "mode", GWY_GRAPH_CURVE_LINE, 
+            g_object_set(gcmodel, "description", _("Brick graph"),
+                                  "mode", GWY_GRAPH_CURVE_LINE,
                                   NULL);
             gwy_graph_model_add_curve(gmodel, gcmodel);
             gwy_object_unref(gcmodel);
@@ -824,8 +824,10 @@ graph_selection_finished_cb(GwySelection *selection,
     gdouble sel[2];
     gint col, row, lev;
     GwyGraphCurveModel *cmodel;
-    GwyDataLine *dline;
+    GwyDataLine *dline, *calibration = NULL;
     ExtractArgs *args = controls->args;
+    gint n;
+    gdouble *xdata, *ydata;
 
     if (!gwy_selection_get_object(selection, 0, sel)) return;
 
@@ -841,7 +843,7 @@ graph_selection_finished_cb(GwySelection *selection,
                                 lev,
                                 gwy_brick_get_xres(controls->brick),
                                 row,
-                                lev,       
+                                lev,
                                 0);
         gwy_data_line_set_si_unit_x(dline, gwy_brick_get_si_unit_x(controls->brick));
         gwy_data_line_set_si_unit_y(dline, gwy_brick_get_si_unit_w(controls->brick));
@@ -856,7 +858,7 @@ graph_selection_finished_cb(GwySelection *selection,
                                 lev,
                                 col,
                                 gwy_brick_get_yres(controls->brick),
-                                lev,       
+                                lev,
                                 0);
         gwy_data_line_set_si_unit_x(dline, gwy_brick_get_si_unit_y(controls->brick));
         gwy_data_line_set_si_unit_y(dline, gwy_brick_get_si_unit_w(controls->brick));
@@ -871,25 +873,36 @@ graph_selection_finished_cb(GwySelection *selection,
                                 0,
                                 col,
                                 row,
-                                gwy_brick_get_zres(controls->brick),       
+                                gwy_brick_get_zres(controls->brick),
                                 0);
+        calibration = gwy_brick_get_zcalibration(controls->brick);
         gwy_data_line_set_si_unit_x(dline, gwy_brick_get_si_unit_z(controls->brick));
         gwy_data_line_set_si_unit_y(dline, gwy_brick_get_si_unit_w(controls->brick));
-    } 
+    }
 
 
     gwy_graph_model_remove_all_curves(controls->gmodel);
 
     cmodel = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_data_from_dataline(cmodel, dline, 0, 0);
+
+    if (calibration) {
+        xdata = gwy_data_line_get_data(calibration);
+        ydata = gwy_data_line_get_data(dline);
+        n = MIN(gwy_data_line_get_res(calibration),
+                gwy_data_line_get_res(dline));
+        gwy_graph_curve_model_set_data(cmodel, xdata, ydata, n);
+    }
+    else {
+        gwy_graph_curve_model_set_data_from_dataline(cmodel, dline, 0, 0);
+    }
 
     g_object_set(cmodel,
                  "mode", GWY_GRAPH_CURVE_LINE,
                  "description", "Brick graph",
                  NULL);
     g_object_set(controls->gmodel,
-                 /*"si-unit-x", gwy_data_line_get_si_unit_x(dline),
-                 "si-unit-x", gwy_data_line_get_si_unit_x(dline),*/
+                 "si-unit-x", gwy_data_line_get_si_unit_x(dline),
+                 "si-unit-y", gwy_data_line_get_si_unit_y(dline),
                  "axis-label-bottom", "x",
                  "axis-label-left", "y",
                  NULL);
@@ -897,7 +910,7 @@ graph_selection_finished_cb(GwySelection *selection,
 
     gwy_graph_model_add_curve(controls->gmodel, cmodel);
     gwy_container_set_object_by_name(controls->mydata, "/1/graph", dline);
-   
+
     controls->gcomputed = TRUE;
 
 }
@@ -1098,7 +1111,7 @@ extract_load_data(ExtractControls *controls,
             controls->rm[1][0] = controls->rm[2][0] = controls->rm[0][1] = controls->rm[0][2] = 0;
             controls->rm[1][2] = controls->rm[2][1] = 0;
             controls->xangle = controls->yangle = controls->zangle = 0;
-   
+
             p3d_build(controls, args);
             p3d_prepare_wdata(controls, args);
 
@@ -1109,7 +1122,7 @@ extract_load_data(ExtractControls *controls,
 
     }
 
-    
+
 }
 
 
@@ -1130,91 +1143,91 @@ preview(ExtractControls *controls,
 
         if (args->type == CUT_DIRX) {
             gwy_brick_extract_plane(controls->brick, dfield,
-                                    (gint)(args->xpos/100.0*(gwy_brick_get_xres(controls->brick)-1)), 
-                                    0, 
+                                    (gint)(args->xpos/100.0*(gwy_brick_get_xres(controls->brick)-1)),
+                                    0,
                                     0,
                                     -1,
-                                    gwy_brick_get_yres(controls->brick), 
-                                    gwy_brick_get_zres(controls->brick), 
+                                    gwy_brick_get_yres(controls->brick),
+                                    gwy_brick_get_zres(controls->brick),
                                     0);
             gwy_data_field_set_si_unit_xy(dfield, gwy_brick_get_si_unit_z(controls->brick));
             gwy_data_field_set_si_unit_z(dfield, gwy_brick_get_si_unit_w(controls->brick));
 
         } else if (args->type == CUT_DIRY) {
             gwy_brick_extract_plane(controls->brick, dfield,
-                                    0, 
-                                    (gint)(args->ypos/100.0*(gwy_brick_get_yres(controls->brick)-1)), 
+                                    0,
+                                    (gint)(args->ypos/100.0*(gwy_brick_get_yres(controls->brick)-1)),
                                     0,
                                     gwy_brick_get_xres(controls->brick),
-                                    -1, 
-                                    gwy_brick_get_zres(controls->brick), 
+                                    -1,
+                                    gwy_brick_get_zres(controls->brick),
                                     0);
             gwy_data_field_set_si_unit_xy(dfield, gwy_brick_get_si_unit_x(controls->brick));
             gwy_data_field_set_si_unit_z(dfield, gwy_brick_get_si_unit_w(controls->brick));
 
         } else if (args->type == CUT_DIRZ) {
             gwy_brick_extract_plane(controls->brick, dfield,
-                                    0, 
-                                    0, 
-                                    (gint)(args->zpos/100.0*(gwy_brick_get_zres(controls->brick)-1)), 
-                                    gwy_brick_get_xres(controls->brick), 
-                                    gwy_brick_get_yres(controls->brick), 
-                                    -1, 
+                                    0,
+                                    0,
+                                    (gint)(args->zpos/100.0*(gwy_brick_get_zres(controls->brick)-1)),
+                                    gwy_brick_get_xres(controls->brick),
+                                    gwy_brick_get_yres(controls->brick),
+                                    -1,
                                     0);
             gwy_data_field_set_si_unit_xy(dfield, gwy_brick_get_si_unit_x(controls->brick));
             gwy_data_field_set_si_unit_z(dfield, gwy_brick_get_si_unit_w(controls->brick));
 
         } else if (args->type == PROJ_DIRX) {
             gwy_brick_sum_plane(controls->brick, dfield,
-                                0, 
-                                0, 
+                                0,
+                                0,
                                 0,
                                 -1,
-                                gwy_brick_get_yres(controls->brick), 
-                                gwy_brick_get_zres(controls->brick), 
+                                gwy_brick_get_yres(controls->brick),
+                                gwy_brick_get_zres(controls->brick),
                                 0);
             gwy_data_field_set_si_unit_xy(dfield, gwy_brick_get_si_unit_z(controls->brick));
             gwy_data_field_set_si_unit_z(dfield, gwy_brick_get_si_unit_w(controls->brick));
 
         } else if (args->type == PROJ_DIRY) {
             gwy_brick_sum_plane(controls->brick, dfield,
-                                0, 
-                                0, 
+                                0,
+                                0,
                                 0,
                                 gwy_brick_get_xres(controls->brick),
-                                -1, 
-                                gwy_brick_get_zres(controls->brick), 
+                                -1,
+                                gwy_brick_get_zres(controls->brick),
                                 0);
             gwy_data_field_set_si_unit_xy(dfield, gwy_brick_get_si_unit_x(controls->brick));
             gwy_data_field_set_si_unit_z(dfield, gwy_brick_get_si_unit_w(controls->brick));
 
         } else if (args->type == PROJ_DIRZ) {
             gwy_brick_sum_plane(controls->brick, dfield,
-                                0, 
-                                0, 
-                                0, 
-                                gwy_brick_get_xres(controls->brick), 
-                                gwy_brick_get_yres(controls->brick), 
-                                -1, 
+                                0,
+                                0,
+                                0,
+                                gwy_brick_get_xres(controls->brick),
+                                gwy_brick_get_yres(controls->brick),
+                                -1,
                                 0);
             gwy_data_field_set_si_unit_xy(dfield, gwy_brick_get_si_unit_x(controls->brick));
             gwy_data_field_set_si_unit_z(dfield, gwy_brick_get_si_unit_w(controls->brick));
 
         }
 
-        g_snprintf(message, sizeof(message), "Shown range %g to %g", 
-                   gwy_data_field_get_min(dfield), 
+        g_snprintf(message, sizeof(message), "Shown range %g to %g",
+                   gwy_data_field_get_min(dfield),
                    gwy_data_field_get_max(dfield));
         gtk_label_set_text(GTK_LABEL(controls->info), message);
 
         gwy_data_field_data_changed(dfield);
-        
+
         zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
                                             gwy_data_field_get_yres(dfield));
         gwy_data_view_set_zoom(GWY_DATA_VIEW(controls->view), zoomval);
 
         controls->computed = TRUE;
-    } 
+    }
     else if (args->active_page == 1)
     {
        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
@@ -1222,35 +1235,35 @@ preview(ExtractControls *controls,
 
        if (args->gtype == GRAPH_DIRX) {
            gwy_brick_sum_plane(controls->brick, dfield,
-                               0, 
-                               0, 
+                               0,
+                               0,
                                0,
                                -1,
-                               gwy_brick_get_yres(controls->brick), 
-                               gwy_brick_get_zres(controls->brick), 
+                               gwy_brick_get_yres(controls->brick),
+                               gwy_brick_get_zres(controls->brick),
                                0);
        } else if (args->gtype == GRAPH_DIRY) {
            gwy_brick_sum_plane(controls->brick, dfield,
-                               0, 
-                               0, 
+                               0,
+                               0,
                                0,
                                gwy_brick_get_xres(controls->brick),
-                               -1, 
-                               gwy_brick_get_zres(controls->brick), 
+                               -1,
+                               gwy_brick_get_zres(controls->brick),
                                0);
        } else if (args->gtype == GRAPH_DIRZ) {
            gwy_brick_sum_plane(controls->brick, dfield,
-                               0, 
-                               0, 
-                               0, 
-                               gwy_brick_get_xres(controls->brick), 
-                               gwy_brick_get_yres(controls->brick), 
-                               -1, 
+                               0,
+                               0,
+                               0,
+                               gwy_brick_get_xres(controls->brick),
+                               gwy_brick_get_yres(controls->brick),
+                               -1,
                                0);
        }
 
        gwy_data_field_data_changed(dfield);
-       
+
        zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
                                            gwy_data_field_get_yres(dfield));
        gwy_data_view_set_zoom(GWY_DATA_VIEW(controls->gview), zoomval);
@@ -1413,7 +1426,7 @@ minv(gdouble m[3][3], gdouble ret[3][3])
 
 
 
-static gdouble 
+static gdouble
 raysum(ExtractControls *controls, gdouble pos[3], gdouble dir[3], gdouble min, gdouble max)
 {
     gint xres, yres, zres;
@@ -1426,7 +1439,7 @@ raysum(ExtractControls *controls, gdouble pos[3], gdouble dir[3], gdouble min, g
     xres = gwy_brick_get_xres(brick);
     yres = gwy_brick_get_yres(brick);
     zres = gwy_brick_get_zres(brick);
-  
+
     brick_xoffset = xres/2;
     brick_yoffset = yres/2;
     brick_zoffset = zres/2;
@@ -1451,7 +1464,7 @@ raysum(ExtractControls *controls, gdouble pos[3], gdouble dir[3], gdouble min, g
 }
 
 static gboolean
-//p3d_on_draw_event(GtkWidget *widget, cairo_t *cr, 
+//p3d_on_draw_event(GtkWidget *widget, cairo_t *cr,
 //              ExtractControls *controls)
 p3d_on_draw_event(GtkWidget *widget, G_GNUC_UNUSED GdkEventExpose *event, ExtractControls *controls)
 {
@@ -1559,9 +1572,9 @@ p3d_on_draw_event(GtkWidget *widget, G_GNUC_UNUSED GdkEventExpose *event, Extrac
                 //mmultv(controls->rm, pos[0], pos[1], pos[2], &px, &py, &pz);
                 mmultv(inv, pos[0], pos[1], pos[2], &px, &py, &pz);
 
-        //        if (i==(PREVIEW_SIZE/2) && j==(PREVIEW_SIZE/2)) 
+        //        if (i==(PREVIEW_SIZE/2) && j==(PREVIEW_SIZE/2))
         //            printf("orig pos: %g %g %g    dir %g %g %g\n", px, py, pz, dx, dy, dz);
-                
+
                     pos[0] = px; pos[1] = py; pos[2] = pz;
                     dir[0] = dx; dir[1] = dy; dir[2] = dz;
                     val = raysum(controls, pos, dir, min, max);
@@ -1575,7 +1588,7 @@ p3d_on_draw_event(GtkWidget *widget, G_GNUC_UNUSED GdkEventExpose *event, Extrac
 
 
         cairo_set_source_surface(cr, controls->image, 0, 0);
-        cairo_paint(cr);    
+        cairo_paint(cr);
         cairo_destroy(ci);
 
 
@@ -1587,19 +1600,19 @@ p3d_on_draw_event(GtkWidget *widget, G_GNUC_UNUSED GdkEventExpose *event, Extrac
     return FALSE;
 }
 
-static gboolean 
+static gboolean
 p3d_clicked(G_GNUC_UNUSED GtkWidget *widget, GdkEventButton *event,
                  ExtractControls *controls)
 {
     controls->rpx = event->x;
-    controls->rpy = event->y;    
+    controls->rpy = event->y;
     controls->in_move = TRUE;
     gtk_widget_queue_draw(controls->drawarea);
 
     return TRUE;
 }
 
-static gboolean 
+static gboolean
 p3d_released(G_GNUC_UNUSED GtkWidget *widget, G_GNUC_UNUSED GdkEventButton *event,
                  ExtractControls *controls)
 {
@@ -1644,7 +1657,7 @@ static void rotate(ExtractControls *controls, gdouble x, gdouble y, gdouble z)
 
     mmultm(rotx, roty, rotbuf);
     mmultm(rotbuf, rotz, controls->rm);
-    
+
     for (i=0; i<controls->nps; i++)
     {
         mmultv(controls->rm, controls->wpx[i], controls->wpy[i], controls->wpz[i], &px, &py, &pz);
@@ -1654,7 +1667,7 @@ static void rotate(ExtractControls *controls, gdouble x, gdouble y, gdouble z)
     }
 
 
-    
+
     controls->rm[0][0] = controls->wpx[0];
     controls->rm[0][1] = controls->wpy[0];
     controls->rm[0][2] = controls->wpz[0];
@@ -1668,8 +1681,8 @@ static void rotate(ExtractControls *controls, gdouble x, gdouble y, gdouble z)
     controls->rm[2][2] = controls->wpz[2];
 
 
-//    printf("total rotation by angle %g %g %g (%g %g %g), rotating by %g %g %g\n", controls->xangle, 
-//           controls->yangle, 
+//    printf("total rotation by angle %g %g %g (%g %g %g), rotating by %g %g %g\n", controls->xangle,
+//           controls->yangle,
 //           controls->zangle,
 //           controls->wpx[0], controls->wpy[1], controls->wpz[2], x, y, z);
 
@@ -1709,7 +1722,7 @@ extract_threshold_cb(ExtractControls *controls)
 
 
 
-static gboolean 
+static gboolean
 p3d_moved(GtkWidget *widget, GdkEventMotion *event,
                  ExtractControls *controls)
 {
@@ -1762,7 +1775,7 @@ render_change_cb(ExtractControls *controls)
     gtk_widget_queue_draw(controls->drawarea);
 }
 
-static void 
+static void
 p3d_xview_cb(ExtractControls *controls)
 {
 
@@ -1772,7 +1785,7 @@ p3d_xview_cb(ExtractControls *controls)
 
 }
 
-static void 
+static void
 p3d_yview_cb(ExtractControls *controls)
 {
     p3d_prepare_wdata(controls, controls->args);
@@ -1781,7 +1794,7 @@ p3d_yview_cb(ExtractControls *controls)
 
 }
 
-static void 
+static void
 p3d_zview_cb(ExtractControls *controls)
 {
     p3d_prepare_wdata(controls, controls->args);
@@ -1790,19 +1803,19 @@ p3d_zview_cb(ExtractControls *controls)
 
 }
 
-static void 
+static void
 p3d_set_axes(ExtractControls *controls)
 {
     gint i = 0;
     gint max;
 
-    if (controls->px==NULL || controls->nps<21) 
+    if (controls->px==NULL || controls->nps<21)
        controls->px = (gdouble *)g_malloc(21*sizeof(gdouble));
-    if (controls->py==NULL || controls->nps<21) 
+    if (controls->py==NULL || controls->nps<21)
        controls->py = (gdouble *)g_malloc(21*sizeof(gdouble));
-    if (controls->pz==NULL || controls->nps<21) 
+    if (controls->pz==NULL || controls->nps<21)
        controls->pz = (gdouble *)g_malloc(21*sizeof(gdouble));
-    if (controls->ps==NULL || controls->nps<21) 
+    if (controls->ps==NULL || controls->nps<21)
        controls->ps = (gdouble *)g_malloc(21*sizeof(gdouble));
 
     controls->bwidth = controls->bheight = controls->bdepth = 1;
@@ -1835,7 +1848,7 @@ p3d_set_axes(ExtractControls *controls)
     controls->px[i] = -1; controls->py[i] = 1; controls->pz[i] = -1; controls->ps[i] = 0; i++;
     controls->px[i] = 1; controls->py[i] = 1; controls->pz[i] = -1; controls->ps[i] = 1; i++;
     controls->px[i] = 1; controls->py[i] = 1; controls->pz[i] = 1; controls->ps[i] = 0; i++;
-    controls->px[i] = 1; controls->py[i] = -1; controls->pz[i] = 1; controls->ps[i] = 1; 
+    controls->px[i] = 1; controls->py[i] = -1; controls->pz[i] = 1; controls->ps[i] = 1;
 
     for (i=3; i<20; i++) {
         controls->px[i] *= controls->bwidth;
@@ -1853,14 +1866,14 @@ gint simplify(gdouble *px, gdouble *py, gdouble *pz, gdouble *ps, gint nps)
     gint i;
     gdouble *nx, *ny, *nz, *ns;
     gint newn;
-   
+
 
     nx = g_malloc(nps*sizeof(gdouble));
     ny = g_malloc(nps*sizeof(gdouble));
     nz = g_malloc(nps*sizeof(gdouble));
     ns = g_malloc(nps*sizeof(gdouble));
-     
-   
+
+
     for (i=0; i<6; i++) {
         nx[i] = px[i]; ny[i] = py[i]; nz[i] = pz[i]; ns[i] = ps[i];
     }
@@ -1868,16 +1881,16 @@ gint simplify(gdouble *px, gdouble *py, gdouble *pz, gdouble *ps, gint nps)
 
     for (i=6; i<nps; i++)
     {
-        if (ps[i] == 0 || !((px[i]-px[i-1]) == (px[i-1]-px[i-2]) 
-                             && (py[i]-py[i-1]) == (py[i-1]-py[i-2]) 
-                             && (pz[i]-pz[i-1]) == (pz[i-1]-pz[i-2]))) 
+        if (ps[i] == 0 || !((px[i]-px[i-1]) == (px[i-1]-px[i-2])
+                             && (py[i]-py[i-1]) == (py[i-1]-py[i-2])
+                             && (pz[i]-pz[i-1]) == (pz[i-1]-pz[i-2])))
         {
             nx[newn] = px[i];
             ny[newn] = py[i];
             nz[newn] = pz[i];
             ns[newn] = ps[i];
             newn++;
-        } 
+        }
     }
 
     for (i=0; i<newn; i++) {
@@ -1890,7 +1903,7 @@ gint simplify(gdouble *px, gdouble *py, gdouble *pz, gdouble *ps, gint nps)
     return newn;
 }
 
-static void     
+static void
 p3d_build(ExtractControls *controls, G_GNUC_UNUSED ExtractArgs *args)
 {
     if (controls->brick == NULL) {
@@ -1907,7 +1920,7 @@ p3d_build(ExtractControls *controls, G_GNUC_UNUSED ExtractArgs *args)
 }
 
 
-static void     
+static void
 p3d_prepare_wdata(ExtractControls *controls, ExtractArgs *args)
 {
     gint i;
@@ -1924,7 +1937,7 @@ p3d_prepare_wdata(ExtractControls *controls, ExtractArgs *args)
         controls->wpz[i] = controls->pz[i];
     }
 
-    for (i=3; i<controls->nps; i++) 
+    for (i=3; i<controls->nps; i++)
     {
         controls->wpx[i] = controls->px[i];
         controls->wpy[i] = controls->py[i];
@@ -1944,28 +1957,28 @@ gothere(gdouble *data, gdouble *vdata, gint xres, gint yres, gint col, gint row,
 
     if (dir == 0) /*y const*/ {
         if (data[col + yres*row]>threshold &&
-                                     (data[col-1 + yres*row]<threshold || data[col + yres*(row-1)]<threshold 
+                                     (data[col-1 + yres*row]<threshold || data[col + yres*(row-1)]<threshold
                                       || data[col+1 + yres*row]<threshold || data[col + yres*(row+1)]<threshold
                                       || data[col+1 + yres*(row+1)]<threshold || data[col-1 + yres*(row-1)]<threshold
-                                      || data[col+1 + yres*(row-1)]<threshold || data[col-1 + yres*(row+1)]<threshold)) return TRUE; 
+                                      || data[col+1 + yres*(row-1)]<threshold || data[col-1 + yres*(row+1)]<threshold)) return TRUE;
 
     } else if (dir == 1) /*y const*/ {
         if (data[col + xres*row]>threshold &&
-                                     (data[col-1 + xres*row]<threshold || data[col + xres*(row-1)]<threshold 
+                                     (data[col-1 + xres*row]<threshold || data[col + xres*(row-1)]<threshold
                                       || data[col+1 + xres*row]<threshold || data[col + xres*(row+1)]<threshold
                                       || data[col+1 + xres*(row+1)]<threshold || data[col-1 + xres*(row-1)]<threshold
-                                      || data[col+1 + xres*(row-1)]<threshold || data[col-1 + xres*(row+1)]<threshold)) return TRUE; 
+                                      || data[col+1 + xres*(row-1)]<threshold || data[col-1 + xres*(row+1)]<threshold)) return TRUE;
     } else {
         if (data[col + xres*row]>threshold &&
-                                     (data[col-1 + xres*row]<threshold || data[col + xres*(row-1)]<threshold 
+                                     (data[col-1 + xres*row]<threshold || data[col + xres*(row-1)]<threshold
                                       || data[col+1 + xres*row]<threshold || data[col + xres*(row+1)]<threshold
                                       || data[col+1 + xres*(row+1)]<threshold || data[col-1 + xres*(row-1)]<threshold
-                                      || data[col+1 + xres*(row-1)]<threshold || data[col-1 + xres*(row+1)]<threshold)) return TRUE; 
+                                      || data[col+1 + xres*(row-1)]<threshold || data[col-1 + xres*(row+1)]<threshold)) return TRUE;
      }
 
     vdata[col+xres*row] = 1;
     return FALSE;
- 
+
 }
 
 static void
@@ -1997,7 +2010,7 @@ visitme(ExtractControls *controls, gint *actual_nps, gdouble *data, gdouble *vda
         controls->pz[controls->nps] = 2*controls->bdepth*(gdouble)tval/(gdouble)zres - controls->bdepth;
     }
     if (*move) {
-        controls->ps[controls->nps] = 0; 
+        controls->ps[controls->nps] = 0;
         *move = 0;
     }
     else controls->ps[controls->nps] = 1;
@@ -2006,7 +2019,7 @@ visitme(ExtractControls *controls, gint *actual_nps, gdouble *data, gdouble *vda
     vdata[col+xres*row] = 1;
 
     /*go to neighbor positions*/
-    if (gothere(data, vdata, xres, yres, col+1, row, dir, threshold))  
+    if (gothere(data, vdata, xres, yres, col+1, row, dir, threshold))
         visitme(controls, actual_nps,data, vdata, xres, yres, zres, col+1, row, dir, tval, move, threshold);
     else if (gothere(data, vdata, xres, yres, col-1, row, dir, threshold))
              visitme(controls, actual_nps, data, vdata, xres, yres, zres, col-1, row, dir, tval, move, threshold);
@@ -2025,7 +2038,7 @@ visitme(ExtractControls *controls, gint *actual_nps, gdouble *data, gdouble *vda
 
 }
 
-static void 
+static void
 p3d_add_wireframe(ExtractControls *controls)
 {
     gint actual_nps = controls->nps;
@@ -2034,13 +2047,13 @@ p3d_add_wireframe(ExtractControls *controls)
     gint col, row, i, spacing = 40;
     gint xres, yres, zres;
     gboolean move;
-   
-  
+
+
     if (controls->brick == NULL) {
         //printf("No brick\n");
         return;
-    } 
-  
+    }
+
     xres = gwy_brick_get_xres(controls->brick);
     yres = gwy_brick_get_yres(controls->brick);
     zres = gwy_brick_get_zres(controls->brick);
@@ -2049,7 +2062,7 @@ p3d_add_wireframe(ExtractControls *controls)
     visited = gwy_data_field_new(yres, zres, yres, zres, FALSE);
 
     //printf("brick min %g, max %g\n", gwy_brick_get_min(controls->brick), gwy_brick_get_max(controls->brick));
-    threshold = gwy_brick_get_min(controls->brick) 
+    threshold = gwy_brick_get_min(controls->brick)
         + (gwy_brick_get_max(controls->brick) - gwy_brick_get_min(controls->brick))/100.0*controls->args->threshold;
 
     for (i=0; i<xres; i+=spacing)
@@ -2097,7 +2110,7 @@ p3d_add_wireframe(ExtractControls *controls)
             {
                     move = 1;
                     if (gothere(data, vdata, xres, yres, col, row, 1, threshold))
-                        visitme(controls, &actual_nps, data, vdata, xres, yres, zres, col, row, 1, i, &move, threshold);                
+                        visitme(controls, &actual_nps, data, vdata, xres, yres, zres, col, row, 1, i, &move, threshold);
             }
         }
     }
@@ -2123,14 +2136,14 @@ p3d_add_wireframe(ExtractControls *controls)
             {
                     move = 1;
                     if (gothere(data, vdata, xres, yres, col, row, 2, threshold))
-                        visitme(controls, &actual_nps, data, vdata, xres, yres, zres, col, row, 2, i, &move, threshold);                
+                        visitme(controls, &actual_nps, data, vdata, xres, yres, zres, col, row, 2, i, &move, threshold);
             }
         }
     }
 //    printf("we have %d segments at the end\nRunning simplification:\n", controls->nps);
 
     controls->nps = simplify(controls->px, controls->py, controls->pz, controls->ps, controls->nps);
-   
+
 
     if (controls->wpx) g_free(controls->wpx);
     if (controls->wpy) g_free(controls->wpy);
