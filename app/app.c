@@ -45,6 +45,8 @@ typedef enum {
     BRICK_PREVIEW_MEAN,
     BRICK_PREVIEW_MINIMUM,
     BRICK_PREVIEW_MAXIMUM,
+    BRICK_PREVIEW_MINPOS,
+    BRICK_PREVIEW_MAXPOS,
     BRICK_PREVIEW_RMS,
     BRICK_PREVIEW_CHANNEL,
     BRICK_PREVIEW_SECTION,
@@ -1340,6 +1342,8 @@ change_brick_preview(GwyDataWindow *data_window)
                                       _("Mean"), BRICK_PREVIEW_MEAN,
                                       _("Minimum"), BRICK_PREVIEW_MINIMUM,
                                       _("Maximum"), BRICK_PREVIEW_MAXIMUM,
+                                      _("Minimum pos."), BRICK_PREVIEW_MINPOS,
+                                      _("Maximum pos."), BRICK_PREVIEW_MAXPOS,
                                       _("RMS"), BRICK_PREVIEW_RMS,
                                       _("Channel:"), BRICK_PREVIEW_CHANNEL,
                                       _("Section:"), BRICK_PREVIEW_SECTION,
@@ -1356,7 +1360,7 @@ change_brick_preview(GwyDataWindow *data_window)
     gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(chooser),
                                 &brick_preview_filter, brick, NULL);
     gtk_table_attach(GTK_TABLE(table), chooser,
-                     1, 4, 5, 6, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+                     1, 4, 7, 8, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_object_set_data(G_OBJECT(dialog), "channel-chooser", chooser);
 
     leveladj = (GtkAdjustment*)gtk_adjustment_new(level, 0, brick->zres-1,
@@ -1365,14 +1369,14 @@ change_brick_preview(GwyDataWindow *data_window)
     gtk_scale_set_draw_value(GTK_SCALE(scale), FALSE);
     gtk_widget_set_size_request(scale, 120, -1);
     gtk_table_attach(GTK_TABLE(table), scale,
-                     1, 2, 6, 7, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+                     1, 2, 8, 9, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_object_set_data(G_OBJECT(dialog), "section-scale", scale);
     spin = gtk_spin_button_new(leveladj, 0.0, 0);
-    gtk_table_attach(GTK_TABLE(table), spin, 2, 3, 6, 7, GTK_FILL, 0, 0, 0);
+    gtk_table_attach(GTK_TABLE(table), spin, 2, 3, 8, 9, GTK_FILL, 0, 0, 0);
     g_object_set_data(G_OBJECT(dialog), "section-spin", spin);
     label = gtk_label_new("px");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 3, 4, 6, 7, GTK_FILL, 0, 0, 0);
+    gtk_table_attach(GTK_TABLE(table), label, 3, 4, 8, 9, GTK_FILL, 0, 0, 0);
     g_object_set_data(G_OBJECT(dialog), "section-units", label);
 
     update_brick_preview_sens(gwy_radio_buttons_get_current(group),
@@ -1406,6 +1410,16 @@ change_brick_preview(GwyDataWindow *data_window)
                             TRUE);
     else if (type == BRICK_PREVIEW_MAXIMUM)
         gwy_brick_max_plane(brick, preview,
+                            0, 0, 0,
+                            brick->xres, brick->yres, -1,
+                            TRUE);
+    else if (type == BRICK_PREVIEW_MINPOS)
+        gwy_brick_minpos_plane(brick, preview,
+                            0, 0, 0,
+                            brick->xres, brick->yres, -1,
+                            TRUE);
+    else if (type == BRICK_PREVIEW_MAXPOS)
+        gwy_brick_maxpos_plane(brick, preview,
                             0, 0, 0,
                             brick->xres, brick->yres, -1,
                             TRUE);

@@ -1698,8 +1698,6 @@ gwy_brick_set_val_real(GwyBrick *brick,
     brick->data[col + brick->xres*row + brick->xres*brick->yres*lev] = value;
 }
 
-
-
 /**
  * gwy_brick_fill:
  * @brick: A data brick.
@@ -2264,6 +2262,292 @@ gwy_brick_max_plane(const GwyBrick *brick,
 
     si_unit = gwy_brick_get_si_unit_w((GwyBrick *)brick);
     gwy_data_field_set_si_unit_z(target, si_unit);
+}
+
+/**
+ * gwy_brick_minpos_plane:
+ * @brick: A data brick.
+ * @target: Datafield to be filled by the minima positions plane.
+ *          It will be resampled if necessary.
+ * @istart: column where to start (pixel coordinates).
+ * @jstart: row where to start (pixel coordinates).
+ * @kstart: level where to start (pixel coordinates).
+ * @width: pixel width of summed plane. If @width is -1, the yz planes will be
+ *         summed.
+ * @height: pixel height of summed plane.  If @height is -1, the xz planes will
+ *          be summed
+ * @depth: pixel depth of extacted plane. If @depth is -1, the xy planes will
+ *         be summed
+ * @keep_offsets: keep the physical offsets in extracted field.  Not
+ *                implemented.
+ *
+ * Finds minima positions of planes in certain direction and extract the result
+ * (GwyDataField). One value of set (@width, @height, @depth) needs to be -1,
+ * determining the plane orientation. In contrast to gwy_brick_extract_plane,
+ * the appropriate start coordinate (e.g. @istart if @width = -1) is not used
+ * for single plane extraction, but the planes are accumulated in whole range
+ * (0..xres for given example)
+ *
+ * Since: 2.32
+ **/
+void
+gwy_brick_minpos_plane(const GwyBrick *brick,
+                       GwyDataField *target,
+                       gint istart,
+                       gint jstart,
+                       gint kstart,
+                       gint width,
+                       gint height,
+                       gint depth,
+                       G_GNUC_UNUSED gboolean keep_offsets)
+{
+    gint col, row, lev;
+    gdouble *bdata, *ddata;
+    gdouble minpos;
+    GwySIUnit *si_unit;
+
+    g_return_if_fail(GWY_IS_BRICK(brick));
+
+    g_return_if_fail((width == -1 && height > 0 && depth > 0)
+                     || (width > 0 && height == -1 && depth > 0)
+                     || (width > 0 && height > 0 && depth == -1));
+
+    g_return_if_fail(istart >=0 && istart < brick->xres
+                     && jstart >=0 && jstart < brick->yres
+                     && kstart >=0 && kstart < brick->zres);
+
+    bdata = brick->data;
+    gwy_data_field_clear(target);
+
+    if (width == -1 && height > 0 && depth > 0) {
+        g_return_if_fail((jstart+height) <= brick->yres);
+        g_return_if_fail((kstart+depth) <= brick->zres);
+
+        gwy_data_field_resample(target, height, depth, GWY_INTERPOLATION_NONE);
+        gwy_data_field_fill(target, G_MAXDOUBLE);
+        ddata = gwy_data_field_get_data(target);
+
+        gwy_data_field_set_xreal(target, brick->yreal);
+        gwy_data_field_set_yreal(target, brick->zreal);
+
+        for (row = 0; row < height; row++) {
+            for (lev = 0; lev < depth; lev++) {
+                minpos = 0;
+                for (col = 0; col < brick->xres; col++) {
+                    gdouble bv = bdata[col + brick->xres*(row + jstart) + brick->xres*brick->yres*(lev + kstart)];
+                    gdouble fv = ddata[row + lev*height];
+                    if (bv < fv)
+                        minpos = col;
+                    ddata[row + lev*height] = MIN(bv, fv);
+                }
+                ddata[row + lev*height] = minpos;
+            }
+        }
+        si_unit = gwy_brick_get_si_unit_x((GwyBrick *)brick);
+        gwy_data_field_set_si_unit_z(target, si_unit);
+    }
+
+    if (width > 0 && height == -1 && depth > 0) {
+        g_return_if_fail((istart+width) <= brick->xres);
+        g_return_if_fail((kstart+depth) <= brick->zres);
+
+        gwy_data_field_resample(target, width, depth, GWY_INTERPOLATION_NONE);
+        gwy_data_field_fill(target, G_MAXDOUBLE);
+        ddata = gwy_data_field_get_data(target);
+
+        gwy_data_field_set_xreal(target, brick->xreal);
+        gwy_data_field_set_yreal(target, brick->zreal);
+
+        for (col = 0; col < width; col++) {
+            for (lev = 0; lev < depth; lev++) {
+                minpos = 0;
+                for (row = 0; row < brick->yres; row++) {
+                    gdouble bv = bdata[col + istart + brick->xres*row + brick->xres*brick->yres*(lev + kstart)];
+                    gdouble fv = ddata[col + lev*width];
+                    if (bv < fv)
+                        minpos = row;
+                    ddata[col + lev*width] = MIN(bv, fv);
+                }
+                ddata[col + lev*width] = minpos;
+            }
+        }
+        si_unit = gwy_brick_get_si_unit_y((GwyBrick *)brick);
+        gwy_data_field_set_si_unit_z(target, si_unit);
+    }
+
+    if (width > 0 && height > 0 && depth == -1) {
+        g_return_if_fail((istart+width) <= brick->xres);
+        g_return_if_fail((jstart+height) <= brick->yres);
+
+        gwy_data_field_resample(target, width, height, GWY_INTERPOLATION_NONE);
+        gwy_data_field_fill(target, G_MAXDOUBLE);
+        ddata = gwy_data_field_get_data(target);
+
+        gwy_data_field_set_xreal(target, brick->xreal);
+        gwy_data_field_set_yreal(target, brick->yreal);
+
+        for (col = 0; col < width; col++) {
+            for (row = 0; row < height; row++) {
+                minpos = 0;
+                for (lev = 0; lev < brick->zres; lev++) {
+                    gdouble bv = bdata[col + istart + brick->xres*(row + jstart) + brick->xres*brick->yres*(lev)];
+                    gdouble fv = ddata[col + row*width];
+                    if (bv < fv)
+                        minpos = lev;
+                    ddata[col + row*width] = MIN(bv, fv);
+                }
+                ddata[col + row*width] = minpos;
+            }
+        }
+        si_unit = gwy_brick_get_si_unit_z((GwyBrick *)brick);
+        gwy_data_field_set_si_unit_z(target, si_unit);
+    }
+
+    si_unit = gwy_brick_get_si_unit_x((GwyBrick *)brick);
+    gwy_data_field_set_si_unit_xy(target, si_unit);
+}
+
+/**
+ * gwy_brick_maxpos_plane:
+ * @brick: A data brick.
+ * @target: Datafield to be filled by the maxima positions plane.
+ *          It will be resampled if necessary.
+ * @istart: column where to start (pixel coordinates).
+ * @jstart: row where to start (pixel coordinates).
+ * @kstart: level where to start (pixel coordinates).
+ * @width: pixel width of summed plane. If @width is -1, the yz planes will be
+ *         summed.
+ * @height: pixel height of summed plane.  If @height is -1, the xz planes will
+ *          be summed
+ * @depth: pixel depth of extacted plane. If @depth is -1, the xy planes will
+ *         be summed
+ * @keep_offsets: keep the physical offsets in extracted field.  Not
+ *                implemented.
+ *
+ * Finds maxima positions of planes in certain direction and extract the result
+ * (GwyDataField). One value of set (@width, @height, @depth) needs to be -1,
+ * determining the plane orientation. In contrast to gwy_brick_extract_plane,
+ * the appropriate start coordinate (e.g. @istart if @width = -1) is not used
+ * for single plane extraction, but the planes are accumulated in whole range
+ * (0..xres for given example)
+ *
+ * Since: 2.32
+ **/
+void
+gwy_brick_maxpos_plane(const GwyBrick *brick,
+                       GwyDataField *target,
+                       gint istart,
+                       gint jstart,
+                       gint kstart,
+                       gint width,
+                       gint height,
+                       gint depth,
+                       G_GNUC_UNUSED gboolean keep_offsets)
+{
+    gint col, row, lev;
+    gdouble *bdata, *ddata;
+    gdouble maxpos;
+    GwySIUnit *si_unit;
+
+    g_return_if_fail(GWY_IS_BRICK(brick));
+
+    g_return_if_fail((width == -1 && height > 0 && depth > 0)
+                     || (width > 0 && height == -1 && depth > 0)
+                     || (width > 0 && height > 0 && depth == -1));
+
+    g_return_if_fail(istart >=0 && istart < brick->xres
+                     && jstart >=0 && jstart < brick->yres
+                     && kstart >=0 && kstart < brick->zres);
+
+    bdata = brick->data;
+    gwy_data_field_clear(target);
+
+    if (width == -1 && height > 0 && depth > 0) {
+        g_return_if_fail((jstart+height) <= brick->yres);
+        g_return_if_fail((kstart+depth) <= brick->zres);
+
+        gwy_data_field_resample(target, height, depth, GWY_INTERPOLATION_NONE);
+        gwy_data_field_fill(target, G_MINDOUBLE);
+        ddata = gwy_data_field_get_data(target);
+
+        gwy_data_field_set_xreal(target, brick->yreal);
+        gwy_data_field_set_yreal(target, brick->zreal);
+
+        for (row = 0; row < height; row++) {
+            for (lev = 0; lev < depth; lev++) {
+                maxpos = 0;
+                for (col = 0; col < brick->xres; col++) {
+                    gdouble bv = bdata[col + brick->xres*(row + jstart) + brick->xres*brick->yres*(lev + kstart)];
+                    gdouble fv = ddata[row + lev*height];
+                    if (bv > fv)
+                        maxpos = col;
+                    ddata[row + lev*height] = MAX(bv, fv);
+                }
+                ddata[row + lev*height] = maxpos;
+            }
+        }
+        si_unit = gwy_brick_get_si_unit_x((GwyBrick *)brick);
+        gwy_data_field_set_si_unit_z(target, si_unit);
+    }
+
+    if (width > 0 && height == -1 && depth > 0) {
+        g_return_if_fail((istart+width) <= brick->xres);
+        g_return_if_fail((kstart+depth) <= brick->zres);
+
+        gwy_data_field_resample(target, width, depth, GWY_INTERPOLATION_NONE);
+        gwy_data_field_fill(target, G_MINDOUBLE);
+        ddata = gwy_data_field_get_data(target);
+
+        gwy_data_field_set_xreal(target, brick->xreal);
+        gwy_data_field_set_yreal(target, brick->zreal);
+
+        for (col = 0; col < width; col++) {
+            for (lev = 0; lev < depth; lev++) {
+                maxpos = 0;
+                for (row = 0; row < brick->yres; row++) {
+                    gdouble bv = bdata[col + istart + brick->xres*row + brick->xres*brick->yres*(lev + kstart)];
+                    gdouble fv = ddata[col + lev*width];
+                    if (bv > fv)
+                        maxpos = row;
+                    ddata[col + lev*width] = MAX(bv, fv);
+                }
+                ddata[col + lev*width] = maxpos;
+            }
+        }
+        si_unit = gwy_brick_get_si_unit_y((GwyBrick *)brick);
+        gwy_data_field_set_si_unit_z(target, si_unit);
+    }
+
+    if (width > 0 && height > 0 && depth == -1) {
+        g_return_if_fail((istart+width) <= brick->xres);
+        g_return_if_fail((jstart+height) <= brick->yres);
+
+        gwy_data_field_resample(target, width, height, GWY_INTERPOLATION_NONE);
+        gwy_data_field_fill(target, G_MINDOUBLE);
+        ddata = gwy_data_field_get_data(target);
+
+        gwy_data_field_set_xreal(target, brick->xreal);
+        gwy_data_field_set_yreal(target, brick->yreal);
+
+        for (col = 0; col < width; col++) {
+            for (row = 0; row < height; row++) {
+                maxpos = 0;
+                for (lev = 0; lev < brick->zres; lev++) {
+                    gdouble bv = bdata[col + istart + brick->xres*(row + jstart) + brick->xres*brick->yres*(lev)];
+                    gdouble fv = ddata[col + row*width];
+                    if (bv > fv)
+                        maxpos = lev;
+                    ddata[col + row*width] = MAX(bv, fv);
+                }
+                ddata[col + row*width] = maxpos;
+            }
+        }
+        si_unit = gwy_brick_get_si_unit_z((GwyBrick *)brick);
+        gwy_data_field_set_si_unit_z(target, si_unit);
+    }
+
+    si_unit = gwy_brick_get_si_unit_x((GwyBrick *)brick);
+    gwy_data_field_set_si_unit_xy(target, si_unit);
 }
 
 /**

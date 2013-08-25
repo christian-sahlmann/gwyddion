@@ -277,6 +277,26 @@ void           gwy_brick_max_plane(const GwyBrick *brick,
                                    gint depth,
                                    gboolean keep_offsets);
 
+void           gwy_brick_minpos_plane(const GwyBrick *brick,
+                                      GwyDataField *target,
+                                      gint istart,
+                                      gint jstart,
+                                      gint kstart,
+                                      gint width,
+                                      gint height,
+                                      gint depth,
+                                      gboolean keep_offsets);
+
+void           gwy_brick_maxpos_plane(const GwyBrick *brick,
+                                      GwyDataField *target,
+                                      gint istart,
+                                      gint jstart,
+                                      gint kstart,
+                                      gint width,
+                                      gint height,
+                                      gint depth,
+                                      gboolean keep_offsets);
+
 void           gwy_brick_mean_plane(const GwyBrick *brick,
                                     GwyDataField *target,
                                     gint istart,

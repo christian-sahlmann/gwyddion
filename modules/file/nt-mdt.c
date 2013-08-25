@@ -834,6 +834,11 @@ mdt_load(const gchar *filename,
                 else
                     gwy_app_channel_title_fall_back(data, n);
 
+                meta = mdt_get_metadata(&mdtfile, i);
+                g_string_printf(key, "/%d/meta", n);
+                gwy_container_set_object_by_name(data, key->str, meta);
+                g_object_unref(meta);
+
                 n++;
             }
             else if ((mdaframe->nDimensions == 0 && mdaframe->nMesurands == 2)
@@ -878,6 +883,12 @@ mdt_load(const gchar *filename,
                                                      dfield);
                     g_object_unref(brick);
                     g_object_unref(dfield);
+
+                    meta = mdt_get_metadata(&mdtfile, i);
+                    g_string_printf(key, "/%d/meta", n);
+                    gwy_container_set_object_by_name(data, key->str, meta);
+                    g_object_unref(meta);
+
                     n++;
                 }
             }
@@ -3010,16 +3021,6 @@ extract_raman_image(MDTMDAFrame *dataframe,
         siunitw = gwy_si_unit_new_parse(cunit, &power10w);
     }
     gwy_debug("w unit power %d", power10w);
-
-    /*
-    if (dataframe->title_len && dataframe->title) {
-        framename = g_strdup_printf("%s (%u)",
-                                    dataframe->title, number);
-    }
-    else
-        framename = g_strdup_printf("Unknown spectral image (%d)",
-                                    number);
-    */
 
     xreal = pow10(power10x) * xAxis->scale;
     yreal = pow10(power10y) * yAxis->scale;
