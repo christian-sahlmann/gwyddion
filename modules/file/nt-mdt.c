@@ -2425,7 +2425,7 @@ extract_raman_image(MDTMDAFrame *dataframe)
     cal = gwy_data_line_new(zres, zres, FALSE);
     data = gwy_data_line_get_data(cal);
     for (k = 0; k < zres; k++) {
-        *(data++) = (gdouble)gwy_get_gfloat_le(&px);
+        *(data++) = zscale * (gdouble)gwy_get_gfloat_le(&px);
     }
     gwy_data_line_set_si_unit_y(cal, siunitz);
     gwy_brick_set_zcalibration(brick, cal);

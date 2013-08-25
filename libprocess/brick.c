@@ -2303,8 +2303,10 @@ gwy_brick_minpos_plane(const GwyBrick *brick,
 {
     gint col, row, lev;
     gdouble *bdata, *ddata;
-    gdouble minpos;
+    gint minpos;
     GwySIUnit *si_unit;
+    GwyDataLine *calibration;
+    gdouble *caldata;
 
     g_return_if_fail(GWY_IS_BRICK(brick));
 
@@ -2385,7 +2387,16 @@ gwy_brick_minpos_plane(const GwyBrick *brick,
 
         gwy_data_field_set_xreal(target, brick->xreal);
         gwy_data_field_set_yreal(target, brick->yreal);
-
+        
+        calibration = gwy_brick_get_zcalibration((GwyBrick *)brick);
+        if (calibration) {
+			si_unit = gwy_data_line_get_si_unit_y(calibration);
+			caldata = gwy_data_line_get_data(calibration);
+		}
+		else {
+			si_unit = gwy_brick_get_si_unit_z((GwyBrick *)brick);
+		}
+		gwy_data_field_set_si_unit_z(target, si_unit);
         for (col = 0; col < width; col++) {
             for (row = 0; row < height; row++) {
                 minpos = 0;
@@ -2396,11 +2407,12 @@ gwy_brick_minpos_plane(const GwyBrick *brick,
                         minpos = lev;
                     ddata[col + row*width] = MIN(bv, fv);
                 }
-                ddata[col + row*width] = minpos;
+                if (!calibration)
+					ddata[col + row*width] = minpos;
+				else
+					ddata[col + row*width] = caldata[minpos];
             }
         }
-        si_unit = gwy_brick_get_si_unit_z((GwyBrick *)brick);
-        gwy_data_field_set_si_unit_z(target, si_unit);
     }
 
     si_unit = gwy_brick_get_si_unit_x((GwyBrick *)brick);
@@ -2446,8 +2458,10 @@ gwy_brick_maxpos_plane(const GwyBrick *brick,
 {
     gint col, row, lev;
     gdouble *bdata, *ddata;
-    gdouble maxpos;
+    gint maxpos;
     GwySIUnit *si_unit;
+    GwyDataLine *calibration;
+    gdouble *caldata;    
 
     g_return_if_fail(GWY_IS_BRICK(brick));
 
@@ -2528,7 +2542,16 @@ gwy_brick_maxpos_plane(const GwyBrick *brick,
 
         gwy_data_field_set_xreal(target, brick->xreal);
         gwy_data_field_set_yreal(target, brick->yreal);
-
+        
+        calibration = gwy_brick_get_zcalibration((GwyBrick *)brick);
+        if (calibration) {
+			si_unit = gwy_data_line_get_si_unit_y(calibration);
+			caldata = gwy_data_line_get_data(calibration);
+		}
+		else {
+			si_unit = gwy_brick_get_si_unit_z((GwyBrick *)brick);
+		}
+		gwy_data_field_set_si_unit_z(target, si_unit);
         for (col = 0; col < width; col++) {
             for (row = 0; row < height; row++) {
                 maxpos = 0;
@@ -2539,11 +2562,12 @@ gwy_brick_maxpos_plane(const GwyBrick *brick,
                         maxpos = lev;
                     ddata[col + row*width] = MAX(bv, fv);
                 }
-                ddata[col + row*width] = maxpos;
+                if (!calibration)
+					ddata[col + row*width] = maxpos;
+				else
+					ddata[col + row*width] = caldata[maxpos];
             }
         }
-        si_unit = gwy_brick_get_si_unit_z((GwyBrick *)brick);
-        gwy_data_field_set_si_unit_z(target, si_unit);
     }
 
     si_unit = gwy_brick_get_si_unit_x((GwyBrick *)brick);
