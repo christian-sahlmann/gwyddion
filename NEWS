@@ -56,6 +56,8 @@ Modules:
 - Arithmetic: It is possible to use ‘x’ and ‘y’ in the expressions for real
   coordinates in the image.
 - Dimensions and Units: Can create a new channel or modify the current one.
+- AIST: Small fix of broken file parser in spectra loading.
+- NTMDT: Reimplemented Raman image loading as volume data.
 
 
 2.31 (2013-02-21)
