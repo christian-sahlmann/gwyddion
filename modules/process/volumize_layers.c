@@ -55,22 +55,20 @@ typedef struct {
     GtkObject *zreal;
 } VolumizeLayersControls;
 
-
-
-static gboolean  module_register            (void);
-static void      volumize_layers                   (GwyContainer *data,
-                                                    GwyRunType run);
-static gboolean    volumize_layers_dialog                 (VolumizeLayersArgs *args,
-                                                           gint xres,
-                                                           gint yres,
-                                                           gint zres,
-                                                           gdouble zreal);
-static void        volumize_layers_load_args              (GwyContainer *container,
-                                                           VolumizeLayersArgs *args);
-static void        volumize_layers_save_args              (GwyContainer *container,
-                                                           VolumizeLayersArgs *args);
-static void        volumize_layers_dialog_update          (VolumizeLayersControls *controls,
-                                                           VolumizeLayersArgs *args);
+static gboolean module_register              (void);
+static void     volumize_layers              (GwyContainer *data,
+                                              GwyRunType run);
+static gboolean volumize_layers_dialog       (VolumizeLayersArgs *args,
+                                              gint xres,
+                                              gint yres,
+                                              gint zres,
+                                              gdouble zreal);
+static void     volumize_layers_load_args    (GwyContainer *container,
+                                              VolumizeLayersArgs *args);
+static void     volumize_layers_save_args    (GwyContainer *container,
+                                              VolumizeLayersArgs *args);
+static void     volumize_layers_dialog_update(VolumizeLayersControls *controls,
+                                              VolumizeLayersArgs *args);
 
 static const VolumizeLayersArgs volumize_layers_defaults = {
     100,
@@ -97,7 +95,7 @@ module_register(void)
 {
     gwy_process_func_register("volumize_layers",
                               (GwyProcessFunc)&volumize_layers,
-                              N_("/_Basic Operations/VolumizeLayers..."),
+                              N_("/_Basic Operations/Volumize Layers..."),
                               NULL,
                               VOLUMIZE_LAYERS_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
@@ -139,7 +137,7 @@ volumize_layers(GwyContainer *data, GwyRunType run)
         dfield = gwy_container_get_object(data, gwy_app_get_data_key_for_id(ids[i]));
         if (xres != gwy_data_field_get_xres(dfield) || yres != gwy_data_field_get_yres(dfield))
         {
-            ok = FALSE; 
+            ok = FALSE;
             break;
         }
 
@@ -155,7 +153,9 @@ volumize_layers(GwyContainer *data, GwyRunType run)
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_MESSAGE_ERROR,
                                          GTK_BUTTONS_CLOSE,
-                                         "All datafields must have same resolution to make a volume from them.");
+                                         _("All datafields must have same "
+                                           "resolution to make a volume from "
+                                           "them."));
         gtk_dialog_run(GTK_DIALOG (dialog));
         gtk_widget_destroy(dialog);
         g_free(ids);
@@ -172,14 +172,14 @@ volumize_layers(GwyContainer *data, GwyRunType run)
 
 
 
-    brick = gwy_brick_new(xres, yres, nids-1, gwy_data_field_get_xreal(dfield), 
+    brick = gwy_brick_new(xres, yres, nids-1, gwy_data_field_get_xreal(dfield),
                           gwy_data_field_get_yreal(dfield), args.zreal, FALSE);
     bdata = gwy_brick_get_data(brick);
     for (i=0; i<(nids-1); i++)
     {
         dfield = gwy_container_get_object(data, gwy_app_get_data_key_for_id(ids[i]));
         ddata = gwy_data_field_get_data(dfield);
-        
+
         for (row = 0; row < yres; row++) {
             for (col = 0; col < xres; col++) {
                  bdata[col + xres*row + xres*yres*i] = (ddata[col + xres*row]);
@@ -246,7 +246,7 @@ volumize_layers_dialog(VolumizeLayersArgs *args, gint xres, gint yres, gint zres
     row++;
 
 
-   
+
     controls.zreal = gtk_adjustment_new(args->zreal/args->valform->magnitude, 0.0, 10000.0, 1, 10, 0);
     gwy_table_attach_hscale(table, row, _("Z _range:"), args->valform->units,
                             controls.zreal, GWY_HSCALE_DEFAULT);

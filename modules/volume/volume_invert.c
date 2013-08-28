@@ -61,7 +61,7 @@ module_register(void)
 {
     gwy_volume_func_register("volume_invert",
                               (GwyVolumeFunc)&volume_invert,
-                              N_("/_Invert value..."),
+                              N_("/_Invert value"),
                               NULL,
                               VOLUME_INVERT_RUN_MODES,
                               GWY_MENU_FLAG_VOLUME,
@@ -83,7 +83,7 @@ volume_invert(GwyContainer *data, GwyRunType run)
 
 
     gwy_app_data_browser_get_current(GWY_APP_BRICK, &brick,
-                                     GWY_APP_BRICK_ID, &id, 
+                                     GWY_APP_BRICK_ID, &id,
                                      0);
 
     g_snprintf(key, sizeof(key), "/brick/%d/preview", id);
@@ -101,7 +101,7 @@ volume_invert(GwyContainer *data, GwyRunType run)
     g_object_unref(dfield);
 
 
-    
+
 
 }
 

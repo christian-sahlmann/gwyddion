@@ -366,7 +366,7 @@ volfit_dialog(VolfitArgs *args)
     row = 0;
 
     /* Curve to volfit selected by xpos, ypos*/
-    label = gtk_label_new_with_mnemonic(_("Curve _xpos:"));
+    label = gtk_label_new_with_mnemonic(_("Curve _X position:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_FILL, 0, 0, 0);
@@ -384,7 +384,7 @@ volfit_dialog(VolfitArgs *args)
 
 
     row++;
-    label = gtk_label_new_with_mnemonic(_("Curve _ypos:"));
+    label = gtk_label_new_with_mnemonic(_("Curve _Y position:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_FILL, 0, 0, 0);
@@ -1072,7 +1072,7 @@ volfit_single(VolfitControls *controls)
                                         GTK_MESSAGE_ERROR,
                                         GTK_BUTTONS_OK,
                                         _("It is necessary to select more "
-                                          "data points than free volfit "
+                                          "data points than free fit "
                                           "parameters"));
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
