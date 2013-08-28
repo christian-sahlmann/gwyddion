@@ -245,8 +245,10 @@ gwy_brick_new_part(const GwyBrick *brick,
                    gboolean keep_offsets)
 {
     GwyBrick *part;
+    GwyBrickPrivate *priv, *new_priv;
     gint col, row, lev;
     gdouble *bdata, *pdata;
+
     g_return_val_if_fail(GWY_IS_BRICK(brick), NULL);
 
     g_return_val_if_fail(xpos >= 0 && ypos >=0 && zpos >=0
@@ -283,6 +285,14 @@ gwy_brick_new_part(const GwyBrick *brick,
         part->si_unit_z = gwy_si_unit_duplicate(brick->si_unit_z);
     if (brick->si_unit_w)
         part->si_unit_w = gwy_si_unit_duplicate(brick->si_unit_w);
+
+    priv = brick->priv;
+    if (priv->ZCalibration) {
+        new_priv = part->priv;
+        new_priv->ZCalibration
+                        = gwy_data_line_part_extract(priv->ZCalibration,
+                                                     zpos, zres);
+    }
 
     if (keep_offsets) {
         gwy_brick_set_xoffset(part, (gdouble)xpos * brick->xreal
