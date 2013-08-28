@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2013-08-15 03:58+0200\n"
-"PO-Revision-Date: 2013-08-25 13:04+0300\n"
+"POT-Creation-Date: 2013-08-28 03:58+0200\n"
+"PO-Revision-Date: 2013-08-28 22:12+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -19,6 +19,8 @@ msgstr ""
 "X-Poedit-Country: RUSSIAN FEDERATION\n"
 "X-Poedit-SourceCharset: utf-8\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-SearchPath-0: /home/dan/.poedit\n"
 
 #: libgwyddion/gwyexpr.c:764
 msgid "Invalid token"
@@ -131,10 +133,10 @@ msgstr "контакт: Герц (параболоид)"
 #: app/data-browser.c:2849
 #: app/data-browser.c:3697
 #: app/data-browser.c:3856
-#: app/data-browser.c:4140
-#: app/data-browser.c:4553
-#: app/data-browser.c:6473
-#: app/data-browser.c:6555
+#: app/data-browser.c:4142
+#: app/data-browser.c:4555
+#: app/data-browser.c:6477
+#: app/data-browser.c:6559
 #: app/resource-editor.c:366
 #: modules/process/convolution_filter.c:699
 msgid "Untitled"
@@ -446,7 +448,7 @@ msgid "Area"
 msgstr "Площадь"
 
 #: libprocess/gwygrainvalue.c:1057
-#: app/data-browser.c:5053
+#: app/data-browser.c:5057
 #: app/toolbox.c:108
 msgid "Volume"
 msgstr "Объём"
@@ -916,7 +918,7 @@ msgstr "точек"
 #: modules/file/rawfile.c:398
 #: modules/process/angle_dist.c:170
 #: modules/process/calcoefs_new.c:347
-#: modules/process/calibrate.c:297
+#: modules/process/calibrate.c:336
 #: modules/process/col_synth.c:300
 #: modules/process/curvature.c:602
 #: modules/process/cwt.c:132
@@ -1228,7 +1230,7 @@ msgstr "Длина"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:399
 #: libgwydgets/gwygraphwindowmeasuredialog.c:592
-#: app/gwyplaintool.c:1021
+#: app/gwyplaintool.c:1024
 #: modules/process/obj_synth.c:566
 #: modules/process/pat_synth.c:882
 #: modules/process/pat_synth.c:1183
@@ -1463,7 +1465,7 @@ msgstr "Удалённое управление"
 msgid "Python Scripting Interface"
 msgstr "Скриптовый интерфейс Python"
 
-#: app/app.c:260
+#: app/app.c:262
 #, c-format
 msgid ""
 "Some data are unsaved:\n"
@@ -1474,77 +1476,77 @@ msgstr ""
 "%s\n"
 "Действительно выйти?"
 
-#: app/app.c:372
+#: app/app.c:374
 msgid "Mask _Color..."
 msgstr "_Цвет маски..."
 
-#: app/app.c:388
-#: app/app.c:1450
+#: app/app.c:390
+#: app/app.c:1464
 msgid "Zoom _1:1"
 msgstr "Масштаб _1:1"
 
-#: app/app.c:392
-#: app/app.c:1454
+#: app/app.c:394
+#: app/app.c:1468
 msgid "Metadata _Browser..."
 msgstr "Просмотр _метаданных"
 
-#: app/app.c:590
+#: app/app.c:592
 msgid "Pi_xelwise Square"
 msgstr "Квадратные _пиксели"
 
-#: app/app.c:600
+#: app/app.c:602
 msgid "_Physically Square"
 msgstr "Равные _масштабы осей"
 
-#: app/app.c:746
+#: app/app.c:748
 msgid "verb|Save"
 msgstr "Сохранить"
 
-#: app/app.c:749
-#: app/app.c:753
+#: app/app.c:751
+#: app/app.c:755
 msgid "Save 3D view to an image"
 msgstr "Сохранить трёхмерный вид в изображение"
 
-#: app/app.c:759
+#: app/app.c:761
 msgid "Set as Default"
 msgstr "Использовать по умолчанию"
 
-#: app/app.c:761
+#: app/app.c:763
 msgid "Set the current view setup as the default"
 msgstr "Установить текущие настройки вида как настройки по умолчанию"
 
-#: app/app.c:822
+#: app/app.c:824
 msgid "_Show mask"
 msgstr "Показывать _маску"
 
-#: app/app.c:990
+#: app/app.c:992
 #, c-format
 msgid "Saving of 3D view to `%s' failed"
 msgstr "Не удалось сохранить трёхмерный вид в `%s'"
 
-#: app/app.c:1034
+#: app/app.c:1036
 msgid "Export 3D View"
 msgstr "Экспортировать трёхмерный вид"
 
-#: app/app.c:1220
+#: app/app.c:1222
 msgid "_Change Preview"
 msgstr "_Изменить изображение предпросмотра"
 
-#: app/app.c:1320
+#: app/app.c:1322
 msgid "Change Volume Data Preview"
 msgstr "Изменить изображение предпросмотра для объёмных данных"
 
-#: app/app.c:1330
+#: app/app.c:1332
 msgid "Preview quantity:"
 msgstr "Величина для предпросмотра:"
 
-#: app/app.c:1340
+#: app/app.c:1342
 #: modules/process/extend.c:270
 #: modules/tools/linestats.c:151
 msgid "Mean"
 msgstr "Среднее"
 
-#: app/app.c:1341
+#: app/app.c:1343
 #: modules/process/polydistort.c:275
 #: modules/tools/filter.c:208
 #: modules/tools/icolorange.c:385
@@ -1552,69 +1554,76 @@ msgstr "Среднее"
 msgid "Minimum"
 msgstr "Минимум"
 
-#: app/app.c:1342
-#: modules/file/nt-mdt.c:2772
+#: app/app.c:1344
 #: modules/tools/filter.c:209
 #: modules/tools/icolorange.c:396
 #: modules/tools/linestats.c:154
 msgid "Maximum"
 msgstr "Максимум"
 
-#: app/app.c:1343
+#: app/app.c:1345
+msgid "Min. position"
+msgstr "Положение минимума"
+
+#: app/app.c:1346
+msgid "Max. position"
+msgstr "Положение максимума"
+
+#: app/app.c:1347
 #: modules/process/scars.c:529
 #: modules/process/scars.c:536
 #: modules/process/threshold.c:353
 msgid "RMS"
 msgstr "Ср. квадр."
 
-#: app/app.c:1344
+#: app/app.c:1348
 #: modules/file/asciiexport.c:185
 msgid "Channel:"
 msgstr "Канал:"
 
-#: app/app.c:1345
+#: app/app.c:1349
 msgid "Section:"
 msgstr "Сечение:"
 
-#: app/data-browser.c:4928
+#: app/data-browser.c:4932
 msgid "Extract to a new file"
 msgstr "Извлечь в новый файл"
 
-#: app/data-browser.c:4929
+#: app/data-browser.c:4933
 msgid "Duplicate"
 msgstr "Сделать копию"
 
-#: app/data-browser.c:4930
+#: app/data-browser.c:4934
 msgid "Delete"
 msgstr "Удалить"
 
-#: app/data-browser.c:4975
+#: app/data-browser.c:4979
 msgid "Data Browser"
 msgstr "Браузер данных"
 
-#: app/data-browser.c:4998
+#: app/data-browser.c:5002
 msgid "Close file"
 msgstr "Закрыть файл"
 
-#: app/data-browser.c:5011
+#: app/data-browser.c:5015
 msgid "Channels"
 msgstr "Каналы"
 
-#: app/data-browser.c:5025
+#: app/data-browser.c:5029
 #: modules/volume/volume_extract.c:456
 msgid "Graphs"
 msgstr "Графики"
 
-#: app/data-browser.c:5039
+#: app/data-browser.c:5043
 msgid "Spectra"
 msgstr "Спектры"
 
-#: app/data-browser.c:6511
+#: app/data-browser.c:6515
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Неизвестный канал %d"
 
-#: app/data-browser.c:6597
+#: app/data-browser.c:6601
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Неизвестный объём %d"
@@ -1920,25 +1929,25 @@ msgstr "Заголовок внезапно закончился на строк
 msgid "Cannot write to file: %s."
 msgstr "Невозможно записать в файл: %s."
 
-#: app/gwyplaintool.c:569
+#: app/gwyplaintool.c:572
 msgid "<big><b>Missing layer module.</b></big>"
 msgstr "<big><b>Отсутствует модуль слоёв.</b></big>"
 
-#: app/gwyplaintool.c:575
+#: app/gwyplaintool.c:578
 #, c-format
 msgid "This tool requires layer of type %s to work, which does not seem to be installed.  Please check your installation."
 msgstr "Этот инструмент требует для работы слой типа %s, который вероятно не установлен. Проверьте целостность установки."
 
-#: app/gwyplaintool.c:791
+#: app/gwyplaintool.c:794
 msgid "Clear selected objects"
 msgstr "Очистить выбранные объекты"
 
 #. TRANSLATORS: Origin of the selected rectangle.
-#: app/gwyplaintool.c:1003
+#: app/gwyplaintool.c:1006
 msgid "Origin"
 msgstr "Начальная точка"
 
-#: app/gwyplaintool.c:1014
+#: app/gwyplaintool.c:1017
 #: modules/file/rawfile.c:958
 #: modules/process/col_synth.c:392
 #: modules/process/convolution_filter.c:357
@@ -1949,7 +1958,7 @@ msgstr "Начальная точка"
 msgid "Size"
 msgstr "Размер"
 
-#: app/gwyplaintool.c:1017
+#: app/gwyplaintool.c:1020
 msgid "Width"
 msgstr "Ширина"
 
@@ -2693,6 +2702,7 @@ msgstr "Экспортировать текст"
 #: modules/file/pixmap.c:3180
 #: modules/file/rawfile.c:719
 #: modules/file/rawxyz.c:669
+#: modules/process/calibrate.c:514
 #: modules/process/extend.c:262
 #: modules/process/fft_filter_1d.c:295
 #: modules/process/grain_dist.c:305
@@ -3336,8 +3346,8 @@ msgstr "_Ширина:"
 #: modules/process/calcoefs_simple.c:456
 #: modules/process/calcoefs_view.c:527
 #: modules/process/calcoefs_view.c:565
-#: modules/process/calibrate.c:340
-#: modules/process/calibrate.c:421
+#: modules/process/calibrate.c:379
+#: modules/process/calibrate.c:460
 #: modules/process/dimensions.h:159
 #: modules/volume/volume_calibrate.c:402
 #: modules/volume/volume_calibrate.c:429
@@ -3373,7 +3383,7 @@ msgstr "Масштаб _Z (на единицу дискретизации):"
 #: modules/process/calcoefs_new.c:775
 #: modules/process/calcoefs_simple.c:1188
 #: modules/process/calcoefs_view.c:1392
-#: modules/process/calibrate.c:819
+#: modules/process/calibrate.c:884
 #: modules/process/dimensions.h:193
 #: modules/volume/volume_calibrate.c:1005
 msgid "Change Units"
@@ -3385,7 +3395,7 @@ msgstr "Изменить единицы измерения"
 #: modules/process/calcoefs_new.c:788
 #: modules/process/calcoefs_simple.c:1201
 #: modules/process/calcoefs_view.c:1405
-#: modules/process/calibrate.c:833
+#: modules/process/calibrate.c:898
 #: modules/process/dimensions.h:206
 #: modules/volume/volume_calibrate.c:1019
 msgid "New _units:"
@@ -4127,48 +4137,36 @@ msgstr "Поле %s заголовка оси содержит слишком м
 msgid "Per-axis header field %s contains too few items."
 msgstr "Поле %s заголовка оси содержит слишком мало элементов."
 
-#: modules/file/nt-mdt.c:703
+#: modules/file/nt-mdt.c:693
 msgid "Imports NT-MDT data files."
 msgstr "Импорт файлов данных NT-MDT"
 
-#: modules/file/nt-mdt.c:716
+#: modules/file/nt-mdt.c:706
 msgid "NT-MDT files (.mdt)"
 msgstr "Файлы NT-MDT (.mdt)"
 
-#: modules/file/nt-mdt.c:1152
+#: modules/file/nt-mdt.c:1159
 msgid "Frame is too short for Frame Mode."
 msgstr "Фрейм слишком короткий для режима фреймов."
 
-#: modules/file/nt-mdt.c:1166
+#: modules/file/nt-mdt.c:1173
 msgid "Frame is too short for dots or data."
 msgstr "Фрейм слишком короткий для точек или данных."
 
-#: modules/file/nt-mdt.c:1425
+#: modules/file/nt-mdt.c:1432
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Достигнут конец файла в заголовке фрейма #%u."
 
-#: modules/file/nt-mdt.c:1433
+#: modules/file/nt-mdt.c:1440
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Достигнут конец файла в данных фрейма #%u."
 
-#: modules/file/nt-mdt.c:1468
+#: modules/file/nt-mdt.c:1475
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "Фрейм #%u слишком короткий чтобы быть заголовком сканированных данных."
-
-#: modules/file/nt-mdt.c:2773
-msgid "Max. position"
-msgstr "Положение максимума"
-
-#: modules/file/nt-mdt.c:2774
-msgid "Average"
-msgstr "Среднее"
-
-#: modules/file/nt-mdt.c:2787
-msgid "Raman Image Import"
-msgstr "Импорт изображений КР"
 
 #: modules/file/oldmda.c:153
 msgid "Imports old NTMDT MDA Spectra files."
@@ -4681,7 +4679,7 @@ msgstr "Предустановки"
 
 #: modules/file/rawfile.c:540
 #: modules/file/rawxyz.c:435
-#: modules/process/arithmetic.c:227
+#: modules/process/arithmetic.c:229
 #: modules/process/calcoefs_view.c:332
 #: modules/process/convolution_filter.c:243
 #: modules/process/deposit_synth.c:680
@@ -6154,68 +6152,68 @@ msgstr "Использовать _аппроксимацию локальной 
 msgid "_Plane size:"
 msgstr "Размер _плоскости:"
 
-#: modules/process/arithmetic.c:144
+#: modules/process/arithmetic.c:146
 msgid "Simple arithmetic operations with data fields."
 msgstr "Простые арифметические операции с полями данных."
 
-#: modules/process/arithmetic.c:158
+#: modules/process/arithmetic.c:160
 msgid "/M_ultidata/_Arithmetic..."
 msgstr "/М_ножественные данные/_Арифметика..."
 
-#: modules/process/arithmetic.c:162
+#: modules/process/arithmetic.c:164
 msgid "Arithmetic operations on data"
 msgstr "Арифметические операции над данными"
 
-#: modules/process/arithmetic.c:196
+#: modules/process/arithmetic.c:198
 #: modules/process/superresolution.c:352
 msgid "Calculated"
 msgstr "Посчитанное"
 
-#: modules/process/arithmetic.c:224
+#: modules/process/arithmetic.c:226
 msgid "Arithmetic"
 msgstr "Арифметические операции"
 
-#: modules/process/arithmetic.c:268
+#: modules/process/arithmetic.c:270
 msgid "_Expression:"
 msgstr "_Выражение:"
 
-#: modules/process/arithmetic.c:293
+#: modules/process/arithmetic.c:295
 msgid "Operands"
 msgstr "Операнды"
 
-#: modules/process/arithmetic.c:298
+#: modules/process/arithmetic.c:300
 #: modules/process/dimensions.h:481
 msgid "Units"
 msgstr "Единицы измерения"
 
-#: modules/process/arithmetic.c:333
+#: modules/process/arithmetic.c:335
 #, c-format
 msgid "Take result units from data d%d"
 msgstr "Взять единицы измерения результата от данных d%d"
 
-#: modules/process/arithmetic.c:349
+#: modules/process/arithmetic.c:353
 msgid "Specify un_its:"
 msgstr "Задать _единицы:"
 
-#: modules/process/arithmetic.c:368
+#: modules/process/arithmetic.c:372
 msgid "Specify result units explicitly"
 msgstr "Непосредственно указать единицы измерения результата"
 
-#: modules/process/arithmetic.c:452
+#: modules/process/arithmetic.c:456
 msgid "Expression contains unknown identifiers"
 msgstr "Выражение содержит неизвестные идентификаторы"
 
-#: modules/process/arithmetic.c:564
+#: modules/process/arithmetic.c:568
 #: modules/process/superresolution.c:303
 msgid "Pixel dimensions differ"
 msgstr "Размеры в пикселях отличаются"
 
-#: modules/process/arithmetic.c:566
+#: modules/process/arithmetic.c:570
 #: modules/process/superresolution.c:305
 msgid "Lateral dimensions are different physical quantities"
 msgstr "Горизонтальные размеры являются разными физическими величинами"
 
-#: modules/process/arithmetic.c:569
+#: modules/process/arithmetic.c:573
 #: modules/process/superresolution.c:308
 msgid "Physical dimensions differ"
 msgstr "Физические размеры отличаются"
@@ -6371,7 +6369,7 @@ msgid "Load calibration data"
 msgstr "Загрузить данные калибровки"
 
 #: modules/process/calcoefs_load.c:330
-#: modules/volume/volume_extract.c:1059
+#: modules/volume/volume_extract.c:1072
 #, c-format
 msgid "Error loading file '%s'"
 msgstr "Ошибка загрузки файла '%s'"
@@ -6482,14 +6480,14 @@ msgstr "Часть"
 
 #: modules/process/calcoefs_simple.c:369
 #: modules/process/calcoefs_view.c:507
-#: modules/process/calibrate.c:368
+#: modules/process/calibrate.c:407
 #: modules/volume/volume_calibrate.c:466
 msgid "_X offset:"
 msgstr "Смещение по _X:"
 
 #: modules/process/calcoefs_simple.c:396
 #: modules/process/calcoefs_view.c:533
-#: modules/process/calibrate.c:381
+#: modules/process/calibrate.c:420
 #: modules/volume/volume_calibrate.c:479
 msgid "_Y offset:"
 msgstr "Смещение по _Y:"
@@ -6555,9 +6553,8 @@ msgid "Digital AFM data recalibration"
 msgstr "Перекалибровка данных цифровой АСМ"
 
 #: modules/process/calcoefs_stage.c:93
-#, fuzzy
 msgid "/Cali_bration/_3D Calibration/_Get From Stage map..."
-msgstr "/_Калибровка/_Трёхмерная/_Получить из карты Stage..."
+msgstr "/_Калибровка/_Трёхмерная/_Получить из карты сканера..."
 
 #: modules/process/calcoefs_stage.c:97
 msgid "Stage error mapping"
@@ -6734,80 +6731,86 @@ msgstr "Привязать к плоскостям"
 msgid "Delaunay"
 msgstr "Делоне"
 
-#: modules/process/calibrate.c:146
+#: modules/process/calibrate.c:151
 msgid "Recalibrates scan lateral dimensions or value range."
 msgstr "Перекалибровывает горизонтальное разрешение скана или диапазон значений"
 
-#: modules/process/calibrate.c:160
+#: modules/process/calibrate.c:165
 msgid "/_Basic Operations/_Dimensions and Units..."
 msgstr "/_Базовые действия/Единицы и_змерения..."
 
-#: modules/process/calibrate.c:164
+#: modules/process/calibrate.c:169
 #: modules/volume/volume_calibrate.c:193
 msgid "Change physical dimensions, units or value scale"
 msgstr "Меняет горизонтальное разрешение, единицы измерения или диапазон значений"
 
-#: modules/process/calibrate.c:283
+#: modules/process/calibrate.c:313
 #: modules/volume/volume_calibrate.c:345
 msgid "Recalibrated Data"
 msgstr "Перекалиброванные данные"
 
-#: modules/process/calibrate.c:296
+#: modules/process/calibrate.c:335
 msgid "Dimensions and Units"
 msgstr "Размеры и единицы измерения"
 
-#: modules/process/calibrate.c:315
+#: modules/process/calibrate.c:354
 #: modules/volume/volume_calibrate.c:377
 msgid "New Real Dimensions"
 msgstr "Новые реальные размеры"
 
-#: modules/process/calibrate.c:320
+#: modules/process/calibrate.c:359
 #: modules/volume/volume_calibrate.c:382
 msgid "_X range:"
 msgstr "Диапазон _X:"
 
-#: modules/process/calibrate.c:347
+#: modules/process/calibrate.c:386
 #: modules/volume/volume_calibrate.c:409
 msgid "_Y range:"
 msgstr "Диапазон _Y:"
 
-#: modules/process/calibrate.c:361
+#: modules/process/calibrate.c:400
 msgid "_Square samples"
 msgstr "_Квадратный образец"
 
-#: modules/process/calibrate.c:396
+#: modules/process/calibrate.c:435
 #: modules/volume/volume_calibrate.c:509
 msgid "Value Range"
 msgstr "Диапазон значений"
 
-#: modules/process/calibrate.c:401
+#: modules/process/calibrate.c:440
 #: modules/volume/volume_calibrate.c:436
 msgid "_Z range:"
 msgstr "Диапазон _Z:"
 
-#: modules/process/calibrate.c:430
+#: modules/process/calibrate.c:469
 msgid "Z shi_ft:"
 msgstr "С_двиг Z:"
 
-#: modules/process/calibrate.c:445
+#: modules/process/calibrate.c:484
 #: modules/volume/volume_calibrate.c:558
 msgid "Calibration Coefficients"
 msgstr "Коэффициенты калибровки"
 
-#: modules/process/calibrate.c:452
+#: modules/process/calibrate.c:491
 #: modules/volume/volume_calibrate.c:565
 msgid "_X calibration factor:"
 msgstr "Множитель калибровки по _X:"
 
-#: modules/process/calibrate.c:460
+#: modules/process/calibrate.c:499
 #: modules/volume/volume_calibrate.c:573
 msgid "_Y calibration factor:"
 msgstr "Множитель калибровки по _Y:"
 
-#: modules/process/calibrate.c:468
+#: modules/process/calibrate.c:507
 #: modules/volume/volume_calibrate.c:581
 msgid "_Z calibration factor:"
 msgstr "Множитель калибровки по _Z:"
+
+#: modules/process/calibrate.c:520
+#: modules/process/extend.c:296
+#: modules/tools/crop.c:221
+msgid "Create new channel"
+msgstr "Создать новый канал"
 
 #: modules/process/col_synth.c:163
 msgid "Generates columnar surfaces by a simple growth algorithm."
@@ -7544,11 +7547,6 @@ msgstr "Расширить си_мметрично"
 #: modules/tools/crop.c:210
 msgid "Keep lateral offsets"
 msgstr "Сохранять пространственные смещения"
-
-#: modules/process/extend.c:296
-#: modules/tools/crop.c:221
-msgid "Create new channel"
-msgstr "Создать новый канал"
 
 #: modules/process/facet-level.c:67
 msgid "Automatic facet-orientation based levelling. Levels data to make facets point up."
@@ -11899,11 +11897,11 @@ msgstr "w"
 msgid "Brick graph"
 msgstr "График сечения блока"
 
-#: modules/volume/volume_extract.c:1042
+#: modules/volume/volume_extract.c:1055
 msgid "Load volume data"
 msgstr "Загрузить объёмные данные"
 
-#: modules/volume/volume_extract.c:1902
+#: modules/volume/volume_extract.c:1915
 msgid "Building wireframe model..."
 msgstr "Строится каркасная модель..."
 
