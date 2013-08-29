@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2013-08-28 03:58+0200\n"
-"PO-Revision-Date: 2013-08-28 22:12+0300\n"
+"POT-Creation-Date: 2013-08-29 03:58+0200\n"
+"PO-Revision-Date: 2013-08-29 06:46+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -5689,6 +5689,7 @@ msgstr "Аппроксимация"
 #: modules/graph/graph_fdfit.c:748
 #: modules/graph/graph_fit.c:792
 #: modules/volume/volume_fdfit.c:967
+#: modules/volume/volume_fdfit.c:1074
 msgid "It is necessary to select more data points than free fit parameters"
 msgstr "Необходимо выбрать больше точек данных, чем возможных параметров аппроксимации"
 
@@ -10612,17 +10613,21 @@ msgstr "/_Базовые действия/_Придать объём..."
 msgid "Convert datafield to 3D data"
 msgstr "Превратить поле данных в трёхмерные данные"
 
-#: modules/process/volumize_layers.c:86
+#: modules/process/volumize_layers.c:84
 msgid "Converts all datafields to 3D volume data."
 msgstr "Конвертирует все поля данных в трёхмерные объёмные данные."
 
-#: modules/process/volumize_layers.c:100
-msgid "/_Basic Operations/VolumizeLayers..."
+#: modules/process/volumize_layers.c:98
+msgid "/_Basic Operations/Volumize Layers..."
 msgstr "/_Базовые действия/Превратить слои в объём..."
 
-#: modules/process/volumize_layers.c:104
+#: modules/process/volumize_layers.c:102
 msgid "Convert all datafields to 3D data"
 msgstr "Превратить все поля данных в трёхмерные данные"
+
+#: modules/process/volumize_layers.c:156
+msgid "All datafields must have same resolution to make a volume from them."
+msgstr "Все поля данных должны иметь одинаковое разрешение для создания из них объёмных данных."
 
 #: modules/process/volumize_layers.c:210
 msgid "Volumize layers"
@@ -11918,26 +11923,30 @@ msgid "Evaluate force-distance volume data"
 msgstr "Рассчитывает объёмные данные сила-расстояние"
 
 #: modules/volume/volume_fdfit.c:369
-msgid "Curve _xpos:"
+msgid "Curve _X position:"
 msgstr "Положение _X кривой:"
 
 #: modules/volume/volume_fdfit.c:387
-msgid "Curve _ypos:"
+msgid "Curve _Y position:"
 msgstr "Положение _Y кривой:"
-
-#: modules/volume/volume_fdfit.c:1074
-msgid "It is necessary to select more data points than free volfit parameters"
-msgstr "Необходимо выбрать больше точек данных, чем возможных параметров аппроксимации"
 
 #: modules/volume/volume_invert.c:50
 msgid "Inverts value in volume data"
 msgstr "Инвертирует значения в объёмных данных"
 
 #: modules/volume/volume_invert.c:64
-msgid "/_Invert value..."
-msgstr "/_Инвертировать значение..."
+msgid "/_Invert value"
+msgstr "/_Инвертировать значение"
 
 #: modules/volume/volume_invert.c:68
 msgid "Invert value in volume data"
 msgstr "Инвертирует значения в объёмных данных"
 
+#~ msgid "Curve _ypos:"
+#~ msgstr "Положение _Y кривой:"
+
+#~ msgid ""
+#~ "It is necessary to select more data points than free volfit parameters"
+#~ msgstr ""
+#~ "Необходимо выбрать больше точек данных, чем возможных параметров "
+#~ "аппроксимации"
