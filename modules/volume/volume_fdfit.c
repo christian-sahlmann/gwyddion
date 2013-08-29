@@ -25,7 +25,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyfdcurvepreset.h>
-#include <libprocess/gwyprocess.h> 
+#include <libprocess/gwyprocess.h>
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwyinventorystore.h>
@@ -156,7 +156,7 @@ static void        param_initial_activate    (GtkWidget *entry,
                                               gpointer user_data);
 static void        fix_changed               (GtkToggleButton *button,
                                               VolfitControls *controls);
-static void        set_layer_channel         (GwyPixmapLayer *layer, 
+static void        set_layer_channel         (GwyPixmapLayer *layer,
                                               gint channel);
 static void        xpos_changed_cb           (GtkAdjustment *adj,
                                               VolfitControls *controls);
@@ -188,8 +188,8 @@ static void        graph_selection_finished_cb  (GwySelection *selection,
                                                  VolfitControls *controls);
 
 static GString*    create_volfit_report         (VolfitArgs *args);
-static gint        pick_and_normalize_data      (VolfitArgs *args, 
-                                                 gint xpos, 
+static gint        pick_and_normalize_data      (VolfitArgs *args,
+                                                 gint xpos,
                                                  gint ypos);
 
 
@@ -266,7 +266,6 @@ volfit_dialog(VolfitArgs *args)
 {
     GtkWidget *label, *dialog, *hbox, *hbox2, *table, *align, *expander, *scroll, *spin;
     GtkTable *table2;
-    GwyGraphCurveModel *cmodel;
     GwyGraphArea *area;
     GwySelection *selection;
     GwySIUnit *siunit;
@@ -275,7 +274,6 @@ volfit_dialog(VolfitArgs *args)
     GString *report;
     gdouble xmin, xmax;
     GwyVectorLayer *vlayer = NULL;
-    GwyDataLine *dline = gwy_data_line_new(1, 1.0, FALSE);
 
     controls.args = args;
     controls.in_update = TRUE;
@@ -330,7 +328,7 @@ volfit_dialog(VolfitArgs *args)
     gwy_vector_layer_set_selection_key(vlayer, "1/select/graph/point");
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.view), vlayer);
     selection = gwy_vector_layer_ensure_selection(vlayer);
-    g_signal_connect(selection, "finished", 
+    g_signal_connect(selection, "finished",
                      G_CALLBACK(graph_selection_finished_cb), &controls);
 
 
@@ -390,7 +388,7 @@ volfit_dialog(VolfitArgs *args)
                      0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
     controls.ypos = gtk_adjustment_new(args->ypos,
-                                        0, gwy_brick_get_yres(args->brick)-1, 1, 10, 0);
+                                       0, gwy_brick_get_yres(args->brick)-1, 1, 10, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.ypos), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
@@ -411,7 +409,7 @@ volfit_dialog(VolfitArgs *args)
     controls.function = function_selector_new(G_CALLBACK(function_changed),
                                               &controls, args->function_type);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.function);
-    
+
     gtk_table_attach(GTK_TABLE(table), controls.function,
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
@@ -419,10 +417,10 @@ volfit_dialog(VolfitArgs *args)
     controls.formula = gtk_label_new("f(x) =");
     gtk_misc_set_alignment(GTK_MISC(controls.formula), 0.0, 0.5);
     gtk_label_set_selectable(GTK_LABEL(controls.formula), TRUE);
-    
+
     scroll = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scroll), controls.formula);
-    
+
     gtk_table_attach(GTK_TABLE(table), scroll,
                      0, 2, row, row+1, GTK_FILL, 0, 0, 8);
     row++;
@@ -620,8 +618,11 @@ static void
 load_curve(VolfitControls *controls)
 {
     GwyDataLine *dline = gwy_data_line_new(10, 10, FALSE);
+    GwyDataLine *calibration = NULL;
     VolfitArgs *args = controls->args;
     GwyGraphCurveModel *cmodel;
+    gint n;
+    gdouble *xdata, *ydata;
 
     gwy_brick_extract_line(args->brick, dline,
                            args->xpos,
@@ -631,15 +632,24 @@ load_curve(VolfitControls *controls)
                            args->ypos,
                            gwy_brick_get_zres(args->brick),
                            0);
+    calibration = gwy_brick_get_zcalibration(args->brick);
     gwy_data_line_set_si_unit_x(dline, gwy_brick_get_si_unit_z(args->brick));
     gwy_data_line_set_si_unit_y(dline, gwy_brick_get_si_unit_w(args->brick));
     printf("line range is %g, points %d\n", gwy_data_line_get_real(dline), gwy_data_line_get_res(dline));
     gwy_graph_model_remove_all_curves(args->graph_model);
 
     cmodel = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_data_from_dataline(cmodel, dline, 0, 0);
+    if (calibration) {
+        xdata = gwy_data_line_get_data(calibration);
+        ydata = gwy_data_line_get_data(dline);
+        n = MIN(gwy_data_line_get_res(calibration),
+                gwy_data_line_get_res(dline));
+        gwy_graph_curve_model_set_data(cmodel, xdata, ydata, n);
+    }
+    else {
+        gwy_graph_curve_model_set_data_from_dataline(cmodel, dline, 0, 0);
+    }
     gwy_graph_model_add_curve(args->graph_model, cmodel);
-
 }
 
 static void
@@ -944,11 +954,11 @@ volfit_do(VolfitControls *controls)
 
     cresult = gwy_data_field_new_alike(args->dfield, TRUE);
     chresult = gwy_data_field_new_alike(args->dfield, TRUE);
-    gwy_data_field_fill(chresult, -1.0); 
+    gwy_data_field_fill(chresult, -1.0);
 
 
 
-    for (i=0; i<gwy_brick_get_xres(args->brick); i++) 
+    for (i=0; i<gwy_brick_get_xres(args->brick); i++)
     {
         for (j=0; j<gwy_brick_get_yres(args->brick); j++)
         {
@@ -994,7 +1004,7 @@ volfit_do(VolfitControls *controls)
                 }
             }
             gwy_data_field_set_val(cresult, i, j, errorknown);
-            
+
             if (errorknown) gwy_data_field_set_val(chresult, i, j, gwy_math_nlfit_get_dispersion(args->fitter));
 
         }
@@ -1544,7 +1554,6 @@ normalize_data(VolfitArgs *args)
     gboolean skip_first_point = FALSE;
     GwyGraphCurveModel *cmodel;
     const gdouble *xs, *ys;
-    const gchar *func_name;
     gdouble *xd, *yd;
 
     cmodel = gwy_graph_model_get_curve(args->graph_model, 0);
@@ -1584,7 +1593,6 @@ pick_and_normalize_data(VolfitArgs *args, gint xpos, gint ypos)
 {
     gint i, j, ns;
     gboolean skip_first_point = FALSE;
-    GwyGraphCurveModel *cmodel;
     GwyDataLine *dline = gwy_data_line_new(1, 1.0, FALSE);
     const gdouble *ys;
     gdouble *xd, *yd, ratio;
@@ -1597,7 +1605,7 @@ pick_and_normalize_data(VolfitArgs *args, gint xpos, gint ypos)
                            ypos,
                            gwy_brick_get_zres(args->brick),
                            0);
- 
+
     ys = gwy_data_line_get_data(dline);
     ns = gwy_brick_get_zres(args->brick);
     ratio = gwy_brick_get_zreal(args->brick)/(gdouble)ns;
