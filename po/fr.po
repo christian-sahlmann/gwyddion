@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2013-08-28 03:58+0200\n"
-"PO-Revision-Date: 2013-08-28 20:22+0100\n"
+"POT-Creation-Date: 2013-08-31 03:58+0200\n"
+"PO-Revision-Date: 2013-08-31 17:10+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -5609,7 +5609,7 @@ msgstr "Ajuster le graphe"
 #: modules/graph/graph_fdfit.c:254
 #: modules/graph/graph_fit.c:267
 #: modules/process/fit_2d.c:252
-#: modules/volume/volume_fdfit.c:301
+#: modules/volume/volume_fdfit.c:299
 msgid "verb|_Fit"
 msgstr "Ajuster"
 
@@ -5623,7 +5623,7 @@ msgstr "_Graphe :"
 #: modules/graph/graph_cd.c:275
 #: modules/graph/graph_fdfit.c:319
 #: modules/graph/graph_fit.c:332
-#: modules/volume/volume_fdfit.c:406
+#: modules/volume/volume_fdfit.c:404
 msgid "F_unction:"
 msgstr "Fonction :"
 
@@ -5631,7 +5631,7 @@ msgstr "Fonction :"
 #: modules/graph/graph_fdfit.c:360
 #: modules/graph/graph_fit.c:368
 #: modules/process/curvature.c:725
-#: modules/volume/volume_fdfit.c:447
+#: modules/volume/volume_fdfit.c:445
 msgid "Parameter"
 msgstr "Paramètre"
 
@@ -5639,7 +5639,7 @@ msgstr "Paramètre"
 #: modules/graph/graph_fdfit.c:362
 #: modules/graph/graph_fit.c:370
 #: modules/process/fit_2d.c:347
-#: modules/volume/volume_fdfit.c:449
+#: modules/volume/volume_fdfit.c:447
 msgid "Error"
 msgstr "Erreur"
 
@@ -5647,7 +5647,7 @@ msgstr "Erreur"
 #: modules/graph/graph_cut.c:191
 #: modules/graph/graph_fdfit.c:414
 #: modules/graph/graph_fit.c:422
-#: modules/volume/volume_fdfit.c:501
+#: modules/volume/volume_fdfit.c:499
 msgid "Range:"
 msgstr "Plage :"
 
@@ -5655,7 +5655,7 @@ msgstr "Plage :"
 #: modules/graph/graph_cut.c:202
 #: modules/graph/graph_fdfit.c:425
 #: modules/graph/graph_fit.c:433
-#: modules/volume/volume_fdfit.c:512
+#: modules/volume/volume_fdfit.c:510
 msgid "range|to"
 msgstr "jusqu'à"
 
@@ -5667,7 +5667,7 @@ msgstr "_Dessiner un cercle entier"
 #: modules/graph/graph_fdfit.c:490
 #: modules/graph/graph_fit.c:520
 #: modules/process/fit_2d.c:993
-#: modules/volume/volume_fdfit.c:574
+#: modules/volume/volume_fdfit.c:572
 msgid "Save Fit Report"
 msgstr "Sauver le rapport d'ajustement"
 
@@ -5675,14 +5675,15 @@ msgstr "Sauver le rapport d'ajustement"
 #: modules/graph/graph_cd.c:1132
 #: modules/graph/graph_fdfit.c:708
 #: modules/graph/graph_fit.c:752
-#: modules/volume/volume_fdfit.c:896
+#: modules/volume/volume_fdfit.c:906
 msgid "Fit"
 msgstr "Ajustement"
 
 #: modules/graph/graph_cd.c:554
 #: modules/graph/graph_fdfit.c:748
 #: modules/graph/graph_fit.c:792
-#: modules/volume/volume_fdfit.c:967
+#: modules/volume/volume_fdfit.c:977
+#: modules/volume/volume_fdfit.c:1084
 msgid "It is necessary to select more data points than free fit parameters"
 msgstr "Il faut sélectionner plus de points que de paramètres d'ajustement"
 
@@ -5700,21 +5701,21 @@ msgstr "Il faut sélectionner plus de points que de paramètres d'ajustement"
 #: modules/tools/stats.c:1054
 #: modules/tools/stats.c:1061
 #: modules/tools/stats.c:1063
-#: modules/volume/volume_fdfit.c:1123
+#: modules/volume/volume_fdfit.c:1133
 msgid "N.A."
 msgstr "N. A."
 
 #: modules/graph/graph_cd.c:1018
 #: modules/graph/graph_fdfit.c:1382
 #: modules/graph/graph_fit.c:1485
-#: modules/volume/volume_fdfit.c:1711
+#: modules/volume/volume_fdfit.c:1719
 msgid "===== Fit Results ====="
 msgstr "===== Résultats de l'ajustement ====="
 
 #: modules/graph/graph_cd.c:1022
 #: modules/graph/graph_fdfit.c:1386
 #: modules/graph/graph_fit.c:1489
-#: modules/volume/volume_fdfit.c:1715
+#: modules/volume/volume_fdfit.c:1723
 #, c-format
 msgid "Data:             %s\n"
 msgstr "Donnée :             %s\n"
@@ -5722,7 +5723,7 @@ msgstr "Donnée :             %s\n"
 #: modules/graph/graph_cd.c:1025
 #: modules/graph/graph_fdfit.c:1389
 #: modules/graph/graph_fit.c:1492
-#: modules/volume/volume_fdfit.c:1718
+#: modules/volume/volume_fdfit.c:1726
 #, c-format
 msgid "Number of points: %d of %d\n"
 msgstr "Nombrer de points : %d sur %d\n"
@@ -5730,7 +5731,7 @@ msgstr "Nombrer de points : %d sur %d\n"
 #: modules/graph/graph_cd.c:1029
 #: modules/graph/graph_fdfit.c:1393
 #: modules/graph/graph_fit.c:1496
-#: modules/volume/volume_fdfit.c:1722
+#: modules/volume/volume_fdfit.c:1730
 #, c-format
 msgid "X range:          %.*f to %.*f %s\n"
 msgstr "Plage X :          %.*f jusqu'à %.*f %s\n"
@@ -5738,7 +5739,7 @@ msgstr "Plage X :          %.*f jusqu'à %.*f %s\n"
 #: modules/graph/graph_cd.c:1035
 #: modules/graph/graph_fdfit.c:1399
 #: modules/graph/graph_fit.c:1502
-#: modules/volume/volume_fdfit.c:1728
+#: modules/volume/volume_fdfit.c:1736
 #, c-format
 msgid "Fitted function:  %s\n"
 msgstr "Fonction ajustée :  %s\n"
@@ -5746,7 +5747,7 @@ msgstr "Fonction ajustée :  %s\n"
 #: modules/graph/graph_cd.c:1038
 #: modules/graph/graph_fdfit.c:1402
 #: modules/graph/graph_fit.c:1505
-#: modules/volume/volume_fdfit.c:1731
+#: modules/volume/volume_fdfit.c:1739
 msgid "Results\n"
 msgstr "Resultats\n"
 
@@ -5873,86 +5874,86 @@ msgid "Fit a force-distance curve"
 msgstr "Ajuster une courbe force-distance"
 
 #: modules/graph/graph_fdfit.c:251
-#: modules/volume/volume_fdfit.c:298
+#: modules/volume/volume_fdfit.c:296
 msgid "Fit FD Curve"
 msgstr "Ajuster la courbe FD"
 
 #: modules/graph/graph_fdfit.c:258
 #: modules/graph/graph_fit.c:271
 #: modules/process/fit_2d.c:254
-#: modules/volume/volume_fdfit.c:305
+#: modules/volume/volume_fdfit.c:303
 msgid "verb|_Estimate"
 msgstr "_Estimer"
 
 #: modules/graph/graph_fdfit.c:260
 #: modules/graph/graph_fit.c:273
 #: modules/process/fit_2d.c:256
-#: modules/volume/volume_fdfit.c:307
+#: modules/volume/volume_fdfit.c:305
 msgid "_Plot Inits"
 msgstr "Initialiser"
 
 #: modules/graph/graph_fdfit.c:358
 #: modules/graph/graph_fit.c:366
 #: modules/process/fit_2d.c:355
-#: modules/volume/volume_fdfit.c:445
+#: modules/volume/volume_fdfit.c:443
 msgid "Fix"
 msgstr "Fixe"
 
 #: modules/graph/graph_fdfit.c:364
 #: modules/graph/graph_fit.c:372
 #: modules/process/fit_2d.c:338
-#: modules/volume/volume_fdfit.c:451
+#: modules/volume/volume_fdfit.c:449
 msgid "Initial"
 msgstr "Initial"
 
 #: modules/graph/graph_fdfit.c:375
 #: modules/graph/graph_fit.c:383
 #: modules/process/fit_2d.c:441
-#: modules/volume/volume_fdfit.c:462
+#: modules/volume/volume_fdfit.c:460
 msgid "χ<sup>2</sup> result:"
 msgstr "Résultat χ<sup>2</sup> :"
 
 #: modules/graph/graph_fdfit.c:391
 #: modules/graph/graph_fit.c:399
 #: modules/process/fit_2d.c:424
-#: modules/volume/volume_fdfit.c:478
+#: modules/volume/volume_fdfit.c:476
 msgid "Correlation Matrix"
 msgstr "Matrice de corrélation"
 
 #: modules/graph/graph_fdfit.c:446
 #: modules/graph/graph_fit.c:474
-#: modules/volume/volume_fdfit.c:533
+#: modules/volume/volume_fdfit.c:531
 msgid "Instant:"
 msgstr "Affichage immédiat :"
 
 #: modules/graph/graph_fdfit.c:449
 #: modules/graph/graph_fit.c:477
-#: modules/volume/volume_fdfit.c:536
+#: modules/volume/volume_fdfit.c:534
 msgid "e_stimate"
 msgstr "e_stimer"
 
 #: modules/graph/graph_fdfit.c:456
 #: modules/graph/graph_fit.c:484
-#: modules/volume/volume_fdfit.c:543
+#: modules/volume/volume_fdfit.c:541
 msgid "p_lot"
 msgstr "graphe"
 
 #: modules/graph/graph_fdfit.c:707
 #: modules/graph/graph_fit.c:751
-#: modules/volume/volume_fdfit.c:895
+#: modules/volume/volume_fdfit.c:905
 msgid "Estimate"
 msgstr "Estimation"
 
 #: modules/graph/graph_fdfit.c:1429
 #: modules/graph/graph_fit.c:1532
-#: modules/volume/volume_fdfit.c:1758
+#: modules/volume/volume_fdfit.c:1766
 #, c-format
 msgid "Residual sum:   %g\n"
 msgstr "Somme résiduelle :   %g\n"
 
 #: modules/graph/graph_fdfit.c:1432
 #: modules/graph/graph_fit.c:1535
-#: modules/volume/volume_fdfit.c:1761
+#: modules/volume/volume_fdfit.c:1769
 msgid "Correlation matrix\n"
 msgstr "Matrice de corrélation\n"
 
@@ -10606,17 +10607,21 @@ msgstr "/Opérations _basiques/Convertir en données volumiques..."
 msgid "Convert datafield to 3D data"
 msgstr "Convertir le champ de données en données 3D"
 
-#: modules/process/volumize_layers.c:86
+#: modules/process/volumize_layers.c:84
 msgid "Converts all datafields to 3D volume data."
 msgstr "Convertit un champ de données en données volumiques 3D"
 
-#: modules/process/volumize_layers.c:100
-msgid "/_Basic Operations/VolumizeLayers..."
+#: modules/process/volumize_layers.c:98
+msgid "/_Basic Operations/Volumize Layers..."
 msgstr "/Opérations _basiques/Convertir les couches en données volumiques..."
 
-#: modules/process/volumize_layers.c:104
+#: modules/process/volumize_layers.c:102
 msgid "Convert all datafields to 3D data"
 msgstr "Convertir tous les champs de données en données volumiques 3D"
+
+#: modules/process/volumize_layers.c:156
+msgid "All datafields must have same resolution to make a volume from them."
+msgstr "Tous les champs doivent avoir les mêmes résolutions pour pouvoir les convertir un volume."
 
 #: modules/process/volumize_layers.c:210
 msgid "Volumize layers"
@@ -11913,29 +11918,32 @@ msgstr "/_Évaluer les données F/D (force/distance)..."
 msgid "Evaluate force-distance volume data"
 msgstr "Évaluer les données force-distance volumiques"
 
-#: modules/volume/volume_fdfit.c:369
-msgid "Curve _xpos:"
-msgstr "Courbe _xpos :"
+#: modules/volume/volume_fdfit.c:367
+msgid "Curve _X position:"
+msgstr "Position _X de la courbe :"
 
-#: modules/volume/volume_fdfit.c:387
-msgid "Curve _ypos:"
-msgstr "Courbe _ypos :"
-
-#: modules/volume/volume_fdfit.c:1074
-msgid "It is necessary to select more data points than free volfit parameters"
-msgstr "Il faut sélectionner plus de points que de paramètres volfit libres"
+#: modules/volume/volume_fdfit.c:385
+msgid "Curve _Y position:"
+msgstr "Position _Y de la courbe :"
 
 #: modules/volume/volume_invert.c:50
 msgid "Inverts value in volume data"
 msgstr "Inverse les valeurs dans les données volumiques"
 
 #: modules/volume/volume_invert.c:64
-msgid "/_Invert value..."
-msgstr "/_Inverser les valeurs..."
+msgid "/_Invert value"
+msgstr "/_Inverser les valeurs"
 
 #: modules/volume/volume_invert.c:68
 msgid "Invert value in volume data"
 msgstr "Inverser les valeurs dans les données volumiques"
+
+#~ msgid "Curve _ypos:"
+#~ msgstr "Courbe _ypos :"
+
+#~ msgid ""
+#~ "It is necessary to select more data points than free volfit parameters"
+#~ msgstr "Il faut sélectionner plus de points que de paramètres volfit libres"
 
 #~ msgid "Average"
 #~ msgstr "Moyenne"
