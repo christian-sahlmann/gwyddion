@@ -14,6 +14,7 @@ attocube	managing-files
 axis	selections
 basicops	basic-operations	modules-basic
 bcrfile	managing-files
+brickshow	volume-data
 burleigh_bii	managing-files
 burleigh_exp	managing-files
 burleigh	managing-files
@@ -190,6 +191,7 @@ stats	statistical-analysis	stat-quantities
 stmprg	managing-files
 stpfile	managing-files
 surffile	managing-files
+tescan	managing-files
 threshold	basic-operations	limit-range
 tiaser	managing-files
 tilt	leveling-and-background
