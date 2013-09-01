@@ -14,9 +14,9 @@ attocube	managing-files
 axis	selections
 basicops	basic-operations	modules-basic
 bcrfile	managing-files
-burleigh	managing-files
 burleigh_bii	managing-files
 burleigh_exp	managing-files
+burleigh	managing-files
 calcoefs_load	caldata
 calcoefs_new	caldata
 calcoefs_simple	caldata
@@ -38,18 +38,18 @@ dmefile	managing-files
 drift	edit-extended	drift-compensation
 drift	edit-extended	xy-denoise
 dumbfile	managing-files
-dwt	integral-transforms	dwt
 dwtanisotropy	integral-transforms	dwt
+dwt	integral-transforms	dwt
 ecsfile	managing-files
 edge	filters-presentations	edge
 ellipse	selections
 extend	basic-operations	extend
 ezdfile	managing-files
-facet-level	leveling-and-background	facet-level
 facet_analysis	statistical-analysis	facet-analysis
-fft	integral-transforms	fft
+facet-level	leveling-and-background	facet-level
 fft_filter_1d	edit-extended	fft-filter-1d
 fft_filter_2d	edit-extended	fft-filter-2d
+fft	integral-transforms	fft
 fft_profile	integral-transforms
 fft_synth	synthetic	spectral-synthetis
 filter	filters-presentations	basic-filters
@@ -62,10 +62,10 @@ grain_cross	grain-analysis	grain-correlation
 grain_dist	grain-analysis	grain-distributions
 grain_edge	grain-analysis
 grain_mark	grain-analysis	grain-threshold
-grain_rem_threshold	grain-analysis	grain-remove-threshold
-grain_wshed	grain-analysis	grain-watershed
 grainmeasure	grain-analysis	grain-measure
 grainremover	editing-correction
+grain_rem_threshold	grain-analysis	grain-remove-threshold
+grain_wshed	grain-analysis	grain-watershed
 graph_cd	graph-processing	graph-critical-dimension
 graph_cut	graph-processing
 graph_dos_spectrum	graph-processing	graph-dos-spectrum
@@ -92,12 +92,12 @@ iso28600	managing-files
 jeol	managing-files
 jpkscan	managing-files
 laplace	editing-correction	remove-data-under-mask
-level	leveling-and-background	plane-level
 level3	leveling-and-background	three-point-level
 level_grains	grain-analysis	grain-level
+level	leveling-and-background	plane-level
 lextfile	managing-files
-line	selections
 linecorrect	editing-correction	line-correction
+line	selections
 linestats	statistical-analysis	line-stats
 lno_synth	synthetic	line-noise-synthetis
 local_contrast	filters-presentations	local-contrast
@@ -123,8 +123,8 @@ nanonis	managing-files
 nanoobserver	managing-files
 nanoscan	managing-files
 nanoscantech	managing-files
-nanoscope	managing-files
 nanoscope-ii	managing-files
+nanoscope	managing-files
 nanotop	managing-files
 netcdf	managing-files
 neural	multidata	neural-network
@@ -134,13 +134,13 @@ nt-mdt	managing-files
 obj_synth	synthetic	object-synthetis
 oldmda	managing-files
 ols	managing-files
-omicron	managing-files
 omicronflat	managing-files
+omicron	managing-files
 omicronmatrix	managing-files
 opdfile	managing-files
 outliers	editing-correction	mask-of-outliers
-pat_synth	synthetic	pattern-synthetis
 pathlevel	leveling-and-background	path-level
+pat_synth	synthetic	pattern-synthetis
 pixmap	managing-files
 pltfile	managing-files
 plugin-proxy	plugins
@@ -165,6 +165,7 @@ rhk-spm32	managing-files
 robotics	managing-files
 rotate	basic-operations	rotate
 roughness	statistical-analysis	roughness-iso
+s94file	managing-files
 scale	basic-operations	scale
 scars	editing-correction	remove-scars
 sdfile	managing-files
@@ -181,9 +182,9 @@ slope_dist	statistical-analysis	slope-distribution
 spectro	single-point-spectra
 sphere-revolve	leveling-and-background	revolve-arc
 spip-asc	managing-files
-spml	managing-files
-spmlab	managing-files
 spmlabf	managing-files
+spmlab	managing-files
+spml	managing-files
 spotremove	editing-correction	remove-spots
 stats	statistical-analysis	stat-quantities
 stmprg	managing-files
@@ -197,6 +198,12 @@ tip_model	tip-convolution-artefacts	tip-model
 tipops	tip-convolution-artefacts	tip-operations
 unisoku	managing-files
 unrotate	editing-correction	unrotate
+volume_calibrate	volume-data
+volume_extract	volume-data
+volume_fdfit	volume-data
+volume_invert	volume-data
+volumize_layers	volume-data
+volumize	volume-data
 vtkfile	managing-files
 wipfile	managing-files
 witec-asc	managing-files
