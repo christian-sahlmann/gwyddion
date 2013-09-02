@@ -19,7 +19,6 @@
 
 /*
  * TODO: assuming cp1251 as 8bit encoding,
- * Implement scan direction in 4D
  */
 
 /**
@@ -67,6 +66,7 @@
 #define MAGIC1 "lsdlsd"
 #define MAGIC1_SIZE (sizeof(MAGIC1)-1)
 #define EXTENSION ".nstdat"
+#define NST4DHEADER_SIZE (4 + 4 + 4 + 4 + 14*8)
 
 typedef enum {
     Vertical   = 0,
@@ -112,6 +112,7 @@ static GwyDataField*  nst_read_3d         (const gchar *buffer,
 static GwyGraphModel* nst_read_2d         (const gchar *buffer,
                                            guint channel);
 static GwyBrick*      nst_read_4d         (const gchar *buffer,
+                                           gsize datasize,
                                            gchar **title);
 static guchar*        nst_get_file_content(unzFile *zipfile,
                                            gsize *contentsize,
@@ -191,7 +192,7 @@ nst_load(const gchar *filename,
     gint status, xres, yres;
     gchar *buffer, *line, *p, *title, *strkey;
     gchar *titlestr = NULL;
-    gsize size;
+    gsize size = 0;
 
     zipfile = unzOpen(filename);
     if (!zipfile) {
@@ -259,7 +260,7 @@ nst_load(const gchar *filename,
             }
             else if (gwy_strequal(line, "4d")) {
                 gwy_debug("4d: %u\n", channelno);
-                brick = nst_read_4d(p, &titlestr);
+                brick = nst_read_4d(p, size, &titlestr);
                 if (brick) {
                     strkey = g_strdup_printf("/brick/%d",
                                              channelno);
@@ -578,7 +579,8 @@ static GwyGraphModel* nst_read_2d(const gchar *buffer, guint channel)
     return gmodel;
 }
 
-static GwyBrick *nst_read_4d(const gchar *buffer, gchar **title)
+static GwyBrick *
+nst_read_4d(const gchar *buffer, gsize datasize, gchar **title)
 {
     GwyBrick *brick =  NULL;
     GwyDataLine *calibration = NULL;
@@ -586,18 +588,25 @@ static GwyBrick *nst_read_4d(const gchar *buffer, gchar **title)
     guint xres, yres, zres;
     gdouble xreal, yreal, zreal;
     gdouble *data = NULL;
-    gint i, j, k;
+    gint i, j, k, dataleft, x0, xn, dx, y0, yn, dy, npoints;
     GwySIUnit *siunit;
-    const guchar *p, *pcur;
+    const guchar *p;
+    gchar *pl;
     gchar *line, *attributes;
     gchar **lineparts;
-
     gint linecur;
 
-    p = buffer;
+    pl = (gchar *)buffer;
+    dataleft = datasize;
+    gwy_debug("4d size = %d", dataleft);
     header = g_new(NST4DHeader, 1);
-    while ((line = gwy_str_next_line(&p))) {
+    while ((line = gwy_str_next_line(&pl))) {
         if (gwy_strequal(line, "[BeginOfItem]")) {
+            dataleft -= (gint)pl - (gint)buffer;
+            p = pl;
+            if (dataleft <= NST4DHEADER_SIZE + 4) {
+                goto exit;
+            }
             header->direction    = (NSTDirection)gwy_get_gint32_le(&p);
             header->startpoint   = (NSTStartPoint)gwy_get_gint32_le(&p);
             header->nx           = gwy_get_guint32_le(&p);
@@ -616,29 +625,81 @@ static GwyBrick *nst_read_4d(const gchar *buffer, gchar **title)
             header->pixelxsize   = gwy_get_gdouble_le(&p);
             header->numpixels    = gwy_get_gdouble_le(&p);
             header->centralpixel = gwy_get_gdouble_le(&p);
+            dataleft -= NST4DHEADER_SIZE;
             xres = header->nx;
             yres = header->ny;
             zres = (gint)(header->maxforrec - header->minforrec);
+            gwy_debug("xres=%d, yres=%d, zres=%d", xres, yres, zres);
             xreal = header->xmax - header->xmin;
             yreal = header->ymax - header->ymin;
             zreal = header->maxforrec - header->minforrec;
             brick = gwy_brick_new(xres, yres, zres,
-                                  xreal, yreal, zreal, FALSE);
+                                  xreal, yreal, zreal, TRUE);
             gwy_brick_set_xoffset(brick, header->xmin);
             gwy_brick_set_yoffset(brick, header->ymin);
             gwy_brick_set_zoffset(brick, header->minforrec);
 
+            if (TopLeft == header->startpoint) {
+                gwy_debug("Top Left");
+                x0 = 0; xn = xres; dx = 1;
+                y0 = 0; yn = yres; dy = 1;
+            }
+            else if (TopRight == header->startpoint) {
+                gwy_debug("Top Right");
+                x0 = xres-1; xn = 0; dx = -1;
+                y0 = 0; yn = yres; dy = 1;
+            }
+            else if (BottomLeft == header->startpoint) {
+                gwy_debug("Bottom Left");
+                x0 = 0; xn = xres; dx = 1;
+                y0 = yres-1; yn = 0; dy = -1;
+            }
+            else if (BottomRight == header->startpoint) {
+                gwy_debug("Bottom Right");
+                x0 = xres-1; xn = 0; dx = -1;
+                y0 = yres-1; yn = 0; dy = -1;
+            }
+            else {
+                gwy_debug("Wrong startpoint");
+                goto exit;
+            }
+
             data = gwy_brick_get_data(brick);
 
-            /* FIXME: data order depends on direction and startpoint */
-            for (k = 0; k < zres; k++) {
-                pcur = p + sizeof(guint32) + k * sizeof(gdouble);
-                for (i = 0; i < yres; i++)
-                    for (j = 0; j < xres; j++) {
-                        *(data++) = gwy_get_gdouble_le(&pcur);
-                        pcur += sizeof(gdouble) * (zres - 1)
-                                                      + sizeof(guint32);
+            if (Horizontal == header->direction) {
+                gwy_debug("Horizontal");
+                for (i = y0; (dy > 0) ? i < yn : i >= yn; i += dy)
+                    for (j= x0; (dx > 0) ? j < xn : j >= xn; j += dx) {
+                        if (dataleft < 8 * zres + 4) {
+                            gwy_debug("Too little data left");
+                            goto exit2;
+                        }
+                        npoints = gwy_get_guint32_le(&p);
+                        for (k = 0; k < MIN(zres, npoints); k++) {
+                            *(data + k * xres * yres + i * xres + j)
+                                               = gwy_get_gdouble_le(&p);
+                        }
+                        dataleft -= 8 * zres + 4;
                     }
+            }
+            else if (Vertical == header->direction) {
+                gwy_debug("Vertical");
+                for (i = x0; (dx > 0) ? i < xn : i >= xn; i += dx)
+                    for (j= y0; (dy > 0) ? j < yn : j >= yn; j += dy) {
+                        if (dataleft < 8 * zres + 4) {
+                            gwy_debug("Too little data left");
+                            goto exit2;
+                        }
+                        npoints = gwy_get_guint32_le(&p);
+                        for (k = 0; k < MIN(zres, npoints); k++) {
+                            *(data + k * xres * yres + j * xres + i)
+                                               = gwy_get_gdouble_le(&p);
+                        }
+                        dataleft -= 8 * zres + 4;
+                    }
+            }
+            else {
+                gwy_debug("Wrong scan direction");
             }
 
             data = NULL;
@@ -675,6 +736,7 @@ static GwyBrick *nst_read_4d(const gchar *buffer, gchar **title)
         }
     }
 
+exit2:
     if (brick) {
         siunit = gwy_si_unit_new("m");
         gwy_brick_set_si_unit_x(brick, siunit);
@@ -690,6 +752,7 @@ static GwyBrick *nst_read_4d(const gchar *buffer, gchar **title)
         g_object_unref(siunit);
     }
 
+exit:
     g_free(header);
 
     return brick;
