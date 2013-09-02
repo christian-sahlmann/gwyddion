@@ -58,6 +58,7 @@ Modules:
 - Dimensions and Units: Can create a new channel or modify the current one.
 - AIST: Small fix of broken file parser in spectra loading.
 - NTMDT: Reimplemented Raman image loading as volume data.
+- NanoScantech: Implemented basic 4D data loading.
 
 
 2.31 (2013-02-21)

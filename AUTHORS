@@ -118,6 +118,8 @@ Percy Zahl, Andreas Klust, and other GXSM authors, see file AUTHORS in GXSM
 source tarball.
     RHK SPM32 plug-in helped us in writing our rhk-spm32 import module,
     although we wrote it from scratch.
+    WiTec Project plug-in helped us in writing our wipfile import module,
+    although we wrote it from scratch.
 
 Mindaugas Rackaitis, Penn State University
     ReadSTP Matlab method helped us in writing our stpfile import module,

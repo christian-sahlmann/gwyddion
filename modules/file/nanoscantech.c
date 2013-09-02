@@ -19,7 +19,7 @@
 
 /*
  * TODO: assuming cp1251 as 8bit encoding,
- * Raman scans (4d) slicing not implemented
+ * Implement scan direction in 4D
  */
 
 /**
@@ -68,6 +68,39 @@
 #define MAGIC1_SIZE (sizeof(MAGIC1)-1)
 #define EXTENSION ".nstdat"
 
+typedef enum {
+    Vertical   = 0,
+    Horizontal = 1
+} NSTDirection;
+
+typedef enum {
+    BottomLeft  = 0,
+    BottomRight = 1,
+    TopLeft     = 2,
+    TopRight    = 3
+} NSTStartPoint;
+
+typedef struct {
+    NSTDirection direction; /* scan direction */
+    NSTStartPoint startpoint; /* scan beginning position */
+    guint nx; /* pixel numbers */
+    guint ny;
+    gdouble xmin; /* scan positions, m */
+    gdouble xmax;
+    gdouble ymin;
+    gdouble ymax;
+    gdouble minforf; /* convolution apply borders */
+    gdouble maxforf;
+    gdouble minforrec; /* spectrum position on matrix */
+    gdouble maxforrec;
+    gdouble laserwl; /* nm */
+    gdouble centerwl; /* nm */
+    gdouble dispersion; /* nm/mm */
+    gdouble pixelxsize; /* mm */
+    gdouble numpixels;
+    gdouble centralpixel;
+} NST4DHeader;
+
 static gboolean       module_register     (void);
 static gint           nst_detect          (const GwyFileDetectInfo *fileinfo,
                                            gboolean only_name);
@@ -78,6 +111,8 @@ static GwyDataField*  nst_read_3d         (const gchar *buffer,
                                            gchar **title);
 static GwyGraphModel* nst_read_2d         (const gchar *buffer,
                                            guint channel);
+static GwyBrick*      nst_read_4d         (const gchar *buffer,
+                                           gchar **title);
 static guchar*        nst_get_file_content(unzFile *zipfile,
                                            gsize *contentsize,
                                            GError **error);
@@ -150,9 +185,10 @@ nst_load(const gchar *filename,
     GwyContainer *container = NULL;
     GwyDataField *dfield;
     GwyGraphModel *gmodel;
+    GwyBrick *brick;
     unzFile zipfile;
     guint channelno = 0;
-    gint status;
+    gint status, xres, yres;
     gchar *buffer, *line, *p, *title, *strkey;
     gchar *titlestr = NULL;
     gsize size;
@@ -186,12 +222,14 @@ nst_load(const gchar *filename,
                 titlestr = NULL;
                 dfield = nst_read_3d(p, &titlestr);
                 if (dfield) {
-                    GQuark key = gwy_app_get_data_key_for_id(channelno);
-
-                    gwy_container_set_object(container, key, dfield);
+                    strkey = g_strdup_printf("/%d/data",
+                                             channelno);
+                    gwy_container_set_object_by_name(container,
+                                                     strkey,
+                                                     dfield);
                     g_object_unref(dfield);
-
-                    strkey = g_strdup_printf("/%u/data/title",
+                    g_free(strkey);
+                    strkey = g_strdup_printf("/%d/data/title",
                                              channelno);
                     if (!titlestr)
                         title = g_strdup_printf("Channel %u",
@@ -220,8 +258,45 @@ nst_load(const gchar *filename,
                 }
             }
             else if (gwy_strequal(line, "4d")) {
-                /* Raman images */
                 gwy_debug("4d: %u\n", channelno);
+                brick = nst_read_4d(p, &titlestr);
+                if (brick) {
+                    strkey = g_strdup_printf("/brick/%d",
+                                             channelno);
+                    gwy_container_set_object_by_name(container,
+                                                     strkey,
+                                                     brick);
+                    g_free(strkey);
+                    strkey = g_strdup_printf("/brick/%d/title",
+                                             channelno);
+                    if (!titlestr)
+                        title = g_strdup_printf("Channel %u",
+                                                channelno);
+                    else
+                        title = g_strdup_printf("%s (%u)",
+                                                titlestr, channelno);
+                    gwy_container_set_string_by_name(container, strkey,
+                                                     title);
+                    g_free(strkey);
+                    xres = gwy_brick_get_xres(brick);
+                    yres = gwy_brick_get_yres(brick);
+                    dfield = gwy_data_field_new(xres, yres,
+                                                1.0, 1.0, FALSE);
+                    gwy_brick_mean_plane(brick, dfield,
+                                         0, 0, 0,
+                                         xres, yres, -1, FALSE);
+                    strkey = g_strdup_printf("/brick/%d/preview",
+                                             channelno);
+                    gwy_container_set_object_by_name(container,
+                                                     strkey,
+                                                     dfield);
+                    g_free(strkey);
+                    g_object_unref(brick);
+                    g_object_unref(dfield);
+                }
+                if (titlestr) {
+                    g_free(titlestr);
+                }
             }
 
             g_free(buffer);
@@ -502,6 +577,124 @@ static GwyGraphModel* nst_read_2d(const gchar *buffer, guint channel)
 
     return gmodel;
 }
+
+static GwyBrick *nst_read_4d(const gchar *buffer, gchar **title)
+{
+    GwyBrick *brick =  NULL;
+    GwyDataLine *calibration = NULL;
+    NST4DHeader *header = NULL;
+    guint xres, yres, zres;
+    gdouble xreal, yreal, zreal;
+    gdouble *data = NULL;
+    gint i, j, k;
+    GwySIUnit *siunit;
+    const guchar *p, *pcur;
+    gchar *line, *attributes;
+    gchar **lineparts;
+
+    gint linecur;
+
+    p = buffer;
+    header = g_new(NST4DHeader, 1);
+    while ((line = gwy_str_next_line(&p))) {
+        if (gwy_strequal(line, "[BeginOfItem]")) {
+            header->direction    = (NSTDirection)gwy_get_gint32_le(&p);
+            header->startpoint   = (NSTStartPoint)gwy_get_gint32_le(&p);
+            header->nx           = gwy_get_guint32_le(&p);
+            header->ny           = gwy_get_guint32_le(&p);
+            header->xmin         = gwy_get_gdouble_le(&p);
+            header->xmax         = gwy_get_gdouble_le(&p);
+            header->ymin         = gwy_get_gdouble_le(&p);
+            header->ymax         = gwy_get_gdouble_le(&p);
+            header->minforf      = gwy_get_gdouble_le(&p);
+            header->maxforf      = gwy_get_gdouble_le(&p);
+            header->minforrec    = gwy_get_gdouble_le(&p);
+            header->maxforrec    = gwy_get_gdouble_le(&p);
+            header->laserwl      = gwy_get_gdouble_le(&p);
+            header->centerwl     = gwy_get_gdouble_le(&p);
+            header->dispersion   = gwy_get_gdouble_le(&p);
+            header->pixelxsize   = gwy_get_gdouble_le(&p);
+            header->numpixels    = gwy_get_gdouble_le(&p);
+            header->centralpixel = gwy_get_gdouble_le(&p);
+            xres = header->nx;
+            yres = header->ny;
+            zres = (gint)(header->maxforrec - header->minforrec);
+            xreal = header->xmax - header->xmin;
+            yreal = header->ymax - header->ymin;
+            zreal = header->maxforrec - header->minforrec;
+            brick = gwy_brick_new(xres, yres, zres,
+                                  xreal, yreal, zreal, FALSE);
+            gwy_brick_set_xoffset(brick, header->xmin);
+            gwy_brick_set_yoffset(brick, header->ymin);
+            gwy_brick_set_zoffset(brick, header->minforrec);
+
+            data = gwy_brick_get_data(brick);
+
+            /* FIXME: data order depends on direction and startpoint */
+            for (k = 0; k < zres; k++) {
+                pcur = p + sizeof(guint32) + k * sizeof(gdouble);
+                for (i = 0; i < yres; i++)
+                    for (j = 0; j < xres; j++) {
+                        *(data++) = gwy_get_gdouble_le(&pcur);
+                        pcur += sizeof(gdouble) * (zres - 1)
+                                                      + sizeof(guint32);
+                    }
+            }
+
+            data = NULL;
+            calibration = gwy_data_line_new(zres, zreal, TRUE);
+            data = gwy_data_line_get_data(calibration);
+            for (i = 0; i < zres; i++)
+                *(data++) = 1e-9 * (header->centerwl
+                          + header->dispersion * header->pixelxsize
+                          * (i - header->centralpixel));
+            siunit = gwy_si_unit_new("m");
+            gwy_data_line_set_si_unit_y(calibration, siunit);
+            g_object_unref(siunit);
+            gwy_brick_set_zcalibration(brick, calibration);
+
+            break;
+        }
+        else if (g_str_has_prefix(line, "Attributes")) {
+            lineparts = g_strsplit(line, " ", 2);
+            attributes = g_strdup(lineparts[1]);
+            g_strfreev(lineparts);
+            lineparts = g_strsplit(attributes, "*_*|^_^", 1024);
+            g_free(attributes);
+            linecur = 0;
+            while (lineparts[linecur]) {
+                if (g_str_has_prefix(lineparts[linecur], "Name")) {
+                    if (((*title) == NULL) && (lineparts[linecur+1]))
+                        *title = g_convert(lineparts[linecur+1],
+                                           -1, "UTF-8", "cp1251",
+                                           NULL, NULL, NULL);
+                }
+                linecur++;
+            }
+            g_strfreev(lineparts);
+        }
+    }
+
+    if (brick) {
+        siunit = gwy_si_unit_new("m");
+        gwy_brick_set_si_unit_x(brick, siunit);
+        g_object_unref(siunit);
+        siunit = gwy_si_unit_new("m");
+        gwy_brick_set_si_unit_y(brick, siunit);
+        g_object_unref(siunit);
+        siunit = gwy_si_unit_new("m");
+        gwy_brick_set_si_unit_z(brick, siunit);
+        g_object_unref(siunit);
+        siunit = gwy_si_unit_new("Counts");
+        gwy_brick_set_si_unit_w(brick, siunit);
+        g_object_unref(siunit);
+    }
+
+    g_free(header);
+
+    return brick;
+}
+
 
 static guchar*
 nst_get_file_content(unzFile *zipfile, gsize *contentsize, GError **error)
