@@ -421,7 +421,9 @@ nst_read_3d(const gchar *buffer, GwyContainer **metadata, gchar **title)
             linecur = 0;
             while (lineparts[linecur]) {
                 if (((linecur % 2) == 0) && (lineparts[linecur+1])) {
-                    key = g_strdup(lineparts[linecur]);
+                    key = g_convert(lineparts[linecur], -1,
+                                    "UTF-8", "cp1251",
+                                    NULL, NULL, NULL);
                     value = g_convert(lineparts[linecur + 1], -1,
                                       "UTF-8", "cp1251",
                                       NULL, NULL, NULL);
@@ -760,7 +762,9 @@ nst_read_4d(const gchar *buffer, gsize datasize,
             linecur = 0;
             while (lineparts[linecur]) {
                 if (((linecur % 2) == 0) && (lineparts[linecur+1])) {
-                    key = g_strdup(lineparts[linecur]);
+                    key = g_convert(lineparts[linecur], -1,
+                                    "UTF-8", "cp1251",
+                                    NULL, NULL, NULL);
                     value = g_convert(lineparts[linecur + 1], -1,
                                       "UTF-8", "cp1251",
                                       NULL, NULL, NULL);
