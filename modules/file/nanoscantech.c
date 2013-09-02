@@ -108,11 +108,13 @@ static GwyContainer*  nst_load            (const gchar *filename,
                                            GwyRunType mode,
                                            GError **error);
 static GwyDataField*  nst_read_3d         (const gchar *buffer,
+                                           GwyContainer **metadata,
                                            gchar **title);
 static GwyGraphModel* nst_read_2d         (const gchar *buffer,
                                            guint channel);
 static GwyBrick*      nst_read_4d         (const gchar *buffer,
                                            gsize datasize,
+                                           GwyContainer **metadata,
                                            gchar **title);
 static guchar*        nst_get_file_content(unzFile *zipfile,
                                            gsize *contentsize,
@@ -183,7 +185,7 @@ nst_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
          GError **error)
 {
-    GwyContainer *container = NULL;
+    GwyContainer *container = NULL, *metadata = NULL;
     GwyDataField *dfield;
     GwyGraphModel *gmodel;
     GwyBrick *brick;
@@ -221,7 +223,7 @@ nst_load(const gchar *filename,
             if (gwy_strequal(line, "3d")) {
                 gwy_debug("3d: %u\n", channelno);
                 titlestr = NULL;
-                dfield = nst_read_3d(p, &titlestr);
+                dfield = nst_read_3d(p, &metadata, &titlestr);
                 if (dfield) {
                     strkey = g_strdup_printf("/%d/data",
                                              channelno);
@@ -229,6 +231,15 @@ nst_load(const gchar *filename,
                                                      strkey,
                                                      dfield);
                     g_object_unref(dfield);
+                    g_free(strkey);
+                    strkey = g_strdup_printf("/%d/meta",
+                                             channelno);
+                    if (metadata) {
+                        gwy_container_set_object_by_name(container,
+                                                         strkey,
+                                                         metadata);
+                        g_object_unref(metadata);
+                    }
                     g_free(strkey);
                     strkey = g_strdup_printf("/%d/data/title",
                                              channelno);
@@ -260,7 +271,7 @@ nst_load(const gchar *filename,
             }
             else if (gwy_strequal(line, "4d")) {
                 gwy_debug("4d: %u\n", channelno);
-                brick = nst_read_4d(p, size, &titlestr);
+                brick = nst_read_4d(p, size, &metadata, &titlestr);
                 if (brick) {
                     strkey = g_strdup_printf("/brick/%d",
                                              channelno);
@@ -278,6 +289,15 @@ nst_load(const gchar *filename,
                                                 titlestr, channelno);
                     gwy_container_set_string_by_name(container, strkey,
                                                      title);
+                    g_free(strkey);
+                    strkey = g_strdup_printf("/brick/%d/meta",
+                                             channelno);
+                    if (metadata) {
+                        gwy_container_set_object_by_name(container,
+                                                         strkey,
+                                                         metadata);
+                        g_object_unref(metadata);
+                    }
                     g_free(strkey);
                     xres = gwy_brick_get_xres(brick);
                     yres = gwy_brick_get_yres(brick);
@@ -316,11 +336,13 @@ fail:
     return container;
 }
 
-static GwyDataField *nst_read_3d(const gchar *buffer, gchar **title)
+static GwyDataField *
+nst_read_3d(const gchar *buffer, GwyContainer **metadata, gchar **title)
 {
     GwyDataField *dfield = NULL;
+    GwyContainer *meta = NULL;
     GwySIUnit *siunitxy = NULL, *siunitz = NULL;
-    gchar *p, *line, *attributes, *unit;
+    gchar *p, *line, *attributes, *unit, *key, *value;
     gchar **lineparts;
     gint x, y, xmax = 0, ymax = 0, i, j;
     gint power10xy = 1, power10z = 1;
@@ -332,6 +354,7 @@ static GwyDataField *nst_read_3d(const gchar *buffer, gchar **title)
 
     p = (gchar *)buffer;
     dataarray = g_array_new(FALSE, TRUE, sizeof(gdouble));
+    meta = gwy_container_new();
     while ((line = gwy_str_next_line(&p))) {
         if (gwy_strequal(line, "[BeginOfItem]")) {
             while ((line = gwy_str_next_line(&p))) {
@@ -397,6 +420,14 @@ static GwyDataField *nst_read_3d(const gchar *buffer, gchar **title)
             g_free(attributes);
             linecur = 0;
             while (lineparts[linecur]) {
+                if (((linecur % 2) == 0) && (lineparts[linecur+1])) {
+                    key = g_strdup(lineparts[linecur]);
+                    value = g_convert(lineparts[linecur + 1], -1,
+                                      "UTF-8", "cp1251",
+                                      NULL, NULL, NULL);
+                    gwy_container_set_string_by_name(meta, key, value);
+                    g_free(key);
+                }
                 if (g_str_has_prefix(lineparts[linecur], "Name")) {
                     if (((*title) == NULL) && (lineparts[linecur+1]))
                         *title = g_convert(lineparts[linecur+1],
@@ -435,6 +466,7 @@ static GwyDataField *nst_read_3d(const gchar *buffer, gchar **title)
         g_object_unref(siunitz);
     }
 
+    *metadata = meta;
     g_array_free(dataarray, TRUE);
     return dfield;
 }
@@ -580,9 +612,11 @@ static GwyGraphModel* nst_read_2d(const gchar *buffer, guint channel)
 }
 
 static GwyBrick *
-nst_read_4d(const gchar *buffer, gsize datasize, gchar **title)
+nst_read_4d(const gchar *buffer, gsize datasize,
+            GwyContainer **metadata, gchar **title)
 {
     GwyBrick *brick =  NULL;
+    GwyContainer *meta = NULL;
     GwyDataLine *calibration = NULL;
     NST4DHeader *header = NULL;
     guint xres, yres, zres;
@@ -592,7 +626,7 @@ nst_read_4d(const gchar *buffer, gsize datasize, gchar **title)
     GwySIUnit *siunit;
     const guchar *p;
     gchar *pl;
-    gchar *line, *attributes;
+    gchar *line, *attributes, *key, *value;
     gchar **lineparts;
     gint linecur;
 
@@ -717,6 +751,7 @@ nst_read_4d(const gchar *buffer, gsize datasize, gchar **title)
             break;
         }
         else if (g_str_has_prefix(line, "Attributes")) {
+            meta = gwy_container_new();
             lineparts = g_strsplit(line, " ", 2);
             attributes = g_strdup(lineparts[1]);
             g_strfreev(lineparts);
@@ -724,6 +759,14 @@ nst_read_4d(const gchar *buffer, gsize datasize, gchar **title)
             g_free(attributes);
             linecur = 0;
             while (lineparts[linecur]) {
+                if (((linecur % 2) == 0) && (lineparts[linecur+1])) {
+                    key = g_strdup(lineparts[linecur]);
+                    value = g_convert(lineparts[linecur + 1], -1,
+                                      "UTF-8", "cp1251",
+                                      NULL, NULL, NULL);
+                    gwy_container_set_string_by_name(meta, key, value);
+                    g_free(key);
+                }
                 if (g_str_has_prefix(lineparts[linecur], "Name")) {
                     if (((*title) == NULL) && (lineparts[linecur+1]))
                         *title = g_convert(lineparts[linecur+1],
@@ -751,6 +794,7 @@ exit2:
         gwy_brick_set_si_unit_w(brick, siunit);
         g_object_unref(siunit);
     }
+    *metadata = meta;
 
 exit:
     g_free(header);
