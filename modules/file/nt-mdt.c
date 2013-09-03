@@ -17,6 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
+
 /* TODO: some metadata ... */
 
 /**
@@ -53,21 +54,12 @@
 #include <libprocess/datafield.h>
 #include <libprocess/spectra.h>
 #include <libprocess/brick.h>
-#include <libgwydgets/gwygraphmodel.h>
-#include <libgwydgets/gwygraphbasics.h>
-#include <libgwymodule/gwymodule-file.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwygraph.h>
-#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwydgets.h>
+#include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
 #include <app/gwymoduleutils.h>
 
-#include <glib.h>
 #include <glib/gprintf.h>
-
-#include <gtk/gtk.h>
-#include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include "err.h"
 #include "get.h"
