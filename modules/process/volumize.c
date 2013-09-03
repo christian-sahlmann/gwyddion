@@ -95,6 +95,9 @@ volumize(GwyContainer *data, GwyRunType run)
 
     brick = create_brick_from_datafield(dfield);
     dfield = gwy_data_field_duplicate(dfield);
+    gwy_brick_sum_plane(brick, dfield, 0, 0, 0, gwy_brick_get_xres(brick),
+                                    gwy_brick_get_yres(brick), -1, FALSE);
+
     gwy_app_data_browser_add_brick(brick, dfield, data, TRUE);
     g_object_unref(brick);
     g_object_unref(dfield);
@@ -143,7 +146,7 @@ create_brick_from_datafield(GwyDataField *dfield)
     gwy_serializable_clone(G_OBJECT(gwy_data_field_get_si_unit_xy(dfield)),
                            G_OBJECT(gwy_brick_get_si_unit_y(brick)));
     gwy_serializable_clone(G_OBJECT(gwy_data_field_get_si_unit_z(dfield)),
-                           G_OBJECT(gwy_brick_get_si_unit_w(brick)));
+                           G_OBJECT(gwy_brick_get_si_unit_z(brick)));
 
     ddata = gwy_data_field_get_data(lowres);
     bdata = gwy_brick_get_data(brick);
