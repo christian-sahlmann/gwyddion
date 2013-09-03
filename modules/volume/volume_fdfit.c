@@ -635,7 +635,7 @@ load_curve(VolfitControls *controls)
     calibration = gwy_brick_get_zcalibration(args->brick);
     gwy_data_line_set_si_unit_x(dline, gwy_brick_get_si_unit_z(args->brick));
     gwy_data_line_set_si_unit_y(dline, gwy_brick_get_si_unit_w(args->brick));
-    printf("line range is %g, points %d\n", gwy_data_line_get_real(dline), gwy_data_line_get_res(dline));
+    //printf("line range is %g, points %d\n", gwy_data_line_get_real(dline), gwy_data_line_get_res(dline));
     gwy_graph_model_remove_all_curves(args->graph_model);
 
     cmodel = gwy_graph_curve_model_new();
@@ -924,7 +924,7 @@ volfit_do(VolfitControls *controls)
 
     args = controls->args;
 
-    printf("Now fit everything\n");
+    //printf("Now fit everything\n");
 
     gwy_app_wait_start(GTK_WINDOW(controls->dialog), "Computation in progress.");
 
