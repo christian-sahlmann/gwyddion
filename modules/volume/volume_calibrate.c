@@ -272,6 +272,13 @@ volcal(GwyContainer *data, GwyRunType run)
     args.wunit = args.wunitorig;
 
 
+/*    printf("x: %g %d %g (%s) y:  %g %d %g (%s) z:  %g %d %g (%s) w:  %g %d %g (%s)\n", 
+                                          args.xorig, args.xexponent, args.x0orig, args.xunitorig,
+                                          args.yorig, args.yexponent, args.y0orig, args.yunitorig,
+                                          args.zorig, args.zexponent, args.z0orig, args.zunitorig,
+                                          args.worig, args.wexponent, -1.0, args.wunitorig);
+*/
+
     if (run == GWY_RUN_INTERACTIVE) {
         ok = volcal_dialog(&args, brick);
         volcal_save_args(gwy_app_settings_get(), &args);
@@ -285,6 +292,9 @@ volcal(GwyContainer *data, GwyRunType run)
 
     g_return_if_fail(GWY_IS_BRICK(brick));
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+
+//    printf("what should be done: xyz real %g %g %g,  w ratio %g and shift %g\n", args.xreal, args.yreal, args.zreal,
+//                                           args.wshift);
 
 
     gwy_brick_set_xreal(brick, args.xreal);
