@@ -478,7 +478,7 @@ static GwyGraphModel* nst_read_2d(const gchar *buffer, guint channel)
     GwyGraphCurveModel *spectra;
     GwyGraphModel *gmodel;
     GwySIUnit *siunitx = NULL, *siunity = NULL;
-    gchar *p, *line, *unit;
+    gchar *p, *line, *unit, *xlabel = NULL, *ylabel = NULL;
     gchar **lineparts;
     gint linecur;
     gdouble *xdata, *ydata, x, y;
@@ -579,6 +579,21 @@ static GwyGraphModel* nst_read_2d(const gchar *buffer, guint channel)
                                               -1, "UTF-8", "cp1251",
                                               NULL, NULL, NULL);
                 }
+                else if (g_str_has_prefix(lineparts[linecur],
+                                                            "XLabel")) {
+                    if ((!xlabel) && (lineparts[linecur+1]))
+                        xlabel = g_convert(lineparts[linecur+1],
+                                           -1, "UTF-8", "cp1251",
+                                           NULL, NULL, NULL);
+                }
+                else if (g_str_has_prefix(lineparts[linecur],
+                                                            "YLabel")) {
+                    if ((!ylabel) && (lineparts[linecur+1]))
+                        ylabel = g_convert(lineparts[linecur+1],
+                                           -1, "UTF-8", "cp1251",
+                                           NULL, NULL, NULL);
+                }
+
                 linecur++;
             }
             g_strfreev(lineparts);
@@ -591,23 +606,27 @@ static GwyGraphModel* nst_read_2d(const gchar *buffer, guint channel)
         title = g_strdup_printf("%s (%u)", framename, channel);
         g_free(framename);
     }
-    g_object_set(gmodel,
-                 "title", title,
-                 NULL);
+    g_object_set(gmodel, "title", title, NULL);
     g_free(title);
 
     if (siunitx) {
-        g_object_set(gmodel,
-                     "si-unit-x", siunitx,
-                     NULL);
+        g_object_set(gmodel, "si-unit-x", siunitx, NULL);
         g_object_unref(siunitx);
     }
 
     if (siunity) {
-        g_object_set(gmodel,
-                     "si-unit-y", siunity,
-                     NULL);
+        g_object_set(gmodel, "si-unit-y", siunity, NULL);
         g_object_unref(siunity);
+    }
+
+    if (xlabel) {
+        gwy_graph_model_set_axis_label(gmodel, GTK_POS_BOTTOM, xlabel);
+        g_free(xlabel);
+    }
+
+    if (ylabel) {
+        gwy_graph_model_set_axis_label(gmodel, GTK_POS_LEFT, ylabel);
+        g_free(ylabel);
     }
 
     return gmodel;
