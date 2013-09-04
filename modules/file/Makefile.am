@@ -166,7 +166,7 @@ EXTRA_DIST = \
 	$(disabled_sources) \
 	1CHECKLIST
 
-if OS_WIN32
+if OS_MSWIN
 no_undefined = -no-undefined
 endif
 

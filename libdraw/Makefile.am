@@ -23,7 +23,7 @@ libgwydraw2include_HEADERS = \
 lib_LTLIBRARIES = libgwydraw2.la
 
 
-if OS_WIN32
+if OS_MSWIN
 no_undefined = -no-undefined
 export_symbols = -export-symbols libgwydraw2.def
 libgwydraw2_la_DEPENDENCIES = libgwydraw2.def

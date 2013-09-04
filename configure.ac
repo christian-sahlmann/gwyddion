@@ -109,19 +109,27 @@ fi
 
 #############################################################################
 # Win32.
-AC_MSG_CHECKING([for native Win32])
+AC_MSG_CHECKING([for native Microsoft Windows])
 case "$host_os" in
-  mingw*)
-    os_win32=yes
+  mingw32)
+    os_mswin=yes
     HOST_CFLAGS="-mms-bitfields"
     HOST_LDFLAGS="-Wl,-subsystem,windows"
+    MSWIN_BITS=32
+    ;;
+  mingw64)
+    os_mswin=yes
+    HOST_CFLAGS="-mms-bitfields"
+    HOST_LDFLAGS="-Wl,-subsystem,windows"
+    MSWIN_BITS=64
     ;;
   *)
-    os_win32=no
+    os_mswin=no
     ;;
 esac
-AC_MSG_RESULT([$os_win32])
-AM_CONDITIONAL([OS_WIN32],[test "$os_win32" = "yes"])
+AC_MSG_RESULT([$os_mswin])
+AM_CONDITIONAL([OS_MSWIN],[test "$os_mswin" = "yes"])
+AC_SUBST(MSWIN_BITS)
 
 #############################################################################
 # Darwin.
@@ -236,7 +244,7 @@ fi
 
 if test "x$enable_pygwy" != xno; then
   libpython=python$PYTHON_VERSION
-  if test "x$os_win32" = xyes; then
+  if test "x$os_mswin" = xyes; then
     libpython=`echo $libpython | sed 's%\\.%%'`
   fi
   AC_CHECK_LIB($libpython, PyRun_String,

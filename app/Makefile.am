@@ -58,7 +58,7 @@ lib_LTLIBRARIES = libgwyapp2.la
 BUILT_SOURCES = \
 	authors.h
 
-if OS_WIN32
+if OS_MSWIN
 no_undefined = -no-undefined
 export_symbols = -export-symbols libgwyapp2.def
 libgwyapp2_la_DEPENDENCIES = libgwyapp2.def

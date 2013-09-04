@@ -16,7 +16,7 @@ volume_LTLIBRARIES = \
 EXTRA_DIST = \
 	$(disabled_sources)
 
-if OS_WIN32
+if OS_MSWIN
 no_undefined = -no-undefined
 endif
 

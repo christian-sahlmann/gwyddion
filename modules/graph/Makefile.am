@@ -14,7 +14,7 @@ graph_LTLIBRARIES = \
 	graph_fit.la \
 	graph_level.la
 
-if OS_WIN32
+if OS_MSWIN
 no_undefined = -no-undefined
 endif
 

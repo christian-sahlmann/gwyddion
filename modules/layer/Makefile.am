@@ -12,7 +12,7 @@ layer_LTLIBRARIES = \
 noinst_HEADERS = \
 	layer.h
 
-if OS_WIN32
+if OS_MSWIN
 no_undefined = -no-undefined
 endif
 

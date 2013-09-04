@@ -25,7 +25,7 @@ module_LTLIBRARIES = \
 EXTRA_DIST = \
 	$(plugin_proxy_sources)
 
-if OS_WIN32
+if OS_MSWIN
 no_undefined = -no-undefined
 endif
 

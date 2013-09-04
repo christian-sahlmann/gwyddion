@@ -50,7 +50,7 @@ noinst_HEADERS = \
 
 lib_LTLIBRARIES = libgwyprocess2.la
 
-if OS_WIN32
+if OS_MSWIN
 no_undefined = -no-undefined
 export_symbols = -export-symbols libgwyprocess2.def
 libgwyprocess2_la_DEPENDENCIES = libgwyprocess2.def

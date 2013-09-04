@@ -9,7 +9,7 @@ libgwyapp = $(top_builddir)/app/libgwyapp2.la
 
 kde4dir = $(KDE4_MODULE_DIR)
 
-if OS_WIN32
+if OS_MSWIN
 no_undefined = -no-undefined
 endif
 

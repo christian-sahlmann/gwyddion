@@ -28,6 +28,7 @@ Var RadioButton
 
 ;----------------------------------------------------------------------------
 
+SetRegView @MSWIN_BITS@
 RequestExecutionLevel admin
 SetCompressor /SOLID lzma
 ;SetCompressor /SOLID zlib

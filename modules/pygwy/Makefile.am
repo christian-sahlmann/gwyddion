@@ -187,7 +187,7 @@ EXTRA_DIST = \
 	pygwy.h \
 	gwyutils.py
 
-if OS_WIN32
+if OS_MSWIN
 no_undefined = -no-undefined
 endif
 
@@ -245,7 +245,7 @@ gwy_la_LIBADD = \
 	$(top_builddir)/libprocess/libgwyprocess2.la \
 	$(PYTHON_LIBS) $(PYGTK_LIBS) @GTK_LIBS@
 
-if OS_WIN32
+if OS_MSWIN
 install-exec-hook:
 	cp "$(DESTDIR)$(pyexecdir)/gwy.dll" "$(DESTDIR)$(bindir)/gwy.pyd"
 

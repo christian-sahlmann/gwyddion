@@ -33,7 +33,7 @@ noinst_HEADERS = \
 
 lib_LTLIBRARIES = libgwyddion2.la
 
-if OS_WIN32
+if OS_MSWIN
 no_undefined = -no-undefined
 export_symbols = -export-symbols libgwyddion2.def
 libgwyddion2_la_DEPENDENCIES = libgwyddion2.def

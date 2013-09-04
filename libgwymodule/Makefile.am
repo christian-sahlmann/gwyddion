@@ -33,7 +33,7 @@ noinst_HEADERS = \
 
 lib_LTLIBRARIES = libgwymodule2.la
 
-if OS_WIN32
+if OS_MSWIN
 no_undefined = -no-undefined
 export_symbols = -export-symbols libgwymodule2.def
 libgwymodule2_la_DEPENDENCIES = libgwymodule2.def

@@ -75,7 +75,7 @@ noinst_HEADERS = \
 
 lib_LTLIBRARIES = libgwydgets2.la
 
-if OS_WIN32
+if OS_MSWIN
 no_undefined = -no-undefined
 export_symbols = -export-symbols libgwydgets2.def
 libgwydgets2_la_DEPENDENCIES = libgwydgets2.def
