@@ -638,7 +638,7 @@ nst_read_4d(const gchar *buffer, gsize datasize,
     header = g_new(NST4DHeader, 1);
     while ((line = gwy_str_next_line(&pl))) {
         if (gwy_strequal(line, "[BeginOfItem]")) {
-            dataleft -= (gint)pl - (gint)buffer;
+            dataleft -= (gint)(pl - buffer);
             p = pl;
             if (dataleft <= NST4DHEADER_SIZE + 4) {
                 goto exit;
