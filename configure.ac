@@ -111,17 +111,14 @@ fi
 # Win32.
 AC_MSG_CHECKING([for native Microsoft Windows])
 case "$host_os" in
-  mingw32)
+  mingw*)
     os_mswin=yes
     HOST_CFLAGS="-mms-bitfields"
     HOST_LDFLAGS="-Wl,-subsystem,windows"
-    MSWIN_BITS=32
-    ;;
-  mingw64)
-    os_mswin=yes
-    HOST_CFLAGS="-mms-bitfields"
-    HOST_LDFLAGS="-Wl,-subsystem,windows"
-    MSWIN_BITS=64
+    case "$host_cpu" in
+      *64) MSWIN_BITS=64;;
+      *) MSWIN_BITS=32;;
+    esac
     ;;
   *)
     os_mswin=no
