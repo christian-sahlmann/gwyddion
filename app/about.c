@@ -244,6 +244,7 @@ fill_features(GtkTextBuffer *buffer)
                                NULL);
 
 #ifdef HAVE_GTKGLEXT
+    /* FIXME: This shows some strange numbers in Win32 */
     s = g_strdup_printf("GtkGLExt %d.%d.%d\n",
                         gtkglext_major_version,
                         gtkglext_minor_version,
