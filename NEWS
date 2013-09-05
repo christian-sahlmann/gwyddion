@@ -61,7 +61,7 @@ Modules:
 - NanoScanTech: Implemented basic 4D data loading.
 
 Others:
-- The Win64 version uses correct set of registry keys, installation paths and
+- The Win64 package uses correct set of registry keys, installation paths and
   the shortcut name was differentiated, allowing parallel installation with
   Win32.
 
