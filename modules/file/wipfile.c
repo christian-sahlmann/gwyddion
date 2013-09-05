@@ -60,6 +60,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <libprocess/spectra.h>
+#include <libprocess/brick.h>
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwygraphbasics.h>
 #include <libgwymodule/gwymodule-file.h>
@@ -207,6 +208,7 @@ typedef struct {
 typedef struct {
     guint numgraph;
     guint numimages;
+    guint numbricks;
     GwyContainer *data;
 } WIPFile;
 
@@ -263,6 +265,7 @@ static gdouble       wip_pixel_to_lambda       (gint i,
                                        WIPSpectralTransform *transform);
 static GwyGraphModel*
                      wip_read_graph            (GNode *node);
+static GwyBrick*     wip_read_graph_image      (GNode *node);
 static void          wip_flip_xy               (GwyDataField *source,
                                                 GwyDataField *dest);
 static GwyDataField *
@@ -771,9 +774,6 @@ static GwyGraphModel * wip_read_graph(GNode *node)
         return NULL;
     }
 
-    g_node_traverse (node, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
-                     wip_read_graph_tags, (gpointer)header);
-
     xdata = g_new(gdouble, numpoints);
     ydata = g_new(gdouble, numpoints);
 
@@ -867,6 +867,270 @@ static GwyGraphModel * wip_read_graph(GNode *node)
     return gmodel;
 }
 
+static GwyBrick * wip_read_graph_image(GNode *node)
+{
+    WIPGraph *header;
+    WIPSpectralTransform *xtransform;
+    WIPAxis *waxis;
+    WIPSpaceTransform *xyaxis;
+    WIPIdNode *idnode;
+    GwyBrick *brick = NULL;
+    GwyDataLine *cal;
+    GwySIUnit *siunitxy = NULL, *siunitz = NULL, *siunitw = NULL;
+    gdouble *data;
+    gdouble xscale, yscale, wscale;
+    gint i, j, k;
+    gint xres, yres, zres;
+    gint power10xy = 0, power10w = 0;
+    const guchar *p;
+
+    header = g_new0(WIPGraph, 1);
+
+    g_node_traverse (node, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                     wip_read_graph_tags, (gpointer)header);
+
+    if ((header->sizex <= 1) && (header->sizey <= 1)) { // not an image
+        g_free(header);
+        return NULL;
+    }
+
+    gwy_debug("sizex = %d sizey = %d\n", header->sizex, header->sizey);
+    gwy_debug("sizegraph = %d\n", header->sizegraph);
+    gwy_debug("dimension=%d\n", header->dimension);
+    gwy_debug("datatype = %d\n", header->datatype);
+    gwy_debug("xrange = %d yrange = %d\n", header->xrange, header->yrange);
+
+    xres = header->sizex;
+    yres = header->sizey;
+    zres = header->sizegraph;
+
+    gwy_debug("numpoints * databytes = %d, datasize = %d\n",
+            xres * yres * zres * WIPDataSize[header->datatype],
+            header->datasize);
+    if ((xres * yres * zres <= 0)
+     || (header->datatype > 10)
+     || (header->datasize != WIPDataSize[header->datatype]
+                           * xres * yres * zres)) {
+        g_free(header);
+        return NULL;
+    }
+
+    //Try to read xy units and scale;
+    idnode = g_new0(WIPIdNode, 1);
+    idnode->id = header->spacetransformid;
+    g_node_traverse (g_node_get_root(node),
+                     G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                     wip_find_by_id, (gpointer)idnode);
+
+    xyaxis = g_new0(WIPSpaceTransform, 1);
+    g_node_traverse (idnode->node->parent->parent,
+                     G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                     wip_read_space_tr_tag, (gpointer)xyaxis);
+
+    if (xyaxis->unitname)
+        siunitxy = gwy_si_unit_new_parse(xyaxis->unitname, &power10xy);
+    else
+        siunitxy = gwy_si_unit_new("");
+    xscale = xyaxis->scale[0];
+    yscale = xyaxis->scale[4];
+    if (xscale == 0.0) {
+        g_warning("Wrong x-scale");
+        xscale = 1.0;
+    }
+    if (yscale == 0.0) {
+        g_warning("Wrong y-scale");
+        yscale = 1.0;
+    }
+    if (yscale < 0.0) {
+        yscale = fabs(yscale);
+    }
+    if (xscale < 0.0) {
+        xscale = fabs(xscale);
+    }
+    g_free(xyaxis);
+
+    //Try to read w units
+    idnode->id = header->zinterpid;
+    g_node_traverse (g_node_get_root (node),
+                     G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                     wip_find_by_id, (gpointer)idnode);
+    waxis = g_new0(WIPAxis, 1);
+    g_node_traverse (idnode->node->parent->parent,
+                     G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                     wip_read_axis_tags,
+                     (gpointer)waxis);
+    if (waxis->unitname)
+        siunitw = gwy_si_unit_new_parse(waxis->unitname, &power10w);
+    else
+        siunitw = gwy_si_unit_new("");
+    g_free(waxis);
+    wscale = pow(10.0, power10w);
+    if (wscale == 0.0)
+        wscale = 1.0;
+
+    brick = gwy_brick_new(xres, yres, zres,
+                          xres * pow(10.0, power10xy) * xscale,
+                          yres * pow(10.0, power10xy) * yscale,
+                          zres, TRUE);
+    data = gwy_brick_get_data(brick);
+    p = header->data;
+
+    switch(header->datatype) {
+        case WIP_DATA_LIST:
+        case WIP_DATA_EXTENDED:
+            /* cannot read this */
+            break;
+        case WIP_DATA_FLOAT:
+            for (k = 0; k < zres; k++) {
+                p = header->data;
+                p += k * sizeof(gfloat);
+                for (i = 0; i < xres; i++)
+                    for (j = 0; j < yres; j++) {
+                        *(data + i + j * xres + k * xres * yres)
+                              = wscale * (gdouble)gwy_get_gfloat_le(&p);
+                        p += (zres - 1) * sizeof(gfloat);
+                    }
+            }
+            break;
+        case WIP_DATA_DOUBLE:
+            for (k = 0; k < zres; k++) {
+                p = header->data;
+                p += k * sizeof(gdouble);
+                for (i = 0; i < xres; i++)
+                    for (j = 0; j < yres; j++) {
+                        *(data + i + j * xres + k * xres * yres)
+                                      = wscale * gwy_get_gdouble_le(&p);
+                        p += (zres - 1) * sizeof(gdouble);
+                    }
+            }
+            break;
+        case WIP_DATA_INT8:
+        case WIP_DATA_UINT8:
+        case WIP_DATA_BOOL:
+            for (k = 0; k < zres; k++) {
+                p = header->data + k;
+                for (i = 0; i < xres; i++)
+                    for (j = 0; j < yres; j++) {
+                        *(data + i + j * xres + k * xres * yres)
+                                                        = wscale * (*p);
+                        p += zres;
+                    }
+            }
+            break;
+        case WIP_DATA_INT64:
+            for (k = 0; k < zres; k++) {
+                p = header->data + k * 8;
+                for (i = 0; i < xres; i++)
+                    for (j = 0; j < yres; j++) {
+                        *(data + i + j * xres + k * xres * yres)
+                          = wscale * GINT64_FROM_LE(*(const gint64 *)p);
+                        p += zres * 8;
+                    }
+            }
+            break;
+        case WIP_DATA_INT32:
+            for (k = 0; k < zres; k++) {
+                p = header->data + k * 4;
+                for (i = 0; i < xres; i++)
+                    for (j = 0; j < yres; j++) {
+                        *(data + i + j * xres + k * xres * yres)
+                          = wscale * GINT32_FROM_LE(*(const gint32 *)p);
+                        p += zres * 4;
+                    }
+            }
+            break;
+        case WIP_DATA_INT16:
+            for (k = 0; k < zres; k++) {
+                p = header->data + k * 2;
+                for (i = 0; i < xres; i++)
+                    for (j = 0; j < yres; j++) {
+                        *(data + i + j * xres + k * xres * yres)
+                          = wscale * GINT16_FROM_LE(*(const gint16 *)p);
+                        p += zres * 2;
+                    }
+            }
+            break;
+        case WIP_DATA_UINT32:
+            for (k = 0; k < zres; k++) {
+                p = header->data + k * 4;
+                for (i = 0; i < xres; i++)
+                    for (j = 0; j < yres; j++) {
+                        *(data + i + j * xres + k * xres * yres)
+                        = wscale * GUINT32_FROM_LE(*(const guint32 *)p);
+                        p += zres * 4;
+                    }
+            }
+            break;
+        case WIP_DATA_UINT16:
+            for (k = 0; k < zres; k++) {
+                p = header->data + k * 2;
+                for (i = 0; i < xres; i++)
+                    for (j = 0; j < yres; j++) {
+                        *(data + i + j * xres + k * xres * yres)
+                        = wscale * GUINT16_FROM_LE(*(const guint16 *)p);
+                        p += zres * 2;
+                    }
+            }
+            break;
+        default:
+            g_warning("Wrong datatype");
+    }
+
+    // Try to read zcalibration
+    idnode->id = header->xtransformid;
+    g_node_traverse(g_node_get_root(node),
+                    G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                    wip_find_by_id, (gpointer)idnode);
+
+    xtransform = g_new0(WIPSpectralTransform, 1);
+    g_node_traverse(idnode->node->parent->parent,
+                    G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                    wip_read_sp_transform_tags,
+                    (gpointer)xtransform);
+    if ((xtransform->transform_type != 1)
+     || (xtransform->m < 0.01) || (xtransform->f < 0.01)
+     || (xtransform->nc < 0.0) || (xtransform->nc > zres)) {
+        // xtransform not read correctly, fallback to point numbers
+    }
+    else {
+        cal = gwy_data_line_new(zres, zres, FALSE);
+        data = gwy_data_line_get_data(cal);
+        for (i = 0; i < zres; i++)
+            data[i] = wip_pixel_to_lambda(i, xtransform);
+
+        if (xtransform->unitname != NULL) {
+            siunitz = gwy_si_unit_new("m");
+            for (i = 0; i < zres; i++)
+                data[i] *= 1e-9;
+        }
+        else
+            siunitz = gwy_si_unit_new("pixels");
+        gwy_data_line_set_si_unit_y(cal, siunitz);
+        gwy_brick_set_zcalibration(brick, cal);
+    }
+
+    if (!siunitz)
+        siunitz = gwy_si_unit_new("pixels");
+
+    if (xtransform->unitname) {
+        g_free(xtransform->unitname);
+    }
+    g_free(xtransform);
+
+    gwy_brick_set_si_unit_x(brick, siunitxy);
+    gwy_brick_set_si_unit_y(brick, siunitxy);
+    gwy_brick_set_si_unit_z(brick, siunitz);
+    gwy_brick_set_si_unit_w(brick, siunitw);
+
+    g_object_unref(siunitxy);
+    g_object_unref(siunitz);
+    g_object_unref(siunitw);
+
+    g_free(idnode);
+
+    return brick;
+}
+
 static void wip_flip_xy(GwyDataField *source, GwyDataField *dest)
 {
     gint xres, yres, i, j;
@@ -921,7 +1185,7 @@ static GwyDataField * wip_read_image(GNode *node)
     }
 
     //Try to read z units
-    idnode = g_new0(WIPIdNode,1);
+    idnode = g_new0(WIPIdNode, 1);
     idnode->id = header->zinterpid;
     g_node_traverse (g_node_get_root(node),
                      G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
@@ -954,7 +1218,7 @@ static GwyDataField * wip_read_image(GNode *node)
     yscale = xyaxis->scale[4];
     if (yscale == 0.0) {
         g_warning("Wrong y-scale");
-        xscale = 1.0;
+        yscale = 1.0;
     }
     if (xscale == 0.0) {
         g_warning("Wrong x-scale");
@@ -1074,7 +1338,7 @@ static GwyDataField * wip_read_bitmap(GNode *node)
                      wip_read_bitmap_tags, (gpointer)header);
 
     //Try to read xy units and scale;
-    idnode = g_new0(WIPIdNode,1);
+    idnode = g_new0(WIPIdNode, 1);
     idnode->id = header->spacetransformid;
     g_node_traverse (g_node_get_root(node),
                      G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
@@ -1132,8 +1396,10 @@ static gboolean wip_read_data(GNode *node, gpointer filedata)
     WIPFile *filecontent;
     GwyGraphModel *gmodel;
     GwyDataField *image;
+    GwyBrick *brick;
     GString *key;
     GString *caption;
+    gdouble xres, yres;
 
     tag = node->data;
     filecontent = (WIPFile *)filedata;
@@ -1141,7 +1407,42 @@ static gboolean wip_read_data(GNode *node, gpointer filedata)
     if (!strncmp(tag->name, "TDGraph", 7)) {
         gmodel = wip_read_graph(node);
         if (!gmodel) {
-            // some error
+            brick = wip_read_graph_image(node);
+            if (!brick) {
+                // some error
+            }
+            else {
+                (filecontent->numbricks)++;
+                g_string_printf(key, "/brick/%d",
+                                filecontent->numbricks);
+                gwy_container_set_object_by_name(filecontent->data,
+                                                 key->str, brick);
+                caption = g_string_new(NULL);
+                g_node_traverse(node->parent, G_LEVEL_ORDER,
+                                G_TRAVERSE_ALL, -1,
+                                wip_read_caption, (gpointer)caption);
+                if (!caption->str)
+                    g_string_printf(caption, "Unnamed spectral image");
+                g_string_append(key, "/title");
+                gwy_container_set_string_by_name(filecontent->data,
+                                                 key->str,
+                                                 g_strdup(caption->str));
+                g_string_free(caption, TRUE);
+                xres = gwy_brick_get_xres(brick);
+                yres = gwy_brick_get_yres(brick);
+                image = gwy_data_field_new(xres, yres,
+                                           1.0, 1.0, FALSE);
+                gwy_brick_mean_plane(brick, image,
+                                     0, 0, 0,
+                                     xres, yres, -1, FALSE);
+                g_string_printf(key, "/brick/%d/preview",
+                                                filecontent->numbricks);
+                gwy_container_set_object_by_name(filecontent->data,
+                                                 key->str,
+                                                 image);
+                g_object_unref(image);
+                g_object_unref(brick);
+            }
         }
         else {
             (filecontent->numgraph)++;

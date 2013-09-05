@@ -59,6 +59,7 @@ Modules:
 - AIST: Small fix of broken file parser in spectra loading.
 - NTMDT: Reimplemented Raman image loading as volume data.
 - NanoScanTech: Implemented basic 4D data loading.
+- WiTec Project: Implemented graph image loading.
 
 Others:
 - The Win64 package uses correct set of registry keys, installation paths and

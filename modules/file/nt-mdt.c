@@ -2427,6 +2427,11 @@ extract_raman_image(MDTMDAFrame *dataframe)
     gwy_brick_set_si_unit_z(brick, siunitz);
     gwy_brick_set_si_unit_w(brick, siunitw);
 
+    g_object_unref(siunitx);
+    g_object_unref(siunity);
+    g_object_unref(siunitz);
+    g_object_unref(siunitw);
+
     return brick;
 }
 
