@@ -264,7 +264,7 @@ Section "Gwyddion (required)"
     GwyExpandFiles "share\locale\es\LC_MESSAGES\*.mo"
 # @@@ GENERATED LANG NSIS-MO END @@@
 
-    CreateShortCut "$SMPROGRAMS\Gwyddion.lnk" "$INSTDIR\bin\gwyddion.exe" "" "$INSTDIR\${ICON_FILE}" "" SW_SHOWNORMAL "" "Gwyddion - SPM data analysis"
+    CreateShortCut "$SMPROGRAMS\Gwyddion@MSWIN_BITS@.lnk" "$INSTDIR\bin\gwyddion.exe" "" "$INSTDIR\${ICON_FILE}" "" SW_SHOWNORMAL "" "Gwyddion - SPM data analysis"
 
     WriteRegStr HKLM "${PRODUCT_REG_KEY}" "InstallDir" "$INSTDIR"
     WriteRegStr HKLM "${PRODUCT_REG_KEY}" "Locale" $Locale
