@@ -60,6 +60,11 @@ Modules:
 - NTMDT: Reimplemented Raman image loading as volume data.
 - NanoScanTech: Implemented basic 4D data loading.
 
+Others:
+- The Win64 version uses correct set of registry keys, installation paths and
+  the shortcut name was differentiated, allowing parallel installation with
+  Win32.
+
 
 2.31 (2013-02-21)
 Application:
