@@ -4165,6 +4165,7 @@ gwy_app_data_browser_brick_render_nlevels(G_GNUC_UNUSED GtkTreeViewColumn *colum
     gtk_tree_model_get(model, iter, MODEL_OBJECT, &brick, -1);
     g_snprintf(buf, sizeof(buf), "%d", gwy_brick_get_zres(brick));
     g_object_set(renderer, "text", buf, NULL);
+    g_object_unref(brick);
 }
 
 static void
