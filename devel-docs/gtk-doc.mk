@@ -153,7 +153,7 @@ html-build.stamp: sgml.stamp $(srcdir)/$(DOC_MAIN_SGML_FILE) $(content_files) re
 	cd html \
 		&& xsltproc --path $(abs_srcdir) --nonet --xinclude \
 		            --stringparam gtkdoc.bookname $(DOC_MODULE) \
-		            --stringparam gtkdoc.version "1.8" \
+		            --stringparam gtkdoc.version "1.19" \
 		            $(GTK_DOC_PATH)/data/gtk-doc.xsl \
 		            ../$(DOC_MAIN_SGML_FILE)
 	@echo 'gtk-doc: Copying styles and images'
