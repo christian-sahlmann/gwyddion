@@ -2003,7 +2003,11 @@ gwy_app_data_proxy_maybe_finalize(GwyAppDataProxy *proxy)
         gwy_app_data_assoc_finalize_list(proxy->associated_mask,
                                          proxy,
                                          &gwy_app_data_proxy_mask_changed);
+        gwy_app_data_assoc_finalize_list(proxy->associated_preview,
+                                         proxy,
+                                         &gwy_app_data_proxy_preview_changed);
         proxy->associated_mask = NULL;
+        proxy->associated_preview = NULL;
     }
 }
 
@@ -5680,6 +5684,14 @@ gwy_app_data_browser_remove(GwyContainer *data)
     gwy_app_data_browser_reset_visibility(proxy->container,
                                           GWY_VISIBILITY_RESET_HIDE_ALL);
     g_return_if_fail(gwy_app_data_proxy_visible_count(proxy) == 0);
+    gwy_app_data_assoc_finalize_list(proxy->associated_mask,
+                                     proxy,
+                                     &gwy_app_data_proxy_mask_changed);
+    gwy_app_data_assoc_finalize_list(proxy->associated_preview,
+                                     proxy,
+                                     &gwy_app_data_proxy_preview_changed);
+    proxy->associated_mask = NULL;
+    proxy->associated_preview = NULL;
     gwy_app_data_proxy_finalize(proxy);
 }
 
