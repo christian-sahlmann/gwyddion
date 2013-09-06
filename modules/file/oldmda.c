@@ -53,7 +53,7 @@
 #include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libgwydgets/gwygraphmodel.h>
+#include <libprocess/brick.h>
 #include <libprocess/stats.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
@@ -108,12 +108,16 @@ typedef struct {
 typedef struct {
     guint         xres;
     guint         yres;
+    guint         zres;
     gdouble       xreal;
     gdouble       yreal;
-    guint         res;
     GArray       *xdata;
-    GwySIUnit    *siunitxy;
-    gint          power10xy;
+    GwySIUnit    *siunitx;
+    GwySIUnit    *siunity;
+    GwySIUnit    *siunitz;
+    gint          power10x;
+    gint          power10y;
+    gint          power10z;
     GwyContainer *data;
 }OldMDAFile;
 
@@ -152,7 +156,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports old NTMDT MDA Spectra files."),
     "dn2010 <dn2010@gmail.com>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti) & Daniil Bratashov (dn2010)",
     "2012",
 };
@@ -257,7 +261,7 @@ oldmda_load(const gchar *filename,
     }
 
     if ((size2 != params.arraysize * params.datacellmemsize)
-     || (params.arraysize != mdafile.xres * mdafile.yres * mdafile.res)) {
+     || (params.arraysize != mdafile.xres * mdafile.yres * mdafile.zres)) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
                     _("Data file too small."));
         g_clear_error(&err);
@@ -299,67 +303,96 @@ static void
 oldmda_read_params(MDAXMLParams *par, OldMDAFile *mdafile)
 {
     MDAAxis axis;
-    mdafile->res = par->res;
+    mdafile->zres = par->res;
     mdafile->xdata = par->xdata;
+    axis = g_array_index(par->axes, MDAAxis, 0);
+    if (axis.unitname)
+        mdafile->siunitz = gwy_si_unit_new(axis.unitname);
+    else
+        mdafile->siunitz = gwy_si_unit_new("");
     axis = g_array_index(par->axes, MDAAxis, 1);
     if (axis.unitname)
-        mdafile->siunitxy = gwy_si_unit_new_parse(axis.unitname,
-                                                 &mdafile->power10xy);
+        mdafile->siunitx = gwy_si_unit_new_parse(axis.unitname,
+                                                &mdafile->power10x);
     else
-        mdafile->siunitxy = gwy_si_unit_new("");
+        mdafile->siunitx = gwy_si_unit_new("");
     mdafile->xres = axis.maxindex - axis.minindex + 1;
     if (mdafile->xres < 1)
         mdafile->xres = 1;
     if (axis.scale <= 0.0)
         axis.scale = 1.0;
-    mdafile->xreal = axis.scale * mdafile->xres 
-				   * pow(10.0, mdafile->power10xy);
+    mdafile->xreal = axis.scale * mdafile->xres
+                   * pow(10.0, mdafile->power10x);
     axis = g_array_index(par->axes, MDAAxis, 2);
+    if (axis.unitname)
+        mdafile->siunity = gwy_si_unit_new_parse(axis.unitname,
+                                                &mdafile->power10y);
+    else
+        mdafile->siunity = gwy_si_unit_new("");
     mdafile->yres = axis.maxindex - axis.minindex + 1;
     if (mdafile->yres < 1)
         mdafile->yres = 1;
     if (axis.scale <= 0.0)
         axis.scale = 1.0;
-    mdafile->yreal = axis.scale * mdafile->yres 
-				   * pow(10.0, mdafile->power10xy);
+    mdafile->yreal = axis.scale * mdafile->yres
+                   * pow(10.0, mdafile->power10y);
 }
 
 static void oldmda_read_data(OldMDAFile *mdafile, const gchar *buffer)
 {
+    GwyBrick *brick;
     GwyDataField *dfield;
-    gdouble *zdata;
-    gdouble yvalue;
-    GArray *yspectra;
+    GwyDataLine *cal;
+    gdouble *data;
     gint i, j, k;
     const guchar *p;
 
     p = buffer;
-    yspectra = g_array_new(FALSE, TRUE, sizeof(gdouble));
+    brick = gwy_brick_new(mdafile->xres, mdafile->yres, mdafile->zres,
+                          mdafile->xreal, mdafile->yreal, mdafile->zres,
+                          TRUE);
+    data = gwy_brick_get_data(brick);
+
+    for (k = 0; k < mdafile->zres; k++) {
+        p = buffer + k * 4;
+        for (i = 0; i < mdafile->yres; i++)
+            for (j = 0; j < mdafile->xres; j++) {
+                *(data + k * mdafile->xres * mdafile->yres + j
+                    + (mdafile->yres - i - 1) * mdafile->xres)
+                        = (gdouble)gwy_get_gint32_le(&p);
+                p += (mdafile->zres - 1) * 4;
+            }
+    }
+
+    gwy_brick_set_si_unit_x(brick, mdafile->siunitx);
+    gwy_brick_set_si_unit_y(brick, mdafile->siunity);
+    gwy_brick_set_si_unit_z(brick, mdafile->siunitz);
+
+    cal = gwy_data_line_new(mdafile->zres, mdafile->zres, FALSE);
+    data = gwy_data_line_get_data(cal);
+    for (k = 0; k < mdafile->zres; k++) {
+        *(data++) = g_array_index(mdafile->xdata, gdouble, k);
+    }
+    gwy_data_line_set_si_unit_y(cal, mdafile->siunitz);
+    gwy_brick_set_zcalibration(brick, cal);
+    g_object_unref(cal);
+
+    g_object_unref(mdafile->siunitx);
+    g_object_unref(mdafile->siunity);
+    g_object_unref(mdafile->siunitz);
+
     dfield = gwy_data_field_new(mdafile->xres, mdafile->yres,
                                 mdafile->xreal, mdafile->yreal,
                                 TRUE);
-    zdata = gwy_data_field_get_data(dfield);
-
-    for (i = 0; i < mdafile->yres; i++)
-        for (j = 0; j < mdafile->xres; j++) {
-            *zdata = 0.0;
-            for (k = 0; k < mdafile->res; k++) {
-                yvalue = (gdouble)gwy_get_gint32_le(&p);
-                g_array_append_val(yspectra, yvalue);
-                if (yvalue > *zdata)
-                    *zdata = yvalue;
-            }
-            zdata++;
-        }
-        
-	gwy_data_field_set_si_unit_xy(dfield, mdafile->siunitxy);
-    gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
-    gwy_container_set_object_by_name(mdafile->data, "/0/data", dfield);
-    gwy_container_set_string_by_name(mdafile->data, "/0/data/title",
-                                     g_strdup("Image"));
-    g_array_free(yspectra, TRUE);
-    g_object_unref(mdafile->siunitxy);    
+    gwy_container_set_object_by_name(mdafile->data, "/brick/0", brick);
+    gwy_container_set_string_by_name(mdafile->data, "/brick/0/title",
+                                     g_strdup("MDA data"));
+    gwy_brick_mean_plane(brick, dfield, 0, 0, 0,
+                         mdafile->xres, mdafile->yres, -1, FALSE);
+    gwy_container_set_object_by_name(mdafile->data, "/brick/0/preview",
+                                     dfield);
     g_object_unref(dfield);
+    g_object_unref(brick);
 }
 
 static gchar*
@@ -534,7 +567,7 @@ parse_text(G_GNUC_UNUSED GMarkupParseContext *context,
             for (i = 0; i < params->res; i++) {
                 val = g_ascii_strtod(g_strdelimit(line, ",.", '.'), &line);
                 line += 2; /* skip ". " between values */
-                g_array_append_val(params->xdata,val);
+                g_array_append_val(params->xdata, val);
             }
         }
     }

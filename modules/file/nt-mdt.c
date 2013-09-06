@@ -2422,6 +2422,8 @@ extract_raman_image(MDTMDAFrame *dataframe)
     gwy_data_line_set_si_unit_y(cal, siunitz);
     gwy_brick_set_zcalibration(brick, cal);
 
+    g_object_unref(cal);
+
     gwy_brick_set_si_unit_x(brick, siunitx);
     gwy_brick_set_si_unit_y(brick, siunity);
     gwy_brick_set_si_unit_z(brick, siunitz);

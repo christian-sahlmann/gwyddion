@@ -20,11 +20,10 @@
  */
 
 /*
- * There should be some generic infrastructure for N*M arrays of
- * spectroscopy data, same for this, NTMDT and some other formats.
- *
  * Thanks to GSXM project crew for description of tag format and
  * datatypes.
+ *
+ * TODO: metadata loading
  */
 
 /**
@@ -280,7 +279,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports WItec Project data files."),
     "Daniil Bratashov <dn2010@gmail.com>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov",
     "2010",
 };
@@ -1107,6 +1106,7 @@ static GwyBrick * wip_read_graph_image(GNode *node)
             siunitz = gwy_si_unit_new("pixels");
         gwy_data_line_set_si_unit_y(cal, siunitz);
         gwy_brick_set_zcalibration(brick, cal);
+        g_object_unref(cal);
     }
 
     if (!siunitz)

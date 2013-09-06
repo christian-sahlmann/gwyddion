@@ -19,6 +19,7 @@
 
 /*
  * TODO: assuming cp1251 as 8bit encoding,
+ *       use Attributes field to load parameters
  */
 
 /**
@@ -127,7 +128,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NanoScanTech .nstdat files."),
     "Daniil Bratashov (dn2010@gmail.com)",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti), Daniil Bratashov (dn2010)",
     "2012",
 };
@@ -768,6 +769,7 @@ nst_read_4d(const gchar *buffer, gsize datasize,
             gwy_data_line_set_si_unit_y(calibration, siunit);
             g_object_unref(siunit);
             gwy_brick_set_zcalibration(brick, calibration);
+            g_object_unref(calibration);
 
             break;
         }

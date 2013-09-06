@@ -60,6 +60,7 @@ Modules:
 - NTMDT: Reimplemented Raman image loading as volume data.
 - NanoScanTech: Implemented basic 4D data loading.
 - WiTec Project: Implemented graph image loading.
+- OLD MDA: Reimplemented data loading as volume ones.
 
 Others:
 - The Win64 package uses correct set of registry keys, installation paths and
