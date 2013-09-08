@@ -1,6 +1,5 @@
 #!/usr/bin/python
-# Update various lists of available localizations.
-# The primary source is table languages in this file.
+# Update API indices in documentation.
 import re, os, sys, glob
 
 subdirs = (

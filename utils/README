@@ -90,6 +90,13 @@ update-potfiles.sh
     translatable strings.  Must be run from the top-level source directory.
 
 
+update-api-indices.py
+
+    Updates foo-docs.sgml files in developer documentation directories to
+    include indices of new symbols for all versions where any new symbol was
+    introduced.  Must be run from the top-level source directory.
+
+
 vim-syn-gen.py
 
     A general script for creation of Vim C syntax file extensions from
