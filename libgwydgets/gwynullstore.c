@@ -480,7 +480,7 @@ gwy_null_store_iter_is_valid(GwyNullStore *store,
 /**
  * SECTION:gwynullstore
  * @title: GwyNullStore
- * @short_description: #GtkTreeModel wrapper around nothing
+ * @short_description: GtkTreeModel wrapper around nothing
  * @see_also: #GwyInventoryStore -- #GtkTreeModel wrapper around #GwyInventory
  *
  * #GwyNullStore is a very simple class which pretends to be a #GtkTreeModel

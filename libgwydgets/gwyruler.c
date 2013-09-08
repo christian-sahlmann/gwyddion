@@ -847,7 +847,7 @@ gwy_ruler_next_scale(ScaleBase scale,
 /**
  * SECTION:gwyruler
  * @title: GwyRuler
- * @short_description: Base class for #GwyHRuler and #GwyVRuler
+ * @short_description: Base class for GwyHRuler and GwyVRuler
  *
  * #GwyRuler is a ruler similar to #GtkRuler, but it is more suited for a
  * scientific application.  It is scale-independent and thus has no arbitrary

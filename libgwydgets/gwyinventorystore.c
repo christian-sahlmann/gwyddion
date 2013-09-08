@@ -587,7 +587,7 @@ gwy_inventory_store_check_item(gpointer key,
 /**
  * SECTION:gwyinventorystore
  * @title: GwyInventoryStore
- * @short_description: #GtkTreeModel wrapper around #GwyInventory
+ * @short_description: GtkTreeModel wrapper around GwyInventory
  * @see_also: #GwyInventory -- the actual data container,
  *            #GtkListStore, #GtkTreeStore -- Gtk+ tree model implementations
  *

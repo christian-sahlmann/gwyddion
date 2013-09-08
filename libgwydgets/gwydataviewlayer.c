@@ -237,7 +237,7 @@ gwy_data_view_layer_real_unplugged(GwyDataViewLayer *layer)
 /**
  * SECTION:gwydataviewlayer
  * @title: GwyDataViewLayer
- * @short_description: Layer #GwyDataView is composed of
+ * @short_description: Layer GwyDataView is composed of
  * @see_also: #GwyDataView -- data display widget,
  *            <link linkend="libgwydraw-gwypixfield">gwypixfield</link> --
  *            low level functions for painting data fields,

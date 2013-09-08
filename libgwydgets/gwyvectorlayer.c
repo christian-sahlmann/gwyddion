@@ -853,7 +853,7 @@ gwy_vector_layer_object_chosen(GwyVectorLayer *layer,
 /**
  * SECTION:gwyvectorlayer
  * @title: GwyVectorLayer
- * @short_description: Base class for #GwyDataView vector (interactive) layers
+ * @short_description: Base class for GwyDataView vector (interactive) layers
  * @see_also: <link linkend="standard-vector-layers">Standard vector
  *            layers</link>
  *

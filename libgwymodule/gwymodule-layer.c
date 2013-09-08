@@ -130,7 +130,7 @@ _gwy_layer_func_remove(const gchar *name)
 /**
  * SECTION:gwymodule-layer
  * @title: gwymodule-layer
- * @short_description: #GwyDataView layer modules
+ * @short_description: GwyDataView layer modules
  *
  * Layer modules implement #GwyDataView layers, corresponding to different
  * kinds of selections.

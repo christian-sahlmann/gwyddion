@@ -410,7 +410,7 @@ gwy_pixmap_layer_make_pixbuf(GwyPixmapLayer *pixmap_layer,
 /**
  * SECTION:gwypixmaplayer
  * @title: GwyPixmapLayer
- * @short_description: Base class for #GwyDataView pixmap layers
+ * @short_description: Base class for GwyDataView pixmap layers
  *
  * #GwyPixmapLayer is a base class for data field displaying
  * #GwyDataViewLayer's.  It is a #GwyDataView component and it is not normally

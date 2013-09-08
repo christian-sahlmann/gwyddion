@@ -250,7 +250,7 @@ gwy_hruler_draw_pos(GwyRuler *ruler)
 /**
  * SECTION:gwyhruler
  * @title: GwyHRuler
- * @short_description: Horizontal ruler, similar to #GtkRuler
+ * @short_description: Horizontal ruler, similar to GtkRuler
  * @see_also: #GwyVRuler -- vertical ruler
  *
  * Please see #GwyRuler for differences from #GtkHRuler.

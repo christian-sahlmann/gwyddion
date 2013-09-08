@@ -279,7 +279,7 @@ gwy_pixbuf_draw_data_field_as_mask(GdkPixbuf *pixbuf,
 /**
  * SECTION:gwypixfield
  * @title: gwypixfield
- * @short_description: Draw #GwyDataField<!-- -->s to #GdkPixbuf<!-- -->s
+ * @short_description: Draw GwyDataFields to GdkPixbufs
  *
  * The simpliest method to render a #GwyDataField to a #GdkPixbuf with a
  * false color scale is gwy_pixbuf_draw_data_field() which uniformly stretches
