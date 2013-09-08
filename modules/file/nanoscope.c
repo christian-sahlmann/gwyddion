@@ -45,7 +45,6 @@
  * [1] Spectra curves are imported as graphs, positional information is lost.
  **/
 #include "config.h"
-#define DEBUG 1
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
