@@ -30,5 +30,9 @@
     <title>Index of new symbols in 2.16</title>
     <xi:include href="xml/api-index-2.16.xml"><xi:fallback /></xi:include>
   </index>
+  <index id="api-index-2-32" role="2.32">
+    <title>Index of new symbols in 2.32</title>
+    <xi:include href="xml/api-index-2.32.xml"><xi:fallback /></xi:include>
+  </index>
   <!-- API INDICES END -->
 </book>
