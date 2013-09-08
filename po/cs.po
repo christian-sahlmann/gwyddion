@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2013-08-28 20:41+0200\n"
+"POT-Creation-Date: 2013-09-08 08:51+0200\n"
 "PO-Revision-Date: 2013-08-28 21:04+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -119,9 +119,9 @@ msgid "contact: Hertz (paraboloid)"
 msgstr "kontaktní: Hertz (paraboloid)"
 
 #: libgwyddion/gwyinventory.c:1310 libgwydgets/gwygraphwindow.c:611
-#: app/data-browser.c:2086 app/data-browser.c:2849 app/data-browser.c:3697
-#: app/data-browser.c:3856 app/data-browser.c:4142 app/data-browser.c:4555
-#: app/data-browser.c:6477 app/data-browser.c:6559 app/resource-editor.c:366
+#: app/data-browser.c:2090 app/data-browser.c:2853 app/data-browser.c:3701
+#: app/data-browser.c:3860 app/data-browser.c:4146 app/data-browser.c:4560
+#: app/data-browser.c:6490 app/data-browser.c:6572 app/resource-editor.c:366
 #: modules/process/convolution_filter.c:699
 msgid "Untitled"
 msgstr "Nepojmenovaný"
@@ -416,7 +416,7 @@ msgstr "Hodnota"
 msgid "Area"
 msgstr "Plocha"
 
-#: libprocess/gwygrainvalue.c:1057 app/data-browser.c:5057 app/toolbox.c:108
+#: libprocess/gwygrainvalue.c:1057 app/data-browser.c:5062 app/toolbox.c:108
 msgid "Volume"
 msgstr "Objem"
 
@@ -856,10 +856,10 @@ msgstr "pixelů"
 #: modules/process/calcoefs_new.c:347 modules/process/calibrate.c:336
 #: modules/process/col_synth.c:300 modules/process/curvature.c:602
 #: modules/process/cwt.c:132 modules/process/deposit_synth.c:360
-#: modules/process/drift.c:240 modules/process/dwtanisotropy.c:183
-#: modules/process/dwt.c:164 modules/process/edge.c:667
-#: modules/process/extend.c:196 modules/process/facet_analysis.c:273
-#: modules/process/facet-level.c:283 modules/process/fft.c:277
+#: modules/process/drift.c:240 modules/process/dwt.c:164
+#: modules/process/dwtanisotropy.c:183 modules/process/edge.c:667
+#: modules/process/extend.c:196 modules/process/facet-level.c:283
+#: modules/process/facet_analysis.c:273 modules/process/fft.c:277
 #: modules/process/fft_filter_2d.c:440 modules/process/fft_synth.c:344
 #: modules/process/fractal.c:206 modules/process/grain_edge.c:217
 #: modules/process/grain_mark.c:262 modules/process/grain_rem_threshold.c:227
@@ -875,7 +875,7 @@ msgstr "pixelů"
 #: modules/process/slope_dist.c:201 modules/process/sphere-revolve.c:215
 #: modules/process/tilt.c:156 modules/process/tip_model.c:170
 #: modules/process/unrotate.c:226 modules/process/volumize_layers.c:211
-#: modules/volume/volume_calibrate.c:359 modules/volume/volume_extract.c:338
+#: modules/volume/volume_calibrate.c:369 modules/volume/volume_extract.c:338
 msgid "_Reset"
 msgstr "_Obnovit"
 
@@ -1201,6 +1201,20 @@ msgstr "_Přidat symbol"
 msgid "Preview"
 msgstr "Náhled"
 
+#: libgwymodule/gwymodule-file.c:535 modules/file/err.h:40
+#: modules/file/pixmap.c:769
+#, c-format
+msgid "Cannot open file for reading: %s."
+msgstr "Soubor nelze otevřít pro čtení: %s."
+
+#: libgwymodule/gwymodule-file.c:544
+msgid "No module can load this file type."
+msgstr "Žádný modul nedokáže načíst tento typ souboru."
+
+#: libgwymodule/gwymodule-file.c:651
+msgid "No module can save to this file type."
+msgstr "Žádný modul nedokáže zapsat tento typ souboru."
+
 #: libgwymodule/gwymodulebrowser.c:66
 msgid "Module Browser"
 msgstr "Prohlížeč modulů"
@@ -1253,20 +1267,6 @@ msgstr "Jméno:"
 #: libgwymodule/gwymodulebrowser.c:270
 msgid "Failure:"
 msgstr "Selhání:"
-
-#: libgwymodule/gwymodule-file.c:535 modules/file/err.h:40
-#: modules/file/pixmap.c:769
-#, c-format
-msgid "Cannot open file for reading: %s."
-msgstr "Soubor nelze otevřít pro čtení: %s."
-
-#: libgwymodule/gwymodule-file.c:544
-msgid "No module can load this file type."
-msgstr "Žádný modul nedokáže načíst tento typ souboru."
-
-#: libgwymodule/gwymodule-file.c:651
-msgid "No module can save to this file type."
-msgstr "Žádný modul nedokáže zapsat tento typ souboru."
 
 #: app/about.c:56
 #, c-format
@@ -1326,39 +1326,39 @@ msgstr "Překladatelé"
 msgid "Development is supported by the Czech Metrology Institute: "
 msgstr "Vývoj programu podporuje Český metrologický institut: "
 
-#: app/about.c:251 app/about.c:254
+#: app/about.c:252 app/about.c:255
 msgid "OpenGL 3D View"
 msgstr "OpenGL trojrozměrné zobrazení"
 
-#: app/about.c:255 app/about.c:269 app/about.c:289
+#: app/about.c:256 app/about.c:270 app/about.c:290
 msgid "not available\n"
 msgstr "není k disposici\n"
 
-#: app/about.c:260 app/about.c:263
+#: app/about.c:261 app/about.c:264
 msgid "Fast Fourier Transform"
 msgstr "Rychlá Fourierova transformace"
 
-#: app/about.c:264
+#: app/about.c:265
 msgid "built-in SimpleFFT\n"
 msgstr "vestavěná SimpleFFT\n"
 
-#: app/about.c:272
+#: app/about.c:273
 msgid "X11 protocol\n"
 msgstr "X11 protokol\n"
 
-#: app/about.c:274
+#: app/about.c:275
 msgid "Win32 protocol\n"
 msgstr "Win32 protokol\n"
 
-#: app/about.c:276
+#: app/about.c:277
 msgid "LibUnique\n"
 msgstr "LibUnique\n"
 
-#: app/about.c:280
+#: app/about.c:281
 msgid "Remote Control"
 msgstr "Dálkové ovládání"
 
-#: app/about.c:284 app/about.c:288
+#: app/about.c:285 app/about.c:289
 msgid "Python Scripting Interface"
 msgstr "Rozhraní pro skriptování v Pythonu"
 
@@ -1469,44 +1469,44 @@ msgstr "Kanál:"
 msgid "Section:"
 msgstr "Řez:"
 
-#: app/data-browser.c:4932
+#: app/data-browser.c:4937
 msgid "Extract to a new file"
 msgstr "Extrahovat do nového souboru"
 
-#: app/data-browser.c:4933
+#: app/data-browser.c:4938
 msgid "Duplicate"
 msgstr "Zduplikovat"
 
-#: app/data-browser.c:4934
+#: app/data-browser.c:4939
 msgid "Delete"
 msgstr "Smazat"
 
-#: app/data-browser.c:4979
+#: app/data-browser.c:4984
 msgid "Data Browser"
 msgstr "Prohlížeč dat"
 
-#: app/data-browser.c:5002
+#: app/data-browser.c:5007
 msgid "Close file"
 msgstr "Zavřít soubor"
 
-#: app/data-browser.c:5015
+#: app/data-browser.c:5020
 msgid "Channels"
 msgstr "Kanály"
 
-#: app/data-browser.c:5029 modules/volume/volume_extract.c:456
+#: app/data-browser.c:5034 modules/volume/volume_extract.c:456
 msgid "Graphs"
 msgstr "Grafy"
 
-#: app/data-browser.c:5043
+#: app/data-browser.c:5048
 msgid "Spectra"
 msgstr "Spektra"
 
-#: app/data-browser.c:6515
+#: app/data-browser.c:6528
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Neznámý kanál %d"
 
-#: app/data-browser.c:6601
+#: app/data-browser.c:6614
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Neznámá objemová data %d"
@@ -1766,12 +1766,6 @@ msgstr ""
 "Aby se neztratilo uložené nastavení, nebude se do něj zapisovat, dokud "
 "nebude opraven či odstraněn."
 
-#: app/gwymoduleutils.c:197 app/settings.c:130 app/settings.c:141
-#: modules/file/err.h:61
-#, c-format
-msgid "Cannot write to file: %s."
-msgstr "Do souboru nelze zapisovat: %s."
-
 #: app/gwymoduleutils-file.c:424
 #, c-format
 msgid "Section %s ended at line %u but it has never started."
@@ -1812,6 +1806,12 @@ msgstr "Klíč na řádku %u je prázdný."
 msgid "Header suddenly ended at line %u; end of header marker is missing"
 msgstr ""
 "Hlavička neočekávaně skončila na řádku %u; chybí značka konce hlavičky."
+
+#: app/gwymoduleutils.c:197 app/settings.c:130 app/settings.c:141
+#: modules/file/err.h:61
+#, c-format
+msgid "Cannot write to file: %s."
+msgstr "Do souboru nelze zapisovat: %s."
 
 #: app/gwyplaintool.c:572
 msgid "<big><b>Missing layer module.</b></big>"
@@ -2807,14 +2807,6 @@ msgstr "Hlavičku souboru nelze převést z UTF-16: %s"
 msgid "Unknown file type header: `%s'."
 msgstr "Neznámá hlavička souboru: ‚%s‘."
 
-#: modules/file/burleigh_bii.c:75
-msgid "Imports Burleigh BII binary data files."
-msgstr "Načítá datové soubory Burleigh BII."
-
-#: modules/file/burleigh_bii.c:88
-msgid "Burleigh Image Studio files (.bii)"
-msgstr "Burleigh Image Studio soubory (.bii)"
-
 #: modules/file/burleigh.c:126
 msgid "Imports Burleigh IMG data files version 2.1."
 msgstr "Načítá datové soubory Burleigh IMG verze 2.1."
@@ -2828,6 +2820,14 @@ msgstr "Burleigh 2.1 soubory (.img)"
 msgid "File format version %.1f is not supported."
 msgstr "Formát souboru verze %.1f není podporován."
 
+#: modules/file/burleigh_bii.c:75
+msgid "Imports Burleigh BII binary data files."
+msgstr "Načítá datové soubory Burleigh BII."
+
+#: modules/file/burleigh_bii.c:88
+msgid "Burleigh Image Studio files (.bii)"
+msgstr "Burleigh Image Studio soubory (.bii)"
+
 #: modules/file/burleigh_exp.c:88
 msgid "Imports Burleigh text/bin exported images."
 msgstr "Načítá textové/binární exporty Burleigh"
@@ -2837,7 +2837,7 @@ msgid "Burleigh exported data (.txt, .bin)"
 msgstr "Burleigh exportovaná data (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:225 modules/file/burleigh_exp.c:266
-#: modules/file/nanoscope.c:1524 modules/file/omicron.c:408
+#: modules/file/nanoscope.c:1523 modules/file/omicron.c:408
 #: modules/file/shimadzu.c:465
 msgid "Missing colon in header line."
 msgstr "V řádku hlavičky schází dvojtečka."
@@ -3371,9 +3371,9 @@ msgstr "Šířk_a:"
 #: modules/process/calcoefs_simple.c:389 modules/process/calcoefs_simple.c:456
 #: modules/process/calcoefs_view.c:527 modules/process/calcoefs_view.c:565
 #: modules/process/calibrate.c:379 modules/process/calibrate.c:460
-#: modules/process/dimensions.h:159 modules/volume/volume_calibrate.c:402
-#: modules/volume/volume_calibrate.c:429 modules/volume/volume_calibrate.c:456
-#: modules/volume/volume_calibrate.c:534
+#: modules/process/dimensions.h:159 modules/volume/volume_calibrate.c:412
+#: modules/volume/volume_calibrate.c:439 modules/volume/volume_calibrate.c:466
+#: modules/volume/volume_calibrate.c:544
 msgid "verb|Change"
 msgstr "Změnit"
 
@@ -3397,7 +3397,7 @@ msgstr "_Z-škála (na jednotku):"
 #: modules/file/rawfile.c:1320 modules/process/calcoefs_new.c:775
 #: modules/process/calcoefs_simple.c:1188 modules/process/calcoefs_view.c:1392
 #: modules/process/calibrate.c:884 modules/process/dimensions.h:193
-#: modules/volume/volume_calibrate.c:1005
+#: modules/volume/volume_calibrate.c:1015
 msgid "Change Units"
 msgstr "Změnit jednotky"
 
@@ -3405,7 +3405,7 @@ msgstr "Změnit jednotky"
 #: modules/file/rawfile.c:1334 modules/process/calcoefs_new.c:788
 #: modules/process/calcoefs_simple.c:1201 modules/process/calcoefs_view.c:1405
 #: modules/process/calibrate.c:898 modules/process/dimensions.h:206
-#: modules/volume/volume_calibrate.c:1019
+#: modules/volume/volume_calibrate.c:1029
 msgid "New _units:"
 msgstr "Nové _jednotky:"
 
@@ -3434,7 +3434,7 @@ msgstr "Načítá SEM datové soubory Hitachi S-3700 a S-4800."
 msgid "Hitachi SEM files (.txt + image)"
 msgstr "Hitachi SEM soubory (.txt + obrázek)"
 
-#: modules/file/hitachi-sem.c:166 modules/file/oldmda.c:248
+#: modules/file/hitachi-sem.c:166 modules/file/oldmda.c:252
 #: modules/file/unisoku.c:234
 msgid "No corresponding data file was found for header file."
 msgstr "K hlavičkovému souboru nebyl nalezen odpovídající datový soubor."
@@ -3889,7 +3889,7 @@ msgstr "Načítá datové soubory .nao NanoObserveru."
 msgid "NanoObserver data (.nao)"
 msgstr "NanoObserver data (.nao)"
 
-#: modules/file/nanoobserver.c:188 modules/file/nanoscantech.c:164
+#: modules/file/nanoobserver.c:188 modules/file/nanoscantech.c:204
 msgid "Minizip cannot open the file as a ZIP file."
 msgstr "Minizip nedokáže otevřít soubor coby soubor ZIP."
 
@@ -3897,35 +3897,35 @@ msgstr "Minizip nedokáže otevřít soubor coby soubor ZIP."
 msgid "File Scan/Measure.xml is missing in the zip file."
 msgstr "V ZIP souboru schází soubor Scan/Measure.xml."
 
-#: modules/file/nanoobserver.c:553 modules/file/nanoscantech.c:554
+#: modules/file/nanoobserver.c:553 modules/file/nanoscantech.c:879
 msgid "Unknown error"
 msgstr "Neznámá chyba"
 
-#: modules/file/nanoobserver.c:558 modules/file/nanoscantech.c:559
+#: modules/file/nanoobserver.c:558 modules/file/nanoscantech.c:884
 msgid "End of file"
 msgstr "Konec souboru"
 
-#: modules/file/nanoobserver.c:560 modules/file/nanoscantech.c:561
+#: modules/file/nanoobserver.c:560 modules/file/nanoscantech.c:886
 msgid "End of list of files"
 msgstr "Konec seznamu souborů"
 
-#: modules/file/nanoobserver.c:562 modules/file/nanoscantech.c:563
+#: modules/file/nanoobserver.c:562 modules/file/nanoscantech.c:888
 msgid "Parameter error"
 msgstr "Chyba parametru"
 
-#: modules/file/nanoobserver.c:564 modules/file/nanoscantech.c:565
+#: modules/file/nanoobserver.c:564 modules/file/nanoscantech.c:890
 msgid "Bad zip file"
 msgstr "Špatný zip soubor"
 
-#: modules/file/nanoobserver.c:566 modules/file/nanoscantech.c:567
+#: modules/file/nanoobserver.c:566 modules/file/nanoscantech.c:892
 msgid "Internal error"
 msgstr "Vnitřní chyba"
 
-#: modules/file/nanoobserver.c:568 modules/file/nanoscantech.c:569
+#: modules/file/nanoobserver.c:568 modules/file/nanoscantech.c:894
 msgid "CRC error"
 msgstr "Chyba CRC"
 
-#: modules/file/nanoobserver.c:571 modules/file/nanoscantech.c:572
+#: modules/file/nanoobserver.c:571 modules/file/nanoscantech.c:897
 #, c-format
 msgid "Minizip error while reading the zip file: %s."
 msgstr "Chyba minizipu při načítání zip souboru: %s."
@@ -3946,30 +3946,38 @@ msgstr "Nejvyšší element není ‚scan‘."
 msgid "Wrong size of Base64 encoded data."
 msgstr "Chybná velikost Base64-zakódovaných dat."
 
-#: modules/file/nanoscantech.c:90
+#: modules/file/nanoscantech.c:129
 msgid "Imports NanoScanTech .nstdat files."
 msgstr "Načítá datové soubory NanoScanTech .nstdat."
 
-#: modules/file/nanoscantech.c:103
+#: modules/file/nanoscantech.c:142
 msgid "NanoScanTech data (.nstdat)"
 msgstr "NanoScanTech data (.nstdat)"
 
-#: modules/file/nanoscope.c:201
+#: modules/file/nanoscope-ii.c:85
+msgid "Imports Digital Instruments Nanoscope II data files."
+msgstr "Načítá datové soubory Digital Instruments Nanoscope II."
+
+#: modules/file/nanoscope-ii.c:98
+msgid "Nanoscope II files"
+msgstr "Nanoscope II soubory."
+
+#: modules/file/nanoscope.c:200
 msgid ""
 "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
 msgstr ""
 "Načítá datové soubory Veeco (Digital Instruments) Nanoscope, verze 3 a "
 "novější."
 
-#: modules/file/nanoscope.c:215
+#: modules/file/nanoscope.c:214
 msgid "Nanoscope III files"
 msgstr "Nanoscope III soubory"
 
-#: modules/file/nanoscope.c:282
+#: modules/file/nanoscope.c:281
 msgid "File is not a Nanoscope file, or it is a unknown subtype."
 msgstr "Soubor není typu Nanoscope nebo je to neznámý podtyp."
 
-#: modules/file/nanoscope.c:289
+#: modules/file/nanoscope.c:288
 msgid ""
 "File has been damaged by change of line endings, resulting in corruption of "
 "the binary part of the file.\n"
@@ -3987,26 +3995,18 @@ msgstr ""
 "komprimované složky‘ v některých verzích MS Windows, případně jiným přenosem "
 "souboru, který se pokouší ukládat textové soubory nezávisle na systému."
 
-#: modules/file/nanoscope.c:602 modules/file/nanoscope.c:618
+#: modules/file/nanoscope.c:601 modules/file/nanoscope.c:617
 msgid "Cannot parse `Scan size' field."
 msgstr "Nedaří se analyzovat položku ‚Scan size‘."
 
-#: modules/file/nanoscope.c:1433 modules/file/nrrdfile.c:1023
+#: modules/file/nanoscope.c:1432 modules/file/nrrdfile.c:1023
 #, c-format
 msgid "Garbage after data sample #%u."
 msgstr "Po datovém vzorku č. %u následují nesmysly."
 
-#: modules/file/nanoscope.c:1514
+#: modules/file/nanoscope.c:1513
 msgid "Truncated header line."
 msgstr "Předčasně ukončený řádek hlavičky."
-
-#: modules/file/nanoscope-ii.c:85
-msgid "Imports Digital Instruments Nanoscope II data files."
-msgstr "Načítá datové soubory Digital Instruments Nanoscope II."
-
-#: modules/file/nanoscope-ii.c:98
-msgid "Nanoscope II files"
-msgstr "Nanoscope II soubory."
 
 #: modules/file/nanotop.c:106
 msgid "Imports NANOTOP AFM files"
@@ -4128,55 +4128,55 @@ msgstr "Položka hlavičky %s pro jednotlivé osy má příliš mnoho částí."
 msgid "Per-axis header field %s contains too few items."
 msgstr "Položka hlavičky %s pro jednotlivé osy má příliš málo částí."
 
-#: modules/file/nt-mdt.c:693
+#: modules/file/nt-mdt.c:685
 msgid "Imports NT-MDT data files."
 msgstr "Načítá datové soubory NT-MDT."
 
-#: modules/file/nt-mdt.c:706
+#: modules/file/nt-mdt.c:698
 msgid "NT-MDT files (.mdt)"
 msgstr "NT-MDT soubory (.mdt)"
 
-#: modules/file/nt-mdt.c:1159
+#: modules/file/nt-mdt.c:1151
 msgid "Frame is too short for Frame Mode."
 msgstr "Rám je příliš krátký pro daný Frame Mode."
 
-#: modules/file/nt-mdt.c:1173
+#: modules/file/nt-mdt.c:1165
 msgid "Frame is too short for dots or data."
 msgstr "Rám je příliš krátký pro body či data."
 
-#: modules/file/nt-mdt.c:1432
+#: modules/file/nt-mdt.c:1424
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Soubor skončil v hlavičce rámu č. %u."
 
-#: modules/file/nt-mdt.c:1440
+#: modules/file/nt-mdt.c:1432
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Soubor skončil v datech rámu č. %u."
 
-#: modules/file/nt-mdt.c:1475
+#: modules/file/nt-mdt.c:1467
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "Rám č. %u je příliš krátký pro hlavičku dat skenu."
 
-#: modules/file/oldmda.c:153
+#: modules/file/oldmda.c:157
 msgid "Imports old NTMDT MDA Spectra files."
 msgstr "Načítá staré NTMDT MDA soubory se spektry."
 
-#: modules/file/oldmda.c:166
+#: modules/file/oldmda.c:170
 msgid "NTMDT old MDA Spectra data (.sxml .dat)"
 msgstr "NTMDT stará MDA spektra (.sxml .dat)"
 
-#: modules/file/oldmda.c:239
+#: modules/file/oldmda.c:243
 msgid "Incorrect number of axes in parameter file."
 msgstr "Špatný počet os v souboru s parametry."
 
-#: modules/file/oldmda.c:254
+#: modules/file/oldmda.c:258
 #, c-format
 msgid "Cannot load data file: %s"
 msgstr "Nelze načíst datový soubor: %s."
 
-#: modules/file/oldmda.c:262
+#: modules/file/oldmda.c:266
 msgid "Data file too small."
 msgstr "Datový soubor je příliš malý."
 
@@ -4994,7 +4994,7 @@ msgid "_Value units:"
 msgstr "Jednotky _hodnot:"
 
 #: modules/file/rawxyz.c:673 modules/process/drift.c:300
-#: modules/process/dwtanisotropy.c:200 modules/process/dwt.c:203
+#: modules/process/dwt.c:203 modules/process/dwtanisotropy.c:200
 #: modules/process/fft_filter_1d.c:328 modules/process/fft_profile.c:297
 #: modules/process/fractal.c:227 modules/process/nanoindent_adjust.c:227
 #: modules/process/polydistort.c:267 modules/process/rotate.c:292
@@ -5304,6 +5304,14 @@ msgstr "Načítá ASCII datové soubory SPIP."
 msgid "SPIP ASCII files (.asc)"
 msgstr "SPIP ASCII soubory (.asc)"
 
+#: modules/file/spml.c:108
+msgid "Loads SPML (Scanning Probe Microscopy Markup Language) data files."
+msgstr "Načítá datové soubory SPML (Scanning Probe Microscopy Markup Language)"
+
+#: modules/file/spml.c:122
+msgid "SPML files (.xml)"
+msgstr "SPML soubory (.xml)"
+
 #: modules/file/spmlab.c:130
 msgid "Imports Thermicroscopes SpmLab R3 to R7 data files."
 msgstr "Načítá datové soubory Thermicroscopes SpmLab R3 až R7."
@@ -5328,14 +5336,6 @@ msgstr "SPMLab soubory s plovoucí čárkou (.flt)"
 #: modules/file/spmlabf.c:153
 msgid "Missing data start marker [Data]."
 msgstr "Chybí značka začátku dat [Data]."
-
-#: modules/file/spml.c:108
-msgid "Loads SPML (Scanning Probe Microscopy Markup Language) data files."
-msgstr "Načítá datové soubory SPML (Scanning Probe Microscopy Markup Language)"
-
-#: modules/file/spml.c:122
-msgid "SPML files (.xml)"
-msgstr "SPML soubory (.xml)"
 
 #: modules/file/stmprg.c:231
 msgid "Imports Omicron STMPRG data files (tp ta)."
@@ -5504,11 +5504,11 @@ msgstr "Exportuje data jako strukturovanou mřížku VTK."
 msgid "VTK structured grid (.vtk)"
 msgstr "VTK strukturovaná mřížka (.vtk)"
 
-#: modules/file/wipfile.c:278
+#: modules/file/wipfile.c:280
 msgid "Imports WItec Project data files."
 msgstr "Načítá datové soubory WItec Project."
 
-#: modules/file/wipfile.c:291
+#: modules/file/wipfile.c:293
 msgid "WItec Project files (.wip)"
 msgstr "WItec Project soubory (.wip)"
 
@@ -5587,7 +5587,7 @@ msgstr "Proložení funkce grafem"
 
 #: modules/graph/graph_cd.c:215 modules/graph/graph_fdfit.c:254
 #: modules/graph/graph_fit.c:267 modules/process/fit_2d.c:252
-#: modules/volume/volume_fdfit.c:301
+#: modules/volume/volume_fdfit.c:299
 msgid "verb|_Fit"
 msgstr "_Proložit"
 
@@ -5597,31 +5597,31 @@ msgid "_Graph curve:"
 msgstr "_Křivka grafu:"
 
 #: modules/graph/graph_cd.c:275 modules/graph/graph_fdfit.c:319
-#: modules/graph/graph_fit.c:332 modules/volume/volume_fdfit.c:406
+#: modules/graph/graph_fit.c:332 modules/volume/volume_fdfit.c:404
 msgid "F_unction:"
 msgstr "_Funkce:"
 
 #: modules/graph/graph_cd.c:304 modules/graph/graph_fdfit.c:360
 #: modules/graph/graph_fit.c:368 modules/process/curvature.c:725
-#: modules/volume/volume_fdfit.c:447
+#: modules/volume/volume_fdfit.c:445
 msgid "Parameter"
 msgstr "Parametr"
 
 #: modules/graph/graph_cd.c:306 modules/graph/graph_fdfit.c:362
 #: modules/graph/graph_fit.c:370 modules/process/fit_2d.c:347
-#: modules/volume/volume_fdfit.c:449
+#: modules/volume/volume_fdfit.c:447
 msgid "Error"
 msgstr "Chyba"
 
 #: modules/graph/graph_cd.c:318 modules/graph/graph_cut.c:191
 #: modules/graph/graph_fdfit.c:414 modules/graph/graph_fit.c:422
-#: modules/volume/volume_fdfit.c:501
+#: modules/volume/volume_fdfit.c:499
 msgid "Range:"
 msgstr "Rozsah:"
 
 #: modules/graph/graph_cd.c:329 modules/graph/graph_cut.c:202
 #: modules/graph/graph_fdfit.c:425 modules/graph/graph_fit.c:433
-#: modules/volume/volume_fdfit.c:512
+#: modules/volume/volume_fdfit.c:510
 msgid "range|to"
 msgstr "až"
 
@@ -5631,18 +5631,19 @@ msgstr "Kreslit _celou kružnici"
 
 #: modules/graph/graph_cd.c:381 modules/graph/graph_fdfit.c:490
 #: modules/graph/graph_fit.c:520 modules/process/fit_2d.c:993
-#: modules/volume/volume_fdfit.c:574
+#: modules/volume/volume_fdfit.c:572
 msgid "Save Fit Report"
 msgstr "Uložit výsledky"
 
 #: modules/graph/graph_cd.c:528 modules/graph/graph_cd.c:1132
 #: modules/graph/graph_fdfit.c:708 modules/graph/graph_fit.c:752
-#: modules/volume/volume_fdfit.c:896
+#: modules/volume/volume_fdfit.c:906
 msgid "Fit"
 msgstr "Proložení"
 
 #: modules/graph/graph_cd.c:554 modules/graph/graph_fdfit.c:748
-#: modules/graph/graph_fit.c:792 modules/volume/volume_fdfit.c:967
+#: modules/graph/graph_fit.c:792 modules/volume/volume_fdfit.c:977
+#: modules/volume/volume_fdfit.c:1084
 msgid "It is necessary to select more data points than free fit parameters"
 msgstr "Je třeba vybrat více datových bodů, než je volných parametrů fitu."
 
@@ -5653,41 +5654,41 @@ msgstr "Je třeba vybrat více datových bodů, než je volných parametrů fitu
 #: modules/tools/stats.c:666 modules/tools/stats.c:677
 #: modules/tools/stats.c:678 modules/tools/stats.c:1054
 #: modules/tools/stats.c:1061 modules/tools/stats.c:1063
-#: modules/volume/volume_fdfit.c:1123
+#: modules/volume/volume_fdfit.c:1133
 msgid "N.A."
 msgstr "nelze použít"
 
 #: modules/graph/graph_cd.c:1018 modules/graph/graph_fdfit.c:1382
-#: modules/graph/graph_fit.c:1485 modules/volume/volume_fdfit.c:1711
+#: modules/graph/graph_fit.c:1485 modules/volume/volume_fdfit.c:1719
 msgid "===== Fit Results ====="
 msgstr "===== Výsledek proložení ====="
 
 #: modules/graph/graph_cd.c:1022 modules/graph/graph_fdfit.c:1386
-#: modules/graph/graph_fit.c:1489 modules/volume/volume_fdfit.c:1715
+#: modules/graph/graph_fit.c:1489 modules/volume/volume_fdfit.c:1723
 #, c-format
 msgid "Data:             %s\n"
 msgstr "Data:             %s\n"
 
 #: modules/graph/graph_cd.c:1025 modules/graph/graph_fdfit.c:1389
-#: modules/graph/graph_fit.c:1492 modules/volume/volume_fdfit.c:1718
+#: modules/graph/graph_fit.c:1492 modules/volume/volume_fdfit.c:1726
 #, c-format
 msgid "Number of points: %d of %d\n"
 msgstr "Počet bodů:       %d z %d\n"
 
 #: modules/graph/graph_cd.c:1029 modules/graph/graph_fdfit.c:1393
-#: modules/graph/graph_fit.c:1496 modules/volume/volume_fdfit.c:1722
+#: modules/graph/graph_fit.c:1496 modules/volume/volume_fdfit.c:1730
 #, c-format
 msgid "X range:          %.*f to %.*f %s\n"
 msgstr "Rozsah x:         %.*f až %.*f %s\n"
 
 #: modules/graph/graph_cd.c:1035 modules/graph/graph_fdfit.c:1399
-#: modules/graph/graph_fit.c:1502 modules/volume/volume_fdfit.c:1728
+#: modules/graph/graph_fit.c:1502 modules/volume/volume_fdfit.c:1736
 #, c-format
 msgid "Fitted function:  %s\n"
 msgstr "Proložená funkce: %s\n"
 
 #: modules/graph/graph_cd.c:1038 modules/graph/graph_fdfit.c:1402
-#: modules/graph/graph_fit.c:1505 modules/volume/volume_fdfit.c:1731
+#: modules/graph/graph_fit.c:1505 modules/volume/volume_fdfit.c:1739
 msgid "Results\n"
 msgstr "Výsledky\n"
 
@@ -5813,68 +5814,68 @@ msgstr "/Proložit _FD křivku..."
 msgid "Fit a force-distance curve"
 msgstr "Proložit FD křivku"
 
-#: modules/graph/graph_fdfit.c:251 modules/volume/volume_fdfit.c:298
+#: modules/graph/graph_fdfit.c:251 modules/volume/volume_fdfit.c:296
 msgid "Fit FD Curve"
 msgstr "Proložení FD křivky"
 
 #: modules/graph/graph_fdfit.c:258 modules/graph/graph_fit.c:271
-#: modules/process/fit_2d.c:254 modules/volume/volume_fdfit.c:305
+#: modules/process/fit_2d.c:254 modules/volume/volume_fdfit.c:303
 msgid "verb|_Estimate"
 msgstr "Od_hadnout"
 
 #: modules/graph/graph_fdfit.c:260 modules/graph/graph_fit.c:273
-#: modules/process/fit_2d.c:256 modules/volume/volume_fdfit.c:307
+#: modules/process/fit_2d.c:256 modules/volume/volume_fdfit.c:305
 msgid "_Plot Inits"
 msgstr "Vy_kreslit odhad"
 
 #: modules/graph/graph_fdfit.c:358 modules/graph/graph_fit.c:366
-#: modules/process/fit_2d.c:355 modules/volume/volume_fdfit.c:445
+#: modules/process/fit_2d.c:355 modules/volume/volume_fdfit.c:443
 msgid "Fix"
 msgstr "Fix."
 
 #: modules/graph/graph_fdfit.c:364 modules/graph/graph_fit.c:372
-#: modules/process/fit_2d.c:338 modules/volume/volume_fdfit.c:451
+#: modules/process/fit_2d.c:338 modules/volume/volume_fdfit.c:449
 msgid "Initial"
 msgstr "Poč."
 
 #: modules/graph/graph_fdfit.c:375 modules/graph/graph_fit.c:383
-#: modules/process/fit_2d.c:441 modules/volume/volume_fdfit.c:462
+#: modules/process/fit_2d.c:441 modules/volume/volume_fdfit.c:460
 msgid "χ<sup>2</sup> result:"
 msgstr "Výsledné χ<sup>2</sup>:"
 
 #: modules/graph/graph_fdfit.c:391 modules/graph/graph_fit.c:399
-#: modules/process/fit_2d.c:424 modules/volume/volume_fdfit.c:478
+#: modules/process/fit_2d.c:424 modules/volume/volume_fdfit.c:476
 msgid "Correlation Matrix"
 msgstr "Korelační matice"
 
 #: modules/graph/graph_fdfit.c:446 modules/graph/graph_fit.c:474
-#: modules/volume/volume_fdfit.c:533
+#: modules/volume/volume_fdfit.c:531
 msgid "Instant:"
 msgstr "Okamžitě:"
 
 #: modules/graph/graph_fdfit.c:449 modules/graph/graph_fit.c:477
-#: modules/volume/volume_fdfit.c:536
+#: modules/volume/volume_fdfit.c:534
 msgid "e_stimate"
 msgstr "od_hadovat"
 
 #: modules/graph/graph_fdfit.c:456 modules/graph/graph_fit.c:484
-#: modules/volume/volume_fdfit.c:543
+#: modules/volume/volume_fdfit.c:541
 msgid "p_lot"
 msgstr "_kreslit"
 
 #: modules/graph/graph_fdfit.c:707 modules/graph/graph_fit.c:751
-#: modules/volume/volume_fdfit.c:895
+#: modules/volume/volume_fdfit.c:905
 msgid "Estimate"
 msgstr "Odhad"
 
 #: modules/graph/graph_fdfit.c:1429 modules/graph/graph_fit.c:1532
-#: modules/volume/volume_fdfit.c:1758
+#: modules/volume/volume_fdfit.c:1766
 #, c-format
 msgid "Residual sum:   %g\n"
 msgstr "Suma čtverců:   %g\n"
 
 #: modules/graph/graph_fdfit.c:1432 modules/graph/graph_fit.c:1535
-#: modules/volume/volume_fdfit.c:1761
+#: modules/volume/volume_fdfit.c:1769
 msgid "Correlation matrix\n"
 msgstr "Korelační matice\n"
 
@@ -6390,12 +6391,12 @@ msgid "Detail"
 msgstr "Detail"
 
 #: modules/process/calcoefs_simple.c:369 modules/process/calcoefs_view.c:507
-#: modules/process/calibrate.c:407 modules/volume/volume_calibrate.c:466
+#: modules/process/calibrate.c:407 modules/volume/volume_calibrate.c:476
 msgid "_X offset:"
 msgstr "Posun v _X:"
 
 #: modules/process/calcoefs_simple.c:396 modules/process/calcoefs_view.c:533
-#: modules/process/calibrate.c:420 modules/volume/volume_calibrate.c:479
+#: modules/process/calibrate.c:420 modules/volume/volume_calibrate.c:489
 msgid "_Y offset:"
 msgstr "Posun v _Y:"
 
@@ -6408,7 +6409,7 @@ msgid "Y p_eriod:"
 msgstr "P_erioda v Y:"
 
 #: modules/process/calcoefs_simple.c:436 modules/process/calcoefs_view.c:545
-#: modules/volume/volume_calibrate.c:493
+#: modules/volume/volume_calibrate.c:503
 msgid "_Z offset:"
 msgstr "Posun v _Z:"
 
@@ -6632,7 +6633,7 @@ msgstr "/_Jednoduché operace/_Rozsah a jednotky..."
 msgid "Change physical dimensions, units or value scale"
 msgstr "Kalibruje podélné rozměry vzorku nebo rozsah hodnot."
 
-#: modules/process/calibrate.c:313 modules/volume/volume_calibrate.c:345
+#: modules/process/calibrate.c:313 modules/volume/volume_calibrate.c:355
 msgid "Recalibrated Data"
 msgstr "Překalibrovaná data"
 
@@ -6640,15 +6641,15 @@ msgstr "Překalibrovaná data"
 msgid "Dimensions and Units"
 msgstr "Rozsah a jednotky"
 
-#: modules/process/calibrate.c:354 modules/volume/volume_calibrate.c:377
+#: modules/process/calibrate.c:354 modules/volume/volume_calibrate.c:387
 msgid "New Real Dimensions"
 msgstr "Nové skutečné rozměry"
 
-#: modules/process/calibrate.c:359 modules/volume/volume_calibrate.c:382
+#: modules/process/calibrate.c:359 modules/volume/volume_calibrate.c:392
 msgid "_X range:"
 msgstr "_X-ový rozsah:"
 
-#: modules/process/calibrate.c:386 modules/volume/volume_calibrate.c:409
+#: modules/process/calibrate.c:386 modules/volume/volume_calibrate.c:419
 msgid "_Y range:"
 msgstr "_Y-ový rozsah:"
 
@@ -6656,11 +6657,11 @@ msgstr "_Y-ový rozsah:"
 msgid "_Square samples"
 msgstr "Č_tvercové pixely"
 
-#: modules/process/calibrate.c:435 modules/volume/volume_calibrate.c:509
+#: modules/process/calibrate.c:435 modules/volume/volume_calibrate.c:519
 msgid "Value Range"
 msgstr "Rozsah hodnot"
 
-#: modules/process/calibrate.c:440 modules/volume/volume_calibrate.c:436
+#: modules/process/calibrate.c:440 modules/volume/volume_calibrate.c:446
 msgid "_Z range:"
 msgstr "_Z-ový rozsah:"
 
@@ -6668,19 +6669,19 @@ msgstr "_Z-ový rozsah:"
 msgid "Z shi_ft:"
 msgstr "Posun v _Z:"
 
-#: modules/process/calibrate.c:484 modules/volume/volume_calibrate.c:558
+#: modules/process/calibrate.c:484 modules/volume/volume_calibrate.c:568
 msgid "Calibration Coefficients"
 msgstr "Kalibrační koeficienty"
 
-#: modules/process/calibrate.c:491 modules/volume/volume_calibrate.c:565
+#: modules/process/calibrate.c:491 modules/volume/volume_calibrate.c:575
 msgid "_X calibration factor:"
 msgstr "Kalibrační faktor v ose _X:"
 
-#: modules/process/calibrate.c:499 modules/volume/volume_calibrate.c:573
+#: modules/process/calibrate.c:499 modules/volume/volume_calibrate.c:583
 msgid "_Y calibration factor:"
 msgstr "Kalibrační faktor v ose _Y:"
 
-#: modules/process/calibrate.c:507 modules/volume/volume_calibrate.c:581
+#: modules/process/calibrate.c:507 modules/volume/volume_calibrate.c:591
 msgid "_Z calibration factor:"
 msgstr "Kalibrační faktor v ose _Z:"
 
@@ -6994,8 +6995,8 @@ msgstr "CWT"
 msgid "2D CWT"
 msgstr "2D CWT"
 
-#: modules/process/cwt.c:154 modules/process/dwtanisotropy.c:207
-#: modules/process/dwt.c:182
+#: modules/process/cwt.c:154 modules/process/dwt.c:182
+#: modules/process/dwtanisotropy.c:207
 msgid "_Wavelet type:"
 msgstr "Typ _waveletu:"
 
@@ -7146,39 +7147,6 @@ msgstr "drift"
 msgid "x-axis drift"
 msgstr "drift podél x"
 
-#: modules/process/dwtanisotropy.c:78
-msgid "2D DWT anisotropy detection based on X/Y components ratio."
-msgstr "Detekce anisotropie založená na poměru X/Y komponentů"
-
-#: modules/process/dwtanisotropy.c:92
-msgid "/_Integral Transforms/DWT _Anisotropy..."
-msgstr "/_Integrální transformace/DWT _anisotropie"
-
-#: modules/process/dwtanisotropy.c:96
-msgid "DWT anisotropy detection"
-msgstr "Detekce anisotropie pomocí DWT"
-
-#: modules/process/dwtanisotropy.c:130 modules/process/dwt.c:118
-#, c-format
-msgid "%s: Data must be square."
-msgstr "%s: Data musejí být čtvercová."
-
-#: modules/process/dwtanisotropy.c:130
-msgid "DWT Anisotropy"
-msgstr "DWT anisotropie"
-
-#: modules/process/dwtanisotropy.c:182
-msgid "2D DWT Anisotropy"
-msgstr "2D DWT detekce anisotropie"
-
-#: modules/process/dwtanisotropy.c:212
-msgid "X/Y ratio threshold:"
-msgstr "práh poměru X/Y:"
-
-#: modules/process/dwtanisotropy.c:220
-msgid "Low level exclude limit:"
-msgstr "Spodní limit rozkladu:"
-
 #: modules/process/dwt.c:71
 msgid "Two-dimensional DWT (Discrete Wavelet Transform)."
 msgstr "Dvourozměrná DWT (diskrétní waveletová transformace)."
@@ -7190,6 +7158,11 @@ msgstr "/_Integrální transformace/2D _DWT..."
 #: modules/process/dwt.c:89
 msgid "Compute Discrete Wavelet Transform"
 msgstr "Vypočíst diskrétní waveletovou transformaci"
+
+#: modules/process/dwt.c:118 modules/process/dwtanisotropy.c:130
+#, c-format
+msgid "%s: Data must be square."
+msgstr "%s: Data musejí být čtvercová."
 
 #: modules/process/dwt.c:145
 msgid "DWT"
@@ -7207,6 +7180,34 @@ msgid ""
 msgstr ""
 "Velikost %d není mocnina dvou,\n"
 "pro DWT budou data přeškálována na %d×%d."
+
+#: modules/process/dwtanisotropy.c:78
+msgid "2D DWT anisotropy detection based on X/Y components ratio."
+msgstr "Detekce anisotropie založená na poměru X/Y komponentů"
+
+#: modules/process/dwtanisotropy.c:92
+msgid "/_Integral Transforms/DWT _Anisotropy..."
+msgstr "/_Integrální transformace/DWT _anisotropie"
+
+#: modules/process/dwtanisotropy.c:96
+msgid "DWT anisotropy detection"
+msgstr "Detekce anisotropie pomocí DWT"
+
+#: modules/process/dwtanisotropy.c:130
+msgid "DWT Anisotropy"
+msgstr "DWT anisotropie"
+
+#: modules/process/dwtanisotropy.c:182
+msgid "2D DWT Anisotropy"
+msgstr "2D DWT detekce anisotropie"
+
+#: modules/process/dwtanisotropy.c:212
+msgid "X/Y ratio threshold:"
+msgstr "práh poměru X/Y:"
+
+#: modules/process/dwtanisotropy.c:220
+msgid "Low level exclude limit:"
+msgstr "Spodní limit rozkladu:"
 
 #: modules/process/edge.c:151
 msgid ""
@@ -7393,6 +7394,37 @@ msgstr "Rozšířit _symetricky"
 msgid "Keep lateral offsets"
 msgstr "_Zachovat podélné posunutí"
 
+#: modules/process/facet-level.c:67
+msgid ""
+"Automatic facet-orientation based levelling. Levels data to make facets "
+"point up."
+msgstr ""
+"Automatické vyrovnání podle plošek. Vyrovná data tak, aby byly plošky "
+"orientovány vzhůru."
+
+#: modules/process/facet-level.c:82
+msgid "/_Level/_Facet Level"
+msgstr "/_Vyrovnání/Vyrovnání podle p_lošek"
+
+#: modules/process/facet-level.c:86
+msgid "Level data to make facets point upward"
+msgstr "Vyrovnat data, aby byly plošky orientovány vzhůru"
+
+#: modules/process/facet-level.c:120
+msgid ""
+"Facet level: Lateral dimensions and value must be the same physical quantity."
+msgstr ""
+"Vyrovnání podle plošek: Rozměry a hodnota musejí být tatáž fyzikální "
+"veličina."
+
+#: modules/process/facet-level.c:132
+msgid "Facet Level"
+msgstr "Vyrovnání podle plošek"
+
+#: modules/process/facet-level.c:145
+msgid "Facet-leveling"
+msgstr "Vyrovnávání podle plošek"
+
 #: modules/process/facet_analysis.c:161
 msgid "Visualizes, marks and measures facet orientation."
 msgstr "Zobrazuje, označuje a měří orientaci plošek."
@@ -7441,37 +7473,6 @@ msgid ""
 msgstr ""
 "Pozor: Jednotky podélných rozměrů a hodnot se liší. Úhly nedávají fyzikálně "
 "smysl."
-
-#: modules/process/facet-level.c:67
-msgid ""
-"Automatic facet-orientation based levelling. Levels data to make facets "
-"point up."
-msgstr ""
-"Automatické vyrovnání podle plošek. Vyrovná data tak, aby byly plošky "
-"orientovány vzhůru."
-
-#: modules/process/facet-level.c:82
-msgid "/_Level/_Facet Level"
-msgstr "/_Vyrovnání/Vyrovnání podle p_lošek"
-
-#: modules/process/facet-level.c:86
-msgid "Level data to make facets point upward"
-msgstr "Vyrovnat data, aby byly plošky orientovány vzhůru"
-
-#: modules/process/facet-level.c:120
-msgid ""
-"Facet level: Lateral dimensions and value must be the same physical quantity."
-msgstr ""
-"Vyrovnání podle plošek: Rozměry a hodnota musejí být tatáž fyzikální "
-"veličina."
-
-#: modules/process/facet-level.c:132
-msgid "Facet Level"
-msgstr "Vyrovnání podle plošek"
-
-#: modules/process/facet-level.c:145
-msgid "Facet-leveling"
-msgstr "Vyrovnávání podle plošek"
 
 #: modules/process/fft.c:95
 msgid "Two-dimensional FFT (Fast Fourier Transform)."
@@ -10448,17 +10449,21 @@ msgstr "/_Jednoduché operace/Převést na o_bjem..."
 msgid "Convert datafield to 3D data"
 msgstr "Převést datové pole na 3D data"
 
-#: modules/process/volumize_layers.c:86
+#: modules/process/volumize_layers.c:84
 msgid "Converts all datafields to 3D volume data."
 msgstr "Převádí všechna datová pole na trojrozměrná objemová data."
 
-#: modules/process/volumize_layers.c:100
+#: modules/process/volumize_layers.c:98
 msgid "/_Basic Operations/Volumize Layers..."
 msgstr "/_Jednoduché operace/Převést vrstvy na objem..."
 
-#: modules/process/volumize_layers.c:104
+#: modules/process/volumize_layers.c:102
 msgid "Convert all datafields to 3D data"
 msgstr "Převést všechna datová pole na 3D data"
+
+#: modules/process/volumize_layers.c:156
+msgid "All datafields must have same resolution to make a volume from them."
+msgstr ""
 
 #: modules/process/volumize_layers.c:210
 msgid "Volumize layers"
@@ -10504,27 +10509,6 @@ msgstr "Druhý směr:"
 msgid "Denoised"
 msgstr "Odšuměná data"
 
-#: pygwy.c:99
-msgid "Pygwy, the Gwyddion Python wrapper."
-msgstr "Pygwy, pythonní rozhraní ke Gwyddionu."
-
-#: pygwy.c:537
-msgid "Function written in Python"
-msgstr "Funkce napsaná v Pythonu"
-
-#: pygwy.c:583
-msgid "Graph function written in Python"
-msgstr "Grafová funkce napsaná v Pythonu"
-
-#: pygwy.c:993
-#, c-format
-msgid ""
-"Pygwy plugin: %s (%s)\n"
-"Export failed."
-msgstr ""
-"Pygwy plugin: %s (%s)\n"
-"Export se nezdařil."
-
 #: modules/pygwy/pygwy-console.c:55
 msgid "/Pygwy Console"
 msgstr "/Konsola pygwy"
@@ -10564,6 +10548,27 @@ msgstr "Spustit skript (Ctrl-E)"
 #: modules/pygwy/pygwy-console.c:380
 msgid "Command"
 msgstr "Příkaz"
+
+#: pygwy.c:99
+msgid "Pygwy, the Gwyddion Python wrapper."
+msgstr "Pygwy, pythonní rozhraní ke Gwyddionu."
+
+#: pygwy.c:537
+msgid "Function written in Python"
+msgstr "Funkce napsaná v Pythonu"
+
+#: pygwy.c:583
+msgid "Graph function written in Python"
+msgstr "Grafová funkce napsaná v Pythonu"
+
+#: pygwy.c:993
+#, c-format
+msgid ""
+"Pygwy plugin: %s (%s)\n"
+"Export failed."
+msgstr ""
+"Pygwy plugin: %s (%s)\n"
+"Export se nezdařil."
 
 #: modules/tools/crop.c:82
 msgid "Crop tool, crops data to smaller size."
@@ -11566,19 +11571,19 @@ msgstr "Překalibruje rozměry nebo rozsah hodnot objemových dat."
 msgid "/_Dimensions and Units..."
 msgstr "/_Rozsah a jednotky..."
 
-#: modules/volume/volume_calibrate.c:358
+#: modules/volume/volume_calibrate.c:368
 msgid "Volume Dimensions and Units"
 msgstr "Objemový rozsah a jednotky"
 
-#: modules/volume/volume_calibrate.c:514
+#: modules/volume/volume_calibrate.c:524
 msgid "_Value range:"
 msgstr "Rozsah _hodnot:"
 
-#: modules/volume/volume_calibrate.c:543
+#: modules/volume/volume_calibrate.c:553
 msgid "Value shi_ft:"
 msgstr "_Posun hodnot:"
 
-#: modules/volume/volume_calibrate.c:589
+#: modules/volume/volume_calibrate.c:599
 msgid "_Value calibration factor:"
 msgstr "_Kalibrační faktor hodnot:"
 
@@ -11768,11 +11773,11 @@ msgstr "/_Vyhodnotit FD data..."
 msgid "Evaluate force-distance volume data"
 msgstr "Vyhodnotit objemová F-D data"
 
-#: modules/volume/volume_fdfit.c:369
+#: modules/volume/volume_fdfit.c:367
 msgid "Curve _X position:"
 msgstr "X-ová souřadnice křivky"
 
-#: modules/volume/volume_fdfit.c:387
+#: modules/volume/volume_fdfit.c:385
 msgid "Curve _Y position:"
 msgstr "Y-ová souřadnice křivky"
 
