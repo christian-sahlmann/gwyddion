@@ -1,6 +1,6 @@
 #!/bin/bash
 # @(#) $Id$
-disabled=
+#disabled=  set this from shell when running to disable some stages
 pkgname=gwyddion
 basever=2.32
 projectdir=$PWD
