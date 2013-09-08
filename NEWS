@@ -1,4 +1,4 @@
-2.32 (0000-00-00)
+2.32 (2013-09-08)
 Application:
 - GLib 2.14 is now required.
 - Translations updated: Czech, French, Russian, Spanish.
@@ -57,10 +57,10 @@ Modules:
   coordinates in the image.
 - Dimensions and Units: Can create a new channel or modify the current one.
 - AIST: Small fix of broken file parser in spectra loading.
-- NTMDT: Reimplemented Raman image loading as volume data.
-- NanoScanTech: Implemented basic 4D data loading.
-- WiTec Project: Implemented graph image loading.
-- OLD MDA: Reimplemented data loading as volume ones.
+- NTMDT: Raman image loading was reimplemented as volume data.
+- NanoScanTech: Basic 4D data loading was implemented.
+- WiTec Project: Graph image loading was implemented.
+- OLD MDA: Data loading was implemented as volume data.
 
 Others:
 - The Win64 package uses correct set of registry keys, installation paths and
