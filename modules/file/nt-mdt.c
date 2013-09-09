@@ -78,10 +78,6 @@
 #define TREAT_CDATA_AS_TEXT 0
 #endif
 
-enum {
-    PREVIEW_SIZE = 200
-};
-
 typedef enum {
     MDT_FRAME_SCANNED      = 0,
     MDT_FRAME_SPECTROSCOPY = 1,
@@ -241,12 +237,6 @@ typedef enum {
     MDT_XML_DATAARRAY        = -1
 } MDTXMLParamType;
 
-typedef enum {
-    MDT_IMAGE_MAX,
-    MDT_IMAGE_MAXPOS,
-    MDT_IMAGE_AVG
-} MDTImageType;
-
 enum {
     FILE_HEADER_SIZE      = 32,
     FRAME_HEADER_SIZE     = 22,
@@ -400,21 +390,6 @@ typedef struct {
     gint   forward_size;
     gint   backward_size;
 } MDTDotsData;
-
-typedef struct {
-    GwyContainer    *mydata;
-    GtkWidget       *view;
-    GtkWidget       *graph;
-    GtkWidget       *combobox;
-    GwySelection    *selection;
-    GwyGraphModel   *gmodel;
-    MDTMDAFrame     *dataframe;
-    MDTImageType     output;
-    gint             xc, yc;
-    gint             xres, yres;
-    gint             numpoints;
-    gint             number;
-} MDTControlsType;
 
 static gboolean       module_register       (void);
 static gint           mdt_detect            (const GwyFileDetectInfo *fileinfo,

@@ -249,18 +249,13 @@ extract(GwyContainer *data, GwyRunType run)
     GwyBrick *brick = NULL;
     gint id;
 
-
     g_return_if_fail(run & EXTRACT_RUN_MODES);
 
     extract_load_args(gwy_app_settings_get(), &args);
-
     gwy_app_data_browser_get_current(GWY_APP_BRICK, &brick,
                                      GWY_APP_BRICK_ID, &id,
                                      0);
-
-
     g_return_if_fail(GWY_IS_BRICK(brick));
-
     extract_dialog(&args, data, brick, id);
     extract_save_args(gwy_app_settings_get(), &args);
 }
@@ -323,7 +318,6 @@ extract_dialog(ExtractArgs *args,
 
     g_return_if_fail(GWY_IS_BRICK(controls.brick));
 
-
     /*dialogue controls*/
 
     dialog = gtk_dialog_new_with_buttons(_("Volume data"), NULL, 0, NULL);
@@ -346,13 +340,11 @@ extract_dialog(ExtractArgs *args,
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_CANCEL);
     controls.dialog = dialog;
 
-
     notebook = gtk_notebook_new();
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), notebook,
                        TRUE, TRUE, 4);
     g_signal_connect_swapped(notebook, "switch-page",
                                  G_CALLBACK(page_switched), &controls);
-
 
     /////////////////////////////  projections page ///////////////////////////////////////
 
@@ -370,7 +362,6 @@ extract_dialog(ExtractArgs *args,
     if (data) gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
                             GWY_DATA_ITEM_PALETTE,
                             0);
-
 
     controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
@@ -394,7 +385,6 @@ extract_dialog(ExtractArgs *args,
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
     row = 0;
-
     controls.xpos = gtk_adjustment_new(args->xpos,
                                             0.0, 100, 1, 10, 0);
     gwy_table_attach_hscale(table, row++, _("X position"), "%",
@@ -416,7 +406,6 @@ extract_dialog(ExtractArgs *args,
     g_signal_connect_swapped(controls.zpos, "value-changed",
                              G_CALLBACK(extract_invalidate), &controls);
 
-
     label = gtk_label_new(_("Shown cut direction:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -431,7 +420,6 @@ extract_dialog(ExtractArgs *args,
                             GTK_OBJECT(controls.type), GWY_HSCALE_WIDGET);
     type_changed_cb(controls.type, &controls);
     row++;
-
 
     controls.update = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.update),
@@ -464,7 +452,6 @@ extract_dialog(ExtractArgs *args,
                             GWY_DATA_ITEM_PALETTE,
                             0);
 
-
     controls.gview = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
     g_object_set(layer,
@@ -486,22 +473,18 @@ extract_dialog(ExtractArgs *args,
 
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.gview, FALSE, FALSE, 4);
-
     table = gtk_table_new(11, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
     row = 0;
-
     controls.gmodel = gwy_graph_model_new();
     controls.graph = gwy_graph_new(controls.gmodel);
     gtk_widget_set_size_request(controls.graph, 300, 200);
     gtk_table_attach(GTK_TABLE(table), controls.graph,
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
     row++;
-
 
     label = gtk_label_new(_("Graph cut direction:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -518,7 +501,6 @@ extract_dialog(ExtractArgs *args,
     gtype_changed_cb(controls.gtype, &controls);
     row++;
 
-
     controls.gupdate = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.gupdate),
                                  args->update);
@@ -534,8 +516,6 @@ extract_dialog(ExtractArgs *args,
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-
-
     /////////////////////////////  3D page ///////////////////////////////////////
 
     hbox = gtk_hbox_new(FALSE, 2);
@@ -543,7 +523,7 @@ extract_dialog(ExtractArgs *args,
                                hbox,
                                gtk_label_new(_("3D view")));
 
-      controls.drawarea = gtk_drawing_area_new();
+    controls.drawarea = gtk_drawing_area_new();
     gtk_widget_add_events(controls.drawarea, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_POINTER_MOTION_MASK);
 
     g_signal_connect(GTK_DRAWING_AREA(controls.drawarea), "expose-event", //should be "draw" for newer Gtk+
@@ -555,10 +535,8 @@ extract_dialog(ExtractArgs *args,
      g_signal_connect(controls.drawarea, "motion-notify-event",
                      G_CALLBACK(p3d_moved), &controls);
 
-
     gtk_box_pack_start(GTK_BOX(hbox), controls.drawarea, FALSE, FALSE, 4);
     gtk_widget_set_size_request(controls.drawarea, PREVIEW_SIZE, PREVIEW_SIZE);
-
 
     table = gtk_table_new(11, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
@@ -566,7 +544,6 @@ extract_dialog(ExtractArgs *args,
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
     row = 0;
-
     controls.size = gtk_adjustment_new(args->size,
                                             1, 100, 1, 10, 0);
     gwy_table_attach_hscale(table, row++, _("Zoom"), "%",
@@ -591,7 +568,6 @@ extract_dialog(ExtractArgs *args,
                              G_CALLBACK(extract_zscale_cb), &controls);
     row++;
 
-
     controls.opacity = gtk_adjustment_new(args->opacity,
                                             1, 100, 1, 10, 0);
     gwy_table_attach_hscale(table, row++, _("Opacity scale"), "%",
@@ -599,8 +575,6 @@ extract_dialog(ExtractArgs *args,
     g_signal_connect_swapped(controls.opacity, "value-changed",
                              G_CALLBACK(extract_opacity_cb), &controls);
     row++;
-
-
 
     controls.perspective = gtk_check_button_new_with_mnemonic(_("apply perspective"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.perspective),
@@ -611,7 +585,6 @@ extract_dialog(ExtractArgs *args,
                              G_CALLBACK(perspective_change_cb), &controls);
     row++;
 
-
     controls.render = gtk_check_button_new_with_mnemonic(_("instant 3D render"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.render),
                                  args->render);
@@ -620,8 +593,6 @@ extract_dialog(ExtractArgs *args,
     g_signal_connect_swapped(controls.render, "toggled",
                              G_CALLBACK(render_change_cb), &controls);
     row++;
-
-
 
     button = gtk_button_new_with_mnemonic(_("X view"));
     gtk_table_attach(GTK_TABLE(table), button,
@@ -643,7 +614,6 @@ extract_dialog(ExtractArgs *args,
 
     p3d_build(&controls, args);
     p3d_prepare_wdata(&controls, args);
-
     row++;
 
     extract_invalidate(&controls);
@@ -706,7 +676,6 @@ extract_dialog(ExtractArgs *args,
             dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
                                                                      "/0/data"));
 
-
             if (args->type == CUT_DIRX)
                 g_snprintf(description, sizeof(description), _("X cross-section at x: %d"),
                            (gint)(args->xpos/100.0*(gwy_brick_get_xres(controls.brick)-1)));
@@ -731,7 +700,6 @@ extract_dialog(ExtractArgs *args,
                                         0);
 
                 gwy_app_set_data_field_title(data, newid, description);
-
             }
             else {
                 newid = 0;
@@ -750,10 +718,8 @@ extract_dialog(ExtractArgs *args,
             GwyGraphModel *gmodel;
             GwyGraphCurveModel *gcmodel;
 
-
             dline = GWY_DATA_LINE(gwy_container_get_object_by_name(controls.mydata,
                                                                      "/1/graph"));
-
 
             gmodel = gwy_graph_model_new();
             gwy_graph_model_set_units_from_data_line(gmodel, dline);
@@ -880,7 +846,6 @@ graph_selection_finished_cb(GwySelection *selection,
         gwy_data_line_set_si_unit_y(dline, gwy_brick_get_si_unit_w(controls->brick));
     }
 
-
     gwy_graph_model_remove_all_curves(controls->gmodel);
 
     cmodel = gwy_graph_curve_model_new();
@@ -907,12 +872,10 @@ graph_selection_finished_cb(GwySelection *selection,
                  "axis-label-left", "y",
                  NULL);
 
-
     gwy_graph_model_add_curve(controls->gmodel, cmodel);
     gwy_container_set_object_by_name(controls->mydata, "/1/graph", dline);
 
     controls->gcomputed = TRUE;
-
 }
 
 static void
@@ -997,7 +960,6 @@ extract_invalidate(ExtractControls *controls)
 {
     if (controls->args->active_page == 0) controls->computed = FALSE;
     else if (controls->args->active_page == 1) controls->gcomputed = FALSE;
-
 
     /* create preview if instant updates are on for the rest, 3d is instantly updated always*/
     if (controls->args->active_page == 2 || (controls->args->update && !controls->in_init)) {
@@ -1124,7 +1086,6 @@ extract_load_data(ExtractControls *controls,
 
 
 }
-
 
 static void
 preview(ExtractControls *controls,
@@ -1276,9 +1237,6 @@ preview(ExtractControls *controls,
     }
  }
 
-
-
-
 #define CX 200
 #define CY 200
 
@@ -1378,13 +1336,14 @@ mmultv(gdouble m[3][3], gdouble x, gdouble y, gdouble z,
     *pz = m[2][0]*x + m[2][1]*y + m[2][2]*z;
 }
 
-
+/*
 static gdouble
 mdet(gdouble m[3][3])
 {
     return (m[0][0] * m[1][1] * m[2][2]) + (m[1][0] * m[2][1] * m[3][2]) + (m[2][0] * m[3][1] * m[4][2])
            - (m[0][2] * m[1][1] * m[2][0]) - (m[1][2] * m[2][1] * m[3][0]) - (m[2][2] * m[3][1] * m[4][0]);
 }
+*/
 
 static gboolean
 minv(gdouble m[3][3], gdouble ret[3][3])
@@ -1400,8 +1359,6 @@ minv(gdouble m[3][3], gdouble ret[3][3])
     ret[1][0] = m[0][1];
     ret[2][0] = m[0][2];
     ret[2][1] = m[1][2];
-
-
 
     //gdouble ddet = 1.0/mdet(m);
 
@@ -1430,7 +1387,7 @@ static gdouble
 raysum(ExtractControls *controls, gdouble pos[3], gdouble dir[3], gdouble min, gdouble max)
 {
     gint xres, yres, zres;
-    gdouble diff, mult;
+    gdouble mult;
     gdouble sum = 0;
     gdouble posd, posx, posy, posz;
     GwyBrick *brick = controls->brick;
@@ -1911,12 +1868,11 @@ p3d_build(ExtractControls *controls, G_GNUC_UNUSED ExtractArgs *args)
         return;
     }
 
-
-    gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Building wireframe model..."));
+    gwy_app_wait_start(GTK_WINDOW(controls->dialog),
+                       _("Building wireframe model..."));
     p3d_set_axes(controls);
     p3d_add_wireframe(controls);
     gwy_app_wait_finish();
-
 }
 
 
@@ -2048,7 +2004,6 @@ p3d_add_wireframe(ExtractControls *controls)
     gint xres, yres, zres;
     gboolean move;
 
-
     if (controls->brick == NULL) {
         //printf("No brick\n");
         return;
@@ -2058,9 +2013,7 @@ p3d_add_wireframe(ExtractControls *controls)
     yres = gwy_brick_get_yres(controls->brick);
     zres = gwy_brick_get_zres(controls->brick);
     cut = gwy_data_field_new(1, 1, 1, 1, FALSE);
-
     visited = gwy_data_field_new(yres, zres, yres, zres, FALSE);
-
     //printf("brick min %g, max %g\n", gwy_brick_get_min(controls->brick), gwy_brick_get_max(controls->brick));
     threshold = gwy_brick_get_min(controls->brick)
         + (gwy_brick_get_max(controls->brick) - gwy_brick_get_min(controls->brick))/100.0*controls->args->threshold;
@@ -2069,22 +2022,20 @@ p3d_add_wireframe(ExtractControls *controls)
     {
         gwy_brick_extract_plane(controls->brick, cut, i, 0, 0, -1, yres, zres, FALSE);
         data = gwy_data_field_get_data(cut);
-
         gwy_data_field_clear(visited);
         vdata = gwy_data_field_get_data(visited);
-
         gwy_data_field_threshold(cut, threshold, 0, 1);
-
         move = 1;
-
         /*here comes the algorithm*/
-        for (col=1; col<yres; col++)
+        for (col=1; col<zres; col++)
         {
-            for (row=1; row<zres; row++)
+            for (row=1; row<yres; row++)
             {
                 move = 1;
-                if (gothere(data, vdata, xres, yres, col, row, 0, threshold))
+
+                if (gothere(data, vdata, xres, yres, col, row, 0, threshold)) {
                     visitme(controls, &actual_nps, data, vdata, xres, yres, zres, col, row, 0, i, &move, threshold);
+                }
             }
         }
     }
@@ -2141,9 +2092,7 @@ p3d_add_wireframe(ExtractControls *controls)
         }
     }
 //    printf("we have %d segments at the end\nRunning simplification:\n", controls->nps);
-
     controls->nps = simplify(controls->px, controls->py, controls->pz, controls->ps, controls->nps);
-
 
     if (controls->wpx) g_free(controls->wpx);
     if (controls->wpy) g_free(controls->wpy);
@@ -2153,10 +2102,7 @@ p3d_add_wireframe(ExtractControls *controls)
     controls->wpy = (gdouble *) g_malloc(controls->nps*sizeof(gdouble));
     controls->wpz = (gdouble *) g_malloc(controls->nps*sizeof(gdouble));
 
-
 //    printf("we have %d segments after simplification\n", controls->nps);
-
-
 }
 
 
