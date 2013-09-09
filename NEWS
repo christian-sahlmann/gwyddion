@@ -1,3 +1,9 @@
+2.33 (0000-00-00)
+Modules:
+- Dimensions and Units: It is possible to set the pixel size to match exactly
+  another channel.
+
+
 2.32 (2013-09-08)
 Application:
 - GLib 2.14 is now required.
