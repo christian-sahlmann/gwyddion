@@ -2,6 +2,7 @@
 Modules:
 - Dimensions and Units: It is possible to set the pixel size to match exactly
   another channel.
+- TIA SER: spectral arrays reimplemented as volume data.
 
 
 2.32 (2013-09-08)
