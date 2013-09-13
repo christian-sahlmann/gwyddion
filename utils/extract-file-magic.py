@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# vim: sw=4 ts=4 et :
+# vim: fileencoding=utf-8 sw=4 ts=4 et :
 # Written by Yeti <yeti@gwyddion.net>. Public domain.
 import sys, os, re
 
@@ -58,6 +58,7 @@ def format_userguide(module, body):
     out.append(entry % fmtsup(supinfo, noterefs, ('Read',)))
     out.append(entry % fmtsup(supinfo, noterefs, ('Save', 'Export')))
     out.append(entry % fmtsup(supinfo, noterefs, ('SPS',)))
+    out.append(entry % fmtsup(supinfo, noterefs, ('Volume',)))
     out.append('</row>')
     for i, x in enumerate(out):
         out[i] = '    ' + x
@@ -84,7 +85,7 @@ mclasses = {
     <primary>supported formats</primary>
   </indexterm>
   <tgroup cols='6' align='left'>
-    <?dblatex XXlccc?>
+    <?dblatex XXlcccc?>
     <thead>
       <row>
         <entry>File Format</entry>
@@ -93,6 +94,7 @@ mclasses = {
         <entry>Read</entry>
         <entry>Write</entry>
         <entry>SPS</entry>
+        <entry>Volume</entry>
       </row>
     </thead>
     <tbody>''',
