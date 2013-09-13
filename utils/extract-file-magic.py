@@ -42,7 +42,7 @@ def format_userguide(module, body):
                 if x['note']:
                     yes += noterefs[x['note']]
                 return yes
-        return 'No'
+        return '—'
 
     module = re.sub(r'\.c$', '', module)
     out = ['<row>']
