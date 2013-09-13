@@ -42,7 +42,7 @@
  * [FILE-MAGIC-USERGUIDE]
  * NT-MDT
  * .mdt
- * Read SPS
+ * Read SPS Volume
  **/
 
 #include "config.h"

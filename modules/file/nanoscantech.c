@@ -43,7 +43,7 @@
  * [FILE-MAGIC-USERGUIDE]
  * NanoScanTech
  * .nstdat
- * Read SPS
+ * Read SPS Volume
  **/
 
 #include "config.h"

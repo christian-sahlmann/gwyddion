@@ -47,7 +47,7 @@
  * [FILE-MAGIC-USERGUIDE]
  * FEI Tecnai imaging and analysis (former Emispec) data
  * .ser
- * Read SPS
+ * Read SPS Volume
  **/
 
 #include "config.h"

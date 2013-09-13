@@ -48,7 +48,7 @@
  * [FILE-MAGIC-USERGUIDE]
  * WITec Project data
  * .wip
- * Read SPS
+ * Read SPS Volume
  **/
 
 #include "config.h"
