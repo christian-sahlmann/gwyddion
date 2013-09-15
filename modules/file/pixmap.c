@@ -471,7 +471,7 @@ static GwyModuleInfo module_info = {
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.23",
+    "7.24",
     "David Nečas (Yeti)",
     "2004-2013",
 };
@@ -1760,20 +1760,22 @@ write_tiff_head_rgb(FILE *fh,
                     guint bit_depth)
 {
     enum {
-        N_ENTRIES = 11,
+        N_ENTRIES = 15,
         ESTART = 4 + 4 + 2,
         HEAD_SIZE = ESTART + 12*N_ENTRIES + 4,  /* head + 0th directory */
         /* offsets of things we have to fill run-time */
-        WIDTH_OFFSET = ESTART + 12*0 + 8,
-        HEIGHT_OFFSET = ESTART + 12*1 + 8,
-        ROWS_OFFSET = ESTART + 12*8 + 8,
-        BYTES_OFFSET = ESTART + 12*9 + 8,
+        WIDTH_OFFSET = ESTART + 12*1 + 8,
+        HEIGHT_OFFSET = ESTART + 12*2 + 8,
+        ROWS_OFFSET = ESTART + 12*9 + 8,
+        BYTES_OFFSET = ESTART + 12*10 + 8,
     };
     static guchar tiff_head[] = {
         0x49, 0x49,   /* magic (LSB) */
         W(42),        /* more magic */
         Q(8),         /* 0th directory offset */
         W(N_ENTRIES), /* number of entries */
+        W(GWY_TIFFTAG_SUB_FILE_TYPE), W(GWY_TIFF_LONG), Q(1),
+            Q(GWY_TIFF_SUBFILE_FULL_IMAGE_DATA),
         W(GWY_TIFFTAG_IMAGE_WIDTH), W(GWY_TIFF_SHORT), Q(1), Q(0),
         W(GWY_TIFFTAG_IMAGE_LENGTH), W(GWY_TIFF_SHORT), Q(1), Q(0),
         W(GWY_TIFFTAG_BITS_PER_SAMPLE), W(GWY_TIFF_SHORT), Q(3), Q(HEAD_SIZE),
@@ -1781,16 +1783,26 @@ write_tiff_head_rgb(FILE *fh,
             Q(GWY_TIFF_COMPRESSION_NONE),
         W(GWY_TIFFTAG_PHOTOMETRIC), W(GWY_TIFF_SHORT), Q(1),
             Q(GWY_TIFF_PHOTOMETRIC_RGB),
-        W(GWY_TIFFTAG_STRIP_OFFSETS), W(GWY_TIFF_LONG), Q(1), Q(HEAD_SIZE + 6),
+        W(GWY_TIFFTAG_STRIP_OFFSETS), W(GWY_TIFF_LONG), Q(1),
+            Q(HEAD_SIZE + 22),
         W(GWY_TIFFTAG_ORIENTATION), W(GWY_TIFF_SHORT), Q(1),
             Q(GWY_TIFF_ORIENTATION_TOPLEFT),
         W(GWY_TIFFTAG_SAMPLES_PER_PIXEL), W(GWY_TIFF_SHORT), Q(1), Q(3),
         W(GWY_TIFFTAG_ROWS_PER_STRIP), W(GWY_TIFF_SHORT), Q(1), Q(0),
         W(GWY_TIFFTAG_STRIP_BYTE_COUNTS), W(GWY_TIFF_LONG), Q(1), Q(0),
+        W(GWY_TIFFTAG_X_RESOLUTION), W(GWY_TIFF_RATIONAL), Q(1),
+            Q(HEAD_SIZE + 6),
+        W(GWY_TIFFTAG_Y_RESOLUTION), W(GWY_TIFF_RATIONAL), Q(1),
+            Q(HEAD_SIZE + 14),
         W(GWY_TIFFTAG_PLANAR_CONFIG), W(GWY_TIFF_SHORT), Q(1),
             Q(GWY_TIFF_PLANAR_CONFIG_CONTIGNUOUS),
+        W(GWY_TIFFTAG_RESOLUTION_UNIT), W(GWY_TIFF_SHORT), Q(1),
+            Q(GWY_TIFF_RESOLUTION_UNIT_INCH),
         Q(0),              /* next directory (0 = none) */
+        /* header data */
         W(0), W(0), W(0),  /* value of bits per sample */
+        Q(72), Q(1),       /* x-resolution */
+        Q(72), Q(1),       /* y-resolution */
         /* here starts the image data */
     };
     guint nbytes = 3*(bit_depth/8)*width*height;
