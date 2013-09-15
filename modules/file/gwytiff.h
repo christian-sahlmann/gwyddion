@@ -60,6 +60,7 @@ typedef enum {
 
 /* Standard TIFF tags */
 typedef enum {
+    GWY_TIFFTAG_SUB_FILE_TYPE     = 254,
     GWY_TIFFTAG_IMAGE_WIDTH       = 256,
     GWY_TIFFTAG_IMAGE_LENGTH      = 257,
     GWY_TIFFTAG_BITS_PER_SAMPLE   = 258,
@@ -108,14 +109,20 @@ typedef enum {
 } GwyTIFFPhotometric;
 
 typedef enum {
+    GWY_TIFF_SUBFILE_FULL_IMAGE_DATA    = 1,
+    GWY_TIFF_SUBFILE_REDUCED_IMAGE_DATA = 2,
+    GWY_TIFF_SUBFILE_SINGLE_PAGE        = 3,
+} GwyTIFFSubFileType;
+
+typedef enum {
     GWY_TIFF_PLANAR_CONFIG_CONTIGNUOUS = 1,
     GWY_TIFF_PLANAR_CONFIG_SEPARATE = 2,
 } GwyTIFFPlanarConfig;
 
 typedef enum {
-    GWY_TIFF_RESOLUTION_UNIT_NONE = 0,
-    GWY_TIFF_RESOLUTION_UNIT_INCH = 1,
-    GWY_TIFF_RESOLUTION_UNIT_CENTIMETER = 2,
+    GWY_TIFF_RESOLUTION_UNIT_NONE = 1,
+    GWY_TIFF_RESOLUTION_UNIT_INCH = 2,
+    GWY_TIFF_RESOLUTION_UNIT_CENTIMETER = 3,
 } GwyTIFFResolutionUnit;
 
 typedef enum {
