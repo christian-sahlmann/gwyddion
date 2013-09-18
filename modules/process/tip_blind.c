@@ -36,7 +36,9 @@
 
 enum {
     MIN_RES = 3,
-    MAX_RES = 128
+    MAX_RES = 128,
+    MIN_STRIPES = 2,
+    MAX_STRIPES = 64,
 };
 
 typedef struct {
@@ -50,6 +52,10 @@ typedef struct {
     gdouble thresh;
     gboolean use_boundaries;
     gboolean same_resolution;
+    gboolean split_to_stripes;
+    gboolean create_images;
+    gboolean plot_size_graph;
+    guint nstripes;
     GwyDataObjectId orig;  /* The original source, to filter out incompatible */
     GwyDataObjectId source;
 } TipBlindArgs;
@@ -73,53 +79,68 @@ typedef struct {
     gboolean tipdone;
     gboolean good_tip;
     GtkWidget *same_resolution;
+    GtkObject *nstripes;
+    GtkObject *stripeno;
+    GtkWidget *split_to_stripes;
+    GtkWidget *create_images;
+    GtkWidget *plot_size_graph;
     gboolean in_update;
 } TipBlindControls;
 
-static gboolean    module_register            (void);
-static void        tip_blind                  (GwyContainer *data,
-                                               GwyRunType run);
-static void        tip_blind_dialog           (TipBlindArgs *args);
-static void        reset                      (TipBlindControls *controls,
-                                               TipBlindArgs *args);
-static void        tip_blind_run              (TipBlindControls *controls,
-                                               TipBlindArgs *args,
-                                               gboolean full);
-static void        tip_blind_do               (TipBlindControls *controls,
-                                               TipBlindArgs *args);
-static void        tip_blind_load_args        (GwyContainer *container,
-                                               TipBlindArgs *args);
-static void        tip_blind_save_args        (GwyContainer *container,
-                                               TipBlindArgs *args);
-static void        tip_blind_sanitize_args    (TipBlindArgs *args);
-static void        width_changed_cb           (GtkAdjustment *adj,
-                                               TipBlindControls *controls);
-static void        height_changed_cb          (GtkAdjustment *adj,
-                                               TipBlindControls *controls);
-static void        thresh_changed_cb          (gpointer object,
-                                               TipBlindControls *controls);
-static void        bound_changed_cb           (GtkToggleButton *button,
-                                               TipBlindArgs *args);
-static void        same_resolution_changed_cb (GtkToggleButton *button,
-                                               TipBlindControls *controls);
-static void        data_changed_cb            (GwyDataChooser *chooser,
-                                               GwyDataObjectId *object);
-static gboolean    tip_blind_source_filter    (GwyContainer *data,
-                                               gint id,
-                                               gpointer user_data);
-static void        tip_update                 (TipBlindControls *controls,
-                                               TipBlindArgs *args);
-static void        tip_blind_dialog_abandon   (TipBlindControls *controls);
-static void        sci_entry_set_value        (GtkAdjustment *adj,
-                                               GtkComboBox *metric,
-                                               gdouble val);
-static void        prepare_fields             (GwyDataField *tipfield,
-                                               GwyDataField *surface,
-                                               gint xres,
-                                               gint yres);
+static gboolean module_register         (void);
+static void     tip_blind               (GwyContainer *data,
+                                         GwyRunType run);
+static void     tip_blind_dialog        (TipBlindArgs *args);
+static void     reset                   (TipBlindControls *controls,
+                                         TipBlindArgs *args);
+static void     tip_blind_run           (TipBlindControls *controls,
+                                         TipBlindArgs *args,
+                                         gboolean full);
+static void     tip_blind_do            (TipBlindControls *controls,
+                                         TipBlindArgs *args);
+static void     tip_blind_load_args     (GwyContainer *container,
+                                         TipBlindArgs *args);
+static void     tip_blind_save_args     (GwyContainer *container,
+                                         TipBlindArgs *args);
+static void     tip_blind_sanitize_args (TipBlindArgs *args);
+static void     width_changed           (GtkAdjustment *adj,
+                                         TipBlindControls *controls);
+static void     height_changed          (GtkAdjustment *adj,
+                                         TipBlindControls *controls);
+static void     thresh_changed          (gpointer object,
+                                         TipBlindControls *controls);
+static void     bound_changed           (GtkToggleButton *button,
+                                         TipBlindArgs *args);
+static void     same_resolution_changed (GtkToggleButton *button,
+                                         TipBlindControls *controls);
+static void     data_changed            (GwyDataChooser *chooser,
+                                         GwyDataObjectId *object);
+static void     split_to_stripes_changed(GtkToggleButton *toggle,
+                                         TipBlindControls *controls);
+static void     nstripes_changed        (GtkAdjustment *adj,
+                                         TipBlindControls *controls);
+static void     stripeno_changed        (GtkAdjustment *adj,
+                                         TipBlindControls *controls);
+static void     create_images_changed   (GtkToggleButton *toggle,
+                                         TipBlindControls *controls);
+static void     plot_size_graph_changed (GtkToggleButton *toggle,
+                                         TipBlindControls *controls);
+static gboolean tip_blind_source_filter (GwyContainer *data,
+                                         gint id,
+                                         gpointer user_data);
+static void     tip_update              (TipBlindControls *controls);
+static void     tip_blind_dialog_abandon(TipBlindControls *controls);
+static void     sci_entry_set_value     (GtkAdjustment *adj,
+                                         GtkComboBox *metric,
+                                         gdouble val);
+static void     prepare_fields          (GwyDataField *tipfield,
+                                         GwyDataField *surface,
+                                         gint xres,
+                                         gint yres);
 
 static const TipBlindArgs tip_blind_defaults = {
     10, 10, 1e-10, FALSE, TRUE,
+    FALSE, TRUE, TRUE, 16,
     { NULL, -1, }, { NULL, -1, },
 };
 
@@ -128,7 +149,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Blind estimation of SPM tip using Villarubia's algorithm."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -172,7 +193,7 @@ tip_blind_dialog(TipBlindArgs *args)
         RESPONSE_PARTIAL,
         RESPONSE_FULL
     };
-    GtkWidget *dialog, *table, *hbox, *label;
+    GtkWidget *dialog, *table, *hbox, *vbox, *label;
     TipBlindControls controls;
     GwyPixmapLayer *layer;
     GwyDataField *dfield;
@@ -200,8 +221,8 @@ tip_blind_dialog(TipBlindArgs *args)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
-    controls.vxres = 200;
-    controls.vyres = 200;
+    controls.vxres = 240;
+    controls.vyres = 240;
 
     /* set initial tip properties */
     quark = gwy_app_get_data_key_for_id(args->source.id);
@@ -226,6 +247,9 @@ tip_blind_dialog(TipBlindArgs *args)
     g_object_unref(dfield);
 
     /* set up rescaled image of the tip */
+    vbox = gtk_vbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
+
     controls.view = gwy_data_view_new(controls.vtip);
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
@@ -233,9 +257,9 @@ tip_blind_dialog(TipBlindArgs *args)
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
 
     /* set up tip estimation controls */
-    gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
 
-    table = gtk_table_new(7, 4, FALSE);
+    table = gtk_table_new(13, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -248,7 +272,7 @@ tip_blind_dialog(TipBlindArgs *args)
     gwy_data_chooser_set_active(GWY_DATA_CHOOSER(controls.data),
                                 args->source.data, args->source.id);
     g_signal_connect(controls.data, "changed",
-                     G_CALLBACK(data_changed_cb), &args->source);
+                     G_CALLBACK(data_changed), &args->source);
     gwy_table_attach_hscale(table, row, _("Related _data:"), NULL,
                             GTK_OBJECT(controls.data), GWY_HSCALE_WIDGET);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
@@ -264,14 +288,14 @@ tip_blind_dialog(TipBlindArgs *args)
     gwy_table_attach_hscale(table, row, _("_Width:"), "px", controls.xres, 0);
     g_object_set_data(G_OBJECT(controls.xres), "controls", &controls);
     g_signal_connect(controls.xres, "value-changed",
-                     G_CALLBACK(width_changed_cb), &controls);
+                     G_CALLBACK(width_changed), &controls);
     row++;
 
     controls.yres = gtk_adjustment_new(args->yres, MIN_RES, MAX_RES, 1, 10, 0);
     gwy_table_attach_hscale(table, row, _("_Height:"), "px", controls.yres, 0);
     g_object_set_data(G_OBJECT(controls.yres), "controls", &controls);
     g_signal_connect(controls.yres, "value-changed",
-                     G_CALLBACK(height_changed_cb), &controls);
+                     G_CALLBACK(height_changed), &controls);
     row++;
 
     controls.same_resolution
@@ -281,8 +305,12 @@ tip_blind_dialog(TipBlindArgs *args)
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.same_resolution),
                                  args->same_resolution);
     g_signal_connect(controls.same_resolution, "toggled",
-                     G_CALLBACK(same_resolution_changed_cb), &controls);
+                     G_CALLBACK(same_resolution_changed), &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
+    gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Options")),
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls.threshold = gtk_adjustment_new(1.0, 0.01, 1000.0, 0.01, 1.0, 0.0);
@@ -297,13 +325,13 @@ tip_blind_dialog(TipBlindArgs *args)
                      0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     unit = gwy_data_field_get_si_unit_z(dfield);
     controls.threshold_unit
-        = gwy_combo_box_metric_unit_new(G_CALLBACK(thresh_changed_cb),
+        = gwy_combo_box_metric_unit_new(G_CALLBACK(thresh_changed),
                                         &controls,
                                         -12, -3, unit, -9);
     gtk_table_attach(GTK_TABLE(table), controls.threshold_unit,
                      3, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect(controls.threshold, "value-changed",
-                     G_CALLBACK(thresh_changed_cb), &controls);
+                     G_CALLBACK(thresh_changed), &controls);
     sci_entry_set_value(GTK_ADJUSTMENT(controls.threshold),
                         GTK_COMBO_BOX(controls.threshold_unit),
                         args->thresh);
@@ -316,10 +344,60 @@ tip_blind_dialog(TipBlindArgs *args)
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.boundaries),
                                                  args->use_boundaries);
     g_signal_connect(controls.boundaries, "toggled",
-                     G_CALLBACK(bound_changed_cb), args);
+                     G_CALLBACK(bound_changed), args);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
+    gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Stripes")),
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls.nstripes = gtk_adjustment_new(args->nstripes,
+                                           MIN_STRIPES, MAX_STRIPES, 1, 10, 0);
+    gwy_table_attach_hscale(table, row, _("_Split to stripes:"), NULL,
+                            controls.nstripes, GWY_HSCALE_CHECK);
+    controls.split_to_stripes = gwy_table_hscale_get_check(controls.nstripes);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.split_to_stripes),
+                                 !args->split_to_stripes);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.split_to_stripes),
+                                 args->split_to_stripes);
+    g_signal_connect(controls.split_to_stripes, "toggled",
+                     G_CALLBACK(split_to_stripes_changed), &controls);
+    g_signal_connect(controls.nstripes, "value-changed",
+                     G_CALLBACK(nstripes_changed), &controls);
+    row++;
+
+    controls.stripeno = gtk_adjustment_new(1, 1, args->nstripes, 1, 10, 0);
+    gwy_table_attach_hscale(table, row, _("_Preview stripe:"), NULL,
+                            controls.stripeno, GWY_HSCALE_DEFAULT);
+    g_signal_connect(controls.stripeno, "value-changed",
+                     G_CALLBACK(stripeno_changed), &controls);
+    row++;
+
+    controls.create_images
+        = gtk_check_button_new_with_mnemonic(_("Create tip i_mages"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.create_images),
+                                 args->create_images);
+    gtk_table_attach(GTK_TABLE(table), controls.create_images,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect(controls.create_images, "toggled",
+                     G_CALLBACK(create_images_changed), &controls);
+    row++;
+
+    controls.plot_size_graph
+        = gtk_check_button_new_with_mnemonic(_("Plot size _graph"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.plot_size_graph),
+                                 args->plot_size_graph);
+    gtk_table_attach(GTK_TABLE(table), controls.plot_size_graph,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect(controls.plot_size_graph, "toggled",
+                     G_CALLBACK(plot_size_graph_changed), &controls);
+    row++;
 
     controls.tipdone = FALSE;
     controls.in_update = FALSE;
+    split_to_stripes_changed(GTK_TOGGLE_BUTTON(controls.split_to_stripes),
+                             &controls);
     gtk_widget_show_all(dialog);
 
     do {
@@ -382,16 +460,16 @@ sci_entry_set_value(GtkAdjustment *adj,
     mag = 3*(gint)floor(log10(val)/3.0);
     mag = CLAMP(mag, -12, -3);
     g_signal_handlers_block_matched(metric, G_SIGNAL_MATCH_FUNC,
-                                    0, 0, 0, thresh_changed_cb, 0);
+                                    0, 0, 0, thresh_changed, 0);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(metric), mag);
     g_signal_handlers_unblock_matched(metric, G_SIGNAL_MATCH_FUNC,
-                                      0, 0, 0, thresh_changed_cb, 0);
+                                      0, 0, 0, thresh_changed, 0);
     gtk_adjustment_set_value(adj, val/pow10(mag));
 }
 
 static void
-width_changed_cb(GtkAdjustment *adj,
-                 TipBlindControls *controls)
+width_changed(GtkAdjustment *adj,
+              TipBlindControls *controls)
 {
     TipBlindArgs *args;
     gdouble v;
@@ -408,12 +486,12 @@ width_changed_cb(GtkAdjustment *adj,
         controls->in_update = FALSE;
     }
 
-    tip_update(controls, args);
+    tip_update(controls);
 }
 
 static void
-height_changed_cb(GtkAdjustment *adj,
-                  TipBlindControls *controls)
+height_changed(GtkAdjustment *adj,
+               TipBlindControls *controls)
 {
     TipBlindArgs *args;
     gdouble v;
@@ -430,12 +508,12 @@ height_changed_cb(GtkAdjustment *adj,
         controls->in_update = FALSE;
     }
 
-    tip_update(controls, args);
+    tip_update(controls);
 }
 
 static void
-thresh_changed_cb(G_GNUC_UNUSED gpointer object,
-                  TipBlindControls *controls)
+thresh_changed(G_GNUC_UNUSED gpointer object,
+               TipBlindControls *controls)
 {
     gdouble val;
     gint p10;
@@ -446,16 +524,16 @@ thresh_changed_cb(G_GNUC_UNUSED gpointer object,
 }
 
 static void
-bound_changed_cb(GtkToggleButton *button,
-                 TipBlindArgs *args)
+bound_changed(GtkToggleButton *button,
+              TipBlindArgs *args)
 {
     args->use_boundaries
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
 }
 
 static void
-same_resolution_changed_cb(GtkToggleButton *button,
-                           TipBlindControls *controls)
+same_resolution_changed(GtkToggleButton *button,
+                        TipBlindControls *controls)
 {
     TipBlindArgs *args;
 
@@ -470,14 +548,68 @@ same_resolution_changed_cb(GtkToggleButton *button,
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->yres), args->xres);
     controls->in_update = FALSE;
 
-    tip_update(controls, args);
+    tip_update(controls);
 }
 
 static void
-data_changed_cb(GwyDataChooser *chooser,
-                GwyDataObjectId *object)
+data_changed(GwyDataChooser *chooser,
+             GwyDataObjectId *object)
 {
     object->data = gwy_data_chooser_get_active(chooser, &object->id);
+}
+
+static void
+split_to_stripes_changed(GtkToggleButton *toggle,
+                         TipBlindControls *controls)
+{
+    gboolean sens = gtk_toggle_button_get_active(toggle);
+    controls->args->split_to_stripes = sens;
+    gwy_table_hscale_set_sensitive(controls->stripeno, sens);
+    gtk_widget_set_sensitive(controls->create_images, sens);
+    gtk_widget_set_sensitive(controls->plot_size_graph, sens);
+    tip_update(controls);
+}
+
+static void
+nstripes_changed(GtkAdjustment *adj,
+                 TipBlindControls *controls)
+{
+    TipBlindArgs *args = controls->args;
+    GtkAdjustment *stripenoadj;
+    guint stripeno;
+
+    args->nstripes = gwy_adjustment_get_int(adj);
+    stripenoadj = GTK_ADJUSTMENT(controls->stripeno);
+    gtk_adjustment_set_upper(stripenoadj, args->nstripes);
+    stripeno = gwy_adjustment_get_int(stripenoadj);
+    if (stripeno > args->nstripes)
+        gtk_adjustment_set_value(stripenoadj, stripeno);
+
+    tip_update(controls);
+}
+
+static void
+stripeno_changed(GtkAdjustment *adj,
+                 TipBlindControls *controls)
+{
+    guint stripeno = gwy_adjustment_get_int(adj);
+    g_printerr("Preview another tip!\n");
+}
+
+static void
+create_images_changed(GtkToggleButton *toggle,
+                      TipBlindControls *controls)
+{
+    gboolean value = gtk_toggle_button_get_active(toggle);
+    controls->args->create_images = value;
+}
+
+static void
+plot_size_graph_changed(GtkToggleButton *toggle,
+                        TipBlindControls *controls)
+{
+    gboolean value = gtk_toggle_button_get_active(toggle);
+    controls->args->plot_size_graph = value;
 }
 
 static gboolean
@@ -502,13 +634,14 @@ tip_blind_source_filter(GwyContainer *data,
 }
 
 static void
-reset(TipBlindControls *controls, TipBlindArgs *args)
+reset(TipBlindControls *controls, G_GNUC_UNUSED TipBlindArgs *args)
 {
+    // TODO: stripes
     gwy_data_field_fill(controls->tip, 0);
     controls->good_tip = FALSE;
     gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
                                       GTK_RESPONSE_OK, controls->good_tip);
-    tip_update(controls, args);
+    tip_update(controls);
 }
 
 static void
@@ -586,12 +719,11 @@ tip_blind_run(TipBlindControls *controls,
     gwy_debug("count = %d", count);
 
     gwy_app_wait_finish();
-    tip_update(controls, args);
+    tip_update(controls);
 }
 
 static void
-tip_update(TipBlindControls *controls,
-           G_GNUC_UNUSED TipBlindArgs *args)
+tip_update(TipBlindControls *controls)
 {
     GwyDataField *vtipfield, *buffer;
 
@@ -623,19 +755,27 @@ tip_blind_do(TipBlindControls *controls,
     controls->tipdone = TRUE;
 }
 
-static const gchar xres_key[]            = "/module/tip_blind/xres";
-static const gchar yres_key[]            = "/module/tip_blind/yres";
-static const gchar thresh_key[]          = "/module/tip_blind/threshold";
-static const gchar use_boundaries_key[]  = "/module/tip_blind/use_boundaries";
-static const gchar same_resolution_key[] = "/module/tip_blind/same_resolution";
+static const gchar xres_key[]             = "/module/tip_blind/xres";
+static const gchar yres_key[]             = "/module/tip_blind/yres";
+static const gchar thresh_key[]           = "/module/tip_blind/threshold";
+static const gchar use_boundaries_key[]   = "/module/tip_blind/use_boundaries";
+static const gchar same_resolution_key[]  = "/module/tip_blind/same_resolution";
+static const gchar split_to_stripes_key[] = "/module/tip_blind/split_to_stripes";
+static const gchar create_images_key[]    = "/module/tip_blind/create_images";
+static const gchar plot_size_graph_key[]  = "/module/tip_blind/plot_size_graph";
+static const gchar nstripes_key[]         = "/module/tip_blind/nstripes";
 
 static void
 tip_blind_sanitize_args(TipBlindArgs *args)
 {
     args->xres = CLAMP(args->xres, MIN_RES, MAX_RES);
     args->yres = CLAMP(args->yres, MIN_RES, MAX_RES);
+    args->nstripes = CLAMP(args->nstripes, MIN_STRIPES, MAX_STRIPES);
     args->use_boundaries = !!args->use_boundaries;
     args->same_resolution = !!args->same_resolution;
+    args->split_to_stripes = !!args->split_to_stripes;
+    args->create_images = !!args->create_images;
+    args->plot_size_graph = !!args->plot_size_graph;
     if (args->same_resolution)
         args->yres = args->xres;
 }
@@ -648,11 +788,18 @@ tip_blind_load_args(GwyContainer *container,
 
     gwy_container_gis_int32_by_name(container, xres_key, &args->xres);
     gwy_container_gis_int32_by_name(container, yres_key, &args->yres);
+    gwy_container_gis_int32_by_name(container, nstripes_key, &args->nstripes);
     gwy_container_gis_double_by_name(container, thresh_key, &args->thresh);
     gwy_container_gis_boolean_by_name(container, use_boundaries_key,
                                       &args->use_boundaries);
     gwy_container_gis_boolean_by_name(container, same_resolution_key,
                                       &args->same_resolution);
+    gwy_container_gis_boolean_by_name(container, split_to_stripes_key,
+                                      &args->split_to_stripes);
+    gwy_container_gis_boolean_by_name(container, create_images_key,
+                                      &args->create_images);
+    gwy_container_gis_boolean_by_name(container, plot_size_graph_key,
+                                      &args->plot_size_graph);
     tip_blind_sanitize_args(args);
 }
 
@@ -662,11 +809,18 @@ tip_blind_save_args(GwyContainer *container,
 {
     gwy_container_set_int32_by_name(container, xres_key, args->xres);
     gwy_container_set_int32_by_name(container, yres_key, args->yres);
+    gwy_container_set_int32_by_name(container, nstripes_key, args->nstripes);
     gwy_container_set_double_by_name(container, thresh_key, args->thresh);
     gwy_container_set_boolean_by_name(container, use_boundaries_key,
                                       args->use_boundaries);
     gwy_container_set_boolean_by_name(container, same_resolution_key,
                                       args->same_resolution);
+    gwy_container_set_boolean_by_name(container, split_to_stripes_key,
+                                      args->split_to_stripes);
+    gwy_container_set_boolean_by_name(container, create_images_key,
+                                      args->create_images);
+    gwy_container_set_boolean_by_name(container, plot_size_graph_key,
+                                      args->plot_size_graph);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
