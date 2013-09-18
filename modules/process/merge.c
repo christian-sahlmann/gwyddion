@@ -155,7 +155,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Merges two images."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -601,6 +601,10 @@ merge_do_uncorrelated(MergeArgs *args)
     }
 
     gwy_data_field_resample(result, newxres, newyres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_set_xreal(result,
+                             newxres*gwy_data_field_get_xmeasure(dfield1));
+    gwy_data_field_set_yreal(result,
+                             newyres*gwy_data_field_get_ymeasure(dfield1));
     gwy_data_field_fill(result, m);
 
     if (args->direction == GWY_MERGE_DIRECTION_UP) {
