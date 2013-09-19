@@ -19,6 +19,29 @@
     <xi:include href="xml/gwymodule-volume.xml"/>
     <xi:include href="xml/gwymodulebrowser.xml"/>
   </chapter>
+
+  <chapter id="ModuleTutorial">
+    <title>Gwyddion Module Tutorial</title>
+    <xi:include href="xml/module-tutorial-overview.xml"/>
+    <xi:include href="xml/module-tutorial-minimal.xml"/>
+    <xi:include href="xml/module-tutorial-beyond.xml"/>
+    <xi:include href="xml/module-tutorial-process.xml"/>
+    <xi:include href="xml/module-tutorial-file.xml"/>
+    <xi:include href="xml/module-tutorial-graph.xml"/>
+    <xi:include href="xml/module-tutorial-tool.xml"/>
+    <xi:include href="xml/module-tutorial-layer.xml"/>
+    <xi:include href="module-tutorial-install.xml"/>
+  </chapter>
+
+  <chapter id="PluginProxyReference">
+    <title>Plug-in Proxy Reference</title>
+    <xi:include href="plugin-proxy-overview.xml"/>
+    <xi:include href="plugin-proxy-process.xml"/>
+    <xi:include href="plugin-proxy-file.xml"/>
+    <xi:include href="plugin-proxy-dump.xml"/>
+    <xi:include href="plugin-proxy-rgi.xml"/>
+  </chapter>
+
   <!-- API INDICES BEGIN -->
   <index id="api-index-full">
     <title>Index of all symbols</title>
@@ -45,26 +68,4 @@
     <xi:include href="xml/api-index-2.32.xml"><xi:fallback /></xi:include>
   </index>
   <!-- API INDICES END -->
-
-  <chapter id="ModuleTutorial">
-    <title>Gwyddion Module Tutorial</title>
-    <xi:include href="xml/module-tutorial-overview.xml"/>
-    <xi:include href="xml/module-tutorial-minimal.xml"/>
-    <xi:include href="xml/module-tutorial-beyond.xml"/>
-    <xi:include href="xml/module-tutorial-process.xml"/>
-    <xi:include href="xml/module-tutorial-file.xml"/>
-    <xi:include href="xml/module-tutorial-graph.xml"/>
-    <xi:include href="xml/module-tutorial-tool.xml"/>
-    <xi:include href="xml/module-tutorial-layer.xml"/>
-    <xi:include href="module-tutorial-install.xml"/>
-  </chapter>
-
-  <chapter id="PluginProxyReference">
-    <title>Plug-in Proxy Reference</title>
-    <xi:include href="plugin-proxy-overview.xml"/>
-    <xi:include href="plugin-proxy-process.xml"/>
-    <xi:include href="plugin-proxy-file.xml"/>
-    <xi:include href="plugin-proxy-dump.xml"/>
-    <xi:include href="plugin-proxy-rgi.xml"/>
-  </chapter>
 </book>
