@@ -7,6 +7,8 @@ Modules:
 - Dimensions and Units: It is possible to set the pixel size to match exactly
   another channel.
 - TIA SER: spectral arrays reimplemented as volume data.
+- Volume show and extract: Crash for data with unequal resolutions in different
+  dimensions was fixed.
 - Merge: Pixel size of images created in ‘None’ merge mode correspond to
   pixel size of the merged images.
 - Tip blind estimate: Estimate can be made for several horizontal stripes on
