@@ -166,7 +166,7 @@ static void     tip_curvatures          (GwyDataField *tipfield,
 
 static const TipBlindArgs tip_blind_defaults = {
     10, 10, 1e-10, FALSE, TRUE,
-    FALSE, TRUE, TRUE, 16,
+    FALSE, FALSE, TRUE, 16,
     { NULL, -1, }, { NULL, -1, },
     NULL, NULL,
 };
@@ -176,7 +176,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Blind estimation of SPM tip using Villarubia's algorithm."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -403,16 +403,6 @@ tip_blind_dialog(TipBlindArgs *args)
                      G_CALLBACK(stripeno_changed), &controls);
     row++;
 
-    controls.create_images
-        = gtk_check_button_new_with_mnemonic(_("Create tip i_mages"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.create_images),
-                                 args->create_images);
-    gtk_table_attach(GTK_TABLE(table), controls.create_images,
-                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    g_signal_connect(controls.create_images, "toggled",
-                     G_CALLBACK(create_images_changed), &controls);
-    row++;
-
     controls.plot_size_graph
         = gtk_check_button_new_with_mnemonic(_("Plot size _graph"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.plot_size_graph),
@@ -421,6 +411,16 @@ tip_blind_dialog(TipBlindArgs *args)
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect(controls.plot_size_graph, "toggled",
                      G_CALLBACK(plot_size_graph_changed), &controls);
+    row++;
+
+    controls.create_images
+        = gtk_check_button_new_with_mnemonic(_("Create tip i_mages"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.create_images),
+                                 args->create_images);
+    gtk_table_attach(GTK_TABLE(table), controls.create_images,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect(controls.create_images, "toggled",
+                     G_CALLBACK(create_images_changed), &controls);
     row++;
 
     controls.tipdone = FALSE;
