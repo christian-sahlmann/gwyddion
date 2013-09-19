@@ -19,6 +19,7 @@
  */
 #define DEBUG 1
 #include "config.h"
+#include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -101,6 +102,10 @@ static void     tip_blind_run           (TipBlindControls *controls,
                                          TipBlindArgs *args,
                                          gboolean full);
 static void     tip_blind_do            (TipBlindControls *controls,
+                                         TipBlindArgs *args);
+static void     tip_blind_do_single     (TipBlindControls *controls,
+                                         TipBlindArgs *args);
+static void     tip_blind_do_stripes    (TipBlindControls *controls,
                                          TipBlindArgs *args);
 static void     tip_blind_load_args     (GwyContainer *container,
                                          TipBlindArgs *args);
@@ -585,25 +590,14 @@ nstripes_changed(GtkAdjustment *adj,
                  TipBlindControls *controls)
 {
     TipBlindArgs *args = controls->args;
-    GtkAdjustment *stripenoadj;
-    guint stripeno;
-
     args->nstripes = gwy_adjustment_get_int(adj);
-    stripenoadj = GTK_ADJUSTMENT(controls->stripeno);
-    gtk_adjustment_set_upper(stripenoadj, args->nstripes);
-    stripeno = gwy_adjustment_get_int(stripenoadj);
-    if (stripeno > args->nstripes)
-        gtk_adjustment_set_value(stripenoadj, stripeno);
-
-    tip_update(controls);
 }
 
 static void
-stripeno_changed(GtkAdjustment *adj,
+stripeno_changed(G_GNUC_UNUSED GtkAdjustment *adj,
                  TipBlindControls *controls)
 {
-    guint stripeno = gwy_adjustment_get_int(adj);
-    g_printerr("Preview another tip!\n");
+    tip_update(controls);
 }
 
 static void
@@ -713,6 +707,11 @@ prepare_stripe_fields(TipBlindControls *controls,
             args->stripetips[i] = gwy_data_field_duplicate(controls->tip);
         args->sizegraph = gwy_data_line_new(args->nstripes, 1.0, FALSE);
     }
+
+    for (i = 0; i < args->nstripes; i++) {
+        gwy_data_field_set_xreal(args->stripetips[i], controls->tip->xreal);
+        gwy_data_field_set_yreal(args->stripetips[i], controls->tip->yreal);
+    }
 }
 
 static void
@@ -741,16 +740,28 @@ tip_blind_run(TipBlindControls *controls,
     /* control tip resolution and real/res ratio*/
     keep = prepare_fields(controls->tip, surface, args->xres, args->yres);
     prepare_stripe_fields(controls, keep);
+    if (args->split_to_stripes) {
+        GtkAdjustment *stripenoadj = GTK_ADJUSTMENT(controls->stripeno);
+        gint stripeno;
+
+        gtk_adjustment_set_upper(stripenoadj, args->nstripes);
+        stripeno = gwy_adjustment_get_int(stripenoadj);
+        if (stripeno > args->nstripes)
+            gtk_adjustment_set_value(stripenoadj, stripeno);
+    }
     controls->oldnstripes = args->nstripes;
+
     tipfunc = full ? gwy_tip_estimate_full : gwy_tip_estimate_partial;
     if (args->split_to_stripes) {
         guint ns = args->nstripes;
         guint xres = surface->xres, yres = surface->yres;
-        guint i;
+        guint anygood = 0, i;
         for (i = 0; i < ns; i++) {
             guint row = i*(yres - args->yres)/ns,
                   height = (i + 1)*(yres - args->yres)/ns + args->yres - row;
+            gboolean ok;
             GwyDataField *stripe;
+
             /* Do not crash in the silly case. */
             if (height < args->yres)
                 continue;
@@ -758,17 +769,24 @@ tip_blind_run(TipBlindControls *controls,
             gwy_debug("[%u] (%u, %u) of %u", i, row, height, yres);
             count = -1;
             stripe = gwy_data_field_area_extract(surface, 0, row, xres, height);
-            args->goodtip[i] = (tipfunc(args->stripetips[i], stripe,
-                                        args->thresh, args->use_boundaries,
-                                        &count,
-                                        gwy_app_wait_set_fraction,
-                                        gwy_app_wait_set_message)
-                                && count > 0);
+            ok = !!tipfunc(args->stripetips[i], stripe,
+                           args->thresh, args->use_boundaries,
+                           &count,
+                           gwy_app_wait_set_fraction,
+                           gwy_app_wait_set_message);
+            args->goodtip[i] = ok && count > 0;
             g_object_unref(stripe);
             gwy_debug("[%u] count = %d", i, count);
+            anygood |= args->goodtip[i];
+            /* Cancelled by user */
+            if (!ok) {
+                anygood = FALSE;
+                gwy_clear(args->goodtip, ns);
+                break;
+            }
         }
-        /* XXX: Cannot display the result yet, prevent crash. */
-        controls->good_tip = FALSE;
+        gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                          GTK_RESPONSE_OK, anygood);
     }
     else {
         count = -1;
@@ -790,9 +808,20 @@ tip_blind_run(TipBlindControls *controls,
 static void
 tip_update(TipBlindControls *controls)
 {
-    GwyDataField *vtipfield, *buffer;
+    GwyDataField *vtipfield, *tipfield, *buffer;
+    TipBlindArgs *args = controls->args;
+    GtkAdjustment *adj = GTK_ADJUSTMENT(controls->stripeno);
+    guint stripeno;
 
-    buffer = gwy_data_field_duplicate(controls->tip);
+    tipfield = controls->tip;
+    stripeno = gwy_adjustment_get_int(adj);
+    if (args->split_to_stripes && args->stripetips
+        && stripeno > 0 && stripeno <= controls->oldnstripes
+        && args->stripetips[stripeno]) {
+        tipfield = args->stripetips[stripeno-1];
+    }
+
+    buffer = gwy_data_field_duplicate(tipfield);
     gwy_data_field_resample(buffer, controls->vxres, controls->vyres,
                             GWY_INTERPOLATION_ROUND);
 
@@ -808,6 +837,16 @@ static void
 tip_blind_do(TipBlindControls *controls,
              TipBlindArgs *args)
 {
+    if (args->split_to_stripes && args->stripetips)
+        tip_blind_do_stripes(controls, args);
+    else
+        tip_blind_do_single(controls, args);
+}
+
+static void
+tip_blind_do_single(TipBlindControls *controls,
+                    TipBlindArgs *args)
+{
     gint newid;
 
     newid = gwy_app_data_browser_add_data_field(controls->tip,
@@ -817,6 +856,33 @@ tip_blind_do(TipBlindControls *controls,
                             0, newid, FALSE,
                             GWY_DATA_ITEM_GRADIENT, 0);
     gwy_app_set_data_field_title(args->source.data, newid, _("Estimated tip"));
+    controls->tipdone = TRUE;
+}
+
+static void
+tip_blind_do_stripes(TipBlindControls *controls,
+                     TipBlindArgs *args)
+{
+    gint newid, i;
+
+    for (i = 0; i < args->nstripes; i++) {
+        gchar *title;
+        gchar key[24];
+
+        if (!args->goodtip[i] || !args->stripetips[i])
+            continue;
+
+        newid = gwy_app_data_browser_add_data_field(args->stripetips[i],
+                                                    args->source.data, TRUE);
+        gwy_app_sync_data_items(args->source.data, args->source.data,
+                                0, newid, FALSE,
+                                GWY_DATA_ITEM_GRADIENT, 0);
+        title = g_strdup_printf("%s %u/%u",
+                                _("Estimated tip"), i+1, args->nstripes);
+        g_snprintf(key, sizeof(key), "/%d/data/title", newid);
+        gwy_container_set_string_by_name(args->source.data, key, title);
+    }
+    /* XXX: Have no idea what this means. */
     controls->tipdone = TRUE;
 }
 
