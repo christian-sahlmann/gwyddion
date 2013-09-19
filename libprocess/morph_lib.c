@@ -643,8 +643,9 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
 {
     gint ixp, jxp;           /* index into the image (x') */
     gint **open;
-    gdouble fraction;
-
+    guint update_every = (100000 + tip_xsiz*tip_ysiz)/(tip_xsiz*tip_ysiz);
+    gdouble total = (im_ysiz - tip_ysiz)*(im_xsiz - tip_xsiz);
+    guint k = 0;
     gint count = 0;          /* counts places where tip estimate is improved */
 
     open = iopen(image, im_xsiz, im_ysiz, tip0, tip_xsiz, tip_ysiz);
@@ -652,23 +653,23 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
         return -1;
 
     for (jxp = tip_ysiz - 1 - yc; jxp <= im_ysiz - 1 - yc; jxp++) {
-         for (ixp = tip_xsiz - 1 - xc; ixp <= im_xsiz - 1 - xc; ixp++) {
-            if (image[jxp][ixp] - open[jxp][ixp] > thresh)
+        for (ixp = tip_xsiz - 1 - xc; ixp <= im_xsiz - 1 - xc; ixp++) {
+            if (image[jxp][ixp] - open[jxp][ixp] > thresh) {
                 if (itip_estimate_point(ixp, jxp, image,
                                         im_xsiz, im_ysiz, tip_xsiz, tip_ysiz,
                                         xc, yc, tip0, thresh, use_edges)) {
                     count++;
                 }
-                if (set_fraction) {
-                    fraction = (gdouble)(jxp-(tip_ysiz - 1 - yc))
-                               /(gdouble)((im_ysiz - 1 - yc)
-                                          - (tip_ysiz - 1 - yc));
-                    fraction = MAX(fraction, 0);
-                    if (set_fraction && !set_fraction(fraction)) {
-                        _gwy_morph_lib_ifreematrix(open);
-                        return -1;
-                    }
+            }
+            k++;
+            if (set_fraction && k % update_every == update_every-1) {
+                gdouble fraction = k/total;
+                fraction = CLAMP(fraction, 0.0, 1.0);
+                if (!set_fraction(fraction)) {
+                    _gwy_morph_lib_ifreematrix(open);
+                    return -1;
                 }
+            }
         }
     }
     _gwy_morph_lib_ifreematrix(open);
@@ -774,7 +775,9 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
                 count++;
                 sumcount++;
             }
-            if (set_fraction && !set_fraction((gdouble)i/(gdouble)n)) {
+            if (set_fraction
+                && i % 100 == 99
+                && !set_fraction((gdouble)i/(gdouble)n)) {
                 g_free(x);
                 g_free(y);
                 return -1;
