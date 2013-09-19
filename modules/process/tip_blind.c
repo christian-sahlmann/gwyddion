@@ -47,6 +47,16 @@ typedef struct {
 } GwyDataObjectId;
 
 typedef struct {
+    gdouble k1;
+    gdouble k2;
+    gdouble phi1;
+    gdouble phi2;
+    gdouble xc;
+    gdouble yc;
+    gdouble zc;
+} GwyCurvatureParams;
+
+typedef struct {
     gint xres;
     gint yres;
     gdouble thresh;
@@ -61,7 +71,6 @@ typedef struct {
     /* Stripe results */
     GwyDataField **stripetips;
     gboolean *goodtip;
-    GwyDataLine *sizegraph;
 } TipBlindArgs;
 
 typedef struct {
@@ -105,7 +114,9 @@ static void     tip_blind_do            (TipBlindControls *controls,
                                          TipBlindArgs *args);
 static void     tip_blind_do_single     (TipBlindControls *controls,
                                          TipBlindArgs *args);
-static void     tip_blind_do_stripes    (TipBlindControls *controls,
+static void     tip_blind_do_images     (TipBlindControls *controls,
+                                         TipBlindArgs *args);
+static void     tip_blind_do_size_plot  (TipBlindControls *controls,
                                          TipBlindArgs *args);
 static void     tip_blind_load_args     (GwyContainer *container,
                                          TipBlindArgs *args);
@@ -149,12 +160,15 @@ static gboolean prepare_fields          (GwyDataField *tipfield,
 static void     prepare_stripe_fields   (TipBlindControls *controls,
                                          gboolean keep);
 static void     free_stripe_results     (TipBlindArgs *args);
+static void     tip_curvatures          (GwyDataField *tipfield,
+                                         gdouble *pc1,
+                                         gdouble *pc2);
 
 static const TipBlindArgs tip_blind_defaults = {
     10, 10, 1e-10, FALSE, TRUE,
     FALSE, TRUE, TRUE, 16,
     { NULL, -1, }, { NULL, -1, },
-    NULL, NULL, NULL,
+    NULL, NULL,
 };
 
 static GwyModuleInfo module_info = {
@@ -705,7 +719,6 @@ prepare_stripe_fields(TipBlindControls *controls,
          * one which is probably what we want. */
         for (i = 0; i < args->nstripes; i++)
             args->stripetips[i] = gwy_data_field_duplicate(controls->tip);
-        args->sizegraph = gwy_data_line_new(args->nstripes, 1.0, FALSE);
     }
 
     for (i = 0; i < args->nstripes; i++) {
@@ -837,8 +850,12 @@ static void
 tip_blind_do(TipBlindControls *controls,
              TipBlindArgs *args)
 {
-    if (args->split_to_stripes && args->stripetips)
-        tip_blind_do_stripes(controls, args);
+    if (args->split_to_stripes && args->stripetips) {
+        if (args->create_images)
+            tip_blind_do_images(controls, args);
+        if (args->plot_size_graph)
+            tip_blind_do_size_plot(controls, args);
+    }
     else
         tip_blind_do_single(controls, args);
 }
@@ -860,8 +877,8 @@ tip_blind_do_single(TipBlindControls *controls,
 }
 
 static void
-tip_blind_do_stripes(TipBlindControls *controls,
-                     TipBlindArgs *args)
+tip_blind_do_images(TipBlindControls *controls,
+                    TipBlindArgs *args)
 {
     gint newid, i;
 
@@ -882,6 +899,86 @@ tip_blind_do_stripes(TipBlindControls *controls,
         g_snprintf(key, sizeof(key), "/%d/data/title", newid);
         gwy_container_set_string_by_name(args->source.data, key, title);
     }
+
+    /* XXX: Have no idea what this means. */
+    controls->tipdone = TRUE;
+}
+
+static void
+tip_blind_do_size_plot(TipBlindControls *controls,
+                       TipBlindArgs *args)
+{
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *gcmodel;
+    GwySIUnit *unit, *dunit;
+    GwyDataField *surface;
+    gdouble *xdata, *ydata;
+    gint i, ngood = 0;
+    guint ns = args->nstripes;
+    GQuark quark;
+
+    quark = gwy_app_get_data_key_for_id(args->source.id);
+    surface = GWY_DATA_FIELD(gwy_container_get_object(args->source.data,
+                                                      quark));
+
+    xdata = g_new(gdouble, ns);
+    ydata = g_new(gdouble, ns);
+
+    for (i = 0; i < ns; i++) {
+        guint row = i*(surface->yres - args->yres)/ns,
+              height = ((i + 1)*(surface->yres - args->yres)/ns
+                        + args->yres - row);
+        gdouble y = (row + 0.5*height)*gwy_data_field_get_ymeasure(surface);
+        gdouble k1, k2;
+
+        if (!args->goodtip[i] || !args->stripetips[i])
+            continue;
+
+        tip_curvatures(args->stripetips[i], &k1, &k2);
+        if (k1 == 0.0 || k2 == 0.0)
+            continue;
+
+        xdata[ngood] = y;
+        /* The tip image is upside down, make curvatures positive. */
+        ydata[ngood] = -2.0/(k1 + k2);
+        ngood++;
+    }
+
+    gcmodel = gwy_graph_curve_model_new();
+    g_object_set(gcmodel,
+                 "description", _("Tip radius evolution"),
+                 NULL);
+    gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, ngood);
+
+    g_free(xdata);
+    g_free(ydata);
+
+    gmodel = gwy_graph_model_new();
+    g_object_set(gmodel,
+                 "title", _("Tip radius evolution"),
+                 NULL);
+    unit = gwy_data_field_get_si_unit_xy(surface);
+
+    dunit = gwy_si_unit_duplicate(unit);
+    g_object_set(gmodel,
+                 "si-unit-x", dunit,
+                 "axis-label-bottom", "y",
+                 NULL);
+    g_object_unref(dunit);
+
+    dunit = gwy_si_unit_duplicate(unit);
+    g_object_set(gmodel,
+                 "si-unit-y", dunit,
+                 "axis-label-left", "r",
+                 NULL);
+    g_object_unref(dunit);
+
+    gwy_graph_model_add_curve(gmodel, gcmodel);
+    g_object_unref(gcmodel);
+
+    gwy_app_data_browser_add_graph_model(gmodel, args->source.data, TRUE);
+    g_object_unref(gmodel);
+
     /* XXX: Have no idea what this means. */
     controls->tipdone = TRUE;
 }
@@ -889,7 +986,6 @@ tip_blind_do_stripes(TipBlindControls *controls,
 static void
 free_stripe_results(TipBlindArgs *args)
 {
-    gwy_object_unref(args->sizegraph);
     if (args->stripetips) {
         guint i;
         for (i = 0; i < args->nstripes; i++) {
@@ -902,6 +998,186 @@ free_stripe_results(TipBlindArgs *args)
         g_free(args->goodtip);
         args->goodtip = NULL;
     }
+}
+
+static gdouble
+standardize_direction(gdouble phi)
+{
+    phi = fmod(phi, G_PI);
+    if (phi <= -G_PI/2.0)
+        phi += G_PI;
+    if (phi > G_PI/2.0)
+        phi -= G_PI;
+    return phi;
+}
+
+static guint
+calc_quadratic_curvatue(GwyCurvatureParams *curvature,
+                        gdouble a, gdouble bx, gdouble by,
+                        gdouble cxx, gdouble cxy, gdouble cyy)
+{
+    /* At least one quadratic term */
+    gdouble cm = cxx - cyy;
+    gdouble cp = cxx + cyy;
+    gdouble phi = 0.5*atan2(cxy, cm);
+    gdouble cx = cp + hypot(cm, cxy);
+    gdouble cy = cp - hypot(cm, cxy);
+    gdouble bx1 = bx*cos(phi) + by*sin(phi);
+    gdouble by1 = -bx*sin(phi) + by*cos(phi);
+    guint degree = 2;
+    gdouble xc, yc;
+
+    /* Eliminate linear terms */
+    if (fabs(cx) < 1e-10*fabs(cy)) {
+        /* Only y quadratic term */
+        xc = 0.0;
+        yc = -by1/cy;
+        degree = 1;
+    }
+    else if (fabs(cy) < 1e-10*fabs(cx)) {
+        /* Only x quadratic term */
+        xc = -bx1/cx;
+        yc = 0.0;
+        degree = 1;
+    }
+    else {
+        /* Two quadratic terms */
+        xc = -bx1/cx;
+        yc = -by1/cy;
+    }
+
+    curvature->xc = xc*cos(phi) - yc*sin(phi);
+    curvature->yc = xc*sin(phi) + yc*cos(phi);
+    curvature->zc = a + xc*bx1 + yc*by1 + 0.5*(xc*xc*cx + yc*yc*cy);
+
+    if (cx > cy) {
+        GWY_SWAP(gdouble, cx, cy);
+        phi += G_PI/2.0;
+    }
+
+    curvature->k1 = cx;
+    curvature->k2 = cy;
+    curvature->phi1 = phi;
+    curvature->phi2 = phi + G_PI/2.0;
+
+    return degree;
+}
+
+static guint
+math_curvature_at_origin(const gdouble *coeffs,
+                         GwyCurvatureParams *curvature)
+{
+    gdouble a = coeffs[0], bx = coeffs[1], by = coeffs[2],
+            cxx = coeffs[3], cxy = coeffs[4], cyy = coeffs[5];
+    gdouble b, beta;
+    guint degree;
+
+    /* Eliminate the mixed term */
+    if (fabs(cxx) + fabs(cxy) + fabs(cyy) <= 1e-10*(fabs(bx) + fabs(by))) {
+        /* Linear gradient */
+        gwy_clear(curvature, 1);
+        curvature->phi2 = G_PI/2.0;
+        curvature->zc = a;
+        return 0;
+    }
+
+    b = hypot(bx, by);
+    beta = atan2(by, bx);
+    if (b > 1e-10) {
+        gdouble cosbeta = bx/b,
+                sinbeta = by/b,
+                cbeta2 = cosbeta*cosbeta,
+                sbeta2 = sinbeta*sinbeta,
+                csbeta = cosbeta*sinbeta,
+                qb = hypot(1.0, b);
+        gdouble cxx1 = (cxx*cbeta2 + cxy*csbeta + cyy*sbeta2)/(qb*qb*qb),
+                cxy1 = (2.0*(cyy - cxx)*csbeta + cxy*(cbeta2 - sbeta2))/(qb*qb),
+                cyy1 = (cyy*cbeta2 - cxy*csbeta + cxx*sbeta2)/qb;
+        cxx = cxx1;
+        cxy = cxy1;
+        cyy = cyy1;
+    }
+    else
+        beta = 0.0;
+
+    degree = calc_quadratic_curvatue(curvature, a, 0, 0, cxx, cxy, cyy);
+
+    curvature->phi1 = standardize_direction(curvature->phi1 + beta);
+    curvature->phi2 = standardize_direction(curvature->phi2 + beta);
+    // This should already hold approximately.  Enforce it exactly.
+    curvature->xc = curvature->yc = 0.0;
+    curvature->zc = a;
+
+    return degree;
+}
+
+static void
+tip_curvatures(GwyDataField *tipfield,
+               gdouble *pc1,
+               gdouble *pc2)
+{
+    gint xres = tipfield->xres, yres = tipfield->yres;
+    gdouble R = 2 + 0.25*log(xres*yres);
+    gdouble sx2 = 0.0, sy2 = 0.0, sx4 = 0.0, sx2y2 = 0.0, sy4 = 0.0;
+    gdouble sz = 0.0, szx = 0.0, szy = 0.0, szx2 = 0.0, szxy = 0.0, szy2 = 0.0;
+    gdouble scale = sqrt(tipfield->xreal*tipfield->yreal/(xres*yres))*R;
+    gdouble xc = 0.5*xres - 0.5, yc = 0.5*yres - 0.5;
+    gdouble a[21], b[6];
+    gint i, j, n = 0;
+    GwyCurvatureParams params;
+
+    for (i = 0; i < yres; i++) {
+        gdouble y = (2.0*i + 1.0 - yres)/yres*tipfield->yreal/scale;
+        for (j = 0; j < xres; j++) {
+            gdouble x = (2.0*j + 1.0 - xres)/xres*tipfield->xreal/scale;
+            gdouble z = tipfield->data[i*xres + j]/scale;
+            gdouble rr = (i - yc)*(i - yc) + (j - xc)*(j - xc);
+            gdouble xx = x*x, yy = y*y;
+
+            /* Exclude also the central pixel – unreliable. */
+            if (rr > R*R || rr < 1e-6)
+                continue;
+
+            sx2 += xx;
+            sx2y2 += xx*yy;
+            sy2 += yy;
+            sx4 += xx*xx;
+            sy4 += yy*yy;
+
+            sz += z;
+            szx += x*z;
+            szy += y*z;
+            szx2 += xx*z;
+            szxy += x*y*z;
+            szy2 += yy*z;
+            n++;
+        }
+    }
+
+    gwy_clear(a, 21);
+    a[0] = n;
+    a[2] = a[6] = sx2;
+    a[5] = a[15] = sy2;
+    a[18] = a[14] = sx2y2;
+    a[9] = sx4;
+    a[20] = sy4;
+    if (gwy_math_choleski_decompose(6, a)) {
+        b[0] = sz;
+        b[1] = szx;
+        b[2] = szy;
+        b[3] = szx2;
+        b[4] = szxy;
+        b[5] = szy2;
+        gwy_math_choleski_solve(6, a, b);
+    }
+    else {
+        *pc1 = *pc2 = 0.0;
+        return;
+    }
+
+    math_curvature_at_origin(b, &params);
+    *pc1 = params.k1/scale;
+    *pc2 = params.k2/scale;
 }
 
 static const gchar xres_key[]             = "/module/tip_blind/xres";
