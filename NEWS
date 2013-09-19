@@ -1,10 +1,16 @@
 2.33 (0000-00-00)
+Libraries:
+- libgwyprocess: Speed of tip blind estimate was improved by not reporting
+  progress too often.
+
 Modules:
 - Dimensions and Units: It is possible to set the pixel size to match exactly
   another channel.
 - TIA SER: spectral arrays reimplemented as volume data.
 - Merge: Pixel size of images created in ‘None’ merge mode correspond to
   pixel size of the merged images.
+- Tip blind estimate: Estimate can be made for several horizontal stripes on
+  the image and tip radius for each estimated.
 
 
 2.32 (2013-09-08)
