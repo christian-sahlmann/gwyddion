@@ -77,6 +77,7 @@ typedef struct {
     TipBlindArgs *args;
     GtkWidget *dialog;
     GtkWidget *view;
+    GtkWidget *graph;
     GtkWidget *data;
     GtkWidget *type;
     GtkObject *threshold;
@@ -101,68 +102,69 @@ typedef struct {
     gboolean oldnstripes;
 } TipBlindControls;
 
-static gboolean module_register         (void);
-static void     tip_blind               (GwyContainer *data,
-                                         GwyRunType run);
-static void     tip_blind_dialog        (TipBlindArgs *args);
-static void     reset                   (TipBlindControls *controls,
-                                         TipBlindArgs *args);
-static void     tip_blind_run           (TipBlindControls *controls,
-                                         TipBlindArgs *args,
-                                         gboolean full);
-static void     tip_blind_do            (TipBlindControls *controls,
-                                         TipBlindArgs *args);
-static void     tip_blind_do_single     (TipBlindControls *controls,
-                                         TipBlindArgs *args);
-static void     tip_blind_do_images     (TipBlindControls *controls,
-                                         TipBlindArgs *args);
-static void     tip_blind_do_size_plot  (TipBlindControls *controls,
-                                         TipBlindArgs *args);
-static void     tip_blind_load_args     (GwyContainer *container,
-                                         TipBlindArgs *args);
-static void     tip_blind_save_args     (GwyContainer *container,
-                                         TipBlindArgs *args);
-static void     tip_blind_sanitize_args (TipBlindArgs *args);
-static void     width_changed           (GtkAdjustment *adj,
-                                         TipBlindControls *controls);
-static void     height_changed          (GtkAdjustment *adj,
-                                         TipBlindControls *controls);
-static void     thresh_changed          (gpointer object,
-                                         TipBlindControls *controls);
-static void     bound_changed           (GtkToggleButton *button,
-                                         TipBlindArgs *args);
-static void     same_resolution_changed (GtkToggleButton *button,
-                                         TipBlindControls *controls);
-static void     data_changed            (GwyDataChooser *chooser,
-                                         GwyDataObjectId *object);
-static void     split_to_stripes_changed(GtkToggleButton *toggle,
-                                         TipBlindControls *controls);
-static void     nstripes_changed        (GtkAdjustment *adj,
-                                         TipBlindControls *controls);
-static void     stripeno_changed        (GtkAdjustment *adj,
-                                         TipBlindControls *controls);
-static void     create_images_changed   (GtkToggleButton *toggle,
-                                         TipBlindControls *controls);
-static void     plot_size_graph_changed (GtkToggleButton *toggle,
-                                         TipBlindControls *controls);
-static gboolean tip_blind_source_filter (GwyContainer *data,
-                                         gint id,
-                                         gpointer user_data);
-static void     tip_update              (TipBlindControls *controls);
-static void     tip_blind_dialog_abandon(TipBlindControls *controls);
-static void     sci_entry_set_value     (GtkAdjustment *adj,
-                                         GtkComboBox *metric,
-                                         gdouble val);
-static gboolean prepare_fields          (GwyDataField *tipfield,
-                                         GwyDataField *surface,
-                                         gint xres,
-                                         gint yres);
-static void     prepare_stripe_fields   (TipBlindControls *controls,
-                                         gboolean keep);
-static void     free_stripe_results     (TipBlindArgs *args);
-static void     tip_curvatures          (GwyDataField *tipfield,
-                                         gdouble *pc1,
-                                         gdouble *pc2);
+static gboolean       module_register         (void);
+static void           tip_blind               (GwyContainer *data,
+                                               GwyRunType run);
+static void           tip_blind_dialog        (TipBlindArgs *args);
+static void           reset                   (TipBlindControls *controls,
+                                               TipBlindArgs *args);
+static void           tip_blind_run           (TipBlindControls *controls,
+                                               TipBlindArgs *args,
+                                               gboolean full);
+static void           tip_blind_do            (TipBlindControls *controls,
+                                               TipBlindArgs *args);
+static void           tip_blind_do_single     (TipBlindControls *controls,
+                                               TipBlindArgs *args);
+static void           tip_blind_do_images     (TipBlindControls *controls,
+                                               TipBlindArgs *args);
+static void           tip_blind_do_size_plot  (TipBlindControls *controls,
+                                               TipBlindArgs *args);
+static void           tip_blind_load_args     (GwyContainer *container,
+                                               TipBlindArgs *args);
+static void           tip_blind_save_args     (GwyContainer *container,
+                                               TipBlindArgs *args);
+static void           tip_blind_sanitize_args (TipBlindArgs *args);
+static void           width_changed           (GtkAdjustment *adj,
+                                               TipBlindControls *controls);
+static void           height_changed          (GtkAdjustment *adj,
+                                               TipBlindControls *controls);
+static void           thresh_changed          (gpointer object,
+                                               TipBlindControls *controls);
+static void           bound_changed           (GtkToggleButton *button,
+                                               TipBlindArgs *args);
+static void           same_resolution_changed (GtkToggleButton *button,
+                                               TipBlindControls *controls);
+static void           data_changed            (GwyDataChooser *chooser,
+                                               GwyDataObjectId *object);
+static void           split_to_stripes_changed(GtkToggleButton *toggle,
+                                               TipBlindControls *controls);
+static void           nstripes_changed        (GtkAdjustment *adj,
+                                               TipBlindControls *controls);
+static void           stripeno_changed        (GtkAdjustment *adj,
+                                               TipBlindControls *controls);
+static void           create_images_changed   (GtkToggleButton *toggle,
+                                               TipBlindControls *controls);
+static void           plot_size_graph_changed (GtkToggleButton *toggle,
+                                               TipBlindControls *controls);
+static gboolean       tip_blind_source_filter (GwyContainer *data,
+                                               gint id,
+                                               gpointer user_data);
+static void           tip_update              (TipBlindControls *controls);
+static void           tip_blind_dialog_abandon(TipBlindControls *controls);
+static void           sci_entry_set_value     (GtkAdjustment *adj,
+                                               GtkComboBox *metric,
+                                               gdouble val);
+static gboolean       prepare_fields          (GwyDataField *tipfield,
+                                               GwyDataField *surface,
+                                               gint xres,
+                                               gint yres);
+static void           prepare_stripe_fields   (TipBlindControls *controls,
+                                               gboolean keep);
+static void           free_stripe_results     (TipBlindArgs *args);
+static void           tip_curvatures          (GwyDataField *tipfield,
+                                               gdouble *pc1,
+                                               gdouble *pc2);
+static GwyGraphModel* size_plot               (TipBlindArgs *args);
 
 static const TipBlindArgs tip_blind_defaults = {
     10, 10, 1e-10, FALSE, TRUE,
@@ -222,6 +224,8 @@ tip_blind_dialog(TipBlindArgs *args)
         RESPONSE_FULL
     };
     GtkWidget *dialog, *table, *hbox, *vbox, *label;
+    GwyGraphModel *gmodel;
+    GwyGraphArea *area;
     TipBlindControls controls;
     GwyPixmapLayer *layer;
     GwyDataField *dfield;
@@ -287,6 +291,21 @@ tip_blind_dialog(TipBlindArgs *args)
 
     /* set up tip estimation controls */
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
+
+    gmodel = gwy_graph_model_new();
+    controls.graph = gwy_graph_new(gmodel);
+    g_object_unref(gmodel);
+    gwy_axis_set_visible(gwy_graph_get_axis(GWY_GRAPH(controls.graph),
+                                            GTK_POS_LEFT),
+                         FALSE);
+    gwy_axis_set_visible(gwy_graph_get_axis(GWY_GRAPH(controls.graph),
+                                            GTK_POS_BOTTOM),
+                         FALSE);
+    area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls.graph)));
+    gtk_widget_set_no_show_all(gwy_graph_area_get_label(area), TRUE);
+    g_signal_connect_after(gwy_graph_area_get_label(area), "map",
+                           G_CALLBACK(gtk_widget_hide), NULL);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.graph, TRUE, TRUE, 0);
 
     table = gtk_table_new(13, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
@@ -654,6 +673,8 @@ tip_blind_source_filter(GwyContainer *data,
 static void
 reset(TipBlindControls *controls, TipBlindArgs *args)
 {
+    GwyGraphModel *gmodel;
+
     gwy_data_field_clear(controls->tip);
     if (args->stripetips) {
         guint i;
@@ -661,6 +682,9 @@ reset(TipBlindControls *controls, TipBlindArgs *args)
             gwy_data_field_clear(args->stripetips[i]);
     }
     controls->good_tip = FALSE;
+    gmodel = gwy_graph_model_new();
+    gwy_graph_set_model(GWY_GRAPH(controls->graph), gmodel);
+    g_object_unref(gmodel);
     gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
                                       GTK_RESPONSE_OK, controls->good_tip);
     tip_update(controls);
@@ -744,6 +768,7 @@ tip_blind_run(TipBlindControls *controls,
                                      GwySetFractionFunc set_fraction,
                                      GwySetMessageFunc set_message);
     GwyDataField *surface;
+    GwyGraphModel *gmodel;
     TipFunc tipfunc;
     GQuark quark;
     gint count;
@@ -808,6 +833,9 @@ tip_blind_run(TipBlindControls *controls,
                 break;
             }
         }
+        gmodel = size_plot(args);
+        gwy_graph_set_model(GWY_GRAPH(controls->graph), gmodel);
+        g_object_unref(gmodel);
         gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
                                           GTK_RESPONSE_OK, anygood);
     }
@@ -820,6 +848,9 @@ tip_blind_run(TipBlindControls *controls,
                                       gwy_app_wait_set_message)
                               && count > 0);
         gwy_debug("count = %d", count);
+        gmodel = gwy_graph_model_new();
+        gwy_graph_set_model(GWY_GRAPH(controls->graph), gmodel);
+        g_object_unref(gmodel);
         gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
                                           GTK_RESPONSE_OK, controls->good_tip);
     }
@@ -918,74 +949,7 @@ static void
 tip_blind_do_size_plot(TipBlindControls *controls,
                        TipBlindArgs *args)
 {
-    GwyGraphModel *gmodel;
-    GwyGraphCurveModel *gcmodel;
-    GwySIUnit *unit, *dunit;
-    GwyDataField *surface;
-    gdouble *xdata, *ydata;
-    gint i, ngood = 0;
-    guint ns = args->nstripes;
-    GQuark quark;
-
-    quark = gwy_app_get_data_key_for_id(args->source.id);
-    surface = GWY_DATA_FIELD(gwy_container_get_object(args->source.data,
-                                                      quark));
-
-    xdata = g_new(gdouble, ns);
-    ydata = g_new(gdouble, ns);
-
-    for (i = 0; i < ns; i++) {
-        guint row = i*(surface->yres - args->yres)/ns,
-              height = ((i + 1)*(surface->yres - args->yres)/ns
-                        + args->yres - row);
-        gdouble y = (row + 0.5*height)*gwy_data_field_get_ymeasure(surface);
-        gdouble k1, k2;
-
-        if (!args->goodtip[i] || !args->stripetips[i])
-            continue;
-
-        tip_curvatures(args->stripetips[i], &k1, &k2);
-        if (k1 == 0.0 || k2 == 0.0)
-            continue;
-
-        xdata[ngood] = y;
-        /* The tip image is upside down, make curvatures positive. */
-        ydata[ngood] = -2.0/(k1 + k2);
-        ngood++;
-    }
-
-    gcmodel = gwy_graph_curve_model_new();
-    g_object_set(gcmodel,
-                 "description", _("Tip radius evolution"),
-                 NULL);
-    gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, ngood);
-
-    g_free(xdata);
-    g_free(ydata);
-
-    gmodel = gwy_graph_model_new();
-    g_object_set(gmodel,
-                 "title", _("Tip radius evolution"),
-                 NULL);
-    unit = gwy_data_field_get_si_unit_xy(surface);
-
-    dunit = gwy_si_unit_duplicate(unit);
-    g_object_set(gmodel,
-                 "si-unit-x", dunit,
-                 "axis-label-bottom", "y",
-                 NULL);
-    g_object_unref(dunit);
-
-    dunit = gwy_si_unit_duplicate(unit);
-    g_object_set(gmodel,
-                 "si-unit-y", dunit,
-                 "axis-label-left", "r",
-                 NULL);
-    g_object_unref(dunit);
-
-    gwy_graph_model_add_curve(gmodel, gcmodel);
-    g_object_unref(gcmodel);
-
+    GwyGraphModel *gmodel = size_plot(args);
     gwy_app_data_browser_add_graph_model(gmodel, args->source.data, TRUE);
     g_object_unref(gmodel);
 
@@ -1188,6 +1152,80 @@ tip_curvatures(GwyDataField *tipfield,
     math_curvature_at_origin(b, &params);
     *pc1 = params.k1/scale;
     *pc2 = params.k2/scale;
+}
+
+static GwyGraphModel*
+size_plot(TipBlindArgs *args)
+{
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *gcmodel;
+    GwySIUnit *unit, *dunit;
+    GwyDataField *surface;
+    gdouble *xdata, *ydata;
+    gint i, ngood = 0;
+    guint ns = args->nstripes;
+    GQuark quark;
+
+    quark = gwy_app_get_data_key_for_id(args->source.id);
+    surface = GWY_DATA_FIELD(gwy_container_get_object(args->source.data,
+                                                      quark));
+
+    xdata = g_new(gdouble, ns);
+    ydata = g_new(gdouble, ns);
+
+    for (i = 0; i < ns; i++) {
+        guint row = i*(surface->yres - args->yres)/ns,
+              height = ((i + 1)*(surface->yres - args->yres)/ns
+                        + args->yres - row);
+        gdouble y = (row + 0.5*height)*gwy_data_field_get_ymeasure(surface);
+        gdouble k1, k2;
+
+        if (!args->goodtip[i] || !args->stripetips[i])
+            continue;
+
+        tip_curvatures(args->stripetips[i], &k1, &k2);
+        if (k1 == 0.0 || k2 == 0.0)
+            continue;
+
+        xdata[ngood] = y;
+        /* The tip image is upside down, make curvatures positive. */
+        ydata[ngood] = -2.0/(k1 + k2);
+        ngood++;
+    }
+
+    gcmodel = gwy_graph_curve_model_new();
+    g_object_set(gcmodel,
+                 "description", _("Tip radius evolution"),
+                 NULL);
+    gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, ngood);
+
+    g_free(xdata);
+    g_free(ydata);
+
+    gmodel = gwy_graph_model_new();
+    g_object_set(gmodel,
+                 "title", _("Tip radius evolution"),
+                 NULL);
+    unit = gwy_data_field_get_si_unit_xy(surface);
+
+    dunit = gwy_si_unit_duplicate(unit);
+    g_object_set(gmodel,
+                 "si-unit-x", dunit,
+                 "axis-label-bottom", "y",
+                 NULL);
+    g_object_unref(dunit);
+
+    dunit = gwy_si_unit_duplicate(unit);
+    g_object_set(gmodel,
+                 "si-unit-y", dunit,
+                 "axis-label-left", "r",
+                 NULL);
+    g_object_unref(dunit);
+
+    gwy_graph_model_add_curve(gmodel, gcmodel);
+    g_object_unref(gcmodel);
+
+    return gmodel;
 }
 
 static const gchar xres_key[]             = "/module/tip_blind/xres";
