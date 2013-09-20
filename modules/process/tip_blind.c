@@ -652,10 +652,14 @@ tip_blind_source_filter(GwyContainer *data,
 }
 
 static void
-reset(TipBlindControls *controls, G_GNUC_UNUSED TipBlindArgs *args)
+reset(TipBlindControls *controls, TipBlindArgs *args)
 {
-    // TODO: stripes
-    gwy_data_field_fill(controls->tip, 0);
+    gwy_data_field_clear(controls->tip);
+    if (args->stripetips) {
+        guint i;
+        for (i = 0; i < controls->oldnstripes; i++)
+            gwy_data_field_clear(args->stripetips[i]);
+    }
     controls->good_tip = FALSE;
     gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
                                       GTK_RESPONSE_OK, controls->good_tip);
@@ -774,6 +778,12 @@ tip_blind_run(TipBlindControls *controls,
                   height = (i + 1)*(yres - args->yres)/ns + args->yres - row;
             gboolean ok;
             GwyDataField *stripe;
+            gchar *prefix;
+
+            /* TRANSLATORS: Prefix for the progressbar message. */
+            prefix = g_strdup_printf(_("Stripe %u: "), i+1);
+            gwy_app_wait_set_message_prefix(prefix);
+            g_free(prefix);
 
             /* Do not crash in the silly case. */
             if (height < args->yres)
