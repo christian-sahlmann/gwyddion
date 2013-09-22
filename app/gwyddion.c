@@ -712,4 +712,11 @@ gwy_app_gl_disabled(void)
     return app_options.disable_gl;
 }
 
+/* http://mingw.5.n7.nabble.com/Linking-Error-with-MSVC-6-0-td18263.html */
+int
+_get_output_format(void)
+{
+    return 0;
+}
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
