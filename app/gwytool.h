@@ -75,20 +75,21 @@ struct _GwyToolClass {
                              GwySpectra *spectra);
     void (*reserved2)(void);
     void (*reserved3)(void);
-    void (*reserved4)(void);
+    void *priv;
 };
 
 GType        gwy_tool_get_type          (void) G_GNUC_CONST;
 
-void         gwy_tool_add_hide_button   (GwyTool *tool,
-                                         gboolean set_default);
-void         gwy_tool_show              (GwyTool *tool);
-void         gwy_tool_hide              (GwyTool *tool);
-gboolean     gwy_tool_is_visible        (GwyTool *tool);
-void         gwy_tool_data_switched     (GwyTool *tool,
-                                         GwyDataView *data_view);
-void         gwy_tool_spectra_switched  (GwyTool *tool,
-                                         GwySpectra *spectra);
+void     gwy_tool_add_hide_button        (GwyTool *tool,
+                                          gboolean set_default);
+void     gwy_tool_show                   (GwyTool *tool);
+void     gwy_tool_hide                   (GwyTool *tool);
+gboolean gwy_tool_is_visible             (GwyTool *tool);
+void     gwy_tool_data_switched          (GwyTool *tool,
+                                          GwyDataView *data_view);
+void     gwy_tool_spectra_switched       (GwyTool *tool,
+                                          GwySpectra *spectra);
+void     gwy_tool_restore_screen_position(GwyTool *tool);
 
 const gchar* gwy_tool_class_get_title   (GwyToolClass *klass);
 const gchar* gwy_tool_class_get_stock_id(GwyToolClass *klass);

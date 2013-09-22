@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2006-2013 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -29,15 +29,28 @@
 #include <app/menu.h>
 #include <app/gwytool.h>
 
-static void     gwy_tool_class_init    (GwyToolClass *klass);
-static void     gwy_tool_init          (GwyTool *tool,
-                                        gpointer g_class);
-static void     gwy_tool_finalize      (GObject *object);
-static void     gwy_tool_response      (GwyTool *tool,
-                                        gint response);
-static void     gwy_tool_unmap         (GwyTool *tool);
-static void     gwy_tool_show_real     (GwyTool *tool);
-static void     gwy_tool_hide_real     (GwyTool *tool);
+/* For restoring of tool dialog position.  This is done only *within* a
+ * session, so we do not store it into settings. */
+typedef struct {
+    GdkScreen *screen;
+    gint x;
+    gint y;
+} GwyToolClassPrivate;
+
+static void     gwy_tool_class_init         (GwyToolClass *klass);
+static void     gwy_tool_class_base_init    (GwyToolClass *klass);
+static void     gwy_tool_class_base_finalize(GwyToolClass *klass);
+static void     gwy_tool_init               (GwyTool *tool,
+                                             gpointer g_class);
+static void     gwy_tool_finalize           (GObject *object);
+static void     gwy_tool_response           (GwyTool *tool,
+                                             gint response);
+static void     gwy_tool_unmap              (GwyTool *tool);
+static gboolean gwy_tool_configure_event    (GwyTool *tool,
+                                             GdkEventConfigure *event,
+                                             GtkWidget *widget);
+static void     gwy_tool_show_real          (GwyTool *tool);
+static void     gwy_tool_hide_real          (GwyTool *tool);
 
 static gpointer gwy_tool_parent_class = NULL;
 
@@ -52,8 +65,8 @@ gwy_tool_get_type (void)
     if (G_UNLIKELY(gwy_tool_type == 0)) {
         static const GTypeInfo gwy_tool_type_info = {
             sizeof(GwyToolClass),
-            NULL,
-            NULL,
+            (GBaseInitFunc)gwy_tool_class_base_init,
+            (GBaseFinalizeFunc)gwy_tool_class_base_finalize,
             (GClassInitFunc)gwy_tool_class_init,
             NULL,
             NULL,
@@ -71,7 +84,6 @@ gwy_tool_get_type (void)
     return gwy_tool_type;
 }
 
-
 static void
 gwy_tool_class_init(GwyToolClass *klass)
 {
@@ -83,6 +95,18 @@ gwy_tool_class_init(GwyToolClass *klass)
 
     klass->hide = gwy_tool_hide_real;
     klass->show = gwy_tool_show_real;
+}
+
+static void
+gwy_tool_class_base_init(GwyToolClass *klass)
+{
+    klass->priv = g_new0(GwyToolClassPrivate, 1);
+}
+
+static void
+gwy_tool_class_base_finalize(GwyToolClass *klass)
+{
+    g_free(klass->priv);
 }
 
 static void
@@ -134,6 +158,8 @@ gwy_tool_init(GwyTool *tool,
 
     g_signal_connect_swapped(tool->dialog, "unmap",
                              G_CALLBACK(gwy_tool_unmap), tool);
+    g_signal_connect_swapped(tool->dialog, "configure-event",
+                             G_CALLBACK(gwy_tool_configure_event), tool);
     g_signal_connect(tool->dialog, "delete-event",
                      G_CALLBACK(gwy_dialog_prevent_delete_cb), NULL);
     g_signal_connect_swapped(tool->dialog, "response",
@@ -191,6 +217,37 @@ gwy_tool_unmap(GwyTool *tool)
     strcpy(key, klass->prefix);
     strcpy(key + len, "/dialog");
     gwy_app_save_window_position(GTK_WINDOW(tool->dialog), key, FALSE, TRUE);
+}
+
+static gboolean
+gwy_tool_configure_event(GwyTool *tool,
+                         G_GNUC_UNUSED GdkEventConfigure *event,
+                         GtkWidget *widget)
+
+{
+    GwyToolClass *klass = GWY_TOOL_GET_CLASS(tool);
+    GwyToolClassPrivate *cpriv = (GwyToolClassPrivate*)klass->priv;
+    GdkScreen *screen;
+
+    gtk_window_get_position(GTK_WINDOW(widget), &cpriv->x, &cpriv->y);
+    gwy_debug("saving %s on screen #%d at (%d,%d)",
+              G_OBJECT_TYPE_NAME(tool),
+              gdk_screen_get_number(cpriv->screen),
+              cpriv->x, cpriv->y);
+
+    screen = gtk_widget_get_screen(widget);
+    if (screen != cpriv->screen) {
+        if (cpriv->screen)
+            g_object_weak_unref(G_OBJECT(cpriv->screen),
+                                (GWeakNotify)g_nullify_pointer,
+                                &cpriv->screen);
+        cpriv->screen = screen;
+        g_object_weak_ref(G_OBJECT(cpriv->screen),
+                          (GWeakNotify)g_nullify_pointer,
+                          &cpriv->screen);
+    }
+
+    return FALSE;
 }
 
 static void
@@ -263,6 +320,49 @@ gwy_tool_show(GwyTool *tool)
     gwy_debug("%s", klass->title);
     if (klass->show)
         klass->show(tool);
+}
+
+/**
+ * gwy_tool_restore_screen_position:
+ * @tool: A tool.
+ *
+ * Restores tool's dialog screen and position.
+ *
+ * This function must be called when the tool dialog is not mapped yet.
+ * The position is remembered within a session (not in the settings) for each
+ * tool class.  In Gwyddion, the program, at most one instance of each tool
+ * exists so there is no abiguity which dialog position should be saved and
+ * restored.
+ *
+ * Since: 2.33
+ **/
+void
+gwy_tool_restore_screen_position(GwyTool *tool)
+{
+    GwyToolClass *klass = GWY_TOOL_GET_CLASS(tool);
+    GwyToolClassPrivate *cpriv = (GwyToolClassPrivate*)klass->priv;
+    GtkWindow *window;
+    gchar *key;
+    guint len;
+
+    if (!klass->prefix || !g_str_has_prefix(klass->prefix, "/module/"))
+        return;
+
+    g_return_if_fail(tool->dialog);
+    window = GTK_WINDOW(tool->dialog);
+    if (cpriv->screen) {
+        gwy_debug("restoring %s to (%d,%d) at screen #%d (%p)",
+                  G_OBJECT_TYPE_NAME(tool), cpriv->x, cpriv->y,
+                  gdk_screen_get_number(cpriv->screen), cpriv);
+        gtk_window_set_screen(window, cpriv->screen);
+        gtk_window_move(window, cpriv->x, cpriv->y);
+    }
+
+    len = strlen(klass->prefix);
+    key = g_newa(gchar, len + sizeof("/dialog"));
+    strcpy(key, klass->prefix);
+    strcpy(key + len, "/dialog");
+    gwy_app_restore_window_position(window, key, TRUE);
 }
 
 /**
