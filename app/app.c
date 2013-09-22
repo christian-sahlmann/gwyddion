@@ -1570,9 +1570,11 @@ gwy_app_brick_popup_menu_popup_key(GtkWidget *menu,
 void
 gwy_app_switch_tool(const gchar *toolname)
 {
+    GwyContainer *settings;
     GwyTool *newtool;
     GwyDataView *data_view;
     GType type;
+    gboolean do_restore = FALSE;
 
     gwy_debug("%s", toolname ? toolname : "NONE");
     type = g_type_from_name(toolname);
@@ -1591,6 +1593,12 @@ gwy_app_switch_tool(const gchar *toolname)
     newtool = (GwyTool*)g_object_new(type, NULL);
     current_tool = newtool;
     g_return_if_fail(GWY_IS_TOOL(newtool));
+
+    settings = gwy_app_settings_get();
+    gwy_container_gis_boolean_by_name(settings, "/app/restore-tool-position",
+                                      &do_restore);
+    if (do_restore)
+        gwy_tool_restore_screen_position(newtool);
 
     if (data_view) {
         GwySpectra *spectra;
