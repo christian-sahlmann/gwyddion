@@ -8203,6 +8203,7 @@ gwy_app_data_browser_remove_channel_watch(gulong id)
  * @GWY_DATA_ITEM_REAL_SQUARE: Physical/pixel aspect ratio mode.
  * @GWY_DATA_ITEM_SELECTIONS: Data selections.
  * @GWY_DATA_ITEM_META: Metadata.
+ * @GWY_DATA_ITEM_CALDATA: Calibration and uncertainty data.
  *
  * Auxiliary channel data type.
  **/
