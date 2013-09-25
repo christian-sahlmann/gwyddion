@@ -1,8 +1,4 @@
 2.33 (0000-00-00)
-Application:
-- Failing to run on 64bit WinXP due to undefined _get_output_format was
-  fixed by defining it.
-
 Libraries:
 - libgwyprocess: Speed of tip blind estimate was improved by not reporting
   progress too often.
