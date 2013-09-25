@@ -290,6 +290,7 @@ SectionEnd
 ;----------------------------------------------------------------------------
 
 Section "Uninstall"
+    SetRegView @MSWIN_BITS@
     DeleteRegKey HKCR "Gwyddion.NativeData"
     DeleteRegKey HKCR ".gwy"
     DeleteRegKey HKLM "${PRODUCT_REG_KEY}"
