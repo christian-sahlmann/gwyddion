@@ -574,7 +574,7 @@ aist_load(const gchar *filename,
 
     gwy_file_abandon_contents(buffer, size, NULL);
 
-    if (context.channel_id == 0) {
+    if ((context.channel_id == 0) && (context.graph_id == 0)) {
         g_object_unref(context.container);
         context.container = NULL;
         err_NO_DATA(error);
