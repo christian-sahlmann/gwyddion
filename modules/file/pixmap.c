@@ -471,7 +471,7 @@ static GwyModuleInfo module_info = {
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.24",
+    "7.25",
     "David Nečas (Yeti)",
     "2004-2013",
 };
@@ -506,7 +506,12 @@ module_register(void)
          * any rubbish as their format and then crash because it isn't. */
         if (!gwy_stramong(fmtname,
                           "bmp", "gif", "icns", "jpeg", "jpeg2000", "pcx",
-                          "png", "pnm", "ras", "tga", "tiff", "xpm",
+                          "png", "pnm", "ras", "tga",
+/* Crashes.  Unclear why. */
+#ifndef __WIN64
+                          "tiff",
+#endif
+                          "xpm",
                           NULL)) {
             gwy_debug("Ignoring GdkPixbuf format %s because it is not on "
                       "the whitelist.", fmtname);
