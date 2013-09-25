@@ -1,7 +1,13 @@
 2.33 (0000-00-00)
+Application:
+- Failing to run on 64bit WinXP due to undefined _get_output_format was
+  fixed by defining it.
+
 Libraries:
 - libgwyprocess: Speed of tip blind estimate was improved by not reporting
   progress too often.
+- libgwyapp: Tools can remember and restore also position of the dialog,
+  within one session.
 
 Modules:
 - Dimensions and Units: It is possible to set the pixel size to match exactly
@@ -13,6 +19,8 @@ Modules:
   pixel size of the merged images.
 - Tip blind estimate: Estimate can be made for several horizontal stripes on
   the image and tip radius for each estimated.
+- Pixmap: Loading of TIFFs on 64bit MS Windows was disabled because the
+  system library crashes.
 
 
 2.32 (2013-09-08)
