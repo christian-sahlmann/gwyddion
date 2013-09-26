@@ -17,6 +17,7 @@ Modules:
   the image and tip radius for each estimated.
 - Pixmap: Loading of TIFFs on 64bit MS Windows was disabled because the
   system library crashes.
+- IGOR file: Units are correctly derived from channels starting with ‘DAC’.
 
 
 2.32 (2013-09-08)

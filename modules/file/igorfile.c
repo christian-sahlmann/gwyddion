@@ -197,7 +197,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Igor binary waves (.ibw)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -835,6 +835,11 @@ canonicalize_title(const gchar *title)
 static const gchar*
 channel_title_to_units(const gchar *title)
 {
+    /* If the title becomes empty here will end up as Volts anyway which is
+     * fine for DAC. */
+    if (g_str_has_prefix(title, "DAC"))
+        title += 3;
+
     if (g_str_has_prefix(title, "Height")
         || g_str_has_prefix(title, "ZSensor")
         || g_str_has_prefix(title, "Deflection")
@@ -850,7 +855,8 @@ channel_title_to_units(const gchar *title)
         return "F";
     if (g_str_has_prefix(title, "Potential"))
         return "V";
-    if (g_str_has_prefix(title, "Count"))
+    if (g_str_has_prefix(title, "Count")
+        || g_str_has_prefix(title, "QFactor"))
         return "";
     /* Everything else is in Volts. */
     return "V";
