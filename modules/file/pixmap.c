@@ -506,13 +506,7 @@ module_register(void)
          * any rubbish as their format and then crash because it isn't. */
         if (!gwy_stramong(fmtname,
                           "bmp", "gif", "icns", "jpeg", "jpeg2000", "pcx",
-                          "png", "pnm", "ras", "tga",
-/* Crashes.  Unclear why. */
-#ifndef __WIN64
-                          "tiff",
-#endif
-                          "xpm",
-                          NULL)) {
+                          "png", "pnm", "ras", "tga", "tiff", "xpm", NULL)) {
             gwy_debug("Ignoring GdkPixbuf format %s because it is not on "
                       "the whitelist.", fmtname);
             continue;
@@ -647,11 +641,16 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
             return 0;
     }
     else if (gwy_strequal(name, "tiff")) {
+/* TIFF crashes on Win64.  Unclear why.  TIFF is madness. */
+#ifdef __WIN64
+        return 0;
+#else
         gwy_debug("Checking TIFF header");
         if (memcmp(fileinfo->head, "MM\x00\x2a", 4) != 0
             && memcmp(fileinfo->head, "II\x2a\x00", 4) != 0)
             return 0;
         gwy_debug("TIFF header OK (type %.2s)", fileinfo->head);
+#endif
     }
     else if (gwy_strequal(name, "jpeg")) {
         if (memcmp(fileinfo->head, "\xff\xd8", 2) != 0)
