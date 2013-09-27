@@ -1469,16 +1469,6 @@ gwy_object_set_or_reset(gpointer object,
     g_object_thaw_notify(object);
 }
 
-/* http://mingw.5.n7.nabble.com/Linking-Error-with-MSVC-6-0-td18263.html */
-#ifdef G_OS_WIN32
-__attribute__((dllimport))
-unsigned int
-_get_output_format(void)
-{
-    return 0;
-}
-#endif
-
 /************************** Documentation ****************************/
 /* Note: gwymacros.h documentation is also here. */
 
