@@ -110,7 +110,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Gwyddion XYZ field files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2013",
 };
@@ -338,10 +338,10 @@ append_double(gdouble *target, const gdouble v)
     union { guchar pp[8]; double d; } u;
     u.d = v;
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
-    GWY_SWAP(guchar, z.pp[0], z.pp[7]);
-    GWY_SWAP(guchar, z.pp[1], z.pp[6]);
-    GWY_SWAP(guchar, z.pp[2], z.pp[5]);
-    GWY_SWAP(guchar, z.pp[3], z.pp[4]);
+    GWY_SWAP(guchar, u.pp[0], u.pp[7]);
+    GWY_SWAP(guchar, u.pp[1], u.pp[6]);
+    GWY_SWAP(guchar, u.pp[2], u.pp[5]);
+    GWY_SWAP(guchar, u.pp[3], u.pp[4]);
 #endif
     *target = u.d;
 }

@@ -18,6 +18,7 @@ Modules:
 - Pixmap: Loading of TIFFs on 64bit MS Windows was disabled because the
   system library crashes.
 - IGOR file: Units are correctly derived from channels starting with ‘DAC’.
+- GWYXYZF: Compilation on big endian architectures was fixed.
 
 
 2.32 (2013-09-08)
