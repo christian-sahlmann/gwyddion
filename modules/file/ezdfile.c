@@ -108,6 +108,7 @@ static GwyContainer* ezdfile_load          (const gchar *filename,
 static guint         find_data_start       (const guchar *buffer,
                                             gsize size);
 static void          ezdfile_free          (GPtrArray *ezdfile);
+static void          ezdsection_free       (EZDSection *section);
 static void          read_data_field       (GwyDataField *dfield,
                                             EZDSection *section);
 static gboolean      file_read_header      (GPtrArray *ezdfile,
@@ -267,17 +268,23 @@ ezdfile_free(GPtrArray *ezdfile)
 
     for (i = 0; i < ezdfile->len; i++) {
         section = (EZDSection*)g_ptr_array_index(ezdfile, i);
-        g_hash_table_destroy(section->meta);
-        g_free(section->name);
-        g_free(section->xrange.unit);
-        g_free(section->yrange.unit);
-        g_free(section->zrange.unit);
-        g_free(section->xrange.name);
-        g_free(section->yrange.name);
-        g_free(section->zrange.name);
-        g_free(section);
+        ezdsection_free(section);
     }
     g_ptr_array_free(ezdfile, TRUE);
+}
+
+static void
+ezdsection_free(EZDSection *section)
+{
+    g_hash_table_destroy(section->meta);
+    g_free(section->name);
+    g_free(section->xrange.unit);
+    g_free(section->yrange.unit);
+    g_free(section->zrange.unit);
+    g_free(section->xrange.name);
+    g_free(section->yrange.name);
+    g_free(section->zrange.name);
+    g_free(section);
 }
 
 static gboolean
@@ -286,6 +293,8 @@ file_read_header(GPtrArray *ezdfile,
                  GError **error)
 {
     EZDSection *section = NULL;
+    GError *firsterr = NULL;
+    gboolean ignoresection = FALSE;
     gchar *p, *line;
     guint len;
 
@@ -294,12 +303,17 @@ file_read_header(GPtrArray *ezdfile,
         if (!(len = strlen(line)))
             continue;
         if (line[0] == '[' && line[len-1] == ']') {
+            if (section && ignoresection) {
+                ezdsection_free(section);
+                g_ptr_array_set_size(ezdfile, ezdfile->len - 1);
+            }
             section = g_new0(EZDSection, 1);
             g_ptr_array_add(ezdfile, section);
             line[len-1] = '\0';
             section->name = g_strdup(line + 1);
             section->meta = g_hash_table_new_full(g_str_hash, g_str_equal,
                                                   g_free, g_free);
+            ignoresection = FALSE;
             gwy_debug("Section <%s>", section->name);
             continue;
         }
@@ -307,6 +321,7 @@ file_read_header(GPtrArray *ezdfile,
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
                         _("Garbage before first header section."));
+            g_clear_error(&firsterr);
             return FALSE;
         }
         /* Skip comments */
@@ -318,27 +333,45 @@ file_read_header(GPtrArray *ezdfile,
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
                         _("Malformed header line (missing =)."));
+            g_clear_error(&firsterr);
             return FALSE;
         }
         *p = '\0';
         p++;
 
         if (gwy_strequal(line, "SaveMode")) {
-            if (strcmp(p, "Binary"))
-                g_warning("SaveMode is not Binary, this is not supported");
+            if (!gwy_strequal(p, "Binary")) {
+                if (!firsterr)
+                    err_UNSUPPORTED(&firsterr, "SaveMode");
+                ignoresection = TRUE;
+            }
         }
-        else if (gwy_strequal(line, "SaveBits"))
+        else if (gwy_strequal(line, "SaveBits")) {
             section->bitdepth = atol(p);
+            if (section->bitdepth != 8
+                && section->bitdepth != 16
+                && section->bitdepth != 32) {
+                if (!firsterr)
+                    err_BPP(&firsterr, section->bitdepth);
+                ignoresection = TRUE;
+            }
+        }
         else if (gwy_strequal(line, "SaveSign")) {
             section->sign = gwy_strequal(p, "Signed");
-            if (!section->sign)
-                g_warning("SaveSign is not Signed, this is not supported");
+            if (!section->sign) {
+                if (!firsterr)
+                    err_UNSUPPORTED(&firsterr, "SaveSign");
+                ignoresection = TRUE;
+            }
         }
         else if (gwy_strequal(line, "SaveOrder")) {
             if (gwy_strequal(p, "Intel"))
                 section->byteorder = G_LITTLE_ENDIAN;
-            else
-                g_warning("SaveOrder is not Intel, this is not supported");
+            else {
+                if (!firsterr)
+                    err_UNSUPPORTED(&firsterr, "SaveOrder");
+                ignoresection = TRUE;
+            }
         }
         else if (gwy_strequal(line, "Frame")) {
             if (gwy_strequal(p, "Scan forward"))
@@ -378,6 +411,22 @@ file_read_header(GPtrArray *ezdfile,
         else
             g_hash_table_replace(section->meta, g_strdup(line), g_strdup(p));
     }
+    if (section && ignoresection) {
+        ezdsection_free(section);
+        g_ptr_array_set_size(ezdfile, ezdfile->len - 1);
+    }
+
+    /* Report the first ‘soft’ error as the import failure cause if it results
+     * in failure to load any channel. */
+    if (firsterr) {
+        if (ezdfile->len)
+            g_clear_error(&firsterr);
+        else {
+            g_propagate_error(error, firsterr);
+            return FALSE;
+        }
+    }
+
     return TRUE;
 }
 
