@@ -7,7 +7,7 @@ Libraries:
 
 Modules:
 - Dimensions and Units: It is possible to set the pixel size to match exactly
-  another channel.
+  another channel.  Undo warnings were fixed.
 - TIA SER: spectral arrays reimplemented as volume data.
 - Volume show and extract: Crash for data with unequal resolutions in different
   dimensions was fixed.
@@ -19,6 +19,9 @@ Modules:
   system library crashes.
 - IGOR file: Units are correctly derived from channels starting with ‘DAC’.
 - GWYXYZF: Compilation on big endian architectures was fixed.
+- Arithmetic: Aspect ratio setting of result is taken from the first channel
+  used in the expresssion.
+- EZD file: Support for 32bit depth was added.
 
 
 2.32 (2013-09-08)
