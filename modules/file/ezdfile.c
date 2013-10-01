@@ -97,6 +97,7 @@ typedef struct {
     guint byteorder;
     gboolean sign;
     const gchar *data;
+    GError *firsterror;
 } EZDSection;
 
 static gboolean      module_register       (void);
@@ -277,6 +278,7 @@ static void
 ezdsection_free(EZDSection *section)
 {
     g_hash_table_destroy(section->meta);
+    g_clear_error(&section->firsterror);
     g_free(section->name);
     g_free(section->xrange.unit);
     g_free(section->yrange.unit);
@@ -293,8 +295,6 @@ file_read_header(GPtrArray *ezdfile,
                  GError **error)
 {
     EZDSection *section = NULL;
-    GError *firsterr = NULL;
-    gboolean ignoresection = FALSE;
     gchar *p, *line;
     guint len;
 
@@ -303,17 +303,12 @@ file_read_header(GPtrArray *ezdfile,
         if (!(len = strlen(line)))
             continue;
         if (line[0] == '[' && line[len-1] == ']') {
-            if (section && ignoresection) {
-                ezdsection_free(section);
-                g_ptr_array_set_size(ezdfile, ezdfile->len - 1);
-            }
             section = g_new0(EZDSection, 1);
             g_ptr_array_add(ezdfile, section);
             line[len-1] = '\0';
             section->name = g_strdup(line + 1);
             section->meta = g_hash_table_new_full(g_str_hash, g_str_equal,
                                                   g_free, g_free);
-            ignoresection = FALSE;
             gwy_debug("Section <%s>", section->name);
             continue;
         }
@@ -321,7 +316,6 @@ file_read_header(GPtrArray *ezdfile,
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
                         _("Garbage before first header section."));
-            g_clear_error(&firsterr);
             return FALSE;
         }
         /* Skip comments */
@@ -333,7 +327,6 @@ file_read_header(GPtrArray *ezdfile,
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
                         _("Malformed header line (missing =)."));
-            g_clear_error(&firsterr);
             return FALSE;
         }
         *p = '\0';
@@ -341,9 +334,8 @@ file_read_header(GPtrArray *ezdfile,
 
         if (gwy_strequal(line, "SaveMode")) {
             if (!gwy_strequal(p, "Binary")) {
-                if (!firsterr)
-                    err_UNSUPPORTED(&firsterr, "SaveMode");
-                ignoresection = TRUE;
+                if (!section->firsterror)
+                    err_UNSUPPORTED(&section->firsterror, "SaveMode");
             }
         }
         else if (gwy_strequal(line, "SaveBits")) {
@@ -351,26 +343,23 @@ file_read_header(GPtrArray *ezdfile,
             if (section->bitdepth != 8
                 && section->bitdepth != 16
                 && section->bitdepth != 32) {
-                if (!firsterr)
-                    err_BPP(&firsterr, section->bitdepth);
-                ignoresection = TRUE;
+                if (!section->firsterror)
+                    err_BPP(&section->firsterror, section->bitdepth);
             }
         }
         else if (gwy_strequal(line, "SaveSign")) {
             section->sign = gwy_strequal(p, "Signed");
             if (!section->sign) {
-                if (!firsterr)
-                    err_UNSUPPORTED(&firsterr, "SaveSign");
-                ignoresection = TRUE;
+                if (!section->firsterror)
+                    err_UNSUPPORTED(&section->firsterror, "SaveSign");
             }
         }
         else if (gwy_strequal(line, "SaveOrder")) {
             if (gwy_strequal(p, "Intel"))
                 section->byteorder = G_LITTLE_ENDIAN;
             else {
-                if (!firsterr)
-                    err_UNSUPPORTED(&firsterr, "SaveOrder");
-                ignoresection = TRUE;
+                if (!section->firsterror)
+                    err_UNSUPPORTED(&section->firsterror, "SaveOrder");
             }
         }
         else if (gwy_strequal(line, "Frame")) {
@@ -411,21 +400,6 @@ file_read_header(GPtrArray *ezdfile,
         else
             g_hash_table_replace(section->meta, g_strdup(line), g_strdup(p));
     }
-    if (section && ignoresection) {
-        ezdsection_free(section);
-        g_ptr_array_set_size(ezdfile, ezdfile->len - 1);
-    }
-
-    /* Report the first ‘soft’ error as the import failure cause if it results
-     * in failure to load any channel. */
-    if (firsterr) {
-        if (ezdfile->len)
-            g_clear_error(&firsterr);
-        else {
-            g_propagate_error(error, firsterr);
-            return FALSE;
-        }
-    }
 
     return TRUE;
 }
@@ -436,7 +410,7 @@ find_data_offsets(const gchar *buffer,
                   GPtrArray *ezdfile,
                   GError **error)
 {
-    EZDSection *dataset, *section;
+    EZDSection *dataset, *section, *firstchannel = NULL;
     GString *grkey;
     guint required_size = 0;
     gint ngroups, nchannels, i, j, k;
@@ -490,6 +464,8 @@ find_data_offsets(const gchar *buffer,
                 g_warning("Cannot find section for %s", p);
                 continue;
             }
+            if (!firstchannel)
+                firstchannel = section;
 
             /* Compute data position */
             gwy_debug("Data %s at offset %u from data start",
@@ -499,6 +475,11 @@ find_data_offsets(const gchar *buffer,
                       section->zrange.name);
             if (section->yres < 2) {
                 gwy_debug("Skipping 1D data Gr%d-Ch%d. FIXME.", i, j);
+                continue;
+            }
+            if (section->firsterror) {
+                gwy_debug("Skipping data Gr%d-Ch%d due to previous errors.",
+                          i, j);
                 continue;
             }
             ndata++;
@@ -518,8 +499,12 @@ find_data_offsets(const gchar *buffer,
     }
     g_string_free(grkey, TRUE);
 
-    if (!ndata)
-        err_NO_DATA(error);
+    if (!ndata) {
+        if (firstchannel)
+            g_propagate_error(error, firstchannel->firsterror);
+        else
+            err_NO_DATA(error);
+    }
 
     return ndata;
 }
@@ -634,7 +619,7 @@ read_data_field(GwyDataField *dfield,
     gwy_data_field_resample(dfield, xres, yres, GWY_INTERPOLATION_NONE);
     data = gwy_data_field_get_data(dfield);
 
-    q = 1 << section->bitdepth;
+    q = pow(2.0, section->bitdepth);
     z0 = q/2.0;
     if (section->bitdepth == 8) {
         const gchar *p = section->data;
