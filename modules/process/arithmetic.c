@@ -126,7 +126,8 @@ static void          arithmetic_show_state        (ArithmeticControls *controls,
                                                    const gchar *message);
 static const gchar*  arithmetic_check_fields      (ArithmeticArgs *args);
 static void          arithmetic_preview           (ArithmeticControls *controls);
-static GwyDataField* arithmetic_do                (ArithmeticArgs *args);
+static GwyDataField* arithmetic_do                (ArithmeticArgs *args,
+                                                   gint *id);
 static void          arithmetic_need_data         (const ArithmeticArgs *args,
                                                    gboolean *need_data);
 static void          arithmetic_update_history    (ArithmeticArgs *args);
@@ -145,7 +146,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Simple arithmetic operations with data fields."),
     "Yeti <yeti@gwyddion.net>",
-    "3.1",
+    "3.2",
     "David Nečas (Yeti)",
     "2004",
 };
@@ -191,13 +192,15 @@ arithmetic(GwyContainer *data, GwyRunType run)
     gwy_expr_define_constant(args.expr, "π", G_PI, NULL);
 
     if (arithmetic_dialog(data, id, &args)) {
-        GwyDataField *result = arithmetic_do(&args);
+        GwyDataField *result = arithmetic_do(&args, &id);
 
         newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
         g_object_unref(result);
         gwy_app_set_data_field_title(data, newid, _("Calculated"));
         gwy_app_sync_data_items(data, data, id, newid, FALSE,
-                                GWY_DATA_ITEM_GRADIENT, 0);
+                                GWY_DATA_ITEM_GRADIENT,
+                                GWY_DATA_ITEM_REAL_SQUARE,
+                                0);
     }
     arithmetic_save_args(settings, &args);
     g_ptr_array_free(args.ok_masks, TRUE);
@@ -248,7 +251,9 @@ arithmetic_dialog(GwyContainer *data,
     dfield = gwy_data_field_new(PREVIEW_SIZE, PREVIEW_SIZE, 1.0, 1.0, TRUE);
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
     gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
-                            GWY_DATA_ITEM_GRADIENT, 0);
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_REAL_SQUARE,
+                            0);
     controls.view = gwy_data_view_new(controls.mydata);
     gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
     layer = gwy_layer_basic_new();
@@ -582,12 +587,13 @@ static void
 arithmetic_preview(ArithmeticControls *controls)
 {
     GwyDataField *result;
+    gint id = -1;
 
     /* We can also get here by activation of the entry so check again. */
     if (controls->args->err != ARITHMETIC_OK)
         return;
 
-    result = arithmetic_do(controls->args);
+    result = arithmetic_do(controls->args, &id);
     g_return_if_fail(result);
 
     gwy_container_set_object_by_name(controls->mydata, "/0/data", result);
@@ -596,7 +602,7 @@ arithmetic_preview(ArithmeticControls *controls)
 }
 
 static GwyDataField*
-arithmetic_do(ArithmeticArgs *args)
+arithmetic_do(ArithmeticArgs *args, gint *id)
 {
     static MakeFieldFunc derivers[ARITHMETIC_NVARS] = {
         NULL, NULL, make_x_der, make_y_der,
@@ -637,6 +643,7 @@ arithmetic_do(ArithmeticArgs *args)
             n = gwy_data_field_get_xres(dfield)*gwy_data_field_get_yres(dfield);
             result = gwy_data_field_new_alike(dfield, FALSE);
             r = gwy_data_field_get_data(result);
+            *id = args->objects[i].id;
         }
     }
 
@@ -654,6 +661,7 @@ arithmetic_do(ArithmeticArgs *args)
             n = gwy_data_field_get_xres(dfield)*gwy_data_field_get_yres(dfield);
             result = gwy_data_field_new_alike(dfield, FALSE);
             r = gwy_data_field_get_data(result);
+            *id = args->objects[i % NARGS].id;
         }
         quark = gwy_app_get_mask_key_for_id(args->objects[i % NARGS].id);
         mfield = NULL;
