@@ -267,12 +267,12 @@ calibrate(GwyContainer *data, GwyRunType run)
 
     if (!args.new_channel) {
         guint n = 1;
-        if (quarks[1]) {
+        if (dfields[1]) {
             n++;
-            if (quarks[2])
+            if (dfields[2])
                 n++;
         }
-        else if (quarks[2]) {
+        else if (dfields[2]) {
             quarks[1] = quarks[2];
             quarks[2] = 0;
             n++;
