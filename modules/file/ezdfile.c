@@ -130,7 +130,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanosurf EZD and NID data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.7.1",
+    "0.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -601,6 +601,16 @@ read_data_field(GwyDataField *dfield,
         for (i = 0; i < yres; i++) {
             for (j = 0; j < xres; j++) {
                 data[i*xres + j] = GINT16_FROM_LE(p[(yres-1 - i)*xres + j]);
+                data[i*xres + j] = (data[i*xres + j] + z0)/q;
+            }
+        }
+    }
+    else if (section->bitdepth == 32) {
+        const gint32 *p = (const gint32*)section->data;
+
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++) {
+                data[i*xres + j] = GINT32_FROM_LE(p[(yres-1 - i)*xres + j]);
                 data[i*xres + j] = (data[i*xres + j] + z0)/q;
             }
         }
