@@ -363,10 +363,15 @@ gwy_brick_serialize(GObject *obj,
             { 'D', "data", &brick->data, &datasize, },
             { 'O', "calibration", &calibrations, &num_items, },
         };
+        gsize nspec = G_N_ELEMENTS(spec) - (num_items ? 0 : 1);
+        GByteArray *retval;
 
-        return gwy_serialize_pack_object_struct(buffer,
-                                                GWY_BRICK_TYPE_NAME,
-                                                G_N_ELEMENTS(spec), spec);
+        retval = gwy_serialize_pack_object_struct(buffer,
+                                                  GWY_BRICK_TYPE_NAME,
+                                                  nspec, spec);
+        g_free(calibrations);
+
+        return retval;
     }
 }
 
@@ -421,9 +426,14 @@ gwy_brick_get_size(GObject *obj)
             { 'D', "data", &brick->data, &datasize, },
             { 'O', "calibration", &calibrations, &num_items, },
         };
+        gsize nspec = G_N_ELEMENTS(spec) - (num_items ? 0 : 1);
+        gsize retval;
 
-        return gwy_serialize_get_struct_size(GWY_BRICK_TYPE_NAME,
-                                             G_N_ELEMENTS(spec), spec);
+        retval = gwy_serialize_get_struct_size(GWY_BRICK_TYPE_NAME,
+                                               nspec, spec);
+        g_free(calibrations);
+
+        return retval;
     }
 }
 
@@ -439,7 +449,7 @@ gwy_brick_deserialize(const guchar *buffer,
     GwyBrick *brick;
     GwyBrickPrivate *priv;
     GwyDataLine **calibrations = NULL;
-    guint32 num_items;
+    guint32 num_items = 0;
 
     GwySerializeSpec spec[] = {
         { 'i', "xres", &xres, NULL, },
