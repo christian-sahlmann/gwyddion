@@ -4,6 +4,9 @@ Libraries:
   progress too often.
 - libgwyapp: Tools can remember and restore also position of the dialog,
   within one session.
+- libgwyapp: Data choosers can be created also for volume data.
+- libgwyapp: The data browser provides id lists and thumbnails also for volume
+  data.
 
 Modules:
 - Dimensions and Units: It is possible to set the pixel size to match exactly

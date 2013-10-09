@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2006-2013 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -733,6 +733,127 @@ gwy_data_chooser_new_channels(void)
     return (GtkWidget*)chooser;
 }
 
+/*****************************************************************************
+ *
+ * Volume data.
+ *
+ *****************************************************************************/
+
+static void
+gwy_data_chooser_volumes_fill(GwyContainer *data,
+                              gpointer user_data)
+{
+    GtkListStore *store;
+    GtkTreeIter iter;
+    Proxy *proxy;
+    gint *ids;
+    gint i;
+
+    store = GWY_DATA_CHOOSER(user_data)->store;
+    ids = gwy_app_data_browser_get_volume_ids(data);
+    for (i = 0; ids[i] >= 0; i++) {
+        gwy_debug("inserting %p %d", data, ids[i]);
+        proxy = g_new0(Proxy, 1);
+        gtk_list_store_insert_with_values(store, &iter, G_MAXINT,
+                                          MODEL_COLUMN_CONTAINER, data,
+                                          MODEL_COLUMN_ID, ids[i],
+                                          MODEL_COLUMN_PROXY, proxy,
+                                          -1);
+    }
+    g_free(ids);
+}
+
+static void
+gwy_data_chooser_volumes_render_name(G_GNUC_UNUSED GtkCellLayout *layout,
+                                     GtkCellRenderer *renderer,
+                                     GtkTreeModel *model,
+                                     GtkTreeIter *iter,
+                                     G_GNUC_UNUSED gpointer data)
+{
+    GwyContainer *container;
+    Proxy *proxy;
+    gint id;
+
+    gtk_tree_model_get(model, iter, MODEL_COLUMN_PROXY, &proxy, -1);
+    if (!proxy->name) {
+        gtk_tree_model_get(model, iter,
+                           MODEL_COLUMN_CONTAINER, &container,
+                           MODEL_COLUMN_ID, &id,
+                           -1);
+        proxy->name = gwy_app_get_brick_title(container, id);
+        g_object_unref(container);
+    }
+    g_object_set(renderer, "text", proxy->name, NULL);
+}
+
+static void
+gwy_data_chooser_volumes_render_icon(G_GNUC_UNUSED GtkCellLayout *layout,
+                                     GtkCellRenderer *renderer,
+                                     GtkTreeModel *model,
+                                     GtkTreeIter *iter,
+                                     G_GNUC_UNUSED gpointer data)
+{
+    GwyContainer *container;
+    gint id, width, height;
+    Proxy *proxy;
+
+    /* FIXME */
+    width = height = 20;
+
+    gtk_tree_model_get(model, iter, MODEL_COLUMN_PROXY, &proxy, -1);
+    if (!proxy->thumb) {
+        gtk_tree_model_get(model, iter,
+                           MODEL_COLUMN_CONTAINER, &container,
+                           MODEL_COLUMN_ID, &id,
+                           -1);
+        proxy->thumb = gwy_app_get_volume_thumbnail(container, id,
+                                                    width, height);
+        g_object_unref(container);
+    }
+    g_object_set(renderer, "pixbuf", proxy->thumb, NULL);
+}
+
+/**
+ * gwy_data_chooser_new_volumes:
+ *
+ * Creates a data chooser for volume data.
+ *
+ * Returns: A new volume chooser.  Nothing may be assumed about the type and
+ *          properties of the returned widget as they can change in the future.
+ *
+ * Since: 2.33
+ **/
+GtkWidget*
+gwy_data_chooser_new_volumes(void)
+{
+    GwyDataChooser *chooser;
+    GtkCellRenderer *renderer;
+    GtkCellLayout *layout;
+
+    chooser = (GwyDataChooser*)g_object_new(GWY_TYPE_DATA_CHOOSER, NULL);
+    gwy_app_data_browser_foreach(gwy_data_chooser_volumes_fill, chooser);
+    layout = GTK_CELL_LAYOUT(chooser);
+
+    renderer = gtk_cell_renderer_pixbuf_new();
+    gtk_cell_layout_pack_start(layout, renderer, FALSE);
+    gtk_cell_layout_set_cell_data_func(layout, renderer,
+                                       gwy_data_chooser_volumes_render_icon,
+                                       chooser, NULL);
+
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "xalign", 0.0, NULL);
+    gtk_cell_layout_pack_start(layout, renderer, TRUE);
+    gtk_cell_layout_set_cell_data_func(layout, renderer,
+                                       gwy_data_chooser_volumes_render_name,
+                                       chooser, NULL);
+
+    gwy_data_chooser_choose_whatever(chooser);
+    // FIXME: Needs data browser support.
+    //gwy_data_chooser_volumes_setup_watcher(chooser);
+
+    return (GtkWidget*)chooser;
+}
+
 /************************** Documentation ****************************/
 
 /**
@@ -742,8 +863,8 @@ gwy_data_chooser_new_channels(void)
  *
  * #GwyDataChooser is an base data object chooser class.  Choosers for
  * particular data objects can be created with functions like
- * gwy_data_chooser_new_channels() and then manipulated through
- * #GwyDataChooser interface.
+ * gwy_data_chooser_new_channels() or gwy_data_chooser_new_volumes() and then
+ * manipulated through #GwyDataChooser interface.
  *
  * The widget type used to implement choosers is not a part of the interface
  * and may be subject of future changes.  In any case #GwyDataChooser has

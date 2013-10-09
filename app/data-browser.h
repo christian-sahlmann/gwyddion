@@ -117,6 +117,7 @@ void   gwy_app_data_browser_get_current     (GwyAppWhat what,
 gint*  gwy_app_data_browser_get_data_ids    (GwyContainer *data);
 gint*  gwy_app_data_browser_get_graph_ids   (GwyContainer *data);
 gint*  gwy_app_data_browser_get_spectra_ids (GwyContainer *data);
+gint*  gwy_app_data_browser_get_volume_ids  (GwyContainer *data);
 gint* gwy_app_data_browser_find_data_by_title   (GwyContainer *data,
                                                  const gchar *titleglob);
 gint* gwy_app_data_browser_find_graphs_by_title (GwyContainer *data,
@@ -165,10 +166,14 @@ void       gwy_app_data_browser_show        (void);
 void       gwy_app_data_browser_restore     (void);
 void       gwy_app_data_browser_shut_down   (void);
 
-GdkPixbuf* gwy_app_get_channel_thumbnail    (GwyContainer *data,
-                                             gint id,
-                                             gint max_width,
-                                             gint max_height);
+GdkPixbuf* gwy_app_get_channel_thumbnail(GwyContainer *data,
+                                         gint id,
+                                         gint max_width,
+                                         gint max_height);
+GdkPixbuf* gwy_app_get_volume_thumbnail (GwyContainer *data,
+                                         gint id,
+                                         gint max_width,
+                                         gint max_height);
 void gwy_app_data_browser_select_data_field (GwyContainer *data,
                                              gint id);
 void gwy_app_data_browser_select_graph_model(GwyContainer *data,

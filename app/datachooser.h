@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2006-2013 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -43,6 +43,7 @@ typedef struct _GwyDataChooser      GwyDataChooser;
 typedef struct _GwyDataChooserClass GwyDataChooserClass;
 
 GtkWidget* gwy_data_chooser_new_channels(void);
+GtkWidget* gwy_data_chooser_new_volumes (void);
 
 GType         gwy_data_chooser_get_type  (void) G_GNUC_CONST;
 gboolean      gwy_data_chooser_set_active(GwyDataChooser *chooser,

@@ -233,10 +233,6 @@ static GdkPixbuf* gwy_app_get_graph_thumbnail      (GwyContainer *data,
                                                     gint id,
                                                     gint max_width,
                                                     gint max_height);
-static GdkPixbuf* gwy_app_get_brick_thumbnail      (GwyContainer *data,
-                                                    gint id,
-                                                    gint max_width,
-                                                    gint max_height);
 static void       gwy_app_data_browser_notify_watch(GList *watchers,
                                                     GwyContainer *container,
                                                     gint id,
@@ -4208,8 +4204,8 @@ gwy_app_data_browser_render_brick(G_GNUC_UNUSED GtkTreeViewColumn *column,
         }
     }
 
-    pixbuf = gwy_app_get_brick_thumbnail(container, id,
-                                         THUMB_SIZE, THUMB_SIZE);
+    pixbuf = gwy_app_get_volume_thumbnail(container, id,
+                                          THUMB_SIZE, THUMB_SIZE);
     pbuf_timestamp = g_new(gdouble, 1);
     *pbuf_timestamp = gwy_get_timestamp();
     g_object_set_data_full(G_OBJECT(pixbuf), "timestamp", pbuf_timestamp,
@@ -7034,6 +7030,22 @@ gwy_app_data_browser_get_spectra_ids(GwyContainer *data)
 }
 
 /**
+ * gwy_app_data_browser_get_volume_ids:
+ * @data: A data container managed by the data-browser.
+ *
+ * Gets the list of all volume data in a data container.
+ *
+ * Returns: A newly allocated array with volume data ids, -1 terminated.
+ *
+ * Since: 2.33
+ **/
+gint*
+gwy_app_data_browser_get_volume_ids(GwyContainer *data)
+{
+    return gwy_app_data_list_get_object_ids(data, PAGE_VOLUMES, NULL);
+}
+
+/**
  * gwy_app_find_window_for_channel:
  * @data: A data container to find window for.
  * @id: Data channel id.  It can be -1 to find any data window displaying
@@ -7845,11 +7857,26 @@ gwy_app_get_channel_thumbnail(GwyContainer *data,
     return pixbuf;
 }
 
-static GdkPixbuf*
-gwy_app_get_brick_thumbnail(GwyContainer *data,
-                            gint id,
-                            gint max_width,
-                            gint max_height)
+/**
+ * gwy_app_get_volume_thumbnail:
+ * @data: A data container.
+ * @id: Volume data id.
+ * @max_width: Maximum width of the created pixbuf, it must be at least 2.
+ * @max_height: Maximum height of the created pixbuf, it must be at least 2.
+ *
+ * Creates a volume thumbnail.
+ *
+ * Returns: A newly created pixbuf with volume data thumbnail.  It keeps the
+ *          aspect ratio of the brick preview while not exceeding @max_width
+ *          and @max_height.
+ *
+ * Since: 2.33
+ **/
+GdkPixbuf*
+gwy_app_get_volume_thumbnail(GwyContainer *data,
+                             gint id,
+                             gint max_width,
+                             gint max_height)
 {
     GwyBrick *brick;
     GwyDataField *dfield = NULL;
