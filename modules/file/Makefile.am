@@ -133,7 +133,6 @@ file_LTLIBRARIES = \
 	rhk-spm32.la \
 	robotics.la \
 	s94file.la \
-	sagfile.la \
 	sdfile.la \
 	seiko.la \
 	sensofar.la \
@@ -157,7 +156,8 @@ file_LTLIBRARIES = \
 	witfile.la \
 	wsffile.la \
 	wsxmfile.la \
-	zeiss.la
+	zeiss.la \
+	zemax.la
 
 noinst_HEADERS = \
 	err.h \
@@ -259,7 +259,6 @@ rhk_sm4_la_SOURCES       = rhk-sm4.c
 rhk_spm32_la_SOURCES     = rhk-spm32.c
 robotics_la_SOURCES      = robotics.c
 s94file_la_SOURCES       = s94file.c
-sagfile_la_SOURCES       = sagfile.c
 sdfile_la_SOURCES        = sdfile.c
 seiko_la_SOURCES         = seiko.c
 sensofar_la_SOURCES      = sensofar.c
@@ -283,6 +282,7 @@ witec_asc_la_SOURCES     = witec-asc.c
 wsffile_la_SOURCES       = wsffile.c
 wsxmfile_la_SOURCES      = wsxmfile.c
 zeiss_la_SOURCES         = zeiss.c
+zemax_la_SOURCES         = zemax.c
 
 # These compile also without.
 createc_la_LIBADD        = @ZLIB@

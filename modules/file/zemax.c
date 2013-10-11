@@ -36,33 +36,33 @@
 #define EXTENSION ".dat"
 
 typedef enum {
-    SAG_UNIT_MM = 0,
-    SAG_UNIT_CM = 1,
-    SAG_UNIT_IN = 2,
-    SAG_UNIT_M = 3,
-    SAG_NUNITS,
-} SagUnit;
+    ZEMAX_UNIT_MM = 0,
+    ZEMAX_UNIT_CM = 1,
+    ZEMAX_UNIT_IN = 2,
+    ZEMAX_UNIT_M = 3,
+    ZEMAX_NUNITS,
+} ZemaxUnit;
 
 typedef struct {
     guint xres;
     guint yres;
     gdouble dx;
     gdouble dy;
-    SagUnit unit;
+    ZemaxUnit unit;
     gdouble xoff;
     gdouble yoff;
-} SagFile;
+} ZemaxFile;
 
-static gboolean      module_register(void);
-static gint          sag_detect     (const GwyFileDetectInfo *fileinfo,
-                                     gboolean only_name);
-static GwyContainer* sag_load       (const gchar *filename,
-                                     GwyRunType mode,
-                                     GError **error);
-static guint         sag_read_header(const gchar *header,
-                                     guint len,
-                                     SagFile *sagfile,
-                                     GError **error);
+static gboolean      module_register  (void);
+static gint          zemax_detect     (const GwyFileDetectInfo *fileinfo,
+                                       gboolean only_name);
+static GwyContainer* zemax_load       (const gchar *filename,
+                                       GwyRunType mode,
+                                       GError **error);
+static guint         zemax_read_header(const gchar *header,
+                                       guint len,
+                                       ZemaxFile *zmxfile,
+                                       GError **error);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -79,10 +79,10 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
-    gwy_file_func_register("sagfile",
+    gwy_file_func_register("zemax",
                            N_("Zemax grid sag data (.dat)"),
-                           (GwyFileDetectFunc)&sag_detect,
-                           (GwyFileLoadFunc)&sag_load,
+                           (GwyFileDetectFunc)&zemax_detect,
+                           (GwyFileLoadFunc)&zemax_load,
                            NULL,
                            NULL);
 
@@ -90,23 +90,23 @@ module_register(void)
 }
 
 static gint
-sag_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
+zemax_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
 {
-    SagFile sagfile;
+    ZemaxFile zmxfile;
 
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
 
-    if (sag_read_header(fileinfo->head, fileinfo->buffer_len, &sagfile, NULL))
+    if (zemax_read_header(fileinfo->head, fileinfo->buffer_len, &zmxfile, NULL))
         return 60;
 
     return 0;
 }
 
 static GwyContainer*
-sag_load(const gchar *filename,
-         G_GNUC_UNUSED GwyRunType mode,
-         GError **error)
+zemax_load(const gchar *filename,
+           G_GNUC_UNUSED GwyRunType mode,
+           GError **error)
 {
     /* The last field is special, it is the mask of invalid pixels. */
     static const gchar *titles[4] = {
@@ -116,7 +116,7 @@ sag_load(const gchar *filename,
         "m", "rad", "rad", "rad/m"
     };
 
-    SagFile sagfile;
+    ZemaxFile zmxfile;
     GwyContainer *container = NULL;
     GwyDataField *fields[5];
     gchar *p, *line, *end, *buffer = NULL;
@@ -132,29 +132,29 @@ sag_load(const gchar *filename,
     }
 
     gwy_clear(fields, G_N_ELEMENTS(fields));
-    if (!(len = sag_read_header(buffer, size, &sagfile, error)))
+    if (!(len = zemax_read_header(buffer, size, &zmxfile, error)))
         goto fail;
 
     p = buffer + len;
 
-    if (sagfile.unit == SAG_UNIT_MM)
+    if (zmxfile.unit == ZEMAX_UNIT_MM)
         q = 1e-3;
-    else if (sagfile.unit == SAG_UNIT_CM)
+    else if (zmxfile.unit == ZEMAX_UNIT_CM)
         q = 1e-2;
-    else if (sagfile.unit == SAG_UNIT_IN)
+    else if (zmxfile.unit == ZEMAX_UNIT_IN)
         q = 0.0254;
 
     for (i = 0; i < G_N_ELEMENTS(fields); i++) {
-        fields[i] = gwy_data_field_new(sagfile.xres,
-                                       sagfile.yres,
-                                       sagfile.xres*sagfile.dx*q,
-                                       sagfile.yres*sagfile.dy*q,
+        fields[i] = gwy_data_field_new(zmxfile.xres,
+                                       zmxfile.yres,
+                                       zmxfile.xres*zmxfile.dx*q,
+                                       zmxfile.yres*zmxfile.dy*q,
                                        FALSE);
         gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(fields[i]),
                                     "m");
     }
 
-    for (k = 0; k < sagfile.xres*sagfile.yres; k++) {
+    for (k = 0; k < zmxfile.xres*zmxfile.yres; k++) {
         line = gwy_str_next_line(&p);
         if (!line) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
@@ -213,10 +213,10 @@ fail:
 /* XXX: This is a weak detection.  We basically accept anything that has seven
  * reasonable numbers on the first line. */
 static guint
-sag_read_header(const gchar *header,
-                guint len,
-                SagFile *sagfile,
-                GError **error)
+zemax_read_header(const gchar *header,
+                  guint len,
+                  ZemaxFile *zmxfile,
+                  GError **error)
 {
     const gchar *p = header, *lineend;
     gchar *end, *line = NULL;
@@ -248,69 +248,69 @@ sag_read_header(const gchar *header,
     line = g_strndup(header, lineend-header);
     header = line;
 
-    sagfile->xres = strtol(header, &end, 10);
-    gwy_debug("xres %u", sagfile->xres);
+    zmxfile->xres = strtol(header, &end, 10);
+    gwy_debug("xres %u", zmxfile->xres);
     if (end == header)
         goto fail;
-    if (err_DIMENSION(error, sagfile->xres)) {
+    if (err_DIMENSION(error, zmxfile->xres)) {
         g_free(line);
         return 0;
     }
     header = end;
 
-    sagfile->yres = strtol(header, &end, 10);
-    gwy_debug("yres %u", sagfile->yres);
+    zmxfile->yres = strtol(header, &end, 10);
+    gwy_debug("yres %u", zmxfile->yres);
     if (end == header)
         goto fail;
-    if (err_DIMENSION(error, sagfile->yres)) {
+    if (err_DIMENSION(error, zmxfile->yres)) {
         g_free(line);
         return 0;
     }
     header = end;
 
-    sagfile->dx = g_ascii_strtod(header, &end);
-    gwy_debug("dx %g", sagfile->dx);
+    zmxfile->dx = g_ascii_strtod(header, &end);
+    gwy_debug("dx %g", zmxfile->dx);
     if (end == header)
         goto fail;
     /* Use negated positive conditions to catch NaNs */
-    if (!((sagfile->dx = fabs(sagfile->dx)) > 0)) {
+    if (!((zmxfile->dx = fabs(zmxfile->dx)) > 0)) {
         g_warning("Real x step is 0.0, fixing to 1.0");
-        sagfile->dx = 1.0;
+        zmxfile->dx = 1.0;
     }
     header = end;
 
-    sagfile->dy = g_ascii_strtod(header, &end);
-    gwy_debug("dy %g", sagfile->dy);
+    zmxfile->dy = g_ascii_strtod(header, &end);
+    gwy_debug("dy %g", zmxfile->dy);
     if (end == header)
         goto fail;
     /* Use negated positive conditions to catch NaNs */
-    if (!((sagfile->dy = fabs(sagfile->dy)) > 0)) {
+    if (!((zmxfile->dy = fabs(zmxfile->dy)) > 0)) {
         g_warning("Real x step is 0.0, fixing to 1.0");
-        sagfile->dy = 1.0;
+        zmxfile->dy = 1.0;
     }
     header = end;
 
-    sagfile->unit = strtol(header, &end, 10);
-    gwy_debug("unit %u", sagfile->unit);
+    zmxfile->unit = strtol(header, &end, 10);
+    gwy_debug("unit %u", zmxfile->unit);
     if (end == header)
         goto fail;
-    if (sagfile->unit >= SAG_NUNITS) {
+    if (zmxfile->unit >= ZEMAX_NUNITS) {
         g_free(line);
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Unit code %d is invalid or unsupported."),
-                    sagfile->unit);
+                    zmxfile->unit);
         return 0;
     }
     header = end;
 
-    sagfile->xoff = g_ascii_strtod(header, &end);
-    gwy_debug("xoff %g", sagfile->xoff);
+    zmxfile->xoff = g_ascii_strtod(header, &end);
+    gwy_debug("xoff %g", zmxfile->xoff);
     if (end == header)
         goto fail;
     header = end;
 
-    sagfile->yoff = g_ascii_strtod(header, &end);
-    gwy_debug("yoff %g", sagfile->yoff);
+    zmxfile->yoff = g_ascii_strtod(header, &end);
+    gwy_debug("yoff %g", zmxfile->yoff);
     if (end == header)
         goto fail;
     header = end;
