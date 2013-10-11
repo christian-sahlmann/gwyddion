@@ -9,6 +9,7 @@ Libraries:
   data.
 
 Modules:
+- Zemax (new): Imports Zemax grid sag data files.
 - Dimensions and Units: It is possible to set the pixel size to match exactly
   another channel.  Undo warnings were fixed.
 - TIA SER: spectral arrays reimplemented as volume data.
