@@ -17,22 +17,23 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-#define DEBUG 1
+
 /**
  * [FILE-MAGIC-USERGUIDE]
- * Zemax grid SAG data
- * .sag
+ * Zemax grid sag data
+ * .dat
  * Read
  **/
 
 #include "config.h"
 #include <stdlib.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/stats.h>
 #include <app/gwymoduleutils-file.h>
 #include <app/data-browser.h>
 #include "err.h"
 
-#define EXTENSION ".sag"
+#define EXTENSION ".dat"
 
 typedef enum {
     SAG_UNIT_MM = 0,
@@ -66,7 +67,7 @@ static guint         sag_read_header(const gchar *header,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     module_register,
-    N_("Imports Zemax grid SAG data files."),
+    N_("Imports Zemax grid sag data files."),
     "Yeti <yeti@gwyddion.net>",
     "0.1",
     "David Nečas (Yeti)",
@@ -79,7 +80,7 @@ static gboolean
 module_register(void)
 {
     gwy_file_func_register("sagfile",
-                           N_("Zemax grid SAG data (.sag)"),
+                           N_("Zemax grid sag data (.dat)"),
                            (GwyFileDetectFunc)&sag_detect,
                            (GwyFileLoadFunc)&sag_load,
                            NULL,
@@ -107,8 +108,12 @@ sag_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
          GError **error)
 {
+    /* The last field is special, it is the mask of invalid pixels. */
     static const gchar *titles[4] = {
-        "Height", "dz/dx", "dz/dy", "d²Z/dXdY"
+        "Height", "dZ/dX", "dZ/dY", "d²Z/dXdY"
+    };
+    static const gchar *units[4] = {
+        "m", "rad", "rad", "rad/m"
     };
 
     SagFile sagfile;
@@ -145,34 +150,55 @@ sag_load(const gchar *filename,
                                        sagfile.xres*sagfile.dx*q,
                                        sagfile.yres*sagfile.dy*q,
                                        FALSE);
+        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(fields[i]),
+                                    "m");
     }
 
     for (k = 0; k < sagfile.xres*sagfile.yres; k++) {
         line = gwy_str_next_line(&p);
         if (!line) {
-            /* TODO: Fail miserably. */
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("File is truncated."));
+            goto fail;
         }
 
         for (i = 0; i < G_N_ELEMENTS(fields); i++) {
             fields[i]->data[k] = g_ascii_strtod(line, &end);
             if (end == line) {
-                /* TODO: Fail miserably. */
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("Data line %u does not contain five items."),
+                            k+1);
+                goto fail;
             }
             line = end;
         }
     }
 
     gwy_data_field_multiply(fields[0], q);
+    gwy_data_field_multiply(fields[3], 1.0/q);
+
+    if (!gwy_data_field_get_avg(fields[4]))
+        gwy_object_unref(fields[4]);
 
     container = gwy_container_new();
     str = g_string_new(NULL);
     for (i = 0; i < G_N_ELEMENTS(titles); i++) {
         GQuark quark = gwy_app_get_data_key_for_id(i);
+        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(fields[i]),
+                                    units[i]);
         gwy_container_set_object(container, quark, fields[i]);
         g_string_assign(str, g_quark_to_string(quark));
         g_string_append(str, "/title");
         gwy_container_set_string_by_name(container, str->str,
                                          g_strdup(titles[i]));
+        if (fields[4]) {
+            GwyDataField *mfield = gwy_data_field_duplicate(fields[4]);
+            gwy_container_set_object(container, gwy_app_get_mask_key_for_id(i),
+                                     mfield);
+            g_object_unref(mfield);
+        }
     }
     g_string_free(str, TRUE);
 
@@ -295,7 +321,7 @@ sag_read_header(const gchar *header,
     if (*header) {
         g_free(line);
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("The first line contrains too many items."));
+                    _("The first line contains too many items."));
         return 0;
     }
 
@@ -304,7 +330,7 @@ sag_read_header(const gchar *header,
 
 fail:
     g_free(line);
-    err_FILE_TYPE(error, "SAG");
+    err_FILE_TYPE(error, "Zemax");
     return 0;
 }
 
