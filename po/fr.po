@@ -7,18 +7,17 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2013-09-08 08:51+0200\n"
-"PO-Revision-Date: 2013-08-31 17:10+0100\n"
+"POT-Creation-Date: 2013-10-13 03:58+0200\n"
+"PO-Revision-Date: 2013-10-13 22:10+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
-"Language: \n"
+"Language: fr_FR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: French\n"
-"X-Poedit-Country: FRANCE\n"
 "X-Poedit-SourceCharset: utf-8\n"
 "Plural-Forms: nplurals=2; plural=n>1;\n"
+"X-Generator: Poedit 1.5.4\n"
 
 #: libgwyddion/gwyexpr.c:764
 msgid "Invalid token"
@@ -126,9 +125,9 @@ msgid "contact: Hertz (paraboloid)"
 msgstr "contact : Hertz (paraboloïde)"
 
 #: libgwyddion/gwyinventory.c:1310 libgwydgets/gwygraphwindow.c:611
-#: app/data-browser.c:2090 app/data-browser.c:2853 app/data-browser.c:3701
-#: app/data-browser.c:3860 app/data-browser.c:4146 app/data-browser.c:4560
-#: app/data-browser.c:6490 app/data-browser.c:6572 app/resource-editor.c:366
+#: app/data-browser.c:2086 app/data-browser.c:2849 app/data-browser.c:3697
+#: app/data-browser.c:3856 app/data-browser.c:4142 app/data-browser.c:4556
+#: app/data-browser.c:6486 app/data-browser.c:6568 app/resource-editor.c:366
 #: modules/process/convolution_filter.c:699
 msgid "Untitled"
 msgstr "Sans titre"
@@ -423,7 +422,7 @@ msgstr "Valeur"
 msgid "Area"
 msgstr "Surface"
 
-#: libprocess/gwygrainvalue.c:1057 app/data-browser.c:5062 app/toolbox.c:108
+#: libprocess/gwygrainvalue.c:1057 app/data-browser.c:5058 app/toolbox.c:108
 msgid "Volume"
 msgstr "Volume"
 
@@ -632,23 +631,23 @@ msgstr "Érosion"
 msgid "Certainty map"
 msgstr "Carte d'incertitude"
 
-#: libprocess/morph_lib.c:616 libprocess/morph_lib.c:763
+#: libprocess/morph_lib.c:616 libprocess/morph_lib.c:764
 #, c-format
 msgid "Iterating estimate (iteration %d)"
 msgstr "Estimation en cours (itération %d)"
 
-#: libprocess/morph_lib.c:625 libprocess/morph_lib.c:784
+#: libprocess/morph_lib.c:625 libprocess/morph_lib.c:787
 #, c-format
 msgid "One image location produced refinement"
 msgid_plural "%d image locations produced refinement"
 msgstr[0] "Un point de l'image donne un recouvrement"
 msgstr[1] "%d points de l'image donnent un recouvrement"
 
-#: libprocess/morph_lib.c:724
+#: libprocess/morph_lib.c:725
 msgid "Searching for local maxima"
 msgstr "Recherche des maxima locaux"
 
-#: libprocess/morph_lib.c:746
+#: libprocess/morph_lib.c:747
 #, c-format
 msgid "Found one internal local maximum"
 msgid_plural "Found %d internal local maxima"
@@ -856,9 +855,9 @@ msgid "pixels"
 msgstr "pixels"
 
 #: libgwydgets/gwy3dwindow.c:1132 modules/file/hdrimage.cc:2149
-#: modules/file/pixmap.c:1059 modules/file/pixmap.c:3077
+#: modules/file/pixmap.c:1063 modules/file/pixmap.c:3093
 #: modules/file/rawfile.c:398 modules/process/angle_dist.c:170
-#: modules/process/calcoefs_new.c:347 modules/process/calibrate.c:336
+#: modules/process/calcoefs_new.c:347 modules/process/calibrate.c:378
 #: modules/process/col_synth.c:300 modules/process/curvature.c:602
 #: modules/process/cwt.c:132 modules/process/deposit_synth.c:360
 #: modules/process/drift.c:240 modules/process/dwt.c:164
@@ -880,7 +879,7 @@ msgstr "pixels"
 #: modules/process/slope_dist.c:201 modules/process/sphere-revolve.c:215
 #: modules/process/tilt.c:156 modules/process/tip_model.c:170
 #: modules/process/unrotate.c:226 modules/process/volumize_layers.c:211
-#: modules/volume/volume_calibrate.c:369 modules/volume/volume_extract.c:338
+#: modules/volume/volume_calibrate.c:369 modules/volume/volume_extract.c:332
 msgid "_Reset"
 msgstr "_Remise à zéro"
 
@@ -1207,7 +1206,7 @@ msgid "Preview"
 msgstr "Aperçu"
 
 #: libgwymodule/gwymodule-file.c:535 modules/file/err.h:40
-#: modules/file/pixmap.c:769
+#: modules/file/pixmap.c:773
 #, c-format
 msgid "Cannot open file for reading: %s."
 msgstr "Impossible d'ouvrir le fichier pour le lire : %s."
@@ -1474,44 +1473,44 @@ msgstr "Canal :"
 msgid "Section:"
 msgstr "Section :"
 
-#: app/data-browser.c:4937
+#: app/data-browser.c:4933
 msgid "Extract to a new file"
 msgstr "Extraire en tant que nouveau fichier"
 
-#: app/data-browser.c:4938
+#: app/data-browser.c:4934
 msgid "Duplicate"
 msgstr "Dupliquer"
 
-#: app/data-browser.c:4939
+#: app/data-browser.c:4935
 msgid "Delete"
 msgstr "Supprimer"
 
-#: app/data-browser.c:4984
+#: app/data-browser.c:4980
 msgid "Data Browser"
 msgstr "Navigateur de données"
 
-#: app/data-browser.c:5007
+#: app/data-browser.c:5003
 msgid "Close file"
 msgstr "Fermer le fichier"
 
-#: app/data-browser.c:5020
+#: app/data-browser.c:5016
 msgid "Channels"
 msgstr "Canaux"
 
-#: app/data-browser.c:5034 modules/volume/volume_extract.c:456
+#: app/data-browser.c:5030 modules/volume/volume_extract.c:444
 msgid "Graphs"
 msgstr "Graphes"
 
-#: app/data-browser.c:5048
+#: app/data-browser.c:5044
 msgid "Spectra"
 msgstr "Spectres"
 
-#: app/data-browser.c:6528
+#: app/data-browser.c:6524
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Canal inconnu %d"
 
-#: app/data-browser.c:6614
+#: app/data-browser.c:6610
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Volume %d inconnu"
@@ -1854,11 +1853,11 @@ msgstr "Taille"
 msgid "Width"
 msgstr "Largeur"
 
-#: app/gwytool.c:236
+#: app/gwytool.c:293
 msgid "verb|Hide"
 msgstr "Masquer"
 
-#: app/gwytool.c:238
+#: app/gwytool.c:295
 msgid "Hide tool dialog (Esc)"
 msgstr "Masquer la fenêtre outil (Echap)"
 
@@ -2784,13 +2783,14 @@ msgstr "Unités :"
 msgid "Export Text"
 msgstr "Exporter au format texte"
 
-#: modules/file/asciiexport.c:272 modules/file/pixmap.c:3180
+#: modules/file/asciiexport.c:272 modules/file/pixmap.c:3196
 #: modules/file/rawfile.c:719 modules/file/rawxyz.c:669
-#: modules/process/calibrate.c:514 modules/process/extend.c:262
+#: modules/process/calibrate.c:591 modules/process/extend.c:262
 #: modules/process/fft_filter_1d.c:295 modules/process/grain_dist.c:305
 #: modules/process/grain_edge.c:269 modules/process/grain_mark.c:343
 #: modules/process/grain_rem_threshold.c:326 modules/process/grain_wshed.c:277
-#: modules/tools/spotremove.c:319 modules/tools/stats.c:378
+#: modules/process/tip_blind.c:360 modules/tools/spotremove.c:319
+#: modules/tools/stats.c:378
 msgid "Options"
 msgstr "Options"
 
@@ -3110,27 +3110,27 @@ msgstr "Import de fichier annulé par l'utilisateur."
 msgid "Missing header."
 msgstr "En-tête manquant."
 
-#: modules/file/ezdfile.c:131
+#: modules/file/ezdfile.c:133
 msgid "Imports Nanosurf EZD and NID data files."
 msgstr "Importe les fichiers Nanosurf EZD et NID."
 
-#: modules/file/ezdfile.c:144
+#: modules/file/ezdfile.c:146
 msgid "Nanosurf files (.ezd, .nid)"
 msgstr "Nanosurf (.ezd, .nid)"
 
-#: modules/file/ezdfile.c:309
+#: modules/file/ezdfile.c:318
 msgid "Garbage before first header section."
 msgstr "Éléments inutiles avant la première section d'en-tête."
 
-#: modules/file/ezdfile.c:320 modules/file/nanoscope-ii.c:257
+#: modules/file/ezdfile.c:329 modules/file/nanoscope-ii.c:257
 msgid "Malformed header line (missing =)."
 msgstr "Ligne d'en-tête non conf.orme (il manque =)"
 
-#: modules/file/ezdfile.c:405
+#: modules/file/ezdfile.c:428
 msgid "First section isn't DataSet"
 msgstr "La première section n'est pas un DataSet"
 
-#: modules/file/ezdfile.c:411
+#: modules/file/ezdfile.c:434
 msgid "GroupCount in [DataSet]"
 msgstr "GroupCount dans [DataSet]"
 
@@ -3197,42 +3197,42 @@ msgstr ""
 "La désérialisation des données a fonctionné, mais a abouti à un objet "
 "inatendu %s."
 
-#: modules/file/gwytiff.h:220 modules/file/gwytiff.h:230
+#: modules/file/gwytiff.h:227 modules/file/gwytiff.h:237
 #, c-format
 msgid "TIFF directory %u ended unexpectedly."
 msgstr "Le répertoire TIFF %u se termine de manière inattendue."
 
-#: modules/file/gwytiff.h:351
+#: modules/file/gwytiff.h:358
 msgid "Invalid tag data positions were found."
 msgstr "Des positions invalides de balises ont été trouvées."
 
-#: modules/file/gwytiff.h:683 modules/file/gwytiff.h:690
-#: modules/file/gwytiff.h:787 modules/file/gwytiff.h:803
+#: modules/file/gwytiff.h:690 modules/file/gwytiff.h:697
+#: modules/file/gwytiff.h:794 modules/file/gwytiff.h:810
 #, c-format
 msgid "Required tag %u was not found."
 msgstr "La balise %u n'a pas été trouvée."
 
-#: modules/file/gwytiff.h:715
+#: modules/file/gwytiff.h:722
 msgid "Non-uniform bits per sample are unsupported."
 msgstr ""
 "Les échantillons avec un nombre de bits non uniforme ne sont pas supportés."
 
-#: modules/file/gwytiff.h:742
+#: modules/file/gwytiff.h:749
 #, c-format
 msgid "Compression type %u is not supported."
 msgstr "Le type de compression %u n'est pas supporté."
 
-#: modules/file/gwytiff.h:748
+#: modules/file/gwytiff.h:755
 #, c-format
 msgid "Planar configuration %u is not supported."
 msgstr "La configuration plane %u n'est pas supportée."
 
-#: modules/file/gwytiff.h:760
+#: modules/file/gwytiff.h:767
 msgid "Unsupported sample format"
 msgstr "Format non supporté"
 
-#: modules/file/gwytiff.h:829 modules/file/matfile.c:275
-#: modules/file/matfile.c:297 modules/file/psia.c:348
+#: modules/file/gwytiff.h:836 modules/file/matfile.c:275
+#: modules/file/matfile.c:297 modules/file/psia.c:348 modules/file/zemax.c:162
 msgid "File is truncated."
 msgstr "Le fichier est tronqué."
 
@@ -3354,39 +3354,39 @@ msgid "OpenEXR data type %u is invalid or unsupported."
 msgstr "Le type de données OpenEXR %u est invalide ou non supportée."
 
 #: modules/file/hdrimage.cc:1404 modules/file/hdrimage.cc:1413
-#: modules/file/pixmap.c:1559 modules/file/pixmap.c:1569
+#: modules/file/pixmap.c:1563 modules/file/pixmap.c:1573
 #, c-format
 msgid "libpng initialization error (in %s)"
 msgstr "Erreur d'initialisation de libpng (dans %s)"
 
-#: modules/file/hdrimage.cc:1422 modules/file/pixmap.c:1629
+#: modules/file/hdrimage.cc:1422 modules/file/pixmap.c:1633
 msgid "libpng error occured"
 msgstr "Une erreur s'est produite dans libpng"
 
 #. TRANSLATORS: Dialog title; %s is PNG, TIFF, ...
-#: modules/file/hdrimage.cc:2146 modules/file/pixmap.c:1056
+#: modules/file/hdrimage.cc:2146 modules/file/pixmap.c:1060
 #, c-format
 msgid "Import %s"
 msgstr "Importer %s"
 
-#: modules/file/hdrimage.cc:2173 modules/file/pixmap.c:1082
+#: modules/file/hdrimage.cc:2173 modules/file/pixmap.c:1086
 msgid "Image Information"
 msgstr "Information sur l'image"
 
-#: modules/file/hdrimage.cc:2182 modules/file/pixmap.c:1089
+#: modules/file/hdrimage.cc:2182 modules/file/pixmap.c:1093
 msgid "Horizontal size:"
 msgstr "Taille horizontale :"
 
 #: modules/file/hdrimage.cc:2182 modules/file/hdrimage.cc:2188
-#: modules/file/pixmap.c:1089 modules/file/pixmap.c:1095
+#: modules/file/pixmap.c:1093 modules/file/pixmap.c:1099
 msgid "px"
 msgstr "px"
 
-#: modules/file/hdrimage.cc:2188 modules/file/pixmap.c:1095
+#: modules/file/hdrimage.cc:2188 modules/file/pixmap.c:1099
 msgid "Vertical size:"
 msgstr "Taille verticale :"
 
-#: modules/file/hdrimage.cc:2193 modules/file/pixmap.c:1100
+#: modules/file/hdrimage.cc:2193 modules/file/pixmap.c:1104
 msgid "Channels:"
 msgstr "Canaux :"
 
@@ -3394,60 +3394,60 @@ msgstr "Canaux :"
 msgid "Pages:"
 msgstr "Pages : "
 
-#: modules/file/hdrimage.cc:2226 modules/file/pixmap.c:1131
+#: modules/file/hdrimage.cc:2226 modules/file/pixmap.c:1135
 #: modules/file/rawfile.c:622 modules/file/rawxyz.c:568
 #: modules/process/dimensions.h:465
 msgid "Physical Dimensions"
 msgstr "Dimensions physiques"
 
-#: modules/file/hdrimage.cc:2240 modules/file/pixmap.c:1141
-#: modules/file/pixmap.c:3122 modules/file/rawfile.c:631
+#: modules/file/hdrimage.cc:2240 modules/file/pixmap.c:1145
+#: modules/file/pixmap.c:3138 modules/file/rawfile.c:631
 #: modules/process/crosscor.c:196 modules/process/dimensions.h:471
-#: modules/process/tip_blind.c:264
+#: modules/process/tip_blind.c:336
 msgid "_Width:"
 msgstr "Largeur :"
 
 #: modules/file/hdrimage.cc:2266 modules/file/hdrimage.cc:2331
-#: modules/file/pixmap.c:1163 modules/file/pixmap.c:1218
+#: modules/file/pixmap.c:1167 modules/file/pixmap.c:1222
 #: modules/file/rawfile.c:654 modules/file/rawfile.c:710
 #: modules/process/calcoefs_new.c:383 modules/process/calcoefs_new.c:450
 #: modules/process/calcoefs_simple.c:389 modules/process/calcoefs_simple.c:456
 #: modules/process/calcoefs_view.c:527 modules/process/calcoefs_view.c:565
-#: modules/process/calibrate.c:379 modules/process/calibrate.c:460
+#: modules/process/calibrate.c:450 modules/process/calibrate.c:533
 #: modules/process/dimensions.h:159 modules/volume/volume_calibrate.c:412
 #: modules/volume/volume_calibrate.c:439 modules/volume/volume_calibrate.c:466
 #: modules/volume/volume_calibrate.c:544
 msgid "verb|Change"
 msgstr "Changer"
 
-#: modules/file/hdrimage.cc:2281 modules/file/pixmap.c:1176
+#: modules/file/hdrimage.cc:2281 modules/file/pixmap.c:1180
 #: modules/file/rawfile.c:667 modules/process/crosscor.c:202
 #: modules/process/dimensions.h:475
 msgid "H_eight:"
 msgstr "Hauteur :"
 
-#: modules/file/hdrimage.cc:2290 modules/file/pixmap.c:1183
+#: modules/file/hdrimage.cc:2290 modules/file/pixmap.c:1187
 #: modules/file/rawfile.c:674 modules/file/rawxyz.c:549
 msgid "Identical _measures"
 msgstr "_Mesures identiques"
 
-#: modules/file/hdrimage.cc:2304 modules/file/pixmap.c:1195
+#: modules/file/hdrimage.cc:2304 modules/file/pixmap.c:1199
 #: modules/file/rawfile.c:686
 msgid "_Z-scale (per sample unit):"
 msgstr "Échelle _Z (par unité d'échantillon) :"
 
-#: modules/file/hdrimage.cc:2493 modules/file/pixmap.c:1445
+#: modules/file/hdrimage.cc:2493 modules/file/pixmap.c:1449
 #: modules/file/rawfile.c:1320 modules/process/calcoefs_new.c:775
 #: modules/process/calcoefs_simple.c:1188 modules/process/calcoefs_view.c:1392
-#: modules/process/calibrate.c:884 modules/process/dimensions.h:193
+#: modules/process/calibrate.c:961 modules/process/dimensions.h:193
 #: modules/volume/volume_calibrate.c:1015
 msgid "Change Units"
 msgstr "Changer les unités"
 
-#: modules/file/hdrimage.cc:2507 modules/file/pixmap.c:1459
+#: modules/file/hdrimage.cc:2507 modules/file/pixmap.c:1463
 #: modules/file/rawfile.c:1334 modules/process/calcoefs_new.c:788
 #: modules/process/calcoefs_simple.c:1201 modules/process/calcoefs_view.c:1405
-#: modules/process/calibrate.c:898 modules/process/dimensions.h:206
+#: modules/process/calibrate.c:975 modules/process/dimensions.h:206
 #: modules/volume/volume_calibrate.c:1029
 msgid "New _units:"
 msgstr "Nouvelles _unités :"
@@ -4211,33 +4211,33 @@ msgstr "Le champ d'en-tête d'axe %s contient trop d'éléments."
 msgid "Per-axis header field %s contains too few items."
 msgstr "Le champ d'en-tête d'axe %s ne contient pas assez d'éléments."
 
-#: modules/file/nt-mdt.c:685
+#: modules/file/nt-mdt.c:660
 msgid "Imports NT-MDT data files."
 msgstr "Importe les fichiers NT-MDT."
 
-#: modules/file/nt-mdt.c:698
+#: modules/file/nt-mdt.c:673
 msgid "NT-MDT files (.mdt)"
 msgstr "NT-MDT (.mdt)"
 
-#: modules/file/nt-mdt.c:1151
+#: modules/file/nt-mdt.c:1126
 msgid "Frame is too short for Frame Mode."
 msgstr "la trame est trop courte pour le mode trame."
 
-#: modules/file/nt-mdt.c:1165
+#: modules/file/nt-mdt.c:1140
 msgid "Frame is too short for dots or data."
 msgstr "la trame est trop courte pour des points ou des données."
 
-#: modules/file/nt-mdt.c:1424
+#: modules/file/nt-mdt.c:1399
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Fin du fichier atteinte dans l'en-tête #%u."
 
-#: modules/file/nt-mdt.c:1432
+#: modules/file/nt-mdt.c:1407
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Fin du fichier atteinte dans les données #%u."
 
-#: modules/file/nt-mdt.c:1467
+#: modules/file/nt-mdt.c:1442
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "La trame #%u est trop courte pour l'en-tête des données scannées."
@@ -4429,169 +4429,169 @@ msgstr ""
 "PNG, JPEG, TIFF, PPM, BMP, TARGA. L'import dépend de GDK et peut ainsi "
 "dépendre de l'installation."
 
-#: modules/file/pixmap.c:763
+#: modules/file/pixmap.c:767
 #, c-format
 msgid "Pixmap has not registered file type `%s'."
 msgstr "L'image ne peut enregistrée avec le type de fichier `%s'."
 
-#: modules/file/pixmap.c:778
+#: modules/file/pixmap.c:782
 #, c-format
 msgid "Cannot get pixbuf loader: %s."
 msgstr "Chargeur d'image non disponible : %s."
 
-#: modules/file/pixmap.c:791 modules/file/pixmap.c:804
+#: modules/file/pixmap.c:795 modules/file/pixmap.c:808
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr "Le chargeur d'image refuse les données : %s."
 
-#: modules/file/pixmap.c:1228
+#: modules/file/pixmap.c:1232
 msgid ""
 "Warning: Colorful images cannot be reliably mapped to meaningful values."
 msgstr ""
 "Attention : des valeurs correctes ne peuvent être appliquées de manière "
 "fiable à des images en couleurs ."
 
-#: modules/file/pixmap.c:1247
+#: modules/file/pixmap.c:1251
 msgid "verb|Use"
 msgstr "Utiliser"
 
-#: modules/file/pixmap.c:1247
+#: modules/file/pixmap.c:1251
 msgid "as data"
 msgstr "en tant que données"
 
-#: modules/file/pixmap.c:1716 modules/file/pixmap.c:1744
+#: modules/file/pixmap.c:1720 modules/file/pixmap.c:1748
 #, c-format
 msgid "Pixbuf save failed: %s."
 msgstr "La sauvegarde de l'image à échoué : %s."
 
-#: modules/file/pixmap.c:2154
+#: modules/file/pixmap.c:2170
 msgid "Image is too large to be stored as TARGA."
 msgstr "L'image est trop grande pour être enregistrée au format TARGA"
 
-#: modules/file/pixmap.c:2233
+#: modules/file/pixmap.c:2249
 msgid "Data must be displayed in a window for pixmap export."
 msgstr ""
 "Les données doivent affichées dans une fenêtre pour l'export vers un format "
 "image."
 
-#: modules/file/pixmap.c:2992
+#: modules/file/pixmap.c:3008
 msgid "Change Inset Color"
 msgstr "Changer l'échelle de couleurs"
 
-#: modules/file/pixmap.c:3074
+#: modules/file/pixmap.c:3090
 #, c-format
 msgid "Export %s"
 msgstr "Exporter %s"
 
-#: modules/file/pixmap.c:3104
+#: modules/file/pixmap.c:3120
 msgid "Scaling"
 msgstr "Échelle"
 
-#: modules/file/pixmap.c:3113
+#: modules/file/pixmap.c:3129
 msgid "_Zoom:"
 msgstr "_Zoom :"
 
-#: modules/file/pixmap.c:3131 modules/process/col_synth.c:399
+#: modules/file/pixmap.c:3147 modules/process/col_synth.c:399
 #: modules/process/grain_mark.c:308 modules/process/grain_rem_threshold.c:282
 #: modules/process/obj_synth.c:572 modules/process/pat_synth.c:888
 #: modules/process/pat_synth.c:1189 modules/process/pat_synth.c:1524
-#: modules/process/tip_blind.c:271
+#: modules/process/tip_blind.c:343
 msgid "_Height:"
 msgstr "_Hauteur :"
 
-#: modules/file/pixmap.c:3139
+#: modules/file/pixmap.c:3155
 msgid "Font:"
 msgstr "Police :"
 
-#: modules/file/pixmap.c:3154
+#: modules/file/pixmap.c:3170
 msgid "Scale text _proportionally"
 msgstr "Mettre le texte _proportionnellement à l'échelle"
 
-#: modules/file/pixmap.c:3169
+#: modules/file/pixmap.c:3185
 msgid "_Font size:"
 msgstr "Taille de police :"
 
-#: modules/file/pixmap.c:3184
+#: modules/file/pixmap.c:3200
 msgid "Draw _mask"
 msgstr "Dessiner le _masque"
 
-#: modules/file/pixmap.c:3193
+#: modules/file/pixmap.c:3209
 msgid "Draw _selection"
 msgstr "Dessiner la _sélection"
 
-#: modules/file/pixmap.c:3209
+#: modules/file/pixmap.c:3225
 msgid "Grayscale Mode"
 msgstr "Mode niveaux de gris"
 
-#: modules/file/pixmap.c:3213
+#: modules/file/pixmap.c:3229
 msgid "Export as 1_6 bit grayscale"
 msgstr "Exporter en niveaux de gris 1_6 bits"
 
-#: modules/file/pixmap.c:3239
+#: modules/file/pixmap.c:3255
 msgid "Lateral Scale"
 msgstr "Échelle latérale"
 
-#: modules/file/pixmap.c:3246 modules/file/pixmap.c:3361
+#: modules/file/pixmap.c:3262 modules/file/pixmap.c:3377
 msgid "ruler|_None"
 msgstr "_Aucune"
 
-#: modules/file/pixmap.c:3247
+#: modules/file/pixmap.c:3263
 msgid "_Rulers"
 msgstr "G_raduations"
 
-#: modules/file/pixmap.c:3248
+#: modules/file/pixmap.c:3264
 msgid "_Inset scale bar"
 msgstr "Échelle"
 
-#: modules/file/pixmap.c:3253
+#: modules/file/pixmap.c:3269
 msgid "Color:"
 msgstr "Couleur :"
 
-#: modules/file/pixmap.c:3269 modules/process/immerse.c:322
+#: modules/file/pixmap.c:3285 modules/process/immerse.c:322
 msgid "Position:"
 msgstr "Position :"
 
-#: modules/file/pixmap.c:3274
+#: modules/file/pixmap.c:3290
 msgid "left"
 msgstr "gauche"
 
-#: modules/file/pixmap.c:3278
+#: modules/file/pixmap.c:3294
 msgid "center"
 msgstr "centre"
 
-#: modules/file/pixmap.c:3282
+#: modules/file/pixmap.c:3298
 msgid "right"
 msgstr "droite"
 
-#: modules/file/pixmap.c:3287
+#: modules/file/pixmap.c:3303
 msgid "top"
 msgstr "haut"
 
-#: modules/file/pixmap.c:3299
+#: modules/file/pixmap.c:3315
 msgid "bottom"
 msgstr "bas"
 
-#: modules/file/pixmap.c:3310 modules/process/lno_synth.c:1065
+#: modules/file/pixmap.c:3326 modules/process/lno_synth.c:1065
 msgid "_Length:"
 msgstr "_Longueur :"
 
-#: modules/file/pixmap.c:3326
+#: modules/file/pixmap.c:3342
 msgid "_Auto"
 msgstr "_Auto"
 
-#: modules/file/pixmap.c:3334
+#: modules/file/pixmap.c:3350
 msgid "Draw _ticks"
 msgstr "Afficher les gradua_tions"
 
-#: modules/file/pixmap.c:3344
+#: modules/file/pixmap.c:3360
 msgid "Draw _label"
 msgstr "Dessiner les _labels"
 
-#: modules/file/pixmap.c:3354
+#: modules/file/pixmap.c:3370
 msgid "Value Scale"
 msgstr "Valeur d'échelle"
 
-#: modules/file/pixmap.c:3362
+#: modules/file/pixmap.c:3378
 msgid "_False color ruler"
 msgstr "Échelle de couleurs"
 
@@ -4762,7 +4762,7 @@ msgid "Presets"
 msgstr "Préréglages"
 
 #: modules/file/rawfile.c:540 modules/file/rawxyz.c:435
-#: modules/process/arithmetic.c:229 modules/process/calcoefs_view.c:332
+#: modules/process/arithmetic.c:232 modules/process/calcoefs_view.c:332
 #: modules/process/convolution_filter.c:243
 #: modules/process/deposit_synth.c:680 modules/process/drift.c:237
 #: modules/process/edge.c:664 modules/process/fft_filter_1d.c:197
@@ -4772,7 +4772,7 @@ msgstr "Préréglages"
 #: modules/process/scars.c:466 modules/process/synth.h:479
 #: modules/process/tip_model.c:167 modules/tools/linestats.c:420
 #: modules/tools/sfunctions.c:475 modules/tools/stats.c:435
-#: modules/volume/volume_extract.c:335
+#: modules/volume/volume_extract.c:329
 msgid "_Update"
 msgstr "Mise à jour"
 
@@ -5543,12 +5543,12 @@ msgstr "Importe les images Tescan SEM."
 msgid "Tescan MIRA SEM image (.tif)"
 msgstr "Tescan MIRA SEM (.tif)"
 
-#: modules/file/tiaser.c:178
+#: modules/file/tiaser.c:179
 msgid "Imports FEI Tecnai imaging and analysis (former Emispec) files."
 msgstr ""
 "Importe les fichiers FEI Tecnai imaging and analysis (anciennement Emispec)"
 
-#: modules/file/tiaser.c:191
+#: modules/file/tiaser.c:192
 msgid "FEI TIA (Emispec) data"
 msgstr "FEI TIA (Emispec) (.tia)"
 
@@ -5664,6 +5664,28 @@ msgstr "Importe les fichiers Carl Zeiss SEM."
 #: modules/file/zeiss.c:76
 msgid "Carl Zeiss SEM scans (.tif)"
 msgstr "Scan Carl Zeiss SEM (.tif)"
+
+#: modules/file/zemax.c:70
+msgid "Imports Zemax grid sag data files."
+msgstr "Importe les fichiers Zemax grid sag."
+
+#: modules/file/zemax.c:83
+msgid "Zemax grid sag data (.dat)"
+msgstr "Zemax grid sag (.dat)"
+
+#: modules/file/zemax.c:171
+#, c-format
+msgid "Data line %u does not contain five items."
+msgstr "La ligne de données %u ne contient pas cinq éléments"
+
+#: modules/file/zemax.c:300
+#, c-format
+msgid "Unit code %d is invalid or unsupported."
+msgstr "Le code d'unité %d est invalide ou n'est pas supporté."
+
+#: modules/file/zemax.c:324
+msgid "The first line contains too many items."
+msgstr "La première ligne contient trop d'éléments."
 
 #: modules/graph/graph_cd.c:139
 msgid "Critical dimension measurements"
@@ -6171,64 +6193,64 @@ msgstr "Utiliser l'ajustement du plan local"
 msgid "_Plane size:"
 msgstr "Taille du _plan :"
 
-#: modules/process/arithmetic.c:146
+#: modules/process/arithmetic.c:147
 msgid "Simple arithmetic operations with data fields."
 msgstr "Opérations arithmétiques simples sur des champs de données."
 
-#: modules/process/arithmetic.c:160
+#: modules/process/arithmetic.c:161
 msgid "/M_ultidata/_Arithmetic..."
 msgstr "/M_ultidonnées/_Arithmétique..."
 
-#: modules/process/arithmetic.c:164
+#: modules/process/arithmetic.c:165
 msgid "Arithmetic operations on data"
 msgstr "Opérations arithmétiques sur les données"
 
-#: modules/process/arithmetic.c:198 modules/process/superresolution.c:352
+#: modules/process/arithmetic.c:199 modules/process/superresolution.c:352
 msgid "Calculated"
 msgstr "Calculée"
 
-#: modules/process/arithmetic.c:226
+#: modules/process/arithmetic.c:229
 msgid "Arithmetic"
 msgstr "Arithmétique"
 
-#: modules/process/arithmetic.c:270
+#: modules/process/arithmetic.c:275
 msgid "_Expression:"
 msgstr "_Expression :"
 
-#: modules/process/arithmetic.c:295
+#: modules/process/arithmetic.c:300
 msgid "Operands"
 msgstr "Opérandes"
 
-#: modules/process/arithmetic.c:300 modules/process/dimensions.h:481
+#: modules/process/arithmetic.c:305 modules/process/dimensions.h:481
 msgid "Units"
 msgstr "Unités"
 
-#: modules/process/arithmetic.c:335
+#: modules/process/arithmetic.c:340
 #, c-format
 msgid "Take result units from data d%d"
 msgstr "Prendre les unités  du résultat à partir des données d%d"
 
-#: modules/process/arithmetic.c:353
+#: modules/process/arithmetic.c:358
 msgid "Specify un_its:"
 msgstr "Spécifier les un_ités :"
 
-#: modules/process/arithmetic.c:372
+#: modules/process/arithmetic.c:377
 msgid "Specify result units explicitly"
 msgstr "Spécifier explicitement les unités du résultat"
 
-#: modules/process/arithmetic.c:456
+#: modules/process/arithmetic.c:461
 msgid "Expression contains unknown identifiers"
 msgstr "L'expression contient des identifiants inconnus"
 
-#: modules/process/arithmetic.c:568 modules/process/superresolution.c:303
+#: modules/process/arithmetic.c:573 modules/process/superresolution.c:303
 msgid "Pixel dimensions differ"
 msgstr "Les dimensions des pixels diffèrent"
 
-#: modules/process/arithmetic.c:570 modules/process/superresolution.c:305
+#: modules/process/arithmetic.c:575 modules/process/superresolution.c:305
 msgid "Lateral dimensions are different physical quantities"
 msgstr "Les dimensions latérales sont des quantités physiques différentes"
 
-#: modules/process/arithmetic.c:573 modules/process/superresolution.c:308
+#: modules/process/arithmetic.c:578 modules/process/superresolution.c:308
 msgid "Physical dimensions differ"
 msgstr "Les dimensions physiques diffèrent"
 
@@ -6359,8 +6381,8 @@ msgstr "Charger des données de calibration"
 msgid "Calibration name:"
 msgstr "Nom de la calibration :"
 
-#: modules/process/calcoefs_load.c:239 modules/volume/volume_extract.c:445
-#: modules/volume/volume_extract.c:531
+#: modules/process/calcoefs_load.c:239 modules/volume/volume_extract.c:433
+#: modules/volume/volume_extract.c:513
 msgid "No data loaded"
 msgstr "Aucunes données chargées"
 
@@ -6384,7 +6406,7 @@ msgstr "Ajouter"
 msgid "Load calibration data"
 msgstr "Charger des données de calibration"
 
-#: modules/process/calcoefs_load.c:330 modules/volume/volume_extract.c:1072
+#: modules/process/calcoefs_load.c:330 modules/volume/volume_extract.c:1034
 #, c-format
 msgid "Error loading file '%s'"
 msgstr "Erreur lors du chargement du fichier '%s'"
@@ -6492,12 +6514,12 @@ msgid "Detail"
 msgstr "Détail"
 
 #: modules/process/calcoefs_simple.c:369 modules/process/calcoefs_view.c:507
-#: modules/process/calibrate.c:407 modules/volume/volume_calibrate.c:476
+#: modules/process/calibrate.c:480 modules/volume/volume_calibrate.c:476
 msgid "_X offset:"
 msgstr "Décalage _X :"
 
 #: modules/process/calcoefs_simple.c:396 modules/process/calcoefs_view.c:533
-#: modules/process/calibrate.c:420 modules/volume/volume_calibrate.c:489
+#: modules/process/calibrate.c:493 modules/volume/volume_calibrate.c:489
 msgid "_Y offset:"
 msgstr "Décalage _Y :"
 
@@ -6541,13 +6563,13 @@ msgstr "Recherche annulée"
 
 #: modules/process/calcoefs_simple.c:629 modules/process/grain_wshed.c:500
 #: modules/process/maskcor.c:326 modules/process/mcrop.c:325
-#: modules/process/merge.c:742 modules/process/tip_blind.c:558
+#: modules/process/merge.c:746 modules/process/tip_blind.c:780
 #: modules/process/tipops.c:306
 msgid "Initializing"
 msgstr "Initialisation"
 
 #: modules/process/calcoefs_simple.c:631 modules/process/maskcor.c:328
-#: modules/process/mcrop.c:327 modules/process/merge.c:744
+#: modules/process/mcrop.c:327 modules/process/merge.c:748
 msgid "Correlating"
 msgstr "Corrélation"
 
@@ -6629,8 +6651,8 @@ msgstr "Rogner aux données réelles"
 #: modules/process/grain_edge.c:285 modules/process/grain_mark.c:376
 #: modules/process/grain_rem_threshold.c:370 modules/process/mark_with.c:355
 #: modules/process/polydistort.c:336 modules/process/scars.c:574
-#: modules/process/synth.h:483 modules/volume/volume_extract.c:436
-#: modules/volume/volume_extract.c:522
+#: modules/process/synth.h:483 modules/volume/volume_extract.c:424
+#: modules/volume/volume_extract.c:504
 msgid "I_nstant updates"
 msgstr "Mise à jour instantanée"
 
@@ -6723,71 +6745,75 @@ msgstr "S'accrocher aux plans"
 msgid "Delaunay"
 msgstr "Delaunay"
 
-#: modules/process/calibrate.c:151
+#: modules/process/calibrate.c:181
 msgid "Recalibrates scan lateral dimensions or value range."
 msgstr "Recalibre les dimensions latérales ou la valeur d'échelle."
 
-#: modules/process/calibrate.c:165
+#: modules/process/calibrate.c:195
 msgid "/_Basic Operations/_Dimensions and Units..."
 msgstr "/Opérations _basiques/_Dimensions et unités..."
 
-#: modules/process/calibrate.c:169 modules/volume/volume_calibrate.c:193
+#: modules/process/calibrate.c:199 modules/volume/volume_calibrate.c:193
 msgid "Change physical dimensions, units or value scale"
 msgstr "Modifie les dimensions latérales, les unités ou l'échelle."
 
-#: modules/process/calibrate.c:313 modules/volume/volume_calibrate.c:355
+#: modules/process/calibrate.c:350 modules/volume/volume_calibrate.c:355
 msgid "Recalibrated Data"
 msgstr "Données recalibrées"
 
-#: modules/process/calibrate.c:335
+#: modules/process/calibrate.c:377
 msgid "Dimensions and Units"
 msgstr "Dimensions et unités"
 
-#: modules/process/calibrate.c:354 modules/volume/volume_calibrate.c:387
+#: modules/process/calibrate.c:397 modules/volume/volume_calibrate.c:387
 msgid "New Real Dimensions"
 msgstr "Nouvelles dimensions réelles"
 
-#: modules/process/calibrate.c:359 modules/volume/volume_calibrate.c:392
+#: modules/process/calibrate.c:403
+msgid "_Match pixel size:"
+msgstr "Faire correspondre la taille des pixels :"
+
+#: modules/process/calibrate.c:428 modules/volume/volume_calibrate.c:392
 msgid "_X range:"
 msgstr "Largeur _X :"
 
-#: modules/process/calibrate.c:386 modules/volume/volume_calibrate.c:419
+#: modules/process/calibrate.c:457 modules/volume/volume_calibrate.c:419
 msgid "_Y range:"
 msgstr "Hauteur _Y :"
 
-#: modules/process/calibrate.c:400
+#: modules/process/calibrate.c:473
 msgid "_Square samples"
 msgstr "Échantillons carrés"
 
-#: modules/process/calibrate.c:435 modules/volume/volume_calibrate.c:519
+#: modules/process/calibrate.c:508 modules/volume/volume_calibrate.c:519
 msgid "Value Range"
 msgstr "Plage de valeurs"
 
-#: modules/process/calibrate.c:440 modules/volume/volume_calibrate.c:446
+#: modules/process/calibrate.c:513 modules/volume/volume_calibrate.c:446
 msgid "_Z range:"
 msgstr "Plage _Z : "
 
-#: modules/process/calibrate.c:469
+#: modules/process/calibrate.c:542
 msgid "Z shi_ft:"
 msgstr "Décalage Z :"
 
-#: modules/process/calibrate.c:484 modules/volume/volume_calibrate.c:568
+#: modules/process/calibrate.c:557 modules/volume/volume_calibrate.c:568
 msgid "Calibration Coefficients"
 msgstr "Coefficients de calibration"
 
-#: modules/process/calibrate.c:491 modules/volume/volume_calibrate.c:575
+#: modules/process/calibrate.c:564 modules/volume/volume_calibrate.c:575
 msgid "_X calibration factor:"
 msgstr "Facteur de calibration _X :"
 
-#: modules/process/calibrate.c:499 modules/volume/volume_calibrate.c:583
+#: modules/process/calibrate.c:574 modules/volume/volume_calibrate.c:583
 msgid "_Y calibration factor:"
 msgstr "Facteur de calibration _Y :"
 
-#: modules/process/calibrate.c:507 modules/volume/volume_calibrate.c:591
+#: modules/process/calibrate.c:584 modules/volume/volume_calibrate.c:591
 msgid "_Z calibration factor:"
 msgstr "Facteur de calibration _Z :"
 
-#: modules/process/calibrate.c:520 modules/process/extend.c:296
+#: modules/process/calibrate.c:597 modules/process/extend.c:296
 #: modules/tools/crop.c:221
 msgid "Create new channel"
 msgstr "Créer un nouveau canal"
@@ -9417,7 +9443,7 @@ msgstr "_Aligner le second opérande :"
 msgid "_Boundary treatment:"
 msgstr "Traitement des _bords :"
 
-#: modules/process/merge.c:549 modules/process/merge.c:625
+#: modules/process/merge.c:549 modules/process/merge.c:629
 msgid "Merged images"
 msgstr "Images fusionnées"
 
@@ -10372,57 +10398,88 @@ msgstr "_Y :"
 msgid "Angles"
 msgstr "Angles"
 
-#: modules/process/tip_blind.c:129
+#: modules/process/tip_blind.c:179
 msgid "Blind estimation of SPM tip using Villarubia's algorithm."
 msgstr "Estimation à l'aveugle d'une sonde SPM avec l'algorithme Villarubia."
 
-#: modules/process/tip_blind.c:143
+#: modules/process/tip_blind.c:193
 msgid "/_Tip/_Blind Estimation..."
 msgstr "/Sonde/Estimation à l'aveugle..."
 
-#: modules/process/tip_blind.c:147
+#: modules/process/tip_blind.c:197
 msgid "Blind tip estimation"
 msgstr "Estimation à l'aveugle de la sonde"
 
-#: modules/process/tip_blind.c:183
+#: modules/process/tip_blind.c:236
 msgid "Blind Tip Estimation"
 msgstr "Estimation à l'aveugle de la sonde"
 
-#: modules/process/tip_blind.c:184
+#: modules/process/tip_blind.c:237
 msgid "Run _Partial"
 msgstr "Estimation _partielle"
 
-#: modules/process/tip_blind.c:185
+#: modules/process/tip_blind.c:238
 msgid "Run _Full"
 msgstr "Estimation complète"
 
-#: modules/process/tip_blind.c:186
+#: modules/process/tip_blind.c:239
 msgid "_Reset Tip"
 msgstr "Initialise_r la sonde"
 
-#: modules/process/tip_blind.c:252
+#: modules/process/tip_blind.c:324
 msgid "Related _data:"
 msgstr "_Données reliées :"
 
-#: modules/process/tip_blind.c:257
+#: modules/process/tip_blind.c:329
 msgid "Estimated Tip Size"
 msgstr "Taille estimée de la sonde"
 
-#: modules/process/tip_blind.c:278
+#: modules/process/tip_blind.c:350
 msgid "_Same resolution"
 msgstr "Même ré_solution"
 
-#: modules/process/tip_blind.c:293
+#: modules/process/tip_blind.c:369
 msgid "Noise suppression t_hreshold:"
 msgstr "Seuil de suppression du bruit : "
 
-#: modules/process/tip_blind.c:313
+#: modules/process/tip_blind.c:389
 msgid "Use _boundaries"
 msgstr "Utiliser les bords"
 
-#: modules/process/tip_blind.c:622
+#: modules/process/tip_blind.c:399
+msgid "Stripes"
+msgstr "Bandes"
+
+#: modules/process/tip_blind.c:405
+msgid "_Split to stripes:"
+msgstr "_Séparer en bandes :"
+
+#: modules/process/tip_blind.c:419
+#, fuzzy
+msgid "_Preview stripe:"
+msgstr "Type de prévisualisation :"
+
+#: modules/process/tip_blind.c:426
+msgid "Plot size _graph"
+msgstr "Afficher le graphe de la taille"
+
+#: modules/process/tip_blind.c:436
+msgid "Create tip i_mages"
+msgstr "Créer des i_mages de la sonde"
+
+#. TRANSLATORS: Prefix for the progressbar message.
+#: modules/process/tip_blind.c:809
+#, c-format
+msgid "Stripe %u: "
+msgstr "Bande %u :"
+
+#: modules/process/tip_blind.c:916 modules/process/tip_blind.c:939
 msgid "Estimated tip"
 msgstr "Sonde estimée"
+
+#: modules/process/tip_blind.c:1198 modules/process/tip_blind.c:1207
+msgid "Tip radius evolution"
+msgstr "Évolution du rayon de la sonde"
 
 #: modules/process/tip_model.c:112
 msgid "Models SPM tip."
@@ -11741,167 +11798,167 @@ msgstr "/Afficher et _extraire..."
 msgid "Show and/or extract a section of volume data"
 msgstr "Afficher et/ou extraire une section de données volumiques"
 
-#: modules/volume/volume_extract.c:276
+#: modules/volume/volume_extract.c:271
 msgid "X cross-section"
 msgstr "Section X"
 
-#: modules/volume/volume_extract.c:277
+#: modules/volume/volume_extract.c:272
 msgid "Y cross-section"
 msgstr "Section Y"
 
-#: modules/volume/volume_extract.c:278
+#: modules/volume/volume_extract.c:273
 msgid "Z cross-section"
 msgstr "Section Z"
 
-#: modules/volume/volume_extract.c:279 modules/volume/volume_extract.c:720
+#: modules/volume/volume_extract.c:274 modules/volume/volume_extract.c:689
 msgid "X direction sum"
 msgstr "Somme selon X"
 
-#: modules/volume/volume_extract.c:280 modules/volume/volume_extract.c:722
+#: modules/volume/volume_extract.c:275 modules/volume/volume_extract.c:691
 msgid "Y direction sum"
 msgstr "Somme selon Y"
 
-#: modules/volume/volume_extract.c:281 modules/volume/volume_extract.c:724
+#: modules/volume/volume_extract.c:276 modules/volume/volume_extract.c:693
 msgid "Z direction sum"
 msgstr "Somme selon Z"
 
-#: modules/volume/volume_extract.c:284
+#: modules/volume/volume_extract.c:279
 msgid "X direction"
 msgstr "Direction X"
 
-#: modules/volume/volume_extract.c:285
+#: modules/volume/volume_extract.c:280
 msgid "Y direction"
 msgstr "Direction Y"
 
-#: modules/volume/volume_extract.c:286
+#: modules/volume/volume_extract.c:281
 msgid "Z direction"
 msgstr "Direction Z"
 
-#: modules/volume/volume_extract.c:329
+#: modules/volume/volume_extract.c:323
 msgid "Volume data"
 msgstr "Données volumiques"
 
-#: modules/volume/volume_extract.c:331
+#: modules/volume/volume_extract.c:325
 msgid "_Load"
 msgstr "Charger"
 
-#: modules/volume/volume_extract.c:343
+#: modules/volume/volume_extract.c:337
 msgid "_Extract projection"
 msgstr "_Extraire la projection"
 
-#: modules/volume/volume_extract.c:362
+#: modules/volume/volume_extract.c:354
 msgid "Projections"
 msgstr "Intersections"
 
-#: modules/volume/volume_extract.c:400
+#: modules/volume/volume_extract.c:390
 msgid "X position"
 msgstr "Position X"
 
-#: modules/volume/volume_extract.c:407
+#: modules/volume/volume_extract.c:397
 msgid "Y position"
 msgstr "Position Y"
 
-#: modules/volume/volume_extract.c:414
+#: modules/volume/volume_extract.c:404
 msgid "Z position"
 msgstr "Position Z"
 
-#: modules/volume/volume_extract.c:420
+#: modules/volume/volume_extract.c:409
 msgid "Shown cut direction:"
 msgstr "Direction de coupe affichée :"
 
-#: modules/volume/volume_extract.c:430 modules/volume/volume_extract.c:516
+#: modules/volume/volume_extract.c:419 modules/volume/volume_extract.c:499
 msgid "Show mode:"
 msgstr "Mode d'affichage : "
 
-#: modules/volume/volume_extract.c:506
+#: modules/volume/volume_extract.c:489
 msgid "Graph cut direction:"
 msgstr "Direction de coupe du graphe :"
 
-#: modules/volume/volume_extract.c:544
+#: modules/volume/volume_extract.c:524
 msgid "3D view"
 msgstr "Vue 3D"
 
-#: modules/volume/volume_extract.c:572
+#: modules/volume/volume_extract.c:549
 msgid "Zoom"
 msgstr "Zoom"
 
-#: modules/volume/volume_extract.c:580
+#: modules/volume/volume_extract.c:557
 msgid "Wireframe threshold"
 msgstr "Seuil du modèle filaire"
 
-#: modules/volume/volume_extract.c:588
+#: modules/volume/volume_extract.c:565
 msgid "Z scale"
 msgstr "Échelle Z"
 
-#: modules/volume/volume_extract.c:597
+#: modules/volume/volume_extract.c:573
 msgid "Opacity scale"
 msgstr "Opacité"
 
-#: modules/volume/volume_extract.c:605
+#: modules/volume/volume_extract.c:579
 msgid "apply perspective"
 msgstr "Appliquer la perspective"
 
-#: modules/volume/volume_extract.c:615
+#: modules/volume/volume_extract.c:588
 msgid "instant 3D render"
 msgstr "Rendu 3D instantané"
 
-#: modules/volume/volume_extract.c:626
+#: modules/volume/volume_extract.c:597
 msgid "X view"
 msgstr "Vue X"
 
-#: modules/volume/volume_extract.c:632
+#: modules/volume/volume_extract.c:603
 msgid "Y view"
 msgstr "Vue Y"
 
-#: modules/volume/volume_extract.c:638
+#: modules/volume/volume_extract.c:609
 msgid "Z view"
 msgstr "Vue Z"
 
-#: modules/volume/volume_extract.c:711
+#: modules/volume/volume_extract.c:680
 #, c-format
 msgid "X cross-section at x: %d"
 msgstr "Section X pour x : %d"
 
-#: modules/volume/volume_extract.c:714
+#: modules/volume/volume_extract.c:683
 #, c-format
 msgid "Y cross-section at y: %d"
 msgstr "Section Y pour y : %d"
 
-#: modules/volume/volume_extract.c:717
+#: modules/volume/volume_extract.c:686
 #, c-format
 msgid "Z cross-section at z: %d"
 msgstr "Section Z pour z : %d"
 
-#: modules/volume/volume_extract.c:762
+#: modules/volume/volume_extract.c:728
 #, c-format
 msgid "X graph at y: %d z: %d"
 msgstr "Graphe X pour y : %d z : %d"
 
-#: modules/volume/volume_extract.c:765
+#: modules/volume/volume_extract.c:731
 #, c-format
 msgid "Y graph at x: %d z: %d"
 msgstr "Graphe Y pour x : %d z : %d"
 
-#: modules/volume/volume_extract.c:768
+#: modules/volume/volume_extract.c:734
 #, c-format
 msgid "Z graph at x: %d y: %d"
 msgstr "Graphe Z pour x : %d y : %d"
 
-#: modules/volume/volume_extract.c:773
+#: modules/volume/volume_extract.c:739
 #, fuzzy
 msgid "w"
 msgstr "w"
 
-#: modules/volume/volume_extract.c:779
+#: modules/volume/volume_extract.c:745
 #, fuzzy
 msgid "Brick graph"
 msgstr "Graphe d'un cube de données"
 
-#: modules/volume/volume_extract.c:1055
+#: modules/volume/volume_extract.c:1017
 msgid "Load volume data"
 msgstr "Charger des données volumiques"
 
-#: modules/volume/volume_extract.c:1915
+#: modules/volume/volume_extract.c:1872
 msgid "Building wireframe model..."
 msgstr "Construction du modèle filaire..."
 
