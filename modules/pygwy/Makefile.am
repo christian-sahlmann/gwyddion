@@ -5,6 +5,7 @@ pygwyutildir = $(pkgdatadir)/pygwy
 
 PYGWY_H_FILES = \
 	$(top_srcdir)/libprocess/arithmetic.h \
+	$(top_srcdir)/libprocess/brick.h \
 	$(top_srcdir)/libprocess/cdline.h \
 	$(top_srcdir)/libprocess/correct.h \
 	$(top_srcdir)/libprocess/correlation.h \
@@ -82,6 +83,7 @@ PYGWY_H_FILES = \
 	$(top_srcdir)/libgwymodule/gwymodule-process.h \
 	$(top_srcdir)/libgwymodule/gwymodule-tool.h \
 	$(top_srcdir)/libgwymodule/gwymoduletypes.h \
+	$(top_srcdir)/libgwymodule/gwymodule-volume.h \
 	$(top_srcdir)/libgwydgets/gwy3dlabel.h \
 	$(top_srcdir)/libgwydgets/gwy3dsetup.h \
 	$(top_srcdir)/libgwydgets/gwy3dview.h \
@@ -133,22 +135,11 @@ PYGWY_H_FILES = \
 	$(top_srcdir)/libgwydgets/gwystock.h \
 	$(top_srcdir)/libgwydgets/gwyvectorlayer.h \
 	$(top_srcdir)/libgwydgets/gwyvruler.h \
-   wrap_calls.h
+	wrap_calls.h
 
 #	$(top_srcdir)/app/gwytool.h
 #	$(top_srcdir)/libgwyddion/gwydebugobjects.h
 #	$(top_srcdir)/libdraw/gwydrawenums.h
-
-#	$(top_srcdir)/libgwymodule/gwymodule-file.h
-#	$(top_srcdir)/libgwymodule/gwymoduleenums.h
-
-#	$(top_srcdir)/libgwyddion/gwysiunit.h
-#	$(top_srcdir)/libgwyddion/gwyenum.h
-#	$(top_srcdir)/libgwyddion/gwyresource.h
-#	$(top_srcdir)/libgwyddion/gwycontainer.h
-#	$(top_srcdir)/app/data-browser.h
-#	$(top_srcdir)/app/undo.h
-
 
 disabled_sources =
 
