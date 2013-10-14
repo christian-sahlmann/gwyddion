@@ -28,7 +28,6 @@
 #include "config.h"
 #include <stdlib.h>
 #include <libgwyddion/gwymath.h>
-#include <libprocess/stats.h>
 #include <app/gwymoduleutils-file.h>
 #include <app/data-browser.h>
 #include "err.h"
@@ -125,6 +124,7 @@ zemax_load(const gchar *filename,
     gsize size = 0;
     GString *str;
     guint len, i, k;
+    gboolean havemask = FALSE;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -174,13 +174,15 @@ zemax_load(const gchar *filename,
             }
             line = end;
         }
+        if (fields[4]->data[k]) {
+            for (i = 0; i < G_N_ELEMENTS(fields)-1; i++)
+                fields[i]->data[k] = 0.0;
+            havemask = TRUE;
+        }
     }
 
     gwy_data_field_multiply(fields[0], q);
     gwy_data_field_multiply(fields[3], 1.0/q);
-
-    if (!gwy_data_field_get_avg(fields[4]))
-        gwy_object_unref(fields[4]);
 
     container = gwy_container_new();
     str = g_string_new(NULL);
@@ -193,7 +195,7 @@ zemax_load(const gchar *filename,
         g_string_append(str, "/title");
         gwy_container_set_string_by_name(container, str->str,
                                          g_strdup(titles[i]));
-        if (fields[4]) {
+        if (havemask) {
             GwyDataField *mfield = gwy_data_field_duplicate(fields[4]);
             gwy_container_set_object(container, gwy_app_get_mask_key_for_id(i),
                                      mfield);
