@@ -28,6 +28,7 @@
 #include "config.h"
 #include <stdlib.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/stats.h>
 #include <app/gwymoduleutils-file.h>
 #include <app/data-browser.h>
 #include "err.h"
@@ -62,13 +63,14 @@ static guint         zemax_read_header(const gchar *header,
                                        guint len,
                                        ZemaxFile *zmxfile,
                                        GError **error);
+static gboolean      is_empty         (GwyDataField *field);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     module_register,
     N_("Imports Zemax grid sag data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "1.0",
     "David Nečas (Yeti)",
     "2013",
 };
@@ -116,14 +118,14 @@ zemax_load(const gchar *filename,
     };
 
     ZemaxFile zmxfile;
-    GwyContainer *container = NULL;
+    GwyContainer *container = NULL, *meta;
     GwyDataField *fields[5];
     gchar *p, *line, *end, *buffer = NULL;
     GError *err = NULL;
     gdouble q = 1.0;
     gsize size = 0;
     GString *str;
-    guint len, i, k;
+    guint len, i, k, nchannels;
     gboolean havemask = FALSE;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
@@ -155,7 +157,10 @@ zemax_load(const gchar *filename,
     }
 
     for (k = 0; k < zmxfile.xres*zmxfile.yres; k++) {
-        line = gwy_str_next_line(&p);
+        do {
+            line = gwy_str_next_line(&p);
+        } while (line && line[0] == '!');
+
         if (!line) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
@@ -166,28 +171,40 @@ zemax_load(const gchar *filename,
         for (i = 0; i < G_N_ELEMENTS(fields); i++) {
             fields[i]->data[k] = g_ascii_strtod(line, &end);
             if (end == line) {
-                g_set_error(error, GWY_MODULE_FILE_ERROR,
-                            GWY_MODULE_FILE_ERROR_DATA,
-                            _("Data line %u does not contain five items."),
-                            k+1);
-                goto fail;
+                if (i < 4) {
+                    g_set_error(error, GWY_MODULE_FILE_ERROR,
+                                GWY_MODULE_FILE_ERROR_DATA,
+                                _("Data line %u does not contain four items."),
+                                k+1);
+                    goto fail;
+                }
+                fields[i]->data[k] = 0.0;
             }
             line = end;
         }
-        if (fields[4]->data[k]) {
-            for (i = 0; i < G_N_ELEMENTS(fields)-1; i++)
-                fields[i]->data[k] = 0.0;
+        if (fields[4]->data[k])
             havemask = TRUE;
-        }
     }
 
     gwy_data_field_multiply(fields[0], q);
     gwy_data_field_multiply(fields[3], 1.0/q);
 
+    nchannels = G_N_ELEMENTS(titles);
+    if (is_empty(fields[1]) && is_empty(fields[2]) && is_empty(fields[3]))
+        nchannels = 1;
+
+    meta = gwy_container_new();
+    gwy_container_set_string_by_name(meta, "Decenter X",
+                                     g_strdup_printf("%g m", q*zmxfile.xoff));
+    gwy_container_set_string_by_name(meta, "Decenter Y",
+                                     g_strdup_printf("%g m", q*zmxfile.yoff));
+
     container = gwy_container_new();
     str = g_string_new(NULL);
-    for (i = 0; i < G_N_ELEMENTS(titles); i++) {
+    for (i = 0; i < nchannels; i++) {
         GQuark quark = gwy_app_get_data_key_for_id(i);
+        GwyContainer *channelmeta;
+
         gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(fields[i]),
                                     units[i]);
         gwy_container_set_object(container, quark, fields[i]);
@@ -201,8 +218,13 @@ zemax_load(const gchar *filename,
                                      mfield);
             g_object_unref(mfield);
         }
+        g_string_printf(str, "/%u/meta", i);
+        channelmeta = gwy_container_duplicate(meta);
+        gwy_container_set_object_by_name(container, str->str, channelmeta);
+        g_object_unref(channelmeta);
     }
     g_string_free(str, TRUE);
+    g_object_unref(meta);
 
 fail:
     g_free(buffer);
@@ -334,6 +356,14 @@ fail:
     g_free(line);
     err_FILE_TYPE(error, "Zemax");
     return 0;
+}
+
+static gboolean
+is_empty(GwyDataField *field)
+{
+    gdouble min, max;
+    gwy_data_field_get_min_max(field, &min, &max);
+    return min == 0.0 && max == 0.0;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
