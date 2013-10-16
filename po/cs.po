@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2013-10-13 03:58+0200\n"
-"PO-Revision-Date: 2013-10-13 23:54+0200\n"
+"POT-Creation-Date: 2013-10-16 03:58+0200\n"
+"PO-Revision-Date: 2013-10-16 17:01+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "Language: cs\n"
@@ -3191,7 +3191,7 @@ msgid "Unsupported sample format"
 msgstr "Nepodporovaný formát vzorku"
 
 #: modules/file/gwytiff.h:836 modules/file/matfile.c:275
-#: modules/file/matfile.c:297 modules/file/psia.c:348 modules/file/zemax.c:162
+#: modules/file/matfile.c:297 modules/file/psia.c:348 modules/file/zemax.c:167
 msgid "File is truncated."
 msgstr "Soubor je uříznutý."
 
@@ -5570,23 +5570,24 @@ msgstr "Načítá SEM obrázky Carl Zeiss."
 msgid "Carl Zeiss SEM scans (.tif)"
 msgstr "Carl Zeiss SEM obrázky (.tif)"
 
-#: modules/file/zemax.c:70
+#: modules/file/zemax.c:71
 msgid "Imports Zemax grid sag data files."
 msgstr "Načítá datové soubory Zemax grid sag."
 
-#: modules/file/zemax.c:83
+#: modules/file/zemax.c:84
 msgid "Zemax grid sag data (.dat)"
 msgstr "Zemax grid sag data (.dat)"
 
-#: modules/file/zemax.c:171
-msgid "Data line %u does not contain five items."
-msgstr "Řádek %u neobsahuje pět položek."
+#: modules/file/zemax.c:177
+msgid "Data line %u does not contain four items."
+msgstr "Řádek %u neobsahuje čtyři položky."
 
-#: modules/file/zemax.c:300
+#: modules/file/zemax.c:324
+#, c-format
 msgid "Unit code %d is invalid or unsupported."
 msgstr "Kód jednotek %d je neplatný či nepodporovaný."
 
-#: modules/file/zemax.c:324
+#: modules/file/zemax.c:348
 msgid "The first line contains too many items."
 msgstr "První řádek obsahuje příliš mnoho položek."
 
