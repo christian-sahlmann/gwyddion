@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2013-10-13 03:58+0200\n"
+"POT-Creation-Date: 2013-10-16 03:58+0200\n"
 "PO-Revision-Date: 2013-10-13 22:10+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: the gwyiddion team <es@li.com>\n"
@@ -3112,7 +3112,7 @@ msgid "Unsupported sample format"
 msgstr ""
 
 #: modules/file/gwytiff.h:836 modules/file/matfile.c:275
-#: modules/file/matfile.c:297 modules/file/psia.c:348 modules/file/zemax.c:162
+#: modules/file/matfile.c:297 modules/file/psia.c:348 modules/file/zemax.c:167
 msgid "File is truncated."
 msgstr ""
 
@@ -5452,26 +5452,26 @@ msgstr "Importa Carl Zeiss SEM imágenes."
 msgid "Carl Zeiss SEM scans (.tif)"
 msgstr ""
 
-#: modules/file/zemax.c:70
+#: modules/file/zemax.c:71
 #, fuzzy
 msgid "Imports Zemax grid sag data files."
 msgstr "Importa Intematix SDF archivos de datos."
 
-#: modules/file/zemax.c:83
+#: modules/file/zemax.c:84
 msgid "Zemax grid sag data (.dat)"
 msgstr ""
 
-#: modules/file/zemax.c:171
+#: modules/file/zemax.c:177
 #, c-format
-msgid "Data line %u does not contain five items."
+msgid "Data line %u does not contain four items."
 msgstr ""
 
-#: modules/file/zemax.c:300
+#: modules/file/zemax.c:324
 #, c-format
 msgid "Unit code %d is invalid or unsupported."
 msgstr ""
 
-#: modules/file/zemax.c:324
+#: modules/file/zemax.c:348
 msgid "The first line contains too many items."
 msgstr ""
 

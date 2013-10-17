@@ -5579,6 +5579,7 @@ msgid "Zemax grid sag data (.dat)"
 msgstr "Zemax grid sag data (.dat)"
 
 #: modules/file/zemax.c:177
+#, c-format
 msgid "Data line %u does not contain four items."
 msgstr "Řádek %u neobsahuje čtyři položky."
 
