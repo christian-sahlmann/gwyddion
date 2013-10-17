@@ -19,14 +19,26 @@
  */
 
 #ifdef __APPLE__
-#include <Carbon/Carbon.h>
+#include <AppKit/AppKit.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <file.h>
-#include "ige-mac-menu.h"
+
+#ifdef GDK_WINDOWING_QUARTZ
+#include <gtkmacintegration/gtkosxapplication.h>
+#endif
+
 #define USE_MAC_INTEGRATION
 #define USED_ON_MAC /* */
 #else
 #define USED_ON_MAC G_GNUC_UNUSED
+#endif
+
+#define USED_ON_MAC_QUARTZ G_GNUC_UNUSED
+#ifdef GDK_WINDOWING_QUARTZ
+#ifdef USE_MAC_INTEGRATION
+#undef USED_ON_MAC_QUARTZ
+#define USED_ON_MAC_QUARTZ /* */
+#endif
 #endif
 
 #include "mac_integration.h"
@@ -34,10 +46,13 @@
 #ifdef USE_MAC_INTEGRATION
 int fileModulesReady = 0;
 GPtrArray *files_array = NULL;
+#ifdef GDK_WINDOWING_QUARTZ
+GtkosxApplication *theApp = NULL;
+#endif
 #endif
 
 void
-gwy_osx_get_menu_from_widget(USED_ON_MAC GtkWidget *container)
+gwy_osx_get_menu_from_widget(USED_ON_MAC_QUARTZ GtkWidget *container)
 {
 #ifdef GDK_WINDOWING_QUARTZ
 #ifdef USE_MAC_INTEGRATION
@@ -76,13 +91,15 @@ gwy_osx_get_menu_from_widget(USED_ON_MAC GtkWidget *container)
     }
     gtk_container_add(GTK_CONTAINER(container), menubar);
     gtk_widget_hide(menubar);
-    ige_mac_menu_set_menu_bar(GTK_MENU_SHELL(menubar));
+    gtkosx_application_set_menu_bar ( theApp, GTK_MENU_SHELL(menubar));
+    gtkosx_application_ready (theApp);
 #endif
 #endif
 }
 
 
 #ifdef USE_MAC_INTEGRATION
+
 static void
 gwy_osx_open_file(gpointer data,
                   G_GNUC_UNUSED gpointer user_data)
@@ -90,46 +107,54 @@ gwy_osx_open_file(gpointer data,
     gwy_app_file_load((const gchar*)data, (const gchar*)data, NULL);
 }
 
-static OSStatus
-appleEventHandler(const AppleEvent * event, AppleEvent * event2, long param)
+@interface GwyOSXEventHandler:NSObject
+@end
+
+@implementation GwyOSXEventHandler
+- (void)handleOpenEvent:(NSAppleEventDescriptor *)event withReplyEvent: (NSAppleEventDescriptor *)replyEvent
 {
-    enum { BUFLEN = 1024 };
-    AEDescList docs;
+    #pragma unused (replyEvent)
+    NSAppleEventDescriptor *descr = [event descriptorForKeyword:keyDirectObject];
+    NSInteger i,count = [descr numberOfItems];
 
-    if (AEGetParamDesc(event, keyDirectObject, typeAEList, &docs) == noErr) {
-        long n = 0;
-        int i;
+    for(i=0;i<count;i++)
+    {
+        NSAppleEventDescriptor *descr1 = i==0?descr:[descr descriptorAtIndex:i];
+        NSString *url = [descr1 stringValue];
+        NSString *filename = [[NSURL URLWithString:url]  path];
 
-        AECountItems(&docs, &n);
-        static UInt8 strBuffer[BUFLEN];
 
-        for (i = 0; i < n; i++) {
-            FSRef ref;
+        char * strBuffer = (char*)[filename UTF8String];
 
-            if (AEGetNthPtr(&docs, i + 1, typeFSRef, 0, 0, &ref, sizeof(ref), 0)
-                != noErr)
-                continue;
-            if (FSRefMakePath(&ref, strBuffer, BUFLEN) == noErr) {
-                if (fileModulesReady)
-                    gwy_osx_open_file(strBuffer, NULL);
-                else {
-                    if (!files_array)
-                        files_array = g_ptr_array_new();
-                    g_ptr_array_add(files_array, g_strdup((gchar*)strBuffer));
-                }
-            }
+        if (fileModulesReady)
+            gwy_osx_open_file(strBuffer, NULL);
+        else {
+            if (!files_array)
+                files_array = g_ptr_array_new();
+            g_ptr_array_add(files_array, g_strdup((gchar*)strBuffer));
         }
     }
-    return noErr;
 }
+
+- (void)handleQuitEvent:(NSAppleEventDescriptor *)event withReplyEvent: (NSAppleEventDescriptor *)replyEvent
+{
+   #pragma unused (event)
+   #pragma unused (replyEvent)
+   gtk_main_quit();
+}
+
+@end
+
+GwyOSXEventHandler *eventHandler;
+
 #endif
 
 void
 gwy_osx_init_handler(USED_ON_MAC int *argc)
 {
 #ifdef USE_MAC_INTEGRATION
+    NSAppleEventManager *appleEventManager;
     CFURLRef res_url_ref = NULL, bundle_url_ref = NULL;
-
     res_url_ref = CFBundleCopyResourcesDirectoryURL(CFBundleGetMainBundle());
     bundle_url_ref = CFBundleCopyBundleURL(CFBundleGetMainBundle());
 
@@ -142,9 +167,24 @@ gwy_osx_init_handler(USED_ON_MAC int *argc)
     if (bundle_url_ref)
         CFRelease(bundle_url_ref);
 
-    AEInstallEventHandler(kCoreEventClass,      // handle open file events
-                          kAEOpenDocuments,
-                          (AEEventHandlerUPP)appleEventHandler, 0, false);
+
+    eventHandler = [[GwyOSXEventHandler alloc] init];
+
+
+    appleEventManager = [NSAppleEventManager sharedAppleEventManager];
+    [appleEventManager setEventHandler:eventHandler
+                           andSelector:@selector(handleOpenEvent:withReplyEvent:)
+                         forEventClass:kCoreEventClass
+                            andEventID:kAEOpenDocuments];
+
+    [appleEventManager setEventHandler:eventHandler
+                           andSelector:@selector(handleQuitEvent:withReplyEvent:)
+                         forEventClass:kCoreEventClass
+                            andEventID:kAEQuitApplication];
+
+#ifdef GDK_WINDOWING_QUARTZ
+    theApp  = g_object_new (GTKOSX_TYPE_APPLICATION, NULL);
+#endif
 #endif
 }
 
@@ -152,9 +192,14 @@ void
 gwy_osx_remove_handler(void)
 {
 #ifdef USE_MAC_INTEGRATION
-    AERemoveEventHandler(kCoreEventClass,
-                         kAEOpenDocuments,
-                         (AEEventHandlerUPP)appleEventHandler, false);
+    NSAppleEventManager *appleEventManager = [NSAppleEventManager sharedAppleEventManager];
+    [appleEventManager removeEventHandlerForEventClass:kCoreEventClass andEventID:kAEOpenDocuments];
+    [appleEventManager removeEventHandlerForEventClass:kCoreEventClass andEventID:kAEQuitApplication];
+    [eventHandler release];
+    eventHandler = nil;
+#ifdef GDK_WINDOWING_QUARTZ
+    g_object_unref (theApp);
+#endif
 #endif
 }
 

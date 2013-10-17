@@ -405,6 +405,7 @@ case "$gdk_target" in
     fi
     ;;
   quartz)
+    LDFLAGS="$LDFLAGS -lgtkmacintegration"
     target_quartz=yes
     pangoft2=
     ;;

@@ -43,7 +43,6 @@ libgwyapp2include_HEADERS = \
 	wait.h
 
 noinst_HEADERS = \
-	ige-mac-menu.h\
 	mac_integration.h\
 	authors.h \
 	gwyappfilechooser.h \
@@ -82,7 +81,8 @@ MKENUM_HFILES = \
 include $(top_srcdir)/utils/mkenum.mk
 
 if OS_DARWIN
-carbon_cflags = -ObjC -framework AppKit -framework Carbon -framework ApplicationServices
+darwin_cflags = -ObjC -g
+darwin_ldflags = -framework AppKit -framework ApplicationServices 
 endif
 
 libgwyapp2.def: $(libgwyapp2_la_OBJECTS)
@@ -93,8 +93,9 @@ libgwyapp2.def: $(libgwyapp2_la_OBJECTS)
 		| awk -F' ' '($$2=="T" && $$3 ~ /^gwy_/){print "     ",$$3}'; \
 	done | sort >>libgwyapp2.def
 
-AM_CFLAGS = $(carbon_cflags) @FFTW3_CFLAGS@ @UNIQUE_CFLAGS@ @COMMON_CFLAGS@
+AM_CFLAGS = $(darwin_cflags) @FFTW3_CFLAGS@ @UNIQUE_CFLAGS@ @COMMON_CFLAGS@
 AM_CPPFLAGS = -I$(top_srcdir)
+AM_LDFLAGS = $(darwin_ldflags)
 
 # In following order do:
 # Any code change     C:   R++: A
@@ -133,7 +134,6 @@ libgwyapp2_la_SOURCES = \
 gwyddion_SOURCES = \
 	about.c \
 	gwyddion.c \
-	ige-mac-menu.c \
 	mac_integration.c \
 	remote.c \
 	remote-unique.c \
