@@ -93,7 +93,7 @@ libgwyapp2.def: $(libgwyapp2_la_OBJECTS)
 		| awk -F' ' '($$2=="T" && $$3 ~ /^gwy_/){print "     ",$$3}'; \
 	done | sort >>libgwyapp2.def
 
-AM_CFLAGS = $(darwin_cflags) @FFTW3_CFLAGS@ @UNIQUE_CFLAGS@ @COMMON_CFLAGS@
+AM_CFLAGS = $(darwin_cflags) @GTK_MAC_CFLAGS@ @FFTW3_CFLAGS@ @UNIQUE_CFLAGS@ @COMMON_CFLAGS@
 AM_CPPFLAGS = -I$(top_srcdir)
 AM_LDFLAGS = $(darwin_ldflags)
 
@@ -144,7 +144,7 @@ gwyddion_SOURCES = \
 	toolbox.c
 
 
-gwyddion_LDADD = @COMMON_LDFLAGS@ @GTKGLEXT_LIBS@ @FFTW3_LIBS@ @UNIQUE_LIBS@ @BASIC_LIBS@ $(LIBXMU) \
+gwyddion_LDADD = @COMMON_LDFLAGS@ @GTK_MAC_LIBS@ @GTKGLEXT_LIBS@ @FFTW3_LIBS@ @UNIQUE_LIBS@ @BASIC_LIBS@ $(LIBXMU) \
 	libgwyapp2.la \
 	$(libgwymodule) \
 	$(libgwydgets) \

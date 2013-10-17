@@ -405,7 +405,9 @@ case "$gdk_target" in
     fi
     ;;
   quartz)
-    LDFLAGS="$LDFLAGS -lgtkmacintegration"
+    PKG_CHECK_MODULES(GTK_MAC, gtk-mac-integration)
+    AC_SUBST(GTK_MAC_LIBS)
+    AC_SUBST(GTK_MAC_CFLAGS)
     target_quartz=yes
     pangoft2=
     ;;
