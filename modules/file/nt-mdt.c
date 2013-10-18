@@ -1236,7 +1236,7 @@ mdt_newspec_data_vars(const guchar *p,
                       G_GNUC_UNUSED GError **error)
 {
     guint bCount;
-    guint i;
+    guint i, j;
     MDTBlock *indexBlock;
     gboolean result = FALSE;
     static const gchar blockIndexFile[] = "index.xml";
@@ -1253,7 +1253,7 @@ mdt_newspec_data_vars(const guchar *p,
     frame->blockCount = bCount;
     frame->blocks = g_new0(MDTBlock, bCount);
 
-    for(i = 0; i < bCount; i++) {
+    for (i = 0; i < bCount; i++) {
        frame->blocks[i].nameLen = gwy_get_guint32_le(&p);
        frame->blocks[i].len = gwy_get_guint32_le(&p);
 
@@ -1261,8 +1261,7 @@ mdt_newspec_data_vars(const guchar *p,
                  frame->blocks[i].nameLen, frame->blocks[i].len);
     }
 
-    for(i = 0; i < bCount; i++)
-    {
+    for (i = 0; i < bCount; i++) {
         frame->blocks[i].name = g_convert((const gchar*)p,
                                           frame->blocks[i].nameLen,
                                           "UTF-8", "UTF-8",
@@ -1271,8 +1270,7 @@ mdt_newspec_data_vars(const guchar *p,
         gwy_debug("block %d %s",i,frame->blocks[i].name);
     }
 
-    for(i = 0; i < bCount; i++)
-    {
+    for (i = 0; i < bCount; i++) {
         frame->blocks[i].data = (gpointer)p;
         p += frame->blocks[i].len;
     }
@@ -1294,8 +1292,7 @@ mdt_newspec_data_vars(const guchar *p,
                                           indexBlock->len, &err)
             || !g_markup_parse_context_end_parse(context, &err))
                 g_clear_error(&err);
-        else
-        {
+        else {
             g_markup_parse_context_free(context);
             context = g_markup_parse_context_new(&parser,
                                                  TREAT_CDATA_AS_TEXT,
@@ -1327,7 +1324,7 @@ mdt_newspec_data_vars(const guchar *p,
                         if(pointInfo->pointBlockIndex != lBLock)
                             offset = 0;
 
-                        lsrc   += offset;
+                        lsrc += offset;
                     }
                     else {
                         lsrc += pointInfo->offset;
@@ -1337,11 +1334,11 @@ mdt_newspec_data_vars(const guchar *p,
                     offset += indCount * 2;
                     lBLock = pointInfo->pointBlockIndex;
                     ldst = pointInfo->rMeasForwInd;
-                    for (i = 0; i < indCount; i++)
+                    for (j = indCount; j--; )
                         *(ldst++) = gwy_get_guint32_le(&lsrc);
 
                     ldst = pointInfo->rMeasBackInd;
-                    for (i = 0; i < indCount; i++)
+                    for (j = indCount; j--;)
                         *(ldst++) = gwy_get_guint32_le(&lsrc);
                 }
                 result = TRUE;
@@ -1350,8 +1347,7 @@ mdt_newspec_data_vars(const guchar *p,
         g_markup_parse_context_free(context);
     }
 
-    if(!frame->rFrameName && (indexBlock = findMDTBlock(blockParamsFile,frame)))
-    {
+    if (!frame->rFrameName && (indexBlock = findMDTBlock(blockParamsFile,frame))) {
         GMarkupParser parser = {
             spec_param_start_element,
             spec_param_end_element,
@@ -1563,10 +1559,10 @@ mdt_mda_vars(const guchar *p,
              G_GNUC_UNUSED guint vars_size,
              G_GNUC_UNUSED GError **error)
 {
-
     guint headSize, NameSize, CommSize, ViewInfoSize, SpecSize;
     G_GNUC_UNUSED guint totLen, SourceInfoSize, VarSize, DataSize, StructLen, CellSize;
     G_GNUC_UNUSED guint64 num;
+    gint i;
     const guchar *recordPointer = p;
     const guchar *structPointer;
 
@@ -1603,19 +1599,19 @@ mdt_mda_vars(const guchar *p,
     else
         frame->title = NULL;
 
-
     if (CommSize && (guint) (frame_size - (p - fstart)) >= CommSize) {
         frame->xmlstuff =
-            g_convert((const gchar *)p, CommSize, "UTF-8", "UTF-16LE", NULL, NULL,
+            g_convert((const gchar *)p, CommSize,
+                      "UTF-8", "UTF-16LE", NULL, NULL,
                       NULL);
         p += CommSize;
     }
     else
         frame->xmlstuff = NULL;
 
-    p += SpecSize + ViewInfoSize + SourceInfoSize;      // skip FrameSpec ViewInfo SourceInfo and vars
+    p += SpecSize + ViewInfoSize + SourceInfoSize; /* skip FrameSpec ViewInfo SourceInfo and vars */
 
-    p += 4;                     // skip total size
+    p += 4; /* skip total size */
     StructLen = gwy_get_guint32_le(&p);
     structPointer = p;
     num = gwy_get_guint64_le(&p);
@@ -1626,8 +1622,6 @@ mdt_mda_vars(const guchar *p,
     p = structPointer + StructLen;
 
     if (frame->nDimensions) {
-        int i;
-
         frame->dimensions = g_new0(MDTMDACalibration, frame->nDimensions);
         for (i = 0; i < frame->nDimensions; i++) {
             mdt_read_mda_calibration(p, &frame->dimensions[i]);
@@ -1639,8 +1633,6 @@ mdt_mda_vars(const guchar *p,
         frame->dimensions = NULL;
 
     if (frame->nMesurands) {
-        int i;
-
         frame->mesurands = g_new0(MDTMDACalibration, frame->nMesurands);
         for (i = 0; i < frame->nMesurands; i++) {
             mdt_read_mda_calibration(p, &frame->mesurands[i]);
@@ -1772,31 +1764,31 @@ mdt_real_load(const guchar *buffer,
                               frame->size, frame->var_size, error))
                 return FALSE;
             frame->frame_data = mdaframe;
-
             break;
 
             case MDT_FRAME_CURVES_NEW:
-                newSpecFrame = g_new0(MDTNewSpecFrame, 1);
-                newSpecFrame->rFrameName = NULL;
+            newSpecFrame = g_new0(MDTNewSpecFrame, 1);
+            newSpecFrame->rFrameName = NULL;
 
-                newSpecFrame->blocks = NULL;
-                newSpecFrame->blockCount = 0;
-                newSpecFrame->pointInfo = NULL;
-                newSpecFrame->pointCount = 0;
-                newSpecFrame->dataInfo = NULL;
-                newSpecFrame->dataCount = 0;
-                newSpecFrame->measInfo = NULL;
-                newSpecFrame->measCount = 0;
-                newSpecFrame->axisInfo = NULL;
-                newSpecFrame->axisCount = 0;
-                newSpecFrame->nameInfo = NULL;
-                newSpecFrame->nameCount = 0;
+            newSpecFrame->blocks = NULL;
+            newSpecFrame->blockCount = 0;
+            newSpecFrame->pointInfo = NULL;
+            newSpecFrame->pointCount = 0;
+            newSpecFrame->dataInfo = NULL;
+            newSpecFrame->dataCount = 0;
+            newSpecFrame->measInfo = NULL;
+            newSpecFrame->measCount = 0;
+            newSpecFrame->axisInfo = NULL;
+            newSpecFrame->axisCount = 0;
+            newSpecFrame->nameInfo = NULL;
+            newSpecFrame->nameCount = 0;
 
-                if (!mdt_newspec_data_vars(p, fstart, newSpecFrame,
-                                           frame->size, frame->var_size, error))
-                    return FALSE;
-                frame->frame_data = newSpecFrame;
-                break;
+            if (!mdt_newspec_data_vars(p, fstart, newSpecFrame,
+                                       frame->size, frame->var_size,
+                                       error))
+                return FALSE;
+            frame->frame_data = newSpecFrame;
+            break;
 
             case MDT_FRAME_PALETTE:
             gwy_debug("Cannot read palette frame");
@@ -1997,7 +1989,7 @@ extract_new_curve (MDTNewSpecFrame *dataframe, guint number)
                     siunitx = gwy_si_unit_new_parse(nameInfoX->rUnit, &power10x);
                     siunity = gwy_si_unit_new_parse(nameInfoY->rUnit, &power10y);
 
-                    dline = gwy_data_line_new(dataInfo->rDataCount, axisInfo->rStopValue - axisInfo->rStartValue, FALSE);
+                    dline = gwy_data_line_new(dataInfo->rDataCount, pow10(power10x)*fabs(axisInfo->rStopValue - axisInfo->rStartValue), FALSE);
 
                     gwy_data_line_set_si_unit_x(dline, siunitx);
                     gwy_data_line_set_si_unit_y(dline, siunity);
@@ -2005,7 +1997,9 @@ extract_new_curve (MDTNewSpecFrame *dataframe, guint number)
                     g_object_unref(siunitx);
                     g_object_unref(siunity);
 
-                    gwy_data_line_set_offset(dline, pow10(power10x)*axisInfo->rStartValue);
+                    gwy_data_line_set_offset(dline, pow10(power10x)*
+                                            (fmin(axisInfo->rStartValue, axisInfo->rStopValue) -
+                                             (measInfo->rAxisOptions[0] & MDT_AXOPT_RELATIVE ? axisInfo->rInitValue : 0) ));
                     ydata = gwy_data_line_get_data(dline);
 
                     if (!(measInfo->rAxisOptions[0] & MDT_AXOPT_INVERTED)) {
@@ -2964,32 +2958,30 @@ static gdouble mdt_str_to_float(const gchar *str)
     return g_ascii_strtod(g_strdelimit((gchar *)str,",", '.'), NULL);
 }
 
-static void           spec_start_element    (G_GNUC_UNUSED GMarkupParseContext *context,
-                                             const gchar *element_name,
-                                             const gchar **attribute_names,
-                                             const gchar **attribute_values,
-                                             gpointer user_data,
-                                             G_GNUC_UNUSED GError **error)
+static void
+spec_start_element (G_GNUC_UNUSED GMarkupParseContext *context,
+                    const gchar *element_name,
+                    const gchar **attribute_names,
+                    const gchar **attribute_values,
+                    gpointer user_data,
+                    G_GNUC_UNUSED GError **error)
 {
     MDTNewSpecFrame *frame = (MDTNewSpecFrame*)user_data;
     const gchar **name_cursor = attribute_names;
     const gchar **value_cursor = attribute_values;
 
-
-    if (gwy_strequal(element_name, "Point"))
-    {
-        if(!frame->pointInfo)
+    if (gwy_strequal(element_name, "Point")) {
+        if (!frame->pointInfo)
             ++(frame->pointCount);
         else
         {
             MDTTNTDAPointInfo  pointInfo = {{0,0,0},NULL,0,0,NULL,NULL,-1,-1};
-            guint           pointIndex = frame->pointCount;
-
+            guint pointIndex = frame->pointCount;
 
             for(;*name_cursor;++name_cursor,++value_cursor)
             {
                 if(gwy_strequal(*name_cursor, "index"))
-                   pointIndex = atoi(*value_cursor);
+                    pointIndex = atoi(*value_cursor);
                 else if(gwy_strequal(*name_cursor, "x"))
                         pointInfo.rCoord[0] = mdt_str_to_float(*value_cursor);
                 else if(gwy_strequal(*name_cursor, "y"))
