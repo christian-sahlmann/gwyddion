@@ -357,18 +357,22 @@ typedef struct {
 } TNTNameInfo;
 
 typedef struct {
-    gint32 rNameInfoInd;
+    gint32  rNameInfoInd;
     gdouble rInitValue;
     gdouble rStartValue;
     gdouble rStopValue;
     gdouble rPointCount;
-    gdouble rDataInfoInd; // parametric data
+    gdouble rDataInfoInd; /* parametric data */
 } TNTDAAxisInfo;
 
-#define DAA_AXIS_COUNT 4
+enum {
+    DAA_AXIS_COUNT = 4
+};
 
-#define axoptInverted 1
-#define axoptRelative 2
+typedef enum {
+	MDT_AXOPT_INVERTED = 1,
+	MDT_AXOPT_RELATIVE = 2
+} MDTAxisOptions;
 
 typedef struct {
     gint32 rNameInfoInd;    // FNameInfo
@@ -377,8 +381,10 @@ typedef struct {
     gint32 rDataInfoInd;
 } TNTDAMeasInfo;
 
-#define dtInt32 0
-#define dtDbl 1
+typedef enum {
+	MDT_DT_INT32 = 0,
+	MDT_DT_DBL   = 1
+} MDTNewSpecDT;
 
 typedef struct {
     gint32 rDataType;
@@ -410,47 +416,40 @@ typedef struct {
 
 typedef struct {
     const gchar *rFrameName;
-
     MDTBlock *blocks;
     guint    blockCount;
-
     TNTDAPointInfo *pointInfo;
     guint           pointCount;
-
     TNTDataInfo    *dataInfo;
     guint           dataCount;
-
     TNTDAMeasInfo  *measInfo;
     guint           measCount;
-
     TNTDAAxisInfo  *axisInfo;
     guint           axisCount;
-
     TNTNameInfo    *nameInfo;
     guint           nameCount;
-
     gboolean       xmlNameFlag;
 } MDTNewSpecFrame;
 
 typedef struct {
-    guint size;     /* h_sz */
-    MDTFrameType type;     /* h_what */
-    gint version;  /* h_ver0, h_ver1 */
+    guint size;        /* h_sz */
+    MDTFrameType type; /* h_what */
+    gint version;      /* h_ver0, h_ver1 */
 
-    gint year;    /* h_yea */
+    gint year;     /* h_yea */
     gint month;    /* h_mon */
-    gint day;    /* h_day */
-    gint hour;    /* h_h */
-    gint min;    /* h_m */
-    gint sec;    /* h_s */
+    gint day;      /* h_day */
+    gint hour;     /* h_h */
+    gint min;      /* h_m */
+    gint sec;      /* h_s */
 
-    gint var_size;    /* h_am, v6 and older only */
+    gint var_size; /* h_am, v6 and older only */
 
     gpointer frame_data;
 } MDTFrame;
 
 typedef struct {
-    guint size;  /* f_sz */
+    guint size;       /* f_sz */
     guint last_frame; /* f_nt */
     MDTFrame *frames;
 } MDTFile;
@@ -517,34 +516,28 @@ static void           parse_text       (GMarkupParseContext *context,
                                         gsize text_len,
                                         gpointer user_data,
                                         GError **error);
+static void           spec_start_element (GMarkupParseContext *context,
+                                          const gchar *element_name,
+                                          const gchar **attribute_names,
+                                          const gchar **attribute_values,
+                                          gpointer user_data,
+                                          GError **error);
+static void           spec_param_start_element (GMarkupParseContext *context,
+                                                const gchar *element_name,
+                                                const gchar **attribute_names,
+                                                const gchar **attribute_values,
+                                                gpointer user_data,
+                                                GError **error);
+static void           spec_param_end_element (GMarkupParseContext *context,
+                                              const gchar *element_name,
+                                              gpointer user_data,
+                                              GError **error);
+static void           spec_param_parse_text (GMarkupParseContext *context,
+                                             const gchar *value,
+                                             gsize value_len,
+                                             gpointer user_data,
+                                             GError **error);
 
-static void           spec_start_element    (GMarkupParseContext *context,
-                                        const gchar *element_name,
-                                        const gchar **attribute_names,
-                                        const gchar **attribute_values,
-                                        gpointer user_data,
-                                        GError **error);
-
-static void           spec_param_start_element(GMarkupParseContext *context,
-                                               const gchar *element_name,
-                                               const gchar **attribute_names,
-                                               const gchar **attribute_values,
-                                               gpointer user_data,
-                                               GError **error);
-
-static void
-spec_param_end_element(GMarkupParseContext *context,
-                       const gchar *element_name,
-                       gpointer user_data,
-                       GError **error);
-
-
-static void
-spec_param_parse_text( GMarkupParseContext *context,
-                      const gchar *value,
-                      gsize value_len,
-                      gpointer user_data,
-                      GError **error);
 #ifdef DEBUG
 static const GwyEnum frame_types[] = {
     { "Scanned",      MDT_FRAME_SCANNED },
@@ -1305,7 +1298,6 @@ mdt_newspec_data_vars(const guchar *p,
                 TNTDAPointInfo *pointInfo = frame->pointInfo;
                 gint  lBLock=-1;
                 guint offset=0;
-                guint j;
 
                 for (i=0;i<frame->pointCount; i++, pointInfo++) {
 
@@ -1334,11 +1326,11 @@ mdt_newspec_data_vars(const guchar *p,
                     lBLock = pointInfo->pointBlockIndex;
 
                     ldst = pointInfo->rMeasForwInd;
-                    for (j=0;i<indCount; i++)
+                    for (i=0;i<indCount; i++)
                         *(ldst++) = gwy_get_guint32_le(&lsrc);
 
                     ldst = pointInfo->rMeasBackInd;
-                    for (j=0;i<indCount; i++)
+                    for (i=0;i<indCount; i++)
                         *(ldst++) = gwy_get_guint32_le(&lsrc);
                 }
               result = TRUE;
@@ -2004,7 +1996,7 @@ static GwySpectra* extract_new_curve (MDTNewSpecFrame *dataframe, guint number)
                   gwy_data_line_set_offset(dline, pow10(power10x)*axisInfo->rStartValue);
                   ydata = gwy_data_line_get_data(dline);
 
-                  if (!(measInfo->rAxisOptions[0] & axoptInverted)) {
+                  if (!(measInfo->rAxisOptions[0] & MDT_AXOPT_INVERTED)) {
                       cStart = 0;
                       cEnd   = dataInfo->rDataCount;
                       cStep  = 1;
@@ -2015,8 +2007,7 @@ static GwySpectra* extract_new_curve (MDTNewSpecFrame *dataframe, guint number)
                       cStep  = -1;
                   }
 
-                  if(dataInfo->rDataType==dtDbl)
-                  {
+                  if (dataInfo->rDataType == MDT_DT_DBL) {
                       gdouble yscale = pow10(power10y);
                       gdouble  *p = dataInfo->rDataPtr;
                       for (i = cStart; i != cEnd; i+=cStep)
@@ -3022,7 +3013,7 @@ static void           spec_start_element    (G_GNUC_UNUSED GMarkupParseContext *
             gint           blockIndex = -1;
             gint           blockOffset = 0;
             guint          dataSize;
-            dataInfo.rDataType = dtInt32;
+            dataInfo.rDataType = MDT_DT_INT32;
 
             for(;*name_cursor;++name_cursor,++value_cursor)
             {
@@ -3035,7 +3026,7 @@ static void           spec_start_element    (G_GNUC_UNUSED GMarkupParseContext *
                 else if(gwy_strequal(*name_cursor, "count"))
                     dataInfo.rDataCount = atoi(*value_cursor);
                 else if(gwy_strequal(*name_cursor, "type") && gwy_strequal(*value_cursor, "float64"))
-                    dataInfo.rDataType = dtDbl;
+                    dataInfo.rDataType = MDT_DT_DBL;
 
 
             }
@@ -3043,7 +3034,7 @@ static void           spec_start_element    (G_GNUC_UNUSED GMarkupParseContext *
             if(dataIndex < frame->dataCount && blockIndex>=0)
             {
                 const guchar *p = frame->blocks[blockIndex].data;
-                gboolean isDouble = dataInfo.rDataType == dtDbl;
+                gboolean isDouble = (dataInfo.rDataType == MDT_DT_DBL);
                 guint i;
 
                 dataSize = isDouble? sizeof(gdouble): sizeof(gint32);
