@@ -347,14 +347,14 @@ typedef struct {
     gchar *xmlstuff;
 } MDTMDAFrame;
 
-// New spectroscopy structures
+/* New spectroscopy data structures */
 
 typedef struct {
     const guchar *rName;
     const guchar *rUnit;
     gdouble rScale;
     gdouble rBias;
-} TNTNameInfo;
+} MDTTNTNameInfo;
 
 typedef struct {
     gint32  rNameInfoInd;
@@ -363,72 +363,69 @@ typedef struct {
     gdouble rStopValue;
     gdouble rPointCount;
     gdouble rDataInfoInd; /* parametric data */
-} TNTDAAxisInfo;
+} MDTTNTDAAxisInfo;
 
 enum {
     DAA_AXIS_COUNT = 4
 };
 
 typedef enum {
-	MDT_AXOPT_INVERTED = 1,
-	MDT_AXOPT_RELATIVE = 2
+    MDT_AXOPT_INVERTED = 1,
+    MDT_AXOPT_RELATIVE = 2
 } MDTAxisOptions;
 
 typedef struct {
-    gint32 rNameInfoInd;    // FNameInfo
-    gint32 rAxisInfoInd[DAA_AXIS_COUNT];    // [rAxisCount] - FAxisInfo
-    gint32 rAxisOptions[DAA_AXIS_COUNT];    // Invert from, to
+    gint32 rNameInfoInd;                 /* FNameInfo */
+    gint32 rAxisInfoInd[DAA_AXIS_COUNT]; /* [rAxisCount] - FAxisInfo */
+    gint32 rAxisOptions[DAA_AXIS_COUNT]; /* Invert from, to */
     gint32 rDataInfoInd;
-} TNTDAMeasInfo;
+} MDTTNTDAMeasInfo;
 
 typedef enum {
-	MDT_DT_INT32 = 0,
-	MDT_DT_DBL   = 1
+    MDT_DT_INT32 = 0,
+    MDT_DT_DBL   = 1
 } MDTNewSpecDT;
 
 typedef struct {
     gint32 rDataType;
     gint32 rDataCount;
     gpointer rDataPtr;
-} TNTDataInfo;
+} MDTTNTDataInfo;
 
 typedef struct {
     gdouble rCoord[DAA_AXIS_COUNT];
     const guchar *rUnit;
-    //  Meas data indexing
+    /* Meas data indexing */
     gint32 rMeasCount;
     gint32 rExecCount;
-    gint32 *rMeasForwInd;  //  [MeasCnt * ExecCount] - Index in FMeasDataInfo
-    gint32 *rMeasBackInd;  //  [MeasCnt * ExecCount]
+    gint32 *rMeasForwInd; /* [MeasCnt * ExecCount] - Index in FMeasDataInfo */
+    gint32 *rMeasBackInd; /* [MeasCnt * ExecCount] */
     gint32 pointBlockIndex;
     gint32 offset;
-} TNTDAPointInfo;
-
-static const gchar blockIndexFile[] = "index.xml";
-static const gchar blockParamsFile[] ="__xmlparams.xml";
+} MDTTNTDAPointInfo;
 
 typedef struct {
     const gchar *name;
-    gpointer data;
-    guint len;
-    guint nameLen;
+    gpointer     data;
+    guint        len;
+    guint        nameLen;
 } MDTBlock;
 
 typedef struct {
-    const gchar *rFrameName;
-    MDTBlock *blocks;
-    guint    blockCount;
-    TNTDAPointInfo *pointInfo;
-    guint           pointCount;
-    TNTDataInfo    *dataInfo;
-    guint           dataCount;
-    TNTDAMeasInfo  *measInfo;
-    guint           measCount;
-    TNTDAAxisInfo  *axisInfo;
-    guint           axisCount;
-    TNTNameInfo    *nameInfo;
-    guint           nameCount;
-    gboolean       xmlNameFlag;
+    const gchar       *rFrameName;
+    MDTBlock          *blocks;
+    guint              blockCount;
+    MDTTNTDAPointInfo *pointInfo;
+    guint              pointCount;
+    MDTTNTDataInfo    *dataInfo;
+    guint              dataCount;
+    MDTTNTDAMeasInfo  *measInfo;
+    guint              measCount;
+    MDTTNTDAAxisInfo  *axisInfo;
+    guint              axisCount;
+    MDTTNTNameInfo    *nameInfo;
+    guint              nameCount;
+    gboolean           xmlNameFlag;
 } MDTNewSpecFrame;
 
 typedef struct {
@@ -1211,9 +1208,11 @@ static gint findMDTBlockIndex(const guchar *name, MDTNewSpecFrame *frame)
 {
     gint i;
     MDTBlock *block=frame->blocks;
-    for(i=0; i < frame->blockCount ; ++i, ++block)
-        if(gwy_strequal(block->name,name))
+
+    for(i = 0; i < frame->blockCount; ++i, ++block)
+        if(gwy_strequal(block->name, name))
             return i;
+
     return -1;
 }
 
@@ -1221,9 +1220,11 @@ static MDTBlock* findMDTBlock(const guchar *name, MDTNewSpecFrame *frame)
 {
     guint i;
     MDTBlock *block=frame->blocks;
-    for(i=frame->blockCount; i--; ++block)
-        if(gwy_strequal(block->name,name))
+
+    for(i = frame->blockCount; i--; ++block)
+        if(gwy_strequal(block->name, name))
             return block;
+
     return NULL;
 }
 
@@ -1235,38 +1236,49 @@ mdt_newspec_data_vars(const guchar *p,
                       G_GNUC_UNUSED guint vars_size,
                       G_GNUC_UNUSED GError **error)
 {
-    guint bCount = gwy_get_guint32_le(&p);
+    guint bCount;
     guint i;
     MDTBlock *indexBlock;
     gboolean result = FALSE;
+    static const gchar blockIndexFile[] = "index.xml";
+    static const gchar blockParamsFile[] ="__xmlparams.xml";
+    MDTTNTDAPointInfo *pointInfo;
+    gint lBLock = -1;
+    guint offset = 0;
+    guint indCount;
+    gint *ldst;
+    const guchar *lsrc;
 
-    gwy_debug("block count %d" , bCount);
+    bCount = gwy_get_guint32_le(&p);
+    gwy_debug("block count %d", bCount);
     frame->blockCount = bCount;
-    frame->blocks =  g_new0(MDTBlock,bCount);
+    frame->blocks = g_new0(MDTBlock, bCount);
 
-    for(i=0;i<bCount;i++)
-    {
-       frame->blocks[i].nameLen =  gwy_get_guint32_le(&p);
-       frame->blocks[i].len =  gwy_get_guint32_le(&p);
+    for(i = 0; i < bCount; i++) {
+       frame->blocks[i].nameLen = gwy_get_guint32_le(&p);
+       frame->blocks[i].len = gwy_get_guint32_le(&p);
 
-       gwy_debug("block %d name len %d content len %d" , i, frame->blocks[i].nameLen, frame->blocks[i].len);
+       gwy_debug("block %d name len %d content len %d", i,
+                 frame->blocks[i].nameLen, frame->blocks[i].len);
     }
 
-    for(i=0;i<bCount;i++)
+    for(i = 0; i < bCount; i++)
     {
-        frame->blocks[i].name = g_convert((const gchar*)p, frame->blocks[i].nameLen,
-                                 "UTF-8", "UTF-8", NULL, NULL, NULL);
+        frame->blocks[i].name = g_convert((const gchar*)p,
+                                          frame->blocks[i].nameLen,
+                                          "UTF-8", "UTF-8",
+                                          NULL, NULL, NULL);
         p += frame->blocks[i].nameLen;
         gwy_debug("block %d %s",i,frame->blocks[i].name);
     }
 
-    for(i=0;i<bCount;i++)
+    for(i = 0; i < bCount; i++)
     {
         frame->blocks[i].data = (gpointer)p;
         p += frame->blocks[i].len;
     }
 
-    indexBlock = findMDTBlock(blockIndexFile,frame);
+    indexBlock = findMDTBlock(blockIndexFile, frame);
     if (indexBlock) {
         GMarkupParser parser = {
             spec_start_element, NULL, NULL, NULL, NULL
@@ -1274,104 +1286,105 @@ mdt_newspec_data_vars(const guchar *p,
         GMarkupParseContext *context;
         GError *err = NULL;
 
-        context = g_markup_parse_context_new(&parser, TREAT_CDATA_AS_TEXT, frame, NULL);
+        context = g_markup_parse_context_new(&parser,
+                                             TREAT_CDATA_AS_TEXT,
+                                             frame, NULL);
 
-        if (!g_markup_parse_context_parse(context, indexBlock->data, indexBlock->len, &err)
+        if (!g_markup_parse_context_parse(context,
+                                          indexBlock->data,
+                                          indexBlock->len, &err)
             || !g_markup_parse_context_end_parse(context, &err))
                 g_clear_error(&err);
         else
         {
             g_markup_parse_context_free(context);
-            context = g_markup_parse_context_new(&parser, TREAT_CDATA_AS_TEXT, frame, NULL);
+            context = g_markup_parse_context_new(&parser,
+                                                 TREAT_CDATA_AS_TEXT,
+                                                 frame, NULL);
 
-            frame->pointInfo = g_new0(TNTDAPointInfo, frame->pointCount);
-            frame->measInfo = g_new0(TNTDAMeasInfo, frame->measCount);
-            frame->dataInfo = g_new0(TNTDataInfo, frame->dataCount);
-            frame->axisInfo = g_new0(TNTDAAxisInfo, frame->axisCount);
-            frame->nameInfo = g_new0(TNTNameInfo, frame->nameCount);
+            frame->pointInfo = g_new0(MDTTNTDAPointInfo, frame->pointCount);
+            frame->measInfo  = g_new0(MDTTNTDAMeasInfo, frame->measCount);
+            frame->dataInfo  = g_new0(MDTTNTDataInfo, frame->dataCount);
+            frame->axisInfo  = g_new0(MDTTNTDAAxisInfo, frame->axisCount);
+            frame->nameInfo  = g_new0(MDTTNTNameInfo, frame->nameCount);
 
-
-            if (!g_markup_parse_context_parse(context, indexBlock->data, indexBlock->len, &err)
+            if (!g_markup_parse_context_parse(context,
+                                              indexBlock->data,
+                                              indexBlock->len, &err)
                 || !g_markup_parse_context_end_parse(context, &err))
                 g_clear_error(&err);
             else {
-                TNTDAPointInfo *pointInfo = frame->pointInfo;
-                gint  lBLock=-1;
-                guint offset=0;
+                pointInfo = frame->pointInfo;
 
-                for (i=0;i<frame->pointCount; i++, pointInfo++) {
+                for (i = 0; i<frame->pointCount; i++, pointInfo++) {
+                    indCount = pointInfo->rMeasCount * pointInfo->rExecCount;
+                    lsrc = frame->blocks[pointInfo->pointBlockIndex].data;
 
-                    guint indCount = pointInfo->rMeasCount * pointInfo->rExecCount;
-                    gint *ldst;
-                    const guchar *lsrc = frame->blocks[pointInfo->pointBlockIndex].data;
+                    pointInfo->rMeasForwInd = g_new0(gint, indCount);
+                    pointInfo->rMeasBackInd = g_new0(gint, indCount);
 
-                    pointInfo->rMeasForwInd = g_new0(gint,indCount);
-                    pointInfo->rMeasBackInd = g_new0(gint,indCount);
-
-                    if(pointInfo->offset<0)
+                    if(pointInfo->offset < 0)
                     {
                         if(pointInfo->pointBlockIndex != lBLock)
                             offset = 0;
 
                         lsrc   += offset;
-
                     }
                     else {
                         lsrc += pointInfo->offset;
                         offset = pointInfo->offset;
                     }
 
-                    offset += indCount*2;
-
+                    offset += indCount * 2;
                     lBLock = pointInfo->pointBlockIndex;
-
                     ldst = pointInfo->rMeasForwInd;
-                    for (i=0;i<indCount; i++)
+                    for (i = 0; i < indCount; i++)
                         *(ldst++) = gwy_get_guint32_le(&lsrc);
 
                     ldst = pointInfo->rMeasBackInd;
-                    for (i=0;i<indCount; i++)
+                    for (i = 0; i < indCount; i++)
                         *(ldst++) = gwy_get_guint32_le(&lsrc);
                 }
-              result = TRUE;
+				result = TRUE;
             }
-
         }
         g_markup_parse_context_free(context);
-
     }
 
     if(!frame->rFrameName && (indexBlock = findMDTBlock(blockParamsFile,frame)))
     {
         GMarkupParser parser = {
-            spec_param_start_element, spec_param_end_element, spec_param_parse_text, NULL, NULL
+            spec_param_start_element,
+            spec_param_end_element,
+            spec_param_parse_text, NULL, NULL
         };
 
         GMarkupParseContext *context;
         GError *err = NULL;
         guchar *xmlstuff;
         gchar *ind;
-        context = g_markup_parse_context_new(&parser, TREAT_CDATA_AS_TEXT, frame, NULL);
-
-        xmlstuff = g_convert(indexBlock->data, indexBlock->len, "UTF-8", "UTF-16LE",
+        context = g_markup_parse_context_new(&parser,
+                                             TREAT_CDATA_AS_TEXT,
+                                             frame, NULL);
+        xmlstuff = g_convert(indexBlock->data, indexBlock->len,
+                             "UTF-8", "UTF-16LE",
                              NULL, NULL, NULL);
 
-        ind = g_strstr_len(xmlstuff,5,"<"); // skip BOM
-
+        ind = g_strstr_len(xmlstuff, 5, "<"); /* skip BOM */
 
         if (!g_markup_parse_context_parse(context, ind , -1, &err)
             || !g_markup_parse_context_end_parse(context, &err))
         {
             g_clear_error(&err);
         }
-       g_markup_parse_context_free(context);
-       g_free(xmlstuff);
-    }
+        g_markup_parse_context_free(context);
+        g_free(xmlstuff);
+	}
 
-  return result;
+	return result;
 }
 
-    static gboolean
+static gboolean
 mdt_scanned_data_vars(const guchar *p,
                       const guchar *fstart,
                       MDTScannedDataFrame *frame,
@@ -1455,7 +1468,8 @@ mdt_scanned_data_vars(const guchar *p,
         guint len = gwy_get_guint32_le(&p);
 
         if (len && (guint)(frame_size - (p - fstart)) >= len) {
-            frame->xmlstuff = g_convert((const gchar*)p, len, "UTF-8", "UTF-16LE",
+            frame->xmlstuff = g_convert((const gchar*)p, len,
+                                        "UTF-8", "UTF-16LE",
                                         NULL, NULL, NULL);
             p += len;
         }
@@ -1936,7 +1950,7 @@ static GwySpectra* extract_new_curve (MDTNewSpecFrame *dataframe, guint number)
 
     if(numpoints)
     {
-      TNTDAPointInfo *pInfo = dataframe->pointInfo;
+      MDTTNTDAPointInfo *pInfo = dataframe->pointInfo;
       siunitcoordxy = gwy_si_unit_new_parse(pInfo->rUnit, &power10coordxy);
 
       gwy_spectra_set_si_unit_xy(spectra, siunitcoordxy);
@@ -1950,10 +1964,10 @@ static GwySpectra* extract_new_curve (MDTNewSpecFrame *dataframe, guint number)
               for(i_fb=0;i_fb<2;++i_fb)
               {
                   gint  measInd = (i_fb?pInfo->rMeasBackInd:pInfo->rMeasForwInd)[i_l];
-                  TNTDAMeasInfo *measInfo;
-                  TNTDAAxisInfo *axisInfo;
-                  TNTDataInfo *dataInfo;
-                  TNTNameInfo *nameInfoX,*nameInfoY;
+                  MDTTNTDAMeasInfo *measInfo;
+                  MDTTNTDAAxisInfo *axisInfo;
+                  MDTTNTDataInfo *dataInfo;
+                  MDTTNTNameInfo *nameInfoX,*nameInfoY;
                   gdouble *ydata = NULL;
                   gint   cStart,cEnd,cStep;
                   gwy_debug("get curve data: point %d, meas %d, back %d",i_p, i_l,i_fb);
@@ -2968,7 +2982,7 @@ static void           spec_start_element    (G_GNUC_UNUSED GMarkupParseContext *
             ++(frame->pointCount);
         else
         {
-            TNTDAPointInfo  pointInfo = {{0,0,0},NULL,0,0,NULL,NULL,-1,-1};
+            MDTTNTDAPointInfo  pointInfo = {{0,0,0},NULL,0,0,NULL,NULL,-1,-1};
             guint           pointIndex = frame->pointCount;
 
 
@@ -2997,7 +3011,7 @@ static void           spec_start_element    (G_GNUC_UNUSED GMarkupParseContext *
 
             if(pointIndex < frame->pointCount)
             {
-                TNTDAPointInfo *pinfo = frame->pointInfo+pointIndex;
+                MDTTNTDAPointInfo *pinfo = frame->pointInfo+pointIndex;
                 g_memmove(pinfo, &pointInfo, sizeof(pointInfo));
             }
         }
@@ -3008,7 +3022,7 @@ static void           spec_start_element    (G_GNUC_UNUSED GMarkupParseContext *
             ++(frame->dataCount);
         else
         {
-            TNTDataInfo    dataInfo;
+            MDTTNTDataInfo    dataInfo;
             guint          dataIndex = frame->dataCount;
             gint           blockIndex = -1;
             gint           blockOffset = 0;
@@ -3065,7 +3079,7 @@ static void           spec_start_element    (G_GNUC_UNUSED GMarkupParseContext *
             ++(frame->measCount);
         else
         {
-            TNTDAMeasInfo    measInfo;
+            MDTTNTDAMeasInfo    measInfo;
             guint            measIndex = frame->measCount;
 
 
@@ -3095,7 +3109,7 @@ static void           spec_start_element    (G_GNUC_UNUSED GMarkupParseContext *
             ++(frame->axisCount);
         else
         {
-            TNTDAAxisInfo    axisInfo;
+            MDTTNTDAAxisInfo    axisInfo;
             guint            axisIndex = frame->axisCount;
 
             for(;*name_cursor;++name_cursor,++value_cursor)
@@ -3125,7 +3139,7 @@ static void           spec_start_element    (G_GNUC_UNUSED GMarkupParseContext *
             ++(frame->nameCount);
         else
         {
-            TNTNameInfo    nameInfo;
+            MDTTNTNameInfo    nameInfo;
             guint          nameIndex = frame->nameCount;
 
 
@@ -3145,7 +3159,7 @@ static void           spec_start_element    (G_GNUC_UNUSED GMarkupParseContext *
 
             if(nameIndex < frame->nameCount)
             {
-                TNTNameInfo *nInfo = frame->nameInfo+nameIndex;
+                MDTTNTNameInfo *nInfo = frame->nameInfo+nameIndex;
                 g_memmove(nInfo, &nameInfo, sizeof(nameInfo));
             }
         }
