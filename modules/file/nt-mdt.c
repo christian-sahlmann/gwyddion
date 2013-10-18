@@ -1203,7 +1203,6 @@ mdt_read_axis_scales(const guchar *p,
     }
 }
 
-
 static gint findMDTBlockIndex(const guchar *name, MDTNewSpecFrame *frame)
 {
     gint i;
@@ -1241,7 +1240,7 @@ mdt_newspec_data_vars(const guchar *p,
     MDTBlock *indexBlock;
     gboolean result = FALSE;
     static const gchar blockIndexFile[] = "index.xml";
-    static const gchar blockParamsFile[] ="__xmlparams.xml";
+    static const gchar blockParamsFile[] = "__xmlparams.xml";
     MDTTNTDAPointInfo *pointInfo;
     gint lBLock = -1;
     guint offset = 0;
@@ -1345,7 +1344,7 @@ mdt_newspec_data_vars(const guchar *p,
                     for (i = 0; i < indCount; i++)
                         *(ldst++) = gwy_get_guint32_le(&lsrc);
                 }
-				result = TRUE;
+                result = TRUE;
             }
         }
         g_markup_parse_context_free(context);
@@ -1379,9 +1378,9 @@ mdt_newspec_data_vars(const guchar *p,
         }
         g_markup_parse_context_free(context);
         g_free(xmlstuff);
-	}
+    }
 
-	return result;
+    return result;
 }
 
 static gboolean
@@ -1932,126 +1931,127 @@ extract_scanned_spectrum (MDTScannedDataFrame *dataframe, guint number)
     return gmodel;
 }
 
-static GwySpectra* extract_new_curve (MDTNewSpecFrame *dataframe, guint number)
+static GwySpectra*
+extract_new_curve (MDTNewSpecFrame *dataframe, guint number)
 {
     GwySpectra *spectra;
     GwyDataLine *dline;
     GwySIUnit *siunitx, *siunity, *siunitcoordxy;
     gint power10x, power10y, power10coordxy;
-    guint i, i_p, i_l, i_fb, numpoints;
-    gchar *framename=NULL;
-
+    guint i, i_p, i_l, i_fb, numpoints, lineCount;
+    gchar *framename = NULL;
+    MDTTNTDAPointInfo *pInfo;
+    MDTTNTDAMeasInfo *measInfo;
+    MDTTNTDAAxisInfo *axisInfo;
+    MDTTNTDataInfo *dataInfo;
+    MDTTNTNameInfo *nameInfoX, *nameInfoY;
+    gdouble *ydata = NULL, *p;
+    gdouble yscale, yoffset;
+    gint measInd, cStart, cEnd, cStep;
 
     spectra = gwy_spectra_new();
-
     numpoints = dataframe->pointCount;
 
     gwy_debug("extract_new_curve, num points %d",numpoints);
 
-    if(numpoints)
-    {
-      MDTTNTDAPointInfo *pInfo = dataframe->pointInfo;
-      siunitcoordxy = gwy_si_unit_new_parse(pInfo->rUnit, &power10coordxy);
+    if (numpoints) {
+        pInfo = dataframe->pointInfo;
+        siunitcoordxy = gwy_si_unit_new_parse(pInfo->rUnit,
+                                             &power10coordxy);
+        gwy_spectra_set_si_unit_xy(spectra, siunitcoordxy);
+        g_object_unref(siunitcoordxy);
 
-      gwy_spectra_set_si_unit_xy(spectra, siunitcoordxy);
-      g_object_unref(siunitcoordxy);
+        for (i_p = 0; i_p < numpoints; ++i_p, ++pInfo) {
+            lineCount = pInfo->rMeasCount * pInfo->rExecCount;
+            gwy_debug("meas count %d execCount %d",
+                      pInfo->rMeasCount, pInfo->rExecCount);
+            for (i_l = 0; i_l < lineCount; ++i_l) {
+                for (i_fb = 0; i_fb < 2; ++i_fb) {
+                    measInd = (i_fb ? pInfo->rMeasBackInd :
+                                      pInfo->rMeasForwInd)[i_l];
+                    gwy_debug("get curve data: point %d, meas %d, back %d", i_p, i_l, i_fb);
 
-      for (i_p=0; i_p<numpoints; ++i_p, ++pInfo) {
-          guint lineCount = pInfo->rMeasCount  * pInfo->rExecCount;
-          gwy_debug("meas count %d execCount %d",pInfo->rMeasCount,pInfo->rExecCount);
-          for(i_l=0;i_l<lineCount;++i_l)
-          {
-              for(i_fb=0;i_fb<2;++i_fb)
-              {
-                  gint  measInd = (i_fb?pInfo->rMeasBackInd:pInfo->rMeasForwInd)[i_l];
-                  MDTTNTDAMeasInfo *measInfo;
-                  MDTTNTDAAxisInfo *axisInfo;
-                  MDTTNTDataInfo *dataInfo;
-                  MDTTNTNameInfo *nameInfoX,*nameInfoY;
-                  gdouble *ydata = NULL;
-                  gint   cStart,cEnd,cStep;
-                  gwy_debug("get curve data: point %d, meas %d, back %d",i_p, i_l,i_fb);
+                    if (measInd < 0 || measInd >= dataframe->measCount)
+                        continue;
 
+                    measInfo = dataframe->measInfo + measInd;
 
-                  if(measInd<0 || measInd>= dataframe->measCount)
-                      continue;
+                    if (measInfo->rNameInfoInd < 0 || measInfo->rNameInfoInd > dataframe->nameCount ||
+                        measInfo->rDataInfoInd < 0 || measInfo->rDataInfoInd > dataframe->dataCount ||
+                        measInfo->rAxisInfoInd[0] <0 || measInfo->rAxisInfoInd[0] > dataframe -> axisCount
+                        )
+                        continue;
 
-                  measInfo = dataframe->measInfo + measInd;
+                    axisInfo = dataframe->axisInfo + measInfo->rAxisInfoInd[0];
+                    nameInfoY = dataframe->nameInfo + measInfo->rNameInfoInd;
+                    dataInfo = dataframe->dataInfo + measInfo->rDataInfoInd;
 
-                  if(measInfo->rNameInfoInd <0 || measInfo->rNameInfoInd > dataframe -> nameCount ||
-                     measInfo->rDataInfoInd <0 || measInfo->rDataInfoInd > dataframe -> dataCount ||
-                     measInfo->rAxisInfoInd[0] <0 || measInfo->rAxisInfoInd[0] > dataframe -> axisCount
-                    )
-                      continue;
+                    if (axisInfo->rNameInfoInd < 0
+                     || axisInfo->rNameInfoInd > dataframe->nameCount)
+                        continue;
 
-                  axisInfo = dataframe->axisInfo + measInfo->rAxisInfoInd[0];
-                  nameInfoY = dataframe->nameInfo + measInfo->rNameInfoInd;
-                  dataInfo = dataframe->dataInfo + measInfo->rDataInfoInd;
+                    nameInfoX = dataframe->nameInfo + axisInfo->rNameInfoInd;
 
-                  if(axisInfo->rNameInfoInd < 0 || axisInfo->rNameInfoInd > dataframe -> nameCount )
-                      continue;
+                    gwy_debug(" x : %s y : %s", nameInfoX->rUnit, nameInfoY->rUnit);
 
+                    siunitx = gwy_si_unit_new_parse(nameInfoX->rUnit, &power10x);
+                    siunity = gwy_si_unit_new_parse(nameInfoY->rUnit, &power10y);
 
-                  nameInfoX = dataframe->nameInfo + axisInfo->rNameInfoInd;
+                    dline = gwy_data_line_new(dataInfo->rDataCount, axisInfo->rStopValue - axisInfo->rStartValue, FALSE);
 
-                  gwy_debug(" x : %s y : %s",nameInfoX->rUnit,nameInfoY->rUnit);
+                    gwy_data_line_set_si_unit_x(dline, siunitx);
+                    gwy_data_line_set_si_unit_y(dline, siunity);
 
-                  siunitx = gwy_si_unit_new_parse(nameInfoX->rUnit, &power10x);
-                  siunity = gwy_si_unit_new_parse(nameInfoY->rUnit, &power10y);
+                    g_object_unref(siunitx);
+                    g_object_unref(siunity);
 
-                  dline = gwy_data_line_new(dataInfo->rDataCount, axisInfo->rStopValue - axisInfo->rStartValue, FALSE);
+                    gwy_data_line_set_offset(dline, pow10(power10x)*axisInfo->rStartValue);
+                    ydata = gwy_data_line_get_data(dline);
 
-                  gwy_data_line_set_si_unit_x(dline, siunitx);
-                  gwy_data_line_set_si_unit_y(dline, siunity);
+                    if (!(measInfo->rAxisOptions[0] & MDT_AXOPT_INVERTED)) {
+                        cStart = 0;
+                        cEnd   = dataInfo->rDataCount;
+                        cStep  = 1;
+                    }
+                    else {
+                        cStart = dataInfo->rDataCount - 1;
+                        cEnd   = -1;
+                        cStep  = -1;
+                    }
 
-                  g_object_unref(siunitx);
-                  g_object_unref(siunity);
+                    if (dataInfo->rDataType == MDT_DT_DBL) {
+                        yscale = pow10(power10y);
+                        p = dataInfo->rDataPtr;
+                        for (i = cStart; i != cEnd; i+=cStep)
+                            ydata[i] = *(p++) * yscale;
+                    }
+                    else {
+                        yscale = pow10(power10y)*nameInfoY->rScale;
+                        yoffset = pow10(power10y)*nameInfoY->rBias;
+                        p = dataInfo->rDataPtr;
+                        for (i = cStart; i != cEnd; i+=cStep)
+                            ydata[i] = *(p++) * yscale + yoffset;
+                    }
 
-                  gwy_data_line_set_offset(dline, pow10(power10x)*axisInfo->rStartValue);
-                  ydata = gwy_data_line_get_data(dline);
-
-                  if (!(measInfo->rAxisOptions[0] & MDT_AXOPT_INVERTED)) {
-                      cStart = 0;
-                      cEnd   = dataInfo->rDataCount;
-                      cStep  = 1;
-                  }
-                  else {
-                      cStart = dataInfo->rDataCount-1;
-                      cEnd   = -1;
-                      cStep  = -1;
-                  }
-
-                  if (dataInfo->rDataType == MDT_DT_DBL) {
-                      gdouble yscale = pow10(power10y);
-                      gdouble  *p = dataInfo->rDataPtr;
-                      for (i = cStart; i != cEnd; i+=cStep)
-                        ydata[i] = *(p++) * yscale;
-                  }
-                  else {
-                      gdouble yscale = pow10(power10y)*nameInfoY->rScale;
-                      gdouble yoffset = pow10(power10y)*nameInfoY->rBias;
-                      gint32  *p = dataInfo->rDataPtr;
-                      for (i = cStart; i != cEnd; i+=cStep)
-                          ydata[i] = *(p++) * yscale + yoffset;
-                  }
-
-                   gwy_spectra_add_spectrum(spectra, dline,
+                    gwy_spectra_add_spectrum(spectra, dline,
                                 pInfo->rCoord[0]*pow10(power10coordxy),
                                 pInfo->rCoord[1]*pow10(power10coordxy));
 
-              }
-          }
-      }
+                }
+            }
+        }
 
         if (dataframe->rFrameName) {
-            framename = g_strdup_printf("%s (%u)", dataframe->rFrameName, number);
+            framename = g_strdup_printf("%s (%u)",
+                                        dataframe->rFrameName, number);
         }
         else
             framename = g_strdup_printf("Unknown spectrum (%d)", number);
 
-      gwy_spectra_set_title(spectra, framename);
-      g_free(framename);
+        gwy_spectra_set_title(spectra, framename);
+        g_free(framename);
     }
+
     return spectra;
 }
 
