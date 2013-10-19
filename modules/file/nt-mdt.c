@@ -1347,7 +1347,8 @@ mdt_newspec_data_vars(const guchar *p,
         g_markup_parse_context_free(context);
     }
 
-    if (!frame->rFrameName && (indexBlock = findMDTBlock(blockParamsFile,frame))) {
+    if (!frame->rFrameName
+    && (indexBlock = findMDTBlock(blockParamsFile, frame))) {
         GMarkupParser parser = {
             spec_param_start_element,
             spec_param_end_element,
@@ -1416,7 +1417,8 @@ mdt_scanned_data_vars(const guchar *p,
 
     p = fstart + FRAME_HEADER_SIZE + vars_size;
     if ((guint)(p - fstart) + FRAME_MODE_SIZE > frame_size) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_DATA,
                     _("Frame is too short for Frame Mode."));
         return FALSE;
     }
@@ -1430,7 +1432,8 @@ mdt_scanned_data_vars(const guchar *p,
     if ((guint)(p - fstart)
         + sizeof(gint16)*(2*frame->fm_ndots + frame->fm_xres * frame->fm_yres)
         > frame_size) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_DATA,
                     _("Frame is too short for dots or data."));
         return FALSE;
     }
@@ -1444,7 +1447,8 @@ mdt_scanned_data_vars(const guchar *p,
         p += sizeof(gint16)*frame->fm_xres*frame->fm_yres;
     }
 
-    gwy_debug("remaining stuff size: %u", (guint)(frame_size - (p - fstart)));
+    gwy_debug("remaining stuff size: %u",
+                                    (guint)(frame_size - (p - fstart)));
 
     /* Title */
     if ((frame_size - (p - fstart)) > 4) {
@@ -1452,7 +1456,7 @@ mdt_scanned_data_vars(const guchar *p,
         if (frame->title_len
             && (guint)(frame_size - (p - fstart)) >= frame->title_len) {
             frame->title = g_convert((const gchar*)p, frame->title_len,
-                                    "UTF-8", "cp1251", NULL, NULL, NULL);
+                                   "UTF-8", "cp1251", NULL, NULL, NULL);
             p += frame->title_len;
             gwy_debug("title = <%.*s>", frame->title_len, frame->title);
         }
@@ -1499,20 +1503,21 @@ mdt_read_mda_calibration(const guchar *p, MDTMDACalibration *calibration)
     gwy_debug("Reading MDA calibration");
     calibration->totLen = gwy_get_guint32_le(&p);
     structLen = gwy_get_guint32_le(&p);
-    sp = p+structLen;
+    sp = p + structLen;
     calibration->nameLen = gwy_get_guint32_le(&p);
     calibration->commentLen = gwy_get_guint32_le(&p);
     calibration->unitLen = gwy_get_guint32_le(&p);
 
     calibration->siUnit   = gwy_get_guint64_le(&p);
     calibration->accuracy = gwy_get_gdouble_le(&p);
-    p+=8;  // skip function id and dimensions
+    p += 8;  /* skip function id and dimensions */
     calibration->bias  = gwy_get_gdouble_le(&p);
     calibration->scale  = gwy_get_gdouble_le(&p);
     gwy_debug("Scale= %f", calibration->scale);
     calibration->minIndex  = gwy_get_guint64_le(&p);
     calibration->maxIndex  = gwy_get_guint64_le(&p);
-    gwy_debug("minIndex %d, maxIndex %d", (gint)calibration->minIndex,(gint)calibration->maxIndex);
+    gwy_debug("minIndex %d, maxIndex %d",
+              (gint)calibration->minIndex,(gint)calibration->maxIndex);
     calibration->dataType  = gwy_get_gint32_le(&p);
     calibration->authorLen  = gwy_get_guint32_le(&p);
 
@@ -1520,7 +1525,8 @@ mdt_read_mda_calibration(const guchar *p, MDTMDACalibration *calibration)
     if (calibration->nameLen > 0) {
         calibration->name = p;
         p += calibration->nameLen;
-        gwy_debug("name = %.*s", calibration->nameLen, calibration->name);
+        gwy_debug("name = %.*s",
+                  calibration->nameLen, calibration->name);
     }
     else
         calibration->name = NULL;
@@ -1537,7 +1543,8 @@ mdt_read_mda_calibration(const guchar *p, MDTMDACalibration *calibration)
     if (calibration->unitLen > 0) {
         calibration->unit = p;
         p += calibration->unitLen;
-        gwy_debug("unit = %.*s", calibration->unitLen, calibration->unit);
+        gwy_debug("unit = %.*s",
+                               calibration->unitLen, calibration->unit);
     }
     else
         calibration->unit = NULL;
@@ -1545,7 +1552,8 @@ mdt_read_mda_calibration(const guchar *p, MDTMDACalibration *calibration)
     if (calibration->authorLen > 0) {
         calibration->author = p;
         p += calibration->authorLen;
-        gwy_debug("author = %.*s", calibration->authorLen, calibration->author);
+        gwy_debug("author = %.*s",
+                           calibration->authorLen, calibration->author);
     }
     else
         calibration->author = NULL;
@@ -2973,32 +2981,30 @@ spec_start_element (G_GNUC_UNUSED GMarkupParseContext *context,
     if (gwy_strequal(element_name, "Point")) {
         if (!frame->pointInfo)
             ++(frame->pointCount);
-        else
-        {
-            MDTTNTDAPointInfo  pointInfo = {{0,0,0},NULL,0,0,NULL,NULL,-1,-1};
+        else {
+            MDTTNTDAPointInfo pointInfo = {{0,0,0},NULL,0,0,NULL,NULL,-1,-1};
             guint pointIndex = frame->pointCount;
 
-            for(;*name_cursor;++name_cursor,++value_cursor)
+            for (; *name_cursor; ++name_cursor, ++value_cursor)
             {
-                if(gwy_strequal(*name_cursor, "index"))
+                if (gwy_strequal(*name_cursor, "index"))
                     pointIndex = atoi(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "x"))
+                else if (gwy_strequal(*name_cursor, "x"))
                         pointInfo.rCoord[0] = mdt_str_to_float(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "y"))
+                else if (gwy_strequal(*name_cursor, "y"))
                     pointInfo.rCoord[1] = mdt_str_to_float(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "z"))
+                else if (gwy_strequal(*name_cursor, "z"))
                     pointInfo.rCoord[2] = mdt_str_to_float(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "exec"))
+                else if (gwy_strequal(*name_cursor, "exec"))
                     pointInfo.rExecCount = atoi(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "meas"))
+                else if (gwy_strequal(*name_cursor, "meas"))
                     pointInfo.rMeasCount = atoi(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "unit"))
+                else if (gwy_strequal(*name_cursor, "unit"))
                     pointInfo.rUnit = g_strdup(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "name"))
-                    pointInfo.pointBlockIndex = findMDTBlockIndex(*value_cursor,frame);
-                else if(gwy_strequal(*name_cursor, "offset"))
+                else if (gwy_strequal(*name_cursor, "name"))
+                    pointInfo.pointBlockIndex = findMDTBlockIndex(*value_cursor, frame);
+                else if (gwy_strequal(*name_cursor, "offset"))
                     pointInfo.offset = atoi(*value_cursor);
-
             }
 
             if(pointIndex < frame->pointCount)
@@ -3008,58 +3014,49 @@ spec_start_element (G_GNUC_UNUSED GMarkupParseContext *context,
             }
         }
     }
-    else if (gwy_strequal(element_name, "Data"))
-    {
-        if(!frame->dataInfo)
+    else if (gwy_strequal(element_name, "Data")) {
+        if (!frame->dataInfo)
             ++(frame->dataCount);
-        else
-        {
-            MDTTNTDataInfo    dataInfo;
+        else {
+            MDTTNTDataInfo dataInfo;
             guint          dataIndex = frame->dataCount;
             gint           blockIndex = -1;
             gint           blockOffset = 0;
             guint          dataSize;
             dataInfo.rDataType = MDT_DT_INT32;
 
-            for(;*name_cursor;++name_cursor,++value_cursor)
-            {
-                if(gwy_strequal(*name_cursor, "index"))
+            for(; *name_cursor; ++name_cursor, ++value_cursor) {
+                if (gwy_strequal(*name_cursor, "index"))
                     dataIndex = atoi(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "name"))
-                    blockIndex = findMDTBlockIndex(*value_cursor,frame);
-                else if(gwy_strequal(*name_cursor, "offset"))
+                else if (gwy_strequal(*name_cursor, "name"))
+                    blockIndex = findMDTBlockIndex(*value_cursor, frame);
+                else if (gwy_strequal(*name_cursor, "offset"))
                     blockOffset = atoi(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "count"))
+                else if (gwy_strequal(*name_cursor, "count"))
                     dataInfo.rDataCount = atoi(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "type") && gwy_strequal(*value_cursor, "float64"))
+                else if (gwy_strequal(*name_cursor, "type")
+                      && gwy_strequal(*value_cursor, "float64"))
                     dataInfo.rDataType = MDT_DT_DBL;
-
-
             }
 
-            if(dataIndex < frame->dataCount && blockIndex>=0)
-            {
+            if (dataIndex < frame->dataCount && blockIndex >= 0) {
                 const guchar *p = frame->blocks[blockIndex].data;
                 gboolean isDouble = (dataInfo.rDataType == MDT_DT_DBL);
                 guint i;
 
-                dataSize = isDouble? sizeof(gdouble): sizeof(gint32);
-
-                dataInfo.rDataPtr = g_malloc(dataInfo.rDataCount*dataSize);
+                dataSize = isDouble ? sizeof(gdouble) : sizeof(gint32);
+                dataInfo.rDataPtr = g_malloc(dataInfo.rDataCount * dataSize);
                 p += blockOffset*dataSize;
-
-                if(isDouble)
-                {
-                    gdouble *dp=(gdouble *)dataInfo.rDataPtr;
-                    for(i=0;i<dataInfo.rDataCount;++i,++dp)
-                        *dp =  gwy_get_gdouble_le(&p);
+                if (isDouble) {
+                    gdouble *dp = (gdouble *)dataInfo.rDataPtr;
+                    for (i = 0; i < dataInfo.rDataCount; ++i, ++dp)
+                        *dp = gwy_get_gdouble_le(&p);
                 }
                 else {
-                    gint32 *dp=(gint32 *)dataInfo.rDataPtr;
-                    for(i=0;i<dataInfo.rDataCount;++i,++dp)
-                        *dp =  gwy_get_guint32_le(&p);
+                    gint32 *dp = (gint32 *)dataInfo.rDataPtr;
+                    for (i = 0; i < dataInfo.rDataCount; ++i, ++dp)
+                        *dp = gwy_get_guint32_le(&p);
                 }
-
 
                 g_memmove(frame->dataInfo+dataIndex, &dataInfo, sizeof(dataInfo));
             }
@@ -3069,106 +3066,90 @@ spec_start_element (G_GNUC_UNUSED GMarkupParseContext *context,
     {
         if(!frame->measInfo)
             ++(frame->measCount);
-        else
-        {
-            MDTTNTDAMeasInfo    measInfo;
-            guint            measIndex = frame->measCount;
+        else {
+            MDTTNTDAMeasInfo measInfo;
+            guint measIndex = frame->measCount;
 
-
-            for(;*name_cursor;++name_cursor,++value_cursor)
-            {
-                if(gwy_strequal(*name_cursor, "index"))
+            for (; *name_cursor; ++name_cursor, ++value_cursor) {
+                if (gwy_strequal(*name_cursor, "index"))
                     measIndex = atoi(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "name"))
+                else if (gwy_strequal(*name_cursor, "name"))
                     measInfo.rNameInfoInd = atoi(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "data"))
+                else if (gwy_strequal(*name_cursor, "data"))
                     measInfo.rDataInfoInd = atoi(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "axis0"))
+                else if (gwy_strequal(*name_cursor, "axis0"))
                     measInfo.rAxisInfoInd[0] = atoi(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "inverse0"))
+                else if (gwy_strequal(*name_cursor, "inverse0"))
                     measInfo.rAxisOptions[0] = atoi(*value_cursor);
-
             }
 
             if(measIndex < frame->measCount)
                 g_memmove(frame->measInfo+measIndex, &measInfo, sizeof(measInfo));
         }
-
     }
-    else if (gwy_strequal(element_name, "Axis"))
-    {
+    else if (gwy_strequal(element_name, "Axis")) {
         if(!frame->axisInfo)
             ++(frame->axisCount);
-        else
-        {
-            MDTTNTDAAxisInfo    axisInfo;
-            guint            axisIndex = frame->axisCount;
+        else {
+            MDTTNTDAAxisInfo axisInfo;
+            guint axisIndex = frame->axisCount;
 
-            for(;*name_cursor;++name_cursor,++value_cursor)
-            {
-                if(gwy_strequal(*name_cursor, "index"))
+            for (; *name_cursor; ++name_cursor, ++value_cursor) {
+                if (gwy_strequal(*name_cursor, "index"))
                     axisIndex = atoi(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "name"))
+                else if (gwy_strequal(*name_cursor, "name"))
                     axisInfo.rNameInfoInd = atoi(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "count"))
+                else if (gwy_strequal(*name_cursor, "count"))
                     axisInfo.rPointCount = atoi(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "value"))
+                else if (gwy_strequal(*name_cursor, "value"))
                     axisInfo.rInitValue = mdt_str_to_float(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "start"))
+                else if (gwy_strequal(*name_cursor, "start"))
                     axisInfo.rStartValue = mdt_str_to_float(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "stop"))
+                else if (gwy_strequal(*name_cursor, "stop"))
                     axisInfo.rStopValue = mdt_str_to_float(*value_cursor);
             }
 
             if(axisIndex < frame->axisCount)
                 g_memmove(frame->axisInfo+axisIndex, &axisInfo, sizeof(axisInfo));
         }
-
     }
     else if (gwy_strequal(element_name, "Name"))
     {
         if(!frame->nameInfo)
             ++(frame->nameCount);
-        else
-        {
-            MDTTNTNameInfo    nameInfo;
+        else {
+            MDTTNTNameInfo nameInfo;
             guint          nameIndex = frame->nameCount;
 
-
-            for(;*name_cursor;++name_cursor,++value_cursor)
-            {
-                if(gwy_strequal(*name_cursor, "index"))
+            for (; *name_cursor; ++name_cursor, ++value_cursor) {
+                if (gwy_strequal(*name_cursor, "index"))
                     nameIndex = atoi(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "bias"))
+                else if (gwy_strequal(*name_cursor, "bias"))
                     nameInfo.rBias = mdt_str_to_float(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "scale"))
+                else if (gwy_strequal(*name_cursor, "scale"))
                     nameInfo.rScale = mdt_str_to_float(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "name"))
+                else if (gwy_strequal(*name_cursor, "name"))
                     nameInfo.rName = g_strdup(*value_cursor);
-                else if(gwy_strequal(*name_cursor, "unit"))
+                else if (gwy_strequal(*name_cursor, "unit"))
                     nameInfo.rUnit = g_strdup(*value_cursor);
             }
 
-            if(nameIndex < frame->nameCount)
-            {
+            if (nameIndex < frame->nameCount) {
                 MDTTNTNameInfo *nInfo = frame->nameInfo+nameIndex;
                 g_memmove(nInfo, &nameInfo, sizeof(nameInfo));
             }
         }
-
     }
-    else if (gwy_strequal(element_name, "Param"))
-    {
-        const gchar *name=NULL;
-        gboolean isName =FALSE;
+    else if (gwy_strequal(element_name, "Param")) {
+        const gchar *name = NULL;
+        gboolean isName   = FALSE;
 
-        for(;*name_cursor;++name_cursor,++value_cursor)
-        {
-            if(gwy_strequal(*name_cursor, "name") && gwy_strequal(*value_cursor, "Name"))
+        for (; *name_cursor; ++name_cursor, ++value_cursor) {
+            if (gwy_strequal(*name_cursor, "name")
+             && gwy_strequal(*value_cursor, "Name"))
                 isName = TRUE;
-            else if(gwy_strequal(*name_cursor, "value"))
+            else if (gwy_strequal(*name_cursor, "value"))
                 name = *value_cursor;
-
         }
         if(isName && !frame->rFrameName)
             frame->rFrameName =  g_strdup(name);
@@ -3176,12 +3157,13 @@ spec_start_element (G_GNUC_UNUSED GMarkupParseContext *context,
 
 }
 
-static void           spec_param_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
-                                             const gchar *element_name,
-                                             G_GNUC_UNUSED const gchar **attribute_names,
-                                             G_GNUC_UNUSED const gchar **attribute_values,
-                                             gpointer user_data,
-                                             G_GNUC_UNUSED GError **error)
+static void
+spec_param_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
+                         const gchar *element_name,
+                         G_GNUC_UNUSED const gchar **attribute_names,
+                         G_GNUC_UNUSED const gchar **attribute_values,
+                         gpointer user_data,
+                         G_GNUC_UNUSED GError **error)
 {
     MDTNewSpecFrame *frame = (MDTNewSpecFrame*)user_data;
     frame->xmlNameFlag = gwy_strequal(element_name, "Name");
@@ -3189,9 +3171,9 @@ static void           spec_param_start_element(G_GNUC_UNUSED GMarkupParseContext
 
 static void
 spec_param_end_element(G_GNUC_UNUSED GMarkupParseContext *context,
-            G_GNUC_UNUSED const gchar *element_name,
-            gpointer user_data,
-            G_GNUC_UNUSED GError **error)
+                       G_GNUC_UNUSED const gchar *element_name,
+                       gpointer user_data,
+                       G_GNUC_UNUSED GError **error)
 {
     MDTNewSpecFrame *frame = (MDTNewSpecFrame*)user_data;
     frame->xmlNameFlag = FALSE;
@@ -3199,15 +3181,14 @@ spec_param_end_element(G_GNUC_UNUSED GMarkupParseContext *context,
 
 static void
 spec_param_parse_text(G_GNUC_UNUSED GMarkupParseContext *context,
-           const gchar *value,
-           G_GNUC_UNUSED gsize value_len,
-           gpointer user_data,
-           G_GNUC_UNUSED GError **error)
+                      const gchar *value,
+                      G_GNUC_UNUSED gsize value_len,
+                      gpointer user_data,
+                      G_GNUC_UNUSED GError **error)
 {
     MDTNewSpecFrame *frame = (MDTNewSpecFrame*)user_data;
-    if(frame->xmlNameFlag)
-    {
-       frame->rFrameName =  g_strdup(value);
+    if(frame->xmlNameFlag) {
+       frame->rFrameName = g_strdup(value);
     }
 }
 
