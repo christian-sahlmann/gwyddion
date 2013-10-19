@@ -832,7 +832,7 @@ mdt_load(const gchar *filename,
     GwyContainer *meta, *data = NULL;
     MDTFile mdtfile;
     GString *key;
-    guint n, i, xres, yres;
+    guint n, i, j, xres, yres;
 
     gwy_debug("");
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -873,6 +873,7 @@ mdt_load(const gchar *filename,
             g_string_printf(key, "/%d/meta", n);
             gwy_container_set_object_by_name(data, key->str, meta);
             g_object_unref(meta);
+            g_free(sdframe);
 
             n++;
         }
@@ -955,6 +956,10 @@ mdt_load(const gchar *filename,
                     n++;
                 }
             }
+            g_free(mdaframe->dimensions);
+            g_free(mdaframe->mesurands);
+            g_free(mdaframe->xmlstuff);
+            g_free(mdaframe);
         }
         else if (mdtfile.frames[i].type == MDT_FRAME_SPECTROSCOPY) {
             MDTScannedDataFrame *sdframe;
@@ -965,11 +970,13 @@ mdt_load(const gchar *filename,
             g_string_printf(key, "/0/graph/graph/%d", n+1);
             gwy_container_set_object_by_name(data, key->str, gmodel);
             g_object_unref(gmodel);
+            g_free((gpointer)sdframe->title);
+            g_free(sdframe);
 
             n++;
         }
         else if (mdtfile.frames[i].type == MDT_FRAME_CURVES) {
-                        MDTScannedDataFrame *sdframe;
+            MDTScannedDataFrame *sdframe;
             GwySpectra *gspectra;
 
             sdframe = (MDTScannedDataFrame*)mdtfile.frames[i].frame_data;
@@ -977,7 +984,8 @@ mdt_load(const gchar *filename,
             g_string_printf(key, "/sps/%d", n);
             gwy_container_set_object_by_name(data, key->str, gspectra);
             g_object_unref(gspectra);
-
+            g_free((gpointer)sdframe->title);
+            g_free(sdframe);
             n++;
         }
         else if (mdtfile.frames[i].type == MDT_FRAME_CURVES_NEW) {
@@ -989,6 +997,16 @@ mdt_load(const gchar *filename,
             g_string_printf(key, "/sps/%d", n);
             gwy_container_set_object_by_name(data, key->str, gspectra);
             g_object_unref(gspectra);
+            for (j = 0; j < sdframe->blockCount; j++) {
+                g_free((gpointer)sdframe->blocks[j].name);
+            }
+            g_free(sdframe->blocks);
+            g_free(sdframe->pointInfo);
+            g_free(sdframe->dataInfo);
+            g_free(sdframe->measInfo);
+            g_free(sdframe->axisInfo);
+            g_free(sdframe->nameInfo);
+            g_free(sdframe);
 
             n++;
     }
