@@ -302,7 +302,7 @@ typedef struct {
     guint fm_mode;    /* m_mode */
     guint fm_xres;    /* m_nx */
     guint fm_yres;    /* m_ny */
-    guint fm_ndots;    /* m_nd */
+    guint fm_ndots;   /* m_nd */
 
     /* Data */
     const guchar *dots;
@@ -765,7 +765,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NT-MDT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.16",
+    "0.17",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1009,7 +1009,7 @@ mdt_load(const gchar *filename,
             g_free(sdframe);
 
             n++;
-    }
+        }
     }
     g_string_free(key, TRUE);
     gwy_file_abandon_contents(buffer, size, NULL);
@@ -1027,8 +1027,7 @@ mdt_load(const gchar *filename,
     gwy_container_set_string_by_name(meta, key, g_strdup(s->str))
 
 static GwyContainer*
-mdt_get_metadata(MDTFile *mdtfile,
-                 guint i)
+mdt_get_metadata(MDTFile *mdtfile, guint i)
 {
     GwyContainer *meta;
     MDTFrame *frame;
@@ -1221,7 +1220,8 @@ mdt_read_axis_scales(const guchar *p,
     }
 }
 
-static gint findMDTBlockIndex(const guchar *name, MDTNewSpecFrame *frame)
+static gint findMDTBlockIndex(const guchar *name,
+                              MDTNewSpecFrame *frame)
 {
     gint i;
     MDTBlock *block=frame->blocks;
@@ -1233,7 +1233,8 @@ static gint findMDTBlockIndex(const guchar *name, MDTNewSpecFrame *frame)
     return -1;
 }
 
-static MDTBlock* findMDTBlock(const guchar *name, MDTNewSpecFrame *frame)
+static MDTBlock* findMDTBlock(const guchar *name,
+                              MDTNewSpecFrame *frame)
 {
     guint i;
     MDTBlock *block=frame->blocks;
@@ -1285,7 +1286,7 @@ mdt_newspec_data_vars(const guchar *p,
                                           "UTF-8", "UTF-8",
                                           NULL, NULL, NULL);
         p += frame->blocks[i].nameLen;
-        gwy_debug("block %d %s",i,frame->blocks[i].name);
+        gwy_debug("block %d %s", i, frame->blocks[i].name);
     }
 
     for (i = 0; i < bCount; i++) {
@@ -1513,7 +1514,8 @@ mdt_scanned_data_vars(const guchar *p,
 }
 
 static void
-mdt_read_mda_calibration(const guchar *p, MDTMDACalibration *calibration)
+mdt_read_mda_calibration(const guchar *p,
+                         MDTMDACalibration *calibration)
 {
     guint  structLen;
     const guchar *sp;
@@ -2024,7 +2026,7 @@ extract_new_curve (MDTNewSpecFrame *dataframe, guint number)
                     g_object_unref(siunity);
 
                     gwy_data_line_set_offset(dline, pow10(power10x)*
-                                            (fmin(axisInfo->rStartValue, axisInfo->rStopValue) -
+                                             (fmin(axisInfo->rStartValue, axisInfo->rStopValue) -
                                              (measInfo->rAxisOptions[0] & MDT_AXOPT_RELATIVE ? axisInfo->rInitValue : 0) ));
                     ydata = gwy_data_line_get_data(dline);
 

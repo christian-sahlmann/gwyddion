@@ -44,7 +44,7 @@
  * [FILE-MAGIC-USERGUIDE]
  * NT-MDT old MDA
  * .sxml .dat
- * Read Volume
+ * Volume
  **/
 
 #include <string.h>
