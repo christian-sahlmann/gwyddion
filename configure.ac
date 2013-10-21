@@ -438,7 +438,7 @@ if test "x$enable_fftw3" != "xno"; then
       AC_MSG_WARN([FFTW3 older than 3.1 may cause crashes on 64bit systems.
         Consider installation of FFTW3 at least 3.1.  Alternatively you can
         disable FFTW3 with --without-fftw3.])
-      FFTW3_WARN=" (with warnings)")
+      [FFTW3_WARN=" (with warnings)"])
   fi
   FFTW3_DEPENDENCY=fftw3
 else
@@ -455,7 +455,7 @@ if test "x$enable_pygwy" != xno; then
     PKG_CHECK_MODULES(GTKSOURCEVIEW,[gtksourceview-2.0],
                       [AC_DEFINE(HAVE_GTKSOURCEVIEW,1,
                                  [Define if we have the GtkSourceView package.])],
-                      enable_gtksourceview=no; GTKSOURCEVIEW_WARN=" (needs GtkSourceView)")
+                      [enable_gtksourceview=no; GTKSOURCEVIEW_WARN=" (needs GtkSourceView)"])
   fi
   if test "x$enable_gtksourceview" != "xno"; then
     GTKSOURCEVIEW_DEPENDENCY=gtksourceview-2.0
@@ -476,7 +476,7 @@ if test "x$enable_gl" != "xno"; then
   PKG_CHECK_MODULES(GTKGLEXT,[$pangoft2 gtkglext-1.0],
                     [AC_DEFINE(HAVE_GTKGLEXT,1,
                                [Define if we have the GtkGLExt package.])],
-                    enable_gl=no; GL_WARN=" (needs GtkGLExt)")
+                    [enable_gl=no; GL_WARN=" (needs GtkGLExt)"])
 fi
 if test "x$enable_gl" != "xno"; then
   GTKGLEXT_DEPENDENCY=gtkglext-1.0
@@ -560,7 +560,7 @@ if test "x$enable_libxml2" != "xno"; then
   PKG_CHECK_MODULES(XML2, [libxml-2.0 >= 2.6],
                     [AC_DEFINE(HAVE_XML2,1,
                                [Define if we have the libxml2 package.])],
-                     enable_libxml2=no)
+                    [enable_libxml2=no])
 fi
 AM_CONDITIONAL([HAVE_XML2],[test x$enable_libxml2 != xno])
 
@@ -572,7 +572,7 @@ if test "x$enable_unique" != "xno"; then
   PKG_CHECK_MODULES(UNIQUE,[unique-1.0],
                     [AC_DEFINE(HAVE_UNIQUE,1,
                                [Define if we have the unique package.])],
-                    enable_unique=no)
+                    [enable_unique=no])
 fi
 if test "x$enable_unique" != xno; then
   remote_backend=unique
