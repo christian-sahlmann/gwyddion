@@ -379,7 +379,6 @@ AC_MSG_CHECKING([for Gdk target])
 gdk_target=`$PKG_CONFIG --variable=target gtk+-2.0`
 AC_MSG_RESULT([$gdk_target])
 remote_backend=none
-target_quartz=no
 pangoft2=pangoft2
 case "$gdk_target" in
   x11)
@@ -405,10 +404,8 @@ case "$gdk_target" in
     fi
     ;;
   quartz)
-    PKG_CHECK_MODULES(GTK_MAC, gtk-mac-integration)
-    AC_SUBST(GTK_MAC_LIBS)
-    AC_SUBST(GTK_MAC_CFLAGS)
-    target_quartz=yes
+    PKG_CHECK_MODULES(GTK_MAC, [gtk-mac-integration],
+      [AC_DEFINE(HAVE_GTK_MAC_INTEGRATION,1,[Define if we have the gtk-mac-integration library.])])
     pangoft2=
     ;;
   win32)
