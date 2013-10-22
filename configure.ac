@@ -405,7 +405,8 @@ case "$gdk_target" in
     ;;
   quartz)
     PKG_CHECK_MODULES(GTK_MAC, [gtk-mac-integration],
-      [AC_DEFINE(HAVE_GTK_MAC_INTEGRATION,1,[Define if we have the gtk-mac-integration library.])])
+      [AC_DEFINE(HAVE_GTK_MAC_INTEGRATION,1,[Define if we have the gtk-mac-integration library.])],
+      [:])
     pangoft2=
     ;;
   win32)
