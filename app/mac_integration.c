@@ -22,8 +22,9 @@
 #include <AppKit/AppKit.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <file.h>
+#include "config.h"
 
-#ifdef GDK_WINDOWING_QUARTZ
+#ifdef HAVE_GTK_MAC_INTEGRATION
 #include <gtkmacintegration/gtkosxapplication.h>
 #endif
 
@@ -33,12 +34,10 @@
 #define USED_ON_MAC G_GNUC_UNUSED
 #endif
 
-#define USED_ON_MAC_QUARTZ G_GNUC_UNUSED
-#ifdef GDK_WINDOWING_QUARTZ
-#ifdef USE_MAC_INTEGRATION
-#undef USED_ON_MAC_QUARTZ
+#ifdef HAVE_GTK_MAC_INTEGRATION
 #define USED_ON_MAC_QUARTZ /* */
-#endif
+#else
+#define USED_ON_MAC_QUARTZ G_GNUC_UNUSED
 #endif
 
 #include "mac_integration.h"
@@ -46,7 +45,7 @@
 #ifdef USE_MAC_INTEGRATION
 int fileModulesReady = 0;
 GPtrArray *files_array = NULL;
-#ifdef GDK_WINDOWING_QUARTZ
+#ifdef HAVE_GTK_MAC_INTEGRATION
 GtkosxApplication *theApp = NULL;
 #endif
 #endif
@@ -54,8 +53,7 @@ GtkosxApplication *theApp = NULL;
 void
 gwy_osx_get_menu_from_widget(USED_ON_MAC_QUARTZ GtkWidget *container)
 {
-#ifdef GDK_WINDOWING_QUARTZ
-#ifdef USE_MAC_INTEGRATION
+#ifdef HAVE_GTK_MAC_INTEGRATION
     GList *children;            //,*subchildren,*subsubchildren;
     GList *l, *ll, *lll;
     GtkWidget *menubar = gtk_menu_bar_new();
@@ -93,7 +91,6 @@ gwy_osx_get_menu_from_widget(USED_ON_MAC_QUARTZ GtkWidget *container)
     gtk_widget_hide(menubar);
     gtkosx_application_set_menu_bar ( theApp, GTK_MENU_SHELL(menubar));
     gtkosx_application_ready (theApp);
-#endif
 #endif
 }
 
@@ -182,7 +179,7 @@ gwy_osx_init_handler(USED_ON_MAC int *argc)
                          forEventClass:kCoreEventClass
                             andEventID:kAEQuitApplication];
 
-#ifdef GDK_WINDOWING_QUARTZ
+#ifdef HAVE_GTK_MAC_INTEGRATION
     theApp  = g_object_new (GTKOSX_TYPE_APPLICATION, NULL);
 #endif
 #endif
@@ -197,7 +194,7 @@ gwy_osx_remove_handler(void)
     [appleEventManager removeEventHandlerForEventClass:kCoreEventClass andEventID:kAEQuitApplication];
     [eventHandler release];
     eventHandler = nil;
-#ifdef GDK_WINDOWING_QUARTZ
+#ifdef HAVE_GTK_MAC_INTEGRATION
     g_object_unref (theApp);
 #endif
 #endif
