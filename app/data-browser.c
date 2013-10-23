@@ -3285,11 +3285,15 @@ gwy_app_data_browser_create_3d(G_GNUC_UNUSED GwyAppDataBrowser *browser,
     GObject *dfield = NULL;
     GwyApp3DAssociation *assoc;
     gchar key[40];
+    const guchar *palette = NULL;
     guint len;
 
     g_snprintf(key, sizeof(key), "/%d/data", id);
     gwy_container_gis_object_by_name(proxy->container, key, &dfield);
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), NULL);
+
+    g_snprintf(key, sizeof(key), "/%d/base/palette", id);
+    gwy_container_gis_string_by_name(proxy->container, key, &palette);
 
     view3d = gwy_3d_view_new(proxy->container);
 
@@ -3316,6 +3320,10 @@ gwy_app_data_browser_create_3d(G_GNUC_UNUSED GwyAppDataBrowser *browser,
     key[len] = '\0';
     g_strlcat(key, "3d/palette", sizeof(key));
     gwy_3d_view_set_gradient_key(GWY_3D_VIEW(view3d), key);
+
+    if (palette)
+        gwy_container_set_string_by_name(proxy->container, key,
+                                         g_strdup(palette));
 
     key[len] = '\0';
     g_strlcat(key, "3d/material", sizeof(key));
