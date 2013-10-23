@@ -103,6 +103,18 @@ static void       gwy_app_volume_window_reset_zoom    (void);
 static void       metadata_browser                    (gpointer pwhat);
 static void       gwy_app_change_mask_color           (void);
 
+/* Must match Gwy3DViewLabel */
+static const struct {
+    const gchar *key;
+    const gchar *default_text;
+}
+labels_3d[GWY_3D_VIEW_NLABELS] = {
+    { "x",   "x: $x", },
+    { "y",   "y: $y", },
+    { "min", "$min",  },
+    { "max", "$max",  },
+};
+
 /*****************************************************************************
  *                                                                           *
  *     Main, toolbox                                                         *
@@ -1060,11 +1072,15 @@ gwy_app_3d_window_set_defaults(Gwy3DWindow *window)
     Gwy3DSetup *setup;
     GObject *lay;
     GtkToggleButton *toggle;
-    GwyContainer *settings;
+    GwyContainer *settings, *data;
+    const gchar *prefix;
+    GString *str;
+    guint i;
 
     view = (Gwy3DView*)gwy_3d_window_get_3d_view(window);
     setup = gwy_3d_view_get_setup(view);
     g_return_if_fail(GWY_IS_3D_SETUP(setup));
+    data = gwy_3d_view_get_data(view);
 
     settings = gwy_app_settings_get();
     gwy_container_set_boolean_by_name(settings, "/app/3d/axes-visible",
@@ -1094,6 +1110,60 @@ gwy_app_3d_window_set_defaults(Gwy3DWindow *window)
     toggle = GTK_TOGGLE_BUTTON(g_object_get_data(lay, "m"));
     gwy_container_set_boolean_by_name(settings, "/app/3d/show-mask",
                                       gtk_toggle_button_get_active(toggle));
+
+    prefix = gwy_3d_view_get_setup_prefix(view);
+    str = g_string_new(NULL);
+    for (i = 0; i < G_N_ELEMENTS(labels_3d); i++) {
+        Gwy3DLabel *label = NULL;
+        gdouble deltax, deltay, rotation, size;
+        gboolean fixed_size;
+        guint len;
+        gchar *text;
+
+        g_string_printf(str, "%s/%s", prefix, labels_3d[i].key);
+        gwy_container_gis_object_by_name(data, str->str, &label);
+        if (!label)
+            continue;
+
+        g_object_get(label,
+                     "delta-x", &deltax,
+                     "delta-y", &deltay,
+                     "rotation", &rotation,
+                     "size", &size,
+                     "fixed-size", &fixed_size,
+                     "text", &text,
+                     NULL);
+        g_string_printf(str, "/app/3d/labels/%s/", labels_3d[i].key);
+        len = str->len;
+
+        g_string_append(str, "delta-x");
+        gwy_container_set_double_by_name(settings, str->str, deltax);
+        g_string_truncate(str, len);
+
+        g_string_append(str, "delta-y");
+        gwy_container_set_double_by_name(settings, str->str, deltay);
+        g_string_truncate(str, len);
+
+        g_string_append(str, "rotation");
+        gwy_container_set_double_by_name(settings, str->str, rotation);
+        g_string_truncate(str, len);
+
+        g_string_append(str, "size");
+        gwy_container_set_double_by_name(settings, str->str, size);
+        g_string_truncate(str, len);
+
+        g_string_append(str, "fixed-size");
+        gwy_container_set_boolean_by_name(settings, str->str, fixed_size);
+        g_string_truncate(str, len);
+
+        /* g_object_get() allocates it, gwy_container_set_string_by_name()
+         * consumes it. */
+        g_string_append(str, "text");
+        gwy_container_set_string_by_name(settings, str->str, text);
+        g_string_truncate(str, len);
+    }
+
+    g_string_free(str, TRUE);
 }
 
 gboolean
@@ -1106,7 +1176,9 @@ _gwy_app_3d_view_init_setup(GwyContainer *container,
     Gwy3DVisualization visualization;
     gdouble dblvalue;
     gboolean boolvalue;
+    GString *str;
     gchar *key;
+    guint i;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
     g_return_val_if_fail(setup_prefix, FALSE);
@@ -1157,6 +1229,59 @@ _gwy_app_3d_view_init_setup(GwyContainer *container,
     gwy_container_set_object_by_name(container, key, setup);
     g_object_unref(setup);
     g_free(key);
+
+    str = g_string_new(NULL);
+    for (i = 0; i < G_N_ELEMENTS(labels_3d); i++) {
+        Gwy3DLabel *label = NULL;
+        gdouble dbl;
+        gboolean flag;
+        guint len;
+        const guchar *text;
+
+        g_string_printf(str, "%s/%s", setup_prefix, labels_3d[i].key);
+        gwy_container_gis_object_by_name(container, str->str, &label);
+        if (label)
+            continue;
+
+        label = gwy_3d_label_new(labels_3d[i].default_text);
+        gwy_container_set_object_by_name(container, str->str, label);
+        g_object_unref(label);
+
+        g_string_printf(str, "/app/3d/labels/%s/", labels_3d[i].key);
+        len = str->len;
+
+        g_string_append(str, "delta-x");
+        if (gwy_container_gis_double_by_name(settings, str->str, &dbl))
+            g_object_set(label, "delta-x", dbl, NULL);
+        g_string_truncate(str, len);
+
+        g_string_append(str, "delta-y");
+        if (gwy_container_gis_double_by_name(settings, str->str, &dbl))
+            g_object_set(label, "delta-y", dbl, NULL);
+        g_string_truncate(str, len);
+
+        g_string_append(str, "rotation");
+        if (gwy_container_gis_double_by_name(settings, str->str, &dbl))
+            g_object_set(label, "rotation", dbl, NULL);
+        g_string_truncate(str, len);
+
+        g_string_append(str, "size");
+        if (gwy_container_gis_double_by_name(settings, str->str, &dbl))
+            g_object_set(label, "size", dbl, NULL);
+        g_string_truncate(str, len);
+
+        g_string_append(str, "fixed-size");
+        if (gwy_container_gis_boolean_by_name(settings, str->str, &flag))
+            g_object_set(label, "fixed-size", flag, NULL);
+        g_string_truncate(str, len);
+
+        g_string_append(str, "text");
+        if (gwy_container_gis_string_by_name(settings, str->str, &text))
+            g_object_set(label, "text", text, NULL);
+        g_string_truncate(str, len);
+    }
+
+    g_string_free(str, TRUE);
 
     return TRUE;
 }
