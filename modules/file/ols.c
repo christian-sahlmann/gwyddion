@@ -65,7 +65,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports OLS data files."),
     "Jan Hořák <xhorak@gmail.com>, Yeti <yeti@gwyddion.net>",
-    "0.9",
+    "0.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2008",
 };
@@ -145,9 +145,8 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
     gint i, power10;
     gchar *comment = NULL;
     const gchar *s1;
-    gchar *s2;
     GError *err = NULL;
-    guint spp, ch, dir_num = 0;
+    guint spp, ch, id = 0, dir_num = 0;
     gdouble *data;
     gdouble z_axis = 1.0, xy_axis, factor;
     GQuark quark;
@@ -232,34 +231,33 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
             if (!container)
                 container = gwy_container_new();
 
-            quark = gwy_app_get_data_key_for_id(dir_num*spp + ch);
+            quark = gwy_app_get_data_key_for_id(id);
             gwy_container_set_object(container, quark, dfield);
+            g_object_unref(dfield);
 
+            g_string_printf(key, "%s/title", g_quark_to_string(quark));
             if (spp == 1) {
                 /* Channel 0 is texture */
                 if (dir_num == 0) {
-                    s2 = g_strdup_printf("%s/title", g_quark_to_string(quark));
-                    gwy_container_set_string_by_name(container, s2,
+                    gwy_container_set_string_by_name(container, key->str,
                                                      g_strdup("Texture"));
-                    g_free(s2);
                 }
                 /* Channel 1 is topography */
                 else if (dir_num == 1) {
-                    s2 = g_strdup_printf("%s/title", g_quark_to_string(quark));
-                    gwy_container_set_string_by_name(container, s2,
+                    g_string_printf(key, "%s/title", g_quark_to_string(quark));
+                    gwy_container_set_string_by_name(container, key->str,
                                                      g_strdup("Height"));
-                    g_free(s2);
                 }
             }
             else {
-                s2 = g_strdup_printf("%s/title", g_quark_to_string(quark));
-                gwy_container_set_string_by_name(container, s2,
+                gwy_container_set_string_by_name(container, key->str,
                                                  g_strdup(colour_channels[ch]));
-                g_free(s2);
+                g_string_printf(key, "/%d/base/palette", id);
+                gwy_container_set_string_by_name(container, key->str,
+                                                 g_strdup(colour_channels[ch]));
             }
 
-            // free resources
-            g_object_unref(dfield);
+            id++;
         }
     }
 
