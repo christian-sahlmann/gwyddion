@@ -86,7 +86,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports LEXT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2010",
 };
@@ -223,6 +223,8 @@ titlecase_channel_name(gchar *name)
 static GwyContainer*
 lext_load_tiff(const GwyTIFF *tiff, GError **error)
 {
+    const gchar *colour_channels[] = { "Red", "Green", "Blue" };
+
     GwyContainer *container = NULL;
     GwyDataField *dfield;
     GwySIUnit *siunit;
@@ -233,9 +235,11 @@ lext_load_tiff(const GwyTIFF *tiff, GError **error)
     LextFile lfile;
     gchar *comment = NULL;
     gchar *title = NULL;
-    const gchar *value, *image0title;
+    gchar *channeltitle;
+    const gchar *value, *image0title, *keytitle;
     GError *err = NULL;
-    guint dir_num = 0;
+    guint dir_num = 0, ch, spp;
+    gint id = 0;
     GString *key;
 
     /* Comment with parameters is common for all data fields */
@@ -295,9 +299,14 @@ lext_load_tiff(const GwyTIFF *tiff, GError **error)
         if (gwy_stramong(title, "Thumbnail", "Invalid", NULL))
             continue;
 
+        if (gwy_strequal(title, "Color"))
+            keytitle = "Intensity";
+        else
+            keytitle = title;
+
         reader = gwy_tiff_image_reader_free(reader);
         /* Request a reader, this ensures dimensions and stuff are defined. */
-        reader = gwy_tiff_get_image_reader(tiff, dir_num, 1, &err);
+        reader = gwy_tiff_get_image_reader(tiff, dir_num, 3, &err);
         if (!reader) {
             g_warning("Ignoring directory %u: %s", dir_num, err->message);
             g_clear_error(&err);
@@ -305,66 +314,79 @@ lext_load_tiff(const GwyTIFF *tiff, GError **error)
         }
 
         g_string_printf(key, "/TiffTagDescData/%sInfo/%sDataPerPixelX",
-                        title, title);
+                        keytitle, keytitle);
         if (!(value = g_hash_table_lookup(hash, (gpointer)key->str))) {
             g_warning("Cannot find %s", key->str);
         }
         xscale = Picometer * g_ascii_strtod(value, NULL);
 
         g_string_printf(key, "/TiffTagDescData/%sInfo/%sDataPerPixelY",
-                        title, title);
+                        keytitle, keytitle);
         if (!(value = g_hash_table_lookup(hash, (gpointer)key->str))) {
             g_warning("Cannot find %s", key->str);
         }
         yscale = Picometer * g_ascii_strtod(value, NULL);
 
         g_string_printf(key, "/TiffTagDescData/%sInfo/%sDataPerPixelZ",
-                        title, title);
+                        keytitle, keytitle);
         if (!(value = g_hash_table_lookup(hash, (gpointer)key->str))) {
             g_warning("Cannot find %s", key->str);
         }
         zfactor = g_ascii_strtod(value, NULL);
 
-        siunit = gwy_si_unit_new("m");
-        dfield = gwy_data_field_new(reader->width, reader->height,
-                                    reader->width * xscale,
-                                    reader->height * yscale,
-                                    FALSE);
-        // units
-        gwy_data_field_set_si_unit_xy(dfield, siunit);
-        g_object_unref(siunit);
-
-        if (gwy_strequal(title, "Height")) {
-            siunit = gwy_si_unit_new("m");
-            zfactor *= Picometer;
-        }
-        else if (gwy_strequal(title, "Intensity")) {
-            siunit = gwy_si_unit_new(NULL);
-        }
-        else
-            siunit = gwy_si_unit_new(NULL);
-
-        gwy_data_field_set_si_unit_z(dfield, siunit);
-        g_object_unref(siunit);
-
-        data = gwy_data_field_get_data(dfield);
-        for (i = 0; i < reader->height; i++)
-            gwy_tiff_read_image_row(tiff, reader, 0, i, zfactor, 0.0,
-                                    data + i*reader->width);
-
-        /* add read datafield to container */
         if (!container)
             container = gwy_container_new();
 
-        quark = gwy_app_get_data_key_for_id(dir_num);
-        gwy_container_set_object(container, quark, dfield);
+        spp = reader->samples_per_pixel;
+        for (ch = 0; ch < spp; ch++) {
+            siunit = gwy_si_unit_new("m");
+            dfield = gwy_data_field_new(reader->width, reader->height,
+                                        reader->width * xscale,
+                                        reader->height * yscale,
+                                        FALSE);
+            // units
+            gwy_data_field_set_si_unit_xy(dfield, siunit);
+            g_object_unref(siunit);
 
-        g_string_printf(key, "/%u/data/title", dir_num);
-        gwy_container_set_string_by_name(container, key->str, title);
-        title = NULL;
+            if (gwy_strequal(title, "Height")) {
+                siunit = gwy_si_unit_new("m");
+                zfactor *= Picometer;
+            }
+            else if (gwy_strequal(title, "Intensity")) {
+                siunit = gwy_si_unit_new(NULL);
+            }
+            else
+                siunit = gwy_si_unit_new(NULL);
 
-        // free resources
-        g_object_unref(dfield);
+            gwy_data_field_set_si_unit_z(dfield, siunit);
+            g_object_unref(siunit);
+
+            data = gwy_data_field_get_data(dfield);
+            for (i = 0; i < reader->height; i++)
+                gwy_tiff_read_image_row(tiff, reader, ch, i, zfactor, 0.0,
+                                        data + i*reader->width);
+
+            /* add read datafield to container */
+            quark = gwy_app_get_data_key_for_id(id);
+            gwy_container_set_object(container, quark, dfield);
+            g_object_unref(dfield);
+
+            g_string_printf(key, "/%u/data/title", id);
+            if (spp == 3)
+                channeltitle = g_strdup(colour_channels[ch]);
+            else
+                channeltitle = g_strdup(title);
+
+            gwy_container_set_string_by_name(container, key->str, channeltitle);
+
+            if (spp == 3) {
+                g_string_printf(key, "/%u/base/palette", id);
+                gwy_container_set_string_by_name(container, key->str,
+                                                 g_strdup(colour_channels[ch]));
+            }
+
+            id++;
+        }
     }
 
 fail:
@@ -396,13 +418,22 @@ guess_image0_title(const GwyTIFF *tiff)
         N_IMAGES
     };
     guint seen = 0, xres, yres, spp, bpp0, dir_num;
+    guint *bpps;
 
     /* Only read the first value of BitsPerSample if it's a tuple. */
     if (!gwy_tiff_get_uint(tiff, 0, GWY_TIFFTAG_IMAGE_WIDTH, &xres)
         || !gwy_tiff_get_uint(tiff, 0, GWY_TIFFTAG_IMAGE_LENGTH, &yres)
         || !gwy_tiff_get_uint(tiff, 0, GWY_TIFFTAG_SAMPLES_PER_PIXEL, &spp)
-        || !gwy_tiff_get_uint(tiff, 0, GWY_TIFFTAG_BITS_PER_SAMPLE, &bpp0))
+        || !spp)
         return NULL;
+
+    bpps = g_new(guint, spp);
+    if (!gwy_tiff_get_uints(tiff, 0, GWY_TIFFTAG_BITS_PER_SAMPLE, spp, bpps)) {
+        g_free(bpps);
+        return NULL;
+    }
+    bpp0 = bpps[0];
+    g_free(bpps);
 
     for (dir_num = 1; dir_num < gwy_tiff_get_n_dirs(tiff); dir_num++) {
         gchar *title = NULL;
