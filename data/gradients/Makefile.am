@@ -40,6 +40,9 @@ gradientdata_DATA = \
 	Red-Stripes-5 \
 	Red-Violet \
 	Red-Yellow \
+	RGB-Red \
+	RGB-Green \
+	RGB-Blue \
 	Rust \
 	Saw1 \
 	Shame \
