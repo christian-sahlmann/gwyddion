@@ -41,7 +41,7 @@ Philipp Rahe <hquerquadrat@gmail.com>
 Matthew Caldwell <m.caldwell@ucl.ac.uk>
     IonScope SICM file import.
 Андрей Груздев <gruzdev@ntmdt.ru>
-    Mac OS X integration.
+    Mac OS X integration, NT-MDT import improvements.
 Даниил Браташов <dn2010@gmail.com>
     NT-MDT improvements namely MDA frame import and old MDA import,
     Nanoeducator, WIP, TIA SER and NanoScanTech import, Mutual crop,
@@ -64,6 +64,8 @@ Sameer Grover <sameer.grover.1@gmail.com>
     Nanomagnetics NMI import module, drift correction improvements.
 Niv Levy <nivl2000@gmail.com>
     NetCDF import improvements.
+Vinicius Barboza <vinicius.barboza@lnnano.cnpem.br>
+    Otsu thresholding.
 
 
 === Translators ===

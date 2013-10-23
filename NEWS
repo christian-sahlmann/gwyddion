@@ -4,6 +4,7 @@ Application:
 - Settings of 3D view labels are also stored when 3D defaults are saved.
 
 Modules:
+- Otsu's thresholding (new): Grain marking using Otsu's method.
 - LEXT: Can load colour images; R, G, B are imported as separate channels.
 - OLS, LEXT: False colour gradients of colour channels are automatically set to
   RGB-Red, RGB-Green and RGB-Blue.
