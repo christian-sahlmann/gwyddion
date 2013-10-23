@@ -1,6 +1,16 @@
 2.34 (0000-00-00)
 Application:
 - Menu integration support in 64 bit OS X application.
+- Settings of 3D view labels are also stored when 3D defaults are saved.
+
+Modules:
+- LEXT: Can load colour images; R, G, B are imported as separate channels.
+- OLS, LEXT: False colour gradients of colour channels are automatically set to
+  RGB-Red, RGB-Green and RGB-Blue.
+
+Other:
+- Three new false colour gradients were added RGB-Red, RGB-Green and RGB-Blue,
+  representing pure R, G and B channels.
 
 
 2.33 (2013-10-17)
