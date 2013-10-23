@@ -224,6 +224,9 @@ static GwyContainer*
 lext_load_tiff(const GwyTIFF *tiff, GError **error)
 {
     const gchar *colour_channels[] = { "Red", "Green", "Blue" };
+    const gchar *colour_channel_gradients[] = {
+        "RGB-Red", "RGB-Green", "RGB-Blue"
+    };
 
     GwyContainer *container = NULL;
     GwyDataField *dfield;
@@ -381,8 +384,9 @@ lext_load_tiff(const GwyTIFF *tiff, GError **error)
 
             if (spp == 3) {
                 g_string_printf(key, "/%u/base/palette", id);
-                gwy_container_set_string_by_name(container, key->str,
-                                                 g_strdup(colour_channels[ch]));
+                gwy_container_set_string_by_name
+                                    (container, key->str,
+                                     g_strdup(colour_channel_gradients[ch]));
             }
 
             id++;
