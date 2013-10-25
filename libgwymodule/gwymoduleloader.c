@@ -74,7 +74,7 @@ gwy_module_error_quark(void)
     static GQuark error_domain = 0;
 
     if (!error_domain)
-        error_domain = g_quark_from_static_string("gwy-expr-error-quark");
+        error_domain = g_quark_from_static_string("gwy-module-error-quark");
 
     return error_domain;
 }
