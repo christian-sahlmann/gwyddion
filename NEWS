@@ -8,6 +8,8 @@ Modules:
 - LEXT: Can load colour images; R, G, B are imported as separate channels.
 - OLS, LEXT: False colour gradients of colour channels are automatically set to
   RGB-Red, RGB-Green and RGB-Blue.
+- Graph cut: Cutting other curves than the first actually works.  Memory leaks
+  were fixed.
 
 Other:
 - Three new false colour gradients were added RGB-Red, RGB-Green and RGB-Blue,
