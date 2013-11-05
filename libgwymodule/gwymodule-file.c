@@ -500,7 +500,7 @@ gwy_file_load(const gchar *filename,
 }
 
 /**
- * gwy_file_load:
+ * gwy_file_load_with_func:
  * @filename: A file name to load data from, in GLib encoding.
  * @mode: Run mode.
  * @name: Location to store the name of file load function used to load the
