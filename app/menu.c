@@ -308,6 +308,123 @@ gwy_app_menu_sort_submenus(GNode *node,
     return FALSE;
 }
 
+static GtkWidget* shadow_menu_item(GtkWidget *item);
+static GtkWidget* shadow_menu_tree(GtkWidget *menu,
+                                   gboolean toplevel);
+
+static void
+shadow_label(GtkMenuItem *item,
+             G_GNUC_UNUSED GParamSpec *pspec,
+             GtkMenuItem *shadowitem)
+{
+    const gchar *label;
+
+    label = gtk_menu_item_get_label(item);
+    gtk_menu_item_set_label(shadowitem, label);
+}
+
+static GtkWidget*
+shadow_menu_item(GtkWidget *item)
+{
+    GtkWidget *submenu, *shadowitem;
+    GwySensitivityGroup *sensgroup;
+    const gchar *label;
+    const gchar *special;
+
+    special = g_object_get_data(G_OBJECT(item), "gwy-menu-special");
+    if (special) {
+        if (gwy_strequal(special, "tearoff"))
+            return NULL;
+        /* TODO: More specials, such as Run/Show Last items? */
+    }
+
+    label = gtk_menu_item_get_label(GTK_MENU_ITEM(item));
+    shadowitem = gtk_menu_item_new_with_mnemonic(label);
+
+    if (GTK_IS_IMAGE_MENU_ITEM(item)) {
+        /* FIXME: Replicating a GtkImage is difficult.
+        gboolean alwas_show_image, use_stock;
+        GtkWidget *image;
+        */
+    }
+
+    sensgroup = gwy_app_sensitivity_get_group();
+    if (gwy_sensitivity_group_contains_widget(sensgroup, item)) {
+        GwyMenuSensFlags sens = gwy_sensitivity_group_get_widget_mask(sensgroup,
+                                                                      item);
+        gwy_app_sensitivity_add_widget(shadowitem, sens);
+    }
+
+    if ((submenu = gtk_menu_item_get_submenu(GTK_MENU_ITEM(item)))) {
+        GtkWidget *shadowsubmenu = shadow_menu_tree(submenu, FALSE);
+        gtk_menu_item_set_submenu(GTK_MENU_ITEM(shadowitem), shadowsubmenu);
+    }
+
+    /* FIXME: Can we activate invisible menu items? */
+    g_signal_connect_swapped(shadowitem, "activate",
+                             G_CALLBACK(gtk_menu_item_activate), item);
+
+    g_signal_connect(item, "notify::label",
+                     G_CALLBACK(shadow_label), shadowitem);
+
+    return shadowitem;
+}
+
+static GtkWidget*
+shadow_menu_tree(GtkWidget *menu,
+                 gboolean toplevel)
+{
+    GList *children, *c;
+    GtkWidget *shadowmenu;
+    GtkMenuShell *shadowshell;
+
+    if (toplevel) {
+        shadowmenu = gtk_menu_bar_new();
+        gtk_menu_bar_set_pack_direction(GTK_MENU_BAR(shadowmenu),
+                                        GTK_PACK_DIRECTION_TTB);
+    }
+    else {
+        shadowmenu = gtk_menu_new();
+    }
+    shadowshell = GTK_MENU_SHELL(shadowmenu);
+
+    children = gtk_container_get_children(GTK_CONTAINER(menu));
+    for (c = children; c; c = g_list_next(c)) {
+        GtkWidget *item, *shadowitem;
+
+        item = GTK_WIDGET(c->data);
+        if ((shadowitem = shadow_menu_item(item)))
+            gtk_menu_shell_append(shadowshell, shadowitem);
+    }
+    g_list_free(children);
+
+    gtk_widget_show_all(shadowmenu);
+
+    return shadowmenu;
+}
+
+static void
+tear_off_submenu(GtkWidget *tearoffitem)
+{
+    GtkWidget *window, *menu, *shadowmenu;
+
+    menu = gtk_widget_get_parent(tearoffitem);
+    shadowmenu = shadow_menu_tree(menu, TRUE);
+
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_container_add(GTK_CONTAINER(window), shadowmenu);
+    gtk_widget_show_all(window);
+}
+
+static GtkWidget*
+create_tearoff_item(void)
+{
+    GtkWidget *item = gtk_menu_item_new_with_label(_("---------------------"));
+    g_signal_connect(item, "activate",
+                     G_CALLBACK(tear_off_submenu), NULL);
+    return item;
+}
+
 /**
  * gwy_app_menu_create_widgets:
  * @node: Module function menu tree node to process.
@@ -354,7 +471,7 @@ gwy_app_menu_create_widgets(GNode *node,
 
     menu = gtk_menu_new();
     gtk_menu_set_title(GTK_MENU(menu), data->item_translated_canonical);
-    item = gtk_tearoff_menu_item_new();
+    item = create_tearoff_item(); /*gtk_tearoff_menu_item_new();*/
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
     for (child = node->children; child; child = child->next) {
         cdata = (MenuNodeData*)child->data;
