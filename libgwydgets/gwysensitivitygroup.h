@@ -58,22 +58,24 @@ struct _GwySensitivityGroupClass {
 };
 
 
-GType  gwy_sensitivity_group_get_type         (void) G_GNUC_CONST;
-GwySensitivityGroup* gwy_sensitivity_group_new(void);
-void   gwy_sensitivity_group_add_widget       (GwySensitivityGroup *sensgroup,
-                                               GtkWidget *widget,
-                                               guint mask);
-void   gwy_sensitivity_group_set_state        (GwySensitivityGroup *sensgroup,
-                                               guint affected_mask,
-                                               guint state);
-guint  gwy_sensitivity_group_get_state        (GwySensitivityGroup *sensgroup);
-void   gwy_sensitivity_group_release_widget   (GwySensitivityGroup *sensgroup,
-                                               GtkWidget *widget);
-guint  gwy_sensitivity_group_get_widget_mask  (GwySensitivityGroup *sensgroup,
-                                               GtkWidget *widget);
-void   gwy_sensitivity_group_set_widget_mask  (GwySensitivityGroup *sensgroup,
-                                               GtkWidget *widget,
-                                               guint mask);
+GType                gwy_sensitivity_group_get_type       (void)                            G_GNUC_CONST;
+GwySensitivityGroup* gwy_sensitivity_group_new            (void);
+void                 gwy_sensitivity_group_add_widget     (GwySensitivityGroup *sensgroup,
+                                                           GtkWidget *widget,
+                                                           guint mask);
+void                 gwy_sensitivity_group_set_state      (GwySensitivityGroup *sensgroup,
+                                                           guint affected_mask,
+                                                           guint state);
+guint                gwy_sensitivity_group_get_state      (GwySensitivityGroup *sensgroup);
+void                 gwy_sensitivity_group_release_widget (GwySensitivityGroup *sensgroup,
+                                                           GtkWidget *widget);
+guint                gwy_sensitivity_group_get_widget_mask(GwySensitivityGroup *sensgroup,
+                                                           GtkWidget *widget);
+void                 gwy_sensitivity_group_set_widget_mask(GwySensitivityGroup *sensgroup,
+                                                           GtkWidget *widget,
+                                                           guint mask);
+gboolean             gwy_sensitivity_group_contains_widget(GwySensitivityGroup *sensgroup,
+                                                           GtkWidget *widget);
 
 G_END_DECLS
 

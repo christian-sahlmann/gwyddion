@@ -362,6 +362,36 @@ gwy_sensitivity_group_set_widget_mask(GwySensitivityGroup *sensgroup,
 }
 
 /**
+ * gwy_sensitivity_group_contains_widget:
+ * @sensgroup: A widget flag sensitivity group.
+ * @widget: Widget to test for membership.
+ *
+ * Checks whether a widget belongs to a sensitivity group.
+ *
+ * Returns: %TRUE if @widget is in @sensgroup, %FALSE otherwise.
+ *
+ * Since: 2.34
+ **/
+gboolean
+gwy_sensitivity_group_contains_widget(GwySensitivityGroup *sensgroup,
+                                      GtkWidget *widget)
+{
+    GObject *object;
+    SensList *senslist;
+
+    g_return_val_if_fail(GWY_IS_SENSITIVITY_GROUP(sensgroup), FALSE);
+    g_return_val_if_fail(GTK_IS_WIDGET(widget), FALSE);
+    object = G_OBJECT(widget);
+    senslist = (SensList*)g_object_get_qdata(object, sensitivity_group_quark);
+    if (!senslist)
+        return FALSE;
+    if (senslist->parent != sensgroup)
+        return FALSE;
+
+    return TRUE;
+}
+
+/**
  * gwy_sensitivity_group_check_dirty:
  * @sensgroup: A widget flag sensitivity group.
  *
