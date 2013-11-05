@@ -668,14 +668,6 @@ gwy_app_menu_create_meta_menu(GtkAccelGroup *accel_group)
 {
     static GtkItemFactoryEntry menu_items[] = {
         {
-            "/---",
-            NULL,
-            NULL,
-            0,
-            "<Tearoff>",
-            NULL
-        },
-        {
             N_("/Show _Data Browser"),
             NULL,
             gwy_app_data_browser_show,
@@ -733,14 +725,6 @@ static GtkWidget*
 gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
 {
     static GtkItemFactoryEntry menu_items[] = {
-        {
-            "/---",
-            NULL,
-            NULL,
-            0,
-            "<Tearoff>",
-            NULL
-        },
         {
             N_("/_Open..."),
             "<control>O",
@@ -827,14 +811,6 @@ GtkWidget*
 gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
 {
     static GtkItemFactoryEntry menu_items[] = {
-        {
-            "/---",
-            NULL,
-            NULL,
-            0,
-            "<Tearoff>",
-            NULL
-        },
         {
             N_("/_Undo"),
             "<control>Z",
