@@ -180,7 +180,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Recalibrates scan lateral dimensions or value range."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.10",
+    "2.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -356,6 +356,9 @@ calibrate(GwyContainer *data, GwyRunType run)
             if (dfields[i])
                 gwy_data_field_data_changed(dfields[i]);
         }
+
+        if (args.xratio != 1.0 || args.yratio != 1.0)
+            gwy_app_data_clear_selections(data, oldid);
     }
 
     g_free(args.xyunit);
