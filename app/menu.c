@@ -678,7 +678,7 @@ gwy_app_process_menu_add_run_last(GtkWidget *menu)
     gtk_accel_map_add_entry(reshow_accel_path, GDK_f,
                             GDK_CONTROL_MASK | GDK_SHIFT_MASK);
     g_object_set_qdata(G_OBJECT(menu), reshow_last_quark, item);
-    gtk_menu_shell_insert(GTK_MENU_SHELL(menu), item, 1);
+    gtk_menu_shell_insert(GTK_MENU_SHELL(menu), item, 0);
     gwy_app_sensitivity_add_widget(item, (GWY_MENU_FLAG_DATA
                                           | GWY_MENU_FLAG_LAST_PROC));
     g_signal_connect_swapped(item, "activate",
@@ -692,7 +692,7 @@ gwy_app_process_menu_add_run_last(GtkWidget *menu)
     gtk_menu_item_set_accel_path(GTK_MENU_ITEM(item), repeat_accel_path);
     gtk_accel_map_add_entry(repeat_accel_path, GDK_f, GDK_CONTROL_MASK);
     g_object_set_qdata(G_OBJECT(menu), repeat_last_quark, item);
-    gtk_menu_shell_insert(GTK_MENU_SHELL(menu), item, 1);
+    gtk_menu_shell_insert(GTK_MENU_SHELL(menu), item, 0);
     gwy_app_sensitivity_add_widget(item, (GWY_MENU_FLAG_DATA
                                           | GWY_MENU_FLAG_LAST_PROC));
     g_signal_connect_swapped(item, "activate",
