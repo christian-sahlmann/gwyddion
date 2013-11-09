@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2013-10-16 03:58+0200\n"
-"PO-Revision-Date: 2013-10-23 14:24+0300\n"
+"POT-Creation-Date: 2013-11-05 03:58+0100\n"
+"PO-Revision-Date: 2013-11-09 14:30+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -131,12 +131,12 @@ msgstr "контакт: Герц (параболоид)"
 #: libgwydgets/gwygraphwindow.c:611
 #: app/data-browser.c:2086
 #: app/data-browser.c:2849
-#: app/data-browser.c:3697
-#: app/data-browser.c:3856
-#: app/data-browser.c:4142
-#: app/data-browser.c:4556
-#: app/data-browser.c:6486
-#: app/data-browser.c:6568
+#: app/data-browser.c:3705
+#: app/data-browser.c:3864
+#: app/data-browser.c:4150
+#: app/data-browser.c:4564
+#: app/data-browser.c:6494
+#: app/data-browser.c:6576
 #: app/resource-editor.c:366
 #: modules/process/convolution_filter.c:699
 msgid "Untitled"
@@ -448,7 +448,7 @@ msgid "Area"
 msgstr "Площадь"
 
 #: libprocess/gwygrainvalue.c:1057
-#: app/data-browser.c:5058
+#: app/data-browser.c:5066
 #: app/toolbox.c:108
 msgid "Volume"
 msgstr "Объём"
@@ -1465,7 +1465,7 @@ msgstr "Удалённое управление"
 msgid "Python Scripting Interface"
 msgstr "Скриптовый интерфейс Python"
 
-#: app/app.c:262
+#: app/app.c:274
 #, c-format
 msgid ""
 "Some data are unsaved:\n"
@@ -1476,77 +1476,77 @@ msgstr ""
 "%s\n"
 "Действительно выйти?"
 
-#: app/app.c:374
+#: app/app.c:386
 msgid "Mask _Color..."
 msgstr "_Цвет маски..."
 
-#: app/app.c:390
-#: app/app.c:1464
+#: app/app.c:402
+#: app/app.c:1589
 msgid "Zoom _1:1"
 msgstr "Масштаб _1:1"
 
-#: app/app.c:394
-#: app/app.c:1468
+#: app/app.c:406
+#: app/app.c:1593
 msgid "Metadata _Browser..."
 msgstr "Просмотр _метаданных"
 
-#: app/app.c:592
+#: app/app.c:604
 msgid "Pi_xelwise Square"
 msgstr "Квадратные _пиксели"
 
-#: app/app.c:602
+#: app/app.c:614
 msgid "_Physically Square"
 msgstr "Равные _масштабы осей"
 
-#: app/app.c:748
+#: app/app.c:760
 msgid "verb|Save"
 msgstr "Сохранить"
 
-#: app/app.c:751
-#: app/app.c:755
+#: app/app.c:763
+#: app/app.c:767
 msgid "Save 3D view to an image"
 msgstr "Сохранить трёхмерный вид в изображение"
 
-#: app/app.c:761
+#: app/app.c:773
 msgid "Set as Default"
 msgstr "Использовать по умолчанию"
 
-#: app/app.c:763
+#: app/app.c:775
 msgid "Set the current view setup as the default"
 msgstr "Установить текущие настройки вида как настройки по умолчанию"
 
-#: app/app.c:824
+#: app/app.c:836
 msgid "_Show mask"
 msgstr "Показывать _маску"
 
-#: app/app.c:992
+#: app/app.c:1004
 #, c-format
 msgid "Saving of 3D view to `%s' failed"
 msgstr "Не удалось сохранить трёхмерный вид в `%s'"
 
-#: app/app.c:1036
+#: app/app.c:1048
 msgid "Export 3D View"
 msgstr "Экспортировать трёхмерный вид"
 
-#: app/app.c:1222
+#: app/app.c:1347
 msgid "_Change Preview"
 msgstr "_Изменить изображение предпросмотра"
 
-#: app/app.c:1322
+#: app/app.c:1447
 msgid "Change Volume Data Preview"
 msgstr "Изменить изображение предпросмотра для объёмных данных"
 
-#: app/app.c:1332
+#: app/app.c:1457
 msgid "Preview quantity:"
 msgstr "Величина для предпросмотра:"
 
-#: app/app.c:1342
+#: app/app.c:1467
 #: modules/process/extend.c:270
 #: modules/tools/linestats.c:151
 msgid "Mean"
 msgstr "Среднее"
 
-#: app/app.c:1343
+#: app/app.c:1468
 #: modules/process/polydistort.c:275
 #: modules/tools/filter.c:208
 #: modules/tools/icolorange.c:385
@@ -1554,76 +1554,76 @@ msgstr "Среднее"
 msgid "Minimum"
 msgstr "Минимум"
 
-#: app/app.c:1344
+#: app/app.c:1469
 #: modules/tools/filter.c:209
 #: modules/tools/icolorange.c:396
 #: modules/tools/linestats.c:154
 msgid "Maximum"
 msgstr "Максимум"
 
-#: app/app.c:1345
+#: app/app.c:1470
 msgid "Min. position"
 msgstr "Положение минимума"
 
-#: app/app.c:1346
+#: app/app.c:1471
 msgid "Max. position"
 msgstr "Положение максимума"
 
-#: app/app.c:1347
+#: app/app.c:1472
 #: modules/process/scars.c:529
 #: modules/process/scars.c:536
 #: modules/process/threshold.c:353
 msgid "RMS"
 msgstr "Ср. квадр."
 
-#: app/app.c:1348
+#: app/app.c:1473
 #: modules/file/asciiexport.c:185
 msgid "Channel:"
 msgstr "Канал:"
 
-#: app/app.c:1349
+#: app/app.c:1474
 msgid "Section:"
 msgstr "Сечение:"
 
-#: app/data-browser.c:4933
+#: app/data-browser.c:4941
 msgid "Extract to a new file"
 msgstr "Извлечь в новый файл"
 
-#: app/data-browser.c:4934
+#: app/data-browser.c:4942
 msgid "Duplicate"
 msgstr "Сделать копию"
 
-#: app/data-browser.c:4935
+#: app/data-browser.c:4943
 msgid "Delete"
 msgstr "Удалить"
 
-#: app/data-browser.c:4980
+#: app/data-browser.c:4988
 msgid "Data Browser"
 msgstr "Браузер данных"
 
-#: app/data-browser.c:5003
+#: app/data-browser.c:5011
 msgid "Close file"
 msgstr "Закрыть файл"
 
-#: app/data-browser.c:5016
+#: app/data-browser.c:5024
 msgid "Channels"
 msgstr "Каналы"
 
-#: app/data-browser.c:5030
+#: app/data-browser.c:5038
 #: modules/volume/volume_extract.c:444
 msgid "Graphs"
 msgstr "Графики"
 
-#: app/data-browser.c:5044
+#: app/data-browser.c:5052
 msgid "Spectra"
 msgstr "Спектры"
 
-#: app/data-browser.c:6524
+#: app/data-browser.c:6532
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Неизвестный канал %d"
 
-#: app/data-browser.c:6610
+#: app/data-browser.c:6618
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Неизвестный объём %d"
@@ -2332,7 +2332,7 @@ msgstr "Инструмент \"Диапазон цвета\" предлагае�
 
 #: app/tips.c:346
 msgid "Dragging selections from Selections Manager tool to a data window copies the selection to the target data."
-msgstr "Перенос выделенной области из менеджера выделенного в окно данных копирует область на указанные данные."
+msgstr "Перенос выделенной области из менеджера выделенных областей в окно данных копирует область на указанные данные."
 
 #: app/tips.c:352
 msgid "Gwyddion User Guide explains in detail many of the methods and algorithms implemented in Gwyddion."
@@ -3577,7 +3577,7 @@ msgstr "Olympus LEXT OLS4000 (.lext)"
 msgid "Top-level element is not ‘TiffTagDescData’."
 msgstr "Элемент верхнего уровня не ‘TiffTagDescData’."
 
-#: modules/file/lextfile.c:258
+#: modules/file/lextfile.c:265
 #: modules/file/nanoscan.c:273
 #, c-format
 msgid "XML parsing failed: %s"
@@ -4139,33 +4139,33 @@ msgstr "Поле %s заголовка оси содержит слишком м
 msgid "Per-axis header field %s contains too few items."
 msgstr "Поле %s заголовка оси содержит слишком мало элементов."
 
-#: modules/file/nt-mdt.c:660
+#: modules/file/nt-mdt.c:766
 msgid "Imports NT-MDT data files."
 msgstr "Импорт файлов данных NT-MDT"
 
-#: modules/file/nt-mdt.c:673
+#: modules/file/nt-mdt.c:779
 msgid "NT-MDT files (.mdt)"
 msgstr "Файлы NT-MDT (.mdt)"
 
-#: modules/file/nt-mdt.c:1126
+#: modules/file/nt-mdt.c:1441
 msgid "Frame is too short for Frame Mode."
 msgstr "Фрейм слишком короткий для режима фреймов."
 
-#: modules/file/nt-mdt.c:1140
+#: modules/file/nt-mdt.c:1456
 msgid "Frame is too short for dots or data."
 msgstr "Фрейм слишком короткий для точек или данных."
 
-#: modules/file/nt-mdt.c:1399
+#: modules/file/nt-mdt.c:1719
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Достигнут конец файла в заголовке фрейма #%u."
 
-#: modules/file/nt-mdt.c:1407
+#: modules/file/nt-mdt.c:1727
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Достигнут конец файла в данных фрейма #%u."
 
-#: modules/file/nt-mdt.c:1442
+#: modules/file/nt-mdt.c:1762
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "Фрейм #%u слишком короткий чтобы быть заголовком сканированных данных."
@@ -9798,6 +9798,15 @@ msgstr "_Масштабируется с размером"
 msgid "_Truncate:"
 msgstr "_Усечение:"
 
+#: modules/process/otsu_threshold.c:49
+#: modules/process/otsu_threshold.c:69
+msgid "Automated threshold using Otsu's method on heights."
+msgstr "Автоматический порог, применяющий метод Оцу к высотам."
+
+#: modules/process/otsu_threshold.c:65
+msgid "/_Grains/_Mark by Otsu's..."
+msgstr "/Зёрн_а/Пометить по методу _Оцу..."
+
 #: modules/process/outliers.c:38
 msgid "Creates mask of outliers."
 msgstr "Создаёт маску выпадающих деталей."
@@ -12002,11 +12011,3 @@ msgstr "/_Инвертировать значение"
 msgid "Invert value in volume data"
 msgstr "Инвертирует значения в объёмных данных"
 
-#~ msgid "Curve _ypos:"
-#~ msgstr "Положение _Y кривой:"
-
-#~ msgid ""
-#~ "It is necessary to select more data points than free volfit parameters"
-#~ msgstr ""
-#~ "Необходимо выбрать больше точек данных, чем возможных параметров "
-#~ "аппроксимации"
