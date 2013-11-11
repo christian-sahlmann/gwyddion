@@ -357,7 +357,8 @@ def tokenize(lines, warnings):
     re_mac = re.compile(r'#.*')
     re_str = re.compile(r'"([^\\"]+|\\"|\\[^"])*"')
     re_chr = re.compile(r'\'(?:.|\\.|\\[0-7]{3}|\\x[0-9a-f]{2})\'')
-    re_id = re.compile(r'\b[A-Za-z_]\w*\b')
+    # permit identifiers starting @ for Objective-C stuff in app/
+    re_id = re.compile(r'@(?:interface|implementation|end|selector)\b|\b[A-Za-z_]\w*\b')
     # this eats some integers too
     re_dbl = re.compile(r'\b(\d*\.\d+|\d+\.?)(?:[Ee][-+]?\d+)?[FfLl]?\b')
     re_int = re.compile(r'\b(?:0[xX][a-fA-F0-9]+|0[0-7]+|[-+]?\d+)[LlUu]*\b')
