@@ -99,7 +99,10 @@ typedef enum {
     MDA_DATA_INT64         = -8,
     MDA_DATA_UINT64        =  8,
     MDA_DATA_FLOAT32       = -(4 + 23 * 256),
-    MDA_DATA_FLOAT64       = -(8 + 52 * 256)
+    MDA_DATA_FLOAT48       = -(6 + 39 * 256),
+    MDA_DATA_FLOAT64       = -(8 + 52 * 256),
+    MDA_DATA_FLOAT80       = -(10 + 63 * 256),
+    MDAT_DATA_FLOATFIX     = -(8 + 256 * 256)
 } MDADataType ;
 
 typedef enum {
@@ -341,6 +344,7 @@ typedef struct {
     gint nDimensions;
     gint nMesurands;
     guint cellSize;
+    guint arraySize;
     const guchar *image;
     guint title_len;
     const guchar *title;
@@ -544,7 +548,7 @@ static const GwyEnum frame_types[] = {
     { "MDA",          MDT_FRAME_MDA },
     { "Palette",      MDT_FRAME_PALETTE },
     { "Curves",       MDT_FRAME_CURVES },
-    { "Curves",       MDT_FRAME_CURVES_NEW }
+    { "New Curves",       MDT_FRAME_CURVES_NEW }
 };
 #endif
 
@@ -882,6 +886,10 @@ mdt_load(const gchar *filename,
             mdaframe = (MDTMDAFrame*)mdtfile.frames[i].frame_data;
             gwy_debug("dimensions %d ; measurands %d",
                       mdaframe->nDimensions, mdaframe->nMesurands);
+            /*
+            fprintf(stderr,"Frame %d\n", i+1);
+            fprintf(stderr,"%s\n", mdaframe->xmlstuff);
+            */
             if (mdaframe->nDimensions == 2 && mdaframe->nMesurands == 1) {
                 /* scan */
                 dfield = extract_mda_data(mdaframe);
@@ -955,6 +963,10 @@ mdt_load(const gchar *filename,
 
                     n++;
                 }
+            }
+            else if (mdaframe->nDimensions == 3 && mdaframe->nMesurands == 5) {
+                /* Hybrid mode MDA */
+
             }
             g_free(mdaframe->dimensions);
             g_free(mdaframe->mesurands);
@@ -1588,8 +1600,9 @@ mdt_mda_vars(const guchar *p,
              G_GNUC_UNUSED GError **error)
 {
     guint headSize, NameSize, CommSize, ViewInfoSize, SpecSize;
-    G_GNUC_UNUSED guint totLen, SourceInfoSize, VarSize, DataSize, StructLen, CellSize;
-    G_GNUC_UNUSED guint64 num;
+    G_GNUC_UNUSED guint totLen, SourceInfoSize, VarSize, DataSize,
+                        StructLen, CellSize;
+    guint64 ArraySize;
     gint i;
     const guchar *recordPointer = p;
     const guchar *structPointer;
@@ -1642,8 +1655,9 @@ mdt_mda_vars(const guchar *p,
     p += 4; /* skip total size */
     StructLen = gwy_get_guint32_le(&p);
     structPointer = p;
-    num = gwy_get_guint64_le(&p);
-    CellSize = gwy_get_guint32_le(&p);
+    ArraySize = gwy_get_guint64_le(&p);
+    frame->arraySize = (guint)ArraySize;
+    frame->cellSize = gwy_get_guint32_le(&p);
 
     frame->nDimensions = gwy_get_guint32_le(&p);
     frame->nMesurands = gwy_get_guint32_le(&p);
@@ -2456,8 +2470,8 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
                  NULL);
 
     res = xAxis->maxIndex - xAxis->minIndex + 1;
-    /* FIXME: I don't know where to find this 1024 points per spectra */
-    res = res ? res : 1024;
+    /* If res == 0, fallback to arraysize */
+    res = res ? res : dataframe->arraySize;
 
     xdata = (gdouble *)g_malloc(res*sizeof(gdouble));
     ydata = (gdouble *)g_malloc(res*sizeof(gdouble));
@@ -2716,7 +2730,6 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
         break;
     }
 
-
     /* parsing XML xAxis->comment to get xdata */
     if (dataframe->nDimensions) {
         if (xAxis->commentLen && xAxis->comment) {
@@ -2951,8 +2964,9 @@ parse_text(G_GNUC_UNUSED GMarkupParseContext *context,
         /* error */
     }
     else if (params->flag == MDT_XML_LASER_WAVELENGTH) {
-        params->laser_wavelength = g_ascii_strtod(g_strdelimit((gchar *)value,
-                                                               ",", '.'), NULL);
+        params->laser_wavelength
+                           = g_ascii_strtod(g_strdelimit((gchar *)value,
+                                                       ",", '.'), NULL);
     }
     else if (params->flag == MDT_XML_UNITS) {
         params->units = atoi(value);
