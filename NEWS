@@ -2,6 +2,8 @@
 Application:
 - Menu integration support in 64 bit OS X application.
 - Settings of 3D view labels are also stored when 3D defaults are saved.
+- It is no longer possible to tear off toolbox submenus.  The tear-off menus
+  were removed as they have been broken for a long time.
 
 Modules:
 - Otsu's thresholding (new): Grain marking using Otsu's method.
@@ -10,6 +12,7 @@ Modules:
   RGB-Red, RGB-Green and RGB-Blue.
 - Graph cut: Cutting other curves than the first actually works.  Memory leaks
   were fixed.
+- Dimensions and Units: If image dimensions change selections are cleared.
 
 Other:
 - Three new false colour gradients were added RGB-Red, RGB-Green and RGB-Blue,
