@@ -104,12 +104,12 @@ mcrop(GwyContainer *data, GwyRunType run)
     op2 = op1;
 
     if (mcrop_dialog(&op1, &op2)) {
-		if (op1.id != op2.id) {
-			quark1 = gwy_app_get_data_key_for_id(op1.id);
-			quark2 = gwy_app_get_data_key_for_id(op2.id);
-			gwy_app_undo_qcheckpoint(data, quark1, quark2, NULL);
-			mcrop_do(&op1, &op2);
-		}
+        if (op1.id != op2.id) {
+            quark1 = gwy_app_get_data_key_for_id(op1.id);
+            quark2 = gwy_app_get_data_key_for_id(op2.id);
+            gwy_app_undo_qcheckpoint(data, quark1, quark2, NULL);
+            mcrop_do(&op1, &op2);
+        }
     }
 }
 
@@ -268,16 +268,15 @@ mcrop_do(GwyDataObjectId *op1, GwyDataObjectId *op2)
 
     find_score_maximum(correlation_score, &max_col, &max_row);
     gwy_debug("c: %d %d %dx%d  k: %d %d %dx%d res: %d %d\n",
-           cdata.x,
-           cdata.y,
-           cdata.width,
-           cdata.height,
-           kdata.x,
-           kdata.y,
-           kdata.width,
-           kdata.height,
-           max_col, max_row
-            );
+              cdata.x,
+              cdata.y,
+              cdata.width,
+              cdata.height,
+              kdata.x,
+              kdata.y,
+              kdata.width,
+              kdata.height,
+              max_col, max_row);
 
     x1l = MAX(0, MAX(max_col-xres1/2, max_col-xres2/2));
     y1b = MAX(0, MAX(max_row-yres1/2, max_row-yres2/2));

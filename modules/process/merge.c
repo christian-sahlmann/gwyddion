@@ -476,8 +476,8 @@ merge_do(MergeArgs *args)
         case GWY_MERGE_DIRECTION_UP:
         xshift = MAX(0,  (max_col - cdata.width/2) + (xres1 - xres2)/2);
         newxres =  MAX(MAX(xres1, xres2),
-                      (MAX(0, (max_col - cdata.width/2)) + xres2/2) -
-                      (MIN(0, (max_col - cdata.width/2)) - xres2/2));
+                      (MAX(0, (max_col - cdata.width/2)) + xres2/2)
+                    - (MIN(0, (max_col - cdata.width/2)) - xres2/2));
         newyres = yres1 + yres2 - max_row - kdata.height/2;
 
         px1 = xshift - max_col + kdata.width/2 + kdata.x;
@@ -489,9 +489,9 @@ merge_do(MergeArgs *args)
         case GWY_MERGE_DIRECTION_DOWN:
         xshift = MAX(0,  (max_col - cdata.width/2) + (xres1 - xres2)/2);
         newxres =  MAX(MAX(xres1, xres2),
-                      (MAX(0, (max_col - cdata.width/2)) + xres2/2) -
-                      (MIN(0, (max_col - cdata.width/2)) - xres2/2));
-        newyres = cdata.y + (max_row - kdata.height/2) + yres2;;
+                      (MAX(0, (max_col - cdata.width/2)) + xres2/2)
+                    - (MIN(0, (max_col - cdata.width/2)) - xres2/2));
+        newyres = cdata.y + (max_row - kdata.height/2) + yres2;
 
         px1 = xshift - max_col + kdata.width/2 + kdata.x;
         py1 = 0;
@@ -503,8 +503,8 @@ merge_do(MergeArgs *args)
         yshift = MAX(0,  (max_row - cdata.height/2) + (yres1 - yres2)/2);
         newxres = cdata.x + (max_col - kdata.width/2) + xres2;
         newyres = MAX(MAX(yres1, yres2),
-                      (MAX(0, (max_row - cdata.height/2)) + yres2/2) -
-                      (MIN(0, (max_row - cdata.height/2)) - yres2/2));
+                      (MAX(0, (max_row - cdata.height/2)) + yres2/2)
+                    - (MIN(0, (max_row - cdata.height/2)) - yres2/2));
         gwy_debug("%d %d %d %d",
                   yres1, yres2,
                   (MAX(0, (max_row - cdata.height/2)) + yres2/2),
@@ -513,7 +513,7 @@ merge_do(MergeArgs *args)
 
         px1 = 0;
         py1 = yshift - max_row + kdata.height/2 + kdata.y;
-        px2 = cdata.x + max_col - kdata.width/2;;
+        px2 = cdata.x + max_col - kdata.width/2;
         py2 = yshift;
         break;
 
@@ -521,8 +521,8 @@ merge_do(MergeArgs *args)
         yshift = MAX(0,  (max_row - cdata.height/2) + (yres1 - yres2)/2);
         newxres = xres1 + xres2 - max_col - kdata.width/2;
         newyres = MAX(MAX(yres1, yres2),
-                      (MAX(0, (max_row - cdata.height/2)) + yres2/2) -
-                      (MIN(0, (max_row - cdata.height/2)) - yres2/2));
+                      (MAX(0, (max_row - cdata.height/2)) + yres2/2)
+                    - (MIN(0, (max_row - cdata.height/2)) - yres2/2));
         gwy_debug("%d %d %d %d",
                   yres1, yres2,
                   (MAX(0, (max_row - cdata.height/2)) + yres2/2),

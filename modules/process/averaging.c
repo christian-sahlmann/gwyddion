@@ -195,7 +195,7 @@ static void find_local_maxima(GwyDataField *dfield, GArray *maxima)
     yres = dfield->yres;
     data = dfield->data;
     for (row = 1; row < yres - 1; row++)
-        for (col=1; col < xres - 1; col++)
+        for (col = 1; col < xres - 1; col++)
             if ((data[row * xres + col] < data[row * xres + col - 1])
              || (data[row * xres + col] < data[row * xres + col + 1])
              || (data[row * xres + col] < data[row * (xres - 1) + col])
@@ -222,8 +222,8 @@ averaging_do(GwyContainer *data, GwySelection *selected)
     gint i;
     gdouble width, height, divider = 0;
 
-    if(!gwy_selection_get_data(selected, area))
-        // error
+    if (!gwy_selection_get_data(selected, area))
+        /* error */
         return NULL;
     dfield = gwy_container_get_object_by_name(data, "/0/data");
     xtop = gwy_data_field_rtoj(dfield, area[0]);
