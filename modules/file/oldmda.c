@@ -180,8 +180,8 @@ module_register(void)
 static gboolean
 check_magic(const gchar *header)
 {
-    return (memcmp(header, MAGIC1, MAGIC1_SIZE) == 0
-            && strstr(header, MAGIC2) != NULL);
+    return (memcmp(header, MAGIC1, MAGIC1_SIZE) == 0)
+            && (strstr(header, MAGIC2) != NULL);
 }
 
 static gint
@@ -247,7 +247,7 @@ oldmda_load(const gchar *filename,
 
     oldmda_read_params(&params, &mdafile);
 
-    dname = g_strdelimit(params.dataname, "\\/",G_DIR_SEPARATOR);
+    dname = g_strdelimit(params.dataname, "\\/", G_DIR_SEPARATOR);
     if (!(dataname = oldmda_find_data_name(filename, dname))) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("No corresponding data file was found for header file."));
@@ -485,14 +485,12 @@ start_element(G_GNUC_UNUSED GMarkupParseContext *context,
                 }
                 else if (gwy_strequal(*name_cursor, "Bias")) {
                     value = g_strdup(*value_cursor);
-                    axis.bias = g_ascii_strtod(
-                        g_strdelimit(value, ",.", '.'), NULL);
+                    axis.bias = g_ascii_strtod(g_strdelimit(value, ",.", '.'), NULL);
                     g_free(value);
                 }
                 else if (gwy_strequal(*name_cursor, "Scale")) {
                     value = g_strdup(*value_cursor);
-                    axis.scale = g_ascii_strtod(
-                        g_strdelimit(value, ",.", '.'), NULL);
+                    axis.scale = g_ascii_strtod(g_strdelimit(value, ",.", '.'), NULL);
                     g_free(value);
                 }
                 name_cursor++;
