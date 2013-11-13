@@ -1170,8 +1170,9 @@ gwy_data_field_filter_laplacian(GwyDataField *data_field)
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
  *
- * Filters a rectangular part of a data field with Laplacian of Gaussians filter.
- * 
+ * Filters a rectangular part of a data field
+ * with Laplacian of Gaussians filter.
+ *
  * Since: 2.23
  **/
 void
@@ -1180,15 +1181,15 @@ gwy_data_field_area_filter_laplacian_of_gaussians(GwyDataField *data_field,
                                                   gint width,
                                                   gint height)
 {
-	/* optimized mexican hat from Scharr's works */
-	const gdouble laplacian_of_gaussians_data[] = {
-		  1, -12,    3, -12,   1,
+    /* optimized mexican hat from Scharr's works */
+    const gdouble laplacian_of_gaussians_data[] = {
+          1, -12,    3, -12,   1,
         -12,  78,  167,  78, -12,
           3, 167, -902, 167,   3,
         -12,  78,  167,  78, -12,
           1, -12,    3, -12,   1,
     };
-    
+
     GwyDataField *laplacian_of_gaussians;
     gint i, j;
 
@@ -1209,7 +1210,7 @@ gwy_data_field_area_filter_laplacian_of_gaussians(GwyDataField *data_field,
  * @data_field: A data field to apply the filter to.
  *
  * Filters a data field with Laplacian of Gaussians filter.
- * 
+ *
  * Since: 2.23
  **/
 void
@@ -2206,8 +2207,8 @@ gwy_data_field_area_filter_kuwahara(GwyDataField *data_field,
 
     for (i = 0; i < height; i++) {
         for (j = 0; j < width; j++)
-            data_field->data[col + j + data_field->xres * (row + i)] =
-                buffer[i*width + j];
+            data_field->data[col + j + data_field->xres * (row + i)]
+                                                  = buffer[i*width + j];
     }
 
     g_free(kernel);
