@@ -333,7 +333,7 @@ tia_load(const gchar *filename,
     header = g_new0(TIAHeader, 1);
     p = buffer;
     tia_load_header(p, header);
-    if(!tia_check_header(header, size)) {
+    if (!tia_check_header(header, size)) {
         err_FILE_TYPE(error, "FEI TIA");
         goto fail2;
     }
@@ -345,12 +345,12 @@ tia_load(const gchar *filename,
     for (i = 0; i < dimarraylength; i++) {
         p += dimarraysize;
         dimension = g_new0(TIADimension, 1);
-        if(!tia_load_dimarray(p, dimension, size - TIA_HEADER_SIZE
+        if (!tia_load_dimarray(p, dimension, size - TIA_HEADER_SIZE
                                                       - dimarraysize)) {
             err_FILE_TYPE(error, "FEI TIA");
             g_free(dimension);
             for (j = 0; j < i; j++) {
-                dimension = &g_array_index (dimarray, TIADimension, j);
+                dimension = &g_array_index(dimarray, TIADimension, j);
                 g_free(dimension->description);
                 g_free(dimension->units);
             }
@@ -464,7 +464,7 @@ tia_load(const gchar *filename,
                 goto tagoffsets_fail;
             }
             dline = tia_read_1d_dataline(buffer + offset, size - offset);
-            if(dline) {
+            if (dline) {
                 xpos = i % xres;
                 ypos = (gint)(i / xres);
                 zres = gwy_data_line_get_res(dline);
@@ -473,7 +473,8 @@ tia_load(const gchar *filename,
                     *(data + k * xres * yres + ypos * xres + xpos)
                                                            = *(value++);
             }
-            else break;
+            else 
+                break;
             g_object_unref(dline);
         }
         if (brick) {
@@ -519,7 +520,7 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
     gint i, n;
     gdouble *data;
     gdouble xoffset, yoffset;
-    gint tia_datasizes[11] = {0, 1, 1, 2, 2, 4, 4, 4, 8, 8, 16};
+    gint tia_datasizes[11] = { 0, 1, 1, 2, 2, 4, 4, 4, 8, 8, 16 };
 
     fielddata = g_new0(TIA2DData, 1);
     fielddata->calibrationoffsetx  = gwy_get_gdouble_le(&p);
@@ -572,7 +573,7 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
         switch (fielddata->datatype) {
             case TIA_DATA_UINT8:
             {
-                for(i = 0; i < n; i++)
+                for (i = 0; i < n; i++)
                     *(data++) = (*(p++)) / (gdouble)G_MAXUINT8;
             }
             break;
@@ -580,7 +581,7 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
             {
                 const guint16 *tp = (const guint16 *)p;
 
-                for(i = 0; i < n; i++)
+                for (i = 0; i < n; i++)
                     *(data++) = GUINT16_FROM_LE(*(tp++))
                                                  / (gdouble)G_MAXUINT16;
             }
@@ -589,7 +590,7 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
             {
                 const guint32 *tp = (const guint32 *)p;
 
-                for(i = 0; i < n; i++)
+                for (i = 0; i < n; i++)
                     *(data++) = GUINT32_FROM_LE(*(tp++))
                                                  / (gdouble)G_MAXUINT32;
             }
@@ -598,7 +599,7 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
             {
                 const gchar *tp = (const gchar *)p;
 
-                for(i = 0; i < n; i++)
+                for (i = 0; i < n; i++)
                     *(data++) = (*(tp++)) / (gdouble)G_MAXINT8;
             }
             break;
@@ -606,7 +607,7 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
             {
                 const gint16 *tp = (const gint16 *)p;
 
-                for(i = 0; i < n; i++)
+                for (i = 0; i < n; i++)
                     *(data++) = GINT16_FROM_LE(*(tp++))
                                                   / (gdouble)G_MAXINT16;
             }
@@ -615,20 +616,20 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
             {
                 const gint32 *tp = (const gint32 *)p;
 
-                for(i = 0; i < n; i++)
+                for (i = 0; i < n; i++)
                     *(data++) = GINT32_FROM_LE(*(tp++))
                                                   / (gdouble)G_MAXINT32;
             }
             break;
             case TIA_DATA_FLOAT:
             {
-                for(i = 0; i < n; i++)
+                for (i = 0; i < n; i++)
                     *(data++) = gwy_get_gfloat_le(&p);
             }
             break;
             case TIA_DATA_DOUBLE:
             {
-                for(i = 0; i < n; i++)
+                for (i = 0; i < n; i++)
                     *(data++) = gwy_get_gdouble_le(&p);
             }
             break;
@@ -649,7 +650,7 @@ static GwyDataLine *tia_read_1d_dataline(const guchar *p, gsize size)
     GwyDataLine *dline = NULL;
     gint i, n;
     gdouble *data;
-    gint tia_datasizes[11] = {0, 1, 1, 2, 2, 4, 4, 4, 8, 8, 16};
+    gint tia_datasizes[11] = { 0, 1, 1, 2, 2, 4, 4, 4, 8, 8, 16 };
 
     spectradata = g_new0(TIA1DData, 1);
     spectradata->calibrationoffset  = gwy_get_gdouble_le(&p);
@@ -683,7 +684,7 @@ static GwyDataLine *tia_read_1d_dataline(const guchar *p, gsize size)
     switch (spectradata->datatype) {
         case TIA_DATA_UINT8:
         {
-            for(i = 0; i < n; i++)
+            for (i = 0; i < n; i++)
                 *(data++) = (*(p++)) / (gdouble)G_MAXUINT8;
         }
         break;
@@ -691,7 +692,7 @@ static GwyDataLine *tia_read_1d_dataline(const guchar *p, gsize size)
         {
             const guint16 *tp = (const guint16 *)p;
 
-            for(i = 0; i < n; i++)
+            for (i = 0; i < n; i++)
                 *(data++) = GUINT16_FROM_LE(*(tp++))
                                              / (gdouble)G_MAXUINT16;
         }
@@ -700,7 +701,7 @@ static GwyDataLine *tia_read_1d_dataline(const guchar *p, gsize size)
         {
             const guint32 *tp = (const guint32 *)p;
 
-            for(i = 0; i < n; i++)
+            for (i = 0; i < n; i++)
                 *(data++) = GUINT32_FROM_LE(*(tp++))
                                              / (gdouble)G_MAXUINT32;
         }
@@ -709,7 +710,7 @@ static GwyDataLine *tia_read_1d_dataline(const guchar *p, gsize size)
         {
             const gchar *tp = (const gchar *)p;
 
-            for(i = 0; i < n; i++)
+            for (i = 0; i < n; i++)
                 *(data++) = (*(tp++)) / (gdouble)G_MAXINT8;
         }
         break;
@@ -717,7 +718,7 @@ static GwyDataLine *tia_read_1d_dataline(const guchar *p, gsize size)
         {
             const gint16 *tp = (const gint16 *)p;
 
-            for(i = 0; i < n; i++)
+            for (i = 0; i < n; i++)
                 *(data++) = GINT16_FROM_LE(*(tp++))
                                               / (gdouble)G_MAXINT16;
         }
@@ -726,20 +727,20 @@ static GwyDataLine *tia_read_1d_dataline(const guchar *p, gsize size)
         {
             const gint32 *tp = (const gint32 *)p;
 
-            for(i = 0; i < n; i++)
+            for (i = 0; i < n; i++)
                 *(data++) = GINT32_FROM_LE(*(tp++))
                                               / (gdouble)G_MAXINT32;
         }
         break;
         case TIA_DATA_FLOAT:
         {
-            for(i = 0; i < n; i++)
+            for (i = 0; i < n; i++)
                 *(data++) = gwy_get_gfloat_le(&p);
         }
         break;
         case TIA_DATA_DOUBLE:
         {
-            for(i = 0; i < n; i++)
+            for (i = 0; i < n; i++)
                 *(data++) = gwy_get_gdouble_le(&p);
         }
         break;

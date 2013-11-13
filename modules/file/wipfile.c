@@ -87,7 +87,7 @@ typedef enum {
     WIP_TAG_STRING   = 9  /* int32 = nchars, n bytes = string */
 } WIPTagType;
 
-gsize WIPTagDataSize[10] = {0, 10, 8, 4, 8, 4, 4, 1, 1, 0};
+gsize WIPTagDataSize[10] = { 0, 10, 8, 4, 8, 4, 4, 1, 1, 0 };
 
 typedef enum {
     WIP_DATA_LIST     = 0, /* list of tags */
@@ -104,7 +104,7 @@ typedef enum {
     WIP_DATA_EXTENDED = 11 /* x86 FPU native type, 10 bytes */
 } WIPDataType;
 
-gsize WIPDataSize[12] = {0, 8, 4, 2, 1, 4, 2, 1, 1, 4, 8, 10};
+gsize WIPDataSize[12] = { 0, 8, 4, 2, 1, 4, 2, 1, 1, 4, 8, 10 };
 
 typedef enum {
     WIP_UNIT_NANOMETER   = 0,
@@ -370,11 +370,11 @@ static void wip_read_all_tags (const guchar *buffer, gsize start,
     while (cur < end) {
         p = (guchar *)(buffer + cur);
         if (!(tag = wip_read_tag(&p, &cur, &end))) {
-            // error: tag cannot be read
+            /* error: tag cannot be read */
         }
         else {
-            tagpos=g_node_insert_data(tagtree, -1, tag);
-            if((!tag->type) && (n < 255))
+            tagpos = g_node_insert_data(tagtree, -1, tag);
+            if ((!tag->type) && (n < 255))
                 wip_read_all_tags(buffer, tag->data_start,
                                   tag->data_end, tagpos, n+1);
             cur = tag->data_end;
@@ -478,7 +478,7 @@ static gboolean wip_read_sp_transform_tags(GNode *node,
     if (!strncmp(tag->name, "SpectralTransformationType", 26))
         sp_transform->transform_type = gwy_get_gint32_le(&p);
     else if (!strncmp(tag->name, "Polynom", 7)) {
-        for(i = 0; i < 3; i++)
+        for (i = 0; i < 3; i++)
             sp_transform->polynom[i] = gwy_get_gdouble_le(&p);
     }
     else if (!strncmp(tag->name, "nC", 2))
@@ -699,7 +699,7 @@ static GwyDataField * wip_read_bmp(const guchar *bmpdata,
     data = gwy_data_field_get_data(dfield);
 
     for (i = 0; i < header->height; i++)
-        for (j = 0; j < header-> width; j++) {
+        for (j = 0; j < header->width; j++) {
             r = *(p++);
             g = *(p++);
             b = *(p++);
@@ -711,7 +711,8 @@ static GwyDataField * wip_read_bmp(const guchar *bmpdata,
     return dfield;
 }
 
-/* spectral transform from here:
+/*
+ * spectral transform from here:
  * http://www.horiba.com/us/en/scientific/products/optics-tutorial/wavelength-pixel-position/
  */
 static gdouble wip_pixel_to_lambda(gint i,
@@ -757,10 +758,10 @@ static GwyGraphModel * wip_read_graph(GNode *node)
 
     header = g_new0(WIPGraph, 1);
 
-    g_node_traverse (node, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
-                     wip_read_graph_tags, (gpointer)header);
+    g_node_traverse(node, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                    wip_read_graph_tags, (gpointer)header);
 
-    if ((header->sizex != 1) || (header->sizey != 1)) { // image
+    if ((header->sizex != 1) || (header->sizey != 1)) { /* image */
         g_free(header);
         return NULL;
     }
@@ -777,22 +778,22 @@ static GwyGraphModel * wip_read_graph(GNode *node)
     xdata = g_new(gdouble, numpoints);
     ydata = g_new(gdouble, numpoints);
 
-    // Read ydata, fallback xdata
+    /* Read ydata, fallback xdata */
     p = header->data;
     for (i = 0; i < numpoints; i++) {
         xdata[i] = i;
         ydata[i] = gwy_get_gfloat_le(&p);
     }
 
-    // Read caption
+    /* Read caption */
     caption = g_string_new(NULL);
     g_node_traverse(node->parent, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                     wip_read_caption, (gpointer)caption);
     if (!caption->str)
         g_string_printf(caption, "Unnamed graph");
 
-    // Try to read xdata
-    idnode = g_new0(WIPIdNode,1);
+    /* Try to read xdata */
+    idnode = g_new0(WIPIdNode, 1);
     idnode->id = header->xtransformid;
     g_node_traverse(g_node_get_root(node),
                     G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
@@ -806,7 +807,7 @@ static GwyGraphModel * wip_read_graph(GNode *node)
     if ((xtransform->transform_type != 1)
      || (xtransform->m < 0.01) || (xtransform->f < 0.01)
      || (xtransform->nc < 0.0) || (xtransform->nc > numpoints)) {
-        // xtransform not read correctly, fallback to point numbers
+        /* xtransform not read correctly, fallback to point numbers */
     }
     else {
         for (i = 0; i < numpoints; i++)
@@ -821,18 +822,18 @@ static GwyGraphModel * wip_read_graph(GNode *node)
     else
         siunitx = gwy_si_unit_new("pixels");
 
-    if(!xtransform->unitname) {
+    if (!xtransform->unitname) {
         g_free(xtransform->unitname);
     }
     g_free(xtransform);
 
-    //Try to read y units
+    /* Try to read y units */
     idnode->id = header->zinterpid;
-    g_node_traverse (g_node_get_root (node),
+    g_node_traverse(g_node_get_root (node),
                      G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_find_by_id, (gpointer)idnode);
     yaxis = g_new0(WIPAxis, 1);
-    g_node_traverse (idnode->node->parent->parent,
+    g_node_traverse(idnode->node->parent->parent,
                      G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_read_axis_tags,
                      (gpointer)yaxis);
@@ -842,7 +843,7 @@ static GwyGraphModel * wip_read_graph(GNode *node)
         siunity = gwy_si_unit_new("");
     g_free(yaxis);
 
-    // Packing
+    /* Packing */
     gmodel = g_object_new(GWY_TYPE_GRAPH_MODEL,
                           "title", caption->str,
                           "si-unit-x", siunitx,
@@ -886,10 +887,10 @@ static GwyBrick * wip_read_graph_image(GNode *node)
 
     header = g_new0(WIPGraph, 1);
 
-    g_node_traverse (node, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+    g_node_traverse(node, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_read_graph_tags, (gpointer)header);
 
-    if ((header->sizex <= 1) && (header->sizey <= 1)) { // not an image
+    if ((header->sizex <= 1) && (header->sizey <= 1)) { /* not an image */
         g_free(header);
         return NULL;
     }
@@ -915,15 +916,15 @@ static GwyBrick * wip_read_graph_image(GNode *node)
         return NULL;
     }
 
-    //Try to read xy units and scale;
+    /* Try to read xy units and scale */
     idnode = g_new0(WIPIdNode, 1);
     idnode->id = header->spacetransformid;
-    g_node_traverse (g_node_get_root(node),
+    g_node_traverse(g_node_get_root(node),
                      G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_find_by_id, (gpointer)idnode);
 
     xyaxis = g_new0(WIPSpaceTransform, 1);
-    g_node_traverse (idnode->node->parent->parent,
+    g_node_traverse(idnode->node->parent->parent,
                      G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_read_space_tr_tag, (gpointer)xyaxis);
 
@@ -949,13 +950,13 @@ static GwyBrick * wip_read_graph_image(GNode *node)
     }
     g_free(xyaxis);
 
-    //Try to read w units
+    /* Try to read w units */
     idnode->id = header->zinterpid;
-    g_node_traverse (g_node_get_root (node),
+    g_node_traverse(g_node_get_root (node),
                      G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_find_by_id, (gpointer)idnode);
     waxis = g_new0(WIPAxis, 1);
-    g_node_traverse (idnode->node->parent->parent,
+    g_node_traverse(idnode->node->parent->parent,
                      G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_read_axis_tags,
                      (gpointer)waxis);
@@ -975,7 +976,7 @@ static GwyBrick * wip_read_graph_image(GNode *node)
     data = gwy_brick_get_data(brick);
     p = header->data;
 
-    switch(header->datatype) {
+    switch (header->datatype) {
         case WIP_DATA_LIST:
         case WIP_DATA_EXTENDED:
             /* cannot read this */
@@ -1076,7 +1077,7 @@ static GwyBrick * wip_read_graph_image(GNode *node)
             g_warning("Wrong datatype");
     }
 
-    // Try to read zcalibration
+    /* Try to read zcalibration */
     idnode->id = header->xtransformid;
     g_node_traverse(g_node_get_root(node),
                     G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
@@ -1090,7 +1091,7 @@ static GwyBrick * wip_read_graph_image(GNode *node)
     if ((xtransform->transform_type != 1)
      || (xtransform->m < 0.01) || (xtransform->f < 0.01)
      || (xtransform->nc < 0.0) || (xtransform->nc > zres)) {
-        // xtransform not read correctly, fallback to point numbers
+        /* xtransform not read correctly, fallback to point numbers */
     }
     else {
         cal = gwy_data_line_new(zres, zres, FALSE);
@@ -1173,7 +1174,7 @@ static GwyDataField * wip_read_image(GNode *node)
 
     header = g_new0(WIPImage, 1);
 
-    g_node_traverse (node, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+    g_node_traverse(node, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_read_image_tags, (gpointer)header);
 
     if ((header->datatype > 11)
@@ -1185,14 +1186,14 @@ static GwyDataField * wip_read_image(GNode *node)
         return NULL;
     }
 
-    //Try to read z units
+    /* Try to read z units */
     idnode = g_new0(WIPIdNode, 1);
     idnode->id = header->zinterpid;
-    g_node_traverse (g_node_get_root(node),
+    g_node_traverse(g_node_get_root(node),
                      G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_find_by_id, (gpointer)idnode);
     zaxis = g_new0(WIPAxis, 1);
-    g_node_traverse (idnode->node->parent->parent,
+    g_node_traverse(idnode->node->parent->parent,
                      G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_read_axis_tags,
                      (gpointer)zaxis);
@@ -1202,13 +1203,13 @@ static GwyDataField * wip_read_image(GNode *node)
         siunitz = gwy_si_unit_new("");
     g_free(zaxis);
 
-    //Try to read xy units and scale;
+    /* Try to read xy units and scale */
     idnode->id = header->postransformid;
-    g_node_traverse (g_node_get_root(node),
+    g_node_traverse(g_node_get_root(node),
                      G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_find_by_id, (gpointer)idnode);
     xyaxis = g_new0(WIPSpaceTransform, 1);
-    g_node_traverse (idnode->node->parent->parent,
+    g_node_traverse(idnode->node->parent->parent,
                      G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_read_space_tr_tag, (gpointer)xyaxis);
     if (xyaxis->unitname)
@@ -1236,8 +1237,8 @@ static GwyDataField * wip_read_image(GNode *node)
     g_free(xyaxis);
     g_free(idnode);
 
-    // Reading actual data
-    /* data is stored in strange way in TDImage, so it is more
+    /* Reading actual data
+     * data is stored in strange way in TDImage, so it is more
      * simple to swap X and Y axes here to read them correctly
      * and rotate datafield in the end of procedure */
     dfield2 = gwy_data_field_new(header->sizey, header->sizex,
@@ -1250,7 +1251,7 @@ static GwyDataField * wip_read_image(GNode *node)
     if (zscale == 0.0)
         zscale = 1.0;
     p = header->data;
-    switch(header->datatype) {
+    switch (header->datatype) {
         case WIP_DATA_LIST:
         case WIP_DATA_EXTENDED:
             /* cannot read this */
@@ -1335,17 +1336,17 @@ static GwyDataField * wip_read_bitmap(GNode *node)
 
     header = g_new0(WIPBitmap, 1);
 
-    g_node_traverse (node, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+    g_node_traverse(node, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_read_bitmap_tags, (gpointer)header);
 
-    //Try to read xy units and scale;
+    /* Try to read xy units and scale */
     idnode = g_new0(WIPIdNode, 1);
     idnode->id = header->spacetransformid;
-    g_node_traverse (g_node_get_root(node),
+    g_node_traverse(g_node_get_root(node),
                      G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_find_by_id, (gpointer)idnode);
     xyaxis = g_new0(WIPSpaceTransform, 1);
-    g_node_traverse (idnode->node->parent->parent,
+    g_node_traverse(idnode->node->parent->parent,
                      G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_read_space_tr_tag, (gpointer)xyaxis);
     if (xyaxis->unitname)
@@ -1375,8 +1376,8 @@ static GwyDataField * wip_read_bitmap(GNode *node)
 
     dfield = wip_read_bmp(header->data, header->datasize,
                           xscale, yscale, power10xy);
-    if (!dfield){
-        // Error here
+    if (!dfield) {
+        /* Error: failed to read BMP data */
     }
     else {
         gwy_data_field_set_si_unit_xy(dfield, siunitxy);
@@ -1410,7 +1411,7 @@ static gboolean wip_read_data(GNode *node, gpointer filedata)
         if (!gmodel) {
             brick = wip_read_graph_image(node);
             if (!brick) {
-                // some error
+                /* some error in brick read */
             }
             else {
                 (filecontent->numbricks)++;
@@ -1456,8 +1457,8 @@ static gboolean wip_read_data(GNode *node, gpointer filedata)
     }
     else if (!strncmp(tag->name, "TDImage", 7)) {
         image = wip_read_image(node);
-        if(!image) {
-            // some error
+        if (!image) {
+            /* some error in image read */
         }
         else {
             (filecontent->numimages)++;
@@ -1480,8 +1481,8 @@ static gboolean wip_read_data(GNode *node, gpointer filedata)
     }
     else if (!strncmp(tag->name, "TDBitmap", 8)) {
         image = wip_read_bitmap(node->parent);
-        if(!image) {
-            // some error
+        if (!image) {
+            /* some error in bitmap read */
         }
         else {
             (filecontent->numimages)++;
@@ -1529,8 +1530,8 @@ static GwyContainer* wip_load (const gchar *filename,
 
     p = buffer + 8; /* skip magic header */
     cur = 8;
-    if(!(tag = wip_read_tag(&p, &cur, &size))) {
-        // error: tag cannot be read
+    if (!(tag = wip_read_tag(&p, &cur, &size))) {
+        /* Error: tag cannot be read */
     }
 
     if ((tag->type)
@@ -1550,12 +1551,12 @@ static GwyContainer* wip_load (const gchar *filename,
     filedata->numgraph = 0;
     filedata->data = data;
 
-    g_node_traverse (tagtree, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
-                     wip_read_data, (gpointer)filedata);
+    g_node_traverse(tagtree, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                    wip_read_data, (gpointer)filedata);
 
-    g_node_traverse (tagtree, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
-                     wip_free_leave, NULL);
-    g_node_destroy (tagtree);
+    g_node_traverse(tagtree, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                    wip_free_leave, NULL);
+    g_node_destroy(tagtree);
     g_free(filedata);
     gwy_file_abandon_contents(buffer, size, NULL);
 

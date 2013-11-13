@@ -349,7 +349,7 @@ nst_read_3d(const gchar *buffer, GwyContainer **metadata, gchar **title)
     gint x, y, xmax = 0, ymax = 0, i, j;
     gint power10xy = 1, power10z = 1;
     gdouble *data, z;
-    gdouble xscale = 1.0, yscale =1.0;
+    gdouble xscale = 1.0, yscale = 1.0;
     gdouble xoffset = 0.0, yoffset = 0.0;
     GArray *dataarray;
     gint linecur;
@@ -451,22 +451,22 @@ nst_read_3d(const gchar *buffer, GwyContainer **metadata, gchar **title)
     dfield = gwy_data_field_new(xmax+1, ymax+1,
                                 xscale*pow10(power10xy),
                                 yscale*pow10(power10xy), TRUE);
-    gwy_data_field_set_xoffset (dfield, xoffset*pow10(power10xy));
-    gwy_data_field_set_yoffset (dfield, yoffset*pow10(power10xy));
+    gwy_data_field_set_xoffset(dfield, xoffset*pow10(power10xy));
+    gwy_data_field_set_yoffset(dfield, yoffset*pow10(power10xy));
     if (dfield) {
         data = gwy_data_field_get_data(dfield);
-        for(j = 0; j <= ymax; j++)
+        for (j = 0; j <= ymax; j++)
             for (i = 0; i <= xmax; i++)
                 *(data++) = g_array_index(dataarray,
-                                          gdouble, j*(xmax+1)+i)*
-                                          pow10(power10z);
+                                          gdouble, j*(xmax+1)+i)
+                                        * pow10(power10z);
     }
     if (siunitxy) {
-        gwy_data_field_set_si_unit_xy (dfield, siunitxy);
+        gwy_data_field_set_si_unit_xy(dfield, siunitxy);
         g_object_unref(siunitxy);
     }
     if (siunitz) {
-        gwy_data_field_set_si_unit_z (dfield, siunitz);
+        gwy_data_field_set_si_unit_z(dfield, siunitz);
         g_object_unref(siunitz);
     }
 
@@ -495,9 +495,9 @@ static GwyGraphModel* nst_read_2d(const gchar *buffer, guint channel)
             numpoints = 0;
             xarray = g_array_new(FALSE, TRUE, sizeof(gdouble));
             yarray = g_array_new(FALSE, TRUE, sizeof(gdouble));
-            while ((line = gwy_str_next_line(&p))&&
-                   (!gwy_strequal(line, "[EndOfItem]"))) {
-                                lineparts = g_strsplit(line, " ", 3);
+            while ((line = gwy_str_next_line(&p))
+                && (!gwy_strequal(line, "[EndOfItem]"))) {
+                                  lineparts = g_strsplit(line, " ", 3);
                 lineparts = g_strsplit(line, " ", 2);
                 x = g_ascii_strtod(lineparts[0], NULL);
                 g_array_append_val(xarray, x);
@@ -602,7 +602,7 @@ static GwyGraphModel* nst_read_2d(const gchar *buffer, guint channel)
         }
     }
 
-    if(!framename)
+    if (!framename)
         title = g_strdup_printf("Graph %u", channel);
     else {
         title = g_strdup_printf("%s (%u)", framename, channel);
@@ -726,7 +726,7 @@ nst_read_4d(const gchar *buffer, gsize datasize,
             if (Horizontal == header->direction) {
                 gwy_debug("Horizontal");
                 for (i = y0; (dy > 0) ? i < yn : i >= yn; i += dy)
-                    for (j= x0; (dx > 0) ? j < xn : j >= xn; j += dx) {
+                    for (j = x0; (dx > 0) ? j < xn : j >= xn; j += dx) {
                         if (dataleft < 8 * zres + 4) {
                             gwy_debug("Too little data left");
                             goto exit2;
@@ -742,7 +742,7 @@ nst_read_4d(const gchar *buffer, gsize datasize,
             else if (Vertical == header->direction) {
                 gwy_debug("Vertical");
                 for (i = x0; (dx > 0) ? i < xn : i >= xn; i += dx)
-                    for (j= y0; (dy > 0) ? j < yn : j >= yn; j += dy) {
+                    for (j = y0; (dy > 0) ? j < yn : j >= yn; j += dy) {
                         if (dataleft < 8 * zres + 4) {
                             gwy_debug("Too little data left");
                             goto exit2;

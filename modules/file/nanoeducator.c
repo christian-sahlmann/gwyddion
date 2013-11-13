@@ -408,7 +408,7 @@ nanoedu_load(const gchar *filename,
 
         /* Setting data field offsets: */
         gwy_data_field_set_xoffset(dfield, params.x_offset * Nanometer);
-        gwy_data_field_set_yoffset(dfield, - params.y_offset * Nanometer
+        gwy_data_field_set_yoffset(dfield, -params.y_offset * Nanometer
                                               - scale * header.topo_ny);
 
         gwy_container_set_object_by_name(container, "/0/data", dfield);
@@ -589,7 +589,7 @@ nanoedu_load(const gchar *filename,
 
         /* Setting data field offsets: */
         gwy_data_field_set_xoffset(dfield, params.x_offset * Nanometer);
-        gwy_data_field_set_yoffset(dfield, - params.y_offset * Nanometer
+        gwy_data_field_set_yoffset(dfield, -params.y_offset * Nanometer
                                              - scale*header.addsurf_ny);
 
         gwy_container_set_object_by_name(container, "/1/data", dfield);
@@ -766,12 +766,12 @@ nanoedu_read_parameters(const guchar *buffer,
               params->gain_x, params->gain_y, params->discr_z_mvolt,
               params->nA_D, params->V_D);
 
-    params->amp_modulation = gwy_get_gint32_le(&buffer); // XXX
+    params->amp_modulation = gwy_get_gint32_le(&buffer); /* XXX */
     params->sd_gain_fm = gwy_get_guint16_le(&buffer);
     params->sd_gain_am = gwy_get_guint16_le(&buffer);
     params->res_freq_r = gwy_get_guint16_le(&buffer);
     params->res_freq_f = gwy_get_guint16_le(&buffer);
-    params->f0 = gwy_get_gint32_le(&buffer); // XXX
+    params->f0 = gwy_get_gint32_le(&buffer); /* XXX */
     params->ampl_suppress = gwy_get_gfloat_le(&buffer);
     gwy_debug("work func: %d (%u %u) (%u %u) %d %g",
               params->amp_modulation, params->sd_gain_fm, params->sd_gain_am,
@@ -1002,8 +1002,8 @@ make_fd_spectrum(gint res, gdouble xy_step, const gint16 *d16, gboolean flip)
         }
     }
     gwy_data_line_multiply(dline, 1.0/z0);
-    gwy_data_line_set_offset(dline, xy_step *
-                         GINT16_FROM_LE(d16[flip ? 2*(res-1) + 1 : 1]));
+    gwy_data_line_set_offset(dline, xy_step
+                       * GINT16_FROM_LE(d16[flip ? 2*(res-1) + 1 : 1]));
 
     return dline;
 }
@@ -1047,7 +1047,7 @@ nanoedu_read_fd_spectra(const guchar *pos_buffer, gsize pos_size,
      * reading. */
     for (i = 0; i < nspectra; i++) {
         x = xscale * GINT16_FROM_LE(p16[pointstep*i]);
-        y = - yscale * GINT16_FROM_LE(p16[pointstep*i + 1]);
+        y = -yscale * GINT16_FROM_LE(p16[pointstep*i + 1]);
         n = (pointstep == 3) ? GINT16_FROM_LE(p16[pointstep*i + 2]) : 1;
         gwy_debug("FD spec%d [%g,%g] %dpts", i, x, y, n);
 
@@ -1081,9 +1081,9 @@ make_iv_spectrum(gint res, gdouble xy_step,
     gint j;
     gint16 v;
 
-    dline = gwy_data_line_new(res, xy_step*
-                              fabs(GINT16_FROM_LE(d16[2*(res - 1)]) -
-                                   GINT16_FROM_LE(d16[0])),
+    dline = gwy_data_line_new(res, xy_step
+                            * fabs(GINT16_FROM_LE(d16[2*(res - 1)])
+                                 - GINT16_FROM_LE(d16[0])),
                               FALSE);
     siunitx = gwy_si_unit_new("V");
     siunity = gwy_si_unit_new("A");
@@ -1135,7 +1135,7 @@ nanoedu_read_iv_spectra(const guchar *pos_buffer, gsize pos_size,
 
     for (i = 0; i < nspectra; i++) {
         x = xscale * GINT16_FROM_LE(p16[pointstep*i]);
-        y = - yscale * GINT16_FROM_LE(p16[pointstep*i + 1]);
+        y = -yscale * GINT16_FROM_LE(p16[pointstep*i + 1]);
         n = (pointstep == 3) ? GINT16_FROM_LE(p16[pointstep*i + 2]) : 1;
         gwy_debug("IV spec%d [%g,%g] %dpts", i, x, y, n);
 
@@ -1218,11 +1218,11 @@ nanoedu_read_iz_spectra(const guchar *pos_buffer, gsize pos_size,
 
     for (i = 0; i < nspectra; i++) {
         x = xscale * GINT16_FROM_LE(p16[pointstep*i]);
-        y = - yscale * GINT16_FROM_LE(p16[pointstep*i + 1]);
+        y = -yscale * GINT16_FROM_LE(p16[pointstep*i + 1]);
         n = (pointstep == 3) ? GINT16_FROM_LE(p16[pointstep*i + 2]) : 1;
         gwy_debug("IZ spec%d [%g,%g] %dpts", i, x, y, n);
 
-        for(j = 0; j < n; j++) {
+        for (j = 0; j < n; j++) {
             if (1 == sp_type) {
                 /* two directions in new format */
                 dline = make_iz_spectrum(res, xy_step,
