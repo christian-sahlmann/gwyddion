@@ -33,8 +33,8 @@
 
 #define DELTA (1e-15)
 
-static gboolean    module_register           (void);
-static void        dos_spectrum              (GwyGraph *graph);
+static gboolean    module_register (void);
+static void        dos_spectrum    (GwyGraph *graph);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -84,15 +84,16 @@ static void dos_spectrum(GwyGraph *graph)
     /* Checking axis units to be voltage-current spectroscopy */
     testunitx = gwy_si_unit_new("V");
     testunity = gwy_si_unit_new("A");
-    if(!(gwy_si_unit_equal(siunitx, testunitx) &&
-        gwy_si_unit_equal(siunity, testunity))) {
+    if (!(gwy_si_unit_equal(siunitx, testunitx)
+     && gwy_si_unit_equal(siunity, testunity))) {
 
         dialog = gtk_message_dialog_new
             (gwy_app_find_window_for_channel(data, -1),
              GTK_DIALOG_DESTROY_WITH_PARENT,
              GTK_MESSAGE_ERROR,
              GTK_BUTTONS_OK,
-             _("%s: Graph should be I-V spectroscopy."), "dos_spectrum");
+             _("%s: Graph should be I-V spectroscopy."),
+             "dos_spectrum");
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
 
@@ -125,35 +126,36 @@ static void dos_spectrum(GwyGraph *graph)
 
     ncurves = gwy_graph_model_get_n_curves(gmodel);
 
-    for(k = 0; k < ncurves; k++) {
+    for (k = 0; k < ncurves; k++) {
         gcmodel = gwy_graph_model_get_curve(gmodel, k);
 
         xdata = gwy_graph_curve_model_get_xdata(gcmodel);
         ydata = gwy_graph_curve_model_get_ydata(gcmodel);
         ndata = gwy_graph_curve_model_get_ndata(gcmodel);
         nndata = ndata-1;
-        for(i = 1; i < ndata; i++) {
+        for (i = 1; i < ndata; i++) {
             if (fabs(ydata[i]) < DELTA)
                 nndata--;
             if (fabs(xdata[i]-xdata[i-1]) < DELTA)
                 nndata--;
         }
 
-        if (nndata == 0) continue;
+        if (nndata == 0)
+            continue;
 
         ngcmodel = gwy_graph_curve_model_duplicate(gcmodel);
         nxdata = g_new(gdouble, nndata);
         nydata = g_new(gdouble, nndata);
 
         j = 0;
-        for(i = 1; i < ndata; i++) {
+        for (i = 1; i < ndata; i++) {
             if (fabs(ydata[i]) < DELTA)
                 continue;
             if (fabs(xdata[i]-xdata[i-1]) < DELTA)
                 continue;
             nxdata[j] = xdata[i];
-            nydata[j] = fabs(((ydata[i]-ydata[i-1])/(xdata[i]-xdata[i-1]))*
-                        (xdata[i]/ydata[i]));
+            nydata[j] = fabs(((ydata[i]-ydata[i-1])/(xdata[i]-xdata[i-1]))
+                           * (xdata[i]/ydata[i]));
             j++;
         }
 

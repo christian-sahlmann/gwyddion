@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2012 David Necas (Yeti), Petr Klapetek, 
+ *  Copyright (C) 2012 David Necas (Yeti), Petr Klapetek,
  *  Daniil Bratashov.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net, dn2010@gmail.com.
  *
@@ -69,8 +69,8 @@ filter(GwyGraph *graph)
     ncurves = gwy_graph_model_get_n_curves(gwy_graph_get_model(graph));
     newydata = g_array_new(FALSE, FALSE, sizeof(gdouble));
     for (i = 0; i < ncurves; i++) {
-        cmodel = gwy_graph_model_get_curve(gwy_graph_get_model(graph), 
-										   i);
+        cmodel = gwy_graph_model_get_curve(gwy_graph_get_model(graph),
+                                           i);
         xdata = gwy_graph_curve_model_get_xdata(cmodel);
         ydata = gwy_graph_curve_model_get_ydata(cmodel);
         ndata = gwy_graph_curve_model_get_ndata(cmodel);
@@ -78,12 +78,12 @@ filter(GwyGraph *graph)
         g_array_append_vals(newydata, ydata, ndata);
         filter_do(ydata, (gdouble*)newydata->data, ndata);
         gwy_graph_curve_model_set_data(cmodel, xdata,
-									  (gdouble*)newydata->data,
+                                      (gdouble*)newydata->data,
                                        ndata);
     }
     for (i = 0; i < ncurves; i++) {
         cmodel = gwy_graph_model_get_curve(gwy_graph_get_model(graph),
-										   i);
+                                           i);
         g_signal_emit_by_name(cmodel, "data-changed");
     }
     g_array_free(newydata, TRUE);
@@ -96,8 +96,8 @@ filter_do(const gdouble *yold, gdouble *y, gdouble n)
     gint num = 5;
 
     for (i = num; i < n-num; i++) {
-		for (j = 1; j < num; j++)
-			y[i] += yold[i+j]+yold[i-j];
-		y[i] /= 2 * num - 1;
-	}
+        for (j = 1; j < num; j++)
+            y[i] += yold[i+j]+yold[i-j];
+        y[i] /= 2 * num - 1;
+    }
 }
