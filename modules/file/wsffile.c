@@ -84,7 +84,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports WSF ASCII files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -249,44 +249,58 @@ fail:
     return container;
 }
 
+static void
+add_meta(gpointer hkey, gpointer hvalue, gpointer user_data)
+{
+    gchar *key = NULL, *value = NULL;
+
+    if (!strlen((const gchar*)hvalue))
+        return;
+
+    if ((key = g_convert((const gchar*)hkey, -1,
+                         "UTF-8", "ISO-8859-1",
+                         NULL, NULL, NULL))
+        && (value = g_convert((const gchar*)hvalue, -1,
+                              "UTF-8", "ISO-8859-1",
+                              NULL, NULL, NULL))) {
+        /* Move units to the value */
+        gchar *s;
+        if ((s = strchr(key, '('))) {
+            gchar *p = g_strdup(s+1);
+            guint len;
+
+            *s = '\0';
+            g_strchomp(key);
+            len = strlen(p);
+            if (len && p[len-1] == ')') {
+                p[len-1] = '\0';
+                len--;
+            }
+
+            if (len) {
+                gchar *q = g_strconcat(value, " ", p, NULL);
+                g_free(value);
+                value = q;
+            }
+        }
+
+        gwy_container_set_string_by_name(GWY_CONTAINER(user_data),
+                                         key, value);
+    }
+    g_free(key);
+    /* value is either NULL or eaten by the container */
+}
+
 static GwyContainer*
 wsf_get_meta(GHashTable *hash)
 {
-    static const gchar *keys[] = {
-        "X Offset", "Y Offset", "Scan Rotation(\xb0)", "Scan Rate(Hz)",
-        "Scan Type",
-    };
     GwyContainer *meta = gwy_container_new();
-    gchar *value, *unit, *key, *p;
-    guint i;
+    g_hash_table_foreach(hash, add_meta, meta);
+    if (gwy_container_get_n_items(meta))
+        return meta;
 
-    for (i = 0; i < G_N_ELEMENTS(keys); i++) {
-        if (!(value = g_hash_table_lookup(hash, keys[i])))
-            continue;
-
-        if (!(unit = strchr(keys[i], '('))) {
-            gwy_container_set_string_by_name(meta, keys[i], g_strdup(value));
-            continue;
-        }
-
-        key = g_strdup(keys[i]);
-        unit = strchr(key, '(');
-        *unit = '\0';
-        unit++;
-        g_strstrip(key);
-        if ((p = strchr(unit, ')')))
-            *p = '\0';
-        g_strstrip(unit);
-
-        value = g_strconcat(value, " ", unit, NULL);
-        gwy_container_set_string_by_name(meta, key, value);
-        g_free(key);
-    }
-
-    if (!gwy_container_get_n_items(meta))
-        gwy_object_unref(meta);
-
-    return meta;
+    g_object_unref(meta);
+    return NULL;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
