@@ -384,7 +384,7 @@ tia_load(const gchar *filename,
     if (header->datatypeid == TIA_2D_DATA)
         for (i = 0; i < header->validnumberelements; i++) {
             offset = g_array_index(dataoffsets, gint32, i);
-            if ((offset > size)||(size-offset < TIA_2D_SIZE)) {
+            if ((offset > size) || (size-offset < TIA_2D_SIZE)) {
                 gwy_debug("Attempt to read after EOF");
             }
             else {
@@ -425,7 +425,7 @@ tia_load(const gchar *filename,
           - dimension->calibrationdelta * dimension->calibrationelement;
 
         offset = g_array_index(dataoffsets, gint32, 0);
-        if ((offset > size)||(size-offset < TIA_1D_SIZE)) {
+        if ((offset > size) || (size-offset < TIA_1D_SIZE)) {
             gwy_debug("Attempt to read after EOF");
             goto tagoffsets_fail;
         }
@@ -459,7 +459,7 @@ tia_load(const gchar *filename,
 
         for (i = 0; i < header->validnumberelements; i++) {
             offset = g_array_index(dataoffsets, gint32, i);
-            if ((offset > size)||(size-offset < TIA_1D_SIZE)) {
+            if ((offset > size) || (size-offset < TIA_1D_SIZE)) {
                 gwy_debug("Attempt to read after EOF");
                 goto tagoffsets_fail;
             }
@@ -473,7 +473,7 @@ tia_load(const gchar *filename,
                     *(data + k * xres * yres + ypos * xres + xpos)
                                                            = *(value++);
             }
-            else 
+            else
                 break;
             g_object_unref(dline);
         }

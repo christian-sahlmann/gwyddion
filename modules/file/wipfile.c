@@ -829,7 +829,7 @@ static GwyGraphModel * wip_read_graph(GNode *node)
 
     /* Try to read y units */
     idnode->id = header->zinterpid;
-    g_node_traverse(g_node_get_root (node),
+    g_node_traverse(g_node_get_root(node),
                      G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_find_by_id, (gpointer)idnode);
     yaxis = g_new0(WIPAxis, 1);
@@ -952,7 +952,7 @@ static GwyBrick * wip_read_graph_image(GNode *node)
 
     /* Try to read w units */
     idnode->id = header->zinterpid;
-    g_node_traverse(g_node_get_root (node),
+    g_node_traverse(g_node_get_root(node),
                      G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_find_by_id, (gpointer)idnode);
     waxis = g_new0(WIPAxis, 1);

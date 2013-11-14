@@ -2028,7 +2028,9 @@ extract_new_curve (MDTNewSpecFrame *dataframe, guint number)
                     siunitx = gwy_si_unit_new_parse(nameInfoX->rUnit, &power10x);
                     siunity = gwy_si_unit_new_parse(nameInfoY->rUnit, &power10y);
 
-                    dline = gwy_data_line_new(dataInfo->rDataCount, pow10(power10x)*fabs(axisInfo->rStopValue - axisInfo->rStartValue), FALSE);
+                    dline = gwy_data_line_new(dataInfo->rDataCount,
+                             pow10(power10x) * fabs(axisInfo->rStopValue
+                                       - axisInfo->rStartValue), FALSE);
 
                     gwy_data_line_set_si_unit_x(dline, siunitx);
                     gwy_data_line_set_si_unit_y(dline, siunity);
@@ -2038,7 +2040,7 @@ extract_new_curve (MDTNewSpecFrame *dataframe, guint number)
 
                     gwy_data_line_set_offset(dline, pow10(power10x)
                                            * (fmin(axisInfo->rStartValue, axisInfo->rStopValue)
-                                           - (measInfo->rAxisOptions[0] & MDT_AXOPT_RELATIVE ? axisInfo->rInitValue : 0) ));
+                                           - (measInfo->rAxisOptions[0] & MDT_AXOPT_RELATIVE ? axisInfo->rInitValue : 0)));
                     ydata = gwy_data_line_get_data(dline);
 
                     if (!(measInfo->rAxisOptions[0] & MDT_AXOPT_INVERTED)) {
@@ -2208,21 +2210,21 @@ unitCodeForSiCode(guint64 siCode)
         return MDT_UNIT_NONE;
 
         case G_GUINT64_CONSTANT(0x0000000000000101):
-        return MDT_UNIT_METER; // Meter
+        return MDT_UNIT_METER; /* Meter */
 
         case G_GUINT64_CONSTANT(0x0000000000100001):
-        return MDT_UNIT_AMPERE2; // Ampere
+        return MDT_UNIT_AMPERE2; /* Ampere */
 
         case G_GUINT64_CONSTANT(0x000000fffd010200):
-        return MDT_UNIT_VOLT2; // volt
+        return MDT_UNIT_VOLT2; /* Volt */
 
         case G_GUINT64_CONSTANT(0x0000000001000001):
-        return MDT_UNIT_SECOND; // second
+        return MDT_UNIT_SECOND; /* Second */
 
         default:
         return MDT_UNIT_NONE;
     }
-    return MDT_UNIT_NONE; // dimensionless
+    return MDT_UNIT_NONE; /* dimensionless */
 }
 
 static GwyDataField *
@@ -2233,7 +2235,7 @@ extract_mda_data(MDTMDAFrame * dataframe)
     gdouble xreal, yreal, zscale, zoffset;
     gint power10xy, power10z;
     GwySIUnit *siunitxy, *siunitz;
-    gint  nx,ny,total;
+    gint nx, ny, total;
     const guchar *p;
     const gchar *cunit;
     gchar *unit;
@@ -2275,7 +2277,7 @@ extract_mda_data(MDTMDAFrame * dataframe)
     zscale = pow10(power10z) * zAxis->scale;
     zoffset = pow10(power10z) * zAxis->bias;
 
-    dfield = gwy_data_field_new(nx,ny, xreal, yreal, FALSE);
+    dfield = gwy_data_field_new(nx, ny, xreal, yreal, FALSE);
     total = nx * ny;
     gwy_data_field_set_si_unit_xy(dfield, siunitxy);
     g_object_unref(siunitxy);
@@ -2285,7 +2287,7 @@ extract_mda_data(MDTMDAFrame * dataframe)
     data = gwy_data_field_get_data(dfield);
     p = (gchar *)dataframe->image;
     gwy_debug("total points %d; data type %d; cell size %d",
-              total, zAxis->dataType, dataframe->cellSize);
+                           total, zAxis->dataType, dataframe->cellSize);
     end_data = data + total;
     switch (zAxis->dataType) {
         case MDA_DATA_INT8:
@@ -2537,8 +2539,8 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
                 xskip = 2;
 
                 for (i = 0; i < res; i++) {
-                    xdata[i] = xscale *
-                               GINT16_FROM_LE(*(const gint16 *)p);
+                    xdata[i] = xscale
+                                   * GINT16_FROM_LE(*(const gint16 *)p);
                     p += 2 + yskip;
                 }
             }
@@ -2549,8 +2551,8 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
                 xskip = 2;
 
                 for (i = 0; i < res; i++) {
-                    xdata[i] = xscale *
-                               GUINT16_FROM_LE(*(const guint16 *)p);
+                    xdata[i] = xscale
+                                 * GUINT16_FROM_LE(*(const guint16 *)p);
                     p += 2 + yskip;
                 }
             }
@@ -2561,8 +2563,8 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
                 xskip = 4;
 
                 for (i = 0; i < res; i++) {
-                    xdata[i] = xscale *
-                               GINT32_FROM_LE(*(const gint32 *)p);
+                    xdata[i] = xscale
+                                   * GINT32_FROM_LE(*(const gint32 *)p);
                     p += 4 + yskip;
                 }
             }
@@ -2573,8 +2575,8 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
                 xskip = 4;
 
                 for (i = 0; i < res; i++) {
-                    xdata[i] = xscale *
-                               GUINT32_FROM_LE(*(const guint32 *)p);
+                    xdata[i] = xscale
+                                 * GUINT32_FROM_LE(*(const guint32 *)p);
                     p += 4 + yskip;
                 }
             }
@@ -2585,8 +2587,8 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
                 xskip = 8;
 
                 for (i = 0; i < res; i++) {
-                    xdata[i] = xscale *
-                               (gint64)GINT64_FROM_LE(*(const gint64 *)p);
+                    xdata[i] = xscale
+                           * (gint64)GINT64_FROM_LE(*(const gint64 *)p);
                     p += 8 + yskip;
                 }
             }
@@ -2597,8 +2599,8 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
                 xskip = 8;
 
                 for (i = 0; i < res; i++) {
-                    xdata[i] = xscale *
-                               GUINT64_FROM_LE(*(const guint64 *)p);
+                    xdata[i] = xscale
+                                 * GUINT64_FROM_LE(*(const guint64 *)p);
                     p += 8 + yskip;
                 }
             }
@@ -2663,8 +2665,8 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
         {
             for (i = 0; i < res; i++) {
                 p += xskip;
-                ydata[i] = yscale *
-                           GUINT16_FROM_LE(*(const guint16 *)p);
+                ydata[i] = yscale
+                                 * GUINT16_FROM_LE(*(const guint16 *)p);
                 p += 2;
             }
         }
@@ -2689,8 +2691,8 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
         case MDA_DATA_INT64:
             for (i = 0; i < res; i++) {
                 p += xskip;
-                ydata[i] = yscale *
-                           (gint64)GINT64_FROM_LE(*(const gint64 *)p);
+                ydata[i] = yscale
+                           * (gint64)GINT64_FROM_LE(*(const gint64 *)p);
                 p += 8;
             }
         break;
@@ -2698,8 +2700,8 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
         case MDA_DATA_UINT64:
             for (i = 0; i < res; i++) {
                 p += xskip;
-                ydata[i] = yscale *
-                           GUINT64_FROM_LE(*(const guint64 *)p);
+                ydata[i] = yscale
+                                 * GUINT64_FROM_LE(*(const guint64 *)p);
                 p += 8;
             }
         break;
@@ -2733,9 +2735,11 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
             params.data = xdata;
             params.res = res;
             params.flag = MDT_XML_NONE;
-            context = g_markup_parse_context_new(&parser, TREAT_CDATA_AS_TEXT,
+            context = g_markup_parse_context_new(&parser,
+                                                 TREAT_CDATA_AS_TEXT,
                                                  &params, NULL);
-            if (!g_markup_parse_context_parse(context, xAxis->comment, xAxis->commentLen, &err)
+            if (!g_markup_parse_context_parse(context, xAxis->comment,
+                                                xAxis->commentLen, &err)
                 || !g_markup_parse_context_end_parse(context, &err)) {
                 g_clear_error(&err);
                 g_markup_parse_context_free(context);
@@ -3014,7 +3018,7 @@ spec_start_element (G_GNUC_UNUSED GMarkupParseContext *context,
             ++(frame->pointCount);
         else {
             MDTTNTDAPointInfo pointInfo = { { 0, 0, 0 }, NULL, 0, 0,
-										   NULL, NULL, -1, -1 };
+                                           NULL, NULL, -1, -1 };
             guint pointIndex = frame->pointCount;
 
             for (; *name_cursor; ++name_cursor, ++value_cursor) {
