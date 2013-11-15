@@ -676,6 +676,7 @@ extract_dialog(ExtractArgs *args,
         if (controls.computed) {
             dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
                                                                      "/0/data"));
+	    // FIXME - change X and Y as well to match new Z format?
 
             if (args->type == CUT_DIRX)
                 g_snprintf(description, sizeof(description), _("X cross-section at x: %d"),
@@ -684,7 +685,13 @@ extract_dialog(ExtractArgs *args,
                 g_snprintf(description, sizeof(description), _("Y cross-section at y: %d"),
                            (gint)(args->ypos/100.0*(gwy_brick_get_yres(controls.brick)-1)));
             else if (args->type == CUT_DIRZ)
-                g_snprintf(description, sizeof(description), _("Z cross-section at z: %d"),
+		g_snprintf(description, sizeof(description),
+			   _("Z cross-section at Z = %g %s (#%d)"),
+			   gwy_brick_ktor(brick, floor(args->zpos/100.0
+			   * (gwy_brick_get_zres(controls.brick)-1)))
+			   + gwy_brick_get_zoffset(brick),
+			   gwy_si_unit_get_string(gwy_brick_get_si_unit_z(brick),
+						  GWY_SI_UNIT_FORMAT_PLAIN),
                            (gint)(args->zpos/100.0*(gwy_brick_get_zres(controls.brick)-1)));
             else if (args->type == PROJ_DIRX)
                 g_snprintf(description, sizeof(description), _("X direction sum"));
@@ -1907,19 +1914,17 @@ static gboolean
 gothere(gdouble *data, gdouble *vdata, gint xres, gint yres, gint col, gint row, gint dir, gdouble threshold)
 {
     if (vdata[col+xres*row] == 1) return FALSE;
-
     if (row < 1 || row>=(yres-1)) return FALSE;
     if (col < 1 || col>=(xres-1)) return FALSE;
 
-
     if (dir == 0) /*y const*/ {
-        if (data[col + yres*row]>threshold &&
-                                     (data[col-1 + yres*row]<threshold || data[col + yres*(row-1)]<threshold
-                                      || data[col+1 + yres*row]<threshold || data[col + yres*(row+1)]<threshold
-                                      || data[col+1 + yres*(row+1)]<threshold || data[col-1 + yres*(row-1)]<threshold
-                                      || data[col+1 + yres*(row-1)]<threshold || data[col-1 + yres*(row+1)]<threshold)) return TRUE;
+	if ((data[row + yres*col]>threshold) &&
+                                     ((data[row-1 + yres*col]<threshold) || (data[row + yres*(col-1)]<threshold)
+                                      || (data[row+1 + yres*col]<threshold) || (data[row + yres*(col+1)]<threshold)
+                                      || (data[row+1 + yres*(col+1)]<threshold) || (data[row-1 + yres*(col-1)]<threshold)
+                                      || (data[row+1 + yres*(col-1)]<threshold) || (data[row-1 + yres*(col+1)]<threshold))) return TRUE;
 
-    } else if (dir == 1) /*y const*/ {
+    } else if (dir == 1) /*y const;  HUH? shouldn't this be x const or something?*/ {
         if (data[col + xres*row]>threshold &&
                                      (data[col-1 + xres*row]<threshold || data[col + xres*(row-1)]<threshold
                                       || data[col+1 + xres*row]<threshold || data[col + xres*(row+1)]<threshold
@@ -2014,12 +2019,12 @@ p3d_add_wireframe(ExtractControls *controls)
     yres = gwy_brick_get_yres(controls->brick);
     zres = gwy_brick_get_zres(controls->brick);
     cut = gwy_data_field_new(1, 1, 1, 1, FALSE);
-    visited = gwy_data_field_new(yres, zres, yres, zres, FALSE);
+    visited = gwy_data_field_new(yres, zres, gwy_brick_get_yreal(controls->brick), gwy_brick_get_zreal(controls-> brick), FALSE);
     //printf("brick min %g, max %g\n", gwy_brick_get_min(controls->brick), gwy_brick_get_max(controls->brick));
     threshold = gwy_brick_get_min(controls->brick)
         + (gwy_brick_get_max(controls->brick) - gwy_brick_get_min(controls->brick))/100.0*controls->args->threshold;
 
-    for (i=0; i<xres; i+=spacing)
+    for (i=0; i<xres; i+=spacing) // why use 40 as a magic number - choose xres / 15 or something like that?
     {
         gwy_brick_extract_plane(controls->brick, cut, i, 0, 0, -1, yres, zres, FALSE);
         data = gwy_data_field_get_data(cut);
@@ -2028,13 +2033,12 @@ p3d_add_wireframe(ExtractControls *controls)
         gwy_data_field_threshold(cut, threshold, 0, 1);
         move = 1;
         /*here comes the algorithm*/
-        for (col=1; col<zres; col++)
+        for (col=1; col<zres-1; col++)
         {
-            for (row=1; row<yres; row++)
+	    for (row=1; row<yres-1; row++)
             {
                 move = 1;
-
-                if (gothere(data, vdata, xres, yres, col, row, 0, threshold)) {
+		if (gothere(data, vdata, zres, yres, col, row, 0, threshold)) {
                     visitme(controls, &actual_nps, data, vdata, xres, yres, zres, col, row, 0, i, &move, threshold);
                 }
             }
