@@ -13,6 +13,9 @@ Modules:
 - Graph cut: Cutting other curves than the first actually works.  Memory leaks
   were fixed.
 - Dimensions and Units: If image dimensions change selections are cleared.
+- WSF file: All key-value pairs in the file header at placed to metadata.
+- NetCDF: Support for multi-layer files was added.
+- Volume show and extract: A possible crash was fixed.
 
 Other:
 - Three new false colour gradients were added RGB-Red, RGB-Green and RGB-Blue,
