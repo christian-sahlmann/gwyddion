@@ -48,8 +48,10 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/stats.h>
+#include <libprocess/brick.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
+#include <app/data-browser.h>
 
 #include "err.h"
 
@@ -139,7 +141,8 @@ static GwySIUnit*    read_real_size         (const NetCDF *cdffile,
 static GwyDataField* read_data_field        (const guchar *buffer,
                                              gint xres,
                                              gint yres,
-                                             NetCDFType type);
+                                             NetCDFType type,
+                                              gint frame_i);
 static gboolean      cdffile_read_dim_array (NetCDFDim **pdims,
                                              gint *pndims,
                                              const guchar *buf,
@@ -170,10 +173,20 @@ static gboolean      cdffile_validate_vars  (const NetCDF *cdffile,
                                              GError **error);
 static void          cdffile_free           (NetCDF *cdffile);
 
+static GwyBrick*     read_brick            (const guchar *buffer,
+                                              gint xres,
+                                              gint yres,
+                                              gint zres,
+                                              NetCDFType type);
+
+static GwyContainer* create_meta        (const NetCDF cdffile);
+static void              add_size_to_meta   (GwyContainer* meta,
+                                             GwyDataField* dfield);
+
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Imports network Common Data Form (netCDF) files."),
+    N_("Imports network Common Data Form (netCDF) files created by GXSM."),
     "Yeti <yeti@gwyddion.net>",
     "0.5",
     "David Nečas (Yeti), Petr Klapetek & Niv Levy",
@@ -236,6 +249,93 @@ err_CDF_INTEGRITY(GError **error, const gchar *field_name)
                 field_name);
 }
 
+/**
+ * gwy_brick_invert:
+ * @brick: A brick.
+ * @x: %TRUE to reflect about YZ plane.
+ * @y: %TRUE to reflect about XZ plane.
+ * @z: %TRUE to reflect about XY plane.
+ * Reflects a brick around one of the three axes.
+ * Note : xz and yz inversions are not implemented.
+ * Note : this is not exactly analogous to the datafield funciton,
+ * since brick inversion exists in a separate function (volume_invert)
+ * Should move eventually to a public location, but for now only used here
+ * and mostly untested.
+ **/
+void
+gwy_brick_invert(GwyBrick *brick,
+                      gboolean x,
+                      gboolean y,
+                      gboolean z)
+{
+    gint i, j, k, n, n_layer;
+    gdouble *data, *flip;
+
+    g_return_if_fail(GWY_IS_BRICK(brick));
+    n = brick->xres * brick->yres * brick->zres;
+    n_layer = brick->xres * brick->yres;
+
+    // not implementing xz or yz flips given that we're not doing true 3D data
+    // x&y&z is odd as well, but easy
+    if (x && y && z) {
+        data = brick->data;
+        flip = data + n-1;
+        for (i = 0; i < n/2; i++, data++, flip--)
+            GWY_SWAP(gdouble, *data, *flip);
+    }
+    else if (x && y) {
+        for (k = 0; k < brick->zres ; k++) {
+            data = brick->data + k * n_layer;
+            flip = data + n_layer -1;
+            for (i = 0; i < n_layer/2; i++, data++, flip--)
+                GWY_SWAP(gdouble, *data, *flip);
+        }
+    }
+    else if ((x && z) || (y && z)) {
+      return;
+    }
+    else if (z) { // TEST
+        for (i = 0 ; i < brick->xres ; i++) {
+            for (j = 0 ; j < brick->yres ; j++) {
+                data = brick->data + i + j * brick->xres;
+                flip = data + (brick->zres -1) * n_layer;
+                for (k = 0 ; k < brick->zres/2 ; k++, data+=n_layer, flip-=n_layer)
+                    GWY_SWAP(gdouble, *data, *flip);
+            }
+        }
+    }
+    else if (y) {
+        for (k = 0; k < brick->zres ; k++) {
+            for (i = 0; i < brick->yres; i++) {
+                data = brick->data + i * brick->xres + k * n_layer;
+                flip = data + brick->xres-1;
+                for (j = 0; j < brick->xres/2; j++, data++, flip--)
+                    GWY_SWAP(gdouble, *data, *flip);
+            }
+        }
+    }
+    else if (x) {
+        for (k = 0; k < brick->zres; k++) {
+            for (j = 0; j < brick->yres/2; i++) {
+                data = brick->data + j*brick->xres + k * n_layer;
+                flip = brick->data + (brick->yres - 1 - j) * brick->xres + k * n_layer;
+                for (i = 0; i < brick->xres; i++, data++, flip++)
+                    GWY_SWAP(gdouble, *data, *flip);
+            }
+        }
+    }
+
+    else
+        return;
+}
+
+
+/*TODO:
+ * deal with fast scan (just issue a warning statement for now)
+ * deal with rotated scans
+ * Find some way to avoid duplicate code between field and brick e.g. real size
+ * ive meaningful field/ brick titles - useful for multidata analysis
+ */
 static GwyContainer*
 gxsm_load(const gchar *filename,
           G_GNUC_UNUSED GwyRunType mode,
@@ -244,16 +344,24 @@ gxsm_load(const gchar *filename,
     static const gchar *dimensions[] = { "time", "value", "dimy", "dimx" };
     GwyContainer *data = NULL, *meta = NULL;
     GwyDataField *dfield;
+    GwyBrick *dbrick;
     GwySIUnit *siunit;
     NetCDF cdffile;
     const NetCDFDim *dim;
-    const NetCDFVar *var;
+    const NetCDFVar *var, *field_var;
     const NetCDFAttr *attr;
-    gdouble real;
-    gint i, power10;
+    gdouble real, offset, *times;
+    gint dim_time, dim_value;
+    gfloat *values;
+    gint i, power10, value_i, time_i, frame_i;
+    const guchar *p ;
+    gboolean good_time_series = FALSE, good_value_Series = FALSE;
+    /*allowed deviation from linearity (beyond which we don't load as volume)*/
+    const gfloat value_series_deviation = 0.01, time_series_deviation = 0.01;
 
     if (!cdffile_load(&cdffile, filename, error))
         return NULL;
+    gwy_debug("Parsing %s", filename);
 
     if (cdffile.nrecs) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
@@ -263,159 +371,432 @@ gxsm_load(const gchar *filename,
 
     /* Look for variable "H" or "FloatField".  This seems to be how GXSM calls
      * data. */
-    if (!(var = cdffile_get_var(&cdffile, "H"))
-        && !(var = cdffile_get_var(&cdffile, "FloatField"))) {
+    if (!(field_var = cdffile_get_var(&cdffile, "H"))
+        && !(field_var = cdffile_get_var(&cdffile, "FloatField"))) {
         err_NO_DATA(error);
         goto gxsm_load_fail;
     }
 
-    /* Check the dimensions.  We only know how to handle time=1 and value=1. */
-    for (i = 0; i < var->ndims; i++) {
-        dim = cdffile.dims + var->dimids[i];
-        if (!gwy_strequal(dim->name, dimensions[i])
-            || (i < 2 && dim->length != 1)) {
-            /* XXX */
+    /* Checks that all these dimensions exist! */
+    for (i = 0; i < field_var->ndims; i++) {
+        dim = cdffile.dims + field_var->dimids[i];
+        if (!gwy_strequal(dim->name, dimensions[i])) {
             err_NO_DATA(error);
             goto gxsm_load_fail;
         }
     }
 
-    if (err_DIMENSION(error, cdffile.dims[var->dimids[3]].length)
-        || err_DIMENSION(error, cdffile.dims[var->dimids[2]].length))
+    if (err_DIMENSION(error, cdffile.dims[field_var->dimids[3]].length)
+    || err_DIMENSION(error, cdffile.dims[field_var->dimids[2]].length)
+        || err_DIMENSION(error, cdffile.dims[field_var->dimids[1]].length)
+            || err_DIMENSION(error, cdffile.dims[field_var->dimids[0]].length))
         goto gxsm_load_fail;
 
-    dfield = read_data_field((const guchar*)(cdffile.buffer + var->begin),
-                             cdffile.dims[var->dimids[3]].length,
-                             cdffile.dims[var->dimids[2]].length,
-                             var->type);
+    /* we know these exist, so just read them */
 
-    if ((siunit = read_real_size(&cdffile, "rangex", &real, &power10))) {
-        /* Use negated positive conditions to catch NaNs */
-        if (!((real = fabs(real)) > 0)) {
-            g_warning("Real x size is 0.0, fixing to 1.0");
-            real = 1.0;
-        }
-        gwy_data_field_set_xreal(dfield, real*pow10(power10));
-        gwy_data_field_set_si_unit_xy(dfield, siunit);
-        g_object_unref(siunit);
-    }
+    dim = cdffile.dims + field_var->dimids[0];
+    dim_time = dim->length ;
+    times = g_new(gdouble, dim_time);
 
-    if ((siunit = read_real_size(&cdffile, "rangey", &real, &power10))) {
-        /* Use negated positive conditions to catch NaNs */
-        if (!((real = fabs(real)) > 0)) {
-            g_warning("Real y size is 0.0, fixing to 1.0");
-            real = 1.0;
-        }
-        gwy_data_field_set_yreal(dfield, real*pow10(power10));
-        /* must be the same gwy_data_field_set_si_unit_xy(dfield, siunit); */
-        g_object_unref(siunit);
-    }
+    dim = cdffile.dims + field_var->dimids[1];
+    dim_value = dim->length ;
+    values = g_new(gfloat, dim_value);
 
-    // add the offsets - mostly important for adding spectra later
-    if ((siunit = read_real_size(&cdffile, "offsetx", &real, &power10))) {
-        /* some minimal checking */
-        if (!(fabs(real) >= 0)) {
-            g_warning("x offset reading failed, not using it");
+    gwy_debug("dimensions: time = %d  value = %d", dim_time, dim_value) ;
+    /* create volume data only if equally spaced - to better than some
+     * arbitrary limit currently set at 1%
+     * This is meant mostly for time movies where the clock can occasionnaly
+     * be off by a tick, but it still would be better to have the stack in
+     * that case - i think.
+     * */
+
+    if (dim_value > 1) {
+        good_value_Series = TRUE;
+        var = cdffile_get_var(&cdffile, "value");
+        if ((attr = cdffile_get_attr(var->attrs, var->nattrs, "value"))
+                    && attr->type != NC_FLOAT) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Value series values must be of type FLOAT."));
+            goto gxsm_load_fail;
         }
-        else {
-            gwy_data_field_set_xoffset(dfield, real*pow10(power10)
-                                       - 0.5*gwy_data_field_get_xreal(dfield));
+        p = (const guchar*) (cdffile.buffer + var->begin) ;
+        for (i = 0; i < dim_value; i++) {
+            values[i] = gwy_get_gfloat_be(&p);
+            if (i > 1 && good_value_Series && fabs(((values[i] - values[i-1])
+                / (values[i-1] - values[i-2])) - 1)
+                  > value_series_deviation) {
+                good_value_Series = FALSE;
+                g_warning("value spacing uniformity below %g - loading as 2D images",
+                          value_series_deviation);
+            }
         }
-        g_object_unref(siunit);
-    }
-    if ((siunit = read_real_size(&cdffile, "offsety", &real, &power10))) {
-        /* some minimal checking */
-        if (!(fabs(real) >= 0)) {
-            g_warning("y offset reading failed, not using it");
-        }
-        else {
-            gwy_data_field_set_yoffset(dfield, real*pow10(power10)
-                                       - 0.5*gwy_data_field_get_yreal(dfield));
-        }
-        g_object_unref(siunit);
     }
 
-    if ((siunit = read_real_size(&cdffile, "rangez", &real, &power10))) {
-        /* rangez seems to be some bogus value, take only units */
-        gwy_data_field_set_si_unit_z(dfield, siunit);
-        gwy_data_field_multiply(dfield, pow10(power10));
-        g_object_unref(siunit);
-    }
-    if ((siunit = read_real_size(&cdffile, "dz", &real, &power10))) {
-        /* on the other hand the units seem to be bogus here, take the range */
-        gwy_data_field_multiply(dfield, real);
-        g_object_unref(siunit);
+    if (dim_time > 1) {
+        good_time_series = TRUE;
+        var = cdffile_get_var(&cdffile, "time");
+        if ((attr = cdffile_get_attr(var->attrs, var->nattrs, "time"))
+                    && attr->type != NC_DOUBLE) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Time values must be of type DOUBLE."));
+            goto gxsm_load_fail;
+        }
+        p = (const guchar*) (cdffile.buffer + var->begin) ;
+        for (i = 1; i < dim_time; i++) {
+            times[i] = gwy_get_gdouble_be(&p);
+            if (i > 1 && good_time_series &&
+                fabs(((times[i] - times[i-1])
+                / (times[i-1] - times[i-2])) - 1) > time_series_deviation) {
+                    good_time_series = FALSE;
+                    g_warning(
+                    "time series is not equally spaced to within %g- loading as stack of 2D images",
+                    time_series_deviation);
+            }
+        }
     }
 
+    if ((var = cdffile_get_var(&cdffile, "sranger_mk2_hwi_fast_scan_flag"))) {
+        p = (const guchar*) (cdffile.buffer + var->begin) ;
+        if (gwy_get_gint16_be(&p) == 1) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_UNIMPLEMENTED,
+                    _("Reading of fast scan files is not implemented - yet."));
+            goto gxsm_load_fail;
+        }
+    }
+
+
+    /* TODO : add the label of the field getting modified in gxsm2 !
+     * currently it does not save it, so there is no way to know what the
+     * value meant */
     data = gwy_container_new();
-    if ((attr = cdffile_get_attr(var->attrs, var->nattrs, "long_name"))
-        && attr->type == NC_CHAR
-        && attr->nelems) {
-        gwy_container_set_string_by_name(data, "/0/data/title",
-                                         g_strndup(attr->values, attr->nelems));
-    }
-    meta = gwy_container_new();
-    gwy_container_set_object_by_name(data, "/0/meta", meta);
+    /* create meta before data since i want to use it for some conditional
+     * stuff*/
+    meta = create_meta(cdffile) ;
+    /* also FIXME -check if recent gxsm does put a name for the value*/
+    gwy_container_set_object_by_name(data, "/brick/0/meta", meta);
     g_object_unref(meta);
-    //flip the data if we're reading a right to left scan!
-    if ((var = cdffile_get_var(&cdffile, "basename"))) {
-        /* FIXME - i should do something safer - even a name including this
-         * would be a problem! */
-        if (g_strstr_len(cdffile.buffer + var->begin, var->vsize, "-Xm-")
-            && !g_strstr_len(cdffile.buffer + var->begin, var->vsize, "-Xp-")) {
-            gwy_debug("gxsm netcdf: data field since basename contains "
-                      "'-Xm-' and not '-Xp-'");
-            // flip horizontally
-            gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
-            gwy_container_set_string_by_name(meta, "Fast scan",
-                                             g_strdup("right to left"));
+
+    if ((good_value_Series && (dim_time == 1))
+      ||  (good_time_series && (dim_value == 1))) {
+        if (good_value_Series) {
+            gwy_debug("Reading brick, xres=%d yres=%d zres=%d",
+                                    cdffile.dims[field_var->dimids[3]].length,
+                                    cdffile.dims[field_var->dimids[2]].length,
+                                    dim_value);
+            dbrick = read_brick((const guchar*)(
+                                    cdffile.buffer + field_var->begin),
+                                    cdffile.dims[field_var->dimids[3]].length,
+                                    cdffile.dims[field_var->dimids[2]].length,
+                                    dim_value,
+                                    field_var->type) ;
+            /* NOTE :
+             * 1. flip the Z direction so that "up" is "correctly oriented"
+             * note that this opens issues is one tries to correlate voltage
+             * with scan time!,
+             * but i don't currently have a better idea.
+             * 2. The zreal calculated does not match the extreme of the
+             * values.
+             * I decided to leave it this way since it corresponds more to the
+             * usual convention for data where the value corresponds to the
+             * center of a pixel, rather than the border e.g. if one take a
+             * series of images at -0.95, -0.85.... 0.95V (20 steps),
+             * zreal = 2.0 rather than 1.9V. In a sense, it's treating it as
+             * if we took the images in a cell at [-1,-0.9] ; it seems to be
+             * self consistent.
+             */
+            if ((real = (values[1] - values[0]) * dim_value) < 0 ) {
+                g_warning("Flipping brick since values have negative step");
+                gwy_brick_invert(dbrick, FALSE, FALSE, TRUE);
+                real = -real ;
+                offset = values[dim_value-1];
+                gwy_container_set_string_by_name(meta, "Z flipped",
+                                                g_strdup("True"));
+                gwy_container_set_string_by_name(meta, "Z values",
+                                                g_strdup_printf("%g, %g... %g",
+                                                values[dim_value-1],
+                                                values[dim_value-2],
+                                                values[0]));
+            }
+            else {
+                offset = values[0];
+                gwy_container_set_string_by_name(meta, "Z flipped",
+                                                g_strdup("False"));
+                gwy_container_set_string_by_name(meta, "Z values",
+                                                g_strdup_printf("%g, %g... %g",
+                                                values[0],
+                                                values[1],
+                                                values[dim_value-1]));
+            }
+
+            gwy_brick_set_zoffset(dbrick, offset) ;
+            gwy_brick_set_zreal(dbrick, real);
+            // duplicating code, yuck
+            var = cdffile_get_var(&cdffile, "value");
+            attr = cdffile_get_attr(var->attrs, var->nattrs, "unit");
+            if (!attr->nelems)
+                p = NULL;
+            else
+                p = g_strndup(attr->values, attr->nelems);
+            siunit = gwy_si_unit_new_parse(p, 0);
+            gwy_brick_set_si_unit_z(dbrick, siunit);
+            g_object_unref(siunit);
         }
         else {
-            /* just assume it left to right (default scan direction) in this
-             * case */
-            gwy_container_set_string_by_name(meta, "Fast scan",
-                                             g_strdup("left to right"));
+            dbrick = read_brick((const guchar*)(cdffile.buffer + field_var->begin),
+                                    cdffile.dims[field_var->dimids[3]].length,
+                                    cdffile.dims[field_var->dimids[2]].length,
+                                    dim_time,
+                                    field_var->type) ;
+            g_return_if_fail(times[1] < times[0]);// no negative time series
+            gwy_brick_set_zoffset(dbrick, times[0]) ;
+            gwy_brick_set_zreal(dbrick, (times[1] - times[0]) * dim_time);
+            siunit = gwy_si_unit_new_parse("s", 0);
+            gwy_brick_set_si_unit_z(dbrick, siunit);
+            g_object_unref(siunit);
+        }
+
+        if ((siunit = read_real_size(&cdffile, "rangex", &real, &power10))) {
+            /* Use negated positive conditions to catch NaNs */
+            if (!((real = fabs(real)) > 0)) {
+                g_warning("Real x size is 0.0, fixing to 1.0");
+                real = 1.0;
+            }
+            gwy_brick_set_xreal(dbrick, real*pow10(power10));
+            gwy_brick_set_si_unit_x(dbrick, siunit);
+            g_object_unref(siunit);
+        }
+        else {
+            g_warning("Failed to read rangex when creating brick");
+        }
+
+        if ((siunit = read_real_size(&cdffile, "rangey", &real, &power10))) {
+            /* Use negated positive conditions to catch NaNs */
+            if (!((real = fabs(real)) > 0)) {
+                g_warning("Real y size is 0.0, fixing to 1.0");
+                real = 1.0;
+            }
+            gwy_brick_set_yreal(dbrick, real*pow10(power10));
+            gwy_brick_set_si_unit_y(dbrick, siunit);
+            g_object_unref(siunit);
+        }
+        else {
+            g_warning("Failed to read rangey when creating brick");
+        }
+
+        // add the offsets - mostly important for adding spectra later
+        if ((siunit = read_real_size(&cdffile, "offsetx", &real, &power10))) {
+            /* some minimal checking */
+            if (!(fabs(real) >= 0)) {
+                g_warning("x offset reading failed, not using it");
+            }
+            else {
+                gwy_brick_set_xoffset(dbrick, real*pow10(power10)
+                                            - 0.5*gwy_brick_get_xreal(dbrick));
+            }
+            g_object_unref(siunit);
+        }
+        if ((siunit = read_real_size(&cdffile, "offsety", &real, &power10))) {
+            /* some minimal checking */
+            if (!(fabs(real) >= 0)) {
+                g_warning("y offset reading failed, not using it");
+            }
+            else {
+                gwy_brick_set_yoffset(dbrick, real*pow10(power10)
+                                            - 0.5*gwy_brick_get_yreal(dbrick));
+            }
+            g_object_unref(siunit);
+        }
+
+        // zrange is what gwyddion calls "w" for volume data
+        if ((siunit = read_real_size(&cdffile, "rangez", &real, &power10))) {
+            /* rangez seems to be some bogus value, take only units */
+            gwy_brick_set_si_unit_w(dbrick, siunit);
+            gwy_brick_multiply(dbrick, pow10(power10));
+            g_object_unref(siunit);
+        }
+        else {
+            g_warning("Failed to read rangez when creating brick");
+        }
+
+        if ((siunit = read_real_size(&cdffile, "dz", &real, &power10))) {
+            /* on the other hand the units seem to be bogus here, take the range */
+            gwy_brick_multiply(dbrick, real);
+            g_object_unref(siunit);
+        }
+        else
+            g_warning("Failed to read dz when creating brick");
+
+        gwy_container_set_object_by_name(data, "/brick/0", dbrick);
+
+        if ((var = cdffile_get_var(&cdffile, "basename"))) {
+            /* FIXME - i should do something safer - even a name including this
+            * would be a problem! */
+            if (g_strstr_len(cdffile.buffer + var->begin, var->vsize, "-Xm-")
+                && !g_strstr_len(cdffile.buffer + var->begin, var->vsize, "-Xp-")) {
+                gwy_debug("gxsm netcdf: flip data field since basename contains "
+                            "'-Xm-' and not '-Xp-'");
+                g_warning("netcdf brick: inverting across y");
+                gwy_brick_invert(dbrick, FALSE, TRUE, FALSE);
+                gwy_container_set_string_by_name(meta, "Fast scan",
+                                                g_strdup("right to left"));
+            }
+            else {
+                /* just assume it left to right (default scan direction) in this
+                * case */
+                gwy_container_set_string_by_name(meta, "Fast scan",
+                                                g_strdup("left to right"));
+            }
+        }
+
+        //add the false 2D image in /brick/0/preview
+        dfield = gwy_data_field_new(cdffile.dims[field_var->dimids[3]].length,
+                                    cdffile.dims[field_var->dimids[2]].length,
+                                    1.0, 1.0, FALSE) ;
+        gwy_brick_extract_plane(dbrick, dfield, 0, 0, 0,
+                                    cdffile.dims[field_var->dimids[3]].length,
+                                    cdffile.dims[field_var->dimids[2]].length,
+                                    -1, TRUE);
+        gwy_container_set_object_by_name(data, "/brick/0/preview", dfield) ;
+        if ((attr = cdffile_get_attr(field_var->attrs, field_var->nattrs, "long_name"))
+                    && attr->type == NC_CHAR
+                    && attr->nelems) {
+                    gwy_container_set_string_by_name(data,
+                                                    "/brick/0/title",
+                                                    g_strndup(attr->values, attr->nelems));
+                }
+        add_size_to_meta(meta, dfield);
+        g_object_unref(dfield);
+        g_object_unref(dbrick);
+    }
+    // either single field, 4D (unlikely for gxsm), or not equally enough spaced
+    else {
+        for (value_i = 0 ; value_i < dim_value ; value_i++) {
+            for (time_i = 0 ; time_i < dim_time ; time_i++) {
+                frame_i = value_i * dim_time + time_i ;
+
+                dfield = read_data_field((const guchar*)(cdffile.buffer + field_var->begin),
+                                        cdffile.dims[field_var->dimids[3]].length,
+                                        cdffile.dims[field_var->dimids[2]].length,
+                                        field_var->type,
+                                        frame_i);
+
+                if ((siunit = read_real_size(&cdffile, "rangex", &real, &power10))) {
+                    /* Use negated positive conditions to catch NaNs */
+                    if (!((real = fabs(real)) > 0)) {
+                        g_warning("Real x size is 0.0, fixing to 1.0");
+                        real = 1.0;
+                    }
+                    gwy_data_field_set_xreal(dfield, real*pow10(power10));
+                    gwy_data_field_set_si_unit_xy(dfield, siunit);
+                    g_object_unref(siunit);
+                }
+
+                if ((siunit = read_real_size(&cdffile, "rangey", &real, &power10))) {
+                    /* Use negated positive conditions to catch NaNs */
+                    if (!((real = fabs(real)) > 0)) {
+                        g_warning("Real y size is 0.0, fixing to 1.0");
+                        real = 1.0;
+                    }
+                    gwy_data_field_set_yreal(dfield, real*pow10(power10));
+                    /* must be the same gwy_data_field_set_si_unit_xy(dfield, siunit); */
+                    g_object_unref(siunit);
+                }
+
+                // add the offsets - mostly important for adding spectra later
+                if ((siunit = read_real_size(&cdffile, "offsetx", &real, &power10))) {
+                    /* some minimal checking */
+                    if (!(fabs(real) >= 0)) {
+                        g_warning("x offset reading failed, not using it");
+                    }
+                    else {
+                        gwy_data_field_set_xoffset(dfield, real*pow10(power10)
+                                                    - 0.5*gwy_data_field_get_xreal(dfield));
+                    }
+                    g_object_unref(siunit);
+                }
+                if ((siunit = read_real_size(&cdffile, "offsety", &real, &power10))) {
+                    /* some minimal checking */
+                    if (!(fabs(real) >= 0)) {
+                        g_warning("y offset reading failed, not using it");
+                    }
+                    else {
+                        gwy_data_field_set_yoffset(dfield, real*pow10(power10)
+                                                    - 0.5*gwy_data_field_get_yreal(dfield));
+                    }
+                    g_object_unref(siunit);
+                }
+
+                if ((siunit = read_real_size(&cdffile, "rangez", &real, &power10))) {
+                    /* rangez seems to be some bogus value, take only units */
+                    gwy_data_field_set_si_unit_z(dfield, siunit);
+                    gwy_data_field_multiply(dfield, pow10(power10));
+                    g_object_unref(siunit);
+                }
+                if ((siunit = read_real_size(&cdffile, "dz", &real, &power10))) {
+                    /* on the other hand the units seem to be bogus here, take the range */
+                    gwy_data_field_multiply(dfield, real);
+                    g_object_unref(siunit);
+                }
+
+                if ((attr = cdffile_get_attr(field_var->attrs, field_var->nattrs,
+                    "long_name"))
+                    && attr->type == NC_CHAR
+                    && attr->nelems) {
+                    gwy_container_set_string_by_name(data,
+                                            g_strdup_printf("/%d/data/title", frame_i),
+                                            g_strndup(attr->values, attr->nelems));
+                }
+
+                /*TODO copy meta instead of creating a new one when dealing with
+                 * multiple frames? */
+                meta = create_meta(cdffile);
+                gwy_container_set_object_by_name(data,
+                                                g_strdup_printf("/%d/meta",
+                                                                frame_i), meta);
+                add_size_to_meta(meta, dfield);
+                g_object_unref(meta);
+
+                //flip the data if we're reading a right to left scan!
+                if ((var = cdffile_get_var(&cdffile, "basename"))) {
+                    /* FIXME - i should do something safer - even a name including this
+                    * would be a problem! */
+                    if (g_strstr_len(cdffile.buffer + var->begin, var->vsize, "-Xm-")
+                        && !g_strstr_len(cdffile.buffer + var->begin, var->vsize, "-Xp-")) {
+                        gwy_debug("gxsm netcdf: data field since basename contains "
+                                    "'-Xm-' and not '-Xp-'");
+                        // flip horizontally
+                        gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
+                        gwy_container_set_string_by_name(meta, "Fast scan",
+                                                        g_strdup("right to left"));
+                    }
+                    else {
+                        /* just assume it left to right (default scan direction) in this
+                        * case */
+                        gwy_container_set_string_by_name(meta, "Fast scan",
+                                                        g_strdup("left to right"));
+                    }
+                }
+
+                if (dim_value > 1) {
+                    gwy_container_set_string_by_name(meta, "layer value",
+                                                        g_strdup_printf("%5.2f",
+                                                                        values[value_i]));
+                }
+
+                if (dim_time > 1) {
+                    gwy_container_set_string_by_name(meta, "time",
+                                                        g_strdup_printf("%5.2f",
+                                                                        times[time_i]));
+                }
+
+                gwy_container_set_object_by_name(data,
+                                              g_strdup_printf("/%d/data", frame_i), dfield);
+                g_object_unref(dfield);
+            }
         }
     }
-    gwy_container_set_object_by_name(data, "/0/data", dfield);
-    g_object_unref(dfield);
-    // Add some more meta data
-    if ((var = cdffile_get_var(&cdffile, "comment"))) {
-        /* not sure if this would be a valid string, so create a new one with
-         * fixed length */
-        gwy_container_set_string_by_name(meta, "Comments",
-                                         g_strndup(cdffile.buffer + var->begin,
-                                                   var->vsize));
-    }
-    if ((var = cdffile_get_var(&cdffile, "dateofscan"))) {
-        /* not sure if this would be a valid string, so create a new one with
-         * fixed length */
-        gwy_container_set_string_by_name(meta, "Date and time",
-                                         g_strndup(cdffile.buffer + var->begin,
-                                                   var->vsize));
-    }
-    /* NOTE: i know this is bad as it's hardware dependent (i.e. only someone
-     * using the sranger 2 dsp gets this); but since these details depend in
-     * gxsm on the plugin, i see no better option */
-    if ((siunit = read_real_size(&cdffile, "sranger_mk2_hwi_bias",
-                                 &real, &power10))) {
-        gwy_container_set_string_by_name(meta, "V_bias",
-                                         g_strdup_printf("%5.2g V",
-                                                         real*pow10(power10)));
-        g_object_unref(siunit);
-    }
-    if ((siunit = read_real_size(&cdffile, "sranger_mk2_hwi_mix0_current_set_point",
-                                 &real, &power10))) {
-        gwy_container_set_string_by_name(meta, "I_setpoint",
-                                         g_strdup_printf("%5.2g A",
-                                                         real*pow10(power10)));
-        g_object_unref(siunit);
-    }
-    if ((var = cdffile_get_var(&cdffile, "spm_scancontrol"))) {
-        gwy_container_set_string_by_name(meta, "Slow scan",
-                                         g_strndup(cdffile.buffer + var->begin,
-                                                   var->vsize));
-    }
+    g_free(times);
+    g_free(values);
 
 gxsm_load_fail:
     gwy_file_abandon_contents(cdffile.buffer, cdffile.size, NULL);
@@ -483,16 +864,24 @@ read_real_size(const NetCDF *cdffile,
     return siunit;
 }
 
+/* Notes:
+ * 1. I assume that all frames have the same xres, yres - which seems reasonable
+ * 2. afaik only float data actually exists -
+ *  i haven't actually checked this for anything else
+*/
 static GwyDataField*
 read_data_field(const guchar *buffer,
                 gint xres,
                 gint yres,
-                NetCDFType type)
+                NetCDFType type,
+                gint frame_i)
 {
     GwyDataField *dfield;
     gdouble *data;
     gint i;
+    const guchar* shifted_buffer ;
 
+    gwy_debug("processing frame %d", frame_i);
     dfield = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
     data = gwy_data_field_get_data(dfield);
 
@@ -503,7 +892,7 @@ read_data_field(const guchar *buffer,
             const gint8 *d8 = (const gint8*)buffer;
 
             for (i = 0; i < xres*yres; i++)
-                data[i] = d8[i];
+                data[i] = d8[i + xres * yres * frame_i];
         }
         break;
 
@@ -512,7 +901,7 @@ read_data_field(const guchar *buffer,
             const gint16 *d16 = (const gint16*)buffer;
 
             for (i = 0; i < xres*yres; i++)
-                data[i] = GINT16_FROM_BE(d16[i]);
+                data[i] = GINT16_FROM_BE(d16[i + xres * yres * frame_i]);
         }
         break;
 
@@ -521,20 +910,23 @@ read_data_field(const guchar *buffer,
             const gint32 *d32 = (const gint32*)buffer;
 
             for (i = 0; i < xres*yres; i++)
-                data[i] = GINT32_FROM_BE(d32[i]);
+                data[i] = GINT32_FROM_BE(d32[i + xres * yres * frame_i]);
         }
         break;
 
         case NC_FLOAT:
+        shifted_buffer = buffer + sizeof(gfloat) * xres * yres * frame_i;
         for (i = 0; i < xres*yres; i++)
-            data[i] = gwy_get_gfloat_be(&buffer);
+            data[i] = gwy_get_gfloat_be(&shifted_buffer);
         break;
 
         case NC_DOUBLE:
+        shifted_buffer = buffer + sizeof(gdouble) * xres * yres * frame_i;
         for (i = 0; i < xres*yres; i++)
-            data[i] = gwy_get_gdouble_be(&buffer);
+            data[i] = gwy_get_gdouble_be(&shifted_buffer);
         break;
 
+        /* not using frame_i if we got here - no point*/
         default:
         g_return_val_if_reached(dfield);
         break;
@@ -542,6 +934,153 @@ read_data_field(const guchar *buffer,
 
     return dfield;
 }
+
+static GwyBrick*
+read_brick(const guchar *buffer,
+          gint xres,
+          gint yres,
+          gint zres,
+          NetCDFType type)
+{
+    GwyBrick *brick ;
+    gdouble * data;
+    gint i;
+
+    brick = gwy_brick_new(xres, yres, zres, 1.0, 1.0, 1.0, FALSE) ;
+    data = gwy_brick_get_data(brick) ;
+    switch (type) {
+        case NC_BYTE:
+        case NC_CHAR:
+        {
+            const gint8 *d8 = (const gint8*)buffer;
+
+            for (i = 0; i < xres*yres*zres; i++)
+                data[i] = d8[i];
+        }
+        break;
+
+        case NC_SHORT:
+        {
+            const gint16 *d16 = (const gint16*)buffer;
+
+            for (i = 0; i < xres*yres*zres; i++)
+                data[i] = GINT16_FROM_BE(d16[i]);
+        }
+        break;
+
+        case NC_INT:
+        {
+            const gint32 *d32 = (const gint32*)buffer;
+
+            for (i = 0; i < xres*yres*zres; i++)
+                data[i] = GINT32_FROM_BE(d32[i]);
+        }
+        break;
+
+        case NC_FLOAT:
+        for (i = 0; i < xres*yres*zres; i++)
+            data[i] = gwy_get_gfloat_be(&buffer);
+        break;
+
+        case NC_DOUBLE:
+        for (i = 0; i < xres*yres*zres; i++)
+            data[i] = gwy_get_gdouble_be(&buffer);
+        break;
+
+        default:
+        g_return_val_if_reached(brick);
+        break;
+    }
+
+    return brick;
+}
+
+static GwyContainer*
+create_meta
+(const NetCDF cdffile)
+{
+    GwyContainer *meta ;
+    const NetCDFVar *var;
+    GwySIUnit* siunit ;
+    gdouble real ;
+    gint power10 ;
+
+    meta = gwy_container_new();
+
+    if ((var = cdffile_get_var(&cdffile, "comment"))) {
+        /* not sure if this would be a valid string, so create a new one with
+        * fixed length */
+        gwy_container_set_string_by_name(meta, "Comments",
+                                        g_strndup(cdffile.buffer + var->begin,
+                                                  var->vsize));
+    }
+    if ((var = cdffile_get_var(&cdffile, "dateofscan"))) {
+        /* not sure if this would be a valid string, so create a new one with
+        * fixed length */
+        gwy_container_set_string_by_name(meta, "Date and time",
+                                        g_strndup(cdffile.buffer + var->begin,
+                                                  var->vsize));
+    }
+    /* NOTE: i know this is bad as it's hardware dependent (i.e. only someone
+    * using the sranger 2 dsp gets this); but since these details depend in
+    * gxsm on the plugin, i see no better option */
+    if ((siunit = read_real_size(&cdffile, "sranger_mk2_hwi_bias",
+                                &real, &power10))) {
+        gwy_container_set_string_by_name(meta, "V_bias",
+                                        g_strdup_printf("%5.2g V",
+                                                        real*pow10(power10)));
+        g_object_unref(siunit);
+    }
+    if ((siunit = read_real_size(&cdffile,
+                                "sranger_mk2_hwi_mix0_current_set_point",
+                                &real, &power10))) {
+        gwy_container_set_string_by_name(meta, "I_setpoint",
+                                        g_strdup_printf("%5.2g A",
+                                                        real*pow10(power10)));
+        g_object_unref(siunit);
+    }
+    if ((var = cdffile_get_var(&cdffile, "spm_scancontrol"))) {
+        gwy_container_set_string_by_name(meta, "Slow scan",
+                                        g_strndup(cdffile.buffer + var->begin,
+                                                  var->vsize));
+    }
+    return meta ;
+}
+
+
+/* Add the lateral size information to the meta data; used for both brick
+ * and field option
+ * */
+
+static void
+add_size_to_meta(GwyContainer* meta, GwyDataField* dfield)
+{
+    gwy_container_set_string_by_name(meta, "Size",
+                  g_strdup_printf("%0.2g x %0.2g %s",
+                  gwy_data_field_get_xreal(dfield),
+                  gwy_data_field_get_yreal(dfield),
+                  gwy_si_unit_get_string(gwy_data_field_get_si_unit_xy(dfield),
+                      GWY_SI_UNIT_FORMAT_PLAIN)));
+    /* Should work, but it seems there's a problem when the units are um,
+     * so i'm using the simpler, inelegant solution above
+    xreal = gwy_data_field_get_xreal(dfield);
+    yreal = gwy_data_field_get_yreal(dfield);
+    siunit = gwy_data_field_get_si_unit_xy(dfield);
+    vf = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                sqrt(xreal*yreal), NULL);
+    gwy_container_set_string_by_name(meta, "Size",
+                        g_strdup_printf("%.*f×%.*f%s%s",
+                        vf->precision, xreal/vf->magnitude,
+                        vf->precision, yreal/vf->magnitude,
+                        (vf->units && *vf->units) ? " " : "", vf->units));
+    g_object_unref(siunit);
+    gwy_si_unit_value_format_free(vf);*/
+    gwy_container_set_string_by_name(meta, "Resolution",
+                        g_strdup_printf("%u x %u",
+                                        gwy_data_field_get_xres(dfield),
+                                        gwy_data_field_get_yres(dfield)));
+}
+
 
 static gboolean
 cdffile_load(NetCDF *cdffile,
