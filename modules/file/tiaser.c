@@ -564,8 +564,8 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
     yoffset = fielddata->calibrationoffsety
         - fielddata->calibrationdeltay * fielddata->calibrationelementy;
     if (dfield) {
-        gwy_data_field_set_xoffset (dfield, xoffset);
-        gwy_data_field_set_yoffset (dfield, yoffset);
+        gwy_data_field_set_xoffset(dfield, xoffset);
+        gwy_data_field_set_yoffset(dfield, yoffset);
         gwy_si_unit_set_from_string(
                             gwy_data_field_get_si_unit_xy(dfield), "m");
         data = gwy_data_field_get_data(dfield);
