@@ -286,6 +286,7 @@ fi
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/mime/packages/%{name}.xml
 %{_datadir}/thumbnailers/%{name}.thumbnailer
+%{_datadir}/gtksourceview-2.0/language-specs/pygwy.lang
 
 %files devel
 %defattr(-,root,root)
