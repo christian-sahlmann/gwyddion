@@ -547,7 +547,14 @@ gxsm_load(const gchar *filename,
                                     cdffile.dims[field_var->dimids[2]].length,
                                     dim_time,
                                     field_var->type) ;
-            g_return_if_fail(times[1] < times[0]);// no negative time series
+            if (!(times[1] < times[0])) {
+                g_warning("Times series are not ordered.");
+                GWY_SWAP(gdouble, times[1], times[0]);
+                if (!(times[1] < times[0])) {
+                    times[0] = 0.0;
+                    times[1] = 1.0;
+                }
+            }
             gwy_brick_set_zoffset(dbrick, times[0]) ;
             gwy_brick_set_zreal(dbrick, (times[1] - times[0]) * dim_time);
             siunit = gwy_si_unit_new_parse("s", 0);
