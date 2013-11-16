@@ -2,6 +2,7 @@
 
 moduledir = $(pkglibdir)/modules
 pygwyutildir = $(pkgdatadir)/pygwy
+langdir = $(datadir)/gtksourceview-2.0/language-specs
 
 PYGWY_H_FILES = \
 	$(top_srcdir)/libprocess/arithmetic.h \
@@ -149,11 +150,12 @@ gwy_pymodule = gwy.la
 pygwy_sources =
 gwy_sources =
 
-pygwyutil_DATA = \
-	gwyutils.py
+pygwyutil_DATA = gwyutils.py
+lang_DATA = pygwy.lang
 
 else
 pygwyutil_DATA =
+lang_DATA =
 pygwy_module =
 gwy_pymodule =
 disabled_sources += pygwy.c gwy.c pygwy-console.c wrap_calls.c
@@ -168,6 +170,7 @@ pyexec_LTLIBRARIES = \
 EXTRA_DIST = \
 	$(disabled_sources) \
 	$(pygwyutil_DATA) \
+	makelang.py \
 	README.pygwy \
 	pygwy.override \
 	pygwy-codegen.py \
@@ -205,10 +208,13 @@ pygwy_la_CFLAGS = @COMMON_CFLAGS@ @WARNING_NOUNUSED_PAR@ @GTKSOURCEVIEW_CFLAGS@ 
 pygwy_la_LIBADD = $(module_libadd) $(PYTHON_LIBS) $(PYGTK_LIBS) @GTKSOURCEVIEW_LIBS@
 
 pygwy.defs: $(PYGWY_H_FILES) Makefile.am pygwy-fix-defs.py
-	$(PYTHON) $(PYGTK_CODEGENDIR)/h2def.py $(PYGWY_H_FILES) \
+	$(AM_V_GEN)$(PYTHON) $(PYGTK_CODEGENDIR)/h2def.py $(PYGWY_H_FILES) \
 	| sed -e 's/define-object Serializable/define-interface Serializable/' -e 's/GWY_TYPE_SELECTION_GRAPH1_DAREA/GWY_TYPE_SELECTION_GRAPH_1DAREA/' -e 's/GWY_TYPE_NL_FIT_PRESET/GWY_TYPE_NLFIT_PRESET/' -e 's/GWY_TYPE_CD_LINE/GWY_TYPE_CDLINE/' > pygwy.defs.tmp
 	$(PYTHON) $(srcdir)/pygwy-fix-defs.py $(PYGTK_CODEGENDIR) > pygwy.defs
 	rm pygwy.defs.tmp
+
+pygwy.lang: pygwy.defs
+	$(AM_V_GEN)$(PYTHON) $(srcdir)/makelang.py <pygwy.defs >pygwy.lang
 
 # The sed fixes pygwy_add_constants() and pygwy_register_classes() to static
 # functions, and standardized `generated' line for automated exclusions of
@@ -245,7 +251,7 @@ uninstall-hook:
 endif
 endif
 
-CLEANFILES = gwy.py gwy.pyc gwy.pyo
+CLEANFILES = gwy.py gwy.pyc gwy.pyo pygwy.lang
 
 DISTCLEANFILES = pygwy.defs pygwywrap.c
 

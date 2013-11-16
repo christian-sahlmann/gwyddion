@@ -413,7 +413,7 @@ pygwy_console_create_gui(void)
     manager = gtk_source_language_manager_get_default();
 
     sourcebuffer = GTK_SOURCE_BUFFER(gtk_text_view_get_buffer(file_textview));
-    language = gtk_source_language_manager_get_language(manager, "python");
+    language = gtk_source_language_manager_get_language(manager, "pygwy");
     gtk_source_buffer_set_language(sourcebuffer, language);
     gtk_source_buffer_set_highlight_syntax(sourcebuffer, TRUE);
 
