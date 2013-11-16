@@ -35,16 +35,15 @@
 #include <gtksourceview/gtksourcelanguagemanager.h>
 #endif
 
-static void     pygwy_on_console_save_as_file   (GtkToolButton *btn,
-                                                 gpointer user_data);
-static void     pygwy_console_run               (GwyContainer *data,
-                                                 GwyRunType run,
-                                                 const gchar *name);
-static void     pygwy_on_console_command_execute(GtkEntry *entry,
-                                                 gpointer user_data);
-static gboolean pygwy_on_console_close          (GtkWidget *widget,
-                                                 GdkEvent *event,
-                                                 gpointer user_data);
+static void pygwy_console_save_as_file   (GtkToolButton *btn,
+                                          gpointer user_data);
+static void pygwy_console_run            (GwyContainer *data,
+                                          GwyRunType run,
+                                          const gchar *name);
+static void pygwy_console_command_execute(GtkEntry *entry,
+                                          gpointer user_data);
+static void pygwy_console_clear_output   (GtkToolButton *btn,
+                                          gpointer user_data);
 
 extern gchar pygwy_plugin_dir_name[];
 
@@ -150,7 +149,7 @@ pygwy_console_append(gchar *msg)
 }
 
 static void
-pygwy_on_console_run_file(GtkToolButton *btn, gpointer user_data)
+pygwy_console_run_file(GtkToolButton *btn, gpointer user_data)
 {
     GtkTextView *textview;
     GtkTextBuffer *console_file_buf;
@@ -203,7 +202,7 @@ fix_eols_to_unix(gchar *text)
 }
 
 static void
-pygwy_on_console_open_file(GtkToolButton *btn, gpointer user_data)
+pygwy_console_open_file(GtkToolButton *btn, gpointer user_data)
 {
     GtkWidget *file_chooser;
     GtkFileFilter *filter = gtk_file_filter_new();
@@ -258,7 +257,7 @@ pygwy_on_console_open_file(GtkToolButton *btn, gpointer user_data)
 }
 
 static void
-pygwy_on_console_save_file(GtkToolButton *btn, gpointer user_data)
+pygwy_console_save_file(GtkToolButton *btn, gpointer user_data)
 {
     GtkTextView *textview;
     GtkTextBuffer *buf;
@@ -267,7 +266,7 @@ pygwy_on_console_save_file(GtkToolButton *btn, gpointer user_data)
     FILE *f;
 
     if (console_setup->script_filename == NULL) {
-        pygwy_on_console_save_as_file(btn, user_data);
+        pygwy_console_save_as_file(btn, user_data);
     }
     else {
         textview = GTK_TEXT_VIEW(console_setup->console_file_content);
@@ -291,7 +290,7 @@ pygwy_on_console_save_file(GtkToolButton *btn, gpointer user_data)
 }
 
 static void
-pygwy_on_console_save_as_file(GtkToolButton *btn, gpointer user_data)
+pygwy_console_save_as_file(GtkToolButton *btn, gpointer user_data)
 {
     GtkWidget *dialog;
 
@@ -309,19 +308,19 @@ pygwy_on_console_save_as_file(GtkToolButton *btn, gpointer user_data)
 
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
         console_setup->script_filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-        pygwy_on_console_save_file(btn, user_data);
+        pygwy_console_save_file(btn, user_data);
     }
     gtk_widget_destroy(dialog);
 }
 
 
 static void
-pygwy_console_create_gui()
+pygwy_console_create_gui(void)
 {
     GtkWidget *console_win, *vbox1, *console_scrolledwin, *file_scrolledwin,
-              *vpaned, *frame;
+              *vpaned, *frame, *image_clear;
     GtkWidget *entry_input, *button_bar, *button_open, *button_run,
-              *button_save, *button_save_as;
+              *button_save, *button_save_as, *button_clearout;
     GtkTextView *file_textview, *output_textview;
     PangoFontDescription *font_desc;
     GtkAccelGroup *accel_group;
@@ -335,7 +334,7 @@ pygwy_console_create_gui()
     // create static structure;
     console_setup = g_new(PygwyConsoleSetup, 1);
     // create GUI
-    console_win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    console_win = console_setup->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(console_win), _("Pygwy Console"));
 
     vbox1 = gtk_vbox_new(FALSE, 0);
@@ -346,6 +345,10 @@ pygwy_console_create_gui()
     button_save = GTK_WIDGET(gtk_tool_button_new_from_stock(GTK_STOCK_SAVE));
     button_save_as = GTK_WIDGET(gtk_tool_button_new_from_stock(GTK_STOCK_SAVE_AS));
     button_run = GTK_WIDGET(gtk_tool_button_new_from_stock(GTK_STOCK_EXECUTE));
+    image_clear = gtk_image_new_from_stock(GTK_STOCK_CLEAR,
+                                           GTK_ICON_SIZE_LARGE_TOOLBAR);
+    button_clearout = GTK_WIDGET(gtk_tool_button_new(image_clear,
+                                                     _("Clear Log")));
     button_bar_tips = gtk_tooltips_new();
     gtk_tooltips_set_tip(GTK_TOOLTIPS(button_bar_tips),
                          button_open,
@@ -366,13 +369,12 @@ pygwy_console_create_gui()
                                GTK_ACCEL_VISIBLE);
     gtk_window_add_accel_group(GTK_WINDOW(console_win), accel_group);
 
-
-
     button_bar = gtk_toolbar_new();
-    gtk_toolbar_insert(GTK_TOOLBAR(button_bar), GTK_TOOL_ITEM(button_run), 0);
-    gtk_toolbar_insert(GTK_TOOLBAR(button_bar), GTK_TOOL_ITEM(button_save_as), 0);
-    gtk_toolbar_insert(GTK_TOOLBAR(button_bar), GTK_TOOL_ITEM(button_save), 0);
-    gtk_toolbar_insert(GTK_TOOLBAR(button_bar), GTK_TOOL_ITEM(button_open), 0);
+    gtk_toolbar_insert(GTK_TOOLBAR(button_bar), GTK_TOOL_ITEM(button_open), -1);
+    gtk_toolbar_insert(GTK_TOOLBAR(button_bar), GTK_TOOL_ITEM(button_save), -1);
+    gtk_toolbar_insert(GTK_TOOLBAR(button_bar), GTK_TOOL_ITEM(button_save_as), -1);
+    gtk_toolbar_insert(GTK_TOOLBAR(button_bar), GTK_TOOL_ITEM(button_run), -1);
+    gtk_toolbar_insert(GTK_TOOLBAR(button_bar), GTK_TOOL_ITEM(button_clearout), -1);
     gtk_box_pack_start(GTK_BOX(vbox1), button_bar, FALSE, FALSE, 0);
     gtk_toolbar_set_style(GTK_TOOLBAR(button_bar), GTK_TOOLBAR_BOTH);
 
@@ -437,21 +439,23 @@ pygwy_console_create_gui()
     gtk_paned_set_position(GTK_PANED(vpaned), 300);
 
     // entry widget on ENTER
-    g_signal_connect((gpointer)entry_input, "activate",
-                     G_CALLBACK(pygwy_on_console_command_execute), NULL);
+    g_signal_connect(entry_input, "activate",
+                     G_CALLBACK(pygwy_console_command_execute), NULL);
     // open script signal connect
-    g_signal_connect((gpointer)button_open, "clicked",
-                     G_CALLBACK(pygwy_on_console_open_file), NULL);
-    g_signal_connect((gpointer)button_run, "clicked",
-                     G_CALLBACK(pygwy_on_console_run_file), NULL);
-    g_signal_connect((gpointer)button_save, "clicked",
-                     G_CALLBACK(pygwy_on_console_save_file), NULL);
-    g_signal_connect((gpointer)button_save_as, "clicked",
-                     G_CALLBACK(pygwy_on_console_save_as_file), NULL);
+    g_signal_connect(button_open, "clicked",
+                     G_CALLBACK(pygwy_console_open_file), NULL);
+    g_signal_connect(button_run, "clicked",
+                     G_CALLBACK(pygwy_console_run_file), NULL);
+    g_signal_connect(button_save, "clicked",
+                     G_CALLBACK(pygwy_console_save_file), NULL);
+    g_signal_connect(button_save_as, "clicked",
+                     G_CALLBACK(pygwy_console_save_as_file), NULL);
+    g_signal_connect(button_clearout, "clicked",
+                     G_CALLBACK(pygwy_console_clear_output), NULL);
 
     // connect on window close()
-    g_signal_connect((gpointer)console_win, "delete_event",
-                     G_CALLBACK(pygwy_on_console_close), NULL);
+    g_signal_connect(console_win, "delete-event",
+                     G_CALLBACK(gtk_widget_hide_on_delete), NULL);
     gtk_text_view_set_wrap_mode(output_textview, GTK_WRAP_WORD_CHAR);
     gtk_window_resize(GTK_WINDOW(console_win), 600, 500);
     gtk_widget_show_all(console_win);
@@ -460,8 +464,13 @@ pygwy_console_create_gui()
 static void
 pygwy_console_run(GwyContainer *data, GwyRunType run, const gchar *name)
 {
-    PyObject *d; //, *py_container;
+    PyObject *d;
     gchar *plugin_dir_name = NULL;
+
+    if (console_setup && console_setup->window) {
+        gtk_window_present(GTK_WINDOW(console_setup->window));
+        return;
+    }
 
     pygwy_initialize();
     pygwy_console_create_gui();
@@ -472,13 +481,6 @@ pygwy_console_run(GwyContainer *data, GwyRunType run, const gchar *name)
         g_warning("Cannot create copy of Python dictionary.");
         return;
     }
-
-    // do NOT create container named 'data' to allow access the container from python
-    // py_container = pygobject_new((GObject*)data);
-    //if (!py_container) {
-    //    g_warning("Variable 'gwy.data' was not inicialized.");
-    //}
-    //PyDict_SetItemString(s_pygwy_dict, "data", py_container);
 
     // redirect stdout & stderr to temporary file
     pygwy_run_string("import sys, gwy, tempfile\n"
@@ -511,7 +513,8 @@ pygwy_console_run(GwyContainer *data, GwyRunType run, const gchar *name)
 }
 
 static void
-pygwy_on_console_command_execute(GtkEntry *entry, gpointer user_data)
+pygwy_console_command_execute(GtkEntry *entry,
+                              G_GNUC_UNUSED gpointer user_data)
 {
     gchar *input_line;
     const gchar *command;
@@ -529,15 +532,18 @@ pygwy_on_console_command_execute(GtkEntry *entry, gpointer user_data)
     gtk_editable_select_region(GTK_EDITABLE(entry), 0, -1);
 }
 
-static gboolean
-pygwy_on_console_close(GtkWidget *widget, GdkEvent *event, gpointer user_data)
+static void
+pygwy_console_clear_output(GtkToolButton *btn,
+                           G_GNUC_UNUSED gpointer user_data)
 {
-    //Py_DECREF(module);
-    //Py_DECREF(py_container); //FIXME
-    Py_DECREF(console_setup->std_err);
-    destroy_environment(console_setup->dictionary, FALSE);
-    g_free(console_setup);
-    return FALSE;
+    GtkTextBuffer *console_buf;
+    GtkTextIter start_iter, end_iter;
+    GtkTextView *textview;
+
+    textview = GTK_TEXT_VIEW(console_setup->console_output);
+    console_buf = gtk_text_view_get_buffer(textview);
+    gtk_text_buffer_get_bounds(console_buf, &start_iter, &end_iter);
+    gtk_text_buffer_delete(console_buf, &start_iter, &end_iter);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

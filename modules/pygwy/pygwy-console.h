@@ -25,6 +25,7 @@
 #include <Python.h>
 #include <gtk/gtk.h>
 typedef struct {
+   GtkWidget *window;
    PyObject *std_err;
    PyObject *dictionary;
    GtkWidget *console_output;
