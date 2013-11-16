@@ -16,6 +16,7 @@ Modules:
 - WSF file: All key-value pairs in the file header at placed to metadata.
 - NetCDF: Support for multi-layer files was added.
 - Volume show and extract: A possible crash was fixed.
+- NTMDT: Support for new spectroscopy frames was added.
 
 Other:
 - Three new false colour gradients were added RGB-Red, RGB-Green and RGB-Blue,
