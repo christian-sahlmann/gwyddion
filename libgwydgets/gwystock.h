@@ -112,6 +112,7 @@ G_BEGIN_DECLS
 #define GWY_STOCK_POLYNOM               "gwy_polynom"
 #define GWY_STOCK_POLYNOM_LEVEL         "gwy_polynom_level"
 #define GWY_STOCK_PROFILE               "gwy_profile"
+#define GWY_STOCK_PYGWY                 "gwy_pygwy"
 #define GWY_STOCK_REMOVE_UNDER_MASK     "gwy_remove_under_mask"
 #define GWY_STOCK_ROTATE                "gwy_rotate"
 #define GWY_STOCK_ROTATE_180            "gwy_rotate_180"

@@ -900,6 +900,15 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_PYGWY:
+ *
+ * The "Pygwy" stock icon.
+ * <inlinegraphic fileref="gwy_pygwy-24.png" format="PNG"/>
+ *
+ * Since: 2.34
+ **/
+
+/**
  * GWY_STOCK_REMOVE_UNDER_MASK:
  *
  * The "Remove-Under-Mask" stock icon.
