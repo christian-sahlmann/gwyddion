@@ -17,6 +17,9 @@ Modules:
 - NetCDF: Support for multi-layer files was added.
 - Volume show and extract: A possible crash was fixed.
 - NTMDT: Support for new spectroscopy frames was added.
+- Pygwy: Console is persistent and only one can exist, it has a clear log
+  button, gwy syntax highlighting was added, a number of leaks was fixed,
+  Python wrappers for file loading and grain numbering were improved.
 
 Other:
 - Three new false colour gradients were added RGB-Red, RGB-Green and RGB-Blue,
