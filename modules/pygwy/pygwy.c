@@ -100,7 +100,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Pygwy, the Gwyddion Python wrapper."),
     "Jan Hořák <xhorak@gmail.com>",
-    "0.2",
+    "0.3",
     "Jan Hořák",
     "2007"
 };
