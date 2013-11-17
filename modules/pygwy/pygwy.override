@@ -774,7 +774,7 @@ _wrap_gwy_data_field_grains_get_values(PyGObject *self, PyObject *args, PyObject
 {
    static char *kwlist[] = {"grains", "quantity", NULL};
 
-   PyGObject *graintuple, *valuetuple;
+   PyObject *graintuple, *valuetuple;
    GwyGrainQuantity quantity;
    guint *grains;
    gdouble *values;
