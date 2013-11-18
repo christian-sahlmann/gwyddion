@@ -326,7 +326,8 @@ static GdkPixbuf*        fmscale                         (GtkWidget *widget,
                                                           gdouble top,
                                                           gdouble zoom,
                                                           const gchar *font,
-                                                          GwySIUnit *siunit);
+                                                          GwySIUnit *siunit,
+                                                          gboolean inner_ticks);
 static GdkPixbuf*        scalebar                        (GtkWidget *widget,
                                                           gint size,
                                                           const gchar *length,
@@ -472,7 +473,7 @@ static GwyModuleInfo module_info = {
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.25",
+    "7.26",
     "David Nečas (Yeti)",
     "2004-2013",
 };
@@ -2312,6 +2313,7 @@ pixmap_draw_presentational(GwyContainer *data,
                            PixmapSaveArgs *args)
 {
     GwyPixmapLayer *layer;
+    GwyLayerBasicRangeType rangetype;
     GdkPixbuf *pixbuf, *datapixbuf, *tmpixbuf;
     GdkPixbuf *hrpixbuf = NULL, *vrpixbuf = NULL, *scalepixbuf = NULL;
     GwySIUnit *siunit_xy, *siunit_z;
@@ -2429,9 +2431,12 @@ pixmap_draw_presentational(GwyContainer *data,
             siunit_z = gwy_si_unit_new(NULL);
         else
             siunit_z = gwy_data_field_get_si_unit_z(args->dfield);
+
+        rangetype = gwy_layer_basic_get_range_type(GWY_LAYER_BASIC(layer));
         gwy_layer_basic_get_range(GWY_LAYER_BASIC(layer), &min, &max);
         scalepixbuf = fmscale(widget, zheight + 2*lw, min, max,
-                              fontzoom, args->font, siunit_z);
+                              fontzoom, args->font, siunit_z,
+                              rangetype != GWY_LAYER_BASIC_RANGE_ADAPT);
         inverted = min > max;
         scw = gdk_pixbuf_get_width(scalepixbuf);
         if (has_presentation)
@@ -3688,7 +3693,8 @@ fmscale(GtkWidget *widget, gint size,
         gdouble top,
         gdouble zoom,
         const gchar *font,
-        GwySIUnit *siunit)
+        GwySIUnit *siunit,
+        gboolean inner_ticks)
 {
     PangoRectangle logical1, logical2;
     PangoLayout *layout;
@@ -3767,25 +3773,26 @@ fmscale(GtkWidget *widget, gint size,
                     layout); /* top text end */
     gdk_draw_line(drawable, gc, 0, lw/2, tick, lw/2); /* top line */
 
-    /* tick in the middle - don't draw it anymore */
-    /*gdk_draw_line(drawable, gc, 0, size/2, tick/2, size/2);*/
-
     /* the rest of the ticks is drawn here (other than bot, top) */
-    while (bool_draw && x <= max) {
-        pos = size-1 - GWY_ROUND((x - bot)*scale);
-        if (pos > label_height && pos < size-1-label_height) {
-            gdk_draw_line(drawable, gc, 0, pos, tick/2, pos);
-            format_layout(layout, &logical1, s, "%.*f",
-                  prec, x/format->magnitude);
-            if (pos - PANGO_PIXELS(logical1.height) > label_height) {
-                gdk_draw_layout(drawable, gc,
-                        width - PANGO_PIXELS(logical1.width) - 2 -units_width,
-                        pos - PANGO_PIXELS(logical1.height),
-                        layout);
+    if (inner_ticks) {
+        while (bool_draw && x <= max) {
+            pos = size-1 - GWY_ROUND((x - bot)*scale);
+            if (pos > label_height && pos < size-1-label_height) {
+                gdk_draw_line(drawable, gc, 0, pos, tick/2, pos);
+                format_layout(layout, &logical1, s, "%.*f",
+                              prec, x/format->magnitude);
+                if (pos - PANGO_PIXELS(logical1.height) > label_height) {
+                    gdk_draw_layout(drawable, gc,
+                                    width - PANGO_PIXELS(logical1.width)
+                                    - 2 - units_width,
+                                    pos - PANGO_PIXELS(logical1.height),
+                                    layout);
+                }
             }
+            x += tickdist;
         }
-        x += tickdist;
     }
+
     /* all drawing is finished here */
     pixbuf = gdk_pixbuf_get_from_drawable(NULL, drawable, NULL,
                                           0, 0, 0, 0, width, size);
