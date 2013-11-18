@@ -89,7 +89,7 @@ static GwyModuleInfo module_info = {
     N_("Rotates data to make characteristic directions parallel "
        "with x or y axis."),
     "Yeti <yeti@gwyddion.net>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -250,7 +250,8 @@ unrotate_dialog(UnrotateArgs *args,
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    s = gwy_enum_to_string(guess, gwy_plane_symmetry_get_enum(), -1);
+    s = gwy_sgettext(gwy_enum_to_string(guess, gwy_plane_symmetry_get_enum(),
+                                        -1));
     label = gtk_label_new(_(s));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
