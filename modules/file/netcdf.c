@@ -354,6 +354,7 @@ gxsm_load(const gchar *filename,
     gfloat *values;
     gint i, power10, value_i, time_i, frame_i;
     const guchar *p ;
+    guchar *pt;
     gboolean good_time_series = FALSE, good_value_Series = FALSE;
     /*allowed deviation from linearity (beyond which we don't load as volume)*/
     const gfloat value_series_deviation = 0.01, time_series_deviation = 0.01;
@@ -744,22 +745,20 @@ gxsm_load(const gchar *filename,
 
                 /* The "long name" is pretty useless - give something that is
                  * useful, especially for multilayer files */
+                pt = g_strdup_printf("/%d/data/title", frame_i);
                 if (dim_value > 1 && dim_time > 1) {
-                    gwy_container_set_string_by_name(data,
-                                        g_strdup_printf("/%d/data/title", frame_i),
+                    gwy_container_set_string_by_name(data, pt,
                                         g_strdup_printf("layer = %5.2f, time = %5.2f",
                                                                     values[value_i],
                                                                     times[time_i]));
                 }
                 else if (dim_value > 1) {
-                    gwy_container_set_string_by_name(data,
-                                        g_strdup_printf("/%d/data/title", frame_i),
+                    gwy_container_set_string_by_name(data, pt,
                                         g_strdup_printf("layer = %5.2f",
                                                                     values[value_i]));
                 }
                 else if (dim_time > 1) {
-                     gwy_container_set_string_by_name(data,
-                                        g_strdup_printf("/%d/data/title", frame_i),
+                    gwy_container_set_string_by_name(data, pt,
                                         g_strdup_printf("time = %5.2f",
                                                                     times[time_i]));
                 }
@@ -768,17 +767,18 @@ gxsm_load(const gchar *filename,
                     "long_name"))
                     && attr->type == NC_CHAR
                     && attr->nelems) {
-                    gwy_container_set_string_by_name(data,
-                                            g_strdup_printf("/%d/data/title", frame_i),
+                    gwy_container_set_string_by_name(data, pt,
                                             g_strndup(attr->values, attr->nelems));
                 }
+                g_free(pt);
 
                 /*TODO copy meta instead of creating a new one when dealing with
                  * multiple frames? */
                 meta = create_meta(cdffile);
-                gwy_container_set_object_by_name(data,
-                                                g_strdup_printf("/%d/meta",
-                                                                frame_i), meta);
+                pt =  g_strdup_printf("/%d/meta", frame_i) ;
+                gwy_container_set_object_by_name(data, pt, meta);
+                g_free(pt);
+
                 add_size_to_meta(meta, dfield);
                 g_object_unref(meta);
 
@@ -815,8 +815,9 @@ gxsm_load(const gchar *filename,
                                                                         times[time_i]));
                 }
 
-                gwy_container_set_object_by_name(data,
-                                              g_strdup_printf("/%d/data", frame_i), dfield);
+                pt = g_strdup_printf("/%d/data", frame_i);
+                gwy_container_set_object_by_name(data, pt, dfield);
+                g_free(pt);
                 g_object_unref(dfield);
             }
         }
