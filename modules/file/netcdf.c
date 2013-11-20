@@ -173,14 +173,14 @@ static gboolean      cdffile_validate_vars  (const NetCDF *cdffile,
                                              GError **error);
 static void          cdffile_free           (NetCDF *cdffile);
 
-static GwyBrick*     read_brick            (const guchar *buffer,
-                                              gint xres,
-                                              gint yres,
-                                              gint zres,
-                                              NetCDFType type);
+static GwyBrick*     read_brick             (const guchar *buffer,
+                                             gint xres,
+                                             gint yres,
+                                             gint zres,
+                                             NetCDFType type);
 
-static GwyContainer* create_meta        (const NetCDF cdffile);
-static void              add_size_to_meta   (GwyContainer* meta,
+static GwyContainer* create_meta            (const NetCDF cdffile);
+static void          add_size_to_meta       (GwyContainer* meta,
                                              GwyDataField* dfield);
 
 static GwyModuleInfo module_info = {
@@ -188,7 +188,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports network Common Data Form (netCDF) files created by GXSM."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti), Petr Klapetek & Niv Levy",
     "2006",
 };
@@ -334,7 +334,6 @@ gwy_brick_invert(GwyBrick *brick,
  * deal with fast scan (just issue a warning statement for now)
  * deal with rotated scans
  * Find some way to avoid duplicate code between field and brick e.g. real size
- * ive meaningful field/ brick titles - useful for multidata analysis
  */
 static GwyContainer*
 gxsm_load(const gchar *filename,
@@ -547,13 +546,11 @@ gxsm_load(const gchar *filename,
                                     cdffile.dims[field_var->dimids[2]].length,
                                     dim_time,
                                     field_var->type) ;
-            if (!(times[1] < times[0])) {
-                g_warning("Times series are not ordered.");
-                GWY_SWAP(gdouble, times[1], times[0]);
-                if (!(times[1] < times[0])) {
-                    times[0] = 0.0;
-                    times[1] = 1.0;
-                }
+            /* if the times are not ordered something is very wrong - i say we fail*/
+            if (times[1] < times[0]) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Time series order is wrong."));
+                goto gxsm_load_fail;
             }
             gwy_brick_set_zoffset(dbrick, times[0]) ;
             gwy_brick_set_zreal(dbrick, (times[1] - times[0]) * dim_time);
@@ -745,7 +742,29 @@ gxsm_load(const gchar *filename,
                     g_object_unref(siunit);
                 }
 
-                if ((attr = cdffile_get_attr(field_var->attrs, field_var->nattrs,
+                /* The "long name" is pretty useless - give something that is
+                 * useful, especially for multilayer files */
+                if (dim_value > 1 && dim_time > 1) {
+                    gwy_container_set_string_by_name(data,
+                                        g_strdup_printf("/%d/data/title", frame_i),
+                                        g_strdup_printf("layer = %5.2f, time = %5.2f",
+                                                                    values[value_i],
+                                                                    times[time_i]));
+                }
+                else if (dim_value > 1) {
+                    gwy_container_set_string_by_name(data,
+                                        g_strdup_printf("/%d/data/title", frame_i),
+                                        g_strdup_printf("layer = %5.2f",
+                                                                    values[value_i]));
+                }
+                else if (dim_time > 1) {
+                     gwy_container_set_string_by_name(data,
+                                        g_strdup_printf("/%d/data/title", frame_i),
+                                        g_strdup_printf("time = %5.2f",
+                                                                    times[time_i]));
+                }
+                // no better idea for the single frame case - use file name? basename?
+                else if ((attr = cdffile_get_attr(field_var->attrs, field_var->nattrs,
                     "long_name"))
                     && attr->type == NC_CHAR
                     && attr->nelems) {
