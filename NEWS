@@ -4,6 +4,8 @@ Application:
 - Settings of 3D view labels are also stored when 3D defaults are saved.
 - It is no longer possible to tear off toolbox submenus.  The tear-off menus
   were removed as they have been broken for a long time.
+- Seldom used functions (Rotate and Unrotate) were replaced with Dimensions
+  & units and Arithmetic in the default toolbox.
 
 Modules:
 - Otsu's thresholding (new): Grain marking using Otsu's method.
@@ -20,6 +22,7 @@ Modules:
 - Pygwy: Console is persistent and only one can exist, it has a clear log
   button, gwy syntax highlighting was added, a number of leaks was fixed,
   Python wrappers for file loading and grain numbering were improved.
+- Pixmap: Only edge false colour scale ticks are drawn for adaptive mapping.
 
 Other:
 - Three new false colour gradients were added RGB-Red, RGB-Green and RGB-Blue,
