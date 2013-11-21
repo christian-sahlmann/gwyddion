@@ -9,8 +9,8 @@
   <group id='proc' title='Data Process'>
     <item type='proc' function='fix_zero'/>
     <item type='proc' function='scale'/>
-    <item type='proc' function='rotate'/>
-    <item type='proc' function='unrotate'/>
+    <item type='proc' function='calibrate'/>
+    <item type='proc' function='arithmetic'/>
     <item type='proc' function='level'/>
     <item type='proc' function='facet-level'/>
     <item type='proc' function='line_correct_median'/>
