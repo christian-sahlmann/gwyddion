@@ -84,10 +84,11 @@ static gint          s94_detect     (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* s94_load       (const gchar *filename,
                                      GwyRunType mode,
                                      GError **error);
-static gboolean s94_read_header(S94File *s94file,
-                const guchar *p,
-                gsize size,
-                GError **error);
+static gboolean      s94_read_header(S94File *s94file,
+                                     const guchar *p,
+                                     gsize size,
+                                     GError **error);
+static GwyContainer* s94_get_meta   (const S94File *s94file);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -145,7 +146,7 @@ s94_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
          GError **error)
 {
-    GwyContainer *container = NULL;
+    GwyContainer *container = NULL, *meta;
     guchar *buffer = NULL;
     const gchar *title, *unit;
     gsize size = 0;
@@ -170,6 +171,11 @@ s94_load(const gchar *filename,
     gwy_data_field_set_xoffset(dfield, s94file.xoff * Nanometre);
     gwy_data_field_set_yoffset(dfield, s94file.yoff * Nanometre);
 
+    if (s94file.swapxy) {
+        gwy_data_field_rotate(dfield, 90, GWY_INTERPOLATION_ROUND);
+        gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
+    }
+
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
     unit = gwy_enuml_to_string(s94file.mode,
                                "m", S94_TOPOGRAPHY,
@@ -188,6 +194,10 @@ s94_load(const gchar *filename,
                                 NULL);
     gwy_container_set_string_by_name(container, "/0/data/title",
                                      g_strdup(title ? title : "Unknown"));
+
+    meta = s94_get_meta(&s94file);
+    gwy_container_set_object_by_name(container, "/0/meta", meta);
+    g_object_unref(meta);
 
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);
@@ -253,6 +263,51 @@ s94_read_header(S94File *s94file,
     }
 
     return TRUE;
+}
+
+static GwyContainer*
+s94_get_meta(const S94File *s94file)
+{
+    GwyContainer *meta = gwy_container_new();
+
+    gwy_container_set_string_by_name(meta, "Image number (original)",
+                                     g_strdup_printf("%u",
+                                                     s94file->orig_imageno));
+    gwy_container_set_string_by_name(meta, "Image mode",
+                                     g_strdup_printf("%u", s94file->mode));
+    gwy_container_set_string_by_name(meta, "X points",
+                                     g_strdup_printf("%u", s94file->xres));
+    gwy_container_set_string_by_name(meta, "Y points",
+                                     g_strdup_printf("%u", s94file->yres));
+    gwy_container_set_string_by_name(meta, "X size",
+                                     g_strdup_printf("%g nm", s94file->xreal));
+    gwy_container_set_string_by_name(meta, "Y size",
+                                     g_strdup_printf("%g nm", s94file->yreal));
+    gwy_container_set_string_by_name(meta, "X offset",
+                                     g_strdup_printf("%g nm", s94file->xoff));
+    gwy_container_set_string_by_name(meta, "Y offset",
+                                     g_strdup_printf("%g nm", s94file->yoff));
+    gwy_container_set_string_by_name(meta, "X/Y swapped",
+                                     g_strdup(s94file->swapxy ? "Yes" : "No"));
+    gwy_container_set_string_by_name(meta, "Scan angle",
+                                     g_strdup_printf("%u deg", s94file->angle));
+    gwy_container_set_string_by_name(meta, "Scan speed",
+                                     g_strdup_printf("%g nm/s",
+                                                     s94file->scanspeed));
+    gwy_container_set_string_by_name(meta, "Z gain",
+                                     g_strdup_printf("%u", s94file->zgain));
+    gwy_container_set_string_by_name(meta, "Section",
+                                     g_strdup_printf("%u", s94file->section));
+    gwy_container_set_string_by_name(meta, "Kp",
+                                     g_strdup_printf("%g", s94file->Kp));
+    gwy_container_set_string_by_name(meta, "Tn",
+                                     g_strdup_printf("%g", s94file->Tn));
+    gwy_container_set_string_by_name(meta, "Tv",
+                                     g_strdup_printf("%g", s94file->Tv));
+    gwy_container_set_string_by_name(meta, "It",
+                                     g_strdup_printf("%g", s94file->It));
+
+    return meta;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
