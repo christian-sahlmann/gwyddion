@@ -42,9 +42,41 @@
 
 #define EXTENSION ".s94"
 
+#define Nanometre (1e-9)
+#define NanoAmpere (1e-9)
+
 enum {
     HEADER_LEN = 60
 };
+
+typedef enum {
+    S94_TOPOGRAPHY = 0,
+    S94_CURRENT = 1,
+} S94ImageMode;
+
+typedef struct {
+    guint xres;
+    guint yres;
+    gboolean swapxy;
+    S94ImageMode mode;
+    guint orig_imageno;
+    gdouble xreal;
+    gdouble yreal;
+    gdouble xoff;
+    gdouble yoff;
+    gdouble scanspeed;
+    gdouble voltage;
+    guint zgain;      /* should be 1 to 3 */
+    guint section;    /* xy ramp amplifier; should be 1 to 3 */
+    gdouble Kp;
+    gdouble Tn;
+    gdouble Tv;
+    gdouble It;
+    guint angle;
+    guint zflag;      /* unused */
+    /* calculated */
+    gdouble q;
+} S94File;
 
 static gboolean      module_register(void);
 static gint          s94_detect     (const GwyFileDetectInfo *fileinfo,
@@ -52,13 +84,17 @@ static gint          s94_detect     (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* s94_load       (const gchar *filename,
                                      GwyRunType mode,
                                      GError **error);
+static gboolean s94_read_header(S94File *s94file,
+                const guchar *p,
+                gsize size,
+                GError **error);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports S94 STM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "1.0",
     "David Nečas (Yeti)",
     "2013",
 };
@@ -82,7 +118,7 @@ static gint
 s94_detect(const GwyFileDetectInfo *fileinfo,
            gboolean only_name)
 {
-    guint xres, yres;
+    guint xres, yres, swap, zgain, section;
 
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
@@ -92,7 +128,13 @@ s94_detect(const GwyFileDetectInfo *fileinfo,
 
     xres = ((guint)fileinfo->head[1] << 8 | fileinfo->head[0]);
     yres = ((guint)fileinfo->head[3] << 8 | fileinfo->head[2]);
-    if (2*xres*yres + HEADER_LEN == fileinfo->file_size)
+    swap = ((guint)fileinfo->head[5] << 8 | fileinfo->head[4]);
+    zgain = ((guint)fileinfo->head[37] << 8 | fileinfo->head[36]);
+    section = ((guint)fileinfo->head[39] << 8 | fileinfo->head[38]);
+    if (2*xres*yres + HEADER_LEN == fileinfo->file_size
+        && (swap == 0 || swap == 1)
+        && (zgain >= 1 && zgain <= 3)
+        && (section >= 1 && section <= 3))
         return 80;
 
     return 0;
@@ -103,84 +145,114 @@ s94_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
          GError **error)
 {
-    enum {
-        RES_OFFSET = 0x00,
-        REAL_OFFSET = 0x0c,
-        ZSCALE_OFFSET = 0x30,
-    };
-
     GwyContainer *container = NULL;
     guchar *buffer = NULL;
-    const guchar *p;
+    const gchar *title, *unit;
     gsize size = 0;
     GError *err = NULL;
-    guint xres, yres;
-    gdouble xreal, yreal, zscale, min, max;
+    S94File s94file;
     GwyDataField *dfield;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
-    if (size <= HEADER_LEN) {
-        err_TOO_SHORT(error);
-        gwy_file_abandon_contents(buffer, size, NULL);
-        return NULL;
-    }
+    if (!s94_read_header(&s94file, buffer, size, error))
+        goto fail;
 
-    p = buffer + RES_OFFSET;
-    xres = gwy_get_guint16_le(&p);
-    yres = gwy_get_guint16_le(&p);
-    if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres)) {
-        gwy_file_abandon_contents(buffer, size, NULL);
-        return NULL;
-    }
-    if (err_SIZE_MISMATCH(error, 2*xres*yres + HEADER_LEN, size, TRUE)) {
-        gwy_file_abandon_contents(buffer, size, NULL);
-        return NULL;
-    }
-
-    p = buffer + REAL_OFFSET;
-    xreal = 1e-9*gwy_get_gfloat_le(&p);
-    yreal = 1e-9*gwy_get_gfloat_le(&p);
-    if (!(xreal = fabs(xreal))) {
-        g_warning("Real x size is 0.0, fixing to 1.0");
-        xreal = 1.0;
-    }
-    if (!(yreal = fabs(yreal))) {
-        g_warning("Real y size is 0.0, fixing to 1.0");
-        yreal = 1.0;
-    }
-
-    p = buffer + ZSCALE_OFFSET;
-    // FIXME: Just a wild guess based on a single file.
-    zscale = 1e-9/(50.0*gwy_get_gdouble_le(&p));
-    if (!(zscale >= 0.0)) {
-        // Just a random guess.
-        g_warning("Bogus z scale, fixing to 1 AA");
-        zscale = 1e-9/50.0;
-    }
-
-    dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
-    gwy_convert_raw_data(buffer + HEADER_LEN, xres*yres,
+    dfield = gwy_data_field_new(s94file.xres, s94file.yres,
+                                s94file.xreal * Nanometre,
+                                s94file.yreal * Nanometre,
+                                FALSE);
+    gwy_convert_raw_data(buffer + HEADER_LEN, s94file.xres*s94file.yres,
                          1, GWY_RAW_DATA_SINT16, GWY_BYTE_ORDER_LITTLE_ENDIAN,
-                         dfield->data, 1.0, 0.0);
-    gwy_data_field_get_min_max(dfield, &min, &max);
-    if (max > min)
-        gwy_data_field_multiply(dfield, zscale/(max - min));
+                         dfield->data, s94file.q, 0.0);
+    gwy_data_field_set_xoffset(dfield, s94file.xoff * Nanometre);
+    gwy_data_field_set_yoffset(dfield, s94file.yoff * Nanometre);
 
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
-    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), "m");
+    unit = gwy_enuml_to_string(s94file.mode,
+                               "m", S94_TOPOGRAPHY,
+                               "A", S94_CURRENT,
+                                NULL);
+    /* Keep the data unitless otherwise. */
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), unit);
 
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
-    gwy_container_set_string_by_name(container, "/0/data/title",
-                                     g_strdup("Topography"));
     g_object_unref(dfield);
 
+    title = gwy_enuml_to_string(s94file.mode,
+                                "Topography", S94_TOPOGRAPHY,
+                                "Current", S94_CURRENT,
+                                NULL);
+    gwy_container_set_string_by_name(container, "/0/data/title",
+                                     g_strdup(title ? title : "Unknown"));
+
+fail:
     gwy_file_abandon_contents(buffer, size, NULL);
 
     return container;
+}
+
+static gboolean
+s94_read_header(S94File *s94file,
+                const guchar *p,
+                gsize size,
+                GError **error)
+{
+    if (size <= HEADER_LEN) {
+        err_TOO_SHORT(error);
+        return FALSE;
+    }
+
+    s94file->xres = gwy_get_guint16_le(&p);
+    s94file->yres = gwy_get_guint16_le(&p);
+    s94file->swapxy = gwy_get_guint16_le(&p);
+    s94file->mode = gwy_get_guint16_le(&p);
+    s94file->orig_imageno = gwy_get_guint32_le(&p);
+    s94file->xreal = gwy_get_gfloat_le(&p);
+    s94file->yreal = gwy_get_gfloat_le(&p);
+    s94file->xoff = gwy_get_gfloat_le(&p);
+    s94file->yoff = gwy_get_gfloat_le(&p);
+    s94file->scanspeed = gwy_get_gfloat_le(&p);
+    s94file->voltage = gwy_get_gfloat_le(&p);
+    s94file->zgain = gwy_get_guint16_le(&p);
+    s94file->section = gwy_get_guint16_le(&p);
+    s94file->Kp = gwy_get_gfloat_le(&p);
+    s94file->Tn = gwy_get_gfloat_le(&p);
+    s94file->Tv = gwy_get_gfloat_le(&p);
+    s94file->It = gwy_get_gfloat_le(&p);
+    s94file->angle = gwy_get_guint16_le(&p);
+    s94file->zflag = gwy_get_guint16_le(&p);
+
+    if (err_DIMENSION(error, s94file->xres)
+        || err_DIMENSION(error, s94file->yres))
+        return FALSE;
+
+    if (err_SIZE_MISMATCH(error, 2*s94file->xres*s94file->yres + HEADER_LEN,
+                          size, TRUE))
+        return FALSE;
+
+    if (!(s94file->xreal = fabs(s94file->xreal))) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        s94file->xreal = 1.0;
+    }
+    if (!(s94file->yreal = fabs(s94file->yreal))) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        s94file->yreal = 1.0;
+    }
+
+    if (s94file->mode == S94_TOPOGRAPHY)
+        s94file->q = 5.5/65536.0 * (1 << (2*(s94file->zgain - 1))) * Nanometre;
+    else if (s94file->mode == S94_CURRENT)
+        s94file->q = 20.0/65536.0 * NanoAmpere;
+    else {
+        g_warning("Unknown mode %u.\n", s94file->mode);
+        s94file->q = 1.0/65536.0;
+    }
+
+    return TRUE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
