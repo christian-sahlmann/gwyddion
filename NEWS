@@ -23,6 +23,8 @@ Modules:
   button, gwy syntax highlighting was added, a number of leaks was fixed,
   Python wrappers for file loading and grain numbering were improved.
 - Pixmap: Only edge false colour scale ticks are drawn for adaptive mapping.
+- S94 file: Support for current images and metadata was added; scaling of
+  topography images was corrected.
 
 Other:
 - Three new false colour gradients were added RGB-Red, RGB-Green and RGB-Blue,
@@ -96,7 +98,7 @@ Modules:
 - Show and extract (new): Show 3D volume data and extract some projections.
 - Volume invert (new): Invert value in a 3D volume.
 - Tescan (new): Imports Tescan MIRA SEM images.
-- S94 (new): Imports S49 STM files.
+- S94 (new): Imports S94 STM files.
 - Spectral synthesis: A ‘Lorentzian’ multiplier leading to exponential ACF
   was added.
 - WSxM: Files with wrong ‘Image header size’ field are imported correctly.
