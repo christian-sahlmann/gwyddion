@@ -5,6 +5,7 @@ layerdir = $(pkglibdir)/modules/layer
 layer_LTLIBRARIES = \
 	axis.la \
 	ellipse.la \
+	lattice.la \
 	line.la \
 	point.la \
 	rectangle.la
@@ -31,11 +32,12 @@ module_libadd = \
 	@GTK_LIBS@
 endif
 
-axis_la_SOURCES = axis.c
-ellipse_la_SOURCES = ellipse.c
-line_la_SOURCES = line.c
+axis_la_SOURCES =      axis.c
+ellipse_la_SOURCES =   ellipse.c
+lattice_la_SOURCES =   lattice.c
+line_la_SOURCES =      line.c
 rectangle_la_SOURCES = rectangle.c
-point_la_SOURCES = point.c
+point_la_SOURCES =     point.c
 
 clean-local:
 	rm -f core.* *~
