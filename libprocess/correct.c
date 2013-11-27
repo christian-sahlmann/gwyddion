@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004,2013 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -28,10 +28,6 @@
 #include <libprocess/correct.h>
 #include <libprocess/interpolation.h>
 
-#ifdef SPARSE_LAPLACE
-#include <libprocess/grains.h>
-#endif
-
 static gdouble      unrotate_refine_correction   (GwyDataLine *derdist,
                                                   guint m,
                                                   gdouble phi);
@@ -40,134 +36,6 @@ static void         compute_fourier_coeffs       (gint nder,
                                                   guint symmetry,
                                                   gdouble *st,
                                                   gdouble *ct);
-
-#ifdef SPARSE_LAPLACE
-typedef struct {
-    gint pos;
-    gint len;
-} RLEGrain;
-
-typedef struct {
-    gint ngrains;
-    gint *idx;
-    RLEGrain *grains;
-} RLEGrains;
-
-/* Laplace iterator */
-typedef struct {
-    GwyComputationState cs;
-    GwyDataField *data_field;
-    GwyDataField *mask_field;
-    gdouble corrfactor;
-    gdouble max_error;
-    gint gno;
-    gdouble work_done;
-    gdouble total_work;
-    RLEGrains rleg;
-    GwyDataField *buffer_field;
-} GwyLaplaceState;
-
-static void
-rle_grains(GwyDataField *mask_field,
-           RLEGrains *rleg)
-{
-    gint *grains, *row;
-    gint xres, yres, gno, n, start, i, j;
-
-    xres = mask_field->xres;
-    yres = mask_field->yres;
-    grains = g_new0(gint, xres*yres);
-    rleg->ngrains = gwy_data_field_number_grains(mask_field, grains);
-
-    /* Scan grains to calculate how large structures we need */
-    rleg->idx = g_new0(gint, rleg->ngrains+1);
-    for (i = 0; i < yres; i++) {
-        row = grains + i*xres;
-        for (j = 0, gno = 0; ; ) {
-            while (j < xres && row[j] == gno)
-                j++;
-            if (j == xres)
-                break;
-            gno = row[j];
-            rleg->idx[gno]++;
-        }
-    }
-    rleg->idx[0] = 0;
-    for (gno = 1; gno <= rleg->ngrains; gno++)
-        rleg->idx[gno] += rleg->idx[gno-1];
-    n = rleg->idx[rleg->ngrains];
-    g_printerr("n: %d\n", n);
-    for (gno = rleg->ngrains; gno > 0; gno--)
-        rleg->idx[gno] = rleg->idx[gno-1];
-
-    /* Actually build the RLE grain data */
-    rleg->grains = g_new(RLEGrain, n);
-    for (i = 0; i < yres; i++) {
-        row = grains + i*xres;
-        start = 0*sizeof("Die, die, GCC!");
-        for (j = 0, gno = 0; ; ) {
-            while (j < xres && row[j] == gno)
-                j++;
-            if (gno) {
-                rleg->grains[rleg->idx[gno]].len = j - start;
-                rleg->idx[gno]++;
-            }
-            if (j == xres)
-                break;
-            start = j;
-            if ((gno = row[j]))
-                rleg->grains[rleg->idx[gno]].pos = i*xres + j;
-        }
-    }
-
-    g_free(grains);
-}
-
-GwyComputationState*
-gwy_data_field_laplace_correct_init(GwyDataField *data_field,
-                                    GwyDataField *mask_field,
-                                    gdouble corrfactor,
-                                    gdouble max_error)
-{
-    GwyWatershedState *state;
-
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(mask_field), NULL);
-
-    state = g_new0(GwyWatershedState, 1);
-
-    state->cs.state = GWY_COMPUTATION_STATE_INIT;
-    state->cs.fraction = 0.0;
-    state->data_field = g_object_ref(data_field);
-    state->mask_field = g_object_ref(mask_field);
-    state->corrfactor = corrfactor;
-    state->max_error = max_error;
-    state->total_work = 0.0;
-    state->work_done = 0.0;
-    state->gno = 0;
-
-    return (GwyComputationState*)state;
-}
-
-void
-gwy_data_field_laplace_correct_iteration(GwyComputationState *cstate)
-{
-    GwyLaplaceState *state = (GwyLaplaceState*)cstate;
-    gint i, j, n;
-
-    if (state->cs.state == GWY_COMPUTATION_STATE_INIT) {
-        state->buffer_field = gwy_data_field_new_alike(state->data_field,
-                                                       FALSE);
-        rle_grains(state->mask_field, &state->rleg);
-        for (i = 1; i <= state->rleg.ngrains; i++) {
-            n = 0;
-            for (j = state->rleg.idx[i-1]; j < state->rleg.idx[i]; j++)
-                n += state->rleg.grains[j].len;
-            state->total_work += (gdouble)n*n;
-        }
-    }
-}
-#endif
 
 /**
  * gwy_data_field_correct_laplace_iteration:
@@ -551,7 +419,7 @@ unrotate_refine_correction(GwyDataLine *derdist,
  *            (@j+0.5, @i+0.5), where @i and @j are the new row and column
  *            indices, passed as the input coordinates.  The output coordinates
  *            should follow the same convention.  Unless a special exterior
- *            handling is requires, the transform function does not need to
+ *            handling is required, the transform function does not need to
  *            concern itself with coordinates being outside of the data.
  * @user_data: Pointer passed as @user_data to @invtrans.
  * @interp: Interpolation type to use.
@@ -561,7 +429,7 @@ unrotate_refine_correction(GwyDataLine *derdist,
  * Distorts a data field in the horizontal plane.
  *
  * Note the transform function @invtrans is the inverse transform, in other
- * words it calculates the old coordinates from tne new coordinates (the
+ * words it calculates the old coordinates from the new coordinates (the
  * transform would not be uniquely defined the other way round).
  *
  * Since: 2.5
@@ -616,6 +484,150 @@ gwy_data_field_distort(GwyDataField *source,
             vset = FALSE;
             x -= 0.5;
             y -= 0.5;
+            if (y > yres || x > xres || y < 0.0 || x < 0.0) {
+                switch (exterior) {
+                    case GWY_EXTERIOR_BORDER_EXTEND:
+                    x = CLAMP(x, 0, xres);
+                    y = CLAMP(y, 0, yres);
+                    break;
+
+                    case GWY_EXTERIOR_MIRROR_EXTEND:
+                    /* Mirror extension is what the interpolation code does
+                     * by default */
+                    break;
+
+                    case GWY_EXTERIOR_PERIODIC:
+                    x = (x > 0) ? fmod(x, xres) : fmod(x, xres) + xres;
+                    y = (y > 0) ? fmod(y, yres) : fmod(y, yres) + yres;
+                    break;
+
+                    case GWY_EXTERIOR_FIXED_VALUE:
+                    v = fill_value;
+                    vset = TRUE;
+                    break;
+
+                    case GWY_EXTERIOR_UNDEFINED:
+                    continue;
+                    break;
+
+                    default:
+                    if (!warned) {
+                        g_warning("Unsupported exterior type, "
+                                  "assuming undefined");
+                        warned = TRUE;
+                    }
+                    continue;
+                    break;
+                }
+            }
+            if (!vset) {
+                oldi = (gint)floor(y);
+                y -= oldi;
+                oldj = (gint)floor(x);
+                x -= oldj;
+                for (i = sf; i <= st; i++) {
+                    ii = (oldi + i + 2*st*yres) % (2*yres);
+                    if (G_UNLIKELY(ii >= yres))
+                        ii = 2*yres-1 - ii;
+                    for (j = sf; j <= st; j++) {
+                        jj = (oldj + j + 2*st*xres) % (2*xres);
+                        if (G_UNLIKELY(jj >= xres))
+                            jj = 2*xres-1 - jj;
+                        coeff[(i - sf)*suplen + j - sf] = cdata[ii*xres + jj];
+                    }
+                }
+                v = gwy_interpolation_interpolate_2d(x, y, suplen, coeff,
+                                                     interp);
+            }
+            data[newj + newxres*newi] = v;
+        }
+    }
+
+    g_object_unref(coeffield);
+}
+
+/**
+ * gwy_data_field_affine:
+ * @source: Source data field.
+ * @dest: Destination data field.
+ * @invtrans: Inverse transform, that is the transformation from
+ *            new pixel coordinates to old pixel coordinates, represented as
+ *            (@j+0.5, @i+0.5), where @i and @j are the row and column
+ *            indices.  It is represented as a six-element array [@axx, @axy,
+ *            @ayx, @ayy, @bx, @by] where @axy is the coefficient from @x to
+ *            @y.
+ * @interp: Interpolation type to use.
+ * @exterior: Exterior pixels handling.
+ * @fill_value: The value to use with @GWY_EXTERIOR_FIXED_VALUE.
+ *
+ * Performs an affine transformation of a data field in the horizontal plane.
+ *
+ * Note the transform @invtrans is the inverse transform, in other
+ * words it calculates the old coordinates from the new coordinates.  This
+ * way even degenerate (non-invertible) transforms can be meaningfully used.
+ * Also note that the (column, row) coordinate system is left-handed.
+ *
+ * Since: 2.34
+ **/
+void
+gwy_data_field_affine(GwyDataField *source,
+                      GwyDataField *dest,
+                      const gdouble *invtrans,
+                      GwyInterpolationType interp,
+                      GwyExteriorType exterior,
+                      gdouble fill_value)
+{
+    GwyDataField *coeffield;
+    gdouble *data, *coeff;
+    const gdouble *cdata;
+    gint xres, yres, newxres, newyres;
+    gint newi, newj, oldi, oldj, i, j, ii, jj, suplen, sf, st;
+    gdouble x, y, v;
+    gdouble axx, axy, ayx, ayy, bx, by;
+    gboolean vset, warned = FALSE;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(source));
+    g_return_if_fail(GWY_IS_DATA_FIELD(dest));
+    g_return_if_fail(invtrans);
+
+    axx = invtrans[0];
+    axy = invtrans[1];
+    ayx = invtrans[2];
+    ayy = invtrans[3];
+    bx = invtrans[4];
+    by = invtrans[5];
+
+    suplen = gwy_interpolation_get_support_size(interp);
+    g_return_if_fail(suplen > 0);
+    coeff = g_newa(gdouble, suplen*suplen);
+    sf = -((suplen - 1)/2);
+    st = suplen/2;
+
+    xres = gwy_data_field_get_xres(source);
+    yres = gwy_data_field_get_yres(source);
+    newxres = gwy_data_field_get_xres(dest);
+    newyres = gwy_data_field_get_yres(dest);
+
+    if (gwy_interpolation_has_interpolating_basis(interp))
+        coeffield = g_object_ref(source);
+    else {
+        coeffield = gwy_data_field_duplicate(source);
+        gwy_interpolation_resolve_coeffs_2d(xres, yres, xres,
+                                            gwy_data_field_get_data(coeffield),
+                                            interp);
+    }
+
+    data = gwy_data_field_get_data(dest);
+    cdata = gwy_data_field_get_data_const(coeffield);
+
+    /* Incorporate the half-pixel shifts to bx and by */
+    bx += 0.5*(axx + axy - 1.0);
+    by += 0.5*(ayx + ayy - 1.0);
+    for (newi = 0; newi < newyres; newi++) {
+        for (newj = 0; newj < newxres; newj++) {
+            x = axx*newj + axy*newi + bx;
+            y = ayx*newj + ayy*newi + by;
+            vset = FALSE;
             if (y > yres || x > xres || y < 0.0 || x < 0.0) {
                 switch (exterior) {
                     case GWY_EXTERIOR_BORDER_EXTEND:

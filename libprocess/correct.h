@@ -32,27 +32,33 @@ typedef void (*GwyCoordTransform2DFunc)(gdouble x,
                                         gdouble *py,
                                         gpointer user_data);
 
-void gwy_data_field_correct_laplace_iteration (GwyDataField *data_field,
-                                               GwyDataField *mask_field,
-                                               GwyDataField *buffer_field,
-                                               gdouble corrfactor,
-                                               gdouble *error);
-void gwy_data_field_correct_average           (GwyDataField *data_field,
-                                               GwyDataField *mask_field);
-void gwy_data_field_mask_outliers             (GwyDataField *data_field,
-                                               GwyDataField *mask_field,
-                                               gdouble thresh);
-void gwy_data_field_mask_outliers2            (GwyDataField *data_field,
-                                               GwyDataField *mask_field,
-                                               gdouble thresh_low,
-                                               gdouble thresh_high);
-void gwy_data_field_distort                   (GwyDataField *source,
-                                               GwyDataField *dest,
-                                               GwyCoordTransform2DFunc invtrans,
-                                               gpointer user_data,
-                                               GwyInterpolationType interp,
-                                               GwyExteriorType exterior,
-                                               gdouble fill_value);
+void gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
+                                              GwyDataField *mask_field,
+                                              GwyDataField *buffer_field,
+                                              gdouble corrfactor,
+                                              gdouble *error);
+void gwy_data_field_correct_average          (GwyDataField *data_field,
+                                              GwyDataField *mask_field);
+void gwy_data_field_mask_outliers            (GwyDataField *data_field,
+                                              GwyDataField *mask_field,
+                                              gdouble thresh);
+void gwy_data_field_mask_outliers2           (GwyDataField *data_field,
+                                              GwyDataField *mask_field,
+                                              gdouble thresh_low,
+                                              gdouble thresh_high);
+void gwy_data_field_distort                  (GwyDataField *source,
+                                              GwyDataField *dest,
+                                              GwyCoordTransform2DFunc invtrans,
+                                              gpointer user_data,
+                                              GwyInterpolationType interp,
+                                              GwyExteriorType exterior,
+                                              gdouble fill_value);
+void gwy_data_field_affine                   (GwyDataField *source,
+                                              GwyDataField *dest,
+                                              const gdouble *invtrans,
+                                              GwyInterpolationType interp,
+                                              GwyExteriorType exterior,
+                                              gdouble fill_value);
 
 GwyPlaneSymmetry gwy_data_field_unrotate_find_corrections(GwyDataLine *derdist,
                                                           gdouble *correction);
