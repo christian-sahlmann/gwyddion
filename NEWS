@@ -7,6 +7,9 @@ Application:
 - Seldom used functions (Rotate and Unrotate) were replaced with Dimensions
   & units and Arithmetic in the default toolbox.
 
+Libraries:
+- libgwyprocess: A function for affine transformation of data fields was added.
+
 Modules:
 - Otsu's thresholding (new): Grain marking using Otsu's method.
 - LEXT: Can load colour images; R, G, B are imported as separate channels.
@@ -25,6 +28,8 @@ Modules:
 - Pixmap: Only edge false colour scale ticks are drawn for adaptive mapping.
 - S94 file: Support for current images and metadata was added; scaling of
   topography images was corrected.
+- Seiko: Files starting with SPIZ000STM are recognised and imported.  Data
+  should be read with correct value offsets (i.e. not just scale) now.
 
 Other:
 - Three new false colour gradients were added RGB-Red, RGB-Green and RGB-Blue,
