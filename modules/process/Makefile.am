@@ -21,6 +21,7 @@ process_LTLIBRARIES = \
 	calcoefs_view.la \
 	calibrate.la \
 	convolution_filter.la \
+	correct_affine.la \
 	crosscor.la \
 	curvature.la \
 	cwt.la \
@@ -123,6 +124,7 @@ calcoefs_view_la_SOURCES       = calcoefs_view.c
 calibrate_la_SOURCES           = calibrate.c
 #col_synth_la_SOURCES           = col_synth.c dimensions.h synth.h
 convolution_filter_la_SOURCES  = convolution_filter.c convolutionfilterpreset.h
+correct_affine_la_SOURCES      = correct_affine.c
 crosscor_la_SOURCES            = crosscor.c
 cwt_la_SOURCES                 = cwt.c
 curvature_la_SOURCES           = curvature.c
