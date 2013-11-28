@@ -251,11 +251,12 @@ read_data_field(const guchar *buffer,
         XSCALE_OFFSET = 0x98,
         YSCALE_OFFSET = 0xa0,
         ZSCALE_OFFSET = 0xa8,
+        ZOFFSET_OFFSET = 0xe0,
     };
     gint xres, yres;
     G_GNUC_UNUSED guint version;
     guint n, endfile, datastart;
-    gdouble xreal, yreal, q, alpha;
+    gdouble xreal, yreal, q, alpha, z0;
     GwyDataField *dfield;
     GwySIUnit *siunit;
     const guchar *p;
@@ -284,6 +285,10 @@ read_data_field(const guchar *buffer,
         q *= NanoAmpere;
     gwy_debug("xscale: %g, yscale: %g, zreal: %g",
               xreal/Nanometer, yreal/Nanometer, q);
+
+    p = buffer + ZOFFSET_OFFSET;
+    z0 = -q*gwy_get_gdouble_le(&p);
+    gwy_debug("z0: %g", z0);
 
     alpha = xreal/yreal;
     n = (endfile - datastart)/2;
@@ -324,14 +329,14 @@ read_data_field(const guchar *buffer,
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     gwy_convert_raw_data(buffer + HEADER_SIZE, xres*yres, 1,
                          GWY_RAW_DATA_UINT16, G_LITTLE_ENDIAN,
-                         gwy_data_field_get_data(dfield), q, 0.0);
+                         gwy_data_field_get_data(dfield), q, z0);
     siunit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, siunit);
     g_object_unref(siunit);
 
     if (datatype == SEIKO_PHASE)
         siunit = gwy_si_unit_new("deg");
-    if (datatype == SEIKO_CURRENT)
+    else if (datatype == SEIKO_CURRENT)
         siunit = gwy_si_unit_new("A");
     else
         siunit = gwy_si_unit_new("m");
