@@ -26,6 +26,7 @@
  *   <magic priority="80">
  *     <match type="string" offset="0" value="SPIZ000AFM"/>
  *     <match type="string" offset="0" value="SPIZ000DFM"/>
+ *     <match type="string" offset="0" value="SPIZ000STM"/>
  *     <match type="string" offset="0" value="NPXZ000AFM"/>
  *     <match type="string" offset="0" value="NPXZ000DFM"/>
  *   </magic>
@@ -37,6 +38,10 @@
  *   <glob pattern="*.XQT"/>
  *   <glob pattern="*.xqp"/>
  *   <glob pattern="*.XQP"/>
+ *   <glob pattern="*.xqj"/>
+ *   <glob pattern="*.XQJ"/>
+ *   <glob pattern="*.xqi"/>
+ *   <glob pattern="*.XQI"/>
  * </mime-type>
  **/
 
@@ -47,6 +52,7 @@
  * # More can perhaps exist.
  * 0 string SPIZ000AFM Seiko SII SPM data
  * 0 string SPIZ000DFM Seiko SII SPM data
+ * 0 string SPIZ000STM Seiko SII SPM data
  * 0 string NPXZ000AFM Seiko SII SPM data
  * 0 string NPXZ000DFM Seiko SII SPM data
  **/
@@ -54,7 +60,7 @@
 /**
  * [FILE-MAGIC-USERGUIDE]
  * Seiko SII
- * .xqb .xqd .xqt .xqp
+ * .xqb .xqd .xqt .xqp .xqj .xqi
  * Read
  **/
 
@@ -74,20 +80,25 @@
 #define MAGIC2 "SPIZ000DFM"
 #define MAGIC3 "NPXZ000AFM"
 #define MAGIC4 "NPXZ000DFM"
+#define MAGIC5 "SPIZ000STM"
 #define MAGIC_SIZE (sizeof(MAGIC1)-1)
 
 #define EXTENSION1 ".xqb"
 #define EXTENSION2 ".xqd"
 #define EXTENSION3 ".xqt"
 #define EXTENSION4 ".xqp"
+#define EXTENSION5 ".xqj"
+#define EXTENSION6 ".xqi"
 
 #define Nanometer 1e-9
+#define NanoAmpere 1e-9
 
 enum { HEADER_SIZE = 2944 };
 
 typedef enum {
     SEIKO_TOPOGRAPHY = 0,
     SEIKO_PHASE      = 1,
+    SEIKO_CURRENT    = 2,
 } SeikoDataType;
 
 static gboolean      module_register   (void);
@@ -106,7 +117,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Seiko XQB, XQD, XQT and XQP files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.9",
+    "0.10",
     "David Nečas (Yeti) & Markus Pristovsek",
     "2006",
 };
@@ -136,7 +147,9 @@ seiko_detect(const GwyFileDetectInfo *fileinfo,
         if (g_str_has_suffix(fileinfo->name_lowercase, EXTENSION1)
             || g_str_has_suffix(fileinfo->name_lowercase, EXTENSION2)
             || g_str_has_suffix(fileinfo->name_lowercase, EXTENSION3)
-            || g_str_has_suffix(fileinfo->name_lowercase, EXTENSION4))
+            || g_str_has_suffix(fileinfo->name_lowercase, EXTENSION4)
+            || g_str_has_suffix(fileinfo->name_lowercase, EXTENSION5)
+            || g_str_has_suffix(fileinfo->name_lowercase, EXTENSION6))
             return 20;
         return 0;
     }
@@ -146,7 +159,8 @@ seiko_detect(const GwyFileDetectInfo *fileinfo,
         && (memcmp(fileinfo->head, MAGIC1, MAGIC_SIZE) == 0
             || memcmp(fileinfo->head, MAGIC2, MAGIC_SIZE) == 0
             || memcmp(fileinfo->head, MAGIC3, MAGIC_SIZE) == 0
-            || memcmp(fileinfo->head, MAGIC4, MAGIC_SIZE) == 0))
+            || memcmp(fileinfo->head, MAGIC4, MAGIC_SIZE) == 0
+            || memcmp(fileinfo->head, MAGIC5, MAGIC_SIZE) == 0))
         score = 100;
 
     return score;
@@ -183,7 +197,8 @@ seiko_load(const gchar *filename,
     if (memcmp(buffer, MAGIC1, MAGIC_SIZE) != 0
         && memcmp(buffer, MAGIC2, MAGIC_SIZE) != 0
         && memcmp(buffer, MAGIC3, MAGIC_SIZE) != 0
-        && memcmp(buffer, MAGIC4, MAGIC_SIZE) != 0) {
+        && memcmp(buffer, MAGIC4, MAGIC_SIZE) != 0
+        && memcmp(buffer, MAGIC5, MAGIC_SIZE) != 0) {
         err_FILE_TYPE(error, "Seiko");
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
@@ -194,6 +209,9 @@ seiko_load(const gchar *filename,
     if (g_str_has_suffix(filename, ".xqp")
         || g_str_has_suffix(filename, ".XQP"))
         datatype = SEIKO_PHASE;
+    else if (g_str_has_suffix(filename, ".xqi")
+        || g_str_has_suffix(filename, ".XQI"))
+        datatype = SEIKO_CURRENT;
 
     dfield = read_data_field(buffer, size, datatype, error);
     if (!dfield) {
@@ -262,6 +280,8 @@ read_data_field(const guchar *buffer,
     q = gwy_get_gdouble_le(&p);
     if (datatype == SEIKO_TOPOGRAPHY)
         q *= Nanometer;
+    else if (datatype == SEIKO_CURRENT)
+        q *= NanoAmpere;
     gwy_debug("xscale: %g, yscale: %g, zreal: %g",
               xreal/Nanometer, yreal/Nanometer, q);
 
@@ -311,6 +331,8 @@ read_data_field(const guchar *buffer,
 
     if (datatype == SEIKO_PHASE)
         siunit = gwy_si_unit_new("deg");
+    if (datatype == SEIKO_CURRENT)
+        siunit = gwy_si_unit_new("A");
     else
         siunit = gwy_si_unit_new("m");
 
