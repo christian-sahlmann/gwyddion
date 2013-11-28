@@ -62,6 +62,7 @@ struct _GwyLayerLattice {
 
     /* Dynamic state */
     gdouble xorig, yorig;    /* Point where the user clicked. */
+    gdouble xy[OBJECT_SIZE];
 };
 
 struct _GwyLayerLatticeClass {
@@ -76,34 +77,44 @@ struct _GwySelectionLatticeClass {
     GwySelectionClass parent_class;
 };
 
-static gboolean   module_register                   (void);
-static GType      gwy_layer_lattice_get_type        (void)                       G_GNUC_CONST;
-static GType      gwy_selection_lattice_get_type    (void)                       G_GNUC_CONST;
-static void       gwy_layer_lattice_set_property    (GObject *object,
-                                                     guint prop_id,
-                                                     const GValue *value,
-                                                     GParamSpec *pspec);
-static void       gwy_layer_lattice_get_property    (GObject*object,
-                                                     guint prop_id,
-                                                     GValue *value,
-                                                     GParamSpec *pspec);
-static void       gwy_layer_lattice_draw            (GwyVectorLayer *layer,
-                                                     GdkDrawable *drawable,
-                                                     GwyRenderingTarget target);
-static void       gwy_layer_lattice_draw_object     (GwyVectorLayer *layer,
-                                                     GdkDrawable *drawable,
-                                                     GwyRenderingTarget target,
-                                                     gint i);
-static gboolean   gwy_layer_lattice_motion_notify   (GwyVectorLayer *layer,
-                                                     GdkEventMotion *event);
-static gboolean   gwy_layer_lattice_button_pressed  (GwyVectorLayer *layer,
-                                                     GdkEventButton *event);
-static gboolean   gwy_layer_lattice_button_released (GwyVectorLayer *layer,
-                                                     GdkEventButton *event);
-static void       gwy_layer_lattice_set_n_lines     (GwyLayerLattice *layer,
-                                                     guint nlines);
-static void       gwy_layer_lattice_realize         (GwyDataViewLayer *dlayer);
-static void       gwy_layer_lattice_unrealize       (GwyDataViewLayer *dlayer);
+static gboolean module_register                  (void);
+static GType    gwy_layer_lattice_get_type       (void)                           G_GNUC_CONST;
+static GType    gwy_selection_lattice_get_type   (void)                           G_GNUC_CONST;
+static void     gwy_layer_lattice_set_property   (GObject *object,
+                                                  guint prop_id,
+                                                  const GValue *value,
+                                                  GParamSpec *pspec);
+static void     gwy_layer_lattice_get_property   (GObject*object,
+                                                  guint prop_id,
+                                                  GValue *value,
+                                                  GParamSpec *pspec);
+static void     gwy_layer_lattice_draw           (GwyVectorLayer *layer,
+                                                  GdkDrawable *drawable,
+                                                  GwyRenderingTarget target);
+static void     gwy_layer_lattice_draw_object    (GwyVectorLayer *layer,
+                                                  GdkDrawable *drawable,
+                                                  GwyRenderingTarget target,
+                                                  gint id);
+static gboolean gwy_layer_lattice_motion_notify  (GwyVectorLayer *layer,
+                                                  GdkEventMotion *event);
+static gboolean gwy_layer_lattice_button_pressed (GwyVectorLayer *layer,
+                                                  GdkEventButton *event);
+static gboolean gwy_layer_lattice_button_released(GwyVectorLayer *layer,
+                                                  GdkEventButton *event);
+static void     gwy_layer_lattice_set_n_lines    (GwyLayerLattice *layer,
+                                                  guint nlines);
+static void     gwy_layer_lattice_realize        (GwyDataViewLayer *dlayer);
+static void     gwy_layer_lattice_unrealize      (GwyDataViewLayer *dlayer);
+static void     transform_lattice                (GwyLayerLattice *layer_lattice,
+                                                  gdouble xreal,
+                                                  gdouble yreal,
+                                                  gdouble *xy);
+static void     matrix_mult                      (gdouble *dest,
+                                                  const gdouble *src,
+                                                  gdouble axx,
+                                                  gdouble axy,
+                                                  gdouble ayx,
+                                                  gdouble ayy);
 
 /* Allow to express intent. */
 #define gwy_layer_lattice_undraw        gwy_layer_lattice_draw
@@ -165,7 +176,8 @@ gwy_layer_lattice_class_init(GwyLayerLatticeClass *klass)
          PROP_N_LINES,
          g_param_spec_uint("n-lines",
                            "N lines",
-                           "Number of lattice lines to draw",
+                           "Number of lattice lines to draw beside the "
+                           "central ones",
                            0, 1024, 12,
                            G_PARAM_READWRITE));
 }
@@ -245,46 +257,98 @@ static void
 gwy_layer_lattice_draw_object(GwyVectorLayer *layer,
                               GdkDrawable *drawable,
                               GwyRenderingTarget target,
-                              gint i)
+                              gint id)
 {
     GwyDataView *data_view;
     gdouble xy[OBJECT_SIZE];
     gboolean has_object;
-    gint xi0, yi0, xi1, yi1, width, height;
-    gdouble xreal, yreal, xoff, yoff;
+    gint xi0, yi0, xi1, yi1, width, height, nlines, i, j;
+    gdouble xsize, ysize, xoff, yoff, xc, yc;
 
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     g_return_if_fail(data_view);
 
-    gwy_debug("%d", i);
-    has_object = gwy_selection_get_object(layer->selection, i, xy);
+    gwy_debug("%d", id);
+    has_object = gwy_selection_get_object(layer->selection, id, xy);
     g_return_if_fail(has_object);
 
     /* Just copied draw_vector()! */
-    gwy_data_view_get_real_data_sizes(data_view, &xreal, &yreal);
+    gwy_data_view_get_real_data_sizes(data_view, &xsize, &ysize);
     gwy_data_view_get_real_data_offsets(data_view, &xoff, &yoff);
+    xc = xoff + 0.5*xsize;
+    yc = yoff + 0.5*ysize;
     gdk_drawable_get_size(drawable, &width, &height);
 
-    switch (target) {
-        case GWY_RENDERING_TARGET_SCREEN:
-        gwy_data_view_coords_real_to_xy(data_view, -xoff, -yoff, &xi0, &yi0);
-        gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xi1, &yi1);
-        gwy_data_view_coords_xy_cut_line(data_view, &xi0, &yi0, &xi1, &yi1);
-        break;
+    nlines = GWY_LAYER_LATTICE(layer)->n_lines;
 
-        case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
-        xi0 = floor(0.0*width/xreal);
-        yi0 = floor(0.0*height/yreal);
-        xi1 = floor(xy[0]*width/xreal);
-        yi1 = floor(xy[1]*height/yreal);
-        break;
+    for (j = -nlines; j <= nlines; j++) {
+        gdouble xfrom = j*xy[0] - nlines*xy[2] + xc,
+                yfrom = j*xy[1] - nlines*xy[3] + yc,
+                xto = j*xy[0] + nlines*xy[2] + xc,
+                yto = j*xy[1] + nlines*xy[3] + yc;
 
-        default:
-        g_return_if_reached();
-        break;
+        gdk_gc_set_line_attributes(layer->gc, 1,
+                                   j ? GDK_LINE_ON_OFF_DASH : GDK_LINE_SOLID,
+                                   GDK_CAP_BUTT,
+                                   GDK_JOIN_BEVEL);
+        switch (target) {
+            case GWY_RENDERING_TARGET_SCREEN:
+            gwy_data_view_coords_real_to_xy(data_view,
+                                            xfrom, yfrom, &xi0, &yi0);
+            gwy_data_view_coords_real_to_xy(data_view,
+                                            xto, yto, &xi1, &yi1);
+            gwy_data_view_coords_xy_cut_line(data_view,
+                                             &xi0, &yi0, &xi1, &yi1);
+            break;
+
+            case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
+            xi0 = floor((xfrom)*width/xsize);
+            yi0 = floor((yfrom)*height/ysize);
+            xi1 = floor((xto)*width/xsize);
+            yi1 = floor((yto)*height/ysize);
+            break;
+
+            default:
+            g_return_if_reached();
+            break;
+        }
+        gdk_draw_line(drawable, layer->gc, xi0, yi0, xi1, yi1);
     }
-    gdk_draw_line(drawable, layer->gc, xi0, yi0, xi1, yi1);
+
+    for (i = -nlines; i <= nlines; i++) {
+        gdouble xfrom = -nlines*xy[0] + i*xy[2] + xc,
+                yfrom = -nlines*xy[1] + i*xy[3] + yc,
+                xto = nlines*xy[0] + i*xy[2] + xc,
+                yto = nlines*xy[1] + i*xy[3] + yc;
+
+        gdk_gc_set_line_attributes(layer->gc, 1,
+                                   i ? GDK_LINE_ON_OFF_DASH : GDK_LINE_SOLID,
+                                   GDK_CAP_BUTT,
+                                   GDK_JOIN_BEVEL);
+        switch (target) {
+            case GWY_RENDERING_TARGET_SCREEN:
+            gwy_data_view_coords_real_to_xy(data_view,
+                                            xfrom, yfrom, &xi0, &yi0);
+            gwy_data_view_coords_real_to_xy(data_view,
+                                            xto, yto, &xi1, &yi1);
+            gwy_data_view_coords_xy_cut_line(data_view,
+                                             &xi0, &yi0, &xi1, &yi1);
+            break;
+
+            case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
+            xi0 = floor((xfrom)*width/xsize);
+            yi0 = floor((yfrom)*height/ysize);
+            xi1 = floor((xto)*width/xsize);
+            yi1 = floor((yto)*height/ysize);
+            break;
+
+            default:
+            g_return_if_reached();
+            break;
+        }
+        gdk_draw_line(drawable, layer->gc, xi0, yi0, xi1, yi1);
+    }
 }
 
 static gboolean
@@ -292,9 +356,10 @@ gwy_layer_lattice_motion_notify(GwyVectorLayer *layer,
                                 GdkEventMotion *event)
 {
     GwyDataView *data_view;
+    GwyLayerLattice *layer_lattice;
     GdkWindow *window;
     gint x, y, i;
-    gdouble xreal, yreal, xsize, ysize, xoff, yoff, xy[OBJECT_SIZE];
+    gdouble xreal, yreal, xy[OBJECT_SIZE];
 
     if (!layer->selection)
         return FALSE;
@@ -308,6 +373,7 @@ gwy_layer_lattice_motion_notify(GwyVectorLayer *layer,
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     g_return_val_if_fail(data_view, FALSE);
     window = GTK_WIDGET(data_view)->window;
+    layer_lattice = GWY_LAYER_LATTICE(layer);
 
     i = layer->selecting;
     if (event->is_hint)
@@ -319,20 +385,10 @@ gwy_layer_lattice_motion_notify(GwyVectorLayer *layer,
     gwy_debug("x = %d, y = %d", x, y);
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
-    gwy_selection_get_object(layer->selection, i, xy);
-
-    gwy_data_view_get_real_data_sizes(data_view, &xsize, &ysize);
-    gwy_data_view_get_real_data_offsets(data_view, &xoff, &yoff);
-    /* XXX: X centre is xoff + 0.5*xsize, etc. */
-
     g_assert(layer->selecting != -1);
     gwy_layer_lattice_undraw_object(layer, window,
                                     GWY_RENDERING_TARGET_SCREEN, i);
-    /* TODO */
-    xy[0] = xreal;
-    xy[1] = yreal;
-    xy[2] = xreal;
-    xy[3] = yreal;
+    transform_lattice(layer_lattice, xreal, yreal, xy);
     gwy_selection_set_object(layer->selection, i, xy);
     gwy_layer_lattice_draw_object(layer, window,
                                   GWY_RENDERING_TARGET_SCREEN, i);
@@ -348,7 +404,7 @@ gwy_layer_lattice_button_pressed(GwyVectorLayer *layer,
     GwyDataView *data_view;
     GdkWindow *window;
     gint x, y, i;
-    gdouble xreal, yreal, xy[OBJECT_SIZE];
+    gdouble xreal, yreal;
 
     if (!layer->editable)
         return FALSE;
@@ -378,21 +434,11 @@ gwy_layer_lattice_button_pressed(GwyVectorLayer *layer,
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
     layer_lattice->xorig = xreal;
     layer_lattice->yorig = yreal;
-    xy[0] = xreal;
-    xy[1] = yreal;
-    xy[2] = xreal;
-    xy[3] = yreal;
 
     i = 0;
     layer->selecting = i;
-    gwy_layer_lattice_undraw_object(layer, window,
-                                    GWY_RENDERING_TARGET_SCREEN,
-                                    layer->selecting);
     layer->button = event->button;
-    gwy_layer_lattice_draw_object(layer, window,
-                                  GWY_RENDERING_TARGET_SCREEN,
-                                  layer->selecting);
-
+    gwy_selection_get_object(layer->selection, i, layer_lattice->xy);
     gdk_window_set_cursor(window, GWY_LAYER_LATTICE(layer)->move_cursor);
     gwy_vector_layer_object_chosen(layer, layer->selecting);
 
@@ -403,6 +449,7 @@ static gboolean
 gwy_layer_lattice_button_released(GwyVectorLayer *layer,
                                   GdkEventButton *event)
 {
+    GwyLayerLattice *layer_lattice;
     GwyDataView *data_view;
     GdkWindow *window;
     gint x, y, i;
@@ -417,6 +464,7 @@ gwy_layer_lattice_button_released(GwyVectorLayer *layer,
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     g_return_val_if_fail(data_view, FALSE);
     window = GTK_WIDGET(data_view)->window;
+    layer_lattice = GWY_LAYER_LATTICE(layer);
 
     layer->button = 0;
     x = event->x;
@@ -427,10 +475,7 @@ gwy_layer_lattice_button_released(GwyVectorLayer *layer,
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
     gwy_layer_lattice_undraw_object(layer, window,
                                     GWY_RENDERING_TARGET_SCREEN, i);
-    xy[0] = xreal;
-    xy[1] = yreal;
-    xy[2] = xreal;
-    xy[3] = yreal;
+    transform_lattice(layer_lattice, xreal, yreal, xy);
     gwy_selection_set_object(layer->selection, i, xy);
     gwy_layer_lattice_draw_object(layer, window, GWY_RENDERING_TARGET_SCREEN, i);
 
@@ -489,6 +534,57 @@ gwy_layer_lattice_unrealize(GwyDataViewLayer *dlayer)
     gdk_cursor_unref(layer->move_cursor);
 
     GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_lattice_parent_class)->unrealize(dlayer);
+}
+
+static void
+transform_lattice(GwyLayerLattice *layer_lattice,
+                  gdouble xreal, gdouble yreal,
+                  gdouble *xy)
+{
+    GwyVectorLayer *layer;
+    GwyDataView *data_view;
+    gdouble xsize, ysize, xoff, yoff, xc, yc, xorig, yorig;
+    gdouble alpha, r, rho, ca, sa;
+
+    layer = GWY_VECTOR_LAYER(layer_lattice);
+    data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
+
+    gwy_data_view_get_real_data_sizes(data_view, &xsize, &ysize);
+    gwy_data_view_get_real_data_offsets(data_view, &xoff, &yoff);
+    xc = xoff + 0.5*xsize;
+    yc = yoff + 0.5*ysize;
+    xorig = layer_lattice->xorig - xc;
+    yorig = layer_lattice->yorig - yc;
+    xreal -= xc;
+    yreal -= yc;
+
+    alpha = atan2(yreal, xreal) - atan2(yorig, xorig);
+    r = xreal*xreal + yreal*yreal;
+    rho = sqrt(r)/sqrt(xorig*xorig + yorig*yorig);
+    ca = cos(alpha)/r;
+    sa = sin(alpha)/r;
+
+    matrix_mult(xy + 0, layer_lattice->xy + 0, ca, -sa, sa, ca);
+    matrix_mult(xy + 2, layer_lattice->xy + 2, ca, -sa, sa, ca);
+    matrix_mult(xy + 0, xy + 0,
+                rho*xreal*xreal + yreal*yreal, xreal*yreal*(rho - 1.0),
+                xreal*yreal*(rho - 1.0), rho*yreal*yreal + xreal*xreal);
+    matrix_mult(xy + 2, xy + 2,
+                rho*xreal*xreal + yreal*yreal, xreal*yreal*(rho - 1.0),
+                xreal*yreal*(rho - 1.0), rho*yreal*yreal + xreal*xreal);
+}
+
+/* Permit dest = src */
+static void
+matrix_mult(gdouble *dest, const gdouble *src,
+            gdouble axx, gdouble axy, gdouble ayx, gdouble ayy)
+{
+    gdouble xy[2];
+
+    xy[0] = axx*src[0] + axy*src[1];
+    xy[1] = ayx*src[0] + ayy*src[1];
+    dest[0] = xy[0];
+    dest[1] = xy[1];
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
