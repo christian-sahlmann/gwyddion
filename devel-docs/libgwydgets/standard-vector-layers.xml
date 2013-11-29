@@ -247,5 +247,44 @@
       <para>None.</para>
     </sect2>
   </refsect1>
+  <refsect1>
+    <title>GwyLayerLattice, GwySelectionLattice</title>
+    <synopsis>
+<link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwyLayerLattice"), NULL);
+<link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwySelectionLattice"), NULL);
+    </synopsis>
+    <para>
+      Layer allows to select a pair of two-dimensional vectors, that represent a lattice in the plane.
+      The selection is also visualised as a lattice.
+    </para>
+    <para>
+      Selection data consists of quadruples of coordinates (x<subscript>0</subscript>,
+      y<subscript>0</subscript>, x<subscript>1</subscript>, y<subscript>1</subscript>),
+      each representing the two selected lattice vectors, where
+      x<subscript>0</subscript> and y<subscript>0</subscript> are coordinates of one vector
+      and x<subscript>1</subscript> and y<subscript>1</subscript>
+      of the other.
+    </para>
+    <para>
+      Although the selection can contain multiple such pairs, the layer ignores all except
+      the first one.
+    </para>
+    <sect2>
+      <title>GwyLayerLattice properties</title>
+      <variablelist>
+        <varlistentry><term><anchor id="GwyLayerLattice--n-lines"/>&quot;<literal>n-lines</literal>&quot; (guint : Read / Write)</term>
+          <listitem>
+            <para>
+              The number of grille lines drawn along each vector.
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </sect2>
+    <sect2>
+      <title>GwySelectionLattice properties</title>
+      <para>None.</para>
+    </sect2>
+  </refsect1>
 </refentry>
 
