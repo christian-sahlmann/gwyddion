@@ -263,7 +263,7 @@ gwy_layer_lattice_draw_object(GwyVectorLayer *layer,
     gdouble xy[OBJECT_SIZE];
     gboolean has_object;
     gint xi0, yi0, xi1, yi1, width, height, nlines, i, j;
-    gdouble xsize, ysize, xoff, yoff, xc, yc;
+    gdouble xsize, ysize;
 
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
@@ -275,18 +275,15 @@ gwy_layer_lattice_draw_object(GwyVectorLayer *layer,
 
     /* Just copied draw_vector()! */
     gwy_data_view_get_real_data_sizes(data_view, &xsize, &ysize);
-    gwy_data_view_get_real_data_offsets(data_view, &xoff, &yoff);
-    xc = xoff + 0.5*xsize;
-    yc = yoff + 0.5*ysize;
     gdk_drawable_get_size(drawable, &width, &height);
 
     nlines = GWY_LAYER_LATTICE(layer)->n_lines;
 
     for (j = -nlines; j <= nlines; j++) {
-        gdouble xfrom = j*xy[0] - nlines*xy[2] + xc,
-                yfrom = j*xy[1] - nlines*xy[3] + yc,
-                xto = j*xy[0] + nlines*xy[2] + xc,
-                yto = j*xy[1] + nlines*xy[3] + yc;
+        gdouble xfrom = j*xy[0] - nlines*xy[2] + 0.5*xsize,
+                yfrom = j*xy[1] - nlines*xy[3] + 0.5*ysize,
+                xto = j*xy[0] + nlines*xy[2] + 0.5*xsize,
+                yto = j*xy[1] + nlines*xy[3] + 0.5*ysize;
 
         gdk_gc_set_line_attributes(layer->gc, 1,
                                    j ? GDK_LINE_ON_OFF_DASH : GDK_LINE_SOLID,
@@ -317,10 +314,10 @@ gwy_layer_lattice_draw_object(GwyVectorLayer *layer,
     }
 
     for (i = -nlines; i <= nlines; i++) {
-        gdouble xfrom = -nlines*xy[0] + i*xy[2] + xc,
-                yfrom = -nlines*xy[1] + i*xy[3] + yc,
-                xto = nlines*xy[0] + i*xy[2] + xc,
-                yto = nlines*xy[1] + i*xy[3] + yc;
+        gdouble xfrom = -nlines*xy[0] + i*xy[2] + 0.5*xsize,
+                yfrom = -nlines*xy[1] + i*xy[3] + 0.5*ysize,
+                xto = nlines*xy[0] + i*xy[2] + 0.5*xsize,
+                yto = nlines*xy[1] + i*xy[3] + 0.5*ysize;
 
         gdk_gc_set_line_attributes(layer->gc, 1,
                                    i ? GDK_LINE_ON_OFF_DASH : GDK_LINE_SOLID,
@@ -543,20 +540,17 @@ transform_lattice(GwyLayerLattice *layer_lattice,
 {
     GwyVectorLayer *layer;
     GwyDataView *data_view;
-    gdouble xsize, ysize, xoff, yoff, xc, yc, xorig, yorig;
+    gdouble xsize, ysize, xorig, yorig;
     gdouble alpha, r, rho, ca, sa;
 
     layer = GWY_VECTOR_LAYER(layer_lattice);
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
 
     gwy_data_view_get_real_data_sizes(data_view, &xsize, &ysize);
-    gwy_data_view_get_real_data_offsets(data_view, &xoff, &yoff);
-    xc = xoff + 0.5*xsize;
-    yc = yoff + 0.5*ysize;
-    xorig = layer_lattice->xorig - xc;
-    yorig = layer_lattice->yorig - yc;
-    xreal -= xc;
-    yreal -= yc;
+    xorig = layer_lattice->xorig - 0.5*xsize;
+    yorig = layer_lattice->yorig - 0.5*ysize;
+    xreal -= 0.5*xsize;
+    yreal -= 0.5*ysize;
 
     alpha = atan2(yreal, xreal) - atan2(yorig, xorig);
     r = xreal*xreal + yreal*yreal;
