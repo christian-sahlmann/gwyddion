@@ -313,7 +313,7 @@ fit_2d_dialog(Fit2DArgs *args,
     gtk_table_attach(GTK_TABLE(table), controls.menu_function, 1, 2, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
-    label = gtk_label_new_with_mnemonic(_("Preview type:"));
+    label = gtk_label_new(_("Preview type:"));
 
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
 
