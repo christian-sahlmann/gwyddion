@@ -1309,6 +1309,10 @@ gwy_data_view_coords_xy_cut_line(GwyDataView *data_view,
  *
  * Recomputes screen coordinates relative to widget origin to physical
  * coordinates in the sample.
+ *
+ * Note that data fields offsets are <emphasis>not</emphasis> taken into
+ * account.  Coordinates @xreal, @yreal are just relative coordinates to the
+ * top left field corner.
  **/
 void
 gwy_data_view_coords_xy_to_real(GwyDataView *data_view,
@@ -1326,7 +1330,7 @@ gwy_data_view_coords_xy_to_real(GwyDataView *data_view,
 /**
  * gwy_data_view_coords_real_to_xy:
  * @data_view: A data view.
- * @xreal: A physical x-coordinate in the data sample..
+ * @xreal: A physical x-coordinate in the data sample.
  * @yreal: A physical y-coordinate in the data sample.
  * @xscr: Where the screen x-coordinate relative to widget origin should be
  *        stored.
@@ -1335,6 +1339,10 @@ gwy_data_view_coords_xy_to_real(GwyDataView *data_view,
  *
  * Recomputes physical coordinate in the sample to screen coordinate relative
  * to widget origin.
+ *
+ * Note that data fields offsets are <emphasis>not</emphasis> taken into
+ * account.  Coordinates @xreal, @yreal are just relative coordinates to the
+ * top left field corner.
  **/
 void
 gwy_data_view_coords_real_to_xy(GwyDataView *data_view,
