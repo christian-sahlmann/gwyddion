@@ -18,13 +18,14 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <stdlib.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/gwyprocesstypes.h>
+#include <libprocess/arithmetic.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
@@ -80,6 +81,12 @@ static GtkWidget* add_lattice_label   (GtkTable *table,
                                        GwySIValueFormat *vf);
 static void       init_selection      (GwySelection *selection,
                                        GwyDataField *dfield);
+static void       refine              (AffcorControls *controls);
+static void       find_maximum        (GwyDataField *dfield,
+                                       gdouble *x,
+                                       gdouble *y,
+                                       gint xwinsize,
+                                       gint ywinsize);
 static void       selection_changed   (AffcorControls *controls);
 static void       image_mode_changed  (GtkToggleButton *button,
                                        AffcorControls *controls);
@@ -146,10 +153,10 @@ affcor_dialog(AffcorArgs *args,
               GwyDataField *dfield,
               gint id)
 {
-    GtkWidget *hbox, *label;
+    GtkWidget *hbox, *label, *button;
     GtkDialog *dialog;
     GtkTable *table;
-    GwyDataField *acf;
+    GwyDataField *acf, *tmp;
     AffcorControls controls;
     gint response;
     GwyPixmapLayer *layer;
@@ -185,9 +192,12 @@ affcor_dialog(AffcorArgs *args,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
 
+    tmp = gwy_data_field_duplicate(dfield);
+    gwy_data_field_add(tmp, -gwy_data_field_get_avg(tmp));
     acf = gwy_data_field_new_alike(dfield, FALSE);
     gwy_data_field_area_2dacf(dfield, acf, 0, 0, dfield->xres, dfield->yres,
                               dfield->xres/4, dfield->yres/4);
+    g_object_unref(tmp);
 
     gwy_container_set_object_by_name(controls.mydata, "/1/data", acf);
     g_object_unref(acf);
@@ -222,7 +232,7 @@ affcor_dialog(AffcorArgs *args,
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
-    table = GTK_TABLE(gtk_table_new(6, 3, FALSE));
+    table = GTK_TABLE(gtk_table_new(7, 3, FALSE));
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -256,6 +266,13 @@ affcor_dialog(AffcorArgs *args,
                                                      NULL);
     controls.a1 = add_lattice_label(table, "a<sub>1</sub>:", &row, controls.vf);
     controls.a2 = add_lattice_label(table, "a<sub>2</sub>:", &row, controls.vf);
+
+    button = gtk_button_new_with_mnemonic(_("Re_fine"));
+    gtk_table_attach(GTK_TABLE(table), button,
+                     1, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(refine), &controls);
+
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
     gtk_widget_show_all(controls.dialog);
@@ -297,7 +314,7 @@ add_lattice_label(GtkTable *table,
     GtkWidget *label;
     GtkRequisition req;
 
-    label = gtk_label_new("-1234.567");
+    label = gtk_label_new("(-1234.5, 1234.5)");
     gtk_widget_size_request(label, &req);
 
     gtk_label_set_markup(GTK_LABEL(label), name);
@@ -329,6 +346,126 @@ init_selection(GwySelection *selection,
     xy[0] = dfield->xreal/20;
     xy[3] = dfield->yreal/20;
     gwy_selection_set_data(selection, 1, xy);
+}
+
+static void
+refine(AffcorControls *controls)
+{
+    GwyDataField *acf;
+    gint xwinsize, ywinsize;
+    gdouble xy[4];
+
+    if (!gwy_selection_get_object(controls->selection, 0, xy))
+        return;
+
+    acf = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                          "/1/data"));
+    xwinsize = (gint)(0.28*MAX(fabs(xy[0]), fabs(xy[2]))
+                      /gwy_data_field_get_xmeasure(acf) + 0.5);
+    ywinsize = (gint)(0.28*MAX(fabs(xy[1]), fabs(xy[3]))
+                      /gwy_data_field_get_ymeasure(acf) + 0.5);
+    gwy_debug("window size: %dx%d", xwinsize, ywinsize);
+
+    xy[0] = (xy[0] - acf->xoff)/gwy_data_field_get_xmeasure(acf);
+    xy[1] = (xy[1] - acf->yoff)/gwy_data_field_get_ymeasure(acf);
+    xy[2] = (xy[2] - acf->xoff)/gwy_data_field_get_xmeasure(acf);
+    xy[3] = (xy[3] - acf->yoff)/gwy_data_field_get_ymeasure(acf);
+    find_maximum(acf, xy + 0, xy + 1, xwinsize, ywinsize);
+    find_maximum(acf, xy + 2, xy + 3, xwinsize, ywinsize);
+    xy[0] = (xy[0] + 0.5)*gwy_data_field_get_xmeasure(acf) + acf->xoff;
+    xy[1] = (xy[1] + 0.5)*gwy_data_field_get_ymeasure(acf) + acf->yoff;
+    xy[2] = (xy[2] + 0.5)*gwy_data_field_get_xmeasure(acf) + acf->xoff;
+    xy[3] = (xy[3] + 0.5)*gwy_data_field_get_ymeasure(acf) + acf->yoff;
+    gwy_selection_set_object(controls->selection, 0, xy);
+}
+
+static void
+find_maximum(GwyDataField *dfield,
+             gdouble *x, gdouble *y,
+             gint xwinsize, gint ywinsize)
+{
+    gint xj = (gint)*x, yi = (gint)*y;
+    gdouble max = -G_MAXDOUBLE;
+    gint mi = yi, mj = xj, i, j;
+    gint xres = dfield->xres, yres = dfield->yres;
+    const gdouble *d = dfield->data;
+    gdouble sz, szx, szy, szxx, szxy, szyy;
+    gdouble v, bx, by, cxx, cxy, cyy, D;
+    gdouble m[6], rhs[3];
+
+    for (i = -ywinsize; i <= ywinsize; i++) {
+        if (i + yi < 0 || i + yi > yres-1)
+            continue;
+        for (j = -xwinsize; j <= xwinsize; j++) {
+            if (j + xj < 0 || j + xj > xres-1)
+                continue;
+
+            v = d[(i + yi)*xres + (j + xj)];
+            if (v > max) {
+                max = v;
+                mi = i + yi;
+                mj = j + xj;
+            }
+        }
+    }
+
+    sz = (d[(mi - 1)*xres + (mj - 1)]
+          + d[(mi - 1)*xres + mj]
+          + d[(mi - 1)*xres + (mj + 1)]
+          + d[mi*xres + (mj - 1)]
+          + d[mi*xres + mj]
+          + d[mi*xres + (mj + 1)]
+          + d[(mi + 1)*xres + (mj - 1)]
+          + d[(mi + 1)*xres + mj]
+          + d[(mi + 1)*xres + (mj + 1)]);
+    szx = (-d[(mi - 1)*xres + (mj - 1)]
+           + d[(mi - 1)*xres + (mj + 1)]
+           - d[mi*xres + (mj - 1)]
+           + d[mi*xres + (mj + 1)]
+           - d[(mi + 1)*xres + (mj - 1)]
+           + d[(mi + 1)*xres + (mj + 1)]);
+    szy = (-d[(mi - 1)*xres + (mj - 1)]
+           - d[(mi - 1)*xres + mj]
+           - d[(mi - 1)*xres + (mj + 1)]
+           + d[(mi + 1)*xres + (mj - 1)]
+           + d[(mi + 1)*xres + mj]
+           + d[(mi + 1)*xres + (mj + 1)]);
+    szxx = (d[(mi - 1)*xres + (mj - 1)]
+            + d[(mi - 1)*xres + (mj + 1)]
+            + d[mi*xres + (mj - 1)]
+            + d[mi*xres + (mj + 1)]
+            + d[(mi + 1)*xres + (mj - 1)]
+            + d[(mi + 1)*xres + (mj + 1)]);
+    szxy = (d[(mi - 1)*xres + (mj - 1)]
+            - d[(mi - 1)*xres + (mj + 1)]
+            - d[(mi + 1)*xres + (mj - 1)]
+            + d[(mi + 1)*xres + (mj + 1)]);
+    szyy = (d[(mi - 1)*xres + (mj - 1)]
+            + d[(mi - 1)*xres + mj]
+            + d[(mi - 1)*xres + (mj + 1)]
+            + d[(mi + 1)*xres + (mj - 1)]
+            + d[(mi + 1)*xres + mj]
+            + d[(mi + 1)*xres + (mj + 1)]);
+
+    m[0] = 9.0;
+    m[1] = m[2] = m[3] = m[5] = 6.0;
+    m[4] = 4.0;
+    gwy_math_choleski_decompose(3, m);
+
+    rhs[0] = sz;
+    rhs[1] = szxx;
+    rhs[2] = szyy;
+    gwy_math_choleski_solve(3, m, rhs);
+
+    bx = szx/6.0;
+    by = szy/6.0;
+    cxx = rhs[1];
+    cxy = szxy/4.0;
+    cyy = rhs[2];
+
+    D = 4.0*cxx*cyy - cxy*cxy;
+    *x = mj + (by*cxy - 2.0*bx*cyy)/D;
+    *y = mi + (bx*cxy - 2.0*by*cxx)/D;
 }
 
 static void
