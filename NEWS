@@ -6,12 +6,16 @@ Application:
   were removed as they have been broken for a long time.
 - Seldom used functions (Rotate and Unrotate) were replaced with Dimensions
   & units and Arithmetic in the default toolbox.
+- Translations updated: Russian.
 
 Libraries:
 - libgwyprocess: A function for affine transformation of data fields was added.
 
 Modules:
 - Otsu's thresholding (new): Grain marking using Otsu's method.
+- Affine distortion (new): Correction of affine distortion by matching image
+  and expected lattice vectors.
+- Lattice layer (new): Layer allowing selection of a two-dimensional lattice.
 - LEXT: Can load colour images; R, G, B are imported as separate channels.
 - OLS, LEXT: False colour gradients of colour channels are automatically set to
   RGB-Red, RGB-Green and RGB-Blue.
