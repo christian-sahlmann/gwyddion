@@ -390,7 +390,7 @@ find_maximum(GwyDataField *dfield,
     gint xres = dfield->xres, yres = dfield->yres;
     const gdouble *d = dfield->data;
     gdouble sz, szx, szy, szxx, szxy, szyy;
-    gdouble v, bx, by, cxx, cxy, cyy, D;
+    gdouble v, bx, by, cxx, cxy, cyy, D, sx, sy;
     gdouble m[6], rhs[3];
 
     for (i = -ywinsize; i <= ywinsize; i++) {
@@ -408,6 +408,13 @@ find_maximum(GwyDataField *dfield,
             }
         }
     }
+
+    *x = mj;
+    *y = mi;
+
+    /* Don't try any sub-pixel refinement if it's on the edge. */
+    if (mi < 1 || mi+1 > yres-1 || mj < 1 || mj+1 > xres-1)
+        return;
 
     sz = (d[(mi - 1)*xres + (mj - 1)]
           + d[(mi - 1)*xres + mj]
@@ -464,8 +471,20 @@ find_maximum(GwyDataField *dfield,
     cyy = rhs[2];
 
     D = 4.0*cxx*cyy - cxy*cxy;
-    *x = mj + (by*cxy - 2.0*bx*cyy)/D;
-    *y = mi + (bx*cxy - 2.0*by*cxx)/D;
+    /* Don't try the sub-pixel refinement if bad cancellation occurs. */
+    if (fabs(D) < 1e-8*MAX(fabs(4.0*cxx*cyy), fabs(cxy*cxy)))
+        return;
+
+    sx = (by*cxy - 2.0*bx*cyy)/D;
+    sy = (bx*cxy - 2.0*by*cxx)/D;
+
+    /* Don't trust the sub-pixel refinement if it moves the maximum outside
+     * the 3×3 neighbourhood. */
+    if (fabs(sx) > 1.5 || fabs(sy) > 1.5)
+        return;
+
+    *x += sx;
+    *y += sy;
 }
 
 static void
