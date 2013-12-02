@@ -64,8 +64,12 @@ typedef struct {
     GwyContainer *mydata;
     GSList *image_mode;
     GwySIValueFormat *vf;
+    GwySIValueFormat *vfphi;
     GtkWidget *a1;
     GtkWidget *a2;
+    GtkWidget *a1_len;
+    GtkWidget *a2_len;
+    GtkWidget *phi;
 } AffcorControls;
 
 static gboolean   module_register     (void);
@@ -161,6 +165,7 @@ affcor_dialog(AffcorArgs *args,
     gint response;
     GwyPixmapLayer *layer;
     GwyVectorLayer *vlayer;
+    GwySIUnit *unitphi;
     gint row;
 
     controls.args = args;
@@ -195,7 +200,7 @@ affcor_dialog(AffcorArgs *args,
     tmp = gwy_data_field_duplicate(dfield);
     gwy_data_field_add(tmp, -gwy_data_field_get_avg(tmp));
     acf = gwy_data_field_new_alike(dfield, FALSE);
-    gwy_data_field_area_2dacf(dfield, acf, 0, 0, dfield->xres, dfield->yres,
+    gwy_data_field_area_2dacf(tmp, acf, 0, 0, dfield->xres, dfield->yres,
                               dfield->xres/4, dfield->yres/4);
     g_object_unref(tmp);
 
@@ -226,13 +231,12 @@ affcor_dialog(AffcorArgs *args,
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.view), vlayer);
     controls.selection = gwy_vector_layer_ensure_selection(vlayer);
     gwy_selection_set_max_objects(controls.selection, 1);
-    init_selection(controls.selection, dfield);
     g_signal_connect_swapped(controls.selection, "changed",
                              G_CALLBACK(selection_changed), &controls);
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
-    table = GTK_TABLE(gtk_table_new(7, 3, FALSE));
+    table = GTK_TABLE(gtk_table_new(10, 4, FALSE));
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -243,7 +247,7 @@ affcor_dialog(AffcorArgs *args,
     label = gtk_label_new(_("Preview type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+                     0, 4, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     controls.image_mode
@@ -253,27 +257,44 @@ affcor_dialog(AffcorArgs *args,
                                     _("2D ACF"), IMAGE_ACF,
                                     NULL);
     row = gwy_radio_buttons_attach_to_table(controls.image_mode,
-                                            GTK_TABLE(table), 3, row);
+                                            GTK_TABLE(table), 4, row);
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
     label = gwy_label_new_header(_("Lattice Vectors"));
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+                     0, 4, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    controls.vf = gwy_data_field_get_value_format_xy(dfield,
-                                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                     NULL);
-    controls.a1 = add_lattice_label(table, "a<sub>1</sub>:", &row, controls.vf);
-    controls.a2 = add_lattice_label(table, "a<sub>2</sub>:", &row, controls.vf);
+    controls.vf
+        = gwy_data_field_get_value_format_xy(dfield,
+                                             GWY_SI_UNIT_FORMAT_VFMARKUP, NULL);
+    unitphi = gwy_si_unit_new("deg");
+    controls.vfphi
+        = gwy_si_unit_get_format_with_resolution(unitphi,
+                                                 GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                 180.0, 0.1, NULL);
+    g_object_unref(unitphi);
+
+    controls.a1 = add_lattice_label(table, "a<sub>1</sub>",
+                                    &row, controls.vf);
+    controls.a1_len = add_lattice_label(table, "|a<sub>1</sub>|",
+                                        &row, controls.vf);
+    controls.a2 = add_lattice_label(table, "a<sub>2</sub>",
+                                    &row, controls.vf);
+    controls.a2_len = add_lattice_label(table, "|a<sub>2</sub>|",
+                                        &row, controls.vf);
+    controls.phi = add_lattice_label(table, "ϕ",
+                                     &row, controls.vfphi);
 
     button = gtk_button_new_with_mnemonic(_("Re_fine"));
     gtk_table_attach(GTK_TABLE(table), button,
-                     1, 3, row, row+1, GTK_FILL, 0, 0, 0);
+                     2, 4, row, row+1, GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(refine), &controls);
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+
+    init_selection(controls.selection, dfield);
 
     gtk_widget_show_all(controls.dialog);
     do {
@@ -302,6 +323,7 @@ affcor_dialog(AffcorArgs *args,
     gtk_widget_destroy(controls.dialog);
 finalize:
     gwy_si_unit_value_format_free(controls.vf);
+    gwy_si_unit_value_format_free(controls.vfphi);
     g_object_unref(controls.mydata);
 }
 
@@ -321,16 +343,19 @@ add_lattice_label(GtkTable *table,
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 1, *row, *row+1, GTK_FILL, 0, 0, 0);
 
+    label = gtk_label_new(" = ");
+    gtk_table_attach(table, label, 1, 2, *row, *row+1, GTK_FILL, 0, 0, 0);
+
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), vf->units);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 2, 3, *row, *row+1, GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, label, 3, 4, *row, *row+1, GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new(NULL);
     gtk_widget_set_size_request(label, req.width, -1);
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
     gtk_table_attach(table, label,
-                     1, 2, *row, *row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+                     2, 3, *row, *row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     (*row)++;
 
@@ -344,7 +369,7 @@ init_selection(GwySelection *selection,
     gdouble xy[4] = { 0.0, 0.0, 0.0, 0.0 };
 
     xy[0] = dfield->xreal/20;
-    xy[3] = dfield->yreal/20;
+    xy[3] = -dfield->yreal/20;
     gwy_selection_set_data(selection, 1, xy);
 }
 
@@ -492,6 +517,7 @@ selection_changed(AffcorControls *controls)
 {
     GwySIValueFormat *vf;
     gdouble xy[4];
+    gdouble phi;
     gchar *buf;
 
     if (!gwy_selection_get_data(controls->selection, NULL)) {
@@ -505,14 +531,33 @@ selection_changed(AffcorControls *controls)
 
     buf = g_strdup_printf("(%.*f, %.*f)",
                           vf->precision, xy[0]/vf->magnitude,
-                          vf->precision, xy[1]/vf->magnitude);
+                          vf->precision, -xy[1]/vf->magnitude);
     gtk_label_set_text(GTK_LABEL(controls->a1), buf);
+    g_free(buf);
+
+    buf = g_strdup_printf("%.*f",
+                          vf->precision, hypot(xy[0], xy[1])/vf->magnitude);
+    gtk_label_set_text(GTK_LABEL(controls->a1_len), buf);
     g_free(buf);
 
     buf = g_strdup_printf("(%.*f, %.*f)",
                           vf->precision, xy[2]/vf->magnitude,
-                          vf->precision, xy[3]/vf->magnitude);
+                          vf->precision, -xy[3]/vf->magnitude);
     gtk_label_set_text(GTK_LABEL(controls->a2), buf);
+    g_free(buf);
+
+    buf = g_strdup_printf("%.*f",
+                          vf->precision, hypot(xy[2], xy[3])/vf->magnitude);
+    gtk_label_set_text(GTK_LABEL(controls->a2_len), buf);
+    g_free(buf);
+
+    vf = controls->vfphi;
+    phi = atan2(-xy[3], xy[2]) - atan2(-xy[1], xy[0]);
+    if (phi < 0.0)
+        phi += 2.0*G_PI;
+    buf = g_strdup_printf("%.*f",
+                          vf->precision, 180.0/G_PI*phi/vf->magnitude);
+    gtk_label_set_text(GTK_LABEL(controls->phi), buf);
     g_free(buf);
 }
 

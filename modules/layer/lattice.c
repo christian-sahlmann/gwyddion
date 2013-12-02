@@ -273,7 +273,6 @@ gwy_layer_lattice_draw_object(GwyVectorLayer *layer,
     has_object = gwy_selection_get_object(layer->selection, id, xy);
     g_return_if_fail(has_object);
 
-    /* Just copied draw_vector()! */
     gwy_data_view_get_real_data_sizes(data_view, &xsize, &ysize);
     gdk_drawable_get_size(drawable, &width, &height);
 
