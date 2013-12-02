@@ -45,19 +45,34 @@ enum {
     RESPONSE_RESET = 1,
 };
 
+enum {
+    SENS_USER_LATTICE = 1,
+    SENS_DIFFERENT_LENGTHS = 2,
+};
+
+enum {
+    INVALID_A1 = 1,
+    INVALID_A2 = 2,
+    INVALID_PHI = 4,
+};
+
 typedef enum {
     IMAGE_DATA,
     IMAGE_ACF,
 } ImageMode;
 
 typedef struct {
-    gboolean whatever;
+    gdouble a1;
+    gdouble a2;
+    gdouble phi;
+    gboolean different_lengths;
 
     ImageMode image_mode;
 } AffcorArgs;
 
 typedef struct {
     AffcorArgs *args;
+    GwySensitivityGroup *sens;
     GtkWidget *dialog;
     GtkWidget *view;
     GwySelection *selection;
@@ -70,38 +85,58 @@ typedef struct {
     GtkWidget *a1_len;
     GtkWidget *a2_len;
     GtkWidget *phi;
+    GtkWidget *a1_corr;
+    GtkWidget *different_lengths;
+    GtkWidget *a2_corr;
+    GtkWidget *phi_corr;
+    guint invalid_corr;
 } AffcorControls;
 
-static gboolean   module_register     (void);
-static void       correct_affine      (GwyContainer *data,
-                                       GwyRunType run);
-static void       affcor_dialog       (AffcorArgs *args,
-                                       GwyContainer *data,
-                                       GwyDataField *dfield,
-                                       gint id);
-static GtkWidget* add_lattice_label   (GtkTable *table,
-                                       const gchar *name,
-                                       gint *row,
-                                       GwySIValueFormat *vf);
-static void       init_selection      (GwySelection *selection,
-                                       GwyDataField *dfield);
-static void       refine              (AffcorControls *controls);
-static void       find_maximum        (GwyDataField *dfield,
-                                       gdouble *x,
-                                       gdouble *y,
-                                       gint xwinsize,
-                                       gint ywinsize);
-static void       selection_changed   (AffcorControls *controls);
-static void       image_mode_changed  (GtkToggleButton *button,
-                                       AffcorControls *controls);
-static void       affcor_load_args    (GwyContainer *container,
-                                       AffcorArgs *args);
-static void       affcor_save_args    (GwyContainer *container,
-                                       AffcorArgs *args);
-static void       affcor_sanitize_args(AffcorArgs *args);
+static gboolean   module_register          (void);
+static void       correct_affine           (GwyContainer *data,
+                                            GwyRunType run);
+static void       affcor_dialog            (AffcorArgs *args,
+                                            GwyContainer *data,
+                                            GwyDataField *dfield,
+                                            gint id);
+static GtkWidget* add_lattice_label        (GtkTable *table,
+                                            const gchar *name,
+                                            gint *row,
+                                            GwySIValueFormat *vf);
+static GtkWidget* add_lattice_entry        (GtkTable *table,
+                                            const gchar *name,
+                                            gdouble value,
+                                            GwySensitivityGroup *sens,
+                                            guint flags,
+                                            gint *row,
+                                            GwySIValueFormat *vf);
+static void       init_selection           (GwySelection *selection,
+                                            GwyDataField *dfield);
+static void       image_mode_changed       (GtkToggleButton *button,
+                                            AffcorControls *controls);
+static void       a1_changed               (AffcorControls *controls,
+                                            GtkEntry *entry);
+static void       a2_changed               (AffcorControls *controls,
+                                            GtkEntry *entry);
+static void       phi_changed              (AffcorControls *controls,
+                                            GtkEntry *entry);
+static void       different_lengths_toggled(AffcorControls *controls,
+                                            GtkToggleButton *toggle);
+static void       refine                   (AffcorControls *controls);
+static void       find_maximum             (GwyDataField *dfield,
+                                            gdouble *x,
+                                            gdouble *y,
+                                            gint xwinsize,
+                                            gint ywinsize);
+static void       selection_changed        (AffcorControls *controls);
+static void       affcor_load_args         (GwyContainer *container,
+                                            AffcorArgs *args);
+static void       affcor_save_args         (GwyContainer *container,
+                                            AffcorArgs *args);
+static void       affcor_sanitize_args     (AffcorArgs *args);
 
 static const AffcorArgs affcor_defaults = {
-    FALSE,
+    1.0, 1.0, 90.0, FALSE,
     IMAGE_DATA,
 };
 
@@ -162,13 +197,15 @@ affcor_dialog(AffcorArgs *args,
     GtkTable *table;
     GwyDataField *acf, *tmp;
     AffcorControls controls;
-    gint response;
+    gint response, row;
     GwyPixmapLayer *layer;
     GwyVectorLayer *vlayer;
     GwySIUnit *unitphi;
-    gint row;
+    guint flags;
 
     controls.args = args;
+    controls.sens = gwy_sensitivity_group_new();
+    controls.invalid_corr = 0;
 
     controls.dialog = gtk_dialog_new_with_buttons(_("Affine Correction"),
                                                   NULL, 0,
@@ -236,7 +273,7 @@ affcor_dialog(AffcorArgs *args,
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
-    table = GTK_TABLE(gtk_table_new(10, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(15, 4, FALSE));
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -291,10 +328,49 @@ affcor_dialog(AffcorArgs *args,
                      2, 4, row, row+1, GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(refine), &controls);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
 
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    /* TRANSLATORS: Correct is an adjective here. */
+    label = gwy_label_new_header(_("Correct Lattice"));
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 4, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls.a1_corr = add_lattice_entry(table, "a<sub>1</sub>", args->a1,
+                                         controls.sens, SENS_USER_LATTICE,
+                                         &row, controls.vf);
+    g_signal_connect_swapped(controls.a1_corr, "changed",
+                             G_CALLBACK(a1_changed), &controls);
+
+    controls.different_lengths
+        = gtk_check_button_new_with_mnemonic(_("_Different lengths"));
+    gtk_table_attach(GTK_TABLE(table), controls.different_lengths,
+                     0, 4, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls.different_lengths, "toggled",
+                             G_CALLBACK(different_lengths_toggled), &controls);
+    row++;
+
+    controls.a2_corr = add_lattice_entry(table, "a<sub>2</sub>", args->a2,
+                                         controls.sens,
+                                         SENS_USER_LATTICE | SENS_DIFFERENT_LENGTHS,
+                                         &row, controls.vf);
+    g_signal_connect_swapped(controls.a2_corr, "changed",
+                             G_CALLBACK(a2_changed), &controls);
+
+    controls.phi_corr = add_lattice_entry(table, "ϕ", args->phi*180.0/G_PI,
+                                          controls.sens, SENS_USER_LATTICE,
+                                          &row, controls.vf);
+    g_signal_connect_swapped(controls.phi_corr, "changed",
+                             G_CALLBACK(phi_changed), &controls);
 
     init_selection(controls.selection, dfield);
+    flags = SENS_USER_LATTICE;
+    if (args->different_lengths)
+        flags |= SENS_DIFFERENT_LENGTHS;
+    gwy_sensitivity_group_set_state(controls.sens,
+                                    SENS_USER_LATTICE | SENS_DIFFERENT_LENGTHS,
+                                    flags);
 
     gtk_widget_show_all(controls.dialog);
     do {
@@ -322,6 +398,7 @@ affcor_dialog(AffcorArgs *args,
 
     gtk_widget_destroy(controls.dialog);
 finalize:
+    g_object_unref(controls.sens);
     gwy_si_unit_value_format_free(controls.vf);
     gwy_si_unit_value_format_free(controls.vfphi);
     g_object_unref(controls.mydata);
@@ -362,6 +439,48 @@ add_lattice_label(GtkTable *table,
     return label;
 }
 
+static GtkWidget*
+add_lattice_entry(GtkTable *table,
+                  const gchar *name,
+                  gdouble value,
+                  GwySensitivityGroup *sens,
+                  guint flags,
+                  gint *row,
+                  GwySIValueFormat *vf)
+{
+    GtkWidget *label, *entry;
+    gchar *buf;
+
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), name);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, *row, *row+1, GTK_FILL, 0, 0, 0);
+    gwy_sensitivity_group_add_widget(sens, label, flags);
+
+    label = gtk_label_new(" = ");
+    gtk_table_attach(table, label, 1, 2, *row, *row+1, GTK_FILL, 0, 0, 0);
+    gwy_sensitivity_group_add_widget(sens, label, flags);
+
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), vf->units);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 3, 4, *row, *row+1, GTK_FILL, 0, 0, 0);
+    gwy_sensitivity_group_add_widget(sens, label, flags);
+
+    entry = gtk_entry_new();
+    buf = g_strdup_printf("%g", value);
+    gtk_entry_set_text(GTK_ENTRY(entry), buf);
+    gtk_entry_set_width_chars(GTK_ENTRY(entry), 6);
+    g_free(buf);
+    gtk_table_attach(table, entry,
+                     2, 3, *row, *row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gwy_sensitivity_group_add_widget(sens, entry, flags);
+
+    (*row)++;
+
+    return entry;
+}
+
 static void
 init_selection(GwySelection *selection,
                GwyDataField *dfield)
@@ -371,6 +490,102 @@ init_selection(GwySelection *selection,
     xy[0] = dfield->xreal/20;
     xy[3] = -dfield->yreal/20;
     gwy_selection_set_data(selection, 1, xy);
+}
+
+static void
+image_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
+                   AffcorControls *controls)
+{
+    AffcorArgs *args = controls->args;
+    GwyPixmapLayer *layer;
+    ImageMode mode;
+
+    mode = gwy_radio_buttons_get_current(controls->image_mode);
+    if (mode == args->image_mode)
+        return;
+    args->image_mode = mode;
+    layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(controls->view));
+
+    if (args->image_mode == IMAGE_DATA)
+        gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    else if (args->image_mode == IMAGE_ACF)
+        gwy_pixmap_layer_set_data_key(layer, "/1/data");
+
+    gwy_set_data_preview_size(GWY_DATA_VIEW(controls->view), PREVIEW_SIZE);
+}
+
+static void
+a1_changed(AffcorControls *controls,
+           GtkEntry *entry)
+{
+    AffcorArgs *args = controls->args;
+    const gchar *buf;
+
+    buf = gtk_entry_get_text(entry);
+    args->a1 = g_strtod(buf, NULL);
+    if (args->a1 > 0.0)
+        controls->invalid_corr &= ~INVALID_A1;
+    else
+        controls->invalid_corr |= INVALID_A1;
+
+    if (!args->different_lengths)
+        gtk_entry_set_text(GTK_ENTRY(controls->a2_corr), buf);
+
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      GTK_RESPONSE_OK, !controls->invalid_corr);
+}
+
+static void
+a2_changed(AffcorControls *controls,
+           GtkEntry *entry)
+{
+    AffcorArgs *args = controls->args;
+    const gchar *buf;
+
+    buf = gtk_entry_get_text(entry);
+    args->a2 = g_strtod(buf, NULL);
+    if (args->a2 > 0.0)
+        controls->invalid_corr &= ~INVALID_A2;
+    else
+        controls->invalid_corr |= INVALID_A2;
+
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      GTK_RESPONSE_OK, !controls->invalid_corr);
+}
+
+static void
+phi_changed(AffcorControls *controls,
+            GtkEntry *entry)
+{
+    AffcorArgs *args = controls->args;
+    const gchar *buf;
+
+    buf = gtk_entry_get_text(entry);
+    args->phi = g_strtod(buf, NULL)*G_PI/180.0;
+    if (args->phi > 1e-6 && args->phi < G_PI - 1e-6)
+        controls->invalid_corr &= ~INVALID_PHI;
+    else
+        controls->invalid_corr |= INVALID_PHI;
+
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      GTK_RESPONSE_OK, !controls->invalid_corr);
+}
+
+static void
+different_lengths_toggled(AffcorControls *controls,
+                          GtkToggleButton *toggle)
+{
+    AffcorArgs *args = controls->args;
+    guint flags;
+
+    args->different_lengths = gtk_toggle_button_get_active(toggle);
+    if (!args->different_lengths) {
+        const gchar *buf = gtk_entry_get_text(GTK_ENTRY(controls->a1_corr));
+        gtk_entry_set_text(GTK_ENTRY(controls->a2_corr), buf);
+    }
+    flags = args->different_lengths ? SENS_DIFFERENT_LENGTHS : 0;
+    gwy_sensitivity_group_set_state(controls->sens,
+                                    SENS_DIFFERENT_LENGTHS, flags);
 }
 
 static void
@@ -561,33 +776,34 @@ selection_changed(AffcorControls *controls)
     g_free(buf);
 }
 
-static void
-image_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
-                   AffcorControls *controls)
-{
-    AffcorArgs *args = controls->args;
-    GwyPixmapLayer *layer;
-    ImageMode mode;
-
-    mode = gwy_radio_buttons_get_current(controls->image_mode);
-    if (mode == args->image_mode)
-        return;
-    args->image_mode = mode;
-    layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(controls->view));
-
-    if (args->image_mode == IMAGE_DATA)
-        gwy_pixmap_layer_set_data_key(layer, "/0/data");
-    else if (args->image_mode == IMAGE_ACF)
-        gwy_pixmap_layer_set_data_key(layer, "/1/data");
-
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls->view), PREVIEW_SIZE);
-}
-
-//static const gchar separate_key[]      = "/module/fft_profile/separate";
+static const gchar a1_key[]                = "/module/correct_affine/a1";
+static const gchar a2_key[]                = "/module/correct_affine/a2";
+static const gchar phi_key[]               = "/module/correct_affine/phi";
+static const gchar different_lengths_key[] = "/module/correct_affine/different-lengths";
 
 static void
 affcor_sanitize_args(AffcorArgs *args)
 {
+    args->different_lengths = !!args->different_lengths;
+
+    if (!(args->a1 > 0.0))
+        args->a1 = 1.0;
+
+    if (args->different_lengths) {
+        if (!(args->a2 > 0.0))
+            args->a2 = 1.0;
+    }
+    else
+        args->a2 = args->a1;
+
+    args->phi = fmod(args->phi, 2.0*G_PI);
+    if (args->phi < 0.0)
+        args->phi += 2.0*G_PI;
+    if (args->phi > G_PI)
+        args->phi -= G_PI;
+
+    if (args->phi < 1e-6 || args->phi > G_PI - 1e-6)
+        args->phi = 0.5*G_PI;
 }
 
 static void
@@ -596,6 +812,12 @@ affcor_load_args(GwyContainer *container,
 {
     *args = affcor_defaults;
 
+    gwy_container_gis_double_by_name(container, a1_key, &args->a1);
+    gwy_container_gis_double_by_name(container, a2_key, &args->a2);
+    gwy_container_gis_double_by_name(container, phi_key, &args->phi);
+    gwy_container_gis_boolean_by_name(container, different_lengths_key,
+                                      &args->different_lengths);
+
     affcor_sanitize_args(args);
 }
 
@@ -603,6 +825,11 @@ static void
 affcor_save_args(GwyContainer *container,
                  AffcorArgs *args)
 {
+    gwy_container_set_double_by_name(container, a1_key, args->a1);
+    gwy_container_set_double_by_name(container, a2_key, args->a2);
+    gwy_container_set_double_by_name(container, phi_key, args->phi);
+    gwy_container_set_boolean_by_name(container, different_lengths_key,
+                                      args->different_lengths);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
