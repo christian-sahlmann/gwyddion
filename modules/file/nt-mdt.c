@@ -464,6 +464,16 @@ typedef struct {
 } MDTXMLParams;
 
 typedef struct {
+    gchar *name;
+    gchar *value;
+} MDTXMLCommentEntry;
+
+typedef struct {
+    GString *path;
+    GArray *entries;
+} MDTXMLComment;
+
+typedef struct {
     gint    headersize;
     gint    coordsize;
     gint    version;
@@ -478,8 +488,8 @@ typedef struct {
 } MDTDotsData;
 
 static gboolean       module_register       (void);
-static gint           mdt_detect            (const GwyFileDetectInfo *fileinfo,
-                                             gboolean only_name);
+static gint           mdt_detect     (const GwyFileDetectInfo *fileinfo,
+                                      gboolean only_name);
 static GwyContainer*  mdt_load              (const gchar *filename,
                                              GwyRunType mode,
                                              GError **error);
@@ -494,10 +504,10 @@ static gboolean       mdt_real_load         (const guchar *buffer,
 static GwyDataField*  extract_scanned_data  (MDTScannedDataFrame *dataframe);
 static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe,
                                                 guint number);
-static GwySpectra*    extract_sps_curve     (MDTScannedDataFrame *dataframe,
-                                             guint number);
-static GwySpectra*    extract_new_curve     (MDTNewSpecFrame *dataframe,
-        guint number);
+static GwySpectra*    extract_sps_curve(MDTScannedDataFrame *dataframe,
+                                        guint number);
+static GwySpectra*    extract_new_curve(MDTNewSpecFrame *dataframe,
+                                        guint number);
 static GwyDataField*  extract_mda_data      (MDTMDAFrame *dataframe);
 static GwyGraphModel* extract_mda_spectrum  (MDTMDAFrame *dataframe,
                                              guint number);
@@ -517,27 +527,42 @@ static void           parse_text       (GMarkupParseContext *context,
                                         gsize text_len,
                                         gpointer user_data,
                                         GError **error);
-static void           spec_start_element (GMarkupParseContext *context,
-                                          const gchar *element_name,
-                                          const gchar **attribute_names,
-                                          const gchar **attribute_values,
-                                          gpointer user_data,
-                                          GError **error);
-static void           spec_param_start_element (GMarkupParseContext *context,
-                                                const gchar *element_name,
-                                                const gchar **attribute_names,
-                                                const gchar **attribute_values,
-                                                gpointer user_data,
-                                                GError **error);
-static void           spec_param_end_element (GMarkupParseContext *context,
-                                              const gchar *element_name,
-                                              gpointer user_data,
-                                              GError **error);
-static void           spec_param_parse_text (GMarkupParseContext *context,
-                                             const gchar *value,
-                                             gsize value_len,
-                                             gpointer user_data,
-                                             GError **error);
+static void  spec_start_element        (GMarkupParseContext *context,
+                                        const gchar *element_name,
+                                        const gchar **attribute_names,
+                                        const gchar **attribute_values,
+                                        gpointer user_data,
+                                        GError **error);
+static void  spec_param_start_element  (GMarkupParseContext *context,
+                                        const gchar *element_name,
+                                        const gchar **attribute_names,
+                                        const gchar **attribute_values,
+                                        gpointer user_data,
+                                        GError **error);
+static void  spec_param_end_element    (GMarkupParseContext *context,
+                                        const gchar *element_name,
+                                        gpointer user_data,
+                                        GError **error);
+static void  spec_param_parse_text     (GMarkupParseContext *context,
+                                        const gchar *value,
+                                        gsize value_len,
+                                        gpointer user_data,
+                                        GError **error);
+static void  xmlcomment_start_element  (GMarkupParseContext *context,
+                                        const gchar *element_name,
+                                        const gchar **attribute_names,
+                                        const gchar **attribute_values,
+                                        gpointer user_data,
+                                        GError **error);
+static void  xmlcomment_end_element    (GMarkupParseContext *context,
+                                        const gchar *element_name,
+                                        gpointer user_data,
+                                        GError **error);
+static void  xmlcomment_parse_text     (GMarkupParseContext *context,
+                                        const gchar *text,
+                                        gsize text_len,
+                                        gpointer user_data,
+                                        GError **error);
 
 #ifdef DEBUG
 static const GwyEnum frame_types[] = {
@@ -3144,7 +3169,8 @@ spec_start_element (G_GNUC_UNUSED GMarkupParseContext *context,
             }
 
             if (axisIndex < frame->axisCount)
-                g_memmove(frame->axisInfo+axisIndex, &axisInfo, sizeof(axisInfo));
+                g_memmove(frame->axisInfo+axisIndex,
+                          &axisInfo, sizeof(axisInfo));
         }
     }
     else if (gwy_strequal(element_name, "Name"))
@@ -3224,6 +3250,51 @@ spec_param_parse_text(G_GNUC_UNUSED GMarkupParseContext *context,
     if (frame->xmlNameFlag) {
        frame->rFrameName = g_strdup(value);
     }
+}
+
+static void
+xmlcomment_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
+                         const gchar *element_name,
+                         G_GNUC_UNUSED const gchar **attribute_names,
+                         G_GNUC_UNUSED const gchar **attribute_values,
+                         gpointer user_data,
+                         G_GNUC_UNUSED GError **error)
+{
+    MDTXMLComment *comment = (MDTXMLComment *)user_data;
+
+    g_string_append_c(comment->path, '/');
+    g_string_append(comment->path, element_name);
+}
+
+static void
+xmlcomment_end_element(G_GNUC_UNUSED GMarkupParseContext *context,
+                       const gchar *element_name,
+                       gpointer user_data,
+                       G_GNUC_UNUSED GError **error)
+{
+    MDTXMLComment *comment = (MDTXMLComment *)user_data;
+    gchar *pos;
+
+    pos = strrchr(comment->path->str, '/');
+    /* GMarkupParser should raise a run-time error
+     * if this does not hold. */
+    g_assert(pos && strcmp(pos + 1, element_name) == 0);
+    g_string_truncate(comment->path, pos - comment->path->str);
+}
+
+static void
+xmlcomment_parse_text(G_GNUC_UNUSED GMarkupParseContext *context,
+                      const gchar *text,
+                      gsize text_len,
+                      gpointer user_data,
+                      G_GNUC_UNUSED GError **error)
+{
+    MDTXMLComment *comment = (MDTXMLComment *)user_data;
+    MDTXMLCommentEntry *entry = g_new0(MDTXMLCommentEntry, 1);
+
+    entry->name = g_strndup(comment->path->str, comment->path->len);
+    entry->value = g_strndup(text, text_len);
+    g_array_append_val(comment->entries, entry);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
