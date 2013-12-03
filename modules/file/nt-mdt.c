@@ -236,6 +236,17 @@ typedef enum {
 } MDTADCMode;
 
 typedef enum {
+    MDT_HLT = 0,
+    MDT_HLB = 1,
+    MDT_HRT = 2,
+    MDT_HRB = 3,
+    MDT_VLT = 4,
+    MDT_VLB = 5,
+    MDT_VRT = 6,
+    MDT_VRB = 7
+} MDTXMLScanLocation;
+
+typedef enum {
     MDT_XML_NONE             = 0,
     MDT_XML_LASER_WAVELENGTH = 1,
     MDT_XML_UNITS            = 2,
@@ -949,7 +960,7 @@ mdt_load(const gchar *filename,
                 g_object_unref(gmodel);
                 n++;
             }
-            else if (mdaframe->nDimensions == 3 && mdaframe->nMesurands == 3) {
+            else if (mdaframe->nDimensions == 3 && mdaframe->nMesurands >= 1) {
                 /* raman images */
                 meta = NULL;
                 if ((brick = extract_brick(mdaframe, &meta, filename))) {
@@ -992,12 +1003,12 @@ mdt_load(const gchar *filename,
 
                     n++;
                 }
-
             }
-            else if (mdaframe->nDimensions == 3 && mdaframe->nMesurands == 5) {
-                /* Hybrid mode MDA */
-
+            else {
+                gwy_debug("dim = %d mes = %d\n",
+                mdaframe->nDimensions, mdaframe->nMesurands);
             }
+    
             g_free(mdaframe->dimensions);
             g_free(mdaframe->mesurands);
             g_free(mdaframe->xmlstuff);
@@ -2931,13 +2942,38 @@ extract_brick(MDTMDAFrame *dataframe,
         base = (guchar *)buffer2;
     }
 
-    xAxis = &dataframe->dimensions[0];
-    yAxis = &dataframe->dimensions[1];
-    zAxis = &dataframe->mesurands[1];
-    wAxis = &dataframe->mesurands[0];
+    /*
+    fprintf(stderr, "axes = %s\n", axes_order);
+    for (i = 0; i < dataframe->nDimensions; i++) {
+        fprintf(stderr,"Axis dim%d\n", i);
+        xAxis = &dataframe->dimensions[i];
+        fprintf(stderr, "min=%d max=%d dt=%d\n",
+                (gint)xAxis->minIndex, (gint)xAxis->maxIndex, xAxis->dataType);
+    }
+    for (i = 0; i < dataframe->nMesurands; i++) {
+        fprintf(stderr,"Axis mes%d\n", i);
+        xAxis = &dataframe->mesurands[i];
+        fprintf(stderr, "min=%d max=%d dt=%d\n",
+                (gint)xAxis->minIndex, (gint)xAxis->maxIndex, xAxis->dataType);
+    }
+    */
+
+    if (!axes_order) { /* Old raman images or hybrid frames has XY first */
+        xAxis = &dataframe->dimensions[0];
+        yAxis = &dataframe->dimensions[1];
+        zAxis = &dataframe->dimensions[2];
+        wAxis = &dataframe->mesurands[0];
+    }
+    else { /* new software is writing Z first */
+        xAxis = &dataframe->dimensions[1];
+        yAxis = &dataframe->dimensions[2];
+        zAxis = &dataframe->dimensions[0];
+        wAxis = &dataframe->mesurands[0];
+    }
+
     xres  = (xAxis->maxIndex - xAxis->minIndex + 1);
     yres  = (yAxis->maxIndex - yAxis->minIndex + 1);
-    zres  = 1024; // FIXME
+    zres  = (zAxis->maxIndex - zAxis->minIndex + 1);
 
     if (xAxis->unit && xAxis->unitLen) {
         unit = g_strndup(xAxis->unit, xAxis->unitLen);
@@ -3004,19 +3040,19 @@ extract_brick(MDTMDAFrame *dataframe,
 
     data = gwy_brick_get_data(brick);
 
-    /*
     for (k = 0; k < zres; k++) {
         p = base;
         p += k * sizeof(gfloat);
         for (i = 0; i < yres; i++)
             for (j = 0; j < xres; j++) {
-                w = (gdouble)gwy_get_gfloat_le(&p);
-                *(data++) = w * wscale;
-                p += (zres - 1) * sizeof(gfloat);
-
+                if ((!ext_name) || (p - base < size2)) {
+                    w = (gdouble)gwy_get_gfloat_le(&p);
+                    *(data++) = w * wscale;
+                    p += (zres - 1) * sizeof(gfloat);
+                }
             }
     }
-
+    /* calibration
     p = base;
     px = p + xres * yres * zres * sizeof(gfloat);
     cal = gwy_data_line_new(zres, zres, FALSE);
@@ -3024,12 +3060,12 @@ extract_brick(MDTMDAFrame *dataframe,
     for (k = 0; k < zres; k++) {
         *(data++) = zscale * (gdouble)gwy_get_gfloat_le(&px);
     }
-    */
 
     gwy_data_line_set_si_unit_y(cal, siunitz);
     gwy_brick_set_zcalibration(brick, cal);
 
     g_object_unref(cal);
+    */
 
     gwy_brick_set_si_unit_x(brick, siunitx);
     gwy_brick_set_si_unit_y(brick, siunity);
