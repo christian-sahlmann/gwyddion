@@ -513,7 +513,8 @@ static GwyDataField*  extract_mda_data      (MDTMDAFrame *dataframe);
 static GwyGraphModel* extract_mda_spectrum  (MDTMDAFrame *dataframe,
                                              guint number);
 static GwyBrick *     extract_brick         (MDTMDAFrame *dataframe,
-                                             GwyContainer **metadata);
+                                             GwyContainer **metadata,
+                                             const gchar *filename);
 static void           start_element    (GMarkupParseContext *context,
                                         const gchar *element_name,
                                         const gchar **attribute_names,
@@ -913,10 +914,7 @@ mdt_load(const gchar *filename,
             mdaframe = (MDTMDAFrame*)mdtfile.frames[i].frame_data;
             gwy_debug("dimensions %d ; measurands %d",
                       mdaframe->nDimensions, mdaframe->nMesurands);
-            /*
-            fprintf(stderr,"Frame %d\n", i+1);
-            fprintf(stderr,"%s\n", mdaframe->xmlstuff);
-            */
+
             if (mdaframe->nDimensions == 2 && mdaframe->nMesurands == 1) {
                 /* scan */
                 dfield = extract_mda_data(mdaframe);
@@ -954,7 +952,7 @@ mdt_load(const gchar *filename,
             else if (mdaframe->nDimensions == 3 && mdaframe->nMesurands == 3) {
                 /* raman images */
                 meta = NULL;
-                if ((brick = extract_brick(mdaframe, &meta))) {
+                if ((brick = extract_brick(mdaframe, &meta, filename))) {
                     g_string_printf(key, "/brick/%d", n);
                     gwy_container_set_object_by_name(data,
                                                      key->str,
@@ -2803,15 +2801,62 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
     return gmodel;
 }
 
+static gchar*
+mdt_find_data_name(const gchar *headername, const gchar *dataname)
+{
+    gchar *dirname = g_path_get_dirname(headername);
+    gchar *dname, *filename;
+
+    filename = g_build_filename(dirname, dataname, NULL);
+    gwy_debug("trying <%s>", filename);
+    if (g_file_test(filename, G_FILE_TEST_IS_REGULAR)) {
+        g_free(dirname);
+        return filename;
+    }
+    g_free(filename);
+
+    dname = g_ascii_strup(dataname, -1);
+    filename = g_build_filename(dirname, dname, NULL);
+    gwy_debug("trying <%s>", filename);
+    if (g_file_test(filename, G_FILE_TEST_IS_REGULAR)) {
+        g_free(dname);
+        g_free(dirname);
+        return filename;
+    }
+    g_free(dname);
+    g_free(filename);
+
+    dname = g_ascii_strdown(dataname, -1);
+    filename = g_build_filename(dirname, dname, NULL);
+    gwy_debug("trying <%s>", filename);
+    if (g_file_test(filename, G_FILE_TEST_IS_REGULAR)) {
+        g_free(dname);
+        g_free(dirname);
+        return filename;
+    }
+    g_free(dname);
+    g_free(filename);
+    g_free(dirname);
+
+    gwy_debug("failed");
+
+    return NULL;
+}
+
 static GwyBrick *
-extract_brick(MDTMDAFrame *dataframe, GwyContainer **metadata)
+extract_brick(MDTMDAFrame *dataframe,
+              GwyContainer **metadata,
+              const gchar *filename)
 {
     GwyBrick *brick = NULL;
     gint power10x, power10y, power10z, power10w;
     GwySIUnit *siunitx, *siunity, *siunitz, *siunitw;
-    const guchar *p, *px;
+    const guchar *p, *px, *base;
     const gchar *cunit;
-    gchar *unit, *external = NULL, *pos, *name, *value;
+    gchar *unit, *pos, *name, *value, *dname, *dataname;
+    gchar *buffer2 = NULL;
+    gsize size2;
+    gchar *ext_name = NULL, *axes_order = NULL, *frame_type = NULL;
     gint xres, yres, zres;
     gint i, j, k;
     gdouble xreal, yreal, zscale, wscale, w;
@@ -2825,14 +2870,6 @@ extract_brick(MDTMDAFrame *dataframe, GwyContainer **metadata)
                              xmlcomment_parse_text, NULL, NULL };
     GMarkupParseContext *context;
     GError *err = NULL;
-
-    xAxis = &dataframe->dimensions[0];
-    yAxis = &dataframe->dimensions[1];
-    zAxis = &dataframe->mesurands[1];
-    wAxis = &dataframe->mesurands[0];
-    xres  = (xAxis->maxIndex - xAxis->minIndex + 1);
-    yres  = (yAxis->maxIndex - yAxis->minIndex + 1);
-    zres  = 1024; // FIXME
 
     comment.path = g_string_new(NULL);
     comment.entries = g_array_new(FALSE, FALSE,
@@ -2857,6 +2894,19 @@ extract_brick(MDTMDAFrame *dataframe, GwyContainer **metadata)
     *metadata = gwy_container_new();
     for (i = 0; i < comment.entries->len; i++) {
         entry = g_array_index(comment.entries, MDTXMLCommentEntry*, i);
+        if (!g_strcmp0(entry->name,
+                       "/FrameComment/Parameters/FrameType")) {
+            frame_type = g_strdup(entry->value);
+        }
+        else if (!g_strcmp0(entry->name,
+                            "/FrameComment/Parameters/Data/ExternalDataFileName")) {
+            ext_name = g_strdup(entry->value);
+        }
+        else if (!g_strcmp0(entry->name,
+                            "/FrameComment/Parameters/Measurement/Spectra/Scanning/AxesDirections")) {
+            axes_order = g_strdup(entry->value);
+        }
+
         if (g_strcmp0(entry->value, "")) {
             pos = strrchr(entry->name, '/');
             name = g_strdup(pos + 1);
@@ -2866,6 +2916,28 @@ extract_brick(MDTMDAFrame *dataframe, GwyContainer **metadata)
         }
     }
     g_array_free(comment.entries, TRUE);
+
+    base = (guchar *)dataframe->image;
+    if (ext_name) {
+        dname = g_strdelimit(ext_name, "\\/", G_DIR_SEPARATOR);
+        if (!(dataname = mdt_find_data_name(filename, dname))) {
+            /* failed to find external data */
+            goto fail;
+        }
+        if (!g_file_get_contents(dataname, &buffer2, &size2, &err)) {
+            g_clear_error(&err);
+            goto fail;
+        }
+        base = (guchar *)buffer2;
+    }
+
+    xAxis = &dataframe->dimensions[0];
+    yAxis = &dataframe->dimensions[1];
+    zAxis = &dataframe->mesurands[1];
+    wAxis = &dataframe->mesurands[0];
+    xres  = (xAxis->maxIndex - xAxis->minIndex + 1);
+    yres  = (yAxis->maxIndex - yAxis->minIndex + 1);
+    zres  = 1024; // FIXME
 
     if (xAxis->unit && xAxis->unitLen) {
         unit = g_strndup(xAxis->unit, xAxis->unitLen);
@@ -2929,11 +3001,12 @@ extract_brick(MDTMDAFrame *dataframe, GwyContainer **metadata)
                           yreal * yres,
                           zscale * zres,
                           TRUE);
-    /*
+
     data = gwy_brick_get_data(brick);
 
+    /*
     for (k = 0; k < zres; k++) {
-        p = (guchar *)dataframe->image;
+        p = base;
         p += k * sizeof(gfloat);
         for (i = 0; i < yres; i++)
             for (j = 0; j < xres; j++) {
@@ -2944,7 +3017,7 @@ extract_brick(MDTMDAFrame *dataframe, GwyContainer **metadata)
             }
     }
 
-    p = (guchar *)dataframe->image;
+    p = base;
     px = p + xres * yres * zres * sizeof(gfloat);
     cal = gwy_data_line_new(zres, zres, FALSE);
     data = gwy_data_line_get_data(cal);
@@ -2952,6 +3025,7 @@ extract_brick(MDTMDAFrame *dataframe, GwyContainer **metadata)
         *(data++) = zscale * (gdouble)gwy_get_gfloat_le(&px);
     }
     */
+
     gwy_data_line_set_si_unit_y(cal, siunitz);
     gwy_brick_set_zcalibration(brick, cal);
 
@@ -2968,6 +3042,14 @@ extract_brick(MDTMDAFrame *dataframe, GwyContainer **metadata)
     g_object_unref(siunitw);
 
     fail:
+    if (buffer2)
+        g_free(buffer2);
+    if (frame_type)
+        g_free(frame_type);
+    if (ext_name)
+        g_free(ext_name);
+    if (axes_order)
+        g_free(axes_order);
 
     return brick;
 }
