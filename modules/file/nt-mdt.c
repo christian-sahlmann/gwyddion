@@ -348,6 +348,7 @@ typedef struct {
     const guchar *image;
     guint title_len;
     const guchar *title;
+    guint xml_len;
     gchar *xmlstuff;
 } MDTMDAFrame;
 
@@ -511,7 +512,8 @@ static GwySpectra*    extract_new_curve(MDTNewSpecFrame *dataframe,
 static GwyDataField*  extract_mda_data      (MDTMDAFrame *dataframe);
 static GwyGraphModel* extract_mda_spectrum  (MDTMDAFrame *dataframe,
                                              guint number);
-static GwyBrick *     extract_raman_image   (MDTMDAFrame *dataframe);
+static GwyBrick *     extract_brick         (MDTMDAFrame *dataframe,
+                                             GwyContainer **metadata);
 static void           start_element    (GMarkupParseContext *context,
                                         const gchar *element_name,
                                         const gchar **attribute_names,
@@ -951,7 +953,8 @@ mdt_load(const gchar *filename,
             }
             else if (mdaframe->nDimensions == 3 && mdaframe->nMesurands == 3) {
                 /* raman images */
-                if ((brick = extract_raman_image(mdaframe))) {
+                meta = NULL;
+                if ((brick = extract_brick(mdaframe, &meta))) {
                     g_string_printf(key, "/brick/%d", n);
                     gwy_container_set_object_by_name(data,
                                                      key->str,
@@ -967,6 +970,14 @@ mdt_load(const gchar *filename,
                     else
                         gwy_app_channel_title_fall_back(data, n);
 
+                    if (meta) {
+                        g_string_printf(key, "/brick/%d/meta", n);
+                        gwy_container_set_object_by_name(data,
+                                                         key->str,
+                                                         meta);
+                        g_object_unref(meta);
+                    }
+
                     xres = gwy_brick_get_xres(brick);
                     yres = gwy_brick_get_yres(brick);
                     dfield = gwy_data_field_new(xres, yres,
@@ -981,13 +992,9 @@ mdt_load(const gchar *filename,
                     g_object_unref(brick);
                     g_object_unref(dfield);
 
-                    meta = mdt_get_metadata(&mdtfile, i);
-                    g_string_printf(key, "/%d/meta", n);
-                    gwy_container_set_object_by_name(data, key->str, meta);
-                    g_object_unref(meta);
-
                     n++;
                 }
+
             }
             else if (mdaframe->nDimensions == 3 && mdaframe->nMesurands == 5) {
                 /* Hybrid mode MDA */
@@ -1176,7 +1183,8 @@ mdt_frame_xml_text(GMarkupParseContext *context,
         v = strtol(t, &end, 10);
         if (end != t) {
             value = gwy_flat_enum_to_string(v, metas[i].len,
-                                            metas[i].table, metas[i].names);
+                                            metas[i].table,
+                                            metas[i].names);
             if (value && *value)
                 gwy_container_set_string_by_name(meta, metas[i].name,
                                                  g_strdup(value));
@@ -1654,6 +1662,7 @@ mdt_mda_vars(const guchar *p,
     gwy_debug("DataSize %u\n", DataSize);
     p = recordPointer + headSize;
     frame->title_len = NameSize;
+    frame->xml_len = CommSize;
 
     if (NameSize && (guint)(frame_size - (p - fstart)) >= NameSize) {
         frame->title = g_convert((const gchar*)p, frame->title_len,
@@ -2795,20 +2804,27 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
 }
 
 static GwyBrick *
-extract_raman_image(MDTMDAFrame *dataframe)
+extract_brick(MDTMDAFrame *dataframe, GwyContainer **metadata)
 {
-    GwyBrick *brick;
+    GwyBrick *brick = NULL;
     gint power10x, power10y, power10z, power10w;
     GwySIUnit *siunitx, *siunity, *siunitz, *siunitw;
     const guchar *p, *px;
     const gchar *cunit;
-    gchar *unit;
+    gchar *unit, *external = NULL, *pos, *name, *value;
     gint xres, yres, zres;
     gint i, j, k;
     gdouble xreal, yreal, zscale, wscale, w;
     gdouble *data;
     GwyDataLine *cal;
     MDTMDACalibration *xAxis, *yAxis, *zAxis, *wAxis;
+    MDTXMLComment comment;
+    MDTXMLCommentEntry *entry;
+    GMarkupParser parser = { xmlcomment_start_element,
+                             xmlcomment_end_element,
+                             xmlcomment_parse_text, NULL, NULL };
+    GMarkupParseContext *context;
+    GError *err = NULL;
 
     xAxis = &dataframe->dimensions[0];
     yAxis = &dataframe->dimensions[1];
@@ -2816,7 +2832,40 @@ extract_raman_image(MDTMDAFrame *dataframe)
     wAxis = &dataframe->mesurands[0];
     xres  = (xAxis->maxIndex - xAxis->minIndex + 1);
     yres  = (yAxis->maxIndex - yAxis->minIndex + 1);
-    zres  = 1024;
+    zres  = 1024; // FIXME
+
+    comment.path = g_string_new(NULL);
+    comment.entries = g_array_new(FALSE, FALSE,
+                                  sizeof(MDTXMLCommentEntry*));
+    context = g_markup_parse_context_new(&parser, TREAT_CDATA_AS_TEXT,
+                                         &comment, NULL);
+    if (!g_markup_parse_context_parse(context,
+                                      dataframe->xmlstuff, -1, &err)
+        || !g_markup_parse_context_end_parse(context, &err)) {
+        /* Error in parsing xmlcomment,
+         * better to fail here than crash entire gwyddion
+         * if data are external */
+        g_clear_error(&err);
+        g_markup_parse_context_free(context);
+        g_string_free(comment.path, TRUE);
+        g_array_free(comment.entries, TRUE);
+        goto fail;
+    }
+    g_markup_parse_context_free(context);
+    g_string_free(comment.path, TRUE);
+
+    *metadata = gwy_container_new();
+    for (i = 0; i < comment.entries->len; i++) {
+        entry = g_array_index(comment.entries, MDTXMLCommentEntry*, i);
+        if (g_strcmp0(entry->value, "")) {
+            pos = strrchr(entry->name, '/');
+            name = g_strdup(pos + 1);
+            value = g_strdup(entry->value);
+            gwy_debug("%s = %s\n", name, value);
+            gwy_container_set_string_by_name(*metadata, name, value);
+        }
+    }
+    g_array_free(comment.entries, TRUE);
 
     if (xAxis->unit && xAxis->unitLen) {
         unit = g_strndup(xAxis->unit, xAxis->unitLen);
@@ -2880,7 +2929,7 @@ extract_raman_image(MDTMDAFrame *dataframe)
                           yreal * yres,
                           zscale * zres,
                           TRUE);
-
+    /*
     data = gwy_brick_get_data(brick);
 
     for (k = 0; k < zres; k++) {
@@ -2902,6 +2951,7 @@ extract_raman_image(MDTMDAFrame *dataframe)
     for (k = 0; k < zres; k++) {
         *(data++) = zscale * (gdouble)gwy_get_gfloat_le(&px);
     }
+    */
     gwy_data_line_set_si_unit_y(cal, siunitz);
     gwy_brick_set_zcalibration(brick, cal);
 
@@ -2916,6 +2966,8 @@ extract_raman_image(MDTMDAFrame *dataframe)
     g_object_unref(siunity);
     g_object_unref(siunitz);
     g_object_unref(siunitw);
+
+    fail:
 
     return brick;
 }
