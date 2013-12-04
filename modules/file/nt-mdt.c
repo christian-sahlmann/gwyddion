@@ -808,7 +808,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NT-MDT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.17",
+    "0.18",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1008,7 +1008,7 @@ mdt_load(const gchar *filename,
                 gwy_debug("dim = %d mes = %d\n",
                 mdaframe->nDimensions, mdaframe->nMesurands);
             }
-    
+
             g_free(mdaframe->dimensions);
             g_free(mdaframe->mesurands);
             g_free(mdaframe->xmlstuff);
@@ -2958,16 +2958,19 @@ extract_brick(MDTMDAFrame *dataframe,
     }
     */
 
-    if (!axes_order) { /* Old raman images or hybrid frames has XY first */
-        xAxis = &dataframe->dimensions[0];
-        yAxis = &dataframe->dimensions[1];
-        zAxis = &dataframe->dimensions[2];
-        wAxis = &dataframe->mesurands[0];
-    }
-    else { /* new software is writing Z first */
+    if ((frame_type)
+        && g_str_has_prefix(frame_type, "Spectra2DFullSpectrum")) {
+        /* new software is writing Z first */
         xAxis = &dataframe->dimensions[1];
         yAxis = &dataframe->dimensions[2];
         zAxis = &dataframe->dimensions[0];
+        wAxis = &dataframe->mesurands[0];
+    }
+    else {
+        /* Old raman images or hybrid frames has XY first */
+        xAxis = &dataframe->dimensions[0];
+        yAxis = &dataframe->dimensions[1];
+        zAxis = &dataframe->dimensions[2];
         wAxis = &dataframe->mesurands[0];
     }
 
@@ -3045,27 +3048,47 @@ extract_brick(MDTMDAFrame *dataframe,
         p += k * sizeof(gfloat);
         for (i = 0; i < yres; i++)
             for (j = 0; j < xres; j++) {
-                if ((!ext_name) || (p - base < size2)) {
+                if ((!ext_name) || (p - base <= size2)) {
                     w = (gdouble)gwy_get_gfloat_le(&p);
                     *(data++) = w * wscale;
                     p += (zres - 1) * sizeof(gfloat);
                 }
             }
     }
-    /* calibration
-    p = base;
-    px = p + xres * yres * zres * sizeof(gfloat);
-    cal = gwy_data_line_new(zres, zres, FALSE);
-    data = gwy_data_line_get_data(cal);
-    for (k = 0; k < zres; k++) {
-        *(data++) = zscale * (gdouble)gwy_get_gfloat_le(&px);
+
+    if (!frame_type) { /* FIXME: old spectrometers only */
+        /* Read nm scale as calibration for Raman images */
+
+        g_object_unref(siunitz);
+        zAxis = &dataframe->mesurands[1];
+        if (zAxis->unit && zAxis->unitLen) {
+            unit = g_strndup(zAxis->unit, zAxis->unitLen);
+            siunitz = gwy_si_unit_new_parse(unit, &power10z);
+            g_free(unit);
+        }
+        else {
+            cunit = gwy_flat_enum_to_string(unitCodeForSiCode(zAxis->siUnit),
+                                            G_N_ELEMENTS(mdt_units),
+                                            mdt_units, mdt_units_name);
+            siunitz = gwy_si_unit_new_parse(cunit, &power10z);
+        }
+        gwy_debug("zcal unit power %d", power10z);
+        zscale = pow10(power10z) * zAxis->scale;
+
+        p = dataframe->image;
+        px = p + xres * yres * zres * sizeof(gfloat);
+
+        cal = gwy_data_line_new(zres, zres, FALSE);
+        data = gwy_data_line_get_data(cal);
+        for (k = 0; k < zres; k++) {
+            *(data++) = zscale * (gdouble)gwy_get_gfloat_le(&px);
+        }
+
+        gwy_data_line_set_si_unit_y(cal, siunitz);
+        gwy_brick_set_zcalibration(brick, cal);
+
+        g_object_unref(cal);
     }
-
-    gwy_data_line_set_si_unit_y(cal, siunitz);
-    gwy_brick_set_zcalibration(brick, cal);
-
-    g_object_unref(cal);
-    */
 
     gwy_brick_set_si_unit_x(brick, siunitx);
     gwy_brick_set_si_unit_y(brick, siunity);
