@@ -3056,7 +3056,9 @@ extract_brick(MDTMDAFrame *dataframe,
             }
     }
 
-    if (!frame_type) { /* FIXME: old spectrometers only */
+    if ((!frame_type)
+        || g_str_has_prefix(frame_type, "Spectra2DFullSpectrum")
+        && (dataframe->nMesurands > 1)) {
         /* Read nm scale as calibration for Raman images */
 
         g_object_unref(siunitz);
@@ -3075,8 +3077,12 @@ extract_brick(MDTMDAFrame *dataframe,
         gwy_debug("zcal unit power %d", power10z);
         zscale = pow10(power10z) * zAxis->scale;
 
-        p = dataframe->image;
-        px = p + xres * yres * zres * sizeof(gfloat);
+        if (ext_name) {
+            px = dataframe->image;
+        }
+        else {
+            px = dataframe->image + xres * yres * zres * sizeof(gfloat);
+        }
 
         cal = gwy_data_line_new(zres, zres, FALSE);
         data = gwy_data_line_get_data(cal);
