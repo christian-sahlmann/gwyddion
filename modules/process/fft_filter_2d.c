@@ -513,7 +513,7 @@ run_dialog(ControlsType *controls)
     gwy_radio_buttons_set_current(controls->mode, controls->edit_mode);
 
     /* Remaining controls: */
-    hbox2 = gtk_vbox_new(FALSE, 4);
+    hbox2 = gtk_vbox_new(FALSE, 0);
     gtk_table_attach(GTK_TABLE(table), hbox2, 1, 2, row, row+3,
                      GTK_EXPAND | GTK_FILL, 0, 4, 0);
 
