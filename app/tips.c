@@ -222,7 +222,7 @@ static const StartupTip tips[] = {
     },
     {
         GTK_STOCK_INDEX,
-        N_("Meta → Show Data Browser brings back a closed Data Browser."),
+        N_("Info → Show Data Browser brings back a closed Data Browser."),
     },
     {
         GTK_STOCK_EDIT,
