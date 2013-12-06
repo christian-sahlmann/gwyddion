@@ -138,13 +138,16 @@ static const StartupTip tips[] = {
            "have not had a mask before."),
     },
     {
-        NULL,
-        N_("Each channel has its own metadata."),
+        GTK_STOCK_INDEX,
+        N_("Each channel has its own metadata.  Display them by "
+           "clicking with the right mouse button and choosing Metadata "
+           "Browser."),
     },
     {
         GTK_STOCK_INDEX,
-        N_("Meta → Metadata Browser displays metadata (auxiliary information) "
-           "of channels and allows editing or exporting to a text file."),
+        N_("Each volume data have their own metadata.  Display them by "
+           "clicking with the right mouse button and choosing Metadata "
+           "Browser."),
     },
     /* 1D Views */
     {

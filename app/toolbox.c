@@ -69,7 +69,7 @@ typedef struct {
     GwyMenuSensFlags sens;
 } Action;
 
-static GtkWidget* gwy_app_menu_create_meta_menu(GtkAccelGroup *accel_group);
+static GtkWidget* gwy_app_menu_create_info_menu(GtkAccelGroup *accel_group);
 static GtkWidget* gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group);
 static GtkWidget* gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group);
 static void       gwy_app_toolbox_create_group (GtkBox *box,
@@ -634,7 +634,7 @@ gwy_app_toolbox_create(void)
     toolbox_add_menubar(container, menu, _("_Volume Data"));
 
     toolbox_add_menubar(container,
-                        gwy_app_menu_create_meta_menu(accel_group), _("_Meta"));
+                        gwy_app_menu_create_info_menu(accel_group), _("_Info"));
 
     /***************************************************************/
 
@@ -665,7 +665,7 @@ gwy_app_toolbox_create(void)
 
 /*************************************************************************/
 static GtkWidget*
-gwy_app_menu_create_meta_menu(GtkAccelGroup *accel_group)
+gwy_app_menu_create_info_menu(GtkAccelGroup *accel_group)
 {
     static GtkItemFactoryEntry menu_items[] = {
         {
@@ -710,6 +710,8 @@ gwy_app_menu_create_meta_menu(GtkAccelGroup *accel_group)
     };
     GtkItemFactory *item_factory;
 
+    /* The menu used to be called Meta.  Keep acceleteror paths and do not
+     * change the name here */
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU, "<meta>", accel_group);
 #ifdef ENABLE_NLS
     gtk_item_factory_set_translate_func(item_factory,
