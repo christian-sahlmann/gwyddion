@@ -2947,14 +2947,14 @@ extract_brick(MDTMDAFrame *dataframe,
     for (i = 0; i < dataframe->nDimensions; i++) {
         fprintf(stderr,"Axis dim%d\n", i);
         xAxis = &dataframe->dimensions[i];
-        fprintf(stderr, "min=%d max=%d dt=%d\n",
-                (gint)xAxis->minIndex, (gint)xAxis->maxIndex, xAxis->dataType);
+        fprintf(stderr, "min=%d max=%d dt=%d unit=%s \n",
+                (gint)xAxis->minIndex, (gint)xAxis->maxIndex, xAxis->dataType, xAxis->unit);
     }
     for (i = 0; i < dataframe->nMesurands; i++) {
         fprintf(stderr,"Axis mes%d\n", i);
         xAxis = &dataframe->mesurands[i];
-        fprintf(stderr, "min=%d max=%d dt=%d\n",
-                (gint)xAxis->minIndex, (gint)xAxis->maxIndex, xAxis->dataType);
+        fprintf(stderr, "min=%d max=%d dt=%d  unit=%s \n",
+                (gint)xAxis->minIndex, (gint)xAxis->maxIndex, xAxis->dataType, xAxis->unit);
     }
     */
 
@@ -3043,21 +3043,37 @@ extract_brick(MDTMDAFrame *dataframe,
 
     data = gwy_brick_get_data(brick);
 
-    for (k = 0; k < zres; k++) {
+    if (g_str_has_prefix(frame_type, "HybridForceVolume")) {
         p = base;
-        p += k * sizeof(gfloat);
         for (i = 0; i < yres; i++)
             for (j = 0; j < xres; j++) {
-                if ((!ext_name) || (p - base <= size2)) {
+                for (k = 0; k < dataframe->nMesurands; k++) {
+                    /* skip generated pixels */
+                    w = (gdouble)gwy_get_gfloat_le(&p);
+                }
+                for (k = 0; k < zres; k++) {
                     w = (gdouble)gwy_get_gfloat_le(&p);
                     *(data++) = w * wscale;
-                    p += (zres - 1) * sizeof(gfloat);
                 }
             }
     }
+    else {
+        for (k = 0; k < zres; k++) {
+            p = base;
+            p += k * sizeof(gfloat);
+            for (i = 0; i < yres; i++)
+                for (j = 0; j < xres; j++) {
+                    if ((!ext_name) || (p - base <= size2)) {
+                        w = (gdouble)gwy_get_gfloat_le(&p);
+                        *(data++) = w * wscale;
+                        p += (zres - 1) * sizeof(gfloat);
+                    }
+                }
+        }
+    }
 
-    if ((!frame_type)
-        || g_str_has_prefix(frame_type, "Spectra2DFullSpectrum")
+    if (((!frame_type)
+        || g_str_has_prefix(frame_type, "Spectra2DFullSpectrum"))
         && (dataframe->nMesurands > 1)) {
         /* Read nm scale as calibration for Raman images */
 
