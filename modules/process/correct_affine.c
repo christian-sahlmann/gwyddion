@@ -18,7 +18,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
@@ -68,6 +68,12 @@ typedef enum {
     IMAGE_CORRECTED,
 } ImageMode;
 
+typedef enum {
+    SCALING_AS_GIVEN,
+    SCALING_PRESERVE_AREA,
+    SCALING_PRESERVE_X,
+} ScalingType;
+
 typedef struct {
     gdouble a1;
     gdouble a2;
@@ -81,6 +87,7 @@ typedef struct {
     gboolean different_lengths;
     gboolean avoid_rotation;
     GwyInterpolationType interp;
+    ScalingType scaling;
     gint preset;
 
     ImageMode image_mode;
@@ -96,6 +103,7 @@ typedef struct {
     GwyContainer *mydata;
     GSList *image_mode;
     GtkWidget *interp;
+    GtkWidget *scaling;
     GwySIValueFormat *vf;
     GwySIValueFormat *vfphi;
     GtkWidget *a1_x;
@@ -137,8 +145,8 @@ static void       init_selection           (GwySelection *selection,
                                             GwyDataField *dfield);
 static void       image_mode_changed       (GtkToggleButton *button,
                                             AffcorControls *controls);
-static void preset_changed(GtkComboBox *combo,
-               AffcorControls *controls);
+static void       preset_changed           (GtkComboBox *combo,
+                                            AffcorControls *controls);
 static void       a1_changed               (AffcorControls *controls,
                                             GtkEntry *entry);
 static void       a2_changed               (AffcorControls *controls,
@@ -150,6 +158,8 @@ static void       different_lengths_toggled(AffcorControls *controls,
 static void       refine                   (AffcorControls *controls);
 static void       selection_changed        (AffcorControls *controls);
 static void       interp_changed           (GtkComboBox *combo,
+                                            AffcorControls *controls);
+static void       scaling_changed          (GtkComboBox *combo,
                                             AffcorControls *controls);
 static void       invalidate               (AffcorControls *controls);
 static gboolean   recalculate              (gpointer user_data);
@@ -174,6 +184,7 @@ static void       matrix_matrix            (gdouble *dest,
                                             const gdouble *src);
 static void       invert_matrix            (gdouble *dest,
                                             const gdouble *src);
+static gdouble    matrix_det               (const gdouble *m);
 static void       affcor_load_args         (GwyContainer *container,
                                             AffcorArgs *args);
 static void       affcor_save_args         (GwyContainer *container,
@@ -183,13 +194,13 @@ static void       affcor_sanitize_args     (AffcorArgs *args);
 static const AffcorArgs affcor_defaults = {
     1.0, 1.0, 90.0, FALSE,
     TRUE,
-    GWY_INTERPOLATION_LINEAR,
+    GWY_INTERPOLATION_LINEAR, SCALING_AS_GIVEN,
     -1,
     IMAGE_DATA,
 };
 
 static const LatticePreset lattice_presets[] = {
-    { 2.46e-9, 2.46e-9, G_PI/3.0 },
+    { 2.46e-10, 2.46e-10, G_PI/3.0 },
 };
 
 static GwyModuleInfo module_info = {
@@ -332,7 +343,7 @@ affcor_dialog(AffcorArgs *args,
 
     gtk_container_add(GTK_CONTAINER(alignment), controls.view);
 
-    table = GTK_TABLE(gtk_table_new(15, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(14, 4, FALSE));
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -367,6 +378,8 @@ affcor_dialog(AffcorArgs *args,
     controls.vf
         = gwy_data_field_get_value_format_xy(dfield,
                                              GWY_SI_UNIT_FORMAT_MARKUP, NULL);
+    controls.vf->precision++;
+
     unitphi = gwy_si_unit_new("deg");
     controls.vfphi
         = gwy_si_unit_get_format_with_resolution(unitphi,
@@ -393,14 +406,12 @@ affcor_dialog(AffcorArgs *args,
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
-    controls.preset = gwy_enum_combo_box_newl(G_CALLBACK(preset_changed),
-                                              &controls,
-                                              args->preset,
-                                              _("User defined"),
-                                              USER_DEFINED_LATTICE,
-                                              "HOPG",
-                                              0,
-                                              NULL);
+    controls.preset
+        = gwy_enum_combo_box_newl(G_CALLBACK(preset_changed), &controls,
+                                  args->preset,
+                                  _("User defined"), USER_DEFINED_LATTICE,
+                                  "HOPG", 0,
+                                  NULL);
     gtk_table_attach(GTK_TABLE(table), controls.preset,
                      2, 5, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.preset);
@@ -450,11 +461,27 @@ affcor_dialog(AffcorArgs *args,
 
     controls.interp
         = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
-                                 G_CALLBACK(interp_changed),
-                                 &controls,
-                                 controls.args->interp, TRUE);
+                                 G_CALLBACK(interp_changed), &controls,
+                                 args->interp, TRUE);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.interp);
     gtk_table_attach(GTK_TABLE(table), controls.interp,
+                     2, 5, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("_Scaling:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
+
+    controls.scaling
+        = gwy_enum_combo_box_newl(G_CALLBACK(scaling_changed), &controls,
+                                  args->scaling,
+                                  _("Exactly as specified"), SCALING_AS_GIVEN,
+                                  _("Preserve area"), SCALING_PRESERVE_AREA,
+                                  _("Preserve X scale"), SCALING_PRESERVE_X,
+                                  NULL);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.scaling);
+    gtk_table_attach(GTK_TABLE(table), controls.scaling,
                      2, 5, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
@@ -925,6 +952,14 @@ interp_changed(GtkComboBox *combo,
 }
 
 static void
+scaling_changed(GtkComboBox *combo,
+                AffcorControls *controls)
+{
+    controls->args->scaling = gwy_enum_combo_box_get_active(combo);
+    invalidate(controls);
+}
+
+static void
 invalidate(AffcorControls *controls)
 {
     controls->calculated = FALSE;
@@ -952,9 +987,9 @@ do_correction(AffcorControls *controls)
 {
     AffcorArgs *args = controls->args;
     GwyDataField *dfield, *corrected;
-    gdouble dx, dy;
+    gdouble dx, dy, q = 1.0;
     gdouble a1a2_corr[4], a1a2[4], m[6], vmax[2], tmp[4];
-    guint xres, yres;
+    guint xres, yres, i;
 
     gwy_selection_get_object(controls->selection, 0, a1a2);
     gwy_debug("a1a2 %g %g %g %g", a1a2[0], a1a2[1], a1a2[2], a1a2[3]);
@@ -985,14 +1020,13 @@ do_correction(AffcorControls *controls)
         matrix_matrix(m, tmp, m);
     }
 
-    tmp[0] = a1a2[0];
-    tmp[1] = a1a2[1];
-    matrix_vector(tmp, m, tmp);
-    gwy_debug("a1' %g %g", tmp[0], tmp[1]);
-    tmp[0] = a1a2[2];
-    tmp[1] = a1a2[3];
-    matrix_vector(tmp, m, tmp);
-    gwy_debug("a2' %g %g", tmp[0], tmp[1]);
+    if (args->scaling == SCALING_PRESERVE_AREA)
+        q = 1.0/sqrt(matrix_det(m));
+    else if (args->scaling == SCALING_PRESERVE_X)
+        q = 1.0/hypot(m[0], m[2]);
+
+    for (i = 0; i < 4; i++)
+        m[i] *= q;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
@@ -1230,7 +1264,7 @@ static void
 invert_matrix(gdouble *dest,
               const gdouble *src)
 {
-    gdouble D = src[0]*src[3] - src[1]*src[2];
+    gdouble D = matrix_det(src);
     gdouble xy[4];
 
     gwy_debug("D %g", D);
@@ -1244,21 +1278,30 @@ invert_matrix(gdouble *dest,
     dest[3] = xy[3];
 }
 
+static gdouble
+matrix_det(const gdouble *m)
+{
+    return m[0]*m[3] - m[1]*m[2];
+}
+
+static const gchar preset_key[]            = "/module/correct_affine/preset";
 static const gchar a1_key[]                = "/module/correct_affine/a1";
 static const gchar a2_key[]                = "/module/correct_affine/a2";
 static const gchar phi_key[]               = "/module/correct_affine/phi";
 static const gchar different_lengths_key[] = "/module/correct_affine/different-lengths";
 static const gchar interp_key[]            = "/module/correct_affine/interpolation";
-static const gchar preset_key[]            = "/module/correct_affine/presetolation";
+static const gchar scaling_key[]           = "/module/correct_affine/scaling";
 
 static void
 affcor_sanitize_args(AffcorArgs *args)
 {
     args->interp = gwy_enum_sanitize_value(args->interp,
                                            GWY_TYPE_INTERPOLATION_TYPE);
+    args->scaling = MIN(args->scaling, SCALING_PRESERVE_X);
     args->preset = CLAMP(args->preset,
                          USER_DEFINED_LATTICE,
                          (gint)G_N_ELEMENTS(lattice_presets)-1);
+
     if (args->preset == USER_DEFINED_LATTICE) {
         args->different_lengths = !!args->different_lengths;
 
@@ -1295,6 +1338,7 @@ affcor_load_args(GwyContainer *container,
     gwy_container_gis_boolean_by_name(container, different_lengths_key,
                                       &args->different_lengths);
     gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
+    gwy_container_gis_enum_by_name(container, scaling_key, &args->scaling);
     gwy_container_gis_int32_by_name(container, preset_key, &args->preset);
 
     affcor_sanitize_args(args);
@@ -1310,6 +1354,7 @@ affcor_save_args(GwyContainer *container,
     gwy_container_set_boolean_by_name(container, different_lengths_key,
                                       args->different_lengths);
     gwy_container_set_enum_by_name(container, interp_key, args->interp);
+    gwy_container_set_enum_by_name(container, scaling_key, args->scaling);
     gwy_container_set_int32_by_name(container, preset_key, args->preset);
 }
 
