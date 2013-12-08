@@ -2869,7 +2869,7 @@ extract_brick(MDTMDAFrame *dataframe,
     gsize size2;
     gchar *ext_name = NULL, *axes_order = NULL, *frame_type = NULL;
     gint xres, yres, zres;
-    gint i, j, k;
+    gint i, j, k, nmes;
     gdouble xreal, yreal, zscale, wscale, w;
     gdouble *data;
     GwyDataLine *cal;
@@ -2905,25 +2905,26 @@ extract_brick(MDTMDAFrame *dataframe,
     *metadata = gwy_container_new();
     for (i = 0; i < comment.entries->len; i++) {
         entry = g_array_index(comment.entries, MDTXMLCommentEntry*, i);
-        if (!g_strcmp0(entry->name,
-                       "/FrameComment/Parameters/FrameType")) {
+        if (entry->name && gwy_strequal(entry->name,
+                                "/FrameComment/Parameters/FrameType")) {
             frame_type = g_strdup(entry->value);
         }
-        else if (!g_strcmp0(entry->name,
-                            "/FrameComment/Parameters/Data/ExternalDataFileName")) {
+        else if (entry->name && gwy_strequal(entry->name,
+                "/FrameComment/Parameters/Data/ExternalDataFileName")) {
             ext_name = g_strdup(entry->value);
         }
-        else if (!g_strcmp0(entry->name,
-                            "/FrameComment/Parameters/Measurement/Spectra/Scanning/AxesDirections")) {
+        else if (entry->name && gwy_strequal(entry->name,
+                 "/FrameComment/Parameters/Measurement/Spectra/Scanning/AxesDirections")) {
             axes_order = g_strdup(entry->value);
         }
 
-        if (g_strcmp0(entry->value, "")) {
+        if (entry->value && !gwy_strequal(entry->value, "")) {
             pos = strrchr(entry->name, '/');
             name = g_strdup(pos + 1);
             value = g_strdup(entry->value);
             gwy_debug("%s = %s\n", name, value);
             gwy_container_set_string_by_name(*metadata, name, value);
+            g_free(name);
         }
     }
     g_array_free(comment.entries, TRUE);
@@ -3043,19 +3044,20 @@ extract_brick(MDTMDAFrame *dataframe,
 
     data = gwy_brick_get_data(brick);
 
+    nmes = dataframe->nMesurands;
     if (g_str_has_prefix(frame_type, "HybridForceVolume")) {
-        p = base;
-        for (i = 0; i < yres; i++)
-            for (j = 0; j < xres; j++) {
-                for (k = 0; k < dataframe->nMesurands; k++) {
-                    /* skip generated pixels */
-                    w = (gdouble)gwy_get_gfloat_le(&p);
+        for (k = 0; k < zres; k++) {
+            p = base;
+            p += nmes + k * sizeof(gfloat);
+            for (i = 0; i < yres; i++)
+                for (j = 0; j < xres; j++) {
+                    if ((!ext_name) || (p - base <= size2)) {
+                        w = (gdouble)gwy_get_gfloat_le(&p);
+                        *(data++) = w * wscale;
+                        p += (zres + nmes - 1) * sizeof(gfloat);
+                    }
                 }
-                for (k = 0; k < zres; k++) {
-                    w = (gdouble)gwy_get_gfloat_le(&p);
-                    *(data++) = w * wscale;
-                }
-            }
+        }
     }
     else {
         for (k = 0; k < zres; k++) {
