@@ -46,6 +46,7 @@ enum {
 
 enum {
     RESPONSE_RESET = 1,
+    USER_DEFINED_LATTICE = -1,
 };
 
 enum {
@@ -71,9 +72,16 @@ typedef struct {
     gdouble a1;
     gdouble a2;
     gdouble phi;
+} LatticePreset;
+
+typedef struct {
+    gdouble a1;
+    gdouble a2;
+    gdouble phi;
     gboolean different_lengths;
     gboolean avoid_rotation;
     GwyInterpolationType interp;
+    gint preset;
 
     ImageMode image_mode;
 } AffcorArgs;
@@ -100,6 +108,7 @@ typedef struct {
     GtkWidget *a2_phi;
     GtkWidget *phi;
     GtkWidget *refine;
+    GtkWidget *preset;
     GtkWidget *a1_corr;
     GtkWidget *different_lengths;
     GtkWidget *a2_corr;
@@ -128,6 +137,8 @@ static void       init_selection           (GwySelection *selection,
                                             GwyDataField *dfield);
 static void       image_mode_changed       (GtkToggleButton *button,
                                             AffcorControls *controls);
+static void preset_changed(GtkComboBox *combo,
+               AffcorControls *controls);
 static void       a1_changed               (AffcorControls *controls,
                                             GtkEntry *entry);
 static void       a2_changed               (AffcorControls *controls,
@@ -173,7 +184,12 @@ static const AffcorArgs affcor_defaults = {
     1.0, 1.0, 90.0, FALSE,
     TRUE,
     GWY_INTERPOLATION_LINEAR,
+    -1,
     IMAGE_DATA,
+};
+
+static const LatticePreset lattice_presets[] = {
+    { 2.46e-9, 2.46e-9, G_PI/3.0 },
 };
 
 static GwyModuleInfo module_info = {
@@ -228,7 +244,7 @@ affcor_dialog(AffcorArgs *args,
               GwyDataField *dfield,
               gint id)
 {
-    GtkWidget *hbox, *label, *button, *lattable;
+    GtkWidget *hbox, *label, *button, *lattable, *alignment;
     GtkDialog *dialog;
     GtkTable *table;
     GwyDataField *acf, *tmp, *corrected;
@@ -289,6 +305,9 @@ affcor_dialog(AffcorArgs *args,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
 
+    alignment = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
+    gtk_box_pack_start(GTK_BOX(hbox), alignment, FALSE, FALSE, 4);
+
     controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
     g_object_set(layer,
@@ -311,7 +330,7 @@ affcor_dialog(AffcorArgs *args,
     g_signal_connect_swapped(controls.selection, "changed",
                              G_CALLBACK(selection_changed), &controls);
 
-    gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
+    gtk_container_add(GTK_CONTAINER(alignment), controls.view);
 
     table = GTK_TABLE(gtk_table_new(15, 4, FALSE));
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
@@ -323,7 +342,7 @@ affcor_dialog(AffcorArgs *args,
     label = gtk_label_new(_("Preview:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 4, row, row+1, GTK_FILL, 0, 0, 0);
+                     0, 5, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     controls.image_mode
@@ -342,7 +361,7 @@ affcor_dialog(AffcorArgs *args,
 
     label = gwy_label_new_header(_("Lattice Vectors"));
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 4, row, row+1, GTK_FILL, 0, 0, 0);
+                     0, 5, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     controls.vf
@@ -357,7 +376,7 @@ affcor_dialog(AffcorArgs *args,
 
     lattable = make_lattice_table(&controls);
     gtk_table_attach(GTK_TABLE(table), lattable,
-                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+                     0, 5, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(controls.refine, "clicked",
                              G_CALLBACK(refine), &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
@@ -366,7 +385,25 @@ affcor_dialog(AffcorArgs *args,
     /* TRANSLATORS: Correct is an adjective here. */
     label = gwy_label_new_header(_("Correct Lattice"));
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 4, row, row+1, GTK_FILL, 0, 0, 0);
+                     0, 5, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("_Lattice type:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
+
+    controls.preset = gwy_enum_combo_box_newl(G_CALLBACK(preset_changed),
+                                              &controls,
+                                              args->preset,
+                                              _("User defined"),
+                                              USER_DEFINED_LATTICE,
+                                              "HOPG",
+                                              0,
+                                              NULL);
+    gtk_table_attach(GTK_TABLE(table), controls.preset,
+                     2, 5, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.preset);
     row++;
 
     controls.a1_corr = add_lattice_entry(table, "a<sub>1</sub>:", args->a1,
@@ -377,15 +414,19 @@ affcor_dialog(AffcorArgs *args,
 
     controls.different_lengths
         = gtk_check_button_new_with_mnemonic(_("_Different lengths"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.different_lengths),
+                                 args->different_lengths);
+    gwy_sensitivity_group_add_widget(controls.sens, controls.different_lengths,
+                                     SENS_USER_LATTICE);
     gtk_table_attach(GTK_TABLE(table), controls.different_lengths,
-                     0, 4, row, row+1, GTK_FILL, 0, 0, 0);
+                     3, 5, row, row+1, GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(controls.different_lengths, "toggled",
                              G_CALLBACK(different_lengths_toggled), &controls);
-    row++;
 
     controls.a2_corr = add_lattice_entry(table, "a<sub>2</sub>:", args->a2,
                                          controls.sens,
-                                         SENS_USER_LATTICE | SENS_DIFFERENT_LENGTHS,
+                                         SENS_USER_LATTICE
+                                         | SENS_DIFFERENT_LENGTHS,
                                          &row, controls.vf);
     g_signal_connect_swapped(controls.a2_corr, "changed",
                              G_CALLBACK(a2_changed), &controls);
@@ -395,10 +436,11 @@ affcor_dialog(AffcorArgs *args,
                                           &row, controls.vfphi);
     g_signal_connect_swapped(controls.phi_corr, "changed",
                              G_CALLBACK(phi_changed), &controls);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
     label = gwy_label_new_header(_("Options"));
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 4, row, row+1, GTK_FILL, 0, 0, 0);
+                     0, 5, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     label = gtk_label_new_with_mnemonic(_("_Interpolation type:"));
@@ -413,16 +455,14 @@ affcor_dialog(AffcorArgs *args,
                                  controls.args->interp, TRUE);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.interp);
     gtk_table_attach(GTK_TABLE(table), controls.interp,
-                     2, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+                     2, 5, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     init_selection(controls.selection, dfield);
-    flags = SENS_USER_LATTICE;
-    if (args->different_lengths)
-        flags |= SENS_DIFFERENT_LENGTHS;
+    flags = args->different_lengths ? SENS_DIFFERENT_LENGTHS : 0;
     gwy_sensitivity_group_set_state(controls.sens,
-                                    SENS_USER_LATTICE | SENS_DIFFERENT_LENGTHS,
-                                    flags);
+                                    SENS_DIFFERENT_LENGTHS, flags);
+    preset_changed(GTK_COMBO_BOX(controls.preset), &controls);
 
     gtk_widget_show_all(controls.dialog);
     do {
@@ -659,6 +699,37 @@ image_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
 }
 
 static void
+preset_changed(GtkComboBox *combo,
+               AffcorControls *controls)
+{
+    AffcorArgs *args = controls->args;
+    const LatticePreset *preset;
+    gboolean different_lengths;
+    GString *str;
+
+    args->preset = gwy_enum_combo_box_get_active(combo);
+    if (args->preset == USER_DEFINED_LATTICE) {
+        gwy_sensitivity_group_set_state(controls->sens,
+                                        SENS_USER_LATTICE, SENS_USER_LATTICE);
+        return;
+    }
+
+    preset = lattice_presets + args->preset;
+    different_lengths = (preset->a1 != preset->a2);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->different_lengths),
+                                 different_lengths);
+
+    str = g_string_new(NULL);
+    g_string_printf(str, "%g", preset->a1/controls->vf->magnitude);
+    gtk_entry_set_text(GTK_ENTRY(controls->a1_corr), str->str);
+    g_string_printf(str, "%g", preset->a2/controls->vf->magnitude);
+    gtk_entry_set_text(GTK_ENTRY(controls->a2_corr), str->str);
+    g_string_free(str, TRUE);
+
+    gwy_sensitivity_group_set_state(controls->sens, SENS_USER_LATTICE, 0);
+}
+
+static void
 a1_changed(AffcorControls *controls,
            GtkEntry *entry)
 {
@@ -711,7 +782,7 @@ phi_changed(AffcorControls *controls,
 
     buf = gtk_entry_get_text(entry);
     args->phi = g_strtod(buf, NULL)*G_PI/180.0;
-    if (args->phi > 1e-6 && args->phi < G_PI - 1e-6)
+    if (args->phi > 1e-3 && args->phi < G_PI - 1e-3)
         controls->invalid_corr &= ~INVALID_PHI;
     else
         controls->invalid_corr |= INVALID_PHI;
@@ -834,8 +905,8 @@ selection_changed(AffcorControls *controls)
               xy[1]/gwy_data_field_get_ymeasure(dfield)) >= 0.9
         && hypot(xy[2]/gwy_data_field_get_xmeasure(dfield),
                  xy[3]/gwy_data_field_get_ymeasure(dfield)) >= 0.9
-        && phi >= 1e-6
-        && phi <= G_PI - 1e-6)
+        && phi >= 1e-3
+        && phi <= G_PI - 1e-3)
         controls->invalid_corr &= ~INVALID_SEL;
     else
         controls->invalid_corr |= INVALID_SEL;
@@ -847,7 +918,7 @@ selection_changed(AffcorControls *controls)
 
 static void
 interp_changed(GtkComboBox *combo,
-                      AffcorControls *controls)
+               AffcorControls *controls)
 {
     controls->args->interp = gwy_enum_combo_box_get_active(combo);
     invalidate(controls);
@@ -892,6 +963,8 @@ do_correction(AffcorControls *controls)
     a1a2_corr[2] = args->a2 * controls->vf->magnitude * cos(args->phi);
     a1a2_corr[3] = -args->a2 * controls->vf->magnitude * sin(args->phi);
     gwy_debug("a1a2_corr %g %g %g %g", a1a2_corr[0], a1a2_corr[1], a1a2_corr[2], a1a2_corr[3]);
+    /* This is an approximate rotation correction to get the base more or less
+     * oriented in the plane as expected and not upside down. */
     if (args->avoid_rotation) {
         gdouble alpha = atan2(-a1a2[1], a1a2[0]);
         tmp[0] = tmp[3] = cos(alpha);
@@ -902,6 +975,15 @@ do_correction(AffcorControls *controls)
     }
     solve_transform_real(a1a2, a1a2_corr, m);
     gwy_debug("m %g %g %g %g", m[0], m[1], m[2], m[3]);
+
+    /* This is the exact rotation correction. */
+    if (args->avoid_rotation) {
+        gdouble alpha = atan2(m[2], m[0]);
+        tmp[0] = tmp[3] = cos(alpha);
+        tmp[1] = sin(alpha);
+        tmp[2] = -sin(alpha);
+        matrix_matrix(m, tmp, m);
+    }
 
     tmp[0] = a1a2[0];
     tmp[1] = a1a2[1];
@@ -1167,32 +1249,38 @@ static const gchar a2_key[]                = "/module/correct_affine/a2";
 static const gchar phi_key[]               = "/module/correct_affine/phi";
 static const gchar different_lengths_key[] = "/module/correct_affine/different-lengths";
 static const gchar interp_key[]            = "/module/correct_affine/interpolation";
+static const gchar preset_key[]            = "/module/correct_affine/presetolation";
 
 static void
 affcor_sanitize_args(AffcorArgs *args)
 {
     args->interp = gwy_enum_sanitize_value(args->interp,
                                            GWY_TYPE_INTERPOLATION_TYPE);
-    args->different_lengths = !!args->different_lengths;
+    args->preset = CLAMP(args->preset,
+                         USER_DEFINED_LATTICE,
+                         (gint)G_N_ELEMENTS(lattice_presets)-1);
+    if (args->preset == USER_DEFINED_LATTICE) {
+        args->different_lengths = !!args->different_lengths;
 
-    if (!(args->a1 > 0.0))
-        args->a1 = 1.0;
+        if (!(args->a1 > 0.0))
+            args->a1 = 1.0;
 
-    if (args->different_lengths) {
-        if (!(args->a2 > 0.0))
-            args->a2 = 1.0;
+        if (args->different_lengths) {
+            if (!(args->a2 > 0.0))
+                args->a2 = 1.0;
+        }
+        else
+            args->a2 = args->a1;
+
+        args->phi = fmod(args->phi, 2.0*G_PI);
+        if (args->phi < 0.0)
+            args->phi += 2.0*G_PI;
+        if (args->phi > G_PI)
+            args->phi -= G_PI;
+
+        if (args->phi < 1e-3 || args->phi > G_PI - 1e-3)
+            args->phi = 0.5*G_PI;
     }
-    else
-        args->a2 = args->a1;
-
-    args->phi = fmod(args->phi, 2.0*G_PI);
-    if (args->phi < 0.0)
-        args->phi += 2.0*G_PI;
-    if (args->phi > G_PI)
-        args->phi -= G_PI;
-
-    if (args->phi < 1e-6 || args->phi > G_PI - 1e-6)
-        args->phi = 0.5*G_PI;
 }
 
 static void
@@ -1207,6 +1295,7 @@ affcor_load_args(GwyContainer *container,
     gwy_container_gis_boolean_by_name(container, different_lengths_key,
                                       &args->different_lengths);
     gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
+    gwy_container_gis_int32_by_name(container, preset_key, &args->preset);
 
     affcor_sanitize_args(args);
 }
@@ -1221,6 +1310,7 @@ affcor_save_args(GwyContainer *container,
     gwy_container_set_boolean_by_name(container, different_lengths_key,
                                       args->different_lengths);
     gwy_container_set_enum_by_name(container, interp_key, args->interp);
+    gwy_container_set_int32_by_name(container, preset_key, args->preset);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
