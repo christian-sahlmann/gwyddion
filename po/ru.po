@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2013-12-07 03:58+0100\n"
-"PO-Revision-Date: 2013-12-07 10:47+0300\n"
+"POT-Creation-Date: 2013-12-09 03:58+0100\n"
+"PO-Revision-Date: 2013-12-09 09:27+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -920,7 +920,7 @@ msgstr "точек"
 #: modules/process/calcoefs_new.c:348
 #: modules/process/calibrate.c:382
 #: modules/process/col_synth.c:301
-#: modules/process/correct_affine.c:248
+#: modules/process/correct_affine.c:275
 #: modules/process/curvature.c:603
 #: modules/process/cwt.c:133
 #: modules/process/deposit_synth.c:361
@@ -2704,7 +2704,7 @@ msgstr "Экспортировать текст"
 #: modules/file/rawfile.c:720
 #: modules/file/rawxyz.c:670
 #: modules/process/calibrate.c:595
-#: modules/process/correct_affine.c:399
+#: modules/process/correct_affine.c:452
 #: modules/process/extend.c:263
 #: modules/process/fft_filter_1d.c:296
 #: modules/process/grain_dist.c:306
@@ -5030,7 +5030,7 @@ msgid "_Value units:"
 msgstr "Единицы измерения _значения:"
 
 #: modules/file/rawxyz.c:674
-#: modules/process/correct_affine.c:404
+#: modules/process/correct_affine.c:457
 #: modules/process/drift.c:301
 #: modules/process/dwt.c:204
 #: modules/process/dwtanisotropy.c:201
@@ -6997,23 +6997,23 @@ msgstr "ГСим"
 msgid "VSym"
 msgstr "ВСим"
 
-#: modules/process/correct_affine.c:182
+#: modules/process/correct_affine.c:209
 msgid "Corrects affine distortion of images by matching image Bravais lattice to the true one."
 msgstr "Исправляет аффинные искажения изображений путём сравнения решетки Браве изображения с реальной."
 
-#: modules/process/correct_affine.c:197
+#: modules/process/correct_affine.c:224
 msgid "/_Correct Data/_Affine Distortion..."
 msgstr "/Исправить _данные/_Аффинное _искажение..."
 
-#: modules/process/correct_affine.c:201
+#: modules/process/correct_affine.c:228
 msgid "Correct affine distortion"
 msgstr "Исправить аффинное искажение"
 
-#: modules/process/correct_affine.c:246
+#: modules/process/correct_affine.c:273
 msgid "Affine Correction"
 msgstr "Аффинная коррекция"
 
-#: modules/process/correct_affine.c:323
+#: modules/process/correct_affine.c:353
 #: modules/process/drift.c:338
 #: modules/process/fit_2d.c:316
 #: modules/process/neural.c:547
@@ -7021,42 +7021,66 @@ msgstr "Аффинная коррекция"
 msgid "Preview:"
 msgstr "Предпросмотр:"
 
-#: modules/process/correct_affine.c:332
+#: modules/process/correct_affine.c:362
 #: modules/tools/grainremover.c:108
 msgid "_Data"
 msgstr "Да_нные"
 
-#: modules/process/correct_affine.c:333
+#: modules/process/correct_affine.c:363
 msgid "2D _ACF"
 msgstr "2D _ACF"
 
-#: modules/process/correct_affine.c:334
+#: modules/process/correct_affine.c:364
 #: modules/process/drift.c:347
 msgid "Correc_ted data"
 msgstr "Ис_правленные данные"
 
-#: modules/process/correct_affine.c:343
+#: modules/process/correct_affine.c:373
 msgid "Lattice Vectors"
 msgstr "Векторы решетки"
 
 #. TRANSLATORS: Correct is an adjective here.
-#: modules/process/correct_affine.c:367
+#: modules/process/correct_affine.c:399
 msgid "Correct Lattice"
 msgstr "Исправить решетку"
 
-#: modules/process/correct_affine.c:379
+#: modules/process/correct_affine.c:404
+msgid "_Lattice type:"
+msgstr "Тип _решетки:"
+
+#: modules/process/correct_affine.c:412
+msgid "User defined"
+msgstr "Пользовательская"
+
+#: modules/process/correct_affine.c:427
 msgid "_Different lengths"
 msgstr "_Различные длины"
 
-#: modules/process/correct_affine.c:499
+#: modules/process/correct_affine.c:471
+msgid "_Scaling:"
+msgstr "_Масштаб:"
+
+#: modules/process/correct_affine.c:479
+msgid "Exactly as specified"
+msgstr "Точно как задано"
+
+#: modules/process/correct_affine.c:480
+msgid "Preserve area"
+msgstr "Сохранять площадь"
+
+#: modules/process/correct_affine.c:481
+msgid "Preserve X scale"
+msgstr "Сохранять масштаб X"
+
+#: modules/process/correct_affine.c:566
 msgid "length"
 msgstr "длина"
 
-#: modules/process/correct_affine.c:506
+#: modules/process/correct_affine.c:573
 msgid "angle"
 msgstr "угол"
 
-#: modules/process/correct_affine.c:567
+#: modules/process/correct_affine.c:634
 msgid "Re_fine"
 msgstr "_Уточнить"
 
