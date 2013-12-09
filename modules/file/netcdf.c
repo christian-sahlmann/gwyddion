@@ -1048,6 +1048,11 @@ create_meta
                                         g_strndup(cdffile.buffer + var->begin,
                                                   var->vsize));
     }
+    if ((siunit = read_real_size(&cdffile, "time",
+                                &real, &power10))) {
+        gwy_container_set_string_by_name(meta, "Scan time",
+                                        g_strdup_printf("%5.2f s", real));
+    }
     /* NOTE: i know this is bad as it's hardware dependent (i.e. only someone
     * using the sranger 2 dsp gets this); but since these details depend in
     * gxsm on the plugin, i see no better option */
