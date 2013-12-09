@@ -2892,7 +2892,7 @@ extract_brick(MDTMDAFrame *dataframe,
         || !g_markup_parse_context_end_parse(context, &err)) {
         /* Error in parsing xmlcomment,
          * better to fail here than crash entire gwyddion
-         * if data are external */
+         * if the data are external */
         g_clear_error(&err);
         g_markup_parse_context_free(context);
         g_string_free(comment.path, TRUE);
@@ -3046,32 +3046,29 @@ extract_brick(MDTMDAFrame *dataframe,
 
     nmes = dataframe->nMesurands;
     if (g_str_has_prefix(frame_type, "HybridForceVolume")) {
-        for (k = 0; k < zres; k++) {
-            p = base;
-            p += nmes + k * sizeof(gfloat);
-            for (i = 0; i < yres; i++)
-                for (j = 0; j < xres; j++) {
+        p = base;
+        for (i = 0; i < yres; i++)
+            for (j = 0; j < xres; j++) {
+                p += (nmes - 1) * sizeof(gfloat);
+                for (k = 0; k < zres; k++) {
                     if ((!ext_name) || (p - base <= size2)) {
                         w = (gdouble)gwy_get_gfloat_le(&p);
-                        *(data++) = w * wscale;
-                        p += (zres + nmes - 1) * sizeof(gfloat);
+                        *(data + k * xres * yres + i * xres + j) = w * wscale;
                     }
                 }
-        }
+            }
     }
     else {
-        for (k = 0; k < zres; k++) {
-            p = base;
-            p += k * sizeof(gfloat);
-            for (i = 0; i < yres; i++)
-                for (j = 0; j < xres; j++) {
+        p = base;
+        for (i = 0; i < yres; i++)
+            for (j = 0; j < xres; j++) {
+                for (k = 0; k < zres; k++) {
                     if ((!ext_name) || (p - base <= size2)) {
                         w = (gdouble)gwy_get_gfloat_le(&p);
-                        *(data++) = w * wscale;
-                        p += (zres - 1) * sizeof(gfloat);
+                        *(data + k * xres * yres + i * xres + j) = w * wscale;
                     }
                 }
-        }
+            }
     }
 
     if (((!frame_type)
