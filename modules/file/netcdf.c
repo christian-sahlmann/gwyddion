@@ -1051,7 +1051,8 @@ create_meta
     if ((siunit = read_real_size(&cdffile, "time",
                                 &real, &power10))) {
         gwy_container_set_string_by_name(meta, "Scan time",
-                                        g_strdup_printf("%5.2f s", real));
+                                         g_strdup_printf("%5.2f s", real));
+        g_object_unref(siunit);
     }
     /* NOTE: i know this is bad as it's hardware dependent (i.e. only someone
     * using the sranger 2 dsp gets this); but since these details depend in
