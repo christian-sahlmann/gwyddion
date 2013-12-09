@@ -264,7 +264,7 @@ affcor_dialog(AffcorArgs *args,
     GwyPixmapLayer *layer;
     GwyVectorLayer *vlayer;
     GwySIUnit *unitphi;
-    guint flags;
+    guint flags, acfwidth, acfheight;
 
     gwy_clear(&controls, 1);
     controls.args = args;
@@ -303,8 +303,10 @@ affcor_dialog(AffcorArgs *args,
     tmp = gwy_data_field_duplicate(dfield);
     gwy_data_field_add(tmp, -gwy_data_field_get_avg(tmp));
     acf = gwy_data_field_new_alike(dfield, FALSE);
+    acfwidth = MIN(dfield->xres/4, PREVIEW_SIZE/2 + (gint)sqrt(dfield->xres));
+    acfheight = MIN(dfield->yres/4, PREVIEW_SIZE/2 + (gint)sqrt(dfield->yres));
     gwy_data_field_area_2dacf(tmp, acf, 0, 0, dfield->xres, dfield->yres,
-                              dfield->xres/4, dfield->yres/4);
+                              MAX(acfwidth, 4), MAX(acfheight, 4));
     g_object_unref(tmp);
 
     gwy_container_set_object_by_name(controls.mydata, "/1/data", acf);
