@@ -753,6 +753,8 @@ preset_changed(GtkComboBox *combo,
     gtk_entry_set_text(GTK_ENTRY(controls->a1_corr), str->str);
     g_string_printf(str, "%g", preset->a2/controls->vf->magnitude);
     gtk_entry_set_text(GTK_ENTRY(controls->a2_corr), str->str);
+    g_string_printf(str, "%g", preset->phi/G_PI*180.0/controls->vfphi->magnitude);
+    gtk_entry_set_text(GTK_ENTRY(controls->phi_corr), str->str);
     g_string_free(str, TRUE);
 
     gwy_sensitivity_group_set_state(controls->sens, SENS_USER_LATTICE, 0);
