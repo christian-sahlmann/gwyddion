@@ -193,12 +193,14 @@ gwy_tiff_load_impl(GwyTIFF *tiff,
     GError *err = NULL;
     const guchar *p;
     guint64 offset, nentries;
+    gsize size;
     guint magic;
 
-    if (!gwy_file_get_contents(filename, &tiff->data, &tiff->size, &err)) {
+    if (!gwy_file_get_contents(filename, &tiff->data, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return FALSE;
     }
+    tiff->size = size;
 
     if (tiff->size < 8) {
         err_TOO_SHORT(error);
