@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2013-12-07 03:58+0100\n"
-"PO-Revision-Date: 2013-12-07 22:58+0100\n"
+"POT-Creation-Date: 2013-12-12 03:58+0100\n"
+"PO-Revision-Date: 2013-12-12 17:36+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "Language: cs\n"
@@ -854,7 +854,7 @@ msgstr "pixelů"
 #: modules/file/pixmap.c:1065 modules/file/pixmap.c:3099
 #: modules/file/rawfile.c:399 modules/process/angle_dist.c:171
 #: modules/process/calcoefs_new.c:348 modules/process/calibrate.c:382
-#: modules/process/col_synth.c:301 modules/process/correct_affine.c:248
+#: modules/process/col_synth.c:301 modules/process/correct_affine.c:275
 #: modules/process/curvature.c:603 modules/process/cwt.c:133
 #: modules/process/deposit_synth.c:361 modules/process/drift.c:241
 #: modules/process/dwt.c:165 modules/process/dwtanisotropy.c:184
@@ -2758,7 +2758,7 @@ msgstr "Export jako text"
 
 #: modules/file/asciiexport.c:273 modules/file/pixmap.c:3202
 #: modules/file/rawfile.c:720 modules/file/rawxyz.c:670
-#: modules/process/calibrate.c:595 modules/process/correct_affine.c:399
+#: modules/process/calibrate.c:595 modules/process/correct_affine.c:454
 #: modules/process/extend.c:263 modules/process/fft_filter_1d.c:296
 #: modules/process/grain_dist.c:306 modules/process/grain_edge.c:270
 #: modules/process/grain_mark.c:344 modules/process/grain_rem_threshold.c:327
@@ -3162,40 +3162,40 @@ msgid ""
 "Data deserialization succeeded, but resulted in an unexpected object %s."
 msgstr "Deserializace dat se podařila, ale výsledkem je neočekávaný objekt %s."
 
-#: modules/file/gwytiff.h:228 modules/file/gwytiff.h:238
+#: modules/file/gwytiff.h:251 modules/file/gwytiff.h:261
 #, c-format
 msgid "TIFF directory %u ended unexpectedly."
 msgstr "Adresář TIFFu č. %u neočekávaně skončil."
 
-#: modules/file/gwytiff.h:359
+#: modules/file/gwytiff.h:385
 msgid "Invalid tag data positions were found."
 msgstr "Vyskytly se neplatné posice dat tagů."
 
-#: modules/file/gwytiff.h:691 modules/file/gwytiff.h:698
-#: modules/file/gwytiff.h:795 modules/file/gwytiff.h:811
+#: modules/file/gwytiff.h:757 modules/file/gwytiff.h:764
+#: modules/file/gwytiff.h:861 modules/file/gwytiff.h:878
 #, c-format
 msgid "Required tag %u was not found."
 msgstr "Nebyl nalezen nezbytný tag %u."
 
-#: modules/file/gwytiff.h:723
+#: modules/file/gwytiff.h:789
 msgid "Non-uniform bits per sample are unsupported."
 msgstr "Nestejné počty bitů na vzorek nejsou podporovány."
 
-#: modules/file/gwytiff.h:750
+#: modules/file/gwytiff.h:816
 #, c-format
 msgid "Compression type %u is not supported."
 msgstr "Komprese typu %u není podporována."
 
-#: modules/file/gwytiff.h:756
+#: modules/file/gwytiff.h:822
 #, c-format
 msgid "Planar configuration %u is not supported."
 msgstr "Planární konfigurace %u není podporována."
 
-#: modules/file/gwytiff.h:768
+#: modules/file/gwytiff.h:834
 msgid "Unsupported sample format"
 msgstr "Nepodporovaný formát vzorku"
 
-#: modules/file/gwytiff.h:837 modules/file/matfile.c:276
+#: modules/file/gwytiff.h:910 modules/file/matfile.c:276
 #: modules/file/matfile.c:298 modules/file/psia.c:349 modules/file/zemax.c:168
 msgid "File is truncated."
 msgstr "Soubor je uříznutý."
@@ -4056,22 +4056,22 @@ msgstr "Načítání souborů rychlých skenů není implementováno (zatím)."
 msgid "Time series order is wrong."
 msgstr "Pořadí časové řady je chybné."
 
-#: modules/file/netcdf.c:1230
+#: modules/file/netcdf.c:1236
 #, c-format
 msgid "File ended unexpectedly inside `%s'."
 msgstr "Soubor neočekávaně skončil uvnitř ‚%s‘."
 
-#: modules/file/netcdf.c:1239
+#: modules/file/netcdf.c:1245
 #, c-format
 msgid "Expected `%s' array or `ABSENT'."
 msgstr "Čekal bych pole ‚%s‘ nebo ‚ABSENT‘."
 
-#: modules/file/netcdf.c:1247
+#: modules/file/netcdf.c:1253
 #, c-format
 msgid "Array `%s' has non-zero number of elements in spite of being absent."
 msgstr "Pole ‚%s‘ má nenulový počet prvků, ačkoli není přítomno."
 
-#: modules/file/netcdf.c:1306
+#: modules/file/netcdf.c:1312
 msgid "More than one record dimension found."
 msgstr "Více než jedna dimenze je ‚record‘."
 
@@ -5016,7 +5016,7 @@ msgstr "_Jednotky rozměrů:"
 msgid "_Value units:"
 msgstr "Jednotky _hodnot:"
 
-#: modules/file/rawxyz.c:674 modules/process/correct_affine.c:404
+#: modules/file/rawxyz.c:674 modules/process/correct_affine.c:459
 #: modules/process/drift.c:301 modules/process/dwt.c:204
 #: modules/process/dwtanisotropy.c:201 modules/process/fft_filter_1d.c:329
 #: modules/process/fft_profile.c:298 modules/process/fractal.c:228
@@ -6862,66 +6862,90 @@ msgstr "HSym"
 msgid "VSym"
 msgstr "VSym"
 
-#: modules/process/correct_affine.c:182
+#: modules/process/correct_affine.c:209
 msgid ""
 "Corrects affine distortion of images by matching image Bravais lattice to "
 "the true one."
 msgstr ""
-"Opravuje affinní pokřivení obrazů pomocí srovnání Bravaisovy mříže obrazu "
-"a skutečné mříže."
+"Opravuje affinní pokřivení obrazů pomocí srovnání Bravaisovy mříže obrazu a "
+"skutečné mříže."
 
-#: modules/process/correct_affine.c:197
+#: modules/process/correct_affine.c:224
 msgid "/_Correct Data/_Affine Distortion..."
 msgstr "/_Korekce dat/_Afinní pokřivení..."
 
-#: modules/process/correct_affine.c:201
+#: modules/process/correct_affine.c:228
 msgid "Correct affine distortion"
 msgstr "Opravit afinní pokřivené"
 
-#: modules/process/correct_affine.c:246
+#: modules/process/correct_affine.c:273
 msgid "Affine Correction"
 msgstr "Afinní pokřivení"
 
-#: modules/process/correct_affine.c:323 modules/process/drift.c:338
+#: modules/process/correct_affine.c:355 modules/process/drift.c:338
 #: modules/process/fit_2d.c:316 modules/process/neural.c:547
 #: modules/process/polydistort.c:296
 msgid "Preview:"
 msgstr "Náhled:"
 
-#: modules/process/correct_affine.c:332 modules/tools/grainremover.c:108
+#: modules/process/correct_affine.c:364 modules/tools/grainremover.c:108
 msgid "_Data"
 msgstr "_Data"
 
-#: modules/process/correct_affine.c:333
+#: modules/process/correct_affine.c:365
 msgid "2D _ACF"
 msgstr "2D _ACF"
 
-#: modules/process/correct_affine.c:334 modules/process/drift.c:347
+#: modules/process/correct_affine.c:366 modules/process/drift.c:347
 msgid "Correc_ted data"
 msgstr "Opravená da_ta"
 
-#: modules/process/correct_affine.c:343
+#: modules/process/correct_affine.c:375
 msgid "Lattice Vectors"
 msgstr "Vektory mříže"
 
 #. TRANSLATORS: Correct is an adjective here.
-#: modules/process/correct_affine.c:367
+#: modules/process/correct_affine.c:401
 msgid "Correct Lattice"
 msgstr "Správná mřížka"
 
-#: modules/process/correct_affine.c:379
+#: modules/process/correct_affine.c:406
+msgid "_Lattice type:"
+msgstr "Typ _mřížky:"
+
+#: modules/process/correct_affine.c:414
+msgid "User defined"
+msgstr "Zadaná uživatelem"
+
+#: modules/process/correct_affine.c:429
 msgid "_Different lengths"
 msgstr "Ro_zdílné délky"
 
-#: modules/process/correct_affine.c:499
+#: modules/process/correct_affine.c:473
+msgid "_Scaling:"
+msgstr "Š_kálování:"
+
+#: modules/process/correct_affine.c:481
+msgid "Exactly as specified"
+msgstr "Přesně jak je zadáno"
+
+#: modules/process/correct_affine.c:482
+msgid "Preserve area"
+msgstr "Zachovat plochu"
+
+#: modules/process/correct_affine.c:483
+msgid "Preserve X scale"
+msgstr "Zachovat škálu X"
+
+#: modules/process/correct_affine.c:568
 msgid "length"
 msgstr "délka"
 
-#: modules/process/correct_affine.c:506
+#: modules/process/correct_affine.c:575
 msgid "angle"
 msgstr "úhel"
 
-#: modules/process/correct_affine.c:567
+#: modules/process/correct_affine.c:636
 msgid "Re_fine"
 msgstr "_Zpřesnit"
 
@@ -11933,4 +11957,3 @@ msgstr "/_Inverze hodnoty"
 #: modules/volume/volume_invert.c:69
 msgid "Invert value in volume data"
 msgstr "Převrátit hodnoty kolem průměru"
-
