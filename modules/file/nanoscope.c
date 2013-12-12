@@ -762,12 +762,11 @@ hash_to_brick(GHashTable *hash, GHashTable *forcelist, GHashTable *scanlist, GHa
     if (!require_keys(scanlist, error, "Scan size", NULL))
         return NULL;
 
-    if (val = g_hash_table_lookup(scanlist, "Capture Mode")) {
+    if ((val = g_hash_table_lookup(scanlist, "Capture Mode"))) {
         if (strstr(val->hard_value_str, "Continuous")) {
             continuous = TRUE;
         }
     }
-
 
     /* scan size */
     val = g_hash_table_lookup(hash, "Data offset");
