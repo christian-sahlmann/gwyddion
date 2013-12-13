@@ -103,7 +103,7 @@ typedef enum {
     MDA_DATA_FLOAT48       = -(6 + 39 * 256),
     MDA_DATA_FLOAT64       = -(8 + 52 * 256),
     MDA_DATA_FLOAT80       = -(10 + 63 * 256),
-    MDAT_DATA_FLOATFIX     = -(8 + 256 * 256)
+    MDA_DATA_FLOATFIX      = -(8 + 256 * 256)
 } MDADataType ;
 
 typedef enum {
@@ -2943,22 +2943,6 @@ extract_brick(MDTMDAFrame *dataframe,
         base = (guchar *)buffer2;
     }
 
-    /*
-    fprintf(stderr, "axes = %s\n", axes_order);
-    for (i = 0; i < dataframe->nDimensions; i++) {
-        fprintf(stderr,"Axis dim%d\n", i);
-        xAxis = &dataframe->dimensions[i];
-        fprintf(stderr, "min=%d max=%d dt=%d unit=%s \n",
-                (gint)xAxis->minIndex, (gint)xAxis->maxIndex, xAxis->dataType, xAxis->unit);
-    }
-    for (i = 0; i < dataframe->nMesurands; i++) {
-        fprintf(stderr,"Axis mes%d\n", i);
-        xAxis = &dataframe->mesurands[i];
-        fprintf(stderr, "min=%d max=%d dt=%d  unit=%s \n",
-                (gint)xAxis->minIndex, (gint)xAxis->maxIndex, xAxis->dataType, xAxis->unit);
-    }
-    */
-
     if ((frame_type)
         && g_str_has_prefix(frame_type, "Spectra2DFullSpectrum")) {
         /* new software is writing Z first */
@@ -2973,6 +2957,11 @@ extract_brick(MDTMDAFrame *dataframe,
         yAxis = &dataframe->dimensions[1];
         zAxis = &dataframe->dimensions[2];
         wAxis = &dataframe->mesurands[0];
+    }
+
+    if (wAxis->dataType != MDA_DATA_FLOAT32) {
+        /* FIXME: other data types unimplemented now */
+        goto fail;
     }
 
     xres  = (xAxis->maxIndex - xAxis->minIndex + 1);
