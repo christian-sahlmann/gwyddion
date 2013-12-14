@@ -1,13 +1,13 @@
 2.34 (0000-00-00)
 Application:
-- Menu integration support in 64 bit OS X application.
-- Settings of 3D view labels are also stored when 3D defaults are saved.
 - It is no longer possible to tear off toolbox submenus.  The tear-off menus
-  were removed as they have been broken for a long time.
+  were removed as they have been broken in Gtk+ for a long time.
 - Seldom used functions (Rotate and Unrotate) were replaced with Dimensions
   & units and Arithmetic in the default toolbox.
 - Menu ‘Meta’ in the toolbox was renamed to ‘Info’.
-- Translations updated: Czech, French, Russian.
+- Menu integration support in 64 bit OS X application.
+- Settings of 3D view labels are also stored when 3D defaults are saved.
+- Translations updated: Czech, French, Italian, Russian.
 
 Libraries:
 - libgwyprocess: A function for affine transformation of data fields was added.
@@ -26,7 +26,10 @@ Modules:
 - WSF file: All key-value pairs in the file header at placed to metadata.
 - NetCDF: Support for multi-layer files was added.
 - Volume show and extract: A possible crash was fixed.
-- NT-MDT: Support for new spectroscopy frames was added.
+- NT-MDT: Support for new spectroscopy frames was added, loading of 4D data
+  from MDA frames improved: hybrid jumping mode, Raman images from 'new
+  solver-next electronics’ era devices, external data storage, metadata parsing
+  from XML.
 - Pygwy: Console is persistent and only one can exist, it has a clear log
   button, gwy syntax highlighting was added, a number of leaks was fixed,
   Python wrappers for file loading and grain numbering were improved.
