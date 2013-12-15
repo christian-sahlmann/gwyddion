@@ -1,4 +1,4 @@
-2.34 (0000-00-00)
+2.34 (2013-12-15)
 Application:
 - It is no longer possible to tear off toolbox submenus.  The tear-off menus
   were removed as they have been broken in Gtk+ for a long time.
