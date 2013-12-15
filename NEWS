@@ -11,6 +11,8 @@ Application:
 
 Libraries:
 - libgwyprocess: A function for affine transformation of data fields was added.
+- libgwydgets: A function to test sensitivity group membership was added.
+- libgwydgets: Pygwy stock icon was added.
 
 Modules:
 - Otsu's thresholding (new): Grain marking using Otsu's method.
