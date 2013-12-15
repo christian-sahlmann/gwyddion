@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2013-12-12 03:58+0100\n"
+"POT-Creation-Date: 2013-12-15 14:29+0100\n"
 "PO-Revision-Date: 2013-12-12 17:36+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -2843,7 +2843,7 @@ msgid "Burleigh exported data (.txt, .bin)"
 msgstr "Burleigh exportovaná data (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:226 modules/file/burleigh_exp.c:267
-#: modules/file/nanoscope.c:1524 modules/file/omicron.c:409
+#: modules/file/nanoscope.c:1523 modules/file/omicron.c:409
 #: modules/file/shimadzu.c:466
 msgid "Missing colon in header line."
 msgstr "V řádku hlavičky schází dvojtečka."
@@ -4005,12 +4005,12 @@ msgstr ""
 msgid "Cannot parse `Scan size' field."
 msgstr "Nedaří se analyzovat položku ‚Scan size‘."
 
-#: modules/file/nanoscope.c:1433 modules/file/nrrdfile.c:1024
+#: modules/file/nanoscope.c:1432 modules/file/nrrdfile.c:1024
 #, c-format
 msgid "Garbage after data sample #%u."
 msgstr "Po datovém vzorku č. %u následují nesmysly."
 
-#: modules/file/nanoscope.c:1514
+#: modules/file/nanoscope.c:1513
 msgid "Truncated header line."
 msgstr "Předčasně ukončený řádek hlavičky."
 
