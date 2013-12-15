@@ -262,7 +262,7 @@ err_CDF_INTEGRITY(GError **error, const gchar *field_name)
  * Should move eventually to a public location, but for now only used here
  * and mostly untested.
  **/
-void
+static void
 gwy_brick_invert(GwyBrick *brick,
                       gboolean x,
                       gboolean y,
