@@ -42,7 +42,7 @@ Modules:
   should be read with correct value offsets (i.e. not just scale) now.
 
 Other:
-- Three new false colour gradients were added RGB-Red, RGB-Green and RGB-Blue,
+- Three new false colour gradients were added, RGB-Red, RGB-Green and RGB-Blue,
   representing pure R, G and B channels.
 
 
