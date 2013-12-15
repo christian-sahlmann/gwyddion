@@ -14,7 +14,6 @@ attocube	managing-files
 axis	selections
 basicops	basic-operations	modules-basic
 bcrfile	managing-files
-brickshow	volume-data
 burleigh_bii	managing-files
 burleigh_exp	managing-files
 burleigh	managing-files
@@ -26,6 +25,7 @@ calcoefs_view	caldata
 calibrate	basic-operations	dimensions-and-units
 codevfile	managing-files
 convolution_filter	filters-presentations	convolution-filter
+correct_affine	edit-extenced	correct-affine
 createc	managing-files
 crop	basic-operations	crop
 crosscor	multidata	cross-correlation
@@ -61,7 +61,7 @@ gdeffile	managing-files
 gradient	filters-presentations	gradient
 grain_cross	grain-analysis	grain-correlation
 grain_dist	grain-analysis	grain-distributions
-grain_edge	grain-analysis
+grain_edge	grain-analysis	grain-edge
 grain_mark	grain-analysis	grain-threshold
 grainmeasure	grain-analysis	grain-measure
 grainremover	editing-correction
@@ -74,6 +74,7 @@ graph_export_ascii	graph-processing
 graph_export_bitmap	graph-processing
 graph_export_vector	graph-processing
 graph_fdfit	graph-processing
+graph_filter	graph-processing
 graph_fit	graph-processing	graph-fit
 graph_level	graph-processing
 graph_stats	graph-processing
@@ -93,6 +94,7 @@ iso28600	managing-files
 jeol	managing-files
 jpkscan	managing-files
 laplace	editing-correction	remove-data-under-mask
+lattice	selections
 level3	leveling-and-background	three-point-level
 level_grains	grain-analysis	grain-level
 level	leveling-and-background	plane-level
@@ -139,6 +141,7 @@ omicronflat	managing-files
 omicron	managing-files
 omicronmatrix	managing-files
 opdfile	managing-files
+otsu_threshold	grain-analysis	grain-threshold-otsu
 outliers	editing-correction	mask-of-outliers
 pathlevel	leveling-and-background	path-level
 pat_synth	synthetic	pattern-synthetis
