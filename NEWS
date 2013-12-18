@@ -1,3 +1,9 @@
+2.35 (0000-00-00)
+Libraries:
+- libgwyprocess: gwy_data_field_grains_get_distribution() no longer incorrectly
+  includes the no-grains value in the resulting distribution.
+
+
 2.34 (2013-12-15)
 Application:
 - It is no longer possible to tear off toolbox submenus.  The tear-off menus

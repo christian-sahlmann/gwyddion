@@ -784,10 +784,15 @@ gwy_data_field_grains_get_distribution(GwyDataField *data_field,
                                      ngrains, grains, quantity);
     g_free(mygrains);
 
+    values->res--;
+    values->data[0] = values->data[values->res];
+
     if (!distribution)
         distribution = gwy_data_line_new(1, 1.0, FALSE);
 
     gwy_data_line_distribution(values, distribution, 0.0, 0.0, FALSE, nstats);
+
+    g_object_unref(values);
 
     return distribution;
 }
