@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2007 David Necas (Yeti).
+ *  Copyright (C) 2007,2013 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -20,6 +20,7 @@
  */
 
 #include <glib.h>
+#include "get.h"
 
 /*
  * This is a rudimentary built-in TIFF reader.
@@ -40,6 +41,10 @@
 #define gwy_tiff_get_uint0(T, t, r) gwy_tiff_get_uint((T), 0, (t), (r))
 #define gwy_tiff_get_float0(T, t, r) gwy_tiff_get_float((T), 0, (t), (r))
 #define gwy_tiff_get_string0(T, t, r) gwy_tiff_get_string((T), 0, (t), (r))
+
+/* File header size, real files must be actually larger. */
+#define GWY_TIFF_HEADER_SIZE     8
+#define GWY_TIFF_HEADER_SIZE_BIG 16
 
 /* TIFF format versions */
 typedef enum {
@@ -166,7 +171,9 @@ typedef struct {
     gint64 (*get_gint64)(const guchar **p);
     gfloat (*get_gfloat)(const guchar **p);
     gdouble (*get_gdouble)(const guchar **p);
+    guint64 (*get_length)(const guchar **p);    // 32bit, 64bit for BigTIFF
     GwyTIFFVersion version;
+    guint tagvaluesize;
 } GwyTIFF;
 
 /* State-object for image data reading */
@@ -194,7 +201,7 @@ gwy_tiff_load_impl(GwyTIFF *tiff,
     const guchar *p;
     guint64 offset, nentries;
     gsize size;
-    guint magic;
+    guint magic, ifdsize, tagsize;
 
     if (!gwy_file_get_contents(filename, &tiff->data, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -202,7 +209,7 @@ gwy_tiff_load_impl(GwyTIFF *tiff,
     }
     tiff->size = size;
 
-    if (tiff->size < 8) {
+    if (tiff->size < GWY_TIFF_HEADER_SIZE) {
         err_TOO_SHORT(error);
         return FALSE;
     }
@@ -211,6 +218,7 @@ gwy_tiff_load_impl(GwyTIFF *tiff,
     magic = gwy_get_guint32_le(&p);
     switch (magic) {
         case 0x002a4949:
+        case 0x002b4949:
         tiff->get_guint16 = gwy_get_guint16_le;
         tiff->get_gint16 = gwy_get_gint16_le;
         tiff->get_guint32 = gwy_get_guint32_le;
@@ -219,9 +227,18 @@ gwy_tiff_load_impl(GwyTIFF *tiff,
         tiff->get_gint64 = gwy_get_gint64_le;
         tiff->get_gfloat = gwy_get_gfloat_le;
         tiff->get_gdouble = gwy_get_gdouble_le;
+        if (magic == 0x002b4949) {
+            tiff->version = GWY_TIFF_BIG;
+            tiff->get_length = gwy_get_guint64_le;
+        }
+        else {
+            tiff->version = GWY_TIFF_CLASSIC;
+            tiff->get_length = gwy_get_guint32as64_le;
+        }
         break;
 
         case 0x2a004d4d:
+        case 0x2b004d4d:
         tiff->get_guint16 = gwy_get_guint16_be;
         tiff->get_gint16 = gwy_get_gint16_be;
         tiff->get_guint32 = gwy_get_guint32_be;
@@ -230,6 +247,14 @@ gwy_tiff_load_impl(GwyTIFF *tiff,
         tiff->get_gint64 = gwy_get_gint64_be;
         tiff->get_gfloat = gwy_get_gfloat_be;
         tiff->get_gdouble = gwy_get_gdouble_be;
+        if (magic == 0x2b004d4d) {
+            tiff->version = GWY_TIFF_BIG;
+            tiff->get_length = gwy_get_guint64_be;
+        }
+        else {
+            tiff->version = GWY_TIFF_CLASSIC;
+            tiff->get_length = gwy_get_guint32as64_be;
+        }
         break;
 
         default:
@@ -238,28 +263,64 @@ gwy_tiff_load_impl(GwyTIFF *tiff,
         break;
     }
 
+    if (tiff->version == GWY_TIFF_CLASSIC) {
+        ifdsize = 2 + 4;
+        tagsize = 12;
+        tiff->tagvaluesize = 4;
+    }
+    else if (tiff->version == GWY_TIFF_BIG) {
+        if (tiff->size < GWY_TIFF_HEADER_SIZE_BIG) {
+            err_TOO_SHORT(error);
+            return FALSE;
+        }
+        ifdsize = 8 + 8;
+        tagsize = 20;
+        tiff->tagvaluesize = 8;
+    }
+
+    if (tiff->version == GWY_TIFF_BIG) {
+        guint bytesize = tiff->get_guint16(&p);
+        guint reserved0 = tiff->get_guint16(&p);
+
+        if (bytesize != 8 || reserved0 != 0) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("BigTIFF reserved fields are %u and %u "
+                          "instead of 8 and 0."),
+                          bytesize, reserved0);
+            return FALSE;
+        }
+    }
+    offset = tiff->get_length(&p);
+
     tiff->dirs = g_ptr_array_new();
-    p = tiff->data + 4;
-    offset = tiff->get_guint32(&p);
+
     do {
         GArray *tags;
         guint64 i;
 
-        if (offset + 2 + 4 > tiff->size) {
+        if (offset + ifdsize > tiff->size) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
-                        _("TIFF directory %u ended unexpectedly."),
-                        (guint)tiff->dirs->len);
+                        _("TIFF directory %lu ended unexpectedly."),
+                        (gulong)tiff->dirs->len);
             return FALSE;
         }
 
         p = tiff->data + offset;
-        nentries = tiff->get_guint16(&p);
-        if (offset + 2 + 4 + 12*nentries > tiff->size) {
+        if (tiff->version == GWY_TIFF_CLASSIC)
+            nentries = tiff->get_guint16(&p);
+        else if (tiff->version == GWY_TIFF_BIG)
+            nentries = tiff->get_guint64(&p);
+        else {
+            g_assert_not_reached();
+        }
+
+        if (offset + ifdsize + tagsize*nentries > tiff->size) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
-                        _("TIFF directory %u ended unexpectedly."),
-                        (guint)tiff->dirs->len);
+                        _("TIFF directory %lu ended unexpectedly."),
+                        (gulong)tiff->dirs->len);
             return FALSE;
         }
 
@@ -271,12 +332,12 @@ gwy_tiff_load_impl(GwyTIFF *tiff,
 
             entry.tag = tiff->get_guint16(&p);
             entry.type = (GwyTIFFDataType)tiff->get_guint16(&p);
-            entry.count = tiff->get_guint32(&p);
-            memcpy(entry.value, p, 4);
-            p += 4;
+            entry.count = tiff->get_length(&p);
+            memcpy(entry.value, p, tiff->tagvaluesize);
+            p += tiff->tagvaluesize;
             g_array_append_val(tags, entry);
         }
-        offset = tiff->get_guint32(&p);
+        offset = tiff->get_length(&p);
     } while (offset);
 
     return TRUE;
@@ -341,10 +402,10 @@ gwy_tiff_data_fits(const GwyTIFF *tiff,
                    guint64 item_size,
                    guint64 nitems)
 {
-    guint bytesize;
+    guint64 bytesize;
 
     /* Overflow in total size */
-    if (nitems > G_GUINT64_CONSTANT(0xffffffff)/item_size)
+    if (nitems > G_GUINT64_CONSTANT(0xffffffffffffffff)/item_size)
         return FALSE;
 
     bytesize = nitems*item_size;
@@ -370,15 +431,26 @@ gwy_tiff_tags_valid(const GwyTIFF *tiff,
             const GwyTIFFEntry *entry;
 
             entry = &g_array_index(tags, GwyTIFFEntry, j);
+            if (tiff->version == GWY_TIFF_CLASSIC
+                && (entry->type == GWY_TIFF_LONG8
+                    || entry->type == GWY_TIFF_SLONG8
+                    || entry->type == GWY_TIFF_IFD8)) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("BigTIFF data type %u was found in classic "
+                              "TIFF."),
+                            entry->type);
+                return FALSE;
+            }
             p = entry->value;
-            offset = tiff->get_guint32(&p);
+            offset = tiff->get_length(&p);
             item_size = gwy_tiff_data_type_size(entry->type);
             /* Uknown types are implicitly OK.  If we cannot read it we never
              * read it by definition, so let the hell take what it refers to.
              * This also means readers of custom types have to check the size
              * themselves. */
             if (item_size
-                && entry->count > 4/item_size
+                && entry->count > tiff->tagvaluesize/item_size
                 && !gwy_tiff_data_fits(tiff, offset, item_size, entry->count)) {
                 g_set_error(error, GWY_MODULE_FILE_ERROR,
                             GWY_MODULE_FILE_ERROR_DATA,

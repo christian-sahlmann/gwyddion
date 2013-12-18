@@ -21,6 +21,24 @@
 #ifndef __GWY_FILE_GET_H__
 #define __GWY_GILE_GET_H__
 
+static inline guint64
+gwy_get_guint32as64_le(const guchar **ppv)
+{
+    const guint32 *pv = (const guint32*)(*ppv);
+    guint32 v = GUINT32_FROM_LE(*pv);
+    *ppv += sizeof(guint32);
+    return v;
+}
+
+static inline guint64
+gwy_get_guint32as64_be(const guchar **ppv)
+{
+    const guint32 *pv = (const guint32*)(*ppv);
+    guint32 v = GUINT32_FROM_BE(*pv);
+    *ppv += sizeof(guint32);
+    return v;
+}
+
 static inline void
 get_CHARS(gchar *dest, const guchar **p, guint size)
 {
