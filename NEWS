@@ -3,6 +3,10 @@ Libraries:
 - libgwyprocess: gwy_data_field_grains_get_distribution() no longer incorrectly
   includes the no-grains value in the resulting distribution.
 
+Modules:
+- HDR image: 32bit and 64bit integer samples as well as 32bit and 64bit
+  floating point samples are supported.  Plain BigTIFF images can be loaded.
+
 
 2.34 (2013-12-15)
 Application:
