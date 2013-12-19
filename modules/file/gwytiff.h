@@ -437,7 +437,7 @@ gwy_tiff_tags_valid(const GwyTIFF *tiff,
                     || entry->type == GWY_TIFF_IFD8)) {
                 g_set_error(error, GWY_MODULE_FILE_ERROR,
                             GWY_MODULE_FILE_ERROR_DATA,
-                            _("BigTIFF data type %u was found in classic "
+                            _("BigTIFF data type %u was found in a classic "
                               "TIFF."),
                             entry->type);
                 return FALSE;
@@ -632,7 +632,7 @@ gwy_tiff_get_uints(const GwyTIFF *tiff,
     else
         return FALSE;
 
-    if (size > 4) {
+    if (size > tiff->tagvaluesize) {
         offset = tiff->get_guint32(&p);
         p = tiff->data + offset;
     }
@@ -794,7 +794,7 @@ gwy_tiff_get_string(const GwyTIFF *tiff,
         return FALSE;
 
     p = entry->value;
-    if (entry->count <= 4) {
+    if (entry->count <= tiff->tagvaluesize) {
         *retval = g_new0(gchar, MAX(entry->count, 1) + 1);
         memcpy(*retval, entry->value, entry->count);
     }

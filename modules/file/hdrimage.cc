@@ -307,7 +307,7 @@ module_register(void)
                            NULL,
                            NULL);
     gwy_file_func_register("tiffbig",
-                           N_("TIFF and BigTIFF images with larger depth "
+                           N_("TIFF and BigTIFF images with high depth "
                               "(.tiff)"),
                            (GwyFileDetectFunc)&tiffbig_detect,
                            (GwyFileLoadFunc)&tiffbig_load,
