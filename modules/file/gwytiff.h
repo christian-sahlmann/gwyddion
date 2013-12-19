@@ -894,14 +894,26 @@ gwy_tiff_get_image_reader(const GwyTIFF *tiff,
                     _("Planar configuration %u is not supported."), i);
         return NULL;
     }
-    if (reader.bits_per_sample != 8
-        && reader.bits_per_sample != 16
-        && reader.bits_per_sample != 32) {
-        err_BPP(error, reader.bits_per_sample);
-        return NULL;
+
+    /* Sample format and bits per sample combinations. */
+    if (reader.sample_format == GWY_TIFF_SAMPLE_FORMAT_UNSIGNED_INTEGER
+        || reader.sample_format == GWY_TIFF_SAMPLE_FORMAT_SIGNED_INTEGER) {
+        if (reader.bits_per_sample != 8
+            && reader.bits_per_sample != 16
+            && reader.bits_per_sample != 32
+            && reader.bits_per_sample != 64) {
+            err_BPP(error, reader.bits_per_sample);
+            return NULL;
+        }
     }
-    if (reader.sample_format != GWY_TIFF_SAMPLE_FORMAT_UNSIGNED_INTEGER
-        && reader.sample_format != GWY_TIFF_SAMPLE_FORMAT_SIGNED_INTEGER) {
+    else if (reader.sample_format == GWY_TIFF_SAMPLE_FORMAT_FLOAT) {
+        if (reader.bits_per_sample != 32
+            && reader.bits_per_sample != 64) {
+            err_BPP(error, reader.bits_per_sample);
+            return NULL;
+        }
+    }
+    else {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Unsupported sample format"));
         return NULL;
@@ -1010,10 +1022,11 @@ gwy_tiff_read_image_row(const GwyTIFF *tiff,
     stripindex = rowno % reader->strip_rows;
     p = tiff->data + (reader->offsets[stripno] + stripindex*reader->rowstride
                       + (reader->bits_per_sample/8)*channelno);
+    skip = (reader->samples_per_pixel - 1)*reader->bits_per_sample/8;
 
     switch (reader->bits_per_sample) {
         case 8:
-        skip = reader->samples_per_pixel;
+        skip++;
         if (sformat == GWY_TIFF_SAMPLE_FORMAT_UNSIGNED_INTEGER) {
             for (i = 0; i < reader->width; i++, p += skip)
                 dest[i] = z0 + q*(*p);
@@ -1026,7 +1039,6 @@ gwy_tiff_read_image_row(const GwyTIFF *tiff,
         break;
 
         case 16:
-        skip = (reader->samples_per_pixel - 1)*reader->bits_per_sample;
         if (sformat == GWY_TIFF_SAMPLE_FORMAT_UNSIGNED_INTEGER) {
             for (i = 0; i < reader->width; i++, p += skip)
                 dest[i] = z0 + q*tiff->get_guint16(&p);
@@ -1038,7 +1050,6 @@ gwy_tiff_read_image_row(const GwyTIFF *tiff,
         break;
 
         case 32:
-        skip = (reader->samples_per_pixel - 1)*reader->bits_per_sample;
         if (sformat == GWY_TIFF_SAMPLE_FORMAT_UNSIGNED_INTEGER) {
             for (i = 0; i < reader->width; i++, p += skip)
                 dest[i] = z0 + q*tiff->get_guint32(&p);
@@ -1046,6 +1057,25 @@ gwy_tiff_read_image_row(const GwyTIFF *tiff,
         else if (sformat == GWY_TIFF_SAMPLE_FORMAT_SIGNED_INTEGER) {
             for (i = 0; i < reader->width; i++, p += skip)
                 dest[i] = z0 + q*tiff->get_gint32(&p);
+        }
+        else if (sformat == GWY_TIFF_SAMPLE_FORMAT_FLOAT) {
+            for (i = 0; i < reader->width; i++, p += skip)
+                dest[i] = z0 + q*tiff->get_gfloat(&p);
+        }
+        break;
+
+        case 64:
+        if (sformat == GWY_TIFF_SAMPLE_FORMAT_UNSIGNED_INTEGER) {
+            for (i = 0; i < reader->width; i++, p += skip)
+                dest[i] = z0 + q*tiff->get_guint64(&p);
+        }
+        else if (sformat == GWY_TIFF_SAMPLE_FORMAT_SIGNED_INTEGER) {
+            for (i = 0; i < reader->width; i++, p += skip)
+                dest[i] = z0 + q*tiff->get_gint64(&p);
+        }
+        else if (sformat == GWY_TIFF_SAMPLE_FORMAT_FLOAT) {
+            for (i = 0; i < reader->width; i++, p += skip)
+                dest[i] = z0 + q*tiff->get_gdouble(&p);
         }
         break;
 
