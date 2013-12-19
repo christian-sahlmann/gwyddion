@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2011 David Necas (Yeti).
+ *  Copyright (C) 2011,2013 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -207,29 +207,29 @@ static gchar*        create_image_data          (GwyDataField *field,
 #endif
 
 #ifdef HAVE_PNG
-static gint          png16_detect(const GwyFileDetectInfo *fileinfo,
-                                  gboolean only_name,
-                                  const gchar *name);
-static GwyContainer* png16_load  (const gchar *filename,
-                                  GwyRunType mode,
-                                  GError **error,
-                                  const gchar *name);
+static gint          png16_detect  (const GwyFileDetectInfo *fileinfo,
+                                    gboolean only_name,
+                                    const gchar *name);
+static GwyContainer* png16_load    (const gchar *filename,
+                                    GwyRunType mode,
+                                    GError **error,
+                                    const gchar *name);
 #endif
 
-static gint          pgm16_detect (const GwyFileDetectInfo *fileinfo,
-                                   gboolean only_name,
-                                   const gchar *name);
-static GwyContainer* pgm16_load   (const gchar *filename,
-                                   GwyRunType mode,
-                                   GError **error,
-                                   const gchar *name);
-static gint          tiff16_detect(const GwyFileDetectInfo *fileinfo,
-                                   gboolean only_name,
-                                   const gchar *name);
-static GwyContainer* tiff16_load  (const gchar *filename,
-                                   GwyRunType mode,
-                                   GError **error,
-                                   const gchar *name);
+static gint          pgm16_detect  (const GwyFileDetectInfo *fileinfo,
+                                    gboolean only_name,
+                                    const gchar *name);
+static GwyContainer* pgm16_load    (const gchar *filename,
+                                    GwyRunType mode,
+                                    GError **error,
+                                    const gchar *name);
+static gint          tiffbig_detect(const GwyFileDetectInfo *fileinfo,
+                                    gboolean only_name,
+                                    const gchar *name);
+static GwyContainer* tiffbig_load  (const gchar *filename,
+                                    GwyRunType mode,
+                                    GError **error,
+                                    const gchar *name);
 
 static gboolean pixmap_load_dialog           (PixmapLoadArgs *args,
                                               const gchar *name,
@@ -274,7 +274,7 @@ static GwyModuleInfo module_info = {
     N_("Imports 16bit grayscale PPM, PNG and TIFF images, imports and exports "
        "OpenEXR images (if available)."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "2.0",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -306,10 +306,11 @@ module_register(void)
                            (GwyFileLoadFunc)&pgm16_load,
                            NULL,
                            NULL);
-    gwy_file_func_register("tiff16",
-                           N_("TIFF images with 16bit depth (.tiff)"),
-                           (GwyFileDetectFunc)&tiff16_detect,
-                           (GwyFileLoadFunc)&tiff16_load,
+    gwy_file_func_register("tiffbig",
+                           N_("TIFF and BigTIFF images with larger depth "
+                              "(.tiff)"),
+                           (GwyFileDetectFunc)&tiffbig_detect,
+                           (GwyFileLoadFunc)&tiffbig_load,
                            NULL,
                            NULL);
 
@@ -1274,6 +1275,24 @@ describe_channels(gboolean grayscale, gboolean has_alpha)
         return has_alpha ? "R, G, B, A" : "R, G, B";
 }
 
+static const gchar*
+channel_name(guint nchannels, guint id)
+{
+    if (nchannels == 1)
+        return "Gray";
+
+    if (nchannels == 2)
+        return id ? "Alpha" : "Gray";
+
+    if (nchannels == 3)
+        return id ? (id == 1 ? "Green" : "Blue") : "Red";
+
+    if (nchannels == 4)
+        return id ? (id == 1 ? "Green" : (id == 2 ? "Blue" : "Alpha")) : "Red";
+
+    return NULL;
+}
+
 /***************************************************************************
  *
  * PNG
@@ -1604,17 +1623,7 @@ png16_load(const gchar *filename,
         g_object_unref(fields[id]);
 
         g_snprintf(buf, sizeof(buf), "/%u/data/title", id);
-        if (nchannels == 1)
-            basetitle = "Gray";
-        else if (nchannels == 2)
-            basetitle = id ? "Alpha" : "Gray";
-        else if (nchannels == 3)
-            basetitle = id ? (id == 1 ? "G" : "B") : "R";
-        else if (nchannels == 4)
-            basetitle = id ? (id == 1 ? "G" : (id == 2 ? "B" : "Alpha")) : "R";
-        else
-            basetitle = NULL;
-
+        basetitle = channel_name(nchannels, id);
         if (title && (nchannels == 1 || !basetitle))
             t = g_strdup(title);
         else if (title)
@@ -1949,9 +1958,9 @@ fail:
  ***************************************************************************/
 
 static gint
-tiff16_detect(const GwyFileDetectInfo *fileinfo,
-              gboolean only_name,
-              const gchar *name)
+tiffbig_detect(const GwyFileDetectInfo *fileinfo,
+               gboolean only_name,
+               const gchar *name)
 {
     // Export is done in pixmap.c, we cannot have multiple exporters of the
     // same type (unlike loaders).
@@ -1961,7 +1970,9 @@ tiff16_detect(const GwyFileDetectInfo *fileinfo,
     if (fileinfo->buffer_len < 5)
         return 0;
     if (memcmp(fileinfo->head, "MM\x00\x2a", 4) != 0
-        && memcmp(fileinfo->head, "II\x2a\x00", 4) != 0)
+        && memcmp(fileinfo->head, "II\x2a\x00", 4) != 0
+        && memcmp(fileinfo->head, "MM\x00\x2b", 4) != 0
+        && memcmp(fileinfo->head, "II\x2b\x00", 4) != 0)
         return 0;
 
     GwyTIFF *tiff = gwy_tiff_load(fileinfo->name, NULL);
@@ -1971,9 +1982,15 @@ tiff16_detect(const GwyFileDetectInfo *fileinfo,
     GwyTIFFImageReader *reader = gwy_tiff_get_image_reader(tiff, 0, 4, NULL);
 
     guint score = 0;
-    // A bit larger value than in pixmap.c.
-    if (reader && reader->bits_per_sample == 16)
-        score = 75;
+    if (reader) {
+        // A bit larger value than in pixmap.c.
+        if (reader->bits_per_sample > 8)
+            score = 75;
+        // An even larger value for BigTIFF, but still permit specific BigTIFF
+        // sub-formats to get a higher score.
+        if (tiff->version == GWY_TIFF_BIG)
+            score = 85;
+    }
 
     gwy_tiff_image_reader_free(reader);
     gwy_tiff_free(tiff);
@@ -1997,6 +2014,9 @@ load_tiff_channels(GwyContainer *container,
         GwyDataField *dfield = gwy_data_field_new(xres, yres, xreal, yreal,
                                                   FALSE);
         gdouble *d = gwy_data_field_get_data(dfield);
+        gchar *key;
+        const gchar *title;
+
         for (guint i = 0; i < yres; i++)
             gwy_tiff_read_image_row(tiff, reader, cid, i, zreal,
                                     0.0, d + i*xres);
@@ -2011,15 +2031,21 @@ load_tiff_channels(GwyContainer *container,
         gwy_container_set_object(container, quark, dfield);
         g_object_unref(dfield);
 
+        key = g_strconcat(g_quark_to_string(quark), "/title", NULL);
+        title = channel_name(nchannels, cid);
+        gwy_container_set_string_by_name(container, key,
+                                         (const guchar*)g_strdup(title));
+        g_free(key);
+
         (*id)++;
     }
 }
 
 static GwyContainer*
-tiff16_load(const gchar *filename,
-            GwyRunType mode,
-            GError **error,
-            const gchar *name)
+tiffbig_load(const gchar *filename,
+             GwyRunType mode,
+             GError **error,
+             const gchar *name)
 {
     GwyContainer *container = NULL;
     guint id, idx;
@@ -2035,12 +2061,6 @@ tiff16_load(const gchar *filename,
     if (!(reader = gwy_tiff_get_image_reader(tiff, 0, 4, error)))
         goto fail;
 
-    if (reader->bits_per_sample != 16) {
-        g_warning("Attempt to import non-16bit TIFF using the tiff16 loader.");
-        err_BPP(error, reader->bits_per_sample);
-        goto fail;
-    }
-
     // Use the first channel for preview.
     if (mode == GWY_RUN_INTERACTIVE) {
         gwy_debug("Manual import is necessary.");
@@ -2055,7 +2075,8 @@ tiff16_load(const gchar *filename,
 
         pixmap_load_load_args(gwy_app_settings_get(), &args);
         gboolean ok = pixmap_load_dialog(&args, "TIFF", f,
-                                         nchannels == 1 ? "Y" : "R, G, B",
+                                         describe_channels(nchannels <= 2,
+                                                           !(nchannels & 1)),
                                          gwy_tiff_get_n_dirs(tiff));
         g_object_unref(f);
         pixmap_load_save_args(gwy_app_settings_get(), &args);
