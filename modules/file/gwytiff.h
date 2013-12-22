@@ -191,6 +191,55 @@ typedef struct {
     guint sample_format;
 } GwyTIFFImageReader;
 
+/* Parameters version and byteorder are inout.  If they are non-zero, the file
+ * must match the specified value to be accepted.  In any case, they are set
+ * to the true values on success. */
+G_GNUC_UNUSED
+static const guchar*
+gwy_tiff_detect(const guchar *buffer,
+                gsize size,
+                GwyTIFFVersion *version,
+                guint *byteorder)
+{
+    guint bom, vm;
+
+    if (size < GWY_TIFF_HEADER_SIZE)
+        return NULL;
+
+    bom = gwy_get_guint16_le(&buffer);
+    if (bom == 0x4949) {
+        bom = G_LITTLE_ENDIAN;
+        vm = gwy_get_guint16_le(&buffer);
+    }
+    else if (bom == 0x4d4d) {
+        bom = G_BIG_ENDIAN;
+        vm = gwy_get_guint16_be(&buffer);
+    }
+    else
+        return NULL;
+
+    if (vm != GWY_TIFF_CLASSIC && vm != GWY_TIFF_BIG)
+        return NULL;
+
+    if (vm == GWY_TIFF_BIG && size < GWY_TIFF_HEADER_SIZE_BIG)
+        return NULL;
+
+    // Typecast because of bloddy C++.
+    if (version) {
+        if (*version && *version != (GwyTIFFVersion)vm)
+            return NULL;
+        *version = (GwyTIFFVersion)vm;
+    }
+
+    if (byteorder) {
+        if (*byteorder && *byteorder != bom)
+            return NULL;
+        *byteorder = bom;
+    }
+
+    return buffer;
+}
+
 /* Does not need to free tags on failure, the caller takes care of it. */
 static gboolean
 gwy_tiff_load_impl(GwyTIFF *tiff,
@@ -201,7 +250,7 @@ gwy_tiff_load_impl(GwyTIFF *tiff,
     const guchar *p;
     guint64 offset, nentries;
     gsize size;
-    guint magic, ifdsize, tagsize;
+    guint ifdsize, tagsize, byteorder = 0;
 
     if (!gwy_file_get_contents(filename, &tiff->data, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -209,16 +258,13 @@ gwy_tiff_load_impl(GwyTIFF *tiff,
     }
     tiff->size = size;
 
-    if (tiff->size < GWY_TIFF_HEADER_SIZE) {
-        err_TOO_SHORT(error);
+    p = tiff->data;
+    if (!(p = gwy_tiff_detect(p, tiff->size, &tiff->version, &byteorder))) {
+        err_FILE_TYPE(error, "TIFF");
         return FALSE;
     }
 
-    p = tiff->data;
-    magic = gwy_get_guint32_le(&p);
-    switch (magic) {
-        case 0x002a4949:
-        case 0x002b4949:
+    if (byteorder == G_LITTLE_ENDIAN) {
         tiff->get_guint16 = gwy_get_guint16_le;
         tiff->get_gint16 = gwy_get_gint16_le;
         tiff->get_guint32 = gwy_get_guint32_le;
@@ -227,18 +273,12 @@ gwy_tiff_load_impl(GwyTIFF *tiff,
         tiff->get_gint64 = gwy_get_gint64_le;
         tiff->get_gfloat = gwy_get_gfloat_le;
         tiff->get_gdouble = gwy_get_gdouble_le;
-        if (magic == 0x002b4949) {
-            tiff->version = GWY_TIFF_BIG;
+        if (tiff->version == GWY_TIFF_BIG)
             tiff->get_length = gwy_get_guint64_le;
-        }
-        else {
-            tiff->version = GWY_TIFF_CLASSIC;
+        else
             tiff->get_length = gwy_get_guint32as64_le;
-        }
-        break;
-
-        case 0x2a004d4d:
-        case 0x2b004d4d:
+    }
+    else if (byteorder == G_BIG_ENDIAN) {
         tiff->get_guint16 = gwy_get_guint16_be;
         tiff->get_gint16 = gwy_get_gint16_be;
         tiff->get_guint32 = gwy_get_guint32_be;
@@ -247,20 +287,13 @@ gwy_tiff_load_impl(GwyTIFF *tiff,
         tiff->get_gint64 = gwy_get_gint64_be;
         tiff->get_gfloat = gwy_get_gfloat_be;
         tiff->get_gdouble = gwy_get_gdouble_be;
-        if (magic == 0x2b004d4d) {
-            tiff->version = GWY_TIFF_BIG;
+        if (tiff->version == GWY_TIFF_BIG)
             tiff->get_length = gwy_get_guint64_be;
-        }
-        else {
-            tiff->version = GWY_TIFF_CLASSIC;
+        else
             tiff->get_length = gwy_get_guint32as64_be;
-        }
-        break;
-
-        default:
-        err_FILE_TYPE(error, "TIFF");
-        return FALSE;
-        break;
+    }
+    else {
+        g_assert_not_reached();
     }
 
     if (tiff->version == GWY_TIFF_CLASSIC) {
@@ -276,6 +309,9 @@ gwy_tiff_load_impl(GwyTIFF *tiff,
         ifdsize = 8 + 8;
         tagsize = 20;
         tiff->tagvaluesize = 8;
+    }
+    else {
+        g_assert_not_reached();
     }
 
     if (tiff->version == GWY_TIFF_BIG) {

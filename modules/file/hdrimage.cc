@@ -1967,12 +1967,7 @@ tiffbig_detect(const GwyFileDetectInfo *fileinfo,
     if (only_name)
         return 0;
 
-    if (fileinfo->buffer_len < 5)
-        return 0;
-    if (memcmp(fileinfo->head, "MM\x00\x2a", 4) != 0
-        && memcmp(fileinfo->head, "II\x2a\x00", 4) != 0
-        && memcmp(fileinfo->head, "MM\x00\x2b", 4) != 0
-        && memcmp(fileinfo->head, "II\x2b\x00", 4) != 0)
+    if (!gwy_tiff_detect(fileinfo->head, fileinfo->buffer_len, NULL, NULL))
         return 0;
 
     GwyTIFF *tiff = gwy_tiff_load(fileinfo->name, NULL);

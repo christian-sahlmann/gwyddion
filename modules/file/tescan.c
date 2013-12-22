@@ -35,9 +35,6 @@
 #include "err.h"
 #include "gwytiff.h"
 
-#define MAGIC      "II\x2a\x00"
-#define MAGIC_SIZE (sizeof(MAGIC) - 1)
-
 #define MAGIC_FIELD "PixelSizeX="
 #define MAGIC_FIELD_SIZE (sizeof(MAGIC_FIELD)-1)
 
@@ -121,14 +118,16 @@ tsc_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
 {
     GwyTIFF *tiff;
     guint score = 0;
+    GwyTIFFVersion version = GWY_TIFF_CLASSIC;
+    guint byteorder = G_LITTLE_ENDIAN;
 
     if (only_name)
         return score;
 
     /* Weed out non-TIFFs */
-    if (fileinfo->buffer_len <= MAGIC_SIZE
-        || memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) != 0)
-        return score;
+    if (!gwy_tiff_detect(fileinfo->head, fileinfo->buffer_len,
+                         &version, &byteorder))
+        return 0;
 
     /* Use GwyTIFF for detection to avoid problems with fragile libtiff.
      * Progressively try more fine tests. */

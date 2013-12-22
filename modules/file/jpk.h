@@ -23,11 +23,7 @@
 #ifndef __JPK_H__
 #define __JPK_H__
 
-
 /*  JPK image scans are TIFF files  */
-#define MAGIC      "MM\x00\x2a"
-#define MAGIC_SIZE (sizeof(MAGIC)-1)
-
 
 /*  Custom TIFF tags  */
 #define JPK_TIFFTAG_FileFormatVersion                 0x8000

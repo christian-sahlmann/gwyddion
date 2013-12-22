@@ -643,13 +643,15 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
             return 0;
     }
     else if (gwy_strequal(name, "tiff")) {
+        /* The pixbuf loader is unlikely to load BigTIFFs any time soon. */
+        GwyTIFFVersion version = GWY_TIFF_CLASSIC;
 /* TIFF crashes on Win64.  Unclear why.  TIFF is madness. */
 #ifdef __WIN64
         return 0;
 #else
         gwy_debug("Checking TIFF header");
-        if (memcmp(fileinfo->head, "MM\x00\x2a", 4) != 0
-            && memcmp(fileinfo->head, "II\x2a\x00", 4) != 0)
+        if (!gwy_tiff_detect(fileinfo->head, fileinfo->buffer_len,
+                             &version, NULL))
             return 0;
         gwy_debug("TIFF header OK (type %.2s)", fileinfo->head);
 #endif

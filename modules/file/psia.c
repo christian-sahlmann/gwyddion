@@ -40,9 +40,6 @@
 #include "err.h"
 #include "gwytiff.h"
 
-#define MAGIC      "II\x2a\x00"
-#define MAGIC_SIZE (sizeof(MAGIC) - 1)
-
 #define Micrometre (1e-6)
 
 enum {
@@ -267,14 +264,15 @@ psia_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
 {
     GwyTIFF *tiff;
     gint score = 0;
-    guint magic, version;
+    GwyTIFFVersion tversion = GWY_TIFF_CLASSIC;
+    guint magic, version, byteorder = G_LITTLE_ENDIAN;
 
     if (only_name)
         return score;
 
     /* Weed out non-TIFFs */
-    if (fileinfo->buffer_len <= MAGIC_SIZE
-        || memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) != 0)
+    if (!gwy_tiff_detect(fileinfo->head, fileinfo->buffer_len,
+                         &tversion, &byteorder))
         return 0;
 
     if ((tiff = gwy_tiff_load(fileinfo->name, NULL))

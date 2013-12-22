@@ -117,12 +117,14 @@ jpkscan_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
     gdouble ulen, vlen;
     gchar *name = NULL;
     gint score = 0;
+    guint byteorder = G_BIG_ENDIAN;
+    GwyTIFFVersion version = GWY_TIFF_CLASSIC;
 
     if (only_name)
         return score;
 
-    if (fileinfo->buffer_len <= MAGIC_SIZE
-        || memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) != 0)
+    if (!gwy_tiff_detect(fileinfo->head, fileinfo->buffer_len,
+                         &version, &byteorder))
         return 0;
 
     if ((tiff = gwy_tiff_load(fileinfo->name, NULL))

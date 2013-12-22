@@ -35,9 +35,6 @@
 #include "err.h"
 #include "gwytiff.h"
 
-#define MAGIC      "II\x2a\x00"
-#define MAGIC_SIZE (sizeof(MAGIC) - 1)
-
 #define MAGIC_COMMENT "\r\nAP_PIXEL_SIZE\r\n"
 #define SOMEWHAT_LESS_MAGIC_COMMENT "0\r\n0\r\n0\r\n"
 
@@ -89,13 +86,15 @@ zeiss_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
     GwyTIFF *tiff;
     gint score = 0;
     gchar *comment = NULL;
+    GwyTIFFVersion version = GWY_TIFF_CLASSIC;
+    guint byteorder = G_LITTLE_ENDIAN;
 
     if (only_name)
         return score;
 
     /* Weed out non-TIFFs */
-    if (fileinfo->buffer_len <= MAGIC_SIZE
-        || memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) != 0)
+    if (!gwy_tiff_detect(fileinfo->head, fileinfo->buffer_len,
+                         &version, &byteorder))
         return 0;
 
     /* Use GwyTIFF for detection to avoid problems with fragile libtiff. */
