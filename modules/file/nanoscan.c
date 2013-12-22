@@ -668,7 +668,7 @@ start_element(G_GNUC_UNUSED GMarkupParseContext *context,
 
     if (!nfile->path->len && !gwy_strequal(element_name, "scan")) {
         g_set_error(error, G_MARKUP_ERROR, G_MARKUP_ERROR_UNKNOWN_ELEMENT,
-                    _("Top-level element is not ‘scan’."));
+                    _("Top-level element is not ‘%s’."), "scan");
         return;
     }
 
