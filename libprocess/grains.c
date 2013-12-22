@@ -30,11 +30,7 @@
 #include <libprocess/correct.h>
 #include <libprocess/grains.h>
 
-#if GLIB_CHECK_VERSION(2, 10, 0)
 #define ONE G_GUINT64_CONSTANT(1)
-#else
-#define ONE G_GINT64_CONSTANT(1U)
-#endif
 
 typedef struct {
     gint i;

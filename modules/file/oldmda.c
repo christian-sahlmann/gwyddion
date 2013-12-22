@@ -68,12 +68,6 @@
 #define MAGIC2 "<MDAList>"
 #define MAGIC2_SIZE (sizeof(MAGIC2) - 1)
 
-#if GLIB_CHECK_VERSION(2, 12, 0)
-#define TREAT_CDATA_AS_TEXT G_MARKUP_TREAT_CDATA_AS_TEXT
-#else
-#define TREAT_CDATA_AS_TEXT 0
-#endif
-
 typedef enum {
     MDA_XML_NONE             = 0,
     MDA_XML_ARRAYSIZE        = 1,

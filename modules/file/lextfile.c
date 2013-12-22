@@ -56,12 +56,6 @@
 #define strlenrchr(s,c,len) strrchr((s),(c))
 #endif
 
-#if GLIB_CHECK_VERSION(2, 12, 0)
-#define TREAT_CDATA_AS_TEXT G_MARKUP_TREAT_CDATA_AS_TEXT
-#else
-#define TREAT_CDATA_AS_TEXT 0
-#endif
-
 #define MAGIC_COMMENT "<TiffTagDescData "
 
 typedef struct {

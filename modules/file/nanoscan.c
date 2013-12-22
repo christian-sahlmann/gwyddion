@@ -63,12 +63,6 @@
 #define strlenrchr(s,c,len) strchr((s),(c))
 #endif
 
-#if GLIB_CHECK_VERSION(2, 12, 0)
-#define TREAT_CDATA_AS_TEXT G_MARKUP_TREAT_CDATA_AS_TEXT
-#else
-#define TREAT_CDATA_AS_TEXT 0
-#endif
-
 #define SCAN_PREFIX "/scan/vector/contents"
 #define SCAN_PREFIX_SIZE (sizeof(SCAN_PREFIX)-1)
 
