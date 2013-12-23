@@ -222,7 +222,7 @@ oldmda_load(const gchar *filename,
     params.numaxes = 0;
     params.axes = g_array_new(FALSE, FALSE, sizeof(MDAAxis));
     params.flag = MDA_XML_NONE;
-    context = g_markup_parse_context_new(&parser, TREAT_CDATA_AS_TEXT,
+    context = g_markup_parse_context_new(&parser, G_MARKUP_TREAT_CDATA_AS_TEXT,
                                          &params, NULL);
     if (!g_markup_parse_context_parse(context, buffer, size, &err)
      || !g_markup_parse_context_end_parse(context, &err)) {

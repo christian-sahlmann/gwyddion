@@ -1351,7 +1351,7 @@ mdt_newspec_data_vars(const guchar *p,
         GError *err = NULL;
 
         context = g_markup_parse_context_new(&parser,
-                                             TREAT_CDATA_AS_TEXT,
+                                             G_MARKUP_TREAT_CDATA_AS_TEXT,
                                              frame, NULL);
 
         if (!g_markup_parse_context_parse(context,
@@ -1362,7 +1362,7 @@ mdt_newspec_data_vars(const guchar *p,
         else {
             g_markup_parse_context_free(context);
             context = g_markup_parse_context_new(&parser,
-                                                 TREAT_CDATA_AS_TEXT,
+                                                 G_MARKUP_TREAT_CDATA_AS_TEXT,
                                                  frame, NULL);
 
             frame->pointInfo = g_new0(MDTTNTDAPointInfo, frame->pointCount);
@@ -1426,7 +1426,7 @@ mdt_newspec_data_vars(const guchar *p,
         guchar *xmlstuff;
         gchar *ind;
         context = g_markup_parse_context_new(&parser,
-                                             TREAT_CDATA_AS_TEXT,
+                                             G_MARKUP_TREAT_CDATA_AS_TEXT,
                                              frame, NULL);
         xmlstuff = g_convert(indexBlock->data, indexBlock->len,
                              "UTF-8", "UTF-16LE",
@@ -2773,7 +2773,7 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
             params.res = res;
             params.flag = MDT_XML_NONE;
             context = g_markup_parse_context_new(&parser,
-                                                 TREAT_CDATA_AS_TEXT,
+                                                 G_MARKUP_TREAT_CDATA_AS_TEXT,
                                                  &params, NULL);
             if (!g_markup_parse_context_parse(context, xAxis->comment,
                                                 xAxis->commentLen, &err)
@@ -2879,7 +2879,7 @@ extract_brick(MDTMDAFrame *dataframe,
     comment.path = g_string_new(NULL);
     comment.entries = g_array_new(FALSE, FALSE,
                                   sizeof(MDTXMLCommentEntry*));
-    context = g_markup_parse_context_new(&parser, TREAT_CDATA_AS_TEXT,
+    context = g_markup_parse_context_new(&parser, G_MARKUP_TREAT_CDATA_AS_TEXT,
                                          &comment, NULL);
     if (!g_markup_parse_context_parse(context,
                                       dataframe->xmlstuff, -1, &err)

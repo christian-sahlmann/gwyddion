@@ -251,7 +251,7 @@ lext_load_tiff(const GwyTIFF *tiff, GError **error)
     lfile.hash = hash = g_hash_table_new_full(g_str_hash, g_str_equal,
                                               g_free, g_free);
     lfile.path = key = g_string_new(NULL);
-    context = g_markup_parse_context_new(&parser, TREAT_CDATA_AS_TEXT,
+    context = g_markup_parse_context_new(&parser, G_MARKUP_TREAT_CDATA_AS_TEXT,
                                          &lfile, NULL);
     if (!g_markup_parse_context_parse(context, comment, strlen(comment), &err)
         || !g_markup_parse_context_end_parse(context, &err)) {
