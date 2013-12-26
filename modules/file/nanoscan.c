@@ -225,8 +225,8 @@ nanoscan_detect(const GwyFileDetectInfo *fileinfo,
 
 static GwyContainer*
 nanoscan_load(const gchar *filename,
-         G_GNUC_UNUSED GwyRunType mode,
-         GError **error)
+              G_GNUC_UNUSED GwyRunType mode,
+              GError **error)
 {
     GwyContainer *container = NULL;
     NanoScanFile nfile;
