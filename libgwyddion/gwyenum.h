@@ -30,6 +30,7 @@ G_BEGIN_DECLS
 #define GWY_TYPE_ENUM                  (gwy_enum_get_type())
 
 typedef struct {
+    /*<public>*/
     const gchar *name;
     gint value;
 } GwyEnum;

@@ -39,6 +39,7 @@ typedef struct _GwySIUnit GwySIUnit;
 typedef struct _GwySIUnitClass GwySIUnitClass;
 
 typedef struct {
+    /*<public>*/
     gdouble magnitude;
     gint precision;
     gchar *units;
