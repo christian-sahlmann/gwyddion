@@ -427,109 +427,21 @@ get_uint8(char **p)
     return (double)val;
 }
 
-/* BASE64 DECODING FUNCTIONS */
-/* ------------------------- */
-
-/**
- * Convert symbol coded in BASE64 encoding to number which it represent
- * @param ch character in A-Za-Z0-9+/=
- * @return value of @param ch character
- * Symbol '=' which does not belong to BASE64 is interpreted as '=' to
- * get number of valid bytes for decodeblock function
- */
-static char
-convert_b64_symbol_to_number(char ch)
-{
-    if (ch >= 'A' && ch <= 'Z') {
-        return ch - 'A';
-    }
-    else if (ch >= 'a' && ch <= 'z') {
-        return ch - 'a' + 26;
-    }
-    else if (ch >= '0' && ch <= '9') {
-        return ch - '0' + 52;
-    }
-    else if (ch == '+') {
-        return 62;
-    }
-    else if (ch == '/') {
-        return 63;
-    }
-    else if (ch == '=') {
-        g_warning("Let's hope symbol '%c' is ignored in BASE64 coding.", ch);
-        return ch;
-    }
-    else {
-        g_warning(" Cannot translate symbol '%c' to number in BASE64 encoding.",
-                  ch);
-        return 0;
-    }
-
-}
-
-/**
- * Decode four 6-bit characters into three 8-bit bytes
- * @return number of valid output bytes
- * */
-static int
-decodeblock(unsigned char in[4], unsigned char out[3])
-{
-    unsigned char i[4];
-
-    if (in[0] == '=' || in[1] == '=')
-        return 0;               /* first or second byte can't be '=' */
-    i[0] = convert_b64_symbol_to_number(in[0]);
-    i[1] = convert_b64_symbol_to_number(in[1]);
-    i[2] = convert_b64_symbol_to_number(in[2]);
-    i[3] = convert_b64_symbol_to_number(in[3]);
-    out[0] = (unsigned char)(i[0] << 2 | i[1] >> 4);
-    out[1] = (unsigned char)(i[1] << 4 | i[2] >> 2);
-    out[2] = (unsigned char)(((i[2] << 6) & 0xc0) | i[3]);
-    return (in[2] == '=') ? 1 : (in[3] == '=') ? 2 : 3;
-}
-
-
 /**
  * Decode input buffer in BASE64 encoding to out_buf
  * @param in_buf pointer to input buffer
- * @param len length of input buffer
  * out_buf is created in dynamic memory must be deallocated by caller.
- * @return -1 when cannot append to dynamic array out_buf
- * @return 0 when input buffer was decoded correctly.
- *
  */
-static int
-decode_b64(char *in_buf, GArray ** out_buf, int len)
+static void
+decode_b64(const gchar *in_buf, GArray **out_buf)
 {
-    int i;
-    char b64_enc_chars[4];
-    char b64_dec_chars[3];
-    int pos = 0;
-    int valid_bytes;
+    guchar *mem;
+    gsize out_len;
 
-    *out_buf = g_array_new(FALSE, FALSE, sizeof(char));
-    for (i = 0; i < len; i++) {
-        if (in_buf[i] == '\n' || in_buf[i] == '\r'
-            || in_buf[i] == ' ' || in_buf[i] == '\t') {
-            /* skip all whitespaces (space, tab, line feed, carriage return) */
-            continue;
-        }
-
-        b64_enc_chars[pos % 4] = in_buf[i];
-        pos++;
-        if ((pos % 4) == 0) {
-            /* decode and save 4x6b to 3x8b */
-            valid_bytes = decodeblock(b64_enc_chars, b64_dec_chars);
-            if (valid_bytes > 0) {
-                *out_buf =
-                    g_array_append_vals(*out_buf, &b64_dec_chars, valid_bytes);
-                if (*out_buf == NULL) {
-                    return -1;
-                }
-            }
-        }
-    }
-    return 0;
+    mem = g_base64_decode(in_buf, &out_len);
+    *out_buf = g_array_sized_new(FALSE, FALSE, sizeof(char), out_len);
+    g_array_append_vals(*out_buf, mem, out_len);
+    g_free(mem);
 }
 
 /* SPML utils */

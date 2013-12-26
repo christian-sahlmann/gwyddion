@@ -109,7 +109,7 @@ static GwyModuleInfo module_info = {
     N_("Loads SPML (Scanning Probe Microscopy Markup Language) "
        "data files."),
     "Jan Hořák <xhorak@gmail.com>",
-    "0.1.4",
+    "0.1.5",
     "Jan Hořák",
     "2006",
 };
@@ -239,15 +239,8 @@ decode_data(double **data, const xmlChar * input, dataFormat data_format,
     }
     switch (coding) {
         case ZLIB_COMPR_BASE64:
-            /*/ XXX: strlen() may not be nice there */
-            if (decode_b64((char *)input, &debase64_buf, strlen(input)) != 0) {
-                if (debase64_buf != NULL) {
-                    g_array_free(debase64_buf, TRUE);
-                }
-                g_warning("Cannot decode data in BASE64 code.");
-                *data = NULL;
-                return 0;
-            }
+            /* XXX: Is input guaranteed to be nul-terminated? */
+            decode_b64((const gchar*)input, &debase64_buf);
             if (inflate_dynamic_array(debase64_buf, &data_stream) != 0) {
                 g_warning("Cannot inflate compressed data.");
                 g_array_free(debase64_buf, TRUE);
@@ -260,15 +253,8 @@ decode_data(double **data, const xmlChar * input, dataFormat data_format,
             g_array_free(debase64_buf, TRUE);
             break;
         case BASE64:
-            /*/ XXX: strlen() may not be nice there */
-            if (decode_b64((char *)input, &data_stream, strlen(input)) != 0) {
-                g_warning("Cannot decode data in BASE64 code.");
-                if (data_stream != NULL) {
-                    g_array_free(data_stream, TRUE);
-                }
-                *data = NULL;
-                return 0;
-            }
+            /* XXX: Is input guaranteed to be nul-terminated? */
+            decode_b64((const gchar*)input, &data_stream);
             break;
         case ASCII:
             p = (char *)input;
