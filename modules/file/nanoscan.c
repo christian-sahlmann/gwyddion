@@ -177,19 +177,15 @@ static void          add_meta            (NanoScanFile *nfile,
                                           const gchar *name,
                                           gchar *value);
 static gfloat*       read_channel_data   (const gchar *value,
-                                          gsize value_len,
                                           guint npixels,
                                           GError **error);
-static gsize         decode_base64       (const guchar *buf,
-                                          gsize len,
-                                          guchar *out);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports NanoScan XML files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -823,8 +819,8 @@ text(G_GNUC_UNUSED GMarkupParseContext *context,
         }
         else if (gwy_strequal(path, "/data")) {
             g_free(channel->data);
-            channel->data = read_channel_data(val, value_len,
-                                              nfile->xres * nfile->yres, error);
+            channel->data = read_channel_data(val, nfile->xres * nfile->yres,
+                                              error);
             gwy_debug("DATA: %p", channel->data);
         }
     }
@@ -896,21 +892,14 @@ add_meta(NanoScanFile *nfile,
 }
 
 static gfloat*
-read_channel_data(const gchar *value, gsize value_len,
+read_channel_data(const gchar *value,
                   guint npixels,
                   GError **error)
 {
-    gpointer *mem;
-    gsize len, maxlen = 3*value_len/4;
+    guchar *mem;
+    gsize len;
 
-    if (maxlen < npixels*sizeof(gfloat)) {
-        g_set_error(error, G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT,
-                    _("Wrong size of Base64 encoded data."));
-        return NULL;
-    }
-
-    mem = g_malloc(maxlen);
-    len = decode_base64((const guchar*)value, value_len, (guchar*)mem);
+    mem = g_base64_decode(value, &len);
     if (len != npixels*sizeof(gfloat)) {
         g_set_error(error, G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT,
                     _("Wrong size of Base64 encoded data."));
@@ -919,71 +908,6 @@ read_channel_data(const gchar *value, gsize value_len,
     }
 
     return (gfloat*)mem;
-}
-
-static gsize
-decode_base64(const guchar *buf, gsize len, guchar *out)
-{
-    static const guchar base64_codes[0x100] = {
-        255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255,  62, 255, 255, 255,  63,
-         52,  53,  54,  55,  56,  57,  58,  59,
-         60,  61, 255, 255, 255,   0, 255, 255,
-        255,   0,   1,   2,   3,   4,   5,   6,
-          7,   8,   9,  10,  11,  12,  13,  14,
-         15,  16,  17,  18,  19,  20,  21,  22,
-         23,  24,  25, 255, 255, 255, 255, 255,
-        255,  26,  27,  28,  29,  30,  31,  32,
-         33,  34,  35,  36,  37,  38,  39,  40,
-         41,  42,  43,  44,  45,  46,  47,  48,
-         49,  50,  51, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255,
-    };
-
-    const guchar *end = buf + len;
-    guchar *p = out;
-    guchar c, code, last[2];
-    guint i = 0, v = 0;
-
-    last[0] = last[1] = 0;
-    while (buf < end) {
-        c = *buf++;
-        code = base64_codes[c];
-        if (code != 255) {
-            last[1] = last[0];
-            last[0] = c;
-            v = (v << 6) | code;
-            if (++i == 4) {
-                *p++ = v >> 16;
-                if (last[1] != '=')
-                    *p++ = v >> 8;
-                if (last[0] != '=')
-                    *p++ = v;
-                i = 0;
-            }
-        }
-    }
-
-    return p - out;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
