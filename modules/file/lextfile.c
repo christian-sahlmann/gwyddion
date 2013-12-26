@@ -186,13 +186,13 @@ end_element(G_GNUC_UNUSED GMarkupParseContext *context,
 static void
 text(G_GNUC_UNUSED GMarkupParseContext *context,
      const gchar *value,
-     G_GNUC_UNUSED gsize value_len,
+     gsize value_len,
      gpointer user_data,
      G_GNUC_UNUSED GError **error)
 {
     LextFile *lfile = (LextFile*)user_data;
     const gchar *path = lfile->path->str;
-    gchar *val = g_strdup(value);
+    gchar *val = g_strndup(value, value_len);
 
     g_strstrip(val);
     if (*val) {

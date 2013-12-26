@@ -519,7 +519,7 @@ end_element(G_GNUC_UNUSED GMarkupParseContext *context,
 static void
 parse_text(G_GNUC_UNUSED GMarkupParseContext *context,
            const gchar *value,
-           G_GNUC_UNUSED gsize value_len,
+           gsize value_len,
            gpointer user_data,
            G_GNUC_UNUSED GError **error)
 {
@@ -528,31 +528,35 @@ parse_text(G_GNUC_UNUSED GMarkupParseContext *context,
     gchar *line;
     gdouble val;
     gint i;
+    gchar *v = g_strndup(value, value_len);
+
     axis = &g_array_index(params->axes, MDAAxis, params->numaxes - 1);
 
     if (params->flag == MDA_XML_NONE) {
         /* error */
     }
     else if (params->flag == MDA_XML_ARRAYSIZE) {
-        params->arraysize = atoi(value);
+        params->arraysize = atoi(v);
     }
     else if (params->flag == MDA_XML_DATACELL_MEMSIZE) {
-        params->datacellmemsize = atoi(value);
+        params->datacellmemsize = atoi(v);
     }
     else if (params->flag == MDA_XML_DATANAME) {
-        params->dataname = g_strdup(value);
+        params->dataname = v;
+        v = NULL;
     }
     else if (params->flag == MDA_XML_MININDEX) {
-        axis->minindex = atoi(value);
+        axis->minindex = atoi(v);
     }
     else if (params->flag == MDA_XML_MAXINDEX) {
-        axis->maxindex = atoi(value);
+        axis->maxindex = atoi(v);
     }
     else if (params->flag == MDA_XML_NAME) {
-        axis->name = g_strdup(value);
+        axis->name = v;
+        v = NULL;
     }
     else if (params->flag == MDA_XML_DATAARRAY) {
-        line = (gchar *)value;
+        line = v;
         if (!params->res) {
             /* Error */
         }
@@ -564,6 +568,7 @@ parse_text(G_GNUC_UNUSED GMarkupParseContext *context,
             }
         }
     }
+    g_free(v);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

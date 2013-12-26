@@ -732,7 +732,10 @@ hash_to_data_field(GHashTable *hash,
 }
 
 static GwyBrick*
-hash_to_brick(GHashTable *hash, GHashTable *forcelist, GHashTable *scanlist, GHashTable *scannerlist,
+hash_to_brick(GHashTable *hash,
+              GHashTable *forcelist,
+              GHashTable *scanlist,
+              G_GNUC_UNUSED GHashTable *scannerlist,
               G_GNUC_UNUSED NanoscopeFileType file_type,
               guint bufsize,
               gchar *buffer,

@@ -175,7 +175,7 @@ static void          text                (GMarkupParseContext *context,
                                           GError **error);
 static void          add_meta            (NanoScanFile *nfile,
                                           const gchar *name,
-                                          const gchar *value);
+                                          gchar *value);
 static gfloat*       read_channel_data   (const gchar *value,
                                           gsize value_len,
                                           guint npixels,
@@ -719,6 +719,7 @@ text(G_GNUC_UNUSED GMarkupParseContext *context,
 {
     NanoScanFile *nfile = (NanoScanFile*)user_data;
     const gchar *path = nfile->path->str;
+    char *val;
 
     /* Content is not directly in elements such as <unit>.  Each element, in
      * spite of its content model being a single value, must contain a <v>
@@ -731,14 +732,15 @@ text(G_GNUC_UNUSED GMarkupParseContext *context,
         return;
     nfile->path->str[nfile->path->len-2] = '\0';
 
+    val = g_strndup(value, value_len);
     if (strncmp(path, RES_PREFIX, RES_PREFIX_SIZE) == 0) {
         path += RES_PREFIX_SIZE;
         if (gwy_strequal(path, "/fast_axis")) {
-            nfile->xres = atoi(value);
+            nfile->xres = atoi(val);
             gwy_debug("xres: %d", nfile->xres);
         }
         else if (gwy_strequal(path, "/slow_axis")) {
-            nfile->yres = atoi(value);
+            nfile->yres = atoi(val);
             gwy_debug("xres: %d", nfile->yres);
         }
     }
@@ -746,15 +748,16 @@ text(G_GNUC_UNUSED GMarkupParseContext *context,
         path += RES_PREFIX_SIZE;
         if (gwy_strequal(path, "/unit")) {
             g_free(nfile->xyunits);
-            nfile->xyunits = g_strdup(value);
-            gwy_debug("xyunits: %s", value);
+            nfile->xyunits = val;
+            gwy_debug("xyunits: %s", val);
+            val = NULL;
         }
         else if (gwy_strequal(path, "/size/contents/fast_axis")) {
-            nfile->xreal = g_ascii_strtod(value, NULL);
+            nfile->xreal = g_ascii_strtod(val, NULL);
             gwy_debug("xreal: %g", nfile->xreal);
         }
         else if (gwy_strequal(path, "/size/contents/slow_axis")) {
-            nfile->yreal = g_ascii_strtod(value, NULL);
+            nfile->yreal = g_ascii_strtod(val, NULL);
             gwy_debug("yreal: %g", nfile->yreal);
         }
     }
@@ -766,30 +769,33 @@ text(G_GNUC_UNUSED GMarkupParseContext *context,
         path += AXIS_PREFIX_SIZE;
         if (gwy_strequal(path, "/name")) {
             g_free(axis->name);
-            axis->name = g_strdup(value);
-            gwy_debug("axis name: %s", value);
+            axis->name = val;
+            gwy_debug("axis name: %s", val);
+            val = NULL;
         }
         else if (gwy_strequal(path, "/unit")) {
             g_free(axis->units);
-            axis->units = g_strdup(value);
-            gwy_debug("axis units: %s", value);
+            axis->units = val;
+            gwy_debug("axis units: %s", val);
+            val = NULL;
         }
         else if (gwy_strequal(path, "/display_unit")) {
             g_free(axis->display_units);
-            axis->display_units = g_strdup(value);
-            gwy_debug("axis display_units: %s", value);
+            axis->display_units = val;
+            gwy_debug("axis display_units: %s", val);
+            val = NULL;
         }
         else if (gwy_strequal(path, "/display_scale")) {
-            axis->display_scale = g_ascii_strtod(value, NULL);
+            axis->display_scale = g_ascii_strtod(val, NULL);
             gwy_debug("axis display_scale: %g", axis->display_scale);
         }
         /* FIXME: These can be vectors in the energy scan mode! */
         else if (gwy_strequal(path, "/start/vector")) {
-            axis->start = g_ascii_strtod(value, NULL);
+            axis->start = g_ascii_strtod(val, NULL);
             gwy_debug("axis start: %g", axis->start);
         }
         else if (gwy_strequal(path, "/stop/vector")) {
-            axis->stop = g_ascii_strtod(value, NULL);
+            axis->stop = g_ascii_strtod(val, NULL);
             gwy_debug("axis stop: %g", axis->stop);
         }
     }
@@ -805,17 +811,19 @@ text(G_GNUC_UNUSED GMarkupParseContext *context,
          * upstream cann sort it out. */
         if (gwy_strequal(path, "/name")) {
             g_free(channel->name);
-            channel->name = g_strdup(value);
-            gwy_debug("channel: %s", value);
+            channel->name = val;
+            gwy_debug("channel: %s", val);
+            val = NULL;
         }
         else if (gwy_strequal(path, "/unit")) {
             g_free(channel->zunits);
-            channel->zunits = g_strdup(value);
-            gwy_debug("zunits: %s", value);
+            channel->zunits = val;
+            gwy_debug("zunits: %s", val);
+            val = NULL;
         }
         else if (gwy_strequal(path, "/data")) {
             g_free(channel->data);
-            channel->data = read_channel_data(value, value_len,
+            channel->data = read_channel_data(val, value_len,
                                               nfile->xres * nfile->yres, error);
             gwy_debug("DATA: %p", channel->data);
         }
@@ -826,16 +834,16 @@ text(G_GNUC_UNUSED GMarkupParseContext *context,
          * way. */
         path += DATA_PREFIX_SIZE;
         if (gwy_strequal(path, "/name")) {
-            if (gwy_strequal(value, "forward")) {
+            if (gwy_strequal(val, "forward")) {
                 nfile->current_direction = SCAN_FORWARD;
                 gwy_debug("direction: forward");
             }
-            else if (gwy_strequal(value, "backward")) {
+            else if (gwy_strequal(val, "backward")) {
                 nfile->current_direction = SCAN_BACKWARD;
                 gwy_debug("direction: backward");
             }
             else
-                g_warning("Unknown direction %s.", value);
+                g_warning("Unknown direction %s.", val);
         }
     }
     else if (strncmp(path, META_PREFIX, META_PREFIX_SIZE) == 0) {
@@ -843,20 +851,24 @@ text(G_GNUC_UNUSED GMarkupParseContext *context,
 
         path += META_PREFIX_SIZE;
         name = strlenrchr(path, '/', nfile->path->len - META_PREFIX_SIZE) + 1;
-        add_meta(nfile, name, value);
+        add_meta(nfile, name, val);
+        val = NULL;
     }
     else if (strncmp(path, SCAN_PREFIX, SCAN_PREFIX_SIZE) == 0
              && !strchr(path + SCAN_PREFIX_SIZE + 1, '/')) {
-        add_meta(nfile, path + SCAN_PREFIX_SIZE+1, value);
+        add_meta(nfile, path + SCAN_PREFIX_SIZE+1, val);
+        val = NULL;
     }
 
     nfile->path->str[nfile->path->len-2] = '/';
+
+    g_free(val);
 }
 
 static void
 add_meta(NanoScanFile *nfile,
          const gchar *name,
-         const gchar *value)
+         gchar *value)
 {
     /* If the element ends with _units, it should be the units of the
      * previous element. */
@@ -868,7 +880,7 @@ add_meta(NanoScanFile *nfile,
             if (g_str_has_prefix(name, meta->name)
                 && strlen(name) == strlen(meta->name) + sizeof("_unit")-1) {
                 g_free(meta->units);
-                meta->units = g_strdup(value);
+                meta->units = value;
                 gwy_debug("units of %s: %s", meta->name, value);
             }
         }
@@ -877,7 +889,7 @@ add_meta(NanoScanFile *nfile,
         NanoScanMeta meta = { NULL, NULL, NULL };
 
         meta.name = g_strdup(name);
-        meta.value = g_strdup(value);
+        meta.value = value;
         gwy_debug("meta %s: %s", name, value);
         g_array_append_val(nfile->meta, meta);
     }
