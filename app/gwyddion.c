@@ -99,9 +99,10 @@ main(int argc, char *argv[])
     GTimer *timer;
 
     sneaking_thread_init();
-    // If I print a debugging messages that's because someone wants to see it
+    // If I print a debugging message that's because someone wants to see it
     // you idiots.
     g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
+    g_unsetenv("UBUNTU_MENUPROXY");
     timer = g_timer_new();
     gwy_app_check_version();
 
