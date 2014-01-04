@@ -428,7 +428,7 @@ gwy_graph_curve_model_serialize(GObject *object,
                                                 GWY_GRAPH_CURVE_MODEL_TYPE_NAME,
                                                 G_N_ELEMENTS(spec)-6, spec);
         }
-        
+
     }
 }
 
@@ -507,7 +507,7 @@ gwy_graph_curve_model_deserialize(const guchar *buffer,
             { 'i', "line_size", &gcmodel->line_width, NULL },
             /* Accept line_width too */
             { 'i', "line_width", &gcmodel->line_width, NULL },
-            { 'D', "xerr", &xerr, &nxerr }, 
+            { 'D', "xerr", &xerr, &nxerr },
             { 'D', "yerr", &yerr, &nyerr },
             { 'D', "zerr", &zerr, &nzerr },
             { 'D', "xunc", &xunc, &nxunc },
@@ -532,7 +532,7 @@ gwy_graph_curve_model_deserialize(const guchar *buffer,
             g_free(description);
         }
         gcmodel->n = nxdata;
-        if (nxerr == nxdata && nyerr == nxdata && nzerr == nxdata 
+        if (nxerr == nxdata && nyerr == nxdata && nzerr == nxdata
             && nxunc == nxdata && nyunc == nxdata && nzunc == nxdata)
         {
             gcmodel->calibration = (GwyCurveCalibrationData *) g_malloc(sizeof(GwyCurveCalibrationData));
@@ -582,7 +582,7 @@ gwy_graph_curve_model_duplicate_real(GObject *object)
  * @ydata: Y data points (array of size @n).
  * @n: Number of points, i.e. items in @xdata and @ydata.
  *
- * Sets curve model data. 
+ * Sets curve model data.
  *
  * If there were calibration data in the former @gcmodel, they are removed.
  **/
@@ -1034,7 +1034,7 @@ gwy_graph_curve_model_data_changed(GwyGraphCurveModel *gcmodel)
  * Get pointer to actual calibration data for curve.
  *
  * Returns: Pointer to the calibration data of present curve (NULL if none).
- *         
+ *
  **/
 GwyCurveCalibrationData *
 gwy_graph_curve_model_get_calibration_data(GwyGraphCurveModel *gcmodel)
@@ -1047,10 +1047,10 @@ gwy_graph_curve_model_get_calibration_data(GwyGraphCurveModel *gcmodel)
  * @gcmodel: A graph curve model.
  * @calibration: Curve calibration data
  *
- * Set calibration data for curve. 
- *         
+ * Set calibration data for curve.
+ *
  **/
-void 
+void
 gwy_graph_curve_model_set_calibration_data(GwyGraphCurveModel *gcmodel,
                                            const GwyCurveCalibrationData *calibration)
 {
@@ -1062,21 +1062,21 @@ gwy_graph_curve_model_set_calibration_data(GwyGraphCurveModel *gcmodel,
         g_free(gcmodel->calibration->xunc);
         g_free(gcmodel->calibration->yunc);
         g_free(gcmodel->calibration->zunc);
-    } else 
+    } else
         gcmodel->calibration = g_new(GwyCurveCalibrationData, 1);
 
     gcmodel->calibration->n = calibration->n;
-    gcmodel->calibration->xerr = g_memdup(calibration->xerr, 
+    gcmodel->calibration->xerr = g_memdup(calibration->xerr,
                                           calibration->n*sizeof(gdouble));
-    gcmodel->calibration->yerr = g_memdup(calibration->yerr, 
+    gcmodel->calibration->yerr = g_memdup(calibration->yerr,
                                           calibration->n*sizeof(gdouble));
-    gcmodel->calibration->zerr = g_memdup(calibration->zerr, 
+    gcmodel->calibration->zerr = g_memdup(calibration->zerr,
                                           calibration->n*sizeof(gdouble));
-    gcmodel->calibration->xunc = g_memdup(calibration->xunc, 
+    gcmodel->calibration->xunc = g_memdup(calibration->xunc,
                                           calibration->n*sizeof(gdouble));
-    gcmodel->calibration->yunc = g_memdup(calibration->yunc, 
+    gcmodel->calibration->yunc = g_memdup(calibration->yunc,
                                           calibration->n*sizeof(gdouble));
-    gcmodel->calibration->zunc = g_memdup(calibration->zunc, 
+    gcmodel->calibration->zunc = g_memdup(calibration->zunc,
                                           calibration->n*sizeof(gdouble));
 }
 

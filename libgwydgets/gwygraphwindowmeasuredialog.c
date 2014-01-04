@@ -51,7 +51,7 @@ static void     status_cb                                           (GwyGraphAre
 
 GwyEnum method_type[] = {
     { N_("Intersections"),   METHOD_INTERSECTIONS, },
-    { N_("Horizontal"),      METHOD_HORIZONTAL,    }, 
+    { N_("Horizontal"),      METHOD_HORIZONTAL,    },
     { N_("Points anywhere"), METHOD_CROSSES,       },
 };
 
@@ -456,7 +456,7 @@ selection_updated_cb(GwySelection *selection,
 
             label = g_ptr_array_index(dialog->disty, i);
             if (ret && prevret) {
-                if (is_calibration && gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES) { 
+                if (is_calibration && gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES) {
                     value_label_unc(label, (y - yp)/yformat->magnitude,
                                                     sqrt(ypunc*ypunc + yunc*yunc)/yformat->magnitude,
                                                     yformat->precision, str);
@@ -471,7 +471,7 @@ selection_updated_cb(GwySelection *selection,
             label = g_ptr_array_index(dialog->slope, i);
             if (ret && prevret) {
                 if (gwy_si_unit_equal (xunit, yunit))
-                    if (is_calibration && gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES) 
+                    if (is_calibration && gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES)
                         value_label_unc(label, 180.0/G_PI*atan2((y - yp), (x - xp)),
                                sqrt((1/(1+(y-yp)*(y-yp)/(x-xp)/(x-xp))*(y-yp)/(x-xp)/(x-xp))
                                    *(1/(1+(y-yp)*(y-yp)/(x-xp)/(x-xp))*(y-yp)/(x-xp)/(x-xp))*(xpunc*xpunc + xunc*xunc)
@@ -598,7 +598,7 @@ _gwy_graph_window_measure_dialog_new(GwyGraph *graph)
 
     for (i = 0; i < NMAX; i++) {
         label = gtk_label_new(NULL);
-        gtk_label_set_selectable(GTK_LABEL(label), TRUE); 
+        gtk_label_set_selectable(GTK_LABEL(label), TRUE);
         gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 0, 1, i+2, i+3,
                          GTK_FILL | GTK_EXPAND, 0, 4, 2);

@@ -1679,7 +1679,7 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
         units = g_string_new(NULL);
         for (i = 0; i < model->curves->len; i++) {
             cmodel = g_ptr_array_index(model->curves, i);
-            if (export_metadata) 
+            if (export_metadata)
                 g_string_append_printf(descriptions, "%s;%s;",
                                        cmodel->description->str,
                                        cmodel->description->str);
