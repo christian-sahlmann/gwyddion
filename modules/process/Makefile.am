@@ -58,7 +58,6 @@ process_LTLIBRARIES = \
 	linecorrect.la \
 	lno_synth.la \
 	local_contrast.la \
-	local_contrast_rank.la \
 	mark_with.la \
 	maskcor.la \
 	maskops.la \
@@ -75,6 +74,7 @@ process_LTLIBRARIES = \
 	polylevel.la \
 	polydistort.la \
 	presentationops.la \
+	rank.la \
 	rotate.la \
 	scale.la \
 	scars.la \
@@ -162,7 +162,6 @@ level_grains_la_SOURCES        = level_grains.c
 linecorrect_la_SOURCES         = linecorrect.c
 lno_synth_la_SOURCES           = lno_synth.c dimensions.h synth.h
 local_contrast_la_SOURCES      = local_contrast.c
-local_contrast_rank_la_SOURCES = local_contrast_rank.c
 mark_with_la_SOURCES           = mark_with.c
 maskcor_la_SOURCES             = maskcor.c
 maskops_la_SOURCES             = maskops.c
@@ -180,6 +179,7 @@ pid_la_SOURCES                 = pid.c
 polylevel_la_SOURCES           = polylevel.c
 polydistort_la_SOURCES         = polydistort.c
 presentationops_la_SOURCES     = presentationops.c
+rank_la_SOURCES                = rank.c
 rotate_la_SOURCES              = rotate.c
 scale_la_SOURCES               = scale.c
 scars_la_SOURCES               = scars.c
