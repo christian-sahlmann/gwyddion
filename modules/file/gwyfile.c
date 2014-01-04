@@ -45,7 +45,7 @@
  * [FILE-MAGIC-USERGUIDE]
  * Gwyddion native data
  * .gwy
- * Read Save SPS
+ * Read Save SPS Volume
  **/
 
 #include "config.h"
