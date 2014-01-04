@@ -58,6 +58,7 @@ process_LTLIBRARIES = \
 	linecorrect.la \
 	lno_synth.la \
 	local_contrast.la \
+	local_contrast_rank.la \
 	mark_with.la \
 	maskcor.la \
 	maskops.la \
@@ -161,6 +162,7 @@ level_grains_la_SOURCES        = level_grains.c
 linecorrect_la_SOURCES         = linecorrect.c
 lno_synth_la_SOURCES           = lno_synth.c dimensions.h synth.h
 local_contrast_la_SOURCES      = local_contrast.c
+local_contrast_rank_la_SOURCES = local_contrast_rank.c
 mark_with_la_SOURCES           = mark_with.c
 maskcor_la_SOURCES             = maskcor.c
 maskops_la_SOURCES             = maskops.c

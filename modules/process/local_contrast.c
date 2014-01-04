@@ -210,11 +210,10 @@ contrast_do(GwyContainer *data, ContrastArgs *args)
     gdouble *show, *weight;
     gdouble mins, maxs, v, vc, minv, maxv;
     gdouble sum, gmin, gmax;
-    gint xres, yres, i, j, k, l, id;
+    gint xres, yres, i, j, k, l;
 
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
                                      GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_DATA_FIELD_ID, &id,
                                      GWY_APP_SHOW_FIELD_KEY, &squark,
                                      GWY_APP_SHOW_FIELD, &showfield,
                                      0);
