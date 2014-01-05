@@ -344,6 +344,7 @@ validate_item_pass2(gpointer hash_key,
         case KEY_IS_MASK:
         case KEY_IS_SHOW:
         case KEY_IS_CHANNEL_META:
+        case KEY_IS_CHANNEL_LOG:
         case KEY_IS_TITLE:
         case KEY_IS_PALETTE:
         case KEY_IS_3D_PALETTE:
@@ -388,6 +389,7 @@ validate_item_pass2(gpointer hash_key,
         case KEY_IS_BRICK_PREVIEW:
         case KEY_IS_BRICK_PREVIEW_PALETTE:
         case KEY_IS_BRICK_META:
+        case KEY_IS_BRICK_LOG:
         if (!in_array(info->volumes, id))
             *errors = g_slist_prepend(*errors,
                                       FAIL(GWY_DATA_ERROR_STRAY_SECONDARY_DATA,

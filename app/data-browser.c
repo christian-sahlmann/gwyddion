@@ -5728,6 +5728,10 @@ gwy_app_data_merge_gather(gpointer key,
         pageno = PAGE_SPECTRA;
         break;
 
+        case KEY_IS_BRICK:
+        pageno = PAGE_VOLUMES;
+        break;
+
         default:
         return;
         break;
@@ -5767,6 +5771,12 @@ gwy_app_data_merge_copy_1(gpointer key,
         if (!g_hash_table_lookup_extended(map[PAGE_SPECTRA], idp, NULL, &id2p))
             goto fail;
         quark = gwy_app_get_spectra_key_for_id(GPOINTER_TO_INT(id2p));
+        break;
+
+        case KEY_IS_BRICK:
+        if (!g_hash_table_lookup_extended(map[PAGE_VOLUMES], idp, NULL, &id2p))
+            goto fail;
+        quark = gwy_app_get_brick_key_for_id(GPOINTER_TO_INT(id2p));
         break;
 
         default:
@@ -5859,6 +5869,20 @@ gwy_app_data_merge_copy_2(gpointer key,
                                               &id2p))
                 goto fail;
             quark = gwy_app_get_spectra_key_for_id(GPOINTER_TO_INT(id2p));
+            g_snprintf(buf, sizeof(buf), "%s/visible",
+                       g_quark_to_string(quark));
+            if (g_value_get_boolean(gvalue))
+                gwy_container_set_boolean_by_name(dest, buf, TRUE);
+        }
+        return;
+        break;
+
+        case KEY_IS_BRICK:
+        if (visibility) {
+            if (!g_hash_table_lookup_extended(map[PAGE_VOLUMES], idp, NULL,
+                                              &id2p))
+                goto fail;
+            quark = gwy_app_get_brick_key_for_id(GPOINTER_TO_INT(id2p));
             g_snprintf(buf, sizeof(buf), "%s/visible",
                        g_quark_to_string(quark));
             if (g_value_get_boolean(gvalue))
@@ -5962,6 +5986,31 @@ gwy_app_data_merge_copy_2(gpointer key,
         case KEY_IS_3D_MATERIAL:
         g_snprintf(buf, sizeof(buf), "/%d/3d/material", id2);
         gwy_container_set_string_by_name(dest, buf, g_value_dup_string(gvalue));
+        break;
+
+        case KEY_IS_BRICK_TITLE:
+        g_snprintf(buf, sizeof(buf), "/brick/%d/title", id2);
+        gwy_container_set_string_by_name(dest, buf, g_value_dup_string(gvalue));
+        break;
+
+        case KEY_IS_BRICK_PREVIEW:
+        g_snprintf(buf, sizeof(buf), "/brick/%d/preview", id2);
+        gwy_container_set_object_by_name(dest, buf, g_value_get_object(gvalue));
+        break;
+
+        case KEY_IS_BRICK_PREVIEW_PALETTE:
+        g_snprintf(buf, sizeof(buf), "/brick/%d/preview/palette", id2);
+        gwy_container_set_string_by_name(dest, buf, g_value_dup_string(gvalue));
+        break;
+
+        case KEY_IS_BRICK_META:
+        g_snprintf(buf, sizeof(buf), "/brick/%d/meta", id2);
+        gwy_container_set_object_by_name(dest, buf, g_value_get_object(gvalue));
+        break;
+
+        case KEY_IS_BRICK_LOG:
+        g_snprintf(buf, sizeof(buf), "/brick/%d/log", id2);
+        gwy_container_set_object_by_name(dest, buf, g_value_get_object(gvalue));
         break;
 
         default:
