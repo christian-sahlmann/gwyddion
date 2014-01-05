@@ -22,17 +22,18 @@
 #include "config.h"
 #include <stdarg.h>
 #include <string.h>
-#include <libgwyddion/gwymacros.h>
-#include <app/gwytool.h>
-#include <app/settings.h>
-#include <app/log.h>
+#include <libgwyddion/gwyddion.h>
+#include <libgwymodule/gwymodule.h>
+#include <app/gwyapp.h>
 
-static gchar* format_args(const gchar *prefix);
-static void format_arg(gpointer hkey, gpointer hvalue, gpointer user_data);
-static const gchar* channel_log_key(gint id);
-static gboolean find_settings_prefix(const gchar *function,
-                                     const gchar *settings_name,
-                                     GString *prefix);
+static gchar*       format_args         (const gchar *prefix);
+static void         format_arg          (gpointer hkey,
+                                         gpointer hvalue,
+                                         gpointer user_data);
+static const gchar* channel_log_key     (gint id);
+static gboolean     find_settings_prefix(const gchar *function,
+                                         const gchar *settings_name,
+                                         GString *prefix);
 
 /**
  * gwy_app_channel_log_add:
@@ -112,6 +113,7 @@ gwy_app_channel_log_add(GwyContainer *data,
         g_object_unref(targetlog);
     }
 
+    // XXX XXX XXX Tools do not have the correct settings saved upon Apply!
     args = format_args(str->str);
     g_string_printf(str, "%s(%s)", function, args);
     gwy_string_list_append_take(targetlog, g_string_free(str, FALSE));
@@ -228,25 +230,55 @@ find_settings_prefix(const gchar *function,
 
     if (settings_name)
         g_string_append(prefix, settings_name);
-    else if (g_str_has_prefix(function, "proc::"))
-        g_string_append(prefix, function + 6);
-    else if (g_str_has_prefix(function, "file::"))
-        g_string_append(prefix, function + 6);
-    else if (g_str_has_prefix(function, "graph::"))
-        g_string_append(prefix, function + 7);
-    else if (g_str_has_prefix(function, "volume::"))
-        g_string_append(prefix, function + 8);
+
+    if (g_str_has_prefix(function, "proc::")) {
+        const gchar *name = function + 6;
+        if (!gwy_process_func_exists(name)) {
+            g_warning("Invalid data processing function name %s.", name);
+            return FALSE;
+        }
+        if (!settings_name)
+            g_string_append(prefix, name);
+    }
+    else if (g_str_has_prefix(function, "file::")) {
+        const gchar *name = function + 6;
+        if (!gwy_file_func_exists(name)) {
+            g_warning("Invalid file function name %s.", name);
+            return FALSE;
+        }
+        if (!settings_name)
+            g_string_append(prefix, name);
+    }
+    else if (g_str_has_prefix(function, "graph::")) {
+        const gchar *name = function + 7;
+        if (!gwy_graph_func_exists(name)) {
+            g_warning("Invalid graph function name %s.", name);
+            return FALSE;
+        }
+        if (!settings_name)
+            g_string_append(prefix, name);
+    }
+    else if (g_str_has_prefix(function, "volume::")) {
+        const gchar *name = function + 8;
+        if (!gwy_volume_func_exists(name)) {
+            g_warning("Invalid volume function name %s.", name);
+            return FALSE;
+        }
+        if (!settings_name)
+            g_string_append(prefix, name);
+    }
     else if (g_str_has_prefix(function, "tool::")) {
-        GType type = g_type_from_name(function + 6);
+        const gchar *name = function + 6;
+        GType type = g_type_from_name(name);
         GwyToolClass *klass;
 
         if (!type) {
-            g_warning("Invalid tool name %s.", function + 6);
+            g_warning("Invalid tool name %s.", name);
             return FALSE;
         }
 
         if (!(klass = g_type_class_ref(type))) {
-            g_warning("Invalid tool name %s.", function + 6);
+            g_warning("Invalid tool name %s.", name);
             return FALSE;
         }
 
