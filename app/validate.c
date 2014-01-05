@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwystringlist.h>
 #include <app/validate.h>
 #include "gwyappinternal.h"
 
@@ -252,6 +253,11 @@ validate_item_pass1(gpointer hash_key,
         case KEY_IS_CHANNEL_META:
         case KEY_IS_BRICK_META:
         check_type(gvalue, GWY_TYPE_CONTAINER, key, errors);
+        break;
+
+        case KEY_IS_CHANNEL_LOG:
+        case KEY_IS_BRICK_LOG:
+        check_type(gvalue, GWY_TYPE_STRING_LIST, key, errors);
         break;
 
         case KEY_IS_TITLE:

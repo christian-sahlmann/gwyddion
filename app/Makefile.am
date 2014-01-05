@@ -34,6 +34,7 @@ libgwyapp2include_HEADERS = \
 	gwymoduleutils-file.h \
 	gwyplaintool.h \
 	gwytool.h \
+	log.h \
 	menu.h \
 	meta.h \
 	resource-editor.h \
@@ -123,6 +124,7 @@ libgwyapp2_la_SOURCES = \
 	gwymoduleutils-file.c \
 	gwyplaintool.c \
 	gwytool.c \
+	log.c \
 	menu.c \
 	meta.c \
 	settings.c \
