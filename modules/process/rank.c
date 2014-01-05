@@ -33,7 +33,7 @@
 #define RANK_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
-    MAX_SIZE = 50,
+    MAX_SIZE = 100,
     BLOCK_SIZE = 200,
 };
 
@@ -57,6 +57,7 @@ static void     rank_do          (GwyContainer *data,
                                   RankArgs *args);
 static gdouble  local_rank       (GwyDataField *data_field,
                                   gint size,
+                                  const gint *xsize,
                                   gint col,
                                   gint row);
 static void     load_args        (GwyContainer *container,
@@ -194,6 +195,7 @@ rank_do(GwyContainer *data, RankArgs *args)
     GQuark dquark, squark;
     gdouble *show;
     gint xres, yres, i, j, size, id;
+    gint *xsize;
     guint count, step;
     gdouble q;
 
@@ -217,12 +219,18 @@ rank_do(GwyContainer *data, RankArgs *args)
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(showfield), "");
     show = gwy_data_field_get_data(showfield);
 
+    xsize = g_new(gint, size);
+    for (i = -(gint)args->size; i <= (gint)args->size; i++) {
+        gdouble x = sqrt(0.25*size*size - i*i) - 0.49999999;
+        xsize[i + args->size] = (gint)floor(x);
+    }
+
     step = MAX(10000, xres*yres/100);
     count = 0;
     q = 1.0/(xres*yres);
     for (i = 0; i < yres; i++) {
         for (j = 0; j < xres; j++) {
-            show[i*xres + j] = local_rank(dfield, size, j, i);
+            show[i*xres + j] = local_rank(dfield, args->size, xsize, j, i);
             if ((++count) % step == 0) {
                 if (!gwy_app_wait_set_fraction(q*count))
                     goto cancelled;
@@ -239,19 +247,18 @@ rank_do(GwyContainer *data, RankArgs *args)
     gwy_data_field_data_changed(showfield);
 
 cancelled:
+    g_free(xsize);
     g_object_unref(showfield);
     gwy_app_wait_finish();
 }
 
 static gdouble
 local_rank(GwyDataField *data_field,
-           gint size,
+           gint size, const gint *xsize,
            gint col, gint row)
 {
-    gint xres, yres;
-    gint i, j;
-    gint xfrom, xto, yfrom, yto;
-    guint r, xlen, ylen;
+    gint xres, yres, i, j, yfrom, yto;
+    guint r, hr, t;
     const gdouble *data;
     gdouble v;
 
@@ -260,30 +267,31 @@ local_rank(GwyDataField *data_field,
     data = data_field->data;
     v = data[row*xres + col];
 
-    yfrom = MAX(0, row - (size-1)/2);
-    yto = MIN(yres-1, row + size/2);
-    ylen = yto - yfrom + 1;
+    yfrom = MAX(0, row - size);
+    yto = MIN(yres-1, row + size);
 
-    xfrom = MAX(0, col - (size-1)/2);
-    xto = MIN(xres-1, col + size/2);
-    xlen = xto - xfrom + 1;
-
-    r = 0;
+    r = hr = t = 0;
     for (i = yfrom; i <= yto; i++) {
+        gint xr = xsize[i - row + size];
+        gint xfrom = MAX(0, col - xr);
+        gint xto = MIN(xres-1, col + xr);
+        guint xlen = xto - xfrom + 1;
         const gdouble *d = data + i*xres + xfrom;
+
         for (j = xlen; j; j--, d++) {
             if (*d <= v) {
-                r += 2;
+                r++;
                 if (G_UNLIKELY(*d == v))
-                    r--;
+                    hr++;
             }
+            t++;
         }
     }
 
-    return 0.5*r/(xlen*ylen);
+    return (r - 0.5*hr)/t;
 }
 
-static const gchar size_key[]   = "/module/rank/size";
+static const gchar size_key[] = "/module/rank/size";
 
 static void
 sanitize_args(RankArgs *args)
