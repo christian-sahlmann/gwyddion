@@ -221,7 +221,7 @@ rank_do(GwyContainer *data, RankArgs *args)
 
     xsize = g_new(gint, size);
     for (i = -(gint)args->size; i <= (gint)args->size; i++) {
-        gdouble x = sqrt(0.25*size*size - i*i) - 0.49999999;
+        gdouble x = sqrt(0.25*size*size - i*i);
         xsize[i + args->size] = (gint)floor(x);
     }
 
