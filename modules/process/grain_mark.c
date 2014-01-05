@@ -144,7 +144,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks grains by thresholding (height, slope, curvature)."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.15",
+    "1.16",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -181,11 +181,12 @@ grain_mark(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(dfield && mquark);
 
-    if (run == GWY_RUN_IMMEDIATE)
+    if (run == GWY_RUN_IMMEDIATE) {
         run_noninteractive(&args, data, dfield, mquark);
+        gwy_app_channel_log_add(data, id, id, "proc::grain_mark", NULL);
+    }
     else {
         mark_dialog(&args, data, dfield, id, mquark);
-        mark_save_args(gwy_app_settings_get(), &args);
     }
 }
 
@@ -420,6 +421,7 @@ mark_dialog(MarkArgs *args,
             case GTK_RESPONSE_NONE:
             g_object_unref(controls.mydata);
             gwy_si_unit_value_format_free(controls.format_height);
+            mark_save_args(gwy_app_settings_get(), args);
             return;
             break;
 
@@ -464,6 +466,9 @@ mark_dialog(MarkArgs *args,
         g_object_unref(controls.mydata);
         run_noninteractive(args, data, dfield, mquark);
     }
+
+    mark_save_args(gwy_app_settings_get(), args);
+    gwy_app_channel_log_add(data, id, id, "proc::grain_mark", NULL);
 }
 
 static void
