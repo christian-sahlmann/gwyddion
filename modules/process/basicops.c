@@ -250,7 +250,7 @@ rotate_clockwise_90(GwyContainer *data, GwyRunType run)
         }
     }
     gwy_app_data_clear_selections(data, id);
-    gwy_app_channel_log_add(data, id, id, "proc::rotate_clockwise_90", NULL);
+    gwy_app_channel_log_add(data, id, id, "proc::rotate_90_cw", NULL);
 }
 
 static void
@@ -280,8 +280,7 @@ rotate_counterclockwise_90(GwyContainer *data, GwyRunType run)
         }
     }
     gwy_app_data_clear_selections(data, id);
-    gwy_app_channel_log_add(data, id, id, "proc::rotate_counterclockwise_90",
-                            NULL);
+    gwy_app_channel_log_add(data, id, id, "proc::rotate_90_ccw", NULL);
 }
 
 static void
