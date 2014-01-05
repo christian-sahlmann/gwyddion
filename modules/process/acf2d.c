@@ -36,7 +36,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Calculates two-dimensional autocorrelation function."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2007",
 };
@@ -61,10 +61,12 @@ static void
 acf2d(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *result;
-    gint id;
+    gint oldid, id;
 
     g_return_if_fail(run & ACF2D_RUN_MODES);
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield, 0);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &oldid,
+                                     0);
     g_return_if_fail(dfield);
 
     result = gwy_data_field_new(1, 1, 1.0, 1.0, FALSE);
@@ -72,6 +74,7 @@ acf2d(GwyContainer *data, GwyRunType run)
     id = gwy_app_data_browser_add_data_field(result, data, TRUE);
     g_object_unref(result);
     gwy_app_set_data_field_title(data, id, _("2D ACF"));
+    gwy_app_channel_log_add(data, oldid, id, "proc::acf2d", NULL);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

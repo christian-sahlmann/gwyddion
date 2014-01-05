@@ -56,7 +56,7 @@ static GwyModuleInfo module_info = {
     N_("Basic operations like flipping, value inversion, and rotation "
        "by multiples of 90 degrees."),
     "Yeti <yeti@gwyddion.net>",
-    "1.7",
+    "1.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -146,6 +146,7 @@ flip_horizontally(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfields[3];
     GQuark quarks[3];
+    gint id;
     gint i;
 
     g_return_if_fail(run & BASICOPS_RUN_MODES);
@@ -155,6 +156,7 @@ flip_horizontally(GwyContainer *data, GwyRunType run)
                                      GWY_APP_DATA_FIELD_KEY, quarks + 0,
                                      GWY_APP_MASK_FIELD_KEY, quarks + 1,
                                      GWY_APP_SHOW_FIELD_KEY, quarks + 2,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     clean_quarks(G_N_ELEMENTS(quarks), quarks, dfields);
     gwy_app_undo_qcheckpointv(data, G_N_ELEMENTS(quarks), quarks);
@@ -164,6 +166,7 @@ flip_horizontally(GwyContainer *data, GwyRunType run)
             gwy_data_field_data_changed(dfields[i]);
         }
     }
+    gwy_app_channel_log_add(data, id, id, "proc::flip_horizontally", NULL);
 }
 
 static void
@@ -171,6 +174,7 @@ flip_vertically(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfields[3];
     GQuark quarks[3];
+    gint id;
     gint i;
 
     g_return_if_fail(run & BASICOPS_RUN_MODES);
@@ -180,6 +184,7 @@ flip_vertically(GwyContainer *data, GwyRunType run)
                                      GWY_APP_DATA_FIELD_KEY, quarks + 0,
                                      GWY_APP_MASK_FIELD_KEY, quarks + 1,
                                      GWY_APP_SHOW_FIELD_KEY, quarks + 2,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     clean_quarks(G_N_ELEMENTS(quarks), quarks, dfields);
     gwy_app_undo_qcheckpointv(data, G_N_ELEMENTS(quarks), quarks);
@@ -189,6 +194,7 @@ flip_vertically(GwyContainer *data, GwyRunType run)
             gwy_data_field_data_changed(dfields[i]);
         }
     }
+    gwy_app_channel_log_add(data, id, id, "proc::flip_vertically", NULL);
 }
 
 static void
@@ -196,6 +202,7 @@ invert_value(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfields[2];
     GQuark quarks[2];
+    gint id;
     guint i;
 
     g_return_if_fail(run & BASICOPS_RUN_MODES);
@@ -203,6 +210,7 @@ invert_value(GwyContainer *data, GwyRunType run)
                                      GWY_APP_SHOW_FIELD, dfields + 1,
                                      GWY_APP_DATA_FIELD_KEY, quarks + 0,
                                      GWY_APP_SHOW_FIELD_KEY, quarks + 1,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     clean_quarks(G_N_ELEMENTS(quarks), quarks, dfields);
     gwy_app_undo_qcheckpointv(data, G_N_ELEMENTS(quarks), quarks);
@@ -212,6 +220,7 @@ invert_value(GwyContainer *data, GwyRunType run)
             gwy_data_field_data_changed(dfields[i]);
         }
     }
+    gwy_app_channel_log_add(data, id, id, "proc::invert_value", NULL);
 }
 
 static void
@@ -241,6 +250,7 @@ rotate_clockwise_90(GwyContainer *data, GwyRunType run)
         }
     }
     gwy_app_data_clear_selections(data, id);
+    gwy_app_channel_log_add(data, id, id, "proc::rotate_clockwise_90", NULL);
 }
 
 static void
@@ -270,6 +280,8 @@ rotate_counterclockwise_90(GwyContainer *data, GwyRunType run)
         }
     }
     gwy_app_data_clear_selections(data, id);
+    gwy_app_channel_log_add(data, id, id, "proc::rotate_counterclockwise_90",
+                            NULL);
 }
 
 static void
@@ -307,6 +319,7 @@ rotate_180(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfields[3];
     GQuark quarks[3];
+    gint id;
     gint i;
 
     g_return_if_fail(run & BASICOPS_RUN_MODES);
@@ -316,6 +329,7 @@ rotate_180(GwyContainer *data, GwyRunType run)
                                      GWY_APP_DATA_FIELD_KEY, quarks + 0,
                                      GWY_APP_MASK_FIELD_KEY, quarks + 1,
                                      GWY_APP_SHOW_FIELD_KEY, quarks + 2,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     clean_quarks(G_N_ELEMENTS(quarks), quarks, dfields);
     gwy_app_undo_qcheckpointv(data, G_N_ELEMENTS(quarks), quarks);
@@ -325,6 +339,7 @@ rotate_180(GwyContainer *data, GwyRunType run)
             gwy_data_field_data_changed(dfields[i]);
         }
     }
+    gwy_app_channel_log_add(data, id, id, "proc::rotate_180", NULL);
 }
 
 static void
@@ -396,6 +411,8 @@ square_samples(GwyContainer *data, GwyRunType run)
         gwy_container_set_object(data, quark, dfields[2]);
         g_object_unref(dfields[2]);
     }
+
+    gwy_app_channel_log_add(data, oldid, newid, "proc::square_samples", NULL);
 }
 
 static void
@@ -405,6 +422,7 @@ null_offsets(GwyContainer *data,
     GwyDataField *dfields[3];
     GQuark quarks[3];
     guint i;
+    gint id;
 
     g_return_if_fail(run & BASICOPS_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, dfields + 0,
@@ -413,6 +431,7 @@ null_offsets(GwyContainer *data,
                                      GWY_APP_DATA_FIELD_KEY, quarks + 0,
                                      GWY_APP_MASK_FIELD_KEY, quarks + 1,
                                      GWY_APP_SHOW_FIELD_KEY, quarks + 2,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     clean_quarks(G_N_ELEMENTS(quarks), quarks, dfields);
 
@@ -436,6 +455,8 @@ null_offsets(GwyContainer *data,
             gwy_data_field_data_changed(dfields[i]);
         }
     }
+
+    gwy_app_channel_log_add(data, id, id, "proc::null_offsets", NULL);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

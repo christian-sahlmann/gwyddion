@@ -79,7 +79,7 @@ static GwyModuleInfo module_info = {
     N_("Levels data by simple plane subtraction or by rotation, "
        "and fixes minimal or mean value to zero."),
     "Yeti <yeti@gwyddion.net>",
-    "1.7",
+    "1.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -143,11 +143,14 @@ do_level(GwyContainer *data,
     GwyDataField *mfield;
     LevelArgs args;
     gdouble c, bx, by;
+    const gchar *name = NULL;
     GQuark quark;
+    gint id;
 
     g_return_if_fail(run & LEVEL_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &quark,
                                      GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      GWY_APP_MASK_FIELD, &mfield,
                                      0);
     g_return_if_fail(dfield && quark);
@@ -185,20 +188,20 @@ do_level(GwyContainer *data,
 
     switch (level_type) {
         case LEVEL_SUBTRACT:
+        name = "proc::level";
         c = -0.5*(bx*gwy_data_field_get_xres(dfield)
                   + by*gwy_data_field_get_yres(dfield));
         gwy_data_field_plane_level(dfield, c, bx, by);
-        gwy_data_field_data_changed(dfield);
         break;
 
         case LEVEL_ROTATE:
+        name = "proc::level_rotate";
         bx = gwy_data_field_rtoj(dfield, bx);
         by = gwy_data_field_rtoi(dfield, by);
         gwy_data_field_plane_rotate(dfield, atan2(bx, 1), atan2(by, 1),
                                     GWY_INTERPOLATION_LINEAR);
         gwy_debug("b = %g, alpha = %g deg, c = %g, beta = %g deg",
                   bx, 180/G_PI*atan2(bx, 1), by, 180/G_PI*atan2(by, 1));
-        gwy_data_field_data_changed(dfield);
         break;
 
         default:
@@ -206,6 +209,8 @@ do_level(GwyContainer *data,
         break;
     }
 
+    gwy_app_channel_log_add(data, id, id, name, NULL);
+    gwy_data_field_data_changed(dfield);
     gwy_object_unref(mfield);
 }
 
@@ -214,14 +219,17 @@ fix_zero(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
     GQuark quark;
+    gint id;
 
     g_return_if_fail(run & LEVEL_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &quark,
                                      GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield && quark);
     gwy_app_undo_qcheckpoint(data, quark, NULL);
     gwy_data_field_add(dfield, -gwy_data_field_get_min(dfield));
+    gwy_app_channel_log_add(data, id, id, "proc::fix_zero", NULL);
     gwy_data_field_data_changed(dfield);
 }
 
@@ -230,14 +238,17 @@ zero_mean(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
     GQuark quark;
+    gint id;
 
     g_return_if_fail(run & LEVEL_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &quark,
                                      GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield && quark);
     gwy_app_undo_qcheckpoint(data, quark, NULL);
     gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
+    gwy_app_channel_log_add(data, id, id, "proc::zero_mean", NULL);
     gwy_data_field_data_changed(dfield);
 }
 

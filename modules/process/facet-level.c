@@ -68,7 +68,7 @@ static GwyModuleInfo module_info = {
     N_("Automatic facet-orientation based levelling. "
        "Levels data to make facets point up."),
     "Yeti <yeti@gwyddion.net>",
-    "2.3",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -175,6 +175,7 @@ facet_level(GwyContainer *data, GwyRunType run)
     if (!cancelled) {
         gwy_app_undo_qcheckpointv(data, 1, &quark);
         gwy_data_field_copy(dfield, old, FALSE);
+        gwy_app_channel_log_add(data, id, id, "proc::facet-level", NULL);
         gwy_data_field_data_changed(old);
     }
     g_object_unref(dfield);
