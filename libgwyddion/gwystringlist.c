@@ -274,6 +274,30 @@ gwy_string_list_append(GwyStringList *strlist,
 }
 
 /**
+ * gwy_string_list_append_take:
+ * @strlist: A string list.
+ * @string: A string to add.
+ *
+ * Appends a string to the end of a string list, taking ownership of the string.
+ *
+ * Since: 2.35
+ **/
+void
+gwy_string_list_append_take(GwyStringList *strlist,
+                            gchar *string)
+{
+    GPtrArray *strings;
+
+    g_return_if_fail(GWY_IS_STRING_LIST(strlist));
+    g_return_if_fail(string);
+
+    strings = (GPtrArray*)strlist->strings;
+    g_ptr_array_add(strings, string);
+
+    g_signal_emit(strlist, string_list_signals[VALUE_CHANGED], 0);
+}
+
+/**
  * gwy_string_list_get_length:
  * @strlist: A string list.
  *

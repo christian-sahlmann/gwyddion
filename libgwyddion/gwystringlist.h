@@ -67,6 +67,8 @@ GType gwy_string_list_get_type  (void) G_GNUC_CONST;
 GwyStringList* gwy_string_list_new        (void);
 void           gwy_string_list_append     (GwyStringList *strlist,
                                            const gchar *string);
+void           gwy_string_list_append_take(GwyStringList *strlist,
+                                           gchar *string);
 guint          gwy_string_list_get_length (GwyStringList *strlist);
 const gchar*   gwy_string_list_get        (GwyStringList *strlist,
                                            guint i);
