@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2006,2013 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006,2013-2014 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -102,6 +102,7 @@ static gboolean   gwy_app_3d_window_data2_filter      (GwyContainer *data2,
 static void       gwy_app_data_window_reset_zoom      (void);
 static void       gwy_app_volume_window_reset_zoom    (void);
 static void       metadata_browser                    (gpointer pwhat);
+static void       log_browser                         (gpointer pwhat);
 static void       gwy_app_change_mask_color           (void);
 
 /* Must match Gwy3DViewLabel */
@@ -407,6 +408,11 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
             N_("Metadata _Browser..."),
             metadata_browser, GUINT_TO_POINTER(GWY_APP_DATA_FIELD),
             GDK_B, GDK_CONTROL_MASK | GDK_SHIFT_MASK
+        },
+        {
+            N_("View _Log..."),
+            log_browser, GUINT_TO_POINTER(GWY_APP_DATA_FIELD),
+            0, 0
         },
     };
     GwySensitivityGroup *sensgroup;
@@ -1787,6 +1793,39 @@ metadata_browser(gpointer pwhat)
         gwy_app_metadata_browser_for_channel(container, id);
     else if (what == GWY_APP_BRICK)
         gwy_app_metadata_browser_for_volume(container, id);
+}
+
+static void
+log_browser(gpointer pwhat)
+{
+    GwyAppWhat what = GPOINTER_TO_UINT(pwhat);
+    GtkWidget *view;
+    GwyContainer *container;
+    gint id;
+
+    if (what == GWY_APP_DATA_FIELD)
+        gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &view,
+                                         GWY_APP_CONTAINER, &container,
+                                         GWY_APP_DATA_FIELD_ID, &id,
+                                         0);
+    else if (what == GWY_APP_BRICK)
+        gwy_app_data_browser_get_current(GWY_APP_VOLUME_VIEW, &view,
+                                         GWY_APP_CONTAINER, &container,
+                                         GWY_APP_BRICK_ID, &id,
+                                         0);
+    else {
+        g_return_if_reached();
+    }
+
+    if (!view || !container || id == -1)
+        return;
+
+    if (what == GWY_APP_DATA_FIELD)
+        gwy_app_log_browser_for_channel(container, id);
+    else if (what == GWY_APP_BRICK) {
+        g_printerr("Implement me!");
+        /*gwy_app_metadata_browser_for_volume(container, id);*/
+    }
 }
 
 static void

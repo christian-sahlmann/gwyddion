@@ -24,16 +24,64 @@
 #include <string.h>
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
+#include <libgwydgets/gwydgets.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
-static gchar*       format_args         (const gchar *prefix);
-static void         format_arg          (gpointer hkey,
-                                         gpointer hvalue,
-                                         gpointer user_data);
-static const gchar* channel_log_key     (gint id);
-static gboolean     find_settings_prefix(const gchar *function,
-                                         const gchar *settings_name,
-                                         GString *prefix);
+enum {
+    LOG_TYPE,
+    LOG_FUNCNAME,
+    LOG_PARAMETERS,
+};
+
+typedef enum {
+    BROWSER_DATA_CHANNEL,
+    BROWSER_DATA_VOLUME,
+} BrowserDataType;
+
+typedef struct {
+    GwyContainer *container;
+    GwyStringList *log;
+    GString *buf;
+    gulong changed_id;
+    gulong destroy_id;
+    GtkWidget *window;
+    GtkWidget *treeview;
+    GtkWidget *save;
+    GtkWidget *clear;
+    GtkWidget *close;
+} LogBrowser;
+
+static GwyStringList* get_channel_log       (GwyContainer *data,
+                                             gint id,
+                                             gboolean create);
+static GtkWidget*     get_log_browser       (GwyContainer *data,
+                                             BrowserDataType type,
+                                             gint id);
+static LogBrowser*    log_browser_new       (GwyContainer *data,
+                                             BrowserDataType type,
+                                             gint id,
+                                             const gchar *key);
+static void           log_browser_construct (LogBrowser *browser);
+static void           log_cell_renderer     (GtkTreeViewColumn *column,
+                                             GtkCellRenderer *renderer,
+                                             GtkTreeModel *model,
+                                             GtkTreeIter *iter,
+                                             gpointer userdata);
+static void           gwy_log_export        (LogBrowser *browser);
+static void           gwy_log_clear         (LogBrowser *browser);
+static void           log_changed           (GwyStringList *slog,
+                                             LogBrowser *browser);
+static void           gwy_log_destroy       (LogBrowser *browser);
+static void           gwy_log_data_finalized(LogBrowser *browser);
+static gchar*         format_args           (const gchar *prefix);
+static void           format_arg            (gpointer hkey,
+                                             gpointer hvalue,
+                                             gpointer user_data);
+static const gchar*   channel_log_key       (gint id);
+static gboolean       find_settings_prefix  (const gchar *function,
+                                             const gchar *settings_name,
+                                             GString *prefix);
 
 /**
  * gwy_app_channel_log_add:
@@ -88,12 +136,12 @@ gwy_app_channel_log_add(GwyContainer *data,
     }
 
     if (previd != -1)
-        sourcelog = gwy_app_get_channel_log(data, previd, FALSE);
+        sourcelog = get_channel_log(data, previd, FALSE);
 
     if (newid == previd)
         targetlog = sourcelog;
     else
-        targetlog = gwy_app_get_channel_log(data, newid, FALSE);
+        targetlog = get_channel_log(data, newid, FALSE);
 
     if (targetlog && targetlog != sourcelog) {
         g_warning("Target log must not exist when replicating logs.");
@@ -119,36 +167,342 @@ gwy_app_channel_log_add(GwyContainer *data,
     gwy_string_list_append_take(targetlog, g_string_free(str, FALSE));
 }
 
+static GwyStringList*
+get_channel_log(GwyContainer *data,
+                gint id,
+                gboolean create)
+{
+    GwyStringList *slog = NULL;
+    const gchar *strkey = channel_log_key(id);
+
+    gwy_container_gis_object_by_name(data, strkey, &slog);
+
+    if (slog || !create)
+        return slog;
+
+    slog = gwy_string_list_new();
+    gwy_container_set_object_by_name(data, strkey, slog);
+    g_object_unref(slog);
+
+    return slog;
+}
+
 /**
- * gwy_app_get_channel_log:
+ * gwy_app_log_browser_for_channel:
  * @data: A data container.
- * @id: Channel identifier.
- * @create: Pass %TRUE to create the log if it does not exist.
+ * @id: Id of a channel in @data to show log for.
  *
- * Obtains the data processing operation log for a channel.
+ * Shows a simple log browser for a channel.
  *
- * Returns: The log.  It may be %NULL if no log exists and @create is %FALSE.
+ * If the log browser is already shown for this channel it is just raised
+ * and given focus.  Otherwise, a new window is created.
+ *
+ * Returns: The log browser (owned by the library).  Usually, you can
+ *          ignore the return value.
  *
  * Since: 2.35
  **/
-GwyStringList*
-gwy_app_get_channel_log(GwyContainer *data,
-                        gint id,
-                        gboolean create)
+GtkWidget*
+gwy_app_log_browser_for_channel(GwyContainer *data,
+                                gint id)
 {
-    GwyStringList *log = NULL;
-    const gchar *strkey = channel_log_key(id);
+    return get_log_browser(data, BROWSER_DATA_CHANNEL, id);
+}
 
-    gwy_container_gis_object_by_name(data, strkey, &log);
+static GtkWidget*
+get_log_browser(GwyContainer *data,
+                BrowserDataType type,
+                gint id)
+{
+    gchar key[32];
+    LogBrowser *browser;
+    GwyStringList *slog;
 
-    if (log || !create)
-        return log;
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
+    g_return_val_if_fail(id >= 0, NULL);
 
-    log = gwy_string_list_new();
-    gwy_container_set_object_by_name(data, strkey, log);
-    g_object_unref(log);
+    if (type == BROWSER_DATA_CHANNEL)
+        g_snprintf(key, sizeof(key), "/%d/data/log", id);
+    else if (type == BROWSER_DATA_VOLUME)
+        g_snprintf(key, sizeof(key), "/brick/%d/log", id);
+    else {
+        g_return_val_if_reached(NULL);
+    }
 
-    return log;
+    if (gwy_container_gis_object_by_name(data, key, &slog)) {
+        browser = g_object_get_data(G_OBJECT(slog), "log-browser");
+        if (browser) {
+            gtk_window_present(GTK_WINDOW(browser->window));
+            return browser->window;
+        }
+    }
+
+    browser = log_browser_new(data, type, id, key);
+    gtk_widget_show_all(browser->window);
+    return browser->window;
+}
+
+static LogBrowser*
+log_browser_new(GwyContainer *data,
+                BrowserDataType type,
+                gint id,
+                const gchar *key)
+{
+    LogBrowser *browser;
+    GtkWidget *scroll, *vbox, *hbox;
+    GtkTreeView *treeview;
+    GwyNullStore *store;
+    GtkRequisition request;
+    GwyStringList *slog = NULL;
+    gchar *title, *dataname;
+    guint n;
+
+    browser = g_new0(LogBrowser, 1);
+    browser->buf = g_string_new(NULL);
+    log_browser_construct(browser);
+    browser->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+
+    if (type == BROWSER_DATA_CHANNEL)
+        dataname = gwy_app_get_data_field_title(data, id);
+    else if (type == BROWSER_DATA_VOLUME)
+        dataname = gwy_app_get_brick_title(data, id);
+    else {
+        g_return_val_if_reached(browser);
+    }
+
+    title = g_strdup_printf(_("Log of %s (%s)"),
+                            dataname, g_get_application_name());
+    gtk_window_set_title(GTK_WINDOW(browser->window), title);
+    g_free(title);
+    g_free(dataname);
+
+    if (!(gwy_container_gis_object_by_name(data, key, &slog))) {
+        slog = gwy_string_list_new();
+        gwy_container_set_object_by_name(data, key, slog);
+        g_object_unref(slog);
+    }
+
+    browser->log = slog;
+    g_object_set_data(G_OBJECT(slog), "log-browser", browser);
+    g_object_weak_ref(G_OBJECT(slog),
+                      (GWeakNotify)&gwy_log_data_finalized,
+                      browser);
+
+    browser->changed_id = g_signal_connect(slog, "value-changed",
+                                           G_CALLBACK(log_changed), browser);
+
+    n = gwy_string_list_get_length(slog);
+    store = gwy_null_store_new(n);
+    treeview = GTK_TREE_VIEW(browser->treeview);
+    gtk_tree_view_set_model(treeview, GTK_TREE_MODEL(store));
+    g_object_unref(store);
+
+    gtk_widget_size_request(browser->treeview, &request);
+    request.width = MAX(request.width, 320);
+    request.height = MAX(request.height, 400);
+    gtk_window_set_default_size(GTK_WINDOW(browser->window),
+                                MIN(request.width + 24, 2*gdk_screen_width()/3),
+                                MIN(request.height + 32,
+                                    2*gdk_screen_height()/3));
+    gwy_app_add_main_accel_group(GTK_WINDOW(browser->window));
+
+    vbox = gtk_vbox_new(FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(browser->window), vbox);
+
+    scroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
+                                   GTK_POLICY_AUTOMATIC,
+                                   GTK_POLICY_AUTOMATIC);
+    gtk_box_pack_start(GTK_BOX(vbox), scroll, TRUE, TRUE, 0);
+    gtk_container_add(GTK_CONTAINER(scroll), browser->treeview);
+    browser->destroy_id
+        = g_signal_connect_swapped(browser->window, "destroy",
+                                   G_CALLBACK(gwy_log_destroy), browser);
+
+    hbox = gtk_hbox_new(TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+
+    browser->save = gwy_stock_like_button_new(_("_Export"), GTK_STOCK_SAVE);
+    gtk_box_pack_start(GTK_BOX(hbox), browser->save, TRUE, TRUE, 0);
+    g_signal_connect_swapped(browser->save, "clicked",
+                             G_CALLBACK(gwy_log_export), browser);
+    gtk_widget_set_sensitive(browser->save, n != 0);
+
+    browser->clear = gwy_stock_like_button_new(_("Clea_r"), GTK_STOCK_CLEAR);
+    gtk_box_pack_start(GTK_BOX(hbox), browser->clear, TRUE, TRUE, 0);
+    g_signal_connect_swapped(browser->clear, "clicked",
+                             G_CALLBACK(gwy_log_clear), browser);
+
+    browser->close = gwy_stock_like_button_new(_("_Close"), GTK_STOCK_CLOSE);
+    gtk_box_pack_start(GTK_BOX(hbox), browser->close, TRUE, TRUE, 0);
+    g_signal_connect_swapped(browser->close, "clicked",
+                             G_CALLBACK(gtk_widget_destroy), browser->window);
+
+    return browser;
+}
+
+static void
+log_browser_construct(LogBrowser *browser)
+{
+    static const struct {
+        const gchar *title;
+        const guint id;
+    }
+    columns[] = {
+        { N_("Type"),       LOG_TYPE,       },
+        { N_("Function"),   LOG_FUNCNAME,   },
+        { N_("Parameters"), LOG_PARAMETERS, },
+    };
+
+    GtkTreeView *treeview;
+    GtkTreeSelection *selection;
+    GtkCellRenderer *renderer;
+    GtkTreeViewColumn *column;
+    gsize i;
+
+    browser->treeview = gtk_tree_view_new();
+    treeview = GTK_TREE_VIEW(browser->treeview);
+    gtk_tree_view_set_rules_hint(treeview, TRUE);
+
+    for (i = 0; i < G_N_ELEMENTS(columns); i++) {
+        renderer = gtk_cell_renderer_text_new();
+        column = gtk_tree_view_column_new_with_attributes(_(columns[i].title),
+                                                          renderer, NULL);
+        gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                                log_cell_renderer, browser,
+                                                NULL);
+        gtk_tree_view_append_column(treeview, column);
+        g_object_set_data(G_OBJECT(renderer), "column",
+                          GUINT_TO_POINTER(columns[i].id));
+
+        if (columns[i].id == LOG_PARAMETERS) {
+            g_object_set(renderer,
+                         "ellipsize", PANGO_ELLIPSIZE_END,
+                         "ellipsize-set", TRUE,
+                         NULL);
+        }
+    }
+
+    selection = gtk_tree_view_get_selection(treeview);
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_NONE);
+}
+
+static void
+log_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                  GtkCellRenderer *renderer,
+                  GtkTreeModel *model,
+                  GtkTreeIter *iter,
+                  gpointer userdata)
+{
+    LogBrowser *browser = (LogBrowser*)userdata;
+    GString *buf = browser->buf;
+    const gchar *s, *t;
+    guint i;
+    gulong id;
+
+    id = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(renderer), "column"));
+    gtk_tree_model_get(model, iter, 0, &i, -1);
+    s = gwy_string_list_get(browser->log, i);
+    g_return_if_fail(s);
+
+    g_string_truncate(buf, 0);
+    switch (id) {
+        case LOG_TYPE:
+        t = strstr(s, "::");
+        g_return_if_fail(t);
+        g_string_append_len(buf, s, t-s);
+        break;
+
+        case LOG_FUNCNAME:
+        t = strstr(s, "::");
+        g_return_if_fail(t);
+        s = t+2;
+        t = strchr(s, '(');
+        g_return_if_fail(t);
+        g_string_append_len(buf, s, t-s);
+        break;
+
+        case LOG_PARAMETERS:
+        t = strchr(s, '(');
+        g_return_if_fail(t);
+        g_string_append(buf, t+1);
+        g_string_truncate(buf, buf->len-1);
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+
+    g_object_set(renderer, "text", buf->str, NULL);
+}
+
+static void
+gwy_log_export(LogBrowser *browser)
+{
+    gchar *str_to_save;
+    const gchar **entries;
+    guint i, n;
+
+    n = gwy_string_list_get_length(browser->log);
+    entries = g_new(const gchar*, n+2);
+    for (i = 0; i < n; i++)
+        entries[i] = gwy_string_list_get(browser->log, i);
+    entries[n] = "";
+    entries[n+1] = NULL;
+
+    str_to_save = g_strjoinv("\n", (gchar**)entries);
+    g_free(entries);
+
+    gwy_save_auxiliary_data(_("Export Log"),
+                            GTK_WINDOW(browser->window),
+                            -1,
+                            str_to_save);
+
+    g_free(str_to_save);
+}
+
+static void
+gwy_log_clear(LogBrowser *browser)
+{
+    gwy_string_list_clear(browser->log);
+}
+
+static void
+log_changed(GwyStringList *slog, LogBrowser *browser)
+{
+    GtkTreeView *treeview = GTK_TREE_VIEW(browser->treeview);
+    GwyNullStore *store = GWY_NULL_STORE(gtk_tree_view_get_model(treeview));
+    guint n = gwy_string_list_get_length(slog);
+
+    // The log can be only:
+    // - extended with new entries (data processing, redo)
+    // - truncated (undo)
+    // - cleared (clear)
+    // In all cases simple gwy_null_store_set_n_rows() does the right thing.
+    gwy_null_store_set_n_rows(store, n);
+    gtk_widget_set_sensitive(browser->save, n != 0);
+}
+
+static void
+gwy_log_destroy(LogBrowser *browser)
+{
+    gwy_signal_handler_disconnect(browser->log, browser->changed_id);
+    g_object_set_data(G_OBJECT(browser->log), "log-browser", NULL);
+    g_object_weak_unref(G_OBJECT(browser->log),
+                        (GWeakNotify)&gwy_log_data_finalized,
+                        browser);
+    g_string_free(browser->buf, TRUE);
+    g_free(browser);
+}
+
+static void
+gwy_log_data_finalized(LogBrowser *browser)
+{
+    browser->changed_id = 0;
+    g_signal_handler_disconnect(browser->window, browser->destroy_id);
+    gtk_widget_destroy(browser->window);
+    g_free(browser);
 }
 
 static gchar*
@@ -160,7 +514,7 @@ format_args(const gchar *prefix)
 
     gwy_container_foreach(settings, prefix, format_arg, values);
     g_ptr_array_add(values, NULL);
-    retval = g_strjoinv(",", (gchar**)values->pdata);
+    retval = g_strjoinv(", ", (gchar**)values->pdata);
     g_ptr_array_free(values, TRUE);
 
     return retval;
@@ -231,7 +585,11 @@ find_settings_prefix(const gchar *function,
     if (settings_name)
         g_string_append(prefix, settings_name);
 
-    if (g_str_has_prefix(function, "proc::")) {
+    if (g_str_has_prefix(function, "builtin::")) {
+        if (!settings_name)
+            g_string_assign(prefix, "/NO-SUCH-FUNCTION");
+    }
+    else if (g_str_has_prefix(function, "proc::")) {
         const gchar *name = function + 6;
         if (!gwy_process_func_exists(name)) {
             g_warning("Invalid data processing function name %s.", name);

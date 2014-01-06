@@ -6318,7 +6318,7 @@ gwy_app_data_browser_add_spectra(GwySpectra *spectra,
  *           should match those of brick planes.  You must
  *           <emphasis>not</emphasis> pass a field which already represents a
  *           channel.  If you want a to show the same field as an existing
- *           channel you must create a copy with gwy_data_field_duplicate().
+ *           channel you must create a copy with gwy_brick_duplicate().
  * @data: A data container to add @brick to.
  *        It can be %NULL to add the data field to current data container.
  * @showit: %TRUE to display it immediately, %FALSE to just add it.
@@ -7428,6 +7428,8 @@ gwy_app_data_browser_copy_channel(GwyContainer *source,
                                   GwyContainer *dest)
 {
     GwyDataField *dfield;
+    GwyStringList *slog;
+    gchar buf[32];
     GQuark key;
     gint newid;
 
@@ -7468,6 +7470,17 @@ gwy_app_data_browser_copy_channel(GwyContainer *source,
                             GWY_DATA_ITEM_SELECTIONS,
                             GWY_DATA_ITEM_CALDATA,
                             0);
+
+    g_snprintf(buf, sizeof(buf), "/%d/data/log", id);
+    if (gwy_container_gis_object_by_name(source, buf, &slog)
+        && gwy_string_list_get_length(slog)) {
+        slog = gwy_string_list_duplicate(slog);
+        g_snprintf(buf, sizeof(buf), "/%d/data/log", newid);
+        gwy_container_set_object_by_name(dest, buf, slog);
+        g_object_unref(slog);
+        gwy_app_channel_log_add(dest, newid, newid, "builtin::duplicate",
+                                NULL);
+    }
 
     return newid;
 }
@@ -7573,9 +7586,11 @@ gwy_app_data_browser_copy_volume(GwyContainer *source,
                                  GwyContainer *dest)
 {
     GwyBrick *brick;
+    GwyStringList *slog;
     GwyDataField *preview = NULL;
     GQuark key;
     gchar *strkey;
+    gchar buf[32];
     gint newid;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(source), -1);
@@ -7601,6 +7616,17 @@ gwy_app_data_browser_copy_volume(GwyContainer *source,
                              GWY_BRICK_ITEM_META,
                              GWY_BRICK_ITEM_TITLE,
                              0);
+
+    g_snprintf(buf, sizeof(buf), BRICK_PREFIX "/%d/log", id);
+    if (gwy_container_gis_object_by_name(source, buf, &slog)
+        && gwy_string_list_get_length(slog)) {
+        slog = gwy_string_list_duplicate(slog);
+        g_snprintf(buf, sizeof(buf), BRICK_PREFIX "/%d/log", newid);
+        gwy_container_set_object_by_name(dest, buf, slog);
+        g_object_unref(slog);
+        gwy_app_channel_log_add(dest, newid, newid, "builtin::duplicate",
+                                NULL);
+    }
 
     return newid;
 }
