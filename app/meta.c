@@ -192,7 +192,7 @@ metadata_browser_new(void)
         = g_signal_connect_swapped(browser->window, "destroy",
                                    G_CALLBACK(gwy_meta_destroy), browser);
 
-    hbox = gtk_hbox_new(FALSE, 0);
+    hbox = gtk_hbox_new(TRUE, 0);
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
     browser->save = gwy_stock_like_button_new(_("_Export"), GTK_STOCK_SAVE);
@@ -242,7 +242,7 @@ gwy_meta_equal_func(GtkTreeModel *model,
     GQuark quark;
 
     gtk_tree_model_get(model, iter, META_KEY, &quark, -1);
-    return strcmp(g_quark_to_string(quark), key);
+    return !strstr(g_quark_to_string(quark), key);
 }
 
 static void
@@ -409,8 +409,6 @@ gwy_meta_browser_construct(MetadataBrowser *browser)
 
     selection = gtk_tree_view_get_selection(treeview);
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
-
-    browser->treeview = GTK_WIDGET(treeview);
 }
 
 static gboolean
