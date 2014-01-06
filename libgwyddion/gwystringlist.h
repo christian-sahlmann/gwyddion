@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004,2014 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -72,6 +72,7 @@ void           gwy_string_list_append_take(GwyStringList *strlist,
 guint          gwy_string_list_get_length (GwyStringList *strlist);
 const gchar*   gwy_string_list_get        (GwyStringList *strlist,
                                            guint i);
+void           gwy_string_list_clear      (GwyStringList *strlist);
 
 G_END_DECLS
 

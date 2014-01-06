@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004,2014 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -49,6 +49,7 @@ static GObject*    gwy_string_list_deserialize    (const guchar *buffer,
 static GObject*    gwy_string_list_duplicate_real (GObject *object);
 static void        gwy_string_list_clone_real     (GObject *source,
                                                    GObject *copy);
+static void        clear_strings                  (GPtrArray *strings);
 
 static guint string_list_signals[LAST_SIGNAL] = { 0 };
 
@@ -105,6 +106,7 @@ gwy_string_list_finalize(GObject *object)
 
     strings = (GPtrArray*)strlist->strings;
     if (strings) {
+        clear_strings(strings);
         g_ptr_array_free(strings, TRUE);
         strlist->strings = NULL;
     }
@@ -337,6 +339,38 @@ gwy_string_list_get(GwyStringList *strlist,
     g_return_val_if_fail(i < strings->len, NULL);
 
     return g_ptr_array_index(strings, i);
+}
+
+/**
+ * gwy_string_list_clear:
+ * @strlist: A string list.
+ *
+ * Clears the contents of a string list, removing all strings.
+ *
+ * Since: 2.35
+ **/
+void
+gwy_string_list_clear(GwyStringList *strlist)
+{
+    GPtrArray *strings;
+    g_return_if_fail(GWY_IS_STRING_LIST(strlist));
+    strings = (GPtrArray*)strlist->strings;
+    if (!strings->len)
+        return;
+    clear_strings(strings);
+
+    g_signal_emit(strlist, string_list_signals[VALUE_CHANGED], 0);
+}
+
+static void
+clear_strings(GPtrArray *strings)
+{
+    guint i = 0;
+
+    for (i = 0; i < strings->len; i++)
+        g_free(g_ptr_array_index(strings, i));
+
+    g_ptr_array_set_size(strings, 0);
 }
 
 /************************** Documentation ****************************/
