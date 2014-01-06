@@ -37,7 +37,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Removes data under mask using fractal interpolation."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -64,17 +64,20 @@ fraccor(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *mfield;
     GQuark dquark;
+    gint id;
 
     g_return_if_fail(run & FRACCOR_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
                                      GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_MASK_FIELD, &mfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield && dquark && mfield);
 
     gwy_app_undo_qcheckpointv(data, 1, &dquark);
     gwy_data_field_fractal_correction(dfield, mfield, GWY_INTERPOLATION_LINEAR);
     gwy_data_field_data_changed(dfield);
+    gwy_app_channel_log_add(data, id, id, "proc::fraccor", NULL);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

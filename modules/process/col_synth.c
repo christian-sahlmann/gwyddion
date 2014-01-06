@@ -279,7 +279,7 @@ run_noninteractive(ColSynthArgs *args,
         gwy_app_channel_log_add(data, -1, newid, "proc::col_synth", NULL);
     }
     else {
-        gwy_app_channel_log_add(data, oldid, newid, "proc::col_synth", NULL);
+        gwy_app_channel_log_add(data, oldid, oldid, "proc::col_synth", NULL);
     }
 
     g_object_unref(dfield);

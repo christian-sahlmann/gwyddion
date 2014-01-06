@@ -188,7 +188,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates random surfaces using spectral synthesis."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -216,6 +216,7 @@ fft_synth(GwyContainer *data, GwyRunType run)
     GwyDimensionArgs dimsargs;
     GwyDataField *dfield;
     GQuark quark;
+    gboolean dorun;
     gint id;
 
     g_return_if_fail(run & FFT_SYNTH_RUN_MODES);
@@ -225,12 +226,14 @@ fft_synth(GwyContainer *data, GwyRunType run)
                                      GWY_APP_DATA_FIELD_KEY, &quark,
                                      0);
 
-    if (run == GWY_RUN_IMMEDIATE
-        || fft_synth_dialog(&args, &dimsargs, data, dfield, id))
-        run_noninteractive(&args, &dimsargs, data, dfield, id, quark);
+    dorun = (run == GWY_RUN_IMMEDIATE
+             || fft_synth_dialog(&args, &dimsargs, data, dfield, id));
 
     if (run == GWY_RUN_INTERACTIVE)
         fft_synth_save_args(gwy_app_settings_get(), &args, &dimsargs);
+
+    if (dorun)
+        run_noninteractive(&args, &dimsargs, data, dfield, id, quark);
 
     gwy_dimensions_free_args(&dimsargs);
 }
@@ -293,6 +296,7 @@ run_noninteractive(FFTSynthArgs *args,
         else
             gwy_data_field_copy(out_re, dfield, FALSE);
 
+        gwy_app_channel_log_add(data, oldid, oldid, "proc::fft_synth", NULL);
         gwy_data_field_data_changed(dfield);
     }
     else {
@@ -317,7 +321,11 @@ run_noninteractive(FFTSynthArgs *args,
         }
 
         gwy_app_set_data_field_title(data, newid, _("Generated"));
+
+        gwy_app_channel_log_add(data, add ? oldid : -1, newid,
+                                "proc::fft_synth", NULL);
     }
+
     g_object_unref(out_re);
 }
 

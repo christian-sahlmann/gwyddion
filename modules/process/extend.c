@@ -112,7 +112,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Extends image by adding borders."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2012",
 };
@@ -170,6 +170,7 @@ extend(GwyContainer *data, GwyRunType run)
     if (!args.new_channel) {
         gwy_serializable_clone(G_OBJECT(result), G_OBJECT(dfield));
         gwy_data_field_data_changed(dfield);
+        gwy_app_channel_log_add(data, oldid, oldid, "proc::extend", NULL);
     }
     else {
         gint newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
@@ -181,6 +182,7 @@ extend(GwyContainer *data, GwyRunType run)
                                 GWY_DATA_ITEM_SELECTIONS,
                                 0);
         gwy_app_set_data_field_title(data, newid, _("Extended"));
+        gwy_app_channel_log_add(data, oldid, newid, "proc::extend", NULL);
     }
     g_object_unref(result);
 }

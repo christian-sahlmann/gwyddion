@@ -152,7 +152,7 @@ static GwyModuleInfo module_info = {
     N_("Several edge detection methods (Laplacian of Gaussian, Canny, "
        "and some experimental), creates presentation."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.12",
+    "1.13",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -289,6 +289,7 @@ edge(GwyContainer *data, GwyRunType run, const gchar *name)
     GwyDataField *dfield, *showfield;
     GQuark dquark, squark;
     GwySIUnit *siunit;
+    gchar *qualname;
     gint id;
     guint i;
 
@@ -324,6 +325,10 @@ edge(GwyContainer *data, GwyRunType run, const gchar *name)
 
     gwy_data_field_normalize(showfield);
     gwy_data_field_data_changed(showfield);
+
+    qualname = g_strconcat("proc::", functions[i].name, NULL);
+    gwy_app_channel_log_add(data, id, id, qualname, NULL);
+    g_free(qualname);
 }
 
 /* Note this is the limiting case when LoG reduces for discrete data just to

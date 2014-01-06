@@ -71,7 +71,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Two-dimensional DWT (Discrete Wavelet Transform)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -146,6 +146,7 @@ dwt(GwyContainer *data, GwyRunType run)
     gwy_app_set_data_field_title(data, newid, _("DWT"));
     gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
                             GWY_DATA_ITEM_PALETTE, 0);
+    gwy_app_channel_log_add(data, oldid, newid, "proc::dwt", NULL);
 
     g_object_unref(wtcoefs);
 }

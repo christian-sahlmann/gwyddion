@@ -1,4 +1,5 @@
 /*
+ *  @(#) $Id$
  *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
@@ -63,7 +64,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Two-dimensional CWT (Continuous Wavelet Transform)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -119,6 +120,7 @@ cwt(GwyContainer *data, GwyRunType run)
 
     g_object_unref(dfield);
     gwy_app_set_data_field_title(data, newid, _("CWT"));
+    gwy_app_channel_log_add(data, oldid, newid, "proc::cwt", NULL);
 }
 
 static gboolean

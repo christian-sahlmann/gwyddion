@@ -137,7 +137,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generic convolution filter with a user-defined matrix."),
     "Yeti <yeti@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -211,12 +211,14 @@ convolution_filter(GwyContainer *data,
         gwy_inventory_foreach(gwy_convolution_filter_presets(), use_filter,
                               NULL);
         convolution_filter_dialog(&args, data, dfield, id, dquark);
-        convolution_filter_save_args(gwy_app_settings_get(), &args);
         gwy_inventory_foreach(gwy_convolution_filter_presets(), release_filter,
                               NULL);
     }
-    else
+    else {
         convolution_filter_run_noninteractive(&args, data, dfield, dquark);
+        gwy_app_channel_log_add(data, id, id, "proc::convolution_filter",
+                                NULL);
+    }
 }
 
 static void
@@ -298,6 +300,7 @@ convolution_filter_dialog(ConvolutionArgs *args,
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             g_object_unref(controls.mydata);
+            convolution_filter_save_args(gwy_app_settings_get(), args);
             return;
             break;
 
@@ -326,6 +329,9 @@ convolution_filter_dialog(ConvolutionArgs *args,
         g_object_unref(controls.mydata);
         convolution_filter_run_noninteractive(args, data, dfield, dquark);
     }
+
+    convolution_filter_save_args(gwy_app_settings_get(), args);
+    gwy_app_channel_log_add(data, id, id, "proc::convolution_filter", NULL);
 }
 
 static GtkWidget*

@@ -147,7 +147,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Simple arithmetic operations with data fields."),
     "Yeti <yeti@gwyddion.net>",
-    "3.2",
+    "3.3",
     "David Nečas (Yeti)",
     "2004",
 };
@@ -174,6 +174,7 @@ arithmetic(GwyContainer *data, GwyRunType run)
     ArithmeticArgs args;
     guint i;
     GwyContainer *settings;
+    gboolean dorun;
     gint id, newid;
 
     g_return_if_fail(run & ARITH_RUN_MODES);
@@ -192,7 +193,9 @@ arithmetic(GwyContainer *data, GwyRunType run)
     gwy_expr_define_constant(args.expr, "pi", G_PI, NULL);
     gwy_expr_define_constant(args.expr, "π", G_PI, NULL);
 
-    if (arithmetic_dialog(data, id, &args)) {
+    dorun = arithmetic_dialog(data, id, &args);
+    arithmetic_save_args(settings, &args);
+    if (dorun) {
         GwyDataField *result = arithmetic_do(&args, &id);
 
         newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
@@ -202,8 +205,8 @@ arithmetic(GwyContainer *data, GwyRunType run)
                                 GWY_DATA_ITEM_GRADIENT,
                                 GWY_DATA_ITEM_REAL_SQUARE,
                                 0);
+        gwy_app_channel_log_add(data, -1, newid, "proc::arithmetic", NULL);
     }
-    arithmetic_save_args(settings, &args);
     g_ptr_array_free(args.ok_masks, TRUE);
     gwy_expr_free(args.expr);
     for (i = 0; i < ARITHMETIC_NARGS; i++)

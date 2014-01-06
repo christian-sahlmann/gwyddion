@@ -161,7 +161,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Visualizes, marks and measures facet orientation."),
     "Yeti <yeti@gwyddion.net>",
-    "1.7",
+    "1.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -207,11 +207,12 @@ facets_analyse(GwyContainer *data, GwyRunType run)
     gwy_data_field_facet_distribution(dfield, 2*args.kernel_size + 1, fdata);
     args.theta0 = gwy_container_get_double_by_name(fdata, "/theta0");
     args.phi0 = gwy_container_get_double_by_name(fdata, "/phi0");
-    if (run == GWY_RUN_IMMEDIATE)
+    if (run == GWY_RUN_IMMEDIATE) {
         run_noninteractive(&args, data, fdata, dfield, mfield, mquark);
+        gwy_app_channel_log_add(data, id, id, "proc::facet_analysis", NULL);
+    }
     else {
         facets_dialog(&args, data, fdata, dfield, mfield, id, mquark);
-        facets_save_args(gwy_app_settings_get(), &args);
     }
     g_object_unref(fdata);
 }
@@ -438,6 +439,7 @@ facets_dialog(FacetsArgs *args,
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             g_object_unref(controls.mydata);
+            facets_save_args(gwy_app_settings_get(), args);
             return;
             break;
 
@@ -476,6 +478,9 @@ facets_dialog(FacetsArgs *args,
         g_object_unref(controls.mydata);
         run_noninteractive(args, data, fdata, dfield, mfield, mquark);
     }
+
+    facets_save_args(gwy_app_settings_get(), args);
+    gwy_app_channel_log_add(data, id, id, "proc::facet_analysis", NULL);
 }
 
 static inline void

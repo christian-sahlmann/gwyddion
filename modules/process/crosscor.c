@@ -107,7 +107,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Calculates cross-correlation of two data fields."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -133,6 +133,7 @@ crosscor(GwyContainer *data, GwyRunType run)
 {
     CrosscorArgs args;
     GwyContainer *settings;
+    gboolean dorun;
 
     g_return_if_fail(run & CROSSCOR_RUN_MODES);
 
@@ -143,10 +144,11 @@ crosscor(GwyContainer *data, GwyRunType run)
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.op1.id, 0);
     args.op2.data = NULL;
 
-    if (crosscor_dialog(&args))
-        crosscor_do(&args);
-
+    dorun = crosscor_dialog(&args);
     crosscor_save_args(settings, &args);
+
+    if (dorun)
+        crosscor_do(&args);
 }
 
 static gboolean
@@ -459,6 +461,7 @@ crosscor_do(CrosscorArgs *args)
     newid = gwy_app_data_browser_add_data_field(dfieldx, data, TRUE);
     gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
                             GWY_DATA_ITEM_GRADIENT, 0);
+    gwy_app_channel_log_add(data, args->op1.id, newid, "proc:crosscor", NULL);
 
     /* create score mask if requested */
     if (args->add_ls_mask) {

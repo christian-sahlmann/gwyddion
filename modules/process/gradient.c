@@ -43,7 +43,7 @@ static GwyModuleInfo module_info = {
     N_("Creates presentations with various gradients "
        "(Sobel, Prewitt)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -129,6 +129,7 @@ gradient(GwyContainer *data,
     GwyDataField *dfield, *showfield;
     GQuark dquark, squark;
     GwySIUnit *siunit;
+    gchar *qualname;
     gint id;
 
     g_return_if_fail(run & GRADIENT_RUN_MODES);
@@ -168,6 +169,10 @@ gradient(GwyContainer *data,
 
     gwy_data_field_normalize(showfield);
     gwy_data_field_data_changed(showfield);
+
+    qualname = g_strconcat("proc::", name, NULL);
+    gwy_app_channel_log_add(data, id, id, qualname, NULL);
+    g_free(qualname);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

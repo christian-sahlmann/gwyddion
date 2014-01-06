@@ -61,6 +61,7 @@ static gboolean module_register       (void);
 static void     fft                   (GwyContainer *data,
                                        GwyRunType run);
 static void     fft_create_output     (GwyContainer *data,
+                                       gint id,
                                        GwyDataField *dfield,
                                        const gchar *window_name);
 static void     fft_postprocess       (GwyDataField *dfield);
@@ -95,7 +96,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Two-dimensional FFT (Fast Fourier Transform)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.10",
+    "1.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -155,21 +156,23 @@ fft(GwyContainer *data, GwyRunType run)
 
     if (args.out == GWY_FFT_OUTPUT_REAL_IMG
         || args.out == GWY_FFT_OUTPUT_REAL)
-        fft_create_output(data, gwy_data_field_duplicate(raout), _("FFT Real"));
+        fft_create_output(data, id, gwy_data_field_duplicate(raout),
+                          _("FFT Real"));
     if (args.out == GWY_FFT_OUTPUT_REAL_IMG
         || args.out == GWY_FFT_OUTPUT_IMG)
-        fft_create_output(data, gwy_data_field_duplicate(ipout), _("FFT Imag"));
+        fft_create_output(data, id, gwy_data_field_duplicate(ipout),
+                          _("FFT Imag"));
     if (args.out == GWY_FFT_OUTPUT_MOD_PHASE
         || args.out == GWY_FFT_OUTPUT_MOD) {
         tmp = gwy_data_field_new_alike(raout, FALSE);
         set_dfield_modulus(raout, ipout, tmp);
-        fft_create_output(data, tmp, _("FFT Modulus"));
+        fft_create_output(data, id, tmp, _("FFT Modulus"));
     }
     if (args.out == GWY_FFT_OUTPUT_MOD_PHASE
         || args.out == GWY_FFT_OUTPUT_PHASE) {
         tmp = gwy_data_field_new_alike(raout, FALSE);
         set_dfield_phase(raout, ipout, tmp);
-        fft_create_output(data, tmp, _("FFT Phase"));
+        fft_create_output(data, id, tmp, _("FFT Phase"));
     }
 
     g_object_unref(raout);
@@ -202,6 +205,7 @@ fft_postprocess(GwyDataField *dfield)
 
 static void
 fft_create_output(GwyContainer *data,
+                  gint id,
                   GwyDataField *dfield,
                   const gchar *output_name)
 {
@@ -211,6 +215,7 @@ fft_create_output(GwyContainer *data,
     newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
     g_object_unref(dfield);
     gwy_app_set_data_field_title(data, newid, output_name);
+    gwy_app_channel_log_add(data, id, newid, "proc::fft", NULL);
 
     /* make fft more visible by choosing a good gradient and using auto range */
     key = g_strdup_printf("/%i/base/palette", newid);
