@@ -191,6 +191,7 @@ col_synth(GwyContainer *data, GwyRunType run)
     GwyDimensionArgs dimsargs;
     GwyDataField *dfield;
     GQuark quark;
+    gboolean dorun;
     gint id;
 
     g_return_if_fail(run & COL_SYNTH_RUN_MODES);
@@ -200,12 +201,14 @@ col_synth(GwyContainer *data, GwyRunType run)
                                      GWY_APP_DATA_FIELD_KEY, &quark,
                                      0);
 
-    if (run == GWY_RUN_IMMEDIATE
-        || col_synth_dialog(&args, &dimsargs, data, dfield, id))
-        run_noninteractive(&args, &dimsargs, data, dfield, id, quark);
+    dorun = (run == GWY_RUN_IMMEDIATE
+             || col_synth_dialog(&args, &dimsargs, data, dfield, id));
 
     if (run == GWY_RUN_INTERACTIVE)
         col_synth_save_args(gwy_app_settings_get(), &args, &dimsargs);
+
+    if (dorun)
+        run_noninteractive(&args, &dimsargs, data, dfield, id, quark);
 
     gwy_dimensions_free_args(&dimsargs);
 }
@@ -273,7 +276,12 @@ run_noninteractive(ColSynthArgs *args,
         }
 
         gwy_app_set_data_field_title(data, newid, _("Generated"));
+        gwy_app_channel_log_add(data, -1, newid, "proc::col_synth", NULL);
     }
+    else {
+        gwy_app_channel_log_add(data, oldid, newid, "proc::col_synth", NULL);
+    }
+
     g_object_unref(dfield);
 }
 

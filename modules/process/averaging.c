@@ -58,14 +58,15 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Similar structures averaging using autocorrelation"),
     "Daniil Bratashov <dn2010@gmail.com>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov",
     "2011",
 };
 
 GWY_MODULE_QUERY(module_info)
 
-static gboolean module_register(void)
+static gboolean
+module_register(void)
 {
     gwy_process_func_register("averaging",
                               (GwyProcessFunc)&averaging,
@@ -78,7 +79,8 @@ static gboolean module_register(void)
     return TRUE;
 }
 
-static void averaging(GwyContainer *data, GwyRunType run)
+static void
+averaging(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *score;
     GwyContainer *mydata;
@@ -107,13 +109,15 @@ static void averaging(GwyContainer *data, GwyRunType run)
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
         gwy_app_set_data_field_title(data, newid, _("Averaged"));
+        gwy_app_channel_log_add(data, id, newid, "proc::averaging", NULL);
 
         g_object_unref(score);
     }
     g_object_unref(mydata);
 }
 
-static GwyDataField *averaging_dialog(GwyContainer *data)
+static GwyDataField*
+averaging_dialog(GwyContainer *data)
 {
     GtkWidget *dialog;
     GtkWidget *hbox, *vbox;
@@ -184,7 +188,8 @@ static GwyDataField *averaging_dialog(GwyContainer *data)
     return score;
 }
 
-static void find_local_maxima(GwyDataField *dfield, GArray *maxima)
+static void
+find_local_maxima(GwyDataField *dfield, GArray *maxima)
 {
     gint xres, yres;
     const gdouble *data;
@@ -210,7 +215,7 @@ static void find_local_maxima(GwyDataField *dfield, GArray *maxima)
             }
 }
 
-static GwyDataField *
+static GwyDataField*
 averaging_do(GwyContainer *data, GwySelection *selected)
 {
     gdouble area[4];

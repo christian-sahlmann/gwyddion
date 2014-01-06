@@ -129,7 +129,7 @@ typedef struct {
 static gboolean   module_register          (void);
 static void       correct_affine           (GwyContainer *data,
                                             GwyRunType run);
-static void       affcor_dialog            (AffcorArgs *args,
+static gint       affcor_dialog            (AffcorArgs *args,
                                             GwyContainer *data,
                                             GwyDataField *dfield,
                                             gint id);
@@ -209,7 +209,7 @@ static GwyModuleInfo module_info = {
     N_("Corrects affine distortion of images by matching image Bravais "
        "lattice to the true one."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2013",
 };
@@ -235,7 +235,7 @@ correct_affine(GwyContainer *data, GwyRunType run)
 {
     AffcorArgs args;
     GwyDataField *dfield;
-    gint id;
+    gint id, newid;
 
     g_return_if_fail(run & AFFINE_RUN_MODES);
     g_return_if_fail(g_type_from_name("GwyLayerLattice"));
@@ -245,11 +245,13 @@ correct_affine(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(dfield);
 
-    affcor_dialog(&args, data, dfield, id);
+    newid = affcor_dialog(&args, data, dfield, id);
     affcor_save_args(gwy_app_settings_get(), &args);
+    if (newid != -1)
+        gwy_app_channel_log_add(data, id, newid, "proc::correct_affine", NULL);
 }
 
-static void
+static gint
 affcor_dialog(AffcorArgs *args,
               GwyContainer *data,
               GwyDataField *dfield,
@@ -260,7 +262,7 @@ affcor_dialog(AffcorArgs *args,
     GtkTable *table;
     GwyDataField *acf, *tmp, *corrected;
     AffcorControls controls;
-    gint response, row, newid;
+    gint response, row, newid = -1;
     GwyPixmapLayer *layer;
     GwyVectorLayer *vlayer;
     GwySIUnit *unitphi;
@@ -538,6 +540,8 @@ finalize:
     gwy_si_unit_value_format_free(controls.vf);
     gwy_si_unit_value_format_free(controls.vfphi);
     g_object_unref(controls.mydata);
+
+    return newid;
 }
 
 static GtkWidget*

@@ -154,7 +154,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Calculates overall curvature."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -215,6 +215,8 @@ curvature(GwyContainer *data, GwyRunType run)
             return;
     }
     curvature_do(data, dfield, mfield, id, &args);
+    if (args.set_selection)
+        gwy_app_channel_log_add(data, id, id, "proc::curvature", NULL);
 }
 
 static int

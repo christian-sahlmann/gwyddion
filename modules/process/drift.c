@@ -165,7 +165,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Evaluates and/or correct thermal drift in fast scan axis."),
     "Petr Klapetek <petr@klapetek.cz>, Yeti <yeti@gwyddion.net>",
-    "3.0",
+    "3.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2007",
 };
@@ -207,7 +207,6 @@ compensate_drift(GwyContainer *data, GwyRunType run)
         run_noninteractive(&args, data, dfield, mfield, sfield, NULL, NULL, id);
     else {
         drift_dialog(&args, data, dfield, mfield, sfield, id);
-        drift_save_args(gwy_app_settings_get(), &args);
     }
 }
 
@@ -396,6 +395,7 @@ drift_dialog(DriftArgs *args,
             gwy_object_unref(controls.result);
             gwy_object_unref(controls.drift);
             case GTK_RESPONSE_NONE:
+            drift_save_args(gwy_app_settings_get(), args);
             return;
             break;
 
@@ -420,6 +420,8 @@ drift_dialog(DriftArgs *args,
 
     drift_dialog_update_values(&controls, args);
     gtk_widget_destroy(dialog);
+
+    drift_save_args(gwy_app_settings_get(), args);
 
     if (controls.computed)
         run_noninteractive(args, data, dfield, mfield, sfield,
@@ -456,7 +458,7 @@ run_noninteractive(DriftArgs *args,
     /* variables for temporary storage */
     gint id_ctr, newid;
     GQuark key;
-    GString *str = g_string_new("");
+    GString *str = g_string_new(NULL);
 
     if (!args->do_correct && !args->do_graph) {
         gwy_object_unref(result);
@@ -530,6 +532,9 @@ run_noninteractive(DriftArgs *args,
             /* drift correct *this* channel */
             if (args->replace)  {
                 apply_drift(dfield, drift, args->interp);
+                gwy_app_channel_log_add(data, id_ctr, id_ctr, "proc::drift",
+                                        NULL);
+
                 gwy_data_field_data_changed(dfield);
                 g_string_printf(str, "/%d/mask", id_ctr);
                 if (gwy_container_gis_object_by_name(data, str->str, &mfield)) {
@@ -542,7 +547,7 @@ run_noninteractive(DriftArgs *args,
                     gwy_data_field_data_changed(sfield);
                 }
             }
-            else if (!args->replace)  {
+            else {
                 result = gwy_data_field_duplicate(dfield);
                 apply_drift(result, drift, args->interp);
                 newid = gwy_app_data_browser_add_data_field(result, data,
@@ -559,6 +564,8 @@ run_noninteractive(DriftArgs *args,
                                         GWY_DATA_ITEM_REAL_SQUARE,
                                         0);
                 gwy_object_unref(result);
+                gwy_app_channel_log_add(data, id_ctr, newid, "proc::drift",
+                                        NULL);
                 g_string_printf(str, "/%d/mask", id_ctr);
                 if (gwy_container_gis_object_by_name(data,
                                                      str->str,
