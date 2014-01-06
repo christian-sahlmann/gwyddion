@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-01-04 03:58+0100\n"
-"PO-Revision-Date: 2014-01-04 12:35+0300\n"
+"POT-Creation-Date: 2014-01-06 03:58+0100\n"
+"PO-Revision-Date: 2014-01-06 22:41+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -128,9 +128,9 @@ msgid "contact: Hertz (paraboloid)"
 msgstr "контакт: Герц (параболоид)"
 
 #: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:612
-#: app/data-browser.c:2087 app/data-browser.c:2850 app/data-browser.c:3706
-#: app/data-browser.c:3865 app/data-browser.c:4151 app/data-browser.c:4565
-#: app/data-browser.c:6495 app/data-browser.c:6577 app/resource-editor.c:367
+#: app/data-browser.c:2091 app/data-browser.c:2854 app/data-browser.c:3710
+#: app/data-browser.c:3869 app/data-browser.c:4155 app/data-browser.c:4569
+#: app/data-browser.c:6553 app/data-browser.c:6635 app/resource-editor.c:367
 #: modules/process/convolution_filter.c:700
 msgid "Untitled"
 msgstr "Безымянный"
@@ -425,7 +425,7 @@ msgstr "Значение"
 msgid "Area"
 msgstr "Площадь"
 
-#: libprocess/gwygrainvalue.c:1058 app/data-browser.c:5067 app/toolbox.c:109
+#: libprocess/gwygrainvalue.c:1058 app/data-browser.c:5071 app/toolbox.c:109
 msgid "Volume"
 msgstr "Объём"
 
@@ -868,24 +868,24 @@ msgstr "точек"
 #: modules/process/deposit_synth.c:361 modules/process/drift.c:241
 #: modules/process/dwt.c:165 modules/process/dwtanisotropy.c:184
 #: modules/process/edge.c:668 modules/process/extend.c:197
-#: modules/process/facet-level.c:284 modules/process/facet_analysis.c:274
+#: modules/process/facet-level.c:285 modules/process/facet_analysis.c:274
 #: modules/process/fft.c:278 modules/process/fft_filter_2d.c:441
 #: modules/process/fft_synth.c:345 modules/process/fractal.c:207
-#: modules/process/grain_edge.c:218 modules/process/grain_mark.c:263
+#: modules/process/grain_edge.c:218 modules/process/grain_mark.c:264
 #: modules/process/grain_rem_threshold.c:228 modules/process/grain_wshed.c:183
 #: modules/process/hough.c:176 modules/process/latsim.c:159
-#: modules/process/level.c:256 modules/process/linecorrect.c:275
+#: modules/process/level.c:267 modules/process/linecorrect.c:275
 #: modules/process/lno_synth.c:438 modules/process/local_contrast.c:127
 #: modules/process/median-bg.c:177 modules/process/noise_synth.c:349
 #: modules/process/obj_synth.c:434 modules/process/pat_synth.c:404
 #: modules/process/pid.c:197 modules/process/polydistort.c:220
-#: modules/process/polylevel.c:375 modules/process/rotate.c:265
-#: modules/process/scale.c:194 modules/process/scars.c:470
-#: modules/process/shade.c:215 modules/process/slope_dist.c:202
-#: modules/process/sphere-revolve.c:216 modules/process/tilt.c:157
-#: modules/process/tip_model.c:171 modules/process/unrotate.c:227
-#: modules/process/volumize_layers.c:212 modules/volume/volume_calibrate.c:370
-#: modules/volume/volume_extract.c:333
+#: modules/process/polylevel.c:375 modules/process/rank.c:129
+#: modules/process/rotate.c:265 modules/process/scale.c:194
+#: modules/process/scars.c:470 modules/process/shade.c:215
+#: modules/process/slope_dist.c:202 modules/process/sphere-revolve.c:216
+#: modules/process/tilt.c:157 modules/process/tip_model.c:171
+#: modules/process/unrotate.c:227 modules/process/volumize_layers.c:212
+#: modules/volume/volume_calibrate.c:370 modules/volume/volume_extract.c:333
 msgid "_Reset"
 msgstr "_Сброс"
 
@@ -1480,44 +1480,44 @@ msgstr "Канал:"
 msgid "Section:"
 msgstr "Сечение:"
 
-#: app/data-browser.c:4942
+#: app/data-browser.c:4946
 msgid "Extract to a new file"
 msgstr "Извлечь в новый файл"
 
-#: app/data-browser.c:4943
+#: app/data-browser.c:4947
 msgid "Duplicate"
 msgstr "Сделать копию"
 
-#: app/data-browser.c:4944
+#: app/data-browser.c:4948
 msgid "Delete"
 msgstr "Удалить"
 
-#: app/data-browser.c:4989
+#: app/data-browser.c:4993
 msgid "Data Browser"
 msgstr "Браузер данных"
 
-#: app/data-browser.c:5012
+#: app/data-browser.c:5016
 msgid "Close file"
 msgstr "Закрыть файл"
 
-#: app/data-browser.c:5025
+#: app/data-browser.c:5029
 msgid "Channels"
 msgstr "Каналы"
 
-#: app/data-browser.c:5039 modules/volume/volume_extract.c:445
+#: app/data-browser.c:5043 modules/volume/volume_extract.c:445
 msgid "Graphs"
 msgstr "Графики"
 
-#: app/data-browser.c:5053
+#: app/data-browser.c:5057
 msgid "Spectra"
 msgstr "Спектры"
 
-#: app/data-browser.c:6533
+#: app/data-browser.c:6591
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Неизвестный канал %d"
 
-#: app/data-browser.c:6619
+#: app/data-browser.c:6677
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Неизвестный объём %d"
@@ -2582,70 +2582,70 @@ msgstr ""
 msgid "This version of Gwyddion was built without OpenGL support."
 msgstr "Эта версия Gwyddion была собрана без поддержки OpenGL"
 
-#: app/validate.c:111 app/validate.c:132
+#: app/validate.c:112 app/validate.c:133
 #, c-format
 msgid "byte at position %d"
 msgstr "Байт в позиции %d"
 
-#: app/validate.c:158 app/validate.c:171
+#: app/validate.c:159 app/validate.c:172
 #, c-format
 msgid "%s instead of %s"
 msgstr "%s вместо %s"
 
-#: app/validate.c:358
+#: app/validate.c:365
 #, c-format
 msgid "no channel %d exists for %s"
 msgstr "отсутствует канал %d для %s"
 
-#: app/validate.c:367
+#: app/validate.c:374
 #, c-format
 msgid "no graph %d exists for %s"
 msgstr "отсутствует график %d для %s"
 
-#: app/validate.c:376
+#: app/validate.c:383
 #, c-format
 msgid "no spectra %d exists for %s"
 msgstr "отсутствует спектр %d для %s"
 
-#: app/validate.c:389
+#: app/validate.c:397
 #, c-format
 msgid "no brick %d exists for %s"
 msgstr "отсутствует блок %d для %s"
 
-#: app/validate.c:442
+#: app/validate.c:450
 #, c-format
 msgid "ref_count is %d for %s"
 msgstr "ref_count равен %d для %s"
 
-#: app/validate.c:623
+#: app/validate.c:631
 msgid "Invalid item key format"
 msgstr "Неверный формат кода позиции"
 
-#: app/validate.c:624
+#: app/validate.c:632
 msgid "Item key contains invalid characters"
 msgstr "Код позиции содержит неверные символы"
 
-#: app/validate.c:625
+#: app/validate.c:633
 msgid "Item key does not belong to any known data"
 msgstr "Код позиции не принадлежит ни одному виду известных данных"
 
-#: app/validate.c:626
+#: app/validate.c:634
 msgid "Wrong data item id"
 msgstr "Неверный идентификатор элемента данных"
 
-#: app/validate.c:627
+#: app/validate.c:635
 msgid "Unexpected data item type"
 msgstr "Неожиданный тип элемента данных"
 
-#: app/validate.c:628
+#: app/validate.c:636
 msgid "String value is not valid UTF-8"
 msgstr "Строчное значение не является правильным UTF-8"
 
-#: app/validate.c:629
+#: app/validate.c:637
 msgid "Object has several references"
 msgstr "Несколько ссылок на объект"
 
-#: app/validate.c:630
+#: app/validate.c:638
 msgid "Secondary data item has no primary data"
 msgstr "Вторичный элемент данных не имеет первичных данных"
 
@@ -2798,7 +2798,7 @@ msgstr "Экспортировать текст"
 #: modules/process/calibrate.c:595 modules/process/correct_affine.c:454
 #: modules/process/extend.c:263 modules/process/fft_filter_1d.c:296
 #: modules/process/grain_dist.c:306 modules/process/grain_edge.c:270
-#: modules/process/grain_mark.c:344 modules/process/grain_rem_threshold.c:327
+#: modules/process/grain_mark.c:345 modules/process/grain_rem_threshold.c:327
 #: modules/process/grain_wshed.c:278 modules/process/tip_blind.c:361
 #: modules/tools/spotremove.c:320 modules/tools/stats.c:379
 msgid "Options"
@@ -4504,7 +4504,7 @@ msgid "_Zoom:"
 msgstr "_Увеличение:"
 
 #: modules/file/pixmap.c:3155 modules/process/col_synth.c:400
-#: modules/process/grain_mark.c:309 modules/process/grain_rem_threshold.c:283
+#: modules/process/grain_mark.c:310 modules/process/grain_rem_threshold.c:283
 #: modules/process/obj_synth.c:573 modules/process/pat_synth.c:889
 #: modules/process/pat_synth.c:1190 modules/process/pat_synth.c:1525
 #: modules/process/tip_blind.c:344
@@ -4774,7 +4774,7 @@ msgstr "Предустановки"
 #: modules/process/convolution_filter.c:244
 #: modules/process/deposit_synth.c:681 modules/process/drift.c:238
 #: modules/process/edge.c:665 modules/process/fft_filter_1d.c:198
-#: modules/process/grain_edge.c:215 modules/process/grain_mark.c:260
+#: modules/process/grain_edge.c:215 modules/process/grain_mark.c:261
 #: modules/process/grain_rem_threshold.c:225 modules/process/grain_wshed.c:180
 #: modules/process/mark_with.c:212 modules/process/polydistort.c:215
 #: modules/process/scars.c:467 modules/process/synth.h:480
@@ -6155,7 +6155,7 @@ msgstr "/_Статистика/Двумерная _автокорреляция"
 msgid "Calculate 2D autocorrelation function"
 msgstr "Рассчитать двумерную функцию автокорреляции"
 
-#: modules/process/acf2d.c:74
+#: modules/process/acf2d.c:76
 msgid "2D ACF"
 msgstr "двумерная ФАК"
 
@@ -6659,7 +6659,7 @@ msgstr "Обрезать до действительных данных"
 
 #: modules/process/calcoefs_view.c:584 modules/process/deposit_synth.c:685
 #: modules/process/edge.c:745 modules/process/fft_filter_1d.c:334
-#: modules/process/grain_edge.c:286 modules/process/grain_mark.c:377
+#: modules/process/grain_edge.c:286 modules/process/grain_mark.c:378
 #: modules/process/grain_rem_threshold.c:371 modules/process/mark_with.c:356
 #: modules/process/polydistort.c:337 modules/process/scars.c:575
 #: modules/process/synth.h:484 modules/volume/volume_extract.c:425
@@ -7178,8 +7178,8 @@ msgstr "_Установить выделение"
 msgid "_Plot graph"
 msgstr "Строить _график"
 
-#: modules/process/curvature.c:684 modules/process/facet-level.c:297
-#: modules/process/level.c:269 modules/process/linecorrect.c:288
+#: modules/process/curvature.c:684 modules/process/facet-level.c:298
+#: modules/process/level.c:280 modules/process/linecorrect.c:288
 #: modules/process/neural.c:592 modules/process/polylevel.c:501
 #: modules/tools/sfunctions.c:458 modules/tools/stats.c:366
 msgid "Masking Mode"
@@ -7341,7 +7341,7 @@ msgid "Drift _lines"
 msgstr "_Линии дрейфа"
 
 #: modules/process/drift.c:359 modules/process/facet_analysis.c:411
-#: modules/process/grain_edge.c:279 modules/process/grain_mark.c:370
+#: modules/process/grain_edge.c:279 modules/process/grain_mark.c:371
 #: modules/process/grain_rem_threshold.c:364 modules/process/grain_wshed.c:296
 #: modules/process/scars.c:568
 msgid "_Mask color:"
@@ -8483,28 +8483,28 @@ msgstr "/Зёрн_а/Пометить по _порогу..."
 msgid "Mark grains by threshold"
 msgstr "Пометить зёрна по пороговому значению"
 
-#: modules/process/grain_mark.c:257
+#: modules/process/grain_mark.c:258
 msgid "Mark Grains by Threshold"
 msgstr "Пометить зёрна по пороговому значению"
 
-#: modules/process/grain_mark.c:305 modules/process/grain_rem_threshold.c:277
+#: modules/process/grain_mark.c:306 modules/process/grain_rem_threshold.c:277
 msgid "Threshold by"
 msgstr "Пороговое значение"
 
-#: modules/process/grain_mark.c:335
+#: modules/process/grain_mark.c:336
 msgid "_Slope:"
 msgstr "_Уклон:"
 
-#: modules/process/grain_mark.c:339
+#: modules/process/grain_mark.c:340
 msgid "_Curvature:"
 msgstr "_Кривизна:"
 
-#: modules/process/grain_mark.c:348 modules/process/grain_rem_threshold.c:331
+#: modules/process/grain_mark.c:349 modules/process/grain_rem_threshold.c:331
 #: modules/process/grain_wshed.c:282
 msgid "_Invert height"
 msgstr "_Инвертировать высоту"
 
-#: modules/process/grain_mark.c:361
+#: modules/process/grain_mark.c:362
 msgid "Mer_ge mode:"
 msgstr "_Метод слияния:"
 
@@ -9265,7 +9265,7 @@ msgstr "Презентация с увеличенным локальным ко
 msgid "Increase Local Contrast"
 msgstr "Увеличить локальный контраст"
 
-#: modules/process/local_contrast.c:142
+#: modules/process/local_contrast.c:142 modules/process/rank.c:144
 msgid "Kernel _size:"
 msgstr "Размер _ядра:"
 
@@ -10124,6 +10124,28 @@ msgstr "Присоединить презентацию"
 #: modules/process/presentationops.c:222
 msgid "_Data to attach:"
 msgstr "Присоединяемые _данные:"
+
+#: modules/process/rank.c:76
+msgid "Enhances local contrast using a rank transform."
+msgstr "Улучшает локальный контраст с помощью преобразования ранжирования"
+
+#: modules/process/rank.c:90
+msgid "/_Presentation/_Rank..."
+msgstr "/_Презентация/_Ранг..."
+
+#: modules/process/rank.c:94
+msgid "Presentation with local contrast ehnanced using a rank transform"
+msgstr ""
+"Презентация с увеличенным локальным контрастом используя преобразование "
+"ранжирования"
+
+#: modules/process/rank.c:127
+msgid "Rank Transform"
+msgstr "Преобразование ранжирования"
+
+#: modules/process/rank.c:215
+msgid "Rank transform..."
+msgstr "Преобразование ранжирования..."
 
 #: modules/process/rotate.c:87
 msgid "Rotates data by arbitrary angle."
