@@ -38,7 +38,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Creates mask of outliers."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -66,13 +66,14 @@ outliers(GwyContainer *data, GwyRunType run)
     GQuark dquark, mquark;
     gdouble thresh = 3.0;
     gboolean has_mask;
-    gint xres, yres, count;
+    gint xres, yres, count, id;
 
     g_return_if_fail(run & OUTLIERS_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
                                      GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_MASK_FIELD_KEY, &mquark,
                                      GWY_APP_MASK_FIELD, &maskfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield && dquark);
     has_mask = !!maskfield;
@@ -108,6 +109,7 @@ outliers(GwyContainer *data, GwyRunType run)
             gwy_container_remove(data, mquark);
         /* otherwise: do nothing */
     }
+    gwy_app_channel_log_add(data, id, id, "proc::outliers", NULL);
 
     g_object_unref(maskfield);
 }

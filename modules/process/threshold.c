@@ -123,7 +123,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Limit the data range using a lower/upper threshold."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2010",
 };
@@ -167,12 +167,13 @@ threshold(GwyContainer *data, GwyRunType run)
     threshold_get_display_range(data, id, dfield,
                                 &ranges.disp_min, &ranges.disp_max);
 
-    if (run == GWY_RUN_IMMEDIATE)
+    if (run == GWY_RUN_IMMEDIATE) {
         run_noninteractive(&args, &ranges, data, dfield, quark);
+        gwy_app_channel_log_add(data, id, id, "proc::threshold", NULL);
+    }
     else {
         threshold_sanitize_min_max(&args, &ranges);
         threshold_dialog(&args, &ranges, data, dfield, id, quark);
-        threshold_save_args(gwy_app_settings_get(), &args);
     }
 }
 
@@ -368,6 +369,7 @@ threshold_dialog(ThresholdArgs *args,
             case GTK_RESPONSE_NONE:
             g_object_unref(controls.mydata);
             gwy_si_unit_value_format_free(controls.format);
+            threshold_save_args(gwy_app_settings_get(), args);
             return;
             break;
 
@@ -380,10 +382,13 @@ threshold_dialog(ThresholdArgs *args,
         }
     } while (response != GTK_RESPONSE_OK);
 
+    threshold_save_args(gwy_app_settings_get(), args);
+
     gtk_widget_destroy(dialog);
     g_object_unref(controls.mydata);
     gwy_si_unit_value_format_free(controls.format);
     run_noninteractive(args, ranges, data, controls.dfield, quark);
+    gwy_app_channel_log_add(data, id, id, "proc::threshold", NULL);
 }
 
 static void

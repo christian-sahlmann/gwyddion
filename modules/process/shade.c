@@ -97,7 +97,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Creates a shaded presentation of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -161,6 +161,7 @@ shade(GwyContainer *data, GwyRunType run)
     }
     gwy_data_field_normalize(shadefield);
     gwy_data_field_data_changed(shadefield);
+    gwy_app_channel_log_add(data, id, id, "proc::shade", NULL);
 }
 
 /* create a smaller copy of data */

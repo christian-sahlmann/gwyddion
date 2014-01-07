@@ -95,7 +95,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Subtracts background by arc or sphere revolution."),
     "Yeti <yeti@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -184,6 +184,7 @@ sphrev(GwyContainer *data, GwyRunType run)
     }
     gwy_data_field_subtract_fields(dfield, dfield, background);
     gwy_data_field_data_changed(dfield);
+    gwy_app_channel_log_add(data, oldid, oldid, "proc::arc_revolve", NULL);
 
     if (!args.do_extract) {
         g_object_unref(background);
@@ -196,6 +197,7 @@ sphrev(GwyContainer *data, GwyRunType run)
                             GWY_DATA_ITEM_GRADIENT,
                             0);
     gwy_app_set_data_field_title(data, newid, _("Background"));
+    gwy_app_channel_log_add(data, oldid, newid, "proc::arc_revolve", NULL);
 }
 
 static gboolean

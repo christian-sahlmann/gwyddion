@@ -73,7 +73,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Tilts image by specified amount."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2008",
 };
@@ -101,10 +101,12 @@ tilt(GwyContainer *data, GwyRunType run)
     GQuark quark;
     TiltArgs args;
     gboolean ok;
+    gint id;
 
     g_return_if_fail(run & TILT_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_KEY, &quark,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield);
 
@@ -130,6 +132,7 @@ tilt(GwyContainer *data, GwyRunType run)
     }
 
     gwy_data_field_data_changed(dfield);
+    gwy_app_channel_log_add(data, id, id, "proc::tilt", NULL);
 }
 
 static gboolean

@@ -48,7 +48,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Automated threshold using Otsu's method on heights."),
     "Vinicius Barboza <vinicius.barboza@lnnano.cnpem.br>",
-    "1.0",
+    "1.1",
     "Brazilian Nanotechnology National Laboratory",
     "2013",
 };
@@ -95,8 +95,8 @@ otsu_threshold(GwyContainer *data,
     /* Foreground statistics*/
     gdouble  weight_1, mean_1;
     /* Data field and histogram statistics*/
-    gdouble min, max, max_var, var, thresh, bin;    
-    gint len, t;
+    gdouble min, max, max_var, var, thresh, bin;
+    gint len, t, id;
 
     /* Running smoothly */
     g_return_if_fail(run & OTSU_RUN_MODES);
@@ -106,6 +106,7 @@ otsu_threshold(GwyContainer *data,
                                      GWY_APP_DATA_FIELD_KEY, &dquark,
                                      GWY_APP_MASK_FIELD, &mfield,
                                      GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
 
     /* Setting checkopint */
@@ -157,6 +158,7 @@ otsu_threshold(GwyContainer *data,
     /* Apply threshold to mask field */
     gwy_data_field_threshold(mfield, thresh, 0.0, 1.0);
     gwy_data_field_data_changed(mfield);
+    gwy_app_channel_log_add(data, id, id, "proc::otsu-threshold", NULL);
 
     g_object_unref(hist);
 

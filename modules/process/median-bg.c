@@ -80,7 +80,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Subtracts background using a rank-based algorithm."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -150,6 +150,7 @@ median(GwyContainer *data, GwyRunType run)
     gwy_app_undo_qcheckpointv(data, 1, &dquark);
     gwy_data_field_subtract_fields(dfield, dfield, background);
     gwy_data_field_data_changed(dfield);
+    gwy_app_channel_log_add(data, oldid, oldid, "proc::median-bg", NULL);
 
     if (!args.do_extract) {
         g_object_unref(background);
@@ -162,6 +163,7 @@ median(GwyContainer *data, GwyRunType run)
                             GWY_DATA_ITEM_GRADIENT,
                             0);
     gwy_app_set_data_field_title(data, newid, _("Background"));
+    gwy_app_channel_log_add(data, oldid, newid, "proc::median-bg", NULL);
 }
 
 static gboolean
