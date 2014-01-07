@@ -257,6 +257,7 @@ nst_load(const gchar *filename,
                 }
                 if (titlestr) {
                     g_free(titlestr);
+                    titlestr = NULL;
                 }
             }
             else if (gwy_strequal(line, "2d")) {
@@ -319,6 +320,7 @@ nst_load(const gchar *filename,
                 }
                 if (titlestr) {
                     g_free(titlestr);
+                    titlestr = NULL;
                 }
             }
 
@@ -453,7 +455,8 @@ nst_read_3d(const gchar *buffer, GwyContainer **metadata, gchar **title)
                                 yscale*pow10(power10xy), TRUE);
     gwy_data_field_set_xoffset(dfield, xoffset*pow10(power10xy));
     gwy_data_field_set_yoffset(dfield, yoffset*pow10(power10xy));
-    if (dfield) {
+
+    if ((dfield) && (dataarray->len == (xmax+1)*(ymax+1))) {
         data = gwy_data_field_get_data(dfield);
         for (j = 0; j <= ymax; j++)
             for (i = 0; i <= xmax; i++)
@@ -461,6 +464,7 @@ nst_read_3d(const gchar *buffer, GwyContainer **metadata, gchar **title)
                                           gdouble, j*(xmax+1)+i)
                                         * pow10(power10z);
     }
+
     if (siunitxy) {
         gwy_data_field_set_si_unit_xy(dfield, siunitxy);
         g_object_unref(siunitxy);
@@ -472,6 +476,7 @@ nst_read_3d(const gchar *buffer, GwyContainer **metadata, gchar **title)
 
     *metadata = meta;
     g_array_free(dataarray, TRUE);
+
     return dfield;
 }
 
