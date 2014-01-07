@@ -1,12 +1,20 @@
 2.35 (0000-00-00)
 Application:
+- A viewer of data processing operation log is available in the right-click
+  menu.
 - A workaround for toolbox menus disapparing in Unity was implemented.
 
 Libraries:
+- libgwyapp: Functions for logging data processing operations were added.
+- libgwyapp: Missing brick containers items were added to validation and file
+  merging operations.
 - libgwyprocess: gwy_data_field_grains_get_distribution() no longer incorrectly
   includes the no-grains value in the resulting distribution.
+- libgwyddion: GwyStringList has new functions for clearing and adding a string
+  with taking the ownership.
 
 Modules:
+- Data processing modules: Support for logging was added.
 - Rank (new): Rank transform-based local constrast ehnancement presentation.
 - HDR image: 32bit and 64bit integer samples as well as 32bit and 64bit
   floating point samples are supported.  Plain BigTIFF images can be loaded.
