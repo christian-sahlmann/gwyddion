@@ -106,7 +106,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks grains by edge detection method."),
     "Daniil Bratashov <dn2010@gmail.com>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov",
     "2011",
 };
@@ -143,12 +143,12 @@ grain_edge(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(dfield && mquark);
 
-    if (run == GWY_RUN_IMMEDIATE)
+    if (run == GWY_RUN_IMMEDIATE) {
         run_noninteractive(&args, data, dfield, mquark);
-    else {
-        gedge_dialog(&args, data, dfield, id, mquark);
-        gedge_save_args(gwy_app_settings_get(), &args);
+        gwy_app_channel_log_add(data, id, id, "proc::grain_edge", NULL);
     }
+    else
+        gedge_dialog(&args, data, dfield, id, mquark);
 }
 
 static void
@@ -313,6 +313,7 @@ gedge_dialog(GEdgeArgs *args,
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             g_object_unref(controls.mydata);
+            gedge_save_args(gwy_app_settings_get(), args);
             return;
             break;
 
@@ -345,6 +346,9 @@ gedge_dialog(GEdgeArgs *args,
                             GWY_DATA_ITEM_MASK_COLOR,
                             0);
     gtk_widget_destroy(dialog);
+
+    gedge_save_args(gwy_app_settings_get(), args);
+    gwy_app_channel_log_add(data, id, id, "proc::grain_edge", NULL);
 
     g_object_unref(controls.mydata);
     run_noninteractive(args, data, dfield, mquark);
@@ -448,8 +452,8 @@ update_change_cb(GEdgeControls *controls)
 
 static void
 gedge_process(GwyDataField *dfield,
-             GwyDataField *maskfield,
-             GEdgeArgs *args)
+              GwyDataField *maskfield,
+              GEdgeArgs *args)
 {
     GwyDataField *temp_field;
 
@@ -476,7 +480,7 @@ gedge_sanitize_args(GEdgeArgs *args)
 
 static void
 gedge_load_args(GwyContainer *container,
-               GEdgeArgs *args)
+                GEdgeArgs *args)
 {
     *args = gedge_defaults;
 
@@ -490,7 +494,7 @@ gedge_load_args(GwyContainer *container,
 
 static void
 gedge_save_args(GwyContainer *container,
-               GEdgeArgs *args)
+                GEdgeArgs *args)
 {
     gwy_container_set_double_by_name(container, threshold_laplasian_key,
                                      args->threshold_laplasian);

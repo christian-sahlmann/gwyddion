@@ -139,7 +139,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Removes grains by thresholding (height, size)."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.15",
+    "1.16",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -177,12 +177,13 @@ remove_th(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(dfield && mfield);
 
-    if (run == GWY_RUN_IMMEDIATE)
+    if (run == GWY_RUN_IMMEDIATE) {
         run_noninteractive(&args, data, dfield, mfield, mquark);
-    else {
-        remove_dialog(&args, data, dfield, mfield, id, mquark);
-        remove_save_args(gwy_app_settings_get(), &args);
+        gwy_app_channel_log_add(data, id, id, "proc::grain_rem_threshold",
+                                NULL);
     }
+    else
+        remove_dialog(&args, data, dfield, mfield, id, mquark);
 }
 
 static void
@@ -409,6 +410,7 @@ remove_dialog(RemoveArgs *args,
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             g_object_unref(controls.mydata);
+            remove_save_args(gwy_app_settings_get(), args);
             return;
             break;
 
@@ -442,6 +444,8 @@ remove_dialog(RemoveArgs *args,
                             0);
     gtk_widget_destroy(dialog);
 
+    remove_save_args(gwy_app_settings_get(), args);
+
     if (args->computed) {
         mfield = gwy_container_get_object_by_name(controls.mydata, "/0/mask");
         gwy_app_undo_qcheckpointv(data, 1, &mquark);
@@ -452,6 +456,8 @@ remove_dialog(RemoveArgs *args,
         g_object_unref(controls.mydata);
         run_noninteractive(args, data, dfield, mfield, mquark);
     }
+
+    gwy_app_channel_log_add(data, id, id, "proc::grain_rem_threshold", NULL);
 }
 
 static void

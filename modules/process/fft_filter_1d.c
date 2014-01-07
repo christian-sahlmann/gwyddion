@@ -102,7 +102,8 @@ static void       fftf_1d_save_args       (GwyContainer *container,
 static void       fftf_1d_sanitize_args   (Fftf1dArgs *args);
 static void       fftf_1d_run             (Fftf1dControls *controls,
                                            Fftf1dArgs *args);
-static void       fftf_1d_do              (Fftf1dControls *controls);
+static void       fftf_1d_do              (Fftf1dControls *controls,
+                                           gint id);
 static void       fftf_1d_dialog_abandon  (Fftf1dControls *controls,
                                            Fftf1dArgs *args);
 static void       suppress_changed_cb     (GtkWidget *combo,
@@ -127,7 +128,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("FFT filtering"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "2.5",
+    "2.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -164,7 +165,6 @@ fftf_1d(GwyContainer *data, GwyRunType run)
     g_return_if_fail(dfield);
 
     fftf_1d_dialog(&args, data, dfield, id);
-    fftf_1d_save_args(gwy_app_settings_get(), &args);
 }
 
 static void
@@ -351,11 +351,13 @@ fftf_1d_dialog(Fftf1dArgs *args,
             case GTK_RESPONSE_DELETE_EVENT:
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
+            fftf_1d_save_args(gwy_app_settings_get(), args);
             return;
             break;
 
             case GTK_RESPONSE_OK:
-            fftf_1d_do(&controls);
+            fftf_1d_save_args(gwy_app_settings_get(), args);
+            fftf_1d_do(&controls, id);
             break;
 
             case RESPONSE_PREVIEW:
@@ -526,7 +528,7 @@ fftf_1d_run(Fftf1dControls *controls,
 
 /*dialog finished, export result data*/
 static void
-fftf_1d_do(Fftf1dControls *controls)
+fftf_1d_do(Fftf1dControls *controls, gint id)
 {
     GwyDataField *rfield;
     gint newid;
@@ -536,6 +538,8 @@ fftf_1d_do(Fftf1dControls *controls)
                                                 TRUE);
     gwy_app_set_data_field_title(controls->original_data, newid,
                                  _("1D FFT Filtered Data"));
+    gwy_app_channel_log_add(controls->original_data, id, newid,
+                            "proc::fft_filter_1d", NULL);
 }
 
 static void

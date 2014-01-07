@@ -84,7 +84,7 @@ static GwyModuleInfo module_info = {
     N_("Levels individual grains, interpolating the shifts between using "
        "Laplacian interpolation."),
     "David Nečas <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -135,6 +135,7 @@ level_grains(GwyContainer *data,
     }
 
     level_grains_do(&args, data, quark, id, dfield, mfield);
+    gwy_app_channel_log_add(data, id, id, "proc::level_grains", NULL);
 }
 
 static void

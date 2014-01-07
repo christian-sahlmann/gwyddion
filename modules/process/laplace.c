@@ -41,7 +41,7 @@ static GwyModuleInfo module_info = {
     N_("Removes data under mask, "
        "interpolating them with Laplace equation solution."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -117,6 +117,7 @@ laplace(GwyContainer *data, GwyRunType run)
     if (!cancelled) {
         gwy_app_undo_qcheckpointv(data, 1, &dquark);
         gwy_container_set_object(data, dquark, dfield);
+        gwy_app_channel_log_add(data, id, id, "proc::laplace", NULL);
     }
     g_object_unref(dfield);
     g_object_unref(buffer);

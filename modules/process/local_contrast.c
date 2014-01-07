@@ -75,7 +75,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Maximizes local contrast."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -101,8 +101,10 @@ maximize_local_contrast(GwyContainer *data, GwyRunType run)
 {
     ContrastArgs args;
     gboolean ok;
+    gint id;
 
     g_return_if_fail(run & CONTRAST_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &id, 0);
     load_args(gwy_app_settings_get(), &args);
     if (run == GWY_RUN_INTERACTIVE) {
         ok = contrast_dialog(&args);
@@ -111,6 +113,7 @@ maximize_local_contrast(GwyContainer *data, GwyRunType run)
             return;
     }
     contrast_do(data, &args);
+    gwy_app_channel_log_add(data, id, id, "proc::local_contrast", NULL);
 }
 
 static gboolean

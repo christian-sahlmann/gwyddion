@@ -91,7 +91,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Scales data by arbitrary factor."),
     "Yeti <yeti@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti) & Petr Klapetek & Dirk Kähler",
     "2003",
 };
@@ -180,6 +180,7 @@ scale(GwyContainer *data, GwyRunType run)
     }
 
     gwy_app_set_data_field_title(data, newid, _("Scaled Data"));
+    gwy_app_channel_log_add(data, oldid, newid, "proc::scale", NULL);
 }
 
 static gboolean

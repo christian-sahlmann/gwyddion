@@ -46,7 +46,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Basic operations with mask: inversion, removal, extraction."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -86,10 +86,12 @@ mask_invert(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *mfield;
     GQuark mquark;
+    gint id;
 
     g_return_if_fail(run & MASKOPS_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_MASK_FIELD, &mfield,
                                      GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(mfield && mquark);
 
@@ -97,19 +99,24 @@ mask_invert(GwyContainer *data, GwyRunType run)
     gwy_data_field_multiply(mfield, -1.0);
     gwy_data_field_add(mfield, 1.0);
     gwy_data_field_data_changed(mfield);
+    gwy_app_channel_log_add(data, id, id, "proc::mask_invert", NULL);
 }
 
 static void
 mask_remove(GwyContainer *data, GwyRunType run)
 {
     GQuark mquark;
+    gint id;
 
     g_return_if_fail(run & MASKOPS_RUN_MODES);
-    gwy_app_data_browser_get_current(GWY_APP_MASK_FIELD_KEY, &mquark, 0);
+    gwy_app_data_browser_get_current(GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
     g_return_if_fail(mquark);
 
     gwy_app_undo_qcheckpointv(data, 1, &mquark);
     gwy_container_remove(data, mquark);
+    gwy_app_channel_log_add(data, id, id, "proc::mask_remove", NULL);
 }
 
 static void
@@ -136,6 +143,7 @@ mask_extract(GwyContainer *data, GwyRunType run)
     newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
     g_object_unref(dfield);
     gwy_app_set_data_field_title(data, newid, _("Mask"));
+    gwy_app_channel_log_add(data, oldid, newid, "proc::mask_extract", NULL);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

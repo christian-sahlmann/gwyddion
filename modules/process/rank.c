@@ -75,7 +75,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Enhances local contrast using a rank transform."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2014",
 };
@@ -101,8 +101,10 @@ static void
 rank(GwyContainer *data, GwyRunType run)
 {
     RankArgs args;
+    gint id;
 
     g_return_if_fail(run & RANK_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &id, 0);
     load_args(gwy_app_settings_get(), &args);
     if (run == GWY_RUN_INTERACTIVE) {
         gboolean ok = rank_dialog(&args);
@@ -111,6 +113,7 @@ rank(GwyContainer *data, GwyRunType run)
             return;
     }
     rank_do(data, &args);
+    gwy_app_channel_log_add(data, id, id, "proc::rank", NULL);
 }
 
 static gboolean

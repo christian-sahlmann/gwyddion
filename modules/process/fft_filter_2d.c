@@ -169,7 +169,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("2D FFT Filtering"),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "1.8",
+    "1.9",
     "Chris Anderson, Molecular Imaging Corp.",
     "2005",
 };
@@ -300,6 +300,8 @@ run_main(GwyContainer *data, GwyRunType run)
                                     GWY_DATA_ITEM_REAL_SQUARE,
                                     0);
             gwy_app_set_data_field_title(data, newid, _("Filtered Data"));
+            gwy_app_channel_log_add(data, id, newid,
+                                    "proc::fft_filter_2d", NULL);
         }
 
         if (controls.out_mode & OUTPUT_DIFF) {
@@ -314,6 +316,8 @@ run_main(GwyContainer *data, GwyRunType run)
                                     GWY_DATA_ITEM_REAL_SQUARE,
                                     0);
             gwy_app_set_data_field_title(data, newid, _("Difference"));
+            gwy_app_channel_log_add(data, id, newid,
+                                    "proc::fft_filter_2d", NULL);
         }
 
         if (controls.out_mode & OUTPUT_FFT) {
@@ -326,6 +330,8 @@ run_main(GwyContainer *data, GwyRunType run)
                                     GWY_DATA_ITEM_REAL_SQUARE,
                                     0);
             gwy_app_set_data_field_title(data, newid, _("Filtered FFT"));
+            gwy_app_channel_log_add(data, id, newid,
+                                    "proc::fft_filter_2d", NULL);
         }
 
         gwy_object_unref(out_diff);

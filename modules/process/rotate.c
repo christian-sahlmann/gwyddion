@@ -86,7 +86,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Rotates data by arbitrary angle."),
     "Yeti <yeti@gwyddion.net>",
-    "1.10",
+    "1.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -208,6 +208,7 @@ rotate(GwyContainer *data, GwyRunType run)
     }
 
     gwy_app_set_data_field_title(data, newid, _("Rotated Data"));
+    gwy_app_channel_log_add(data, oldid, newid, "proc::rotate", NULL);
 }
 
 /* create a smaller copy of data */

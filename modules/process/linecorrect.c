@@ -88,7 +88,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Corrects line defects (mostly experimental algorithms)."),
     "Yeti <yeti@gwyddion.net>, Luke Somers <lsomers@sas.upenn.edu>",
-    "1.8",
+    "1.9",
     "David Nečas (Yeti) & Petr Klapetek & Luke Somers",
     "2004",
 };
@@ -146,10 +146,12 @@ line_correct_modus(GwyContainer *data, GwyRunType run)
     gint xres, yres, i;
     GQuark dquark;
     gdouble modus;
+    gint id;
 
     g_return_if_fail(run & LINECORR_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield && dquark);
     gwy_app_undo_qcheckpointv(data, 1, &dquark);
@@ -174,6 +176,7 @@ line_correct_modus(GwyContainer *data, GwyRunType run)
     g_object_unref(modi);
     g_object_unref(line);
     gwy_data_field_data_changed(dfield);
+    gwy_app_channel_log_add(data, id, id, "proc::line_correct_modus", NULL);
 }
 
 static void
@@ -186,11 +189,13 @@ line_correct_median(GwyContainer *data, GwyRunType run)
     GQuark dquark;
     const gdouble *d, *m;
     gdouble median, total_median;
+    gint id;
 
     g_return_if_fail(run & (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE));
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_MASK_FIELD, &mfield,
                                      GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield && dquark);
 
@@ -258,6 +263,7 @@ line_correct_median(GwyContainer *data, GwyRunType run)
     g_object_unref(modi);
     g_object_unref(line);
     gwy_data_field_data_changed(dfield);
+    gwy_app_channel_log_add(data, id, id, "proc::line_correct_median", NULL);
 }
 
 static gboolean
@@ -362,10 +368,12 @@ line_correct_median_difference(GwyContainer *data, GwyRunType run)
     gint xres, yres, i, j;
     gdouble median;
     GQuark dquark;
+    gint id;
 
     g_return_if_fail(run & GWY_RUN_IMMEDIATE);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield && dquark);
     gwy_app_undo_qcheckpointv(data, 1, &dquark);
@@ -387,6 +395,8 @@ line_correct_median_difference(GwyContainer *data, GwyRunType run)
 
     g_free(diffs);
     gwy_data_field_data_changed(dfield);
+    gwy_app_channel_log_add(data, id, id,
+                            "proc::line_correct_median_difference", NULL);
 }
 
 static gdouble
@@ -496,10 +506,12 @@ line_correct_match(GwyContainer *data,
     gdouble *d, *s, *w;
     const gdouble *a, *b;
     GQuark dquark;
+    gint id;
 
     g_return_if_fail(run & LINECORR_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield && dquark);
     gwy_app_undo_qcheckpointv(data, 1, &dquark);
@@ -553,6 +565,7 @@ line_correct_match(GwyContainer *data,
     g_object_unref(shifts);
     g_free(w);
     gwy_data_field_data_changed(dfield);
+    gwy_app_channel_log_add(data, id, id, "proc::line_correct_match", NULL);
 }
 
 #if 0
@@ -776,10 +789,12 @@ line_correct_step(GwyContainer *data,
 {
     GwyDataField *dfield, *mask;
     GQuark dquark;
+    gint id;
 
     g_return_if_fail(run & LINECORR_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield && dquark);
     gwy_app_undo_qcheckpointv(data, 1, &dquark);
@@ -794,6 +809,7 @@ line_correct_step(GwyContainer *data,
 
     gwy_data_field_filter_conservative(dfield, 5);
     gwy_data_field_data_changed(dfield);
+    gwy_app_channel_log_add(data, id, id, "proc::line_correct_step", NULL);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

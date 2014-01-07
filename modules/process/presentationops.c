@@ -57,7 +57,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Basic operations with presentation: extraction, removal."),
     "Yeti <yeti@gwyddion.net>",
-    "1.7",
+    "1.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -104,12 +104,16 @@ static void
 presentation_remove(GwyContainer *data, GwyRunType run)
 {
     GQuark quark;
+    gint id;
 
     g_return_if_fail(run & PRESENTATIONOPS_RUN_MODES);
-    gwy_app_data_browser_get_current(GWY_APP_SHOW_FIELD_KEY, &quark, 0);
+    gwy_app_data_browser_get_current(GWY_APP_SHOW_FIELD_KEY, &quark,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
     g_return_if_fail(quark);
     gwy_app_undo_qcheckpointv(data, 1, &quark);
     gwy_container_remove(data, quark);
+    gwy_app_channel_log_add(data, id, id, "proc::presentation_remove", NULL);
 }
 
 static void
@@ -133,6 +137,8 @@ presentation_extract(GwyContainer *data, GwyRunType run)
                             GWY_DATA_ITEM_GRADIENT,
                             0);
     gwy_app_set_data_field_title(data, newid, NULL);
+    gwy_app_channel_log_add(data, oldid, newid, "proc::presentation_extract",
+                            NULL);
 }
 
 static void
@@ -142,12 +148,13 @@ presentation_logscale(GwyContainer *data, GwyRunType run)
     GQuark squark;
     gdouble *d;
     gdouble min, max, m0;
-    gint xres, yres, i, zeroes;
+    gint xres, yres, i, zeroes, id;
 
     g_return_if_fail(run & PRESENTATIONOPS_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_SHOW_FIELD_KEY, &squark,
                                      GWY_APP_SHOW_FIELD, &sfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield && squark);
 
@@ -191,6 +198,7 @@ presentation_logscale(GwyContainer *data, GwyRunType run)
     }
 
     gwy_data_field_data_changed(sfield);
+    gwy_app_channel_log_add(data, id, id, "proc::presentation_logscale", NULL);
 }
 
 static void
@@ -252,6 +260,8 @@ presentation_attach(G_GNUC_UNUSED GwyContainer *data,
             /* The data must be always compatible at least with itself */
             g_assert(source.data);
             presentation_attach_do(&source, &target);
+            gwy_app_channel_log_add(data, target.id, target.id,
+                                    "proc::presentation_attach", NULL);
             break;
 
             default:
