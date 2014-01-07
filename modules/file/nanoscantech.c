@@ -21,6 +21,7 @@
 /*
  * TODO: assuming cp1251 as 8bit encoding,
  *       use Attributes field to load parameters
+ *       4D jumping mode fixes
  */
 
 /**
@@ -741,7 +742,7 @@ nst_read_4d(const gchar *buffer, gsize datasize,
                             *(data + k * xres * yres + i * xres + j)
                                                = gwy_get_gdouble_le(&p);
                         }
-                        dataleft -= 8 * zres + 4;
+                        dataleft -= 8 * MIN(zres, npoints) + 4;
                     }
             }
             else if (Vertical == header->direction) {
@@ -757,7 +758,7 @@ nst_read_4d(const gchar *buffer, gsize datasize,
                             *(data + k * xres * yres + j * xres + i)
                                                = gwy_get_gdouble_le(&p);
                         }
-                        dataleft -= 8 * zres + 4;
+                        dataleft -= 8 * MIN(zres, npoints) + 4;
                     }
             }
             else {
