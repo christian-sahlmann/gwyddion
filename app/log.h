@@ -22,6 +22,7 @@
 #ifndef __GWY_APP_LOG_H__
 #define __GWY_APP_LOG_H__
 
+#include <gtk/gtk.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwyddion/gwystringlist.h>
 
