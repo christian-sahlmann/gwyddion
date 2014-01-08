@@ -156,7 +156,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Merges two images."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -198,8 +198,6 @@ merge(GwyContainer *data, GwyRunType run)
         else
             merge_do(&args);
     }
-
-    merge_save_args(settings, &args);
 }
 
 static gboolean
@@ -265,6 +263,7 @@ merge_dialog(MergeArgs *args)
             case GTK_RESPONSE_DELETE_EVENT:
             case GTK_RESPONSE_NONE:
             gtk_widget_destroy(dialog);
+            merge_save_args(gwy_app_settings_get(), args);
             return FALSE;
             break;
 
@@ -279,6 +278,7 @@ merge_dialog(MergeArgs *args)
     } while (!ok);
 
     gtk_widget_destroy(dialog);
+    merge_save_args(gwy_app_settings_get(), args);
 
     return TRUE;
 }
@@ -555,6 +555,7 @@ merge_do(MergeArgs *args)
                                 GWY_DATA_ITEM_RANGE,
                                 0);
         g_object_unref(result);
+        gwy_app_channel_log_add(data, -1, newid, "proc::merge", NULL);
     }
 
     g_object_unref(correlation_data);
@@ -634,6 +635,7 @@ merge_do_uncorrelated(MergeArgs *args)
                             GWY_DATA_ITEM_MASK_COLOR,
                             GWY_DATA_ITEM_RANGE,
                             0);
+    gwy_app_channel_log_add(data, -1, newid, "proc::merge", NULL);
     g_object_unref(result);
 }
 

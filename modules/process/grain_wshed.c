@@ -111,7 +111,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks grains by watershed algorithm."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.16",
+    "1.17",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -148,12 +148,12 @@ grain_wshed(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(dfield && mquark);
 
-    if (run == GWY_RUN_IMMEDIATE)
+    if (run == GWY_RUN_IMMEDIATE) {
         run_noninteractive(&args, data, dfield, mquark, id);
-    else {
-        wshed_dialog(&args, data, dfield, id, mquark);
-        wshed_save_args(gwy_app_settings_get(), &args);
+        gwy_app_channel_log_add(data, id, id, "proc::grain_wshed", NULL);
     }
+    else
+        wshed_dialog(&args, data, dfield, id, mquark);
 }
 
 static void
@@ -311,6 +311,7 @@ wshed_dialog(WshedArgs *args,
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             g_object_unref(controls.mydata);
+            wshed_save_args(gwy_app_settings_get(), args);
             return;
             break;
 
@@ -338,6 +339,7 @@ wshed_dialog(WshedArgs *args,
                             GWY_DATA_ITEM_MASK_COLOR,
                             0);
     gtk_widget_destroy(dialog);
+    wshed_save_args(gwy_app_settings_get(), args);
 
     if (controls.computed) {
         mfield = gwy_container_get_object_by_name(controls.mydata, "/0/mask");
@@ -349,6 +351,8 @@ wshed_dialog(WshedArgs *args,
         g_object_unref(controls.mydata);
         run_noninteractive(args, data, dfield, mquark, id);
     }
+
+    gwy_app_channel_log_add(data, id, id, "proc::grain_wshed", NULL);
 }
 
 static void

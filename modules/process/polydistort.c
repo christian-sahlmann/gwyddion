@@ -140,7 +140,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Apllies polynomial distortion in the horizontal plane."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2007",
 };
@@ -182,10 +182,8 @@ polydistort(GwyContainer *data, GwyRunType run)
 
     if (run == GWY_RUN_IMMEDIATE)
         run_noninteractive(&args, data, dfield, mfield, sfield, NULL, id);
-    else {
+    else
         distort_dialog(&args, data, dfield, mfield, sfield, id);
-        distort_save_args(gwy_app_settings_get(), &args);
-    }
 
     g_free(args.xcoeff);
     g_free(args.ycoeff);
@@ -358,6 +356,7 @@ distort_dialog(DistortArgs *args,
             gtk_widget_destroy(dialog);
             gwy_object_unref(controls.result);
             case GTK_RESPONSE_NONE:
+            distort_save_args(gwy_app_settings_get(), args);
             return;
             break;
 
@@ -387,6 +386,7 @@ distort_dialog(DistortArgs *args,
         controls.preview_id = 0;
     }
     gtk_widget_destroy(dialog);
+    distort_save_args(gwy_app_settings_get(), args);
 
     if (controls.computed)
         run_noninteractive(args, data, dfield, mfield, sfield,
@@ -522,9 +522,9 @@ run_noninteractive(DistortArgs *args,
                             GWY_DATA_ITEM_MASK_COLOR,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
+    gwy_app_channel_log_add(data, id, newid, "proc::polydistort", NULL);
 
     g_object_unref(result);
-
 
     if (mfield) {
         GwyInterpolationType interp = args->interp;

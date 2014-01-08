@@ -112,7 +112,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Models SPM tip."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -145,7 +145,6 @@ tip_model(GwyContainer *data, GwyRunType run)
     args.object.data = data;
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.object.id, 0);
     tip_model_dialog(&args);
-    tip_model_save_args(gwy_app_settings_get(), &args);
 }
 
 static void
@@ -284,10 +283,13 @@ tip_model_dialog(TipModelArgs *args)
             gtk_widget_destroy(dialog);
             tip_model_dialog_abandon(&controls);
             case GTK_RESPONSE_NONE:
+            tip_model_save_args(gwy_app_settings_get(), args);
             return;
             break;
 
             case GTK_RESPONSE_OK:
+            tip_model_dialog_update_values(&controls, args);
+            tip_model_save_args(gwy_app_settings_get(), args);
             tip_model_do(args, &controls);
             break;
 
@@ -311,7 +313,6 @@ tip_model_dialog(TipModelArgs *args)
         }
     } while (response != GTK_RESPONSE_OK);
 
-    tip_model_dialog_update_values(&controls, args);
     gtk_widget_destroy(dialog);
     tip_model_dialog_abandon(&controls);
 }
@@ -465,6 +466,8 @@ tip_model_do(TipModelArgs *args,
                             args->object.id, newid, FALSE,
                             GWY_DATA_ITEM_GRADIENT, 0);
     gwy_app_set_data_field_title(args->object.data, newid, _("Modelled tip"));
+    gwy_app_channel_log_add(args->object.data, -1, newid,
+                            "proc::tip_model", NULL);
     controls->tipdone = TRUE;
 }
 

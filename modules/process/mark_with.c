@@ -152,7 +152,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Creates or modifies a mask using other channels."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -189,7 +189,6 @@ mark(GwyContainer *data, GwyRunType run)
                                      0);
 
     mark_dialog(&args, &target, mquark);
-    mark_save_args(gwy_app_settings_get(), &args);
 }
 
 static void
@@ -443,6 +442,7 @@ mark_dialog(MarkArgs *args,
             case GTK_RESPONSE_DELETE_EVENT:
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
+            mark_save_args(gwy_app_settings_get(), args);
             return;
             break;
 
@@ -465,10 +465,13 @@ mark_dialog(MarkArgs *args,
     } while (response != GTK_RESPONSE_OK);
 
     gtk_widget_destroy(dialog);
+    mark_save_args(gwy_app_settings_get(), args);
 
     dfield = gwy_container_get_object_by_name(controls.mydata, "/1/mask");
     gwy_app_undo_qcheckpointv(target->data, 1, &mquark);
     gwy_container_set_object(target->data, mquark, dfield);
+    gwy_app_channel_log_add(target->data, target->id, target->id,
+                            "proc::mark_with", NULL);
 
     g_object_unref(controls.mydata);
 }
@@ -802,7 +805,7 @@ static const gchar mark_with_key[] = "/module/mark_with/mark_with";
 static const gchar operation_key[] = "/module/mark_with/operation";
 static const gchar min_key[]       = "/module/mark_with/min";
 static const gchar max_key[]       = "/module/mark_with/max";
-static const gchar update_key[]    = "/module/mask_with/update";
+static const gchar update_key[]    = "/module/mark_with/update";
 
 static void
 mark_sanitize_args(MarkArgs *args)

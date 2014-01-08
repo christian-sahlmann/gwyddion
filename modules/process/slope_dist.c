@@ -108,7 +108,7 @@ static GwyModuleInfo module_info = {
     N_("Calculates one- or two-dimensional distribution of slopes "
        "or graph of their angular distribution."),
     "Yeti <yeti@gwyddion.net>",
-    "1.12",
+    "1.13",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -164,6 +164,7 @@ slope_dist(GwyContainer *data, GwyRunType run)
                                 GWY_DATA_ITEM_PALETTE,
                                 0);
         gwy_app_set_data_field_title(data, newid, _("Slope distribution"));
+        gwy_app_channel_log_add(data, oldid, newid, "proc::slope_dist", NULL);
         break;
 
         case SLOPE_DIST_GRAPH_PHI:

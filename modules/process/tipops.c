@@ -66,7 +66,7 @@ static GwyModuleInfo module_info = {
     N_("Tip operations: dilation (convolution), erosion (reconstruction) "
        "and certainty map."),
     "Petr Klapetek <klapetek@gwyddion.net>, Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -307,14 +307,20 @@ tipops_do(TipOpsArgs *args,
                        _("Initializing"));
 
     if (op == DILATION || op == EROSION) {
-        if (op == DILATION)
+        const gchar *qualname;
+
+        if (op == DILATION) {
             ok = gwy_tip_dilation(tip, target, dfield,
                                   gwy_app_wait_set_fraction,
                                   gwy_app_wait_set_message) != NULL;
-        else
+            qualname = "proc::tip_dilation";
+        }
+        else {
             ok = gwy_tip_erosion(tip, target, dfield,
                                  gwy_app_wait_set_fraction,
                                  gwy_app_wait_set_message) != NULL;
+            qualname = "proc::tip_reconstruction";
+        }
         gwy_app_wait_finish();
 
         if (ok) {
@@ -326,6 +332,8 @@ tipops_do(TipOpsArgs *args,
                                     GWY_DATA_ITEM_PALETTE, 0);
             gwy_app_set_data_field_title(args->target.data, newid,
                                          data_titles[op]);
+            gwy_app_channel_log_add(args->target.data, args->target.id, newid,
+                                    qualname, NULL);
         }
     }
     else {
@@ -338,6 +346,9 @@ tipops_do(TipOpsArgs *args,
             quark = gwy_app_get_mask_key_for_id(args->target.id);
             gwy_app_undo_qcheckpointv(args->target.data, 1, &quark);
             gwy_container_set_object(args->target.data, quark, dfield);
+            gwy_app_channel_log_add(args->target.data, args->target.id,
+                                    args->target.id,
+                                    "proc::tip_map", NULL);
         }
     }
     g_object_unref(dfield);

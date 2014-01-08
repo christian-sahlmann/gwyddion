@@ -70,7 +70,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Crops non-intersecting regions of two images."),
     "Daniil Bratashov <dn2010@gmail.com>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov",
     "2010",
 };
@@ -109,6 +109,8 @@ mcrop(GwyContainer *data, GwyRunType run)
             quark2 = gwy_app_get_data_key_for_id(op2.id);
             gwy_app_undo_qcheckpoint(data, quark1, quark2, NULL);
             mcrop_do(&op1, &op2);
+            gwy_app_channel_log_add(data, op1.id, op1.id, "proc::mcrop", NULL);
+            gwy_app_channel_log_add(data, op2.id, op2.id, "proc::mcrop", NULL);
         }
     }
 }

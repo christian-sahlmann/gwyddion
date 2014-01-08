@@ -197,7 +197,7 @@ sphrev(GwyContainer *data, GwyRunType run)
                             GWY_DATA_ITEM_GRADIENT,
                             0);
     gwy_app_set_data_field_title(data, newid, _("Background"));
-    gwy_app_channel_log_add(data, oldid, newid, "proc::arc_revolve", NULL);
+    gwy_app_channel_log_add(data, oldid, newid, NULL, NULL);
 }
 
 static gboolean

@@ -217,7 +217,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Neural network SPM data processing"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2012",
 };
@@ -1372,6 +1372,9 @@ neural_apply_do(NeuralApplyArgs *args,
         gwy_app_set_data_field_title(data, newid, _("Evaluated signal"));
         gwy_app_sync_data_items(data, data, id, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT, 0);
+        gwy_app_channel_log_add(data, id, newid, "proc::neural_apply",
+                                "settings-name", "neural",
+                                NULL);
     }
     g_object_unref(result);
 }

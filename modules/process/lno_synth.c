@@ -281,7 +281,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates various kinds of line noise."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2010",
 };
@@ -366,6 +366,8 @@ run_noninteractive(LNoSynthArgs *args,
         gwy_app_undo_qcheckpointv(data, 1, &quark);
         if (!add)
             gwy_data_field_clear(dfield);
+
+        gwy_app_channel_log_add(data, oldid, oldid, "proc::lno_synth", NULL);
     }
     else {
         if (add)
@@ -410,6 +412,8 @@ run_noninteractive(LNoSynthArgs *args,
         }
 
         gwy_app_set_data_field_title(data, newid, _("Generated"));
+        gwy_app_channel_log_add(data, add ? oldid : -1, newid,
+                                "proc::lno_synth", NULL);
     }
     g_object_unref(dfield);
 }

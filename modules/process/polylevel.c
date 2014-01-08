@@ -144,7 +144,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Subtracts polynomial background."),
     "Yeti <yeti@gwyddion.net>",
-    "3.0",
+    "3.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -282,6 +282,7 @@ poly_level_do(GwyContainer *data,
         bg = gwy_data_field_new_alike(dfield, TRUE);
 
     poly_level_do_with_mask(dfield, mfield, dfield, bg, args, NULL);
+    gwy_app_channel_log_add(data, oldid, oldid, "proc::polylevel", NULL);
 
     if (!args->do_extract)
         return;
@@ -292,6 +293,7 @@ poly_level_do(GwyContainer *data,
                             GWY_DATA_ITEM_GRADIENT,
                             0);
     gwy_app_set_data_field_title(data, newid, _("Background"));
+    gwy_app_channel_log_add(data, oldid, newid, NULL, NULL);
 }
 
 /* create a smaller copy of data */

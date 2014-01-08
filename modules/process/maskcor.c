@@ -87,7 +87,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Creates mask by correlation with another data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -125,8 +125,6 @@ maskcor(GwyContainer *data, GwyRunType run)
 
     if (maskcor_dialog(&args))
         maskcor_do(&args);
-
-    maskcor_save_args(settings, &args);
 }
 
 static gboolean
@@ -200,6 +198,7 @@ maskcor_dialog(MaskcorArgs *args)
             case GTK_RESPONSE_DELETE_EVENT:
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
+            maskcor_save_args(gwy_app_settings_get(), args);
             return FALSE;
             break;
 
@@ -214,6 +213,7 @@ maskcor_dialog(MaskcorArgs *args)
         }
     } while (!ok);
 
+    maskcor_save_args(gwy_app_settings_get(), args);
     return ok;
 }
 
@@ -360,6 +360,8 @@ maskcor_do(MaskcorArgs *args)
         gwy_app_set_data_field_title(args->data.data, newid,
                                      _("Correlation score"));
         g_object_unref(score);
+        gwy_app_channel_log_add(args->data.data, args->data.id, newid,
+                                "proc::maskcor", NULL);
     }
     else {
         /* add mask */
@@ -374,6 +376,8 @@ maskcor_do(MaskcorArgs *args)
             gwy_data_field_threshold(retfield, args->threshold, 0.0, 1.0);
 
         gwy_container_set_object(args->data.data, quark, retfield);
+        gwy_app_channel_log_add(args->data.data, args->data.id, args->data.id,
+                                "proc::maskcor", NULL);
     }
     g_object_unref(retfield);
 }

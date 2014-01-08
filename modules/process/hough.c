@@ -72,7 +72,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Hough transform."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -100,11 +100,12 @@ hough(GwyContainer *data, GwyRunType run)
     GwySIUnit *siunit;
     gboolean ok;
     HoughArgs args;
-    gint newid;
+    gint id, newid;
     gchar title[30];
 
     g_return_if_fail(run & HOUGH_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield);
 
@@ -156,6 +157,8 @@ hough(GwyContainer *data, GwyRunType run)
     g_object_unref(edgefield);
     g_object_unref(f1);
     g_object_unref(f2);
+
+    gwy_app_channel_log_add(data, id, newid, "proc::hough", NULL);
 }
 
 

@@ -290,7 +290,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates randomly patterned surfaces by placing objects."),
     "Yeti <yeti@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -364,6 +364,8 @@ run_noninteractive(ObjSynthArgs *args,
         gwy_app_undo_qcheckpointv(data, 1, &quark);
         if (!add)
             gwy_data_field_clear(dfield);
+
+        gwy_app_channel_log_add(data, oldid, oldid, "proc::obj_synth", NULL);
     }
     else {
         if (add)
@@ -404,6 +406,8 @@ run_noninteractive(ObjSynthArgs *args,
         }
 
         gwy_app_set_data_field_title(data, newid, _("Generated"));
+        gwy_app_channel_log_add(data, add ? oldid : -1, newid,
+                                "proc::obj_synth", NULL);
     }
     g_object_unref(dfield);
 }

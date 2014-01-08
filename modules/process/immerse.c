@@ -174,7 +174,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Immerse high resolution detail into overall image."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.3",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -212,8 +212,6 @@ immerse(GwyContainer *data, GwyRunType run)
 
     if (immerse_dialog(&args))
         immerse_do(&args);
-
-    immerse_save_args(settings, &args);
 }
 
 static gboolean
@@ -396,6 +394,7 @@ immerse_dialog(ImmerseArgs *args)
             case GTK_RESPONSE_DELETE_EVENT:
             case GTK_RESPONSE_NONE:
             immerse_controls_destroy(&controls);
+            immerse_save_args(gwy_app_settings_get(), args);
             return FALSE;
             break;
 
@@ -415,6 +414,7 @@ immerse_dialog(ImmerseArgs *args)
     } while (!ok);
 
     immerse_controls_destroy(&controls);
+    immerse_save_args(gwy_app_settings_get(), args);
 
     return TRUE;
 }
@@ -798,6 +798,7 @@ immerse_do(ImmerseArgs *args)
     newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
     gwy_app_set_data_field_title(data, newid, _("Immersed detail"));
     g_object_unref(result);
+    gwy_app_channel_log_add(data, args->image.id, newid, "proc::immerse", NULL);
 }
 
 static void
