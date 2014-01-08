@@ -32,6 +32,7 @@ enum {
     LOG_TYPE,
     LOG_FUNCNAME,
     LOG_PARAMETERS,
+    LOG_TIME,
 };
 
 typedef enum {
@@ -116,8 +117,9 @@ gwy_app_channel_log_add(GwyContainer *data,
     va_list ap;
     GString *str = NULL;
     const gchar *key, *settings_name = NULL;
-    gchar *args;
+    gchar *args, *optime, *s;
     GwyStringList *sourcelog = NULL, *targetlog = NULL;
+    GTimeVal t;
 
     g_return_if_fail(GWY_IS_CONTAINER(data));
     g_return_if_fail(newid >= 0);
@@ -171,15 +173,21 @@ gwy_app_channel_log_add(GwyContainer *data,
         g_object_unref(targetlog);
     }
 
-    // XXX XXX XXX Tools do not have the correct settings saved upon Apply!
     if (!function)
         return;
+
+    g_get_current_time(&t);
+    optime = g_time_val_to_iso8601(&t);
+    s = strchr(optime, 'T');
+    if (s)
+        *s = ' ';
 
     args = format_args(str->str);
     if (!str)
         str = g_string_new(NULL);
-    g_string_printf(str, "%s(%s)", function, args);
+    g_string_printf(str, "%s(%s)@%s", function, args, optime);
     gwy_string_list_append_take(targetlog, g_string_free(str, FALSE));
+    g_free(optime);
 }
 
 static GwyStringList*
@@ -367,6 +375,7 @@ log_browser_construct(LogBrowser *browser)
         { N_("Type"),       LOG_TYPE,       },
         { N_("Function"),   LOG_FUNCNAME,   },
         { N_("Parameters"), LOG_PARAMETERS, },
+        { N_("Time"),       LOG_TIME,       },
     };
 
     GtkTreeView *treeview;
@@ -391,6 +400,7 @@ log_browser_construct(LogBrowser *browser)
                           GUINT_TO_POINTER(columns[i].id));
 
         if (columns[i].id == LOG_PARAMETERS) {
+            gtk_tree_view_column_set_expand(column, TRUE);
             g_object_set(renderer,
                          "ellipsize", PANGO_ELLIPSIZE_END,
                          "ellipsize-set", TRUE,
@@ -440,8 +450,16 @@ log_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
         case LOG_PARAMETERS:
         t = strchr(s, '(');
         g_return_if_fail(t);
+        s = t+1;
+        t = strrchr(s, ')');
+        g_return_if_fail(t);
+        g_string_append_len(buf, s, t-s);
+        break;
+
+        case LOG_TIME:
+        t = strrchr(s, '@');
+        g_return_if_fail(t);
         g_string_append(buf, t+1);
-        g_string_truncate(buf, buf->len-1);
         break;
 
         default:
@@ -700,6 +718,11 @@ find_settings_prefix(const gchar *function,
  * use data from other channels, such as masking using another data or tip
  * convolution, should be represented as simple modifications of the primary
  * channel.
+ *
+ * Logging functions such as gwy_app_channel_log_add() take settings values
+ * corresponding to the function name and store them in the log entry.
+ * If the settings are stored under a different name, use the "settings-name"
+ * logging option to set the correct name.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
