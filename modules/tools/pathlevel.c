@@ -101,6 +101,7 @@ static void     gwy_tool_path_level_apply            (GwyToolPathLevel *tool);
 static void     gwy_tool_path_level_sel_to_isel      (GwyToolPathLevel *tool,
                                                       gint i,
                                                       gint *isel);
+static void     gwy_tool_path_level_save_args        (GwyToolPathLevel *tool);
 
 static const gchar thickness_key[] = "/module/pathlevel/thickness";
 
@@ -109,7 +110,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Path level tool, performs row leveling along on user-set lines."),
     "Yeti <yeti@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti)",
     "2007",
 };
@@ -154,13 +155,9 @@ static void
 gwy_tool_path_level_finalize(GObject *object)
 {
     GwyToolPathLevel *tool;
-    GwyContainer *settings;
 
     tool = GWY_TOOL_PATH_LEVEL(object);
-
-    settings = gwy_app_settings_get();
-    gwy_container_set_int32_by_name(settings, thickness_key,
-                                    tool->args.thickness);
+    gwy_tool_path_level_save_args(tool);
 
     if (tool->model) {
         gtk_tree_view_set_model(tool->treeview, NULL);
@@ -445,6 +442,7 @@ gwy_tool_path_level_apply(GwyToolPathLevel *tool)
     gint *isel;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
+    gwy_tool_path_level_save_args(tool);
     gwy_app_undo_qcheckpoint(plain_tool->container,
                              gwy_app_get_data_key_for_id(plain_tool->id), 0);
 
@@ -528,6 +526,9 @@ gwy_tool_path_level_apply(GwyToolPathLevel *tool)
     g_object_unref(corr);
 
     gwy_data_field_data_changed(plain_tool->data_field);
+    gwy_app_channel_log_add(plain_tool->container,
+                            plain_tool->id, plain_tool->id,
+                            "tool::GwyToolPathLevel", NULL);
 }
 
 static void
@@ -556,6 +557,16 @@ gwy_tool_path_level_sel_to_isel(GwyToolPathLevel *tool,
     isel[1] = CLAMP(floor(sel[1]), 0, yres-1);
     isel[2] = CLAMP((gint)sel[2], 0, xres-1);
     isel[3] = CLAMP(ceil(sel[3]), 0, yres-1);
+}
+
+static void
+gwy_tool_path_level_save_args(GwyToolPathLevel *tool)
+{
+    GwyContainer *settings;
+
+    settings = gwy_app_settings_get();
+    gwy_container_set_int32_by_name(settings, thickness_key,
+                                    tool->args.thickness);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

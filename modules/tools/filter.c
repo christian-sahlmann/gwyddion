@@ -92,6 +92,7 @@ static void     gwy_tool_filter_type_changed     (GtkComboBox *combo,
                                                   GwyToolFilter *tool);
 static gboolean gwy_tool_filter_is_sized         (GwyFilterType type);
 static void     gwy_tool_filter_apply            (GwyToolFilter *tool);
+static void     gwy_tool_filter_save_args        (GwyToolFilter *tool);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -99,7 +100,7 @@ static GwyModuleInfo module_info = {
     N_("Filter tool, processes selected part of data with a filter "
        "(conservative denoise, mean, median. Kuwahara, minimum, maximum)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "3.6",
+    "3.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -147,17 +148,7 @@ gwy_tool_filter_class_init(GwyToolFilterClass *klass)
 static void
 gwy_tool_filter_finalize(GObject *object)
 {
-    GwyToolFilter *tool;
-    GwyContainer *settings;
-
-    tool = GWY_TOOL_FILTER(object);
-
-    settings = gwy_app_settings_get();
-    gwy_container_set_enum_by_name(settings, filter_type_key,
-                                   tool->args.filter_type);
-    gwy_container_set_int32_by_name(settings, size_key,
-                                    tool->args.size);
-
+    gwy_tool_filter_save_args(GWY_TOOL_FILTER(object));
     G_OBJECT_CLASS(gwy_tool_filter_parent_class)->finalize(object);
 }
 
@@ -373,6 +364,7 @@ gwy_tool_filter_apply(GwyToolFilter *tool)
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->id >= 0 && plain_tool->data_field != NULL);
+    gwy_tool_filter_save_args(tool);
 
     if (gwy_selection_get_object(plain_tool->selection, 0, sel)) {
         isel[0] = floor(gwy_data_field_rtoj(plain_tool->data_field, sel[0]));
@@ -457,6 +449,21 @@ gwy_tool_filter_apply(GwyToolFilter *tool)
     }
 
     gwy_data_field_data_changed(plain_tool->data_field);
+    gwy_app_channel_log_add(plain_tool->container,
+                            plain_tool->id, plain_tool->id,
+                            "tool::GwyToolFilter", NULL);
+}
+
+static void
+gwy_tool_filter_save_args(GwyToolFilter *tool)
+{
+    GwyContainer *settings;
+
+    settings = gwy_app_settings_get();
+    gwy_container_set_enum_by_name(settings, filter_type_key,
+                                   tool->args.filter_type);
+    gwy_container_set_int32_by_name(settings, size_key,
+                                    tool->args.size);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -76,13 +76,14 @@ static void   gwy_tool_crop_keep_offsets_toggled(GwyToolCrop *tool,
 static void   gwy_tool_crop_new_data_toggled    (GwyToolCrop *tool,
                                                  GtkToggleButton *toggle);
 static void   gwy_tool_crop_apply               (GwyToolCrop *tool);
+static void   gwy_tool_crop_save_args           (GwyToolCrop *tool);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Crop tool, crops data to smaller size."),
     "Yeti <yeti@gwyddion.net>",
-    "2.8",
+    "2.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -130,17 +131,7 @@ gwy_tool_crop_class_init(GwyToolCropClass *klass)
 static void
 gwy_tool_crop_finalize(GObject *object)
 {
-    GwyToolCrop *tool;
-    GwyContainer *settings;
-
-    tool = GWY_TOOL_CROP(object);
-
-    settings = gwy_app_settings_get();
-    gwy_container_set_boolean_by_name(settings, keep_offsets_key,
-                                      tool->args.keep_offsets);
-    gwy_container_set_boolean_by_name(settings, new_channel_key,
-                                      tool->args.new_channel);
-
+    gwy_tool_crop_save_args(GWY_TOOL_CROP(object));
     G_OBJECT_CLASS(gwy_tool_crop_parent_class)->finalize(object);
 }
 
@@ -365,6 +356,8 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
         return;
     }
 
+    gwy_tool_crop_save_args(tool);
+
     isel[0] = floor(gwy_data_field_rtoj(plain_tool->data_field, sel[0]));
     isel[1] = floor(gwy_data_field_rtoi(plain_tool->data_field, sel[1]));
     isel[2] = floor(gwy_data_field_rtoj(plain_tool->data_field, sel[2]));
@@ -393,6 +386,8 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
                                 GWY_DATA_ITEM_REAL_SQUARE,
                                 0);
         gwy_app_set_data_field_title(container, id, _("Detail"));
+        gwy_app_channel_log_add(container, oldid, id,
+                                "tool::GwyToolCrop", NULL);
 
         if (mfield) {
             dfield = gwy_data_field_duplicate(mfield);
@@ -411,12 +406,12 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
         }
     }
     else {
-        quarks[0] = gwy_app_get_data_key_for_id(plain_tool->id);
+        quarks[0] = gwy_app_get_data_key_for_id(oldid);
         quarks[1] = quarks[2] = 0;
         if (plain_tool->mask_field)
-            quarks[1] = gwy_app_get_mask_key_for_id(plain_tool->id);
+            quarks[1] = gwy_app_get_mask_key_for_id(oldid);
         if (plain_tool->show_field)
-            quarks[2] = gwy_app_get_show_key_for_id(plain_tool->id);
+            quarks[2] = gwy_app_get_show_key_for_id(oldid);
         gwy_app_undo_qcheckpointv(container, G_N_ELEMENTS(quarks), quarks);
 
         gwy_tool_crop_one_field(plain_tool->data_field, isel, sel,
@@ -436,8 +431,22 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
         }
 
         /* XXX: This is not undoable */
-        gwy_app_data_clear_selections(container, plain_tool->id);
+        gwy_app_data_clear_selections(container, oldid);
+        gwy_app_channel_log_add(container, oldid, oldid,
+                                "tool::GwyToolCrop", NULL);
     }
+}
+
+static void
+gwy_tool_crop_save_args(GwyToolCrop *tool)
+{
+    GwyContainer *settings;
+
+    settings = gwy_app_settings_get();
+    gwy_container_set_boolean_by_name(settings, keep_offsets_key,
+                                      tool->args.keep_offsets);
+    gwy_container_set_boolean_by_name(settings, new_channel_key,
+                                      tool->args.new_channel);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
