@@ -98,6 +98,12 @@ static gboolean       find_settings_prefix  (const gchar *function,
  *
  * See the introduction for a description of valid @previd and @newid.
  *
+ * It is possible to pass %NULL as @function.  In this case the log is just
+ * copied from source to target without adding any entries.  This can be useful
+ * to prevent duplicate log entries in modules that modify a data field and
+ * then can also create secondary outputs.  Note you still need to pass a
+ * second %NULL argument as the option terminator.
+ *
  * Since: 2.35
  **/
 void
@@ -108,14 +114,13 @@ gwy_app_channel_log_add(GwyContainer *data,
                         ...)
 {
     va_list ap;
-    GString *str;
+    GString *str = NULL;
     const gchar *key, *settings_name = NULL;
     gchar *args;
     GwyStringList *sourcelog = NULL, *targetlog = NULL;
 
     g_return_if_fail(GWY_IS_CONTAINER(data));
     g_return_if_fail(newid >= 0);
-    g_return_if_fail(function);
 
     va_start(ap, function);
     while ((key = va_arg(ap, const gchar*))) {
@@ -129,10 +134,12 @@ gwy_app_channel_log_add(GwyContainer *data,
     }
     va_end(ap);
 
-    str = g_string_new(NULL);
-    if (!find_settings_prefix(function, settings_name, str)) {
-        g_string_free(str, TRUE);
-        return;
+    if (function) {
+        str = g_string_new(NULL);
+        if (!find_settings_prefix(function, settings_name, str)) {
+            g_string_free(str, TRUE);
+            return;
+        }
     }
 
     if (previd != -1)
@@ -153,8 +160,11 @@ gwy_app_channel_log_add(GwyContainer *data,
     if (!targetlog) {
         if (sourcelog)
             targetlog = gwy_string_list_duplicate(sourcelog);
-        else
+        else {
+            if (!function)
+                return;
             targetlog = gwy_string_list_new();
+        }
 
         gwy_container_set_object_by_name(data, channel_log_key(newid),
                                          targetlog);
@@ -162,7 +172,12 @@ gwy_app_channel_log_add(GwyContainer *data,
     }
 
     // XXX XXX XXX Tools do not have the correct settings saved upon Apply!
+    if (!function)
+        return;
+
     args = format_args(str->str);
+    if (!str)
+        str = g_string_new(NULL);
     g_string_printf(str, "%s(%s)", function, args);
     gwy_string_list_append_take(targetlog, g_string_free(str, FALSE));
 }
