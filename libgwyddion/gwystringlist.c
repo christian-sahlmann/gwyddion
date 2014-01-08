@@ -131,9 +131,11 @@ gwy_string_list_serialize(GObject *obj,
         GwySerializeSpec spec[] = {
             { 'S', "strings", &strings->pdata, &len, },
         };
+        guint n = len ? G_N_ELEMENTS(spec) : 0;
+
         retval = gwy_serialize_pack_object_struct(buffer,
                                                   GWY_STRING_LIST_TYPE_NAME,
-                                                  G_N_ELEMENTS(spec), spec);
+                                                  n, spec);
         return retval;
     }
 }
@@ -154,8 +156,10 @@ gwy_string_list_get_size(GObject *obj)
         GwySerializeSpec spec[] = {
             { 'S', "strings", &strings->pdata, &len, },
         };
+        guint n = len ? G_N_ELEMENTS(spec) : 0;
+
         size = gwy_serialize_get_struct_size(GWY_STRING_LIST_TYPE_NAME,
-                                             G_N_ELEMENTS(spec), spec);
+                                             n, spec);
     }
 
     return size;
