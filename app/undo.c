@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006,2014 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/datafield.h>
 #include <app/menu.h>
+#include <app/log.h>
 #include <app/undo.h>
 #include "gwyappinternal.h"
 
@@ -53,6 +54,8 @@ typedef struct {
     gint modif;
 } GwyAppUndo;
 
+static void        undo_log_container              (GwyContainer *data);
+static void        redo_log_container              (GwyContainer *data);
 static void        gwy_app_undo_reuse_levels       (GwyAppUndoLevel *level,
                                                     GList *available);
 static void        gwy_app_undo_or_redo            (GwyContainer *data,
@@ -67,6 +70,9 @@ static gint        gwy_app_undo_compare_data       (gconstpointer a,
                                                     gconstpointer b);
 static GwyAppUndo* gwy_undo_get_for_data           (GwyContainer *data,
                                                     gboolean do_create);
+static void        gwy_app_log_undo_or_redo        (GwyContainer *data,
+                                                    GwyAppUndoLevel *level,
+                                                    const gchar *qualname);
 
 static GList *container_list = NULL;
 static gboolean undo_disabled = FALSE;
@@ -311,6 +317,7 @@ gwy_app_undo_undo_container(GwyContainer *data)
 {
     GwyAppUndo *appundo;
 
+    undo_log_container(data);
     gwy_undo_undo_container(data);
     appundo = gwy_undo_get_for_data(data, FALSE);
     if (!appundo)
@@ -336,6 +343,7 @@ gwy_app_undo_redo_container(GwyContainer *data)
 {
     GwyAppUndo *appundo;
 
+    redo_log_container(data);
     gwy_undo_redo_container(data);
     appundo = gwy_undo_get_for_data(data, FALSE);
     if (!appundo)
@@ -645,6 +653,20 @@ gwy_undo_undo_container(GwyContainer *data)
     appundo->modif--;    /* TODO */
 }
 
+static void
+undo_log_container(GwyContainer *data)
+{
+    GwyAppUndo *appundo;
+
+    if (undo_disabled)
+        return;
+
+    appundo = gwy_undo_get_for_data(data, FALSE);
+    g_return_if_fail(appundo && appundo->undo);
+    gwy_app_log_undo_or_redo(data, (GwyAppUndoLevel*)appundo->undo->data,
+                             "builtin::undo");
+}
+
 /**
  * gwy_undo_redo_container:
  * @data: A data container.
@@ -674,6 +696,20 @@ gwy_undo_redo_container(GwyContainer *data)
     appundo->redo = g_list_remove_link(appundo->redo, l);
     appundo->undo = g_list_concat(l, appundo->undo);
     appundo->modif++;    /* TODO */
+}
+
+static void
+redo_log_container(GwyContainer *data)
+{
+    GwyAppUndo *appundo;
+
+    if (undo_disabled)
+        return;
+
+    appundo = gwy_undo_get_for_data(data, FALSE);
+    g_return_if_fail(appundo && appundo->redo);
+    gwy_app_log_undo_or_redo(data, (GwyAppUndoLevel*)appundo->redo->data,
+                             "builtin::redo");
 }
 
 static void
@@ -735,6 +771,39 @@ gwy_app_undo_or_redo(GwyContainer *data,
         else
             g_warning("Undoing/redoing NULL to another NULL");
     }
+}
+
+static void
+gwy_app_log_undo_or_redo(GwyContainer *data,
+                         GwyAppUndoLevel *level,
+                         const gchar *qualname)
+{
+    GSList *channel_ids = NULL, *l;
+    guint i;
+
+    for (i = 0; i < level->nitems; i++) {
+        GwyAppUndoItem *item = level->items + i;
+        GwyAppKeyType type;
+        gint id, len;
+        gpointer p;
+
+        id = _gwy_app_analyse_data_key(g_quark_to_string(item->key),
+                                       &type, &len);
+        p = GINT_TO_POINTER(id);
+
+        if ((type == KEY_IS_DATA
+             || type == KEY_IS_MASK
+             || type == KEY_IS_SHOW)
+            && !g_slist_find(channel_ids, p))
+            channel_ids = g_slist_append(channel_ids, p);
+    }
+
+    for (l = channel_ids; l; l = g_slist_next(l)) {
+        gint id = GPOINTER_TO_INT(l->data);
+        gwy_app_channel_log_add(data, id, id, qualname, NULL);
+    }
+
+    g_slist_free(channel_ids);
 }
 
 /**
