@@ -21,7 +21,7 @@
 /*
  * TODO: assuming cp1251 as 8bit encoding,
  *       use Attributes field to load parameters
- *       4D jumping mode fixes
+ *       4d data loading improvements for jumping mode
  */
 
 /**
@@ -130,7 +130,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NanoScanTech .nstdat files."),
     "Daniil Bratashov (dn2010@gmail.com)",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti), Daniil Bratashov (dn2010)",
     "2012",
 };
@@ -644,11 +644,11 @@ static GwyBrick *
 nst_read_4d(const gchar *buffer, gsize datasize,
             GwyContainer **metadata, gchar **title)
 {
-    GwyBrick *brick =  NULL;
+    GwyBrick *brick =  NULL, *brick_cropped = NULL;
     GwyContainer *meta = NULL;
     GwyDataLine *calibration = NULL;
     NST4DHeader *header = NULL;
-    guint xres, yres, zres;
+    guint xres, yres, zres, zcrop;
     gdouble xreal, yreal, zreal;
     gdouble *data = NULL;
     gint i, j, k, dataleft, x0, xn, dx, y0, yn, dy, npoints;
@@ -728,6 +728,7 @@ nst_read_4d(const gchar *buffer, gsize datasize,
             }
 
             data = gwy_brick_get_data(brick);
+            zcrop = 0;
 
             if (Horizontal == header->direction) {
                 gwy_debug("Horizontal");
@@ -738,6 +739,9 @@ nst_read_4d(const gchar *buffer, gsize datasize,
                             goto exit2;
                         }
                         npoints = gwy_get_guint32_le(&p);
+                        if (!zcrop) {
+                            zcrop = npoints;
+                        }
                         for (k = 0; k < MIN(zres, npoints); k++) {
                             *(data + k * xres * yres + i * xres + j)
                                                = gwy_get_gdouble_le(&p);
@@ -754,6 +758,9 @@ nst_read_4d(const gchar *buffer, gsize datasize,
                             goto exit2;
                         }
                         npoints = gwy_get_guint32_le(&p);
+                        if (!zcrop) {
+                            zcrop = npoints;
+                        }
                         for (k = 0; k < MIN(zres, npoints); k++) {
                             *(data + k * xres * yres + j * xres + i)
                                                = gwy_get_gdouble_le(&p);
@@ -764,19 +771,6 @@ nst_read_4d(const gchar *buffer, gsize datasize,
             else {
                 gwy_debug("Wrong scan direction");
             }
-
-            data = NULL;
-            calibration = gwy_data_line_new(zres, zreal, TRUE);
-            data = gwy_data_line_get_data(calibration);
-            for (i = 0; i < zres; i++)
-                *(data++) = 1e-9 * (header->centerwl
-                          + header->dispersion * header->pixelxsize
-                          * (i - header->centralpixel));
-            siunit = gwy_si_unit_new("m");
-            gwy_data_line_set_si_unit_y(calibration, siunit);
-            g_object_unref(siunit);
-            gwy_brick_set_zcalibration(brick, calibration);
-            g_object_unref(calibration);
 
             break;
         }
@@ -813,6 +807,28 @@ nst_read_4d(const gchar *buffer, gsize datasize,
 
 exit2:
     if (brick) {
+        if (zcrop < zres) {
+            brick_cropped = gwy_brick_new_part(brick, 0, 0, 0,
+                                               xres, yres, zcrop,
+                                               TRUE);
+            g_object_unref(brick);
+            brick = brick_cropped;
+            zres = zcrop;
+        }
+
+        data = NULL;
+        calibration = gwy_data_line_new(zres, zreal, TRUE);
+        data = gwy_data_line_get_data(calibration);
+        for (i = 0; i < zres; i++)
+            *(data++) = 1e-9 * (header->centerwl
+                      + header->dispersion * header->pixelxsize
+                      * (i - header->centralpixel));
+        siunit = gwy_si_unit_new("m");
+        gwy_data_line_set_si_unit_y(calibration, siunit);
+        g_object_unref(siunit);
+        gwy_brick_set_zcalibration(brick, calibration);
+        g_object_unref(calibration);
+
         siunit = gwy_si_unit_new("m");
         gwy_brick_set_si_unit_x(brick, siunit);
         g_object_unref(siunit);
