@@ -99,6 +99,15 @@ typedef enum {
     APE_AUX2_R   = 11,
 } APEChannel;
 
+typedef enum {
+    APE_HVA_UNKNOWN = -1,
+    APE_HVA_LV = 0,
+    APE_HVA_HVOL = 1,
+    APE_HVA_HVCL = 2,
+    APE_HVA_HVOLBIP = 3,
+    APE_HVA_LAST
+} APEHVAStatus;
+
 typedef struct {
     guint version;
     SPMModeType spm_mode;
@@ -173,12 +182,20 @@ static const GwyEnum spm_modes[] = {
     { "Phase detection AFM",   SPM_MODE_PHASE_DETECT_AFM },
 };
 
+static const GwyEnum hva_statuses[] = {
+    { "N/A",       APE_HVA_UNKNOWN, },
+    { "LV",        APE_HVA_LV,      },
+    { "HV OL",     APE_HVA_HVOL,    },
+    { "HV CL",     APE_HVA_HVCL,    },
+    { "HV bip OL", APE_HVA_HVOLBIP, },
+};
+
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports APE (Applied Physics and Engineering) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.9",
+    "0.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -394,7 +411,7 @@ apefile_load(const gchar *filename,
         /*
          * Channel labelling based on SPM Mode
          */
-        switch(apefile.spm_mode) {
+        switch (apefile.spm_mode) {
             case SPM_MODE_SNOM:
             title = gwy_enuml_to_string(i,
                                         "Height",   APE_HEIGHT,
@@ -536,8 +553,46 @@ apefile_get_metadata(APEFile *apefile)
 
     meta = gwy_container_new();
 
-    HASH_STORE("Version", "%u", version);
-    HASH_STORE("Tip oscilation frequency", "%g Hz", freq_osc_tip);
+    gwy_container_set_string_by_name(meta, "Version",
+                                     g_strdup_printf("%u.%u", apefile->version,
+                                                     apefile->subversion));
+
+    /*
+     * In SPM_MODE_SNOM or SPM_MODE_AFM_NONCONTACT freq_osc_tip holds the tip
+     * oscillation frequency.
+     * If spm_mode=SPM_MODE_AFM_CONTACT then the freq_osc_tip field holds the
+     * force the tip applies to the sample in nN.
+     * If spm_mode=SPM_MODE_STM then freq_osc_tip holds the bias voltage in
+     * Volts.
+     */
+    switch (apefile->spm_mode) {
+        case SPM_MODE_SNOM:
+        case SPM_MODE_AFM_NONCONTACT:
+            HASH_STORE("Tip oscillation frequency", "%g Hz", freq_osc_tip);
+            break;
+        case SPM_MODE_AFM_CONTACT:
+            HASH_STORE("Force", "%g nN", freq_osc_tip);
+            break;
+        case SPM_MODE_STM:
+            HASH_STORE("Bias", "%g V", freq_osc_tip);
+            break;
+        default:
+            HASH_STORE("Tip oscillation frequency", "%g Hz", freq_osc_tip);
+            break;
+    }
+
+    /* We will fetch the HV Amplifier status only if file version>= 2.4*/
+    if (apefile->version > 1 && apefile->subversion >= 4) {
+        gwy_container_set_string_by_name
+            (meta, "XY HV Status",
+             g_strdup(gwy_enum_to_string(apefile->xy_hv_status, hva_statuses,
+                                         G_N_ELEMENTS(hva_statuses))));
+        gwy_container_set_string_by_name
+            (meta, "Z HV Status",
+             g_strdup(gwy_enum_to_string(apefile->z_hv_status, hva_statuses,
+                                         G_N_ELEMENTS(hva_statuses))));
+    }
+
     HASH_STORE("Acquire delay", "%.6f s", acquire_delay);
     HASH_STORE("Raster delay", "%.6f s", raster_delay);
     HASH_STORE("Tip distance", "%g nm", tip_dist);
