@@ -1767,7 +1767,7 @@ sstrconcat(const gchar *s, ...)
     static GString *str = NULL;
     va_list ap;
 
-    if (s) {
+    if (!s) {
         if (str) {
             g_string_free(str, TRUE);
             str = NULL;
