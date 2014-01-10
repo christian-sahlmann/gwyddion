@@ -140,6 +140,7 @@ gboolean   gwy_rect_selection_labels_fill     (GwyRectSelectionLabels *rlabels,
                                                GwyDataField *dfield,
                                                gdouble *selreal,
                                                gint *selpix);
+void       gwy_plain_tool_log_add             (GwyPlainTool *plain_tool);
 
 G_END_DECLS
 

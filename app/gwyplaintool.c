@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2006,2014 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -29,6 +29,7 @@
 #include <libprocess/elliptic.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/menu.h>
+#include <app/log.h>
 #include <app/gwyplaintool.h>
 
 #define ITEM_CHANGED "item-changed::"
@@ -1275,6 +1276,35 @@ gwy_rect_selection_labels_set_sensitive(GwyRectSelectionLabels *rlabels,
         gtk_widget_set_sensitive(GTK_WIDGET(rlabels->pix[i]), sensitive);
         gtk_widget_set_sensitive(rlabels->px[i], sensitive);
     }
+}
+
+/**
+ * gwy_plain_tool_log_add:
+ * @plain_tool: A plain tool.
+ *
+ * Logs a data modification operation of a plain tool.
+ *
+ * This is a convenience wrapper for gwy_app_channel_log_add(),
+ * setting automatically the container, data id and function name from the
+ * tool.  It can only be used for simple data modification operations in which
+ * the source and target ids are the same.  In more complex cases you have to
+ * use gwy_app_channel_log_add() directly.
+ *
+ * Since: 2.35
+ **/
+void
+gwy_plain_tool_log_add(GwyPlainTool *plain_tool)
+{
+    gchar *qualname;
+
+    g_return_if_fail(GWY_IS_PLAIN_TOOL(plain_tool));
+    g_return_if_fail(plain_tool->container);
+
+    qualname = g_strconcat("tool::", G_OBJECT_TYPE_NAME(plain_tool), NULL);
+    gwy_app_channel_log_add(plain_tool->container,
+                            plain_tool->id, plain_tool->id,
+                            qualname,
+                            NULL);
 }
 
 /************************** Documentation ****************************/
