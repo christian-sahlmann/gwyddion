@@ -93,7 +93,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports Tescan SEM images."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2013",
 };
@@ -161,6 +161,9 @@ tsc_load(const gchar *filename,
     }
 
     container = tsc_load_tiff(tiff, entry, error);
+    if (container)
+        gwy_file_channel_import_log_add(container, 0, "tescan", filename);
+
     gwy_tiff_free(tiff);
 
     return container;

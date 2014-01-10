@@ -156,7 +156,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Surfstand group SDF (Surface Data File) files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.11",
+    "0.12",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -330,6 +330,7 @@ sdfile_load_bin(const gchar *filename,
     g_object_unref(dfield);
     gwy_container_set_string_by_name(container, "/0/data/title",
                                      g_strdup("Topography"));
+    gwy_file_channel_import_log_add(container, 0, "sdfile-bin", filename);
 
     return container;
 }
@@ -392,6 +393,8 @@ sdfile_load_text(const gchar *filename,
         g_hash_table_destroy(sdfile.extras);
     }
     g_free(buffer);
+
+    gwy_file_channel_import_log_add(container, 0, "sdfile-text", filename);
 
     return container;
 }
@@ -524,6 +527,7 @@ micromap_load(const gchar *filename,
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     gwy_container_set_string_by_name(container, "/0/data/title",
                                      g_strdup("Topography"));
+    gwy_file_channel_import_log_add(container, 0, "micromap", filename);
 
 fail:
     g_object_unref(dfield);

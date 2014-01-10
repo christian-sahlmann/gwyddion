@@ -291,7 +291,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Surf data files."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "0.9",
+    "0.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -539,6 +539,7 @@ surffile_load(const gchar *filename,
     g_object_unref(meta);
 
     gwy_app_channel_check_nonsquare(container, 0);
+    gwy_file_channel_import_log_add(container, 0, "surffile", filename);
 
     return container;
 }

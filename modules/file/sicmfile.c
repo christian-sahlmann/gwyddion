@@ -193,7 +193,7 @@ static GwyModuleInfo module_info =
     &module_register,
     N_("Imports IonScope SICM data files."),
     "Matthew Caldwell <m.caldwell@ucl.ac.uk>",
-    "1.2",
+    "1.3",
     "Matthew Caldwell",
     "2007-2010",
 };
@@ -204,12 +204,12 @@ GWY_MODULE_QUERY(module_info)
 /* announce ourselves to gwyddion */
 static gboolean module_register ( void )
 {
-    gwy_file_func_register( "sicm",
-                            N_("IonScope SICM files (.img)"),
-                            (GwyFileDetectFunc) &sicm_detect,
-                            (GwyFileLoadFunc) &sicm_load,
-                            NULL,
-                            NULL );
+    gwy_file_func_register("sicm",
+                           N_("IonScope SICM files (.img)"),
+                           (GwyFileDetectFunc) &sicm_detect,
+                           (GwyFileLoadFunc) &sicm_load,
+                           NULL,
+                           NULL );
 
     return TRUE;
 }
@@ -697,7 +697,7 @@ static GwyContainer* sicm_load ( const gchar *filename,
     gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
 
-
+    gwy_file_channel_import_log_add(container, 0, "sicm", filename);
 
     gwy_file_abandon_contents(buffer, size, NULL);
 

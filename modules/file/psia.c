@@ -239,7 +239,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports Park Systems data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -301,6 +301,8 @@ psia_load(const gchar *filename,
         return NULL;
 
     container = psia_load_tiff(tiff, error);
+    if (container)
+        gwy_file_channel_import_log_add(container, 0, "psia", filename);
     gwy_tiff_free(tiff);
 
     return container;

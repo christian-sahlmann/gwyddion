@@ -132,7 +132,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Shimadzu SPM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti)",
     "2007",
 };
@@ -247,6 +247,8 @@ shimadzu_load(const gchar *filename,
                                              g_strdup(title));
         else
             gwy_app_channel_title_fall_back(container, 0);
+
+        gwy_file_channel_import_log_add(container, 0, "shimadzu", filename);
     }
 
     g_free(head);

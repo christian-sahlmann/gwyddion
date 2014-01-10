@@ -120,7 +120,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Pacific Nanotechnology PNI data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -283,6 +283,8 @@ pni_load(const gchar *filename,
     }
     else
         g_warning("Data type %d is unknown", data_type);
+
+    gwy_file_channel_import_log_add(container, 0, "pnifile", filename);
 
     return container;
 }

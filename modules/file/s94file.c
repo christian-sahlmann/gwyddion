@@ -95,7 +95,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports S94 STM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2013",
 };
@@ -198,6 +198,8 @@ s94_load(const gchar *filename,
     meta = s94_get_meta(&s94file);
     gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
+
+    gwy_file_channel_import_log_add(container, 0, "s94file", filename);
 
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);

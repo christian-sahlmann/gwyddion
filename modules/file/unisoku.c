@@ -144,7 +144,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Unisoku data files (two-part .hdr + .dat)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.8",
+    "0.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -259,6 +259,8 @@ unisoku_load(const gchar *filename,
     meta = unisoku_get_metadata(&ufile);
     gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
+
+    gwy_file_channel_import_log_add(container, 0, "unisoku", filename);
 
     unisoku_file_free(&ufile);
 

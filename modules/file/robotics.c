@@ -80,7 +80,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Automation & Robotics Dual Lensmapper data files"),
     "Mira <miraval@seznam.cz>",
-    "0.1",
+    "0.2",
     "Miroslav Valtr",
     "2011",
 };
@@ -164,17 +164,17 @@ robotics_load(const gchar *filename,
         err_MISSING_FIELD(error, "Origin");
         goto fail;
     }
-    
+
     for (i = 1; i < 11; i++)
          line = gwy_str_next_line(&p);
-    
+
     line = gwy_str_next_line(&p);
     if (!line
         || sscanf(line, "Nbs Points (x,y):\t%u\t%u",&xres, &yres) != 2) {
         err_MISSING_FIELD(error, "Nbs Points (x,y)");
         goto fail;
     }
-    
+
     line = gwy_str_next_line(&p);
     splitted_line = g_strsplit(line,"\t",3);
     if (!line || splitted_line == NULL) {
@@ -184,7 +184,7 @@ robotics_load(const gchar *filename,
     //0.001 is the conversion factor from mm to m
     xreal = 0.001*g_ascii_strtod(splitted_line[1], NULL);
     yreal = 0.001*g_ascii_strtod(splitted_line[2], NULL);
-    
+
     line = gwy_str_next_line(&p);
 
     line = gwy_str_next_line(&p);
@@ -200,7 +200,7 @@ robotics_load(const gchar *filename,
 
     dfield = g_new(GwyDataField*, NUM_DFIELDS);
     data = g_new(gdouble*, NUM_DFIELDS);
-    for (i=0; i<NUM_DFIELDS; i++) {
+    for (i = 0; i < NUM_DFIELDS; i++) {
          dfield[i] = gwy_data_field_new(xres, yres, xreal, yreal, TRUE);
          data[i] = gwy_data_field_get_data(dfield[i]);
          gwy_data_field_set_xoffset(dfield[i], xoffset);
@@ -209,87 +209,112 @@ robotics_load(const gchar *filename,
          gwy_data_field_set_si_unit_xy(dfield[i], unit);
          g_object_unref(unit);
     }
-    
+
     if (valid) {
-      for (i=0; i<NUM_DFIELDS; i++) {
-        data[i][0] = g_ascii_strtod(splitted_line[i], NULL);
-      }
+        for (i = 0; i < NUM_DFIELDS; i++) {
+            data[i][0] = g_ascii_strtod(splitted_line[i], NULL);
+        }
     }
-    
-    for (j=1; j<(xres*yres);j++) {
-      line = gwy_str_next_line(&p);
-      if (!line) {
-          err_TOO_SHORT(error);
-          goto fail;
-      }
-      splitted_line = g_strsplit(line,"\t",NUM_DFIELDS+1);
-      if (splitted_line == NULL) {
-          err_FILE_TYPE(error, "Automation & Robotics");
-          goto fail;
-      }
-      valid = g_ascii_strtod(splitted_line[6], NULL);
-      if (valid) {
-        for (i=0; i<NUM_DFIELDS; i++)
-          data[i][j] = g_ascii_strtod(splitted_line[i], NULL);
-      }
+
+    for (j = 1; j < xres*yres; j++) {
+        line = gwy_str_next_line(&p);
+        if (!line) {
+            err_TOO_SHORT(error);
+            goto fail;
+        }
+        splitted_line = g_strsplit(line,"\t",NUM_DFIELDS+1);
+        if (splitted_line == NULL) {
+            err_FILE_TYPE(error, "Automation & Robotics");
+            goto fail;
+        }
+        valid = g_ascii_strtod(splitted_line[6], NULL);
+        if (valid) {
+            for (i=0; i<NUM_DFIELDS; i++)
+                data[i][j] = g_ascii_strtod(splitted_line[i], NULL);
+        }
     }
-    
+
     container = gwy_container_new();
-    for (i=0; i<NUM_DFIELDS; i++) {
-      gwy_container_set_object(container, gwy_app_get_data_key_for_id(i), dfield[i]);
-      g_object_unref(dfield[i]);
+    for (i = 0; i < NUM_DFIELDS; i++) {
+        gwy_container_set_object(container,
+                                 gwy_app_get_data_key_for_id(i),
+                                 dfield[i]);
+        g_object_unref(dfield[i]);
+        gwy_file_channel_import_log_add(container, i, "robotics", filename);
     }
-    
-    gwy_container_set_string_by_name(container, "/0/data/title", g_strdup("PosX"));
-    gwy_container_set_string_by_name(container, "/1/data/title", g_strdup("PosY"));
-    gwy_container_set_string_by_name(container, "/2/data/title", g_strdup("Dpt"));
-    gwy_container_set_string_by_name(container, "/3/data/title", g_strdup("Sph"));
-    gwy_container_set_string_by_name(container, "/4/data/title", g_strdup("Cyl"));
-    gwy_container_set_string_by_name(container, "/5/data/title", g_strdup("Axis"));
-    gwy_container_set_string_by_name(container, "/6/data/title", g_strdup("Valid"));
-    gwy_container_set_string_by_name(container, "/7/data/title", g_strdup("NormX"));
-    gwy_container_set_string_by_name(container, "/8/data/title", g_strdup("NormY"));
-    gwy_container_set_string_by_name(container, "/9/data/title", g_strdup("NormZ"));
-    gwy_container_set_string_by_name(container, "/10/data/title", g_strdup("PosZ"));
-    gwy_container_set_string_by_name(container, "/11/data/title", g_strdup("MinCurvX"));
-    gwy_container_set_string_by_name(container, "/12/data/title", g_strdup("MinCurvY"));
-    gwy_container_set_string_by_name(container, "/13/data/title", g_strdup("MinCurvZ"));
-    
+
+    gwy_container_set_string_by_name(container, "/0/data/title",
+                                     g_strdup("PosX"));
+    gwy_container_set_string_by_name(container, "/1/data/title",
+                                     g_strdup("PosY"));
+    gwy_container_set_string_by_name(container, "/2/data/title",
+                                     g_strdup("Dpt"));
+    gwy_container_set_string_by_name(container, "/3/data/title",
+                                     g_strdup("Sph"));
+    gwy_container_set_string_by_name(container, "/4/data/title",
+                                     g_strdup("Cyl"));
+    gwy_container_set_string_by_name(container, "/5/data/title",
+                                     g_strdup("Axis"));
+    gwy_container_set_string_by_name(container, "/6/data/title",
+                                     g_strdup("Valid"));
+    gwy_container_set_string_by_name(container, "/7/data/title",
+                                     g_strdup("NormX"));
+    gwy_container_set_string_by_name(container, "/8/data/title",
+                                     g_strdup("NormY"));
+    gwy_container_set_string_by_name(container, "/9/data/title",
+                                     g_strdup("NormZ"));
+    gwy_container_set_string_by_name(container, "/10/data/title",
+                                     g_strdup("PosZ"));
+    gwy_container_set_string_by_name(container, "/11/data/title",
+                                     g_strdup("MinCurvX"));
+    gwy_container_set_string_by_name(container, "/12/data/title",
+                                     g_strdup("MinCurvY"));
+    gwy_container_set_string_by_name(container, "/13/data/title",
+                                     g_strdup("MinCurvZ"));
+
     meta = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
 
     //gwy_container_set_string_by_name(meta, "File version:", g_strdup_printf("%d", version));
-    gwy_container_set_string_by_name(meta, "Comment:", g_strdup_printf("%s", comment));
-    
+    gwy_container_set_string_by_name(meta, "Comment:",
+                                     g_strdup_printf("%s", comment));
+
     switch (origin) {
             case 0:
-            gwy_container_set_string_by_name(meta, "Carto origin:", g_strdup("Refl"));
+            gwy_container_set_string_by_name(meta, "Carto origin:",
+                                             g_strdup("Refl"));
             break;
-              
+
             case 1:
-            gwy_container_set_string_by_name(meta, "Carto origin:", g_strdup("Transm"));
+            gwy_container_set_string_by_name(meta, "Carto origin:",
+                                             g_strdup("Transm"));
             break;
-              
+
             case 2:
-            gwy_container_set_string_by_name(meta, "Carto origin:", g_strdup("Extern"));
+            gwy_container_set_string_by_name(meta, "Carto origin:",
+                                             g_strdup("Extern"));
             break;
-            
+
             default:
             g_assert_not_reached();
             break;
     }
-    
-    gwy_container_set_string_by_name(meta, "Nbs Points (x,y):", g_strdup_printf("%u,%u", xres, yres));
-    gwy_container_set_string_by_name(meta, "Size (x,y in mm):", g_strdup_printf("%.3lf,%.3lf", xreal*1000.0, yreal*1000.0));
+
+    gwy_container_set_string_by_name(meta, "Nbs Points (x,y):",
+                                     g_strdup_printf("%u,%u", xres, yres));
+    gwy_container_set_string_by_name(meta, "Size (x,y in mm):",
+                                     g_strdup_printf("%.3lf,%.3lf",
+                                                     xreal*1000.0,
+                                                     yreal*1000.0));
 
 fail:
     g_free(buffer);
     if (*dfield != NULL)
-      g_free(dfield);
+        g_free(dfield);
     if (*data != NULL)
-      g_free(data);
-  
+        g_free(data);
+
     return container;
 }
 

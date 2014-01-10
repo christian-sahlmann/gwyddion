@@ -73,7 +73,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports WITec ASCII export files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -253,6 +253,7 @@ dat_load(const gchar *filename,
         gwy_app_channel_title_fall_back(container, 0);
 
     gwy_app_channel_check_nonsquare(container, 0);
+    gwy_file_channel_import_log_add(container, 0, "witec-asc", filename);
 
 fail:
     g_object_unref(dfield);

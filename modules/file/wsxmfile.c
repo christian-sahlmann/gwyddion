@@ -89,7 +89,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanotec WSxM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.11",
+    "0.12",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -267,6 +267,8 @@ wsxmfile_load(const gchar *filename,
         gwy_container_set_object_by_name(container, "/0/data", dfield);
         g_object_unref(dfield);
         process_metadata(meta, container);
+
+        gwy_file_channel_import_log_add(container, 0, "wsxmfile", filename);
     }
     g_hash_table_destroy(meta);
     g_free(header);

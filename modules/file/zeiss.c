@@ -60,7 +60,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports Carl Zeiss SEM images."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -126,6 +126,9 @@ zeiss_load(const gchar *filename,
         return NULL;
 
     container = zeiss_load_tiff(tiff, error);
+    if (container)
+        gwy_file_channel_import_log_add(container, 0, "zeiss", filename);
+
     gwy_tiff_free(tiff);
 
     return container;
