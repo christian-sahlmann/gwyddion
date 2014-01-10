@@ -92,6 +92,9 @@ static void       gwy_app_redo_cb              (void);
 static void       toggle_edit_accelerators     (gpointer callback_data,
                                                 gint callback_action,
                                                 GtkCheckMenuItem *item);
+static void       toggle_logging_enabled       (gpointer callback_data,
+                                                gint callback_action,
+                                                GtkCheckMenuItem *item);
 static void       enable_edit_accelerators     (gboolean enable);
 static void       gwy_app_tool_use_cb          (const gchar *toolname,
                                                 GtkWidget *button);
@@ -870,10 +873,19 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             "<CheckItem>",
             NULL
         },
+        {
+            N_("/_Logging Enabled"),
+            NULL,
+            toggle_logging_enabled,
+            0,
+            "<CheckItem>",
+            NULL
+        },
     };
     GtkItemFactory *item_factory;
     GtkWidget *item;
-    gboolean enable_edit = FALSE;
+    GwyContainer *settings;
+    gboolean enable_edit = FALSE, enable_logging;
 
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU, "<edit>", accel_group);
 #ifdef ENABLE_NLS
@@ -889,12 +901,19 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
                     "<edit>/Redo", GWY_MENU_FLAG_REDO,
                     NULL);
 
-    gwy_container_gis_boolean_by_name(gwy_app_settings_get(),
+    settings = gwy_app_settings_get();
+
+    gwy_container_gis_boolean_by_name(settings,
                                       "/app/edit-accelerators", &enable_edit);
     item = gtk_item_factory_get_widget(item_factory,
                                        "<edit>/Keyboard Shortcuts");
     gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), enable_edit);
     enable_edit_accelerators(enable_edit);
+
+    enable_logging = gwy_log_get_enabled();
+    item = gtk_item_factory_get_widget(item_factory,
+                                       "<edit>/Logging Enabled");
+    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), enable_logging);
 
     return gtk_item_factory_get_widget(item_factory, "<edit>");
 }
@@ -1080,6 +1099,18 @@ toggle_edit_accelerators(G_GNUC_UNUSED gpointer callback_data,
     gwy_container_set_boolean_by_name(gwy_app_settings_get(),
                                       "/app/edit-accelerators", active);
     enable_edit_accelerators(active);
+}
+
+static void
+toggle_logging_enabled(G_GNUC_UNUSED gpointer callback_data,
+                       G_GNUC_UNUSED gint callback_action,
+                       GtkCheckMenuItem *item)
+{
+    gboolean active = gtk_check_menu_item_get_active(item);
+
+    gwy_container_set_boolean_by_name(gwy_app_settings_get(),
+                                      "/app/log/disable", !active);
+    gwy_log_set_enabled(active);
 }
 
 static void
