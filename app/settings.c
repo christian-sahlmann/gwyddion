@@ -35,6 +35,7 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwyserializable.h>
 #include <libgwydgets/gwydgets.h>
+#include <app/log.h>
 #include <app/settings.h>
 
 static gboolean create_config_dir_real         (const gchar *cfgdir,
@@ -469,6 +470,12 @@ gwy_app_settings_apply(GwyContainer *settings)
                                           &disabled)
         && disabled)
         gwy_3d_view_class_disable_axis_drawing(disabled);
+
+    /* Globally disabled logging */
+    if (gwy_container_gis_boolean_by_name(settings, "/app/log/disable",
+                                          &disabled)
+        && disabled)
+        gwy_log_set_enabled(FALSE);
 }
 
 /**

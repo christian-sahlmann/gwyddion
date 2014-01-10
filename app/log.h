@@ -28,13 +28,15 @@
 
 G_BEGIN_DECLS
 
-void           gwy_app_channel_log_add        (GwyContainer *data,
-                                               gint previd,
-                                               gint newid,
-                                               const gchar *function,
-                                               ...);
-GtkWidget*     gwy_app_log_browser_for_channel(GwyContainer *data,
-                                               gint id);
+void       gwy_app_channel_log_add        (GwyContainer *data,
+                                           gint previd,
+                                           gint newid,
+                                           const gchar *function,
+                                           ...);
+GtkWidget* gwy_app_log_browser_for_channel(GwyContainer *data,
+                                           gint id);
+gboolean   gwy_log_get_enabled            (void);
+void       gwy_log_set_enabled            (gboolean setting);
 
 G_END_DECLS
 

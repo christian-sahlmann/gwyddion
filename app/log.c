@@ -84,6 +84,8 @@ static gboolean       find_settings_prefix  (const gchar *function,
                                              const gchar *settings_name,
                                              GString *prefix);
 
+static gboolean log_disabled = FALSE;
+
 /**
  * gwy_app_channel_log_add:
  * @data: A data container.
@@ -123,6 +125,9 @@ gwy_app_channel_log_add(GwyContainer *data,
 
     g_return_if_fail(GWY_IS_CONTAINER(data));
     g_return_if_fail(newid >= 0);
+
+    if (log_disabled)
+        return;
 
     va_start(ap, function);
     while ((key = va_arg(ap, const gchar*))) {
@@ -682,6 +687,44 @@ find_settings_prefix(const gchar *function,
     }
 
     return TRUE;
+}
+
+/**
+ * gwy_log_get_enabled:
+ *
+ * Reports whether logging of data processing operations is globally enabled.
+ *
+ * Returns: %TRUE if logging is enabled, %FALSE if it is disabled.
+ *
+ * Since: 2.35
+ **/
+gboolean
+gwy_log_get_enabled(void)
+{
+    return !log_disabled;
+}
+
+/**
+ * gwy_log_set_enabled:
+ * @setting: %TRUE to enable logging, %FALSE to disable it.
+ *
+ * Globally enables or disables logging of data processing operations.
+ *
+ * By default, logging is enabled.  Non-GUI applications that run module
+ * functions may wish to disable it.  Of course, the log will presist only if
+ * the data container is saved into a GWY file.
+ *
+ * If logging is disabled logging functions such as gwy_app_channel_log_add()
+ * become no-op.  It is possible to run the log viewer with
+ * gwy_app_log_browser_for_channel() to see log entries created when logging
+ * was enabled.
+ *
+ * Since: 2.35
+ **/
+void
+gwy_log_set_enabled(gboolean setting)
+{
+    log_disabled = !setting;
 }
 
 /************************** Documentation ****************************/
