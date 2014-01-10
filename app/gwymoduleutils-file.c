@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2007 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2007,2014 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -25,6 +25,8 @@
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/stats.h>
 #include <app/data-browser.h>
+#include <app/settings.h>
+#include <app/log.h>
 #include <app/gwymoduleutils-file.h>
 
 struct _GwyTextHeaderContext {
@@ -617,6 +619,72 @@ guint
 gwy_text_header_context_get_lineno(const GwyTextHeaderContext *context)
 {
     return context->lineno;
+}
+
+/**
+ * gwy_file_import_log_add:
+ * @data: A data container.
+ * @id: Data channel id.
+ * @filetype: File type, i.e. the name of the function importing the data
+ *            (without any "file::" prefix).
+ * @filename: Name of the imported file.  If it is not valid UTF-8, it will be
+ *            converted to UTF-8 using g_filename_to_utf8().  Failing even
+ *            that, non-ASCII characters will be escaped.
+ *
+ * Logs the import of a channel from third-party file.
+ *
+ * The source id will be set to -1.  The file name will be added to function
+ * arguments.
+ *
+ * Since: 2.35
+ **/
+void
+gwy_file_channel_import_log_add(GwyContainer *data,
+                                gint id,
+                                const gchar *filetype,
+                                const gchar *filename)
+{
+    /* There should not be any settings key called
+     * "/module/<filetype>/filename".
+     * But just in case there is one, preserve it. */
+    GwyContainer *settings;
+    GValue savedval;
+    GQuark quark;
+    gchar *myfilename = NULL, *fskey, *qualname;
+
+    g_return_if_fail(filename);
+    g_return_if_fail(filetype);
+    g_return_if_fail(data);
+
+    if (g_utf8_validate(filename, -1, NULL))
+        myfilename = g_strdup(filename);
+    if (!myfilename)
+        myfilename = g_filename_to_utf8(filename, -1, NULL, NULL, NULL);
+    if (!myfilename)
+        myfilename = g_strescape(filename, NULL);
+
+    fskey = g_strdup_printf("/module/%s/filename", filetype);
+    quark = g_quark_from_string(fskey);
+    g_free(fskey);
+
+    gwy_clear(&savedval, 1);
+    settings = gwy_app_settings_get();
+    if (gwy_container_contains(settings, quark))
+        savedval = gwy_container_get_value(settings, quark);
+
+    /* Eats myfilename. */
+    gwy_container_set_string(settings, quark, myfilename);
+
+    qualname = g_strconcat("file::", filetype, NULL);
+    gwy_app_channel_log_add(data, -1, id, qualname, NULL);
+    g_free(qualname);
+
+    if (G_VALUE_TYPE(&savedval)) {
+        gwy_container_set_value(settings, quark, &savedval);
+        g_value_unset(&savedval);
+    }
+    else
+        gwy_container_remove(settings, quark);
 }
 
 /************************** Documentation ****************************/

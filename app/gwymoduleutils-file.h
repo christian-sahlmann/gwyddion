@@ -370,6 +370,11 @@ GHashTable* gwy_text_header_parse      (gchar *header,
 const gchar* gwy_text_header_context_get_section(const GwyTextHeaderContext *context);
 guint gwy_text_header_context_get_lineno(const GwyTextHeaderContext *context);
 
+void gwy_file_channel_import_log_add(GwyContainer *data,
+                                     gint id,
+                                     const gchar *filetype,
+                                     const gchar *filename);
+
 G_END_DECLS
 
 #endif /* __GWY_MODULEUTILS_FILE_H__ */
