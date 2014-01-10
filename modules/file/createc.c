@@ -132,7 +132,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Createc data files."),
     "Rok Zitko <rok.zitko@ijs.si>",
-    "1.0",
+    "1.1",
     "Rok Zitko, David Nečas (Yeti)",
     "2004",
 };
@@ -299,6 +299,8 @@ createc_load(const gchar *filename,
             g_free(key);
             g_object_unref(meta);
         }
+
+        gwy_file_channel_import_log_add(container, id, "createc", filename);
     }
 
 fail:

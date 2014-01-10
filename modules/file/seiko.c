@@ -117,7 +117,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Seiko XQB, XQD, XQT and XQP files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.10",
+    "0.11",
     "David Nečas (Yeti) & Markus Pristovsek",
     "2006",
 };
@@ -232,6 +232,7 @@ seiko_load(const gchar *filename,
     }
 
     gwy_app_channel_check_nonsquare(container, 0);
+    gwy_file_channel_import_log_add(container, 0, "seiko", filename);
 
     gwy_file_abandon_contents(buffer, size, NULL);
 

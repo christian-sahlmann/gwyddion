@@ -195,7 +195,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports APE (Applied Physics and Engineering) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.10",
+    "0.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -472,6 +472,8 @@ apefile_load(const gchar *filename,
         g_snprintf(key, sizeof(key), "/%d/meta", n);
         gwy_container_set_object_by_name(container, key, tmp);
         g_object_unref(tmp);
+
+        gwy_file_channel_import_log_add(container, n, "apefile", filename);
 
         n++;
     }

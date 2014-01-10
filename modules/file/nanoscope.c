@@ -201,7 +201,7 @@ static GwyModuleInfo module_info = {
     N_("Imports Veeco (Digital Instruments) Nanoscope data files, "
        "version 3 or newer."),
     "Yeti <yeti@gwyddion.net>",
-    "0.30",
+    "0.31",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -426,6 +426,8 @@ nanoscope_load(const gchar *filename,
                 g_object_unref(meta);
 
                 gwy_app_channel_check_nonsquare(container, i);
+                gwy_file_channel_import_log_add(container, i, "nanoscope",
+                                                filename);
                 i++;
             }
             else if (ndata->graph_model) {

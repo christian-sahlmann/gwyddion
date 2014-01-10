@@ -130,7 +130,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Thermicroscopes SpmLab R3 to R7 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.10",
+    "0.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -245,6 +245,8 @@ spmlab_load(const gchar *filename,
     else
         gwy_app_channel_title_fall_back(container, 0);
 
+
+    gwy_file_channel_import_log_add(container, 0, "spmlab", filename);
     /* TODO: Store direction to metadata, if known */
 
     return container;
