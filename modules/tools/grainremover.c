@@ -88,6 +88,7 @@ static void gwy_tool_grain_remover_selection_finished(GwyPlainTool *plain_tool);
 
 static void laplace_interpolation                   (GwyDataField *dfield,
                                                      GwyDataField *grain);
+static void gwy_tool_grain_remover_save_args        (GwyToolGrainRemover *tool);
 
 static const gchar mode_key[]   = "/module/grainremover/mode";
 static const gchar method_key[] = "/module/grainremover/method";
@@ -98,7 +99,7 @@ static GwyModuleInfo module_info = {
     N_("Grain removal tool, removes continuous parts of mask and/or "
        "underlying data."),
     "Petr Klapetek <klapetek@gwyddion.net>, Yeti <yeti@gwyddion.net>",
-    "3.4",
+    "3.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -153,17 +154,7 @@ gwy_tool_grain_remover_class_init(GwyToolGrainRemoverClass *klass)
 static void
 gwy_tool_grain_remover_finalize(GObject *object)
 {
-    GwyToolGrainRemover *tool;
-    GwyContainer *settings;
-
-    tool = GWY_TOOL_GRAIN_REMOVER(object);
-
-    settings = gwy_app_settings_get();
-    gwy_container_set_int32_by_name(settings,
-                                    mode_key, tool->args.mode);
-    gwy_container_set_int32_by_name(settings,
-                                    method_key, tool->args.method);
-
+    gwy_tool_grain_remover_save_args(GWY_TOOL_GRAIN_REMOVER(object));
     G_OBJECT_CLASS(gwy_tool_grain_remover_parent_class)->finalize(object);
 }
 
@@ -318,6 +309,7 @@ gwy_tool_grain_remover_selection_finished(GwyPlainTool *plain_tool)
     if (!gwy_data_field_get_val(plain_tool->mask_field, col, row))
         return;
 
+    gwy_tool_grain_remover_save_args(GWY_TOOL_GRAIN_REMOVER(plain_tool));
     mode = GWY_TOOL_GRAIN_REMOVER(plain_tool)->args.mode;
     quarks[0] = quarks[1] = 0;
     if (mode & GRAIN_REMOVE_DATA)
@@ -346,7 +338,7 @@ gwy_tool_grain_remover_selection_finished(GwyPlainTool *plain_tool)
         gwy_data_field_grains_remove_grain(plain_tool->mask_field, col, row);
         gwy_data_field_data_changed(plain_tool->mask_field);
     }
-
+    gwy_plain_tool_log_add(plain_tool);
     gwy_selection_clear(plain_tool->selection);
 }
 
@@ -411,6 +403,18 @@ laplace_interpolation(GwyDataField *dfield,
     gwy_data_field_area_copy(area, dfield, 0, 0, xmax - xmin, ymax - ymin,
                              xmin, ymin);
     g_object_unref(area);
+}
+
+static void
+gwy_tool_grain_remover_save_args(GwyToolGrainRemover *tool)
+{
+    GwyContainer *settings;
+
+    settings = gwy_app_settings_get();
+    gwy_container_set_int32_by_name(settings,
+                                    mode_key, tool->args.mode);
+    gwy_container_set_int32_by_name(settings,
+                                    method_key, tool->args.method);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

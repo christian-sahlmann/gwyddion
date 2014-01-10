@@ -94,6 +94,7 @@ static void   gwy_tool_level3_render_cell          (GtkCellLayout *layout,
                                                     GtkTreeIter *iter,
                                                     gpointer user_data);
 static void   gwy_tool_level3_apply                (GwyToolLevel3 *tool);
+static void   gwy_tool_level3_save_args            (GwyToolLevel3 *tool);
 
 static const gchar radius_key[]        = "/module/level3/radius";
 static const gchar instant_apply_key[] = "/module/level3/instant_apply";
@@ -105,7 +106,7 @@ static GwyModuleInfo module_info = {
     N_("Three-point level tool, levels data by subtracting a plane fitted "
        "through three selected points."),
     "Yeti <yeti@gwyddion.net>",
-    "2.5",
+    "2.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -155,7 +156,6 @@ static void
 gwy_tool_level3_finalize(GObject *object)
 {
     GwyToolLevel3 *tool;
-    GwyContainer *settings;
 
     tool = GWY_TOOL_LEVEL3(object);
 
@@ -163,13 +163,7 @@ gwy_tool_level3_finalize(GObject *object)
         gtk_tree_view_set_model(tool->treeview, NULL);
         gwy_object_unref(tool->model);
     }
-
-    settings = gwy_app_settings_get();
-    gwy_container_set_int32_by_name(settings, radius_key, tool->args.radius);
-    gwy_container_set_boolean_by_name(settings, instant_apply_key,
-                                      tool->args.instant_apply);
-    gwy_container_set_boolean_by_name(settings, set_zero_key,
-                                      tool->args.set_zero);
+    gwy_tool_level3_save_args(tool);
 
     G_OBJECT_CLASS(gwy_tool_level3_parent_class)->finalize(object);
 }
@@ -567,14 +561,29 @@ gwy_tool_level3_apply(GwyToolLevel3 *tool)
     yres = gwy_data_field_get_yres(plain_tool->data_field);
     if (!tool->args.set_zero)
         coeffs[2] = -0.5*(coeffs[0]*xres + coeffs[1]*yres);
-    if (tool->args.allow_undo)
+    if (tool->args.allow_undo) {
         gwy_app_undo_qcheckpoint(plain_tool->container,
                                  gwy_app_get_data_key_for_id(plain_tool->id),
                                  0);
+        gwy_plain_tool_log_add(plain_tool);
+    }
     gwy_data_field_plane_level(plain_tool->data_field,
                                coeffs[2], coeffs[0], coeffs[1]);
 
     gwy_data_field_data_changed(plain_tool->data_field);
+}
+
+static void
+gwy_tool_level3_save_args(GwyToolLevel3 *tool)
+{
+    GwyContainer *settings;
+
+    settings = gwy_app_settings_get();
+    gwy_container_set_int32_by_name(settings, radius_key, tool->args.radius);
+    gwy_container_set_boolean_by_name(settings, instant_apply_key,
+                                      tool->args.instant_apply);
+    gwy_container_set_boolean_by_name(settings, set_zero_key,
+                                      tool->args.set_zero);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

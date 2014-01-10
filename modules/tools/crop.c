@@ -432,8 +432,7 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
 
         /* XXX: This is not undoable */
         gwy_app_data_clear_selections(container, oldid);
-        gwy_app_channel_log_add(container, oldid, oldid,
-                                "tool::GwyToolCrop", NULL);
+        gwy_plain_tool_log_add(plain_tool);
     }
 }
 

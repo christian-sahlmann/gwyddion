@@ -82,6 +82,7 @@ static void   gwy_tool_polynom_direction_changed(GObject *button,
 static void   gwy_tool_polynom_exclude_changed  (GtkToggleButton *button,
                                                  GwyToolPolynom *tool);
 static void   gwy_tool_polynom_apply            (GwyToolPolynom *tool);
+static void   gwy_tool_polynom_save_args        (GwyToolPolynom *tool);
 
 static const gchar order_key[]     = "/module/polynom/order";
 static const gchar direction_key[] = "/module/polynom/direction";
@@ -93,7 +94,7 @@ static GwyModuleInfo module_info = {
     N_("Polynomial line level tool, fits polynomials to X or Y profiles and "
        "subtracts them."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.3",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -139,19 +140,7 @@ gwy_tool_polynom_class_init(GwyToolPolynomClass *klass)
 static void
 gwy_tool_polynom_finalize(GObject *object)
 {
-    GwyToolPolynom *tool;
-    GwyContainer *settings;
-
-    tool = GWY_TOOL_POLYNOM(object);
-
-    settings = gwy_app_settings_get();
-    gwy_container_set_int32_by_name(settings, order_key,
-                                    tool->args.order);
-    gwy_container_set_enum_by_name(settings, direction_key,
-                                   tool->args.direction);
-    gwy_container_set_boolean_by_name(settings, exclude_key,
-                                      tool->args.exclude);
-
+    gwy_tool_polynom_save_args(GWY_TOOL_POLYNOM(object));
     G_OBJECT_CLASS(gwy_tool_polynom_parent_class)->finalize(object);
 }
 
@@ -393,6 +382,22 @@ gwy_tool_polynom_apply(GwyToolPolynom *tool)
                              tool->args.exclude,
                              tool->args.direction);
     gwy_data_field_data_changed(plain_tool->data_field);
+    gwy_tool_polynom_save_args(tool);
+    gwy_plain_tool_log_add(plain_tool);
+}
+
+static void
+gwy_tool_polynom_save_args(GwyToolPolynom *tool)
+{
+    GwyContainer *settings;
+
+    settings = gwy_app_settings_get();
+    gwy_container_set_int32_by_name(settings, order_key,
+                                    tool->args.order);
+    gwy_container_set_enum_by_name(settings, direction_key,
+                                   tool->args.direction);
+    gwy_container_set_boolean_by_name(settings, exclude_key,
+                                      tool->args.exclude);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

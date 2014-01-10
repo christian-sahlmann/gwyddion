@@ -153,6 +153,7 @@ static void  gwy_tool_mask_editor_bucket_fill        (GwyToolMaskEditor *tool,
                                                       gint i);
 static void  gwy_tool_mask_editor_selection_changed  (GwyPlainTool *plain_tool,
                                                       gint hint);
+static void  gwy_tool_mask_editor_save_args          (GwyToolMaskEditor *tool);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -160,7 +161,7 @@ static GwyModuleInfo module_info = {
     N_("Mask editor tool, allows interactive modification of parts "
        "of the mask."),
     "Yeti <yeti@gwyddion.net>",
-    "3.2",
+    "3.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -224,29 +225,7 @@ gwy_tool_mask_editor_class_init(GwyToolMaskEditorClass *klass)
 static void
 gwy_tool_mask_editor_finalize(GObject *object)
 {
-    GwyToolMaskEditor *tool;
-    GwyContainer *settings;
-
-    tool = GWY_TOOL_MASK_EDITOR(object);
-
-    settings = gwy_app_settings_get();
-    gwy_container_set_enum_by_name(settings, style_key,
-                                   tool->args.style);
-    gwy_container_set_enum_by_name(settings, mode_key,
-                                   tool->args.mode);
-    gwy_container_set_enum_by_name(settings, shape_key,
-                                   tool->args.shape);
-    gwy_container_set_enum_by_name(settings, tool_key,
-                                   tool->args.tool);
-    gwy_container_set_int32_by_name(settings, radius_key,
-                                    tool->args.radius);
-    gwy_container_set_int32_by_name(settings, gsamount_key,
-                                    tool->args.gsamount);
-    gwy_container_set_boolean_by_name(settings, from_border_key,
-                                      tool->args.from_border);
-    gwy_container_set_boolean_by_name(settings, prevent_merge_key,
-                                      tool->args.prevent_merge);
-
+    gwy_tool_mask_editor_save_args(GWY_TOOL_MASK_EDITOR(object));
     G_OBJECT_CLASS(gwy_tool_mask_editor_parent_class)->finalize(object);
 }
 
@@ -851,6 +830,8 @@ gwy_tool_mask_editor_invert(GwyToolMaskEditor *tool)
     gwy_data_field_multiply(plain_tool->mask_field, -1.0);
     gwy_data_field_add(plain_tool->mask_field, 1.0);
     gwy_data_field_data_changed(plain_tool->mask_field);
+    gwy_tool_mask_editor_save_args(tool);
+    gwy_plain_tool_log_add(plain_tool);
 }
 
 static void
@@ -865,6 +846,8 @@ gwy_tool_mask_editor_remove(GwyToolMaskEditor *tool)
     quark = gwy_app_get_mask_key_for_id(plain_tool->id);
     gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
     gwy_container_remove(plain_tool->container, quark);
+    gwy_tool_mask_editor_save_args(tool);
+    gwy_plain_tool_log_add(plain_tool);
 }
 
 static void
@@ -882,6 +865,8 @@ gwy_tool_mask_editor_fill(GwyToolMaskEditor *tool)
     mfield = gwy_tool_mask_editor_maybe_add_mask(plain_tool, quark);
     gwy_data_field_fill(mfield, 1.0);
     gwy_data_field_data_changed(mfield);
+    gwy_tool_mask_editor_save_args(tool);
+    gwy_plain_tool_log_add(plain_tool);
 }
 
 static void
@@ -991,6 +976,8 @@ gwy_tool_mask_editor_grow(GwyToolMaskEditor *tool)
     g_free(grains);
 
     gwy_data_field_data_changed(plain_tool->mask_field);
+    gwy_tool_mask_editor_save_args(tool);
+    gwy_plain_tool_log_add(plain_tool);
 }
 
 static void
@@ -1074,6 +1061,8 @@ gwy_tool_mask_editor_shrink(GwyToolMaskEditor *tool)
     g_free(prow);
 
     gwy_data_field_data_changed(plain_tool->mask_field);
+    gwy_tool_mask_editor_save_args(tool);
+    gwy_plain_tool_log_add(plain_tool);
 }
 
 static void
@@ -1128,6 +1117,8 @@ gwy_tool_mask_editor_fill_voids(GwyToolMaskEditor *tool)
     g_free(vgrains);
 
     gwy_data_field_data_changed(plain_tool->mask_field);
+    gwy_tool_mask_editor_save_args(tool);
+    gwy_plain_tool_log_add(plain_tool);
 }
 
 static void
@@ -1409,8 +1400,11 @@ gwy_tool_mask_editor_selection_finished(GwyPlainTool *plain_tool)
         break;
     }
     gwy_selection_clear(plain_tool->selection);
-    if (mfield)
+    if (mfield) {
         gwy_data_field_data_changed(mfield);
+        gwy_tool_mask_editor_save_args(tool);
+        gwy_plain_tool_log_add(plain_tool);
+    }
 }
 
 static void
@@ -1573,6 +1567,30 @@ gwy_tool_mask_editor_selection_changed(GwyPlainTool *plain_tool,
         tool->oldisel[1] = isel[1];
         tool->drawing_started = TRUE;
     }
+}
+
+static void
+gwy_tool_mask_editor_save_args(GwyToolMaskEditor *tool)
+{
+    GwyContainer *settings;
+
+    settings = gwy_app_settings_get();
+    gwy_container_set_enum_by_name(settings, style_key,
+                                   tool->args.style);
+    gwy_container_set_enum_by_name(settings, mode_key,
+                                   tool->args.mode);
+    gwy_container_set_enum_by_name(settings, shape_key,
+                                   tool->args.shape);
+    gwy_container_set_enum_by_name(settings, tool_key,
+                                   tool->args.tool);
+    gwy_container_set_int32_by_name(settings, radius_key,
+                                    tool->args.radius);
+    gwy_container_set_int32_by_name(settings, gsamount_key,
+                                    tool->args.gsamount);
+    gwy_container_set_boolean_by_name(settings, from_border_key,
+                                      tool->args.from_border);
+    gwy_container_set_boolean_by_name(settings, prevent_merge_key,
+                                      tool->args.prevent_merge);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

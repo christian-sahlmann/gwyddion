@@ -449,9 +449,7 @@ gwy_tool_filter_apply(GwyToolFilter *tool)
     }
 
     gwy_data_field_data_changed(plain_tool->data_field);
-    gwy_app_channel_log_add(plain_tool->container,
-                            plain_tool->id, plain_tool->id,
-                            "tool::GwyToolFilter", NULL);
+    gwy_plain_tool_log_add(plain_tool);
 }
 
 static void

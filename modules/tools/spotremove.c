@@ -145,6 +145,7 @@ static gboolean find_subrange                       (gint center,
                                                      gint res,
                                                      gint size,
                                                      Range *r);
+static void gwy_tool_spot_remover_save_args         (GwyToolSpotRemover *tool);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -152,7 +153,7 @@ static GwyModuleInfo module_info = {
     N_("Spot removal tool, interpolates small parts of data (displayed on "
        "a zoomed view) using selected algorithm."),
     "Yeti <yeti@gwyddion.net>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -206,13 +207,9 @@ static void
 gwy_tool_spot_remover_finalize(GObject *object)
 {
     GwyToolSpotRemover *tool;
-    GwyContainer *settings;
 
     tool = GWY_TOOL_SPOT_REMOVER(object);
-
-    settings = gwy_app_settings_get();
-    gwy_container_set_enum_by_name(settings, method_key,
-                                   tool->args.method);
+    gwy_tool_spot_remover_save_args(tool);
 
     gwy_signal_handler_disconnect(GWY_PLAIN_TOOL(object)->container,
                                   tool->palette_id);
@@ -599,6 +596,8 @@ gwy_tool_spot_remover_apply(GwyToolSpotRemover *tool)
                                         tool->zisel[0], tool->zisel[1],
                                         tool->zisel[2], tool->zisel[3]);
     gwy_data_field_data_changed(plain_tool->data_field);
+    gwy_tool_spot_remover_save_args(tool);
+    gwy_plain_tool_log_add(plain_tool);
 }
 
 static void
@@ -731,6 +730,16 @@ pseudo_laplace_average(GwyDataField *dfield,
     }
 
     g_free(disttable);
+}
+
+static void
+gwy_tool_spot_remover_save_args(GwyToolSpotRemover *tool)
+{
+    GwyContainer *settings;
+
+    settings = gwy_app_settings_get();
+    gwy_container_set_enum_by_name(settings, method_key,
+                                   tool->args.method);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

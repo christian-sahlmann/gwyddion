@@ -526,9 +526,7 @@ gwy_tool_path_level_apply(GwyToolPathLevel *tool)
     g_object_unref(corr);
 
     gwy_data_field_data_changed(plain_tool->data_field);
-    gwy_app_channel_log_add(plain_tool->container,
-                            plain_tool->id, plain_tool->id,
-                            "tool::GwyToolPathLevel", NULL);
+    gwy_plain_tool_log_add(plain_tool);
 }
 
 static void
