@@ -178,7 +178,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates particles using simple dynamical model"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.2",
     "Petr Klapetek",
     "2010",
 };
@@ -217,10 +217,8 @@ deposit_synth(GwyContainer *data, GwyRunType run)
 
     if (run == GWY_RUN_IMMEDIATE)
         run_noninteractive(&args, &dimsargs, data, dfield, id, quark);
-    else if (run == GWY_RUN_INTERACTIVE) {
+    else if (run == GWY_RUN_INTERACTIVE)
         deposit_synth_dialog(&args, &dimsargs, data, dfield, id, quark);
-        deposit_synth_save_args(gwy_app_settings_get(), &args, &dimsargs);
-    }
 
     gwy_dimensions_free_args(&dimsargs);
 }
@@ -338,10 +336,10 @@ run_noninteractive(DepositSynthArgs *args,
 
 static gboolean
 deposit_synth_dialog(DepositSynthArgs *args,
-                 GwyDimensionArgs *dimsargs,
-                 GwyContainer *data,
-                 GwyDataField *dfield_template,
-                 gint id, GQuark quark)
+                     GwyDimensionArgs *dimsargs,
+                     GwyContainer *data,
+                     GwyDataField *dfield_template,
+                     gint id, GQuark quark)
 {
     GtkWidget *dialog, *table, *vbox, *hbox, *notebook, *spin;
     DepositSynthControls controls;
@@ -527,36 +525,42 @@ deposit_synth_dialog(DepositSynthArgs *args,
         }
     }
 
+    deposit_synth_save_args(gwy_app_settings_get(), args, dimsargs);
 
-    if (response == GTK_RESPONSE_OK)
-    {
-        if (!controls.data_done) preview(&controls);
+    if (response == GTK_RESPONSE_OK) {
+        if (!controls.data_done)
+            preview(&controls);
 
         if (controls.dims->args->replace) {
             gwy_app_undo_qcheckpointv(data, 1, &quark);
             gwy_data_field_copy(controls.out, controls.original, FALSE);
             gwy_data_field_data_changed(controls.original);
+            gwy_app_channel_log_add(data, id, id, "proc::deposit_synth", NULL);
         }
         else {
             if (data) {
-                newid = gwy_app_data_browser_add_data_field(controls.out, data, TRUE);
+                newid = gwy_app_data_browser_add_data_field(controls.out, data,
+                                                            TRUE);
                 gwy_app_sync_data_items(data, data, id, newid, FALSE,
                                         GWY_DATA_ITEM_GRADIENT,
                                         0);
                 gwy_app_set_data_field_title(data, newid, _("Generated"));
-
+                gwy_app_channel_log_add(data, id, newid,
+                                        "proc::deposit_synth", NULL);
             }
             else {
                 newid = 0;
                 newdata = gwy_container_new();
-                gwy_container_set_object(newdata, gwy_app_get_data_key_for_id(newid),
+                gwy_container_set_object(newdata,
+                                         gwy_app_get_data_key_for_id(newid),
                                          controls.out);
                 gwy_app_data_browser_add(newdata);
                 gwy_app_data_browser_reset_visibility(newdata,
                                                       GWY_VISIBILITY_RESET_SHOW_ALL);
                 g_object_unref(newdata);
                 gwy_app_set_data_field_title(newdata, newid, _("Generated"));
-
+                gwy_app_channel_log_add(newdata, -1, newid,
+                                        "proc::deposit_synth", NULL);
             }
 
         }
@@ -570,7 +574,6 @@ deposit_synth_dialog(DepositSynthArgs *args,
 
     g_object_unref(controls.mydata);
     gwy_dimensions_free(controls.dims);
-
 
     return response == GTK_RESPONSE_OK;
 }

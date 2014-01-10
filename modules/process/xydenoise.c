@@ -34,7 +34,6 @@
 
 #define XYDENOISE_RUN_MODES GWY_RUN_INTERACTIVE
 
-
 typedef struct {
     GwyContainer *data;
     gint id;
@@ -44,10 +43,6 @@ typedef struct {
     GwyDataObjectId op1;
     GwyDataObjectId op2;
 } XYdenoiseArgs;
-
-typedef struct {
-    XYdenoiseArgs *args;
-} XYdenoiseControls;
 
 static gboolean module_register       (void);
 static void     xydenoise              (GwyContainer *data,
@@ -69,7 +64,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Denoises measurement on basis of two orthogonal scans."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2012",
 };
@@ -94,11 +89,8 @@ static void
 xydenoise(GwyContainer *data, GwyRunType run)
 {
     XYdenoiseArgs args;
-    GwyContainer *settings;
 
     g_return_if_fail(run & XYDENOISE_RUN_MODES);
-
-    settings = gwy_app_settings_get();
 
     args.op1.data = data;
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.op1.id, 0);
@@ -111,12 +103,9 @@ xydenoise(GwyContainer *data, GwyRunType run)
 static gboolean
 xydenoise_dialog(XYdenoiseArgs *args)
 {
-    XYdenoiseControls controls;
     GtkWidget *dialog, *table, *chooser;
     gint row, response;
     gboolean ok = FALSE;
-
-    controls.args = args;
 
     dialog = gtk_dialog_new_with_buttons(_("XY Denoising"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -264,7 +253,7 @@ xydenoise_do(XYdenoiseArgs *args)
     gwy_app_wait_set_fraction(0.3);
     gwy_app_wait_set_message("Computing image...");
 
-    for (i=0; i<(xres*yres); i++) {
+    for (i = 0; i < xres*yres; i++) {
         xmodule = sqrt(rxdata[i]*rxdata[i] + ixdata[i]*ixdata[i]);
         xphase = atan2(ixdata[i],rxdata[i]);
         ymodule = sqrt(rydata[i]*rydata[i] + iydata[i]*iydata[i]);
@@ -287,6 +276,7 @@ xydenoise_do(XYdenoiseArgs *args)
                             GWY_DATA_ITEM_GRADIENT, 0);
 
     gwy_app_set_data_field_title(data, newid, _("Denoised"));
+    gwy_app_channel_log_add(data, -1, newid, "proc::xydenoise", NULL);
     gwy_app_wait_finish();
 
     g_object_unref(result);
@@ -302,4 +292,3 @@ xydenoise_do(XYdenoiseArgs *args)
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-

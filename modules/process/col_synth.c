@@ -201,14 +201,11 @@ col_synth(GwyContainer *data, GwyRunType run)
                                      GWY_APP_DATA_FIELD_KEY, &quark,
                                      0);
 
-    dorun = (run == GWY_RUN_IMMEDIATE
-             || col_synth_dialog(&args, &dimsargs, data, dfield, id));
-
-    if (run == GWY_RUN_INTERACTIVE)
+    if (run == GWY_RUN_IMMEDIATE
+        || col_synth_dialog(&args, &dimsargs, data, dfield, id)) {
         col_synth_save_args(gwy_app_settings_get(), &args, &dimsargs);
-
-    if (dorun)
         run_noninteractive(&args, &dimsargs, data, dfield, id, quark);
+    }
 
     gwy_dimensions_free_args(&dimsargs);
 }

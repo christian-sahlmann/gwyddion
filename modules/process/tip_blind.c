@@ -179,7 +179,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Blind estimation of SPM tip using Villarubia's algorithm."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -212,7 +212,6 @@ tip_blind(GwyContainer *data, GwyRunType run)
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.orig.id, 0);
     args.source = args.orig;
     tip_blind_dialog(&args);
-    tip_blind_save_args(gwy_app_settings_get(), &args);
     free_stripe_results(&args);
 }
 
@@ -457,10 +456,12 @@ tip_blind_dialog(TipBlindArgs *args)
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             tip_blind_dialog_abandon(&controls);
+            tip_blind_save_args(gwy_app_settings_get(), args);
             return;
             break;
 
             case GTK_RESPONSE_OK:
+            tip_blind_save_args(gwy_app_settings_get(), args);
             tip_blind_do(&controls, args);
             break;
 
@@ -915,6 +916,8 @@ tip_blind_do_single(TipBlindControls *controls,
                             0, newid, FALSE,
                             GWY_DATA_ITEM_GRADIENT, 0);
     gwy_app_set_data_field_title(args->source.data, newid, _("Estimated tip"));
+    gwy_app_channel_log_add(args->source.data, -1, newid, "proc::tip_blind",
+                            NULL);
     controls->tipdone = TRUE;
 }
 
@@ -940,6 +943,8 @@ tip_blind_do_images(TipBlindControls *controls,
                                 _("Estimated tip"), i+1, args->nstripes);
         g_snprintf(key, sizeof(key), "/%d/data/title", newid);
         gwy_container_set_string_by_name(args->source.data, key, title);
+        gwy_app_channel_log_add(args->source.data, -1, newid, "proc::tip_blind",
+                                NULL);
     }
 
     /* XXX: Have no idea what this means. */

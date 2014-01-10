@@ -56,7 +56,7 @@ static void        latsim_save_args           (GwyContainer *container,
 static void        latsim_dialog_update       (LatSimControls *controls,
                                                LatSimArgs *args);
 static gboolean    run_latsim                  (GwyDataField *dfield,
-                                               GwyDataField *fw, 
+                                               GwyDataField *fw,
                                                GwyDataField *rev,
                                                LatSimArgs *args);
 static void        latsim_values_update       (LatSimControls *controls,
@@ -74,7 +74,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Lateral force simulator"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2012",
 };
@@ -122,8 +122,7 @@ latsim(GwyContainer *data, GwyRunType run)
     gwy_data_field_set_si_unit_z(forward, gwy_si_unit_new("N"));
     gwy_data_field_set_si_unit_z(reverse, gwy_si_unit_new("N"));
 
-    ok = run_latsim(dfield, forward, reverse,
-            &args);
+    ok = run_latsim(dfield, forward, reverse, &args);
 
     if (ok) {
         newid = gwy_app_data_browser_add_data_field(forward, data, TRUE);
@@ -133,6 +132,7 @@ latsim(GwyContainer *data, GwyRunType run)
                                 0);
         g_object_unref(forward);
         gwy_app_set_data_field_title(data, newid, _("Fw lateral force "));
+        gwy_app_channel_log_add(data, oldid, newid, "proc::latsim", NULL);
 
         newid = gwy_app_data_browser_add_data_field(reverse, data, TRUE);
         gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
@@ -141,9 +141,8 @@ latsim(GwyContainer *data, GwyRunType run)
                                 0);
         g_object_unref(reverse);
         gwy_app_set_data_field_title(data, newid, _("Rev lateral force"));
-
+        gwy_app_channel_log_add(data, oldid, newid, "proc::latsim", NULL);
     }
-
 }
 
 static gboolean
@@ -222,7 +221,7 @@ latsim_dialog(LatSimArgs *args)
     return TRUE;
 }
 
-static void        
+static void
 latsim_values_update(LatSimControls *controls,
                   LatSimArgs *args)
 {
@@ -244,7 +243,7 @@ run_latsim(GwyDataField *dfield, GwyDataField *fw, GwyDataField *rev,
     gdouble slope, dx, theta, load, adhesion;
     gdouble va, vb, vc, vd;
     gdouble *dfw, *drev, *surface;
-    
+
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     dx = 2.0*gwy_data_field_get_xreal(dfield)/(gdouble)xres;
@@ -257,7 +256,7 @@ run_latsim(GwyDataField *dfield, GwyDataField *fw, GwyDataField *rev,
     load = args->load*1e-9;            //TODO hardcoded now, as well as in GUI
     adhesion = args->adhesion*1e-9;    //TODO hardcoded now, as well as in GUI
 
-    for (row=0; row<yres; row++) 
+    for (row=0; row<yres; row++)
     {
         for (col=0; col<xres; col++)
         {
@@ -267,16 +266,16 @@ run_latsim(GwyDataField *dfield, GwyDataField *fw, GwyDataField *rev,
             else slope = (surface[row*xres + col + 1] - surface[row*xres + col - 1])/dx;
 
             theta = fabs(atan(slope));
-            va = load*sin(theta); 
+            va = load*sin(theta);
             vc = cos(theta);
-            vb = args->mu*(load*vc + adhesion); 
+            vb = args->mu*(load*vc + adhesion);
             vd = args->mu*sin(theta);
 
-            if (slope>=0) 
+            if (slope>=0)
             {
                 dfw[row*xres + col] = (va + vb)/(vc - vd);
                 drev[row*xres + col] = -(va - vb)/(vc + vd);
-            } 
+            }
             else
             {
                 dfw[row*xres + col] = -(va - vb)/(vc + vd);
@@ -301,10 +300,9 @@ latsim_dialog_update(LatSimControls *controls,
                              args->load);
 }
 
-static const gchar mu_key[]  = "/module/latsim/mu";
-static const gchar adhesion_key[]  = "/module/latsim/adhesion";
-static const gchar load_key[]  = "/module/latsim/load";
-
+static const gchar mu_key[]       = "/module/latsim/mu";
+static const gchar adhesion_key[] = "/module/latsim/adhesion";
+static const gchar load_key[]     = "/module/latsim/load";
 
 static void
 latsim_sanitize_args(LatSimArgs *args)
@@ -323,7 +321,7 @@ latsim_load_args(GwyContainer *container,
     gwy_container_gis_double_by_name(container, mu_key, &args->mu);
     gwy_container_gis_double_by_name(container, adhesion_key, &args->adhesion);
     gwy_container_gis_double_by_name(container, load_key, &args->load);
-    
+
     latsim_sanitize_args(args);
 }
 
@@ -334,7 +332,7 @@ latsim_save_args(GwyContainer *container,
     gwy_container_set_double_by_name(container, mu_key, args->mu);
     gwy_container_set_double_by_name(container, adhesion_key, args->adhesion);
     gwy_container_set_double_by_name(container, load_key, args->load);
- 
+
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

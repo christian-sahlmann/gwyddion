@@ -78,7 +78,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("2D DWT anisotropy detection based on X/Y components ratio."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -169,8 +169,8 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
     g_object_unref(wtcoefs);
     g_object_unref(dfield);
     gwy_data_field_data_changed(mask);
+    gwy_app_channel_log_add(data, id, id, "proc::dwtanisotropy", NULL);
 }
-
 
 static gboolean
 dwt_anisotropy_dialog(DWTAnisotropyArgs *args)

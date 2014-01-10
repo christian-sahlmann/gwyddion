@@ -248,11 +248,10 @@ noise_synth(GwyContainer *data, GwyRunType run)
                                      0);
 
     if (run == GWY_RUN_IMMEDIATE
-        || noise_synth_dialog(&args, &dimsargs, data, dfield, id))
-        run_noninteractive(&args, &dimsargs, data, dfield, id, quark);
-
-    if (run == GWY_RUN_INTERACTIVE)
+        || noise_synth_dialog(&args, &dimsargs, data, dfield, id)) {
         noise_synth_save_args(gwy_app_settings_get(), &args, &dimsargs);
+        run_noninteractive(&args, &dimsargs, data, dfield, id, quark);
+    }
 
     gwy_dimensions_free_args(&dimsargs);
 }

@@ -68,8 +68,8 @@ static void        pid_dialog_update          (PIDControls *controls,
                                                PIDArgs *args);
 static gboolean    run_pid                    (GwyDataField *dfield,
                                                GwyContainer *data,
-                                               gint oldid, 
-                                               GwyDataField *fw, 
+                                               gint oldid,
+                                               GwyDataField *fw,
                                                GwyDataField *ffw,
                                                GwyDataField *revdata,
                                                GwyDataField *frev,
@@ -79,7 +79,7 @@ static void        pid_values_update          (PIDControls *controls,
 
 
 static const PIDArgs pid_defaults = {
-    1, 
+    1,
     1,
     0,
     100,
@@ -94,7 +94,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("A simple PID simulator"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2012",
 };
@@ -145,8 +145,7 @@ pid(GwyContainer *data, GwyRunType run)
     gwy_data_field_set_si_unit_z(rfresult, gwy_si_unit_new(NULL));
 
     ok = run_pid(dfield, data, oldid, presult, fresult, rpresult, rfresult,
-            &args);
-
+                 &args);
 
     if (ok) {
         newid = gwy_app_data_browser_add_data_field(presult, data, TRUE);
@@ -156,6 +155,7 @@ pid(GwyContainer *data, GwyRunType run)
                                 0);
         g_object_unref(presult);
         gwy_app_set_data_field_title(data, newid, _("PID FW result"));
+        gwy_app_channel_log_add(data, oldid, newid, "proc::pid", NULL);
 
         newid = gwy_app_data_browser_add_data_field(fresult, data, TRUE);
         gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
@@ -164,6 +164,7 @@ pid(GwyContainer *data, GwyRunType run)
                                 0);
         g_object_unref(fresult);
         gwy_app_set_data_field_title(data, newid, _("PID FW max. force"));
+        gwy_app_channel_log_add(data, oldid, newid, "proc::pid", NULL);
 
         newid = gwy_app_data_browser_add_data_field(rpresult, data, TRUE);
         gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
@@ -172,6 +173,7 @@ pid(GwyContainer *data, GwyRunType run)
                                 0);
         g_object_unref(rpresult);
         gwy_app_set_data_field_title(data, newid, _("PID REV result"));
+        gwy_app_channel_log_add(data, oldid, newid, "proc::pid", NULL);
 
         newid = gwy_app_data_browser_add_data_field(rfresult, data, TRUE);
         gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
@@ -180,8 +182,8 @@ pid(GwyContainer *data, GwyRunType run)
                                 0);
         g_object_unref(rfresult);
         gwy_app_set_data_field_title(data, newid, _("PID REV max. force"));
+        gwy_app_channel_log_add(data, oldid, newid, "proc::pid", NULL);
     }
-
 }
 
 static gboolean
@@ -291,7 +293,7 @@ pid_dialog(PIDArgs *args)
     return TRUE;
 }
 
-static void        
+static void
 pid_values_update(PIDControls *controls,
                   PIDArgs *args)
 {
@@ -330,7 +332,7 @@ run_pid(GwyDataField *dfield, GwyContainer *data, gint id, GwyDataField *fw, Gwy
     gdouble strength;
     gdouble zrange;
     GtkWidget *dialog;
-    
+
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, id), _("Starting..."));
 
     xres = gwy_data_field_get_xres(dfield);
@@ -371,7 +373,7 @@ run_pid(GwyDataField *dfield, GwyContainer *data, gint id, GwyDataField *fw, Gwy
                 force = strength*(surface[row*xres + col]-zpos);
                 //force = strength*pow((surface[row*xres + col]-zpos), args->fpower);
 
-                for (j=nprev; j>0; j--) 
+                for (j=nprev; j>0; j--)
                     previous[j]=previous[j-1];
                 previous[0] = (force-setpoint);
 
@@ -379,11 +381,11 @@ run_pid(GwyDataField *dfield, GwyContainer *data, gint id, GwyDataField *fw, Gwy
                 for (j=0; j<nprev; j++) accumulator += previous[j]*(gdouble)(nprev-j)/(gdouble)nprev;
                 accumulator/=nprev;
 
-                zpos += (args->proportional*(force-setpoint) 
-                        + args->integral*accumulator 
+                zpos += (args->proportional*(force-setpoint)
+                        + args->integral*accumulator
                         + args->derivative*(previous[0]-previous[1])/args->ratio)*zrange;
             }
-            if (gwy_isinf(zpos) || gwy_isnan(zpos) || gwy_isinf(force) || gwy_isnan(force)) 
+            if (gwy_isinf(zpos) || gwy_isnan(zpos) || gwy_isinf(force) || gwy_isnan(force))
             {
                 dialog = gtk_message_dialog_new(GTK_WINDOW(gwy_app_find_window_for_channel(data, id)),
                                                 GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -407,7 +409,7 @@ run_pid(GwyDataField *dfield, GwyContainer *data, gint id, GwyDataField *fw, Gwy
                     dfrev[row*xres + col] = force;
                 }
             }
- 
+
         }
         if (!gwy_app_wait_set_fraction((gdouble)row/(gdouble)yres)) return 0;
     }
@@ -441,15 +443,14 @@ pid_dialog_update(PIDControls *controls,
                              args->fsetpoint);
 }
 
-static const gchar proportional_key[]  = "/module/pid/proportional";
-static const gchar integral_key[]  = "/module/pid/integral";
-static const gchar derivative_key[]  = "/module/pid/derivative";
-static const gchar ratio_key[]  = "/module/pid/ratio";
-static const gchar tau_key[]    = "/module/pid/tau";
-static const gchar fpower_key[]    = "/module/pid/fpower";
+static const gchar proportional_key[] = "/module/pid/proportional";
+static const gchar integral_key[]     = "/module/pid/integral";
+static const gchar derivative_key[]   = "/module/pid/derivative";
+static const gchar ratio_key[]        = "/module/pid/ratio";
+static const gchar tau_key[]          = "/module/pid/tau";
+static const gchar fpower_key[]       = "/module/pid/fpower";
 static const gchar fstrength_key[]    = "/module/pid/fstrength";
 static const gchar fsetpoint_key[]    = "/module/pid/fsetpoint";
-
 
 static void
 pid_sanitize_args(PIDArgs *args)
@@ -479,7 +480,7 @@ pid_load_args(GwyContainer *container,
     gwy_container_gis_int32_by_name(container, fpower_key, &args->fpower);
     gwy_container_gis_double_by_name(container, fstrength_key, &args->fstrength);
     gwy_container_gis_double_by_name(container, fsetpoint_key, &args->fsetpoint);
-    
+
     pid_sanitize_args(args);
 }
 
@@ -495,7 +496,7 @@ pid_save_args(GwyContainer *container,
     gwy_container_set_int32_by_name(container, fpower_key, args->fpower);
     gwy_container_set_double_by_name(container, fstrength_key, args->fstrength);
     gwy_container_gis_double_by_name(container, fsetpoint_key, &args->fsetpoint);
- 
+
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

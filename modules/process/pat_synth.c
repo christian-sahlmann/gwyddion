@@ -281,11 +281,10 @@ pat_synth(GwyContainer *data, GwyRunType run)
 
     rngset = rand_gen_set_new(RNG_NRNGS);
     if (run == GWY_RUN_IMMEDIATE
-        || pat_synth_dialog(&args, &dimsargs, rngset, data, dfield, id))
-        run_noninteractive(&args, &dimsargs, rngset, data, dfield, id, quark);
-
-    if (run == GWY_RUN_INTERACTIVE)
+        || pat_synth_dialog(&args, &dimsargs, rngset, data, dfield, id)) {
         pat_synth_save_args(gwy_app_settings_get(), &args, &dimsargs);
+        run_noninteractive(&args, &dimsargs, rngset, data, dfield, id, quark);
+    }
 
     rand_gen_set_free(rngset);
     gwy_dimensions_free_args(&dimsargs);
