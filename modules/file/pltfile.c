@@ -79,7 +79,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanosurf PLT files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -215,6 +215,8 @@ plt_load(const gchar *filename,
                                          g_strdup(value));
     else
         gwy_app_channel_title_fall_back(container, 0);
+
+    gwy_file_channel_import_log_add(container, 0, "pltfile", filename);
 
 fail:
     g_free(buffer);
