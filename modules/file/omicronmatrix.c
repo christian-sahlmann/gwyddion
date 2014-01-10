@@ -1,4 +1,5 @@
 /*
+ *  @(#) $Id$
  *  Copyright (C) 2008, Philipp Rahe, David Necas
  *  E-mail: hquerquadrat@gmail.com
  *
