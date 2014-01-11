@@ -622,7 +622,7 @@ gwy_text_header_context_get_lineno(const GwyTextHeaderContext *context)
 }
 
 /**
- * gwy_file_import_log_add:
+ * gwy_file_channel_import_log_add:
  * @data: A data container.
  * @id: Data channel id.
  * @filetype: File type, i.e. the name of the function importing the data
