@@ -89,6 +89,7 @@ static void       delete_app_window            (void);
 static void       gwy_app_zoom_set_cb          (gpointer user_data);
 static void       gwy_app_undo_cb              (void);
 static void       gwy_app_redo_cb              (void);
+static void       remove_all_logs              (void);
 static void       toggle_edit_accelerators     (gpointer callback_data,
                                                 gint callback_action,
                                                 GtkCheckMenuItem *item);
@@ -772,6 +773,14 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
             GTK_STOCK_SAVE_AS
         },
         {
+            N_("/Remo_ve All Logs"),
+            NULL,
+            remove_all_logs,
+            0,
+            NULL,
+            NULL
+        },
+        {
             "/---",
             NULL,
             NULL,
@@ -801,9 +810,10 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
                                   G_N_ELEMENTS(menu_items), menu_items, NULL);
 
     set_sensitivity(item_factory,
-                    "<file>/Save",         GWY_MENU_FLAG_FILE,
-                    "<file>/Save As...",   GWY_MENU_FLAG_FILE,
-                    "<file>/Merge...",     GWY_MENU_FLAG_FILE,
+                    "<file>/Save",            GWY_MENU_FLAG_FILE,
+                    "<file>/Save As...",      GWY_MENU_FLAG_FILE,
+                    "<file>/Merge...",        GWY_MENU_FLAG_FILE,
+                    "<file>/Remove All Logs", GWY_MENU_FLAG_FILE,
                     NULL);
 
     item = gtk_item_factory_get_item(item_factory, "<file>/Open Recent");
@@ -1087,6 +1097,36 @@ gwy_app_redo_cb(void)
     gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
     if (data)
         gwy_app_undo_redo_container(data);
+}
+
+static void
+remove_all_logs(void)
+{
+    GwyContainer *data;
+    gchar buf[32];
+    gint *ids;
+    gint i;
+
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
+    g_return_if_fail(data);
+
+    g_object_ref(data);
+
+    ids = gwy_app_data_browser_get_data_ids(data);
+    for (i = 0; ids[i] != -1; i++) {
+        g_snprintf(buf, sizeof(buf), "/%d/data/log", ids[i]);
+        gwy_container_remove_by_name(data, buf);
+    }
+    g_free(ids);
+
+    ids = gwy_app_data_browser_get_volume_ids(data);
+    for (i = 0; ids[i] != -1; i++) {
+        g_snprintf(buf, sizeof(buf), "/brick/%d/log", ids[i]);
+        gwy_container_remove_by_name(data, buf);
+    }
+    g_free(ids);
+
+    g_object_unref(data);
 }
 
 static void
