@@ -85,7 +85,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Digital Instruments Nanoscope II data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2007",
 };
@@ -175,6 +175,7 @@ nanoscope_load(const gchar *filename,
     }
 
     gwy_app_channel_title_fall_back(container, 0);
+    gwy_file_channel_import_log_add(container, 0, "nanoscope-ii", filename);
 
     return container;
 }

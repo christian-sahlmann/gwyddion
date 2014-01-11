@@ -106,7 +106,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NANOTOP AFM files"),
     "Alexander Kovalev <av_kov@tut.by>",
-    "1.8",
+    "1.9",
     "Alexander Kovalev, Metal-Polymer Research Institute",
     "2006",
 };
@@ -220,6 +220,7 @@ nanotop_load(const gchar *filename,
         g_object_unref(dfield);
         gwy_app_channel_title_fall_back(container, 0);
     }
+    gwy_file_channel_import_log_add(container, 0, "nanotop", filename);
 
     gwy_file_abandon_contents(buffer, size, NULL);
 

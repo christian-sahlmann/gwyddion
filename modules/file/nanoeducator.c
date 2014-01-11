@@ -289,7 +289,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanoeducator data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -416,6 +416,7 @@ nanoedu_load(const gchar *filename,
                                          g_strdup("Topography"));
         gwy_container_set_object_by_name(container, "/0/meta", meta);
         g_object_unref(dfield);
+        gwy_file_channel_import_log_add(container, 0, "nanoeducator", filename);
         nobjects++;
     }
 
@@ -617,6 +618,7 @@ nanoedu_load(const gchar *filename,
         m = gwy_container_duplicate(meta);
         gwy_container_set_object_by_name(container, "/1/meta", m);
         g_object_unref(m);
+        gwy_file_channel_import_log_add(container, 1, "nanoeducator", filename);
         nobjects++;
     }
 

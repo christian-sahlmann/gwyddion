@@ -83,7 +83,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Hitachi S-3700 and S-4800 SEM files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -233,6 +233,8 @@ hitachi_load(const gchar *filename,
     g_hash_table_foreach(hash, store_meta, meta);
     gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
+
+    gwy_file_channel_import_log_add(container, 0, "hitachi-sem", filename);
 
 fail:
     gwy_object_unref(pixbuf);

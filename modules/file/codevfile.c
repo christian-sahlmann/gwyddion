@@ -71,7 +71,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Code V interferogram files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -340,6 +340,8 @@ int_load(const gchar *filename,
 
     gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
+
+    gwy_file_channel_import_log_add(container, 0, "codevfile", filename);
 
 fail:
     g_free(fields);

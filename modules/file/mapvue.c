@@ -466,7 +466,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports MapVue data files (.map)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -614,6 +614,7 @@ mapvue_load(const gchar *filename,
     gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
     */
+    gwy_file_channel_import_log_add(container, 0, "mapvue", filename);
 
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);

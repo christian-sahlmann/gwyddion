@@ -82,7 +82,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Benyuan CSM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -261,6 +261,8 @@ csmfile_load(const gchar *filename,
     }
     else
         gwy_app_channel_title_fall_back(container, 0);
+
+    gwy_file_channel_import_log_add(container, 0, "csmfile", filename);
 
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);

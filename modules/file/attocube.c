@@ -84,7 +84,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Attocube Systems ASC files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -271,6 +271,8 @@ asc_load(const gchar *filename,
 
     if ((value = g_hash_table_lookup(hash, "scanspeed")))
         gwy_container_set_string_by_name(meta, "Scan Speed", g_strdup(value));
+
+    gwy_file_channel_import_log_add(container, 0, "attocube", filename);
 
 fail:
     g_free(buffer);

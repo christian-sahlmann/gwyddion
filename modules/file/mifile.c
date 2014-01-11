@@ -172,7 +172,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Molecular Imaging MI data files."),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "0.13",
+    "0.14",
     "Chris Anderson, Molecular Imaging Corp.",
     "2006",
 };
@@ -328,6 +328,7 @@ mifile_load(const gchar *filename,
             g_object_unref(dfield);
             process_metadata(mifile, i, container, container_key);
             g_free(container_key);
+            gwy_file_channel_import_log_add(container, i, "mifile", filename);
         }
 
         image_file_free(mifile);

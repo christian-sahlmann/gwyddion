@@ -63,6 +63,7 @@ static GwyContainer* dumb_load       (const gchar *filename,
                                       GError **error);
 static GwyContainer* text_dump_import(gchar *buffer,
                                       gsize size,
+                                      const gchar *filename,
                                       GError **error);
 
 static GwyModuleInfo module_info = {
@@ -70,7 +71,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Reads and exports Gwyddion dumb dump files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -123,7 +124,7 @@ dumb_load(const gchar *filename,
         goto fail;
     }
 
-    container = text_dump_import(buffer, size, error);
+    container = text_dump_import(buffer, size, filename, error);
 
 fail:
     g_free(buffer);
@@ -134,13 +135,14 @@ fail:
 static GwyContainer*
 text_dump_import(gchar *buffer,
                  gsize size,
+                 const gchar *filename,
                  GError **error)
 {
     gchar *val, *key, *pos, *line, *title;
     GwyContainer *data;
     GwyDataField *dfield;
     gdouble xreal, yreal;
-    gint xres, yres;
+    gint xres, yres, id;
     GwySIUnit *uxy, *uz;
     const guchar *s;
     gdouble *d;
@@ -176,6 +178,9 @@ text_dump_import(gchar *buffer,
         pos++;
         dfield = NULL;
         gwy_container_gis_object_by_name(data, line, &dfield);
+
+        id = 0;
+        sscanf(line, "/%d", &id);
 
         /* get datafield parameters from already read values, failing back
          * to values of original data field */
@@ -305,6 +310,8 @@ text_dump_import(gchar *buffer,
             gwy_container_set_string_by_name(data, key, title);
             g_free(key);
         }
+
+        gwy_file_channel_import_log_add(data, id, "dumbfile", filename);
     }
     return data;
 

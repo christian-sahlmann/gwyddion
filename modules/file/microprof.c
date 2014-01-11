@@ -116,7 +116,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports MicroProf FRT profilometer data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -284,6 +284,7 @@ microprof_load(const gchar *filename,
         g_object_unref(dfield);
 
         gwy_app_channel_title_fall_back(container, i);
+        gwy_file_channel_import_log_add(container, i, "microprof", filename);
     }
 
 fail:
@@ -448,6 +449,8 @@ microprof_txt_load(const gchar *filename,
     g_object_unref(dfield);
     gwy_container_set_string_by_name(container, "/0/data/title",
                                      g_strdup("Topography"));
+
+    gwy_file_channel_import_log_add(container, 0, "microprof", filename);
 
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);

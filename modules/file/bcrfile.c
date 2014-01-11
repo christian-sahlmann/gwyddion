@@ -138,7 +138,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Image Metrology BCR data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.14",
+    "0.15",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -268,6 +268,8 @@ bcrfile_load(const gchar *filename,
         if (meta)
             gwy_container_set_object_by_name(container, "/0/meta", meta);
         g_object_unref(meta);
+
+        gwy_file_channel_import_log_add(container, 0, "bcrfile", filename);
     }
     g_hash_table_destroy(bcrmeta);
     g_free(header);

@@ -296,7 +296,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports SymPhoTime data files, version 2.0."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -420,6 +420,8 @@ pt3file_load(const gchar *filename,
     meta = pt3file_get_metadata(&pt3file);
     gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
+
+    gwy_file_channel_import_log_add(container, 0, "pt3file", filename);
 
     gmodel = pt3file_extract_decay(&pt3file, p);
     gwy_container_set_object_by_name(container, "/0/graph/graph/1", gmodel);

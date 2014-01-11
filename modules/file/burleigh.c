@@ -126,7 +126,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Burleigh IMG data files version 2.1."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Petr Klapetek & Hans-Peter Doerr",
     "2006",
 };
@@ -272,6 +272,8 @@ burleigh_load(const gchar *filename,
 
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
+
+    gwy_file_channel_import_log_add(container, 0, "burleigh", filename);
 
     return container;
 }

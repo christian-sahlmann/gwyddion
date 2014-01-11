@@ -84,7 +84,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports ECS IMG files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2006",
 };
@@ -264,6 +264,8 @@ ecs_load(const gchar *filename,
     if (gwy_container_get_n_items(meta))
         gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
+
+    gwy_file_channel_import_log_add(container, 0, "ecsfile", filename);
 
 fail:
     g_free(s);

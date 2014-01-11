@@ -130,7 +130,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Danish Micro Engineering (DME) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -267,6 +267,8 @@ dme_load(const gchar *filename,
     else
         gwy_container_set_string_by_name(container, "/0/data/title",
                                          g_strdup("Topography"));
+
+    gwy_file_channel_import_log_add(container, 0, "dmefile", filename);
 
     return container;
 }

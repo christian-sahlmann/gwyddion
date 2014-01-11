@@ -90,7 +90,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Reads and exports Gwyddion Simple Field files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2010",
 };
@@ -218,6 +218,8 @@ gsf_load(const gchar *filename,
     if (gwy_container_get_n_items(meta))
         gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
+
+    gwy_file_channel_import_log_add(container, 0, "gsffile", filename);
 
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);

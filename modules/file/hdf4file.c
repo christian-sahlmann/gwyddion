@@ -338,7 +338,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Hierarchical Data Format (HDF) files, version 4."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -513,6 +513,8 @@ psi_load(const gchar *filename,
         meta = psi_get_metadadata(header);
         gwy_container_set_object_by_name(container, "/0/meta", meta);
         g_object_unref(meta);
+
+        gwy_file_channel_import_log_add(container, 0, "psifile", filename);
     }
 
     gwy_file_abandon_contents(buffer, size, NULL);

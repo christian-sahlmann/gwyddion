@@ -125,7 +125,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports Intematix SDF data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -274,6 +274,7 @@ isdf_load(const gchar *filename,
         gwy_container_set_string_by_name(container, "/0/data/title",
                                          g_strdup(p));
     gwy_app_channel_title_fall_back(container, 0);
+    gwy_file_channel_import_log_add(container, 0, "intematix", filename);
 
 fail:
     isdf_image_free(&image);

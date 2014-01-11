@@ -69,7 +69,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Assing AFM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.16",
+    "0.17",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -174,6 +174,8 @@ aafm_load(const gchar *filename,
     gwy_container_set_string_by_name(container, "/0/data/title",
                                      g_strdup("Topography"));
     g_object_unref(dfield);
+
+    gwy_file_channel_import_log_add(container, 0, "assing-afm", filename);
 
     gwy_file_abandon_contents(buffer, size, NULL);
 

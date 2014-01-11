@@ -106,7 +106,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Hitachi AFM files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2005",
 };
@@ -228,6 +228,7 @@ hitachi_load(const gchar *filename,
                                      g_strdup("Topography"));
 
     gwy_app_channel_check_nonsquare(container, 0);
+    gwy_file_channel_import_log_add(container, 0, name, filename);
 
     return container;
 }

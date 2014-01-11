@@ -84,7 +84,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports WSF ASCII files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -229,9 +229,7 @@ wsf_load(const gchar *filename,
     }
 
     container = gwy_container_new();
-
     gwy_container_set_object(container, gwy_app_get_data_key_for_id(0), dfield);
-
     gwy_container_set_string_by_name(container, "/0/data/title",
                                      g_strdup(title));
 
@@ -239,6 +237,8 @@ wsf_load(const gchar *filename,
         gwy_container_set_object_by_name(container, "/0/meta", meta);
         g_object_unref(meta);
     }
+
+    gwy_file_channel_import_log_add(container, 0, "wsffile", filename);
 
 fail:
     gwy_object_unref(dfield);
