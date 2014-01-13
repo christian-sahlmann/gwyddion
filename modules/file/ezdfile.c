@@ -56,6 +56,7 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
 #include "get.h"
@@ -133,7 +134,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanosurf EZD and NID data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.8",
+    "0.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -245,6 +246,7 @@ ezdfile_load(const gchar *filename,
             g_object_unref(meta);
         }
 
+        gwy_file_channel_import_log_add(container, i, "ezdfile", filename);
         i++;
     }
     gwy_file_abandon_contents(buffer, size, NULL);

@@ -198,7 +198,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Igor binary waves (.ibw)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.7",
+    "0.8",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -425,6 +425,8 @@ igor_load(const gchar *filename,
             gwy_app_channel_title_fall_back(container,chid);
         }
         gwy_object_unref(meta);
+
+        gwy_file_channel_import_log_add(container, chid, "igorfile", filename);
     }
 
 fail:

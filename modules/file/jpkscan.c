@@ -63,6 +63,7 @@ static GwyContainer* jpkscan_load        (const gchar *filename,
                                           GError **error);
 static void          jpk_load_channel    (const GwyTIFF *tiff,
                                           const GwyTIFFImageReader *reader,
+                                          const gchar *filename,
                                           GwyContainer *container,
                                           GwyContainer *meta,
                                           guint idx,
@@ -90,7 +91,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports JPK image scans."),
     "Sven Neumann <neumann@jpk.com>, Yeti <yeti@gwyddion.net>",
-    "0.8",
+    "0.9",
     "JPK Instruments AG",
     "2005-2007",
 };
@@ -216,7 +217,8 @@ jpkscan_load(const gchar *filename,
             continue;
         }
 
-        jpk_load_channel(tiff, reader, container, meta, idx, ulen, vlen);
+        jpk_load_channel(tiff, reader, filename,
+                         container, meta, idx, ulen, vlen);
     }
 
     gwy_tiff_free(tiff);
@@ -231,6 +233,7 @@ jpkscan_load(const gchar *filename,
 static void
 jpk_load_channel(const GwyTIFF *tiff,
                  const GwyTIFFImageReader *reader,
+                 const gchar *filename,
                  GwyContainer *container,
                  GwyContainer *meta,
                  guint idx, gdouble ulen, gdouble vlen)
@@ -340,6 +343,7 @@ jpk_load_channel(const GwyTIFF *tiff,
         gwy_container_set_object_by_name(container, key->str, tmp);
         g_object_unref(tmp);
     }
+    gwy_file_channel_import_log_add(container, idx, "jpkscan", filename);
 
     g_string_free(key, TRUE);
 }

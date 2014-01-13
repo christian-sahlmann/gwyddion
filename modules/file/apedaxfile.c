@@ -119,8 +119,9 @@ static GwyDataField* apedax_get_data_field         (unzFile uFile,
 static void          apedax_get_channels_data      (unzFile uFile,
                                                     guchar *scanXmlContent,
                                                     gsize contentSize,
+                                                    const gchar *filename,
                                                     GwyContainer *container,
-                                                    GwyContainer * meta,
+                                                    GwyContainer *meta,
                                                     const APEDAX_ScanSize *scanSize,
                                                     GError **error);
 static gchar*        apedax_format_date             (const gchar* datefield);
@@ -132,7 +133,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports A.P.E. Research DAX data files."),
     "Gianfranco Gallizia <infos@aperesearch.com>",
-    "0.1",
+    "0.2",
     "A.P.E. Research srl",
     "2012"
 };
@@ -259,6 +260,7 @@ apedax_load(const gchar *filename,
     apedax_get_channels_data(uFile,
                              buffer,
                              size,
+                             filename,
                              container,
                              meta,
                              &scanSize,
@@ -676,6 +678,7 @@ static void
 apedax_get_channels_data(unzFile uFile,
                          guchar *scanXmlContent,
                          gsize contentSize,
+                         const gchar *filename,
                          GwyContainer *container,
                          GwyContainer *meta,
                          const APEDAX_ScanSize *scanSize,
@@ -783,13 +786,14 @@ apedax_get_channels_data(unzFile uFile,
             g_snprintf(key, sizeof(key), "/%d/data", i);
             gwy_container_set_object_by_name(container, key, dfield);
             g_object_unref(dfield);
+            gwy_file_channel_import_log_add(container, i, "apedaxfile",
+                                            filename);
+
+            tmp = gwy_container_duplicate(meta);
+            g_snprintf(key, sizeof(key), "/%d/meta", i);
+            gwy_container_set_object_by_name(container, key, tmp);
+            g_object_unref(tmp);
         }
-
-        tmp = gwy_container_duplicate(meta);
-        g_snprintf(key, sizeof(key), "/%d/meta", i);
-        gwy_container_set_object_by_name(container, key, tmp);
-        g_object_unref(tmp);
-
     }
 
     xmlXPathFreeObject(pathObj);

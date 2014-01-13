@@ -129,7 +129,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports DME GDEF data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti)",
     "2010",
 };
@@ -697,6 +697,8 @@ gdef_load(const gchar *filename,
                 g_object_unref(meta);
                 g_free(key);
             }
+            gwy_file_channel_import_log_add(container, i, "gdeffile",
+                                            filename);
             i++;
         }
     }

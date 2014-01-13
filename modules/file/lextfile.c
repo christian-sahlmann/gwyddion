@@ -70,6 +70,7 @@ static GwyContainer* lext_load         (const gchar *filename,
                                         GwyRunType mode,
                                         GError **error);
 static GwyContainer* lext_load_tiff    (const GwyTIFF *tiff,
+                                        const gchar *filename,
                                         GError **error);
 static const gchar*  guess_image0_title(const GwyTIFF *tiff);
 
@@ -78,7 +79,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports LEXT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2010",
 };
@@ -140,7 +141,7 @@ lext_load(const gchar *filename,
     if (!tiff)
         return NULL;
 
-    container = lext_load_tiff(tiff, error);
+    container = lext_load_tiff(tiff, filename, error);
     gwy_tiff_free(tiff);
 
     return container;
@@ -215,7 +216,7 @@ titlecase_channel_name(gchar *name)
 }
 
 static GwyContainer*
-lext_load_tiff(const GwyTIFF *tiff, GError **error)
+lext_load_tiff(const GwyTIFF *tiff, const gchar *filename, GError **error)
 {
     const gchar *colour_channels[] = { "Red", "Green", "Blue" };
     const gchar *colour_channel_gradients[] = {
@@ -383,6 +384,8 @@ lext_load_tiff(const GwyTIFF *tiff, GError **error)
                                      g_strdup(colour_channel_gradients[ch]));
             }
 
+            gwy_file_channel_import_log_add(container, id, "lextfile",
+                                            filename);
             id++;
         }
     }

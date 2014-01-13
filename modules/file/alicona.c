@@ -146,7 +146,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Alicona Imaging AL3D files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -284,6 +284,7 @@ al3d_load(const gchar *filename,
         g_object_unref(field);
         set_title(container, id, "Depth", -1);
         add_meta(container, id, &afile);
+        gwy_file_channel_import_log_add(container, id, "alicona", filename);
         id++;
     }
 
@@ -309,6 +310,7 @@ al3d_load(const gchar *filename,
             set_title(container, id, name, -1);
             add_meta(container, id, &afile);
             g_free(name);
+            gwy_file_channel_import_log_add(container, id, "alicona", filename);
             id++;
         }
         else if ((name = texture_ptr(tag))) {
@@ -329,6 +331,8 @@ al3d_load(const gchar *filename,
                                          field);
                 set_title(container, id, name, nplanes > 1 ? j : -1);
                 add_meta(container, id, &afile);
+                gwy_file_channel_import_log_add(container, id, "alicona",
+                                                filename);
                 id++;
             }
             g_strfreev(planes);

@@ -88,7 +88,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Anfatec data files (two-part .txt + .int)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2010",
 };
@@ -330,6 +330,8 @@ anfatec_load(const gchar *filename,
         }
         else
             gwy_app_channel_title_fall_back(container, id);
+
+        gwy_file_channel_import_log_add(container, id, "anfatec", filename);
     }
 
     err_NO_DATA(error);

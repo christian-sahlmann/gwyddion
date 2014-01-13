@@ -162,6 +162,7 @@ static ISO28600FieldValue* load_header        (gchar **buffer,
                                                GError **error);
 static void                free_header        (ISO28600FieldValue *header);
 static GwyContainer*       load_channels      (ISO28600FieldValue *header,
+                                               const gchar *filename,
                                                gchar **strings,
                                                gchar **p,
                                                ISO28600ExperimentMode experiment,
@@ -534,7 +535,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports and exports ISO 28600:2011 SPM data transfer format."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -638,7 +639,7 @@ iso28600_load(const gchar *filename,
             }
         }
 
-        container = load_channels(header, strings, &p,
+        container = load_channels(header, filename, strings, &p,
                                   experiment, nchannels,
                                   xres, yres, xreal, yreal,
                                   error);
@@ -711,6 +712,7 @@ fail:
 
 static GwyContainer*
 load_channels(ISO28600FieldValue *header,
+              const gchar *filename,
               gchar **strings,
               gchar **p,
               ISO28600ExperimentMode experiment,
@@ -803,6 +805,8 @@ load_channels(ISO28600FieldValue *header,
             g_snprintf(key, sizeof(key), "/%d/data/title", id);
             gwy_container_set_string_by_name(container, key, g_strdup(title));
         }
+
+        gwy_file_channel_import_log_add(container, id, "iso28600", filename);
     }
 
 fail:

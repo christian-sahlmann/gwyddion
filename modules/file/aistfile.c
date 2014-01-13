@@ -84,6 +84,7 @@ typedef struct {
 
 typedef struct {
     GwyContainer *container;
+    const gchar *filename;
     gint channel_id;
     gint graph_id;
 } AistContext;
@@ -119,7 +120,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports AIST-NT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -333,6 +334,8 @@ read_aist_raster(const guchar **p, gsize *size, AistContext *context)
     g_snprintf(key, sizeof(key), "/%d/data", context->channel_id);
     gwy_container_set_object_by_name(context->container, key, dfield);
     g_object_unref(dfield);
+    gwy_file_channel_import_log_add(context->container, context->channel_id,
+                                    "aistfile", context->filename);
 
     if ((s = strchr(raster.common.name, '[')))
         s = g_strchomp(g_strndup(raster.common.name, s - raster.common.name));
@@ -569,6 +572,7 @@ aist_load(const gchar *filename,
     remaining = size;
 
     context.container = gwy_container_new();
+    context.filename = filename;
     context.channel_id = 0;
     context.graph_id = 0;
     read_aist_tree(&p, &remaining, &context);

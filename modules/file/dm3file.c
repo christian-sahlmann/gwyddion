@@ -154,6 +154,7 @@ struct _DM3File {
     gboolean little_endian;
     DM3TagEntry root_entry;
     GHashTable *hash;
+    const gchar *filename;
 };
 
 static gboolean      module_register       (void);
@@ -224,7 +225,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Reads Digital Micrograph DM3 files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2012",
 };
@@ -298,6 +299,7 @@ dm3_load(const gchar *filename,
     if (!dm3_read_header(&dm3file, &p, &remaining, error))
         goto fail;
 
+    dm3file.filename = filename;
     dm3file.root_entry.is_group = TRUE;
     dm3file.root_entry.label = (gchar*)"";
     if (!(dm3file.root_entry.group
@@ -501,6 +503,8 @@ dm3_read_image(DM3File *dm3file,
             g_free(key);
             title = NULL;
         }
+        gwy_file_channel_import_log_add(container, *id, "dm3file",
+                                        dm3file->filename);
 
         (*id)++;
     }

@@ -111,7 +111,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Gwyddion XYZ field files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2013",
 };
@@ -281,6 +281,7 @@ gxyzf_load(const gchar *filename,
             g_snprintf(buf, sizeof(buf), "/%d/data/title", id);
             gwy_container_set_string_by_name(container, buf, g_strdup(value));
         }
+        gwy_file_channel_import_log_add(container, id, "gxyzffile", filename);
     }
 
     /* Visualise the raw data.
