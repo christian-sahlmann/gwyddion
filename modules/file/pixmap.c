@@ -261,6 +261,10 @@ static void              set_combo_from_unit             (GtkWidget *combo,
                                                           const gchar *str);
 static void              units_change_cb                 (GtkWidget *button,
                                                           PixmapLoadControls *controls);
+static void              pixmap_add_import_log           (GwyContainer *data,
+                                                          gint id,
+                                                          const gchar *filetype,
+                                                          const gchar *filename);
 static void              pixmap_load_update_controls     (PixmapLoadControls *controls,
                                                           PixmapLoadArgs *args);
 static void              pixmap_load_update_values       (PixmapLoadControls *controls,
@@ -473,7 +477,7 @@ static GwyModuleInfo module_info = {
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.26",
+    "7.27",
     "David Nečas (Yeti)",
     "2004-2013",
 };
@@ -905,6 +909,7 @@ pixmap_load(const gchar *filename,
                                                      value_map_types,
                                                      nmaptypes));
             g_object_unref(dfield);
+            pixmap_add_import_log(data, i, name, filename);
         }
     }
     else {
@@ -915,6 +920,7 @@ pixmap_load(const gchar *filename,
                               gwy_enum_to_string(args.maptype,
                                                  value_map_types, nmaptypes));
         g_object_unref(dfield);
+        pixmap_add_import_log(data, 0, name, filename);
     }
 
     g_object_unref(pixbuf);
@@ -1498,6 +1504,43 @@ units_change_cb(GtkWidget *button,
     }
 
     gtk_widget_destroy(dialog);
+}
+
+static void
+pixmap_add_import_log(GwyContainer *data,
+                      gint id,
+                      const gchar *filetype,
+                      const gchar *filename)
+{
+    GwyContainer *settings;
+    GQuark quark;
+    gchar *myfilename = NULL, *fskey, *qualname;
+
+    g_return_if_fail(filename);
+    g_return_if_fail(filetype);
+    g_return_if_fail(data);
+
+    if (g_utf8_validate(filename, -1, NULL))
+        myfilename = g_strdup(filename);
+    if (!myfilename)
+        myfilename = g_filename_to_utf8(filename, -1, NULL, NULL, NULL);
+    if (!myfilename)
+        myfilename = g_strescape(filename, NULL);
+
+    fskey = g_strdup_printf("/module/%s/filename", filetype);
+    quark = g_quark_from_string(fskey);
+    g_free(fskey);
+
+    /* Eats myfilename. */
+    settings = gwy_app_settings_get();
+    gwy_container_set_string(settings, quark, myfilename);
+
+    qualname = g_strconcat("file::", filetype, NULL);
+    gwy_app_channel_log_add(data, -1, id, qualname, NULL);
+    g_free(qualname);
+
+    /* We know pixmap functions have no such setting as "filename". */
+    gwy_container_remove(settings, quark);
 }
 
 /***************************************************************************
