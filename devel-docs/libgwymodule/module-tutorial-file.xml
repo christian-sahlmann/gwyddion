@@ -238,6 +238,8 @@ simple_load(const gchar *filename,
                                      g_strdup("Topography"));
     g_object_unref(dfield);
 
+    gwy_file_channel_import_log_add(container, 0, "simple", filename);
+
     gwy_file_abandon_contents(buffer, size, NULL);
 
     return container;
@@ -487,7 +489,10 @@ unit = gwy_si_unit_new_parse("nA", &power10);
       channel names, they are good candidates for a channel title, otherwise
       we settle for channel type as Topography or Current), and return the
       container.  The application then takes care of adding it to the data
-      browser and showing it in a data window.
+      browser and showing it in a data window.  Calling
+      gwy_file_channel_import_log_add() for channel 0 adds a data operation
+      log entry, noting that the data originated by import from the
+      <literal>"simple"</literal> format.
     </para>
     <informalexample><programlisting>
 container = gwy_container_new<!--x-->();
@@ -496,6 +501,8 @@ gwy_container_set_string_by_name(container, "/0/data/title",
                                  g_strdup("Topography"));
 
 g_object_unref(dfield);
+
+gwy_file_channel_import_log_add(container, 0, "simple", filename);
 
 gwy_file_abandon_contents(buffer, size, NULL);
 

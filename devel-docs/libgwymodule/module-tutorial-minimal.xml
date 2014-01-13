@@ -69,14 +69,17 @@ my_invert_value(GwyContainer *data,
 {
     GwyDataField *dfield;
     GQuark quark;
+    gint id;
 
     g_return_if_fail(run & INVERT_VALUE_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_KEY, &quark,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     gwy_app_undo_qcheckpointv(data, 1, &quark);
     gwy_data_field_multiply(dfield, -1.0);
     gwy_data_field_data_changed(dfield);
+    gwy_app_channel_log_add(data, id, id, "my_invert_value", NULL);
 }
 ]]></programlisting></informalexample>
   <para>
@@ -274,14 +277,17 @@ my_invert_value(GwyContainer *data,
 {
     GwyDataField *dfield;
     GQuark quark;
+    gint id;
 
     g_return_if_fail(run & INVERT_VALUE_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_KEY, &quark,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     gwy_app_undo_qcheckpointv(data, 1, &quark);
     gwy_data_field_multiply(dfield, -1.0);
     gwy_data_field_data_changed(dfield);
+    gwy_app_channel_log_add(data, id, id, "my_invert_value", NULL);
 }
 ]]></programlisting></informalexample>
    <para>
@@ -316,6 +322,15 @@ my_invert_value(GwyContainer *data,
      done – almost.  To notify views displaying our data field that its data
      has changed we call gwy_data_field_data_changed().  This function should
      be called once on each changed data field after all processing is done.
+   </para>
+   <para>
+     When we perform a data modification, it should be logged to the data
+     operation log.  A new log entry can be added with
+     gwy_app_channel_log_add(), where @id is the numeric identifier of the
+     data field in the container.  If the source and target of the operation
+     is the same, we just pass the same identifier twice.  If new data are
+     created the two identifier can differ, as described in the
+     <link linkend='libgwyapp-log'>logging documentation</link>.
    </para>
   </refsect1>
 </refentry>
