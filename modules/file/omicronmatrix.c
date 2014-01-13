@@ -100,7 +100,7 @@ typedef struct {
     // concerning the filename
     guint32 session;
     guint32 trace;
-    gchar* channelname;
+    gchar *channelname;
 } MatrixData;
 
 /** Transferfunctions for correct scaling of Z/Df/I/Ext2... data */
@@ -121,7 +121,7 @@ typedef struct {
     gdouble raw1_2;
     gdouble whole_2;
     guint32 cnumber;
-    gchar* channelname;
+    gchar *channelname;
 } ZScaling;
 
 /** States during parsing of parameterfile */
@@ -139,31 +139,31 @@ typedef struct {
 static gboolean      module_register             (void);
 static gint          matrix_detect               (const GwyFileDetectInfo *fi,
                                                   gboolean only_name);
-static gchar*        matrix_readstring           (const guchar** buffer,
-                                                  guint32* size);
-static guint32       matrix_readdata_to_container(const guchar** fp,
-                                                  const gchar* name,
-                                                  const gchar* metaname,
-                                                  GwyContainer* container,
-                                                  GwyContainer* meta,
+static gchar*        matrix_readstring           (const guchar **buffer,
+                                                  guint32 *size);
+static gboolean      matrix_readdata_to_container(const guchar **fp,
+                                                  gchar *name,
+                                                  gchar *metaname,
+                                                  GwyContainer *container,
+                                                  GwyContainer *meta,
                                                   guint32 check);
-static guint32       matrix_readdata             (void* data,
-                                                  const guchar** fp,
+static guint32       matrix_readdata             (void *data,
+                                                  const guchar **fp,
                                                   guint32 check);
-static guint32       matrix_scanparamfile        (const guchar** buffer,
-                                                  GwyContainer* container,
-                                                  GwyContainer* meta,
-                                                  MatrixData* matrixdata);
-static guint32       matrix_scanimagefile        (const guchar** buffer,
-                                                  GwyContainer* container,
-                                                  GwyContainer* meta,
-                                                  MatrixData* matrixdata,
+static guint32       matrix_scanparamfile        (const guchar **buffer,
+                                                  GwyContainer *container,
+                                                  GwyContainer *meta,
+                                                  MatrixData *matrixdata);
+static guint32       matrix_scanimagefile        (const guchar **buffer,
+                                                  GwyContainer *container,
+                                                  GwyContainer *meta,
+                                                  MatrixData *matrixdata,
                                                   gboolean useparamfile);
-static GwyContainer* matrix_load                 (const gchar* filename,
+static GwyContainer* matrix_load                 (const gchar *filename,
                                                   GwyRunType mode,
-                                                  GError** error);
+                                                  GError **error);
 static gdouble       matrix_tff                  (gint32 value,
-                                                  ZScaling* scale);
+                                                  ZScaling *scale);
 static const gchar*  sstrconcat                  (const gchar *s,
                                                   ...);
 
@@ -171,7 +171,7 @@ static const gchar*  sstrconcat                  (const gchar *s,
  *  corresponding transfer function
  */
 static gdouble
-matrix_tff(gint32 v, ZScaling* s) {
+matrix_tff(gint32 v, ZScaling *s) {
     if (s->tfftype == TFF_LINEAR1D) {
         // use linear1d: p = (r - n)/f
         return ((gdouble)v - s->offset_1)/s->factor_1;
@@ -237,12 +237,12 @@ matrix_detect(const GwyFileDetectInfo *fileinfo,
 /** read a string from the paramter or data file
  *  remember to free the result! */
 static gchar*
-matrix_readstring(const guchar** fp,
-                  guint32* size) {
-    gchar* str = NULL;
+matrix_readstring(const guchar **fp,
+                  guint32 *size) {
+    gchar *str = NULL;
     // len is the number of characters (each 16Bit) encoded
     guint32 len;
-    GError* tmperr = NULL;
+    GError *tmperr = NULL;
 
     len = gwy_get_guint32_le(fp);
     if (len == 0) {
@@ -275,91 +275,93 @@ matrix_readstring(const guchar** fp,
  *  at key <name>.
  *  If <metacontainer>!=NULL, it is also stored here.
  *  These fields have a identifier in front.
+ *
+ *  Parameters name and metaname are consumed!
  */
-static guint32
-matrix_readdata_to_container(const guchar** fp,
-                             const gchar* name,
-                             const gchar* metaname,
-                             GwyContainer* container,
-                             GwyContainer* metacontainer,
+static gboolean
+matrix_readdata_to_container(const guchar **fp,
+                             gchar *name,
+                             gchar *metaname,
+                             GwyContainer *container,
+                             GwyContainer *metacontainer,
                              guint32 check)
 {
-    gchar* id = NULL;
+    gboolean retval = FALSE;
+    gchar *id = NULL;
+
     if (check == 1) {
         guint32 a = gwy_get_guint32_le(fp);
-        if (a != 0 ) {
+        if (a != 0) {
             *fp -= 4;
             gwy_container_set_int32_by_name(container, name, a);
             if (metacontainer != NULL) {
-              gchar val[30];
-              g_snprintf(val, sizeof(val), "%u", a);
-              gwy_container_set_string_by_name(metacontainer, metaname,
-                                               (guchar*)g_strdup(val));
+                gchar val[30];
+                g_snprintf(val, sizeof(val), "%u", a);
+                gwy_container_set_string_by_name(metacontainer, metaname,
+                                                 (guchar*)g_strdup(val));
             }
-            return 0;
+            goto finished;
         }
     }
 
     id = g_strndup((gchar*)*fp, 4);
     *fp += 4;
-    if (0 == strncmp(id, "GNOL", 4)) {
+    if (gwy_strequal(id, "GNOL")) {
         // UInt32
         guint32 v = gwy_get_guint32_le(fp);
         gwy_container_set_int32_by_name(container, name, v);
         if (metacontainer != NULL) {
-          gchar val[30];
-          g_snprintf(val, sizeof(val), "%u", v);
-          gwy_container_set_string_by_name(metacontainer,
-                                           metaname,
-                                           (guchar*)g_strdup(val));
+            gchar val[30];
+            g_snprintf(val, sizeof(val), "%u", v);
+            gwy_container_set_string_by_name(metacontainer,
+                                             metaname,
+                                             (guchar*)g_strdup(val));
         }
-        g_free(id);
-        return 0;
     }
-    else if (0 == strncmp(id, "LOOB", 4)) {
+    else if (gwy_strequal(id, "LOOB")) {
         // bool, 32bit
         guint32 a = gwy_get_guint32_le(fp);
         gwy_container_set_boolean_by_name(container, name, a != 0);
         if (metacontainer != NULL) {
-          gchar val[30];
-          g_snprintf(val, sizeof(val), "%i", a);
-          gwy_container_set_string_by_name(metacontainer,
-                                           metaname,
-                                           (guchar*)g_strdup(val));
+            gchar val[30];
+            g_snprintf(val, sizeof(val), "%i", a);
+            gwy_container_set_string_by_name(metacontainer,
+                                             metaname,
+                                             (guchar*)g_strdup(val));
         }
-        g_free(id);
-        return 0;
     }
-    else if (0 == strncmp(id, "BUOD", 4)) {
+    else if (gwy_strequal(id, "BUOD")) {
         // double, 32bit
         gdouble v = gwy_get_gdouble_le(fp);
         gwy_container_set_double_by_name(container, name, v);
         if (metacontainer != NULL) {
-          gchar val[30];
-          g_snprintf(val, sizeof(val), "%e", v);
-          gwy_container_set_string_by_name(metacontainer,
-                                           metaname,
-                                           (guchar*)g_strdup(val));
+            gchar val[30];
+            g_snprintf(val, sizeof(val), "%e", v);
+            gwy_container_set_string_by_name(metacontainer,
+                                             metaname,
+                                             (guchar*)g_strdup(val));
         }
-        g_free(id);
-        return 0;
     }
-    else if (0 == strncmp(id, "GRTS", 4)) {
+    else if (gwy_strequal(id, "GRTS")) {
         // string
-        gchar* str;
+        gchar *str;
         str = matrix_readstring(fp, NULL);
         gwy_container_set_string_by_name(container,
                                          name, (guchar*)str);
         if (metacontainer != NULL) {
-          gwy_container_set_string_by_name(metacontainer,
-                                           metaname,
-                                           (guchar*)g_strdup(str));
+            gwy_container_set_string_by_name(metacontainer,
+                                             metaname,
+                                             (guchar*)g_strdup(str));
         }
-        g_free(id);
-        return 0;
     }
+    else
+        retval = TRUE;
+
+finished:
     g_free(id);
-    return 1;
+    g_free(name);
+    g_free(metaname);
+    return retval;
 }
 
 
@@ -368,11 +370,11 @@ matrix_readdata_to_container(const guchar** fp,
  *  be careful: Provide enough memory
  */
 static guint32
-matrix_readdata(void* data,
-                const guchar** fp,
+matrix_readdata(void *data,
+                const guchar **fp,
                 guint32 check)
 {
-    gchar* id = NULL;
+    gchar *id = NULL;
     guint32 uintval = 0;
     gdouble dval = 1.0;
     gboolean boolval = FALSE;
@@ -436,7 +438,7 @@ matrix_readdata(void* data,
     }
     else if (0 == strncmp(id, "GRTS", 4)) {
         // string
-        gchar* locdata = matrix_readstring(fp, NULL);
+        gchar *locdata = matrix_readstring(fp, NULL);
         if (data != NULL) {
           data = locdata;
         }
@@ -455,13 +457,13 @@ matrix_readdata(void* data,
 /** Scans OMICRON MATRIX parameterfiles
  */
 static guint32
-matrix_scanparamfile(const guchar** infile,
-                     GwyContainer* container,
-                     GwyContainer* meta,
-                     MatrixData* matrixdata)
+matrix_scanparamfile(const guchar **infile,
+                     GwyContainer *container,
+                     GwyContainer *meta,
+                     MatrixData *matrixdata)
 {
-    const guchar* fp = NULL;
-    gchar* ident = NULL;
+    const guchar *fp = NULL;
+    gchar *ident = NULL;
     gint32 len;
 
     if (matrixdata != NULL && (matrixdata->state == 1 ||
@@ -506,10 +508,10 @@ matrix_scanparamfile(const guchar** infile,
 
     if (0 == strncmp(ident, "ATEM", 4)) {
         // Data at beginning of parameter file
-        gchar* programmname = NULL;
-        gchar* version = NULL;
-        gchar* profil = NULL;
-        gchar* user = NULL;
+        gchar *programmname = NULL;
+        gchar *version = NULL;
+        gchar *profil = NULL;
+        gchar *user = NULL;
 
         // program
         programmname = matrix_readstring(&fp, NULL);
@@ -536,7 +538,7 @@ matrix_scanparamfile(const guchar** infile,
         fp += 4;
         for (i=0; i<7; i++) {
             // read 7 strings
-            gchar* s1 = NULL;
+            gchar *s1 = NULL;
             gchar key[30];
             g_snprintf(key, sizeof(key), "EXPD: s%d", i);
             s1 = matrix_readstring(&fp, NULL);
@@ -565,7 +567,7 @@ matrix_scanparamfile(const guchar** infile,
         guint32 i = 0;
         for (i = 0; i<3; i++) {
             // read strings
-            gchar* s1 = NULL;
+            gchar *s1 = NULL;
             gchar key[30];
             g_snprintf(key, sizeof(key), "GENL: s%d", i);
             s1 = matrix_readstring(&fp, NULL);
@@ -580,9 +582,9 @@ matrix_scanparamfile(const guchar** infile,
         guint32 i = 0;
         for (i=0; i<anz; i++) {
             /* Instance and Elements are following */
-            gchar* s1 = NULL;
-            gchar* s2 = NULL;
-            gchar* s3 = NULL;
+            gchar *s1 = NULL;
+            gchar *s2 = NULL;
+            gchar *s3 = NULL;
             gchar key[100];
             guint32 count;
 
@@ -595,8 +597,8 @@ matrix_scanparamfile(const guchar** infile,
             /* Number of following properties to instance */
             count = gwy_get_guint32_le(&fp);
             while ( count > 0) {
-                gchar* t1 = NULL;
-                gchar* t2 = NULL;
+                gchar *t1 = NULL;
+                gchar *t2 = NULL;
                 gchar key2[100];
 
                 t1 = matrix_readstring(&fp, NULL);
@@ -630,9 +632,9 @@ matrix_scanparamfile(const guchar** infile,
         // configuration of experiment
         // altered values are recorded in PMOD
         // the most important parts are in XYScanner
-        gchar* inst = NULL;
-        gchar* prop = NULL;
-        gchar* unit = NULL;
+        gchar *inst = NULL;
+        gchar *prop = NULL;
+        gchar *unit = NULL;
         guint32 a, charlen, restype;
         gdouble doubleval;
         guint32 uint32val;
@@ -825,9 +827,9 @@ matrix_scanparamfile(const guchar** infile,
         // modified parameter during scanning
         // Changed configuration of APEE
         // parametername, unit, value
-        gchar* inst = NULL;
-        gchar* prop = NULL;
-        gchar* unit = NULL;
+        gchar *inst = NULL;
+        gchar *prop = NULL;
+        gchar *unit = NULL;
         guint32 restype, uint32val;
         gdouble doubleval;
         gchar val[30];
@@ -1006,7 +1008,7 @@ matrix_scanparamfile(const guchar** infile,
     }
     else if ( 0 == strncmp(ident, "KRAM", 4)) {
         // Calibration of system
-        gchar* cal = NULL;
+        gchar *cal = NULL;
         cal = matrix_readstring(&fp, NULL);
         gwy_container_set_string_by_name(meta,
                                          "MARK: Calibration", (guchar*)cal);
@@ -1021,8 +1023,8 @@ matrix_scanparamfile(const guchar** infile,
 
     }
     else if (0 == strncmp(ident, "FERB", 4)) {
-        gchar* filename = NULL;
-        const gchar* savedname = NULL;
+        gchar *filename = NULL;
+        const gchar *savedname = NULL;
         // Filename of images
         fp += 4;
         filename = matrix_readstring(&fp, NULL);
@@ -1051,8 +1053,8 @@ matrix_scanparamfile(const guchar** infile,
         // description and internal number of captured channels
         // has to be linkend to the physical devices
         // given in XFER to get the scaling
-        gchar* s1 = NULL;
-        gchar* s2 = NULL;
+        gchar *s1 = NULL;
+        gchar *s2 = NULL;
         guint32 a, number, i;
         // No timestamp, advance 8B
         fp += 8;
@@ -1068,8 +1070,8 @@ matrix_scanparamfile(const guchar** infile,
         // Number of channels
         number = gwy_get_guint32_le(&fp);
         for (i=0; i<number; i++) {
-            gchar* name = NULL;
-            gchar* unit = NULL;
+            gchar *name = NULL;
+            gchar *unit = NULL;
             gchar key[30];
             fp += 4;
             a = gwy_get_guint32_le(&fp);
@@ -1102,20 +1104,20 @@ matrix_scanparamfile(const guchar** infile,
         //gdouble value, factor, offset;
         guint32 i, a;
         while (fp - *infile < len) {
-            gchar* name = NULL;
-            gchar* unit = NULL;
+            gchar *name = NULL;
+            gchar *unit = NULL;
             gchar key[30];
             fp += 4;
             number = gwy_get_guint32_le(&fp);
             name = matrix_readstring(&fp, NULL);
             g_snprintf(key, sizeof(key), "/channels/%u/tff", number);
-            // set string by name requires gchar* key
+            // set string by name requires gchar *key
             gwy_container_set_string_by_name(container,
                                              g_strdup(key), (guchar*)g_strdup(name));
             unit = matrix_readstring(&fp, NULL);
             a = gwy_get_guint32_le(&fp);
             for (i=0; i<a; i++) {
-                gchar* prop = NULL;
+                gchar *prop = NULL;
                 prop = matrix_readstring(&fp, NULL);
                 g_snprintf(key, sizeof(key), "/channels/%u/%s", number, prop);
                 matrix_readdata_to_container(&fp, g_strdup(key), NULL,
@@ -1145,8 +1147,8 @@ matrix_foreach(gpointer key,
                gpointer value, gpointer data)
 {
   const gchar*  sval = NULL;
-  ZScaling* zscale = NULL;
-  gchar** split = NULL;
+  ZScaling *zscale = NULL;
+  gchar **split = NULL;
 
   zscale = (ZScaling*)data;
   if (G_VALUE_HOLDS(value, G_TYPE_STRING)) {
@@ -1167,13 +1169,13 @@ matrix_foreach(gpointer key,
   * reads an OMICRON data/image file
   */
 static guint32
-matrix_scanimagefile(const guchar** fp,
-                     GwyContainer* container,
-                     GwyContainer* meta,
-                     MatrixData* matrixdata,
+matrix_scanimagefile(const guchar **fp,
+                     GwyContainer *container,
+                     GwyContainer *meta,
+                     MatrixData *matrixdata,
                      gboolean useparamfile)
 {
-    gchar* ident;
+    gchar *ident;
     guint32 len;
 
     ident = g_strndup((gchar*)*fp, 4);
@@ -1193,11 +1195,11 @@ matrix_scanimagefile(const guchar** fp,
         gchar times[40];
         guint64 date = gwy_get_guint64_le(fp);
         time_t timestamp = date;
-        struct tm* sdate = localtime(&timestamp);
+        struct tm *sdate = localtime(&timestamp);
         strftime(times, sizeof(times), "%H:%M:%S %d.%m.%Y", sdate);
         //g_snprintf(times, sizeof(times), "%i", date);
-        gwy_container_set_string_by_name(meta,
-                        "! Image ended at", (guchar*)g_strdup(times));
+        gwy_container_set_string_by_name(meta, "! Image ended at",
+                                         (guchar*)g_strdup(times));
         len += 8;
         *fp += 4;
         while (0 != matrix_scanimagefile(fp,
@@ -1206,7 +1208,8 @@ matrix_scanimagefile(const guchar** fp,
                                          matrixdata,
                                          useparamfile))
             ; // scans imagefile
-    } else if (0 == strncmp(ident, "CSED", 4)) {
+    }
+    else if (0 == strncmp(ident, "CSED", 4)) {
         // headerdata
         // the next 20 B are unknown
         *fp+= 20;
@@ -1216,25 +1219,26 @@ matrix_scanimagefile(const guchar** fp,
         matrixdata->proc_available_no = gwy_get_guint32_le(fp);
         *fp += len -20-4-4;
 
-    } else if (0 == strncmp(ident, "ATAD", 4)) {
+    }
+    else if (0 == strncmp(ident, "ATAD", 4)) {
         // Image data
         // GwyDataField for TraceUp, ReTraceUp, TraceDown, ReTraceDown
-        GwyDataField* dfield_tup = NULL;
-        GwyDataField* dfield_retup = NULL;
-        GwyDataField* dfield_tdown = NULL;
-        GwyDataField* dfield_retdown = NULL;
+        GwyDataField *dfield_tup = NULL;
+        GwyDataField *dfield_retup = NULL;
+        GwyDataField *dfield_tdown = NULL;
+        GwyDataField *dfield_retdown = NULL;
         // as well as pointer
-        gdouble* data_tup = NULL;
-        gdouble* data_retup = NULL;
-        gdouble* data_tdown = NULL;
-        gdouble* data_retdown = NULL;
+        gdouble *data_tup = NULL;
+        gdouble *data_retup = NULL;
+        gdouble *data_tdown = NULL;
+        gdouble *data_retdown = NULL;
         // and indices
         guint32 ind_tup, ind_retup, ind_tdown, ind_retdown;
         guint32 xres, yres, cntl, cntp, n, avail;
         G_GNUC_UNUSED guint32 maxint;
         gdouble width, height;
-        GwySIUnit* unit;
-        const gchar* sunit;
+        GwySIUnit *unit;
+        const gchar *sunit;
         gdouble fac = 1.0;
         ZScaling zscale;
         gchar key[40];
@@ -1248,7 +1252,8 @@ matrix_scanimagefile(const guchar** fp,
             yres = matrixdata->ypoints;
             width = matrixdata->width/(gdouble)matrixdata->zoom;
             height = matrixdata->height/(gdouble)matrixdata->zoom;
-        } else {
+        }
+        else {
             // guess sizes
             xres = (guint32)floor(sqrt(matrixdata->proc_intended_no/4.));
             yres = (guint32)floor(sqrt(matrixdata->proc_intended_no/4.));
@@ -1270,7 +1275,8 @@ matrix_scanimagefile(const guchar** fp,
             n = 0;
             avail = matrixdata->proc_available_no;
 
-        } else if (matrixdata->gridmode == 1) {
+        }
+        else if (matrixdata->gridmode == 1) {
             // Constraint Line
             dfield_tup = gwy_data_field_new(xres, yres,
                                             width, height, FALSE);
@@ -1285,7 +1291,8 @@ matrix_scanimagefile(const guchar** fp,
             n = 0;
             avail = matrixdata->proc_available_no;
 
-        } else {
+        }
+        else {
             // Constraint None
             dfield_tup = gwy_data_field_new(xres, yres,
                                             width, height, FALSE);
@@ -1308,18 +1315,19 @@ matrix_scanimagefile(const guchar** fp,
             avail = matrixdata->proc_available_no;
 
         }
+
         if (useparamfile) {
             // Get correct scaling factor
             zscale.channelname = matrixdata->channelname;
             // look for correct Z/I/Df/.... scaling
             gwy_container_foreach(container, "/channels/",
-                                    matrix_foreach, &zscale);
+                                  matrix_foreach, &zscale);
             gwy_debug("omiconmatrix::matrix_loadimagefile:"
                       " Channel found, getting the data");
             g_snprintf(key, sizeof(key), "/channels/%u/", zscale.cnumber);
-            if (gwy_strequal((gchar*)gwy_container_get_string_by_name(
-                           container, sstrconcat(key, "tff", NULL)),
-               TFF_LINEAR1D_NAME)) {
+            if (gwy_strequal((gchar*)gwy_container_get_string_by_name(container,
+                                                                      sstrconcat(key, "tff", NULL)),
+                             TFF_LINEAR1D_NAME)) {
               // TFF_LINEAR1D is used
               zscale.tfftype = TFF_LINEAR1D;
               zscale.factor_1 = gwy_container_get_double_by_name(container,
@@ -1330,7 +1338,7 @@ matrix_scanimagefile(const guchar** fp,
             else if (gwy_strequal((gchar*)
                                   gwy_container_get_string_by_name(container,
                                                                    sstrconcat(key, "tff", NULL)),
-                     TFF_MULTILINEAR1D_NAME)) {
+                                  TFF_MULTILINEAR1D_NAME)) {
               // TFF_MULTILINEAR1D is used
               zscale.tfftype = TFF_MULTILINEAR1D;
               zscale.neutralfactor_2
@@ -1357,7 +1365,7 @@ matrix_scanimagefile(const guchar** fp,
               zscale.offset_1 = 0.0;
             }
             sunit = (gchar*)gwy_container_get_string_by_name(container,
-                         sstrconcat(key, "unit", NULL));
+                                                             sstrconcat(key, "unit", NULL));
 #ifdef OSNAVERSION
             if (gwy_strequal(zscale.channelname, "Df")) {
               fac = -1.0/5.464;
@@ -1374,9 +1382,8 @@ matrix_scanimagefile(const guchar** fp,
         }
 
 
-        gwy_debug(sstrconcat("omicronmatrix::matrix_loadimagefile ",
-                              msg, NULL));
-        if (matrixdata->gridmode == 2 ) {
+        gwy_debug("omicronmatrix::matrix_loadimagefile %s", msg);
+        if (matrixdata->gridmode == 2) {
             // Constraint Point
             // parse data, data is encoded as Integer, 32Bit
             for (cntl = 0; cntl<yres; cntl++) {
@@ -1452,141 +1459,158 @@ matrix_scanimagefile(const guchar** fp,
         gwy_debug("omicronmatrix::matrix_scanimagefile:"
                   " Data successfully read");
 
-        if (matrixdata->gridmode == 2 ) {
-          //Constraint Point, only TraceUp
-          unit = gwy_si_unit_new("m");
-          gwy_data_field_set_si_unit_xy(dfield_tup, unit);
-          g_object_unref(unit);
-          unit = gwy_si_unit_new(sunit);
-          gwy_data_field_set_si_unit_z(dfield_tup, unit);
-          g_object_unref(unit);
+        if (matrixdata->gridmode == 2) {
+            GwyContainer *tmpmeta;
 
-          g_snprintf(msg, sizeof(msg), "%u-%u %s TraceUp%s",
-                     matrixdata->session, matrixdata->trace,
-                     matrixdata->channelname, inverted);
-          gwy_container_set_object_by_name(container, "/0/data",
-                                           dfield_tup);
-          g_object_unref(dfield_tup);
-          gwy_container_set_string_by_name(container,"/0/data/title",
-                                    (guchar*)g_strdup(msg));
-          gwy_container_set_object_by_name(container, "/0/meta", meta);
-          //g_object_unref(meta);
-          gwy_debug("omicronmastrix::matrix_scanimagefile:"
-                    " gridmode=2, Data saved to container");
+            //Constraint Point, only TraceUp
+            unit = gwy_si_unit_new("m");
+            gwy_data_field_set_si_unit_xy(dfield_tup, unit);
+            g_object_unref(unit);
+            unit = gwy_si_unit_new(sunit);
+            gwy_data_field_set_si_unit_z(dfield_tup, unit);
+            g_object_unref(unit);
+
+            g_snprintf(msg, sizeof(msg), "%u-%u %s TraceUp%s",
+                       matrixdata->session, matrixdata->trace,
+                       matrixdata->channelname, inverted);
+            gwy_container_set_object_by_name(container, "/0/data",
+                                             dfield_tup);
+            g_object_unref(dfield_tup);
+            gwy_container_set_string_by_name(container,"/0/data/title",
+                                             (guchar*)g_strdup(msg));
+            tmpmeta = gwy_container_duplicate(meta);
+            gwy_container_set_object_by_name(container, "/0/meta", tmpmeta);
+            g_object_unref(tmpmeta);
+            gwy_debug("omicronmastrix::matrix_scanimagefile:"
+                      " gridmode=2, Data saved to container");
 
         }
         else if (matrixdata->gridmode == 1) {
-          unit = gwy_si_unit_new("m");
-          gwy_data_field_set_si_unit_xy(dfield_tup, unit);
-          g_object_unref(unit);
-          unit = gwy_si_unit_new(sunit);
-          gwy_data_field_set_si_unit_z(dfield_tup, unit);
-          g_object_unref(unit);
+            GwyContainer *tmpmeta;
 
-          unit = gwy_si_unit_new("m");
-          gwy_data_field_set_si_unit_xy(dfield_retup, unit);
-          g_object_unref(unit);
-          unit = gwy_si_unit_new(sunit);
-          gwy_data_field_set_si_unit_z(dfield_retup, unit);
-          g_object_unref(unit);
+            unit = gwy_si_unit_new("m");
+            gwy_data_field_set_si_unit_xy(dfield_tup, unit);
+            g_object_unref(unit);
+            unit = gwy_si_unit_new(sunit);
+            gwy_data_field_set_si_unit_z(dfield_tup, unit);
+            g_object_unref(unit);
 
-          g_snprintf(msg, sizeof(msg), "%u-%u %s TraceUp %s",
-                     matrixdata->session, matrixdata->trace,
-                     matrixdata->channelname, inverted);
-          gwy_container_set_object_by_name(container, "/0/data",
-                                           dfield_tup);
-          g_object_unref(dfield_tup);
-          gwy_container_set_string_by_name(container, "/0/data/title",
-                                    (guchar*)g_strdup(msg));
-          gwy_container_set_object_by_name(container, "/0/meta", meta);
+            unit = gwy_si_unit_new("m");
+            gwy_data_field_set_si_unit_xy(dfield_retup, unit);
+            g_object_unref(unit);
+            unit = gwy_si_unit_new(sunit);
+            gwy_data_field_set_si_unit_z(dfield_retup, unit);
+            g_object_unref(unit);
 
-          g_snprintf(msg, sizeof(msg), "%u-%u %s RetraceUp %s",
-                     matrixdata->session, matrixdata->trace,
-                     matrixdata->channelname, inverted);
-          gwy_container_set_object_by_name(container, "/1/data",
-                                           dfield_retup);
-          g_object_unref(dfield_retup);
-          gwy_container_set_string_by_name(container, "/1/data/title",
-                                    (guchar*)g_strdup(msg));
-          gwy_container_set_object_by_name(container, "/1/meta", meta);
-          //g_object_unref(meta);
+            g_snprintf(msg, sizeof(msg), "%u-%u %s TraceUp %s",
+                       matrixdata->session, matrixdata->trace,
+                       matrixdata->channelname, inverted);
+            gwy_container_set_object_by_name(container, "/0/data",
+                                             dfield_tup);
+            g_object_unref(dfield_tup);
+            gwy_container_set_string_by_name(container, "/0/data/title",
+                                             (guchar*)g_strdup(msg));
+            tmpmeta = gwy_container_duplicate(meta);
+            gwy_container_set_object_by_name(container, "/0/meta", tmpmeta);
+            g_object_unref(tmpmeta);
 
-          gwy_debug("omicronmastrix::matrix_scanimagefile:"
-                    " gridmode=1, Data saved to container");
+            g_snprintf(msg, sizeof(msg), "%u-%u %s RetraceUp %s",
+                       matrixdata->session, matrixdata->trace,
+                       matrixdata->channelname, inverted);
+            gwy_container_set_object_by_name(container, "/1/data",
+                                             dfield_retup);
+            g_object_unref(dfield_retup);
+            gwy_container_set_string_by_name(container, "/1/data/title",
+                                             (guchar*)g_strdup(msg));
+            tmpmeta = gwy_container_duplicate(meta);
+            gwy_container_set_object_by_name(container, "/1/meta", tmpmeta);
+            g_object_unref(tmpmeta);
+
+            gwy_debug("omicronmastrix::matrix_scanimagefile:"
+                      " gridmode=1, Data saved to container");
 
         } else {
-          // Constraint None or unknown
-          unit = gwy_si_unit_new("m");
-          gwy_data_field_set_si_unit_xy(dfield_tup, unit);
-          g_object_unref(unit);
-          unit = gwy_si_unit_new(sunit);
-          gwy_data_field_set_si_unit_z(dfield_tup, unit);
-          g_object_unref(unit);
+            GwyContainer *tmpmeta;
 
-          unit = gwy_si_unit_new("m");
-          gwy_data_field_set_si_unit_xy(dfield_retup, unit);
-          g_object_unref(unit);
-          unit = gwy_si_unit_new(sunit);
-          gwy_data_field_set_si_unit_z(dfield_retup, unit);
-          g_object_unref(unit);
+            // Constraint None or unknown
+            unit = gwy_si_unit_new("m");
+            gwy_data_field_set_si_unit_xy(dfield_tup, unit);
+            g_object_unref(unit);
+            unit = gwy_si_unit_new(sunit);
+            gwy_data_field_set_si_unit_z(dfield_tup, unit);
+            g_object_unref(unit);
 
-          unit = gwy_si_unit_new("m");
-          gwy_data_field_set_si_unit_xy(dfield_tdown, unit);
-          g_object_unref(unit);
-          unit = gwy_si_unit_new(sunit);
-          gwy_data_field_set_si_unit_z(dfield_tdown, unit);
-          g_object_unref(unit);
+            unit = gwy_si_unit_new("m");
+            gwy_data_field_set_si_unit_xy(dfield_retup, unit);
+            g_object_unref(unit);
+            unit = gwy_si_unit_new(sunit);
+            gwy_data_field_set_si_unit_z(dfield_retup, unit);
+            g_object_unref(unit);
 
-          unit = gwy_si_unit_new("m");
-          gwy_data_field_set_si_unit_xy(dfield_retdown, unit);
-          g_object_unref(unit);
-          unit = gwy_si_unit_new(sunit);
-          gwy_data_field_set_si_unit_z(dfield_retdown, unit);
-          g_object_unref(unit);
+            unit = gwy_si_unit_new("m");
+            gwy_data_field_set_si_unit_xy(dfield_tdown, unit);
+            g_object_unref(unit);
+            unit = gwy_si_unit_new(sunit);
+            gwy_data_field_set_si_unit_z(dfield_tdown, unit);
+            g_object_unref(unit);
 
-          g_snprintf(msg, sizeof(msg), "%u-%u %s TraceUp %s",
-                     matrixdata->session, matrixdata->trace,
-                     matrixdata->channelname, inverted);
-          gwy_container_set_object_by_name(container, "/0/data",
-                                           dfield_tup);
-          g_object_unref(dfield_tup);
-          gwy_container_set_string_by_name(container, "/0/data/title",
-                                    (guchar*)g_strdup(msg));
-          gwy_container_set_object_by_name(container, "/0/meta", meta);
+            unit = gwy_si_unit_new("m");
+            gwy_data_field_set_si_unit_xy(dfield_retdown, unit);
+            g_object_unref(unit);
+            unit = gwy_si_unit_new(sunit);
+            gwy_data_field_set_si_unit_z(dfield_retdown, unit);
+            g_object_unref(unit);
 
-          g_snprintf(msg, sizeof(msg), "%u-%u %s RetraceUp %s",
-                     matrixdata->session, matrixdata->trace,
-                     matrixdata->channelname, inverted);
-          gwy_container_set_object_by_name(container, "/1/data",
-                                           dfield_retup);
-          g_object_unref(dfield_retup);
-          gwy_container_set_string_by_name(container, "/1/data/title",
-                                    (guchar*)g_strdup(msg));
-          gwy_container_set_object_by_name(container, "/1/meta", meta);
+            g_snprintf(msg, sizeof(msg), "%u-%u %s TraceUp %s",
+                       matrixdata->session, matrixdata->trace,
+                       matrixdata->channelname, inverted);
+            gwy_container_set_object_by_name(container, "/0/data",
+                                             dfield_tup);
+            g_object_unref(dfield_tup);
+            gwy_container_set_string_by_name(container, "/0/data/title",
+                                             (guchar*)g_strdup(msg));
+            tmpmeta = gwy_container_duplicate(meta);
+            gwy_container_set_object_by_name(container, "/0/meta", tmpmeta);
+            g_object_unref(tmpmeta);
 
-          g_snprintf(msg, sizeof(msg), "%u-%u %s TraceDown %s",
-                     matrixdata->session, matrixdata->trace,
-                     matrixdata->channelname, inverted);
-          gwy_container_set_object_by_name(container, "/2/data",
-                                           dfield_tdown);
-          g_object_unref(dfield_tdown);
-          gwy_container_set_string_by_name(container, "/2/data/title",
-                                    (guchar*)g_strdup(msg));
-          gwy_container_set_object_by_name(container, "/2/meta", meta);
+            g_snprintf(msg, sizeof(msg), "%u-%u %s RetraceUp %s",
+                       matrixdata->session, matrixdata->trace,
+                       matrixdata->channelname, inverted);
+            gwy_container_set_object_by_name(container, "/1/data",
+                                             dfield_retup);
+            g_object_unref(dfield_retup);
+            gwy_container_set_string_by_name(container, "/1/data/title",
+                                             (guchar*)g_strdup(msg));
+            tmpmeta = gwy_container_duplicate(meta);
+            gwy_container_set_object_by_name(container, "/1/meta", tmpmeta);
+            g_object_unref(tmpmeta);
 
-          g_snprintf(msg, sizeof(msg), "%u-%u %s RetraceDown %s",
-                     matrixdata->session, matrixdata->trace,
-                     matrixdata->channelname, inverted);
-          gwy_container_set_object_by_name(container, "/3/data",
-                                           dfield_retdown);
-          g_object_unref(dfield_retdown);
-          gwy_container_set_string_by_name(container, "/3/data/title",
-                                    (guchar*)g_strdup(msg));
-          gwy_container_set_object_by_name(container, "/3/meta", meta);
-          //g_object_unref(meta);
-          gwy_debug("omicronmastrix::matrix_scanimagefile:"
-                    " Data saved to container");
-      }
+            g_snprintf(msg, sizeof(msg), "%u-%u %s TraceDown %s",
+                       matrixdata->session, matrixdata->trace,
+                       matrixdata->channelname, inverted);
+            gwy_container_set_object_by_name(container, "/2/data",
+                                             dfield_tdown);
+            g_object_unref(dfield_tdown);
+            gwy_container_set_string_by_name(container, "/2/data/title",
+                                             (guchar*)g_strdup(msg));
+            tmpmeta = gwy_container_duplicate(meta);
+            gwy_container_set_object_by_name(container, "/2/meta", tmpmeta);
+            g_object_unref(tmpmeta);
+
+            g_snprintf(msg, sizeof(msg), "%u-%u %s RetraceDown %s",
+                       matrixdata->session, matrixdata->trace,
+                       matrixdata->channelname, inverted);
+            gwy_container_set_object_by_name(container, "/3/data",
+                                             dfield_retdown);
+            g_object_unref(dfield_retdown);
+            gwy_container_set_string_by_name(container, "/3/data/title",
+                                             (guchar*)g_strdup(msg));
+            tmpmeta = gwy_container_duplicate(meta);
+            gwy_container_set_object_by_name(container, "/3/meta", tmpmeta);
+            g_object_unref(tmpmeta);
+            gwy_debug("omicronmastrix::matrix_scanimagefile:"
+                      " Data saved to container");
+        }
     }
     else {
         // Block identifier is unknown, perhaps the fileend is reached
@@ -1604,26 +1628,26 @@ matrix_scanimagefile(const guchar** fp,
  *  corresponding parameter file is needed.
  */
 static GwyContainer*
-matrix_load(const gchar* filename,
+matrix_load(const gchar *filename,
             G_GNUC_UNUSED GwyRunType mode,
-            GError** error)
+            GError **error)
 {
-    GwyContainer* container = NULL;
-    GwyContainer* meta = NULL;
-    guchar* imgbuffer = NULL;
-    guchar* parbuffer = NULL;
-    const guchar* fp = NULL;
-    GError* err = NULL;
+    GwyContainer *container = NULL;
+    GwyContainer *meta = NULL;
+    guchar *imgbuffer = NULL;
+    guchar *parbuffer = NULL;
+    const guchar *fp = NULL;
+    GError *err = NULL;
     gsize imgsize, parsize;
     gboolean useparamfile = TRUE;
     gboolean wrongscaling = FALSE;
     MatrixData matrixdata;
-    gchar** fsplit = NULL;
-    gchar** ifsplit1 = NULL;
-    gchar** ifsplit2 = NULL;
-    gchar* lastpart = NULL;
-    gchar* paramfilename = NULL;
-    const gchar* delimiter = ".";
+    gchar **fsplit = NULL;
+    gchar **ifsplit1 = NULL;
+    gchar **ifsplit2 = NULL;
+    gchar *lastpart = NULL;
+    gchar *paramfilename = NULL;
+    const gchar *delimiter = ".";
     gchar newdelimiter = '_';
 
     // Some default values
@@ -1692,9 +1716,10 @@ matrix_load(const gchar* filename,
       matrixdata.session = (guint32)g_strtod(*ifsplit1, NULL);
       matrixdata.trace   = (guint32)g_strtod(*(ifsplit1+1), NULL);
       matrixdata.channelname = g_strdup(*(ifsplit1+2));
-      gwy_debug(sstrconcat("omicronmatrix::matrix_load channel: ",
-              matrixdata.channelname,NULL));
-    } else {
+      gwy_debug("omicronmatrix::matrix_load channel: %s",
+                matrixdata.channelname);
+    }
+    else {
       g_warning("omicronmatrix::matrix_load:"
                 " cannot parse image filename");
       matrixdata.session = 0;
