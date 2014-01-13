@@ -210,6 +210,7 @@ typedef struct {
     guint numimages;
     guint numbricks;
     GwyContainer *data;
+    const gchar *filename;
 } WIPFile;
 
 typedef struct {
@@ -280,7 +281,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports WItec Project data files."),
     "Daniil Bratashov <dn2010@gmail.com>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov",
     "2010",
 };
@@ -316,7 +317,8 @@ wip_detect(const GwyFileDetectInfo *fileinfo,
     return score;
 }
 
-static WIPTag *wip_read_tag(guchar **pos, gsize *start, gsize *end)
+static WIPTag*
+wip_read_tag(guchar **pos, gsize *start, gsize *end)
 {
     WIPTag *tag;
     const guchar *p;
@@ -352,14 +354,16 @@ static WIPTag *wip_read_tag(guchar **pos, gsize *start, gsize *end)
     return tag;
 }
 
-static void wip_free_tag(WIPTag *tag)
+static void
+wip_free_tag(WIPTag *tag)
 {
     g_free((gpointer)tag->name);
     g_free(tag);
 }
 
-static void wip_read_all_tags (const guchar *buffer, gsize start,
-                        gsize end, GNode *tagtree, gint n)
+static void
+wip_read_all_tags(const guchar *buffer, gsize start,
+                  gsize end, GNode *tagtree, gint n)
 {
     guchar *p;
     gsize cur;
@@ -382,8 +386,9 @@ static void wip_read_all_tags (const guchar *buffer, gsize start,
     }
 }
 
-static gboolean wip_free_leave (GNode *node,
-                                G_GNUC_UNUSED gpointer data)
+static gboolean
+wip_free_leave(GNode *node,
+               G_GNUC_UNUSED gpointer data)
 {
     wip_free_tag((WIPTag *)node->data);
     node->data = NULL;
@@ -391,7 +396,8 @@ static gboolean wip_free_leave (GNode *node,
     return FALSE;
 }
 
-static gboolean wip_read_graph_tags(GNode *node, gpointer header)
+static gboolean
+wip_read_graph_tags(GNode *node, gpointer header)
 {
     WIPTag *tag;
     WIPGraph *graphheader;
@@ -430,7 +436,8 @@ static gboolean wip_read_graph_tags(GNode *node, gpointer header)
     return FALSE;
 }
 
-static gboolean wip_read_image_tags(GNode *node, gpointer header)
+static gboolean
+wip_read_image_tags(GNode *node, gpointer header)
 {
     WIPTag *tag;
     WIPImage *imageheader;
@@ -463,8 +470,9 @@ static gboolean wip_read_image_tags(GNode *node, gpointer header)
     return FALSE;
 }
 
-static gboolean wip_read_sp_transform_tags(GNode *node,
-                                           gpointer transform)
+static gboolean
+wip_read_sp_transform_tags(GNode *node,
+                           gpointer transform)
 {
     WIPTag *tag;
     WIPSpectralTransform *sp_transform;
@@ -509,7 +517,8 @@ static gboolean wip_read_sp_transform_tags(GNode *node,
     return FALSE;
 }
 
-static gboolean wip_read_space_tr_tag(GNode *node, gpointer transform)
+static gboolean
+wip_read_space_tr_tag(GNode *node, gpointer transform)
 {
     WIPTag *tag;
     WIPSpaceTransform *sp_transform;
@@ -536,7 +545,8 @@ static gboolean wip_read_space_tr_tag(GNode *node, gpointer transform)
     return FALSE;
 }
 
-static gboolean wip_read_axis_tags(GNode *node, gpointer axis)
+static gboolean
+wip_read_axis_tags(GNode *node, gpointer axis)
 {
     WIPTag *tag;
     WIPAxis *tmp_axis;
@@ -559,7 +569,8 @@ static gboolean wip_read_axis_tags(GNode *node, gpointer axis)
     return FALSE;
 }
 
-static gboolean wip_read_bitmap_tags(GNode *node, gpointer data)
+static gboolean
+wip_read_bitmap_tags(GNode *node, gpointer data)
 {
     WIPTag *tag;
     WIPBitmap *bitmap;
@@ -580,7 +591,8 @@ static gboolean wip_read_bitmap_tags(GNode *node, gpointer data)
     return FALSE;
 }
 
-static gboolean wip_find_by_id(GNode *node, gpointer idnode)
+static gboolean
+wip_find_by_id(GNode *node, gpointer idnode)
 {
     WIPTag *tag;
     WIPIdNode *idnode_tmp;
@@ -603,7 +615,8 @@ static gboolean wip_find_by_id(GNode *node, gpointer idnode)
     return FALSE;
 }
 
-static gboolean wip_read_caption(GNode *node, gpointer caption)
+static gboolean
+wip_read_caption(GNode *node, gpointer caption)
 {
     gchar *str;
     gint str_len;
@@ -623,10 +636,11 @@ static gboolean wip_read_caption(GNode *node, gpointer caption)
     return FALSE;
 }
 
-static GwyDataField * wip_read_bmp(const guchar *bmpdata,
-                                   gsize datasize,
-                                   gdouble xscale, gdouble yscale,
-                                   gint power10xy)
+static GwyDataField*
+wip_read_bmp(const guchar *bmpdata,
+             gsize datasize,
+             gdouble xscale, gdouble yscale,
+             gint power10xy)
 {
     const guchar *p;
     gint tmp;
@@ -715,8 +729,9 @@ static GwyDataField * wip_read_bmp(const guchar *bmpdata,
  * spectral transform from here:
  * http://www.horiba.com/us/en/scientific/products/optics-tutorial/wavelength-pixel-position/
  */
-static gdouble wip_pixel_to_lambda(gint i,
-                                   WIPSpectralTransform *transform)
+static gdouble
+wip_pixel_to_lambda(gint i,
+                    WIPSpectralTransform *transform)
 {
     gdouble lambda, alpha, betac, hc, lh, hi, betah, betai;
 
@@ -742,7 +757,8 @@ static gdouble wip_pixel_to_lambda(gint i,
     return lambda;
 }
 
-static GwyGraphModel * wip_read_graph(GNode *node)
+static GwyGraphModel*
+wip_read_graph(GNode *node)
 {
     WIPGraph *header;
     WIPSpectralTransform *xtransform;
@@ -868,7 +884,8 @@ static GwyGraphModel * wip_read_graph(GNode *node)
     return gmodel;
 }
 
-static GwyBrick * wip_read_graph_image(GNode *node)
+static GwyBrick*
+wip_read_graph_image(GNode *node)
 {
     WIPGraph *header;
     WIPSpectralTransform *xtransform;
@@ -1133,7 +1150,8 @@ static GwyBrick * wip_read_graph_image(GNode *node)
     return brick;
 }
 
-static void wip_flip_xy(GwyDataField *source, GwyDataField *dest)
+static void
+wip_flip_xy(GwyDataField *source, GwyDataField *dest)
 {
     gint xres, yres, i, j;
     gdouble *dd;
@@ -1155,7 +1173,8 @@ static void wip_flip_xy(GwyDataField *source, GwyDataField *dest)
     gwy_data_field_set_yreal(dest, gwy_data_field_get_xreal(source));
 }
 
-static GwyDataField * wip_read_image(GNode *node)
+static GwyDataField*
+wip_read_image(GNode *node)
 {
     WIPImage *header;
     WIPAxis *zaxis;
@@ -1323,7 +1342,8 @@ static GwyDataField * wip_read_image(GNode *node)
     return dfield;
 }
 
-static GwyDataField * wip_read_bitmap(GNode *node)
+static GwyDataField*
+wip_read_bitmap(GNode *node)
 {
     WIPBitmap *header;
     WIPSpaceTransform *xyaxis;
@@ -1392,7 +1412,8 @@ static GwyDataField * wip_read_bitmap(GNode *node)
     return dfield;
 }
 
-static gboolean wip_read_data(GNode *node, gpointer filedata)
+static gboolean
+wip_read_data(GNode *node, gpointer filedata)
 {
     WIPTag *tag;
     WIPFile *filecontent;
@@ -1501,6 +1522,11 @@ static gboolean wip_read_data(GNode *node, gpointer filedata)
 
             g_string_free(caption, TRUE);
             g_object_unref(image);
+
+            gwy_file_channel_import_log_add(filecontent->data,
+                                            filecontent->numimages,
+                                            "wipfile",
+                                            filecontent->filename);
         }
     }
 
@@ -1510,9 +1536,10 @@ static gboolean wip_read_data(GNode *node, gpointer filedata)
 }
 
 
-static GwyContainer* wip_load (const gchar *filename,
-                               G_GNUC_UNUSED GwyRunType mode,
-                               GError **error)
+static GwyContainer*
+wip_load(const gchar *filename,
+         G_GNUC_UNUSED GwyRunType mode,
+         GError **error)
 {
     guchar *buffer;
     gsize size, cur;
@@ -1550,6 +1577,7 @@ static GwyContainer* wip_load (const gchar *filename,
     filedata = g_new0(WIPFile, 1);
     filedata->numgraph = 0;
     filedata->data = data;
+    filedata->filename = filename;
 
     g_node_traverse(tagtree, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                     wip_read_data, (gpointer)filedata);

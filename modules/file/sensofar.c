@@ -201,7 +201,7 @@ static GwyModuleInfo module_info = {
     N_("Imports Sensofar PLu file format, "
        "version 2000 or newer."),
     "Jan Hořák <xhorak@gmail.com>, Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Jan Hořák",
     "2008",
 };
@@ -334,6 +334,7 @@ sensofar_load(const gchar *filename,
             g_object_unref(mfield);
         }
         gwy_app_channel_title_fall_back(container, 0);
+        gwy_file_channel_import_log_add(container, 0, "sensofar", filename);
         break;
 
         case MES_PERFIL:

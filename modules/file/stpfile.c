@@ -60,6 +60,7 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
 
@@ -139,7 +140,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Molecular Imaging STP data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5.1",
+    "0.5.2",
     "David Nečas (Yeti), Petr Klapetek, Chris Anderson",
     "2006",
 };
@@ -245,6 +246,8 @@ stpfile_load(const gchar *filename,
             g_object_unref(dfield);
             process_metadata(stpfile, i, container, container_key);
             g_free(container_key);
+
+            gwy_file_channel_import_log_add(container, i, "stpfile", filename);
         }
     }
 

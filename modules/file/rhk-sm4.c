@@ -380,7 +380,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports RHK Technology SM4 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -555,6 +555,9 @@ rhk_sm4_load(const gchar *filename,
             g_string_printf(key, "/%u/meta", imageid);
             gwy_container_set_object_by_name(container, key->str, meta);
             g_object_unref(meta);
+
+            gwy_file_channel_import_log_add(container, imageid, "rhk-sm4",
+                                            filename);
 
             imageid++;
         }

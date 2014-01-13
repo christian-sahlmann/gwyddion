@@ -56,6 +56,7 @@ static GwyContainer* ols_load        (const gchar *filename,
                                       GwyRunType mode,
                                       GError **error);
 static GwyContainer* ols_load_tiff   (const GwyTIFF *tiff,
+                                      const gchar *filename,
                                       GError **error);
 
 static GwyModuleInfo module_info = {
@@ -63,7 +64,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports OLS data files."),
     "Jan Hořák <xhorak@gmail.com>, Yeti <yeti@gwyddion.net>",
-    "0.10",
+    "0.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2008",
 };
@@ -125,14 +126,14 @@ ols_load(const gchar *filename,
     if (!tiff)
         return NULL;
 
-    container = ols_load_tiff(tiff, error);
+    container = ols_load_tiff(tiff, filename, error);
     gwy_tiff_free(tiff);
 
     return container;
 }
 
 static GwyContainer*
-ols_load_tiff(const GwyTIFF *tiff, GError **error)
+ols_load_tiff(const GwyTIFF *tiff, const gchar *filename, GError **error)
 {
     const gchar *colour_channels[] = { "Red", "Green", "Blue" };
     const gchar *colour_channel_gradients[] = {
@@ -260,6 +261,8 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
                                     (container, key->str,
                                      g_strdup(colour_channel_gradients[ch]));
             }
+
+            gwy_file_channel_import_log_add(container, id, "ols", filename);
 
             id++;
         }

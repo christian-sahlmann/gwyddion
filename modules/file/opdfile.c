@@ -188,7 +188,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Wyko OPD and ASC files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.7",
+    "0.8",
     "David Nečas (Yeti)",
     "2008",
 };
@@ -377,6 +377,8 @@ opd_load(const gchar *filename,
                             g_quark_to_string(gwy_app_get_data_key_for_id(j)));
         gwy_container_set_boolean_by_name(container, s, TRUE);
         g_free(s);
+
+        gwy_file_channel_import_log_add(container, j, "opdfile", filename);
 
         j++;
     }
@@ -826,6 +828,9 @@ opd_asc_load(const gchar *filename,
                                 g_quark_to_string(gwy_app_get_data_key_for_id(j)));
             gwy_container_set_boolean_by_name(container, s, TRUE);
             g_free(s);
+
+            gwy_file_channel_import_log_add(container, j, "opdfile-asc",
+                                            filename);
 
             j++;
             continue;

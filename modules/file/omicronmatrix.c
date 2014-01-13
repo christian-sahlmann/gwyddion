@@ -155,6 +155,7 @@ static guint32       matrix_scanparamfile        (const guchar **buffer,
                                                   GwyContainer *meta,
                                                   MatrixData *matrixdata);
 static guint32       matrix_scanimagefile        (const guchar **buffer,
+                                                  const gchar *filename,
                                                   GwyContainer *container,
                                                   GwyContainer *meta,
                                                   MatrixData *matrixdata,
@@ -1170,6 +1171,7 @@ matrix_foreach(gpointer key,
   */
 static guint32
 matrix_scanimagefile(const guchar **fp,
+                     const gchar *filename,
                      GwyContainer *container,
                      GwyContainer *meta,
                      MatrixData *matrixdata,
@@ -1203,6 +1205,7 @@ matrix_scanimagefile(const guchar **fp,
         len += 8;
         *fp += 4;
         while (0 != matrix_scanimagefile(fp,
+                                         filename,
                                          container,
                                          meta,
                                          matrixdata,
@@ -1481,6 +1484,8 @@ matrix_scanimagefile(const guchar **fp,
             tmpmeta = gwy_container_duplicate(meta);
             gwy_container_set_object_by_name(container, "/0/meta", tmpmeta);
             g_object_unref(tmpmeta);
+            gwy_file_channel_import_log_add(container, 0, "omicronmatrix",
+                                            filename);
             gwy_debug("omicronmastrix::matrix_scanimagefile:"
                       " gridmode=2, Data saved to container");
 
@@ -1513,6 +1518,8 @@ matrix_scanimagefile(const guchar **fp,
             tmpmeta = gwy_container_duplicate(meta);
             gwy_container_set_object_by_name(container, "/0/meta", tmpmeta);
             g_object_unref(tmpmeta);
+            gwy_file_channel_import_log_add(container, 0, "omicronmatrix",
+                                            filename);
 
             g_snprintf(msg, sizeof(msg), "%u-%u %s RetraceUp %s",
                        matrixdata->session, matrixdata->trace,
@@ -1525,6 +1532,8 @@ matrix_scanimagefile(const guchar **fp,
             tmpmeta = gwy_container_duplicate(meta);
             gwy_container_set_object_by_name(container, "/1/meta", tmpmeta);
             g_object_unref(tmpmeta);
+            gwy_file_channel_import_log_add(container, 1, "omicronmatrix",
+                                            filename);
 
             gwy_debug("omicronmastrix::matrix_scanimagefile:"
                       " gridmode=1, Data saved to container");
@@ -1572,6 +1581,8 @@ matrix_scanimagefile(const guchar **fp,
             tmpmeta = gwy_container_duplicate(meta);
             gwy_container_set_object_by_name(container, "/0/meta", tmpmeta);
             g_object_unref(tmpmeta);
+            gwy_file_channel_import_log_add(container, 0, "omicronmatrix",
+                                            filename);
 
             g_snprintf(msg, sizeof(msg), "%u-%u %s RetraceUp %s",
                        matrixdata->session, matrixdata->trace,
@@ -1584,6 +1595,8 @@ matrix_scanimagefile(const guchar **fp,
             tmpmeta = gwy_container_duplicate(meta);
             gwy_container_set_object_by_name(container, "/1/meta", tmpmeta);
             g_object_unref(tmpmeta);
+            gwy_file_channel_import_log_add(container, 1, "omicronmatrix",
+                                            filename);
 
             g_snprintf(msg, sizeof(msg), "%u-%u %s TraceDown %s",
                        matrixdata->session, matrixdata->trace,
@@ -1596,6 +1609,8 @@ matrix_scanimagefile(const guchar **fp,
             tmpmeta = gwy_container_duplicate(meta);
             gwy_container_set_object_by_name(container, "/2/meta", tmpmeta);
             g_object_unref(tmpmeta);
+            gwy_file_channel_import_log_add(container, 2, "omicronmatrix",
+                                            filename);
 
             g_snprintf(msg, sizeof(msg), "%u-%u %s RetraceDown %s",
                        matrixdata->session, matrixdata->trace,
@@ -1608,6 +1623,9 @@ matrix_scanimagefile(const guchar **fp,
             tmpmeta = gwy_container_duplicate(meta);
             gwy_container_set_object_by_name(container, "/3/meta", tmpmeta);
             g_object_unref(tmpmeta);
+            gwy_file_channel_import_log_add(container, 3, "omicronmatrix",
+                                            filename);
+
             gwy_debug("omicronmastrix::matrix_scanimagefile:"
                       " Data saved to container");
         }
@@ -1769,6 +1787,7 @@ matrix_load(const gchar *filename,
     gwy_debug("omicronmatrix::matrix_load:",
               " starting the image scan loop..");
     matrix_scanimagefile(&fp,
+                         filename,
                          container,
                          meta,
                          &matrixdata,

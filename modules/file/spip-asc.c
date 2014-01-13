@@ -75,7 +75,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports SPIP ASC files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -257,6 +257,8 @@ asc_load(const gchar *filename,
                                  mfield);
         g_object_unref(mfield);
     }
+
+    gwy_file_channel_import_log_add(container, 0, "spip-asc", filename);
 
 fail:
     gwy_object_unref(dfield);

@@ -235,7 +235,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports RHK Technology SM3 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.14",
+    "0.15",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -677,6 +677,7 @@ rhk_sm3_load(const gchar *filename,
         g_object_unref(meta);
 
         gwy_app_channel_check_nonsquare(container, count);
+        gwy_file_channel_import_log_add(container, count, "rhk-sm3", filename);
         count++;
     }
 

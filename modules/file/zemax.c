@@ -71,7 +71,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports Zemax grid sag data files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2013",
 };
@@ -223,6 +223,8 @@ zemax_load(const gchar *filename,
         channelmeta = gwy_container_duplicate(meta);
         gwy_container_set_object_by_name(container, str->str, channelmeta);
         g_object_unref(channelmeta);
+
+        gwy_file_channel_import_log_add(container, i, "zemax", filename);
     }
     g_string_free(str, TRUE);
     g_object_unref(meta);

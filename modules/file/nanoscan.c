@@ -136,6 +136,7 @@ static GwyContainer* nanoscan_load       (const gchar *filename,
 static void          nanoscan_free       (NanoScanFile *nfile);
 static void          add_channel         (GwyContainer *container,
                                           NanoScanFile *nfile,
+                                          const gchar *filename,
                                           NanoScanChannel *channel,
                                           gint id);
 static void          add_graph           (GwyContainer *container,
@@ -185,7 +186,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NanoScan XML files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -300,7 +301,7 @@ nanoscan_load(const gchar *filename,
         else if (nfile.axes->len >= 2)
             add_multigraph(container, &nfile, channel, id);
         else {
-            add_channel(container, &nfile, channel, id);
+            add_channel(container, &nfile, filename, channel, id);
             add_metadata(container, &nfile, id);
         }
 
@@ -360,6 +361,7 @@ nanoscan_free(NanoScanFile *nfile)
 static void
 add_channel(GwyContainer *container,
             NanoScanFile *nfile,
+            const gchar *filename,
             NanoScanChannel *channel,
             gint id)
 {
@@ -410,6 +412,7 @@ add_channel(GwyContainer *container,
         gwy_container_set_string_by_name(container, key, title);
         g_free(key);
     }
+    gwy_file_channel_import_log_add(container, id, "nanoscan", filename);
     channel->already_added = TRUE;
 }
 

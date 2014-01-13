@@ -51,6 +51,7 @@
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwyinventorystore.h>
 #include <libgwydgets/gwyradiobuttons.h>
+#include <app/gwymoduleutils-file.h>
 #include <app/settings.h>
 
 #include "err.h"
@@ -230,7 +231,7 @@ static GwyModuleInfo module_info = {
     N_("Imports raw data files, both ASCII and binary, according to "
        "user-specified format."),
     "Yeti <yeti@gwyddion.net>",
-    "2.7",
+    "2.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -372,6 +373,7 @@ rawfile_load(const gchar *filename,
         data = gwy_container_new();
         gwy_container_set_object_by_name(data, "/0/data", dfield);
         g_object_unref(dfield);
+        gwy_file_channel_import_log_add(data, 0, "rawfile", filename);
     }
     else
         err_CANCELLED(error);

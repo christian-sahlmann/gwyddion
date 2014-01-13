@@ -274,7 +274,7 @@ static GwyModuleInfo module_info = {
     N_("Imports 16bit grayscale PPM, PNG and TIFF images, imports and exports "
        "OpenEXR images (if available)."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -1125,6 +1125,8 @@ exr_load_image(const gchar *filename,
         gwy_container_set_string_by_name(container, key,
                                          (const guchar*)title);
         g_free(key);
+
+        gwy_file_channel_import_log_add(container, id, "openexr", filename);
     }
 
     // We have container on the unref-me-list so another reference must be
@@ -1633,6 +1635,8 @@ png16_load(const gchar *filename,
 
         if (t)
             gwy_container_set_string_by_name(container, buf, (const guchar*)t);
+
+        gwy_file_channel_import_log_add(container, id, "png16", filename);
     }
 
 fail:
@@ -1942,6 +1946,8 @@ pgm16_load(const gchar *filename,
         title = NULL;
     }
 
+    gwy_file_channel_import_log_add(container, 0, "pgm16", filename);
+
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);
     gwy_object_unref(unitxy);
@@ -1997,6 +2003,7 @@ static void
 load_tiff_channels(GwyContainer *container,
                    const GwyTIFF *tiff,
                    const GwyTIFFImageReader *reader,
+                   const gchar *filename,
                    gdouble xreal, gdouble yreal, gdouble zreal,
                    GwySIUnit *unitxy, GwySIUnit *unitz,
                    guint *id)
@@ -2031,6 +2038,8 @@ load_tiff_channels(GwyContainer *container,
         gwy_container_set_string_by_name(container, key,
                                          (const guchar*)g_strdup(title));
         g_free(key);
+
+        gwy_file_channel_import_log_add(container, *id, "tiffbig", filename);
 
         (*id)++;
     }
@@ -2104,7 +2113,7 @@ tiffbig_load(const gchar *filename,
             continue;
         }
 
-        load_tiff_channels(container, tiff, reader,
+        load_tiff_channels(container, tiff, reader, filename,
                            xreal, yreal, zreal, unitxy, unitz,
                            &id);
     }

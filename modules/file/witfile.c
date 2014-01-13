@@ -210,7 +210,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports WITec WIT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -304,6 +304,8 @@ witec_load(const gchar *filename,
         g_string_printf(key, "/%d/meta", i);
         gwy_container_set_object_by_name(container, key->str, meta);
         g_object_unref(meta);
+
+        gwy_file_channel_import_log_add(container, i, "witfile", filename);
     }
     g_string_free(key, TRUE);
 

@@ -80,6 +80,7 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
+#include <app/gwymoduleutils-file.h>
 
 #include <libxml/xmlreader.h>
 #include "spml-utils.h"
@@ -109,7 +110,7 @@ static GwyModuleInfo module_info = {
     N_("Loads SPML (Scanning Probe Microscopy Markup Language) "
        "data files."),
     "Jan Hořák <xhorak@gmail.com>",
-    "0.1.5",
+    "0.1.6",
     "Jan Hořák",
     "2006",
 };
@@ -1049,6 +1050,8 @@ spml_load(const gchar *filename)
                 g_free(gwy_channel_location);
                 g_object_unref(dfield);
 
+                gwy_file_channel_import_log_add(object, channel_number-1,
+                                                "spml", filename);
             }
             /* Free possibly allocated memory */
             if (data)

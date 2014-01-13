@@ -223,7 +223,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports raw XYZ data files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -293,8 +293,8 @@ next_line:
 
 static GwyContainer*
 rawxyz_load(const gchar *filename,
-         G_GNUC_UNUSED GwyRunType mode,
-         GError **error)
+            G_GNUC_UNUSED GwyRunType mode,
+            GError **error)
 {
     GwyContainer *settings, *container = NULL;
     GwyDataField *dfield;
@@ -344,6 +344,7 @@ rawxyz_load(const gchar *filename,
         gwy_container_set_object_by_name(container, "/0/data", dfield);
         gwy_container_set_string_by_name(container, "/0/data/title",
                                          g_strdup("Regularized XYZ"));
+        gwy_file_channel_import_log_add(container, 0, "rawxyz", filename);
     }
 
 fail:

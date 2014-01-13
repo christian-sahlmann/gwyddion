@@ -60,6 +60,7 @@
 #include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
 #include <libprocess/spectra.h>
+#include <app/gwymoduleutils-file.h>
 #include <app/data-browser.h>
 
 #include "err.h"
@@ -160,7 +161,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.10",
+    "0.11",
     "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2006",
 };
@@ -291,6 +292,8 @@ omicron_load(const gchar *filename,
             gwy_container_set_object_by_name(container, key, meta);
             g_object_unref(meta);
         }
+
+        gwy_file_channel_import_log_add(container, i, "omicron", filename);
     }
 
     /* Then load the spectroscopy data. */

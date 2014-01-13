@@ -175,7 +175,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports RHK Technology SPM32 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.9",
+    "0.10",
     "David Nečas (Yeti) & Petr Klapetek, mod by Niv Levy",
     "2007",
 };
@@ -311,6 +311,9 @@ rhkspm32_load(const gchar *filename,
             }
             else
                 gwy_app_channel_title_fall_back(container, i);
+
+            gwy_file_channel_import_log_add(container, i, "rhk-spm32",
+                                            filename);
         }
         else if (rhkpage->type == RHK_TYPE_LINE) { // niv - after omicron.c
 
@@ -335,8 +338,8 @@ rhkspm32_load(const gchar *filename,
         gwy_debug("rhk-spm32: finished parsing page %d \n", i);
         meta = rhkspm32_get_metadata(rhkpage);
         if (rhkpage->type == RHK_TYPE_IMAGE) {
-        /* this doesn't really work, but at least the meta data stays
-         with the graph, even if the metadata viewer won't show it*/
+            /* this doesn't really work, but at least the meta data stays
+               with the graph, even if the metadata viewer won't show it*/
             g_string_printf(key, "/%d/meta", i);
         }
         else if (rhkpage->type == RHK_TYPE_LINE) {

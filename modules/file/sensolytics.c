@@ -111,7 +111,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Sensolytics text files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -260,6 +260,8 @@ sly_load(const gchar *filename,
         }
         else
             gwy_app_channel_title_fall_back(container, i);
+
+        gwy_file_channel_import_log_add(container, i, "sensolytics", filename);
     }
 
     meta = get_meta(hash);

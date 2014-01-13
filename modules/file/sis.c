@@ -460,7 +460,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports SIS (Surface Imaging Systems) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.15",
+    "0.16",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -556,6 +556,7 @@ sis_load(const gchar *filename,
                         gwy_container_set_string_by_name(data, key->str,
                                                          g_strdup(s));
                     add_metadata(&sisfile, n, i, data);
+                    gwy_file_channel_import_log_add(data, n, "sis", filename);
                     n++;
                 }
             }

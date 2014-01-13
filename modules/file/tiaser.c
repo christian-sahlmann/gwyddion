@@ -179,7 +179,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports FEI Tecnai imaging and analysis (former Emispec) files."),
     "dn2010 <dn2010@gmail.com>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti), Daniil Bratashov (dn2010)",
     "2012",
 };
@@ -400,6 +400,8 @@ tia_load(const gchar *filename,
                                                      strkey,
                                                      g_strdup("TEM"));
                     g_free(strkey);
+                    gwy_file_channel_import_log_add(container, i, "tiaser",
+                                                    filename);
                 }
             }
         }
