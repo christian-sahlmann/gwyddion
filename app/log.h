@@ -33,7 +33,14 @@ void       gwy_app_channel_log_add        (GwyContainer *data,
                                            gint newid,
                                            const gchar *function,
                                            ...);
+void       gwy_app_volume_log_add         (GwyContainer *data,
+                                           gint previd,
+                                           gint newid,
+                                           const gchar *function,
+                                           ...);
 GtkWidget* gwy_app_log_browser_for_channel(GwyContainer *data,
+                                           gint id);
+GtkWidget* gwy_app_log_browser_for_volume (GwyContainer *data,
                                            gint id);
 gboolean   gwy_log_get_enabled            (void);
 void       gwy_log_set_enabled            (gboolean setting);

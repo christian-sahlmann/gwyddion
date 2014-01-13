@@ -40,6 +40,9 @@ typedef enum {
     BROWSER_DATA_VOLUME,
 } BrowserDataType;
 
+
+typedef GQuark (*LogKeyFync)(gint id);
+
 typedef struct {
     GwyContainer *container;
     GwyStringList *log;
@@ -53,8 +56,14 @@ typedef struct {
     GtkWidget *close;
 } LogBrowser;
 
-static GwyStringList* get_channel_log       (GwyContainer *data,
-                                             gint id,
+void                  data_log_add_valist   (GwyContainer *data,
+                                             LogKeyFync log_key,
+                                             gint previd,
+                                             gint newid,
+                                             const gchar *function,
+                                             va_list ap);
+static GwyStringList* get_data_log          (GwyContainer *data,
+                                             GQuark quark,
                                              gboolean create);
 static GtkWidget*     get_log_browser       (GwyContainer *data,
                                              BrowserDataType type,
@@ -79,7 +88,8 @@ static gchar*         format_args           (const gchar *prefix);
 static void           format_arg            (gpointer hkey,
                                              gpointer hvalue,
                                              gpointer user_data);
-static const gchar*   channel_log_key       (gint id);
+static GQuark         channel_log_key       (gint id);
+static GQuark         volume_log_key        (gint id);
 static gboolean       find_settings_prefix  (const gchar *function,
                                              const gchar *settings_name,
                                              GString *prefix);
@@ -117,10 +127,60 @@ gwy_app_channel_log_add(GwyContainer *data,
                         ...)
 {
     va_list ap;
+    va_start(ap, function);
+    data_log_add_valist(data, channel_log_key, previd, newid, function, ap);
+    va_end(ap);
+}
+
+/**
+ * gwy_app_volume_log_add:
+ * @data: A data container.
+ * @previd: Identifier of the previous (source) volume data in the container.
+ *          Pass -1 for a no-source (or unclear source) operation.
+ * @newid: Identifier of the new (target) volume data in the container.
+ * @function: Quailified name of the function applied as shown by the module
+ *            browser.  For instance "proc::facet-level" or
+ *            "tool::GwyToolCrop".
+ * @...: Logging options as a %NULL-terminated list of pairs name, value.
+ *
+ * Adds an entry to the log of data processing operations for volume data.
+ *
+ * See the introduction for a description of valid @previd and @newid.
+ *
+ * It is possible to pass %NULL as @function.  In this case the log is just
+ * copied from source to target without adding any entries.  This can be useful
+ * to prevent duplicate log entries in modules that modify a data field and
+ * then can also create secondary outputs.  Note you still need to pass a
+ * second %NULL argument as the option terminator.
+ *
+ * Since: 2.35
+ **/
+void
+gwy_app_volume_log_add(GwyContainer *data,
+                       gint previd,
+                       gint newid,
+                       const gchar *function,
+                       ...)
+{
+    va_list ap;
+    va_start(ap, function);
+    data_log_add_valist(data, volume_log_key, previd, newid, function, ap);
+    va_end(ap);
+}
+
+void
+data_log_add_valist(GwyContainer *data,
+                    LogKeyFync log_key,
+                    gint previd,
+                    gint newid,
+                    const gchar *function,
+                    va_list ap)
+{
     GString *str = NULL;
     const gchar *key, *settings_name = NULL;
     gchar *args, *optime, *s;
     GwyStringList *sourcelog = NULL, *targetlog = NULL;
+    GQuark newquark;
     GTimeVal t;
 
     g_return_if_fail(GWY_IS_CONTAINER(data));
@@ -129,7 +189,6 @@ gwy_app_channel_log_add(GwyContainer *data,
     if (log_disabled)
         return;
 
-    va_start(ap, function);
     while ((key = va_arg(ap, const gchar*))) {
         if (gwy_strequal(key, "settings-name")) {
             settings_name = va_arg(ap, const gchar*);
@@ -139,7 +198,6 @@ gwy_app_channel_log_add(GwyContainer *data,
             return;
         }
     }
-    va_end(ap);
 
     if (function) {
         str = g_string_new(NULL);
@@ -150,12 +208,13 @@ gwy_app_channel_log_add(GwyContainer *data,
     }
 
     if (previd != -1)
-        sourcelog = get_channel_log(data, previd, FALSE);
+        sourcelog = get_data_log(data, log_key(previd), FALSE);
 
+    newquark = log_key(newid);
     if (newid == previd)
         targetlog = sourcelog;
     else
-        targetlog = get_channel_log(data, newid, FALSE);
+        targetlog = get_data_log(data, newquark, FALSE);
 
     if (targetlog && targetlog != sourcelog) {
         g_warning("Target log must not exist when replicating logs.");
@@ -173,8 +232,7 @@ gwy_app_channel_log_add(GwyContainer *data,
             targetlog = gwy_string_list_new();
         }
 
-        gwy_container_set_object_by_name(data, channel_log_key(newid),
-                                         targetlog);
+        gwy_container_set_object(data, newquark, targetlog);
         g_object_unref(targetlog);
     }
 
@@ -196,20 +254,19 @@ gwy_app_channel_log_add(GwyContainer *data,
 }
 
 static GwyStringList*
-get_channel_log(GwyContainer *data,
-                gint id,
-                gboolean create)
+get_data_log(GwyContainer *data,
+             GQuark quark,
+             gboolean create)
 {
     GwyStringList *slog = NULL;
-    const gchar *strkey = channel_log_key(id);
 
-    gwy_container_gis_object_by_name(data, strkey, &slog);
+    gwy_container_gis_object(data, quark, &slog);
 
     if (slog || !create)
         return slog;
 
     slog = gwy_string_list_new();
-    gwy_container_set_object_by_name(data, strkey, slog);
+    gwy_container_set_object(data, quark, slog);
     g_object_unref(slog);
 
     return slog;
@@ -235,6 +292,28 @@ gwy_app_log_browser_for_channel(GwyContainer *data,
                                 gint id)
 {
     return get_log_browser(data, BROWSER_DATA_CHANNEL, id);
+}
+
+/**
+ * gwy_app_log_browser_for_volume:
+ * @data: A data container.
+ * @id: Id of volume data in @data to show log for.
+ *
+ * Shows a simple log browser for volume data.
+ *
+ * If the log browser is already shown for this volume data it is just raised
+ * and given focus.  Otherwise, a new window is created.
+ *
+ * Returns: The log browser (owned by the library).  Usually, you can
+ *          ignore the return value.
+ *
+ * Since: 2.35
+ **/
+GtkWidget*
+gwy_app_log_browser_for_volume(GwyContainer *data,
+                               gint id)
+{
+    return get_log_browser(data, BROWSER_DATA_VOLUME, id);
 }
 
 static GtkWidget*
@@ -605,12 +684,20 @@ format_arg(gpointer hkey, gpointer hvalue, gpointer user_data)
     g_ptr_array_add(values, formatted);
 }
 
-static const gchar*
+static GQuark
 channel_log_key(gint id)
 {
     static gchar buf[32];
     g_snprintf(buf, sizeof(buf), "/%d/data/log", id);
-    return buf;
+    return g_quark_from_string(buf);
+}
+
+static GQuark
+volume_log_key(gint id)
+{
+    static gchar buf[32];
+    g_snprintf(buf, sizeof(buf), "/brick/%d/log", id);
+    return g_quark_from_string(buf);
 }
 
 static gboolean
