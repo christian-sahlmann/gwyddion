@@ -31,12 +31,16 @@ def keyfunc(name):
     name = name.split('.')
     return float(name[0]) + 0.001*float(name[1])
 
+def has_entries(filename):
+    return file(filename).read().find('<indexentry>') != -1
+
 for subdir in subdirs:
     docsfile = os.path.join('devel-docs', subdir, subdir + '-docs.sgml')
     if not os.access(docsfile, os.R_OK):
         continue
 
     indices = glob.glob(os.path.join('devel-docs', subdir, 'xml', 'api-index-*.xml'))
+    indices = [x for x in indices if has_entries(x)]
     indices = [re.sub('^.*?/api-index-([^/]+)\.xml$', r'\1', x) for x in indices]
     out = []
     for ind in sorted(indices, key=keyfunc):
