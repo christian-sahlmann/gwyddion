@@ -38,6 +38,18 @@ struct _GwyTextHeaderContext {
     guint lineno;
 };
 
+typedef void (*LogAddFunc)(GwyContainer *data,
+                           gint previd,
+                           gint newid,
+                           const gchar *function,
+                           ...);
+
+static void add_import_log(GwyContainer *data,
+                           gint id,
+                           LogAddFunc add_log,
+                           const gchar *filetype,
+                           const gchar *filename);
+
 /**
  * gwy_app_channel_check_nonsquare:
  * @data: A data container.
@@ -633,8 +645,8 @@ gwy_text_header_context_get_lineno(const GwyTextHeaderContext *context)
  *
  * Logs the import of a channel from third-party file.
  *
- * The source id will be set to -1.  The file name will be added to function
- * arguments.
+ * This is a convenience wrapper for gwy_app_channel_log_add().  The source id
+ * will be set to -1.  The file name will be added to function arguments.
  *
  * Since: 2.35
  **/
@@ -643,6 +655,42 @@ gwy_file_channel_import_log_add(GwyContainer *data,
                                 gint id,
                                 const gchar *filetype,
                                 const gchar *filename)
+{
+    add_import_log(data, id, gwy_app_channel_log_add, filetype, filename);
+}
+
+/**
+ * gwy_file_volume_import_log_add:
+ * @data: A data container.
+ * @id: Volume data id.
+ * @filetype: File type, i.e. the name of the function importing the data
+ *            (without any "file::" prefix).
+ * @filename: Name of the imported file.  If it is not valid UTF-8, it will be
+ *            converted to UTF-8 using g_filename_to_utf8().  Failing even
+ *            that, non-ASCII characters will be escaped.
+ *
+ * Logs the import of volume data from third-party file.
+ *
+ * This is a convenience wrapper for gwy_app_volume_log_add().  The source id
+ * will be set to -1.  The file name will be added to function arguments.
+ *
+ * Since: 2.35
+ **/
+void
+gwy_file_volume_import_log_add(GwyContainer *data,
+                               gint id,
+                               const gchar *filetype,
+                               const gchar *filename)
+{
+    add_import_log(data, id, gwy_app_volume_log_add, filetype, filename);
+}
+
+static void
+add_import_log(GwyContainer *data,
+               gint id,
+               LogAddFunc add_log,
+               const gchar *filetype,
+               const gchar *filename)
 {
     /* There should not be any settings key called
      * "/module/<filetype>/filename".
@@ -676,7 +724,7 @@ gwy_file_channel_import_log_add(GwyContainer *data,
     gwy_container_set_string(settings, quark, myfilename);
 
     qualname = g_strconcat("file::", filetype, NULL);
-    gwy_app_channel_log_add(data, -1, id, qualname, NULL);
+    add_log(data, -1, id, qualname, NULL);
     g_free(qualname);
 
     if (G_VALUE_TYPE(&savedval)) {

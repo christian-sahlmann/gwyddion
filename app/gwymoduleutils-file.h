@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2007 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2007,2014 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -374,6 +374,10 @@ void gwy_file_channel_import_log_add(GwyContainer *data,
                                      gint id,
                                      const gchar *filetype,
                                      const gchar *filename);
+void gwy_file_volume_import_log_add(GwyContainer *data,
+                                    gint id,
+                                    const gchar *filetype,
+                                    const gchar *filename);
 
 G_END_DECLS
 
