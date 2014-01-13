@@ -1,5 +1,5 @@
 /*
- *  $Id: nanoscan.c 15788 2013-12-26 11:40:54Z yeti-dn $
+ *  $Id$
  *  IonScope SICM file format importer
  *  Copyright (C) 2008-2010 Matthew Caldwell.
  *  E-mail: m.caldwell@ucl.ac.uk
