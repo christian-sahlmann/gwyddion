@@ -117,7 +117,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Reads NanoObserver .nao files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2012",
 };
@@ -256,6 +256,8 @@ nao_load(const gchar *filename,
                         g_object_unref(thismeta);
                         g_free(strkey);
                     }
+                    gwy_file_channel_import_log_add(container, channelno,
+                                                    "nanoobserver", filename);
 
                     channelno++;
                 }
@@ -290,7 +292,7 @@ static GwyDataField*
 nao_read_field(unzFile *zipfile, NAOFile *naofile, guint id)
 {
     gsize size, expected_size;
-    guint width, height, nscanlines, i, j;
+    guint width, G_GNUC_UNUSED height, nscanlines, i, j;
     guchar *buffer = nao_get_file_content(zipfile, &size, NULL);
     const guchar *p = buffer;
     GwyDataField *field;

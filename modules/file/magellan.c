@@ -48,6 +48,7 @@ static GwyContainer* mgl_load       (const gchar *filename,
                                      GwyRunType mode,
                                      GError **error);
 static GwyContainer* mgl_load_tiff  (const GwyTIFF *tiff,
+                                     const gchar *filename,
                                      GError **error);
 static GwyContainer* get_meta       (GHashTable *hash);
 static void          add_meta       (gpointer hkey,
@@ -59,7 +60,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports FEI Magellan SEM images."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2013",
 };
@@ -121,14 +122,14 @@ mgl_load(const gchar *filename,
     if (!tiff)
         return NULL;
 
-    container = mgl_load_tiff(tiff, error);
+    container = mgl_load_tiff(tiff, filename, error);
     gwy_tiff_free(tiff);
 
     return container;
 }
 
 static GwyContainer*
-mgl_load_tiff(const GwyTIFF *tiff, GError **error)
+mgl_load_tiff(const GwyTIFF *tiff, const gchar *filename, GError **error)
 {
     GwyContainer *container = NULL, *meta;
     GwyDataField *dfield;
@@ -231,6 +232,8 @@ mgl_load_tiff(const GwyTIFF *tiff, GError **error)
             gwy_container_set_object_by_name(container, key->str, meta);
             g_object_unref(meta);
         }
+        gwy_file_channel_import_log_add(container, dir_num, "magellan",
+                                        filename);
     }
 
     if (!container)

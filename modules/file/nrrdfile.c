@@ -170,7 +170,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports and exports nearly raw raster data (NRRD) files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -468,6 +468,7 @@ nrrdfile_load(const gchar *filename,
             g_object_unref(chanmeta);
             g_free(key);
         }
+        gwy_file_channel_import_log_add(container, i, "nrrdfile", filename);
     }
 
     /* TODO: Read key-values and possible other fields as metadata. */

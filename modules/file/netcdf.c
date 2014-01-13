@@ -188,7 +188,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports network Common Data Form (netCDF) files created by GXSM."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti), Petr Klapetek & Niv Levy",
     "2006",
 };
@@ -819,6 +819,9 @@ gxsm_load(const gchar *filename,
                 gwy_container_set_object_by_name(data, pt, dfield);
                 g_free(pt);
                 g_object_unref(dfield);
+
+                gwy_file_channel_import_log_add(data, frame_i, "gsxmfile",
+                                                filename);
             }
         }
     }

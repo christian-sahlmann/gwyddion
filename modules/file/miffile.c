@@ -200,7 +200,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports DME MIF data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2010",
 };
@@ -650,6 +650,7 @@ mif_load(const gchar *filename,
         gwy_container_set_object(container, quark, dfield);
         g_object_unref(dfield);
         gwy_app_channel_title_fall_back(container, i);
+        gwy_file_channel_import_log_add(container, i, "miffile", filename);
     }
 
     if (!container)

@@ -403,7 +403,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanomagnetics' NMI file format version 3 and 5"),
     "Sameer Grover <sameer.grover.1@gmail.com>",
-    "1.1",
+    "1.2",
     "Sameer Grover, Tata Institute of Fundamental Research",
     "2012",
 };
@@ -740,6 +740,9 @@ nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
         g_snprintf(buf, sizeof(buf), "/%d/meta", channelno);
         gwy_container_set_object_by_name(container, buf, meta);
         g_object_unref(meta);
+
+        gwy_file_channel_import_log_add(container, channelno, "nanomagnetics",
+                                        filename);
     }
 
     cleanup_channels(channel_params, params.numImages);

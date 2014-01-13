@@ -130,7 +130,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NanoScanTech .nstdat files."),
     "Daniil Bratashov (dn2010@gmail.com)",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti), Daniil Bratashov (dn2010)",
     "2012",
 };
@@ -255,6 +255,9 @@ nst_load(const gchar *filename,
                     gwy_container_set_string_by_name(container, strkey,
                                                      title);
                     g_free(strkey);
+
+                    gwy_file_channel_import_log_add(container, channelno,
+                                                    "nanoscantech", filename);
                 }
                 if (titlestr) {
                     g_free(titlestr);

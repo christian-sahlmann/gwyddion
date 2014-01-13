@@ -151,7 +151,8 @@ static gboolean      mul_read_image_label(const guchar *buffer,
 static void          mul_read_image      (GwyContainer *container,
                                           const guchar *buffer,
                                           const MulIndexEntry *entry,
-                                          const MulImageLabel *label);
+                                          const MulImageLabel *label,
+                                          const gchar *filename);
 static GwyContainer* mul_get_meta        (const MulImageLabel *label);
 
 static GwyModuleInfo module_info = {
@@ -159,7 +160,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Aarhus MUL files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -229,7 +230,7 @@ mul_load(const gchar *filename,
         if (!mul_read_image_label(buffer, size, image_index + i, &label, NULL))
             continue;
 
-        mul_read_image(container, buffer, image_index + i, &label);
+        mul_read_image(container, buffer, image_index + i, &label, filename);
     }
 
     if (!gwy_container_get_n_items(container)) {
@@ -405,7 +406,8 @@ static void
 mul_read_image(GwyContainer *container,
                const guchar *buffer,
                const MulIndexEntry *entry,
-               const MulImageLabel *label)
+               const MulImageLabel *label,
+               const gchar *filename)
 {
     const gint16 *d16 = (const gint16*)(buffer
                                         + (entry->addr + 1)* MUL_BLOCK_SIZE);
@@ -515,6 +517,7 @@ mul_read_image(GwyContainer *container,
     g_object_unref(meta);
 
     gwy_app_channel_check_nonsquare(container, label->id);
+    gwy_file_channel_import_log_add(container, label->id, "mulfile", filename);
 }
 
 static GwyContainer*

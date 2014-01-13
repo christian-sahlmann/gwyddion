@@ -416,7 +416,7 @@ mat5_load(const gchar *filename,
         /* The only interesting case is MATRIX */
         if (cursor.data_type == MAT5_MATRIX) {
             if ((dfield = try_read_datafield(&cursor, name))) {
-                GQuark quark = gwy_app_get_data_key_for_id(id++);
+                GQuark quark = gwy_app_get_data_key_for_id(id);
                 gchar *key;
 
                 if (!container)
@@ -428,6 +428,9 @@ mat5_load(const gchar *filename,
                 gwy_container_set_string_by_name(container, key,
                                                  g_strdup(name->str));
                 g_free(key);
+                gwy_file_channel_import_log_add(container, id, "matfile",
+                                                filename);
+                id++;
             }
         }
     }

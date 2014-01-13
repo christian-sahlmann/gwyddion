@@ -116,7 +116,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanonis SXM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.10",
+    "0.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -413,6 +413,7 @@ sxm_read_tag(SXMFile *sxmfile,
 static void
 read_data_field(GwyContainer *container,
                 gint *id,
+                const gchar *filename,
                 const SXMFile *sxmfile,
                 const SXMDataInfo *data_info,
                 SXMDirection dir,
@@ -499,6 +500,7 @@ read_data_field(GwyContainer *container,
         flip_vertically = TRUE;
 
     gwy_data_field_invert(dfield, flip_vertically, flip_horizontally, FALSE);
+    gwy_file_channel_import_log_add(container, *id, "nanonis", filename);
 
     (*id)++;
 }
@@ -516,7 +518,7 @@ sxm_load(const gchar *filename,
     const guchar *p;
     gchar *header, *hp, *s, *endptr;
     gchar **columns;
-    gboolean rotated = FALSE;
+    G_GNUC_UNUSED gboolean rotated = FALSE;
     gint version;
     guint i;
 
@@ -723,15 +725,15 @@ sxm_load(const gchar *filename,
             guint d = sxmfile.data_info[i].direction;
 
             if (d == DIR_BOTH) {
-                read_data_field(container, &id,
+                read_data_field(container, &id, filename,
                                 &sxmfile, sxmfile.data_info + i,
                                 DIR_FORWARD, &p);
-                read_data_field(container, &id,
+                read_data_field(container, &id, filename,
                                 &sxmfile, sxmfile.data_info + i,
                                 DIR_BACKWARD, &p);
             }
             else if (d == DIR_FORWARD || d == DIR_BACKWARD) {
-                read_data_field(container, &id,
+                read_data_field(container, &id, filename,
                                 &sxmfile, sxmfile.data_info + i, d, &p);
             }
             else {

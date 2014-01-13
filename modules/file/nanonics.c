@@ -52,6 +52,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
+#include <app/gwymoduleutils-file.h>
 #include <app/data-browser.h>
 
 #include "err.h"
@@ -100,7 +101,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanonics NAN data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -299,6 +300,8 @@ nanonics_load(const gchar *filename,
                                                      g_strdup(title));
                 g_free(key);
             }
+            gwy_file_channel_import_log_add(container, 2*i + j, "nanonics",
+                                            filename);
         }
     }
 
