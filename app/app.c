@@ -1601,6 +1601,11 @@ gwy_app_menu_brick_popup_create(GtkAccelGroup *accel_group)
             metadata_browser, GUINT_TO_POINTER(GWY_APP_BRICK),
             GDK_B, GDK_CONTROL_MASK | GDK_SHIFT_MASK
         },
+        {
+            N_("View _Log..."),
+            log_browser, GUINT_TO_POINTER(GWY_APP_BRICK),
+            0, 0
+        },
     };
     GwySensitivityGroup *sensgroup;
     GtkWidget *menu, *item;
@@ -1822,10 +1827,8 @@ log_browser(gpointer pwhat)
 
     if (what == GWY_APP_DATA_FIELD)
         gwy_app_log_browser_for_channel(container, id);
-    else if (what == GWY_APP_BRICK) {
-        g_printerr("Implement me!");
-        /*gwy_app_metadata_browser_for_volume(container, id);*/
-    }
+    else if (what == GWY_APP_BRICK)
+        gwy_app_log_browser_for_volume(container, id);
 }
 
 static void
