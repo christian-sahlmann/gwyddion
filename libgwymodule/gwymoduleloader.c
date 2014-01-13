@@ -780,4 +780,24 @@ gwy_module_lookup(const gchar *name)
  * process functions is @GWY_RUN_IMMEDIATE.
  **/
 
+/**
+ * GwyModuleError:
+ * @GWY_MODULE_ERROR_NAME: Module has an invalid name.  It is recommended that
+ *                         module names are valid C identifiers, possibly with
+ *                         dashes instead of underscores, but only really
+ *                         broken names are rejected.
+ * @GWY_MODULE_ERROR_DUPLICATE: A module of the same name has already been
+ *                              registered.
+ * @GWY_MODULE_ERROR_OPEN: Calling g_module_open() on the module failed.
+ * @GWY_MODULE_ERROR_QUERY: Module does not contain any query function.
+ * @GWY_MODULE_ERROR_ABI: Module has different ABI version than
+ *                        expected/supported; or required info field are
+ *                        missing.
+ * @GWY_MODULE_ERROR_INFO: Module query function provided %NULL info.
+ * @GWY_MODULE_ERROR_REGISTER: The registration function returned %FALSE; or
+ *                             the module did not register any function.
+ *
+ * Type of module loading and registration error.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
