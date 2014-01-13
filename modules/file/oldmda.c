@@ -180,7 +180,7 @@ check_magic(const gchar *header)
 
 static gint
 oldmda_detect(const GwyFileDetectInfo *fileinfo,
-                gboolean only_name)
+              gboolean only_name)
 {
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 10 : 0;
@@ -190,8 +190,8 @@ oldmda_detect(const GwyFileDetectInfo *fileinfo,
 
 static GwyContainer*
 oldmda_load(const gchar *filename,
-         G_GNUC_UNUSED GwyRunType mode,
-         GError **error)
+            G_GNUC_UNUSED GwyRunType mode,
+            GError **error)
 {
     GwyContainer *container = NULL;
     OldMDAFile mdafile;
@@ -333,7 +333,8 @@ oldmda_read_params(MDAXMLParams *par, OldMDAFile *mdafile)
                    * pow(10.0, mdafile->power10y);
 }
 
-static void oldmda_read_data(OldMDAFile *mdafile, const gchar *buffer)
+static void
+oldmda_read_data(OldMDAFile *mdafile, const gchar *buffer)
 {
     GwyBrick *brick;
     GwyDataField *dfield;
