@@ -84,7 +84,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Converts all datafields to 3D volume data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2013",
 };
@@ -113,7 +113,7 @@ volumize_layers(GwyContainer *data, GwyRunType run)
     GtkWidget *dialog;
     GwyBrick *brick;
     gboolean ok = TRUE;
-    gint *ids, col, row, i, nids, xres, yres;
+    gint *ids, col, row, i, nids, xres, yres, newid;
     gdouble *ddata, *bdata;
 
     g_return_if_fail(run & VOLUMIZE_LAYERS_RUN_MODES);
@@ -194,9 +194,10 @@ volumize_layers(GwyContainer *data, GwyRunType run)
     gwy_brick_resample(brick, args.xres, args.yres, args.zres, GWY_INTERPOLATION_ROUND);
     gwy_data_field_resample(dfield, args.xres, args.yres, GWY_INTERPOLATION_ROUND);
 
-    gwy_app_data_browser_add_brick(brick, dfield, data, TRUE);
+    newid = gwy_app_data_browser_add_brick(brick, dfield, data, TRUE);
     g_object_unref(brick);
     g_object_unref(dfield);
+    gwy_app_volume_log_add(data, -1, newid, "proc::volumize_layers", NULL);
 }
 
 
@@ -311,12 +312,10 @@ volumize_layers_dialog_update(VolumizeLayersControls *controls,
 }
 
 
-
-
-static const gchar xres_key[]       = "/module/volumize_layers/xres";
-static const gchar yres_key[]       = "/module/volumize_layers/yres";
-static const gchar zres_key[]       = "/module/volumize_layers/zres";
-static const gchar zreal_key[]       = "/module/volumize_layers/zreal";
+static const gchar xres_key[]  = "/module/volumize_layers/xres";
+static const gchar yres_key[]  = "/module/volumize_layers/yres";
+static const gchar zres_key[]  = "/module/volumize_layers/zres";
+static const gchar zreal_key[] = "/module/volumize_layers/zreal";
 
 static void
 volumize_layers_sanitize_args(VolumizeLayersArgs *args)
