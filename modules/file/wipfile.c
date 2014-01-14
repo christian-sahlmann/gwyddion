@@ -1498,6 +1498,11 @@ wip_read_data(GNode *node, gpointer filedata)
 
             g_string_free(caption, TRUE);
             g_object_unref(image);
+
+            gwy_file_channel_import_log_add(filecontent->data,
+                                            filecontent->numimages,
+                                            "wipfile",
+                                            filecontent->filename);
         }
     }
     else if (!strncmp(tag->name, "TDBitmap", 8)) {
