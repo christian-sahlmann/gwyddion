@@ -222,7 +222,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Shows and/or extracts a section of volume data"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2013",
 };
@@ -233,12 +233,12 @@ static gboolean
 module_register(void)
 {
     gwy_volume_func_register("extract",
-                              (GwyVolumeFunc)&extract,
-                              N_("/Show and _extract..."),
-                              NULL,
-                              EXTRACT_RUN_MODES,
-                              GWY_MENU_FLAG_VOLUME,
-                              N_("Show and/or extract a section of volume data"));
+                             (GwyVolumeFunc)&extract,
+                             N_("/Show and _extract..."),
+                             NULL,
+                             EXTRACT_RUN_MODES,
+                             GWY_MENU_FLAG_VOLUME,
+                             N_("Show and/or extract a section of volume data"));
 
     return TRUE;
 }
@@ -258,9 +258,7 @@ extract(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(GWY_IS_BRICK(brick));
     extract_dialog(&args, data, brick, id);
-    extract_save_args(gwy_app_settings_get(), &args);
 }
-
 
 static void
 extract_dialog(ExtractArgs *args,
@@ -637,6 +635,7 @@ extract_dialog(ExtractArgs *args,
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             g_object_unref(controls.mydata);
+            extract_save_args(gwy_app_settings_get(), args);
             return;
             break;
 
@@ -670,13 +669,13 @@ extract_dialog(ExtractArgs *args,
     } while (response != GTK_RESPONSE_OK);
 
     extract_dialog_update_values(&controls, args);
+    extract_save_args(gwy_app_settings_get(), args);
 
-    if (response == GTK_RESPONSE_OK)
-    {
+    if (response == GTK_RESPONSE_OK) {
         if (controls.computed) {
             dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
                                                                      "/0/data"));
-	    // FIXME - change X and Y as well to match new Z format?
+            // FIXME - change X and Y as well to match new Z format?
 
             if (args->type == CUT_DIRX)
                 g_snprintf(description, sizeof(description), _("X cross-section at x: %d"),
@@ -685,13 +684,13 @@ extract_dialog(ExtractArgs *args,
                 g_snprintf(description, sizeof(description), _("Y cross-section at y: %d"),
                            (gint)(args->ypos/100.0*(gwy_brick_get_yres(controls.brick)-1)));
             else if (args->type == CUT_DIRZ)
-		g_snprintf(description, sizeof(description),
-			   _("Z cross-section at Z = %g %s (#%d)"),
-			   gwy_brick_ktor(brick, floor(args->zpos/100.0
-			   * (gwy_brick_get_zres(controls.brick)-1)))
-			   + gwy_brick_get_zoffset(brick),
-			   gwy_si_unit_get_string(gwy_brick_get_si_unit_z(brick),
-						  GWY_SI_UNIT_FORMAT_PLAIN),
+                g_snprintf(description, sizeof(description),
+                           _("Z cross-section at Z = %g %s (#%d)"),
+                           gwy_brick_ktor(brick, floor(args->zpos/100.0
+                                                       * (gwy_brick_get_zres(controls.brick)-1)))
+                           + gwy_brick_get_zoffset(brick),
+                           gwy_si_unit_get_string(gwy_brick_get_si_unit_z(brick),
+                                                  GWY_SI_UNIT_FORMAT_PLAIN),
                            (gint)(args->zpos/100.0*(gwy_brick_get_zres(controls.brick)-1)));
             else if (args->type == PROJ_DIRX)
                 g_snprintf(description, sizeof(description), _("X direction sum"));
@@ -708,6 +707,8 @@ extract_dialog(ExtractArgs *args,
                                         0);
 
                 gwy_app_set_data_field_title(data, newid, description);
+                gwy_app_channel_log_add(data, -1, newid, "volume::extract",
+                                        NULL);
             }
             else {
                 newid = 0;
@@ -719,7 +720,8 @@ extract_dialog(ExtractArgs *args,
                                                       GWY_VISIBILITY_RESET_SHOW_ALL);
                 g_object_unref(newdata);
                 gwy_app_set_data_field_title(newdata, newid, description);
-
+                gwy_app_channel_log_add(newdata, -1, newid, "volume::extract",
+                                        NULL);
             }
         }
         if (controls.gcomputed) {
@@ -727,7 +729,7 @@ extract_dialog(ExtractArgs *args,
             GwyGraphCurveModel *gcmodel;
 
             dline = GWY_DATA_LINE(gwy_container_get_object_by_name(controls.mydata,
-                                                                     "/1/graph"));
+                                                                   "/1/graph"));
 
             gmodel = gwy_graph_model_new();
             gwy_graph_model_set_units_from_data_line(gmodel, dline);
@@ -751,15 +753,15 @@ extract_dialog(ExtractArgs *args,
             gcmodel = gwy_graph_curve_model_new();
             gwy_graph_curve_model_set_data_from_dataline(gcmodel, dline, -1, -1);
             g_object_set(gcmodel, "description", _("Brick graph"),
-                                  "mode", GWY_GRAPH_CURVE_LINE,
-                                  NULL);
+                         "mode", GWY_GRAPH_CURVE_LINE,
+                         NULL);
             gwy_graph_model_add_curve(gmodel, gcmodel);
             gwy_object_unref(gcmodel);
 
             if (newdata)
-               gwy_app_data_browser_add_graph_model(gmodel, newdata, TRUE);
+                gwy_app_data_browser_add_graph_model(gmodel, newdata, TRUE);
             else if (data)
-               gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+                gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
             else {
                 newid = 0;
                 newdata = gwy_container_new();
@@ -2112,17 +2114,17 @@ p3d_add_wireframe(ExtractControls *controls)
 
 
 
-static const gchar xpos_key[]       = "/module/extract/xpos";
-static const gchar ypos_key[]       = "/module/extract/ypos";
-static const gchar zpos_key[]       = "/module/extract/zpos";
-static const gchar type_key[]    = "/module/extract/dirtype";
-static const gchar gtype_key[]    = "/module/extract/dirgtype";
-static const gchar update_key[] = "/module/extract/update";
+static const gchar xpos_key[]        = "/module/extract/xpos";
+static const gchar ypos_key[]        = "/module/extract/ypos";
+static const gchar zpos_key[]        = "/module/extract/zpos";
+static const gchar type_key[]        = "/module/extract/dirtype";
+static const gchar gtype_key[]       = "/module/extract/dirgtype";
+static const gchar update_key[]      = "/module/extract/update";
 static const gchar perspective_key[] = "/module/extract/perspective";
-static const gchar render_key[] = "/module/extract/render";
-static const gchar size_key[] = "/module/extract/size";
-static const gchar zscale_key[] = "/module/extract/zscale";
-static const gchar opacity_key[] = "/module/extract/opacity";
+static const gchar render_key[]      = "/module/extract/render";
+static const gchar size_key[]        = "/module/extract/size";
+static const gchar zscale_key[]      = "/module/extract/zscale";
+static const gchar opacity_key[]     = "/module/extract/opacity";
 
 static void
 extract_sanitize_args(ExtractArgs *args)

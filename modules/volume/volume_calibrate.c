@@ -175,7 +175,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Recalibrate volume data dimensions or value range."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2013",
 };
@@ -186,13 +186,13 @@ static gboolean
 module_register(void)
 {
     gwy_volume_func_register("volcal",
-                              (GwyVolumeFunc)&volcal,
-                              N_("/_Dimensions and Units..."),
-                              GWY_STOCK_DATA_MEASURE,
-                              VOLCAL_RUN_MODES,
-                              GWY_MENU_FLAG_VOLUME,
-                              N_("Change physical dimensions, units "
-                                 "or value scale"));
+                             (GwyVolumeFunc)&volcal,
+                             N_("/_Dimensions and Units..."),
+                             GWY_STOCK_DATA_MEASURE,
+                             VOLCAL_RUN_MODES,
+                             GWY_MENU_FLAG_VOLUME,
+                             N_("Change physical dimensions, units "
+                                "or value scale"));
 
     return TRUE;
 }
@@ -216,7 +216,7 @@ volcal(GwyContainer *data, GwyRunType run)
     g_return_if_fail(GWY_IS_BRICK(brick));
 
     volcal_load_args(gwy_app_settings_get(), &args);
-    
+
     args.xorig = gwy_brick_get_xreal(brick);
     args.yorig = gwy_brick_get_yreal(brick);
     args.zorig = gwy_brick_get_zreal(brick);
@@ -273,7 +273,7 @@ volcal(GwyContainer *data, GwyRunType run)
     args.wunit = args.wunitorig;
 
 
-/*    printf("x: %g %d %g (%s) y:  %g %d %g (%s) z:  %g %d %g (%s) w:  %g %d %g (%s)\n", 
+/*    printf("x: %g %d %g (%s) y:  %g %d %g (%s) z:  %g %d %g (%s) w:  %g %d %g (%s)\n",
                                           args.xorig, args.xexponent, args.x0orig, args.xunitorig,
                                           args.yorig, args.yexponent, args.y0orig, args.yunitorig,
                                           args.zorig, args.zexponent, args.z0orig, args.zunitorig,
@@ -348,17 +348,18 @@ volcal(GwyContainer *data, GwyRunType run)
         siunitz = gwy_data_field_get_si_unit_z(dfield);
         gwy_si_unit_set_from_string(siunitz, args.wunit);
     }
-   
+
     newid = gwy_app_data_browser_add_brick(brick, dfield, data, TRUE);
     g_object_unref(brick);
     g_object_unref(dfield);
 
     gwy_app_set_brick_title(data, newid, _("Recalibrated Data"));
+    gwy_app_volume_log_add(data, id, newid, "volume::volcal", NULL);
 }
 
 static gboolean
 volcal_dialog(VolcalArgs *args,
-                 GwyBrick *brick)
+              GwyBrick *brick)
 {
     enum { RESPONSE_RESET = 1};
     GtkWidget *dialog, *spin, *table, *label;

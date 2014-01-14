@@ -50,7 +50,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Inverts value in volume data"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2013",
 };
@@ -77,11 +77,9 @@ volume_invert(GwyContainer *data, GwyRunType run)
     GwyBrick *brick = NULL;
     GwyDataField *dfield = NULL;
     gchar key[50];
-    gint id;
-
+    gint id, newid;
 
     g_return_if_fail(run & VOLUME_INVERT_RUN_MODES);
-
 
     gwy_app_data_browser_get_current(GWY_APP_BRICK, &brick,
                                      GWY_APP_BRICK_ID, &id,
@@ -97,14 +95,11 @@ volume_invert(GwyContainer *data, GwyRunType run)
     gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
     gwy_brick_multiply(brick, -1.0);
 
-    gwy_app_data_browser_add_brick(brick, dfield, data, TRUE);
+    newid = gwy_app_data_browser_add_brick(brick, dfield, data, TRUE);
     g_object_unref(brick);
     g_object_unref(dfield);
 
-
-
-
+    gwy_app_volume_log_add(data, id, newid, "volume::volume_invert", NULL);
 }
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
