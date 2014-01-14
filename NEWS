@@ -1,11 +1,12 @@
 2.35 (0000-00-00)
 Application:
-- A viewer of data processing operation log is available in the right-click
-  menu.
+- A log of data modification operations is recorded for each channel and volume
+  data. A viewer of data processing operation log is available in the
+  right-click menus.  Logging can be enabled and disabled in the Edit menu.
 - A workaround for toolbox menus disapparing in Unity was implemented.
 
 Libraries:
-- libgwyapp: Functions for logging data processing operations were added.
+- libgwyapp: Functions for of logging data processing operations were added.
 - libgwyapp: Missing brick containers items were added to validation and file
   merging operations.
 - libgwyprocess: gwy_data_field_grains_get_distribution() no longer incorrectly
@@ -14,10 +15,11 @@ Libraries:
   with taking the ownership.
 
 Modules:
-- Data processing modules: Support for logging was added.
+- Data processing, file and volume modules: Support for logging was added.
 - Rank (new): Rank transform-based local constrast ehnancement presentation.
 - HDR image: 32bit and 64bit integer samples as well as 32bit and 64bit
   floating point samples are supported.  Plain BigTIFF images can be loaded.
+- APE file: Metadata handling for different SPM modes was improved.
 
 
 2.34 (2013-12-15)
