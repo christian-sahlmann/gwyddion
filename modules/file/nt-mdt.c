@@ -514,12 +514,14 @@ static GwySpectra*    extract_sps_curve(MDTScannedDataFrame *dataframe,
                                         guint number);
 static GwySpectra*    extract_new_curve(MDTNewSpecFrame *dataframe,
                                         guint number);
-static GwyDataField*  extract_mda_data      (MDTMDAFrame *dataframe);
-static GwyGraphModel* extract_mda_spectrum  (MDTMDAFrame *dataframe,
+static GwyDataField*  extract_mda_data      (MDTMDAFrame  *dataframe);
+static GwyGraphModel* extract_mda_spectrum  (MDTMDAFrame  *dataframe,
                                              guint number);
-static GwyBrick *     extract_brick         (MDTMDAFrame *dataframe,
+static GwyBrick *     extract_brick         (MDTMDAFrame  *dataframe,
                                              GwyContainer **metadata,
-                                             const gchar *filename);
+                                             GwyDataField ***scanData,
+                                             gchar        ***scanNames,
+                                             const gchar  *filename);
 static void           start_element    (GMarkupParseContext *context,
                                         const gchar *element_name,
                                         const gchar **attribute_names,
@@ -870,6 +872,9 @@ mdt_load(const gchar *filename,
     MDTFile mdtfile;
     GString *key;
     guint n, i, j, xres, yres;
+    GwyDataField **scanData;
+    gchar **scanNames;
+    const gchar *lTitle;
 
     gwy_debug("");
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -958,15 +963,18 @@ mdt_load(const gchar *filename,
             }
             else if (mdaframe->nDimensions == 3 && mdaframe->nMesurands >= 1) {
                 /* raman images */
+                scanData = NULL;
+                scanNames = NULL;
                 meta = NULL;
-                if ((brick = extract_brick(mdaframe, &meta, filename))) {
+                if ((brick = extract_brick(mdaframe, &meta, &scanData, &scanNames, filename))) {
                     g_string_printf(key, "/brick/%d", n);
                     gwy_container_set_object_by_name(data,
                                                      key->str,
                                                      brick);
 
+                    g_string_append(key, "/title");
+
                     if (mdaframe->title) {
-                        g_string_append(key, "/title");
                         gwy_container_set_string_by_name(data, key->str,
                                             g_strdup_printf("%s (%u)",
                                             mdaframe->title, i+1));
@@ -974,6 +982,8 @@ mdt_load(const gchar *filename,
                     }
                     else
                         gwy_app_channel_title_fall_back(data, n);
+
+                    lTitle = gwy_container_get_string_by_name(data, key->str);
 
                     if (meta) {
                         g_string_printf(key, "/brick/%d/meta", n);
@@ -998,6 +1008,27 @@ mdt_load(const gchar *filename,
                     g_object_unref(dfield);
 
                     n++;
+
+                    if (scanData) {
+                        for (j = 0; scanData[j]; j++, n++) {
+                            g_string_printf(key, "/%d/data", n);
+                            gwy_container_set_object_by_name(data, key->str, scanData[j]);
+                            g_object_unref(scanData[j]);
+                            g_string_append(key, "/title");
+                            if (scanNames && scanNames[j]) {
+                                gwy_container_set_string_by_name(data, key->str, scanNames[j]);
+                            }
+                            else
+                                gwy_app_channel_title_fall_back(data, n);
+
+                            gwy_container_set_string_by_name(data, key->str,
+                                                             g_strdup_printf("%s, %s", gwy_container_get_string_by_name(data, key->str), lTitle));
+                        }
+                        g_free(scanData);
+                    }
+                    if (scanNames) {
+                        g_free(scanNames);
+                    }
                 }
             }
             else {
@@ -2851,13 +2882,15 @@ mdt_find_data_name(const gchar *headername, const gchar *dataname)
 }
 
 static GwyBrick *
-extract_brick(MDTMDAFrame *dataframe,
+extract_brick(MDTMDAFrame  *dataframe,
               GwyContainer **metadata,
-              const gchar *filename)
+              GwyDataField ***scanData,
+              gchar        ***scanNames,
+              const gchar  *filename)
 {
     GwyBrick *brick = NULL;
-    gint power10x, power10y, power10z, power10w;
-    GwySIUnit *siunitx, *siunity, *siunitz, *siunitw;
+    gint power10x, power10y, power10z, power10w, power10t;
+    GwySIUnit *siunitx, *siunity, *siunitz, *siunitw, *siunitt;
     const guchar *p, *px, *base;
     const gchar *cunit;
     gchar *unit, *pos, *name, *value, *dname, *dataname;
@@ -2867,9 +2900,9 @@ extract_brick(MDTMDAFrame *dataframe,
     gint xres, yres, zres;
     gint i, j, k, nmes;
     gdouble xreal, yreal, zscale, wscale, w;
-    gdouble *data;
+    gdouble *data, **sdata=NULL, *tscale = NULL;
     GwyDataLine *cal;
-    MDTMDACalibration *xAxis, *yAxis, *zAxis, *wAxis;
+    MDTMDACalibration *xAxis, *yAxis, *zAxis, *wAxis, *tAxis;
     MDTXMLComment comment;
     MDTXMLCommentEntry *entry;
     GMarkupParser parser = { xmlcomment_start_element,
@@ -2952,7 +2985,7 @@ extract_brick(MDTMDAFrame *dataframe,
         xAxis = &dataframe->dimensions[0];
         yAxis = &dataframe->dimensions[1];
         zAxis = &dataframe->dimensions[2];
-        wAxis = &dataframe->mesurands[0];
+        wAxis = &dataframe->mesurands[dataframe->nMesurands - 1];
     }
 
     if (wAxis->dataType != MDA_DATA_FLOAT32) {
@@ -3032,9 +3065,39 @@ extract_brick(MDTMDAFrame *dataframe,
     nmes = dataframe->nMesurands;
     if (g_str_has_prefix(frame_type, "HybridForceVolume")) {
         p = base;
+        if (nmes > 1) {
+            sdata = g_malloc((nmes - 1) * sizeof(gdouble*));
+            tscale = g_malloc((nmes - 1) * sizeof(gdouble));
+            *scanData = g_malloc(nmes * sizeof(**scanData));
+            *scanNames= g_malloc(nmes * sizeof(gchar*));
+            for (i = 0; i < nmes - 1; i++) {
+                (*scanData)[i] = gwy_data_field_new(xres, yres,
+                                                    xres *xreal, yres *yreal,
+                                                    FALSE);
+                gwy_data_field_set_si_unit_xy((*scanData)[i], siunitx);
+
+                tAxis = &dataframe->mesurands[i];
+                (*scanNames)[i] = tAxis->name && tAxis->nameLen ? g_strndup(tAxis->name,tAxis->nameLen) : NULL;
+                if (tAxis->unit && tAxis->unitLen) {
+                    unit = g_strndup(tAxis->unit, tAxis->unitLen);
+                    siunitt = gwy_si_unit_new_parse(unit, &power10t);
+                    tscale[i] = pow10(power10t) * tAxis->scale;
+                    g_free(unit);
+                    gwy_data_field_set_si_unit_z((*scanData)[i], siunitt);
+                }
+                else
+                    tscale[i] = 1;
+
+                sdata[i] = gwy_data_field_get_data((*scanData)[i]);
+            }
+            (*scanData)[nmes - 1] = NULL;
+        }
         for (i = 0; i < yres; i++)
             for (j = 0; j < xres; j++) {
-                p += (nmes - 1) * sizeof(gfloat);
+                for (k = 0; k < nmes - 1; k++) {
+                    if ((!ext_name) || (p - base <= size2))
+                      sdata[k][j + i * xres] = (gdouble)gwy_get_gfloat_le(&p) * tscale[k];
+				}
                 for (k = 0; k < zres; k++) {
                     if ((!ext_name) || (p - base <= size2)) {
                         w = (gdouble)gwy_get_gfloat_le(&p);
@@ -3042,6 +3105,13 @@ extract_brick(MDTMDAFrame *dataframe,
                     }
                 }
             }
+
+        if (sdata) {
+            g_free(sdata);
+        }
+        if (tscale) {
+            g_free(tscale);
+        }
     }
     else {
         p = base;
