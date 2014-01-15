@@ -2980,12 +2980,20 @@ extract_brick(MDTMDAFrame  *dataframe,
         zAxis = &dataframe->dimensions[0];
         wAxis = &dataframe->mesurands[0];
     }
-    else {
-        /* Old raman images or hybrid frames has XY first */
+    else if ((frame_type)
+             && g_str_has_prefix(frame_type, "HybridForceVolume")) {
+        /* hybrid frames has XY first and last measurand as w */
         xAxis = &dataframe->dimensions[0];
         yAxis = &dataframe->dimensions[1];
         zAxis = &dataframe->dimensions[2];
         wAxis = &dataframe->mesurands[dataframe->nMesurands - 1];
+    }
+    else {
+        /* Old raman images has XY first and first measurand as w */
+        xAxis = &dataframe->dimensions[0];
+        yAxis = &dataframe->dimensions[1];
+        zAxis = &dataframe->dimensions[2];
+        wAxis = &dataframe->mesurands[0];
     }
 
     if (wAxis->dataType != MDA_DATA_FLOAT32) {
@@ -3063,7 +3071,8 @@ extract_brick(MDTMDAFrame  *dataframe,
     data = gwy_brick_get_data(brick);
 
     nmes = dataframe->nMesurands;
-    if (g_str_has_prefix(frame_type, "HybridForceVolume")) {
+    if (frame_type
+        && g_str_has_prefix(frame_type, "HybridForceVolume")) {
         p = base;
         if (nmes > 1) {
             sdata = g_malloc((nmes - 1) * sizeof(gdouble*));
@@ -3097,7 +3106,7 @@ extract_brick(MDTMDAFrame  *dataframe,
                 for (k = 0; k < nmes - 1; k++) {
                     if ((!ext_name) || (p - base <= size2))
                       sdata[k][j + i * xres] = (gdouble)gwy_get_gfloat_le(&p) * tscale[k];
-				}
+                }
                 for (k = 0; k < zres; k++) {
                     if ((!ext_name) || (p - base <= size2)) {
                         w = (gdouble)gwy_get_gfloat_le(&p);
