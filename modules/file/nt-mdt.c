@@ -1006,7 +1006,7 @@ mdt_load(const gchar *filename,
                                                      dfield);
                     g_object_unref(brick);
                     g_object_unref(dfield);
-                    
+
                     gwy_file_volume_import_log_add(data, n, "nt-mdt", filename);
 
                     n++;
@@ -1025,7 +1025,7 @@ mdt_load(const gchar *filename,
 
                             gwy_container_set_string_by_name(data, key->str,
                                                              g_strdup_printf("%s, %s", gwy_container_get_string_by_name(data, key->str), lTitle));
-                            
+
                             gwy_file_channel_import_log_add(data, n, "nt-mdt", filename);
                         }
                         g_free(scanData);
@@ -2893,8 +2893,12 @@ extract_brick(MDTMDAFrame  *dataframe,
               const gchar  *filename)
 {
     GwyBrick *brick = NULL;
+    gint scanlocation = MDT_HLB;
+    gint xyoffset, xstep, ystep;
     gint power10x, power10y, power10z, power10w, power10t;
-    GwySIUnit *siunitx, *siunity, *siunitz, *siunitw, *siunitt;
+    gint power10nl = 0;
+    GwySIUnit *siunitx, *siunity, *siunitz, *siunitw;
+    GwySIUnit *siunitt, *siunitnl = NULL;
     const guchar *p, *px, *base;
     const gchar *cunit;
     gchar *unit, *pos, *name, *value, *dname, *dataname;
@@ -2903,7 +2907,7 @@ extract_brick(MDTMDAFrame  *dataframe,
     gchar *ext_name = NULL, *axes_order = NULL, *frame_type = NULL;
     gint xres, yres, zres;
     gint i, j, k, nmes;
-    gdouble xreal, yreal, zscale, wscale, w;
+    gdouble xreal, yreal, zscale, wscale, w, zamp = 1;
     gdouble *data, **sdata=NULL, *tscale = NULL;
     GwyDataLine *cal;
     MDTMDACalibration *xAxis, *yAxis, *zAxis, *wAxis, *tAxis;
@@ -2950,6 +2954,20 @@ extract_brick(MDTMDAFrame  *dataframe,
                  "/FrameComment/Parameters/Measurement/Spectra/Scanning/AxesDirections")) {
             axes_order = g_strdup(entry->value);
         }
+        else if (entry->name && gwy_strequal(entry->name,
+                                             "/FrameComment/Parameters/Hybrid/DevicePars/ZAmp")) {
+            zamp = g_ascii_strtod(entry->value, NULL);
+        }
+        else if (entry->name && gwy_strequal(entry->name,
+                                             "/FrameComment/Parameters/Hybrid/DevicePars/ZAmpUnits")) {
+            unit = g_strdup(entry->value);
+            siunitnl = gwy_si_unit_new_parse(unit, &power10nl);
+            g_free(unit);
+        }
+        else if (entry->name && gwy_strequal(entry->name,
+                                             "/FrameComment/Parameters/Measurement/Scanning/Location")) {
+            scanlocation = strtol(entry->value, NULL, 10);
+        }
 
         if (entry->value && !gwy_strequal(entry->value, "")) {
             pos = strrchr(entry->name, '/');
@@ -2961,6 +2979,8 @@ extract_brick(MDTMDAFrame  *dataframe,
         }
     }
     g_array_free(comment.entries, TRUE);
+
+    zamp = zamp * pow10(power10nl);
 
     base = (guchar *)dataframe->image;
     if (ext_name) {
@@ -3066,6 +3086,63 @@ extract_brick(MDTMDAFrame  *dataframe,
     zscale = pow10(power10z) * zAxis->scale;
     wscale = pow10(power10w) * wAxis->scale;
 
+    switch (scanlocation) {
+        case MDT_HLT: {
+            xyoffset = 0 ;
+            xstep =  1;
+            ystep =  xres;
+        }
+        break;
+        case MDT_HLB: {
+            xyoffset = xres * (yres - 1);
+            xstep = 1;
+            ystep = -xres;
+        }
+        break;
+        case MDT_HRT: {
+            xyoffset = xres - 1;
+            xstep = -1;
+            ystep = xres;
+        }
+        break;
+        case MDT_HRB: {
+            xyoffset = xres * yres - 1;
+            xstep = -1;
+            ystep = -xres;
+        }
+        break;
+        case MDT_VLT: {
+            xyoffset = 0;
+            xstep = yres;
+            ystep = 1;
+        }
+        break;
+        case MDT_VLB: {
+            xyoffset = xres * (yres - 1);
+            xstep =  yres;
+            ystep = -1;
+        }
+        break;
+        case MDT_VRT: {
+            xyoffset = xres - 1;
+            xstep = -yres;
+            ystep = 1;
+        }
+        break;
+        case MDT_VRB: {
+            xyoffset = xres * yres - 1;
+            xstep = -yres;
+            ystep = -1;
+        }
+        break;
+        default: {
+            gwy_debug("Wrong scan direction!");
+            xyoffset = 0 ;
+            xstep =  1;
+            ystep =  xres;
+        }
+    }
+
     brick = gwy_brick_new(xres, yres, zres,
                           xreal * xres,
                           yreal * yres,
@@ -3109,12 +3186,13 @@ extract_brick(MDTMDAFrame  *dataframe,
             for (j = 0; j < xres; j++) {
                 for (k = 0; k < nmes - 1; k++) {
                     if ((!ext_name) || (p - base <= size2))
-                      sdata[k][j + i * xres] = (gdouble)gwy_get_gfloat_le(&p) * tscale[k];
+                        sdata[k][xyoffset + j * xstep + i * ystep]
+                           = (gdouble)gwy_get_gfloat_le(&p) * tscale[k];
                 }
                 for (k = 0; k < zres; k++) {
                     if ((!ext_name) || (p - base <= size2)) {
                         w = (gdouble)gwy_get_gfloat_le(&p);
-                        *(data + k * xres * yres + i * xres + j) = w * wscale;
+                        *(data + k * xres * yres + xyoffset + i * ystep + j * xstep) = w * wscale;
                     }
                 }
             }
@@ -3125,6 +3203,23 @@ extract_brick(MDTMDAFrame  *dataframe,
         if (tscale) {
             g_free(tscale);
         }
+
+        cal = gwy_data_line_new(zres, zres, FALSE);
+        data = gwy_data_line_get_data(cal);
+        for (k = 0; k < zres; k++) {
+            *(data++) = zamp * (1 - cos(k * 2 * M_PI / zres));
+        }
+
+        if (siunitnl) {
+            gwy_data_line_set_si_unit_y(cal, siunitnl);
+        }
+        else {
+            gwy_data_line_set_si_unit_y(cal, siunitz);
+        }
+        gwy_brick_set_zcalibration(brick, cal);
+
+        g_object_unref(cal);
+
     }
     else {
         p = base;
@@ -3133,7 +3228,7 @@ extract_brick(MDTMDAFrame  *dataframe,
                 for (k = 0; k < zres; k++) {
                     if ((!ext_name) || (p - base <= size2)) {
                         w = (gdouble)gwy_get_gfloat_le(&p);
-                        *(data + k * xres * yres + i * xres + j) = w * wscale;
+                        *(data + k * xres * yres + xyoffset + i * ystep + j * xstep) = w * wscale;
                     }
                 }
             }
@@ -3181,13 +3276,21 @@ extract_brick(MDTMDAFrame  *dataframe,
 
     gwy_brick_set_si_unit_x(brick, siunitx);
     gwy_brick_set_si_unit_y(brick, siunity);
-    gwy_brick_set_si_unit_z(brick, siunitz);
+    if (siunitnl) {
+        gwy_brick_set_si_unit_z(brick, siunitnl);
+    }
+    else {
+        gwy_brick_set_si_unit_z(brick, siunitz);
+    }
     gwy_brick_set_si_unit_w(brick, siunitw);
 
     g_object_unref(siunitx);
     g_object_unref(siunity);
     g_object_unref(siunitz);
     g_object_unref(siunitw);
+    if (siunitnl) {
+        g_object_unref(siunitnl);
+    }
 
     fail:
     if (buffer2)
