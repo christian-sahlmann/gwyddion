@@ -1006,6 +1006,8 @@ mdt_load(const gchar *filename,
                                                      dfield);
                     g_object_unref(brick);
                     g_object_unref(dfield);
+                    
+                    gwy_file_volume_import_log_add(data, n, "nt-mdt", filename);
 
                     n++;
 
@@ -1023,6 +1025,8 @@ mdt_load(const gchar *filename,
 
                             gwy_container_set_string_by_name(data, key->str,
                                                              g_strdup_printf("%s, %s", gwy_container_get_string_by_name(data, key->str), lTitle));
+                            
+                            gwy_file_channel_import_log_add(data, n, "nt-mdt", filename);
                         }
                         g_free(scanData);
                     }

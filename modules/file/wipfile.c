@@ -1465,6 +1465,11 @@ wip_read_data(GNode *node, gpointer filedata)
                                                  image);
                 g_object_unref(image);
                 g_object_unref(brick);
+
+                gwy_file_volume_import_log_add(filecontent->data,
+                                               filecontent->numbricks,
+                                               "wipfile",
+                                               filecontent->filename);
             }
         }
         else {

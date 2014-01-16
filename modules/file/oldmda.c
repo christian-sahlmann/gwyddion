@@ -113,6 +113,7 @@ typedef struct {
     gint          power10x;
     gint          power10y;
     gint          power10z;
+    const gchar  *filename;
     GwyContainer *data;
 }OldMDAFile;
 
@@ -151,7 +152,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports old NTMDT MDA Spectra files."),
     "dn2010 <dn2010@gmail.com>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Daniil Bratashov (dn2010)",
     "2012",
 };
@@ -265,6 +266,7 @@ oldmda_load(const gchar *filename,
 
     container = gwy_container_new();
     mdafile.data = container;
+    mdafile.filename = filename;
     oldmda_read_data(&mdafile, buffer2);
 
 fail2:
@@ -389,6 +391,9 @@ oldmda_read_data(OldMDAFile *mdafile, const gchar *buffer)
                                      dfield);
     g_object_unref(dfield);
     g_object_unref(brick);
+
+    gwy_file_volume_import_log_add(mdafile->data,
+                                   0, "oldmda", mdafile->filename);
 }
 
 static gchar*
