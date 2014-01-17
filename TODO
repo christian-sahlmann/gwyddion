@@ -8,6 +8,7 @@ Release checklist:
 - must build on Linux from svn and tarballs
 - must cross-build for MS Windows
 - update user guide module map
+- check translations, may require actually running Gwyddion in all locales
 - update translations (make update-po in po; remember to commit and tag the
   really final versions, making dists in general updates po again)
 - make sure global library headers (libfoo.h) include all other public
