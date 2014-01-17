@@ -146,6 +146,7 @@ static gboolean      omicron_read_spectro_header(gchar **buffer,
                                                  GError **error);
 static GwyDataField* omicron_read_data          (OmicronFile *ofile,
                                                  OmicronTopoChannel *channel,
+                                                 gchar **datafilename,
                                                  GError **error);
 static GwySpectra*   omicron_read_cs_data       (OmicronFile *ofile,
                                                  OmicronSpectroChannel *channel,
@@ -262,9 +263,10 @@ omicron_load(const gchar *filename,
     /* First Load the Topographic Data */
     for (i = 0; i < ofile.topo_channels->len; i++) {
         OmicronTopoChannel *channel;
+        gchar *datafilename = NULL;
 
         channel = g_ptr_array_index(ofile.topo_channels, i);
-        dfield = omicron_read_data(&ofile, channel, error);
+        dfield = omicron_read_data(&ofile, channel, &datafilename, error);
         if (!dfield) {
             gwy_object_unref(container);
             goto fail;
@@ -293,7 +295,8 @@ omicron_load(const gchar *filename,
             g_object_unref(meta);
         }
 
-        gwy_file_channel_import_log_add(container, i, "omicron", filename);
+        gwy_file_channel_import_log_add(container, i, "omicron", datafilename);
+        g_free(datafilename);
     }
 
     /* Then load the spectroscopy data. */
@@ -736,6 +739,7 @@ omicron_fix_file_name(const gchar *parname,
 static GwyDataField*
 omicron_read_data(OmicronFile *ofile,
                   OmicronTopoChannel *channel,
+                  gchar **datafilename,
                   GError **error)
 {
     GError *err = NULL;
@@ -750,6 +754,7 @@ omicron_read_data(OmicronFile *ofile,
     guint i, j, n;
     gint power10 = 0;
 
+    *datafilename = NULL;
     filename = omicron_fix_file_name(ofile->filename, channel->filename, error);
     if (!filename)
         return NULL;
@@ -760,7 +765,8 @@ omicron_read_data(OmicronFile *ofile,
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
-    g_free(filename);
+    *datafilename = filename;
+    filename = NULL;
 
     n = ofile->xres*ofile->yres;
     if (err_SIZE_MISMATCH(error, 2*n, size, TRUE)) {
