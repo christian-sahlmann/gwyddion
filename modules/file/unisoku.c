@@ -240,6 +240,7 @@ unisoku_load(const gchar *filename,
     if (!gwy_file_get_contents(data_name, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         unisoku_file_free(&ufile);
+        g_free(data_name);
         return NULL;
     }
 
@@ -248,6 +249,7 @@ unisoku_load(const gchar *filename,
 
     if (!dfield) {
         unisoku_file_free(&ufile);
+        g_free(data_name);
         return NULL;
     }
 
@@ -260,9 +262,10 @@ unisoku_load(const gchar *filename,
     gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
 
-    gwy_file_channel_import_log_add(container, 0, "unisoku", filename);
+    gwy_file_channel_import_log_add(container, 0, "unisoku", data_name);
 
     unisoku_file_free(&ufile);
+    g_free(data_name);
 
     return container;
 }
