@@ -314,6 +314,7 @@ anfatec_load(const gchar *filename,
     for (id = 0; id <= maxid; id++) {
         GQuark quark;
         gchar *title;
+        const gchar *dataname;
 
         if (!(dfield = anfatec_load_channel(hash, id, dirname, &title)))
             continue;
@@ -331,7 +332,11 @@ anfatec_load(const gchar *filename,
         else
             gwy_app_channel_title_fall_back(container, id);
 
-        gwy_file_channel_import_log_add(container, id, "anfatec", filename);
+        key = g_strdup_printf("%d::FileName", id);
+        dataname = g_hash_table_lookup(hash, key);
+        g_free(key);
+
+        gwy_file_channel_import_log_add(container, id, "anfatec", dataname);
     }
 
     err_NO_DATA(error);
