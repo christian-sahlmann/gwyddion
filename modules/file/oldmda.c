@@ -266,7 +266,7 @@ oldmda_load(const gchar *filename,
 
     container = gwy_container_new();
     mdafile.data = container;
-    mdafile.filename = filename;
+    mdafile.filename = dataname;
     oldmda_read_data(&mdafile, buffer2);
 
 fail2:
