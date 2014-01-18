@@ -853,11 +853,11 @@ graph_selection_finished_cb(GwySelection *selection,
                                 0);
         calibration = gwy_brick_get_zcalibration(controls->brick);
         if (calibration) {
-			gwy_data_line_set_si_unit_x(dline, gwy_data_line_get_si_unit_y(calibration));
-		}
-		else {
-			gwy_data_line_set_si_unit_x(dline, gwy_brick_get_si_unit_z(controls->brick));
-		}
+            gwy_data_line_set_si_unit_x(dline, gwy_data_line_get_si_unit_y(calibration));
+        }
+        else {
+            gwy_data_line_set_si_unit_x(dline, gwy_brick_get_si_unit_z(controls->brick));
+        }
         gwy_data_line_set_si_unit_y(dline, gwy_brick_get_si_unit_w(controls->brick));
     }
 
@@ -1925,7 +1925,7 @@ gothere(gdouble *data, gdouble *vdata, gint xres, gint yres, gint col, gint row,
     if (col < 1 || col>=(xres-1)) return FALSE;
 
     if (dir == 0) /*y const*/ {
-	if ((data[row + yres*col]>threshold) &&
+    if ((data[row + yres*col]>threshold) &&
                                      ((data[row-1 + yres*col]<threshold) || (data[row + yres*(col-1)]<threshold)
                                       || (data[row+1 + yres*col]<threshold) || (data[row + yres*(col+1)]<threshold)
                                       || (data[row+1 + yres*(col+1)]<threshold) || (data[row-1 + yres*(col-1)]<threshold)
@@ -2042,10 +2042,10 @@ p3d_add_wireframe(ExtractControls *controls)
         /*here comes the algorithm*/
         for (col=1; col<zres-1; col++)
         {
-	    for (row=1; row<yres-1; row++)
+        for (row=1; row<yres-1; row++)
             {
                 move = 1;
-		if (gothere(data, vdata, zres, yres, col, row, 0, threshold)) {
+        if (gothere(data, vdata, zres, yres, col, row, 0, threshold)) {
                     visitme(controls, &actual_nps, data, vdata, xres, yres, zres, col, row, 0, i, &move, threshold);
                 }
             }
