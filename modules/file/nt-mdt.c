@@ -2956,7 +2956,7 @@ extract_brick(MDTMDAFrame  *dataframe,
         }
         else if (entry->name && gwy_strequal(entry->name,
                                              "/FrameComment/Parameters/Hybrid/DevicePars/ZAmp")) {
-            zamp = g_ascii_strtod(entry->value, NULL);
+            zamp = g_strtod(entry->value, NULL);
         }
         else if (entry->name && gwy_strequal(entry->name,
                                              "/FrameComment/Parameters/Hybrid/DevicePars/ZAmpUnits")) {
@@ -3276,12 +3276,7 @@ extract_brick(MDTMDAFrame  *dataframe,
 
     gwy_brick_set_si_unit_x(brick, siunitx);
     gwy_brick_set_si_unit_y(brick, siunity);
-    if (siunitnl) {
-        gwy_brick_set_si_unit_z(brick, siunitnl);
-    }
-    else {
-        gwy_brick_set_si_unit_z(brick, siunitz);
-    }
+    gwy_brick_set_si_unit_z(brick, siunitz);
     gwy_brick_set_si_unit_w(brick, siunitw);
 
     g_object_unref(siunitx);
