@@ -852,7 +852,12 @@ graph_selection_finished_cb(GwySelection *selection,
                                 gwy_brick_get_zres(controls->brick),
                                 0);
         calibration = gwy_brick_get_zcalibration(controls->brick);
-        gwy_data_line_set_si_unit_x(dline, gwy_brick_get_si_unit_z(controls->brick));
+        if (calibration) {
+			gwy_data_line_set_si_unit_x(dline, gwy_data_line_get_si_unit_y(calibration));
+		}
+		else {
+			gwy_data_line_set_si_unit_x(dline, gwy_brick_get_si_unit_z(controls->brick));
+		}
         gwy_data_line_set_si_unit_y(dline, gwy_brick_get_si_unit_w(controls->brick));
     }
 
