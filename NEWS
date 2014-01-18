@@ -20,6 +20,8 @@ Modules:
 - HDR image: 32bit and 64bit integer samples as well as 32bit and 64bit
   floating point samples are supported.  Plain BigTIFF images can be loaded.
 - APE file: Metadata handling for different SPM modes was improved.
+- nanoscantech: Problems with loading 4d jumping mode spectroscopy fixed.
+- NT-MDT: Hybrid mode is loaded with distance calibration.
 
 
 2.34 (2013-12-15)
