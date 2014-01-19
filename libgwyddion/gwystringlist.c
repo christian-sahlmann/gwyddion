@@ -380,7 +380,7 @@ clear_strings(GPtrArray *strings)
 /************************** Documentation ****************************/
 
 /**
- * SECTION:gwystrlist
+ * SECTION:gwystringlist
  * @title: GwyStringList
  * @short_description: A string list object wrapper
  *
