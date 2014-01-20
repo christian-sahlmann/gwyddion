@@ -282,7 +282,7 @@ extract_dialog(ExtractArgs *args,
 
     GtkWidget *dialog, *table, *hbox, *label, *notebook, *button;
     GwyDataField *dfield;
-    GwyDataLine *dline;
+    GwyDataLine *dline, *calibration;
     ExtractControls controls;
     gint response;
     gdouble zoomval;
@@ -727,11 +727,20 @@ extract_dialog(ExtractArgs *args,
         if (controls.gcomputed) {
             GwyGraphModel *gmodel;
             GwyGraphCurveModel *gcmodel;
+            gdouble *xdata, *ydata;
+            gint n;
 
             dline = GWY_DATA_LINE(gwy_container_get_object_by_name(controls.mydata,
                                                                    "/1/graph"));
 
+            calibration = NULL;
+            gwy_container_gis_object_by_name(controls.mydata,
+                                             "/1/calibration",
+                                             &calibration);
             gmodel = gwy_graph_model_new();
+            if (calibration) {
+                gwy_data_line_set_si_unit_x(dline, gwy_data_line_get_si_unit_y(calibration));
+            }
             gwy_graph_model_set_units_from_data_line(gmodel, dline);
 
             if (args->gtype == GRAPH_DIRX)
@@ -751,7 +760,17 @@ extract_dialog(ExtractArgs *args,
                          NULL);
 
             gcmodel = gwy_graph_curve_model_new();
-            gwy_graph_curve_model_set_data_from_dataline(gcmodel, dline, -1, -1);
+            if (calibration) {
+                xdata = gwy_data_line_get_data(calibration);
+                ydata = gwy_data_line_get_data(dline);
+                n = MIN(gwy_data_line_get_res(calibration),
+                gwy_data_line_get_res(dline));
+                gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, n);
+            }
+            else {
+                gwy_graph_curve_model_set_data_from_dataline(gcmodel, dline, -1, -1);
+            }
+
             g_object_set(gcmodel, "description", _("Brick graph"),
                          "mode", GWY_GRAPH_CURVE_LINE,
                          NULL);
@@ -889,6 +908,9 @@ graph_selection_finished_cb(GwySelection *selection,
 
     gwy_graph_model_add_curve(controls->gmodel, cmodel);
     gwy_container_set_object_by_name(controls->mydata, "/1/graph", dline);
+    if (calibration) {
+        gwy_container_set_object_by_name(controls->mydata, "/1/calibration", calibration);
+    }
 
     controls->gcomputed = TRUE;
 }
