@@ -67,7 +67,6 @@ process_LTLIBRARIES = \
 	neural.la \
 	noise_synth.la \
 	obj_synth.la \
-	otsu_threshold.la \
 	outliers.la \
 	pat_synth.la \
 	pid.la \
@@ -172,7 +171,6 @@ merge_la_SOURCES               = merge.c
 neural_la_SOURCES              = neural.c neuraldata.h
 noise_synth_la_SOURCES         = noise_synth.c dimensions.h synth.h
 obj_synth_la_SOURCES           = obj_synth.c dimensions.h synth.h
-otsu_threshold_la_SOURCES      = otsu_threshold.c
 outliers_la_SOURCES            = outliers.c
 pat_synth_la_SOURCES           = pat_synth.c dimensions.h synth.h
 pid_la_SOURCES                 = pid.c
