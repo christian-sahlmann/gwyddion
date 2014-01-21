@@ -189,6 +189,7 @@ scale_dialog(ScaleArgs *args)
     GtkWidget *dialog, *table, *spin;
     ScaleControls controls;
     enum { RESPONSE_RESET = 1 };
+    gdouble adjmin, step = 1e-4;
     gint response;
 
     dialog = gtk_dialog_new_with_buttons(gwy_sgettext("verb|Scale"), NULL, 0,
@@ -205,13 +206,14 @@ scale_dialog(ScaleArgs *args)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
 
+    adjmin = GWY_ROUND(2.0/MIN(args->org_xres, args->org_yres)/step)*step;
     controls.ratio = gtk_adjustment_new(args->ratio,
-                                        2.0/MIN(args->org_xres, args->org_yres),
+                                        adjmin,
                                         8192.0/MAX(args->org_xres, args->org_yres),
-                                        0.01, 0.2, 0);
+                                        step, 0.1, 0);
     spin = gwy_table_attach_hscale(table, 0, _("Scale by _ratio:"), NULL,
                                    controls.ratio, GWY_HSCALE_LOG);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 4);
     g_object_set_data(G_OBJECT(controls.ratio), "controls", &controls);
     g_signal_connect(controls.ratio, "value-changed",
                      G_CALLBACK(scale_changed_cb), args);
