@@ -1636,6 +1636,15 @@ png16_load(const gchar *filename,
         if (t)
             gwy_container_set_string_by_name(container, buf, (const guchar*)t);
 
+        if (t && gwy_stramong(t, "Red", "Green", "Blue", NULL)) {
+            gchar *palette;
+
+            g_snprintf(buf, sizeof(buf), "/%d/base/palette", id);
+            palette = g_strconcat("RGB-", t, NULL);
+            gwy_container_set_string_by_name(container, buf,
+                                             (const guchar*)palette);
+        }
+
         gwy_file_channel_import_log_add(container, id, "png16", filename);
     }
 
@@ -2038,6 +2047,16 @@ load_tiff_channels(GwyContainer *container,
         gwy_container_set_string_by_name(container, key,
                                          (const guchar*)g_strdup(title));
         g_free(key);
+
+        if (gwy_stramong(title, "Red", "Green", "Blue", NULL)) {
+            gchar *palette;
+
+            key = g_strdup_printf("/%d/base/palette", *id);
+            palette = g_strconcat("RGB-", title, NULL);
+            gwy_container_set_string_by_name(container, key,
+                                             (const guchar*)palette);
+            g_free(key);
+        }
 
         gwy_file_channel_import_log_add(container, *id, "tiffbig", filename);
 
