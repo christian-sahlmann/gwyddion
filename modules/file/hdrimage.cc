@@ -1993,6 +1993,8 @@ tiffbig_detect(const GwyFileDetectInfo *fileinfo,
 
     guint score = 0;
     if (reader) {
+        // If nothing else wants to load the image we can give it a try.
+        score = 20;
         // A bit larger value than in pixmap.c.
         if (reader->bits_per_sample > 8)
             score = 75;
