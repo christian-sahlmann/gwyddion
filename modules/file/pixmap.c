@@ -2128,7 +2128,7 @@ pixmap_save_bmp(GwyContainer *data,
     GwyPixbuf *pixbuf;
     guchar *buffer = NULL;
     guint i, j;
-    guint bmplen, bmprowstride;
+    guint bmplen, rowlen, bmprowstride;
     gboolean ok = FALSE;
     FILE *fh;
 
@@ -2136,7 +2136,8 @@ pixmap_save_bmp(GwyContainer *data,
     if (!pixbuf)
         return FALSE;
 
-    bmprowstride = 12*((pixbuf->width + 3)/4);
+    rowlen = 3*pixbuf->width;
+    bmprowstride = ((rowlen + 3)/4)*4;
     bmplen = pixbuf->height*bmprowstride + sizeof(bmp_head);
 
     fh = g_fopen(filename, "wb");
