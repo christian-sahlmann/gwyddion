@@ -22,6 +22,8 @@ Modules:
 - APE file: Metadata handling for different SPM modes was improved.
 - nanoscantech: Problems with loading 4d jumping mode spectroscopy fixed.
 - NT-MDT: Hybrid mode is loaded with distance calibration.
+- Scale: Rouding of scaling ratio to some odd values was fixed.
+- Pixmap export: Bad row padding for some BMP image widths was fixed.
 
 
 2.34 (2013-12-15)
