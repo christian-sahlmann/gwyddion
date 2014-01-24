@@ -1811,22 +1811,20 @@ write_tiff_head_rgb(FILE *fh,
                     guint bit_depth)
 {
     enum {
-        N_ENTRIES = 15,
+        N_ENTRIES = 14,
         ESTART = 4 + 4 + 2,
         HEAD_SIZE = ESTART + 12*N_ENTRIES + 4,  /* head + 0th directory */
         /* offsets of things we have to fill run-time */
-        WIDTH_OFFSET = ESTART + 12*1 + 8,
-        HEIGHT_OFFSET = ESTART + 12*2 + 8,
-        ROWS_OFFSET = ESTART + 12*9 + 8,
-        BYTES_OFFSET = ESTART + 12*10 + 8,
+        WIDTH_OFFSET = ESTART + 12*0 + 8,
+        HEIGHT_OFFSET = ESTART + 12*1 + 8,
+        ROWS_OFFSET = ESTART + 12*8 + 8,
+        BYTES_OFFSET = ESTART + 12*9 + 8,
     };
     static guchar tiff_head[] = {
         0x49, 0x49,   /* magic (LSB) */
         W(42),        /* more magic */
         Q(8),         /* 0th directory offset */
         W(N_ENTRIES), /* number of entries */
-        W(GWY_TIFFTAG_SUB_FILE_TYPE), W(GWY_TIFF_LONG), Q(1),
-            Q(GWY_TIFF_SUBFILE_FULL_IMAGE_DATA),
         W(GWY_TIFFTAG_IMAGE_WIDTH), W(GWY_TIFF_SHORT), Q(1), Q(0),
         W(GWY_TIFFTAG_IMAGE_LENGTH), W(GWY_TIFF_SHORT), Q(1), Q(0),
         W(GWY_TIFFTAG_BITS_PER_SAMPLE), W(GWY_TIFF_SHORT), Q(3), Q(HEAD_SIZE),
