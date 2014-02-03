@@ -769,7 +769,7 @@ omicron_read_data(OmicronFile *ofile,
     filename = NULL;
 
     n = ofile->xres*ofile->yres;
-    if (err_SIZE_MISMATCH(error, 2*n, size, TRUE)) {
+    if (err_SIZE_MISMATCH(error, 2*n, size, FALSE)) {
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
@@ -1025,7 +1025,7 @@ omicron_read_be_data(OmicronFile *ofile,
     }
     g_free(filename);
 
-    if (err_SIZE_MISMATCH(error, 2*gxres*gyres*channel->npoints, size, TRUE)) {
+    if (err_SIZE_MISMATCH(error, 2*gxres*gyres*channel->npoints, size, FALSE)) {
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
