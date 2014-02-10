@@ -548,6 +548,41 @@ gwy_data_field_grains_extract_grain(GwyDataField *grain_field,
 }
 
 /**
+ * gwy_data_field_grains_remove_by_number:
+ * @grain_field: Field of marked grains (mask).
+ * @number: Grain number was filled by gwy_data_field_number_grains().
+ *
+ * Removes grain identified by @number.
+ *
+ * Since: 2.35
+ **/
+void
+gwy_data_field_grains_remove_by_number(GwyDataField *grain_field,
+                                       gint number)
+{
+    gint i, xres, yres;
+    gdouble *data;
+    gint *grains;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(grain_field));
+
+    xres = grain_field->xres;
+    yres = grain_field->yres;
+    data = grain_field->data;
+
+    grains = g_new0(gint, xres*yres);
+    gwy_data_field_number_grains(grain_field, grains);
+
+    for (i = 0; i < xres*yres; i++) {
+        if (grains[i] == number) {
+            data[i] = 0;
+        }
+    }
+
+    g_free(grains);
+}
+
+/**
  * gwy_data_field_grains_remove_by_size:
  * @grain_field: Field of marked grains (mask).
  * @size: Grain area threshold, in square pixels.

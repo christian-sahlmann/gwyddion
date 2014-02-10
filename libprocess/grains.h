@@ -49,6 +49,9 @@ gboolean gwy_data_field_grains_extract_grain(GwyDataField *grain_field,
                                              gint col,
                                              gint row);
 
+void gwy_data_field_grains_remove_by_number(GwyDataField *grain_field,
+                                            gint number);
+
 void gwy_data_field_grains_remove_by_size(GwyDataField *grain_field,
                                           gint size);
 
