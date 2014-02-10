@@ -45,9 +45,14 @@
  * Read SPS:Limited[1]
  * [1] Spectra curves are imported as graphs, positional information is lost.
  **/
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
+
+#ifdef HAVE_ZLIB
+#include <zlib.h>
+#endif
+
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
@@ -80,6 +85,7 @@ enum {
     PAGE_INDEX_HEADER_SIZE = 4*4,
     PAGE_INDEX_ARRAY_SIZE = GUID_SIZE + 4*4,
     PAGE_HEADER_SIZE = 170,
+    PRM_HEADER_SIZE = 12,
 };
 
 typedef enum {
@@ -374,6 +380,14 @@ static GwyDataField*       rhk_sm4_page_to_data_field    (const RHKPage *page);
 static GwyGraphModel*      rhk_sm4_page_to_graph_model   (const RHKPage *page);
 static GwyContainer*       rhk_sm4_get_metadata          (const RHKPageIndex *pi,
                                                           const RHKPage *page);
+static GwyContainer*       rhk_sm4_read_prm              (const RHKObject *prmheader,
+                                                          const RHKObject *prm,
+                                                          const guchar *buffer);
+static gchar*              unpack_compressed_data        (const guchar *buffer,
+                                                          gsize size,
+                                                          gsize expected_size,
+                                                          gsize *datasize,
+                                                          GError **error);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -500,6 +514,18 @@ rhk_sm4_load(const gchar *filename,
 
     container = gwy_container_new();
     key = g_string_new(NULL);
+
+    /* PRM metadata */
+    if ((obj = rhk_sm4_find_object(rhkfile.objects, rhkfile.object_count,
+                                   RHK_OBJECT_PRM_HEADER,
+                                   RHK_OBJECT_FILE_HEADER, NULL))) {
+        RHKObject *obj2;
+        if ((obj2 = rhk_sm4_find_object(rhkfile.objects, rhkfile.object_count,
+                                        RHK_OBJECT_PRM,
+                                        RHK_OBJECT_FILE_HEADER, NULL))) {
+            rhk_sm4_read_prm(obj, obj2, buffer);
+        }
+    }
 
     /* Read pages */
     for (i = 0; i < rhkfile.page_index_header.page_count; i++) {
@@ -1240,5 +1266,152 @@ rhk_sm4_get_metadata(const RHKPageIndex *pi,
 
     return meta;
 }
+
+static GwyContainer*
+rhk_sm4_read_prm(const RHKObject *prmheader, const RHKObject *prm,
+                 const guchar *buffer)
+{
+    GwyContainer *prmmeta = NULL;
+    gchar *prmtext = NULL;
+    gboolean compressed;
+    gsize compsize, decompsize;
+    const guchar *p;
+
+    if (prmheader->size != PRM_HEADER_SIZE)
+        return NULL;
+
+    p = buffer + prmheader->offset;
+    compressed = gwy_get_guint32_le(&p);
+    decompsize = gwy_get_guint32_le(&p);
+    compsize = gwy_get_guint32_le(&p);
+    gwy_debug("PRM (%d) compsisze=%zu, decompsize=%zu, prmsize=%u",
+              compressed, compsize, decompsize, prm->size);
+
+    if (compressed) {
+        gchar *data;
+        gsize truedecompsize = 0;
+
+        if (prm->size != compsize)
+            return NULL;
+
+        data = unpack_compressed_data(buffer + prm->offset, prm->size,
+                                      decompsize, &truedecompsize, NULL);
+        if (data) {
+            prmtext = g_convert(data, truedecompsize, "UTF-8", "CP437",
+                                NULL, &truedecompsize, NULL);
+            if (prmtext)
+                prmtext[truedecompsize] = '\0';
+        }
+        g_free(data);
+    }
+    else {
+        gsize truedecompsize = 0;
+
+        if (prm->size != decompsize)
+            return NULL;
+
+        prmtext = g_convert(buffer + prm->offset, prm->size, "UTF-8", "CP437",
+                            NULL, &truedecompsize, NULL);
+        if (prmtext)
+            prmtext[truedecompsize] = '\0';
+    }
+
+    if (!prmtext)
+        return NULL;
+
+
+    fprintf(stderr, "[[[%s]]]\n", prmtext);
+    /* TODO: Try to parse the bloody thing. */
+    g_free(prmtext);
+
+    return prmmeta;
+}
+
+#ifdef HAVE_ZLIB
+/* XXX: Common with matfile.c */
+static inline gboolean
+zinflate_into(z_stream *zbuf,
+              gint flush_mode,
+              gsize csize,
+              const guchar *compressed,
+              GByteArray *output,
+              GError **error)
+{
+    gint status;
+    gboolean retval = TRUE;
+
+    gwy_clear(zbuf, 1);
+    zbuf->next_in = (char*)compressed;
+    zbuf->avail_in = csize;
+    zbuf->next_out = output->data;
+    zbuf->avail_out = output->len;
+
+    /* XXX: zbuf->msg does not seem to ever contain anything, so just report
+     * the error codes. */
+    if ((status = inflateInit(zbuf)) != Z_OK) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("zlib initialization failed with error %d, "
+                      "cannot decompress data."),
+                    status);
+        return FALSE;
+    }
+
+    if ((status = inflate(zbuf, flush_mode)) != Z_OK
+        /* zlib return Z_STREAM_END also when we *exactly* exhaust all input.
+         * But this is no error, in fact it should happen every time, so check
+         * for it specifically. */
+        && !(status == Z_STREAM_END
+             && zbuf->total_in == csize
+             && zbuf->total_out == output->len)) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Decompression of compressed data failed with "
+                      "error %d."),
+                    status);
+        retval = FALSE;
+    }
+
+    status = inflateEnd(zbuf);
+    /* This should not really happen whatever data we pass in.  And we have
+     * already our output, so just make some noise and get over it.  */
+    if (status != Z_OK)
+        g_critical("inflateEnd() failed with error %d", status);
+
+    return retval;
+}
+
+static gchar*
+unpack_compressed_data(const guchar *buffer,
+                       gsize size,
+                       gsize expected_size,
+                       gsize *datasize,
+                       GError **error)
+{
+    z_stream zbuf; /* decompression stream */
+    GByteArray *output;
+    gboolean ok;
+
+    output = g_byte_array_sized_new(expected_size);
+    g_byte_array_set_size(output, expected_size);
+    ok = zinflate_into(&zbuf, Z_SYNC_FLUSH, size, buffer, output, error);
+    *datasize = output->len;
+
+    return g_byte_array_free(output, !ok);
+}
+#else
+static gchar*
+unpack_compressed_data(G_GNUC_UNUSED const guchar *buffer,
+                       G_GNUC_UNUSED gsize size,
+                       G_GNUC_UNUSED gsize expected_size,
+                       gsize *datasize,
+                       GError **error)
+{
+    *datasize = 0;
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_SPECIFIC,
+                _("Cannot decompress compressed data.  Zlib support was "
+                  "not built in."));
+    return NULL;
+}
+#endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
