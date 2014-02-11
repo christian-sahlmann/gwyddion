@@ -484,12 +484,12 @@ gwy_meta_browser_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
     gtk_tree_model_get(model, iter, META_KEY, &quark, -1);
     switch (id) {
         case META_KEY:
-        g_object_set(renderer, "markup", g_quark_to_string(quark), NULL);
+        g_object_set(renderer, "text", g_quark_to_string(quark), NULL);
         break;
 
         case META_VALUE:
         s = gwy_container_get_string(browser->meta, quark);
-        g_object_set(renderer, "markup", s, NULL);
+        g_object_set(renderer, "text", s, NULL);
         break;
 
         default:
