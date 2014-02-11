@@ -1376,6 +1376,7 @@ rhk_sm4_read_prm(const RHKObject *prmheader, const RHKObject *prm,
             g_free(header2);
             g_free(header3);
             header1 = g_match_info_fetch(matchinfo, 1);
+            g_strstrip(header1);
             header2 = NULL;
             header3 = NULL;
             g_match_info_unref(matchinfo);
@@ -1387,6 +1388,7 @@ rhk_sm4_read_prm(const RHKObject *prmheader, const RHKObject *prm,
             g_free(header2);
             g_free(header3);
             header2 = g_match_info_fetch(matchinfo, 1);
+            g_strstrip(header2);
             header3 = NULL;
             g_match_info_unref(matchinfo);
             continue;
@@ -1396,6 +1398,7 @@ rhk_sm4_read_prm(const RHKObject *prmheader, const RHKObject *prm,
         if (g_regex_match(h3regex, line, 0, &matchinfo)) {
             g_free(header3);
             header3 = g_match_info_fetch(matchinfo, 1);
+            g_strstrip(header3);
             if (header3[0] == '*' || header3[strlen(header3)-1] == '*') {
                 g_free(header3);
                 header3 = NULL;
