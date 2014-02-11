@@ -6,13 +6,14 @@ Application:
 - A workaround for toolbox menus disapparing in Unity was implemented.
 
 Libraries:
-- libgwyapp: Functions for of logging data processing operations were added.
+- libgwyapp: Functions for logging of data processing operations were added.
 - libgwyapp: Missing brick containers items were added to validation and file
   merging operations.
 - libgwyprocess: gwy_data_field_grains_get_distribution() no longer incorrectly
   includes the no-grains value in the resulting distribution.
 - libgwyddion: GwyStringList has new functions for clearing and adding a string
   with taking the ownership.
+- libgwyprocess: A function for removing grains by number was added.
 
 Modules:
 - Data processing, file and volume modules: Support for logging was added.
@@ -24,6 +25,7 @@ Modules:
 - NT-MDT: Hybrid mode is loaded with distance calibration.
 - Scale: Rouding of scaling ratio to some odd values was fixed.
 - Pixmap export: Bad row padding for some BMP image widths was fixed.
+- RHK SM4: PRM are imported to metadata.
 
 
 2.34 (2013-12-15)
