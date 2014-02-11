@@ -45,7 +45,7 @@
  * Read SPS:Limited[1]
  * [1] Spectra curves are imported as graphs, positional information is lost.
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 
@@ -379,7 +379,8 @@ static void                rhk_sm4_free                  (RHKFile *rhkfile);
 static GwyDataField*       rhk_sm4_page_to_data_field    (const RHKPage *page);
 static GwyGraphModel*      rhk_sm4_page_to_graph_model   (const RHKPage *page);
 static GwyContainer*       rhk_sm4_get_metadata          (const RHKPageIndex *pi,
-                                                          const RHKPage *page);
+                                                          const RHKPage *page,
+                                                          GwyContainer *basemeta);
 static GwyContainer*       rhk_sm4_read_prm              (const RHKObject *prmheader,
                                                           const RHKObject *prm,
                                                           const guchar *buffer);
@@ -394,7 +395,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports RHK Technology SM4 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -444,7 +445,7 @@ rhk_sm4_load(const gchar *filename,
 {
     RHKFile rhkfile;
     RHKObject *obj, o;
-    GwyContainer *meta, *container = NULL;
+    GwyContainer *meta, *prmmeta = NULL, *container = NULL;
     guchar *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
@@ -523,7 +524,7 @@ rhk_sm4_load(const gchar *filename,
         if ((obj2 = rhk_sm4_find_object(rhkfile.objects, rhkfile.object_count,
                                         RHK_OBJECT_PRM,
                                         RHK_OBJECT_FILE_HEADER, NULL))) {
-            rhk_sm4_read_prm(obj, obj2, buffer);
+            prmmeta = rhk_sm4_read_prm(obj, obj2, buffer);
         }
     }
 
@@ -577,7 +578,7 @@ rhk_sm4_load(const gchar *filename,
                 gwy_container_set_string_by_name(container, key->str, title);
             }
 
-            meta = rhk_sm4_get_metadata(pi, page);
+            meta = rhk_sm4_get_metadata(pi, page, prmmeta);
             g_string_printf(key, "/%u/meta", imageid);
             gwy_container_set_object_by_name(container, key->str, meta);
             g_object_unref(meta);
@@ -1152,7 +1153,8 @@ rhk_sm4_meta_string(const RHKPage *page,
 
 static GwyContainer*
 rhk_sm4_get_metadata(const RHKPageIndex *pi,
-                     const RHKPage *page)
+                     const RHKPage *page,
+                     GwyContainer *basemeta)
 {
     static const gchar hex[] = "0123456789abcdef";
 
@@ -1161,7 +1163,10 @@ rhk_sm4_get_metadata(const RHKPageIndex *pi,
     gchar *str;
     guint i, w;
 
-    meta = gwy_container_new();
+    if (basemeta)
+        meta = gwy_container_duplicate(basemeta);
+    else
+        meta = gwy_container_new();
 
     s = gwy_enuml_to_string(page->page_type,
                             "Topographic", RHK_PAGE_TOPOGAPHIC,
@@ -1272,9 +1277,12 @@ rhk_sm4_read_prm(const RHKObject *prmheader, const RHKObject *prm,
                  const guchar *buffer)
 {
     GwyContainer *prmmeta = NULL;
-    gchar *prmtext = NULL;
+    gchar *prmtext = NULL, *q, *line;
+    gchar *header1 = NULL, *header2 = NULL, *header3 = NULL;
     gboolean compressed;
     gsize compsize, decompsize;
+    GRegex *h1regex, *h2regex, *h3regex, *metaregex;
+    GString *key;
     const guchar *p;
 
     if (prmheader->size != PRM_HEADER_SIZE)
@@ -1319,10 +1327,94 @@ rhk_sm4_read_prm(const RHKObject *prmheader, const RHKObject *prm,
     if (!prmtext)
         return NULL;
 
+    h1regex = g_regex_new("^\\s*\\**\\[([^][]+)\\]\\*+$",
+                          G_REGEX_OPTIMIZE, 0, NULL);
+    g_assert(h1regex);
+    h2regex = g_regex_new("^\\[([^][]+)\\]$",
+                          G_REGEX_OPTIMIZE, 0, NULL);
+    g_assert(h2regex);
+    h3regex = g_regex_new("^\\s+-*([^][]+)-*$",
+                          G_REGEX_OPTIMIZE, 0, NULL);
+    g_assert(h3regex);
+    metaregex = g_regex_new("^<[0-9]{4}>\\s+(.+?)\\s+::(.*)$",
+                            G_REGEX_OPTIMIZE, 0, NULL);
+    g_assert(metaregex);
 
-    fprintf(stderr, "[[[%s]]]\n", prmtext);
-    /* TODO: Try to parse the bloody thing. */
+    prmmeta = gwy_container_new();
+    key = g_string_new(NULL);
+    q = prmtext;
+    while ((line = gwy_str_next_line(&q))) {
+        GMatchInfo *matchinfo = NULL;
+
+        if (g_regex_match(metaregex, line, 0, &matchinfo)) {
+            gchar *name = g_match_info_fetch(matchinfo, 1),
+                  *value = g_match_info_fetch(matchinfo, 2);
+            if (header1) {
+                g_string_assign(key, header1);
+                if (header2) {
+                    g_string_append(key, "::");
+                    g_string_append(key, header2);
+                    if (header3) {
+                        g_string_append(key, "::");
+                        g_string_append(key, header3);
+                    }
+                }
+                g_string_append(key, "::");
+                g_string_append(key, name);
+                gwy_container_set_string_by_name(prmmeta, key->str, value);
+            }
+            else
+                g_free(value);
+            g_free(name);
+            g_match_info_unref(matchinfo);
+            continue;
+        }
+        g_match_info_unref(matchinfo);
+
+        if (g_regex_match(h1regex, line, 0, &matchinfo)) {
+            g_free(header1);
+            g_free(header2);
+            g_free(header3);
+            header1 = g_match_info_fetch(matchinfo, 1);
+            header2 = NULL;
+            header3 = NULL;
+            g_match_info_unref(matchinfo);
+            continue;
+        }
+        g_match_info_unref(matchinfo);
+
+        if (g_regex_match(h2regex, line, 0, &matchinfo)) {
+            g_free(header2);
+            g_free(header3);
+            header2 = g_match_info_fetch(matchinfo, 1);
+            header3 = NULL;
+            g_match_info_unref(matchinfo);
+            continue;
+        }
+        g_match_info_unref(matchinfo);
+
+        if (g_regex_match(h3regex, line, 0, &matchinfo)) {
+            g_free(header3);
+            header3 = g_match_info_fetch(matchinfo, 1);
+            if (header3[0] == '*' || header3[strlen(header3)-1] == '*') {
+                g_free(header3);
+                header3 = NULL;
+            }
+            g_match_info_unref(matchinfo);
+            continue;
+        }
+        g_match_info_unref(matchinfo);
+    }
+
+    g_string_free(key, TRUE);
+    g_regex_unref(metaregex);
+    g_regex_unref(h3regex);
+    g_regex_unref(h2regex);
+    g_regex_unref(h1regex);
     g_free(prmtext);
+    g_free(header3);
+    g_free(header2);
+    g_free(header1);
 
     return prmmeta;
 }
