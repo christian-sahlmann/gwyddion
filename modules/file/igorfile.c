@@ -189,16 +189,18 @@ static GwyDataField* igor_read_data_field  (const IgorFile *igorfile,
 static GwyContainer* igor_get_metadata     (IgorFile *igorfile,
                                             guint id);
 static GPtrArray*    read_channel_labels   (const gchar *p,
-                                            guint n, guint l);
+                                            guint n,
+                                            guint l);
 static gchar*        canonicalize_title    (const gchar *title);
 static const gchar*  channel_title_to_units(const gchar *title);
+static GwyDataField* mask_of_nans          (GwyDataField *dfield);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Igor binary waves (.ibw)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.8",
+    "0.9",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -242,7 +244,7 @@ igor_load(const gchar *filename,
           GError **error)
 {
     GwyContainer *meta = NULL, *container = NULL;
-    GwyDataField *dfield = NULL;
+    GwyDataField *dfield = NULL, *maskfield = NULL;
     GwyTextHeaderParser parser;
     IgorFile igorfile;
     IgorWaveHeader5 *wave5;
@@ -390,9 +392,14 @@ igor_load(const gchar *filename,
             meta = igor_get_metadata(&igorfile, i + 1);
         }
         dfield = igor_read_data_field(&igorfile, buffer, i, zunits, FALSE);
+        maskfield = mask_of_nans(dfield);
         quark = gwy_app_get_data_key_for_id(chid);
         gwy_container_set_object(container, quark, dfield);
         g_object_unref(dfield);
+        if (maskfield) {
+            g_snprintf(key, sizeof(key), "/%d/mask", chid);
+            gwy_container_set_object_by_name(container, key, maskfield);
+        }
         if (meta) {
             g_snprintf(key, sizeof(key), "/%d/meta", chid);
             gwy_container_set_object_by_name(container, key, meta);
@@ -417,6 +424,13 @@ igor_load(const gchar *filename,
                 meta = gwy_container_duplicate(meta);
                 gwy_container_set_object_by_name(container, key, meta);
             }
+            if (maskfield) {
+                g_snprintf(key, sizeof(key), "/%d/mask", chid);
+                /* container still holds a reference */
+                g_object_unref(maskfield);
+                maskfield = gwy_data_field_duplicate(maskfield);
+                gwy_container_set_object_by_name(container, key, maskfield);
+            }
 
             if (title) {
                 g_snprintf(key, sizeof(key), "/%d/data/title", chid);
@@ -425,6 +439,7 @@ igor_load(const gchar *filename,
             gwy_app_channel_title_fall_back(container,chid);
         }
         gwy_object_unref(meta);
+        gwy_object_unref(maskfield);
 
         gwy_file_channel_import_log_add(container, chid, "igorfile", filename);
     }
@@ -915,6 +930,41 @@ igor_get_metadata(IgorFile *igorfile,
     g_hash_table_foreach(igorfile->meta, gather_channel_meta, igorfile);
 
     return igorfile->channelmeta;
+}
+
+static GwyDataField*
+mask_of_nans(GwyDataField *dfield)
+{
+    GwyDataField *mask = NULL;
+    guint k, n = dfield->xres*dfield->yres;
+    gdouble *d = dfield->data;
+    gdouble avg;
+
+    for (k = 0; k < n; k++) {
+        if (gwy_isnan(d[k]) || gwy_isinf(d[k])) {
+            if (G_UNLIKELY(!mask)) {
+                mask = gwy_data_field_new_alike(dfield, TRUE);
+                gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(mask),
+                                            NULL);
+            }
+            mask->data[k] = 1.0;
+        }
+    }
+
+    if (!mask)
+        return mask;
+
+    avg = gwy_data_field_area_get_avg_mask(dfield, mask, GWY_MASK_EXCLUDE,
+                                           0, 0, dfield->xres, dfield->yres);
+    if (gwy_isnan(avg) || gwy_isinf(avg))
+        avg = 0.0;
+
+    for (k = 0; k < n; k++) {
+        if (gwy_isnan(d[k]) || gwy_isinf(d[k]))
+            d[k] = avg;
+    }
+
+    return mask;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
