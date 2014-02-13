@@ -26,6 +26,8 @@ Modules:
 - Scale: Rouding of scaling ratio to some odd values was fixed.
 - Pixmap export: Bad row padding for some BMP image widths was fixed.
 - RHK SM4: PRM are imported to metadata.
+- IGOR file: Infinities and NaNs in the data are filled with a neutral value
+  and masked upon import.
 
 
 2.34 (2013-12-15)
