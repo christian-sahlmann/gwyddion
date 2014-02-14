@@ -158,7 +158,6 @@ file_LTLIBRARIES = \
 	wsffile.la \
 	wsxmfile.la \
 	zeiss.la \
-	zeisslsm.la \
 	zemax.la
 
 noinst_HEADERS = \
@@ -285,7 +284,6 @@ witec_asc_la_SOURCES     = witec-asc.c
 wsffile_la_SOURCES       = wsffile.c
 wsxmfile_la_SOURCES      = wsxmfile.c
 zeiss_la_SOURCES         = zeiss.c
-zeisslsm_la_SOURCES      = zeisslsm.c
 zemax_la_SOURCES         = zemax.c
 
 # These compile also without.
