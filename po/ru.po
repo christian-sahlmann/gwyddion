@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-01-12 03:58+0100\n"
-"PO-Revision-Date: 2014-01-12 13:49+0300\n"
+"POT-Creation-Date: 2014-01-14 03:58+0100\n"
+"PO-Revision-Date: 2014-01-14 15:12+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -530,11 +530,11 @@ msgid "Scale and space adaptive"
 msgstr "Адаптивный по масштабу и пространству"
 
 #. TRANSLATORS: Interpolation type (AKA nearest neighbour)
-#: libprocess/gwyprocessenums.c:207 modules/file/rawxyz.c:682
+#: libprocess/gwyprocessenums.c:207 modules/file/rawxyz.c:683
 msgid "Round"
 msgstr "Округление"
 
-#: libprocess/gwyprocessenums.c:208 modules/file/rawxyz.c:683
+#: libprocess/gwyprocessenums.c:208 modules/file/rawxyz.c:684
 msgid "Linear"
 msgstr "Линейная"
 
@@ -859,9 +859,9 @@ msgstr "_Размер:"
 msgid "pixels"
 msgstr "точек"
 
-#: libgwydgets/gwy3dwindow.c:1133 modules/file/hdrimage.cc:2166
-#: modules/file/pixmap.c:1067 modules/file/pixmap.c:3101
-#: modules/file/rawfile.c:399 modules/process/angle_dist.c:172
+#: libgwydgets/gwy3dwindow.c:1133 modules/file/hdrimage.cc:2175
+#: modules/file/pixmap.c:1073 modules/file/pixmap.c:3144
+#: modules/file/rawfile.c:401 modules/process/angle_dist.c:172
 #: modules/process/calcoefs_new.c:348 modules/process/calibrate.c:385
 #: modules/process/col_synth.c:306 modules/process/correct_affine.c:277
 #: modules/process/curvature.c:605 modules/process/cwt.c:135
@@ -1168,7 +1168,7 @@ msgstr "Угол"
 msgid "Preferred"
 msgstr "Предпочтительное"
 
-#: libgwydgets/gwyoptionmenus.c:470 app/meta.c:380 modules/file/rawfile.c:957
+#: libgwydgets/gwyoptionmenus.c:470 app/meta.c:380 modules/file/rawfile.c:959
 #: modules/process/convolution_filter.c:553 modules/process/neural.c:413
 #: modules/tools/selectionmanager.c:330
 msgid "Name"
@@ -1206,13 +1206,13 @@ msgstr "_Верхний индекс"
 msgid "A_dd symbol"
 msgstr "_Добавить символ"
 
-#: libgwydgets/gwyscitext.c:274 modules/file/rawfile.c:527
-#: modules/file/rawxyz.c:422
+#: libgwydgets/gwyscitext.c:274 modules/file/rawfile.c:529
+#: modules/file/rawxyz.c:423
 msgid "Preview"
 msgstr "Предпросмотр"
 
 #: libgwymodule/gwymodule-file.c:536 modules/file/err.h:41
-#: modules/file/pixmap.c:777
+#: modules/file/pixmap.c:781
 #, c-format
 msgid "Cannot open file for reading: %s."
 msgstr "Невозможно открыть файл для чтения: %s."
@@ -1396,7 +1396,7 @@ msgstr "Масштаб _1:1"
 msgid "Metadata _Browser..."
 msgstr "Просмотр _метаданных"
 
-#: app/app.c:413
+#: app/app.c:413 app/app.c:1605
 msgid "View _Log..."
 msgstr "Просмотр _журнала..."
 
@@ -1784,42 +1784,42 @@ msgstr ""
 "Чтобы избежать потери сохранённых настроек попыток обновить его делаться не "
 "будет до тех пор, пока он не будет исправлен или удалён."
 
-#: app/gwymoduleutils-file.c:427
+#: app/gwymoduleutils-file.c:439
 #, c-format
 msgid "Section %s ended at line %u but it has never started."
 msgstr "Секция %s закончилась в строке %u, но никогда не начиналась."
 
-#: app/gwymoduleutils-file.c:435
+#: app/gwymoduleutils-file.c:447
 #, c-format
 msgid "Section %s ended at line %u instead of %s."
 msgstr "Секция %s закончилась в строке %u вместо %s."
 
-#: app/gwymoduleutils-file.c:472
+#: app/gwymoduleutils-file.c:484
 #, c-format
 msgid "Section %s started at line %u before %s ended."
 msgstr "Секция %s закончилась в строке %u до того, как %s закончилась."
 
-#: app/gwymoduleutils-file.c:478
+#: app/gwymoduleutils-file.c:490
 #, c-format
 msgid "Empty section name at header line %u."
 msgstr "Пустое название секции в строке заголовка %u."
 
-#: app/gwymoduleutils-file.c:513
+#: app/gwymoduleutils-file.c:525
 #, c-format
 msgid "Header line %u lacks prefix %s."
 msgstr "В строке заголовка %u отсутствует префикс %s."
 
-#: app/gwymoduleutils-file.c:538
+#: app/gwymoduleutils-file.c:550
 #, c-format
 msgid "Header line %u lacks key-value separator."
 msgstr "В строке заголовка %u отсутствует разделитель ключ-значение."
 
-#: app/gwymoduleutils-file.c:546
+#: app/gwymoduleutils-file.c:558
 #, c-format
 msgid "Key at header line %u is empty."
 msgstr "Ключ в строке заголовка %u пустой."
 
-#: app/gwymoduleutils-file.c:573
+#: app/gwymoduleutils-file.c:585
 #, c-format
 msgid "Header suddenly ended at line %u; end of header marker is missing"
 msgstr ""
@@ -1854,7 +1854,7 @@ msgstr "Очистить выбранные объекты"
 msgid "Origin"
 msgstr "Начальная точка"
 
-#: app/gwyplaintool.c:1019 modules/file/rawfile.c:959
+#: app/gwyplaintool.c:1019 modules/file/rawfile.c:961
 #: modules/process/col_synth.c:398 modules/process/convolution_filter.c:364
 #: modules/process/convolution_filter.c:568 modules/process/neural.c:414
 #: modules/process/obj_synth.c:540 modules/process/pat_synth.c:1488
@@ -1873,40 +1873,40 @@ msgstr "Скрыть"
 msgid "Hide tool dialog (Esc)"
 msgstr "Убрать диалог инструментов (Esc)"
 
-#: app/log.c:301
+#: app/log.c:380
 #, c-format
 msgid "Log of %s (%s)"
 msgstr "Журнал %s (%s)"
 
-#: app/log.c:353 app/meta.c:198
+#: app/log.c:432 app/meta.c:198
 msgid "_Export"
 msgstr "_Экспорт"
 
-#: app/log.c:359
+#: app/log.c:438
 msgid "Clea_r"
 msgstr "О_чистить"
 
-#: app/log.c:364 app/meta.c:214
+#: app/log.c:443 app/meta.c:214
 msgid "_Close"
 msgstr "_Закрыть"
 
-#: app/log.c:380 modules/file/rawfile.c:958
+#: app/log.c:459 modules/file/rawfile.c:960
 msgid "Type"
 msgstr "Тип"
 
-#: app/log.c:381
+#: app/log.c:460
 msgid "Function"
 msgstr "Функция"
 
-#: app/log.c:382 modules/tools/stats.c:402
+#: app/log.c:461 modules/tools/stats.c:402
 msgid "Parameters"
 msgstr "Параметры"
 
-#: app/log.c:383
+#: app/log.c:462
 msgid "Time"
 msgstr "Время"
 
-#: app/log.c:495
+#: app/log.c:574
 msgid "Export Log"
 msgstr "Экспортировать журнал"
 
@@ -1946,7 +1946,7 @@ msgstr "_Предыдущие документы"
 msgid "_New"
 msgstr "Новый _элемент"
 
-#: app/meta.c:209 modules/file/rawfile.c:1020 modules/process/neural.c:710
+#: app/meta.c:209 modules/file/rawfile.c:1022 modules/process/neural.c:710
 msgid "_Delete"
 msgstr "_Удалить"
 
@@ -2694,11 +2694,11 @@ msgstr "Вторичный элемент данных не имеет перв�
 msgid "Please wait"
 msgstr "Подождите, пожалуйста "
 
-#: modules/file/aistfile.c:120
+#: modules/file/aistfile.c:121
 msgid "Imports AIST-NT data files."
 msgstr "Импорт файлов данных AIST-NT"
 
-#: modules/file/aistfile.c:133
+#: modules/file/aistfile.c:134
 msgid "AIST-NT files (.aist)"
 msgstr "Файлы AIST-NT (.aist)"
 
@@ -2710,51 +2710,51 @@ msgstr "Импортирует файлы Alicona Imaging AL3D."
 msgid "Alicona Imaging AL3D files (.al3d)"
 msgstr "Файлы Alicona Imaging AL3D (.al3d)"
 
-#: modules/file/alicona.c:488
+#: modules/file/alicona.c:492
 #, c-format
 msgid "Invalid plane number %u in tag ‘%s’."
 msgstr "Неправильный номер плоскости %u в теге ‘%s’."
 
-#: modules/file/alicona.c:575
+#: modules/file/alicona.c:579
 msgid "Header tag key is not nul-terminated."
 msgstr "Ключ тега заголовка не заканчивается нулём."
 
-#: modules/file/alicona.c:580
+#: modules/file/alicona.c:584
 msgid "Header tag key is empty."
 msgstr "Ключ тега заголовка пуст."
 
-#: modules/file/alicona.c:587
+#: modules/file/alicona.c:591
 #, c-format
 msgid "Header tag ‘%s’ key is not nul-padded."
 msgstr "Ключ тега заголовка ‘%s’ не выровнен нулями."
 
-#: modules/file/alicona.c:594
+#: modules/file/alicona.c:598
 #, c-format
 msgid "Header tag ‘%s’ lacks CRLF terminator."
 msgstr "В теге заголовка ‘%s’ не завершающих CRLF."
 
-#: modules/file/alicona.c:600
+#: modules/file/alicona.c:604
 #, c-format
 msgid "Header tag ‘%s’ value is not nul-terminated."
 msgstr "Значение тега заголовка ‘%s’ не заканчивается нулём."
 
-#: modules/file/alicona.c:610
+#: modules/file/alicona.c:614
 #, c-format
 msgid "Header tag ‘%s’ value is not nul-padded."
 msgstr "Значение тега заголовка ‘%s’ не выровнено нулями."
 
-#: modules/file/alicona.c:661 modules/file/gdeffile.c:176
+#: modules/file/alicona.c:665 modules/file/gdeffile.c:176
 #: modules/file/gdeffile.c:200 modules/file/gsffile.c:159
-#: modules/file/gxyzffile.c:181 modules/file/iso28600.c:1036
+#: modules/file/gxyzffile.c:181 modules/file/iso28600.c:1040
 #: modules/file/pt3file.c:490 modules/file/pt3file.c:592
 msgid "File header is truncated."
 msgstr "Заголовок файла усечён."
 
-#: modules/file/alicona.c:676
+#: modules/file/alicona.c:680
 msgid "Comment lacks CRLF termination."
 msgstr "В комментарии отсутствуют завершающие строки CRLF."
 
-#: modules/file/alicona.c:681
+#: modules/file/alicona.c:685
 msgid "Comment is not nul-terminated."
 msgstr "Комментарий не завершается нулём."
 
@@ -2794,11 +2794,11 @@ msgstr "Для FileDescEnd не найден соответствующий File
 msgid "FileDescBegin has no corresponding FileDescEnd."
 msgstr "Для FileDescBegin не найден соответствующий FileDescEnd."
 
-#: modules/file/apedaxfile.c:133
+#: modules/file/apedaxfile.c:134
 msgid "Imports A.P.E. Research DAX data files."
 msgstr "Импортирует файлы данных A.P.E. Research DAX."
 
-#: modules/file/apedaxfile.c:146
+#: modules/file/apedaxfile.c:147
 msgid "A.P.E. Research DAX Files (.dax)"
 msgstr "Файлы A.P.E. Research DAX (.dax)"
 
@@ -2834,8 +2834,8 @@ msgstr "Единицы измерения:"
 msgid "Export Text"
 msgstr "Экспортировать текст"
 
-#: modules/file/asciiexport.c:273 modules/file/pixmap.c:3204
-#: modules/file/rawfile.c:720 modules/file/rawxyz.c:670
+#: modules/file/asciiexport.c:273 modules/file/pixmap.c:3247
+#: modules/file/rawfile.c:722 modules/file/rawxyz.c:671
 #: modules/process/calibrate.c:598 modules/process/correct_affine.c:456
 #: modules/process/extend.c:265 modules/process/fft_filter_1d.c:296
 #: modules/process/grain_dist.c:306 modules/process/grain_edge.c:270
@@ -2920,8 +2920,8 @@ msgstr "Импортирует текстовые/двоичные экспор�
 msgid "Burleigh exported data (.txt, .bin)"
 msgstr "Экспортированные данные Burleigh (.txt, .bin)"
 
-#: modules/file/burleigh_exp.c:226 modules/file/burleigh_exp.c:267
-#: modules/file/nanoscope.c:1528 modules/file/omicron.c:409
+#: modules/file/burleigh_exp.c:227 modules/file/burleigh_exp.c:268
+#: modules/file/nanoscope.c:1528 modules/file/omicron.c:412
 #: modules/file/shimadzu.c:468
 msgid "Missing colon in header line."
 msgstr "Пропущено двоеточие в строке заголовка."
@@ -2947,7 +2947,7 @@ msgstr "Файлы Createc (.dat)"
 msgid "Neither `%s' nor `%s' header field found."
 msgstr "Не найдено ни `%s', ни `%s' поля заголовка."
 
-#: modules/file/createc.c:788 modules/file/matfile.c:597
+#: modules/file/createc.c:788 modules/file/matfile.c:600
 #, c-format
 msgid "zlib initialization failed with error %d, cannot decompress data."
 msgstr ""
@@ -2978,34 +2978,34 @@ msgstr "Поле заголовка \"ширина изображения\" не
 msgid "Header image height field does not match BMP height."
 msgstr "Поле заголовка \"высота изображения\" не соответствует высоте BMP."
 
-#: modules/file/dm3file.c:225
+#: modules/file/dm3file.c:226
 msgid "Reads Digital Micrograph DM3 files."
 msgstr "Читает файлы Digital Micrograph DM3"
 
-#: modules/file/dm3file.c:238
+#: modules/file/dm3file.c:239
 msgid "Digital Micrograph DM3 TEM data (.dm3)"
 msgstr "Данные Digital Micrograph DM3 TEM (.dm3)"
 
-#: modules/file/dm3file.c:831
+#: modules/file/dm3file.c:835
 #, c-format
 msgid "Invalid tag type definition in entry ‘%s’."
 msgstr "Неверное определение типа тега в записи ‘%s’."
 
-#: modules/file/dm3file.c:843
+#: modules/file/dm3file.c:847
 #, c-format
 msgid "File is truncated in entry ‘%s’."
 msgstr "Файл усечен в записи ‘%s’."
 
-#: modules/file/dm3file.c:901
+#: modules/file/dm3file.c:905
 msgid "Tag entry type is neither group nor data."
 msgstr "Тип записи тега ни группа, ни данные."
 
-#: modules/file/dm3file.c:958
+#: modules/file/dm3file.c:962
 #, c-format
 msgid "Tag type does not start with marker ‘%s’."
 msgstr "Тип тега не начинается с маркера ‘%s’."
 
-#: modules/file/dm3file.c:1109
+#: modules/file/dm3file.c:1113
 #, c-format
 msgid "Invalid or unsupported tag type %u."
 msgstr "Неверный или неподдерживаемый тип тега %u."
@@ -3072,8 +3072,8 @@ msgstr "Файлы ECS (.img)"
 msgid "Scan size header field overlaps with data."
 msgstr "Поле заголовка \"размер сканирования\" пересекается с данными."
 
-#: modules/file/err.h:48 modules/file/nrrdfile.c:717
-#: modules/file/nrrdfile.c:762
+#: modules/file/err.h:48 modules/file/nrrdfile.c:718
+#: modules/file/nrrdfile.c:763
 #, c-format
 msgid "Cannot read from file: %s."
 msgstr "Невозможно прочесть из файла: %s."
@@ -3154,27 +3154,27 @@ msgstr "Импорт файла отменён пользователем"
 msgid "Missing header."
 msgstr "Отсутствует заголовок."
 
-#: modules/file/ezdfile.c:134
+#: modules/file/ezdfile.c:135
 msgid "Imports Nanosurf EZD and NID data files."
 msgstr "Импортирует файлы данных Nanosurf EZD и NID."
 
-#: modules/file/ezdfile.c:147
+#: modules/file/ezdfile.c:148
 msgid "Nanosurf files (.ezd, .nid)"
 msgstr "Файлы Nanosurf (.ezd, .nid)"
 
-#: modules/file/ezdfile.c:319
+#: modules/file/ezdfile.c:321
 msgid "Garbage before first header section."
 msgstr "Мусор перед первой частью заголовка."
 
-#: modules/file/ezdfile.c:330 modules/file/nanoscope-ii.c:259
+#: modules/file/ezdfile.c:332 modules/file/nanoscope-ii.c:259
 msgid "Malformed header line (missing =)."
 msgstr "Искаженная строка заголовка (отсутствует =)."
 
-#: modules/file/ezdfile.c:429
+#: modules/file/ezdfile.c:431
 msgid "First section isn't DataSet"
 msgstr "Первая секция не DataSet"
 
-#: modules/file/ezdfile.c:435
+#: modules/file/ezdfile.c:437
 msgid "GroupCount in [DataSet]"
 msgstr "GroupCount в [DataSet]"
 
@@ -3408,63 +3408,63 @@ msgstr "Чтение изображения EXR было неудачным с �
 msgid "OpenEXR data type %u is invalid or unsupported."
 msgstr "Тип данных OpenEXR %u неправилен или не поддерживается."
 
-#: modules/file/hdrimage.cc:1424 modules/file/hdrimage.cc:1433
-#: modules/file/pixmap.c:1567 modules/file/pixmap.c:1577
+#: modules/file/hdrimage.cc:1426 modules/file/hdrimage.cc:1435
+#: modules/file/pixmap.c:1610 modules/file/pixmap.c:1620
 #, c-format
 msgid "libpng initialization error (in %s)"
 msgstr "ошибка инициализации libpng (в %s)"
 
-#: modules/file/hdrimage.cc:1442 modules/file/pixmap.c:1637
+#: modules/file/hdrimage.cc:1444 modules/file/pixmap.c:1680
 msgid "libpng error occured"
 msgstr "Произошла ошибка libpng"
 
 #. TRANSLATORS: Dialog title; %s is PNG, TIFF, ...
-#: modules/file/hdrimage.cc:2163 modules/file/pixmap.c:1064
+#: modules/file/hdrimage.cc:2172 modules/file/pixmap.c:1070
 #, c-format
 msgid "Import %s"
 msgstr "Импортировать %s"
 
-#: modules/file/hdrimage.cc:2190 modules/file/pixmap.c:1090
+#: modules/file/hdrimage.cc:2199 modules/file/pixmap.c:1096
 msgid "Image Information"
 msgstr "Информация о изображении"
 
-#: modules/file/hdrimage.cc:2199 modules/file/pixmap.c:1097
+#: modules/file/hdrimage.cc:2208 modules/file/pixmap.c:1103
 msgid "Horizontal size:"
 msgstr "Горизонтальный размер:"
 
-#: modules/file/hdrimage.cc:2199 modules/file/hdrimage.cc:2205
-#: modules/file/pixmap.c:1097 modules/file/pixmap.c:1103
+#: modules/file/hdrimage.cc:2208 modules/file/hdrimage.cc:2214
+#: modules/file/pixmap.c:1103 modules/file/pixmap.c:1109
 msgid "px"
 msgstr "пикс."
 
-#: modules/file/hdrimage.cc:2205 modules/file/pixmap.c:1103
+#: modules/file/hdrimage.cc:2214 modules/file/pixmap.c:1109
 msgid "Vertical size:"
 msgstr "Вертикальный размер:"
 
-#: modules/file/hdrimage.cc:2210 modules/file/pixmap.c:1108
+#: modules/file/hdrimage.cc:2219 modules/file/pixmap.c:1114
 msgid "Channels:"
 msgstr "Каналы:"
 
-#: modules/file/hdrimage.cc:2216
+#: modules/file/hdrimage.cc:2225
 msgid "Pages:"
 msgstr "Страницы:"
 
-#: modules/file/hdrimage.cc:2243 modules/file/pixmap.c:1139
-#: modules/file/rawfile.c:623 modules/file/rawxyz.c:569
+#: modules/file/hdrimage.cc:2252 modules/file/pixmap.c:1145
+#: modules/file/rawfile.c:625 modules/file/rawxyz.c:570
 #: modules/process/dimensions.h:466
 msgid "Physical Dimensions"
 msgstr "Физические размеры"
 
-#: modules/file/hdrimage.cc:2257 modules/file/pixmap.c:1149
-#: modules/file/pixmap.c:3146 modules/file/rawfile.c:632
+#: modules/file/hdrimage.cc:2266 modules/file/pixmap.c:1155
+#: modules/file/pixmap.c:3189 modules/file/rawfile.c:634
 #: modules/process/crosscor.c:199 modules/process/dimensions.h:472
 #: modules/process/tip_blind.c:336
 msgid "_Width:"
 msgstr "_Ширина:"
 
-#: modules/file/hdrimage.cc:2283 modules/file/hdrimage.cc:2348
-#: modules/file/pixmap.c:1171 modules/file/pixmap.c:1226
-#: modules/file/rawfile.c:655 modules/file/rawfile.c:711
+#: modules/file/hdrimage.cc:2292 modules/file/hdrimage.cc:2357
+#: modules/file/pixmap.c:1177 modules/file/pixmap.c:1232
+#: modules/file/rawfile.c:657 modules/file/rawfile.c:713
 #: modules/process/calcoefs_new.c:384 modules/process/calcoefs_new.c:451
 #: modules/process/calcoefs_simple.c:390 modules/process/calcoefs_simple.c:457
 #: modules/process/calcoefs_view.c:528 modules/process/calcoefs_view.c:566
@@ -3475,32 +3475,32 @@ msgstr "_Ширина:"
 msgid "verb|Change"
 msgstr "Изменить"
 
-#: modules/file/hdrimage.cc:2298 modules/file/pixmap.c:1184
-#: modules/file/rawfile.c:668 modules/process/crosscor.c:205
+#: modules/file/hdrimage.cc:2307 modules/file/pixmap.c:1190
+#: modules/file/rawfile.c:670 modules/process/crosscor.c:205
 #: modules/process/dimensions.h:476
 msgid "H_eight:"
 msgstr "_Высота:"
 
-#: modules/file/hdrimage.cc:2307 modules/file/pixmap.c:1191
-#: modules/file/rawfile.c:675 modules/file/rawxyz.c:550
+#: modules/file/hdrimage.cc:2316 modules/file/pixmap.c:1197
+#: modules/file/rawfile.c:677 modules/file/rawxyz.c:551
 msgid "Identical _measures"
 msgstr "Одинаковый _масштаб"
 
-#: modules/file/hdrimage.cc:2321 modules/file/pixmap.c:1203
-#: modules/file/rawfile.c:687
+#: modules/file/hdrimage.cc:2330 modules/file/pixmap.c:1209
+#: modules/file/rawfile.c:689
 msgid "_Z-scale (per sample unit):"
 msgstr "Масштаб _Z (на единицу дискретизации):"
 
-#: modules/file/hdrimage.cc:2510 modules/file/pixmap.c:1453
-#: modules/file/rawfile.c:1321 modules/process/calcoefs_new.c:776
+#: modules/file/hdrimage.cc:2519 modules/file/pixmap.c:1459
+#: modules/file/rawfile.c:1323 modules/process/calcoefs_new.c:776
 #: modules/process/calcoefs_simple.c:1189 modules/process/calcoefs_view.c:1393
 #: modules/process/calibrate.c:968 modules/process/dimensions.h:194
 #: modules/volume/volume_calibrate.c:1016
 msgid "Change Units"
 msgstr "Изменить единицы измерения"
 
-#: modules/file/hdrimage.cc:2524 modules/file/pixmap.c:1467
-#: modules/file/rawfile.c:1335 modules/process/calcoefs_new.c:789
+#: modules/file/hdrimage.cc:2533 modules/file/pixmap.c:1473
+#: modules/file/rawfile.c:1337 modules/process/calcoefs_new.c:789
 #: modules/process/calcoefs_simple.c:1202 modules/process/calcoefs_view.c:1406
 #: modules/process/calibrate.c:982 modules/process/dimensions.h:207
 #: modules/volume/volume_calibrate.c:1030
@@ -3594,29 +3594,29 @@ msgstr "Набор тегов параметров неполон."
 msgid "image depth"
 msgstr "глубина изображения"
 
-#: modules/file/iso28600.c:535
+#: modules/file/iso28600.c:536
 msgid "Imports and exports ISO 28600:2011 SPM data transfer format."
 msgstr "Импортирует и экспортирует формат передачи данных СЗМ ISO 28600:2011"
 
-#: modules/file/iso28600.c:551
+#: modules/file/iso28600.c:552
 msgid "ISO 28600:2011 SPM data transfer files (.spm)"
 msgstr "Файлы передачи данных СЗМ ISO 28600:2011 (.spm)"
 
-#: modules/file/iso28600.c:607
+#: modules/file/iso28600.c:608
 #, c-format
 msgid "Only regular mappings are implemented but file has mapping type ‘%s’."
 msgstr ""
 "Реализованы только правильные отображения, а этот файл содержит тип "
 "отображения ‘%s’."
 
-#: modules/file/iso28600.c:669 modules/file/iso28600.c:678
-#: modules/file/iso28600.c:687
+#: modules/file/iso28600.c:670 modules/file/iso28600.c:679
+#: modules/file/iso28600.c:688
 #, c-format
 msgid "List ‘%s’ has %u items which differs from the number %u given by ‘%s’."
 msgstr ""
 "Список ‘%s’ содержит %u элементов, что отличается от числа %u заданного ‘%s’."
 
-#: modules/file/iso28600.c:755 modules/file/iso28600.c:865
+#: modules/file/iso28600.c:757 modules/file/iso28600.c:869
 #: modules/file/sdfile.c:848 modules/file/sdfile.c:865
 #: modules/file/spip-asc.c:224 modules/file/witec-asc.c:223
 #: modules/file/wsffile.c:216
@@ -3624,18 +3624,18 @@ msgstr ""
 msgid "End of file reached when reading sample #%d of %d"
 msgstr "Достигнут конец файла при чтении значения #%d из %d"
 
-#: modules/file/iso28600.c:764 modules/file/iso28600.c:874
+#: modules/file/iso28600.c:766 modules/file/iso28600.c:878
 #: modules/file/spip-asc.c:231 modules/file/witec-asc.c:230
 #: modules/file/wsffile.c:223
 #, c-format
 msgid "Malformed data encountered when reading sample #%d of %d"
 msgstr "При чтении значения  #%d of %d получены искаженные данные"
 
-#: modules/file/iso28600.c:774 modules/file/iso28600.c:884
+#: modules/file/iso28600.c:776 modules/file/iso28600.c:888
 msgid "Missing end-of-data marker."
 msgstr "Отсутствует маркер конца данных end-of-data."
 
-#: modules/file/iso28600.c:1046
+#: modules/file/iso28600.c:1050
 #, c-format
 msgid "Line %u does not contain mandatory label ‘%s’."
 msgstr "Строка %u не содержит обязательной метки ‘%s’."
@@ -3652,43 +3652,43 @@ msgstr "Файлы данных JEOL (.tif)"
 msgid "The type of data is unknown.  Please report it to the developers."
 msgstr "Тип данных неизвестен. Пожалуйста сообщите о нём разработчикам."
 
-#: modules/file/jpkscan.c:91
+#: modules/file/jpkscan.c:92
 msgid "Imports JPK image scans."
 msgstr "Импортирует изображения сканирований JPK."
 
-#: modules/file/jpkscan.c:104
+#: modules/file/jpkscan.c:105
 msgid "JPK image scans (.jpk)"
 msgstr "Изображения сканирований JPK (.jpk)"
 
-#: modules/file/jpkscan.c:168
+#: modules/file/jpkscan.c:169
 msgid "File does not contain grid dimensions."
 msgstr "Файл не содержит размеров сетки"
 
-#: modules/file/lextfile.c:79
+#: modules/file/lextfile.c:80
 msgid "Imports LEXT data files."
 msgstr "Импортирует файлы данных LEXT."
 
-#: modules/file/lextfile.c:92
+#: modules/file/lextfile.c:93
 msgid "Olympus LEXT OLS4000 (.lext)"
 msgstr "Olympus LEXT OLS4000 (.lext)"
 
-#: modules/file/lextfile.c:162 modules/file/nanoscan.c:667
+#: modules/file/lextfile.c:163 modules/file/nanoscan.c:670
 #: modules/file/ometiff.c:204
 #, c-format
 msgid "Top-level element is not ‘%s’."
 msgstr "Элемент верхнего уровня не ‘%s’."
 
-#: modules/file/lextfile.c:259 modules/file/nanoscan.c:264
+#: modules/file/lextfile.c:260 modules/file/nanoscan.c:265
 #: modules/file/ometiff.c:336
 #, c-format
 msgid "XML parsing failed: %s"
 msgstr "Разбор XML окончился неудачно: %s"
 
-#: modules/file/magellan.c:60
+#: modules/file/magellan.c:61
 msgid "Imports FEI Magellan SEM images."
 msgstr "Импортирует изображения FEI Magellan SEM."
 
-#: modules/file/magellan.c:73
+#: modules/file/magellan.c:74
 msgid "FEI Magellan SEM image (.tif)"
 msgstr "Изображение FEI Magellan SEM (.tif)"
 
@@ -3765,7 +3765,7 @@ msgstr "Сжатые данные найдены внутри сжатых да�
 msgid "Invalid short tag of type %u claims to consists of %u bytes."
 msgstr "Неверный короткий тег типа %u претендует что его длина %u байт."
 
-#: modules/file/matfile.c:611
+#: modules/file/matfile.c:614
 #, c-format
 msgid "Decompression of compressed variable failed with error %d."
 msgstr "Распаковка сжатой переменной закончилась с ошибкой %d."
@@ -3778,11 +3778,11 @@ msgstr "Импортирует двоичные файлы данных MetroPro
 msgid "MetroPro files (.dat)"
 msgstr "Файлы MetroPro (.dat)"
 
-#: modules/file/metropro.c:331
+#: modules/file/metropro.c:332
 msgid "File header is too short."
 msgstr "Заголовок файла слишком короткий."
 
-#: modules/file/metropro.c:336
+#: modules/file/metropro.c:337
 msgid "File header is larger than file."
 msgstr "Заголовок файла больше, чем сам файл."
 
@@ -3835,7 +3835,7 @@ msgstr "Размер блока информации о файле невере�
 msgid "Unique id record is too short."
 msgstr "Уникальный идентификатор слишком короткий."
 
-#: modules/file/miffile.c:687 modules/file/mulfile.c:304
+#: modules/file/miffile.c:688 modules/file/mulfile.c:305
 msgid "Image data are outside the file."
 msgstr "Данные изображения не помещаются в файл."
 
@@ -3851,21 +3851,21 @@ msgstr "Файлы данных PicoView (.mi)"
 msgid "Spectroscopy Graph"
 msgstr "График спектроскопии"
 
-#: modules/file/mulfile.c:160
+#: modules/file/mulfile.c:161
 msgid "Imports Aarhus MUL files."
 msgstr "Импортирует файлы Aarhus MUL"
 
-#: modules/file/mulfile.c:173
+#: modules/file/mulfile.c:174
 msgid "Aarhus MUL files (.mul)"
 msgstr "Файлы Aarhus MUL (.mul)"
 
-#: modules/file/mulfile.c:295
+#: modules/file/mulfile.c:296
 #, c-format
 msgid "Image number in the label %u does not match the number %u in the index."
 msgstr ""
 "Номер изображения в названии %u не соответствует числу %u в оглавлении."
 
-#: modules/file/mulfile.c:354 modules/file/mulfile.c:363
+#: modules/file/mulfile.c:355 modules/file/mulfile.c:364
 #, c-format
 msgid "Label string length %u is larger than 20."
 msgstr "Длина строки названия %u больше, чем 20."
@@ -3927,26 +3927,26 @@ msgstr "Импортирует формат файлов Nanomagnetics' NMI, в�
 msgid "Nanomagnetics File (.nmi)"
 msgstr "Файлы Nanomagnetics (.nmi)"
 
-#: modules/file/nanonics.c:101
+#: modules/file/nanonics.c:102
 msgid "Imports Nanonics NAN data files."
 msgstr "Импортирует файлы данных Nanoniсs NAN."
 
-#: modules/file/nanonics.c:114
+#: modules/file/nanonics.c:115
 msgid "Nanonics files (.nan)"
 msgstr "Файлы Nanoniсs (.nan)"
 
-#: modules/file/nanonics.c:174 modules/file/nanonics.c:410
+#: modules/file/nanonics.c:175 modules/file/nanonics.c:413
 #: modules/file/wsxmfile.c:211
 #, c-format
 msgid "Expected header end marker ‘%s’ was not found."
 msgstr "Ожидаемый маркер конца заголовка ‘%s’ не был найден."
 
-#: modules/file/nanonics.c:201
+#: modules/file/nanonics.c:202
 #, c-format
 msgid "HeaderLength %u differs from actual header length %u"
 msgstr "HeaderLength %u отличается от реальной длины заголовка %u"
 
-#: modules/file/nanonics.c:335 modules/file/witec-asc.c:167
+#: modules/file/nanonics.c:338 modules/file/witec-asc.c:167
 #, c-format
 msgid "Expected header start marker ‘%s’ but found ‘%s’."
 msgstr "Ожидался маркер начала заголовка ‘%s’, но был найден ‘%s’."
@@ -3959,7 +3959,7 @@ msgstr "Импортирует файлы данных Nanonis SXM."
 msgid "Nanonis SXM files (.sxm)"
 msgstr "Файлы Nanonis SXM (.sxm)"
 
-#: modules/file/nanonis.c:171 modules/file/omicron.c:513
+#: modules/file/nanonis.c:171 modules/file/omicron.c:516
 #: modules/file/unisoku.c:275
 msgid "File header ended unexpectedly."
 msgstr "Заголовок файла неожиданно завершился."
@@ -3982,7 +3982,7 @@ msgstr "Строка DATA_INFO содержит меньше %d полей."
 msgid "Header ended within a Multipass-Config table."
 msgstr "Заголовок закончился внутри таблицы Multipass-Config."
 
-#: modules/file/nanonis.c:544
+#: modules/file/nanonis.c:546
 msgid "Missing data start marker \\x1a\\x04."
 msgstr "Отсутствует маркер начала данных \\x1a\\x04."
 
@@ -3998,52 +3998,52 @@ msgstr "Данные NanoObserver (.nao)"
 msgid "Minizip cannot open the file as a ZIP file."
 msgstr "Minizip не может открыть файл как архив ZIP."
 
-#: modules/file/nanoobserver.c:459
+#: modules/file/nanoobserver.c:461
 msgid "File Scan/Measure.xml is missing in the zip file."
 msgstr "Файл Scan/Measure.xml отсутствует в zip-архиве."
 
-#: modules/file/nanoobserver.c:554 modules/file/nanoscantech.c:902
+#: modules/file/nanoobserver.c:556 modules/file/nanoscantech.c:905
 msgid "Unknown error"
 msgstr "Неизвестная ошибка"
 
-#: modules/file/nanoobserver.c:559 modules/file/nanoscantech.c:907
+#: modules/file/nanoobserver.c:561 modules/file/nanoscantech.c:910
 msgid "End of file"
 msgstr "Конец файла"
 
-#: modules/file/nanoobserver.c:561 modules/file/nanoscantech.c:909
+#: modules/file/nanoobserver.c:563 modules/file/nanoscantech.c:912
 msgid "End of list of files"
 msgstr "Конец списка файлов"
 
-#: modules/file/nanoobserver.c:563 modules/file/nanoscantech.c:911
+#: modules/file/nanoobserver.c:565 modules/file/nanoscantech.c:914
 msgid "Parameter error"
 msgstr "Ошибка параметра"
 
-#: modules/file/nanoobserver.c:565 modules/file/nanoscantech.c:913
+#: modules/file/nanoobserver.c:567 modules/file/nanoscantech.c:916
 msgid "Bad zip file"
 msgstr "Плохой файл zip"
 
-#: modules/file/nanoobserver.c:567 modules/file/nanoscantech.c:915
+#: modules/file/nanoobserver.c:569 modules/file/nanoscantech.c:918
 msgid "Internal error"
 msgstr "Внутренняя ошибка"
 
-#: modules/file/nanoobserver.c:569 modules/file/nanoscantech.c:917
+#: modules/file/nanoobserver.c:571 modules/file/nanoscantech.c:920
 msgid "CRC error"
 msgstr "Ошибка контрольной суммы"
 
-#: modules/file/nanoobserver.c:572 modules/file/nanoscantech.c:920
+#: modules/file/nanoobserver.c:574 modules/file/nanoscantech.c:923
 #, c-format
 msgid "Minizip error while reading the zip file: %s."
 msgstr "Ошибка minizip при чтении zip-файла: %s."
 
-#: modules/file/nanoscan.c:186
+#: modules/file/nanoscan.c:187
 msgid "Imports NanoScan XML files."
 msgstr "Импортирует файлы данных NanoScan XML."
 
-#: modules/file/nanoscan.c:199
+#: modules/file/nanoscan.c:200
 msgid "NanoScan XML files (.xml)"
 msgstr "Файлы NanoScan XML (.xml)"
 
-#: modules/file/nanoscan.c:905
+#: modules/file/nanoscan.c:908
 msgid "Wrong size of Base64 encoded data."
 msgstr "Неправильный размер данных, кодированных Base64."
 
@@ -4101,7 +4101,7 @@ msgstr ""
 msgid "Cannot parse `Scan size' field."
 msgstr "Не удаётся распознать поле `Scan size'."
 
-#: modules/file/nanoscope.c:1437 modules/file/nrrdfile.c:1024
+#: modules/file/nanoscope.c:1437 modules/file/nrrdfile.c:1025
 #, c-format
 msgid "Garbage after data sample #%u."
 msgstr "Мусор после элемента данных #%u."
@@ -4151,24 +4151,24 @@ msgstr "Загрузка файлов быстрого сканирования 
 msgid "Time series order is wrong."
 msgstr "Некорректный порядок временных рядов."
 
-#: modules/file/netcdf.c:1236
+#: modules/file/netcdf.c:1239
 #, c-format
 msgid "File ended unexpectedly inside `%s'."
 msgstr "Файл неожиданно окончился внутри `%s'."
 
-#: modules/file/netcdf.c:1245
+#: modules/file/netcdf.c:1248
 #, c-format
 msgid "Expected `%s' array or `ABSENT'."
 msgstr "Ожидался массив `%s'  или `ABSENT'."
 
-#: modules/file/netcdf.c:1253
+#: modules/file/netcdf.c:1256
 #, c-format
 msgid "Array `%s' has non-zero number of elements in spite of being absent."
 msgstr ""
 "Массив `%s' содержит ненулевое количество элементов вместо того, чтобы "
 "отсутствовать."
 
-#: modules/file/netcdf.c:1312
+#: modules/file/netcdf.c:1315
 msgid "More than one record dimension found."
 msgstr "Найдена больше, чем одна запись о размерности."
 
@@ -4199,60 +4199,60 @@ msgstr ""
 msgid "Compression is supported only for detached files."
 msgstr "Сжатие поддерживается только для открепленных файлов."
 
-#: modules/file/nrrdfile.c:683
+#: modules/file/nrrdfile.c:684
 msgid "Split detached data files are not supported."
 msgstr "Разбитые на тома открепленные файлы данных не поддерживаются."
 
-#: modules/file/nrrdfile.c:729
+#: modules/file/nrrdfile.c:730
 msgid "Cannot decompress gzip-encoded data.  Zlib support was not built in."
 msgstr ""
 "Не удаётся распаковать gzip-кодированные данные. Поддержка Zlib не была "
 "встроена."
 
-#: modules/file/nrrdfile.c:774
+#: modules/file/nrrdfile.c:775
 msgid "Cannot decompress bzip2-encoded data.  Bzip2 support was not built in."
 msgstr ""
 "Не удаётся распаковать bzip2-кодированные данные. Поддержка Bzip2 не была "
 "встроена."
 
-#: modules/file/nrrdfile.c:906
+#: modules/file/nrrdfile.c:907
 #, c-format
 msgid "Hex data contains less values (%u) than corresponds to the sizes (%u)."
 msgstr ""
 "Шестнадцатеричные данные содержат меньше значений (%u) чем нужно в "
 "соответствии с размерами (%u)."
 
-#: modules/file/nrrdfile.c:1019
+#: modules/file/nrrdfile.c:1020
 #, c-format
 msgid "Text data contains less values (%u) than corresponds to the sizes (%u)."
 msgstr ""
 "Текстовые данные содержат меньше значений (%u) чем нужно в соответствии с "
 "размерами (%u)."
 
-#: modules/file/nrrdfile.c:1073
+#: modules/file/nrrdfile.c:1074
 msgid "Field byteskip cannot be -1 for text encodings."
 msgstr ""
 "Число пропущенных байтов поля не может быть -1 для текстовых кодировок."
 
-#: modules/file/nrrdfile.c:1084
+#: modules/file/nrrdfile.c:1085
 msgid "Field lineskip specifies more lines than there are in the file."
 msgstr "Число пропущенных линий поля задаёт больше линий, чем есть в файле."
 
-#: modules/file/nrrdfile.c:1127
+#: modules/file/nrrdfile.c:1128
 msgid "Field byteskip specifies more bytes than there are in the file."
 msgstr "Число пропущенных байтов поля задаёт больше байтов, чем есть в файле."
 
-#: modules/file/nrrdfile.c:1350
+#: modules/file/nrrdfile.c:1351
 #, c-format
 msgid "Items of per-axis header field %s are not quoted."
 msgstr "Элементы поля %s заголовка оси не заключены в кавычки."
 
-#: modules/file/nrrdfile.c:1361
+#: modules/file/nrrdfile.c:1362
 #, c-format
 msgid "Per-axis header field %s contains too many items."
 msgstr "Поле %s заголовка оси содержит слишком много элементов."
 
-#: modules/file/nrrdfile.c:1370
+#: modules/file/nrrdfile.c:1371
 #, c-format
 msgid "Per-axis header field %s contains too few items."
 msgstr "Поле %s заголовка оси содержит слишком мало элементов."
@@ -4265,25 +4265,25 @@ msgstr "Импорт файлов данных NT-MDT"
 msgid "NT-MDT files (.mdt)"
 msgstr "Файлы NT-MDT (.mdt)"
 
-#: modules/file/nt-mdt.c:1487
+#: modules/file/nt-mdt.c:1489
 msgid "Frame is too short for Frame Mode."
 msgstr "Фрейм слишком короткий для режима фреймов."
 
-#: modules/file/nt-mdt.c:1502
+#: modules/file/nt-mdt.c:1504
 msgid "Frame is too short for dots or data."
 msgstr "Фрейм слишком короткий для точек или данных."
 
-#: modules/file/nt-mdt.c:1768
+#: modules/file/nt-mdt.c:1770
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Достигнут конец файла в заголовке фрейма #%u."
 
-#: modules/file/nt-mdt.c:1776
+#: modules/file/nt-mdt.c:1778
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Достигнут конец файла в данных фрейма #%u."
 
-#: modules/file/nt-mdt.c:1811
+#: modules/file/nt-mdt.c:1813
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "Фрейм #%u слишком короткий чтобы быть заголовком сканированных данных."
@@ -4309,11 +4309,11 @@ msgstr "Невозможно загрузить файл данных: %s."
 msgid "Data file too small."
 msgstr "Файл данных слишком короткий."
 
-#: modules/file/ols.c:64
+#: modules/file/ols.c:65
 msgid "Imports OLS data files."
 msgstr "Импортирует файлы данных OLS."
 
-#: modules/file/ols.c:77
+#: modules/file/ols.c:78
 msgid "Olympus LEXT OLS3000 (.ols)"
 msgstr "Olympus LEXT OLS3000 (.ols)"
 
@@ -4325,20 +4325,20 @@ msgstr "Импортирует файлы данных OME-TIFF."
 msgid "Open Microscopy OME-TIFF (.ome.tiff)"
 msgstr "Open Microscopy OME-TIFF (.ome.tiff)"
 
-#: modules/file/omicron.c:161
+#: modules/file/omicron.c:162
 msgid "Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."
 msgstr ""
 "Импортирует файлы данных Omicron (две части: .par + .tf*, .tb*, .sf*, .sb*)."
 
-#: modules/file/omicron.c:174
+#: modules/file/omicron.c:175
 msgid "Omicron files (.par + data)"
 msgstr "Файлы Omicron (.par + данные)"
 
-#: modules/file/omicron.c:415
+#: modules/file/omicron.c:418
 msgid "Header line starts with a colon."
 msgstr "Строка заголовка начинается с двоеточия."
 
-#: modules/file/omicron.c:522
+#: modules/file/omicron.c:525
 msgid "Channel information ended unexpectedly."
 msgstr "Информация о канале неожиданно закончилась."
 
@@ -4358,11 +4358,11 @@ msgstr "Кривые сила-расстояние не поддерживают
 msgid "Temporally varying signal is not supported."
 msgstr "Меняющийся во времени сигнал не поддерживается."
 
-#: modules/file/omicronmatrix.c:195
+#: modules/file/omicronmatrix.c:196
 msgid "Omicron MATRIX (param.mtrx & data.mtrx)"
 msgstr "Omicron MATRIX (param.mtrx & data.mtrx)"
 
-#: modules/file/omicronmatrix.c:211
+#: modules/file/omicronmatrix.c:212
 msgid "Omicron MATRIX (.mtrx & .mtrx)"
 msgstr "Omicron MATRIX (.mtrx & .mtrx)"
 
@@ -4383,96 +4383,96 @@ msgstr "Файлы экспорта в ASCII Wyko (.asc)"
 msgid "Item `%s' is beyond the end of the file."
 msgstr "Элемент `%s' находится за концом файла."
 
-#: modules/file/opdfile.c:613
+#: modules/file/opdfile.c:615
 msgid "Nested directories found"
 msgstr "Найдены вложенные каталоги"
 
-#: modules/file/opdfile.c:804
+#: modules/file/opdfile.c:806
 #, c-format
 msgid "Truncated data in block %s"
 msgstr "Неполные данные в блоке %s"
 
-#: modules/file/pixmap.c:365
+#: modules/file/pixmap.c:369
 msgid "All channels"
 msgstr "Все каналы"
 
-#: modules/file/pixmap.c:366
+#: modules/file/pixmap.c:370
 msgid "Red"
 msgstr "Красный"
 
-#: modules/file/pixmap.c:367
+#: modules/file/pixmap.c:371
 msgid "Green"
 msgstr "Зеленый"
 
-#: modules/file/pixmap.c:368
+#: modules/file/pixmap.c:372
 msgid "Blue"
 msgstr "Синий"
 
-#: modules/file/pixmap.c:369
+#: modules/file/pixmap.c:373
 msgid "Value (max)"
 msgstr "Значение (макс.)"
 
-#: modules/file/pixmap.c:370
+#: modules/file/pixmap.c:374
 msgid "RGB sum"
 msgstr "Сумма RGB"
 
-#: modules/file/pixmap.c:371
+#: modules/file/pixmap.c:375
 msgid "Luma"
 msgstr "Яркость"
 
-#: modules/file/pixmap.c:372
+#: modules/file/pixmap.c:376
 msgid "Alpha"
 msgstr "Альфа"
 
-#: modules/file/pixmap.c:384
+#: modules/file/pixmap.c:388
 msgid "Portable Network Graphics (.png)"
 msgstr "Portable Network Graphics (.png)"
 
-#: modules/file/pixmap.c:390
+#: modules/file/pixmap.c:394
 msgid "JPEG (.jpeg,.jpg)"
 msgstr "JPEG (.jpeg,.jpg)"
 
-#: modules/file/pixmap.c:396
+#: modules/file/pixmap.c:400
 msgid "TIFF (.tiff,.tif)"
 msgstr "TIFF (.tiff,.tif)"
 
-#: modules/file/pixmap.c:402
+#: modules/file/pixmap.c:406
 msgid "Portable Pixmap (.ppm,.pnm)"
 msgstr "Portable Pixmap (.ppm,.pnm)"
 
-#: modules/file/pixmap.c:408
+#: modules/file/pixmap.c:412
 msgid "Windows or OS2 Bitmap (.bmp)"
 msgstr "Bitmap из Windows или OS2 (.bmp)"
 
-#: modules/file/pixmap.c:414
+#: modules/file/pixmap.c:418
 msgid "TARGA (.tga,.targa)"
 msgstr "TARGA (.tga,.targa)"
 
-#: modules/file/pixmap.c:427
+#: modules/file/pixmap.c:431
 msgid "Graphics Interchange Format (.gif)"
 msgstr "Graphics Interchange Format (.gif)"
 
-#: modules/file/pixmap.c:431
+#: modules/file/pixmap.c:435
 msgid "JPEG 2000 (.jpx)"
 msgstr "JPEG 2000 (.jpx)"
 
-#: modules/file/pixmap.c:435
+#: modules/file/pixmap.c:439
 msgid "PCX (.pcx)"
 msgstr "PCX (.pcx)"
 
-#: modules/file/pixmap.c:439
+#: modules/file/pixmap.c:443
 msgid "X Pixmap (.xpm)"
 msgstr "X Pixmap (.xpm)"
 
-#: modules/file/pixmap.c:443
+#: modules/file/pixmap.c:447
 msgid "Sun raster image (.ras)"
 msgstr "Растровое изображение Sun (.ras)"
 
-#: modules/file/pixmap.c:447
+#: modules/file/pixmap.c:451
 msgid "Apple icon (.icns)"
 msgstr "Иконка Apple (.icns)"
 
-#: modules/file/pixmap.c:471
+#: modules/file/pixmap.c:475
 msgid ""
 "Renders data into pixmap images and imports data from pixmap images. It "
 "supports the following image formats for export: PNG, JPEG, TIFF, PPM, BMP, "
@@ -4483,68 +4483,68 @@ msgstr ""
 "JPEG, TIFF, PPM, BMP, TARGA. Поддержка импорта полагается на GDK и, "
 "вследствие этого, может зависеть от варианта установки."
 
-#: modules/file/pixmap.c:771
+#: modules/file/pixmap.c:775
 #, c-format
 msgid "Pixmap has not registered file type `%s'."
 msgstr ""
 "Модуль импорта изображений не имеет зарегистрированного типа файла `%s'."
 
-#: modules/file/pixmap.c:786
+#: modules/file/pixmap.c:790
 #, c-format
 msgid "Cannot get pixbuf loader: %s."
 msgstr "Не удаётся получить загрузчик pixbuf: %s."
 
-#: modules/file/pixmap.c:799 modules/file/pixmap.c:812
+#: modules/file/pixmap.c:803 modules/file/pixmap.c:816
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr "Загрузчик pixbuf не принял данные: %s."
 
-#: modules/file/pixmap.c:1236
+#: modules/file/pixmap.c:1242
 msgid ""
 "Warning: Colorful images cannot be reliably mapped to meaningful values."
 msgstr ""
 "Предупреждение: цветные изображения не могут быть надёжно отображены в "
 "значащие что-либо данные."
 
-#: modules/file/pixmap.c:1255
+#: modules/file/pixmap.c:1261
 msgid "verb|Use"
 msgstr "Использовать"
 
-#: modules/file/pixmap.c:1255
+#: modules/file/pixmap.c:1261
 msgid "as data"
 msgstr "как данные"
 
-#: modules/file/pixmap.c:1724 modules/file/pixmap.c:1752
+#: modules/file/pixmap.c:1767 modules/file/pixmap.c:1795
 #, c-format
 msgid "Pixbuf save failed: %s."
 msgstr "Сохранение pixbuf закончилось неудачно: %s."
 
-#: modules/file/pixmap.c:2174
+#: modules/file/pixmap.c:2217
 msgid "Image is too large to be stored as TARGA."
 msgstr "Изображение слишком велико чтобы сохранить его в формате TARGA."
 
-#: modules/file/pixmap.c:2253
+#: modules/file/pixmap.c:2296
 msgid "Data must be displayed in a window for pixmap export."
 msgstr "Данные должны отображаться в окне для экспорта изображения."
 
-#: modules/file/pixmap.c:3016
+#: modules/file/pixmap.c:3059
 msgid "Change Inset Color"
 msgstr "Изменить цвет отрезка"
 
-#: modules/file/pixmap.c:3098
+#: modules/file/pixmap.c:3141
 #, c-format
 msgid "Export %s"
 msgstr "Экспорт %s"
 
-#: modules/file/pixmap.c:3128
+#: modules/file/pixmap.c:3171
 msgid "Scaling"
 msgstr "Масштабирование"
 
-#: modules/file/pixmap.c:3137
+#: modules/file/pixmap.c:3180
 msgid "_Zoom:"
 msgstr "_Увеличение:"
 
-#: modules/file/pixmap.c:3155 modules/process/col_synth.c:405
+#: modules/file/pixmap.c:3198 modules/process/col_synth.c:405
 #: modules/process/grain_mark.c:310 modules/process/grain_rem_threshold.c:284
 #: modules/process/obj_synth.c:576 modules/process/pat_synth.c:892
 #: modules/process/pat_synth.c:1193 modules/process/pat_synth.c:1528
@@ -4552,99 +4552,99 @@ msgstr "_Увеличение:"
 msgid "_Height:"
 msgstr "_Высота:"
 
-#: modules/file/pixmap.c:3163
+#: modules/file/pixmap.c:3206
 msgid "Font:"
 msgstr "Шрифт:"
 
-#: modules/file/pixmap.c:3178
+#: modules/file/pixmap.c:3221
 msgid "Scale text _proportionally"
 msgstr "_Пропорциональный масштаб текста"
 
-#: modules/file/pixmap.c:3193
+#: modules/file/pixmap.c:3236
 msgid "_Font size:"
 msgstr "_Размер шрифта:"
 
-#: modules/file/pixmap.c:3208
+#: modules/file/pixmap.c:3251
 msgid "Draw _mask"
 msgstr "Рисовать _маску"
 
-#: modules/file/pixmap.c:3217
+#: modules/file/pixmap.c:3260
 msgid "Draw _selection"
 msgstr "Рисовать в_ыбранную область"
 
-#: modules/file/pixmap.c:3233
+#: modules/file/pixmap.c:3276
 msgid "Grayscale Mode"
 msgstr "Градации серого"
 
-#: modules/file/pixmap.c:3237
+#: modules/file/pixmap.c:3280
 msgid "Export as 1_6 bit grayscale"
 msgstr "Экспортировать как 1_6битное серое"
 
-#: modules/file/pixmap.c:3263
+#: modules/file/pixmap.c:3306
 msgid "Lateral Scale"
 msgstr "Горизонтальный масштаб:"
 
-#: modules/file/pixmap.c:3270 modules/file/pixmap.c:3385
+#: modules/file/pixmap.c:3313 modules/file/pixmap.c:3428
 msgid "ruler|_None"
 msgstr "_Нет"
 
-#: modules/file/pixmap.c:3271
+#: modules/file/pixmap.c:3314
 msgid "_Rulers"
 msgstr "Направл_яющие"
 
-#: modules/file/pixmap.c:3272
+#: modules/file/pixmap.c:3315
 msgid "_Inset scale bar"
 msgstr "В_ложенный масштабный отрезок"
 
-#: modules/file/pixmap.c:3277
+#: modules/file/pixmap.c:3320
 msgid "Color:"
 msgstr "Цвет:"
 
-#: modules/file/pixmap.c:3293 modules/process/immerse.c:321
+#: modules/file/pixmap.c:3336 modules/process/immerse.c:321
 msgid "Position:"
 msgstr "Расположение:"
 
-#: modules/file/pixmap.c:3298
+#: modules/file/pixmap.c:3341
 msgid "left"
 msgstr "слева"
 
-#: modules/file/pixmap.c:3302
+#: modules/file/pixmap.c:3345
 msgid "center"
 msgstr "по центру"
 
-#: modules/file/pixmap.c:3306
+#: modules/file/pixmap.c:3349
 msgid "right"
 msgstr "справа"
 
-#: modules/file/pixmap.c:3311
+#: modules/file/pixmap.c:3354
 msgid "top"
 msgstr "верх"
 
-#: modules/file/pixmap.c:3323
+#: modules/file/pixmap.c:3366
 msgid "bottom"
 msgstr "низ"
 
-#: modules/file/pixmap.c:3334 modules/process/lno_synth.c:1069
+#: modules/file/pixmap.c:3377 modules/process/lno_synth.c:1069
 msgid "_Length:"
 msgstr "_Длина:"
 
-#: modules/file/pixmap.c:3350
+#: modules/file/pixmap.c:3393
 msgid "_Auto"
 msgstr "_Авто"
 
-#: modules/file/pixmap.c:3358
+#: modules/file/pixmap.c:3401
 msgid "Draw _ticks"
 msgstr "Рисовать _засечки"
 
-#: modules/file/pixmap.c:3368
+#: modules/file/pixmap.c:3411
 msgid "Draw _label"
 msgstr "Рисовать подпис_ь"
 
-#: modules/file/pixmap.c:3378
+#: modules/file/pixmap.c:3421
 msgid "Value Scale"
 msgstr "Масштаб значений"
 
-#: modules/file/pixmap.c:3386
+#: modules/file/pixmap.c:3429
 msgid "_False color ruler"
 msgstr "Л_инейка псевдоцвета"
 
@@ -4734,7 +4734,7 @@ msgstr "Импортирует файловый формат Quesant."
 msgid "Quesant files (.afm)"
 msgstr "Файлы Quesant (.afm)"
 
-#: modules/file/rawfile.c:230
+#: modules/file/rawfile.c:231
 msgid ""
 "Imports raw data files, both ASCII and binary, according to user-specified "
 "format."
@@ -4742,75 +4742,75 @@ msgstr ""
 "Импортирует неизвестные файлы данных, как текстовые. так и двоичные, в "
 "соответствии с форматом, указанным пользователем."
 
-#: modules/file/rawfile.c:251
+#: modules/file/rawfile.c:252
 msgid "User-specified"
 msgstr "Определённый пользователем"
 
-#: modules/file/rawfile.c:252
+#: modules/file/rawfile.c:253
 msgid "Signed byte"
 msgstr "байт со знаком"
 
-#: modules/file/rawfile.c:253
+#: modules/file/rawfile.c:254
 msgid "Unsigned byte"
 msgstr "байт без знака"
 
-#: modules/file/rawfile.c:254
+#: modules/file/rawfile.c:255
 msgid "Signed 16bit word"
 msgstr "16битное слово со знаком"
 
-#: modules/file/rawfile.c:255
+#: modules/file/rawfile.c:256
 msgid "Unsigned 16bit word"
 msgstr "16битное слово без знака"
 
-#: modules/file/rawfile.c:256
+#: modules/file/rawfile.c:257
 msgid "Signed 32bit word"
 msgstr "32битное слово со знаком"
 
-#: modules/file/rawfile.c:257
+#: modules/file/rawfile.c:258
 msgid "Unsigned 32bit word"
 msgstr "16битное слово без знака"
 
-#: modules/file/rawfile.c:258
+#: modules/file/rawfile.c:259
 msgid "Signed 64bit word"
 msgstr "64битное слово со знаком"
 
-#: modules/file/rawfile.c:259
+#: modules/file/rawfile.c:260
 msgid "Unsigned 64bit word"
 msgstr "64битное слово без знака"
 
-#: modules/file/rawfile.c:260
+#: modules/file/rawfile.c:261
 msgid "IEEE single"
 msgstr "IEEE single"
 
-#: modules/file/rawfile.c:261
+#: modules/file/rawfile.c:262
 msgid "IEEE double"
 msgstr "IEEE double"
 
-#: modules/file/rawfile.c:314
+#: modules/file/rawfile.c:315
 msgid "Raw data files"
 msgstr "Импорт неизвестных файлов данных"
 
-#: modules/file/rawfile.c:356
+#: modules/file/rawfile.c:357
 msgid "Raw data import must be run as interactive."
 msgstr "Импорт неизвестных данных должен быть запущен в интерактивном режиме."
 
-#: modules/file/rawfile.c:398
+#: modules/file/rawfile.c:400
 msgid "Read Raw File"
 msgstr "Прочитать неизвестный файл"
 
-#: modules/file/rawfile.c:424
+#: modules/file/rawfile.c:426
 msgid "Information"
 msgstr "Информация"
 
-#: modules/file/rawfile.c:429
+#: modules/file/rawfile.c:431
 msgid "Data Format"
 msgstr "Формат данных"
 
-#: modules/file/rawfile.c:436 modules/process/convolution_filter.c:290
+#: modules/file/rawfile.c:438 modules/process/convolution_filter.c:290
 msgid "Presets"
 msgstr "Предустановки"
 
-#: modules/file/rawfile.c:541 modules/file/rawxyz.c:436
+#: modules/file/rawfile.c:543 modules/file/rawxyz.c:437
 #: modules/process/arithmetic.c:236 modules/process/calcoefs_view.c:333
 #: modules/process/convolution_filter.c:246
 #: modules/process/deposit_synth.c:684 modules/process/drift.c:237
@@ -4825,164 +4825,164 @@ msgstr "Предустановки"
 msgid "_Update"
 msgstr "О_бновить"
 
-#: modules/file/rawfile.c:576
+#: modules/file/rawfile.c:578
 msgid "<b>File</b>"
 msgstr "<b>Файл</b>"
 
-#: modules/file/rawfile.c:600 modules/file/rawxyz.c:516
+#: modules/file/rawfile.c:602 modules/file/rawxyz.c:517
 #: modules/process/dimensions.h:444
 msgid "Resolution"
 msgstr "Разрешение"
 
-#: modules/file/rawfile.c:605 modules/file/rawxyz.c:520
+#: modules/file/rawfile.c:607 modules/file/rawxyz.c:521
 #: modules/process/dimensions.h:450
 msgid "_Horizontal size:"
 msgstr "_Горизонтальный размер:"
 
-#: modules/file/rawfile.c:612 modules/file/rawxyz.c:535
+#: modules/file/rawfile.c:614 modules/file/rawxyz.c:536
 #: modules/process/dimensions.h:453
 msgid "_Vertical size:"
 msgstr "Вертика_льный размер:"
 
-#: modules/file/rawfile.c:617 modules/file/rawxyz.c:605
+#: modules/file/rawfile.c:619 modules/file/rawxyz.c:606
 msgid "S_quare sample"
 msgstr "_Квадратный образец"
 
-#: modules/file/rawfile.c:723
+#: modules/file/rawfile.c:725
 msgid "_Automatically offer raw data import of unknown files"
 msgstr ""
 "_Автоматически предлагать импорт необработанных данных\n"
 "для файлов неизвестного типа"
 
-#: modules/file/rawfile.c:752
+#: modules/file/rawfile.c:754
 msgid "_Text data"
 msgstr "Т_екстовые данные"
 
-#: modules/file/rawfile.c:753
+#: modules/file/rawfile.c:755
 msgid "_Binary data"
 msgstr "_Двоичные данные"
 
-#: modules/file/rawfile.c:762
+#: modules/file/rawfile.c:764
 msgid "Start from _line:"
 msgstr "_Начать со строки:"
 
-#: modules/file/rawfile.c:769
+#: modules/file/rawfile.c:771
 msgid "E_ach row skip:"
 msgstr "_В каждой строке пропустить:"
 
-#: modules/file/rawfile.c:770
+#: modules/file/rawfile.c:772
 msgid "fields"
 msgstr "полей"
 
-#: modules/file/rawfile.c:774
+#: modules/file/rawfile.c:776
 msgid "_Field delimiter:"
 msgstr "_Разделитель полей:"
 
-#: modules/file/rawfile.c:782
+#: modules/file/rawfile.c:784
 msgid "Any whitespace"
 msgstr "Любой пробельный"
 
-#: modules/file/rawfile.c:783
+#: modules/file/rawfile.c:785
 msgid "TAB character"
 msgstr "Символ TAB"
 
-#: modules/file/rawfile.c:784
+#: modules/file/rawfile.c:786
 msgid "Other character"
 msgstr "Другой символ"
 
-#: modules/file/rawfile.c:792
+#: modules/file/rawfile.c:794
 msgid "_Other delimiter:"
 msgstr "Др_угой разделитель:"
 
-#: modules/file/rawfile.c:805
+#: modules/file/rawfile.c:807
 msgid "_Decimal separator is comma"
 msgstr "Десятичный разделитель - _запятая"
 
-#: modules/file/rawfile.c:823
+#: modules/file/rawfile.c:825
 msgid "Byte s_wap pattern:"
 msgstr "_Шаблон перестановки байтов:"
 
-#: modules/file/rawfile.c:838
+#: modules/file/rawfile.c:840
 msgid "Start at _offset:"
 msgstr "Начать со сме_щения:"
 
-#: modules/file/rawfile.c:839
+#: modules/file/rawfile.c:841
 msgid "bytes"
 msgstr "байт"
 
-#: modules/file/rawfile.c:845
+#: modules/file/rawfile.c:847
 msgid "_Sample size:"
 msgstr "Р_азмер отсчёта:"
 
-#: modules/file/rawfile.c:846 modules/file/rawfile.c:854
-#: modules/file/rawfile.c:862
+#: modules/file/rawfile.c:848 modules/file/rawfile.c:856
+#: modules/file/rawfile.c:864
 msgid "bits"
 msgstr "бит"
 
-#: modules/file/rawfile.c:853
+#: modules/file/rawfile.c:855
 msgid "After each sample s_kip:"
 msgstr "Пос_ле каждого отсчёта пропустить:"
 
-#: modules/file/rawfile.c:861
+#: modules/file/rawfile.c:863
 msgid "After each _row skip:"
 msgstr "После ка_ждой строки пропустить:"
 
-#: modules/file/rawfile.c:867
+#: modules/file/rawfile.c:869
 msgid "_Reverse bits in bytes"
 msgstr "Обратить порядок битов в ба_йтах:"
 
-#: modules/file/rawfile.c:872
+#: modules/file/rawfile.c:874
 msgid "Reverse bi_ts in samples"
 msgstr "Обратить порядок битов в отс_чётах:"
 
-#: modules/file/rawfile.c:877
+#: modules/file/rawfile.c:879
 msgid "Samples are si_gned"
 msgstr "Отсчёты со _знаком"
 
-#: modules/file/rawfile.c:907
+#: modules/file/rawfile.c:909
 msgid "Binary"
 msgstr "Двоичный"
 
-#: modules/file/rawfile.c:907
+#: modules/file/rawfile.c:909
 msgid "Text"
 msgstr "Текст"
 
-#: modules/file/rawfile.c:929
+#: modules/file/rawfile.c:931
 msgid "Delimiter: whitespace"
 msgstr "Разделитель: пробел"
 
-#: modules/file/rawfile.c:932
+#: modules/file/rawfile.c:934
 #, c-format
 msgid "Delimiter: 0x%02x"
 msgstr "Разделитель: 0x%02x"
 
-#: modules/file/rawfile.c:934
+#: modules/file/rawfile.c:936
 #, c-format
 msgid "Delimiter: %s"
 msgstr "Разделитель: %s"
 
-#: modules/file/rawfile.c:960
+#: modules/file/rawfile.c:962
 msgid "Info"
 msgstr "Информация"
 
-#: modules/file/rawfile.c:1002 modules/process/calcoefs_load.c:216
+#: modules/file/rawfile.c:1004 modules/process/calcoefs_load.c:216
 #: modules/process/neural.c:692
 msgid "verb|_Load"
 msgstr "_Загрузить"
 
-#: modules/file/rawfile.c:1008 modules/process/neural.c:698
+#: modules/file/rawfile.c:1010 modules/process/neural.c:698
 msgid "verb|_Store"
 msgstr "Со_хранить"
 
-#: modules/file/rawfile.c:1014 modules/process/neural.c:704
+#: modules/file/rawfile.c:1016 modules/process/neural.c:704
 msgid "_Rename"
 msgstr "_Переименовать"
 
-#: modules/file/rawfile.c:1033
+#: modules/file/rawfile.c:1035
 msgid "Preset _name:"
 msgstr "_Название предустановки:"
 
-#: modules/file/rawfile.c:1117
+#: modules/file/rawfile.c:1119
 #, c-format
 msgid ""
 "<b>Too short file</b>\n"
@@ -4993,7 +4993,7 @@ msgstr ""
 "Формат предполагает размер файла не менее %u байт, но размер `%s' всего %u "
 "байт."
 
-#: modules/file/rawfile.c:1133
+#: modules/file/rawfile.c:1135
 #, c-format
 msgid ""
 "<b>Parsing failed</b>\n"
@@ -5002,50 +5002,50 @@ msgstr ""
 "<b>Разбор закончился неудачно</b>\n"
 "Содержимое `%s' не соответствует формату: %s."
 
-#: modules/file/rawfile.c:1612 modules/process/neural.c:1581
+#: modules/file/rawfile.c:1614 modules/process/neural.c:1581
 #, c-format
 msgid "The name `%s' is invalid."
 msgstr "Имя `%s' неверно."
 
-#: modules/file/rawfile.c:2095
+#: modules/file/rawfile.c:2097
 #, c-format
 msgid "Not enough lines (%d) for offset (%d)"
 msgstr "Не хватает строк (%d) для смещения (%d)"
 
-#: modules/file/rawfile.c:2120
+#: modules/file/rawfile.c:2122
 #, c-format
 msgid "Expected whitespace to skip more fields in row %u, got `%.16s'"
 msgstr ""
 "Ожидался пробел чтобы пропустить ещё несколько полей в строке %u, получили `"
 "%.16s'"
 
-#: modules/file/rawfile.c:2134
+#: modules/file/rawfile.c:2136
 #, c-format
 msgid "Expected `%c' to skip more fields in row %u, got `%.16s'"
 msgstr ""
 "Ожидался `%c' чтобы пропустить ещё несколько полей в строке %u, получили `"
 "%.16s'"
 
-#: modules/file/rawfile.c:2148
+#: modules/file/rawfile.c:2150
 #, c-format
 msgid "Expected `%s' to skip more fields in row %u, got `%.16s'"
 msgstr ""
 "Ожидалось `%s' чтобы пропустить ещё несколько полей в строке %u, получили `"
 "%.16s'"
 
-#: modules/file/rawfile.c:2165 modules/file/rawfile.c:2179
-#: modules/file/rawfile.c:2205
+#: modules/file/rawfile.c:2167 modules/file/rawfile.c:2181
+#: modules/file/rawfile.c:2207
 #, c-format
 msgid "Garbage `%.16s' in row %u, column %u"
 msgstr "Мусор `%.16s' в строке %u, столбце %u"
 
-#: modules/file/rawfile.c:2191
+#: modules/file/rawfile.c:2193
 #, c-format
 msgid "Expected delimiter `%c' after data in row %u, column %u, got `%c'"
 msgstr ""
 "Ожидался разделитель `%c' после данных в строке %u, столбце %u, получили `%c'"
 
-#: modules/file/rawfile.c:2217
+#: modules/file/rawfile.c:2219
 #, c-format
 msgid "Expected delimiter `%s' after data in row %u, column %u, got `%.16s'"
 msgstr ""
@@ -5110,27 +5110,27 @@ msgstr ""
 "импорт неформатированных данных XYZ должен быть запущен в интерактивном "
 "режиме."
 
-#: modules/file/rawxyz.c:387
+#: modules/file/rawxyz.c:388
 msgid "Import XYZ Data"
 msgstr "Импорт данных XYZ"
 
-#: modules/file/rawxyz.c:573
+#: modules/file/rawxyz.c:574
 msgid "_X-range:"
 msgstr "Диапазон _X:"
 
-#: modules/file/rawxyz.c:589
+#: modules/file/rawxyz.c:590
 msgid "_Y-range:"
 msgstr "Диапазон _Y:"
 
-#: modules/file/rawxyz.c:624
+#: modules/file/rawxyz.c:625
 msgid "_Lateral units:"
 msgstr "Единицы _размера:"
 
-#: modules/file/rawxyz.c:641 modules/process/dimensions.h:493
+#: modules/file/rawxyz.c:642 modules/process/dimensions.h:493
 msgid "_Value units:"
 msgstr "Единицы измерения _значения:"
 
-#: modules/file/rawxyz.c:674 modules/process/correct_affine.c:461
+#: modules/file/rawxyz.c:675 modules/process/correct_affine.c:461
 #: modules/process/drift.c:300 modules/process/dwt.c:205
 #: modules/process/dwtanisotropy.c:201 modules/process/fft_filter_1d.c:329
 #: modules/process/fft_profile.c:298 modules/process/fractal.c:228
@@ -5142,31 +5142,31 @@ msgstr "Единицы измерения _значения:"
 msgid "_Interpolation type:"
 msgstr "Тип _интерполяции:"
 
-#: modules/file/rawxyz.c:684
+#: modules/file/rawxyz.c:685
 msgid "Field"
 msgstr "Поле"
 
-#: modules/file/rawxyz.c:691 modules/process/extend.c:281
+#: modules/file/rawxyz.c:692 modules/process/extend.c:281
 #: modules/process/polydistort.c:282
 msgid "_Exterior type:"
 msgstr "Тип _внешней части:"
 
-#: modules/file/rawxyz.c:699 modules/process/extend.c:274
+#: modules/file/rawxyz.c:700 modules/process/extend.c:274
 #: modules/process/polydistort.c:275
 msgid "exterior|Border"
 msgstr "Граница"
 
-#: modules/file/rawxyz.c:701 modules/process/extend.c:276
+#: modules/file/rawxyz.c:702 modules/process/extend.c:276
 #: modules/process/polydistort.c:277
 msgid "exterior|Mirror"
 msgstr "Зеркальная"
 
-#: modules/file/rawxyz.c:703 modules/process/extend.c:278
+#: modules/file/rawxyz.c:704 modules/process/extend.c:278
 #: modules/process/polydistort.c:279
 msgid "exterior|Periodic"
 msgstr "Периодический"
 
-#: modules/file/rawxyz.c:976
+#: modules/file/rawxyz.c:977
 #, c-format
 msgid ""
 "Points read from file: %u\n"
@@ -5177,7 +5177,7 @@ msgstr ""
 "Объединено как слишком близких: %u\n"
 "Добавлено на границе: %u"
 
-#: modules/file/rawxyz.c:984
+#: modules/file/rawxyz.c:985
 #, c-format
 msgid ""
 "Points read from file: %u\n"
@@ -5186,7 +5186,7 @@ msgstr ""
 "Точек считано из файла: %u\n"
 "Точки формируют правильную сетку: %u×%u"
 
-#: modules/file/rawxyz.c:1049
+#: modules/file/rawxyz.c:1050
 msgid "XYZ data regularization failed due to numerical instability."
 msgstr ""
 "Упорядочение XYZ-данных закончилось неудачно из-за численной нестабильности."
@@ -5220,7 +5220,7 @@ msgstr "Достигнут конец файла в заголовке цвет�
 msgid "End of file reached in color data."
 msgstr "Достигнут конец файла в цветовых данных."
 
-#: modules/file/rhk-sm3.c:719
+#: modules/file/rhk-sm3.c:720
 #, c-format
 msgid "Unknown line %d"
 msgstr "Неизвестная строка %d"
@@ -5233,22 +5233,22 @@ msgstr "Импортирует файлы данных RHK Technology SM4."
 msgid "RHK SM4 files (.sm4)"
 msgstr "Файлы RHK SM4 (.sm4)"
 
-#: modules/file/rhk-sm4.c:613
+#: modules/file/rhk-sm4.c:616
 #, c-format
 msgid "Object %s is truncated."
 msgstr "Объект %s усечён."
 
-#: modules/file/rhk-sm4.c:896
+#: modules/file/rhk-sm4.c:899
 #, c-format
 msgid "Object list in %s is truncated."
 msgstr "Список объектов в %s усечён."
 
-#: modules/file/rhk-sm4.c:913
+#: modules/file/rhk-sm4.c:916
 #, c-format
 msgid "Object of type %s is truncated."
 msgstr "Объект типа %s усечён."
 
-#: modules/file/rhk-sm4.c:938
+#: modules/file/rhk-sm4.c:941
 #, c-format
 msgid "Cannot find object %s in %s."
 msgstr "Невозможно найти объект %s в %s."
@@ -5261,29 +5261,29 @@ msgstr "Импортирует файлы данных RHK Technology SPM32."
 msgid "RHK SPM32 files (.sm2)"
 msgstr "Файлы RHK SPM32 (.sm2)"
 
-#: modules/file/rhk-spm32.c:376
+#: modules/file/rhk-spm32.c:379
 msgid "Invalid file header."
 msgstr "Неверный заголовок файла."
 
-#: modules/file/rhk-spm32.c:389
+#: modules/file/rhk-spm32.c:392
 msgid "Only image and line files are supported."
 msgstr "Поддерживаются только файлы изображений и строк."
 
-#: modules/file/rhk-spm32.c:395
+#: modules/file/rhk-spm32.c:398
 #, c-format
 msgid "Invalid data type %d for image data."
 msgstr "Неправильный тип данных %d для данных изображения."
 
-#: modules/file/rhk-spm32.c:403
+#: modules/file/rhk-spm32.c:406
 #, c-format
 msgid "Invalid data type %d for line data."
 msgstr "Неправильный тип данных %d для данных строки."
 
-#: modules/file/rhk-spm32.c:422
+#: modules/file/rhk-spm32.c:425
 msgid "data ranges"
 msgstr "диапазоны данных"
 
-#: modules/file/rhk-spm32.c:489
+#: modules/file/rhk-spm32.c:492
 msgid "data offset"
 msgstr "смещение данных"
 
@@ -5367,7 +5367,7 @@ msgstr "Импортирует формат файлов Sensofar PLu, верс�
 msgid "Sensofar PLu files (.plu)"
 msgstr "Файлы Sensofar PLu (.plu)"
 
-#: modules/file/sensofar.c:489 modules/file/sensofar.c:503
+#: modules/file/sensofar.c:490 modules/file/sensofar.c:504
 msgid "Profile"
 msgstr "Профиль"
 
@@ -5392,11 +5392,11 @@ msgstr "Файлы Shimadzu"
 msgid "Cannot parse data values after %d of %d."
 msgstr "Невозможно распознать значения данных после %d из %d."
 
-#: modules/file/sicmfile.c:194
+#: modules/file/sicmfile.c:195
 msgid "Imports IonScope SICM data files."
 msgstr "Импортирует файлы данных IonScope SICM."
 
-#: modules/file/sicmfile.c:208
+#: modules/file/sicmfile.c:209
 msgid "IonScope SICM files (.img)"
 msgstr "Файлы IonScope SICM (.img)"
 
@@ -5408,31 +5408,31 @@ msgstr "Импортирует файлы данных SIS (Surface Imaging Syst
 msgid "SIS files (.sis)"
 msgstr "Файлы SIS (.sis)"
 
-#: modules/file/sis.c:831
+#: modules/file/sis.c:832
 msgid "Block not a document block."
 msgstr "Блок не является блоком документа."
 
-#: modules/file/sis.c:840
+#: modules/file/sis.c:841
 msgid "Too short document info."
 msgstr "Слишком короткая информация о документе."
 
-#: modules/file/sis.c:861
+#: modules/file/sis.c:862
 msgid "Too short parameter info."
 msgstr "Слишком короткая информация о параметре."
 
-#: modules/file/sis.c:968
+#: modules/file/sis.c:969
 msgid "Unexpected image block."
 msgstr "Неожиданный блок изображения."
 
-#: modules/file/sis.c:1001 modules/file/sis.c:1032
+#: modules/file/sis.c:1002 modules/file/sis.c:1033
 msgid "End of file reached in image block."
 msgstr "Достигнут конец файла внутри блока изображения."
 
-#: modules/file/sis.c:1046
+#: modules/file/sis.c:1047
 msgid "End of file reached in channel block."
 msgstr "Достигнут конец файла внутри блока канала."
 
-#: modules/file/sis.c:1070
+#: modules/file/sis.c:1071
 msgid "End of file reached when another channel was expected."
 msgstr "Достигнут конец файла в то время, как ожидался другой канал."
 
@@ -5444,12 +5444,12 @@ msgstr "Импортирует файлы SPIP ASC."
 msgid "SPIP ASCII files (.asc)"
 msgstr "ASCII файлы SPIP (.asc)"
 
-#: modules/file/spml.c:109
+#: modules/file/spml.c:110
 msgid "Loads SPML (Scanning Probe Microscopy Markup Language) data files."
 msgstr ""
 "Загружает файлы данных SPML (Scanning Probe Microscopy Markup Language)."
 
-#: modules/file/spml.c:123
+#: modules/file/spml.c:124
 msgid "SPML files (.xml)"
 msgstr "Файлы SPML (.xml)"
 
@@ -5494,83 +5494,83 @@ msgstr "Файл параметров слишком короткий."
 msgid "First channel is switched off."
 msgstr "Первый канал выключен."
 
-#: modules/file/stpfile.c:117
+#: modules/file/stpfile.c:118
 msgid "Topography"
 msgstr "Топография"
 
-#: modules/file/stpfile.c:118
+#: modules/file/stpfile.c:119
 msgid "Current or Deflection or Amplitude"
 msgstr "Ток, отклонение или амплитуда"
 
-#: modules/file/stpfile.c:119
+#: modules/file/stpfile.c:120
 msgid "Electrochemical Voltage (Vec)"
 msgstr "Электрохимическое напряжение (Vec)"
 
-#: modules/file/stpfile.c:120
+#: modules/file/stpfile.c:121
 msgid "Topography and SPS"
 msgstr "Топография и спектроскопия"
 
-#: modules/file/stpfile.c:121
+#: modules/file/stpfile.c:122
 msgid "Topography and SPS (scripted)"
 msgstr "Топография и спектроскопия (скрипт.)"
 
-#: modules/file/stpfile.c:122
+#: modules/file/stpfile.c:123
 msgid "Electrochemical Current (Iec)"
 msgstr "Электрохимический ток (Iec)"
 
-#: modules/file/stpfile.c:123
+#: modules/file/stpfile.c:124
 msgid "Friction or Phase"
 msgstr "Трение или фаза"
 
-#: modules/file/stpfile.c:124
+#: modules/file/stpfile.c:125
 msgid "AUX in BNC"
 msgstr "AUX в BNC"
 
-#: modules/file/stpfile.c:125
+#: modules/file/stpfile.c:126
 msgid "AUX in 3 (Sum)"
 msgstr "AUX в 3 (Сумма)"
 
-#: modules/file/stpfile.c:126
+#: modules/file/stpfile.c:127
 msgid "AUX in 4 (Raw Deflection)"
 msgstr "AUX в 4 (Прямое отклонение)"
 
-#: modules/file/stpfile.c:127
+#: modules/file/stpfile.c:128
 msgid "AUX in 5 (PicoPlus Aux BNC)"
 msgstr "AUX в 5 (PicoPlus Aux BNC)"
 
-#: modules/file/stpfile.c:128
+#: modules/file/stpfile.c:129
 msgid "AUX in 6 (Surface Potential)"
 msgstr "AUX в 6 (Поверхностный потенциал)"
 
-#: modules/file/stpfile.c:129
+#: modules/file/stpfile.c:130
 msgid "AUX in 7"
 msgstr "AUX в 7"
 
-#: modules/file/stpfile.c:130
+#: modules/file/stpfile.c:131
 msgid "AUX in 8"
 msgstr "AUX в 8"
 
-#: modules/file/stpfile.c:131
+#: modules/file/stpfile.c:132
 msgid "AUX in 9"
 msgstr "AUX в 9"
 
-#: modules/file/stpfile.c:132
+#: modules/file/stpfile.c:133
 msgid "AUX in 10"
 msgstr "AUX в 10"
 
-#: modules/file/stpfile.c:133
+#: modules/file/stpfile.c:134
 msgid "Topography and Flexgrid"
 msgstr "Топография и динамическая сетка"
 
-#: modules/file/stpfile.c:134
+#: modules/file/stpfile.c:135
 msgid "External"
 msgstr "Внешний"
 
-#: modules/file/stpfile.c:140
+#: modules/file/stpfile.c:141
 msgid "Imports Molecular Imaging STP data files."
 msgstr "Импортирует файлы данных Molecular Imaging STP."
 
-#: modules/file/stpfile.c:153
+#: modules/file/stpfile.c:154
 msgid "STP files (.stp)"
 msgstr "Файлы STP (.stp)"
 
@@ -5646,11 +5646,11 @@ msgstr "Экспортирует данные как структурные се
 msgid "VTK structured grid (.vtk)"
 msgstr "Структурная сетка VTK (.vtk)"
 
-#: modules/file/wipfile.c:281
+#: modules/file/wipfile.c:282
 msgid "Imports WItec Project data files."
 msgstr "Импортирует файлы данных WItec Project."
 
-#: modules/file/wipfile.c:294
+#: modules/file/wipfile.c:295
 msgid "WItec Project files (.wip)"
 msgstr "Файлы WItec Project (.wip)"
 
@@ -5724,12 +5724,12 @@ msgstr "Данные искривления сетки Zemax (.dat)"
 msgid "Data line %u does not contain four items."
 msgstr "Строка данных %u не содержит четыре элемента."
 
-#: modules/file/zemax.c:325
+#: modules/file/zemax.c:327
 #, c-format
 msgid "Unit code %d is invalid or unsupported."
 msgstr "Код единиц измерения %d неправилен или не поддерживается."
 
-#: modules/file/zemax.c:349
+#: modules/file/zemax.c:351
 msgid "The first line contains too many items."
 msgstr "Первая строка содержит слишком много элементов."
 
@@ -12129,26 +12129,3 @@ msgstr "/_Инвертировать значение"
 #: modules/volume/volume_invert.c:69
 msgid "Invert value in volume data"
 msgstr "Инвертирует значения в объёмных данных"
-
-#~ msgid "Top-level element is not ‘TiffTagDescData’."
-#~ msgstr "Элемент верхнего уровня не ‘TiffTagDescData’."
-
-#~ msgid "Each channel has its own metadata."
-#~ msgstr "У каждого канала есть свои метаданные."
-
-#~ msgid ""
-#~ "Meta → Metadata Browser displays metadata (auxiliary information) of "
-#~ "channels and allows editing or exporting to a text file."
-#~ msgstr ""
-#~ "Мета → Просмотр метаданных показывает метаданные (вспомогательную "
-#~ "информацию) каналов и позволяет их редактировать или экспортировать в "
-#~ "текстовый файл."
-
-#~ msgid "_Meta"
-#~ msgstr "_Мета"
-
-#~ msgid "Preview type:"
-#~ msgstr "Тип предпросмотра:"
-
-#~ msgid "Preview type"
-#~ msgstr "Тип предпросмотра"

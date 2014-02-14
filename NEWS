@@ -22,7 +22,8 @@ Modules:
   floating point samples are supported.  Plain BigTIFF images can be loaded.
 - APE file: Metadata handling for different SPM modes was improved.
 - nanoscantech: Problems with loading 4d jumping mode spectroscopy fixed.
-- NT-MDT: Hybrid mode is loaded with distance calibration.
+- NT-MDT: Hybrid mode is loaded with distance calibration, 
+  precalculated datafields are loaded from hybrid-mode data.
 - Scale: Rouding of scaling ratio to some odd values was fixed.
 - Pixmap export: Bad row padding for some BMP image widths was fixed.
 - RHK SM4: PRM are imported to metadata.
