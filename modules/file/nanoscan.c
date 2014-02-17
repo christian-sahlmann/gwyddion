@@ -53,7 +53,8 @@
 #define MAGIC1 "<?xml"
 #define MAGIC1_SIZE (sizeof(MAGIC1)-1)
 #define MAGIC2 "<scan"
-#define MAGIC3 "xmlns=\"http://www.swissprobe.com/SPM\""
+#define MAGIC3a "xmlns=\"http://www.swissprobe.com/SPM\""
+#define MAGIC3b "xmlns=\"http://www.nanoscan.ch/SPM\""
 
 #define EXTENSION ".xml"
 
@@ -186,7 +187,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NanoScan XML files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -211,7 +212,8 @@ check_magic(const gchar *header)
 {
     return (memcmp(header, MAGIC1, MAGIC1_SIZE) == 0
             && strstr(header, MAGIC2) != NULL
-            && strstr(header, MAGIC3) != NULL);
+            && (strstr(header, MAGIC3a) != NULL
+                || strstr(header, MAGIC3b) != NULL));
 }
 
 static gint
