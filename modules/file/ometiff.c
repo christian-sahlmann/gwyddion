@@ -81,7 +81,14 @@ typedef struct {
 } OMEData;
 
 typedef struct {
+    guint z, t, c;
+    gboolean seen;
+} IFDAssignment;
+
+typedef struct {
     GString *path;
+    guint ndirs;
+    IFDAssignment *ifdmap;
     /* From Pixels (or possibly Image) element */
     OMEDimensionOrder dim_order;
     guint xres;
@@ -98,14 +105,36 @@ typedef struct {
     GHashTable *meta;
 } OMEFile;
 
-static gboolean      module_register   (void);
-static gint          ome_detect       (const GwyFileDetectInfo *fileinfo,
-                                        gboolean only_name);
-static GwyContainer* ome_load         (const gchar *filename,
-                                        GwyRunType mode,
-                                        GError **error);
-static GwyContainer* ome_load_tiff    (const GwyTIFF *tiff,
-                                        GError **error);
+static gboolean      module_register        (void);
+static gint          ome_detect             (const GwyFileDetectInfo *fileinfo,
+                                             gboolean only_name);
+static GwyContainer* ome_load               (const gchar *filename,
+                                             GwyRunType mode,
+                                             GError **error);
+static GwyContainer* ome_load_tiff          (const GwyTIFF *tiff,
+                                             GError **error);
+static void          start_element          (GMarkupParseContext *context,
+                                             const gchar *element_name,
+                                             const gchar **attribute_names,
+                                             const gchar **attribute_values,
+                                             gpointer user_data,
+                                             GError **error);
+static void          end_element            (GMarkupParseContext *context,
+                                             const gchar *element_name,
+                                             gpointer user_data,
+                                             GError **error);
+static void          text                   (GMarkupParseContext *context,
+                                             const gchar *value,
+                                             gsize value_len,
+                                             gpointer user_data,
+                                             GError **error);
+static gboolean      assign_tiff_directories(OMEFile *omefile,
+                                             GError **error);
+static void          next_ztc               (const OMEFile *omefile,
+                                             const OMEData *data,
+                                             guint *z,
+                                             guint *t,
+                                             guint *c);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -178,6 +207,101 @@ ome_load(const gchar *filename,
     return container;
 }
 
+static GwyContainer*
+ome_load_tiff(const GwyTIFF *tiff, GError **error)
+{
+    const gchar *colour_channels[] = { "Red", "Green", "Blue" };
+    const gchar *colour_channel_gradients[] = {
+        "RGB-Red", "RGB-Green", "RGB-Blue"
+    };
+
+    GwyContainer *container = NULL;
+    GwyDataField *dfield;
+    GwySIUnit *siunit;
+    GwyTIFFImageReader *reader = NULL;
+    GMarkupParser parser = { start_element, end_element, text, NULL, NULL };
+    GHashTable *hash = NULL;
+    GMarkupParseContext *context = NULL;
+    OMEFile omefile;
+    gchar *comment = NULL;
+    gchar *title = NULL;
+    gchar *channeltitle;
+    const gchar *value, *image0title, *keytitle;
+    GError *err = NULL;
+    guint dir_num = 0, ch, spp;
+    gint id = 0;
+    GString *key;
+
+    /* Comment with parameters is common for all data fields */
+    if (!gwy_tiff_get_string0(tiff, GWY_TIFFTAG_IMAGE_DESCRIPTION, &comment)
+        || !strstr(comment, MAGIC_COMMENT1)
+        || !strstr(comment, MAGIC_COMMENT2)) {
+        g_free(comment);
+        err_FILE_TYPE(error, "OME-TIFF");
+        return NULL;
+    }
+
+    /* Read the comment header. */
+    gwy_clear(&omefile, 1);
+    omefile.ndirs = tiff->dirs->len;
+    omefile.meta = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                         g_free, g_free);
+    omefile.path = key = g_string_new(NULL);
+    omefile.data = g_array_new(FALSE, FALSE, sizeof(OMEData));
+    context = g_markup_parse_context_new(&parser, G_MARKUP_TREAT_CDATA_AS_TEXT,
+                                         &omefile, NULL);
+    if (!g_markup_parse_context_parse(context, comment, strlen(comment), &err)
+        || !g_markup_parse_context_end_parse(context, &err)) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("XML parsing failed: %s"), err->message);
+        g_clear_error(&err);
+        goto fail;
+    }
+
+    gwy_debug("res xy,ztc: %u %u, %u %u %u",
+              omefile.xres, omefile.yres, omefile.zres, omefile.tres, omefile.cres);
+
+    omefile.ifdmap = g_new0(IFDAssignment, omefile.ndirs);
+    if (!assign_tiff_directories(&omefile, error))
+        goto fail;
+
+#ifdef DEBUG
+    {
+        guint i;
+
+        for (i = 0; i < omefile.ndirs; i++) {
+            if (omefile.ifdmap[i].seen)
+                gwy_debug("IFD#%u z=%u t=%u c=%u",
+                          i, omefile.ifdmap[i].z, omefile.ifdmap[i].t,
+                          omefile.ifdmap[i].c);
+            else
+                gwy_debug("IFD#%u UNASSIGNED", i);
+        }
+    }
+#endif
+
+    err_NO_DATA(error);
+
+fail:
+    g_free(title);
+    g_free(comment);
+    g_free(omefile.ifdmap);
+    if (reader) {
+        gwy_tiff_image_reader_free(reader);
+        reader = NULL;
+    }
+    if (omefile.data)
+        g_array_free(omefile.data, TRUE);
+    if (omefile.meta)
+        g_hash_table_destroy(omefile.meta);
+    if (key)
+        g_string_free(key, TRUE);
+    if (context)
+        g_markup_parse_context_free(context);
+
+    return container;
+}
+
 static void
 start_element(G_GNUC_UNUSED GMarkupParseContext *context,
               const gchar *element_name,
@@ -244,6 +368,38 @@ start_element(G_GNUC_UNUSED GMarkupParseContext *context,
                 omefile->dt = g_ascii_strtod(val, NULL);
         }
     }
+    if (gwy_stramong(omefile->path->str,
+                     "/OME/Image/TiffData", "/OME/Image/Pixels/TiffData",
+                     NULL)) {
+        OMEData data;
+        gboolean have_ifd = FALSE, have_planecount = FALSE;
+
+        gwy_clear(&data, 1);
+        for (i = 0; attribute_names[i]; i++) {
+            const gchar *name = attribute_names[i], *val = attribute_values[i];
+            if (gwy_strequal(name, "IFD")) {
+                data.ifd = atoi(val);
+                have_ifd = TRUE;
+            }
+            else if (gwy_strequal(name, "FirstZ"))
+                data.firstz = atoi(val);
+            else if (gwy_strequal(name, "FirstT"))
+                data.firstt = atoi(val);
+            else if (gwy_strequal(name, "FirstC"))
+                data.firstc = atoi(val);
+            else if (gwy_strequal(name, "PlaneCount")) {
+                data.planecount = atoi(val);
+                have_planecount = TRUE;
+            }
+        }
+
+        /* The number of directories counted in depends on if IFD is given. */
+        if (!have_planecount) {
+            data.planecount = have_ifd ? 1: omefile->ndirs;
+        }
+
+        g_array_append_val(omefile->data, data);
+    }
 }
 
 static void
@@ -289,75 +445,131 @@ text(G_GNUC_UNUSED GMarkupParseContext *context,
         g_free(val);
 }
 
-static GwyContainer*
-ome_load_tiff(const GwyTIFF *tiff, GError **error)
+static gboolean
+assign_tiff_directories(OMEFile *omefile,
+                        GError **error)
 {
-    const gchar *colour_channels[] = { "Red", "Green", "Blue" };
-    const gchar *colour_channel_gradients[] = {
-        "RGB-Red", "RGB-Green", "RGB-Blue"
-    };
+    guint i, j;
 
-    GwyContainer *container = NULL;
-    GwyDataField *dfield;
-    GwySIUnit *siunit;
-    GwyTIFFImageReader *reader = NULL;
-    GMarkupParser parser = { start_element, end_element, text, NULL, NULL };
-    GHashTable *hash = NULL;
-    GMarkupParseContext *context = NULL;
-    OMEFile omefile;
-    gchar *comment = NULL;
-    gchar *title = NULL;
-    gchar *channeltitle;
-    const gchar *value, *image0title, *keytitle;
-    GError *err = NULL;
-    guint dir_num = 0, ch, spp;
-    gint id = 0;
-    GString *key;
+    for (i = 0; i < omefile->data->len; i++) {
+        guint z, t, c, ifd;
+        OMEData *data = &g_array_index(omefile->data, OMEData, i);
 
-    /* Comment with parameters is common for all data fields */
-    if (!gwy_tiff_get_string0(tiff, GWY_TIFFTAG_IMAGE_DESCRIPTION, &comment)
-        || !strstr(comment, MAGIC_COMMENT1)
-        || !strstr(comment, MAGIC_COMMENT2)) {
-        g_free(comment);
-        err_FILE_TYPE(error, "OME-TIFF");
-        return NULL;
+        z = data->firstz;
+        t = data->firstt;
+        c = data->firstc;
+        ifd = data->ifd;
+
+        for (j = 0; j < data->planecount; j++) {
+            IFDAssignment *assignment = omefile->ifdmap + ifd;
+
+            if (z >= omefile->zres
+                || t >= omefile->tres
+                || c >= omefile->cres) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("ZTC coordinates (%u,%u,%u) fall outside the "
+                              "given ranges."), z, t, c);
+                return FALSE;
+            }
+
+            if (ifd >= omefile->ndirs) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("The OME TIFF header specifies more TIFF "
+                              "directories than there are in the file."));
+                return FALSE;
+            }
+
+            if (assignment->seen
+                && (assignment->z != z
+                    || assignment->t != t
+                    || assignment->c != c)) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("TIFF directory %u is assigned to multiple "
+                              "conflicting ZTC coordinates."), ifd);
+                return FALSE;
+            }
+
+            assignment->z = z;
+            assignment->t = t;
+            assignment->c = c;
+            assignment->seen = TRUE;
+
+            next_ztc(omefile, data, &z, &t, &c);
+            ifd++;
+        }
     }
 
-    /* Read the comment header. */
-    gwy_clear(&omefile, 1);
-    omefile.meta = g_hash_table_new_full(g_str_hash, g_str_equal,
-                                         g_free, g_free);
-    omefile.path = key = g_string_new(NULL);
-    context = g_markup_parse_context_new(&parser, G_MARKUP_TREAT_CDATA_AS_TEXT,
-                                         &omefile, NULL);
-    if (!g_markup_parse_context_parse(context, comment, strlen(comment), &err)
-        || !g_markup_parse_context_end_parse(context, &err)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("XML parsing failed: %s"), err->message);
-        g_clear_error(&err);
-        goto fail;
+    return TRUE;
+}
+
+/* XXX: It is completely unclear from the specs how we are supposed to wrap
+ * around in adimension for which FirstFOO is given.  We wrap to the FirstFOO
+ * value, not to 0. */
+static void
+next_ztc(const OMEFile *omefile,
+         const OMEData *data,
+         guint *z, guint *t, guint *c)
+{
+    if (omefile->dim_order == OME_DIM_ORDER_XYZCT) {
+        if (++(*z) == omefile->zres) {
+            *z = data->firstz;
+            if (++(*c) == omefile->cres) {
+                *c = data->firstc;
+                ++(*t);
+            }
+        }
     }
-
-    gwy_debug("res xy,ztc: %u %u, %u %u %u",
-              omefile.xres, omefile.yres, omefile.zres, omefile.tres, omefile.cres);
-
-    err_NO_DATA(error);
-
-fail:
-    g_free(title);
-    g_free(comment);
-    if (reader) {
-        gwy_tiff_image_reader_free(reader);
-        reader = NULL;
+    else if (omefile->dim_order == OME_DIM_ORDER_XYZTC) {
+        if (++(*z) == omefile->zres) {
+            *z = data->firstz;
+            if (++(*t) == omefile->tres) {
+                *t = data->firstt;
+                ++(*c);
+            }
+        }
     }
-    if (omefile.meta)
-        g_hash_table_destroy(omefile.meta);
-    if (key)
-        g_string_free(key, TRUE);
-    if (context)
-        g_markup_parse_context_free(context);
-
-    return container;
+    else if (omefile->dim_order == OME_DIM_ORDER_XYCZT) {
+        if (++(*c) == omefile->cres) {
+            *c = data->firstc;
+            if (++(*z) == omefile->zres) {
+                *z = data->firstz;
+                ++(*t);
+            }
+        }
+    }
+    else if (omefile->dim_order == OME_DIM_ORDER_XYCTZ) {
+        if (++(*c) == omefile->cres) {
+            *c = data->firstc;
+            if (++(*t) == omefile->tres) {
+                *t = data->firstt;
+                ++(*z);
+            }
+        }
+    }
+    else if (omefile->dim_order == OME_DIM_ORDER_XYTZC) {
+        if (++(*t) == omefile->tres) {
+            *t = data->firstt;
+            if (++(*z) == omefile->zres) {
+                *z = data->firstz;
+                ++(*c);
+            }
+        }
+    }
+    else if (omefile->dim_order == OME_DIM_ORDER_XYTCZ) {
+        if (++(*t) == omefile->tres) {
+            *t = data->firstt;
+            if (++(*c) == omefile->cres) {
+                *c = data->firstc;
+                ++(*z);
+            }
+        }
+    }
+    else {
+        g_assert_not_reached();
+    }
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
