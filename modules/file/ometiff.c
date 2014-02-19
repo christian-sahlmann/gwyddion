@@ -112,6 +112,7 @@ static GwyContainer* ome_load               (const gchar *filename,
                                              GwyRunType mode,
                                              GError **error);
 static GwyContainer* ome_load_tiff          (const GwyTIFF *tiff,
+                                             const gchar *filename,
                                              GError **error);
 static void          start_element          (GMarkupParseContext *context,
                                              const gchar *element_name,
@@ -201,14 +202,14 @@ ome_load(const gchar *filename,
     if (!tiff)
         return NULL;
 
-    container = ome_load_tiff(tiff, error);
+    container = ome_load_tiff(tiff, filename, error);
     gwy_tiff_free(tiff);
 
     return container;
 }
 
 static GwyContainer*
-ome_load_tiff(const GwyTIFF *tiff, GError **error)
+ome_load_tiff(const GwyTIFF *tiff, const gchar *filename, GError **error)
 {
     const gchar *colour_channels[] = { "Red", "Green", "Blue" };
     const gchar *colour_channel_gradients[] = {
@@ -217,16 +218,13 @@ ome_load_tiff(const GwyTIFF *tiff, GError **error)
 
     GwyContainer *container = NULL;
     GwyDataField *dfield;
-    GwySIUnit *siunit;
     GwyTIFFImageReader *reader = NULL;
     GMarkupParser parser = { start_element, end_element, text, NULL, NULL };
-    GHashTable *hash = NULL;
     GMarkupParseContext *context = NULL;
     OMEFile omefile;
     gchar *comment = NULL;
     gchar *title = NULL;
     gchar *channeltitle;
-    const gchar *value, *image0title, *keytitle;
     GError *err = NULL;
     guint dir_num = 0, ch, spp;
     gint id = 0;
@@ -265,22 +263,92 @@ ome_load_tiff(const GwyTIFF *tiff, GError **error)
     if (!assign_tiff_directories(&omefile, error))
         goto fail;
 
+    id = 0;
+    for (dir_num = 0; dir_num < omefile.ndirs; dir_num++) {
+        if (omefile.ifdmap[dir_num].seen) {
+            id++;
 #ifdef DEBUG
-    {
-        guint i;
-
-        for (i = 0; i < omefile.ndirs; i++) {
-            if (omefile.ifdmap[i].seen)
-                gwy_debug("IFD#%u z=%u t=%u c=%u",
-                          i, omefile.ifdmap[i].z, omefile.ifdmap[i].t,
-                          omefile.ifdmap[i].c);
-            else
-                gwy_debug("IFD#%u UNASSIGNED", i);
+            gwy_debug("IFD#%u z=%u t=%u c=%u",
+                      dir_num,
+                      omefile.ifdmap[dir_num].z,
+                      omefile.ifdmap[dir_num].t,
+                      omefile.ifdmap[dir_num].c);
+        }
+        else {
+            gwy_debug("IFD#%u UNASSIGNED", dir_num);
+#endif
         }
     }
-#endif
 
-    err_NO_DATA(error);
+    if (!id) {
+        err_NO_DATA(error);
+        goto fail;
+    }
+
+    container = gwy_container_new();
+    id = 0;
+
+    for (dir_num = 0; dir_num < omefile.ndirs; dir_num++) {
+        IFDAssignment *assignment = omefile.ifdmap + dir_num;
+
+        if (!assignment->seen)
+            continue;
+
+        reader = gwy_tiff_image_reader_free(reader);
+        /* Request a reader, this ensures dimensions and stuff are defined. */
+        err = NULL;
+        reader = gwy_tiff_get_image_reader(tiff, dir_num, 3, &err);
+        if (!reader) {
+            g_warning("Ignoring directory %u: %s", dir_num, err->message);
+            g_clear_error(&err);
+            continue;
+        }
+
+        spp = reader->samples_per_pixel;
+        for (ch = 0; ch < spp; ch++) {
+            GQuark quark;
+            guint i;
+            gdouble *d;
+            gdouble zfactor = 1.0;
+
+            dfield = gwy_data_field_new(reader->width, reader->height,
+                                        reader->width * 1.0,
+                                        reader->height * 1.0,
+                                        FALSE);
+            // units
+            gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield),
+                                        "m");
+
+            d = gwy_data_field_get_data(dfield);
+            for (i = 0; i < reader->height; i++)
+                gwy_tiff_read_image_row(tiff, reader, ch, i, zfactor, 0.0,
+                                        d + i*reader->width);
+
+            /* add read datafield to container */
+            quark = gwy_app_get_data_key_for_id(id);
+            gwy_container_set_object(container, quark, dfield);
+            g_object_unref(dfield);
+
+            g_string_printf(key, "/%u/data/title", id);
+            if (spp == 3)
+                channeltitle = g_strdup(colour_channels[ch]);
+            else
+                channeltitle = g_strdup("Unkown");
+
+            gwy_container_set_string_by_name(container, key->str, channeltitle);
+
+            if (spp == 3) {
+                g_string_printf(key, "/%u/base/palette", id);
+                gwy_container_set_string_by_name
+                                    (container, key->str,
+                                     g_strdup(colour_channel_gradients[ch]));
+            }
+
+            gwy_file_channel_import_log_add(container, id, "ometiff",
+                                            filename);
+            id++;
+        }
+    }
 
 fail:
     g_free(title);
