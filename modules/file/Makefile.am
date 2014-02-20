@@ -57,6 +57,7 @@ endif
 filedir = $(pkglibdir)/modules/file
 
 file_LTLIBRARIES = \
+	accurexii-txt.la \
 	aistfile.la \
 	alicona.la \
 	ambfile.la \
@@ -188,6 +189,7 @@ module_libadd = \
 	@GTK_LIBS@
 endif
 
+accurexii_txt_la_SOURCES = accurexii-txt.c
 aistfile_la_SOURCES      = aistfile.c
 alicona_la_SOURCES       = alicona.c
 ambfile_la_SOURCES       = ambfile.c
@@ -291,6 +293,7 @@ createc_la_LIBADD        = @ZLIB@
 nrrdfile_la_LIBADD       = @ZLIB@ @BZIP2@
 pixmap_la_LIBADD         = @PNG_LIBS@
 pixmap_la_CFLAGS         = $(AM_CFLAGS) @PNG_CFLAGS@
+rhk_sm4_la_LIBADD        = @ZLIB@
 hdrimage_la_LIBADD       = @EXR_LIBS@ @PNG_LIBS@
 hdrimage_la_CXXFLAGS     = $(AM_CXXFLAGS) @PNG_CFLAGS@ @EXR_CFLAGS@
 
