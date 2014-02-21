@@ -329,11 +329,26 @@ ome_load_tiff(const GwyTIFF *tiff, const gchar *filename, GError **error)
             gwy_container_set_object(container, quark, dfield);
             g_object_unref(dfield);
 
+            /* It makes sense to use only grey channels in OME TIFF since they
+             * have an explicit colour plane.  But if there is RGB... */
             g_string_printf(key, "/%u/data/title", id);
             if (spp == 3)
-                channeltitle = g_strdup(colour_channels[ch]);
+                channeltitle = g_strdup_printf("Z%u T%u C%u (%s)",
+                                               assignment->z,
+                                               assignment->t,
+                                               assignment->c,
+                                               colour_channels[ch]);
+            else if (spp > 1)
+                channeltitle = g_strdup_printf("Z%u T%u C%u (%u)",
+                                               assignment->z,
+                                               assignment->t,
+                                               assignment->c,
+                                               ch);
             else
-                channeltitle = g_strdup("Unkown");
+                channeltitle = g_strdup_printf("Z%u T%u C%u",
+                                               assignment->z,
+                                               assignment->t,
+                                               assignment->c);
 
             gwy_container_set_string_by_name(container, key->str, channeltitle);
 
