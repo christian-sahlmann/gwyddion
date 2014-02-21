@@ -257,7 +257,8 @@ ome_load_tiff(const GwyTIFF *tiff, const gchar *filename, GError **error)
     }
 
     gwy_debug("res xy,ztc: %u %u, %u %u %u",
-              omefile.xres, omefile.yres, omefile.zres, omefile.tres, omefile.cres);
+              omefile.xres, omefile.yres, omefile.zres,
+              omefile.tres, omefile.cres);
 
     omefile.ifdmap = g_new0(IFDAssignment, omefile.ndirs);
     if (!assign_tiff_directories(&omefile, error))
@@ -309,15 +310,22 @@ ome_load_tiff(const GwyTIFF *tiff, const gchar *filename, GError **error)
             GQuark quark;
             guint i;
             gdouble *d;
-            gdouble zfactor = 1.0;
+            gdouble zfactor = 1.0, xreal = omefile.xres, yreal = omefile.yres;
+
+            /* Do no warn, it seems they happily produce files without physical
+             * dimensions. */
+            if (omefile.xreal > 0.0 && omefile.yreal > 0.0) {
+                xreal = omefile.xreal;
+                yreal = omefile.yreal;
+            }
 
             dfield = gwy_data_field_new(reader->width, reader->height,
-                                        reader->width * 1.0,
-                                        reader->height * 1.0,
-                                        FALSE);
-            // units
-            gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield),
-                                        "m");
+                                        xreal, yreal, FALSE);
+            /* units */
+            if (omefile.xreal > 0.0 && omefile.yreal > 0.0) {
+                gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield),
+                                            "m");
+            }
 
             d = gwy_data_field_get_data(dfield);
             for (i = 0; i < reader->height; i++)
