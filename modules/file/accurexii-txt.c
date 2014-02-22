@@ -25,7 +25,7 @@
  *   <magic priority="80">
  *     <match type="string" offset="0" value="[Header Section]">
  *       <match type="string" offset="16:240" value="Stage Type"/>
- *     </math>
+ *     </match>
  *   </magic>
  * </mime-type>
  **/
