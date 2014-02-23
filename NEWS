@@ -31,6 +31,8 @@ Modules:
 - IGOR file: Infinities and NaNs in the data are filled with a neutral value
   and masked upon import.
 - NanoScan: Files with http://www.nanoscan.ch/SPM namespace are recognised.
+- Merge: Bug causing occassional use of data outside of the operand images was
+  fixed.
 
 
 2.34 (2013-12-15)

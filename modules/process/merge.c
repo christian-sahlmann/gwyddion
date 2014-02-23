@@ -156,7 +156,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Merges two images."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.7",
+    "1.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -540,6 +540,15 @@ merge_do(MergeArgs *args)
         break;
     }
 
+    if (py1 < 0) {
+        py2 -= py1;
+        py1 = 0;
+    }
+    if (px1 < 0) {
+        px2 -= px1;
+        px1 = 0;
+    }
+
     gwy_data_field_resample(result, newxres, newyres, GWY_INTERPOLATION_NONE);
     put_fields(dfield1, dfield2, result, real_boundary, px1, py1, px2, py2);
 
@@ -650,13 +659,8 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
     GwyCoord f1_pos;
     GwyCoord f2_pos;
     gint x1, x2, y1_, y2, w1, w2, h1, h2;
-    gint xres1, xres2, yres1, yres2;
 
-    gwy_debug("px1: %u, py1: %u, px2: %u, py2: %u", px1, py1, px2, py2);
-    xres1 = gwy_data_field_get_xres(dfield1);
-    yres1 = gwy_data_field_get_yres(dfield1);
-    xres2 = gwy_data_field_get_xres(dfield2);
-    yres2 = gwy_data_field_get_yres(dfield2);
+    gwy_debug("px1: %d, py1: %d, px2: %d, py2: %d", px1, py1, px2, py2);
 
     /* Use the pixels sizes of field 1 but they must be identical. */
     gwy_data_field_set_xreal(result,
@@ -675,6 +679,17 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
     h1 = gwy_data_field_get_yres(dfield1);
     w2 = gwy_data_field_get_xres(dfield2);
     h2 = gwy_data_field_get_yres(dfield2);
+
+    /*
+    g_assert(w1 + x1 <= dfield1->xres);
+    g_assert(h1 + y1_ <= dfield1->yres);
+    g_assert(w2 + x2 <= dfield2->xres);
+    g_assert(h2 + y2 <= dfield2->yres);
+    g_assert(w1 + px1 <= result->xres);
+    g_assert(h1 + py1 <= result->yres);
+    g_assert(w2 + px2 <= result->xres);
+    g_assert(h2 + py2 <= result->yres);
+    */
 
     if (boundary == GWY_MERGE_BOUNDARY_SMOOTH
         || boundary == GWY_MERGE_BOUNDARY_SECOND) {
@@ -695,34 +710,34 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
                                  px1, py1);
     }
 
-
     /* adjust boundary to be as smooth as possible */
     if (boundary == GWY_MERGE_BOUNDARY_SMOOTH) {
         if (px1 < px2) {
             res_rect.x = px2;
-            res_rect.width = px1 + xres1 - px2;
-        } else {
+            res_rect.width = px1 + w1 - px2;
+        }
+        else {
             res_rect.x = px1;
-            res_rect.width = px2 + xres2 - px1;
+            res_rect.width = px2 + w2 - px1;
         }
 
         if (py1 < py2) {
             res_rect.y = py2;
-            res_rect.height = py1 + yres1 - py2;
+            res_rect.height = py1 + h1 - py2;
         }
         else {
             res_rect.y = py1;
-            res_rect.height = py2 + yres2 - py1;
+            res_rect.height = py2 + h2 - py1;
         }
 
-        f1_pos.x = res_rect.x - px1;
-        f1_pos.y = res_rect.y - py1;
-        f2_pos.x = res_rect.x - px2;
-        f2_pos.y = res_rect.y - py2;
+        res_rect.height = MIN(res_rect.height, MIN(h1, h2));
+        res_rect.width = MIN(res_rect.width, MIN(w1, w2));
 
+        f1_pos.x = res_rect.x - (px1 - x1);
+        f1_pos.y = res_rect.y - (py1 - y1_);
+        f2_pos.x = res_rect.x - (px2 - x2);
+        f2_pos.y = res_rect.y - (py2 - y2);
 
-        /*gwy_data_field_area_multiply(result, res_rect.x, res_rect.y,
-                                     res_rect.width, res_rect.height, 1.5);*/
         merge_boundary(dfield1, dfield2, result, res_rect, f1_pos, f2_pos);
     }
 }
@@ -816,12 +831,12 @@ merge_boundary(GwyDataField *dfield1,
     gint col, row;
     gdouble weight, val1, val2;
 
-    gwy_debug("dfield1: %u x %u at (%u, %u)",
+    gwy_debug("dfield1: %d x %d at (%d, %d)",
               dfield1->xres, dfield1->yres, f1_pos.x, f1_pos.y);
-    gwy_debug("dfield2: %u x %u at (%u, %u)",
+    gwy_debug("dfield2: %d x %d at (%d, %d)",
               dfield2->xres, dfield2->yres, f2_pos.x, f2_pos.y);
-    gwy_debug("result: %u x %u", result->xres, result->yres);
-    gwy_debug("rect in result : %u x %u at (%u,%u)",
+    gwy_debug("result: %d x %d", result->xres, result->yres);
+    gwy_debug("rect in result : %d x %d at (%d,%d)",
               res_rect.width, res_rect.height, res_rect.x, res_rect.y);
 
     for (col = 0; col < res_rect.width; col++) {
@@ -829,7 +844,6 @@ merge_boundary(GwyDataField *dfield1,
 
             weight = 0.5; /*FIXME adapt weight to direction*/
 
-            /* FIXME: This sometimes asks for values outside the field. */
             val1 = gwy_data_field_get_val(dfield1,
                                           col + f1_pos.x, row + f1_pos.y);
             val2 = gwy_data_field_get_val(dfield2,
