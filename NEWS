@@ -18,7 +18,7 @@ Libraries:
 Modules:
 - Data processing, file and volume modules: Support for logging was added.
 - Rank (new): Rank transform-based local constrast ehnancement presentation.
-- Accurex II TXT: Imports Accurex II text data files.
+- Accurex II TXT (new): Imports Accurex II text data files.
 - HDR image: 32bit and 64bit integer samples as well as 32bit and 64bit
   floating point samples are supported.  Plain BigTIFF images can be loaded.
 - APE file: Metadata handling for different SPM modes was improved.
