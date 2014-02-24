@@ -465,28 +465,81 @@ gwy_graph_window_key_pressed(GtkWidget *widget,
 static gboolean
 gwy_graph_cursor_motion(GwyGraphWindow *graphwindow)
 {
-    const gchar* xstring, *ystring;
     GwyGraph *graph;
     GwyAxis *axis;
     gdouble x, y;
-    gchar buffer[200];
-    gdouble xmag, ymag;
+    GString *str;
+    gchar *p;
 
+    str = g_string_new(NULL);
     graph = GWY_GRAPH(graphwindow->graph);
     gwy_graph_area_get_cursor(GWY_GRAPH_AREA(gwy_graph_get_area(graph)),
                               &x, &y);
 
     axis = gwy_graph_get_axis(graph, GTK_POS_TOP);
-    xmag = gwy_axis_get_magnification(axis);
-    xstring = gwy_axis_get_magnification_string(axis);
+    if (gwy_axis_is_logarithmic(axis)) {
+        GwySIUnit *unit = axis->unit;
+        if (unit) {
+            gchar *u = gwy_si_unit_get_string(unit,
+                                              GWY_SI_UNIT_FORMAT_VFMARKUP);
+            g_string_append_printf(str, "%.5g %s", x, u);
+            g_free(u);
+        }
+        else
+            g_string_append_printf(str, "%.5g", x);
+    }
+    else {
+        g_string_append_printf(str, "%.4f %s",
+                               x/gwy_axis_get_magnification(axis),
+                               gwy_axis_get_magnification_string(axis));
+    }
+
+    g_string_append(str, ", ");
 
     axis = gwy_graph_get_axis(graph, GTK_POS_LEFT);
-    ymag = gwy_axis_get_magnification(axis);
-    ystring = gwy_axis_get_magnification_string(axis);
+    if (gwy_axis_is_logarithmic(axis)) {
+        GwySIUnit *unit = axis->unit;
+        if (unit) {
+            gchar *u = gwy_si_unit_get_string(unit,
+                                              GWY_SI_UNIT_FORMAT_VFMARKUP);
+            g_string_append_printf(str, "%.5g %s", y, u);
+            g_free(u);
+        }
+        else
+            g_string_append_printf(str, "%.5g", y);
+    }
+    else {
+        g_string_append_printf(str, "%.4f %s",
+                               y/gwy_axis_get_magnification(axis),
+                               gwy_axis_get_magnification_string(axis));
+    }
 
-    g_snprintf(buffer, sizeof(buffer), "%.4f %s, %.4f %s",
-               x/xmag, xstring, y/ymag, ystring);
-    gwy_statusbar_set_markup(GWY_STATUSBAR(graphwindow->statusbar), buffer);
+    while ((p = strstr(str->str, "e+"))) {
+        guint i = p - str->str;
+        g_string_erase(str, i, 2);
+        g_string_insert(str, i, "×10<sup>");
+        i += strlen("×10<sup>");
+        while (str->str[i] == '0' && g_ascii_isdigit(str->str[i+1]))
+            g_string_erase(str, i, 1);
+        while (g_ascii_isdigit(str->str[i]))
+            i++;
+        g_string_insert(str, i, "</sup>");
+    }
+
+    while ((p = strstr(str->str, "e-"))) {
+        guint i = p - str->str;
+        g_string_erase(str, i, 2);
+        g_string_insert(str, i, "×10<sup>-");
+        i += strlen("×10<sup>-");
+        while (str->str[i] == '0' && g_ascii_isdigit(str->str[i+1]))
+            g_string_erase(str, i, 1);
+        while (g_ascii_isdigit(str->str[i]))
+            i++;
+        g_string_insert(str, i, "</sup>");
+    }
+
+    gwy_statusbar_set_markup(GWY_STATUSBAR(graphwindow->statusbar), str->str);
+    g_string_free(str, TRUE);
 
     return FALSE;
 }
