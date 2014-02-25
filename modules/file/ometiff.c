@@ -19,6 +19,9 @@
  *  Boston, MA 02110-1301, USA.
  */
 
+/* TODO: Some metadata.  The specs define some but it's quite scattered and
+ * I'm not going to implement it without having any files with such metadata. */
+
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-ome-tiff">
@@ -42,7 +45,7 @@
  * .ome.tiff, .ome.tif
  * Read
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <stdlib.h>
 #include <libgwyddion/gwymath.h>
@@ -142,7 +145,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports OME-TIFF data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "1.0",
     "David Nečas (Yeti)",
     "2013",
 };
