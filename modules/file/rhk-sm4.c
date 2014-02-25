@@ -1366,10 +1366,10 @@ rhk_sm4_read_prm(const RHKObject *prmheader, const RHKObject *prm,
             else
                 g_free(value);
             g_free(name);
-            g_match_info_unref(matchinfo);
+            g_match_info_free(matchinfo);
             continue;
         }
-        g_match_info_unref(matchinfo);
+        g_match_info_free(matchinfo);
 
         if (g_regex_match(h1regex, line, 0, &matchinfo)) {
             g_free(header1);
@@ -1379,10 +1379,10 @@ rhk_sm4_read_prm(const RHKObject *prmheader, const RHKObject *prm,
             g_strstrip(header1);
             header2 = NULL;
             header3 = NULL;
-            g_match_info_unref(matchinfo);
+            g_match_info_free(matchinfo);
             continue;
         }
-        g_match_info_unref(matchinfo);
+        g_match_info_free(matchinfo);
 
         if (g_regex_match(h2regex, line, 0, &matchinfo)) {
             g_free(header2);
@@ -1390,10 +1390,10 @@ rhk_sm4_read_prm(const RHKObject *prmheader, const RHKObject *prm,
             header2 = g_match_info_fetch(matchinfo, 1);
             g_strstrip(header2);
             header3 = NULL;
-            g_match_info_unref(matchinfo);
+            g_match_info_free(matchinfo);
             continue;
         }
-        g_match_info_unref(matchinfo);
+        g_match_info_free(matchinfo);
 
         if (g_regex_match(h3regex, line, 0, &matchinfo)) {
             g_free(header3);
@@ -1403,10 +1403,10 @@ rhk_sm4_read_prm(const RHKObject *prmheader, const RHKObject *prm,
                 g_free(header3);
                 header3 = NULL;
             }
-            g_match_info_unref(matchinfo);
+            g_match_info_free(matchinfo);
             continue;
         }
-        g_match_info_unref(matchinfo);
+        g_match_info_free(matchinfo);
     }
 
     g_string_free(key, TRUE);
