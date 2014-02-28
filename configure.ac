@@ -810,14 +810,14 @@ else
 fi
 
 if test "x$enable_zlib" != xno; then
-  enabled_formats="$enabled_formats, Createc zlib compression, NRRD zlib compression"
+  enabled_formats="$enabled_formats, Createc zlib compression, NRRD zlib compression, RHK SM4 PRM metadata compression"
   if test "x$enable_libxml2" != xno; then
     enabled_formats="$enabled_formats, SPML"
   else
     disabled_formats="$disabled_formats, SPML"
   fi
 else
-  disabled_formats="$disabled_formats, SPML, Createc zlib compression, NRRD zlib compression"
+  disabled_formats="$disabled_formats, SPML, Createc zlib compression, NRRD zlib compression, RHK SM4 PRM metadata compression"
 fi
 
 if test "x$enable_bzip2" != xno; then
