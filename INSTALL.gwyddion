@@ -67,8 +67,8 @@ Optional, for SPML file support:
 - LibXML2, including development files
   http://xmlsoft.org/
 
-Optional, for compressed Createc, NRRD and Matlab MAT5 (once implemented) file
-support:
+Optional, for compressed Createc, SPML, NRRD, RHK SM4 PRM metadata and Matlab
+MAT5 (once implemented) file support:
 - zlib, including development files
   http://www.gzip.org/zlib/
 
