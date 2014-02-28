@@ -1,4 +1,5 @@
 # vim: set ts=28 :
+accurexii-txt	managing-files
 acf2d	statistical-analysis	autocorrelation-2d
 aistfile	managing-files
 alicona	managing-files
@@ -37,7 +38,6 @@ distance	basic-operations	distance
 dm3file	managing-files
 dmefile	managing-files
 drift	edit-extended	drift-compensation
-drift	edit-extended	xy-denoise
 dumbfile	managing-files
 dwtanisotropy	integral-transforms	dwt
 dwt	integral-transforms	dwt
@@ -137,6 +137,7 @@ nt-mdt	managing-files
 obj_synth	synthetic	object-synthetis
 oldmda	managing-files
 ols	managing-files
+ometiff	managing-files
 omicronflat	managing-files
 omicron	managing-files
 omicronmatrix	managing-files
@@ -158,6 +159,7 @@ profile	basic-operations	profile
 psia	managing-files
 pt3file	managing-files
 quesant	managing-files
+rank	presentations	rank
 rawfile	raw-file-import
 rawgraph	specific-data-import
 rawxyz	specific-data-import
@@ -215,5 +217,6 @@ witec-asc	managing-files
 witfile	managing-files
 wsffile	managing-files
 wsxmfile	managing-files
+xydenoise	edit-extended	xy-denoise
 zeiss	managing-files
 zemax	managing-files
