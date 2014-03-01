@@ -56,7 +56,7 @@ typedef struct {
     GtkWidget *close;
 } LogBrowser;
 
-void                  data_log_add_valist   (GwyContainer *data,
+static void           data_log_add_valist   (GwyContainer *data,
                                              LogKeyFync log_key,
                                              gint previd,
                                              gint newid,
@@ -168,7 +168,7 @@ gwy_app_volume_log_add(GwyContainer *data,
     va_end(ap);
 }
 
-void
+static void
 data_log_add_valist(GwyContainer *data,
                     LogKeyFync log_key,
                     gint previd,
