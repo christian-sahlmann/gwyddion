@@ -2,7 +2,7 @@
 # @(#) $Id$
 #disabled=  set this from shell when running to disable some stages
 pkgname=gwyddion
-basever=2.34
+basever=2.35
 projectdir=$PWD
 logdir=$projectdir/../buildlog
 installprefix=$HOME/opt/gwyddion
