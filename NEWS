@@ -4,6 +4,7 @@ Application:
   data. A viewer of data processing operation log is available in the
   right-click menus.  Logging can be enabled and disabled in the Edit menu.
 - A workaround for toolbox menus disapparing in Unity was implemented.
+- Translations updated: Czech, French, Russian.
 
 Libraries:
 - libgwyapp: Functions for logging of data processing operations were added.
