@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-02-23 03:59+0100\n"
+"POT-Creation-Date: 2014-03-02 13:05+0100\n"
 "PO-Revision-Date: 2014-02-23 10:30+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
@@ -127,7 +127,7 @@ msgstr "vdW: параболоид"
 msgid "contact: Hertz (paraboloid)"
 msgstr "контакт: Герц (параболоид)"
 
-#: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:612
+#: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:665
 #: app/data-browser.c:2091 app/data-browser.c:2854 app/data-browser.c:3710
 #: app/data-browser.c:3869 app/data-browser.c:4155 app/data-browser.c:4569
 #: app/data-browser.c:6553 app/data-browser.c:6635 app/resource-editor.c:367
@@ -3689,13 +3689,13 @@ msgid "Olympus LEXT OLS4000 (.lext)"
 msgstr "Olympus LEXT OLS4000 (.lext)"
 
 #: modules/file/lextfile.c:163 modules/file/nanoscan.c:672
-#: modules/file/ometiff.c:419
+#: modules/file/ometiff.c:422
 #, c-format
 msgid "Top-level element is not ‘%s’."
 msgstr "Элемент верхнего уровня не ‘%s’."
 
 #: modules/file/lextfile.c:260 modules/file/nanoscan.c:267
-#: modules/file/ometiff.c:254
+#: modules/file/ometiff.c:257
 #, c-format
 msgid "XML parsing failed: %s"
 msgstr "Разбор XML окончился неудачно: %s"
@@ -4333,26 +4333,26 @@ msgstr "Импортирует файлы данных OLS."
 msgid "Olympus LEXT OLS3000 (.ols)"
 msgstr "Olympus LEXT OLS3000 (.ols)"
 
-#: modules/file/ometiff.c:143
+#: modules/file/ometiff.c:146
 msgid "Imports OME-TIFF data files."
 msgstr "Импортирует файлы данных OME-TIFF."
 
-#: modules/file/ometiff.c:156
+#: modules/file/ometiff.c:159
 msgid "Open Microscopy OME-TIFF (.ome.tiff)"
 msgstr "Open Microscopy OME-TIFF (.ome.tiff)"
 
-#: modules/file/ometiff.c:562
+#: modules/file/ometiff.c:565
 #, c-format
 msgid "ZTC coordinates (%u,%u,%u) fall outside the given ranges."
 msgstr "Координаты ZTC (%u,%u,%u) выпадают за пределы заданных диапазонов."
 
-#: modules/file/ometiff.c:570
+#: modules/file/ometiff.c:573
 msgid ""
 "The OME TIFF header specifies more TIFF directories than there are in the "
 "file."
 msgstr "Заголовок OME TIFF задаёт больше каталогов TIFF, чем есть в файле."
 
-#: modules/file/ometiff.c:581
+#: modules/file/ometiff.c:584
 #, c-format
 msgid "TIFF directory %u is assigned to multiple conflicting ZTC coordinates."
 msgstr ""
@@ -6645,13 +6645,13 @@ msgstr "Поиск отменён"
 
 #: modules/process/calcoefs_simple.c:630 modules/process/grain_wshed.c:505
 #: modules/process/maskcor.c:327 modules/process/mcrop.c:327
-#: modules/process/merge.c:749 modules/process/tip_blind.c:782
+#: modules/process/merge.c:764 modules/process/tip_blind.c:782
 #: modules/process/tipops.c:307
 msgid "Initializing"
 msgstr "Инициализация"
 
 #: modules/process/calcoefs_simple.c:632 modules/process/maskcor.c:329
-#: modules/process/mcrop.c:329 modules/process/merge.c:751
+#: modules/process/mcrop.c:329 modules/process/merge.c:766
 msgid "Correlating"
 msgstr "Поиск макс. корреляции"
 
@@ -9599,7 +9599,7 @@ msgstr "_Выровнять второй операнд:"
 msgid "_Boundary treatment:"
 msgstr "Режим _границы:"
 
-#: modules/process/merge.c:550 modules/process/merge.c:631
+#: modules/process/merge.c:559 modules/process/merge.c:640
 msgid "Merged images"
 msgstr "Объединённые изображения"
 

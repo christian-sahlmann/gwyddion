@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-02-24 03:58+0100\n"
+"POT-Creation-Date: 2014-03-02 13:05+0100\n"
 "PO-Revision-Date: 2014-02-24 13:48+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -118,7 +118,7 @@ msgstr "vdW: paraboloid"
 msgid "contact: Hertz (paraboloid)"
 msgstr "kontaktní: Hertz (paraboloid)"
 
-#: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:612
+#: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:665
 #: app/data-browser.c:2091 app/data-browser.c:2854 app/data-browser.c:3710
 #: app/data-browser.c:3869 app/data-browser.c:4155 app/data-browser.c:4569
 #: app/data-browser.c:6553 app/data-browser.c:6635 app/resource-editor.c:367
@@ -1860,6 +1860,7 @@ msgid "Hide tool dialog (Esc)"
 msgstr "Skrýt okno nástroje (Esc)"
 
 #: app/log.c:380
+#, c-format
 msgid "Log of %s (%s)"
 msgstr "Log %s (%s)"
 
@@ -2665,6 +2666,7 @@ msgid "Accurex II text files (.txt)"
 msgstr "Accurex II textové soubory (.txt)"
 
 #: modules/file/accurexii-txt.c:153
+#, c-format
 msgid "File header cannot be converted from ISO-8859-1 character set: %s"
 msgstr "Hlavičku souboru nelze převést ze znakové sady ISO-8859-1: %s"
 
@@ -3221,6 +3223,7 @@ msgid "BigTIFF reserved fields are %u and %u instead of 8 and 0."
 msgstr "Reservovaná pole BigTIFFu jsou %u a %u namísto 8 a 0."
 
 #: modules/file/gwytiff.h:341 modules/file/gwytiff.h:358
+#, c-format
 msgid "TIFF directory %lu ended unexpectedly."
 msgstr "Adresář TIFFu č. %lu neočekávaně skončil."
 
@@ -3642,12 +3645,13 @@ msgid "Olympus LEXT OLS4000 (.lext)"
 msgstr "Olympus LEXT OLS4000 (.lext)"
 
 #: modules/file/lextfile.c:163 modules/file/nanoscan.c:672
-#: modules/file/ometiff.c:419
+#: modules/file/ometiff.c:422
+#, c-format
 msgid "Top-level element is not ‘%s’."
 msgstr "Kořenový element není ‚%s‘."
 
 #: modules/file/lextfile.c:260 modules/file/nanoscan.c:267
-#: modules/file/ometiff.c:254
+#: modules/file/ometiff.c:257
 #, c-format
 msgid "XML parsing failed: %s"
 msgstr "Parsování XML selhalo: %s"
@@ -4271,27 +4275,27 @@ msgstr "Načítá datové soubory OLS."
 msgid "Olympus LEXT OLS3000 (.ols)"
 msgstr "Olympus LEXT OLS3000 (.ols)"
 
-#: modules/file/ometiff.c:143
+#: modules/file/ometiff.c:146
 msgid "Imports OME-TIFF data files."
 msgstr "Načítá datové soubory OME-TIFF."
 
-#: modules/file/ometiff.c:156
+#: modules/file/ometiff.c:159
 msgid "Open Microscopy OME-TIFF (.ome.tiff)"
 msgstr "Open Microscopy OME-TIFF (.ome.tiff)"
 
-#: modules/file/ometiff.c:562
+#: modules/file/ometiff.c:565
 #, c-format
 msgid "ZTC coordinates (%u,%u,%u) fall outside the given ranges."
 msgstr "ZTC souřadnice (%u,%u,%u) leží mimo dané rozsahy."
 
-#: modules/file/ometiff.c:570
+#: modules/file/ometiff.c:573
 msgid ""
 "The OME TIFF header specifies more TIFF directories than there are in the "
 "file."
 msgstr ""
 "OME TIFF hlavička udává více TIFF adresářů, než kolik jich je v souboru."
 
-#: modules/file/ometiff.c:581
+#: modules/file/ometiff.c:584
 #, c-format
 msgid "TIFF directory %u is assigned to multiple conflicting ZTC coordinates."
 msgstr "TIFF adresář č. %u je přiřazen několika rozporným ZTC souřadnicím."
