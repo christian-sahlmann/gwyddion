@@ -188,12 +188,6 @@ Section "Gwyddion (required)"
     GwyExpandFiles "bin\gwyddion-thumbnailer.exe"
     GwyExpandFiles "bin\gwy.pyd"
     GwyExpandFiles "bin\iconv.dll"
-    ; We used to have the following here but they do not seem necessary as
-    ; only harfbuzz-icu requires them?  Anyway, the version is wrong.
-    ; "bin\icudata48.dll"
-    ; "bin\icule48.dll"
-    ; "bin\icuuc48.dll"
-    ; "LICENSE-icu.txt"
     GwyExpandFiles "bin\libasprintf-0.dll"
     GwyExpandFiles "bin\libatk-1.0-0.dll"
     GwyExpandFiles "bin\libbz2-1.dll"
