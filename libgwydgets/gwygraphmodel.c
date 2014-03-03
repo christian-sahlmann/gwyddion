@@ -1581,8 +1581,8 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
 
     if ((export_style & ~GWY_GRAPH_MODEL_EXPORT_ASCII_POSIX)
         == GWY_GRAPH_MODEL_EXPORT_ASCII_IGORPRO) {
-        posix_format = TRUE;
         export_units = TRUE;
+        posix_format = TRUE;
     }
 
     if (export_units) {
@@ -1749,14 +1749,15 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
                 g_string_append_printf(string, "WAVES/D %s%d\n", yname, i+1);
                 g_string_append(string, "BEGIN\n");
                 for (j = 0; j < cmodel->n; j++) {
-                    append_number(string, cmodel->ydata[j]/ymult, TRUE);
+                    append_number(string, cmodel->ydata[j]/ymult, posix_format);
                     g_string_append_c(string, '\n');
                 }
                 g_string_append(string, "END\n");
                 g_string_append(string, "X SetScale/I x ");
-                append_number(string, cmodel->xdata[0]/xmult, TRUE);
+                append_number(string, cmodel->xdata[0]/xmult, posix_format);
                 g_string_append_c(string, ',');
-                append_number(string, cmodel->xdata[cmodel->n-1]/xmult, TRUE);
+                append_number(string, cmodel->xdata[cmodel->n-1]/xmult,
+                              posix_format);
                 g_string_append_printf(string, ",\"%s\", %s%d; ",
                                        xformat->units, xname, i+1);
                 g_string_append_printf(string, "SetScale d,0,0,\"%s\", %s%d\n",
@@ -1767,9 +1768,9 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
                                        xname, i+1, yname, i+1);
                 g_string_append(string, "BEGIN\n");
                 for (j = 0; j < cmodel->n; j++) {
-                    append_number(string, cmodel->xdata[j], TRUE);
+                    append_number(string, cmodel->xdata[j], posix_format);
                     g_string_append_c(string, ' ');
-                    append_number(string, cmodel->ydata[j]/ymult, TRUE);
+                    append_number(string, cmodel->ydata[j]/ymult, posix_format);
                     g_string_append_c(string, '\n');
                 }
                 g_string_append(string, "END\n");
