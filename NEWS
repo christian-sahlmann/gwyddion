@@ -1,3 +1,8 @@
+2.36 (0000-00-00)
+Libraries:
+- libgwydgets: Igor Pro .itx graph ASCII export option was added.
+
+
 2.35 (2014-03-02)
 Application:
 - A log of data modification operations is recorded for each channel and volume
@@ -15,7 +20,7 @@ Libraries:
 - libgwyddion: GwyStringList has new functions for clearing and adding a string
   with taking the ownership.
 - libgwyprocess: A function for removing grains by number was added.
-- libgwydggets: Graph window shows reasonable cursor coordinates with
+- libgwydgets: Graph window shows reasonable cursor coordinates with
   logscale axes.
 
 Modules:
