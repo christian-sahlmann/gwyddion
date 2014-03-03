@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2006,2014 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -55,6 +55,7 @@ static const GwyEnum style_type[] = {
    { N_("Gnuplot friendly"),       GWY_GRAPH_MODEL_EXPORT_ASCII_GNUPLOT, },
    { N_("Comma separated values"), GWY_GRAPH_MODEL_EXPORT_ASCII_CSV,     },
    { N_("Origin friendly"),        GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN,  },
+   { N_("Igor Pro text wave"),     GWY_GRAPH_MODEL_EXPORT_ASCII_IGORPRO, },
 };
 
 static const ExportParameters load_defaults = {
@@ -70,7 +71,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Exports graph data to text files."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -249,7 +250,7 @@ load_args(GwyContainer *settings,
 
     params->posix = params->style & GWY_GRAPH_MODEL_EXPORT_ASCII_POSIX;
     params->style = params->style & ~GWY_GRAPH_MODEL_EXPORT_ASCII_POSIX;
-    params->style = MIN(params->style, GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN);
+    params->style = MIN(params->style, GWY_GRAPH_MODEL_EXPORT_ASCII_IGORPRO);
 }
 
 static void
