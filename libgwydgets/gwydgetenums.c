@@ -202,6 +202,8 @@ gwy_graph_curve_type_get_enum(void)
  *                                    data represented as empty columns.
  * @GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN: Presently, the same as the plain
  *                                       format.
+ * @GWY_GRAPH_MODEL_EXPORT_ASCII_IGORPRO: Text wave format of Igor Pro (.itx).
+ *                                        (Since 2.36)
  * @GWY_GRAPH_MODEL_EXPORT_ASCII_POSIX: Flag that can be combined with the
  *                                      other formats, meaning
  *                                      locale-independent C/POSIX format of

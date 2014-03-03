@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004-2007 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004-2007,2014 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -72,30 +72,32 @@ typedef struct {
     gulong notify_id;
 } GwyGraphModelCurveAux;
 
-static void     gwy_graph_model_finalize          (GObject *object);
-static void     gwy_graph_model_serializable_init (GwySerializableIface *iface);
-static GByteArray* gwy_graph_model_serialize      (GObject *obj,
-                                                   GByteArray*buffer);
-static gsize    gwy_graph_model_get_size          (GObject *obj);
-static GObject* gwy_graph_model_deserialize       (const guchar *buffer,
-                                                   gsize size,
-                                                   gsize *position);
-static GObject* gwy_graph_model_duplicate_real    (GObject *object);
-static void     gwy_graph_model_set_property      (GObject *object,
-                                                   guint prop_id,
-                                                   const GValue *value,
-                                                   GParamSpec *pspec);
-static void     gwy_graph_model_get_property      (GObject *object,
-                                                   guint prop_id,
-                                                   GValue *value,
-                                                   GParamSpec *pspec);
-static void     gwy_graph_model_release_curve     (GwyGraphModel *gmodel,
-                                                   guint i);
-static void     gwy_graph_model_curve_data_changed(GwyGraphCurveModel *cmodel,
-                                                   GwyGraphModel *gmodel);
-static void     gwy_graph_model_curve_notify      (GwyGraphCurveModel *cmodel,
-                                                   GParamSpec *pspec,
-                                                   GwyGraphModel *gmodel);
+static void        gwy_graph_model_finalize          (GObject *object);
+static void        gwy_graph_model_serializable_init (GwySerializableIface *iface);
+static GByteArray* gwy_graph_model_serialize         (GObject *obj,
+                                                      GByteArray*buffer);
+static gsize       gwy_graph_model_get_size          (GObject *obj);
+static GObject*    gwy_graph_model_deserialize       (const guchar *buffer,
+                                                      gsize size,
+                                                      gsize *position);
+static GObject*    gwy_graph_model_duplicate_real    (GObject *object);
+static void        gwy_graph_model_set_property      (GObject *object,
+                                                      guint prop_id,
+                                                      const GValue *value,
+                                                      GParamSpec *pspec);
+static void        gwy_graph_model_get_property      (GObject *object,
+                                                      guint prop_id,
+                                                      GValue *value,
+                                                      GParamSpec *pspec);
+static gboolean    curve_is_equispaced               (const GwyGraphCurveModel *gcmodel);
+static gchar*      ascii_name                        (const gchar *s);
+static void        gwy_graph_model_release_curve     (GwyGraphModel *gmodel,
+                                                      guint i);
+static void        gwy_graph_model_curve_data_changed(GwyGraphCurveModel *cmodel,
+                                                      GwyGraphModel *gmodel);
+static void        gwy_graph_model_curve_notify      (GwyGraphCurveModel *cmodel,
+                                                      GParamSpec *pspec,
+                                                      GwyGraphModel *gmodel);
 
 static guint graph_model_signals[LAST_SIGNAL] = { 0 };
 
@@ -1572,9 +1574,16 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
     GString *labels, *descriptions, *units;
     gint i, j, max, ndata;
     gboolean posix_format = export_style & GWY_GRAPH_MODEL_EXPORT_ASCII_POSIX;
+    gchar *xname, *yname;
 
     if (!string)
         string = g_string_new(NULL);
+
+    if ((export_style & ~GWY_GRAPH_MODEL_EXPORT_ASCII_POSIX)
+        == GWY_GRAPH_MODEL_EXPORT_ASCII_IGORPRO) {
+        posix_format = TRUE;
+        export_units = TRUE;
+    }
 
     if (export_units) {
         xaverage = (model->x_max + model->x_min)/2;
@@ -1724,12 +1733,116 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
         }
         break;
 
+        case GWY_GRAPH_MODEL_EXPORT_ASCII_IGORPRO:
+        xname = ascii_name(model->left_label->str);
+        if (!xname)
+            xname = g_strdup_printf("x");
+
+        yname = ascii_name(model->left_label->str);
+        if (!yname)
+            yname = g_strdup_printf("y");
+
+        g_string_append(string, "IGOR\n");
+        for (i = 0; i < model->curves->len; i++) {
+            cmodel = g_ptr_array_index(model->curves, i);
+            if (curve_is_equispaced(cmodel)) {
+                g_string_append_printf(string, "WAVES/D %s%d\n", yname, i+1);
+                g_string_append(string, "BEGIN\n");
+                for (j = 0; j < cmodel->n; j++) {
+                    append_number(string, cmodel->ydata[j]/ymult, TRUE);
+                    g_string_append_c(string, '\n');
+                }
+                g_string_append(string, "END\n");
+                g_string_append(string, "X SetScale/I x ");
+                append_number(string, cmodel->xdata[0]/xmult, TRUE);
+                g_string_append_c(string, ',');
+                append_number(string, cmodel->xdata[cmodel->n-1]/xmult, TRUE);
+                g_string_append_printf(string, ",\"%s\", %s%d; ",
+                                       xformat->units, xname, i+1);
+                g_string_append_printf(string, "SetScale d,0,0,\"%s\", %s%d\n",
+                                       yformat->units, yname, i+1);
+            }
+            else {
+                g_string_append_printf(string, "WAVES/D %s%d %s%d\n",
+                                       xname, i+1, yname, i+1);
+                g_string_append(string, "BEGIN\n");
+                for (j = 0; j < cmodel->n; j++) {
+                    append_number(string, cmodel->xdata[j], TRUE);
+                    g_string_append_c(string, ' ');
+                    append_number(string, cmodel->ydata[j]/ymult, TRUE);
+                    g_string_append_c(string, '\n');
+                }
+                g_string_append(string, "END\n");
+                g_string_append_printf(string,
+                                       "X SetScale d,0,0,\"%s\", %s%d, %s%d\n",
+                                       yformat->units, xname, i+1, yname, i+1);
+            }
+            g_string_append_c(string, '\n');
+        }
+
+        break;
+
         default:
         g_return_val_if_reached(string);
         break;
     }
 
     return string;
+}
+
+static gboolean
+curve_is_equispaced(const GwyGraphCurveModel *gcmodel)
+{
+    const gdouble *xdata = gcmodel->xdata;
+    gdouble step, eps;
+    gint i, n = gcmodel->n;
+
+    if (n < 3)
+        return TRUE;
+
+    step = (xdata[n-1] - xdata[0])/(n - 1);
+    eps = 1e-9*fabs(step);
+    for (i = 1; i < n-1; i++) {
+        if (fabs(xdata[i] - xdata[0] - i*step) > eps)
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+static gchar*
+ascii_name(const gchar *s)
+{
+    guint i, m, n = 0;
+    gchar *as;
+
+    for (i = 0; s[i]; i++) {
+        if (g_ascii_isalpha(s[i]))
+            break;
+    }
+
+    m = i;
+    while (s[i]) {
+        if (g_ascii_isalnum(s[i]))
+            n++;
+        i++;
+    }
+
+    if (!n)
+        return NULL;
+
+    as = g_new(gchar, n+1);
+
+    i = m;
+    while (s[i]) {
+        if (g_ascii_isalnum(s[i]))
+            as[n++] = s[i];
+        i++;
+    }
+
+    as[n] = '\0';
+    g_printerr("<%s>\n", as);
+    return as;
 }
 
 static void
