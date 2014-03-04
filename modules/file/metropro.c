@@ -68,8 +68,8 @@ typedef enum {
     MPRO_PHASE_RES_HIGH   = 1,
 } MProPhaseResType;
 
-/* Corresponds to MAGIC1 and MAGIC2 */
 typedef struct {
+    /* Common to all MAGIC1, MAGIC2 and MAGIC3 files. */
     guint magic_number;
     guint header_format;
     guint header_size;
@@ -225,41 +225,115 @@ typedef struct {
     gint ftpsi_res_factor;
     /* Unused 8 bytes. */
 
+    /* Only MAGIC3 files. */
+    /* Unused 4 bytes. */
+    gint films_mode;
+    gint films_reflectivity_ratio;
+    gdouble films_obliquity_correction;
+    gdouble films_refraction_index;
+    gdouble films_min_mod;
+    gdouble films_min_thickness;
+    gdouble films_max_thickness;
+    gdouble films_min_refl_ratio;
+    gdouble films_max_refl_ratio;
+    gchar films_sys_char_file_name[28];
+    gint films_dfmt;
+    gint films_merit_mode;
+    gint films_h2g;
+    gchar anti_vibration_cal_file_name[28];
+    /* Unused 2 bytes. */
+    gdouble films_fringe_remove_perc;
+    gchar asphere_job_file_name[28];
+    gchar asphere_test_plan_name[28];
+    /* Unused 4 bytes. */
+    gdouble asphere_nzones;
+    gdouble asphere_rv;
+    gdouble asphere_voffset;
+    gdouble asphere_att4;
+    gdouble asphere_r0;
+    gdouble asphere_att6;
+    gdouble asphere_r0_optimization;
+    gdouble asphere_att8;
+    gdouble asphere_aperture_pct;
+    gdouble asphere_optimized_r0;
+    gint iff_state;
+    gchar iff_idr_filename[42];
+    gchar iff_ise_filename[42];
+    /* Unused 2 bytes. */
+    gdouble asphere_eqn_r0;
+    gdouble asphere_eqn_k;
+    gdouble asphere_eqn_coef[21];
+    gint awm_enable;
+    gdouble awm_vacuum_wavelength_nm;
+    gdouble awm_air_wavelength_nm;
+    gdouble awm_air_temperature_degc;
+    gdouble awm_air_pressure_mmhg;
+    gdouble awm_air_rel_humidity_pct;
+    gdouble awm_air_quality;
+    gdouble awm_input_power_mw;
+    gint asphere_optimizations;
+    gint asphere_optimization_mode;
+    gdouble asphere_optimized_k;
+    /* Unused 2 bytes. */
+    gint n_fiducials_b;
+    gdouble fiducials_b[14];
+    /* Unused 2 bytes. */
+    gint n_fiducials_c;
+    gdouble fiducials_c[14];
+    /* Unused 2 bytes. */
+    gint n_fiducials_d;
+    gdouble fiducials_d[14];
+    gdouble gpi_enc_zoom_mag;
+    gdouble asphere_max_distortion;
+    gdouble asphere_distortion_uncert;
+    gchar field_stop_name[12];
+    gchar apert_stop_name[12];
+    gchar illum_filt_name[12];
+    /* Unused 2606 bytes. */
+
     /* Our stuff */
+    const gchar *filename;
     GwyDataField **intensity_data;
     GwyDataField **intensity_mask;
     GwyDataField *phase_data;
     GwyDataField *phase_mask;
-} MProFile12;
+} MProFile;
 
-static gboolean      module_register        (void);
-static gint          mprofile_detect        (const GwyFileDetectInfo *fileinfo,
-                                             gboolean only_name);
-static GwyContainer* mprofile_load          (const gchar *filename,
-                                             GwyRunType mode,
-                                             GError **error);
-static GwyContainer* mprofile_load12        (const gchar *filename,
-                                             const guchar *buffer,
-                                             gsize size,
-                                             GError **error);
-static GwyContainer* mprofile_load3         (const gchar *filename,
-                                             const guchar *buffer,
-                                             gsize size,
-                                             GError **error);
-static gboolean      mprofile_read_header12 (const guchar *buffer,
-                                             gsize size,
-                                             MProFile12 *mprofile,
-                                             GError **error);
-static gint          fill_data_fields12     (MProFile12 *mprofile,
-                                             const guchar *buffer);
-static GwyContainer* mprofile_get_metadata12(MProFile12 *mprofile);
+static gboolean      module_register      (void);
+static gint          mprofile_detect      (const GwyFileDetectInfo *fileinfo,
+                                           gboolean only_name);
+static GwyContainer* mprofile_load        (const gchar *filename,
+                                           GwyRunType mode,
+                                           GError **error);
+static GwyContainer* mprofile_load_data   (MProFile *mprofile,
+                                           const guchar *buffer,
+                                           gsize size,
+                                           GError **error);
+static gboolean      mprofile_read_header (const guchar *buffer,
+                                           gsize size,
+                                           MProFile *mprofile,
+                                           GError **error);
+static gint          fill_data_fields     (MProFile *mprofile,
+                                           const guchar *buffer);
+static GwyContainer* mprofile_get_metadata(MProFile *mprofile);
+
+static const struct {
+    guint format;
+    guint magic;
+    guint size;
+}
+header_formats[] = {
+    { 1, 0x881b036f, HEADER_SIZE12, },
+    { 2, 0x881b0370, HEADER_SIZE12, },
+    { 3, 0x881b0371, HEADER_SIZE3,  },
+};
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports binary MetroPro (Zygo) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.7",
+    "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -284,6 +358,8 @@ mprofile_detect(const GwyFileDetectInfo *fileinfo,
                 gboolean only_name)
 {
     gint score = 0;
+    const guchar *p;
+    guint magic, i;
 
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, ".dat") ? 10 : 0;
@@ -291,10 +367,14 @@ mprofile_detect(const GwyFileDetectInfo *fileinfo,
     if (fileinfo->buffer_len < HEADER_SIZE12)
         return 0;
 
-    if (memcmp(fileinfo->head, MAGIC1, MAGIC_SIZE) == 0
-        || memcmp(fileinfo->head, MAGIC2, MAGIC_SIZE) == 0
-        || memcmp(fileinfo->head, MAGIC3, MAGIC_SIZE) == 0)
-        score = 100;
+    p = fileinfo->head;
+    magic = gwy_get_guint32_be(&p);
+    for (i = 0; i < G_N_ELEMENTS(header_formats); i++) {
+        if (magic == header_formats[i].magic) {
+            score = 100;
+            break;
+        }
+    }
 
     return score;
 }
@@ -305,25 +385,32 @@ mprofile_load(const gchar *filename,
               GError **error)
 {
     GwyContainer *container = NULL;
+    MProFile *mprofile;
     guchar *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
+    guint n;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
 
-    if (size < MAGIC_SIZE)
+    if (size < MAGIC_SIZE + 2 + 4)
         err_TOO_SHORT(error);
-    else if (memcmp(buffer, MAGIC1, MAGIC_SIZE) == 0)
-        container = mprofile_load12(filename, buffer, size, error);
-    else if (memcmp(buffer, MAGIC2, MAGIC_SIZE) == 0)
-        container = mprofile_load12(filename, buffer, size, error);
-    else if (memcmp(buffer, MAGIC3, MAGIC_SIZE) == 0)
-        container = mprofile_load3(filename, buffer, size, error);
-    else
-        err_FILE_TYPE(error, "MetroPro");
+
+    mprofile = g_new0(MProFile, 1);
+    mprofile->filename = filename;
+
+    container = mprofile_load_data(mprofile, buffer, size, error);
+
+    for (n = 0; n < mprofile->ac_n_buckets; n++) {
+        gwy_object_unref(mprofile->intensity_data[n]);
+        gwy_object_unref(mprofile->intensity_mask[n]);
+    }
+    gwy_object_unref(mprofile->phase_data);
+    gwy_object_unref(mprofile->phase_mask);
+    g_free(mprofile);
 
     gwy_file_abandon_contents(buffer, size, NULL);
 
@@ -331,27 +418,29 @@ mprofile_load(const gchar *filename,
 }
 
 static GwyContainer*
-mprofile_load12(const gchar *filename,
-                const guchar *buffer, gsize size, GError **error)
+mprofile_load_data(MProFile *mprofile,
+                   const guchar *buffer, gsize size, GError **error)
 {
-    MProFile12 mprofile;
     GwyContainer *meta, *container = NULL;
     GwyDataField *dfield = NULL, *vpmask = NULL;
     gsize expected;
     GString *key;
     const gchar *title;
-    guint n, i;
+    guint n, i, ac_npix, cn_npix;
 
-    if (!mprofile_read_header12(buffer, size, &mprofile, error))
+    if (!mprofile_read_header(buffer, size, mprofile, error))
         return NULL;
 
-    expected = mprofile.header_size
-               + 2*mprofile.ac_n_buckets*mprofile.ac_width*mprofile.ac_height
-               + 4*mprofile.cn_width*mprofile.cn_height;
+    ac_npix = mprofile->ac_width * mprofile->ac_height;
+    cn_npix = mprofile->cn_width * mprofile->cn_height;
+    expected = mprofile->header_size
+               + 2*mprofile->ac_n_buckets*ac_npix
+               + 4*cn_npix;
+
     if (err_SIZE_MISMATCH(error, expected, size, TRUE))
         return NULL;
 
-    n = fill_data_fields12(&mprofile, buffer);
+    n = fill_data_fields(mprofile, buffer);
     if (!n) {
         err_NO_DATA(error);
         return NULL;
@@ -361,13 +450,13 @@ mprofile_load12(const gchar *filename,
     container = gwy_container_new();
     for (i = 0; i < n; i++) {
         if (i > 0) {
-            dfield = mprofile.intensity_data[i-1];
-            vpmask = mprofile.intensity_mask[i-1];
+            dfield = mprofile->intensity_data[i-1];
+            vpmask = mprofile->intensity_mask[i-1];
             title = "Intensity";
         }
         else {
-            dfield = mprofile.phase_data;
-            vpmask = mprofile.phase_mask;
+            dfield = mprofile->phase_data;
+            vpmask = mprofile->phase_mask;
             title = "Phase";
         }
         g_string_printf(key, "/%d/data", i);
@@ -379,56 +468,60 @@ mprofile_load12(const gchar *filename,
             gwy_container_set_object_by_name(container, key->str, vpmask);
         }
 
-        meta = mprofile_get_metadata12(&mprofile);
+        meta = mprofile_get_metadata(mprofile);
         g_string_printf(key, "/%d/meta", i);
         gwy_container_set_object_by_name(container, key->str, meta);
         g_object_unref(meta);
 
-        gwy_file_channel_import_log_add(container, i, "metropro", filename);
+        gwy_file_channel_import_log_add(container, i, "metropro",
+                                        mprofile->filename);
     }
     g_string_free(key, TRUE);
-
-    for (n = 0; n < mprofile.ac_n_buckets; n++) {
-        gwy_object_unref(mprofile.intensity_data[n]);
-        gwy_object_unref(mprofile.intensity_mask[n]);
-    }
-    gwy_object_unref(mprofile.phase_data);
-    gwy_object_unref(mprofile.phase_mask);
 
     return container;
 }
 
 static gboolean
-mprofile_read_header12(const guchar *buffer,
-                       gsize size,
-                       MProFile12 *mprofile,
-                       GError **error)
+mprofile_read_header(const guchar *buffer,
+                     gsize size,
+                     MProFile *mprofile,
+                     GError **error)
 {
     const guchar *p;
     guint i;
 
-    if (size < HEADER_SIZE12 + 2) {
+    if (size < MAGIC_SIZE + 2 + 4) {
         err_TOO_SHORT(error);
         return FALSE;
     }
 
     p = buffer;
+    /* Common to all MAGIC1, MAGIC2 and MAGIC3 files. */
     mprofile->magic_number = gwy_get_guint32_be(&p);
     mprofile->header_format = gwy_get_guint16_be(&p);
-    if (mprofile->header_format != 1
-        && mprofile->header_format != 2) {
-        err_UNSUPPORTED(error, "FormatVersion");
+    mprofile->header_size = gwy_get_guint32_be(&p);
+    gwy_debug("magic: %08x, header_format: %d, header_size: %d",
+              mprofile->magic_number,
+              mprofile->header_format,
+              mprofile->header_size);
+    for (i = 0; i < G_N_ELEMENTS(header_formats); i++) {
+        if (mprofile->magic_number == header_formats[i].magic)
+            break;
+    }
+    if (i == G_N_ELEMENTS(header_formats)) {
+        err_FILE_TYPE(error, "MetroPro");
         return FALSE;
     }
 
-    mprofile->header_size = gwy_get_guint32_be(&p);
-    gwy_debug("header_format: %d, header_size: %d",
-              mprofile->header_format, mprofile->header_size);
-    if (mprofile->header_size < 570) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File header is too short."));
+    if (mprofile->header_format != header_formats[i].format) {
+        err_UNSUPPORTED(error, "HeaderFormat");
         return FALSE;
     }
+    if (mprofile->header_size != header_formats[i].size) {
+        err_UNSUPPORTED(error, "HeaderSize");
+        return FALSE;
+    }
+
     if (mprofile->header_size > size) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("File header is larger than file."));
@@ -618,12 +711,85 @@ mprofile_read_header12(const guchar *buffer,
     mprofile->ftpsi_res_factor = gwy_get_gint32_le(&p);
     p += 8;
 
+    if (mprofile->header_format < 3)
+        return TRUE;
+
+    /* Only MAGIC3 files. */
+    p += 4;
+    mprofile->films_mode = gwy_get_gint16_be(&p);
+    mprofile->films_reflectivity_ratio = gwy_get_gint16_be(&p);
+    mprofile->films_obliquity_correction = gwy_get_gfloat_be(&p);
+    mprofile->films_refraction_index = gwy_get_gfloat_be(&p);
+    mprofile->films_min_mod = gwy_get_gfloat_be(&p);
+    mprofile->films_min_thickness = gwy_get_gfloat_be(&p);
+    mprofile->films_max_thickness = gwy_get_gfloat_be(&p);
+    mprofile->films_min_refl_ratio = gwy_get_gfloat_be(&p);
+    mprofile->films_max_refl_ratio = gwy_get_gfloat_be(&p);
+    get_CHARARRAY(mprofile->films_sys_char_file_name, &p);
+    mprofile->films_dfmt = gwy_get_gint16_be(&p);
+    mprofile->films_merit_mode = gwy_get_gint16_be(&p);
+    mprofile->films_h2g = gwy_get_gint16_be(&p);
+    get_CHARARRAY(mprofile->anti_vibration_cal_file_name, &p);
+    p += 2;
+    mprofile->films_fringe_remove_perc = gwy_get_gfloat_be(&p);
+    get_CHARARRAY(mprofile->asphere_job_file_name, &p);
+    get_CHARARRAY(mprofile->asphere_test_plan_name, &p);
+    p += 4;
+    mprofile->asphere_nzones = gwy_get_gfloat_be(&p);
+    mprofile->asphere_rv = gwy_get_gfloat_be(&p);
+    mprofile->asphere_voffset = gwy_get_gfloat_be(&p);
+    mprofile->asphere_att4 = gwy_get_gfloat_be(&p);
+    mprofile->asphere_r0 = gwy_get_gfloat_be(&p);
+    mprofile->asphere_att6 = gwy_get_gfloat_be(&p);
+    mprofile->asphere_r0_optimization = gwy_get_gfloat_be(&p);
+    mprofile->asphere_att8 = gwy_get_gfloat_be(&p);
+    mprofile->asphere_aperture_pct = gwy_get_gfloat_be(&p);
+    mprofile->asphere_optimized_r0 = gwy_get_gfloat_be(&p);
+    mprofile->iff_state = gwy_get_gint16_le(&p);
+    get_CHARARRAY(mprofile->iff_idr_filename, &p);
+    get_CHARARRAY(mprofile->iff_ise_filename, &p);
+    p += 2;
+    mprofile->asphere_eqn_r0 = gwy_get_gfloat_be(&p);
+    mprofile->asphere_eqn_k = gwy_get_gfloat_be(&p);
+    for (i = 0; i < G_N_ELEMENTS(mprofile->asphere_eqn_coef); i++)
+        mprofile->asphere_eqn_coef[i] = gwy_get_gfloat_be(&p);
+    mprofile->awm_enable = gwy_get_gint32_le(&p);
+    mprofile->awm_vacuum_wavelength_nm = gwy_get_gfloat_le(&p);
+    mprofile->awm_air_wavelength_nm = gwy_get_gfloat_le(&p);
+    mprofile->awm_air_temperature_degc = gwy_get_gfloat_le(&p);
+    mprofile->awm_air_pressure_mmhg = gwy_get_gfloat_le(&p);
+    mprofile->awm_air_rel_humidity_pct = gwy_get_gfloat_le(&p);
+    mprofile->awm_air_quality = gwy_get_gfloat_le(&p);
+    mprofile->awm_input_power_mw = gwy_get_gfloat_le(&p);
+    mprofile->asphere_optimizations = gwy_get_gint32_be(&p);
+    mprofile->asphere_optimization_mode = gwy_get_gint32_be(&p);
+    mprofile->asphere_optimized_k = gwy_get_gfloat_be(&p);
+    p += 2;
+    mprofile->n_fiducials_b = gwy_get_gint16_be(&p);
+    for (i = 0; i < G_N_ELEMENTS(mprofile->fiducials_b); i++)
+        mprofile->fiducials_b[i] = gwy_get_gfloat_be(&p);
+    p += 2;
+    mprofile->n_fiducials_c = gwy_get_gint16_be(&p);
+    for (i = 0; i < G_N_ELEMENTS(mprofile->fiducials_c); i++)
+        mprofile->fiducials_c[i] = gwy_get_gfloat_be(&p);
+    p += 2;
+    mprofile->n_fiducials_d = gwy_get_gint16_be(&p);
+    for (i = 0; i < G_N_ELEMENTS(mprofile->fiducials_d); i++)
+        mprofile->fiducials_d[i] = gwy_get_gfloat_be(&p);
+    mprofile->gpi_enc_zoom_mag = gwy_get_gfloat_le(&p);
+    mprofile->asphere_max_distortion = gwy_get_gfloat_be(&p);
+    mprofile->asphere_distortion_uncert = gwy_get_gfloat_be(&p);
+    get_CHARARRAY(mprofile->field_stop_name, &p);
+    get_CHARARRAY(mprofile->apert_stop_name, &p);
+    get_CHARARRAY(mprofile->illum_filt_name, &p);
+    p += 2606;
+
     return TRUE;
 }
 
 static void
-set_units12(GwyDataField *dfield,
-            const MProFile12 *mprofile,
+set_units(GwyDataField *dfield,
+            const MProFile *mprofile,
             const gchar *zunit)
 {
     GwySIUnit *siunit;
@@ -641,8 +807,8 @@ set_units12(GwyDataField *dfield,
 }
 
 static gint
-fill_data_fields12(MProFile12 *mprofile,
-                   const guchar *buffer)
+fill_data_fields(MProFile *mprofile,
+                 const guchar *buffer)
 {
     GwyDataField *dfield, *vpmask;
     gdouble *data, *mask;
@@ -708,7 +874,7 @@ fill_data_fields12(MProFile12 *mprofile,
                 }
             }
 
-            set_units12(dfield, mprofile, "");
+            set_units(dfield, mprofile, "");
             if (!gwy_app_channel_remove_bad_data(dfield, vpmask))
                 gwy_object_unref(vpmask);
 
@@ -767,7 +933,7 @@ fill_data_fields12(MProFile12 *mprofile,
             }
         }
 
-        set_units12(dfield, mprofile, "m");
+        set_units(dfield, mprofile, "m");
         if (!gwy_app_channel_remove_bad_data(dfield, vpmask))
             gwy_object_unref(vpmask);
 
@@ -803,7 +969,7 @@ store_meta_string(GwyContainer *container,
 
 /* Quite incomplete... */
 static GwyContainer*
-mprofile_get_metadata12(MProFile12 *mprofile)
+mprofile_get_metadata(MProFile *mprofile)
 {
     static const GwyEnum yesno[] = { { "No", 0, }, { "Yes", 1, } };
     static const GwyEnum software_types[] = {
@@ -894,16 +1060,6 @@ mprofile_get_metadata12(MProFile12 *mprofile)
     gwy_container_set_string_by_name(meta, "Minimum modulation", p);
 
     return meta;
-}
-
-static GwyContainer*
-mprofile_load3(const gchar *filename,
-               const guchar *buffer,
-               gsize size,
-               GError **error)
-{
-    err_UNSUPPORTED(error, "header_format");
-    return NULL;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
