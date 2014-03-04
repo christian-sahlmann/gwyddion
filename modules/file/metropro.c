@@ -1,6 +1,6 @@
 /*
  *  $Id$
- *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2006,2014 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -418,13 +418,13 @@ mprofile_read_header1(const guchar *buffer,
     }
 
     p = buffer;
-    /*
-    get_CHARARRAY(mprofile->magic, &p);
-    mprofile->header_format = gwy_get_guint16_be(&p);
+    mprofile->magic_number = gwy_get_gint32_be(&p);
+    mprofile->header_format = gwy_get_gint16_be(&p);
     if (mprofile->header_format != 1) {
         err_UNSUPPORTED(error, "FormatVersion");
         return FALSE;
     }
+
     mprofile->header_size = gwy_get_guint32_be(&p);
     gwy_debug("header_format: %d, header_size: %d",
               mprofile->header_format, mprofile->header_size);
@@ -438,153 +438,52 @@ mprofile_read_header1(const guchar *buffer,
                     _("File header is larger than file."));
         return FALSE;
     }
-    mprofile->software_type = gwy_get_guint16_be(&p);
-    get_CHARARRAY0(mprofile->software_date, &p);
-    gwy_debug("software_type: %d, software_date: %s",
-              mprofile->software_type, mprofile->software_date);
 
-    mprofile->swinfo_vers_maj = gwy_get_guint16_be(&p);
-    mprofile->swinfo_vers_min = gwy_get_guint16_be(&p);
-    mprofile->swinfo_vers_bug = gwy_get_guint16_be(&p);
+    mprofile->swinfo_type = gwy_get_gint16_be(&p);
+    get_CHARARRAY(mprofile->swinfo_date, &p);
+    gwy_debug("software_type: %d, software_date: %s",
+              mprofile->swinfo_type, mprofile->swinfo_date);
+
+    mprofile->swinfo_vers_maj = gwy_get_gint16_be(&p);
+    mprofile->swinfo_vers_min = gwy_get_gint16_be(&p);
+    mprofile->swinfo_vers_bug = gwy_get_gint16_be(&p);
     gwy_debug("version: %d.%d.%d",
               mprofile->swinfo_vers_maj,
               mprofile->swinfo_vers_min,
               mprofile->swinfo_vers_bug);
 
-    mprofile->intens_xoff = gwy_get_guint16_be(&p);
-    mprofile->intens_yoff = gwy_get_guint16_be(&p);
-    mprofile->ac_width = gwy_get_guint16_be(&p);
-    mprofile->ac_height = gwy_get_guint16_be(&p);
-    gwy_debug("INTENS xres: %d, yres: %d, xoff: %d, yoff: %d",
-              mprofile->ac_width, mprofile->ac_height,
-              mprofile->intens_xoff, mprofile->intens_yoff);
-    mprofile->ac_n_buckets = gwy_get_guint16_be(&p);
-    mprofile->intens_range = gwy_get_guint16_be(&p);
-    mprofile->intens_nbytes = gwy_get_guint32_be(&p);
-    gwy_debug("intens_nbytes: %d, expecting: %d",
-              mprofile->intens_nbytes,
-              2*mprofile->ac_width*mprofile->ac_height*mprofile->ac_n_buckets);
-
-    mprofile->phase_xoff = gwy_get_guint16_be(&p);
-    mprofile->phase_yoff = gwy_get_guint16_be(&p);
-    mprofile->cn_width = gwy_get_guint16_be(&p);
-    mprofile->cn_height = gwy_get_guint16_be(&p);
-    gwy_debug("PHASE xres: %d, yres: %d, xoff: %d, yoff: %d",
-              mprofile->cn_width, mprofile->cn_height,
-              mprofile->phase_xoff, mprofile->phase_yoff);
-    mprofile->phase_nbytes = gwy_get_guint32_be(&p);
-    gwy_debug("phase_nbytes: %d, expecting: %d",
-              mprofile->phase_nbytes,
-              4*mprofile->cn_width*mprofile->cn_height);
-
-    mprofile->time_stamp = gwy_get_guint32_be(&p);
-    get_CHARARRAY0(mprofile->comment, &p);
-    gwy_debug("comment: %s", mprofile->comment);
-    mprofile->source = gwy_get_guint16_be(&p);
-
-    mprofile->intf_scale_factor = gwy_get_gfloat_be(&p);
-    mprofile->wavelength_in = gwy_get_gfloat_be(&p);
-    mprofile->numeric_aperture = gwy_get_gfloat_be(&p);
-    mprofile->obliquity_factor = gwy_get_gfloat_be(&p);
-    mprofile->magnification = gwy_get_gfloat_be(&p);
-    mprofile->lateral_res = gwy_get_gfloat_be(&p);
-
-    mprofile->acquire_mode = gwy_get_guint16_be(&p);
-    gwy_debug("acquire_mode: %d", mprofile->acquire_mode);
-    mprofile->intens_avgs = gwy_get_guint16_be(&p);
-    if (!mprofile->intens_avgs)
-        mprofile->intens_avgs = 1;
-    mprofile->pzt_cal = gwy_get_guint16_be(&p);
-    mprofile->pzt_gain_tolerance = gwy_get_guint16_be(&p);
-    mprofile->pzt_gain = gwy_get_guint16_be(&p);
-    mprofile->part_thickness = gwy_get_gfloat_be(&p);
-    mprofile->agc = gwy_get_guint16_be(&p);
-    mprofile->target_range = gwy_get_gfloat_be(&p);
-
-    p += 2;
-    mprofile->min_mod = gwy_get_guint32_be(&p);
-    mprofile->min_mod_pts = gwy_get_guint32_be(&p);
-    mprofile->phase_res = gwy_get_guint16_be(&p);
-    mprofile->min_area_size = gwy_get_guint32_be(&p);
-    mprofile->discont_action = gwy_get_guint16_be(&p);
-    mprofile->discont_filter = gwy_get_gfloat_be(&p);
-    mprofile->connection_order = gwy_get_guint16_be(&p);
-    mprofile->sign = gwy_get_guint16_be(&p);
-    mprofile->camera_width = gwy_get_guint16_be(&p);
-    mprofile->camera_height = gwy_get_guint16_be(&p);
-    mprofile->system_type = gwy_get_guint16_be(&p);
-    mprofile->system_board = gwy_get_guint16_be(&p);
-    mprofile->system_serial = gwy_get_guint16_be(&p);
-    mprofile->instrument_id = gwy_get_guint16_be(&p);
-    get_CHARARRAY0(mprofile->objective_name, &p);
-    get_CHARARRAY0(mprofile->part_num, &p);
-    gwy_debug("part_num: %s", mprofile->part_num);
-    mprofile->code_vtype = gwy_get_guint16_be(&p);
-    mprofile->phase_avgs = gwy_get_guint16_be(&p);
-    mprofile->subtract_sys_err = gwy_get_guint16_be(&p);
-    p += 16;
-    get_CHARARRAY0(mprofile->part_ser_num, &p);
-    mprofile->refactive_index = gwy_get_gfloat_be(&p);
-    mprofile->remove_tilt_bias = gwy_get_guint16_be(&p);
-    mprofile->remove_fringes = gwy_get_guint16_be(&p);
-    mprofile->max_area_size = gwy_get_guint32_be(&p);
-    mprofile->setup_type = gwy_get_guint16_be(&p);
-    p += 2;
-    mprofile->pre_connect_filter = gwy_get_gfloat_be(&p);
-
-    mprofile->wavelength2 = gwy_get_gfloat_be(&p);
-    mprofile->wavelength_fold = gwy_get_guint16_be(&p);
-    mprofile->wavelength1 = gwy_get_gfloat_be(&p);
-    mprofile->wavelength3 = gwy_get_gfloat_be(&p);
-    mprofile->wavelength4 = gwy_get_gfloat_be(&p);
-    get_CHARARRAY0(mprofile->wavelength_select, &p);
-    mprofile->fda_res = gwy_get_guint16_be(&p);
-    get_CHARARRAY0(mprofile->scan_description, &p);
-    gwy_debug("scan_description: %s", mprofile->scan_description);
-
-    mprofile->nfiducials = gwy_get_guint16_be(&p);
-    for (i = 0; i < G_N_ELEMENTS(mprofile->fiducials); i++)
-        mprofile->fiducials[i] = gwy_get_gfloat_be(&p);
-
-    mprofile->pixel_width = gwy_get_gfloat_be(&p);
-    mprofile->pixel_height = gwy_get_gfloat_be(&p);
-    mprofile->exit_pupil_diam = gwy_get_gfloat_be(&p);
-    mprofile->light_level_pct = gwy_get_gfloat_be(&p);
-    mprofile->coords_state = gwy_get_guint32_be(&p);
-    mprofile->xpos = gwy_get_gfloat_be(&p);
-    mprofile->ypos = gwy_get_gfloat_be(&p);
-    mprofile->zpos = gwy_get_gfloat_be(&p);
-    mprofile->xrot = gwy_get_gfloat_be(&p);
-    mprofile->yrot = gwy_get_gfloat_be(&p);
-    mprofile->zrot = gwy_get_gfloat_be(&p);
-    mprofile->coherence_mode = gwy_get_guint16_be(&p);
-    mprofile->surface_filter = gwy_get_guint16_be(&p);
-    get_CHARARRAY0(mprofile->sys_err_file, &p);
-    get_CHARARRAY0(mprofile->zoom_desc, &p);
-*/
-
-    mprofile->magic_number = gwy_get_gint32_be(&p);
-    mprofile->header_format = gwy_get_gint16_be(&p);
-    mprofile->header_size = gwy_get_gint32_be(&p);
-    mprofile->swinfo_type = gwy_get_gint16_be(&p);
-    get_CHARARRAY(mprofile->swinfo_date, &p);
-    mprofile->swinfo_vers_maj = gwy_get_gint16_be(&p);
-    mprofile->swinfo_vers_min = gwy_get_gint16_be(&p);
-    mprofile->swinfo_vers_bug = gwy_get_gint16_be(&p);
     mprofile->ac_org_x = gwy_get_gint16_be(&p);
     mprofile->ac_org_y = gwy_get_gint16_be(&p);
     mprofile->ac_width = gwy_get_gint16_be(&p);
     mprofile->ac_height = gwy_get_gint16_be(&p);
+    gwy_debug("INTENS xres: %d, yres: %d, xoff: %d, yoff: %d",
+              mprofile->ac_width, mprofile->ac_height,
+              mprofile->ac_org_x, mprofile->ac_org_y);
+
     mprofile->ac_n_buckets = gwy_get_gint16_be(&p);
     mprofile->ac_range = gwy_get_gint16_be(&p);
     mprofile->ac_n_bytes = gwy_get_gint32_be(&p);
+    gwy_debug("intens_nbytes: %d, expecting: %d",
+              mprofile->ac_n_bytes,
+              2*mprofile->ac_width*mprofile->ac_height*mprofile->ac_n_buckets);
+
     mprofile->cn_org_x = gwy_get_gint16_be(&p);
     mprofile->cn_org_y = gwy_get_gint16_be(&p);
     mprofile->cn_width = gwy_get_gint16_be(&p);
     mprofile->cn_height = gwy_get_gint16_be(&p);
+    gwy_debug("PHASE xres: %d, yres: %d, xoff: %d, yoff: %d",
+              mprofile->cn_width, mprofile->cn_height,
+              mprofile->cn_org_x, mprofile->cn_org_y);
+
     mprofile->cn_n_bytes = gwy_get_gint32_be(&p);
+    gwy_debug("phase_nbytes: %d, expecting: %d",
+              mprofile->cn_n_bytes,
+              4*mprofile->cn_width*mprofile->cn_height);
+
     mprofile->time_stamp = gwy_get_gint32_be(&p);
     get_CHARARRAY(mprofile->comment, &p);
+    gwy_debug("comment: %s", mprofile->comment);
+
     mprofile->source = gwy_get_gint16_be(&p);
     mprofile->intf_scale_factor = gwy_get_gfloat_be(&p);
     mprofile->wavelength_in = gwy_get_gfloat_be(&p);
@@ -637,6 +536,8 @@ mprofile_read_header1(const guchar *buffer,
     get_CHARARRAY(mprofile->wavelen_select, &p);
     mprofile->fda_res = gwy_get_gint16_be(&p);
     get_CHARARRAY(mprofile->scan_descr, &p);
+    gwy_debug("scan_description: %s", mprofile->scan_descr);
+
     mprofile->n_fiducials_a = gwy_get_gint16_be(&p);
     for (i = 0; i < G_N_ELEMENTS(mprofile->fiducials_a); i++)
         mprofile->fiducials_a[i] = gwy_get_gfloat_be(&p);
@@ -957,43 +858,40 @@ mprofile_get_metadata1(MProFile1 *mprofile)
                       mprofile->swinfo_date);
     store_meta_string(meta, "Comment",
                       mprofile->comment);
-#if 0
     store_meta_string(meta, "Objective name",
-                      mprofile->objective_name);
+                      mprofile->obj_name);
     store_meta_string(meta, "Part measured",
-                      mprofile->part_num);
+                      mprofile->part_name);
     store_meta_string(meta, "Part serial number",
                       mprofile->part_ser_num);
     store_meta_string(meta, "Description",
-                      mprofile->scan_description);
+                      mprofile->scan_descr);
     store_meta_string(meta, "System error file",
-                      mprofile->sys_err_file);
+                      mprofile->sys_err_file_name);
     store_meta_string(meta, "Zoom description",
-                      mprofile->zoom_desc);
+                      mprofile->zoom_descr);
     store_meta_string(meta, "Wavelength select",
-                      mprofile->wavelength_select);
+                      mprofile->wavelen_select);
 
     /* Misc */
-    HASH_STORE_ENUM("Software type", software_type, software_types);
+    HASH_STORE_ENUM("Software type", swinfo_type, software_types);
     HASH_STORE("Wavelength", "%g m", wavelength_in);
-    HASH_STORE("Intensity averages", "%d", intens_avgs);
-    HASH_STORE("Minimum modulation points", "%d", min_mod_pts);
-    HASH_STORE_ENUM("Automatic gain control", agc, yesno);
-    HASH_STORE_ENUM("Discontinuity action", discont_action, discont_actions);
-    HASH_STORE("Discontinuity filter", "%g %%", discont_filter);
-    HASH_STORE_ENUM("System type", system_type, system_types);
-    HASH_STORE("System board", "%d", system_board);
-    HASH_STORE("System serial", "%d", system_serial);
-    HASH_STORE("Instrument id", "%d", instrument_id);
-    HASH_STORE_ENUM("System error subtracted", subtract_sys_err, yesno);
-    HASH_STORE("Refractive index", "%g", refactive_index);
-    HASH_STORE_ENUM("Removed tilt bias", remove_tilt_bias, yesno);
-    HASH_STORE_ENUM("Removed fringes", remove_fringes, yesno);
+    HASH_STORE("Intensity averages", "%d", intens_avg_cnt);
+    HASH_STORE("Minimum modulation points", "%d", min_mod_count);
+    HASH_STORE_ENUM("Discontinuity action", discon_action, discont_actions);
+    HASH_STORE("Discontinuity filter", "%g %%", discon_filter);
+    HASH_STORE_ENUM("System type", sys_type, system_types);
+    HASH_STORE("System board", "%d", sys_board);
+    HASH_STORE("System serial", "%d", sys_serial);
+    HASH_STORE("Instrument id", "%d", inst_id);
+    HASH_STORE_ENUM("System error subtracted", sub_sys_err, yesno);
+    HASH_STORE("Refractive index", "%g", refractive_index);
+    HASH_STORE_ENUM("Removed tilt bias", rem_tilt_bias, yesno);
+    HASH_STORE_ENUM("Removed fringes", rem_fringes, yesno);
     HASH_STORE_ENUM("Wavelength folding", wavelength_fold, yesno);
 
     p = g_strdup_printf("%.2g", mprofile->min_mod/10.23);
     gwy_container_set_string_by_name(meta, "Minimum modulation", p);
-#endif
 
     return meta;
 }
