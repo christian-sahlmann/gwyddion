@@ -2,6 +2,9 @@
 Libraries:
 - libgwydgets: Igor Pro .itx graph ASCII export option was added.
 
+Modules:
+- Omicron: Value offsets in grid spectra were corrected.
+
 
 2.35 (2014-03-02)
 Application:
