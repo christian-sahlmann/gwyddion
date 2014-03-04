@@ -3,6 +3,7 @@ Libraries:
 - libgwydgets: Igor Pro .itx graph ASCII export option was added.
 
 Modules:
+- MetroPro: Files wiht header formats 2 and 3 are recognised and imported.
 - Omicron: Value offsets in grid spectra were corrected.
 
 
