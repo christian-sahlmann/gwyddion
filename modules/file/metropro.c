@@ -60,8 +60,7 @@
 #define MAGIC3 "\x88\x1b\x03\x71"
 #define MAGIC_SIZE (sizeof(MAGIC1) - 1)
 
-#define HEADER_SIZE1 834
-#define HEADER_SIZE2 834
+#define HEADER_SIZE12 834
 #define HEADER_SIZE3 4096
 
 typedef enum {
@@ -69,11 +68,11 @@ typedef enum {
     MPRO_PHASE_RES_HIGH   = 1,
 } MProPhaseResType;
 
-/* Corresponds to MAGIC1 */
+/* Corresponds to MAGIC1 and MAGIC2 */
 typedef struct {
-    gint magic_number;
-    gint header_format;
-    gint header_size;
+    guint magic_number;
+    guint header_format;
+    guint header_size;
     gint swinfo_type;
     gchar swinfo_date[30];
     gint swinfo_vers_maj;
@@ -81,16 +80,16 @@ typedef struct {
     gint swinfo_vers_bug;
     gint ac_org_x;
     gint ac_org_y;
-    gint ac_width;
-    gint ac_height;
-    gint ac_n_buckets;
+    guint ac_width;
+    guint ac_height;
+    guint ac_n_buckets;
     gint ac_range;
-    gint ac_n_bytes;
+    guint ac_n_bytes;
     gint cn_org_x;
     gint cn_org_y;
-    gint cn_width;
-    gint cn_height;
-    gint cn_n_bytes;
+    guint cn_width;
+    guint cn_height;
+    guint cn_n_bytes;
     gint time_stamp;
     gchar comment[82];
     gint source;
@@ -231,33 +230,29 @@ typedef struct {
     GwyDataField **intensity_mask;
     GwyDataField *phase_data;
     GwyDataField *phase_mask;
-} MProFile1;
+} MProFile12;
 
-static gboolean      module_register       (void);
-static gint          mprofile_detect       (const GwyFileDetectInfo *fileinfo,
-                                            gboolean only_name);
-static GwyContainer* mprofile_load         (const gchar *filename,
-                                            GwyRunType mode,
-                                            GError **error);
-static GwyContainer* mprofile_load1        (const gchar *filename,
-                                            const guchar *buffer,
-                                            gsize size,
-                                            GError **error);
-static GwyContainer* mprofile_load2        (const gchar *filename,
-                                            const guchar *buffer,
-                                            gsize size,
-                                            GError **error);
-static GwyContainer* mprofile_load3        (const gchar *filename,
-                                            const guchar *buffer,
-                                            gsize size,
-                                            GError **error);
-static gboolean      mprofile_read_header1 (const guchar *buffer,
-                                            gsize size,
-                                            MProFile1 *mprofile,
-                                            GError **error);
-static gint          fill_data_fields1     (MProFile1 *mprofile,
-                                            const guchar *buffer);
-static GwyContainer* mprofile_get_metadata1(MProFile1 *mprofile);
+static gboolean      module_register        (void);
+static gint          mprofile_detect        (const GwyFileDetectInfo *fileinfo,
+                                             gboolean only_name);
+static GwyContainer* mprofile_load          (const gchar *filename,
+                                             GwyRunType mode,
+                                             GError **error);
+static GwyContainer* mprofile_load12        (const gchar *filename,
+                                             const guchar *buffer,
+                                             gsize size,
+                                             GError **error);
+static GwyContainer* mprofile_load3         (const gchar *filename,
+                                             const guchar *buffer,
+                                             gsize size,
+                                             GError **error);
+static gboolean      mprofile_read_header12 (const guchar *buffer,
+                                             gsize size,
+                                             MProFile12 *mprofile,
+                                             GError **error);
+static gint          fill_data_fields12     (MProFile12 *mprofile,
+                                             const guchar *buffer);
+static GwyContainer* mprofile_get_metadata12(MProFile12 *mprofile);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -293,7 +288,7 @@ mprofile_detect(const GwyFileDetectInfo *fileinfo,
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, ".dat") ? 10 : 0;
 
-    if (fileinfo->buffer_len < HEADER_SIZE1)
+    if (fileinfo->buffer_len < HEADER_SIZE12)
         return 0;
 
     if (memcmp(fileinfo->head, MAGIC1, MAGIC_SIZE) == 0
@@ -322,9 +317,9 @@ mprofile_load(const gchar *filename,
     if (size < MAGIC_SIZE)
         err_TOO_SHORT(error);
     else if (memcmp(buffer, MAGIC1, MAGIC_SIZE) == 0)
-        container = mprofile_load1(filename, buffer, size, error);
+        container = mprofile_load12(filename, buffer, size, error);
     else if (memcmp(buffer, MAGIC2, MAGIC_SIZE) == 0)
-        container = mprofile_load2(filename, buffer, size, error);
+        container = mprofile_load12(filename, buffer, size, error);
     else if (memcmp(buffer, MAGIC3, MAGIC_SIZE) == 0)
         container = mprofile_load3(filename, buffer, size, error);
     else
@@ -336,10 +331,10 @@ mprofile_load(const gchar *filename,
 }
 
 static GwyContainer*
-mprofile_load1(const gchar *filename,
-               const guchar *buffer, gsize size, GError **error)
+mprofile_load12(const gchar *filename,
+                const guchar *buffer, gsize size, GError **error)
 {
-    MProFile1 mprofile;
+    MProFile12 mprofile;
     GwyContainer *meta, *container = NULL;
     GwyDataField *dfield = NULL, *vpmask = NULL;
     gsize expected;
@@ -347,7 +342,7 @@ mprofile_load1(const gchar *filename,
     const gchar *title;
     guint n, i;
 
-    if (!mprofile_read_header1(buffer, size, &mprofile, error))
+    if (!mprofile_read_header12(buffer, size, &mprofile, error))
         return NULL;
 
     expected = mprofile.header_size
@@ -356,7 +351,7 @@ mprofile_load1(const gchar *filename,
     if (err_SIZE_MISMATCH(error, expected, size, TRUE))
         return NULL;
 
-    n = fill_data_fields1(&mprofile, buffer);
+    n = fill_data_fields12(&mprofile, buffer);
     if (!n) {
         err_NO_DATA(error);
         return NULL;
@@ -384,7 +379,7 @@ mprofile_load1(const gchar *filename,
             gwy_container_set_object_by_name(container, key->str, vpmask);
         }
 
-        meta = mprofile_get_metadata1(&mprofile);
+        meta = mprofile_get_metadata12(&mprofile);
         g_string_printf(key, "/%d/meta", i);
         gwy_container_set_object_by_name(container, key->str, meta);
         g_object_unref(meta);
@@ -404,23 +399,24 @@ mprofile_load1(const gchar *filename,
 }
 
 static gboolean
-mprofile_read_header1(const guchar *buffer,
-                      gsize size,
-                      MProFile1 *mprofile,
-                      GError **error)
+mprofile_read_header12(const guchar *buffer,
+                       gsize size,
+                       MProFile12 *mprofile,
+                       GError **error)
 {
     const guchar *p;
     guint i;
 
-    if (size < HEADER_SIZE1 + 2) {
+    if (size < HEADER_SIZE12 + 2) {
         err_TOO_SHORT(error);
         return FALSE;
     }
 
     p = buffer;
-    mprofile->magic_number = gwy_get_gint32_be(&p);
-    mprofile->header_format = gwy_get_gint16_be(&p);
-    if (mprofile->header_format != 1) {
+    mprofile->magic_number = gwy_get_guint32_be(&p);
+    mprofile->header_format = gwy_get_guint16_be(&p);
+    if (mprofile->header_format != 1
+        && mprofile->header_format != 2) {
         err_UNSUPPORTED(error, "FormatVersion");
         return FALSE;
     }
@@ -454,28 +450,28 @@ mprofile_read_header1(const guchar *buffer,
 
     mprofile->ac_org_x = gwy_get_gint16_be(&p);
     mprofile->ac_org_y = gwy_get_gint16_be(&p);
-    mprofile->ac_width = gwy_get_gint16_be(&p);
-    mprofile->ac_height = gwy_get_gint16_be(&p);
+    mprofile->ac_width = gwy_get_guint16_be(&p);
+    mprofile->ac_height = gwy_get_guint16_be(&p);
     gwy_debug("INTENS xres: %d, yres: %d, xoff: %d, yoff: %d",
               mprofile->ac_width, mprofile->ac_height,
               mprofile->ac_org_x, mprofile->ac_org_y);
 
-    mprofile->ac_n_buckets = gwy_get_gint16_be(&p);
+    mprofile->ac_n_buckets = gwy_get_guint16_be(&p);
     mprofile->ac_range = gwy_get_gint16_be(&p);
-    mprofile->ac_n_bytes = gwy_get_gint32_be(&p);
+    mprofile->ac_n_bytes = gwy_get_guint32_be(&p);
     gwy_debug("intens_nbytes: %d, expecting: %d",
               mprofile->ac_n_bytes,
               2*mprofile->ac_width*mprofile->ac_height*mprofile->ac_n_buckets);
 
     mprofile->cn_org_x = gwy_get_gint16_be(&p);
     mprofile->cn_org_y = gwy_get_gint16_be(&p);
-    mprofile->cn_width = gwy_get_gint16_be(&p);
-    mprofile->cn_height = gwy_get_gint16_be(&p);
+    mprofile->cn_width = gwy_get_guint16_be(&p);
+    mprofile->cn_height = gwy_get_guint16_be(&p);
     gwy_debug("PHASE xres: %d, yres: %d, xoff: %d, yoff: %d",
               mprofile->cn_width, mprofile->cn_height,
               mprofile->cn_org_x, mprofile->cn_org_y);
 
-    mprofile->cn_n_bytes = gwy_get_gint32_be(&p);
+    mprofile->cn_n_bytes = gwy_get_guint32_be(&p);
     gwy_debug("phase_nbytes: %d, expecting: %d",
               mprofile->cn_n_bytes,
               4*mprofile->cn_width*mprofile->cn_height);
@@ -626,9 +622,9 @@ mprofile_read_header1(const guchar *buffer,
 }
 
 static void
-set_units1(GwyDataField *dfield,
-           const MProFile1 *mprofile,
-           const gchar *zunit)
+set_units12(GwyDataField *dfield,
+            const MProFile12 *mprofile,
+            const gchar *zunit)
 {
     GwySIUnit *siunit;
 
@@ -645,8 +641,8 @@ set_units1(GwyDataField *dfield,
 }
 
 static gint
-fill_data_fields1(MProFile1 *mprofile,
-                  const guchar *buffer)
+fill_data_fields12(MProFile12 *mprofile,
+                   const guchar *buffer)
 {
     GwyDataField *dfield, *vpmask;
     gdouble *data, *mask;
@@ -712,7 +708,7 @@ fill_data_fields1(MProFile1 *mprofile,
                 }
             }
 
-            set_units1(dfield, mprofile, "");
+            set_units12(dfield, mprofile, "");
             if (!gwy_app_channel_remove_bad_data(dfield, vpmask))
                 gwy_object_unref(vpmask);
 
@@ -771,7 +767,7 @@ fill_data_fields1(MProFile1 *mprofile,
             }
         }
 
-        set_units1(dfield, mprofile, "m");
+        set_units12(dfield, mprofile, "m");
         if (!gwy_app_channel_remove_bad_data(dfield, vpmask))
             gwy_object_unref(vpmask);
 
@@ -807,7 +803,7 @@ store_meta_string(GwyContainer *container,
 
 /* Quite incomplete... */
 static GwyContainer*
-mprofile_get_metadata1(MProFile1 *mprofile)
+mprofile_get_metadata12(MProFile12 *mprofile)
 {
     static const GwyEnum yesno[] = { { "No", 0, }, { "Yes", 1, } };
     static const GwyEnum software_types[] = {
@@ -846,6 +842,10 @@ mprofile_get_metadata1(MProFile1 *mprofile)
                         mprofile->swinfo_vers_min,
                         mprofile->swinfo_vers_bug);
     gwy_container_set_string_by_name(meta, "Version", p);
+
+    p = g_strdup_printf("%u (%08x)",
+                        mprofile->header_format, mprofile->magic_number);
+    gwy_container_set_string_by_name(meta, "Header format", p);
 
     /* Timestamp */
     tp = mprofile->time_stamp;
@@ -894,16 +894,6 @@ mprofile_get_metadata1(MProFile1 *mprofile)
     gwy_container_set_string_by_name(meta, "Minimum modulation", p);
 
     return meta;
-}
-
-static GwyContainer*
-mprofile_load2(const gchar *filename,
-               const guchar *buffer,
-               gsize size,
-               GError **error)
-{
-    err_UNSUPPORTED(error, "header_format");
-    return NULL;
 }
 
 static GwyContainer*
