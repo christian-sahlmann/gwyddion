@@ -25,6 +25,8 @@
  *   <comment>Zygo SPM data</comment>
  *   <magic priority="80">
  *     <match type="string" offset="0" value="\x88\x1b\x03\x6f"/>
+ *     <match type="string" offset="0" value="\x88\x1b\x03\x70"/>
+ *     <match type="string" offset="0" value="\x88\x1b\x03\x71"/>
  *   </magic>
  * </mime-type>
  **/
@@ -33,6 +35,8 @@
  * [FILE-MAGIC-FILEMAGIC]
  * # Zygo MetroPro
  * 0 belong 0x881b036f Zygo MetroPro surface profilometry data
+ * 0 belong 0x881b0370 Zygo MetroPro surface profilometry data
+ * 0 belong 0x881b0371 Zygo MetroPro surface profilometry data
  **/
 
 /**
@@ -41,7 +45,7 @@
  * .dat
  * Read
  **/
-#define DEBUG 1
+
 #include <string.h>
 #include <time.h>
 #include "config.h"
@@ -107,7 +111,7 @@ typedef struct {
     gdouble part_thickness;
     gint sw_llc;
     gdouble target_range;
-    gint rad_drv_veasure_eeq;
+    gint rad_crv_veasure_eeq;
     gint min_mod;
     gint min_mod_count;
     gint phase_res;
@@ -182,11 +186,11 @@ typedef struct {
     gdouble sph_dist_cal_radius;
     gint surface_type;
     gint ac_surface_type;
-    gdouble z_zosition;
-    gdouble power_rultiplier;
-    gdouble focus_sultiplier;
-    gdouble rad_drv_vocus_sal_lactor;
-    gdouble rad_drv_vower_ral_lactor;
+    gdouble z_position;
+    gdouble power_multiplier;
+    gdouble focus_multiplier;
+    gdouble rad_crv_vocus_sal_lactor;
+    gdouble rad_crv_vower_ral_lactor;
     gdouble ftp_left_pos;
     gdouble ftp_right_pos;
     gdouble ftp_pitch_pos;
@@ -588,7 +592,7 @@ mprofile_read_header(const guchar *buffer,
     mprofile->part_thickness = gwy_get_gfloat_be(&p);
     mprofile->sw_llc = gwy_get_gint16_be(&p);
     mprofile->target_range = gwy_get_gfloat_be(&p);
-    mprofile->rad_drv_veasure_eeq = gwy_get_gint16_le(&p);
+    mprofile->rad_crv_veasure_eeq = gwy_get_gint16_le(&p);
     mprofile->min_mod = gwy_get_gint32_be(&p);
     mprofile->min_mod_count = gwy_get_gint32_be(&p);
     mprofile->phase_res = gwy_get_gint16_be(&p);
@@ -666,11 +670,11 @@ mprofile_read_header(const guchar *buffer,
     mprofile->sph_dist_cal_radius = gwy_get_gfloat_le(&p);
     mprofile->surface_type = gwy_get_gint16_le(&p);
     mprofile->ac_surface_type = gwy_get_gint16_le(&p);
-    mprofile->z_zosition = gwy_get_gfloat_le(&p);
-    mprofile->power_rultiplier = gwy_get_gfloat_le(&p);
-    mprofile->focus_sultiplier = gwy_get_gfloat_le(&p);
-    mprofile->rad_drv_vocus_sal_lactor = gwy_get_gfloat_le(&p);
-    mprofile->rad_drv_vower_ral_lactor = gwy_get_gfloat_le(&p);
+    mprofile->z_position = gwy_get_gfloat_le(&p);
+    mprofile->power_multiplier = gwy_get_gfloat_le(&p);
+    mprofile->focus_multiplier = gwy_get_gfloat_le(&p);
+    mprofile->rad_crv_vocus_sal_lactor = gwy_get_gfloat_le(&p);
+    mprofile->rad_crv_vower_ral_lactor = gwy_get_gfloat_le(&p);
     mprofile->ftp_left_pos = gwy_get_gfloat_le(&p);
     mprofile->ftp_right_pos = gwy_get_gfloat_le(&p);
     mprofile->ftp_pitch_pos = gwy_get_gfloat_le(&p);
