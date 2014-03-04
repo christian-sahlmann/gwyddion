@@ -162,7 +162,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.11",
+    "0.12",
     "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2006",
 };
@@ -991,7 +991,7 @@ omicron_read_be_data(OmicronFile *ofile,
     gdouble xreal = channel->end - channel->start,
             q = (channel->max_phys - channel->min_phys)
                 /(channel->max_raw - channel->min_raw),
-            z0 = channel->min_phys;
+            z0 = channel->min_phys - q*channel->min_raw;
     GError *err = NULL;
     GwySIUnit *siunit = NULL, *coord_unit = NULL;
     GwySpectra *spectra = NULL;
