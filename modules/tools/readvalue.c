@@ -30,7 +30,7 @@
 #include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
 
-enum { RADIUS_MAX = 16 };
+enum { RADIUS_MAX = 32 };
 
 #define GWY_TYPE_TOOL_READ_VALUE            (gwy_tool_read_value_get_type())
 #define GWY_TOOL_READ_VALUE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_TOOL_READ_VALUE, GwyToolReadValue))
