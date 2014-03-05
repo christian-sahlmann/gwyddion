@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2007 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2007,2014 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -41,6 +41,16 @@ typedef struct _GwyToolReadValue      GwyToolReadValue;
 typedef struct _GwyToolReadValueClass GwyToolReadValueClass;
 
 typedef struct {
+    gdouble k1;
+    gdouble k2;
+    gdouble phi1;
+    gdouble phi2;
+    gdouble xc;
+    gdouble yc;
+    gdouble zc;
+} GwyCurvatureParams;
+
+typedef struct {
     gint radius;
     gboolean show_selection;
 } ToolArgs;
@@ -53,6 +63,8 @@ struct _GwyToolReadValue {
     gdouble avg;
     gdouble bx;
     gdouble by;
+    gdouble k1;
+    gdouble k2;
 
     gdouble *values;
     gint *xpos;
@@ -65,6 +77,8 @@ struct _GwyToolReadValue {
     GtkWidget *z;
     GtkWidget *theta;
     GtkWidget *phi;
+    GtkWidget *curv1;
+    GtkWidget *curv2;
     GtkObject *radius;
     GtkWidget *show_selection;
     GtkWidget *set_zero;
@@ -88,23 +102,31 @@ struct _GwyToolReadValueClass {
 
 static gboolean module_register(void);
 
-static GType gwy_tool_read_value_get_type             (void) G_GNUC_CONST;
-static void gwy_tool_read_value_finalize              (GObject *object);
-static void gwy_tool_read_value_init_dialog           (GwyToolReadValue *tool);
-static void gwy_tool_read_value_data_switched         (GwyTool *gwytool,
-                                                       GwyDataView *data_view);
-static void gwy_tool_read_value_update_units          (GwyToolReadValue *tool);
-static void gwy_tool_read_value_data_changed         (GwyPlainTool *plain_tool);
-static void gwy_tool_read_value_selection_changed     (GwyPlainTool *plain_tool,
-                                                       gint hint);
-static void gwy_tool_read_value_radius_changed        (GwyToolReadValue *tool);
-static void gwy_tool_read_value_show_selection_changed(GtkToggleButton *check,
-                                                       GwyToolReadValue *tool);
-static void gwy_tool_read_value_update_values         (GwyToolReadValue *tool);
-static void gwy_tool_read_value_calculate             (GwyToolReadValue *tool,
-                                                       gint col,
-                                                       gint row);
-static void gwy_tool_read_value_set_zero              (GwyToolReadValue *tool);
+static GType gwy_tool_read_value_get_type              (void)                      G_GNUC_CONST;
+static void  gwy_tool_read_value_finalize              (GObject *object);
+static void  gwy_tool_read_value_init_dialog           (GwyToolReadValue *tool);
+static void  gwy_tool_read_value_data_switched         (GwyTool *gwytool,
+                                                        GwyDataView *data_view);
+static void  gwy_tool_read_value_update_units          (GwyToolReadValue *tool);
+static void  gwy_tool_read_value_data_changed          (GwyPlainTool *plain_tool);
+static void  gwy_tool_read_value_selection_changed     (GwyPlainTool *plain_tool,
+                                                        gint hint);
+static void  gwy_tool_read_value_radius_changed        (GwyToolReadValue *tool);
+static void  gwy_tool_read_value_show_selection_changed(GtkToggleButton *check,
+                                                        GwyToolReadValue *tool);
+static void  gwy_tool_read_value_update_values         (GwyToolReadValue *tool);
+static void  gwy_tool_read_value_calculate             (GwyToolReadValue *tool,
+                                                        gint col,
+                                                        gint row);
+static void  gwy_tool_read_value_set_zero              (GwyToolReadValue *tool);
+static void  calc_curvatures                           (const gdouble *values,
+                                                        const gint *xpos,
+                                                        const gint *ypos,
+                                                        guint npts,
+                                                        gdouble dx,
+                                                        gdouble dy,
+                                                        gdouble *pc1,
+                                                        gdouble *pc2);
 
 static const gchar radius_key[]         = "/module/readvalue/radius";
 static const gchar show_selection_key[] = "/module/readvalue/show-selection";
@@ -114,7 +136,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Pointer tool, reads value under pointer."),
     "Yeti <yeti@gwyddion.net>",
-    "2.10",
+    "2.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -229,7 +251,7 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
     tips = gwy_app_get_tooltips();
 
-    table = GTK_TABLE(gtk_table_new(10, 3, FALSE));
+    table = GTK_TABLE(gtk_table_new(13, 3, FALSE));
     gtk_table_set_col_spacings(table, 6);
     gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -322,6 +344,31 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
     tool->phi = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(tool->phi), 1.0, 0.5);
     gtk_table_attach(table, tool->phi,
+                     2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_set_row_spacing(table, row, 8);
+    row++;
+
+    gtk_table_attach(table, gwy_label_new_header(_("Curvatures")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new(_("Curvature 1"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+    tool->curv1 = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(tool->curv1), 1.0, 0.5);
+    gtk_table_attach(table, tool->curv1,
+                     2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new(_("Curvature 2"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+    tool->curv2 = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(tool->curv2), 1.0, 0.5);
+    gtk_table_attach(table, tool->curv2,
                      2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
@@ -505,6 +552,22 @@ update_label(GwySIValueFormat *units,
 }
 
 static void
+update_curvature_label(GtkWidget *label, gdouble value,
+                       GwyDataField *dfield)
+{
+    GwySIUnit *unit = gwy_data_field_get_si_unit_xy(dfield);
+    GwySIUnit *curvunit = gwy_si_unit_power(unit, -1, NULL);
+    GwySIValueFormat *vf;
+
+    vf = gwy_si_unit_get_format_with_digits(curvunit,
+                                            GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                            value, 3, NULL);
+    update_label(vf, label, value);
+    gwy_si_unit_value_format_free(vf);
+    g_object_unref(curvunit);
+}
+
+static void
 update_label_unc(GwySIValueFormat *units,
              GtkWidget *label,
              gdouble value,
@@ -557,25 +620,31 @@ gwy_tool_read_value_update_values(GwyToolReadValue *tool)
     update_label(tool->pixel_format, tool->ypx, row);
     gwy_tool_read_value_calculate(tool, col, row);
 
-    if (tool->has_calibration) /*FIXME, use local plane fitting and uncertainty propagation*/
-          update_label_unc(plain_tool->value_format, 
-                           tool->z, 
-                           tool->avg, 
-                           gwy_data_field_get_dval_real(tool->zunc, 
-                                                        point[0], 
-                                                        point[1], 
+    /*FIXME, use local plane fitting and uncertainty propagation*/
+    if (tool->has_calibration)
+          update_label_unc(plain_tool->value_format,
+                           tool->z,
+                           tool->avg,
+                           gwy_data_field_get_dval_real(tool->zunc,
+                                                        point[0],
+                                                        point[1],
                                                         GWY_INTERPOLATION_BILINEAR));
-    else update_label(plain_tool->value_format, tool->z, tool->avg);
+    else
+        update_label(plain_tool->value_format, tool->z, tool->avg);
 
     if (tool->same_units) {
         update_label(tool->angle_format, tool->theta,
                      180.0/G_PI*atan(hypot(tool->bx, tool->by)));
         update_label(tool->angle_format, tool->phi,
                      180.0/G_PI*atan2(tool->by, tool->bx));
+        update_curvature_label(tool->curv1, tool->k1, plain_tool->data_field);
+        update_curvature_label(tool->curv2, tool->k2, plain_tool->data_field);
     }
     else {
         gtk_label_set_text(GTK_LABEL(tool->theta), _("N.A."));
         gtk_label_set_text(GTK_LABEL(tool->phi), _("N.A."));
+        gtk_label_set_text(GTK_LABEL(tool->curv1), _("N.A."));
+        gtk_label_set_text(GTK_LABEL(tool->curv2), _("N.A."));
     }
 }
 
@@ -596,6 +665,7 @@ gwy_tool_read_value_calculate(GwyToolReadValue *tool,
         tool->avg = gwy_data_field_get_val(dfield, col, row);
         tool->bx = gwy_data_field_get_xder(dfield, col, row);
         tool->by = gwy_data_field_get_yder(dfield, col, row);
+        tool->k1 = tool->k2 = 0.0;
         return;
     }
 
@@ -613,6 +683,8 @@ gwy_tool_read_value_calculate(GwyToolReadValue *tool,
                                                       tool->xpos, tool->ypos);
     tool->avg = 0.0;
     if (!n) {
+        tool->bx = tool->by = 0.0;
+        tool->k1 = tool->k2 = 0.0;
         g_warning("Z average calculated from an empty area");
         return;
     }
@@ -638,6 +710,11 @@ gwy_tool_read_value_calculate(GwyToolReadValue *tool,
      * and then invert both for downward slopes.  As a result x is inverted. */
     tool->bx = -z[1]/gwy_data_field_get_xmeasure(dfield);
     tool->by = z[2]/gwy_data_field_get_ymeasure(dfield);
+
+    calc_curvatures(tool->values, tool->xpos, tool->ypos, n,
+                    gwy_data_field_get_xmeasure(dfield),
+                    gwy_data_field_get_ymeasure(dfield),
+                    &tool->k1, &tool->k2);
 }
 
 static void
@@ -656,6 +733,179 @@ gwy_tool_read_value_set_zero(GwyToolReadValue *tool)
     gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
     gwy_data_field_add(plain_tool->data_field, -tool->avg);
     gwy_data_field_data_changed(plain_tool->data_field);
+}
+
+static gdouble
+standardize_direction(gdouble phi)
+{
+    phi = fmod(phi, G_PI);
+    if (phi <= -G_PI/2.0)
+        phi += G_PI;
+    if (phi > G_PI/2.0)
+        phi -= G_PI;
+    return phi;
+}
+
+static guint
+calc_quadratic_curvatue(GwyCurvatureParams *curvature,
+                        gdouble a, gdouble bx, gdouble by,
+                        gdouble cxx, gdouble cxy, gdouble cyy)
+{
+    /* At least one quadratic term */
+    gdouble cm = cxx - cyy;
+    gdouble cp = cxx + cyy;
+    gdouble phi = 0.5*atan2(cxy, cm);
+    gdouble cx = cp + hypot(cm, cxy);
+    gdouble cy = cp - hypot(cm, cxy);
+    gdouble bx1 = bx*cos(phi) + by*sin(phi);
+    gdouble by1 = -bx*sin(phi) + by*cos(phi);
+    guint degree = 2;
+    gdouble xc, yc;
+
+    /* Eliminate linear terms */
+    if (fabs(cx) < 1e-10*fabs(cy)) {
+        /* Only y quadratic term */
+        xc = 0.0;
+        yc = -by1/cy;
+        degree = 1;
+    }
+    else if (fabs(cy) < 1e-10*fabs(cx)) {
+        /* Only x quadratic term */
+        xc = -bx1/cx;
+        yc = 0.0;
+        degree = 1;
+    }
+    else {
+        /* Two quadratic terms */
+        xc = -bx1/cx;
+        yc = -by1/cy;
+    }
+
+    curvature->xc = xc*cos(phi) - yc*sin(phi);
+    curvature->yc = xc*sin(phi) + yc*cos(phi);
+    curvature->zc = a + xc*bx1 + yc*by1 + 0.5*(xc*xc*cx + yc*yc*cy);
+
+    if (cx > cy) {
+        GWY_SWAP(gdouble, cx, cy);
+        phi += G_PI/2.0;
+    }
+
+    curvature->k1 = cx;
+    curvature->k2 = cy;
+    curvature->phi1 = phi;
+    curvature->phi2 = phi + G_PI/2.0;
+
+    return degree;
+}
+
+static guint
+math_curvature_at_origin(const gdouble *coeffs,
+                         GwyCurvatureParams *curvature)
+{
+    gdouble a = coeffs[0], bx = coeffs[1], by = coeffs[2],
+            cxx = coeffs[3], cxy = coeffs[4], cyy = coeffs[5];
+    gdouble b, beta;
+    guint degree;
+
+    /* Eliminate the mixed term */
+    if (fabs(cxx) + fabs(cxy) + fabs(cyy) <= 1e-10*(fabs(bx) + fabs(by))) {
+        /* Linear gradient */
+        gwy_clear(curvature, 1);
+        curvature->phi2 = G_PI/2.0;
+        curvature->zc = a;
+        return 0;
+    }
+
+    b = hypot(bx, by);
+    beta = atan2(by, bx);
+    if (b > 1e-10) {
+        gdouble cosbeta = bx/b,
+                sinbeta = by/b,
+                cbeta2 = cosbeta*cosbeta,
+                sbeta2 = sinbeta*sinbeta,
+                csbeta = cosbeta*sinbeta,
+                qb = hypot(1.0, b);
+        gdouble cxx1 = (cxx*cbeta2 + cxy*csbeta + cyy*sbeta2)/(qb*qb*qb),
+                cxy1 = (2.0*(cyy - cxx)*csbeta + cxy*(cbeta2 - sbeta2))/(qb*qb),
+                cyy1 = (cyy*cbeta2 - cxy*csbeta + cxx*sbeta2)/qb;
+        cxx = cxx1;
+        cxy = cxy1;
+        cyy = cyy1;
+    }
+    else
+        beta = 0.0;
+
+    degree = calc_quadratic_curvatue(curvature, a, 0, 0, cxx, cxy, cyy);
+
+    curvature->phi1 = standardize_direction(curvature->phi1 + beta);
+    curvature->phi2 = standardize_direction(curvature->phi2 + beta);
+    // This should already hold approximately.  Enforce it exactly.
+    curvature->xc = curvature->yc = 0.0;
+    curvature->zc = a;
+
+    return degree;
+}
+
+static void
+calc_curvatures(const gdouble *values,
+                const gint *xpos, const gint *ypos,
+                guint npts,
+                gdouble dx, gdouble dy,
+                gdouble *pc1,
+                gdouble *pc2)
+{
+    gdouble sx2 = 0.0, sy2 = 0.0, sx4 = 0.0, sx2y2 = 0.0, sy4 = 0.0;
+    gdouble sz = 0.0, szx = 0.0, szy = 0.0, szx2 = 0.0, szxy = 0.0, szy2 = 0.0;
+    gdouble scale = sqrt(dx*dy)*4.0;
+    gdouble a[21], b[6];
+    gint i, n = 0;
+    GwyCurvatureParams params;
+
+    for (i = 0; i < npts; i++) {
+        gdouble x = xpos[i]*dx/scale;
+        gdouble y = ypos[i]*dy/scale;
+        gdouble z = values[i]/scale;
+        gdouble xx = x*x, yy = y*y;
+
+        sx2 += xx;
+        sx2y2 += xx*yy;
+        sy2 += yy;
+        sx4 += xx*xx;
+        sy4 += yy*yy;
+
+        sz += z;
+        szx += x*z;
+        szy += y*z;
+        szx2 += xx*z;
+        szxy += x*y*z;
+        szy2 += yy*z;
+        n++;
+    }
+
+    gwy_clear(a, 21);
+    a[0] = n;
+    a[2] = a[6] = sx2;
+    a[5] = a[15] = sy2;
+    a[18] = a[14] = sx2y2;
+    a[9] = sx4;
+    a[20] = sy4;
+    if (gwy_math_choleski_decompose(6, a)) {
+        b[0] = sz;
+        b[1] = szx;
+        b[2] = szy;
+        b[3] = szx2;
+        b[4] = szxy;
+        b[5] = szy2;
+        gwy_math_choleski_solve(6, a, b);
+    }
+    else {
+        *pc1 = *pc2 = 0.0;
+        return;
+    }
+
+    math_curvature_at_origin(b, &params);
+    *pc1 = params.k1/scale;
+    *pc2 = params.k2/scale;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
