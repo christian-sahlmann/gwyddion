@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-03-02 13:05+0100\n"
-"PO-Revision-Date: 2014-02-26 20:38+0100\n"
+"POT-Creation-Date: 2014-03-06 03:59+0100\n"
+"PO-Revision-Date: 2014-03-06 21:38+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -368,11 +368,11 @@ msgstr "Position y du centre du cercle circonscrit minimal"
 msgid "Mean radius"
 msgstr "Rayon moyen"
 
-#: libprocess/gwygrainvalue.c:339 modules/tools/readvalue.c:308
+#: libprocess/gwygrainvalue.c:339 modules/tools/readvalue.c:330
 msgid "Inclination θ"
 msgstr "Inclinaison θ"
 
-#: libprocess/gwygrainvalue.c:348 modules/tools/readvalue.c:318
+#: libprocess/gwygrainvalue.c:348 modules/tools/readvalue.c:340
 msgid "Inclination φ"
 msgstr "Inclinaison φ"
 
@@ -388,11 +388,11 @@ msgstr "Position y du centre de courbure"
 msgid "Curvature center z value"
 msgstr "Valeur z du centre de courbure"
 
-#: libprocess/gwygrainvalue.c:384
+#: libprocess/gwygrainvalue.c:384 modules/tools/readvalue.c:355
 msgid "Curvature 1"
 msgstr "Courbure 1"
 
-#: libprocess/gwygrainvalue.c:393
+#: libprocess/gwygrainvalue.c:393 modules/tools/readvalue.c:365
 msgid "Curvature 2"
 msgstr "Courbure 2"
 
@@ -408,13 +408,13 @@ msgstr "Angle de courbure 2"
 msgid "Id"
 msgstr "Identifiant"
 
-#: libprocess/gwygrainvalue.c:1055 modules/tools/readvalue.c:240
+#: libprocess/gwygrainvalue.c:1055 modules/tools/readvalue.c:262
 msgid "Position"
 msgstr "Position"
 
 #: libprocess/gwygrainvalue.c:1056 app/meta.c:381
 #: modules/process/curvature.c:745 modules/tools/level3.c:456
-#: modules/tools/readvalue.c:275
+#: modules/tools/readvalue.c:297
 msgid "Value"
 msgstr "Valeur"
 
@@ -2838,7 +2838,7 @@ msgstr "Hauteur :"
 msgid "Value units:"
 msgstr "Unités :"
 
-#: modules/file/asciiexport.c:263 modules/graph/graph_export_ascii.c:112
+#: modules/file/asciiexport.c:263 modules/graph/graph_export_ascii.c:113
 msgid "Export Text"
 msgstr "Exporter au format texte"
 
@@ -3802,19 +3802,15 @@ msgstr "La balise invalide de type %u prétend être constitués de %u octets."
 msgid "Decompression of compressed variable failed with error %d."
 msgstr "La décompression d'une variable compressée a échoué avec l'erreur %d."
 
-#: modules/file/metropro.c:182
+#: modules/file/metropro.c:338
 msgid "Imports binary MetroPro (Zygo) data files."
 msgstr "Importe les fichiers binaires MetroPro (Zygo)."
 
-#: modules/file/metropro.c:195
+#: modules/file/metropro.c:351
 msgid "MetroPro files (.dat)"
 msgstr "MetroPro (.dat)"
 
-#: modules/file/metropro.c:332
-msgid "File header is too short."
-msgstr "L'en-tête de fichier est trop court."
-
-#: modules/file/metropro.c:337
+#: modules/file/metropro.c:531
 msgid "File header is larger than file."
 msgstr "L'en-tête de fichier est plus grand que le fichier."
 
@@ -5880,8 +5876,9 @@ msgstr "Il faut sélectionner plus de points que de paramètres d'ajustement"
 
 #: modules/graph/graph_cd.c:710 modules/graph/graph_fdfit.c:798
 #: modules/graph/graph_fit.c:842 modules/process/fit_2d.c:405
-#: modules/tools/grainmeasure.c:216 modules/tools/readvalue.c:577
-#: modules/tools/readvalue.c:578 modules/tools/roughness.c:959
+#: modules/tools/grainmeasure.c:216 modules/tools/readvalue.c:644
+#: modules/tools/readvalue.c:645 modules/tools/readvalue.c:646
+#: modules/tools/readvalue.c:647 modules/tools/roughness.c:959
 #: modules/tools/stats.c:667 modules/tools/stats.c:678
 #: modules/tools/stats.c:679 modules/tools/stats.c:1055
 #: modules/tools/stats.c:1062 modules/tools/stats.c:1064
@@ -5981,31 +5978,35 @@ msgstr "Valeurs séparées par des virgules"
 msgid "Origin friendly"
 msgstr "Compatible Origin"
 
-#: modules/graph/graph_export_ascii.c:71
+#: modules/graph/graph_export_ascii.c:58
+msgid "Igor Pro text wave"
+msgstr "Igor Pro wave texte"
+
+#: modules/graph/graph_export_ascii.c:72
 msgid "Exports graph data to text files."
 msgstr "Exporte le graphe dans un fichier texte."
 
-#: modules/graph/graph_export_ascii.c:85
+#: modules/graph/graph_export_ascii.c:86
 msgid "/Export _Text..."
 msgstr "/Exporter au format _texte..."
 
-#: modules/graph/graph_export_ascii.c:88
+#: modules/graph/graph_export_ascii.c:89
 msgid "Export graph data to a text file"
 msgstr "Exporter le graphe dans un fichier texte"
 
-#: modules/graph/graph_export_ascii.c:127
+#: modules/graph/graph_export_ascii.c:128
 msgid "POSIX _number format"
 msgstr "_Nombre au format POSIX"
 
-#: modules/graph/graph_export_ascii.c:133
+#: modules/graph/graph_export_ascii.c:134
 msgid "Export _labels"
 msgstr "Exporter les _labels"
 
-#: modules/graph/graph_export_ascii.c:139
+#: modules/graph/graph_export_ascii.c:140
 msgid "Export _units"
 msgstr "Exporter les _unités"
 
-#: modules/graph/graph_export_ascii.c:145
+#: modules/graph/graph_export_ascii.c:146
 msgid "Export _metadata"
 msgstr "Exporter les _métadonnées"
 
@@ -11162,7 +11163,7 @@ msgstr "Mise à niveau par 3 points"
 msgid "Level data by fitting a plane through three points"
 msgstr "Met à niveaux les données en ajustant un plan grâce à 3 points"
 
-#: modules/tools/level3.c:239 modules/tools/readvalue.c:339
+#: modules/tools/level3.c:239 modules/tools/readvalue.c:386
 msgid "_Averaging radius:"
 msgstr "R_ayon de moyennage :"
 
@@ -11504,31 +11505,35 @@ msgstr "Z inc. limite basse %d"
 msgid "calib-data|None"
 msgstr "Aucune"
 
-#: modules/tools/readvalue.c:115
+#: modules/tools/readvalue.c:137
 msgid "Pointer tool, reads value under pointer."
 msgstr "Outil de pointage, lit la valeur sous le pointeur."
 
-#: modules/tools/readvalue.c:148
+#: modules/tools/readvalue.c:170
 msgid "Read Value"
 msgstr "Lire la valeur"
 
-#: modules/tools/readvalue.c:149
+#: modules/tools/readvalue.c:171
 msgid "Read value under mouse cursor"
 msgstr "Lire la valeur sous le curseur"
 
-#: modules/tools/readvalue.c:293
+#: modules/tools/readvalue.c:315
 msgid "Set _Zero"
 msgstr "Mise à zéro"
 
-#: modules/tools/readvalue.c:296
+#: modules/tools/readvalue.c:318
 msgid "Shift plane z=0 to pass through the selected point"
 msgstr "Déplace le plan z=0 de manière à passer par les points sélectionnés"
 
-#: modules/tools/readvalue.c:304
+#: modules/tools/readvalue.c:326
 msgid "Facet"
 msgstr "Facette"
 
-#: modules/tools/readvalue.c:346
+#: modules/tools/readvalue.c:351
+msgid "Curvatures"
+msgstr "Courbures"
+
+#: modules/tools/readvalue.c:393
 msgid "Show _selection"
 msgstr "Montrer la _sélection"
 
@@ -12162,7 +12167,6 @@ msgid "w"
 msgstr "w"
 
 #: modules/volume/volume_extract.c:774
-#, fuzzy
 msgid "Brick graph"
 msgstr "Graphe d'un cube de données"
 
@@ -12205,6 +12209,9 @@ msgstr "/_Inverser les valeurs"
 #: modules/volume/volume_invert.c:69
 msgid "Invert value in volume data"
 msgstr "Inverser les valeurs dans les données volumiques"
+
+#~ msgid "File header is too short."
+#~ msgstr "L'en-tête de fichier est trop court."
 
 #~ msgid "Top-level element is not ‘TiffTagDescData’."
 #~ msgstr "L'élément de premier niveau n'est pas ‘TiffTagDescData’."
