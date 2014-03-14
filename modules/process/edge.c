@@ -104,6 +104,8 @@ static void     sobel_do       (GwyDataField *dfield,
                                 GwyDataField *show);
 static void     prewitt_do     (GwyDataField *dfield,
                                 GwyDataField *show);
+static void     slope_map      (GwyContainer *data,
+                                GwyRunType run);
 
 static void zero_crossing                      (GwyContainer *data,
                                                 GwyRunType run);
@@ -152,7 +154,7 @@ static GwyModuleInfo module_info = {
     N_("Several edge detection methods (Laplacian of Gaussian, Canny, "
        "and some experimental), creates presentation."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.13",
+    "1.14",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -246,15 +248,6 @@ module_register(void)
                               EDGE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Prewitt edge presentation"));
-    /*
-    gwy_process_func_register("edge_local_maxima",
-                              (GwyProcessFunc)&edge,
-                              N_("/_Presentation/_Edge Detection/Local _Maxima"),
-                              NULL,
-                              EDGE_RUN_MODES,
-                              GWY_MENU_FLAG_DATA,
-                              N_("Local maxima presentation presentation"));
-                              */
     gwy_process_func_register("edge_zero_crossing",
                               (GwyProcessFunc)&zero_crossing,
                               N_("/_Presentation/_Edge Detection/_Zero Crossing..."),
@@ -262,6 +255,13 @@ module_register(void)
                               EDGE_UI_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Zero crossing step detection presentation"));
+    gwy_process_func_register("slope_map",
+                              (GwyProcessFunc)&slope_map,
+                              N_("/_Integral Transforms/Local Slope"),
+                              NULL,
+                              EDGE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("First derivative slope transformation"));
 
     return TRUE;
 }
@@ -571,54 +571,65 @@ prewitt_do(GwyDataField *dfield, GwyDataField *show)
     gwy_data_field_filter_prewitt_total(show);
 }
 
-/*
 static void
-local_maxima_do(GwyDataField *dfield, GwyDataField *show)
+slope_map(GwyContainer *data, GwyRunType run)
 {
-    static const gdouble r = 3.5;
-    gint xres, yres, i, j, size, rr;
-    gint *xp, *yp;
-    gdouble *d, *z;
+    GwyDataField *dfield, *sfield;
+    GwySIUnit *xyunit, *zunit;
+    gint oldid, newid;
+    gint xres, yres, i, j;
+    gdouble dx, dy;
+    const gdouble *d;
+    gdouble *sdata;
+
+    g_return_if_fail(run & EDGE_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &oldid,
+                                     0);
+    g_return_if_fail(dfield);
+
+    sfield = gwy_data_field_new_alike(dfield, FALSE);
+    xyunit = gwy_data_field_get_si_unit_xy(sfield);
+    zunit = gwy_data_field_get_si_unit_z(sfield);
+    gwy_si_unit_divide(zunit, xyunit, zunit);
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
-    d = gwy_data_field_get_data(show);
-    rr = (gint)ceil(r);
+    dx = gwy_data_field_get_xmeasure(dfield);
+    dy = gwy_data_field_get_ymeasure(dfield);
+    d = gwy_data_field_get_data_const(dfield);
+    sdata = gwy_data_field_get_data(sfield);
 
-    size = gwy_data_field_get_circular_area_size(r);
-    z = g_new(gdouble, size);
-    xp = g_new(gint, 2*size);
-    yp = xp + size;
     for (i = 0; i < yres; i++) {
+        const gdouble *row = d + i*xres, *prev = row - xres, *next = row + xres;
         for (j = 0; j < xres; j++) {
-            gdouble s1, s2, s3, x;
-            gint k, n;
+            gdouble xd, yd;
 
-            if (j < rr || j + rr > xres || i < rr || i + rr > yres) {
-                d[i*xres + j] = 0.0;
-                continue;
-            }
+            if (!j)
+                xd = row[j + 1] - row[j];
+            else if (j == xres-1)
+                xd = row[j] - row[j - 1];
+            else
+                xd = (row[j + 1] - row[j - 1])/2;
 
-            n = gwy_data_field_circular_area_extract_with_pos(dfield, j, i, r,
-                                                              z, xp, yp);
-            s1 = s2 = s3 = 0.0;
-            for (k = 0; k < n; k++) {
-                x = 2.0*xp[k];
-                s1 += z[k]*(1.0 - x*x);
-                x = xp[k] + GWY_SQRT3*yp[k];
-                s2 += z[k]*(1.0 - x*x);
-                x = xp[k] - GWY_SQRT3*yp[k];
-                s3 += z[k]*(1.0 - x*x);
-            }
-            x = s1 + s2 + s3;
-            x = (s1*s1 + s2*s2 + s3*s3) - x*x/3.0;
-            d[i*xres + j] = sqrt(x);
+            if (!i)
+                yd = next[j] - row[j];
+            else if (i == yres-1)
+                yd = row[j] - prev[j];
+            else
+                yd = (next[j] - prev[j])/2;
+
+            xd /= dx;
+            yd /= dy;
+            sdata[i*xres + j] = sqrt(xd*xd + yd*yd);
         }
     }
-    g_free(xp);
-    g_free(z);
+
+    newid = gwy_app_data_browser_add_data_field(sfield, data, TRUE);
+    gwy_app_set_data_field_title(data, newid, _("Slope map"));
+    gwy_app_channel_log_add(data, oldid, newid, "proc::slope_map", NULL);
+    g_object_unref(sfield);
 }
-*/
 
 static void
 zero_crossing(GwyContainer *data, GwyRunType run)
