@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-03-02 13:05+0100\n"
-"PO-Revision-Date: 2014-02-23 10:30+0300\n"
+"POT-Creation-Date: 2014-03-16 03:58+0100\n"
+"PO-Revision-Date: 2014-03-16 17:32+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -371,11 +371,11 @@ msgstr "Положение центра по y минимальной описа
 msgid "Mean radius"
 msgstr "Средний радиус"
 
-#: libprocess/gwygrainvalue.c:339 modules/tools/readvalue.c:308
+#: libprocess/gwygrainvalue.c:339 modules/tools/readvalue.c:330
 msgid "Inclination θ"
 msgstr "Наклон θ"
 
-#: libprocess/gwygrainvalue.c:348 modules/tools/readvalue.c:318
+#: libprocess/gwygrainvalue.c:348 modules/tools/readvalue.c:340
 msgid "Inclination φ"
 msgstr "Наклон φ"
 
@@ -391,11 +391,11 @@ msgstr "Положение центра кривизны по y"
 msgid "Curvature center z value"
 msgstr "Значение центра кривизны по z"
 
-#: libprocess/gwygrainvalue.c:384
+#: libprocess/gwygrainvalue.c:384 modules/tools/readvalue.c:355
 msgid "Curvature 1"
 msgstr "Кривизна 1"
 
-#: libprocess/gwygrainvalue.c:393
+#: libprocess/gwygrainvalue.c:393 modules/tools/readvalue.c:365
 msgid "Curvature 2"
 msgstr "Кривизна 2"
 
@@ -411,13 +411,13 @@ msgstr "Угол кривизны 2"
 msgid "Id"
 msgstr "Идентификатор"
 
-#: libprocess/gwygrainvalue.c:1055 modules/tools/readvalue.c:240
+#: libprocess/gwygrainvalue.c:1055 modules/tools/readvalue.c:262
 msgid "Position"
 msgstr "Позиция"
 
 #: libprocess/gwygrainvalue.c:1056 app/meta.c:381
 #: modules/process/curvature.c:745 modules/tools/level3.c:456
-#: modules/tools/readvalue.c:275
+#: modules/tools/readvalue.c:297
 msgid "Value"
 msgstr "Значение"
 
@@ -867,7 +867,7 @@ msgstr "точек"
 #: modules/process/curvature.c:605 modules/process/cwt.c:135
 #: modules/process/deposit_synth.c:359 modules/process/drift.c:240
 #: modules/process/dwt.c:166 modules/process/dwtanisotropy.c:184
-#: modules/process/edge.c:673 modules/process/extend.c:199
+#: modules/process/edge.c:684 modules/process/extend.c:199
 #: modules/process/facet-level.c:285 modules/process/facet_analysis.c:275
 #: modules/process/fft.c:283 modules/process/fft_filter_2d.c:447
 #: modules/process/fft_synth.c:353 modules/process/fractal.c:207
@@ -2845,7 +2845,7 @@ msgstr "Высота:"
 msgid "Value units:"
 msgstr "Единицы измерения:"
 
-#: modules/file/asciiexport.c:263 modules/graph/graph_export_ascii.c:112
+#: modules/file/asciiexport.c:263 modules/graph/graph_export_ascii.c:113
 msgid "Export Text"
 msgstr "Экспортировать текст"
 
@@ -3786,19 +3786,15 @@ msgstr "Неверный короткий тег типа %u претендуе�
 msgid "Decompression of compressed variable failed with error %d."
 msgstr "Распаковка сжатой переменной закончилась с ошибкой %d."
 
-#: modules/file/metropro.c:182
+#: modules/file/metropro.c:338
 msgid "Imports binary MetroPro (Zygo) data files."
 msgstr "Импортирует двоичные файлы данных MetroPro (Zygo)."
 
-#: modules/file/metropro.c:195
+#: modules/file/metropro.c:351
 msgid "MetroPro files (.dat)"
 msgstr "Файлы MetroPro (.dat)"
 
-#: modules/file/metropro.c:332
-msgid "File header is too short."
-msgstr "Заголовок файла слишком короткий."
-
-#: modules/file/metropro.c:337
+#: modules/file/metropro.c:531
 msgid "File header is larger than file."
 msgstr "Заголовок файла больше, чем сам файл."
 
@@ -4847,7 +4843,7 @@ msgstr "Предустановки"
 #: modules/process/arithmetic.c:236 modules/process/calcoefs_view.c:333
 #: modules/process/convolution_filter.c:246
 #: modules/process/deposit_synth.c:684 modules/process/drift.c:237
-#: modules/process/edge.c:670 modules/process/fft_filter_1d.c:198
+#: modules/process/edge.c:681 modules/process/fft_filter_1d.c:198
 #: modules/process/grain_edge.c:215 modules/process/grain_mark.c:261
 #: modules/process/grain_rem_threshold.c:226 modules/process/grain_wshed.c:180
 #: modules/process/mark_with.c:211 modules/process/polydistort.c:213
@@ -5848,8 +5844,9 @@ msgstr ""
 
 #: modules/graph/graph_cd.c:710 modules/graph/graph_fdfit.c:798
 #: modules/graph/graph_fit.c:842 modules/process/fit_2d.c:405
-#: modules/tools/grainmeasure.c:216 modules/tools/readvalue.c:577
-#: modules/tools/readvalue.c:578 modules/tools/roughness.c:959
+#: modules/tools/grainmeasure.c:216 modules/tools/readvalue.c:644
+#: modules/tools/readvalue.c:645 modules/tools/readvalue.c:646
+#: modules/tools/readvalue.c:647 modules/tools/roughness.c:959
 #: modules/tools/stats.c:667 modules/tools/stats.c:678
 #: modules/tools/stats.c:679 modules/tools/stats.c:1055
 #: modules/tools/stats.c:1062 modules/tools/stats.c:1064
@@ -5949,31 +5946,35 @@ msgstr "Значения, разделённые запятыми"
 msgid "Origin friendly"
 msgstr "Совместимый с Origin"
 
-#: modules/graph/graph_export_ascii.c:71
+#: modules/graph/graph_export_ascii.c:58
+msgid "Igor Pro text wave"
+msgstr "Igor Pro text wave"
+
+#: modules/graph/graph_export_ascii.c:72
 msgid "Exports graph data to text files."
 msgstr "Экспортирует графические данные в текстовые файлы."
 
-#: modules/graph/graph_export_ascii.c:85
+#: modules/graph/graph_export_ascii.c:86
 msgid "/Export _Text..."
 msgstr "/Экспортировать _текст..."
 
-#: modules/graph/graph_export_ascii.c:88
+#: modules/graph/graph_export_ascii.c:89
 msgid "Export graph data to a text file"
 msgstr "Экспортировать графические данные в текстовый файл"
 
-#: modules/graph/graph_export_ascii.c:127
+#: modules/graph/graph_export_ascii.c:128
 msgid "POSIX _number format"
 msgstr "Формат _чисел POSIX"
 
-#: modules/graph/graph_export_ascii.c:133
+#: modules/graph/graph_export_ascii.c:134
 msgid "Export _labels"
 msgstr "Экспорт _меток"
 
-#: modules/graph/graph_export_ascii.c:139
+#: modules/graph/graph_export_ascii.c:140
 msgid "Export _units"
 msgstr "Экспорт _единиц измерения"
 
-#: modules/graph/graph_export_ascii.c:145
+#: modules/graph/graph_export_ascii.c:146
 msgid "Export _metadata"
 msgstr "Экспорт мета_данных"
 
@@ -6728,7 +6729,7 @@ msgid "Crop to actual data"
 msgstr "Обрезать до действительных данных"
 
 #: modules/process/calcoefs_view.c:584 modules/process/deposit_synth.c:688
-#: modules/process/edge.c:750 modules/process/fft_filter_1d.c:334
+#: modules/process/edge.c:761 modules/process/fft_filter_1d.c:334
 #: modules/process/grain_edge.c:286 modules/process/grain_mark.c:378
 #: modules/process/grain_rem_threshold.c:372 modules/process/mark_with.c:355
 #: modules/process/polydistort.c:335 modules/process/scars.c:582
@@ -7503,7 +7504,7 @@ msgstr "Порог отношения X/Y:"
 msgid "Low level exclude limit:"
 msgstr "Предел исключения низкого уровня:"
 
-#: modules/process/edge.c:152
+#: modules/process/edge.c:154
 msgid ""
 "Several edge detection methods (Laplacian of Gaussian, Canny, and some "
 "experimental), creates presentation."
@@ -7511,135 +7512,147 @@ msgstr ""
 "Несколько методов обнаружения границ (лапласиан гауссианов, Канни и "
 "несколько экспериментальных), создают презентации."
 
-#: modules/process/edge.c:167
+#: modules/process/edge.c:169
 msgid "/_Presentation/_Edge Detection/_Laplacian of Gaussian"
 msgstr "/_Презентации/Поиск _края/_Лапласиан гауссианов"
 
-#: modules/process/edge.c:171
+#: modules/process/edge.c:173
 msgid "Laplacian of Gaussian step detection presentation"
 msgstr "Презентация \"Лапласиан гауссианов\" для нахождения ступеней."
 
-#: modules/process/edge.c:175
+#: modules/process/edge.c:177
 msgid "/_Presentation/_Edge Detection/_Canny"
 msgstr "/_Презентации/Поиск _края/_Канни"
 
-#: modules/process/edge.c:179
+#: modules/process/edge.c:181
 msgid "Canny edge detection presentation"
 msgstr "Презентация поиска краёв Канни"
 
-#: modules/process/edge.c:182
+#: modules/process/edge.c:184
 msgid "/_Presentation/_Edge Detection/_RMS"
 msgstr "/_Презентации/Поиск _края/_Среднеквадратичное отклонение"
 
-#: modules/process/edge.c:186
+#: modules/process/edge.c:188
 msgid "Local RMS value based step detection presentation"
 msgstr ""
 "Презентация поиска кромок по локальному значению среднеквадратичного "
 "отклонения"
 
-#: modules/process/edge.c:190
+#: modules/process/edge.c:192
 msgid "/_Presentation/_Edge Detection/RMS _Edge"
 msgstr "/_Презентации/Поиск _края/Кромка среднеквадратичного _отклонения"
 
-#: modules/process/edge.c:194
+#: modules/process/edge.c:196
 msgid "Local RMS value based step detection with postprocessing"
 msgstr ""
 "Обнаружение кромки по локальному значению среднеквадратичного отклонения с "
 "постобработкой"
 
-#: modules/process/edge.c:198
+#: modules/process/edge.c:200
 msgid "/_Presentation/_Edge Detection/Local _Nonlinearity"
 msgstr "/_Презентации/Поиск _края/Локальная _нелинейность"
 
-#: modules/process/edge.c:202
+#: modules/process/edge.c:204
 msgid "Local nonlinearity based edge detection presentation"
 msgstr "Презентация поиска краёв по локальной нелинейности"
 
-#: modules/process/edge.c:206
+#: modules/process/edge.c:208
 msgid "/_Presentation/_Edge Detection/_Hough Lines"
 msgstr "/_Презентации/Поиск _края/Линии _Хафа"
 
-#: modules/process/edge.c:211
+#: modules/process/edge.c:213
 msgid "Hough lines presentation"
 msgstr "Презентация линии Хафа"
 
-#: modules/process/edge.c:214
+#: modules/process/edge.c:216
 msgid "/_Presentation/_Edge Detection/_Harris Corner"
 msgstr "/_Презентации/Поиск _края/_Угол Харриса"
 
-#: modules/process/edge.c:219
+#: modules/process/edge.c:221
 msgid "Harris corner presentation"
 msgstr "Презентация угол Харриса"
 
-#: modules/process/edge.c:222
+#: modules/process/edge.c:224
 msgid "/_Presentation/_Edge Detection/_Inclination"
 msgstr "/_Презентации/Поиск _края/Н_аклон"
 
-#: modules/process/edge.c:226
+#: modules/process/edge.c:228
 msgid "Local inclination visualization presentation"
 msgstr "Презентация \"визуализация локального наклона\""
 
-#: modules/process/edge.c:230
+#: modules/process/edge.c:232
 msgid "/_Presentation/_Edge Detection/_Step"
 msgstr "/_Презентация/Поиск к_раёв/С_тупень"
 
-#: modules/process/edge.c:234
+#: modules/process/edge.c:236
 msgid "Fine step detection presentation"
 msgstr "Презентация поиска малых ступеней"
 
-#: modules/process/edge.c:237
+#: modules/process/edge.c:239
 msgid "/_Presentation/_Edge Detection/_Sobel"
 msgstr "/_Презентация/Поиск к_раёв/Со_бел"
 
-#: modules/process/edge.c:241
+#: modules/process/edge.c:243
 msgid "Sobel edge presentation"
 msgstr "Презентация \"градиент Собела\""
 
-#: modules/process/edge.c:244
+#: modules/process/edge.c:246
 msgid "/_Presentation/_Edge Detection/_Prewitt"
 msgstr "/_Презентация/Поиск к_раёв/П_ревитт"
 
-#: modules/process/edge.c:248
+#: modules/process/edge.c:250
 msgid "Prewitt edge presentation"
 msgstr "Презентация \"градиент Превитта\""
 
-#: modules/process/edge.c:260
+#: modules/process/edge.c:253
 msgid "/_Presentation/_Edge Detection/_Zero Crossing..."
 msgstr "/_Презентации/Поиск _края/_Пересечение нуля..."
 
-#: modules/process/edge.c:264
+#: modules/process/edge.c:257
 msgid "Zero crossing step detection presentation"
 msgstr "презенация \"Обнаружение ступени по пересечению нуля\""
 
-#: modules/process/edge.c:667
+#: modules/process/edge.c:260
+msgid "/_Integral Transforms/Local Slope"
+msgstr "/_Интегральные преобразования/Локальный уклон"
+
+#: modules/process/edge.c:264
+msgid "First derivative slope transformation"
+msgstr "Преобразование уклона (первые производные)"
+
+#: modules/process/edge.c:629
+msgid "Slope map"
+msgstr "Карта уклонов"
+
+#: modules/process/edge.c:678
 msgid "Zero Crossing Step Detection"
 msgstr "Обнаружение ступени по пересечению нуля"
 
-#: modules/process/edge.c:717
+#: modules/process/edge.c:728
 msgid "_Gaussian FWHM:"
 msgstr "Ширина на половине высоты _гауссиан:"
 
-#: modules/process/edge.c:726
+#: modules/process/edge.c:737
 msgid "_Threshold:"
 msgstr "_Пороговое значение:"
 
-#: modules/process/edge.c:726
+#: modules/process/edge.c:737
 msgid "NRMS"
 msgstr "ср. квадр. в окр."
 
-#: modules/process/edge.c:733
+#: modules/process/edge.c:744
 msgid "verb|Display"
 msgstr "Показать"
 
-#: modules/process/edge.c:742 modules/process/fft_filter_2d.c:401
+#: modules/process/edge.c:753 modules/process/fft_filter_2d.c:401
 msgid "Original _image"
 msgstr "Исходное _изображение"
 
-#: modules/process/edge.c:743
+#: modules/process/edge.c:754
 msgid "_LoG convolved"
 msgstr "_ЛГ после свёртки"
 
-#: modules/process/edge.c:744
+#: modules/process/edge.c:755
 msgid "Detected st_ep"
 msgstr "Найденная с_тупень"
 
@@ -11125,7 +11138,7 @@ msgstr "Выравнивание по трём точкам"
 msgid "Level data by fitting a plane through three points"
 msgstr "Выровнять данные построив плоскость по трём точкам"
 
-#: modules/tools/level3.c:239 modules/tools/readvalue.c:339
+#: modules/tools/level3.c:239 modules/tools/readvalue.c:386
 msgid "_Averaging radius:"
 msgstr "Радиус _усреднения:"
 
@@ -11462,31 +11475,35 @@ msgstr "Нижняя граница погрешности Z %d"
 msgid "calib-data|None"
 msgstr "Нет"
 
-#: modules/tools/readvalue.c:115
+#: modules/tools/readvalue.c:137
 msgid "Pointer tool, reads value under pointer."
 msgstr "Инструмент указатель, считывает данные под указателем."
 
-#: modules/tools/readvalue.c:148
+#: modules/tools/readvalue.c:170
 msgid "Read Value"
 msgstr "Считать значение"
 
-#: modules/tools/readvalue.c:149
+#: modules/tools/readvalue.c:171
 msgid "Read value under mouse cursor"
 msgstr "Считать значение под курсором мыши."
 
-#: modules/tools/readvalue.c:293
+#: modules/tools/readvalue.c:315
 msgid "Set _Zero"
 msgstr "Установить _нуль"
 
-#: modules/tools/readvalue.c:296
+#: modules/tools/readvalue.c:318
 msgid "Shift plane z=0 to pass through the selected point"
 msgstr "Сдвигает плоскость z=0 так, чтобы она проходила через выбранную точку"
 
-#: modules/tools/readvalue.c:304
+#: modules/tools/readvalue.c:326
 msgid "Facet"
 msgstr "Грань"
 
-#: modules/tools/readvalue.c:346
+#: modules/tools/readvalue.c:351
+msgid "Curvatures"
+msgstr "Кривизна"
+
+#: modules/tools/readvalue.c:393
 msgid "Show _selection"
 msgstr "Показать _выбор"
 
@@ -12162,6 +12179,9 @@ msgstr "/_Инвертировать значение"
 #: modules/volume/volume_invert.c:69
 msgid "Invert value in volume data"
 msgstr "Инвертирует значения в объёмных данных"
+
+#~ msgid "File header is too short."
+#~ msgstr "Заголовок файла слишком короткий."
 
 #~ msgid "Top-level element is not ‘TiffTagDescData’."
 #~ msgstr "Элемент верхнего уровня не ‘TiffTagDescData’."
