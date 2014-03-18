@@ -166,17 +166,15 @@ zeiss_load_tiff(const GwyTIFF *tiff, GError **error)
     /* Read the comment header. */
     if (new_file) {
         hash = parse_comment(comment);
-        if (!(value = g_hash_table_lookup(hash, "Pixel Size"))) {
-            err_MISSING_FIELD(error, "Pixel Size");
-            goto fail;
-        }
-
-        if (g_hash_table_lookup(hash, "Image Pixel Size")) {
-            value = g_hash_table_lookup(hash, "Image Pixel Size");
+        if ((value = g_hash_table_lookup(hash, "Image Pixel Size"))) {
             gwy_debug("Using dx from Image Pixel Size: %s", value);
         }
-        else {
+        else if ((value = g_hash_table_lookup(hash, "Pixel Size"))) {
             gwy_debug("Using dx from Pixel Size: %s", value);
+        }
+        else {
+            err_MISSING_FIELD(error, "Pixel Size");
+            goto fail;
         }
     }
     else {
