@@ -409,6 +409,9 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
          *  without losing values that get outside of the datafield
          */
         ccfield = gwy_data_field_new_alike(dfield, FALSE);
+        gwy_data_field_set_xreal(ccfield, header.yreal);
+        gwy_data_field_set_yreal(ccfield, header.xreal);
+
         gwy_data_field_resample(ccfield,
                                 header.yres,
                                 header.xres,
