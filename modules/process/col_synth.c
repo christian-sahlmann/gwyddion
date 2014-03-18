@@ -37,7 +37,7 @@
 #define COL_SYNTH_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
-    PREVIEW_SIZE = 240,
+    PREVIEW_SIZE = 400,
 };
 
 enum {
@@ -191,7 +191,6 @@ col_synth(GwyContainer *data, GwyRunType run)
     GwyDimensionArgs dimsargs;
     GwyDataField *dfield;
     GQuark quark;
-    gboolean dorun;
     gint id;
 
     g_return_if_fail(run & COL_SYNTH_RUN_MODES);
@@ -571,49 +570,6 @@ preview_gsource(gpointer user_data)
 }
 
 static void
-extend(GwyDataField *source,
-       GwyDataField *dest)
-{
-    guint sxres, syres, dxres, dyres, i, j, ii, jj, ext_up, ext_left;
-    const gdouble *sdata;
-    gdouble *ddata;
-
-    sxres = gwy_data_field_get_xres(source);
-    syres = gwy_data_field_get_yres(source);
-    dxres = gwy_data_field_get_xres(dest);
-    dyres = gwy_data_field_get_yres(dest);
-    sdata = gwy_data_field_get_data_const(source);
-    ddata = gwy_data_field_get_data(dest);
-    ext_left = (dxres - sxres)/2;
-    ext_up = (dyres - syres)/2;
-
-    for (i = 0; i < dxres; i++) {
-        const gdouble *srow;
-        gdouble *drow;
-
-        if (i < ext_up)
-            ii = ext_up-1 - i;
-        else if (i >= sxres + ext_up)
-            ii = 2*sxres-1 + ext_up - i;
-        else
-            ii = i - ext_up;
-
-        srow = sdata + ii*sxres;
-        drow = ddata + i*dxres;
-        for (j = 0; j < sxres; j++) {
-            if (j < ext_left)
-                jj = ext_left-1 - j;
-            else if (j >= sxres + ext_left)
-                jj = 2*sxres-1 + ext_left - j;
-            else
-                jj = j - ext_left;
-
-            drow[j] = srow[jj];
-        }
-    }
-}
-
-static void
 preview(ColSynthControls *controls)
 {
     ColSynthArgs *args = controls->args;
@@ -638,22 +594,18 @@ col_synth_do(const ColSynthArgs *args,
              GwyDataField *dfield)
 {
     GwyDataField *workspace;
-    gint fxres, fyres, xres, yres, xext, yext;
+    gint xres, yres;
     gulong npart, ip;
     gdouble zmax;
     GRand *rng;
 
-    fxres = gwy_data_field_get_xres(dfield);
-    fyres = gwy_data_field_get_yres(dfield);
-    xext = fxres/8 + 16;
-    yext = fyres/8 + 16;
-    xres = fxres + 2*xext;
-    yres = fyres + 2*yext;
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
 
-    workspace = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
-    extend(dfield, workspace);
+    workspace = gwy_data_field_duplicate(dfield);
+    gwy_data_field_add(workspace, -gwy_data_field_get_max(workspace));
+    zmax = 0.0;
 
-    zmax = gwy_data_field_get_max(workspace);
     npart = args->coverage * xres*yres;
     g_printerr("Generating %lu particles.\n", npart);
 
@@ -663,11 +615,12 @@ col_synth_do(const ColSynthArgs *args,
     for (ip = 0; ip < npart; ip++) {
         gdouble theta, phi, x, y, z;
 
-        theta = G_PI/2.0*g_rand_double(rng);
+        //theta = 0.95*G_PI/2.0*sqrt(g_rand_double(rng));
+        theta = (0.18*g_rand_double(rng) + 0.80)*G_PI/2.0;
         phi = 2.0*G_PI*g_rand_double(rng);
         x = xres*g_rand_double(rng);
         y = yres*g_rand_double(rng);
-        z = zmax + 1.0;
+        z = zmax + 50.0;
 
         col_synth_trace(workspace, x, y, z, theta, phi, 1.0, &zmax);
 
@@ -675,9 +628,7 @@ col_synth_do(const ColSynthArgs *args,
             g_printerr("%lu %g\n", ip, zmax);
     }
 
-    gwy_data_field_area_copy(workspace, dfield,
-                             xext, yext, fxres, fyres, 0, 0);
-
+    gwy_data_field_copy(workspace, dfield, FALSE);
     g_object_unref(workspace);
 }
 
@@ -1026,9 +977,9 @@ col_synth_trace(GwyDataField *dfield,
                 gdouble *zmax)
 {
     gdouble kx, ky, kz;
-    guint i, j, k, xres, yres;
+    gint i, j, k1, k2, k, xres, yres;
     gdouble xnew, ynew, znew;
-    guint inew, jnew, iold, jold;
+    gint inew, jnew, iold, jold;
     gdouble *data;
 
     xres = gwy_data_field_get_xres(dfield);
@@ -1037,10 +988,10 @@ col_synth_trace(GwyDataField *dfield,
 
     kx = cos(phi);
     ky = sin(phi);
-    kz = -1.0/tan(theta);
+    kz = -1.0/tan(fmax(theta, 1e-18));
 
-    jnew = jold = floor(x);
-    inew = iold = floor(y);
+    jnew = jold = (gint)floor(x);
+    inew = iold = (gint)floor(y);
 
     do {
         i = inew;
@@ -1048,26 +999,44 @@ col_synth_trace(GwyDataField *dfield,
         xnew = x + 0.4*kx;
         ynew = y + 0.4*ky;
         znew = z + 0.4*kz;
-        jnew = floor(xnew);
-        inew = floor(ynew);
+        jnew = (gint)floor(xnew);
+        inew = (gint)floor(ynew);
         if (jnew != j || inew != i) {
-            if (jnew >= xres || inew >= yres)
-                return FALSE;
-            iold = i;
+            if (jnew < 0) {
+                xnew += xres;
+                jnew += xres;
+            }
+            else if (jnew >= xres) {
+                xnew -= xres;
+                jnew -= xres;
+            }
+
+            if (inew < 0) {
+                ynew += yres;
+                inew += yres;
+            }
+            else if (inew >= yres) {
+                ynew -= yres;
+                inew -= yres;
+            }
+
             jold = j;
+            iold = i;
         }
+
         x = xnew;
         y = ynew;
         z = znew;
     } while (z > data[inew*xres + jnew]);
 
-    /*
-    if (z < data[inew*xres + jnew] - size)
-        k = i*xres + j;
+    /* Relaxation.  This is important as it prevents exponential growth of
+     * spikes with periodic boundary conditions. */
+    k1 = iold*xres + jold;
+    k2 = inew*xres + jnew;
+    if (data[k2] < data[k1])
+        k = k2;
     else
-        k = inew*xres + jnew;
-        */
-    k = iold*xres + jold;
+        k = k1;
 
     data[k] += size;
     if (data[k] > *zmax)
