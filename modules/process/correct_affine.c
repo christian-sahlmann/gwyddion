@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2013 David Necas (Yeti).
+ *  Copyright (C) 2013-2014 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -106,6 +106,7 @@ typedef struct {
     GtkWidget *scaling;
     GwySIValueFormat *vf;
     GwySIValueFormat *vfphi;
+    /* Actual */
     GtkWidget *a1_x;
     GtkWidget *a1_y;
     GtkWidget *a1_len;
@@ -117,6 +118,8 @@ typedef struct {
     GtkWidget *phi;
     GtkWidget *refine;
     GtkWidget *preset;
+    gdouble xy[4];
+    /* Correct (wanted) */
     GtkWidget *a1_corr;
     GtkWidget *different_lengths;
     GtkWidget *a2_corr;
@@ -141,6 +144,10 @@ static GtkWidget* add_lattice_entry        (GtkTable *table,
                                             guint flags,
                                             gint *row,
                                             GwySIValueFormat *vf);
+static void       a1_changed_manually      (GtkEntry *entry,
+                                            AffcorControls *controls);
+static void       a2_changed_manually      (GtkEntry *entry,
+                                            AffcorControls *controls);
 static void       init_selection           (GwySelection *selection,
                                             GwyDataField *dfield);
 static void       image_mode_changed       (GtkToggleButton *button,
@@ -382,13 +389,13 @@ affcor_dialog(AffcorArgs *args,
     controls.vf
         = gwy_data_field_get_value_format_xy(dfield,
                                              GWY_SI_UNIT_FORMAT_MARKUP, NULL);
-    controls.vf->precision++;
+    controls.vf->precision += 2;
 
     unitphi = gwy_si_unit_new("deg");
     controls.vfphi
         = gwy_si_unit_get_format_with_resolution(unitphi,
                                                  GWY_SI_UNIT_FORMAT_MARKUP,
-                                                 180.0, 0.1, NULL);
+                                                 180.0, 0.01, NULL);
     g_object_unref(unitphi);
 
     lattable = make_lattice_table(&controls);
@@ -547,7 +554,7 @@ finalize:
 static GtkWidget*
 make_lattice_table(AffcorControls *controls)
 {
-    GtkWidget *table, *label, *button;
+    GtkWidget *table, *label, *button, *entry;
     GString *str = g_string_new(NULL);
 
     table = gtk_table_new(4, 5, FALSE);
@@ -589,21 +596,37 @@ make_lattice_table(AffcorControls *controls)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2, GTK_FILL, 0, 0, 0);
 
-    controls->a1_x = label = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 1, 2, GTK_FILL, 0, 0, 0);
+    controls->a1_x = entry = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(entry), 8);
+    g_object_set_data(G_OBJECT(entry), "id", (gpointer)"x");
+    gwy_widget_set_activate_on_unfocus(entry, TRUE);
+    gtk_table_attach(GTK_TABLE(table), entry, 1, 2, 1, 2, GTK_FILL, 0, 0, 0);
+    g_signal_connect(entry, "activate",
+                     G_CALLBACK(a1_changed_manually), controls);
 
-    controls->a1_y = label = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 2, 3, 1, 2, GTK_FILL, 0, 0, 0);
+    controls->a1_y = entry = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(entry), 8);
+    g_object_set_data(G_OBJECT(entry), "id", (gpointer)"y");
+    gwy_widget_set_activate_on_unfocus(entry, TRUE);
+    gtk_table_attach(GTK_TABLE(table), entry, 2, 3, 1, 2, GTK_FILL, 0, 0, 0);
+    g_signal_connect(entry, "activate",
+                     G_CALLBACK(a1_changed_manually), controls);
 
-    controls->a1_len = label = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 3, 4, 1, 2, GTK_FILL, 0, 0, 0);
+    controls->a1_len = entry = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(entry), 8);
+    g_object_set_data(G_OBJECT(entry), "id", (gpointer)"len");
+    gwy_widget_set_activate_on_unfocus(entry, TRUE);
+    gtk_table_attach(GTK_TABLE(table), entry, 3, 4, 1, 2, GTK_FILL, 0, 0, 0);
+    g_signal_connect(entry, "activate",
+                     G_CALLBACK(a1_changed_manually), controls);
 
-    controls->a1_phi = label = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 4, 5, 1, 2, GTK_FILL, 0, 0, 0);
+    controls->a1_phi = entry = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(entry), 8);
+    g_object_set_data(G_OBJECT(entry), "id", (gpointer)"phi");
+    gwy_widget_set_activate_on_unfocus(entry, TRUE);
+    gtk_table_attach(GTK_TABLE(table), entry, 4, 5, 1, 2, GTK_FILL, 0, 0, 0);
+    g_signal_connect(entry, "activate",
+                     G_CALLBACK(a1_changed_manually), controls);
 
     /* a2 */
     label = gtk_label_new(NULL);
@@ -611,21 +634,37 @@ make_lattice_table(AffcorControls *controls)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 2, 3, GTK_FILL, 0, 0, 0);
 
-    controls->a2_x = label = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 2, 3, GTK_FILL, 0, 0, 0);
+    controls->a2_x = entry = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(entry), 8);
+    g_object_set_data(G_OBJECT(entry), "id", (gpointer)"x");
+    gwy_widget_set_activate_on_unfocus(entry, TRUE);
+    gtk_table_attach(GTK_TABLE(table), entry, 1, 2, 2, 3, GTK_FILL, 0, 0, 0);
+    g_signal_connect(entry, "activate",
+                     G_CALLBACK(a2_changed_manually), controls);
 
-    controls->a2_y = label = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 2, 3, 2, 3, GTK_FILL, 0, 0, 0);
+    controls->a2_y = entry = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(entry), 8);
+    g_object_set_data(G_OBJECT(entry), "id", (gpointer)"y");
+    gwy_widget_set_activate_on_unfocus(entry, TRUE);
+    gtk_table_attach(GTK_TABLE(table), entry, 2, 3, 2, 3, GTK_FILL, 0, 0, 0);
+    g_signal_connect(entry, "activate",
+                     G_CALLBACK(a2_changed_manually), controls);
 
-    controls->a2_len = label = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 3, 4, 2, 3, GTK_FILL, 0, 0, 0);
+    controls->a2_len = entry = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(entry), 8);
+    g_object_set_data(G_OBJECT(entry), "id", (gpointer)"len");
+    gwy_widget_set_activate_on_unfocus(entry, TRUE);
+    gtk_table_attach(GTK_TABLE(table), entry, 3, 4, 2, 3, GTK_FILL, 0, 0, 0);
+    g_signal_connect(entry, "activate",
+                     G_CALLBACK(a2_changed_manually), controls);
 
-    controls->a2_phi = label = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 4, 5, 2, 3, GTK_FILL, 0, 0, 0);
+    controls->a2_phi = entry = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(entry), 8);
+    g_object_set_data(G_OBJECT(entry), "id", (gpointer)"phi");
+    gwy_widget_set_activate_on_unfocus(entry, TRUE);
+    gtk_table_attach(GTK_TABLE(table), entry, 4, 5, 2, 3, GTK_FILL, 0, 0, 0);
+    g_signal_connect(entry, "activate",
+                     G_CALLBACK(a2_changed_manually), controls);
 
     /* phi */
     label = gtk_label_new(NULL);
@@ -682,6 +721,78 @@ add_lattice_entry(GtkTable *table,
     (*row)++;
 
     return entry;
+}
+
+static void
+a1_changed_manually(GtkEntry *entry,
+                    AffcorControls *controls)
+{
+    GwySIValueFormat *vf = controls->vf;
+    gdouble x, y, len, phi;
+    const gchar *id, *text;
+    gdouble value;
+
+    id = g_object_get_data(G_OBJECT(entry), "id");
+    text = gtk_entry_get_text(GTK_ENTRY(entry));
+    value = g_strtod(text, NULL);
+
+    x = controls->xy[0];
+    y = -controls->xy[1];
+    len = hypot(x, y);
+    phi = atan2(y, x);
+    if (gwy_strequal(id, "x"))
+        controls->xy[0] = vf->magnitude * value;
+    else if (gwy_strequal(id, "y"))
+        controls->xy[1] = vf->magnitude * -value;
+    else if (gwy_strequal(id, "len")) {
+        controls->xy[0] = vf->magnitude * value * cos(phi);
+        controls->xy[1] = vf->magnitude * value * -sin(phi);
+    }
+    else if (gwy_strequal(id, "phi")) {
+        phi = G_PI/180.0 * value;
+        controls->xy[0] = len * cos(phi);
+        controls->xy[1] = len * -sin(phi);
+    }
+
+    /* This actually recalculates everything.  But it does not activate
+     * entries so we will not recurse. */
+    gwy_selection_set_data(controls->selection, 1, controls->xy);
+}
+
+static void
+a2_changed_manually(GtkEntry *entry,
+                    AffcorControls *controls)
+{
+    GwySIValueFormat *vf = controls->vf;
+    gdouble x, y, len, phi;
+    const gchar *id, *text;
+    gdouble value;
+
+    id = g_object_get_data(G_OBJECT(entry), "id");
+    text = gtk_entry_get_text(GTK_ENTRY(entry));
+    value = g_strtod(text, NULL);
+
+    x = controls->xy[2];
+    y = -controls->xy[3];
+    len = hypot(x, y);
+    phi = atan2(y, x);
+    if (gwy_strequal(id, "x"))
+        controls->xy[2] = vf->magnitude * value;
+    else if (gwy_strequal(id, "y"))
+        controls->xy[3] = vf->magnitude * -value;
+    else if (gwy_strequal(id, "len")) {
+        controls->xy[2] = vf->magnitude * value * cos(phi);
+        controls->xy[3] = vf->magnitude * value * -sin(phi);
+    }
+    else if (gwy_strequal(id, "phi")) {
+        phi = G_PI/180.0 * value;
+        controls->xy[2] = len * cos(phi);
+        controls->xy[3] = len * -sin(phi);
+    }
+
+    /* This actually recalculates everything.  But it does not activate
+     * entries so we will not recurse. */
+    gwy_selection_set_data(controls->selection, 1, controls->xy);
 }
 
 static void
@@ -882,7 +993,7 @@ selection_changed(AffcorControls *controls)
     GwyDataField *dfield;
     gdouble xy[4];
     gdouble a1, a2, phi1, phi2, phi;
-    guint flags;
+    guint flags, i;
     GString *str = g_string_new(NULL);
 
     if (!gwy_selection_get_data(controls->selection, NULL)) {
@@ -893,38 +1004,40 @@ selection_changed(AffcorControls *controls)
     }
 
     gwy_selection_get_object(controls->selection, 0, xy);
+    for (i = 0; i < 4; i++)
+        controls->xy[i] = xy[i];
 
     vf = controls->vf;
     g_string_printf(str, "%.*f", vf->precision, xy[0]/vf->magnitude);
-    gtk_label_set_text(GTK_LABEL(controls->a1_x), str->str);
+    gtk_entry_set_text(GTK_ENTRY(controls->a1_x), str->str);
 
     g_string_printf(str, "%.*f", vf->precision, -xy[1]/vf->magnitude);
-    gtk_label_set_text(GTK_LABEL(controls->a1_y), str->str);
+    gtk_entry_set_text(GTK_ENTRY(controls->a1_y), str->str);
 
     a1 = hypot(xy[0], xy[1]);
     g_string_printf(str, "%.*f", vf->precision, a1/vf->magnitude);
-    gtk_label_set_text(GTK_LABEL(controls->a1_len), str->str);
+    gtk_entry_set_text(GTK_ENTRY(controls->a1_len), str->str);
 
     vf = controls->vfphi;
     phi1 = atan2(-xy[1], xy[0]);
     g_string_printf(str, "%.*f", vf->precision, 180.0/G_PI*phi1/vf->magnitude);
-    gtk_label_set_text(GTK_LABEL(controls->a1_phi), str->str);
+    gtk_entry_set_text(GTK_ENTRY(controls->a1_phi), str->str);
 
     vf = controls->vf;
     g_string_printf(str, "%.*f", vf->precision, xy[2]/vf->magnitude);
-    gtk_label_set_text(GTK_LABEL(controls->a2_x), str->str);
+    gtk_entry_set_text(GTK_ENTRY(controls->a2_x), str->str);
 
     g_string_printf(str, "%.*f", vf->precision, -xy[3]/vf->magnitude);
-    gtk_label_set_text(GTK_LABEL(controls->a2_y), str->str);
+    gtk_entry_set_text(GTK_ENTRY(controls->a2_y), str->str);
 
     a2 = hypot(xy[2], xy[3]);
     g_string_printf(str, "%.*f", vf->precision, a2/vf->magnitude);
-    gtk_label_set_text(GTK_LABEL(controls->a2_len), str->str);
+    gtk_entry_set_text(GTK_ENTRY(controls->a2_len), str->str);
 
     vf = controls->vfphi;
     phi2 = atan2(-xy[3], xy[2]);
     g_string_printf(str, "%.*f", vf->precision, 180.0/G_PI*phi2/vf->magnitude);
-    gtk_label_set_text(GTK_LABEL(controls->a2_phi), str->str);
+    gtk_entry_set_text(GTK_ENTRY(controls->a2_phi), str->str);
 
     phi = phi2 - phi1;
     if (phi < 0.0)
