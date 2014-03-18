@@ -6,6 +6,8 @@ Modules:
 - MetroPro: Files wiht header formats 2 and 3 are recognised and imported.
 - Omicron: Value offsets in grid spectra were corrected.
 - Read value: Local curvature at cursor is also calculated and displayed.
+- Zeiss: ‘Image Pixel Size’ field is used for real dimensions instead of
+  ‘Pixel Size’ if it is present.
 
 
 2.35 (2014-03-02)

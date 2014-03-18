@@ -60,7 +60,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports Carl Zeiss SEM images."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -170,14 +170,22 @@ zeiss_load_tiff(const GwyTIFF *tiff, GError **error)
             err_MISSING_FIELD(error, "Pixel Size");
             goto fail;
         }
+
+        if (g_hash_table_lookup(hash, "Image Pixel Size")) {
+            value = g_hash_table_lookup(hash, "Image Pixel Size");
+            gwy_debug("Using dx from Image Pixel Size: %s", value);
+        }
+        else {
+            gwy_debug("Using dx from Pixel Size: %s", value);
+        }
     }
     else {
         /* The first thing is the pixel size, apparently. */
         value = comment + strlen(SOMEWHAT_LESS_MAGIC_COMMENT);
+        gwy_debug("Using dx from old-style comment: %s", value);
     }
 
     dx = g_ascii_strtod(value, &end);
-    gwy_debug("dx %g", dx);
     /* Use negated positive conditions to catch NaNs */
     if (!((dx = fabs(dx)) > 0)) {
         g_warning("Real pixel size is 0.0, fixing to 1.0");
