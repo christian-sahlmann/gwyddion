@@ -102,6 +102,7 @@ typedef struct {
     GwySelection *selection;
     GwyContainer *mydata;
     GSList *image_mode;
+    GtkWidget *acffield;
     GtkWidget *interp;
     GtkWidget *scaling;
     GwySIValueFormat *vf;
@@ -144,6 +145,9 @@ static GtkWidget* add_lattice_entry        (GtkTable *table,
                                             guint flags,
                                             gint *row,
                                             GwySIValueFormat *vf);
+static gboolean   filter_acffield          (GwyContainer *data,
+                                            gint id,
+                                            gpointer user_data);
 static void       a1_changed_manually      (GtkEntry *entry,
                                             AffcorControls *controls);
 static void       a2_changed_manually      (GtkEntry *entry,
@@ -160,6 +164,10 @@ static void       a2_changed               (AffcorControls *controls,
                                             GtkEntry *entry);
 static void       phi_changed              (AffcorControls *controls,
                                             GtkEntry *entry);
+static void       acffield_changed         (AffcorControls *controls,
+                                            GwyDataChooser *chooser);
+static void       calculate_acffield       (AffcorControls *controls,
+                                            GwyDataField *dfield);
 static void       different_lengths_toggled(AffcorControls *controls,
                                             GtkToggleButton *toggle);
 static void       refine                   (AffcorControls *controls);
@@ -267,13 +275,13 @@ affcor_dialog(AffcorArgs *args,
     GtkWidget *hbox, *label, *button, *lattable, *alignment;
     GtkDialog *dialog;
     GtkTable *table;
-    GwyDataField *acf, *tmp, *corrected;
+    GwyDataField *corrected;
     AffcorControls controls;
     gint response, row, newid = -1;
     GwyPixmapLayer *layer;
     GwyVectorLayer *vlayer;
     GwySIUnit *unitphi;
-    guint flags, acfwidth, acfheight;
+    guint flags;
 
     gwy_clear(&controls, 1);
     controls.args = args;
@@ -309,17 +317,7 @@ affcor_dialog(AffcorArgs *args,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
 
-    tmp = gwy_data_field_duplicate(dfield);
-    gwy_data_field_add(tmp, -gwy_data_field_get_avg(tmp));
-    acf = gwy_data_field_new_alike(dfield, FALSE);
-    acfwidth = MIN(dfield->xres/4, PREVIEW_SIZE/2 + (gint)sqrt(dfield->xres));
-    acfheight = MIN(dfield->yres/4, PREVIEW_SIZE/2 + (gint)sqrt(dfield->yres));
-    gwy_data_field_area_2dacf(tmp, acf, 0, 0, dfield->xres, dfield->yres,
-                              MAX(acfwidth, 4), MAX(acfheight, 4));
-    g_object_unref(tmp);
-
-    gwy_container_set_object_by_name(controls.mydata, "/1/data", acf);
-    g_object_unref(acf);
+    calculate_acffield(&controls, dfield);
     gwy_app_sync_data_items(data, controls.mydata, id, 1, FALSE,
                             GWY_DATA_ITEM_RANGE_TYPE,
                             GWY_DATA_ITEM_RANGE,
@@ -354,17 +352,16 @@ affcor_dialog(AffcorArgs *args,
 
     gtk_container_add(GTK_CONTAINER(alignment), controls.view);
 
-    table = GTK_TABLE(gtk_table_new(14, 4, FALSE));
-    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    table = GTK_TABLE(gtk_table_new(15, 4, FALSE));
+    gtk_table_set_row_spacings(table, 2);
+    gtk_table_set_col_spacings(table, 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_end(GTK_BOX(hbox), GTK_WIDGET(table), FALSE, FALSE, 0);
     row = 0;
 
     label = gtk_label_new(_("Preview:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 5, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, label, 0, 5, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     controls.image_mode
@@ -375,15 +372,14 @@ affcor_dialog(AffcorArgs *args,
                                     _("Correc_ted data"), IMAGE_CORRECTED,
                                     NULL);
     row = gwy_radio_buttons_attach_to_table(controls.image_mode,
-                                            GTK_TABLE(table), 4, row);
+                                            table, 4, row);
     button = gwy_radio_buttons_find(controls.image_mode, IMAGE_CORRECTED);
     gwy_sensitivity_group_add_widget(controls.sens, button,
                                      SENS_VALID_LATTICE);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    gtk_table_set_row_spacing(table, row-1, 8);
 
     label = gwy_label_new_header(_("Lattice Vectors"));
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 5, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, label, 0, 5, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     controls.vf
@@ -399,23 +395,21 @@ affcor_dialog(AffcorArgs *args,
     g_object_unref(unitphi);
 
     lattable = make_lattice_table(&controls);
-    gtk_table_attach(GTK_TABLE(table), lattable,
+    gtk_table_attach(table, lattable,
                      0, 5, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(controls.refine, "clicked",
                              G_CALLBACK(refine), &controls);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    gtk_table_set_row_spacing(table, row, 8);
     row++;
 
     /* TRANSLATORS: Correct is an adjective here. */
     label = gwy_label_new_header(_("Correct Lattice"));
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 5, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, label, 0, 5, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     label = gtk_label_new_with_mnemonic(_("_Lattice type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, label, 0, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
     controls.preset
         = gwy_enum_combo_box_newl(G_CALLBACK(preset_changed), &controls,
@@ -423,7 +417,7 @@ affcor_dialog(AffcorArgs *args,
                                   _("User defined"), USER_DEFINED_LATTICE,
                                   "HOPG", 0,
                                   NULL);
-    gtk_table_attach(GTK_TABLE(table), controls.preset,
+    gtk_table_attach(table, controls.preset,
                      2, 5, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.preset);
     row++;
@@ -440,7 +434,7 @@ affcor_dialog(AffcorArgs *args,
                                  args->different_lengths);
     gwy_sensitivity_group_add_widget(controls.sens, controls.different_lengths,
                                      SENS_USER_LATTICE);
-    gtk_table_attach(GTK_TABLE(table), controls.different_lengths,
+    gtk_table_attach(table, controls.different_lengths,
                      3, 5, row, row+1, GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(controls.different_lengths, "toggled",
                              G_CALLBACK(different_lengths_toggled), &controls);
@@ -458,31 +452,42 @@ affcor_dialog(AffcorArgs *args,
                                           &row, controls.vfphi);
     g_signal_connect_swapped(controls.phi_corr, "changed",
                              G_CALLBACK(phi_changed), &controls);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    gtk_table_set_row_spacing(table, row-1, 8);
 
     label = gwy_label_new_header(_("Options"));
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 5, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, label, 0, 5, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("Image for _ACF:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 2, row, row+1, GTK_FILL, 0, 0, 0);
+
+    controls.acffield = gwy_data_chooser_new_channels();
+    gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(controls.acffield),
+                                filter_acffield, &controls, NULL);
+    gwy_data_chooser_set_active(GWY_DATA_CHOOSER(controls.acffield), data, id);
+    gtk_table_attach(table, controls.acffield,
+                     2, 5, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls.acffield, "changed",
+                             G_CALLBACK(acffield_changed), &controls);
     row++;
 
     label = gtk_label_new_with_mnemonic(_("_Interpolation type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, label, 0, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
     controls.interp
         = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
                                  G_CALLBACK(interp_changed), &controls,
                                  args->interp, TRUE);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.interp);
-    gtk_table_attach(GTK_TABLE(table), controls.interp,
+    gtk_table_attach(table, controls.interp,
                      2, 5, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     label = gtk_label_new_with_mnemonic(_("_Scaling:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, label, 0, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
     controls.scaling
         = gwy_enum_combo_box_newl(G_CALLBACK(scaling_changed), &controls,
@@ -492,7 +497,7 @@ affcor_dialog(AffcorArgs *args,
                                   _("Preserve X scale"), SCALING_PRESERVE_X,
                                   NULL);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.scaling);
-    gtk_table_attach(GTK_TABLE(table), controls.scaling,
+    gtk_table_attach(table, controls.scaling,
                      2, 5, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
@@ -673,7 +678,7 @@ make_lattice_table(AffcorControls *controls)
     gtk_table_attach(GTK_TABLE(table), label, 3, 4, 3, 4, GTK_FILL, 0, 0, 0);
 
     controls->phi = label = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(label), .0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 4, 5, 3, 4, GTK_FILL, 0, 0, 0);
 
     controls->refine = button = gtk_button_new_with_mnemonic(_("Re_fine"));
@@ -721,6 +726,35 @@ add_lattice_entry(GtkTable *table,
     (*row)++;
 
     return entry;
+}
+
+static gboolean
+filter_acffield(GwyContainer *data, gint id, gpointer user_data)
+{
+    AffcorControls *controls = (AffcorControls*)user_data;
+    GwyDataField *dfield, *acffield;
+    gdouble r;
+
+    dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
+    acffield = gwy_container_get_object(data, gwy_app_get_data_key_for_id(id));
+    /* Do not check value, we may want to align channels of a different
+     * physical quantity.  But check order-of-magnitude pixel size for
+     * elementary sanity. */
+    if (gwy_data_field_check_compatibility(dfield, acffield,
+                                           GWY_DATA_COMPATIBILITY_LATERAL))
+        return FALSE;
+
+    r = (gwy_data_field_get_xmeasure(dfield)
+         /gwy_data_field_get_xmeasure(acffield));
+    if (r > 16.0 || r < 1.0/16.0)
+        return FALSE;
+
+    r = (gwy_data_field_get_ymeasure(dfield)
+         /gwy_data_field_get_ymeasure(acffield));
+    if (r > 16.0 || r < 1.0/16.0)
+        return FALSE;
+
+    return TRUE;
 }
 
 static void
@@ -936,6 +970,39 @@ phi_changed(AffcorControls *controls,
     flags = controls->invalid_corr ? 0 : SENS_VALID_LATTICE;
     gwy_sensitivity_group_set_state(controls->sens, SENS_VALID_LATTICE, flags);
     invalidate(controls);
+}
+
+static void
+acffield_changed(AffcorControls *controls,
+                 GwyDataChooser *chooser)
+{
+    GwyContainer *data;
+    GwyDataField *dfield;
+    gint id;
+
+    data = gwy_data_chooser_get_active(chooser, &id);
+    g_return_if_fail(data);
+    dfield = gwy_container_get_object(data, gwy_app_get_data_key_for_id(id));
+    calculate_acffield(controls, dfield);
+}
+
+static void
+calculate_acffield(AffcorControls *controls,
+                   GwyDataField *dfield)
+{
+    GwyDataField *acf;
+    guint acfwidth, acfheight;
+
+    dfield = gwy_data_field_duplicate(dfield);
+    gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
+    acf = gwy_data_field_new_alike(dfield, FALSE);
+    acfwidth = MIN(dfield->xres/4, PREVIEW_SIZE/2 + (gint)sqrt(dfield->xres));
+    acfheight = MIN(dfield->yres/4, PREVIEW_SIZE/2 + (gint)sqrt(dfield->yres));
+    gwy_data_field_area_2dacf(dfield, acf, 0, 0, dfield->xres, dfield->yres,
+                              MAX(acfwidth, 4), MAX(acfheight, 4));
+    g_object_unref(dfield);
+    gwy_container_set_object_by_name(controls->mydata, "/1/data", acf);
+    g_object_unref(acf);
 }
 
 static void
