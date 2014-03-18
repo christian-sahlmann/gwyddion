@@ -72,11 +72,11 @@ add_point(GwyDataField *result,
 
 void
 gwy_data_field_hough_line(GwyDataField *dfield,
-                               GwyDataField *x_gradient,
-                               GwyDataField *y_gradient,
-                               GwyDataField *result,
-                               gint hwidth,
-                               gboolean overlapping)
+                          GwyDataField *x_gradient,
+                          GwyDataField *y_gradient,
+                          GwyDataField *result,
+                          gint hwidth,
+                          gboolean overlapping)
 {
     gint k, col, row, xres, yres, rxres, ryres;
     gdouble rho, theta, rhostep, thetastep, *data, gradangle = 0, threshold;
@@ -143,14 +143,15 @@ gwy_data_field_hough_line(GwyDataField *dfield,
     else
         gwy_data_field_set_yreal(result, G_PI);
 
+    gwy_data_field_invalidate(result);
 }
 
 void
 gwy_data_field_hough_line_strenghten(GwyDataField *dfield,
-                                          GwyDataField *x_gradient,
-                                          GwyDataField *y_gradient,
-                                          gint hwidth,
-                                          gdouble threshold)
+                                     GwyDataField *x_gradient,
+                                     GwyDataField *y_gradient,
+                                     gint hwidth,
+                                     gdouble threshold)
 {
     GwyDataField *result, *water;
     gdouble hmax, hmin, threshval, zdata[20];
@@ -199,10 +200,10 @@ gwy_data_field_hough_line_strenghten(GwyDataField *dfield,
 
 void
 gwy_data_field_hough_circle(GwyDataField *dfield,
-                               GwyDataField *x_gradient,
-                               GwyDataField *y_gradient,
-                               GwyDataField *result,
-                               gdouble radius)
+                            GwyDataField *x_gradient,
+                            GwyDataField *y_gradient,
+                            GwyDataField *result,
+                            gdouble radius)
 {
     gint col, row, xres, yres;
     gdouble angle = 0.0;
@@ -235,14 +236,15 @@ gwy_data_field_hough_circle(GwyDataField *dfield,
         }
     }
 
+    gwy_data_field_invalidate(result);
 }
 
 void
 gwy_data_field_hough_circle_strenghten(GwyDataField *dfield,
-                                          GwyDataField *x_gradient,
-                                          GwyDataField *y_gradient,
-                                          gdouble radius,
-                                          gdouble threshold)
+                                       GwyDataField *x_gradient,
+                                       GwyDataField *y_gradient,
+                                       gdouble radius,
+                                       gdouble threshold)
 {
     GwyDataField *result, *buffer;
     gdouble hmax, hmin, threshval, zdata[200];
@@ -288,8 +290,9 @@ signum(gint x)
 
 void
 gwy_data_field_hough_polar_line_to_datafield(GwyDataField *dfield,
-                      gdouble rho, gdouble theta,
-                     gint *px1, gint *px2, gint *py1, gint *py2)
+                                             gdouble rho, gdouble theta,
+                                             gint *px1, gint *px2,
+                                             gint *py1, gint *py2)
 {
      gint x_top, x_bottom, y_left, y_right;
      gboolean x1set = FALSE;
