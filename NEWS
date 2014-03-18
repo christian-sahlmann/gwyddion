@@ -1,4 +1,7 @@
 2.36 (0000-00-00)
+Application:
+- Translations updated: French, Russian.
+
 Libraries:
 - libgwydgets: Igor Pro .itx graph ASCII export option was added.
 
@@ -10,6 +13,7 @@ Modules:
   ‘Pixel Size’ if it is present.
 - Affine distortion: ACF of one image can be used to correct another image.
   Uncorrected lattice vectors can be entered numerically.
+- PSIA: Rotated non-square images are imported correctly.
 
 
 2.35 (2014-03-02)

@@ -315,13 +315,15 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
     PSIAImageHeader header;
     GwyContainer *container = NULL;
     GwyContainer *meta = NULL;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *ccfield;
     GwySIUnit *siunit;
-    guint magic, version, bps, i;
+    guint magic, version, bps, i, j;
     const guchar *p, *data;
     gchar *comment = NULL;
     gint count, data_len, power10;
     gdouble q, z0;
+    gdouble *dd;
+    const gdouble *sd;
 
     if (!gwy_tiff_get_uint0(tiff, PSIA_TIFFTAG_MagicNumber, &magic)
         || magic != PSIA_MAGIC_NUMBER
@@ -398,14 +400,35 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
     q = pow10(power10)*header.data_gain;
     psia_read_data_field(dfield, data, header.data_type, q, header.z_scale, z0);
 
+    container = gwy_container_new();
+
     gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
     if (header.swap_xy) {
-        gwy_data_field_rotate(dfield, 0.5*G_PI, GWY_INTERPOLATION_ROUND);
-        gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
-    }
+        /*
+         *  rotating datafield CCW to display and process horizontally
+         *  without losing values that get outside of the datafield
+         */
+        ccfield = gwy_data_field_new_alike(dfield, FALSE);
+        gwy_data_field_resample(ccfield,
+                                header.yres,
+                                header.xres,
+                                GWY_INTERPOLATION_NONE);
 
-    container = gwy_container_new();
-    gwy_container_set_object_by_name(container, "/0/data", dfield);
+        sd = gwy_data_field_get_data_const(dfield);
+        dd = gwy_data_field_get_data(ccfield);
+
+        for (i = 0; i < header.xres; i++) {
+            for (j = 0; j < header.yres; j++) {
+                dd[i*header.yres + j] = sd[j*header.xres + (header.xres - 1 - i)];
+            }
+        }
+
+        gwy_container_set_object_by_name(container, "/0/data", ccfield);
+        g_object_unref(ccfield);
+    }
+    else {
+        gwy_container_set_object_by_name(container, "/0/data", dfield);
+    }
     g_object_unref(dfield);
 
     if (header.source_name && *header.source_name)
@@ -815,7 +838,7 @@ psia_read_spectra(GwyContainer *container,
     g_free(spectra);
     g_free(lines);
 
-fail:
+ fail:
     if (error) {
         g_warning("%s", error->message);
         g_clear_error(&error);
