@@ -8,6 +8,8 @@ Modules:
 - Read value: Local curvature at cursor is also calculated and displayed.
 - Zeiss: ‘Image Pixel Size’ field is used for real dimensions instead of
   ‘Pixel Size’ if it is present.
+- Affine distortion: ACF of one image can be used to correct another image.
+  Uncorrected lattice vectors can be entered numerically.
 
 
 2.35 (2014-03-02)
