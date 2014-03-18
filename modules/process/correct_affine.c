@@ -224,7 +224,7 @@ static GwyModuleInfo module_info = {
     N_("Corrects affine distortion of images by matching image Bravais "
        "lattice to the true one."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2013",
 };
