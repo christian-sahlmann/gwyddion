@@ -91,7 +91,6 @@ struct _ObjSynthControls {
     GtkObject *phi_spread;
     GtkObject *height;
     GtkWidget *height_units;
-    GtkWidget *height_init;
     GtkObject *height_noise;
     GtkWidget *relaxation;
     GwyContainer *mydata;
@@ -123,13 +122,17 @@ static void       page_switched           (ColSynthControls *controls,
                                            GtkNotebookPage *page,
                                            gint pagenum);
 static void       update_values           (ColSynthControls *controls);
-static void       height_init_clicked     (ColSynthControls *controls);
 static void       relaxation_type_selected(GtkComboBox *combo,
                                            ColSynthControls *controls);
 static void       col_synth_invalidate    (ColSynthControls *controls);
+static void       scale_to_unit_cubes     (GwyDataField *dfield,
+                                           gdouble *rx,
+                                           gdouble *ry);
+static void       scale_from_unit_cubes   (GwyDataField *dfield,
+                                           gdouble rx,
+                                           gdouble ry);
 static void       preview                 (ColSynthControls *controls);
-static void       col_synth_do            (const ColSynthArgs *args,
-                                           const GwyDimensionArgs *dimsargs,
+static gboolean   col_synth_do            (const ColSynthArgs *args,
                                            GwyDataField *dfield,
                                            gdouble preview_time);
 static gboolean   col_synth_trace         (GwyDataField *dfield,
@@ -226,68 +229,79 @@ run_noninteractive(ColSynthArgs *args,
                    gint oldid,
                    GQuark quark)
 {
+    GwyDataField *newfield;
     GwySIUnit *siunit;
     gboolean replace = dimsargs->replace && dfield;
     gboolean add = dimsargs->add && dfield;
+    gdouble rx, ry;
     gint newid;
+    gboolean ok;
 
     if (args->randomize)
         args->seed = g_random_int() & 0x7fffffff;
 
-    if (replace) {
-        /* Always take a reference so that we can always unref. */
-        g_object_ref(dfield);
-
-        gwy_app_undo_qcheckpointv(data, 1, &quark);
-        if (!add)
-            gwy_data_field_clear(dfield);
-
-        gwy_app_channel_log_add(data, oldid, oldid, "proc::col_synth", NULL);
+    if (add || replace) {
+        if (add)
+            newfield = gwy_data_field_duplicate(dfield);
+        else
+            newfield = gwy_data_field_new_alike(dfield, TRUE);
     }
     else {
-        if (add)
-            dfield = gwy_data_field_duplicate(dfield);
-        else {
-            gdouble mag = pow10(dimsargs->xypow10) * dimsargs->measure;
-            dfield = gwy_data_field_new(dimsargs->xres, dimsargs->yres,
-                                        mag*dimsargs->xres, mag*dimsargs->yres,
-                                        TRUE);
+        gdouble mag = pow10(dimsargs->xypow10) * dimsargs->measure;
+        newfield = gwy_data_field_new(dimsargs->xres, dimsargs->yres,
+                                      mag*dimsargs->xres, mag*dimsargs->yres,
+                                      TRUE);
 
-            siunit = gwy_data_field_get_si_unit_xy(dfield);
-            gwy_si_unit_set_from_string(siunit, dimsargs->xyunits);
+        siunit = gwy_data_field_get_si_unit_xy(newfield);
+        gwy_si_unit_set_from_string(siunit, dimsargs->xyunits);
 
-            siunit = gwy_data_field_get_si_unit_z(dfield);
-            gwy_si_unit_set_from_string(siunit, dimsargs->zunits);
-        }
+        siunit = gwy_data_field_get_si_unit_z(newfield);
+        gwy_si_unit_set_from_string(siunit, dimsargs->zunits);
     }
 
-    col_synth_do(args, dimsargs, dfield, HUGE_VAL);
+    gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid),
+                       _("Starting..."));
+    scale_to_unit_cubes(newfield, &rx, &ry);
+    ok = col_synth_do(args, newfield, HUGE_VAL);
+    scale_from_unit_cubes(newfield, rx, ry);
+    gwy_app_wait_finish();
 
-    if (!replace) {
-        if (data) {
-            newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
-            if (oldid != -1)
-                gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
-                                        GWY_DATA_ITEM_GRADIENT,
-                                        0);
-        }
-        else {
-            newid = 0;
-            data = gwy_container_new();
-            gwy_container_set_object(data, gwy_app_get_data_key_for_id(newid),
-                                     dfield);
-            gwy_app_data_browser_add(data);
-            gwy_app_data_browser_reset_visibility(data,
-                                                  GWY_VISIBILITY_RESET_SHOW_ALL);
-            g_object_unref(data);
-        }
-
-        gwy_app_set_data_field_title(data, newid, _("Generated"));
-        gwy_app_channel_log_add(data, add ? oldid : -1, newid,
-                                "proc::col_synth", NULL);
+    if (!ok) {
+        g_object_ref(newfield);
+        return;
     }
 
-    g_object_unref(dfield);
+    if (replace) {
+        gwy_app_undo_qcheckpointv(data, 1, &quark);
+        gwy_container_set_object(data, gwy_app_get_data_key_for_id(oldid),
+                                 newfield);
+        gwy_app_channel_log_add(data, oldid, oldid, "proc::col_synth", NULL);
+        g_object_unref(newfield);
+        return;
+    }
+
+    if (data) {
+        newid = gwy_app_data_browser_add_data_field(newfield, data, TRUE);
+        if (oldid != -1)
+            gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
+                                    GWY_DATA_ITEM_GRADIENT,
+                                    0);
+    }
+    else {
+        newid = 0;
+        data = gwy_container_new();
+        gwy_container_set_object(data, gwy_app_get_data_key_for_id(newid),
+                                 newfield);
+        gwy_app_data_browser_add(data);
+        gwy_app_data_browser_reset_visibility(data,
+                                              GWY_VISIBILITY_RESET_SHOW_ALL);
+        g_object_unref(data);
+    }
+
+    gwy_app_set_data_field_title(data, newid, _("Generated"));
+    gwy_app_channel_log_add(data, add ? oldid : -1, newid,
+                            "proc::col_synth", NULL);
+    g_object_unref(newfield);
 }
 
 static gboolean
@@ -408,19 +422,12 @@ col_synth_dialog(ColSynthArgs *args,
     row++;
 
     controls.height = gtk_adjustment_new(args->height, 0.1, 10.0, 0.1, 1.0, 0);
-    row = gwy_synth_attach_height(&controls, row,
-                                  &controls.height, &args->height,
-                                  _("_Height:"), NULL, &controls.height_units);
-
-    if (dfield_template) {
-        controls.height_init
-            = gtk_button_new_with_mnemonic(_("_Like Current Channel"));
-        g_signal_connect_swapped(controls.height_init, "clicked",
-                                 G_CALLBACK(height_init_clicked), &controls);
-        gtk_table_attach(GTK_TABLE(table), controls.height_init,
-                         1, 3, row, row+1, GTK_FILL, 0, 0, 0);
-        row++;
-    }
+    g_object_set_data(G_OBJECT(controls.height), "target", &args->height);
+    gwy_table_attach_hscale(table, row, _("_Height:"), "px",
+                            controls.height, GWY_HSCALE_SQRT);
+    g_signal_connect_swapped(controls.height, "value-changed",
+                             G_CALLBACK(gwy_synth_double_changed), &controls);
+    row++;
 
     row = gwy_synth_attach_variance(&controls, row,
                                     &controls.height_noise,
@@ -567,14 +574,6 @@ update_values(ColSynthControls *controls)
 }
 
 static void
-height_init_clicked(ColSynthControls *controls)
-{
-    gdouble mag = pow10(controls->dims->args->zpow10);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height),
-                             controls->zscale/mag);
-}
-
-static void
 relaxation_type_selected(GtkComboBox *combo,
                          ColSynthControls *controls)
 {
@@ -587,33 +586,58 @@ col_synth_invalidate(G_GNUC_UNUSED ColSynthControls *controls)
 }
 
 static void
+scale_to_unit_cubes(GwyDataField *dfield,
+                    gdouble *rx, gdouble *ry)
+{
+    gdouble r;
+
+    *rx = 1.0/gwy_data_field_get_xmeasure(dfield);
+    *ry = 1.0/gwy_data_field_get_ymeasure(dfield);
+    gwy_data_field_set_xreal(dfield, dfield->xres);
+    gwy_data_field_set_yreal(dfield, dfield->yres);
+    r = sqrt((*rx)*(*ry));
+    gwy_data_field_multiply(dfield, r);
+}
+
+static void
+scale_from_unit_cubes(GwyDataField *dfield,
+                      gdouble rx, gdouble ry)
+{
+    gwy_data_field_multiply(dfield, 1.0/sqrt(rx*ry));
+    gwy_data_field_set_xreal(dfield, dfield->xres/rx);
+    gwy_data_field_set_yreal(dfield, dfield->yres/ry);
+}
+
+static void
 preview(ColSynthControls *controls)
 {
     ColSynthArgs *args = controls->args;
     GwyDataField *dfield;
+    gdouble rx, ry;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
 
     if (controls->dims->args->add && controls->surface)
-        gwy_data_field_copy(controls->surface, dfield, FALSE);
+        gwy_data_field_copy(controls->surface, dfield, TRUE);
     else
         gwy_data_field_clear(dfield);
 
+    scale_to_unit_cubes(dfield, &rx, &ry);
+
     gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Starting..."));
-    col_synth_do(args, controls->dims->args, dfield, 1.25);
+    col_synth_do(args, dfield, 1.25);
     gwy_app_wait_finish();
 
+    scale_from_unit_cubes(dfield,rx, ry);
     gwy_data_field_data_changed(dfield);
 }
 
-static void
+static gboolean
 col_synth_do(const ColSynthArgs *args,
-             const GwyDimensionArgs *dimsargs,
              GwyDataField *dfield,
              gdouble preview_time)
 {
-    GwyDataField *workspace;
     RelaxationType relaxation;
     gint xres, yres;
     gulong npart, ip;
@@ -621,6 +645,7 @@ col_synth_do(const ColSynthArgs *args,
     gdouble lasttime = 0.0, lastpreviewtime = 0.0, currtime;
     GTimer *timer;
     GRand *rng;
+    gboolean finished = FALSE;
 
     rand_gen_gaussian(NULL, 0.0);
     timer = g_timer_new();
@@ -629,8 +654,7 @@ col_synth_do(const ColSynthArgs *args,
     yres = gwy_data_field_get_yres(dfield);
     relaxation = args->relaxation;
 
-    workspace = gwy_data_field_duplicate(dfield);
-    gwy_data_field_add(workspace, -gwy_data_field_get_max(workspace));
+    gwy_data_field_add(dfield, -gwy_data_field_get_max(dfield));
     zmax = 0.0;
 
     npart = args->coverage * xres*yres;
@@ -668,7 +692,7 @@ col_synth_do(const ColSynthArgs *args,
         /* XXX: Make the starting height also a parameter? */
         z = zmax + 5.0;
 
-        col_synth_trace(workspace, x, y, z, theta, phi, height,
+        col_synth_trace(dfield, x, y, z, theta, phi, height,
                         relaxation, rng, &zmax);
 
         if (ip % 1000 == 0) {
@@ -680,7 +704,6 @@ col_synth_do(const ColSynthArgs *args,
 
                 if (args->animated
                     && currtime - lastpreviewtime >= preview_time) {
-                    gwy_data_field_copy(workspace, dfield, FALSE);
                     gwy_data_field_data_changed(dfield);
                     lastpreviewtime = lasttime;
                 }
@@ -688,353 +711,14 @@ col_synth_do(const ColSynthArgs *args,
         }
     }
 
-    gwy_data_field_copy(workspace, dfield, FALSE);
+    finished = TRUE;
 
 fail:
-    g_object_unref(workspace);
     g_timer_destroy(timer);
     g_rand_free(rng);
+
+    return finished;
 }
-
-#if 0
-typedef struct {
-    guint i, j;       /* Position in the grid (row, column). */
-    gdouble x, y, z;  /* Fractional part of the position. */
-    gdouble a, q;     /* dy/dx and dz/dx if dx > 0 is dominant; analogous
-                         in other cases.  They are always positive, the
-                         actual movement depends on the direction octant. */
-    gboolean dominant_edge;
-} Particle;
-
-typedef void (*ParticleMoveFunc)(Particle *p);
-
-/* Dominant direction: positive x.  Other direction: positive y. */
-static inline void
-particle_move_xpyp(Particle *p)
-{
-    if (p->dominant_edge) {
-        if (p->y <= 1.0 - p->a) {
-            p->y += p->a;
-            p->z += p->q;
-            p->j++;
-        }
-        else {
-            gdouble m = (1.0 - p->y)/p->a;
-            p->x += m;
-            p->y = 0.0;
-            p->z += p->q*m;
-            p->dominant_edge = FALSE;
-            p->i++;
-        }
-    }
-    else {
-        gdouble m = (1.0 - p->x);
-        p->x = 0.0;
-        p->y = p->a*m;
-        p->z += p->q*m;
-        p->dominant_edge = TRUE;
-        p->j++;
-    }
-}
-
-/* Dominant direction: positive x.  Other direction: negative y. */
-static inline void
-particle_move_xpym(Particle *p)
-{
-    if (p->dominant_edge) {
-        if (p->y >= p->a) {
-            p->y -= p->a;
-            p->z += p->q;
-            p->j++;
-        }
-        else {
-            gdouble m = p->y/p->a;
-            p->x += m;
-            p->y = 1.0;
-            p->z += p->q*m;
-            p->dominant_edge = FALSE;
-            p->i--;
-        }
-    }
-    else {
-        gdouble m = (1.0 - p->x);
-        p->x = 0.0;
-        p->y = 1.0 - p->a*m;
-        p->z += p->q*m;
-        p->dominant_edge = TRUE;
-        p->j++;
-    }
-}
-
-/* Dominant direction: negative x.  Other direction: positive y. */
-static inline void
-particle_move_xmyp(Particle *p)
-{
-    if (p->dominant_edge) {
-        if (p->y <= 1.0 - p->a) {
-            p->y += p->a;
-            p->z += p->q;
-            p->j--;
-        }
-        else {
-            gdouble m = (1.0 - p->y)/p->a;
-            p->x -= m;
-            p->y = 0.0;
-            p->z += p->q*m;
-            p->dominant_edge = FALSE;
-            p->i++;
-        }
-    }
-    else {
-        gdouble m = p->x;
-        p->x = 1.0;
-        p->y = p->a*m;
-        p->z += p->q*m;
-        p->dominant_edge = TRUE;
-        p->j--;
-    }
-}
-
-/* Dominant direction: negative x.  Other direction: negative y. */
-static inline void
-particle_move_xmym(Particle *p)
-{
-    if (p->dominant_edge) {
-        if (p->y >= p->a) {
-            p->y -= p->a;
-            p->z += p->q;
-            p->j--;
-        }
-        else {
-            gdouble m = p->y/p->a;
-            p->x -= m;
-            p->y = 1.0;
-            p->z += p->q*m;
-            p->dominant_edge = FALSE;
-            p->i--;
-        }
-    }
-    else {
-        gdouble m = p->x;
-        p->x = 1.0;
-        p->y = 1.0 - p->a*m;
-        p->z += p->q*m;
-        p->dominant_edge = TRUE;
-        p->j--;
-    }
-}
-
-/* Dominant direction: positive y.  Other direction: positive x. */
-static inline void
-particle_move_ypxp(Particle *p)
-{
-    if (p->dominant_edge) {
-        if (p->x <= 1.0 - p->a) {
-            p->x += p->a;
-            p->z += p->q;
-            p->i++;
-        }
-        else {
-            gdouble m = (1.0 - p->x)/p->a;
-            p->y += m;
-            p->x = 0.0;
-            p->z += p->q*m;
-            p->dominant_edge = FALSE;
-            p->j++;
-        }
-    }
-    else {
-        gdouble m = (1.0 - p->y);
-        p->y = 0.0;
-        p->x = p->a*m;
-        p->z += p->q*m;
-        p->dominant_edge = TRUE;
-        p->i++;
-    }
-}
-
-/* Dominant direction: positive y.  Other direction: negative x. */
-static inline void
-particle_move_ypxm(Particle *p)
-{
-    if (p->dominant_edge) {
-        if (p->x >= p->a) {
-            p->x -= p->a;
-            p->z += p->q;
-            p->i++;
-        }
-        else {
-            gdouble m = p->x/p->a;
-            p->y += m;
-            p->x = 1.0;
-            p->z += p->q*m;
-            p->dominant_edge = FALSE;
-            p->j--;
-        }
-    }
-    else {
-        gdouble m = (1.0 - p->y);
-        p->y = 0.0;
-        p->x = 1.0 - p->a*m;
-        p->z += p->q*m;
-        p->dominant_edge = TRUE;
-        p->i++;
-    }
-}
-
-/* Dominant direction: negative y.  Other direction: positive x. */
-static inline void
-particle_move_ymxp(Particle *p)
-{
-    if (p->dominant_edge) {
-        if (p->x <= 1.0 - p->a) {
-            p->x += p->a;
-            p->z += p->q;
-            p->i--;
-        }
-        else {
-            gdouble m = (1.0 - p->x)/p->a;
-            p->y -= m;
-            p->x = 0.0;
-            p->z += p->q*m;
-            p->dominant_edge = FALSE;
-            p->j++;
-        }
-    }
-    else {
-        gdouble m = p->y;
-        p->y = 1.0;
-        p->x = p->a*m;
-        p->z += p->q*m;
-        p->dominant_edge = TRUE;
-        p->i--;
-    }
-}
-
-/* Dominant direction: negative y.  Other direction: negative x. */
-static inline void
-particle_move_ymxm(Particle *p)
-{
-    if (p->dominant_edge) {
-        if (p->x >= p->a) {
-            p->x -= p->a;
-            p->z += p->q;
-            p->i--;
-        }
-        else {
-            gdouble m = p->x/p->a;
-            p->y -= m;
-            p->x = 1.0;
-            p->z += p->q*m;
-            p->dominant_edge = FALSE;
-            p->j--;
-        }
-    }
-    else {
-        gdouble m = p->y;
-        p->y = 1.0;
-        p->x = 1.0 - p->a*m;
-        p->z += p->q*m;
-        p->dominant_edge = TRUE;
-        p->i--;
-    }
-}
-
-static gboolean
-col_synth_trace2(GwyDataField *dfield,
-                gdouble x, gdouble y, gdouble z,
-                gdouble theta, gdouble phi, gdouble size,
-                gdouble *zmax)
-{
-    ParticleMoveFunc move, move_back;
-    Particle p;
-    gdouble kx, ky, kz;
-    guint k, xres, yres;
-    gdouble *data;
-
-    kx = cos(phi);
-    ky = sin(phi);
-    kz = -1.0/tan(theta);
-
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    data = gwy_data_field_get_data(dfield);
-
-    p.j = floor(x);
-    p.i = floor(y);
-    p.x = x - p.j;
-    p.y = y - p.i;
-    p.z = z;
-    p.dominant_edge = TRUE;
-    p.a = fmin(fabs(kx), fabs(ky))/fmax(fabs(kx), fabs(ky));
-    p.q = kz/fmax(fabs(kx), fabs(ky));
-
-    if (kx >= 0.0) {
-        if (ky >= 0.0) {
-            if (kx >= ky) {
-                move = &particle_move_xpyp;
-                move_back = &particle_move_xmym;
-            }
-            else {
-                move = &particle_move_ypxp;
-                move_back = &particle_move_ymxm;
-            }
-        }
-        else {
-            if (kx >= -ky) {
-                move = &particle_move_xpym;
-                move_back = &particle_move_xmyp;
-            }
-            else {
-                move = &particle_move_ymxp;
-                move_back = &particle_move_ypxm;
-            }
-        }
-    }
-    else {
-        if (ky >= 0.0) {
-            if (-kx >= ky) {
-                move = &particle_move_xmyp;
-                move_back = &particle_move_xpym;
-            }
-            else {
-                move = &particle_move_ypxm;
-                move_back = &particle_move_ymxp;
-            }
-        }
-        else {
-            if (-kx >= -ky) {
-                move = &particle_move_xmym;
-                move_back = &particle_move_xpyp;
-            }
-            else {
-                move = &particle_move_ymxm;
-                move_back = &particle_move_ypxp;
-            }
-        }
-    }
-
-    do {
-        move(&p);
-        if (p.j >= xres || p.i >= yres)
-            return FALSE;
-        k = p.i*xres + p.j;
-    } while (p.z > data[k]);
-
-    move_back(&p);
-    /* Rounding error? */
-    if (p.j >= xres || p.i >= yres) {
-        //g_warning("Move back went astray.");
-        return FALSE;
-    }
-    k = p.i*xres + p.j;
-    data[k] += size;
-    if (data[k] > *zmax)
-        *zmax = data[k];
-
-    return TRUE;
-}
-#endif
 
 static gboolean
 col_synth_trace(GwyDataField *dfield,
