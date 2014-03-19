@@ -567,7 +567,9 @@ preview(ColSynthControls *controls)
     else
         gwy_data_field_clear(dfield);
 
+    gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Starting..."));
     col_synth_do(args, controls->dims->args, dfield);
+    gwy_app_wait_finish();
 
     gwy_data_field_data_changed(dfield);
 }
@@ -581,9 +583,12 @@ col_synth_do(const ColSynthArgs *args,
     gint xres, yres;
     gulong npart, ip;
     gdouble zmax;
+    gdouble lasttime = 0.0, lastpreviewtime = 0.0, currtime;
+    GTimer *timer;
     GRand *rng;
 
     rand_gen_gaussian(NULL, 0.0);
+    timer = g_timer_new();
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
@@ -593,7 +598,8 @@ col_synth_do(const ColSynthArgs *args,
     zmax = 0.0;
 
     npart = args->coverage * xres*yres;
-    g_printerr("Generating %lu particles.\n", npart);
+    gwy_app_wait_set_message(_("Depositing particles..."));
+    gwy_app_wait_set_fraction(0.0);
 
     rng = g_rand_new();
     g_rand_set_seed(rng, args->seed);
@@ -628,13 +634,28 @@ col_synth_do(const ColSynthArgs *args,
 
         col_synth_trace(workspace, x, y, z, theta, phi, height, &zmax);
 
-        if (ip % 100000 == 0)
-            g_printerr("%lu %g\n", ip, zmax);
+        if (ip % 1000 == 0) {
+            currtime = g_timer_elapsed(timer, NULL);
+            if (currtime - lasttime >= 0.2) {
+                if (!gwy_app_wait_set_fraction((gdouble)ip/npart))
+                    goto fail;
+                lasttime = g_timer_elapsed(timer, NULL);
+
+                /* XXX XXX XXX: Only do this for preview. */
+                if (currtime - lastpreviewtime >= 1.0) {
+                    gwy_data_field_copy(workspace, dfield, FALSE);
+                    gwy_data_field_data_changed(dfield);
+                    lastpreviewtime = lasttime;
+                }
+            }
+        }
     }
 
     gwy_data_field_copy(workspace, dfield, FALSE);
-    g_object_unref(workspace);
 
+fail:
+    g_object_unref(workspace);
+    g_timer_destroy(timer);
     g_rand_free(rng);
 }
 
