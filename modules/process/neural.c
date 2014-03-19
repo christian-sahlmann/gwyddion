@@ -1162,6 +1162,7 @@ train_do(GwyNeuralNetwork *nn, GwyDataLine *errors, GwyGraphCurveModel *gcmodel,
     ok = TRUE;
 
 fail:
+    g_timer_destroy(timer);
     g_object_unref(scaled);
     g_free(indices);
 
