@@ -359,6 +359,34 @@ gwy_synth_attach_roundness(GWY_SYNTH_CONTROLS *controls,
 
 G_GNUC_UNUSED
 static gint
+gwy_synth_attach_angle(GWY_SYNTH_CONTROLS *controls,
+                       gint row,
+                       GtkObject **adj,
+                       gdouble *target,
+                       gdouble from, gdouble to,
+                       const gchar *name)
+{
+    GtkWidget *spin;
+
+    *adj = gtk_adjustment_new(*target * 180.0/G_PI,
+                              from * 180.0/G_PI, to * 180.0/G_PI,
+                              1.0, 10.0, 0);
+    g_object_set_data(G_OBJECT(*adj), "target", target);
+
+    spin = gwy_table_attach_hscale(GTK_WIDGET(controls->table),
+                                   row, name, "deg", *adj,
+                                   GWY_HSCALE_DEFAULT);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 1);
+    g_signal_connect_swapped(*adj, "value-changed",
+                             G_CALLBACK(gwy_synth_angle_changed), controls);
+
+    row++;
+
+    return row;
+}
+
+G_GNUC_UNUSED
+static gint
 gwy_synth_attach_orientation(GWY_SYNTH_CONTROLS *controls,
                              gint row,
                              GtkObject **adj,

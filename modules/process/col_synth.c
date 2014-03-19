@@ -50,12 +50,6 @@ enum {
     PAGE_NPAGES
 };
 
-typedef enum {
-    COL_SOURCE_COSINE = 0,
-    COL_SOURCE_DIRECTIONAL = 1,
-    COL_SOURCE_NSOURCES
-} ColSynthSourceType;
-
 typedef struct _ObjSynthControls ColSynthControls;
 
 typedef struct {
@@ -63,12 +57,13 @@ typedef struct {
     gint seed;
     gboolean randomize;
     gboolean update;
-    ColSynthSourceType source;
     gdouble theta;
+    gdouble theta_spread;
     gdouble phi;
-    gdouble spread;
+    gdouble phi_spread;
     gdouble height;
     gdouble height_noise;
+    // TODO: Relaxation algorithm
     gdouble coverage;
 } ColSynthArgs;
 
@@ -82,13 +77,15 @@ struct _ObjSynthControls {
     GtkObject *seed;
     GtkWidget *randomize;
     GtkTable *table;
-    GtkWidget *source;
-    GtkWidget *angle;
-    GtkObject *spread;
     GtkObject *coverage;
+    GtkObject *theta;
+    GtkObject *theta_spread;
+    GtkObject *phi;
+    GtkObject *phi_spread;
     GtkObject *height;
     GtkWidget *height_units;
     GtkWidget *height_init;
+    GtkObject *height_noise;
     GwyContainer *mydata;
     GwyDataField *surface;
     gdouble pxsize;
@@ -97,50 +94,49 @@ struct _ObjSynthControls {
     gulong sid;
 };
 
-static gboolean   module_register     (void);
-static void       col_synth           (GwyContainer *data,
-                                       GwyRunType run);
-static void       run_noninteractive  (ColSynthArgs *args,
-                                       const GwyDimensionArgs *dimsargs,
-                                       GwyContainer *data,
-                                       GwyDataField *dfield,
-                                       gint oldid,
-                                       GQuark quark);
-static gboolean   col_synth_dialog    (ColSynthArgs *args,
-                                       GwyDimensionArgs *dimsargs,
-                                       GwyContainer *data,
-                                       GwyDataField *dfield,
-                                       gint id);
-static GtkWidget* source_selector_new (ColSynthControls *controls);
-static void       update_controls     (ColSynthControls *controls,
-                                       ColSynthArgs *args);
-static void       page_switched       (ColSynthControls *controls,
-                                       GtkNotebookPage *page,
-                                       gint pagenum);
-static void       update_values       (ColSynthControls *controls);
-static void       source_type_selected(GtkComboBox *combo,
-                                       ColSynthControls *controls);
-static void       height_init_clicked (ColSynthControls *controls);
-static void       col_synth_invalidate(ColSynthControls *controls);
-static gboolean   preview_gsource     (gpointer user_data);
-static void       preview             (ColSynthControls *controls);
-static void       col_synth_do        (const ColSynthArgs *args,
-                                       const GwyDimensionArgs *dimsargs,
-                                       GwyDataField *dfield);
-static gboolean   col_synth_trace     (GwyDataField *dfield,
-                                       gdouble x,
-                                       gdouble y,
-                                       gdouble z,
-                                       gdouble theta,
-                                       gdouble phi,
-                                       gdouble size,
-                                       gdouble *zmax);
-static void       col_synth_load_args (GwyContainer *container,
-                                       ColSynthArgs *args,
-                                       GwyDimensionArgs *dimsargs);
-static void       col_synth_save_args (GwyContainer *container,
-                                       const ColSynthArgs *args,
-                                       const GwyDimensionArgs *dimsargs);
+static gboolean module_register     (void);
+static void     col_synth           (GwyContainer *data,
+                                     GwyRunType run);
+static void     run_noninteractive  (ColSynthArgs *args,
+                                     const GwyDimensionArgs *dimsargs,
+                                     GwyContainer *data,
+                                     GwyDataField *dfield,
+                                     gint oldid,
+                                     GQuark quark);
+static gboolean col_synth_dialog    (ColSynthArgs *args,
+                                     GwyDimensionArgs *dimsargs,
+                                     GwyContainer *data,
+                                     GwyDataField *dfield,
+                                     gint id);
+static void     update_controls     (ColSynthControls *controls,
+                                     ColSynthArgs *args);
+static void     page_switched       (ColSynthControls *controls,
+                                     GtkNotebookPage *page,
+                                     gint pagenum);
+static void     update_values       (ColSynthControls *controls);
+static void     height_init_clicked (ColSynthControls *controls);
+static void     col_synth_invalidate(ColSynthControls *controls);
+static gboolean preview_gsource     (gpointer user_data);
+static void     preview             (ColSynthControls *controls);
+static void     col_synth_do        (const ColSynthArgs *args,
+                                     const GwyDimensionArgs *dimsargs,
+                                     GwyDataField *dfield);
+static gboolean col_synth_trace     (GwyDataField *dfield,
+                                     gdouble x,
+                                     gdouble y,
+                                     gdouble z,
+                                     gdouble theta,
+                                     gdouble phi,
+                                     gdouble size,
+                                     gdouble *zmax);
+static gdouble  rand_gen_gaussian   (GRand *rng,
+                                     gdouble sigma);
+static void     col_synth_load_args (GwyContainer *container,
+                                     ColSynthArgs *args,
+                                     GwyDimensionArgs *dimsargs);
+static void     col_synth_save_args (GwyContainer *container,
+                                     const ColSynthArgs *args,
+                                     const GwyDimensionArgs *dimsargs);
 
 #define GWY_SYNTH_CONTROLS ColSynthControls
 #define GWY_SYNTH_INVALIDATE(controls) col_synth_invalidate(controls)
@@ -150,8 +146,8 @@ static void       col_synth_save_args (GwyContainer *container,
 static const ColSynthArgs col_synth_defaults = {
     PAGE_DIMENSIONS,
     42, TRUE, FALSE,
-    COL_SOURCE_COSINE,
-    0.0, 0.0, 1.0,
+    0.0, 0.0,
+    0.0, 2.0*G_PI,
     1.0, 0.0,
     10.0,
 };
@@ -380,11 +376,6 @@ col_synth_dialog(ColSynthArgs *args,
                              gtk_label_new(_("Generator")));
     row = 0;
 
-    controls.source = source_selector_new(&controls);
-    gwy_table_attach_hscale(table, row, _("_Source:"), NULL,
-                            GTK_OBJECT(controls.source), GWY_HSCALE_WIDGET);
-    row++;
-
     controls.coverage = gtk_adjustment_new(args->coverage,
                                            0.1, 1000.0, 0.001, 1.0, 0);
     g_object_set_data(G_OBJECT(controls.coverage), "target", &args->coverage);
@@ -395,7 +386,7 @@ col_synth_dialog(ColSynthArgs *args,
     row++;
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
-    gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Size")),
+    gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Particle Size")),
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
@@ -414,11 +405,27 @@ col_synth_dialog(ColSynthArgs *args,
         row++;
     }
 
-    /* TODO:
     row = gwy_synth_attach_variance(&controls, row,
                                     &controls.height_noise,
                                     &args->height_noise);
-                                    */
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    gtk_table_attach(GTK_TABLE(table),
+                     gwy_label_new_header(_("Incidence")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    row = gwy_synth_attach_angle(&controls, row, &controls.theta, &args->theta,
+                                 0.0, 0.99*G_PI/2.0, _("Inclination"));
+    row = gwy_synth_attach_variance(&controls, row,
+                                    &controls.theta_spread,
+                                    &args->theta_spread);
+
+    row = gwy_synth_attach_angle(&controls, row, &controls.phi, &args->phi,
+                                 -G_PI, G_PI, _("Direction"));
+    row = gwy_synth_attach_variance(&controls, row,
+                                    &controls.phi_spread,
+                                    &args->phi_spread);
 
     gtk_widget_show_all(dialog);
     controls.in_init = FALSE;
@@ -471,22 +478,6 @@ col_synth_dialog(ColSynthArgs *args,
     return response == GTK_RESPONSE_OK;
 }
 
-static GtkWidget*
-source_selector_new(ColSynthControls *controls)
-{
-    GtkWidget *combo;
-
-    combo = gwy_enum_combo_box_newl(G_CALLBACK(source_type_selected), controls,
-                                    controls->args->source,
-                                    gwy_sgettext("source|Cosine"),
-                                    COL_SOURCE_COSINE,
-                                    gwy_sgettext("source|Directional"),
-                                    COL_SOURCE_DIRECTIONAL,
-                                    NULL);
-
-    return combo;
-}
-
 static void
 update_controls(ColSynthControls *controls,
                 ColSynthArgs *args)
@@ -499,14 +490,14 @@ update_controls(ColSynthControls *controls,
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->coverage),
                              args->coverage);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height), args->height);
-    /*
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height_noise),
                              args->height_noise);
-    gwy_shader_set_angle(GWY_SHADER(controls->angle), args->theta, args->phi);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->spread), args->spread);
-                             */
-    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->source),
-                                  args->source);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->theta), args->theta);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->theta_spread),
+                             args->theta_spread);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->phi), args->phi);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->phi_spread),
+                             args->phi_spread);
 }
 
 static void
@@ -531,14 +522,6 @@ update_values(ColSynthControls *controls)
     if (controls->height_units)
         gtk_label_set_markup(GTK_LABEL(controls->height_units),
                              dims->zvf->units);
-}
-
-static void
-source_type_selected(GtkComboBox *combo,
-                     ColSynthControls *controls)
-{
-    controls->args->source = gwy_enum_combo_box_get_active(combo);
-    col_synth_invalidate(controls);
 }
 
 static void
@@ -600,6 +583,8 @@ col_synth_do(const ColSynthArgs *args,
     gdouble zmax;
     GRand *rng;
 
+    rand_gen_gaussian(NULL, 0.0);
+
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
 
@@ -614,15 +599,34 @@ col_synth_do(const ColSynthArgs *args,
     g_rand_set_seed(rng, args->seed);
 
     for (ip = 0; ip < npart; ip++) {
-        gdouble theta, phi, x, y, z;
+        gdouble theta, phi, height, x, y, z;
 
-        theta = 0.9*G_PI/2.0*sqrt(g_rand_double(rng));
-        phi = 2.0*G_PI*g_rand_double(rng);
+        height = args->height;
+        if (args->height_noise)
+            height *= exp(rand_gen_gaussian(rng, args->height_noise));
+
+        theta = args->theta;
+        if (args->theta_spread) {
+            gdouble cth;
+
+            do {
+                cth = cos(theta) + rand_gen_gaussian(rng,
+                                                     G_PI*args->theta_spread);
+            } while (cth < 0.0 || cth > 0.99);
+
+            theta = acos(1.0 - cth);
+        }
+
+        phi = args->phi;
+        if (args->phi_spread)
+            phi += rand_gen_gaussian(rng, 2.0*G_PI*args->phi_spread);
+
         x = xres*g_rand_double(rng);
         y = yres*g_rand_double(rng);
+        /* XXX: Make the starting height also a parameter? */
         z = zmax + 5.0;
 
-        col_synth_trace(workspace, x, y, z, theta, phi, 1.0, &zmax);
+        col_synth_trace(workspace, x, y, z, theta, phi, height, &zmax);
 
         if (ip % 100000 == 0)
             g_printerr("%lu %g\n", ip, zmax);
@@ -630,6 +634,8 @@ col_synth_do(const ColSynthArgs *args,
 
     gwy_data_field_copy(workspace, dfield, FALSE);
     g_object_unref(workspace);
+
+    g_rand_free(rng);
 }
 
 typedef struct {
@@ -1045,17 +1051,45 @@ col_synth_trace(GwyDataField *dfield,
     return TRUE;
 }
 
+static gdouble
+rand_gen_gaussian(GRand *rng,
+                  gdouble sigma)
+{
+    static gboolean have_spare = FALSE;
+    static gdouble spare;
+
+    gdouble x, y, w;
+
+    /* Calling with NULL rng just clears the spare random value. */
+    if (have_spare || G_UNLIKELY(!rng)) {
+        have_spare = FALSE;
+        return sigma*spare;
+    }
+
+    do {
+        x = -1.0 + 2.0*g_rand_double(rng);
+        y = -1.0 + 2.0*g_rand_double(rng);
+        w = x*x + y*y;
+    } while (w >= 1.0 || G_UNLIKELY(w == 0.0));
+
+    w = sqrt(-2.0*log(w)/w);
+    spare = y*w;
+    have_spare = TRUE;
+
+    return sigma*x*w;
+}
+
 static const gchar prefix[]           = "/module/col_synth";
 static const gchar active_page_key[]  = "/module/col_synth/active_page";
 static const gchar update_key[]       = "/module/col_synth/update";
 static const gchar randomize_key[]    = "/module/col_synth/randomize";
 static const gchar seed_key[]         = "/module/col_synth/seed";
-static const gchar source_key[]       = "/module/col_synth/source";
 static const gchar height_key[]       = "/module/col_synth/height";
 static const gchar height_noise_key[] = "/module/col_synth/height_noise";
 static const gchar theta_key[]        = "/module/col_synth/theta";
+static const gchar theta_spread_key[] = "/module/col_synth/theta_spread";
 static const gchar phi_key[]          = "/module/col_synth/phi";
-static const gchar spread_key[]       = "/module/col_synth/spread";
+static const gchar phi_spread_key[]   = "/module/col_synth/phi_spread";
 static const gchar coverage_key[]     = "/module/col_synth/coverage";
 
 static void
@@ -1063,15 +1097,15 @@ col_synth_sanitize_args(ColSynthArgs *args)
 {
     args->active_page = CLAMP(args->active_page,
                               PAGE_DIMENSIONS, PAGE_NPAGES-1);
-    args->update = FALSE;  /* Never switch in on. */
+    args->update = FALSE;  /* Never switch it on. */
     args->seed = MAX(0, args->seed);
     args->randomize = !!args->randomize;
-    args->source = MIN(args->source, COL_SOURCE_NSOURCES-1);
     args->height = CLAMP(args->height, 0.001, 10000.0);
     args->height_noise = CLAMP(args->height_noise, 0.0, 1.0);
     args->theta = CLAMP(args->theta, 0, G_PI/2.0);
+    args->theta_spread = CLAMP(args->theta_spread, 0.0, 1.0);
     args->phi = CLAMP(args->phi, -G_PI, G_PI);
-    args->spread = CLAMP(args->spread, -G_PI, G_PI);
+    args->phi_spread = CLAMP(args->phi_spread, 0.0, 1.0);
     args->coverage = CLAMP(args->coverage, 0.1, 1000.0);
 }
 
@@ -1088,13 +1122,15 @@ col_synth_load_args(GwyContainer *container,
     gwy_container_gis_int32_by_name(container, seed_key, &args->seed);
     gwy_container_gis_boolean_by_name(container, randomize_key,
                                       &args->randomize);
-    gwy_container_gis_enum_by_name(container, source_key, &args->source);
     gwy_container_gis_double_by_name(container, height_key, &args->height);
     gwy_container_gis_double_by_name(container, height_noise_key,
                                      &args->height_noise);
     gwy_container_gis_double_by_name(container, theta_key, &args->theta);
+    gwy_container_gis_double_by_name(container, theta_spread_key,
+                                     &args->theta_spread);
     gwy_container_gis_double_by_name(container, phi_key, &args->phi);
-    gwy_container_gis_double_by_name(container, spread_key, &args->spread);
+    gwy_container_gis_double_by_name(container, phi_spread_key,
+                                     &args->phi_spread);
     gwy_container_gis_double_by_name(container, coverage_key, &args->coverage);
     col_synth_sanitize_args(args);
 
@@ -1114,13 +1150,15 @@ col_synth_save_args(GwyContainer *container,
     gwy_container_set_int32_by_name(container, seed_key, args->seed);
     gwy_container_set_boolean_by_name(container, randomize_key,
                                       args->randomize);
-    gwy_container_set_enum_by_name(container, source_key, args->source);
     gwy_container_set_double_by_name(container, height_key, args->height);
     gwy_container_set_double_by_name(container, height_noise_key,
                                      args->height_noise);
     gwy_container_set_double_by_name(container, theta_key, args->theta);
+    gwy_container_set_double_by_name(container, theta_spread_key,
+                                     args->theta_spread);
     gwy_container_set_double_by_name(container, phi_key, args->phi);
-    gwy_container_set_double_by_name(container, spread_key, args->spread);
+    gwy_container_set_double_by_name(container, phi_spread_key,
+                                     args->phi_spread);
     gwy_container_set_double_by_name(container, coverage_key, args->coverage);
 
     gwy_dimensions_save_args(dimsargs, container, prefix);
