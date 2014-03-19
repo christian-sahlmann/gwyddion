@@ -149,7 +149,7 @@ static void       col_synth_save_args (GwyContainer *container,
 
 static const ColSynthArgs col_synth_defaults = {
     PAGE_DIMENSIONS,
-    42, TRUE, TRUE,
+    42, TRUE, FALSE,
     COL_SOURCE_COSINE,
     0.0, 0.0, 1.0,
     1.0, 0.0,
@@ -346,6 +346,7 @@ col_synth_dialog(ColSynthArgs *args,
                                                      &controls.update,
                                                      &args->update),
                        FALSE, FALSE, 0);
+    gtk_widget_set_no_show_all(controls.update, TRUE);
     g_signal_connect_swapped(controls.update_now, "clicked",
                              G_CALLBACK(preview), &controls);
 
@@ -615,12 +616,11 @@ col_synth_do(const ColSynthArgs *args,
     for (ip = 0; ip < npart; ip++) {
         gdouble theta, phi, x, y, z;
 
-        //theta = 0.95*G_PI/2.0*sqrt(g_rand_double(rng));
-        theta = (0.18*g_rand_double(rng) + 0.80)*G_PI/2.0;
+        theta = 0.9*G_PI/2.0*sqrt(g_rand_double(rng));
         phi = 2.0*G_PI*g_rand_double(rng);
         x = xres*g_rand_double(rng);
         y = yres*g_rand_double(rng);
-        z = zmax + 50.0;
+        z = zmax + 5.0;
 
         col_synth_trace(workspace, x, y, z, theta, phi, 1.0, &zmax);
 
@@ -1063,7 +1063,7 @@ col_synth_sanitize_args(ColSynthArgs *args)
 {
     args->active_page = CLAMP(args->active_page,
                               PAGE_DIMENSIONS, PAGE_NPAGES-1);
-    args->update = !!args->update;
+    args->update = FALSE;  /* Never switch in on. */
     args->seed = MAX(0, args->seed);
     args->randomize = !!args->randomize;
     args->source = MIN(args->source, COL_SOURCE_NSOURCES-1);
