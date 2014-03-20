@@ -26,6 +26,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/stats.h>
 #include <libprocess/filters.h>
+#include <libprocess/simplefft.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwydgetutils.h>
@@ -37,8 +38,15 @@
 
 #define WAVE_SYNTH_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
+// 18 is what fits into L2 cache on all modern processors (3*2¹⁸ floats ≈ 3 MB)
 enum {
-    PREVIEW_SIZE = 400,
+    APPROX_WAVE_BITS = 17,
+    APPROX_WAVE_SIZE = 1 << APPROX_WAVE_BITS,
+    APPROX_WAVE_MASK = APPROX_WAVE_SIZE - 1,
+};
+
+enum {
+    PREVIEW_SIZE = 320,
 };
 
 enum {
@@ -52,8 +60,8 @@ enum {
 };
 
 typedef enum {
-    WAVE_TYPE_SINE            = 0,
-    WAVE_TYPE_INVCOSH         = 1,
+    WAVE_TYPE_COSINE  = 0,
+    WAVE_TYPE_INVCOSH = 1,
     WAVE_TYPE_NTYPES
 } WaveTypeType;
 
@@ -63,6 +71,13 @@ typedef enum {
     WAVE_QUANTITY_PHASE        = 2,
     WAVE_QUANTITY_NTYPES
 } WaveQuantityType;
+
+typedef struct {
+    gdouble x;
+    gdouble y;
+    gdouble z;
+    gdouble k;
+} GwyWaveSource;
 
 typedef struct _WaveSynthArgs WaveSynthArgs;
 typedef struct _WaveSynthControls WaveSynthControls;
@@ -83,6 +98,8 @@ struct _WaveSynthArgs {
     gdouble amplitude_noise;
     gdouble k;
     gdouble k_noise;
+    /* Dynamic state */
+    gfloat *wave_table;
 };
 
 struct _WaveSynthControls {
@@ -119,45 +136,60 @@ struct _WaveSynthControls {
     gulong sid;
 };
 
-static gboolean   module_register       (void);
-static void       wave_synth            (GwyContainer *data,
-                                         GwyRunType run);
-static void       run_noninteractive    (WaveSynthArgs *args,
-                                         const GwyDimensionArgs *dimsargs,
-                                         GwyContainer *data,
-                                         GwyDataField *dfield,
-                                         gint oldid,
-                                         GQuark quark);
-static gboolean   wave_synth_dialog     (WaveSynthArgs *args,
-                                         GwyDimensionArgs *dimsargs,
-                                         GwyContainer *data,
-                                         GwyDataField *dfield,
-                                         gint id);
-static GtkWidget* type_selector_new     (WaveSynthControls *controls);
-static GtkWidget* quantity_selector_new (WaveSynthControls *controls);
-static void       update_controls       (WaveSynthControls *controls,
-                                         WaveSynthArgs *args);
-static void       page_switched         (WaveSynthControls *controls,
-                                         GtkNotebookPage *page,
-                                         gint pagenum);
-static void       update_values         (WaveSynthControls *controls);
-static void       wave_type_selected    (GtkComboBox *combo,
-                                         WaveSynthControls *controls);
-static void       quantity_type_selected(GtkComboBox *combo,
-                                         WaveSynthControls *controls);
-static void       amplitude_init_clicked(WaveSynthControls *controls);
-static void       wave_synth_invalidate (WaveSynthControls *controls);
-static gboolean   preview_gsource       (gpointer user_data);
-static void       preview               (WaveSynthControls *controls);
-static void       wave_synth_do         (const WaveSynthArgs *args,
-                                         const GwyDimensionArgs *dimsargs,
-                                         GwyDataField *dfield);
-static void       wave_synth_load_args  (GwyContainer *container,
-                                         WaveSynthArgs *args,
-                                         GwyDimensionArgs *dimsargs);
-static void       wave_synth_save_args  (GwyContainer *container,
-                                         const WaveSynthArgs *args,
-                                         const GwyDimensionArgs *dimsargs);
+static gboolean   module_register        (void);
+static void       wave_synth             (GwyContainer *data,
+                                          GwyRunType run);
+static void       run_noninteractive     (WaveSynthArgs *args,
+                                          const GwyDimensionArgs *dimsargs,
+                                          GwyContainer *data,
+                                          GwyDataField *dfield,
+                                          gint oldid,
+                                          GQuark quark);
+static gboolean   wave_synth_dialog      (WaveSynthArgs *args,
+                                          GwyDimensionArgs *dimsargs,
+                                          GwyContainer *data,
+                                          GwyDataField *dfield,
+                                          gint id);
+static GtkWidget* type_selector_new      (WaveSynthControls *controls);
+static GtkWidget* quantity_selector_new  (WaveSynthControls *controls);
+static void       update_controls        (WaveSynthControls *controls,
+                                          WaveSynthArgs *args);
+static void       page_switched          (WaveSynthControls *controls,
+                                          GtkNotebookPage *page,
+                                          gint pagenum);
+static void       update_values          (WaveSynthControls *controls);
+static void       wave_type_selected     (GtkComboBox *combo,
+                                          WaveSynthControls *controls);
+static void       quantity_type_selected (GtkComboBox *combo,
+                                          WaveSynthControls *controls);
+static void       amplitude_init_clicked (WaveSynthControls *controls);
+static void       wave_synth_invalidate  (WaveSynthControls *controls);
+static gboolean   preview_gsource        (gpointer user_data);
+static void       preview                (WaveSynthControls *controls);
+static void       wave_synth_do          (const WaveSynthArgs *args,
+                                          const GwyDimensionArgs *dimsargs,
+                                          GwyDataField *dfield);
+static void       precalculate_wave_table(gfloat *tab,
+                                          guint n,
+                                          WaveTypeType type);
+static void       complement_table       (gdouble *dbltab,
+                                          gfloat *tab,
+                                          guint n);
+static void       complement_wave        (const gdouble *cwave,
+                                          gdouble *swave,
+                                          guint n);
+static void       randomize_sources      (GRand *rng,
+                                          GwyWaveSource *sources,
+                                          const WaveSynthArgs *args,
+                                          gdouble q);
+static gdouble    rand_gen_gaussian      (GRand *rng,
+                                          gdouble sigma);
+static void       wave_synth_load_args   (GwyContainer *container,
+                                          WaveSynthArgs *args,
+                                          GwyDimensionArgs *dimsargs);
+static void       wave_synth_save_args   (GwyContainer *container,
+                                          const WaveSynthArgs *args,
+                                          const GwyDimensionArgs *dimsargs);
 
 #define GWY_SYNTH_CONTROLS WaveSynthControls
 #define GWY_SYNTH_INVALIDATE(controls) wave_synth_invalidate(controls)
@@ -169,12 +201,14 @@ static const gchar prefix[] = "/module/wave_synth";
 static const WaveSynthArgs wave_synth_defaults = {
     PAGE_DIMENSIONS,
     42, TRUE, TRUE,
-    WAVE_TYPE_SINE, WAVE_QUANTITY_INTENSITY,
-    100,
-    0.0, 1.0,
-    0.0, 1.0,
+    WAVE_TYPE_COSINE, WAVE_QUANTITY_INTENSITY,
+    50,
+    0.0, 0.3,
+    0.0, 0.3,
     1.0, 0.0,
-    20.0, 0.1,
+    80.0, 0.02,
+    /* Dynamic state */
+    NULL,
 };
 
 static const GwyDimensionArgs dims_defaults = GWY_DIMENSION_ARGS_INIT;
@@ -223,10 +257,10 @@ wave_synth(GwyContainer *data, GwyRunType run)
 
     if (run == GWY_RUN_IMMEDIATE
         || wave_synth_dialog(&args, &dimsargs, data, dfield, id)) {
-        wave_synth_save_args(gwy_app_settings_get(), &args, &dimsargs);
         run_noninteractive(&args, &dimsargs, data, dfield, id, quark);
     }
 
+    g_free(args.wave_table);
     gwy_dimensions_free_args(&dimsargs);
 }
 
@@ -303,12 +337,12 @@ run_noninteractive(WaveSynthArgs *args,
 
 static gboolean
 wave_synth_dialog(WaveSynthArgs *args,
-                 GwyDimensionArgs *dimsargs,
-                 GwyContainer *data,
-                 GwyDataField *dfield_template,
-                 gint id)
+                  GwyDimensionArgs *dimsargs,
+                  GwyContainer *data,
+                  GwyDataField *dfield_template,
+                  gint id)
 {
-    GtkWidget *dialog, *table, *vbox, *hbox, *notebook, *label;
+    GtkWidget *dialog, *table, *vbox, *hbox, *notebook;
     WaveSynthControls controls;
     GwyDataField *dfield;
     GwyPixmapLayer *layer;
@@ -408,8 +442,8 @@ wave_synth_dialog(WaveSynthArgs *args,
     controls.nwaves = gtk_adjustment_new(args->nwaves, 1, 10000, 1, 10, 0);
     g_object_set_data(G_OBJECT(controls.nwaves), "target", &args->nwaves);
     gwy_table_attach_hscale(table, row, _("_Number of waves:"), NULL,
-                            GTK_OBJECT(controls.nwaves), GWY_HSCALE_DEFAULT);
-    g_signal_connect_swapped(controls.nwaves, "changed",
+                            GTK_OBJECT(controls.nwaves), GWY_HSCALE_SQRT);
+    g_signal_connect_swapped(controls.nwaves, "value-changed",
                              G_CALLBACK(gwy_synth_int_changed), &controls);
     row++;
 
@@ -448,10 +482,43 @@ wave_synth_dialog(WaveSynthArgs *args,
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
+    controls.k = gtk_adjustment_new(args->k, 0.1, 1000.0, 0.1, 10, 0);
+    g_object_set_data(G_OBJECT(controls.k), "target", &args->k);
+    gwy_table_attach_hscale(table, row, _("_Spatial frequency:"), NULL,
+                            GTK_OBJECT(controls.k), GWY_HSCALE_SQRT);
+    g_signal_connect_swapped(controls.k, "value-changed",
+                             G_CALLBACK(gwy_synth_double_changed), &controls);
+    row++;
+
+    row = gwy_synth_attach_variance(&controls, row,
+                                    &controls.k_noise, &args->k_noise);
+
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Sources")),
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
+
+    controls.x = gtk_adjustment_new(args->x, -1000.0, 1000.0, 0.01, 1, 0);
+    g_object_set_data(G_OBJECT(controls.x), "target", &args->x);
+    gwy_table_attach_hscale(table, row, _("_X center:"), NULL,
+                            GTK_OBJECT(controls.x), GWY_HSCALE_DEFAULT);
+    g_signal_connect_swapped(controls.x, "value-changed",
+                             G_CALLBACK(gwy_synth_double_changed), &controls);
+    row++;
+
+    row = gwy_synth_attach_variance(&controls, row,
+                                    &controls.x_noise, &args->x_noise);
+
+    controls.y = gtk_adjustment_new(args->y, -1000.0, 1000.0, 0.01, 1, 0);
+    g_object_set_data(G_OBJECT(controls.y), "target", &args->y);
+    gwy_table_attach_hscale(table, row, _("_X center:"), NULL,
+                            GTK_OBJECT(controls.y), GWY_HSCALE_DEFAULT);
+    g_signal_connect_swapped(controls.y, "value-changed",
+                             G_CALLBACK(gwy_synth_double_changed), &controls);
+    row++;
+
+    row = gwy_synth_attach_variance(&controls, row,
+                                    &controls.y_noise, &args->y_noise);
 
     gtk_widget_show_all(dialog);
     controls.in_init = FALSE;
@@ -490,6 +557,8 @@ wave_synth_dialog(WaveSynthArgs *args,
         }
     }
 
+    wave_synth_save_args(gwy_app_settings_get(), args, dimsargs);
+
     if (controls.sid) {
         g_source_remove(controls.sid);
         controls.sid = 0;
@@ -505,7 +574,7 @@ static GtkWidget*
 type_selector_new(WaveSynthControls *controls)
 {
     static const GwyEnum wave_types[] = {
-        { N_("Sine"),         WAVE_TYPE_SINE   },
+        { N_("Cosine"),       WAVE_TYPE_COSINE  },
         { N_("Inverse cosh"), WAVE_TYPE_INVCOSH },
     };
     GtkWidget *combo;
@@ -577,7 +646,10 @@ static void
 wave_type_selected(GtkComboBox *combo,
                    WaveSynthControls *controls)
 {
-    controls->args->type = gwy_enum_combo_box_get_active(combo);
+    WaveSynthArgs *args = controls->args;
+
+    args->type = gwy_enum_combo_box_get_active(combo);
+    precalculate_wave_table(args->wave_table, APPROX_WAVE_SIZE, args->type);
     wave_synth_invalidate(controls);
 }
 
@@ -634,13 +706,137 @@ preview(WaveSynthControls *controls)
     wave_synth_do(args, controls->dims->args, dfield);
 }
 
+static inline void
+approx_wave2(const gfloat *tab, gdouble x, gfloat *s, gfloat *c)
+{
+    guint xi = (guint)(x*(APPROX_WAVE_SIZE/(2.0*G_PI))) & APPROX_WAVE_MASK;
+    *s = tab[xi];
+    *c = tab[xi + APPROX_WAVE_SIZE];
+}
+
 static void
 wave_synth_do(const WaveSynthArgs *args,
-             const GwyDimensionArgs *dimsargs,
-             GwyDataField *dfield)
+              const GwyDimensionArgs *dimsargs,
+              GwyDataField *dfield)
 {
-    /* TODO */
+    GRand *rng;
+    GwyWaveSource *sources;
+    guint xres = dfield->xres, yres = dfield->yres;
+    guint i, j, k, nwaves = args->nwaves;
+    gdouble *d;
+    const gfloat *tab;
+
+    sources = g_new(GwyWaveSource, args->nwaves);
+    rand_gen_gaussian(NULL, 0.0);
+    rng = g_rand_new();
+    g_rand_set_seed(rng, args->seed);
+    randomize_sources(rng, sources, args, sqrt(xres*yres));
+    g_rand_free(rng);
+
+    d = dfield->data;
+    tab = args->wave_table;
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            const GwyWaveSource *source = sources;
+            gfloat zc = 0.0, zs = 0.0;
+
+            for (k = nwaves; k; k--, source++) {
+                gdouble x = j - source->x, y = i - source->y;
+                gdouble r = sqrt(x*x + y*y);
+                gfloat c, s;
+                approx_wave2(tab, source->k*r, &s, &c);
+                zs += s;
+                zc += c;
+            }
+            *(d++) = sqrt(zc*zc + zs*zs);
+        }
+    }
+
+    g_free(sources);
+
+    gwy_data_field_invalidate(dfield);
     gwy_data_field_data_changed(dfield);
+}
+
+static void
+precalculate_wave_table(gfloat *tab, guint n, WaveTypeType type)
+{
+    guint i;
+
+    if (type == WAVE_TYPE_COSINE) {
+        for (i = 0; i < n; i++) {
+            gdouble x = (i + 0.5)/n * 2.0*G_PI;
+            tab[i] = cos(x);
+            tab[i + n] = sin(x);
+        }
+    }
+    else if (type == WAVE_TYPE_INVCOSH) {
+        gdouble *dbltab = g_new(gdouble, 2*n);
+
+        for (i = 0; i < n; i++) {
+            gdouble x = (i + 0.5)/n * 10.0;
+            dbltab[i] = 1.0/cosh(x) + 1.0/cosh(10.0 - x);
+        }
+
+        complement_table(dbltab, tab, n);
+        g_free(dbltab);
+    }
+    else {
+        g_return_if_reached();
+    }
+}
+
+static void
+complement_table(gdouble *dbltab, gfloat *tab, guint n)
+{
+    guint i;
+    gdouble s = 0.0;
+
+    for (i = 0; i < n; i++)
+        s += dbltab[i];
+    s /= n;
+
+    for (i = 0; i < n; i++)
+        dbltab[i] -= s;
+
+    complement_wave(dbltab, dbltab + n, n);
+    for (i = 0; i < 2*n; i++)
+        tab[i] = dbltab[i];
+}
+
+static void
+complement_wave(const gdouble *cwave, gdouble *swave, guint n)
+{
+    gdouble *buf1 = g_new(gdouble, 3*n);
+    gdouble *buf2 = buf1 + n;
+    gdouble *buf3 = buf2 + n;
+
+    gwy_clear(swave, 0.0);
+    gwy_fft_simple(GWY_TRANSFORM_DIRECTION_FORWARD, n,
+                   1, cwave, swave,
+                   1, buf1, buf2);
+    gwy_fft_simple(GWY_TRANSFORM_DIRECTION_BACKWARD, n,
+                   1, buf2, buf1,
+                   1, buf3, swave);
+    g_free(buf1);
+}
+
+static void
+randomize_sources(GRand *rng,
+                  GwyWaveSource *sources,
+                  const WaveSynthArgs *args,
+                  gdouble q)
+{
+    guint i, nsources = args->nwaves;
+
+    for (i = 0; i < nsources; i++) {
+        sources[i].x = args->x + rand_gen_gaussian(rng, 1000.0*args->x_noise);
+        sources[i].y = args->y + rand_gen_gaussian(rng, 1000.0*args->y_noise);
+        sources[i].k = args->k/q*exp(rand_gen_gaussian(rng, 4.0*args->k_noise));
+        sources[i].z = (args->amplitude
+                        * exp(rand_gen_gaussian(rng,
+                                                4.0*args->amplitude_noise)));
+    }
 }
 
 static gdouble
@@ -710,8 +906,8 @@ wave_synth_sanitize_args(WaveSynthArgs *args)
 
 static void
 wave_synth_load_args(GwyContainer *container,
-                    WaveSynthArgs *args,
-                    GwyDimensionArgs *dimsargs)
+                     WaveSynthArgs *args,
+                     GwyDimensionArgs *dimsargs)
 {
     *args = wave_synth_defaults;
 
@@ -736,6 +932,9 @@ wave_synth_load_args(GwyContainer *container,
     gwy_container_gis_double_by_name(container, k_noise_key, &args->k_noise);
     wave_synth_sanitize_args(args);
 
+    args->wave_table = g_new(gfloat, 2*APPROX_WAVE_SIZE);
+    precalculate_wave_table(args->wave_table, APPROX_WAVE_SIZE, args->type);
+
     gwy_clear(dimsargs, 1);
     gwy_dimensions_copy_args(&dims_defaults, dimsargs);
     gwy_dimensions_load_args(dimsargs, container, prefix);
@@ -743,8 +942,8 @@ wave_synth_load_args(GwyContainer *container,
 
 static void
 wave_synth_save_args(GwyContainer *container,
-                    const WaveSynthArgs *args,
-                    const GwyDimensionArgs *dimsargs)
+                     const WaveSynthArgs *args,
+                     const GwyDimensionArgs *dimsargs)
 {
     gwy_container_set_int32_by_name(container, active_page_key,
                                     args->active_page);
