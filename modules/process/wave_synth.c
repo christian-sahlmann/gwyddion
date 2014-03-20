@@ -40,7 +40,7 @@
 
 // 18 is what fits into L2 cache on all modern processors (3*2¹⁸ floats ≈ 3 MB)
 enum {
-    APPROX_WAVE_BITS = 17,
+    APPROX_WAVE_BITS = 16,
     APPROX_WAVE_SIZE = 1 << APPROX_WAVE_BITS,
     APPROX_WAVE_MASK = APPROX_WAVE_SIZE - 1,
 };
@@ -62,6 +62,7 @@ enum {
 typedef enum {
     WAVE_TYPE_COSINE  = 0,
     WAVE_TYPE_INVCOSH = 1,
+    WAVE_TYPE_FLATTOP = 2,
     WAVE_TYPE_NTYPES
 } WaveTypeType;
 
@@ -439,7 +440,7 @@ wave_synth_dialog(WaveSynthArgs *args,
                             GWY_HSCALE_WIDGET);
     row++;
 
-    controls.nwaves = gtk_adjustment_new(args->nwaves, 1, 10000, 1, 10, 0);
+    controls.nwaves = gtk_adjustment_new(args->nwaves, 1, 1000, 1, 10, 0);
     g_object_set_data(G_OBJECT(controls.nwaves), "target", &args->nwaves);
     gwy_table_attach_hscale(table, row, _("_Number of waves:"), NULL,
                             GTK_OBJECT(controls.nwaves), GWY_HSCALE_SQRT);
@@ -576,6 +577,7 @@ type_selector_new(WaveSynthControls *controls)
     static const GwyEnum wave_types[] = {
         { N_("Cosine"),       WAVE_TYPE_COSINE  },
         { N_("Inverse cosh"), WAVE_TYPE_INVCOSH },
+        { N_("Flat top"),     WAVE_TYPE_FLATTOP },
     };
     GtkWidget *combo;
 
@@ -707,11 +709,18 @@ preview(WaveSynthControls *controls)
 }
 
 static inline void
-approx_wave2(const gfloat *tab, gdouble x, gfloat *s, gfloat *c)
+approx_wave_sc(const gfloat *tab, gdouble x, gfloat *s, gfloat *c)
 {
     guint xi = (guint)(x*(APPROX_WAVE_SIZE/(2.0*G_PI))) & APPROX_WAVE_MASK;
-    *s = tab[xi];
-    *c = tab[xi + APPROX_WAVE_SIZE];
+    *c = tab[xi];
+    *s = tab[xi + APPROX_WAVE_SIZE];
+}
+
+static inline gfloat
+approx_wave_c(const gfloat *tab, gdouble x)
+{
+    guint xi = (guint)(x*(APPROX_WAVE_SIZE/(2.0*G_PI))) & APPROX_WAVE_MASK;
+    return tab[xi];
 }
 
 static void
@@ -735,21 +744,59 @@ wave_synth_do(const WaveSynthArgs *args,
 
     d = dfield->data;
     tab = args->wave_table;
-    for (i = 0; i < yres; i++) {
-        for (j = 0; j < xres; j++) {
-            const GwyWaveSource *source = sources;
-            gfloat zc = 0.0, zs = 0.0;
+    if (args->quantity == WAVE_QUANTITY_DISPLACEMENT) {
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++) {
+                const GwyWaveSource *source = sources;
+                gfloat z = 0.0;
 
-            for (k = nwaves; k; k--, source++) {
-                gdouble x = j - source->x, y = i - source->y;
-                gdouble r = sqrt(x*x + y*y);
-                gfloat c, s;
-                approx_wave2(tab, source->k*r, &s, &c);
-                zs += s;
-                zc += c;
+                for (k = nwaves; k; k--, source++) {
+                    gdouble x = j - source->x, y = i - source->y;
+                    gdouble r = sqrt(x*x + y*y);
+                    z += source->z * approx_wave_c(tab, source->k*r);
+                }
+                *(d++) = z;
             }
-            *(d++) = sqrt(zc*zc + zs*zs);
         }
+    }
+    else if (args->quantity == WAVE_QUANTITY_INTENSITY) {
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++) {
+                const GwyWaveSource *source = sources;
+                gfloat zc = 0.0, zs = 0.0;
+
+                for (k = nwaves; k; k--, source++) {
+                    gdouble x = j - source->x, y = i - source->y;
+                    gdouble r = sqrt(x*x + y*y);
+                    gfloat c, s;
+                    approx_wave_sc(tab, source->k*r, &s, &c);
+                    zs += source->z*s;
+                    zc += source->z*c;
+                }
+                *(d++) = sqrt(zc*zc + zs*zs);
+            }
+        }
+    }
+    else if (args->quantity == WAVE_QUANTITY_PHASE) {
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++) {
+                const GwyWaveSource *source = sources;
+                gfloat zc = 0.0, zs = 0.0;
+
+                for (k = nwaves; k; k--, source++) {
+                    gdouble x = j - source->x, y = i - source->y;
+                    gdouble r = sqrt(x*x + y*y);
+                    gfloat c, s;
+                    approx_wave_sc(tab, source->k*r, &s, &c);
+                    zs += source->z*s;
+                    zc += source->z*c;
+                }
+                *(d++) = atan2(zs, zc);
+            }
+        }
+    }
+    else {
+        g_assert_not_reached();
     }
 
     g_free(sources);
@@ -781,6 +828,13 @@ precalculate_wave_table(gfloat *tab, guint n, WaveTypeType type)
         complement_table(dbltab, tab, n);
         g_free(dbltab);
     }
+    else if (type == WAVE_TYPE_FLATTOP) {
+        for (i = 0; i < n; i++) {
+            gdouble x = (i + 0.5)/n * 2.0*G_PI;
+            tab[i] = cos(x) - cos(3*x)/6 + cos(5*x)/50;
+            tab[i + n] = sin(x) - sin(3*x)/6 + sin(5*x)/50;
+        }
+    }
     else {
         g_return_if_reached();
     }
@@ -790,18 +844,21 @@ static void
 complement_table(gdouble *dbltab, gfloat *tab, guint n)
 {
     guint i;
-    gdouble s = 0.0;
+    gdouble s = 0.0, s2 = 0.0;
 
     for (i = 0; i < n; i++)
         s += dbltab[i];
     s /= n;
 
-    for (i = 0; i < n; i++)
+    for (i = 0; i < n; i++) {
         dbltab[i] -= s;
+        s2 += dbltab[i]*dbltab[i];
+    }
+    s2 = sqrt(s2/n);
 
     complement_wave(dbltab, dbltab + n, n);
     for (i = 0; i < 2*n; i++)
-        tab[i] = dbltab[i];
+        tab[i] = dbltab[i]/s2;
 }
 
 static void
@@ -810,14 +867,25 @@ complement_wave(const gdouble *cwave, gdouble *swave, guint n)
     gdouble *buf1 = g_new(gdouble, 3*n);
     gdouble *buf2 = buf1 + n;
     gdouble *buf3 = buf2 + n;
+    guint i;
 
-    gwy_clear(swave, 0.0);
+    gwy_clear(swave, n);
     gwy_fft_simple(GWY_TRANSFORM_DIRECTION_FORWARD, n,
                    1, cwave, swave,
                    1, buf1, buf2);
+    for (i = 0; i < n/2; i++) {
+        gdouble t = buf2[i];
+        buf2[i] = buf1[i];
+        buf1[i] = t;
+    }
+    for (i = n/2; i < n; i++) {
+        gdouble t = buf2[i];
+        buf2[i] = -buf1[i];
+        buf1[i] = t;
+    }
     gwy_fft_simple(GWY_TRANSFORM_DIRECTION_BACKWARD, n,
-                   1, buf2, buf1,
-                   1, buf3, swave);
+                   1, buf1, buf2,
+                   1, swave, buf3);
     g_free(buf1);
 }
 
@@ -830,8 +898,10 @@ randomize_sources(GRand *rng,
     guint i, nsources = args->nwaves;
 
     for (i = 0; i < nsources; i++) {
-        sources[i].x = args->x + rand_gen_gaussian(rng, 1000.0*args->x_noise);
-        sources[i].y = args->y + rand_gen_gaussian(rng, 1000.0*args->y_noise);
+        sources[i].x = q*(args->x
+                          + rand_gen_gaussian(rng, 1000.0*args->x_noise));
+        sources[i].y = q*(args->y
+                          + rand_gen_gaussian(rng, 1000.0*args->y_noise));
         sources[i].k = args->k/q*exp(rand_gen_gaussian(rng, 4.0*args->k_noise));
         sources[i].z = (args->amplitude
                         * exp(rand_gen_gaussian(rng,
@@ -893,7 +963,7 @@ wave_synth_sanitize_args(WaveSynthArgs *args)
     args->randomize = !!args->randomize;
     args->type = MIN(args->type, WAVE_TYPE_NTYPES-1);
     args->quantity = MIN(args->quantity, WAVE_QUANTITY_NTYPES-1);
-    args->nwaves = CLAMP(args->nwaves, 1, 10000);
+    args->nwaves = CLAMP(args->nwaves, 1, 1000);
     args->x = CLAMP(args->x, -1000.0, 1000.0);
     args->x_noise = CLAMP(args->x_noise, 0.0, 1.0);
     args->y = CLAMP(args->y, -1000.0, 1000.0);
