@@ -162,10 +162,10 @@ static void       col_synth_save_args     (GwyContainer *container,
 static const ColSynthArgs col_synth_defaults = {
     PAGE_DIMENSIONS,
     42, TRUE, FALSE, TRUE,
-    0.0, 0.0,
-    0.0, 2.0*G_PI,
-    1.0, 0.0,
     10.0,
+    0.0, 1.0,
+    0.0, 1.0,
+    1.0, 0.0,
     RELAX_WEAK,
 };
 
@@ -539,10 +539,12 @@ update_controls(ColSynthControls *controls,
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height), args->height);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height_noise),
                              args->height_noise);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->theta), args->theta);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->theta),
+                             args->theta * 180.0/G_PI);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->theta_spread),
                              args->theta_spread);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->phi), args->phi);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->phi),
+                             args->phi * 180.0/G_PI);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->phi_spread),
                              args->phi_spread);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->relaxation),
