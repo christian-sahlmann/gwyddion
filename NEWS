@@ -4,11 +4,17 @@ Application:
 
 Libraries:
 - libgwydgets: Igor Pro .itx graph ASCII export option was added.
+- libgwyprocess: Function gwy_data_field_extend() for extending data fields
+  with various exterior handling types was added.
+- libgwyprocess: A function for Euclidean distance transform of a mask was
+  added.
 
 Modules:
 - Columnar synthesis (new): Simulation of columnar film growth.
 - Wave synthesis (new): Composes images using interference of waves from a
   number of point sources.
+- Euclidean distance transform (new): Creates a data field representing the
+  distance transform of given mask.
 - MetroPro: Files wiht header formats 2 and 3 are recognised and imported.
 - Omicron: Value offsets in grid spectra were corrected.
 - Read value: Local curvature at cursor is also calculated and displayed.
