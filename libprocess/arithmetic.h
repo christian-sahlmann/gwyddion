@@ -57,6 +57,15 @@ gwy_data_line_check_compatibility(GwyDataLine *data_line1,
                                   GwyDataLine *data_line2,
                                   GwyDataCompatibilityFlags check);
 
+GwyDataField* gwy_data_field_extend(GwyDataField *data_field,
+                                    guint left,
+                                    guint right,
+                                    guint up,
+                                    guint down,
+                                    GwyExteriorType exterior,
+                                    gdouble fill_value,
+                                    gboolean keep_offsets);
+
 G_END_DECLS
 
 #endif /* __GWY_PROCESS_ARITHMETIC_H__ */
