@@ -61,6 +61,7 @@ process_LTLIBRARIES = \
 	local_contrast.la \
 	mark_with.la \
 	maskcor.la \
+	mask_edt.la \
 	maskops.la \
 	mcrop.la \
 	median-bg.la \
@@ -166,6 +167,7 @@ lno_synth_la_SOURCES           = lno_synth.c dimensions.h synth.h
 local_contrast_la_SOURCES      = local_contrast.c
 mark_with_la_SOURCES           = mark_with.c
 maskcor_la_SOURCES             = maskcor.c
+mask_edt_la_SOURCES            = mask_edt.c
 maskops_la_SOURCES             = maskops.c
 mcrop_la_SOURCES               = mcrop.c
 median_bg_la_SOURCES           = median-bg.c
