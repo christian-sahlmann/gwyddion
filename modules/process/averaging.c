@@ -128,7 +128,7 @@ averaging_dialog(GwyContainer *data)
     GwyDataField *score;
     gint response;
 
-    dialog = gtk_dialog_new_with_buttons(_("Select area of interest"),
+    dialog = gtk_dialog_new_with_buttons(_("Averaging of Similar Structures"),
                                          NULL, 0,
                                          GTK_STOCK_CANCEL,
                                          GTK_RESPONSE_CANCEL,
