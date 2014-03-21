@@ -141,6 +141,8 @@ void gwy_data_field_grains_splash_water(GwyDataField *data_field,
                                         gint locate_steps,
                                         gdouble locate_dropsize);
 
+void gwy_data_field_grain_distance_transform(GwyDataField *data_field);
+
 G_END_DECLS
 
 #endif /* __GWY_PROCESS_GRAINS__ */

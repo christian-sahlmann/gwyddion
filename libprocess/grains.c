@@ -3940,6 +3940,340 @@ gwy_data_field_fill_one_grain(gint xres,
     return count;
 }
 
+/* Euclidean distance transform */
+
+enum {
+    SEDINF = 0x7fffffffu,
+    QUEUED = 0x80000000u,
+};
+
+typedef struct {
+    guint size;
+    guint len;
+    gint *data;
+} IntList;
+
+static inline IntList*
+int_list_new(guint prealloc)
+{
+    IntList *list = g_slice_new0(IntList);
+    prealloc = MAX(prealloc, 16);
+    list->size = prealloc;
+    list->data = g_new(gint, list->size);
+    return list;
+}
+
+static inline void
+int_list_add(IntList *list, gint i)
+{
+    if (G_UNLIKELY(list->len == list->size)) {
+        list->size = MAX(2*list->size, 16);
+        list->data = g_renew(gint, list->data, list->size);
+    }
+
+    list->data[list->len] = i;
+    list->len++;
+}
+
+static void
+int_list_free(IntList *list)
+{
+    g_free(list->data);
+    g_slice_free(IntList, list);
+}
+
+
+// Set squared distance for all points that have an 8-neighbour outside and
+// add them to the queue.
+static void
+distance_transform_first_step(guint *distances,
+                              guint xres, guint yres,
+                              IntList *queue)
+{
+    guint k = 0, j, i;
+
+    queue->len = 0;
+    for (j = xres; j; j--, k++) {
+        if (distances[k]) {
+            distances[k] = 1;
+            int_list_add(queue, k);
+        }
+    }
+
+    if (G_UNLIKELY(yres == 1))
+        return;
+
+    for (i = 1; i < yres-1; i++) {
+        if (distances[k]) {
+            distances[k] = 1;
+            int_list_add(queue, k);
+        }
+        k++;
+
+        if (G_UNLIKELY(xres == 1))
+            continue;
+
+        for (j = xres-2; j; j--, k++) {
+            if (!distances[k])
+                continue;
+
+            if (!distances[k-xres] || !distances[k-1]
+                || !distances[k+1] || !distances[k+xres]) {
+                distances[k] = 1;
+                int_list_add(queue, k);
+            }
+            else if (!distances[k-xres-1] || !distances[k-xres+1]
+                     || !distances[k+xres-1] || !distances[k+xres+1]) {
+                distances[k] = 2;
+                int_list_add(queue, k);
+            }
+        }
+
+        if (distances[k]) {
+            distances[k] = 1;
+            int_list_add(queue, k);
+        }
+        k++;
+    }
+
+    for (j = xres; j; j--, k++) {
+        if (distances[k]) {
+            distances[k] = 1;
+            int_list_add(queue, k);
+        }
+    }
+}
+
+static void
+distance_transform_erode_sed2(guint *distances, const guint *olddist,
+                              guint xres, guint yres,
+                              const IntList *inqueue,
+                              IntList *outqueue)
+{
+    enum { hvsed2 = 3, diag2 = 6 };
+    guint q;
+
+    outqueue->len = 0;
+
+    for (q = 0; q < inqueue->len; q++) {
+        guint k = inqueue->data[q], kk = k-xres-1;
+        guint i = k/xres, j = k % xres;
+        guint d2hv = olddist[k] + hvsed2, d2d = olddist[k] + diag2;
+
+        if (i && j && (distances[kk] & ~QUEUED) > d2d) {
+            if (!(distances[kk] & QUEUED))
+                int_list_add(outqueue, kk);
+            distances[kk] = QUEUED | d2d;
+        }
+        kk++;
+        if (i && (distances[kk] & ~QUEUED) > d2hv) {
+            if (!(distances[kk] & QUEUED))
+                int_list_add(outqueue, kk);
+            distances[kk] = QUEUED | d2hv;
+        }
+        kk++;
+        if (i && j < xres-1 && (distances[kk] & ~QUEUED) > d2d) {
+            if (!(distances[kk] & QUEUED))
+                int_list_add(outqueue, kk);
+            distances[kk] = QUEUED | d2d;
+        }
+        kk += xres-2;
+        if (j && (distances[kk] & ~QUEUED) > d2hv) {
+            if (!(distances[kk] & QUEUED))
+                int_list_add(outqueue, kk);
+            distances[kk] = QUEUED | d2hv;
+        }
+        kk += 2;
+        if (j < xres-1 && (distances[kk] & ~QUEUED) > d2hv) {
+            if (!(distances[kk] & QUEUED))
+                int_list_add(outqueue, kk);
+            distances[kk] = QUEUED | d2hv;
+        }
+        kk += xres-2;
+        if (i < yres-1 && j && (distances[kk] & ~QUEUED) > d2d) {
+            if (!(distances[kk] & QUEUED))
+                int_list_add(outqueue, kk);
+            distances[kk] = QUEUED | d2d;
+        }
+        kk++;
+        if (i < yres-1 && (distances[kk] & ~QUEUED) > d2hv) {
+            if (!(distances[kk] & QUEUED))
+                int_list_add(outqueue, kk);
+            distances[kk] = QUEUED | d2hv;
+        }
+        kk++;
+        if (i < yres-1 && j < xres-1 && (distances[kk] & ~QUEUED) > d2d) {
+            if (!(distances[kk] & QUEUED))
+                int_list_add(outqueue, kk);
+            distances[kk] = QUEUED | d2d;
+        }
+    }
+}
+
+static void
+distance_transform_erode_sed(guint *distances, const guint *olddist,
+                             guint xres,
+                             guint l,
+                             const IntList *inqueue,
+                             IntList *outqueue)
+{
+    guint hvsed2 = 2*l - 1, diag2 = 2*hvsed2;
+    guint q;
+
+    outqueue->len = 0;
+
+    for (q = 0; q < inqueue->len; q++) {
+        guint k = inqueue->data[q], kk = k-xres-1;
+        guint d2hv = olddist[k] + hvsed2, d2d = olddist[k] + diag2;
+
+        if ((distances[kk] & ~QUEUED) > d2d) {
+            if (!(distances[kk] & QUEUED))
+                int_list_add(outqueue, kk);
+            distances[kk] = QUEUED | d2d;
+        }
+        kk++;
+        if ((distances[kk] & ~QUEUED) > d2hv) {
+            if (!(distances[kk] & QUEUED))
+                int_list_add(outqueue, kk);
+            distances[kk] = QUEUED | d2hv;
+        }
+        kk++;
+        if ((distances[kk] & ~QUEUED) > d2d) {
+            if (!(distances[kk] & QUEUED))
+                int_list_add(outqueue, kk);
+            distances[kk] = QUEUED | d2d;
+        }
+        kk += xres-2;
+        if ((distances[kk] & ~QUEUED) > d2hv) {
+            if (!(distances[kk] & QUEUED))
+                int_list_add(outqueue, kk);
+            distances[kk] = QUEUED | d2hv;
+        }
+        kk += 2;
+        if ((distances[kk] & ~QUEUED) > d2hv) {
+            if (!(distances[kk] & QUEUED))
+                int_list_add(outqueue, kk);
+            distances[kk] = QUEUED | d2hv;
+        }
+        kk += xres-2;
+        if ((distances[kk] & ~QUEUED) > d2d) {
+            if (!(distances[kk] & QUEUED))
+                int_list_add(outqueue, kk);
+            distances[kk] = QUEUED | d2d;
+        }
+        kk++;
+        if ((distances[kk] & ~QUEUED) > d2hv) {
+            if (!(distances[kk] & QUEUED))
+                int_list_add(outqueue, kk);
+            distances[kk] = QUEUED | d2hv;
+        }
+        kk++;
+        if ((distances[kk] & ~QUEUED) > d2d) {
+            if (!(distances[kk] & QUEUED))
+                int_list_add(outqueue, kk);
+            distances[kk] = QUEUED | d2d;
+        }
+    }
+}
+
+/**
+ * _gwy_distance_transform_raw:
+ * @distances: Array @xres*@yres with nonzeroes within shapes.  If all non-zero
+ *             values are %SEDINF you can pass %TRUE for @infinitised.
+ * @workspace: Workspace of identical dimensions as @distances.
+ * @xres: Width.
+ * @yres: Height.
+ * @inqueue: Pre-allocated queue used by the algorithm.
+ * @outqueue: Second pre-allocated queue used by the algorithm.
+ *
+ * Performs distance transformation.
+ *
+ * When it finishes non-zero values in @distances are squared Euclidean
+ * distances from outside pixels (including outside the field).
+ *
+ * Workspace objects @workspace, @inqueue and @outqueue do not carry any
+ * information.  They are allocated by the caller to enable an efficient
+ * repeated use.
+ **/
+void
+distance_transform_raw(guint *distances, guint *workspace,
+                       guint xres, guint yres,
+                       IntList *inqueue, IntList *outqueue)
+{
+    guint l, q;
+
+    distance_transform_first_step(distances, xres, yres, inqueue);
+
+    for (l = 2; inqueue->len; l++) {
+        gint *qdata;
+
+        for (q = 0; q < inqueue->len; q++) {
+            guint k = inqueue->data[q];
+            workspace[k] = distances[k];
+        }
+        if (l == 2)
+            distance_transform_erode_sed2(distances, workspace, xres, yres,
+                                          inqueue, outqueue);
+        else
+            distance_transform_erode_sed(distances, workspace, xres, l,
+                                         inqueue, outqueue);
+
+        qdata = outqueue->data;
+        for (q = outqueue->len; q; q--, qdata++)
+            distances[*qdata] &= ~QUEUED;
+
+        GWY_SWAP(IntList*, inqueue, outqueue);
+    }
+}
+
+/**
+ * gwy_data_field_grain_distance_transform:
+ * @data_field: A data field with zeroes in empty space and nonzeroes in
+ *              grains.
+ *
+ * Performs Euclidean distance transform of a data field with grains.
+ *
+ * Each non-zero value will be replaced with Euclidean distance to the grain
+ * boundary, measured in pixels.
+ *
+ * Since: 2.36
+ **/
+void
+gwy_data_field_grain_distance_transform(GwyDataField *data_field)
+{
+    IntList *inqueue, *outqueue;
+    guint xres, yres, k, inisize;
+    guint *distances, *workspace;
+    gdouble *d;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+
+    xres = data_field->xres;
+    yres = data_field->yres;
+    d = data_field->data;
+    distances = g_new(guint, xres*yres);
+    workspace = g_new(guint, xres*yres);
+
+    for (k = 0; k < xres*yres; k++)
+        distances[k] = (d[k] > 0.0) ? SEDINF : 0;
+
+    inisize = (guint)(8*sqrt(xres*yres) + 16);
+    inqueue = int_list_new(inisize);
+    outqueue = int_list_new(inisize);
+
+    distance_transform_raw(distances, workspace, xres, yres, inqueue, outqueue);
+
+    int_list_free(inqueue);
+    int_list_free(outqueue);
+
+    for (k = 0; k < xres*yres; k++)
+        d[k] = sqrt(distances[k]);
+    gwy_data_field_invalidate(data_field);
+
+    g_free(workspace);
+    g_free(distances);
+}
+
 /************************** Documentation ****************************/
 
 /**
