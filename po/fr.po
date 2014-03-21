@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-03-16 03:58+0100\n"
-"PO-Revision-Date: 2014-03-16 13:30+0100\n"
+"POT-Creation-Date: 2014-03-21 03:58+0100\n"
+"PO-Revision-Date: 2014-03-21 21:07+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -858,7 +858,7 @@ msgstr "pixels"
 #: modules/file/pixmap.c:1073 modules/file/pixmap.c:3143
 #: modules/file/rawfile.c:401 modules/process/angle_dist.c:172
 #: modules/process/calcoefs_new.c:348 modules/process/calibrate.c:385
-#: modules/process/col_synth.c:306 modules/process/correct_affine.c:277
+#: modules/process/col_synth.c:328 modules/process/correct_affine.c:292
 #: modules/process/curvature.c:605 modules/process/cwt.c:135
 #: modules/process/deposit_synth.c:359 modules/process/drift.c:240
 #: modules/process/dwt.c:166 modules/process/dwtanisotropy.c:184
@@ -1848,7 +1848,7 @@ msgid "Origin"
 msgstr "Origine"
 
 #: app/gwyplaintool.c:1019 modules/file/rawfile.c:961
-#: modules/process/col_synth.c:398 modules/process/convolution_filter.c:364
+#: modules/process/convolution_filter.c:364
 #: modules/process/convolution_filter.c:568 modules/process/neural.c:414
 #: modules/process/obj_synth.c:540 modules/process/pat_synth.c:1488
 msgid "Size"
@@ -2844,12 +2844,13 @@ msgstr "Exporter au format texte"
 
 #: modules/file/asciiexport.c:273 modules/file/pixmap.c:3246
 #: modules/file/rawfile.c:722 modules/file/rawxyz.c:671
-#: modules/process/calibrate.c:598 modules/process/correct_affine.c:456
-#: modules/process/extend.c:265 modules/process/fft_filter_1d.c:296
-#: modules/process/grain_dist.c:306 modules/process/grain_edge.c:270
-#: modules/process/grain_mark.c:345 modules/process/grain_rem_threshold.c:328
-#: modules/process/grain_wshed.c:278 modules/process/tip_blind.c:360
-#: modules/tools/spotremove.c:317 modules/tools/stats.c:379
+#: modules/process/calibrate.c:598 modules/process/col_synth.c:456
+#: modules/process/correct_affine.c:457 modules/process/extend.c:265
+#: modules/process/fft_filter_1d.c:296 modules/process/grain_dist.c:306
+#: modules/process/grain_edge.c:270 modules/process/grain_mark.c:345
+#: modules/process/grain_rem_threshold.c:328 modules/process/grain_wshed.c:278
+#: modules/process/tip_blind.c:360 modules/tools/spotremove.c:317
+#: modules/tools/stats.c:379
 msgid "Options"
 msgstr "Options"
 
@@ -3303,7 +3304,7 @@ msgid "Unsupported sample format"
 msgstr "Format non supporté"
 
 #: modules/file/gwytiff.h:1030 modules/file/matfile.c:276
-#: modules/file/matfile.c:298 modules/file/psia.c:349 modules/file/zemax.c:168
+#: modules/file/matfile.c:298 modules/file/psia.c:351 modules/file/zemax.c:168
 msgid "File is truncated."
 msgstr "Le fichier est tronqué."
 
@@ -4603,7 +4604,7 @@ msgstr "Échelle"
 msgid "_Zoom:"
 msgstr "_Zoom :"
 
-#: modules/file/pixmap.c:3197 modules/process/col_synth.c:405
+#: modules/file/pixmap.c:3197 modules/process/col_synth.c:426
 #: modules/process/grain_mark.c:310 modules/process/grain_rem_threshold.c:284
 #: modules/process/obj_synth.c:576 modules/process/pat_synth.c:892
 #: modules/process/pat_synth.c:1193 modules/process/pat_synth.c:1528
@@ -4731,16 +4732,16 @@ msgstr "Importe les fichiers Park Systems."
 msgid "Park Systems data files (.tiff, .tif)"
 msgstr "Park Systems (.tiff, .tif)"
 
-#: modules/file/psia.c:339
+#: modules/file/psia.c:341
 msgid "Data tag is missing."
 msgstr "Étiquette de données manquante."
 
-#: modules/file/psia.c:498
+#: modules/file/psia.c:524
 #, c-format
 msgid "Header is too short (only %lu bytes)."
 msgstr "L'en-tête est trop court (seulement %lu octets)."
 
-#: modules/file/psia.c:614
+#: modules/file/psia.c:640
 #, c-format
 msgid "Spectroscopy header is too short (only %lu bytes)."
 msgstr "L'en-tête de spectroscopie est trop court (seulement %lu octets)."
@@ -4881,7 +4882,7 @@ msgstr "Préréglages"
 #: modules/process/grain_edge.c:215 modules/process/grain_mark.c:261
 #: modules/process/grain_rem_threshold.c:226 modules/process/grain_wshed.c:180
 #: modules/process/mark_with.c:211 modules/process/polydistort.c:213
-#: modules/process/scars.c:474 modules/process/synth.h:480
+#: modules/process/scars.c:474 modules/process/synth.h:508
 #: modules/process/tip_model.c:167 modules/tools/linestats.c:421
 #: modules/tools/sfunctions.c:476 modules/tools/stats.c:436
 #: modules/volume/volume_extract.c:328
@@ -5065,7 +5066,7 @@ msgstr ""
 "<b>L'analyse du contenu à échoué</b>\n"
 "Le contenu de `%s' ne correspond pas au format : %s."
 
-#: modules/file/rawfile.c:1614 modules/process/neural.c:1581
+#: modules/file/rawfile.c:1614 modules/process/neural.c:1582
 #, c-format
 msgid "The name `%s' is invalid."
 msgstr "Le nom `%s' est invalide."
@@ -5192,7 +5193,7 @@ msgstr "Unités _latérales :"
 msgid "_Value units:"
 msgstr "Unités de valeur :"
 
-#: modules/file/rawxyz.c:675 modules/process/correct_affine.c:461
+#: modules/file/rawxyz.c:675 modules/process/correct_affine.c:475
 #: modules/process/drift.c:300 modules/process/dwt.c:205
 #: modules/process/dwtanisotropy.c:201 modules/process/fft_filter_1d.c:329
 #: modules/process/fft_profile.c:298 modules/process/fractal.c:228
@@ -6769,7 +6770,7 @@ msgstr "Rogner aux données réelles"
 #: modules/process/grain_edge.c:286 modules/process/grain_mark.c:378
 #: modules/process/grain_rem_threshold.c:372 modules/process/mark_with.c:355
 #: modules/process/polydistort.c:335 modules/process/scars.c:582
-#: modules/process/synth.h:484 modules/volume/volume_extract.c:423
+#: modules/process/synth.h:512 modules/volume/volume_extract.c:423
 #: modules/volume/volume_extract.c:503
 msgid "I_nstant updates"
 msgstr "Mise à jour instantanée"
@@ -6936,21 +6937,26 @@ msgstr "Facteur de calibration _Z :"
 msgid "Create new channel"
 msgstr "Créer un nouveau canal"
 
-#: modules/process/col_synth.c:164
+#: modules/process/col_synth.c:177
 msgid "Generates columnar surfaces by a simple growth algorithm."
 msgstr ""
 "Génère des surfaces colonnaires à l'aide d'un algorithme de croissance "
 "simple."
 
-#: modules/process/col_synth.c:178
+#: modules/process/col_synth.c:191
 msgid "/S_ynthetic/_Columnar..."
 msgstr "/S_ynthèse/_Croissance colonnaire..."
 
-#: modules/process/col_synth.c:182
+#: modules/process/col_synth.c:195
 msgid "Generate columnar surface"
 msgstr "Générer une surface colonnaire"
 
-#: modules/process/col_synth.c:277 modules/process/deposit_synth.c:315
+#: modules/process/col_synth.c:263 modules/process/col_synth.c:628
+#: modules/process/neural.c:1275 modules/process/pid.c:336
+msgid "Starting..."
+msgstr "Démarrage..."
+
+#: modules/process/col_synth.c:301 modules/process/deposit_synth.c:315
 #: modules/process/deposit_synth.c:327 modules/process/deposit_synth.c:547
 #: modules/process/deposit_synth.c:561 modules/process/fft_synth.c:323
 #: modules/process/lno_synth.c:413 modules/process/noise_synth.c:325
@@ -6958,46 +6964,64 @@ msgstr "Générer une surface colonnaire"
 msgid "Generated"
 msgstr "Généré"
 
-#: modules/process/col_synth.c:304
+#: modules/process/col_synth.c:326
 msgid "Grow Columnar Surface"
 msgstr "Surface à croissance colonnaire"
 
-#: modules/process/col_synth.c:369 modules/process/deposit_synth.c:428
+#: modules/process/col_synth.c:376
+msgid "Progressive preview"
+msgstr "Aperçu progressif"
+
+#: modules/process/col_synth.c:399 modules/process/deposit_synth.c:428
 #: modules/process/fft_synth.c:417 modules/process/lno_synth.c:504
 #: modules/process/noise_synth.c:416 modules/process/obj_synth.c:500
 #: modules/process/pat_synth.c:470
 msgid "Dimensions"
 msgstr "Dimensions"
 
-#: modules/process/col_synth.c:380 modules/process/deposit_synth.c:438
+#: modules/process/col_synth.c:407 modules/process/deposit_synth.c:438
 #: modules/process/fft_synth.c:428 modules/process/lno_synth.c:515
 #: modules/process/noise_synth.c:427 modules/process/obj_synth.c:511
 #: modules/process/pat_synth.c:482
 msgid "Generator"
 msgstr "Générateur"
 
-#: modules/process/col_synth.c:384
-msgid "_Source:"
-msgstr "_Source :"
-
-#: modules/process/col_synth.c:391 modules/process/lno_synth.c:1057
+#: modules/process/col_synth.c:413 modules/process/lno_synth.c:1057
 #: modules/process/obj_synth.c:522
 msgid "Co_verage:"
-msgstr "Couverture :"
+msgstr "Cou_verture :"
 
-#: modules/process/col_synth.c:409 modules/process/fft_synth.c:437
-#: modules/process/lno_synth.c:551 modules/process/noise_synth.c:459
-#: modules/process/obj_synth.c:580
-msgid "_Like Current Channel"
-msgstr "Identique au canal courant"
+#: modules/process/col_synth.c:420
+msgid "Particle Size"
+msgstr "Taille de particule"
 
-#: modules/process/col_synth.c:481
-msgid "source|Cosine"
-msgstr "Cosinus"
+#: modules/process/col_synth.c:438
+msgid "Incidence"
+msgstr "Incidence"
 
-#: modules/process/col_synth.c:483
-msgid "source|Directional"
-msgstr "Directionnelle"
+#: modules/process/col_synth.c:443
+msgid "Inclination"
+msgstr "Inclinaison"
+
+#: modules/process/col_synth.c:449
+msgid "Direction"
+msgstr "Direction"
+
+#: modules/process/col_synth.c:461
+msgid "Relaxation type:"
+msgstr "Type de relaxation :"
+
+#: modules/process/col_synth.c:516
+msgid "Weak"
+msgstr "Faible"
+
+#: modules/process/col_synth.c:517
+msgid "Strong"
+msgstr "Fort"
+
+#: modules/process/col_synth.c:661
+msgid "Depositing particles..."
+msgstr "Dépôt des particules en cours..."
 
 #: modules/process/convolution_filter.c:130
 msgid "symmetry|None"
@@ -7056,7 +7080,7 @@ msgstr "Symétrie horizontale"
 msgid "VSym"
 msgstr "Symétrie verticale"
 
-#: modules/process/correct_affine.c:209
+#: modules/process/correct_affine.c:224
 msgid ""
 "Corrects affine distortion of images by matching image Bravais lattice to "
 "the true one."
@@ -7064,82 +7088,86 @@ msgstr ""
 "Corrige la distorsion affine des images en ajustant la matrice de Bravais "
 "sur la matrice réelle."
 
-#: modules/process/correct_affine.c:224
+#: modules/process/correct_affine.c:239
 msgid "/_Correct Data/_Affine Distortion..."
 msgstr "/_Correction des données/Distorsion _affine..."
 
-#: modules/process/correct_affine.c:228
+#: modules/process/correct_affine.c:243
 msgid "Correct affine distortion"
 msgstr "Corriger la distorsion affine"
 
-#: modules/process/correct_affine.c:275
+#: modules/process/correct_affine.c:290
 msgid "Affine Correction"
 msgstr "Correction affine"
 
-#: modules/process/correct_affine.c:357 modules/process/drift.c:337
+#: modules/process/correct_affine.c:362 modules/process/drift.c:337
 #: modules/process/fit_2d.c:316 modules/process/neural.c:547
 #: modules/process/polydistort.c:294
 msgid "Preview:"
 msgstr "Aperçu :"
 
-#: modules/process/correct_affine.c:366 modules/tools/grainremover.c:109
+#: modules/process/correct_affine.c:370 modules/tools/grainremover.c:109
 msgid "_Data"
 msgstr "_Données"
 
-#: modules/process/correct_affine.c:367
+#: modules/process/correct_affine.c:371
 msgid "2D _ACF"
 msgstr "_ACF 2D"
 
-#: modules/process/correct_affine.c:368 modules/process/drift.c:346
+#: modules/process/correct_affine.c:372 modules/process/drift.c:346
 msgid "Correc_ted data"
 msgstr "Données corrigées"
 
-#: modules/process/correct_affine.c:377
+#: modules/process/correct_affine.c:381
 msgid "Lattice Vectors"
 msgstr "Vecteurs de base"
 
 #. TRANSLATORS: Correct is an adjective here.
-#: modules/process/correct_affine.c:403
+#: modules/process/correct_affine.c:406
 msgid "Correct Lattice"
 msgstr "Corriger la matrice"
 
-#: modules/process/correct_affine.c:408
+#: modules/process/correct_affine.c:410
 msgid "_Lattice type:"
 msgstr "Type de matrice :"
 
-#: modules/process/correct_affine.c:416
+#: modules/process/correct_affine.c:417
 msgid "User defined"
 msgstr "Défini par l'utilisateur"
 
-#: modules/process/correct_affine.c:431
+#: modules/process/correct_affine.c:432
 msgid "_Different lengths"
 msgstr "Longueurs _différentes"
 
-#: modules/process/correct_affine.c:475
+#: modules/process/correct_affine.c:461
+msgid "Image for _ACF:"
+msgstr "Image pour l'_ACF : "
+
+#: modules/process/correct_affine.c:488
 msgid "_Scaling:"
 msgstr "Échelle :"
 
-#: modules/process/correct_affine.c:483
+#: modules/process/correct_affine.c:495
 msgid "Exactly as specified"
 msgstr "Tel que spécifié"
 
-#: modules/process/correct_affine.c:484
+#: modules/process/correct_affine.c:496
 msgid "Preserve area"
 msgstr "Conserver l'aire"
 
-#: modules/process/correct_affine.c:485
+#: modules/process/correct_affine.c:497
 msgid "Preserve X scale"
 msgstr "Conserver l'échelle X"
 
-#: modules/process/correct_affine.c:572
+#: modules/process/correct_affine.c:584
 msgid "length"
 msgstr "longueur"
 
-#: modules/process/correct_affine.c:579
+#: modules/process/correct_affine.c:591
 msgid "angle"
 msgstr "angle"
 
-#: modules/process/correct_affine.c:640
+#: modules/process/correct_affine.c:684
 msgid "Re_fine"
 msgstr "A_ffiner"
 
@@ -7369,11 +7397,11 @@ msgstr "Taux de _couverture :"
 msgid "_Relax steps:"
 msgstr "Étapes de _relaxation :"
 
-#: modules/process/deposit_synth.c:706 modules/process/synth.h:519
+#: modules/process/deposit_synth.c:706 modules/process/synth.h:547
 msgid "R_andom seed:"
 msgstr "Graine _aléatoire :"
 
-#: modules/process/deposit_synth.c:712 modules/process/synth.h:525
+#: modules/process/deposit_synth.c:712 modules/process/synth.h:553
 msgid "seed|_New"
 msgstr "_Nouvelle"
 
@@ -8125,6 +8153,11 @@ msgstr "Synthèse spectrale"
 #: modules/process/noise_synth.c:455
 msgid "_RMS:"
 msgstr "_RMS :"
+
+#: modules/process/fft_synth.c:437 modules/process/lno_synth.c:551
+#: modules/process/noise_synth.c:459 modules/process/obj_synth.c:580
+msgid "_Like Current Channel"
+msgstr "Identique au canal courant"
 
 #: modules/process/fft_synth.c:448
 msgid "M_inimum frequency:"
@@ -9830,24 +9863,20 @@ msgstr ""
 msgid "Training..."
 msgstr "Apprentissage..."
 
-#: modules/process/neural.c:1186 modules/process/neural.c:1350
+#: modules/process/neural.c:1187 modules/process/neural.c:1351
 msgid "Evaluating..."
 msgstr "Évaluation..."
 
-#: modules/process/neural.c:1274 modules/process/pid.c:336
-msgid "Starting..."
-msgstr "Démarrage..."
-
-#: modules/process/neural.c:1310
+#: modules/process/neural.c:1311
 msgid "Training was canceled."
 msgstr "L'apprentissage a été annulé."
 
-#: modules/process/neural.c:1320
+#: modules/process/neural.c:1321
 #, c-format
 msgid "Mean difference: %.*f %s"
 msgstr "Différence moyenne : %.*f %s"
 
-#: modules/process/neural.c:1372
+#: modules/process/neural.c:1373
 msgid "Evaluated signal"
 msgstr "Signal évalué"
 
@@ -10528,31 +10557,31 @@ msgstr "Circularité"
 msgid "Roundn_ess:"
 msgstr "Circularité :"
 
-#: modules/process/synth.h:370
+#: modules/process/synth.h:398
 msgid "Orientation"
 msgstr "Orientation"
 
-#: modules/process/synth.h:379
+#: modules/process/synth.h:407
 msgid "Orien_tation:"
 msgstr "Orien_tation :"
 
-#: modules/process/synth.h:403
+#: modules/process/synth.h:431
 msgid "Variance:"
 msgstr "Variance :"
 
-#: modules/process/synth.h:427
+#: modules/process/synth.h:455
 msgid "Deformation"
 msgstr "Déformation"
 
-#: modules/process/synth.h:435
+#: modules/process/synth.h:463
 msgid "_Amplitude:"
 msgstr "_Amplitude :"
 
-#: modules/process/synth.h:443
+#: modules/process/synth.h:471
 msgid "_Lateral scale:"
 msgstr "Échelle _latérale :"
 
-#: modules/process/synth.h:537
+#: modules/process/synth.h:565
 msgid "Randomi_ze"
 msgstr "Randomiser"
 
@@ -12222,6 +12251,15 @@ msgstr "/_Inverser les valeurs"
 msgid "Invert value in volume data"
 msgstr "Inverser les valeurs dans les données volumiques"
 
+#~ msgid "_Source:"
+#~ msgstr "_Source :"
+
+#~ msgid "source|Cosine"
+#~ msgstr "Cosinus"
+
+#~ msgid "source|Directional"
+#~ msgstr "Directionnelle"
+
 #~ msgid "File header is too short."
 #~ msgstr "L'en-tête de fichier est trop court."
 
@@ -12404,9 +12442,6 @@ msgstr "Inverser les valeurs dans les données volumiques"
 #~ msgid "/_Synthetic/_Deposit particles..."
 #~ msgstr "/S_ynthèse/Dépôt de particule_s..."
 
-#~ msgid "Deposit spherical particles"
-#~ msgstr "Dépôt de particules sphériques"
-
 #~ msgid "_Start"
 #~ msgstr "Début"
 
@@ -12415,9 +12450,6 @@ msgstr "Inverser les valeurs dans les données volumiques"
 
 #~ msgid "_Size"
 #~ msgstr "Taille"
-
-#~ msgid "Particles"
-#~ msgstr "Particules"
 
 #~ msgid "_size:"
 #~ msgstr "hauteur :"
