@@ -200,7 +200,8 @@ simple(GwyContainer *data, GwyRunType run)
     guint i;
     GwyDataField *dfield;
     GQuark mquark;
-    gint n, id;
+    G_GNUC_UNUSED gint n;
+    gint id;
     GwyCalibration *calibration;
     GwyCalData *caldata=NULL;
     gchar *filename;
@@ -742,7 +743,8 @@ simple_do(SimpleArgs *args)
     gdouble xxshift, xyshift, yxshift, yyshift;
     gdouble tlmin, nextmin;
     gint tl, next;
-    gint xres, yres, present_xs, present_pxs;
+    gint xres, yres;
+    G_GNUC_UNUSED gint present_xs, present_pxs;
     gdouble angle, avs[4];
     gdouble *x, *y, *z, *xerr, *yerr, *zerr, *xunc, *yunc, *zunc;
     gdouble minx, maxx, miny, maxy, minz, maxz;
