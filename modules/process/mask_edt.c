@@ -132,8 +132,8 @@ static gboolean
 maskedt_dialog(MaskEdtArgs *args)
 {
     static const GwyEnum types[] = {
-        { N_("Interoir"),  MASKEDT_INTERIOR },
-        { N_("Exteroir"),  MASKEDT_EXTERIOR },
+        { N_("Interior"),  MASKEDT_INTERIOR },
+        { N_("Exterior"),  MASKEDT_EXTERIOR },
         { N_("Two-sided"), MASKEDT_SIGNED   },
     };
 
