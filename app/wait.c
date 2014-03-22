@@ -28,13 +28,11 @@ static void gwy_app_wait_create_dialog (GtkWindow *window,
                                         const gchar *message);
 static void gwy_app_wait_cancelled      (void);
 
-static GtkWidget *wait_widget  = NULL;
 static GtkWidget *dialog = NULL;
 static GtkWidget *progress = NULL;
 static GtkWidget *label = NULL;
 static gchar *message_prefix = NULL;
 static gboolean cancelled = FALSE;
-static gboolean silent_waiting = FALSE;
 
 /**
  * gwy_app_wait_start:
@@ -52,18 +50,14 @@ gwy_app_wait_start(GtkWindow *window,
     if (window && !GTK_IS_WINDOW(window))
         g_warning("Widget is not a window");
 
-    if (wait_widget || silent_waiting) {
+    if (dialog) {
         g_critical("Waiting is modal, cannot wait on more than one thing "
                    "at once.");
         return;
     }
 
     cancelled = FALSE;
-    if (!window)
-        silent_waiting = TRUE;
-    else
-        gwy_app_wait_create_dialog(window, message);
-    wait_widget = GTK_WIDGET(window);
+    gwy_app_wait_create_dialog(window, message);
 }
 
 /**
@@ -83,17 +77,14 @@ gwy_app_wait_finish(void)
         return;
     }
 
-    if (!silent_waiting) {
-        g_return_if_fail(dialog != NULL);
-        gtk_widget_destroy(dialog);
-        g_free(message_prefix);
-    }
+    g_return_if_fail(dialog != NULL);
+    gtk_widget_destroy(dialog);
+    g_free(message_prefix);
+
     dialog = NULL;
     progress = NULL;
     label = NULL;
     message_prefix = NULL;
-    wait_widget = NULL;
-    silent_waiting = FALSE;
 }
 
 static void
@@ -107,6 +98,11 @@ gwy_app_wait_create_dialog(GtkWindow *window,
                                          | GTK_DIALOG_MODAL,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          NULL);
+    if (!window) {
+        gtk_window_set_position(GTK_WINDOW(dialog), GTK_WIN_POS_CENTER);
+        gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
+    }
+
     label = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_markup(GTK_LABEL(label), message);
@@ -142,8 +138,7 @@ gwy_app_wait_create_dialog(GtkWindow *window,
 gboolean
 gwy_app_wait_set_message(const gchar *message)
 {
-    if (silent_waiting)
-        return TRUE;
+    g_return_val_if_fail(dialog, FALSE);
 
     while (gtk_events_pending())
         gtk_main_iteration();
@@ -179,8 +174,8 @@ gwy_app_wait_set_message(const gchar *message)
 gboolean
 gwy_app_wait_set_message_prefix(const gchar *prefix)
 {
-    if (silent_waiting)
-        return TRUE;
+    g_return_val_if_fail(dialog, FALSE);
+
     if (cancelled)
         return FALSE;
 
@@ -208,15 +203,13 @@ gwy_app_wait_set_fraction(gdouble fraction)
 {
     gchar buf[8];
 
-    if (silent_waiting)
-        return TRUE;
+    g_return_val_if_fail(dialog, FALSE);
 
     while (gtk_events_pending())
         gtk_main_iteration();
     if (cancelled)
         return FALSE;
 
-    g_return_val_if_fail(dialog, FALSE);
     gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(progress), fraction);
     if (fraction < 0.0 || fraction > 1.0) {
         g_warning("Fraction outside [0, 1] range");
