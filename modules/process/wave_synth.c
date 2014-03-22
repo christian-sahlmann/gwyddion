@@ -541,10 +541,13 @@ wave_synth_dialog(WaveSynthArgs *args,
             break;
 
             case RESPONSE_RESET:
-            args->seed = wave_synth_defaults.seed;
-            args->randomize = wave_synth_defaults.randomize;
-            /* Don't reset type either.  It sort of defeats resetting the
-             * noise-specific options. */
+            {
+                gint temp2 = args->active_page;
+                gfloat *tab = args->wave_table;
+                *args = wave_synth_defaults;
+                args->wave_table = tab;
+                args->active_page = temp2;
+            }
             controls.in_init = TRUE;
             update_controls(&controls, args);
             controls.in_init = FALSE;
@@ -615,7 +618,17 @@ update_controls(WaveSynthControls *controls,
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->quantity),
                                   args->quantity);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->type), args->type);
-    /* TODO */
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->nwaves), args->nwaves);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->x), args->x);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->x_noise), args->x_noise);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->y), args->y);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->y_noise), args->y_noise);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->amplitude),
+                             args->amplitude);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->amplitude_noise),
+                             args->amplitude_noise);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->k), args->k);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->k_noise), args->k_noise);
 }
 
 static void
