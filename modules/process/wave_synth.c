@@ -68,7 +68,7 @@ typedef enum {
 
 typedef enum {
     WAVE_QUANTITY_DISPLACEMENT = 0,
-    WAVE_QUANTITY_INTENSITY    = 1,
+    WAVE_QUANTITY_AMPLITUDE    = 1,
     WAVE_QUANTITY_PHASE        = 2,
     WAVE_QUANTITY_NTYPES
 } WaveQuantityType;
@@ -203,7 +203,7 @@ static const gchar prefix[] = "/module/wave_synth";
 static const WaveSynthArgs wave_synth_defaults = {
     PAGE_DIMENSIONS,
     42, TRUE, TRUE,
-    WAVE_TYPE_COSINE, WAVE_QUANTITY_INTENSITY,
+    WAVE_TYPE_COSINE, WAVE_QUANTITY_AMPLITUDE,
     50,
     0.0, 0.3,
     0.0, 0.3,
@@ -596,7 +596,7 @@ quantity_selector_new(WaveSynthControls *controls)
 {
     static const GwyEnum quantity_types[] = {
         { N_("Displacement"), WAVE_QUANTITY_DISPLACEMENT },
-        { N_("Intensity"),    WAVE_QUANTITY_INTENSITY    },
+        { N_("Amplitude"),    WAVE_QUANTITY_AMPLITUDE    },
         { N_("Phase"),        WAVE_QUANTITY_PHASE        },
     };
     GtkWidget *combo;
@@ -775,7 +775,7 @@ wave_synth_do(const WaveSynthArgs *args,
             }
         }
     }
-    else if (args->quantity == WAVE_QUANTITY_INTENSITY) {
+    else if (args->quantity == WAVE_QUANTITY_AMPLITUDE) {
         q = 2.0/sqrt(nwaves);
         for (i = 0; i < yres; i++) {
             for (j = 0; j < xres; j++) {
