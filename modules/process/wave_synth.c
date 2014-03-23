@@ -497,7 +497,7 @@ wave_synth_dialog(WaveSynthArgs *args,
                                     &controls.k_noise, &args->k_noise);
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
-    gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Sources")),
+    gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Position")),
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
