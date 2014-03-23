@@ -183,7 +183,8 @@ static void       randomize_sources      (GRand *rng,
                                           GwyWaveSource *sources,
                                           const WaveSynthArgs *args,
                                           const GwyDimensionArgs *dimsargs,
-                                          gdouble q);
+                                          guint xres,
+                                          guint yres);
 static gdouble    rand_gen_gaussian      (GRand *rng,
                                           gdouble sigma);
 static void       wave_synth_load_args   (GwyContainer *container,
@@ -484,7 +485,7 @@ wave_synth_dialog(WaveSynthArgs *args,
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    controls.k = gtk_adjustment_new(args->k, 0.1, 1000.0, 0.1, 10, 0);
+    controls.k = gtk_adjustment_new(args->k, 0.01, 1000.0, 0.01, 10, 0);
     g_object_set_data(G_OBJECT(controls.k), "target", &args->k);
     gwy_table_attach_hscale(table, row, _("_Spatial frequency:"), NULL,
                             GTK_OBJECT(controls.k), GWY_HSCALE_SQRT);
@@ -513,7 +514,7 @@ wave_synth_dialog(WaveSynthArgs *args,
 
     controls.y = gtk_adjustment_new(args->y, -1000.0, 1000.0, 0.01, 1, 0);
     g_object_set_data(G_OBJECT(controls.y), "target", &args->y);
-    gwy_table_attach_hscale(table, row, _("_X center:"), NULL,
+    gwy_table_attach_hscale(table, row, _("_Y center:"), NULL,
                             GTK_OBJECT(controls.y), GWY_HSCALE_DEFAULT);
     g_signal_connect_swapped(controls.y, "value-changed",
                              G_CALLBACK(gwy_synth_double_changed), &controls);
@@ -754,7 +755,7 @@ wave_synth_do(const WaveSynthArgs *args,
     rand_gen_gaussian(NULL, 0.0);
     rng = g_rand_new();
     g_rand_set_seed(rng, args->seed);
-    randomize_sources(rng, sources, args, dimsargs, sqrt(xres*yres));
+    randomize_sources(rng, sources, args, dimsargs, xres, yres);
     g_rand_free(rng);
 
     d = dfield->data;
@@ -912,16 +913,19 @@ randomize_sources(GRand *rng,
                   GwyWaveSource *sources,
                   const WaveSynthArgs *args,
                   const GwyDimensionArgs *dimsargs,
-                  gdouble q)
+                  guint xres, guint yres)
 {
     guint i, nsources = args->nwaves;
+    gdouble q = sqrt(xres*yres), r = 2.0*G_PI/q;
 
     for (i = 0; i < nsources; i++) {
         sources[i].x = q*(args->x
-                          + rand_gen_gaussian(rng, 1000.0*args->x_noise));
+                          + rand_gen_gaussian(rng, 1000.0*args->x_noise))
+                       + 0.5*xres;
         sources[i].y = q*(args->y
-                          + rand_gen_gaussian(rng, 1000.0*args->y_noise));
-        sources[i].k = args->k/q*exp(rand_gen_gaussian(rng, 4.0*args->k_noise));
+                          + rand_gen_gaussian(rng, 1000.0*args->y_noise))
+                       + 0.5*yres;
+        sources[i].k = r*args->k*exp(rand_gen_gaussian(rng, 4.0*args->k_noise));
         sources[i].z = (args->amplitude * pow10(dimsargs->zpow10)
                         * exp(rand_gen_gaussian(rng,
                                                 4.0*args->amplitude_noise)));
@@ -989,7 +993,7 @@ wave_synth_sanitize_args(WaveSynthArgs *args)
     args->y_noise = CLAMP(args->y_noise, 0.0, 1.0);
     args->amplitude = CLAMP(args->amplitude, 0.001, 10000.0);
     args->amplitude_noise = CLAMP(args->amplitude_noise, 0.0, 1.0);
-    args->k = CLAMP(args->k, 0.1, 1000.0);
+    args->k = CLAMP(args->k, 0.01, 1000.0);
     args->k_noise = CLAMP(args->k_noise, 0.0, 1.0);
 }
 
