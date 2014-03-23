@@ -182,6 +182,7 @@ static void       complement_wave        (const gdouble *cwave,
 static void       randomize_sources      (GRand *rng,
                                           GwyWaveSource *sources,
                                           const WaveSynthArgs *args,
+                                          const GwyDimensionArgs *dimsargs,
                                           gdouble q);
 static gdouble    rand_gen_gaussian      (GRand *rng,
                                           gdouble sigma);
@@ -747,17 +748,19 @@ wave_synth_do(const WaveSynthArgs *args,
     guint i, j, k, nwaves = args->nwaves;
     gdouble *d;
     const gfloat *tab;
+    gdouble q;
 
     sources = g_new(GwyWaveSource, args->nwaves);
     rand_gen_gaussian(NULL, 0.0);
     rng = g_rand_new();
     g_rand_set_seed(rng, args->seed);
-    randomize_sources(rng, sources, args, sqrt(xres*yres));
+    randomize_sources(rng, sources, args, dimsargs, sqrt(xres*yres));
     g_rand_free(rng);
 
     d = dfield->data;
     tab = args->wave_table;
     if (args->quantity == WAVE_QUANTITY_DISPLACEMENT) {
+        q = 2.0/sqrt(nwaves);
         for (i = 0; i < yres; i++) {
             for (j = 0; j < xres; j++) {
                 const GwyWaveSource *source = sources;
@@ -768,11 +771,12 @@ wave_synth_do(const WaveSynthArgs *args,
                     gdouble r = sqrt(x*x + y*y);
                     z += source->z * approx_wave_c(tab, source->k*r);
                 }
-                *(d++) = z;
+                *(d++) += q*z;
             }
         }
     }
     else if (args->quantity == WAVE_QUANTITY_INTENSITY) {
+        q = 2.0/sqrt(nwaves);
         for (i = 0; i < yres; i++) {
             for (j = 0; j < xres; j++) {
                 const GwyWaveSource *source = sources;
@@ -786,11 +790,12 @@ wave_synth_do(const WaveSynthArgs *args,
                     zs += source->z*s;
                     zc += source->z*c;
                 }
-                *(d++) = sqrt(zc*zc + zs*zs);
+                *(d++) += q*sqrt(zc*zc + zs*zs);
             }
         }
     }
     else if (args->quantity == WAVE_QUANTITY_PHASE) {
+        q = 1.0/GWY_SQRT_PI;
         for (i = 0; i < yres; i++) {
             for (j = 0; j < xres; j++) {
                 const GwyWaveSource *source = sources;
@@ -804,7 +809,7 @@ wave_synth_do(const WaveSynthArgs *args,
                     zs += source->z*s;
                     zc += source->z*c;
                 }
-                *(d++) = atan2(zs, zc);
+                *(d++) += q*atan2(zs, zc);
             }
         }
     }
@@ -906,6 +911,7 @@ static void
 randomize_sources(GRand *rng,
                   GwyWaveSource *sources,
                   const WaveSynthArgs *args,
+                  const GwyDimensionArgs *dimsargs,
                   gdouble q)
 {
     guint i, nsources = args->nwaves;
@@ -916,7 +922,7 @@ randomize_sources(GRand *rng,
         sources[i].y = q*(args->y
                           + rand_gen_gaussian(rng, 1000.0*args->y_noise));
         sources[i].k = args->k/q*exp(rand_gen_gaussian(rng, 4.0*args->k_noise));
-        sources[i].z = (args->amplitude
+        sources[i].z = (args->amplitude * pow10(dimsargs->zpow10)
                         * exp(rand_gen_gaussian(rng,
                                                 4.0*args->amplitude_noise)));
     }
