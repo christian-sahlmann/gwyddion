@@ -416,6 +416,33 @@ grain_values[] = {
             0, 0, GWY_GRAIN_VALUE_IS_ANGLE, 0,
         }
     },
+    {
+        N_("Major semiaxis of equivalent ellipse"),
+        GWY_GRAIN_VALUE_EQUIV_ELLIPSE_MAJOR,
+        {
+            GWY_GRAIN_VALUE_GROUP_MOMENT,
+            "<i>a</i><sub>e1</sub>", "a_e1", NULL,
+            1, 0, 0, 0,
+        }
+    },
+    {
+        N_("Minor semiaxis of equivalent ellipse"),
+        GWY_GRAIN_VALUE_EQUIV_ELLIPSE_MINOR,
+        {
+            GWY_GRAIN_VALUE_GROUP_MOMENT,
+            "<i>a</i><sub>e2</sub>", "a_e2", NULL,
+            1, 0, 0, 0,
+        }
+    },
+    {
+        N_("Orientation of equivalent ellipse"),
+        GWY_GRAIN_VALUE_EQUIV_ELLIPSE_ANGLE,
+        {
+            GWY_GRAIN_VALUE_GROUP_MOMENT,
+            "<i>φ</i><sub>e1</sub>", "phi_e1", NULL,
+            0, 0, GWY_GRAIN_VALUE_IS_ANGLE, 0,
+        }
+    },
 };
 
 G_DEFINE_TYPE(GwyGrainValue, gwy_grain_value, GWY_TYPE_RESOURCE)
@@ -1059,6 +1086,7 @@ gwy_grain_value_group_name(GwyGrainValueGroup group)
         N_("Boundary"),
         N_("Slope"),
         N_("Curvature"),
+        N_("Moment"),
     };
 
     if (group == GWY_GRAIN_VALUE_GROUP_USER)

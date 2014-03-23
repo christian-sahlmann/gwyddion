@@ -456,6 +456,12 @@ gwy_masking_type_get_enum(void)
  *                               centre as defined by
  *                               @GWY_GRAIN_VALUE_CENTER_X and
  *                               @GWY_GRAIN_VALUE_CENTER_Y. (Since: 2.30)
+ * @GWY_GRAIN_VALUE_EQUIV_ELLIPSE_MAJOR: Length of major semiaxis of equivalent
+ *                                       ellipse. (Since 2.36)
+ * @GWY_GRAIN_VALUE_EQUIV_ELLIPSE_MINOR: Length of minor semiaxis of equivalent
+ *                                       ellipse. (Since 2.36)
+ * @GWY_GRAIN_VALUE_EQUIV_ELLIPSE_ANGLE: Orientation of the major axis of
+ *                                       equivalent ellipse. (Since 2.36)
  *
  * Grain quantity to request from gwy_data_field_grains_get_distribution()
  * and similar functions.

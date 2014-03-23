@@ -2022,7 +2022,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
                                      const gint *grains)
 {
     /* The number of built-in quantities. */
-    enum { NQ = 42 };
+    enum { NQ = 45 };
     enum {
         NEED_SIZES = 1 << 0,
         NEED_BOUNDPOS = 1 << 1,
@@ -2080,6 +2080,9 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         NEED_BOUNDPOS,                /* circumcircle centre x */
         NEED_BOUNDPOS,                /* circumcircle centre y */
         NEED_CENTRE,                  /* mean radius */
+        NEED_LINEAR,                  /* equiv ellipse major axis */
+        NEED_LINEAR,                  /* equiv ellipse minor axis */
+        NEED_LINEAR,                  /* equiv ellipse major axis angle */
     };
 
     gdouble *quantity_data[NQ];
@@ -2624,6 +2627,42 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
             p[gno] /= blen[gno];
 
         g_free(blen);
+    }
+    if (quantity_data[GWY_GRAIN_VALUE_EQUIV_ELLIPSE_MAJOR]
+        || quantity_data[GWY_GRAIN_VALUE_EQUIV_ELLIPSE_MINOR]
+        || quantity_data[GWY_GRAIN_VALUE_EQUIV_ELLIPSE_ANGLE]) {
+        gdouble *amaj = quantity_data[GWY_GRAIN_VALUE_EQUIV_ELLIPSE_MAJOR];
+        gdouble *amin = quantity_data[GWY_GRAIN_VALUE_EQUIV_ELLIPSE_MINOR];
+        gdouble *phi = quantity_data[GWY_GRAIN_VALUE_EQUIV_ELLIPSE_ANGLE];
+
+        for (gno = 1; gno <= ngrains; gno++) {
+            guint n = sizes[gno];
+            gdouble *lin = linear + 5*gno;
+            gdouble Jxx = qh*qh*(lin[0] + n/12.0)*qarea;
+            gdouble Jxy = qh*qv*lin[1]*qarea;
+            gdouble Jyy = qv*qv*(lin[2] + n/12.0)*qarea;
+
+            if (phi) {
+                gdouble Jeps = 1e-9*MAX(Jxx, Jyy);
+
+                if (fabs(Jxx - Jyy) > Jeps || fabs(Jxy) > Jeps)
+                    phi[gno] = 0.5*atan2(-2.0*Jxy, Jxx - Jyy);
+                else
+                    phi[gno] = 0.0;
+            }
+
+            if (amaj || amin) {
+                gdouble u = Jxx + Jyy,
+                        v = hypot(2.0*Jxy, Jxx - Jyy),
+                        w = sqrt(G_PI*sqrt(Jxx*Jyy - Jxy*Jxy));
+
+                if (amaj)
+                    amaj[gno] = sqrt((u + v)/w);
+                if (amin)
+                    amin[gno] = sqrt((u - v)/w);
+            }
+        }
+
     }
     if ((p = quantity_data[GWY_GRAIN_VALUE_CENTER_X])) {
         for (gno = 0; gno <= ngrains; gno++)
