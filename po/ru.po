@@ -7,15 +7,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-03-22 03:58+0100\n"
-"PO-Revision-Date: 2014-03-22 15:54+0300\n"
+"POT-Creation-Date: 2014-03-23 03:58+0100\n"
+"PO-Revision-Date: 2014-03-23 11:03+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-SourceCharset: utf-8\n"
+"X-Poedit-SourceCharset: UTF-8\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
 "X-Poedit-Basepath: .\n"
@@ -575,7 +575,7 @@ msgid "Blackmann"
 msgstr "Блэкмен"
 
 #: libprocess/gwyprocessenums.c:249
-msgid "Lanzcos"
+msgid "Lanczos"
 msgstr "Ланцош"
 
 #: libprocess/gwyprocessenums.c:250
@@ -2691,7 +2691,7 @@ msgstr "Несколько ссылок на объект"
 msgid "Secondary data item has no primary data"
 msgstr "Вторичный элемент данных не имеет первичных данных"
 
-#: app/wait.c:103
+#: app/wait.c:94
 msgid "Please wait"
 msgstr "Подождите, пожалуйста "
 
@@ -7862,7 +7862,7 @@ msgstr "Мнимое"
 msgid "Modulus"
 msgstr "Абсолютная величина: "
 
-#: modules/process/fft.c:276 modules/process/wave_synth.c:596
+#: modules/process/fft.c:276 modules/process/wave_synth.c:599
 msgid "Phase"
 msgstr "Фаза"
 
@@ -9482,11 +9482,11 @@ msgid "Distance Transform"
 msgstr "Преобразование расстояния"
 
 #: modules/process/mask_edt.c:135
-msgid "Interoir"
+msgid "Interior"
 msgstr "Внутреннее"
 
 #: modules/process/mask_edt.c:136
-msgid "Exteroir"
+msgid "Exterior"
 msgstr "Внешнее"
 
 #: modules/process/mask_edt.c:137
@@ -10985,23 +10985,23 @@ msgstr "Источники"
 msgid "_X center:"
 msgstr "Центр _X:"
 
-#: modules/process/wave_synth.c:578
+#: modules/process/wave_synth.c:581
 msgid "Cosine"
 msgstr "Косинус"
 
-#: modules/process/wave_synth.c:579
+#: modules/process/wave_synth.c:582
 msgid "Inverse cosh"
 msgstr "Обратный cosh"
 
-#: modules/process/wave_synth.c:580
+#: modules/process/wave_synth.c:583
 msgid "Flat top"
 msgstr "Плоская вершина"
 
-#: modules/process/wave_synth.c:594
+#: modules/process/wave_synth.c:597
 msgid "Displacement"
 msgstr "Смещение"
 
-#: modules/process/wave_synth.c:595
+#: modules/process/wave_synth.c:598
 msgid "Intensity"
 msgstr "Интенсивность"
 
@@ -12305,34 +12305,5 @@ msgstr "/_Инвертировать значение"
 msgid "Invert value in volume data"
 msgstr "Инвертирует значения в объёмных данных"
 
-#~ msgid "Select area of interest"
-#~ msgstr "Выберите интересующую область"
-
-#~ msgid "source|Directional"
-#~ msgstr "Направленный"
-
-#~ msgid "File header is too short."
-#~ msgstr "Заголовок файла слишком короткий."
-
-#~ msgid "Top-level element is not ‘TiffTagDescData’."
-#~ msgstr "Элемент верхнего уровня не ‘TiffTagDescData’."
-
-#~ msgid "Each channel has its own metadata."
-#~ msgstr "У каждого канала есть свои метаданные."
-
-#~ msgid ""
-#~ "Meta → Metadata Browser displays metadata (auxiliary information) of "
-#~ "channels and allows editing or exporting to a text file."
-#~ msgstr ""
-#~ "Мета → Просмотр метаданных показывает метаданные (вспомогательную "
-#~ "информацию) каналов и позволяет их редактировать или экспортировать в "
-#~ "текстовый файл."
-
-#~ msgid "_Meta"
-#~ msgstr "_Мета"
-
-#~ msgid "Preview type:"
-#~ msgstr "Тип предпросмотра:"
-
-#~ msgid "Preview type"
-#~ msgstr "Тип предпросмотра"
+#~ msgid "Lanzcos"
+#~ msgstr "Ланцош"
