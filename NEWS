@@ -8,6 +8,10 @@ Libraries:
   with various exterior handling types was added.
 - libgwyprocess: A function for Euclidean distance transform of a mask was
   added.
+- libgwyapp: gwy_app_wait_start() always creates a progress/cancel dialog,
+  even if no parent window is passed.
+- libgwyprocess: Grain quantities characterising the moment-equivalent
+  ellipses of grains (axis lengths and orientation) were added.
 
 Modules:
 - Columnar synthesis (new): Simulation of columnar film growth.
