@@ -919,12 +919,11 @@ randomize_sources(GRand *rng,
     gdouble q = sqrt(xres*yres), r = 2.0*G_PI/q;
 
     for (i = 0; i < nsources; i++) {
-        sources[i].x = q*(args->x
-                          + rand_gen_gaussian(rng, 1000.0*args->x_noise))
-                       + 0.5*xres;
-        sources[i].y = q*(args->y
-                          + rand_gen_gaussian(rng, 1000.0*args->y_noise))
-                       + 0.5*yres;
+        gdouble xsigma = 1000.0*args->x_noise*args->x_noise,
+                ysigma = 1000.0*args->y_noise*args->y_noise;
+
+        sources[i].x = q*(args->x + rand_gen_gaussian(rng, xsigma)) + 0.5*xres;
+        sources[i].y = q*(args->y + rand_gen_gaussian(rng, ysigma)) + 0.5*yres;
         sources[i].k = r*args->k*exp(rand_gen_gaussian(rng, 4.0*args->k_noise));
         sources[i].z = (args->amplitude * pow10(dimsargs->zpow10)
                         * exp(rand_gen_gaussian(rng,
