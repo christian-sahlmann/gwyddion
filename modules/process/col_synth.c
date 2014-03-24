@@ -61,7 +61,7 @@ typedef struct {
     gint active_page;
     gint seed;
     gboolean randomize;
-    gboolean update;
+    gboolean update;   /* Always false */
     gboolean animated;
     gdouble coverage;
     gdouble theta;
@@ -98,7 +98,6 @@ struct _ObjSynthControls {
     gdouble pxsize;
     gdouble zscale;
     gboolean in_init;
-    gulong sid;
 };
 
 static gboolean   module_register         (void);
@@ -372,8 +371,8 @@ col_synth_dialog(ColSynthArgs *args,
     g_signal_connect_swapped(controls.update_now, "clicked",
                              G_CALLBACK(preview), &controls);
 
-    controls.animated
-        = check = gtk_check_button_new_with_mnemonic(_("Progressive preview"));
+    controls.animated = check
+        = gtk_check_button_new_with_mnemonic(_("Progressive preview"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), args->animated);
     gtk_box_pack_start(GTK_BOX(hbox2), check, FALSE, FALSE, 0);
     g_object_set_data(G_OBJECT(check), "target", &args->animated);
@@ -498,10 +497,6 @@ col_synth_dialog(ColSynthArgs *args,
 
     col_synth_save_args(gwy_app_settings_get(), args, dimsargs);
 
-    if (controls.sid) {
-        g_source_remove(controls.sid);
-        controls.sid = 0;
-    }
     g_object_unref(controls.mydata);
     gwy_object_unref(controls.surface);
     gwy_dimensions_free(controls.dims);
