@@ -178,7 +178,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates particles using simple dynamical model"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2",
+    "1.3",
     "Petr Klapetek",
     "2010",
 };
@@ -240,7 +240,6 @@ run_noninteractive(DepositSynthArgs *args,
     gdouble mag;
     gboolean success;
     gint newid, ndata;
-    gchar message[50];
 
     if (args->randomize)
         args->seed = g_random_int() & 0x7fffffff;
@@ -274,32 +273,40 @@ run_noninteractive(DepositSynthArgs *args,
         }
     }
 
-    gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid), "Starting...");
+    gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid), _("Starting..."));
     ndata = deposit_synth_do(args, out, NULL, &success);
     gwy_app_wait_finish();
 
-    if (ndata <=0) {
-        if (ndata==RES_TOO_MANY) g_snprintf(message, sizeof(message), "Error: too many particles.");
-        else if (ndata==RES_TOO_FEW) g_snprintf(message, sizeof(message), "Error: no particles.");
-        else if (ndata==RES_TOO_LARGE) g_snprintf(message, sizeof(message), "Error: particles too large.");
-        else if (ndata==RES_TOO_SMALL) g_snprintf(message, sizeof(message), "Error: particles too small.");
-        dialog = gtk_message_dialog_new (gwy_app_find_window_for_channel(data, oldid),
-                                         GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_MESSAGE_ERROR,
-                                         GTK_BUTTONS_CLOSE,
-                                         "%s", message);
-        gtk_dialog_run (GTK_DIALOG (dialog));
-        gtk_widget_destroy (dialog);
+    if (ndata <= 0) {
+        const gchar *message = "";
 
-    } else {
+        if (ndata == RES_TOO_MANY)
+            message = _("Error: too many particles.");
+        else if (ndata == RES_TOO_FEW)
+            message = _("Error: no particles.");
+        else if (ndata == RES_TOO_LARGE)
+            message = _("Error: particles too large.");
+        else if (ndata == RES_TOO_SMALL)
+            message = _("Error: particles too small.");
+
+        dialog = gtk_message_dialog_new(gwy_app_find_window_for_channel(data, oldid),
+                                        GTK_DIALOG_DESTROY_WITH_PARENT,
+                                        GTK_MESSAGE_ERROR,
+                                        GTK_BUTTONS_CLOSE,
+                                        "%s", message);
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+
+    }
+    else {
         if (!success) {
-            dialog = gtk_message_dialog_new (gwy_app_find_window_for_channel(data, oldid),
-                                             GTK_DIALOG_DESTROY_WITH_PARENT,
-                                             GTK_MESSAGE_WARNING,
-                                             GTK_BUTTONS_CLOSE,
-                                             "Not all the particles could be deposited, try more revise steps.");
-            gtk_dialog_run (GTK_DIALOG (dialog));
-            gtk_widget_destroy (dialog);
+            dialog = gtk_message_dialog_new(gwy_app_find_window_for_channel(data, oldid),
+                                            GTK_DIALOG_DESTROY_WITH_PARENT,
+                                            GTK_MESSAGE_WARNING,
+                                            GTK_BUTTONS_CLOSE,
+                                            _("Not all the particles could be deposited, try more revise steps."));
+            gtk_dialog_run(GTK_DIALOG(dialog));
+            gtk_widget_destroy(dialog);
         }
         if (replace) {
             gwy_data_field_copy(out, dfield, FALSE);

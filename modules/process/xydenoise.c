@@ -64,7 +64,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Denoises measurement on basis of two orthogonal scans."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2012",
 };
@@ -217,7 +217,7 @@ xydenoise_do(XYdenoiseArgs *args)
     GQuark quark;
 
     gwy_app_wait_start(gwy_app_find_window_for_channel(args->op1.data, args->op1.id),
-                       "Starting...");
+                       _("Starting..."));
 
     quark = gwy_app_get_data_key_for_id(args->op1.id);
     dfieldx = GWY_DATA_FIELD(gwy_container_get_object(args->op1.data, quark));
@@ -235,7 +235,7 @@ xydenoise_do(XYdenoiseArgs *args)
     iy = gwy_data_field_new_alike(dfieldx, TRUE);
 
     gwy_app_wait_set_fraction(0.1);
-    gwy_app_wait_set_message("Computing forward FFTs...");
+    gwy_app_wait_set_message(_("Computing forward FFTs..."));
 
     gwy_data_field_2dfft(dfieldx, NULL, rx, ix,
                          window, GWY_TRANSFORM_DIRECTION_FORWARD, interp,
@@ -251,7 +251,7 @@ xydenoise_do(XYdenoiseArgs *args)
     iydata = gwy_data_field_get_data(iy);
 
     gwy_app_wait_set_fraction(0.3);
-    gwy_app_wait_set_message("Computing image...");
+    gwy_app_wait_set_message(_("Computing image..."));
 
     for (i = 0; i < xres*yres; i++) {
         xmodule = sqrt(rxdata[i]*rxdata[i] + ixdata[i]*ixdata[i]);
@@ -263,7 +263,7 @@ xydenoise_do(XYdenoiseArgs *args)
     }
 
     gwy_app_wait_set_fraction(0.7);
-    gwy_app_wait_set_message("Computing backward FFT...");
+    gwy_app_wait_set_message(_("Computing backward FFT..."));
     gwy_data_field_2dfft(rx, ix, result, iresult,
                          window, GWY_TRANSFORM_DIRECTION_BACKWARD, interp,
                          FALSE, 0);
