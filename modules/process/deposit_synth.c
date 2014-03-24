@@ -155,6 +155,7 @@ static gint          deposit_synth_do      (const DepositSynthArgs *args,
                                             GwyDataField *dfield,
                                             GwyDataField *showfield,
                                             gboolean *success);
+static const gchar* particle_error(gint code);
 static void          deposit_synth_load_args   (GwyContainer *container,
                                             DepositSynthArgs *args,
                                             GwyDimensionArgs *dimsargs);
@@ -278,22 +279,11 @@ run_noninteractive(DepositSynthArgs *args,
     gwy_app_wait_finish();
 
     if (ndata <= 0) {
-        const gchar *message = "";
-
-        if (ndata == RES_TOO_MANY)
-            message = _("Error: too many particles.");
-        else if (ndata == RES_TOO_FEW)
-            message = _("Error: no particles.");
-        else if (ndata == RES_TOO_LARGE)
-            message = _("Error: particles too large.");
-        else if (ndata == RES_TOO_SMALL)
-            message = _("Error: particles too small.");
-
         dialog = gtk_message_dialog_new(gwy_app_find_window_for_channel(data, oldid),
                                         GTK_DIALOG_DESTROY_WITH_PARENT,
                                         GTK_MESSAGE_ERROR,
                                         GTK_BUTTONS_CLOSE,
-                                        "%s", message);
+                                        "%s", particle_error(ndata));
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
 
@@ -304,7 +294,10 @@ run_noninteractive(DepositSynthArgs *args,
                                             GTK_DIALOG_DESTROY_WITH_PARENT,
                                             GTK_MESSAGE_WARNING,
                                             GTK_BUTTONS_CLOSE,
-                                            _("Not all the particles could be deposited, try more revise steps."));
+                                            _("Not all the particles could "
+                                              "be deposited (%u),\n"
+                                              "try more revise steps."),
+                                            ndata);
             gtk_dialog_run(GTK_DIALOG(dialog));
             gtk_widget_destroy(dialog);
         }
@@ -838,7 +831,7 @@ preview(DepositSynthControls *controls)
     gdouble mag;
     GwySIUnit *siunit;
     GwyDataField *dfield, *surface;
-    gchar message[50];
+    gchar *message;
     gint ndata;
     gboolean success;
 
@@ -910,21 +903,26 @@ preview(DepositSynthControls *controls)
     args->size = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size))*pow10(controls->dims->args->xypow10);
     args->width = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->width))*pow10(controls->dims->args->xypow10);
 
-    gwy_app_wait_start(GTK_WINDOW(controls->dialog), "Starting...");
-    gtk_label_set_text(GTK_LABEL(controls->message), "Running computation...");
+    gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Starting..."));
+    gtk_label_set_text(GTK_LABEL(controls->message), _("Running computation..."));
     ndata = deposit_synth_do(args, controls->out, dfield, &success);
     gwy_app_wait_finish();
 
-    if (ndata>=0 && success) g_snprintf(message, sizeof(message), "%d particles deposited", ndata);
-    else if (ndata>=0 && !success) g_snprintf(message, sizeof(message), "Not all deposited (%d), try more relax steps", ndata);
-    else if (ndata==RES_TOO_MANY) g_snprintf(message, sizeof(message), "Error: too many particles.");
-    else if (ndata==RES_TOO_FEW) g_snprintf(message, sizeof(message), "Error: no particles.");
-    else if (ndata==RES_TOO_LARGE) g_snprintf(message, sizeof(message), "Error: particles too large.");
-    else if (ndata==RES_TOO_SMALL) g_snprintf(message, sizeof(message), "Error: particles too small.");
+    if (ndata >=0 && success)
+        message = g_strdup_printf(_("%d particles were deposited"), ndata);
+    else if (ndata >= 0 && !success)
+        message = g_strdup_printf(_("Not all the particles could "
+                                    "be deposited (%u),\n"
+                                    "try more revise steps."),
+                                  ndata);
+    else
+        message = g_strdup(particle_error(ndata));
 
     gtk_label_set_text(GTK_LABEL(controls->message), message);
+    g_free(message);
 
-    if (surface) gwy_object_unref(surface);
+    if (surface)
+        gwy_object_unref(surface);
     surface = surface_for_preview(controls->out, PREVIEW_SIZE);
     gwy_data_field_copy(surface, dfield, FALSE);
     gwy_data_field_data_changed(dfield);
@@ -938,44 +936,44 @@ preview(DepositSynthControls *controls)
 static inline gboolean
 gwy_data_field_inside(GwyDataField *data_field, gint i, gint j)
 {
-        if (i >= 0 && j >= 0 && i < data_field->xres && j < data_field->yres)
-                    return TRUE;
-            else
-                        return FALSE;
+    return i >= 0 && j >= 0 && i < data_field->xres && j < data_field->yres;
 }
 
-
 static void
-showit(GwyDataField *lfield, GwyDataField *dfield, gdouble *rdisizes, gdouble *rx, gdouble *ry, gdouble *rz, gint *xdata, gint *ydata, gint ndata,
-       gint oxres, gdouble oxreal, gint oyres, gdouble oyreal, gint add, gint xres, gint yres)
+showit(GwyDataField *lfield, GwyDataField *dfield,
+       gdouble *rdisizes, gdouble *rx, gdouble *ry, gdouble *rz,
+       gint *xdata, gint *ydata, gint ndata,
+       gint oxres, gdouble oxreal, gint oyres, gdouble oyreal,
+       gint add, gint xres, gint yres)
 {
     gint i, m, n;
     gdouble sum, surface, lsurface;
     gint disize;
 
-    for (i=0; i<ndata; i++)
-    {
+    for (i = 0; i < ndata; i++) {
         xdata[i] = oxres*(rx[i]/oxreal);
         ydata[i] = oyres*(ry[i]/oyreal);
 
-        if (xdata[i]<0 || ydata[i]<0 || xdata[i]>=xres || ydata[i]>=yres) continue;
-        if (rz[i]>(gwy_data_field_get_val(lfield, xdata[i], ydata[i])+6*rdisizes[i])) continue;
+        if (xdata[i] < 0 || ydata[i] < 0
+            || xdata[i] >= xres || ydata[i] >= yres)
+            continue;
+        if (rz[i] > (gwy_data_field_get_val(lfield, xdata[i], ydata[i])
+                     + 6*rdisizes[i]))
+            continue;
 
         disize = (gint)((gdouble)oxres*rdisizes[i]/oxreal);
 
-        for (m=(xdata[i]-disize); m<(xdata[i]+disize); m++)
+        for (m = xdata[i] - disize; m < xdata[i]+disize; m++) {
+            for (n = ydata[i] - disize; n < ydata[i]+disize; n++) {
+                if (m < 0 || n < 0 || m >= xres || n >= yres)
+                    continue;
 
-        {
-            for (n=(ydata[i]-disize); n<(ydata[i]+disize); n++)
-            {
-                if (m<0 || n<0 || m>=xres || n>=yres) continue;
-
-                if (m>=add && n>=add && m<(xres-add) && n<(yres-add)) {
+                if (m >= add && n >= add && m < xres-add && n < yres-add) {
                     surface = gwy_data_field_get_val(dfield, m-add, n-add);
                     lsurface = gwy_data_field_get_val(lfield, m, n);
 
-                    if ((sum=(disize*disize - (xdata[i]-m)*(xdata[i]-m) - (ydata[i]-n)*(ydata[i]-n)))>0)
-                    {
+                    if ((sum = (disize*disize - (xdata[i]-m)*(xdata[i]-m)
+                                - (ydata[i]-n)*(ydata[i]-n))) > 0) {
                         surface = MAX(lsurface, rz[i] + sqrt(sum)*oxreal/(double)oxres);
                         gwy_data_field_set_val(lfield, m, n, surface);
                     }
@@ -1086,27 +1084,31 @@ deposit_synth_do(const DepositSynthArgs *args,
     yreal = yres*oyreal/(gdouble)oyres;
 
     presetval = args->coverage/100 * xreal*yreal/(G_PI*size*size);
-    if (presetval<=0) return RES_TOO_FEW;
-    if (presetval>MAXN) return RES_TOO_MANY;
-    if (2*size*xres < xreal) return RES_TOO_SMALL;
-    if (4*size > xreal) return RES_TOO_LARGE;
+    if (presetval <= 0)
+        return RES_TOO_FEW;
+    if (presetval > MAXN)
+        return RES_TOO_MANY;
+    if (2*size*xres < xreal)
+        return RES_TOO_SMALL;
+    if (4*size > xreal)
+        return RES_TOO_LARGE;
 
-    xdata = (gint *) g_malloc(presetval*sizeof(gint));
-    ydata = (gint *) g_malloc(presetval*sizeof(gint));
-    disizes = (gdouble *) g_malloc(presetval*sizeof(gdouble));
-    rdisizes = (gdouble *) g_malloc(presetval*sizeof(gdouble));
-    rx = (gdouble *) g_malloc(presetval*sizeof(gdouble));
-    ry = (gdouble *) g_malloc(presetval*sizeof(gdouble));
-    rz = (gdouble *) g_malloc(presetval*sizeof(gdouble));
-    vx = (gdouble *) g_malloc(presetval*sizeof(gdouble));
-    vy = (gdouble *) g_malloc(presetval*sizeof(gdouble));
-    vz = (gdouble *) g_malloc(presetval*sizeof(gdouble));
-    ax = (gdouble *) g_malloc(presetval*sizeof(gdouble));
-    ay = (gdouble *) g_malloc(presetval*sizeof(gdouble));
-    az = (gdouble *) g_malloc(presetval*sizeof(gdouble));
-    fx = (gdouble *) g_malloc(presetval*sizeof(gdouble));
-    fy = (gdouble *) g_malloc(presetval*sizeof(gdouble));
-    fz = (gdouble *) g_malloc(presetval*sizeof(gdouble));
+    xdata = g_new(gint, presetval);
+    ydata = g_new(gint, presetval);
+    disizes = g_new(gdouble, presetval);
+    rdisizes = g_new(gdouble, presetval);
+    rx = g_new(gdouble, presetval);
+    ry = g_new(gdouble, presetval);
+    rz = g_new(gdouble, presetval);
+    vx = g_new(gdouble, presetval);
+    vy = g_new(gdouble, presetval);
+    vz = g_new(gdouble, presetval);
+    ax = g_new(gdouble, presetval);
+    ay = g_new(gdouble, presetval);
+    az = g_new(gdouble, presetval);
+    fx = g_new(gdouble, presetval);
+    fy = g_new(gdouble, presetval);
+    fz = g_new(gdouble, presetval);
 
    // printf("After normalization size %g width %g, coverage %g, revise %d, datafield real %g x %g, rms %g\n",
    //        size, width, args->coverage, args->revise, oxreal, oyreal, gwy_data_field_get_rms(dfield)); //assure that width and size are in real coordinates
@@ -1138,7 +1140,7 @@ deposit_synth_do(const DepositSynthArgs *args,
 
     zlfield = gwy_data_field_duplicate(lfield);
     zdfield = gwy_data_field_duplicate(dfield);
-    gwy_app_wait_set_message("Initial particle set...");
+    gwy_app_wait_set_message(_("Initial particle set..."));
 
     /*FIXME determine max number of particles and alloc only necessary field sizes*/
 
@@ -1205,19 +1207,19 @@ deposit_synth_do(const DepositSynthArgs *args,
 
 
     /*revise steps*/
-    for (i=0; i<(args->revise); i++)
-    {
-        if (!gwy_app_wait_set_message("Running revise...")) break;
+    for (i = 0; i < args->revise; i++) {
+        if (!gwy_app_wait_set_message("Running revise..."))
+            break;
 
         /*try to add some particles if necessary, do this only for first half of molecular dynamics steps*/
         if (ndata<presetval && i<(10*args->revise)) {
             ii = 0;
             nloc = 0;
 
-            while (ndata < presetval && ii<(max/1000) && nloc<maxloc)
-            {
+            while (ndata < presetval && ii < max/1000 && nloc < maxloc) {
                 size = norm*args->size + rand_gen_gaussian(rng, norm*args->width);
-                if (size<args->size/100) size = args->size/100;
+                if (size<args->size/100)
+                    size = args->size/100;
 
                 disize = gwy_data_field_rtoi(dfield, size);
 
@@ -1232,20 +1234,18 @@ deposit_synth_do(const DepositSynthArgs *args,
                 ryv = ((gdouble)ypos*oyreal/(gdouble)oyres);
                 rzv = gwy_data_field_get_val(zlfield, xpos, ypos)+ rdisizes[ndata];// + 5*size;
 
-                for (k=0; k<ndata; k++)
-                {
+                for (k = 0; k < ndata; k++) {
                     if (((rxv-rx[k])*(rxv-rx[k])
                          + (ryv-ry[k])*(ryv-ry[k])
-                         + (rzv-rz[k])*(rzv-rz[k]))<(4.0*size*size))
-                    {
+                         + (rzv-rz[k])*(rzv-rz[k])) < 4.0*size*size) {
                         too_close = 1;
                         break;
                     }
                 }
-                if (too_close) continue;
-                if (ndata>=10000) {
+                if (too_close)
+                    continue;
+                if (ndata >= 10000)
                     break;
-                }
 
                 xdata[ndata] = xpos;
                 ydata[ndata] = ypos;
@@ -1261,25 +1261,23 @@ deposit_synth_do(const DepositSynthArgs *args,
             };
         }
 
-        if (!gwy_app_wait_set_message("Running revise...")) break;
+        if (!gwy_app_wait_set_message("Running revise..."))
+            break;
 
         /*test succesive LJ steps on substrate*/
-        for (k=0; k<ndata; k++)
-        {
+        for (k = 0; k < ndata; k++) {
             fx[k] = fy[k] = fz[k] = 0;
             /*calculate forces for all particles on substrate*/
 
-            if (gwy_data_field_rtoi(lfield, rx[k])<0
-                || gwy_data_field_rtoj(lfield, ry[k])<0
-                || gwy_data_field_rtoi(lfield, rx[k])>=xres
-                || gwy_data_field_rtoj(lfield, ry[k])>=yres) {
+            if (gwy_data_field_rtoi(lfield, rx[k]) < 0
+                || gwy_data_field_rtoj(lfield, ry[k]) < 0
+                || gwy_data_field_rtoi(lfield, rx[k]) >= xres
+                || gwy_data_field_rtoj(lfield, ry[k]) >= yres)
                 continue;
-            }
 
-            for (m=0; m<ndata; m++)
-            {
-
-                if (m==k) continue;
+            for (m = 0; m < ndata; m++) {
+                if (m == k)
+                    continue;
 
                 fx[k] -= (get_lj_potential_spheres(rx[m], ry[m], rz[m], rx[k]+diff, ry[k], rz[k], rdisizes[k], rdisizes[m])
                               -get_lj_potential_spheres(rx[m], ry[m], rz[m], rx[k]-diff, ry[k], rz[k], rdisizes[k], rdisizes[m]))/2/diff;
@@ -1299,7 +1297,8 @@ deposit_synth_do(const DepositSynthArgs *args,
 
         }
 
-        if (!gwy_app_wait_set_message("Running revise...")) break;
+        if (!gwy_app_wait_set_message(_("Running revise...")))
+            break;
         //clamp forces to prevent too fast movements at extreme parameters cases
         /*for (k=0; k<ndata; k++)
         {
@@ -1414,10 +1413,26 @@ deposit_synth_do(const DepositSynthArgs *args,
 
     g_rand_free(rng);
 
-    if (ndata != presetval) *success = FALSE;
-    else *success = TRUE;
+    if (ndata != presetval)
+        *success = FALSE;
+    else
+        *success = TRUE;
 
     return ndata;
+}
+
+static const gchar*
+particle_error(gint code)
+{
+    if (code == RES_TOO_MANY)
+        return _("Error: too many particles.");
+    if (code == RES_TOO_FEW)
+        return _("Error: no particles.");
+    if (code == RES_TOO_LARGE)
+        return _("Error: particles too large.");
+    if (code == RES_TOO_SMALL)
+        return _("Error: particles too small.");
+    return "";
 }
 
 static const gchar prefix[]           = "/module/deposit_synth";
@@ -1446,8 +1461,8 @@ deposit_synth_sanitize_args(DepositSynthArgs *args)
 
 static void
 deposit_synth_load_args(GwyContainer *container,
-                    DepositSynthArgs *args,
-                    GwyDimensionArgs *dimsargs)
+                        DepositSynthArgs *args,
+                        GwyDimensionArgs *dimsargs)
 {
     *args = deposit_synth_defaults;
 
@@ -1470,8 +1485,8 @@ deposit_synth_load_args(GwyContainer *container,
 
 static void
 deposit_synth_save_args(GwyContainer *container,
-                    const DepositSynthArgs *args,
-                    const GwyDimensionArgs *dimsargs)
+                        const DepositSynthArgs *args,
+                        const GwyDimensionArgs *dimsargs)
 {
     gwy_container_set_int32_by_name(container, active_page_key,
                                     args->active_page);
