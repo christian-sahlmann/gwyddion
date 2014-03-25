@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-03-23 03:58+0100\n"
-"PO-Revision-Date: 2014-03-23 11:03+0300\n"
+"POT-Creation-Date: 2014-03-25 03:58+0100\n"
+"PO-Revision-Date: 2014-03-26 00:20+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -407,43 +407,60 @@ msgstr "Угол кривизны 1"
 msgid "Curvature angle 2"
 msgstr "Угол кривизны 2"
 
-#: libprocess/gwygrainvalue.c:1054
+#: libprocess/gwygrainvalue.c:420
+msgid "Major semiaxis of equivalent ellipse"
+msgstr "Большая полуось эквивалентного эллипса"
+
+#: libprocess/gwygrainvalue.c:429
+msgid "Minor semiaxis of equivalent ellipse"
+msgstr "Малая полуось эквивалентного эллипса"
+
+#: libprocess/gwygrainvalue.c:438
+msgid "Orientation of equivalent ellipse"
+msgstr "Ориентация эквивалентного эллипса"
+
+#: libprocess/gwygrainvalue.c:1081
 msgid "Id"
 msgstr "Идентификатор"
 
-#: libprocess/gwygrainvalue.c:1055 modules/tools/readvalue.c:262
+#: libprocess/gwygrainvalue.c:1082 modules/process/wave_synth.c:500
+#: modules/tools/readvalue.c:262
 msgid "Position"
 msgstr "Позиция"
 
-#: libprocess/gwygrainvalue.c:1056 app/meta.c:381
+#: libprocess/gwygrainvalue.c:1083 app/meta.c:381
 #: modules/process/curvature.c:745 modules/tools/level3.c:456
 #: modules/tools/readvalue.c:297
 msgid "Value"
 msgstr "Значение"
 
-#: libprocess/gwygrainvalue.c:1057
+#: libprocess/gwygrainvalue.c:1084
 msgid "Area"
 msgstr "Площадь"
 
-#: libprocess/gwygrainvalue.c:1058 app/data-browser.c:5071 app/toolbox.c:113
+#: libprocess/gwygrainvalue.c:1085 app/data-browser.c:5071 app/toolbox.c:113
 msgid "Volume"
 msgstr "Объём"
 
-#: libprocess/gwygrainvalue.c:1059
+#: libprocess/gwygrainvalue.c:1086
 msgid "Boundary"
 msgstr "Граница"
 
-#: libprocess/gwygrainvalue.c:1060 modules/process/pat_synth.c:869
+#: libprocess/gwygrainvalue.c:1087 modules/process/pat_synth.c:869
 #: modules/process/pat_synth.c:1170 modules/process/pat_synth.c:1505
 #: modules/tools/linestats.c:157
 msgid "Slope"
 msgstr "Уклон"
 
-#: libprocess/gwygrainvalue.c:1061 modules/process/curvature.c:603
+#: libprocess/gwygrainvalue.c:1088 modules/process/curvature.c:603
 msgid "Curvature"
 msgstr "Кривизна"
 
-#: libprocess/gwygrainvalue.c:1065
+#: libprocess/gwygrainvalue.c:1089
+msgid "Moment"
+msgstr "Момент"
+
+#: libprocess/gwygrainvalue.c:1093
 msgid "User"
 msgstr "Пользовательские"
 
@@ -885,7 +902,7 @@ msgstr "точек"
 #: modules/process/slope_dist.c:203 modules/process/sphere-revolve.c:218
 #: modules/process/tilt.c:160 modules/process/tip_model.c:170
 #: modules/process/unrotate.c:228 modules/process/volumize_layers.c:213
-#: modules/process/wave_synth.c:360 modules/volume/volume_calibrate.c:371
+#: modules/process/wave_synth.c:362 modules/volume/volume_calibrate.c:371
 #: modules/volume/volume_extract.c:331
 msgid "_Reset"
 msgstr "_Сброс"
@@ -6926,7 +6943,7 @@ msgstr "Запускается..."
 #: modules/process/deposit_synth.c:561 modules/process/fft_synth.c:323
 #: modules/process/lno_synth.c:413 modules/process/noise_synth.c:325
 #: modules/process/obj_synth.c:407 modules/process/pat_synth.c:377
-#: modules/process/wave_synth.c:332
+#: modules/process/wave_synth.c:334
 msgid "Generated"
 msgstr "Сгенерированное"
 
@@ -6941,14 +6958,14 @@ msgstr "Прогрессивное обновление"
 #: modules/process/col_synth.c:399 modules/process/deposit_synth.c:428
 #: modules/process/fft_synth.c:417 modules/process/lno_synth.c:504
 #: modules/process/noise_synth.c:416 modules/process/obj_synth.c:500
-#: modules/process/pat_synth.c:470 modules/process/wave_synth.c:423
+#: modules/process/pat_synth.c:470 modules/process/wave_synth.c:425
 msgid "Dimensions"
 msgstr "Размеры"
 
 #: modules/process/col_synth.c:407 modules/process/deposit_synth.c:438
 #: modules/process/fft_synth.c:428 modules/process/lno_synth.c:515
 #: modules/process/noise_synth.c:427 modules/process/obj_synth.c:511
-#: modules/process/pat_synth.c:482 modules/process/wave_synth.c:434
+#: modules/process/pat_synth.c:482 modules/process/wave_synth.c:436
 msgid "Generator"
 msgstr "Генератор"
 
@@ -7862,7 +7879,7 @@ msgstr "Мнимое"
 msgid "Modulus"
 msgstr "Абсолютная величина: "
 
-#: modules/process/fft.c:276 modules/process/wave_synth.c:599
+#: modules/process/fft.c:276 modules/process/wave_synth.c:601
 msgid "Phase"
 msgstr "Фаза"
 
@@ -8128,7 +8145,7 @@ msgstr "Ср. _квадр.:"
 
 #: modules/process/fft_synth.c:437 modules/process/lno_synth.c:551
 #: modules/process/noise_synth.c:459 modules/process/obj_synth.c:580
-#: modules/process/wave_synth.c:469
+#: modules/process/wave_synth.c:471
 msgid "_Like Current Channel"
 msgstr "Как _у текущего канала"
 
@@ -10933,77 +10950,74 @@ msgstr "Разрешение по _Z:"
 msgid "Z _range:"
 msgstr "Диапа_зон Z"
 
-#: modules/process/wave_synth.c:220
+#: modules/process/wave_synth.c:222
 msgid "Generates various kinds of waves."
 msgstr "Генерирует различные виды волн."
 
-#: modules/process/wave_synth.c:234
+#: modules/process/wave_synth.c:236
 msgid "/S_ynthetic/_Waves..."
 msgstr "/Син_тез/_Волны..."
 
-#: modules/process/wave_synth.c:238
+#: modules/process/wave_synth.c:240
 msgid "Generate waves"
 msgstr "Генерировать волны"
 
-#: modules/process/wave_synth.c:358
+#: modules/process/wave_synth.c:360
 msgid "Waves"
 msgstr "Волны"
 
-#: modules/process/wave_synth.c:438 modules/tools/linestats.c:321
+#: modules/process/wave_synth.c:440 modules/tools/linestats.c:321
 msgid "_Quantity:"
 msgstr "_Величина:"
 
-#: modules/process/wave_synth.c:445
+#: modules/process/wave_synth.c:447
 msgid "_Number of waves:"
 msgstr "_Число волн:"
 
-#: modules/process/wave_synth.c:452 modules/tools/roughness.c:282
+#: modules/process/wave_synth.c:454 modules/process/wave_synth.c:600
+#: modules/tools/roughness.c:282
 msgid "Amplitude"
 msgstr "Амплитуда"
 
-#: modules/process/wave_synth.c:457
+#: modules/process/wave_synth.c:459
 msgid "_Wave form:"
 msgstr "_Форма волны:"
 
-#: modules/process/wave_synth.c:464
+#: modules/process/wave_synth.c:466
 msgid "Amplitude:"
 msgstr "Амплитуда:"
 
-#: modules/process/wave_synth.c:482
+#: modules/process/wave_synth.c:484
 msgid "Frequency"
 msgstr "Частота"
 
-#: modules/process/wave_synth.c:488
+#: modules/process/wave_synth.c:490
 msgid "_Spatial frequency:"
 msgstr "_Пространственная частота:"
 
-#: modules/process/wave_synth.c:498
-msgid "Sources"
-msgstr "Источники"
-
-#: modules/process/wave_synth.c:504 modules/process/wave_synth.c:515
+#: modules/process/wave_synth.c:506
 msgid "_X center:"
-msgstr "Центр _X:"
+msgstr "_X центра:"
 
-#: modules/process/wave_synth.c:581
+#: modules/process/wave_synth.c:517
+msgid "_Y center:"
+msgstr "_Y центра:"
+
+#: modules/process/wave_synth.c:583
 msgid "Cosine"
 msgstr "Косинус"
 
-#: modules/process/wave_synth.c:582
+#: modules/process/wave_synth.c:584
 msgid "Inverse cosh"
 msgstr "Обратный cosh"
 
-#: modules/process/wave_synth.c:583
+#: modules/process/wave_synth.c:585
 msgid "Flat top"
 msgstr "Плоская вершина"
 
-#: modules/process/wave_synth.c:597
+#: modules/process/wave_synth.c:599
 msgid "Displacement"
 msgstr "Смещение"
-
-#: modules/process/wave_synth.c:598
-msgid "Intensity"
-msgstr "Интенсивность"
 
 #: modules/process/xydenoise.c:65
 msgid "Denoises measurement on basis of two orthogonal scans."
@@ -12304,6 +12318,3 @@ msgstr "/_Инвертировать значение"
 #: modules/volume/volume_invert.c:69
 msgid "Invert value in volume data"
 msgstr "Инвертирует значения в объёмных данных"
-
-#~ msgid "Lanzcos"
-#~ msgstr "Ланцош"
