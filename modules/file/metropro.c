@@ -958,6 +958,9 @@ fill_data_fields(MProFile *mprofile,
     if (s && *s) \
         gwy_container_set_string_by_name(meta, key, g_strdup(s));
 
+#define HASH_STORE_STRING(key, field) \
+    store_meta_string(meta, key, mprofile->field)
+
 static void
 store_meta_string(GwyContainer *container,
                   const gchar *key,
@@ -975,7 +978,6 @@ store_meta_string(GwyContainer *container,
 static GwyContainer*
 mprofile_get_metadata(MProFile *mprofile)
 {
-    static const GwyEnum yesno[] = { { "No", 0, }, { "Yes", 1, } };
     static const GwyEnum software_types[] = {
         { "MetroPro",   1, },
         { "MetroBasic", 2, },
@@ -1026,42 +1028,213 @@ mprofile_get_metadata(MProFile *mprofile)
     /* Comments */
     store_meta_string(meta, "Software date",
                       mprofile->swinfo_date);
-    store_meta_string(meta, "Comment",
-                      mprofile->comment);
-    store_meta_string(meta, "Objective name",
-                      mprofile->obj_name);
-    store_meta_string(meta, "Part measured",
-                      mprofile->part_name);
-    store_meta_string(meta, "Part serial number",
-                      mprofile->part_ser_num);
-    store_meta_string(meta, "Description",
-                      mprofile->scan_descr);
-    store_meta_string(meta, "System error file",
-                      mprofile->sys_err_file_name);
-    store_meta_string(meta, "Zoom description",
-                      mprofile->zoom_descr);
-    store_meta_string(meta, "Wavelength select",
-                      mprofile->wavelen_select);
 
     /* Misc */
     HASH_STORE_ENUM("Software type", swinfo_type, software_types);
     HASH_STORE("Wavelength", "%g m", wavelength_in);
-    HASH_STORE("Intensity averages", "%d", intens_avg_cnt);
-    HASH_STORE("Minimum modulation points", "%d", min_mod_count);
     HASH_STORE_ENUM("Discontinuity action", discon_action, discont_actions);
     HASH_STORE("Discontinuity filter", "%g %%", discon_filter);
     HASH_STORE_ENUM("System type", sys_type, system_types);
-    HASH_STORE("System board", "%d", sys_board);
-    HASH_STORE("System serial", "%d", sys_serial);
-    HASH_STORE("Instrument id", "%d", inst_id);
-    HASH_STORE_ENUM("System error subtracted", sub_sys_err, yesno);
-    HASH_STORE("Refractive index", "%g", refractive_index);
-    HASH_STORE_ENUM("Removed tilt bias", rem_tilt_bias, yesno);
-    HASH_STORE_ENUM("Removed fringes", rem_fringes, yesno);
-    HASH_STORE_ENUM("Wavelength folding", wavelength_fold, yesno);
 
     p = g_strdup_printf("%.2g", mprofile->min_mod/10.23);
     gwy_container_set_string_by_name(meta, "Minimum modulation", p);
+
+    /* Generated code for simple fields */
+    HASH_STORE("Acquired origin x", "%d", ac_org_x);
+    HASH_STORE("Acquired origin y", "%d", ac_org_y);
+    HASH_STORE("Acquired width", "%u", ac_width);
+    HASH_STORE("Acquired height", "%u", ac_height);
+    HASH_STORE("Acquired number of frames", "%u", ac_n_buckets);
+    HASH_STORE("Acquired range", "%d", ac_range);
+    HASH_STORE("Acquired number of bytes", "%u", ac_n_bytes);
+    HASH_STORE("Connected origin x", "%d", cn_org_x);
+    HASH_STORE("Connected origin y", "%d", cn_org_y);
+    HASH_STORE("Connected width", "%u", cn_width);
+    HASH_STORE("Connected height", "%u", cn_height);
+    HASH_STORE("Connected number of bytes", "%u", cn_n_bytes);
+    /*HASH_STORE("Time stamp", "%d", time_stamp);*/
+    HASH_STORE_STRING("Comment", comment);
+    HASH_STORE("Source", "%d", source);
+    HASH_STORE("Interferometric setup scale factor", "%g", intf_scale_factor);
+    /*HASH_STORE("Instrument wavelength", "%g", wavelength_in);*/
+    HASH_STORE("Numerical aperture", "%g", num_aperture);
+    HASH_STORE("Obliquity factor", "%g", obliquity_factor);
+    HASH_STORE("Magnification", "%g", magnification);
+    HASH_STORE("Lateral resolution", "%g", lateral_res);
+    HASH_STORE("Acquisition type", "%d", acq_type);
+    HASH_STORE("Intensity average control", "%d", intens_avg_cnt);
+    HASH_STORE("Ramp calibration", "%d", ramp_cal);
+    HASH_STORE("Sfac limit", "%d", sfac_limit);
+    HASH_STORE("Ramp gain", "%d", ramp_gain);
+    HASH_STORE("Part thickness", "%g", part_thickness);
+    HASH_STORE("Software light level control", "%d", sw_llc);
+    HASH_STORE("Target range", "%g", target_range);
+    /*HASH_STORE("Minimum modulation", "%d", min_mod);*/
+    HASH_STORE("Minimum modulation count", "%d", min_mod_count);
+    HASH_STORE("Phase resolution", "%d", phase_res);
+    HASH_STORE("Minimum area", "%d", min_area);
+    HASH_STORE("Discontinuity action", "%d", discon_action);
+    /*HASH_STORE("Discontinuity filter", "%g", discon_filter);*/
+    HASH_STORE("Connection order", "%d", connect_order);
+    HASH_STORE("Sign", "%d", sign);
+    HASH_STORE("Camera width", "%d", camera_width);
+    HASH_STORE("Camera height", "%d", camera_height);
+    HASH_STORE("System type", "%d", sys_type);
+    HASH_STORE("System board", "%d", sys_board);
+    HASH_STORE("Instrument serial number", "%d", sys_serial);
+    HASH_STORE("Instrument id", "%d", inst_id);
+    HASH_STORE_STRING("Objective name", obj_name);
+    HASH_STORE_STRING("Part name", part_name);
+    HASH_STORE("Code V type", "%d", codev_type);
+    HASH_STORE("Phase average count", "%d", phase_avg_cnt);
+    HASH_STORE("Subtract system error", "%d", sub_sys_err);
+    HASH_STORE_STRING("Part serial number", part_ser_num);
+    HASH_STORE("Refractive index", "%g", refractive_index);
+    HASH_STORE("Remove tilt bias", "%d", rem_tilt_bias);
+    HASH_STORE("Remove fringes", "%d", rem_fringes);
+    HASH_STORE("Maximum area", "%d", max_area);
+    HASH_STORE("Setup type", "%d", setup_type);
+    HASH_STORE("Wrapped", "%d", wrapped);
+    HASH_STORE("Pre-connection filter", "%g", pre_connect_filter);
+    HASH_STORE("Lambda2 filter wavelength", "%g", wavelength_in_2);
+    HASH_STORE("Wavelength fold", "%d", wavelength_fold);
+    HASH_STORE("Lambda1 filter wavelength", "%g", wavelength_in_1);
+    HASH_STORE("Third light source wavelength", "%g", wavelength_in_3);
+    HASH_STORE("Fourth light source wavelength", "%g", wavelength_in_4);
+    HASH_STORE_STRING("Wavelength select", wavelen_select);
+    HASH_STORE("Frequency domain analysis resolution", "%d", fda_res);
+    HASH_STORE_STRING("Scan description", scan_descr);
+    /* TODO: array
+    HASH_STORE("Number of fiducials a", "%d", n_fiducials_a);
+    */
+    HASH_STORE("Pixel width", "%g", pixel_width);
+    HASH_STORE("Pixel height", "%g", pixel_height);
+    HASH_STORE("Exit pupil diameter", "%g", exit_pupil_diam);
+    HASH_STORE("Light level percent", "%g", light_level_pct);
+    HASH_STORE("Coordinates state", "%d", coords_state);
+    HASH_STORE("Coordinates x position", "%g", coords_x_pos);
+    HASH_STORE("Coordinates y position", "%g", coords_y_pos);
+    HASH_STORE("Coordinates z position", "%g", coords_z_pos);
+    HASH_STORE("Coordinates x rotation", "%g", coords_x_rot);
+    HASH_STORE("Coordinates y rotation", "%g", coords_y_rot);
+    HASH_STORE("Coordinates z rotation", "%g", coords_z_rot);
+    HASH_STORE("Coherence mode", "%d", coherence_mode);
+    HASH_STORE("Surface filter", "%d", surface_filter);
+    HASH_STORE_STRING("System error file name", sys_err_file_name);
+    HASH_STORE_STRING("Zoom description", zoom_descr);
+    HASH_STORE("Alpha part", "%g", alpha_part);
+    HASH_STORE("Beta part", "%g", beta_part);
+    HASH_STORE("Distance part", "%g", dist_part);
+    HASH_STORE("Camera split location x", "%d", cam_split_loc_x);
+    HASH_STORE("Camera split location y", "%d", cam_split_loc_y);
+    HASH_STORE("Camera split translation x", "%d", cam_split_trans_x);
+    HASH_STORE("Camera split translation y", "%d", cam_split_trans_y);
+    HASH_STORE_STRING("Material a", material_a);
+    HASH_STORE_STRING("Material b", material_b);
+    HASH_STORE("Camera split unused", "%d", cam_split_unused);
+    HASH_STORE("Displacement measuring interferometer center x", "%g", dmi_ctr_x);
+    HASH_STORE("Displacement measuring interferometer center y", "%g", dmi_ctr_y);
+    HASH_STORE("Spherical distortion correction", "%d", sph_dist_corr);
+    HASH_STORE("Spherical distortion part NA", "%g", sph_dist_part_na);
+    HASH_STORE("Spherical distortion part radius", "%g", sph_dist_part_radius);
+    HASH_STORE("Spherical distortion calibration NA", "%g", sph_dist_cal_na);
+    HASH_STORE("Spherical distortion calibration radius", "%g", sph_dist_cal_radius);
+    HASH_STORE("Surface type", "%d", surface_type);
+    HASH_STORE("Acquired surface type", "%d", ac_surface_type);
+    HASH_STORE("Z position", "%g", z_position);
+    HASH_STORE("Power multiplier", "%g", power_multiplier);
+    HASH_STORE("Focus multiplier", "%g", focus_multiplier);
+    HASH_STORE("Fourier transform phase left position", "%g", ftp_left_pos);
+    HASH_STORE("Fourier transform phase right position", "%g", ftp_right_pos);
+    HASH_STORE("Fourier transform phase pitch position", "%g", ftp_pitch_pos);
+    HASH_STORE("Fourier transform phase roll position", "%g", ftp_roll_pos);
+    HASH_STORE("Minimum modulation percent", "%g", min_mod_pct);
+    HASH_STORE("Maximum intensity", "%d", max_inten);
+    HASH_STORE("Ring of fire", "%d", ring_of_fire);
+    HASH_STORE("Rc orientation", "%d", rc_orientation);
+    HASH_STORE("Rc distance", "%g", rc_distance);
+    HASH_STORE("Rc angle", "%g", rc_angle);
+    HASH_STORE("Rc diameter", "%g", rc_diameter);
+    HASH_STORE("Remove fringes mode", "%d", rem_fringes_mode);
+    HASH_STORE("Fourier transform phase shifting interferometry phase resolution", "%d", ftpsi_phase_res);
+    HASH_STORE("Frames acquired", "%d", frames_acquired);
+    HASH_STORE("Cavity type", "%d", cavity_type);
+    HASH_STORE("Camera frame rate", "%g", cam_frame_rate);
+    HASH_STORE("Tune range", "%g", tune_range);
+    HASH_STORE("Calibration pixel location x", "%d", cal_pix_loc_x);
+    HASH_STORE("Calibration pixel location y", "%d", cal_pix_loc_y);
+    /* TODO: arrays
+    HASH_STORE("Number of test calibration points", "%d", n_tst_cal_pts);
+    HASH_STORE("Number of reference calibration points", "%d", n_ref_cal_pts);
+    */
+    HASH_STORE("Test calibration pixel OPD", "%g", tst_cal_pix_opd);
+    HASH_STORE("Reference calibration pixel OPD", "%g", ref_cal_pix_opd);
+    HASH_STORE("Instrument serial number 2", "%d", sys_serial2);
+    HASH_STORE("Flash phase DC mask", "%g", flash_phase_dc_mask);
+    HASH_STORE("Flash phase alias mask", "%g", flash_phase_alias_mask);
+    HASH_STORE("Flash phase filter", "%g", flash_phase_filter);
+    HASH_STORE("Scan direction", "%d", scan_direction);
+    HASH_STORE("Frequency domain analysis pre-filter", "%d", pre_fda_filter);
+    HASH_STORE("Fourier transform phase shifting interferometry resolution factor", "%d", ftpsi_res_factor);
+
+    if (mprofile->header_format < 3)
+        return meta;
+
+    HASH_STORE("Films mode", "%d", films_mode);
+    HASH_STORE("Films reflectivity ratio", "%d", films_reflectivity_ratio);
+    HASH_STORE("Films obliquity correction", "%g", films_obliquity_correction);
+    HASH_STORE("Films refraction index", "%g", films_refraction_index);
+    HASH_STORE("Films minimum modulation", "%g", films_min_mod);
+    HASH_STORE("Films minimum thickness", "%g", films_min_thickness);
+    HASH_STORE("Films maximum thickness", "%g", films_max_thickness);
+    HASH_STORE("Films minimum reflectivity ratio", "%g", films_min_refl_ratio);
+    HASH_STORE("Films maximum reflectivity ratio", "%g", films_max_refl_ratio);
+    HASH_STORE_STRING("Films system characterization file name", films_sys_char_file_name);
+    HASH_STORE("Films data format", "%d", films_dfmt);
+    HASH_STORE("Films merit mode", "%d", films_merit_mode);
+    HASH_STORE("Films high 2nd generation", "%d", films_h2g);
+    HASH_STORE_STRING("Anti vibration calibration file name", anti_vibration_cal_file_name);
+    HASH_STORE("Films fringe removal percent", "%g", films_fringe_remove_perc);
+    HASH_STORE_STRING("Asphere job file name", asphere_job_file_name);
+    HASH_STORE_STRING("Asphere test plan name", asphere_test_plan_name);
+    HASH_STORE("Asphere number of zones", "%g", asphere_nzones);
+    HASH_STORE("Asphere rv", "%g", asphere_rv);
+    HASH_STORE("Asphere voffset", "%g", asphere_voffset);
+    HASH_STORE("Asphere attribute 4", "%g", asphere_att4);
+    HASH_STORE("Asphere r0", "%g", asphere_r0);
+    HASH_STORE("Asphere attribute 6", "%g", asphere_att6);
+    HASH_STORE("Asphere r0 optimization", "%g", asphere_r0_optimization);
+    HASH_STORE("Asphere attribute 8", "%g", asphere_att8);
+    HASH_STORE("Asphere aperture percent", "%g", asphere_aperture_pct);
+    HASH_STORE("Asphere optimized r0", "%g", asphere_optimized_r0);
+    HASH_STORE("Intensity field flattening state", "%d", iff_state);
+    HASH_STORE_STRING("Intensity field flattening intensity dark reference filename", iff_idr_filename);
+    HASH_STORE_STRING("Intensity field flattening intensity system error filename", iff_ise_filename);
+    HASH_STORE("Asphere equation r0", "%g", asphere_eqn_r0);
+    HASH_STORE("Asphere equation k", "%g", asphere_eqn_k);
+    /* TODO array: asphere_eqn_coeffs */
+    HASH_STORE("Absolute wavelength meter enable", "%d", awm_enable);
+    HASH_STORE("Absolute wavelength meter vacuum wavelength nm", "%g", awm_vacuum_wavelength_nm);
+    HASH_STORE("Absolute wavelength meter air wavelength nm", "%g", awm_air_wavelength_nm);
+    HASH_STORE("Absolute wavelength meter air temperature degC", "%g", awm_air_temperature_degc);
+    HASH_STORE("Absolute wavelength meter air pressure mm Hg", "%g", awm_air_pressure_mmhg);
+    HASH_STORE("Absolute wavelength meter relative humidity %", "%g", awm_air_rel_humidity_pct);
+    HASH_STORE("Absolute wavelength meter air quality", "%g", awm_air_quality);
+    HASH_STORE("Absolute wavelength meter input power mW", "%g", awm_input_power_mw);
+    HASH_STORE("Asphere optimizations", "%d", asphere_optimizations);
+    HASH_STORE("Asphere optimization mode", "%d", asphere_optimization_mode);
+    HASH_STORE("Asphere optimized k", "%g", asphere_optimized_k);
+    /* TODO: arrays
+    HASH_STORE("Number of fiducials b", "%d", n_fiducials_b);
+    HASH_STORE("Number of fiducials c", "%d", n_fiducials_c);
+    HASH_STORE("Number of fiducials d", "%d", n_fiducials_d);
+    */
+    HASH_STORE("GPI encoded zoom magnification", "%g", gpi_enc_zoom_mag);
+    HASH_STORE("Asphere maximum distortion", "%g", asphere_max_distortion);
+    HASH_STORE("Asphere distortion uncertainty", "%g", asphere_distortion_uncert);
+    HASH_STORE_STRING("Field stop name", field_stop_name);
+    HASH_STORE_STRING("Aperture stop name", apert_stop_name);
+    HASH_STORE_STRING("Illumination filter name", illum_filt_name);
 
     return meta;
 }
