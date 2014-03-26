@@ -149,7 +149,7 @@ static const DomainSynthArgs domain_synth_defaults = {
     42, TRUE, FALSE, TRUE,
     QUANTITY_U, 1 << QUANTITY_U,
     200, 1.0,
-    0.8, 1.5, 0.2, 0.0, 0.005,
+    0.8, 1.5, 0.2, 0.0, 5.0,
 };
 
 static const GwyDimensionArgs dims_defaults = GWY_DIMENSION_ARGS_INIT;
@@ -404,61 +404,46 @@ domain_synth_dialog(DomainSynthArgs *args,
                              G_CALLBACK(gwy_synth_int_changed), &controls);
     row++;
 
-#if 0
-    controls.coverage = gtk_adjustment_new(args->coverage,
-                                           0.1, 1000.0, 0.001, 1.0, 0);
-    g_object_set_data(G_OBJECT(controls.coverage), "target", &args->coverage);
-    gwy_table_attach_hscale(table, row, _("Co_verage:"), NULL,
-                            controls.coverage, GWY_HSCALE_SQRT);
-    g_signal_connect_swapped(controls.coverage, "value-changed",
+    controls.T = gtk_adjustment_new(args->T, 0.001, 2.0, 0.001, 0.1, 0);
+    g_object_set_data(G_OBJECT(controls.T), "target", &args->T);
+    gwy_table_attach_hscale(table, row, _("_Temperature:"), NULL,
+                            GTK_OBJECT(controls.T), GWY_HSCALE_SQRT);
+    g_signal_connect_swapped(controls.T, "value-changed",
                              G_CALLBACK(gwy_synth_double_changed), &controls);
     row++;
 
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
-    gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Particle Size")),
-                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
-    row++;
-
-    controls.height = gtk_adjustment_new(args->height, 0.1, 10.0, 0.1, 1.0, 0);
-    g_object_set_data(G_OBJECT(controls.height), "target", &args->height);
-    gwy_table_attach_hscale(table, row, _("_Height:"), "px",
-                            controls.height, GWY_HSCALE_SQRT);
-    g_signal_connect_swapped(controls.height, "value-changed",
+    controls.J = gtk_adjustment_new(args->J, 0.001, 100.0, 0.1, 10, 0);
+    g_object_set_data(G_OBJECT(controls.J), "target", &args->J);
+    gwy_table_attach_hscale(table, row, _("_Inhibitor strength:"), NULL,
+                            GTK_OBJECT(controls.J), GWY_HSCALE_SQRT);
+    g_signal_connect_swapped(controls.J, "value-changed",
                              G_CALLBACK(gwy_synth_double_changed), &controls);
     row++;
 
-    row = gwy_synth_attach_variance(&controls, row,
-                                    &controls.height_noise,
-                                    &args->height_noise);
-
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
-    gtk_table_attach(GTK_TABLE(table),
-                     gwy_label_new_header(_("Incidence")),
-                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    controls.mu = gtk_adjustment_new(args->mu, 0.001, 100.0, 0.1, 10, 0);
+    g_object_set_data(G_OBJECT(controls.mu), "target", &args->mu);
+    gwy_table_attach_hscale(table, row, _("In_hibitor coupling:"), NULL,
+                            GTK_OBJECT(controls.mu), GWY_HSCALE_SQRT);
+    g_signal_connect_swapped(controls.mu, "value-changed",
+                             G_CALLBACK(gwy_synth_double_changed), &controls);
     row++;
 
-    row = gwy_synth_attach_angle(&controls, row, &controls.theta, &args->theta,
-                                 0.0, 0.99*G_PI/2.0, _("Inclination"));
-    row = gwy_synth_attach_variance(&controls, row,
-                                    &controls.theta_spread,
-                                    &args->theta_spread);
-
-    row = gwy_synth_attach_angle(&controls, row, &controls.phi, &args->phi,
-                                 -G_PI, G_PI, _("Direction"));
-    row = gwy_synth_attach_variance(&controls, row,
-                                    &controls.phi_spread,
-                                    &args->phi_spread);
-
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
-    gtk_table_attach(GTK_TABLE(table),
-                     gwy_label_new_header(_("Options")),
-                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    controls.nu = gtk_adjustment_new(args->nu, -5.0, 5.0, 0.001, 0.1, 0);
+    g_object_set_data(G_OBJECT(controls.nu), "target", &args->nu);
+    gwy_table_attach_hscale(table, row, _("_Bias:"), NULL,
+                            GTK_OBJECT(controls.nu), GWY_HSCALE_DEFAULT);
+    g_signal_connect_swapped(controls.nu, "value-changed",
+                             G_CALLBACK(gwy_synth_double_changed), &controls);
     row++;
 
-    controls.relaxation = relaxation_selector_new(&controls);
-    gwy_table_attach_hscale(table, row, _("Relaxation type:"), NULL,
-                            GTK_OBJECT(controls.relaxation), GWY_HSCALE_WIDGET);
-#endif
+    controls.dt = gtk_adjustment_new(args->dt, 0.001, 1000.0, 0.001, 1.0, 0);
+    g_object_set_data(G_OBJECT(controls.dt), "target", &args->dt);
+    gwy_table_attach_hscale(table, row, _("_Monte-Carlo time step:"), 
+                            "×10<sup>-3</sup>",
+                            GTK_OBJECT(controls.dt), GWY_HSCALE_LOG);
+    g_signal_connect_swapped(controls.dt, "value-changed",
+                             G_CALLBACK(gwy_synth_double_changed), &controls);
+    row++;
 
     gtk_widget_show_all(dialog);
     controls.in_init = FALSE;
@@ -695,7 +680,7 @@ static void
 field_rk4_step(GwyDataField *vfield, const gint *u,
                const DomainSynthArgs *args)
 {
-    gdouble mu = args->mu, nu = args->nu, dt = args->dt;
+    gdouble mu = args->mu, nu = args->nu, dt = args->dt * 1e-3;
     guint xres = vfield->xres, yres = vfield->yres, n = xres*yres;
     gdouble *v = vfield->data;
     guint k;
@@ -811,7 +796,7 @@ domain_synth_sanitize_args(DomainSynthArgs *args)
     args->randomize = !!args->randomize;
     args->animated = !!args->animated;
     args->niters = MIN(args->niters, 10000);
-    args->T = CLAMP(args->T, 0.001, 100.0);
+    args->T = CLAMP(args->T, 0.001, 2.0);
     args->J = CLAMP(args->J, 0.001, 100.0);
     args->mu = CLAMP(args->mu, 0.001, 100.0);
     args->nu = CLAMP(args->nu, -1.0, 1.0);
