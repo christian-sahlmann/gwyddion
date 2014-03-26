@@ -53,7 +53,8 @@ enum {
 enum {
     QUANTITY_U = 0,
     QUANTITY_V = 1,
-    QUANTITY_MASK = (1 << QUANTITY_U) | (1 << QUANTITY_V),
+    QUANTITY_NTYPES,
+    QUANTITY_MASK = (1 << QUANTITY_NTYPES) - 1,
 };
 
 typedef struct _ObjSynthControls DomainSynthControls;
@@ -95,14 +96,13 @@ struct _ObjSynthControls {
     GtkObject *height;
     GtkWidget *height_units;
     GtkWidget *height_init;
-    GtkWidget *quantity;
     GtkWidget *preview_quantity;
+    GtkWidget *quantity[QUANTITY_NTYPES];
     GwyContainer *mydata;
     GwyDataField *surface;
     gdouble pxsize;
     gdouble zscale;
     gboolean in_init;
-    gboolean calculated;
 };
 
 static gboolean   module_register              (void);
@@ -128,12 +128,19 @@ static void       page_switched                (DomainSynthControls *controls,
 static void       update_values                (DomainSynthControls *controls);
 static void       preview_quantity_selected    (GtkComboBox *combo,
                                                 DomainSynthControls *controls);
+static void       output_quantity_toggled      (GtkToggleButton *check,
+                                                DomainSynthControls *controls);
 static void       height_init_clicked          (DomainSynthControls *controls);
+static void       update_ok_sensitivity        (DomainSynthControls *controls);
 static void       domain_synth_invalidate      (DomainSynthControls *controls);
 static void       preview                      (DomainSynthControls *controls);
+static void       init_ufield_from_surface     (GwyDataField *dfield,
+                                                GwyDataField *ufield,
+                                                GRand *rng);
 static gboolean   domain_synth_do              (const DomainSynthArgs *args,
                                                 GwyDataField *ufield,
                                                 GwyDataField *vfield,
+                                                GRand *rng,
                                                 gdouble preview_time);
 static void       domain_synth_load_args       (GwyContainer *container,
                                                 DomainSynthArgs *args,
@@ -220,80 +227,120 @@ run_noninteractive(DomainSynthArgs *args,
                    gint oldid,
                    GQuark quark)
 {
-    GwyDataField *newfield, *vfield;
+    GwyDataField *ufield, *vfield;
     GwySIUnit *siunit;
+    GRand *rng;
     gboolean replace = dimsargs->replace && dfield;
     gboolean add = dimsargs->add && dfield;
-    gint newid;
-    gboolean ok;
+    gint unewid = -1, vnewid = -1;
+    gboolean ok, uout, vout;
+
+    uout = (args->quantity & (1 << QUANTITY_U));
+    vout = (args->quantity & (1 << QUANTITY_V));
 
     if (args->randomize)
         args->seed = g_random_int() & 0x7fffffff;
 
+    rng = g_rand_new();
+    g_rand_set_seed(rng, args->seed);
+
     if (add || replace) {
-        if (add)
-            newfield = gwy_data_field_duplicate(dfield);
-        else
-            newfield = gwy_data_field_new_alike(dfield, TRUE);
+        ufield = gwy_data_field_new_alike(dfield, TRUE);
     }
     else {
         gdouble mag = pow10(dimsargs->xypow10) * dimsargs->measure;
-        newfield = gwy_data_field_new(dimsargs->xres, dimsargs->yres,
-                                      mag*dimsargs->xres, mag*dimsargs->yres,
-                                      TRUE);
+        ufield = gwy_data_field_new(dimsargs->xres, dimsargs->yres,
+                                    mag*dimsargs->xres, mag*dimsargs->yres,
+                                    TRUE);
 
-        siunit = gwy_data_field_get_si_unit_xy(newfield);
+        siunit = gwy_data_field_get_si_unit_xy(ufield);
         gwy_si_unit_set_from_string(siunit, dimsargs->xyunits);
 
-        siunit = gwy_data_field_get_si_unit_z(newfield);
+        siunit = gwy_data_field_get_si_unit_z(ufield);
         gwy_si_unit_set_from_string(siunit, dimsargs->zunits);
     }
+    init_ufield_from_surface(dfield, ufield, rng);
 
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid),
                        _("Starting..."));
-    vfield = gwy_data_field_new_alike(newfield, FALSE);
-    //scale_to_unit_cubes(newfield, &rx, &ry);
-    ok = domain_synth_do(args, newfield, vfield, HUGE_VAL);
-    g_object_unref(vfield);
-    //scale_from_unit_cubes(newfield, rx, ry);
+    vfield = gwy_data_field_new_alike(ufield, FALSE);
+    ok = domain_synth_do(args, ufield, vfield, rng, HUGE_VAL);
     gwy_app_wait_finish();
 
+    g_rand_free(rng);
+
     if (!ok) {
-        g_object_ref(newfield);
+        g_object_unref(ufield);
+        g_object_unref(vfield);
         return;
     }
 
+    gwy_data_field_renormalize(ufield,
+                               pow10(dimsargs->zpow10) * args->height, 0.0);
+    gwy_data_field_renormalize(vfield,
+                               pow10(dimsargs->zpow10) * args->height, 0.0);
+
     if (replace) {
         gwy_app_undo_qcheckpointv(data, 1, &quark);
-        gwy_container_set_object(data, gwy_app_get_data_key_for_id(oldid),
-                                 newfield);
+        if (uout)
+            gwy_container_set_object(data, gwy_app_get_data_key_for_id(oldid),
+                                     ufield);
+        else if (vout)
+            gwy_container_set_object(data, gwy_app_get_data_key_for_id(oldid),
+                                     vfield);
+        else {
+            g_assert_not_reached();
+        }
         gwy_app_channel_log_add(data, oldid, oldid, "proc::domain_synth", NULL);
-        g_object_unref(newfield);
+        g_object_unref(ufield);
+        g_object_unref(vfield);
         return;
     }
 
     if (data) {
-        newid = gwy_app_data_browser_add_data_field(newfield, data, TRUE);
-        if (oldid != -1)
-            gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
-                                    GWY_DATA_ITEM_GRADIENT,
-                                    0);
+        if (uout)
+            unewid = gwy_app_data_browser_add_data_field(ufield, data, TRUE);
+        if (vout)
+            vnewid = gwy_app_data_browser_add_data_field(vfield, data, TRUE);
     }
     else {
-        newid = 0;
         data = gwy_container_new();
-        gwy_container_set_object(data, gwy_app_get_data_key_for_id(newid),
-                                 newfield);
+        if (uout) {
+            unewid = 0;
+            gwy_container_set_object(data, gwy_app_get_data_key_for_id(unewid),
+                                     ufield);
+        }
+        if (vout) {
+            vnewid = 1;
+            gwy_container_set_object(data, gwy_app_get_data_key_for_id(vnewid),
+                                     vfield);
+        }
         gwy_app_data_browser_add(data);
         gwy_app_data_browser_reset_visibility(data,
                                               GWY_VISIBILITY_RESET_SHOW_ALL);
         g_object_unref(data);
     }
 
-    gwy_app_set_data_field_title(data, newid, _("Generated"));
-    gwy_app_channel_log_add(data, add ? oldid : -1, newid,
-                            "proc::domain_synth", NULL);
-    g_object_unref(newfield);
+    if (uout) {
+        if (oldid != -1)
+            gwy_app_sync_data_items(data, data, oldid, unewid, FALSE,
+                                    GWY_DATA_ITEM_GRADIENT,
+                                    0);
+        gwy_app_set_data_field_title(data, unewid, _("Generated"));
+        gwy_app_channel_log_add(data, add ? oldid : -1, unewid,
+                                "proc::domain_synth", NULL);
+    }
+    if (vout) {
+        if (oldid != -1)
+            gwy_app_sync_data_items(data, data, oldid, vnewid, FALSE,
+                                    GWY_DATA_ITEM_GRADIENT,
+                                    0);
+        gwy_app_set_data_field_title(data, vnewid, _("Generated"));
+        gwy_app_channel_log_add(data, add ? oldid : -1, vnewid,
+                                "proc::domain_synth", NULL);
+    }
+    g_object_unref(ufield);
+    g_object_unref(vfield);
 }
 
 static gboolean
@@ -303,17 +350,16 @@ domain_synth_dialog(DomainSynthArgs *args,
                     GwyDataField *dfield_template,
                     gint id)
 {
-    GtkWidget *dialog, *table, *vbox, *hbox, *notebook, *hbox2, *check;
+    GtkWidget *dialog, *table, *vbox, *hbox, *notebook, *hbox2, *check, *label;
     DomainSynthControls controls;
     GwyDataField *dfield;
     GwyPixmapLayer *layer;
     gboolean finished;
     gint response;
-    gint row;
+    gint row, i;
 
     gwy_clear(&controls, 1);
     controls.in_init = TRUE;
-    controls.calculated = FALSE;
     controls.args = args;
     controls.pxsize = 1.0;
     dialog = gtk_dialog_new_with_buttons(_("Domains"),
@@ -401,7 +447,7 @@ domain_synth_dialog(DomainSynthArgs *args,
                              gwy_dimensions_get_widget(controls.dims),
                              gtk_label_new(_("Dimensions")));
 
-    table = gtk_table_new(19 + (dfield_template ? 1 : 0), 4, FALSE);
+    table = gtk_table_new(12 + (dfield_template ? 1 : 0), 4, FALSE);
     controls.table = GTK_TABLE(table);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -409,6 +455,18 @@ domain_synth_dialog(DomainSynthArgs *args,
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), table,
                              gtk_label_new(_("Generator")));
     row = 0;
+
+    controls.preview_quantity = preview_quantity_selector_new(&controls);
+    gwy_table_attach_hscale(table, row, _("_Preview quantity:"), NULL,
+                            GTK_OBJECT(controls.preview_quantity),
+                            GWY_HSCALE_WIDGET);
+    row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    gtk_table_attach(GTK_TABLE(table),
+                     gwy_label_new_header(_("Simulation Parameters")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
 
     controls.niters = gtk_adjustment_new(args->niters, 1, 10000, 1, 10, 0);
     g_object_set_data(G_OBJECT(controls.niters), "target", &args->niters);
@@ -459,6 +517,12 @@ domain_synth_dialog(DomainSynthArgs *args,
                              G_CALLBACK(gwy_synth_double_changed), &controls);
     row++;
 
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    gtk_table_attach(GTK_TABLE(table),
+                     gwy_label_new_header(_("Output Options")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
     row = gwy_synth_attach_height(&controls, row,
                                   &controls.height, &args->height,
                                   _("_Height:"), NULL, &controls.height_units);
@@ -473,11 +537,27 @@ domain_synth_dialog(DomainSynthArgs *args,
         row++;
     }
 
-    controls.preview_quantity = preview_quantity_selector_new(&controls);
-    gwy_table_attach_hscale(table, row, _("_Preview quantity:"), NULL,
-                            GTK_OBJECT(controls.preview_quantity),
-                            GWY_HSCALE_WIDGET);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    label = gtk_label_new(_("Output type:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
+
+    for (i = 0; i < QUANTITY_NTYPES; i++) {
+        controls.quantity[i]
+            = gtk_check_button_new_with_label(_(quantity_types[i].name));
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.quantity[i]),
+                                     args->quantity & (1 << i));
+        g_object_set_data(G_OBJECT(controls.quantity[i]), "value",
+                          GUINT_TO_POINTER(i));
+        gtk_table_attach(GTK_TABLE(table), controls.quantity[i],
+                         0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+        g_signal_connect(controls.quantity[i], "toggled",
+                         G_CALLBACK(output_quantity_toggled), &controls);
+        row++;
+    }
+    update_ok_sensitivity(&controls);
 
     gtk_widget_show_all(dialog);
     controls.in_init = FALSE;
@@ -542,11 +622,14 @@ static void
 update_controls(DomainSynthControls *controls,
                 DomainSynthArgs *args)
 {
+    guint i;
+
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->seed), args->seed);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->randomize),
                                  args->randomize);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->animated),
                                  args->animated);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->niters), args->niters);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->T), args->T);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->J), args->J);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->mu), args->mu);
@@ -555,6 +638,10 @@ update_controls(DomainSynthControls *controls,
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height), args->height);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->preview_quantity),
                                   args->preview_quantity);
+
+    for (i = 0; i < QUANTITY_NTYPES; i++)
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->quantity[i]),
+                                     args->quantity & (1 << i));
 }
 
 static void
@@ -602,6 +689,22 @@ preview_quantity_selected(GtkComboBox *combo,
 }
 
 static void
+output_quantity_toggled(GtkToggleButton *check,
+                        DomainSynthControls *controls)
+{
+    DomainSynthArgs *args = controls->args;
+    guint value = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(check), "value"));
+    gboolean checked = gtk_toggle_button_get_active(check);
+
+    if (checked)
+        args->quantity |= (1 << value);
+    else
+        args->quantity &= ~(1 << value);
+
+    update_ok_sensitivity(controls);
+}
+
+static void
 height_init_clicked(DomainSynthControls *controls)
 {
     gdouble mag = pow10(controls->dims->args->zpow10);
@@ -610,9 +713,31 @@ height_init_clicked(DomainSynthControls *controls)
 }
 
 static void
-domain_synth_invalidate(DomainSynthControls *controls)
+update_ok_sensitivity(DomainSynthControls *controls)
 {
-    controls->calculated = FALSE;
+    gboolean have_output = !!controls->args->quantity;
+    gboolean sensitive;
+
+    if (!have_output)
+        sensitive = FALSE;
+    else if (!controls->dims->args->replace)
+        sensitive = TRUE;
+    else {
+        guint i, count = 0;
+
+        for (i = 0; i < QUANTITY_NTYPES; i++)
+            count += !!(controls->args->quantity & (1 << i));
+
+        sensitive = (count == 1);
+    }
+
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      GTK_RESPONSE_OK, sensitive);
+}
+
+static void
+domain_synth_invalidate(G_GNUC_UNUSED DomainSynthControls *controls)
+{
 }
 
 static void
@@ -620,7 +745,10 @@ preview(DomainSynthControls *controls)
 {
     DomainSynthArgs *args = controls->args;
     GwyDataField *ufield, *vfield;
-    //gdouble rx, ry;
+    GRand *rng;
+
+    rng = g_rand_new();
+    g_rand_set_seed(rng, args->seed);
 
     ufield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
@@ -628,21 +756,35 @@ preview(DomainSynthControls *controls)
                                                              "/1/data"));
 
     if (controls->dims->args->add && controls->surface)
-        gwy_data_field_copy(controls->surface, ufield, TRUE);
+        init_ufield_from_surface(controls->surface, ufield, rng);
     else
-        gwy_data_field_clear(ufield);
-
-    //scale_to_unit_cubes(dfield, &rx, &ry);
+        init_ufield_from_surface(NULL, ufield, rng);
 
     gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Starting..."));
-    domain_synth_do(args, ufield, vfield, 1.25);
+    domain_synth_do(args, ufield, vfield, rng, 1.25);
     gwy_app_wait_finish();
 
-    //scale_from_unit_cubes(dfield,rx, ry);
-    gwy_data_field_data_changed(ufield);
-    gwy_data_field_data_changed(vfield);
+    g_rand_free(rng);
+}
 
-    controls->calculated = TRUE;
+static void
+init_ufield_from_surface(GwyDataField *dfield, GwyDataField *ufield,
+                         GRand *rng)
+{
+    guint xres = ufield->xres, yres = ufield->yres, k;
+    gdouble *u = gwy_data_field_get_data(ufield);
+
+    if (dfield) {
+        gdouble med = gwy_data_field_get_median(dfield);
+        const gdouble *d = dfield->data;
+
+        for (k = xres*yres; k; k--, d++, u++)
+            *u = (*d <= med) ? -1 : 1;
+    }
+    else {
+        for (k = xres*yres; k; k--, u++)
+            *u = g_rand_boolean(rng) ? 1 : -1;
+    }
 }
 
 static inline gint
@@ -757,29 +899,32 @@ field_rk4_step(GwyDataField *vfield, const gint *u,
         v[k] = v_rk4_step(v[k], u[k], mu, nu, dt);
 }
 
-static gint*
-create_random_ufield(guint xres, guint yres, GRand *rng)
+static void
+ufield_to_data_field(const gint *u, const gint *ubuf,
+                     GwyDataField *dfield)
 {
-    gint *ufield = g_new(gint, xres*yres);
+    guint xres = gwy_data_field_get_xres(dfield);
+    guint yres = gwy_data_field_get_yres(dfield);
     guint k;
 
     for (k = 0; k < xres*yres; k++)
-        ufield[k] = g_rand_boolean(rng) ? 1 : -1;
+        dfield->data[k] = 0.5*(u[k] + ubuf[k]);
 
-    return ufield;
+    gwy_data_field_invalidate(dfield);
+    gwy_data_field_data_changed(dfield);
 }
 
 static gboolean
 domain_synth_do(const DomainSynthArgs *args,
                 GwyDataField *ufield,
                 GwyDataField *vfield,
+                GRand *rng,
                 gdouble preview_time)
 {
     gint xres, yres;
     gulong i;
     gdouble lasttime = 0.0, lastpreviewtime = 0.0, currtime;
     GTimer *timer;
-    GRand *rng;
     gint *u, *ubuf;
     guint k;
     gboolean finished = FALSE;
@@ -792,12 +937,11 @@ domain_synth_do(const DomainSynthArgs *args,
     gwy_app_wait_set_message(_("Running computation..."));
     gwy_app_wait_set_fraction(0.0);
 
-    rng = g_rand_new();
-    g_rand_set_seed(rng, args->seed);
-
     gwy_data_field_clear(vfield);
-    u = create_random_ufield(xres, yres, rng);
+    u = g_new(gint, xres*yres);
     ubuf = g_new(gint, xres*yres);
+    for (k = 0; k < xres*yres; k++)
+        u[k] = (gint)(ufield->data[k]);
 
     for (i = 0; i < args->niters; i++) {
         field_mc_step8(vfield, u, ubuf, args, rng);
@@ -814,11 +958,8 @@ domain_synth_do(const DomainSynthArgs *args,
 
                 if (args->animated
                     && currtime - lastpreviewtime >= preview_time) {
-                    for (k = 0; k < xres*yres; k++)
-                        ufield->data[k] = 0.5*(u[k] + ubuf[k]);
-                    gwy_data_field_invalidate(ufield);
+                    ufield_to_data_field(u, ubuf, ufield);
                     gwy_data_field_invalidate(vfield);
-                    gwy_data_field_data_changed(ufield);
                     gwy_data_field_data_changed(vfield);
                     lastpreviewtime = lasttime;
                 }
@@ -826,17 +967,13 @@ domain_synth_do(const DomainSynthArgs *args,
         }
     }
 
-    for (k = 0; k < xres*yres; k++)
-        ufield->data[k] = 0.5*(u[k] + ubuf[k]);
-
+    ufield_to_data_field(u, ubuf, ufield);
     gwy_data_field_invalidate(vfield);
-    gwy_data_field_invalidate(ufield);
-
+    gwy_data_field_data_changed(vfield);
     finished = TRUE;
 
 fail:
     g_timer_destroy(timer);
-    g_rand_free(rng);
     g_free(u);
     g_free(ubuf);
 
@@ -874,13 +1011,13 @@ domain_synth_sanitize_args(DomainSynthArgs *args)
     args->dt = CLAMP(args->dt, 0.001, 100.0);
     args->height = CLAMP(args->height, 0.001, 10000.0);
     args->quantity &= QUANTITY_MASK;
-    args->preview_quantity = MIN(args->preview_quantity, QUANTITY_V);
+    args->preview_quantity = MIN(args->preview_quantity, QUANTITY_NTYPES-1);
 }
 
 static void
 domain_synth_load_args(GwyContainer *container,
-                    DomainSynthArgs *args,
-                    GwyDimensionArgs *dimsargs)
+                       DomainSynthArgs *args,
+                       GwyDimensionArgs *dimsargs)
 {
     *args = domain_synth_defaults;
 
@@ -910,8 +1047,8 @@ domain_synth_load_args(GwyContainer *container,
 
 static void
 domain_synth_save_args(GwyContainer *container,
-                    const DomainSynthArgs *args,
-                    const GwyDimensionArgs *dimsargs)
+                       const DomainSynthArgs *args,
+                       const GwyDimensionArgs *dimsargs)
 {
     gwy_container_set_int32_by_name(container, active_page_key,
                                     args->active_page);
