@@ -266,7 +266,7 @@ run_noninteractive(ColSynthArgs *args,
     gwy_app_wait_finish();
 
     if (!ok) {
-        g_object_ref(newfield);
+        g_object_unref(newfield);
         return;
     }
 
