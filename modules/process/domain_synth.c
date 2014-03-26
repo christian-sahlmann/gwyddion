@@ -94,6 +94,7 @@ struct _ObjSynthControls {
     GtkObject *dt;
     GtkObject *height;
     GtkWidget *height_units;
+    GtkWidget *height_init;
     GtkWidget *quantity;
     GtkWidget *preview_quantity;
     GwyContainer *mydata;
@@ -101,43 +102,45 @@ struct _ObjSynthControls {
     gdouble pxsize;
     gdouble zscale;
     gboolean in_init;
+    gboolean calculated;
 };
 
-static gboolean   module_register        (void);
-static void       domain_synth           (GwyContainer *data,
-                                          GwyRunType run);
-static void       run_noninteractive     (DomainSynthArgs *args,
-                                          const GwyDimensionArgs *dimsargs,
-                                          GwyContainer *data,
-                                          GwyDataField *dfield,
-                                          gint oldid,
-                                          GQuark quark);
-static gboolean   domain_synth_dialog    (DomainSynthArgs *args,
-                                          GwyDimensionArgs *dimsargs,
-                                          GwyContainer *data,
-                                          GwyDataField *dfield,
-                                          gint id);
-static GtkWidget* quantity_selector_new(DomainSynthControls *controls);
-static void       update_controls        (DomainSynthControls *controls,
-                                          DomainSynthArgs *args);
-static void       page_switched          (DomainSynthControls *controls,
-                                          GtkNotebookPage *page,
-                                          gint pagenum);
-static void       update_values          (DomainSynthControls *controls);
-static void       quantity_selected      (GtkComboBox *combo,
-                                          DomainSynthControls *controls);
-static void       domain_synth_invalidate(DomainSynthControls *controls);
-static void       preview                (DomainSynthControls *controls);
-static gboolean   domain_synth_do        (const DomainSynthArgs *args,
-                                          GwyDataField *ufield,
-                                          GwyDataField *vfield,
-                                          gdouble preview_time);
-static void       domain_synth_load_args (GwyContainer *container,
-                                          DomainSynthArgs *args,
-                                          GwyDimensionArgs *dimsargs);
-static void       domain_synth_save_args (GwyContainer *container,
-                                          const DomainSynthArgs *args,
-                                          const GwyDimensionArgs *dimsargs);
+static gboolean   module_register              (void);
+static void       domain_synth                 (GwyContainer *data,
+                                                GwyRunType run);
+static void       run_noninteractive           (DomainSynthArgs *args,
+                                                const GwyDimensionArgs *dimsargs,
+                                                GwyContainer *data,
+                                                GwyDataField *dfield,
+                                                gint oldid,
+                                                GQuark quark);
+static gboolean   domain_synth_dialog          (DomainSynthArgs *args,
+                                                GwyDimensionArgs *dimsargs,
+                                                GwyContainer *data,
+                                                GwyDataField *dfield,
+                                                gint id);
+static GtkWidget* preview_quantity_selector_new(DomainSynthControls *controls);
+static void       update_controls              (DomainSynthControls *controls,
+                                                DomainSynthArgs *args);
+static void       page_switched                (DomainSynthControls *controls,
+                                                GtkNotebookPage *page,
+                                                gint pagenum);
+static void       update_values                (DomainSynthControls *controls);
+static void       preview_quantity_selected    (GtkComboBox *combo,
+                                                DomainSynthControls *controls);
+static void       height_init_clicked          (DomainSynthControls *controls);
+static void       domain_synth_invalidate      (DomainSynthControls *controls);
+static void       preview                      (DomainSynthControls *controls);
+static gboolean   domain_synth_do              (const DomainSynthArgs *args,
+                                                GwyDataField *ufield,
+                                                GwyDataField *vfield,
+                                                gdouble preview_time);
+static void       domain_synth_load_args       (GwyContainer *container,
+                                                DomainSynthArgs *args,
+                                                GwyDimensionArgs *dimsargs);
+static void       domain_synth_save_args       (GwyContainer *container,
+                                                const DomainSynthArgs *args,
+                                                const GwyDimensionArgs *dimsargs);
 
 #define GWY_SYNTH_CONTROLS DomainSynthControls
 #define GWY_SYNTH_INVALIDATE(controls) domain_synth_invalidate(controls)
@@ -147,9 +150,9 @@ static void       domain_synth_save_args (GwyContainer *container,
 static const DomainSynthArgs domain_synth_defaults = {
     PAGE_DIMENSIONS,
     42, TRUE, FALSE, TRUE,
-    QUANTITY_U, 1 << QUANTITY_U,
-    200, 1.0,
-    0.8, 1.5, 0.2, 0.0, 5.0,
+    1 << QUANTITY_U, QUANTITY_U,
+    500, 1.0,
+    0.8, 1.0, 20.0, 0.0, 5.0,
 };
 
 static const GwyDimensionArgs dims_defaults = GWY_DIMENSION_ARGS_INIT;
@@ -310,6 +313,7 @@ domain_synth_dialog(DomainSynthArgs *args,
 
     gwy_clear(&controls, 1);
     controls.in_init = TRUE;
+    controls.calculated = FALSE;
     controls.args = args;
     controls.pxsize = 1.0;
     dialog = gtk_dialog_new_with_buttons(_("Domains"),
@@ -334,8 +338,18 @@ domain_synth_dialog(DomainSynthArgs *args,
                                 dimsargs->measure*PREVIEW_SIZE,
                                 TRUE);
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
+
+    dfield = gwy_data_field_new(PREVIEW_SIZE, PREVIEW_SIZE,
+                                dimsargs->measure*PREVIEW_SIZE,
+                                dimsargs->measure*PREVIEW_SIZE,
+                                TRUE);
+    gwy_container_set_object_by_name(controls.mydata, "/1/data", dfield);
+
     if (dfield_template) {
         gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
+                                GWY_DATA_ITEM_PALETTE,
+                                0);
+        gwy_app_sync_data_items(data, controls.mydata, id, 1, FALSE,
                                 GWY_DATA_ITEM_PALETTE,
                                 0);
         controls.surface = gwy_synth_surface_for_preview(dfield_template,
@@ -445,11 +459,33 @@ domain_synth_dialog(DomainSynthArgs *args,
                              G_CALLBACK(gwy_synth_double_changed), &controls);
     row++;
 
+    row = gwy_synth_attach_height(&controls, row,
+                                  &controls.height, &args->height,
+                                  _("_Height:"), NULL, &controls.height_units);
+
+    if (dfield_template) {
+        controls.height_init
+            = gtk_button_new_with_mnemonic(_("_Like Current Channel"));
+        g_signal_connect_swapped(controls.height_init, "clicked",
+                                 G_CALLBACK(height_init_clicked), &controls);
+        gtk_table_attach(GTK_TABLE(table), controls.height_init,
+                         1, 3, row, row+1, GTK_FILL, 0, 0, 0);
+        row++;
+    }
+
+    controls.preview_quantity = preview_quantity_selector_new(&controls);
+    gwy_table_attach_hscale(table, row, _("_Preview quantity:"), NULL,
+                            GTK_OBJECT(controls.preview_quantity),
+                            GWY_HSCALE_WIDGET);
+    row++;
+
     gtk_widget_show_all(dialog);
     controls.in_init = FALSE;
     /* Must be done when widgets are shown, see GtkNotebook docs */
     gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), args->active_page);
     update_values(&controls);
+    preview_quantity_selected(GTK_COMBO_BOX(controls.preview_quantity),
+                              &controls);
 
     finished = FALSE;
     while (!finished) {
@@ -490,14 +526,15 @@ domain_synth_dialog(DomainSynthArgs *args,
 }
 
 static GtkWidget*
-quantity_selector_new(DomainSynthControls *controls)
+preview_quantity_selector_new(DomainSynthControls *controls)
 {
     GtkWidget *combo;
 
     combo = gwy_enum_combo_box_new(quantity_types,
                                    G_N_ELEMENTS(quantity_types),
-                                   G_CALLBACK(quantity_selected),
-                                   controls, controls->args->quantity, TRUE);
+                                   G_CALLBACK(preview_quantity_selected),
+                                   controls, controls->args->preview_quantity,
+                                   TRUE);
     return combo;
 }
 
@@ -510,8 +547,14 @@ update_controls(DomainSynthControls *controls,
                                  args->randomize);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->animated),
                                  args->animated);
-    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->quantity),
-                                  args->quantity);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->T), args->T);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->J), args->J);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->mu), args->mu);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->nu), args->nu);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->dt), args->dt);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height), args->height);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->preview_quantity),
+                                  args->preview_quantity);
 }
 
 static void
@@ -539,42 +582,67 @@ update_values(DomainSynthControls *controls)
 }
 
 static void
-quantity_selected(GtkComboBox *combo,
-                  DomainSynthControls *controls)
+preview_quantity_selected(GtkComboBox *combo,
+                          DomainSynthControls *controls)
 {
-    controls->args->quantity = gwy_enum_combo_box_get_active(combo);
+    DomainSynthArgs *args = controls->args;
+    GwyPixmapLayer *layer;
+
+    args->preview_quantity = gwy_enum_combo_box_get_active(combo);
+
+    layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(controls->view));
+
+    if (args->preview_quantity == QUANTITY_U)
+        g_object_set(layer, "data-key", "/0/data", NULL);
+    else if (args->preview_quantity == QUANTITY_V)
+        g_object_set(layer, "data-key", "/1/data", NULL);
+    else {
+        g_return_if_reached();
+    }
 }
 
 static void
-domain_synth_invalidate(G_GNUC_UNUSED DomainSynthControls *controls)
+height_init_clicked(DomainSynthControls *controls)
 {
+    gdouble mag = pow10(controls->dims->args->zpow10);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height),
+                             controls->zscale/mag);
+}
+
+static void
+domain_synth_invalidate(DomainSynthControls *controls)
+{
+    controls->calculated = FALSE;
 }
 
 static void
 preview(DomainSynthControls *controls)
 {
     DomainSynthArgs *args = controls->args;
-    GwyDataField *dfield, *vfield;
+    GwyDataField *ufield, *vfield;
     //gdouble rx, ry;
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+    ufield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
+    vfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                             "/1/data"));
 
     if (controls->dims->args->add && controls->surface)
-        gwy_data_field_copy(controls->surface, dfield, TRUE);
+        gwy_data_field_copy(controls->surface, ufield, TRUE);
     else
-        gwy_data_field_clear(dfield);
+        gwy_data_field_clear(ufield);
 
     //scale_to_unit_cubes(dfield, &rx, &ry);
 
     gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Starting..."));
-    vfield = gwy_data_field_new_alike(dfield, FALSE);
-    domain_synth_do(args, dfield, vfield, 1.25);
-    g_object_unref(vfield);
+    domain_synth_do(args, ufield, vfield, 1.25);
     gwy_app_wait_finish();
 
     //scale_from_unit_cubes(dfield,rx, ry);
-    gwy_data_field_data_changed(dfield);
+    gwy_data_field_data_changed(ufield);
+    gwy_data_field_data_changed(vfield);
+
+    controls->calculated = TRUE;
 }
 
 static inline gint
@@ -749,6 +817,7 @@ domain_synth_do(const DomainSynthArgs *args,
                     for (k = 0; k < xres*yres; k++)
                         ufield->data[k] = 0.5*(u[k] + ubuf[k]);
                     gwy_data_field_invalidate(ufield);
+                    gwy_data_field_invalidate(vfield);
                     gwy_data_field_data_changed(ufield);
                     gwy_data_field_data_changed(vfield);
                     lastpreviewtime = lasttime;
@@ -759,6 +828,8 @@ domain_synth_do(const DomainSynthArgs *args,
 
     for (k = 0; k < xres*yres; k++)
         ufield->data[k] = 0.5*(u[k] + ubuf[k]);
+
+    gwy_data_field_invalidate(vfield);
     gwy_data_field_invalidate(ufield);
 
     finished = TRUE;
