@@ -19,6 +19,8 @@ Modules:
   number of point sources.
 - Euclidean distance transform (new): Creates a data field representing the
   distance transform of given mask.
+- Domain synthesis (new): Creates patterns based on a hybrid non-equilibrium
+  Ising model.
 - MetroPro: Files with header formats 2 and 3 are recognised and imported.
   Almost all header fields are imported to metadata.
 - Omicron: Value offsets in grid spectra were corrected.
