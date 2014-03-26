@@ -19,7 +19,8 @@ Modules:
   number of point sources.
 - Euclidean distance transform (new): Creates a data field representing the
   distance transform of given mask.
-- MetroPro: Files wiht header formats 2 and 3 are recognised and imported.
+- MetroPro: Files with header formats 2 and 3 are recognised and imported.
+  Almost all header fields are imported to metadata.
 - Omicron: Value offsets in grid spectra were corrected.
 - Read value: Local curvature at cursor is also calculated and displayed.
 - Zeiss: ‘Image Pixel Size’ field is used for real dimensions instead of
@@ -27,6 +28,9 @@ Modules:
 - Affine distortion: ACF of one image can be used to correct another image.
   Uncorrected lattice vectors can be entered numerically.
 - PSIA: Rotated non-square images are imported correctly.
+
+Other:
+- A false colour gradient mimicking the MetroPro rainbow palette was added.
 
 
 2.35 (2014-03-02)
