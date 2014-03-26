@@ -259,7 +259,7 @@ run_noninteractive(DomainSynthArgs *args,
         siunit = gwy_data_field_get_si_unit_z(ufield);
         gwy_si_unit_set_from_string(siunit, dimsargs->zunits);
     }
-    init_ufield_from_surface(dfield, ufield, rng);
+    init_ufield_from_surface(add ? dfield : NULL, ufield, rng);
 
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid),
                        _("Starting..."));
