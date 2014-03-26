@@ -296,6 +296,7 @@ typedef struct {
     /* Unused 2606 bytes. */
 
     /* Our stuff */
+    guint infinity;
     const gchar *filename;
     GwyDataField **intensity_data;
     GwyDataField **intensity_mask;
@@ -337,7 +338,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports binary MetroPro (Zygo) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -405,6 +406,7 @@ mprofile_load(const gchar *filename,
 
     mprofile = g_new0(MProFile, 1);
     mprofile->filename = filename;
+    mprofile->infinity = G_MAXUINT;
 
     container = mprofile_load_data(mprofile, buffer, size, error);
 
@@ -961,6 +963,16 @@ fill_data_fields(MProFile *mprofile,
 #define HASH_STORE_STRING(key, field) \
     store_meta_string(meta, key, mprofile->field)
 
+#define HASH_STORE_ARRAY(key, fmt, field, n_field) \
+    do { \
+        for (i = 0; \
+             i < MIN(G_N_ELEMENTS(mprofile->field), mprofile->n_field); \
+             i++) { \
+            g_snprintf(buffer, sizeof(buffer), key " %u", i); \
+            HASH_STORE(buffer, fmt, field[i]); \
+        } \
+    } while (FALSE)
+
 static void
 store_meta_string(GwyContainer *container,
                   const gchar *key,
@@ -1003,8 +1015,9 @@ mprofile_get_metadata(MProFile *mprofile)
     time_t tp;
     struct tm *tm;
     const gchar *s;
-    gchar buffer[24];
+    gchar buffer[40];
     gchar *p;
+    guint i;
 
     meta = gwy_container_new();
 
@@ -1104,9 +1117,7 @@ mprofile_get_metadata(MProFile *mprofile)
     HASH_STORE_STRING("Wavelength select", wavelen_select);
     HASH_STORE("Frequency domain analysis resolution", "%d", fda_res);
     HASH_STORE_STRING("Scan description", scan_descr);
-    /* TODO: array
-    HASH_STORE("Number of fiducials a", "%d", n_fiducials_a);
-    */
+    HASH_STORE_ARRAY("Fiducials a", "%g", fiducials_a, n_fiducials_a);
     HASH_STORE("Pixel width", "%g", pixel_width);
     HASH_STORE("Pixel height", "%g", pixel_height);
     HASH_STORE("Exit pupil diameter", "%g", exit_pupil_diam);
@@ -1163,10 +1174,8 @@ mprofile_get_metadata(MProFile *mprofile)
     HASH_STORE("Tune range", "%g", tune_range);
     HASH_STORE("Calibration pixel location x", "%d", cal_pix_loc_x);
     HASH_STORE("Calibration pixel location y", "%d", cal_pix_loc_y);
-    /* TODO: arrays
-    HASH_STORE("Number of test calibration points", "%d", n_tst_cal_pts);
-    HASH_STORE("Number of reference calibration points", "%d", n_ref_cal_pts);
-    */
+    HASH_STORE_ARRAY("Test calibration point", "%g", tst_cal_pts, n_tst_cal_pts);
+    HASH_STORE_ARRAY("Reference calibration point", "%g", ref_cal_pts, n_ref_cal_pts);
     HASH_STORE("Test calibration pixel OPD", "%g", tst_cal_pix_opd);
     HASH_STORE("Reference calibration pixel OPD", "%g", ref_cal_pix_opd);
     HASH_STORE("Instrument serial number 2", "%d", sys_serial2);
@@ -1212,7 +1221,7 @@ mprofile_get_metadata(MProFile *mprofile)
     HASH_STORE_STRING("Intensity field flattening intensity system error filename", iff_ise_filename);
     HASH_STORE("Asphere equation r0", "%g", asphere_eqn_r0);
     HASH_STORE("Asphere equation k", "%g", asphere_eqn_k);
-    /* TODO array: asphere_eqn_coeffs */
+    HASH_STORE_ARRAY("Asphere equation coefficient", "%g", asphere_eqn_coef, infinity);
     HASH_STORE("Absolute wavelength meter enable", "%d", awm_enable);
     HASH_STORE("Absolute wavelength meter vacuum wavelength nm", "%g", awm_vacuum_wavelength_nm);
     HASH_STORE("Absolute wavelength meter air wavelength nm", "%g", awm_air_wavelength_nm);
@@ -1224,11 +1233,9 @@ mprofile_get_metadata(MProFile *mprofile)
     HASH_STORE("Asphere optimizations", "%d", asphere_optimizations);
     HASH_STORE("Asphere optimization mode", "%d", asphere_optimization_mode);
     HASH_STORE("Asphere optimized k", "%g", asphere_optimized_k);
-    /* TODO: arrays
-    HASH_STORE("Number of fiducials b", "%d", n_fiducials_b);
-    HASH_STORE("Number of fiducials c", "%d", n_fiducials_c);
-    HASH_STORE("Number of fiducials d", "%d", n_fiducials_d);
-    */
+    HASH_STORE_ARRAY("Fiducials b", "%g", fiducials_b, n_fiducials_b);
+    HASH_STORE_ARRAY("Fiducials c", "%g", fiducials_c, n_fiducials_c);
+    HASH_STORE_ARRAY("Fiducials d", "%g", fiducials_d, n_fiducials_d);
     HASH_STORE("GPI encoded zoom magnification", "%g", gpi_enc_zoom_mag);
     HASH_STORE("Asphere maximum distortion", "%g", asphere_max_distortion);
     HASH_STORE("Asphere distortion uncertainty", "%g", asphere_distortion_uncert);
