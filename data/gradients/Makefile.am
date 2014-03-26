@@ -27,6 +27,7 @@ gradientdata_DATA = \
 	Halcyon \
 	Lines \
 	Maple \
+	MetroPro \
 	NT-MDT \
 	Neon \
 	Olive \
