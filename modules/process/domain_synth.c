@@ -510,7 +510,7 @@ domain_synth_dialog(DomainSynthArgs *args,
 
     controls.dt = gtk_adjustment_new(args->dt, 0.001, 1000.0, 0.001, 1.0, 0);
     g_object_set_data(G_OBJECT(controls.dt), "target", &args->dt);
-    gwy_table_attach_hscale(table, row, _("_Monte-Carlo time step:"), 
+    gwy_table_attach_hscale(table, row, _("_Monte Carlo time step:"), 
                             "×10<sup>-3</sup>",
                             GTK_OBJECT(controls.dt), GWY_HSCALE_LOG);
     g_signal_connect_swapped(controls.dt, "value-changed",
