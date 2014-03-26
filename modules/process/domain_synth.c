@@ -476,7 +476,7 @@ domain_synth_dialog(DomainSynthArgs *args,
                              G_CALLBACK(gwy_synth_int_changed), &controls);
     row++;
 
-    controls.T = gtk_adjustment_new(args->T, 0.001, 2.0, 0.001, 0.1, 0);
+    controls.T = gtk_adjustment_new(args->T, 0.001, 5.0, 0.001, 0.1, 0);
     g_object_set_data(G_OBJECT(controls.T), "target", &args->T);
     gwy_table_attach_hscale(table, row, _("_Temperature:"), NULL,
                             GTK_OBJECT(controls.T), GWY_HSCALE_SQRT);
@@ -797,7 +797,7 @@ mc_step8(gint u,
     gint s2 = (u == u5) + (u == u6) + (u == u7) + (u == u8);
     gdouble E = 6.0 - s1 - 0.5*s2 + J*u*v;
     gdouble Enew = s1 + 0.5*s2 - J*u*v;
-    if (Enew < E || g_rand_double(rng) < exp((E - Enew)/T))
+    if (Enew < E - T*G_LN2 || g_rand_double(rng) < 0.5*exp((E - Enew)/T))
         return -u;
     return u;
 }
@@ -1004,7 +1004,7 @@ domain_synth_sanitize_args(DomainSynthArgs *args)
     args->randomize = !!args->randomize;
     args->animated = !!args->animated;
     args->niters = MIN(args->niters, 10000);
-    args->T = CLAMP(args->T, 0.001, 2.0);
+    args->T = CLAMP(args->T, 0.001, 5.0);
     args->J = CLAMP(args->J, 0.001, 100.0);
     args->mu = CLAMP(args->mu, 0.001, 100.0);
     args->nu = CLAMP(args->nu, -1.0, 1.0);
