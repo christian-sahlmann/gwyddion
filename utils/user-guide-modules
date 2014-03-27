@@ -25,6 +25,7 @@ calcoefs_stage	caldata
 calcoefs_view	caldata
 calibrate	basic-operations	dimensions-and-units
 codevfile	managing-files
+col_synth	synthetic	columnar-synthesis
 convolution_filter	filters-presentations	convolution-filter
 correct_affine	edit-extenced	correct-affine
 createc	managing-files
@@ -37,6 +38,7 @@ deposit_synth	synthetic
 distance	basic-operations	distance
 dm3file	managing-files
 dmefile	managing-files
+domain_synth	synthetic	domain-synthesis
 drift	edit-extended	drift-compensation
 dumbfile	managing-files
 dwtanisotropy	integral-transforms	dwt
@@ -109,6 +111,7 @@ mapvue	managing-files
 mark_with	presentations-masks
 maskcor	multidata	mask-by-correlation
 maskedit	modules-tools	tool-mask-editor
+mask_edt	grain-analysis	grain-edt
 maskops	presentations-masks
 matfile	managing-files
 mcrop	multidata	mutual-crop
@@ -212,6 +215,7 @@ volume_invert	volume-data
 volumize_layers	volume-data
 volumize	volume-data
 vtkfile	managing-files
+wave_synth	synthetic	wave-synthesis
 wipfile	managing-files
 witec-asc	managing-files
 witfile	managing-files
