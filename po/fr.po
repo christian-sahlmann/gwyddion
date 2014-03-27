@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-03-22 03:58+0100\n"
-"PO-Revision-Date: 2014-03-22 23:48+0100\n"
+"POT-Creation-Date: 2014-03-27 03:58+0100\n"
+"PO-Revision-Date: 2014-03-27 21:57+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -404,43 +404,60 @@ msgstr "Angle de courbure 1"
 msgid "Curvature angle 2"
 msgstr "Angle de courbure 2"
 
-#: libprocess/gwygrainvalue.c:1054
+#: libprocess/gwygrainvalue.c:420
+msgid "Major semiaxis of equivalent ellipse"
+msgstr "Demi grand axe de l'ellipse équivalente"
+
+#: libprocess/gwygrainvalue.c:429
+msgid "Minor semiaxis of equivalent ellipse"
+msgstr "Demi petit axe de l'ellipse équivalente"
+
+#: libprocess/gwygrainvalue.c:438
+msgid "Orientation of equivalent ellipse"
+msgstr "Orientation de l'ellipse équivalente"
+
+#: libprocess/gwygrainvalue.c:1081
 msgid "Id"
 msgstr "Identifiant"
 
-#: libprocess/gwygrainvalue.c:1055 modules/tools/readvalue.c:262
+#: libprocess/gwygrainvalue.c:1082 modules/process/wave_synth.c:500
+#: modules/tools/readvalue.c:262
 msgid "Position"
 msgstr "Position"
 
-#: libprocess/gwygrainvalue.c:1056 app/meta.c:381
+#: libprocess/gwygrainvalue.c:1083 app/meta.c:381
 #: modules/process/curvature.c:745 modules/tools/level3.c:456
 #: modules/tools/readvalue.c:297
 msgid "Value"
 msgstr "Valeur"
 
-#: libprocess/gwygrainvalue.c:1057
+#: libprocess/gwygrainvalue.c:1084
 msgid "Area"
 msgstr "Surface"
 
-#: libprocess/gwygrainvalue.c:1058 app/data-browser.c:5071 app/toolbox.c:113
+#: libprocess/gwygrainvalue.c:1085 app/data-browser.c:5071 app/toolbox.c:113
 msgid "Volume"
 msgstr "Volume"
 
-#: libprocess/gwygrainvalue.c:1059
+#: libprocess/gwygrainvalue.c:1086
 msgid "Boundary"
 msgstr "Bord"
 
-#: libprocess/gwygrainvalue.c:1060 modules/process/pat_synth.c:869
+#: libprocess/gwygrainvalue.c:1087 modules/process/pat_synth.c:869
 #: modules/process/pat_synth.c:1170 modules/process/pat_synth.c:1505
 #: modules/tools/linestats.c:157
 msgid "Slope"
 msgstr "Pente"
 
-#: libprocess/gwygrainvalue.c:1061 modules/process/curvature.c:603
+#: libprocess/gwygrainvalue.c:1088 modules/process/curvature.c:603
 msgid "Curvature"
 msgstr "Courbure"
 
-#: libprocess/gwygrainvalue.c:1065
+#: libprocess/gwygrainvalue.c:1089
+msgid "Moment"
+msgstr "Moment"
+
+#: libprocess/gwygrainvalue.c:1093
 msgid "User"
 msgstr "Utilisateur"
 
@@ -572,7 +589,7 @@ msgid "Blackmann"
 msgstr "Blackmann"
 
 #: libprocess/gwyprocessenums.c:249
-msgid "Lanzcos"
+msgid "Lanczos"
 msgstr "Lanczos"
 
 #: libprocess/gwyprocessenums.c:250
@@ -858,30 +875,30 @@ msgstr "pixels"
 #: modules/file/pixmap.c:1073 modules/file/pixmap.c:3143
 #: modules/file/rawfile.c:401 modules/process/angle_dist.c:172
 #: modules/process/calcoefs_new.c:348 modules/process/calibrate.c:385
-#: modules/process/col_synth.c:328 modules/process/correct_affine.c:292
+#: modules/process/col_synth.c:327 modules/process/correct_affine.c:292
 #: modules/process/curvature.c:605 modules/process/cwt.c:135
-#: modules/process/deposit_synth.c:359 modules/process/drift.c:240
-#: modules/process/dwt.c:166 modules/process/dwtanisotropy.c:184
-#: modules/process/edge.c:684 modules/process/extend.c:191
-#: modules/process/facet-level.c:285 modules/process/facet_analysis.c:275
-#: modules/process/fft.c:283 modules/process/fft_filter_2d.c:447
-#: modules/process/fft_synth.c:353 modules/process/fractal.c:207
-#: modules/process/grain_edge.c:218 modules/process/grain_mark.c:264
-#: modules/process/grain_rem_threshold.c:229 modules/process/grain_wshed.c:183
-#: modules/process/hough.c:179 modules/process/latsim.c:158
-#: modules/process/level.c:267 modules/process/linecorrect.c:281
-#: modules/process/lno_synth.c:441 modules/process/local_contrast.c:130
-#: modules/process/median-bg.c:179 modules/process/noise_synth.c:352
-#: modules/process/obj_synth.c:437 modules/process/pat_synth.c:407
-#: modules/process/pid.c:199 modules/process/polydistort.c:218
-#: modules/process/polylevel.c:377 modules/process/rank.c:132
-#: modules/process/rotate.c:266 modules/process/scale.c:196
-#: modules/process/scars.c:477 modules/process/shade.c:216
-#: modules/process/slope_dist.c:203 modules/process/sphere-revolve.c:218
-#: modules/process/tilt.c:160 modules/process/tip_model.c:170
-#: modules/process/unrotate.c:228 modules/process/volumize_layers.c:213
-#: modules/process/wave_synth.c:360 modules/volume/volume_calibrate.c:371
-#: modules/volume/volume_extract.c:331
+#: modules/process/deposit_synth.c:359 modules/process/domain_synth.c:367
+#: modules/process/drift.c:240 modules/process/dwt.c:166
+#: modules/process/dwtanisotropy.c:184 modules/process/edge.c:684
+#: modules/process/extend.c:191 modules/process/facet-level.c:285
+#: modules/process/facet_analysis.c:275 modules/process/fft.c:283
+#: modules/process/fft_filter_2d.c:447 modules/process/fft_synth.c:353
+#: modules/process/fractal.c:207 modules/process/grain_edge.c:218
+#: modules/process/grain_mark.c:264 modules/process/grain_rem_threshold.c:229
+#: modules/process/grain_wshed.c:183 modules/process/hough.c:179
+#: modules/process/latsim.c:158 modules/process/level.c:267
+#: modules/process/linecorrect.c:281 modules/process/lno_synth.c:441
+#: modules/process/local_contrast.c:130 modules/process/median-bg.c:179
+#: modules/process/noise_synth.c:352 modules/process/obj_synth.c:437
+#: modules/process/pat_synth.c:407 modules/process/pid.c:199
+#: modules/process/polydistort.c:218 modules/process/polylevel.c:377
+#: modules/process/rank.c:132 modules/process/rotate.c:266
+#: modules/process/scale.c:196 modules/process/scars.c:477
+#: modules/process/shade.c:216 modules/process/slope_dist.c:203
+#: modules/process/sphere-revolve.c:218 modules/process/tilt.c:160
+#: modules/process/tip_model.c:170 modules/process/unrotate.c:228
+#: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:362
+#: modules/volume/volume_calibrate.c:371 modules/volume/volume_extract.c:331
 msgid "_Reset"
 msgstr "_Remise à zéro"
 
@@ -2682,7 +2699,7 @@ msgstr "L'objet a plusieurs références"
 msgid "Secondary data item has no primary data"
 msgstr "L'élément de données secondaires n'a pas de données primaires"
 
-#: app/wait.c:103
+#: app/wait.c:94
 msgid "Please wait"
 msgstr "Patientez s'il vous plaît"
 
@@ -2845,7 +2862,7 @@ msgstr "Exporter au format texte"
 
 #: modules/file/asciiexport.c:273 modules/file/pixmap.c:3246
 #: modules/file/rawfile.c:722 modules/file/rawxyz.c:671
-#: modules/process/calibrate.c:598 modules/process/col_synth.c:456
+#: modules/process/calibrate.c:598 modules/process/col_synth.c:455
 #: modules/process/correct_affine.c:457 modules/process/extend.c:257
 #: modules/process/fft_filter_1d.c:296 modules/process/grain_dist.c:306
 #: modules/process/grain_edge.c:270 modules/process/grain_mark.c:345
@@ -3804,15 +3821,15 @@ msgstr "La balise invalide de type %u prétend être constitués de %u octets."
 msgid "Decompression of compressed variable failed with error %d."
 msgstr "La décompression d'une variable compressée a échoué avec l'erreur %d."
 
-#: modules/file/metropro.c:338
+#: modules/file/metropro.c:339
 msgid "Imports binary MetroPro (Zygo) data files."
 msgstr "Importe les fichiers binaires MetroPro (Zygo)."
 
-#: modules/file/metropro.c:351
+#: modules/file/metropro.c:352
 msgid "MetroPro files (.dat)"
 msgstr "MetroPro (.dat)"
 
-#: modules/file/metropro.c:531
+#: modules/file/metropro.c:533
 msgid "File header is larger than file."
 msgstr "L'en-tête de fichier est plus grand que le fichier."
 
@@ -4605,11 +4622,11 @@ msgstr "Échelle"
 msgid "_Zoom:"
 msgstr "_Zoom :"
 
-#: modules/file/pixmap.c:3197 modules/process/col_synth.c:426
-#: modules/process/grain_mark.c:310 modules/process/grain_rem_threshold.c:284
-#: modules/process/obj_synth.c:576 modules/process/pat_synth.c:892
-#: modules/process/pat_synth.c:1193 modules/process/pat_synth.c:1528
-#: modules/process/tip_blind.c:343
+#: modules/file/pixmap.c:3197 modules/process/col_synth.c:425
+#: modules/process/domain_synth.c:528 modules/process/grain_mark.c:310
+#: modules/process/grain_rem_threshold.c:284 modules/process/obj_synth.c:576
+#: modules/process/pat_synth.c:892 modules/process/pat_synth.c:1193
+#: modules/process/pat_synth.c:1528 modules/process/tip_blind.c:343
 msgid "_Height:"
 msgstr "_Hauteur :"
 
@@ -6938,90 +6955,96 @@ msgstr "Facteur de calibration _Z :"
 msgid "Create new channel"
 msgstr "Créer un nouveau canal"
 
-#: modules/process/col_synth.c:177
+#: modules/process/col_synth.c:176
 msgid "Generates columnar surfaces by a simple growth algorithm."
 msgstr ""
 "Génère des surfaces colonnaires à l'aide d'un algorithme de croissance "
 "simple."
 
-#: modules/process/col_synth.c:191
+#: modules/process/col_synth.c:190
 msgid "/S_ynthetic/_Columnar..."
 msgstr "/S_ynthèse/_Croissance colonnaire..."
 
-#: modules/process/col_synth.c:195
+#: modules/process/col_synth.c:194
 msgid "Generate columnar surface"
 msgstr "Générer une surface colonnaire"
 
-#: modules/process/col_synth.c:263 modules/process/col_synth.c:630
+#: modules/process/col_synth.c:262 modules/process/col_synth.c:625
+#: modules/process/deposit_synth.c:277 modules/process/deposit_synth.c:906
+#: modules/process/domain_synth.c:265 modules/process/domain_synth.c:763
 #: modules/process/neural.c:1275 modules/process/pid.c:336
+#: modules/process/xydenoise.c:220
 msgid "Starting..."
 msgstr "Démarrage..."
 
-#: modules/process/col_synth.c:301 modules/process/deposit_synth.c:315
+#: modules/process/col_synth.c:300 modules/process/deposit_synth.c:315
 #: modules/process/deposit_synth.c:327 modules/process/deposit_synth.c:547
-#: modules/process/deposit_synth.c:561 modules/process/fft_synth.c:323
+#: modules/process/deposit_synth.c:561 modules/process/domain_synth.c:329
+#: modules/process/domain_synth.c:338 modules/process/fft_synth.c:323
 #: modules/process/lno_synth.c:413 modules/process/noise_synth.c:325
 #: modules/process/obj_synth.c:407 modules/process/pat_synth.c:377
-#: modules/process/wave_synth.c:332
+#: modules/process/wave_synth.c:334
 msgid "Generated"
 msgstr "Généré"
 
-#: modules/process/col_synth.c:326
+#: modules/process/col_synth.c:325
 msgid "Grow Columnar Surface"
 msgstr "Surface à croissance colonnaire"
 
-#: modules/process/col_synth.c:376
+#: modules/process/col_synth.c:375 modules/process/domain_synth.c:425
 msgid "Progressive preview"
 msgstr "Aperçu progressif"
 
-#: modules/process/col_synth.c:399 modules/process/deposit_synth.c:428
-#: modules/process/fft_synth.c:417 modules/process/lno_synth.c:504
-#: modules/process/noise_synth.c:416 modules/process/obj_synth.c:500
-#: modules/process/pat_synth.c:470 modules/process/wave_synth.c:423
+#: modules/process/col_synth.c:398 modules/process/deposit_synth.c:428
+#: modules/process/domain_synth.c:448 modules/process/fft_synth.c:417
+#: modules/process/lno_synth.c:504 modules/process/noise_synth.c:416
+#: modules/process/obj_synth.c:500 modules/process/pat_synth.c:470
+#: modules/process/wave_synth.c:425
 msgid "Dimensions"
 msgstr "Dimensions"
 
-#: modules/process/col_synth.c:407 modules/process/deposit_synth.c:438
-#: modules/process/fft_synth.c:428 modules/process/lno_synth.c:515
-#: modules/process/noise_synth.c:427 modules/process/obj_synth.c:511
-#: modules/process/pat_synth.c:482 modules/process/wave_synth.c:434
+#: modules/process/col_synth.c:406 modules/process/deposit_synth.c:438
+#: modules/process/domain_synth.c:456 modules/process/fft_synth.c:428
+#: modules/process/lno_synth.c:515 modules/process/noise_synth.c:427
+#: modules/process/obj_synth.c:511 modules/process/pat_synth.c:482
+#: modules/process/wave_synth.c:436
 msgid "Generator"
 msgstr "Générateur"
 
-#: modules/process/col_synth.c:413 modules/process/lno_synth.c:1057
+#: modules/process/col_synth.c:412 modules/process/lno_synth.c:1057
 #: modules/process/obj_synth.c:522
 msgid "Co_verage:"
 msgstr "Cou_verture :"
 
-#: modules/process/col_synth.c:420
+#: modules/process/col_synth.c:419
 msgid "Particle Size"
 msgstr "Taille de particule"
 
-#: modules/process/col_synth.c:438
+#: modules/process/col_synth.c:437
 msgid "Incidence"
 msgstr "Incidence"
 
-#: modules/process/col_synth.c:443
+#: modules/process/col_synth.c:442
 msgid "Inclination"
 msgstr "Inclinaison"
 
-#: modules/process/col_synth.c:449
+#: modules/process/col_synth.c:448
 msgid "Direction"
 msgstr "Direction"
 
-#: modules/process/col_synth.c:461
+#: modules/process/col_synth.c:460
 msgid "Relaxation type:"
 msgstr "Type de relaxation :"
 
-#: modules/process/col_synth.c:516
+#: modules/process/col_synth.c:511
 msgid "Weak"
 msgstr "Faible"
 
-#: modules/process/col_synth.c:517
+#: modules/process/col_synth.c:512
 msgid "Strong"
-msgstr "Fort"
+msgstr "Forte"
 
-#: modules/process/col_synth.c:663
+#: modules/process/col_synth.c:658
 msgid "Depositing particles..."
 msgstr "Dépôt des particules en cours..."
 
@@ -7367,17 +7390,26 @@ msgstr "Transformée en ondelettes continue 2D (2D CWT)"
 msgid "_Wavelet type:"
 msgstr "Type d'ondelette :"
 
-#: modules/process/deposit_synth.c:179
+#: modules/process/deposit_synth.c:180
 msgid "Generates particles using simple dynamical model"
 msgstr "Génère des particules à l'aide d'un modèle dynamique simple"
 
-#: modules/process/deposit_synth.c:193
+#: modules/process/deposit_synth.c:194
 msgid "/S_ynthetic/_Particles..."
 msgstr "/S_ynthèse/_Particules..."
 
-#: modules/process/deposit_synth.c:197
+#: modules/process/deposit_synth.c:198
 msgid "Generate particles using dynamical model"
 msgstr "Générer des particules à l'aide d'un modèle dynamique"
+
+#: modules/process/deposit_synth.c:297 modules/process/deposit_synth.c:914
+#, c-format
+msgid ""
+"Not all the particles could be deposited (%u),\n"
+"try more revise steps."
+msgstr ""
+"Toutes les particules n'ont pu être déposées (%u), \n"
+" essayez plus d'étapes de révision."
 
 #: modules/process/deposit_synth.c:357
 msgid "Particle Generation"
@@ -7411,6 +7443,39 @@ msgstr "_Nouvelle"
 msgid "Randomize"
 msgstr "Randomiser"
 
+#: modules/process/deposit_synth.c:907 modules/process/domain_synth.c:937
+msgid "Running computation..."
+msgstr "Calcul en cours..."
+
+#: modules/process/deposit_synth.c:912
+#, c-format
+msgid "%d particles were deposited"
+msgstr "%d particules ont été déposées."
+
+#: modules/process/deposit_synth.c:1143
+msgid "Initial particle set..."
+msgstr "Ensemble initial de particules..."
+
+#: modules/process/deposit_synth.c:1300
+msgid "Running revise..."
+msgstr "Révision en cours..."
+
+#: modules/process/deposit_synth.c:1428
+msgid "Error: too many particles."
+msgstr "Erreur : trop de particules."
+
+#: modules/process/deposit_synth.c:1430
+msgid "Error: no particles."
+msgstr "Erreur : aucune particule."
+
+#: modules/process/deposit_synth.c:1432
+msgid "Error: particles too large."
+msgstr "Erreur : les particules sont trop grandes."
+
+#: modules/process/deposit_synth.c:1434
+msgid "Error: particles too small."
+msgstr "Erreur : les particules sont trop petites."
+
 #: modules/process/dimensions.h:456
 msgid "S_quare image"
 msgstr "Image carrée"
@@ -7434,6 +7499,79 @@ msgstr "_Remplacer le canal courant"
 #: modules/process/dimensions.h:522
 msgid "_Start from the current channel"
 msgstr "Ajouter à partir du canal courant"
+
+#: modules/process/domain_synth.c:168
+msgid "Discrete state"
+msgstr "État discret"
+
+#: modules/process/domain_synth.c:169
+msgid "Continuous inhibitor"
+msgstr "Inhibiteur continu"
+
+#: modules/process/domain_synth.c:175
+msgid "Generates domain images using a hybrid Ising model."
+msgstr ""
+"Génère des images constituées de domaines en se basant sur le modèle hybride "
+"de Ising."
+
+#: modules/process/domain_synth.c:189
+msgid "/S_ynthetic/_Domains..."
+msgstr "/S_ynthèse/_Domaines..."
+
+#: modules/process/domain_synth.c:193
+msgid "Generate image with domains"
+msgstr "Génère une image formée de domaines"
+
+#: modules/process/domain_synth.c:365
+msgid "Domains"
+msgstr "Domaines"
+
+#: modules/process/domain_synth.c:460
+msgid "_Preview quantity:"
+msgstr "Quantité prévisualisée :"
+
+#: modules/process/domain_synth.c:467
+msgid "Simulation Parameters"
+msgstr "Paramètres de simulation"
+
+#: modules/process/domain_synth.c:473
+msgid "_Number of iterations:"
+msgstr "_Nombre d'itérations :"
+
+#: modules/process/domain_synth.c:481
+msgid "_Temperature:"
+msgstr "_Température :"
+
+#: modules/process/domain_synth.c:489
+msgid "_Inhibitor strength:"
+msgstr "Force de l'_inhibiteur :"
+
+#: modules/process/domain_synth.c:497
+msgid "In_hibitor coupling:"
+msgstr "Couplage de l'in_hibiteur :"
+
+#: modules/process/domain_synth.c:505
+msgid "_Bias:"
+msgstr "_Biais :"
+
+#: modules/process/domain_synth.c:513
+msgid "_Monte Carlo time step:"
+msgstr "Étape temporelle de Monte-Carlo :"
+
+#: modules/process/domain_synth.c:522 modules/process/fft_filter_2d.c:622
+msgid "Output Options"
+msgstr "Options de sortie"
+
+#: modules/process/domain_synth.c:532 modules/process/fft_synth.c:437
+#: modules/process/lno_synth.c:551 modules/process/noise_synth.c:459
+#: modules/process/obj_synth.c:580 modules/process/wave_synth.c:471
+msgid "_Like Current Channel"
+msgstr "Identique au canal courant"
+
+#: modules/process/domain_synth.c:541 modules/process/fft_filter_2d.c:627
+#: modules/process/mask_edt.c:163 modules/process/slope_dist.c:217
+msgid "Output type:"
+msgstr "Type de sortie :"
 
 #: modules/process/drift.c:166
 msgid "Evaluates and/or correct thermal drift in fast scan axis."
@@ -7892,7 +8030,7 @@ msgstr "Imaginaire"
 msgid "Modulus"
 msgstr "Module"
 
-#: modules/process/fft.c:276 modules/process/wave_synth.c:596
+#: modules/process/fft.c:276 modules/process/wave_synth.c:601
 msgid "Phase"
 msgstr "Phase"
 
@@ -8057,15 +8195,6 @@ msgstr "Affichage :"
 msgid "Zoom:"
 msgstr "_Zoom :"
 
-#: modules/process/fft_filter_2d.c:622
-msgid "Output Options"
-msgstr "Options de sortie"
-
-#: modules/process/fft_filter_2d.c:627 modules/process/mask_edt.c:163
-#: modules/process/slope_dist.c:217
-msgid "Output type:"
-msgstr "Type de sortie :"
-
 #: modules/process/fft_filter_2d.c:1288
 msgid "Draw ellipses on the mask"
 msgstr "Ajouter des ellipses au masque de filtrage"
@@ -8156,12 +8285,6 @@ msgstr "Synthèse spectrale"
 #: modules/process/noise_synth.c:455
 msgid "_RMS:"
 msgstr "_RMS :"
-
-#: modules/process/fft_synth.c:437 modules/process/lno_synth.c:551
-#: modules/process/noise_synth.c:459 modules/process/obj_synth.c:580
-#: modules/process/wave_synth.c:469
-msgid "_Like Current Channel"
-msgstr "Identique au canal courant"
 
 #: modules/process/fft_synth.c:448
 msgid "M_inimum frequency:"
@@ -9517,11 +9640,11 @@ msgid "Distance Transform"
 msgstr "Carte de distances"
 
 #: modules/process/mask_edt.c:135
-msgid "Interoir"
+msgid "Interior"
 msgstr "Intérieur"
 
 #: modules/process/mask_edt.c:136
-msgid "Exteroir"
+msgid "Exterior"
 msgstr "Exterieur"
 
 #: modules/process/mask_edt.c:137
@@ -10970,77 +11093,74 @@ msgstr "Résolution _Z :"
 msgid "Z _range:"
 msgstr "Plage Z : "
 
-#: modules/process/wave_synth.c:220
+#: modules/process/wave_synth.c:222
 msgid "Generates various kinds of waves."
 msgstr "Génère divers types d'ondes."
 
-#: modules/process/wave_synth.c:234
+#: modules/process/wave_synth.c:236
 msgid "/S_ynthetic/_Waves..."
 msgstr "/S_ynthèse/Ondes..."
 
-#: modules/process/wave_synth.c:238
+#: modules/process/wave_synth.c:240
 msgid "Generate waves"
 msgstr "Générer des ondes"
 
-#: modules/process/wave_synth.c:358
+#: modules/process/wave_synth.c:360
 msgid "Waves"
 msgstr "Ondes"
 
-#: modules/process/wave_synth.c:438 modules/tools/linestats.c:321
+#: modules/process/wave_synth.c:440 modules/tools/linestats.c:321
 msgid "_Quantity:"
 msgstr "Quantité"
 
-#: modules/process/wave_synth.c:445
+#: modules/process/wave_synth.c:447
 msgid "_Number of waves:"
 msgstr "_Nombre d'ondes :"
 
-#: modules/process/wave_synth.c:452 modules/tools/roughness.c:282
+#: modules/process/wave_synth.c:454 modules/process/wave_synth.c:600
+#: modules/tools/roughness.c:282
 msgid "Amplitude"
 msgstr "Amplitude"
 
-#: modules/process/wave_synth.c:457
+#: modules/process/wave_synth.c:459
 msgid "_Wave form:"
 msgstr "Forme d'ondes : "
 
-#: modules/process/wave_synth.c:464
+#: modules/process/wave_synth.c:466
 msgid "Amplitude:"
 msgstr "Amplitude :"
 
-#: modules/process/wave_synth.c:482
+#: modules/process/wave_synth.c:484
 msgid "Frequency"
 msgstr "Fréquence"
 
-#: modules/process/wave_synth.c:488
+#: modules/process/wave_synth.c:490
 msgid "_Spatial frequency:"
 msgstr "Fréquence spatiale :"
 
-#: modules/process/wave_synth.c:498
-msgid "Sources"
-msgstr "Sources"
-
-#: modules/process/wave_synth.c:504 modules/process/wave_synth.c:515
+#: modules/process/wave_synth.c:506
 msgid "_X center:"
 msgstr "Centre _X :"
 
-#: modules/process/wave_synth.c:578
+#: modules/process/wave_synth.c:517
+msgid "_Y center:"
+msgstr "Centre _Y :"
+
+#: modules/process/wave_synth.c:583
 msgid "Cosine"
 msgstr "Sinusoïde"
 
-#: modules/process/wave_synth.c:579
+#: modules/process/wave_synth.c:584
 msgid "Inverse cosh"
 msgstr "Argument cosinus hyperbolique"
 
-#: modules/process/wave_synth.c:580
+#: modules/process/wave_synth.c:585
 msgid "Flat top"
 msgstr "Plateau"
 
-#: modules/process/wave_synth.c:594
+#: modules/process/wave_synth.c:599
 msgid "Displacement"
 msgstr "Déplacement"
-
-#: modules/process/wave_synth.c:595
-msgid "Intensity"
-msgstr "Intensité"
 
 #: modules/process/xydenoise.c:65
 msgid "Denoises measurement on basis of two orthogonal scans."
@@ -11061,6 +11181,18 @@ msgstr "Débruitage XY"
 #: modules/process/xydenoise.c:131
 msgid "Second direction:"
 msgstr "Seconde direction :"
+
+#: modules/process/xydenoise.c:238
+msgid "Computing forward FFTs..."
+msgstr "Calcul des TF en cours..."
+
+#: modules/process/xydenoise.c:254
+msgid "Computing image..."
+msgstr "Calcul de l'image en cours..."
+
+#: modules/process/xydenoise.c:266
+msgid "Computing backward FFT..."
+msgstr "Calcul de la TF inverse en cours..."
 
 #: modules/process/xydenoise.c:278
 msgid "Denoised"
@@ -12299,7 +12431,6 @@ msgid "Z graph at x: %d y: %d"
 msgstr "Graphe Z pour x : %d y : %d"
 
 #: modules/volume/volume_extract.c:758
-#, fuzzy
 msgid "w"
 msgstr "w"
 
@@ -12346,6 +12477,15 @@ msgstr "/_Inverser les valeurs"
 #: modules/volume/volume_invert.c:69
 msgid "Invert value in volume data"
 msgstr "Inverser les valeurs dans les données volumiques"
+
+#~ msgid "Sources"
+#~ msgstr "Sources"
+
+#~ msgid "Intensity"
+#~ msgstr "Intensité"
+
+#~ msgid "Lanzcos"
+#~ msgstr "Lanczos"
 
 #~ msgid "Select area of interest"
 #~ msgstr "Sélectionner la zone d'intérêt"
