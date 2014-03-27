@@ -4234,7 +4234,7 @@ distance_transform_erode_sed(guint *distances, const guint *olddist,
  * information.  They are allocated by the caller to enable an efficient
  * repeated use.
  **/
-void
+static void
 distance_transform_raw(guint *distances, guint *workspace,
                        guint xres, guint yres,
                        IntList *inqueue, IntList *outqueue)
