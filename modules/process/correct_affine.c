@@ -224,7 +224,7 @@ static GwyModuleInfo module_info = {
     N_("Corrects affine distortion of images by matching image Bravais "
        "lattice to the true one."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti)",
     "2013",
 };
@@ -288,18 +288,12 @@ affcor_dialog(AffcorArgs *args,
     controls.sens = gwy_sensitivity_group_new();
 
     controls.dialog = gtk_dialog_new_with_buttons(_("Affine Correction"),
-                                                  NULL, 0,
-                                                  _("_Reset"),
-                                                  RESPONSE_RESET,
-                                                  GTK_STOCK_CANCEL,
-                                                  GTK_RESPONSE_CANCEL,
-                                                  GTK_STOCK_OK,
-                                                  GTK_RESPONSE_OK,
-                                                  NULL);
+                                                  NULL, 0, NULL);
     dialog = GTK_DIALOG(controls.dialog);
+    gtk_dialog_add_button(dialog, _("_Reset"), RESPONSE_RESET);
+    gtk_dialog_add_button(dialog, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
+    button = gtk_dialog_add_button(dialog, GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_OK);
-    button = gtk_dialog_get_widget_for_response(GTK_DIALOG(controls.dialog),
-                                                GTK_RESPONSE_OK);
     gwy_sensitivity_group_add_widget(controls.sens, button,
                                      SENS_VALID_LATTICE);
 
