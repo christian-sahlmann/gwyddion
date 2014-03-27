@@ -33,6 +33,7 @@ Modules:
 
 Other:
 - A false colour gradient mimicking the MetroPro rainbow palette was added.
+- Compatibility with Gtk+ 2.8, accidentally broken in 2.35, was restored.
 
 
 2.35 (2014-03-02)
