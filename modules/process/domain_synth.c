@@ -70,7 +70,7 @@ typedef struct {
     guint niters;
     gdouble height;
     gdouble T;
-    gdouble J;
+    gdouble B;
     gdouble mu;
     gdouble nu;
     gdouble dt;
@@ -89,7 +89,7 @@ struct _ObjSynthControls {
     GtkTable *table;
     GtkObject *niters;
     GtkObject *T;
-    GtkObject *J;
+    GtkObject *B;
     GtkObject *mu;
     GtkObject *nu;
     GtkObject *dt;
@@ -484,11 +484,11 @@ domain_synth_dialog(DomainSynthArgs *args,
                              G_CALLBACK(gwy_synth_double_changed), &controls);
     row++;
 
-    controls.J = gtk_adjustment_new(args->J, 0.001, 100.0, 0.1, 10, 0);
-    g_object_set_data(G_OBJECT(controls.J), "target", &args->J);
+    controls.B = gtk_adjustment_new(args->B, 0.001, 100.0, 0.1, 10, 0);
+    g_object_set_data(G_OBJECT(controls.B), "target", &args->B);
     gwy_table_attach_hscale(table, row, _("_Inhibitor strength:"), NULL,
-                            GTK_OBJECT(controls.J), GWY_HSCALE_SQRT);
-    g_signal_connect_swapped(controls.J, "value-changed",
+                            GTK_OBJECT(controls.B), GWY_HSCALE_SQRT);
+    g_signal_connect_swapped(controls.B, "value-changed",
                              G_CALLBACK(gwy_synth_double_changed), &controls);
     row++;
 
@@ -631,7 +631,7 @@ update_controls(DomainSynthControls *controls,
                                  args->animated);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->niters), args->niters);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->T), args->T);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->J), args->J);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->B), args->B);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->mu), args->mu);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->nu), args->nu);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->dt), args->dt);
@@ -791,12 +791,12 @@ static inline gint
 mc_step8(gint u,
          gint u1, gint u2, gint u3, gint u4,
          gint u5, gint u6, gint u7, gint u8,
-         GRand *rng, gdouble T, gdouble J, gdouble v)
+         GRand *rng, gdouble T, gdouble B, gdouble v)
 {
     gint s1 = (u == u1) + (u == u2) + (u == u3) + (u == u4);
     gint s2 = (u == u5) + (u == u6) + (u == u7) + (u == u8);
-    gdouble E = 6.0 - s1 - 0.5*s2 + J*u*v;
-    gdouble Enew = s1 + 0.5*s2 - J*u*v;
+    gdouble E = 6.0 - s1 - 0.5*s2 + B*u*v;
+    gdouble Enew = s1 + 0.5*s2 - B*u*v;
     if (Enew < E - T*G_LN2 || g_rand_double(rng) < 0.5*exp((E - Enew)/T))
         return -u;
     return u;
@@ -807,7 +807,7 @@ field_mc_step8(const GwyDataField *vfield, const gint *u, gint *unew,
                const DomainSynthArgs *args,
                GRand *rng)
 {
-    gdouble T = args->T, J = args->J;
+    gdouble T = args->T, B = args->B;
     guint xres = vfield->xres, yres = vfield->yres, n = xres*yres;
     const gdouble *v = vfield->data;
     guint i, j;
@@ -816,20 +816,20 @@ field_mc_step8(const GwyDataField *vfield, const gint *u, gint *unew,
     unew[0] = mc_step8(u[0],
                        u[1], u[xres-1], u[xres], u[n-xres],
                        u[xres+1], u[2*xres-1], u[n-xres+1], u[n-1],
-                       rng, T, J, v[0]);
+                       rng, T, B, v[0]);
 
     for (j = 1; j < xres-1; j++) {
         unew[j] = mc_step8(u[j],
                            u[j-1], u[j+1], u[j+xres], u[j + n-xres],
                            u[j+xres-1], u[j+xres+1], u[j-1 + n-xres], u[j+1 + n-xres],
-                           rng, T, J, v[j]);
+                           rng, T, B, v[j]);
     }
 
     j = xres-1;
     unew[j] = mc_step8(u[j],
                        u[0], u[j+xres], u[j-1], u[n-1],
                        u[2*xres-2],  u[xres], u[n-2], u[n-xres],
-                       rng, T, J, v[j]);
+                       rng, T, B, v[j]);
 
     /* Inner rows. */
     for (i = 1; i < yres-1; i++) {
@@ -842,20 +842,20 @@ field_mc_step8(const GwyDataField *vfield, const gint *u, gint *unew,
         unewrow[0] = mc_step8(urow[0],
                               uprevrow[0], urow[1], unextrow[0], urow[xres-1],
                               uprevrow[1], uprevrow[xres-1], unextrow[1], unextrow[xres-1],
-                              rng, T, J, vrow[0]);
+                              rng, T, B, vrow[0]);
 
         for (j = 1; j < xres-1; j++) {
             unewrow[j] = mc_step8(urow[j],
                                   uprevrow[j], urow[j-1], urow[j+1], unextrow[j],
                                   uprevrow[j-1], uprevrow[j+1], unextrow[j-1], unextrow[j+1],
-                                  rng, T, J, vrow[j]);
+                                  rng, T, B, vrow[j]);
         }
 
         j = xres-1;
         unewrow[j] = mc_step8(urow[j],
                               uprevrow[j], urow[0], urow[xres-2], unextrow[j],
                               uprevrow[0], uprevrow[xres-2], unextrow[0], unextrow[xres-2],
-                              rng, T, J, vrow[j]);
+                              rng, T, B, vrow[j]);
     }
 
     /* Bottom row. */
@@ -863,20 +863,20 @@ field_mc_step8(const GwyDataField *vfield, const gint *u, gint *unew,
     unew[j] = mc_step8(u[j],
                        u[j+1], u[0], u[n-1], u[j-xres],
                        u[j - xres-1], u[j - xres+1], u[1], u[xres-1],
-                       rng, T, J, v[j]);
+                       rng, T, B, v[j]);
 
     for (j = 1; j < xres-1; j++) {
         unew[i + j] = mc_step8(u[i + j],
                                u[i + j-1], u[i + j+1], u[i + j-xres], u[j],
                                u[i + j-xres-1], u[i + j-xres+1], u[j-1], u[j+1],
-                               rng, T, J, v[i + j]);
+                               rng, T, B, v[i + j]);
     }
 
     j = n-1;
     unew[j] = mc_step8(u[j],
                        u[i], u[j-xres], u[xres-1], u[j-1],
                        u[0], u[xres-2], u[i-2], u[i-xres],
-                       rng, T, J, v[j]);
+                       rng, T, B, v[j]);
 }
 
 static inline gdouble
@@ -986,7 +986,7 @@ static const gchar randomize_key[]        = "/module/domain_synth/randomize";
 static const gchar seed_key[]             = "/module/domain_synth/seed";
 static const gchar animated_key[]         = "/module/domain_synth/animated";
 static const gchar T_key[]                = "/module/domain_synth/T";
-static const gchar J_key[]                = "/module/domain_synth/J";
+static const gchar B_key[]                = "/module/domain_synth/B";
 static const gchar mu_key[]               = "/module/domain_synth/mu";
 static const gchar nu_key[]               = "/module/domain_synth/nu";
 static const gchar dt_key[]               = "/module/domain_synth/dt";
@@ -1005,7 +1005,7 @@ domain_synth_sanitize_args(DomainSynthArgs *args)
     args->animated = !!args->animated;
     args->niters = MIN(args->niters, 10000);
     args->T = CLAMP(args->T, 0.001, 5.0);
-    args->J = CLAMP(args->J, 0.001, 100.0);
+    args->B = CLAMP(args->B, 0.001, 100.0);
     args->mu = CLAMP(args->mu, 0.001, 100.0);
     args->nu = CLAMP(args->nu, -1.0, 1.0);
     args->dt = CLAMP(args->dt, 0.001, 100.0);
@@ -1030,7 +1030,7 @@ domain_synth_load_args(GwyContainer *container,
                                       &args->animated);
     gwy_container_gis_int32_by_name(container, niters_key, &args->niters);
     gwy_container_gis_double_by_name(container, T_key, &args->T);
-    gwy_container_gis_double_by_name(container, J_key, &args->J);
+    gwy_container_gis_double_by_name(container, B_key, &args->B);
     gwy_container_gis_double_by_name(container, mu_key, &args->mu);
     gwy_container_gis_double_by_name(container, nu_key, &args->nu);
     gwy_container_gis_double_by_name(container, dt_key, &args->dt);
@@ -1059,7 +1059,7 @@ domain_synth_save_args(GwyContainer *container,
                                       args->animated);
     gwy_container_set_int32_by_name(container, niters_key, args->niters);
     gwy_container_set_double_by_name(container, T_key, args->T);
-    gwy_container_set_double_by_name(container, J_key, args->J);
+    gwy_container_set_double_by_name(container, B_key, args->B);
     gwy_container_set_double_by_name(container, mu_key, args->mu);
     gwy_container_set_double_by_name(container, nu_key, args->nu);
     gwy_container_set_double_by_name(container, dt_key, args->dt);
