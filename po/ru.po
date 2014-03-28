@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-03-27 03:58+0100\n"
-"PO-Revision-Date: 2014-03-27 09:23+0300\n"
+"POT-Creation-Date: 2014-03-28 03:58+0100\n"
+"PO-Revision-Date: 2014-03-28 10:16+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -880,7 +880,7 @@ msgstr "точек"
 #: modules/file/pixmap.c:1073 modules/file/pixmap.c:3143
 #: modules/file/rawfile.c:401 modules/process/angle_dist.c:172
 #: modules/process/calcoefs_new.c:348 modules/process/calibrate.c:385
-#: modules/process/col_synth.c:327 modules/process/correct_affine.c:292
+#: modules/process/col_synth.c:327 modules/process/correct_affine.c:293
 #: modules/process/curvature.c:605 modules/process/cwt.c:135
 #: modules/process/deposit_synth.c:359 modules/process/domain_synth.c:367
 #: modules/process/drift.c:240 modules/process/dwt.c:166
@@ -2492,6 +2492,8 @@ msgstr ""
 #: app/tips.c:361
 msgid "Gwyddion is a son of Math."
 msgstr ""
+"Gwyddion is a son of Math. Непереводимая игра слов, использующая имена "
+"кельтской мифологии."
 
 #: app/tips.c:408
 msgid "Gwyddion Tip of the Day"
@@ -2870,7 +2872,7 @@ msgstr "Экспортировать текст"
 #: modules/file/asciiexport.c:273 modules/file/pixmap.c:3246
 #: modules/file/rawfile.c:722 modules/file/rawxyz.c:671
 #: modules/process/calibrate.c:598 modules/process/col_synth.c:455
-#: modules/process/correct_affine.c:457 modules/process/extend.c:257
+#: modules/process/correct_affine.c:451 modules/process/extend.c:257
 #: modules/process/fft_filter_1d.c:296 modules/process/grain_dist.c:306
 #: modules/process/grain_edge.c:270 modules/process/grain_mark.c:345
 #: modules/process/grain_rem_threshold.c:328 modules/process/grain_wshed.c:278
@@ -5178,7 +5180,7 @@ msgstr "Единицы _размера:"
 msgid "_Value units:"
 msgstr "Единицы измерения _значения:"
 
-#: modules/file/rawxyz.c:675 modules/process/correct_affine.c:475
+#: modules/file/rawxyz.c:675 modules/process/correct_affine.c:469
 #: modules/process/drift.c:300 modules/process/dwt.c:205
 #: modules/process/dwtanisotropy.c:201 modules/process/fft_filter_1d.c:329
 #: modules/process/fft_profile.c:298 modules/process/fractal.c:228
@@ -7089,74 +7091,74 @@ msgstr "Исправить аффинное искажение"
 msgid "Affine Correction"
 msgstr "Аффинная коррекция"
 
-#: modules/process/correct_affine.c:362 modules/process/drift.c:337
+#: modules/process/correct_affine.c:356 modules/process/drift.c:337
 #: modules/process/fit_2d.c:316 modules/process/neural.c:547
 #: modules/process/polydistort.c:294
 msgid "Preview:"
 msgstr "Предпросмотр:"
 
-#: modules/process/correct_affine.c:370 modules/tools/grainremover.c:109
+#: modules/process/correct_affine.c:364 modules/tools/grainremover.c:109
 msgid "_Data"
 msgstr "Да_нные"
 
-#: modules/process/correct_affine.c:371
+#: modules/process/correct_affine.c:365
 msgid "2D _ACF"
 msgstr "2D _ACF"
 
-#: modules/process/correct_affine.c:372 modules/process/drift.c:346
+#: modules/process/correct_affine.c:366 modules/process/drift.c:346
 msgid "Correc_ted data"
 msgstr "Ис_правленные данные"
 
-#: modules/process/correct_affine.c:381
+#: modules/process/correct_affine.c:375
 msgid "Lattice Vectors"
 msgstr "Векторы решетки"
 
 #. TRANSLATORS: Correct is an adjective here.
-#: modules/process/correct_affine.c:406
+#: modules/process/correct_affine.c:400
 msgid "Correct Lattice"
 msgstr "Исправить решетку"
 
-#: modules/process/correct_affine.c:410
+#: modules/process/correct_affine.c:404
 msgid "_Lattice type:"
 msgstr "Тип _решетки:"
 
-#: modules/process/correct_affine.c:417
+#: modules/process/correct_affine.c:411
 msgid "User defined"
 msgstr "Пользовательская"
 
-#: modules/process/correct_affine.c:432
+#: modules/process/correct_affine.c:426
 msgid "_Different lengths"
 msgstr "_Различные длины"
 
-#: modules/process/correct_affine.c:461
+#: modules/process/correct_affine.c:455
 msgid "Image for _ACF:"
 msgstr "Изображение для _АКФ:"
 
-#: modules/process/correct_affine.c:488
+#: modules/process/correct_affine.c:482
 msgid "_Scaling:"
 msgstr "_Масштаб:"
 
-#: modules/process/correct_affine.c:495
+#: modules/process/correct_affine.c:489
 msgid "Exactly as specified"
 msgstr "Точно как задано"
 
-#: modules/process/correct_affine.c:496
+#: modules/process/correct_affine.c:490
 msgid "Preserve area"
 msgstr "Сохранять площадь"
 
-#: modules/process/correct_affine.c:497
+#: modules/process/correct_affine.c:491
 msgid "Preserve X scale"
 msgstr "Сохранять масштаб X"
 
-#: modules/process/correct_affine.c:584
+#: modules/process/correct_affine.c:578
 msgid "length"
 msgstr "длина"
 
-#: modules/process/correct_affine.c:591
+#: modules/process/correct_affine.c:585
 msgid "angle"
 msgstr "угол"
 
-#: modules/process/correct_affine.c:684
+#: modules/process/correct_affine.c:678
 msgid "Re_fine"
 msgstr "_Уточнить"
 
@@ -7510,7 +7512,7 @@ msgstr "Сила _ингибитора:"
 
 #: modules/process/domain_synth.c:497
 msgid "In_hibitor coupling:"
-msgstr "Сопр_яжение ингибитора:"
+msgstr "Св_язь ингибитора:"
 
 #: modules/process/domain_synth.c:505
 msgid "_Bias:"
