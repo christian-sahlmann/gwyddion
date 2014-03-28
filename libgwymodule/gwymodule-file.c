@@ -872,6 +872,32 @@ gwy_file_get_data_info(GwyContainer *data,
 }
 
 /**
+ * gwy_file_get_filename_sys:
+ * @data: A #GwyContainer.
+ *
+ * Gets the file name corresponding to a data container.
+ *
+ * The file name is set on two ocasions: file load and successful file save.
+ * File export does not set it.
+ *
+ * Returns: File name of @data (in GLib encoding), or %NULL.  The returned
+ *          string is owned by module system and is valid only until the
+ *          container is destroyed or saved again.
+ *
+ * Since: 2.36
+ **/
+const gchar*
+gwy_file_get_filename_sys(GwyContainer *data)
+{
+    FileTypeInfo *fti;
+
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
+
+    fti = gwy_file_type_info_get(data, FALSE);
+    return fti ? fti->filename_sys : NULL;
+}
+
+/**
  * gwy_module_file_error_quark:
  *
  * Returns error domain for file module functions.

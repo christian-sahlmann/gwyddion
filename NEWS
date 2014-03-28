@@ -1,6 +1,6 @@
 2.36 (0000-00-00)
 Application:
-- Translations updated: French, Russian.
+- Translations updated: Czech, French, Russian.
 
 Libraries:
 - libgwydgets: Igor Pro .itx graph ASCII export option was added.
@@ -12,6 +12,8 @@ Libraries:
   even if no parent window is passed.
 - libgwyprocess: Grain quantities characterising the moment-equivalent
   ellipses of grains (axis lengths and orientation) were added.
+- libgwymodules: Function for obtaining the file name of a container was
+  added (mostly useful for pygwy).
 
 Modules:
 - Columnar synthesis (new): Simulation of columnar film growth.

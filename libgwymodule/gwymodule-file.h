@@ -124,6 +124,7 @@ void                gwy_file_func_set_is_detectable(const gchar *name,
 gboolean            gwy_file_get_data_info    (GwyContainer *data,
                                                const gchar **name,
                                                const gchar **filename_sys);
+const gchar*        gwy_file_get_filename_sys (GwyContainer *data);
 
 GQuark gwy_module_file_error_quark(void);
 
