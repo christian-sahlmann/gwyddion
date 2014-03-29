@@ -2745,11 +2745,18 @@ draw_selection_changed(GtkToggleButton *check,
 static void
 update_font_size_to_zoom(PixmapSaveControls *controls)
 {
-    gdouble zoom = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->zoom));
-    gdouble s = FONT_SIZE*zoom, v;
-    gdouble lower = 0.5*s, upper = 5.0*s;
-    GtkSpinButton *spin = GTK_SPIN_BUTTON(controls->font_size);
-    GtkAdjustment *adj = gtk_spin_button_get_adjustment(spin);
+    gdouble zoom;
+    gdouble s, v;
+    gdouble lower, upper;
+    GtkSpinButton *spin;
+    GtkAdjustment *adj;
+
+    zoom = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->zoom));
+    s = FONT_SIZE * zoom;
+    lower = 0.25 * s;
+    upper = 5.0 * s;
+    spin = GTK_SPIN_BUTTON(controls->font_size);
+    adj = gtk_spin_button_get_adjustment(spin);
     g_object_set(adj, "lower", lower, "upper", upper, NULL);
     // This does not clamp the value.  Fix it manually.
     v = gtk_adjustment_get_value(adj);
