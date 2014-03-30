@@ -426,7 +426,6 @@ calibrate_dialog(CalibrateArgs *args,
     }
     else {
         gtk_widget_set_sensitive(controls.match_size, FALSE);
-        gtk_widget_set_no_show_all(label, TRUE);
         gtk_widget_set_no_show_all(controls.match_size, TRUE);
         gtk_widget_set_no_show_all(controls.size_chooser, TRUE);
     }
