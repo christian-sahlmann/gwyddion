@@ -87,6 +87,11 @@ gchar*       gwy_canonicalize_path     (const gchar *path);
 gboolean     gwy_filename_ignore       (const gchar *filename_sys);
 gchar*       gwy_sgettext              (const gchar *msgid);
 gchar*       gwy_str_next_line         (gchar **buffer);
+guint        gwy_gstring_replace       (GString *str,
+                                        const gchar *old,
+                                        const gchar *replacement,
+                                        gint count);
+void         gwy_gstring_to_native_eol (GString *str);
 void         gwy_memcpy_byte_swap      (const guint8 *source,
                                         guint8 *dest,
                                         gsize item_size,
