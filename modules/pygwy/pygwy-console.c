@@ -313,6 +313,17 @@ pygwy_console_save_as_file(GtkToolButton *btn, gpointer user_data)
     gtk_widget_destroy(dialog);
 }
 
+static gboolean
+key_pressed(GtkWidget *widget, GdkEventKey *event,
+            G_GNUC_UNUSED PygwyConsoleSetup *setup)
+{
+    if (event->keyval != GDK_Escape
+        || (event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK)))
+        return FALSE;
+
+    gtk_widget_hide(widget);
+    return TRUE;
+}
 
 static void
 pygwy_console_create_gui(void)
@@ -359,15 +370,17 @@ pygwy_console_create_gui(void)
                          button_run, _("Execute script (Ctrl-E)"), "");
     accel_group = gtk_accel_group_new();
     gtk_widget_add_accelerator(button_run, "clicked", accel_group,
-                               GDK_E, (GdkModifierType) GDK_CONTROL_MASK,
+                               GDK_E, (GdkModifierType)GDK_CONTROL_MASK,
                                GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator(button_open, "clicked", accel_group,
-                               GDK_O, (GdkModifierType) GDK_CONTROL_MASK,
+                               GDK_O, (GdkModifierType)GDK_CONTROL_MASK,
                                GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator(button_save, "clicked", accel_group,
-                               GDK_S, (GdkModifierType) GDK_CONTROL_MASK,
+                               GDK_S, (GdkModifierType)GDK_CONTROL_MASK,
                                GTK_ACCEL_VISIBLE);
     gtk_window_add_accel_group(GTK_WINDOW(console_win), accel_group);
+    g_signal_connect(console_win, "key-press-event",
+                     G_CALLBACK(key_pressed), console_setup);
 
     button_bar = gtk_toolbar_new();
     gtk_toolbar_insert(GTK_TOOLBAR(button_bar), GTK_TOOL_ITEM(button_open), -1);
