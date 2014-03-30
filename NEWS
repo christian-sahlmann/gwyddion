@@ -36,6 +36,7 @@ Modules:
 - PSIA: Rotated non-square images are imported correctly.
 - Grain distributions, Roughness tool, Statistical quantities tool: Outputs
   are saved to text files with native line terminators.
+- Pygwy console: Can be hidden by pressing Esc.
 
 Other:
 - A false colour gradient mimicking the MetroPro rainbow palette was added.
