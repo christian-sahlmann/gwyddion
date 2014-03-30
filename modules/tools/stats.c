@@ -182,7 +182,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Statistics tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.12",
+    "2.13",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -1110,6 +1110,7 @@ gwy_tool_stats_create_report(gpointer user_data,
     g_free(theta);
     g_free(phi);
 
+    gwy_gstring_to_native_eol(report);
     retval = report->str;
     g_string_free(report, FALSE);
 
