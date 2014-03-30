@@ -14,6 +14,8 @@ Libraries:
   ellipses of grains (axis lengths and orientation) were added.
 - libgwymodules: Function for obtaining the file name of a container was
   added (mostly useful for pygwy).
+- libgwyddion: A GString in-place substring replacement function was added.
+- libgwyddion: A function for conversion of text to native EOLs was added.
 
 Modules:
 - Columnar synthesis (new): Simulation of columnar film growth.
@@ -32,6 +34,8 @@ Modules:
 - Affine distortion: ACF of one image can be used to correct another image.
   Uncorrected lattice vectors can be entered numerically.
 - PSIA: Rotated non-square images are imported correctly.
+- Grain distributions, Roughness tool, Statistical quantities tool: Outputs
+  are saved to text files with native line terminators.
 
 Other:
 - A false colour gradient mimicking the MetroPro rainbow palette was added.
