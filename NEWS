@@ -34,8 +34,8 @@ Modules:
 - Affine distortion: ACF of one image can be used to correct another image.
   Uncorrected lattice vectors can be entered numerically.
 - PSIA: Rotated non-square images are imported correctly.
-- Grain distributions, Roughness tool, Statistical quantities tool: Outputs
-  are saved to text files with native line terminators.
+- Modules with a text output: Outputs are saved to text files with native
+  line terminators.
 - Pygwy console: Can be hidden by pressing Esc.
 
 Other:
