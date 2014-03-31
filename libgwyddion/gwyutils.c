@@ -1202,9 +1202,9 @@ gwy_gstring_replace(GString *str,
  * Converts "\n" in a string to operating system native line terminators.
  *
  * Text files are most easily written by opening them in the text mode.  This
- * function can be useful for writing text files using g_file_set_contents() or
- * gwy_save_auxiliary_with_callback() that do not permit the conversion to
- * happen automatically.
+ * function can be useful for writing text files using functions such as
+ * g_file_set_contents() that do not permit the conversion to happen
+ * automatically.
  *
  * It is a no-op on all POSIX systems, including OS X.  So at present, it
  * actually performs any conversion at all only on MS Windows.
