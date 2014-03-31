@@ -92,7 +92,7 @@ process_LTLIBRARIES = \
 	unrotate.la \
 	volumize.la \
 	volumize_layers.la \
-	wave_synth.la
+	wave_synth.la \
 	xydenoise.la
 
 EXTRA_DIST = \
