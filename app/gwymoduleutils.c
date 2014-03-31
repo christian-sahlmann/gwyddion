@@ -145,36 +145,33 @@ gwy_save_auxiliary_with_callback(const gchar *title,
     data = create(user_data, &data_len);
     g_return_val_if_fail(data, FALSE);
 
-    if (data_len <= 0) {
-        if ((fh = g_fopen(filename_sys, "w"))) {
-            if (fputs(data, fh) == EOF) {
-                myerrno = errno;
-                /* This is just best-effort clean-up */
-                fclose(fh);
-                g_unlink(filename_sys);
-                fh = NULL;
-            }
-            else
-                myerrno = 0;  /* GCC */
+    if ((fh = g_fopen(filename_sys, "wb"))) {
+        gchar *mydata = NULL;
+
+        /* Write everything in binary and just convert the EOLs by manually.
+         * This seems to actually work as we want. */
+        if (data_len <= 0) {
+#ifdef G_OS_WIN32
+            mydata = gwy_strreplace(data, "\n", "\r\n", (gsize)-1);
+            data_len = strlen(mydata);
+#else
+            data_len = strlen(data);
+#endif
+        }
+        if (fwrite(mydata ? mydata : data, data_len, 1, fh) != 1) {
+            myerrno = errno;
+            /* This is just best-effort clean-up */
+            fclose(fh);
+            g_unlink(filename_sys);
+            fh = NULL;
         }
         else
-            myerrno = errno;
+            myerrno = 0;  /* GCC */
+
+        g_free(mydata);
     }
-    else {
-        if ((fh = g_fopen(filename_sys, "wb"))) {
-            if (fwrite(data, data_len, 1, fh) != 1) {
-                myerrno = errno;
-                /* This is just best-effort clean-up */
-                fclose(fh);
-                g_unlink(filename_sys);
-                fh = NULL;
-            }
-            else
-                myerrno = 0;  /* GCC */
-        }
-        else
-            myerrno = errno;
-    }
+    else
+        myerrno = errno;
 
     if (destroy)
         destroy(data, user_data);
