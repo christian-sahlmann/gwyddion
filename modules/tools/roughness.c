@@ -622,7 +622,7 @@ static GwyModuleInfo module_info = {
     N_("Calculate surface profile parameters."),
     "Martin Hasoň <hasonm@physics.muni.cz>, "
         "Yeti <yeti@gwyddion.net>",
-    "1.9",
+    "1.8",
     "Martin Hasoň & David Nečas (Yeti)",
     "2006",
 };
@@ -2176,7 +2176,6 @@ gwy_tool_roughness_create_report(gpointer user_data,
     if (tvf)
         gwy_si_unit_value_format_free(tvf);
 
-    gwy_gstring_to_native_eol(report);
     retval = report->str;
     g_string_free(report, FALSE);
 

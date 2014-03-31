@@ -150,7 +150,7 @@ static GwyModuleInfo module_info = {
     N_("Evaluates distribution of grains (continuous parts of mask)."),
     "Petr Klapetek <petr@klapetek.cz>, Sven Neumann <neumann@jpk.com>, "
         "Yeti <yeti@gwyddion.net>",
-    "3.11",
+    "3.10",
     "David Nečas (Yeti) & Petr Klapetek & Sven Neumann",
     "2003",
 };
@@ -618,7 +618,6 @@ grain_dist_export_create(gpointer user_data,
         }
     }
 
-    gwy_gstring_to_native_eol(report);
     retval = report->str;
     g_string_free(report, FALSE);
     *data_len = -1;
