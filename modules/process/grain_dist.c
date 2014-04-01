@@ -150,7 +150,7 @@ static GwyModuleInfo module_info = {
     N_("Evaluates distribution of grains (continuous parts of mask)."),
     "Petr Klapetek <petr@klapetek.cz>, Sven Neumann <neumann@jpk.com>, "
         "Yeti <yeti@gwyddion.net>",
-    "3.10",
+    "3.11",
     "David Nečas (Yeti) & Petr Klapetek & Sven Neumann",
     "2003",
 };
@@ -649,6 +649,7 @@ add_report_row(GtkTable *table,
                gint *row,
                const gchar *name,
                const gchar *value,
+               const gchar *plainvalue,
                GPtrArray *report)
 {
     GtkWidget *label;
@@ -663,8 +664,7 @@ add_report_row(GtkTable *table,
     (*row)++;
 
     g_ptr_array_add(report, (gpointer)name);
-    /* FIXME: We should use PLAIN format for text output, not Pango markup */
-    g_ptr_array_add(report, g_strdup(value));
+    g_ptr_array_add(report, g_strdup(plainvalue));
 }
 
 static void
@@ -694,12 +694,12 @@ grain_stat(GwyContainer *data, GwyRunType run)
     GtkWidget *dialog, *table, *hbox, *button;
     GwyDataField *dfield, *mfield;
     GwySIUnit *siunit, *siunit2;
-    GwySIValueFormat *vf;
+    GwySIValueFormat *vf, *vf2;
     gint xres, yres, ngrains;
     gdouble total_area, area, size, vol_0, vol_min, vol_laplace, bound_len, v;
     gdouble *values = NULL;
     gint *grains;
-    GString *str;
+    GString *str, *str2;
     GPtrArray *report;
     const guchar *title;
     gchar *key, *value;
@@ -763,63 +763,86 @@ grain_stat(GwyContainer *data, GwyRunType run)
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     row = 0;
     str = g_string_new(NULL);
+    str2 = g_string_new(NULL);
 
     g_string_printf(str, "%d", ngrains);
     add_report_row(GTK_TABLE(table), &row, _("Number of grains:"),
-                   str->str, report);
+                   str->str, str->str, report);
 
     siunit = gwy_data_field_get_si_unit_xy(dfield);
     siunit2 = gwy_si_unit_power(siunit, 2, NULL);
 
     v = area;
     vf = gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, NULL);
+    vf2 = gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_PLAIN, v, NULL);
     g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
+    g_string_printf(str2, "%.*f %s",
+                    vf2->precision, v/vf2->magnitude, vf2->units);
     add_report_row(GTK_TABLE(table), &row, _("Total projected area (abs.):"),
-                   str->str, report);
+                   str->str, str2->str, report);
 
     g_string_printf(str, "%.2f %%", 100.0*area/total_area);
     add_report_row(GTK_TABLE(table), &row, _("Total projected area (rel.):"),
-                   str->str, report);
+                   str->str, str->str, report);
 
     v = area/ngrains;
     gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
+    gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_PLAIN, v, vf2);
     g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
+    g_string_printf(str2, "%.*f %s",
+                    vf2->precision, v/vf2->magnitude, vf2->units);
     add_report_row(GTK_TABLE(table), &row, _("Mean grain area:"),
-                   str->str, report);
+                   str->str, str2->str, report);
 
     v = size/ngrains;
     gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
+    gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_PLAIN, v, vf2);
     g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
+    g_string_printf(str2, "%.*f %s",
+                    vf2->precision, v/vf2->magnitude, vf2->units);
     add_report_row(GTK_TABLE(table), &row, _("Mean grain size:"),
-                   str->str, report);
+                   str->str, str2->str, report);
 
     siunit = gwy_data_field_get_si_unit_z(dfield);
     gwy_si_unit_multiply(siunit2, siunit, siunit2);
 
     v = vol_0;
     gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
+    gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_PLAIN, v, vf2);
     g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
+    g_string_printf(str2, "%.*f %s",
+                    vf2->precision, v/vf2->magnitude, vf2->units);
     add_report_row(GTK_TABLE(table), &row, _("Total grain volume (zero):"),
-                   str->str, report);
+                   str->str, str2->str, report);
 
     v = vol_min;
     gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
+    gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_PLAIN, v, vf2);
     g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
+    g_string_printf(str2, "%.*f %s",
+                    vf2->precision, v/vf2->magnitude, vf2->units);
     add_report_row(GTK_TABLE(table), &row, _("Total grain volume (minimum):"),
-                   str->str, report);
+                   str->str, str2->str, report);
 
     v = vol_laplace;
     gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
+    gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_PLAIN, v, vf2);
     g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
+    g_string_printf(str2, "%.*f %s",
+                    vf2->precision, v/vf2->magnitude, vf2->units);
     add_report_row(GTK_TABLE(table), &row, _("Total grain volume (laplacian):"),
-                   str->str, report);
+                   str->str, str2->str, report);
 
     v = bound_len;
     gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
+    gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_PLAIN, v, vf2);
     g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
+    g_string_printf(str2, "%.*f %s",
+                    vf2->precision, v/vf2->magnitude, vf2->units);
     add_report_row(GTK_TABLE(table), &row, _("Total projected boundary length:"),
-                   str->str, report);
+                   str->str, str2->str, report);
 
+    gwy_si_unit_value_format_free(vf2);
     gwy_si_unit_value_format_free(vf);
     g_object_unref(siunit2);
 
@@ -865,6 +888,7 @@ grain_stat(GwyContainer *data, GwyRunType run)
     gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
 
+    g_string_free(str2, TRUE);
     g_string_free(str, TRUE);
 }
 

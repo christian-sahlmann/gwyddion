@@ -37,6 +37,8 @@ Modules:
 - Modules with a text output: Outputs are saved to text files with native
   line terminators.
 - Pygwy console: Can be hidden by pressing Esc.
+- Grain statistics: Text output uses simple human-readable notation for
+  powers instead of Pango markup.
 
 Other:
 - A false colour gradient mimicking the MetroPro rainbow palette was added.
