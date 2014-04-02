@@ -76,7 +76,7 @@ AM_CPPFLAGS = \
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libversion = -version-info 11:0:11
+libversion = -version-info 12:0:12
 #libversion = -release @LIBRARY_RELEASE@
 libgwyddion2_la_LDFLAGS = @BASIC_LIBS@ -export-dynamic $(no_undefined) $(export_symbols) $(libversion)
 libgwyddion2_la_SOURCES = \

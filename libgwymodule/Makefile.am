@@ -69,7 +69,7 @@ AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"GwyModule\"
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libversion = -version-info 6:1:6
+libversion = -version-info 7:0:7
 #libversion = -release @LIBRARY_RELEASE@
 libgwymodule2_la_LDFLAGS = @GMODULE_LIBS@ @GTK_LIBS@ @BASIC_LIBS@  -export-dynamic $(no_undefined) $(export_symbols) $(libversion)
 libgwymodule2_la_LIBADD = $(libgwymodule_libadd)
