@@ -1,3 +1,12 @@
+2.37 (0000-00-00)
+Libraries:
+- libgwyprocess: A function to fill grain voids was added.
+
+Modules:
+- Mask editor tool: Fill voids handles correctly different connectivity of
+  grain exterior, noticeable for grains separated only by thin lines.
+
+
 2.36 (2014-04-02)
 Application:
 - Translations updated: Czech, French, Russian.

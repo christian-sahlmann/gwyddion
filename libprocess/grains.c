@@ -4014,6 +4014,23 @@ int_list_add(IntList *list, gint i)
     list->len++;
 }
 
+static inline void
+int_list_add_unique(IntList **plist, gint i)
+{
+    IntList *list;
+    guint j;
+
+    if (!*plist)
+        *plist = int_list_new(0);
+
+    list = *plist;
+    for (j = 0; j < list->len; j++) {
+        if (list->data[j] == i)
+            return;
+    }
+    int_list_add(list, i);
+}
+
 static void
 int_list_free(IntList *list)
 {
@@ -4311,6 +4328,125 @@ gwy_data_field_grain_distance_transform(GwyDataField *data_field)
 
     g_free(workspace);
     g_free(distances);
+}
+
+/**
+ * gwy_data_field_fill_voids:
+ * @data_field: A data field with zeroes in empty space and nonzeroes in
+ *              grains.
+ *
+ * Fills voids in grains in a data field representing a mask.
+ *
+ * Voids in grains are zero pixels in @data_field from which no path exists
+ * through other zero pixels to the field boundary.  The paths are considered
+ * in 8-connectivity because grains themselves are considered in
+ * 4-connectivity.
+ *
+ * Returns: %TRUE if any voids were filled at all, %FALSE if no change was
+ *          made.
+ *
+ * Since: 2.37
+ **/
+gboolean
+gwy_data_field_fill_voids(GwyDataField *data_field)
+{
+    GwyDataField *voids;
+    gdouble *data;
+    gint xres, yres;
+    gint i, j, k, gno, gno2;
+    gint *vgrains;
+    gboolean *unbound_vgrains;
+    IntList **vgrain_neighbours;
+    guint nvgrains;
+    gboolean changed, changed_ever = FALSE;
+
+    g_return_val_if_fail(data_field, FALSE);
+
+    xres = gwy_data_field_get_xres(data_field);
+    yres = gwy_data_field_get_yres(data_field);
+    data = gwy_data_field_get_data(data_field);
+
+    voids = gwy_data_field_duplicate(data_field);
+    gwy_data_field_multiply(voids, -1.0);
+    gwy_data_field_add(voids, 1.0);
+    vgrains = g_new0(gint, xres*yres);
+    nvgrains = gwy_data_field_number_grains(voids, vgrains);
+    g_object_unref(voids);
+
+    unbound_vgrains = g_new0(gboolean, nvgrains+1);
+    for (i = 0; i < xres; i++) {
+        unbound_vgrains[vgrains[i]] = TRUE;
+        unbound_vgrains[vgrains[xres*(yres - 1) + i]] = TRUE;
+    }
+    for (j = 0; j < yres; j++) {
+        unbound_vgrains[vgrains[j*xres]] = TRUE;
+        unbound_vgrains[vgrains[j*xres + xres-1]] = TRUE;
+    }
+
+    /* We must take into account grain separators (vgrains) have 8-connectivity
+     * while all grain functions work with 4-connectivity.  So construct a map
+     * of diagonally touching grains and spread the unboundness through it. */
+    vgrain_neighbours = g_new0(IntList*, nvgrains+1);
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            k = i*xres + j;
+            if (!(gno = vgrains[k]))
+                continue;
+
+            if (i && j && (gno2 = vgrains[k-xres-1]) && gno2 != gno)
+                int_list_add_unique(vgrain_neighbours + gno, gno2);
+            if (i && j < xres-1 && (gno2 = vgrains[k-xres+1]) && gno2 != gno)
+                int_list_add_unique(vgrain_neighbours + gno, gno2);
+            if (i < yres-1 && j && (gno2 = vgrains[k+xres-1]) && gno2 != gno)
+                int_list_add_unique(vgrain_neighbours + gno, gno2);
+            if (i < yres-1 && j < xres-1 && (gno2 = vgrains[k+xres+1]) && gno2 != gno)
+                int_list_add_unique(vgrain_neighbours + gno, gno2);
+        }
+    }
+
+    do {
+        changed = FALSE;
+        for (gno = 1; gno <= nvgrains; gno++) {
+            IntList *list = vgrain_neighbours[gno];
+
+            if (!list || !unbound_vgrains[gno])
+                continue;
+
+            changed = TRUE;
+            for (k = 0; k < list->len; k++)
+                unbound_vgrains[list->data[k]] = TRUE;
+
+            /* We have propagated everything we can from @list, so avoid doing
+             * that again and again. */
+            int_list_free(list);
+            vgrain_neighbours[gno] = NULL;
+        }
+
+        changed_ever |= changed;
+    } while (changed);
+
+    k = 0;
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            if (!data[k] && !unbound_vgrains[vgrains[k]])
+                data[k] = 1.0;
+            k++;
+        }
+    }
+
+    for (gno = 1; gno <= nvgrains; gno++) {
+        IntList *list = vgrain_neighbours[gno];
+        if (list)
+            int_list_free(list);
+    }
+    g_free(vgrain_neighbours);
+    g_free(unbound_vgrains);
+    g_free(vgrains);
+
+    if (changed_ever)
+        gwy_data_field_invalidate(data_field);
+
+    return changed_ever;
 }
 
 /************************** Documentation ****************************/

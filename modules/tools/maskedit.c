@@ -1065,158 +1065,18 @@ gwy_tool_mask_editor_shrink(GwyToolMaskEditor *tool)
     gwy_plain_tool_log_add(plain_tool);
 }
 
-typedef struct {
-    guint size;
-    guint len;
-    gint *data;
-} IntList;
-
-static inline IntList*
-int_list_new(guint prealloc)
-{
-    IntList *list = g_slice_new0(IntList);
-    prealloc = MAX(prealloc, 16);
-    list->size = prealloc;
-    list->data = g_new(gint, list->size);
-    return list;
-}
-
-static inline void
-int_list_add(IntList *list, gint i)
-{
-    if (G_UNLIKELY(list->len == list->size)) {
-        list->size = MAX(2*list->size, 16);
-        list->data = g_renew(gint, list->data, list->size);
-    }
-
-    list->data[list->len] = i;
-    list->len++;
-}
-
-static inline void
-int_list_add_unique(IntList **plist, gint i)
-{
-    IntList *list;
-    guint j;
-
-    if (!*plist)
-        *plist = int_list_new(0);
-
-    list = *plist;
-    for (j = 0; j < list->len; j++) {
-        if (list->data[j] == i)
-            return;
-    }
-    int_list_add(list, i);
-}
-
-static void
-int_list_free(IntList *list)
-{
-    g_free(list->data);
-    g_slice_free(IntList, list);
-}
-
 static void
 gwy_tool_mask_editor_fill_voids(GwyToolMaskEditor *tool)
 {
     GwyPlainTool *plain_tool;
-    GwyDataField *voids;
     GQuark quark;
-    gdouble *data;
-    gint xres, yres;
-    gint i, j, k, gno, gno2;
-    gint *vgrains;
-    gboolean *unbound_vgrains;
-    IntList **vgrain_neighbours;
-    guint nvgrains;
-    gboolean changed;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->mask_field);
 
     quark = gwy_app_get_mask_key_for_id(plain_tool->id);
     gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
-
-    xres = gwy_data_field_get_xres(plain_tool->mask_field);
-    yres = gwy_data_field_get_yres(plain_tool->mask_field);
-    data = gwy_data_field_get_data(plain_tool->mask_field);
-
-    voids = gwy_data_field_duplicate(plain_tool->mask_field);
-    gwy_data_field_multiply(voids, -1.0);
-    gwy_data_field_add(voids, 1.0);
-    vgrains = g_new0(gint, xres*yres);
-    nvgrains = gwy_data_field_number_grains(voids, vgrains);
-    g_object_unref(voids);
-    unbound_vgrains = g_new0(gboolean, nvgrains+1);
-
-    for (i = 0; i < xres; i++) {
-        unbound_vgrains[vgrains[i]] = TRUE;
-        unbound_vgrains[vgrains[xres*(yres - 1) + i]] = TRUE;
-    }
-    for (j = 0; j < yres; j++) {
-        unbound_vgrains[vgrains[j*xres]] = TRUE;
-        unbound_vgrains[vgrains[j*xres + xres-1]] = TRUE;
-    }
-
-    /* We must take into account grain separators (vgrains) have 8-connectivity
-     * while all grain functions work with 4-connectivity.  So construct a map
-     * of diagonally touching grains and spread the unboundness through it. */
-    vgrain_neighbours = g_new0(IntList*, nvgrains+1);
-    for (i = 0; i < yres; i++) {
-        for (j = 0; j < xres; j++) {
-            k = i*xres + j;
-            if (!(gno = vgrains[k]))
-                continue;
-
-            if (i && j && (gno2 = vgrains[k-xres-1]) && gno2 != gno)
-                int_list_add_unique(vgrain_neighbours + gno, gno2);
-            if (i && j < xres-1 && (gno2 = vgrains[k-xres+1]) && gno2 != gno)
-                int_list_add_unique(vgrain_neighbours + gno, gno2);
-            if (i < yres-1 && j && (gno2 = vgrains[k+xres-1]) && gno2 != gno)
-                int_list_add_unique(vgrain_neighbours + gno, gno2);
-            if (i < yres-1 && j < xres-1 && (gno2 = vgrains[k+xres+1]) && gno2 != gno)
-                int_list_add_unique(vgrain_neighbours + gno, gno2);
-        }
-    }
-
-    do {
-        changed = FALSE;
-        for (gno = 1; gno <= nvgrains; gno++) {
-            IntList *list = vgrain_neighbours[gno];
-
-            if (!list || !unbound_vgrains[gno])
-                continue;
-
-            changed = TRUE;
-            for (k = 0; k < list->len; k++)
-                unbound_vgrains[list->data[k]] = TRUE;
-
-            /* We have propagated everything we can from @list, so avoid doing
-             * that again and again. */
-            int_list_free(list);
-            vgrain_neighbours[gno] = NULL;
-        }
-    } while (changed);
-
-    k = 0;
-    for (i = 0; i < yres; i++) {
-        for (j = 0; j < xres; j++) {
-            if (!data[k] && !unbound_vgrains[vgrains[k]])
-                data[k] = 1.0;
-            k++;
-        }
-    }
-
-    for (gno = 1; gno <= nvgrains; gno++) {
-        IntList *list = vgrain_neighbours[gno];
-        if (list)
-            int_list_free(list);
-    }
-    g_free(vgrain_neighbours);
-    g_free(unbound_vgrains);
-    g_free(vgrains);
-
+    gwy_data_field_fill_voids(plain_tool->mask_field);
     gwy_data_field_data_changed(plain_tool->mask_field);
     gwy_tool_mask_editor_save_args(tool);
     gwy_plain_tool_log_add(plain_tool);
