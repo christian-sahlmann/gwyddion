@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-03-28 03:58+0100\n"
+"POT-Creation-Date: 2014-04-02 11:55+0200\n"
 "PO-Revision-Date: 2014-03-28 10:16+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
@@ -877,7 +877,7 @@ msgid "pixels"
 msgstr "точек"
 
 #: libgwydgets/gwy3dwindow.c:1133 modules/file/hdrimage.cc:2196
-#: modules/file/pixmap.c:1073 modules/file/pixmap.c:3143
+#: modules/file/pixmap.c:1073 modules/file/pixmap.c:3150
 #: modules/file/rawfile.c:401 modules/process/angle_dist.c:172
 #: modules/process/calcoefs_new.c:348 modules/process/calibrate.c:385
 #: modules/process/col_synth.c:327 modules/process/correct_affine.c:293
@@ -1602,7 +1602,7 @@ msgstr "Объединить файлы"
 msgid "Open File"
 msgstr "Открыть файл"
 
-#: app/file.c:500 app/gwymoduleutils.c:193
+#: app/file.c:500 app/gwymoduleutils.c:191
 #, c-format
 msgid "Saving of `%s' failed"
 msgstr "Сохранение `%s' не выполнено"
@@ -1844,7 +1844,7 @@ msgstr ""
 "Заголовок внезапно закончился на строке %u; отсутствует маркер конца "
 "заголовка"
 
-#: app/gwymoduleutils.c:198 app/settings.c:132 app/settings.c:143
+#: app/gwymoduleutils.c:196 app/settings.c:132 app/settings.c:143
 #: modules/file/err.h:62
 #, c-format
 msgid "Cannot write to file: %s."
@@ -2869,9 +2869,9 @@ msgstr "Единицы измерения:"
 msgid "Export Text"
 msgstr "Экспортировать текст"
 
-#: modules/file/asciiexport.c:273 modules/file/pixmap.c:3246
+#: modules/file/asciiexport.c:273 modules/file/pixmap.c:3253
 #: modules/file/rawfile.c:722 modules/file/rawxyz.c:671
-#: modules/process/calibrate.c:598 modules/process/col_synth.c:455
+#: modules/process/calibrate.c:597 modules/process/col_synth.c:455
 #: modules/process/correct_affine.c:451 modules/process/extend.c:257
 #: modules/process/fft_filter_1d.c:296 modules/process/grain_dist.c:306
 #: modules/process/grain_edge.c:270 modules/process/grain_mark.c:345
@@ -3493,7 +3493,7 @@ msgid "Physical Dimensions"
 msgstr "Физические размеры"
 
 #: modules/file/hdrimage.cc:2287 modules/file/pixmap.c:1155
-#: modules/file/pixmap.c:3188 modules/file/rawfile.c:634
+#: modules/file/pixmap.c:3195 modules/file/rawfile.c:634
 #: modules/process/crosscor.c:199 modules/process/dimensions.h:472
 #: modules/process/tip_blind.c:336
 msgid "_Width:"
@@ -3505,7 +3505,7 @@ msgstr "_Ширина:"
 #: modules/process/calcoefs_new.c:384 modules/process/calcoefs_new.c:451
 #: modules/process/calcoefs_simple.c:391 modules/process/calcoefs_simple.c:458
 #: modules/process/calcoefs_view.c:528 modules/process/calcoefs_view.c:566
-#: modules/process/calibrate.c:457 modules/process/calibrate.c:540
+#: modules/process/calibrate.c:456 modules/process/calibrate.c:539
 #: modules/process/dimensions.h:160 modules/volume/volume_calibrate.c:414
 #: modules/volume/volume_calibrate.c:441 modules/volume/volume_calibrate.c:468
 #: modules/volume/volume_calibrate.c:546
@@ -3531,7 +3531,7 @@ msgstr "Масштаб _Z (на единицу дискретизации):"
 #: modules/file/hdrimage.cc:2540 modules/file/pixmap.c:1459
 #: modules/file/rawfile.c:1323 modules/process/calcoefs_new.c:776
 #: modules/process/calcoefs_simple.c:1191 modules/process/calcoefs_view.c:1393
-#: modules/process/calibrate.c:968 modules/process/dimensions.h:194
+#: modules/process/calibrate.c:967 modules/process/dimensions.h:194
 #: modules/volume/volume_calibrate.c:1017
 msgid "Change Units"
 msgstr "Изменить единицы измерения"
@@ -3539,7 +3539,7 @@ msgstr "Изменить единицы измерения"
 #: modules/file/hdrimage.cc:2554 modules/file/pixmap.c:1473
 #: modules/file/rawfile.c:1337 modules/process/calcoefs_new.c:789
 #: modules/process/calcoefs_simple.c:1204 modules/process/calcoefs_view.c:1406
-#: modules/process/calibrate.c:982 modules/process/dimensions.h:207
+#: modules/process/calibrate.c:981 modules/process/dimensions.h:207
 #: modules/volume/volume_calibrate.c:1031
 msgid "New _units:"
 msgstr "Новые _единицы:"
@@ -4577,24 +4577,24 @@ msgstr "Изображение слишком велико чтобы сохра
 msgid "Data must be displayed in a window for pixmap export."
 msgstr "Данные должны отображаться в окне для экспорта изображения."
 
-#: modules/file/pixmap.c:3058
+#: modules/file/pixmap.c:3065
 msgid "Change Inset Color"
 msgstr "Изменить цвет отрезка"
 
-#: modules/file/pixmap.c:3140
+#: modules/file/pixmap.c:3147
 #, c-format
 msgid "Export %s"
 msgstr "Экспорт %s"
 
-#: modules/file/pixmap.c:3170
+#: modules/file/pixmap.c:3177
 msgid "Scaling"
 msgstr "Масштабирование"
 
-#: modules/file/pixmap.c:3179
+#: modules/file/pixmap.c:3186
 msgid "_Zoom:"
 msgstr "_Увеличение:"
 
-#: modules/file/pixmap.c:3197 modules/process/col_synth.c:425
+#: modules/file/pixmap.c:3204 modules/process/col_synth.c:425
 #: modules/process/domain_synth.c:528 modules/process/grain_mark.c:310
 #: modules/process/grain_rem_threshold.c:284 modules/process/obj_synth.c:576
 #: modules/process/pat_synth.c:892 modules/process/pat_synth.c:1193
@@ -4602,99 +4602,99 @@ msgstr "_Увеличение:"
 msgid "_Height:"
 msgstr "_Высота:"
 
-#: modules/file/pixmap.c:3205
+#: modules/file/pixmap.c:3212
 msgid "Font:"
 msgstr "Шрифт:"
 
-#: modules/file/pixmap.c:3220
+#: modules/file/pixmap.c:3227
 msgid "Scale text _proportionally"
 msgstr "_Пропорциональный масштаб текста"
 
-#: modules/file/pixmap.c:3235
+#: modules/file/pixmap.c:3242
 msgid "_Font size:"
 msgstr "_Размер шрифта:"
 
-#: modules/file/pixmap.c:3250
+#: modules/file/pixmap.c:3257
 msgid "Draw _mask"
 msgstr "Рисовать _маску"
 
-#: modules/file/pixmap.c:3259
+#: modules/file/pixmap.c:3266
 msgid "Draw _selection"
 msgstr "Рисовать в_ыбранную область"
 
-#: modules/file/pixmap.c:3275
+#: modules/file/pixmap.c:3282
 msgid "Grayscale Mode"
 msgstr "Градации серого"
 
-#: modules/file/pixmap.c:3279
+#: modules/file/pixmap.c:3286
 msgid "Export as 1_6 bit grayscale"
 msgstr "Экспортировать как 1_6битное серое"
 
-#: modules/file/pixmap.c:3305
+#: modules/file/pixmap.c:3312
 msgid "Lateral Scale"
 msgstr "Горизонтальный масштаб:"
 
-#: modules/file/pixmap.c:3312 modules/file/pixmap.c:3427
+#: modules/file/pixmap.c:3319 modules/file/pixmap.c:3434
 msgid "ruler|_None"
 msgstr "_Нет"
 
-#: modules/file/pixmap.c:3313
+#: modules/file/pixmap.c:3320
 msgid "_Rulers"
 msgstr "Направл_яющие"
 
-#: modules/file/pixmap.c:3314
+#: modules/file/pixmap.c:3321
 msgid "_Inset scale bar"
 msgstr "В_ложенный масштабный отрезок"
 
-#: modules/file/pixmap.c:3319
+#: modules/file/pixmap.c:3326
 msgid "Color:"
 msgstr "Цвет:"
 
-#: modules/file/pixmap.c:3335 modules/process/immerse.c:321
+#: modules/file/pixmap.c:3342 modules/process/immerse.c:321
 msgid "Position:"
 msgstr "Расположение:"
 
-#: modules/file/pixmap.c:3340
+#: modules/file/pixmap.c:3347
 msgid "left"
 msgstr "слева"
 
-#: modules/file/pixmap.c:3344
+#: modules/file/pixmap.c:3351
 msgid "center"
 msgstr "по центру"
 
-#: modules/file/pixmap.c:3348
+#: modules/file/pixmap.c:3355
 msgid "right"
 msgstr "справа"
 
-#: modules/file/pixmap.c:3353
+#: modules/file/pixmap.c:3360
 msgid "top"
 msgstr "верх"
 
-#: modules/file/pixmap.c:3365
+#: modules/file/pixmap.c:3372
 msgid "bottom"
 msgstr "низ"
 
-#: modules/file/pixmap.c:3376 modules/process/lno_synth.c:1069
+#: modules/file/pixmap.c:3383 modules/process/lno_synth.c:1069
 msgid "_Length:"
 msgstr "_Длина:"
 
-#: modules/file/pixmap.c:3392
+#: modules/file/pixmap.c:3399
 msgid "_Auto"
 msgstr "_Авто"
 
-#: modules/file/pixmap.c:3400
+#: modules/file/pixmap.c:3407
 msgid "Draw _ticks"
 msgstr "Рисовать _засечки"
 
-#: modules/file/pixmap.c:3410
+#: modules/file/pixmap.c:3417
 msgid "Draw _label"
 msgstr "Рисовать подпис_ь"
 
-#: modules/file/pixmap.c:3420
+#: modules/file/pixmap.c:3427
 msgid "Value Scale"
 msgstr "Масштаб значений"
 
-#: modules/file/pixmap.c:3428
+#: modules/file/pixmap.c:3435
 msgid "_False color ruler"
 msgstr "Л_инейка псевдоцвета"
 
@@ -6618,12 +6618,12 @@ msgid "Detail"
 msgstr "Часть"
 
 #: modules/process/calcoefs_simple.c:371 modules/process/calcoefs_view.c:508
-#: modules/process/calibrate.c:487 modules/volume/volume_calibrate.c:478
+#: modules/process/calibrate.c:486 modules/volume/volume_calibrate.c:478
 msgid "_X offset:"
 msgstr "Смещение по _X:"
 
 #: modules/process/calcoefs_simple.c:398 modules/process/calcoefs_view.c:534
-#: modules/process/calibrate.c:500 modules/volume/volume_calibrate.c:491
+#: modules/process/calibrate.c:499 modules/volume/volume_calibrate.c:491
 msgid "_Y offset:"
 msgstr "Смещение по _Y:"
 
@@ -6878,47 +6878,47 @@ msgstr "Новые реальные размеры"
 msgid "_Match pixel size:"
 msgstr "_Выровнять размер пикселя:"
 
-#: modules/process/calibrate.c:435 modules/volume/volume_calibrate.c:394
+#: modules/process/calibrate.c:434 modules/volume/volume_calibrate.c:394
 msgid "_X range:"
 msgstr "Диапазон _X:"
 
-#: modules/process/calibrate.c:464 modules/volume/volume_calibrate.c:421
+#: modules/process/calibrate.c:463 modules/volume/volume_calibrate.c:421
 msgid "_Y range:"
 msgstr "Диапазон _Y:"
 
-#: modules/process/calibrate.c:480
+#: modules/process/calibrate.c:479
 msgid "_Square samples"
 msgstr "_Квадратный образец"
 
-#: modules/process/calibrate.c:515 modules/volume/volume_calibrate.c:521
+#: modules/process/calibrate.c:514 modules/volume/volume_calibrate.c:521
 msgid "Value Range"
 msgstr "Диапазон значений"
 
-#: modules/process/calibrate.c:520 modules/volume/volume_calibrate.c:448
+#: modules/process/calibrate.c:519 modules/volume/volume_calibrate.c:448
 msgid "_Z range:"
 msgstr "Диапазон _Z:"
 
-#: modules/process/calibrate.c:549
+#: modules/process/calibrate.c:548
 msgid "Z shi_ft:"
 msgstr "С_двиг Z:"
 
-#: modules/process/calibrate.c:564 modules/volume/volume_calibrate.c:570
+#: modules/process/calibrate.c:563 modules/volume/volume_calibrate.c:570
 msgid "Calibration Coefficients"
 msgstr "Коэффициенты калибровки"
 
-#: modules/process/calibrate.c:571 modules/volume/volume_calibrate.c:577
+#: modules/process/calibrate.c:570 modules/volume/volume_calibrate.c:577
 msgid "_X calibration factor:"
 msgstr "Множитель калибровки по _X:"
 
-#: modules/process/calibrate.c:581 modules/volume/volume_calibrate.c:585
+#: modules/process/calibrate.c:580 modules/volume/volume_calibrate.c:585
 msgid "_Y calibration factor:"
 msgstr "Множитель калибровки по _Y:"
 
-#: modules/process/calibrate.c:591 modules/volume/volume_calibrate.c:593
+#: modules/process/calibrate.c:590 modules/volume/volume_calibrate.c:593
 msgid "_Z calibration factor:"
 msgstr "Множитель калибровки по _Z:"
 
-#: modules/process/calibrate.c:604 modules/process/extend.c:291
+#: modules/process/calibrate.c:603 modules/process/extend.c:291
 #: modules/tools/crop.c:213
 msgid "Create new channel"
 msgstr "Создать новый канал"
@@ -7311,13 +7311,13 @@ msgstr "Строить _график"
 msgid "Masking Mode"
 msgstr "Режим использования маски"
 
-#: modules/process/curvature.c:756 modules/process/grain_dist.c:855
+#: modules/process/curvature.c:756 modules/process/grain_dist.c:878
 #: modules/process/polylevel.c:619 modules/tools/distance.c:228
 #: modules/tools/roughness.c:825 modules/tools/stats.c:427
 msgid "Save table to a file"
 msgstr "Сохранить таблицу в файл"
 
-#: modules/process/curvature.c:761 modules/process/grain_dist.c:860
+#: modules/process/curvature.c:761 modules/process/grain_dist.c:883
 #: modules/process/polylevel.c:629 modules/tools/distance.c:233
 #: modules/tools/roughness.c:830 modules/tools/stats.c:432
 msgid "Copy table to clipboard"
@@ -8650,43 +8650,43 @@ msgstr "Сохранить статистику зёрен"
 msgid "Data channel:"
 msgstr "Канал данных:"
 
-#: modules/process/grain_dist.c:757 modules/process/grain_dist.c:834
+#: modules/process/grain_dist.c:757 modules/process/grain_dist.c:857
 msgid "Grain Statistics"
 msgstr "Статистика зёрен"
 
-#: modules/process/grain_dist.c:768
+#: modules/process/grain_dist.c:769
 msgid "Number of grains:"
 msgstr "Число зёрен:"
 
-#: modules/process/grain_dist.c:777
+#: modules/process/grain_dist.c:781
 msgid "Total projected area (abs.):"
 msgstr "Общая площадь проекции (абс.):"
 
-#: modules/process/grain_dist.c:781
+#: modules/process/grain_dist.c:785
 msgid "Total projected area (rel.):"
 msgstr "Общая площадь проекции (отн.):"
 
-#: modules/process/grain_dist.c:787
+#: modules/process/grain_dist.c:794
 msgid "Mean grain area:"
 msgstr "Средняя площадь зерна:"
 
-#: modules/process/grain_dist.c:793
+#: modules/process/grain_dist.c:803
 msgid "Mean grain size:"
 msgstr "Средний размер зерна:"
 
-#: modules/process/grain_dist.c:802
+#: modules/process/grain_dist.c:815
 msgid "Total grain volume (zero):"
 msgstr "Общий объём зерна (нуль):"
 
-#: modules/process/grain_dist.c:808
+#: modules/process/grain_dist.c:824
 msgid "Total grain volume (minimum):"
 msgstr "Общий объём зерна (минимум):"
 
-#: modules/process/grain_dist.c:814
+#: modules/process/grain_dist.c:833
 msgid "Total grain volume (laplacian):"
 msgstr "Общий объём зерна (по Лапласу):"
 
-#: modules/process/grain_dist.c:820
+#: modules/process/grain_dist.c:842
 msgid "Total projected boundary length:"
 msgstr "Общая длина проекции границы:"
 
@@ -11182,27 +11182,27 @@ msgstr "Открыть скрипт Python"
 msgid "Save Script as"
 msgstr "Сохранить скрипт как"
 
-#: modules/pygwy/pygwy-console.c:338
+#: modules/pygwy/pygwy-console.c:349
 msgid "Pygwy Console"
 msgstr "Консоль Pygwy"
 
-#: modules/pygwy/pygwy-console.c:351
+#: modules/pygwy/pygwy-console.c:362
 msgid "Clear Log"
 msgstr "Очистить лог"
 
-#: modules/pygwy/pygwy-console.c:355
+#: modules/pygwy/pygwy-console.c:366
 msgid "Open script in Python language (Ctrl-O)"
 msgstr "Открыть скрипт на языке Python (Ctrl-O)"
 
-#: modules/pygwy/pygwy-console.c:357
+#: modules/pygwy/pygwy-console.c:368
 msgid "Save script (Ctrl-S)"
 msgstr "Сохранить сценарий (Ctrl-S)"
 
-#: modules/pygwy/pygwy-console.c:359
+#: modules/pygwy/pygwy-console.c:370
 msgid "Execute script (Ctrl-E)"
 msgstr "Выполнить сценарий (Ctrl-E)"
 
-#: modules/pygwy/pygwy-console.c:435
+#: modules/pygwy/pygwy-console.c:448
 msgid "Command"
 msgstr "Команда"
 
