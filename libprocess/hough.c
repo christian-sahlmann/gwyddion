@@ -79,7 +79,7 @@ gwy_data_field_hough_line(GwyDataField *dfield,
                           gboolean overlapping)
 {
     gint k, col, row, xres, yres, rxres, ryres;
-    gdouble rho, theta, rhostep, thetastep, *data, gradangle = 0, threshold;
+    gdouble rho, theta, rhostep, thetastep, *data, gradangle = 0;
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
@@ -119,9 +119,9 @@ gwy_data_field_hough_line(GwyDataField *dfield,
                     if (!overlapping)
                         theta += G_PI/4;
 
+                    /*
                     threshold = 1.0;
-
-                    /*if (data[col + row*xres]) printf("%g %g\n", theta, gradangle);
+                    if (data[col + row*xres]) printf("%g %g\n", theta, gradangle);
                     if (x_gradient && y_gradient && !(fabs(theta-gradangle)<threshold)) continue;*/
 
 
