@@ -29,6 +29,7 @@
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
@@ -254,7 +255,7 @@ module_register(void)
     gwy_process_func_register("pat_synth",
                               (GwyProcessFunc)&pat_synth,
                               N_("/S_ynthetic/_Pattern..."),
-                              NULL,
+                              GWY_STOCK_SYNTHETIC_PATTERN,
                               PAT_SYNTH_RUN_MODES,
                               0,
                               N_("Generate patterned surface"));

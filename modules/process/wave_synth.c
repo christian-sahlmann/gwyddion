@@ -30,6 +30,7 @@
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
@@ -234,7 +235,7 @@ module_register(void)
     gwy_process_func_register("wave_synth",
                               (GwyProcessFunc)&wave_synth,
                               N_("/S_ynthetic/_Waves..."),
-                              NULL,
+                              GWY_STOCK_SYNTHETIC_WAVES,
                               WAVE_SYNTH_RUN_MODES,
                               0,
                               N_("Generate waves"));

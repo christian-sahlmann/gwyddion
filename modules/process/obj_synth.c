@@ -29,6 +29,7 @@
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
@@ -303,7 +304,7 @@ module_register(void)
     gwy_process_func_register("obj_synth",
                               (GwyProcessFunc)&obj_synth,
                               N_("/S_ynthetic/_Objects..."),
-                              NULL,
+                              GWY_STOCK_SYNTHETIC_OBJECTS,
                               OBJ_SYNTH_RUN_MODES,
                               0,
                               N_("Generate surface of randomly placed objects"));

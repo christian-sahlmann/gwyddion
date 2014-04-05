@@ -29,6 +29,7 @@
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
@@ -294,7 +295,7 @@ module_register(void)
     gwy_process_func_register("lno_synth",
                               (GwyProcessFunc)&lno_synth,
                               N_("/S_ynthetic/_Line Noise..."),
-                              NULL,
+                              GWY_STOCK_SYNTHETIC_LINE_NOISE,
                               LNO_SYNTH_RUN_MODES,
                               0,
                               N_("Generate line noise"));

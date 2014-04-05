@@ -30,6 +30,7 @@
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
@@ -223,7 +224,7 @@ module_register(void)
     gwy_process_func_register("noise_synth",
                               (GwyProcessFunc)&noise_synth,
                               N_("/S_ynthetic/_Noise..."),
-                              NULL,
+                              GWY_STOCK_SYNTHETIC_NOISE,
                               NOISE_DISTRIBUTION_RUN_MODES,
                               0,
                               N_("Generate surface of uncorrelated noise"));

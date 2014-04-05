@@ -29,6 +29,7 @@
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
@@ -188,7 +189,7 @@ module_register(void)
     gwy_process_func_register("col_synth",
                               (GwyProcessFunc)&col_synth,
                               N_("/S_ynthetic/_Columnar..."),
-                              NULL,
+                              GWY_STOCK_SYNTHETIC_COLUMNAR,
                               COL_SYNTH_RUN_MODES,
                               0,
                               N_("Generate columnar surface"));

@@ -29,6 +29,7 @@
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
@@ -187,7 +188,7 @@ module_register(void)
     gwy_process_func_register("domain_synth",
                               (GwyProcessFunc)&domain_synth,
                               N_("/S_ynthetic/_Domains..."),
-                              NULL,
+                              GWY_STOCK_SYNTHETIC_DOMAINS,
                               DOMAIN_SYNTH_RUN_MODES,
                               0,
                               N_("Generate image with domains"));

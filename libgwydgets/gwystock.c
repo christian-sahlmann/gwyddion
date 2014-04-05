@@ -1023,6 +1023,69 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_SYNTHETIC_COLUMNAR:
+ *
+ * The "Synthetic-Columnar" stock icon.
+ * <inlinegraphic fileref="gwy_synthetic_columnar-24.png" format="PNG"/>
+ *
+ * Since: 2.37
+ **/
+
+/**
+ * GWY_STOCK_SYNTHETIC_DOMAINS:
+ *
+ * The "Synthetic-Domains" stock icon.
+ * <inlinegraphic fileref="gwy_synthetic_domains-24.png" format="PNG"/>
+ *
+ * Since: 2.37
+ **/
+
+/**
+ * GWY_STOCK_SYNTHETIC_LINE_NOISE:
+ *
+ * The "Synthetic-Line-Noise" stock icon.
+ * <inlinegraphic fileref="gwy_synthetic_line_noise-24.png" format="PNG"/>
+ *
+ * Since: 2.37
+ **/
+
+/**
+ * GWY_STOCK_SYNTHETIC_NOISE:
+ *
+ * The "Synthetic-Noise" stock icon.
+ * <inlinegraphic fileref="gwy_synthetic_noise-24.png" format="PNG"/>
+ *
+ * Since: 2.37
+ **/
+
+/**
+ * GWY_STOCK_SYNTHETIC_OBJECTS:
+ *
+ * The "Synthetic-Objects" stock icon.
+ * <inlinegraphic fileref="gwy_synthetic_objects-24.png" format="PNG"/>
+ *
+ * Since: 2.37
+ **/
+
+/**
+ * GWY_STOCK_SYNTHETIC_PATTERN:
+ *
+ * The "Synthetic-Pattern" stock icon.
+ * <inlinegraphic fileref="gwy_synthetic_pattern-24.png" format="PNG"/>
+ *
+ * Since: 2.37
+ **/
+
+/**
+ * GWY_STOCK_SYNTHETIC_WAVES:
+ *
+ * The "Synthetic-Waves" stock icon.
+ * <inlinegraphic fileref="gwy_synthetic_waves-24.png" format="PNG"/>
+ *
+ * Since: 2.37
+ **/
+
+/**
  * GWY_STOCK_UNROTATE:
  *
  * The "Unrotate" stock icon.
