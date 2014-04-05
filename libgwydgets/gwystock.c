@@ -681,6 +681,15 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_MARK_WITH:
+ *
+ * The "Mark-With" stock icon.
+ * <inlinegraphic fileref="gwy_mark_with-24.png" format="PNG"/>
+ *
+ * Since: 2.37
+ **/
+
+/**
  * GWY_STOCK_MASK:
  *
  * The "Mask" stock icon.

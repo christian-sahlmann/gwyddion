@@ -83,6 +83,7 @@ G_BEGIN_DECLS
 #define GWY_STOCK_LINE_LEVEL            "gwy_line_level"
 #define GWY_STOCK_LOGSCALE_HORIZONTAL   "gwy_logscale_horizontal"
 #define GWY_STOCK_LOGSCALE_VERTICAL     "gwy_logscale_vertical"
+#define GWY_STOCK_MARK_WITH             "gwy_mark_with"
 #define GWY_STOCK_MASK                  "gwy_mask"
 #define GWY_STOCK_MASK_ADD              "gwy_mask_add"
 #define GWY_STOCK_MASK_CIRCLE           "gwy_mask_circle"

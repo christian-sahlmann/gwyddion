@@ -165,7 +165,7 @@ module_register(void)
     gwy_process_func_register("mark_with",
                               (GwyProcessFunc)&mark,
                               N_("/_Mask/Mark _With..."),
-                              NULL,
+                              GWY_STOCK_MARK_WITH,
                               MARK_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Mask combining and modification"));

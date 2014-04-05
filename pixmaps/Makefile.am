@@ -10,7 +10,7 @@ icondatadir = $(datadir)/icons/hicolor/48x48/apps
 # Since 2.22: mask_fill_draw mask_fill_erase mask_paint_draw mask_paint_erase
 # Since 2.29: polynom_level
 # Since 2.34: pygwy
-# Since 2.37: synthetic_columnar synthetic_domains synthetic_line_noise synthetic_noise synthetic_objects synthetic_pattern synthetic_waves
+# Since 2.37: mark_with synthetic_columnar synthetic_domains synthetic_line_noise synthetic_noise synthetic_objects synthetic_pattern synthetic_waves
 
 # If you add new stock icons here, add them to a `Since' line above and run
 # ./utils/stockgen.py from the top-level directory to update source code
@@ -77,6 +77,7 @@ pixmapdata_DATA = \
 	gwy_line_level-24.png \
 	gwy_logscale_horizontal-24.png \
 	gwy_logscale_vertical-24.png \
+	gwy_mark_with-24.png \
 	gwy_mask-16.png \
 	gwy_mask-24.png \
 	gwy_mask_add-24.png \
