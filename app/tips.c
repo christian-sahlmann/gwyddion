@@ -48,17 +48,17 @@ enum {
 static const StartupTip tips[] = {
     /* Interface */
     {
-        NULL,
+        GWY_STOCK_SELECTIONS,
         N_("Holding Shift restritcs directions of selected lines "
            "to multiples of 15°."),
     },
     {
-        NULL,
+        GWY_STOCK_SELECTIONS,
         N_("Holding Shift restritcs shapes of selected rectangles "
            "to perfect squares."),
     },
     {
-        NULL,
+        GWY_STOCK_SELECTIONS,
         N_("Holding Shift restritcs shapes of selected ellipses "
            "to perfect circles."),
     },
@@ -148,6 +148,11 @@ static const StartupTip tips[] = {
         N_("Each volume data have their own metadata.  Display them by "
            "clicking with the right mouse button and choosing Metadata "
            "Browser."),
+    },
+    {
+        GTK_STOCK_INDEX,
+        N_("A record of applied data processing operations can be browser "
+           "using View Log in the channel or volume data right-click menu."),
     },
     /* 1D Views */
     {
@@ -242,8 +247,13 @@ static const StartupTip tips[] = {
     },
     {
         GWY_STOCK_ARITHMETIC,
-        N_("Data Arithmetic works as a scientific calculator, "
+        N_("Data Arithmetic works as a scientific calculator: "
            "just type an arithmetic expression."),
+    },
+    {
+        GWY_STOCK_ARITHMETIC,
+        N_("Data Arithmetic expressions can include values (d), "
+           "mask values (m), derivatives (bx, by) and coordinates (x, y)."),
     },
     {
         GWY_STOCK_FACET_LEVEL,
@@ -277,11 +287,26 @@ static const StartupTip tips[] = {
         N_("Remove Scars in the toolbox runs with the settings last "
            "used in Mark Scars."),
     },
+    {
+        GWY_STOCK_SYNTHETIC_OBJECTS,
+        N_("Data synthesis modules can be also used to modify existing "
+           "images."),
+    },
+    {
+        GWY_STOCK_MARK_WITH,
+        N_("Data Process → Mask → Mark With can set the image mask based on "
+           "another data, mask or presentation."),
+    },
     /* Graphing */
     {
         GWY_STOCK_GRAPH_MEASURE,
         N_("Graph → Critical Dimension measures steps on extracted profile "
            "graphs."),
+    },
+    {
+        GWY_STOCK_GRAPH,
+        N_("All Graph functions are available also in the graph right-click "
+           "menu."),
     },
     /* Tools */
     {
