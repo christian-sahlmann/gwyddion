@@ -31,6 +31,7 @@
 #include <libprocess/grains.h>
 
 #define ONE G_GUINT64_CONSTANT(1)
+#define GRAIN_BARRIER G_MAXINT
 
 typedef struct {
     gint i;
@@ -4447,6 +4448,236 @@ gwy_data_field_fill_voids(GwyDataField *data_field)
         gwy_data_field_invalidate(data_field);
 
     return changed_ever;
+}
+
+static gint
+compare_indices(gconstpointer pa, gconstpointer pb,
+                gpointer user_data)
+{
+    const gdouble *values = (const gdouble*)user_data;
+    gint ia = *(const gint*)pa;
+    gint ib = *(const gint*)pb;
+    gdouble a = values[ia];
+    gdouble b = values[ib];
+
+    if (a < b)
+        return -1;
+    if (a > b)
+        return 1;
+    if (ia < ib)
+        return -1;
+    if (ia > ib)
+        return 1;
+    /* We should not really get here. */
+    return 0;
+}
+
+static gint
+waterpour_decide(const gint *assigned, gint xres, gint yres, gint km)
+{
+    gint i = km/xres, j = km % xres;
+    gint idu = (i ? assigned[km-xres] : GRAIN_BARRIER),
+         idl = (j ? assigned[km-1] : GRAIN_BARRIER),
+         idr = (j < xres-1 ? assigned[km+1] : GRAIN_BARRIER),
+         idd = (i < yres-1 ? assigned[km+xres] : GRAIN_BARRIER);
+
+    if (idu == GRAIN_BARRIER || idu == 0) {
+        if (idl == GRAIN_BARRIER || idl == 0) {
+            if (idr == GRAIN_BARRIER || idr == 0) {
+                if (idd == GRAIN_BARRIER || idd == 0)
+                    return 0;
+                return idd;
+            }
+            if (idd == GRAIN_BARRIER || idd == 0|| idd == idr)
+                return idr;
+            return GRAIN_BARRIER;
+        }
+        if (idr == GRAIN_BARRIER || idr == 0 || idr == idl) {
+            if (idd == GRAIN_BARRIER || idd == 0|| idd == idl)
+                return idl;
+        }
+        return GRAIN_BARRIER;
+    }
+    if (idl == GRAIN_BARRIER || idl == 0 || idl == idu) {
+        if (idr == GRAIN_BARRIER || idr == 0 || idr == idu) {
+            if (idd == GRAIN_BARRIER || idd == 0 || idd == idu)
+                return idu;
+        }
+    }
+    return GRAIN_BARRIER;
+}
+
+static void
+fix_grain_numbers(gint *grains, gint *buf, gint n)
+{
+    gint gno = 0, k;
+
+    for (k = 0; k < n; k++) {
+        gint gnok = grains[k];
+        if (gnok && !buf[gnok]) {
+            buf[gnok] = ++gno;
+        }
+    }
+    for (k = 0; k < n; k++)
+        grains[k] = buf[grains[k]];
+}
+
+/**
+ * gwy_data_field_waterpour:
+ * @data_field: A data field to segmentate.
+ * @result: Data field that will be filled with the resulting mask.  It will be
+ *          resized to the dimensions of @data_field and its properties set
+ *          accordingly.
+ * @grains: Optionally, an array with the same number of items as @data_field.
+ *          If non-%NULL, it will be filled with grain numbers in the same
+ *          manner as gwy_data_field_number_grains().  Pass %NULL to ignore.
+ *
+ * Performs the classical Vincent watershed segmentation of a data field.
+ *
+ * The segmentation always results in the entire field being masked with the
+ * exception of thin (8-connectivity) lines separating the segments (grains).
+ *
+ * Compared to gwy_data_field_grains_mark_watershed(), this algorithm is very
+ * fast.  However, when used alone, it typically results in a serious
+ * oversegmentation as each local minimum gives raise to a grain.  Furthermore,
+ * the full segmentation means that also pixels which would be considered
+ * outside any grain in the topographical sense will be assigned to some
+ * catchment basin.  Therefore, pre- or postprocessing is usually necessary,
+ * using the gradient image or a more sophisticated method.
+ *
+ * Since the algorithm numbers the grains as a side effect, you can pass a
+ * @grains array and get the grain numbers immediatelly, avoiding the
+ * relatively (although not drastically) expensive
+ * gwy_data_field_number_grains() call.
+ *
+ * Returns: The number of segments (grains) in the result, excluding the
+ *          separators, i.e. the same convention as in
+ *          gwy_data_field_number_grains() is used.
+ *
+ * Since: 2.37
+ **/
+gint
+gwy_data_field_waterpour(GwyDataField *data_field,
+                         GwyDataField *result,
+                         gint *grains)
+{
+    IntList *flatqueue;
+    gint xres, yres, n, k, kq, gno;
+    gint *queue, *assigned;
+    const gdouble *d;
+    gdouble *rd;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(result), 0);
+
+    xres = data_field->xres;
+    yres = data_field->yres;
+    n = xres*yres;
+    gwy_data_field_resample(result, xres, yres, GWY_INTERPOLATION_NONE);
+
+    queue = g_new(gint, n);
+    for (k = 0; k < n; k++)
+        queue[k] = k;
+
+    d = data_field->data;
+    g_qsort_with_data(queue, n, sizeof(gint), compare_indices, (gpointer)d);
+
+    assigned = grains ? grains : g_new0(gint, n);
+    flatqueue = int_list_new(0);
+    kq = gno = 0;
+    while (kq < n) {
+        gint len = 1, todo;
+        gdouble z;
+
+        k = queue[kq];
+        z = d[k];
+        while (kq + len < n && d[queue[kq + len]] == z)
+            len++;
+
+        todo = len;
+        while (todo) {
+            gint firstunassigned = GRAIN_BARRIER, m;
+
+            flatqueue->len = 0;
+            for (m = 0; m < len; m++) {
+                gint km = queue[kq + m];
+                gint id = assigned[km];
+                if (id)
+                    continue;
+
+                if ((id = waterpour_decide(assigned, xres, yres, km))) {
+                    /* Must postpone the grain number assignment. There may
+                     * be conflicts later so only queue the position; we have
+                     * to waterpour_decide() again. */
+                    int_list_add(flatqueue, km);
+                }
+                else if (firstunassigned == GRAIN_BARRIER)
+                    firstunassigned = km;
+            }
+
+            if (flatqueue->len) {
+                /* We have some modifications to commit. */
+                for (m = 0; m < flatqueue->len; m++) {
+                    gint km = flatqueue->data[m];
+                    gint id = waterpour_decide(assigned, xres, yres, km);
+                    g_assert(id);
+                    assigned[km] = id;
+                }
+                todo -= flatqueue->len;
+            }
+            else {
+                /* We do not have any modifications.  Start a new grain. */
+                g_assert(firstunassigned != GRAIN_BARRIER);
+                assigned[firstunassigned] = ++gno;
+                todo--;
+            }
+        }
+
+        kq += len;
+    }
+
+    rd = result->data;
+    for (k = 0; k < n; k++) {
+        gint gnok = assigned[k];
+        gnok = (gnok == GRAIN_BARRIER) ? 0 : gnok;
+        assigned[k] = gnok;
+        rd[k] = !!gnok;
+    }
+
+    /* The grain numbering differs from gwy_data_field_number_grains() which
+     * performs the numbering from top left to bottom right.  Since we
+     * guarantee stable grain numbers, renumber the grains to match that.
+     * Recycle @queue as a scratch buffer.  */
+    if (grains) {
+        gwy_clear(queue, gno+1);
+        fix_grain_numbers(grains, queue, n);
+    }
+
+    int_list_free(flatqueue);
+    g_free(queue);
+    if (!grains)
+        g_free(assigned);
+
+    result->xreal = data_field->xreal;
+    result->yreal = data_field->yreal;
+    result->xoff = data_field->xoff;
+    result->yoff = data_field->yoff;
+
+    /* SI Units can be NULL */
+    if (data_field->si_unit_xy && result->si_unit_xy)
+        gwy_serializable_clone(G_OBJECT(data_field->si_unit_xy),
+                               G_OBJECT(result->si_unit_xy));
+    else if (data_field->si_unit_xy && !result->si_unit_xy)
+        result->si_unit_xy = gwy_si_unit_duplicate(data_field->si_unit_xy);
+    else if (!data_field->si_unit_xy && result->si_unit_xy)
+        gwy_object_unref(result->si_unit_xy);
+
+    if (result->si_unit_z)
+        gwy_si_unit_set_from_string(result->si_unit_z, NULL);
+
+    gwy_data_field_invalidate(result);
+
+    return gno;
 }
 
 /************************** Documentation ****************************/
