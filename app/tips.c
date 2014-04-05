@@ -118,6 +118,12 @@ static const StartupTip tips[] = {
         N_("File → Merge imports all data from selected file to the current "
            "file."),
     },
+    {
+        GTK_STOCK_OPEN,
+        N_("Previews in the file open dialog can be shown with plane "
+           "and/or line levelling applied.  Use the switches at the bottom "
+           "of the preview list."),
+    },
     /* Resources */
     {
         GWY_STOCK_PALETTES,
@@ -244,6 +250,11 @@ static const StartupTip tips[] = {
         GWY_STOCK_LEVEL,
         N_("Plane Level offers to use/exclude the masked area if a mask is "
            "present on the data."),
+    },
+    {
+        GWY_STOCK_LINE_LEVEL,
+        N_("Median Line Correction offers to use/exclude the masked area "
+           "if a mask is present on the data."),
     },
     {
         GWY_STOCK_ARITHMETIC,
