@@ -3,6 +3,10 @@
  *  Copyright (C) 2003-2012 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
+ *  The quicksort algorithm was copied from GNU C library,
+ *  Copyright (C) 1991, 1992, 1996, 1997, 1999 Free Software Foundation, Inc.
+ *  See below.
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
@@ -114,6 +118,7 @@ static gint     gwy_data_field_fill_one_grain(gint xres,
                                               gint grain_no,
                                               gint *listv,
                                               gint *listh);
+static void waterpour_sort(const gdouble *d, gint *idx, gint n);
 
 enum { NDIRECTIONS = 12 };
 
@@ -4451,28 +4456,6 @@ gwy_data_field_fill_voids(GwyDataField *data_field)
 }
 
 static gint
-compare_indices(gconstpointer pa, gconstpointer pb,
-                gpointer user_data)
-{
-    const gdouble *values = (const gdouble*)user_data;
-    gint ia = *(const gint*)pa;
-    gint ib = *(const gint*)pb;
-    gdouble a = values[ia];
-    gdouble b = values[ib];
-
-    if (a < b)
-        return -1;
-    if (a > b)
-        return 1;
-    if (ia < ib)
-        return -1;
-    if (ia > ib)
-        return 1;
-    /* We should not really get here. */
-    return 0;
-}
-
-static gint
 waterpour_decide(const gint *assigned, gint xres, gint yres, gint km)
 {
     gint i = km/xres, j = km % xres;
@@ -4505,6 +4488,50 @@ waterpour_decide(const gint *assigned, gint xres, gint yres, gint km)
         }
     }
     return GRAIN_BARRIER;
+}
+
+static gint
+mark_one_grain(const gdouble *d, gint *assigned,
+               gint xres, gint yres,
+               gint km, gint gno,
+               IntList *inqueue, IntList *outqueue)
+{
+    gint m, i, j, count = 1;
+    gdouble z = d[km];
+
+    inqueue->len = 0;
+    int_list_add(inqueue, km);
+    assigned[km] = gno;
+
+    while (inqueue->len) {
+        outqueue->len = 0;
+        for (m = 0; m < inqueue->len; m++) {
+            km = inqueue->data[m];
+            i = km/xres;
+            j = km % xres;
+
+            if (i > 0 && !assigned[km-xres] && d[km-xres] == z)
+                int_list_add(outqueue, km-xres);
+            if (j > 0 && !assigned[km-1] && d[km-1] == z)
+                int_list_add(outqueue, km-1);
+            if (j < xres-1 && !assigned[km+1] && d[km+1] == z)
+                int_list_add(outqueue, km+1);
+            if (i < yres-1 && !assigned[km+xres] && d[km+xres] == z)
+                int_list_add(outqueue, km+xres);
+        }
+
+        inqueue->len = 0;
+        for (m = 0; m < outqueue->len; m++) {
+            km = outqueue->data[m];
+            if (!assigned[km]) {
+                assigned[km] = gno;
+                int_list_add(inqueue, km);
+                count++;
+            }
+        }
+    }
+
+    return count;
 }
 
 static void
@@ -4561,7 +4588,7 @@ gwy_data_field_waterpour(GwyDataField *data_field,
                          GwyDataField *result,
                          gint *grains)
 {
-    IntList *flatqueue;
+    IntList *flatqueue, *fillqueue;
     gint xres, yres, n, k, kq, gno;
     gint *queue, *assigned;
     const gdouble *d;
@@ -4580,13 +4607,14 @@ gwy_data_field_waterpour(GwyDataField *data_field,
         queue[k] = k;
 
     d = data_field->data;
-    g_qsort_with_data(queue, n, sizeof(gint), compare_indices, (gpointer)d);
+    waterpour_sort(d, queue, n);
 
     assigned = grains ? grains : g_new0(gint, n);
     flatqueue = int_list_new(0);
+    fillqueue = int_list_new(0);
     kq = gno = 0;
     while (kq < n) {
-        gint len = 1, todo;
+        gint len = 1, todo, um;
         gdouble z;
 
         k = queue[kq];
@@ -4596,8 +4624,9 @@ gwy_data_field_waterpour(GwyDataField *data_field,
 
         todo = len;
         while (todo) {
-            gint firstunassigned = GRAIN_BARRIER, m;
+            gint m;
 
+            um = GRAIN_BARRIER;
             flatqueue->len = 0;
             for (m = 0; m < len; m++) {
                 gint km = queue[kq + m];
@@ -4611,8 +4640,8 @@ gwy_data_field_waterpour(GwyDataField *data_field,
                      * to waterpour_decide() again. */
                     int_list_add(flatqueue, km);
                 }
-                else if (firstunassigned == GRAIN_BARRIER)
-                    firstunassigned = km;
+                else if (um == GRAIN_BARRIER)
+                    um = m;
             }
 
             if (flatqueue->len) {
@@ -4626,11 +4655,26 @@ gwy_data_field_waterpour(GwyDataField *data_field,
                 todo -= flatqueue->len;
             }
             else {
-                /* We do not have any modifications.  Start a new grain. */
-                g_assert(firstunassigned != GRAIN_BARRIER);
-                assigned[firstunassigned] = ++gno;
-                todo--;
+                /* We do not have any modifications.  All unassigned pixels
+                 * of this height belong to new grains. */
+                break;
             }
+        }
+
+        /* Create new grains from remaining pixels. */
+        while (todo) {
+            gint km = GRAIN_BARRIER;
+            while (um < len) {
+                k = queue[kq + um];
+                um++;
+                if (!assigned[k]) {
+                    km = k;
+                    break;
+                }
+            }
+            g_assert(km != GRAIN_BARRIER);
+            todo -= mark_one_grain(d, assigned, xres, yres,
+                                   km, ++gno, flatqueue, fillqueue);
         }
 
         kq += len;
@@ -4653,6 +4697,7 @@ gwy_data_field_waterpour(GwyDataField *data_field,
         fix_grain_numbers(grains, queue, n);
     }
 
+    int_list_free(fillqueue);
     int_list_free(flatqueue);
     g_free(queue);
     if (!grains)
@@ -4678,6 +4723,238 @@ gwy_data_field_waterpour(GwyDataField *data_field,
     gwy_data_field_invalidate(result);
 
     return gno;
+}
+
+/* Copyright (C) 1991, 1992, 1996, 1997, 1999 Free Software Foundation, Inc.
+   This file is part of the GNU C Library.
+   Written by Douglas C. Schmidt (schmidt@ics.uci.edu).
+
+   The GNU C Library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
+
+   The GNU C Library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+
+   You should have received a copy of the GNU Lesser General Public
+   License along with the GNU C Library; if not, write to the Free
+   Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+   MA 02110-1301, USA  */
+
+/* If you consider tuning this algorithm, you should consult first:
+   Engineering a sort function; Jon Bentley and M. Douglas McIlroy;
+   Software - Practice and Experience; Vol. 23 (11), 1249-1265, 1993.  */
+
+typedef struct {
+    gdouble z;
+    guint k;
+} Pair;
+
+#define is_smaller_pair(a, b) \
+    ((a)->z < (b)->z || ((a)->z == (b)->z && (a)->k < (b)->k))
+
+#define PSWAP(x, y) GWY_SWAP(Pair, x, y)
+
+#define STACK_SIZE      (CHAR_BIT * sizeof(gsize))
+#define PUSH(low, high) ((void) ((top->lo = (low)), (top->hi = (high)), ++top))
+#define POP(low, high)  ((void) (--top, (low = top->lo), (high = top->hi)))
+#define STACK_NOT_EMPTY (stack < top)
+
+/* Order size using quicksort.  This implementation incorporates
+   four optimizations discussed in Sedgewick:
+
+   1. Non-recursive, using an explicit stack of pointer that store the
+   next array partition to sort.  To save time, this maximum amount
+   of space required to store an array of SIZE_MAX is allocated on the
+   stack.  Assuming a 32-bit (64 bit) integer for size_t, this needs
+   only 32 * sizeof(stack_node) == 256 bytes (for 64 bit: 1024 bytes).
+   Pretty cheap, actually.
+
+   2. Chose the pivot element using a median-of-three decision tree.
+   This reduces the probability of selecting a bad pivot value and
+   eliminates certain extraneous comparisons.
+
+   3. Only quicksorts TOTAL_ELEMS / MAX_THRESH partitions, leaving
+   insertion sort to order the MAX_THRESH items within each partition.
+   This is a big win, since insertion sort is faster for small, mostly
+   sorted array segments.
+
+   4. The larger of the two sub-partitions is always pushed onto the
+   stack first, with the algorithm then concentrating on the
+   smaller partition.  This *guarantees* no more than log(n)
+   stack size is needed (actually O(1) in this case)!  */
+
+static void
+sort_pairs(Pair *array,
+           gsize n)
+{
+    /* Note: Specialization makes the insertion sort part relatively more
+     * efficient, after some benchmarking this seems be about the best value
+     * on Athlon 64. */
+    enum { MAX_THRESH = 20 };
+
+    // Stack node declarations used to store unfulfilled partition obligations.
+    typedef struct {
+        Pair *lo;
+        Pair *hi;
+    } stack_node;
+
+    if (n < 2)
+        /* Avoid lossage with unsigned arithmetic below.  */
+        return;
+
+    if (n > MAX_THRESH) {
+        Pair *lo = array;
+        Pair *hi = lo + (n - 1);
+        stack_node stack[STACK_SIZE];
+        stack_node *top = stack + 1;
+
+        while (STACK_NOT_EMPTY) {
+            Pair *left_ptr;
+            Pair *right_ptr;
+
+            /* Select median value from among LO, MID, and HI. Rearrange
+               LO and HI so the three values are sorted. This lowers the
+               probability of picking a pathological pivot value and
+               skips a comparison for both the LEFT_PTR and RIGHT_PTR in
+               the while loops. */
+
+            Pair *mid = lo + ((hi - lo) >> 1);
+
+            if (is_smaller_pair(mid, lo))
+                PSWAP(*mid, *lo);
+            if (is_smaller_pair(hi, mid))
+                PSWAP(*mid, *hi);
+            else
+                goto jump_over;
+            if (is_smaller_pair(mid, lo))
+                PSWAP(*mid, *lo);
+
+jump_over:
+          left_ptr  = lo + 1;
+          right_ptr = hi - 1;
+
+          /* Here's the famous ``collapse the walls'' section of quicksort.
+             Gotta like those tight inner loops!  They are the main reason
+             that this algorithm runs much faster than others. */
+          do {
+              while (is_smaller_pair(left_ptr, mid))
+                  left_ptr++;
+
+              while (is_smaller_pair(mid, right_ptr))
+                  right_ptr--;
+
+              if (left_ptr < right_ptr) {
+                  PSWAP(*left_ptr, *right_ptr);
+                  if (mid == left_ptr)
+                      mid = right_ptr;
+                  else if (mid == right_ptr)
+                      mid = left_ptr;
+                  left_ptr++;
+                  right_ptr--;
+              }
+              else if (left_ptr == right_ptr) {
+                  left_ptr++;
+                  right_ptr--;
+                  break;
+              }
+          }
+          while (left_ptr <= right_ptr);
+
+          /* Set up pointers for next iteration.  First determine whether
+             left and right partitions are below the threshold size.  If so,
+             ignore one or both.  Otherwise, push the larger partition's
+             bounds on the stack and continue sorting the smaller one. */
+
+          if ((gsize)(right_ptr - lo) <= MAX_THRESH) {
+              if ((gsize)(hi - left_ptr) <= MAX_THRESH)
+                  /* Ignore both small partitions. */
+                  POP(lo, hi);
+              else
+                  /* Ignore small left partition. */
+                  lo = left_ptr;
+          }
+          else if ((gsize)(hi - left_ptr) <= MAX_THRESH)
+              /* Ignore small right partition. */
+              hi = right_ptr;
+          else if ((right_ptr - lo) > (hi - left_ptr)) {
+              /* Push larger left partition indices. */
+              PUSH(lo, right_ptr);
+              lo = left_ptr;
+          }
+          else {
+              /* Push larger right partition indices. */
+              PUSH(left_ptr, hi);
+              hi = right_ptr;
+          }
+        }
+    }
+
+    /* Once the BASE_PTR array is partially sorted by quicksort the rest
+       is completely sorted using insertion sort, since this is efficient
+       for partitions below MAX_THRESH size. BASE_PTR points to the beginning
+       of the array to sort, and END_PTR points at the very last element in
+       the array (*not* one beyond it!). */
+
+    {
+        Pair *const end_ptr = array + (n - 1);
+        Pair *tmp_ptr = array;
+        Pair *thresh = MIN(end_ptr, array + MAX_THRESH);
+        Pair *run_ptr;
+
+        /* Find smallest element in first threshold and place it at the
+           array's beginning.  This is the smallest array element,
+           and the operation speeds up insertion sort's inner loop. */
+
+        for (run_ptr = tmp_ptr + 1; run_ptr <= thresh; run_ptr++) {
+            if (is_smaller_pair(run_ptr, tmp_ptr))
+                tmp_ptr = run_ptr;
+        }
+
+        if (tmp_ptr != array)
+            PSWAP(*tmp_ptr, *array);
+
+        /* Insertion sort, running from left-hand-side up to right-hand-side.
+         */
+
+        run_ptr = array + 1;
+        while (++run_ptr <= end_ptr) {
+            tmp_ptr = run_ptr - 1;
+            while (is_smaller_pair(run_ptr, tmp_ptr))
+                tmp_ptr--;
+
+            tmp_ptr++;
+            if (tmp_ptr != run_ptr) {
+                Pair *hi, *lo;
+                Pair d;
+
+                d = *run_ptr;
+                for (hi = lo = run_ptr; --lo >= tmp_ptr; hi = lo)
+                    *hi = *lo;
+                *hi = d;
+            }
+        }
+    }
+}
+
+static void
+waterpour_sort(const gdouble *d, gint *idx, gint n)
+{
+    Pair *pairs = g_new(Pair, n);
+    gint k;
+
+    for (k = 0; k < n; k++)
+        pairs[k] = (Pair){ d[k], k };
+
+    sort_pairs(pairs, n);
+
+    for (k = 0; k < n; k++)
+        idx[k] = pairs[k].k;
+
+    g_free(pairs);
 }
 
 /************************** Documentation ****************************/
