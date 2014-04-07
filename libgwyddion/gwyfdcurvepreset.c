@@ -1,4 +1,3 @@
-
 /*
  *  @(#) $Id$
  *  Copyright (C) 2000-2003 Martin Siler.
@@ -185,10 +184,10 @@ sphcapella_guess(gint n_dat,
 /******************* sphsphcapella ********************************/
 static gdouble
 sphsphcapella_func(gdouble x,
-                G_GNUC_UNUSED gint n_param,
-                const gdouble *b,
-                G_GNUC_UNUSED gpointer user_data,
-                gboolean *fres)
+                   G_GNUC_UNUSED gint n_param,
+                   const gdouble *b,
+                   G_GNUC_UNUSED gpointer user_data,
+                   gboolean *fres)
 {
     /*xc, R, H */
     *fres = TRUE;
@@ -197,10 +196,10 @@ sphsphcapella_func(gdouble x,
 
 static void
 sphsphcapella_guess(gint n_dat,
-                 const gdouble *x,
-                 const gdouble *y,
-                 gdouble *param,
-                 gboolean *fres)
+                    const gdouble *x,
+                    const gdouble *y,
+                    gdouble *param,
+                    gboolean *fres)
 {
     gint i;
     gdouble xmin = x[0], xmax = x[n_dat - 1];
@@ -223,10 +222,10 @@ sphsphcapella_guess(gint n_dat,
 /******************* conecapella ********************************/
 static gdouble
 conecapella_func(gdouble x,
-                G_GNUC_UNUSED gint n_param,
-                const gdouble *b,
-                G_GNUC_UNUSED gpointer user_data,
-                gboolean *fres)
+                 G_GNUC_UNUSED gint n_param,
+                 const gdouble *b,
+                 G_GNUC_UNUSED gpointer user_data,
+                 gboolean *fres)
 {
     /*xc, R, H */
     *fres = TRUE;
@@ -235,10 +234,10 @@ conecapella_func(gdouble x,
 
 static void
 conecapella_guess(gint n_dat,
-                 const gdouble *x,
-                 const gdouble *y,
-                 gdouble *param,
-                 gboolean *fres)
+                  const gdouble *x,
+                  const gdouble *y,
+                  gdouble *param,
+                  gboolean *fres)
 {
     gint i;
     gdouble xmin = x[0], xmax = x[n_dat - 1];
@@ -260,10 +259,10 @@ conecapella_guess(gint n_dat,
 /******************* cylindercapella ********************************/
 static gdouble
 cylindercapella_func(gdouble x,
-                G_GNUC_UNUSED gint n_param,
-                const gdouble *b,
-                G_GNUC_UNUSED gpointer user_data,
-                gboolean *fres)
+                     G_GNUC_UNUSED gint n_param,
+                     const gdouble *b,
+                     G_GNUC_UNUSED gpointer user_data,
+                     gboolean *fres)
 {
     /*xc, R, H */
     *fres = TRUE;
@@ -272,10 +271,10 @@ cylindercapella_func(gdouble x,
 
 static void
 cylindercapella_guess(gint n_dat,
-                 const gdouble *x,
-                 const gdouble *y,
-                 gdouble *param,
-                 gboolean *fres)
+                      const gdouble *x,
+                      const gdouble *y,
+                      gdouble *param,
+                      gboolean *fres)
 {
     gint i;
     gdouble xmin = x[0], xmax = x[n_dat - 1];
@@ -335,10 +334,10 @@ parcapella_guess(gint n_dat,
 /******************* hertz paraboloid ********************************/
 static gdouble
 hertzpar_func(gdouble x,
-                G_GNUC_UNUSED gint n_param,
-                const gdouble *b,
-                G_GNUC_UNUSED gpointer user_data,
-                gboolean *fres)
+              G_GNUC_UNUSED gint n_param,
+              const gdouble *b,
+              G_GNUC_UNUSED gpointer user_data,
+              gboolean *fres)
 {
     /*xc, R, E */
     *fres = TRUE;
@@ -348,10 +347,10 @@ hertzpar_func(gdouble x,
 
 static void
 hertzpar_guess(gint n_dat,
-                 const gdouble *x,
-                 const gdouble *y,
-                 gdouble *param,
-                 gboolean *fres)
+               const gdouble *x,
+               G_GNUC_UNUSED const gdouble *y,
+               gdouble *param,
+               gboolean *fres)
 {
     gint i;
     gdouble xmax = x[n_dat - 1];
