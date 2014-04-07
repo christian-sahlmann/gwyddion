@@ -542,8 +542,10 @@ gwy_data_field_correlate_finalize(GwyComputationState *cstate)
  * @score: Data field to store correlation scores to.
  * @search_width: Search area width.
  * @search_height: Search area height.
- * @window_width: Correlation window width.
- * @window_height: Correlation window height.
+ * @window_width: Correlation window width.  This parameter is not actually
+ *                used.  Pass zero.
+ * @window_height: Correlation window height.  This parameter is not actually
+ *                 used.  Pass zero.
  *
  * Algorithm for matching two different images of the same object under changes.
  *
@@ -559,8 +561,8 @@ gwy_data_field_crosscorrelate(GwyDataField *data_field1,
                               GwyDataField *data_field2, GwyDataField *x_dist,
                               GwyDataField *y_dist, GwyDataField *score,
                               gint search_width, gint search_height,
-                              gint window_width,
-                              gint window_height)
+                              G_GNUC_UNUSED gint window_width,
+                              G_GNUC_UNUSED gint window_height)
 {
     gint xres, yres, i, j, m, n;
     gint imax, jmax;
@@ -753,7 +755,7 @@ gwy_data_field_crosscorrelate_iteration(GwyComputationState *cstate)
     gint xres, yres, m, n, col, row, colmax, rowmax;
     gdouble cormax, lscore;
     gdouble zm, zp, z0, ipos, jpos;
-    
+
 
     xres = state->data_field1->xres;
     yres = state->data_field1->yres;
@@ -850,7 +852,7 @@ gwy_data_field_crosscorrelate_iteration(GwyComputationState *cstate)
             state->y_dist->data[col + xres * row]
                 = (jpos - row)*state->data_field1->yreal/state->data_field1->yres;
         }
-        
+
         state->j++;
         if (state->j == xres - (state->search_width
                                 - state->search_width/2)) {

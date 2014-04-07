@@ -498,68 +498,6 @@ find_isthere(gdouble *xdata, gdouble *ydata,
     return -1;
 }
 
-/* XXX: Cannot it be written readably? */
-static gdouble
-find_nmax(GwyDataField *dfield, gint *mcol, gint *mrow)
-{
-
-    if ((*mcol) > 0
-        && dfield->data[(*mcol) - 1 + (*mrow)*dfield->xres] > dfield->data[(*mcol) + (*mrow)*dfield->xres]) {
-        (*mcol) -= 1;
-        find_nmax(dfield, mcol, mrow);
-    }
-
-    if ((*mrow) > 0
-        && dfield->data[(*mcol) + ((*mrow) - 1)*dfield->xres] > dfield->data[(*mcol) + (*mrow)*dfield->xres]) {
-        (*mrow) -= 1;
-        find_nmax(dfield, mcol, mrow);
-    }
-
-    if ((*mcol) < (dfield->xres - 1)
-        && dfield->data[(*mcol) + 1 + (*mrow)*dfield->xres] > dfield->data[(*mcol) + (*mrow)*dfield->xres]) {
-        (*mcol) += 1;
-        find_nmax(dfield, mcol, mrow);
-    }
-
-    if ((*mrow) < (dfield->yres - 1)
-        && dfield->data[(*mcol) + ((*mrow) + 1)*dfield->xres] > dfield->data[(*mcol) + (*mrow)*dfield->xres]) {
-        (*mrow) += 1;
-        find_nmax(dfield, mcol, mrow);
-    }
-
-    if ((*mcol) > 0
-        && (*mrow) > 0
-        && dfield->data[(*mcol) - 1 + ((*mrow) - 1)*dfield->xres] > dfield->data[(*mcol) + (*mrow)*dfield->xres]) {
-        (*mcol) -= 1;
-        (*mrow) -= 1;
-        find_nmax(dfield, mcol, mrow);
-    }
-
-    if ((*mcol) > 0 && (*mrow) < (dfield->yres - 1)
-        && dfield->data[(*mcol) - 1 + ((*mrow) + 1)*dfield->xres] > dfield->data[(*mcol) + (*mrow)*dfield->xres]) {
-        (*mcol) -= 1;
-        (*mrow) += 1;
-        find_nmax(dfield, mcol, mrow);
-    }
-
-    if ((*mcol) < (dfield->xres - 1) && (*mrow) > 0
-        && dfield->data[(*mcol) + 1 + ((*mrow) - 1)*dfield->xres] > dfield->data[(*mcol) + (*mrow)*dfield->xres]) {
-        (*mcol) += 1;
-        (*mrow) -= 1;
-        find_nmax(dfield, mcol, mrow);
-    }
-
-    if ((*mcol) < (dfield->xres - 1)
-        && (*mrow) < (dfield->yres - 1)
-        && dfield->data[(*mcol) + 1 + ((*mrow) + 1)*dfield->xres] > dfield->data[(*mcol) + (*mrow)*dfield->xres]) {
-        (*mcol) += 1;
-        (*mrow) += 1;
-        find_nmax(dfield, mcol, mrow);
-    }
-
-    return dfield->data[(*mcol) + (*mrow)*dfield->xres];
-}
-
 static void
 get_local_maximum(GwyDataField *dfield,
                   gint mcol, gint mrow,
