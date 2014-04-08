@@ -208,7 +208,6 @@ static GwyContainer* psia_load               (const gchar *filename,
 static GwyContainer* psia_load_tiff          (GwyTIFF *tiff,
                                               GError **error);
 static void          psia_free_image_header  (PSIAImageHeader *header);
-static void          psia_free_spectro_header(PSIASpectroscopyHeader *header);
 static void          psia_read_data_field    (GwyDataField *dfield,
                                               const guchar *p,
                                               PSIADataType data_type,
@@ -220,6 +219,8 @@ static guint         psia_read_image_header  (const guchar *p,
                                               guint version,
                                               PSIAImageHeader *header,
                                               GError **error);
+#if 0
+static void          psia_free_spectro_header(PSIASpectroscopyHeader *header);
 static gboolean      psia_read_spectro_header(const guchar *p,
                                               gsize size,
                                               guint version,
@@ -229,6 +230,7 @@ static void          psia_read_spectra       (GwyContainer *container,
                                               GwyTIFF *tiff,
                                               PSIADataType data_type,
                                               guint version);
+#endif
 static gchar*        psia_wchar_to_utf8      (const guchar **src,
                                               guint len);
 static GwyContainer* psia_get_metadata       (PSIAImageHeader *header,
@@ -468,18 +470,6 @@ psia_free_image_header(PSIAImageHeader *header)
 }
 
 static void
-psia_free_spectro_header(PSIASpectroscopyHeader *header)
-{
-    guint i;
-
-    for (i = 0; i < PSIA_MAX_SPECTRO_CHANNEL; i++) {
-        g_free(header->channel[i].source_name);
-        g_free(header->channel[i].w_unit);
-    }
-    g_free(header->w_unit);
-}
-
-static void
 psia_read_data_field(GwyDataField *dfield,
                      const guchar *p,
                      PSIADataType data_type,
@@ -622,6 +612,7 @@ psia_read_image_header(const guchar *p,
     return bps;
 }
 
+#if 0
 static gboolean
 psia_read_spectro_header(const guchar *p,
                          gsize size,
@@ -709,6 +700,18 @@ psia_read_spectro_header(const guchar *p,
     p += 30;
 
     return TRUE;
+}
+
+static void
+psia_free_spectro_header(PSIASpectroscopyHeader *header)
+{
+    guint i;
+
+    for (i = 0; i < PSIA_MAX_SPECTRO_CHANNEL; i++) {
+        g_free(header->channel[i].source_name);
+        g_free(header->channel[i].w_unit);
+    }
+    g_free(header->w_unit);
 }
 
 static void
@@ -848,6 +851,7 @@ psia_read_spectra(GwyContainer *container,
     }
     psia_free_spectro_header(&specheader);
 }
+#endif
 
 static gchar*
 psia_wchar_to_utf8(const guchar **src,
