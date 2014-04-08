@@ -46,8 +46,6 @@ static void     selection_updated_cb                                (GwySelectio
 static void     index_changed_cb                                    (GwyGraphWindowMeasureDialog *dialog);
 static void     method_cb                                           (GtkWidget *combo,
                                                                      GwyGraphWindowMeasureDialog *dialog);
-static void     status_cb                                           (GwyGraphArea *area,
-                                                                     GwyGraphWindowMeasureDialog *dialog);
 
 GwyEnum method_type[] = {
     { N_("Intersections"),   METHOD_INTERSECTIONS, },
@@ -550,9 +548,6 @@ _gwy_graph_window_measure_dialog_new(GwyGraph *graph)
     gwy_table_attach_spinbutton(table, 0, _("Curve:"), NULL, dialog->index);
     g_signal_connect_swapped(dialog->index, "value-changed",
                              G_CALLBACK(index_changed_cb), dialog);
-    g_signal_connect(GWY_GRAPH_AREA(gwy_graph_get_area(graph)),
-                     "notify::status",
-                     G_CALLBACK(status_cb), dialog);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("Method:"));
@@ -709,13 +704,6 @@ method_cb(GtkWidget *combo, GwyGraphWindowMeasureDialog *dialog)
     gwy_graph_set_status(GWY_GRAPH(dialog->graph), status);
     gwy_graph_window_measure_dialog_connect_selection(dialog);
     selection_updated_cb(dialog->selection, -1, dialog);
-}
-
-static void
-status_cb(GwyGraphArea *area, GwyGraphWindowMeasureDialog *dialog)
-{
-    /* FIXME: Who knows. What should happen when *someone else* changes the
-     * status while the measure dialog is active? */
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

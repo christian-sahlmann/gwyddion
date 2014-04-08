@@ -2801,7 +2801,7 @@ gwy_3d_fmscaletex(gint height,
     GString *s;
     gint tick, width, lw, layw1, layw2, layh;
     gint units_width, label_height, mintickdist, prec = 1;
-    gboolean do_draw = TRUE;
+    G_GNUC_UNUSED gboolean do_draw = TRUE;
     gint size, fmw, l;
     cairo_pattern_t* pattern;
     gdouble zoom;
