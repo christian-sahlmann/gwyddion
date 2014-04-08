@@ -419,7 +419,8 @@ psi_load(const gchar *filename,
     gsize size;
     GArray *tags;
     const guchar *p;
-    guint i, data_len;
+    G_GNUC_UNUSED guint data_len;
+    guint i;
     gboolean fail;
     gdouble *d;
 
