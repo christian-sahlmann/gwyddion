@@ -306,8 +306,8 @@ cd_stepheight(const gdouble *x,
     param[1] = err[1] = 0;
     nout = 0;
     for (i = 0; i < n_dat; i++) {
-        if ((i < (imax - iwidth/3) && i > (imax - iwidth))    // /3 
-            || (i > (imin + iwidth/3) && i < (imin + iwidth))) {       // /3 
+        if ((i < (imax - iwidth/3) && i > (imax - iwidth))    // /3
+            || (i > (imin + iwidth/3) && i < (imin + iwidth))) {       // /3
             param[1] += y[i];
             err[1] += y[i] * y[i];
             nout++;
@@ -321,11 +321,11 @@ cd_stepheight(const gdouble *x,
         param[2] = 0;
         suma = sumb = 0;
         for (i = 0; i < n_dat; i++) {
-            if ((i < (imax - iwidth/3) && i > (imax - iwidth))   
-                || (i > (imin + iwidth/3) && i < (imin + iwidth))) {      
+            if ((i < (imax - iwidth/3) && i > (imax - iwidth))
+                || (i > (imin + iwidth/3) && i < (imin + iwidth))) {
                 param[1] += y[i]/cdata->zunc[i]/cdata->zunc[i];
                 suma += (1/cdata->zunc[i]/cdata->zunc[i]);
-            } 
+            }
             else if (i>(imax + iwidth/3) && i<=(imin - iwidth/3))
             {
                 param[2] += y[i]/cdata->zunc[i]/cdata->zunc[i];
@@ -339,11 +339,11 @@ cd_stepheight(const gdouble *x,
         err[2] = 0;
         na = nb = 0;
         for (i = 0; i < n_dat; i++) {
-            if ((i < (imax - iwidth/3) && i > (imax - iwidth))    
-                || (i > (imin + iwidth/3) && i < (imin + iwidth))) {     
+            if ((i < (imax - iwidth/3) && i > (imax - iwidth))
+                || (i > (imin + iwidth/3) && i < (imin + iwidth))) {
                 err[1] += cdata->zunc[i]*cdata->zunc[i];
                 na++;
-            } 
+            }
             else if (i>(imax + iwidth/3) && i<=(imin - iwidth/3))
             {
                 printf("%g\n", cdata->zunc[i]);
@@ -786,7 +786,7 @@ gwy_cdline_fit(GwyCDLine* cdline,
  *
  * Performs a critical dimension evaulation (fit), allowing user to pass uncertainties.
  **/
-void         
+void
 gwy_cdline_fit_with_caldata (GwyCDLine* cdline,
                              gint n_dat,
                              const gdouble *x,
