@@ -80,6 +80,30 @@ cat >check_deps_versions.ignore <<':'
 ':'
 :
 
+cat >check_symbols <<':'
+^Exported undeclared symbol (libgwyapp): gwy_app_main_window_set$
+^Evil symbol (pygwy): create_environment$
+^Evil symbol (pygwy): destroy_environment$
+^Evil symbol (pygwy): gwy_app_data_browser_get_data_ids_wrap$
+^Evil symbol (pygwy): gwy_data_field_area_fit_polynom_wrap$
+^Evil symbol (pygwy): gwy_data_field_circular_area_extract_wrap$
+^Evil symbol (pygwy): gwy_data_field_create_full_mask$
+^Evil symbol (pygwy): gwy_data_field_elliptic_area_extract_wrap$
+^Evil symbol (pygwy): gwy_data_field_fit_polynom_wrap$
+^Evil symbol (pygwy): gwy_data_field_get_profile_wrap$
+^Evil symbol (pygwy): gwy_get_key_from_name$
+^Evil symbol (pygwy): gwy_selection_get_data_wrap$
+^Evil symbol (pygwy): gwy_tip_cmap_wrap$
+^Evil symbol (pygwy): gwy_tip_dilation_wrap$
+^Evil symbol (pygwy): gwy_tip_erosion_wrap$
+^Evil symbol (pygwy): gwy_tip_estimate_full_wrap$
+^Evil symbol (pygwy): gwy_tip_estimate_partial_wrap$
+^Evil symbol (pygwy): pygwy_initialize$
+^Evil symbol (pygwy): pygwy_register_console$
+^Evil symbol (pygwy): pygwy_run_string$
+':'
+:
+
 function printerr() {
   f=$1
   shift
