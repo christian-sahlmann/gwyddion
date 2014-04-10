@@ -80,7 +80,7 @@ cat >check_deps_versions.ignore <<':'
 ':'
 :
 
-cat >check_symbols <<':'
+cat >check_symbols.ignore <<':'
 ^Exported undeclared symbol (libgwyapp): gwy_app_main_window_set$
 ^Evil symbol (pygwy): create_environment$
 ^Evil symbol (pygwy): destroy_environment$
