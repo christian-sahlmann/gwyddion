@@ -210,7 +210,7 @@ xydenoise_do(XYdenoiseArgs *args)
     GwyContainer *data;
     GwyDataField *dfieldx, *rx, *ix, *dfieldy, *ry, *iy, *result, *iresult;
     gint i, newid, xres, yres;
-    gdouble *rxdata, *rydata, *ixdata, *iydata, xmodule, xphase, ymodule, yphase;
+    gdouble *rxdata, *rydata, *ixdata, *iydata;
     GwyWindowingType window = GWY_WINDOWING_NONE;
     GwyInterpolationType interp = GWY_INTERPOLATION_LINEAR;
 
@@ -254,10 +254,10 @@ xydenoise_do(XYdenoiseArgs *args)
     gwy_app_wait_set_message(_("Computing image..."));
 
     for (i = 0; i < xres*yres; i++) {
-        xmodule = sqrt(rxdata[i]*rxdata[i] + ixdata[i]*ixdata[i]);
-        xphase = atan2(ixdata[i],rxdata[i]);
-        ymodule = sqrt(rydata[i]*rydata[i] + iydata[i]*iydata[i]);
-        yphase = atan2(iydata[i],rydata[i]);
+        gdouble xmodule = sqrt(rxdata[i]*rxdata[i] + ixdata[i]*ixdata[i]);
+        gdouble xphase = atan2(ixdata[i],rxdata[i]);
+        gdouble ymodule = sqrt(rydata[i]*rydata[i] + iydata[i]*iydata[i]);
+        /*gdouble yphase = atan2(iydata[i],rydata[i]);*/
         rxdata[i] = MIN(xmodule, ymodule)*cos(xphase);
         ixdata[i] = MIN(xmodule, ymodule)*sin(xphase);
     }
