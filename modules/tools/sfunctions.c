@@ -677,7 +677,7 @@ static void
 gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
 {
     GwyPlainTool *plain_tool;
-    GwyGraphCurveModel *gcmodel, *ugcmodel;
+    GwyGraphCurveModel *gcmodel, *ugcmodel = NULL;
     GwyDataField *mask_field = NULL;
     gdouble sel[4];
     gint isel[4] = { sizeof("Die, die, GCC!"), 0, 0, 0 };
@@ -916,19 +916,20 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
     }
     else {
         gcmodel = gwy_graph_model_get_curve(tool->gmodel, 0);
-        if (tool->has_calibration && tool->has_uline)
-           if (gwy_graph_model_get_n_curves(tool->gmodel)<2)
-           {
+        if (tool->has_calibration && tool->has_uline) {
+           if (gwy_graph_model_get_n_curves(tool->gmodel) < 2) {
                ugcmodel = gwy_graph_curve_model_new();
                gwy_graph_model_add_curve(tool->gmodel, ugcmodel);
                g_object_set(ugcmodel, "mode", GWY_GRAPH_CURVE_LINE, NULL);
                g_object_unref(ugcmodel);
            }
-           else ugcmodel = gwy_graph_model_get_curve(tool->gmodel, 1);
-        else if (gwy_graph_model_get_n_curves(tool->gmodel)>1)
+           else {
+               ugcmodel = gwy_graph_model_get_curve(tool->gmodel, 1);
+           }
+        }
+        else if (gwy_graph_model_get_n_curves(tool->gmodel) > 1)
            gwy_graph_model_remove_curve(tool->gmodel, 1);
     }
-
 
     gwy_graph_curve_model_set_data_from_dataline(gcmodel, tool->line, 0, 0);
     title = gettext(gwy_enum_to_string(tool->args.output_type,
@@ -936,9 +937,10 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
 
     g_object_set(gcmodel, "description", title, NULL);
 
-    if (tool->has_calibration && tool->has_uline)
-    {
-        gwy_graph_curve_model_set_data_from_dataline(ugcmodel, tool->uline, 0, 0);
+    if (tool->has_calibration && tool->has_uline) {
+        g_assert(ugcmodel);
+        gwy_graph_curve_model_set_data_from_dataline(ugcmodel, tool->uline,
+                                                     0, 0);
         g_object_set(ugcmodel, "description", "uncertainty", NULL);
     }
 
