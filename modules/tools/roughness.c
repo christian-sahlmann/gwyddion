@@ -1585,7 +1585,7 @@ gwy_tool_roughness_peaks(GwyDataLine *data_line, gdouble *peaks,
     gint i, res, c=-1;
     gdouble val, val_prev;
     gdouble *p;
-    gboolean under = FALSE;
+    G_GNUC_UNUSED gboolean under = FALSE;
 
     g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0);
 
