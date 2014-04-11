@@ -93,6 +93,7 @@ process_LTLIBRARIES = \
 	volumize.la \
 	volumize_layers.la \
 	wave_synth.la \
+	wpour_mark.la \
 	xydenoise.la
 
 EXTRA_DIST = \
@@ -202,6 +203,7 @@ unrotate_la_SOURCES            = unrotate.c
 volumize_la_SOURCES            = volumize.c
 volumize_layers_la_SOURCES     = volumize_layers.c
 wave_synth_la_SOURCES          = wave_synth.c dimensions.h synth.h
+wpour_mark_la_SOURCES          = wpour_mark.c
 xydenoise_la_SOURCES           = xydenoise.c
 
 clean-local:
