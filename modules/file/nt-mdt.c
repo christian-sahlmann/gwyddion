@@ -2908,7 +2908,7 @@ extract_brick(MDTMDAFrame  *dataframe,
     gint xres, yres, zres;
     gint i, j, k, nmes;
     gdouble xreal, yreal, zscale, wscale, w, zamp = 1;
-    gdouble *data, **sdata=NULL, *tscale = NULL;
+    gdouble *data, **sdata = NULL, *tscale = NULL;
     GwyDataLine *cal;
     MDTMDACalibration *xAxis, *yAxis, *zAxis, *wAxis, *tAxis;
     MDTXMLComment comment;
@@ -3159,7 +3159,7 @@ extract_brick(MDTMDAFrame  *dataframe,
             sdata = g_malloc((nmes - 1) * sizeof(gdouble*));
             tscale = g_malloc((nmes - 1) * sizeof(gdouble));
             *scanData = g_malloc(nmes * sizeof(**scanData));
-            *scanNames= g_malloc(nmes * sizeof(gchar*));
+            *scanNames = g_malloc(nmes * sizeof(gchar*));
             for (i = 0; i < nmes - 1; i++) {
                 (*scanData)[i] = gwy_data_field_new(xres, yres,
                                                     xres *xreal, yres *yreal,
@@ -3167,7 +3167,7 @@ extract_brick(MDTMDAFrame  *dataframe,
                 gwy_data_field_set_si_unit_xy((*scanData)[i], siunitx);
 
                 tAxis = &dataframe->mesurands[i];
-                (*scanNames)[i] = tAxis->name && tAxis->nameLen ? g_strndup(tAxis->name,tAxis->nameLen) : NULL;
+                (*scanNames)[i] = tAxis->name && tAxis->nameLen ? g_strndup(tAxis->name, tAxis->nameLen) : NULL;
                 if (tAxis->unit && tAxis->unitLen) {
                     unit = g_strndup(tAxis->unit, tAxis->unitLen);
                     siunitt = gwy_si_unit_new_parse(unit, &power10t);
@@ -3501,8 +3501,7 @@ spec_start_element (G_GNUC_UNUSED GMarkupParseContext *context,
             }
         }
     }
-    else if (gwy_strequal(element_name, "Meas"))
-    {
+    else if (gwy_strequal(element_name, "Meas")) {
         if (!frame->measInfo)
             ++(frame->measCount);
         else {
@@ -3553,8 +3552,7 @@ spec_start_element (G_GNUC_UNUSED GMarkupParseContext *context,
                           &axisInfo, sizeof(axisInfo));
         }
     }
-    else if (gwy_strequal(element_name, "Name"))
-    {
+    else if (gwy_strequal(element_name, "Name")) {
         if (!frame->nameInfo)
             ++(frame->nameCount);
         else {
