@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-04-08 03:58+0200\n"
-"PO-Revision-Date: 2014-04-08 22:18+0300\n"
+"POT-Creation-Date: 2014-04-12 03:58+0200\n"
+"PO-Revision-Date: 2014-04-12 21:57+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -501,7 +501,7 @@ msgid "Hat"
 msgstr "Шляпа"
 
 #: libprocess/gwyprocessenums.c:126
-#: libgwydgets/gwygraphwindowmeasuredialog.c:54
+#: libgwydgets/gwygraphwindowmeasuredialog.c:52
 #: modules/process/convolution_filter.c:427
 msgid "Horizontal"
 msgstr "Горизонтальное"
@@ -903,7 +903,8 @@ msgstr "точек"
 #: modules/process/sphere-revolve.c:218 modules/process/tilt.c:160
 #: modules/process/tip_model.c:170 modules/process/unrotate.c:228
 #: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:363
-#: modules/volume/volume_calibrate.c:371 modules/volume/volume_extract.c:331
+#: modules/process/wpour_mark.c:209 modules/volume/volume_calibrate.c:371
+#: modules/volume/volume_extract.c:331
 msgid "_Reset"
 msgstr "_Сброс"
 
@@ -948,7 +949,7 @@ msgstr "Выбор градиента"
 msgid "Hidden"
 msgstr "Скрытый"
 
-#: libgwydgets/gwydgetenums.c:47 libgwydgets/gwygraphwindowmeasuredialog.c:577
+#: libgwydgets/gwydgetenums.c:47 libgwydgets/gwygraphwindowmeasuredialog.c:572
 #: modules/tools/selectionmanager.c:259
 msgid "Points"
 msgstr "Точки"
@@ -1143,40 +1144,40 @@ msgstr "Сделать ось x логарифмической"
 msgid "Toggle logarithmic y axis"
 msgstr "Сделать ось y логарифмической"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:53
+#: libgwydgets/gwygraphwindowmeasuredialog.c:51
 msgid "Intersections"
 msgstr "Пересечения"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:55
+#: libgwydgets/gwygraphwindowmeasuredialog.c:53
 msgid "Points anywhere"
 msgstr "Точки в любом  месте"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:396
-#: libgwydgets/gwygraphwindowmeasuredialog.c:585 modules/tools/linestats.c:156
+#: libgwydgets/gwygraphwindowmeasuredialog.c:394
+#: libgwydgets/gwygraphwindowmeasuredialog.c:580 modules/tools/linestats.c:156
 #: modules/tools/roughness.c:524
 msgid "Length"
 msgstr "Длина"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:400
-#: libgwydgets/gwygraphwindowmeasuredialog.c:593 app/gwyplaintool.c:1026
+#: libgwydgets/gwygraphwindowmeasuredialog.c:398
+#: libgwydgets/gwygraphwindowmeasuredialog.c:588 app/gwyplaintool.c:1026
 #: modules/process/obj_synth.c:571 modules/process/pat_synth.c:887
 #: modules/process/pat_synth.c:1188 modules/process/pat_synth.c:1523
 msgid "Height"
 msgstr "Высота"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:528
+#: libgwydgets/gwygraphwindowmeasuredialog.c:526
 msgid "Measure Distances"
 msgstr "Измерение расстояний"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:550
+#: libgwydgets/gwygraphwindowmeasuredialog.c:548
 msgid "Curve:"
 msgstr "Кривая:"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:558
+#: libgwydgets/gwygraphwindowmeasuredialog.c:553
 msgid "Method:"
 msgstr "Способ:"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:597
+#: libgwydgets/gwygraphwindowmeasuredialog.c:592
 #: modules/process/crosscor.c:236
 msgid "Angle"
 msgstr "Угол"
@@ -2930,8 +2931,8 @@ msgstr "Экспортировать текст"
 #: modules/process/fft_filter_1d.c:296 modules/process/grain_dist.c:306
 #: modules/process/grain_edge.c:270 modules/process/grain_mark.c:345
 #: modules/process/grain_rem_threshold.c:328 modules/process/grain_wshed.c:278
-#: modules/process/tip_blind.c:360 modules/tools/spotremove.c:317
-#: modules/tools/stats.c:379
+#: modules/process/tip_blind.c:360 modules/process/wpour_mark.c:263
+#: modules/tools/spotremove.c:317 modules/tools/stats.c:379
 msgid "Options"
 msgstr "Параметры"
 
@@ -3379,7 +3380,7 @@ msgid "Unsupported sample format"
 msgstr "Неподдерживаемый формат отсчёта"
 
 #: modules/file/gwytiff.h:1030 modules/file/matfile.c:276
-#: modules/file/matfile.c:298 modules/file/psia.c:351 modules/file/zemax.c:168
+#: modules/file/matfile.c:298 modules/file/psia.c:353 modules/file/zemax.c:168
 msgid "File is truncated."
 msgstr "Файл усечен."
 
@@ -3404,19 +3405,19 @@ msgstr "Импортирует файлы Hierarchical Data Format (HDF) вер�
 msgid "Psi HDF4 files (.hdf)"
 msgstr "Файлы Psi HDF4 (.hdf)"
 
-#: modules/file/hdf4file.c:540
+#: modules/file/hdf4file.c:541
 msgid "PSI binary header is too short."
 msgstr "Двоичный заголовок PSI слишком короток."
 
-#: modules/file/hdf4file.c:653
+#: modules/file/hdf4file.c:654
 msgid "Data descriptor header is truncated."
 msgstr "Заголовок описания данных неполон."
 
-#: modules/file/hdf4file.c:663
+#: modules/file/hdf4file.c:664
 msgid "Data descriptor block is truncated."
 msgstr "Блок описания данных неполон."
 
-#: modules/file/hdf4file.c:697
+#: modules/file/hdf4file.c:698
 msgid "HDF data with `native' type is not supported."
 msgstr "Данные HDF с типом `native' не поддерживаются."
 
@@ -4768,24 +4769,24 @@ msgstr "Импорт файлов данных Pacific Nanotechnology PNI."
 msgid "PNI files (.pni)"
 msgstr "Файлы PNI (.pni)"
 
-#: modules/file/psia.c:240
+#: modules/file/psia.c:242
 msgid "Imports Park Systems data files."
 msgstr "Импортирует файлы данных Park Systems."
 
-#: modules/file/psia.c:253
+#: modules/file/psia.c:255
 msgid "Park Systems data files (.tiff, .tif)"
 msgstr "Файлы данных Park Systems (.tiff, .tif)"
 
-#: modules/file/psia.c:341
+#: modules/file/psia.c:343
 msgid "Data tag is missing."
 msgstr "Тег данных отсутствует."
 
-#: modules/file/psia.c:524
+#: modules/file/psia.c:514
 #, c-format
 msgid "Header is too short (only %lu bytes)."
 msgstr "Заголовок слишком короткий (всего %lu байт)."
 
-#: modules/file/psia.c:640
+#: modules/file/psia.c:631
 #, c-format
 msgid "Spectroscopy header is too short (only %lu bytes)."
 msgstr "Заголовок спектроскопии слишком короткий (всего %lu байт)."
@@ -4923,9 +4924,9 @@ msgstr "Предустановки"
 #: modules/process/grain_rem_threshold.c:226 modules/process/grain_wshed.c:180
 #: modules/process/mark_with.c:211 modules/process/polydistort.c:213
 #: modules/process/scars.c:474 modules/process/synth.h:508
-#: modules/process/tip_model.c:167 modules/tools/linestats.c:421
-#: modules/tools/sfunctions.c:476 modules/tools/stats.c:436
-#: modules/volume/volume_extract.c:328
+#: modules/process/tip_model.c:167 modules/process/wpour_mark.c:204
+#: modules/tools/linestats.c:421 modules/tools/sfunctions.c:476
+#: modules/tools/stats.c:436 modules/volume/volume_extract.c:328
 msgid "_Update"
 msgstr "О_бновить"
 
@@ -6808,8 +6809,8 @@ msgstr "Обрезать до действительных данных"
 #: modules/process/grain_edge.c:286 modules/process/grain_mark.c:378
 #: modules/process/grain_rem_threshold.c:372 modules/process/mark_with.c:355
 #: modules/process/polydistort.c:335 modules/process/scars.c:582
-#: modules/process/synth.h:512 modules/volume/volume_extract.c:423
-#: modules/volume/volume_extract.c:503
+#: modules/process/synth.h:512 modules/process/wpour_mark.c:288
+#: modules/volume/volume_extract.c:423 modules/volume/volume_extract.c:503
 msgid "I_nstant updates"
 msgstr "Мгновенное об_новление"
 
@@ -7636,7 +7637,7 @@ msgstr "_Линии дрейфа"
 #: modules/process/drift.c:358 modules/process/facet_analysis.c:412
 #: modules/process/grain_edge.c:279 modules/process/grain_mark.c:371
 #: modules/process/grain_rem_threshold.c:365 modules/process/grain_wshed.c:296
-#: modules/process/scars.c:575
+#: modules/process/scars.c:575 modules/process/wpour_mark.c:281
 msgid "_Mask color:"
 msgstr "_Цвет маски:"
 
@@ -8661,7 +8662,7 @@ msgstr "Простая статистика зёрен"
 
 #: modules/process/grain_dist.c:187
 msgid "/_Grains/Select _Inscribed Discs"
-msgstr "/_Зёрна/Выбрать вписанные _диски"
+msgstr "/_Зёрна/Выделить вписанные _диски"
 
 #: modules/process/grain_dist.c:191
 msgid "Create a selection visualising discs incribed into grains"
@@ -8669,7 +8670,7 @@ msgstr "Создать выделенную область, показывающ
 
 #: modules/process/grain_dist.c:195
 msgid "/_Grains/Select _Excscribed Circles"
-msgstr "/_Зёрна/Выбрать о_писанные окружности"
+msgstr "/_Зёрна/Выделить о_писанные окружности"
 
 #: modules/process/grain_dist.c:199
 msgid "Create a selection visualising grain circumcircles"
@@ -8797,7 +8798,7 @@ msgid "_Curvature:"
 msgstr "_Кривизна:"
 
 #: modules/process/grain_mark.c:349 modules/process/grain_rem_threshold.c:332
-#: modules/process/grain_wshed.c:282
+#: modules/process/grain_wshed.c:282 modules/process/wpour_mark.c:267
 msgid "_Invert height"
 msgstr "_Инвертировать высоту"
 
@@ -11178,6 +11179,30 @@ msgstr "Плоская вершина"
 #: modules/process/wave_synth.c:600
 msgid "Displacement"
 msgstr "Смещение"
+
+#: modules/process/wpour_mark.c:120
+msgid "Segmentates image using watershed with pre- and postprocessing."
+msgstr "Разделяет изображение используя водораздел с пред- и постобработкой."
+
+#: modules/process/wpour_mark.c:134
+msgid "/_Grains/_Mark by Segmentation..."
+msgstr "/Зёрн_а/Пометить _сегментацией..."
+
+#: modules/process/wpour_mark.c:138
+msgid "Segmentate using watershed "
+msgstr "Пометить используя классический водораздел"
+
+#: modules/process/wpour_mark.c:201
+msgid "Segmentate by Watershed"
+msgstr "Пометить классическим водоразделом"
+
+#: modules/process/wpour_mark.c:251
+msgid "Preprocessing"
+msgstr "Предобработка"
+
+#: modules/process/wpour_mark.c:257
+msgid "Postprocessing"
+msgstr "Постобработка"
 
 #: modules/process/xydenoise.c:65
 msgid "Denoises measurement on basis of two orthogonal scans."
