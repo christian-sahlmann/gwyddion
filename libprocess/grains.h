@@ -146,6 +146,9 @@ gboolean gwy_data_field_fill_voids              (GwyDataField *data_field);
 gint     gwy_data_field_waterpour               (GwyDataField *data_field,
                                                  GwyDataField *result,
                                                  gint *grains);
+void     gwy_data_field_mark_extrema            (GwyDataField *dfield,
+                                                 GwyDataField *extrema,
+                                                 gboolean maxima);
 
 G_END_DECLS
 
