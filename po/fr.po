@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-04-02 11:55+0200\n"
-"PO-Revision-Date: 2014-03-27 21:57+0100\n"
+"POT-Creation-Date: 2014-04-12 03:58+0200\n"
+"PO-Revision-Date: 2014-04-15 21:21+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -84,43 +84,43 @@ msgstr "La pile n'est pas exécutable"
 msgid "Unresolved identifiers"
 msgstr "Identifiants non résolus"
 
-#: libgwyddion/gwyfdcurvepreset.c:785
+#: libgwyddion/gwyfdcurvepreset.c:784
 msgid "vdW: semisphere"
 msgstr "vdW : hémisphère"
 
-#: libgwyddion/gwyfdcurvepreset.c:800
+#: libgwyddion/gwyfdcurvepreset.c:799
 msgid "vdW: pyramide"
 msgstr "vdW : pyramide"
 
-#: libgwyddion/gwyfdcurvepreset.c:813
+#: libgwyddion/gwyfdcurvepreset.c:812
 msgid "vdW: truncated pyramid"
 msgstr "vdW : pyramide tronquée"
 
-#: libgwyddion/gwyfdcurvepreset.c:826
+#: libgwyddion/gwyfdcurvepreset.c:825
 msgid "vdW: sphere"
 msgstr "vdW : sphère"
 
-#: libgwyddion/gwyfdcurvepreset.c:839
+#: libgwyddion/gwyfdcurvepreset.c:838
 msgid "vdW: offset sphere"
 msgstr "vdW : sphère décalée"
 
-#: libgwyddion/gwyfdcurvepreset.c:852
+#: libgwyddion/gwyfdcurvepreset.c:851
 msgid "vdW: two spheres"
 msgstr "vdW : deux sphères"
 
-#: libgwyddion/gwyfdcurvepreset.c:865
+#: libgwyddion/gwyfdcurvepreset.c:864
 msgid "vdW: cone"
 msgstr "vdW : cône"
 
-#: libgwyddion/gwyfdcurvepreset.c:878
+#: libgwyddion/gwyfdcurvepreset.c:877
 msgid "vdW: cylinder"
 msgstr "vdW : cylindre"
 
-#: libgwyddion/gwyfdcurvepreset.c:891
+#: libgwyddion/gwyfdcurvepreset.c:890
 msgid "vdW: paraboloid"
 msgstr "vdW : parabole"
 
-#: libgwyddion/gwyfdcurvepreset.c:904
+#: libgwyddion/gwyfdcurvepreset.c:903
 msgid "contact: Hertz (paraboloid)"
 msgstr "contact : Hertz (paraboloïde)"
 
@@ -420,7 +420,7 @@ msgstr "Orientation de l'ellipse équivalente"
 msgid "Id"
 msgstr "Identifiant"
 
-#: libprocess/gwygrainvalue.c:1082 modules/process/wave_synth.c:500
+#: libprocess/gwygrainvalue.c:1082 modules/process/wave_synth.c:501
 #: modules/tools/readvalue.c:262
 msgid "Position"
 msgstr "Position"
@@ -443,8 +443,8 @@ msgstr "Volume"
 msgid "Boundary"
 msgstr "Bord"
 
-#: libprocess/gwygrainvalue.c:1087 modules/process/pat_synth.c:869
-#: modules/process/pat_synth.c:1170 modules/process/pat_synth.c:1505
+#: libprocess/gwygrainvalue.c:1087 modules/process/pat_synth.c:870
+#: modules/process/pat_synth.c:1171 modules/process/pat_synth.c:1506
 #: modules/tools/linestats.c:157
 msgid "Slope"
 msgstr "Pente"
@@ -498,7 +498,7 @@ msgid "Hat"
 msgstr "Plateau"
 
 #: libprocess/gwyprocessenums.c:126
-#: libgwydgets/gwygraphwindowmeasuredialog.c:54
+#: libgwydgets/gwygraphwindowmeasuredialog.c:52
 #: modules/process/convolution_filter.c:427
 msgid "Horizontal"
 msgstr "Horizontal"
@@ -875,9 +875,9 @@ msgstr "pixels"
 #: modules/file/pixmap.c:1073 modules/file/pixmap.c:3150
 #: modules/file/rawfile.c:401 modules/process/angle_dist.c:172
 #: modules/process/calcoefs_new.c:348 modules/process/calibrate.c:385
-#: modules/process/col_synth.c:327 modules/process/correct_affine.c:293
+#: modules/process/col_synth.c:328 modules/process/correct_affine.c:293
 #: modules/process/curvature.c:605 modules/process/cwt.c:135
-#: modules/process/deposit_synth.c:359 modules/process/domain_synth.c:367
+#: modules/process/deposit_synth.c:359 modules/process/domain_synth.c:368
 #: modules/process/drift.c:240 modules/process/dwt.c:166
 #: modules/process/dwtanisotropy.c:184 modules/process/edge.c:684
 #: modules/process/extend.c:191 modules/process/facet-level.c:285
@@ -887,18 +887,19 @@ msgstr "pixels"
 #: modules/process/grain_mark.c:264 modules/process/grain_rem_threshold.c:229
 #: modules/process/grain_wshed.c:183 modules/process/hough.c:179
 #: modules/process/latsim.c:158 modules/process/level.c:267
-#: modules/process/linecorrect.c:281 modules/process/lno_synth.c:441
+#: modules/process/linecorrect.c:281 modules/process/lno_synth.c:442
 #: modules/process/local_contrast.c:130 modules/process/median-bg.c:179
-#: modules/process/noise_synth.c:352 modules/process/obj_synth.c:437
-#: modules/process/pat_synth.c:407 modules/process/pid.c:199
+#: modules/process/noise_synth.c:353 modules/process/obj_synth.c:438
+#: modules/process/pat_synth.c:408 modules/process/pid.c:199
 #: modules/process/polydistort.c:218 modules/process/polylevel.c:377
 #: modules/process/rank.c:132 modules/process/rotate.c:266
 #: modules/process/scale.c:196 modules/process/scars.c:477
 #: modules/process/shade.c:216 modules/process/slope_dist.c:203
 #: modules/process/sphere-revolve.c:218 modules/process/tilt.c:160
 #: modules/process/tip_model.c:170 modules/process/unrotate.c:228
-#: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:362
-#: modules/volume/volume_calibrate.c:371 modules/volume/volume_extract.c:331
+#: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:363
+#: modules/process/wpour_mark.c:209 modules/volume/volume_calibrate.c:371
+#: modules/volume/volume_extract.c:331
 msgid "_Reset"
 msgstr "_Remise à zéro"
 
@@ -943,7 +944,7 @@ msgstr "Choisir le gradient"
 msgid "Hidden"
 msgstr "Caché"
 
-#: libgwydgets/gwydgetenums.c:47 libgwydgets/gwygraphwindowmeasuredialog.c:577
+#: libgwydgets/gwydgetenums.c:47 libgwydgets/gwygraphwindowmeasuredialog.c:572
 #: modules/tools/selectionmanager.c:259
 msgid "Points"
 msgstr "Points"
@@ -1138,40 +1139,40 @@ msgstr "Passer à l'échelle logarithmique en X"
 msgid "Toggle logarithmic y axis"
 msgstr "Passer à l'échelle logarithmique en Y"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:53
+#: libgwydgets/gwygraphwindowmeasuredialog.c:51
 msgid "Intersections"
 msgstr "Intersections"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:55
+#: libgwydgets/gwygraphwindowmeasuredialog.c:53
 msgid "Points anywhere"
 msgstr "Points quelconques"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:396
-#: libgwydgets/gwygraphwindowmeasuredialog.c:585 modules/tools/linestats.c:156
+#: libgwydgets/gwygraphwindowmeasuredialog.c:394
+#: libgwydgets/gwygraphwindowmeasuredialog.c:580 modules/tools/linestats.c:156
 #: modules/tools/roughness.c:524
 msgid "Length"
 msgstr "Longueur"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:400
-#: libgwydgets/gwygraphwindowmeasuredialog.c:593 app/gwyplaintool.c:1026
-#: modules/process/obj_synth.c:570 modules/process/pat_synth.c:886
-#: modules/process/pat_synth.c:1187 modules/process/pat_synth.c:1522
+#: libgwydgets/gwygraphwindowmeasuredialog.c:398
+#: libgwydgets/gwygraphwindowmeasuredialog.c:588 app/gwyplaintool.c:1026
+#: modules/process/obj_synth.c:571 modules/process/pat_synth.c:887
+#: modules/process/pat_synth.c:1188 modules/process/pat_synth.c:1523
 msgid "Height"
 msgstr "Hauteur"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:528
+#: libgwydgets/gwygraphwindowmeasuredialog.c:526
 msgid "Measure Distances"
 msgstr "Mesure"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:550
+#: libgwydgets/gwygraphwindowmeasuredialog.c:548
 msgid "Curve:"
 msgstr "Courbe :"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:558
+#: libgwydgets/gwygraphwindowmeasuredialog.c:553
 msgid "Method:"
 msgstr "Méthode :"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:597
+#: libgwydgets/gwygraphwindowmeasuredialog.c:592
 #: modules/process/crosscor.c:236
 msgid "Angle"
 msgstr "Angle"
@@ -1868,7 +1869,7 @@ msgstr "Origine"
 #: app/gwyplaintool.c:1019 modules/file/rawfile.c:961
 #: modules/process/convolution_filter.c:364
 #: modules/process/convolution_filter.c:568 modules/process/neural.c:414
-#: modules/process/obj_synth.c:540 modules/process/pat_synth.c:1488
+#: modules/process/obj_synth.c:541 modules/process/pat_synth.c:1489
 msgid "Size"
 msgstr "Taille"
 
@@ -2142,7 +2143,16 @@ msgstr ""
 "Fichier→ Fusionner importe toute les données du fichier sélectionné vers le "
 "fichier courant."
 
-#: app/tips.c:124
+#: app/tips.c:123
+msgid ""
+"Previews in the file open dialog can be shown with plane and/or line "
+"levelling applied.  Use the switches at the bottom of the preview list."
+msgstr ""
+"L'aperçu des données dans la fenêtre d'ouverture des fichiers peut être "
+"affiché en appliquant une mise à niveau du plan et/ou des lignes. Utilisez "
+"pour cela les icônes situées sous la fenêtre d'aperçu."
+
+#: app/tips.c:130
 msgid ""
 "Your favorite false color gradient can be set as default in the gradient "
 "editor: Edit → Color Gradients.  The default gradient is shown in bold face."
@@ -2150,7 +2160,7 @@ msgstr ""
 "Votre gradient favori peut être réglé par défaut dans l'éditeur de "
 "gradient : Éditer → Gradients.  Le gradient par défaut est affiché en gras."
 
-#: app/tips.c:130
+#: app/tips.c:136
 msgid ""
 "Your favorite GL material can be set as default in the material editor: Edit "
 "→ GL Materials.  The default material is shown in bold face."
@@ -2158,7 +2168,7 @@ msgstr ""
 "Votre matériau GL favori peut être réglé par défaut dans l'éditeur de "
 "matériau : Éditer → Matériau GL.  Le matériau par défaut est affiché en gras."
 
-#: app/tips.c:136
+#: app/tips.c:142
 msgid ""
 "Edit → Default Mask Color sets the default mask color.  This color is used "
 "when a mask is created on data that have not had a mask before."
@@ -2167,7 +2177,7 @@ msgstr ""
 "masque. Cette couleur est utilisée lorsqu'un masque est créé sur des données "
 "sur lesquelles aucun masque n'est appliqué."
 
-#: app/tips.c:142
+#: app/tips.c:148
 msgid ""
 "Each channel has its own metadata.  Display them by clicking with the right "
 "mouse button and choosing Metadata Browser."
@@ -2175,7 +2185,7 @@ msgstr ""
 "Chaque canal a ses propres métadonnées. Vous pouvez les afficher en faisant "
 "un clic droit puis en choisissant Navigateur de métadonnées."
 
-#: app/tips.c:148
+#: app/tips.c:154
 msgid ""
 "Each volume data have their own metadata.  Display them by clicking with the "
 "right mouse button and choosing Metadata Browser."
@@ -2183,7 +2193,16 @@ msgstr ""
 "Chaque volume a ses propres métadonnées. Vous pouvez les afficher en faisant "
 "un clic droit puis en choisissant Navigateur de métadonnées."
 
-#: app/tips.c:155
+#: app/tips.c:160
+msgid ""
+"A record of applied data processing operations can be browser using View Log "
+"in the channel or volume data right-click menu."
+msgstr ""
+"Un journal des opérations appliquées aux données est accessible grâce à la "
+"commande Voir le journal, disponible dans le menu contextuel des canaux et "
+"des données volumiques."
+
+#: app/tips.c:166
 msgid ""
 "Curves can be copied to other (compatible) graphs by dragging them from "
 "Curves tab to the graph window."
@@ -2191,24 +2210,24 @@ msgstr ""
 "Les courbes peuvent être copiées vers d'autres graphes (compatibles) en les "
 "transportant de l'onglet Courbes vers la fenêtre graphes."
 
-#: app/tips.c:160
+#: app/tips.c:171
 msgid "Graph curve properties can be edited by clicking on the curve."
 msgstr ""
 "Les propriétés des courbes d'un graphique peuvent être éditées en cliquant "
 "sur les courbes."
 
-#: app/tips.c:164
+#: app/tips.c:175
 msgid "Graph axis labels can be edited after by clicking on the label."
 msgstr ""
 "Les labels des axes des graphiques peuvent être édités en cliquant dessus."
 
-#: app/tips.c:168
+#: app/tips.c:179
 msgid ""
 "Graph key (legend) properties can be edited by double-clicking on the legend."
 msgstr ""
 "Les légendes des graphiques peuvent être éditées en double-cliquant dessus."
 
-#: app/tips.c:173
+#: app/tips.c:184
 msgid ""
 "Curves can be deleted from graphs by selecting the curve in Curves tab and "
 "pressing Delete."
@@ -2216,19 +2235,19 @@ msgstr ""
 "Les courbes peuvent être supprimées d'un graphe en les sélectionnant dans "
 "l'onglet Courbes puis en en pressant la touche Suppr."
 
-#: app/tips.c:179
+#: app/tips.c:190
 msgid "Key ‛+’ or ‛=’ zooms in a data window."
 msgstr "La touche ‛+’ ou ‛=’ zoome la fenêtre de données."
 
-#: app/tips.c:183
+#: app/tips.c:194
 msgid "Key ‛-’ (minus) zooms out a data window."
 msgstr "La touche ‛-’ (moins) dézoome la fenêtre de données."
 
-#: app/tips.c:187
+#: app/tips.c:198
 msgid "Key ‛Z’ resets data window zoom to 1:1."
 msgstr "La touche ‛Z’ remet le zoom de la fenêtre à 1:1."
 
-#: app/tips.c:191
+#: app/tips.c:202
 msgid ""
 "Data with different <i>x</i> and <i>y</i> measures can be displayed either "
 "with pixel-wise or realistic aspect ratio.  The menu in data window top left "
@@ -2239,7 +2258,7 @@ msgstr ""
 "menu en haut à gauche de la fenêtre de données permet de basculer entre ces "
 "deux modes s'affichage."
 
-#: app/tips.c:198
+#: app/tips.c:209
 msgid ""
 "Clicking on a false color scale with the right mouse button brings a false "
 "color gradient selector."
@@ -2247,7 +2266,7 @@ msgstr ""
 "Un clic droit sur l'échelle de fausses couleurs fera apparaître le selecteur "
 "de gradients."
 
-#: app/tips.c:204
+#: app/tips.c:215
 msgid ""
 "Clicking on a 3D view with the right mouse button brings a GL material or "
 "false color gradient selector."
@@ -2255,7 +2274,7 @@ msgstr ""
 "Un clic droit sur la vue 3D fera apparaître le selecteur de matériaux GL ou "
 "de gradients."
 
-#: app/tips.c:209
+#: app/tips.c:220
 msgid ""
 "3D view transformation modes can be selected with keys: R (rotate), S "
 "(scale), V (value scale) and L (light source)."
@@ -2263,7 +2282,7 @@ msgstr ""
 "Les modes d'action de la vue 3D peuvent être contrôlées au clavier : R "
 "(rotation), S (échelle), V (échelle des valeurs) et L (source de lumière)."
 
-#: app/tips.c:215
+#: app/tips.c:226
 msgid ""
 "Pressing Ctrl-C copies the image of a channel, graph or 3D view to the "
 "clipboard."
@@ -2271,7 +2290,7 @@ msgstr ""
 "Presser Ctrl-C permet de copier l'image d'un canal, d'un graphe ou d'une vue "
 "3D vers le presse papier."
 
-#: app/tips.c:220
+#: app/tips.c:231
 msgid ""
 "Dragging channels or graphs from Data Browser to a window copies them to the "
 "corresponding file."
@@ -2279,11 +2298,11 @@ msgstr ""
 "Déplacer des canaux ou des graphes du Navigateur de Données vers une fenêtre "
 "permet de créer une copie dans le fichier correspondant."
 
-#: app/tips.c:225
+#: app/tips.c:236
 msgid "Info → Show Data Browser brings back a closed Data Browser."
 msgstr "Info → Navigateur de Données réaffiche le navigateur s'il est fermé."
 
-#: app/tips.c:229
+#: app/tips.c:240
 msgid ""
 "Channels and graphs can be renamed by double-clicking on their name in Data "
 "Browser."
@@ -2291,7 +2310,7 @@ msgstr ""
 "Les canaux et graphiques peuvent être renommés en double-cliquant sur leur "
 "nom dans le Navigateur de Données."
 
-#: app/tips.c:235
+#: app/tips.c:246
 msgid ""
 "Facet Level offers to use/exclude the masked area if a mask is present on "
 "the data."
@@ -2299,7 +2318,7 @@ msgstr ""
 "La Mise à Niveau des Facettes permet d'utiliser ou d'exclure la zone masquée "
 "s'il y en a une sur les données."
 
-#: app/tips.c:240
+#: app/tips.c:251
 msgid ""
 "Plane Level offers to use/exclude the masked area if a mask is present on "
 "the data."
@@ -2307,15 +2326,31 @@ msgstr ""
 "Niveau Plan permet d'utiliser ou exclure la zone masquée si un masque est "
 "présent dans les données."
 
-#: app/tips.c:245
+#: app/tips.c:256
 msgid ""
-"Data Arithmetic works as a scientific calculator, just type an arithmetic "
+"Median Line Correction offers to use/exclude the masked area if a mask is "
+"present on the data."
+msgstr ""
+"La correction des lignes par médiane permet d'utiliser ou exclure la zone "
+"masquée si un masque est présent dans les données."
+
+#: app/tips.c:261
+msgid ""
+"Data Arithmetic works as a scientific calculator: just type an arithmetic "
 "expression."
 msgstr ""
-"Multidonnées / Arithmétique... fonctionne comme une calculette scientifique, "
-"tapez juste une expression mathématique."
+"Le module arithmétique fonctionne comme une calculette scientifique : tapez "
+"simplement une expression arithmétique."
 
-#: app/tips.c:250
+#: app/tips.c:266
+msgid ""
+"Data Arithmetic expressions can include values (d), mask values (m), "
+"derivatives (bx, by) and coordinates (x, y)."
+msgstr ""
+"Les expressions arithmétiques peuvent inclure les valeurs (d), les masques "
+"(m), les dérivées (bx, by) et les coordonnées (x, y)."
+
+#: app/tips.c:271
 msgid ""
 "Facet Level can often level data with large features that make impossible to "
 "use standard plane levelling.  It levels the surface by making normals of "
@@ -2326,14 +2361,14 @@ msgstr ""
 "standard par plan. Elle met à niveau la surface de façon à ce que les "
 "normales des zones planes pointent vers le haut."
 
-#: app/tips.c:256
+#: app/tips.c:277
 msgid ""
 "Too small grains can be filtered out with Remove by Threshold grain function."
 msgstr ""
 "Des grains trop petits peuvent être filtrés en utiliant la fonction "
 "Supprimer par Seuillage."
 
-#: app/tips.c:261
+#: app/tips.c:282
 msgid ""
 "Data Process → Presentation → Edge Detection → Step is a fine step detector "
 "with a good dynamic range"
@@ -2341,7 +2376,7 @@ msgstr ""
 "Traitement des Données → Présentation → Détection → Saut permet une "
 "détection fine des sauts sur une grande dynamique."
 
-#: app/tips.c:266
+#: app/tips.c:287
 msgid ""
 "Data Process → Basic Operations → Recalibrate changes scales, offsets and "
 "even lateral and value units."
@@ -2349,7 +2384,7 @@ msgstr ""
 "Traitement des Données → Opérations Basiques → Recalibrer permet de changer "
 "les échelles, décaler et égaliser les unités latérales et d'échelle."
 
-#: app/tips.c:271
+#: app/tips.c:292
 msgid ""
 "Grains or other areas of interest are marked with masks.  Many functions "
 "then can do something interesting with the masked areas."
@@ -2357,28 +2392,48 @@ msgstr ""
 "Les grains ou d'autres zones d'intérêt peuvent être marquées par un masque. "
 "Plusieurs fonctions peuvent exploiter ces zones masquées."
 
-#: app/tips.c:277
+#: app/tips.c:298
 msgid ""
 "Remove Scars in the toolbox runs with the settings last used in Mark Scars."
 msgstr ""
 "L'outil Supprimer les Défauts Linéaires dans la barre d'outils se lance avec "
 "les réglages utilisés avec Marquer les Défauts Linéaires."
 
-#: app/tips.c:283
+#: app/tips.c:303
+msgid "Data synthesis modules can be also used to modify existing images."
+msgstr ""
+"Les modules de synthèse de données peuvent aussi être utilisées pour "
+"modifier des images existantes."
+
+#: app/tips.c:308
+msgid ""
+"Data Process → Mask → Mark With can set the image mask based on another "
+"data, mask or presentation."
+msgstr ""
+"Traitement des données → Masque → Marquer avec... permet de créer un masque "
+"à partir d'autres données, d'un masque ou d'une présentation."
+
+#: app/tips.c:314
 msgid "Graph → Critical Dimension measures steps on extracted profile graphs."
 msgstr ""
 "Graphique → Dimension Critique permet de mesurer les sauts sur des profils "
 "extraits."
 
-#: app/tips.c:289
+#: app/tips.c:319
+msgid "All Graph functions are available also in the graph right-click menu."
+msgstr ""
+"Toutes les fonctions relatives aux graphes sont accessibles dans le menu "
+"contextuel obtenu avec un clic droit."
+
+#: app/tips.c:325
 msgid "Pressing Esc hides tool windows."
 msgstr "La touche Echap permet de masquer la fenêtre outils."
 
-#: app/tips.c:293
+#: app/tips.c:329
 msgid "Read Value tool displays also the local facet normal."
 msgstr "L'outil Lire la Valeur affiche aussi la normale locale de la facette."
 
-#: app/tips.c:297
+#: app/tips.c:333
 msgid ""
 "Read Value tool can shift data to make <i>z</i>=0 plane pass through the "
 "selected point."
@@ -2386,7 +2441,7 @@ msgstr ""
 "L'outil Lire la Valeur permet de décaler les données de manière à ce que le "
 "plan <i>z</i>=0 passe par le point sélectionné."
 
-#: app/tips.c:302
+#: app/tips.c:338
 msgid ""
 "Individual lines can be deleted in Distance tool by selecting them in the "
 "list and pressing Delete."
@@ -2394,7 +2449,7 @@ msgstr ""
 "Des lignes individuelles peuvent être supprimées dans l'outil Distance en "
 "les sélectionnant puis en pressant la touche Suppr."
 
-#: app/tips.c:307
+#: app/tips.c:343
 msgid ""
 "Individual lines can be deleted in Profiles tool by selecting them in the "
 "list and pressing Delete."
@@ -2402,7 +2457,7 @@ msgstr ""
 "Des lignes individuelles peuvent être supprimées dans l'outil Profils en les "
 "sélectionnant puis en pressant la touche Suppr."
 
-#: app/tips.c:312
+#: app/tips.c:348
 msgid ""
 "Spectroscopy tool displays point spectroscopy data and extracts them to "
 "standalone graphs that can be subsequently analysed for instance with Graph "
@@ -2412,7 +2467,7 @@ msgstr ""
 "extraits vers des graphes qui peuvent être analysés ultérieurement, par "
 "exmeple avec Graphe → Ajuster la courbe FD."
 
-#: app/tips.c:318
+#: app/tips.c:354
 msgid ""
 "Statistical Quantities tool allows limiting the area of interest by a mask, "
 "rectangular selection or the intersection of both."
@@ -2420,7 +2475,7 @@ msgstr ""
 "L'outil Statistiques permet de limiter la zone d'intérêt par un masque, une "
 "sélection rectangulaire ou l'intersection des deux."
 
-#: app/tips.c:323
+#: app/tips.c:359
 msgid ""
 "Beside height and angle distributions, Statistical Functions tool calculates "
 "also correlation functions, power spectrum density (PSDF) and some more "
@@ -2430,7 +2485,7 @@ msgstr ""
 "Statistiques calcule aussi les fonctions de corrélation, les densités "
 "spectrales de puissance (PSDF) ainsi que quelques fonctions exotiques."
 
-#: app/tips.c:329
+#: app/tips.c:365
 msgid ""
 "Path Level tool levels misaligned rows by lining them up along manually "
 "selected lines.  If there are no large features automatic Median Line "
@@ -2440,7 +2495,7 @@ msgstr ""
 "sélectionnés manuellement. La Correction des Lignes par Médiane fait en "
 "général l'affaire s'il n'y a pas de gros motifs."
 
-#: app/tips.c:335
+#: app/tips.c:371
 msgid ""
 "Grain Measure tool is great for examining individual grains.  Overall grain "
 "statistics are available in Data Processing → Grains."
@@ -2449,13 +2504,13 @@ msgstr ""
 "Les statistiques globales des grains sont accessibles via Traitement des "
 "Données → Grains."
 
-#: app/tips.c:341
+#: app/tips.c:377
 msgid "Mask Editor tool can create, edit, invert, grow and shrink masks."
 msgstr ""
 "L'Éditeur de Masque permet de créer, éditer, inverser, dilater ou éroder les "
 "masques."
 
-#: app/tips.c:345
+#: app/tips.c:381
 msgid ""
 "Color Range tool offers several false color scale mapping modes and can make "
 "any of them the default mode."
@@ -2463,7 +2518,7 @@ msgstr ""
 "L'outil Visualisation des Couleurs propose différents types d'échelle "
 "d'affichage en fausses couleurs, permet d'en sélectionner une par défaut."
 
-#: app/tips.c:350
+#: app/tips.c:386
 msgid ""
 "Dragging selections from Selections Manager tool to a data window copies the "
 "selection to the target data."
@@ -2471,7 +2526,7 @@ msgstr ""
 "Glisser des sélections depuis le Gestionnaire de Sélections vers une fenêtre "
 "de données permet de copier ces sélections vers les données souhaitées."
 
-#: app/tips.c:356
+#: app/tips.c:392
 msgid ""
 "Gwyddion User Guide explains in detail many of the methods and algorithms "
 "implemented in Gwyddion."
@@ -2479,19 +2534,19 @@ msgstr ""
 "Le Guide Utilisateur explique en détails les méthodes et algorithmes "
 "implémentés dans Gwyddion."
 
-#: app/tips.c:361
+#: app/tips.c:397
 msgid "Gwyddion is a son of Math."
 msgstr "Gwyddion est un des fils de Math."
 
-#: app/tips.c:408
+#: app/tips.c:444
 msgid "Gwyddion Tip of the Day"
 msgstr "Astuce Gwyddion du jour"
 
-#: app/tips.c:421
+#: app/tips.c:457
 msgid "_Previous Tip"
 msgstr "Astuce _précédente"
 
-#: app/tips.c:427
+#: app/tips.c:463
 msgid "_Next Tip"
 msgstr "Astuce suiva_nte"
 
@@ -2862,13 +2917,13 @@ msgstr "Exporter au format texte"
 
 #: modules/file/asciiexport.c:273 modules/file/pixmap.c:3253
 #: modules/file/rawfile.c:722 modules/file/rawxyz.c:671
-#: modules/process/calibrate.c:597 modules/process/col_synth.c:455
+#: modules/process/calibrate.c:597 modules/process/col_synth.c:456
 #: modules/process/correct_affine.c:451 modules/process/extend.c:257
 #: modules/process/fft_filter_1d.c:296 modules/process/grain_dist.c:306
 #: modules/process/grain_edge.c:270 modules/process/grain_mark.c:345
 #: modules/process/grain_rem_threshold.c:328 modules/process/grain_wshed.c:278
-#: modules/process/tip_blind.c:360 modules/tools/spotremove.c:317
-#: modules/tools/stats.c:379
+#: modules/process/tip_blind.c:360 modules/process/wpour_mark.c:263
+#: modules/tools/spotremove.c:317 modules/tools/stats.c:379
 msgid "Options"
 msgstr "Options"
 
@@ -3322,7 +3377,7 @@ msgid "Unsupported sample format"
 msgstr "Format non supporté"
 
 #: modules/file/gwytiff.h:1030 modules/file/matfile.c:276
-#: modules/file/matfile.c:298 modules/file/psia.c:351 modules/file/zemax.c:168
+#: modules/file/matfile.c:298 modules/file/psia.c:353 modules/file/zemax.c:168
 msgid "File is truncated."
 msgstr "Le fichier est tronqué."
 
@@ -3348,19 +3403,19 @@ msgstr "Importe les fichiers Hierarchical Data Format (HDF) version 4."
 msgid "Psi HDF4 files (.hdf)"
 msgstr "Psi HDF4 (.hdf)"
 
-#: modules/file/hdf4file.c:540
+#: modules/file/hdf4file.c:541
 msgid "PSI binary header is too short."
 msgstr "L'en-tête PSI binaire est trop court."
 
-#: modules/file/hdf4file.c:653
+#: modules/file/hdf4file.c:654
 msgid "Data descriptor header is truncated."
 msgstr "L'en-tête de description des données est tronqué."
 
-#: modules/file/hdf4file.c:663
+#: modules/file/hdf4file.c:664
 msgid "Data descriptor block is truncated."
 msgstr "Le bloc de description des données est tronqué."
 
-#: modules/file/hdf4file.c:697
+#: modules/file/hdf4file.c:698
 msgid "HDF data with `native' type is not supported."
 msgstr "Les données HDF avec le type `natif' ne sont pas supportées."
 
@@ -4622,11 +4677,11 @@ msgstr "Échelle"
 msgid "_Zoom:"
 msgstr "_Zoom :"
 
-#: modules/file/pixmap.c:3204 modules/process/col_synth.c:425
-#: modules/process/domain_synth.c:528 modules/process/grain_mark.c:310
-#: modules/process/grain_rem_threshold.c:284 modules/process/obj_synth.c:576
-#: modules/process/pat_synth.c:892 modules/process/pat_synth.c:1193
-#: modules/process/pat_synth.c:1528 modules/process/tip_blind.c:343
+#: modules/file/pixmap.c:3204 modules/process/col_synth.c:426
+#: modules/process/domain_synth.c:529 modules/process/grain_mark.c:310
+#: modules/process/grain_rem_threshold.c:284 modules/process/obj_synth.c:577
+#: modules/process/pat_synth.c:893 modules/process/pat_synth.c:1194
+#: modules/process/pat_synth.c:1529 modules/process/tip_blind.c:343
 msgid "_Height:"
 msgstr "_Hauteur :"
 
@@ -4702,7 +4757,7 @@ msgstr "haut"
 msgid "bottom"
 msgstr "bas"
 
-#: modules/file/pixmap.c:3383 modules/process/lno_synth.c:1069
+#: modules/file/pixmap.c:3383 modules/process/lno_synth.c:1070
 msgid "_Length:"
 msgstr "_Longueur :"
 
@@ -4742,24 +4797,24 @@ msgstr "Importe les fichiers Pacific Nanotechnology PNI."
 msgid "PNI files (.pni)"
 msgstr "PNI (.pni)"
 
-#: modules/file/psia.c:240
+#: modules/file/psia.c:242
 msgid "Imports Park Systems data files."
 msgstr "Importe les fichiers Park Systems."
 
-#: modules/file/psia.c:253
+#: modules/file/psia.c:255
 msgid "Park Systems data files (.tiff, .tif)"
 msgstr "Park Systems (.tiff, .tif)"
 
-#: modules/file/psia.c:341
+#: modules/file/psia.c:343
 msgid "Data tag is missing."
 msgstr "Étiquette de données manquante."
 
-#: modules/file/psia.c:524
+#: modules/file/psia.c:514
 #, c-format
 msgid "Header is too short (only %lu bytes)."
 msgstr "L'en-tête est trop court (seulement %lu octets)."
 
-#: modules/file/psia.c:640
+#: modules/file/psia.c:631
 #, c-format
 msgid "Spectroscopy header is too short (only %lu bytes)."
 msgstr "L'en-tête de spectroscopie est trop court (seulement %lu octets)."
@@ -4901,9 +4956,9 @@ msgstr "Préréglages"
 #: modules/process/grain_rem_threshold.c:226 modules/process/grain_wshed.c:180
 #: modules/process/mark_with.c:211 modules/process/polydistort.c:213
 #: modules/process/scars.c:474 modules/process/synth.h:508
-#: modules/process/tip_model.c:167 modules/tools/linestats.c:421
-#: modules/tools/sfunctions.c:476 modules/tools/stats.c:436
-#: modules/volume/volume_extract.c:328
+#: modules/process/tip_model.c:167 modules/process/wpour_mark.c:204
+#: modules/tools/linestats.c:421 modules/tools/sfunctions.c:476
+#: modules/tools/stats.c:436 modules/volume/volume_extract.c:328
 msgid "_Update"
 msgstr "Mise à jour"
 
@@ -6788,8 +6843,8 @@ msgstr "Rogner aux données réelles"
 #: modules/process/grain_edge.c:286 modules/process/grain_mark.c:378
 #: modules/process/grain_rem_threshold.c:372 modules/process/mark_with.c:355
 #: modules/process/polydistort.c:335 modules/process/scars.c:582
-#: modules/process/synth.h:512 modules/volume/volume_extract.c:423
-#: modules/volume/volume_extract.c:503
+#: modules/process/synth.h:512 modules/process/wpour_mark.c:288
+#: modules/volume/volume_extract.c:423 modules/volume/volume_extract.c:503
 msgid "I_nstant updates"
 msgstr "Mise à jour instantanée"
 
@@ -6955,96 +7010,96 @@ msgstr "Facteur de calibration _Z :"
 msgid "Create new channel"
 msgstr "Créer un nouveau canal"
 
-#: modules/process/col_synth.c:176
+#: modules/process/col_synth.c:177
 msgid "Generates columnar surfaces by a simple growth algorithm."
 msgstr ""
 "Génère des surfaces colonnaires à l'aide d'un algorithme de croissance "
 "simple."
 
-#: modules/process/col_synth.c:190
+#: modules/process/col_synth.c:191
 msgid "/S_ynthetic/_Columnar..."
 msgstr "/S_ynthèse/_Croissance colonnaire..."
 
-#: modules/process/col_synth.c:194
+#: modules/process/col_synth.c:195
 msgid "Generate columnar surface"
 msgstr "Générer une surface colonnaire"
 
-#: modules/process/col_synth.c:262 modules/process/col_synth.c:625
+#: modules/process/col_synth.c:263 modules/process/col_synth.c:626
 #: modules/process/deposit_synth.c:277 modules/process/deposit_synth.c:906
-#: modules/process/domain_synth.c:265 modules/process/domain_synth.c:763
+#: modules/process/domain_synth.c:266 modules/process/domain_synth.c:764
 #: modules/process/neural.c:1275 modules/process/pid.c:336
 #: modules/process/xydenoise.c:220
 msgid "Starting..."
 msgstr "Démarrage..."
 
-#: modules/process/col_synth.c:300 modules/process/deposit_synth.c:315
+#: modules/process/col_synth.c:301 modules/process/deposit_synth.c:315
 #: modules/process/deposit_synth.c:327 modules/process/deposit_synth.c:547
-#: modules/process/deposit_synth.c:561 modules/process/domain_synth.c:329
-#: modules/process/domain_synth.c:338 modules/process/fft_synth.c:323
-#: modules/process/lno_synth.c:413 modules/process/noise_synth.c:325
-#: modules/process/obj_synth.c:407 modules/process/pat_synth.c:377
-#: modules/process/wave_synth.c:334
+#: modules/process/deposit_synth.c:561 modules/process/domain_synth.c:330
+#: modules/process/domain_synth.c:339 modules/process/fft_synth.c:323
+#: modules/process/lno_synth.c:414 modules/process/noise_synth.c:326
+#: modules/process/obj_synth.c:408 modules/process/pat_synth.c:378
+#: modules/process/wave_synth.c:335
 msgid "Generated"
 msgstr "Généré"
 
-#: modules/process/col_synth.c:325
+#: modules/process/col_synth.c:326
 msgid "Grow Columnar Surface"
 msgstr "Surface à croissance colonnaire"
 
-#: modules/process/col_synth.c:375 modules/process/domain_synth.c:425
+#: modules/process/col_synth.c:376 modules/process/domain_synth.c:426
 msgid "Progressive preview"
 msgstr "Aperçu progressif"
 
-#: modules/process/col_synth.c:398 modules/process/deposit_synth.c:428
-#: modules/process/domain_synth.c:448 modules/process/fft_synth.c:417
-#: modules/process/lno_synth.c:504 modules/process/noise_synth.c:416
-#: modules/process/obj_synth.c:500 modules/process/pat_synth.c:470
-#: modules/process/wave_synth.c:425
+#: modules/process/col_synth.c:399 modules/process/deposit_synth.c:428
+#: modules/process/domain_synth.c:449 modules/process/fft_synth.c:417
+#: modules/process/lno_synth.c:505 modules/process/noise_synth.c:417
+#: modules/process/obj_synth.c:501 modules/process/pat_synth.c:471
+#: modules/process/wave_synth.c:426
 msgid "Dimensions"
 msgstr "Dimensions"
 
-#: modules/process/col_synth.c:406 modules/process/deposit_synth.c:438
-#: modules/process/domain_synth.c:456 modules/process/fft_synth.c:428
-#: modules/process/lno_synth.c:515 modules/process/noise_synth.c:427
-#: modules/process/obj_synth.c:511 modules/process/pat_synth.c:482
-#: modules/process/wave_synth.c:436
+#: modules/process/col_synth.c:407 modules/process/deposit_synth.c:438
+#: modules/process/domain_synth.c:457 modules/process/fft_synth.c:428
+#: modules/process/lno_synth.c:516 modules/process/noise_synth.c:428
+#: modules/process/obj_synth.c:512 modules/process/pat_synth.c:483
+#: modules/process/wave_synth.c:437
 msgid "Generator"
 msgstr "Générateur"
 
-#: modules/process/col_synth.c:412 modules/process/lno_synth.c:1057
-#: modules/process/obj_synth.c:522
+#: modules/process/col_synth.c:413 modules/process/lno_synth.c:1058
+#: modules/process/obj_synth.c:523
 msgid "Co_verage:"
 msgstr "Cou_verture :"
 
-#: modules/process/col_synth.c:419
+#: modules/process/col_synth.c:420
 msgid "Particle Size"
 msgstr "Taille de particule"
 
-#: modules/process/col_synth.c:437
+#: modules/process/col_synth.c:438
 msgid "Incidence"
 msgstr "Incidence"
 
-#: modules/process/col_synth.c:442
+#: modules/process/col_synth.c:443
 msgid "Inclination"
 msgstr "Inclinaison"
 
-#: modules/process/col_synth.c:448
+#: modules/process/col_synth.c:449
 msgid "Direction"
 msgstr "Direction"
 
-#: modules/process/col_synth.c:460
+#: modules/process/col_synth.c:461
 msgid "Relaxation type:"
 msgstr "Type de relaxation :"
 
-#: modules/process/col_synth.c:511
+#: modules/process/col_synth.c:512
 msgid "Weak"
 msgstr "Faible"
 
-#: modules/process/col_synth.c:512
+#: modules/process/col_synth.c:513
 msgid "Strong"
 msgstr "Forte"
 
-#: modules/process/col_synth.c:658
+#: modules/process/col_synth.c:659
 msgid "Depositing particles..."
 msgstr "Dépôt des particules en cours..."
 
@@ -7443,7 +7498,7 @@ msgstr "_Nouvelle"
 msgid "Randomize"
 msgstr "Randomiser"
 
-#: modules/process/deposit_synth.c:907 modules/process/domain_synth.c:937
+#: modules/process/deposit_synth.c:907 modules/process/domain_synth.c:938
 msgid "Running computation..."
 msgstr "Calcul en cours..."
 
@@ -7500,75 +7555,75 @@ msgstr "_Remplacer le canal courant"
 msgid "_Start from the current channel"
 msgstr "Ajouter à partir du canal courant"
 
-#: modules/process/domain_synth.c:168
+#: modules/process/domain_synth.c:169
 msgid "Discrete state"
 msgstr "État discret"
 
-#: modules/process/domain_synth.c:169
+#: modules/process/domain_synth.c:170
 msgid "Continuous inhibitor"
 msgstr "Inhibiteur continu"
 
-#: modules/process/domain_synth.c:175
+#: modules/process/domain_synth.c:176
 msgid "Generates domain images using a hybrid Ising model."
 msgstr ""
 "Génère des images constituées de domaines en se basant sur le modèle hybride "
 "de Ising."
 
-#: modules/process/domain_synth.c:189
+#: modules/process/domain_synth.c:190
 msgid "/S_ynthetic/_Domains..."
 msgstr "/S_ynthèse/_Domaines..."
 
-#: modules/process/domain_synth.c:193
+#: modules/process/domain_synth.c:194
 msgid "Generate image with domains"
 msgstr "Génère une image formée de domaines"
 
-#: modules/process/domain_synth.c:365
+#: modules/process/domain_synth.c:366
 msgid "Domains"
 msgstr "Domaines"
 
-#: modules/process/domain_synth.c:460
+#: modules/process/domain_synth.c:461
 msgid "_Preview quantity:"
 msgstr "Quantité prévisualisée :"
 
-#: modules/process/domain_synth.c:467
+#: modules/process/domain_synth.c:468
 msgid "Simulation Parameters"
 msgstr "Paramètres de simulation"
 
-#: modules/process/domain_synth.c:473
+#: modules/process/domain_synth.c:474
 msgid "_Number of iterations:"
 msgstr "_Nombre d'itérations :"
 
-#: modules/process/domain_synth.c:481
+#: modules/process/domain_synth.c:482
 msgid "_Temperature:"
 msgstr "_Température :"
 
-#: modules/process/domain_synth.c:489
+#: modules/process/domain_synth.c:490
 msgid "_Inhibitor strength:"
 msgstr "Force de l'_inhibiteur :"
 
-#: modules/process/domain_synth.c:497
+#: modules/process/domain_synth.c:498
 msgid "In_hibitor coupling:"
 msgstr "Couplage de l'in_hibiteur :"
 
-#: modules/process/domain_synth.c:505
+#: modules/process/domain_synth.c:506
 msgid "_Bias:"
 msgstr "_Biais :"
 
-#: modules/process/domain_synth.c:513
+#: modules/process/domain_synth.c:514
 msgid "_Monte Carlo time step:"
 msgstr "Étape temporelle de Monte-Carlo :"
 
-#: modules/process/domain_synth.c:522 modules/process/fft_filter_2d.c:622
+#: modules/process/domain_synth.c:523 modules/process/fft_filter_2d.c:622
 msgid "Output Options"
 msgstr "Options de sortie"
 
-#: modules/process/domain_synth.c:532 modules/process/fft_synth.c:437
-#: modules/process/lno_synth.c:551 modules/process/noise_synth.c:459
-#: modules/process/obj_synth.c:580 modules/process/wave_synth.c:471
+#: modules/process/domain_synth.c:533 modules/process/fft_synth.c:437
+#: modules/process/lno_synth.c:552 modules/process/noise_synth.c:460
+#: modules/process/obj_synth.c:581 modules/process/wave_synth.c:472
 msgid "_Like Current Channel"
 msgstr "Identique au canal courant"
 
-#: modules/process/domain_synth.c:541 modules/process/fft_filter_2d.c:627
+#: modules/process/domain_synth.c:542 modules/process/fft_filter_2d.c:627
 #: modules/process/mask_edt.c:163 modules/process/slope_dist.c:217
 msgid "Output type:"
 msgstr "Type de sortie :"
@@ -7616,7 +7671,7 @@ msgstr "Lignes de dérive"
 #: modules/process/drift.c:358 modules/process/facet_analysis.c:412
 #: modules/process/grain_edge.c:279 modules/process/grain_mark.c:371
 #: modules/process/grain_rem_threshold.c:365 modules/process/grain_wshed.c:296
-#: modules/process/scars.c:575
+#: modules/process/scars.c:575 modules/process/wpour_mark.c:281
 msgid "_Mask color:"
 msgstr "Couleur de _masque :"
 
@@ -8030,7 +8085,7 @@ msgstr "Imaginaire"
 msgid "Modulus"
 msgstr "Module"
 
-#: modules/process/fft.c:276 modules/process/wave_synth.c:601
+#: modules/process/fft.c:276 modules/process/wave_synth.c:602
 msgid "Phase"
 msgstr "Phase"
 
@@ -8281,8 +8336,8 @@ msgstr "Générer une surface en utilisant la synthèse spectrale"
 msgid "Spectral Synthesis"
 msgstr "Synthèse spectrale"
 
-#: modules/process/fft_synth.c:433 modules/process/lno_synth.c:547
-#: modules/process/noise_synth.c:455
+#: modules/process/fft_synth.c:433 modules/process/lno_synth.c:548
+#: modules/process/noise_synth.c:456
 msgid "_RMS:"
 msgstr "_RMS :"
 
@@ -8776,7 +8831,7 @@ msgid "_Curvature:"
 msgstr "_Courbure :"
 
 #: modules/process/grain_mark.c:349 modules/process/grain_rem_threshold.c:332
-#: modules/process/grain_wshed.c:282
+#: modules/process/grain_wshed.c:282 modules/process/wpour_mark.c:267
 msgid "_Invert height"
 msgstr "_Inverser les hauteurs"
 
@@ -9443,87 +9498,87 @@ msgstr "Corriger les sauts dans les lignes"
 msgid "Median Line Correction"
 msgstr "Correction des lignes par médiane"
 
-#: modules/process/lno_synth.c:250 modules/process/noise_synth.c:184
+#: modules/process/lno_synth.c:251 modules/process/noise_synth.c:185
 msgid "distribution|Gaussian"
 msgstr "Gaussienne"
 
-#: modules/process/lno_synth.c:256 modules/process/noise_synth.c:190
+#: modules/process/lno_synth.c:257 modules/process/noise_synth.c:191
 msgid "distribution|Exponential"
 msgstr "Exponentielle"
 
-#: modules/process/lno_synth.c:262 modules/process/noise_synth.c:196
+#: modules/process/lno_synth.c:263 modules/process/noise_synth.c:197
 msgid "distribution|Uniform"
 msgstr "Uniforme"
 
-#: modules/process/lno_synth.c:268 modules/process/noise_synth.c:202
+#: modules/process/lno_synth.c:269 modules/process/noise_synth.c:203
 msgid "distribution|Triangular"
 msgstr "Triangulaire"
 
-#: modules/process/lno_synth.c:275 modules/process/pat_synth.c:233
+#: modules/process/lno_synth.c:276 modules/process/pat_synth.c:234
 msgid "Steps"
 msgstr "Marches"
 
-#: modules/process/lno_synth.c:276
+#: modules/process/lno_synth.c:277
 msgid "Scars"
 msgstr "Défauts linéaires"
 
-#: modules/process/lno_synth.c:282
+#: modules/process/lno_synth.c:283
 msgid "Generates various kinds of line noise."
 msgstr "Génère divers types de bruit linéaire."
 
-#: modules/process/lno_synth.c:296
+#: modules/process/lno_synth.c:297
 msgid "/S_ynthetic/_Line Noise..."
 msgstr "/S_ynthèse/Bruit _linéaire..."
 
-#: modules/process/lno_synth.c:300
+#: modules/process/lno_synth.c:301
 msgid "Generate line noise"
 msgstr "Génère un bruit linéaire"
 
-#: modules/process/lno_synth.c:439
+#: modules/process/lno_synth.c:440
 msgid "Line Noise"
 msgstr "Bruit linéaire"
 
-#: modules/process/lno_synth.c:518
+#: modules/process/lno_synth.c:519
 msgid "Distribution"
 msgstr "Distribution"
 
-#: modules/process/lno_synth.c:523 modules/process/noise_synth.c:431
+#: modules/process/lno_synth.c:524 modules/process/noise_synth.c:432
 msgid "_Distribution:"
 msgstr "_Distribution : "
 
-#: modules/process/lno_synth.c:528 modules/process/noise_synth.c:436
+#: modules/process/lno_synth.c:529 modules/process/noise_synth.c:437
 msgid "Direction:"
 msgstr "Direction :"
 
-#: modules/process/lno_synth.c:537 modules/process/noise_synth.c:445
+#: modules/process/lno_synth.c:538 modules/process/noise_synth.c:446
 msgid "S_ymmetrical"
 msgstr "S_ymétrique"
 
-#: modules/process/lno_synth.c:538 modules/process/noise_synth.c:446
+#: modules/process/lno_synth.c:539 modules/process/noise_synth.c:447
 msgid "One-sided _positive"
 msgstr "Valeurs positives uniquement"
 
-#: modules/process/lno_synth.c:539 modules/process/noise_synth.c:447
+#: modules/process/lno_synth.c:540 modules/process/noise_synth.c:448
 msgid "One-sided _negative"
 msgstr "Valeurs négatives seulement"
 
-#: modules/process/lno_synth.c:560
+#: modules/process/lno_synth.c:561
 msgid "Noise Type"
 msgstr "Type de bruit"
 
-#: modules/process/lno_synth.c:565
+#: modules/process/lno_synth.c:566
 msgid "_Noise type:"
 msgstr "Type de bruit :"
 
-#: modules/process/lno_synth.c:867
+#: modules/process/lno_synth.c:868
 msgid "Densi_ty:"
 msgstr "Densi_té :"
 
-#: modules/process/lno_synth.c:878
+#: modules/process/lno_synth.c:879
 msgid "_Within line:"
 msgstr "Dans les lignes :"
 
-#: modules/process/lno_synth.c:885
+#: modules/process/lno_synth.c:886
 msgid "C_umulative"
 msgstr "C_umulatif"
 
@@ -10039,107 +10094,107 @@ msgstr "Différence moyenne : %.*f %s"
 msgid "Evaluated signal"
 msgstr "Signal évalué"
 
-#: modules/process/noise_synth.c:211
+#: modules/process/noise_synth.c:212
 msgid "Generates uncorrelated random noise."
 msgstr "Génère un bruit aléatoire non corrélé."
 
-#: modules/process/noise_synth.c:225
+#: modules/process/noise_synth.c:226
 msgid "/S_ynthetic/_Noise..."
 msgstr "/S_ynthèse/Bruit..."
 
-#: modules/process/noise_synth.c:229
+#: modules/process/noise_synth.c:230
 msgid "Generate surface of uncorrelated noise"
 msgstr "Générer une surface à partir d'un bruit non corrélé"
 
-#: modules/process/noise_synth.c:350
+#: modules/process/noise_synth.c:351
 msgid "Random Noise"
 msgstr "Bruit aléatoire"
 
-#: modules/process/obj_synth.c:275
+#: modules/process/obj_synth.c:276
 msgid "Spheres"
 msgstr "Sphères"
 
-#: modules/process/obj_synth.c:276
+#: modules/process/obj_synth.c:277
 msgid "Boxes"
 msgstr "Boîtes"
 
-#: modules/process/obj_synth.c:277
+#: modules/process/obj_synth.c:278
 msgid "Cones"
 msgstr "Cônes"
 
-#: modules/process/obj_synth.c:278
+#: modules/process/obj_synth.c:279
 msgid "Pyramids"
 msgstr "Pyramides"
 
-#: modules/process/obj_synth.c:279
+#: modules/process/obj_synth.c:280
 msgid "Diamonds"
 msgstr "Losanges"
 
-#: modules/process/obj_synth.c:280
+#: modules/process/obj_synth.c:281
 msgid "Tetrahedrons"
 msgstr "Tétraèdres"
 
-#: modules/process/obj_synth.c:281
+#: modules/process/obj_synth.c:282
 msgid "Nuggets"
 msgstr "Pépites"
 
-#: modules/process/obj_synth.c:282
+#: modules/process/obj_synth.c:283
 msgid "Thatches"
 msgstr "Chaumes"
 
-#: modules/process/obj_synth.c:283
+#: modules/process/obj_synth.c:284
 msgid "Tents"
 msgstr "Tentes"
 
-#: modules/process/obj_synth.c:284
+#: modules/process/obj_synth.c:285
 msgid "Gaussians"
 msgstr "Gaussiennes"
 
-#: modules/process/obj_synth.c:285
+#: modules/process/obj_synth.c:286
 msgid "Doughnuts"
 msgstr "Beignets"
 
-#: modules/process/obj_synth.c:291
+#: modules/process/obj_synth.c:292
 msgid "Generates randomly patterned surfaces by placing objects."
 msgstr "Génère des motifs de surface aléatoire en plçant des objets."
 
-#: modules/process/obj_synth.c:305
+#: modules/process/obj_synth.c:306
 msgid "/S_ynthetic/_Objects..."
 msgstr "/S_ynthèse/_Objets..."
 
-#: modules/process/obj_synth.c:309
+#: modules/process/obj_synth.c:310
 msgid "Generate surface of randomly placed objects"
 msgstr "Générer une surface avec des objets placés aléatoirement"
 
-#: modules/process/obj_synth.c:435
+#: modules/process/obj_synth.c:436
 msgid "Random Objects"
 msgstr "Objets aléatoires"
 
-#: modules/process/obj_synth.c:515
+#: modules/process/obj_synth.c:516
 msgid "_Shape:"
 msgstr "Forme :"
 
-#: modules/process/obj_synth.c:533
+#: modules/process/obj_synth.c:534
 msgid "obj."
 msgstr "obj."
 
-#: modules/process/obj_synth.c:546 modules/process/pat_synth.c:1496
+#: modules/process/obj_synth.c:547 modules/process/pat_synth.c:1497
 msgid "_Size:"
 msgstr "Dimen_sion :"
 
-#: modules/process/obj_synth.c:553
+#: modules/process/obj_synth.c:554
 msgid "Aspect Ratio"
 msgstr "Rapport d'aspect"
 
-#: modules/process/obj_synth.c:560
+#: modules/process/obj_synth.c:561
 msgid "_Aspect ratio:"
 msgstr "Rapport d'_aspect :"
 
-#: modules/process/obj_synth.c:589
+#: modules/process/obj_synth.c:590
 msgid "Scales _with size"
 msgstr "Mettre à l'échelle avec la taille"
 
-#: modules/process/obj_synth.c:792
+#: modules/process/obj_synth.c:793
 msgid "_Truncate:"
 msgstr "_Tronquer :"
 
@@ -10163,72 +10218,72 @@ msgstr "/_Correction des données/Masquer les p_oints aberrants"
 msgid "Mark data farther than 3σ from mean value"
 msgstr "Marque les données éloignées de plus de 3σ de la valeur moyenne"
 
-#: modules/process/pat_synth.c:234
+#: modules/process/pat_synth.c:235
 msgid "Ridges"
 msgstr "Créneaux"
 
-#: modules/process/pat_synth.c:235
+#: modules/process/pat_synth.c:236
 msgid "Holes"
 msgstr "Trous"
 
-#: modules/process/pat_synth.c:241
+#: modules/process/pat_synth.c:242
 msgid "Generates surfaces representing simple patterns (steps, ridges, ...)."
 msgstr "Génère une surface à partir de motifs simples (marches, créneaux...)."
 
-#: modules/process/pat_synth.c:256
+#: modules/process/pat_synth.c:257
 msgid "/S_ynthetic/_Pattern..."
 msgstr "/S_ynthèse/Motifs..."
 
-#: modules/process/pat_synth.c:260
+#: modules/process/pat_synth.c:261
 msgid "Generate patterned surface"
 msgstr "Générer une surface à partir de motifs"
 
-#: modules/process/pat_synth.c:405
+#: modules/process/pat_synth.c:406
 msgid "Pattern"
 msgstr "Motif"
 
-#: modules/process/pat_synth.c:486
+#: modules/process/pat_synth.c:487
 msgid "_Pattern:"
 msgstr "Motif :"
 
-#: modules/process/pat_synth.c:497
+#: modules/process/pat_synth.c:498
 msgid "Placement"
 msgstr "Positionnement"
 
-#: modules/process/pat_synth.c:852
+#: modules/process/pat_synth.c:853
 msgid "Flat"
 msgstr "Plateau"
 
-#: modules/process/pat_synth.c:860
+#: modules/process/pat_synth.c:861
 msgid "_Flat width:"
 msgstr "Largeur :"
 
-#: modules/process/pat_synth.c:877 modules/process/pat_synth.c:1178
-#: modules/process/pat_synth.c:1513
+#: modules/process/pat_synth.c:878 modules/process/pat_synth.c:1179
+#: modules/process/pat_synth.c:1514
 msgid "_Slope width:"
 msgstr "Largeur :"
 
-#: modules/process/pat_synth.c:1138
+#: modules/process/pat_synth.c:1139
 msgid "Top"
 msgstr "Haut"
 
-#: modules/process/pat_synth.c:1145
+#: modules/process/pat_synth.c:1146
 msgid "Flat _top width:"
 msgstr "Largeur :"
 
-#: modules/process/pat_synth.c:1153
+#: modules/process/pat_synth.c:1154
 msgid "Bottom"
 msgstr "Bas"
 
-#: modules/process/pat_synth.c:1161
+#: modules/process/pat_synth.c:1162
 msgid "Flat _bottom width:"
 msgstr "Largeur :"
 
-#: modules/process/pat_synth.c:1471 modules/tools/distance.c:131
+#: modules/process/pat_synth.c:1472 modules/tools/distance.c:131
 msgid "Distance"
 msgstr "Distance"
 
-#: modules/process/pat_synth.c:1479
+#: modules/process/pat_synth.c:1480
 msgid "_Distance:"
 msgstr "_Distance :"
 
@@ -11093,74 +11148,99 @@ msgstr "Résolution _Z :"
 msgid "Z _range:"
 msgstr "Plage Z : "
 
-#: modules/process/wave_synth.c:222
+#: modules/process/wave_synth.c:223
 msgid "Generates various kinds of waves."
 msgstr "Génère divers types d'ondes."
 
-#: modules/process/wave_synth.c:236
+#: modules/process/wave_synth.c:237
 msgid "/S_ynthetic/_Waves..."
 msgstr "/S_ynthèse/Ondes..."
 
-#: modules/process/wave_synth.c:240
+#: modules/process/wave_synth.c:241
 msgid "Generate waves"
 msgstr "Générer des ondes"
 
-#: modules/process/wave_synth.c:360
+#: modules/process/wave_synth.c:361
 msgid "Waves"
 msgstr "Ondes"
 
-#: modules/process/wave_synth.c:440 modules/tools/linestats.c:321
+#: modules/process/wave_synth.c:441 modules/tools/linestats.c:321
 msgid "_Quantity:"
 msgstr "Quantité"
 
-#: modules/process/wave_synth.c:447
+#: modules/process/wave_synth.c:448
 msgid "_Number of waves:"
 msgstr "_Nombre d'ondes :"
 
-#: modules/process/wave_synth.c:454 modules/process/wave_synth.c:600
+#: modules/process/wave_synth.c:455 modules/process/wave_synth.c:601
 #: modules/tools/roughness.c:282
 msgid "Amplitude"
 msgstr "Amplitude"
 
-#: modules/process/wave_synth.c:459
+#: modules/process/wave_synth.c:460
 msgid "_Wave form:"
 msgstr "Forme d'ondes : "
 
-#: modules/process/wave_synth.c:466
+#: modules/process/wave_synth.c:467
 msgid "Amplitude:"
 msgstr "Amplitude :"
 
-#: modules/process/wave_synth.c:484
+#: modules/process/wave_synth.c:485
 msgid "Frequency"
 msgstr "Fréquence"
 
-#: modules/process/wave_synth.c:490
+#: modules/process/wave_synth.c:491
 msgid "_Spatial frequency:"
 msgstr "Fréquence spatiale :"
 
-#: modules/process/wave_synth.c:506
+#: modules/process/wave_synth.c:507
 msgid "_X center:"
 msgstr "Centre _X :"
 
-#: modules/process/wave_synth.c:517
+#: modules/process/wave_synth.c:518
 msgid "_Y center:"
 msgstr "Centre _Y :"
 
-#: modules/process/wave_synth.c:583
+#: modules/process/wave_synth.c:584
 msgid "Cosine"
 msgstr "Sinusoïde"
 
-#: modules/process/wave_synth.c:584
+#: modules/process/wave_synth.c:585
 msgid "Inverse cosh"
 msgstr "Argument cosinus hyperbolique"
 
-#: modules/process/wave_synth.c:585
+#: modules/process/wave_synth.c:586
 msgid "Flat top"
 msgstr "Plateau"
 
-#: modules/process/wave_synth.c:599
+#: modules/process/wave_synth.c:600
 msgid "Displacement"
 msgstr "Déplacement"
+
+#: modules/process/wpour_mark.c:120
+msgid "Segmentates image using watershed with pre- and postprocessing."
+msgstr ""
+
+#: modules/process/wpour_mark.c:134
+#, fuzzy
+msgid "/_Grains/_Mark by Segmentation..."
+msgstr "/_Grains/Marqu_er par détection de bord..."
+
+#: modules/process/wpour_mark.c:138
+msgid "Segmentate using watershed "
+msgstr ""
+
+#: modules/process/wpour_mark.c:201
+msgid "Segmentate by Watershed"
+msgstr ""
+
+#: modules/process/wpour_mark.c:251
+msgid "Preprocessing"
+msgstr "Pré-traitement"
+
+#: modules/process/wpour_mark.c:257
+msgid "Postprocessing"
+msgstr "Post-traitement"
 
 #: modules/process/xydenoise.c:65
 msgid "Denoises measurement on basis of two orthogonal scans."
