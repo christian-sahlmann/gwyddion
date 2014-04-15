@@ -30,6 +30,7 @@
 #include <libprocess/level.h>
 #include <libprocess/grains.h>
 #include <libprocess/elliptic.h>
+#include <libprocess/arithmetic.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwyradiobuttons.h>
@@ -574,13 +575,9 @@ prewitt_do(GwyDataField *dfield, GwyDataField *show)
 static void
 slope_map(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield, *sfield;
+    GwyDataField *dfield, *sfield, *buf;
     GwySIUnit *xyunit, *zunit;
     gint oldid, newid;
-    gint xres, yres, i, j;
-    gdouble dx, dy;
-    const gdouble *d;
-    gdouble *sdata;
 
     g_return_if_fail(run & EDGE_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
@@ -589,41 +586,15 @@ slope_map(GwyContainer *data, GwyRunType run)
     g_return_if_fail(dfield);
 
     sfield = gwy_data_field_new_alike(dfield, FALSE);
+    buf = gwy_data_field_new_alike(dfield, FALSE);
+
+    gwy_data_field_filter_slope(dfield, sfield, buf);
+    gwy_data_field_hypot_of_fields(sfield, sfield, buf);
+    g_object_unref(buf);
+
     xyunit = gwy_data_field_get_si_unit_xy(sfield);
     zunit = gwy_data_field_get_si_unit_z(sfield);
     gwy_si_unit_divide(zunit, xyunit, zunit);
-
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    dx = gwy_data_field_get_xmeasure(dfield);
-    dy = gwy_data_field_get_ymeasure(dfield);
-    d = gwy_data_field_get_data_const(dfield);
-    sdata = gwy_data_field_get_data(sfield);
-
-    for (i = 0; i < yres; i++) {
-        const gdouble *row = d + i*xres, *prev = row - xres, *next = row + xres;
-        for (j = 0; j < xres; j++) {
-            gdouble xd, yd;
-
-            if (!j)
-                xd = row[j + 1] - row[j];
-            else if (j == xres-1)
-                xd = row[j] - row[j - 1];
-            else
-                xd = (row[j + 1] - row[j - 1])/2;
-
-            if (!i)
-                yd = next[j] - row[j];
-            else if (i == yres-1)
-                yd = row[j] - prev[j];
-            else
-                yd = (next[j] - prev[j])/2;
-
-            xd /= dx;
-            yd /= dy;
-            sdata[i*xres + j] = sqrt(xd*xd + yd*yd);
-        }
-    }
 
     newid = gwy_app_data_browser_add_data_field(sfield, data, TRUE);
     gwy_app_set_data_field_title(data, newid, _("Slope map"));

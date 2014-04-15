@@ -32,6 +32,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/stats.h>
 #include <libprocess/level.h>
+#include <libprocess/filters.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-mask.h>
@@ -914,41 +915,12 @@ compute_slopes(GwyDataField *dfield,
         fields[1] = yder;
         gwy_data_field_fit_local_planes(dfield, kernel_size,
                                         2, quantites, fields);
+
+        gwy_data_field_multiply(xder, xres/gwy_data_field_get_xreal(dfield));
+        gwy_data_field_multiply(yder, yres/gwy_data_field_get_yreal(dfield));
     }
-    else {
-        gint col, row;
-        gdouble *xd, *yd;
-        const gdouble *data;
-        gdouble d;
-
-        data = gwy_data_field_get_data_const(dfield);
-        xd = gwy_data_field_get_data(xder);
-        yd = gwy_data_field_get_data(yder);
-        for (row = 0; row < yres; row++) {
-            for (col = 0; col < xres; col++) {
-                if (!col)
-                    d = data[row*xres + col + 1] - data[row*xres + col];
-                else if (col == xres-1)
-                    d = data[row*xres + col] - data[row*xres + col - 1];
-                else
-                    d = (data[row*xres + col + 1]
-                         - data[row*xres + col - 1])/2;
-                *(xd++) = d;
-
-                if (!row)
-                    d = data[row*xres + xres + col] - data[row*xres + col];
-                else if (row == yres-1)
-                    d = data[row*xres + col] - data[row*xres - xres + col];
-                else
-                    d = (data[row*xres + xres + col]
-                         - data[row*xres - xres + col])/2;
-                *(yd++) = d;
-            }
-        }
-    }
-
-    gwy_data_field_multiply(xder, xres/gwy_data_field_get_xreal(dfield));
-    gwy_data_field_multiply(yder, yres/gwy_data_field_get_yreal(dfield));
+    else
+        gwy_data_field_filter_slope(dfield, xder, yder);
 }
 
 static void
