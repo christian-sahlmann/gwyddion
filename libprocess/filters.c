@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2014 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -1376,6 +1376,86 @@ gwy_data_field_filter_prewitt_total(GwyDataField *data_field)
                                        data_field->xres, data_field->yres);
     gwy_data_field_hypot_of_fields(data_field, data_field, workspace);
     g_object_unref(workspace);
+}
+
+/**
+ * gwy_data_field_filter_slope:
+ * @data_field: A data field to apply the filter to.
+ * @xder: Data field where the x-derivarive is to be stored, or %NULL if you
+ *        are only interested in the y-derivarive.
+ * @yder: Data field where the y-derivarive is to be stored, or %NULL if you
+ *        are only interested in the x-derivarive.
+ *
+ * Calculates x and y derivaties for an entire field.
+ *
+ * The derivatives are calculated as the simple symmetrical differences (in
+ * physical units, not pixel-wise), except at the edges where the differences
+ * are one-sided.
+ *
+ * Since: 2.37
+ **/
+void
+gwy_data_field_filter_slope(GwyDataField *data_field,
+                            GwyDataField *xder,
+                            GwyDataField *yder)
+{
+    guint xres, yres, i, j;
+    gdouble dx, dy;
+    const gdouble *d;
+    gdouble *bx, *by;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(!xder || GWY_IS_DATA_FIELD(xder));
+    g_return_if_fail(!yder || GWY_IS_DATA_FIELD(yder));
+    if (!xder && !yder)
+        return;
+
+    xres = data_field->xres;
+    yres = data_field->yres;
+    gwy_data_field_resample(xder, xres, yres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(yder, xres, yres, GWY_INTERPOLATION_NONE);
+    dx = gwy_data_field_get_xmeasure(data_field);
+    dy = gwy_data_field_get_ymeasure(data_field);
+    d = data_field->data;
+    bx = xder ? xder->data : NULL;
+    by = yder ? yder->data : NULL;
+
+    for (i = 0; i < yres; i++) {
+        const gdouble *row = d + i*xres, *prev = row - xres, *next = row + xres;
+        gdouble *bxrow = bx ? bx + i*xres : NULL;
+        gdouble *byrow = by ? by + i*xres : NULL;
+
+        for (j = 0; j < xres; j++) {
+            gdouble xd, yd;
+
+            if (bxrow) {
+                if (!j)
+                    xd = row[j + 1] - row[j];
+                else if (j == xres-1)
+                    xd = row[j] - row[j - 1];
+                else
+                    xd = (row[j + 1] - row[j - 1])/2;
+
+                bxrow[j] = xd/dx;
+            }
+
+            if (byrow) {
+                if (!i)
+                    yd = next[j] - row[j];
+                else if (i == yres-1)
+                    yd = row[j] - prev[j];
+                else
+                    yd = (next[j] - prev[j])/2;
+
+                byrow[j] = yd/dy;
+            }
+        }
+    }
+
+    if (xder)
+        gwy_data_field_invalidate(xder);
+    if (yder)
+        gwy_data_field_invalidate(yder);
 }
 
 /**
