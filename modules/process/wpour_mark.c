@@ -25,10 +25,13 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/grains.h>
 #include <libprocess/stats.h>
+#include <libprocess/arithmetic.h>
+#include <libprocess/filters.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-mask.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
@@ -46,70 +49,112 @@ enum {
     RESPONSE_PREVIEW = 2
 };
 
+typedef enum {
+    PREVIEW_ORIGINAL,
+    PREVIEW_PREPROC,
+    PREVIEW_NTYPES,
+} PreviewType;
+
+typedef struct {
+    guint size;
+    guint len;
+    gint *data;
+} IntList;
+
 typedef struct {
     gboolean inverted;
     gboolean update;
+    PreviewType preview_type;
+    gdouble blur_fwhm;
+    gdouble prefill_level;
+    gdouble prefill_height;
+    gdouble gradient_contrib;
+    gdouble curvature_contrib;
 
     /* interface only */
     gboolean computed;
 } WPourArgs;
 
 typedef struct {
+    WPourArgs *args;
     GtkWidget *dialog;
     GtkWidget *inverted;
     GtkWidget *view;
     GtkWidget *color_button;
     GtkWidget *update;
+    GwyPixmapLayer *player;
+    GSList *preview_type;
+    GtkAdjustment *blur_fwhm;
+    GtkAdjustment *prefill_level;
+    GtkAdjustment *prefill_height;
+    GtkAdjustment *gradient_contrib;
+    GtkAdjustment *curvature_contrib;
     GwyContainer *mydata;
-    WPourArgs *args;
     gboolean in_init;
 } WPourControls;
 
-static gboolean      module_register             (void);
-static void          wpour_mark                  (GwyContainer *data,
-                                                  GwyRunType run);
-static void          run_noninteractive          (WPourArgs *args,
-                                                  GwyContainer *data,
-                                                  GwyDataField *dfield,
-                                                  GQuark mquark);
-static void          wpour_dialog                (WPourArgs *args,
-                                                  GwyContainer *data,
-                                                  GwyDataField *dfield,
-                                                  gint id,
-                                                  GQuark mquark);
-static void          mask_color_changed          (GtkWidget *color_button,
-                                                  WPourControls *controls);
-static void          load_mask_color             (GtkWidget *color_button,
-                                                  GwyContainer *data);
-static void          wpour_dialog_update_controls(WPourControls *controls,
-                                                  WPourArgs *args);
-static void          inverted_changed            (WPourControls *controls,
-                                                  GtkToggleButton *toggle);
-static void          update_changed              (WPourControls *controls,
-                                                  GtkToggleButton *toggle);
-static void          table_attach_threshold      (GtkWidget *table,
-                                                  gint *row,
-                                                  const gchar *name,
-                                                  GtkObject **adj,
-                                                  gdouble value,
-                                                  GtkWidget **check,
-                                                  gpointer data);
-static void          wpour_invalidate            (WPourControls *controls);
-static GwyDataField* create_mask_field           (GwyDataField *dfield);
-static void          preview                     (WPourControls *controls,
-                                                  WPourArgs *args);
-static void          wpour_do                    (GwyDataField *dfield,
-                                                  GwyDataField *maskfield,
-                                                  WPourArgs *args);
-static void          wpour_load_args             (GwyContainer *container,
-                                                  WPourArgs *args);
-static void          wpour_save_args             (GwyContainer *container,
-                                                  WPourArgs *args);
-static void          wpour_sanitize_args         (WPourArgs *args);
+static gboolean       module_register             (void);
+static void           wpour_mark                  (GwyContainer *data,
+                                                   GwyRunType run);
+static void           run_noninteractive          (WPourArgs *args,
+                                                   GwyContainer *data,
+                                                   GwyDataField *dfield,
+                                                   GQuark mquark);
+static void           wpour_dialog                (WPourArgs *args,
+                                                   GwyContainer *data,
+                                                   GwyDataField *dfield,
+                                                   gint id,
+                                                   GQuark mquark);
+static void           mask_color_changed          (GtkWidget *color_button,
+                                                   WPourControls *controls);
+static void           load_mask_color             (GtkWidget *color_button,
+                                                   GwyContainer *data);
+static void           wpour_dialog_update_controls(WPourControls *controls,
+                                                   WPourArgs *args);
+static void           inverted_changed            (WPourControls *controls,
+                                                   GtkToggleButton *toggle);
+static void           update_changed              (WPourControls *controls,
+                                                   GtkToggleButton *toggle);
+static void preview_type_changed(GtkToggleButton *toggle,
+                     WPourControls *controls);
+static GtkAdjustment* table_attach_threshold      (GtkWidget *table,
+                                                   gint *row,
+                                                   const gchar *name,
+                                                   gdouble *value,
+                                                   WPourControls *controls);
+static void           wpour_update_double         (WPourControls *controls,
+                                                   GtkAdjustment *adj);
+static void           wpour_invalidate            (WPourControls *controls);
+static GwyDataField*  create_mask_field           (GwyDataField *dfield);
+static void           preview                     (WPourControls *controls,
+                                                   WPourArgs *args);
+static void           wpour_do                    (GwyDataField *dfield,
+                                                   GwyDataField *maskfield,
+                                                   GwyDataField *preprocessed,
+                                                   WPourArgs *args);
+static void           add_slope_contribs          (GwyDataField *workspace,
+                                                   GwyDataField *dfield,
+                                                   gdouble gradient_contrib,
+                                                   gdouble curvature_contrib);
+static void           prefill_minima              (GwyDataField *dfield,
+                                                   GwyDataField *workspace,
+                                                   IntList *inqueue,
+                                                   IntList *outqueue,
+                                                   gdouble depth,
+                                                   gdouble height);
+static void           wpour_load_args             (GwyContainer *container,
+                                                   WPourArgs *args);
+static void           wpour_save_args             (GwyContainer *container,
+                                                   WPourArgs *args);
+static void           wpour_sanitize_args         (WPourArgs *args);
 
 static const WPourArgs wpour_defaults = {
     FALSE,
     TRUE,
+    PREVIEW_ORIGINAL,
+    0.0,
+    0.0, 0.0,
+    0.0, 0.0,
     /* interface only */
     FALSE,
 };
@@ -117,7 +162,7 @@ static const WPourArgs wpour_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Segmentates image using watershed with pre- and postprocessing."),
+    N_("Segments image using watershed with pre- and postprocessing."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti)",
@@ -135,7 +180,7 @@ module_register(void)
                               GWY_STOCK_GRAINS_WATER,
                               WPOUR_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Segmentate using watershed "));
+                              N_("Segment using watershed "));
 
     return TRUE;
 }
@@ -175,7 +220,7 @@ run_noninteractive(WPourArgs *args,
 
     gwy_app_undo_qcheckpointv(data, 1, &mquark);
     mfield = create_mask_field(dfield);
-    wpour_do(dfield, mfield, args);
+    wpour_do(dfield, mfield, NULL, args);
     gwy_container_set_object(data, mquark, mfield);
     g_object_unref(mfield);
 }
@@ -187,7 +232,9 @@ wpour_dialog(WPourArgs *args,
             gint id,
             GQuark mquark)
 {
-    GtkWidget *dialog, *table, *hbox;
+    GtkWidget *dialog, *table, *hbox, *label;
+    GSList *group;
+    GtkObject *gtkobj;
     WPourControls controls;
     gint response;
     GwyPixmapLayer *layer;
@@ -198,7 +245,7 @@ wpour_dialog(WPourArgs *args,
     controls.args = args;
     controls.in_init = TRUE;
 
-    dialog = gtk_dialog_new_with_buttons(_("Segmentate by Watershed"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("Segment by Watershed"), NULL, 0,
                                          NULL);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
                                  gwy_stock_like_button_new(_("_Update"),
@@ -229,6 +276,7 @@ wpour_dialog(WPourArgs *args,
                             0);
     controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
+    controls.player = layer;
     g_object_set(layer,
                  "data-key", "/0/data",
                  "gradient-key", "/0/base/palette",
@@ -251,6 +299,32 @@ wpour_dialog(WPourArgs *args,
     gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Preprocessing")),
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
+
+    gtkobj = gtk_adjustment_new(args->blur_fwhm, 0.0, 20.0, 0.01, 0.1, 0);
+    controls.blur_fwhm = GTK_ADJUSTMENT(gtkobj);
+    g_object_set_data(G_OBJECT(gtkobj), "target", &args->blur_fwhm);
+    gwy_table_attach_hscale(table, row,
+                            _("Gaussian _smoothening:"), "px", gtkobj,
+                            GWY_HSCALE_SQRT);
+    g_signal_connect_swapped(gtkobj, "value-changed",
+                             G_CALLBACK(wpour_update_double), &controls);
+    row++;
+
+    controls.gradient_contrib
+        = table_attach_threshold(table, &row, _("Add _gradient:"),
+                                 &args->gradient_contrib, &controls);
+
+    controls.curvature_contrib
+        = table_attach_threshold(table, &row, _("Add _curvature:"),
+                                 &args->curvature_contrib, &controls);
+
+    controls.prefill_level
+        = table_attach_threshold(table, &row, _("Prefill _level:"),
+                                 &args->prefill_level, &controls);
+
+    controls.prefill_height
+        = table_attach_threshold(table, &row, _("Pre_fill from minima:"),
+                                 &args->prefill_height, &controls);
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
@@ -285,6 +359,22 @@ wpour_dialog(WPourArgs *args,
                      G_CALLBACK(mask_color_changed), &controls);
     row++;
 
+    label = gtk_label_new(_("Preview:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    group = gwy_radio_buttons_createl(G_CALLBACK(preview_type_changed),
+                                      &controls,
+                                      args->preview_type,
+                                      _("Original _image"), PREVIEW_ORIGINAL,
+                                      _("Pr_eprocessed image"), PREVIEW_PREPROC,
+                                      NULL);
+    controls.preview_type = group;
+    row = gwy_radio_buttons_attach_to_table(group, GTK_TABLE(table), 3, row);
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     controls.update = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.update),
                                  args->update);
@@ -292,6 +382,7 @@ wpour_dialog(WPourArgs *args,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(controls.update, "toggled",
                              G_CALLBACK(update_changed), &controls);
+    row++;
 
     controls.in_init = FALSE;
     wpour_invalidate(&controls);
@@ -317,9 +408,6 @@ wpour_dialog(WPourArgs *args,
             *args = wpour_defaults;
             args->update = temp;
             wpour_dialog_update_controls(&controls, args);
-            controls.in_init = TRUE;
-            preview(&controls, args);
-            controls.in_init = FALSE;
             break;
 
             case RESPONSE_PREVIEW:
@@ -356,10 +444,21 @@ static void
 wpour_dialog_update_controls(WPourControls *controls,
                              WPourArgs *args)
 {
+    controls->in_init = TRUE;
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->inverted),
                                  args->inverted);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update),
                                  args->update);
+    gwy_radio_buttons_set_current(controls->preview_type, args->preview_type);
+    gtk_adjustment_set_value(controls->blur_fwhm, args->blur_fwhm);
+    gtk_adjustment_set_value(controls->prefill_level, args->prefill_level);
+    gtk_adjustment_set_value(controls->prefill_height, args->prefill_height);
+    gtk_adjustment_set_value(controls->gradient_contrib,
+                             args->gradient_contrib);
+    gtk_adjustment_set_value(controls->curvature_contrib,
+                             args->curvature_contrib);
+    controls->in_init = FALSE;
+    wpour_invalidate(controls);
 }
 
 static void
@@ -382,19 +481,37 @@ update_changed(WPourControls *controls,
 }
 
 static void
-table_attach_threshold(GtkWidget *table, gint *row, const gchar *name,
-                       GtkObject **adj, gdouble value,
-                       GtkWidget **check,
-                       gpointer data)
+preview_type_changed(G_GNUC_UNUSED GtkToggleButton *toggle,
+                     WPourControls *controls)
 {
-    *adj = gtk_adjustment_new(value, 0.0, 100.0, 0.1, 5, 0);
-    gwy_table_attach_hscale(table, *row, name, "%", *adj, GWY_HSCALE_CHECK);
-    *check = gwy_table_hscale_get_check(*adj);
-    g_signal_connect_swapped(*adj, "value-changed",
-                             G_CALLBACK(wpour_invalidate), data);
-    g_signal_connect_swapped(*check, "toggled",
-                             G_CALLBACK(wpour_invalidate), data);
+    WPourArgs *args = controls->args;
+    args->preview_type = gwy_radio_buttons_get_current(controls->preview_type);
+    wpour_invalidate(controls);
+}
+
+static GtkAdjustment*
+table_attach_threshold(GtkWidget *table, gint *row, const gchar *name,
+                       gdouble *value, WPourControls *controls)
+{
+    GtkObject *adj;
+
+    adj = gtk_adjustment_new(*value, 0.0, 100.0, 0.01, 1.0, 0);
+    g_object_set_data(G_OBJECT(adj), "target", value);
+    gwy_table_attach_hscale(table, *row, name, "%", adj, GWY_HSCALE_DEFAULT);
+    g_signal_connect_swapped(adj, "value-changed",
+                             G_CALLBACK(wpour_update_double), controls);
     (*row)++;
+
+    return GTK_ADJUSTMENT(adj);
+}
+
+static void
+wpour_update_double(WPourControls *controls, GtkAdjustment *adj)
+{
+    gdouble *value = g_object_get_data(G_OBJECT(adj), "target");
+
+    *value = gtk_adjustment_get_value(adj);
+    wpour_invalidate(controls);
 }
 
 static void
@@ -447,11 +564,19 @@ static void
 preview(WPourControls *controls,
         WPourArgs *args)
 {
-    GwyDataField *mask, *dfield;
+    GwyDataField *mask, *dfield, *preprocessed;
     GwyPixmapLayer *layer;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
+ 
+    if (!gwy_container_gis_object_by_name(controls->mydata, "/1/data",
+                                          &preprocessed)) {
+        preprocessed = gwy_data_field_new_alike(dfield, FALSE);
+        gwy_container_set_object_by_name(controls->mydata, "/1/data",
+                                         preprocessed);
+        g_object_unref(preprocessed);
+    }
 
     if (!gwy_container_gis_object_by_name(controls->mydata, "/0/mask", &mask)) {
         mask = create_mask_field(dfield);
@@ -463,33 +588,232 @@ preview(WPourControls *controls,
         gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
         gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), layer);
     }
-    wpour_do(dfield, mask, args);
+    wpour_do(dfield, mask, preprocessed, args);
     gwy_data_field_data_changed(mask);
+    gwy_data_field_data_changed(preprocessed);
+
+    if (args->preview_type == PREVIEW_ORIGINAL)
+        g_object_set(controls->player, "data-key", "/0/data", NULL);
+    else
+        g_object_set(controls->player, "data-key", "/1/data", NULL);
 
     args->computed = TRUE;
+}
+
+static inline IntList*
+int_list_new(guint prealloc)
+{
+    IntList *list = g_slice_new0(IntList);
+    prealloc = MAX(prealloc, 16);
+    list->size = prealloc;
+    list->data = g_new(gint, list->size);
+    return list;
+}
+
+static inline void
+int_list_add(IntList *list, gint i)
+{
+    if (G_UNLIKELY(list->len == list->size)) {
+        list->size = MAX(2*list->size, 16);
+        list->data = g_renew(gint, list->data, list->size);
+    }
+
+    list->data[list->len] = i;
+    list->len++;
+}
+
+static inline void
+int_list_add_unique(IntList **plist, gint i)
+{
+    IntList *list;
+    guint j;
+
+    if (!*plist)
+        *plist = int_list_new(0);
+
+    list = *plist;
+    for (j = 0; j < list->len; j++) {
+        if (list->data[j] == i)
+            return;
+    }
+    int_list_add(list, i);
+}
+
+static void
+int_list_free(IntList *list)
+{
+    g_free(list->data);
+    g_slice_free(IntList, list);
 }
 
 static void
 wpour_do(GwyDataField *dfield,
          GwyDataField *maskfield,
+         GwyDataField *preprocessed,
          WPourArgs *args)
 {
-    GwyDataField *workfield = gwy_data_field_duplicate(dfield);
+    guint xres = dfield->xres, yres = dfield->yres;
+    IntList *inqueue = int_list_new(0);
+    IntList *outqueue = int_list_new(0);
+
+    if (preprocessed) {
+        g_object_ref(preprocessed);
+        gwy_data_field_copy(dfield, preprocessed, FALSE);
+    }
+    else {
+        preprocessed = gwy_data_field_duplicate(dfield);
+    }
 
     if (args->inverted)
-        gwy_data_field_invert(workfield, FALSE, FALSE, TRUE);
-    gwy_data_field_waterpour(workfield, maskfield, NULL);
-    g_object_unref(workfield);
+        gwy_data_field_invert(preprocessed, FALSE, FALSE, TRUE);
+
+    /* Use maskfield as a scratch buffer. */
+    gwy_data_field_add(preprocessed, -gwy_data_field_get_max(preprocessed));
+    if (args->blur_fwhm) {
+        gdouble sigma = args->blur_fwhm/(2.0*sqrt(2*G_LN2));
+        gwy_data_field_area_filter_gaussian(preprocessed, sigma,
+                                            0, 0, xres, yres);
+    }
+    add_slope_contribs(maskfield, preprocessed,
+                       args->gradient_contrib, args->curvature_contrib);
+    prefill_minima(preprocessed, maskfield, inqueue, outqueue,
+                   args->prefill_level, args->prefill_height);
+    gwy_data_field_waterpour(preprocessed, maskfield, NULL);
+
+    int_list_free(outqueue);
+    int_list_free(inqueue);
+    g_object_unref(preprocessed);
 }
 
-static const gchar inverted_key[]  = "/module/wpour_mark/inverted";
-static const gchar update_key[]    = "/module/wpour_mark/update";
+static void
+add_slope_contribs(GwyDataField *workspace, GwyDataField *dfield,
+                   gdouble gradient_contrib, gdouble curvature_contrib)
+{
+    GwyDataField *xder, *yder;
+    gdouble r1, r2, q, p;
+    guint k, xres = dfield->xres, yres = dfield->yres;
+
+    if (!gradient_contrib && !curvature_contrib)
+        return;
+
+    xder = gwy_data_field_new_alike(dfield, FALSE);
+    yder = gwy_data_field_new_alike(dfield, FALSE);
+
+    gwy_data_field_filter_slope(dfield, xder, yder);
+    gwy_data_field_hypot_of_fields(workspace, xder, yder);
+    r1 = gwy_data_field_get_rms(dfield);
+    r2 = gwy_data_field_get_rms(workspace);
+    if (r2) {
+        gdouble *d = dfield->data, *w = workspace->data;
+
+        q = r1/r2;
+        p = gradient_contrib/100.0;
+        for (k = 0; k < xres*yres; k++) {
+            d[k] = p*q*w[k] + (1.0 - p)*d[k];
+        }
+    }
+
+    g_object_unref(yder);
+    g_object_unref(xder);
+
+    gwy_data_field_invalidate(dfield);
+    gwy_data_field_invalidate(workspace);
+}
+
+static void
+prefill_minima(GwyDataField *dfield, GwyDataField *workspace,
+               IntList *inqueue, IntList *outqueue,
+               gdouble depth, gdouble height)
+{
+    guint i, j, k, m, xres = dfield->xres, yres = dfield->yres;
+    gdouble min, max;
+
+    gwy_data_field_get_min_max(dfield, &min, &max);
+    if (min == max)
+        return;
+
+    /* Simple absolute prefilling corresponding to plain mark-by-threshold. */
+    if (depth > 0.0) {
+        gdouble depththreshold = depth/100.0*(max - min) + min;
+        gdouble *d = dfield->data;
+
+        for (k = 0; k < xres*yres; k++) {
+            if (d[k] < depththreshold)
+                d[k] = depththreshold;
+        }
+        gwy_data_field_invalidate(dfield);
+    }
+
+    /* Simple height prefilling which floods all pixels with heights only
+     * little above the minimum. */
+    if (height > 0.0) {
+        gdouble heightthreshold = height/100.0*(max - min);
+        gdouble *d = dfield->data, *w = workspace->data;
+
+        gwy_data_field_mark_extrema(dfield, workspace, FALSE);
+
+        inqueue->len = 0;
+        for (k = 0; k < xres*yres; k++) {
+            if (w[k])
+                int_list_add(inqueue, k);
+        }
+
+        while (inqueue->len) {
+            outqueue->len = 0;
+            for (m = 0; m < inqueue->len; m++) {
+                gdouble z, zth;
+
+                k = inqueue->data[m];
+                i = k/xres;
+                j = k % xres;
+                z = d[k];
+                zth = z + heightthreshold*fabs(z)/(max - min);
+
+                if (i > 0 && d[k-xres] > z && d[k-xres] < zth) {
+                    d[k-xres] = z;
+                    int_list_add(outqueue, k-xres);
+                }
+                if (j > 0 && d[k-1] > z && d[k-1] < zth) {
+                    d[k-1] = z;
+                    int_list_add(outqueue, k-1);
+                }
+                if (j < xres-1 && d[k+1] > z && d[k+1] < zth) {
+                    d[k+1] = z;
+                    int_list_add(outqueue, k+1);
+                }
+                if (i < yres-1 && d[k+xres] > z && d[k+xres] < zth) {
+                    d[k+xres] = z;
+                    int_list_add(outqueue, k+xres);
+                }
+            }
+
+            GWY_SWAP(IntList*, inqueue, outqueue);
+        }
+
+        gwy_data_field_invalidate(dfield);
+    }
+}
+
+static const gchar inverted_key[]          = "/module/wpour_mark/inverted";
+static const gchar update_key[]            = "/module/wpour_mark/update";
+static const gchar preview_type_key[]      = "/module/wpour_mark/preview_type";
+static const gchar blur_fwhm_key[]         = "/module/wpour_mark/blur_fwhm";
+static const gchar prefill_level_key[]     = "/module/wpour_mark/prefill_level";
+static const gchar prefill_height_key[]    = "/module/wpour_mark/prefill_height";
+static const gchar gradient_contrib_key[]  = "/module/wpour_mark/gradient_contrib";
+static const gchar curvature_contrib_key[] = "/module/wpour_mark/curvature_contrib";
 
 static void
 wpour_sanitize_args(WPourArgs *args)
 {
     args->inverted = !!args->inverted;
     args->update = !!args->update;
+    args->preview_type = MIN(args->preview_type, PREVIEW_NTYPES-1);
+    args->blur_fwhm = CLAMP(args->blur_fwhm, 0.0, 100.0);
+    args->prefill_level = CLAMP(args->prefill_level, 0.0, 100.0);
+    args->prefill_height = CLAMP(args->prefill_height, 0.0, 100.0);
+    args->gradient_contrib = CLAMP(args->gradient_contrib, 0.0, 100.0);
+    args->curvature_contrib = CLAMP(args->curvature_contrib, 0.0, 100.0);
 }
 
 static void
@@ -500,6 +824,18 @@ wpour_load_args(GwyContainer *container,
 
     gwy_container_gis_boolean_by_name(container, inverted_key, &args->inverted);
     gwy_container_gis_boolean_by_name(container, update_key, &args->update);
+    gwy_container_gis_enum_by_name(container, preview_type_key,
+                                   &args->preview_type);
+    gwy_container_gis_double_by_name(container, blur_fwhm_key,
+                                     &args->blur_fwhm);
+    gwy_container_gis_double_by_name(container, prefill_level_key,
+                                     &args->prefill_level);
+    gwy_container_gis_double_by_name(container, prefill_height_key,
+                                     &args->prefill_height);
+    gwy_container_gis_double_by_name(container, gradient_contrib_key,
+                                     &args->gradient_contrib);
+    gwy_container_gis_double_by_name(container, curvature_contrib_key,
+                                     &args->curvature_contrib);
     wpour_sanitize_args(args);
 }
 
@@ -509,6 +845,18 @@ wpour_save_args(GwyContainer *container,
 {
     gwy_container_set_boolean_by_name(container, inverted_key, args->inverted);
     gwy_container_set_boolean_by_name(container, update_key, args->update);
+    gwy_container_set_enum_by_name(container, preview_type_key,
+                                   args->preview_type);
+    gwy_container_set_double_by_name(container, blur_fwhm_key,
+                                     args->blur_fwhm);
+    gwy_container_set_double_by_name(container, prefill_level_key,
+                                     args->prefill_level);
+    gwy_container_set_double_by_name(container, prefill_height_key,
+                                     args->prefill_height);
+    gwy_container_set_double_by_name(container, gradient_contrib_key,
+                                     args->gradient_contrib);
+    gwy_container_set_double_by_name(container, curvature_contrib_key,
+                                     args->curvature_contrib);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
