@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-04-12 03:58+0200\n"
-"PO-Revision-Date: 2014-04-15 21:21+0100\n"
+"POT-Creation-Date: 2014-04-16 03:58+0200\n"
+"PO-Revision-Date: 2014-04-16 21:24+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -744,15 +744,15 @@ msgstr "Lumière et matériau"
 msgid "Labels"
 msgstr "Labels"
 
-#: libgwydgets/gwy3dwindow.c:763 modules/process/facet_analysis.c:357
-#: modules/process/facet_analysis.c:373 modules/process/shade.c:252
+#: libgwydgets/gwy3dwindow.c:763 modules/process/facet_analysis.c:358
+#: modules/process/facet_analysis.c:374 modules/process/shade.c:252
 #: modules/process/tilt.c:221
 msgid "φ:"
 msgstr "φ :"
 
 #: libgwydgets/gwy3dwindow.c:763 libgwydgets/gwy3dwindow.c:769
 #: libgwydgets/gwy3dwindow.c:934 libgwydgets/gwy3dwindow.c:942
-#: modules/process/facet_analysis.c:401 modules/process/indent_analyze.c:461
+#: modules/process/facet_analysis.c:402 modules/process/indent_analyze.c:461
 #: modules/process/rotate.c:285 modules/process/shade.c:244
 #: modules/process/shade.c:252 modules/process/tilt.c:209
 #: modules/process/tilt.c:221 modules/process/tip_model.c:233
@@ -760,8 +760,8 @@ msgstr "φ :"
 msgid "deg"
 msgstr "deg"
 
-#: libgwydgets/gwy3dwindow.c:769 modules/process/facet_analysis.c:356
-#: modules/process/facet_analysis.c:372 modules/process/shade.c:244
+#: libgwydgets/gwy3dwindow.c:769 modules/process/facet_analysis.c:357
+#: modules/process/facet_analysis.c:373 modules/process/shade.c:244
 #: modules/process/tilt.c:209
 msgid "θ:"
 msgstr "θ :"
@@ -872,16 +872,16 @@ msgid "pixels"
 msgstr "pixels"
 
 #: libgwydgets/gwy3dwindow.c:1133 modules/file/hdrimage.cc:2196
-#: modules/file/pixmap.c:1073 modules/file/pixmap.c:3150
+#: modules/file/pixmap.c:1074 modules/file/pixmap.c:3154
 #: modules/file/rawfile.c:401 modules/process/angle_dist.c:172
 #: modules/process/calcoefs_new.c:348 modules/process/calibrate.c:385
 #: modules/process/col_synth.c:328 modules/process/correct_affine.c:293
 #: modules/process/curvature.c:605 modules/process/cwt.c:135
 #: modules/process/deposit_synth.c:359 modules/process/domain_synth.c:368
 #: modules/process/drift.c:240 modules/process/dwt.c:166
-#: modules/process/dwtanisotropy.c:184 modules/process/edge.c:684
+#: modules/process/dwtanisotropy.c:184 modules/process/edge.c:655
 #: modules/process/extend.c:191 modules/process/facet-level.c:285
-#: modules/process/facet_analysis.c:275 modules/process/fft.c:283
+#: modules/process/facet_analysis.c:276 modules/process/fft.c:283
 #: modules/process/fft_filter_2d.c:447 modules/process/fft_synth.c:353
 #: modules/process/fractal.c:207 modules/process/grain_edge.c:218
 #: modules/process/grain_mark.c:264 modules/process/grain_rem_threshold.c:229
@@ -894,11 +894,11 @@ msgstr "pixels"
 #: modules/process/polydistort.c:218 modules/process/polylevel.c:377
 #: modules/process/rank.c:132 modules/process/rotate.c:266
 #: modules/process/scale.c:196 modules/process/scars.c:477
-#: modules/process/shade.c:216 modules/process/slope_dist.c:203
+#: modules/process/shade.c:216 modules/process/slope_dist.c:204
 #: modules/process/sphere-revolve.c:218 modules/process/tilt.c:160
 #: modules/process/tip_model.c:170 modules/process/unrotate.c:228
 #: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:363
-#: modules/process/wpour_mark.c:209 modules/volume/volume_calibrate.c:371
+#: modules/process/wpour_mark.c:256 modules/volume/volume_calibrate.c:371
 #: modules/volume/volume_extract.c:331
 msgid "_Reset"
 msgstr "_Remise à zéro"
@@ -1226,7 +1226,7 @@ msgid "Preview"
 msgstr "Aperçu"
 
 #: libgwymodule/gwymodule-file.c:536 modules/file/err.h:41
-#: modules/file/pixmap.c:781
+#: modules/file/pixmap.c:782
 #, c-format
 msgid "Cannot open file for reading: %s."
 msgstr "Impossible d'ouvrir le fichier pour le lire : %s."
@@ -2915,14 +2915,14 @@ msgstr "Unités :"
 msgid "Export Text"
 msgstr "Exporter au format texte"
 
-#: modules/file/asciiexport.c:273 modules/file/pixmap.c:3253
+#: modules/file/asciiexport.c:273 modules/file/pixmap.c:3257
 #: modules/file/rawfile.c:722 modules/file/rawxyz.c:671
 #: modules/process/calibrate.c:597 modules/process/col_synth.c:456
 #: modules/process/correct_affine.c:451 modules/process/extend.c:257
 #: modules/process/fft_filter_1d.c:296 modules/process/grain_dist.c:306
 #: modules/process/grain_edge.c:270 modules/process/grain_mark.c:345
 #: modules/process/grain_rem_threshold.c:328 modules/process/grain_wshed.c:278
-#: modules/process/tip_blind.c:360 modules/process/wpour_mark.c:263
+#: modules/process/tip_blind.c:360 modules/process/wpour_mark.c:337
 #: modules/tools/spotremove.c:317 modules/tools/stats.c:379
 msgid "Options"
 msgstr "Options"
@@ -3499,39 +3499,39 @@ msgid "OpenEXR data type %u is invalid or unsupported."
 msgstr "Le type de données OpenEXR %u est invalide ou non supportée."
 
 #: modules/file/hdrimage.cc:1426 modules/file/hdrimage.cc:1435
-#: modules/file/pixmap.c:1610 modules/file/pixmap.c:1620
+#: modules/file/pixmap.c:1611 modules/file/pixmap.c:1621
 #, c-format
 msgid "libpng initialization error (in %s)"
 msgstr "Erreur d'initialisation de libpng (dans %s)"
 
-#: modules/file/hdrimage.cc:1444 modules/file/pixmap.c:1680
+#: modules/file/hdrimage.cc:1444 modules/file/pixmap.c:1681
 msgid "libpng error occured"
 msgstr "Une erreur s'est produite dans libpng"
 
 #. TRANSLATORS: Dialog title; %s is PNG, TIFF, ...
-#: modules/file/hdrimage.cc:2193 modules/file/pixmap.c:1070
+#: modules/file/hdrimage.cc:2193 modules/file/pixmap.c:1071
 #, c-format
 msgid "Import %s"
 msgstr "Importer %s"
 
-#: modules/file/hdrimage.cc:2220 modules/file/pixmap.c:1096
+#: modules/file/hdrimage.cc:2220 modules/file/pixmap.c:1097
 msgid "Image Information"
 msgstr "Information sur l'image"
 
-#: modules/file/hdrimage.cc:2229 modules/file/pixmap.c:1103
+#: modules/file/hdrimage.cc:2229 modules/file/pixmap.c:1104
 msgid "Horizontal size:"
 msgstr "Taille horizontale :"
 
 #: modules/file/hdrimage.cc:2229 modules/file/hdrimage.cc:2235
-#: modules/file/pixmap.c:1103 modules/file/pixmap.c:1109
+#: modules/file/pixmap.c:1104 modules/file/pixmap.c:1110
 msgid "px"
 msgstr "px"
 
-#: modules/file/hdrimage.cc:2235 modules/file/pixmap.c:1109
+#: modules/file/hdrimage.cc:2235 modules/file/pixmap.c:1110
 msgid "Vertical size:"
 msgstr "Taille verticale :"
 
-#: modules/file/hdrimage.cc:2240 modules/file/pixmap.c:1114
+#: modules/file/hdrimage.cc:2240 modules/file/pixmap.c:1115
 msgid "Channels:"
 msgstr "Canaux :"
 
@@ -3539,21 +3539,21 @@ msgstr "Canaux :"
 msgid "Pages:"
 msgstr "Pages : "
 
-#: modules/file/hdrimage.cc:2273 modules/file/pixmap.c:1145
+#: modules/file/hdrimage.cc:2273 modules/file/pixmap.c:1146
 #: modules/file/rawfile.c:625 modules/file/rawxyz.c:570
 #: modules/process/dimensions.h:466
 msgid "Physical Dimensions"
 msgstr "Dimensions physiques"
 
-#: modules/file/hdrimage.cc:2287 modules/file/pixmap.c:1155
-#: modules/file/pixmap.c:3195 modules/file/rawfile.c:634
+#: modules/file/hdrimage.cc:2287 modules/file/pixmap.c:1156
+#: modules/file/pixmap.c:3199 modules/file/rawfile.c:634
 #: modules/process/crosscor.c:199 modules/process/dimensions.h:472
 #: modules/process/tip_blind.c:336
 msgid "_Width:"
 msgstr "Largeur :"
 
 #: modules/file/hdrimage.cc:2313 modules/file/hdrimage.cc:2378
-#: modules/file/pixmap.c:1177 modules/file/pixmap.c:1232
+#: modules/file/pixmap.c:1178 modules/file/pixmap.c:1233
 #: modules/file/rawfile.c:657 modules/file/rawfile.c:713
 #: modules/process/calcoefs_new.c:384 modules/process/calcoefs_new.c:451
 #: modules/process/calcoefs_simple.c:391 modules/process/calcoefs_simple.c:458
@@ -3565,23 +3565,23 @@ msgstr "Largeur :"
 msgid "verb|Change"
 msgstr "Changer"
 
-#: modules/file/hdrimage.cc:2328 modules/file/pixmap.c:1190
+#: modules/file/hdrimage.cc:2328 modules/file/pixmap.c:1191
 #: modules/file/rawfile.c:670 modules/process/crosscor.c:205
 #: modules/process/dimensions.h:476
 msgid "H_eight:"
 msgstr "Hauteur :"
 
-#: modules/file/hdrimage.cc:2337 modules/file/pixmap.c:1197
+#: modules/file/hdrimage.cc:2337 modules/file/pixmap.c:1198
 #: modules/file/rawfile.c:677 modules/file/rawxyz.c:551
 msgid "Identical _measures"
 msgstr "_Mesures identiques"
 
-#: modules/file/hdrimage.cc:2351 modules/file/pixmap.c:1209
+#: modules/file/hdrimage.cc:2351 modules/file/pixmap.c:1210
 #: modules/file/rawfile.c:689
 msgid "_Z-scale (per sample unit):"
 msgstr "Échelle _Z (par unité d'échantillon) :"
 
-#: modules/file/hdrimage.cc:2540 modules/file/pixmap.c:1459
+#: modules/file/hdrimage.cc:2540 modules/file/pixmap.c:1460
 #: modules/file/rawfile.c:1323 modules/process/calcoefs_new.c:776
 #: modules/process/calcoefs_simple.c:1191 modules/process/calcoefs_view.c:1393
 #: modules/process/calibrate.c:967 modules/process/dimensions.h:194
@@ -3589,7 +3589,7 @@ msgstr "Échelle _Z (par unité d'échantillon) :"
 msgid "Change Units"
 msgstr "Changer les unités"
 
-#: modules/file/hdrimage.cc:2554 modules/file/pixmap.c:1473
+#: modules/file/hdrimage.cc:2554 modules/file/pixmap.c:1474
 #: modules/file/rawfile.c:1337 modules/process/calcoefs_new.c:789
 #: modules/process/calcoefs_simple.c:1204 modules/process/calcoefs_view.c:1406
 #: modules/process/calibrate.c:981 modules/process/dimensions.h:207
@@ -4524,87 +4524,87 @@ msgstr "Des dossiers emboîtés ont été trouvés"
 msgid "Truncated data in block %s"
 msgstr "Données tronquées dans le bloc %s"
 
-#: modules/file/pixmap.c:369
+#: modules/file/pixmap.c:370
 msgid "All channels"
 msgstr "Tous les canaux"
 
-#: modules/file/pixmap.c:370
+#: modules/file/pixmap.c:371
 msgid "Red"
 msgstr "Rouge"
 
-#: modules/file/pixmap.c:371
+#: modules/file/pixmap.c:372
 msgid "Green"
 msgstr "Vert"
 
-#: modules/file/pixmap.c:372
+#: modules/file/pixmap.c:373
 msgid "Blue"
 msgstr "Bleu"
 
-#: modules/file/pixmap.c:373
+#: modules/file/pixmap.c:374
 msgid "Value (max)"
 msgstr "Valeur (max)"
 
-#: modules/file/pixmap.c:374
+#: modules/file/pixmap.c:375
 msgid "RGB sum"
 msgstr "Somme RVB"
 
-#: modules/file/pixmap.c:375
+#: modules/file/pixmap.c:376
 msgid "Luma"
 msgstr "Luma"
 
-#: modules/file/pixmap.c:376
+#: modules/file/pixmap.c:377
 msgid "Alpha"
 msgstr "Alpha"
 
-#: modules/file/pixmap.c:388
+#: modules/file/pixmap.c:389
 msgid "Portable Network Graphics (.png)"
 msgstr "PNG (.png)"
 
-#: modules/file/pixmap.c:394
+#: modules/file/pixmap.c:395
 msgid "JPEG (.jpeg,.jpg)"
 msgstr "JPEG (.jpeg, .jpg)"
 
-#: modules/file/pixmap.c:400
+#: modules/file/pixmap.c:401
 msgid "TIFF (.tiff,.tif)"
 msgstr "TIFF (.tiff, .tif)"
 
-#: modules/file/pixmap.c:406
+#: modules/file/pixmap.c:407
 msgid "Portable Pixmap (.ppm,.pnm)"
 msgstr "PPM (.ppm, .pnm)"
 
-#: modules/file/pixmap.c:412
+#: modules/file/pixmap.c:413
 msgid "Windows or OS2 Bitmap (.bmp)"
 msgstr "BMP (.bmp)"
 
-#: modules/file/pixmap.c:418
+#: modules/file/pixmap.c:419
 msgid "TARGA (.tga,.targa)"
 msgstr "TARGA (.tga, .targa)"
 
-#: modules/file/pixmap.c:431
+#: modules/file/pixmap.c:432
 msgid "Graphics Interchange Format (.gif)"
 msgstr "GIF (.gif)"
 
-#: modules/file/pixmap.c:435
+#: modules/file/pixmap.c:436
 msgid "JPEG 2000 (.jpx)"
 msgstr "JPEG 2000 (.jpx)"
 
-#: modules/file/pixmap.c:439
+#: modules/file/pixmap.c:440
 msgid "PCX (.pcx)"
 msgstr "PCX (.pcx)"
 
-#: modules/file/pixmap.c:443
+#: modules/file/pixmap.c:444
 msgid "X Pixmap (.xpm)"
 msgstr "XPM (.xpm)"
 
-#: modules/file/pixmap.c:447
+#: modules/file/pixmap.c:448
 msgid "Sun raster image (.ras)"
 msgstr "Sun raster (.ras)"
 
-#: modules/file/pixmap.c:451
+#: modules/file/pixmap.c:452
 msgid "Apple icon (.icns)"
 msgstr "Icône Apple (.icns)"
 
-#: modules/file/pixmap.c:475
+#: modules/file/pixmap.c:476
 msgid ""
 "Renders data into pixmap images and imports data from pixmap images. It "
 "supports the following image formats for export: PNG, JPEG, TIFF, PPM, BMP, "
@@ -4615,69 +4615,69 @@ msgstr ""
 "PNG, JPEG, TIFF, PPM, BMP, TARGA. L'import dépend de GDK et peut ainsi "
 "dépendre de l'installation."
 
-#: modules/file/pixmap.c:775
+#: modules/file/pixmap.c:776
 #, c-format
 msgid "Pixmap has not registered file type `%s'."
 msgstr "L'image ne peut enregistrée avec le type de fichier `%s'."
 
-#: modules/file/pixmap.c:790
+#: modules/file/pixmap.c:791
 #, c-format
 msgid "Cannot get pixbuf loader: %s."
 msgstr "Chargeur d'image non disponible : %s."
 
-#: modules/file/pixmap.c:803 modules/file/pixmap.c:816
+#: modules/file/pixmap.c:804 modules/file/pixmap.c:817
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr "Le chargeur d'image refuse les données : %s."
 
-#: modules/file/pixmap.c:1242
+#: modules/file/pixmap.c:1243
 msgid ""
 "Warning: Colorful images cannot be reliably mapped to meaningful values."
 msgstr ""
 "Attention : des valeurs correctes ne peuvent être appliquées de manière "
 "fiable à des images en couleurs ."
 
-#: modules/file/pixmap.c:1261
+#: modules/file/pixmap.c:1262
 msgid "verb|Use"
 msgstr "Utiliser"
 
-#: modules/file/pixmap.c:1261
+#: modules/file/pixmap.c:1262
 msgid "as data"
 msgstr "en tant que données"
 
-#: modules/file/pixmap.c:1767 modules/file/pixmap.c:1795
+#: modules/file/pixmap.c:1768 modules/file/pixmap.c:1796
 #, c-format
 msgid "Pixbuf save failed: %s."
 msgstr "La sauvegarde de l'image à échoué : %s."
 
-#: modules/file/pixmap.c:2216
+#: modules/file/pixmap.c:2217
 msgid "Image is too large to be stored as TARGA."
 msgstr "L'image est trop grande pour être enregistrée au format TARGA"
 
-#: modules/file/pixmap.c:2295
+#: modules/file/pixmap.c:2296
 msgid "Data must be displayed in a window for pixmap export."
 msgstr ""
 "Les données doivent affichées dans une fenêtre pour l'export vers un format "
 "image."
 
-#: modules/file/pixmap.c:3065
+#: modules/file/pixmap.c:3069
 msgid "Change Inset Color"
 msgstr "Changer l'échelle de couleurs"
 
-#: modules/file/pixmap.c:3147
+#: modules/file/pixmap.c:3151
 #, c-format
 msgid "Export %s"
 msgstr "Exporter %s"
 
-#: modules/file/pixmap.c:3177
+#: modules/file/pixmap.c:3181
 msgid "Scaling"
 msgstr "Échelle"
 
-#: modules/file/pixmap.c:3186
+#: modules/file/pixmap.c:3190
 msgid "_Zoom:"
 msgstr "_Zoom :"
 
-#: modules/file/pixmap.c:3204 modules/process/col_synth.c:426
+#: modules/file/pixmap.c:3208 modules/process/col_synth.c:426
 #: modules/process/domain_synth.c:529 modules/process/grain_mark.c:310
 #: modules/process/grain_rem_threshold.c:284 modules/process/obj_synth.c:577
 #: modules/process/pat_synth.c:893 modules/process/pat_synth.c:1194
@@ -4685,99 +4685,99 @@ msgstr "_Zoom :"
 msgid "_Height:"
 msgstr "_Hauteur :"
 
-#: modules/file/pixmap.c:3212
+#: modules/file/pixmap.c:3216
 msgid "Font:"
 msgstr "Police :"
 
-#: modules/file/pixmap.c:3227
+#: modules/file/pixmap.c:3231
 msgid "Scale text _proportionally"
 msgstr "Mettre le texte _proportionnellement à l'échelle"
 
-#: modules/file/pixmap.c:3242
+#: modules/file/pixmap.c:3246
 msgid "_Font size:"
 msgstr "Taille de police :"
 
-#: modules/file/pixmap.c:3257
+#: modules/file/pixmap.c:3261
 msgid "Draw _mask"
 msgstr "Dessiner le _masque"
 
-#: modules/file/pixmap.c:3266
+#: modules/file/pixmap.c:3270
 msgid "Draw _selection"
 msgstr "Dessiner la _sélection"
 
-#: modules/file/pixmap.c:3282
+#: modules/file/pixmap.c:3286
 msgid "Grayscale Mode"
 msgstr "Mode niveaux de gris"
 
-#: modules/file/pixmap.c:3286
+#: modules/file/pixmap.c:3290
 msgid "Export as 1_6 bit grayscale"
 msgstr "Exporter en niveaux de gris 1_6 bits"
 
-#: modules/file/pixmap.c:3312
+#: modules/file/pixmap.c:3316
 msgid "Lateral Scale"
 msgstr "Échelle latérale"
 
-#: modules/file/pixmap.c:3319 modules/file/pixmap.c:3434
+#: modules/file/pixmap.c:3323 modules/file/pixmap.c:3438
 msgid "ruler|_None"
 msgstr "_Aucune"
 
-#: modules/file/pixmap.c:3320
+#: modules/file/pixmap.c:3324
 msgid "_Rulers"
 msgstr "G_raduations"
 
-#: modules/file/pixmap.c:3321
+#: modules/file/pixmap.c:3325
 msgid "_Inset scale bar"
 msgstr "Échelle"
 
-#: modules/file/pixmap.c:3326
+#: modules/file/pixmap.c:3330
 msgid "Color:"
 msgstr "Couleur :"
 
-#: modules/file/pixmap.c:3342 modules/process/immerse.c:321
+#: modules/file/pixmap.c:3346 modules/process/immerse.c:321
 msgid "Position:"
 msgstr "Position :"
 
-#: modules/file/pixmap.c:3347
+#: modules/file/pixmap.c:3351
 msgid "left"
 msgstr "gauche"
 
-#: modules/file/pixmap.c:3351
+#: modules/file/pixmap.c:3355
 msgid "center"
 msgstr "centre"
 
-#: modules/file/pixmap.c:3355
+#: modules/file/pixmap.c:3359
 msgid "right"
 msgstr "droite"
 
-#: modules/file/pixmap.c:3360
+#: modules/file/pixmap.c:3364
 msgid "top"
 msgstr "haut"
 
-#: modules/file/pixmap.c:3372
+#: modules/file/pixmap.c:3376
 msgid "bottom"
 msgstr "bas"
 
-#: modules/file/pixmap.c:3383 modules/process/lno_synth.c:1070
+#: modules/file/pixmap.c:3387 modules/process/lno_synth.c:1070
 msgid "_Length:"
 msgstr "_Longueur :"
 
-#: modules/file/pixmap.c:3399
+#: modules/file/pixmap.c:3403
 msgid "_Auto"
 msgstr "_Auto"
 
-#: modules/file/pixmap.c:3407
+#: modules/file/pixmap.c:3411
 msgid "Draw _ticks"
 msgstr "Afficher les gradua_tions"
 
-#: modules/file/pixmap.c:3417
+#: modules/file/pixmap.c:3421
 msgid "Draw _label"
 msgstr "Dessiner les _labels"
 
-#: modules/file/pixmap.c:3427
+#: modules/file/pixmap.c:3431
 msgid "Value Scale"
 msgstr "Valeur d'échelle"
 
-#: modules/file/pixmap.c:3435
+#: modules/file/pixmap.c:3439
 msgid "_False color ruler"
 msgstr "Échelle de couleurs"
 
@@ -4951,12 +4951,12 @@ msgstr "Préréglages"
 #: modules/process/arithmetic.c:236 modules/process/calcoefs_view.c:333
 #: modules/process/convolution_filter.c:246
 #: modules/process/deposit_synth.c:684 modules/process/drift.c:237
-#: modules/process/edge.c:681 modules/process/fft_filter_1d.c:198
+#: modules/process/edge.c:652 modules/process/fft_filter_1d.c:198
 #: modules/process/grain_edge.c:215 modules/process/grain_mark.c:261
 #: modules/process/grain_rem_threshold.c:226 modules/process/grain_wshed.c:180
 #: modules/process/mark_with.c:211 modules/process/polydistort.c:213
 #: modules/process/scars.c:474 modules/process/synth.h:508
-#: modules/process/tip_model.c:167 modules/process/wpour_mark.c:204
+#: modules/process/tip_model.c:167 modules/process/wpour_mark.c:251
 #: modules/tools/linestats.c:421 modules/tools/sfunctions.c:476
 #: modules/tools/stats.c:436 modules/volume/volume_extract.c:328
 msgid "_Update"
@@ -6365,7 +6365,7 @@ msgstr "Distribution  angulaire"
 msgid "Angle Distribution"
 msgstr "Distribution  angulaire"
 
-#: modules/process/angle_dist.c:187 modules/process/slope_dist.c:239
+#: modules/process/angle_dist.c:187 modules/process/slope_dist.c:240
 msgid "Output _size:"
 msgstr "Taille de _sortie :"
 
@@ -6373,15 +6373,15 @@ msgstr "Taille de _sortie :"
 msgid "_Number of steps:"
 msgstr "_Nombre de pas :"
 
-#: modules/process/angle_dist.c:197 modules/process/slope_dist.c:244
+#: modules/process/angle_dist.c:197 modules/process/slope_dist.c:245
 msgid "_Logarithmic value scale"
 msgstr "Échelle _logarithmique"
 
-#: modules/process/angle_dist.c:203 modules/process/slope_dist.c:250
+#: modules/process/angle_dist.c:203 modules/process/slope_dist.c:251
 msgid "Use local plane _fitting"
 msgstr "Utiliser l'ajustement du plan local"
 
-#: modules/process/angle_dist.c:212 modules/process/slope_dist.c:259
+#: modules/process/angle_dist.c:212 modules/process/slope_dist.c:260
 msgid "_Plane size:"
 msgstr "Taille du _plan :"
 
@@ -6839,11 +6839,11 @@ msgid "Crop to actual data"
 msgstr "Rogner aux données réelles"
 
 #: modules/process/calcoefs_view.c:584 modules/process/deposit_synth.c:688
-#: modules/process/edge.c:761 modules/process/fft_filter_1d.c:334
+#: modules/process/edge.c:732 modules/process/fft_filter_1d.c:334
 #: modules/process/grain_edge.c:286 modules/process/grain_mark.c:378
 #: modules/process/grain_rem_threshold.c:372 modules/process/mark_with.c:355
 #: modules/process/polydistort.c:335 modules/process/scars.c:582
-#: modules/process/synth.h:512 modules/process/wpour_mark.c:288
+#: modules/process/synth.h:512 modules/process/wpour_mark.c:378
 #: modules/volume/volume_extract.c:423 modules/volume/volume_extract.c:503
 msgid "I_nstant updates"
 msgstr "Mise à jour instantanée"
@@ -7182,7 +7182,7 @@ msgstr "Correction affine"
 
 #: modules/process/correct_affine.c:356 modules/process/drift.c:337
 #: modules/process/fit_2d.c:316 modules/process/neural.c:547
-#: modules/process/polydistort.c:294
+#: modules/process/polydistort.c:294 modules/process/wpour_mark.c:362
 msgid "Preview:"
 msgstr "Aperçu :"
 
@@ -7624,7 +7624,7 @@ msgid "_Like Current Channel"
 msgstr "Identique au canal courant"
 
 #: modules/process/domain_synth.c:542 modules/process/fft_filter_2d.c:627
-#: modules/process/mask_edt.c:163 modules/process/slope_dist.c:217
+#: modules/process/mask_edt.c:163 modules/process/slope_dist.c:218
 msgid "Output type:"
 msgstr "Type de sortie :"
 
@@ -7668,10 +7668,10 @@ msgstr "_Exclure l'asymétrie linéaire"
 msgid "Drift _lines"
 msgstr "Lignes de dérive"
 
-#: modules/process/drift.c:358 modules/process/facet_analysis.c:412
+#: modules/process/drift.c:358 modules/process/facet_analysis.c:413
 #: modules/process/grain_edge.c:279 modules/process/grain_mark.c:371
 #: modules/process/grain_rem_threshold.c:365 modules/process/grain_wshed.c:296
-#: modules/process/scars.c:575 modules/process/wpour_mark.c:281
+#: modules/process/scars.c:575 modules/process/wpour_mark.c:355
 msgid "_Mask color:"
 msgstr "Couleur de _masque :"
 
@@ -7761,7 +7761,7 @@ msgstr "Seuil du ratio X/Y :"
 msgid "Low level exclude limit:"
 msgstr "Limite basse d'exclusion :"
 
-#: modules/process/edge.c:154
+#: modules/process/edge.c:155
 msgid ""
 "Several edge detection methods (Laplacian of Gaussian, Canny, and some "
 "experimental), creates presentation."
@@ -7769,143 +7769,144 @@ msgstr ""
 "Plusieurs méthode de détection de bord (Laplacien d'une Gaussienne, Canny, "
 "et d'autres expérimentales), création de présentations."
 
-#: modules/process/edge.c:169
+#: modules/process/edge.c:170
 msgid "/_Presentation/_Edge Detection/_Laplacian of Gaussian"
 msgstr "/_Présentation/Dét_ection de bord/_Laplacien d'une Gaussienne"
 
-#: modules/process/edge.c:173
+#: modules/process/edge.c:174
 msgid "Laplacian of Gaussian step detection presentation"
 msgstr "Détection de bord par Laplacien d'une Gaussienne"
 
-#: modules/process/edge.c:177
+#: modules/process/edge.c:178
 msgid "/_Presentation/_Edge Detection/_Canny"
 msgstr "/_Présentation/Dét_ection de bord/_Canny"
 
-#: modules/process/edge.c:181
+#: modules/process/edge.c:182
 msgid "Canny edge detection presentation"
 msgstr "Détection de bord par Canny"
 
-#: modules/process/edge.c:184
+#: modules/process/edge.c:185
 msgid "/_Presentation/_Edge Detection/_RMS"
 msgstr "/_Présentation/Dét_ection de bord/_RMS"
 
-#: modules/process/edge.c:188
+#: modules/process/edge.c:189
 msgid "Local RMS value based step detection presentation"
 msgstr "Détection de bord basée sur la valeur RMS locale"
 
-#: modules/process/edge.c:192
+#: modules/process/edge.c:193
 msgid "/_Presentation/_Edge Detection/RMS _Edge"
 msgstr "/_Présentation/Dét_ection de bord/Bord RMS"
 
-#: modules/process/edge.c:196
+#: modules/process/edge.c:197
 msgid "Local RMS value based step detection with postprocessing"
 msgstr "Détection de bord basée sur la valeur RMS locale avec post-traitement"
 
-#: modules/process/edge.c:200
+#: modules/process/edge.c:201
 msgid "/_Presentation/_Edge Detection/Local _Nonlinearity"
 msgstr "/_Présentation/Dét_ection de bord/_Non-linéarité locale"
 
-#: modules/process/edge.c:204
+#: modules/process/edge.c:205
 msgid "Local nonlinearity based edge detection presentation"
 msgstr "Détection de bord basée sur la non-linéarité locale"
 
-#: modules/process/edge.c:208
+#: modules/process/edge.c:209
 msgid "/_Presentation/_Edge Detection/_Hough Lines"
 msgstr "/_Présentation/Dét_ection de bord/Lignes de _Hough"
 
-#: modules/process/edge.c:213
+#: modules/process/edge.c:214
 msgid "Hough lines presentation"
 msgstr "Lignes de Hough"
 
-#: modules/process/edge.c:216
+#: modules/process/edge.c:217
 msgid "/_Presentation/_Edge Detection/_Harris Corner"
 msgstr "/_Présentation/Dét_ection de bord/Coin de _Harris"
 
-#: modules/process/edge.c:221
+#: modules/process/edge.c:222
 msgid "Harris corner presentation"
 msgstr "Coin de Harris"
 
-#: modules/process/edge.c:224
+#: modules/process/edge.c:225
 msgid "/_Presentation/_Edge Detection/_Inclination"
 msgstr "/_Présentation/Dét_ection de bord/_Inclinaison"
 
-#: modules/process/edge.c:228
+#: modules/process/edge.c:229
 msgid "Local inclination visualization presentation"
 msgstr "Visualisation de l'inclinaison locale"
 
-#: modules/process/edge.c:232
+#: modules/process/edge.c:233
 msgid "/_Presentation/_Edge Detection/_Step"
 msgstr "/_Présentation/Dét_ection de bord/_Saut"
 
-#: modules/process/edge.c:236
+#: modules/process/edge.c:237
 msgid "Fine step detection presentation"
 msgstr "Détection fine des sauts"
 
-#: modules/process/edge.c:239
+#: modules/process/edge.c:240
 msgid "/_Presentation/_Edge Detection/_Sobel"
 msgstr "/_Présentation/Dét_ection de bord/_Sobel"
 
-#: modules/process/edge.c:243
+#: modules/process/edge.c:244
 msgid "Sobel edge presentation"
 msgstr "Détection de bord par gradient Sobel"
 
-#: modules/process/edge.c:246
+#: modules/process/edge.c:247
 msgid "/_Presentation/_Edge Detection/_Prewitt"
 msgstr "/_Présentation/Dét_ection de bord/_Prewitt"
 
-#: modules/process/edge.c:250
+#: modules/process/edge.c:251
 msgid "Prewitt edge presentation"
 msgstr "Détection de bord par gradient Prewitt"
 
-#: modules/process/edge.c:253
+#: modules/process/edge.c:254
 msgid "/_Presentation/_Edge Detection/_Zero Crossing..."
 msgstr "/_Présentation/Dét_ection de bord/Coupure à _zéro..."
 
-#: modules/process/edge.c:257
+#: modules/process/edge.c:258
 msgid "Zero crossing step detection presentation"
 msgstr "Détection du passage à zéro"
 
-#: modules/process/edge.c:260
+#: modules/process/edge.c:261
 msgid "/_Integral Transforms/Local Slope"
 msgstr "/Transformées/Pente locale"
 
-#: modules/process/edge.c:264
+#: modules/process/edge.c:265
 msgid "First derivative slope transformation"
 msgstr "Affichage de la pente locale (dérivée première)"
 
-#: modules/process/edge.c:629
+#: modules/process/edge.c:600
 msgid "Slope map"
 msgstr "Carte de pente"
 
-#: modules/process/edge.c:678
+#: modules/process/edge.c:649
 msgid "Zero Crossing Step Detection"
 msgstr "Détection de saut par coupure à zéro"
 
-#: modules/process/edge.c:728
+#: modules/process/edge.c:699
 msgid "_Gaussian FWHM:"
 msgstr "FWHM _gaussienne :"
 
-#: modules/process/edge.c:737
+#: modules/process/edge.c:708
 msgid "_Threshold:"
 msgstr "Seuil :"
 
-#: modules/process/edge.c:737
+#: modules/process/edge.c:708
 msgid "NRMS"
 msgstr "NRMS"
 
-#: modules/process/edge.c:744
+#: modules/process/edge.c:715
 msgid "verb|Display"
 msgstr "Afficher"
 
-#: modules/process/edge.c:753 modules/process/fft_filter_2d.c:401
+#: modules/process/edge.c:724 modules/process/fft_filter_2d.c:401
+#: modules/process/wpour_mark.c:371
 msgid "Original _image"
 msgstr "_Image originale"
 
-#: modules/process/edge.c:754
+#: modules/process/edge.c:725
 msgid "_LoG convolved"
 msgstr "Convoluer par le Laplacien d'une Gaussienne (LoG)"
 
-#: modules/process/edge.c:755
+#: modules/process/edge.c:726
 msgid "Detected st_ep"
 msgstr "Saut dét_ecté"
 
@@ -7988,48 +7989,48 @@ msgstr "Niveau des facettes"
 msgid "Facet-leveling"
 msgstr "Mise à niveau des facettes"
 
-#: modules/process/facet_analysis.c:162
+#: modules/process/facet_analysis.c:163
 msgid "Visualizes, marks and measures facet orientation."
 msgstr "Visualise, marque et mesure l'orientation des facettes."
 
-#: modules/process/facet_analysis.c:176
+#: modules/process/facet_analysis.c:177
 msgid "/_Statistics/Facet _Analysis..."
 msgstr "/_Statistiques/_Analyse des facettes..."
 
-#: modules/process/facet_analysis.c:180
+#: modules/process/facet_analysis.c:181
 msgid "Mark areas by 2D slope"
 msgstr "Marquer des zones selon la pente 2D"
 
-#: modules/process/facet_analysis.c:270
+#: modules/process/facet_analysis.c:271
 msgid "Mark Facets"
 msgstr "Marquer les facettes"
 
-#: modules/process/facet_analysis.c:273
+#: modules/process/facet_analysis.c:274
 msgid "verb|_Mark"
 msgstr "_Marquer"
 
 #. TRANSLATORS: The direction or line orthogonal to something.
-#: modules/process/facet_analysis.c:351
+#: modules/process/facet_analysis.c:352
 msgid "Normal"
 msgstr "Normal"
 
-#: modules/process/facet_analysis.c:359
+#: modules/process/facet_analysis.c:360
 msgid "_Find Maximum"
 msgstr "Trouver le maximum"
 
-#: modules/process/facet_analysis.c:367
+#: modules/process/facet_analysis.c:368
 msgid "Mean Normal"
 msgstr "Normale moyenne"
 
-#: modules/process/facet_analysis.c:376
+#: modules/process/facet_analysis.c:377
 msgid "Facet plane size:"
 msgstr "Taille des facettes :"
 
-#: modules/process/facet_analysis.c:401
+#: modules/process/facet_analysis.c:402
 msgid "_Tolerance:"
 msgstr "_Tolérance :"
 
-#: modules/process/facet_analysis.c:421
+#: modules/process/facet_analysis.c:422
 msgid ""
 "Warning: Lateral and value units differ. Angles are not physically "
 "meaningful."
@@ -8831,7 +8832,7 @@ msgid "_Curvature:"
 msgstr "_Courbure :"
 
 #: modules/process/grain_mark.c:349 modules/process/grain_rem_threshold.c:332
-#: modules/process/grain_wshed.c:282 modules/process/wpour_mark.c:267
+#: modules/process/grain_wshed.c:282 modules/process/wpour_mark.c:341
 msgid "_Invert height"
 msgstr "_Inverser les hauteurs"
 
@@ -10649,7 +10650,7 @@ msgstr "Ombrage"
 msgid "_Mix:"
 msgstr "_Mixage : "
 
-#: modules/process/slope_dist.c:108
+#: modules/process/slope_dist.c:109
 msgid ""
 "Calculates one- or two-dimensional distribution of slopes or graph of their "
 "angular distribution."
@@ -10657,47 +10658,47 @@ msgstr ""
 "Calcule la distribution uni ou bi-dimensionnelle des pentes ou affiche la "
 "distribution angulaires."
 
-#: modules/process/slope_dist.c:123
+#: modules/process/slope_dist.c:124
 msgid "/_Statistics/_Slope Distribution..."
 msgstr "/_Statistiques/Di_stribution des pentes..."
 
-#: modules/process/slope_dist.c:127
+#: modules/process/slope_dist.c:128
 msgid "Calculate angular slope distribution"
 msgstr "Calculer la distribution des pentes"
 
-#: modules/process/slope_dist.c:166
+#: modules/process/slope_dist.c:167
 msgid "Slope distribution"
 msgstr "Distribution des pentes"
 
-#: modules/process/slope_dist.c:192
+#: modules/process/slope_dist.c:193
 msgid "_Two-dimensional distribution"
 msgstr "Dis_tribution bi-dimensionnelle"
 
-#: modules/process/slope_dist.c:193
+#: modules/process/slope_dist.c:194
 msgid "Directional (φ) _graph"
 msgstr "_Graphe directionnel (φ) "
 
-#: modules/process/slope_dist.c:194
+#: modules/process/slope_dist.c:195
 msgid "_Inclination (θ) graph"
 msgstr "Graphe d'_inclinaison (θ)"
 
-#: modules/process/slope_dist.c:202
+#: modules/process/slope_dist.c:203
 msgid "Slope Distribution"
 msgstr "Distribution des pentes"
 
-#: modules/process/slope_dist.c:432
+#: modules/process/slope_dist.c:433
 msgid "Angular Slope Distribution"
 msgstr "Distribution angulaires des pentes"
 
-#: modules/process/slope_dist.c:442 modules/process/tilt.c:177
+#: modules/process/slope_dist.c:443 modules/process/tilt.c:177
 msgid "Slopes"
 msgstr "Pentes"
 
-#: modules/process/slope_dist.c:497
+#: modules/process/slope_dist.c:498
 msgid "Inclination Distribution"
 msgstr "Distribution des inclinaisons"
 
-#: modules/process/slope_dist.c:507
+#: modules/process/slope_dist.c:508
 msgid "Inclinations"
 msgstr "Inclinaisons"
 
@@ -11217,30 +11218,55 @@ msgstr "Plateau"
 msgid "Displacement"
 msgstr "Déplacement"
 
-#: modules/process/wpour_mark.c:120
-msgid "Segmentates image using watershed with pre- and postprocessing."
+#: modules/process/wpour_mark.c:165
+msgid "Segments image using watershed with pre- and postprocessing."
 msgstr ""
 
-#: modules/process/wpour_mark.c:134
+#: modules/process/wpour_mark.c:179
 #, fuzzy
 msgid "/_Grains/_Mark by Segmentation..."
 msgstr "/_Grains/Marqu_er par détection de bord..."
 
-#: modules/process/wpour_mark.c:138
-msgid "Segmentate using watershed "
+#: modules/process/wpour_mark.c:183
+msgid "Segment using watershed "
 msgstr ""
 
-#: modules/process/wpour_mark.c:201
-msgid "Segmentate by Watershed"
-msgstr ""
+#: modules/process/wpour_mark.c:248
+#, fuzzy
+msgid "Segment by Watershed"
+msgstr "Marquer les Grains par Segmentation"
 
-#: modules/process/wpour_mark.c:251
+#: modules/process/wpour_mark.c:299
 msgid "Preprocessing"
 msgstr "Pré-traitement"
 
-#: modules/process/wpour_mark.c:257
+#: modules/process/wpour_mark.c:307
+msgid "Gaussian _smoothening:"
+msgstr "Floutage gau_ssien"
+
+#: modules/process/wpour_mark.c:314
+msgid "Add _gradient:"
+msgstr "Ajouter un _gradient : "
+
+#: modules/process/wpour_mark.c:318
+msgid "Add _curvature:"
+msgstr "Ajouter de la _courbure : "
+
+#: modules/process/wpour_mark.c:322
+msgid "Prefill _level:"
+msgstr "Niveau de pré-remplissage : "
+
+#: modules/process/wpour_mark.c:326
+msgid "Pre_fill from minima:"
+msgstr "Pré-remplir à partir du minima : "
+
+#: modules/process/wpour_mark.c:331
 msgid "Postprocessing"
 msgstr "Post-traitement"
+
+#: modules/process/wpour_mark.c:372
+msgid "Pr_eprocessed image"
+msgstr "Image pré-traité_e"
 
 #: modules/process/xydenoise.c:65
 msgid "Denoises measurement on basis of two orthogonal scans."
