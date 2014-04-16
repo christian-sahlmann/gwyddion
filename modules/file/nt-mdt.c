@@ -804,7 +804,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NT-MDT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.19",
+    "0.20",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -2051,7 +2051,8 @@ extract_new_curve (MDTNewSpecFrame *dataframe, guint number)
     MDTTNTDAAxisInfo *axisInfo;
     MDTTNTDataInfo *dataInfo;
     MDTTNTNameInfo *nameInfoX, *nameInfoY;
-    gdouble *ydata = NULL, *p;
+    gdouble *ydata = NULL;
+    const guchar *p;
     gdouble yscale, yoffset;
     gint measInd, cStart, cEnd, cStep;
 
@@ -2116,30 +2117,31 @@ extract_new_curve (MDTNewSpecFrame *dataframe, guint number)
                                            * (fmin(axisInfo->rStartValue, axisInfo->rStopValue)
                                            - (measInfo->rAxisOptions[0] & MDT_AXOPT_RELATIVE ? axisInfo->rInitValue : 0)));
                     ydata = gwy_data_line_get_data(dline);
-
-                    if (!(measInfo->rAxisOptions[0] & MDT_AXOPT_INVERTED)) {
+                    
+                    if (!(measInfo->rAxisOptions[0] & MDT_AXOPT_INVERTED) != 
+                        !(axisInfo->rStopValue - axisInfo->rStartValue < 0)) {
+						cStart = dataInfo->rDataCount - 1;
+                        cEnd   = -1;
+                        cStep  = -1;
+                    }
+                    else {
                         cStart = 0;
                         cEnd   = dataInfo->rDataCount;
                         cStep  = 1;
-                    }
-                    else {
-                        cStart = dataInfo->rDataCount - 1;
-                        cEnd   = -1;
-                        cStep  = -1;
                     }
 
                     if (dataInfo->rDataType == MDT_DT_DBL) {
                         yscale = pow10(power10y);
                         p = dataInfo->rDataPtr;
                         for (i = cStart; i != cEnd; i += cStep)
-                            ydata[i] = *(p++) * yscale;
+                            *(ydata + i) = gwy_get_gdouble_le(&p) * yscale;
                     }
                     else {
                         yscale = pow10(power10y) * nameInfoY->rScale;
                         yoffset = pow10(power10y) * nameInfoY->rBias;
                         p = dataInfo->rDataPtr;
                         for (i = cStart; i != cEnd; i += cStep)
-                            ydata[i] = *(p++) * yscale + yoffset;
+                            *(ydata + i) = gwy_get_gdouble_le(&p) * yscale + yoffset;
                     }
 
                     gwy_spectra_add_spectrum(spectra, dline,
