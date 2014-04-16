@@ -2117,10 +2117,10 @@ extract_new_curve (MDTNewSpecFrame *dataframe, guint number)
                                            * (fmin(axisInfo->rStartValue, axisInfo->rStopValue)
                                            - (measInfo->rAxisOptions[0] & MDT_AXOPT_RELATIVE ? axisInfo->rInitValue : 0)));
                     ydata = gwy_data_line_get_data(dline);
-                    
-                    if (!(measInfo->rAxisOptions[0] & MDT_AXOPT_INVERTED) != 
+
+                    if (!(measInfo->rAxisOptions[0] & MDT_AXOPT_INVERTED) !=
                         !(axisInfo->rStopValue - axisInfo->rStartValue < 0)) {
-						cStart = dataInfo->rDataCount - 1;
+                        cStart = dataInfo->rDataCount - 1;
                         cEnd   = -1;
                         cStep  = -1;
                     }
