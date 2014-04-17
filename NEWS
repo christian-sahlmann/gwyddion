@@ -1,10 +1,19 @@
 2.37 (0000-00-00)
+Application:
+- Translations updated: French, Russian.
+
 Libraries:
-- libgwyprocess: A function to fill grain voids was added.
+- libgwyprocess: A function for filling grain voids was added.
+- libgwyprocess: A simple x and y derivative filter function was added.
+- libgwyprocess: A regional extrema marking function was added.
+- libgwyprocess: A classic Vincent watershed algorithm function was added.
 
 Modules:
+- Mark by Segmentation (new): Another segmentation/grain marking module, based
+  on the classic Vincent algorithm.
 - Mask editor tool: Fill voids handles correctly different connectivity of
   grain exterior, noticeable for grains separated only by thin lines.
+- Pixmap: Vertical and horizontal rulers always use the same number format.
 
 
 2.36 (2014-04-02)
