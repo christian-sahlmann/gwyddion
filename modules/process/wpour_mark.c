@@ -115,8 +115,8 @@ static void           inverted_changed            (WPourControls *controls,
                                                    GtkToggleButton *toggle);
 static void           update_changed              (WPourControls *controls,
                                                    GtkToggleButton *toggle);
-static void preview_type_changed(GtkToggleButton *toggle,
-                     WPourControls *controls);
+static void           preview_type_changed        (GtkToggleButton *toggle,
+                                                   WPourControls *controls);
 static GtkAdjustment* table_attach_threshold      (GtkWidget *table,
                                                    gint *row,
                                                    const gchar *name,
@@ -136,6 +136,9 @@ static void           add_slope_contribs          (GwyDataField *workspace,
                                                    GwyDataField *dfield,
                                                    gdouble gradient_contrib,
                                                    gdouble curvature_contrib);
+static void           normal_vector_difference    (GwyDataField *result,
+                                                   GwyDataField *xder,
+                                                   GwyDataField *yder);
 static void           prefill_minima              (GwyDataField *dfield,
                                                    GwyDataField *workspace,
                                                    IntList *inqueue,
@@ -569,7 +572,7 @@ preview(WPourControls *controls,
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
- 
+
     if (!gwy_container_gis_object_by_name(controls->mydata, "/1/data",
                                           &preprocessed)) {
         preprocessed = gwy_data_field_new_alike(dfield, FALSE);
@@ -690,26 +693,43 @@ add_slope_contribs(GwyDataField *workspace, GwyDataField *dfield,
                    gdouble gradient_contrib, gdouble curvature_contrib)
 {
     GwyDataField *xder, *yder;
-    gdouble r1, r2, q, p;
-    guint k, xres = dfield->xres, yres = dfield->yres;
+    gdouble r, rg, pg, pc;
 
     if (!gradient_contrib && !curvature_contrib)
+        return;
+
+    r = gwy_data_field_get_rms(dfield);
+    if (!r)
         return;
 
     xder = gwy_data_field_new_alike(dfield, FALSE);
     yder = gwy_data_field_new_alike(dfield, FALSE);
 
-    gwy_data_field_filter_slope(dfield, xder, yder);
-    gwy_data_field_hypot_of_fields(workspace, xder, yder);
-    r1 = gwy_data_field_get_rms(dfield);
-    r2 = gwy_data_field_get_rms(workspace);
-    if (r2) {
-        gdouble *d = dfield->data, *w = workspace->data;
+    pg = gradient_contrib/100.0;
+    pc = curvature_contrib/100.0;
 
-        q = r1/r2;
-        p = gradient_contrib/100.0;
-        for (k = 0; k < xres*yres; k++) {
-            d[k] = p*q*w[k] + (1.0 - p)*d[k];
+    gwy_data_field_filter_slope(dfield, xder, yder);
+    gwy_data_field_multiply(dfield, 1.0 - MAX(pg, pc));
+
+    /* We need this for both operations. */
+    gwy_data_field_hypot_of_fields(workspace, xder, yder);
+    rg = gwy_data_field_get_rms(workspace);
+
+    if (gradient_contrib) {
+        gwy_data_field_multiply(workspace, pg * r/rg);
+        gwy_data_field_sum_fields(dfield, dfield, workspace);
+    }
+
+    if (curvature_contrib) {
+        gdouble rc;
+
+        gwy_data_field_multiply(xder, 1.0/rg);
+        gwy_data_field_multiply(yder, 1.0/rg);
+        normal_vector_difference(workspace, xder, yder);
+        rc = gwy_data_field_get_rms(workspace);
+        if (rc) {
+            gwy_data_field_multiply(workspace, pc * r/rc);
+            gwy_data_field_sum_fields(dfield, dfield, workspace);
         }
     }
 
@@ -718,6 +738,70 @@ add_slope_contribs(GwyDataField *workspace, GwyDataField *dfield,
 
     gwy_data_field_invalidate(dfield);
     gwy_data_field_invalidate(workspace);
+}
+
+static void
+normal_vector(gdouble bx, gdouble by,
+              gdouble *nx, gdouble *ny, gdouble *nz)
+{
+    gdouble b = sqrt(1.0 + bx*bx + by*by);
+
+    *nx = -bx/b;
+    *ny = -by/b;
+    *nz = 1.0/b;
+}
+
+static void
+normal_vector_difference(GwyDataField *result,
+                         GwyDataField *xder,
+                         GwyDataField *yder)
+{
+    const gdouble *bx, *by;
+    guint xres, yres, i, j;
+    gdouble *d;
+
+    gwy_data_field_clear(result);
+    xres = result->xres;
+    yres = result->yres;
+    d = result->data;
+    bx = xder->data;
+    by = yder->data;
+
+    for (i = 0; i < yres; i++) {
+        gdouble *row = d + i*xres, *next = row + xres;
+        const gdouble *bxrow = bx + i*xres, *nextbx = bxrow + xres;
+        const gdouble *byrow = by + i*yres, *nextby = byrow + yres;
+
+        for (j = 0; j < xres; j++) {
+            gdouble nx, ny, nz;
+            gdouble nxr, nyr, nzr;
+            gdouble nxd, nyd, nzd;
+            gdouble ch, cv;
+
+            normal_vector(bxrow[j], byrow[j], &nx, &ny, &nz);
+            if (j < xres-1) {
+                normal_vector(bxrow[j+1], byrow[j+1], &nxr, &nyr, &nzr);
+                nxr -= nx;
+                nyr -= ny;
+                nzr -= nz;
+                ch = sqrt(nxr*nxr + nyr*nyr + nzr*nzr);
+                row[j] += ch;
+                row[j+1] += ch;
+            }
+
+            if (i < yres-1) {
+                normal_vector(nextbx[j], nextby[j], &nxd, &nyd, &nzd);
+                nxd -= nx;
+                nyd -= ny;
+                nzd -= nz;
+                cv = sqrt(nxd*nxd + nyd*nyd + nzd*nzd);
+                row[j] += cv;
+                next[j] += cv;
+            }
+        }
+    }
+
+    gwy_data_field_invalidate(result);
 }
 
 static void
