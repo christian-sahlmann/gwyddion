@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2014-04-16 03:58+0200\n"
-"PO-Revision-Date: 2014-04-16 21:24+0100\n"
+"PO-Revision-Date: 2014-04-21 16:36+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -31,7 +31,7 @@ msgstr "Expression vide"
 #: libgwyddion/gwyexpr.c:1017
 #, c-format
 msgid "Missing operator %c argument"
-msgstr "Il manque l'argument d'opérateur %c"
+msgstr "Il manque l'argument de l'opérateur %c"
 
 #. TRANSLATORS: %c is replaced with +, -, *, /, etc.
 #: libgwyddion/gwyexpr.c:1024
@@ -3305,7 +3305,7 @@ msgstr "La donnée de la variable %s est tronquée."
 
 #: modules/file/gsffile.c:91
 msgid "Reads and exports Gwyddion Simple Field files."
-msgstr "Lit et exporte"
+msgstr "Lit et exporte les fichiers GSF (Gwyddion Simple Field)."
 
 #: modules/file/gsffile.c:104
 msgid "Gwyddion Simple Field (.gsf)"
@@ -3313,7 +3313,7 @@ msgstr "Gwyddion Simple Field (.gsf)"
 
 #: modules/file/gwyfile.c:103
 msgid "Loads and saves Gwyddion native data files (serialized objects)."
-msgstr "Charge et sauve les fichiers Gwyddion natifs (objects sérialisés)."
+msgstr "Charge et sauve les fichiers Gwyddion natifs (objets sérialisés)."
 
 #: modules/file/gwyfile.c:116
 msgid "Gwyddion native format (.gwy)"
@@ -4500,7 +4500,7 @@ msgstr "Omicron MATRIX (.mtrx & .mtrx)"
 
 #: modules/file/opdfile.c:189
 msgid "Imports Wyko OPD and ASC files."
-msgstr "Importe les fichiers  Wyko OPD et ASC."
+msgstr "Importe les fichiers Wyko OPD et ASC."
 
 #: modules/file/opdfile.c:202
 msgid "Wyko OPD files (.opd)"
@@ -6110,7 +6110,7 @@ msgstr "Exporter le graphe sous forme d'image vectorielle"
 
 #: modules/graph/graph_fdfit.c:172
 msgid "Fit force-distance data"
-msgstr "Ajuster les données forcedistance"
+msgstr "Ajuster les données force-distance"
 
 #: modules/graph/graph_fdfit.c:186
 msgid "/_Fit FD Curve..."
@@ -6471,7 +6471,7 @@ msgid ""
 "Basic operations like flipping, value inversion, and rotation by multiples "
 "of 90 degrees."
 msgstr ""
-"Opérations basiques : renversement, inversion de valeur, et rotation par "
+"Opérations basiques : renversement, inversion de valeur et rotation par "
 "multiples de 90 degrés."
 
 #: modules/process/basicops.c:71
@@ -6614,7 +6614,7 @@ msgstr "%d points de donnée ont été chargés"
 
 #: modules/process/calcoefs_new.c:166
 msgid "Create simple calibration data"
-msgstr "Créer des "
+msgstr "Créer des données de calibration basiques"
 
 #: modules/process/calcoefs_new.c:180
 msgid "/Cali_bration/_Create..."
@@ -6630,51 +6630,51 @@ msgstr "Données de calibration basiques"
 
 #: modules/process/calcoefs_new.c:364
 msgid "_X from:"
-msgstr "_X début :"
+msgstr "X début :"
 
 #: modules/process/calcoefs_new.c:391
 msgid "_X to:"
-msgstr "_X fin :"
+msgstr "X fin :"
 
 #: modules/process/calcoefs_new.c:404
 msgid "_Y from:"
-msgstr "_Y début :"
+msgstr "Y début :"
 
 #: modules/process/calcoefs_new.c:417
 msgid "_Y to:"
-msgstr "_Y fin :"
+msgstr "Y fin :"
 
 #: modules/process/calcoefs_new.c:431
 msgid "_Z from:"
-msgstr "_Z début :"
+msgstr "Z début :"
 
 #: modules/process/calcoefs_new.c:458
 msgid "_Z to:"
-msgstr "_Z fin :"
+msgstr "Z fin :"
 
 #: modules/process/calcoefs_new.c:471
 msgid "_X uncertainty:"
-msgstr "Incertitude _X :"
+msgstr "Incertitude X :"
 
 #: modules/process/calcoefs_new.c:492
 msgid "_Y uncertainty:"
-msgstr "Incertitude _Y :"
+msgstr "Incertitude Y :"
 
 #: modules/process/calcoefs_new.c:507
 msgid "_Z uncertainty:"
-msgstr "Incertitude _Z :"
+msgstr "Incertitude Z :"
 
 #: modules/process/calcoefs_new.c:529
 msgid "_X correction factor:"
-msgstr "Facteur de correction _X :"
+msgstr "Facteur de correction X :"
 
 #: modules/process/calcoefs_new.c:541
 msgid "_Y correction factor:"
-msgstr "Facteur de correction _Y :"
+msgstr "Facteur de correction Y :"
 
 #: modules/process/calcoefs_new.c:553
 msgid "_Z correction factor:"
-msgstr "Facteur de correction _Z :"
+msgstr "Facteur de correction Z :"
 
 #: modules/process/calcoefs_simple.c:173
 msgid "Simple error map based on grating measurements"
@@ -7422,7 +7422,7 @@ msgstr "Sauver la courbure"
 
 #: modules/process/cwt.c:65
 msgid "Two-dimensional CWT (Continuous Wavelet Transform)."
-msgstr "CWT bi-dimensionnelle (Transformée en ondelettes continue)"
+msgstr "CWT bi-dimensionnelle (transformée en ondelettes continue)"
 
 #: modules/process/cwt.c:79
 msgid "/_Integral Transforms/2D _CWT..."
@@ -7701,7 +7701,7 @@ msgstr "dérive selon l'axe x"
 
 #: modules/process/dwt.c:72
 msgid "Two-dimensional DWT (Discrete Wavelet Transform)."
-msgstr "DWT bi-dimensionnelle (Transformée en ondelettes discrète)"
+msgstr "DWT bi-dimensionnelle (transformée en ondelettes discrète)"
 
 #: modules/process/dwt.c:86
 msgid "/_Integral Transforms/2D _DWT..."
@@ -7766,16 +7766,16 @@ msgid ""
 "Several edge detection methods (Laplacian of Gaussian, Canny, and some "
 "experimental), creates presentation."
 msgstr ""
-"Plusieurs méthode de détection de bord (Laplacien d'une Gaussienne, Canny, "
+"Plusieurs méthode de détection de bord (laplacien d'une gaussienne, Canny, "
 "et d'autres expérimentales), création de présentations."
 
 #: modules/process/edge.c:170
 msgid "/_Presentation/_Edge Detection/_Laplacian of Gaussian"
-msgstr "/_Présentation/Dét_ection de bord/_Laplacien d'une Gaussienne"
+msgstr "/_Présentation/Dét_ection de bord/_Laplacien d'une gaussienne"
 
 #: modules/process/edge.c:174
 msgid "Laplacian of Gaussian step detection presentation"
-msgstr "Détection de bord par Laplacien d'une Gaussienne"
+msgstr "Détection de bord par laplacien d'une gaussienne"
 
 #: modules/process/edge.c:178
 msgid "/_Presentation/_Edge Detection/_Canny"
@@ -7904,7 +7904,7 @@ msgstr "_Image originale"
 
 #: modules/process/edge.c:725
 msgid "_LoG convolved"
-msgstr "Convoluer par le Laplacien d'une Gaussienne (LoG)"
+msgstr "Convoluer par le laplacien d'une gaussienne (LoG)"
 
 #: modules/process/edge.c:726
 msgid "Detected st_ep"
@@ -7956,7 +7956,7 @@ msgstr "Étendre de manière _symétrique"
 
 #: modules/process/extend.c:281 modules/tools/crop.c:202
 msgid "Keep lateral offsets"
-msgstr "Conserver les offsets latéraux"
+msgstr "Conserver les décalages latéraux"
 
 #: modules/process/facet-level.c:68
 msgid ""
@@ -7964,7 +7964,7 @@ msgid ""
 "point up."
 msgstr ""
 "Mise à niveau basée sur l'orientation automatique des facettes. Met à niveau "
-"les données de manières à ce que les facettes pointent vers le haut."
+"les données de manière à ce que les facettes pointent vers le haut."
 
 #: modules/process/facet-level.c:83
 msgid "/_Level/_Facet Level"
@@ -8805,7 +8805,7 @@ msgstr "_Laplacien :"
 
 #: modules/process/grain_mark.c:145
 msgid "Marks grains by thresholding (height, slope, curvature)."
-msgstr "Marquer les grains en seuillant (hauteur, pente, courbure)."
+msgstr "Marquer les grains par seuillage (hauteur, pente, courbure)."
 
 #: modules/process/grain_mark.c:159
 msgid "/_Grains/_Mark by Threshold..."
@@ -8882,7 +8882,7 @@ msgstr "Marquer les grains par segmentation"
 
 #: modules/process/grain_wshed.c:177
 msgid "Mark Grains by Watershed"
-msgstr "Marquer les Grains par Segmentation"
+msgstr "Marquer les grains par segmentation"
 
 #: modules/process/grain_wshed.c:225
 msgid "Grain Location"
@@ -8946,7 +8946,7 @@ msgstr "Taille du _cercle : "
 
 #: modules/process/immerse.c:175
 msgid "Immerse high resolution detail into overall image."
-msgstr "incruste un détail à haute résolution dans une image."
+msgstr "Incruste un détail à haute résolution dans une image."
 
 #: modules/process/immerse.c:189
 msgid "/M_ultidata/_Immerse Detail..."
@@ -9306,7 +9306,7 @@ msgstr "Indentation - Débordement\n"
 msgid ""
 "Removes data under mask, interpolating them with Laplace equation solution."
 msgstr ""
-"Supprime les données sous le masque en les interpolant par un Laplacien."
+"Supprime les données sous le masque en les interpolant par un laplacien."
 
 #: modules/process/laplace.c:56
 msgid "/_Correct Data/_Remove Data Under Mask"
@@ -9415,14 +9415,14 @@ msgstr ""
 
 #: modules/process/level_grains.c:99
 msgid "/_Grains/_Level Grains..."
-msgstr "/_Grains/Mise à niveau de grains..."
+msgstr "/_Grains/Mise à niveau des grains..."
 
 #: modules/process/level_grains.c:103
 msgid ""
 "Level individual grains, interpolating the shifts between using Laplacian "
 "interpolation"
 msgstr ""
-"Mise à niveau de grains individuels, en interpolant les décalages à l'aide "
+"Mise à niveau des grains individuels, en interpolant les décalages à l'aide "
 "d'une interpolation laplacienne."
 
 #: modules/process/level_grains.c:179
@@ -9437,7 +9437,7 @@ msgstr "Arrière-plan"
 
 #: modules/process/level_grains.c:243
 msgid "Level Grains"
-msgstr "Mise à niveau de grains"
+msgstr "Mise à niveau des grains"
 
 #: modules/process/level_grains.c:257
 msgid "Quantity to level:"
@@ -9818,7 +9818,7 @@ msgstr "Nivelage médian"
 
 #: modules/process/median-bg.c:178
 msgid "Median Level"
-msgstr "Niveau Médian"
+msgstr "Niveau médian"
 
 #: modules/process/median-bg.c:197 modules/process/sphere-revolve.c:236
 msgid "Real _radius:"
@@ -9984,9 +9984,10 @@ msgstr "Erreur d'apprentissage"
 msgid "error"
 msgstr "Erreur"
 
+# Légende du graphe d'erreur, on omet le NN (Neural Network)
 #: modules/process/neural.c:502
 msgid "NN training error"
-msgstr "Erreur d'apprentissage du réseau neuronal"
+msgstr "Erreur d'apprentissage"
 
 #: modules/process/neural.c:519
 msgid "_Model:"
@@ -10030,7 +10031,7 @@ msgstr "Hauteur de fenêtre :"
 
 #: modules/process/neural.c:634
 msgid "_Hidden nodes:"
-msgstr "Noeuds cac_hés : "
+msgstr "Nœuds cac_hés : "
 
 #: modules/process/neural.c:642
 msgid "Result Units"
@@ -10157,7 +10158,7 @@ msgstr "Beignets"
 
 #: modules/process/obj_synth.c:292
 msgid "Generates randomly patterned surfaces by placing objects."
-msgstr "Génère des motifs de surface aléatoire en plçant des objets."
+msgstr "Génère des motifs de surface aléatoire en plaçant des objets."
 
 #: modules/process/obj_synth.c:306
 msgid "/S_ynthetic/_Objects..."
@@ -10656,7 +10657,7 @@ msgid ""
 "angular distribution."
 msgstr ""
 "Calcule la distribution uni ou bi-dimensionnelle des pentes ou affiche la "
-"distribution angulaires."
+"distribution angulaire."
 
 #: modules/process/slope_dist.c:124
 msgid "/_Statistics/_Slope Distribution..."
@@ -10874,7 +10875,8 @@ msgstr "Angles"
 
 #: modules/process/tip_blind.c:180
 msgid "Blind estimation of SPM tip using Villarubia's algorithm."
-msgstr "Estimation à l'aveugle d'une sonde SPM avec l'algorithme Villarubia."
+msgstr ""
+"Estimation à l'aveugle d'une sonde SPM avec l'algorithme de Villarubia."
 
 #: modules/process/tip_blind.c:194
 msgid "/_Tip/_Blind Estimation..."
@@ -11817,8 +11819,7 @@ msgstr "(sinon elle sera utilisée pour l'ajustement)"
 
 #: modules/tools/profile.c:182
 msgid "Profile tool, creates profile graphs from selected lines."
-msgstr ""
-"Outil profil, crée des graphes de profiles à partir des lignes sélectionnées."
+msgstr "Outil profil, crée des profils à partir des lignes sélectionnées."
 
 #: modules/tools/profile.c:231 modules/tools/profile.c:514
 msgid "Profiles"
@@ -12558,7 +12559,7 @@ msgstr "Évaluer les données force-distance volumiques"
 
 #: modules/volume/volume_fdfit.c:214
 msgid "/_Evaluate FD data..."
-msgstr "/_Évaluer les données F/D (force/distance)..."
+msgstr "/_Évaluer les données F-D (force-distance)..."
 
 #: modules/volume/volume_fdfit.c:218
 msgid "Evaluate force-distance volume data"
