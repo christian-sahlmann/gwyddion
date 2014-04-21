@@ -9,6 +9,7 @@ Libraries:
 - libgwyprocess: A classic Vincent watershed algorithm function was added.
 
 Modules:
+- WinSTM (new): Import WinSTM data files.
 - Mark by Segmentation (new): Another segmentation/grain marking module, based
   on the classic Vincent algorithm.
 - Mask editor tool: Fill voids handles correctly different connectivity of

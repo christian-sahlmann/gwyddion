@@ -153,6 +153,7 @@ file_LTLIBRARIES = \
 	tiaser.la \
 	unisoku.la \
 	vtkfile.la \
+	win_stm.la \
 	wipfile.la \
 	witec-asc.la \
 	witfile.la \
@@ -280,6 +281,7 @@ tiaser_la_SOURCES        = tiaser.c
 tescan_la_SOURCES        = tescan.c
 unisoku_la_SOURCES       = unisoku.c
 vtkfile_la_SOURCES       = vtkfile.c
+win_stm_la_SOURCES       = win_stm.c
 wipfile_la_SOURCES       = wipfile.c
 witfile_la_SOURCES       = witfile.c
 witec_asc_la_SOURCES     = witec-asc.c
