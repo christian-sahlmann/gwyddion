@@ -68,6 +68,13 @@ typedef enum {
     IMAGE_CORRECTED,
 } ImageMode;
 
+/* Keep it simple and use a predefined set of zooms, these seem suitable. */
+typedef enum {
+    ZOOM_1 = 1,
+    ZOOM_4 = 4,
+    ZOOM_16 = 16
+} ZoomType;
+
 typedef enum {
     SCALING_AS_GIVEN,
     SCALING_PRESERVE_AREA,
@@ -90,6 +97,7 @@ typedef struct {
     ScalingType scaling;
     gint preset;
 
+    ZoomType zoom;
     ImageMode image_mode;
 } AffcorArgs;
 
@@ -101,6 +109,7 @@ typedef struct {
     GwyVectorLayer *vlayer;
     GwySelection *selection;
     GwyContainer *mydata;
+    GSList *zoom;
     GSList *image_mode;
     GtkWidget *acffield;
     GtkWidget *interp;
@@ -156,6 +165,8 @@ static void       init_selection           (GwySelection *selection,
                                             GwyDataField *dfield);
 static void       image_mode_changed       (GtkToggleButton *button,
                                             AffcorControls *controls);
+static void       zoom_changed             (GtkRadioButton *button,
+                                            AffcorControls *controls);
 static void       preset_changed           (GtkComboBox *combo,
                                             AffcorControls *controls);
 static void       a1_changed               (AffcorControls *controls,
@@ -166,8 +177,9 @@ static void       phi_changed              (AffcorControls *controls,
                                             GtkEntry *entry);
 static void       acffield_changed         (AffcorControls *controls,
                                             GwyDataChooser *chooser);
-static void       calculate_acffield       (AffcorControls *controls,
+static void       calculate_acffield_full  (AffcorControls *controls,
                                             GwyDataField *dfield);
+static void       calculate_acffield       (AffcorControls *controls);
 static void       different_lengths_toggled(AffcorControls *controls,
                                             GtkToggleButton *toggle);
 static void       refine                   (AffcorControls *controls);
@@ -211,7 +223,7 @@ static const AffcorArgs affcor_defaults = {
     TRUE,
     GWY_INTERPOLATION_LINEAR, SCALING_AS_GIVEN,
     -1,
-    IMAGE_DATA,
+    ZOOM_1, IMAGE_DATA,
 };
 
 static const LatticePreset lattice_presets[] = {
@@ -224,7 +236,7 @@ static GwyModuleInfo module_info = {
     N_("Corrects affine distortion of images by matching image Bravais "
        "lattice to the true one."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti)",
     "2013",
 };
@@ -272,9 +284,10 @@ affcor_dialog(AffcorArgs *args,
               GwyDataField *dfield,
               gint id)
 {
-    GtkWidget *hbox, *label, *button, *lattable, *alignment;
+    GtkWidget *hbox, *hbox2, *label, *button, *lattable, *alignment;
     GtkDialog *dialog;
     GtkTable *table;
+    GSList *l;
     GwyDataField *corrected;
     AffcorControls controls;
     gint response, row, newid = -1;
@@ -311,7 +324,7 @@ affcor_dialog(AffcorArgs *args,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
 
-    calculate_acffield(&controls, dfield);
+    calculate_acffield_full(&controls, dfield);
     gwy_app_sync_data_items(data, controls.mydata, id, 1, FALSE,
                             GWY_DATA_ITEM_RANGE_TYPE,
                             GWY_DATA_ITEM_RANGE,
@@ -346,14 +359,19 @@ affcor_dialog(AffcorArgs *args,
 
     gtk_container_add(GTK_CONTAINER(alignment), controls.view);
 
-    table = GTK_TABLE(gtk_table_new(15, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(17, 4, FALSE));
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_end(GTK_BOX(hbox), GTK_WIDGET(table), FALSE, FALSE, 0);
     row = 0;
 
-    label = gtk_label_new(_("Preview:"));
+    label = gwy_label_new_header(_("Preview Options"));
+    gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new(_("Display:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 5, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
@@ -370,8 +388,27 @@ affcor_dialog(AffcorArgs *args,
     button = gwy_radio_buttons_find(controls.image_mode, IMAGE_CORRECTED);
     gwy_sensitivity_group_add_widget(controls.sens, button,
                                      SENS_VALID_LATTICE);
-    gtk_table_set_row_spacing(table, row-1, 8);
 
+    hbox2 = gtk_hbox_new(FALSE, 8);
+    gtk_table_attach(GTK_TABLE(table), hbox2, 0, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    label = gtk_label_new(_("ACF zoom:"));
+    gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
+
+    controls.zoom
+        = gwy_radio_buttons_createl(G_CALLBACK(zoom_changed), &controls,
+                                    args->zoom,
+                                    "1×", ZOOM_1,
+                                    "4×", ZOOM_4,
+                                    "16×", ZOOM_16,
+                                    NULL);
+    for (l = controls.zoom; l; l = g_slist_next(l)) {
+        GtkWidget *widget = GTK_WIDGET(l->data);
+        gtk_box_pack_start(GTK_BOX(hbox2), widget, FALSE, FALSE, 0);
+    }
+    row++;
+
+    gtk_table_set_row_spacing(table, row-1, 8);
     label = gwy_label_new_header(_("Lattice Vectors"));
     gtk_table_attach(table, label, 0, 5, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
@@ -871,6 +908,23 @@ image_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
 }
 
 static void
+zoom_changed(GtkRadioButton *button,
+             AffcorControls *controls)
+{
+    AffcorArgs *args = controls->args;
+    ZoomType zoom = gwy_radio_buttons_get_current(controls->zoom);
+
+    if (button && zoom == args->zoom)
+        return;
+
+    args->zoom = zoom;
+    if (args->image_mode != IMAGE_ACF)
+        return;
+
+    calculate_acffield(controls);
+}
+
+static void
 preset_changed(GtkComboBox *combo,
                AffcorControls *controls)
 {
@@ -977,12 +1031,12 @@ acffield_changed(AffcorControls *controls,
     data = gwy_data_chooser_get_active(chooser, &id);
     g_return_if_fail(data);
     dfield = gwy_container_get_object(data, gwy_app_get_data_key_for_id(id));
-    calculate_acffield(controls, dfield);
+    calculate_acffield_full(controls, dfield);
 }
 
 static void
-calculate_acffield(AffcorControls *controls,
-                   GwyDataField *dfield)
+calculate_acffield_full(AffcorControls *controls,
+                        GwyDataField *dfield)
 {
     GwyDataField *acf;
     guint acfwidth, acfheight;
@@ -990,13 +1044,47 @@ calculate_acffield(AffcorControls *controls,
     dfield = gwy_data_field_duplicate(dfield);
     gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
     acf = gwy_data_field_new_alike(dfield, FALSE);
-    acfwidth = MIN(dfield->xres/4, PREVIEW_SIZE/2 + (gint)sqrt(dfield->xres));
-    acfheight = MIN(dfield->yres/4, PREVIEW_SIZE/2 + (gint)sqrt(dfield->yres));
+    acfwidth = MIN(MAX(dfield->xres/4, 64), dfield->xres/2);
+    acfheight = MIN(MAX(dfield->yres/4, 64), dfield->yres/2);
     gwy_data_field_area_2dacf(dfield, acf, 0, 0, dfield->xres, dfield->yres,
-                              MAX(acfwidth, 4), MAX(acfheight, 4));
+                              acfwidth, acfheight);
     g_object_unref(dfield);
-    gwy_container_set_object_by_name(controls->mydata, "/1/data", acf);
+    gwy_container_set_object_by_name(controls->mydata, "/1/data/full", acf);
     g_object_unref(acf);
+
+    calculate_acffield(controls);
+}
+
+static void
+calculate_acffield(AffcorControls *controls)
+{
+    ZoomType zoom = controls->args->zoom;
+    GwyDataField *acf;
+
+    acf = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                          "/1/data/full"));
+    if (zoom != ZOOM_1) {
+        guint xres = acf->xres;
+        guint yres = acf->yres;
+        guint width = (xres/zoom) | 1;
+        guint height = (yres/zoom) | 1;
+
+        if (width < 17)
+            width = MAX(width, MIN(17, xres));
+
+        if (height < 17)
+            height = MAX(height, MIN(17, yres));
+
+        acf = gwy_data_field_area_extract(acf,
+                                          (xres - width)/2, (yres - height)/2,
+                                          width, height);
+        gwy_data_field_set_xoffset(acf, -0.5*acf->xreal);
+        gwy_data_field_set_yoffset(acf, -0.5*acf->yreal);
+    }
+    gwy_container_set_object_by_name(controls->mydata, "/1/data", acf);
+
+    if (controls->args->image_mode == IMAGE_ACF)
+        gwy_set_data_preview_size(GWY_DATA_VIEW(controls->view), PREVIEW_SIZE);
 }
 
 static void
@@ -1028,9 +1116,9 @@ refine(AffcorControls *controls)
 
     acf = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                           "/1/data"));
-    xwinsize = (gint)(0.28*MAX(fabs(xy[0]), fabs(xy[2]))
+    xwinsize = (gint)(0.32*MAX(fabs(xy[0]), fabs(xy[2]))
                       /gwy_data_field_get_xmeasure(acf) + 0.5);
-    ywinsize = (gint)(0.28*MAX(fabs(xy[1]), fabs(xy[3]))
+    ywinsize = (gint)(0.32*MAX(fabs(xy[1]), fabs(xy[3]))
                       /gwy_data_field_get_ymeasure(acf) + 0.5);
     gwy_debug("window size: %dx%d", xwinsize, ywinsize);
 
@@ -1315,6 +1403,7 @@ find_maximum(GwyDataField *dfield,
     gdouble v, bx, by, cxx, cxy, cyy, D, sx, sy;
     gdouble m[6], rhs[3];
 
+    gwy_debug("searching from: %g, %g", *x, *y);
     for (i = -ywinsize; i <= ywinsize; i++) {
         if (i + yi < 0 || i + yi > yres-1)
             continue;
@@ -1333,6 +1422,7 @@ find_maximum(GwyDataField *dfield,
 
     *x = mj;
     *y = mi;
+    gwy_debug("pixel maximum at: %g, %g", *x, *y);
 
     /* Don't try any sub-pixel refinement if it's on the edge. */
     if (mi < 1 || mi+1 > yres-1 || mj < 1 || mj+1 > xres-1)
@@ -1402,6 +1492,7 @@ find_maximum(GwyDataField *dfield,
 
     /* Don't trust the sub-pixel refinement if it moves the maximum outside
      * the 3×3 neighbourhood. */
+    gwy_debug("refinements: %g, %g", sx, sy);
     if (fabs(sx) > 1.5 || fabs(sy) > 1.5)
         return;
 
@@ -1473,6 +1564,7 @@ static const gchar phi_key[]               = "/module/correct_affine/phi";
 static const gchar different_lengths_key[] = "/module/correct_affine/different-lengths";
 static const gchar interp_key[]            = "/module/correct_affine/interpolation";
 static const gchar scaling_key[]           = "/module/correct_affine/scaling";
+static const gchar zoom_key[]              = "/module/correct_affine/zoom";
 
 static void
 affcor_sanitize_args(AffcorArgs *args)
@@ -1483,6 +1575,8 @@ affcor_sanitize_args(AffcorArgs *args)
     args->preset = CLAMP(args->preset,
                          USER_DEFINED_LATTICE,
                          (gint)G_N_ELEMENTS(lattice_presets)-1);
+    if (args->zoom != ZOOM_1 && args->zoom != ZOOM_4 && args->zoom != ZOOM_16)
+        args->zoom = affcor_defaults.zoom;
 
     if (args->preset == USER_DEFINED_LATTICE) {
         args->different_lengths = !!args->different_lengths;
@@ -1522,6 +1616,7 @@ affcor_load_args(GwyContainer *container,
     gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
     gwy_container_gis_enum_by_name(container, scaling_key, &args->scaling);
     gwy_container_gis_int32_by_name(container, preset_key, &args->preset);
+    gwy_container_gis_enum_by_name(container, zoom_key, &args->zoom);
 
     affcor_sanitize_args(args);
 }
@@ -1538,6 +1633,7 @@ affcor_save_args(GwyContainer *container,
     gwy_container_set_enum_by_name(container, interp_key, args->interp);
     gwy_container_set_enum_by_name(container, scaling_key, args->scaling);
     gwy_container_set_int32_by_name(container, preset_key, args->preset);
+    gwy_container_set_enum_by_name(container, zoom_key, args->zoom);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

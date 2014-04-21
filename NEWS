@@ -15,6 +15,7 @@ Modules:
 - Mask editor tool: Fill voids handles correctly different connectivity of
   grain exterior, noticeable for grains separated only by thin lines.
 - Pixmap: Vertical and horizontal rulers always use the same number format.
+- Affine distortion: The ACF image can be zoomed.
 
 
 2.36 (2014-04-02)
