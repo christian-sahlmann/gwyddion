@@ -32,6 +32,7 @@
 #include <libprocess/arithmetic.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
@@ -117,7 +118,7 @@ module_register(void)
     gwy_process_func_register("extend",
                               (GwyProcessFunc)&extend,
                               N_("/_Basic Operations/E_xtend..."),
-                              NULL,
+                              GWY_STOCK_EXTEND,
                               EXTEND_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Extend by adding borders"));

@@ -34,6 +34,7 @@
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
@@ -249,7 +250,7 @@ module_register(void)
     gwy_process_func_register("correct_affine",
                               (GwyProcessFunc)&correct_affine,
                               N_("/_Correct Data/_Affine Distortion..."),
-                              NULL,
+                              GWY_STOCK_CORRECT_AFFINE,
                               AFFINE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Correct affine distortion"));
