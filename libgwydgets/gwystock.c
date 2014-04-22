@@ -354,6 +354,15 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_CORRECT_AFFINE:
+ *
+ * The "Correct-Affine" stock icon.
+ * <inlinegraphic fileref="gwy_correct_affine-24.png" format="PNG"/>
+ *
+ * Since: 2.37
+ **/
+
+/**
  * GWY_STOCK_CROP:
  *
  * The "Crop" stock icon.
@@ -404,6 +413,15 @@ file_to_icon_source(const gchar *path,
  *
  * The "Edge" stock icon.
  * <inlinegraphic fileref="gwy_edge-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_EXTEND:
+ *
+ * The "Extend" stock icon.
+ * <inlinegraphic fileref="gwy_extend-24.png" format="PNG"/>
+ *
+ * Since: 2.37
  **/
 
 /**
