@@ -50,10 +50,24 @@ enum {
 };
 
 typedef enum {
-    PREVIEW_ORIGINAL,
-    PREVIEW_PREPROC,
-    PREVIEW_NTYPES,
-} PreviewType;
+    UPDATE_NOTHING,
+    UPDATE_PREPROCESS,
+    UPDATE_MARK,
+    UPDATE_NTYPES,
+} UpdateType;
+
+typedef enum {
+    IMAGE_PREVIEW_ORIGINAL,
+    IMAGE_PREVIEW_PREPROC,
+    IMAGE_PREVIEW_NTYPES,
+} ImagePreviewType;
+
+typedef enum {
+    MASK_PREVIEW_NONE,
+    MASK_PREVIEW_MARKED,
+    MASK_PREVIEW_POSTPROCESSED,
+    MASK_PREVIEW_NTYPES,
+} MaskPreviewType;
 
 typedef struct {
     guint size;
@@ -63,8 +77,9 @@ typedef struct {
 
 typedef struct {
     gboolean inverted;
-    gboolean update;
-    PreviewType preview_type;
+    UpdateType update;
+    ImagePreviewType image_preview;
+    MaskPreviewType mask_preview;
     gdouble blur_fwhm;
     gdouble prefill_level;
     gdouble prefill_height;
@@ -83,7 +98,8 @@ typedef struct {
     GtkWidget *color_button;
     GtkWidget *update;
     GwyPixmapLayer *player;
-    GSList *preview_type;
+    GtkWidget *image_preview;
+    GtkWidget *mask_preview;
     GtkAdjustment *blur_fwhm;
     GtkAdjustment *prefill_level;
     GtkAdjustment *prefill_height;
@@ -113,9 +129,11 @@ static void           wpour_dialog_update_controls(WPourControls *controls,
                                                    WPourArgs *args);
 static void           inverted_changed            (WPourControls *controls,
                                                    GtkToggleButton *toggle);
-static void           update_changed              (WPourControls *controls,
-                                                   GtkToggleButton *toggle);
-static void           preview_type_changed        (GtkToggleButton *toggle,
+static void           update_changed              (GtkComboBox *combo,
+                                                   WPourControls *controls);
+static void           image_preview_changed       (GtkComboBox *combo,
+                                                   WPourControls *controls);
+static void           mask_preview_changed        (GtkComboBox *combo,
                                                    WPourControls *controls);
 static GtkAdjustment* table_attach_threshold      (GtkWidget *table,
                                                    gint *row,
@@ -153,8 +171,8 @@ static void           wpour_sanitize_args         (WPourArgs *args);
 
 static const WPourArgs wpour_defaults = {
     FALSE,
-    TRUE,
-    PREVIEW_ORIGINAL,
+    UPDATE_MARK,
+    IMAGE_PREVIEW_ORIGINAL, MASK_PREVIEW_MARKED,
     0.0,
     0.0, 0.0,
     0.0, 0.0,
@@ -235,8 +253,7 @@ wpour_dialog(WPourArgs *args,
             gint id,
             GQuark mquark)
 {
-    GtkWidget *dialog, *table, *hbox, *label;
-    GSList *group;
+    GtkWidget *dialog, *table, *hbox;
     GtkObject *gtkobj;
     WPourControls controls;
     gint response;
@@ -362,22 +379,32 @@ wpour_dialog(WPourArgs *args,
                      G_CALLBACK(mask_color_changed), &controls);
     row++;
 
-    label = gtk_label_new(_("Preview:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
-    row++;
+    controls.image_preview
+        = gwy_enum_combo_box_newl(G_CALLBACK(image_preview_changed), &controls,
+                                  args->image_preview,
+                                  _("Original image"),
+                                  IMAGE_PREVIEW_ORIGINAL,
+                                  _("Preprocessed image"),
+                                  IMAGE_PREVIEW_PREPROC,
+                                  NULL);
+    gwy_table_attach_hscale(table, row++, _("_Image preview:"), NULL,
+                            GTK_OBJECT(controls.image_preview),
+                            GWY_HSCALE_WIDGET);
 
-    group = gwy_radio_buttons_createl(G_CALLBACK(preview_type_changed),
-                                      &controls,
-                                      args->preview_type,
-                                      _("Original _image"), PREVIEW_ORIGINAL,
-                                      _("Pr_eprocessed image"), PREVIEW_PREPROC,
-                                      NULL);
-    controls.preview_type = group;
-    row = gwy_radio_buttons_attach_to_table(group, GTK_TABLE(table), 3, row);
+    controls.mask_preview
+        = gwy_enum_combo_box_newl(G_CALLBACK(mask_preview_changed), &controls,
+                                  args->mask_preview,
+                                  _("No mask"),
+                                  MASK_PREVIEW_NONE,
+                                  _("Marked"),
+                                  MASK_PREVIEW_MARKED,
+                                  _("Postprocessed"),
+                                  MASK_PREVIEW_POSTPROCESSED,
+                                  NULL);
+    gwy_table_attach_hscale(table, row++, _("_Mask preview:"), NULL,
+                            GTK_OBJECT(controls.mask_preview),
+                            GWY_HSCALE_WIDGET);
 
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     controls.update = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.update),
                                  args->update);
@@ -452,7 +479,8 @@ wpour_dialog_update_controls(WPourControls *controls,
                                  args->inverted);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update),
                                  args->update);
-    gwy_radio_buttons_set_current(controls->preview_type, args->preview_type);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->image_preview),
+                                  args->image_preview);
     gtk_adjustment_set_value(controls->blur_fwhm, args->blur_fwhm);
     gtk_adjustment_set_value(controls->prefill_level, args->prefill_level);
     gtk_adjustment_set_value(controls->prefill_height, args->prefill_height);
@@ -473,22 +501,32 @@ inverted_changed(WPourControls *controls,
 }
 
 static void
-update_changed(WPourControls *controls,
-               GtkToggleButton *toggle)
+update_changed(GtkComboBox *combo,
+               WPourControls *controls)
 {
-    controls->args->update = gtk_toggle_button_get_active(toggle);
+    WPourArgs *args = controls->args;
+    args->update = gwy_enum_combo_box_get_active(combo);
     gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
                                       RESPONSE_PREVIEW,
-                                      !controls->args->update);
+                                      args->update != UPDATE_MARK);
     wpour_invalidate(controls);
 }
 
 static void
-preview_type_changed(G_GNUC_UNUSED GtkToggleButton *toggle,
-                     WPourControls *controls)
+image_preview_changed(GtkComboBox *combo,
+                      WPourControls *controls)
 {
     WPourArgs *args = controls->args;
-    args->preview_type = gwy_radio_buttons_get_current(controls->preview_type);
+    args->image_preview = gwy_enum_combo_box_get_active(combo);
+    wpour_invalidate(controls);
+}
+
+static void
+mask_preview_changed(GtkComboBox *combo,
+                      WPourControls *controls)
+{
+    WPourArgs *args = controls->args;
+    args->mask_preview = gwy_enum_combo_box_get_active(combo);
     wpour_invalidate(controls);
 }
 
@@ -595,7 +633,8 @@ preview(WPourControls *controls,
     gwy_data_field_data_changed(mask);
     gwy_data_field_data_changed(preprocessed);
 
-    if (args->preview_type == PREVIEW_ORIGINAL)
+    /* TODO */
+    if (args->image_preview == IMAGE_PREVIEW_ORIGINAL)
         g_object_set(controls->player, "data-key", "/0/data", NULL);
     else
         g_object_set(controls->player, "data-key", "/1/data", NULL);
@@ -880,7 +919,8 @@ prefill_minima(GwyDataField *dfield, GwyDataField *workspace,
 
 static const gchar inverted_key[]          = "/module/wpour_mark/inverted";
 static const gchar update_key[]            = "/module/wpour_mark/update";
-static const gchar preview_type_key[]      = "/module/wpour_mark/preview_type";
+static const gchar image_preview_key[]     = "/module/wpour_mark/image_preview";
+static const gchar mask_preview_key[]      = "/module/wpour_mark/mask_preview";
 static const gchar blur_fwhm_key[]         = "/module/wpour_mark/blur_fwhm";
 static const gchar prefill_level_key[]     = "/module/wpour_mark/prefill_level";
 static const gchar prefill_height_key[]    = "/module/wpour_mark/prefill_height";
@@ -891,8 +931,9 @@ static void
 wpour_sanitize_args(WPourArgs *args)
 {
     args->inverted = !!args->inverted;
-    args->update = !!args->update;
-    args->preview_type = MIN(args->preview_type, PREVIEW_NTYPES-1);
+    args->update = MIN(args->update, UPDATE_NTYPES-1);
+    args->image_preview = MIN(args->image_preview, IMAGE_PREVIEW_NTYPES-1);
+    args->mask_preview = MIN(args->mask_preview, MASK_PREVIEW_NTYPES-1);
     args->blur_fwhm = CLAMP(args->blur_fwhm, 0.0, 100.0);
     args->prefill_level = CLAMP(args->prefill_level, 0.0, 100.0);
     args->prefill_height = CLAMP(args->prefill_height, 0.0, 100.0);
@@ -907,9 +948,11 @@ wpour_load_args(GwyContainer *container,
     *args = wpour_defaults;
 
     gwy_container_gis_boolean_by_name(container, inverted_key, &args->inverted);
-    gwy_container_gis_boolean_by_name(container, update_key, &args->update);
-    gwy_container_gis_enum_by_name(container, preview_type_key,
-                                   &args->preview_type);
+    gwy_container_gis_enum_by_name(container, update_key, &args->update);
+    gwy_container_gis_enum_by_name(container, image_preview_key,
+                                   &args->image_preview);
+    gwy_container_gis_enum_by_name(container, mask_preview_key,
+                                   &args->mask_preview);
     gwy_container_gis_double_by_name(container, blur_fwhm_key,
                                      &args->blur_fwhm);
     gwy_container_gis_double_by_name(container, prefill_level_key,
@@ -928,9 +971,11 @@ wpour_save_args(GwyContainer *container,
                 WPourArgs *args)
 {
     gwy_container_set_boolean_by_name(container, inverted_key, args->inverted);
-    gwy_container_set_boolean_by_name(container, update_key, args->update);
-    gwy_container_set_enum_by_name(container, preview_type_key,
-                                   args->preview_type);
+    gwy_container_set_enum_by_name(container, update_key, args->update);
+    gwy_container_set_enum_by_name(container, image_preview_key,
+                                   args->image_preview);
+    gwy_container_set_enum_by_name(container, mask_preview_key,
+                                   args->mask_preview);
     gwy_container_set_double_by_name(container, blur_fwhm_key,
                                      args->blur_fwhm);
     gwy_container_set_double_by_name(container, prefill_level_key,
