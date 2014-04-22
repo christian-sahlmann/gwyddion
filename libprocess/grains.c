@@ -4572,6 +4572,10 @@ fix_grain_numbers(gint *grains, gint *buf, gint n)
  * catchment basin.  Therefore, pre- or postprocessing is usually necessary,
  * using the gradient image or a more sophisticated method.
  *
+ * The function does not assign pixels with value %HUGE_VAL or larger to any
+ * segment.  This can be used to pre-mark certain areas explicitly as
+ * boundaries.
+ *
  * Since the algorithm numbers the grains as a side effect, you can pass a
  * @grains array and get the grain numbers immediatelly, avoiding the
  * relatively (although not drastically) expensive
@@ -4619,6 +4623,11 @@ gwy_data_field_waterpour(GwyDataField *data_field,
 
         k = queue[kq];
         z = d[k];
+        if (z >= HUGE_VAL) {
+            assigned[kq++] = GRAIN_BARRIER;
+            continue;
+        }
+
         while (kq + len < n && d[queue[kq + len]] == z)
             len++;
 
