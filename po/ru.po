@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-04-16 03:58+0200\n"
-"PO-Revision-Date: 2014-04-16 10:25+0300\n"
+"POT-Creation-Date: 2014-04-23 03:58+0200\n"
+"PO-Revision-Date: 2014-04-23 12:36+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -880,12 +880,12 @@ msgstr "точек"
 #: modules/file/pixmap.c:1074 modules/file/pixmap.c:3154
 #: modules/file/rawfile.c:401 modules/process/angle_dist.c:172
 #: modules/process/calcoefs_new.c:348 modules/process/calibrate.c:385
-#: modules/process/col_synth.c:328 modules/process/correct_affine.c:293
+#: modules/process/col_synth.c:328 modules/process/correct_affine.c:307
 #: modules/process/curvature.c:605 modules/process/cwt.c:135
 #: modules/process/deposit_synth.c:359 modules/process/domain_synth.c:368
 #: modules/process/drift.c:240 modules/process/dwt.c:166
 #: modules/process/dwtanisotropy.c:184 modules/process/edge.c:655
-#: modules/process/extend.c:191 modules/process/facet-level.c:285
+#: modules/process/extend.c:192 modules/process/facet-level.c:285
 #: modules/process/facet_analysis.c:276 modules/process/fft.c:283
 #: modules/process/fft_filter_2d.c:447 modules/process/fft_synth.c:353
 #: modules/process/fractal.c:207 modules/process/grain_edge.c:218
@@ -903,7 +903,7 @@ msgstr "точек"
 #: modules/process/sphere-revolve.c:218 modules/process/tilt.c:160
 #: modules/process/tip_model.c:170 modules/process/unrotate.c:228
 #: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:363
-#: modules/process/wpour_mark.c:256 modules/volume/volume_calibrate.c:371
+#: modules/process/wpour_mark.c:276 modules/volume/volume_calibrate.c:371
 #: modules/volume/volume_extract.c:331
 msgid "_Reset"
 msgstr "_Сброс"
@@ -1468,7 +1468,7 @@ msgstr "Изменить изображение предпросмотра дл�
 msgid "Preview quantity:"
 msgstr "Величина для предпросмотра:"
 
-#: app/app.c:1474 modules/process/extend.c:265 modules/tools/linestats.c:152
+#: app/app.c:1474 modules/process/extend.c:266 modules/tools/linestats.c:152
 msgid "Mean"
 msgstr "Среднее"
 
@@ -2927,11 +2927,11 @@ msgstr "Экспортировать текст"
 #: modules/file/asciiexport.c:273 modules/file/pixmap.c:3257
 #: modules/file/rawfile.c:722 modules/file/rawxyz.c:671
 #: modules/process/calibrate.c:597 modules/process/col_synth.c:456
-#: modules/process/correct_affine.c:451 modules/process/extend.c:257
+#: modules/process/correct_affine.c:489 modules/process/extend.c:258
 #: modules/process/fft_filter_1d.c:296 modules/process/grain_dist.c:306
 #: modules/process/grain_edge.c:270 modules/process/grain_mark.c:345
 #: modules/process/grain_rem_threshold.c:328 modules/process/grain_wshed.c:278
-#: modules/process/tip_blind.c:360 modules/process/wpour_mark.c:337
+#: modules/process/tip_blind.c:360 modules/process/wpour_mark.c:357
 #: modules/tools/spotremove.c:317 modules/tools/stats.c:379
 msgid "Options"
 msgstr "Параметры"
@@ -4924,7 +4924,7 @@ msgstr "Предустановки"
 #: modules/process/grain_rem_threshold.c:226 modules/process/grain_wshed.c:180
 #: modules/process/mark_with.c:211 modules/process/polydistort.c:213
 #: modules/process/scars.c:474 modules/process/synth.h:508
-#: modules/process/tip_model.c:167 modules/process/wpour_mark.c:251
+#: modules/process/tip_model.c:167 modules/process/wpour_mark.c:271
 #: modules/tools/linestats.c:421 modules/tools/sfunctions.c:476
 #: modules/tools/stats.c:436 modules/volume/volume_extract.c:328
 msgid "_Update"
@@ -5235,7 +5235,7 @@ msgstr "Единицы _размера:"
 msgid "_Value units:"
 msgstr "Единицы измерения _значения:"
 
-#: modules/file/rawxyz.c:675 modules/process/correct_affine.c:469
+#: modules/file/rawxyz.c:675 modules/process/correct_affine.c:507
 #: modules/process/drift.c:300 modules/process/dwt.c:205
 #: modules/process/dwtanisotropy.c:201 modules/process/fft_filter_1d.c:329
 #: modules/process/fft_profile.c:298 modules/process/fractal.c:228
@@ -5251,22 +5251,22 @@ msgstr "Тип _интерполяции:"
 msgid "Field"
 msgstr "Поле"
 
-#: modules/file/rawxyz.c:692 modules/process/extend.c:273
+#: modules/file/rawxyz.c:692 modules/process/extend.c:274
 #: modules/process/polydistort.c:282
 msgid "_Exterior type:"
 msgstr "Тип _внешней части:"
 
-#: modules/file/rawxyz.c:700 modules/process/extend.c:266
+#: modules/file/rawxyz.c:700 modules/process/extend.c:267
 #: modules/process/polydistort.c:275
 msgid "exterior|Border"
 msgstr "Граница"
 
-#: modules/file/rawxyz.c:702 modules/process/extend.c:268
+#: modules/file/rawxyz.c:702 modules/process/extend.c:269
 #: modules/process/polydistort.c:277
 msgid "exterior|Mirror"
 msgstr "Зеркальная"
 
-#: modules/file/rawxyz.c:704 modules/process/extend.c:270
+#: modules/file/rawxyz.c:704 modules/process/extend.c:271
 #: modules/process/polydistort.c:279
 msgid "exterior|Periodic"
 msgstr "Периодический"
@@ -5750,6 +5750,14 @@ msgstr "Экспортирует данные как структурные се
 #: modules/file/vtkfile.c:68
 msgid "VTK structured grid (.vtk)"
 msgstr "Структурная сетка VTK (.vtk)"
+
+#: modules/file/win_stm.c:76
+msgid "Imports WinSTM (.stm) files."
+msgstr "Импортирует файлы WinSTM (.stm)."
+
+#: modules/file/win_stm.c:89
+msgid "WinSTM files (.stm)"
+msgstr "Файлы WinSTM (.stm)"
 
 #: modules/file/wipfile.c:282
 msgid "Imports WItec Project data files."
@@ -6809,7 +6817,7 @@ msgstr "Обрезать до действительных данных"
 #: modules/process/grain_edge.c:286 modules/process/grain_mark.c:378
 #: modules/process/grain_rem_threshold.c:372 modules/process/mark_with.c:355
 #: modules/process/polydistort.c:335 modules/process/scars.c:582
-#: modules/process/synth.h:512 modules/process/wpour_mark.c:378
+#: modules/process/synth.h:512 modules/process/wpour_mark.c:408
 #: modules/volume/volume_extract.c:423 modules/volume/volume_extract.c:503
 msgid "I_nstant updates"
 msgstr "Мгновенное об_новление"
@@ -6973,7 +6981,7 @@ msgstr "Множитель калибровки по _Y:"
 msgid "_Z calibration factor:"
 msgstr "Множитель калибровки по _Z:"
 
-#: modules/process/calibrate.c:603 modules/process/extend.c:291
+#: modules/process/calibrate.c:603 modules/process/extend.c:292
 #: modules/tools/crop.c:213
 msgid "Create new channel"
 msgstr "Создать новый канал"
@@ -7126,7 +7134,7 @@ msgstr "ГСим"
 msgid "VSym"
 msgstr "ВСим"
 
-#: modules/process/correct_affine.c:224
+#: modules/process/correct_affine.c:237
 msgid ""
 "Corrects affine distortion of images by matching image Bravais lattice to "
 "the true one."
@@ -7134,86 +7142,92 @@ msgstr ""
 "Исправляет аффинные искажения изображений путём сравнения решетки Браве "
 "изображения с реальной."
 
-#: modules/process/correct_affine.c:239
+#: modules/process/correct_affine.c:252
 msgid "/_Correct Data/_Affine Distortion..."
 msgstr "/Исправить _данные/_Аффинное _искажение..."
 
-#: modules/process/correct_affine.c:243
+#: modules/process/correct_affine.c:256
 msgid "Correct affine distortion"
 msgstr "Исправить аффинное искажение"
 
-#: modules/process/correct_affine.c:290
+#: modules/process/correct_affine.c:304
 msgid "Affine Correction"
 msgstr "Аффинная коррекция"
 
-#: modules/process/correct_affine.c:356 modules/process/drift.c:337
-#: modules/process/fit_2d.c:316 modules/process/neural.c:547
-#: modules/process/polydistort.c:294 modules/process/wpour_mark.c:362
-msgid "Preview:"
-msgstr "Предпросмотр:"
+#: modules/process/correct_affine.c:370 modules/process/fft_filter_2d.c:566
+msgid "Preview Options"
+msgstr "Параметры предпросмотра"
 
-#: modules/process/correct_affine.c:364 modules/tools/grainremover.c:109
+#: modules/process/correct_affine.c:375 modules/process/fft_filter_2d.c:571
+msgid "Display:"
+msgstr "Показать:"
+
+#: modules/process/correct_affine.c:383 modules/tools/grainremover.c:109
 msgid "_Data"
 msgstr "Да_нные"
 
-#: modules/process/correct_affine.c:365
+#: modules/process/correct_affine.c:384
 msgid "2D _ACF"
 msgstr "2D _ACF"
 
-#: modules/process/correct_affine.c:366 modules/process/drift.c:346
+#: modules/process/correct_affine.c:385 modules/process/drift.c:346
 msgid "Correc_ted data"
 msgstr "Ис_правленные данные"
 
-#: modules/process/correct_affine.c:375
+#: modules/process/correct_affine.c:396
+msgid "ACF zoom:"
+msgstr "Увеличение АКФ:"
+
+#: modules/process/correct_affine.c:413
 msgid "Lattice Vectors"
 msgstr "Векторы решетки"
 
 #. TRANSLATORS: Correct is an adjective here.
-#: modules/process/correct_affine.c:400
+#: modules/process/correct_affine.c:438
 msgid "Correct Lattice"
 msgstr "Исправить решетку"
 
-#: modules/process/correct_affine.c:404
+#: modules/process/correct_affine.c:442
 msgid "_Lattice type:"
 msgstr "Тип _решетки:"
 
-#: modules/process/correct_affine.c:411
+#: modules/process/correct_affine.c:449
 msgid "User defined"
 msgstr "Пользовательская"
 
-#: modules/process/correct_affine.c:426
+#: modules/process/correct_affine.c:464
 msgid "_Different lengths"
 msgstr "_Различные длины"
 
-#: modules/process/correct_affine.c:455
+#: modules/process/correct_affine.c:493
 msgid "Image for _ACF:"
 msgstr "Изображение для _АКФ:"
 
-#: modules/process/correct_affine.c:482
+#: modules/process/correct_affine.c:520
 msgid "_Scaling:"
 msgstr "_Масштаб:"
 
-#: modules/process/correct_affine.c:489
+#: modules/process/correct_affine.c:527
 msgid "Exactly as specified"
 msgstr "Точно как задано"
 
-#: modules/process/correct_affine.c:490
+#: modules/process/correct_affine.c:528
 msgid "Preserve area"
 msgstr "Сохранять площадь"
 
-#: modules/process/correct_affine.c:491
+#: modules/process/correct_affine.c:529
 msgid "Preserve X scale"
 msgstr "Сохранять масштаб X"
 
-#: modules/process/correct_affine.c:578
+#: modules/process/correct_affine.c:616
 msgid "length"
 msgstr "длина"
 
-#: modules/process/correct_affine.c:585
+#: modules/process/correct_affine.c:623
 msgid "angle"
 msgstr "угол"
 
-#: modules/process/correct_affine.c:678
+#: modules/process/correct_affine.c:716
 msgid "Re_fine"
 msgstr "_Уточнить"
 
@@ -7630,6 +7644,11 @@ msgstr "Исправить _данные"
 msgid "_Exclude linear skew"
 msgstr "_Исключить линейный уклон"
 
+#: modules/process/drift.c:337 modules/process/fit_2d.c:316
+#: modules/process/neural.c:547 modules/process/polydistort.c:294
+msgid "Preview:"
+msgstr "Предпросмотр:"
+
 #: modules/process/drift.c:347
 msgid "Drift _lines"
 msgstr "_Линии дрейфа"
@@ -7637,7 +7656,7 @@ msgstr "_Линии дрейфа"
 #: modules/process/drift.c:358 modules/process/facet_analysis.c:413
 #: modules/process/grain_edge.c:279 modules/process/grain_mark.c:371
 #: modules/process/grain_rem_threshold.c:365 modules/process/grain_wshed.c:296
-#: modules/process/scars.c:575 modules/process/wpour_mark.c:355
+#: modules/process/scars.c:575 modules/process/wpour_mark.c:375
 msgid "_Mask color:"
 msgstr "_Цвет маски:"
 
@@ -7868,7 +7887,6 @@ msgid "verb|Display"
 msgstr "Показать"
 
 #: modules/process/edge.c:724 modules/process/fft_filter_2d.c:401
-#: modules/process/wpour_mark.c:371
 msgid "Original _image"
 msgstr "Исходное _изображение"
 
@@ -7880,51 +7898,51 @@ msgstr "_ЛГ после свёртки"
 msgid "Detected st_ep"
 msgstr "Найденная с_тупень"
 
-#: modules/process/extend.c:105
+#: modules/process/extend.c:106
 msgid "Extends image by adding borders."
 msgstr "Расширяет изображение добавлением границ."
 
-#: modules/process/extend.c:119
+#: modules/process/extend.c:120
 msgid "/_Basic Operations/E_xtend..."
 msgstr "/_Базовые действия/Рас_ширить..."
 
-#: modules/process/extend.c:123
+#: modules/process/extend.c:124
 msgid "Extend by adding borders"
 msgstr "Расширить добавлением границ"
 
-#: modules/process/extend.c:176
+#: modules/process/extend.c:177
 msgid "Extended"
 msgstr "Расширенное"
 
-#: modules/process/extend.c:190
+#: modules/process/extend.c:191
 msgid "Extend"
 msgstr "Расширить"
 
-#: modules/process/extend.c:212
+#: modules/process/extend.c:213
 msgid "Borders"
 msgstr "Границы"
 
-#: modules/process/extend.c:218
+#: modules/process/extend.c:219
 msgid "_Up:"
 msgstr "_Верх:"
 
-#: modules/process/extend.c:225
+#: modules/process/extend.c:226
 msgid "_Down:"
 msgstr "_Низ:"
 
-#: modules/process/extend.c:232
+#: modules/process/extend.c:233
 msgid "_Left:"
 msgstr "_Слева:"
 
-#: modules/process/extend.c:239
+#: modules/process/extend.c:240
 msgid "_Right:"
 msgstr "С_права:"
 
-#: modules/process/extend.c:246
+#: modules/process/extend.c:247
 msgid "Extend _symetrically"
 msgstr "Расширить си_мметрично"
 
-#: modules/process/extend.c:281 modules/tools/crop.c:202
+#: modules/process/extend.c:282 modules/tools/crop.c:202
 msgid "Keep lateral offsets"
 msgstr "Сохранять пространственные смещения"
 
@@ -8088,7 +8106,7 @@ msgstr "/Исправить _данные/Одномерная фильтрац�
 msgid "1D FFT Filtering"
 msgstr "Одномерная фильтрация БПФ"
 
-#: modules/process/fft_filter_1d.c:177
+#: modules/process/fft_filter_1d.c:177 modules/process/wpour_mark.c:399
 msgid "Marked"
 msgstr "Помечено"
 
@@ -8208,14 +8226,6 @@ msgstr "_Заполнить"
 #: modules/process/fft_filter_2d.c:553
 msgid "_Snap to origin"
 msgstr "_Прикрепить к началу координат"
-
-#: modules/process/fft_filter_2d.c:566
-msgid "Preview Options"
-msgstr "Параметры предпросмотра"
-
-#: modules/process/fft_filter_2d.c:571
-msgid "Display:"
-msgstr "Показать:"
 
 #: modules/process/fft_filter_2d.c:601
 msgid "Zoom:"
@@ -8799,7 +8809,7 @@ msgid "_Curvature:"
 msgstr "_Кривизна:"
 
 #: modules/process/grain_mark.c:349 modules/process/grain_rem_threshold.c:332
-#: modules/process/grain_wshed.c:282 modules/process/wpour_mark.c:341
+#: modules/process/grain_wshed.c:282 modules/process/wpour_mark.c:361
 msgid "_Invert height"
 msgstr "_Инвертировать высоту"
 
@@ -11181,55 +11191,75 @@ msgstr "Плоская вершина"
 msgid "Displacement"
 msgstr "Смещение"
 
-#: modules/process/wpour_mark.c:165
+#: modules/process/wpour_mark.c:186
 msgid "Segments image using watershed with pre- and postprocessing."
 msgstr ""
 "Разделяет изображение используя классический водораздел с пред- и "
 "постобработкой."
 
-#: modules/process/wpour_mark.c:179
+#: modules/process/wpour_mark.c:200
 msgid "/_Grains/_Mark by Segmentation..."
 msgstr "/Зёрн_а/Пометить _сегментацией..."
 
-#: modules/process/wpour_mark.c:183
+#: modules/process/wpour_mark.c:204
 msgid "Segment using watershed "
 msgstr "Пометить используя классический водораздел"
 
-#: modules/process/wpour_mark.c:248
+#: modules/process/wpour_mark.c:268
 msgid "Segment by Watershed"
 msgstr "Пометить классическим водоразделом"
 
-#: modules/process/wpour_mark.c:299
+#: modules/process/wpour_mark.c:319
 msgid "Preprocessing"
 msgstr "Предобработка"
 
-#: modules/process/wpour_mark.c:307
+#: modules/process/wpour_mark.c:327
 msgid "Gaussian _smoothening:"
 msgstr "Гауссово _сглаживание:"
 
-#: modules/process/wpour_mark.c:314
+#: modules/process/wpour_mark.c:334
 msgid "Add _gradient:"
 msgstr "Добавить _градиент:"
 
-#: modules/process/wpour_mark.c:318
+#: modules/process/wpour_mark.c:338
 msgid "Add _curvature:"
 msgstr "Добавить _кривизну:"
 
-#: modules/process/wpour_mark.c:322
+#: modules/process/wpour_mark.c:342
 msgid "Prefill _level:"
 msgstr "_Уровень предзаполнения:"
 
-#: modules/process/wpour_mark.c:326
+#: modules/process/wpour_mark.c:346
 msgid "Pre_fill from minima:"
 msgstr "Предварительно _заполнить с минимумов:"
 
-#: modules/process/wpour_mark.c:331
+#: modules/process/wpour_mark.c:351
 msgid "Postprocessing"
 msgstr "Постобработка"
 
-#: modules/process/wpour_mark.c:372
-msgid "Pr_eprocessed image"
-msgstr "Пр_едобработанное изображение"
+#: modules/process/wpour_mark.c:385
+msgid "Original image"
+msgstr "Исходное изображение"
+
+#: modules/process/wpour_mark.c:387
+msgid "Preprocessed image"
+msgstr "Предобработанное изображение"
+
+#: modules/process/wpour_mark.c:390
+msgid "_Image preview:"
+msgstr "_Изображение предпросмотра"
+
+#: modules/process/wpour_mark.c:397
+msgid "No mask"
+msgstr "Без маски"
+
+#: modules/process/wpour_mark.c:401
+msgid "Postprocessed"
+msgstr "После постобработки"
+
+#: modules/process/wpour_mark.c:404
+msgid "_Mask preview:"
+msgstr "Предпросмотр _маски:"
 
 #: modules/process/xydenoise.c:65
 msgid "Denoises measurement on basis of two orthogonal scans."
