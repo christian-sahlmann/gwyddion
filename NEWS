@@ -7,13 +7,15 @@ Libraries:
 - libgwyprocess: A simple x and y derivative filter function was added.
 - libgwyprocess: A regional extrema marking function was added.
 - libgwyprocess: A classic Vincent watershed algorithm function was added.
+- libgwydgets: Several new stock icons were added.
 
 Modules:
 - WinSTM (new): Import WinSTM data files.
 - Mark by Segmentation (new): Another segmentation/grain marking module, based
   on the classic Vincent algorithm.
 - Mask editor tool: Fill voids handles correctly different connectivity of
-  grain exterior, noticeable for grains separated only by thin lines.
+  grain exterior, noticeable for grains separated only by thin lines.  It is
+  also possible to fill only simple-connected grains.
 - Pixmap: Vertical and horizontal rulers always use the same number format.
 - Affine distortion: The ACF image can be zoomed.
 - NT-MDT: Double inversion of new specroscopy data properly checked and fixed.
