@@ -98,6 +98,7 @@ typedef struct {
     GtkWidget *color_button;
     GtkWidget *update;
     GwyPixmapLayer *player;
+    GwyPixmapLayer *mlayer;
     GtkWidget *image_preview;
     GtkWidget *mask_preview;
     GtkAdjustment *blur_fwhm;
@@ -149,7 +150,8 @@ static void           preview                     (WPourControls *controls,
 static void           wpour_do                    (GwyDataField *dfield,
                                                    GwyDataField *maskfield,
                                                    GwyDataField *preprocessed,
-                                                   WPourArgs *args);
+                                                   WPourArgs *args,
+                                                   gboolean ispreview);
 static void           add_slope_contribs          (GwyDataField *workspace,
                                                    GwyDataField *dfield,
                                                    gdouble gradient_contrib,
@@ -241,7 +243,7 @@ run_noninteractive(WPourArgs *args,
 
     gwy_app_undo_qcheckpointv(data, 1, &mquark);
     mfield = create_mask_field(dfield);
-    wpour_do(dfield, mfield, NULL, args);
+    wpour_do(dfield, mfield, NULL, args, FALSE);
     gwy_container_set_object(data, mquark, mfield);
     g_object_unref(mfield);
 }
@@ -260,7 +262,7 @@ wpour_dialog(WPourArgs *args,
     GwyPixmapLayer *layer;
     GwyDataField *mfield;
     gint row;
-    gboolean temp;
+    UpdateType temp;
 
     controls.args = args;
     controls.in_init = TRUE;
@@ -405,13 +407,19 @@ wpour_dialog(WPourArgs *args,
                             GTK_OBJECT(controls.mask_preview),
                             GWY_HSCALE_WIDGET);
 
-    controls.update = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.update),
-                                 args->update);
-    gtk_table_attach(GTK_TABLE(table), controls.update,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    g_signal_connect_swapped(controls.update, "toggled",
-                             G_CALLBACK(update_changed), &controls);
+    controls.update
+        = gwy_enum_combo_box_newl(G_CALLBACK(update_changed), &controls,
+                                  args->update,
+                                  _("No updates"),
+                                  UPDATE_NOTHING,
+                                  _("Preprocess image"),
+                                  UPDATE_PREPROCESS,
+                                  _("Preprocess and mark"),
+                                  UPDATE_MARK,
+                                  NULL);
+    gwy_table_attach_hscale(table, row++, _("Instant:"), NULL,
+                            GTK_OBJECT(controls.update),
+                            GWY_HSCALE_WIDGET);
     row++;
 
     controls.in_init = FALSE;
@@ -441,7 +449,10 @@ wpour_dialog(WPourArgs *args,
             break;
 
             case RESPONSE_PREVIEW:
+            temp = args->update;
+            args->update = UPDATE_MARK;
             preview(&controls, args);
+            args->update = temp;
             break;
 
             default:
@@ -596,9 +607,8 @@ static void
 wpour_invalidate(WPourControls *controls)
 {
     controls->args->computed = FALSE;
-    if (controls->args->update && !controls->in_init) {
+    if (!controls->in_init)
         preview(controls, controls->args);
-    }
 }
 
 static void
@@ -607,6 +617,9 @@ preview(WPourControls *controls,
 {
     GwyDataField *mask, *dfield, *preprocessed;
     GwyPixmapLayer *layer;
+
+    if (args->update == UPDATE_NOTHING)
+        return;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
@@ -625,19 +638,28 @@ preview(WPourControls *controls,
         g_object_unref(mask);
 
         layer = gwy_layer_mask_new();
+        controls->mlayer = layer;
         gwy_pixmap_layer_set_data_key(layer, "/0/mask");
         gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
         gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), layer);
     }
-    wpour_do(dfield, mask, preprocessed, args);
+
+    wpour_do(dfield, mask, preprocessed, args, TRUE);
     gwy_data_field_data_changed(mask);
     gwy_data_field_data_changed(preprocessed);
 
-    /* TODO */
+    /* TODO: We should only change what is displayed when the preview type
+     * changes, there is no need to recalculate everything to change the
+     * displayed field. */
     if (args->image_preview == IMAGE_PREVIEW_ORIGINAL)
         g_object_set(controls->player, "data-key", "/0/data", NULL);
     else
         g_object_set(controls->player, "data-key", "/1/data", NULL);
+
+    if (args->mask_preview == MASK_PREVIEW_NONE)
+        g_object_set(controls->mlayer, "data-key", "/2/mask", NULL);
+    else
+        g_object_set(controls->mlayer, "data-key", "/0/mask", NULL);
 
     args->computed = TRUE;
 }
@@ -692,7 +714,8 @@ static void
 wpour_do(GwyDataField *dfield,
          GwyDataField *maskfield,
          GwyDataField *preprocessed,
-         WPourArgs *args)
+         WPourArgs *args,
+         gboolean ispreview)
 {
     guint xres = dfield->xres, yres = dfield->yres;
     IntList *inqueue = int_list_new(0);
@@ -720,7 +743,11 @@ wpour_do(GwyDataField *dfield,
                        args->gradient_contrib, args->curvature_contrib);
     prefill_minima(preprocessed, maskfield, inqueue, outqueue,
                    args->prefill_level, args->prefill_height);
-    gwy_data_field_waterpour(preprocessed, maskfield, NULL);
+
+    if (!ispreview || args->update >= UPDATE_MARK)
+        gwy_data_field_waterpour(preprocessed, maskfield, NULL);
+    else
+        gwy_data_field_clear(maskfield);
 
     int_list_free(outqueue);
     int_list_free(inqueue);
