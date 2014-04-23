@@ -142,7 +142,8 @@ void gwy_data_field_grains_splash_water(GwyDataField *data_field,
                                         gdouble locate_dropsize);
 
 void     gwy_data_field_grain_distance_transform(GwyDataField *data_field);
-gboolean gwy_data_field_fill_voids              (GwyDataField *data_field);
+gboolean gwy_data_field_fill_voids              (GwyDataField *data_field,
+                                                 gboolean nonsimple);
 gint     gwy_data_field_waterpour               (GwyDataField *data_field,
                                                  GwyDataField *result,
                                                  gint *grains);

@@ -1076,7 +1076,7 @@ gwy_tool_mask_editor_fill_voids(GwyToolMaskEditor *tool)
 
     quark = gwy_app_get_mask_key_for_id(plain_tool->id);
     gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
-    gwy_data_field_fill_voids(plain_tool->mask_field);
+    gwy_data_field_fill_voids(plain_tool->mask_field, TRUE);
     gwy_data_field_data_changed(plain_tool->mask_field);
     gwy_tool_mask_editor_save_args(tool);
     gwy_plain_tool_log_add(plain_tool);

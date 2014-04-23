@@ -4340,6 +4340,10 @@ gwy_data_field_grain_distance_transform(GwyDataField *data_field)
  * gwy_data_field_fill_voids:
  * @data_field: A data field with zeroes in empty space and nonzeroes in
  *              grains.
+ * @nonsimple: Pass %TRUE to fill also voids that are not simple-connected
+ *             (e.g. ring-like).  This can result in grain merging if a small
+ *             grain is contained within a void.  Pass %FALSE to fill only
+ *             simple-connected grains.
  *
  * Fills voids in grains in a data field representing a mask.
  *
@@ -4354,17 +4358,18 @@ gwy_data_field_grain_distance_transform(GwyDataField *data_field)
  * Since: 2.37
  **/
 gboolean
-gwy_data_field_fill_voids(GwyDataField *data_field)
+gwy_data_field_fill_voids(GwyDataField *data_field,
+                          gboolean nonsimple)
 {
     GwyDataField *voids;
     gdouble *data;
     gint xres, yres;
     gint i, j, k, gno, gno2;
-    gint *vgrains;
+    gint *grains = NULL, *vgrains = NULL, *grain_neighbours = NULL;
     gboolean *unbound_vgrains;
     IntList **vgrain_neighbours;
     guint nvgrains;
-    gboolean changed, changed_ever = FALSE;
+    gboolean changed, changed_ever = FALSE, onlysimple = !nonsimple;
 
     g_return_val_if_fail(data_field, FALSE);
 
@@ -4389,9 +4394,12 @@ gwy_data_field_fill_voids(GwyDataField *data_field)
         unbound_vgrains[vgrains[j*xres + xres-1]] = TRUE;
     }
 
-    /* We must take into account grain separators (vgrains) have 8-connectivity
-     * while all grain functions work with 4-connectivity.  So construct a map
-     * of diagonally touching grains and spread the unboundness through it. */
+    if (onlysimple) {
+        grains = g_new0(gint, xres*yres);
+        grain_neighbours = g_new0(gint, nvgrains+1);
+        gwy_data_field_number_grains(data_field, grains);
+    }
+
     vgrain_neighbours = g_new0(IntList*, nvgrains+1);
     for (i = 0; i < yres; i++) {
         for (j = 0; j < xres; j++) {
@@ -4399,6 +4407,10 @@ gwy_data_field_fill_voids(GwyDataField *data_field)
             if (!(gno = vgrains[k]))
                 continue;
 
+            /* We must take into account grain separators (vgrains) have
+             * 8-connectivity while all grain functions work with
+             * 4-connectivity.  So construct a map of diagonally touching
+             * grains and spread the unboundness through it. */
             if (i && j && (gno2 = vgrains[k-xres-1]) && gno2 != gno)
                 int_list_add_unique(vgrain_neighbours + gno, gno2);
             if (i && j < xres-1 && (gno2 = vgrains[k-xres+1]) && gno2 != gno)
@@ -4407,6 +4419,39 @@ gwy_data_field_fill_voids(GwyDataField *data_field)
                 int_list_add_unique(vgrain_neighbours + gno, gno2);
             if (i < yres-1 && j < xres-1 && (gno2 = vgrains[k+xres+1]) && gno2 != gno)
                 int_list_add_unique(vgrain_neighbours + gno, gno2);
+
+            /* To detect non-simple-connected grains, we remember the number of
+             * the first normal grain the vgrain touches.  If we find later
+             * that the void grain also touches a normal grain with a different
+             * number, it means it is not simple-connected and we indicate by
+             * setting the neighbour number to G_MAXINT. */
+            if (!onlysimple || grain_neighbours[gno] == G_MAXINT)
+                continue;
+
+            if (i && (gno2 = grains[k-xres])) {
+                if (!grain_neighbours[gno])
+                    grain_neighbours[gno] = gno2;
+                else if (grain_neighbours[gno] != gno2)
+                    grain_neighbours[gno] = G_MAXINT;
+            }
+            if (j && (gno2 = grains[k-1])) {
+                if (!grain_neighbours[gno])
+                    grain_neighbours[gno] = gno2;
+                else if (grain_neighbours[gno] != gno2)
+                    grain_neighbours[gno] = G_MAXINT;
+            }
+            if (j < xres-1 && (gno2 = grains[k+1])) {
+                if (!grain_neighbours[gno])
+                    grain_neighbours[gno] = gno2;
+                else if (grain_neighbours[gno] != gno2)
+                    grain_neighbours[gno] = G_MAXINT;
+            }
+            if (i < yres-1 && (gno2 = grains[k+xres])) {
+                if (!grain_neighbours[gno])
+                    grain_neighbours[gno] = gno2;
+                else if (grain_neighbours[gno] != gno2)
+                    grain_neighbours[gno] = G_MAXINT;
+            }
         }
     }
 
@@ -4434,7 +4479,9 @@ gwy_data_field_fill_voids(GwyDataField *data_field)
     k = 0;
     for (i = 0; i < yres; i++) {
         for (j = 0; j < xres; j++) {
-            if (!data[k] && !unbound_vgrains[vgrains[k]])
+            if (!data[k]
+                && !unbound_vgrains[vgrains[k]]
+                && (!onlysimple || grain_neighbours[vgrains[k]] != G_MAXINT))
                 data[k] = 1.0;
             k++;
         }
@@ -4446,8 +4493,10 @@ gwy_data_field_fill_voids(GwyDataField *data_field)
             int_list_free(list);
     }
     g_free(vgrain_neighbours);
+    g_free(grain_neighbours);
     g_free(unbound_vgrains);
     g_free(vgrains);
+    g_free(grains);
 
     if (changed_ever)
         gwy_data_field_invalidate(data_field);
