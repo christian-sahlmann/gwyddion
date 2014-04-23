@@ -87,6 +87,7 @@ typedef struct {
     gint32 radius;
     gboolean from_border;
     gboolean prevent_merge;
+    gboolean fill_nonsimple;
 } ToolArgs;
 
 struct _GwyToolMaskEditor {
@@ -104,6 +105,7 @@ struct _GwyToolMaskEditor {
     GtkObject *gsamount;
     GtkWidget *from_border;
     GtkWidget *prevent_merge;
+    GtkWidget *fill_nonsimple;
 
     gboolean in_setup;
 
@@ -122,38 +124,40 @@ struct _GwyToolMaskEditorClass {
 
 static gboolean module_register(void);
 
-static GType gwy_tool_mask_editor_get_type           (void) G_GNUC_CONST;
-static void  gwy_tool_mask_editor_finalize           (GObject *object);
-static void  gwy_tool_mask_editor_init_dialog        (GwyToolMaskEditor *tool);
-static void  gwy_tool_mask_editor_data_switched      (GwyTool *gwytool,
-                                                      GwyDataView *data_view);
-static void  gwy_tool_mask_editor_mask_changed       (GwyPlainTool *plain_tool);
-static void  gwy_tool_mask_editor_style_changed      (GwyToolMaskEditor *tool);
-static void  gwy_tool_mask_editor_mode_changed       (GwyToolMaskEditor *tool);
-static void  gwy_tool_mask_editor_shape_changed      (GwyToolMaskEditor *tool);
-static void  gwy_tool_mask_editor_tool_changed       (GwyToolMaskEditor *tool);
-static void  gwy_tool_mask_editor_setup_layer        (GwyToolMaskEditor *tool);
-static void  gwy_tool_mask_editor_radius_changed     (GtkAdjustment *adj,
-                                                      GwyToolMaskEditor *tool);
-static void  gwy_tool_mask_editor_gsamount_changed   (GtkAdjustment *adj,
-                                                      GwyToolMaskEditor *tool);
-static void  gwy_tool_mask_editor_from_border_changed(GtkToggleButton *toggle,
-                                                      GwyToolMaskEditor *tool);
-static void  gwy_tool_mask_editor_prevent_merge_changed(GtkToggleButton *toggle,
-                                                       GwyToolMaskEditor *tool);
-static void  gwy_tool_mask_editor_invert             (GwyToolMaskEditor *tool);
-static void  gwy_tool_mask_editor_remove             (GwyToolMaskEditor *tool);
-static void  gwy_tool_mask_editor_fill               (GwyToolMaskEditor *tool);
-static void  gwy_tool_mask_editor_grow               (GwyToolMaskEditor *tool);
-static void  gwy_tool_mask_editor_shrink             (GwyToolMaskEditor *tool);
-static void  gwy_tool_mask_editor_fill_voids         (GwyToolMaskEditor *tool);
-static void  gwy_tool_mask_editor_selection_finished (GwyPlainTool *plain_tool);
-static void  gwy_tool_mask_editor_bucket_fill        (GwyToolMaskEditor *tool,
-                                                      gint j,
-                                                      gint i);
-static void  gwy_tool_mask_editor_selection_changed  (GwyPlainTool *plain_tool,
-                                                      gint hint);
-static void  gwy_tool_mask_editor_save_args          (GwyToolMaskEditor *tool);
+static GType gwy_tool_mask_editor_get_type              (void)                      G_GNUC_CONST;
+static void  gwy_tool_mask_editor_finalize              (GObject *object);
+static void  gwy_tool_mask_editor_init_dialog           (GwyToolMaskEditor *tool);
+static void  gwy_tool_mask_editor_data_switched         (GwyTool *gwytool,
+                                                         GwyDataView *data_view);
+static void  gwy_tool_mask_editor_mask_changed          (GwyPlainTool *plain_tool);
+static void  gwy_tool_mask_editor_style_changed         (GwyToolMaskEditor *tool);
+static void  gwy_tool_mask_editor_mode_changed          (GwyToolMaskEditor *tool);
+static void  gwy_tool_mask_editor_shape_changed         (GwyToolMaskEditor *tool);
+static void  gwy_tool_mask_editor_tool_changed          (GwyToolMaskEditor *tool);
+static void  gwy_tool_mask_editor_setup_layer           (GwyToolMaskEditor *tool);
+static void  gwy_tool_mask_editor_radius_changed        (GtkAdjustment *adj,
+                                                         GwyToolMaskEditor *tool);
+static void  gwy_tool_mask_editor_gsamount_changed      (GtkAdjustment *adj,
+                                                         GwyToolMaskEditor *tool);
+static void  gwy_tool_mask_editor_from_border_changed   (GtkToggleButton *toggle,
+                                                         GwyToolMaskEditor *tool);
+static void  gwy_tool_mask_editor_prevent_merge_changed (GtkToggleButton *toggle,
+                                                         GwyToolMaskEditor *tool);
+static void  gwy_tool_mask_editor_fill_nonsimple_changed(GtkToggleButton *toggle,
+                                                         GwyToolMaskEditor *tool);
+static void  gwy_tool_mask_editor_invert                (GwyToolMaskEditor *tool);
+static void  gwy_tool_mask_editor_remove                (GwyToolMaskEditor *tool);
+static void  gwy_tool_mask_editor_fill                  (GwyToolMaskEditor *tool);
+static void  gwy_tool_mask_editor_grow                  (GwyToolMaskEditor *tool);
+static void  gwy_tool_mask_editor_shrink                (GwyToolMaskEditor *tool);
+static void  gwy_tool_mask_editor_fill_voids            (GwyToolMaskEditor *tool);
+static void  gwy_tool_mask_editor_selection_finished    (GwyPlainTool *plain_tool);
+static void  gwy_tool_mask_editor_bucket_fill           (GwyToolMaskEditor *tool,
+                                                         gint j,
+                                                         gint i);
+static void  gwy_tool_mask_editor_selection_changed     (GwyPlainTool *plain_tool,
+                                                         gint hint);
+static void  gwy_tool_mask_editor_save_args             (GwyToolMaskEditor *tool);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -161,7 +165,7 @@ static GwyModuleInfo module_info = {
     N_("Mask editor tool, allows interactive modification of parts "
        "of the mask."),
     "Yeti <yeti@gwyddion.net>",
-    "3.4",
+    "3.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -170,14 +174,15 @@ static const gchar *const shape_selection_names[MASK_NSHAPES] = {
     "rectangle", "ellipse", "line"
 };
 
-static const gchar style_key[]         = "/module/maskeditor/style";
-static const gchar mode_key[]          = "/module/maskeditor/mode";
-static const gchar shape_key[]         = "/module/maskeditor/shape";
-static const gchar tool_key[]          = "/module/maskeditor/tool";
-static const gchar radius_key[]        = "/module/maskeditor/radius";
-static const gchar gsamount_key[]      = "/module/maskeditor/gsamount";
-static const gchar from_border_key[]   = "/module/maskeditor/from_border";
-static const gchar prevent_merge_key[] = "/module/maskeditor/prevent_merge";
+static const gchar style_key[]          = "/module/maskeditor/style";
+static const gchar mode_key[]           = "/module/maskeditor/mode";
+static const gchar shape_key[]          = "/module/maskeditor/shape";
+static const gchar tool_key[]           = "/module/maskeditor/tool";
+static const gchar radius_key[]         = "/module/maskeditor/radius";
+static const gchar gsamount_key[]       = "/module/maskeditor/gsamount";
+static const gchar from_border_key[]    = "/module/maskeditor/from_border";
+static const gchar prevent_merge_key[]  = "/module/maskeditor/prevent_merge";
+static const gchar fill_nonsimple_key[] = "/module/maskeditor/fill_nonsimple";
 
 static const ToolArgs default_args = {
     MASK_EDIT_STYLE_SHAPES,
@@ -188,6 +193,7 @@ static const ToolArgs default_args = {
     1,
     FALSE,
     TRUE,
+    FALSE,
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -273,6 +279,8 @@ gwy_tool_mask_editor_init(GwyToolMaskEditor *tool)
                                       &tool->args.from_border);
     gwy_container_gis_boolean_by_name(settings, prevent_merge_key,
                                       &tool->args.prevent_merge);
+    gwy_container_gis_boolean_by_name(settings, fill_nonsimple_key,
+                                      &tool->args.fill_nonsimple);
 
     tool->args.style = MIN(tool->args.style, MASK_NSTYLES-1);
     tool->args.mode = MIN(tool->args.mode, MASK_NMODES-1);
@@ -373,10 +381,10 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
     tips = gwy_app_get_tooltips();
-    sizegroup = gtk_size_group_new(GTK_SIZE_GROUP_HORIZONTAL);
+    sizegroup = gtk_size_group_new(GTK_SIZE_GROUP_BOTH);
     tool->sensgroup = gwy_sensitivity_group_new();
 
-    table = GTK_TABLE(gtk_table_new(13, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(14, 4, FALSE));
     gtk_table_set_col_spacings(table, 6);
     gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -540,6 +548,14 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_tool_mask_editor_fill), tool);
 
+    label = gtk_label_new(NULL);
+    gtk_box_pack_start(hbox, label, TRUE, TRUE, 0);
+    row++;
+
+    hbox = GTK_BOX(gtk_hbox_new(FALSE, 0));
+    gtk_table_attach(table, GTK_WIDGET(hbox),
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
     button = gtk_button_new_with_mnemonic(_("Fill _Voids"));
     gtk_size_group_add_widget(sizegroup, button);
     gwy_sensitivity_group_add_widget(tool->sensgroup, button,
@@ -548,8 +564,14 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_tool_mask_editor_fill_voids), tool);
 
-    label = gtk_label_new(NULL);
-    gtk_box_pack_start(hbox, label, TRUE, TRUE, 0);
+    tool->fill_nonsimple
+        = gtk_check_button_new_with_mnemonic(_("Fill non-simple-connected"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->fill_nonsimple),
+                                 tool->args.fill_nonsimple);
+    gtk_box_pack_start(hbox, tool->fill_nonsimple, TRUE, TRUE, 0);
+    g_signal_connect(tool->fill_nonsimple, "toggled",
+                     G_CALLBACK(gwy_tool_mask_editor_fill_nonsimple_changed),
+                     tool);
     gtk_table_set_row_spacing(table, row, 8);
     row++;
 
@@ -800,6 +822,13 @@ gwy_tool_mask_editor_prevent_merge_changed(GtkToggleButton *toggle,
                                            GwyToolMaskEditor *tool)
 {
     tool->args.prevent_merge = gtk_toggle_button_get_active(toggle);
+}
+
+static void
+gwy_tool_mask_editor_fill_nonsimple_changed(GtkToggleButton *toggle,
+                                            GwyToolMaskEditor *tool)
+{
+    tool->args.fill_nonsimple = gtk_toggle_button_get_active(toggle);
 }
 
 static GwyDataField*
@@ -1076,7 +1105,8 @@ gwy_tool_mask_editor_fill_voids(GwyToolMaskEditor *tool)
 
     quark = gwy_app_get_mask_key_for_id(plain_tool->id);
     gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
-    gwy_data_field_fill_voids(plain_tool->mask_field, TRUE);
+    gwy_data_field_fill_voids(plain_tool->mask_field,
+                              tool->args.fill_nonsimple);
     gwy_data_field_data_changed(plain_tool->mask_field);
     gwy_tool_mask_editor_save_args(tool);
     gwy_plain_tool_log_add(plain_tool);
@@ -1552,6 +1582,8 @@ gwy_tool_mask_editor_save_args(GwyToolMaskEditor *tool)
                                       tool->args.from_border);
     gwy_container_set_boolean_by_name(settings, prevent_merge_key,
                                       tool->args.prevent_merge);
+    gwy_container_set_boolean_by_name(settings, fill_nonsimple_key,
+                                      tool->args.fill_nonsimple);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
