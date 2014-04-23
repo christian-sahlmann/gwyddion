@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-04-16 03:58+0200\n"
-"PO-Revision-Date: 2014-04-21 16:36+0100\n"
+"POT-Creation-Date: 2014-04-23 03:58+0200\n"
+"PO-Revision-Date: 2014-04-23 20:25+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -875,12 +875,12 @@ msgstr "pixels"
 #: modules/file/pixmap.c:1074 modules/file/pixmap.c:3154
 #: modules/file/rawfile.c:401 modules/process/angle_dist.c:172
 #: modules/process/calcoefs_new.c:348 modules/process/calibrate.c:385
-#: modules/process/col_synth.c:328 modules/process/correct_affine.c:293
+#: modules/process/col_synth.c:328 modules/process/correct_affine.c:307
 #: modules/process/curvature.c:605 modules/process/cwt.c:135
 #: modules/process/deposit_synth.c:359 modules/process/domain_synth.c:368
 #: modules/process/drift.c:240 modules/process/dwt.c:166
 #: modules/process/dwtanisotropy.c:184 modules/process/edge.c:655
-#: modules/process/extend.c:191 modules/process/facet-level.c:285
+#: modules/process/extend.c:192 modules/process/facet-level.c:285
 #: modules/process/facet_analysis.c:276 modules/process/fft.c:283
 #: modules/process/fft_filter_2d.c:447 modules/process/fft_synth.c:353
 #: modules/process/fractal.c:207 modules/process/grain_edge.c:218
@@ -898,7 +898,7 @@ msgstr "pixels"
 #: modules/process/sphere-revolve.c:218 modules/process/tilt.c:160
 #: modules/process/tip_model.c:170 modules/process/unrotate.c:228
 #: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:363
-#: modules/process/wpour_mark.c:256 modules/volume/volume_calibrate.c:371
+#: modules/process/wpour_mark.c:276 modules/volume/volume_calibrate.c:371
 #: modules/volume/volume_extract.c:331
 msgid "_Reset"
 msgstr "_Remise à zéro"
@@ -1462,7 +1462,7 @@ msgstr "Modifier l'aperçu des données volumiques"
 msgid "Preview quantity:"
 msgstr "Quantité prévisualisée :"
 
-#: app/app.c:1474 modules/process/extend.c:265 modules/tools/linestats.c:152
+#: app/app.c:1474 modules/process/extend.c:266 modules/tools/linestats.c:152
 msgid "Mean"
 msgstr "Moyenne"
 
@@ -2918,11 +2918,11 @@ msgstr "Exporter au format texte"
 #: modules/file/asciiexport.c:273 modules/file/pixmap.c:3257
 #: modules/file/rawfile.c:722 modules/file/rawxyz.c:671
 #: modules/process/calibrate.c:597 modules/process/col_synth.c:456
-#: modules/process/correct_affine.c:451 modules/process/extend.c:257
+#: modules/process/correct_affine.c:489 modules/process/extend.c:258
 #: modules/process/fft_filter_1d.c:296 modules/process/grain_dist.c:306
 #: modules/process/grain_edge.c:270 modules/process/grain_mark.c:345
 #: modules/process/grain_rem_threshold.c:328 modules/process/grain_wshed.c:278
-#: modules/process/tip_blind.c:360 modules/process/wpour_mark.c:337
+#: modules/process/tip_blind.c:360 modules/process/wpour_mark.c:357
 #: modules/tools/spotremove.c:317 modules/tools/stats.c:379
 msgid "Options"
 msgstr "Options"
@@ -4956,7 +4956,7 @@ msgstr "Préréglages"
 #: modules/process/grain_rem_threshold.c:226 modules/process/grain_wshed.c:180
 #: modules/process/mark_with.c:211 modules/process/polydistort.c:213
 #: modules/process/scars.c:474 modules/process/synth.h:508
-#: modules/process/tip_model.c:167 modules/process/wpour_mark.c:251
+#: modules/process/tip_model.c:167 modules/process/wpour_mark.c:271
 #: modules/tools/linestats.c:421 modules/tools/sfunctions.c:476
 #: modules/tools/stats.c:436 modules/volume/volume_extract.c:328
 msgid "_Update"
@@ -5266,7 +5266,7 @@ msgstr "Unités _latérales :"
 msgid "_Value units:"
 msgstr "Unités de valeur :"
 
-#: modules/file/rawxyz.c:675 modules/process/correct_affine.c:469
+#: modules/file/rawxyz.c:675 modules/process/correct_affine.c:507
 #: modules/process/drift.c:300 modules/process/dwt.c:205
 #: modules/process/dwtanisotropy.c:201 modules/process/fft_filter_1d.c:329
 #: modules/process/fft_profile.c:298 modules/process/fractal.c:228
@@ -5282,22 +5282,22 @@ msgstr "Type d'interpolation :"
 msgid "Field"
 msgstr "Champ"
 
-#: modules/file/rawxyz.c:692 modules/process/extend.c:273
+#: modules/file/rawxyz.c:692 modules/process/extend.c:274
 #: modules/process/polydistort.c:282
 msgid "_Exterior type:"
 msgstr "Type d'_extérieur :"
 
-#: modules/file/rawxyz.c:700 modules/process/extend.c:266
+#: modules/file/rawxyz.c:700 modules/process/extend.c:267
 #: modules/process/polydistort.c:275
 msgid "exterior|Border"
 msgstr "Extérieur"
 
-#: modules/file/rawxyz.c:702 modules/process/extend.c:268
+#: modules/file/rawxyz.c:702 modules/process/extend.c:269
 #: modules/process/polydistort.c:277
 msgid "exterior|Mirror"
 msgstr "Miroir"
 
-#: modules/file/rawxyz.c:704 modules/process/extend.c:270
+#: modules/file/rawxyz.c:704 modules/process/extend.c:271
 #: modules/process/polydistort.c:279
 msgid "exterior|Periodic"
 msgstr "Périodique"
@@ -5782,6 +5782,14 @@ msgstr "Exporte les données sous forme de grille VTK structurée."
 #: modules/file/vtkfile.c:68
 msgid "VTK structured grid (.vtk)"
 msgstr "Grille VTK structurée (.vtk)"
+
+#: modules/file/win_stm.c:76
+msgid "Imports WinSTM (.stm) files."
+msgstr "Importe les fichiers WinSTM (.stm)."
+
+#: modules/file/win_stm.c:89
+msgid "WinSTM files (.stm)"
+msgstr "WinSTM (.stm)"
 
 #: modules/file/wipfile.c:282
 msgid "Imports WItec Project data files."
@@ -6843,7 +6851,7 @@ msgstr "Rogner aux données réelles"
 #: modules/process/grain_edge.c:286 modules/process/grain_mark.c:378
 #: modules/process/grain_rem_threshold.c:372 modules/process/mark_with.c:355
 #: modules/process/polydistort.c:335 modules/process/scars.c:582
-#: modules/process/synth.h:512 modules/process/wpour_mark.c:378
+#: modules/process/synth.h:512 modules/process/wpour_mark.c:408
 #: modules/volume/volume_extract.c:423 modules/volume/volume_extract.c:503
 msgid "I_nstant updates"
 msgstr "Mise à jour instantanée"
@@ -7005,7 +7013,7 @@ msgstr "Facteur de calibration _Y :"
 msgid "_Z calibration factor:"
 msgstr "Facteur de calibration _Z :"
 
-#: modules/process/calibrate.c:603 modules/process/extend.c:291
+#: modules/process/calibrate.c:603 modules/process/extend.c:292
 #: modules/tools/crop.c:213
 msgid "Create new channel"
 msgstr "Créer un nouveau canal"
@@ -7150,7 +7158,7 @@ msgstr "_automatique"
 
 #: modules/process/convolution_filter.c:416
 msgid "Symmetry"
-msgstr "Symmetrie"
+msgstr "Symétrie"
 
 #: modules/process/convolution_filter.c:576
 msgid "HSym"
@@ -7160,7 +7168,7 @@ msgstr "Symétrie horizontale"
 msgid "VSym"
 msgstr "Symétrie verticale"
 
-#: modules/process/correct_affine.c:224
+#: modules/process/correct_affine.c:237
 msgid ""
 "Corrects affine distortion of images by matching image Bravais lattice to "
 "the true one."
@@ -7168,86 +7176,92 @@ msgstr ""
 "Corrige la distorsion affine des images en ajustant la matrice de Bravais "
 "sur la matrice réelle."
 
-#: modules/process/correct_affine.c:239
+#: modules/process/correct_affine.c:252
 msgid "/_Correct Data/_Affine Distortion..."
 msgstr "/_Correction des données/Distorsion _affine..."
 
-#: modules/process/correct_affine.c:243
+#: modules/process/correct_affine.c:256
 msgid "Correct affine distortion"
 msgstr "Corriger la distorsion affine"
 
-#: modules/process/correct_affine.c:290
+#: modules/process/correct_affine.c:304
 msgid "Affine Correction"
 msgstr "Correction affine"
 
-#: modules/process/correct_affine.c:356 modules/process/drift.c:337
-#: modules/process/fit_2d.c:316 modules/process/neural.c:547
-#: modules/process/polydistort.c:294 modules/process/wpour_mark.c:362
-msgid "Preview:"
-msgstr "Aperçu :"
+#: modules/process/correct_affine.c:370 modules/process/fft_filter_2d.c:566
+msgid "Preview Options"
+msgstr "Option d'aperçu"
 
-#: modules/process/correct_affine.c:364 modules/tools/grainremover.c:109
+#: modules/process/correct_affine.c:375 modules/process/fft_filter_2d.c:571
+msgid "Display:"
+msgstr "Affichage :"
+
+#: modules/process/correct_affine.c:383 modules/tools/grainremover.c:109
 msgid "_Data"
 msgstr "_Données"
 
-#: modules/process/correct_affine.c:365
+#: modules/process/correct_affine.c:384
 msgid "2D _ACF"
 msgstr "_ACF 2D"
 
-#: modules/process/correct_affine.c:366 modules/process/drift.c:346
+#: modules/process/correct_affine.c:385 modules/process/drift.c:346
 msgid "Correc_ted data"
 msgstr "Données corrigées"
 
-#: modules/process/correct_affine.c:375
+#: modules/process/correct_affine.c:396
+msgid "ACF zoom:"
+msgstr "Zoom ACF : "
+
+#: modules/process/correct_affine.c:413
 msgid "Lattice Vectors"
 msgstr "Vecteurs de base"
 
 #. TRANSLATORS: Correct is an adjective here.
-#: modules/process/correct_affine.c:400
+#: modules/process/correct_affine.c:438
 msgid "Correct Lattice"
 msgstr "Corriger la matrice"
 
-#: modules/process/correct_affine.c:404
+#: modules/process/correct_affine.c:442
 msgid "_Lattice type:"
 msgstr "Type de matrice :"
 
-#: modules/process/correct_affine.c:411
+#: modules/process/correct_affine.c:449
 msgid "User defined"
 msgstr "Défini par l'utilisateur"
 
-#: modules/process/correct_affine.c:426
+#: modules/process/correct_affine.c:464
 msgid "_Different lengths"
 msgstr "Longueurs _différentes"
 
-#: modules/process/correct_affine.c:455
+#: modules/process/correct_affine.c:493
 msgid "Image for _ACF:"
 msgstr "Image pour l'_ACF : "
 
-#: modules/process/correct_affine.c:482
+#: modules/process/correct_affine.c:520
 msgid "_Scaling:"
 msgstr "Échelle :"
 
-#: modules/process/correct_affine.c:489
+#: modules/process/correct_affine.c:527
 msgid "Exactly as specified"
 msgstr "Tel que spécifié"
 
-#: modules/process/correct_affine.c:490
+#: modules/process/correct_affine.c:528
 msgid "Preserve area"
 msgstr "Conserver l'aire"
 
-#: modules/process/correct_affine.c:491
+#: modules/process/correct_affine.c:529
 msgid "Preserve X scale"
 msgstr "Conserver l'échelle X"
 
-#: modules/process/correct_affine.c:578
+#: modules/process/correct_affine.c:616
 msgid "length"
 msgstr "longueur"
 
-#: modules/process/correct_affine.c:585
+#: modules/process/correct_affine.c:623
 msgid "angle"
 msgstr "angle"
 
-#: modules/process/correct_affine.c:678
+#: modules/process/correct_affine.c:716
 msgid "Re_fine"
 msgstr "A_ffiner"
 
@@ -7664,6 +7678,11 @@ msgstr "Corriger les _données"
 msgid "_Exclude linear skew"
 msgstr "_Exclure l'asymétrie linéaire"
 
+#: modules/process/drift.c:337 modules/process/fit_2d.c:316
+#: modules/process/neural.c:547 modules/process/polydistort.c:294
+msgid "Preview:"
+msgstr "Aperçu :"
+
 #: modules/process/drift.c:347
 msgid "Drift _lines"
 msgstr "Lignes de dérive"
@@ -7671,7 +7690,7 @@ msgstr "Lignes de dérive"
 #: modules/process/drift.c:358 modules/process/facet_analysis.c:413
 #: modules/process/grain_edge.c:279 modules/process/grain_mark.c:371
 #: modules/process/grain_rem_threshold.c:365 modules/process/grain_wshed.c:296
-#: modules/process/scars.c:575 modules/process/wpour_mark.c:355
+#: modules/process/scars.c:575 modules/process/wpour_mark.c:375
 msgid "_Mask color:"
 msgstr "Couleur de _masque :"
 
@@ -7898,7 +7917,6 @@ msgid "verb|Display"
 msgstr "Afficher"
 
 #: modules/process/edge.c:724 modules/process/fft_filter_2d.c:401
-#: modules/process/wpour_mark.c:371
 msgid "Original _image"
 msgstr "_Image originale"
 
@@ -7910,51 +7928,51 @@ msgstr "Convoluer par le laplacien d'une gaussienne (LoG)"
 msgid "Detected st_ep"
 msgstr "Saut dét_ecté"
 
-#: modules/process/extend.c:105
+#: modules/process/extend.c:106
 msgid "Extends image by adding borders."
 msgstr "Étend l'image en ajoutant des bordures."
 
-#: modules/process/extend.c:119
+#: modules/process/extend.c:120
 msgid "/_Basic Operations/E_xtend..."
 msgstr "/Opérations _basiques/Étendre..."
 
-#: modules/process/extend.c:123
+#: modules/process/extend.c:124
 msgid "Extend by adding borders"
 msgstr "Étendre en ajoutant des bordures"
 
-#: modules/process/extend.c:176
+#: modules/process/extend.c:177
 msgid "Extended"
 msgstr "Étendu"
 
-#: modules/process/extend.c:190
+#: modules/process/extend.c:191
 msgid "Extend"
 msgstr "Étendre"
 
-#: modules/process/extend.c:212
+#: modules/process/extend.c:213
 msgid "Borders"
 msgstr "Bordures"
 
-#: modules/process/extend.c:218
+#: modules/process/extend.c:219
 msgid "_Up:"
 msgstr "Ha_ut :"
 
-#: modules/process/extend.c:225
+#: modules/process/extend.c:226
 msgid "_Down:"
 msgstr "Bas :"
 
-#: modules/process/extend.c:232
+#: modules/process/extend.c:233
 msgid "_Left:"
 msgstr "Gauche :"
 
-#: modules/process/extend.c:239
+#: modules/process/extend.c:240
 msgid "_Right:"
 msgstr "D_roite :"
 
-#: modules/process/extend.c:246
+#: modules/process/extend.c:247
 msgid "Extend _symetrically"
 msgstr "Étendre de manière _symétrique"
 
-#: modules/process/extend.c:281 modules/tools/crop.c:202
+#: modules/process/extend.c:282 modules/tools/crop.c:202
 msgid "Keep lateral offsets"
 msgstr "Conserver les décalages latéraux"
 
@@ -8118,7 +8136,7 @@ msgstr "/_Correction des données/Filtrage _FFT 1D..."
 msgid "1D FFT Filtering"
 msgstr "Filtrage FFT 1D"
 
-#: modules/process/fft_filter_1d.c:177
+#: modules/process/fft_filter_1d.c:177 modules/process/wpour_mark.c:399
 msgid "Marked"
 msgstr "Marqué"
 
@@ -8238,14 +8256,6 @@ msgstr "Remplir"
 #: modules/process/fft_filter_2d.c:553
 msgid "_Snap to origin"
 msgstr "_S'accrocher à l'origine"
-
-#: modules/process/fft_filter_2d.c:566
-msgid "Preview Options"
-msgstr "Option d'aperçu"
-
-#: modules/process/fft_filter_2d.c:571
-msgid "Display:"
-msgstr "Affichage :"
 
 #: modules/process/fft_filter_2d.c:601
 msgid "Zoom:"
@@ -8832,7 +8842,7 @@ msgid "_Curvature:"
 msgstr "_Courbure :"
 
 #: modules/process/grain_mark.c:349 modules/process/grain_rem_threshold.c:332
-#: modules/process/grain_wshed.c:282 modules/process/wpour_mark.c:341
+#: modules/process/grain_wshed.c:282 modules/process/wpour_mark.c:361
 msgid "_Invert height"
 msgstr "_Inverser les hauteurs"
 
@@ -8870,19 +8880,21 @@ msgstr "Mode de _sélection :"
 
 #: modules/process/grain_wshed.c:112
 msgid "Marks grains by watershed algorithm."
-msgstr "Marque les grains à l'aide d'un algorithme de segmentation."
+msgstr ""
+"Marque les grains à l'aide d'un algorithme de ligne de partage des eaux "
+"(segmentation)."
 
 #: modules/process/grain_wshed.c:126
 msgid "/_Grains/Mark by _Watershed..."
-msgstr "/_Grains/Marquer par segmentation..."
+msgstr "/_Grains/Marquer par ligne de partage des eaux..."
 
 #: modules/process/grain_wshed.c:130
 msgid "Mark grains by watershed"
-msgstr "Marquer les grains par segmentation"
+msgstr "Marquer les grains par lignes de partage des eaux (segmentation)"
 
 #: modules/process/grain_wshed.c:177
 msgid "Mark Grains by Watershed"
-msgstr "Marquer les grains par segmentation"
+msgstr "Marquer les grains par ligne de partage des eaux (segmentation)"
 
 #: modules/process/grain_wshed.c:225
 msgid "Grain Location"
@@ -8914,7 +8926,7 @@ msgstr "Localisation"
 
 #: modules/process/grain_wshed.c:515
 msgid "Watershed"
-msgstr "Segmentation"
+msgstr "Ligne de partage des eaux"
 
 #: modules/process/grain_wshed.c:517
 msgid "Marking boundaries"
@@ -11220,55 +11232,73 @@ msgstr "Plateau"
 msgid "Displacement"
 msgstr "Déplacement"
 
-#: modules/process/wpour_mark.c:165
+#: modules/process/wpour_mark.c:186
 msgid "Segments image using watershed with pre- and postprocessing."
-msgstr ""
+msgstr "Segmente l'image par immersion avec pré- et post-traitement."
 
-#: modules/process/wpour_mark.c:179
-#, fuzzy
+#: modules/process/wpour_mark.c:200
 msgid "/_Grains/_Mark by Segmentation..."
-msgstr "/_Grains/Marqu_er par détection de bord..."
+msgstr "/_Grains/Marqu_er par immersion..."
 
-#: modules/process/wpour_mark.c:183
+#: modules/process/wpour_mark.c:204
 msgid "Segment using watershed "
-msgstr ""
+msgstr "Segmenter par immersion"
 
-#: modules/process/wpour_mark.c:248
-#, fuzzy
+#: modules/process/wpour_mark.c:268
 msgid "Segment by Watershed"
-msgstr "Marquer les Grains par Segmentation"
+msgstr "Segmente l'image par immersion"
 
-#: modules/process/wpour_mark.c:299
+#: modules/process/wpour_mark.c:319
 msgid "Preprocessing"
 msgstr "Pré-traitement"
 
-#: modules/process/wpour_mark.c:307
+#: modules/process/wpour_mark.c:327
 msgid "Gaussian _smoothening:"
 msgstr "Floutage gau_ssien"
 
-#: modules/process/wpour_mark.c:314
+#: modules/process/wpour_mark.c:334
 msgid "Add _gradient:"
 msgstr "Ajouter un _gradient : "
 
-#: modules/process/wpour_mark.c:318
+#: modules/process/wpour_mark.c:338
 msgid "Add _curvature:"
 msgstr "Ajouter de la _courbure : "
 
-#: modules/process/wpour_mark.c:322
+#: modules/process/wpour_mark.c:342
 msgid "Prefill _level:"
 msgstr "Niveau de pré-remplissage : "
 
-#: modules/process/wpour_mark.c:326
+#: modules/process/wpour_mark.c:346
 msgid "Pre_fill from minima:"
 msgstr "Pré-remplir à partir du minima : "
 
-#: modules/process/wpour_mark.c:331
+#: modules/process/wpour_mark.c:351
 msgid "Postprocessing"
 msgstr "Post-traitement"
 
-#: modules/process/wpour_mark.c:372
-msgid "Pr_eprocessed image"
-msgstr "Image pré-traité_e"
+#: modules/process/wpour_mark.c:385
+msgid "Original image"
+msgstr "Image initiale"
+
+#: modules/process/wpour_mark.c:387
+msgid "Preprocessed image"
+msgstr "Image pré-traitée"
+
+#: modules/process/wpour_mark.c:390
+msgid "_Image preview:"
+msgstr "Aperçu de l'_image : "
+
+#: modules/process/wpour_mark.c:397
+msgid "No mask"
+msgstr "Aucun masque"
+
+#: modules/process/wpour_mark.c:401
+msgid "Postprocessed"
+msgstr "Image post-traitée"
+
+#: modules/process/wpour_mark.c:404
+msgid "_Mask preview:"
+msgstr "Aperçu du _masque : "
 
 #: modules/process/xydenoise.c:65
 msgid "Denoises measurement on basis of two orthogonal scans."
