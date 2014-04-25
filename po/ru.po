@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-04-23 03:58+0200\n"
-"PO-Revision-Date: 2014-04-23 12:36+0300\n"
+"POT-Creation-Date: 2014-04-24 03:58+0200\n"
+"PO-Revision-Date: 2014-04-24 11:45+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -903,7 +903,7 @@ msgstr "точек"
 #: modules/process/sphere-revolve.c:218 modules/process/tilt.c:160
 #: modules/process/tip_model.c:170 modules/process/unrotate.c:228
 #: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:363
-#: modules/process/wpour_mark.c:276 modules/volume/volume_calibrate.c:371
+#: modules/process/wpour_mark.c:278 modules/volume/volume_calibrate.c:371
 #: modules/volume/volume_extract.c:331
 msgid "_Reset"
 msgstr "_Сброс"
@@ -2931,7 +2931,7 @@ msgstr "Экспортировать текст"
 #: modules/process/fft_filter_1d.c:296 modules/process/grain_dist.c:306
 #: modules/process/grain_edge.c:270 modules/process/grain_mark.c:345
 #: modules/process/grain_rem_threshold.c:328 modules/process/grain_wshed.c:278
-#: modules/process/tip_blind.c:360 modules/process/wpour_mark.c:357
+#: modules/process/tip_blind.c:360 modules/process/wpour_mark.c:359
 #: modules/tools/spotremove.c:317 modules/tools/stats.c:379
 msgid "Options"
 msgstr "Параметры"
@@ -4924,7 +4924,7 @@ msgstr "Предустановки"
 #: modules/process/grain_rem_threshold.c:226 modules/process/grain_wshed.c:180
 #: modules/process/mark_with.c:211 modules/process/polydistort.c:213
 #: modules/process/scars.c:474 modules/process/synth.h:508
-#: modules/process/tip_model.c:167 modules/process/wpour_mark.c:271
+#: modules/process/tip_model.c:167 modules/process/wpour_mark.c:273
 #: modules/tools/linestats.c:421 modules/tools/sfunctions.c:476
 #: modules/tools/stats.c:436 modules/volume/volume_extract.c:328
 msgid "_Update"
@@ -6133,7 +6133,7 @@ msgid "Correlation Matrix"
 msgstr "Матрица корреляции"
 
 #: modules/graph/graph_fdfit.c:447 modules/graph/graph_fit.c:475
-#: modules/volume/volume_fdfit.c:532
+#: modules/process/wpour_mark.c:420 modules/volume/volume_fdfit.c:532
 msgid "Instant:"
 msgstr "Сразу:"
 
@@ -6817,8 +6817,8 @@ msgstr "Обрезать до действительных данных"
 #: modules/process/grain_edge.c:286 modules/process/grain_mark.c:378
 #: modules/process/grain_rem_threshold.c:372 modules/process/mark_with.c:355
 #: modules/process/polydistort.c:335 modules/process/scars.c:582
-#: modules/process/synth.h:512 modules/process/wpour_mark.c:408
-#: modules/volume/volume_extract.c:423 modules/volume/volume_extract.c:503
+#: modules/process/synth.h:512 modules/volume/volume_extract.c:423
+#: modules/volume/volume_extract.c:503
 msgid "I_nstant updates"
 msgstr "Мгновенное об_новление"
 
@@ -7656,7 +7656,7 @@ msgstr "_Линии дрейфа"
 #: modules/process/drift.c:358 modules/process/facet_analysis.c:413
 #: modules/process/grain_edge.c:279 modules/process/grain_mark.c:371
 #: modules/process/grain_rem_threshold.c:365 modules/process/grain_wshed.c:296
-#: modules/process/scars.c:575 modules/process/wpour_mark.c:375
+#: modules/process/scars.c:575 modules/process/wpour_mark.c:377
 msgid "_Mask color:"
 msgstr "_Цвет маски:"
 
@@ -8106,7 +8106,7 @@ msgstr "/Исправить _данные/Одномерная фильтрац�
 msgid "1D FFT Filtering"
 msgstr "Одномерная фильтрация БПФ"
 
-#: modules/process/fft_filter_1d.c:177 modules/process/wpour_mark.c:399
+#: modules/process/fft_filter_1d.c:177 modules/process/wpour_mark.c:401
 msgid "Marked"
 msgstr "Помечено"
 
@@ -8215,11 +8215,11 @@ msgstr "Маска фильтра"
 msgid "_Undo"
 msgstr "_Отменить"
 
-#: modules/process/fft_filter_2d.c:535 modules/tools/maskedit.c:528
+#: modules/process/fft_filter_2d.c:535 modules/tools/maskedit.c:536
 msgid "_Remove"
 msgstr "_Удалить"
 
-#: modules/process/fft_filter_2d.c:543 modules/tools/maskedit.c:536
+#: modules/process/fft_filter_2d.c:543 modules/tools/maskedit.c:544
 msgid "_Fill"
 msgstr "_Заполнить"
 
@@ -8809,7 +8809,7 @@ msgid "_Curvature:"
 msgstr "_Кривизна:"
 
 #: modules/process/grain_mark.c:349 modules/process/grain_rem_threshold.c:332
-#: modules/process/grain_wshed.c:282 modules/process/wpour_mark.c:361
+#: modules/process/grain_wshed.c:282 modules/process/wpour_mark.c:363
 msgid "_Invert height"
 msgstr "_Инвертировать высоту"
 
@@ -9682,7 +9682,7 @@ msgstr "Внешнее"
 msgid "Two-sided"
 msgstr "Двустороннее"
 
-#: modules/process/mask_edt.c:178 modules/tools/maskedit.c:596
+#: modules/process/mask_edt.c:178 modules/tools/maskedit.c:618
 msgid "Shrink from _border"
 msgstr "Ужать от _границы"
 
@@ -11191,75 +11191,87 @@ msgstr "Плоская вершина"
 msgid "Displacement"
 msgstr "Смещение"
 
-#: modules/process/wpour_mark.c:186
+#: modules/process/wpour_mark.c:188
 msgid "Segments image using watershed with pre- and postprocessing."
 msgstr ""
 "Разделяет изображение используя классический водораздел с пред- и "
 "постобработкой."
 
-#: modules/process/wpour_mark.c:200
+#: modules/process/wpour_mark.c:202
 msgid "/_Grains/_Mark by Segmentation..."
 msgstr "/Зёрн_а/Пометить _сегментацией..."
 
-#: modules/process/wpour_mark.c:204
+#: modules/process/wpour_mark.c:206
 msgid "Segment using watershed "
 msgstr "Пометить используя классический водораздел"
 
-#: modules/process/wpour_mark.c:268
+#: modules/process/wpour_mark.c:270
 msgid "Segment by Watershed"
 msgstr "Пометить классическим водоразделом"
 
-#: modules/process/wpour_mark.c:319
+#: modules/process/wpour_mark.c:321
 msgid "Preprocessing"
 msgstr "Предобработка"
 
-#: modules/process/wpour_mark.c:327
+#: modules/process/wpour_mark.c:329
 msgid "Gaussian _smoothening:"
 msgstr "Гауссово _сглаживание:"
 
-#: modules/process/wpour_mark.c:334
+#: modules/process/wpour_mark.c:336
 msgid "Add _gradient:"
 msgstr "Добавить _градиент:"
 
-#: modules/process/wpour_mark.c:338
+#: modules/process/wpour_mark.c:340
 msgid "Add _curvature:"
 msgstr "Добавить _кривизну:"
 
-#: modules/process/wpour_mark.c:342
+#: modules/process/wpour_mark.c:344
 msgid "Prefill _level:"
 msgstr "_Уровень предзаполнения:"
 
-#: modules/process/wpour_mark.c:346
+#: modules/process/wpour_mark.c:348
 msgid "Pre_fill from minima:"
 msgstr "Предварительно _заполнить с минимумов:"
 
-#: modules/process/wpour_mark.c:351
+#: modules/process/wpour_mark.c:353
 msgid "Postprocessing"
 msgstr "Постобработка"
 
-#: modules/process/wpour_mark.c:385
+#: modules/process/wpour_mark.c:387
 msgid "Original image"
 msgstr "Исходное изображение"
 
-#: modules/process/wpour_mark.c:387
+#: modules/process/wpour_mark.c:389
 msgid "Preprocessed image"
 msgstr "Предобработанное изображение"
 
-#: modules/process/wpour_mark.c:390
+#: modules/process/wpour_mark.c:392
 msgid "_Image preview:"
 msgstr "_Изображение предпросмотра"
 
-#: modules/process/wpour_mark.c:397
+#: modules/process/wpour_mark.c:399
 msgid "No mask"
 msgstr "Без маски"
 
-#: modules/process/wpour_mark.c:401
+#: modules/process/wpour_mark.c:403
 msgid "Postprocessed"
 msgstr "После постобработки"
 
-#: modules/process/wpour_mark.c:404
+#: modules/process/wpour_mark.c:406
 msgid "_Mask preview:"
 msgstr "Предпросмотр _маски:"
+
+#: modules/process/wpour_mark.c:413
+msgid "No updates"
+msgstr "Без обновления"
+
+#: modules/process/wpour_mark.c:415
+msgid "Preprocess image"
+msgstr "Предобработать изображение"
+
+#: modules/process/wpour_mark.c:417
+msgid "Preprocess and mark"
+msgstr "Предобработать и пометить"
 
 #: modules/process/xydenoise.c:65
 msgid "Denoises measurement on basis of two orthogonal scans."
@@ -11625,119 +11637,124 @@ msgstr "<b>Параметры</b>"
 msgid "_Instant updates"
 msgstr "_Обновлять сразу"
 
-#: modules/tools/maskedit.c:161
+#: modules/tools/maskedit.c:165
 msgid "Mask editor tool, allows interactive modification of parts of the mask."
 msgstr "Редактор маски, позволяет интерактивно изменять части маски."
 
-#: modules/tools/maskedit.c:215
+#: modules/tools/maskedit.c:221
 msgid "Mask Editor"
 msgstr "Редактор маски"
 
-#: modules/tools/maskedit.c:216
+#: modules/tools/maskedit.c:222
 msgid "Edit mask"
 msgstr "Редактировать маску"
 
-#: modules/tools/maskedit.c:306
+#: modules/tools/maskedit.c:314
 msgid "Set mask to selection"
 msgstr "Установить маску равной выделенному"
 
-#: modules/tools/maskedit.c:311
+#: modules/tools/maskedit.c:319
 msgid "Add selection to mask"
 msgstr "Добавить выделенное к маске"
 
-#: modules/tools/maskedit.c:316
+#: modules/tools/maskedit.c:324
 msgid "Subtract selection from mask"
 msgstr "Вычесть выделенное из маски"
 
-#: modules/tools/maskedit.c:321
+#: modules/tools/maskedit.c:329
 msgid "Intersect selection with mask"
 msgstr "Пересечение выделенного и маски"
 
-#: modules/tools/maskedit.c:328
+#: modules/tools/maskedit.c:336
 msgid "Rectangular shapes"
 msgstr "Прямоугольные формы"
 
-#: modules/tools/maskedit.c:333
+#: modules/tools/maskedit.c:341
 msgid "Elliptic shapes"
 msgstr "Эллиптические формы"
 
-#: modules/tools/maskedit.c:338
+#: modules/tools/maskedit.c:346
 msgid "Thin lines"
 msgstr "Тонкие линии"
 
-#: modules/tools/maskedit.c:345
+#: modules/tools/maskedit.c:353
 msgid "Freehand mask drawing"
 msgstr "Свободное рисование маски"
 
-#: modules/tools/maskedit.c:350
+#: modules/tools/maskedit.c:358
 msgid "Freehand mask erasing"
 msgstr "Свободное стирание маски"
 
-#: modules/tools/maskedit.c:355
+#: modules/tools/maskedit.c:363
 msgid "Fill continuous empty areas with mask"
 msgstr "Заполнение непрерывных пустых областей маской"
 
-#: modules/tools/maskedit.c:360
+#: modules/tools/maskedit.c:368
 msgid "Erase continuous parts of mask"
 msgstr "Удаление непрерывных частей маски"
 
-#: modules/tools/maskedit.c:388
+#: modules/tools/maskedit.c:396
 msgid "Editor"
 msgstr "Редактор"
 
-#: modules/tools/maskedit.c:393
+#: modules/tools/maskedit.c:401
 msgid "_Shapes"
 msgstr "_Фигуры"
 
-#: modules/tools/maskedit.c:403
+#: modules/tools/maskedit.c:411
 msgid "Mode:"
 msgstr "Режим:"
 
-#: modules/tools/maskedit.c:432
+#: modules/tools/maskedit.c:440
 msgid "Shape:"
 msgstr "Форма:"
 
-#: modules/tools/maskedit.c:463
+#: modules/tools/maskedit.c:471
 msgid "_Drawing Tools"
 msgstr "И_нструменты рисования"
 
-#: modules/tools/maskedit.c:473
+#: modules/tools/maskedit.c:481
 msgid "Tool:"
 msgstr "Инструмент:"
 
-#: modules/tools/maskedit.c:504
+#: modules/tools/maskedit.c:512
 msgid "_Radius:"
 msgstr "Ра_диус:"
 
-#: modules/tools/maskedit.c:512
+#: modules/tools/maskedit.c:520
 msgid "Actions"
 msgstr "Действия"
 
-#: modules/tools/maskedit.c:520
+#: modules/tools/maskedit.c:528
 msgid "_Invert"
 msgstr "_Инвертировать"
 
-#: modules/tools/maskedit.c:543
+#: modules/tools/maskedit.c:559
 msgid "Fill _Voids"
 msgstr "З_аполнить Пустоты"
 
-#: modules/tools/maskedit.c:557
+#: modules/tools/maskedit.c:568
+#, fuzzy
+msgid "Fill non-simple-connected"
+msgstr "Заполнять сложносвязанные"
+
+#: modules/tools/maskedit.c:579
 msgid "Grow/Shrink"
 msgstr "Растянуть/Ужать"
 
-#: modules/tools/maskedit.c:566
+#: modules/tools/maskedit.c:588
 msgid "_Grow"
 msgstr "_Растянуть"
 
-#: modules/tools/maskedit.c:574
+#: modules/tools/maskedit.c:596
 msgid "Shrin_k"
 msgstr "_Ужать"
 
-#: modules/tools/maskedit.c:589
+#: modules/tools/maskedit.c:611
 msgid "_Amount:"
 msgstr "_Количество:"
 
-#: modules/tools/maskedit.c:607
+#: modules/tools/maskedit.c:629
 msgid "_Prevent grain merging by growing"
 msgstr "_Предотвращать слияние зёрен при растяжении"
 
