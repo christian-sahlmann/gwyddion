@@ -752,6 +752,9 @@ _______EOF
   fi
   echo >>$outfile
 
+  echo "#define GWY_SHARED_LIBRARY_EXTENSION \"$acl_shlibext\"" >>$outfile
+  echo >>$outfile
+
   echo '/* Math functions become available when gwymathfallback.h is included. */' >>$outfile
   echo '/* In 2.x also when gwymath.h is included. */' >>$outfile
 
@@ -771,6 +774,7 @@ _______EOF
 ],
 [
   enable_gl=$enable_gl
+  acl_shlibext=$acl_shlibext
   gwy_math_pow10=$gwy_math_pow10
   gwy_math_hypot=$gwy_math_hypot
   gwy_math_cbrt=$gwy_math_cbrt
