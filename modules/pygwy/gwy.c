@@ -94,7 +94,8 @@ reload_libraries(void)
     guint i;
 
     for (i = 0; i < G_N_ELEMENTS(gwyddion_libs); i++) {
-        gchar *filename = g_strconcat(gwyddion_libs[i], ".", G_MODULE_SUFFIX,
+        gchar *filename = g_strconcat(gwyddion_libs[i],
+                                      ".", GWY_SHARED_LIBRARY_EXTENSION,
                                       NULL);
         GModule *modhandle = g_module_open(filename, G_MODULE_BIND_LAZY);
         if (!modhandle) {
