@@ -20,6 +20,10 @@ Modules:
 - Affine distortion: The ACF image can be zoomed.
 - NT-MDT: Double inversion of new spectroscopy data properly checked and fixed.
 
+Other:
+- The standalone Python gwy module uses the correct extension for dlopening,
+  fixing the failure to load Gwyddion libraries on OS X.
+
 
 2.36 (2014-04-02)
 Application:
