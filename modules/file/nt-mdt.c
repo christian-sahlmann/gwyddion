@@ -1842,6 +1842,8 @@ mdt_real_load(const guchar *buffer,
             case MDT_FRAME_SCANNED:
             case MDT_FRAME_SPECTROSCOPY:
             case MDT_FRAME_CURVES:
+            // FIXME: this check fails with spectroscopy from nanoeducator2
+            /*
             if (frame->var_size < AXIS_SCALES_SIZE + SCAN_VARS_MIN_SIZE) {
                 g_set_error(error, GWY_MODULE_FILE_ERROR,
                             GWY_MODULE_FILE_ERROR_DATA,
@@ -1849,6 +1851,7 @@ mdt_real_load(const guchar *buffer,
                               "scanned data header."), i);
                 return FALSE;
             }
+            */
             scannedframe = g_new0(MDTScannedDataFrame, 1);
             if (!mdt_scanned_data_vars(p, fstart, scannedframe,
                                        frame->size, frame->var_size, error))
