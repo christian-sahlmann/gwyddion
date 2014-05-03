@@ -120,7 +120,7 @@ static GwyDataField*
 averaging_dialog(GwyContainer *data)
 {
     GtkWidget *dialog;
-    GtkWidget *hbox, *vbox;
+    GtkWidget *hbox, *vbox, *label;
     GwyPixmapLayer *layer;
     GwyVectorLayer *vlayer;
     GtkWidget *view;
@@ -145,6 +145,9 @@ averaging_dialog(GwyContainer *data)
     /* Data view */
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
+
+    label = gtk_label_new(_("Select the sample area below"));
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
     view = gwy_data_view_new(data);
     layer = gwy_layer_basic_new();
