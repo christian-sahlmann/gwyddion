@@ -330,7 +330,8 @@ threshold_dialog(ThresholdArgs *args,
     gtk_table_attach(table, button, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    s = g_strdup_printf("%.*f to %.*f",
+    /* TRANSLATORS: This is a range: 123 to 456. */
+    s = g_strdup_printf(_("%.*f to %.*f"),
                         controls.format->precision+1,
                         controls.ranges->disp_min/controls.format->magnitude,
                         controls.format->precision+1,

@@ -512,7 +512,7 @@ neural_train_dialog(NeuralTrainArgs *args)
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), table,
-                             gtk_label_new("Training"));
+                             gtk_label_new(_("Training")));
     row = 0;
 
     controls.tmodel = gwy_data_chooser_new_channels();
@@ -606,7 +606,7 @@ neural_train_dialog(NeuralTrainArgs *args)
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), table,
-                             gtk_label_new("Parameters"));
+                             gtk_label_new(_("Parameters")));
     row = 0;
 
     label = gwy_label_new_header(_("Network"));
