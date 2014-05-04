@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-04-24 03:58+0200\n"
-"PO-Revision-Date: 2014-04-24 11:45+0300\n"
+"POT-Creation-Date: 2014-05-04 03:58+0200\n"
+"PO-Revision-Date: 2014-05-04 08:50+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -4371,11 +4371,6 @@ msgstr "Достигнут конец файла в заголовке фрей�
 msgid "End of file reached in frame data #%u."
 msgstr "Достигнут конец файла в данных фрейма #%u."
 
-#: modules/file/nt-mdt.c:1848
-#, c-format
-msgid "Frame #%u is too short for scanned data header."
-msgstr "Фрейм #%u слишком короткий чтобы быть заголовком сканированных данных."
-
 #: modules/file/oldmda.c:153
 msgid "Imports old NTMDT MDA Spectra files."
 msgstr "Импортирует старые файлы MDA от NT-MDT Ntegra Spectra."
@@ -6442,6 +6437,10 @@ msgstr "Усреднённое"
 #: modules/process/averaging.c:131
 msgid "Averaging of Similar Structures"
 msgstr "Усреднение похожих структур"
+
+#: modules/process/averaging.c:149
+msgid "Select the sample area below"
+msgstr "Выберите образец для усреднения ниже"
 
 #: modules/process/basicops.c:56
 msgid ""
@@ -11734,9 +11733,8 @@ msgid "Fill _Voids"
 msgstr "З_аполнить Пустоты"
 
 #: modules/tools/maskedit.c:568
-#, fuzzy
 msgid "Fill non-simple-connected"
-msgstr "Заполнять сложносвязанные"
+msgstr "Заполнять связанные непросто"
 
 #: modules/tools/maskedit.c:579
 msgid "Grow/Shrink"
@@ -12589,3 +12587,7 @@ msgstr "/_Инвертировать значение"
 #: modules/volume/volume_invert.c:69
 msgid "Invert value in volume data"
 msgstr "Инвертирует значения в объёмных данных"
+
+#~ msgid "Frame #%u is too short for scanned data header."
+#~ msgstr ""
+#~ "Фрейм #%u слишком короткий чтобы быть заголовком сканированных данных."
