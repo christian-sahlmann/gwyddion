@@ -37,7 +37,7 @@
 
 enum {
     PREVIEW_SIZE = 160,
-    MAX_DEGREE = 12
+    MAX_DEGREE = 11
 };
 
 typedef struct {
@@ -144,7 +144,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Subtracts polynomial background."),
     "Yeti <yeti@gwyddion.net>",
-    "3.1",
+    "3.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
