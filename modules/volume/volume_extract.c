@@ -328,7 +328,7 @@ extract_dialog(ExtractArgs *args,
                                  gwy_stock_like_button_new(_("_Update"),
                                                            GTK_STOCK_EXECUTE),
                                  RESPONSE_PREVIEW);
-    gtk_dialog_add_button(GTK_DIALOG(dialog), _("_Reset"), RESPONSE_RESET);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),_("_Reset"), RESPONSE_RESET);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
 
@@ -1051,7 +1051,7 @@ extract_load_data(ExtractControls *controls,
     GError *err = NULL;
 
 
-    dialog = gtk_file_chooser_dialog_new (N_("Load volume data"),
+    dialog = gtk_file_chooser_dialog_new (_("Load volume data"),
                                           GTK_WINDOW(controls->dialog),
                                           GTK_FILE_CHOOSER_ACTION_OPEN,
                                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -1068,7 +1068,7 @@ extract_load_data(ExtractControls *controls,
                                                 GTK_DIALOG_DESTROY_WITH_PARENT,
                                                 GTK_MESSAGE_ERROR,
                                                 GTK_BUTTONS_CLOSE,
-                                                N_("Error loading file '%s'"),
+                                                _("Error loading file '%s'"),
                                                 filename);
             gtk_dialog_run(GTK_DIALOG(msgdialog));
             gtk_widget_destroy(msgdialog);
@@ -1213,7 +1213,7 @@ preview(ExtractControls *controls,
 
         }
 
-        g_snprintf(message, sizeof(message), "Shown range %g to %g",
+        g_snprintf(message, sizeof(message), N_("Shown range %g to %g"),
                    gwy_data_field_get_min(dfield),
                    gwy_data_field_get_max(dfield));
         gtk_label_set_text(GTK_LABEL(controls->info), message);
