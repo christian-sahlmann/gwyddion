@@ -818,10 +818,25 @@ square_func(gdouble x,
             G_GNUC_UNUSED gint n_param,
             const gdouble *b,
             G_GNUC_UNUSED gpointer user_data,
-            G_GNUC_UNUSED gboolean *fres)
+            gboolean *fres)
 {
+    gdouble s, t;
+
     x = (x - b[1])/b[0];
-    return (x - floor(x)) > 0.5 ? b[2] : b[3];
+
+    if (b[0] == 0.0) {
+        *fres = FALSE;
+        return 0.0;
+    }
+
+    /* This would be an exactly square wave but we cannot fit a step-like
+     * function because the sum of squares has not meaningful derivatives
+     * by parameters.  So fake an almost-square function using sine. */
+    /* return (x - floor(x)) > 0.5 ? b[2] : b[3]; */
+
+    s = sin(2.0*G_PI*x);
+    t = pow(fabs(s), 0.001) * (s > 0.0 ? -1.0 : 1.0);
+    return 0.5*(b[2] + b[3]) + 0.5*t*(b[2] - b[3]);
 }
 
 static void
