@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-05-04 03:58+0200\n"
-"PO-Revision-Date: 2014-05-04 08:50+0300\n"
+"POT-Creation-Date: 2014-05-07 03:58+0200\n"
+"PO-Revision-Date: 2014-05-07 08:50+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -135,75 +135,75 @@ msgstr "контакт: Герц (параболоид)"
 msgid "Untitled"
 msgstr "Безымянный"
 
-#: libgwyddion/gwynlfitpreset.c:1190 libprocess/gwyprocessenums.c:101
+#: libgwyddion/gwynlfitpreset.c:1205 libprocess/gwyprocessenums.c:101
 msgid "Gaussian"
 msgstr "Гауссиана"
 
-#: libgwyddion/gwynlfitpreset.c:1206
+#: libgwyddion/gwynlfitpreset.c:1221
 msgid "Gaussian (PSDF)"
 msgstr "Гауссиана (ФСПМ)"
 
-#: libgwyddion/gwynlfitpreset.c:1220
+#: libgwyddion/gwynlfitpreset.c:1235
 msgid "Gaussian (ACF)"
 msgstr "Гауссиана (ACF)"
 
-#: libgwyddion/gwynlfitpreset.c:1234
+#: libgwyddion/gwynlfitpreset.c:1249
 msgid "Gaussian (HHCF)"
 msgstr "Гауссиана (HHCF)"
 
-#: libgwyddion/gwynlfitpreset.c:1248
+#: libgwyddion/gwynlfitpreset.c:1263
 msgid "Gaussian (RPSDF)"
 msgstr "Гауссиана (RPSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1262
+#: libgwyddion/gwynlfitpreset.c:1277
 msgid "Exponential"
 msgstr "Экспоненциальная"
 
-#: libgwyddion/gwynlfitpreset.c:1275
+#: libgwyddion/gwynlfitpreset.c:1290
 msgid "Exponential (PSDF)"
 msgstr "Экспоненциальная (ФСПМ)"
 
-#: libgwyddion/gwynlfitpreset.c:1289
+#: libgwyddion/gwynlfitpreset.c:1304
 msgid "Exponential (ACF)"
 msgstr "Экспоненциальная (АКФ)"
 
-#: libgwyddion/gwynlfitpreset.c:1302
+#: libgwyddion/gwynlfitpreset.c:1317
 msgid "Exponential (HHCF)"
 msgstr "Экспоненциальная (HHCF)"
 
-#: libgwyddion/gwynlfitpreset.c:1316
+#: libgwyddion/gwynlfitpreset.c:1331
 msgid "Exponential (RPSDF)"
 msgstr "Экспоненциальная (RPSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1331
+#: libgwyddion/gwynlfitpreset.c:1346
 msgid "Polynomial (order 0)"
 msgstr "Полиномиальная (порядка 0)"
 
-#: libgwyddion/gwynlfitpreset.c:1343
+#: libgwyddion/gwynlfitpreset.c:1358
 msgid "Polynomial (order 1)"
 msgstr "Полиномиальная (порядка 1)"
 
-#: libgwyddion/gwynlfitpreset.c:1355
+#: libgwyddion/gwynlfitpreset.c:1370
 msgid "Polynomial (order 2)"
 msgstr "Полиномиальная (порядка 2)"
 
-#: libgwyddion/gwynlfitpreset.c:1368
+#: libgwyddion/gwynlfitpreset.c:1383
 msgid "Polynomial (order 3)"
 msgstr "Полиномиальная (порядка 3)"
 
-#: libgwyddion/gwynlfitpreset.c:1382
+#: libgwyddion/gwynlfitpreset.c:1397
 msgid "Square wave"
 msgstr "Прямоугольные импульсы"
 
-#: libgwyddion/gwynlfitpreset.c:1399
+#: libgwyddion/gwynlfitpreset.c:1414
 msgid "Power"
 msgstr "Степенная"
 
-#: libgwyddion/gwynlfitpreset.c:1412
+#: libgwyddion/gwynlfitpreset.c:1427
 msgid "Lorentzian"
 msgstr "Лоренцева"
 
-#: libgwyddion/gwynlfitpreset.c:1427
+#: libgwyddion/gwynlfitpreset.c:1442
 msgid "Sinc"
 msgstr "Sinc"
 
@@ -1491,7 +1491,7 @@ msgid "Max. position"
 msgstr "Положение максимума"
 
 #: app/app.c:1479 modules/process/scars.c:537 modules/process/scars.c:544
-#: modules/process/threshold.c:355
+#: modules/process/threshold.c:356
 msgid "RMS"
 msgstr "Ср. квадр."
 
@@ -1917,7 +1917,7 @@ msgstr "Тип"
 msgid "Function"
 msgstr "Функция"
 
-#: app/log.c:461 modules/tools/stats.c:402
+#: app/log.c:461 modules/process/neural.c:609 modules/tools/stats.c:402
 msgid "Parameters"
 msgstr "Параметры"
 
@@ -9961,6 +9961,10 @@ msgstr "ошибка"
 msgid "NN training error"
 msgstr "Ошибка обучения нейросети"
 
+#: modules/process/neural.c:515
+msgid "Training"
+msgstr "Обучение"
+
 #: modules/process/neural.c:519
 msgid "_Model:"
 msgstr "_Модель:"
@@ -10812,7 +10816,13 @@ msgstr "С_верху:"
 msgid "Set to _Full Range"
 msgstr "_Полный диапазон"
 
-#: modules/process/threshold.c:355
+#. TRANSLATORS: This is a range: 123 to 456.
+#: modules/process/threshold.c:334
+#, c-format
+msgid "%.*f to %.*f"
+msgstr "от %.*f до %.*f"
+
+#: modules/process/threshold.c:356
 msgid "F_arther than:"
 msgstr "Д_альше, чем:"
 
@@ -12551,6 +12561,11 @@ msgstr "График сечения блока"
 #: modules/volume/volume_extract.c:1054
 msgid "Load volume data"
 msgstr "Загрузить объёмные данные"
+
+#: modules/volume/volume_extract.c:1216
+#, c-format
+msgid "Shown range %g to %g"
+msgstr "Показан диапазон от %g до %g"
 
 #: modules/volume/volume_extract.c:1909
 msgid "Building wireframe model..."
