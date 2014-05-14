@@ -422,8 +422,11 @@ gwy_data_field_area_get_min_max_mask(GwyDataField *data_field,
                 }
             }
         }
-        *min = min1;
-        *max = max1;
+
+        if (min)
+            *min = min1;
+        if (max)
+            *max = max1;
 
         return;
     }
