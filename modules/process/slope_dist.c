@@ -52,6 +52,7 @@ typedef struct {
     gboolean logscale;
     gboolean fit_plane;
     gint kernel_size;
+    GwyMaskingType masking;
 } SlopeArgs;
 
 typedef struct {
@@ -60,13 +61,15 @@ typedef struct {
     GtkWidget *logscale;
     GtkWidget *fit_plane;
     GtkObject *kernel_size;
+    GSList *masking;
 } SlopeControls;
 
 static gboolean       module_register             (void);
 static void           slope_dist                  (GwyContainer *data,
                                                    GwyRunType run);
 static gboolean       slope_dialog                (SlopeArgs *args,
-                                                   gboolean same_units);
+                                                   gboolean same_units,
+                                                   GwyDataField *mfield);
 static void           slope_dialog_update_controls(SlopeControls *controls,
                                                    SlopeArgs *args);
 static void           slope_dialog_update_values  (SlopeControls *controls,
@@ -76,14 +79,18 @@ static void           slope_fit_plane_cb          (GtkToggleButton *check,
 static void           slope_output_type_cb        (GtkToggleButton *radio,
                                                    SlopeControls *controls);
 static GwyDataField*  slope_do_2d                 (GwyDataField *dfield,
+                                                   GwyDataField *mfield,
                                                    SlopeArgs *args);
 static GwyGraphModel* slope_do_graph_phi          (GwyDataField *dfield,
+                                                   GwyDataField *mfield,
                                                    SlopeArgs *args);
 static GwyGraphModel* slope_do_graph_theta        (GwyDataField *dfield,
+                                                   GwyDataField *mfield,
                                                    SlopeArgs *args);
 static GwyGraphModel* slope_do_graph_gradient     (GwyDataField *dfield,
+                                                   GwyDataField *mfield,
                                                    SlopeArgs *args);
-static gdouble        compute_slopes              (GwyDataField *dfield,
+static void           compute_slopes              (GwyDataField *dfield,
                                                    gint kernel_size,
                                                    GwyDataField *xder,
                                                    GwyDataField *yder);
@@ -104,6 +111,7 @@ static const SlopeArgs slope_defaults = {
     FALSE,
     FALSE,
     5,
+    GWY_MASK_IGNORE,
 };
 
 static GwyModuleInfo module_info = {
@@ -112,7 +120,7 @@ static GwyModuleInfo module_info = {
     N_("Calculates one- or two-dimensional distribution of slopes "
        "or graph of their angular distribution."),
     "Yeti <yeti@gwyddion.net>",
-    "1.14",
+    "1.15",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -136,7 +144,7 @@ module_register(void)
 static void
 slope_dist(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield;
+    GwyDataField *dfield, *mfield;
     GwyGraphModel *gmodel;
     SlopeArgs args;
     gint oldid, newid;
@@ -145,15 +153,17 @@ slope_dist(GwyContainer *data, GwyRunType run)
     g_return_if_fail(run & SLOPE_DIST_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &oldid,
+                                     GWY_APP_MASK_FIELD, &mfield,
                                      0);
     g_return_if_fail(dfield);
     load_args(gwy_app_settings_get(), &args);
     same_units = gwy_si_unit_equal(gwy_data_field_get_si_unit_xy(dfield),
                                    gwy_data_field_get_si_unit_z(dfield));
+
     if (run == GWY_RUN_INTERACTIVE) {
         if (!same_units && (args.output_type == SLOPE_DIST_GRAPH_THETA))
             args.output_type = SLOPE_DIST_GRAPH_GRADIENT;
-        ok = slope_dialog(&args, same_units);
+        ok = slope_dialog(&args, same_units, mfield);
         save_args(gwy_app_settings_get(), &args);
         if (!ok)
             return;
@@ -161,7 +171,7 @@ slope_dist(GwyContainer *data, GwyRunType run)
 
     switch (args.output_type) {
         case SLOPE_DIST_2D_DIST:
-        dfield = slope_do_2d(dfield, &args);
+        dfield = slope_do_2d(dfield, mfield, &args);
         newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
         g_object_unref(dfield);
         gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
@@ -172,19 +182,19 @@ slope_dist(GwyContainer *data, GwyRunType run)
         break;
 
         case SLOPE_DIST_GRAPH_PHI:
-        gmodel = slope_do_graph_phi(dfield, &args);
+        gmodel = slope_do_graph_phi(dfield, mfield, &args);
         gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
         g_object_unref(gmodel);
         break;
 
         case SLOPE_DIST_GRAPH_THETA:
-        gmodel = slope_do_graph_theta(dfield, &args);
+        gmodel = slope_do_graph_theta(dfield, mfield, &args);
         gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
         g_object_unref(gmodel);
         break;
 
         case SLOPE_DIST_GRAPH_GRADIENT:
-        gmodel = slope_do_graph_gradient(dfield, &args);
+        gmodel = slope_do_graph_gradient(dfield, mfield, &args);
         gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
         g_object_unref(gmodel);
         break;
@@ -196,7 +206,7 @@ slope_dist(GwyContainer *data, GwyRunType run)
 }
 
 static gboolean
-slope_dialog(SlopeArgs *args, gboolean same_units)
+slope_dialog(SlopeArgs *args, gboolean same_units, GwyDataField *mfield)
 {
     static const GwyEnum output_types[] = {
         { N_("_Two-dimensional distribution"), SLOPE_DIST_2D_DIST,        },
@@ -217,7 +227,7 @@ slope_dialog(SlopeArgs *args, gboolean same_units)
                                          NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(9, 4, FALSE);
+    table = gtk_table_new(9 + (mfield ? 4 : 0), 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -246,6 +256,13 @@ slope_dialog(SlopeArgs *args, gboolean same_units)
         gtk_widget_set_sensitive(radio, FALSE);
     }
 
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+
+    label = gwy_label_new_header(_("Options"));
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
     controls.size = gtk_adjustment_new(args->size, 10, MAX_OUT_SIZE, 1, 10, 0);
     gwy_table_attach_hscale(table, row, _("Output _size:"), "px",
                             controls.size, 0);
@@ -270,6 +287,22 @@ slope_dialog(SlopeArgs *args, gboolean same_units)
     gwy_table_attach_hscale(table, row, _("_Plane size:"), "px",
                             controls.kernel_size, 0);
     row++;
+
+    if (mfield) {
+        gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+        label = gwy_label_new_header(_("Masking Mode"));
+        gtk_table_attach(GTK_TABLE(table), label,
+                        0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        row++;
+
+        controls.masking
+            = gwy_radio_buttons_create(gwy_masking_type_get_enum(), -1,
+                                       NULL, NULL, args->masking);
+        row = gwy_radio_buttons_attach_to_table(controls.masking,
+                                                GTK_TABLE(table), 3, row);
+    }
+    else
+        controls.masking = NULL;
 
     slope_dialog_update_controls(&controls, args);
 
@@ -322,6 +355,8 @@ slope_dialog_update_controls(SlopeControls *controls,
                              args->output_type == SLOPE_DIST_2D_DIST);
     gwy_radio_buttons_set_current(controls->output_type_group,
                                   args->output_type);
+    if (controls->masking)
+        gwy_radio_buttons_set_current(controls->masking, args->masking);
 }
 
 static void
@@ -336,6 +371,8 @@ slope_dialog_update_values(SlopeControls *controls,
         gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->fit_plane));
     args->output_type =
         gwy_radio_buttons_get_current(controls->output_type_group);
+    if (controls->masking)
+        args->masking = gwy_radio_buttons_get_current(controls->masking);
 }
 
 static void
@@ -359,13 +396,26 @@ slope_output_type_cb(GtkToggleButton *button,
     gtk_widget_set_sensitive(controls->logscale, otype == SLOPE_DIST_2D_DIST);
 }
 
+static inline gboolean
+is_counted(GwyDataField *mfield, guint k, GwyMaskingType masking)
+{
+    if (!mfield || masking == GWY_MASK_IGNORE)
+        return TRUE;
+
+    if (masking == GWY_MASK_INCLUDE)
+        return mfield->data[k] > 0.0;
+    else
+        return mfield->data[k] <= 0.0;
+}
+
 static GwyDataField*
 slope_do_2d(GwyDataField *dfield,
+            GwyDataField *mfield,
             SlopeArgs *args)
 {
     GwyDataField *xder, *yder;
     const gdouble *xd, *yd;
-    gdouble max;
+    gdouble minxd, maxxd, minyd, maxyd, max;
     gint xres, yres, n;
     gint xider, yider, i;
     gulong *count;
@@ -377,18 +427,29 @@ slope_do_2d(GwyDataField *dfield,
     n = (xres - n)*(yres - n);
     xder = gwy_data_field_new_alike(dfield, FALSE);
     yder = gwy_data_field_new_alike(dfield, FALSE);
-    max = compute_slopes(dfield, args->fit_plane ? args->kernel_size : 0,
-                         xder, yder);
+    compute_slopes(dfield, args->fit_plane ? args->kernel_size : 0, xder, yder);
+
+    gwy_data_field_get_min_max(xder, &minxd, &maxxd);
+    maxxd = MAX(fabs(minxd), fabs(maxxd));
+    gwy_data_field_get_min_max(yder, &minyd, &maxyd);
+    maxyd = MAX(fabs(minyd), fabs(maxyd));
+    max = MAX(maxxd, maxyd);
+    if (!max) {
+        max = 1.0;
+    }
+
     count = g_new0(gulong, args->size*args->size);
     xd = gwy_data_field_get_data_const(xder);
     yd = gwy_data_field_get_data_const(yder);
     for (i = 0; i < n; i++) {
-        xider = args->size*(xd[i]/(2.0*max) + 0.5);
-        xider = CLAMP(xider, 0, args->size-1);
-        yider = args->size*(yd[i]/(2.0*max) + 0.5);
-        yider = CLAMP(yider, 0, args->size-1);
+        if (is_counted(mfield, i, args->masking)) {
+            xider = args->size*(xd[i]/(2.0*max) + 0.5);
+            xider = CLAMP(xider, 0, args->size-1);
+            yider = args->size*(yd[i]/(2.0*max) + 0.5);
+            yider = CLAMP(yider, 0, args->size-1);
 
-        count[yider*args->size + xider]++;
+            count[yider*args->size + xider]++;
+        }
     }
     g_object_unref(yder);
     g_object_unref(xder);
@@ -398,6 +459,7 @@ slope_do_2d(GwyDataField *dfield,
 
 static GwyGraphModel*
 slope_do_graph_phi(GwyDataField *dfield,
+                   GwyDataField *mfield,
                    SlopeArgs *args)
 {
     GwyGraphModel *gmodel;
@@ -423,13 +485,14 @@ slope_do_graph_phi(GwyDataField *dfield,
     xd = gwy_data_field_get_data_const(xder);
     yd = gwy_data_field_get_data_const(yder);
     for (i = 0; i < n; i++) {
-        gdouble phi = fmod(atan2(yd[i], -xd[i]) + 2*G_PI, 2*G_PI);
-        gdouble d = (xd[i]*xd[i] + yd[i]*yd[i]);
-        gint iphi;
+        if (is_counted(mfield, i, args->masking)) {
+            gdouble phi = fmod(atan2(yd[i], -xd[i]) + 2*G_PI, 2*G_PI);
+            gdouble d = (xd[i]*xd[i] + yd[i]*yd[i]);
+            gint iphi = floor(args->size*phi/(2.0*G_PI));
 
-        iphi = floor(args->size*phi/(2.0*G_PI));
-        iphi = CLAMP(iphi, 0, args->size-1);
-        data[iphi] += d;
+            iphi = CLAMP(iphi, 0, args->size-1);
+            data[iphi] += d;
+        }
     }
     g_object_unref(yder);
     g_object_unref(xder);
@@ -464,6 +527,7 @@ slope_do_graph_phi(GwyDataField *dfield,
 
 static GwyGraphModel*
 slope_do_graph_theta(GwyDataField *dfield,
+                     GwyDataField *mfield,
                      SlopeArgs *args)
 {
     GwyGraphModel *gmodel;
@@ -473,7 +537,7 @@ slope_do_graph_theta(GwyDataField *dfield,
     GwyDataField *xder, *yder;
     const gdouble *yd;
     gdouble *xd, *data;
-    gint xres, yres, n, i;
+    gint xres, yres, n, i, nc;
     gdouble max;
 
     xres = gwy_data_field_get_xres(dfield);
@@ -492,16 +556,23 @@ slope_do_graph_theta(GwyDataField *dfield,
     for (i = 0; i < n; i++)
         xd[i] = 180.0/G_PI*atan(hypot(xd[i], yd[i]));
     g_object_unref(yder);
-    max = gwy_data_field_get_max(xder);
+    gwy_data_field_area_get_min_max_mask(xder, mfield, args->masking,
+                                         0, 0, xres, yres, NULL, &max);
     gwy_data_line_set_real(dataline, max);
+    nc = 0;
     for (i = 0; i < n; i++) {
-        gint itheta;
+        if (is_counted(mfield, i, args->masking)) {
+            gint itheta = floor(args->size*xd[i]/max);
 
-        itheta = floor(args->size*xd[i]/max);
-        itheta = CLAMP(itheta, 0, args->size-1);
-        data[itheta] += args->size/(n*max);
+            itheta = CLAMP(itheta, 0, args->size-1);
+            data[itheta]++;
+            nc++;
+        }
     }
     g_object_unref(xder);
+
+    if (nc && max)
+        gwy_data_line_multiply(dataline, args->size/(nc*max));
 
     gmodel = gwy_graph_model_new();
     siunitx = gwy_si_unit_new("deg");
@@ -531,6 +602,7 @@ slope_do_graph_theta(GwyDataField *dfield,
 
 static GwyGraphModel*
 slope_do_graph_gradient(GwyDataField *dfield,
+                        GwyDataField *mfield,
                         SlopeArgs *args)
 {
     GwyGraphModel *gmodel;
@@ -540,7 +612,7 @@ slope_do_graph_gradient(GwyDataField *dfield,
     GwyDataField *xder, *yder;
     const gdouble *yd;
     gdouble *xd, *data;
-    gint xres, yres, n, i;
+    gint xres, yres, n, i, nc;
     gdouble max;
 
     xres = gwy_data_field_get_xres(dfield);
@@ -557,18 +629,25 @@ slope_do_graph_gradient(GwyDataField *dfield,
     for (i = 0; i < n; i++)
         xd[i] = hypot(xd[i], yd[i]);
     g_object_unref(yder);
-    max = gwy_data_field_get_max(xder);
+    gwy_data_field_area_get_min_max_mask(xder, mfield, args->masking,
+                                         0, 0, xres, yres, NULL, &max);
 
     dataline = gwy_data_line_new(args->size, max, TRUE);
     data = gwy_data_line_get_data(dataline);
+    nc = 0;
     for (i = 0; i < n; i++) {
-        gint ider;
+        if (is_counted(mfield, i, args->masking)) {
+            gint ider = floor(args->size*xd[i]/max);
 
-        ider = floor(args->size*xd[i]/max);
-        ider = CLAMP(ider, 0, args->size-1);
-        data[ider] += args->size/(n*max);
+            ider = CLAMP(ider, 0, args->size-1);
+            data[ider]++;
+            nc++;
+        }
     }
     g_object_unref(xder);
+
+    if (nc && max)
+        gwy_data_line_multiply(dataline, args->size/(nc*max));
 
     gmodel = gwy_graph_model_new();
     siunitx = gwy_si_unit_divide(gwy_data_field_get_si_unit_z(dfield),
@@ -598,14 +677,13 @@ slope_do_graph_gradient(GwyDataField *dfield,
     return gmodel;
 }
 
-static gdouble
+static void
 compute_slopes(GwyDataField *dfield,
                gint kernel_size,
                GwyDataField *xder,
                GwyDataField *yder)
 {
     gint xres, yres;
-    gdouble minxd, maxxd, minyd, maxyd;
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
@@ -624,13 +702,6 @@ compute_slopes(GwyDataField *dfield,
     }
     else
         gwy_data_field_filter_slope(dfield, xder, yder);
-
-    gwy_data_field_get_min_max(xder, &minxd, &maxxd);
-    maxxd = MAX(fabs(minxd), fabs(maxxd));
-    gwy_data_field_get_min_max(yder, &minyd, &maxyd);
-    maxyd = MAX(fabs(minyd), fabs(maxyd));
-
-    return MAX(maxxd, maxyd);
 }
 
 static GwyDataField*
@@ -676,6 +747,7 @@ static const gchar size_key[]        = "/module/slope_dist/size";
 static const gchar logscale_key[]    = "/module/slope_dist/logscale";
 static const gchar fit_plane_key[]   = "/module/slope_dist/fit_plane";
 static const gchar kernel_size_key[] = "/module/slope_dist/kernel_size";
+static const gchar masking_key[]     = "/module/slope_dist/masking";
 
 static void
 sanitize_args(SlopeArgs *args)
@@ -685,6 +757,7 @@ sanitize_args(SlopeArgs *args)
     args->kernel_size = CLAMP(args->kernel_size, 2, 16);
     args->logscale = !!args->logscale;
     args->fit_plane = !!args->fit_plane;
+    args->masking = MIN(args->masking, GWY_MASK_IGNORE);
 }
 
 static void
@@ -701,6 +774,7 @@ load_args(GwyContainer *container,
                                       &args->fit_plane);
     gwy_container_gis_int32_by_name(container, kernel_size_key,
                                     &args->kernel_size);
+    gwy_container_gis_enum_by_name(container, masking_key, &args->masking);
     sanitize_args(args);
 }
 
@@ -716,6 +790,7 @@ save_args(GwyContainer *container,
                                       args->fit_plane);
     gwy_container_set_int32_by_name(container, kernel_size_key,
                                     args->kernel_size);
+    gwy_container_set_enum_by_name(container, masking_key, args->masking);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
