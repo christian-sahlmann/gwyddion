@@ -35,13 +35,14 @@
 #define SLOPE_DIST_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
-    MAX_OUT_SIZE = 1024
+    MAX_OUT_SIZE = 4096
 };
 
 typedef enum {
     SLOPE_DIST_2D_DIST,
     SLOPE_DIST_GRAPH_PHI,
     SLOPE_DIST_GRAPH_THETA,
+    SLOPE_DIST_GRAPH_GRADIENT,
     SLOPE_DIST_LAST
 } SlopeOutput;
 
@@ -80,6 +81,8 @@ static GwyGraphModel* slope_do_graph_phi          (GwyDataField *dfield,
                                                    SlopeArgs *args);
 static GwyGraphModel* slope_do_graph_theta        (GwyDataField *dfield,
                                                    SlopeArgs *args);
+static GwyGraphModel* slope_do_graph_gradient     (GwyDataField *dfield,
+                                                   SlopeArgs *args);
 static gdouble        compute_slopes              (GwyDataField *dfield,
                                                    gint kernel_size,
                                                    GwyDataField *xder,
@@ -109,7 +112,7 @@ static GwyModuleInfo module_info = {
     N_("Calculates one- or two-dimensional distribution of slopes "
        "or graph of their angular distribution."),
     "Yeti <yeti@gwyddion.net>",
-    "1.13",
+    "1.14",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -148,8 +151,8 @@ slope_dist(GwyContainer *data, GwyRunType run)
     same_units = gwy_si_unit_equal(gwy_data_field_get_si_unit_xy(dfield),
                                    gwy_data_field_get_si_unit_z(dfield));
     if (run == GWY_RUN_INTERACTIVE) {
-        if (!same_units && args.output_type == SLOPE_DIST_GRAPH_THETA)
-            args.output_type = SLOPE_DIST_GRAPH_PHI;
+        if (!same_units && (args.output_type == SLOPE_DIST_GRAPH_THETA))
+            args.output_type = SLOPE_DIST_GRAPH_GRADIENT;
         ok = slope_dialog(&args, same_units);
         save_args(gwy_app_settings_get(), &args);
         if (!ok)
@@ -180,6 +183,12 @@ slope_dist(GwyContainer *data, GwyRunType run)
         g_object_unref(gmodel);
         break;
 
+        case SLOPE_DIST_GRAPH_GRADIENT:
+        gmodel = slope_do_graph_gradient(dfield, &args);
+        gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+        g_object_unref(gmodel);
+        break;
+
         default:
         g_return_if_reached();
         break;
@@ -190,9 +199,10 @@ static gboolean
 slope_dialog(SlopeArgs *args, gboolean same_units)
 {
     static const GwyEnum output_types[] = {
-        { N_("_Two-dimensional distribution"), SLOPE_DIST_2D_DIST,     },
-        { N_("Directional (φ) _graph"),        SLOPE_DIST_GRAPH_PHI,   },
-        { N_("_Inclination (θ) graph"),        SLOPE_DIST_GRAPH_THETA, },
+        { N_("_Two-dimensional distribution"), SLOPE_DIST_2D_DIST,        },
+        { N_("Directional (φ) _graph"),        SLOPE_DIST_GRAPH_PHI,      },
+        { N_("_Inclination (θ) graph"),        SLOPE_DIST_GRAPH_THETA,    },
+        { N_("Inclination (gra_dient) graph"), SLOPE_DIST_GRAPH_GRADIENT, },
     };
     GtkWidget *dialog, *table, *label;
     SlopeControls controls;
@@ -207,7 +217,7 @@ slope_dialog(SlopeArgs *args, gboolean same_units)
                                          NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(8, 4, FALSE);
+    table = gtk_table_new(9, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -441,6 +451,8 @@ slope_do_graph_phi(GwyDataField *dfield,
     g_object_set(cmodel,
                  "mode", GWY_GRAPH_CURVE_LINE,
                  "description", _("Slopes"),
+                 "axis-label-bottom", "φ",
+                 "axis-label-left", "w",
                  NULL);
     gwy_graph_curve_model_set_data_from_dataline(cmodel, dataline, 0, 0);
     g_object_unref(dataline);
@@ -493,11 +505,82 @@ slope_do_graph_theta(GwyDataField *dfield,
 
     gmodel = gwy_graph_model_new();
     siunitx = gwy_si_unit_new("deg");
-    siunity = gwy_si_unit_new("deg^-1");
+    siunity = gwy_si_unit_power(siunitx, -1, NULL);
     g_object_set(gmodel,
                  "title", _("Inclination Distribution"),
                  "si-unit-x", siunitx,
                  "si-unit-y", siunity,
+                 "axis-label-bottom", "θ",
+                 "axis-label-left", "ρ",
+                 NULL);
+    g_object_unref(siunity);
+    g_object_unref(siunitx);
+
+    cmodel = gwy_graph_curve_model_new();
+    g_object_set(cmodel,
+                 "mode", GWY_GRAPH_CURVE_LINE,
+                 "description", _("Inclinations"),
+                 NULL);
+    gwy_graph_curve_model_set_data_from_dataline(cmodel, dataline, 0, 0);
+    g_object_unref(dataline);
+    gwy_graph_model_add_curve(gmodel, cmodel);
+    g_object_unref(cmodel);
+
+    return gmodel;
+}
+
+static GwyGraphModel*
+slope_do_graph_gradient(GwyDataField *dfield,
+                        SlopeArgs *args)
+{
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *cmodel;
+    GwyDataLine *dataline;
+    GwySIUnit *siunitx, *siunity;
+    GwyDataField *xder, *yder;
+    const gdouble *yd;
+    gdouble *xd, *data;
+    gint xres, yres, n, i;
+    gdouble max;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+
+    n = args->fit_plane ? args->kernel_size : 2;
+    n = (xres - n)*(yres - n);
+    xder = gwy_data_field_new_alike(dfield, FALSE);
+    yder = gwy_data_field_new_alike(dfield, FALSE);
+    compute_slopes(dfield, args->fit_plane ? args->kernel_size : 0, xder, yder);
+
+    xd = gwy_data_field_get_data(xder);
+    yd = gwy_data_field_get_data_const(yder);
+    for (i = 0; i < n; i++)
+        xd[i] = hypot(xd[i], yd[i]);
+    g_object_unref(yder);
+    max = gwy_data_field_get_max(xder);
+
+    dataline = gwy_data_line_new(args->size, max, TRUE);
+    data = gwy_data_line_get_data(dataline);
+    for (i = 0; i < n; i++) {
+        gint ider;
+
+        ider = floor(args->size*xd[i]/max);
+        ider = CLAMP(ider, 0, args->size-1);
+        data[ider] += args->size/(n*max);
+    }
+    g_object_unref(xder);
+
+    gmodel = gwy_graph_model_new();
+    siunitx = gwy_si_unit_divide(gwy_data_field_get_si_unit_z(dfield),
+                                 gwy_data_field_get_si_unit_xy(dfield),
+                                 NULL);
+    siunity = gwy_si_unit_power(siunitx, -1, NULL);
+    g_object_set(gmodel,
+                 "title", _("Inclination Distribution"),
+                 "si-unit-x", siunitx,
+                 "si-unit-y", siunity,
+                 "axis-label-bottom", "η",
+                 "axis-label-left", "ρ",
                  NULL);
     g_object_unref(siunity);
     g_object_unref(siunitx);
