@@ -19,6 +19,7 @@ Modules:
 - Pixmap: Vertical and horizontal rulers always use the same number format.
 - Affine distortion: The ACF image can be zoomed.
 - NT-MDT: Double inversion of new spectroscopy data properly checked and fixed.
+- Slope distribution: Masking is supported.  Plot of total gradient was added.
 
 Other:
 - The standalone Python gwy module uses the correct extension for dlopening,
