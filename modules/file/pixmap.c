@@ -142,6 +142,8 @@ typedef struct {
     gboolean scale_font;
     gboolean inset_draw_ticks;
     gboolean inset_draw_label;
+    gdouble fmscale_gap;
+    gdouble inset_gap;
     guint grayscale;
     gchar *inset_length;
     /* Interface only */
@@ -170,7 +172,6 @@ typedef struct {
 
 typedef struct {
     PixmapSaveArgs *args;
-    GwySensitivityGroup *sensgroup;
     GtkWidget *dialog;
     GtkWidget *left_column;
     GtkWidget *right_column;
@@ -186,11 +187,13 @@ typedef struct {
     GtkWidget *inset_length_auto;
     GtkWidget *inset_draw_ticks;
     GtkWidget *inset_draw_label;
+    GtkObject *inset_gap;
     GtkObject *zoom;
     GtkObject *width;
     GtkObject *height;
     GtkWidget *font;
     GtkWidget *font_size;
+    GtkObject *fmscale_gap;
     GtkWidget *image;
     GtkWidget *draw_mask;
     GtkWidget *draw_selection;
@@ -461,6 +464,7 @@ static const PixmapSaveArgs pixmap_save_defaults = {
     1.0, PIXMAP_RULERS, PIXMAP_FMSCALE,
     { 1.0, 1.0, 1.0, 1.0 }, INSET_POS_BOTTOM_RIGHT,
     TRUE, TRUE, "Helvetica", FONT_SIZE, TRUE, TRUE, TRUE,
+    1.0, 1.0,
     0, "",
     /* Interface only */
     NULL, NULL, FALSE, 0, 0, FALSE,
@@ -478,7 +482,7 @@ static GwyModuleInfo module_info = {
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.28",
+    "7.29",
     "David Nečas (Yeti)",
     "2004-2013",
 };
@@ -2368,8 +2372,7 @@ pixmap_draw_presentational(GwyContainer *data,
     gboolean has_presentation, inverted = FALSE;
     gdouble fontzoom, min, max;
     gint border = 20;
-    gint gap = 20;
-    gint fmw = 18;
+    gint fmw = 18, fmscale_gap = fmw, inset_gap = fmw;
 
     if (args->supports_16bit && args->grayscale) {
         GwyGradient *gradient;
@@ -2414,7 +2417,8 @@ pixmap_draw_presentational(GwyContainer *data,
     zwidth = gdk_pixbuf_get_width(datapixbuf);
     zheight = gdk_pixbuf_get_height(datapixbuf);
 
-    gap *= fontzoom;
+    fmscale_gap *= fontzoom * args->fmscale_gap;
+    inset_gap *= fontzoom * args->inset_gap;
     fmw *= fontzoom;
     lw = ZOOM2LW(fontzoom);
 
@@ -2432,18 +2436,18 @@ pixmap_draw_presentational(GwyContainer *data,
         if (args->inset_pos == INSET_POS_TOP_LEFT
             || args->inset_pos == INSET_POS_TOP_CENTER
             || args->inset_pos == INSET_POS_TOP_RIGHT)
-            sby = gap/2;
+            sby = inset_gap/2;
         else
-            sby = zheight - sbh - gap/2;
+            sby = zheight - sbh - inset_gap/2;
 
         if (args->inset_pos == INSET_POS_TOP_LEFT
             || args->inset_pos == INSET_POS_BOTTOM_LEFT)
-            sbx = gap/2;
+            sbx = inset_gap/2;
         else if (args->inset_pos == INSET_POS_TOP_CENTER
                  || args->inset_pos == INSET_POS_BOTTOM_CENTER)
             sbx = (zwidth - sbw)/2;
         else
-            sbx = zwidth - sbw - gap/2;
+            sbx = zwidth - sbw - inset_gap/2;
 
         gdk_pixbuf_composite(sbpixbuf, datapixbuf, sbx, sby,
                              sbw, sbh, sbx, sby, 1.0, 1.0,
@@ -2491,14 +2495,15 @@ pixmap_draw_presentational(GwyContainer *data,
             g_object_unref(siunit_z);
     }
     else {
-        gap = 0;
+        fmscale_gap = 0;
+        inset_gap = 0;
         fmw = 0;
         scw = 0;
     }
 
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
                             vrw + zwidth + 2*lw + 2*border
-                            + gap + fmw + 2*lw + scw,
+                            + fmscale_gap + fmw + 2*lw + scw,
                             hrh + zheight + 2*lw + 2*border + border/3);
     gwy_debug_objects_creation(G_OBJECT(pixbuf));
     gdk_pixbuf_fill(pixbuf, 0xffffffff);
@@ -2527,7 +2532,7 @@ pixmap_draw_presentational(GwyContainer *data,
         gdk_pixbuf_copy_area(scalepixbuf,
                              0, 0, scw, zheight + 2*lw,
                              pixbuf,
-                             border + vrw + zwidth + 2*lw + gap + fmw + 2*lw,
+                             border + vrw + zwidth + lw + fmscale_gap + fmw + 2*lw,
                              hrh + border);
         g_object_unref(scalepixbuf);
 
@@ -2546,7 +2551,7 @@ pixmap_draw_presentational(GwyContainer *data,
             yi = inverted ? zheight-1 - y : y;
             row = pixels
                 + gdk_pixbuf_get_rowstride(pixbuf)*(border + hrh + lw + yi)
-                + 3*(int)(border + vrw + zwidth + 2*lw + gap + lw);
+                + 3*(int)(border + vrw + zwidth + lw + fmscale_gap + lw);
             k = nsamples-1 - floor(nsamples*y/zheight);
             for (j = 0; j < fmw; j++) {
                 row[3*j] = samples[4*k];
@@ -2571,13 +2576,13 @@ pixmap_draw_presentational(GwyContainer *data,
                          pixbuf, vrw + border + zwidth + lw, hrh + border);
     if (args->ztype == PIXMAP_FMSCALE) {
         gdk_pixbuf_copy_area(tmpixbuf, 0, 0, lw, zheight + lw,
-                            pixbuf,
-                            vrw + border + zwidth + 2*lw + gap,
-                            hrh + border);
+                             pixbuf,
+                             vrw + border + zwidth + lw + fmscale_gap,
+                             hrh + border);
         gdk_pixbuf_copy_area(tmpixbuf, 0, 0, lw, zheight + 2*lw,
-                            pixbuf,
-                            vrw + border + zwidth + 2*lw + gap + fmw + lw,
-                            hrh + border);
+                             pixbuf,
+                             vrw + border + zwidth + lw + fmscale_gap + fmw + lw,
+                             hrh + border);
     }
     g_object_unref(tmpixbuf);
 
@@ -2591,11 +2596,11 @@ pixmap_draw_presentational(GwyContainer *data,
     if (args->ztype == PIXMAP_FMSCALE) {
         gdk_pixbuf_copy_area(tmpixbuf, 0, 0, fmw + 2*lw, lw,
                             pixbuf,
-                            vrw + border + zwidth + 2*lw + gap,
+                            vrw + border + zwidth + 2*lw + fmscale_gap,
                             hrh + border);
         gdk_pixbuf_copy_area(tmpixbuf, 0, 0, fmw + 2*lw, lw,
                             pixbuf,
-                            vrw + border + zwidth + 2*lw + gap,
+                            vrw + border + zwidth + 2*lw + fmscale_gap,
                             hrh + border + lw + zheight);
     }
     g_object_unref(tmpixbuf);
@@ -2684,6 +2689,7 @@ save_update_sensitivity(PixmapSaveControls *controls)
     gboolean sens = controls->args->xytype == PIXMAP_SCALEBAR;
     gboolean pmode = !(controls->args->grayscale
                        && controls->args->supports_16bit);
+    gboolean fmscale = controls->args->ztype == PIXMAP_FMSCALE;
     guint i;
     GSList *l;
 
@@ -2705,6 +2711,8 @@ save_update_sensitivity(PixmapSaveControls *controls)
     gtk_widget_set_sensitive(controls->inset_length_auto, sens);
     gtk_widget_set_sensitive(controls->inset_draw_ticks, sens);
     gtk_widget_set_sensitive(controls->inset_draw_label, sens);
+    gwy_table_hscale_set_sensitive(controls->inset_gap, sens);
+    gwy_table_hscale_set_sensitive(controls->fmscale_gap, fmscale);
 }
 
 static void
@@ -2727,7 +2735,32 @@ save_ztype_changed(GtkWidget *button,
         return;
 
     controls->args->ztype = gwy_radio_buttons_get_current(controls->ztypes);
+    save_update_sensitivity(controls);
     save_update_preview(controls);
+}
+
+static void
+save_fmscale_gap_changed(GtkAdjustment *adj,
+                         PixmapSaveControls *controls)
+{
+    if (controls->in_update)
+        return;
+
+    controls->args->fmscale_gap = gtk_adjustment_get_value(adj);
+    if (controls->args->ztype == PIXMAP_FMSCALE)
+        save_update_preview(controls);
+}
+
+static void
+save_inset_gap_changed(GtkAdjustment *adj,
+                       PixmapSaveControls *controls)
+{
+    if (controls->in_update)
+        return;
+
+    controls->args->inset_gap = gtk_adjustment_get_value(adj);
+    if (controls->args->xytype == PIXMAP_SCALEBAR)
+        save_update_preview(controls);
 }
 
 static void
@@ -3126,6 +3159,37 @@ inset_draw_label_toggled(GtkToggleButton *button,
     save_update_preview(controls);
 }
 
+static GtkObject*
+attach_gap(GtkTable *table,
+           gint row,
+           gdouble value)
+{
+    GtkWidget *widget;
+    GtkObject *adj;
+
+    adj = gtk_adjustment_new(value, 0.0, 2.0, 0.01, 0.1, 0);
+    gwy_table_attach_hscale(GTK_WIDGET(table), row, _("Gap:"), NULL, adj,
+                            GWY_HSCALE_DEFAULT);
+
+    /* Make the hscale take more columns to accommodate for inset position
+     * controls. */
+    widget = gwy_table_get_child_widget(GTK_WIDGET(table), row, 2);
+    g_object_ref(widget);
+    gtk_container_remove(GTK_CONTAINER(table), widget);
+    gtk_table_attach(table, widget,
+                     3, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_object_unref(widget);
+
+    widget = gwy_table_get_child_widget(GTK_WIDGET(table), row, 1);
+    g_object_ref(widget);
+    gtk_container_remove(GTK_CONTAINER(table), widget);
+    gtk_table_attach(table, widget,
+                     1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_object_unref(widget);
+
+    return adj;
+}
+
 static gboolean
 pixmap_save_dialog(GwyContainer *data,
                    PixmapSaveArgs *args,
@@ -3240,7 +3304,7 @@ pixmap_save_dialog(GwyContainer *data,
     if (args->scale_font)
         args->font_size = FONT_SIZE*args->zoom;
     adj = gtk_adjustment_new(args->font_size,
-                             0.5*FONT_SIZE*minzoom, 20.0*FONT_SIZE*maxzoom,
+                             0.5*FONT_SIZE*minzoom, 32.0*FONT_SIZE*maxzoom,
                              1.0, 10.0, 0);
     controls.font_size = gwy_table_attach_spinbutton(GTK_WIDGET(table), row,
                                                      _("_Font size:"), NULL,
@@ -3306,7 +3370,7 @@ pixmap_save_dialog(GwyContainer *data,
     align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
     gtk_box_pack_start(GTK_BOX(hbox), align, FALSE, FALSE, 0);
 
-    table = GTK_TABLE(gtk_table_new(14, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(16, 4, FALSE));
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
     gtk_container_add(GTK_CONTAINER(align), GTK_WIDGET(table));
@@ -3326,6 +3390,11 @@ pixmap_save_dialog(GwyContainer *data,
                                     NULL);
     row = gwy_radio_buttons_attach_to_table(controls.xytypes, table,
                                             3, row);
+
+    controls.inset_gap = attach_gap(table, row, args->inset_gap);
+    g_signal_connect(controls.inset_gap, "value-changed",
+                     G_CALLBACK(save_inset_gap_changed), &controls);
+    row++;
 
     controls.inset_color_label = gtk_label_new(_("Color:"));
     gtk_misc_set_alignment(GTK_MISC(controls.inset_color_label), 0.0, 0.5);
@@ -3439,7 +3508,11 @@ pixmap_save_dialog(GwyContainer *data,
                                     _("_False color ruler"), PIXMAP_FMSCALE,
                                     NULL);
     row = gwy_radio_buttons_attach_to_table(controls.ztypes, table, 3, row);
-    gtk_table_set_row_spacing(table, row-1, 8);
+
+    controls.fmscale_gap = attach_gap(table, row, args->fmscale_gap);
+    g_signal_connect(controls.fmscale_gap, "value-changed",
+                     G_CALLBACK(save_fmscale_gap_changed), &controls);
+    row++;
 
     save_update_sensitivity(&controls);
 
@@ -3483,6 +3556,12 @@ pixmap_save_dialog(GwyContainer *data,
             args->xytype = pixmap_save_defaults.xytype;
             args->ztype = pixmap_save_defaults.ztype;
             args->inset_pos = pixmap_save_defaults.inset_pos;
+            args->fmscale_gap = pixmap_save_defaults.fmscale_gap;
+            gtk_adjustment_set_value(GTK_ADJUSTMENT(controls.fmscale_gap),
+                                     args->fmscale_gap);
+            args->inset_gap = pixmap_save_defaults.inset_gap;
+            gtk_adjustment_set_value(GTK_ADJUSTMENT(controls.inset_gap),
+                                     args->inset_gap);
             inset_length_set_auto(&controls);
             args->draw_mask = pixmap_save_defaults.draw_mask;
             args->draw_selection = pixmap_save_defaults.draw_selection;
@@ -3501,6 +3580,7 @@ pixmap_save_dialog(GwyContainer *data,
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.inset_draw_label),
                                          args->inset_draw_label);
             controls.in_update = FALSE;
+            save_update_sensitivity(&controls);
             save_update_preview(&controls);
             break;
 
@@ -4046,6 +4126,8 @@ static const gchar inset_draw_ticks_key[] = "/module/pixmap/inset_draw_ticks";
 static const gchar inset_draw_label_key[] = "/module/pixmap/inset_draw_label";
 static const gchar inset_length_key[]     = "/module/pixmap/inset_length";
 static const gchar scale_font_key[]       = "/module/pixmap/scale_font";
+static const gchar fmscale_gap_key[]      = "/module/pixmap/fmscale_gap";
+static const gchar inset_gap_key[]        = "/module/pixmap/inset_gap";
 static const gchar xytype_key[]           = "/module/pixmap/xytype";
 static const gchar zoom_key[]             = "/module/pixmap/zoom";
 static const gchar ztype_key[]            = "/module/pixmap/ztype";
@@ -4065,6 +4147,8 @@ pixmap_save_sanitize_args(PixmapSaveArgs *args)
     args->inset_draw_ticks = !!args->inset_draw_ticks;
     args->inset_draw_label = !!args->inset_draw_label;
     args->font_size = CLAMP(args->font_size, 1.2, 120.0);
+    args->fmscale_gap = CLAMP(args->fmscale_gap, 0.0, 2.0);
+    args->inset_gap = CLAMP(args->inset_gap, 0.0, 2.0);
     args->grayscale = (args->grayscale == 16) ? 16 : 0;
 }
 
@@ -4098,6 +4182,10 @@ pixmap_save_load_args(GwyContainer *container,
                                       &args->scale_font);
     gwy_container_gis_double_by_name(container, font_size_key,
                                      &args->font_size);
+    gwy_container_gis_double_by_name(container, fmscale_gap_key,
+                                     &args->fmscale_gap);
+    gwy_container_gis_double_by_name(container, inset_gap_key,
+                                     &args->inset_gap);
     gwy_container_gis_int32_by_name(container, grayscale_key, &args->grayscale);
     gwy_container_gis_boolean_by_name(container, inset_draw_ticks_key,
                                       &args->inset_draw_ticks);
@@ -4129,7 +4217,12 @@ pixmap_save_save_args(GwyContainer *container,
                                      g_strdup(args->font));
     gwy_container_set_boolean_by_name(container, scale_font_key,
                                       args->scale_font);
-    gwy_container_set_double_by_name(container, font_size_key, args->font_size);
+    gwy_container_set_double_by_name(container, font_size_key,
+                                     args->font_size);
+    gwy_container_set_double_by_name(container, fmscale_gap_key,
+                                     args->fmscale_gap);
+    gwy_container_set_double_by_name(container, inset_gap_key,
+                                     args->inset_gap);
     gwy_container_set_int32_by_name(container, grayscale_key, args->grayscale);
     gwy_container_set_boolean_by_name(container, inset_draw_ticks_key,
                                       args->inset_draw_ticks);

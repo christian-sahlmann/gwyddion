@@ -17,6 +17,8 @@ Modules:
   grain exterior, noticeable for grains separated only by thin lines.  It is
   also possible to fill only simple-connected grains.
 - Pixmap: Vertical and horizontal rulers always use the same number format.
+  The gap between image and false colour map can be adjusted, as well as the
+  gap beteween the inset scale bar and image border.
 - Affine distortion: The ACF image can be zoomed.
 - NT-MDT: Double inversion of new spectroscopy data properly checked and fixed.
 - Slope distribution: Masking is supported.  Plot of total gradient was added.
