@@ -24,6 +24,7 @@ Modules:
 - Affine distortion: The ACF image can be zoomed.
 - NT-MDT: Double inversion of new spectroscopy data properly checked and fixed.
 - Slope distribution: Masking is supported.  Plot of total gradient was added.
+- NanoScan: A couple of memory-hadling bugs was fixed.
 
 Other:
 - The standalone Python gwy module uses the correct extension for dlopening,
