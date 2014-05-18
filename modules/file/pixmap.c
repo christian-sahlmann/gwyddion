@@ -137,6 +137,7 @@ typedef struct {
     InsetPosType inset_pos;
     gboolean draw_mask;
     gboolean draw_selection;
+    gboolean text_antialias;
     gchar *font;
     gdouble font_size;
     gboolean scale_font;
@@ -198,6 +199,7 @@ typedef struct {
     GtkWidget *draw_mask;
     GtkWidget *draw_selection;
     GtkWidget *scale_font;
+    GtkWidget *text_antialias;
     GtkWidget *grayscale;
     GwyContainer *data;
     gboolean in_update;
@@ -328,6 +330,7 @@ static GdkPixbuf*        vruler                      (GtkWidget *widget,
                                                       const gchar *font,
                                                       GwySIValueFormat *format);
 static gint              gwy_pixmap_step_to_prec     (gdouble d);
+static void              unantialias                 (GdkPixbuf *pixbuf);
 static GdkPixbuf*        fmscale                     (GtkWidget *widget,
                                                       gint size,
                                                       gdouble bot,
@@ -463,7 +466,8 @@ static GSList *pixmap_formats = NULL;
 static const PixmapSaveArgs pixmap_save_defaults = {
     1.0, PIXMAP_RULERS, PIXMAP_FMSCALE,
     { 1.0, 1.0, 1.0, 1.0 }, INSET_POS_BOTTOM_RIGHT,
-    TRUE, TRUE, "Helvetica", FONT_SIZE, TRUE, TRUE, TRUE,
+    TRUE, TRUE, TRUE,
+    "Helvetica", FONT_SIZE, TRUE, TRUE, TRUE,
     1.0, 1.0,
     0, "",
     /* Interface only */
@@ -2469,11 +2473,17 @@ pixmap_draw_presentational(GwyContainer *data,
                           fontzoom, gwy_data_field_get_xoffset(args->dfield),
                           args->font, siunit_xy, &format);
         hrh = gdk_pixbuf_get_height(hrpixbuf);
+        if (!args->text_antialias)
+            unantialias(hrpixbuf);
+
         vrpixbuf = vruler(widget, zheight + 2*lw, border,
                           gwy_data_field_get_yreal(args->dfield),
                           fontzoom, gwy_data_field_get_yoffset(args->dfield),
                           args->font, format);
         vrw = gdk_pixbuf_get_width(vrpixbuf);
+        if (!args->text_antialias)
+            unantialias(vrpixbuf);
+
         gwy_si_unit_value_format_free(format);
     }
     else {
@@ -2496,6 +2506,8 @@ pixmap_draw_presentational(GwyContainer *data,
         scw = gdk_pixbuf_get_width(scalepixbuf);
         if (has_presentation)
             g_object_unref(siunit_z);
+        if (!args->text_antialias)
+            unantialias(scalepixbuf);
     }
     else {
         fmscale_gap = 0;
@@ -2941,6 +2953,16 @@ scale_font_changed(GtkToggleButton *check,
 }
 
 static void
+text_antialias_changed(GtkToggleButton *check,
+                       PixmapSaveControls *controls)
+{
+    controls->args->text_antialias = gtk_toggle_button_get_active(check);
+    if (controls->args->xytype != PIXMAP_NONE
+        || controls->args->ztype != PIXMAP_NONE)
+        save_update_preview(controls);
+}
+
+static void
 font_size_changed(GtkAdjustment *adj,
                   PixmapSaveControls *controls)
 {
@@ -3237,15 +3259,14 @@ pixmap_save_dialog(GwyContainer *data,
     vbox = gtk_vbox_new(FALSE, 8);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
-    table = GTK_TABLE(gtk_table_new(13, 3, FALSE));
+    table = GTK_TABLE(gtk_table_new(15, 3, FALSE));
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
     gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(table), FALSE, FALSE, 0);
     controls.left_column = GTK_WIDGET(table);
     row = 0;
 
-    gtk_table_attach(table,
-                     gwy_label_new_header(gwy_sgettext("Scaling")),
+    gtk_table_attach(table, gwy_label_new_header("Scaling"),
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
@@ -3278,6 +3299,10 @@ pixmap_save_dialog(GwyContainer *data,
     g_signal_connect(controls.height, "value-changed",
                      G_CALLBACK(height_changed), &controls);
     gtk_table_set_row_spacing(table, row, 8);
+    row++;
+
+    gtk_table_attach(table, gwy_label_new_header(_("Labels")),
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     label = gtk_label_new(_("Font:"));
@@ -3318,6 +3343,16 @@ pixmap_save_dialog(GwyContainer *data,
                                    !args->scale_font);
     g_signal_connect(adj, "value-changed",
                      G_CALLBACK(font_size_changed), &controls);
+    row++;
+
+    controls.text_antialias
+        = gtk_check_button_new_with_mnemonic(_("Use antialiasing"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.text_antialias),
+                                 args->text_antialias);
+    gtk_table_attach(table, controls.text_antialias,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect(controls.text_antialias, "toggled",
+                     G_CALLBACK(text_antialias_changed), &controls);
     gtk_table_set_row_spacing(table, row, 8);
     row++;
 
@@ -3560,14 +3595,11 @@ pixmap_save_dialog(GwyContainer *data,
             args->ztype = pixmap_save_defaults.ztype;
             args->inset_pos = pixmap_save_defaults.inset_pos;
             args->fmscale_gap = pixmap_save_defaults.fmscale_gap;
-            gtk_adjustment_set_value(GTK_ADJUSTMENT(controls.fmscale_gap),
-                                     args->fmscale_gap);
             args->inset_gap = pixmap_save_defaults.inset_gap;
-            gtk_adjustment_set_value(GTK_ADJUSTMENT(controls.inset_gap),
-                                     args->inset_gap);
             inset_length_set_auto(&controls);
             args->draw_mask = pixmap_save_defaults.draw_mask;
             args->draw_selection = pixmap_save_defaults.draw_selection;
+            args->text_antialias = pixmap_save_defaults.text_antialias;
             args->inset_draw_ticks = pixmap_save_defaults.inset_draw_ticks;
             args->inset_draw_label = pixmap_save_defaults.inset_draw_label;
             gtk_adjustment_set_value(GTK_ADJUSTMENT(controls.zoom), args->zoom);
@@ -3578,10 +3610,16 @@ pixmap_save_dialog(GwyContainer *data,
                                          args->draw_mask);
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.draw_selection),
                                          args->draw_selection);
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.text_antialias),
+                                         args->text_antialias);
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.inset_draw_ticks),
                                          args->inset_draw_ticks);
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.inset_draw_label),
                                          args->inset_draw_label);
+            gtk_adjustment_set_value(GTK_ADJUSTMENT(controls.fmscale_gap),
+                                     args->fmscale_gap);
+            gtk_adjustment_set_value(GTK_ADJUSTMENT(controls.inset_gap),
+                                     args->inset_gap);
             controls.in_update = FALSE;
             save_update_sensitivity(&controls);
             save_update_preview(&controls);
@@ -3811,7 +3849,8 @@ vruler(GtkWidget *widget, gint size,
 
 /* auxilliary function to compute decimal points from tickdist */
 static gint
-gwy_pixmap_step_to_prec(gdouble d) {
+gwy_pixmap_step_to_prec(gdouble d)
+{
     gdouble resd = log10(7.5)-log10(d);
     if (resd != resd)
         return 1;
@@ -3820,6 +3859,25 @@ gwy_pixmap_step_to_prec(gdouble d) {
     if (resd < 1.0)
         resd = 1.0;
     return (gint) floor(resd);
+}
+
+static void
+unantialias(GdkPixbuf *pixbuf)
+{
+    guint width = gdk_pixbuf_get_width(pixbuf);
+    guint height = gdk_pixbuf_get_height(pixbuf);
+    guint rowstride = gdk_pixbuf_get_rowstride(pixbuf);
+    guint bpp = gdk_pixbuf_get_has_alpha(pixbuf) ? 4 : 3;
+    guchar *pixels = gdk_pixbuf_get_pixels(pixbuf);
+    guint i, j;
+
+    for (i = 0; i < height; i++) {
+        guchar *row = pixels + i*rowstride;
+        /* Threshold all channels independently.  This is fine for grey levels.
+         * We should not be run on a full-colour pixbuf. */
+        for (j = 0; j < width*bpp; j++)
+            row[j] = (row[j] < 143) ? 0x00 : 0xff;
+    }
 }
 
 static GdkPixbuf*
@@ -4120,6 +4178,7 @@ find_format(const gchar *name)
 
 static const gchar draw_mask_key[]        = "/module/pixmap/draw_mask";
 static const gchar draw_selection_key[]   = "/module/pixmap/draw_selection";
+static const gchar text_antialias_key[]   = "/module/pixmap/text_antialias";
 static const gchar font_key[]             = "/module/pixmap/font";
 static const gchar font_size_key[]        = "/module/pixmap/font_size";
 static const gchar grayscale_key[]        = "/module/pixmap/grayscale";
@@ -4146,6 +4205,7 @@ pixmap_save_sanitize_args(PixmapSaveArgs *args)
     args->zoom = CLAMP(args->zoom, 0.06, 16.0);
     args->draw_mask = !!args->draw_mask;
     args->draw_selection = !!args->draw_selection;
+    args->text_antialias = !!args->text_antialias;
     args->scale_font = !!args->scale_font;
     args->inset_draw_ticks = !!args->inset_draw_ticks;
     args->inset_draw_label = !!args->inset_draw_label;
@@ -4179,6 +4239,8 @@ pixmap_save_load_args(GwyContainer *container,
                                       &args->draw_mask);
     gwy_container_gis_boolean_by_name(container, draw_selection_key,
                                       &args->draw_selection);
+    gwy_container_gis_boolean_by_name(container, text_antialias_key,
+                                      &args->text_antialias);
     gwy_container_gis_string_by_name(container, font_key,
                                      (const guchar**)&args->font);
     gwy_container_gis_boolean_by_name(container, scale_font_key,
@@ -4216,6 +4278,8 @@ pixmap_save_save_args(GwyContainer *container,
                                       args->draw_mask);
     gwy_container_set_boolean_by_name(container, draw_selection_key,
                                       args->draw_selection);
+    gwy_container_set_boolean_by_name(container, text_antialias_key,
+                                      args->text_antialias);
     gwy_container_set_string_by_name(container, font_key,
                                      g_strdup(args->font));
     gwy_container_set_boolean_by_name(container, scale_font_key,

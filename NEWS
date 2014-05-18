@@ -18,7 +18,9 @@ Modules:
   also possible to fill only simple-connected grains.
 - Pixmap: Vertical and horizontal rulers always use the same number format.
   The gap between image and false colour map can be adjusted, as well as the
-  gap beteween the inset scale bar and image border.
+  gap beteween the inset scale bar and image border.  Missing lower left corner
+  of the false colour map scale border was fixed.  Text antialising can be
+  disabled.
 - Affine distortion: The ACF image can be zoomed.
 - NT-MDT: Double inversion of new spectroscopy data properly checked and fixed.
 - Slope distribution: Masking is supported.  Plot of total gradient was added.
