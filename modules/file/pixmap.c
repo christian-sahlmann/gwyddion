@@ -632,8 +632,8 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
     if (fileinfo->buffer_len < 64)
         return 0;
 
-    /* FIXME: GdkPixbuf doesn't good a good job regarding detection
-     * we do some sanity check ourselves */
+    /* GdkPixbuf does a terrible job regarding detection so we do some sanity
+     * check ourselves */
     score = 70;
     if (gwy_strequal(name, "png")) {
         if (memcmp(fileinfo->head, "\x89PNG\r\n\x1a\n", 8) != 0)
@@ -654,8 +654,10 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
     else if (gwy_strequal(name, "tiff")) {
         /* The pixbuf loader is unlikely to load BigTIFFs any time soon. */
         GwyTIFFVersion version = GWY_TIFF_CLASSIC;
-/* TIFF crashes on Win64.  Unclear why.  TIFF is madness. */
 #ifdef __WIN64
+        /* The TIFF loader (supposedly GDI-based) crashes on Win64.  Unclear
+         * why.  TIFF is madness.  Note there is a fallback GwyTIFF loader in
+         * hdrimage which will take over when we do this.  */
         return 0;
 #else
         gwy_debug("Checking TIFF header");
@@ -707,7 +709,7 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
     else {
         /* Assign lower score to loaders we found by trying if they accept
          * the header because they often have no clue. */
-        score = 60;
+        score = 55;
     }
 
     gwy_debug("Creating a loader for type %s", name);
@@ -716,12 +718,13 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
     if (!loader)
         return 0;
 
-    /* XXX: libTIFF seems to crash on broken TIFFs a way too often, especially
-     * on MS Windows for some reason.  Do not try to feed anything to it
-     * just accept it's a TIFF and hope some other loader of a TIFF-based
-     * format will claim this with a higher score. */
+    /* The TIFF loaders (both libTIFF and GDI-based) seem to crash on broken
+     * TIFFs a way too often.  Do not try to feed anything to it just accept
+     * the file is a TIFF and hope some other loader of a TIFF-based format
+     * will claim it with a higher score. */
     if (gwy_strequal(name, "tiff")) {
-        gwy_debug("Avoiding feeding data to TIFF loader, calling gdk_pixbuf_loader_close().");
+        gwy_debug("Avoiding feeding data to TIFF loader, calling "
+                  "gdk_pixbuf_loader_close().");
         gdk_pixbuf_loader_close(loader, NULL);
         gwy_debug("Unreferencing the TIFF loader");
         g_object_unref(loader);
@@ -2571,11 +2574,11 @@ pixmap_draw_presentational(GwyContainer *data,
                                         vrw + border, hrh + border,
                                         lw, zheight + 2*lw);
     gwy_debug_objects_creation(G_OBJECT(tmpixbuf));
-    gdk_pixbuf_fill(tmpixbuf, 0x000000);
+    gdk_pixbuf_fill(tmpixbuf, 0x00000000);
     gdk_pixbuf_copy_area(tmpixbuf, 0, 0, lw, zheight + 2*lw,
                          pixbuf, vrw + border + zwidth + lw, hrh + border);
     if (args->ztype == PIXMAP_FMSCALE) {
-        gdk_pixbuf_copy_area(tmpixbuf, 0, 0, lw, zheight + lw,
+        gdk_pixbuf_copy_area(tmpixbuf, 0, 0, lw, zheight + 2*lw,
                              pixbuf,
                              vrw + border + zwidth + lw + fmscale_gap,
                              hrh + border);
@@ -2590,18 +2593,18 @@ pixmap_draw_presentational(GwyContainer *data,
                                         vrw + border, hrh + border,
                                         zwidth + 2*lw, lw);
     gwy_debug_objects_creation(G_OBJECT(tmpixbuf));
-    gdk_pixbuf_fill(tmpixbuf, 0x000000);
+    gdk_pixbuf_fill(tmpixbuf, 0x00000000);
     gdk_pixbuf_copy_area(tmpixbuf, 0, 0, zwidth + 2*lw, lw,
                          pixbuf, vrw + border, hrh + border + zheight + lw);
     if (args->ztype == PIXMAP_FMSCALE) {
         gdk_pixbuf_copy_area(tmpixbuf, 0, 0, fmw + 2*lw, lw,
-                            pixbuf,
-                            vrw + border + zwidth + 2*lw + fmscale_gap,
-                            hrh + border);
+                             pixbuf,
+                             vrw + border + zwidth + 2*lw + fmscale_gap,
+                             hrh + border);
         gdk_pixbuf_copy_area(tmpixbuf, 0, 0, fmw + 2*lw, lw,
-                            pixbuf,
-                            vrw + border + zwidth + 2*lw + fmscale_gap,
-                            hrh + border + lw + zheight);
+                             pixbuf,
+                             vrw + border + zwidth + 2*lw + fmscale_gap,
+                             hrh + border + lw + zheight);
     }
     g_object_unref(tmpixbuf);
 
@@ -3891,7 +3894,7 @@ fmscale(GtkWidget *widget, gint size,
     format_layout(layout, &logical1, s, "%.*f",
                   prec, bot/format->magnitude);
     gdk_draw_layout(drawable, gc,
-                    width - PANGO_PIXELS(logical1.width) - 2 -units_width,
+                    width - PANGO_PIXELS(logical1.width) - 2 - units_width,
                     size - 1 - PANGO_PIXELS(logical1.height),
                     layout);
     gdk_draw_line(drawable, gc, 0, size - (lw + 1)/2, tick, size - (lw + 1)/2);
