@@ -61,7 +61,7 @@
 #ifdef HAVE_MEMRCHR
 #define strlenrchr(s,c,len) (gchar*)memrchr((s),(c),(len))
 #else
-#define strlenrchr(s,c,len) strchr((s),(c))
+#define strlenrchr(s,c,len) strrchr((s),(c))
 #endif
 
 #define SCAN_PREFIX "/scan/vector/contents"
