@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-05-07 03:58+0200\n"
-"PO-Revision-Date: 2014-05-07 08:50+0300\n"
+"POT-Creation-Date: 2014-05-18 03:58+0200\n"
+"PO-Revision-Date: 2014-05-18 10:14+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -877,7 +877,7 @@ msgid "pixels"
 msgstr "точек"
 
 #: libgwydgets/gwy3dwindow.c:1133 modules/file/hdrimage.cc:2196
-#: modules/file/pixmap.c:1074 modules/file/pixmap.c:3154
+#: modules/file/pixmap.c:1078 modules/file/pixmap.c:3218
 #: modules/file/rawfile.c:401 modules/process/angle_dist.c:172
 #: modules/process/calcoefs_new.c:348 modules/process/calibrate.c:385
 #: modules/process/col_synth.c:328 modules/process/correct_affine.c:307
@@ -891,7 +891,7 @@ msgstr "точек"
 #: modules/process/fractal.c:207 modules/process/grain_edge.c:218
 #: modules/process/grain_mark.c:264 modules/process/grain_rem_threshold.c:229
 #: modules/process/grain_wshed.c:183 modules/process/hough.c:179
-#: modules/process/latsim.c:158 modules/process/level.c:267
+#: modules/process/latsim.c:158 modules/process/level.c:265
 #: modules/process/linecorrect.c:281 modules/process/lno_synth.c:442
 #: modules/process/local_contrast.c:130 modules/process/median-bg.c:179
 #: modules/process/noise_synth.c:353 modules/process/obj_synth.c:438
@@ -899,7 +899,7 @@ msgstr "точек"
 #: modules/process/polydistort.c:218 modules/process/polylevel.c:377
 #: modules/process/rank.c:132 modules/process/rotate.c:266
 #: modules/process/scale.c:196 modules/process/scars.c:477
-#: modules/process/shade.c:216 modules/process/slope_dist.c:204
+#: modules/process/shade.c:216 modules/process/slope_dist.c:224
 #: modules/process/sphere-revolve.c:218 modules/process/tilt.c:160
 #: modules/process/tip_model.c:170 modules/process/unrotate.c:228
 #: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:363
@@ -1231,7 +1231,7 @@ msgid "Preview"
 msgstr "Предпросмотр"
 
 #: libgwymodule/gwymodule-file.c:536 modules/file/err.h:41
-#: modules/file/pixmap.c:782
+#: modules/file/pixmap.c:786
 #, c-format
 msgid "Cannot open file for reading: %s."
 msgstr "Невозможно открыть файл для чтения: %s."
@@ -2924,15 +2924,16 @@ msgstr "Единицы измерения:"
 msgid "Export Text"
 msgstr "Экспортировать текст"
 
-#: modules/file/asciiexport.c:273 modules/file/pixmap.c:3257
+#: modules/file/asciiexport.c:273 modules/file/pixmap.c:3321
 #: modules/file/rawfile.c:722 modules/file/rawxyz.c:671
 #: modules/process/calibrate.c:597 modules/process/col_synth.c:456
 #: modules/process/correct_affine.c:489 modules/process/extend.c:258
 #: modules/process/fft_filter_1d.c:296 modules/process/grain_dist.c:306
 #: modules/process/grain_edge.c:270 modules/process/grain_mark.c:345
 #: modules/process/grain_rem_threshold.c:328 modules/process/grain_wshed.c:278
-#: modules/process/tip_blind.c:360 modules/process/wpour_mark.c:359
-#: modules/tools/spotremove.c:317 modules/tools/stats.c:379
+#: modules/process/slope_dist.c:261 modules/process/tip_blind.c:360
+#: modules/process/wpour_mark.c:359 modules/tools/spotremove.c:317
+#: modules/tools/stats.c:379
 msgid "Options"
 msgstr "Параметры"
 
@@ -3501,39 +3502,39 @@ msgid "OpenEXR data type %u is invalid or unsupported."
 msgstr "Тип данных OpenEXR %u неправилен или не поддерживается."
 
 #: modules/file/hdrimage.cc:1426 modules/file/hdrimage.cc:1435
-#: modules/file/pixmap.c:1611 modules/file/pixmap.c:1621
+#: modules/file/pixmap.c:1615 modules/file/pixmap.c:1625
 #, c-format
 msgid "libpng initialization error (in %s)"
 msgstr "ошибка инициализации libpng (в %s)"
 
-#: modules/file/hdrimage.cc:1444 modules/file/pixmap.c:1681
+#: modules/file/hdrimage.cc:1444 modules/file/pixmap.c:1685
 msgid "libpng error occured"
 msgstr "Произошла ошибка libpng"
 
 #. TRANSLATORS: Dialog title; %s is PNG, TIFF, ...
-#: modules/file/hdrimage.cc:2193 modules/file/pixmap.c:1071
+#: modules/file/hdrimage.cc:2193 modules/file/pixmap.c:1075
 #, c-format
 msgid "Import %s"
 msgstr "Импортировать %s"
 
-#: modules/file/hdrimage.cc:2220 modules/file/pixmap.c:1097
+#: modules/file/hdrimage.cc:2220 modules/file/pixmap.c:1101
 msgid "Image Information"
 msgstr "Информация о изображении"
 
-#: modules/file/hdrimage.cc:2229 modules/file/pixmap.c:1104
+#: modules/file/hdrimage.cc:2229 modules/file/pixmap.c:1108
 msgid "Horizontal size:"
 msgstr "Горизонтальный размер:"
 
 #: modules/file/hdrimage.cc:2229 modules/file/hdrimage.cc:2235
-#: modules/file/pixmap.c:1104 modules/file/pixmap.c:1110
+#: modules/file/pixmap.c:1108 modules/file/pixmap.c:1114
 msgid "px"
 msgstr "пикс."
 
-#: modules/file/hdrimage.cc:2235 modules/file/pixmap.c:1110
+#: modules/file/hdrimage.cc:2235 modules/file/pixmap.c:1114
 msgid "Vertical size:"
 msgstr "Вертикальный размер:"
 
-#: modules/file/hdrimage.cc:2240 modules/file/pixmap.c:1115
+#: modules/file/hdrimage.cc:2240 modules/file/pixmap.c:1119
 msgid "Channels:"
 msgstr "Каналы:"
 
@@ -3541,21 +3542,21 @@ msgstr "Каналы:"
 msgid "Pages:"
 msgstr "Страницы:"
 
-#: modules/file/hdrimage.cc:2273 modules/file/pixmap.c:1146
+#: modules/file/hdrimage.cc:2273 modules/file/pixmap.c:1150
 #: modules/file/rawfile.c:625 modules/file/rawxyz.c:570
 #: modules/process/dimensions.h:466
 msgid "Physical Dimensions"
 msgstr "Физические размеры"
 
-#: modules/file/hdrimage.cc:2287 modules/file/pixmap.c:1156
-#: modules/file/pixmap.c:3199 modules/file/rawfile.c:634
+#: modules/file/hdrimage.cc:2287 modules/file/pixmap.c:1160
+#: modules/file/pixmap.c:3263 modules/file/rawfile.c:634
 #: modules/process/crosscor.c:199 modules/process/dimensions.h:472
 #: modules/process/tip_blind.c:336
 msgid "_Width:"
 msgstr "_Ширина:"
 
 #: modules/file/hdrimage.cc:2313 modules/file/hdrimage.cc:2378
-#: modules/file/pixmap.c:1178 modules/file/pixmap.c:1233
+#: modules/file/pixmap.c:1182 modules/file/pixmap.c:1237
 #: modules/file/rawfile.c:657 modules/file/rawfile.c:713
 #: modules/process/calcoefs_new.c:384 modules/process/calcoefs_new.c:451
 #: modules/process/calcoefs_simple.c:391 modules/process/calcoefs_simple.c:458
@@ -3567,23 +3568,23 @@ msgstr "_Ширина:"
 msgid "verb|Change"
 msgstr "Изменить"
 
-#: modules/file/hdrimage.cc:2328 modules/file/pixmap.c:1191
+#: modules/file/hdrimage.cc:2328 modules/file/pixmap.c:1195
 #: modules/file/rawfile.c:670 modules/process/crosscor.c:205
 #: modules/process/dimensions.h:476
 msgid "H_eight:"
 msgstr "_Высота:"
 
-#: modules/file/hdrimage.cc:2337 modules/file/pixmap.c:1198
+#: modules/file/hdrimage.cc:2337 modules/file/pixmap.c:1202
 #: modules/file/rawfile.c:677 modules/file/rawxyz.c:551
 msgid "Identical _measures"
 msgstr "Одинаковый _масштаб"
 
-#: modules/file/hdrimage.cc:2351 modules/file/pixmap.c:1210
+#: modules/file/hdrimage.cc:2351 modules/file/pixmap.c:1214
 #: modules/file/rawfile.c:689
 msgid "_Z-scale (per sample unit):"
 msgstr "Масштаб _Z (на единицу дискретизации):"
 
-#: modules/file/hdrimage.cc:2540 modules/file/pixmap.c:1460
+#: modules/file/hdrimage.cc:2540 modules/file/pixmap.c:1464
 #: modules/file/rawfile.c:1323 modules/process/calcoefs_new.c:776
 #: modules/process/calcoefs_simple.c:1191 modules/process/calcoefs_view.c:1393
 #: modules/process/calibrate.c:967 modules/process/dimensions.h:194
@@ -3591,7 +3592,7 @@ msgstr "Масштаб _Z (на единицу дискретизации):"
 msgid "Change Units"
 msgstr "Изменить единицы измерения"
 
-#: modules/file/hdrimage.cc:2554 modules/file/pixmap.c:1474
+#: modules/file/hdrimage.cc:2554 modules/file/pixmap.c:1478
 #: modules/file/rawfile.c:1337 modules/process/calcoefs_new.c:789
 #: modules/process/calcoefs_simple.c:1204 modules/process/calcoefs_view.c:1406
 #: modules/process/calibrate.c:981 modules/process/dimensions.h:207
@@ -4492,87 +4493,87 @@ msgstr "Найдены вложенные каталоги"
 msgid "Truncated data in block %s"
 msgstr "Неполные данные в блоке %s"
 
-#: modules/file/pixmap.c:370
+#: modules/file/pixmap.c:373
 msgid "All channels"
 msgstr "Все каналы"
 
-#: modules/file/pixmap.c:371
+#: modules/file/pixmap.c:374
 msgid "Red"
 msgstr "Красный"
 
-#: modules/file/pixmap.c:372
+#: modules/file/pixmap.c:375
 msgid "Green"
 msgstr "Зеленый"
 
-#: modules/file/pixmap.c:373
+#: modules/file/pixmap.c:376
 msgid "Blue"
 msgstr "Синий"
 
-#: modules/file/pixmap.c:374
+#: modules/file/pixmap.c:377
 msgid "Value (max)"
 msgstr "Значение (макс.)"
 
-#: modules/file/pixmap.c:375
+#: modules/file/pixmap.c:378
 msgid "RGB sum"
 msgstr "Сумма RGB"
 
-#: modules/file/pixmap.c:376
+#: modules/file/pixmap.c:379
 msgid "Luma"
 msgstr "Яркость"
 
-#: modules/file/pixmap.c:377
+#: modules/file/pixmap.c:380
 msgid "Alpha"
 msgstr "Альфа"
 
-#: modules/file/pixmap.c:389
+#: modules/file/pixmap.c:392
 msgid "Portable Network Graphics (.png)"
 msgstr "Portable Network Graphics (.png)"
 
-#: modules/file/pixmap.c:395
+#: modules/file/pixmap.c:398
 msgid "JPEG (.jpeg,.jpg)"
 msgstr "JPEG (.jpeg,.jpg)"
 
-#: modules/file/pixmap.c:401
+#: modules/file/pixmap.c:404
 msgid "TIFF (.tiff,.tif)"
 msgstr "TIFF (.tiff,.tif)"
 
-#: modules/file/pixmap.c:407
+#: modules/file/pixmap.c:410
 msgid "Portable Pixmap (.ppm,.pnm)"
 msgstr "Portable Pixmap (.ppm,.pnm)"
 
-#: modules/file/pixmap.c:413
+#: modules/file/pixmap.c:416
 msgid "Windows or OS2 Bitmap (.bmp)"
 msgstr "Bitmap из Windows или OS2 (.bmp)"
 
-#: modules/file/pixmap.c:419
+#: modules/file/pixmap.c:422
 msgid "TARGA (.tga,.targa)"
 msgstr "TARGA (.tga,.targa)"
 
-#: modules/file/pixmap.c:432
+#: modules/file/pixmap.c:435
 msgid "Graphics Interchange Format (.gif)"
 msgstr "Graphics Interchange Format (.gif)"
 
-#: modules/file/pixmap.c:436
+#: modules/file/pixmap.c:439
 msgid "JPEG 2000 (.jpx)"
 msgstr "JPEG 2000 (.jpx)"
 
-#: modules/file/pixmap.c:440
+#: modules/file/pixmap.c:443
 msgid "PCX (.pcx)"
 msgstr "PCX (.pcx)"
 
-#: modules/file/pixmap.c:444
+#: modules/file/pixmap.c:447
 msgid "X Pixmap (.xpm)"
 msgstr "X Pixmap (.xpm)"
 
-#: modules/file/pixmap.c:448
+#: modules/file/pixmap.c:451
 msgid "Sun raster image (.ras)"
 msgstr "Растровое изображение Sun (.ras)"
 
-#: modules/file/pixmap.c:452
+#: modules/file/pixmap.c:455
 msgid "Apple icon (.icns)"
 msgstr "Иконка Apple (.icns)"
 
-#: modules/file/pixmap.c:476
+#: modules/file/pixmap.c:480
 msgid ""
 "Renders data into pixmap images and imports data from pixmap images. It "
 "supports the following image formats for export: PNG, JPEG, TIFF, PPM, BMP, "
@@ -4583,68 +4584,72 @@ msgstr ""
 "JPEG, TIFF, PPM, BMP, TARGA. Поддержка импорта полагается на GDK и, "
 "вследствие этого, может зависеть от варианта установки."
 
-#: modules/file/pixmap.c:776
+#: modules/file/pixmap.c:780
 #, c-format
 msgid "Pixmap has not registered file type `%s'."
 msgstr ""
 "Модуль импорта изображений не имеет зарегистрированного типа файла `%s'."
 
-#: modules/file/pixmap.c:791
+#: modules/file/pixmap.c:795
 #, c-format
 msgid "Cannot get pixbuf loader: %s."
 msgstr "Не удаётся получить загрузчик pixbuf: %s."
 
-#: modules/file/pixmap.c:804 modules/file/pixmap.c:817
+#: modules/file/pixmap.c:808 modules/file/pixmap.c:821
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr "Загрузчик pixbuf не принял данные: %s."
 
-#: modules/file/pixmap.c:1243
+#: modules/file/pixmap.c:1247
 msgid ""
 "Warning: Colorful images cannot be reliably mapped to meaningful values."
 msgstr ""
 "Предупреждение: цветные изображения не могут быть надёжно отображены в "
 "значащие что-либо данные."
 
-#: modules/file/pixmap.c:1262
+#: modules/file/pixmap.c:1266
 msgid "verb|Use"
 msgstr "Использовать"
 
-#: modules/file/pixmap.c:1262
+#: modules/file/pixmap.c:1266
 msgid "as data"
 msgstr "как данные"
 
-#: modules/file/pixmap.c:1768 modules/file/pixmap.c:1796
+#: modules/file/pixmap.c:1772 modules/file/pixmap.c:1800
 #, c-format
 msgid "Pixbuf save failed: %s."
 msgstr "Сохранение pixbuf закончилось неудачно: %s."
 
-#: modules/file/pixmap.c:2217
+#: modules/file/pixmap.c:2221
 msgid "Image is too large to be stored as TARGA."
 msgstr "Изображение слишком велико чтобы сохранить его в формате TARGA."
 
-#: modules/file/pixmap.c:2296
+#: modules/file/pixmap.c:2300
 msgid "Data must be displayed in a window for pixmap export."
 msgstr "Данные должны отображаться в окне для экспорта изображения."
 
-#: modules/file/pixmap.c:3069
+#: modules/file/pixmap.c:3102
 msgid "Change Inset Color"
 msgstr "Изменить цвет отрезка"
 
-#: modules/file/pixmap.c:3151
+#: modules/file/pixmap.c:3171
+msgid "Gap:"
+msgstr "Зазор:"
+
+#: modules/file/pixmap.c:3215
 #, c-format
 msgid "Export %s"
 msgstr "Экспорт %s"
 
-#: modules/file/pixmap.c:3181
+#: modules/file/pixmap.c:3245
 msgid "Scaling"
 msgstr "Масштабирование"
 
-#: modules/file/pixmap.c:3190
+#: modules/file/pixmap.c:3254
 msgid "_Zoom:"
 msgstr "_Увеличение:"
 
-#: modules/file/pixmap.c:3208 modules/process/col_synth.c:426
+#: modules/file/pixmap.c:3272 modules/process/col_synth.c:426
 #: modules/process/domain_synth.c:529 modules/process/grain_mark.c:310
 #: modules/process/grain_rem_threshold.c:284 modules/process/obj_synth.c:577
 #: modules/process/pat_synth.c:893 modules/process/pat_synth.c:1194
@@ -4652,99 +4657,99 @@ msgstr "_Увеличение:"
 msgid "_Height:"
 msgstr "_Высота:"
 
-#: modules/file/pixmap.c:3216
+#: modules/file/pixmap.c:3280
 msgid "Font:"
 msgstr "Шрифт:"
 
-#: modules/file/pixmap.c:3231
+#: modules/file/pixmap.c:3295
 msgid "Scale text _proportionally"
 msgstr "_Пропорциональный масштаб текста"
 
-#: modules/file/pixmap.c:3246
+#: modules/file/pixmap.c:3310
 msgid "_Font size:"
 msgstr "_Размер шрифта:"
 
-#: modules/file/pixmap.c:3261
+#: modules/file/pixmap.c:3325
 msgid "Draw _mask"
 msgstr "Рисовать _маску"
 
-#: modules/file/pixmap.c:3270
+#: modules/file/pixmap.c:3334
 msgid "Draw _selection"
 msgstr "Рисовать в_ыбранную область"
 
-#: modules/file/pixmap.c:3286
+#: modules/file/pixmap.c:3350
 msgid "Grayscale Mode"
 msgstr "Градации серого"
 
-#: modules/file/pixmap.c:3290
+#: modules/file/pixmap.c:3354
 msgid "Export as 1_6 bit grayscale"
 msgstr "Экспортировать как 1_6битное серое"
 
-#: modules/file/pixmap.c:3316
+#: modules/file/pixmap.c:3380
 msgid "Lateral Scale"
 msgstr "Горизонтальный масштаб:"
 
-#: modules/file/pixmap.c:3323 modules/file/pixmap.c:3438
+#: modules/file/pixmap.c:3387 modules/file/pixmap.c:3507
 msgid "ruler|_None"
 msgstr "_Нет"
 
-#: modules/file/pixmap.c:3324
+#: modules/file/pixmap.c:3388
 msgid "_Rulers"
 msgstr "Направл_яющие"
 
-#: modules/file/pixmap.c:3325
+#: modules/file/pixmap.c:3389
 msgid "_Inset scale bar"
 msgstr "В_ложенный масштабный отрезок"
 
-#: modules/file/pixmap.c:3330
+#: modules/file/pixmap.c:3399
 msgid "Color:"
 msgstr "Цвет:"
 
-#: modules/file/pixmap.c:3346 modules/process/immerse.c:321
+#: modules/file/pixmap.c:3415 modules/process/immerse.c:321
 msgid "Position:"
 msgstr "Расположение:"
 
-#: modules/file/pixmap.c:3351
+#: modules/file/pixmap.c:3420
 msgid "left"
 msgstr "слева"
 
-#: modules/file/pixmap.c:3355
+#: modules/file/pixmap.c:3424
 msgid "center"
 msgstr "по центру"
 
-#: modules/file/pixmap.c:3359
+#: modules/file/pixmap.c:3428
 msgid "right"
 msgstr "справа"
 
-#: modules/file/pixmap.c:3364
+#: modules/file/pixmap.c:3433
 msgid "top"
 msgstr "верх"
 
-#: modules/file/pixmap.c:3376
+#: modules/file/pixmap.c:3445
 msgid "bottom"
 msgstr "низ"
 
-#: modules/file/pixmap.c:3387 modules/process/lno_synth.c:1070
+#: modules/file/pixmap.c:3456 modules/process/lno_synth.c:1070
 msgid "_Length:"
 msgstr "_Длина:"
 
-#: modules/file/pixmap.c:3403
+#: modules/file/pixmap.c:3472
 msgid "_Auto"
 msgstr "_Авто"
 
-#: modules/file/pixmap.c:3411
+#: modules/file/pixmap.c:3480
 msgid "Draw _ticks"
 msgstr "Рисовать _засечки"
 
-#: modules/file/pixmap.c:3421
+#: modules/file/pixmap.c:3490
 msgid "Draw _label"
 msgstr "Рисовать подпис_ь"
 
-#: modules/file/pixmap.c:3431
+#: modules/file/pixmap.c:3500
 msgid "Value Scale"
 msgstr "Масштаб значений"
 
-#: modules/file/pixmap.c:3439
+#: modules/file/pixmap.c:3508
 msgid "_False color ruler"
 msgstr "Л_инейка псевдоцвета"
 
@@ -6337,7 +6342,7 @@ msgstr "Распределение углов"
 msgid "Angle Distribution"
 msgstr "Распределение углов"
 
-#: modules/process/angle_dist.c:187 modules/process/slope_dist.c:240
+#: modules/process/angle_dist.c:187 modules/process/slope_dist.c:267
 msgid "Output _size:"
 msgstr "_Размер результата:"
 
@@ -6345,15 +6350,15 @@ msgstr "_Размер результата:"
 msgid "_Number of steps:"
 msgstr "_Число шагов:"
 
-#: modules/process/angle_dist.c:197 modules/process/slope_dist.c:245
+#: modules/process/angle_dist.c:197 modules/process/slope_dist.c:272
 msgid "_Logarithmic value scale"
 msgstr "_Логарифмическая шкала"
 
-#: modules/process/angle_dist.c:203 modules/process/slope_dist.c:251
+#: modules/process/angle_dist.c:203 modules/process/slope_dist.c:278
 msgid "Use local plane _fitting"
 msgstr "Использовать _аппроксимацию локальной плоскостью"
 
-#: modules/process/angle_dist.c:212 modules/process/slope_dist.c:260
+#: modules/process/angle_dist.c:212 modules/process/slope_dist.c:287
 msgid "_Plane size:"
 msgstr "Размер _плоскости:"
 
@@ -7373,9 +7378,10 @@ msgid "_Plot graph"
 msgstr "Строить _график"
 
 #: modules/process/curvature.c:686 modules/process/facet-level.c:298
-#: modules/process/level.c:280 modules/process/linecorrect.c:294
+#: modules/process/level.c:278 modules/process/linecorrect.c:294
 #: modules/process/neural.c:592 modules/process/polylevel.c:503
-#: modules/tools/sfunctions.c:458 modules/tools/stats.c:366
+#: modules/process/slope_dist.c:293 modules/tools/sfunctions.c:458
+#: modules/tools/stats.c:366
 msgid "Masking Mode"
 msgstr "Режим использования маски"
 
@@ -7601,7 +7607,7 @@ msgid "_Like Current Channel"
 msgstr "Как _у текущего канала"
 
 #: modules/process/domain_synth.c:542 modules/process/fft_filter_2d.c:627
-#: modules/process/mask_edt.c:163 modules/process/slope_dist.c:218
+#: modules/process/mask_edt.c:163 modules/process/slope_dist.c:238
 msgid "Output type:"
 msgstr "Тип вывода:"
 
@@ -10627,7 +10633,7 @@ msgstr "Затенение"
 msgid "_Mix:"
 msgstr "C_мешать:"
 
-#: modules/process/slope_dist.c:109
+#: modules/process/slope_dist.c:120
 msgid ""
 "Calculates one- or two-dimensional distribution of slopes or graph of their "
 "angular distribution."
@@ -10635,47 +10641,51 @@ msgstr ""
 "Рассчитывает одно- или двумерное распределение наклонов или график их "
 "углового распределения."
 
-#: modules/process/slope_dist.c:124
+#: modules/process/slope_dist.c:135
 msgid "/_Statistics/_Slope Distribution..."
 msgstr "/_Статистика/Распределение _наклонов..."
 
-#: modules/process/slope_dist.c:128
+#: modules/process/slope_dist.c:139
 msgid "Calculate angular slope distribution"
 msgstr "Рассчитать угловое распределение наклонов"
 
-#: modules/process/slope_dist.c:167
+#: modules/process/slope_dist.c:180
 msgid "Slope distribution"
 msgstr "Распределение наклона"
 
-#: modules/process/slope_dist.c:193
+#: modules/process/slope_dist.c:212
 msgid "_Two-dimensional distribution"
 msgstr "_Двумерное распределение"
 
-#: modules/process/slope_dist.c:194
+#: modules/process/slope_dist.c:213
 msgid "Directional (φ) _graph"
 msgstr "_График направлений (φ) "
 
-#: modules/process/slope_dist.c:195
+#: modules/process/slope_dist.c:214
 msgid "_Inclination (θ) graph"
 msgstr "График _наклонов (θ)"
 
-#: modules/process/slope_dist.c:203
+#: modules/process/slope_dist.c:215
+msgid "Inclination (gra_dient) graph"
+msgstr "График наклонов (гра_диент)"
+
+#: modules/process/slope_dist.c:223
 msgid "Slope Distribution"
 msgstr "Распределение наклонов"
 
-#: modules/process/slope_dist.c:433
+#: modules/process/slope_dist.c:506
 msgid "Angular Slope Distribution"
 msgstr "Распределение наклонов по углам"
 
-#: modules/process/slope_dist.c:443 modules/process/tilt.c:177
+#: modules/process/slope_dist.c:516 modules/process/tilt.c:177
 msgid "Slopes"
 msgstr "Наклоны"
 
-#: modules/process/slope_dist.c:498
+#: modules/process/slope_dist.c:581 modules/process/slope_dist.c:658
 msgid "Inclination Distribution"
 msgstr "Распределение наклона"
 
-#: modules/process/slope_dist.c:508
+#: modules/process/slope_dist.c:593 modules/process/slope_dist.c:670
 msgid "Inclinations"
 msgstr "Наклоны"
 
