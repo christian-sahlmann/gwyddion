@@ -187,7 +187,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NanoScan XML files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -350,7 +350,7 @@ nanoscan_free(NanoScanFile *nfile)
         g_array_free(nfile->channels, TRUE);
     }
     if (nfile->meta) {
-        for (i = 0; i < nfile->channels->len; i++) {
+        for (i = 0; i < nfile->meta->len; i++) {
             NanoScanMeta *meta = &g_array_index(nfile->meta, NanoScanMeta, i);
             g_free(meta->name);
             g_free(meta->value);
