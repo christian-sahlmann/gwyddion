@@ -85,9 +85,6 @@ typedef struct {
     gdouble prefill_height;
     gdouble gradient_contrib;
     gdouble curvature_contrib;
-
-    /* interface only */
-    gboolean computed;
 } WPourArgs;
 
 typedef struct {
@@ -108,6 +105,7 @@ typedef struct {
     GtkAdjustment *curvature_contrib;
     GwyContainer *mydata;
     gboolean in_init;
+    gulong sid;
 } WPourControls;
 
 static gboolean       module_register             (void);
@@ -144,9 +142,11 @@ static GtkAdjustment* table_attach_threshold      (GtkWidget *table,
 static void           wpour_update_double         (WPourControls *controls,
                                                    GtkAdjustment *adj);
 static void           wpour_invalidate            (WPourControls *controls);
+static gboolean       preview_gsource             (gpointer user_data);
 static GwyDataField*  create_mask_field           (GwyDataField *dfield);
 static void           preview                     (WPourControls *controls,
                                                    WPourArgs *args);
+static void           set_visible_images          (WPourControls *controls);
 static void           wpour_do                    (GwyDataField *dfield,
                                                    GwyDataField *maskfield,
                                                    GwyDataField *preprocessed,
@@ -178,8 +178,6 @@ static const WPourArgs wpour_defaults = {
     0.0,
     0.0, 0.0,
     0.0, 0.0,
-    /* interface only */
-    FALSE,
 };
 
 static GwyModuleInfo module_info = {
@@ -260,12 +258,12 @@ wpour_dialog(WPourArgs *args,
     WPourControls controls;
     gint response;
     GwyPixmapLayer *layer;
-    GwyDataField *mfield;
     gint row;
     UpdateType temp;
 
     controls.args = args;
     controls.in_init = TRUE;
+    controls.sid = 0;
 
     dialog = gtk_dialog_new_with_buttons(_("Segment by Watershed"), NULL, 0,
                                          NULL);
@@ -423,6 +421,7 @@ wpour_dialog(WPourArgs *args,
     row++;
 
     controls.in_init = FALSE;
+    set_visible_images(&controls);
     wpour_invalidate(&controls);
 
     gtk_widget_show_all(dialog);
@@ -461,22 +460,17 @@ wpour_dialog(WPourArgs *args,
         }
     } while (response != GTK_RESPONSE_OK);
 
+    if (controls.sid) {
+        g_source_remove(controls.sid);
+        controls.sid = 0;
+    }
+
     gwy_app_sync_data_items(controls.mydata, data, 0, id, FALSE,
                             GWY_DATA_ITEM_MASK_COLOR,
                             0);
     gtk_widget_destroy(dialog);
-
-    if (args->computed) {
-        mfield = gwy_container_get_object_by_name(controls.mydata, "/0/mask");
-        gwy_app_undo_qcheckpointv(data, 1, &mquark);
-        gwy_container_set_object(data, mquark, mfield);
-        g_object_unref(controls.mydata);
-    }
-    else {
-        g_object_unref(controls.mydata);
-        run_noninteractive(args, data, dfield, mquark);
-    }
-
+    g_object_unref(controls.mydata);
+    run_noninteractive(args, data, dfield, mquark);
     wpour_save_args(gwy_app_settings_get(), args);
     gwy_app_channel_log_add(data, id, id, "proc::wpour_mark", NULL);
 }
@@ -529,7 +523,7 @@ image_preview_changed(GtkComboBox *combo,
 {
     WPourArgs *args = controls->args;
     args->image_preview = gwy_enum_combo_box_get_active(combo);
-    wpour_invalidate(controls);
+    set_visible_images(controls);
 }
 
 static void
@@ -538,7 +532,7 @@ mask_preview_changed(GtkComboBox *combo,
 {
     WPourArgs *args = controls->args;
     args->mask_preview = gwy_enum_combo_box_get_active(combo);
-    wpour_invalidate(controls);
+    set_visible_images(controls);
 }
 
 static GtkAdjustment*
@@ -606,17 +600,31 @@ create_mask_field(GwyDataField *dfield)
 static void
 wpour_invalidate(WPourControls *controls)
 {
-    controls->args->computed = FALSE;
-    if (!controls->in_init)
-        preview(controls, controls->args);
+    /* create preview if instant updates are on */
+    if (controls->args->update != UPDATE_NOTHING
+        && !controls->in_init
+        && !controls->sid) {
+        controls->sid = g_idle_add_full(G_PRIORITY_LOW, preview_gsource,
+                                        controls, NULL);
+    }
+}
+
+static gboolean
+preview_gsource(gpointer user_data)
+{
+    WPourControls *controls = (WPourControls*)user_data;
+    controls->sid = 0;
+
+    preview(controls, controls->args);
+
+    return FALSE;
 }
 
 static void
 preview(WPourControls *controls,
         WPourArgs *args)
 {
-    GwyDataField *mask, *dfield, *preprocessed;
-    GwyPixmapLayer *layer;
+    GwyDataField *mask, *dfield, *preproc;
 
     if (args->update == UPDATE_NOTHING)
         return;
@@ -624,13 +632,38 @@ preview(WPourControls *controls,
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
 
+    preproc = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                              "/1/data"));
+    mask = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                           "/0/mask"));
+
+    wpour_do(dfield, mask, preproc, args, TRUE);
+    gwy_data_field_data_changed(mask);
+    gwy_data_field_data_changed(preproc);
+}
+
+static void
+set_visible_images(WPourControls *controls)
+{
+    GwyDataField *dfield, *preproc, *mask;
+    WPourArgs *args = controls->args;
+    GwyPixmapLayer *layer;
+
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                             "/0/data"));
+
     if (!gwy_container_gis_object_by_name(controls->mydata, "/1/data",
-                                          &preprocessed)) {
-        preprocessed = gwy_data_field_new_alike(dfield, FALSE);
+                                          &preproc)) {
+        preproc = gwy_data_field_new_alike(dfield, FALSE);
         gwy_container_set_object_by_name(controls->mydata, "/1/data",
-                                         preprocessed);
-        g_object_unref(preprocessed);
+                                         preproc);
+        g_object_unref(preproc);
     }
+
+    if (args->image_preview == IMAGE_PREVIEW_ORIGINAL)
+        g_object_set(controls->player, "data-key", "/0/data", NULL);
+    else
+        g_object_set(controls->player, "data-key", "/1/data", NULL);
 
     if (!gwy_container_gis_object_by_name(controls->mydata, "/0/mask", &mask)) {
         mask = create_mask_field(dfield);
@@ -644,24 +677,10 @@ preview(WPourControls *controls,
         gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), layer);
     }
 
-    wpour_do(dfield, mask, preprocessed, args, TRUE);
-    gwy_data_field_data_changed(mask);
-    gwy_data_field_data_changed(preprocessed);
-
-    /* TODO: We should only change what is displayed when the preview type
-     * changes, there is no need to recalculate everything to change the
-     * displayed field. */
-    if (args->image_preview == IMAGE_PREVIEW_ORIGINAL)
-        g_object_set(controls->player, "data-key", "/0/data", NULL);
-    else
-        g_object_set(controls->player, "data-key", "/1/data", NULL);
-
     if (args->mask_preview == MASK_PREVIEW_NONE)
         g_object_set(controls->mlayer, "data-key", "/2/mask", NULL);
     else
         g_object_set(controls->mlayer, "data-key", "/0/mask", NULL);
-
-    args->computed = TRUE;
 }
 
 static inline IntList*
