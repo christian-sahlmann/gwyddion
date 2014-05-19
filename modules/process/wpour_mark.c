@@ -81,6 +81,7 @@ typedef struct {
     ImagePreviewType image_preview;
     MaskPreviewType mask_preview;
     gdouble blur_fwhm;
+    gdouble barrier_level;
     gdouble prefill_level;
     gdouble prefill_height;
     gdouble gradient_contrib;
@@ -99,6 +100,7 @@ typedef struct {
     GtkWidget *image_preview;
     GtkWidget *mask_preview;
     GtkAdjustment *blur_fwhm;
+    GtkAdjustment *barrier_level;
     GtkAdjustment *prefill_level;
     GtkAdjustment *prefill_height;
     GtkAdjustment *gradient_contrib;
@@ -149,9 +151,8 @@ static void           preview                     (WPourControls *controls,
 static void           set_visible_images          (WPourControls *controls);
 static void           wpour_do                    (GwyDataField *dfield,
                                                    GwyDataField *maskfield,
-                                                   GwyDataField *preprocessed,
-                                                   WPourArgs *args,
-                                                   gboolean ispreview);
+                                                   GwyDataField *preproc,
+                                                   WPourArgs *args);
 static void           add_slope_contribs          (GwyDataField *workspace,
                                                    GwyDataField *dfield,
                                                    gdouble gradient_contrib,
@@ -159,12 +160,17 @@ static void           add_slope_contribs          (GwyDataField *workspace,
 static void           normal_vector_difference    (GwyDataField *result,
                                                    GwyDataField *xder,
                                                    GwyDataField *yder);
+static gdouble        create_barriers             (GwyDataField *dfield,
+                                                   gdouble level);
 static void           prefill_minima              (GwyDataField *dfield,
                                                    GwyDataField *workspace,
                                                    IntList *inqueue,
                                                    IntList *outqueue,
                                                    gdouble depth,
                                                    gdouble height);
+static void           replace_value               (GwyDataField *dfield,
+                                                   gdouble from,
+                                                   gdouble to);
 static void           wpour_load_args             (GwyContainer *container,
                                                    WPourArgs *args);
 static void           wpour_save_args             (GwyContainer *container,
@@ -176,6 +182,7 @@ static const WPourArgs wpour_defaults = {
     UPDATE_MARK,
     IMAGE_PREVIEW_ORIGINAL, MASK_PREVIEW_MARKED,
     0.0,
+    100.0,
     0.0, 0.0,
     0.0, 0.0,
 };
@@ -241,7 +248,7 @@ run_noninteractive(WPourArgs *args,
 
     gwy_app_undo_qcheckpointv(data, 1, &mquark);
     mfield = create_mask_field(dfield);
-    wpour_do(dfield, mfield, NULL, args, FALSE);
+    wpour_do(dfield, mfield, NULL, args);
     gwy_container_set_object(data, mquark, mfield);
     g_object_unref(mfield);
 }
@@ -337,6 +344,10 @@ wpour_dialog(WPourArgs *args,
     controls.curvature_contrib
         = table_attach_threshold(table, &row, _("Add _curvature:"),
                                  &args->curvature_contrib, &controls);
+
+    controls.barrier_level
+        = table_attach_threshold(table, &row, _("_Barrier level:"),
+                                 &args->barrier_level, &controls);
 
     controls.prefill_level
         = table_attach_threshold(table, &row, _("Prefill _level:"),
@@ -482,11 +493,14 @@ wpour_dialog_update_controls(WPourControls *controls,
     controls->in_init = TRUE;
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->inverted),
                                  args->inverted);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update),
-                                 args->update);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->update),
+                                  args->update);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->image_preview),
                                   args->image_preview);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->mask_preview),
+                                  args->mask_preview);
     gtk_adjustment_set_value(controls->blur_fwhm, args->blur_fwhm);
+    gtk_adjustment_set_value(controls->barrier_level, args->barrier_level);
     gtk_adjustment_set_value(controls->prefill_level, args->prefill_level);
     gtk_adjustment_set_value(controls->prefill_height, args->prefill_height);
     gtk_adjustment_set_value(controls->gradient_contrib,
@@ -631,13 +645,12 @@ preview(WPourControls *controls,
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
-
     preproc = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                               "/1/data"));
     mask = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                            "/0/mask"));
 
-    wpour_do(dfield, mask, preproc, args, TRUE);
+    wpour_do(dfield, mask, preproc, args);
     gwy_data_field_data_changed(mask);
     gwy_data_field_data_changed(preproc);
 }
@@ -732,45 +745,46 @@ int_list_free(IntList *list)
 static void
 wpour_do(GwyDataField *dfield,
          GwyDataField *maskfield,
-         GwyDataField *preprocessed,
-         WPourArgs *args,
-         gboolean ispreview)
+         GwyDataField *preproc,
+         WPourArgs *args)
 {
     guint xres = dfield->xres, yres = dfield->yres;
     IntList *inqueue = int_list_new(0);
     IntList *outqueue = int_list_new(0);
+    gdouble barmax;
 
-    if (preprocessed) {
-        g_object_ref(preprocessed);
-        gwy_data_field_copy(dfield, preprocessed, FALSE);
+    if (preproc) {
+        g_object_ref(preproc);
+        gwy_data_field_copy(dfield, preproc, FALSE);
     }
     else {
-        preprocessed = gwy_data_field_duplicate(dfield);
+        preproc = gwy_data_field_duplicate(dfield);
     }
 
     if (args->inverted)
-        gwy_data_field_invert(preprocessed, FALSE, FALSE, TRUE);
+        gwy_data_field_invert(preproc, FALSE, FALSE, TRUE);
 
     /* Use maskfield as a scratch buffer. */
-    gwy_data_field_add(preprocessed, -gwy_data_field_get_max(preprocessed));
+    gwy_data_field_add(preproc, -gwy_data_field_get_max(preproc));
     if (args->blur_fwhm) {
         gdouble sigma = args->blur_fwhm/(2.0*sqrt(2*G_LN2));
-        gwy_data_field_area_filter_gaussian(preprocessed, sigma,
+        gwy_data_field_area_filter_gaussian(preproc, sigma,
                                             0, 0, xres, yres);
     }
-    add_slope_contribs(maskfield, preprocessed,
+    add_slope_contribs(maskfield, preproc,
                        args->gradient_contrib, args->curvature_contrib);
-    prefill_minima(preprocessed, maskfield, inqueue, outqueue,
+    barmax = create_barriers(preproc, args->barrier_level);
+    prefill_minima(preproc, maskfield, inqueue, outqueue,
                    args->prefill_level, args->prefill_height);
 
-    if (!ispreview || args->update >= UPDATE_MARK)
-        gwy_data_field_waterpour(preprocessed, maskfield, NULL);
-    else
-        gwy_data_field_clear(maskfield);
+    replace_value(preproc, barmax, HUGE_VAL);
+    gwy_data_field_waterpour(preproc, maskfield, NULL);
+    /* Lower the barriers again to avoid HUGE_VAL in the preview. */
+    replace_value(preproc, HUGE_VAL, barmax);
 
     int_list_free(outqueue);
     int_list_free(inqueue);
-    g_object_unref(preprocessed);
+    g_object_unref(preproc);
 }
 
 static void
@@ -889,6 +903,33 @@ normal_vector_difference(GwyDataField *result,
     gwy_data_field_invalidate(result);
 }
 
+static gdouble
+create_barriers(GwyDataField *dfield,
+                gdouble level)
+{
+    guint k, xres = dfield->xres, yres = dfield->yres;
+    gdouble min, max, barmax;
+
+    gwy_data_field_get_min_max(dfield, &min, &max);
+    barmax = 1.01*max;
+    if (min == max)
+        return barmax;
+
+    if (level < 100.0) {
+        gdouble threshold = level/100.0*(max - min) + min;
+        gdouble *d = dfield->data;
+
+        barmax = max;
+        for (k = 0; k < xres*yres; k++) {
+            if (d[k] >= threshold)
+                d[k] = barmax;
+        }
+        gwy_data_field_invalidate(dfield);
+    }
+
+    return barmax;
+}
+
 static void
 prefill_minima(GwyDataField *dfield, GwyDataField *workspace,
                IntList *inqueue, IntList *outqueue,
@@ -963,11 +1004,25 @@ prefill_minima(GwyDataField *dfield, GwyDataField *workspace,
     }
 }
 
+static void
+replace_value(GwyDataField *dfield, gdouble from, gdouble to)
+{
+    guint k, xres = dfield->xres, yres = dfield->yres;
+    gdouble *d = dfield->data;
+
+    for (k = 0; k < xres*yres; k++) {
+        if (d[k] == from)
+            d[k] = to;
+    }
+    gwy_data_field_invalidate(dfield);
+}
+
 static const gchar inverted_key[]          = "/module/wpour_mark/inverted";
 static const gchar update_key[]            = "/module/wpour_mark/update";
 static const gchar image_preview_key[]     = "/module/wpour_mark/image_preview";
 static const gchar mask_preview_key[]      = "/module/wpour_mark/mask_preview";
 static const gchar blur_fwhm_key[]         = "/module/wpour_mark/blur_fwhm";
+static const gchar barrier_level_key[]     = "/module/wpour_mark/barrier_level";
 static const gchar prefill_level_key[]     = "/module/wpour_mark/prefill_level";
 static const gchar prefill_height_key[]    = "/module/wpour_mark/prefill_height";
 static const gchar gradient_contrib_key[]  = "/module/wpour_mark/gradient_contrib";
@@ -981,6 +1036,7 @@ wpour_sanitize_args(WPourArgs *args)
     args->image_preview = MIN(args->image_preview, IMAGE_PREVIEW_NTYPES-1);
     args->mask_preview = MIN(args->mask_preview, MASK_PREVIEW_NTYPES-1);
     args->blur_fwhm = CLAMP(args->blur_fwhm, 0.0, 100.0);
+    args->barrier_level = CLAMP(args->barrier_level, 0.0, 100.0);
     args->prefill_level = CLAMP(args->prefill_level, 0.0, 100.0);
     args->prefill_height = CLAMP(args->prefill_height, 0.0, 100.0);
     args->gradient_contrib = CLAMP(args->gradient_contrib, 0.0, 100.0);
@@ -1001,6 +1057,8 @@ wpour_load_args(GwyContainer *container,
                                    &args->mask_preview);
     gwy_container_gis_double_by_name(container, blur_fwhm_key,
                                      &args->blur_fwhm);
+    gwy_container_gis_double_by_name(container, barrier_level_key,
+                                     &args->barrier_level);
     gwy_container_gis_double_by_name(container, prefill_level_key,
                                      &args->prefill_level);
     gwy_container_gis_double_by_name(container, prefill_height_key,
@@ -1024,6 +1082,8 @@ wpour_save_args(GwyContainer *container,
                                    args->mask_preview);
     gwy_container_set_double_by_name(container, blur_fwhm_key,
                                      args->blur_fwhm);
+    gwy_container_set_double_by_name(container, barrier_level_key,
+                                     args->barrier_level);
     gwy_container_set_double_by_name(container, prefill_level_key,
                                      args->prefill_level);
     gwy_container_set_double_by_name(container, prefill_height_key,
