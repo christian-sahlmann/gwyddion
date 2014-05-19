@@ -4672,10 +4672,8 @@ gwy_data_field_waterpour(GwyDataField *data_field,
 
         k = queue[kq];
         z = d[k];
-        if (z >= HUGE_VAL) {
-            assigned[kq++] = GRAIN_BARRIER;
-            continue;
-        }
+        if (z >= HUGE_VAL)
+            break;
 
         while (kq + len < n && d[queue[kq + len]] == z)
             len++;
@@ -4736,6 +4734,11 @@ gwy_data_field_waterpour(GwyDataField *data_field,
         }
 
         kq += len;
+    }
+
+    while (kq < n) {
+        k = queue[kq++];
+        assigned[k] = GRAIN_BARRIER;
     }
 
     rd = result->data;
