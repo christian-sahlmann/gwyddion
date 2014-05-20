@@ -92,7 +92,7 @@ static GwyModuleInfo module_info = {
     N_("Grain measurement tool, calculates characteristics of selected "
        "countinous parts of mask."),
     "Yeti <yeti@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti)",
     "2007",
 };
@@ -195,6 +195,7 @@ render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
              gpointer user_data)
 {
     GwyToolGrainMeasure *tool = (GwyToolGrainMeasure*)user_data;
+    GwyGrainQuantity quantity;
     GwyGrainValue *gvalue;
     gdouble value;
     const gdouble *values;
@@ -218,7 +219,8 @@ render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
     }
 
     /* FIXME: Magic number, see top of gwygrainvalue.c */
-    if ((gint)gwy_grain_value_get_quantity(gvalue) > 62) {
+    quantity = gwy_grain_value_get_quantity(gvalue);
+    if ((gint)quantity > 62) {
         g_snprintf(buf, sizeof(buf), "%d", tool->gno);
         g_object_set(renderer, "text", buf, NULL);
         return;
@@ -237,6 +239,10 @@ render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
 
     if (gwy_grain_value_get_flags(gvalue) & GWY_GRAIN_VALUE_IS_ANGLE) {
         g_snprintf(buf, sizeof(buf), "%.1f deg", 180.0/G_PI*value);
+        g_object_set(renderer, "text", buf, NULL);
+    }
+    else if (quantity == GWY_GRAIN_VALUE_PIXEL_AREA) {
+        g_snprintf(buf, sizeof(buf), "%.0f", value);
         g_object_set(renderer, "text", buf, NULL);
     }
     else {
