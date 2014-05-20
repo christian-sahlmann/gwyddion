@@ -163,6 +163,7 @@ typedef enum {
     GWY_GRAIN_VALUE_MINIMUM              = 5,
     GWY_GRAIN_VALUE_MEAN                 = 6,
     GWY_GRAIN_VALUE_MEDIAN               = 7,
+    GWY_GRAIN_VALUE_PIXEL_AREA           = 8,
     GWY_GRAIN_VALUE_HALF_HEIGHT_AREA     = 9,
     GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH = 10,
     GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE   = 12,

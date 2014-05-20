@@ -141,6 +141,15 @@ grain_values[] = {
         }
     },
     {
+        N_("Pixel area"),
+        GWY_GRAIN_VALUE_PIXEL_AREA,
+        {
+            GWY_GRAIN_VALUE_GROUP_AREA,
+            "<i>A</i><sub>px</sub>", "A_px", NULL,
+            0, 0, 0, 0,
+        }
+    },
+    {
         N_("Projected area"),
         GWY_GRAIN_VALUE_PROJECTED_AREA,
         {

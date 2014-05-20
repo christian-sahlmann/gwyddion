@@ -360,6 +360,9 @@ gwy_masking_type_get_enum(void)
  * @GWY_GRAIN_VALUE_MINIMUM: Maximum value.
  * @GWY_GRAIN_VALUE_MEAN: Mean value.
  * @GWY_GRAIN_VALUE_MEDIAN: Median value.
+ * @GWY_GRAIN_VALUE_PIXEL_AREA: Flat grain area measured in pixels.  This value
+ *                              is redundant but it is useful for filtering
+ *                              (Since: 2.37).
  * @GWY_GRAIN_VALUE_HALF_HEIGHT_AREA: Projected area of the part of grain
  *                                    that is above the half-height, i.e.
  *                                    the height between the minimum and

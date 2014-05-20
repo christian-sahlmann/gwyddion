@@ -2052,7 +2052,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         NEED_MIN,                     /* minimum */
         NEED_ZVALUE,                  /* mean */
         NEED_SIZES,                   /* median */
-        INVALID,
+        NEED_SIZES,                   /* pixel area */
         NEED_MIN | NEED_MAX,          /* half-height area */
         0,                            /* flat boundary length */
         INVALID,
@@ -2208,6 +2208,10 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
     qgeom = sqrt(qarea);
 
     /* Calculate specific requested quantities */
+    if ((p = quantity_data[GWY_GRAIN_VALUE_PIXEL_AREA])) {
+        for (gno = 0; gno <= ngrains; gno++)
+            p[gno] = sizes[gno];
+    }
     if ((p = quantity_data[GWY_GRAIN_VALUE_PROJECTED_AREA])) {
         for (gno = 0; gno <= ngrains; gno++)
             p[gno] = qarea*sizes[gno];
