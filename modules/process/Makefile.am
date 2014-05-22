@@ -47,6 +47,7 @@ process_LTLIBRARIES = \
 	grain_cross.la \
 	grain_dist.la \
 	grain_edge.la \
+	grain_filter.la \
 	grain_mark.la \
 	grain_rem_threshold.la \
 	grain_wshed.la \
@@ -152,12 +153,13 @@ fit_2d_la_SOURCES              = fit_2d.c
 fractal_la_SOURCES             = fractal.c
 fraccor_la_SOURCES             = fraccor.c
 gradient_la_SOURCES            = gradient.c
-grain_mark_la_SOURCES          = grain_mark.c
-grain_rem_threshold_la_SOURCES = grain_rem_threshold.c
-grain_wshed_la_SOURCES         = grain_wshed.c
 grain_cross_la_SOURCES         = grain_cross.c
 grain_dist_la_SOURCES          = grain_dist.c
 grain_edge_la_SOURCES          = grain_edge.c
+grain_filter_la_SOURCES        = grain_filter.c
+grain_mark_la_SOURCES          = grain_mark.c
+grain_rem_threshold_la_SOURCES = grain_rem_threshold.c
+grain_wshed_la_SOURCES         = grain_wshed.c
 hough_la_SOURCES               = hough.c
 immerse_la_SOURCES             = immerse.c
 indent_analyze_la_SOURCES      = indent_analyze.c
