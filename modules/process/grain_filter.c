@@ -23,15 +23,15 @@
 #include <gtk/gtk.h>
 #include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwyexpr.h>
 #include <libprocess/grains.h>
-#include <libprocess/stats.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-mask.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwygrainvaluemenu.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
@@ -76,6 +76,7 @@ typedef struct {
 
 typedef struct {
     gboolean update;
+    gint expanded;
     gint nquantities;
     GrainLogical1 logical1;
     GrainLogical2 logical2;
@@ -99,7 +100,7 @@ typedef struct {
     GtkWidget *color_button;
     GtkObject *nquantities;
     GtkWidget *logical_op;
-    GtkWidget *set_as[NQUANTITIES];
+    GtkWidget *set_as;
     GtkObject *name[NQUANTITIES];
     GtkObject *lower[NQUANTITIES];
     GtkObject *upper[NQUANTITIES];
@@ -107,6 +108,7 @@ typedef struct {
 
     gboolean computed;
     gboolean in_init;
+    gint set_as_id;
 } GFilterControls;
 
 static gboolean module_register               (void);
@@ -129,10 +131,12 @@ static void     load_mask_color               (GtkWidget *color_button,
                                                GwyContainer *data);
 static void     gfilter_dialog_update_controls(GFilterControls *controls,
                                                GFilterArgs *args);
+static void     gfilter_invalidate            (GFilterControls *controls);
 static void     update_changed                (GFilterControls *controls,
                                                GtkToggleButton *toggle);
-static void     gfilter_invalidate            (GFilterControls *controls);
-static void     gfilter_invalidate2           (gpointer whatever,
+static void     value_selected                (GFilterControls *controls,
+                                               GtkTreeSelection *selection);
+static void     set_as_changed                (GtkComboBox *combo,
                                                GFilterControls *controls);
 static void     gfilter_load_args             (GwyContainer *container,
                                                GFilterArgs *args);
@@ -142,7 +146,8 @@ static void     gfilter_sanitize_args         (GFilterArgs *args);
 static void     gfilter_free_args             (GFilterArgs *args);
 
 static const GFilterArgs gfilter_defaults = {
-    TRUE, 1,
+    TRUE, 0,
+    1,
     GRAIN_LOGICAL1_A,
     GRAIN_LOGICAL2_A_AND_B,
     GRAIN_LOGICAL3_A_AND_B_AND_C,
@@ -187,6 +192,7 @@ module_register(void)
 static void
 grain_filter(GwyContainer *data, GwyRunType run)
 {
+    GwySIUnit *siunitxy, *siunitz;
     GFilterArgs args;
     GwyDataField *dfield, *mfield;
     GQuark mquark;
@@ -200,6 +206,10 @@ grain_filter(GwyContainer *data, GwyRunType run)
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield && mfield);
+
+    siunitxy = gwy_data_field_get_si_unit_xy(dfield);
+    siunitz = gwy_data_field_get_si_unit_z(dfield);
+    args.units_equal = gwy_si_unit_equal(siunitxy, siunitz);
 
     /* Must precalculate grain quantities to limit the ranges correctly. */
 
@@ -234,16 +244,18 @@ gfilter_dialog(GFilterArgs *args,
               gint id,
               GQuark mquark)
 {
-    GtkWidget *dialog, *table, *hbox, *label, *pivot;
+    GtkWidget *dialog, *table, *hbox, *label, *scwin;
+    GtkTreeView *treeview;
+    GtkTreeSelection *selection;
     GFilterControls controls;
-    gint response;
+    gint response, row;
     GwyPixmapLayer *layer;
-    gint row;
 
     controls.args = args;
     controls.mask = mfield;
     controls.in_init = TRUE;
     controls.computed = FALSE;
+    controls.set_as_id = 0;
 
     dialog = gtk_dialog_new_with_buttons(_("GFilter Grains by Threshold"),
                                          NULL, 0, NULL);
@@ -300,6 +312,39 @@ gfilter_dialog(GFilterArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
     row = 0;
 
+    scwin = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
+                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_table_attach(GTK_TABLE(table), scwin, 0, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
+
+    controls.values = gwy_grain_value_tree_view_new(FALSE,
+                                                    "name", "symbol_markup",
+                                                    NULL);
+    treeview = GTK_TREE_VIEW(controls.values);
+    gtk_tree_view_set_headers_visible(treeview, FALSE);
+    selection = gtk_tree_view_get_selection(treeview);
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
+    gwy_grain_value_tree_view_set_same_units(treeview, args->units_equal);
+    gwy_grain_value_tree_view_set_expanded_groups(treeview, args->expanded);
+    gtk_container_add(GTK_CONTAINER(scwin), controls.values);
+    g_signal_connect_swapped(selection, "changed",
+                             G_CALLBACK(value_selected), &controls);
+    row++;
+
+    controls.expression = gtk_entry_new();
+    gwy_table_attach_hscale(table, row++, _("Expression:"), NULL,
+                            GTK_OBJECT(controls.expression), GWY_HSCALE_WIDGET);
+
+    controls.set_as = gwy_enum_combo_box_newl(G_CALLBACK(set_as_changed),
+                                              &controls, 0,
+                                              "A", 0,
+                                              "B", 1,
+                                              "C", 2,
+                                              NULL);
+    gtk_table_attach(GTK_TABLE(table), controls.set_as, 3, 4, row-1, row,
+                     0, 0, 0, 0);
+
     controls.color_button = gwy_color_button_new();
     gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
                                    TRUE);
@@ -322,6 +367,7 @@ gfilter_dialog(GFilterArgs *args,
 
     /* finished initializing, allow instant updates */
     controls.in_init = FALSE;
+    /* TODO: update entry to show expression for quantity A. */
     gfilter_invalidate(&controls);
 
     gtk_widget_show_all(dialog);
@@ -330,6 +376,8 @@ gfilter_dialog(GFilterArgs *args,
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
+            args->expanded = gwy_grain_value_tree_view_get_expanded_groups
+                                             (GTK_TREE_VIEW(controls.values));
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             g_object_unref(controls.mydata);
@@ -358,6 +406,8 @@ gfilter_dialog(GFilterArgs *args,
         }
     } while (response != GTK_RESPONSE_OK);
 
+    args->expanded = gwy_grain_value_tree_view_get_expanded_groups
+                                             (GTK_TREE_VIEW(controls.values));
     gwy_app_sync_data_items(controls.mydata, data, 0, id, FALSE,
                             GWY_DATA_ITEM_MASK_COLOR,
                             0);
@@ -395,12 +445,6 @@ gfilter_invalidate(GFilterControls *controls)
 }
 
 static void
-gfilter_invalidate2(G_GNUC_UNUSED gpointer whatever, GFilterControls *controls)
-{
-    gfilter_invalidate(controls);
-}
-
-static void
 mask_color_changed(GtkWidget *color_button,
                    GFilterControls *controls)
 {
@@ -427,8 +471,7 @@ load_mask_color(GtkWidget *color_button,
 }
 
 static void
-update_changed(GFilterControls *controls,
-               GtkToggleButton *toggle)
+update_changed(GFilterControls *controls, GtkToggleButton *toggle)
 {
     GFilterArgs *args = controls->args;
 
@@ -436,12 +479,37 @@ update_changed(GFilterControls *controls,
     gfilter_invalidate(controls);
 }
 
+static void
+value_selected(GFilterControls *controls, GtkTreeSelection *selection)
+{
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    GwyGrainValue *gvalue;
+    const gchar *symbol;
+
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter))
+        return;
+
+    gtk_tree_model_get(model, &iter, 0, &gvalue, -1);
+    symbol = gwy_grain_value_get_symbol(gvalue);
+    gtk_entry_set_text(GTK_ENTRY(controls->expression), symbol);
+}
+
+static void
+set_as_changed(GtkComboBox *combo, GFilterControls *controls)
+{
+    controls->set_as_id = gwy_enum_combo_box_get_active(combo);
+    gtk_entry_set_text(GTK_ENTRY(controls->expression),
+                       controls->args->ranges[controls->set_as_id].quantity);
+}
+
 static const gchar nquantities_key[] = "/module/grain_filter/nquantities";
 static const gchar logical1_key[]    = "/module/grain_filter/logical1";
 static const gchar logical2_key[]    = "/module/grain_filter/logical2";
 static const gchar logical3_key[]    = "/module/grain_filter/logical3";
-static const gchar update_key[]      = "/module/grain_filter/update";
 static const gchar quantity_key[]    = "/module/grain_filter/quantity";
+static const gchar update_key[]      = "/module/grain_filter/update";
+static const gchar expanded_key[]    = "/module/grain_filter/expanded";
 
 static void
 gfilter_sanitize_args(GFilterArgs *args)
@@ -483,6 +551,7 @@ gfilter_load_args(GwyContainer *container,
     *args = gfilter_defaults;
 
     gwy_container_gis_boolean_by_name(container, update_key, &args->update);
+    gwy_container_gis_int32_by_name(container, expanded_key, &args->expanded);
     gwy_container_gis_int32_by_name(container, nquantities_key,
                                     &args->nquantities);
     gwy_container_gis_enum_by_name(container, logical1_key, &args->logical1);
@@ -553,6 +622,7 @@ gfilter_save_args(GwyContainer *container,
     guint i;
 
     gwy_container_set_boolean_by_name(container, update_key, args->update);
+    gwy_container_set_int32_by_name(container, expanded_key, args->expanded);
     gwy_container_set_int32_by_name(container, nquantities_key,
                                     args->nquantities);
     gwy_container_set_enum_by_name(container, logical1_key, args->logical1);
