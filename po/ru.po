@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-05-18 03:58+0200\n"
-"PO-Revision-Date: 2014-05-18 10:14+0300\n"
+"POT-Creation-Date: 2014-05-22 03:58+0200\n"
+"PO-Revision-Date: 2014-05-22 10:07+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -282,185 +282,189 @@ msgid "Maximum value on boundary"
 msgstr "Максимальное значение на границе"
 
 #: libprocess/gwygrainvalue.c:144
+msgid "Pixel area"
+msgstr "Площадь в пикселях"
+
+#: libprocess/gwygrainvalue.c:153
 msgid "Projected area"
 msgstr "Площадь проекции"
 
-#: libprocess/gwygrainvalue.c:153
+#: libprocess/gwygrainvalue.c:162
 msgid "Surface area"
 msgstr "Площадь поверхности"
 
-#: libprocess/gwygrainvalue.c:162
+#: libprocess/gwygrainvalue.c:171
 msgid "Equivalent square side"
 msgstr "Сторона эквивалентного квадрата"
 
-#: libprocess/gwygrainvalue.c:171
+#: libprocess/gwygrainvalue.c:180
 msgid "Equivalent disc radius"
 msgstr "Радиус эквивалентного диска"
 
-#: libprocess/gwygrainvalue.c:180
+#: libprocess/gwygrainvalue.c:189
 msgid "Area above half-height"
 msgstr "Площадь выше половинной высоты"
 
-#: libprocess/gwygrainvalue.c:189
+#: libprocess/gwygrainvalue.c:198
 msgid "Area of convex hull"
 msgstr "Площадь выпуклой оболочки"
 
 #. TRANSLATORS: Grain volume calculated using basis (foot) set to
 #. * zero.
-#: libprocess/gwygrainvalue.c:200
+#: libprocess/gwygrainvalue.c:209
 msgid "Zero basis volume"
 msgstr "Объём между нулевой плоскостью и поверхностью"
 
 #. TRANSLATORS: Grain volume calculated using basis (foot) set to the
 #. * grain minimum.
-#: libprocess/gwygrainvalue.c:211
+#: libprocess/gwygrainvalue.c:220
 msgid "Grain minimum basis volume"
 msgstr "Объём между поверхностью и плоскостью, проходящей через минимум зерна"
 
 #. TRANSLATORS: Grain volume calculated using basis (foot) set to the
 #. * Laplacian background.
-#: libprocess/gwygrainvalue.c:222
+#: libprocess/gwygrainvalue.c:231
 msgid "Laplacian background basis volume"
 msgstr "Объём между поверхностью и фоном, вычисленным по Лапласу"
 
-#: libprocess/gwygrainvalue.c:231
+#: libprocess/gwygrainvalue.c:240
 msgid "Projected boundary length"
 msgstr "Длина границы проекции"
 
-#: libprocess/gwygrainvalue.c:240
+#: libprocess/gwygrainvalue.c:249
 msgid "Minimum bounding size"
 msgstr "Минимальный ограничивающий размер"
 
-#: libprocess/gwygrainvalue.c:249
+#: libprocess/gwygrainvalue.c:258
 msgid "Minimum bounding direction"
 msgstr "Направление минимального ограничивающего размера"
 
-#: libprocess/gwygrainvalue.c:258
+#: libprocess/gwygrainvalue.c:267
 msgid "Maximum bounding size"
 msgstr "Максимальный ограничивающий размер"
 
-#: libprocess/gwygrainvalue.c:267
+#: libprocess/gwygrainvalue.c:276
 msgid "Maximum bounding direction"
 msgstr "Направление максимального ограничивающего размера"
 
-#: libprocess/gwygrainvalue.c:276
+#: libprocess/gwygrainvalue.c:285
 msgid "Maximum inscribed disc radius"
 msgstr "Максимальный радиус вписанного диска"
 
-#: libprocess/gwygrainvalue.c:285
+#: libprocess/gwygrainvalue.c:294
 msgid "Maximum inscribed disc center x position"
 msgstr "Положение центра по x максимального вписанного диска"
 
-#: libprocess/gwygrainvalue.c:294
+#: libprocess/gwygrainvalue.c:303
 msgid "Maximum inscribed disc center y position"
 msgstr "Положение центра по y максимального вписанного диска"
 
-#: libprocess/gwygrainvalue.c:303
+#: libprocess/gwygrainvalue.c:312
 msgid "Minimum circumcircle radius"
 msgstr "Минимальный радиус описанной окружности"
 
-#: libprocess/gwygrainvalue.c:312
+#: libprocess/gwygrainvalue.c:321
 msgid "Minimum circumcircle center x position"
 msgstr "Положение центра по x минимальной описанной окружности"
 
-#: libprocess/gwygrainvalue.c:321
+#: libprocess/gwygrainvalue.c:330
 msgid "Minimum circumcircle center y position"
 msgstr "Положение центра по y минимальной описанной окружности"
 
-#: libprocess/gwygrainvalue.c:330
+#: libprocess/gwygrainvalue.c:339
 msgid "Mean radius"
 msgstr "Средний радиус"
 
-#: libprocess/gwygrainvalue.c:339 modules/tools/readvalue.c:330
+#: libprocess/gwygrainvalue.c:348 modules/tools/readvalue.c:330
 msgid "Inclination θ"
 msgstr "Наклон θ"
 
-#: libprocess/gwygrainvalue.c:348 modules/tools/readvalue.c:340
+#: libprocess/gwygrainvalue.c:357 modules/tools/readvalue.c:340
 msgid "Inclination φ"
 msgstr "Наклон φ"
 
-#: libprocess/gwygrainvalue.c:357
+#: libprocess/gwygrainvalue.c:366
 msgid "Curvature center x position"
 msgstr "Положение центра кривизны по x"
 
-#: libprocess/gwygrainvalue.c:366
+#: libprocess/gwygrainvalue.c:375
 msgid "Curvature center y position"
 msgstr "Положение центра кривизны по y"
 
-#: libprocess/gwygrainvalue.c:375
+#: libprocess/gwygrainvalue.c:384
 msgid "Curvature center z value"
 msgstr "Значение центра кривизны по z"
 
-#: libprocess/gwygrainvalue.c:384 modules/tools/readvalue.c:355
+#: libprocess/gwygrainvalue.c:393 modules/tools/readvalue.c:355
 msgid "Curvature 1"
 msgstr "Кривизна 1"
 
-#: libprocess/gwygrainvalue.c:393 modules/tools/readvalue.c:365
+#: libprocess/gwygrainvalue.c:402 modules/tools/readvalue.c:365
 msgid "Curvature 2"
 msgstr "Кривизна 2"
 
-#: libprocess/gwygrainvalue.c:402
+#: libprocess/gwygrainvalue.c:411
 msgid "Curvature angle 1"
 msgstr "Угол кривизны 1"
 
-#: libprocess/gwygrainvalue.c:411
+#: libprocess/gwygrainvalue.c:420
 msgid "Curvature angle 2"
 msgstr "Угол кривизны 2"
 
-#: libprocess/gwygrainvalue.c:420
+#: libprocess/gwygrainvalue.c:429
 msgid "Major semiaxis of equivalent ellipse"
 msgstr "Большая полуось эквивалентного эллипса"
 
-#: libprocess/gwygrainvalue.c:429
+#: libprocess/gwygrainvalue.c:438
 msgid "Minor semiaxis of equivalent ellipse"
 msgstr "Малая полуось эквивалентного эллипса"
 
-#: libprocess/gwygrainvalue.c:438
+#: libprocess/gwygrainvalue.c:447
 msgid "Orientation of equivalent ellipse"
 msgstr "Ориентация эквивалентного эллипса"
 
-#: libprocess/gwygrainvalue.c:1081
+#: libprocess/gwygrainvalue.c:1090
 msgid "Id"
 msgstr "Идентификатор"
 
-#: libprocess/gwygrainvalue.c:1082 modules/process/wave_synth.c:501
+#: libprocess/gwygrainvalue.c:1091 modules/process/wave_synth.c:501
 #: modules/tools/readvalue.c:262
 msgid "Position"
 msgstr "Позиция"
 
-#: libprocess/gwygrainvalue.c:1083 app/meta.c:381
+#: libprocess/gwygrainvalue.c:1092 app/meta.c:381
 #: modules/process/curvature.c:745 modules/tools/level3.c:456
 #: modules/tools/readvalue.c:297
 msgid "Value"
 msgstr "Значение"
 
-#: libprocess/gwygrainvalue.c:1084
+#: libprocess/gwygrainvalue.c:1093
 msgid "Area"
 msgstr "Площадь"
 
-#: libprocess/gwygrainvalue.c:1085 app/data-browser.c:5071 app/toolbox.c:113
+#: libprocess/gwygrainvalue.c:1094 app/data-browser.c:5071 app/toolbox.c:113
 msgid "Volume"
 msgstr "Объём"
 
-#: libprocess/gwygrainvalue.c:1086
+#: libprocess/gwygrainvalue.c:1095
 msgid "Boundary"
 msgstr "Граница"
 
-#: libprocess/gwygrainvalue.c:1087 modules/process/pat_synth.c:870
+#: libprocess/gwygrainvalue.c:1096 modules/process/pat_synth.c:870
 #: modules/process/pat_synth.c:1171 modules/process/pat_synth.c:1506
 #: modules/tools/linestats.c:157
 msgid "Slope"
 msgstr "Уклон"
 
-#: libprocess/gwygrainvalue.c:1088 modules/process/curvature.c:603
+#: libprocess/gwygrainvalue.c:1097 modules/process/curvature.c:603
 msgid "Curvature"
 msgstr "Кривизна"
 
-#: libprocess/gwygrainvalue.c:1089
+#: libprocess/gwygrainvalue.c:1098
 msgid "Moment"
 msgstr "Момент"
 
-#: libprocess/gwygrainvalue.c:1093
+#: libprocess/gwygrainvalue.c:1102
 msgid "User"
 msgstr "Пользовательские"
 
@@ -745,7 +749,7 @@ msgstr "Основные"
 msgid "Light & Material"
 msgstr "Свет и материал"
 
-#: libgwydgets/gwy3dwindow.c:650
+#: libgwydgets/gwy3dwindow.c:650 modules/file/pixmap.c:3304
 msgid "Labels"
 msgstr "Метки"
 
@@ -877,7 +881,7 @@ msgid "pixels"
 msgstr "точек"
 
 #: libgwydgets/gwy3dwindow.c:1133 modules/file/hdrimage.cc:2196
-#: modules/file/pixmap.c:1078 modules/file/pixmap.c:3218
+#: modules/file/pixmap.c:1085 modules/file/pixmap.c:3243
 #: modules/file/rawfile.c:401 modules/process/angle_dist.c:172
 #: modules/process/calcoefs_new.c:348 modules/process/calibrate.c:385
 #: modules/process/col_synth.c:328 modules/process/correct_affine.c:307
@@ -903,7 +907,7 @@ msgstr "точек"
 #: modules/process/sphere-revolve.c:218 modules/process/tilt.c:160
 #: modules/process/tip_model.c:170 modules/process/unrotate.c:228
 #: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:363
-#: modules/process/wpour_mark.c:278 modules/volume/volume_calibrate.c:371
+#: modules/process/wpour_mark.c:283 modules/volume/volume_calibrate.c:371
 #: modules/volume/volume_extract.c:331
 msgid "_Reset"
 msgstr "_Сброс"
@@ -1231,7 +1235,7 @@ msgid "Preview"
 msgstr "Предпросмотр"
 
 #: libgwymodule/gwymodule-file.c:536 modules/file/err.h:41
-#: modules/file/pixmap.c:786
+#: modules/file/pixmap.c:793
 #, c-format
 msgid "Cannot open file for reading: %s."
 msgstr "Невозможно открыть файл для чтения: %s."
@@ -2924,7 +2928,7 @@ msgstr "Единицы измерения:"
 msgid "Export Text"
 msgstr "Экспортировать текст"
 
-#: modules/file/asciiexport.c:273 modules/file/pixmap.c:3321
+#: modules/file/asciiexport.c:273 modules/file/pixmap.c:3359
 #: modules/file/rawfile.c:722 modules/file/rawxyz.c:671
 #: modules/process/calibrate.c:597 modules/process/col_synth.c:456
 #: modules/process/correct_affine.c:489 modules/process/extend.c:258
@@ -2932,7 +2936,7 @@ msgstr "Экспортировать текст"
 #: modules/process/grain_edge.c:270 modules/process/grain_mark.c:345
 #: modules/process/grain_rem_threshold.c:328 modules/process/grain_wshed.c:278
 #: modules/process/slope_dist.c:261 modules/process/tip_blind.c:360
-#: modules/process/wpour_mark.c:359 modules/tools/spotremove.c:317
+#: modules/process/wpour_mark.c:368 modules/tools/spotremove.c:317
 #: modules/tools/stats.c:379
 msgid "Options"
 msgstr "Параметры"
@@ -3502,39 +3506,39 @@ msgid "OpenEXR data type %u is invalid or unsupported."
 msgstr "Тип данных OpenEXR %u неправилен или не поддерживается."
 
 #: modules/file/hdrimage.cc:1426 modules/file/hdrimage.cc:1435
-#: modules/file/pixmap.c:1615 modules/file/pixmap.c:1625
+#: modules/file/pixmap.c:1622 modules/file/pixmap.c:1632
 #, c-format
 msgid "libpng initialization error (in %s)"
 msgstr "ошибка инициализации libpng (в %s)"
 
-#: modules/file/hdrimage.cc:1444 modules/file/pixmap.c:1685
+#: modules/file/hdrimage.cc:1444 modules/file/pixmap.c:1692
 msgid "libpng error occured"
 msgstr "Произошла ошибка libpng"
 
 #. TRANSLATORS: Dialog title; %s is PNG, TIFF, ...
-#: modules/file/hdrimage.cc:2193 modules/file/pixmap.c:1075
+#: modules/file/hdrimage.cc:2193 modules/file/pixmap.c:1082
 #, c-format
 msgid "Import %s"
 msgstr "Импортировать %s"
 
-#: modules/file/hdrimage.cc:2220 modules/file/pixmap.c:1101
+#: modules/file/hdrimage.cc:2220 modules/file/pixmap.c:1108
 msgid "Image Information"
 msgstr "Информация о изображении"
 
-#: modules/file/hdrimage.cc:2229 modules/file/pixmap.c:1108
+#: modules/file/hdrimage.cc:2229 modules/file/pixmap.c:1115
 msgid "Horizontal size:"
 msgstr "Горизонтальный размер:"
 
 #: modules/file/hdrimage.cc:2229 modules/file/hdrimage.cc:2235
-#: modules/file/pixmap.c:1108 modules/file/pixmap.c:1114
+#: modules/file/pixmap.c:1115 modules/file/pixmap.c:1121
 msgid "px"
 msgstr "пикс."
 
-#: modules/file/hdrimage.cc:2235 modules/file/pixmap.c:1114
+#: modules/file/hdrimage.cc:2235 modules/file/pixmap.c:1121
 msgid "Vertical size:"
 msgstr "Вертикальный размер:"
 
-#: modules/file/hdrimage.cc:2240 modules/file/pixmap.c:1119
+#: modules/file/hdrimage.cc:2240 modules/file/pixmap.c:1126
 msgid "Channels:"
 msgstr "Каналы:"
 
@@ -3542,21 +3546,21 @@ msgstr "Каналы:"
 msgid "Pages:"
 msgstr "Страницы:"
 
-#: modules/file/hdrimage.cc:2273 modules/file/pixmap.c:1150
+#: modules/file/hdrimage.cc:2273 modules/file/pixmap.c:1157
 #: modules/file/rawfile.c:625 modules/file/rawxyz.c:570
 #: modules/process/dimensions.h:466
 msgid "Physical Dimensions"
 msgstr "Физические размеры"
 
-#: modules/file/hdrimage.cc:2287 modules/file/pixmap.c:1160
-#: modules/file/pixmap.c:3263 modules/file/rawfile.c:634
+#: modules/file/hdrimage.cc:2287 modules/file/pixmap.c:1167
+#: modules/file/pixmap.c:3287 modules/file/rawfile.c:634
 #: modules/process/crosscor.c:199 modules/process/dimensions.h:472
 #: modules/process/tip_blind.c:336
 msgid "_Width:"
 msgstr "_Ширина:"
 
 #: modules/file/hdrimage.cc:2313 modules/file/hdrimage.cc:2378
-#: modules/file/pixmap.c:1182 modules/file/pixmap.c:1237
+#: modules/file/pixmap.c:1189 modules/file/pixmap.c:1244
 #: modules/file/rawfile.c:657 modules/file/rawfile.c:713
 #: modules/process/calcoefs_new.c:384 modules/process/calcoefs_new.c:451
 #: modules/process/calcoefs_simple.c:391 modules/process/calcoefs_simple.c:458
@@ -3568,23 +3572,23 @@ msgstr "_Ширина:"
 msgid "verb|Change"
 msgstr "Изменить"
 
-#: modules/file/hdrimage.cc:2328 modules/file/pixmap.c:1195
+#: modules/file/hdrimage.cc:2328 modules/file/pixmap.c:1202
 #: modules/file/rawfile.c:670 modules/process/crosscor.c:205
 #: modules/process/dimensions.h:476
 msgid "H_eight:"
 msgstr "_Высота:"
 
-#: modules/file/hdrimage.cc:2337 modules/file/pixmap.c:1202
+#: modules/file/hdrimage.cc:2337 modules/file/pixmap.c:1209
 #: modules/file/rawfile.c:677 modules/file/rawxyz.c:551
 msgid "Identical _measures"
 msgstr "Одинаковый _масштаб"
 
-#: modules/file/hdrimage.cc:2351 modules/file/pixmap.c:1214
+#: modules/file/hdrimage.cc:2351 modules/file/pixmap.c:1221
 #: modules/file/rawfile.c:689
 msgid "_Z-scale (per sample unit):"
 msgstr "Масштаб _Z (на единицу дискретизации):"
 
-#: modules/file/hdrimage.cc:2540 modules/file/pixmap.c:1464
+#: modules/file/hdrimage.cc:2540 modules/file/pixmap.c:1471
 #: modules/file/rawfile.c:1323 modules/process/calcoefs_new.c:776
 #: modules/process/calcoefs_simple.c:1191 modules/process/calcoefs_view.c:1393
 #: modules/process/calibrate.c:967 modules/process/dimensions.h:194
@@ -3592,7 +3596,7 @@ msgstr "Масштаб _Z (на единицу дискретизации):"
 msgid "Change Units"
 msgstr "Изменить единицы измерения"
 
-#: modules/file/hdrimage.cc:2554 modules/file/pixmap.c:1478
+#: modules/file/hdrimage.cc:2554 modules/file/pixmap.c:1485
 #: modules/file/rawfile.c:1337 modules/process/calcoefs_new.c:789
 #: modules/process/calcoefs_simple.c:1204 modules/process/calcoefs_view.c:1406
 #: modules/process/calibrate.c:981 modules/process/dimensions.h:207
@@ -4493,87 +4497,87 @@ msgstr "Найдены вложенные каталоги"
 msgid "Truncated data in block %s"
 msgstr "Неполные данные в блоке %s"
 
-#: modules/file/pixmap.c:373
+#: modules/file/pixmap.c:376
 msgid "All channels"
 msgstr "Все каналы"
 
-#: modules/file/pixmap.c:374
+#: modules/file/pixmap.c:377
 msgid "Red"
 msgstr "Красный"
 
-#: modules/file/pixmap.c:375
+#: modules/file/pixmap.c:378
 msgid "Green"
 msgstr "Зеленый"
 
-#: modules/file/pixmap.c:376
+#: modules/file/pixmap.c:379
 msgid "Blue"
 msgstr "Синий"
 
-#: modules/file/pixmap.c:377
+#: modules/file/pixmap.c:380
 msgid "Value (max)"
 msgstr "Значение (макс.)"
 
-#: modules/file/pixmap.c:378
+#: modules/file/pixmap.c:381
 msgid "RGB sum"
 msgstr "Сумма RGB"
 
-#: modules/file/pixmap.c:379
+#: modules/file/pixmap.c:382
 msgid "Luma"
 msgstr "Яркость"
 
-#: modules/file/pixmap.c:380
+#: modules/file/pixmap.c:383
 msgid "Alpha"
 msgstr "Альфа"
 
-#: modules/file/pixmap.c:392
+#: modules/file/pixmap.c:395
 msgid "Portable Network Graphics (.png)"
 msgstr "Portable Network Graphics (.png)"
 
-#: modules/file/pixmap.c:398
+#: modules/file/pixmap.c:401
 msgid "JPEG (.jpeg,.jpg)"
 msgstr "JPEG (.jpeg,.jpg)"
 
-#: modules/file/pixmap.c:404
+#: modules/file/pixmap.c:407
 msgid "TIFF (.tiff,.tif)"
 msgstr "TIFF (.tiff,.tif)"
 
-#: modules/file/pixmap.c:410
+#: modules/file/pixmap.c:413
 msgid "Portable Pixmap (.ppm,.pnm)"
 msgstr "Portable Pixmap (.ppm,.pnm)"
 
-#: modules/file/pixmap.c:416
+#: modules/file/pixmap.c:419
 msgid "Windows or OS2 Bitmap (.bmp)"
 msgstr "Bitmap из Windows или OS2 (.bmp)"
 
-#: modules/file/pixmap.c:422
+#: modules/file/pixmap.c:425
 msgid "TARGA (.tga,.targa)"
 msgstr "TARGA (.tga,.targa)"
 
-#: modules/file/pixmap.c:435
+#: modules/file/pixmap.c:438
 msgid "Graphics Interchange Format (.gif)"
 msgstr "Graphics Interchange Format (.gif)"
 
-#: modules/file/pixmap.c:439
+#: modules/file/pixmap.c:442
 msgid "JPEG 2000 (.jpx)"
 msgstr "JPEG 2000 (.jpx)"
 
-#: modules/file/pixmap.c:443
+#: modules/file/pixmap.c:446
 msgid "PCX (.pcx)"
 msgstr "PCX (.pcx)"
 
-#: modules/file/pixmap.c:447
+#: modules/file/pixmap.c:450
 msgid "X Pixmap (.xpm)"
 msgstr "X Pixmap (.xpm)"
 
-#: modules/file/pixmap.c:451
+#: modules/file/pixmap.c:454
 msgid "Sun raster image (.ras)"
 msgstr "Растровое изображение Sun (.ras)"
 
-#: modules/file/pixmap.c:455
+#: modules/file/pixmap.c:458
 msgid "Apple icon (.icns)"
 msgstr "Иконка Apple (.icns)"
 
-#: modules/file/pixmap.c:480
+#: modules/file/pixmap.c:484
 msgid ""
 "Renders data into pixmap images and imports data from pixmap images. It "
 "supports the following image formats for export: PNG, JPEG, TIFF, PPM, BMP, "
@@ -4584,72 +4588,68 @@ msgstr ""
 "JPEG, TIFF, PPM, BMP, TARGA. Поддержка импорта полагается на GDK и, "
 "вследствие этого, может зависеть от варианта установки."
 
-#: modules/file/pixmap.c:780
+#: modules/file/pixmap.c:787
 #, c-format
 msgid "Pixmap has not registered file type `%s'."
 msgstr ""
 "Модуль импорта изображений не имеет зарегистрированного типа файла `%s'."
 
-#: modules/file/pixmap.c:795
+#: modules/file/pixmap.c:802
 #, c-format
 msgid "Cannot get pixbuf loader: %s."
 msgstr "Не удаётся получить загрузчик pixbuf: %s."
 
-#: modules/file/pixmap.c:808 modules/file/pixmap.c:821
+#: modules/file/pixmap.c:815 modules/file/pixmap.c:828
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr "Загрузчик pixbuf не принял данные: %s."
 
-#: modules/file/pixmap.c:1247
+#: modules/file/pixmap.c:1254
 msgid ""
 "Warning: Colorful images cannot be reliably mapped to meaningful values."
 msgstr ""
 "Предупреждение: цветные изображения не могут быть надёжно отображены в "
 "значащие что-либо данные."
 
-#: modules/file/pixmap.c:1266
+#: modules/file/pixmap.c:1273
 msgid "verb|Use"
 msgstr "Использовать"
 
-#: modules/file/pixmap.c:1266
+#: modules/file/pixmap.c:1273
 msgid "as data"
 msgstr "как данные"
 
-#: modules/file/pixmap.c:1772 modules/file/pixmap.c:1800
+#: modules/file/pixmap.c:1779 modules/file/pixmap.c:1807
 #, c-format
 msgid "Pixbuf save failed: %s."
 msgstr "Сохранение pixbuf закончилось неудачно: %s."
 
-#: modules/file/pixmap.c:2221
+#: modules/file/pixmap.c:2228
 msgid "Image is too large to be stored as TARGA."
 msgstr "Изображение слишком велико чтобы сохранить его в формате TARGA."
 
-#: modules/file/pixmap.c:2300
+#: modules/file/pixmap.c:2307
 msgid "Data must be displayed in a window for pixmap export."
 msgstr "Данные должны отображаться в окне для экспорта изображения."
 
-#: modules/file/pixmap.c:3102
+#: modules/file/pixmap.c:3127
 msgid "Change Inset Color"
 msgstr "Изменить цвет отрезка"
 
-#: modules/file/pixmap.c:3171
+#: modules/file/pixmap.c:3196
 msgid "Gap:"
 msgstr "Зазор:"
 
-#: modules/file/pixmap.c:3215
+#: modules/file/pixmap.c:3240
 #, c-format
 msgid "Export %s"
 msgstr "Экспорт %s"
 
-#: modules/file/pixmap.c:3245
-msgid "Scaling"
-msgstr "Масштабирование"
-
-#: modules/file/pixmap.c:3254
+#: modules/file/pixmap.c:3278
 msgid "_Zoom:"
 msgstr "_Увеличение:"
 
-#: modules/file/pixmap.c:3272 modules/process/col_synth.c:426
+#: modules/file/pixmap.c:3296 modules/process/col_synth.c:426
 #: modules/process/domain_synth.c:529 modules/process/grain_mark.c:310
 #: modules/process/grain_rem_threshold.c:284 modules/process/obj_synth.c:577
 #: modules/process/pat_synth.c:893 modules/process/pat_synth.c:1194
@@ -4657,99 +4657,103 @@ msgstr "_Увеличение:"
 msgid "_Height:"
 msgstr "_Высота:"
 
-#: modules/file/pixmap.c:3280
+#: modules/file/pixmap.c:3308
 msgid "Font:"
 msgstr "Шрифт:"
 
-#: modules/file/pixmap.c:3295
+#: modules/file/pixmap.c:3323
 msgid "Scale text _proportionally"
 msgstr "_Пропорциональный масштаб текста"
 
-#: modules/file/pixmap.c:3310
+#: modules/file/pixmap.c:3338
 msgid "_Font size:"
 msgstr "_Размер шрифта:"
 
-#: modules/file/pixmap.c:3325
+#: modules/file/pixmap.c:3349
+msgid "Use antialiasing"
+msgstr "Использовать сглаживание"
+
+#: modules/file/pixmap.c:3363
 msgid "Draw _mask"
 msgstr "Рисовать _маску"
 
-#: modules/file/pixmap.c:3334
+#: modules/file/pixmap.c:3372
 msgid "Draw _selection"
 msgstr "Рисовать в_ыбранную область"
 
-#: modules/file/pixmap.c:3350
+#: modules/file/pixmap.c:3388
 msgid "Grayscale Mode"
 msgstr "Градации серого"
 
-#: modules/file/pixmap.c:3354
+#: modules/file/pixmap.c:3392
 msgid "Export as 1_6 bit grayscale"
 msgstr "Экспортировать как 1_6битное серое"
 
-#: modules/file/pixmap.c:3380
+#: modules/file/pixmap.c:3418
 msgid "Lateral Scale"
 msgstr "Горизонтальный масштаб:"
 
-#: modules/file/pixmap.c:3387 modules/file/pixmap.c:3507
+#: modules/file/pixmap.c:3425 modules/file/pixmap.c:3545
 msgid "ruler|_None"
 msgstr "_Нет"
 
-#: modules/file/pixmap.c:3388
+#: modules/file/pixmap.c:3426
 msgid "_Rulers"
 msgstr "Направл_яющие"
 
-#: modules/file/pixmap.c:3389
+#: modules/file/pixmap.c:3427
 msgid "_Inset scale bar"
 msgstr "В_ложенный масштабный отрезок"
 
-#: modules/file/pixmap.c:3399
+#: modules/file/pixmap.c:3437
 msgid "Color:"
 msgstr "Цвет:"
 
-#: modules/file/pixmap.c:3415 modules/process/immerse.c:321
+#: modules/file/pixmap.c:3453 modules/process/immerse.c:321
 msgid "Position:"
 msgstr "Расположение:"
 
-#: modules/file/pixmap.c:3420
+#: modules/file/pixmap.c:3458
 msgid "left"
 msgstr "слева"
 
-#: modules/file/pixmap.c:3424
+#: modules/file/pixmap.c:3462
 msgid "center"
 msgstr "по центру"
 
-#: modules/file/pixmap.c:3428
+#: modules/file/pixmap.c:3466
 msgid "right"
 msgstr "справа"
 
-#: modules/file/pixmap.c:3433
+#: modules/file/pixmap.c:3471
 msgid "top"
 msgstr "верх"
 
-#: modules/file/pixmap.c:3445
+#: modules/file/pixmap.c:3483
 msgid "bottom"
 msgstr "низ"
 
-#: modules/file/pixmap.c:3456 modules/process/lno_synth.c:1070
+#: modules/file/pixmap.c:3494 modules/process/lno_synth.c:1070
 msgid "_Length:"
 msgstr "_Длина:"
 
-#: modules/file/pixmap.c:3472
+#: modules/file/pixmap.c:3510
 msgid "_Auto"
 msgstr "_Авто"
 
-#: modules/file/pixmap.c:3480
+#: modules/file/pixmap.c:3518
 msgid "Draw _ticks"
 msgstr "Рисовать _засечки"
 
-#: modules/file/pixmap.c:3490
+#: modules/file/pixmap.c:3528
 msgid "Draw _label"
 msgstr "Рисовать подпис_ь"
 
-#: modules/file/pixmap.c:3500
+#: modules/file/pixmap.c:3538
 msgid "Value Scale"
 msgstr "Масштаб значений"
 
-#: modules/file/pixmap.c:3508
+#: modules/file/pixmap.c:3546
 msgid "_False color ruler"
 msgstr "Л_инейка псевдоцвета"
 
@@ -4924,7 +4928,7 @@ msgstr "Предустановки"
 #: modules/process/grain_rem_threshold.c:226 modules/process/grain_wshed.c:180
 #: modules/process/mark_with.c:211 modules/process/polydistort.c:213
 #: modules/process/scars.c:474 modules/process/synth.h:508
-#: modules/process/tip_model.c:167 modules/process/wpour_mark.c:273
+#: modules/process/tip_model.c:167 modules/process/wpour_mark.c:278
 #: modules/tools/linestats.c:421 modules/tools/sfunctions.c:476
 #: modules/tools/stats.c:436 modules/volume/volume_extract.c:328
 msgid "_Update"
@@ -5928,7 +5932,7 @@ msgstr ""
 
 #: modules/graph/graph_cd.c:710 modules/graph/graph_fdfit.c:798
 #: modules/graph/graph_fit.c:842 modules/process/fit_2d.c:405
-#: modules/tools/grainmeasure.c:216 modules/tools/readvalue.c:644
+#: modules/tools/grainmeasure.c:217 modules/tools/readvalue.c:644
 #: modules/tools/readvalue.c:645 modules/tools/readvalue.c:646
 #: modules/tools/readvalue.c:647 modules/tools/roughness.c:959
 #: modules/tools/stats.c:667 modules/tools/stats.c:678
@@ -6133,7 +6137,7 @@ msgid "Correlation Matrix"
 msgstr "Матрица корреляции"
 
 #: modules/graph/graph_fdfit.c:447 modules/graph/graph_fit.c:475
-#: modules/process/wpour_mark.c:420 modules/volume/volume_fdfit.c:532
+#: modules/process/wpour_mark.c:429 modules/volume/volume_fdfit.c:532
 msgid "Instant:"
 msgstr "Сразу:"
 
@@ -7661,7 +7665,7 @@ msgstr "_Линии дрейфа"
 #: modules/process/drift.c:358 modules/process/facet_analysis.c:413
 #: modules/process/grain_edge.c:279 modules/process/grain_mark.c:371
 #: modules/process/grain_rem_threshold.c:365 modules/process/grain_wshed.c:296
-#: modules/process/scars.c:575 modules/process/wpour_mark.c:377
+#: modules/process/scars.c:575 modules/process/wpour_mark.c:386
 msgid "_Mask color:"
 msgstr "_Цвет маски:"
 
@@ -8111,7 +8115,7 @@ msgstr "/Исправить _данные/Одномерная фильтрац�
 msgid "1D FFT Filtering"
 msgstr "Одномерная фильтрация БПФ"
 
-#: modules/process/fft_filter_1d.c:177 modules/process/wpour_mark.c:401
+#: modules/process/fft_filter_1d.c:177 modules/process/wpour_mark.c:410
 msgid "Marked"
 msgstr "Помечено"
 
@@ -8814,7 +8818,7 @@ msgid "_Curvature:"
 msgstr "_Кривизна:"
 
 #: modules/process/grain_mark.c:349 modules/process/grain_rem_threshold.c:332
-#: modules/process/grain_wshed.c:282 modules/process/wpour_mark.c:363
+#: modules/process/grain_wshed.c:282 modules/process/wpour_mark.c:372
 msgid "_Invert height"
 msgstr "_Инвертировать высоту"
 
@@ -11210,85 +11214,89 @@ msgstr "Плоская вершина"
 msgid "Displacement"
 msgstr "Смещение"
 
-#: modules/process/wpour_mark.c:188
+#: modules/process/wpour_mark.c:193
 msgid "Segments image using watershed with pre- and postprocessing."
 msgstr ""
 "Разделяет изображение используя классический водораздел с пред- и "
 "постобработкой."
 
-#: modules/process/wpour_mark.c:202
+#: modules/process/wpour_mark.c:207
 msgid "/_Grains/_Mark by Segmentation..."
 msgstr "/Зёрн_а/Пометить _сегментацией..."
 
-#: modules/process/wpour_mark.c:206
+#: modules/process/wpour_mark.c:211
 msgid "Segment using watershed "
 msgstr "Пометить используя классический водораздел"
 
-#: modules/process/wpour_mark.c:270
+#: modules/process/wpour_mark.c:275
 msgid "Segment by Watershed"
 msgstr "Пометить классическим водоразделом"
 
-#: modules/process/wpour_mark.c:321
+#: modules/process/wpour_mark.c:326
 msgid "Preprocessing"
 msgstr "Предобработка"
 
-#: modules/process/wpour_mark.c:329
+#: modules/process/wpour_mark.c:334
 msgid "Gaussian _smoothening:"
 msgstr "Гауссово _сглаживание:"
 
-#: modules/process/wpour_mark.c:336
+#: modules/process/wpour_mark.c:341
 msgid "Add _gradient:"
 msgstr "Добавить _градиент:"
 
-#: modules/process/wpour_mark.c:340
+#: modules/process/wpour_mark.c:345
 msgid "Add _curvature:"
 msgstr "Добавить _кривизну:"
 
-#: modules/process/wpour_mark.c:344
+#: modules/process/wpour_mark.c:349
+msgid "_Barrier level:"
+msgstr "Высота _барьера:"
+
+#: modules/process/wpour_mark.c:353
 msgid "Prefill _level:"
 msgstr "_Уровень предзаполнения:"
 
-#: modules/process/wpour_mark.c:348
+#: modules/process/wpour_mark.c:357
 msgid "Pre_fill from minima:"
 msgstr "Предварительно _заполнить с минимумов:"
 
-#: modules/process/wpour_mark.c:353
+#: modules/process/wpour_mark.c:362
 msgid "Postprocessing"
 msgstr "Постобработка"
 
-#: modules/process/wpour_mark.c:387
+#: modules/process/wpour_mark.c:396
 msgid "Original image"
 msgstr "Исходное изображение"
 
-#: modules/process/wpour_mark.c:389
+#: modules/process/wpour_mark.c:398
 msgid "Preprocessed image"
 msgstr "Предобработанное изображение"
 
-#: modules/process/wpour_mark.c:392
+#: modules/process/wpour_mark.c:401
 msgid "_Image preview:"
 msgstr "_Изображение предпросмотра"
 
-#: modules/process/wpour_mark.c:399
+#: modules/process/wpour_mark.c:408
 msgid "No mask"
 msgstr "Без маски"
 
-#: modules/process/wpour_mark.c:403
+#: modules/process/wpour_mark.c:412
 msgid "Postprocessed"
 msgstr "После постобработки"
 
-#: modules/process/wpour_mark.c:406
+#: modules/process/wpour_mark.c:415
 msgid "_Mask preview:"
 msgstr "Предпросмотр _маски:"
 
-#: modules/process/wpour_mark.c:413
+#: modules/process/wpour_mark.c:422
 msgid "No updates"
 msgstr "Без обновления"
 
-#: modules/process/wpour_mark.c:415
+#: modules/process/wpour_mark.c:424
 msgid "Preprocess image"
 msgstr "Предобработать изображение"
 
-#: modules/process/wpour_mark.c:417
+#: modules/process/wpour_mark.c:426
 msgid "Preprocess and mark"
 msgstr "Предобработать и пометить"
 
@@ -12612,6 +12620,9 @@ msgstr "/_Инвертировать значение"
 #: modules/volume/volume_invert.c:69
 msgid "Invert value in volume data"
 msgstr "Инвертирует значения в объёмных данных"
+
+#~ msgid "Scaling"
+#~ msgstr "Масштабирование"
 
 #~ msgid "Frame #%u is too short for scanned data header."
 #~ msgstr ""
