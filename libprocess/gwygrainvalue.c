@@ -1142,6 +1142,35 @@ gwy_grain_values_get_grain_value(const gchar *name)
     return (GwyGrainValue*)gwy_inventory_get_item(i, name);
 }
 
+/**
+ * gwy_grain_values_get_grain_value_by_symbol:
+ * @symbol: Grain quantity symbol.
+ *
+ * Convenience function to get a grain quantity from gwy_grain_values() by
+ * its symbol.
+ *
+ * Returns: Grain quantity with smybol @symbol or %NULL if there is no such
+ *          grain quantity.
+ *
+ * Since: 2.37
+ **/
+GwyGrainValue*
+gwy_grain_values_get_grain_value_by_symbol(const gchar *symbol)
+{
+    GwyInventory *i;
+    guint n, k;
+
+    i = GWY_RESOURCE_CLASS(g_type_class_peek(GWY_TYPE_GRAIN_VALUE))->inventory;
+    n = gwy_inventory_get_n_items(i);
+    for (k = 0; k < n; k++) {
+        GwyGrainValue *gvalue = gwy_inventory_get_nth_item(i, k);
+        if (gwy_strequal(gwy_grain_value_get_symbol(gvalue), symbol))
+            return gvalue;
+    }
+
+    return NULL;
+}
+
 static gboolean
 find_grain_value_by_quantity(G_GNUC_UNUSED gpointer key,
                              gpointer value,

@@ -108,6 +108,7 @@ const gchar*       gwy_grain_value_group_name       (GwyGrainValueGroup group);
 
 GwyInventory*  gwy_grain_values                          (void);
 GwyGrainValue* gwy_grain_values_get_grain_value          (const gchar *name);
+GwyGrainValue* gwy_grain_values_get_grain_value_by_symbol(const gchar *symbol);
 GwyGrainValue* gwy_grain_values_get_builtin_grain_value  (GwyGrainQuantity quantity);
 
 void gwy_grain_values_calculate(gint nvalues,
