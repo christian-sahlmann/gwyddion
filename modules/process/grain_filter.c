@@ -20,6 +20,7 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include <gtk/gtk.h>
 #include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
@@ -82,10 +83,15 @@ typedef struct {
     GrainLogical2 logical2;
     GrainLogical3 logical3;
     RangeRecord ranges[NQUANTITIES];
+
     GHashTable *ranges_history;
 
     /* To mask impossible quantitities without really resetting the bits */
     gboolean units_equal;
+
+    GPtrArray *valuedata;
+    gint *grains;
+    guint ngrains;
 } GFilterArgs;
 
 typedef struct {
@@ -111,39 +117,43 @@ typedef struct {
     gint set_as_id;
 } GFilterControls;
 
-static gboolean module_register               (void);
-static void     grain_filter                  (GwyContainer *data,
-                                               GwyRunType run);
-static void     run_noninteractive            (GFilterArgs *args,
-                                               GwyContainer *data,
-                                               GwyDataField *dfield,
-                                               GwyDataField *mfield,
-                                               GQuark mquark);
-static void     gfilter_dialog                (GFilterArgs *args,
-                                               GwyContainer *data,
-                                               GwyDataField *dfield,
-                                               GwyDataField *mfield,
-                                               gint id,
-                                               GQuark mquark);
-static void     mask_color_changed            (GtkWidget *color_button,
-                                               GFilterControls *controls);
-static void     load_mask_color               (GtkWidget *color_button,
-                                               GwyContainer *data);
-static void     gfilter_dialog_update_controls(GFilterControls *controls,
-                                               GFilterArgs *args);
-static void     gfilter_invalidate            (GFilterControls *controls);
-static void     update_changed                (GFilterControls *controls,
-                                               GtkToggleButton *toggle);
-static void     value_selected                (GFilterControls *controls,
-                                               GtkTreeSelection *selection);
-static void     set_as_changed                (GtkComboBox *combo,
-                                               GFilterControls *controls);
-static void     gfilter_load_args             (GwyContainer *container,
-                                               GFilterArgs *args);
-static void     gfilter_save_args             (GwyContainer *container,
-                                               GFilterArgs *args);
-static void     gfilter_sanitize_args         (GFilterArgs *args);
-static void     gfilter_free_args             (GFilterArgs *args);
+static gboolean   module_register               (void);
+static void       grain_filter                  (GwyContainer *data,
+                                                 GwyRunType run);
+static void       run_noninteractive            (GFilterArgs *args,
+                                                 GwyContainer *data,
+                                                 GwyDataField *dfield,
+                                                 GwyDataField *mfield,
+                                                 GQuark mquark);
+static void       gfilter_dialog                (GFilterArgs *args,
+                                                 GwyContainer *data,
+                                                 GwyDataField *dfield,
+                                                 GwyDataField *mfield,
+                                                 gint id,
+                                                 GQuark mquark);
+static void       mask_color_changed            (GtkWidget *color_button,
+                                                 GFilterControls *controls);
+static void       load_mask_color               (GtkWidget *color_button,
+                                                 GwyContainer *data);
+static void       gfilter_dialog_update_controls(GFilterControls *controls,
+                                                 GFilterArgs *args);
+static void       gfilter_invalidate            (GFilterControls *controls);
+static void       update_changed                (GFilterControls *controls,
+                                                 GtkToggleButton *toggle);
+static void       value_selected                (GFilterControls *controls,
+                                                 GtkTreeSelection *selection);
+static void       set_as_changed                (GtkComboBox *combo,
+                                                 GFilterControls *controls);
+static GPtrArray* calculate_all_grain_values    (GwyDataField *dfield,
+                                                 GwyDataField *mask,
+                                                 guint *ngrains,
+                                                 gint **grains);
+static void       gfilter_load_args             (GwyContainer *container,
+                                                 GFilterArgs *args);
+static void       gfilter_save_args             (GwyContainer *container,
+                                                 GFilterArgs *args);
+static void       gfilter_sanitize_args         (GFilterArgs *args);
+static void       gfilter_free_args             (GFilterArgs *args);
 
 static const GFilterArgs gfilter_defaults = {
     TRUE, 0,
@@ -159,7 +169,8 @@ static const GFilterArgs gfilter_defaults = {
     },
     /* Dynamic state */
     NULL,
-    FALSE
+    FALSE,
+    NULL, NULL, 0,
 };
 
 static GwyModuleInfo module_info = {
@@ -210,6 +221,8 @@ grain_filter(GwyContainer *data, GwyRunType run)
     siunitxy = gwy_data_field_get_si_unit_xy(dfield);
     siunitz = gwy_data_field_get_si_unit_z(dfield);
     args.units_equal = gwy_si_unit_equal(siunitxy, siunitz);
+    args.valuedata = calculate_all_grain_values(dfield, mfield,
+                                                &args.ngrains, &args.grains);
 
     /* Must precalculate grain quantities to limit the ranges correctly. */
 
@@ -503,6 +516,39 @@ set_as_changed(GtkComboBox *combo, GFilterControls *controls)
                        controls->args->ranges[controls->set_as_id].quantity);
 }
 
+static GPtrArray*
+calculate_all_grain_values(GwyDataField *dfield,
+                           GwyDataField *mask,
+                           guint *ngrains,
+                           gint **grains)
+{
+    GwyGrainValue **gvalues;
+    guint xres = dfield->xres, yres = dfield->yres, n, i;
+    GwyInventory *inventory;
+    GPtrArray *valuedata;
+
+    *grains = g_new0(gint, xres*yres);
+    *ngrains = gwy_data_field_number_grains(mask, *grains);
+
+    inventory = gwy_grain_values();
+    n = gwy_inventory_get_n_items(inventory);
+
+    valuedata = g_ptr_array_new();
+    g_ptr_array_set_size(valuedata, n);
+
+    gvalues = g_new(GwyGrainValue*, n);
+    for (i = 0; i < n; i++) {
+        gvalues[i] = gwy_inventory_get_nth_item(inventory, i);
+        g_ptr_array_index(valuedata, i) = g_new(gdouble, *ngrains + 1);
+    }
+
+    gwy_grain_values_calculate(n, gvalues, (gdouble**)valuedata->pdata,
+                               dfield, *ngrains, *grains);
+    g_free(gvalues);
+
+    return valuedata;
+}
+
 static const gchar nquantities_key[] = "/module/grain_filter/nquantities";
 static const gchar logical1_key[]    = "/module/grain_filter/logical1";
 static const gchar logical2_key[]    = "/module/grain_filter/logical2";
@@ -654,12 +700,22 @@ gfilter_save_args(GwyContainer *container,
 static void
 gfilter_free_args(GFilterArgs *args)
 {
-    guint i;
+    GwyInventory *inventory;
+    guint i, n;
 
     for (i = 0; i < NQUANTITIES; i++)
         g_free(args->ranges[i].quantity);
 
     g_hash_table_destroy(args->ranges_history);
+
+    inventory = gwy_grain_values();
+    n = gwy_inventory_get_n_items(inventory);
+
+    for (i = 0; i < n; i++)
+        g_free(g_ptr_array_index(args->valuedata, i));
+
+    g_ptr_array_free(args->valuedata, TRUE);
+    g_free(args->grains);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
