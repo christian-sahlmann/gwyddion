@@ -101,12 +101,15 @@ typedef struct {
 
     GtkWidget *dialog;
     GtkWidget *view;
+    GtkWidget *table;
     GtkWidget *values;
     GtkWidget *expression;
     GtkWidget *color_button;
     GtkObject *nquantities;
-    GtkWidget *logical_op;
     GtkWidget *set_as;
+    GtkWidget *logical_op[NQUANTITIES];
+    gint logop_col;
+    gint logop_row;
     GtkObject *name[NQUANTITIES];
     GtkObject *lower[NQUANTITIES];
     GtkObject *upper[NQUANTITIES];
@@ -143,6 +146,14 @@ static void       update_changed                (GFilterControls *controls,
 static void       value_selected                (GFilterControls *controls,
                                                  GtkTreeSelection *selection);
 static void       set_as_changed                (GtkComboBox *combo,
+                                                 GFilterControls *controls);
+static void       nquantities_changed           (GFilterControls *controls,
+                                                 GtkAdjustment *adj);
+static void       logical_op1_changed           (GtkComboBox *combo,
+                                                 GFilterControls *controls);
+static void       logical_op2_changed           (GtkComboBox *combo,
+                                                 GFilterControls *controls);
+static void       logical_op3_changed           (GtkComboBox *combo,
                                                  GFilterControls *controls);
 static GPtrArray* calculate_all_grain_values    (GwyDataField *dfield,
                                                  GwyDataField *mask,
@@ -261,7 +272,7 @@ gfilter_dialog(GFilterArgs *args,
     GtkTreeView *treeview;
     GtkTreeSelection *selection;
     GFilterControls controls;
-    gint response, row;
+    gint response, row, i;
     GwyPixmapLayer *layer;
 
     controls.args = args;
@@ -323,6 +334,7 @@ gfilter_dialog(GFilterArgs *args,
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
+    controls.table = table;
     row = 0;
 
     scwin = gtk_scrolled_window_new(NULL, NULL);
@@ -346,17 +358,58 @@ gfilter_dialog(GFilterArgs *args,
     row++;
 
     controls.expression = gtk_entry_new();
-    gwy_table_attach_hscale(table, row++, _("Expression:"), NULL,
+    gwy_table_attach_hscale(table, row++, _("E_xpression:"), NULL,
                             GTK_OBJECT(controls.expression), GWY_HSCALE_WIDGET);
 
-    controls.set_as = gwy_enum_combo_box_newl(G_CALLBACK(set_as_changed),
-                                              &controls, 0,
-                                              "A", 0,
-                                              "B", 1,
-                                              "C", 2,
-                                              NULL);
+    controls.set_as
+        = gwy_enum_combo_box_newl(G_CALLBACK(set_as_changed), &controls, 0,
+                                  "A", 0,
+                                  "B", 1,
+                                  "C", 2,
+                                  NULL);
     gtk_table_attach(GTK_TABLE(table), controls.set_as, 3, 4, row-1, row,
                      0, 0, 0, 0);
+
+    controls.nquantities = gtk_adjustment_new(args->nquantities, 1, 3, 1, 1, 0);
+    gwy_table_attach_hscale(table, row++, _("_Number of quantities:"), NULL,
+                            controls.nquantities, GWY_HSCALE_DEFAULT);
+    g_signal_connect_swapped(controls.nquantities, "value-changed",
+                             G_CALLBACK(nquantities_changed), &controls);
+
+    controls.logical_op[0]
+        = gwy_enum_combo_box_newl(G_CALLBACK(logical_op1_changed), &controls,
+                                  args->logical1,
+                                  "A", GRAIN_LOGICAL1_A,
+                                  NULL);
+    controls.logical_op[1]
+        = gwy_enum_combo_box_newl(G_CALLBACK(logical_op2_changed), &controls,
+                                  args->logical2,
+                                  "A ∧ B", GRAIN_LOGICAL2_A_AND_B,
+                                  "A ∨ B", GRAIN_LOGICAL2_A_OR_B,
+                                  NULL);
+    controls.logical_op[2]
+        = gwy_enum_combo_box_newl(G_CALLBACK(logical_op3_changed), &controls,
+                                  args->logical3,
+                                  "A ∧ B ∧ C", GRAIN_LOGICAL3_A_AND_B_AND_C,
+                                  "A ∨ B ∨ C", GRAIN_LOGICAL3_A_OR_B_OR_C,
+                                  "(A ∧ B) ∨ C", GRAIN_LOGICAL3_A_AND_B_OR_C,
+                                  "(A ∨ B) ∧ C", GRAIN_LOGICAL3_A_OR_B_AND_C,
+                                  NULL);
+
+    for (i = 0; i < NQUANTITIES; i++) {
+        g_object_ref(controls.logical_op[i]);
+        if (i+1 == args->nquantities) {
+            gwy_table_attach_hscale(table, row++,
+                                    _("Keep grains satisfying:"), NULL,
+                                    GTK_OBJECT(controls.logical_op[i]),
+                                    GWY_HSCALE_WIDGET);
+            gtk_container_child_get(GTK_CONTAINER(table),
+                                    controls.logical_op[i],
+                                    "top-attach", &controls.logop_row,
+                                    "left-attach", &controls.logop_col,
+                                    NULL);
+        }
+    }
 
     controls.color_button = gwy_color_button_new();
     gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
@@ -391,6 +444,8 @@ gfilter_dialog(GFilterArgs *args,
             case GTK_RESPONSE_DELETE_EVENT:
             args->expanded = gwy_grain_value_tree_view_get_expanded_groups
                                              (GTK_TREE_VIEW(controls.values));
+            for (i = 0; i < NQUANTITIES; i++)
+                g_object_unref(controls.logical_op[i]);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             g_object_unref(controls.mydata);
@@ -424,6 +479,8 @@ gfilter_dialog(GFilterArgs *args,
     gwy_app_sync_data_items(controls.mydata, data, 0, id, FALSE,
                             GWY_DATA_ITEM_MASK_COLOR,
                             0);
+    for (i = 0; i < NQUANTITIES; i++)
+        g_object_unref(controls.logical_op[i]);
     gtk_widget_destroy(dialog);
 
     gfilter_save_args(gwy_app_settings_get(), args);
@@ -446,6 +503,19 @@ static void
 gfilter_dialog_update_controls(GFilterControls *controls,
                                GFilterArgs *args)
 {
+    controls->in_init = TRUE;
+
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->logical_op[0]),
+                                  args->logical1);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->logical_op[1]),
+                                  args->logical2);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->logical_op[2]),
+                                  args->logical3);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->nquantities),
+                             args->nquantities);
+
+    controls->in_init = FALSE;
+    gfilter_invalidate(controls);
 }
 
 static void
@@ -514,6 +584,44 @@ set_as_changed(GtkComboBox *combo, GFilterControls *controls)
     controls->set_as_id = gwy_enum_combo_box_get_active(combo);
     gtk_entry_set_text(GTK_ENTRY(controls->expression),
                        controls->args->ranges[controls->set_as_id].quantity);
+}
+
+static void
+nquantities_changed(GFilterControls *controls, GtkAdjustment *adj)
+{
+    GFilterArgs *args = controls->args;
+
+    gtk_container_remove(GTK_CONTAINER(controls->table),
+                         controls->logical_op[args->nquantities-1]);
+    args->nquantities = gwy_adjustment_get_int(adj);
+    gtk_table_attach(GTK_TABLE(controls->table),
+                     controls->logical_op[args->nquantities-1],
+                     controls->logop_col, controls->logop_col+2,
+                     controls->logop_row, controls->logop_row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_widget_show(controls->logical_op[args->nquantities-1]);
+    gfilter_invalidate(controls);
+}
+
+static void
+logical_op1_changed(GtkComboBox *combo, GFilterControls *controls)
+{
+    controls->args->logical1 = gwy_enum_combo_box_get_active(combo);
+    gfilter_invalidate(controls);
+}
+
+static void
+logical_op2_changed(GtkComboBox *combo, GFilterControls *controls)
+{
+    controls->args->logical2 = gwy_enum_combo_box_get_active(combo);
+    gfilter_invalidate(controls);
+}
+
+static void
+logical_op3_changed(GtkComboBox *combo, GFilterControls *controls)
+{
+    controls->args->logical3 = gwy_enum_combo_box_get_active(combo);
+    gfilter_invalidate(controls);
 }
 
 static GPtrArray*
