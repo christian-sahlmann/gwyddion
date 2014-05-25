@@ -8,6 +8,7 @@ Libraries:
 - libgwyprocess: A regional extrema marking function was added.
 - libgwyprocess: A classic Vincent watershed algorithm function was added.
 - libgwydgets: Several new stock icons were added.
+- libgwyprocess: Pixel count was added as a new grain quantity.
 
 Modules:
 - WinSTM (new): Import WinSTM data files.
@@ -25,6 +26,7 @@ Modules:
 - NT-MDT: Double inversion of new spectroscopy data properly checked and fixed.
 - Slope distribution: Masking is supported.  Plot of total gradient was added.
 - NanoScan: A couple of memory-hadling bugs was fixed.
+- Grain distributions: Displays a preview graph of the selected quantity.
 
 Other:
 - The standalone Python gwy module uses the correct extension for dlopening,
