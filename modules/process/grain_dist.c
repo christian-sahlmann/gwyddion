@@ -80,10 +80,14 @@ typedef struct {
 
     /* To mask impossible quantitities without really resetting the bits */
     gboolean units_equal;
+    gint *grains;
+    guint ngrains;
 } GrainDistArgs;
 
 typedef struct {
     GrainDistArgs *args;
+    GwyDataField *dfield;
+    GtkWidget *graph;
     GtkWidget *values;
     GSList *mode;
     GtkWidget *add_comment;
@@ -100,39 +104,45 @@ typedef struct {
     gboolean add_comment;
 } GrainDistExportData;
 
-static gboolean   module_register                     (void);
-static void       grain_dist                          (GwyContainer *data,
-                                                       GwyRunType run);
-static void       grain_stat                          (GwyContainer *data,
-                                                       GwyRunType run);
-static void       grain_inscribe_discs                (GwyContainer *data,
-                                                       GwyRunType run);
-static void       grain_exscribe_circles              (GwyContainer *data,
-                                                       GwyRunType run);
-static GtkWidget* grain_stats_add_aux_button          (GtkWidget *hbox,
-                                                       const gchar *stock_id,
-                                                       const gchar *tooltip);
-static void       grain_dist_dialog                   (GrainDistArgs *args,
-                                                       GwyContainer *data,
-                                                       GwyDataField *dfield,
-                                                       GwyDataField *mfield);
-static void       mode_changed_cb                     (GtkToggleButton *button,
-                                                       GrainDistControls *controls);
-static void       selected_changed_cb                 (GrainDistControls *controls);
-static void       grain_dist_dialog_update_values     (GrainDistControls *controls,
-                                                       GrainDistArgs *args);
-static void       grain_dist_dialog_update_sensitivity(GrainDistControls *controls,
-                                                       GrainDistArgs *args);
-static void       grain_dist_run                      (GrainDistArgs *args,
-                                                       GwyContainer *data,
-                                                       GwyDataField *dfield,
-                                                       GwyDataField *mfield);
-static gchar*     grain_dist_export_create            (gpointer user_data,
-                                                       gssize *data_len);
-static void       grain_dist_load_args                (GwyContainer *container,
-                                                       GrainDistArgs *args);
-static void       grain_dist_save_args                (GwyContainer *container,
-                                                       GrainDistArgs *args);
+static gboolean       module_register           (void);
+static void           grain_dist                (GwyContainer *data,
+                                                 GwyRunType run);
+static void           grain_stat                (GwyContainer *data,
+                                                 GwyRunType run);
+static void           grain_inscribe_discs      (GwyContainer *data,
+                                                 GwyRunType run);
+static void           grain_exscribe_circles    (GwyContainer *data,
+                                                 GwyRunType run);
+static GtkWidget*     grain_stats_add_aux_button(GtkWidget *hbox,
+                                                 const gchar *stock_id,
+                                                 const gchar *tooltip);
+static void           grain_dist_dialog         (GrainDistArgs *args,
+                                                 GwyContainer *data,
+                                                 GwyDataField *dfield);
+static void           mode_changed              (GtkToggleButton *button,
+                                                 GrainDistControls *controls);
+static void           selected_changed          (GrainDistControls *controls);
+static void           resolution_changed        (GrainDistControls *controls,
+                                                 GtkAdjustment *adj);
+static void           fixres_changed            (GrainDistControls *controls,
+                                                 GtkToggleButton *check);
+static void           update_values             (GrainDistControls *controls,
+                                                 GrainDistArgs *args);
+static void           update_sensitivity        (GrainDistControls *controls,
+                                                 GrainDistArgs *args);
+static void           preview_dist              (GrainDistControls *controls);
+static GwyGraphModel* add_one_distribution      (GwyDataField *dfield,
+                                                 GrainDistExportData *expdata,
+                                                 guint i);
+static void           grain_dist_run            (GrainDistArgs *args,
+                                                 GwyContainer *data,
+                                                 GwyDataField *dfield);
+static gchar*         grain_dist_export_create  (gpointer user_data,
+                                                 gssize *data_len);
+static void           grain_dist_load_args      (GwyContainer *container,
+                                                 GrainDistArgs *args);
+static void           grain_dist_save_args      (GwyContainer *container,
+                                                 GrainDistArgs *args);
 
 static const GrainDistArgs grain_dist_defaults = {
     MODE_GRAPH,
@@ -141,7 +151,9 @@ static const GrainDistArgs grain_dist_defaults = {
     FALSE,
     FALSE,
     120,
+    /* dynamic state */
     FALSE,
+    NULL, 0,
 };
 
 static GwyModuleInfo module_info = {
@@ -150,7 +162,7 @@ static GwyModuleInfo module_info = {
     N_("Evaluates distribution of grains (continuous parts of mask)."),
     "Petr Klapetek <petr@klapetek.cz>, Sven Neumann <neumann@jpk.com>, "
         "Yeti <yeti@gwyddion.net>",
-    "3.11",
+    "4.0",
     "David Nečas (Yeti) & Petr Klapetek & Sven Neumann",
     "2003",
 };
@@ -217,23 +229,27 @@ grain_dist(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(dfield && mfield);
 
+    args.grains = g_new0(gint, mfield->xres*mfield->yres);
+    args.ngrains = gwy_data_field_number_grains(mfield, args.grains);
+
     siunitxy = gwy_data_field_get_si_unit_xy(dfield);
     siunitz = gwy_data_field_get_si_unit_z(dfield);
     args.units_equal = gwy_si_unit_equal(siunitxy, siunitz);
 
     if (run == GWY_RUN_IMMEDIATE)
-        grain_dist_run(&args, data, dfield, mfield);
+        grain_dist_run(&args, data, dfield);
     else {
-        grain_dist_dialog(&args, data, dfield, mfield);
+        grain_dist_dialog(&args, data, dfield);
         grain_dist_save_args(gwy_app_settings_get(), &args);
     }
+
+    g_free(args.grains);
 }
 
 static void
 grain_dist_dialog(GrainDistArgs *args,
                   GwyContainer *data,
-                  GwyDataField *dfield,
-                  GwyDataField *mfield)
+                  GwyDataField *dfield)
 {
     static const GwyEnum modes[] = {
         { N_("_Export raw data"), MODE_RAW,   },
@@ -241,7 +257,8 @@ grain_dist_dialog(GrainDistArgs *args,
     };
 
     GrainDistControls controls;
-    GtkWidget *scwin;
+    GtkWidget *scwin, *hbox, *vbox;
+    GwyGraphModel *gmodel;
     GtkDialog *dialog;
     GtkTreeView *treeview;
     GtkTreeSelection *selection;
@@ -251,6 +268,7 @@ grain_dist_dialog(GrainDistArgs *args,
     gint row, response;
 
     controls.args = args;
+    controls.dfield = dfield;
 
     dialog = GTK_DIALOG(gtk_dialog_new_with_buttons(_("Grain Distributions"),
                                                     NULL, 0,
@@ -263,17 +281,31 @@ grain_dist_dialog(GrainDistArgs *args,
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_OK);
     gtk_window_set_default_size(GTK_WINDOW(dialog), -1, 520);
 
+    hbox = gtk_hbox_new(FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 4);
+
+    gmodel = gwy_graph_model_new();
+    controls.graph = gwy_graph_new(gmodel);
+    gtk_widget_set_size_request(controls.graph, 360, 0);
+    g_object_unref(gmodel);
+    gtk_box_pack_start(GTK_BOX(hbox), controls.graph, TRUE, TRUE, 4);
+
+    vbox = gtk_vbox_new(FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 4);
+
     scwin = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
                                    GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-    gtk_box_pack_start(GTK_BOX(dialog->vbox), scwin, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), scwin, TRUE, TRUE, 0);
 
     controls.values = gwy_grain_value_tree_view_new(FALSE,
                                                     "name", "enabled", NULL);
     treeview = GTK_TREE_VIEW(controls.values);
     gtk_tree_view_set_headers_visible(treeview, FALSE);
     selection = gtk_tree_view_get_selection(treeview);
-    gtk_tree_selection_set_mode(selection, GTK_SELECTION_NONE);
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
+    g_signal_connect_swapped(selection, "changed",
+                             G_CALLBACK(preview_dist), &controls);
     gwy_grain_value_tree_view_set_same_units(treeview, args->units_equal);
     gwy_grain_value_tree_view_set_expanded_groups(treeview, args->expanded);
     if (args->selected) {
@@ -287,19 +319,18 @@ grain_dist_dialog(GrainDistArgs *args,
 
     model = gtk_tree_view_get_model(treeview);
     g_signal_connect_swapped(model, "row-changed",
-                             G_CALLBACK(selected_changed_cb), &controls);
+                             G_CALLBACK(selected_changed), &controls);
 
     /* Options */
     table = GTK_TABLE(gtk_table_new(5, 4, FALSE));
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(table),
-                       FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(table), FALSE, FALSE, 0);
     row = 0;
 
     controls.mode = gwy_radio_buttons_create(modes, G_N_ELEMENTS(modes),
-                                             G_CALLBACK(mode_changed_cb),
+                                             G_CALLBACK(mode_changed),
                                              &controls,
                                              args->mode);
 
@@ -336,17 +367,21 @@ grain_dist_dialog(GrainDistArgs *args,
     controls.fixres = gwy_table_hscale_get_check(controls.resolution);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.fixres),
                                  args->fixres);
+    g_signal_connect_swapped(controls.resolution, "value-changed",
+                             G_CALLBACK(resolution_changed), &controls);
+    g_signal_connect_swapped(controls.fixres, "toggled",
+                             G_CALLBACK(fixres_changed), &controls);
     row++;
 
     gtk_widget_show_all(GTK_WIDGET(dialog));
-    grain_dist_dialog_update_sensitivity(&controls, args);
+    update_sensitivity(&controls, args);
 
     do {
         response = gtk_dialog_run(dialog);
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-            grain_dist_dialog_update_values(&controls, args);
+            update_values(&controls, args);
             gtk_widget_destroy(GTK_WIDGET(dialog));
             case GTK_RESPONSE_NONE:
             return;
@@ -354,11 +389,11 @@ grain_dist_dialog(GrainDistArgs *args,
 
             case RESPONSE_CLEAR:
             g_signal_handlers_block_by_func(model,
-                                            selected_changed_cb, &controls);
+                                            selected_changed, &controls);
             gwy_grain_value_tree_view_set_enabled(treeview, NULL);
             g_signal_handlers_unblock_by_func(model,
-                                              selected_changed_cb, &controls);
-            selected_changed_cb(&controls);
+                                              selected_changed, &controls);
+            selected_changed(&controls);
             break;
 
             case GTK_RESPONSE_OK:
@@ -370,33 +405,46 @@ grain_dist_dialog(GrainDistArgs *args,
         }
     } while (response != GTK_RESPONSE_OK);
 
-    grain_dist_dialog_update_values(&controls, args);
+    update_values(&controls, args);
     gtk_widget_destroy(GTK_WIDGET(dialog));
 
-    grain_dist_run(args, data, dfield, mfield);
+    grain_dist_run(args, data, dfield);
 }
 
 static void
-mode_changed_cb(GtkToggleButton *button,
-                GrainDistControls *controls)
+mode_changed(GtkToggleButton *button,
+             GrainDistControls *controls)
 {
     if (!gtk_toggle_button_get_active(button))
         return;
 
-    grain_dist_dialog_update_values(controls, controls->args);
-    grain_dist_dialog_update_sensitivity(controls, controls->args);
+    update_values(controls, controls->args);
+    update_sensitivity(controls, controls->args);
 }
 
 static void
-selected_changed_cb(GrainDistControls *controls)
+selected_changed(GrainDistControls *controls)
 {
-    grain_dist_dialog_update_values(controls, controls->args);
-    grain_dist_dialog_update_sensitivity(controls, controls->args);
+    update_values(controls, controls->args);
+    update_sensitivity(controls, controls->args);
 }
 
 static void
-grain_dist_dialog_update_values(GrainDistControls *controls,
-                                GrainDistArgs *args)
+resolution_changed(GrainDistControls *controls, GtkAdjustment *adj)
+{
+    controls->args->resolution = gwy_adjustment_get_int(adj);
+    preview_dist(controls);
+}
+
+static void
+fixres_changed(GrainDistControls *controls, GtkToggleButton *check)
+{
+    controls->args->fixres = gtk_toggle_button_get_active(check);
+    preview_dist(controls);
+}
+
+static void
+update_values(GrainDistControls *controls, GrainDistArgs *args)
 {
     GwyContainer *settings;
     GtkTreeView *treeview;
@@ -421,8 +469,7 @@ grain_dist_dialog_update_values(GrainDistControls *controls,
 }
 
 static void
-grain_dist_dialog_update_sensitivity(GrainDistControls *controls,
-                                     GrainDistArgs *args)
+update_sensitivity(GrainDistControls *controls, GrainDistArgs *args)
 {
     GtkTreeView *treeview;
     GtkWidget *check, *w;
@@ -456,8 +503,42 @@ grain_dist_dialog_update_sensitivity(GrainDistControls *controls,
 }
 
 static void
-add_one_distribution(GwyContainer *container,
-                     GwyDataField *dfield,
+preview_dist(GrainDistControls *controls)
+{
+    GrainDistArgs *args = controls->args;
+    GtkTreeSelection *selection;
+    GrainDistExportData expdata;
+    GwyGraphModel *gmodel;
+    GwyGrainValue *gvalue;
+    GtkTreeModel *model;
+    GwyDataLine *dline;
+    GtkTreeIter iter;
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->values));
+
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter)) {
+        gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
+        gwy_graph_model_remove_all_curves(gmodel);
+        return;
+    }
+
+    gtk_tree_model_get(model, &iter, 0, &gvalue, -1);
+    expdata.args = args;
+    expdata.nvalues = 1;
+    expdata.gvalues = &gvalue;
+    dline = gwy_data_line_new(args->ngrains+1, 1.0, FALSE);
+    expdata.rawvalues = &dline;
+    expdata.add_comment = FALSE;
+    gwy_grain_values_calculate(1, expdata.gvalues, &dline->data,
+                               controls->dfield, args->ngrains, args->grains);
+    gmodel = add_one_distribution(controls->dfield, &expdata, 0);
+    gwy_graph_set_model(GWY_GRAPH(controls->graph), gmodel);
+    g_object_unref(dline);
+    g_object_unref(gmodel);
+}
+
+static GwyGraphModel*
+add_one_distribution(GwyDataField *dfield,
                      GrainDistExportData *expdata,
                      guint i)
 {
@@ -505,28 +586,20 @@ add_one_distribution(GwyContainer *container,
     gwy_graph_curve_model_set_data_from_dataline(cmodel, distribution, 0, 0);
     g_object_unref(distribution);
 
-    gwy_app_data_browser_add_graph_model(gmodel, container, TRUE);
-    g_object_unref(gmodel);
+    return gmodel;
 }
 
 static void
 grain_dist_run(GrainDistArgs *args,
                GwyContainer *data,
-               GwyDataField *dfield,
-               GwyDataField *mfield)
+               GwyDataField *dfield)
 {
     GrainDistExportData expdata;
     GwyGrainValue *gvalue;
     GwyDataLine *dline;
     gchar **names;
-    gint *grains;
     guint i, nvalues;
-    gint ngrains;
     gdouble **results;
-
-    grains = g_new0(gint, gwy_data_field_get_xres(mfield)
-                          *gwy_data_field_get_yres(mfield));
-    ngrains = gwy_data_field_number_grains(mfield, grains);
 
     names = g_strsplit(args->selected, "\n", 0);
     nvalues = g_strv_length(names);
@@ -544,7 +617,7 @@ grain_dist_run(GrainDistArgs *args,
             continue;
 
         expdata.gvalues[nvalues] = gvalue;
-        dline = gwy_data_line_new(ngrains+1, 1.0, FALSE);
+        dline = gwy_data_line_new(args->ngrains+1, 1.0, FALSE);
         expdata.rawvalues[nvalues] = dline;
         results[nvalues] = gwy_data_line_get_data(dline);
         nvalues++;
@@ -553,15 +626,19 @@ grain_dist_run(GrainDistArgs *args,
     g_strfreev(names);
 
     gwy_grain_values_calculate(nvalues, expdata.gvalues, results,
-                               dfield, ngrains, grains);
-    g_free(grains);
+                               dfield, args->ngrains, args->grains);
     g_free(results);
 
     expdata.args = args;
     switch (args->mode) {
         case MODE_GRAPH:
-        for (i = 0; i < expdata.nvalues; i++)
-            add_one_distribution(data, dfield, &expdata, i);
+        for (i = 0; i < expdata.nvalues; i++) {
+            GwyGraphModel *gmodel;
+
+            gmodel = add_one_distribution(dfield, &expdata, i);
+            gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+            g_object_unref(gmodel);
+        }
         break;
 
         case MODE_RAW:

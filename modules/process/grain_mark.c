@@ -270,7 +270,6 @@ mark_dialog(MarkArgs *args,
     controls.dialog = dialog;
 
     hbox = gtk_hbox_new(FALSE, 2);
-
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
