@@ -56,12 +56,15 @@ typedef struct {
 } SlopeArgs;
 
 typedef struct {
+    SlopeArgs *args;
     GSList *output_type_group;
     GtkObject *size;
     GtkWidget *logscale;
     GtkWidget *fit_plane;
     GtkObject *kernel_size;
     GSList *masking;
+
+    gboolean in_init;
 } SlopeControls;
 
 static gboolean       module_register             (void);
@@ -72,12 +75,19 @@ static gboolean       slope_dialog                (SlopeArgs *args,
                                                    GwyDataField *mfield);
 static void           slope_dialog_update_controls(SlopeControls *controls,
                                                    SlopeArgs *args);
-static void           slope_dialog_update_values  (SlopeControls *controls,
-                                                   SlopeArgs *args);
-static void           slope_fit_plane_cb          (GtkToggleButton *check,
+static void           fit_plane_changed           (SlopeControls *controls,
+                                                   GtkToggleButton *check);
+static void           logscale_changed            (SlopeControls *controls,
+                                                   GtkToggleButton *check);
+static void           size_changed                (SlopeControls *controls,
+                                                   GtkAdjustment *adj);
+static void           kernel_size_changed         (SlopeControls *controls,
+                                                   GtkAdjustment *adj);
+static void           output_type_changed         (GtkToggleButton *radio,
                                                    SlopeControls *controls);
-static void           slope_output_type_cb        (GtkToggleButton *radio,
+static void           masking_changed             (GtkToggleButton *button,
                                                    SlopeControls *controls);
+static void           slope_invalidate            (SlopeControls *controls);
 static GwyDataField*  slope_do_2d                 (GwyDataField *dfield,
                                                    GwyDataField *mfield,
                                                    SlopeArgs *args);
@@ -120,7 +130,7 @@ static GwyModuleInfo module_info = {
     N_("Calculates one- or two-dimensional distribution of slopes "
        "or graph of their angular distribution."),
     "Yeti <yeti@gwyddion.net>",
-    "1.15",
+    "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -220,6 +230,9 @@ slope_dialog(SlopeArgs *args, gboolean same_units, GwyDataField *mfield)
     gint response;
     gint row;
 
+    controls.args = args;
+    controls.in_init = TRUE;
+
     dialog = gtk_dialog_new_with_buttons(_("Slope Distribution"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -243,7 +256,7 @@ slope_dialog(SlopeArgs *args, gboolean same_units, GwyDataField *mfield)
 
     controls.output_type_group
         = gwy_radio_buttons_create(output_types, G_N_ELEMENTS(output_types),
-                                   G_CALLBACK(slope_output_type_cb),
+                                   G_CALLBACK(output_type_changed),
                                    &controls,
                                    args->output_type);
     row = gwy_radio_buttons_attach_to_table(controls.output_type_group,
@@ -266,26 +279,36 @@ slope_dialog(SlopeArgs *args, gboolean same_units, GwyDataField *mfield)
     controls.size = gtk_adjustment_new(args->size, 10, MAX_OUT_SIZE, 1, 10, 0);
     gwy_table_attach_hscale(table, row, _("Output _size:"), "px",
                             controls.size, 0);
+    g_signal_connect_swapped(controls.size, "value-changed",
+                             G_CALLBACK(size_changed), &controls);
     row++;
 
     controls.logscale
         = gtk_check_button_new_with_mnemonic(_("_Logarithmic value scale"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.logscale),
+                                 args->logscale);
     gtk_table_attach(GTK_TABLE(table), controls.logscale,
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls.logscale, "toggled",
+                             G_CALLBACK(logscale_changed), &controls);
     row++;
 
     controls.fit_plane
         = gtk_check_button_new_with_mnemonic(_("Use local plane _fitting"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.fit_plane),
+                                 args->fit_plane);
     gtk_table_attach(GTK_TABLE(table), controls.fit_plane,
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    g_signal_connect(controls.fit_plane, "toggled",
-                     G_CALLBACK(slope_fit_plane_cb), &controls);
+    g_signal_connect_swapped(controls.fit_plane, "toggled",
+                             G_CALLBACK(fit_plane_changed), &controls);
     row++;
 
     controls.kernel_size = gtk_adjustment_new(args->kernel_size,
                                               2, 16, 1, 4, 0);
     gwy_table_attach_hscale(table, row, _("_Plane size:"), "px",
                             controls.kernel_size, 0);
+    g_signal_connect_swapped(controls.kernel_size, "value-changed",
+                             G_CALLBACK(kernel_size_changed), &controls);
     row++;
 
     if (mfield) {
@@ -297,14 +320,18 @@ slope_dialog(SlopeArgs *args, gboolean same_units, GwyDataField *mfield)
 
         controls.masking
             = gwy_radio_buttons_create(gwy_masking_type_get_enum(), -1,
-                                       NULL, NULL, args->masking);
+                                       G_CALLBACK(masking_changed), &controls,
+                                       args->masking);
         row = gwy_radio_buttons_attach_to_table(controls.masking,
                                                 GTK_TABLE(table), 3, row);
     }
     else
         controls.masking = NULL;
 
-    slope_dialog_update_controls(&controls, args);
+    output_type_changed(GTK_TOGGLE_BUTTON(controls.output_type_group),
+                        &controls);
+    fit_plane_changed(&controls, GTK_TOGGLE_BUTTON(controls.fit_plane));
+    controls.in_init = FALSE;
 
     gtk_widget_show_all(dialog);
     do {
@@ -312,7 +339,6 @@ slope_dialog(SlopeArgs *args, gboolean same_units, GwyDataField *mfield)
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-            slope_dialog_update_values(&controls, args);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return FALSE;
@@ -322,8 +348,11 @@ slope_dialog(SlopeArgs *args, gboolean same_units, GwyDataField *mfield)
             break;
 
             case RESPONSE_RESET:
+            controls.in_init = TRUE;
             *args = slope_defaults;
             slope_dialog_update_controls(&controls, args);
+            controls.in_init = FALSE;
+            slope_invalidate(&controls);
             break;
 
             default:
@@ -332,7 +361,6 @@ slope_dialog(SlopeArgs *args, gboolean same_units, GwyDataField *mfield)
         }
     } while (response != GTK_RESPONSE_OK);
 
-    slope_dialog_update_values(&controls, args);
     gtk_widget_destroy(dialog);
 
     return TRUE;
@@ -350,9 +378,6 @@ slope_dialog_update_controls(SlopeControls *controls,
                                  args->logscale);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->fit_plane),
                                  args->fit_plane);
-    gwy_table_hscale_set_sensitive(controls->kernel_size, args->fit_plane);
-    gtk_widget_set_sensitive(controls->logscale,
-                             args->output_type == SLOPE_DIST_2D_DIST);
     gwy_radio_buttons_set_current(controls->output_type_group,
                                   args->output_type);
     if (controls->masking)
@@ -360,40 +385,71 @@ slope_dialog_update_controls(SlopeControls *controls,
 }
 
 static void
-slope_dialog_update_values(SlopeControls *controls,
-                           SlopeArgs *args)
+fit_plane_changed(SlopeControls *controls, GtkToggleButton *check)
 {
-    args->size = gwy_adjustment_get_int(controls->size);
-    args->kernel_size = gwy_adjustment_get_int(controls->kernel_size);
-    args->logscale =
-        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->logscale));
-    args->fit_plane =
-        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->fit_plane));
-    args->output_type =
-        gwy_radio_buttons_get_current(controls->output_type_group);
-    if (controls->masking)
-        args->masking = gwy_radio_buttons_get_current(controls->masking);
-}
-
-static void
-slope_fit_plane_cb(GtkToggleButton *check,
-                   SlopeControls *controls)
-{
+    controls->args->fit_plane = gtk_toggle_button_get_active(check);
     gwy_table_hscale_set_sensitive(controls->kernel_size,
-                                   gtk_toggle_button_get_active(check));
+                                   controls->args->fit_plane);
+    slope_invalidate(controls);
 }
 
 static void
-slope_output_type_cb(GtkToggleButton *button,
-                     SlopeControls *controls)
+logscale_changed(SlopeControls *controls, GtkToggleButton *check)
+{
+    controls->args->logscale = gtk_toggle_button_get_active(check);
+    slope_invalidate(controls);
+}
+
+static void
+size_changed(SlopeControls *controls, GtkAdjustment *adj)
+{
+    controls->args->size = gwy_adjustment_get_int(adj);
+    slope_invalidate(controls);
+}
+
+static void
+kernel_size_changed(SlopeControls *controls, GtkAdjustment *adj)
+{
+    controls->args->kernel_size = gwy_adjustment_get_int(adj);
+    slope_invalidate(controls);
+}
+
+static void
+output_type_changed(GtkToggleButton *button, SlopeControls *controls)
 {
     SlopeOutput otype;
+
+    otype = gwy_radio_buttons_get_current(controls->output_type_group);
+    controls->args->output_type = otype;
+    gtk_widget_set_sensitive(controls->logscale, otype == SLOPE_DIST_2D_DIST);
 
     if (!gtk_toggle_button_get_active(button))
         return;
 
-    otype = gwy_radio_buttons_get_current(controls->output_type_group);
-    gtk_widget_set_sensitive(controls->logscale, otype == SLOPE_DIST_2D_DIST);
+    slope_invalidate(controls);
+}
+
+static void
+masking_changed(GtkToggleButton *button, SlopeControls *controls)
+{
+    GwyMaskingType masking;
+
+    masking = gwy_radio_buttons_get_current(controls->output_type_group);
+    controls->args->output_type = masking;
+
+    if (!gtk_toggle_button_get_active(button))
+        return;
+
+    slope_invalidate(controls);
+}
+
+static void
+slope_invalidate(SlopeControls *controls)
+{
+    if (controls->in_init)
+        return;
+
+    /* TODO */
 }
 
 static inline gboolean
