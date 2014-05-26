@@ -181,7 +181,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Recalibrates scan lateral dimensions or value range."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.12",
+    "2.13",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -292,13 +292,18 @@ calibrate(GwyContainer *data, GwyRunType run)
         gwy_data_field_add(dfields[0], args.zshift);
     gwy_data_field_set_xoffset(dfields[0], args.x0);
     gwy_data_field_set_yoffset(dfields[0], args.y0);
-    if (args.xyunit != args.xyunitorig) {
-        siunitxy = gwy_data_field_get_si_unit_xy(dfields[0]);
-        gwy_si_unit_set_from_string(siunitxy, args.xyunit);
+    if (!gwy_strequal(args.xyunit, args.xyunitorig)) {
+        siunitxy = gwy_si_unit_new(args.xyunit);
+        gwy_data_field_set_si_unit_xy(dfields[0], siunitxy);
+        g_object_unref(siunitxy);
     }
+
     if (args.zunit != args.zunitorig) {
-        siunitz = gwy_data_field_get_si_unit_z(dfields[0]);
-        gwy_si_unit_set_from_string(siunitz, args.zunit);
+        /* Ensure colour axis redraw when only the units change (but not the
+         * range) by setting a new unit object. */
+        siunitz = gwy_si_unit_new(args.zunit);
+        gwy_data_field_set_si_unit_z(dfields[0], siunitz);
+        g_object_unref(siunitz);
     }
 
     if (dfields[1]) {
@@ -309,9 +314,10 @@ calibrate(GwyContainer *data, GwyRunType run)
         gwy_data_field_set_yreal(dfields[1], args.yreal);
         gwy_data_field_set_xoffset(dfields[1], args.x0);
         gwy_data_field_set_xoffset(dfields[1], args.y0);
-        if (args.xyunit != args.xyunitorig) {
-            siunitxy = gwy_data_field_get_si_unit_xy(dfields[1]);
-            gwy_si_unit_set_from_string(siunitxy, args.xyunit);
+        if (!gwy_strequal(args.xyunit, args.xyunitorig)) {
+            siunitxy = gwy_si_unit_new(args.xyunit);
+            gwy_data_field_set_si_unit_xy(dfields[1], siunitxy);
+            g_object_unref(siunitxy);
         }
     }
 
@@ -323,9 +329,10 @@ calibrate(GwyContainer *data, GwyRunType run)
         gwy_data_field_set_yreal(dfields[2], args.yreal);
         gwy_data_field_set_xoffset(dfields[2], args.x0);
         gwy_data_field_set_xoffset(dfields[2], args.y0);
-        if (args.xyunit != args.xyunitorig) {
-            siunitxy = gwy_data_field_get_si_unit_xy(dfields[2]);
-            gwy_si_unit_set_from_string(siunitxy, args.xyunit);
+        if (!gwy_strequal(args.xyunit, args.xyunitorig)) {
+            siunitxy = gwy_si_unit_new(args.xyunit);
+            gwy_data_field_set_si_unit_xy(dfields[2], siunitxy);
+            g_object_unref(siunitxy);
         }
     }
 
