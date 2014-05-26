@@ -1319,15 +1319,14 @@ gwy_grain_values_calculate(gint nvalues,
     if (duplicities) {
         for (i = 1; i < nvalues; i++) {
             gvalue = gvalues[i];
-            for (j = i; j; j--) {
-                if (gvalues[j-1] == gvalue)
+            for (j = 0; j < i; j++) {
+                if (gvalues[j] == gvalue)
                     break;
             }
-            if (!j)
+            if (j == i)
                 continue;
 
-            j--;
-            memcpy(quantities[i], quantities[j], (ngrains + 1)*sizeof(gdouble));
+            memcpy(results[i], results[j], (ngrains + 1)*sizeof(gdouble));
         }
     }
 
