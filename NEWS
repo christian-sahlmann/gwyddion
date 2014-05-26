@@ -16,6 +16,8 @@ Modules:
 - WinSTM (new): Import WinSTM data files.
 - Mark by Segmentation (new): Another segmentation/grain marking module, based
   on the classic Vincent algorithm.
+- Grain filter (new): Filtering of grains by range criteria and logical
+  expressions.
 - Mask editor tool: Fill voids handles correctly different connectivity of
   grain exterior, noticeable for grains separated only by thin lines.  It is
   also possible to fill only simple-connected grains.
@@ -32,6 +34,7 @@ Modules:
 - Grain correlations: If run interactively and the same-units condition of
   selected quantities is not satisfied, default quantities are selected
   instead of aborting with an error box.
+- Slope distributions: Preview of the result was added.
 - Dimensions and Units: False colour axis actually starts showing the new
   value units also when you change only the units (not the Z range).
 
