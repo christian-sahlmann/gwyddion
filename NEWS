@@ -9,6 +9,8 @@ Libraries:
 - libgwyprocess: A classic Vincent watershed algorithm function was added.
 - libgwydgets: Several new stock icons were added.
 - libgwyprocess: Pixel count was added as a new grain quantity.
+- libgwyprocess: Crash in gwy_grain_values_calculate() when a quantity was
+  requested multiple times was fixed.
 
 Modules:
 - WinSTM (new): Import WinSTM data files.
@@ -27,6 +29,11 @@ Modules:
 - Slope distribution: Masking is supported.  Plot of total gradient was added.
 - NanoScan: A couple of memory-hadling bugs was fixed.
 - Grain distributions: Displays a preview graph of the selected quantity.
+- Grain correlations: If run interactively and the same-units condition of
+  selected quantities is not satisfied, default quantities are selected
+  instead of aborting with an error box.
+- Dimensions and Units: False colour axis actually starts showing the new
+  value units also when you change only the units (not the Z range).
 
 Other:
 - The standalone Python gwy module uses the correct extension for dlopening,
