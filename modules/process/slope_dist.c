@@ -27,14 +27,18 @@
 #include <libprocess/level.h>
 #include <libprocess/stats.h>
 #include <libprocess/filters.h>
+#include <libgwydgets/gwydataview.h>
+#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include <app/gwymoduleutils.h>
 
 #define SLOPE_DIST_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
+    PREVIEW_SIZE = 400,
     MAX_OUT_SIZE = 4096
 };
 
@@ -51,19 +55,25 @@ typedef struct {
     gint size;
     gboolean logscale;
     gboolean fit_plane;
+    gboolean update;
     gint kernel_size;
     GwyMaskingType masking;
 } SlopeArgs;
 
 typedef struct {
     SlopeArgs *args;
-    GSList *output_type_group;
+    GwyContainer *mydata;
+    GtkWidget *view;
+    GtkWidget *graph;
+    GSList *output_type;
     GtkObject *size;
     GtkWidget *logscale;
     GtkWidget *fit_plane;
     GtkObject *kernel_size;
     GSList *masking;
 
+    GwyDataField *dfield;
+    GwyDataField *mfield;
     gboolean in_init;
 } SlopeControls;
 
@@ -72,7 +82,10 @@ static void           slope_dist                  (GwyContainer *data,
                                                    GwyRunType run);
 static gboolean       slope_dialog                (SlopeArgs *args,
                                                    gboolean same_units,
-                                                   GwyDataField *mfield);
+                                                   GwyContainer *data,
+                                                   GwyDataField *dfield,
+                                                   GwyDataField *mfield,
+                                                   gint id);
 static void           slope_dialog_update_controls(SlopeControls *controls,
                                                    SlopeArgs *args);
 static void           fit_plane_changed           (SlopeControls *controls,
@@ -88,6 +101,7 @@ static void           output_type_changed         (GtkToggleButton *radio,
 static void           masking_changed             (GtkToggleButton *button,
                                                    SlopeControls *controls);
 static void           slope_invalidate            (SlopeControls *controls);
+static void           preview                     (SlopeControls *controls);
 static GwyDataField*  slope_do_2d                 (GwyDataField *dfield,
                                                    GwyDataField *mfield,
                                                    SlopeArgs *args);
@@ -120,6 +134,7 @@ static const SlopeArgs slope_defaults = {
     200,
     FALSE,
     FALSE,
+    TRUE,
     5,
     GWY_MASK_IGNORE,
 };
@@ -173,7 +188,7 @@ slope_dist(GwyContainer *data, GwyRunType run)
     if (run == GWY_RUN_INTERACTIVE) {
         if (!same_units && (args.output_type == SLOPE_DIST_GRAPH_THETA))
             args.output_type = SLOPE_DIST_GRAPH_GRADIENT;
-        ok = slope_dialog(&args, same_units, mfield);
+        ok = slope_dialog(&args, same_units, data, dfield, mfield, oldid);
         save_args(gwy_app_settings_get(), &args);
         if (!ok)
             return;
@@ -216,7 +231,9 @@ slope_dist(GwyContainer *data, GwyRunType run)
 }
 
 static gboolean
-slope_dialog(SlopeArgs *args, gboolean same_units, GwyDataField *mfield)
+slope_dialog(SlopeArgs *args, gboolean same_units,
+             GwyContainer *data,
+             GwyDataField *dfield, GwyDataField *mfield, gint id)
 {
     static const GwyEnum output_types[] = {
         { N_("_Two-dimensional distribution"), SLOPE_DIST_2D_DIST,        },
@@ -224,13 +241,17 @@ slope_dialog(SlopeArgs *args, gboolean same_units, GwyDataField *mfield)
         { N_("_Inclination (θ) graph"),        SLOPE_DIST_GRAPH_THETA,    },
         { N_("Inclination (gra_dient) graph"), SLOPE_DIST_GRAPH_GRADIENT, },
     };
-    GtkWidget *dialog, *table, *label;
+    GtkWidget *dialog, *table, *label, *hbox, *vbox;
+    GwyGraphModel *gmodel;
+    GwyPixmapLayer *layer;
     SlopeControls controls;
     enum { RESPONSE_RESET = 1 };
     gint response;
     gint row;
 
     controls.args = args;
+    controls.dfield = dfield;
+    controls.mfield = mfield;
     controls.in_init = TRUE;
 
     dialog = gtk_dialog_new_with_buttons(_("Slope Distribution"), NULL, 0,
@@ -240,12 +261,52 @@ slope_dialog(SlopeArgs *args, gboolean same_units, GwyDataField *mfield)
                                          NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
+    hbox = gtk_hbox_new(FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
+                       FALSE, FALSE, 4);
+
+    vbox = gtk_vbox_new(FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
+
+    controls.mydata = gwy_container_new();
+    dfield = gwy_data_field_new(PREVIEW_SIZE, PREVIEW_SIZE, 1.0, 1.0, TRUE);
+    gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
+    g_object_unref(dfield);
+    gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
+                            GWY_DATA_ITEM_PALETTE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_REAL_SQUARE,
+                            0);
+    controls.view = gwy_data_view_new(controls.mydata);
+    layer = gwy_layer_basic_new();
+    g_object_set(layer,
+                 "data-key", "/0/data",
+                 "gradient-key", "/0/base/palette",
+                 "range-type-key", "/0/base/range-type",
+                 "min-max-key", "/0/base",
+                 NULL);
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
+    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
+
+    gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
+    if (args->output_type != SLOPE_DIST_2D_DIST)
+        gtk_widget_set_no_show_all(controls.view, TRUE);
+
+    gmodel = gwy_graph_model_new();
+    controls.graph = gwy_graph_new(gmodel);
+    gtk_widget_set_size_request(controls.graph, PREVIEW_SIZE, 0);
+    g_object_unref(gmodel);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.graph, TRUE, TRUE, 0);
+    if (args->output_type == SLOPE_DIST_2D_DIST)
+        gtk_widget_set_no_show_all(controls.graph, TRUE);
+
     table = gtk_table_new(9 + (mfield ? 4 : 0), 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
-                       FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
     row = 0;
 
     label = gtk_label_new(_("Output type:"));
@@ -254,17 +315,17 @@ slope_dialog(SlopeArgs *args, gboolean same_units, GwyDataField *mfield)
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    controls.output_type_group
+    controls.output_type
         = gwy_radio_buttons_create(output_types, G_N_ELEMENTS(output_types),
                                    G_CALLBACK(output_type_changed),
                                    &controls,
                                    args->output_type);
-    row = gwy_radio_buttons_attach_to_table(controls.output_type_group,
+    row = gwy_radio_buttons_attach_to_table(controls.output_type,
                                             GTK_TABLE(table), 4, row);
     if (!same_units) {
         GtkWidget *radio;
 
-        radio = gwy_radio_buttons_find(controls.output_type_group,
+        radio = gwy_radio_buttons_find(controls.output_type,
                                        SLOPE_DIST_GRAPH_THETA);
         gtk_widget_set_sensitive(radio, FALSE);
     }
@@ -278,7 +339,7 @@ slope_dialog(SlopeArgs *args, gboolean same_units, GwyDataField *mfield)
 
     controls.size = gtk_adjustment_new(args->size, 10, MAX_OUT_SIZE, 1, 10, 0);
     gwy_table_attach_hscale(table, row, _("Output _size:"), "px",
-                            controls.size, 0);
+                            controls.size, GWY_HSCALE_SQRT);
     g_signal_connect_swapped(controls.size, "value-changed",
                              G_CALLBACK(size_changed), &controls);
     row++;
@@ -328,9 +389,9 @@ slope_dialog(SlopeArgs *args, gboolean same_units, GwyDataField *mfield)
     else
         controls.masking = NULL;
 
-    output_type_changed(GTK_TOGGLE_BUTTON(controls.output_type_group),
-                        &controls);
+    output_type_changed(GTK_TOGGLE_BUTTON(controls.output_type), &controls);
     fit_plane_changed(&controls, GTK_TOGGLE_BUTTON(controls.fit_plane));
+    preview(&controls);
     controls.in_init = FALSE;
 
     gtk_widget_show_all(dialog);
@@ -378,8 +439,7 @@ slope_dialog_update_controls(SlopeControls *controls,
                                  args->logscale);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->fit_plane),
                                  args->fit_plane);
-    gwy_radio_buttons_set_current(controls->output_type_group,
-                                  args->output_type);
+    gwy_radio_buttons_set_current(controls->output_type, args->output_type);
     if (controls->masking)
         gwy_radio_buttons_set_current(controls->masking, args->masking);
 }
@@ -419,9 +479,21 @@ output_type_changed(GtkToggleButton *button, SlopeControls *controls)
 {
     SlopeOutput otype;
 
-    otype = gwy_radio_buttons_get_current(controls->output_type_group);
+    otype = gwy_radio_buttons_get_current(controls->output_type);
     controls->args->output_type = otype;
     gtk_widget_set_sensitive(controls->logscale, otype == SLOPE_DIST_2D_DIST);
+    if (otype == SLOPE_DIST_2D_DIST) {
+        gtk_widget_set_no_show_all(controls->graph, TRUE);
+        gtk_widget_set_no_show_all(controls->view, FALSE);
+        gtk_widget_hide(controls->graph);
+        gtk_widget_show_all(controls->view);
+    }
+    else {
+        gtk_widget_set_no_show_all(controls->view, TRUE);
+        gtk_widget_set_no_show_all(controls->graph, FALSE);
+        gtk_widget_hide(controls->view);
+        gtk_widget_show_all(controls->graph);
+    }
 
     if (!gtk_toggle_button_get_active(button))
         return;
@@ -434,8 +506,8 @@ masking_changed(GtkToggleButton *button, SlopeControls *controls)
 {
     GwyMaskingType masking;
 
-    masking = gwy_radio_buttons_get_current(controls->output_type_group);
-    controls->args->output_type = masking;
+    masking = gwy_radio_buttons_get_current(controls->masking);
+    controls->args->masking = masking;
 
     if (!gtk_toggle_button_get_active(button))
         return;
@@ -446,10 +518,41 @@ masking_changed(GtkToggleButton *button, SlopeControls *controls)
 static void
 slope_invalidate(SlopeControls *controls)
 {
-    if (controls->in_init)
+    if (controls->in_init || !controls->args->update)
         return;
 
-    /* TODO */
+    preview(controls);
+}
+
+static void
+preview(SlopeControls *controls)
+{
+    SlopeArgs *args = controls->args;
+    GwyGraphModel *gmodel;
+
+    if (args->output_type == SLOPE_DIST_2D_DIST) {
+        GwyDataField *dfield = slope_do_2d(controls->dfield, controls->mfield,
+                                           args);
+
+        gwy_container_set_object_by_name(controls->mydata, "/0/data", dfield);
+        g_object_unref(dfield);
+        gwy_set_data_preview_size(GWY_DATA_VIEW(controls->view), PREVIEW_SIZE);
+        return;
+    }
+
+    if (args->output_type == SLOPE_DIST_GRAPH_PHI)
+        gmodel = slope_do_graph_phi(controls->dfield, controls->mfield, args);
+    else if (args->output_type == SLOPE_DIST_GRAPH_THETA)
+        gmodel = slope_do_graph_theta(controls->dfield, controls->mfield, args);
+    else if (args->output_type == SLOPE_DIST_GRAPH_GRADIENT)
+        gmodel = slope_do_graph_gradient(controls->dfield, controls->mfield,
+                                         args);
+    else {
+        g_return_if_reached();
+    }
+
+    gwy_graph_set_model(GWY_GRAPH(controls->graph), gmodel);
+    g_object_unref(gmodel);
 }
 
 static inline gboolean
