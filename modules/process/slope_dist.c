@@ -39,7 +39,8 @@
 
 enum {
     PREVIEW_SIZE = 400,
-    MAX_OUT_SIZE = 4096
+    MAX_OUT_SIZE = 4096,
+    RESPONSE_PREVIEW = 2,
 };
 
 typedef enum {
@@ -63,12 +64,14 @@ typedef struct {
 typedef struct {
     SlopeArgs *args;
     GwyContainer *mydata;
+    GtkWidget *dialog;
     GtkWidget *view;
     GtkWidget *graph;
     GSList *output_type;
     GtkObject *size;
     GtkWidget *logscale;
     GtkWidget *fit_plane;
+    GtkWidget *update;
     GtkObject *kernel_size;
     GSList *masking;
 
@@ -77,57 +80,59 @@ typedef struct {
     gboolean in_init;
 } SlopeControls;
 
-static gboolean       module_register             (void);
-static void           slope_dist                  (GwyContainer *data,
-                                                   GwyRunType run);
-static gboolean       slope_dialog                (SlopeArgs *args,
-                                                   gboolean same_units,
-                                                   GwyContainer *data,
-                                                   GwyDataField *dfield,
-                                                   GwyDataField *mfield,
-                                                   gint id);
-static void           slope_dialog_update_controls(SlopeControls *controls,
-                                                   SlopeArgs *args);
-static void           fit_plane_changed           (SlopeControls *controls,
-                                                   GtkToggleButton *check);
-static void           logscale_changed            (SlopeControls *controls,
-                                                   GtkToggleButton *check);
-static void           size_changed                (SlopeControls *controls,
-                                                   GtkAdjustment *adj);
-static void           kernel_size_changed         (SlopeControls *controls,
-                                                   GtkAdjustment *adj);
-static void           output_type_changed         (GtkToggleButton *radio,
-                                                   SlopeControls *controls);
-static void           masking_changed             (GtkToggleButton *button,
-                                                   SlopeControls *controls);
-static void           slope_invalidate            (SlopeControls *controls);
-static void           preview                     (SlopeControls *controls);
-static GwyDataField*  slope_do_2d                 (GwyDataField *dfield,
-                                                   GwyDataField *mfield,
-                                                   SlopeArgs *args);
-static GwyGraphModel* slope_do_graph_phi          (GwyDataField *dfield,
-                                                   GwyDataField *mfield,
-                                                   SlopeArgs *args);
-static GwyGraphModel* slope_do_graph_theta        (GwyDataField *dfield,
-                                                   GwyDataField *mfield,
-                                                   SlopeArgs *args);
-static GwyGraphModel* slope_do_graph_gradient     (GwyDataField *dfield,
-                                                   GwyDataField *mfield,
-                                                   SlopeArgs *args);
-static void           compute_slopes              (GwyDataField *dfield,
-                                                   gint kernel_size,
-                                                   GwyDataField *xder,
-                                                   GwyDataField *yder);
-static GwyDataField*  make_datafield              (GwyDataField *old,
-                                                   gint res,
-                                                   gulong *count,
-                                                   gdouble real,
-                                                   gboolean logscale);
-static void           load_args                   (GwyContainer *container,
-                                                   SlopeArgs *args);
-static void           save_args                   (GwyContainer *container,
-                                                   SlopeArgs *args);
-static void           sanitize_args               (SlopeArgs *args);
+static gboolean       module_register        (void);
+static void           slope_dist             (GwyContainer *data,
+                                              GwyRunType run);
+static gboolean       slope_dialog           (SlopeArgs *args,
+                                              gboolean same_units,
+                                              GwyContainer *data,
+                                              GwyDataField *dfield,
+                                              GwyDataField *mfield,
+                                              gint id);
+static void           update_controls        (SlopeControls *controls,
+                                              SlopeArgs *args);
+static void           fit_plane_changed      (SlopeControls *controls,
+                                              GtkToggleButton *check);
+static void           logscale_changed       (SlopeControls *controls,
+                                              GtkToggleButton *check);
+static void           size_changed           (SlopeControls *controls,
+                                              GtkAdjustment *adj);
+static void           kernel_size_changed    (SlopeControls *controls,
+                                              GtkAdjustment *adj);
+static void           output_type_changed    (GtkToggleButton *radio,
+                                              SlopeControls *controls);
+static void           update_changed         (SlopeControls *controls,
+                                              GtkToggleButton *check);
+static void           masking_changed        (GtkToggleButton *button,
+                                              SlopeControls *controls);
+static void           slope_invalidate       (SlopeControls *controls);
+static void           preview                (SlopeControls *controls);
+static GwyDataField*  slope_do_2d            (GwyDataField *dfield,
+                                              GwyDataField *mfield,
+                                              SlopeArgs *args);
+static GwyGraphModel* slope_do_graph_phi     (GwyDataField *dfield,
+                                              GwyDataField *mfield,
+                                              SlopeArgs *args);
+static GwyGraphModel* slope_do_graph_theta   (GwyDataField *dfield,
+                                              GwyDataField *mfield,
+                                              SlopeArgs *args);
+static GwyGraphModel* slope_do_graph_gradient(GwyDataField *dfield,
+                                              GwyDataField *mfield,
+                                              SlopeArgs *args);
+static void           compute_slopes         (GwyDataField *dfield,
+                                              gint kernel_size,
+                                              GwyDataField *xder,
+                                              GwyDataField *yder);
+static GwyDataField*  make_datafield         (GwyDataField *old,
+                                              gint res,
+                                              gulong *count,
+                                              gdouble real,
+                                              gboolean logscale);
+static void           load_args              (GwyContainer *container,
+                                              SlopeArgs *args);
+static void           save_args              (GwyContainer *container,
+                                              SlopeArgs *args);
+static void           sanitize_args          (SlopeArgs *args);
 
 static const SlopeArgs slope_defaults = {
     SLOPE_DIST_2D_DIST,
@@ -259,7 +264,12 @@ slope_dialog(SlopeArgs *args, gboolean same_units,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
+                                 gwy_stock_like_button_new(_("_Update"),
+                                                           GTK_STOCK_EXECUTE),
+                                 RESPONSE_PREVIEW);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    controls.dialog = dialog;
 
     hbox = gtk_hbox_new(FALSE, 2);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
@@ -302,7 +312,7 @@ slope_dialog(SlopeArgs *args, gboolean same_units,
     if (args->output_type == SLOPE_DIST_2D_DIST)
         gtk_widget_set_no_show_all(controls.graph, TRUE);
 
-    table = gtk_table_new(9 + (mfield ? 4 : 0), 4, FALSE);
+    table = gtk_table_new(10 + (mfield ? 4 : 0), 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -372,6 +382,15 @@ slope_dialog(SlopeArgs *args, gboolean same_units,
                              G_CALLBACK(kernel_size_changed), &controls);
     row++;
 
+    controls.update = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.update),
+                                 args->update);
+    gtk_table_attach(GTK_TABLE(table), controls.update,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls.update, "toggled",
+                             G_CALLBACK(update_changed), &controls);
+    row++;
+
     if (mfield) {
         gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
         label = gwy_label_new_header(_("Masking Mode"));
@@ -391,7 +410,11 @@ slope_dialog(SlopeArgs *args, gboolean same_units,
 
     output_type_changed(GTK_TOGGLE_BUTTON(controls.output_type), &controls);
     fit_plane_changed(&controls, GTK_TOGGLE_BUTTON(controls.fit_plane));
-    preview(&controls);
+    if (args->update) {
+        gtk_dialog_set_response_sensitive(GTK_DIALOG(controls.dialog),
+                                          RESPONSE_PREVIEW, FALSE);
+        preview(&controls);
+    }
     controls.in_init = FALSE;
 
     gtk_widget_show_all(dialog);
@@ -411,9 +434,13 @@ slope_dialog(SlopeArgs *args, gboolean same_units,
             case RESPONSE_RESET:
             controls.in_init = TRUE;
             *args = slope_defaults;
-            slope_dialog_update_controls(&controls, args);
+            update_controls(&controls, args);
             controls.in_init = FALSE;
             slope_invalidate(&controls);
+            break;
+
+            case RESPONSE_PREVIEW:
+            preview(&controls);
             break;
 
             default:
@@ -428,8 +455,7 @@ slope_dialog(SlopeArgs *args, gboolean same_units,
 }
 
 static void
-slope_dialog_update_controls(SlopeControls *controls,
-                             SlopeArgs *args)
+update_controls(SlopeControls *controls, SlopeArgs *args)
 {
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size),
                              args->size);
@@ -498,6 +524,16 @@ output_type_changed(GtkToggleButton *button, SlopeControls *controls)
     if (!gtk_toggle_button_get_active(button))
         return;
 
+    slope_invalidate(controls);
+}
+
+static void
+update_changed(SlopeControls *controls, GtkToggleButton *check)
+{
+    controls->args->update = gtk_toggle_button_get_active(check);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      RESPONSE_PREVIEW,
+                                      !controls->args->update);
     slope_invalidate(controls);
 }
 
@@ -665,6 +701,8 @@ slope_do_graph_phi(GwyDataField *dfield,
                  "title", _("Angular Slope Distribution"),
                  "si-unit-x", siunitx,
                  "si-unit-y", siunity,
+                 "axis-label-bottom", "φ",
+                 "axis-label-left", "w",
                  NULL);
     g_object_unref(siunity);
     g_object_unref(siunitx);
@@ -673,8 +711,6 @@ slope_do_graph_phi(GwyDataField *dfield,
     g_object_set(cmodel,
                  "mode", GWY_GRAPH_CURVE_LINE,
                  "description", _("Slopes"),
-                 "axis-label-bottom", "φ",
-                 "axis-label-left", "w",
                  NULL);
     gwy_graph_curve_model_set_data_from_dataline(cmodel, dataline, 0, 0);
     g_object_unref(dataline);
@@ -905,6 +941,7 @@ static const gchar output_type_key[] = "/module/slope_dist/output_type";
 static const gchar size_key[]        = "/module/slope_dist/size";
 static const gchar logscale_key[]    = "/module/slope_dist/logscale";
 static const gchar fit_plane_key[]   = "/module/slope_dist/fit_plane";
+static const gchar update_key[]      = "/module/slope_dist/update";
 static const gchar kernel_size_key[] = "/module/slope_dist/kernel_size";
 static const gchar masking_key[]     = "/module/slope_dist/masking";
 
@@ -916,6 +953,7 @@ sanitize_args(SlopeArgs *args)
     args->kernel_size = CLAMP(args->kernel_size, 2, 16);
     args->logscale = !!args->logscale;
     args->fit_plane = !!args->fit_plane;
+    args->update = !!args->update;
     args->masking = MIN(args->masking, GWY_MASK_IGNORE);
 }
 
@@ -931,6 +969,7 @@ load_args(GwyContainer *container,
     gwy_container_gis_boolean_by_name(container, logscale_key, &args->logscale);
     gwy_container_gis_boolean_by_name(container, fit_plane_key,
                                       &args->fit_plane);
+    gwy_container_gis_boolean_by_name(container, update_key, &args->update);
     gwy_container_gis_int32_by_name(container, kernel_size_key,
                                     &args->kernel_size);
     gwy_container_gis_enum_by_name(container, masking_key, &args->masking);
@@ -947,6 +986,7 @@ save_args(GwyContainer *container,
     gwy_container_set_boolean_by_name(container, logscale_key, args->logscale);
     gwy_container_set_boolean_by_name(container, fit_plane_key,
                                       args->fit_plane);
+    gwy_container_set_boolean_by_name(container, update_key, args->update);
     gwy_container_set_int32_by_name(container, kernel_size_key,
                                     args->kernel_size);
     gwy_container_set_enum_by_name(container, masking_key, args->masking);
