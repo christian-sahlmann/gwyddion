@@ -126,8 +126,8 @@ static void           resolution_changed        (GrainDistControls *controls,
                                                  GtkAdjustment *adj);
 static void           fixres_changed            (GrainDistControls *controls,
                                                  GtkToggleButton *check);
-static void           update_values             (GrainDistControls *controls,
-                                                 GrainDistArgs *args);
+static void           add_comment_changed       (GrainDistControls *controls,
+                                                 GtkToggleButton *check);
 static void           update_sensitivity        (GrainDistControls *controls,
                                                  GrainDistArgs *args);
 static void           preview_dist              (GrainDistControls *controls);
@@ -351,6 +351,8 @@ grain_dist_dialog(GrainDistArgs *args,
                                  args->add_comment);
     gtk_table_attach(table, controls.add_comment,
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls.add_comment, "toggled",
+                             G_CALLBACK(add_comment_changed), &controls);
     row++;
 
     gtk_table_attach(table, GTK_WIDGET(l->data),
@@ -381,7 +383,6 @@ grain_dist_dialog(GrainDistArgs *args,
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-            update_values(&controls, args);
             gtk_widget_destroy(GTK_WIDGET(dialog));
             case GTK_RESPONSE_NONE:
             return;
@@ -405,7 +406,6 @@ grain_dist_dialog(GrainDistArgs *args,
         }
     } while (response != GTK_RESPONSE_OK);
 
-    update_values(&controls, args);
     gtk_widget_destroy(GTK_WIDGET(dialog));
 
     grain_dist_run(args, data, dfield);
@@ -415,17 +415,33 @@ static void
 mode_changed(GtkToggleButton *button,
              GrainDistControls *controls)
 {
+    GrainDistArgs *args = controls->args;
+
     if (!gtk_toggle_button_get_active(button))
         return;
 
-    update_values(controls, controls->args);
-    update_sensitivity(controls, controls->args);
+    args->mode = gwy_radio_buttons_get_current(controls->mode);
+    update_sensitivity(controls, args);
 }
 
 static void
 selected_changed(GrainDistControls *controls)
 {
-    update_values(controls, controls->args);
+    GwyContainer *settings;
+    GtkTreeView *treeview;
+    const gchar **names;
+    gchar *s;
+
+    settings = gwy_app_settings_get();
+    treeview = GTK_TREE_VIEW(controls->values);
+    names = gwy_grain_value_tree_view_get_enabled(treeview);
+    s = g_strjoinv("\n", (gchar**)names);
+    g_free(names);
+    gwy_container_set_string_by_name(settings, selected_key, s);
+    /* Ensures args->selected is never owned by us. */
+    controls->args->selected = gwy_container_get_string_by_name(settings,
+                                                                selected_key);
+
     update_sensitivity(controls, controls->args);
 }
 
@@ -444,28 +460,9 @@ fixres_changed(GrainDistControls *controls, GtkToggleButton *check)
 }
 
 static void
-update_values(GrainDistControls *controls, GrainDistArgs *args)
+add_comment_changed(GrainDistControls *controls, GtkToggleButton *check)
 {
-    GwyContainer *settings;
-    GtkTreeView *treeview;
-    const gchar **names;
-    gchar *s;
-
-    settings = gwy_app_settings_get();
-    treeview = GTK_TREE_VIEW(controls->values);
-    names = gwy_grain_value_tree_view_get_enabled(treeview);
-    s = g_strjoinv("\n", (gchar**)names);
-    g_free(names);
-    gwy_container_set_string_by_name(settings, selected_key, s);
-    /* Ensures args->selected is never owned by us. */
-    args->selected = gwy_container_get_string_by_name(settings, selected_key);
-
-    args->mode = gwy_radio_buttons_get_current(controls->mode);
-    args->resolution = gwy_adjustment_get_int(controls->resolution);
-    args->fixres
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->fixres));
-    args->add_comment
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->add_comment));
+    controls->args->add_comment = gtk_toggle_button_get_active(check);
 }
 
 static void
