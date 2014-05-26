@@ -39,37 +39,50 @@ typedef struct {
     gint ordinate_expanded;
 
     gboolean units_equal;
+    guint ngrains;
+    gint *grains;
 } GrainCrossArgs;
 
 typedef struct {
     GrainCrossArgs *args;
     GtkDialog *dialog;
+    GtkWidget *graph;
     GtkTreeView *abscissa;
     GtkTreeView *ordinate;
+
+    GwyDataField *dfield;
 } GrainCrossControls;
 
-static gboolean module_register          (void);
-static void     grain_cross              (GwyContainer *data,
-                                          GwyRunType run);
-static void     require_same_units_dialog(GwyContainer *data,
-                                          gint id);
-static void     grain_cross_dialog       (GrainCrossArgs *args,
-                                          GwyContainer *data,
-                                          GwyDataField *dfield,
-                                          GwyDataField *mfield);
-static void     grain_cross_run          (GrainCrossArgs *args,
-                                          GwyContainer *data,
-                                          GwyDataField *dfield,
-                                          GwyDataField *mfield);
-static void     grain_cross_load_args    (GwyContainer *container,
-                                          GrainCrossArgs *args);
-static void     grain_cross_save_args    (GwyContainer *container,
-                                          GrainCrossArgs *args);
+static gboolean       module_register          (void);
+static void           grain_cross              (GwyContainer *data,
+                                                GwyRunType run);
+static void           require_same_units_dialog(GwyContainer *data,
+                                                gint id);
+static void           grain_cross_dialog       (GrainCrossArgs *args,
+                                                GwyContainer *data,
+                                                GwyDataField *dfield);
+static void           axis_quantity_changed    (GrainCrossControls *controls);
+static GtkTreeView*   attach_axis_list         (GtkTable *table,
+                                                const gchar *name,
+                                                gint column,
+                                                const gchar *selected,
+                                                gint expanded,
+                                                GrainCrossControls *controls);
+static void           grain_cross_run          (GrainCrossArgs *args,
+                                                GwyContainer *data,
+                                                GwyDataField *dfield);
+static GwyGraphModel* create_corr_graph        (GrainCrossArgs *args,
+                                                GwyDataField *dfield);
+static void           grain_cross_load_args    (GwyContainer *container,
+                                                GrainCrossArgs *args);
+static void           grain_cross_save_args    (GwyContainer *container,
+                                                GrainCrossArgs *args);
 
 static const GrainCrossArgs grain_cross_defaults = {
     "Equivalent disc radius", 0,
     "Projected boundary length", 0,
     FALSE,
+    0, NULL,
 };
 
 static GwyModuleInfo module_info = {
@@ -77,7 +90,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Plots one grain quantity as a function of another."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "2.0",
     "David Nečas",
     "2007",
 };
@@ -144,12 +157,17 @@ grain_cross(GwyContainer *data, GwyRunType run)
         }
     }
 
+    args.grains = g_new0(gint, mfield->xres*mfield->yres);
+    args.ngrains = gwy_data_field_number_grains(mfield, args.grains);
+
     if (run == GWY_RUN_IMMEDIATE)
-        grain_cross_run(&args, data, dfield, mfield);
+        grain_cross_run(&args, data, dfield);
     else {
-        grain_cross_dialog(&args, data, dfield, mfield);
+        grain_cross_dialog(&args, data, dfield);
         grain_cross_save_args(gwy_app_settings_get(), &args);
     }
+
+    g_free(args.grains);
 }
 
 static void
@@ -172,9 +190,82 @@ require_same_units_dialog(GwyContainer *data, gint id)
 }
 
 static void
+grain_cross_dialog(GrainCrossArgs *args,
+                  GwyContainer *data,
+                  GwyDataField *dfield)
+{
+    GrainCrossControls controls;
+    GtkWidget *dialog;
+    GtkTable *table;
+    GwyGraphModel *gmodel;
+    gint response;
+
+    controls.args = args;
+    controls.dfield = dfield;
+
+    dialog = gtk_dialog_new_with_buttons(_("Grain Correlations"), NULL, 0,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                         NULL);
+    controls.dialog = GTK_DIALOG(dialog);
+    gtk_dialog_set_default_response(controls.dialog, GTK_RESPONSE_OK);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 720, 480);
+
+    table = GTK_TABLE(gtk_table_new(2, 2, FALSE));
+    gtk_table_set_row_spacings(table, 2);
+    gtk_table_set_col_spacings(table, 2);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(controls.dialog->vbox), GTK_WIDGET(table),
+                       TRUE, TRUE, 0);
+
+    gmodel = gwy_graph_model_new();
+    controls.graph = gwy_graph_new(gmodel);
+    gtk_widget_set_size_request(controls.graph, 320, 0);
+    g_object_unref(gmodel);
+    gtk_table_attach(GTK_TABLE(table), controls.graph, 0, 1, 0, 2,
+                     GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
+
+    controls.abscissa = attach_axis_list(table, _("_Abscissa"), 1,
+                                         args->abscissa,
+                                         args->abscissa_expanded,
+                                         &controls);
+    controls.ordinate = attach_axis_list(table, _("O_rdinate"), 2,
+                                         args->ordinate,
+                                         args->ordinate_expanded,
+                                         &controls);
+    axis_quantity_changed(&controls);
+
+    gtk_widget_show_all(dialog);
+
+    do {
+        response = gtk_dialog_run(controls.dialog);
+        switch (response) {
+            case GTK_RESPONSE_CANCEL:
+            case GTK_RESPONSE_DELETE_EVENT:
+            gtk_widget_destroy(dialog);
+            case GTK_RESPONSE_NONE:
+            return;
+            break;
+
+            case GTK_RESPONSE_OK:
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
+    } while (response != GTK_RESPONSE_OK);
+
+    gtk_widget_destroy(dialog);
+
+    grain_cross_run(args, data, dfield);
+}
+
+static void
 axis_quantity_changed(GrainCrossControls *controls)
 {
     GtkTreeSelection *selection;
+    GwyGraphModel *gmodel;
     GwyGrainValue *gvalue;
     GtkTreeModel *model;
     GtkTreeIter iter;
@@ -201,6 +292,10 @@ axis_quantity_changed(GrainCrossControls *controls)
     }
     else
         ok = FALSE;
+
+    gmodel = create_corr_graph(controls->args, controls->dfield);
+    gwy_graph_set_model(GWY_GRAPH(controls->graph), gmodel);
+    g_object_unref(gmodel);
 
     gtk_dialog_set_response_sensitive(controls->dialog, GTK_RESPONSE_OK, ok);
 }
@@ -247,70 +342,6 @@ attach_axis_list(GtkTable *table,
     return list;
 }
 
-static void
-grain_cross_dialog(GrainCrossArgs *args,
-                  GwyContainer *data,
-                  GwyDataField *dfield,
-                  GwyDataField *mfield)
-{
-    GrainCrossControls controls;
-    GtkWidget *dialog;
-    GtkTable *table;
-    gint response;
-
-    controls.args = args;
-
-    dialog = gtk_dialog_new_with_buttons(_("Grain Correlations"), NULL, 0,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
-                                         NULL);
-    controls.dialog = GTK_DIALOG(dialog);
-    gtk_dialog_set_default_response(controls.dialog, GTK_RESPONSE_OK);
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 440, 520);
-
-    table = GTK_TABLE(gtk_table_new(2, 2, FALSE));
-    gtk_table_set_row_spacings(table, 2);
-    gtk_table_set_col_spacings(table, 2);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(controls.dialog->vbox), GTK_WIDGET(table),
-                       TRUE, TRUE, 0);
-
-    controls.abscissa = attach_axis_list(table, _("_Abscissa"), 0,
-                                         args->abscissa,
-                                         args->abscissa_expanded,
-                                         &controls);
-    controls.ordinate = attach_axis_list(table, _("O_rdinate"), 1,
-                                         args->ordinate,
-                                         args->ordinate_expanded,
-                                         &controls);
-    axis_quantity_changed(&controls);
-
-    gtk_widget_show_all(dialog);
-
-    do {
-        response = gtk_dialog_run(controls.dialog);
-        switch (response) {
-            case GTK_RESPONSE_CANCEL:
-            case GTK_RESPONSE_DELETE_EVENT:
-            gtk_widget_destroy(dialog);
-            case GTK_RESPONSE_NONE:
-            return;
-            break;
-
-            case GTK_RESPONSE_OK:
-            break;
-
-            default:
-            g_assert_not_reached();
-            break;
-        }
-    } while (response != GTK_RESPONSE_OK);
-
-    gtk_widget_destroy(dialog);
-
-    grain_cross_run(args, data, dfield, mfield);
-}
-
 static int
 compare_doubles(const void *a, const void *b)
 {
@@ -327,8 +358,18 @@ compare_doubles(const void *a, const void *b)
 static void
 grain_cross_run(GrainCrossArgs *args,
                 GwyContainer *data,
-                GwyDataField *dfield,
-                GwyDataField *mfield)
+                GwyDataField *dfield)
+{
+    GwyGraphModel *gmodel;
+
+    gmodel = create_corr_graph(args, dfield);
+    gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+    g_object_unref(gmodel);
+}
+
+static GwyGraphModel*
+create_corr_graph(GrainCrossArgs *args,
+                  GwyDataField *dfield)
 {
     GwyGraphCurveModel *cmodel;
     GwyGraphModel *gmodel;
@@ -336,28 +377,23 @@ grain_cross_run(GrainCrossArgs *args,
     gdouble *xdata, *ydata, *bothdata, *rdata[2];
     GwySIUnit *siunitxy, *siunitz, *siunitx, *siunity;
     const gchar *title;
-    gint *grains;
-    gint res, ngrains, i;
+    gint i;
 
     gvalues[0] = gwy_grain_values_get_grain_value(args->abscissa);
     gvalues[1] = gwy_grain_values_get_grain_value(args->ordinate);
 
-    res = gwy_data_field_get_xres(mfield)*gwy_data_field_get_yres(mfield);
-    grains = g_new0(gint, res);
-    ngrains = gwy_data_field_number_grains(mfield, grains);
+    bothdata = g_new(gdouble, 4*args->ngrains + 2);
+    rdata[0] = xdata = bothdata + 2*args->ngrains;
+    rdata[1] = ydata = bothdata + 3*args->ngrains + 1;
+    gwy_grain_values_calculate(2, gvalues, rdata, dfield,
+                               args->ngrains, args->grains);
 
-    bothdata = g_new(gdouble, 4*ngrains + 2);
-    rdata[0] = xdata = bothdata + 2*ngrains;
-    rdata[1] = ydata = bothdata + 3*ngrains + 1;
-    gwy_grain_values_calculate(2, gvalues, rdata, dfield, ngrains, grains);
-    g_free(grains);
-
-    for (i = 0; i < ngrains; i++) {
+    for (i = 0; i < args->ngrains; i++) {
         bothdata[2*i + 0] = xdata[i+1];
         bothdata[2*i + 1] = ydata[i+1];
     }
-    qsort(bothdata, ngrains, 2*sizeof(gdouble), compare_doubles);
-    for (i = 0; i < ngrains; i++) {
+    qsort(bothdata, args->ngrains, 2*sizeof(gdouble), compare_doubles);
+    for (i = 0; i < args->ngrains; i++) {
         xdata[i] = bothdata[2*i + 0];
         ydata[i] = bothdata[2*i + 1];
     }
@@ -394,11 +430,10 @@ grain_cross_run(GrainCrossArgs *args,
                  "description", title,
                  "mode", GWY_GRAPH_CURVE_POINTS,
                  NULL);
-    gwy_graph_curve_model_set_data(cmodel, xdata, ydata, ngrains);
+    gwy_graph_curve_model_set_data(cmodel, xdata, ydata, args->ngrains);
     g_free(bothdata);
 
-    gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
-    g_object_unref(gmodel);
+    return gmodel;
 }
 
 static const gchar abscissa_key[]          = "/module/grain_cross/abscissa";
