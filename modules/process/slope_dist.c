@@ -306,7 +306,7 @@ slope_dialog(SlopeArgs *args, gboolean same_units,
 
     gmodel = gwy_graph_model_new();
     controls.graph = gwy_graph_new(gmodel);
-    gtk_widget_set_size_request(controls.graph, PREVIEW_SIZE, 0);
+    gtk_widget_set_size_request(controls.graph, PREVIEW_SIZE, -1);
     g_object_unref(gmodel);
     gtk_box_pack_start(GTK_BOX(vbox), controls.graph, TRUE, TRUE, 0);
     if (args->output_type == SLOPE_DIST_2D_DIST)

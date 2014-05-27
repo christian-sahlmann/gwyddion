@@ -252,7 +252,7 @@ grain_dist_dialog(GrainDistArgs *args,
 
     gmodel = gwy_graph_model_new();
     controls.graph = gwy_graph_new(gmodel);
-    gtk_widget_set_size_request(controls.graph, 360, 0);
+    gtk_widget_set_size_request(controls.graph, 360, -1);
     g_object_unref(gmodel);
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph, TRUE, TRUE, 4);
 

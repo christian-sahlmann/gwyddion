@@ -495,7 +495,7 @@ neural_train_dialog(NeuralTrainArgs *args)
                  "axis-label-bottom", "n",
                  NULL);
     controls.errgraph = gwy_graph_new(controls.gmodel);
-    gtk_widget_set_size_request(controls.errgraph, 0, 200);
+    gtk_widget_set_size_request(controls.errgraph, -1, 200);
     gtk_box_pack_start(GTK_BOX(vbox), controls.errgraph, TRUE, TRUE, 0);
 
     gcmodel = gwy_graph_curve_model_new();

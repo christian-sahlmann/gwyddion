@@ -220,7 +220,7 @@ grain_cross_dialog(GrainCrossArgs *args,
 
     gmodel = gwy_graph_model_new();
     controls.graph = gwy_graph_new(gmodel);
-    gtk_widget_set_size_request(controls.graph, 320, 0);
+    gtk_widget_set_size_request(controls.graph, 320, -1);
     g_object_unref(gmodel);
     gtk_table_attach(GTK_TABLE(table), controls.graph, 0, 1, 0, 2,
                      GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
