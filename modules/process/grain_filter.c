@@ -24,6 +24,7 @@
 #include <gtk/gtk.h>
 #include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyexpr.h>
 #include <libprocess/grains.h>
 #include <libgwydgets/gwydataview.h>
@@ -42,6 +43,8 @@
 enum {
     PREVIEW_SIZE = 400,
     NQUANTITIES = 3,
+    /* Taken from gwydgetutils. */
+    GWY_HSCALE_WIDTH = 96
 };
 
 enum {
@@ -78,6 +81,7 @@ typedef struct {
     gboolean units_equal;
 
     GPtrArray *valuedata;
+    GPtrArray *sortedvaluedata;
     gint *grains;
     guint ngrains;
 } GFilterArgs;
@@ -94,9 +98,19 @@ typedef struct {
     GtkWidget *color_button;
     GtkWidget *set_as[NQUANTITIES];
     GtkWidget *logical_op;
-    GtkWidget *name[NQUANTITIES];
+    GwySIValueFormat *vf[NQUANTITIES];
+    GtkWidget *header[NQUANTITIES];
+    GtkWidget *qname[NQUANTITIES];
     GtkObject *lower[NQUANTITIES];
+    GtkWidget *lower_label[NQUANTITIES];
+    GtkWidget *lower_scale[NQUANTITIES];
+    GtkWidget *lower_entry[NQUANTITIES];
+    GtkWidget *lower_units[NQUANTITIES];
     GtkObject *upper[NQUANTITIES];
+    GtkWidget *upper_label[NQUANTITIES];
+    GtkWidget *upper_scale[NQUANTITIES];
+    GtkWidget *upper_entry[NQUANTITIES];
+    GtkWidget *upper_units[NQUANTITIES];
     GtkWidget *update;
 
     gboolean computed;
@@ -126,13 +140,33 @@ static void       gfilter_dialog_update_controls(GFilterControls *controls,
 static void       gfilter_invalidate            (GFilterControls *controls);
 static void       update_changed                (GFilterControls *controls,
                                                  GtkToggleButton *toggle);
-static void set_as_clicked(GFilterControls *controls, GtkButton *button);
+static void       set_as_clicked                (GFilterControls *controls,
+                                                 GtkButton *button);
+static void       set_up_quantity               (GFilterControls *controls,
+                                                 GwyGrainValue *gvalue,
+                                                 guint id);
+static void       set_adjustment_to_grain_value (GFilterControls *controls,
+                                                 GwyGrainValue *gvalue,
+                                                 GtkAdjustment *adj,
+                                                 gdouble value);
+static guint      bisect_lower                  (const gdouble *a,
+                                                 guint n,
+                                                 gdouble x);
 static void       logical_op_changed            (GtkComboBox *combo,
                                                  GFilterControls *controls);
+static void       lower_changed                 (GFilterControls *controls,
+                                                 GtkAdjustment *adj);
+static void       upper_changed                 (GFilterControls *controls,
+                                                 GtkAdjustment *adj);
+static void       threshold_changed             (GFilterControls *controls,
+                                                 GtkAdjustment *adj,
+                                                 gboolean upper);
 static GPtrArray* calculate_all_grain_values    (GwyDataField *dfield,
                                                  GwyDataField *mask,
                                                  guint *ngrains,
                                                  gint **grains);
+static GPtrArray* sort_grain_values             (GPtrArray *valuedata,
+                                                 guint ngrains);
 static void       gfilter_load_args             (GwyContainer *container,
                                                  GFilterArgs *args);
 static void       gfilter_save_args             (GwyContainer *container,
@@ -152,7 +186,8 @@ static const GFilterArgs gfilter_defaults = {
     /* Dynamic state */
     NULL,
     FALSE,
-    NULL, NULL, 0,
+    NULL, NULL,
+    NULL, 0,
 };
 
 static const GrainLogical logical_limits[NQUANTITIES+1] = {
@@ -211,8 +246,11 @@ grain_filter(GwyContainer *data, GwyRunType run)
     args.units_equal = gwy_si_unit_equal(siunitxy, siunitz);
     args.valuedata = calculate_all_grain_values(dfield, mfield,
                                                 &args.ngrains, &args.grains);
-
-    /* Must precalculate grain quantities to limit the ranges correctly. */
+    args.sortedvaluedata = sort_grain_values(args.valuedata, args.ngrains);
+    if (!args.ngrains) {
+        gfilter_free_args(&args);
+        return;
+    }
 
     if (run == GWY_RUN_IMMEDIATE) {
         run_noninteractive(&args, data, dfield, mfield, mquark);
@@ -245,17 +283,27 @@ gfilter_dialog(GFilterArgs *args,
               gint id,
               GQuark mquark)
 {
-    GtkWidget *dialog, *table, *hbox, *scwin, *hbox2;
+    GtkWidget *dialog, *table, *vbox, *hbox, *scwin, *hbox2;
     GtkTreeView *treeview;
     GtkTreeSelection *selection;
     GFilterControls controls;
     gint response, row, i;
+    GwySIUnit *siunit;
     GwyPixmapLayer *layer;
 
     controls.args = args;
     controls.mask = mfield;
     controls.in_init = TRUE;
     controls.computed = FALSE;
+
+    siunit = gwy_si_unit_new(NULL);
+    for (i = 0; i < NQUANTITIES; i++) {
+        controls.vf[i]
+            = gwy_si_unit_get_format_with_digits(siunit,
+                                                 GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                 1.0, 4, NULL);
+    }
+    g_object_unref(siunit);
 
     dialog = gtk_dialog_new_with_buttons(_("GFilter Grains by Threshold"),
                                          NULL, 0, NULL);
@@ -269,12 +317,17 @@ gfilter_dialog(GFilterArgs *args,
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), RESPONSE_PREVIEW,
+                                      !args->update);
     controls.dialog = dialog;
 
     hbox = gtk_hbox_new(FALSE, 2);
 
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
+
+    vbox = gtk_vbox_new(FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
 
     controls.mydata = gwy_container_new();
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
@@ -303,7 +356,14 @@ gfilter_dialog(GFilterArgs *args,
     gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls.view), layer);
     gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
 
-    gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
+
+    controls.update = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.update),
+                                 args->update);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.update, FALSE, FALSE, 0);
+    g_signal_connect_swapped(controls.update, "toggled",
+                             G_CALLBACK(update_changed), &controls);
 
     table = gtk_table_new(10, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
@@ -369,24 +429,80 @@ gfilter_dialog(GFilterArgs *args,
 
         gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
-        controls.name[i] = gtk_label_new(_(rr->quantity));
         /* TRANSLATORS: %c is replaced with quantity label A, B or C. */
         qlabel = g_strdup_printf(_("Quantity %c:"), 'A' + i);
-        gwy_table_attach_hscale(table, row++, qlabel, NULL,
-                                GTK_OBJECT(controls.name[i]),
-                                GWY_HSCALE_WIDGET);
+        controls.header[i] = gwy_label_new_header(qlabel);
         g_free(qlabel);
+        gtk_table_attach(GTK_TABLE(table), controls.header[i],
+                         0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
-        /* This is replaced with actual ranges later. */
-        controls.lower[i] = gtk_adjustment_new(0.0, 0.0, 1.0, 0.1, 0.1, 0.0);
-        gwy_table_attach_hscale(table, row++, _("Lower threshold:"), "",
-                                GTK_OBJECT(controls.lower[i]),
-                                GWY_HSCALE_DEFAULT);
+        controls.qname[i] = gwy_label_new_header(_(rr->quantity));
+        gtk_table_attach(GTK_TABLE(table), controls.qname[i],
+                         1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        row++;
 
-        controls.upper[i] = gtk_adjustment_new(0.0, 0.0, 1.0, 0.1, 0.1, 0.0);
-        gwy_table_attach_hscale(table, row++, _("Upper threshold:"), "",
-                                GTK_OBJECT(controls.upper[i]),
-                                GWY_HSCALE_DEFAULT);
+        /* The values are set properly later. */
+        controls.lower_label[i] = gtk_label_new(_("Lower threshold:"));
+        gtk_misc_set_alignment(GTK_MISC(controls.lower_label[i]), 0.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), controls.lower_label[i],
+                         0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+        controls.lower[i] = gtk_adjustment_new(1.0, 1.0, args->ngrains-1,
+                                               1.0, 10.0, 0.0);
+        g_object_set_data(G_OBJECT(controls.lower[i]), "id",
+                          GUINT_TO_POINTER(i));
+        g_signal_connect_swapped(controls.lower[i], "value-changed",
+                                 G_CALLBACK(lower_changed), &controls);
+        controls.lower_scale[i]
+            = gtk_hscale_new(GTK_ADJUSTMENT(controls.lower[i]));
+        gtk_scale_set_draw_value(GTK_SCALE(controls.lower_scale[i]), FALSE);
+        gtk_widget_set_size_request(controls.lower_scale[i],
+                                    GWY_HSCALE_WIDTH, -1);
+        gtk_table_attach(GTK_TABLE(table), controls.lower_scale[i],
+                         1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+        controls.lower_entry[i] = gtk_entry_new();
+        gtk_entry_set_width_chars(GTK_ENTRY(controls.lower_entry[i]), 8);
+        gtk_table_attach(GTK_TABLE(table), controls.lower_entry[i],
+                         2, 3, row, row+1, GTK_FILL, 0, 0, 0);
+        /* TODO: react to manual setting */
+
+        controls.lower_units[i] = gtk_label_new(NULL);
+        gtk_misc_set_alignment(GTK_MISC(controls.lower_units[i]), 0.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), controls.lower_units[i],
+                         3, 4, row, row+1, GTK_FILL, 0, 0, 0);
+        row++;
+
+        controls.upper_label[i] = gtk_label_new(_("Upper threshold:"));
+        gtk_misc_set_alignment(GTK_MISC(controls.upper_label[i]), 0.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), controls.upper_label[i],
+                         0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+        controls.upper[i] = gtk_adjustment_new(1.0, 1.0, args->ngrains-1,
+                                               1.0, 10.0, 0.0);
+        g_object_set_data(G_OBJECT(controls.upper[i]), "id",
+                          GUINT_TO_POINTER(i));
+        g_signal_connect_swapped(controls.upper[i], "value-changed",
+                                 G_CALLBACK(upper_changed), &controls);
+        controls.upper_scale[i]
+            = gtk_hscale_new(GTK_ADJUSTMENT(controls.upper[i]));
+        gtk_scale_set_draw_value(GTK_SCALE(controls.upper_scale[i]), FALSE);
+        gtk_widget_set_size_request(controls.upper_scale[i],
+                                    GWY_HSCALE_WIDTH, -1);
+        gtk_table_attach(GTK_TABLE(table), controls.upper_scale[i],
+                         1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+        controls.upper_entry[i] = gtk_entry_new();
+        gtk_entry_set_width_chars(GTK_ENTRY(controls.upper_entry[i]), 8);
+        gtk_table_attach(GTK_TABLE(table), controls.upper_entry[i],
+                         2, 3, row, row+1, GTK_FILL, 0, 0, 0);
+        /* TODO: react to manual setting */
+
+        controls.upper_units[i] = gtk_label_new(NULL);
+        gtk_misc_set_alignment(GTK_MISC(controls.upper_units[i]), 0.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), controls.upper_units[i],
+                         3, 4, row, row+1, GTK_FILL, 0, 0, 0);
+        row++;
     }
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
@@ -406,15 +522,8 @@ gfilter_dialog(GFilterArgs *args,
                      G_CALLBACK(mask_color_changed), &controls);
     row++;
 
-    controls.update = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.update),
-                                 args->update);
-    gtk_table_attach(GTK_TABLE(table), controls.update,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    g_signal_connect_swapped(controls.update, "toggled",
-                             G_CALLBACK(update_changed), &controls);
-
     /* finished initializing, allow instant updates */
+    /* TODO: set up quantities */
     logical_op_changed(GTK_COMBO_BOX(controls.logical_op), &controls);
     controls.in_init = FALSE;
     gfilter_invalidate(&controls);
@@ -427,6 +536,8 @@ gfilter_dialog(GFilterArgs *args,
             case GTK_RESPONSE_DELETE_EVENT:
             args->expanded = gwy_grain_value_tree_view_get_expanded_groups
                                              (GTK_TREE_VIEW(controls.values));
+            for (i = 0; i < NQUANTITIES; i++)
+                gwy_si_unit_value_format_free(controls.vf[i]);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             g_object_unref(controls.mydata);
@@ -455,6 +566,8 @@ gfilter_dialog(GFilterArgs *args,
         }
     } while (response != GTK_RESPONSE_OK);
 
+    for (i = 0; i < NQUANTITIES; i++)
+        gwy_si_unit_value_format_free(controls.vf[i]);
     args->expanded = gwy_grain_value_tree_view_get_expanded_groups
                                              (GTK_TREE_VIEW(controls.values));
     gwy_app_sync_data_items(controls.mydata, data, 0, id, FALSE,
@@ -532,6 +645,8 @@ update_changed(GFilterControls *controls, GtkToggleButton *toggle)
     GFilterArgs *args = controls->args;
 
     args->update = gtk_toggle_button_get_active(toggle);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      RESPONSE_PREVIEW, !args->update);
     gfilter_invalidate(controls);
 }
 
@@ -550,7 +665,115 @@ set_as_clicked(GFilterControls *controls, GtkButton *button)
         return;
 
     gtk_tree_model_get(model, &iter, 0, &gvalue, -1);
-    /* TODO */
+    set_up_quantity(controls, gvalue, id);
+}
+
+static void
+set_up_quantity(GFilterControls *controls, GwyGrainValue *gvalue, guint id)
+{
+    GFilterArgs *args = controls->args;
+    GwyInventory *inventory;
+    GwyDataField *dfield;
+    RangeRecord *rr, myrr;
+    const gchar *name;
+    const gdouble *v;
+    gchar *s;
+    gdouble vmin, vmax;
+    GwySIUnit *siunit, *siunitxy, *siunitz;
+    guint i;
+
+    controls->in_init = TRUE;
+    name = gwy_resource_get_name(GWY_RESOURCE(gvalue));
+    args->ranges[id].quantity = name;
+    s = g_strconcat("<b>", name, "</b>", NULL);
+    gtk_label_set_markup(GTK_LABEL(controls->qname[id]), s);
+    g_free(s);
+    rr = g_hash_table_lookup(args->ranges_history, (gpointer)name);
+    if (rr)
+        myrr = *rr;
+    else {
+        myrr.lower = -G_MAXDOUBLE;
+        myrr.upper = G_MAXDOUBLE;
+    }
+
+    inventory = gwy_grain_values();
+    i = gwy_inventory_get_item_position(inventory, name);
+    v = g_ptr_array_index(args->sortedvaluedata, i);
+    vmin = v[0];
+    vmax = v[args->ngrains-1];
+    myrr.lower = CLAMP(myrr.lower, vmin, vmax);
+    myrr.upper = CLAMP(myrr.upper, vmin, vmax);
+
+    dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
+    siunitxy = gwy_data_field_get_si_unit_xy(dfield);
+    siunitz = gwy_data_field_get_si_unit_z(dfield);
+    siunit = gwy_si_unit_power_multiply(siunitxy,
+                                        gwy_grain_value_get_power_xy(gvalue),
+                                        siunitz,
+                                        gwy_grain_value_get_power_z(gvalue),
+                                        NULL);
+    gwy_si_unit_get_format_with_digits(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                       MAX(fabs(vmin), fabs(vmax)), 4,
+                                       controls->vf[id]);
+    g_object_unref(siunit);
+    gtk_label_set_markup(GTK_LABEL(controls->lower_units[id]),
+                         controls->vf[id]->units);
+    gtk_label_set_markup(GTK_LABEL(controls->upper_units[id]),
+                         controls->vf[id]->units);
+
+    set_adjustment_to_grain_value(controls, gvalue,
+                                  GTK_ADJUSTMENT(controls->lower[id]),
+                                  myrr.lower);
+    set_adjustment_to_grain_value(controls, gvalue,
+                                  GTK_ADJUSTMENT(controls->upper[id]),
+                                  myrr.upper);
+    /* TODO: init args->ranges[id] */
+    /* TODO: show the value in the entry */
+
+    controls->in_init = FALSE;
+}
+
+static void
+set_adjustment_to_grain_value(GFilterControls *controls,
+                              GwyGrainValue *gvalue,
+                              GtkAdjustment *adj,
+                              gdouble value)
+{
+    GFilterArgs *args = controls->args;
+    GwyInventory *inventory;
+    const gchar *name;
+    guint k, i;
+    const gdouble *v;
+
+    inventory = gwy_grain_values();
+    name = gwy_resource_get_name(GWY_RESOURCE(gvalue));
+    i = gwy_inventory_get_item_position(inventory, name);
+    v = g_ptr_array_index(args->sortedvaluedata, i);
+    k = bisect_lower(v, args->ngrains, value);
+    /* XXX: This is approximate, but maybe sufficient. */
+    gtk_adjustment_set_value(adj, k);
+}
+
+static guint
+bisect_lower(const gdouble *a, guint n, gdouble x)
+{
+    guint lo = 0, hi = n-1;
+
+    if (G_UNLIKELY(x < a[lo]))
+        return 0;
+    if (G_UNLIKELY(x >= a[hi]))
+        return n-1;
+
+    while (hi - lo > 1) {
+        guint mid = (hi + lo)/2;
+
+        if (x < a[mid])
+            hi = mid;
+        else
+            lo = mid;
+    }
+
+    return lo;
 }
 
 static void
@@ -566,11 +789,87 @@ logical_op_changed(GtkComboBox *combo, GFilterControls *controls)
         gboolean sens = (logical >= logical_limits[i]);
 
         gtk_widget_set_sensitive(controls->set_as[i], sens);
-        gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->name[i]), sens);
-        gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->lower[i]), sens);
-        gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->upper[i]), sens);
+        gtk_widget_set_sensitive(controls->qname[i], sens);
+        gtk_widget_set_sensitive(controls->header[i], sens);
+        gtk_widget_set_sensitive(controls->lower_label[i], sens);
+        gtk_widget_set_sensitive(controls->lower_scale[i], sens);
+        gtk_widget_set_sensitive(controls->lower_entry[i], sens);
+        gtk_widget_set_sensitive(controls->lower_units[i], sens);
+        gtk_widget_set_sensitive(controls->upper_label[i], sens);
+        gtk_widget_set_sensitive(controls->upper_scale[i], sens);
+        gtk_widget_set_sensitive(controls->upper_entry[i], sens);
+        gtk_widget_set_sensitive(controls->upper_units[i], sens);
     }
     gfilter_invalidate(controls);
+}
+
+static void
+lower_changed(GFilterControls *controls, GtkAdjustment *adj)
+{
+    threshold_changed(controls, adj, FALSE);
+}
+
+static void
+upper_changed(GFilterControls *controls, GtkAdjustment *adj)
+{
+    threshold_changed(controls, adj, TRUE);
+}
+
+static void
+threshold_changed(GFilterControls *controls,
+                  GtkAdjustment *adj, gboolean upper)
+{
+    GFilterArgs *args = controls->args;
+    GwyInventory *inventory;
+    GwyGrainValue *gvalue;
+    RangeRecord *rr;
+    GtkEntry *entry;
+    const gchar *name;
+    guint id, i, k;
+    gdouble *v;
+    gchar *s;
+
+    if (controls->in_init)
+        return;
+
+    k = gwy_adjustment_get_int(adj);
+    id = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(adj), "id"));
+    inventory = gwy_grain_values();
+    gvalue = gwy_inventory_get_item(inventory, args->ranges[id].quantity);
+    g_return_if_fail(gvalue);
+    i = gwy_inventory_get_item_position(inventory, args->ranges[id].quantity);
+    v = g_ptr_array_index(args->sortedvaluedata, i);
+    if (upper)
+        args->ranges[id].upper = v[k];
+    else
+        args->ranges[id].lower = v[k];
+
+    s = g_strdup_printf("%.*f",
+                        controls->vf[id]->precision,
+                        v[k]/controls->vf[id]->magnitude);
+    if (upper)
+        entry = GTK_ENTRY(controls->upper_entry[id]);
+    else
+        entry = GTK_ENTRY(controls->lower_entry[id]);
+
+    gtk_entry_set_text(entry, s);
+    g_free(s);
+
+    name = gwy_resource_get_name(GWY_RESOURCE(gvalue));
+    rr = g_hash_table_lookup(args->ranges_history, (gpointer)name);
+    if (rr) {
+        if (upper)
+            rr->upper = v[k];
+        else
+            rr->lower = v[k];
+    }
+    else {
+        rr = g_slice_new(RangeRecord);
+        rr->lower = args->ranges[id].lower;
+        rr->upper = args->ranges[id].upper;
+        rr->quantity = name;
+        g_hash_table_insert(args->ranges_history, (gpointer)name, rr);
+    }
 }
 
 static GPtrArray*
@@ -604,6 +903,33 @@ calculate_all_grain_values(GwyDataField *dfield,
     g_free(gvalues);
 
     return valuedata;
+}
+
+static GPtrArray*
+sort_grain_values(GPtrArray *valuedata,
+                  guint ngrains)
+{
+    GwyInventory *inventory;
+    GPtrArray *sortedvaluedata;
+    guint n, i, datasize;
+
+    inventory = gwy_grain_values();
+    n = gwy_inventory_get_n_items(inventory);
+
+    sortedvaluedata = g_ptr_array_new();
+    g_ptr_array_set_size(sortedvaluedata, n);
+
+    datasize = ngrains*sizeof(gdouble);
+    for (i = 0; i < n; i++) {
+        const gdouble *vdi = g_ptr_array_index(valuedata, i);
+        /* +1 to avoid the zeroth non-grain */
+        gdouble *svdi = g_memdup(vdi + 1, datasize);
+
+        gwy_math_sort(ngrains, svdi);
+        g_ptr_array_index(sortedvaluedata, i) = svdi;
+    }
+
+    return sortedvaluedata;
 }
 
 static const gchar logical_key[]     = "/module/grain_filter/logical";
@@ -694,7 +1020,8 @@ gfilter_load_args(GwyContainer *container,
                 rr->lower = lower;
                 rr->upper = upper;
                 rr->quantity = gwy_resource_get_name(GWY_RESOURCE(gvalue));
-                g_hash_table_insert(args->ranges_history, s, rr);
+                g_hash_table_insert(args->ranges_history,
+                                    (gpointer)rr->quantity, rr);
             }
         }
         g_free(buffer);
@@ -762,10 +1089,13 @@ gfilter_free_args(GFilterArgs *args)
     inventory = gwy_grain_values();
     n = gwy_inventory_get_n_items(inventory);
 
-    for (i = 0; i < n; i++)
+    for (i = 0; i < n; i++) {
         g_free(g_ptr_array_index(args->valuedata, i));
+        g_free(g_ptr_array_index(args->sortedvaluedata, i));
+    }
 
     g_ptr_array_free(args->valuedata, TRUE);
+    g_ptr_array_free(args->sortedvaluedata, TRUE);
     g_free(args->grains);
 }
 
