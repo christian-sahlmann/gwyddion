@@ -44,11 +44,6 @@ typedef struct {
 static gboolean module_register   (void);
 static void     facet_level       (GwyContainer *data,
                                    GwyRunType run);
-static gboolean facet_level_coeffs(GwyDataField *dfield,
-                                   GwyDataField *mfield,
-                                   GwyMaskingType masking_type,
-                                   gdouble *bx,
-                                   gdouble *by);
 static gboolean level_dialog      (LevelArgs *args,
                                    const gchar *title);
 static void     masking_changed   (GtkToggleButton *button,
@@ -68,7 +63,7 @@ static GwyModuleInfo module_info = {
     N_("Automatic facet-orientation based levelling. "
        "Levels data to make facets point up."),
     "Yeti <yeti@gwyddion.net>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -96,7 +91,7 @@ facet_level(GwyContainer *data, GwyRunType run)
     LevelArgs args;
     GQuark quark;
     gdouble c, bx, by, b2;
-    gdouble p, progress, maxb2 = 666, eps = 1e-8;
+    gdouble p, progress, maxb2 = 666.0, eps = 1e-8;
     gint i, id;
     gboolean ok;
     gboolean cancelled = FALSE;
@@ -145,19 +140,18 @@ facet_level(GwyContainer *data, GwyRunType run)
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, id),
                        _("Facet-leveling"));
     while (i < 100) {
-        if (!facet_level_coeffs(dfield, mfield, args.masking, &bx, &by)) {
+        if (!gwy_data_field_fit_facet_plane(dfield, mfield, args.masking,
+                                            &c, &bx, &by)) {
             /* Not actually cancelled, but do not save undo */
             cancelled = TRUE;
             break;
         }
+        gwy_data_field_plane_level(dfield, c, bx, by);
+        bx /= gwy_data_field_get_xmeasure(dfield);
+        by /= gwy_data_field_get_ymeasure(dfield);
         b2 = bx*bx + by*by;
-        bx *= gwy_data_field_get_xmeasure(dfield);
-        by *= gwy_data_field_get_ymeasure(dfield);
         if (!i)
             maxb2 = MAX(b2, eps);
-        c = -0.5*(bx*gwy_data_field_get_xres(dfield)
-                  + by*gwy_data_field_get_yres(dfield));
-        gwy_data_field_plane_level(dfield, c, bx, by);
         if (b2 < eps)
             break;
         i++;
@@ -179,95 +173,6 @@ facet_level(GwyContainer *data, GwyRunType run)
         gwy_data_field_data_changed(old);
     }
     g_object_unref(dfield);
-}
-
-static gboolean
-facet_level_coeffs(GwyDataField *dfield, GwyDataField *mfield,
-                   GwyMaskingType masking_type,
-                   gdouble *bx, gdouble *by)
-{
-    gdouble *data, *row, *newrow;
-    const gdouble *mdata, *mrow, *newmrow;
-    gdouble vx, vy, q, sumvx, sumvy, sumvz, xr, yr, sigma2;
-    gint xres, yres, n, i, j;
-
-    *bx = *by = 0;
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    xr = gwy_data_field_get_xmeasure(dfield);
-    yr = gwy_data_field_get_ymeasure(dfield);
-
-    data = gwy_data_field_get_data(dfield);
-    mdata = mfield ? gwy_data_field_get_data_const(mfield) : NULL;
-
-    sigma2 = 0.0;
-    newrow = data;
-    newmrow = mdata;
-    n = 0;
-    for (i = 1; i < yres; i++) {
-        row = newrow;
-        newrow += xres;
-        mrow = newmrow;
-        newmrow += xres;
-
-        for (j = 1; j < xres; j++) {
-            if (masking_type == GWY_MASK_IGNORE
-                || (masking_type == GWY_MASK_INCLUDE
-                    && newmrow[j] >= 1.0 && mrow[j] >= 1.0
-                    && newmrow[j-1] >= 1.0 && mrow[j-1] >= 1.0)
-                || (masking_type == GWY_MASK_EXCLUDE
-                    && newmrow[j] <= 0.0 && mrow[j] <= 0.0
-                    && newmrow[j-1] <= 0.0 && mrow[j-1] <= 0.0)) {
-                n++;
-                vx = 0.5*(newrow[j] + row[j] - newrow[j-1] - row[j-1])/xr;
-                vy = 0.5*(newrow[j-1] + newrow[j] - row[j-1] - row[j])/yr;
-                sigma2 += vx*vx + vy*vy;
-            }
-        }
-    }
-    /* Do not try to level from some random pixel */
-    gwy_debug("n=%d", n);
-    if (n < 4)
-        return FALSE;
-
-    sigma2 = 0.05*sigma2/n;
-
-    sumvx = sumvy = sumvz = 0.0;
-    newrow = data;
-    newmrow = mdata;
-    for (i = 1; i < yres; i++) {
-        row = newrow;
-        newrow += xres;
-        mrow = newmrow;
-        newmrow += xres;
-
-        for (j = 1; j < xres; j++) {
-            if (masking_type == GWY_MASK_IGNORE
-                || (masking_type == GWY_MASK_INCLUDE
-                    && newmrow[j] >= 1.0 && mrow[j] >= 1.0
-                    && newmrow[j-1] >= 1.0 && mrow[j-1] >= 1.0)
-                || (masking_type == GWY_MASK_EXCLUDE
-                    && newmrow[j] <= 0.0 && mrow[j] <= 0.0
-                    && newmrow[j-1] <= 0.0 && mrow[j-1] <= 0.0)) {
-                vx = 0.5*(newrow[j] + row[j] - newrow[j-1] - row[j-1])/xr;
-                vy = 0.5*(newrow[j-1] + newrow[j] - row[j-1] - row[j])/yr;
-                /* XXX: I thought q alone (i.e., normal normalization) would
-                 * give nice facet leveling, but the higher norm values has to
-                 * be suppressed much more -- it seems */
-                q = exp((vx*vx + vy*vy)/sigma2);
-                sumvx += vx/q;
-                sumvy += vy/q;
-                sumvz += 1.0/q;
-            }
-        }
-    }
-    q = sumvz;
-    *bx = sumvx/q;
-    *by = sumvy/q;
-    gwy_debug("sigma=%g sum=(%g, %g, %g) q=%g b=(%g, %g)",
-              sqrt(sigma2), sumvx, sumvy, sumvz, q, *bx, *by);
-
-    return TRUE;
 }
 
 static gboolean

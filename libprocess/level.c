@@ -210,6 +210,139 @@ gwy_data_field_area_fit_plane(GwyDataField *data_field,
 }
 
 /**
+ * gwy_data_field_fit_facet_plane:
+ * @data_field: A data field.
+ * @mask: Mask specifying which values to take into account/exclude, or %NULL.
+ * @masking: Masking mode to use.
+ * @pa: Where constant coefficient should be stored (or %NULL).
+ * @pbx: Where x plane coefficient should be stored.
+ * @pby: Where y plane coefficient should be stored.
+ *
+ * Calculates the inclination of a plane close to the dominant plane in a data
+ * field.
+ *
+ * The dominant plane is determined by taking into account larger local slopes
+ * with exponentially smaller weight.
+ *
+ * This is the basis of so-called facet levelling algorithm.  Usually, the
+ * plane found by this method is subtracted using gwy_data_field_plane_level()
+ * and the entire process is repeated until it converges.  A convergence
+ * criterion may be sufficiently small values of the x and y plane
+ * coefficients.  Note that since gwy_data_field_plane_level() uses pixel-based
+ * lateral coordinates, the coefficients must be divided by
+ * gwy_data_field_get_xmeasure(data_field) and
+ * gwy_data_field_get_ymeasure(data_field) to obtain physical plane
+ * coefficients.
+ *
+ * Returns: %TRUE if any plane was actually fitted; %FALSE if there was an
+ *          insufficient number of unmasked pixels.
+ *
+ * Since: 2.37
+ **/
+gboolean
+gwy_data_field_fit_facet_plane(GwyDataField *data_field,
+                               GwyDataField *mask,
+                               GwyMaskingType masking,
+                               gdouble *pa, gdouble *pbx, gdouble *pby)
+{
+    gdouble *data, *row, *newrow;
+    const gdouble *mdata, *mrow, *newmrow;
+    gdouble vx, vy, q, sumvx, sumvy, sumvz, xr, yr, sigma2;
+    gint xres, yres, n, i, j;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), FALSE);
+    if (mask) {
+        g_return_val_if_fail(GWY_IS_DATA_FIELD(mask), FALSE);
+        g_return_val_if_fail(mask->xres == data_field->xres, FALSE);
+        g_return_val_if_fail(mask->yres == data_field->yres, FALSE);
+    }
+
+    *pbx = *pby = 0.0;
+    if (pa)
+        *pa = 0.0;
+
+    xres = data_field->xres;
+    yres = data_field->yres;
+    xr = data_field->xreal/xres;
+    yr = data_field->yreal/yres;
+
+    data = data_field->data;
+    mdata = mask ? gwy_data_field_get_data_const(mask) : NULL;
+
+    sigma2 = 0.0;
+    newrow = data;
+    newmrow = mdata;
+    n = 0;
+    for (i = 1; i < yres; i++) {
+        row = newrow;
+        newrow += xres;
+        mrow = newmrow;
+        newmrow += xres;
+
+        for (j = 1; j < xres; j++) {
+            if (masking == GWY_MASK_IGNORE
+                || (masking == GWY_MASK_INCLUDE
+                    && newmrow[j] >= 1.0 && mrow[j] >= 1.0
+                    && newmrow[j-1] >= 1.0 && mrow[j-1] >= 1.0)
+                || (masking == GWY_MASK_EXCLUDE
+                    && newmrow[j] <= 0.0 && mrow[j] <= 0.0
+                    && newmrow[j-1] <= 0.0 && mrow[j-1] <= 0.0)) {
+                n++;
+                vx = 0.5*(newrow[j] + row[j] - newrow[j-1] - row[j-1])/xr;
+                vy = 0.5*(newrow[j-1] + newrow[j] - row[j-1] - row[j])/yr;
+                sigma2 += vx*vx + vy*vy;
+            }
+        }
+    }
+    /* Do not try to level from some random pixel */
+    gwy_debug("n=%d", n);
+    if (n < 4)
+        return FALSE;
+
+    sigma2 = 0.05*sigma2/n;
+
+    sumvx = sumvy = sumvz = 0.0;
+    newrow = data;
+    newmrow = mdata;
+    for (i = 1; i < yres; i++) {
+        row = newrow;
+        newrow += xres;
+        mrow = newmrow;
+        newmrow += xres;
+
+        for (j = 1; j < xres; j++) {
+            if (masking == GWY_MASK_IGNORE
+                || (masking == GWY_MASK_INCLUDE
+                    && newmrow[j] >= 1.0 && mrow[j] >= 1.0
+                    && newmrow[j-1] >= 1.0 && mrow[j-1] >= 1.0)
+                || (masking == GWY_MASK_EXCLUDE
+                    && newmrow[j] <= 0.0 && mrow[j] <= 0.0
+                    && newmrow[j-1] <= 0.0 && mrow[j-1] <= 0.0)) {
+                vx = 0.5*(newrow[j] + row[j] - newrow[j-1] - row[j-1])/xr;
+                vy = 0.5*(newrow[j-1] + newrow[j] - row[j-1] - row[j])/yr;
+                /* XXX: I thought q alone (i.e., normal normalization) would
+                 * give nice facet leveling, but the higher norm values has to
+                 * be suppressed much more -- it seems */
+                q = exp((vx*vx + vy*vy)/sigma2);
+                sumvx += vx/q;
+                sumvy += vy/q;
+                sumvz += 1.0/q;
+            }
+        }
+    }
+    q = sumvz;
+    *pbx = sumvx/q * xr;
+    *pby = sumvy/q * yr;
+    gwy_debug("sigma=%g sum=(%g, %g, %g) q=%g b=(%g, %g)",
+              sqrt(sigma2), sumvx, sumvy, sumvz, q, *pbx, *pby);
+
+    if (pa)
+        *pa = -0.5*((*pbx)*xres + (*pby)*yres);
+
+    return TRUE;
+}
+
+/**
  * gwy_data_field_plane_level:
  * @data_field: A data field.
  * @a: Constant coefficient.

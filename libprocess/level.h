@@ -41,6 +41,13 @@ void gwy_data_field_fit_plane             (GwyDataField *data_field,
                                            gdouble *pbx,
                                            gdouble *pby);
 
+gboolean gwy_data_field_fit_facet_plane   (GwyDataField *data_field,
+                                           GwyDataField *mfield,
+                                           GwyMaskingType masking,
+                                           gdouble *pa,
+                                           gdouble *pbx,
+                                           gdouble *pby);
+
 void gwy_data_field_plane_level           (GwyDataField *data_field,
                                            gdouble a,
                                            gdouble bx,
