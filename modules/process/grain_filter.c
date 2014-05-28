@@ -100,7 +100,6 @@ typedef struct {
     GtkWidget *logical_op;
     GwySIValueFormat *vf[NQUANTITIES];
     GtkWidget *header[NQUANTITIES];
-    GtkWidget *qname[NQUANTITIES];
     GtkObject *lower[NQUANTITIES];
     GtkWidget *lower_label[NQUANTITIES];
     GtkWidget *lower_scale[NQUANTITIES];
@@ -117,62 +116,64 @@ typedef struct {
     gboolean in_init;
 } GFilterControls;
 
-static gboolean   module_register               (void);
-static void       grain_filter                  (GwyContainer *data,
-                                                 GwyRunType run);
-static void       run_noninteractive            (GFilterArgs *args,
-                                                 GwyContainer *data,
-                                                 GwyDataField *dfield,
-                                                 GwyDataField *mfield,
-                                                 GQuark mquark);
-static void       gfilter_dialog                (GFilterArgs *args,
-                                                 GwyContainer *data,
-                                                 GwyDataField *dfield,
-                                                 GwyDataField *mfield,
-                                                 gint id,
-                                                 GQuark mquark);
-static void       mask_color_changed            (GtkWidget *color_button,
-                                                 GFilterControls *controls);
-static void       load_mask_color               (GtkWidget *color_button,
-                                                 GwyContainer *data);
-static void       gfilter_invalidate            (GFilterControls *controls);
-static void       update_changed                (GFilterControls *controls,
-                                                 GtkToggleButton *toggle);
-static void       set_as_clicked                (GFilterControls *controls,
-                                                 GtkButton *button);
-static void       set_up_quantity               (GFilterControls *controls,
-                                                 GwyGrainValue *gvalue,
-                                                 guint id);
-static void       set_adjustment_to_grain_value (GFilterControls *controls,
-                                                 GwyGrainValue *gvalue,
-                                                 GtkAdjustment *adj,
-                                                 gdouble value);
-static guint      bisect_lower                  (const gdouble *a,
-                                                 guint n,
-                                                 gdouble x);
-static void       logical_op_changed            (GtkComboBox *combo,
-                                                 GFilterControls *controls);
-static void       threshold_changed             (GFilterControls *controls,
-                                                 GtkAdjustment *adj);
-static void       threshold_activated           (GFilterControls *controls,
-                                                 GtkEntry *entry);
-static void       set_threshold_value           (GFilterArgs *args,
-                                                 guint id,
-                                                 const gchar *name,
-                                                 gdouble value,
-                                                 gboolean is_upper);
-static GPtrArray* calculate_all_grain_values    (GwyDataField *dfield,
-                                                 GwyDataField *mask,
-                                                 guint *ngrains,
-                                                 gint **grains);
-static GPtrArray* sort_grain_values             (GPtrArray *valuedata,
-                                                 guint ngrains);
-static void       gfilter_load_args             (GwyContainer *container,
-                                                 GFilterArgs *args);
-static void       gfilter_save_args             (GwyContainer *container,
-                                                 GFilterArgs *args);
-static void       gfilter_sanitize_args         (GFilterArgs *args);
-static void       gfilter_free_args             (GFilterArgs *args);
+static gboolean   module_register              (void);
+static void       grain_filter                 (GwyContainer *data,
+                                                GwyRunType run);
+static void       run_noninteractive           (GFilterArgs *args,
+                                                GwyContainer *data,
+                                                GwyDataField *mfield,
+                                                GQuark mquark);
+static void       gfilter_dialog               (GFilterArgs *args,
+                                                GwyContainer *data,
+                                                GwyDataField *dfield,
+                                                GwyDataField *mfield,
+                                                gint id,
+                                                GQuark mquark);
+static void       mask_color_changed           (GtkWidget *color_button,
+                                                GFilterControls *controls);
+static void       load_mask_color              (GtkWidget *color_button,
+                                                GwyContainer *data);
+static void       gfilter_invalidate           (GFilterControls *controls);
+static void       preview                      (GFilterControls *controls);
+static void       update_changed               (GFilterControls *controls,
+                                                GtkToggleButton *toggle);
+static void       set_as_clicked               (GFilterControls *controls,
+                                                GtkButton *button);
+static void       set_up_quantity              (GFilterControls *controls,
+                                                GwyGrainValue *gvalue,
+                                                guint id);
+static void       set_adjustment_to_grain_value(GFilterControls *controls,
+                                                GwyGrainValue *gvalue,
+                                                GtkAdjustment *adj,
+                                                gdouble value);
+static guint      bisect_lower                 (const gdouble *a,
+                                                guint n,
+                                                gdouble x);
+static void       logical_op_changed           (GtkComboBox *combo,
+                                                GFilterControls *controls);
+static void       threshold_changed            (GFilterControls *controls,
+                                                GtkAdjustment *adj);
+static void       threshold_activated          (GFilterControls *controls,
+                                                GtkEntry *entry);
+static void       set_threshold_value          (GFilterArgs *args,
+                                                guint id,
+                                                const gchar *name,
+                                                gdouble value,
+                                                gboolean is_upper);
+static GPtrArray* calculate_all_grain_values   (GwyDataField *dfield,
+                                                GwyDataField *mask,
+                                                guint *ngrains,
+                                                gint **grains);
+static GPtrArray* sort_grain_values            (GPtrArray *valuedata,
+                                                guint ngrains);
+static void       gfilter_process              (GwyDataField *mfield,
+                                                GFilterArgs *args);
+static void       gfilter_load_args            (GwyContainer *container,
+                                                GFilterArgs *args);
+static void       gfilter_save_args            (GwyContainer *container,
+                                                GFilterArgs *args);
+static void       gfilter_sanitize_args        (GFilterArgs *args);
+static void       gfilter_free_args            (GFilterArgs *args);
 
 static const GFilterArgs gfilter_defaults = {
     TRUE, 0,
@@ -253,9 +254,8 @@ grain_filter(GwyContainer *data, GwyRunType run)
     }
 
     if (run == GWY_RUN_IMMEDIATE) {
-        run_noninteractive(&args, data, dfield, mfield, mquark);
-        gwy_app_channel_log_add(data, id, id, "proc::grain_filter",
-                                NULL);
+        run_noninteractive(&args, data, mfield, mquark);
+        gwy_app_channel_log_add(data, id, id, "proc::grain_filter", NULL);
     }
     else
         gfilter_dialog(&args, data, dfield, mfield, id, mquark);
@@ -266,12 +266,11 @@ grain_filter(GwyContainer *data, GwyRunType run)
 static void
 run_noninteractive(GFilterArgs *args,
                    GwyContainer *data,
-                   GwyDataField *dfield,
                    GwyDataField *mfield,
                    GQuark mquark)
 {
     gwy_app_undo_qcheckpointv(data, 1, &mquark);
-    //mask_process(dfield, mfield, args);
+    gfilter_process(mfield, args);
     gwy_data_field_data_changed(mfield);
 }
 
@@ -283,7 +282,7 @@ gfilter_dialog(GFilterArgs *args,
               gint id,
               GQuark mquark)
 {
-    GtkWidget *dialog, *table, *vbox, *hbox, *scwin, *hbox2;
+    GtkWidget *dialog, *table, *vbox, *hbox, *scwin, *hbox2, *label;
     GtkTreeView *treeview;
     GtkTreeSelection *selection;
     GFilterControls controls;
@@ -363,6 +362,22 @@ gfilter_dialog(GFilterArgs *args,
     g_signal_connect_swapped(controls.update, "toggled",
                              G_CALLBACK(update_changed), &controls);
 
+    hbox2 = gtk_hbox_new(FALSE, 6);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox2, FALSE, FALSE, 0);
+
+    label = gtk_label_new_with_mnemonic(_("_Mask color:"));
+    gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
+
+    controls.color_button = gwy_color_button_new();
+    gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
+                                   TRUE);
+    load_mask_color(controls.color_button,
+                    gwy_data_view_get_data(GWY_DATA_VIEW(controls.view)));
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.color_button);
+    gtk_box_pack_start(GTK_BOX(hbox2), controls.color_button, FALSE, FALSE, 0);
+    g_signal_connect(controls.color_button, "clicked",
+                     G_CALLBACK(mask_color_changed), &controls);
+
     table = gtk_table_new(10, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -423,21 +438,12 @@ gfilter_dialog(GFilterArgs *args,
                             GWY_HSCALE_WIDGET);
 
     for (i = 0; i < NQUANTITIES; i++) {
-        RangeRecord *rr = args->ranges + i;
-        gchar *qlabel;
-
         gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
-        /* TRANSLATORS: %c is replaced with quantity label A, B or C. */
-        qlabel = g_strdup_printf(_("Quantity %c:"), 'A' + i);
-        controls.header[i] = gwy_label_new_header(qlabel);
-        g_free(qlabel);
+        controls.header[i] = gtk_label_new(NULL);
+        gtk_misc_set_alignment(GTK_MISC(controls.header[i]), 0.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), controls.header[i],
-                         0, 1, row, row+1, GTK_FILL, 0, 0, 0);
-
-        controls.qname[i] = gwy_label_new_header(_(rr->quantity));
-        gtk_table_attach(GTK_TABLE(table), controls.qname[i],
-                         1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+                         0, 3, row, row+1, GTK_FILL, 0, 0, 0);
         row++;
 
         /* The values are set properly later. */
@@ -512,23 +518,6 @@ gfilter_dialog(GFilterArgs *args,
         row++;
     }
 
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
-    gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Options")),
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
-
-    controls.color_button = gwy_color_button_new();
-    gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
-                                   TRUE);
-    load_mask_color(controls.color_button,
-                    gwy_data_view_get_data(GWY_DATA_VIEW(controls.view)));
-    gwy_table_attach_hscale(table, row++, _("_Mask color:"), NULL,
-                            GTK_OBJECT(controls.color_button),
-                            GWY_HSCALE_WIDGET_NO_EXPAND);
-    g_signal_connect(controls.color_button, "clicked",
-                     G_CALLBACK(mask_color_changed), &controls);
-    row++;
-
     for (i = 0; i < NQUANTITIES; i++) {
         GwyInventory *inventory;
         GwyGrainValue *gvalue;
@@ -541,7 +530,6 @@ gfilter_dialog(GFilterArgs *args,
 
     /* finished initializing, allow instant updates */
     controls.in_init = FALSE;
-    gfilter_invalidate(&controls);
 
     gtk_widget_show_all(dialog);
     do {
@@ -564,7 +552,7 @@ gfilter_dialog(GFilterArgs *args,
             break;
 
             case RESPONSE_PREVIEW:
-            //preview(&controls, args);
+            preview(&controls);
             break;
 
             default:
@@ -592,7 +580,7 @@ gfilter_dialog(GFilterArgs *args,
     }
     else {
         g_object_unref(controls.mydata);
-        run_noninteractive(args, data, dfield, controls.mask, mquark);
+        run_noninteractive(args, data, controls.mask, mquark);
     }
 
     gwy_app_channel_log_add(data, id, id, "proc::grain_filter", NULL);
@@ -605,6 +593,19 @@ gfilter_invalidate(GFilterControls *controls)
 
     if (controls->in_init || !controls->args->update)
         return;
+
+    preview(controls);
+}
+
+static void
+preview(GFilterControls *controls)
+{
+    GwyDataField *mfield;
+
+    mfield = gwy_container_get_object_by_name(controls->mydata, "/0/mask");
+    gfilter_process(mfield, controls->args);
+    gwy_data_field_data_changed(mfield);
+    controls->computed = TRUE;
 }
 
 static void
@@ -671,17 +672,22 @@ set_up_quantity(GFilterControls *controls, GwyGrainValue *gvalue, guint id)
     RangeRecord *rr;
     const gchar *name;
     const gdouble *v;
-    gchar *s;
+    gchar *s, *t;
     gdouble vmin, vmax, lower = -G_MAXDOUBLE, upper = G_MAXDOUBLE;
     GwySIUnit *siunit, *siunitxy, *siunitz;
+    gboolean was_in_init = controls->in_init;
     guint i;
 
     controls->in_init = TRUE;
     name = gwy_resource_get_name(GWY_RESOURCE(gvalue));
     args->ranges[id].quantity = name;
-    s = g_strconcat("<b>", name, "</b>", NULL);
-    gtk_label_set_markup(GTK_LABEL(controls->qname[id]), s);
+    /* TRANSLATORS: %c is replaced with quantity label A, B or C. */
+    s = g_strdup_printf(_("Condition %c: %s"), 'A' + id, name);
+    t = g_strconcat("<b>", s, "</b>", NULL);
+    gtk_label_set_markup(GTK_LABEL(controls->header[id]), t);
+    g_free(t);
     g_free(s);
+
     rr = g_hash_table_lookup(args->ranges_history, (gpointer)name);
     if (rr) {
         lower = rr->lower;
@@ -743,7 +749,8 @@ set_up_quantity(GFilterControls *controls, GwyGrainValue *gvalue, guint id)
     /* XXX: We might have modified the range by CLAMP().  Store the new one
      * right here?  Pro: consistency.  Con: the user did not do anything,
      * he just may be browsing. */
-    controls->in_init = FALSE;
+    controls->in_init = was_in_init;
+    gfilter_invalidate(controls);
 }
 
 static void
@@ -802,7 +809,6 @@ logical_op_changed(GtkComboBox *combo, GFilterControls *controls)
         gboolean sens = (logical >= logical_limits[i]);
 
         gtk_widget_set_sensitive(controls->set_as[i], sens);
-        gtk_widget_set_sensitive(controls->qname[i], sens);
         gtk_widget_set_sensitive(controls->header[i], sens);
         gtk_widget_set_sensitive(controls->lower_label[i], sens);
         gtk_widget_set_sensitive(controls->lower_scale[i], sens);
@@ -858,6 +864,7 @@ threshold_changed(GFilterControls *controls, GtkAdjustment *adj)
     g_free(s);
 
     set_threshold_value(args, id, name, value, is_upper);
+    gfilter_invalidate(controls);
 }
 
 static void
@@ -897,6 +904,7 @@ threshold_activated(GFilterControls *controls, GtkEntry *entry)
     controls->in_init = FALSE;
 
     set_threshold_value(args, id, name, value, is_upper);
+    gfilter_invalidate(controls);
 }
 
 static void
@@ -985,6 +993,74 @@ sort_grain_values(GPtrArray *valuedata,
     }
 
     return sortedvaluedata;
+}
+
+static inline gboolean
+check_threshold(gdouble v, gdouble lower, gdouble upper)
+{
+    return (lower <= upper
+            ? v >= lower && v <= upper
+            : v >= lower || v <= upper);
+}
+
+static void
+gfilter_process(GwyDataField *mfield, GFilterArgs *args)
+{
+    GwyInventory *inventory;
+    GrainLogical logical;
+    const gdouble *v[NQUANTITIES];
+    const guint *grains;
+    const RangeRecord *ranges;
+    gboolean *keep_grain;
+    guint i, k, n, ngrains;
+
+    inventory = gwy_grain_values();
+    for (i = 0; i < NQUANTITIES; i++) {
+        k = gwy_inventory_get_item_position(inventory,
+                                            args->ranges[i].quantity);
+        v[i] = g_ptr_array_index(args->valuedata, k);
+    }
+
+    ngrains = args->ngrains;
+    grains = args->grains;
+    logical = args->logical;
+    ranges = &args->ranges[0];
+
+    keep_grain = g_new(gboolean, ngrains+1);
+    keep_grain[0] = FALSE;
+    for (k = 1; k <= ngrains; k++) {
+        gboolean is_ok[NQUANTITIES];
+
+        for (i = 0; i < NQUANTITIES; i++) {
+             is_ok[i] = check_threshold(v[i][k],
+                                        ranges[i].lower,
+                                        ranges[i].upper);
+        }
+        if (logical == GRAIN_LOGICAL_A)
+            keep_grain[k] = is_ok[0];
+        else if (logical == GRAIN_LOGICAL_A_AND_B)
+            keep_grain[k] = is_ok[0] && is_ok[1];
+        else if (logical == GRAIN_LOGICAL_A_OR_B)
+            keep_grain[k] = is_ok[0] || is_ok[1];
+        else if (logical == GRAIN_LOGICAL_A_AND_B_AND_C)
+            keep_grain[k] = is_ok[0] && is_ok[1] && is_ok[2];
+        else if (logical == GRAIN_LOGICAL_A_OR_B_OR_C)
+            keep_grain[k] = is_ok[0] || is_ok[1] || is_ok[2];
+        else if (logical == GRAIN_LOGICAL_A_AND_B_OR_C)
+            keep_grain[k] = (is_ok[0] && is_ok[1]) || is_ok[2];
+        else if (logical == GRAIN_LOGICAL_A_OR_B_AND_C)
+            keep_grain[k] = (is_ok[0] || is_ok[1]) && is_ok[2];
+        else {
+            g_assert_not_reached();
+        }
+    }
+
+    n = mfield->xres * mfield->yres;
+    for (k = 0; k < n; k++)
+        mfield->data[k] = keep_grain[grains[k]];
+    gwy_data_field_invalidate(mfield);
+
+    g_free(keep_grain);
 }
 
 static const gchar logical_key[]     = "/module/grain_filter/logical";
