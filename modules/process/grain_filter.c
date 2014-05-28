@@ -304,7 +304,7 @@ gfilter_dialog(GFilterArgs *args,
         controls.vf[i]
             = gwy_si_unit_get_format_with_digits(siunit,
                                                  GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                 1.0, 3, NULL);
+                                                 1.0, 4, NULL);
     }
     g_object_unref(siunit);
 
@@ -326,8 +326,7 @@ gfilter_dialog(GFilterArgs *args,
 
     hbox = gtk_hbox_new(FALSE, 2);
 
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
-                       FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 4);
 
     vbox = gtk_vbox_new(FALSE, 4);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
@@ -386,7 +385,7 @@ gfilter_dialog(GFilterArgs *args,
                                                     "name", "symbol_markup",
                                                     NULL);
     treeview = GTK_TREE_VIEW(controls.values);
-    gtk_widget_set_size_request(controls.values, -1, 120);
+    gtk_widget_set_size_request(scwin, -1, 120);
     gtk_tree_view_set_headers_visible(treeview, FALSE);
     selection = gtk_tree_view_get_selection(treeview);
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
@@ -686,11 +685,11 @@ set_up_quantity(GFilterControls *controls, GwyGrainValue *gvalue, guint id)
     GFilterArgs *args = controls->args;
     GwyInventory *inventory;
     GwyDataField *dfield;
-    RangeRecord *rr, myrr;
+    RangeRecord *rr;
     const gchar *name;
     const gdouble *v;
     gchar *s;
-    gdouble vmin, vmax;
+    gdouble vmin, vmax, lower = -G_MAXDOUBLE, upper = G_MAXDOUBLE;
     GwySIUnit *siunit, *siunitxy, *siunitz;
     guint i;
 
@@ -701,11 +700,9 @@ set_up_quantity(GFilterControls *controls, GwyGrainValue *gvalue, guint id)
     gtk_label_set_markup(GTK_LABEL(controls->qname[id]), s);
     g_free(s);
     rr = g_hash_table_lookup(args->ranges_history, (gpointer)name);
-    if (rr)
-        myrr = *rr;
-    else {
-        myrr.lower = -G_MAXDOUBLE;
-        myrr.upper = G_MAXDOUBLE;
+    if (rr) {
+        lower = rr->lower;
+        upper = rr->upper;
     }
 
     inventory = gwy_grain_values();
@@ -713,8 +710,8 @@ set_up_quantity(GFilterControls *controls, GwyGrainValue *gvalue, guint id)
     v = g_ptr_array_index(args->sortedvaluedata, i);
     vmin = v[0];
     vmax = v[args->ngrains-1];
-    myrr.lower = CLAMP(myrr.lower, vmin, vmax);
-    myrr.upper = CLAMP(myrr.upper, vmin, vmax);
+    lower = CLAMP(lower, vmin, vmax);
+    upper = CLAMP(upper, vmin, vmax);
 
     dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
     siunitxy = gwy_data_field_get_si_unit_xy(dfield);
@@ -725,7 +722,7 @@ set_up_quantity(GFilterControls *controls, GwyGrainValue *gvalue, guint id)
                                         gwy_grain_value_get_power_z(gvalue),
                                         NULL);
     gwy_si_unit_get_format_with_digits(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                       MAX(fabs(vmin), fabs(vmax)), 3,
+                                       MAX(fabs(vmin), fabs(vmax)), 4,
                                        controls->vf[id]);
     g_object_unref(siunit);
     gtk_label_set_markup(GTK_LABEL(controls->lower_units[id]),
@@ -734,13 +731,28 @@ set_up_quantity(GFilterControls *controls, GwyGrainValue *gvalue, guint id)
                          controls->vf[id]->units);
 
     set_adjustment_to_grain_value(controls, gvalue,
-                                  GTK_ADJUSTMENT(controls->lower[id]),
-                                  myrr.lower);
+                                  GTK_ADJUSTMENT(controls->lower[id]), lower);
     set_adjustment_to_grain_value(controls, gvalue,
-                                  GTK_ADJUSTMENT(controls->upper[id]),
-                                  myrr.upper);
-    /* TODO: init args->ranges[id] */
-    /* TODO: show the value in the entry */
+                                  GTK_ADJUSTMENT(controls->upper[id]), upper);
+
+    args->ranges[id].quantity = name;
+    args->ranges[id].lower = lower;
+    args->ranges[id].upper = upper;
+
+    s = g_strdup_printf("%.*f",
+                        controls->vf[id]->precision,
+                        lower/controls->vf[id]->magnitude);
+    gtk_entry_set_text(GTK_ENTRY(controls->lower_entry[id]), s);
+    g_free(s);
+
+    s = g_strdup_printf("%.*f",
+                        controls->vf[id]->precision,
+                        upper/controls->vf[id]->magnitude);
+    gtk_entry_set_text(GTK_ENTRY(controls->upper_entry[id]), s);
+    g_free(s);
+
+    /* XXX: We might modified the range by CLAMP().  Store the new one right
+     * here? */
 
     controls->in_init = FALSE;
 }
@@ -1002,10 +1014,13 @@ gfilter_sanitize_args(GFilterArgs *args)
     args->logical = MIN(args->logical, GRAIN_LOGICAL_NTYPES);
     for (i = 0; i < NQUANTITIES; i++) {
         RangeRecord *rr = args->ranges + i;
+        GwyGrainValue *gvalue;
 
-        if (gwy_inventory_get_item(inventory, rr->quantity))
+        if ((gvalue = gwy_inventory_get_item(inventory, rr->quantity)))
+            rr->quantity = gwy_resource_get_name(GWY_RESOURCE(gvalue));
+        else
             rr->quantity = gfilter_defaults.ranges[i].quantity;
-        /* Range is restored later from range_history. */
+        /* The actual range is restored later from range_history. */
     }
     args->update = !!args->update;
 }
