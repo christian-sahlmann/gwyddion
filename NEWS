@@ -11,6 +11,7 @@ Libraries:
 - libgwyprocess: Pixel count was added as a new grain quantity.
 - libgwyprocess: Crash in gwy_grain_values_calculate() when a quantity was
   requested multiple times was fixed.
+- libgwyprocess: New function for performing one step of facet levelling.
 
 Modules:
 - WinSTM (new): Import WinSTM data files.
@@ -18,6 +19,8 @@ Modules:
   on the classic Vincent algorithm.
 - Grain filter (new): Filtering of grains by range criteria and logical
   expressions.
+- Slope statistics (new): Statistics were split off Slope distributions, the
+  GUI and functionality is the same as before.
 - Mask editor tool: Fill voids handles correctly different connectivity of
   grain exterior, noticeable for grains separated only by thin lines.  It is
   also possible to fill only simple-connected grains.
