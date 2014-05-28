@@ -49,7 +49,6 @@ enum {
 };
 
 enum {
-    RESPONSE_RESET   = 1,
     RESPONSE_PREVIEW = 2
 };
 
@@ -136,8 +135,6 @@ static void       mask_color_changed            (GtkWidget *color_button,
                                                  GFilterControls *controls);
 static void       load_mask_color               (GtkWidget *color_button,
                                                  GwyContainer *data);
-static void       gfilter_dialog_update_controls(GFilterControls *controls,
-                                                 GFilterArgs *args);
 static void       gfilter_invalidate            (GFilterControls *controls);
 static void       update_changed                (GFilterControls *controls,
                                                  GtkToggleButton *toggle);
@@ -314,7 +311,6 @@ gfilter_dialog(GFilterArgs *args,
                                  gwy_stock_like_button_new(_("_Update"),
                                                            GTK_STOCK_EXECUTE),
                                  RESPONSE_PREVIEW);
-    gtk_dialog_add_button(GTK_DIALOG(dialog), _("_Reset"), RESPONSE_RESET);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
@@ -533,9 +529,17 @@ gfilter_dialog(GFilterArgs *args,
                      G_CALLBACK(mask_color_changed), &controls);
     row++;
 
-    /* finished initializing, allow instant updates */
-    /* TODO: set up quantities */
+    for (i = 0; i < NQUANTITIES; i++) {
+        GwyInventory *inventory;
+        GwyGrainValue *gvalue;
+
+        inventory = gwy_grain_values();
+        gvalue = gwy_inventory_get_item(inventory, args->ranges[i].quantity);
+        set_up_quantity(&controls, gvalue, i);
+    }
     logical_op_changed(GTK_COMBO_BOX(controls.logical_op), &controls);
+
+    /* finished initializing, allow instant updates */
     controls.in_init = FALSE;
     gfilter_invalidate(&controls);
 
@@ -557,14 +561,6 @@ gfilter_dialog(GFilterArgs *args,
             break;
 
             case GTK_RESPONSE_OK:
-            break;
-
-            case RESPONSE_RESET:
-            controls.in_init = TRUE;
-            /* TODO */
-            gfilter_dialog_update_controls(&controls, args);
-            controls.in_init = FALSE;
-            gfilter_invalidate(&controls);
             break;
 
             case RESPONSE_PREVIEW:
@@ -600,19 +596,6 @@ gfilter_dialog(GFilterArgs *args,
     }
 
     gwy_app_channel_log_add(data, id, id, "proc::grain_filter", NULL);
-}
-
-static void
-gfilter_dialog_update_controls(GFilterControls *controls,
-                               GFilterArgs *args)
-{
-    controls->in_init = TRUE;
-
-    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->logical_op),
-                                  args->logical);
-
-    controls->in_init = FALSE;
-    gfilter_invalidate(controls);
 }
 
 static void
@@ -725,19 +708,25 @@ set_up_quantity(GFilterControls *controls, GwyGrainValue *gvalue, guint id)
                                        MAX(fabs(vmin), fabs(vmax)), 4,
                                        controls->vf[id]);
     g_object_unref(siunit);
+    /* Special-case the pixel area format. */
+    if (gwy_strequal(name, "Pixel area")) {
+        controls->vf[id]->magnitude = 1.0;
+        controls->vf[id]->precision = 0;
+        gwy_si_unit_value_format_set_units(controls->vf[id], "");
+    }
     gtk_label_set_markup(GTK_LABEL(controls->lower_units[id]),
                          controls->vf[id]->units);
     gtk_label_set_markup(GTK_LABEL(controls->upper_units[id]),
                          controls->vf[id]->units);
 
+    args->ranges[id].quantity = name;
+    args->ranges[id].lower = lower;
+    args->ranges[id].upper = upper;
+
     set_adjustment_to_grain_value(controls, gvalue,
                                   GTK_ADJUSTMENT(controls->lower[id]), lower);
     set_adjustment_to_grain_value(controls, gvalue,
                                   GTK_ADJUSTMENT(controls->upper[id]), upper);
-
-    args->ranges[id].quantity = name;
-    args->ranges[id].lower = lower;
-    args->ranges[id].upper = upper;
 
     s = g_strdup_printf("%.*f",
                         controls->vf[id]->precision,
@@ -751,9 +740,9 @@ set_up_quantity(GFilterControls *controls, GwyGrainValue *gvalue, guint id)
     gtk_entry_set_text(GTK_ENTRY(controls->upper_entry[id]), s);
     g_free(s);
 
-    /* XXX: We might modified the range by CLAMP().  Store the new one right
-     * here? */
-
+    /* XXX: We might have modified the range by CLAMP().  Store the new one
+     * right here?  Pro: consistency.  Con: the user did not do anything,
+     * he just may be browsing. */
     controls->in_init = FALSE;
 }
 
