@@ -260,14 +260,16 @@ slope_dialog(SlopeArgs *args, gboolean same_units,
     controls.in_init = TRUE;
 
     dialog = gtk_dialog_new_with_buttons(_("Slope Distribution"), NULL, 0,
-                                         _("_Reset"), RESPONSE_RESET,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
                                  gwy_stock_like_button_new(_("_Update"),
                                                            GTK_STOCK_EXECUTE),
                                  RESPONSE_PREVIEW);
+    gtk_dialog_add_button(GTK_DIALOG(dialog), _("_Reset"), RESPONSE_RESET);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     controls.dialog = dialog;
 
