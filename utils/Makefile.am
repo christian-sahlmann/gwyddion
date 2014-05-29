@@ -13,6 +13,7 @@ GUIDE_MAP = user-guide-modules
 EXTRA_DIST = \
 	extract-file-magic.py \
 	genmarshal.mk \
+	make-module-lists \
 	mkenum.c.template \
 	mkenum.h.template \
 	mkenum.mk \
@@ -27,10 +28,11 @@ EXTRA_DIST = \
 	bundler.in \
 	mkosxlauncher.in
 
-module-list: modules.xml module-list.html module-list-nocss.html
-
 noinst_PROGRAMS = \
 	dump-modules
+
+noinst_SCRIPTS = \
+	make-module-lists
 
 dump_modules_SOURCES = \
 	dump-modules.c
@@ -46,28 +48,7 @@ dump_modules_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ \
 	$(libgwyprocess) \
 	$(libgwyddion)
 
-CLEANFILES = \
-	$(GUIDE_MAP).tmp \
-	modules.xml \
-	module-list.html \
-	module-list-nocss.html
-
-DISTCLEANFILES = \
-	gwywin32.bat
-
-modules.xml: dump-modules $(GUIDE_MAP) $(moduledir)/*.c $(moduledir)/*/*.c
-	@sed -e '/^#/d' \
-	  -e 's/^\([^\t]\+\)\t\([^\t]\+\)$$/\1 \2.html/' \
-	  -e 's/^\([^\t]\+\)\t\([^\t]\+\)\t\([^\t]\+\)$$/\1 \2.html#\3/' \
-	  $(GUIDE_MAP) >$(GUIDE_MAP).tmp
-	./dump-modules $(GUIDE_MAP).tmp >modules.xml
-	rm -f $(GUIDE_MAP).tmp
-
-module-list.html: modules.xml modules-web.xsl
-	$(XSLTPROC) -o module-list.html modules-web.xsl modules.xml
-
-module-list-nocss.html: modules.xml modules-web-nocss.xsl
-	$(XSLTPROC) -o module-list-nocss.html modules-web-nocss.xsl modules.xml
+CLEANFILES = $(GUIDE_MAP).tmp
 
 clean-local:
-	rm -f core.* *~
+	rm -f module-lists core.* *~

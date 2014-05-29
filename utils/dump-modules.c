@@ -19,15 +19,18 @@
  *  Boston, MA 02110-1301, USA.
  */
 
+#include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwyddion.h>
 #include <app/settings.h>
 #include <app/gwytool.h>
+#include <app/app.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>
 
 typedef struct {
     const gchar *name;
@@ -121,6 +124,7 @@ menu_path_print(const gchar *path, const gchar *tag)
     gchar *s;
     gint i;
 
+    path = gettext(path);
     s = gwy_strkill(gwy_strreplace(path + (path[0] == '/'),
                                    "/", " → ", -1), "_");
     i = strlen(s);
@@ -206,10 +210,14 @@ main(int argc,
     gsize i;
 
     gwy_type_init();
-    if (argc < 2) {
-        g_printerr("Need user guide map.\n");
+    if (argc < 3) {
+        g_printerr("Usage: dump-modules USER-GUIDE-MAP LANGUAGE.\n");
         return 1;
     }
+    g_setenv("LC_MESSAGES", argv[2], TRUE);
+    g_setenv("LANGUAGE", argv[2], TRUE);
+    setlocale(LC_MESSAGES, argv[2]);
+    gwy_app_init_i18n();
     read_user_guide(argv[1]);
 
     module_dirs = gwy_app_settings_get_module_dirs();
@@ -246,7 +254,7 @@ main(int argc,
         }
         else
             fprintf(stderr, "No user guide entry for %s\n", info->name);
-        tag_print("description", info->info->blurb);
+        tag_print("description", gettext(info->info->blurb));
         for (i = 0; i < G_N_ELEMENTS(no_func_modules); i++) {
             if (gwy_strequal(info->name, no_func_modules[i]))
                 break;

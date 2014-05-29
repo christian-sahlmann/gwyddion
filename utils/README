@@ -19,11 +19,16 @@ translation-stats.py <LOG-FILE
     (more precisely from gtk-doc and gettext messages).
 
 
-dump-modules user-guide-modules >modules.xml
+dump-modules user-guide-modules en >modules.en.xml
 
     Dumps information about all installed Gwyddion modules in XML format.
 
-    user-guide-modules maps module names to particula user guide documents.
+    File user-guide-modules maps module names to particular user guide
+    documents.  Usually this is run for all languages as
+
+        ./make-module-lists
+
+    which creates directory module-lists with all the lists.
 
 
 gen-news.py <NEWS >NEWS.html

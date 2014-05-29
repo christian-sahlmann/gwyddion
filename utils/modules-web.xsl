@@ -7,14 +7,47 @@
 
 <xsl:template match="modulelist">
   <table class="modulelist">
-    <thead><tr><th>Name</th><th>Version</th><th>Authors</th></tr></thead>
+    <thead>
+      <tr>
+        <th>
+          <xsl:choose>
+            <xsl:when test="$lang = 'en'">Name</xsl:when>
+            <xsl:when test="$lang = 'fr'">Nom</xsl:when>
+            <xsl:when test="$lang = 'ru'">Имя</xsl:when>
+            <xsl:otherwise>Name</xsl:otherwise>
+          </xsl:choose>
+        </th>
+        <th>
+          <xsl:choose>
+            <xsl:when test="$lang = 'en'">Version</xsl:when>
+            <xsl:when test="$lang = 'fr'">Version</xsl:when>
+            <xsl:when test="$lang = 'ru'">Версия</xsl:when>
+            <xsl:otherwise>Version</xsl:otherwise>
+          </xsl:choose>
+        </th>
+        <th>
+          <xsl:choose>
+            <xsl:when test="$lang = 'en'">Authors</xsl:when>
+            <xsl:when test="$lang = 'fr'">Auteurs</xsl:when>
+            <xsl:when test="$lang = 'ru'">Авторы</xsl:when>
+            <xsl:otherwise>Authors</xsl:otherwise>
+          </xsl:choose>
+        </th>
+      </tr>
+    </thead>
     <tbody>
     <xsl:for-each select="module">
       <tr>
         <td>
           <div>
             <p>
-              <b>Module: </b>
+              <b>
+                <xsl:choose>
+                  <xsl:when test="$lang = 'en'">Authors</xsl:when>
+                  <xsl:otherwise>Authors</xsl:otherwise>
+                </xsl:choose>
+                <xsl:text>:&#32;</xsl:text>
+              </b>
               <xsl:value-of select="name"/>-<xsl:value-of select="version"/>
               <br/>
               <xsl:text>© </xsl:text>
@@ -22,12 +55,43 @@
               <xsl:text> </xsl:text>
               <xsl:value-of select="date"/>
             </p>
-            <p><b>Description: </b><xsl:value-of select="description"/></p>
+            <p><b>
+              <xsl:choose>
+                <xsl:when test="$lang = 'en'">Description</xsl:when>
+                <xsl:otherwise>Description</xsl:otherwise>
+              </xsl:choose>
+              <xsl:text>:&#32;</xsl:text>
+            </b><xsl:value-of select="description"/></p>
             <xsl:if test="count(child::funclist/func) > 0">
               <table>
                 <thead>
-                  <tr><th colspan="3">Functions:</th></tr>
-                  <tr><th>Type</th><th>Name</th><th>Information</th></tr>
+                  <tr><th colspan="3">
+                   <xsl:choose>
+                     <xsl:when test="$lang = 'en'">Functions</xsl:when>
+                     <xsl:otherwise>Functions</xsl:otherwise>
+                   </xsl:choose>
+                   <xsl:text>:</xsl:text>
+                  </th></tr>
+                  <tr>
+                    <th>
+                       <xsl:choose>
+                         <xsl:when test="$lang = 'en'">Type</xsl:when>
+                         <xsl:otherwise>Type</xsl:otherwise>
+                       </xsl:choose>
+                    </th>
+                    <th>
+                       <xsl:choose>
+                         <xsl:when test="$lang = 'en'">Name</xsl:when>
+                         <xsl:otherwise>Name</xsl:otherwise>
+                       </xsl:choose>
+                    </th>
+                    <th>
+                       <xsl:choose>
+                         <xsl:when test="$lang = 'en'">Information</xsl:when>
+                         <xsl:otherwise>Information</xsl:otherwise>
+                       </xsl:choose>
+                    </th>
+                  </tr>
                 </thead>
                 <tbody>
                 <xsl:for-each select="funclist/func">
@@ -44,7 +108,7 @@
           <p>
             <xsl:choose>
               <xsl:when test="count(child::userguide) > 0">
-                <a><xsl:attribute name="href">http://gwyddion.net/documentation/user-guide-en/<xsl:value-of select="userguide"/></xsl:attribute>
+                <a><xsl:attribute name="href">http://gwyddion.net/documentation/user-guide-<xsl:value-of select="$lang"/>/<xsl:value-of select="userguide"/></xsl:attribute>
                   <xsl:value-of select="name"/>
                 </a>
               </xsl:when>

@@ -1,0 +1,24 @@
+#!/bin/bash
+guidemap=user-guide-modules
+
+process_one_lang() {
+    ../dump-modules $guidemap.tmp $2 >modules.$1.xml
+    xsltproc --stringparam lang $1 -o module-list.$1.html ../modules-web.xsl modules.$1.xml
+    xsltproc --stringparam lang $1 -o module-list-nocss.$1.html ../modules-web-nocss.xsl modules.$1.xml
+}
+
+rm -rf module-lists
+mkdir module-lists
+
+pushd module-lists >/dev/null
+sed -e '/^#/d' \
+    -e 's/^\([^\t]\+\)\t\([^\t]\+\)$/\1 \2.html/' \
+    -e 's/^\([^\t]\+\)\t\([^\t]\+\)\t\([^\t]\+\)$/\1 \2.html#\3/' \
+    ../$guidemap >$guidemap.tmp
+
+process_one_lang en en_US.UTF-8
+process_one_lang fr fr_FR.UTF-8
+process_one_lang ru ru_RU.UTF-8
+
+rm -rf module-lists/$guidemap.tmp
+popd >/dev/null
