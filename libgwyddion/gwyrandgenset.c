@@ -135,6 +135,41 @@ gwy_rand_gen_get_rng(GwyRandGenSet *rngset,
 }
 
 /**
+ * gwy_rand_gen_set_range:
+ * @rngset: A set of pseudorandom number generators.
+ * @i: Index of a generator from the set.
+ * @lower: Lower limit of the range.
+ * @upper: Upper limit of the range.
+ *
+ * Samples from a uniform distribution over given interval using one generator
+ * from a pseudorandom number generator set.
+ *
+ * The generated number always lies inside the interval, neither endpoint value
+ * is ever returned.  Note if there are no representable real numbers between
+ * @lower and @upper this function will never terminate.  You must ensure
+ * @upper is sufficiently larger than @lower.
+ *
+ * Returns: A pseudorandom number.
+ *
+ * Since: 2.37
+ **/
+gdouble
+gwy_rand_gen_set_range(GwyRandGenSet *rngset,
+                       guint i,
+                       gdouble lower,
+                       gdouble upper)
+{
+    GwyRandGen *randgen = rngset->rngs + i;
+    gdouble x;
+
+    do {
+        x = (upper - lower)*g_rand_double(randgen->rng) + lower;
+    } while (G_UNLIKELY(x <= lower || x >= upper));
+
+    return x;
+}
+
+/**
  * gwy_rand_gen_set_uniform:
  * @rngset: A set of pseudorandom number generators.
  * @i: Index of a generator from the set.
@@ -307,6 +342,25 @@ gwy_rand_gen_set_multiplier(GwyRandGenSet *rngset,
 
     rng = rngset->rngs[i].rng;
     return 1.0 + range*(g_rand_double(rng) - g_rand_double(rng));
+}
+
+/**
+ * gwy_rand_gen_set_int:
+ * @rngset: A set of pseudorandom number generators.
+ * @i: Index of a generator from the set.
+ *
+ * Samples a 32bit integer using a generator from a pseudorandom number
+ * generator set.
+ *
+ * Returns: A pseudorandom number.
+ *
+ * Since: 2.37
+ **/
+guint32
+gwy_rand_gen_set_int(GwyRandGenSet *rngset,
+                     guint i)
+{
+    return g_rand_int(rngset->rngs[i].rng);
 }
 
 /************************** Documentation ****************************/

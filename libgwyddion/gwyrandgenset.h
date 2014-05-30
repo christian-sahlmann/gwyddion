@@ -35,6 +35,10 @@ void           gwy_rand_gen_set_init       (GwyRandGenSet *rngset,
 void           gwy_rand_gen_set_free       (GwyRandGenSet *rngset);
 GRand*         gwy_rand_gen_get_rng        (GwyRandGenSet *rngset,
                                             guint i);
+gdouble        gwy_rand_gen_set_range      (GwyRandGenSet *rngset,
+                                            guint i,
+                                            gdouble lower,
+                                            gdouble upper);
 gdouble        gwy_rand_gen_set_uniform    (GwyRandGenSet *rngset,
                                             guint i,
                                             gdouble sigma);
@@ -50,6 +54,8 @@ gdouble        gwy_rand_gen_set_triangular (GwyRandGenSet *rngset,
 gdouble        gwy_rand_gen_set_multiplier (GwyRandGenSet *rngset,
                                             guint i,
                                             gdouble range);
+guint32        gwy_rand_gen_set_int        (GwyRandGenSet *rngset,
+                                            guint i);
 
 G_END_DECLS
 
