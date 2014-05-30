@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-05-22 03:58+0200\n"
-"PO-Revision-Date: 2014-05-22 10:07+0300\n"
+"POT-Creation-Date: 2014-05-30 03:58+0200\n"
+"PO-Revision-Date: 2014-05-30 07:48+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -883,13 +883,13 @@ msgstr "точек"
 #: libgwydgets/gwy3dwindow.c:1133 modules/file/hdrimage.cc:2196
 #: modules/file/pixmap.c:1085 modules/file/pixmap.c:3243
 #: modules/file/rawfile.c:401 modules/process/angle_dist.c:172
-#: modules/process/calcoefs_new.c:348 modules/process/calibrate.c:385
+#: modules/process/calcoefs_new.c:348 modules/process/calibrate.c:392
 #: modules/process/col_synth.c:328 modules/process/correct_affine.c:307
 #: modules/process/curvature.c:605 modules/process/cwt.c:135
 #: modules/process/deposit_synth.c:359 modules/process/domain_synth.c:368
 #: modules/process/drift.c:240 modules/process/dwt.c:166
 #: modules/process/dwtanisotropy.c:184 modules/process/edge.c:655
-#: modules/process/extend.c:192 modules/process/facet-level.c:285
+#: modules/process/extend.c:192 modules/process/facet-level.c:190
 #: modules/process/facet_analysis.c:276 modules/process/fft.c:283
 #: modules/process/fft_filter_2d.c:447 modules/process/fft_synth.c:353
 #: modules/process/fractal.c:207 modules/process/grain_edge.c:218
@@ -903,7 +903,7 @@ msgstr "точек"
 #: modules/process/polydistort.c:218 modules/process/polylevel.c:377
 #: modules/process/rank.c:132 modules/process/rotate.c:266
 #: modules/process/scale.c:196 modules/process/scars.c:477
-#: modules/process/shade.c:216 modules/process/slope_dist.c:224
+#: modules/process/shade.c:216 modules/process/slope_dist.c:268
 #: modules/process/sphere-revolve.c:218 modules/process/tilt.c:160
 #: modules/process/tip_model.c:170 modules/process/unrotate.c:228
 #: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:363
@@ -1269,7 +1269,7 @@ msgid "Name-Version:"
 msgstr "Название и версия:"
 
 #: libgwymodule/gwymodulebrowser.c:247 libgwymodule/gwymodulebrowser.c:270
-#: modules/process/grain_dist.c:720
+#: modules/process/grain_stat.c:186
 msgid "File:"
 msgstr "Файл:"
 
@@ -2930,12 +2930,12 @@ msgstr "Экспортировать текст"
 
 #: modules/file/asciiexport.c:273 modules/file/pixmap.c:3359
 #: modules/file/rawfile.c:722 modules/file/rawxyz.c:671
-#: modules/process/calibrate.c:597 modules/process/col_synth.c:456
+#: modules/process/calibrate.c:604 modules/process/col_synth.c:456
 #: modules/process/correct_affine.c:489 modules/process/extend.c:258
-#: modules/process/fft_filter_1d.c:296 modules/process/grain_dist.c:306
-#: modules/process/grain_edge.c:270 modules/process/grain_mark.c:345
+#: modules/process/fft_filter_1d.c:296 modules/process/grain_dist.c:303
+#: modules/process/grain_edge.c:270 modules/process/grain_mark.c:344
 #: modules/process/grain_rem_threshold.c:328 modules/process/grain_wshed.c:278
-#: modules/process/slope_dist.c:261 modules/process/tip_blind.c:360
+#: modules/process/slope_dist.c:347 modules/process/tip_blind.c:360
 #: modules/process/wpour_mark.c:368 modules/tools/spotremove.c:317
 #: modules/tools/stats.c:379
 msgid "Options"
@@ -2945,7 +2945,7 @@ msgstr "Параметры"
 msgid "Use _dot as decimal separator"
 msgstr "Использовать точку как _десятичный разделитель"
 
-#: modules/file/asciiexport.c:283 modules/process/grain_dist.c:317
+#: modules/file/asciiexport.c:283 modules/process/grain_dist.c:314
 msgid "Add _informational comment header"
 msgstr "Добавить _информационный заголовок-комментарий"
 
@@ -3565,7 +3565,7 @@ msgstr "_Ширина:"
 #: modules/process/calcoefs_new.c:384 modules/process/calcoefs_new.c:451
 #: modules/process/calcoefs_simple.c:391 modules/process/calcoefs_simple.c:458
 #: modules/process/calcoefs_view.c:528 modules/process/calcoefs_view.c:566
-#: modules/process/calibrate.c:456 modules/process/calibrate.c:539
+#: modules/process/calibrate.c:463 modules/process/calibrate.c:546
 #: modules/process/dimensions.h:160 modules/volume/volume_calibrate.c:414
 #: modules/volume/volume_calibrate.c:441 modules/volume/volume_calibrate.c:468
 #: modules/volume/volume_calibrate.c:546
@@ -3591,7 +3591,7 @@ msgstr "Масштаб _Z (на единицу дискретизации):"
 #: modules/file/hdrimage.cc:2540 modules/file/pixmap.c:1471
 #: modules/file/rawfile.c:1323 modules/process/calcoefs_new.c:776
 #: modules/process/calcoefs_simple.c:1191 modules/process/calcoefs_view.c:1393
-#: modules/process/calibrate.c:967 modules/process/dimensions.h:194
+#: modules/process/calibrate.c:974 modules/process/dimensions.h:194
 #: modules/volume/volume_calibrate.c:1017
 msgid "Change Units"
 msgstr "Изменить единицы измерения"
@@ -3599,7 +3599,7 @@ msgstr "Изменить единицы измерения"
 #: modules/file/hdrimage.cc:2554 modules/file/pixmap.c:1485
 #: modules/file/rawfile.c:1337 modules/process/calcoefs_new.c:789
 #: modules/process/calcoefs_simple.c:1204 modules/process/calcoefs_view.c:1406
-#: modules/process/calibrate.c:981 modules/process/dimensions.h:207
+#: modules/process/calibrate.c:988 modules/process/dimensions.h:207
 #: modules/volume/volume_calibrate.c:1031
 msgid "New _units:"
 msgstr "Новые _единицы:"
@@ -4650,7 +4650,7 @@ msgid "_Zoom:"
 msgstr "_Увеличение:"
 
 #: modules/file/pixmap.c:3296 modules/process/col_synth.c:426
-#: modules/process/domain_synth.c:529 modules/process/grain_mark.c:310
+#: modules/process/domain_synth.c:529 modules/process/grain_mark.c:309
 #: modules/process/grain_rem_threshold.c:284 modules/process/obj_synth.c:577
 #: modules/process/pat_synth.c:893 modules/process/pat_synth.c:1194
 #: modules/process/pat_synth.c:1529 modules/process/tip_blind.c:343
@@ -4924,10 +4924,11 @@ msgstr "Предустановки"
 #: modules/process/convolution_filter.c:246
 #: modules/process/deposit_synth.c:684 modules/process/drift.c:237
 #: modules/process/edge.c:652 modules/process/fft_filter_1d.c:198
-#: modules/process/grain_edge.c:215 modules/process/grain_mark.c:261
-#: modules/process/grain_rem_threshold.c:226 modules/process/grain_wshed.c:180
-#: modules/process/mark_with.c:211 modules/process/polydistort.c:213
-#: modules/process/scars.c:474 modules/process/synth.h:508
+#: modules/process/grain_edge.c:215 modules/process/grain_filter.c:310
+#: modules/process/grain_mark.c:261 modules/process/grain_rem_threshold.c:226
+#: modules/process/grain_wshed.c:180 modules/process/mark_with.c:211
+#: modules/process/polydistort.c:213 modules/process/scars.c:474
+#: modules/process/slope_dist.c:265 modules/process/synth.h:508
 #: modules/process/tip_model.c:167 modules/process/wpour_mark.c:278
 #: modules/tools/linestats.c:421 modules/tools/sfunctions.c:476
 #: modules/tools/stats.c:436 modules/volume/volume_extract.c:328
@@ -6346,7 +6347,7 @@ msgstr "Распределение углов"
 msgid "Angle Distribution"
 msgstr "Распределение углов"
 
-#: modules/process/angle_dist.c:187 modules/process/slope_dist.c:267
+#: modules/process/angle_dist.c:187 modules/process/slope_dist.c:353
 msgid "Output _size:"
 msgstr "_Размер результата:"
 
@@ -6354,15 +6355,15 @@ msgstr "_Размер результата:"
 msgid "_Number of steps:"
 msgstr "_Число шагов:"
 
-#: modules/process/angle_dist.c:197 modules/process/slope_dist.c:272
+#: modules/process/angle_dist.c:197 modules/process/slope_dist.c:360
 msgid "_Logarithmic value scale"
 msgstr "_Логарифмическая шкала"
 
-#: modules/process/angle_dist.c:203 modules/process/slope_dist.c:278
+#: modules/process/angle_dist.c:203 modules/process/slope_dist.c:370
 msgid "Use local plane _fitting"
 msgstr "Использовать _аппроксимацию локальной плоскостью"
 
-#: modules/process/angle_dist.c:212 modules/process/slope_dist.c:287
+#: modules/process/angle_dist.c:212 modules/process/slope_dist.c:381
 msgid "_Plane size:"
 msgstr "Размер _плоскости:"
 
@@ -6689,12 +6690,12 @@ msgid "Detail"
 msgstr "Часть"
 
 #: modules/process/calcoefs_simple.c:371 modules/process/calcoefs_view.c:508
-#: modules/process/calibrate.c:486 modules/volume/volume_calibrate.c:478
+#: modules/process/calibrate.c:493 modules/volume/volume_calibrate.c:478
 msgid "_X offset:"
 msgstr "Смещение по _X:"
 
 #: modules/process/calcoefs_simple.c:398 modules/process/calcoefs_view.c:534
-#: modules/process/calibrate.c:499 modules/volume/volume_calibrate.c:491
+#: modules/process/calibrate.c:506 modules/volume/volume_calibrate.c:491
 msgid "_Y offset:"
 msgstr "Смещение по _Y:"
 
@@ -6822,9 +6823,10 @@ msgstr "Обрезать до действительных данных"
 
 #: modules/process/calcoefs_view.c:584 modules/process/deposit_synth.c:688
 #: modules/process/edge.c:732 modules/process/fft_filter_1d.c:334
-#: modules/process/grain_edge.c:286 modules/process/grain_mark.c:378
-#: modules/process/grain_rem_threshold.c:372 modules/process/mark_with.c:355
-#: modules/process/polydistort.c:335 modules/process/scars.c:582
+#: modules/process/grain_edge.c:286 modules/process/grain_filter.c:358
+#: modules/process/grain_mark.c:377 modules/process/grain_rem_threshold.c:372
+#: modules/process/mark_with.c:355 modules/process/polydistort.c:335
+#: modules/process/scars.c:582 modules/process/slope_dist.c:387
 #: modules/process/synth.h:512 modules/volume/volume_extract.c:423
 #: modules/volume/volume_extract.c:503
 msgid "I_nstant updates"
@@ -6933,63 +6935,63 @@ msgid "Change physical dimensions, units or value scale"
 msgstr ""
 "Изменить горизонтальное разрешение, единицы измерения или диапазон значений"
 
-#: modules/process/calibrate.c:351 modules/volume/volume_calibrate.c:356
+#: modules/process/calibrate.c:358 modules/volume/volume_calibrate.c:356
 msgid "Recalibrated Data"
 msgstr "Перекалиброванные данные"
 
-#: modules/process/calibrate.c:384
+#: modules/process/calibrate.c:391
 msgid "Dimensions and Units"
 msgstr "Размеры и единицы измерения"
 
-#: modules/process/calibrate.c:404 modules/volume/volume_calibrate.c:389
+#: modules/process/calibrate.c:411 modules/volume/volume_calibrate.c:389
 msgid "New Real Dimensions"
 msgstr "Новые реальные размеры"
 
-#: modules/process/calibrate.c:410
+#: modules/process/calibrate.c:417
 msgid "_Match pixel size:"
 msgstr "_Выровнять размер пикселя:"
 
-#: modules/process/calibrate.c:434 modules/volume/volume_calibrate.c:394
+#: modules/process/calibrate.c:441 modules/volume/volume_calibrate.c:394
 msgid "_X range:"
 msgstr "Диапазон _X:"
 
-#: modules/process/calibrate.c:463 modules/volume/volume_calibrate.c:421
+#: modules/process/calibrate.c:470 modules/volume/volume_calibrate.c:421
 msgid "_Y range:"
 msgstr "Диапазон _Y:"
 
-#: modules/process/calibrate.c:479
+#: modules/process/calibrate.c:486
 msgid "_Square samples"
 msgstr "_Квадратный образец"
 
-#: modules/process/calibrate.c:514 modules/volume/volume_calibrate.c:521
+#: modules/process/calibrate.c:521 modules/volume/volume_calibrate.c:521
 msgid "Value Range"
 msgstr "Диапазон значений"
 
-#: modules/process/calibrate.c:519 modules/volume/volume_calibrate.c:448
+#: modules/process/calibrate.c:526 modules/volume/volume_calibrate.c:448
 msgid "_Z range:"
 msgstr "Диапазон _Z:"
 
-#: modules/process/calibrate.c:548
+#: modules/process/calibrate.c:555
 msgid "Z shi_ft:"
 msgstr "С_двиг Z:"
 
-#: modules/process/calibrate.c:563 modules/volume/volume_calibrate.c:570
+#: modules/process/calibrate.c:570 modules/volume/volume_calibrate.c:570
 msgid "Calibration Coefficients"
 msgstr "Коэффициенты калибровки"
 
-#: modules/process/calibrate.c:570 modules/volume/volume_calibrate.c:577
+#: modules/process/calibrate.c:577 modules/volume/volume_calibrate.c:577
 msgid "_X calibration factor:"
 msgstr "Множитель калибровки по _X:"
 
-#: modules/process/calibrate.c:580 modules/volume/volume_calibrate.c:585
+#: modules/process/calibrate.c:587 modules/volume/volume_calibrate.c:585
 msgid "_Y calibration factor:"
 msgstr "Множитель калибровки по _Y:"
 
-#: modules/process/calibrate.c:590 modules/volume/volume_calibrate.c:593
+#: modules/process/calibrate.c:597 modules/volume/volume_calibrate.c:593
 msgid "_Z calibration factor:"
 msgstr "Множитель калибровки по _Z:"
 
-#: modules/process/calibrate.c:603 modules/process/extend.c:292
+#: modules/process/calibrate.c:610 modules/process/extend.c:292
 #: modules/tools/crop.c:213
 msgid "Create new channel"
 msgstr "Создать новый канал"
@@ -7381,21 +7383,21 @@ msgstr "_Установить выделение"
 msgid "_Plot graph"
 msgstr "Строить _график"
 
-#: modules/process/curvature.c:686 modules/process/facet-level.c:298
+#: modules/process/curvature.c:686 modules/process/facet-level.c:203
 #: modules/process/level.c:278 modules/process/linecorrect.c:294
 #: modules/process/neural.c:592 modules/process/polylevel.c:503
-#: modules/process/slope_dist.c:293 modules/tools/sfunctions.c:458
+#: modules/process/slope_dist.c:398 modules/tools/sfunctions.c:458
 #: modules/tools/stats.c:366
 msgid "Masking Mode"
 msgstr "Режим использования маски"
 
-#: modules/process/curvature.c:756 modules/process/grain_dist.c:878
+#: modules/process/curvature.c:756 modules/process/grain_stat.c:344
 #: modules/process/polylevel.c:619 modules/tools/distance.c:228
 #: modules/tools/roughness.c:825 modules/tools/stats.c:427
 msgid "Save table to a file"
 msgstr "Сохранить таблицу в файл"
 
-#: modules/process/curvature.c:761 modules/process/grain_dist.c:883
+#: modules/process/curvature.c:761 modules/process/grain_stat.c:349
 #: modules/process/polylevel.c:629 modules/tools/distance.c:233
 #: modules/tools/roughness.c:830 modules/tools/stats.c:432
 msgid "Copy table to clipboard"
@@ -7611,7 +7613,7 @@ msgid "_Like Current Channel"
 msgstr "Как _у текущего канала"
 
 #: modules/process/domain_synth.c:542 modules/process/fft_filter_2d.c:627
-#: modules/process/mask_edt.c:163 modules/process/slope_dist.c:238
+#: modules/process/mask_edt.c:163 modules/process/slope_dist.c:324
 msgid "Output type:"
 msgstr "Тип вывода:"
 
@@ -7663,9 +7665,10 @@ msgid "Drift _lines"
 msgstr "_Линии дрейфа"
 
 #: modules/process/drift.c:358 modules/process/facet_analysis.c:413
-#: modules/process/grain_edge.c:279 modules/process/grain_mark.c:371
-#: modules/process/grain_rem_threshold.c:365 modules/process/grain_wshed.c:296
-#: modules/process/scars.c:575 modules/process/wpour_mark.c:386
+#: modules/process/grain_edge.c:279 modules/process/grain_filter.c:368
+#: modules/process/grain_mark.c:370 modules/process/grain_rem_threshold.c:365
+#: modules/process/grain_wshed.c:296 modules/process/scars.c:575
+#: modules/process/wpour_mark.c:386
 msgid "_Mask color:"
 msgstr "_Цвет маски:"
 
@@ -7955,7 +7958,7 @@ msgstr "Расширить си_мметрично"
 msgid "Keep lateral offsets"
 msgstr "Сохранять пространственные смещения"
 
-#: modules/process/facet-level.c:68
+#: modules/process/facet-level.c:63
 msgid ""
 "Automatic facet-orientation based levelling. Levels data to make facets "
 "point up."
@@ -7963,26 +7966,26 @@ msgstr ""
 "Автоматическое выравнивание основанное на ориентации граней. Выравнивает "
 "данные заставляя грани смотреть вверх."
 
-#: modules/process/facet-level.c:83
+#: modules/process/facet-level.c:78
 msgid "/_Level/_Facet Level"
 msgstr "/_Выравнивание/Выравнивание _граней"
 
-#: modules/process/facet-level.c:87
+#: modules/process/facet-level.c:82
 msgid "Level data to make facets point upward"
 msgstr "Выровнять данные заставив грани смотреть вверх"
 
-#: modules/process/facet-level.c:121
+#: modules/process/facet-level.c:116
 msgid ""
 "Facet level: Lateral dimensions and value must be the same physical quantity."
 msgstr ""
 "Выравнивание граней: горизонтальные размеры и значения данных должны быть "
 "одной и той же физической величиной."
 
-#: modules/process/facet-level.c:133
+#: modules/process/facet-level.c:128
 msgid "Facet Level"
 msgstr "Выравнивание граней"
 
-#: modules/process/facet-level.c:146
+#: modules/process/facet-level.c:141
 msgid "Facet-leveling"
 msgstr "Выравнивание граней"
 
@@ -8294,7 +8297,7 @@ msgstr "Радиальное сечение ФСПМ"
 msgid "PSDF Section"
 msgstr "Сечение ФСПМ"
 
-#: modules/process/fft_profile.c:272 modules/process/grain_dist.c:334
+#: modules/process/fft_profile.c:272 modules/process/grain_dist.c:333
 #: modules/tools/linestats.c:376 modules/tools/profile.c:433
 #: modules/tools/sfunctions.c:406
 msgid "_Fix res.:"
@@ -8628,19 +8631,19 @@ msgstr "/_Презентация/_Градиент/_Азимут"
 msgid "Local slope azimuth presentation"
 msgstr "Презентация азимута локального наклона"
 
-#: modules/process/grain_cross.c:76
+#: modules/process/grain_cross.c:91
 msgid "Plots one grain quantity as a function of another."
 msgstr "Строит график одного из свойств зёрен как функции от другого."
 
-#: modules/process/grain_cross.c:90
+#: modules/process/grain_cross.c:105
 msgid "/_Grains/_Correlate..."
 msgstr "/Зёрн_а/_Коррелировать..."
 
-#: modules/process/grain_cross.c:94
+#: modules/process/grain_cross.c:109
 msgid "Correlate grain characteristics"
 msgstr "Коррелировать характеристики зёрен"
 
-#: modules/process/grain_cross.c:134
+#: modules/process/grain_cross.c:182
 msgid ""
 "Grain correlation: Lateral dimensions and value must be the same physical "
 "quantity for the selected grain properties."
@@ -8648,122 +8651,49 @@ msgstr ""
 "Корреляция зёрен: пространственные единицы измерения и значения должны быть "
 "одной физической величиной для выбранных свойств зёрен."
 
-#: modules/process/grain_cross.c:240
+#: modules/process/grain_cross.c:206
 msgid "Grain Correlations"
 msgstr "Корреляции зёрен"
 
-#: modules/process/grain_cross.c:255
+#: modules/process/grain_cross.c:228
 msgid "_Abscissa"
 msgstr "_Абсцисса"
 
-#: modules/process/grain_cross.c:259
+#: modules/process/grain_cross.c:232
 msgid "O_rdinate"
 msgstr "О_рдината"
 
-#: modules/process/grain_dist.c:150
+#: modules/process/grain_dist.c:151
 msgid "Evaluates distribution of grains (continuous parts of mask)."
 msgstr "Оценивает распределение зёрен (непрерывных частей маски)."
 
-#: modules/process/grain_dist.c:172
+#: modules/process/grain_dist.c:173
 msgid "/_Grains/_Distributions..."
 msgstr "/Зёрн_а/_Распределения..."
 
-#: modules/process/grain_dist.c:176
+#: modules/process/grain_dist.c:177
 msgid "Distributions of various grain characteristics"
 msgstr "Распределения различных характеристик зерна"
 
-#: modules/process/grain_dist.c:180
-msgid "/_Grains/S_tatistics..."
-msgstr "/Зёрн_а/_Статистика..."
-
-#: modules/process/grain_dist.c:184
-msgid "Simple grain statistics"
-msgstr "Простая статистика зёрен"
-
-#: modules/process/grain_dist.c:187
-msgid "/_Grains/Select _Inscribed Discs"
-msgstr "/_Зёрна/Выделить вписанные _диски"
-
-#: modules/process/grain_dist.c:191
-msgid "Create a selection visualising discs incribed into grains"
-msgstr "Создать выделенную область, показывающую вписанные в зёрна диски"
-
-#: modules/process/grain_dist.c:195
-msgid "/_Grains/Select _Excscribed Circles"
-msgstr "/_Зёрна/Выделить о_писанные окружности"
-
-#: modules/process/grain_dist.c:199
-msgid "Create a selection visualising grain circumcircles"
-msgstr ""
-"Создать выделенную область, показывающую описанные вокруг зёрен окружности"
-
-#: modules/process/grain_dist.c:239
+#: modules/process/grain_dist.c:221
 msgid "_Export raw data"
 msgstr "_Экспортировать необработанные данные"
 
-#: modules/process/grain_dist.c:240
+#: modules/process/grain_dist.c:222
 msgid "Plot _graphs"
 msgstr "Строить _графики"
 
-#: modules/process/grain_dist.c:255
+#: modules/process/grain_dist.c:239
 msgid "Grain Distributions"
 msgstr "Распределения зёрен"
 
-#: modules/process/grain_dist.c:500
+#: modules/process/grain_dist.c:544
 msgid "count"
 msgstr "число"
 
-#: modules/process/grain_dist.c:568
+#: modules/process/grain_dist.c:608
 msgid "Export Raw Grain Values"
 msgstr "Экспортировать необработанные значения зёрен"
-
-#: modules/process/grain_dist.c:675
-msgid "Save Grain Statistics"
-msgstr "Сохранить статистику зёрен"
-
-#: modules/process/grain_dist.c:726
-msgid "Data channel:"
-msgstr "Канал данных:"
-
-#: modules/process/grain_dist.c:757 modules/process/grain_dist.c:857
-msgid "Grain Statistics"
-msgstr "Статистика зёрен"
-
-#: modules/process/grain_dist.c:769
-msgid "Number of grains:"
-msgstr "Число зёрен:"
-
-#: modules/process/grain_dist.c:781
-msgid "Total projected area (abs.):"
-msgstr "Общая площадь проекции (абс.):"
-
-#: modules/process/grain_dist.c:785
-msgid "Total projected area (rel.):"
-msgstr "Общая площадь проекции (отн.):"
-
-#: modules/process/grain_dist.c:794
-msgid "Mean grain area:"
-msgstr "Средняя площадь зерна:"
-
-#: modules/process/grain_dist.c:803
-msgid "Mean grain size:"
-msgstr "Средний размер зерна:"
-
-#: modules/process/grain_dist.c:815
-msgid "Total grain volume (zero):"
-msgstr "Общий объём зерна (нуль):"
-
-#: modules/process/grain_dist.c:824
-msgid "Total grain volume (minimum):"
-msgstr "Общий объём зерна (минимум):"
-
-#: modules/process/grain_dist.c:833
-msgid "Total grain volume (laplacian):"
-msgstr "Общий объём зерна (по Лапласу):"
-
-#: modules/process/grain_dist.c:842
-msgid "Total projected boundary length:"
-msgstr "Общая длина проекции границы:"
 
 #: modules/process/grain_edge.c:107
 msgid "Marks grains by edge detection method."
@@ -8789,6 +8719,46 @@ msgstr "Порог"
 msgid "_Laplacian:"
 msgstr "_Лапласиан:"
 
+#: modules/process/grain_filter.c:203
+msgid ""
+"Filters grains by their properties, using logical expressions and thresholds."
+msgstr ""
+"Фильтрует зёрна по их свойствам, используя логические выражения и пороги"
+
+#: modules/process/grain_filter.c:218
+msgid "/_Grains/_Filter..."
+msgstr "/Зёрн_а/_Фильтр..."
+
+#: modules/process/grain_filter.c:222
+msgid "Filter grains by their properties"
+msgstr "Фильтровать зёрна по свойствам"
+
+#: modules/process/grain_filter.c:307
+msgid "GFilter Grains by Threshold"
+msgstr "Фильтровать зёрна по порогу"
+
+#: modules/process/grain_filter.c:421
+msgid "Set selected as:"
+msgstr "Установить выбранное как:"
+
+#: modules/process/grain_filter.c:436
+msgid "Keep grains satisfying:"
+msgstr "Оставлять зёрна, удовлетворяющие:"
+
+#: modules/process/grain_filter.c:450
+msgid "Lower threshold:"
+msgstr "Нижний порог:"
+
+#: modules/process/grain_filter.c:485
+msgid "Upper threshold:"
+msgstr "Верхний порог:"
+
+#. TRANSLATORS: %c is replaced with quantity label A, B or C.
+#: modules/process/grain_filter.c:685
+#, c-format
+msgid "Condition %c: %s"
+msgstr "Условие %c: %s"
+
 #: modules/process/grain_mark.c:145
 msgid "Marks grains by thresholding (height, slope, curvature)."
 msgstr "Помечает зёрна по порогу (высоты, размера)."
@@ -8805,24 +8775,24 @@ msgstr "Пометить зёрна по пороговому значению"
 msgid "Mark Grains by Threshold"
 msgstr "Пометить зёрна по пороговому значению"
 
-#: modules/process/grain_mark.c:306 modules/process/grain_rem_threshold.c:278
+#: modules/process/grain_mark.c:305 modules/process/grain_rem_threshold.c:278
 msgid "Threshold by"
 msgstr "Пороговое значение"
 
-#: modules/process/grain_mark.c:336
+#: modules/process/grain_mark.c:335
 msgid "_Slope:"
 msgstr "_Уклон:"
 
-#: modules/process/grain_mark.c:340
+#: modules/process/grain_mark.c:339
 msgid "_Curvature:"
 msgstr "_Кривизна:"
 
-#: modules/process/grain_mark.c:349 modules/process/grain_rem_threshold.c:332
+#: modules/process/grain_mark.c:348 modules/process/grain_rem_threshold.c:332
 #: modules/process/grain_wshed.c:282 modules/process/wpour_mark.c:372
 msgid "_Invert height"
 msgstr "_Инвертировать высоту"
 
-#: modules/process/grain_mark.c:362
+#: modules/process/grain_mark.c:361
 msgid "Mer_ge mode:"
 msgstr "_Метод слияния:"
 
@@ -8853,6 +8823,83 @@ msgstr "Удалить зёрна, _касающиеся границ изобр
 #: modules/process/grain_rem_threshold.c:356
 msgid "_Selection mode:"
 msgstr "_Режим выделения:"
+
+#: modules/process/grain_stat.c:54
+msgid "Displays overall grain statistics."
+msgstr "Показывает общую статистику зёрен."
+
+#: modules/process/grain_stat.c:69
+msgid "/_Grains/S_tatistics..."
+msgstr "/Зёрн_а/_Статистика..."
+
+#: modules/process/grain_stat.c:73
+msgid "Simple grain statistics"
+msgstr "Простая статистика зёрен"
+
+#: modules/process/grain_stat.c:76
+msgid "/_Grains/Select _Inscribed Discs"
+msgstr "/_Зёрна/Выделить вписанные _диски"
+
+#: modules/process/grain_stat.c:80
+msgid "Create a selection visualising discs incribed into grains"
+msgstr "Создать выделенную область, показывающую вписанные в зёрна диски"
+
+#: modules/process/grain_stat.c:84
+msgid "/_Grains/Select _Excscribed Circles"
+msgstr "/_Зёрна/Выделить о_писанные окружности"
+
+#: modules/process/grain_stat.c:88
+msgid "Create a selection visualising grain circumcircles"
+msgstr ""
+"Создать выделенную область, показывающую описанные вокруг зёрен окружности"
+
+#: modules/process/grain_stat.c:141
+msgid "Save Grain Statistics"
+msgstr "Сохранить статистику зёрен"
+
+#: modules/process/grain_stat.c:192
+msgid "Data channel:"
+msgstr "Канал данных:"
+
+#: modules/process/grain_stat.c:223 modules/process/grain_stat.c:323
+msgid "Grain Statistics"
+msgstr "Статистика зёрен"
+
+#: modules/process/grain_stat.c:235
+msgid "Number of grains:"
+msgstr "Число зёрен:"
+
+#: modules/process/grain_stat.c:247
+msgid "Total projected area (abs.):"
+msgstr "Общая площадь проекции (абс.):"
+
+#: modules/process/grain_stat.c:251
+msgid "Total projected area (rel.):"
+msgstr "Общая площадь проекции (отн.):"
+
+#: modules/process/grain_stat.c:260
+msgid "Mean grain area:"
+msgstr "Средняя площадь зерна:"
+
+#: modules/process/grain_stat.c:269
+msgid "Mean grain size:"
+msgstr "Средний размер зерна:"
+
+#: modules/process/grain_stat.c:281
+msgid "Total grain volume (zero):"
+msgstr "Общий объём зерна (нуль):"
+
+#: modules/process/grain_stat.c:290
+msgid "Total grain volume (minimum):"
+msgstr "Общий объём зерна (минимум):"
+
+#: modules/process/grain_stat.c:299
+msgid "Total grain volume (laplacian):"
+msgstr "Общий объём зерна (по Лапласу):"
+
+#: modules/process/grain_stat.c:308
+msgid "Total projected boundary length:"
+msgstr "Общая длина проекции границы:"
 
 #: modules/process/grain_wshed.c:112
 msgid "Marks grains by watershed algorithm."
@@ -10637,7 +10684,7 @@ msgstr "Затенение"
 msgid "_Mix:"
 msgstr "C_мешать:"
 
-#: modules/process/slope_dist.c:120
+#: modules/process/slope_dist.c:150
 msgid ""
 "Calculates one- or two-dimensional distribution of slopes or graph of their "
 "angular distribution."
@@ -10645,51 +10692,51 @@ msgstr ""
 "Рассчитывает одно- или двумерное распределение наклонов или график их "
 "углового распределения."
 
-#: modules/process/slope_dist.c:135
+#: modules/process/slope_dist.c:165
 msgid "/_Statistics/_Slope Distribution..."
 msgstr "/_Статистика/Распределение _наклонов..."
 
-#: modules/process/slope_dist.c:139
+#: modules/process/slope_dist.c:169
 msgid "Calculate angular slope distribution"
 msgstr "Рассчитать угловое распределение наклонов"
 
-#: modules/process/slope_dist.c:180
+#: modules/process/slope_dist.c:210
 msgid "Slope distribution"
 msgstr "Распределение наклона"
 
-#: modules/process/slope_dist.c:212
+#: modules/process/slope_dist.c:244
 msgid "_Two-dimensional distribution"
 msgstr "_Двумерное распределение"
 
-#: modules/process/slope_dist.c:213
+#: modules/process/slope_dist.c:245
 msgid "Directional (φ) _graph"
 msgstr "_График направлений (φ) "
 
-#: modules/process/slope_dist.c:214
+#: modules/process/slope_dist.c:246
 msgid "_Inclination (θ) graph"
 msgstr "График _наклонов (θ)"
 
-#: modules/process/slope_dist.c:215
+#: modules/process/slope_dist.c:247
 msgid "Inclination (gra_dient) graph"
 msgstr "График наклонов (гра_диент)"
 
-#: modules/process/slope_dist.c:223
+#: modules/process/slope_dist.c:262
 msgid "Slope Distribution"
 msgstr "Распределение наклонов"
 
-#: modules/process/slope_dist.c:506
+#: modules/process/slope_dist.c:703
 msgid "Angular Slope Distribution"
 msgstr "Распределение наклонов по углам"
 
-#: modules/process/slope_dist.c:516 modules/process/tilt.c:177
+#: modules/process/slope_dist.c:715 modules/process/tilt.c:177
 msgid "Slopes"
 msgstr "Наклоны"
 
-#: modules/process/slope_dist.c:581 modules/process/slope_dist.c:658
+#: modules/process/slope_dist.c:778 modules/process/slope_dist.c:855
 msgid "Inclination Distribution"
 msgstr "Распределение наклона"
 
-#: modules/process/slope_dist.c:593 modules/process/slope_dist.c:670
+#: modules/process/slope_dist.c:790 modules/process/slope_dist.c:867
 msgid "Inclinations"
 msgstr "Наклоны"
 
@@ -12620,6 +12667,12 @@ msgstr "/_Инвертировать значение"
 #: modules/volume/volume_invert.c:69
 msgid "Invert value in volume data"
 msgstr "Инвертирует значения в объёмных данных"
+
+#~ msgid "E_xpression:"
+#~ msgstr "_Выражение:"
+
+#~ msgid "_Number of quantities:"
+#~ msgstr "_Число величин:"
 
 #~ msgid "Scaling"
 #~ msgstr "Масштабирование"
