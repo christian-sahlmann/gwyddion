@@ -25,6 +25,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwyrandgenset.h>
 #include <libprocess/stats.h>
 #include <libprocess/arithmetic.h>
 #include <libprocess/inttrans.h>
@@ -179,7 +180,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates particles using simple dynamical model"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.3",
+    "1.4",
     "Petr Klapetek",
     "2010",
 };
@@ -629,35 +630,6 @@ update_controls(DepositSynthControls *controls,
                              args->revise);
 }
 
-static gdouble
-rand_gen_gaussian(GRand *rng,
-                  gdouble sigma)
-{
-    static gboolean have_spare = FALSE;
-    static gdouble spare;
-
-    gdouble x, y, w;
-
-    /* Calling with NULL rng just clears the spare random value. */
-    if (have_spare || G_UNLIKELY(!rng)) {
-        have_spare = FALSE;
-        return sigma*spare;
-    }
-
-    do {
-        x = -1.0 + 2.0*g_rand_double(rng);
-        y = -1.0 + 2.0*g_rand_double(rng);
-        w = x*x + y*y;
-    } while (w >= 1.0 || G_UNLIKELY(w == 0.0));
-
-    w = sqrt(-2.0*log(w)/w);
-    spare = y*w;
-    have_spare = TRUE;
-
-    return sigma*x*w;
-}
-
-
 static void
 toggle_update_boolean(GtkToggleButton *toggle,
                       gboolean *var)
@@ -1029,9 +1001,11 @@ integrate_lj_substrate(GwyDataField *lfield, gdouble ax, gdouble ay, gdouble az,
 
 static gint
 deposit_synth_do(const DepositSynthArgs *args,
-             GwyDataField *dfield, GwyDataField *showfield, gboolean *success)
+                 GwyDataField *dfield, GwyDataField *showfield,
+                 gboolean *success)
 {
     gint i, ii, m, k;
+    GwyRandGenSet *rngset;
     GRand *rng;
     GwyDataField *surface=NULL, *lfield, *zlfield, *zdfield; //FIXME all of them?
     gint xres, yres, oxres, oyres, ndata, steps;
@@ -1060,8 +1034,9 @@ deposit_synth_do(const DepositSynthArgs *args,
 //    printf("size %g width %g, coverage %g, revise %d, datafield real %g x %g, rms %g\n",
 //           args->size, args->width, args->coverage, args->revise, oxreal, oyreal, gwy_data_field_get_rms(dfield));
 
-    rng = g_rand_new();
-    g_rand_set_seed(rng, args->seed);
+    rngset = gwy_rand_gen_set_new(1);
+    gwy_rand_gen_set_init(rngset, args->seed);
+    rng = gwy_rand_gen_set_rng(rngset, 0);
 
     /*normalize all*/
     gwy_data_field_multiply(dfield, norm);
@@ -1155,7 +1130,8 @@ deposit_synth_do(const DepositSynthArgs *args,
 
     while (ndata < presetval && steps<maxsteps)
     {
-        size = norm*args->size + rand_gen_gaussian(rng, norm*args->width);
+        size = norm*args->size + gwy_rand_gen_set_gaussian(rngset, 0,
+                                                           norm*args->width);
         if (size<args->size/100) size = args->size/100;
 
         disize = gwy_data_field_rtoi(dfield, size);
@@ -1217,7 +1193,8 @@ deposit_synth_do(const DepositSynthArgs *args,
             nloc = 0;
 
             while (ndata < presetval && ii < max/1000 && nloc < maxloc) {
-                size = norm*args->size + rand_gen_gaussian(rng, norm*args->width);
+                size = norm*args->size + gwy_rand_gen_set_gaussian(rngset, 0,
+                                                                   norm*args->width);
                 if (size<args->size/100)
                     size = args->size/100;
 
@@ -1411,7 +1388,7 @@ deposit_synth_do(const DepositSynthArgs *args,
     g_free(fy);
     g_free(fz);
 
-    g_rand_free(rng);
+    gwy_rand_gen_set_free(rngset);
 
     if (ndata != presetval)
         *success = FALSE;
