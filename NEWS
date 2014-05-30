@@ -12,6 +12,8 @@ Libraries:
 - libgwyprocess: Crash in gwy_grain_values_calculate() when a quantity was
   requested multiple times was fixed.
 - libgwyprocess: New function for performing one step of facet levelling.
+- libgwyddion: New data type GwyRandGenSet providing a convenient set of random
+  number generators and functions for sampling from different distributions.
 
 Modules:
 - WinSTM (new): Import WinSTM data files.
