@@ -24,6 +24,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwyrandgenset.h>
 #include <libprocess/stats.h>
 #include <libprocess/filters.h>
 #include <libgwydgets/gwydataview.h>
@@ -108,13 +109,6 @@ typedef struct {
 } ObjSynthFeature;
 
 typedef struct {
-    guint n;
-    GRand **rng;
-    gboolean *have_spare;
-    gdouble *spare;
-} RandGenSet;
-
-typedef struct {
     gint active_page;
     gint seed;
     gboolean randomize;
@@ -137,7 +131,7 @@ typedef struct {
 struct _ObjSynthControls {
     ObjSynthArgs *args;
     GwyDimensions *dims;
-    RandGenSet *rngset;
+    GwyRandGenSet *rngset;
     GtkWidget *dialog;
     GtkWidget *view;
     GtkWidget *update;
@@ -177,14 +171,14 @@ static void        obj_synth            (GwyContainer *data,
                                          GwyRunType run);
 static void        run_noninteractive   (ObjSynthArgs *args,
                                          const GwyDimensionArgs *dimsargs,
-                                         RandGenSet *rngset,
+                                         GwyRandGenSet *rngset,
                                          GwyContainer *data,
                                          GwyDataField *dfield,
                                          gint oldid,
                                          GQuark quark);
 static gboolean    obj_synth_dialog     (ObjSynthArgs *args,
                                          GwyDimensionArgs *dimsargs,
-                                         RandGenSet *rngset,
+                                         GwyRandGenSet *rngset,
                                          GwyContainer *data,
                                          GwyDataField *dfield,
                                          gint id);
@@ -208,13 +202,13 @@ static gboolean    preview_gsource      (gpointer user_data);
 static void        preview              (ObjSynthControls *controls);
 static void        obj_synth_do         (const ObjSynthArgs *args,
                                          const GwyDimensionArgs *dimsargs,
-                                         RandGenSet *rngset,
+                                         GwyRandGenSet *rngset,
                                          GwyDataField *dfield);
 static void        object_synth_iter    (GwyDataField *surface,
                                          ObjSynthObject *object,
                                          const ObjSynthArgs *args,
                                          const GwyDimensionArgs *dimsargs,
-                                         RandGenSet *rngset,
+                                         GwyRandGenSet *rngset,
                                          gint nxcells,
                                          gint nycells,
                                          gint xoff,
@@ -228,10 +222,6 @@ static void        place_add_min        (GwyDataField *surface,
 static glong       calculate_n_objects  (const ObjSynthArgs *args,
                                          guint xres,
                                          guint yres);
-static RandGenSet* rand_gen_set_new     (guint n);
-static void        rand_gen_set_init    (RandGenSet *rngset,
-                                         guint seed);
-static void        rand_gen_set_free    (RandGenSet *rngset);
 static void        obj_synth_load_args  (GwyContainer *container,
                                          ObjSynthArgs *args,
                                          GwyDimensionArgs *dimsargs);
@@ -317,7 +307,7 @@ obj_synth(GwyContainer *data, GwyRunType run)
 {
     ObjSynthArgs args;
     GwyDimensionArgs dimsargs;
-    RandGenSet *rngset;
+    GwyRandGenSet *rngset;
     GwyDataField *dfield;
     GQuark quark;
     gint id;
@@ -329,21 +319,21 @@ obj_synth(GwyContainer *data, GwyRunType run)
                                      GWY_APP_DATA_FIELD_KEY, &quark,
                                      0);
 
-    rngset = rand_gen_set_new(RNG_NRNGS);
+    rngset = gwy_rand_gen_set_new(RNG_NRNGS);
     if (run == GWY_RUN_IMMEDIATE
         || obj_synth_dialog(&args, &dimsargs, rngset, data, dfield, id)) {
         obj_synth_save_args(gwy_app_settings_get(), &args, &dimsargs);
         run_noninteractive(&args, &dimsargs, rngset, data, dfield, id, quark);
     }
 
-    rand_gen_set_free(rngset);
+    gwy_rand_gen_set_free(rngset);
     gwy_dimensions_free_args(&dimsargs);
 }
 
 static void
 run_noninteractive(ObjSynthArgs *args,
                    const GwyDimensionArgs *dimsargs,
-                   RandGenSet *rngset,
+                   GwyRandGenSet *rngset,
                    GwyContainer *data,
                    GwyDataField *dfield,
                    gint oldid,
@@ -415,7 +405,7 @@ run_noninteractive(ObjSynthArgs *args,
 static gboolean
 obj_synth_dialog(ObjSynthArgs *args,
                  GwyDimensionArgs *dimsargs,
-                 RandGenSet *rngset,
+                 GwyRandGenSet *rngset,
                  GwyContainer *data,
                  GwyDataField *dfield_template,
                  gint id)
@@ -857,7 +847,7 @@ preview(ObjSynthControls *controls)
 static void
 obj_synth_do(const ObjSynthArgs *args,
              const GwyDimensionArgs *dimsargs,
-             RandGenSet *rngset,
+             GwyRandGenSet *rngset,
              GwyDataField *dfield)
 {
     ObjSynthObject object = { 0, 0, 0, NULL };
@@ -874,7 +864,7 @@ obj_synth_do(const ObjSynthArgs *args,
     nobjects = calculate_n_objects(args, xres, yres);
     niters = nobjects/ncells;
 
-    rand_gen_set_init(rngset, args->seed);
+    gwy_rand_gen_set_init(rngset, args->seed);
     indices = g_new(gint, ncells);
 
     for (i = 0; i < niters; i++) {
@@ -890,39 +880,12 @@ obj_synth_do(const ObjSynthArgs *args,
     gwy_data_field_data_changed(dfield);
 }
 
-static inline gdouble
-rand_gen_set_gauss(RandGenSet *rngset,
-                   guint i,
-                   gdouble sigma)
-{
-    GRand *rng;
-    gdouble x, y, w;
-
-    if (rngset->have_spare[i]) {
-        rngset->have_spare[i] = FALSE;
-        return sigma*rngset->spare[i];
-    }
-
-    rng = rngset->rng[i];
-    do {
-        x = -1.0 + 2.0*g_rand_double(rng);
-        y = -1.0 + 2.0*g_rand_double(rng);
-        w = x*x + y*y;
-    } while (w >= 1.0 || w == 0);
-
-    w = sqrt(-2.0*log(w)/w);
-    rngset->spare[i] = y*w;
-    rngset->have_spare[i] = TRUE;
-
-    return sigma*x*w;
-}
-
 static void
 object_synth_iter(GwyDataField *surface,
                   ObjSynthObject *object,
                   const ObjSynthArgs *args,
                   const GwyDimensionArgs *dimsargs,
-                  RandGenSet *rngset,
+                  GwyRandGenSet *rngset,
                   gint nxcells,
                   gint nycells,
                   gint xoff,
@@ -932,6 +895,7 @@ object_synth_iter(GwyDataField *surface,
 {
     gint xres, yres, ncells, k, l;
     const ObjSynthFeature *feature;
+    GRand *rngid;
 
     g_return_if_fail(nobjects <= nxcells*nycells);
 
@@ -943,42 +907,43 @@ object_synth_iter(GwyDataField *surface,
     for (k = 0; k < ncells; k++)
         indices[k] = k;
 
+    rngid = gwy_rand_gen_set_rng(rngset, RNG_ID);
     for (k = 0; k < nobjects; k++) {
         gdouble size, aspect, height, angle, htrunc;
         gint id, i, j, from, to;
         gdouble *p;
 
-        id = g_rand_int_range(rngset->rng[RNG_ID], 0, ncells - k);
+        id = g_rand_int_range(rngid, 0, ncells - k);
         i = indices[id]/nxcells;
         j = indices[id] % nxcells;
         indices[id] = indices[ncells-1 - k];
 
         size = args->size;
         if (args->size_noise)
-            size *= exp(rand_gen_set_gauss(rngset, RNG_SIZE,
-                                           args->size_noise));
+            size *= exp(gwy_rand_gen_set_gaussian(rngset, RNG_SIZE,
+                                                  args->size_noise));
 
         aspect = args->aspect;
         if (args->aspect_noise)
-            aspect *= exp(rand_gen_set_gauss(rngset, RNG_ASPECT,
-                                             args->aspect_noise));
+            aspect *= exp(gwy_rand_gen_set_gaussian(rngset, RNG_ASPECT,
+                                                    args->aspect_noise));
 
         height = args->height * pow10(dimsargs->zpow10);
         if (args->height_bound)
             height *= size/args->size;
         if (args->height_noise)
-            height *= exp(rand_gen_set_gauss(rngset, RNG_HEIGHT,
-                                             args->height_noise));
+            height *= exp(gwy_rand_gen_set_gaussian(rngset, RNG_HEIGHT,
+                                                    args->height_noise));
 
         angle = args->angle;
         if (args->angle_noise)
-            angle += rand_gen_set_gauss(rngset, RNG_ANGLE,
-                                        2*args->angle_noise);
+            angle += gwy_rand_gen_set_gaussian(rngset, RNG_ANGLE,
+                                               2*args->angle_noise);
 
         // Use a specific distribution for htrunc.
         if (args->htrunc_noise) {
-            gdouble q = exp(rand_gen_set_gauss(rngset, RNG_HTRUNC,
-                                               args->htrunc_noise));
+            gdouble q = exp(gwy_rand_gen_set_gaussian(rngset, RNG_HTRUNC,
+                                                      args->htrunc_noise));
             htrunc = q/(q + 1.0/args->htrunc - 1.0);
         }
         else
@@ -999,12 +964,12 @@ object_synth_iter(GwyDataField *surface,
         from = (j*xres + nxcells/2)/nxcells;
         to = (j*xres + xres + nxcells/2)/nxcells;
         to = MIN(to, xres);
-        j = from + xoff + g_rand_int_range(rngset->rng[RNG_ID], 0, to - from);
+        j = from + xoff + g_rand_int_range(rngid, 0, to - from);
 
         from = (i*yres + nycells/2)/nycells;
         to = (i*yres + yres + nycells/2)/nycells;
         to = MIN(to, yres);
-        i = from + yoff + g_rand_int_range(rngset->rng[RNG_ID], 0, to - from);
+        i = from + yoff + g_rand_int_range(rngid, 0, to - from);
 
         place_add_min(surface, object, j, i);
     }
@@ -1527,48 +1492,6 @@ static gdouble
 getcov_thedron(G_GNUC_UNUSED gdouble aspect)
 {
     return GWY_SQRT3/4.0;
-}
-
-static RandGenSet*
-rand_gen_set_new(guint n)
-{
-    RandGenSet *rngset;
-    guint i;
-
-    rngset = g_new(RandGenSet, 1);
-    rngset->rng = g_new(GRand*, n);
-    rngset->have_spare = g_new0(gboolean, n);
-    rngset->spare = g_new0(gdouble, n);
-    rngset->n = n;
-    for (i = 0; i < n; i++)
-        rngset->rng[i] = g_rand_new();
-
-    return rngset;
-}
-
-static void
-rand_gen_set_init(RandGenSet *rngset,
-                  guint seed)
-{
-    guint i;
-
-    for (i = 0; i < rngset->n; i++) {
-        g_rand_set_seed(rngset->rng[i], seed + i);
-        rngset->have_spare[i] = FALSE;
-    }
-}
-
-static void
-rand_gen_set_free(RandGenSet *rngset)
-{
-    guint i;
-
-    for (i = 0; i < rngset->n; i++)
-        g_rand_free(rngset->rng[i]);
-    g_free(rngset->rng);
-    g_free(rngset->have_spare);
-    g_free(rngset->spare);
-    g_free(rngset);
 }
 
 static const gchar prefix[]           = "/module/obj_synth";
