@@ -1,5 +1,5 @@
 /*
- *  @(#) $Id: deposit_synth.c 11510 2010-11-04 15:07:43Z yeti-dn $
+ *  @(#) $Id$
  *  Copyright (C) 2007,2009,2010 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
