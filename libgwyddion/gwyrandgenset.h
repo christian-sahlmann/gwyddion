@@ -33,7 +33,7 @@ GwyRandGenSet* gwy_rand_gen_set_new        (guint n);
 void           gwy_rand_gen_set_init       (GwyRandGenSet *rngset,
                                             guint seed);
 void           gwy_rand_gen_set_free       (GwyRandGenSet *rngset);
-GRand*         gwy_rand_gen_get_rng        (GwyRandGenSet *rngset,
+GRand*         gwy_rand_gen_set_rng        (GwyRandGenSet *rngset,
                                             guint i);
 gdouble        gwy_rand_gen_set_range      (GwyRandGenSet *rngset,
                                             guint i,

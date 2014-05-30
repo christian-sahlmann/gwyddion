@@ -110,7 +110,7 @@ gwy_rand_gen_set_free(GwyRandGenSet *rngset)
 }
 
 /**
- * gwy_rand_gen_set_free:
+ * gwy_rand_gen_set_rng:
  * @rngset: A set of pseudorandom number generators.
  * @i: Index of a generator from the set.
  *
@@ -126,7 +126,7 @@ gwy_rand_gen_set_free(GwyRandGenSet *rngset)
  * Since: 2.37
  **/
 GRand*
-gwy_rand_gen_get_rng(GwyRandGenSet *rngset,
+gwy_rand_gen_set_rng(GwyRandGenSet *rngset,
                      guint i)
 {
     g_return_val_if_fail(rngset, NULL);
