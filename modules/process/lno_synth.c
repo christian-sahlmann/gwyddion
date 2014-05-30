@@ -24,6 +24,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwyrandgenset.h>
 #include <libprocess/stats.h>
 #include <libprocess/filters.h>
 #include <libgwydgets/gwydataview.h>
@@ -51,10 +52,9 @@
     static void reset_##name(gpointer pcontrols)
 
 #define DECLARE_NOISE(name) \
-    static gdouble noise_##name##_both(GRand *rng, gdouble sigma); \
-    static gdouble noise_##name##_up(GRand *rng, gdouble sigma); \
-    static gdouble noise_##name##_down(GRand *rng, gdouble sigma); \
-    static gdouble rand_gen_##name(GRand *rng, gdouble sigma)
+    static gdouble noise_##name##_both(GwyRandGenSet *rng, gdouble sigma); \
+    static gdouble noise_##name##_up(GwyRandGenSet *rng, gdouble sigma); \
+    static gdouble noise_##name##_down(GwyRandGenSet *rng, gdouble sigma);
 
 #define LLNO_FUNCS(name) \
     &create_gui_##name, &dimensions_changed_##name, &reset_##name, \
@@ -74,6 +74,12 @@ enum {
     PAGE_GENERATOR  = 1,
     PAGE_NPAGES
 };
+
+typedef enum {
+    RNG_POS, /* NB: This is the implicit generator in the point noise funcs. */
+    RNG_LEN,
+    RNG_NRGNS
+} LNoSynthRng;
 
 typedef enum {
     LNO_DISTRIBUTION_GAUSSIAN    = 0,
@@ -110,7 +116,7 @@ typedef gpointer (*LoadArgsFunc)(GwyContainer *settings);
 typedef void (*SaveArgsFunc)(gpointer pargs,
                              GwyContainer *settings);
 
-typedef gdouble (*PointNoiseFunc)(GRand *rng, gdouble sigma);
+typedef gdouble (*PointNoiseFunc)(GwyRandGenSet *rng, gdouble sigma);
 
 /* This scheme makes the distribution type list easily reordeable in the GUI
  * without changing the ids.  Directions need not be reordered. */
@@ -118,7 +124,6 @@ typedef struct {
     LNoDistributionType distribution;
     const gchar *name;
     PointNoiseFunc point_noise[LNO_DIRECTION_NTYPES];
-    PointNoiseFunc base_generator;
 } LNoSynthGenerator;
 
 /* This scheme makes the object type list easily reordeable in the GUI without
@@ -248,25 +253,21 @@ static const LNoSynthGenerator generators[] = {
         LNO_DISTRIBUTION_GAUSSIAN,
         N_("distribution|Gaussian"),
         { &noise_gaussian_both, &noise_gaussian_up, &noise_gaussian_down, },
-        rand_gen_gaussian,
     },
     {
         LNO_DISTRIBUTION_EXPONENTIAL,
         N_("distribution|Exponential"),
         { &noise_exp_both, &noise_exp_up, &noise_exp_down, },
-        rand_gen_exp,
     },
     {
         LNO_DISTRIBUTION_UNIFORM,
         N_("distribution|Uniform"),
         { &noise_uniform_both, &noise_uniform_up, &noise_uniform_down, },
-        rand_gen_uniform,
     },
     {
         LNO_DISTRIBUTION_TRIANGULAR,
         N_("distribution|Triangular"),
         { &noise_triangle_both, &noise_triangle_up, &noise_triangle_down, },
-        rand_gen_triangle,
     },
 };
 
@@ -911,11 +912,11 @@ make_noise_steps(const LNoSynthArgs *args,
     const LNoSynthGenerator *generator;
     PointNoiseFunc point_noise;
     gdouble *steps, *data;
-    GRand *rng;
+    GwyRandGenSet *rngset;
     guint xres, yres, nbatches, nsteps, i, j, ib, is;
     gdouble q, h;
 
-    rng = g_rand_new();
+    rngset = gwy_rand_gen_set_new(1);
 
     q = args->sigma * pow10(dimsargs->zpow10);
     xres = gwy_data_field_get_xres(dfield);
@@ -929,24 +930,22 @@ make_noise_steps(const LNoSynthArgs *args,
      * it makes them more uniform. */
     nbatches = (nsteps + BATCH_SIZE-1)/BATCH_SIZE;
 
-    g_rand_set_seed(rng, args->seed);
+    gwy_rand_gen_set_init(rngset, args->seed);
     for (ib = 0; ib < nbatches; ib++) {
         guint base = ib*nsteps/nbatches, nextbase = (ib + 1)*nsteps/nbatches;
         gdouble min = base/(gdouble)nsteps, max = nextbase/(gdouble)nsteps;
 
         for (i = base; i < nextbase; i++)
-            steps[i] = g_rand_double_range(rng, min, max);
+            steps[i] = gwy_rand_gen_set_range(rngset, 0, min, max);
 
         gwy_math_sort(nextbase - base, steps + base);
     }
     /* Sentinel */
     steps[nsteps] = 1.01;
 
-    g_rand_set_seed(rng, args->seed + 1);
+    gwy_rand_gen_set_init(rngset, args->seed + 1);
     generator = get_point_noise_generator(args->distribution);
     point_noise = generator->point_noise[args->direction];
-    /* Clear spare values possibly saved in the base generator */
-    generator->base_generator(NULL, 0.0);
 
     data = gwy_data_field_get_data(dfield);
     is = 0;
@@ -957,9 +956,9 @@ make_noise_steps(const LNoSynthArgs *args,
 
             while (x > steps[is]) {
                 if (pargs->cumulative)
-                    h += point_noise(rng, q);
+                    h += point_noise(rngset, q);
                 else
-                    h = point_noise(rng, q);
+                    h = point_noise(rngset, q);
                 is++;
             }
             data[i*xres + j] += h;
@@ -967,7 +966,7 @@ make_noise_steps(const LNoSynthArgs *args,
     }
 
     g_free(steps);
-    g_rand_free(rng);
+    gwy_rand_gen_set_free(rngset);
 }
 
 static gpointer
@@ -1095,13 +1094,12 @@ make_noise_scars(const LNoSynthArgs *args,
     const LNoSynthGenerator *generator;
     PointNoiseFunc point_noise;
     gdouble *data, *row;
-    GRand *rngpos, *rnglen;
+    GwyRandGenSet *rngset;
     gint xres, yres, i, j, length, from, to, L;
     guint is, n, nscars, m, t;
     gdouble noise_corr, stickout_corr, q, h;
 
-    rngpos = g_rand_new();
-    rnglen = g_rand_new();
+    rngset = gwy_rand_gen_set_new(RNG_NRGNS);
 
     q = args->sigma * pow10(dimsargs->zpow10);
     xres = gwy_data_field_get_xres(dfield);
@@ -1119,23 +1117,21 @@ make_noise_scars(const LNoSynthArgs *args,
 
     generator = get_point_noise_generator(args->distribution);
     point_noise = generator->point_noise[args->direction];
-    /* Clear spare values possibly saved in the base generator */
-    generator->base_generator(NULL, 0.0);
-    rand_gen_gaussian(NULL, 0.0);
-    g_rand_set_seed(rngpos, args->seed);
-    g_rand_set_seed(rnglen, args->seed+1);
+    gwy_rand_gen_set_init(rngset, args->seed);
 
     data = gwy_data_field_get_data(dfield);
     for (is = 0; is < nscars; is++) {
         do {
-            t = g_rand_int(rngpos);
+            t = gwy_rand_gen_set_int(rngset, RNG_POS);
         } while (t >= m);
         i = t % yres;
         j = t/yres % (xres + L) + L/2-L;
-        h = point_noise(rngpos, q);
-        if (pargs->length_noise)
-            length = GWY_ROUND(L*exp(rand_gen_gaussian(rnglen,
-                                                       pargs->length_noise)));
+        h = point_noise(rngset, q);
+        if (pargs->length_noise) {
+            length = gwy_rand_gen_set_gaussian(rngset, RNG_LEN,
+                                               pargs->length_noise);
+            length = GWY_ROUND(L*exp(length));
+        }
         else
             length = L;
         row = data + i*xres;
@@ -1145,8 +1141,7 @@ make_noise_scars(const LNoSynthArgs *args,
             row[j] += h;
     }
 
-    g_rand_free(rngpos);
-    g_rand_free(rnglen);
+    gwy_rand_gen_set_free(rngset);
 }
 
 static gpointer
@@ -1200,186 +1195,79 @@ reset_scars(gpointer p)
                              pargs->length_noise);
 }
 
-static gdouble
-rand_gen_gaussian(GRand *rng,
-                  gdouble sigma)
-{
-    static gboolean have_spare = FALSE;
-    static gdouble spare;
-
-    gdouble x, y, w;
-
-    /* Calling with NULL rng just clears the spare random value. */
-    if (have_spare || G_UNLIKELY(!rng)) {
-        have_spare = FALSE;
-        return sigma*spare;
-    }
-
-    do {
-        x = -1.0 + 2.0*g_rand_double(rng);
-        y = -1.0 + 2.0*g_rand_double(rng);
-        w = x*x + y*y;
-    } while (w >= 1.0 || G_UNLIKELY(w == 0.0));
-
-    w = sqrt(-2.0*log(w)/w);
-    spare = y*w;
-    have_spare = TRUE;
-
-    return sigma*x*w;
-}
-
-static gdouble
-rand_gen_exp(GRand *rng,
-             gdouble sigma)
-{
-    static guint spare_bits = 0;
-    static guint32 spare;
-
-    gdouble x;
-    gboolean sign;
-
-    /* Calling with NULL rng just clears the spare random value. */
-    if (G_UNLIKELY(!rng)) {
-        spare_bits = 0;
-        return 0.0;
-    }
-
-    x = g_rand_double(rng);
-    /* This is how we get exact 0.0 at least sometimes */
-    if (G_UNLIKELY(x == 0.0))
-        return 0.0;
-
-    if (!spare_bits) {
-        spare = g_rand_int(rng);
-        spare_bits = 32;
-    }
-
-    sign = spare & 1;
-    spare >>= 1;
-    spare_bits--;
-
-    if (sign)
-        return -sigma/G_SQRT2*log(x);
-    else
-        return sigma/G_SQRT2*log(x);
-}
-
-static gdouble
-rand_gen_uniform(GRand *rng,
-                 gdouble sigma)
-{
-    gdouble x;
-
-    if (G_UNLIKELY(!rng))
-        return 0.0;
-
-    do {
-        x = g_rand_double(rng);
-    } while (G_UNLIKELY(x == 0.0));
-
-    return (2.0*x - 1.0)*GWY_SQRT3*sigma;
-}
-
-static gdouble
-rand_gen_triangle(GRand *rng,
-                  gdouble sigma)
-{
-    gdouble x;
-
-    if (G_UNLIKELY(!rng))
-        return 0.0;
-
-    do {
-        x = g_rand_double(rng);
-    } while (G_UNLIKELY(x == 0.0));
-
-    return (x <= 0.5 ? sqrt(2.0*x) - 1.0 : 1.0 - sqrt(2.0*(1.0 - x)))
-           *sigma*GWY_SQRT6;
-}
-
 /* XXX: Sometimes the generators seem unnecessarily complicated; this is to
  * make the positive and negative noise related to the symmetrical one. */
 
 static gdouble
-noise_gaussian_both(GRand *rng, gdouble sigma)
+noise_gaussian_both(GwyRandGenSet *rng, gdouble sigma)
 {
-    return rand_gen_gaussian(rng, sigma);
+    return gwy_rand_gen_set_gaussian(rng, 0, sigma);
 }
 
 static gdouble
-noise_gaussian_up(GRand *rng, gdouble sigma)
+noise_gaussian_up(GwyRandGenSet *rng, gdouble sigma)
 {
-    return fabs(rand_gen_gaussian(rng, sigma));
+    return fabs(gwy_rand_gen_set_gaussian(rng, 0, sigma));
 }
 
 static gdouble
-noise_gaussian_down(GRand *rng, gdouble sigma)
+noise_gaussian_down(GwyRandGenSet *rng, gdouble sigma)
 {
-    return -fabs(rand_gen_gaussian(rng, sigma));
+    return -fabs(gwy_rand_gen_set_gaussian(rng, 0, sigma));
 }
 
 static gdouble
-noise_exp_both(GRand *rng, gdouble sigma)
+noise_exp_both(GwyRandGenSet *rng, gdouble sigma)
 {
-    return rand_gen_exp(rng, sigma);
+    return gwy_rand_gen_set_exponential(rng, 0, sigma);
 }
 
 static gdouble
-noise_exp_up(GRand *rng, gdouble sigma)
+noise_exp_up(GwyRandGenSet *rng, gdouble sigma)
 {
-    gdouble x = g_rand_double(rng);
-
-    if (G_UNLIKELY(x == 0.0))
-        return 0.0;
-
-    return -sigma/G_SQRT2*log(x);
+    return fabs(gwy_rand_gen_set_exponential(rng, 0, sigma));
 }
 
 static gdouble
-noise_exp_down(GRand *rng, gdouble sigma)
+noise_exp_down(GwyRandGenSet *rng, gdouble sigma)
 {
-    gdouble x = g_rand_double(rng);
-
-    if (G_UNLIKELY(x == 0.0))
-        return 0.0;
-
-    return sigma/G_SQRT2*log(x);
+    return -fabs(gwy_rand_gen_set_exponential(rng, 0, sigma));
 }
 
 static gdouble
-noise_uniform_both(GRand *rng, gdouble sigma)
+noise_uniform_both(GwyRandGenSet *rng, gdouble sigma)
 {
-    return rand_gen_uniform(rng, sigma);
+    return gwy_rand_gen_set_uniform(rng, 0, sigma);
 }
 
 static gdouble
-noise_uniform_up(GRand *rng, gdouble sigma)
+noise_uniform_up(GwyRandGenSet *rng, gdouble sigma)
 {
-    return fabs(rand_gen_uniform(rng, sigma));
+    return fabs(gwy_rand_gen_set_uniform(rng, 0, sigma));
 }
 
 static gdouble
-noise_uniform_down(GRand *rng, gdouble sigma)
+noise_uniform_down(GwyRandGenSet *rng, gdouble sigma)
 {
-    return -fabs(rand_gen_uniform(rng, sigma));
+    return -fabs(gwy_rand_gen_set_uniform(rng, 0, sigma));
 }
 
 static gdouble
-noise_triangle_both(GRand *rng, gdouble sigma)
+noise_triangle_both(GwyRandGenSet *rng, gdouble sigma)
 {
-    return rand_gen_triangle(rng, sigma);
+    return gwy_rand_gen_set_triangular(rng, 0, sigma);
 }
 
 static gdouble
-noise_triangle_up(GRand *rng, gdouble sigma)
+noise_triangle_up(GwyRandGenSet *rng, gdouble sigma)
 {
-    return fabs(rand_gen_triangle(rng, sigma));
+    return fabs(gwy_rand_gen_set_triangular(rng, 0, sigma));
 }
 
 static gdouble
-noise_triangle_down(GRand *rng, gdouble sigma)
+noise_triangle_down(GwyRandGenSet *rng, gdouble sigma)
 {
-    return -fabs(rand_gen_triangle(rng, sigma));
+    return -fabs(gwy_rand_gen_set_triangular(rng, 0, sigma));
 }
 
 static const gchar active_page_key[]  = "/module/lno_synth/active_page";
