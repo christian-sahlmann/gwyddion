@@ -21,6 +21,7 @@ libgwyddion2include_HEADERS = \
 	gwymd5.h \
 	gwynlfit.h \
 	gwynlfitpreset.h \
+	gwyrandgenset.h \
 	gwyresource.h \
 	gwyserializable.h \
 	gwysiunit.h \
@@ -93,6 +94,7 @@ libgwyddion2_la_SOURCES = \
 	gwymd5.c \
 	gwynlfit.c \
 	gwynlfitpreset.c \
+	gwyrandgenset.c \
 	gwyresource.c \
 	gwyserializable.c \
 	gwysiunit.c \

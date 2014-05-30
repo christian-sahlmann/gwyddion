@@ -45,6 +45,7 @@ PYGWY_H_FILES = \
 	$(top_srcdir)/libgwyddion/gwynlfit.h \
 	$(top_srcdir)/libgwyddion/gwynlfitpreset.h \
 	$(top_srcdir)/libgwyddion/gwyresource.h \
+	$(top_srcdir)/libgwyddion/gwyrandgenset.h \
 	$(top_srcdir)/libgwyddion/gwyserializable.h \
 	$(top_srcdir)/libgwyddion/gwysiunit.h \
 	$(top_srcdir)/libgwyddion/gwystringlist.h \
