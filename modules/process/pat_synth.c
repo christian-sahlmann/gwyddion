@@ -24,6 +24,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwyrandgenset.h>
 #include <libprocess/stats.h>
 #include <libprocess/filters.h>
 #include <libgwydgets/gwydataview.h>
@@ -42,7 +43,7 @@
     static void dimensions_changed_##name(PatSynthControls *controls); \
     static void make_pattern_##name(const PatSynthArgs *args, \
                                     const GwyDimensionArgs *dimsargs, \
-                                    RandGenSet *rngset, \
+                                    GwyRandGenSet *rngset, \
                                     GwyDataField *dfield); \
     static gpointer load_args_##name(GwyContainer *settings); \
     static void save_args_##name(gpointer pargs, GwyContainer *settings); \
@@ -95,18 +96,13 @@ typedef enum {
 typedef struct _PatSynthArgs PatSynthArgs;
 typedef struct _PatSynthControls PatSynthControls;
 
-typedef struct {
-    guint n;
-    GRand **rng;
-} RandGenSet;
-
 typedef gpointer (*CreateGUIFunc)(PatSynthControls *controls);
 typedef void (*DestroyGUIFunc)(gpointer pcontrols);
 typedef void (*DimensionsChangedFunc)(PatSynthControls *controls);
 typedef void (*ResetFunc)(gpointer pcontrols);
 typedef void (*MakePatternFunc)(const PatSynthArgs *args,
                                 const GwyDimensionArgs *dimsargs,
-                                RandGenSet *rngset,
+                                GwyRandGenSet *rngset,
                                 GwyDataField *dfield);
 typedef gpointer (*LoadArgsFunc)(GwyContainer *settings);
 typedef void (*SaveArgsFunc)(gpointer pargs,
@@ -138,7 +134,7 @@ struct _PatSynthControls {
     PatSynthArgs *args;
     GwyDimensions *dims;
     const PatSynthPattern *pattern;
-    RandGenSet *rngset;
+    GwyRandGenSet *rngset;
     /* They have different types, known only to the pattern. */
     gpointer pattern_controls;
     GtkWidget *dialog;
@@ -164,14 +160,14 @@ static void          pat_synth            (GwyContainer *data,
                                            GwyRunType run);
 static void          run_noninteractive   (PatSynthArgs *args,
                                            const GwyDimensionArgs *dimsargs,
-                                           RandGenSet *rngset,
+                                           GwyRandGenSet *rngset,
                                            GwyContainer *data,
                                            GwyDataField *dfield,
                                            gint oldid,
                                            GQuark quark);
 static gboolean      pat_synth_dialog     (PatSynthArgs *args,
                                            GwyDimensionArgs *dimsargs,
-                                           RandGenSet *rngset,
+                                           GwyRandGenSet *rngset,
                                            GwyContainer *data,
                                            GwyDataField *dfield,
                                            gint id);
@@ -189,17 +185,13 @@ static gboolean      preview_gsource      (gpointer user_data);
 static void          preview              (PatSynthControls *controls);
 static void          pat_synth_do         (const PatSynthArgs *args,
                                            const GwyDimensionArgs *dimsargs,
-                                           RandGenSet *rngset,
+                                           GwyRandGenSet *rngset,
                                            GwyDataField *dfield);
 static GwyDataField* make_displacement_map(guint xres,
                                            guint yres,
                                            gdouble sigma,
                                            gdouble tau,
                                            GRand *rng);
-static RandGenSet*   rand_gen_set_new     (guint n);
-static void          rand_gen_set_init    (RandGenSet *rngset,
-                                           guint seed);
-static void          rand_gen_set_free    (RandGenSet *rngset);
 static void          pat_synth_load_args  (GwyContainer *container,
                                            PatSynthArgs *args,
                                            GwyDimensionArgs *dimsargs);
@@ -240,7 +232,7 @@ static GwyModuleInfo module_info = {
     N_("Generates surfaces representing simple patterns "
        "(steps, ridges, ...)."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti)",
     "2010",
 };
@@ -266,7 +258,7 @@ pat_synth(GwyContainer *data, GwyRunType run)
 {
     PatSynthArgs args;
     GwyDimensionArgs dimsargs;
-    RandGenSet *rngset;
+    GwyRandGenSet *rngset;
     GwyDataField *dfield;
     GQuark quark;
     gint id;
@@ -278,14 +270,14 @@ pat_synth(GwyContainer *data, GwyRunType run)
                                      GWY_APP_DATA_FIELD_KEY, &quark,
                                      0);
 
-    rngset = rand_gen_set_new(RNG_NRNGS);
+    rngset = gwy_rand_gen_set_new(RNG_NRNGS);
     if (run == GWY_RUN_IMMEDIATE
         || pat_synth_dialog(&args, &dimsargs, rngset, data, dfield, id)) {
         pat_synth_save_args(gwy_app_settings_get(), &args, &dimsargs);
         run_noninteractive(&args, &dimsargs, rngset, data, dfield, id, quark);
     }
 
-    rand_gen_set_free(rngset);
+    gwy_rand_gen_set_free(rngset);
     gwy_dimensions_free_args(&dimsargs);
 }
 
@@ -306,7 +298,7 @@ get_pattern(guint type)
 static void
 run_noninteractive(PatSynthArgs *args,
                    const GwyDimensionArgs *dimsargs,
-                   RandGenSet *rngset,
+                   GwyRandGenSet *rngset,
                    GwyContainer *data,
                    GwyDataField *dfield,
                    gint oldid,
@@ -383,7 +375,7 @@ run_noninteractive(PatSynthArgs *args,
 static gboolean
 pat_synth_dialog(PatSynthArgs *args,
                  GwyDimensionArgs *dimsargs,
-                 RandGenSet *rngset,
+                 GwyRandGenSet *rngset,
                  GwyContainer *data,
                  GwyDataField *dfield_template,
                  gint id)
@@ -688,12 +680,12 @@ preview(PatSynthControls *controls)
 static void
 pat_synth_do(const PatSynthArgs *args,
              const GwyDimensionArgs *dimsargs,
-             RandGenSet *rngset,
+             GwyRandGenSet *rngset,
              GwyDataField *dfield)
 {
     const PatSynthPattern *pattern = get_pattern(args->type);
 
-    rand_gen_set_init(rngset, args->seed);
+    gwy_rand_gen_set_init(rngset, args->seed);
     pattern->run(args, dimsargs, rngset, dfield);
     gwy_data_field_data_changed(dfield);
 }
@@ -739,18 +731,6 @@ growing_iter_next(GrowingIter *giter)
     return TRUE;
 }
 
-/* Gauss-like distribution with range limited to [1-range, 1+range] */
-static inline gdouble
-rand_gen_set_mult(RandGenSet *rngset,
-                  guint i,
-                  gdouble range)
-{
-    GRand *rng;
-
-    rng = rngset->rng[i];
-    return 1.0 + range*(g_rand_double(rng) - g_rand_double(rng));
-}
-
 static guint
 bisect_lower(const gdouble *a, guint n, gdouble x)
 {
@@ -775,23 +755,23 @@ bisect_lower(const gdouble *a, guint n, gdouble x)
 
 static inline void
 generate(gdouble *a, gdouble base, gdouble noise,
-         RandGenSet *rngset, gint id)
+         GwyRandGenSet *rngset, gint id)
 {
     gdouble v = base;
 
     if (base && noise)
-        v *= rand_gen_set_mult(rngset, id, noise);
+        v *= gwy_rand_gen_set_multiplier(rngset, id, noise);
     *a = v;
 }
 
 static inline void
 accumulate(gdouble *a, gdouble base, gdouble noise,
-           RandGenSet *rngset, gint id)
+           GwyRandGenSet *rngset, gint id)
 {
     gdouble v = base;
 
     if (base && noise)
-        v *= rand_gen_set_mult(rngset, id, noise);
+        v *= gwy_rand_gen_set_multiplier(rngset, id, noise);
     *a = v + *(a - 1);
 }
 
@@ -928,7 +908,7 @@ dimensions_changed_steps(PatSynthControls *controls)
 static void
 make_pattern_steps(const PatSynthArgs *args,
                    const GwyDimensionArgs *dimsargs,
-                   RandGenSet *rngset,
+                   GwyRandGenSet *rngset,
                    GwyDataField *dfield)
 {
     const PatSynthArgsSteps *pargs = args->pattern_args;
@@ -968,7 +948,8 @@ make_pattern_steps(const PatSynthArgs *args,
 
     displacement_x = make_displacement_map(xres, yres,
                                            pargs->sigma, pargs->tau,
-                                           rngset->rng[RNG_DISPLAC_X]);
+                                           gwy_rand_gen_set_rng(rngset,
+                                                                RNG_DISPLAC_X));
     dx_data = gwy_data_field_get_data(displacement_x);
 
     c = cos(pargs->angle);
@@ -1231,7 +1212,7 @@ dimensions_changed_ridges(PatSynthControls *controls)
 static void
 make_pattern_ridges(const PatSynthArgs *args,
                     const GwyDimensionArgs *dimsargs,
-                    RandGenSet *rngset,
+                    GwyRandGenSet *rngset,
                     GwyDataField *dfield)
 {
     const PatSynthArgsRidges *pargs = args->pattern_args;
@@ -1278,7 +1259,8 @@ make_pattern_ridges(const PatSynthArgs *args,
 
     displacement_x = make_displacement_map(xres, yres,
                                            pargs->sigma, pargs->tau,
-                                           rngset->rng[RNG_DISPLAC_X]);
+                                           gwy_rand_gen_set_rng(rngset,
+                                                                RNG_DISPLAC_X));
     dx_data = gwy_data_field_get_data(displacement_x);
 
     c = cos(pargs->angle);
@@ -1631,7 +1613,7 @@ hole_shape(gdouble x, gdouble y, gdouble size, gdouble slope, gdouble roundness)
 static void
 make_pattern_holes(const PatSynthArgs *args,
                    const GwyDimensionArgs *dimsargs,
-                   RandGenSet *rngset,
+                   GwyRandGenSet *rngset,
                    GwyDataField *dfield)
 {
     enum {
@@ -1682,10 +1664,12 @@ make_pattern_holes(const PatSynthArgs *args,
 
     displacement_x = make_displacement_map(xres, yres,
                                            pargs->sigma, pargs->tau,
-                                           rngset->rng[RNG_DISPLAC_X]);
+                                           gwy_rand_gen_set_rng(rngset,
+                                                                RNG_DISPLAC_X));
     displacement_y = make_displacement_map(xres, yres,
                                            pargs->sigma, pargs->tau,
-                                           rngset->rng[RNG_DISPLAC_Y]);
+                                           gwy_rand_gen_set_rng(rngset,
+                                                                RNG_DISPLAC_Y));
     dx_data = gwy_data_field_get_data(displacement_x);
     dy_data = gwy_data_field_get_data(displacement_y);
 
@@ -1914,42 +1898,6 @@ make_displacement_map(guint xres, guint yres,
     }
 
     return dfield;
-}
-
-static RandGenSet*
-rand_gen_set_new(guint n)
-{
-    RandGenSet *rngset;
-    guint i;
-
-    rngset = g_new(RandGenSet, 1);
-    rngset->rng = g_new(GRand*, n);
-    rngset->n = n;
-    for (i = 0; i < n; i++)
-        rngset->rng[i] = g_rand_new();
-
-    return rngset;
-}
-
-static void
-rand_gen_set_init(RandGenSet *rngset,
-                  guint seed)
-{
-    guint i;
-
-    for (i = 0; i < rngset->n; i++)
-        g_rand_set_seed(rngset->rng[i], seed + i);
-}
-
-static void
-rand_gen_set_free(RandGenSet *rngset)
-{
-    guint i;
-
-    for (i = 0; i < rngset->n; i++)
-        g_rand_free(rngset->rng[i]);
-    g_free(rngset->rng);
-    g_free(rngset);
 }
 
 static const gchar active_page_key[] = "/module/pat_synth/active_page";
