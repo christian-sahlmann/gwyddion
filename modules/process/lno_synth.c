@@ -281,7 +281,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates various kinds of line noise."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti)",
     "2010",
 };
