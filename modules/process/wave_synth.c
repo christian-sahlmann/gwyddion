@@ -24,6 +24,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwyrandgenset.h>
 #include <libprocess/stats.h>
 #include <libprocess/filters.h>
 #include <libprocess/simplefft.h>
@@ -180,14 +181,12 @@ static void       complement_table       (gdouble *dbltab,
 static void       complement_wave        (const gdouble *cwave,
                                           gdouble *swave,
                                           guint n);
-static void       randomize_sources      (GRand *rng,
+static void       randomize_sources      (GwyRandGenSet *rngset,
                                           GwyWaveSource *sources,
                                           const WaveSynthArgs *args,
                                           const GwyDimensionArgs *dimsargs,
                                           guint xres,
                                           guint yres);
-static gdouble    rand_gen_gaussian      (GRand *rng,
-                                          gdouble sigma);
 static void       wave_synth_load_args   (GwyContainer *container,
                                           WaveSynthArgs *args,
                                           GwyDimensionArgs *dimsargs);
@@ -222,7 +221,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates various kinds of waves."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2014",
 };
@@ -744,7 +743,7 @@ wave_synth_do(const WaveSynthArgs *args,
               const GwyDimensionArgs *dimsargs,
               GwyDataField *dfield)
 {
-    GRand *rng;
+    GwyRandGenSet *rngset;
     GwyWaveSource *sources;
     guint xres = dfield->xres, yres = dfield->yres;
     guint i, j, k, nwaves = args->nwaves;
@@ -753,11 +752,10 @@ wave_synth_do(const WaveSynthArgs *args,
     gdouble q;
 
     sources = g_new(GwyWaveSource, args->nwaves);
-    rand_gen_gaussian(NULL, 0.0);
-    rng = g_rand_new();
-    g_rand_set_seed(rng, args->seed);
-    randomize_sources(rng, sources, args, dimsargs, xres, yres);
-    g_rand_free(rng);
+    rngset = gwy_rand_gen_set_new(1);
+    gwy_rand_gen_set_init(rngset, args->seed);
+    randomize_sources(rngset, sources, args, dimsargs, xres, yres);
+    gwy_rand_gen_set_free(rngset);
 
     d = dfield->data;
     tab = args->wave_table;
@@ -909,8 +907,10 @@ complement_wave(const gdouble *cwave, gdouble *swave, guint n)
     g_free(buf1);
 }
 
+#define rng_gaussian gwy_rand_gen_set_gaussian
+
 static void
-randomize_sources(GRand *rng,
+randomize_sources(GwyRandGenSet *rngset,
                   GwyWaveSource *sources,
                   const WaveSynthArgs *args,
                   const GwyDimensionArgs *dimsargs,
@@ -923,41 +923,13 @@ randomize_sources(GRand *rng,
         gdouble xsigma = 1000.0*args->x_noise*args->x_noise,
                 ysigma = 1000.0*args->y_noise*args->y_noise;
 
-        sources[i].x = q*(args->x + rand_gen_gaussian(rng, xsigma)) + 0.5*xres;
-        sources[i].y = q*(args->y + rand_gen_gaussian(rng, ysigma)) + 0.5*yres;
-        sources[i].k = r*args->k*exp(rand_gen_gaussian(rng, 4.0*args->k_noise));
+        sources[i].x = q*(args->x + rng_gaussian(rngset, 0, xsigma)) + 0.5*xres;
+        sources[i].y = q*(args->y + rng_gaussian(rngset, 0, ysigma)) + 0.5*yres;
+        sources[i].k = r*args->k*exp(rng_gaussian(rngset, 0, 4.0*args->k_noise));
         sources[i].z = (args->amplitude * pow10(dimsargs->zpow10)
-                        * exp(rand_gen_gaussian(rng,
-                                                4.0*args->amplitude_noise)));
+                        * exp(rng_gaussian(rngset, 0,
+                                           4.0*args->amplitude_noise)));
     }
-}
-
-static gdouble
-rand_gen_gaussian(GRand *rng,
-                  gdouble sigma)
-{
-    static gboolean have_spare = FALSE;
-    static gdouble spare;
-
-    gdouble x, y, w;
-
-    /* Calling with NULL rng just clears the spare random value. */
-    if (have_spare || G_UNLIKELY(!rng)) {
-        have_spare = FALSE;
-        return sigma*spare;
-    }
-
-    do {
-        x = -1.0 + 2.0*g_rand_double(rng);
-        y = -1.0 + 2.0*g_rand_double(rng);
-        w = x*x + y*y;
-    } while (w >= 1.0 || G_UNLIKELY(w == 0.0));
-
-    w = sqrt(-2.0*log(w)/w);
-    spare = y*w;
-    have_spare = TRUE;
-
-    return sigma*x*w;
 }
 
 static const gchar active_page_key[]     = "/module/wave_synth/active_page";

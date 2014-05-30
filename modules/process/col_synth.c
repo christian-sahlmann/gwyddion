@@ -24,6 +24,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwyrandgenset.h>
 #include <libprocess/stats.h>
 #include <libprocess/filters.h>
 #include <libgwydgets/gwydataview.h>
@@ -143,10 +144,8 @@ static gboolean   col_synth_trace         (GwyDataField *dfield,
                                            gdouble phi,
                                            gdouble size,
                                            RelaxationType relaxation,
-                                           GRand *rng,
+                                           GwyRandGenSet *rngset,
                                            gdouble *zmax);
-static gdouble    rand_gen_gaussian       (GRand *rng,
-                                           gdouble sigma);
 static void       col_synth_load_args     (GwyContainer *container,
                                            ColSynthArgs *args,
                                            GwyDimensionArgs *dimsargs);
@@ -176,7 +175,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates columnar surfaces by a simple growth algorithm."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2014",
 };
@@ -642,10 +641,9 @@ col_synth_do(const ColSynthArgs *args,
     gdouble zmax;
     gdouble lasttime = 0.0, lastpreviewtime = 0.0, currtime;
     GTimer *timer;
-    GRand *rng;
+    GwyRandGenSet *rngset;
     gboolean finished = FALSE;
 
-    rand_gen_gaussian(NULL, 0.0);
     timer = g_timer_new();
 
     xres = gwy_data_field_get_xres(dfield);
@@ -659,23 +657,25 @@ col_synth_do(const ColSynthArgs *args,
     gwy_app_wait_set_message(_("Depositing particles..."));
     gwy_app_wait_set_fraction(0.0);
 
-    rng = g_rand_new();
-    g_rand_set_seed(rng, args->seed);
+    rngset = gwy_rand_gen_set_new(1);
+    gwy_rand_gen_set_init(rngset, args->seed);
 
     for (ip = 0; ip < npart; ip++) {
         gdouble theta, phi, height, x, y, z;
 
         height = args->height;
         if (args->height_noise)
-            height *= exp(rand_gen_gaussian(rng, args->height_noise));
+            height *= exp(gwy_rand_gen_set_gaussian(rngset, 0,
+                                                    args->height_noise));
 
         theta = args->theta;
         if (args->theta_spread) {
             gdouble cth;
 
             do {
-                cth = cos(theta) + rand_gen_gaussian(rng,
-                                                     G_PI*args->theta_spread);
+                cth = (cos(theta)
+                       + (gwy_rand_gen_set_gaussian(rngset, 0,
+                                                    G_PI*args->theta_spread)));
             } while (cth < 0.0 || cth > 0.99);
 
             theta = acos(1.0 - cth);
@@ -683,15 +683,16 @@ col_synth_do(const ColSynthArgs *args,
 
         phi = args->phi;
         if (args->phi_spread)
-            phi += rand_gen_gaussian(rng, 2.0*G_PI*args->phi_spread);
+            phi += gwy_rand_gen_set_gaussian(rngset, 0,
+                                             2.0*G_PI*args->phi_spread);
 
-        x = xres*g_rand_double(rng);
-        y = yres*g_rand_double(rng);
+        x = xres*gwy_rand_gen_set_double(rngset, 0);
+        y = yres*gwy_rand_gen_set_double(rngset, 0);
         /* XXX: Make the starting height also a parameter? */
         z = zmax + 5.0;
 
         col_synth_trace(dfield, x, y, z, theta, phi, height,
-                        relaxation, rng, &zmax);
+                        relaxation, rngset, &zmax);
 
         if (ip % 1000 == 0) {
             currtime = g_timer_elapsed(timer, NULL);
@@ -713,7 +714,7 @@ col_synth_do(const ColSynthArgs *args,
 
 fail:
     g_timer_destroy(timer);
-    g_rand_free(rng);
+    gwy_rand_gen_set_free(rngset);
 
     return finished;
 }
@@ -723,7 +724,7 @@ col_synth_trace(GwyDataField *dfield,
                 gdouble x, gdouble y, gdouble z,
                 gdouble theta, gdouble phi, gdouble size,
                 RelaxationType relaxation,
-                GRand *rng,
+                GwyRandGenSet *rngset,
                 gdouble *zmax)
 {
     gdouble kx, ky, kz;
@@ -791,7 +792,7 @@ col_synth_trace(GwyDataField *dfield,
 
                 k = ((inew + yres + i) % yres)*xres + (jnew + xres + j) % xres;
                 if (data[k] < data[k2]) {
-                    if (g_rand_double(rng) < 0.5/(i*i + j*j))
+                    if (gwy_rand_gen_set_double(rngset, 0) < 0.5/(i*i + j*j))
                         k2 = k;
                 }
             }
@@ -804,34 +805,6 @@ col_synth_trace(GwyDataField *dfield,
         *zmax = data[k];
 
     return TRUE;
-}
-
-static gdouble
-rand_gen_gaussian(GRand *rng,
-                  gdouble sigma)
-{
-    static gboolean have_spare = FALSE;
-    static gdouble spare;
-
-    gdouble x, y, w;
-
-    /* Calling with NULL rng just clears the spare random value. */
-    if (have_spare || G_UNLIKELY(!rng)) {
-        have_spare = FALSE;
-        return sigma*spare;
-    }
-
-    do {
-        x = -1.0 + 2.0*g_rand_double(rng);
-        y = -1.0 + 2.0*g_rand_double(rng);
-        w = x*x + y*y;
-    } while (w >= 1.0 || G_UNLIKELY(w == 0.0));
-
-    w = sqrt(-2.0*log(w)/w);
-    spare = y*w;
-    have_spare = TRUE;
-
-    return sigma*x*w;
 }
 
 static const gchar prefix[]           = "/module/col_synth";
