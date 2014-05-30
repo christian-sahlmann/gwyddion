@@ -23,6 +23,7 @@
 #include <glib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwyrandgenset.h>
 #include <libprocess/datafield.h>
 #include <libprocess/stats.h>
 
@@ -424,33 +425,6 @@ gwy_data_field_fractal_fit(GwyDataLine *xresult, GwyDataLine *yresult,
     *b = (sx2 * sy - sx * sxy)/(sx2 * size - sx * sx);
 }
 
-/**
- * gaussian_random_number:
- * @rng: A random number generator.
- *
- * Returns a normally distributed deviate with zero mean and unit variance.
- *
- * Returns: A Gaussian random number.
- **/
-static gdouble
-gaussian_random_number(GRand *rng)
-{
-    gdouble x, y, w;
-
-    /* to avoid four random number generations for a signle gaussian number,
-     * we use g_rand_int() instead of g_rand_double() and use the second
-     * gaussian number to add noise to the lower bits */
-    do {
-        x = -1.0 + 2.0/4294967295.0*g_rand_int(rng);
-        y = -1.0 + 2.0/4294967295.0*g_rand_int(rng);
-        w = x*x + y*y;
-    } while (w >= 1.0 || w == 0);
-
-    w = sqrt(-2.0*log(w)/w);
-
-    return (x + y/4294967295.0)*w;
-}
-
 /*
  * data repair tool using succesive random additional midpoint displacement
  * method.
@@ -461,11 +435,11 @@ gaussian_random_number(GRand *rng)
 static gboolean
 fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
 {
-    GRand *rng;
+    GwyRandGenSet *rngset;
     gint i, j, l, p, ii, jj, pp, n, xres;
     gdouble r, sg, avh;
 
-    rng = g_rand_new();
+    rngset = gwy_rand_gen_set_new(1);
     avh = gwy_data_field_get_avg(z);
 
     xres = z->xres;
@@ -482,7 +456,7 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
             for (j = 0; j < pp; j++) {
                 ii = (2 * i + 1) * p;
                 jj = (2 * j + 1) * p;
-                r = sg * gaussian_random_number(rng);
+                r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                 if (mask->data[ii * xres + jj] != 0) {
                     if (l == 0)
                         z->data[ii * xres + jj] = avh;
@@ -501,30 +475,30 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                 jj = (2 * j + 1) * p;
                 if ((jj + p) == n - 1) {
                     if ((ii + p) == n - 1) {
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[(ii + p) * xres + (jj + p)] != 0)
                             z->data[(ii + p) * xres + (jj + p)]
                                 = z->data[(ii + p) * xres + (jj + p)] + r;
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[(ii + p) * xres + (jj - p)] != 0)
                             z->data[(ii + p) * xres + (jj - p)]
                                 = z->data[(ii + p) * xres + (jj - p)] + r;
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[(ii - p) * xres + (jj + p)] != 0)
                             z->data[(ii - p) * xres + (jj + p)]
                                 = z->data[(ii - p) * xres + (jj + p)] + r;
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[(ii - p) * xres + (jj - p)] != 0)
                             z->data[(ii - p) * xres + (jj - p)]
                                 = z->data[(ii - p) * xres + (jj - p)] + r;
                     }
                     else {
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[(ii - p) * xres + (jj + p)] != 0) {
                             z->data[(ii - p) * xres + (jj + p)]
                                 = z->data[(ii - p) * xres + (jj + p)] + r;
                         }
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[(ii - p) * xres + (jj - p)] != 0) {
                             z->data[(ii - p) * xres + (jj - p)]
                                 = z->data[(ii - p) * xres + (jj - p)] + r;
@@ -533,19 +507,19 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                 }
                 else {
                     if ((ii + p) == n - 1) {
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[(ii + p) * xres + (jj - p)] != 0) {
                             z->data[(ii + p) * xres + (jj - p)]
                                 = z->data[(ii + p) * xres + (jj - p)] + r;
                         }
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[(ii - p) * xres + (jj - p)] != 0) {
                             z->data[(ii - p) * xres + (jj - p)]
                                 = z->data[(ii - p) * xres + (jj - p)] + r;
                         }
                     }
                     else {
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[(ii - p) * xres + (jj - p)] != 0) {
                             z->data[(ii - p) * xres + (jj - p)]
                                 = z->data[(ii - p) * xres + (jj - p)] + r;
@@ -560,25 +534,25 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                 ii = (2*i + 1) * p;
                 jj = (2*j + 1) * p;
                 if (l == 0) {
-                    r = sg * gaussian_random_number(rng);
+                    r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                     if (mask->data[ii * xres + (jj - p)] != 0)
                         z->data[ii * xres + (jj - p)]
                             = (z->data[(ii - p) * xres + (jj - p)]
                                + z->data[(ii + p) * xres + (jj - p)]
                                + z->data[ii * xres + jj])/3 + r;
-                    r = sg * gaussian_random_number(rng);
+                    r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                     if (mask->data[ii * xres + (jj + p)] != 0)
                         z->data[ii * xres + (jj + p)]
                             = (z->data[(ii - p) * xres + (jj + p)]
                                + z->data[(ii + p) * xres + (jj + p)]
                                + z->data[ii * xres + jj])/3 + r;
-                    r = sg * gaussian_random_number(rng);
+                    r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                     if (mask->data[(ii - p) * xres + jj] != 0)
                         z->data[(ii - p) * xres + jj]
                             = (z->data[(ii - p) * xres + (jj - p)]
                                + z->data[(ii - p) * xres + (jj + p)]
                                + z->data[ii * xres + jj])/3 + r;
-                    r = sg * gaussian_random_number(rng);
+                    r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                     if (mask->data[(ii + p) * xres + jj] != 0)
                         z->data[(ii + p) * xres + jj]
                             = (z->data[(ii + p) * xres + (jj - p)]
@@ -588,21 +562,21 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                 else {
                     if ((jj + p) == n - 1) {
                         if ((ii + p) == n - 1) {
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[(ii + p) * xres + jj] != 0)
                                 z->data[(ii + p) * xres + jj]
                                     = (z->data[ii * xres + jj]
                                        + z->data[(ii + p) * xres + (jj + p)]
                                        + z->data[(ii + p) * xres + (jj - p)])/3
                                       + r;
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[ii * xres + (jj + p)] != 0)
                                 z->data[ii * xres + (jj + p)]
                                     = (z->data[ii * xres + jj]
                                        + z->data[(ii + p) * xres + (jj + p)]
                                        + z->data[(ii - p) * xres + (jj + p)])/3
                                       + r;
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[(ii - p) * xres + jj] != 0)
                                 z->data[(ii - p) * xres + jj]
                                     = (z->data[ii * xres + jj]
@@ -612,14 +586,14 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                                       + r;
                         }
                         if ((ii + p) != n && (ii - p) != 1) {
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[ii * xres + (jj + p)] != 0)
                                 z->data[ii * xres + (jj + p)]
                                     = (z->data[ii * xres + jj]
                                        + z->data[(ii + p) * xres + (jj + p)]
                                        + z->data[(ii - p) * xres + (jj + p)])/3
                                       + r;
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[(ii - p) * xres + jj] != 0)
                                 z->data[(ii - p) * xres + jj]
                                     = (z->data[ii * xres + jj]
@@ -629,14 +603,14 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                                       + r;
                         }
                         if ((ii - p) == 0) {
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[ii * xres + (jj + p)] != 0)
                                 z->data[ii * xres + (jj + p)]
                                     = (z->data[ii * xres + jj]
                                        + z->data[(ii - p) * xres + (jj + p)]
                                        + z->data[(ii + p) * xres + (jj + p)])/3
                                       + r;
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[(ii - p) * xres + jj] != 0)
                                 z->data[(ii - p) * xres + jj]
                                     = (z->data[ii * xres + jj]
@@ -647,14 +621,14 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                     }
                     if ((jj + p) != (n - 1) && (jj - p) != 0) {
                         if ((ii + p) == n - 1) {
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[(ii + p) * xres + jj] != 0)
                                 z->data[(ii + p) * xres + jj]
                                     = (z->data[ii * xres + jj]
                                        + z->data[(ii + p) * xres + (jj - p)]
                                        + z->data[(ii + p) * xres + (jj + p)])/3
                                       + r;
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[ii * xres + (jj + p)] != 0)
                                 z->data[ii * xres + (jj + p)]
                                     = (z->data[ii * xres + jj]
@@ -662,7 +636,7 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                                        + z->data[(ii - p) * xres + (jj + p)]
                                        + z->data[(ii + p) * xres + (jj + p)])/4
                                       + r;
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[(ii - p) * xres + jj] != 0)
                                 z->data[(ii - p) * xres + jj]
                                     = (z->data[ii * xres + jj]
@@ -672,7 +646,7 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                                       + r;
                         }
                         if ((ii + p) != n - 1 && (ii - p) != 0) {
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[ii * xres + (jj + p)] != 0)
                                 z->data[ii * xres + (jj + p)]
                                     = (z->data[ii * xres + jj]
@@ -680,7 +654,7 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                                        + z->data[(ii - p) * xres + (jj + p)]
                                        + z->data[(ii + p) * xres + (jj + p)])/4
                                       + r;
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[(ii - p) * xres + jj] != 0)
                                 z->data[(ii - p) * xres + jj]
                                     = (z->data[ii * xres + jj]
@@ -690,7 +664,7 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                                       + r;
                         }
                         if ((ii - p) == 0) {
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[ii * xres + (jj + p)] != 0)
                                 z->data[ii * xres + (jj + p)]
                                     = (z->data[ii * xres + jj]
@@ -698,7 +672,7 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                                        + z->data[(ii - p) * xres + (jj + p)]
                                        + z->data[(ii + p) * xres + (jj + p)])/4
                                       + r;
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[(ii - p) * xres + jj] != 0)
                                 z->data[(ii - p) * xres + jj]
                                     = (z->data[ii * xres + jj]
@@ -709,14 +683,14 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                     }
                     if ((jj - p) == 0) {
                         if ((ii + p) == n - 1) {
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[(ii + p) * xres + jj] != 0)
                                 z->data[(ii + p) * xres + jj]
                                     = (z->data[ii * xres + jj]
                                        + z->data[(ii + p) * xres + (jj - p)]
                                        + z->data[(ii + p) * xres + (jj + p)])/3
                                       + r;
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[ii * xres + (jj + p)] != 0)
                                 z->data[ii * xres + (jj + p)]
                                     = (z->data[ii * xres + jj]
@@ -724,7 +698,7 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                                        + z->data[(ii - p) * xres + (jj + p)]
                                        + z->data[(ii + p) * xres + (jj + p)])/4
                                       + r;
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[(ii - p) * xres + jj] != 0)
                                 z->data[(ii - p) * xres + jj]
                                     = (z->data[ii * xres + jj]
@@ -732,7 +706,7 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                                        + z->data[(ii - p) * xres + (jj + p)]
                                        + z->data[(ii - p) * xres + (jj - p)])/4
                                       + r;
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[ii * xres + (jj - p)] != 0)
                                 z->data[ii * xres + (jj - p)]
                                     = (z->data[ii * xres + jj]
@@ -741,7 +715,7 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                                       + r;
                         }
                         if ((ii + p) != n - 1 && (ii - p) != 0) {
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[ii * xres + (jj + p)] != 0)
                                 z->data[ii * xres + (jj + p)]
                                     = (z->data[ii * xres + jj]
@@ -749,7 +723,7 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                                        + z->data[(ii - p) * xres + (jj + p)]
                                        + z->data[(ii + p) * xres + (jj + p)])/4
                                       + r;
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[(ii - p) * xres + jj] != 0)
                                 z->data[(ii - p) * xres + jj]
                                     = (z->data[ii * xres + jj]
@@ -757,7 +731,7 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                                        + z->data[(ii - p) * xres + (jj + p)]
                                        + z->data[(ii - p) * xres + (jj - p)])/4
                                       + r;
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[ii * xres + (jj - p)] != 0)
                                 z->data[ii * xres + (jj - p)]
                                     = (z->data[ii * xres + jj]
@@ -766,7 +740,7 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                                       + r;
                         }
                         if ((ii - p) == 0) {
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[ii * xres + (jj + p)] != 0)
                                 z->data[ii * xres + (jj + p)]
                                     = (z->data[ii * xres + jj]
@@ -774,14 +748,14 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                                        + z->data[(ii - p) * xres + (jj + p)]
                                        + z->data[(ii + p) * xres + (jj + p)])/4
                                       + r;
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[(ii - p) * xres + jj] != 0)
                                 z->data[(ii - p) * xres + jj]
                                     = (z->data[ii * xres + jj]
                                        + z->data[(ii - p) * xres + (jj + p)]
                                        + z->data[(ii - p) * xres + (jj - p)])/3
                                       + r;
-                            r = sg * gaussian_random_number(rng);
+                            r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                             if (mask->data[ii * xres + (jj - p)] != 0)
                                 z->data[ii * xres + (jj - p)]
                                     = (z->data[ii * xres + jj]
@@ -799,37 +773,37 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                 jj = (2*j + 1) * p;
                 if ((jj + p) == n - 1) {
                     if ((ii + p) == n - 1) {
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[(ii + p) * xres + (jj + p)] != 0)
                             z->data[(ii + p) * xres + (jj + p)]
                                 = z->data[(ii + p) * xres + (jj + p)] + r;
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[(ii + p) * xres + (jj - p)] != 0)
                             z->data[(ii + p) * xres + (jj - p)]
                                 = z->data[(ii + p) * xres + (jj - p)] + r;
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[(ii - p) * xres + (jj + p)] != 0)
                             z->data[(ii - p) * xres + (jj + p)]
                                 = z->data[(ii - p) * xres + (jj + p)] + r;
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[(ii - p) * xres + (jj - p)] != 0)
                             z->data[(ii - p) * xres + (jj - p)]
                                 = z->data[(ii - p) * xres + (jj - p)] + r;
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[ii * xres + jj] != 0)
                             z->data[ii * xres + jj]
                                 = z->data[ii * xres + jj] + r;
                     }
                     else {
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[(ii - p) * xres + (jj + p)] != 0)
                             z->data[(ii - p) * xres + (jj + p)]
                                 = z->data[(ii - p) * xres + (jj + p)] + r;
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[(ii - p) * xres + (jj - p)] != 0)
                             z->data[(ii - p) * xres + (jj - p)]
                                 = z->data[(ii - p) * xres + (jj - p)] + r;
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[ii * xres + jj] != 0)
                             z->data[ii * xres + jj]
                                 = z->data[ii * xres + jj] + r;
@@ -837,25 +811,25 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                 }
                 else {
                     if ((ii + p) == n - 1) {
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[(ii + p) * xres + (jj - p)] != 0)
                             z->data[(ii + p) * xres + (jj - p)]
                                 = z->data[(ii + p) * xres + (jj - p)] + r;
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[(ii - p) * xres + (jj - p)] != 0)
                             z->data[(ii - p) * xres + (jj - p)]
                                 = z->data[(ii - p) * xres + (jj - p)] + r;
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[ii * xres + jj] != 0)
                             z->data[ii * xres + jj]
                                 = z->data[ii * xres + jj] + r;
                     }
                     else {
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[(ii - p) * xres + (jj - p)] != 0)
                             z->data[(ii - p) * xres + (jj - p)]
                                 = z->data[(ii - p) * xres + (jj - p)] + r;
-                        r = sg * gaussian_random_number(rng);
+                        r = gwy_rand_gen_set_gaussian(rngset, 0, sg);
                         if (mask->data[ii * xres + jj] != 0)
                             z->data[ii * xres + jj]
                                 = z->data[ii * xres + jj] + r;
@@ -864,7 +838,7 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
             }
     }
 
-    g_rand_free(rng);
+    gwy_rand_gen_set_free(rngset);
     gwy_data_field_invalidate(z);
 
     return TRUE;
