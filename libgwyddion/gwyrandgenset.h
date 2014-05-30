@@ -54,6 +54,8 @@ gdouble        gwy_rand_gen_set_triangular (GwyRandGenSet *rngset,
 gdouble        gwy_rand_gen_set_multiplier (GwyRandGenSet *rngset,
                                             guint i,
                                             gdouble range);
+gdouble        gwy_rand_gen_set_double     (GwyRandGenSet *rngset,
+                                            guint i);
 guint32        gwy_rand_gen_set_int        (GwyRandGenSet *rngset,
                                             guint i);
 

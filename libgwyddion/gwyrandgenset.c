@@ -213,6 +213,8 @@ gwy_rand_gen_set_uniform(GwyRandGenSet *rngset,
  * @sigma.
  *
  * Returns: A pseudorandom number.
+ *
+ * Since: 2.37
  **/
 gdouble
 gwy_rand_gen_set_gaussian(GwyRandGenSet *rngset,
@@ -342,6 +344,26 @@ gwy_rand_gen_set_multiplier(GwyRandGenSet *rngset,
 
     rng = rngset->rngs[i].rng;
     return 1.0 + range*(g_rand_double(rng) - g_rand_double(rng));
+}
+
+/**
+ * gwy_rand_gen_set_double:
+ * @rngset: A set of pseudorandom number generators.
+ * @i: Index of a generator from the set.
+ * @sigma: Rms of the distribution.
+ *
+ * Samples uniform distribution over [0,1) using one generator from a
+ * pseudorandom number generator set.
+ *
+ * Returns: A pseudorandom number.
+ *
+ * Since: 2.37
+ **/
+gdouble
+gwy_rand_gen_set_double(GwyRandGenSet *rngset,
+                        guint i)
+{
+    return g_rand_double(rngset->rngs[i].rng);
 }
 
 /**
