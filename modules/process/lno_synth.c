@@ -110,8 +110,6 @@ typedef gpointer (*LoadArgsFunc)(GwyContainer *settings);
 typedef void (*SaveArgsFunc)(gpointer pargs,
                              GwyContainer *settings);
 
-typedef void (*UpdateValueFunc)(LNoSynthControls *controls);
-
 typedef gdouble (*PointNoiseFunc)(GRand *rng, gdouble sigma);
 
 /* This scheme makes the distribution type list easily reordeable in the GUI

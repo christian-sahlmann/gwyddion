@@ -112,8 +112,6 @@ typedef gpointer (*LoadArgsFunc)(GwyContainer *settings);
 typedef void (*SaveArgsFunc)(gpointer pargs,
                              GwyContainer *settings);
 
-typedef void (*UpdateValueFunc)(PatSynthControls *controls);
-
 /* This scheme makes the object type list easily reordeable in the GUI without
  * changing the ids.  */
 typedef struct {
@@ -713,7 +711,7 @@ static inline void
 growing_iter_init(GrowingIter *giter, guint n)
 {
     giter->n = n;
-    giter->k = giter->j = giter-> i = 0;
+    giter->k = giter->j = giter->i = 0;
     giter->horizontal = FALSE;
 }
 
@@ -1276,8 +1274,7 @@ make_pattern_ridges(const PatSynthArgs *args,
         generate(height + k, h, pargs->height_noise,
                  rngset, RNG_HEIGHT);
     }
-    generate(height + n, h, pargs->height_noise,
-             rngset, RNG_HEIGHT);
+    generate(height + n, h, pargs->height_noise, rngset, RNG_HEIGHT);
 
     displacement_x = make_displacement_map(xres, yres,
                                            pargs->sigma, pargs->tau,
