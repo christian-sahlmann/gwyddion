@@ -82,6 +82,7 @@ typedef struct {
 
     GPtrArray *valuedata;
     GPtrArray *sortedvaluedata;
+    guint *nuniqvalues;
     gint *grains;
     guint ngrains;
 } GFilterArgs;
@@ -165,7 +166,10 @@ static GPtrArray* calculate_all_grain_values   (GwyDataField *dfield,
                                                 guint *ngrains,
                                                 gint **grains);
 static GPtrArray* sort_grain_values            (GPtrArray *valuedata,
+                                                guint **nuniqvalues,
                                                 guint ngrains);
+static guint      uniq_values                  (gdouble *values,
+                                                guint n);
 static void       gfilter_process              (GwyDataField *mfield,
                                                 GFilterArgs *args);
 static void       gfilter_load_args            (GwyContainer *container,
@@ -187,7 +191,7 @@ static const GFilterArgs gfilter_defaults = {
     /* Dynamic state */
     NULL,
     FALSE,
-    NULL, NULL,
+    NULL, NULL, NULL,
     NULL, 0,
 };
 
@@ -247,7 +251,9 @@ grain_filter(GwyContainer *data, GwyRunType run)
     args.units_equal = gwy_si_unit_equal(siunitxy, siunitz);
     args.valuedata = calculate_all_grain_values(dfield, mfield,
                                                 &args.ngrains, &args.grains);
-    args.sortedvaluedata = sort_grain_values(args.valuedata, args.ngrains);
+    args.sortedvaluedata = sort_grain_values(args.valuedata,
+                                             &args.nuniqvalues,
+                                             args.ngrains);
     if (!args.ngrains) {
         gfilter_free_args(&args);
         return;
@@ -452,7 +458,7 @@ gfilter_dialog(GFilterArgs *args,
         gtk_table_attach(GTK_TABLE(table), controls.lower_label[i],
                          0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
-        controls.lower[i] = gtk_adjustment_new(1.0, 1.0, args->ngrains-1,
+        controls.lower[i] = gtk_adjustment_new(0.0, 0.0, 0.0,
                                                1.0, 10.0, 0.0);
         g_object_set_data(G_OBJECT(controls.lower[i]), "id",
                           GUINT_TO_POINTER(i));
@@ -487,7 +493,7 @@ gfilter_dialog(GFilterArgs *args,
         gtk_table_attach(GTK_TABLE(table), controls.upper_label[i],
                          0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
-        controls.upper[i] = gtk_adjustment_new(1.0, 1.0, args->ngrains-1,
+        controls.upper[i] = gtk_adjustment_new(0.0, 0.0, 0.0,
                                                1.0, 10.0, 0.0);
         g_object_set_data(G_OBJECT(controls.upper[i]), "id",
                           GUINT_TO_POINTER(i | IS_UPPER));
@@ -676,7 +682,7 @@ set_up_quantity(GFilterControls *controls, GwyGrainValue *gvalue, guint id)
     gdouble vmin, vmax, lower = -G_MAXDOUBLE, upper = G_MAXDOUBLE;
     GwySIUnit *siunit, *siunitxy, *siunitz;
     gboolean was_in_init = controls->in_init;
-    guint i;
+    guint i, nuniq;
 
     controls->in_init = TRUE;
     name = gwy_resource_get_name(GWY_RESOURCE(gvalue));
@@ -696,11 +702,15 @@ set_up_quantity(GFilterControls *controls, GwyGrainValue *gvalue, guint id)
 
     inventory = gwy_grain_values();
     i = gwy_inventory_get_item_position(inventory, name);
+    nuniq = args->nuniqvalues[i];
     v = g_ptr_array_index(args->sortedvaluedata, i);
     vmin = v[0];
-    vmax = v[args->ngrains-1];
+    vmax = v[nuniq-1];
     lower = CLAMP(lower, vmin, vmax);
     upper = CLAMP(upper, vmin, vmax);
+
+    gtk_adjustment_set_upper(GTK_ADJUSTMENT(controls->lower[id]), nuniq-1);
+    gtk_adjustment_set_upper(GTK_ADJUSTMENT(controls->upper[id]), nuniq-1);
 
     dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
     siunitxy = gwy_data_field_get_si_unit_xy(dfield);
@@ -769,7 +779,7 @@ set_adjustment_to_grain_value(GFilterControls *controls,
     name = gwy_resource_get_name(GWY_RESOURCE(gvalue));
     i = gwy_inventory_get_item_position(inventory, name);
     v = g_ptr_array_index(args->sortedvaluedata, i);
-    k = bisect_lower(v, args->ngrains, value);
+    k = bisect_lower(v, args->nuniqvalues[i], value);
     /* XXX: This is approximate, but maybe sufficient. */
     gtk_adjustment_set_value(adj, k);
 }
@@ -970,6 +980,7 @@ calculate_all_grain_values(GwyDataField *dfield,
 
 static GPtrArray*
 sort_grain_values(GPtrArray *valuedata,
+                  guint **nuniqvalues,
                   guint ngrains)
 {
     GwyInventory *inventory;
@@ -981,6 +992,7 @@ sort_grain_values(GPtrArray *valuedata,
 
     sortedvaluedata = g_ptr_array_new();
     g_ptr_array_set_size(sortedvaluedata, n);
+    *nuniqvalues = g_new(guint, ngrains);
 
     datasize = ngrains*sizeof(gdouble);
     for (i = 0; i < n; i++) {
@@ -989,10 +1001,27 @@ sort_grain_values(GPtrArray *valuedata,
         gdouble *svdi = g_memdup(vdi + 1, datasize);
 
         gwy_math_sort(ngrains, svdi);
+        (*nuniqvalues)[i] = uniq_values(svdi, ngrains);
         g_ptr_array_index(sortedvaluedata, i) = svdi;
     }
 
     return sortedvaluedata;
+}
+
+static guint
+uniq_values(gdouble *values, guint n)
+{
+    guint i, j;
+
+    for (i = j = 0; i < n; i++) {
+        if (i && (fabs(values[i] - values[j-1])
+                  < 1e-12*(fabs(values[i]) + fabs(values[j-1]))))
+            continue;
+
+        values[j++] = values[i];
+    }
+
+    return j;
 }
 
 static inline gboolean
@@ -1230,6 +1259,7 @@ gfilter_free_args(GFilterArgs *args)
 
     g_ptr_array_free(args->valuedata, TRUE);
     g_ptr_array_free(args->sortedvaluedata, TRUE);
+    g_free(args->nuniqvalues);
     g_free(args->grains);
 }
 
