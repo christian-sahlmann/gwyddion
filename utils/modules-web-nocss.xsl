@@ -66,6 +66,7 @@
       <b>
         <xsl:choose>
           <xsl:when test="$lang = 'en'">Version</xsl:when>
+          <xsl:when test="$lang = 'ru'">Версия</xsl:when>
           <xsl:otherwise>Version</xsl:otherwise>
         </xsl:choose>
         <xsl:text>:&#32;</xsl:text>
@@ -74,6 +75,7 @@
       <b>
         <xsl:choose>
           <xsl:when test="$lang = 'en'">Authors</xsl:when>
+          <xsl:when test="$lang = 'ru'">Авторы</xsl:when>
           <xsl:otherwise>Authors</xsl:otherwise>
         </xsl:choose>
         <xsl:text>:&#32;</xsl:text>
@@ -82,6 +84,7 @@
       <b>
         <xsl:choose>
           <xsl:when test="$lang = 'en'">Copyright</xsl:when>
+          <xsl:when test="$lang = 'ru'">Авторские права</xsl:when>
           <xsl:otherwise>Copyright</xsl:otherwise>
         </xsl:choose>
         <xsl:text>:&#32;</xsl:text>
@@ -109,6 +112,7 @@
         <tr><th colspan="3">
           <xsl:choose>
             <xsl:when test="$lang = 'en'">Functions</xsl:when>
+            <xsl:when test="$lang = 'ru'">Функции</xsl:when>
             <xsl:otherwise>Functions</xsl:otherwise>
           </xsl:choose>
         </th></tr>
@@ -116,18 +120,21 @@
           <th>
              <xsl:choose>
                <xsl:when test="$lang = 'en'">Type</xsl:when>
+               <xsl:when test="$lang = 'ru'">Тип</xsl:when>
                <xsl:otherwise>Type</xsl:otherwise>
              </xsl:choose>
           </th>
           <th>
              <xsl:choose>
                <xsl:when test="$lang = 'en'">Name</xsl:when>
+               <xsl:when test="$lang = 'ru'">Название</xsl:when>
                <xsl:otherwise>Name</xsl:otherwise>
              </xsl:choose>
           </th>
           <th>
              <xsl:choose>
                <xsl:when test="$lang = 'en'">Information</xsl:when>
+               <xsl:when test="$lang = 'ru'">Информация</xsl:when>
                <xsl:otherwise>Information</xsl:otherwise>
              </xsl:choose>
           </th>

@@ -13,7 +13,7 @@
           <xsl:choose>
             <xsl:when test="$lang = 'en'">Name</xsl:when>
             <xsl:when test="$lang = 'fr'">Nom</xsl:when>
-            <xsl:when test="$lang = 'ru'">Имя</xsl:when>
+            <xsl:when test="$lang = 'ru'">Название</xsl:when>
             <xsl:otherwise>Name</xsl:otherwise>
           </xsl:choose>
         </th>
@@ -44,6 +44,7 @@
               <b>
                 <xsl:choose>
                   <xsl:when test="$lang = 'en'">Authors</xsl:when>
+                  <xsl:when test="$lang = 'ru'">Авторы</xsl:when>
                   <xsl:otherwise>Authors</xsl:otherwise>
                 </xsl:choose>
                 <xsl:text>:&#32;</xsl:text>
@@ -58,6 +59,7 @@
             <p><b>
               <xsl:choose>
                 <xsl:when test="$lang = 'en'">Description</xsl:when>
+                <xsl:when test="$lang = 'ru'">Описание</xsl:when>
                 <xsl:otherwise>Description</xsl:otherwise>
               </xsl:choose>
               <xsl:text>:&#32;</xsl:text>
@@ -68,6 +70,7 @@
                   <tr><th colspan="3">
                    <xsl:choose>
                      <xsl:when test="$lang = 'en'">Functions</xsl:when>
+                     <xsl:when test="$lang = 'ru'">Функции</xsl:when>
                      <xsl:otherwise>Functions</xsl:otherwise>
                    </xsl:choose>
                    <xsl:text>:</xsl:text>
@@ -76,18 +79,21 @@
                     <th>
                        <xsl:choose>
                          <xsl:when test="$lang = 'en'">Type</xsl:when>
+                         <xsl:when test="$lang = 'ru'">Тип</xsl:when>
                          <xsl:otherwise>Type</xsl:otherwise>
                        </xsl:choose>
                     </th>
                     <th>
                        <xsl:choose>
                          <xsl:when test="$lang = 'en'">Name</xsl:when>
+                         <xsl:when test="$lang = 'ru'">Название</xsl:when>
                          <xsl:otherwise>Name</xsl:otherwise>
                        </xsl:choose>
                     </th>
                     <th>
                        <xsl:choose>
                          <xsl:when test="$lang = 'en'">Information</xsl:when>
+                         <xsl:when test="$lang = 'ru'">Информация</xsl:when>
                          <xsl:otherwise>Information</xsl:otherwise>
                        </xsl:choose>
                     </th>
