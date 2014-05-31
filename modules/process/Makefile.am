@@ -57,6 +57,7 @@ process_LTLIBRARIES = \
 	indent_analyze.la \
 	laplace.la \
 	latsim.la \
+	lat_synth.la \
 	level.la \
 	level_grains.la \
 	linecorrect.la \
@@ -166,6 +167,7 @@ hough_la_SOURCES               = hough.c
 immerse_la_SOURCES             = immerse.c
 indent_analyze_la_SOURCES      = indent_analyze.c
 laplace_la_SOURCES             = laplace.c
+lat_synth_la_SOURCES           = lat_synth.c dimensions.h synth.h
 latsim_la_SOURCES              = latsim.c
 level_la_SOURCES               = level.c
 level_grains_la_SOURCES        = level_grains.c
