@@ -18,7 +18,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <gtk/gtk.h>
@@ -38,11 +38,19 @@
 
 #define LAT_SYNTH_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
-#define DECLARE_LATTICE(name) \
-    static void make_lattice_##name(const LatSynthArgs *args, \
-                                    const GwyDimensionArgs *dimsargs, \
-                                    GwyRandGenSet *rngset, \
-                                    GwyDataField *dfield)
+#define EPS 0.0000001
+
+/* How larger the squarized grid should be (measured in squares). */
+#define SQBORDER 2
+
+/* A convience macro to make the source readable.
+   Use: VOBJ(p->next)->angle = M_PI2 */
+#define VOBJ(x) ((VoronoiObject*)(x)->data)
+
+#define DOTPROD_SS(a, b) ((a).x*(b).x + (a).y*(b).y)
+#define DOTPROD_SP(a, b) ((a).x*(b)->x + (a).y*(b)->y)
+#define DOTPROD_PS(a, b) ((a)->x*(b).x + (a)->y*(b).y)
+#define DOTPROD_PP(a, b) ((a)->x*(b)->x + (a)->y*(b)->y)
 
 enum {
     PREVIEW_SIZE = 400,
@@ -59,13 +67,14 @@ enum {
     PAGE_NPAGES
 };
 
+/* The random grid uses the generators differently so there are aliases. */
 typedef enum {
     RNG_POINTS     = 0,
-    RNG_MISSING    = 1,
-    RNG_EXTRA      = 2,
-    RNG_VALUE      = 3,
-    RNG_DISPLAC_X  = 4,
-    RNG_DISPLAC_Y  = 5,
+    RNG_MISSING    = 0,
+    RNG_EXTRA      = 1,
+    RNG_VALUE      = 2,
+    RNG_DISPLAC_X  = 3,
+    RNG_DISPLAC_Y  = 4,
     RNG_NRNGS
 } LatSynthRng;
 
@@ -90,20 +99,33 @@ typedef enum {
 typedef struct _LatSynthArgs LatSynthArgs;
 typedef struct _LatSynthControls LatSynthControls;
 
-/* XXX: This is more complex.  We just create a lattice, the field is rendered
- * later. */
-typedef void (*MakeLatticeFunc)(const LatSynthArgs *args,
-                                const GwyDimensionArgs *dimsargs,
-                                GwyRandGenSet *rngset,
-                                GwyDataField *dfield);
-
-/* This scheme makes the object type list easily reordeable in the GUI without
- * changing the ids.  */
 typedef struct {
-    LatSynthType type;
-    const gchar *name;
-    MakeLatticeFunc create;
-} LatSynthLattice;
+    gdouble x, y;
+} VoronoiCoords;
+
+typedef struct {
+    VoronoiCoords v; /* line equation: v*r == d */
+    gdouble d;
+} VoronoiLine;
+
+typedef struct {
+    VoronoiCoords pos; /* coordinates */
+    VoronoiLine rel; /* precomputed coordinates relative to currently processed
+                        object and their norm */
+    gdouble angle; /* precomputed angle relative to currently processed object
+                      (similar as rel) */
+    gdouble random;  /* a random number in [0,1], generated to be always the
+                        same for the same grid size */
+    GSList *ne; /* neighbour list */
+} VoronoiObject;
+
+typedef struct {
+    GwyRandGenSet *rngset;
+    GSList **squares; /* (hsq+2*SQBORDER)*(wsq+2*SQBORDER) VoronoiObject list */
+    gint wsq;         /* width in squares (unextended) */
+    gint hsq;         /* height in squares (unextended) */
+    gdouble scale;    /* ratio of square side to the average cell size */
+} VoronoiState;
 
 struct _LatSynthArgs {
     gint active_page;
@@ -121,8 +143,6 @@ struct _LatSynthArgs {
 struct _LatSynthControls {
     LatSynthArgs *args;
     GwyDimensions *dims;
-    const LatSynthLattice *lattice;
-    GwyRandGenSet *rngset;
     GwyContainer *mydata;
     GwyDataField *surface;
     /* They have different types, known only to the lattice. */
@@ -135,6 +155,8 @@ struct _LatSynthControls {
     GtkTable *table;   /* Only used in synth.h attach functions. */
     GtkWidget *lattice_type;
     GtkObject *size;
+    GtkWidget *size_value;
+    GtkWidget *size_units;
     GtkObject *angle;
     GtkObject *sigma;
     GtkObject *tau;
@@ -146,60 +168,60 @@ struct _LatSynthControls {
     gulong sid;
 };
 
-static gboolean      module_register      (void);
-static void          lat_synth            (GwyContainer *data,
-                                           GwyRunType run);
-static void          run_noninteractive   (LatSynthArgs *args,
-                                           const GwyDimensionArgs *dimsargs,
-                                           GwyRandGenSet *rngset,
-                                           GwyContainer *data,
-                                           GwyDataField *dfield,
-                                           gint oldid,
-                                           GQuark quark);
-static gboolean      lat_synth_dialog     (LatSynthArgs *args,
-                                           GwyDimensionArgs *dimsargs,
-                                           GwyRandGenSet *rngset,
-                                           GwyContainer *data,
-                                           GwyDataField *dfield,
-                                           gint id);
-static GtkWidget*    lattice_selector_new (LatSynthControls *controls);
-static void          update_controls      (LatSynthControls *controls,
-                                           LatSynthArgs *args);
-static void          page_switched        (LatSynthControls *controls,
-                                           GtkNotebookPage *page,
-                                           gint pagenum);
-static void          update_values        (LatSynthControls *controls);
-static void          lattice_type_selected(GtkComboBox *combo,
-                                           LatSynthControls *controls);
-static void          lat_synth_invalidate (LatSynthControls *controls);
-static gboolean      preview_gsource      (gpointer user_data);
-static void          preview              (LatSynthControls *controls);
-static void          lat_synth_do         (const LatSynthArgs *args,
-                                           const GwyDimensionArgs *dimsargs,
-                                           GwyRandGenSet *rngset,
-                                           GwyDataField *dfield);
-static GwyDataField* make_displacement_map(guint xres,
-                                           guint yres,
-                                           gdouble sigma,
-                                           gdouble tau,
-                                           GRand *rng);
-static void          lat_synth_load_args  (GwyContainer *container,
-                                           LatSynthArgs *args,
-                                           GwyDimensionArgs *dimsargs);
-static void          lat_synth_save_args  (GwyContainer *container,
-                                           const LatSynthArgs *args,
-                                           const GwyDimensionArgs *dimsargs);
+static gboolean      module_register        (void);
+static void          lat_synth              (GwyContainer *data,
+                                             GwyRunType run);
+static void          run_noninteractive     (LatSynthArgs *args,
+                                             const GwyDimensionArgs *dimsargs,
+                                             GwyContainer *data,
+                                             GwyDataField *dfield,
+                                             gint oldid,
+                                             GQuark quark);
+static gboolean      lat_synth_dialog       (LatSynthArgs *args,
+                                             GwyDimensionArgs *dimsargs,
+                                             GwyContainer *data,
+                                             GwyDataField *dfield,
+                                             gint id);
+static void          update_controls        (LatSynthControls *controls,
+                                             LatSynthArgs *args);
+static void          page_switched          (LatSynthControls *controls,
+                                             GtkNotebookPage *page,
+                                             gint pagenum);
+static void          update_values          (LatSynthControls *controls);
+static void          lattice_type_selected  (GtkComboBox *combo,
+                                             LatSynthControls *controls);
+static void          lat_synth_invalidate   (LatSynthControls *controls);
+static gboolean      preview_gsource        (gpointer user_data);
+static void          preview                (LatSynthControls *controls);
+static void          lat_synth_do           (const LatSynthArgs *args,
+                                             const GwyDimensionArgs *dimsargs,
+                                             GwyDataField *dfield);
+VoronoiState*        make_randomized_grid   (const LatSynthArgs *args,
+                                             guint xres,
+                                             guint yres);
+static void          random_squarized_points(GSList **squares,
+                                             guint extwsq,
+                                             guint exthsq,
+                                             guint npts,
+                                             GRand *rng);
+static GwyDataField* make_displacement_map  (guint xres,
+                                             guint yres,
+                                             gdouble sigma,
+                                             gdouble tau,
+                                             GRand *rng);
+static void          voronoi_state_free     (VoronoiState *vstate);
+static void          lat_synth_load_args    (GwyContainer *container,
+                                             LatSynthArgs *args,
+                                             GwyDimensionArgs *dimsargs);
+static void          lat_synth_save_args    (GwyContainer *container,
+                                             const LatSynthArgs *args,
+                                             const GwyDimensionArgs *dimsargs);
 
 #define GWY_SYNTH_CONTROLS LatSynthControls
 #define GWY_SYNTH_INVALIDATE(controls) \
     lat_synth_invalidate(controls)
 
 #include "synth.h"
-
-DECLARE_LATTICE(random);
-DECLARE_LATTICE(square);
-DECLARE_LATTICE(hexagonal);
-DECLARE_LATTICE(triangular);
 
 static const LatSynthArgs lat_synth_defaults = {
     PAGE_DIMENSIONS,
@@ -212,13 +234,6 @@ static const LatSynthArgs lat_synth_defaults = {
 };
 
 static const GwyDimensionArgs dims_defaults = GWY_DIMENSION_ARGS_INIT;
-
-static const LatSynthLattice lattices[] = {
-    { LAT_SYNTH_RANDOM,     N_("lattice|Random"),     make_lattice_random,     },
-    { LAT_SYNTH_SQUARE,     N_("lattice|Square"),     make_lattice_square,     },
-    { LAT_SYNTH_HEXAGONAL,  N_("lattice|Hexagonal"),  make_lattice_hexagonal,  },
-    { LAT_SYNTH_TRIANGULAR, N_("lattice|Triangular"), make_lattice_triangular, },
-};
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -251,7 +266,6 @@ lat_synth(GwyContainer *data, GwyRunType run)
 {
     LatSynthArgs args;
     GwyDimensionArgs dimsargs;
-    GwyRandGenSet *rngset;
     GwyDataField *dfield;
     GQuark quark;
     gint id;
@@ -263,21 +277,18 @@ lat_synth(GwyContainer *data, GwyRunType run)
                                      GWY_APP_DATA_FIELD_KEY, &quark,
                                      0);
 
-    rngset = gwy_rand_gen_set_new(RNG_NRNGS);
     if (run == GWY_RUN_IMMEDIATE
-        || lat_synth_dialog(&args, &dimsargs, rngset, data, dfield, id)) {
+        || lat_synth_dialog(&args, &dimsargs, data, dfield, id)) {
         lat_synth_save_args(gwy_app_settings_get(), &args, &dimsargs);
-        run_noninteractive(&args, &dimsargs, rngset, data, dfield, id, quark);
+        run_noninteractive(&args, &dimsargs, data, dfield, id, quark);
     }
 
-    gwy_rand_gen_set_free(rngset);
     gwy_dimensions_free_args(&dimsargs);
 }
 
 static void
 run_noninteractive(LatSynthArgs *args,
                    const GwyDimensionArgs *dimsargs,
-                   GwyRandGenSet *rngset,
                    GwyContainer *data,
                    GwyDataField *dfield,
                    gint oldid,
@@ -318,7 +329,7 @@ run_noninteractive(LatSynthArgs *args,
         }
     }
 
-    lat_synth_do(args, dimsargs, rngset, dfield);
+    lat_synth_do(args, dimsargs, dfield);
 
     if (!replace) {
         if (data) {
@@ -349,11 +360,17 @@ run_noninteractive(LatSynthArgs *args,
 static gboolean
 lat_synth_dialog(LatSynthArgs *args,
                  GwyDimensionArgs *dimsargs,
-                 GwyRandGenSet *rngset,
                  GwyContainer *data,
                  GwyDataField *dfield_template,
                  gint id)
 {
+    static const GwyEnum lattice_types[] = {
+        { N_("lattice|Random"),     LAT_SYNTH_RANDOM,     },
+        { N_("lattice|Square"),     LAT_SYNTH_SQUARE,     },
+        { N_("lattice|Hexagonal"),  LAT_SYNTH_HEXAGONAL,  },
+        { N_("lattice|Triangular"), LAT_SYNTH_TRIANGULAR, },
+    };
+
     GtkWidget *dialog, *table, *vbox, *hbox, *notebook;
     LatSynthControls controls;
     GwyDataField *dfield;
@@ -365,7 +382,6 @@ lat_synth_dialog(LatSynthArgs *args,
     gwy_clear(&controls, 1);
     controls.in_init = TRUE;
     controls.args = args;
-    controls.rngset = rngset;
     controls.pxsize = 1.0;
     dialog = gtk_dialog_new_with_buttons(_("Lattice"),
                                          NULL, 0,
@@ -446,10 +462,20 @@ lat_synth_dialog(LatSynthArgs *args,
                              gtk_label_new(_("Lattice")));
     row = 0;
 
-    controls.lattice_type = lattice_selector_new(&controls);
+    controls.lattice_type
+        = gwy_enum_combo_box_new(lattice_types, G_N_ELEMENTS(lattice_types),
+                                 G_CALLBACK(lattice_type_selected), &controls,
+                                 args->lattice_type, TRUE);
     gwy_table_attach_hscale(table, row, _("_Lattice:"), NULL,
                             GTK_OBJECT(controls.lattice_type),
                             GWY_HSCALE_WIDGET);
+    row++;
+
+    controls.size = gtk_adjustment_new(args->size, 1.0, 1000.0, 0.1, 10.0, 0);
+    row = gwy_synth_attach_lateral(&controls, row, controls.size, &args->size,
+                                   _("_Size:"), GWY_HSCALE_LOG,
+                                   NULL,
+                                   &controls.size_value, &controls.size_units);
     row++;
 
     table = gtk_table_new(1, 4, FALSE);
@@ -508,28 +534,6 @@ lat_synth_dialog(LatSynthArgs *args,
     return response == GTK_RESPONSE_OK;
 }
 
-static GtkWidget*
-lattice_selector_new(LatSynthControls *controls)
-{
-    GtkWidget *combo;
-    GwyEnum *model;
-    guint n, i;
-
-    n = G_N_ELEMENTS(lattices);
-    model = g_new(GwyEnum, n);
-    for (i = 0; i < n; i++) {
-        model[i].value = lattices[i].type;
-        model[i].name = lattices[i].name;
-    }
-
-    combo = gwy_enum_combo_box_new(model, n,
-                                   G_CALLBACK(lattice_type_selected), controls,
-                                   controls->args->lattice_type, TRUE);
-    g_object_weak_ref(G_OBJECT(combo), (GWeakNotify)g_free, model);
-
-    return combo;
-}
-
 static void
 update_controls(LatSynthControls *controls,
                 LatSynthArgs *args)
@@ -563,6 +567,7 @@ update_values(LatSynthControls *controls)
     GwyDimensions *dims = controls->dims;
 
     controls->pxsize = dims->args->measure * pow10(dims->args->xypow10);
+    gtk_label_set_markup(GTK_LABEL(controls->size_units), dims->xyvf->units);
     /*
     gtk_label_set_markup(GTK_LABEL(controls->flat_units), dims->xyvf->units);
     gtk_label_set_markup(GTK_LABEL(controls->slope_units), dims->xyvf->units);
@@ -618,18 +623,181 @@ preview(LatSynthControls *controls)
     else
         gwy_data_field_clear(dfield);
 
-    lat_synth_do(args, controls->dims->args, controls->rngset, dfield);
+    lat_synth_do(args, controls->dims->args, dfield);
 }
 
 static void
 lat_synth_do(const LatSynthArgs *args,
              const GwyDimensionArgs *dimsargs,
-             GwyRandGenSet *rngset,
              GwyDataField *dfield)
 {
-    gwy_rand_gen_set_init(rngset, args->seed);
-    /* TODO */
+    VoronoiState *vstate;
+    guint xres = dfield->xres, yres = dfield->yres;
+
+    vstate = make_randomized_grid(args, xres, yres);
+    voronoi_state_free(vstate);
     gwy_data_field_data_changed(dfield);
+}
+
+VoronoiState*
+make_randomized_grid(const LatSynthArgs *args,
+                     guint xres, guint yres)
+{
+    VoronoiState *vstate;
+    gdouble scale, a;
+    guint wsq, hsq, extwsq, exthsq;
+    guint npts;
+
+    /* Compute square size trying to get density per square around 7. The
+     * shorter side of the field will be divided to squares exactly, the
+     * longer side may have more squares, i.e. slightly wider border around
+     * the field than SQBORDER. */
+    gwy_debug("Field: %ux%u, size %g", xres, yres, args->size);
+    if (xres < yres) {
+        wsq = (gint)ceil(xres/(sqrt(7.0)*args->size));
+        a = xres/(gdouble)wsq;
+        hsq = (gint)ceil((1.0 - EPS)*yres/a);
+    }
+    else {
+        hsq = (gint)ceil(yres/(sqrt(7.0)*args->size));
+        a = yres/(gdouble)hsq;
+        wsq = (gint)ceil((1.0 - EPS)*xres/a);
+    }
+    gwy_debug("Squares: %ux%u", wsq, hsq);
+    scale = a/args->size;
+    gwy_debug("Scale: %g, Density: %g", scale, scale*scale);
+    extwsq = wsq + 2*SQBORDER;
+    exthsq = hsq + 2*SQBORDER;
+    npts = ceil(exthsq*extwsq*scale*scale);
+    if (npts < exthsq*extwsq) {
+        /* XXX: This means we have only a handful of points in the image.
+         * The result does not worth much anyway then. */
+        npts = exthsq*extwsq;
+    }
+
+    vstate = g_new(VoronoiState, 1);
+    vstate->squares = g_new0(GSList*, extwsq*exthsq);
+    vstate->hsq = hsq;
+    vstate->wsq = wsq;
+    vstate->scale = scale;
+    vstate->rngset = gwy_rand_gen_set_new(RNG_NRNGS);
+    gwy_rand_gen_set_init(vstate->rngset, args->seed);
+
+    if (TRUE || args->lattice_type == LAT_SYNTH_RANDOM) {
+        GRand *rng = gwy_rand_gen_set_rng(vstate->rngset, RNG_POINTS);
+        random_squarized_points(vstate->squares, extwsq, exthsq, npts, rng);
+        return vstate;
+    }
+
+#if 0
+    /* compute cell sizes, must take tileability into account
+     * ncell is the number of *rectangular* cells */
+    ncell.x = width/side*sqrt(shape_area_factor[gridtype])
+        /rect_cell_to_axy_ratio[gridtype].x;
+    ncell.y = height/side*sqrt(shape_area_factor[gridtype])
+        /rect_cell_to_axy_ratio[gridtype].y;
+
+    a.x = width/ncell.x/rect_cell_to_axy_ratio[gridtype].x;
+    a.y = height/ncell.y/rect_cell_to_axy_ratio[gridtype].y;
+
+    /* compensate for square deformation */
+    a.x *= wsq/(gdouble)width;
+    a.y *= hsq/(gdouble)height;
+    radial_factor = 1.0/sqrt(a.x*a.y*grid_cell_center_distance[gridtype]);
+
+    /*fprintf(stderr, "lambda = %f\n", lambda);*/
+    wmap = MAX(1.2*rect_cell_to_axy_ratio[gridtype].x*ncell.x, 6);
+    hmap = MAX(1.2*rect_cell_to_axy_ratio[gridtype].y*ncell.y, 6);
+    defmapx = g_new(gdouble, wmap*hmap);
+    defmapy = g_new(gdouble, wmap*hmap);
+    slambda = lambda*sqrt(wmap*hmap/(gdouble)n);
+    /*
+       fprintf(stderr, "ncell = (%f, %f)\n", ncell.x, ncell.y);
+       fprintf(stderr, "a = (%f, %f)\n", a.x, a.y);
+       fprintf(stderr, "wmap = %d, hmap = %d, slambda = %f\n", wmap, hmap, slambda);
+       */
+
+    defsigma.x = a.x*sigma*grid_cell_center_distance[gridtype];
+    defsigma.y = a.y*sigma*grid_cell_center_distance[gridtype];
+    /*fprintf(stderr, "sigma = (%f, %f)\n", defsigma.x, defsigma.y);*/
+    n = (extwsq*exthsq)/(a.x*a.y*shape_area_factor[gridtype]);
+    iter = 0;
+    do {
+        grid = create_regular_grid(gridtype, &a, wsq, hsq);
+        compute_deformation_map(defmapx, wmap, hmap, slambda);
+        compute_deformation_map(defmapy, wmap, hmap, slambda);
+        apply_deformation_map(grid, wsq, hsq,
+                              defmapx, defmapy, defsigma, wmap, hmap);
+        squarize_grid(grid, squares, wsq, hsq);
+        add_dislocations(squares, wsq, hsq, n*interstit, n*vacancies);
+        make_grid_tilable(squares, wsq, hsq, htil, vtil);
+        if (iter++ == 20) {
+            g_error("Cannot create grid. If you can reproduce this, report bug "
+                    "to <yeti@physics.muni.cz>, please include grid generator "
+                    "settings.");
+        }
+    } while (empty_squares(squares, wsq, hsq));
+
+    g_free(defmapx);
+    g_free(defmapy);
+#endif
+
+    return vstate;
+}
+
+static void
+random_squarized_points(GSList **squares,
+                        guint extwsq, guint exthsq, guint npts,
+                        GRand *rng)
+{
+    VoronoiObject *obj;
+    guint i, j, k, nsq, nempty, nrem;
+
+    nsq = extwsq*exthsq;
+    g_assert(npts >= nsq);
+    nempty = nsq;
+    nrem = npts;
+
+    /* First place points randomly to the entire area.  For preiew, this part
+     * does not depend on the mean cell size which is good because the radnom
+     * lattice changes more or less smoothly with size then. */
+    while (nrem > nempty) {
+        obj = g_slice_new0(VoronoiObject);
+        obj->pos.x = g_rand_double(rng)*(extwsq - 2.0*EPS) + EPS;
+        obj->pos.y = g_rand_double(rng)*(exthsq - 2.0*EPS) + EPS;
+        obj->random = g_rand_double(rng);
+        j = (guint)floor(obj->pos.x);
+        i = (guint)floor(obj->pos.y);
+        k = extwsq*i + j;
+        if (!squares[k])
+            nempty--;
+
+        squares[k] = g_slist_prepend(squares[k], obj);
+        nrem--;
+    }
+
+    gwy_debug("Placed %u points into %u squares, %u empty squares left.",
+              npts, nsq, nrem);
+
+    if (!nrem)
+        return;
+
+    /* We still have some empty squares.  Must place a point to each.  This
+     * depends strongly on the mean cell size but influences only a tiny
+     * fraction (≈ 10⁻⁴) of points. */
+    for (i = 0; i < exthsq; i++) {
+        for (j = 0; j < extwsq; j++) {
+            k = extwsq*i + j;
+            if (squares[k])
+                continue;
+
+            obj = g_slice_new0(VoronoiObject);
+            obj->pos.x = (1.0 - 2.0*EPS)*g_rand_double(rng) + EPS + j;
+            obj->pos.y = (1.0 - 2.0*EPS)*g_rand_double(rng) + EPS + i;
+            obj->random = g_rand_double(rng);
+            squares[k] = g_slist_prepend(NULL, obj);
+        }
+    }
 }
 
 /* Iterating through rectangles in a growing fashion from the origin to
@@ -740,35 +908,33 @@ make_displacement_map(guint xres, guint yres,
 }
 
 static void
-make_lattice_random(const LatSynthArgs *args,
-                    const GwyDimensionArgs *dimsargs,
-                    GwyRandGenSet *rngset,
-                    GwyDataField *dfield)
+voronoi_state_free(VoronoiState *vstate)
 {
-}
+    GSList *l;
+    guint extwsq, exthsq, i;
 
-static void
-make_lattice_square(const LatSynthArgs *args,
-                    const GwyDimensionArgs *dimsargs,
-                    GwyRandGenSet *rngset,
-                    GwyDataField *dfield)
-{
-}
+    gwy_rand_gen_set_free(vstate->rngset);
 
-static void
-make_lattice_hexagonal(const LatSynthArgs *args,
-                       const GwyDimensionArgs *dimsargs,
-                       GwyRandGenSet *rngset,
-                       GwyDataField *dfield)
-{
-}
+    extwsq = vstate->wsq + 2*SQBORDER;
+    exthsq = vstate->hsq + 2*SQBORDER;
 
-static void
-make_lattice_triangular(const LatSynthArgs *args,
-                        const GwyDimensionArgs *dimsargs,
-                        GwyRandGenSet *rngset,
-                        GwyDataField *dfield)
-{
+    /* Neighbourhoods. */
+    for (i = 0; i < extwsq*exthsq; i++) {
+        for (l = vstate->squares[i]; l; l = g_slist_next(l)) {
+            if (l && l->data && VOBJ(l)->ne) {
+                GSList *ne = VOBJ(l)->ne->next;
+                VOBJ(l)->ne->next = NULL; /* break cycles */
+                g_slist_free(ne);
+            }
+        }
+    }
+
+    /* Grid contents. */
+    for (i = 0; i < extwsq*exthsq; i++) {
+        for (l = vstate->squares[i]; l; l = g_slist_next(l))
+            g_slice_free(VoronoiObject, l->data);
+        g_slist_free(vstate->squares[i]);
+    }
 }
 
 static const gchar prefix[]           = "/module/lat_synth";
