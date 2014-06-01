@@ -149,6 +149,7 @@ struct _LatSynthControls {
     GwyDimensions *dims;
     GwyContainer *mydata;
     GwyDataField *surface;
+    VoronoiState *vstate;
     /* They have different types, known only to the lattice. */
     GtkWidget *dialog;
     GtkWidget *view;
@@ -164,7 +165,7 @@ struct _LatSynthControls {
     GtkObject *angle;
     GtkObject *sigma;
     GtkObject *tau;
-    GtkObject *surface_type_weight[LAT_SURFACE_NTYPES];
+    GtkObject *weight[LAT_SURFACE_NTYPES];
     GtkObject *height;
     gdouble pxsize;
     gdouble zscale;
@@ -194,11 +195,17 @@ static void           page_switched               (LatSynthControls *controls,
 static void           update_values               (LatSynthControls *controls);
 static void           lattice_type_selected       (GtkComboBox *combo,
                                                    LatSynthControls *controls);
+static void           invalidate_lattice          (LatSynthControls *controls);
 static void           lat_synth_invalidate        (LatSynthControls *controls);
 static gboolean       preview_gsource             (gpointer user_data);
 static void           preview                     (LatSynthControls *controls);
-static void           lat_synth_do                (const LatSynthArgs *args,
+static VoronoiState*  lat_synth_do                (const LatSynthArgs *args,
                                                    const GwyDimensionArgs *dimsargs,
+                                                   VoronoiState *vstate,
+                                                   GwyDataField *dfield);
+static void           render_lattice              (const LatSynthArgs *args,
+                                                   const GwyDimensionArgs *dimsargs,
+                                                   VoronoiState *vstate,
                                                    GwyDataField *dfield);
 static VoronoiState*  make_randomized_grid        (const LatSynthArgs *args,
                                                    guint xres,
@@ -338,6 +345,7 @@ run_noninteractive(LatSynthArgs *args,
                    GQuark quark)
 {
     GwySIUnit *siunit;
+    VoronoiState *vstate;
     gboolean replace = dimsargs->replace && dfield;
     gboolean add = dimsargs->add && dfield;
     gint newid;
@@ -372,7 +380,8 @@ run_noninteractive(LatSynthArgs *args,
         }
     }
 
-    lat_synth_do(args, dimsargs, dfield);
+    vstate = lat_synth_do(args, dimsargs, NULL, dfield);
+    voronoi_state_free(vstate);
 
     if (!replace) {
         if (data) {
@@ -397,6 +406,7 @@ run_noninteractive(LatSynthArgs *args,
         gwy_app_channel_log_add(data, add ? oldid : -1, newid,
                                 "proc::lat_synth", NULL);
     }
+
     g_object_unref(dfield);
 }
 
@@ -407,11 +417,20 @@ lat_synth_dialog(LatSynthArgs *args,
                  GwyDataField *dfield_template,
                  gint id)
 {
-    static const GwyEnum lattice_types[] = {
+    static const GwyEnum lattice_types[LAT_SYNTH_NTYPES] = {
         { N_("lattice|Random"),     LAT_SYNTH_RANDOM,     },
         { N_("lattice|Square"),     LAT_SYNTH_SQUARE,     },
         { N_("lattice|Hexagonal"),  LAT_SYNTH_HEXAGONAL,  },
         { N_("lattice|Triangular"), LAT_SYNTH_TRIANGULAR, },
+    };
+
+    static const GwyEnum surface_types[LAT_SURFACE_NTYPES] = {
+        { N_("Random flats"),            LAT_SURFACE_FLAT,      },
+        { N_("Radial distance"),         LAT_SURFACE_RADIAL,    },
+        { N_("Segmented distance"),      LAT_SURFACE_SEGMENTED, },
+        { N_("Border distance"),         LAT_SURFACE_BORDER,    },
+        { N_("Second nearest distance"), LAT_SURFACE_SECOND,    },
+        { N_("Scalar product"),          LAT_SURFACE_DOTPROD,   },
     };
 
     GtkWidget *dialog, *table, *vbox, *hbox, *notebook;
@@ -419,8 +438,8 @@ lat_synth_dialog(LatSynthArgs *args,
     GwyDataField *dfield;
     GwyPixmapLayer *layer;
     gboolean finished;
-    gint response;
-    gint row;
+    gint response, row;
+    guint i;
 
     gwy_clear(&controls, 1);
     controls.in_init = TRUE;
@@ -514,11 +533,13 @@ lat_synth_dialog(LatSynthArgs *args,
                             GWY_HSCALE_WIDGET);
     row++;
 
-    controls.size = gtk_adjustment_new(args->size, 1.0, 1000.0, 0.1, 10.0, 0);
+    controls.size = gtk_adjustment_new(args->size, 4.0, 1000.0, 0.1, 10.0, 0);
     row = gwy_synth_attach_lateral(&controls, row, controls.size, &args->size,
                                    _("_Size:"), GWY_HSCALE_LOG,
                                    NULL,
                                    &controls.size_value, &controls.size_units);
+    g_signal_connect_swapped(controls.size, "value-changed",
+                             G_CALLBACK(invalidate_lattice), &controls);
     row++;
 
     table = gtk_table_new(1, 4, FALSE);
@@ -528,6 +549,26 @@ lat_synth_dialog(LatSynthArgs *args,
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), table,
                              gtk_label_new(_("Surface")));
+    row = 0;
+
+    gtk_table_attach(controls.table,
+                     gwy_label_new_header(_("Quantity Weights")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    for (i = 0; i < LAT_SURFACE_NTYPES; i++) {
+        g_assert(surface_types[i].value == i);
+        controls.weight[i] = gtk_adjustment_new(args->weight[i], 0.0, 1.0,
+                                                0.001, 0.1, 0);
+        g_object_set_data(G_OBJECT(controls.weight[i]),
+                          "target", args->weight + i);
+        gwy_table_attach_hscale(table, row, _(surface_types[i].name), NULL,
+                                controls.weight[i], GWY_HSCALE_DEFAULT);
+        g_signal_connect_swapped(controls.weight[i], "value-changed",
+                                 G_CALLBACK(gwy_synth_double_changed),
+                                 &controls);
+        row++;
+    }
 
     gtk_widget_show_all(dialog);
     controls.table = NULL;
@@ -613,16 +654,7 @@ update_values(LatSynthControls *controls)
 
     controls->pxsize = dims->args->measure * pow10(dims->args->xypow10);
     gtk_label_set_markup(GTK_LABEL(controls->size_units), dims->xyvf->units);
-    /*
-    gtk_label_set_markup(GTK_LABEL(controls->flat_units), dims->xyvf->units);
-    gtk_label_set_markup(GTK_LABEL(controls->slope_units), dims->xyvf->units);
-    gtk_label_set_markup(GTK_LABEL(controls->height_units), dims->zvf->units);
-    gtk_label_set_markup(GTK_LABEL(controls->tau_units), dims->xyvf->units);
-
-    gwy_synth_update_lateral(controls, GTK_ADJUSTMENT(controls->flat));
-    gwy_synth_update_lateral(controls, GTK_ADJUSTMENT(controls->slope));
-    gwy_synth_update_lateral(controls, GTK_ADJUSTMENT(controls->tau));
-    */
+    gwy_synth_update_lateral(controls, GTK_ADJUSTMENT(controls->size));
 }
 
 static void
@@ -631,7 +663,19 @@ lattice_type_selected(GtkComboBox *combo,
 {
     LatSynthArgs *args = controls->args;
     args->lattice_type = gwy_enum_combo_box_get_active(combo);
+    invalidate_lattice(controls);
     lat_synth_invalidate(controls);
+}
+
+/* This extra callback is only invoked on changed that influence the lattice.
+ * Visualisation style changes do not need to costly recompute it. */
+static void
+invalidate_lattice(LatSynthControls *controls)
+{
+    if (controls->vstate) {
+        voronoi_state_free(controls->vstate);
+        controls->vstate = NULL;
+    }
 }
 
 static void
@@ -668,33 +712,59 @@ preview(LatSynthControls *controls)
     else
         gwy_data_field_clear(dfield);
 
-    lat_synth_do(args, controls->dims->args, dfield);
+    controls->vstate = lat_synth_do(args, controls->dims->args,
+                                    controls->vstate, dfield);
+}
+
+static VoronoiState*
+lat_synth_do(const LatSynthArgs *args,
+             const GwyDimensionArgs *dimsargs,
+             VoronoiState *vstate,
+             GwyDataField *dfield)
+{
+    guint xres = dfield->xres, yres = dfield->yres;
+    guint iter, niter;
+    GTimer *timer = g_timer_new();
+
+    if (!vstate) {
+        vstate = make_randomized_grid(args, xres, yres);
+
+        gwy_debug("Lattice creation: %g ms",
+                  1000.0*g_timer_elapsed(timer, NULL));
+        g_timer_start(timer);
+
+        niter = (vstate->wsq + 2*SQBORDER)*(vstate->hsq + 2*SQBORDER);
+        for (iter = 0; iter < niter; iter++) {
+            find_voronoi_neighbours_iter(vstate, iter);
+            /* TODO: Update progress bar, if necessary. */
+        }
+        gwy_debug("Triangulation: %g ms", 1000.0*g_timer_elapsed(timer, NULL));
+        g_timer_start(timer);
+    }
+
+    render_lattice(args, dimsargs, vstate, dfield);
+    gwy_debug("Rendering: %g ms", 1000.0*g_timer_elapsed(timer, NULL));
+    g_timer_destroy(timer);
+
+    gwy_data_field_data_changed(dfield);
+
+    return vstate;
 }
 
 static void
-lat_synth_do(const LatSynthArgs *args,
-             const GwyDimensionArgs *dimsargs,
-             GwyDataField *dfield)
+render_lattice(const LatSynthArgs *args,
+               const GwyDimensionArgs *dimsargs,
+               VoronoiState *vstate,
+               GwyDataField *dfield)
 {
-    VoronoiState *vstate;
     VoronoiObject *owner, *line_start;
     VoronoiCoords z, zline, tmp;
+    guint xres = dfield->xres, yres = dfield->yres;
     gint hsafe, vsafe;
     guint x, y, i;
-    guint xres = dfield->xres, yres = dfield->yres;
-    guint extwsq, exthsq, iter;
     gdouble wsum = EPS;
     gdouble scale, q, xoff, yoff;
     gdouble *data;
-
-    vstate = make_randomized_grid(args, xres, yres);
-    extwsq = vstate->wsq + 2*SQBORDER;
-    exthsq = vstate->hsq + 2*SQBORDER;
-
-    for (iter = 0; iter < extwsq*exthsq; iter++) {
-        find_voronoi_neighbours_iter(vstate, iter);
-        /* TODO: Update progress bar, if necessary. */
-    }
 
     for (i = 0; i < LAT_SURFACE_NTYPES; i++)
         wsum += args->weight[i];
@@ -720,19 +790,15 @@ lat_synth_do(const LatSynthArgs *args,
     for (y = 0; y < yres; ) {
         hsafe = 0;
         z = zline;
-        //owner = line_start;
+        owner = line_start;
 
-        //neighbourize(owner->ne, &owner->pos);
-        //compute_segment_angles(owner->ne);
+        neighbourize(owner->ne, &owner->pos);
+        compute_segment_angles(owner->ne);
 
-        //tmp.y = zline.y;
+        tmp.y = zline.y;
 
         for (x = 0; x < xres; ) {
             gdouble r = 0.0;
-
-            owner = find_owner(vstate, &z);
-            neighbourize(owner->ne, &owner->pos);
-            compute_segment_angles(owner->ne);
 
             for (i = 0; i < LAT_SURFACE_NTYPES; i++) {
                 if (args->weight[i])
@@ -744,7 +810,6 @@ lat_synth_do(const LatSynthArgs *args,
 
             /* Move right. */
             x++;
-#if 0
             if (hsafe-- == 0) {
                 tmp.x = q*x + xoff;
                 owner = move_along_line(owner, &z, &tmp, &hsafe);
@@ -753,14 +818,12 @@ lat_synth_do(const LatSynthArgs *args,
                 z.x = tmp.x;
             }
             else
-#endif
                 z.x = q*x + xoff;
 
         }
 
         /* Move down. */
         y++;
-#if 0
         if (vsafe-- == 0) {
             tmp.x = xoff;
             tmp.y = q*y + yoff;
@@ -768,12 +831,8 @@ lat_synth_do(const LatSynthArgs *args,
             zline.y = tmp.y;
         }
         else
-#endif
             zline.y = q*y + yoff;
     }
-
-    voronoi_state_free(vstate);
-    gwy_data_field_data_changed(dfield);
 }
 
 static VoronoiState*
@@ -1333,10 +1392,16 @@ find_owner(VoronoiState *vstate, const VoronoiCoords *point)
     jx = floor(point->x);
     jy = floor(point->y);
 
+    /* These might be slightly non-true due to rounding errors.  Use clamps
+     * in production code. */
+#ifdef DEBUG
     g_return_val_if_fail(jx >= SQBORDER, NULL);
     g_return_val_if_fail(jy >= SQBORDER, NULL);
     g_return_val_if_fail(jx < wsq + SQBORDER, NULL);
     g_return_val_if_fail(jy < hsq + SQBORDER, NULL);
+#endif
+    jx = CLAMP(jx, SQBORDER, wsq + SQBORDER-1);
+    jy = CLAMP(jy, SQBORDER, hsq + SQBORDER-1);
 
     /* scan the 25-neighbourhood */
     norm_min = HUGE_VAL;
@@ -1567,20 +1632,29 @@ static const gchar angle_key[]        = "/module/lat_synth/angle";
 static const gchar sigma_key[]        = "/module/lat_synth/sigma";
 static const gchar tau_key[]          = "/module/lat_synth/tau";
 static const gchar height_key[]       = "/module/lat_synth/height";
+static const gchar weight_key[]       = "/module/lat_synth/weight";
+
+static const gchar *weight_keys[] = {
+    "flat", "radial", "segmented", "border", "second", "dotprod",
+};
 
 static void
 lat_synth_sanitize_args(LatSynthArgs *args)
 {
+    guint i;
+
     args->active_page = CLAMP(args->active_page,
                               PAGE_DIMENSIONS, PAGE_NPAGES-1);
     args->update = !!args->update;
     args->seed = MAX(0, args->seed);
     args->randomize = !!args->randomize;
     args->lattice_type = MIN(args->lattice_type, LAT_SYNTH_NTYPES-1);
-    args->size = CLAMP(args->size, 1.0, 1000.0);
+    args->size = CLAMP(args->size, 4.0, 1000.0);
     args->angle = CLAMP(args->angle, -G_PI, G_PI);
     args->sigma = CLAMP(args->sigma, 0.0, 100.0);
     args->tau = CLAMP(args->sigma, 0.1, 1000.0);
+    for (i = 0; i < G_N_ELEMENTS(args->weight); i++)
+        args->weight[i]= CLAMP(args->weight[i], 0.0, 1.0);
 }
 
 static void
@@ -1588,6 +1662,9 @@ lat_synth_load_args(GwyContainer *container,
                     LatSynthArgs *args,
                     GwyDimensionArgs *dimsargs)
 {
+    GString *str;
+    guint i;
+
     *args = lat_synth_defaults;
 
     gwy_container_gis_int32_by_name(container, active_page_key,
@@ -1602,6 +1679,14 @@ lat_synth_load_args(GwyContainer *container,
     gwy_container_gis_double_by_name(container, angle_key, &args->angle);
     gwy_container_gis_double_by_name(container, sigma_key, &args->sigma);
     gwy_container_gis_double_by_name(container, tau_key, &args->tau);
+    str = g_string_new(NULL);
+    for (i = 0; i < G_N_ELEMENTS(args->weight); i++) {
+        g_string_assign(str, weight_key);
+        g_string_append_c(str, '/');
+        g_string_append(str, weight_keys[i]);
+        gwy_container_gis_double_by_name(container, str->str, args->weight + i);
+    }
+    g_string_free(str, TRUE);
     lat_synth_sanitize_args(args);
 
     gwy_clear(dimsargs, 1);
@@ -1614,6 +1699,9 @@ lat_synth_save_args(GwyContainer *container,
                     const LatSynthArgs *args,
                     const GwyDimensionArgs *dimsargs)
 {
+    GString *str;
+    guint i;
+
     gwy_container_set_int32_by_name(container, active_page_key,
                                     args->active_page);
     gwy_container_set_boolean_by_name(container, update_key, args->update);
@@ -1626,6 +1714,14 @@ lat_synth_save_args(GwyContainer *container,
     gwy_container_set_double_by_name(container, angle_key, args->angle);
     gwy_container_set_double_by_name(container, sigma_key, args->sigma);
     gwy_container_set_double_by_name(container, tau_key, args->tau);
+    str = g_string_new(NULL);
+    for (i = 0; i < G_N_ELEMENTS(args->weight); i++) {
+        g_string_assign(str, weight_key);
+        g_string_append_c(str, '/');
+        g_string_append(str, weight_keys[i]);
+        gwy_container_set_double_by_name(container, str->str, args->weight[i]);
+    }
+    g_string_free(str, TRUE);
 
     gwy_dimensions_save_args(dimsargs, container, prefix);
 }
