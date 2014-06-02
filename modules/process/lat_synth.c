@@ -86,13 +86,15 @@ typedef enum {
 } LatSynthType;
 
 typedef enum {
-    LAT_SURFACE_FLAT      = 0,
-    LAT_SURFACE_LINEAR    = 1,
-    LAT_SURFACE_RADIAL    = 2,
-    LAT_SURFACE_SEGMENTED = 3,
-    LAT_SURFACE_BORDER    = 4,
-    LAT_SURFACE_SECOND    = 5,
-    LAT_SURFACE_DOTPROD   = 6,
+    LAT_SURFACE_FLAT       = 0,
+    LAT_SURFACE_LINEAR     = 1,
+    LAT_SURFACE_RADIAL     = 2,
+    LAT_SURFACE_SEGMENTED  = 3,
+    LAT_SURFACE_ZSEGMENTED = 4,
+    LAT_SURFACE_BORDER     = 5,
+    LAT_SURFACE_ZBORDER    = 6,
+    LAT_SURFACE_SECOND     = 7,
+    LAT_SURFACE_DOTPROD    = 8,
     LAT_SURFACE_NTYPES
 } LatSynthSurface;
 
@@ -244,7 +246,13 @@ static gdouble        render_radial               (const VoronoiCoords *point,
 static gdouble        render_segmented            (const VoronoiCoords *point,
                                                    const VoronoiObject *owner,
                                                    gdouble scale);
+static gdouble        render_zsegmented           (const VoronoiCoords *point,
+                                                   const VoronoiObject *owner,
+                                                   gdouble scale);
 static gdouble        render_border               (const VoronoiCoords *point,
+                                                   const VoronoiObject *owner,
+                                                   gdouble scale);
+static gdouble        render_zborder              (const VoronoiCoords *point,
                                                    const VoronoiObject *owner,
                                                    gdouble scale);
 static gdouble        render_second               (const VoronoiCoords *point,
@@ -272,7 +280,9 @@ static const RenderFunc render_functions[LAT_SURFACE_NTYPES] = {
     render_linear,
     render_radial,
     render_segmented,
+    render_zsegmented,
     render_border,
+    render_zborder,
     render_second,
     render_dotprod,
 };
@@ -430,13 +440,15 @@ lat_synth_dialog(LatSynthArgs *args,
     };
 
     static const GwyEnum surface_types[LAT_SURFACE_NTYPES] = {
-        { N_("Random constant"),         LAT_SURFACE_FLAT,      },
-        { N_("Random linear"),           LAT_SURFACE_LINEAR,    },
-        { N_("Radial distance"),         LAT_SURFACE_RADIAL,    },
-        { N_("Segmented distance"),      LAT_SURFACE_SEGMENTED, },
-        { N_("Border distance"),         LAT_SURFACE_BORDER,    },
-        { N_("Second nearest distance"), LAT_SURFACE_SECOND,    },
-        { N_("Scalar product"),          LAT_SURFACE_DOTPROD,   },
+        { N_("Random constant"),         LAT_SURFACE_FLAT,       },
+        { N_("Random linear"),           LAT_SURFACE_LINEAR,     },
+        { N_("Radial distance"),         LAT_SURFACE_RADIAL,     },
+        { N_("Segmented distance"),      LAT_SURFACE_SEGMENTED,  },
+        { N_("Segmented random"),        LAT_SURFACE_ZSEGMENTED, },
+        { N_("Border distance"),         LAT_SURFACE_BORDER,     },
+        { N_("Border random"),           LAT_SURFACE_ZBORDER,    },
+        { N_("Second nearest distance"), LAT_SURFACE_SECOND,     },
+        { N_("Scalar product"),          LAT_SURFACE_DOTPROD,    },
     };
 
     GtkWidget *dialog, *table, *vbox, *hbox, *notebook;
@@ -1167,49 +1179,24 @@ render_flat(G_GNUC_UNUSED const VoronoiCoords *point,
     return r;
 }
 
-static gdouble
-render_linear_slow_path(const VoronoiCoords *point,
-                        const VoronoiObject *neigh1,
-                        const VoronoiObject *neigh2)
-{
-    gdouble r, D, Dx, Dy, z0, za, zb;
-    VoronoiCoords dist, va, vb;
-    GSList *ne = neigh2->ne;
-
-    while ((const VoronoiObject*)VOBJ(ne) != neigh1)
-        ne = ne->next;
-    ne = ne->next;
-
-    /* TODO: We still may not be inside the correct triangle.  In this case
-     * case we have to follow the really slow path and get there... */
-    dist = coords_minus(point, &neigh2->pos);
-    va = coords_minus(&neigh1->pos, &neigh2->pos);
-    vb = coords_minus(&VOBJ(ne)->pos, &neigh2->pos);
-
-    D = va.x*vb.y - va.y*vb.x;
-    z0 = neigh2->random;
-    za = neigh1->random - z0;
-    zb = VOBJ(ne)->random - z0;
-    Dx = za*vb.y - zb*va.y;
-    Dy = va.x*zb - vb.x*za;
-
-    r = (Dx*dist.x + Dy*dist.y)/D + z0;
-
-    return r;
-}
-
-/* owner->ne requirements: cyclic, neighbourized, segment angles */
-static gdouble
-render_linear(const VoronoiCoords *point, const VoronoiObject *owner,
-              G_GNUC_UNUSED gdouble scale)
+/* Returns TRUE if owner does not change and we can assume everything is
+ * neighbourised.  FALSE is returned if we moved to another cell. */
+static gint
+find_delaunay_triangle(const VoronoiCoords *point,
+                       const VoronoiObject **owner,
+                       const VoronoiObject **neigh1,
+                       const VoronoiObject **neigh2)
 {
     VoronoiCoords dist;
-    const VoronoiCoords *v1, *v2;
-    gdouble r, D, Dx, Dy, z0, z1, z2, cp1, cp2;
-    GSList *ne1, *ne2;
+    const VoronoiCoords *v1, *v2, *v;
+    const VoronoiObject *pivot;
+    GSList *ne1, *ne2, *ne;
+    gdouble cp1, cp2;
+    guint iter = 0;
 
-    dist = coords_minus(point, &owner->pos);
-    ne1 = owner->ne;
+    /* Find the two neighbours that bracket the direction to the point. */
+    dist = coords_minus(point, &((*owner)->pos));
+    ne1 = (*owner)->ne;
     ne2 = ne1->next;
     while (TRUE) {
         v1 = &VOBJ(ne1)->rel.v;
@@ -1221,19 +1208,107 @@ render_linear(const VoronoiCoords *point, const VoronoiObject *owner,
         ne2 = ne2->next;
     }
 
-    /* We may or may not be inside the right Delaunay triangle now.  If we are
-     * not we should be able to get there pretty fast from here (starting by
-     * going to the other common neighbour of ne1 and ne2 and possibly moving
-     * further.  But we will move outside the neighbourised cell! */
-    if (v1->x*v2->y - v1->y*v2->x - cp1 - cp2 < 0.0)
-        return render_linear_slow_path(point, VOBJ(ne1), VOBJ(ne2));
+    if (v1->x*v2->y - v1->y*v2->x - cp1 - cp2 >= 0.0) {
+        /* OK, we are inside the right Delaunay triangle. */
+        *neigh1 = VOBJ(ne1);
+        *neigh2 = VOBJ(ne2);
+        return TRUE;
+    }
 
-    D = v1->x*v2->y - v1->y*v2->x;
-    z0 = owner->random;
-    z1 = VOBJ(ne1)->random - z0;
-    z2 = VOBJ(ne2)->random - z0;
-    Dx = z1*v2->y - z2*v1->y;
-    Dy = v1->x*z2 - v2->x*z1;
+    /* We are not.  The somewhat slower path is to check the opposite cell that
+     * also has ne1 and ne2 neighbours. */
+    while (TRUE) {
+        VoronoiCoords tdist;
+        gdouble a1, a2, a12;
+
+        /* Find ne1 and the third point (ne) in the neighbour list of ne2. */
+        pivot = VOBJ(ne2);
+        for (ne = pivot->ne;
+             (const VoronoiObject*)VOBJ(ne) != VOBJ(ne1);
+             ne = ne->next)
+            ;
+        ne1 = ne;
+        ne2 = ne->next;
+
+        v = &pivot->pos;
+        v1 = &VOBJ(ne1)->pos;
+        v2 = &VOBJ(ne2)->pos;
+
+        dist = coords_minus(point, v);
+        tdist = coords_minus(v1, v);
+        a1 = tdist.x*dist.y - tdist.y*dist.x;
+
+        dist = coords_minus(point, v1);
+        tdist = coords_minus(v2, v1);
+        a12 = tdist.x*dist.y - tdist.y*dist.x;
+
+        dist = coords_minus(point, v2);
+        tdist = coords_minus(v, v2);
+        a2 = tdist.x*dist.y - tdist.y*dist.x;
+
+        if (a1 >= 0.0 && a2 >= 0.0 && a12 >= 0.0)
+            break;
+
+        iter++;
+
+        /* XXX: Just fail for now.  Must move to the triangle we are most
+         * likely to succeed. */
+        *owner = pivot;   /* Does not mean anything, just the third vertex. */
+        *neigh1 = VOBJ(ne1);
+        *neigh2 = VOBJ(ne2);
+        return 2;
+    }
+
+    *owner = pivot;   /* Does not mean anything, just the third vertex. */
+    *neigh1 = VOBJ(ne1);
+    *neigh2 = VOBJ(ne2);
+
+    return FALSE;
+}
+
+/* owner->ne requirements: cyclic, neighbourized, segment angles */
+static gdouble
+render_linear(const VoronoiCoords *point, const VoronoiObject *owner,
+              G_GNUC_UNUSED gdouble scale)
+{
+    const VoronoiObject *neigh1, *neigh2;
+    VoronoiCoords dist;
+    gdouble r, D, Dx, Dy, z0;
+    gint g;
+
+    if ((g = find_delaunay_triangle(point, &owner, &neigh1, &neigh2)) == TRUE) {
+        const VoronoiCoords *v1 = &neigh1->rel.v;
+        const VoronoiCoords *v2 = &neigh2->rel.v;
+        gdouble z1, z2;
+
+        dist = coords_minus(point, &owner->pos);
+        D = v1->x*v2->y - v1->y*v2->x;
+        z0 = owner->random;
+        z1 = neigh1->random - z0;
+        z2 = neigh2->random - z0;
+        Dx = z1*v2->y - z2*v1->y;
+        Dy = v1->x*z2 - v2->x*z1;
+    }
+    else {
+        VoronoiCoords va, vb;
+        gdouble za, zb;
+
+        dist = coords_minus(point, &neigh2->pos);
+        va = coords_minus(&neigh1->pos, &neigh2->pos);
+        vb = coords_minus(&owner->pos, &neigh2->pos);
+
+        D = va.x*vb.y - va.y*vb.x;
+        z0 = neigh2->random;
+        za = neigh1->random - z0;
+        zb = owner->random - z0;
+        Dx = za*vb.y - zb*va.y;
+        Dy = va.x*zb - vb.x*za;
+
+        if (g == 2) {
+            Dx = Dy = 0.0;
+            z0 = 10.0;
+        }
+    }
 
     r = (Dx*dist.x + Dy*dist.y)/D + z0;
 
@@ -1277,6 +1352,29 @@ render_segmented(const VoronoiCoords *point, const VoronoiObject *owner,
     return r;
 }
 
+/* owner->ne requirements: cyclic, neighbourized, segment angles */
+static gdouble
+render_zsegmented(const VoronoiCoords *point, const VoronoiObject *owner,
+                  G_GNUC_UNUSED gdouble scale)
+{
+    VoronoiCoords dist;
+    gdouble r, phi;
+    GSList *ne;
+
+    ne = owner->ne;
+    dist = coords_minus(point, &owner->pos);
+    phi = angle(&dist);
+
+    while ((phi >= VOBJ(ne)->angle)
+           + (phi < VOBJ(ne->next)->angle)
+           + (VOBJ(ne)->angle > VOBJ(ne->next)->angle) < 2)
+        ne = ne->next;
+
+    r = owner->random*(2*DOTPROD_SS(dist, VOBJ(ne)->rel.v)/VOBJ(ne)->rel.d - 1);
+
+    return r;
+}
+
 /* owner->ne requirements: neighbourized */
 static gdouble
 render_border(const VoronoiCoords *point, const VoronoiObject *owner,
@@ -1299,6 +1397,32 @@ render_border(const VoronoiCoords *point, const VoronoiObject *owner,
     }
 
     r = 1 - 2*r_min*scale;
+
+    return r;
+}
+
+/* owner->ne requirements: neighbourized */
+static gdouble
+render_zborder(const VoronoiCoords *point, const VoronoiObject *owner,
+               gdouble scale)
+{
+    VoronoiCoords dist;
+    gdouble r, r_min;
+    GSList *ne;
+
+    dist = coords_minus(point, &owner->pos);
+    r_min = HUGE_VAL;
+
+    for (ne = owner->ne; ; ne = ne->next) {
+        r = fabs(VOBJ(ne)->rel.d/2 - DOTPROD_SS(dist, VOBJ(ne)->rel.v))
+            /sqrt(VOBJ(ne)->rel.d);
+        if (r < r_min)
+            r_min = r;
+        if (ne->next == owner->ne)
+            break;
+    }
+
+    r = 1 - 2*r_min*scale*owner->random;
 
     return r;
 }
@@ -1717,7 +1841,9 @@ static const gchar height_key[]       = "/module/lat_synth/height";
 static const gchar weight_key[]       = "/module/lat_synth/weight";
 
 static const gchar *weight_keys[] = {
-    "flat", "linear", "radial", "segmented", "border", "second", "dotprod",
+    "flat", "linear", "radial",
+    "segmented", "zsegmented", "border", "zborder",
+    "second", "dotprod",
 };
 
 static void
