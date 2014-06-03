@@ -1,6 +1,6 @@
 2.37 (0000-00-00)
 Application:
-- Translations updated: French, Russian.
+- Translations updated: French, Italian, Russian.
 
 Libraries:
 - libgwyprocess: A function for filling grain voids was added.
@@ -23,6 +23,8 @@ Modules:
   expressions.
 - Slope statistics (new): Statistics were split off Slope distributions, the
   GUI and functionality is the same as before.
+- Lattice synthesis (new): Construction of surfaces based on Voronoi
+  tesselation of randomized lattices.
 - Mask editor tool: Fill voids handles correctly different connectivity of
   grain exterior, noticeable for grains separated only by thin lines.  It is
   also possible to fill only simple-connected grains.
