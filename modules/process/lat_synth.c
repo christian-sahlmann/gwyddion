@@ -30,6 +30,7 @@
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwynullstore.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
@@ -148,6 +149,7 @@ struct _LatSynthArgs {
     gdouble sigma;
     gdouble tau;
     gdouble height;
+    gboolean enabled[LAT_SURFACE_NTYPES];
     gdouble weight[LAT_SURFACE_NTYPES];
     /* Cache vstate.scale here */
     gdouble scale;
@@ -174,8 +176,11 @@ struct _LatSynthControls {
     GtkObject *angle;
     GtkObject *sigma;
     GtkObject *tau;
-    GtkObject *weight[LAT_SURFACE_NTYPES];
+    GtkWidget *surfaces;
+    GtkWidget *enabled;
+    GtkObject *weight;
     GtkObject *height;
+    LatSynthSurface selected_surface;
     gdouble pxsize;
     gdouble zscale;
     gboolean in_init;
@@ -202,8 +207,10 @@ static void           page_switched               (LatSynthControls *controls,
                                                    GtkNotebookPage *page,
                                                    gint pagenum);
 static void           update_values               (LatSynthControls *controls);
+static void           create_surface_treeview     (LatSynthControls *controls);
 static void           lattice_type_selected       (GtkComboBox *combo,
                                                    LatSynthControls *controls);
+static void weight_changed(LatSynthControls *controls, GtkAdjustment *adj);
 static void           invalidate_lattice          (LatSynthControls *controls);
 static void           lat_synth_invalidate        (LatSynthControls *controls);
 static gboolean       preview_gsource             (gpointer user_data);
@@ -285,7 +292,8 @@ static const LatSynthArgs lat_synth_defaults = {
     0.0,
     0.0, 0.0,
     0.0,
-    { 0.0, 0.0, 1.0, 0.0, 0.0, 0.0 },
+    { FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, },
+    { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, },
     0.0,
 };
 
@@ -430,25 +438,12 @@ lat_synth_dialog(LatSynthArgs *args,
         { N_("lattice|Triangular"), LAT_SYNTH_TRIANGULAR, },
     };
 
-    static const GwyEnum surface_types[LAT_SURFACE_NTYPES] = {
-        { N_("Random constant"),         LAT_SURFACE_FLAT,       },
-        { N_("Random linear"),           LAT_SURFACE_LINEAR,     },
-        { N_("Random bumpy"),            LAT_SURFACE_BUMPY,      },
-        { N_("Radial distance"),         LAT_SURFACE_RADIAL,     },
-        { N_("Segmented distance"),      LAT_SURFACE_SEGMENTED,  },
-        { N_("Segmented random"),        LAT_SURFACE_ZSEGMENTED, },
-        { N_("Border distance"),         LAT_SURFACE_BORDER,     },
-        { N_("Border random"),           LAT_SURFACE_ZBORDER,    },
-        { N_("Second nearest distance"), LAT_SURFACE_SECOND,     },
-    };
-
-    GtkWidget *dialog, *table, *vbox, *hbox, *notebook;
+    GtkWidget *dialog, *table, *vbox, *hbox, *notebook, *scwin;
     LatSynthControls controls;
     GwyDataField *dfield;
     GwyPixmapLayer *layer;
     gboolean finished;
     gint response, row;
-    guint i;
 
     gwy_clear(&controls, 1);
     controls.in_init = TRUE;
@@ -562,24 +557,23 @@ lat_synth_dialog(LatSynthArgs *args,
                              gtk_label_new(_("Surface")));
     row = 0;
 
-    gtk_table_attach(controls.table,
-                     gwy_label_new_header(_("Quantity Weights")),
-                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    scwin = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
+                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_widget_set_size_request(scwin, -1, 240);
+    gtk_table_attach(GTK_TABLE(table), scwin, 0, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
+
+    create_surface_treeview(&controls);
+    gtk_container_add(GTK_CONTAINER(scwin), controls.surfaces);
     row++;
 
-    for (i = 0; i < LAT_SURFACE_NTYPES; i++) {
-        g_assert(surface_types[i].value == i);
-        controls.weight[i] = gtk_adjustment_new(args->weight[i], 0.0, 1.0,
-                                                0.001, 0.1, 0);
-        g_object_set_data(G_OBJECT(controls.weight[i]),
-                          "target", args->weight + i);
-        gwy_table_attach_hscale(table, row, _(surface_types[i].name), NULL,
-                                controls.weight[i], GWY_HSCALE_DEFAULT);
-        g_signal_connect_swapped(controls.weight[i], "value-changed",
-                                 G_CALLBACK(gwy_synth_double_changed),
-                                 &controls);
-        row++;
-    }
+    controls.weight = gtk_adjustment_new(0.0, -1.0, 1.0, 0.001, 0.1, 0);
+    gwy_table_attach_hscale(table, row, _("_Weight:"), NULL,
+                            controls.weight, GWY_HSCALE_DEFAULT);
+    g_signal_connect_swapped(controls.weight, "value-changed",
+                             G_CALLBACK(weight_changed), &controls);
+    row++;
 
     gtk_widget_show_all(dialog);
     controls.table = NULL;
@@ -669,13 +663,114 @@ update_values(LatSynthControls *controls)
 }
 
 static void
-lattice_type_selected(GtkComboBox *combo,
-                      LatSynthControls *controls)
+enabled_toggled(LatSynthControls *controls,
+                const gchar *strpath,
+                GtkCellRendererToggle *toggle)
+{
+    GtkTreeView *treeview = GTK_TREE_VIEW(controls->surfaces);
+    GtkTreeModel *model = gtk_tree_view_get_model(treeview);
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    guint i;
+
+    path = gtk_tree_path_new_from_string(strpath);
+    gtk_tree_model_get_iter(model, &iter, path);
+    gtk_tree_path_free(path);
+    gtk_tree_model_get(model, &iter, 0, &i, -1);
+    controls->args->enabled[i] = !controls->args->enabled[i];
+    gwy_null_store_row_changed(GWY_NULL_STORE(model), i);
+}
+
+static void
+render_enabled(G_GNUC_UNUSED GtkTreeViewColumn *column,
+               GtkCellRenderer *renderer,
+               GtkTreeModel *model,
+               GtkTreeIter *iter,
+               gpointer user_data)
+{
+    LatSynthControls *controls = (LatSynthControls*)user_data;
+    guint i;
+
+    gtk_tree_model_get(model, iter, 0, &i, -1);
+    g_object_set(renderer, "active", controls->args->enabled[i], NULL);
+}
+
+static void
+render_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
+            GtkCellRenderer *renderer,
+            GtkTreeModel *model,
+            GtkTreeIter *iter,
+            G_GNUC_UNUSED gpointer user_data)
+{
+    static const gchar* names[LAT_SURFACE_NTYPES] = {
+        N_("Random constant"),
+        N_("Random linear"),
+        N_("Random bumpy"),
+        N_("Radial distance"),
+        N_("Segmented distance"),
+        N_("Segmented random"),
+        N_("Border distance"),
+        N_("Border random"),
+        N_("Second nearest distance"),
+    };
+
+    guint i;
+
+    gtk_tree_model_get(model, iter, 0, &i, -1);
+    g_object_set(renderer, "text", gettext(names[i]), NULL);
+}
+
+static void
+create_surface_treeview(LatSynthControls *controls)
+{
+    GtkTreeModel *model;
+    GtkWidget *treeview;
+    GtkTreeViewColumn *column;
+    GtkCellRenderer *renderer;
+    GtkTreeSelection *selection;
+
+    model = GTK_TREE_MODEL(gwy_null_store_new(LAT_SURFACE_NTYPES));
+    treeview = gtk_tree_view_new_with_model(model);
+    controls->surfaces = treeview;
+    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(treeview), FALSE);
+    g_object_unref(model);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_expand(column, FALSE);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
+    renderer = gtk_cell_renderer_toggle_new();
+    g_object_set(renderer, "activatable", TRUE, NULL);
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_enabled, controls, NULL);
+    g_signal_connect_swapped(renderer, "toggled",
+                             G_CALLBACK(enabled_toggled), controls);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_expand(column, TRUE);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
+    renderer = gtk_cell_renderer_text_new();
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_name, controls, NULL);
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
+}
+
+static void
+lattice_type_selected(GtkComboBox *combo, LatSynthControls *controls)
 {
     LatSynthArgs *args = controls->args;
     args->lattice_type = gwy_enum_combo_box_get_active(combo);
     invalidate_lattice(controls);
     lat_synth_invalidate(controls);
+}
+
+static void
+weight_changed(LatSynthControls *controls, GtkAdjustment *adj)
+{
+    // TODO
 }
 
 /* This extra callback is only invoked on changed that influence the lattice.
@@ -773,12 +868,8 @@ render_lattice(LatSynthArgs *args,
     guint xres = dfield->xres, yres = dfield->yres;
     gint hsafe, vsafe;
     guint x, y, i;
-    gdouble wsum = EPS;
     gdouble q, xoff, yoff;
     gdouble *data;
-
-    for (i = 0; i < LAT_SURFACE_NTYPES; i++)
-        wsum += args->weight[i];
 
     if (xres <= yres) {
         q = (gdouble)vstate->wsq/xres;
@@ -798,6 +889,9 @@ render_lattice(LatSynthArgs *args,
     vsafe = 0;
     data = gwy_data_field_get_data(dfield);
 
+    /* TODO: To enable thresholding of individual rendering types, each must be
+     * rendered separately to a datafield, then we can take min and max and
+     * apply thresholds. */
     for (y = 0; y < yres; ) {
         hsafe = 0;
         z = zline;
@@ -816,7 +910,6 @@ render_lattice(LatSynthArgs *args,
                     r += args->weight[i]*render_functions[i](&z, owner, args);
             }
             /* TODO: Value scaling, clamping, ... */
-            r = r/wsum;
             data[y*xres + x] = r;
 
             /* Move right. */
@@ -1852,7 +1945,7 @@ lat_synth_sanitize_args(LatSynthArgs *args)
     args->sigma = CLAMP(args->sigma, 0.0, 100.0);
     args->tau = CLAMP(args->sigma, 0.1, 1000.0);
     for (i = 0; i < G_N_ELEMENTS(args->weight); i++)
-        args->weight[i]= CLAMP(args->weight[i], 0.0, 1.0);
+        args->weight[i]= CLAMP(args->weight[i], -1.0, 1.0);
 }
 
 static void
