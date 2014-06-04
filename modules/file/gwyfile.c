@@ -102,7 +102,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Loads and saves Gwyddion native data files (serialized objects)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.15",
+    "0.16",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -233,7 +233,11 @@ gwyfile_save(GwyContainer *data,
         ok = FALSE;
         g_unlink(filename);
     }
-    fclose(fh);
+    if (fclose(fh)) {
+        err_WRITE(error);
+        ok = FALSE;
+        g_unlink(filename);
+    }
     g_byte_array_free(buffer, TRUE);
 
     /* Restore filename if save failed */
