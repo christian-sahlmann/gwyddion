@@ -44,6 +44,10 @@ Modules:
 - Slope distributions: Preview of the result was added.
 - Dimensions and Units: False colour axis actually starts showing the new
   value units also when you change only the units (not the Z range).
+- 2D FFT Filter: FFT output centre of lateral coordinates is at the zero
+  frequency now.
+- 2D FFT and FFT profile: Slight offset of lateral coordinates for odd-sized
+  images was corrected.
 
 Other:
 - The standalone Python gwy module uses the correct extension for dlopening,
