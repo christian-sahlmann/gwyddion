@@ -13,7 +13,7 @@
           <xsl:choose>
             <xsl:when test="$lang = 'en'">Name</xsl:when>
             <xsl:when test="$lang = 'fr'">Nom</xsl:when>
-            <xsl:when test="$lang = 'ru'">Название</xsl:when>
+            <xsl:when test="$lang = 'ru'">Имя</xsl:when>
             <xsl:otherwise>Name</xsl:otherwise>
           </xsl:choose>
         </th>
@@ -86,7 +86,7 @@
                     <th>
                        <xsl:choose>
                          <xsl:when test="$lang = 'en'">Name</xsl:when>
-                         <xsl:when test="$lang = 'ru'">Название</xsl:when>
+                         <xsl:when test="$lang = 'ru'">Имя</xsl:when>
                          <xsl:otherwise>Name</xsl:otherwise>
                        </xsl:choose>
                     </th>

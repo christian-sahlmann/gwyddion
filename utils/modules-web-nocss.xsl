@@ -100,6 +100,7 @@
           <xsl:attribute name="href">http://gwyddion.net/documentation/user-guide-<xsl:value-of select="$lang"/>/<xsl:value-of select="userguide"/></xsl:attribute>
           <xsl:choose>
             <xsl:when test="$lang = 'en'">User guide</xsl:when>
+            <xsl:when test="$lang = 'ru'">Руководство пользователя</xsl:when>
             <xsl:otherwise>User guide</xsl:otherwise>
           </xsl:choose>
         </a>
@@ -127,7 +128,7 @@
           <th>
              <xsl:choose>
                <xsl:when test="$lang = 'en'">Name</xsl:when>
-               <xsl:when test="$lang = 'ru'">Название</xsl:when>
+               <xsl:when test="$lang = 'ru'">Имя</xsl:when>
                <xsl:otherwise>Name</xsl:otherwise>
              </xsl:choose>
           </th>
