@@ -25,6 +25,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyrandgenset.h>
+#include <libprocess/arithmetic.h>
 #include <libprocess/stats.h>
 #include <libprocess/filters.h>
 #include <libgwydgets/gwydataview.h>
@@ -52,10 +53,10 @@
 #define DOTPROD_SP(a, b) ((a).x*(b)->x + (a).y*(b)->y)
 #define DOTPROD_PS(a, b) ((a)->x*(b).x + (a)->y*(b).y)
 
-#define DECLARE_RENDER(x) \
-    static gdouble render_##x(const VoronoiCoords *point, \
-                              const VoronoiObject *owner, \
-                              const LatSynthArgs *args)
+#define DECLARE_SURFACE(x) \
+    static gdouble surface_##x(const VoronoiCoords *point, \
+                               const VoronoiObject *owner, \
+                               const LatSynthArgs *args)
 
 enum {
     PREVIEW_SIZE = 400,
@@ -208,9 +209,32 @@ static void           page_switched               (LatSynthControls *controls,
                                                    gint pagenum);
 static void           update_values               (LatSynthControls *controls);
 static void           create_surface_treeview     (LatSynthControls *controls);
+static void           select_surface              (LatSynthControls *controls,
+                                                   LatSynthSurface i);
+static void           enabled_toggled             (LatSynthControls *controls,
+                                                   const gchar *strpath,
+                                                   GtkCellRendererToggle *toggle);
+static void           render_enabled              (GtkTreeViewColumn *column,
+                                                   GtkCellRenderer *renderer,
+                                                   GtkTreeModel *model,
+                                                   GtkTreeIter *iter,
+                                                   gpointer user_data);
+static void           render_name                 (GtkTreeViewColumn *column,
+                                                   GtkCellRenderer *renderer,
+                                                   GtkTreeModel *model,
+                                                   GtkTreeIter *iter,
+                                                   gpointer user_data);
+static void           render_weight               (GtkTreeViewColumn *column,
+                                                   GtkCellRenderer *renderer,
+                                                   GtkTreeModel *model,
+                                                   GtkTreeIter *iter,
+                                                   gpointer user_data);
+static void           surface_selected            (LatSynthControls *controls,
+                                                   GtkTreeSelection *selection);
 static void           lattice_type_selected       (GtkComboBox *combo,
                                                    LatSynthControls *controls);
-static void weight_changed(LatSynthControls *controls, GtkAdjustment *adj);
+static void           weight_changed              (LatSynthControls *controls,
+                                                   GtkAdjustment *adj);
 static void           invalidate_lattice          (LatSynthControls *controls);
 static void           lat_synth_invalidate        (LatSynthControls *controls);
 static gboolean       preview_gsource             (gpointer user_data);
@@ -219,7 +243,7 @@ static VoronoiState*  lat_synth_do                (LatSynthArgs *args,
                                                    const GwyDimensionArgs *dimsargs,
                                                    VoronoiState *vstate,
                                                    GwyDataField *dfield);
-static void           render_lattice              (LatSynthArgs *args,
+static void           construct_surface           (LatSynthArgs *args,
                                                    const GwyDimensionArgs *dimsargs,
                                                    VoronoiState *vstate,
                                                    GwyDataField *dfield);
@@ -255,16 +279,15 @@ static void           lat_synth_save_args         (GwyContainer *container,
                                                    const LatSynthArgs *args,
                                                    const GwyDimensionArgs *dimsargs);
 
-
-DECLARE_RENDER(flat);
-DECLARE_RENDER(linear);
-DECLARE_RENDER(bumpy);
-DECLARE_RENDER(radial);
-DECLARE_RENDER(segmented);
-DECLARE_RENDER(zsegmented);
-DECLARE_RENDER(border);
-DECLARE_RENDER(zborder);
-DECLARE_RENDER(second);
+DECLARE_SURFACE(flat);
+DECLARE_SURFACE(linear);
+DECLARE_SURFACE(bumpy);
+DECLARE_SURFACE(radial);
+DECLARE_SURFACE(segmented);
+DECLARE_SURFACE(zsegmented);
+DECLARE_SURFACE(border);
+DECLARE_SURFACE(zborder);
+DECLARE_SURFACE(second);
 
 #define GWY_SYNTH_CONTROLS LatSynthControls
 #define GWY_SYNTH_INVALIDATE(controls) \
@@ -272,16 +295,16 @@ DECLARE_RENDER(second);
 
 #include "synth.h"
 
-static const RenderFunc render_functions[LAT_SURFACE_NTYPES] = {
-    render_flat,
-    render_linear,
-    render_bumpy,
-    render_radial,
-    render_segmented,
-    render_zsegmented,
-    render_border,
-    render_zborder,
-    render_second,
+static const RenderFunc surface_functions[LAT_SURFACE_NTYPES] = {
+    surface_flat,
+    surface_linear,
+    surface_bumpy,
+    surface_radial,
+    surface_segmented,
+    surface_zsegmented,
+    surface_border,
+    surface_zborder,
+    surface_second,
 };
 
 static const LatSynthArgs lat_synth_defaults = {
@@ -444,6 +467,7 @@ lat_synth_dialog(LatSynthArgs *args,
     GwyPixmapLayer *layer;
     gboolean finished;
     gint response, row;
+    guint i;
 
     gwy_clear(&controls, 1);
     controls.in_init = TRUE;
@@ -581,6 +605,12 @@ lat_synth_dialog(LatSynthArgs *args,
     /* Must be done when widgets are shown, see GtkNotebook docs */
     gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), args->active_page);
     update_values(&controls);
+    for (i = 0; i < LAT_SURFACE_NTYPES; i++) {
+        if (args->enabled[i])
+            break;
+    }
+    select_surface(&controls, i % LAT_SURFACE_NTYPES);
+
     lat_synth_invalidate(&controls);
 
     finished = FALSE;
@@ -663,6 +693,69 @@ update_values(LatSynthControls *controls)
 }
 
 static void
+create_surface_treeview(LatSynthControls *controls)
+{
+    GtkTreeModel *model;
+    GtkWidget *treeview;
+    GtkTreeViewColumn *column;
+    GtkCellRenderer *renderer;
+    GtkTreeSelection *selection;
+
+    model = GTK_TREE_MODEL(gwy_null_store_new(LAT_SURFACE_NTYPES));
+    treeview = gtk_tree_view_new_with_model(model);
+    controls->surfaces = treeview;
+    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(treeview), FALSE);
+    g_object_unref(model);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_expand(column, FALSE);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
+    renderer = gtk_cell_renderer_toggle_new();
+    g_object_set(renderer, "activatable", TRUE, NULL);
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_enabled, controls, NULL);
+    g_signal_connect_swapped(renderer, "toggled",
+                             G_CALLBACK(enabled_toggled), controls);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_expand(column, TRUE);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
+    renderer = gtk_cell_renderer_text_new();
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_name, controls, NULL);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_expand(column, FALSE);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "width-chars", 7, "xalign", 1.0, NULL);
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_weight, controls, NULL);
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
+    g_signal_connect_swapped(selection, "changed",
+                             G_CALLBACK(surface_selected), controls);
+}
+
+static void
+select_surface(LatSynthControls *controls,
+               LatSynthSurface i)
+{
+    GtkTreeSelection *selection;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->surfaces));
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(controls->surfaces));
+    gtk_tree_model_iter_nth_child(model, &iter, NULL, i);
+    gtk_tree_selection_select_iter(selection, &iter);
+}
+
+static void
 enabled_toggled(LatSynthControls *controls,
                 const gchar *strpath,
                 GtkCellRendererToggle *toggle)
@@ -721,41 +814,25 @@ render_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
 }
 
 static void
-create_surface_treeview(LatSynthControls *controls)
+render_weight(G_GNUC_UNUSED GtkTreeViewColumn *column,
+              GtkCellRenderer *renderer,
+              GtkTreeModel *model,
+              GtkTreeIter *iter,
+              gpointer user_data)
 {
-    GtkTreeModel *model;
-    GtkWidget *treeview;
-    GtkTreeViewColumn *column;
-    GtkCellRenderer *renderer;
-    GtkTreeSelection *selection;
+    LatSynthControls *controls = (LatSynthControls*)user_data;
+    gchar buf[12];
+    guint i;
 
-    model = GTK_TREE_MODEL(gwy_null_store_new(LAT_SURFACE_NTYPES));
-    treeview = gtk_tree_view_new_with_model(model);
-    controls->surfaces = treeview;
-    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(treeview), FALSE);
-    g_object_unref(model);
+    gtk_tree_model_get(model, iter, 0, &i, -1);
+    g_snprintf(buf, sizeof(buf), "%.03f", controls->args->weight[i]);
+    g_object_set(renderer, "text", buf, NULL);
+}
 
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_expand(column, FALSE);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
-    renderer = gtk_cell_renderer_toggle_new();
-    g_object_set(renderer, "activatable", TRUE, NULL);
-    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
-    gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                            render_enabled, controls, NULL);
-    g_signal_connect_swapped(renderer, "toggled",
-                             G_CALLBACK(enabled_toggled), controls);
-
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_expand(column, TRUE);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
-    renderer = gtk_cell_renderer_text_new();
-    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
-    gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                            render_name, controls, NULL);
-
-    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
-    gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
+static void
+surface_selected(LatSynthControls *controls, GtkTreeSelection *selection)
+{
+    // TODO
 }
 
 static void
@@ -848,7 +925,7 @@ lat_synth_do(LatSynthArgs *args,
         g_timer_start(timer);
     }
 
-    render_lattice(args, dimsargs, vstate, dfield);
+    construct_surface(args, dimsargs, vstate, dfield);
     gwy_debug("Rendering: %g ms", 1000.0*g_timer_elapsed(timer, NULL));
     g_timer_destroy(timer);
 
@@ -858,11 +935,12 @@ lat_synth_do(LatSynthArgs *args,
 }
 
 static void
-render_lattice(LatSynthArgs *args,
-               G_GNUC_UNUSED const GwyDimensionArgs *dimsargs,
-               VoronoiState *vstate,
-               GwyDataField *dfield)
+construct_surface(LatSynthArgs *args,
+                  G_GNUC_UNUSED const GwyDimensionArgs *dimsargs,
+                  VoronoiState *vstate,
+                  GwyDataField *dfield)
 {
+    GwyDataField *tmpfield = gwy_data_field_new_alike(dfield, FALSE);
     VoronoiObject *owner, *line_start;
     VoronoiCoords z, zline, tmp;
     guint xres = dfield->xres, yres = dfield->yres;
@@ -883,60 +961,67 @@ render_lattice(LatSynthArgs *args,
     }
 
     args->scale = vstate->scale;
-    zline.x = xoff;
-    zline.y = yoff;
-    line_start = find_owner(vstate, &zline);
-    vsafe = 0;
-    data = gwy_data_field_get_data(dfield);
+    data = gwy_data_field_get_data(tmpfield);
 
-    /* TODO: To enable thresholding of individual rendering types, each must be
-     * rendered separately to a datafield, then we can take min and max and
-     * apply thresholds. */
-    for (y = 0; y < yres; ) {
-        hsafe = 0;
-        z = zline;
-        owner = line_start;
+    /* XXX: For preview, we might want to remember all the surfaces and then
+     * just clamp/scale them when the non-lattice parameters are changed. */
+    for (i = 0; i < LAT_SURFACE_NTYPES; i++) {
+        if (!args->enabled[i] || !args->weight[i])
+            continue;
 
-        neighbourize(owner->ne, &owner->pos);
-        compute_segment_angles(owner->ne);
+        gwy_data_field_clear(tmpfield);
+        zline.x = xoff;
+        zline.y = yoff;
+        line_start = find_owner(vstate, &zline);
+        vsafe = 0;
 
-        tmp.y = zline.y;
+        for (y = 0; y < yres; ) {
+            hsafe = 0;
+            z = zline;
+            owner = line_start;
 
-        for (x = 0; x < xres; ) {
-            gdouble r = 0.0;
+            neighbourize(owner->ne, &owner->pos);
+            compute_segment_angles(owner->ne);
 
-            for (i = 0; i < LAT_SURFACE_NTYPES; i++) {
-                if (args->weight[i])
-                    r += args->weight[i]*render_functions[i](&z, owner, args);
+            tmp.y = zline.y;
+
+            for (x = 0; x < xres; ) {
+                data[y*xres + x] = surface_functions[i](&z, owner, args);
+
+                /* Move right. */
+                x++;
+                if (hsafe-- == 0) {
+                    tmp.x = q*x + xoff;
+                    owner = move_along_line(owner, &z, &tmp, &hsafe);
+                    neighbourize(owner->ne, &owner->pos);
+                    compute_segment_angles(owner->ne);
+                    z.x = tmp.x;
+                }
+                else
+                    z.x = q*x + xoff;
+
             }
-            /* TODO: Value scaling, clamping, ... */
-            data[y*xres + x] = r;
 
-            /* Move right. */
-            x++;
-            if (hsafe-- == 0) {
-                tmp.x = q*x + xoff;
-                owner = move_along_line(owner, &z, &tmp, &hsafe);
-                neighbourize(owner->ne, &owner->pos);
-                compute_segment_angles(owner->ne);
-                z.x = tmp.x;
+            /* Move down. */
+            y++;
+            if (vsafe-- == 0) {
+                tmp.x = xoff;
+                tmp.y = q*y + yoff;
+                line_start = move_along_line(line_start, &zline, &tmp, &vsafe);
+                zline.y = tmp.y;
             }
             else
-                z.x = q*x + xoff;
-
+                zline.y = q*y + yoff;
         }
 
-        /* Move down. */
-        y++;
-        if (vsafe-- == 0) {
-            tmp.x = xoff;
-            tmp.y = q*y + yoff;
-            line_start = move_along_line(line_start, &zline, &tmp, &vsafe);
-            zline.y = tmp.y;
-        }
-        else
-            zline.y = q*y + yoff;
+        gwy_data_field_invalidate(tmpfield);
+        gwy_data_field_normalize(tmpfield);
+        /* gwy_data_field_clamp(tmpfield, 0.0, 1.0); */
+
+        gwy_data_field_sum_fields(dfield, dfield, tmpfield);
     }
+
+    g_object_unref(tmpfield);
 }
 
 static VoronoiState*
@@ -1252,9 +1337,9 @@ vobj_angle_compare(gconstpointer x, gconstpointer y)
 
 /* owner->ne requirements: NONE */
 static gdouble
-render_flat(G_GNUC_UNUSED const VoronoiCoords *point,
-            const VoronoiObject *owner,
-            G_GNUC_UNUSED const LatSynthArgs *args)
+surface_flat(G_GNUC_UNUSED const VoronoiCoords *point,
+             const VoronoiObject *owner,
+             G_GNUC_UNUSED const LatSynthArgs *args)
 {
     gdouble r;
 
@@ -1369,8 +1454,8 @@ find_delaunay_triangle(const VoronoiCoords *point,
 
 /* owner->ne requirements: cyclic, neighbourized, segment angles */
 static gdouble
-render_linear(const VoronoiCoords *point, const VoronoiObject *owner,
-              G_GNUC_UNUSED const LatSynthArgs *args)
+surface_linear(const VoronoiCoords *point, const VoronoiObject *owner,
+               G_GNUC_UNUSED const LatSynthArgs *args)
 {
     const VoronoiObject *neigh1, *neigh2;
     VoronoiCoords dist, v1, v2;
@@ -1397,8 +1482,8 @@ render_linear(const VoronoiCoords *point, const VoronoiObject *owner,
 
 /* owner->ne requirements: cyclic, neighbourized, segment angles */
 static gdouble
-render_bumpy(const VoronoiCoords *point, const VoronoiObject *owner,
-             G_GNUC_UNUSED const LatSynthArgs *args)
+surface_bumpy(const VoronoiCoords *point, const VoronoiObject *owner,
+              G_GNUC_UNUSED const LatSynthArgs *args)
 {
     const VoronoiObject *neigh1, *neigh2;
     VoronoiCoords dist, v1, v2;
@@ -1429,8 +1514,8 @@ render_bumpy(const VoronoiCoords *point, const VoronoiObject *owner,
 
 /* owner->ne requirements: NONE */
 static gdouble
-render_radial(const VoronoiCoords *point, const VoronoiObject *owner,
-              const LatSynthArgs *args)
+surface_radial(const VoronoiCoords *point, const VoronoiObject *owner,
+               const LatSynthArgs *args)
 {
     VoronoiCoords dist;
     gdouble r;
@@ -1443,8 +1528,8 @@ render_radial(const VoronoiCoords *point, const VoronoiObject *owner,
 
 /* owner->ne requirements: cyclic, neighbourized, segment angles */
 static gdouble
-render_segmented(const VoronoiCoords *point, const VoronoiObject *owner,
-                 G_GNUC_UNUSED const LatSynthArgs *args)
+surface_segmented(const VoronoiCoords *point, const VoronoiObject *owner,
+                  G_GNUC_UNUSED const LatSynthArgs *args)
 {
     VoronoiCoords dist;
     gdouble r, phi;
@@ -1466,8 +1551,8 @@ render_segmented(const VoronoiCoords *point, const VoronoiObject *owner,
 
 /* owner->ne requirements: cyclic, neighbourized, segment angles */
 static gdouble
-render_zsegmented(const VoronoiCoords *point, const VoronoiObject *owner,
-                  G_GNUC_UNUSED const LatSynthArgs *args)
+surface_zsegmented(const VoronoiCoords *point, const VoronoiObject *owner,
+                   G_GNUC_UNUSED const LatSynthArgs *args)
 {
     VoronoiCoords dist;
     gdouble r, phi;
@@ -1489,8 +1574,8 @@ render_zsegmented(const VoronoiCoords *point, const VoronoiObject *owner,
 
 /* owner->ne requirements: neighbourized */
 static gdouble
-render_border(const VoronoiCoords *point, const VoronoiObject *owner,
-              const LatSynthArgs *args)
+surface_border(const VoronoiCoords *point, const VoronoiObject *owner,
+               const LatSynthArgs *args)
 {
     VoronoiCoords dist;
     gdouble r, r_min;
@@ -1515,8 +1600,8 @@ render_border(const VoronoiCoords *point, const VoronoiObject *owner,
 
 /* owner->ne requirements: neighbourized */
 static gdouble
-render_zborder(const VoronoiCoords *point, const VoronoiObject *owner,
-               const LatSynthArgs *args)
+surface_zborder(const VoronoiCoords *point, const VoronoiObject *owner,
+                const LatSynthArgs *args)
 {
     VoronoiCoords dist;
     gdouble r, r_min;
@@ -1541,8 +1626,8 @@ render_zborder(const VoronoiCoords *point, const VoronoiObject *owner,
 
 /* owner->ne requirements: NONE */
 static gdouble
-render_second(const VoronoiCoords *point, const VoronoiObject *owner,
-              const LatSynthArgs *args)
+surface_second(const VoronoiCoords *point, const VoronoiObject *owner,
+               const LatSynthArgs *args)
 {
     VoronoiCoords dist;
     gdouble r, r_min;
