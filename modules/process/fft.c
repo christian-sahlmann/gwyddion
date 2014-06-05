@@ -96,7 +96,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Two-dimensional FFT (Fast Fourier Transform)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.11",
+    "1.12",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -195,11 +195,11 @@ fft_postprocess(GwyDataField *dfield)
     gwy_data_field_set_yreal(dfield, 1.0/gwy_data_field_get_ymeasure(dfield));
 
     res = gwy_data_field_get_xres(dfield);
-    r = (res + 1 + res % 2)/2.0;
+    r = (res + 1 - res % 2)/2.0;
     gwy_data_field_set_xoffset(dfield, -gwy_data_field_jtor(dfield, r));
 
     res = gwy_data_field_get_yres(dfield);
-    r = (res + 1 + res % 2)/2.0;
+    r = (res + 1 - res % 2)/2.0;
     gwy_data_field_set_yoffset(dfield, -gwy_data_field_itor(dfield, r));
 }
 

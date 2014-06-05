@@ -169,7 +169,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("2D FFT Filtering"),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "1.9",
+    "1.10",
     "Chris Anderson, Molecular Imaging Corp.",
     "2005",
 };
@@ -321,6 +321,19 @@ run_main(GwyContainer *data, GwyRunType run)
         }
 
         if (controls.out_mode & OUTPUT_FFT) {
+            gint res;
+            gdouble r;
+
+            res = gwy_data_field_get_xres(out_fft);
+            r = (res + 1 - res % 2)/2.0;
+            gwy_data_field_set_xoffset(out_fft,
+                                       -gwy_data_field_jtor(out_fft, r));
+
+            res = gwy_data_field_get_yres(out_fft);
+            r = (res + 1 - res % 2)/2.0;
+            gwy_data_field_set_yoffset(out_fft,
+                                       -gwy_data_field_itor(out_fft, r));
+
             newid = gwy_app_data_browser_add_data_field(out_fft, data, TRUE);
             gwy_app_sync_data_items(controls.mydata, data, 0, newid, FALSE,
                                     GWY_DATA_ITEM_GRADIENT,

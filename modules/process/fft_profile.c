@@ -120,7 +120,7 @@ static GwyModuleInfo module_info = {
     N_("Reads radial sections of two-dimensional power spectrum density "
        "function."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -531,11 +531,11 @@ prof_psdf(GwyDataField *dfield,
     gwy_data_field_set_yreal(fftre, 1.0/gwy_data_field_get_ymeasure(fftre));
 
     res = gwy_data_field_get_xres(fftre);
-    r = (res + 1 + res % 2)/2.0;
+    r = (res + 1 - res % 2)/2.0;
     gwy_data_field_set_xoffset(fftre, -gwy_data_field_jtor(fftre, r));
 
     res = gwy_data_field_get_yres(fftre);
-    r = (res + 1 + res % 2)/2.0;
+    r = (res + 1 - res % 2)/2.0;
     gwy_data_field_set_yoffset(fftre, -gwy_data_field_itor(fftre, r));
 
     return fftre;
