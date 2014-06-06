@@ -152,6 +152,8 @@ struct _LatSynthArgs {
     gdouble height;
     gboolean enabled[LAT_SURFACE_NTYPES];
     gdouble weight[LAT_SURFACE_NTYPES];
+    gdouble lower[LAT_SURFACE_NTYPES];
+    gdouble upper[LAT_SURFACE_NTYPES];
     /* Cache vstate.scale here */
     gdouble scale;
 };
@@ -179,7 +181,10 @@ struct _LatSynthControls {
     GtkObject *tau;
     GtkWidget *surfaces;
     GtkWidget *enabled;
+    GtkWidget *surface_header;
     GtkObject *weight;
+    GtkObject *lower;
+    GtkObject *upper;
     GtkObject *height;
     LatSynthSurface selected_surface;
     gdouble pxsize;
@@ -234,6 +239,10 @@ static void           surface_selected            (LatSynthControls *controls,
 static void           lattice_type_selected       (GtkComboBox *combo,
                                                    LatSynthControls *controls);
 static void           weight_changed              (LatSynthControls *controls,
+                                                   GtkAdjustment *adj);
+static void           lower_changed               (LatSynthControls *controls,
+                                                   GtkAdjustment *adj);
+static void           upper_changed               (LatSynthControls *controls,
                                                    GtkAdjustment *adj);
 static void           invalidate_lattice          (LatSynthControls *controls);
 static void           lat_synth_invalidate        (LatSynthControls *controls);
@@ -307,6 +316,18 @@ static const RenderFunc surface_functions[LAT_SURFACE_NTYPES] = {
     surface_second,
 };
 
+static const gchar* surface_names[LAT_SURFACE_NTYPES] = {
+    N_("Random constant"),
+    N_("Random linear"),
+    N_("Random bumpy"),
+    N_("Radial distance"),
+    N_("Segmented distance"),
+    N_("Segmented random"),
+    N_("Border distance"),
+    N_("Border random"),
+    N_("Second nearest distance"),
+};
+
 static const LatSynthArgs lat_synth_defaults = {
     PAGE_DIMENSIONS,
     42, TRUE, TRUE,
@@ -316,6 +337,8 @@ static const LatSynthArgs lat_synth_defaults = {
     0.0, 0.0,
     0.0,
     { FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, },
+    { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, },
+    { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, },
     { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, },
     0.0,
 };
@@ -592,11 +615,31 @@ lat_synth_dialog(LatSynthArgs *args,
     gtk_container_add(GTK_CONTAINER(scwin), controls.surfaces);
     row++;
 
+    controls.surface_header = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(controls.surface_header), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls.surface_header,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
     controls.weight = gtk_adjustment_new(0.0, -1.0, 1.0, 0.001, 0.1, 0);
     gwy_table_attach_hscale(table, row, _("_Weight:"), NULL,
                             controls.weight, GWY_HSCALE_DEFAULT);
     g_signal_connect_swapped(controls.weight, "value-changed",
                              G_CALLBACK(weight_changed), &controls);
+    row++;
+
+    controls.lower = gtk_adjustment_new(0.0, 0.0, 1.0, 0.001, 0.1, 0);
+    gwy_table_attach_hscale(table, row, _("Lower threshold:"), NULL,
+                            controls.lower, GWY_HSCALE_DEFAULT);
+    g_signal_connect_swapped(controls.lower, "value-changed",
+                             G_CALLBACK(lower_changed), &controls);
+    row++;
+
+    controls.upper = gtk_adjustment_new(0.0, 0.0, 1.0, 0.001, 0.1, 0);
+    gwy_table_attach_hscale(table, row, _("Upper threshold:"), NULL,
+                            controls.upper, GWY_HSCALE_DEFAULT);
+    g_signal_connect_swapped(controls.upper, "value-changed",
+                             G_CALLBACK(upper_changed), &controls);
     row++;
 
     gtk_widget_show_all(dialog);
@@ -758,7 +801,7 @@ select_surface(LatSynthControls *controls,
 static void
 enabled_toggled(LatSynthControls *controls,
                 const gchar *strpath,
-                GtkCellRendererToggle *toggle)
+                G_GNUC_UNUSED GtkCellRendererToggle *toggle)
 {
     GtkTreeView *treeview = GTK_TREE_VIEW(controls->surfaces);
     GtkTreeModel *model = gtk_tree_view_get_model(treeview);
@@ -772,6 +815,7 @@ enabled_toggled(LatSynthControls *controls,
     gtk_tree_model_get(model, &iter, 0, &i, -1);
     controls->args->enabled[i] = !controls->args->enabled[i];
     gwy_null_store_row_changed(GWY_NULL_STORE(model), i);
+    lat_synth_invalidate(controls);
 }
 
 static void
@@ -795,22 +839,10 @@ render_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
             GtkTreeIter *iter,
             G_GNUC_UNUSED gpointer user_data)
 {
-    static const gchar* names[LAT_SURFACE_NTYPES] = {
-        N_("Random constant"),
-        N_("Random linear"),
-        N_("Random bumpy"),
-        N_("Radial distance"),
-        N_("Segmented distance"),
-        N_("Segmented random"),
-        N_("Border distance"),
-        N_("Border random"),
-        N_("Second nearest distance"),
-    };
-
     guint i;
 
     gtk_tree_model_get(model, iter, 0, &i, -1);
-    g_object_set(renderer, "text", gettext(names[i]), NULL);
+    g_object_set(renderer, "text", gettext(surface_names[i]), NULL);
 }
 
 static void
@@ -832,7 +864,27 @@ render_weight(G_GNUC_UNUSED GtkTreeViewColumn *column,
 static void
 surface_selected(LatSynthControls *controls, GtkTreeSelection *selection)
 {
-    // TODO
+    LatSynthArgs *args = controls->args;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    guint i;
+    gchar *s;
+
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter))
+        return;
+
+    gtk_tree_model_get(model, &iter, 0, &i, -1);
+    controls->selected_surface = i;
+
+    controls->in_init = TRUE;
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->weight), args->weight[i]);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->lower), args->lower[i]);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->upper), args->upper[i]);
+    controls->in_init = FALSE;
+
+    s = g_strconcat("<b>", surface_names[i], "</b>", NULL);
+    gtk_label_set_markup(GTK_LABEL(controls->surface_header), s);
+    g_free(s);
 }
 
 static void
@@ -847,7 +899,29 @@ lattice_type_selected(GtkComboBox *combo, LatSynthControls *controls)
 static void
 weight_changed(LatSynthControls *controls, GtkAdjustment *adj)
 {
-    // TODO
+    GtkTreeModel *model;
+    controls->args->weight[controls->selected_surface]
+        = gtk_adjustment_get_value(adj);
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(controls->surfaces));
+    gwy_null_store_row_changed(GWY_NULL_STORE(model),
+                               controls->selected_surface);
+    lat_synth_invalidate(controls);
+}
+
+static void
+lower_changed(LatSynthControls *controls, GtkAdjustment *adj)
+{
+    controls->args->lower[controls->selected_surface]
+        = gtk_adjustment_get_value(adj);
+    lat_synth_invalidate(controls);
+}
+
+static void
+upper_changed(LatSynthControls *controls, GtkAdjustment *adj)
+{
+    controls->args->upper[controls->selected_surface]
+        = gtk_adjustment_get_value(adj);
+    lat_synth_invalidate(controls);
 }
 
 /* This extra callback is only invoked on changed that influence the lattice.
@@ -962,9 +1036,6 @@ construct_surface(LatSynthArgs *args,
 
     args->scale = vstate->scale;
     data = gwy_data_field_get_data(tmpfield);
-
-    /* XXX: For preview, we might want to remember all the surfaces and then
-     * just clamp/scale them when the non-lattice parameters are changed. */
     for (i = 0; i < LAT_SURFACE_NTYPES; i++) {
         if (!args->enabled[i] || !args->weight[i])
             continue;
@@ -1016,8 +1087,10 @@ construct_surface(LatSynthArgs *args,
 
         gwy_data_field_invalidate(tmpfield);
         gwy_data_field_normalize(tmpfield);
-        /* gwy_data_field_clamp(tmpfield, 0.0, 1.0); */
-
+        if (args->lower[i] > 0.0 || args->upper[i] < 1.0)
+            gwy_data_field_clamp(tmpfield, args->lower[i], args->upper[i]);
+        if (args->weight[i] != 1.0)
+            gwy_data_field_multiply(tmpfield, args->weight[i]);
         gwy_data_field_sum_fields(dfield, dfield, tmpfield);
     }
 
@@ -2006,9 +2079,12 @@ static const gchar angle_key[]        = "/module/lat_synth/angle";
 static const gchar sigma_key[]        = "/module/lat_synth/sigma";
 static const gchar tau_key[]          = "/module/lat_synth/tau";
 static const gchar height_key[]       = "/module/lat_synth/height";
-static const gchar weight_key[]       = "/module/lat_synth/weight";
+static const gchar enabled_key[]      = "enabled";
+static const gchar weight_key[]       = "weight";
+static const gchar lower_key[]        = "lower";
+static const gchar upper_key[]        = "upper";
 
-static const gchar *weight_keys[] = {
+static const gchar *surface_keys[] = {
     "flat", "linear", "bumpy", "radial",
     "segmented", "zsegmented", "border", "zborder",
     "second",
@@ -2029,8 +2105,12 @@ lat_synth_sanitize_args(LatSynthArgs *args)
     args->angle = CLAMP(args->angle, -G_PI, G_PI);
     args->sigma = CLAMP(args->sigma, 0.0, 100.0);
     args->tau = CLAMP(args->sigma, 0.1, 1000.0);
-    for (i = 0; i < G_N_ELEMENTS(args->weight); i++)
+    for (i = 0; i < G_N_ELEMENTS(args->weight); i++) {
         args->weight[i]= CLAMP(args->weight[i], -1.0, 1.0);
+        args->enabled[i] = !!args->enabled[i];
+        args->lower[i] = CLAMP(args->lower[i], 0.0, 1.0);
+        args->upper[i] = CLAMP(args->upper[i], 0.0, 1.0);
+    }
 }
 
 static void
@@ -2057,10 +2137,29 @@ lat_synth_load_args(GwyContainer *container,
     gwy_container_gis_double_by_name(container, tau_key, &args->tau);
     str = g_string_new(NULL);
     for (i = 0; i < G_N_ELEMENTS(args->weight); i++) {
-        g_string_assign(str, weight_key);
+        guint len;
+
+        g_string_assign(str, prefix);
         g_string_append_c(str, '/');
-        g_string_append(str, weight_keys[i]);
+        g_string_append(str, surface_keys[i]);
+        g_string_append_c(str, '/');
+        len = str->len;
+
+        g_string_truncate(str, len);
+        g_string_append(str, enabled_key);
+        gwy_container_gis_boolean_by_name(container, str->str, args->enabled + i);
+
+        g_string_truncate(str, len);
+        g_string_append(str, weight_key);
         gwy_container_gis_double_by_name(container, str->str, args->weight + i);
+
+        g_string_truncate(str, len);
+        g_string_append(str, lower_key);
+        gwy_container_gis_double_by_name(container, str->str, args->lower + i);
+
+        g_string_truncate(str, len);
+        g_string_append(str, upper_key);
+        gwy_container_gis_double_by_name(container, str->str, args->upper + i);
     }
     g_string_free(str, TRUE);
     lat_synth_sanitize_args(args);
@@ -2092,10 +2191,28 @@ lat_synth_save_args(GwyContainer *container,
     gwy_container_set_double_by_name(container, tau_key, args->tau);
     str = g_string_new(NULL);
     for (i = 0; i < G_N_ELEMENTS(args->weight); i++) {
-        g_string_assign(str, weight_key);
+        guint len;
+        g_string_assign(str, prefix);
         g_string_append_c(str, '/');
-        g_string_append(str, weight_keys[i]);
+        g_string_append(str, surface_keys[i]);
+        g_string_append_c(str, '/');
+        len = str->len;
+
+        g_string_truncate(str, len);
+        g_string_append(str, enabled_key);
+        gwy_container_set_boolean_by_name(container, str->str, args->enabled[i]);
+
+        g_string_truncate(str, len);
+        g_string_append(str, weight_key);
         gwy_container_set_double_by_name(container, str->str, args->weight[i]);
+
+        g_string_truncate(str, len);
+        g_string_append(str, lower_key);
+        gwy_container_set_double_by_name(container, str->str, args->lower[i]);
+
+        g_string_truncate(str, len);
+        g_string_append(str, upper_key);
+        gwy_container_set_double_by_name(container, str->str, args->upper[i]);
     }
     g_string_free(str, TRUE);
 
