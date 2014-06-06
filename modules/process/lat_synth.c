@@ -1037,7 +1037,8 @@ construct_surface(LatSynthArgs *args,
     args->scale = vstate->scale;
     data = gwy_data_field_get_data(tmpfield);
     for (i = 0; i < LAT_SURFACE_NTYPES; i++) {
-        if (!args->enabled[i] || !args->weight[i])
+        if (!args->enabled[i] || !args->weight[i]
+            || args->lower[i] >= args->upper[i])
             continue;
 
         gwy_data_field_clear(tmpfield);
