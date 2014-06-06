@@ -182,7 +182,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Statistics tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.12",
+    "2.13",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -971,7 +971,7 @@ gwy_tool_stats_copy(GwyToolStats *tool)
 
 #define fmt_val(v) \
     g_strdup_printf("%.*f%s%s", \
-                    vf->precision, report_data->results.v/vf->magnitude, \
+                    vf->precision + 1, report_data->results.v/vf->magnitude, \
                     *vf->units ? " " : "", vf->units)
 
 static gchar*
