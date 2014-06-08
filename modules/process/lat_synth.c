@@ -18,7 +18,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <gtk/gtk.h>
@@ -265,7 +265,8 @@ static void           preview                     (LatSynthControls *controls);
 static VoronoiState*  lat_synth_do                (LatSynthArgs *args,
                                                    const GwyDimensionArgs *dimsargs,
                                                    VoronoiState *vstate,
-                                                   GwyDataField *dfield);
+                                                   GwyDataField *dfield,
+                                                   gboolean show_messages);
 static void           construct_surface           (LatSynthArgs *args,
                                                    const GwyDimensionArgs *dimsargs,
                                                    VoronoiState *vstate,
@@ -276,7 +277,9 @@ static VoronoiState*  make_randomized_grid        (const LatSynthArgs *args,
 static void           random_squarized_points     (VoronoiState *vstate,
                                                    guint npts);
 static void           create_regular_points       (VoronoiState *vstate,
-                                                   const LatSynthArgs *args);
+                                                   const LatSynthArgs *args,
+                                                   gint xres,
+                                                   gint yres);
 static gboolean       place_point_to_square       (VoronoiState *vstate,
                                                    VoronoiCoords *pos,
                                                    gdouble random);
@@ -426,6 +429,7 @@ run_noninteractive(LatSynthArgs *args,
                    gint oldid,
                    GQuark quark)
 {
+    GwyDataField *newfield;
     GwySIUnit *siunit;
     VoronoiState *vstate;
     gboolean replace = dimsargs->replace && dfield;
@@ -435,61 +439,68 @@ run_noninteractive(LatSynthArgs *args,
     if (args->randomize)
         args->seed = g_random_int() & 0x7fffffff;
 
-    if (replace) {
-        /* Always take a reference so that we can always unref. */
-        g_object_ref(dfield);
-
-        gwy_app_undo_qcheckpointv(data, 1, &quark);
-        if (!add)
-            gwy_data_field_clear(dfield);
-
-        gwy_app_channel_log_add(data, oldid, oldid, "proc::lat_synth", NULL);
+    if (add || replace) {
+        if (add)
+            newfield = gwy_data_field_duplicate(dfield);
+        else
+            newfield = gwy_data_field_new_alike(dfield, TRUE);
     }
     else {
-        if (add)
-            dfield = gwy_data_field_duplicate(dfield);
-        else {
-            gdouble mag = pow10(dimsargs->xypow10) * dimsargs->measure;
-            dfield = gwy_data_field_new(dimsargs->xres, dimsargs->yres,
-                                        mag*dimsargs->xres, mag*dimsargs->yres,
-                                        TRUE);
+        gdouble mag = pow10(dimsargs->xypow10) * dimsargs->measure;
+        newfield = gwy_data_field_new(dimsargs->xres, dimsargs->yres,
+                                      mag*dimsargs->xres, mag*dimsargs->yres,
+                                      TRUE);
 
-            siunit = gwy_data_field_get_si_unit_xy(dfield);
-            gwy_si_unit_set_from_string(siunit, dimsargs->xyunits);
+        siunit = gwy_data_field_get_si_unit_xy(newfield);
+        gwy_si_unit_set_from_string(siunit, dimsargs->xyunits);
 
-            siunit = gwy_data_field_get_si_unit_z(dfield);
-            gwy_si_unit_set_from_string(siunit, dimsargs->zunits);
-        }
+        siunit = gwy_data_field_get_si_unit_z(newfield);
+        gwy_si_unit_set_from_string(siunit, dimsargs->zunits);
     }
 
-    vstate = lat_synth_do(args, dimsargs, NULL, dfield);
+    gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid),
+                       _("Starting..."));
+    vstate = lat_synth_do(args, dimsargs, NULL, newfield, TRUE);
+    gwy_app_wait_finish();
+
+    if (!vstate) {
+        g_object_unref(newfield);
+        return;
+    }
+
     voronoi_state_free(vstate);
 
-    if (!replace) {
-        if (data) {
-            newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
-            if (oldid != -1)
-                gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
-                                        GWY_DATA_ITEM_GRADIENT,
-                                        0);
-        }
-        else {
-            newid = 0;
-            data = gwy_container_new();
-            gwy_container_set_object(data, gwy_app_get_data_key_for_id(newid),
-                                     dfield);
-            gwy_app_data_browser_add(data);
-            gwy_app_data_browser_reset_visibility(data,
-                                                  GWY_VISIBILITY_RESET_SHOW_ALL);
-            g_object_unref(data);
-        }
-
-        gwy_app_set_data_field_title(data, newid, _("Generated"));
-        gwy_app_channel_log_add(data, add ? oldid : -1, newid,
-                                "proc::lat_synth", NULL);
+    if (replace) {
+        gwy_app_undo_qcheckpointv(data, 1, &quark);
+        gwy_container_set_object(data, gwy_app_get_data_key_for_id(oldid),
+                                 newfield);
+        gwy_app_channel_log_add(data, oldid, oldid, "proc::lat_synth", NULL);
+        g_object_unref(newfield);
+        return;
     }
 
-    g_object_unref(dfield);
+    if (data) {
+        newid = gwy_app_data_browser_add_data_field(newfield, data, TRUE);
+        if (oldid != -1)
+            gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
+                                    GWY_DATA_ITEM_GRADIENT,
+                                    0);
+    }
+    else {
+        newid = 0;
+        data = gwy_container_new();
+        gwy_container_set_object(data, gwy_app_get_data_key_for_id(newid),
+                                 newfield);
+        gwy_app_data_browser_add(data);
+        gwy_app_data_browser_reset_visibility(data,
+                                              GWY_VISIBILITY_RESET_SHOW_ALL);
+        g_object_unref(data);
+    }
+
+    gwy_app_set_data_field_title(data, newid, _("Generated"));
+    gwy_app_channel_log_add(data, add ? oldid : -1, newid,
+                            "proc::lat_synth", NULL);
+    g_object_unref(newfield);
 }
 
 static gboolean
@@ -1074,43 +1085,70 @@ preview(LatSynthControls *controls)
         gwy_data_field_clear(dfield);
 
     controls->vstate = lat_synth_do(args, controls->dims->args,
-                                    controls->vstate, dfield);
+                                    controls->vstate, dfield, FALSE);
 }
 
 static VoronoiState*
 lat_synth_do(LatSynthArgs *args,
              const GwyDimensionArgs *dimsargs,
              VoronoiState *vstate,
-             GwyDataField *dfield)
+             GwyDataField *dfield,
+             gboolean show_messages)
 {
     guint xres = dfield->xres, yres = dfield->yres;
-    guint iter, niter;
-    GTimer *timer = g_timer_new();
+    guint iter, niter, step = 0;
+    gdouble nsteps;
+
+    nsteps = 1.0 + 1.0 + (guint)ceil(args->relaxation/1.25) + 1.0;
+    if (show_messages) {
+        gwy_app_wait_set_message(_("Constructing lattice..."));
+        if (!gwy_app_wait_set_fraction(step/nsteps))
+            return NULL;
+    }
 
     if (!vstate) {
         gdouble r = args->relaxation;
 
         vstate = make_randomized_grid(args, xres, yres);
 
-        gwy_debug("Lattice creation: %g ms",
-                  1000.0*g_timer_elapsed(timer, NULL));
-        g_timer_start(timer);
+        if (show_messages) {
+            step++;
+            gwy_app_wait_set_message(_("Triangulating..."));
+            if (!gwy_app_wait_set_fraction(step/nsteps)) {
+                voronoi_state_free(vstate);
+                return NULL;
+            }
+        }
 
         niter = (vstate->wsq + 2*SQBORDER)*(vstate->hsq + 2*SQBORDER);
         for (iter = 0; iter < niter; iter++) {
             find_voronoi_neighbours_iter(vstate, iter);
             /* TODO: Update progress bar, if necessary. */
         }
-        gwy_debug("Triangulation: %g ms", 1000.0*g_timer_elapsed(timer, NULL));
-        g_timer_start(timer);
 
         while (r > 1e-9) {
+            if (show_messages) {
+                step++;
+                gwy_app_wait_set_message(_("Relaxing lattice..."));
+                if (!gwy_app_wait_set_fraction(step/nsteps)) {
+                    voronoi_state_free(vstate);
+                    return NULL;
+                }
+            }
+
             /* Overrelax slightly, but not much. */
             vstate = relax_lattice(vstate, MIN(r, 1.25));
             r -= 1.25;
         }
-        gwy_debug("Relaxation: %g ms", 1000.0*g_timer_elapsed(timer, NULL));
-        g_timer_start(timer);
+    }
+
+    if (show_messages) {
+        step++;
+        gwy_app_wait_set_message(_("Rendering surface..."));
+        if (!gwy_app_wait_set_fraction(step/nsteps)) {
+            voronoi_state_free(vstate);
+            return NULL;
+        }
     }
 
     if (dimsargs->add) {
@@ -1121,9 +1159,6 @@ lat_synth_do(LatSynthArgs *args,
     }
     else
         construct_surface(args, dimsargs, vstate, dfield);
-
-    gwy_debug("Rendering: %g ms", 1000.0*g_timer_elapsed(timer, NULL));
-    g_timer_destroy(timer);
 
     gwy_data_field_data_changed(dfield);
 
@@ -1229,7 +1264,7 @@ make_randomized_grid(const LatSynthArgs *args,
 {
     VoronoiState *vstate;
     gdouble scale, a;
-    guint wsq, hsq, extwsq, exthsq;
+    guint wsq, hsq, extwsq, exthsq, extxres, extyres;
     guint npts;
 
     /* Compute square size trying to get density per square around 7. The
@@ -1272,7 +1307,9 @@ make_randomized_grid(const LatSynthArgs *args,
         return vstate;
     }
 
-    create_regular_points(vstate, args);
+    extxres = GWY_ROUND(a*extwsq);
+    extyres = GWY_ROUND(a*exthsq);
+    create_regular_points(vstate, args, extxres, extyres);
     /*
     add_dislocations(squares, wsq, hsq, n*interstit, n*vacancies);
     */
@@ -1365,8 +1402,10 @@ iterate_hexagonal(int *i, int *j)
 }
 
 static void
-create_regular_points(VoronoiState *vstate, const LatSynthArgs *args)
+create_regular_points(VoronoiState *vstate, const LatSynthArgs *args,
+                      gint xres, gint yres)
 {
+    GwyDataField *displacement_x, *displacement_y;
     guint exthsq = vstate->hsq + 2*SQBORDER;
     guint extwsq = vstate->wsq + 2*SQBORDER;
     gdouble limit = MAX(exthsq*exthsq, extwsq*extwsq);
@@ -1374,7 +1413,26 @@ create_regular_points(VoronoiState *vstate, const LatSynthArgs *args)
     gdouble scale = vstate->scale, cth, sth, t;
     LatSynthType lattice_type = args->lattice_type;
     VoronoiCoords cpos, pos;
-    gint i = 0, j = 0;
+    gint i = 0, j = 0, disp_i, disp_j;
+    const gdouble *dx_data, *dy_data;
+    G_GNUC_UNUSED guint npts = 0;
+
+    displacement_x = make_displacement_map(xres, yres,
+                                           0.1*args->sigma, args->tau,
+                                           gwy_rand_gen_set_rng(vstate->rngset,
+                                                                RNG_DISPLAC_X));
+    displacement_y = make_displacement_map(xres, yres,
+                                           0.1*args->sigma, args->tau,
+                                           gwy_rand_gen_set_rng(vstate->rngset,
+                                                                RNG_DISPLAC_Y));
+    dx_data = gwy_data_field_get_data(displacement_x);
+    dy_data = gwy_data_field_get_data(displacement_y);
+
+    /* Ensure the point density is always the same as for random. */
+    if (lattice_type == LAT_SYNTH_HEXAGONAL)
+        scale /= 1.0379548493020427;
+    else if (lattice_type == LAT_SYNTH_TRIANGULAR)
+        scale /= 0.8474865856124707;
 
     cth = cos(args->angle);
     sth = sin(args->angle);
@@ -1396,18 +1454,34 @@ create_regular_points(VoronoiState *vstate, const LatSynthArgs *args)
          * User-level randomisation is controlled by the deformation map. */
         pos.x = cpos.x + 0.5*extwsq + 0.0001*(g_rand_double(rng) - 0.00005);
         pos.y = cpos.y + 0.5*exthsq + 0.0001*(g_rand_double(rng) - 0.00005);
+
+        disp_j = GWY_ROUND(pos.x/extwsq*xres);
+        disp_j = CLAMP(disp_j, 0, xres-1);
+        disp_i = GWY_ROUND(pos.y/exthsq*yres);
+        disp_i = CLAMP(disp_i, 0, yres-1);
+
+        pos.x += dx_data[disp_i*xres + disp_j];
+        pos.y += dy_data[disp_i*xres + disp_j];
+
         if (!(lattice_type == LAT_SYNTH_TRIANGULAR && ABS(j - i) % 3 == 0)
             && pos.x >= EPS
             && pos.y >= EPS
             && pos.x <= extwsq - 2.0*EPS
-            && pos.y <= exthsq - 2.0*EPS)
+            && pos.y <= exthsq - 2.0*EPS) {
             place_point_to_square(vstate, &pos, g_rand_double(rng));
+            npts++;
+        }
 
         if (lattice_type == LAT_SYNTH_SQUARE)
             iterate_square(&i, &j);
         else
             iterate_hexagonal(&i, &j);
     } while (DOTPROD_SS(cpos, cpos) <= limit);
+
+    gwy_debug("Number of points: %u", npts);
+
+    g_object_unref(displacement_y);
+    g_object_unref(displacement_x);
 }
 
 static gboolean
