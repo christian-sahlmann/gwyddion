@@ -66,6 +66,7 @@
       <b>
         <xsl:choose>
           <xsl:when test="$lang = 'en'">Version</xsl:when>
+          <xsl:when test="$lang = 'fr'">Version</xsl:when>
           <xsl:when test="$lang = 'ru'">Версия</xsl:when>
           <xsl:otherwise>Version</xsl:otherwise>
         </xsl:choose>
@@ -75,6 +76,7 @@
       <b>
         <xsl:choose>
           <xsl:when test="$lang = 'en'">Authors</xsl:when>
+          <xsl:when test="$lang = 'fr'">Auteurs</xsl:when>
           <xsl:when test="$lang = 'ru'">Авторы</xsl:when>
           <xsl:otherwise>Authors</xsl:otherwise>
         </xsl:choose>
@@ -84,6 +86,7 @@
       <b>
         <xsl:choose>
           <xsl:when test="$lang = 'en'">Copyright</xsl:when>
+          <xsl:when test="$lang = 'fr'">Droit d'auteur</xsl:when>
           <xsl:when test="$lang = 'ru'">Авторские права</xsl:when>
           <xsl:otherwise>Copyright</xsl:otherwise>
         </xsl:choose>
@@ -100,6 +103,7 @@
           <xsl:attribute name="href">http://gwyddion.net/documentation/user-guide-<xsl:value-of select="$lang"/>/<xsl:value-of select="userguide"/></xsl:attribute>
           <xsl:choose>
             <xsl:when test="$lang = 'en'">User guide</xsl:when>
+            <xsl:when test="$lang = 'fr'">Manuel utilisateur</xsl:when>
             <xsl:when test="$lang = 'ru'">Руководство пользователя</xsl:when>
             <xsl:otherwise>User guide</xsl:otherwise>
           </xsl:choose>
@@ -113,6 +117,7 @@
         <tr><th colspan="3">
           <xsl:choose>
             <xsl:when test="$lang = 'en'">Functions</xsl:when>
+            <xsl:when test="$lang = 'fr'">Fonctions</xsl:when>
             <xsl:when test="$lang = 'ru'">Функции</xsl:when>
             <xsl:otherwise>Functions</xsl:otherwise>
           </xsl:choose>
@@ -121,6 +126,7 @@
           <th>
              <xsl:choose>
                <xsl:when test="$lang = 'en'">Type</xsl:when>
+               <xsl:when test="$lang = 'fr'">Type</xsl:when>
                <xsl:when test="$lang = 'ru'">Тип</xsl:when>
                <xsl:otherwise>Type</xsl:otherwise>
              </xsl:choose>
@@ -128,6 +134,7 @@
           <th>
              <xsl:choose>
                <xsl:when test="$lang = 'en'">Name</xsl:when>
+               <xsl:when test="$lang = 'fr'">Nom</xsl:when>
                <xsl:when test="$lang = 'ru'">Имя</xsl:when>
                <xsl:otherwise>Name</xsl:otherwise>
              </xsl:choose>
@@ -135,6 +142,7 @@
           <th>
              <xsl:choose>
                <xsl:when test="$lang = 'en'">Information</xsl:when>
+               <xsl:when test="$lang = 'fr'">Information</xsl:when>
                <xsl:when test="$lang = 'ru'">Информация</xsl:when>
                <xsl:otherwise>Information</xsl:otherwise>
              </xsl:choose>
