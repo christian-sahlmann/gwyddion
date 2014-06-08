@@ -53,6 +53,11 @@
 #define DOTPROD_SP(a, b) ((a).x*(b)->x + (a).y*(b)->y)
 #define DOTPROD_PS(a, b) ((a)->x*(b).x + (a)->y*(b).y)
 
+#define CROSSPROD_SS(a, b) ((a).x*(b).y - (a).y*(b).x)
+#define CROSSPROD_SP(a, b) ((a).x*(b)->y - (a).y*(b)->x)
+#define CROSSPROD_PS(a, b) ((a)->x*(b).y - (a)->y*(b).x)
+#define CROSSPROD_PP(a, b) ((a)->x*(b)->y - (a)->y*(b)->x)
+
 #define DECLARE_SURFACE(x) \
     static gdouble surface_##x(const VoronoiCoords *point, \
                                const VoronoiObject *owner, \
@@ -146,6 +151,7 @@ struct _LatSynthArgs {
     gboolean update;
     LatSynthType lattice_type;
     gdouble size;
+    gdouble relaxation;
     gdouble angle;
     gdouble sigma;
     gdouble tau;
@@ -176,6 +182,7 @@ struct _LatSynthControls {
     GtkObject *size;
     GtkWidget *size_value;
     GtkWidget *size_units;
+    GtkObject *relaxation;
     GtkObject *angle;
     GtkObject *sigma;
     GtkObject *tau;
@@ -272,6 +279,11 @@ static GwyDataField*  make_displacement_map       (guint xres,
                                                    gdouble sigma,
                                                    gdouble tau,
                                                    GRand *rng);
+static VoronoiState*  relax_lattice               (VoronoiState *vstate,
+                                                   gdouble relax);
+static gdouble        cell_area_and_centre_of_mass(VoronoiObject *obj,
+                                                   VoronoiCoords *centre);
+static void           find_cell_vertices          (VoronoiObject *obj);
 static void           find_voronoi_neighbours_iter(VoronoiState *vstate,
                                                    gint iter);
 static VoronoiObject* find_owner                  (VoronoiState *vstate,
@@ -336,6 +348,7 @@ static const LatSynthArgs lat_synth_defaults = {
     42, TRUE, TRUE,
     LAT_SYNTH_RANDOM,
     40.0,
+    0.0,
     0.0,
     0.0, 0.0,
     0.0,
@@ -595,6 +608,18 @@ lat_synth_dialog(LatSynthArgs *args,
                                    NULL,
                                    &controls.size_value, &controls.size_units);
     g_signal_connect_swapped(controls.size, "value-changed",
+                             G_CALLBACK(invalidate_lattice), &controls);
+    row++;
+
+    controls.relaxation = gtk_adjustment_new(args->relaxation,
+                                             0.0, 16.0, 0.001, 0.1, 0);
+    g_object_set_data(G_OBJECT(controls.relaxation),
+                      "target", &args->relaxation);
+    gwy_table_attach_hscale(table, row, _("Rela_xation:"), NULL,
+                            controls.relaxation, GWY_HSCALE_SQRT);
+    g_signal_connect_swapped(controls.relaxation, "value-changed",
+                             G_CALLBACK(gwy_synth_double_changed), &controls);
+    g_signal_connect_swapped(controls.relaxation, "value-changed",
                              G_CALLBACK(invalidate_lattice), &controls);
     row++;
 
@@ -1026,6 +1051,8 @@ lat_synth_do(LatSynthArgs *args,
     GTimer *timer = g_timer_new();
 
     if (!vstate) {
+        gdouble r = args->relaxation;
+
         vstate = make_randomized_grid(args, xres, yres);
 
         gwy_debug("Lattice creation: %g ms",
@@ -1038,6 +1065,13 @@ lat_synth_do(LatSynthArgs *args,
             /* TODO: Update progress bar, if necessary. */
         }
         gwy_debug("Triangulation: %g ms", 1000.0*g_timer_elapsed(timer, NULL));
+        g_timer_start(timer);
+
+        while (r > 1e-9) {
+            vstate = relax_lattice(vstate, MIN(r, 1.25));
+            r -= 1.25;
+        }
+        gwy_debug("Relaxation: %g ms", 1000.0*g_timer_elapsed(timer, NULL));
         g_timer_start(timer);
     }
 
@@ -1441,6 +1475,127 @@ coords_plus(const VoronoiCoords *a, const VoronoiCoords *b)
     return z;
 }
 
+static VoronoiState*
+relax_lattice(VoronoiState *oldvstate, gdouble relax)
+{
+    VoronoiState *vstate;
+    guint extwsq = oldvstate->wsq + 2*SQBORDER;
+    guint exthsq = oldvstate->hsq + 2*SQBORDER;
+    guint i, j, k;
+    gdouble r;
+    GSList *l;
+
+    vstate = g_new0(VoronoiState, 1);
+    vstate->squares = g_new0(GSList*, extwsq*exthsq);
+    vstate->hsq = oldvstate->hsq;
+    vstate->wsq = oldvstate->wsq;
+    vstate->scale = oldvstate->scale;
+
+    for (i = 0; i < exthsq; i++) {
+        for (j = 0; j < extwsq; j++) {
+            k = extwsq*i + j;
+
+            r = ((i == 0 || j == 0 || i == exthsq-1 || j == extwsq-1)
+                 ? 0.0
+                 : relax);
+
+            for (l = oldvstate->squares[k]; l; l = l->next) {
+                VoronoiObject *oldobj = VOBJ(l);
+                VoronoiObject *obj = g_slice_new0(VoronoiObject);
+                gint newi, newj, newk;
+
+                if (r > 0.0) {
+                    VoronoiCoords c;
+                    cell_area_and_centre_of_mass(oldobj, &c);
+                    obj->pos.x = r*c.x + (1.0 - r)*oldobj->pos.x;
+                    obj->pos.y = r*c.y + (1.0 - r)*oldobj->pos.y;
+                }
+                else {
+                    obj->pos.x = oldobj->pos.x;
+                    obj->pos.y = oldobj->pos.y;
+                }
+                obj->random = oldobj->random;
+                newj = floor(obj->pos.x);
+                newi = floor(obj->pos.y);
+                g_assert(newi >= 0);
+                g_assert(newj >= 0);
+                g_assert(newi < exthsq);
+                g_assert(newj < extwsq);
+                newk = extwsq*newi + newj;
+                vstate->squares[newk] = g_slist_prepend(vstate->squares[newk],
+                                                        obj);
+            }
+        }
+    }
+
+    vstate->rngset = oldvstate->rngset;
+    oldvstate->rngset = NULL;
+    voronoi_state_free(oldvstate);
+
+    for (i = 0; i < exthsq; i++) {
+        for (j = 0; j < extwsq; j++) {
+            k = extwsq*i + j;
+            find_voronoi_neighbours_iter(vstate, k);
+        }
+    }
+
+    return vstate;
+}
+
+/* ne requirements: cyclic
+ * destroys neighbourisaion by recycling rel! */
+static gdouble
+cell_area_and_centre_of_mass(VoronoiObject *obj, VoronoiCoords *centre)
+{
+    GSList *ne = obj->ne, *ne2 = ne->next;
+    gdouble area = 0.0;
+
+    find_cell_vertices(obj);
+    gwy_clear(centre, 1);
+    do {
+        const VoronoiCoords *v1 = &VOBJ(ne)->rel.v;
+        const VoronoiCoords *v2 = &VOBJ(ne2)->rel.v;
+        VoronoiCoords mid = coords_plus(v1, v2);
+        gdouble a = CROSSPROD_PP(v1, v2);
+
+        area += a;
+        centre->x += mid.x * a;
+        centre->y += mid.y * a;
+
+        ne = ne2;
+        ne2 = ne->next;
+    } while (ne != obj->ne);
+
+    centre->x = obj->pos.x + centre->x/(6.0*area);
+    centre->y = obj->pos.y + centre->y/(6.0*area);
+
+    return 0.5*area;
+}
+
+/* Calculate vertices of the Voronoi cell, storing them in rel. */
+static void
+find_cell_vertices(VoronoiObject *obj)
+{
+    GSList *ne = obj->ne, *ne2;
+
+    do {
+        VoronoiCoords v1, v2;
+        gdouble D, l1, l2;
+
+        ne2 = ne->next;
+        v1 = coords_minus(&VOBJ(ne)->pos, &obj->pos);
+        v2 = coords_minus(&VOBJ(ne2)->pos, &obj->pos);
+
+        l1 = DOTPROD_SS(v1, v1);
+        l2 = DOTPROD_SS(v2, v2);
+        D = 2.0*CROSSPROD_SS(v1, v2);
+        VOBJ(ne)->rel.v.x = (l1*v2.y - l2*v1.y)/D;
+        VOBJ(ne)->rel.v.y = (v1.x*l2 - v2.x*l1)/D;
+
+        ne = ne2;
+    } while (ne != obj->ne);
+}
+
 static inline gdouble
 angle(const VoronoiCoords *r)
 {
@@ -1497,14 +1652,14 @@ find_delaunay_triangle(const VoronoiCoords *point,
     while (TRUE) {
         v1 = &VOBJ(ne1)->rel.v;
         v2 = &VOBJ(ne2)->rel.v;
-        if ((cp1 = v1->x*dist.y - v1->y*dist.x) >= 0
-            && (cp2 = dist.x*v2->y - dist.y*v2->x) >= 0)
+        if ((cp1 = CROSSPROD_PS(v1, dist)) >= 0
+            && (cp2 = CROSSPROD_SP(dist, v2)) >= 0)
             break;
         ne1 = ne2;
         ne2 = ne2->next;
     }
 
-    if (v1->x*v2->y - v1->y*v2->x - cp1 - cp2 >= 0.0) {
+    if (CROSSPROD_PP(v1, v2) - cp1 - cp2 >= 0.0) {
         /* OK, we are inside the right Delaunay triangle. */
         *neigh1 = VOBJ(ne1);
         *neigh2 = VOBJ(ne2);
@@ -1532,7 +1687,7 @@ find_delaunay_triangle(const VoronoiCoords *point,
 
         dist = coords_minus(point, v);
         tdist = coords_minus(v1, v);
-        a1 = tdist.x*dist.y - tdist.y*dist.x;
+        a1 = CROSSPROD_SS(tdist, dist);
         /* Are both sides of the line the wrong side?  Well...  Probably we are
          * almost exactly on that line so nothing bad will happen if we just
          * give up.  Seems very rare in practice. */
@@ -1541,11 +1696,11 @@ find_delaunay_triangle(const VoronoiCoords *point,
 
         dist = coords_minus(point, v1);
         tdist = coords_minus(v2, v1);
-        a12 = tdist.x*dist.y - tdist.y*dist.x;
+        a12 = CROSSPROD_SS(tdist, dist);
 
         dist = coords_minus(point, v2);
         tdist = coords_minus(v, v2);
-        a2 = tdist.x*dist.y - tdist.y*dist.x;
+        a2 = CROSSPROD_SS(tdist, dist);
 
         if (a2 >= 0.0 && a12 >= 0.0)
             break;
@@ -1598,9 +1753,9 @@ surface_linear(const VoronoiCoords *point, const VoronoiObject *owner,
     }
 
     dist = coords_minus(point, &owner->pos);
-    D = v1.x*v2.y - v1.y*v2.x;
-    c1 = -(v2.x*dist.y - v2.y*dist.x)/D;
-    c2 = (v1.x*dist.y - v1.y*dist.x)/D;
+    D = CROSSPROD_SS(v1, v2);
+    c1 = -CROSSPROD_SS(v2, dist)/D;
+    c2 = CROSSPROD_SS(v1, dist)/D;
     c = 1.0 - (c2 + c1);
     r = c*owner->random + c1*neigh1->random + c2*neigh2->random;
 
@@ -1626,9 +1781,9 @@ surface_bumpy(const VoronoiCoords *point, const VoronoiObject *owner,
     }
 
     dist = coords_minus(point, &owner->pos);
-    D = v1.x*v2.y - v1.y*v2.x;
-    c1 = -(v2.x*dist.y - v2.y*dist.x)/D;
-    c2 = (v1.x*dist.y - v1.y*dist.x)/D;
+    D = CROSSPROD_SS(v1, v2);
+    c1 = -CROSSPROD_SS(v2, dist)/D;
+    c2 = CROSSPROD_SS(v1, dist)/D;
     c = 1.0 - (c2 + c1);
     c1 *= c1*c1;
     c2 *= c2*c2;
@@ -1972,14 +2127,12 @@ in_shadow(const VoronoiLine *a, const VoronoiLine *b, const VoronoiCoords *z)
     /* Artifical fix for periodic grids, because in Real World This Just Does
      * Not Happen; also mitigates the s == 0 case below, as the offending point
      * would be probably removed here. */
-    if (DOTPROD_SP(a->v, z) > 1.01*a->d
-        && fabs(a->v.x * z->y - z->x * a->v.y) < 1e-12)
+    if (DOTPROD_SP(a->v, z) > 1.01*a->d && fabs(CROSSPROD_SP(a->v, z)) < 1e-12)
         return TRUE;
-    if (DOTPROD_SP(b->v, z) > 1.01*b->d
-        && fabs(b->v.x * z->y - z->x * b->v.y) < 1e-12)
+    if (DOTPROD_SP(b->v, z) > 1.01*b->d && fabs(CROSSPROD_SP(b->v, z)) < 1e-12)
         return TRUE;
 
-    s = 2*(a->v.x * b->v.y - b->v.x * a->v.y);
+    s = 2*CROSSPROD_SS(a->v, b->v);
     /* FIXME: what to do when s == 0 (or very near)??? */
     r.x = (a->d * b->v.y - b->d * a->v.y)/s;
     r.y = (b->d * a->v.x - a->d * b->v.x)/s;
@@ -2098,7 +2251,8 @@ voronoi_state_free(VoronoiState *vstate)
     GSList *l;
     guint extwsq, exthsq, i;
 
-    gwy_rand_gen_set_free(vstate->rngset);
+    if (vstate->rngset)
+        gwy_rand_gen_set_free(vstate->rngset);
 
     extwsq = vstate->wsq + 2*SQBORDER;
     exthsq = vstate->hsq + 2*SQBORDER;
@@ -2129,6 +2283,7 @@ static const gchar randomize_key[]    = "/module/lat_synth/randomize";
 static const gchar seed_key[]         = "/module/lat_synth/seed";
 static const gchar lattice_type_key[] = "/module/lat_synth/lattice_type";
 static const gchar size_key[]         = "/module/lat_synth/size";
+static const gchar relaxation_key[]   = "/module/lat_synth/relaxation";
 static const gchar angle_key[]        = "/module/lat_synth/angle";
 static const gchar sigma_key[]        = "/module/lat_synth/sigma";
 static const gchar tau_key[]          = "/module/lat_synth/tau";
@@ -2156,6 +2311,7 @@ lat_synth_sanitize_args(LatSynthArgs *args)
     args->randomize = !!args->randomize;
     args->lattice_type = MIN(args->lattice_type, LAT_SYNTH_NTYPES-1);
     args->size = CLAMP(args->size, 4.0, 1000.0);
+    args->relaxation = CLAMP(args->relaxation, 0.0, 16.0);
     args->angle = CLAMP(args->angle, -G_PI, G_PI);
     args->sigma = CLAMP(args->sigma, 0.0, 100.0);
     args->tau = CLAMP(args->sigma, 0.1, 1000.0);
@@ -2187,6 +2343,8 @@ lat_synth_load_args(GwyContainer *container,
     gwy_container_gis_enum_by_name(container, lattice_type_key,
                                    &args->lattice_type);
     gwy_container_gis_double_by_name(container, size_key, &args->size);
+    gwy_container_gis_double_by_name(container, relaxation_key,
+                                     &args->relaxation);
     gwy_container_gis_double_by_name(container, angle_key, &args->angle);
     gwy_container_gis_double_by_name(container, sigma_key, &args->sigma);
     gwy_container_gis_double_by_name(container, tau_key, &args->tau);
@@ -2242,6 +2400,8 @@ lat_synth_save_args(GwyContainer *container,
     gwy_container_set_enum_by_name(container, lattice_type_key,
                                    args->lattice_type);
     gwy_container_set_double_by_name(container, size_key, args->size);
+    gwy_container_set_double_by_name(container, relaxation_key,
+                                     args->relaxation);
     gwy_container_set_double_by_name(container, angle_key, args->angle);
     gwy_container_set_double_by_name(container, sigma_key, args->sigma);
     gwy_container_set_double_by_name(container, tau_key, args->tau);
