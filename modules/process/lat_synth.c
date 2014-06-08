@@ -183,9 +183,13 @@ struct _LatSynthControls {
     GtkWidget *size_value;
     GtkWidget *size_units;
     GtkObject *relaxation;
+    GtkWidget *angle_header;
     GtkObject *angle;
+    GtkWidget *deformation_header;
     GtkObject *sigma;
     GtkObject *tau;
+    GtkWidget *tau_value;
+    GtkWidget *tau_units;
     GtkWidget *surfaces;
     GtkWidget *enabled;
     GtkWidget *surface_header;
@@ -269,11 +273,13 @@ static void           construct_surface           (LatSynthArgs *args,
 static VoronoiState*  make_randomized_grid        (const LatSynthArgs *args,
                                                    guint xres,
                                                    guint yres);
-static void           random_squarized_points     (GSList **squares,
-                                                   guint extwsq,
-                                                   guint exthsq,
-                                                   guint npts,
-                                                   GRand *rng);
+static void           random_squarized_points     (VoronoiState *vstate,
+                                                   guint npts);
+static void           create_regular_points       (VoronoiState *vstate,
+                                                   const LatSynthArgs *args);
+static gboolean       place_point_to_square       (VoronoiState *vstate,
+                                                   VoronoiCoords *pos,
+                                                   gdouble random);
 static GwyDataField*  make_displacement_map       (guint xres,
                                                    guint yres,
                                                    gdouble sigma,
@@ -623,6 +629,25 @@ lat_synth_dialog(LatSynthArgs *args,
                              G_CALLBACK(invalidate_lattice), &controls);
     row++;
 
+    i = row;
+    row = gwy_synth_attach_orientation(&controls, row,
+                                       &controls.angle, &args->angle);
+    controls.angle_header = gwy_table_get_child_widget(table, i, 0);
+    g_signal_connect_swapped(controls.angle, "value-changed",
+                             G_CALLBACK(invalidate_lattice), &controls);
+
+    i = row;
+    row = gwy_synth_attach_deformation(&controls, row,
+                                       &controls.sigma, &args->sigma,
+                                       &controls.tau, &args->tau,
+                                       &controls.tau_value,
+                                       &controls.tau_units);
+    controls.deformation_header = gwy_table_get_child_widget(table, i, 0);
+    g_signal_connect_swapped(controls.tau, "value-changed",
+                             G_CALLBACK(invalidate_lattice), &controls);
+    g_signal_connect_swapped(controls.sigma, "value-changed",
+                             G_CALLBACK(invalidate_lattice), &controls);
+
     table = gtk_table_new(9, 4, FALSE);
     controls.table = GTK_TABLE(table);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
@@ -696,6 +721,7 @@ lat_synth_dialog(LatSynthArgs *args,
     /* Must be done when widgets are shown, see GtkNotebook docs */
     gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), args->active_page);
     update_values(&controls);
+    lattice_type_selected(GTK_COMBO_BOX(controls.lattice_type), &controls);
     for (i = 0; i < LAT_SURFACE_NTYPES; i++) {
         if (args->enabled[i])
             break;
@@ -780,6 +806,7 @@ update_values(LatSynthControls *controls)
 
     controls->pxsize = dims->args->measure * pow10(dims->args->xypow10);
     gtk_label_set_markup(GTK_LABEL(controls->size_units), dims->xyvf->units);
+    gtk_label_set_markup(GTK_LABEL(controls->tau_units), dims->xyvf->units);
     if (controls->height_units)
         gtk_label_set_markup(GTK_LABEL(controls->height_units),
                              dims->zvf->units);
@@ -950,9 +977,19 @@ static void
 lattice_type_selected(GtkComboBox *combo, LatSynthControls *controls)
 {
     LatSynthArgs *args = controls->args;
+    gboolean sens;
+
     args->lattice_type = gwy_enum_combo_box_get_active(combo);
     invalidate_lattice(controls);
     lat_synth_invalidate(controls);
+
+    sens = (args->lattice_type != LAT_SYNTH_RANDOM);
+    gtk_widget_set_sensitive(controls->angle_header, sens);
+    gwy_table_hscale_set_sensitive(controls->angle, sens);
+    gtk_widget_set_sensitive(controls->deformation_header, sens);
+    gwy_table_hscale_set_sensitive(controls->sigma, sens);
+    gwy_table_hscale_set_sensitive(controls->tau, sens);
+    gtk_widget_set_sensitive(controls->tau_units, sens);
 }
 
 static void
@@ -1068,6 +1105,7 @@ lat_synth_do(LatSynthArgs *args,
         g_timer_start(timer);
 
         while (r > 1e-9) {
+            /* Overrelax slightly, but not much. */
             vstate = relax_lattice(vstate, MIN(r, 1.25));
             r -= 1.25;
         }
@@ -1229,73 +1267,25 @@ make_randomized_grid(const LatSynthArgs *args,
     vstate->rngset = gwy_rand_gen_set_new(RNG_NRNGS);
     gwy_rand_gen_set_init(vstate->rngset, args->seed);
 
-    if (TRUE || args->lattice_type == LAT_SYNTH_RANDOM) {
-        GRand *rng = gwy_rand_gen_set_rng(vstate->rngset, RNG_POINTS);
-        random_squarized_points(vstate->squares, extwsq, exthsq, npts, rng);
+    if (args->lattice_type == LAT_SYNTH_RANDOM) {
+        random_squarized_points(vstate, npts);
         return vstate;
     }
 
-#if 0
-    /* compute cell sizes, must take tileability into account
-     * ncell is the number of *rectangular* cells */
-    ncell.x = width/side*sqrt(shape_area_factor[gridtype])
-        /rect_cell_to_axy_ratio[gridtype].x;
-    ncell.y = height/side*sqrt(shape_area_factor[gridtype])
-        /rect_cell_to_axy_ratio[gridtype].y;
-
-    a.x = width/ncell.x/rect_cell_to_axy_ratio[gridtype].x;
-    a.y = height/ncell.y/rect_cell_to_axy_ratio[gridtype].y;
-
-    /* compensate for square deformation */
-    a.x *= wsq/(gdouble)width;
-    a.y *= hsq/(gdouble)height;
-    radial_factor = 1.0/sqrt(a.x*a.y*grid_cell_center_distance[gridtype]);
-
-    /*fprintf(stderr, "lambda = %f\n", lambda);*/
-    wmap = MAX(1.2*rect_cell_to_axy_ratio[gridtype].x*ncell.x, 6);
-    hmap = MAX(1.2*rect_cell_to_axy_ratio[gridtype].y*ncell.y, 6);
-    defmapx = g_new(gdouble, wmap*hmap);
-    defmapy = g_new(gdouble, wmap*hmap);
-    slambda = lambda*sqrt(wmap*hmap/(gdouble)n);
+    create_regular_points(vstate, args);
     /*
-       fprintf(stderr, "ncell = (%f, %f)\n", ncell.x, ncell.y);
-       fprintf(stderr, "a = (%f, %f)\n", a.x, a.y);
-       fprintf(stderr, "wmap = %d, hmap = %d, slambda = %f\n", wmap, hmap, slambda);
-       */
-
-    defsigma.x = a.x*sigma*grid_cell_center_distance[gridtype];
-    defsigma.y = a.y*sigma*grid_cell_center_distance[gridtype];
-    /*fprintf(stderr, "sigma = (%f, %f)\n", defsigma.x, defsigma.y);*/
-    n = (extwsq*exthsq)/(a.x*a.y*shape_area_factor[gridtype]);
-    iter = 0;
-    do {
-        grid = create_regular_grid(gridtype, &a, wsq, hsq);
-        compute_deformation_map(defmapx, wmap, hmap, slambda);
-        compute_deformation_map(defmapy, wmap, hmap, slambda);
-        apply_deformation_map(grid, wsq, hsq,
-                              defmapx, defmapy, defsigma, wmap, hmap);
-        squarize_grid(grid, squares, wsq, hsq);
-        add_dislocations(squares, wsq, hsq, n*interstit, n*vacancies);
-        make_grid_tilable(squares, wsq, hsq, htil, vtil);
-        if (iter++ == 20) {
-            g_error("Cannot create grid. If you can reproduce this, report bug "
-                    "to <yeti@physics.muni.cz>, please include grid generator "
-                    "settings.");
-        }
-    } while (empty_squares(squares, wsq, hsq));
-
-    g_free(defmapx);
-    g_free(defmapy);
-#endif
+    add_dislocations(squares, wsq, hsq, n*interstit, n*vacancies);
+    */
 
     return vstate;
 }
 
 static void
-random_squarized_points(GSList **squares,
-                        guint extwsq, guint exthsq, guint npts,
-                        GRand *rng)
+random_squarized_points(VoronoiState *vstate, guint npts)
 {
+    guint exthsq = vstate->hsq + 2*SQBORDER;
+    guint extwsq = vstate->wsq + 2*SQBORDER;
+    GRand *rng = gwy_rand_gen_set_rng(vstate->rngset, RNG_POINTS);
     VoronoiObject *obj;
     guint i, j, k, nsq, nempty, nrem;
 
@@ -1308,17 +1298,11 @@ random_squarized_points(GSList **squares,
      * does not depend on the mean cell size which is good because the radnom
      * lattice changes more or less smoothly with size then. */
     while (nrem > nempty) {
-        obj = g_slice_new0(VoronoiObject);
-        obj->pos.x = g_rand_double(rng)*(extwsq - 2.0*EPS) + EPS;
-        obj->pos.y = g_rand_double(rng)*(exthsq - 2.0*EPS) + EPS;
-        obj->random = g_rand_double(rng);
-        j = (guint)floor(obj->pos.x);
-        i = (guint)floor(obj->pos.y);
-        k = extwsq*i + j;
-        if (!squares[k])
+        VoronoiCoords pos;
+        pos.x = g_rand_double(rng)*(extwsq - 2.0*EPS) + EPS;
+        pos.y = g_rand_double(rng)*(exthsq - 2.0*EPS) + EPS;
+        if (place_point_to_square(vstate, &pos, g_rand_double(rng)))
             nempty--;
-
-        squares[k] = g_slist_prepend(squares[k], obj);
         nrem--;
     }
 
@@ -1334,16 +1318,127 @@ random_squarized_points(GSList **squares,
     for (i = 0; i < exthsq; i++) {
         for (j = 0; j < extwsq; j++) {
             k = extwsq*i + j;
-            if (squares[k])
+            if (vstate->squares[k])
                 continue;
 
             obj = g_slice_new0(VoronoiObject);
             obj->pos.x = (1.0 - 2.0*EPS)*g_rand_double(rng) + EPS + j;
             obj->pos.y = (1.0 - 2.0*EPS)*g_rand_double(rng) + EPS + i;
             obj->random = g_rand_double(rng);
-            squares[k] = g_slist_prepend(NULL, obj);
+            vstate->squares[k] = g_slist_prepend(NULL, obj);
         }
     }
+}
+
+static inline void
+iterate_square(int *i, int *j)
+{
+    if (*i > 0 && (ABS(*j) < *i || *j == *i))
+        (*j)--;
+    else if (*i <= 0 && ABS(*j) <= -(*i))
+        (*j)++;
+    else if (*j > 0 && ABS(*i) < *j)
+        (*i)++;
+    else
+        (*i)--;
+}
+
+static inline void
+iterate_hexagonal(int *i, int *j)
+{
+    if (*i <= 0 && *j <= 0) {
+        (*i)--;
+        (*j)++;
+    }
+    else if (*i >= 0 && *j > 0) {
+        (*i)++;
+        (*j)--;
+    }
+    else if (*j > 0 && -(*i) <= *j)
+        (*i)++;
+    else if (*j < 0 && *i <= -(*j))
+        (*i)--;
+    else if (*i > 0)
+        (*j)--;
+    else
+        (*j)++;
+}
+
+static void
+create_regular_points(VoronoiState *vstate, const LatSynthArgs *args)
+{
+    guint exthsq = vstate->hsq + 2*SQBORDER;
+    guint extwsq = vstate->wsq + 2*SQBORDER;
+    gdouble limit = MAX(exthsq*exthsq, extwsq*extwsq);
+    GRand *rng = gwy_rand_gen_set_rng(vstate->rngset, RNG_POINTS);
+    gdouble scale = vstate->scale, cth, sth, t;
+    LatSynthType lattice_type = args->lattice_type;
+    VoronoiCoords cpos, pos;
+    gint i = 0, j = 0;
+
+    cth = cos(args->angle);
+    sth = sin(args->angle);
+    do {
+        if (lattice_type == LAT_SYNTH_SQUARE) {
+            cpos.x = j;
+            cpos.y = -i;
+        }
+        else {
+            cpos.x = j + 0.26794919243112270648*i;
+            cpos.y = -i - 0.26794919243112270648*j;
+        }
+
+        t = cth*cpos.x + sth*cpos.y;
+        cpos.y = (-sth*cpos.x + cth*cpos.y)/scale;
+        cpos.x = t/scale;
+
+        /* The randomisation here is to avoid some numeric troubles.
+         * User-level randomisation is controlled by the deformation map. */
+        pos.x = cpos.x + 0.5*extwsq + 0.0001*(g_rand_double(rng) - 0.00005);
+        pos.y = cpos.y + 0.5*exthsq + 0.0001*(g_rand_double(rng) - 0.00005);
+        if (!(lattice_type == LAT_SYNTH_TRIANGULAR && ABS(j - i) % 3 == 0)
+            && pos.x >= EPS
+            && pos.y >= EPS
+            && pos.x <= extwsq - 2.0*EPS
+            && pos.y <= exthsq - 2.0*EPS)
+            place_point_to_square(vstate, &pos, g_rand_double(rng));
+
+        if (lattice_type == LAT_SYNTH_SQUARE)
+            iterate_square(&i, &j);
+        else
+            iterate_hexagonal(&i, &j);
+    } while (DOTPROD_SS(cpos, cpos) <= limit);
+}
+
+static gboolean
+place_point_to_square(VoronoiState *vstate, VoronoiCoords *pos, gdouble random)
+{
+    VoronoiObject *obj;
+    guint exthsq = vstate->hsq + 2*SQBORDER;
+    guint extwsq = vstate->wsq + 2*SQBORDER;
+    gint i = (gint)floor(pos->y);
+    gint j = (gint)floor(pos->x);
+    guint k;
+
+#ifdef DEBUG
+    g_assert(i >= 0);
+    g_assert(j >= 0);
+    g_assert(i < exthsq);
+    g_assert(j < extwsq);
+#endif
+
+    obj = g_slice_new0(VoronoiObject);
+    obj->pos = *pos;
+    obj->random = random;
+
+    k = extwsq*i + j;
+    if (!vstate->squares[k]) {
+        vstate->squares[k] = g_slist_prepend(NULL, obj);
+        return TRUE;
+    }
+
+    vstate->squares[k] = g_slist_prepend(vstate->squares[k], obj);
+    return FALSE;
 }
 
 /* Iterating through rectangles in a growing fashion from the origin to
@@ -1494,36 +1589,24 @@ relax_lattice(VoronoiState *oldvstate, gdouble relax)
     for (i = 0; i < exthsq; i++) {
         for (j = 0; j < extwsq; j++) {
             k = extwsq*i + j;
-
             r = ((i == 0 || j == 0 || i == exthsq-1 || j == extwsq-1)
                  ? 0.0
                  : relax);
 
             for (l = oldvstate->squares[k]; l; l = l->next) {
                 VoronoiObject *oldobj = VOBJ(l);
-                VoronoiObject *obj = g_slice_new0(VoronoiObject);
-                gint newi, newj, newk;
 
                 if (r > 0.0) {
-                    VoronoiCoords c;
-                    cell_area_and_centre_of_mass(oldobj, &c);
-                    obj->pos.x = r*c.x + (1.0 - r)*oldobj->pos.x;
-                    obj->pos.y = r*c.y + (1.0 - r)*oldobj->pos.y;
+                    VoronoiCoords pos;
+                    cell_area_and_centre_of_mass(oldobj, &pos);
+                    pos.x = r*pos.x + (1.0 - r)*oldobj->pos.x;
+                    pos.y = r*pos.y + (1.0 - r)*oldobj->pos.y;
+                    place_point_to_square(vstate, &pos, oldobj->random);
                 }
                 else {
-                    obj->pos.x = oldobj->pos.x;
-                    obj->pos.y = oldobj->pos.y;
+                    place_point_to_square(vstate,
+                                          &oldobj->pos, oldobj->random);
                 }
-                obj->random = oldobj->random;
-                newj = floor(obj->pos.x);
-                newi = floor(obj->pos.y);
-                g_assert(newi >= 0);
-                g_assert(newj >= 0);
-                g_assert(newi < exthsq);
-                g_assert(newj < extwsq);
-                newk = extwsq*newi + newj;
-                vstate->squares[newk] = g_slist_prepend(vstate->squares[newk],
-                                                        obj);
             }
         }
     }
