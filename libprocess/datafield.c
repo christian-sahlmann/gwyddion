@@ -1182,8 +1182,8 @@ gwy_data_field_get_value_format_z(GwyDataField *data_field,
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
 
-    max = gwy_data_field_get_max(data_field);
-    min = gwy_data_field_get_min(data_field);
+    gwy_data_field_get_min_max(data_field, &min, &max);
+    gwy_data_field_get_autorange(data_field, &min, &max);
     if (max == min) {
         max = ABS(max);
         min = 0.0;
