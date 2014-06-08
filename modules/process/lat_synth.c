@@ -186,6 +186,8 @@ struct _LatSynthControls {
     GtkObject *lower;
     GtkObject *upper;
     GtkObject *height;
+    GtkWidget *height_units;
+    GtkWidget *height_init;
     LatSynthSurface selected_surface;
     gdouble pxsize;
     gdouble zscale;
@@ -244,6 +246,7 @@ static void           lower_changed               (LatSynthControls *controls,
                                                    GtkAdjustment *adj);
 static void           upper_changed               (LatSynthControls *controls,
                                                    GtkAdjustment *adj);
+static void           height_init_clicked         (LatSynthControls *controls);
 static void           invalidate_lattice          (LatSynthControls *controls);
 static void           lat_synth_invalidate        (LatSynthControls *controls);
 static gboolean       preview_gsource             (gpointer user_data);
@@ -595,7 +598,7 @@ lat_synth_dialog(LatSynthArgs *args,
                              G_CALLBACK(invalidate_lattice), &controls);
     row++;
 
-    table = gtk_table_new(1, 4, FALSE);
+    table = gtk_table_new(9, 4, FALSE);
     controls.table = GTK_TABLE(table);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -641,6 +644,26 @@ lat_synth_dialog(LatSynthArgs *args,
     g_signal_connect_swapped(controls.upper, "value-changed",
                              G_CALLBACK(upper_changed), &controls);
     row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Height")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    row = gwy_synth_attach_height(&controls, row,
+                                  &controls.height, &args->height,
+                                  _("_Height:"),
+                                  NULL, &controls.height_units);
+
+    if (dfield_template) {
+        controls.height_init
+            = gtk_button_new_with_mnemonic(_("_Like Current Channel"));
+        g_signal_connect_swapped(controls.height_init, "clicked",
+                                 G_CALLBACK(height_init_clicked), &controls);
+        gtk_table_attach(GTK_TABLE(table), controls.height_init,
+                         1, 3, row, row+1, GTK_FILL, 0, 0, 0);
+        row++;
+    }
 
     gtk_widget_show_all(dialog);
     controls.table = NULL;
@@ -732,6 +755,10 @@ update_values(LatSynthControls *controls)
 
     controls->pxsize = dims->args->measure * pow10(dims->args->xypow10);
     gtk_label_set_markup(GTK_LABEL(controls->size_units), dims->xyvf->units);
+    if (controls->height_units)
+        gtk_label_set_markup(GTK_LABEL(controls->height_units),
+                             dims->zvf->units);
+
     gwy_synth_update_lateral(controls, GTK_ADJUSTMENT(controls->size));
 }
 
@@ -867,6 +894,7 @@ surface_selected(LatSynthControls *controls, GtkTreeSelection *selection)
     LatSynthArgs *args = controls->args;
     GtkTreeModel *model;
     GtkTreeIter iter;
+    gboolean sens;
     guint i;
     gchar *s;
 
@@ -885,6 +913,12 @@ surface_selected(LatSynthControls *controls, GtkTreeSelection *selection)
     s = g_strconcat("<b>", surface_names[i], "</b>", NULL);
     gtk_label_set_markup(GTK_LABEL(controls->surface_header), s);
     g_free(s);
+
+    sens = args->enabled[i];
+    gtk_widget_set_sensitive(controls->surface_header, sens);
+    gwy_table_hscale_set_sensitive(controls->weight, sens);
+    gwy_table_hscale_set_sensitive(controls->lower, sens);
+    gwy_table_hscale_set_sensitive(controls->upper, sens);
 }
 
 static void
@@ -922,6 +956,14 @@ upper_changed(LatSynthControls *controls, GtkAdjustment *adj)
     controls->args->upper[controls->selected_surface]
         = gtk_adjustment_get_value(adj);
     lat_synth_invalidate(controls);
+}
+
+static void
+height_init_clicked(LatSynthControls *controls)
+{
+    gdouble mag = pow10(controls->dims->args->zpow10);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height),
+                             controls->zscale/mag);
 }
 
 /* This extra callback is only invoked on changed that influence the lattice.
@@ -999,7 +1041,15 @@ lat_synth_do(LatSynthArgs *args,
         g_timer_start(timer);
     }
 
-    construct_surface(args, dimsargs, vstate, dfield);
+    if (dimsargs->add) {
+        GwyDataField *addfield = gwy_data_field_new_alike(dfield, FALSE);
+        construct_surface(args, dimsargs, vstate, addfield);
+        gwy_data_field_sum_fields(dfield, dfield, addfield);
+        g_object_unref(addfield);
+    }
+    else
+        construct_surface(args, dimsargs, vstate, dfield);
+
     gwy_debug("Rendering: %g ms", 1000.0*g_timer_elapsed(timer, NULL));
     g_timer_destroy(timer);
 
@@ -1094,6 +1144,9 @@ construct_surface(LatSynthArgs *args,
             gwy_data_field_multiply(tmpfield, args->weight[i]);
         gwy_data_field_sum_fields(dfield, dfield, tmpfield);
     }
+
+    gwy_data_field_renormalize(dfield,
+                               args->height * pow10(dimsargs->zpow10), 0.0);
 
     g_object_unref(tmpfield);
 }
@@ -2106,6 +2159,7 @@ lat_synth_sanitize_args(LatSynthArgs *args)
     args->angle = CLAMP(args->angle, -G_PI, G_PI);
     args->sigma = CLAMP(args->sigma, 0.0, 100.0);
     args->tau = CLAMP(args->sigma, 0.1, 1000.0);
+    args->height = CLAMP(args->height, 0.001, 10000.0);
     for (i = 0; i < G_N_ELEMENTS(args->weight); i++) {
         args->weight[i]= CLAMP(args->weight[i], -1.0, 1.0);
         args->enabled[i] = !!args->enabled[i];
@@ -2136,6 +2190,7 @@ lat_synth_load_args(GwyContainer *container,
     gwy_container_gis_double_by_name(container, angle_key, &args->angle);
     gwy_container_gis_double_by_name(container, sigma_key, &args->sigma);
     gwy_container_gis_double_by_name(container, tau_key, &args->tau);
+    gwy_container_gis_double_by_name(container, height_key, &args->height);
     str = g_string_new(NULL);
     for (i = 0; i < G_N_ELEMENTS(args->weight); i++) {
         guint len;
@@ -2190,6 +2245,7 @@ lat_synth_save_args(GwyContainer *container,
     gwy_container_set_double_by_name(container, angle_key, args->angle);
     gwy_container_set_double_by_name(container, sigma_key, args->sigma);
     gwy_container_set_double_by_name(container, tau_key, args->tau);
+    gwy_container_set_double_by_name(container, height_key, args->height);
     str = g_string_new(NULL);
     for (i = 0; i < G_N_ELEMENTS(args->weight); i++) {
         guint len;
