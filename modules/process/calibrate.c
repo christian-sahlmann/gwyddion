@@ -382,7 +382,7 @@ static gboolean
 calibrate_dialog(CalibrateArgs *args,
                  GwyDataField *dfield)
 {
-    enum { RESPONSE_RESET = 1};
+    enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *spin, *table, *label;
     GwySIUnit *unit;
     CalibrateControls controls;
