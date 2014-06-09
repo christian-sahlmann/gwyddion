@@ -49,7 +49,6 @@ process_LTLIBRARIES = \
 	grain_edge.la \
 	grain_filter.la \
 	grain_mark.la \
-	grain_rem_threshold.la \
 	grain_stat.la \
 	grain_wshed.la \
 	hough.la \
@@ -160,7 +159,6 @@ grain_dist_la_SOURCES          = grain_dist.c
 grain_edge_la_SOURCES          = grain_edge.c
 grain_filter_la_SOURCES        = grain_filter.c
 grain_mark_la_SOURCES          = grain_mark.c
-grain_rem_threshold_la_SOURCES = grain_rem_threshold.c
 grain_stat_la_SOURCES          = grain_stat.c
 grain_wshed_la_SOURCES         = grain_wshed.c
 hough_la_SOURCES               = hough.c
