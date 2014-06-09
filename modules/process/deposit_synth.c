@@ -31,6 +31,7 @@
 #include <libprocess/inttrans.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
@@ -193,7 +194,7 @@ module_register(void)
     gwy_process_func_register("deposit_synth",
                               (GwyProcessFunc)&deposit_synth,
                               N_("/S_ynthetic/_Particles..."),
-                              NULL,
+                              GWY_STOCK_SYNTHETIC_PARTICLES,
                               DEPOSIT_SYNTH_RUN_MODES,
                               0,
                               N_("Generate particles using dynamical model"));

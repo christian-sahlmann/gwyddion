@@ -388,7 +388,7 @@ module_register(void)
     gwy_process_func_register("lat_synth",
                               (GwyProcessFunc)&lat_synth,
                               N_("/S_ynthetic/_Lattice..."),
-                              NULL,
+                              GWY_STOCK_SYNTHETIC_LATTICE,
                               LAT_SYNTH_RUN_MODES,
                               0,
                               N_("Generate lattice based surface"));
