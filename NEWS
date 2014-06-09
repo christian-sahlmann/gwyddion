@@ -14,6 +14,8 @@ Libraries:
 - libgwyprocess: New function for performing one step of facet levelling.
 - libgwyddion: New data type GwyRandGenSet providing a convenient set of random
   number generators and functions for sampling from different distributions.
+- libgwyprocess: DataField z-value format is now based on autorange instead of
+  the full data range.
 
 Modules:
 - WinSTM (new): Import WinSTM data files.
@@ -25,6 +27,11 @@ Modules:
   GUI and functionality is the same as before.
 - Lattice synthesis (new): Construction of surfaces based on Voronoi
   tesselation of randomized lattices.
+- Grain removal by threshold: Removed.  Threshold-based removal is replaced
+  by Grain filter (also replacing it the default toolbox).  Removal of grains
+  touching image edges is a standalone menu function now.
+- Mask operations: Function for removal of grains touching image edges was
+  added.
 - Mask editor tool: Fill voids handles correctly different connectivity of
   grain exterior, noticeable for grains separated only by thin lines.  It is
   also possible to fill only simple-connected grains.
