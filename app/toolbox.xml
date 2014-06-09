@@ -17,7 +17,7 @@
     <item type='proc' function='scars_remove'/>
     <item type='proc' function='grain_mark'/>
     <item type='proc' function='grain_wshed'/>
-    <item type='proc' function='grain_rem_threshold'/>
+    <item type='proc' function='grain_filter'/>
     <item type='proc' function='grain_dist'/>
     <item type='proc' function='shade'/>
     <item type='proc' function='polylevel'/>
