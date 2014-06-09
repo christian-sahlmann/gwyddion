@@ -1068,6 +1068,15 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_SYNTHETIC_LATTICE:
+ *
+ * The "Synthetic-Lattice" stock icon.
+ * <inlinegraphic fileref="gwy_synthetic_lattice-24.png" format="PNG"/>
+ *
+ * Since: 2.37
+ **/
+
+/**
  * GWY_STOCK_SYNTHETIC_LINE_NOISE:
  *
  * The "Synthetic-Line-Noise" stock icon.
@@ -1090,6 +1099,15 @@ file_to_icon_source(const gchar *path,
  *
  * The "Synthetic-Objects" stock icon.
  * <inlinegraphic fileref="gwy_synthetic_objects-24.png" format="PNG"/>
+ *
+ * Since: 2.37
+ **/
+
+/**
+ * GWY_STOCK_SYNTHETIC_PARTICLES:
+ *
+ * The "Synthetic-Particles" stock icon.
+ * <inlinegraphic fileref="gwy_synthetic_particles-24.png" format="PNG"/>
  *
  * Since: 2.37
  **/
