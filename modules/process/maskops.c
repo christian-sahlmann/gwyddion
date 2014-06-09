@@ -22,6 +22,7 @@
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/filters.h>
+#include <libprocess/grains.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
@@ -33,20 +34,22 @@ typedef struct {
     gint id;
 } GwyDataObjectId;
 
-static gboolean module_register   (void);
-static void     mask_remove       (GwyContainer *data,
-                                   GwyRunType run);
-static void     mask_invert       (GwyContainer *data,
-                                   GwyRunType run);
-static void     mask_extract      (GwyContainer *data,
-                                   GwyRunType run);
+static gboolean module_register(void);
+static void     mask_remove    (GwyContainer *data,
+                                GwyRunType run);
+static void     mask_invert    (GwyContainer *data,
+                                GwyRunType run);
+static void     mask_extract   (GwyContainer *data,
+                                GwyRunType run);
+static void     remove_touching(GwyContainer *data,
+                                GwyRunType run);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Basic operations with mask: inversion, removal, extraction."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -77,6 +80,13 @@ module_register(void)
                               MASKOPS_RUN_MODES,
                               GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
                               N_("Extract mask to a new channel"));
+    gwy_process_func_register("grain_rem_touching",
+                              (GwyProcessFunc)&remove_touching,
+                              N_("/_Grains/_Remove Edge-Touching..."),
+                              NULL,
+                              MASKOPS_RUN_MODES,
+                              GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_DATA_MASK,
+                              N_("Remove grains touching image edges"));
 
     return TRUE;
 }
@@ -144,6 +154,26 @@ mask_extract(GwyContainer *data, GwyRunType run)
     g_object_unref(dfield);
     gwy_app_set_data_field_title(data, newid, _("Mask"));
     gwy_app_channel_log_add(data, oldid, newid, "proc::mask_extract", NULL);
+}
+
+static void
+remove_touching(GwyContainer *data, GwyRunType run)
+{
+    GwyDataField *mfield;
+    GQuark mquark;
+    gint id;
+
+    g_return_if_fail(run & MASKOPS_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_MASK_FIELD, &mfield,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
+    g_return_if_fail(mfield);
+
+    gwy_app_undo_qcheckpointv(data, 1, &mquark);
+    gwy_data_field_grains_remove_touching_border(mfield);
+    gwy_data_field_data_changed(mfield);
+    gwy_app_channel_log_add(data, id, id, "proc::grain_rem_touching", NULL);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
