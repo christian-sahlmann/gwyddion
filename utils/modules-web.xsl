@@ -43,10 +43,10 @@
             <p>
               <b>
                 <xsl:choose>
-                  <xsl:when test="$lang = 'en'">Authors</xsl:when>
-                  <xsl:when test="$lang = 'fr'">Auteurs</xsl:when>
-                  <xsl:when test="$lang = 'ru'">Авторы</xsl:when>
-                  <xsl:otherwise>Authors</xsl:otherwise>
+                  <xsl:when test="$lang = 'en'">Module</xsl:when>
+                  <xsl:when test="$lang = 'fr'">Module</xsl:when>
+                  <xsl:when test="$lang = 'ru'">Модуль</xsl:when>
+                  <xsl:otherwise>Module</xsl:otherwise>
                 </xsl:choose>
                 <xsl:text>:&#32;</xsl:text>
               </b>
