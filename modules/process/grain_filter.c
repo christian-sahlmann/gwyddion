@@ -992,7 +992,7 @@ sort_grain_values(GPtrArray *valuedata,
 
     sortedvaluedata = g_ptr_array_new();
     g_ptr_array_set_size(sortedvaluedata, n);
-    *nuniqvalues = g_new(guint, ngrains);
+    *nuniqvalues = g_new(guint, n);
 
     datasize = ngrains*sizeof(gdouble);
     for (i = 0; i < n; i++) {
