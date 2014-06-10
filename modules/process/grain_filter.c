@@ -536,6 +536,7 @@ gfilter_dialog(GFilterArgs *args,
 
     /* finished initializing, allow instant updates */
     controls.in_init = FALSE;
+    gfilter_invalidate(&controls);
 
     gtk_widget_show_all(dialog);
     do {
