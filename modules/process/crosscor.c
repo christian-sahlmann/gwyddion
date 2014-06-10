@@ -105,6 +105,10 @@ static void     mask_changed_cb       (GtkToggleButton *button,
                                        CrosscorControls *controls);
 static void     multiple_changed_cb   (GtkToggleButton *button,
                                        CrosscorControls *controls);
+static void     crosscor_update_areas_cb(GtkObject *adj,
+                                       CrosscorControls *controls);
+
+
 
 static const CrosscorArgs crosscor_defaults = {
     GWY_CROSSCOR_ABS, 10, 10, 25, 25, 0.0, 0.0, 1, 0.95, 0,
@@ -207,6 +211,11 @@ crosscor_dialog(CrosscorArgs *args)
                                                 0.0, 100.0, 1, 5, 0);
     gwy_table_attach_hscale(table, row, _("_Width:"), "px",
                             controls.search_area_x, 0);
+
+    g_signal_connect(controls.search_area_x, "value-changed",
+                     G_CALLBACK(crosscor_update_areas_cb),
+                     &controls);
+
     row++;
 
     controls.search_area_y = gtk_adjustment_new(args->search_y,
@@ -214,6 +223,10 @@ crosscor_dialog(CrosscorArgs *args)
     gwy_table_attach_hscale(table, row, _("H_eight:"), "px",
                             controls.search_area_y, 0);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    g_signal_connect(controls.search_area_y, "value-changed",
+                     G_CALLBACK(crosscor_update_areas_cb),
+                     &controls);
+
     row++;
 
     /* Window size */
@@ -227,6 +240,10 @@ crosscor_dialog(CrosscorArgs *args)
                                                 0.0, 100.0, 1, 5, 0);
     gwy_table_attach_hscale(table, row, _("W_idth:"), "px",
                             controls.window_area_x, 0);
+    g_signal_connect(controls.window_area_x, "value-changed",
+                     G_CALLBACK(crosscor_update_areas_cb),
+                     &controls);
+
     row++;
 
     controls.window_area_y = gtk_adjustment_new(args->window_y,
@@ -234,6 +251,9 @@ crosscor_dialog(CrosscorArgs *args)
     gwy_table_attach_hscale(table, row, _("Hei_ght:"), "px",
                             controls.window_area_y, 0);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    g_signal_connect(controls.window_area_y, "value-changed",
+                     G_CALLBACK(crosscor_update_areas_cb),
+                     &controls);
     row++;
 
     /* Result */
@@ -443,25 +463,55 @@ dir_field(GwyDataField *dfieldx, GwyDataField *dfieldy)
     return result;
 }
 
+static void     
+crosscor_update_areas_cb(G_GNUC_UNUSED GtkObject *adj,
+                                       CrosscorControls *controls)
+{
+    static gboolean in_update = FALSE;
+    if (in_update)  return;
+
+    in_update = TRUE;
+
+    controls->args->search_x = gwy_adjustment_get_int(controls->search_area_x);
+    controls->args->search_y = gwy_adjustment_get_int(controls->search_area_y);
+
+    controls->args->window_x = gwy_adjustment_get_int(controls->window_area_x);
+    controls->args->window_y = gwy_adjustment_get_int(controls->window_area_y);
+
+    if (controls->args->search_x<controls->args->window_x) {
+         controls->args->search_x = controls->args->window_x;
+         gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->search_area_x), controls->args->search_x);
+    }
+    if (controls->args->search_y<controls->args->window_y) {
+         controls->args->search_y = controls->args->window_y;
+         gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->search_area_y), controls->args->search_y);
+    }
+
+    in_update = FALSE;
+}
+
 static void
 crosscor_update_values(CrosscorControls *controls,
                        CrosscorArgs *args)
 {
     args->search_x = gwy_adjustment_get_int(controls->search_area_x);
     args->search_y = gwy_adjustment_get_int(controls->search_area_y);
+
     args->window_x = gwy_adjustment_get_int(controls->window_area_x);
     args->window_y = gwy_adjustment_get_int(controls->window_area_y);
+
     args->threshold =
         gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold));
     args->add_ls_mask =
         gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->add_ls_mask));
+
 }
 
 static gboolean
 crosscor_do(CrosscorArgs *args)
 {
     GwyContainer *data;
-    GwyDataField *dfieldx, *dfieldy, *dfield1, *dfield2, *dfield3, *dfield4, *score, *dir=NULL, *abs=NULL;
+    GwyDataField *dfieldx, *dfieldy, *dfield1, *dfield2, *dfield3=NULL, *dfield4=NULL, *score, *dir=NULL, *abs=NULL;
     GwyDataField *dfieldx2=NULL, *dfieldy2=NULL, *score2=NULL;
     gint newid;
     GwyComputationState *state;
