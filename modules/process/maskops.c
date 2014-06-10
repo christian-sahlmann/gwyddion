@@ -82,7 +82,7 @@ module_register(void)
                               N_("Extract mask to a new channel"));
     gwy_process_func_register("grain_rem_touching",
                               (GwyProcessFunc)&remove_touching,
-                              N_("/_Grains/_Remove Edge-Touching..."),
+                              N_("/_Grains/_Remove Edge-Touching"),
                               NULL,
                               MASKOPS_RUN_MODES,
                               GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_DATA_MASK,

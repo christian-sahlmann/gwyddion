@@ -157,7 +157,7 @@ static const StartupTip tips[] = {
     },
     {
         GTK_STOCK_INDEX,
-        N_("A record of applied data processing operations can be browser "
+        N_("A record of applied data processing operations can be browsed "
            "using View Log in the channel or volume data right-click menu."),
     },
     /* 1D Views */

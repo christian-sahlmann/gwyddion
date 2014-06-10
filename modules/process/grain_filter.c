@@ -310,7 +310,7 @@ gfilter_dialog(GFilterArgs *args,
     }
     g_object_unref(siunit);
 
-    dialog = gtk_dialog_new_with_buttons(_("GFilter Grains by Threshold"),
+    dialog = gtk_dialog_new_with_buttons(_("Filter Grains"),
                                          NULL, 0, NULL);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
                                  gwy_stock_like_button_new(_("_Update"),
