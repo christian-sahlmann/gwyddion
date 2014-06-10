@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2014-06-05 03:58+0200\n"
-"PO-Revision-Date: 2014-06-06 22:42+0100\n"
+"PO-Revision-Date: 2014-06-09 19:08+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -8774,7 +8774,7 @@ msgstr "Filtrer les grains par seuil"
 
 #: modules/process/grain_filter.c:427
 msgid "Set selected as:"
-msgstr "Définir la sélection comme :"
+msgstr "Assigner à :"
 
 #: modules/process/grain_filter.c:442
 msgid "Keep grains satisfying:"
@@ -9439,7 +9439,6 @@ msgid "_Weight:"
 msgstr "Poids :"
 
 #: modules/process/lat_synth.c:706
-#, fuzzy
 msgid "Random constant"
 msgstr "Bruit aléatoire"
 
@@ -9892,7 +9891,7 @@ msgstr "Noyau de correction :"
 
 #: modules/process/maskcor.c:169
 msgid "Objects marked"
-msgstr "Objects marqués"
+msgstr "Objets marqués"
 
 #: modules/process/maskcor.c:170
 msgid "Correlation maxima"
