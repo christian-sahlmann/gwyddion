@@ -109,7 +109,6 @@ static void     crosscor_update_areas_cb(GtkObject *adj,
                                        CrosscorControls *controls);
 
 
-
 static const CrosscorArgs crosscor_defaults = {
     GWY_CROSSCOR_ABS, 10, 10, 25, 25, 0.0, 0.0, 1, 0.95, 0,
     { NULL, -1 }, { NULL, -1 }, { NULL, -1 }, { NULL, -1 },
@@ -431,7 +430,7 @@ abs_field(GwyDataField *dfieldx, GwyDataField *dfieldy)
     const gdouble *d2;
     gint i, n;
     GwyDataField *result = gwy_data_field_new_alike(dfieldx, TRUE);
-     
+
 
     data = gwy_data_field_get_data(dfieldx);
     d2 = gwy_data_field_get_data_const(dfieldy);
@@ -463,9 +462,9 @@ dir_field(GwyDataField *dfieldx, GwyDataField *dfieldy)
     return result;
 }
 
-static void     
+static void
 crosscor_update_areas_cb(G_GNUC_UNUSED GtkObject *adj,
-                                       CrosscorControls *controls)
+                         CrosscorControls *controls)
 {
     static gboolean in_update = FALSE;
     if (in_update)  return;
@@ -479,12 +478,14 @@ crosscor_update_areas_cb(G_GNUC_UNUSED GtkObject *adj,
     controls->args->window_y = gwy_adjustment_get_int(controls->window_area_y);
 
     if (controls->args->search_x<controls->args->window_x) {
-         controls->args->search_x = controls->args->window_x;
-         gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->search_area_x), controls->args->search_x);
+        controls->args->search_x = controls->args->window_x;
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->search_area_x),
+                                 controls->args->search_x);
     }
     if (controls->args->search_y<controls->args->window_y) {
-         controls->args->search_y = controls->args->window_y;
-         gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->search_area_y), controls->args->search_y);
+        controls->args->search_y = controls->args->window_y;
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->search_area_y),
+                                 controls->args->search_y);
     }
 
     in_update = FALSE;
@@ -504,15 +505,16 @@ crosscor_update_values(CrosscorControls *controls,
         gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold));
     args->add_ls_mask =
         gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->add_ls_mask));
-
 }
 
 static gboolean
-crosscor_do(CrosscorArgs *args)
+crosscor_do(CrosscorArgs * args)
 {
     GwyContainer *data;
-    GwyDataField *dfieldx, *dfieldy, *dfield1, *dfield2, *dfield3=NULL, *dfield4=NULL, *score, *dir=NULL, *abs=NULL;
-    GwyDataField *dfieldx2=NULL, *dfieldy2=NULL, *score2=NULL;
+    GwyDataField *dfieldx, *dfieldy, *dfield1, *dfield2,
+                 *dfield3 = NULL, *dfield4 = NULL, *score, *dir = NULL,
+                 *abs = NULL;
+    GwyDataField *dfieldx2 = NULL, *dfieldy2 = NULL, *score2 = NULL;
     gint newid;
     GwyComputationState *state;
     GwySIUnit *siunit;
@@ -529,16 +531,18 @@ crosscor_do(CrosscorArgs *args)
     dfieldy = gwy_data_field_new_alike(dfield1, FALSE);
     score = gwy_data_field_new_alike(dfield1, FALSE);
 
-    if (args->multiple) { 
-	    quark = gwy_app_get_data_key_for_id(args->op3.id);
-	    dfield3 = GWY_DATA_FIELD(gwy_container_get_object(args->op3.data, quark));
+    if (args->multiple) {
+        quark = gwy_app_get_data_key_for_id(args->op3.id);
+        dfield3 =
+            GWY_DATA_FIELD(gwy_container_get_object(args->op3.data, quark));
 
-	    quark = gwy_app_get_data_key_for_id(args->op4.id);
-	    dfield4 = GWY_DATA_FIELD(gwy_container_get_object(args->op4.data, quark));
+        quark = gwy_app_get_data_key_for_id(args->op4.id);
+        dfield4 =
+            GWY_DATA_FIELD(gwy_container_get_object(args->op4.data, quark));
 
-	    dfieldx2 = gwy_data_field_new_alike(dfield1, FALSE);
-	    dfieldy2 = gwy_data_field_new_alike(dfield1, FALSE);
-	    score2 = gwy_data_field_new_alike(dfield1, FALSE);
+        dfieldx2 = gwy_data_field_new_alike(dfield1, FALSE);
+        dfieldy2 = gwy_data_field_new_alike(dfield1, FALSE);
+        score2 = gwy_data_field_new_alike(dfield1, FALSE);
     }
 
     /* FIXME */
@@ -566,43 +570,41 @@ crosscor_do(CrosscorArgs *args)
     gwy_data_field_crosscorrelate_finalize(state);
     gwy_app_wait_finish();
 
-    /* compute crosscorelation of second set if it is there*/
-    if (args->multiple) { 
-            gwy_app_wait_start(gwy_app_find_window_for_channel(args->op1.data,
-                                                       args->op1.id),
-                       _("Initializing..."));
+    /* compute crosscorelation of second set if it is there */
+    if (args->multiple) {
+        gwy_app_wait_start(gwy_app_find_window_for_channel(args->op1.data,
+                                                           args->op1.id),
+                           _("Initializing..."));
 
-	    state = gwy_data_field_crosscorrelate_init(dfield3, dfield4,
-			    dfieldx2, dfieldy2, score2,
-			    args->search_x, args->search_y,
-			    args->window_x, args->window_y);
-	    gwy_app_wait_set_message(_("Correlating second set..."));
-	    do {
-		    gwy_data_field_crosscorrelate_iteration(state);
-		    if (!gwy_app_wait_set_fraction(state->fraction)) {
-			    gwy_data_field_crosscorrelate_finalize(state);
-			    gwy_app_wait_finish();
-			    g_object_unref(dfieldx2);
-			    g_object_unref(dfieldy2);
-			    g_object_unref(score2);
-			    return FALSE;
-		    }
-	    } while (state->state != GWY_COMPUTATION_STATE_FINISHED);
-	    gwy_data_field_crosscorrelate_finalize(state);
-	    gwy_app_wait_finish();
+        state = gwy_data_field_crosscorrelate_init(dfield3, dfield4,
+                                                   dfieldx2, dfieldy2, score2,
+                                                   args->search_x,
+                                                   args->search_y,
+                                                   args->window_x,
+                                                   args->window_y);
+        gwy_app_wait_set_message(_("Correlating second set..."));
+        do {
+            gwy_data_field_crosscorrelate_iteration(state);
+            if (!gwy_app_wait_set_fraction(state->fraction)) {
+                gwy_data_field_crosscorrelate_finalize(state);
+                gwy_app_wait_finish();
+                g_object_unref(dfieldx2);
+                g_object_unref(dfieldy2);
+                g_object_unref(score2);
+                return FALSE;
+            }
+        } while (state->state != GWY_COMPUTATION_STATE_FINISHED);
+        gwy_data_field_crosscorrelate_finalize(state);
+        gwy_app_wait_finish();
 
-            gwy_data_field_sum_fields(dfieldx, dfieldx, dfieldx2);
-            gwy_data_field_sum_fields(dfieldy, dfieldy, dfieldy2);
-            gwy_data_field_sum_fields(score, score, score2);
-  
-            gwy_data_field_multiply(dfieldx, 0.5);
-            gwy_data_field_multiply(dfieldy, 0.5);
-            gwy_data_field_multiply(score, 0.5);
+        gwy_data_field_sum_fields(dfieldx, dfieldx, dfieldx2);
+        gwy_data_field_sum_fields(dfieldy, dfieldy, dfieldy2);
+        gwy_data_field_sum_fields(score, score, score2);
 
+        gwy_data_field_multiply(dfieldx, 0.5);
+        gwy_data_field_multiply(dfieldy, 0.5);
+        gwy_data_field_multiply(score, 0.5);
     }
-
-     
-
 
     if (args->result == GWY_CROSSCOR_ALL || args->result == GWY_CROSSCOR_ABS)
         abs = abs_field(dfieldx, dfieldy);
@@ -610,114 +612,116 @@ crosscor_do(CrosscorArgs *args)
     if (args->result == GWY_CROSSCOR_ALL || args->result == GWY_CROSSCOR_DIR)
         dir = dir_field(dfieldx, dfieldy);
 
-    if (args->result == GWY_CROSSCOR_ALL || args->result == GWY_CROSSCOR_X)
-    {
-	    siunit = gwy_data_field_get_si_unit_z(dfieldx);
-	    gwy_si_unit_set_from_string(siunit, NULL);
-	    
-            data = args->op1.data;
-	    newid = gwy_app_data_browser_add_data_field(dfieldx, data, TRUE);
-	    gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
-			    GWY_DATA_ITEM_GRADIENT, 0);
-	    gwy_app_channel_log_add(data, args->op1.id, newid, "proc::crosscor", NULL);
+    if (args->result == GWY_CROSSCOR_ALL || args->result == GWY_CROSSCOR_X) {
+        siunit = gwy_data_field_get_si_unit_z(dfieldx);
+        gwy_si_unit_set_from_string(siunit, NULL);
 
-	    /* create score mask if requested */
-	    if (args->add_ls_mask) {
-		    quark = gwy_app_get_mask_key_for_id(newid);
-		    gwy_data_field_threshold(score, args->threshold, 1.0, 0.0);
-		    gwy_container_set_object(data, quark, score);
-	    }
+        data = args->op1.data;
+        newid = gwy_app_data_browser_add_data_field(dfieldx, data, TRUE);
+        gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
+                                GWY_DATA_ITEM_GRADIENT, 0);
+        gwy_app_channel_log_add(data, args->op1.id, newid, "proc::crosscor",
+                                NULL);
 
-            gwy_app_set_data_field_title(data, newid, _("X difference"));
+        /* create score mask if requested */
+        if (args->add_ls_mask) {
+            quark = gwy_app_get_mask_key_for_id(newid);
+            gwy_data_field_threshold(score, args->threshold, 1.0, 0.0);
+            gwy_container_set_object(data, quark, score);
+        }
+
+        gwy_app_set_data_field_title(data, newid, _("X difference"));
     }
 
-    if (args->result == GWY_CROSSCOR_ALL || args->result == GWY_CROSSCOR_Y)
-    {
-	    siunit = gwy_data_field_get_si_unit_z(dfieldy);
-	    gwy_si_unit_set_from_string(siunit, NULL);
-	    
-            data = args->op1.data;
-	    newid = gwy_app_data_browser_add_data_field(dfieldy, data, TRUE);
-	    gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
-			    GWY_DATA_ITEM_GRADIENT, 0);
-	    gwy_app_channel_log_add(data, args->op1.id, newid, "proc::crosscor", NULL);
+    if (args->result == GWY_CROSSCOR_ALL || args->result == GWY_CROSSCOR_Y) {
+        siunit = gwy_data_field_get_si_unit_z(dfieldy);
+        gwy_si_unit_set_from_string(siunit, NULL);
 
-	    /* create score mask if requested */
-	    if (args->add_ls_mask) {
-		    quark = gwy_app_get_mask_key_for_id(newid);
-		    gwy_data_field_threshold(score, args->threshold, 1.0, 0.0);
-		    gwy_container_set_object(data, quark, score);
-	    }
+        data = args->op1.data;
+        newid = gwy_app_data_browser_add_data_field(dfieldy, data, TRUE);
+        gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
+                                GWY_DATA_ITEM_GRADIENT, 0);
+        gwy_app_channel_log_add(data, args->op1.id, newid, "proc::crosscor",
+                                NULL);
 
-            gwy_app_set_data_field_title(data, newid, _("Y difference"));
+        /* create score mask if requested */
+        if (args->add_ls_mask) {
+            quark = gwy_app_get_mask_key_for_id(newid);
+            gwy_data_field_threshold(score, args->threshold, 1.0, 0.0);
+            gwy_container_set_object(data, quark, score);
+        }
+
+        gwy_app_set_data_field_title(data, newid, _("Y difference"));
     }
-    if (args->result == GWY_CROSSCOR_ALL || args->result == GWY_CROSSCOR_ABS)
-    {
-	    siunit = gwy_data_field_get_si_unit_z(abs);
-	    gwy_si_unit_set_from_string(siunit, NULL);
-	    
-            data = args->op1.data;
-	    newid = gwy_app_data_browser_add_data_field(abs, data, TRUE);
-	    gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
-			    GWY_DATA_ITEM_GRADIENT, 0);
-	    gwy_app_channel_log_add(data, args->op1.id, newid, "proc::crosscor", NULL);
+    if (args->result == GWY_CROSSCOR_ALL || args->result == GWY_CROSSCOR_ABS) {
+        siunit = gwy_data_field_get_si_unit_z(abs);
+        gwy_si_unit_set_from_string(siunit, NULL);
 
-	    /* create score mask if requested */
-	    if (args->add_ls_mask) {
-		    quark = gwy_app_get_mask_key_for_id(newid);
-		    gwy_data_field_threshold(score, args->threshold, 1.0, 0.0);
-		    gwy_container_set_object(data, quark, score);
-	    }
+        data = args->op1.data;
+        newid = gwy_app_data_browser_add_data_field(abs, data, TRUE);
+        gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
+                                GWY_DATA_ITEM_GRADIENT, 0);
+        gwy_app_channel_log_add(data, args->op1.id, newid, "proc::crosscor",
+                                NULL);
 
-            gwy_app_set_data_field_title(data, newid, _("Absolute difference"));
+        /* create score mask if requested */
+        if (args->add_ls_mask) {
+            quark = gwy_app_get_mask_key_for_id(newid);
+            gwy_data_field_threshold(score, args->threshold, 1.0, 0.0);
+            gwy_container_set_object(data, quark, score);
+        }
+
+        gwy_app_set_data_field_title(data, newid, _("Absolute difference"));
     }
-    if (args->result == GWY_CROSSCOR_ALL || args->result == GWY_CROSSCOR_DIR)
-    {
-	    siunit = gwy_data_field_get_si_unit_z(dir);
-	    gwy_si_unit_set_from_string(siunit, NULL);
-	    
-            data = args->op1.data;
-	    newid = gwy_app_data_browser_add_data_field(dir, data, TRUE);
-	    gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
-			    GWY_DATA_ITEM_GRADIENT, 0);
-	    gwy_app_channel_log_add(data, args->op1.id, newid, "proc::crosscor", NULL);
+    if (args->result == GWY_CROSSCOR_ALL || args->result == GWY_CROSSCOR_DIR) {
+        siunit = gwy_data_field_get_si_unit_z(dir);
+        gwy_si_unit_set_from_string(siunit, NULL);
 
-	    /* create score mask if requested */
-	    if (args->add_ls_mask) {
-		    quark = gwy_app_get_mask_key_for_id(newid);
-		    gwy_data_field_threshold(score, args->threshold, 1.0, 0.0);
-		    gwy_container_set_object(data, quark, score);
-	    }
+        data = args->op1.data;
+        newid = gwy_app_data_browser_add_data_field(dir, data, TRUE);
+        gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
+                                GWY_DATA_ITEM_GRADIENT, 0);
+        gwy_app_channel_log_add(data, args->op1.id, newid, "proc::crosscor",
+                                NULL);
 
-            gwy_app_set_data_field_title(data, newid, _("Direction"));
+        /* create score mask if requested */
+        if (args->add_ls_mask) {
+            quark = gwy_app_get_mask_key_for_id(newid);
+            gwy_data_field_threshold(score, args->threshold, 1.0, 0.0);
+            gwy_container_set_object(data, quark, score);
+        }
+
+        gwy_app_set_data_field_title(data, newid, _("Direction"));
     }
-    if (args->result == GWY_CROSSCOR_ALL || args->result == GWY_CROSSCOR_SCORE)
-    {
-	    siunit = gwy_data_field_get_si_unit_z(score);
-	    gwy_si_unit_set_from_string(siunit, NULL);
-	    
-            data = args->op1.data;
-	    newid = gwy_app_data_browser_add_data_field(score, data, TRUE);
-	    gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
-			    GWY_DATA_ITEM_GRADIENT, 0);
-	    gwy_app_channel_log_add(data, args->op1.id, newid, "proc::crosscor", NULL);
+    if (args->result == GWY_CROSSCOR_ALL
+        || args->result == GWY_CROSSCOR_SCORE) {
+        siunit = gwy_data_field_get_si_unit_z(score);
+        gwy_si_unit_set_from_string(siunit, NULL);
 
-	    /* create score mask if requested */
-	    if (args->add_ls_mask) {
-		    quark = gwy_app_get_mask_key_for_id(newid);
-		    gwy_data_field_threshold(score, args->threshold, 1.0, 0.0);
-		    gwy_container_set_object(data, quark, score);
-	    }
+        data = args->op1.data;
+        newid = gwy_app_data_browser_add_data_field(score, data, TRUE);
+        gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
+                                GWY_DATA_ITEM_GRADIENT, 0);
+        gwy_app_channel_log_add(data, args->op1.id, newid, "proc::crosscor",
+                                NULL);
 
-            gwy_app_set_data_field_title(data, newid, _("Score"));
+        /* create score mask if requested */
+        if (args->add_ls_mask) {
+            quark = gwy_app_get_mask_key_for_id(newid);
+            gwy_data_field_threshold(score, args->threshold, 1.0, 0.0);
+            gwy_container_set_object(data, quark, score);
+        }
+
+        gwy_app_set_data_field_title(data, newid, _("Score"));
     }
 
     g_object_unref(score);
     g_object_unref(dfieldy);
     g_object_unref(dfieldx);
-    if (abs) g_object_unref(abs);
-    if (dir) g_object_unref(dir);
-
+    if (abs)
+        g_object_unref(abs);
+    if (dir)
+        g_object_unref(dir);
 
     return TRUE;
 }
