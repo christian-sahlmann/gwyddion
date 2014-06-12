@@ -254,8 +254,18 @@ grain_filter(GwyContainer *data, GwyRunType run)
     args.sortedvaluedata = sort_grain_values(args.valuedata,
                                              &args.nuniqvalues,
                                              args.ngrains);
-    if (!args.ngrains) {
+    if (run == GWY_RUN_INTERACTIVE && !args.ngrains) {
+        GtkWidget *dialog;
+
         gfilter_free_args(&args);
+        dialog = gtk_message_dialog_new
+                        (gwy_app_find_window_for_channel(data, id),
+                        GTK_DIALOG_DESTROY_WITH_PARENT,
+                        GTK_MESSAGE_ERROR,
+                        GTK_BUTTONS_OK,
+                        _("There are no grains to filter."));
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
         return;
     }
 
