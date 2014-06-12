@@ -129,6 +129,7 @@ typedef struct {
                       (similar as rel) */
     gdouble random;  /* a random number in [0,1], generated to be always the
                         same for the same grid size */
+    gdouble rlxrandom; /* relaxed random */
     GSList *ne; /* neighbour list */
 } VoronoiObject;
 
@@ -151,7 +152,8 @@ struct _LatSynthArgs {
     gboolean update;
     LatSynthType lattice_type;
     gdouble size;
-    gdouble relaxation;
+    gdouble lrelaxation;
+    gdouble hrelaxation;
     gdouble angle;
     gdouble sigma;
     gdouble tau;
@@ -182,7 +184,8 @@ struct _LatSynthControls {
     GtkObject *size;
     GtkWidget *size_value;
     GtkWidget *size_units;
-    GtkObject *relaxation;
+    GtkObject *lrelaxation;
+    GtkObject *hrelaxation;
     GtkWidget *angle_header;
     GtkObject *angle;
     GtkWidget *deformation_header;
@@ -293,6 +296,9 @@ static VoronoiState*  relax_lattice               (VoronoiState *vstate,
 static gdouble        cell_area_and_centre_of_mass(VoronoiObject *obj,
                                                    VoronoiCoords *centre);
 static void           find_cell_vertices          (VoronoiObject *obj);
+static void           init_relaxed_random         (VoronoiState *vstate);
+static void           relax_random_values         (VoronoiState *vstate,
+                                                   gdouble relax);
 static void           find_voronoi_neighbours_iter(VoronoiState *vstate,
                                                    gint iter);
 static VoronoiObject* find_owner                  (VoronoiState *vstate,
@@ -357,7 +363,7 @@ static const LatSynthArgs lat_synth_defaults = {
     42, TRUE, TRUE,
     LAT_SYNTH_RANDOM,
     40.0,
-    0.0,
+    0.0, 0.0,
     0.0,
     0.0, 0.0,
     0.0,
@@ -628,16 +634,26 @@ lat_synth_dialog(LatSynthArgs *args,
                              G_CALLBACK(invalidate_lattice), &controls);
     row++;
 
-    controls.relaxation = gtk_adjustment_new(args->relaxation,
-                                             0.0, 16.0, 0.001, 0.1, 0);
-    g_object_set_data(G_OBJECT(controls.relaxation),
-                      "target", &args->relaxation);
-    gwy_table_attach_hscale(table, row, _("Rela_xation:"), NULL,
-                            controls.relaxation, GWY_HSCALE_SQRT);
-    g_signal_connect_swapped(controls.relaxation, "value-changed",
+    controls.lrelaxation = gtk_adjustment_new(args->lrelaxation,
+                                              0.0, 16.0, 0.001, 0.1, 0);
+    g_object_set_data(G_OBJECT(controls.lrelaxation),
+                      "target", &args->lrelaxation);
+    gwy_table_attach_hscale(table, row, _("Lattice rela_xation:"), NULL,
+                            controls.lrelaxation, GWY_HSCALE_SQRT);
+    g_signal_connect_swapped(controls.lrelaxation, "value-changed",
                              G_CALLBACK(gwy_synth_double_changed), &controls);
-    g_signal_connect_swapped(controls.relaxation, "value-changed",
+    g_signal_connect_swapped(controls.lrelaxation, "value-changed",
                              G_CALLBACK(invalidate_lattice), &controls);
+    row++;
+
+    controls.hrelaxation = gtk_adjustment_new(args->hrelaxation,
+                                             0.0, 200.0, 0.01, 10.0, 0);
+    g_object_set_data(G_OBJECT(controls.hrelaxation),
+                      "target", &args->hrelaxation);
+    gwy_table_attach_hscale(table, row, _("_Height rela_xation:"), NULL,
+                            controls.hrelaxation, GWY_HSCALE_SQRT);
+    g_signal_connect_swapped(controls.hrelaxation, "value-changed",
+                             G_CALLBACK(gwy_synth_double_changed), &controls);
     row++;
 
     i = row;
@@ -1097,9 +1113,9 @@ lat_synth_do(LatSynthArgs *args,
 {
     guint xres = dfield->xres, yres = dfield->yres;
     guint iter, niter, step = 0;
-    gdouble nsteps;
+    gdouble nsteps, r;
 
-    nsteps = 1.0 + 1.0 + (guint)ceil(args->relaxation/1.25) + 1.0;
+    nsteps = 1.0 + 1.0 + (guint)ceil(args->lrelaxation/1.25) + 1.0 + 1.0;
     if (show_messages) {
         gwy_app_wait_set_message(_("Constructing lattice..."));
         if (!gwy_app_wait_set_fraction(step/nsteps))
@@ -1107,8 +1123,7 @@ lat_synth_do(LatSynthArgs *args,
     }
 
     if (!vstate) {
-        gdouble r = args->relaxation;
-
+        r = args->lrelaxation;
         vstate = make_randomized_grid(args, xres, yres);
 
         if (show_messages) {
@@ -1140,6 +1155,21 @@ lat_synth_do(LatSynthArgs *args,
             vstate = relax_lattice(vstate, MIN(r, 1.25));
             r -= 1.25;
         }
+    }
+
+    if (show_messages) {
+        step++;
+        gwy_app_wait_set_message(_("Relaxing heights..."));
+        if (!gwy_app_wait_set_fraction(step/nsteps)) {
+            voronoi_state_free(vstate);
+            return NULL;
+        }
+    }
+    init_relaxed_random(vstate);
+    r = args->hrelaxation;
+    while (r > 1e-9) {
+        relax_random_values(vstate, MIN(r, 1.0));
+        r -= 1.0;
     }
 
     if (show_messages) {
@@ -1488,7 +1518,7 @@ static gboolean
 place_point_to_square(VoronoiState *vstate, VoronoiCoords *pos, gdouble random)
 {
     VoronoiObject *obj;
-    guint exthsq = vstate->hsq + 2*SQBORDER;
+    G_GNUC_UNUSED guint exthsq = vstate->hsq + 2*SQBORDER;
     guint extwsq = vstate->wsq + 2*SQBORDER;
     gint i = (gint)floor(pos->y);
     gint j = (gint)floor(pos->x);
@@ -1753,6 +1783,66 @@ find_cell_vertices(VoronoiObject *obj)
     } while (ne != obj->ne);
 }
 
+static void
+init_relaxed_random(VoronoiState *vstate)
+{
+    guint extwsq = vstate->wsq + 2*SQBORDER;
+    guint exthsq = vstate->hsq + 2*SQBORDER;
+    guint i, j, k;
+    GSList *l;
+
+    for (i = 0; i < exthsq; i++) {
+        for (j = 0; j < extwsq; j++) {
+            k = extwsq*i + j;
+            for (l = vstate->squares[k]; l; l = l->next) {
+                VoronoiObject *obj = VOBJ(l);
+                obj->rlxrandom = obj->random;
+            }
+        }
+    }
+}
+
+static void
+relax_random_values(VoronoiState *vstate, gdouble relax)
+{
+    guint extwsq = vstate->wsq + 2*SQBORDER;
+    guint exthsq = vstate->hsq + 2*SQBORDER;
+    guint i, j, k;
+    GSList *l;
+
+    for (i = 0; i < exthsq; i++) {
+        for (j = 0; j < extwsq; j++) {
+            k = extwsq*i + j;
+            for (l = vstate->squares[k]; l; l = l->next) {
+                VoronoiObject *obj = VOBJ(l);
+                GSList *ne = obj->ne;
+                gdouble w = 0.0, z = 0.0;
+
+                do {
+                    VoronoiCoords v = coords_minus(&VOBJ(ne)->pos, &obj->pos);
+                    gdouble v2 = 1.0/DOTPROD_SS(v, v);
+
+                    w += v2;
+                    z += v2*VOBJ(ne)->rlxrandom;
+                    ne = ne->next;
+                } while (ne != obj->ne);
+
+                obj->angle = z/w;
+            }
+        }
+    }
+
+    for (i = 0; i < exthsq; i++) {
+        for (j = 0; j < extwsq; j++) {
+            k = extwsq*i + j;
+            for (l = vstate->squares[k]; l; l = l->next) {
+                VoronoiObject *obj = VOBJ(l);
+                obj->rlxrandom += 0.5*relax*(obj->angle - obj->rlxrandom);
+            }
+        }
+    }
+}
+
 static inline gdouble
 angle(const VoronoiCoords *r)
 {
@@ -1782,7 +1872,7 @@ surface_flat(G_GNUC_UNUSED const VoronoiCoords *point,
 {
     gdouble r;
 
-    r = owner->random;
+    r = owner->rlxrandom;
 
     return r;
 }
@@ -1914,7 +2004,7 @@ surface_linear(const VoronoiCoords *point, const VoronoiObject *owner,
     c1 = -CROSSPROD_SS(v2, dist)/D;
     c2 = CROSSPROD_SS(v1, dist)/D;
     c = 1.0 - (c2 + c1);
-    r = c*owner->random + c1*neigh1->random + c2*neigh2->random;
+    r = c*owner->rlxrandom + c1*neigh1->rlxrandom + c2*neigh2->rlxrandom;
 
     return r;
 }
@@ -1946,7 +2036,7 @@ surface_bumpy(const VoronoiCoords *point, const VoronoiObject *owner,
     c2 *= c2*c2;
     c *= c*c;
     cs = c + c1 + c2;
-    r = (c*owner->random + c1*neigh1->random + c2*neigh2->random)/cs;
+    r = (c*owner->rlxrandom + c1*neigh1->rlxrandom + c2*neigh2->rlxrandom)/cs;
 
     return r;
 }
@@ -2006,7 +2096,8 @@ surface_zsegmented(const VoronoiCoords *point, const VoronoiObject *owner,
            + (VOBJ(ne)->angle > VOBJ(ne->next)->angle) < 2)
         ne = ne->next;
 
-    r = owner->random*(2*DOTPROD_SS(dist, VOBJ(ne)->rel.v)/VOBJ(ne)->rel.d - 1);
+    r = owner->rlxrandom*(2*DOTPROD_SS(dist, VOBJ(ne)->rel.v)/VOBJ(ne)->rel.d
+                          - 1);
 
     return r;
 }
@@ -2058,7 +2149,7 @@ surface_zborder(const VoronoiCoords *point, const VoronoiObject *owner,
             break;
     }
 
-    r = 1 - 2*r_min*args->scale*owner->random;
+    r = 1 - 2*r_min*args->scale*owner->rlxrandom;
 
     return r;
 }
@@ -2107,7 +2198,7 @@ compute_segment_angles(GSList *ne0)
         z.x = p->rel.d * q->rel.v.y - q->rel.d * p->rel.v.y;
         z.y = q->rel.d * p->rel.v.x - p->rel.d * q->rel.v.x;
         q->angle = angle(&z);
-        ne = g_slist_next(ne);
+        ne = ne->next;
     } while (ne != ne0);
 }
 
@@ -2247,7 +2338,7 @@ compute_straight_angles(GSList *ne0)
     GSList *ne;
     VoronoiObject *p;
 
-    for (ne = ne0; ne; ne = g_slist_next(ne)) {
+    for (ne = ne0; ne; ne = ne->next) {
         p = VOBJ(ne);
         p->angle = angle(&p->rel.v);
         if (ne->next == ne0)
@@ -2263,7 +2354,7 @@ neighbourize(GSList *ne0, const VoronoiCoords *center)
 {
     GSList *ne;
 
-    for (ne = ne0; ne; ne = g_slist_next(ne)) {
+    for (ne = ne0; ne; ne = ne->next) {
         VoronoiObject *p = VOBJ(ne);
 
         p->rel.v = coords_minus(&p->pos, center);
@@ -2358,7 +2449,7 @@ shadow_filter(GSList *ne)
     /* make the list cyclic if it isn't already
      * (we have to unlink elements ourself then) */
     len = 1;
-    for (ne2 = ne; ne2->next && ne2->next != ne; ne2 = g_slist_next(ne2))
+    for (ne2 = ne; ne2->next && ne2->next != ne; ne2 = ne2->next)
         len++;
     if (len < 3)
         return ne;
@@ -2392,7 +2483,7 @@ find_voronoi_neighbours_iter(VoronoiState *vstate, gint iter)
 {
     GSList *this;
 
-    for (this = vstate->squares[iter]; this; this = g_slist_next(this)) {
+    for (this = vstate->squares[iter]; this; this = this->next) {
         VoronoiObject *obj = VOBJ(this);
 
         obj->ne = extract_neighbourhood(vstate->squares,
@@ -2416,7 +2507,7 @@ voronoi_state_free(VoronoiState *vstate)
 
     /* Neighbourhoods. */
     for (i = 0; i < extwsq*exthsq; i++) {
-        for (l = vstate->squares[i]; l; l = g_slist_next(l)) {
+        for (l = vstate->squares[i]; l; l = l->next) {
             if (l && l->data && VOBJ(l)->ne) {
                 GSList *ne = VOBJ(l)->ne->next;
                 VOBJ(l)->ne->next = NULL; /* break cycles */
@@ -2427,7 +2518,7 @@ voronoi_state_free(VoronoiState *vstate)
 
     /* Grid contents. */
     for (i = 0; i < extwsq*exthsq; i++) {
-        for (l = vstate->squares[i]; l; l = g_slist_next(l))
+        for (l = vstate->squares[i]; l; l = l->next)
             g_slice_free(VoronoiObject, l->data);
         g_slist_free(vstate->squares[i]);
     }
@@ -2440,7 +2531,8 @@ static const gchar randomize_key[]    = "/module/lat_synth/randomize";
 static const gchar seed_key[]         = "/module/lat_synth/seed";
 static const gchar lattice_type_key[] = "/module/lat_synth/lattice_type";
 static const gchar size_key[]         = "/module/lat_synth/size";
-static const gchar relaxation_key[]   = "/module/lat_synth/relaxation";
+static const gchar lrelaxation_key[]  = "/module/lat_synth/lrelaxation";
+static const gchar hrelaxation_key[]  = "/module/lat_synth/hrelaxation";
 static const gchar angle_key[]        = "/module/lat_synth/angle";
 static const gchar sigma_key[]        = "/module/lat_synth/sigma";
 static const gchar tau_key[]          = "/module/lat_synth/tau";
@@ -2468,7 +2560,8 @@ lat_synth_sanitize_args(LatSynthArgs *args)
     args->randomize = !!args->randomize;
     args->lattice_type = MIN(args->lattice_type, LAT_SYNTH_NTYPES-1);
     args->size = CLAMP(args->size, 4.0, 1000.0);
-    args->relaxation = CLAMP(args->relaxation, 0.0, 16.0);
+    args->lrelaxation = CLAMP(args->lrelaxation, 0.0, 16.0);
+    args->hrelaxation = CLAMP(args->hrelaxation, 0.0, 200.0);
     args->angle = CLAMP(args->angle, -G_PI, G_PI);
     args->sigma = CLAMP(args->sigma, 0.0, 100.0);
     args->tau = CLAMP(args->sigma, 0.1, 1000.0);
@@ -2500,8 +2593,10 @@ lat_synth_load_args(GwyContainer *container,
     gwy_container_gis_enum_by_name(container, lattice_type_key,
                                    &args->lattice_type);
     gwy_container_gis_double_by_name(container, size_key, &args->size);
-    gwy_container_gis_double_by_name(container, relaxation_key,
-                                     &args->relaxation);
+    gwy_container_gis_double_by_name(container, lrelaxation_key,
+                                     &args->lrelaxation);
+    gwy_container_gis_double_by_name(container, hrelaxation_key,
+                                     &args->hrelaxation);
     gwy_container_gis_double_by_name(container, angle_key, &args->angle);
     gwy_container_gis_double_by_name(container, sigma_key, &args->sigma);
     gwy_container_gis_double_by_name(container, tau_key, &args->tau);
@@ -2557,8 +2652,10 @@ lat_synth_save_args(GwyContainer *container,
     gwy_container_set_enum_by_name(container, lattice_type_key,
                                    args->lattice_type);
     gwy_container_set_double_by_name(container, size_key, args->size);
-    gwy_container_set_double_by_name(container, relaxation_key,
-                                     args->relaxation);
+    gwy_container_set_double_by_name(container, lrelaxation_key,
+                                     args->lrelaxation);
+    gwy_container_set_double_by_name(container, hrelaxation_key,
+                                     args->hrelaxation);
     gwy_container_set_double_by_name(container, angle_key, args->angle);
     gwy_container_set_double_by_name(container, sigma_key, args->sigma);
     gwy_container_set_double_by_name(container, tau_key, args->tau);
