@@ -770,9 +770,15 @@ lat_synth_dialog(LatSynthArgs *args,
             break;
 
             case RESPONSE_RESET:
-            args->seed = lat_synth_defaults.seed;
-            args->randomize = lat_synth_defaults.randomize;
-            /* TODO */
+            {
+                gboolean temp = args->update;
+                gint temp2 = args->active_page;
+                gdouble temp3 = args->scale;
+                *args = lat_synth_defaults;
+                args->scale = temp3;
+                args->active_page = temp2;
+                args->update = temp;
+            }
             controls.in_init = TRUE;
             update_controls(&controls, args);
             controls.in_init = FALSE;
@@ -803,6 +809,11 @@ static void
 update_controls(LatSynthControls *controls,
                 LatSynthArgs *args)
 {
+    GtkTreeView *treeview;
+    GtkTreeSelection *selection;
+    GwyNullStore *store;
+    guint i;
+
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update),
                                  args->update);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->seed), args->seed);
@@ -810,7 +821,22 @@ update_controls(LatSynthControls *controls,
                                  args->randomize);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->lattice_type),
                                   args->lattice_type);
-    /* TODO */
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size),
+                             args->size);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->lrelaxation),
+                             args->lrelaxation);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->hrelaxation),
+                             args->hrelaxation);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->angle), args->angle);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->sigma), args->sigma);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->tau), args->tau);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height), args->height);
+    treeview = GTK_TREE_VIEW(controls->surfaces);
+    selection = gtk_tree_view_get_selection(treeview);
+    store = GWY_NULL_STORE(gtk_tree_view_get_model(treeview));
+    surface_selected(controls, selection);
+    for (i = 0; i < LAT_SURFACE_NTYPES; i++)
+        gwy_null_store_row_changed(store, i);
 }
 
 static void
