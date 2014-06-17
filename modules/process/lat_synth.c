@@ -2590,7 +2590,7 @@ lat_synth_sanitize_args(LatSynthArgs *args)
     args->hrelaxation = CLAMP(args->hrelaxation, 0.0, 200.0);
     args->angle = CLAMP(args->angle, -G_PI, G_PI);
     args->sigma = CLAMP(args->sigma, 0.0, 100.0);
-    args->tau = CLAMP(args->sigma, 0.1, 1000.0);
+    args->tau = CLAMP(args->tau, 0.1, 1000.0);
     args->height = CLAMP(args->height, 0.001, 10000.0);
     for (i = 0; i < G_N_ELEMENTS(args->weight); i++) {
         args->weight[i]= CLAMP(args->weight[i], -1.0, 1.0);
