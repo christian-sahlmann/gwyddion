@@ -16,6 +16,8 @@ Libraries:
   number generators and functions for sampling from different distributions.
 - libgwyprocess: DataField z-value format is now based on autorange instead of
   the full data range.
+- libgwyddion: Environment variables such as GWYDDION_LIBDIR override the
+  system-default paths on all systems, including OS X now.
 
 Modules:
 - WinSTM (new): Import WinSTM data files.

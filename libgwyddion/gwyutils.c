@@ -672,21 +672,34 @@ gwy_find_self_dir(const gchar *dirname)
     };
     gsize i;
     const gchar *base;
+
+    /* Allow the environment variables override everthing else. */
+    for (i = 0; i < G_N_ELEMENTS(paths); i++) {
+        if (!gwy_strequal(dirname, paths[i].id))
+            continue;
+
+        if ((base = g_getenv(paths[i].env))) {
+            gwy_debug("for <%s> base = <%s>, dir = <%s>",
+                      dirname, base, paths[i].dir);
+            return g_build_filename(base, paths[i].dir, NULL);
+        }
+    }
+
 #endif    /* GWY_LIBDIR */
 #ifdef __APPLE__
-    char *ret = gwy_osx_find_dir_in_bundle(dirname);
+    {
+        gchar *ret = gwy_osx_find_dir_in_bundle(dirname);
 
-    if (ret)
-        return ret;
+        if (ret)
+            return ret;
+    }
 #endif    /* __APPLE__ */
 #ifdef GWY_LIBDIR
     for (i = 0; i < G_N_ELEMENTS(paths); i++) {
         if (!gwy_strequal(dirname, paths[i].id))
             continue;
 
-        if (!(base = g_getenv(paths[i].env)))
-            base = paths[i].base;
-
+        base = paths[i].base;
         gwy_debug("for <%s> base = <%s>, dir = <%s>",
                   dirname, base, paths[i].dir);
         return g_build_filename(base, paths[i].dir, NULL);
