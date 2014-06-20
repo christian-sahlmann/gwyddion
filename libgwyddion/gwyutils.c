@@ -35,6 +35,7 @@
 #include <libgwyddion/gwyversion.h>
 
 #ifdef __APPLE__
+#define GWYDDION_BUNDLE_ID "net.gwyddion"
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 
@@ -567,34 +568,43 @@ gwy_osx_find_dir_in_bundle(const gchar *dirname)
         int len;
         char *res_url_path;
 
-        CFURLRef res_url_ref = NULL, bundle_url_ref = NULL;
+        CFBundleRef bundle_ref = NULL;
+        CFStringRef bid_str_ref = NULL;
 
-        res_url_ref =
-            CFBundleCopyResourcesDirectoryURL(CFBundleGetMainBundle());
-        bundle_url_ref = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+        bid_str_ref = CFSTR(GWYDDION_BUNDLE_ID);
+        bundle_ref = CFBundleGetBundleWithIdentifier(bid_str_ref);
+        if (bundle_ref) {
+            CFURLRef res_url_ref = NULL, bundle_url_ref = NULL;
 
-        if (res_url_ref
-            && bundle_url_ref && !CFEqual(res_url_ref, bundle_url_ref)) {
+            res_url_ref = CFBundleCopyResourcesDirectoryURL(bundle_ref);
+            bundle_url_ref = CFBundleCopyBundleURL(bundle_ref);
 
-            res_url_path = malloc(maxlen);
+            if (res_url_ref
+                && bundle_url_ref && !CFEqual(res_url_ref, bundle_url_ref)) {
 
-            while (!CFURLGetFileSystemRepresentation(res_url_ref, true,
-                                                     (UInt8*) res_url_path,
-                                                     maxlen)) {
-                maxlen *= 2;
-                res_url_path = realloc(res_url_path, maxlen);
+                res_url_path = malloc(maxlen);
+
+                while (!CFURLGetFileSystemRepresentation(res_url_ref, true,
+                                                         (UInt8*)res_url_path,
+                                                         maxlen)) {
+                    maxlen *= 2;
+                    res_url_path = realloc(res_url_path, maxlen);
+                }
+
+                len = strlen(res_url_path);
+                basedir = malloc(len + 1);
+                strncpy(basedir, res_url_path, len);
+                basedir[len] = 0;
+                free(res_url_path);
             }
+            if (res_url_ref)
+                CFRelease(res_url_ref);
+            if (bundle_url_ref)
+                CFRelease(bundle_url_ref);
 
-            len = strlen(res_url_path);
-            basedir = malloc(len + 1);
-            strncpy(basedir, res_url_path, len);
-            basedir[len] = 0;
-            free(res_url_path);
+            CFRelease(bundle_ref);
         }
-        if (res_url_ref)
-            CFRelease(res_url_ref);
-        if (bundle_url_ref)
-            CFRelease(bundle_url_ref);
+        CFRelease(bid_str_ref);
     }
     if (gwy_strequal(dirname, "data"))
         dirname = NULL;

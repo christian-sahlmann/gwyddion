@@ -18,6 +18,9 @@ Libraries:
   the full data range.
 - libgwyddion: Environment variables such as GWYDDION_LIBDIR override the
   system-default paths on all systems, including OS X now.
+- libgwyddion: Module and data paths on OS X are taken from the bundle
+  "net.gwyddion" instead of the main bundle, fixing broken paths in the
+  standalone Python gwy module.
 
 Modules:
 - WinSTM (new): Import WinSTM data files.
