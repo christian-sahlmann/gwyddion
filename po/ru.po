@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2014-06-13 03:58+0200\n"
-"PO-Revision-Date: 2014-06-13 18:23+0300\n"
+"PO-Revision-Date: 2014-06-18 08:19+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -10262,7 +10262,7 @@ msgstr "Сферы"
 
 #: modules/process/obj_synth.c:267
 msgid "Boxes"
-msgstr "Коробки"
+msgstr "Параллелепипеды"
 
 #: modules/process/obj_synth.c:268
 msgid "Cones"
@@ -10274,7 +10274,7 @@ msgstr "Пирамиды"
 
 #: modules/process/obj_synth.c:270
 msgid "Diamonds"
-msgstr "Алмазы"
+msgstr "Бриллианты"
 
 #: modules/process/obj_synth.c:271
 msgid "Tetrahedrons"
@@ -10290,7 +10290,7 @@ msgstr "Листья камыша"
 
 #: modules/process/obj_synth.c:274
 msgid "Tents"
-msgstr "Ангары"
+msgstr "Палатки"
 
 #: modules/process/obj_synth.c:275
 msgid "Gaussians"
