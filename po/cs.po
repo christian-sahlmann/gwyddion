@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-06-10 03:58+0200\n"
-"PO-Revision-Date: 2014-06-10 22:09+0200\n"
+"POT-Creation-Date: 2014-06-20 03:58+0200\n"
+"PO-Revision-Date: 2014-06-20 15:38+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "Language: cs\n"
@@ -885,7 +885,7 @@ msgstr "pixelů"
 #: modules/process/fft_filter_2d.c:460 modules/process/fft_synth.c:353
 #: modules/process/fractal.c:207 modules/process/grain_edge.c:218
 #: modules/process/grain_mark.c:264 modules/process/grain_wshed.c:183
-#: modules/process/hough.c:179 modules/process/lat_synth.c:534
+#: modules/process/hough.c:179 modules/process/lat_synth.c:540
 #: modules/process/latsim.c:158 modules/process/level.c:265
 #: modules/process/linecorrect.c:281 modules/process/lno_synth.c:441
 #: modules/process/local_contrast.c:130 modules/process/median-bg.c:179
@@ -1155,7 +1155,7 @@ msgstr "Délka"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:398
 #: libgwydgets/gwygraphwindowmeasuredialog.c:588 app/gwyplaintool.c:1026
-#: modules/process/lat_synth.c:710 modules/process/obj_synth.c:561
+#: modules/process/lat_synth.c:726 modules/process/obj_synth.c:561
 #: modules/process/pat_synth.c:865 modules/process/pat_synth.c:1167
 #: modules/process/pat_synth.c:1502
 msgid "Height"
@@ -1174,7 +1174,7 @@ msgid "Method:"
 msgstr "Metoda:"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:592
-#: modules/process/crosscor.c:236
+#: modules/process/crosscor.c:265
 msgid "Angle"
 msgstr "Úhel"
 
@@ -2383,8 +2383,8 @@ msgstr ""
 #: app/tips.c:303
 msgid "Data synthesis modules can be also used to modify existing images."
 msgstr ""
-"Moduly pro tvorbu syntetických dat lze použít také k modifikaci "
-"existujících obrázků."
+"Moduly pro tvorbu syntetických dat lze použít také k modifikaci existujících "
+"obrázků."
 
 #: app/tips.c:308
 msgid ""
@@ -3508,7 +3508,7 @@ msgstr "Fyzické rozměry"
 
 #: modules/file/hdrimage.cc:2287 modules/file/pixmap.c:1167
 #: modules/file/pixmap.c:3287 modules/file/rawfile.c:634
-#: modules/process/crosscor.c:199 modules/process/dimensions.h:472
+#: modules/process/crosscor.c:211 modules/process/dimensions.h:472
 #: modules/process/tip_blind.c:336
 msgid "_Width:"
 msgstr "Šířk_a:"
@@ -3527,7 +3527,7 @@ msgid "verb|Change"
 msgstr "Změnit"
 
 #: modules/file/hdrimage.cc:2328 modules/file/pixmap.c:1202
-#: modules/file/rawfile.c:670 modules/process/crosscor.c:205
+#: modules/file/rawfile.c:670 modules/process/crosscor.c:222
 #: modules/process/dimensions.h:476
 msgid "H_eight:"
 msgstr "_Výška:"
@@ -4589,7 +4589,7 @@ msgstr "_Zvětšení"
 
 #: modules/file/pixmap.c:3296 modules/process/col_synth.c:425
 #: modules/process/domain_synth.c:529 modules/process/grain_mark.c:309
-#: modules/process/lat_synth.c:716 modules/process/obj_synth.c:567
+#: modules/process/lat_synth.c:732 modules/process/obj_synth.c:567
 #: modules/process/pat_synth.c:871 modules/process/pat_synth.c:1173
 #: modules/process/pat_synth.c:1508 modules/process/tip_blind.c:343
 msgid "_Height:"
@@ -4862,7 +4862,7 @@ msgstr "Předvolby"
 #: modules/process/convolution_filter.c:246
 #: modules/process/deposit_synth.c:657 modules/process/drift.c:237
 #: modules/process/edge.c:652 modules/process/fft_filter_1d.c:198
-#: modules/process/grain_edge.c:215 modules/process/grain_filter.c:316
+#: modules/process/grain_edge.c:215 modules/process/grain_filter.c:326
 #: modules/process/grain_mark.c:261 modules/process/grain_wshed.c:180
 #: modules/process/mark_with.c:211 modules/process/polydistort.c:213
 #: modules/process/scars.c:474 modules/process/slope_dist.c:265
@@ -6750,7 +6750,7 @@ msgstr "Oříznout na skutečná data"
 
 #: modules/process/calcoefs_view.c:584 modules/process/deposit_synth.c:661
 #: modules/process/edge.c:732 modules/process/fft_filter_1d.c:334
-#: modules/process/grain_edge.c:286 modules/process/grain_filter.c:364
+#: modules/process/grain_edge.c:286 modules/process/grain_filter.c:374
 #: modules/process/grain_mark.c:377 modules/process/mark_with.c:355
 #: modules/process/polydistort.c:335 modules/process/scars.c:582
 #: modules/process/slope_dist.c:387 modules/process/synth.h:512
@@ -6935,7 +6935,7 @@ msgstr "Generovat sloupcový povrch"
 #: modules/process/col_synth.c:262 modules/process/col_synth.c:625
 #: modules/process/deposit_synth.c:279 modules/process/deposit_synth.c:879
 #: modules/process/domain_synth.c:266 modules/process/domain_synth.c:764
-#: modules/process/lat_synth.c:462 modules/process/neural.c:1275
+#: modules/process/lat_synth.c:468 modules/process/neural.c:1275
 #: modules/process/pid.c:336 modules/process/xydenoise.c:220
 msgid "Starting..."
 msgstr "Spouštím..."
@@ -6944,7 +6944,7 @@ msgstr "Spouštím..."
 #: modules/process/deposit_synth.c:329 modules/process/deposit_synth.c:549
 #: modules/process/deposit_synth.c:563 modules/process/domain_synth.c:330
 #: modules/process/domain_synth.c:339 modules/process/fft_synth.c:323
-#: modules/process/lat_synth.c:500 modules/process/lno_synth.c:413
+#: modules/process/lat_synth.c:506 modules/process/lno_synth.c:413
 #: modules/process/noise_synth.c:321 modules/process/obj_synth.c:398
 #: modules/process/pat_synth.c:368 modules/process/wave_synth.c:334
 msgid "Generated"
@@ -6960,7 +6960,7 @@ msgstr "Postupné náhledy"
 
 #: modules/process/col_synth.c:398 modules/process/deposit_synth.c:430
 #: modules/process/domain_synth.c:449 modules/process/fft_synth.c:417
-#: modules/process/lat_synth.c:599 modules/process/lno_synth.c:504
+#: modules/process/lat_synth.c:605 modules/process/lno_synth.c:504
 #: modules/process/noise_synth.c:412 modules/process/obj_synth.c:491
 #: modules/process/pat_synth.c:461 modules/process/wave_synth.c:425
 msgid "Dimensions"
@@ -6991,7 +6991,7 @@ msgstr "Dopad"
 msgid "Inclination"
 msgstr "Sklon"
 
-#: modules/process/col_synth.c:448
+#: modules/process/col_synth.c:448 modules/process/crosscor.c:694
 msgid "Direction"
 msgstr "Směr"
 
@@ -7165,92 +7165,113 @@ msgstr "úhel"
 msgid "Re_fine"
 msgstr "_Zpřesnit"
 
-#: modules/process/crosscor.c:108
+#: modules/process/crosscor.c:120
 msgid "Calculates cross-correlation of two data fields."
 msgstr "Počítá vzájemnou korelaci dvou datových polí."
 
-#: modules/process/crosscor.c:122
+#: modules/process/crosscor.c:134
 msgid "/M_ultidata/_Cross-Correlation..."
 msgstr "/M_ultidata/_Vzájemná korelace..."
 
-#: modules/process/crosscor.c:126
+#: modules/process/crosscor.c:138
 msgid "Cross-correlate two data fields"
 msgstr "Vypočíst vzájemnou korelaci dvou datových polí"
 
-#: modules/process/crosscor.c:164
+#: modules/process/crosscor.c:176
 msgid "Cross-Correlation"
 msgstr "Vzájemná korelace"
 
-#: modules/process/crosscor.c:185
+#: modules/process/crosscor.c:197
 msgid "Co_rrelate with:"
 msgstr "Ko_relovat s:"
 
-#: modules/process/crosscor.c:191
+#: modules/process/crosscor.c:203
 msgid "Search size"
 msgstr "Velikost hledání"
 
-#: modules/process/crosscor.c:211
+#: modules/process/crosscor.c:232
 msgid "Window size"
 msgstr "Velikost okna"
 
-#: modules/process/crosscor.c:219
+#: modules/process/crosscor.c:240
 msgid "W_idth:"
 msgstr "Šíř_ka"
 
-#: modules/process/crosscor.c:225
+#: modules/process/crosscor.c:250
 msgid "Hei_ght:"
 msgstr "_Výška:"
 
-#: modules/process/crosscor.c:233
+#: modules/process/crosscor.c:261
+msgid "All"
+msgstr "Všechno"
+
+#: modules/process/crosscor.c:262
 msgid "Absolute"
 msgstr "Absolutní vzdálenost"
 
-#: modules/process/crosscor.c:234
+#: modules/process/crosscor.c:263
 msgid "X Distance"
 msgstr "Vzdálenost v ose X"
 
-#: modules/process/crosscor.c:235
+#: modules/process/crosscor.c:264
 msgid "Y Distance"
 msgstr "Vzdálenost v ose Y"
 
-#: modules/process/crosscor.c:238 modules/process/fft.c:309
+#: modules/process/crosscor.c:266 modules/process/crosscor.c:715
+msgid "Score"
+msgstr "Skóre"
+
+#: modules/process/crosscor.c:268 modules/process/fft.c:309
 #: modules/process/maskcor.c:173
 msgid "Output _type:"
 msgstr "T_yp výstupu:"
 
-#: modules/process/crosscor.c:244
+#: modules/process/crosscor.c:274
 msgid "Add _low score results mask"
 msgstr "Přidat _masku s nízkým skóre"
 
-#: modules/process/crosscor.c:255 modules/process/grain_wshed.c:249
+#: modules/process/crosscor.c:285 modules/process/grain_wshed.c:249
 #: modules/process/maskcor.c:185
 msgid "T_hreshold:"
 msgstr "Prá_h:"
 
-#: modules/process/crosscor.c:412 modules/process/nanoindent_adjust.c:322
+#: modules/process/crosscor.c:292
+msgid "Multichannel cross-corelation"
+msgstr "Vícekanálová vzájemná korelace"
+
+#: modules/process/crosscor.c:309
+msgid "Second _source data:"
+msgstr "_Druhá zdrojová data:"
+
+#: modules/process/crosscor.c:324
+msgid "Correlate with:"
+msgstr "Korelovat s:"
+
+#: modules/process/crosscor.c:551 modules/process/crosscor.c:577
+#: modules/process/nanoindent_adjust.c:322
 #: modules/process/superresolution.c:418 modules/process/superresolution.c:506
 msgid "Initializing..."
 msgstr "Inicializuje se..."
 
-#: modules/process/crosscor.c:419
-msgid "Correlating..."
-msgstr "Koreluje se..."
+#: modules/process/crosscor.c:558
+msgid "Correlating first set..."
+msgstr "Koreluje se první sada..."
 
-#: modules/process/crosscor.c:475
-msgid "Absolute difference"
-msgstr "Absolutní rozdíl"
+#: modules/process/crosscor.c:585
+msgid "Correlating second set..."
+msgstr "Koreluje se druhá sada..."
 
-#: modules/process/crosscor.c:479
+#: modules/process/crosscor.c:633
 msgid "X difference"
 msgstr "Rozdíl v X"
 
-#: modules/process/crosscor.c:483
+#: modules/process/crosscor.c:654
 msgid "Y difference"
 msgstr "Rozdíl v Y"
 
-#: modules/process/crosscor.c:487
-msgid "Direction difference"
-msgstr "Směr rozdílu"
+#: modules/process/crosscor.c:674
+msgid "Absolute difference"
+msgstr "Absolutní rozdíl"
 
 #: modules/process/curvature.c:125
 msgid "Center value"
@@ -7529,7 +7550,7 @@ msgid "Output Options"
 msgstr "Možnosti výstupu"
 
 #: modules/process/domain_synth.c:533 modules/process/fft_synth.c:437
-#: modules/process/lat_synth.c:721 modules/process/lno_synth.c:551
+#: modules/process/lat_synth.c:737 modules/process/lno_synth.c:551
 #: modules/process/noise_synth.c:455 modules/process/obj_synth.c:571
 #: modules/process/wave_synth.c:471
 msgid "_Like Current Channel"
@@ -7586,7 +7607,7 @@ msgid "Drift _lines"
 msgstr "_Linie driftu"
 
 #: modules/process/drift.c:358 modules/process/facet_analysis.c:413
-#: modules/process/grain_edge.c:279 modules/process/grain_filter.c:374
+#: modules/process/grain_edge.c:279 modules/process/grain_filter.c:384
 #: modules/process/grain_mark.c:370 modules/process/grain_wshed.c:296
 #: modules/process/scars.c:575 modules/process/wpour_mark.c:386
 msgid "_Mask color:"
@@ -8650,28 +8671,32 @@ msgstr "/_Zrna/_Filtr..."
 msgid "Filter grains by their properties"
 msgstr "Filtrovat zrna na základě jejich vlastností"
 
-#: modules/process/grain_filter.c:313
+#: modules/process/grain_filter.c:266
+msgid "There are no grains to filter."
+msgstr "Kanál neobsahuje žádná zrna, která by šlo filtrovat."
+
+#: modules/process/grain_filter.c:323
 msgid "Filter Grains"
 msgstr "Filtrování zrn"
 
-#: modules/process/grain_filter.c:427
+#: modules/process/grain_filter.c:437
 msgid "Set selected as:"
 msgstr "Nastavit vybranou veličinu jako:"
 
-#: modules/process/grain_filter.c:442
+#: modules/process/grain_filter.c:452
 msgid "Keep grains satisfying:"
 msgstr "Ponechat zrna splňující:"
 
-#: modules/process/grain_filter.c:456 modules/process/lat_synth.c:696
+#: modules/process/grain_filter.c:466 modules/process/lat_synth.c:712
 msgid "Lower threshold:"
 msgstr "Spodní práh:"
 
-#: modules/process/grain_filter.c:491 modules/process/lat_synth.c:703
+#: modules/process/grain_filter.c:501 modules/process/lat_synth.c:719
 msgid "Upper threshold:"
 msgstr "Horní práh:"
 
 #. TRANSLATORS: %c is replaced with quantity label A, B or C.
-#: modules/process/grain_filter.c:691
+#: modules/process/grain_filter.c:702
 #, c-format
 msgid "Condition %c: %s"
 msgstr "Podmínka %c: %s"
@@ -9239,108 +9264,116 @@ msgstr "Interpolace dat pod maskou řešením Laplaceovy rovnice"
 msgid "Laplace correction"
 msgstr "Laplaceovská korekce"
 
-#: modules/process/lat_synth.c:344
+#: modules/process/lat_synth.c:350
 msgid "Random constant"
 msgstr "Náhodná konstanta"
 
-#: modules/process/lat_synth.c:345
+#: modules/process/lat_synth.c:351
 msgid "Random linear"
 msgstr "Náhodné roviny"
 
-#: modules/process/lat_synth.c:346
+#: modules/process/lat_synth.c:352
 msgid "Random bumpy"
 msgstr "Náhodné hrboly"
 
-#: modules/process/lat_synth.c:347
+#: modules/process/lat_synth.c:353
 msgid "Radial distance"
 msgstr "Radiální vzdálenost"
 
-#: modules/process/lat_synth.c:348
+#: modules/process/lat_synth.c:354
 msgid "Segmented distance"
 msgstr "Sementová vzdálenost"
 
-#: modules/process/lat_synth.c:349
+#: modules/process/lat_synth.c:355
 msgid "Segmented random"
 msgstr "Randomizovaná segmentová vzdálenost"
 
-#: modules/process/lat_synth.c:350
+#: modules/process/lat_synth.c:356
 msgid "Border distance"
 msgstr "Vzdálenost od hranice"
 
-#: modules/process/lat_synth.c:351
+#: modules/process/lat_synth.c:357
 msgid "Border random"
 msgstr "Randomizovaná vzdálenost od hranice"
 
-#: modules/process/lat_synth.c:352
+#: modules/process/lat_synth.c:358
 msgid "Second nearest distance"
 msgstr "Vzdálenost od druhého nejbližšího"
 
-#: modules/process/lat_synth.c:376
+#: modules/process/lat_synth.c:382
 msgid "Generates surfaces based on regular or random lattices."
 msgstr "Vytváří povrch na základě pravidelných nebo náhodných mřížek."
 
-#: modules/process/lat_synth.c:390
+#: modules/process/lat_synth.c:396
 msgid "/S_ynthetic/_Lattice..."
 msgstr "/S_yntetická/_Mřížka..."
 
-#: modules/process/lat_synth.c:394
+#: modules/process/lat_synth.c:400
 msgid "Generate lattice based surface"
 msgstr "Generovat povrch na základě mřížky"
 
-#: modules/process/lat_synth.c:514
+#: modules/process/lat_synth.c:520
 msgid "lattice|Random"
 msgstr "Náhodná"
 
-#: modules/process/lat_synth.c:515
+#: modules/process/lat_synth.c:521
 msgid "lattice|Square"
 msgstr "Čtvercová"
 
-#: modules/process/lat_synth.c:516
+#: modules/process/lat_synth.c:522
 msgid "lattice|Hexagonal"
 msgstr "Hexagonální"
 
-#: modules/process/lat_synth.c:517
+#: modules/process/lat_synth.c:523
 msgid "lattice|Triangular"
 msgstr "Trojúhelníková"
 
-#: modules/process/lat_synth.c:532 modules/process/lat_synth.c:610
+#: modules/process/lat_synth.c:538 modules/process/lat_synth.c:616
 msgid "Lattice"
 msgstr "Mřížka"
 
-#: modules/process/lat_synth.c:617
+#: modules/process/lat_synth.c:623
 msgid "_Lattice:"
 msgstr "_Mřížka:"
 
-#: modules/process/lat_synth.c:624 modules/process/obj_synth.c:537
+#: modules/process/lat_synth.c:630 modules/process/obj_synth.c:537
 #: modules/process/pat_synth.c:1476
 msgid "_Size:"
 msgstr "_Velikost:"
 
-#: modules/process/lat_synth.c:635
-msgid "Rela_xation:"
-msgstr "Rela_xace:"
+#: modules/process/lat_synth.c:641
+msgid "Lattice rela_xation:"
+msgstr "Rela_xace mřížky:"
 
-#: modules/process/lat_synth.c:668
+#: modules/process/lat_synth.c:653
+msgid "_Height relaxation:"
+msgstr "Relaxace _výšky:"
+
+#: modules/process/lat_synth.c:684
 msgid "Surface"
 msgstr "Povrch"
 
-#: modules/process/lat_synth.c:689 modules/process/local_contrast.c:153
+#: modules/process/lat_synth.c:705 modules/process/local_contrast.c:153
 msgid "_Weight:"
 msgstr "Vá_ha:"
 
-#: modules/process/lat_synth.c:1104
+#: modules/process/lat_synth.c:1146
 msgid "Constructing lattice..."
 msgstr "Vytvářím mřížku..."
 
-#: modules/process/lat_synth.c:1116
+#: modules/process/lat_synth.c:1157
 msgid "Triangulating..."
 msgstr "Trianguluji..."
 
-#: modules/process/lat_synth.c:1132
+#: modules/process/lat_synth.c:1173
 msgid "Relaxing lattice..."
 msgstr "Relaxuji mřížku..."
 
-#: modules/process/lat_synth.c:1147
+#: modules/process/lat_synth.c:1188
+msgid "Relaxing heights..."
+msgstr "Relaxuji mřížku..."
+
+#: modules/process/lat_synth.c:1203
 msgid "Rendering surface..."
 msgstr "Vykresluji povrch..."
 
@@ -12635,6 +12668,9 @@ msgstr "/_Inverze hodnoty"
 #: modules/volume/volume_invert.c:69
 msgid "Invert value in volume data"
 msgstr "Převrátit hodnoty kolem průměru"
+
+#~ msgid "Direction difference"
+#~ msgstr "Směr rozdílu"
 
 #~ msgid "Frame #%u is too short for scanned data header."
 #~ msgstr "Rám č. %u je příliš krátký pro hlavičku dat skenu."
