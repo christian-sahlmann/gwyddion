@@ -650,7 +650,7 @@ lat_synth_dialog(LatSynthArgs *args,
                                              0.0, 200.0, 0.01, 10.0, 0);
     g_object_set_data(G_OBJECT(controls.hrelaxation),
                       "target", &args->hrelaxation);
-    gwy_table_attach_hscale(table, row, _("_Height rela_xation:"), NULL,
+    gwy_table_attach_hscale(table, row, _("_Height relaxation:"), NULL,
                             controls.hrelaxation, GWY_HSCALE_SQRT);
     g_signal_connect_swapped(controls.hrelaxation, "value-changed",
                              G_CALLBACK(gwy_synth_double_changed), &controls);
