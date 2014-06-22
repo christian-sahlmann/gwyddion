@@ -1,6 +1,6 @@
 2.37 (0000-00-00)
 Application:
-- Translations updated: French, Italian, Russian.
+- Translations updated: Czech, French, Italian, Russian.
 
 Libraries:
 - libgwyprocess: A function for filling grain voids was added.
@@ -60,6 +60,8 @@ Modules:
   frequency now.
 - 2D FFT and FFT profile: Slight offset of lateral coordinates for odd-sized
   images was corrected.
+- Spectral synthesis: Critical message/crash, occuring when some files were
+  loaded but no channel was active while invoking the function, was fixed.
 
 Other:
 - The standalone Python gwy module uses the correct extension for dlopening,
