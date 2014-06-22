@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2014-06-19 03:58+0200\n"
-"PO-Revision-Date: 2014-06-19 22:45+0100\n"
+"PO-Revision-Date: 2014-06-22 19:44+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -7311,7 +7311,6 @@ msgid "Hei_ght:"
 msgstr "Hauteur :"
 
 #: modules/process/crosscor.c:261
-#, fuzzy
 msgid "All"
 msgstr "Tout"
 
@@ -9388,15 +9387,15 @@ msgstr "Correction de Laplace"
 
 #: modules/process/lat_synth.c:350
 msgid "Random constant"
-msgstr "Bruit aléatoire"
+msgstr "Aléatoire constant"
 
 #: modules/process/lat_synth.c:351
 msgid "Random linear"
-msgstr ""
+msgstr "Aléatoire linéaire"
 
 #: modules/process/lat_synth.c:352
 msgid "Random bumpy"
-msgstr ""
+msgstr "Aléatoire bosselé"
 
 #: modules/process/lat_synth.c:353
 msgid "Radial distance"
@@ -9412,16 +9411,15 @@ msgstr "Aléatoire segmenté"
 
 #: modules/process/lat_synth.c:356
 msgid "Border distance"
-msgstr ""
+msgstr "Distance de bord"
 
 #: modules/process/lat_synth.c:357
 msgid "Border random"
-msgstr ""
+msgstr "Bord alétoire"
 
 #: modules/process/lat_synth.c:358
-#, fuzzy
 msgid "Second nearest distance"
-msgstr "Mesure"
+msgstr "Second point le plus proche"
 
 #: modules/process/lat_synth.c:382
 msgid "Generates surfaces based on regular or random lattices."
@@ -9470,7 +9468,7 @@ msgstr "Rela_xation du maillage :"
 
 #: modules/process/lat_synth.c:653
 msgid "_Height rela_xation:"
-msgstr "Relaxation des hauteurs :"
+msgstr "Relaxation des _hauteurs :"
 
 #: modules/process/lat_synth.c:684
 msgid "Surface"
