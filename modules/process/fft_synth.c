@@ -188,7 +188,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates random surfaces using spectral synthesis."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -370,11 +370,10 @@ fft_synth_dialog(FFTSynthArgs *args,
                                 dimsargs->measure*PREVIEW_SIZE,
                                 TRUE);
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
-    if (data)
+    if (dfield_template) {
         gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
                                 GWY_DATA_ITEM_PALETTE,
                                 0);
-    if (dfield_template) {
         controls.surface = gwy_synth_surface_for_preview(dfield_template,
                                                          PREVIEW_SIZE);
         controls.zscale = gwy_data_field_get_rms(dfield_template);
