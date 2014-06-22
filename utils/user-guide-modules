@@ -26,7 +26,7 @@ calcoefs_view	caldata
 calibrate	basic-operations	dimensions-and-units
 codevfile	managing-files
 col_synth	synthetic	columnar-synthesis
-convolution_filter	filters-presentations	convolution-filter
+convolution_filter	filters	convolution-filter
 correct_affine	edit-extenced	correct-affine
 createc	managing-files
 crop	basic-operations	crop
@@ -44,7 +44,7 @@ dumbfile	managing-files
 dwtanisotropy	integral-transforms	dwt
 dwt	integral-transforms	dwt
 ecsfile	managing-files
-edge	filters-presentations	edge
+edge	presentations	edge
 ellipse	selections
 extend	basic-operations	extend
 ezdfile	managing-files
@@ -55,12 +55,12 @@ fft_filter_2d	edit-extended	fft-filter-2d
 fft	integral-transforms	fft
 fft_profile	integral-transforms
 fft_synth	synthetic	spectral-synthetis
-filter	filters-presentations	basic-filters
+filter	filters	basic-filters
 fit_2d	leveling-and-background	fit-sphere
 fraccor	editing-correction	fractal-correction
 fractal	fractal-analysis	fractal-dimension
 gdeffile	managing-files
-gradient	filters-presentations	gradient
+gradient	presentations	gradient
 grain_cross	grain-analysis	grain-correlation
 grain_dist	grain-analysis	grain-distributions
 grain_edge	grain-analysis	grain-edge
@@ -97,6 +97,7 @@ jeol	managing-files
 jpkscan	managing-files
 laplace	editing-correction	remove-data-under-mask
 lattice	selections
+lat_synth	synthetic	lattice-synthetis
 level3	leveling-and-background	three-point-level
 level_grains	grain-analysis	grain-level
 level	leveling-and-background	plane-level
@@ -105,7 +106,7 @@ linecorrect	editing-correction	line-correction
 line	selections
 linestats	statistical-analysis	line-stats
 lno_synth	synthetic	line-noise-synthetis
-local_contrast	filters-presentations	local-contrast
+local_contrast	presentations	local-contrast
 magellan	managing-files
 mapvue	managing-files
 mark_with	presentations-masks
@@ -157,7 +158,7 @@ point	selections
 polydistort	edit-extended	polynomial-distort
 polylevel	leveling-and-background	polynomial-level
 polynom	editing-correction	line-polynomial
-presentationops	filters-presentations	presentationops
+presentationops	presentations	presentationops
 profile	basic-operations	profile
 psia	managing-files
 pt3file	managing-files
@@ -183,7 +184,7 @@ selectionmanager	selections	selection-manager
 sensofar	managing-files
 sensolytics	managing-files
 sfunctions	statistical-analysis	sfunctions
-shade	filters-presentations	shade
+shade	presentations	shade
 shimadzu	managing-files
 sicmfile	managing-files
 sis	managing-files
@@ -216,6 +217,7 @@ volumize_layers	volume-data
 volumize	volume-data
 vtkfile	managing-files
 wave_synth	synthetic	wave-synthesis
+win_stm	managing-files
 wipfile	managing-files
 witec-asc	managing-files
 witfile	managing-files
