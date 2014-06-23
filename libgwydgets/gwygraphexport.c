@@ -96,6 +96,7 @@ gwy_graph_export_pixmap(GwyGraph *graph,
                                           0, 0, 0, 0,
                                           -1, -1);
 
+    g_object_unref(pixmap);
     g_object_unref(layout);
     g_object_unref(context);
     g_object_unref(gc);
