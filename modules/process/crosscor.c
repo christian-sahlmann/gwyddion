@@ -93,6 +93,9 @@ static void     crosscor_data_cb      (GwyDataChooser *chooser,
 static gboolean crosscor_data_filter  (GwyContainer *data,
                                        gint id,
                                        gpointer user_data);
+static gboolean crosscor_weaker_filter  (GwyContainer *data,
+                                       gint id,
+                                       gpointer user_data);
 static void     crosscor_update_values(CrosscorControls *controls,
                                        CrosscorArgs *args);
 static gboolean crosscor_do           (CrosscorArgs *args);
@@ -302,7 +305,7 @@ crosscor_dialog(CrosscorArgs *args)
     controls.chooser_op3 = gwy_data_chooser_new_channels();
     g_object_set_data(G_OBJECT(controls.chooser_op3), "dialog", dialog);
     gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(controls.chooser_op3),
-                                crosscor_data_filter, &args->op1, NULL);
+                                crosscor_weaker_filter, &args->op1, NULL);
     g_signal_connect(controls.chooser_op3, "changed",
                      G_CALLBACK(crosscor_data_cb), &args->op3);
     crosscor_data_cb(GWY_DATA_CHOOSER(controls.chooser_op3), &args->op3);
@@ -317,7 +320,7 @@ crosscor_dialog(CrosscorArgs *args)
     controls.chooser_op4 = gwy_data_chooser_new_channels();
     g_object_set_data(G_OBJECT(controls.chooser_op4), "dialog", dialog);
     gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(controls.chooser_op4),
-                                crosscor_data_filter, &args->op1, NULL);
+                                crosscor_weaker_filter, &args->op1, NULL);
     g_signal_connect(controls.chooser_op4, "changed",
                      G_CALLBACK(crosscor_data_cb), &args->op4);
     crosscor_data_cb(GWY_DATA_CHOOSER(controls.chooser_op4), &args->op4);
@@ -421,6 +424,28 @@ crosscor_data_filter(GwyContainer *data,
                                                | GWY_DATA_COMPATIBILITY_REAL
                                                | GWY_DATA_COMPATIBILITY_LATERAL
                                                | GWY_DATA_COMPATIBILITY_VALUE);
+}
+
+
+static gboolean
+crosscor_weaker_filter(GwyContainer *data,
+                     gint id,
+                     gpointer user_data)
+{
+    GwyDataObjectId *object = (GwyDataObjectId*)user_data;
+    GwyDataField *op1, *op2;
+    GQuark quark;
+
+    quark = gwy_app_get_data_key_for_id(id);
+    op1 = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
+
+    quark = gwy_app_get_data_key_for_id(object->id);
+    op2 = GWY_DATA_FIELD(gwy_container_get_object(object->data, quark));
+
+    return !gwy_data_field_check_compatibility(op1, op2,
+                                               GWY_DATA_COMPATIBILITY_RES
+                                               | GWY_DATA_COMPATIBILITY_REAL
+                                               | GWY_DATA_COMPATIBILITY_LATERAL);
 }
 
 static GwyDataField*
