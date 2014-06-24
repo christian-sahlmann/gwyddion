@@ -1,11 +1,37 @@
 #!/bin/bash
 guidemap=user-guide-modules
+enguidedir=../../user-guide/en/xhtml
 
 process_one_lang() {
     ../dump-modules $guidemap.tmp $2 >modules.$1.xml
     xsltproc --stringparam lang $1 -o module-list.$1.html ../modules-web.xsl modules.$1.xml
     xsltproc --stringparam lang $1 -o module-list-nocss.$1.html ../modules-web-nocss.xsl modules.$1.xml
 }
+
+enguidedir=$(realpath "$enguidedir")
+if test -f "$enguidedir/index.html"; then
+    while read -a xref; do
+        module="${xref[0]}"
+        if test "$module" = '#'; then
+            continue
+        fi
+        file="$enguidedir/${xref[1]}.html"
+        if test -f "$file"; then
+            fragment="${xref[2]}"
+            if test -n "$fragment"; then
+                if grep -E -q -s "\\<id=([\"'])$fragment\\1" "$file"; then
+                    : # OK
+                else
+                    echo "Broken link for $module, fragment $fragment not present in file $file"
+                fi
+            fi
+        else
+            echo "Broken link for $module, no such file $file" 1>&2
+        fi
+    done <$guidemap
+else
+    echo "Cannot verify links, no guide found in $enguidedir" 1>&2
+fi
 
 rm -rf module-lists
 mkdir module-lists

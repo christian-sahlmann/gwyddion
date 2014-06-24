@@ -67,7 +67,6 @@ grain_edge	grain-analysis	grain-edge
 grain_mark	grain-analysis	grain-threshold
 grainmeasure	grain-analysis	grain-measure
 grainremover	editing-correction	remove-grains
-grain_rem_threshold	grain-analysis	grain-remove-threshold
 grain_wshed	grain-analysis	grain-watershed
 graph_cd	graph-processing	graph-critical-dimension
 graph_cut	graph-processing
@@ -110,7 +109,7 @@ magellan	managing-files
 mapvue	managing-files
 mark_with	presentations-masks
 maskcor	multidata	mask-by-correlation
-maskedit	modules-tools	tool-mask-editor
+maskedit	presentations-masks	mask-editor
 mask_edt	grain-analysis	grain-edt
 maskops	presentations-masks
 matfile	managing-files
@@ -147,7 +146,7 @@ omicronmatrix	managing-files
 opdfile	managing-files
 otsu_threshold	grain-analysis	grain-threshold-otsu
 outliers	editing-correction	mask-of-outliers
-pathlevel	edit	path-level
+pathlevel	editing-correction	path-level
 pat_synth	synthetic	pattern-synthesis
 pixmap	managing-files
 pltfile	managing-files
@@ -173,7 +172,7 @@ rhk-sm4	managing-files
 rhk-spm32	managing-files
 robotics	managing-files
 rotate	basic-operations	rotate
-roughness	statistical-analysis	roughness-iso
+roughness	roughness-iso
 s94file	managing-files
 scale	basic-operations	scale
 scars	editing-correction	remove-scars
