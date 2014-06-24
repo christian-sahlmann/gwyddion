@@ -27,13 +27,13 @@ calibrate	basic-operations	dimensions-and-units
 codevfile	managing-files
 col_synth	synthetic	columnar-synthesis
 convolution_filter	filters	convolution-filter
-correct_affine	edit-extenced	correct-affine
+correct_affine	edit-extended	correct-affine
 createc	managing-files
 crop	basic-operations	crop
 crosscor	multidata	cross-correlation
 csmfile	managing-files
-curvature	leveling	curvature
-cwt	integral-transforms	cwt
+curvature	leveling-and-background	curvature
+cwt	wavelet-transform	cwt
 deposit_synth	synthetic
 distance	basic-operations	distance
 dm3file	managing-files
@@ -41,8 +41,8 @@ dmefile	managing-files
 domain_synth	synthetic	domain-synthesis
 drift	edit-extended	drift-compensation
 dumbfile	managing-files
-dwtanisotropy	integral-transforms	dwt
-dwt	integral-transforms	dwt
+dwtanisotropy	wavelet-transform	dwt
+dwt	wavelet-transform	dwt
 ecsfile	managing-files
 edge	presentations	edge
 ellipse	selections
@@ -52,9 +52,9 @@ facet_analysis	statistical-analysis	facet-analysis
 facet-level	leveling-and-background	facet-level
 fft_filter_1d	edit-extended	fft-filter-1d
 fft_filter_2d	edit-extended	fft-filter-2d
-fft	integral-transforms	fft
-fft_profile	integral-transforms
-fft_synth	synthetic	spectral-synthetis
+fft	fourier-transform
+fft_profile	fourier-transform
+fft_synth	synthetic	spectral-synthesis
 filter	filters	basic-filters
 fit_2d	leveling-and-background	fit-sphere
 fraccor	editing-correction	fractal-correction
@@ -66,7 +66,7 @@ grain_dist	grain-analysis	grain-distributions
 grain_edge	grain-analysis	grain-edge
 grain_mark	grain-analysis	grain-threshold
 grainmeasure	grain-analysis	grain-measure
-grainremover	editing-correction
+grainremover	editing-correction	remove-grains
 grain_rem_threshold	grain-analysis	grain-remove-threshold
 grain_wshed	grain-analysis	grain-watershed
 graph_cd	graph-processing	graph-critical-dimension
@@ -87,17 +87,16 @@ hdf4file	managing-files
 hdrimage	managing-files
 hitachi-afm	managing-files
 hitachi-sem	managing-files
-hough	integral-transforms
 icolorange	color-map	color-range
 igorfile	managing-files
-immerse	multidata-immerse	immerse
+immerse	multidata	immerse
 intematix	managing-files
 iso28600	managing-files
 jeol	managing-files
 jpkscan	managing-files
 laplace	editing-correction	remove-data-under-mask
 lattice	selections
-lat_synth	synthetic	lattice-synthetis
+lat_synth	synthetic	lattice-synthesis
 level3	leveling-and-background	three-point-level
 level_grains	grain-analysis	grain-level
 level	leveling-and-background	plane-level
@@ -105,7 +104,7 @@ lextfile	managing-files
 linecorrect	editing-correction	line-correction
 line	selections
 linestats	statistical-analysis	line-stats
-lno_synth	synthetic	line-noise-synthetis
+lno_synth	synthetic	line-noise-synthesis
 local_contrast	presentations	local-contrast
 magellan	managing-files
 mapvue	managing-files
@@ -116,7 +115,7 @@ mask_edt	grain-analysis	grain-edt
 maskops	presentations-masks
 matfile	managing-files
 mcrop	multidata	mutual-crop
-median-bg	leveling-and-background	median-background
+median-bg	leveling-and-background	median-level
 merge	multidata	merge
 metropro	managing-files
 microprof	managing-files
@@ -135,10 +134,10 @@ nanoscope	managing-files
 nanotop	managing-files
 netcdf	managing-files
 neural	multidata	neural-network
-noise_synth	synthetic	noise-synthetis
+noise_synth	synthetic	noise-synthesis
 nrrdfile	managing-files
 nt-mdt	managing-files
-obj_synth	synthetic	object-synthetis
+obj_synth	synthetic	object-synthesis
 oldmda	managing-files
 ols	managing-files
 ometiff	managing-files
@@ -148,8 +147,8 @@ omicronmatrix	managing-files
 opdfile	managing-files
 otsu_threshold	grain-analysis	grain-threshold-otsu
 outliers	editing-correction	mask-of-outliers
-pathlevel	leveling-and-background	path-level
-pat_synth	synthetic	pattern-synthetis
+pathlevel	edit	path-level
+pat_synth	synthetic	pattern-synthesis
 pixmap	managing-files
 pltfile	managing-files
 plugin-proxy	plugins
