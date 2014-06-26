@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-06-13 03:58+0200\n"
-"PO-Revision-Date: 2014-06-18 08:19+0300\n"
+"POT-Creation-Date: 2014-06-26 03:58+0200\n"
+"PO-Revision-Date: 2014-06-26 22:31+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -1183,7 +1183,7 @@ msgid "Method:"
 msgstr "Способ:"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:592
-#: modules/process/crosscor.c:265
+#: modules/process/crosscor.c:268
 msgid "Angle"
 msgstr "Угол"
 
@@ -3554,7 +3554,7 @@ msgstr "Физические размеры"
 
 #: modules/file/hdrimage.cc:2287 modules/file/pixmap.c:1167
 #: modules/file/pixmap.c:3287 modules/file/rawfile.c:634
-#: modules/process/crosscor.c:211 modules/process/dimensions.h:472
+#: modules/process/crosscor.c:214 modules/process/dimensions.h:472
 #: modules/process/tip_blind.c:336
 msgid "_Width:"
 msgstr "_Ширина:"
@@ -3573,7 +3573,7 @@ msgid "verb|Change"
 msgstr "Изменить"
 
 #: modules/file/hdrimage.cc:2328 modules/file/pixmap.c:1202
-#: modules/file/rawfile.c:670 modules/process/crosscor.c:222
+#: modules/file/rawfile.c:670 modules/process/crosscor.c:225
 #: modules/process/dimensions.h:476
 msgid "H_eight:"
 msgstr "_Высота:"
@@ -7034,7 +7034,7 @@ msgid "Progressive preview"
 msgstr "Прогрессивное обновление"
 
 #: modules/process/col_synth.c:398 modules/process/deposit_synth.c:430
-#: modules/process/domain_synth.c:449 modules/process/fft_synth.c:417
+#: modules/process/domain_synth.c:449 modules/process/fft_synth.c:416
 #: modules/process/lat_synth.c:605 modules/process/lno_synth.c:504
 #: modules/process/noise_synth.c:412 modules/process/obj_synth.c:491
 #: modules/process/pat_synth.c:461 modules/process/wave_synth.c:425
@@ -7042,7 +7042,7 @@ msgid "Dimensions"
 msgstr "Размеры"
 
 #: modules/process/col_synth.c:406 modules/process/deposit_synth.c:440
-#: modules/process/domain_synth.c:457 modules/process/fft_synth.c:428
+#: modules/process/domain_synth.c:457 modules/process/fft_synth.c:427
 #: modules/process/lno_synth.c:515 modules/process/noise_synth.c:423
 #: modules/process/obj_synth.c:502 modules/process/pat_synth.c:473
 #: modules/process/wave_synth.c:436
@@ -7066,7 +7066,7 @@ msgstr "Угол падения"
 msgid "Inclination"
 msgstr "Наклон"
 
-#: modules/process/col_synth.c:448 modules/process/crosscor.c:694
+#: modules/process/col_synth.c:448 modules/process/crosscor.c:719
 msgid "Direction"
 msgstr "Направление"
 
@@ -7240,111 +7240,111 @@ msgstr "угол"
 msgid "Re_fine"
 msgstr "_Уточнить"
 
-#: modules/process/crosscor.c:120
+#: modules/process/crosscor.c:123
 msgid "Calculates cross-correlation of two data fields."
 msgstr "Вычисляет взаимную корреляцию двух полей данных."
 
-#: modules/process/crosscor.c:134
+#: modules/process/crosscor.c:137
 msgid "/M_ultidata/_Cross-Correlation..."
 msgstr "/М_ножественные данные/_Взаимная корреляция..."
 
-#: modules/process/crosscor.c:138
+#: modules/process/crosscor.c:141
 msgid "Cross-correlate two data fields"
 msgstr "Взаимная корреляция двух полей данных"
 
-#: modules/process/crosscor.c:176
+#: modules/process/crosscor.c:179
 msgid "Cross-Correlation"
 msgstr "Взаимная корреляция"
 
-#: modules/process/crosscor.c:197
+#: modules/process/crosscor.c:200
 msgid "Co_rrelate with:"
 msgstr "Ко_ррелировать с:"
 
-#: modules/process/crosscor.c:203
+#: modules/process/crosscor.c:206
 msgid "Search size"
 msgstr "Размер поиска"
 
-#: modules/process/crosscor.c:232
+#: modules/process/crosscor.c:235
 msgid "Window size"
 msgstr "Размер окна"
 
-#: modules/process/crosscor.c:240
+#: modules/process/crosscor.c:243
 msgid "W_idth:"
 msgstr "Ш_ирина:"
 
-#: modules/process/crosscor.c:250
+#: modules/process/crosscor.c:253
 msgid "Hei_ght:"
 msgstr "В_ысота:"
 
-#: modules/process/crosscor.c:261
+#: modules/process/crosscor.c:264
 msgid "All"
 msgstr "Всё"
 
-#: modules/process/crosscor.c:262
+#: modules/process/crosscor.c:265
 msgid "Absolute"
 msgstr "Модуль"
 
-#: modules/process/crosscor.c:263
+#: modules/process/crosscor.c:266
 msgid "X Distance"
 msgstr "Расстояние по X"
 
-#: modules/process/crosscor.c:264
+#: modules/process/crosscor.c:267
 msgid "Y Distance"
 msgstr "Расстояние по Y"
 
-#: modules/process/crosscor.c:266 modules/process/crosscor.c:715
+#: modules/process/crosscor.c:269 modules/process/crosscor.c:740
 msgid "Score"
 msgstr "Степень"
 
-#: modules/process/crosscor.c:268 modules/process/fft.c:309
+#: modules/process/crosscor.c:271 modules/process/fft.c:309
 #: modules/process/maskcor.c:173
 msgid "Output _type:"
 msgstr "Тип в_ывода:"
 
-#: modules/process/crosscor.c:274
+#: modules/process/crosscor.c:277
 msgid "Add _low score results mask"
 msgstr "Добавить маску результатов с _низким весом"
 
-#: modules/process/crosscor.c:285 modules/process/grain_wshed.c:249
+#: modules/process/crosscor.c:288 modules/process/grain_wshed.c:249
 #: modules/process/maskcor.c:185
 msgid "T_hreshold:"
 msgstr "_Порог:"
 
-#: modules/process/crosscor.c:292
+#: modules/process/crosscor.c:295
 msgid "Multichannel cross-corelation"
 msgstr "Взаимная корреляция нескольких каналов"
 
-#: modules/process/crosscor.c:309
+#: modules/process/crosscor.c:312
 msgid "Second _source data:"
 msgstr "Данные второго _источника:"
 
-#: modules/process/crosscor.c:324
+#: modules/process/crosscor.c:327
 msgid "Correlate with:"
 msgstr "Коррелировать с:"
 
-#: modules/process/crosscor.c:551 modules/process/crosscor.c:577
+#: modules/process/crosscor.c:576 modules/process/crosscor.c:602
 #: modules/process/nanoindent_adjust.c:322
 #: modules/process/superresolution.c:418 modules/process/superresolution.c:506
 msgid "Initializing..."
 msgstr "Инициализация..."
 
-#: modules/process/crosscor.c:558
+#: modules/process/crosscor.c:583
 msgid "Correlating first set..."
 msgstr "Корреляция первого множества..."
 
-#: modules/process/crosscor.c:585
+#: modules/process/crosscor.c:610
 msgid "Correlating second set..."
 msgstr "Корреляция второго множества..."
 
-#: modules/process/crosscor.c:633
+#: modules/process/crosscor.c:658
 msgid "X difference"
 msgstr "Различие X"
 
-#: modules/process/crosscor.c:654
+#: modules/process/crosscor.c:679
 msgid "Y difference"
 msgstr "Различие Y"
 
-#: modules/process/crosscor.c:674
+#: modules/process/crosscor.c:699
 msgid "Absolute difference"
 msgstr "Разница по модулю"
 
@@ -7626,7 +7626,7 @@ msgstr "Временной шаг метода _Монте-Карло:"
 msgid "Output Options"
 msgstr "Параметры вывода"
 
-#: modules/process/domain_synth.c:533 modules/process/fft_synth.c:437
+#: modules/process/domain_synth.c:533 modules/process/fft_synth.c:436
 #: modules/process/lat_synth.c:737 modules/process/lno_synth.c:551
 #: modules/process/noise_synth.c:455 modules/process/obj_synth.c:571
 #: modules/process/wave_synth.c:471
@@ -8348,36 +8348,36 @@ msgstr "Создать поверхность используя спектра�
 msgid "Spectral Synthesis"
 msgstr "Спектральный синтез"
 
-#: modules/process/fft_synth.c:433 modules/process/lno_synth.c:547
+#: modules/process/fft_synth.c:432 modules/process/lno_synth.c:547
 #: modules/process/noise_synth.c:451
 msgid "_RMS:"
 msgstr "Ср. _квадр.:"
 
-#: modules/process/fft_synth.c:448
+#: modules/process/fft_synth.c:447
 msgid "M_inimum frequency:"
 msgstr "М_инимальная частота:"
 
-#: modules/process/fft_synth.c:468
+#: modules/process/fft_synth.c:467
 msgid "Ma_ximum frequency:"
 msgstr "М_аксимальная частота:"
 
-#: modules/process/fft_synth.c:488
+#: modules/process/fft_synth.c:487
 msgid "Enable _Gaussian multiplier"
 msgstr "Разрешить _гауссов множитель"
 
-#: modules/process/fft_synth.c:501 modules/process/fft_synth.c:524
+#: modules/process/fft_synth.c:500 modules/process/fft_synth.c:523
 msgid "_Autocorrelation length:"
 msgstr "_Длина автокорреляции:"
 
-#: modules/process/fft_synth.c:511
+#: modules/process/fft_synth.c:510
 msgid "Enable _Lorentz multiplier"
 msgstr "Разрешить _лоренцев множитель"
 
-#: modules/process/fft_synth.c:534
+#: modules/process/fft_synth.c:533
 msgid "Enable _power multiplier"
 msgstr "Разрешить сте_пенной множитель"
 
-#: modules/process/fft_synth.c:545
+#: modules/process/fft_synth.c:544
 msgid "Po_wer:"
 msgstr "С_тепень:"
 
@@ -9424,15 +9424,15 @@ msgstr "_Решетка:"
 #: modules/process/lat_synth.c:630 modules/process/obj_synth.c:537
 #: modules/process/pat_synth.c:1476
 msgid "_Size:"
-msgstr "_Размер:"
+msgstr "Р_азмер:"
 
 #: modules/process/lat_synth.c:641
 msgid "Lattice rela_xation:"
 msgstr "Рела_ксация решетки:"
 
 #: modules/process/lat_synth.c:653
-msgid "_Height rela_xation:"
-msgstr "Релаксация _высот:"
+msgid "_Height relaxation:"
+msgstr "Релаксация в_ысоты"
 
 #: modules/process/lat_synth.c:684
 msgid "Surface"
