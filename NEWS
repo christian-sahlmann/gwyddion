@@ -62,6 +62,8 @@ Modules:
   images was corrected.
 - Spectral synthesis: Critical message/crash, occuring when some files were
   loaded but no channel was active while invoking the function, was fixed.
+- Cross-correlation: now allowing use of multiple channesl and output of
+  all the results together.
 
 Other:
 - The standalone Python gwy module uses the correct extension for dlopening,
