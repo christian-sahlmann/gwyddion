@@ -32,7 +32,7 @@ Release checklist:
 - sign packages and upload signatures
   gpg2 -u yeti@gwyddion.net -b gwyddion-2.28.tar.gz
 - update gwyddion main page
-- publish files on Freshmeat, SourceForge
+- publish files on SourceForge
   rsync --progress -e ssh gwyddion-2.28.tar.xz yeti-dn@frs.sourceforge.net:/home/frs/project/gwyddion/gwyddion/2.28/
 - send e-mail to the mailing lists
 - update the list of supported file formats on gwyddion.net and in the user
