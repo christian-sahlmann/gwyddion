@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-06-20 03:58+0200\n"
+"POT-Creation-Date: 2014-06-27 09:24+0200\n"
 "PO-Revision-Date: 2014-06-20 15:38+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -1174,7 +1174,7 @@ msgid "Method:"
 msgstr "Metoda:"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:592
-#: modules/process/crosscor.c:265
+#: modules/process/crosscor.c:268
 msgid "Angle"
 msgstr "Úhel"
 
@@ -3508,7 +3508,7 @@ msgstr "Fyzické rozměry"
 
 #: modules/file/hdrimage.cc:2287 modules/file/pixmap.c:1167
 #: modules/file/pixmap.c:3287 modules/file/rawfile.c:634
-#: modules/process/crosscor.c:211 modules/process/dimensions.h:472
+#: modules/process/crosscor.c:214 modules/process/dimensions.h:472
 #: modules/process/tip_blind.c:336
 msgid "_Width:"
 msgstr "Šířk_a:"
@@ -3527,7 +3527,7 @@ msgid "verb|Change"
 msgstr "Změnit"
 
 #: modules/file/hdrimage.cc:2328 modules/file/pixmap.c:1202
-#: modules/file/rawfile.c:670 modules/process/crosscor.c:222
+#: modules/file/rawfile.c:670 modules/process/crosscor.c:225
 #: modules/process/dimensions.h:476
 msgid "H_eight:"
 msgstr "_Výška:"
@@ -6959,7 +6959,7 @@ msgid "Progressive preview"
 msgstr "Postupné náhledy"
 
 #: modules/process/col_synth.c:398 modules/process/deposit_synth.c:430
-#: modules/process/domain_synth.c:449 modules/process/fft_synth.c:417
+#: modules/process/domain_synth.c:449 modules/process/fft_synth.c:416
 #: modules/process/lat_synth.c:605 modules/process/lno_synth.c:504
 #: modules/process/noise_synth.c:412 modules/process/obj_synth.c:491
 #: modules/process/pat_synth.c:461 modules/process/wave_synth.c:425
@@ -6967,7 +6967,7 @@ msgid "Dimensions"
 msgstr "Rozměry"
 
 #: modules/process/col_synth.c:406 modules/process/deposit_synth.c:440
-#: modules/process/domain_synth.c:457 modules/process/fft_synth.c:428
+#: modules/process/domain_synth.c:457 modules/process/fft_synth.c:427
 #: modules/process/lno_synth.c:515 modules/process/noise_synth.c:423
 #: modules/process/obj_synth.c:502 modules/process/pat_synth.c:473
 #: modules/process/wave_synth.c:436
@@ -6991,7 +6991,7 @@ msgstr "Dopad"
 msgid "Inclination"
 msgstr "Sklon"
 
-#: modules/process/col_synth.c:448 modules/process/crosscor.c:694
+#: modules/process/col_synth.c:448 modules/process/crosscor.c:719
 msgid "Direction"
 msgstr "Směr"
 
@@ -7165,111 +7165,111 @@ msgstr "úhel"
 msgid "Re_fine"
 msgstr "_Zpřesnit"
 
-#: modules/process/crosscor.c:120
+#: modules/process/crosscor.c:123
 msgid "Calculates cross-correlation of two data fields."
 msgstr "Počítá vzájemnou korelaci dvou datových polí."
 
-#: modules/process/crosscor.c:134
+#: modules/process/crosscor.c:137
 msgid "/M_ultidata/_Cross-Correlation..."
 msgstr "/M_ultidata/_Vzájemná korelace..."
 
-#: modules/process/crosscor.c:138
+#: modules/process/crosscor.c:141
 msgid "Cross-correlate two data fields"
 msgstr "Vypočíst vzájemnou korelaci dvou datových polí"
 
-#: modules/process/crosscor.c:176
+#: modules/process/crosscor.c:179
 msgid "Cross-Correlation"
 msgstr "Vzájemná korelace"
 
-#: modules/process/crosscor.c:197
+#: modules/process/crosscor.c:200
 msgid "Co_rrelate with:"
 msgstr "Ko_relovat s:"
 
-#: modules/process/crosscor.c:203
+#: modules/process/crosscor.c:206
 msgid "Search size"
 msgstr "Velikost hledání"
 
-#: modules/process/crosscor.c:232
+#: modules/process/crosscor.c:235
 msgid "Window size"
 msgstr "Velikost okna"
 
-#: modules/process/crosscor.c:240
+#: modules/process/crosscor.c:243
 msgid "W_idth:"
 msgstr "Šíř_ka"
 
-#: modules/process/crosscor.c:250
+#: modules/process/crosscor.c:253
 msgid "Hei_ght:"
 msgstr "_Výška:"
 
-#: modules/process/crosscor.c:261
+#: modules/process/crosscor.c:264
 msgid "All"
 msgstr "Všechno"
 
-#: modules/process/crosscor.c:262
+#: modules/process/crosscor.c:265
 msgid "Absolute"
 msgstr "Absolutní vzdálenost"
 
-#: modules/process/crosscor.c:263
+#: modules/process/crosscor.c:266
 msgid "X Distance"
 msgstr "Vzdálenost v ose X"
 
-#: modules/process/crosscor.c:264
+#: modules/process/crosscor.c:267
 msgid "Y Distance"
 msgstr "Vzdálenost v ose Y"
 
-#: modules/process/crosscor.c:266 modules/process/crosscor.c:715
+#: modules/process/crosscor.c:269 modules/process/crosscor.c:740
 msgid "Score"
 msgstr "Skóre"
 
-#: modules/process/crosscor.c:268 modules/process/fft.c:309
+#: modules/process/crosscor.c:271 modules/process/fft.c:309
 #: modules/process/maskcor.c:173
 msgid "Output _type:"
 msgstr "T_yp výstupu:"
 
-#: modules/process/crosscor.c:274
+#: modules/process/crosscor.c:277
 msgid "Add _low score results mask"
 msgstr "Přidat _masku s nízkým skóre"
 
-#: modules/process/crosscor.c:285 modules/process/grain_wshed.c:249
+#: modules/process/crosscor.c:288 modules/process/grain_wshed.c:249
 #: modules/process/maskcor.c:185
 msgid "T_hreshold:"
 msgstr "Prá_h:"
 
-#: modules/process/crosscor.c:292
+#: modules/process/crosscor.c:295
 msgid "Multichannel cross-corelation"
 msgstr "Vícekanálová vzájemná korelace"
 
-#: modules/process/crosscor.c:309
+#: modules/process/crosscor.c:312
 msgid "Second _source data:"
 msgstr "_Druhá zdrojová data:"
 
-#: modules/process/crosscor.c:324
+#: modules/process/crosscor.c:327
 msgid "Correlate with:"
 msgstr "Korelovat s:"
 
-#: modules/process/crosscor.c:551 modules/process/crosscor.c:577
+#: modules/process/crosscor.c:576 modules/process/crosscor.c:602
 #: modules/process/nanoindent_adjust.c:322
 #: modules/process/superresolution.c:418 modules/process/superresolution.c:506
 msgid "Initializing..."
 msgstr "Inicializuje se..."
 
-#: modules/process/crosscor.c:558
+#: modules/process/crosscor.c:583
 msgid "Correlating first set..."
 msgstr "Koreluje se první sada..."
 
-#: modules/process/crosscor.c:585
+#: modules/process/crosscor.c:610
 msgid "Correlating second set..."
 msgstr "Koreluje se druhá sada..."
 
-#: modules/process/crosscor.c:633
+#: modules/process/crosscor.c:658
 msgid "X difference"
 msgstr "Rozdíl v X"
 
-#: modules/process/crosscor.c:654
+#: modules/process/crosscor.c:679
 msgid "Y difference"
 msgstr "Rozdíl v Y"
 
-#: modules/process/crosscor.c:674
+#: modules/process/crosscor.c:699
 msgid "Absolute difference"
 msgstr "Absolutní rozdíl"
 
@@ -7549,7 +7549,7 @@ msgstr "Časový krok _Monte Carlo:"
 msgid "Output Options"
 msgstr "Možnosti výstupu"
 
-#: modules/process/domain_synth.c:533 modules/process/fft_synth.c:437
+#: modules/process/domain_synth.c:533 modules/process/fft_synth.c:436
 #: modules/process/lat_synth.c:737 modules/process/lno_synth.c:551
 #: modules/process/noise_synth.c:455 modules/process/obj_synth.c:571
 #: modules/process/wave_synth.c:471
@@ -8265,36 +8265,36 @@ msgstr "Vytvořit povrch spektrální syntézou"
 msgid "Spectral Synthesis"
 msgstr "Spektrální syntéza"
 
-#: modules/process/fft_synth.c:433 modules/process/lno_synth.c:547
+#: modules/process/fft_synth.c:432 modules/process/lno_synth.c:547
 #: modules/process/noise_synth.c:451
 msgid "_RMS:"
 msgstr "_RMS:"
 
-#: modules/process/fft_synth.c:448
+#: modules/process/fft_synth.c:447
 msgid "M_inimum frequency:"
 msgstr "M_inimální frekvence:"
 
-#: modules/process/fft_synth.c:468
+#: modules/process/fft_synth.c:467
 msgid "Ma_ximum frequency:"
 msgstr "Ma_ximální frekvence:"
 
-#: modules/process/fft_synth.c:488
+#: modules/process/fft_synth.c:487
 msgid "Enable _Gaussian multiplier"
 msgstr "Aplikovat _Gaussovský multiplikátor"
 
-#: modules/process/fft_synth.c:501 modules/process/fft_synth.c:524
+#: modules/process/fft_synth.c:500 modules/process/fft_synth.c:523
 msgid "_Autocorrelation length:"
 msgstr "Autokorelační dé_lka:"
 
-#: modules/process/fft_synth.c:511
+#: modules/process/fft_synth.c:510
 msgid "Enable _Lorentz multiplier"
 msgstr "Aplikovat _lorentzovský multiplikátor"
 
-#: modules/process/fft_synth.c:534
+#: modules/process/fft_synth.c:533
 msgid "Enable _power multiplier"
 msgstr "Aplikovat mocninný multi_plikátor"
 
-#: modules/process/fft_synth.c:545
+#: modules/process/fft_synth.c:544
 msgid "Po_wer:"
 msgstr "M_ocnina"
 
@@ -12630,6 +12630,7 @@ msgid "Load volume data"
 msgstr "Načíst objemová data"
 
 #: modules/volume/volume_extract.c:1216
+#, fuzzy, c-format
 msgid "Shown range %g to %g"
 msgstr "Rozsah:  ( %.*f až %.*f) %s"
 

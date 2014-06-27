@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-06-19 03:58+0200\n"
+"POT-Creation-Date: 2014-06-27 09:24+0200\n"
 "PO-Revision-Date: 2014-06-22 19:44+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
@@ -1178,7 +1178,7 @@ msgid "Method:"
 msgstr "Méthode :"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:592
-#: modules/process/crosscor.c:265
+#: modules/process/crosscor.c:268
 msgid "Angle"
 msgstr "Angle"
 
@@ -3552,7 +3552,7 @@ msgstr "Dimensions physiques"
 
 #: modules/file/hdrimage.cc:2287 modules/file/pixmap.c:1167
 #: modules/file/pixmap.c:3287 modules/file/rawfile.c:634
-#: modules/process/crosscor.c:211 modules/process/dimensions.h:472
+#: modules/process/crosscor.c:214 modules/process/dimensions.h:472
 #: modules/process/tip_blind.c:336
 msgid "_Width:"
 msgstr "Largeur :"
@@ -3571,7 +3571,7 @@ msgid "verb|Change"
 msgstr "Changer"
 
 #: modules/file/hdrimage.cc:2328 modules/file/pixmap.c:1202
-#: modules/file/rawfile.c:670 modules/process/crosscor.c:222
+#: modules/file/rawfile.c:670 modules/process/crosscor.c:225
 #: modules/process/dimensions.h:476
 msgid "H_eight:"
 msgstr "Hauteur :"
@@ -7068,7 +7068,7 @@ msgid "Progressive preview"
 msgstr "Aperçu progressif"
 
 #: modules/process/col_synth.c:398 modules/process/deposit_synth.c:430
-#: modules/process/domain_synth.c:449 modules/process/fft_synth.c:417
+#: modules/process/domain_synth.c:449 modules/process/fft_synth.c:416
 #: modules/process/lat_synth.c:605 modules/process/lno_synth.c:504
 #: modules/process/noise_synth.c:412 modules/process/obj_synth.c:491
 #: modules/process/pat_synth.c:461 modules/process/wave_synth.c:425
@@ -7076,7 +7076,7 @@ msgid "Dimensions"
 msgstr "Dimensions"
 
 #: modules/process/col_synth.c:406 modules/process/deposit_synth.c:440
-#: modules/process/domain_synth.c:457 modules/process/fft_synth.c:428
+#: modules/process/domain_synth.c:457 modules/process/fft_synth.c:427
 #: modules/process/lno_synth.c:515 modules/process/noise_synth.c:423
 #: modules/process/obj_synth.c:502 modules/process/pat_synth.c:473
 #: modules/process/wave_synth.c:436
@@ -7100,7 +7100,7 @@ msgstr "Incidence"
 msgid "Inclination"
 msgstr "Inclinaison"
 
-#: modules/process/col_synth.c:448 modules/process/crosscor.c:694
+#: modules/process/col_synth.c:448 modules/process/crosscor.c:719
 msgid "Direction"
 msgstr "Direction"
 
@@ -7274,111 +7274,111 @@ msgstr "angle"
 msgid "Re_fine"
 msgstr "A_ffiner"
 
-#: modules/process/crosscor.c:120
+#: modules/process/crosscor.c:123
 msgid "Calculates cross-correlation of two data fields."
 msgstr "Calcule la corrélation croisée de 2 champs de données."
 
-#: modules/process/crosscor.c:134
+#: modules/process/crosscor.c:137
 msgid "/M_ultidata/_Cross-Correlation..."
 msgstr "/M_ultidonnées/_Corrélation croisée..."
 
-#: modules/process/crosscor.c:138
+#: modules/process/crosscor.c:141
 msgid "Cross-correlate two data fields"
 msgstr "Corrélation croisée de deux champs de données"
 
-#: modules/process/crosscor.c:176
+#: modules/process/crosscor.c:179
 msgid "Cross-Correlation"
 msgstr "Corrélation croisée"
 
-#: modules/process/crosscor.c:197
+#: modules/process/crosscor.c:200
 msgid "Co_rrelate with:"
 msgstr "Corréler avec :"
 
-#: modules/process/crosscor.c:203
+#: modules/process/crosscor.c:206
 msgid "Search size"
 msgstr "Dimensions de recherche"
 
-#: modules/process/crosscor.c:232
+#: modules/process/crosscor.c:235
 msgid "Window size"
 msgstr "Taille de la fenêtre"
 
-#: modules/process/crosscor.c:240
+#: modules/process/crosscor.c:243
 msgid "W_idth:"
 msgstr "Largeur :"
 
-#: modules/process/crosscor.c:250
+#: modules/process/crosscor.c:253
 msgid "Hei_ght:"
 msgstr "Hauteur :"
 
-#: modules/process/crosscor.c:261
+#: modules/process/crosscor.c:264
 msgid "All"
 msgstr "Tout"
 
-#: modules/process/crosscor.c:262
+#: modules/process/crosscor.c:265
 msgid "Absolute"
 msgstr "Absolu"
 
-#: modules/process/crosscor.c:263
+#: modules/process/crosscor.c:266
 msgid "X Distance"
 msgstr "Distance X"
 
-#: modules/process/crosscor.c:264
+#: modules/process/crosscor.c:267
 msgid "Y Distance"
 msgstr "Distance Y"
 
-#: modules/process/crosscor.c:266 modules/process/crosscor.c:715
+#: modules/process/crosscor.c:269 modules/process/crosscor.c:740
 msgid "Score"
 msgstr "Score"
 
-#: modules/process/crosscor.c:268 modules/process/fft.c:309
+#: modules/process/crosscor.c:271 modules/process/fft.c:309
 #: modules/process/maskcor.c:173
 msgid "Output _type:"
 msgstr "_Type de sortie :"
 
-#: modules/process/crosscor.c:274
+#: modules/process/crosscor.c:277
 msgid "Add _low score results mask"
 msgstr "Ajouter un masque de corré_lation basse"
 
-#: modules/process/crosscor.c:285 modules/process/grain_wshed.c:249
+#: modules/process/crosscor.c:288 modules/process/grain_wshed.c:249
 #: modules/process/maskcor.c:185
 msgid "T_hreshold:"
 msgstr "Seuil :"
 
-#: modules/process/crosscor.c:292
+#: modules/process/crosscor.c:295
 msgid "Multichannel cross-corelation"
 msgstr "Corrélation croisée multi-canaux"
 
-#: modules/process/crosscor.c:309
+#: modules/process/crosscor.c:312
 msgid "Second _source data:"
 msgstr "Seconde _source de données :"
 
-#: modules/process/crosscor.c:324
+#: modules/process/crosscor.c:327
 msgid "Correlate with:"
 msgstr "Corréler avec :"
 
-#: modules/process/crosscor.c:551 modules/process/crosscor.c:577
+#: modules/process/crosscor.c:576 modules/process/crosscor.c:602
 #: modules/process/nanoindent_adjust.c:322
 #: modules/process/superresolution.c:418 modules/process/superresolution.c:506
 msgid "Initializing..."
 msgstr "Initialisation..."
 
-#: modules/process/crosscor.c:558
+#: modules/process/crosscor.c:583
 msgid "Correlating first set..."
 msgstr "Corrélation du premier jeu..."
 
-#: modules/process/crosscor.c:585
+#: modules/process/crosscor.c:610
 msgid "Correlating second set..."
 msgstr "Corrélation du second jeu..."
 
-#: modules/process/crosscor.c:633
+#: modules/process/crosscor.c:658
 msgid "X difference"
 msgstr "Différence X"
 
-#: modules/process/crosscor.c:654
+#: modules/process/crosscor.c:679
 msgid "Y difference"
 msgstr "Différence Y"
 
-#: modules/process/crosscor.c:674
+#: modules/process/crosscor.c:699
 msgid "Absolute difference"
 msgstr "Différence absolue"
 
@@ -7662,7 +7662,7 @@ msgstr "Étape temporelle de Monte-Carlo :"
 msgid "Output Options"
 msgstr "Options de sortie"
 
-#: modules/process/domain_synth.c:533 modules/process/fft_synth.c:437
+#: modules/process/domain_synth.c:533 modules/process/fft_synth.c:436
 #: modules/process/lat_synth.c:737 modules/process/lno_synth.c:551
 #: modules/process/noise_synth.c:455 modules/process/obj_synth.c:571
 #: modules/process/wave_synth.c:471
@@ -8379,36 +8379,36 @@ msgstr "Générer une surface en utilisant la synthèse spectrale"
 msgid "Spectral Synthesis"
 msgstr "Synthèse spectrale"
 
-#: modules/process/fft_synth.c:433 modules/process/lno_synth.c:547
+#: modules/process/fft_synth.c:432 modules/process/lno_synth.c:547
 #: modules/process/noise_synth.c:451
 msgid "_RMS:"
 msgstr "_RMS :"
 
-#: modules/process/fft_synth.c:448
+#: modules/process/fft_synth.c:447
 msgid "M_inimum frequency:"
 msgstr "Fréquence m_inimum :"
 
-#: modules/process/fft_synth.c:468
+#: modules/process/fft_synth.c:467
 msgid "Ma_ximum frequency:"
 msgstr "Fréquence ma_ximum :"
 
-#: modules/process/fft_synth.c:488
+#: modules/process/fft_synth.c:487
 msgid "Enable _Gaussian multiplier"
 msgstr "Activer le multiplicateur _Gaussien"
 
-#: modules/process/fft_synth.c:501 modules/process/fft_synth.c:524
+#: modules/process/fft_synth.c:500 modules/process/fft_synth.c:523
 msgid "_Autocorrelation length:"
 msgstr "Longueur d'_autocorrélation :"
 
-#: modules/process/fft_synth.c:511
+#: modules/process/fft_synth.c:510
 msgid "Enable _Lorentz multiplier"
 msgstr "Activer le multiplicateur _lorentzien"
 
-#: modules/process/fft_synth.c:534
+#: modules/process/fft_synth.c:533
 msgid "Enable _power multiplier"
 msgstr "Activer le multiplicateur _puissance"
 
-#: modules/process/fft_synth.c:545
+#: modules/process/fft_synth.c:544
 msgid "Po_wer:"
 msgstr "Puissance :"
 
@@ -9467,7 +9467,8 @@ msgid "Lattice rela_xation:"
 msgstr "Rela_xation du maillage :"
 
 #: modules/process/lat_synth.c:653
-msgid "_Height rela_xation:"
+#, fuzzy
+msgid "_Height relaxation:"
 msgstr "Relaxation des _hauteurs :"
 
 #: modules/process/lat_synth.c:684
