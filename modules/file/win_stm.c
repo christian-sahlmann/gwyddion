@@ -29,6 +29,13 @@
  * TODO: Import full meta data list.
  */
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * WinSTM data
+ * .stm
+ * Read
+ **/
+
 #include <stdio.h>
 #include <string.h>
 #include <glib/gstdio.h>
