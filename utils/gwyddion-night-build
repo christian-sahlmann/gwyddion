@@ -55,6 +55,8 @@ function autostuff() {
 function build_project() {
   # Exclude documentation to get a separate log
   sed -i -e '/^SUBDIRS =/,/[^\]$/s:^:###NIGHT-BUILD###:' devel-docs/Makefile
+  # Exclude pygwy to get a separate log
+  sed -i -e '/^SUBDIRS =/s:\s\+pygwy::' modules/Makefile
   make -k all
   make -k ctags
   pushd po
@@ -70,10 +72,9 @@ function build_project() {
 
 
 function build_pygwy() {
-  # Rebuild pygwy.  This is mainly useful for getting separate logs.  It would
-  # be nice to exclude it from build_project.
+  # Rebuild pygwy.
+  sed -i -e '/^SUBDIRS =/s:$: pygwy:' modules/Makefile
   cd ./modules/pygwy
-  rm -fr pygwywrap.c pygwy-doc
   make -k all pygwy-doc
 }
 
