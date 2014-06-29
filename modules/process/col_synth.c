@@ -612,6 +612,8 @@ static void
 update_controls(ColSynthControls *controls,
                 ColSynthArgs *args)
 {
+    guint i;
+
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->seed), args->seed);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->randomize),
                                  args->randomize);
@@ -632,6 +634,10 @@ update_controls(ColSynthControls *controls,
                              args->phi_spread);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->relaxation),
                                   args->relaxation);
+    for (i = 0; i < GRAPH_NFLAGS; i++) {
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->graph_flags[i]),
+                                     args->graph_flags[i]);
+    }
 }
 
 static void
