@@ -58,7 +58,7 @@ enum {
     QUANTITY_MASK = (1 << QUANTITY_NTYPES) - 1,
 };
 
-typedef struct _ObjSynthControls DomainSynthControls;
+typedef struct _DomainSynthControls DomainSynthControls;
 
 typedef struct {
     gint active_page;
@@ -77,7 +77,7 @@ typedef struct {
     gdouble dt;
 } DomainSynthArgs;
 
-struct _ObjSynthControls {
+struct _DomainSynthControls {
     DomainSynthArgs *args;
     GwyDimensions *dims;
     GtkWidget *dialog;

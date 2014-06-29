@@ -64,7 +64,7 @@ typedef enum {
     GRAPH_NFLAGS,
 } GraphFlags;
 
-typedef struct _ObjSynthControls ColSynthControls;
+typedef struct _ColSynthControls ColSynthControls;
 
 typedef struct {
     gint active_page;
@@ -83,7 +83,7 @@ typedef struct {
     gboolean graph_flags[GRAPH_NFLAGS];
 } ColSynthArgs;
 
-struct _ObjSynthControls {
+struct _ColSynthControls {
     ColSynthArgs *args;
     GwyDimensions *dims;
     GtkWidget *dialog;
