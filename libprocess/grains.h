@@ -83,6 +83,8 @@ void gwy_data_field_grains_mark_slope(GwyDataField *data_field,
                                       gdouble threshval,
                                       gboolean below);
 
+gdouble gwy_data_field_otsu_threshold(GwyDataField *data_field);
+
 void gwy_data_field_grains_add(GwyDataField *grain_field,
                               GwyDataField *add_field);
 

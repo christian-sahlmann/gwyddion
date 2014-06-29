@@ -3,6 +3,9 @@
  *  Copyright (C) 2003-2012 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
+ *  Copyright (C) 2013 Brazilian Nanotechnology National Laboratory
+ *  E-mail: Vinicius Barboza <vinicius.barboza@lnnano.cnpem.br>
+ *
  *  The quicksort algorithm was copied from GNU C library,
  *  Copyright (C) 1991, 1992, 1996, 1997, 1999 Free Software Foundation, Inc.
  *  See below.
@@ -36,6 +39,11 @@
 
 #define ONE G_GUINT64_CONSTANT(1)
 #define GRAIN_BARRIER G_MAXINT
+
+enum {
+    FOREGROUND_FLAG = 1,
+    BACKGROUND_FLAG = 0,
+};
 
 typedef struct {
     gint i;
@@ -87,6 +95,13 @@ typedef struct {
     GwyDataField *mark_dfield;
 } GwyWatershedState;
 
+static gdouble  class_weight                 (GwyDataLine *hist,
+                                              gint t,
+                                              gint flag);
+static gdouble  class_mean                   (GwyDataField *dfield,
+                                              GwyDataLine *hist,
+                                              gint t,
+                                              gint flag);
 static gboolean step_by_one                  (GwyDataField *data_field,
                                               gint *rcol,
                                               gint *rrow);
@@ -118,7 +133,9 @@ static gint     gwy_data_field_fill_one_grain(gint xres,
                                               gint grain_no,
                                               gint *listv,
                                               gint *listh);
-static void waterpour_sort(const gdouble *d, gint *idx, gint n);
+static void     waterpour_sort               (const gdouble *d,
+                                              gint *idx,
+                                              gint n);
 
 enum { NDIRECTIONS = 12 };
 
@@ -253,6 +270,147 @@ gwy_data_field_grains_mark_slope(GwyDataField *data_field,
     gwy_data_field_invalidate(grain_field);
 }
 
+/**
+ * gwy_data_field_otsu_threshold:
+ * @data_field: A data field.
+ *
+ * Finds Otsu's height threshold for a data field.
+ *
+ * The Otsu's threshold is optimal in the sense that it minimises the
+ * inter-class variances of two classes of pixels: above and below theshold.
+ *
+ * Since: 2.37
+ **/
+gdouble
+gwy_data_field_otsu_threshold(GwyDataField *data_field)
+{
+    guint nstats, nn, t;
+    GwyDataLine *hist;
+    gdouble min, max, thresh, max_var;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0.0);
+
+    /* Getting histogram length and max/min values for the data field */
+    nn = data_field->xres * data_field->yres;
+    gwy_data_field_get_min_max(data_field, &min, &max);
+    if (min == max)
+        return min;
+
+    nstats = floor(7.49*cbrt(nn) + 0.5);
+    hist = gwy_data_line_new(nstats, 1, FALSE);
+    gwy_data_field_dh(data_field, hist, nstats);
+
+    /* Calculating the threshold */
+    thresh = max_var = 0.0;
+    for (t = 0; t < nstats; t++) {
+        /* Background statistics*/
+        gdouble weight_0, mean_0;
+        /* Foreground statistics*/
+        gdouble  weight_1, mean_1;
+        gdouble bin, var;
+
+        /* Getting histogram statistics for fg and bg classes */
+        weight_0 = class_weight(hist, t, BACKGROUND_FLAG);
+        weight_1 = class_weight(hist, t, FOREGROUND_FLAG);
+        mean_0 = class_mean(data_field, hist, t, BACKGROUND_FLAG);
+        mean_1 = class_mean(data_field, hist, t, FOREGROUND_FLAG);
+
+        /* Interclass variance */
+        var = weight_0 * weight_1 * (mean_0 - mean_1) * (mean_0 - mean_1);
+        bin = min + (t + 0.5)*(max - min)/nstats;
+
+        /* Check for greater interclass variance */
+        if (var > max_var) {
+            max_var = var;
+            thresh = bin;
+        }
+    }
+
+    g_object_unref(hist);
+
+    return thresh;
+}
+
+/**
+ * class_weight:
+ * @hist: A #GwyDataLine histogram from where to calculate the class
+ *        probability for @t.
+ * @t: A threshold value.
+ * @flag: Alternates between %BACKGROUND or %FOREGROUND class probabilities.
+ *
+ * Returns: The probability for a class given a threshold value.
+ **/
+static gdouble
+class_weight(GwyDataLine *hist,
+             gint t,
+             gint flag)
+{
+    gint i;
+    gint len;
+    gdouble roi, total, weight;
+    gdouble *data;
+
+    len = gwy_data_line_get_res(hist);
+
+    roi = 0;
+    total = 0;
+    data = gwy_data_line_get_data(hist);
+
+    for (i = 0; i < len; i++)
+        total += data[i];
+
+    for (i = flag*t; i < (1 - flag)*t + flag*len; i++)
+        roi += data[i];
+
+    weight = roi/total;
+
+    return weight;
+}
+
+/**
+ * class_mean:
+ * @hist: A #GwyDataLine hiustogram from where to calculate the class mean for
+ *        @t.
+ * @t: A threshold value.
+ * @flag: Alternates between %BACKGROUND or %FOREGROUND class mean.
+ *
+ * Returns: The mean value for a class given a threshold value.
+ **/
+static gdouble
+class_mean(GwyDataField *dfield,
+           GwyDataLine *hist,
+           gint t,
+           gint flag)
+{
+    gint i;
+    gint len;
+    gdouble max, min, bin, val;
+    gdouble roi, total, mean;
+    gdouble *data;
+
+    len = gwy_data_line_get_res(hist);
+    max = gwy_data_field_get_max(dfield);
+    min = gwy_data_field_get_min(dfield);
+
+    roi = 0;
+    total = 0;
+    data = gwy_data_line_get_data(hist);
+
+    if (t == 0 && flag == 0) {
+        return 0.0;
+    }
+
+    for (i = flag*t; i < (1 - flag)*t + flag*len; i++) {
+        val = data[i];
+        bin = min + ( (i + 0.5) * (max-min) / len );
+        roi += bin * val;
+        total += val;
+    }
+
+    mean = roi/total;
+
+    return mean;
+}
 /**
  * gwy_data_field_grains_mark_watershed:
  * @data_field: Data to be used for marking.
