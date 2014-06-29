@@ -49,6 +49,7 @@ enum {
 enum {
     PAGE_DIMENSIONS = 0,
     PAGE_GENERATOR  = 1,
+    PAGE_GRAPHS     = 2,
     PAGE_NPAGES
 };
 
@@ -56,6 +57,12 @@ typedef enum {
     RELAX_WEAK = 0,
     RELAX_STRONG = 1,
 } RelaxationType;
+
+typedef enum {
+    GRAPH_MAX = 0,
+    GRAPH_RMS = 1,
+    GRAPH_NFLAGS,
+} GraphFlags;
 
 typedef struct _ObjSynthControls ColSynthControls;
 
@@ -73,6 +80,7 @@ typedef struct {
     gdouble height;
     gdouble height_noise;
     RelaxationType relaxation;
+    gboolean graph_flags[GRAPH_NFLAGS];
 } ColSynthArgs;
 
 struct _ObjSynthControls {
@@ -95,6 +103,7 @@ struct _ObjSynthControls {
     GtkWidget *height_units;
     GtkObject *height_noise;
     GtkWidget *relaxation;
+    GtkWidget *graph_flags[GRAPH_NFLAGS];
     GwyContainer *mydata;
     GwyDataField *surface;
     gdouble pxsize;
@@ -135,7 +144,9 @@ static void       scale_from_unit_cubes   (GwyDataField *dfield,
 static void       preview                 (ColSynthControls *controls);
 static gboolean   col_synth_do            (const ColSynthArgs *args,
                                            GwyDataField *dfield,
-                                           gdouble preview_time);
+                                           GwyGraphCurveModel **gcmodels,
+                                           gdouble preview_time,
+                                           gdouble zscale);
 static gboolean   col_synth_trace         (GwyDataField *dfield,
                                            gdouble x,
                                            gdouble y,
@@ -158,6 +169,11 @@ static void       col_synth_save_args     (GwyContainer *container,
 
 #include "synth.h"
 
+static const gchar* graph_flags[] = {
+    N_("Maximum"),
+    N_("RMS"),
+};
+
 static const ColSynthArgs col_synth_defaults = {
     PAGE_DIMENSIONS,
     42, TRUE, FALSE, TRUE,
@@ -166,6 +182,7 @@ static const ColSynthArgs col_synth_defaults = {
     0.0, 1.0,
     1.0, 0.0,
     RELAX_WEAK,
+    { FALSE, FALSE, },
 };
 
 static const GwyDimensionArgs dims_defaults = GWY_DIMENSION_ARGS_INIT;
@@ -175,7 +192,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates columnar surfaces by a simple growth algorithm."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2014",
 };
@@ -230,10 +247,12 @@ run_noninteractive(ColSynthArgs *args,
 {
     GwyDataField *newfield;
     GwySIUnit *siunit;
+    GwyGraphCurveModel *gcmodels[GRAPH_NFLAGS];
     gboolean replace = dimsargs->replace && dfield;
     gboolean add = dimsargs->add && dfield;
     gdouble rx, ry;
     gint newid;
+    guint i;
     gboolean ok;
 
     if (args->randomize)
@@ -261,7 +280,7 @@ run_noninteractive(ColSynthArgs *args,
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid),
                        _("Starting..."));
     scale_to_unit_cubes(newfield, &rx, &ry);
-    ok = col_synth_do(args, newfield, HUGE_VAL);
+    ok = col_synth_do(args, newfield, gcmodels, HUGE_VAL, 1.0/sqrt(rx*ry));
     scale_from_unit_cubes(newfield, rx, ry);
     gwy_app_wait_finish();
 
@@ -276,31 +295,69 @@ run_noninteractive(ColSynthArgs *args,
                                  newfield);
         gwy_app_channel_log_add(data, oldid, oldid, "proc::col_synth", NULL);
         g_object_unref(newfield);
-        return;
-    }
-
-    if (data) {
-        newid = gwy_app_data_browser_add_data_field(newfield, data, TRUE);
-        if (oldid != -1)
-            gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
-                                    GWY_DATA_ITEM_GRADIENT,
-                                    0);
+        newid = oldid;
     }
     else {
-        newid = 0;
-        data = gwy_container_new();
-        gwy_container_set_object(data, gwy_app_get_data_key_for_id(newid),
-                                 newfield);
-        gwy_app_data_browser_add(data);
-        gwy_app_data_browser_reset_visibility(data,
-                                              GWY_VISIBILITY_RESET_SHOW_ALL);
-        g_object_unref(data);
+        if (data) {
+            newid = gwy_app_data_browser_add_data_field(newfield, data, TRUE);
+            if (oldid != -1)
+                gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
+                                        GWY_DATA_ITEM_GRADIENT,
+                                        0);
+        }
+        else {
+            newid = 0;
+            data = gwy_container_new();
+            gwy_container_set_object(data, gwy_app_get_data_key_for_id(newid),
+                                     newfield);
+            gwy_app_data_browser_add(data);
+            gwy_app_data_browser_reset_visibility(data,
+                                                  GWY_VISIBILITY_RESET_SHOW_ALL);
+            g_object_unref(data);
+        }
+
+        gwy_app_set_data_field_title(data, newid, _("Generated"));
+        gwy_app_channel_log_add(data, add ? oldid : -1, newid,
+                                "proc::col_synth", NULL);
+        g_object_unref(newfield);
     }
 
-    gwy_app_set_data_field_title(data, newid, _("Generated"));
-    gwy_app_channel_log_add(data, add ? oldid : -1, newid,
-                            "proc::col_synth", NULL);
-    g_object_unref(newfield);
+    for (i = 0; i < GRAPH_NFLAGS; i++) {
+        GwyGraphModel *gmodel;
+        GwySIUnit *unit;
+        gchar *s, *title;
+
+        if (!gcmodels[i])
+            continue;
+
+        gmodel = gwy_graph_model_new();
+        gwy_graph_model_add_curve(gmodel, gcmodels[i]);
+        g_object_unref(gcmodels[i]);
+
+        s = gwy_app_get_data_field_title(data, newid);
+        title = g_strdup_printf("%s (%s)", graph_flags[i], s);
+        g_free(s);
+        g_object_set(gmodel,
+                     "title", title,
+                     "x-logarithmic", TRUE,
+                     "y-logarithmic", TRUE,
+                     "axis-label-bottom", _("Mean height"),
+                     "axis-label-left", _(graph_flags[i]),
+                     NULL);
+        g_free(title);
+
+        unit = gwy_data_field_get_si_unit_z(newfield);
+        unit = gwy_si_unit_duplicate(unit);
+        g_object_set(gmodel, "si-unit-x", unit, NULL);
+        g_object_unref(unit);
+
+        unit = gwy_data_field_get_si_unit_z(newfield);
+        unit = gwy_si_unit_duplicate(unit);
+        g_object_set(gmodel, "si-unit-y", unit, NULL);
+        g_object_unref(unit);
+
+        gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+    }
 }
 
 static gboolean
@@ -310,13 +367,13 @@ col_synth_dialog(ColSynthArgs *args,
                   GwyDataField *dfield_template,
                   gint id)
 {
-    GtkWidget *dialog, *table, *vbox, *hbox, *notebook, *hbox2, *check;
+    GtkWidget *dialog, *table, *vbox, *hbox, *notebook, *hbox2, *check, *label;
     ColSynthControls controls;
     GwyDataField *dfield;
     GwyPixmapLayer *layer;
     gboolean finished;
     gint response;
-    gint row;
+    gint row, i;
 
     gwy_clear(&controls, 1);
     controls.in_init = TRUE;
@@ -398,6 +455,7 @@ col_synth_dialog(ColSynthArgs *args,
                              gtk_label_new(_("Dimensions")));
 
     table = gtk_table_new(19 + (dfield_template ? 1 : 0), 4, FALSE);
+    /* This is used only for synt.h helpers. */
     controls.table = GTK_TABLE(table);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -459,6 +517,36 @@ col_synth_dialog(ColSynthArgs *args,
     controls.relaxation = relaxation_selector_new(&controls);
     gwy_table_attach_hscale(table, row, _("Relaxation type:"), NULL,
                             GTK_OBJECT(controls.relaxation), GWY_HSCALE_WIDGET);
+
+    table = gtk_table_new(1 + GRAPH_NFLAGS, 4, FALSE);
+    /* This is used only for synt.h helpers. */
+    controls.table = GTK_TABLE(table);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), table,
+                             gtk_label_new(_("Evolution")));
+    row = 0;
+
+    label = gtk_label_new(_("Plot graphs:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    for (i = 0; i < GRAPH_NFLAGS; i++) {
+        GtkToggleButton *toggle;
+        controls.graph_flags[i]
+            = gtk_check_button_new_with_label(_(graph_flags[i]));
+        toggle = GTK_TOGGLE_BUTTON(controls.graph_flags[i]);
+        gtk_toggle_button_set_active(toggle, args->graph_flags[i]);
+        gtk_table_attach(GTK_TABLE(table), controls.graph_flags[i],
+                         0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+        g_signal_connect(toggle, "toggled",
+                         G_CALLBACK(gwy_synth_boolean_changed_silent),
+                         &args->graph_flags[i]);
+        row++;
+    }
 
     gtk_widget_show_all(dialog);
     controls.in_init = FALSE;
@@ -623,7 +711,7 @@ preview(ColSynthControls *controls)
     scale_to_unit_cubes(dfield, &rx, &ry);
 
     gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Starting..."));
-    col_synth_do(args, dfield, 1.25);
+    col_synth_do(args, dfield, NULL, 1.25, 1.0);
     gwy_app_wait_finish();
 
     scale_from_unit_cubes(dfield,rx, ry);
@@ -633,25 +721,42 @@ preview(ColSynthControls *controls)
 static gboolean
 col_synth_do(const ColSynthArgs *args,
              GwyDataField *dfield,
-             gdouble preview_time)
+             GwyGraphCurveModel **gcmodels,
+             gdouble preview_time,
+             gdouble zscale)
 {
     RelaxationType relaxation;
     gint xres, yres;
+    guint i;
     gulong npart, ip;
-    gdouble zmax;
+    gdouble zmax, zsum, nextgraphx;
     gdouble lasttime = 0.0, lastpreviewtime = 0.0, currtime;
     GTimer *timer;
     GwyRandGenSet *rngset;
+    GArray **evolution = NULL;
+    gboolean any_graphs = FALSE;
     gboolean finished = FALSE;
 
     timer = g_timer_new();
+
+    evolution = g_new0(GArray*, GRAPH_NFLAGS + 1);
+    if (gcmodels) {
+        for (i = 0; i < GRAPH_NFLAGS; i++) {
+            if (args->graph_flags[i]) {
+                evolution[i] = g_array_new(FALSE, FALSE, sizeof(gdouble));
+                any_graphs = TRUE;
+            }
+        }
+        if (any_graphs)
+            evolution[GRAPH_NFLAGS] = g_array_new(FALSE, FALSE, sizeof(gdouble));
+    }
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     relaxation = args->relaxation;
 
     gwy_data_field_add(dfield, -gwy_data_field_get_max(dfield));
-    zmax = 0.0;
+    zmax = zsum = nextgraphx = 0.0;
 
     npart = args->coverage * xres*yres;
     gwy_app_wait_set_message(_("Depositing particles..."));
@@ -708,6 +813,38 @@ col_synth_do(const ColSynthArgs *args,
                 }
             }
         }
+
+        zsum += height;
+        if (any_graphs && ip >= nextgraphx) {
+            height = zsum/(xres*yres) * zscale;
+            g_array_append_val(evolution[GRAPH_NFLAGS], height);
+            if (evolution[GRAPH_MAX]) {
+                height = zmax*zscale;
+                g_array_append_val(evolution[GRAPH_MAX], height);
+            }
+            if (evolution[GRAPH_RMS]) {
+                gdouble rms;
+                gwy_data_field_invalidate(dfield);
+                rms = gwy_data_field_get_rms(dfield) * zscale;
+                g_array_append_val(evolution[GRAPH_RMS], rms);
+            }
+
+            nextgraphx = 1.2*nextgraphx + 1.0;
+        }
+    }
+
+    for (i = 0; i < GRAPH_NFLAGS; i++) {
+        if (!evolution[i]) {
+            gcmodels[i] = NULL;
+            continue;
+        }
+
+        gcmodels[i] = gwy_graph_curve_model_new();
+        gwy_graph_curve_model_set_data(gcmodels[i],
+                                       (gdouble*)evolution[GRAPH_NFLAGS]->data,
+                                       (gdouble*)evolution[i]->data,
+                                       evolution[GRAPH_NFLAGS]->len);
+        g_object_set(gcmodels[i], "description", _(graph_flags[i]), NULL);
     }
 
     finished = TRUE;
@@ -715,6 +852,11 @@ col_synth_do(const ColSynthArgs *args,
 fail:
     g_timer_destroy(timer);
     gwy_rand_gen_set_free(rngset);
+    for (i = 0; i <= GRAPH_NFLAGS; i++) {
+        if (evolution[i])
+            g_array_free(evolution[i], TRUE);
+    }
+    g_free(evolution);
 
     return finished;
 }
@@ -820,6 +962,7 @@ static const gchar theta_spread_key[] = "/module/col_synth/theta_spread";
 static const gchar phi_key[]          = "/module/col_synth/phi";
 static const gchar phi_spread_key[]   = "/module/col_synth/phi_spread";
 static const gchar relaxation_key[]   = "/module/col_synth/relaxation";
+static const gchar graph_flags_key[]  = "/module/col_synth/graph_flags";
 
 static void
 col_synth_sanitize_args(ColSynthArgs *args)
@@ -844,6 +987,9 @@ col_synth_load_args(GwyContainer *container,
                     ColSynthArgs *args,
                     GwyDimensionArgs *dimsargs)
 {
+    guint i;
+    gint gflags = 0;
+
     *args = col_synth_defaults;
 
     gwy_container_gis_int32_by_name(container, active_page_key,
@@ -864,6 +1010,10 @@ col_synth_load_args(GwyContainer *container,
                                      &args->phi_spread);
     gwy_container_gis_double_by_name(container, coverage_key, &args->coverage);
     gwy_container_gis_enum_by_name(container, relaxation_key, &args->relaxation);
+    gwy_container_gis_int32_by_name(container, graph_flags_key, &gflags);
+    for (i = 0; i < GRAPH_NFLAGS; i++)
+        args->graph_flags[i] = !!(gflags & (1 << i));
+
     col_synth_sanitize_args(args);
 
     gwy_clear(dimsargs, 1);
@@ -876,6 +1026,12 @@ col_synth_save_args(GwyContainer *container,
                     const ColSynthArgs *args,
                     const GwyDimensionArgs *dimsargs)
 {
+    guint i;
+    gint gflags = 0;
+
+    for (i = 0; i < GRAPH_NFLAGS; i++)
+        gflags |= (args->graph_flags[i] ? (1 << i) : 0);
+
     gwy_container_set_int32_by_name(container, active_page_key,
                                     args->active_page);
     gwy_container_set_int32_by_name(container, seed_key, args->seed);
@@ -894,6 +1050,7 @@ col_synth_save_args(GwyContainer *container,
                                      args->phi_spread);
     gwy_container_set_double_by_name(container, coverage_key, args->coverage);
     gwy_container_set_enum_by_name(container, relaxation_key, args->relaxation);
+    gwy_container_set_int32_by_name(container, graph_flags_key, gflags);
 
     gwy_dimensions_save_args(dimsargs, container, prefix);
 }
