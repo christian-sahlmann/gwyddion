@@ -36,6 +36,8 @@
 #define GWY_IS_TOOL_FILTER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_TOOL_FILTER))
 #define GWY_TOOL_FILTER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_FILTER, GwyToolFilterClass))
 
+#define FWHM2SIGMA (1.0/(2.0*sqrt(2*G_LN2)))
+
 /* Keep numbering for settings */
 typedef enum {
     GWY_FILTER_MEAN          = 0,
@@ -54,6 +56,7 @@ typedef struct _GwyToolFilterClass GwyToolFilterClass;
 typedef struct {
     GwyFilterType filter_type;
     gint size;
+    gdouble gauss_size;
 } ToolArgs;
 
 struct _GwyToolFilter {
@@ -76,7 +79,7 @@ struct _GwyToolFilterClass {
 
 static gboolean module_register(void);
 
-static GType    gwy_tool_filter_get_type         (void) G_GNUC_CONST;
+static GType    gwy_tool_filter_get_type         (void)                      G_GNUC_CONST;
 static void     gwy_tool_filter_finalize         (GObject *object);
 static void     gwy_tool_filter_init_dialog      (GwyToolFilter *tool);
 static void     gwy_tool_filter_data_switched    (GwyTool *gwytool,
@@ -91,6 +94,7 @@ static void     gwy_tool_filter_size_changed     (GwyToolFilter *tool,
 static void     gwy_tool_filter_type_changed     (GtkComboBox *combo,
                                                   GwyToolFilter *tool);
 static gboolean gwy_tool_filter_is_sized         (GwyFilterType type);
+static void     setup_size_adjustment            (GwyToolFilter *tool);
 static void     gwy_tool_filter_apply            (GwyToolFilter *tool);
 static void     gwy_tool_filter_save_args        (GwyToolFilter *tool);
 
@@ -100,17 +104,19 @@ static GwyModuleInfo module_info = {
     N_("Filter tool, processes selected part of data with a filter "
        "(conservative denoise, mean, median. Kuwahara, minimum, maximum)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "3.7",
+    "3.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
 
 static const gchar filter_type_key[] = "/module/filter/filter_type";
 static const gchar size_key[]        = "/module/filter/size";
+static const gchar gauss_size_key[]  = "/module/filter/gauss_size";
 
 static const ToolArgs default_args = {
     GWY_FILTER_MEAN,
     5,
+    5.0,
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -172,6 +178,8 @@ gwy_tool_filter_init(GwyToolFilter *tool)
                                    &tool->args.filter_type);
     gwy_container_gis_int32_by_name(settings, size_key,
                                     &tool->args.size);
+    gwy_container_gis_double_by_name(settings, gauss_size_key,
+                                     &tool->args.gauss_size);
 
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_rect,
                                      "rectangle");
@@ -240,7 +248,8 @@ gwy_tool_filter_init_dialog(GwyToolFilter *tool)
                             GTK_OBJECT(tool->filter_type), GWY_HSCALE_WIDGET);
     row++;
 
-    tool->size = gtk_adjustment_new(tool->args.size, 2, 20, 1, 5, 0);
+    tool->size = gtk_adjustment_new(0.0, 0.0, 1.0, 0.1, 1.0, 0);
+    setup_size_adjustment(tool);
     gwy_table_attach_hscale(GTK_WIDGET(table), row, _("Si_ze:"), "px",
                             tool->size, 0);
     gwy_table_hscale_set_sensitive
@@ -300,7 +309,7 @@ gwy_tool_filter_data_changed(GwyPlainTool *plain_tool)
 
 static void
 gwy_tool_filter_response(GwyTool *tool,
-                       gint response_id)
+                         gint response_id)
 {
     GWY_TOOL_CLASS(gwy_tool_filter_parent_class)->response(tool, response_id);
 
@@ -310,7 +319,7 @@ gwy_tool_filter_response(GwyTool *tool,
 
 static void
 gwy_tool_filter_selection_changed(GwyPlainTool *plain_tool,
-                                gint hint)
+                                  gint hint)
 {
     GwyToolFilter *tool;
     gint n = 0;
@@ -334,18 +343,26 @@ static void
 gwy_tool_filter_size_changed(GwyToolFilter *tool,
                              GtkAdjustment *adj)
 {
-    tool->args.size = gwy_adjustment_get_int(adj);
+    if (tool->args.filter_type == GWY_FILTER_GAUSSIAN)
+        tool->args.gauss_size = gtk_adjustment_get_value(adj);
+    else
+        tool->args.size = gwy_adjustment_get_int(adj);
 }
 
 static void
 gwy_tool_filter_type_changed(GtkComboBox *combo,
                              GwyToolFilter *tool)
 {
+    GwyFilterType prevtype, newtype;
     gboolean sensitive;
 
-    tool->args.filter_type = gwy_enum_combo_box_get_active(combo);
+    prevtype = tool->args.filter_type;
+    tool->args.filter_type = newtype = gwy_enum_combo_box_get_active(combo);
     sensitive = gwy_tool_filter_is_sized(tool->args.filter_type);
     gwy_table_hscale_set_sensitive(tool->size, sensitive);
+
+    if (prevtype == GWY_FILTER_GAUSSIAN || newtype == GWY_FILTER_GAUSSIAN)
+        setup_size_adjustment(tool);
 }
 
 static gboolean
@@ -353,6 +370,17 @@ gwy_tool_filter_is_sized(GwyFilterType type)
 {
     return (type != GWY_FILTER_KUWAHARA
             && type != GWY_FILTER_DECHECKER);
+}
+
+static void
+setup_size_adjustment(GwyToolFilter *tool)
+{
+    GtkAdjustment *adj = GTK_ADJUSTMENT(tool->size);
+    if (tool->args.filter_type == GWY_FILTER_GAUSSIAN)
+        gtk_adjustment_configure(adj, tool->args.gauss_size,
+                                 0.01, 40.0, 0.01, 1.0, 0);
+    else
+        gtk_adjustment_configure(adj, tool->args.size, 2, 20, 1, 5, 0);
 }
 
 static void
@@ -438,7 +466,7 @@ gwy_tool_filter_apply(GwyToolFilter *tool)
 
         case GWY_FILTER_GAUSSIAN:
         gwy_data_field_area_filter_gaussian(plain_tool->data_field,
-                                            tool->args.size/(2.0*sqrt(2*G_LN2)),
+                                            tool->args.gauss_size*FWHM2SIGMA,
                                             isel[0], isel[1],
                                             isel[2], isel[3]);
         break;
@@ -462,6 +490,8 @@ gwy_tool_filter_save_args(GwyToolFilter *tool)
                                    tool->args.filter_type);
     gwy_container_set_int32_by_name(settings, size_key,
                                     tool->args.size);
+    gwy_container_set_double_by_name(settings, gauss_size_key,
+                                     tool->args.gauss_size);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

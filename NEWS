@@ -3,6 +3,7 @@ Libraries:
 - libgwyprocess: New function to find a height threshold by the Otsu method.
 
 Modules:
+- Filters tool: Gaussian smoothing is no longer limited to integer FWHM.
 - Columnar synthesis: Can plot the evolution of some statistics during the
   growth.
 
