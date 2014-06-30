@@ -22,16 +22,12 @@ cat >autostuff.ignore <<':'
 ':'
 :
 
-cat >build_project_nopygwy.ignore <<':'
+cat >build_project.ignore <<':'
 ^mkdir: cannot create directory `\.libs': File exists
 ^TRANSLATION [a-z]
 ^[0-9]\+ translated messages
 \.\.\. done
 ^/usr/bin/glib-mkenums: ./.*.h:[0-9]*: lowercase_name is deprecated, use underscore_name
-In file included from gwy\.c:[0-9]*:0:
-In file included from pygwy\.c:[0-9]*:0:
-from gwy\.c:[0-9]*:
-from pygwy\.c:[0-9]*:
 ^[ ^]*$
 ':'
 :
@@ -128,13 +124,6 @@ function printerr() {
   cat $tmplog
 }
 
-function exclude_pygwy_from_project() {
-  # Exclude the block of lines that match pygwy build from build_project
-  difffmt='--old-line-format=%L --new-line-format= --unchanged-line-format='
-  diff $difffmt build_project.err build_pygwy.err >build_project_nopygwy.err
-  diff $difffmt build_project.log build_pygwy.log >build_project_nopygwy.log
-}
-
 function extract_build_documentation() {
   logfile=build_documentation.log
   h=
@@ -181,20 +170,20 @@ function coding_style_report() {
 
 printerr update_version
 printerr autostuff
-exclude_pygwy_from_project
-printerr build_project_nopygwy
+printerr build_project
 printerr build_pygwy >pygwy.log
+cat build_project.err build_pygwy.err >build-seen.err
 extract_translation_stats
 printerr build_documentation
 extract_build_documentation
 extract_documentation_stats
 coding_style_report
-printerr install_to_tmp grep -vFf build_project.err
+printerr install_to_tmp grep -vFf build-seen.err
 printerr check_headers
 printerr check_symbols
 printerr check_deps_versions
 printerr check_desktop
 printerr check_coding_style
-printerr make_dists grep -vFf build_project.err
+printerr make_dists grep -vFf build-seen.err
 
 rm *.ignore $tmplog
