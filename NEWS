@@ -1,3 +1,12 @@
+2.38 (0000-00-00)
+Libraries:
+- libgwyprocess: New function to find a height threshold by the Otsu method.
+
+Modules:
+- Columnar synthesis: Can plot the evolution of some statistics during the
+  growth.
+
+
 2.37 (2014-06-27)
 Application:
 - Translations updated: Czech, French, Italian, Russian.
