@@ -73,6 +73,11 @@ typedef enum {
 typedef struct {
     guint col;
     guint row;
+    guint k;
+    guint kup;
+    guint kleft;
+    guint kright;
+    guint kdown;
     /* Nehgibours blocking movement. */
     guint nneigh;
     guint neighbours;
@@ -87,6 +92,7 @@ typedef struct {
     gdouble fluxperiter;
     gdouble fluence;
     guint64 iter;
+    gdouble *exptable;
 } DiffSynthState;
 
 typedef struct _DiffSynthControls DiffSynthControls;
@@ -159,6 +165,13 @@ static gboolean        diff_synth_do            (DiffSynthArgs *args,
                                                  GwyGraphCurveModel **gcmodels,
                                                  gdouble preview_time,
                                                  gdouble zscale);
+static void            particle_try_move        (Particle *p,
+                                                 guint *hfield,
+                                                 guint xres,
+                                                 guint yres,
+                                                 const DiffSynthArgs *args,
+                                                 GRand *rng,
+                                                 const gdouble *exptable);
 static void            one_iteration            (DiffSynthState *dstate,
                                                  const DiffSynthArgs *args);
 static void            add_particle             (DiffSynthState *dstate);
@@ -166,7 +179,8 @@ static void            finalize_moving_particles(DiffSynthState *dstate,
                                                  const DiffSynthArgs *args);
 static DiffSynthState* diff_synth_state_new     (guint xres,
                                                  guint yres,
-                                                 guint32 seed);
+                                                 guint32 seed,
+                                                 gdouble iT);
 static void            diff_synth_state_free    (DiffSynthState *dstate);
 static void            diff_synth_load_args     (GwyContainer *container,
                                                  DiffSynthArgs *args,
@@ -672,6 +686,7 @@ diff_synth_do(DiffSynthArgs *args,
     gdouble lasttime = 0.0, lastpreviewtime = 0.0, currtime;
     gdouble logflux;
     GTimer *timer;
+    guint64 workdone;
     DiffSynthState *dstate;
     /*
     GArray **evolution = NULL;
@@ -704,19 +719,20 @@ diff_synth_do(DiffSynthArgs *args,
     gwy_app_wait_set_message(_("Depositing particles..."));
     gwy_app_wait_set_fraction(0.0);
 
-    dstate = diff_synth_state_new(xres, yres, args->seed);
+    particle_try_move(NULL, NULL, 0, 0, NULL, NULL, NULL);
+
+    dstate = diff_synth_state_new(xres, yres, args->seed, -1.0/args->T);
     logflux = args->flux;
     args->flux = pow10(logflux);
-
+    workdone = 0.0;
     {
         GArray *particles = dstate->particles;
         guint64 niter = (guint64)(args->coverage/args->flux + 0.5);
         guint64 iter = 0;
 
-        g_printerr("%lu\n", niter);
-
         dstate->fluxperiter = xres*yres * args->flux;
         while (iter < niter) {
+            workdone += particles->len;
             one_iteration(dstate, args);
             if (particles->len)
                 iter++;
@@ -726,24 +742,25 @@ diff_synth_do(DiffSynthArgs *args,
                                   + 0.5);
                 dstate->fluence = 0.0;
             }
-            if (iter % 100000 == 0)
-                g_printerr("%.2f%% %u\r", 100.0*iter/niter, particles->len);
-            /*
-            if (ip % 1000 == 0) {
+
+            if (workdone >= 1000000) {
                 currtime = g_timer_elapsed(timer, NULL);
                 if (currtime - lasttime >= 0.25) {
-                    if (!gwy_app_wait_set_fraction((gdouble)ip/npart))
+                    if (!gwy_app_wait_set_fraction((gdouble)iter/niter))
                         goto fail;
                     lasttime = currtime;
 
                     if (args->animated
                         && currtime - lastpreviewtime >= preview_time) {
+                        for (k = 0; k < xres*yres; k++)
+                            dfield->data[k] = dstate->hfield[k];
+                        gwy_data_field_invalidate(dfield);
                         gwy_data_field_data_changed(dfield);
                         lastpreviewtime = lasttime;
                     }
                 }
+                workdone -= 1000000;
             }
-            */
         }
         finalize_moving_particles(dstate, args);
     }
@@ -801,40 +818,35 @@ calc_neighbour_pos(guint col, guint row, guint k, guint xres, guint yres,
 }
 
 static void
-particle_update_neighbours(Particle *p,
-                           const guint *hfield, guint xres, guint yres,
-                           gboolean schwoebel)
+particle_update_neighbours(Particle *p, const guint *hfield, gboolean schwoebel)
 {
-    guint col = p->col, row = p->row, k = row*xres + col;
-    guint h = hfield[k];
+    guint h = hfield[p->k];
     guint neighbours = 0, nneigh = 0;
-    guint kup, kleft, kright, kdown;
 
-    calc_neighbour_pos(col, row, k, xres, yres, &kup, &kleft, &kright, &kdown);
-    if (hfield[kup] >= h) {
+    if (hfield[p->kup] >= h) {
         neighbours |= (1 << NEIGH_UP);
         nneigh++;
     }
-    if (hfield[kleft] >= h) {
+    if (hfield[p->kleft] >= h) {
         neighbours |= (1 << NEIGH_LEFT);
         nneigh++;
     }
-    if (hfield[kright] >= h) {
+    if (hfield[p->kright] >= h) {
         neighbours |= (1 << NEIGH_RIGHT);
         nneigh++;
     }
-    if (hfield[kdown] >= h) {
+    if (hfield[p->kdown] >= h) {
         neighbours |= (1 << NEIGH_DOWN);
         nneigh++;
     }
     if (schwoebel) {
-        if (hfield[kup] + 1 < h)
+        if (hfield[p->kup] + 1 < h)
             neighbours |= (1 << (NEIGH_UP + NEIGH_SCHWOEBEL));
-        if (hfield[kleft] + 1 < h)
+        if (hfield[p->kleft] + 1 < h)
             neighbours |= (1 << (NEIGH_LEFT + NEIGH_SCHWOEBEL));
-        if (hfield[kright] + 1 < h)
+        if (hfield[p->kright] + 1 < h)
             neighbours |= (1 << (NEIGH_RIGHT + NEIGH_SCHWOEBEL));
-        if (hfield[kdown] + 1 < h)
+        if (hfield[p->kdown] + 1 < h)
             neighbours |= (1 << (NEIGH_DOWN + NEIGH_SCHWOEBEL));
     }
     p->neighbours = neighbours;
@@ -845,12 +857,31 @@ particle_update_neighbours(Particle *p,
 static void
 particle_try_move(Particle *p,
                   guint *hfield, guint xres, guint yres,
-                  const DiffSynthArgs *args, GRand *rng)
+                  const DiffSynthArgs *args, GRand *rng,
+                  const gdouble *exptable)
 {
+    static guint32 spare = 0;
+    static guint nspare = 0;
+
     Particle pnew;
-    guint direction = g_rand_int_range(rng, 0, 4);
-    guint k, knew;
-    gdouble iT;
+    guint direction;
+
+    if (G_UNLIKELY(!p)) {
+        nspare = 0;
+        return;
+    }
+
+    if (nspare) {
+        direction = spare & 0x3;
+        spare >>= 2;
+        nspare--;
+    }
+    else {
+        spare = g_rand_int(rng);
+        direction = spare & 0x3;
+        spare >>= 2;
+        nspare = 3;
+    }
 
     if (p->neighbours & (1 << direction))
         return;
@@ -873,18 +904,19 @@ particle_try_move(Particle *p,
     else
         pnew.row = G_LIKELY(pnew.row < yres - 1) ? pnew.row + 1 : 0;
 
-    k = xres*p->row + p->col;
-    knew = xres*pnew.row + pnew.col;
-    iT = -1.0/args->T;
-    hfield[knew]++;
-    hfield[k]--;
-    particle_update_neighbours(&pnew, hfield, xres, yres, FALSE);
+    pnew.k = xres*pnew.row + pnew.col;
+    calc_neighbour_pos(pnew.col, pnew.row, pnew.k,
+                       xres, yres,
+                       &pnew.kup, &pnew.kleft, &pnew.kright, &pnew.kdown);
+    hfield[pnew.k]++;
+    hfield[p->k]--;
+    particle_update_neighbours(&pnew, hfield, FALSE);
     if (pnew.nneigh > p->nneigh
-        || g_rand_double(rng) < 0.5*exp(iT*(p->nneigh - pnew.nneigh)))
+        || g_rand_double(rng) < exptable[p->nneigh - pnew.nneigh])
         *p = pnew;
     else {
-        hfield[k]++;
-        hfield[knew]--;
+        hfield[p->k]++;
+        hfield[pnew.k]--;
     }
 }
 
@@ -894,8 +926,11 @@ add_particle(DiffSynthState *dstate)
     Particle p;
     p.col = g_rand_int_range(dstate->rng, 0, dstate->xres);
     p.row = g_rand_int_range(dstate->rng, 0, dstate->yres);
+    p.k = p.row*dstate->xres + p.col;
+    calc_neighbour_pos(p.col, p.row, p.k, dstate->xres, dstate->yres,
+                       &p.kup, &p.kleft, &p.kright, &p.kdown);
     g_array_append_val(dstate->particles, p);
-    dstate->hfield[dstate->xres*p.row + p.col]++;
+    dstate->hfield[p.k]++;
 }
 
 static void
@@ -904,18 +939,19 @@ one_iteration(DiffSynthState *dstate, const DiffSynthArgs *args)
     GArray *particles = dstate->particles;
     guint xres = dstate->xres, yres = dstate->yres;
     guint *hfield = dstate->hfield;
+    const gdouble *exptable = dstate->exptable;
     GRand *rng = dstate->rng;
     guint i = 0;
 
     while (i < particles->len) {
         Particle *p = &g_array_index(particles, Particle, i);
-        particle_update_neighbours(p, hfield, xres, yres, !!args->schwoebel);
+        particle_update_neighbours(p, hfield, !!args->schwoebel);
         if (p->nneigh > 1 || (p->nneigh && g_rand_double(rng) < args->ps)) {
             g_array_remove_index_fast(particles, i);
         }
         else {
             // TODO: We may also consider desorption here.
-            particle_try_move(p, hfield, xres, yres, args, rng);
+            particle_try_move(p, hfield, xres, yres, args, rng, exptable);
             i++;
         }
     }
@@ -932,34 +968,38 @@ finalize_moving_particles(DiffSynthState *dstate,
                           const DiffSynthArgs *args)
 {
     GArray *particles = dstate->particles;
-    guint xres = dstate->xres, yres = dstate->yres;
     guint *hfield = dstate->hfield;
     GRand *rng = dstate->rng;
     guint i = 0;
 
     while (i < particles->len) {
         Particle *p = &g_array_index(particles, Particle, i);
-        particle_update_neighbours(p, hfield, xres, yres, !!args->schwoebel);
+        particle_update_neighbours(p, hfield, !!args->schwoebel);
         if (p->nneigh > 1 || (p->nneigh && g_rand_double(rng) < args->ps)) {
             g_array_remove_index_fast(particles, i);
         }
         else {
-            hfield[xres*p->row + p->col]--;
+            hfield[p->k]--;
             i++;
         }
     }
 }
 
 static DiffSynthState*
-diff_synth_state_new(guint xres, guint yres, guint32 seed)
+diff_synth_state_new(guint xres, guint yres, guint32 seed, gdouble iT)
 {
     DiffSynthState *dstate = g_new0(DiffSynthState, 1);
+    guint i;
+
     dstate->rng = g_rand_new_with_seed(seed);
     dstate->xres = xres;
     dstate->yres = yres;
     dstate->hfield = g_new0(guint, dstate->xres*dstate->yres);
     dstate->particles = g_array_new(FALSE, FALSE, sizeof(Particle));
     dstate->fluence = 0.0;
+    dstate->exptable = g_new(gdouble, 5);
+    for (i = 0; i < 5; i++)
+        dstate->exptable[i] = 0.5*exp(iT*i);
     return dstate;
 }
 
@@ -969,6 +1009,7 @@ diff_synth_state_free(DiffSynthState *dstate)
     g_free(dstate->hfield);
     g_rand_free(dstate->rng);
     g_array_free(dstate->particles, TRUE);
+    g_free(dstate->exptable);
     g_free(dstate);
 }
 
