@@ -133,6 +133,7 @@ G_BEGIN_DECLS
 #define GWY_STOCK_SUBSCRIPT             "gwy_subscript"
 #define GWY_STOCK_SUPERSCRIPT           "gwy_superscript"
 #define GWY_STOCK_SYNTHETIC_COLUMNAR    "gwy_synthetic_columnar"
+#define GWY_STOCK_SYNTHETIC_DIFFUSION   "gwy_synthetic_diffusion"
 #define GWY_STOCK_SYNTHETIC_DOMAINS     "gwy_synthetic_domains"
 #define GWY_STOCK_SYNTHETIC_LATTICE     "gwy_synthetic_lattice"
 #define GWY_STOCK_SYNTHETIC_LINE_NOISE  "gwy_synthetic_line_noise"

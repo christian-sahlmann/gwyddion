@@ -1059,6 +1059,13 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_SYNTHETIC_DIFFUSION:
+ *
+ * The "Synthetic-Diffusion" stock icon.
+ * <inlinegraphic fileref="gwy_synthetic_diffusion-24.png" format="PNG"/>
+ **/
+
+/**
  * GWY_STOCK_SYNTHETIC_DOMAINS:
  *
  * The "Synthetic-Domains" stock icon.
