@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-06-27 09:24+0200\n"
-"PO-Revision-Date: 2014-06-26 22:31+0300\n"
+"POT-Creation-Date: 2014-07-02 03:58+0200\n"
+"PO-Revision-Date: 2014-07-02 12:15+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -265,11 +265,11 @@ msgstr "Минимальное значение"
 msgid "Maximum value"
 msgstr "Максимальное значение"
 
-#: libprocess/gwygrainvalue.c:108 modules/tools/filter.c:197
+#: libprocess/gwygrainvalue.c:108 modules/tools/filter.c:205
 msgid "Mean value"
 msgstr "Среднее значение"
 
-#: libprocess/gwygrainvalue.c:117 modules/tools/filter.c:198
+#: libprocess/gwygrainvalue.c:117 modules/tools/filter.c:206
 msgid "Median value"
 msgstr "Срединное значение"
 
@@ -871,7 +871,7 @@ msgstr "_Вертикально:"
 msgid "Scale size _automatically"
 msgstr "Масштабировать размер _автоматически"
 
-#: libgwydgets/gwy3dwindow.c:1125 modules/tools/filter.c:244
+#: libgwydgets/gwy3dwindow.c:1125 modules/tools/filter.c:253
 msgid "Si_ze:"
 msgstr "_Размер:"
 
@@ -884,31 +884,31 @@ msgstr "точек"
 #: modules/file/pixmap.c:1085 modules/file/pixmap.c:3243
 #: modules/file/rawfile.c:401 modules/process/angle_dist.c:172
 #: modules/process/calcoefs_new.c:348 modules/process/calibrate.c:392
-#: modules/process/col_synth.c:327 modules/process/correct_affine.c:307
+#: modules/process/col_synth.c:384 modules/process/correct_affine.c:307
 #: modules/process/curvature.c:605 modules/process/cwt.c:135
-#: modules/process/deposit_synth.c:361 modules/process/domain_synth.c:368
-#: modules/process/drift.c:240 modules/process/dwt.c:166
-#: modules/process/dwtanisotropy.c:184 modules/process/edge.c:655
-#: modules/process/extend.c:192 modules/process/facet-level.c:190
-#: modules/process/facet_analysis.c:276 modules/process/fft.c:283
-#: modules/process/fft_filter_2d.c:460 modules/process/fft_synth.c:353
-#: modules/process/fractal.c:207 modules/process/grain_edge.c:218
-#: modules/process/grain_mark.c:264 modules/process/grain_wshed.c:183
-#: modules/process/hough.c:179 modules/process/lat_synth.c:540
-#: modules/process/latsim.c:158 modules/process/level.c:265
-#: modules/process/linecorrect.c:281 modules/process/lno_synth.c:441
-#: modules/process/local_contrast.c:130 modules/process/median-bg.c:179
-#: modules/process/noise_synth.c:348 modules/process/obj_synth.c:428
-#: modules/process/pat_synth.c:398 modules/process/pid.c:199
-#: modules/process/polydistort.c:218 modules/process/polylevel.c:377
-#: modules/process/rank.c:132 modules/process/rotate.c:266
-#: modules/process/scale.c:196 modules/process/scars.c:477
-#: modules/process/shade.c:216 modules/process/slope_dist.c:268
-#: modules/process/sphere-revolve.c:218 modules/process/tilt.c:160
-#: modules/process/tip_model.c:170 modules/process/unrotate.c:228
-#: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:362
-#: modules/process/wpour_mark.c:283 modules/volume/volume_calibrate.c:371
-#: modules/volume/volume_extract.c:331
+#: modules/process/deposit_synth.c:361 modules/process/diff_synth.c:403
+#: modules/process/domain_synth.c:368 modules/process/drift.c:240
+#: modules/process/dwt.c:166 modules/process/dwtanisotropy.c:184
+#: modules/process/edge.c:655 modules/process/extend.c:192
+#: modules/process/facet-level.c:190 modules/process/facet_analysis.c:276
+#: modules/process/fft.c:283 modules/process/fft_filter_2d.c:460
+#: modules/process/fft_synth.c:353 modules/process/fractal.c:207
+#: modules/process/grain_edge.c:218 modules/process/grain_mark.c:264
+#: modules/process/grain_wshed.c:183 modules/process/hough.c:179
+#: modules/process/lat_synth.c:540 modules/process/latsim.c:158
+#: modules/process/level.c:265 modules/process/linecorrect.c:281
+#: modules/process/lno_synth.c:441 modules/process/local_contrast.c:130
+#: modules/process/median-bg.c:179 modules/process/noise_synth.c:348
+#: modules/process/obj_synth.c:428 modules/process/pat_synth.c:398
+#: modules/process/pid.c:199 modules/process/polydistort.c:218
+#: modules/process/polylevel.c:377 modules/process/rank.c:132
+#: modules/process/rotate.c:266 modules/process/scale.c:196
+#: modules/process/scars.c:477 modules/process/shade.c:216
+#: modules/process/slope_dist.c:268 modules/process/sphere-revolve.c:218
+#: modules/process/tilt.c:160 modules/process/tip_model.c:170
+#: modules/process/unrotate.c:228 modules/process/volumize_layers.c:213
+#: modules/process/wave_synth.c:362 modules/process/wpour_mark.c:283
+#: modules/volume/volume_calibrate.c:371 modules/volume/volume_extract.c:331
 msgid "_Reset"
 msgstr "_Сброс"
 
@@ -1477,13 +1477,13 @@ msgstr "Величина для предпросмотра:"
 msgid "Mean"
 msgstr "Среднее"
 
-#: app/app.c:1475 modules/process/polydistort.c:274 modules/tools/filter.c:200
+#: app/app.c:1475 modules/process/polydistort.c:274 modules/tools/filter.c:208
 #: modules/tools/icolorange.c:386 modules/tools/linestats.c:154
 msgid "Minimum"
 msgstr "Минимум"
 
-#: app/app.c:1476 modules/tools/filter.c:201 modules/tools/icolorange.c:397
-#: modules/tools/linestats.c:155
+#: app/app.c:1476 modules/process/col_synth.c:173 modules/tools/filter.c:209
+#: modules/tools/icolorange.c:397 modules/tools/linestats.c:155
 msgid "Maximum"
 msgstr "Максимум"
 
@@ -1495,8 +1495,8 @@ msgstr "Положение минимума"
 msgid "Max. position"
 msgstr "Положение максимума"
 
-#: app/app.c:1479 modules/process/scars.c:537 modules/process/scars.c:544
-#: modules/process/threshold.c:356
+#: app/app.c:1479 modules/process/col_synth.c:174 modules/process/scars.c:537
+#: modules/process/scars.c:544 modules/process/threshold.c:356
 msgid "RMS"
 msgstr "Ср. квадр."
 
@@ -2931,7 +2931,7 @@ msgstr "Экспортировать текст"
 
 #: modules/file/asciiexport.c:273 modules/file/pixmap.c:3359
 #: modules/file/rawfile.c:722 modules/file/rawxyz.c:671
-#: modules/process/calibrate.c:604 modules/process/col_synth.c:455
+#: modules/process/calibrate.c:604 modules/process/col_synth.c:513
 #: modules/process/correct_affine.c:489 modules/process/extend.c:258
 #: modules/process/fft_filter_1d.c:296 modules/process/grain_dist.c:303
 #: modules/process/grain_edge.c:270 modules/process/grain_mark.c:344
@@ -4649,11 +4649,12 @@ msgstr "Экспорт %s"
 msgid "_Zoom:"
 msgstr "_Увеличение:"
 
-#: modules/file/pixmap.c:3296 modules/process/col_synth.c:425
-#: modules/process/domain_synth.c:529 modules/process/grain_mark.c:309
-#: modules/process/lat_synth.c:732 modules/process/obj_synth.c:567
-#: modules/process/pat_synth.c:871 modules/process/pat_synth.c:1173
-#: modules/process/pat_synth.c:1508 modules/process/tip_blind.c:343
+#: modules/file/pixmap.c:3296 modules/process/col_synth.c:483
+#: modules/process/diff_synth.c:531 modules/process/domain_synth.c:529
+#: modules/process/grain_mark.c:309 modules/process/lat_synth.c:732
+#: modules/process/obj_synth.c:567 modules/process/pat_synth.c:871
+#: modules/process/pat_synth.c:1173 modules/process/pat_synth.c:1508
+#: modules/process/tip_blind.c:343
 msgid "_Height:"
 msgstr "_Высота:"
 
@@ -5756,11 +5757,11 @@ msgstr "Экспортирует данные как структурные се
 msgid "VTK structured grid (.vtk)"
 msgstr "Структурная сетка VTK (.vtk)"
 
-#: modules/file/win_stm.c:76
+#: modules/file/win_stm.c:83
 msgid "Imports WinSTM (.stm) files."
 msgstr "Импортирует файлы WinSTM (.stm)."
 
-#: modules/file/win_stm.c:89
+#: modules/file/win_stm.c:96
 msgid "WinSTM files (.stm)"
 msgstr "Файлы WinSTM (.stm)"
 
@@ -6995,94 +6996,110 @@ msgstr "Множитель калибровки по _Z:"
 msgid "Create new channel"
 msgstr "Создать новый канал"
 
-#: modules/process/col_synth.c:176
+#: modules/process/col_synth.c:193
 msgid "Generates columnar surfaces by a simple growth algorithm."
 msgstr "Создаёт столбчатые поверхности простым алгоритмом роста. "
 
-#: modules/process/col_synth.c:190
+#: modules/process/col_synth.c:207
 msgid "/S_ynthetic/_Columnar..."
 msgstr "/Син_тез/С_толбчатая..."
 
-#: modules/process/col_synth.c:194
+#: modules/process/col_synth.c:211
 msgid "Generate columnar surface"
 msgstr "Создать столбчатую поверхность"
 
-#: modules/process/col_synth.c:262 modules/process/col_synth.c:625
+#: modules/process/col_synth.c:281 modules/process/col_synth.c:719
 #: modules/process/deposit_synth.c:279 modules/process/deposit_synth.c:879
+#: modules/process/diff_synth.c:302 modules/process/diff_synth.c:670
 #: modules/process/domain_synth.c:266 modules/process/domain_synth.c:764
 #: modules/process/lat_synth.c:468 modules/process/neural.c:1275
 #: modules/process/pid.c:336 modules/process/xydenoise.c:220
 msgid "Starting..."
 msgstr "Запускается..."
 
-#: modules/process/col_synth.c:300 modules/process/deposit_synth.c:317
+#: modules/process/col_synth.c:319 modules/process/deposit_synth.c:317
 #: modules/process/deposit_synth.c:329 modules/process/deposit_synth.c:549
-#: modules/process/deposit_synth.c:563 modules/process/domain_synth.c:330
-#: modules/process/domain_synth.c:339 modules/process/fft_synth.c:323
-#: modules/process/lat_synth.c:506 modules/process/lno_synth.c:413
-#: modules/process/noise_synth.c:321 modules/process/obj_synth.c:398
-#: modules/process/pat_synth.c:368 modules/process/wave_synth.c:334
+#: modules/process/deposit_synth.c:563 modules/process/diff_synth.c:338
+#: modules/process/domain_synth.c:330 modules/process/domain_synth.c:339
+#: modules/process/fft_synth.c:323 modules/process/lat_synth.c:506
+#: modules/process/lno_synth.c:413 modules/process/noise_synth.c:321
+#: modules/process/obj_synth.c:398 modules/process/pat_synth.c:368
+#: modules/process/wave_synth.c:334
 msgid "Generated"
 msgstr "Сгенерированное"
 
-#: modules/process/col_synth.c:325
+#: modules/process/col_synth.c:344 modules/process/diff_synth.c:363
+msgid "Mean height"
+msgstr "Средняя высота"
+
+#: modules/process/col_synth.c:382
 msgid "Grow Columnar Surface"
 msgstr "Вырастить столбчатую поверхность"
 
-#: modules/process/col_synth.c:375 modules/process/domain_synth.c:426
+#: modules/process/col_synth.c:432 modules/process/diff_synth.c:451
+#: modules/process/domain_synth.c:426
 msgid "Progressive preview"
 msgstr "Прогрессивное обновление"
 
-#: modules/process/col_synth.c:398 modules/process/deposit_synth.c:430
-#: modules/process/domain_synth.c:449 modules/process/fft_synth.c:416
-#: modules/process/lat_synth.c:605 modules/process/lno_synth.c:504
-#: modules/process/noise_synth.c:412 modules/process/obj_synth.c:491
-#: modules/process/pat_synth.c:461 modules/process/wave_synth.c:425
+#: modules/process/col_synth.c:455 modules/process/deposit_synth.c:430
+#: modules/process/diff_synth.c:474 modules/process/domain_synth.c:449
+#: modules/process/fft_synth.c:416 modules/process/lat_synth.c:605
+#: modules/process/lno_synth.c:504 modules/process/noise_synth.c:412
+#: modules/process/obj_synth.c:491 modules/process/pat_synth.c:461
+#: modules/process/wave_synth.c:425
 msgid "Dimensions"
 msgstr "Размеры"
 
-#: modules/process/col_synth.c:406 modules/process/deposit_synth.c:440
-#: modules/process/domain_synth.c:457 modules/process/fft_synth.c:427
-#: modules/process/lno_synth.c:515 modules/process/noise_synth.c:423
-#: modules/process/obj_synth.c:502 modules/process/pat_synth.c:473
-#: modules/process/wave_synth.c:436
+#: modules/process/col_synth.c:464 modules/process/deposit_synth.c:440
+#: modules/process/diff_synth.c:483 modules/process/domain_synth.c:457
+#: modules/process/fft_synth.c:427 modules/process/lno_synth.c:515
+#: modules/process/noise_synth.c:423 modules/process/obj_synth.c:502
+#: modules/process/pat_synth.c:473 modules/process/wave_synth.c:436
 msgid "Generator"
 msgstr "Генератор"
 
-#: modules/process/col_synth.c:412 modules/process/lno_synth.c:1055
-#: modules/process/obj_synth.c:513
+#: modules/process/col_synth.c:470 modules/process/diff_synth.c:489
+#: modules/process/lno_synth.c:1055 modules/process/obj_synth.c:513
 msgid "Co_verage:"
 msgstr "По_крытие:"
 
-#: modules/process/col_synth.c:419
+#: modules/process/col_synth.c:477
 msgid "Particle Size"
 msgstr "Размер частицы"
 
-#: modules/process/col_synth.c:437
+#: modules/process/col_synth.c:495
 msgid "Incidence"
 msgstr "Угол падения"
 
-#: modules/process/col_synth.c:442
+#: modules/process/col_synth.c:500
 msgid "Inclination"
 msgstr "Наклон"
 
-#: modules/process/col_synth.c:448 modules/process/crosscor.c:719
+#: modules/process/col_synth.c:506 modules/process/crosscor.c:719
 msgid "Direction"
 msgstr "Направление"
 
-#: modules/process/col_synth.c:460
+#: modules/process/col_synth.c:518
 msgid "Relaxation type:"
 msgstr "Тип релаксации:"
 
-#: modules/process/col_synth.c:511
+#: modules/process/col_synth.c:528
+msgid "Evolution"
+msgstr "Эволюция"
+
+#: modules/process/col_synth.c:531 modules/process/diff_synth.c:538
+msgid "Plot graphs:"
+msgstr "Строить графики:"
+
+#: modules/process/col_synth.c:599
 msgid "Weak"
 msgstr "Слабая"
 
-#: modules/process/col_synth.c:512
+#: modules/process/col_synth.c:600
 msgid "Strong"
 msgstr "Сильная"
 
-#: modules/process/col_synth.c:657
+#: modules/process/col_synth.c:768 modules/process/diff_synth.c:719
 msgid "Depositing particles..."
 msgstr "Осаждаются частицы..."
 
@@ -7114,8 +7131,8 @@ msgstr "Общий фильтр свёртки"
 msgid "Convolution Filter"
 msgstr "Фильтр свёртки"
 
-#: modules/process/convolution_filter.c:284 modules/tools/filter.c:138
-#: modules/tools/filter.c:229
+#: modules/process/convolution_filter.c:284 modules/tools/filter.c:144
+#: modules/tools/filter.c:237
 msgid "Filter"
 msgstr "Фильтр"
 
@@ -7542,6 +7559,42 @@ msgstr "Ошибка: частицы слишком большие."
 msgid "Error: particles too small."
 msgstr "Ошибка: частицы слишком маленькие."
 
+#: modules/process/diff_synth.c:198
+msgid "Number of islands"
+msgstr "Число островков"
+
+#: modules/process/diff_synth.c:214
+msgid "Generates surfaces by diffusion limited aggregation."
+msgstr "Создаёт поверхность с помощью агрегации, ограниченной диффузией"
+
+#: modules/process/diff_synth.c:228
+msgid "/S_ynthetic/_Diffusion..."
+msgstr "/Син_тез/Ди_ффузия..."
+
+#: modules/process/diff_synth.c:232
+msgid "Generate surface by diffusion limited aggregation"
+msgstr "Создать поверхность используя агрегацию, ограниченную диффузией"
+
+#: modules/process/diff_synth.c:401
+msgid "Diffusion Limited Aggregation"
+msgstr "Агрегация, ограниченная диффузией"
+
+#: modules/process/diff_synth.c:497
+msgid "Log10 of _flux:"
+msgstr "Log10 _потока:"
+
+#: modules/process/diff_synth.c:505 modules/process/domain_synth.c:482
+msgid "_Temperature:"
+msgstr "_Температура:"
+
+#: modules/process/diff_synth.c:513
+msgid "_Sticking _probability:"
+msgstr "_Вероятность прилипания:"
+
+#: modules/process/diff_synth.c:522
+msgid "Sch_woebel probability:"
+msgstr "Вероятность по _Швёбелю:"
+
 #: modules/process/dimensions.h:456
 msgid "S_quare image"
 msgstr "_Квадратное изображение"
@@ -7601,10 +7654,6 @@ msgstr "Параметры модели"
 #: modules/process/domain_synth.c:474
 msgid "_Number of iterations:"
 msgstr "_Число шагов:"
-
-#: modules/process/domain_synth.c:482
-msgid "_Temperature:"
-msgstr "_Температура:"
 
 #: modules/process/domain_synth.c:490
 msgid "_Inhibitor strength:"
@@ -10340,11 +10389,11 @@ msgstr "_Масштабируется с размером"
 msgid "_Truncate:"
 msgstr "_Усечение:"
 
-#: modules/process/otsu_threshold.c:48 modules/process/otsu_threshold.c:68
+#: modules/process/otsu_threshold.c:37 modules/process/otsu_threshold.c:57
 msgid "Automated threshold using Otsu's method on heights."
 msgstr "Автоматический порог, применяющий метод Оцу к высотам."
 
-#: modules/process/otsu_threshold.c:64
+#: modules/process/otsu_threshold.c:53
 msgid "/_Grains/_Mark by Otsu's..."
 msgstr "/Зёрн_а/Пометить по методу _Оцу..."
 
@@ -11578,7 +11627,7 @@ msgstr "Инструмент измерения расстояний, измер
 msgid "Measure distances and directions between points"
 msgstr "Измерить расстояния и углы между точками"
 
-#: modules/tools/filter.c:100
+#: modules/tools/filter.c:104
 msgid ""
 "Filter tool, processes selected part of data with a filter (conservative "
 "denoise, mean, median. Kuwahara, minimum, maximum)."
@@ -11586,27 +11635,27 @@ msgstr ""
 "Инструмент-фильтр, обрабатывает выбранную часть данных фильтром (выборочной "
 "уборки шума, среднего, срединного. Кувахара, минимум. максимум)."
 
-#: modules/tools/filter.c:139
+#: modules/tools/filter.c:145
 msgid "Basic filters: mean, median, denoise, …"
 msgstr "Основные фильтры: среднее, срединное, убрать шум, …"
 
-#: modules/tools/filter.c:199
+#: modules/tools/filter.c:207
 msgid "Conservative denoise"
 msgstr "Выборочная уборка шума"
 
-#: modules/tools/filter.c:202
+#: modules/tools/filter.c:210
 msgid "Kuwahara"
 msgstr "Кувахара"
 
-#: modules/tools/filter.c:203
+#: modules/tools/filter.c:211
 msgid "Dechecker"
 msgstr "Убрать \"шахматную доску\""
 
-#: modules/tools/filter.c:204
+#: modules/tools/filter.c:212
 msgid "filter|Gaussian"
 msgstr "Гауссов"
 
-#: modules/tools/filter.c:239 modules/tools/polynom.c:235
+#: modules/tools/filter.c:247 modules/tools/polynom.c:235
 msgid "_Type:"
 msgstr "_Тип:"
 
@@ -12777,6 +12826,16 @@ msgstr "/_Инвертировать значение"
 msgid "Invert value in volume data"
 msgstr "Инвертирует значения в объёмных данных"
 
+#~ msgid "Frame #%u is too short for scanned data header."
+#~ msgstr ""
+#~ "Фрейм #%u слишком короткий чтобы быть заголовком сканированных данных."
+
+#~ msgid "Imports Carl Zeiss LSM images."
+#~ msgstr "Импортирует изображения Carl Zeiss LSM."
+
+#~ msgid "Carl Zeiss LSM scans (.lsm)"
+#~ msgstr "Сканы Carl Zeiss LSM (.lsm)"
+
 #~ msgid "Direction difference"
 #~ msgstr "Разница направлений"
 
@@ -12812,7 +12871,3 @@ msgstr "Инвертирует значения в объёмных данных
 
 #~ msgid "Scaling"
 #~ msgstr "Масштабирование"
-
-#~ msgid "Frame #%u is too short for scanned data header."
-#~ msgstr ""
-#~ "Фрейм #%u слишком короткий чтобы быть заголовком сканированных данных."
