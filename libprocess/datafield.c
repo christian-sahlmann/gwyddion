@@ -2255,6 +2255,14 @@ gwy_data_line_copy_units_to_data_field(GwyDataLine *data_line,
     gwy_serializable_clone(G_OBJECT(lineunit), G_OBJECT(fieldunit));
 }
 
+#undef gwy_data_field_invalidate
+void
+gwy_data_field_invalidate(GwyDataField *data_field)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    data_field->cached = 0;
+}
+
 /************************** Documentation ****************************/
 
 /**

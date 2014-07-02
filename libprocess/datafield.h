@@ -67,6 +67,8 @@ struct _GwyDataFieldClass {
     void (*reserved1)(void);
 };
 
+void gwy_data_field_invalidate(GwyDataField *data_field);
+
 #define gwy_data_field_invalidate(data_field) (data_field)->cached = 0
 
 #define gwy_data_field_duplicate(data_field) \
