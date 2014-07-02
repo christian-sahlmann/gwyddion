@@ -138,56 +138,57 @@ struct _DiffSynthControls {
     gboolean in_init;
 };
 
-static gboolean        module_register          (void);
-static void            diff_synth               (GwyContainer *data,
-                                                 GwyRunType run);
-static void            run_noninteractive       (DiffSynthArgs *args,
-                                                 const GwyDimensionArgs *dimsargs,
-                                                 GwyContainer *data,
-                                                 GwyDataField *dfield,
-                                                 gint oldid,
-                                                 GQuark quark);
-static gboolean        diff_synth_dialog        (DiffSynthArgs *args,
-                                                 GwyDimensionArgs *dimsargs,
-                                                 GwyContainer *data,
-                                                 GwyDataField *dfield,
-                                                 gint id);
-static void            update_controls          (DiffSynthControls *controls,
-                                                 DiffSynthArgs *args);
-static void            page_switched            (DiffSynthControls *controls,
-                                                 GtkNotebookPage *page,
-                                                 gint pagenum);
-static void            update_values            (DiffSynthControls *controls);
-static void            diff_synth_invalidate    (DiffSynthControls *controls);
-static void            preview                  (DiffSynthControls *controls);
-static gboolean        diff_synth_do            (DiffSynthArgs *args,
-                                                 GwyDataField *dfield,
-                                                 GwyGraphCurveModel **gcmodels,
-                                                 gdouble preview_time,
-                                                 gdouble zscale);
-static void            particle_try_move        (Particle *p,
-                                                 guint *hfield,
-                                                 guint xres,
-                                                 guint yres,
-                                                 const DiffSynthArgs *args,
-                                                 GRand *rng,
-                                                 const gdouble *exptable);
-static void            one_iteration            (DiffSynthState *dstate,
-                                                 const DiffSynthArgs *args);
-static void            add_particle             (DiffSynthState *dstate);
-static void            finalize_moving_particles(DiffSynthState *dstate,
-                                                 const DiffSynthArgs *args);
-static DiffSynthState* diff_synth_state_new     (guint xres,
-                                                 guint yres,
-                                                 guint32 seed,
-                                                 gdouble iT);
-static void            diff_synth_state_free    (DiffSynthState *dstate);
-static void            diff_synth_load_args     (GwyContainer *container,
-                                                 DiffSynthArgs *args,
-                                                 GwyDimensionArgs *dimsargs);
-static void            diff_synth_save_args     (GwyContainer *container,
-                                                 const DiffSynthArgs *args,
-                                                 const GwyDimensionArgs *dimsargs);
+static gboolean           module_register          (void);
+static void               diff_synth               (GwyContainer *data,
+                                                    GwyRunType run);
+static void               run_noninteractive       (DiffSynthArgs *args,
+                                                    const GwyDimensionArgs *dimsargs,
+                                                    GwyContainer *data,
+                                                    GwyDataField *dfield,
+                                                    gint oldid,
+                                                    GQuark quark);
+static gboolean           diff_synth_dialog        (DiffSynthArgs *args,
+                                                    GwyDimensionArgs *dimsargs,
+                                                    GwyContainer *data,
+                                                    GwyDataField *dfield,
+                                                    gint id);
+static void               update_controls          (DiffSynthControls *controls,
+                                                    DiffSynthArgs *args);
+static void               page_switched            (DiffSynthControls *controls,
+                                                    GtkNotebookPage *page,
+                                                    gint pagenum);
+static void               update_values            (DiffSynthControls *controls);
+static void               diff_synth_invalidate    (DiffSynthControls *controls);
+static void               preview                  (DiffSynthControls *controls);
+static gboolean           diff_synth_do            (DiffSynthArgs *args,
+                                                    GwyDataField *dfield,
+                                                    GwyGraphCurveModel **gcmodels,
+                                                    gdouble preview_time,
+                                                    gdouble zscale);
+static ParticleNeighbours random_direction         (GRand *rng);
+static void               particle_try_move        (Particle *p,
+                                                    guint *hfield,
+                                                    guint xres,
+                                                    guint yres,
+                                                    const DiffSynthArgs *args,
+                                                    GRand *rng,
+                                                    const gdouble *exptable);
+static void               one_iteration            (DiffSynthState *dstate,
+                                                    const DiffSynthArgs *args);
+static void               add_particle             (DiffSynthState *dstate);
+static void               finalize_moving_particles(DiffSynthState *dstate,
+                                                    const DiffSynthArgs *args);
+static DiffSynthState*    diff_synth_state_new     (guint xres,
+                                                    guint yres,
+                                                    guint32 seed,
+                                                    gdouble iT);
+static void               diff_synth_state_free    (DiffSynthState *dstate);
+static void               diff_synth_load_args     (GwyContainer *container,
+                                                    DiffSynthArgs *args,
+                                                    GwyDimensionArgs *dimsargs);
+static void               diff_synth_save_args     (GwyContainer *container,
+                                                    const DiffSynthArgs *args,
+                                                    const GwyDimensionArgs *dimsargs);
 
 #define GWY_SYNTH_CONTROLS DiffSynthControls
 #define GWY_SYNTH_INVALIDATE(controls) diff_synth_invalidate(controls)
@@ -719,7 +720,7 @@ diff_synth_do(DiffSynthArgs *args,
     gwy_app_wait_set_message(_("Depositing particles..."));
     gwy_app_wait_set_fraction(0.0);
 
-    particle_try_move(NULL, NULL, 0, 0, NULL, NULL, NULL);
+    random_direction(NULL);
 
     dstate = diff_synth_state_new(xres, yres, args->seed, -1.0/args->T);
     logflux = args->flux;
@@ -853,22 +854,17 @@ particle_update_neighbours(Particle *p, const guint *hfield, gboolean schwoebel)
     p->nneigh = nneigh;
 }
 
-/* This must be called with nehgibours information updated. */
-static void
-particle_try_move(Particle *p,
-                  guint *hfield, guint xres, guint yres,
-                  const DiffSynthArgs *args, GRand *rng,
-                  const gdouble *exptable)
+static inline ParticleNeighbours
+random_direction(GRand *rng)
 {
     static guint32 spare = 0;
     static guint nspare = 0;
 
-    Particle pnew;
-    guint direction;
+    ParticleNeighbours direction;
 
-    if (G_UNLIKELY(!p)) {
+    if (G_UNLIKELY(!rng)) {
         nspare = 0;
-        return;
+        return 0;
     }
 
     if (nspare) {
@@ -880,44 +876,49 @@ particle_try_move(Particle *p,
         spare = g_rand_int(rng);
         direction = spare & 0x3;
         spare >>= 2;
-        nspare = 3;
+        nspare = 7;
     }
+
+    return direction;
+}
+
+/* This must be called with nehgibours information updated. */
+static void
+particle_try_move(Particle *p,
+                  guint *hfield, guint xres, guint yres,
+                  const DiffSynthArgs *args, GRand *rng,
+                  const gdouble *exptable)
+{
+    ParticleNeighbours direction = random_direction(rng);
 
     if (p->neighbours & (1 << direction))
         return;
 
     /* We do not scale the Schwoebel barrier with temperature, so it is
      * actually already a probability. */
-    if (args->schwoebel
-        && (p->neighbours & (1 << (direction + NEIGH_SCHWOEBEL)))
-        && g_rand_double(rng) < args->schwoebel) {
+    if (args->schwoebel && (p->neighbours
+                            & (1 << (direction + NEIGH_SCHWOEBEL)))) {
+        if (args->schwoebel == 1.0 || g_rand_double(rng) < args->schwoebel)
+            return;
+    }
+
+    if (g_rand_double(rng) >= exptable[p->nneigh])
         return;
-    }
 
-    pnew = *p;
-    if (direction == NEIGH_UP)
-        pnew.row = G_LIKELY(pnew.row) ? pnew.row - 1 : xres - 1;
-    else if (direction == NEIGH_LEFT)
-        pnew.col = G_LIKELY(pnew.col) ? pnew.col - 1 : yres - 1;
-    else if (direction == NEIGH_RIGHT)
-        pnew.col = G_LIKELY(pnew.col < xres - 1) ? pnew.col + 1 : 0;
-    else
-        pnew.row = G_LIKELY(pnew.row < yres - 1) ? pnew.row + 1 : 0;
-
-    pnew.k = xres*pnew.row + pnew.col;
-    calc_neighbour_pos(pnew.col, pnew.row, pnew.k,
-                       xres, yres,
-                       &pnew.kup, &pnew.kleft, &pnew.kright, &pnew.kdown);
-    hfield[pnew.k]++;
     hfield[p->k]--;
-    particle_update_neighbours(&pnew, hfield, FALSE);
-    if (pnew.nneigh > p->nneigh
-        || g_rand_double(rng) < exptable[p->nneigh - pnew.nneigh])
-        *p = pnew;
-    else {
-        hfield[p->k]++;
-        hfield[pnew.k]--;
-    }
+    if (direction == NEIGH_UP)
+        p->row = G_LIKELY(p->row) ? p->row - 1 : xres - 1;
+    else if (direction == NEIGH_LEFT)
+        p->col = G_LIKELY(p->col) ? p->col - 1 : yres - 1;
+    else if (direction == NEIGH_RIGHT)
+        p->col = G_LIKELY(p->col < xres - 1) ? p->col + 1 : 0;
+    else
+        p->row = G_LIKELY(p->row < yres - 1) ? p->row + 1 : 0;
+
+    p->k = p->row*xres + p->col;
+    calc_neighbour_pos(p->col, p->row, p->k, xres, yres,
+                       &p->kup, &p->kleft, &p->kright, &p->kdown);
+    hfield[p->k]++;
 }
 
 static void
