@@ -48,10 +48,12 @@ disabled_sources += matfile.c
 if HAVE_MINIZIP
 nanoobserver_module = nanoobserver.la
 nanoscantech_module = nanoscantech.la
+opengps_module = opengps.la
 else
 nanoobserver_module =
 nanoscantech_module =
-disabled_sources += nanoobserver.c nanoscantech.c
+opengps_module =
+disabled_sources += nanoobserver.c nanoscantech.c opengps.c
 endif
 
 filedir = $(pkglibdir)/modules/file
@@ -114,13 +116,14 @@ file_LTLIBRARIES = \
 	netcdf.la \
 	nrrdfile.la \
 	nt-mdt.la \
+	oldmda.la \
+	ols.la \
 	ometiff.la \
 	omicron.la \
 	omicronflat.la \
 	omicronmatrix.la \
-	oldmda.la \
-	ols.la \
 	opdfile.la \
+	$(opengps_module) \
 	pixmap.la \
 	pnifile.la \
 	pltfile.la \
@@ -330,6 +333,10 @@ nanoobserver_la_LIBADD   = @MINIZIP_LIBS@
 nanoscantech_la_SOURCES  = nanoscantech.c
 nanoscantech_la_CFLAGS   = $(AM_CFLAGS) @MINIZIP_CFLAGS@
 nanoscantech_la_LIBADD   = @MINIZIP_LIBS@
+
+opengps_la_SOURCES  = opengps.c
+opengps_la_CFLAGS   = $(AM_CFLAGS) @MINIZIP_CFLAGS@
+opengps_la_LIBADD   = @MINIZIP_LIBS@
 endif
 
 clean-local:
