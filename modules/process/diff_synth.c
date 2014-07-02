@@ -26,6 +26,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyrandgenset.h>
 #include <libprocess/stats.h>
+#include <libprocess/grains.h>
 #include <libprocess/filters.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
@@ -37,6 +38,8 @@
 #include "dimensions.h"
 
 #define DIFF_SYNTH_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
+
+#define WORK_UPDATE_CHECK 1000000
 
 enum {
     PREVIEW_SIZE = 320,
@@ -93,6 +96,7 @@ typedef struct {
     gdouble fluence;
     guint64 iter;
     gdouble *exptable;
+    gboolean use_schwoebel;
 } DiffSynthState;
 
 typedef struct _DiffSynthControls DiffSynthControls;
@@ -130,6 +134,7 @@ struct _DiffSynthControls {
     GtkObject *schwoebel;
     GtkObject *height;
     GtkWidget *height_units;
+    GtkWidget *height_init;
     GtkWidget *graph_flags[GRAPH_NFLAGS];
     GwyContainer *mydata;
     GwyDataField *surface;
@@ -158,13 +163,13 @@ static void               page_switched            (DiffSynthControls *controls,
                                                     GtkNotebookPage *page,
                                                     gint pagenum);
 static void               update_values            (DiffSynthControls *controls);
+static void               height_init_clicked      (DiffSynthControls *controls);
 static void               diff_synth_invalidate    (DiffSynthControls *controls);
 static void               preview                  (DiffSynthControls *controls);
 static gboolean           diff_synth_do            (DiffSynthArgs *args,
                                                     GwyDataField *dfield,
                                                     GwyGraphCurveModel **gcmodels,
-                                                    gdouble preview_time,
-                                                    gdouble zscale);
+                                                    gdouble preview_time);
 static ParticleNeighbours random_direction         (GRand *rng);
 static void               particle_try_move        (Particle *p,
                                                     guint *hfield,
@@ -172,6 +177,7 @@ static void               particle_try_move        (Particle *p,
                                                     guint yres,
                                                     const DiffSynthArgs *args,
                                                     GRand *rng,
+                                                    gboolean use_schwoebel,
                                                     const gdouble *exptable);
 static void               one_iteration            (DiffSynthState *dstate,
                                                     const DiffSynthArgs *args);
@@ -180,8 +186,7 @@ static void               finalize_moving_particles(DiffSynthState *dstate,
                                                     const DiffSynthArgs *args);
 static DiffSynthState*    diff_synth_state_new     (guint xres,
                                                     guint yres,
-                                                    guint32 seed,
-                                                    gdouble iT);
+                                                    const DiffSynthArgs *args);
 static void               diff_synth_state_free    (DiffSynthState *dstate);
 static void               diff_synth_load_args     (GwyContainer *container,
                                                     DiffSynthArgs *args,
@@ -301,13 +306,15 @@ run_noninteractive(DiffSynthArgs *args,
 
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid),
                        _("Starting..."));
-    ok = diff_synth_do(args, newfield, gcmodels, HUGE_VAL, 1.0);
+    ok = diff_synth_do(args, newfield, gcmodels, HUGE_VAL);
     gwy_app_wait_finish();
 
     if (!ok) {
         g_object_unref(newfield);
         return;
     }
+
+    gwy_data_field_multiply(newfield, pow10(dimsargs->zpow10) * args->height);
 
     if (replace) {
         gwy_app_undo_qcheckpointv(data, 1, &quark);
@@ -518,22 +525,27 @@ diff_synth_dialog(DiffSynthArgs *args,
     row++;
 
     controls.schwoebel = gtk_adjustment_new(args->schwoebel,
-                                            0.0, 1.0, 0.00001, 0.01, 0);
+                                            0.0, 1.0, 0.000001, 0.01, 0);
     g_object_set_data(G_OBJECT(controls.schwoebel), "target", &args->schwoebel);
-    gwy_table_attach_hscale(table, row, _("Sch_woebel probability:"), NULL,
+    gwy_table_attach_hscale(table, row, _("Sch_woebel passing:"), NULL,
                             controls.schwoebel, GWY_HSCALE_SQRT);
     g_signal_connect_swapped(controls.schwoebel, "value-changed",
                              G_CALLBACK(gwy_synth_double_changed), &controls);
     row++;
 
-    // FIXME: Use code from a module with normal height scaling
-    controls.height = gtk_adjustment_new(args->height, 0.1, 10.0, 0.1, 1.0, 0);
-    g_object_set_data(G_OBJECT(controls.height), "target", &args->height);
-    gwy_table_attach_hscale(table, row, _("_Height:"), "px",
-                            controls.height, GWY_HSCALE_SQRT);
-    g_signal_connect_swapped(controls.height, "value-changed",
-                             G_CALLBACK(gwy_synth_double_changed), &controls);
-    row++;
+    row = gwy_synth_attach_height(&controls, row,
+                                  &controls.height, &args->height,
+                                  _("_Height:"), NULL, &controls.height_units);
+
+    if (dfield_template) {
+        controls.height_init
+            = gtk_button_new_with_mnemonic(_("_Like Current Channel"));
+        g_signal_connect_swapped(controls.height_init, "clicked",
+                                 G_CALLBACK(height_init_clicked), &controls);
+        gtk_table_attach(GTK_TABLE(table), controls.height_init,
+                         1, 3, row, row+1, GTK_FILL, 0, 0, 0);
+        row++;
+    }
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     label = gtk_label_new(_("Plot graphs:"));
@@ -650,6 +662,14 @@ update_values(DiffSynthControls *controls)
 }
 
 static void
+height_init_clicked(DiffSynthControls *controls)
+{
+    gdouble mag = pow10(controls->dims->args->zpow10);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height),
+                             controls->zscale/mag);
+}
+
+static void
 diff_synth_invalidate(G_GNUC_UNUSED DiffSynthControls *controls)
 {
 }
@@ -669,7 +689,7 @@ preview(DiffSynthControls *controls)
         gwy_data_field_clear(dfield);
 
     gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Starting..."));
-    diff_synth_do(args, dfield, NULL, 1.25, 1.0);
+    diff_synth_do(args, dfield, NULL, 1.25);
     gwy_app_wait_finish();
 
     gwy_data_field_data_changed(dfield);
@@ -679,16 +699,16 @@ static gboolean
 diff_synth_do(DiffSynthArgs *args,
               GwyDataField *dfield,
               GwyGraphCurveModel **gcmodels,
-              gdouble preview_time,
-              gdouble zscale)
+              gdouble preview_time)
 {
     gint xres, yres, k;
     guint i;
     gdouble lasttime = 0.0, lastpreviewtime = 0.0, currtime;
-    gdouble logflux;
+    gdouble logflux, threshold;
     GTimer *timer;
-    guint64 workdone;
+    guint64 workdone, niter, iter;
     DiffSynthState *dstate;
+    GArray *particles;
     /*
     GArray **evolution = NULL;
     gboolean any_graphs = FALSE;
@@ -714,7 +734,8 @@ diff_synth_do(DiffSynthArgs *args,
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
 
-    gwy_data_field_add(dfield, -gwy_data_field_get_max(dfield));
+    threshold = gwy_data_field_otsu_threshold(dfield);
+    gwy_data_field_threshold(dfield, threshold, 0.0, 1.0);
     /* zmax = zsum = nextgraphx = 0.0; */
 
     gwy_app_wait_set_message(_("Depositing particles..."));
@@ -722,49 +743,53 @@ diff_synth_do(DiffSynthArgs *args,
 
     random_direction(NULL);
 
-    dstate = diff_synth_state_new(xres, yres, args->seed, -1.0/args->T);
+    dstate = diff_synth_state_new(xres, yres, args);
+    for (k = 0; k < xres*yres; k++)
+        dstate->hfield[k] = dfield->data[k];
+
+    particles = dstate->particles;
     logflux = args->flux;
     args->flux = pow10(logflux);
     workdone = 0.0;
-    {
-        GArray *particles = dstate->particles;
-        guint64 niter = (guint64)(args->coverage/args->flux + 0.5);
-        guint64 iter = 0;
+    niter = (guint64)(args->coverage/args->flux + 0.5);
+    iter = 0;
+    dstate->fluxperiter = xres*yres * args->flux;
 
-        dstate->fluxperiter = xres*yres * args->flux;
-        while (iter < niter) {
-            workdone += particles->len;
-            one_iteration(dstate, args);
-            if (particles->len)
-                iter++;
-            else {
-                add_particle(dstate);
-                iter += (guint64)((1.0 - dstate->fluence)/dstate->fluxperiter
-                                  + 0.5);
-                dstate->fluence = 0.0;
-            }
-
-            if (workdone >= 1000000) {
-                currtime = g_timer_elapsed(timer, NULL);
-                if (currtime - lasttime >= 0.25) {
-                    if (!gwy_app_wait_set_fraction((gdouble)iter/niter))
-                        goto fail;
-                    lasttime = currtime;
-
-                    if (args->animated
-                        && currtime - lastpreviewtime >= preview_time) {
-                        for (k = 0; k < xres*yres; k++)
-                            dfield->data[k] = dstate->hfield[k];
-                        gwy_data_field_invalidate(dfield);
-                        gwy_data_field_data_changed(dfield);
-                        lastpreviewtime = lasttime;
-                    }
-                }
-                workdone -= 1000000;
-            }
+    while (iter < niter) {
+        workdone += particles->len;
+        one_iteration(dstate, args);
+        /* Optimize the low-flux case when there may be no free particles at
+         * all for relatively long time periods and skip to the time when
+         * another particle arrives. */
+        if (particles->len)
+            iter++;
+        else {
+            add_particle(dstate);
+            iter += (guint64)((1.0 - dstate->fluence)/dstate->fluxperiter
+                              + 0.5);
+            dstate->fluence = 0.0;
         }
-        finalize_moving_particles(dstate, args);
+
+        if (workdone >= WORK_UPDATE_CHECK) {
+            currtime = g_timer_elapsed(timer, NULL);
+            if (currtime - lasttime >= 0.25) {
+                if (!gwy_app_wait_set_fraction((gdouble)iter/niter))
+                    goto fail;
+                lasttime = currtime;
+
+                if (args->animated
+                    && currtime - lastpreviewtime >= preview_time) {
+                    for (k = 0; k < xres*yres; k++)
+                        dfield->data[k] = dstate->hfield[k];
+                    gwy_data_field_invalidate(dfield);
+                    gwy_data_field_data_changed(dfield);
+                    lastpreviewtime = lasttime;
+                }
+            }
+            workdone -= WORK_UPDATE_CHECK;
+        }
     }
+    finalize_moving_particles(dstate, args);
 
     if (gcmodels) {
         for (i = 0; i < GRAPH_NFLAGS; i++) {
@@ -819,7 +844,8 @@ calc_neighbour_pos(guint col, guint row, guint k, guint xres, guint yres,
 }
 
 static void
-particle_update_neighbours(Particle *p, const guint *hfield, gboolean schwoebel)
+particle_update_neighbours(Particle *p, const guint *hfield,
+                           gboolean use_schwoebel)
 {
     guint h = hfield[p->k];
     guint neighbours = 0, nneigh = 0;
@@ -840,7 +866,7 @@ particle_update_neighbours(Particle *p, const guint *hfield, gboolean schwoebel)
         neighbours |= (1 << NEIGH_DOWN);
         nneigh++;
     }
-    if (schwoebel) {
+    if (use_schwoebel) {
         if (hfield[p->kup] + 1 < h)
             neighbours |= (1 << (NEIGH_UP + NEIGH_SCHWOEBEL));
         if (hfield[p->kleft] + 1 < h)
@@ -887,7 +913,7 @@ static void
 particle_try_move(Particle *p,
                   guint *hfield, guint xres, guint yres,
                   const DiffSynthArgs *args, GRand *rng,
-                  const gdouble *exptable)
+                  gboolean use_schwoebel, const gdouble *exptable)
 {
     ParticleNeighbours direction = random_direction(rng);
 
@@ -896,9 +922,9 @@ particle_try_move(Particle *p,
 
     /* We do not scale the Schwoebel barrier with temperature, so it is
      * actually already a probability. */
-    if (args->schwoebel && (p->neighbours
-                            & (1 << (direction + NEIGH_SCHWOEBEL)))) {
-        if (args->schwoebel == 1.0 || g_rand_double(rng) < args->schwoebel)
+    if (use_schwoebel && (p->neighbours
+                          & (1 << (direction + NEIGH_SCHWOEBEL)))) {
+        if (!args->schwoebel || g_rand_double(rng) >= args->schwoebel)
             return;
     }
 
@@ -942,17 +968,19 @@ one_iteration(DiffSynthState *dstate, const DiffSynthArgs *args)
     guint *hfield = dstate->hfield;
     const gdouble *exptable = dstate->exptable;
     GRand *rng = dstate->rng;
+    gboolean use_schwoebel = dstate->use_schwoebel;
     guint i = 0;
 
     while (i < particles->len) {
         Particle *p = &g_array_index(particles, Particle, i);
-        particle_update_neighbours(p, hfield, !!args->schwoebel);
+        particle_update_neighbours(p, hfield, use_schwoebel);
         if (p->nneigh > 1 || (p->nneigh && g_rand_double(rng) < args->ps)) {
             g_array_remove_index_fast(particles, i);
         }
         else {
             // TODO: We may also consider desorption here.
-            particle_try_move(p, hfield, xres, yres, args, rng, exptable);
+            particle_try_move(p, hfield, xres, yres, args, rng,
+                              use_schwoebel, exptable);
             i++;
         }
     }
@@ -975,7 +1003,7 @@ finalize_moving_particles(DiffSynthState *dstate,
 
     while (i < particles->len) {
         Particle *p = &g_array_index(particles, Particle, i);
-        particle_update_neighbours(p, hfield, !!args->schwoebel);
+        particle_update_neighbours(p, hfield, dstate->use_schwoebel);
         if (p->nneigh > 1 || (p->nneigh && g_rand_double(rng) < args->ps)) {
             g_array_remove_index_fast(particles, i);
         }
@@ -987,12 +1015,12 @@ finalize_moving_particles(DiffSynthState *dstate,
 }
 
 static DiffSynthState*
-diff_synth_state_new(guint xres, guint yres, guint32 seed, gdouble iT)
+diff_synth_state_new(guint xres, guint yres, const DiffSynthArgs *args)
 {
     DiffSynthState *dstate = g_new0(DiffSynthState, 1);
     guint i;
 
-    dstate->rng = g_rand_new_with_seed(seed);
+    dstate->rng = g_rand_new_with_seed(args->seed);
     dstate->xres = xres;
     dstate->yres = yres;
     dstate->hfield = g_new0(guint, dstate->xres*dstate->yres);
@@ -1000,7 +1028,8 @@ diff_synth_state_new(guint xres, guint yres, guint32 seed, gdouble iT)
     dstate->fluence = 0.0;
     dstate->exptable = g_new(gdouble, 5);
     for (i = 0; i < 5; i++)
-        dstate->exptable[i] = 0.5*exp(iT*i);
+        dstate->exptable[i] = 0.5*exp(-1.0/args->T*i);
+    dstate->use_schwoebel = (args->schwoebel < 1.0);
     return dstate;
 }
 
