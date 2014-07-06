@@ -232,7 +232,7 @@ module_register(void)
     gwy_process_func_register("diff_synth",
                               (GwyProcessFunc)&diff_synth,
                               N_("/S_ynthetic/_Diffusion..."),
-                              NULL,
+                              GWY_STOCK_SYNTHETIC_DIFFUSION,
                               DIFF_SYNTH_RUN_MODES,
                               0,
                               N_("Generate surface by diffusion limited "
