@@ -839,18 +839,21 @@ col_synth_do(const ColSynthArgs *args,
         }
     }
 
-    for (i = 0; i < GRAPH_NFLAGS; i++) {
-        if (!evolution[i]) {
-            gcmodels[i] = NULL;
-            continue;
-        }
+    if (gcmodels) {
+        const gdouble *xdata = (const gdouble*)evolution[GRAPH_NFLAGS]->data;
+        for (i = 0; i < GRAPH_NFLAGS; i++) {
+            if (!evolution[i]) {
+                gcmodels[i] = NULL;
+                continue;
+            }
 
-        gcmodels[i] = gwy_graph_curve_model_new();
-        gwy_graph_curve_model_set_data(gcmodels[i],
-                                       (gdouble*)evolution[GRAPH_NFLAGS]->data,
-                                       (gdouble*)evolution[i]->data,
-                                       evolution[GRAPH_NFLAGS]->len);
-        g_object_set(gcmodels[i], "description", _(graph_flags[i]), NULL);
+            gcmodels[i] = gwy_graph_curve_model_new();
+            gwy_graph_curve_model_set_data(gcmodels[i],
+                                           xdata,
+                                           (gdouble*)evolution[i]->data,
+                                           evolution[GRAPH_NFLAGS]->len);
+            g_object_set(gcmodels[i], "description", _(graph_flags[i]), NULL);
+        }
     }
 
     finished = TRUE;
