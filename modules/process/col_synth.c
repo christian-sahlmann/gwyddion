@@ -840,13 +840,14 @@ col_synth_do(const ColSynthArgs *args,
     }
 
     if (gcmodels) {
-        const gdouble *xdata = (const gdouble*)evolution[GRAPH_NFLAGS]->data;
+        const gdouble *xdata;
         for (i = 0; i < GRAPH_NFLAGS; i++) {
             if (!evolution[i]) {
                 gcmodels[i] = NULL;
                 continue;
             }
 
+            xdata = (const gdouble*)evolution[GRAPH_NFLAGS]->data;
             gcmodels[i] = gwy_graph_curve_model_new();
             gwy_graph_curve_model_set_data(gcmodels[i],
                                            xdata,
