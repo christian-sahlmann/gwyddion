@@ -458,7 +458,8 @@ nao_parse_measure(unzFile *zipfile,
     gwy_debug("calling unzLocateFile() to find Scan/Measure.xml");
     if (unzLocateFile(zipfile, "Scan/Measure.xml", 1) != UNZ_OK) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    _("File Scan/Measure.xml is missing in the zip file."));
+                    _("File %s is missing in the zip file."),
+                    "Scan/Measure.xml");
         return FALSE;
     }
 

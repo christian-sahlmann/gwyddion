@@ -17,6 +17,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  */
+
 #define DEBUG 1
 #include "config.h"
 #include <string.h>
@@ -28,6 +29,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
+#include <libprocess/stats.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
 #include <app/data-browser.h>
@@ -45,10 +47,18 @@
 
 #define MAT_DIM_PREFIX "/ISO5436_2/Record3/MatrixDimension"
 #define AXES_PREFIX "/ISO5436_2/Record1/Axes"
+#define DATA_LINK_PREFIX "/ISO5436_2/Record3/DataLink"
+
+typedef enum {
+    X3P_FEATURE_SUR,
+    X3P_FEATURE_PRF,
+    X3P_FEATURE_PCL,
+} X3PFeatureType;
 
 typedef struct {
     GHashTable *hash;
     GString *path;
+    X3PFeatureType feature_type;
     gboolean seen_datum;
     guint xres;
     guint yres;
@@ -57,29 +67,43 @@ typedef struct {
     guint datapos;
     gdouble dx;
     gdouble dy;
+    gdouble dz;
     gdouble xoff;
     gdouble yoff;
+    gdouble zoff;
     gdouble *values;
     gboolean *valid;
 } X3PFile;
 
-static gboolean      module_register     (void);
-static gint          x3p_detect          (const GwyFileDetectInfo *fileinfo,
-                                          gboolean only_name);
-static GwyContainer* x3p_load            (const gchar *filename,
-                                          GwyRunType mode,
-                                          GError **error);
-static gboolean      x3p_parse_main      (unzFile *zipfile,
-                                          X3PFile *x3pfile,
-                                          GError **error);
-static gboolean      data_start          (X3PFile *x3pfile,
-                                          GError **error);
-static guchar*       x3p_get_file_content(unzFile *zipfile,
-                                          gsize *contentsize,
-                                          GError **error);
-static gboolean      x3p_set_error       (gint status,
-                                          GError **error);
-static void          x3p_file_free       (X3PFile *x3pfile);
+static gboolean      module_register       (void);
+static gint          x3p_detect            (const GwyFileDetectInfo *fileinfo,
+                                            gboolean only_name);
+static GwyContainer* x3p_load              (const gchar *filename,
+                                            GwyRunType mode,
+                                            GError **error);
+static gboolean      x3p_parse_main        (unzFile *zipfile,
+                                            X3PFile *x3pfile,
+                                            GError **error);
+static gboolean      data_start            (X3PFile *x3pfile,
+                                            GError **error);
+static gboolean      read_binary_data      (X3PFile *x3pfile,
+                                            unzFile *zipfile,
+                                            GError **error);
+static GwyContainer* get_meta              (X3PFile *x3pfile);
+static void          add_meta_record       (gpointer hkey,
+                                            gpointer hvalue,
+                                            gpointer user_data);
+static guchar*       x3p_get_file_content  (unzFile *zipfile,
+                                            gsize *contentsize,
+                                            GError **error);
+static gboolean      x3p_set_error         (gint status,
+                                            GError **error);
+static void          x3p_file_free         (X3PFile *x3pfile);
+static gboolean      x3p_file_get_data_type(const gchar *type,
+                                            GwyRawDataType *rawtype,
+                                            GError **error);
+static GwyDataField* mask_of_nans          (GwyDataField *dfield,
+                                            const gboolean *valid);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -150,7 +174,7 @@ x3p_load(const gchar *filename,
     GwyContainer *container = NULL, *meta = NULL;
     X3PFile x3pfile;
     unzFile zipfile;
-    guint channelno = 0;
+    gint id;
 
     zipfile = unzOpen(filename);
     if (!zipfile) {
@@ -164,23 +188,58 @@ x3p_load(const gchar *filename,
     if (!x3p_parse_main(zipfile, &x3pfile, error))
         goto fail;
 
-    container = gwy_container_new();
-    /*
-    if (g_hash_table_size(x3pfile.hash)) {
-        meta = gwy_container_new();
-        g_hash_table_foreach(x3pfile.hash, &add_meta, meta);
+    if (!x3pfile.ndata) {
+        err_NO_DATA(error);
+        goto fail;
     }
-    */
+
+    if (!x3pfile.datapos) {
+        if (!read_binary_data(&x3pfile, zipfile, error))
+            goto fail;
+    }
+
+    container = gwy_container_new();
+    /* It is not clear if the format actually can have multiple z values, i.e.
+     * channels.  But We have no problem implementing that. */
+    for (id = 0; id < x3pfile.zres; id++) {
+        guint n = x3pfile.xres*x3pfile.yres;
+        GwyDataField *dfield, *mask;
+        GQuark quark;
+        gchar buf[40];
+
+        dfield = gwy_data_field_new(x3pfile.xres,
+                                    x3pfile.yres,
+                                    x3pfile.xres*x3pfile.dx,
+                                    x3pfile.yres*x3pfile.dy,
+                                    FALSE);
+        memcpy(dfield->data, x3pfile.values + id*n, n*sizeof(gdouble));
+
+        quark = gwy_app_get_data_key_for_id(id);
+        gwy_container_set_object(container, quark, dfield);
+
+        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
+        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), "m");
+        gwy_app_channel_title_fall_back(container, id);
+        gwy_app_channel_check_nonsquare(container, id);
+
+        if ((mask = mask_of_nans(dfield, x3pfile.valid + id*n))) {
+            quark = gwy_app_get_mask_key_for_id(id);
+            gwy_container_set_object(container, quark, mask);
+            g_object_unref(mask);
+        }
+        g_object_unref(dfield);
+
+        if ((meta = get_meta(&x3pfile))) {
+            g_snprintf(buf, sizeof(buf), "/%u/meta", id);
+            gwy_container_set_object_by_name(container, buf, meta);
+            g_object_unref(meta);
+        }
+    }
 
 fail:
     gwy_debug("calling unzClose()");
     unzClose(zipfile);
     x3p_file_free(&x3pfile);
-    gwy_object_unref(meta);
-    if (!channelno) {
-        gwy_object_unref(container);
-        err_NO_DATA(error);
-    }
 
     return container;
 }
@@ -314,12 +373,11 @@ x3p_parse_main(unzFile *zipfile,
     gwy_debug("calling unzLocateFile() to find main.xml");
     if (unzLocateFile(zipfile, "main.xml", 1) != UNZ_OK) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    _("File main.xml is missing in the zip file."));
+                    _("File %s is missing in the zip file."), "main.xml");
         return FALSE;
     }
 
-    content = x3p_get_file_content(zipfile, NULL, error);
-    if (!content)
+    if (!(content = x3p_get_file_content(zipfile, NULL, error)))
         return FALSE;
 
     gwy_strkill(content, "\r");
@@ -340,7 +398,6 @@ x3p_parse_main(unzFile *zipfile,
     if (!g_markup_parse_context_end_parse(context, error))
         goto fail;
 
-    /* TODO */
     ok = TRUE;
 
 fail:
@@ -356,6 +413,12 @@ fail:
 static gboolean
 data_start(X3PFile *x3pfile, GError **error)
 {
+    static const GwyEnum features[] = {
+        { "SUR", X3P_FEATURE_SUR, },
+        { "PRF", X3P_FEATURE_PRF, },
+        { "PCL", X3P_FEATURE_PCL, },
+    };
+
     gchar *s;
 
     if (x3pfile->values) {
@@ -367,11 +430,27 @@ data_start(X3PFile *x3pfile, GError **error)
     /* First check axes to get meaningful error messages if their types are
      * not as expected. */
     if (!require_keys(x3pfile->hash, error,
+                      "/ISO5436_2/Record1/FeatureType",
                       AXES_PREFIX "/CX/AxisType",
                       AXES_PREFIX "/CY/AxisType",
                       AXES_PREFIX "/CZ/AxisType",
                       NULL))
         return FALSE;
+
+    s = (gchar*)g_hash_table_lookup(x3pfile->hash,
+                                    "/ISO5436_2/Record1/FeatureType");
+    if ((x3pfile->feature_type
+         = gwy_string_to_enum(s, features, G_N_ELEMENTS(features))) == -1) {
+        err_UNSUPPORTED(error, "/ISO5436_2/Record1/FeatureType");
+        return FALSE;
+    }
+
+    /* TODO: Support also PRF feature types (profile N×1×M), i.e. a set of line
+     * profiles. */
+    if (x3pfile->feature_type != X3P_FEATURE_SUR) {
+        err_UNSUPPORTED(error, "/ISO5436_2/Record1/FeatureType");
+        return FALSE;
+    }
 
     s = (gchar*)g_hash_table_lookup(x3pfile->hash, AXES_PREFIX "/CX/AxisType");
     if (!gwy_strequal(s, "I")) {
@@ -419,7 +498,7 @@ data_start(X3PFile *x3pfile, GError **error)
     s = (gchar*)g_hash_table_lookup(x3pfile->hash, MAT_DIM_PREFIX "/SizeZ");
     x3pfile->zres = atoi(s);
 
-    gwy_debug("xres=%u, yres=%u, zres=%u\n",
+    gwy_debug("xres=%u, yres=%u, zres=%u",
               x3pfile->xres, x3pfile->yres, x3pfile->zres);
 
     if (err_DIMENSION(error, x3pfile->xres)
@@ -429,9 +508,17 @@ data_start(X3PFile *x3pfile, GError **error)
 
     s = (gchar*)g_hash_table_lookup(x3pfile->hash, AXES_PREFIX "/CX/Increment");
     x3pfile->dx = g_ascii_strtod(s, NULL);
+    if (!((x3pfile->dx = fabs(x3pfile->dx)) > 0)) {
+        g_warning("Real x step is 0.0, fixing to 1.0");
+        x3pfile->dx = 1.0;
+    }
 
     s = (gchar*)g_hash_table_lookup(x3pfile->hash, AXES_PREFIX "/CY/Increment");
     x3pfile->dy = g_ascii_strtod(s, NULL);
+    if (!((x3pfile->dy = fabs(x3pfile->dy)) > 0)) {
+        g_warning("Real x step is 0.0, fixing to 1.0");
+        x3pfile->dy = 1.0;
+    }
 
     s = (gchar*)g_hash_table_lookup(x3pfile->hash, AXES_PREFIX "/CX/Offset");
     x3pfile->xoff = g_ascii_strtod(s, NULL);
@@ -439,12 +526,144 @@ data_start(X3PFile *x3pfile, GError **error)
     s = (gchar*)g_hash_table_lookup(x3pfile->hash, AXES_PREFIX "/CY/Offset");
     x3pfile->yoff = g_ascii_strtod(s, NULL);
 
+    /* Defaults that are good for floating point data conversion.  If a file
+     * with floating point data specifies Increment and Offset, we apply them
+     * without hesitation.  The behaviour is probably undefined.  */
+    x3pfile->dz = 1.0;
+    x3pfile->zoff = 0.0;
+
+    s = (gchar*)g_hash_table_lookup(x3pfile->hash, AXES_PREFIX "/CZ/Increment");
+    if (s)
+        x3pfile->dz = g_ascii_strtod(s, NULL);
+
+    s = (gchar*)g_hash_table_lookup(x3pfile->hash, AXES_PREFIX "/CZ/Offset");
+    if (s)
+        x3pfile->zoff = g_ascii_strtod(s, NULL);
+
     x3pfile->ndata = x3pfile->xres*x3pfile->yres*x3pfile->zres;
     x3pfile->values = g_new(gdouble, x3pfile->ndata);
     x3pfile->valid = g_new(gboolean, x3pfile->ndata);
     x3pfile->datapos = 0;
 
     return TRUE;
+}
+
+static gboolean
+read_binary_data(X3PFile *x3pfile, unzFile *zipfile, GError **error)
+{
+    GwyRawDataType rawtype;
+    gsize size;
+    guchar *bindata;
+    gchar *s;
+    guint i;
+
+    s = g_hash_table_lookup(x3pfile->hash, DATA_LINK_PREFIX "/PointDataLink");
+    if (!s) {
+        err_NO_DATA(error);
+        return FALSE;
+    }
+    gwy_debug("binary data file %s", s);
+
+    if (unzLocateFile(zipfile, s, 1) != UNZ_OK) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    _("File %s is missing in the zip file."), s);
+        return FALSE;
+    }
+
+    s = g_hash_table_lookup(x3pfile->hash, AXES_PREFIX "/CZ/DataType");
+    if (!s) {
+        err_MISSING_FIELD(error, AXES_PREFIX "CZ/DataType");
+        return FALSE;
+    }
+
+    if (!x3p_file_get_data_type(s, &rawtype, error))
+        return FALSE;
+
+    if (!(bindata = x3p_get_file_content(zipfile, &size, error)))
+        return FALSE;
+
+    if (err_SIZE_MISMATCH(error, x3pfile->ndata * gwy_raw_data_size(rawtype),
+                          size, TRUE)) {
+        g_free(bindata);
+        return FALSE;
+    }
+
+    gwy_convert_raw_data(bindata, x3pfile->ndata, 1,
+                         rawtype, GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                         x3pfile->values, 1.0, 0.0);
+    g_free(bindata);
+
+    for (i = 0; i < x3pfile->ndata; i++)
+        x3pfile->valid[i] = TRUE;
+
+    s = g_hash_table_lookup(x3pfile->hash, DATA_LINK_PREFIX "/ValidPointsLink");
+    if (!s)
+        return TRUE;
+
+    if (unzLocateFile(zipfile, s, 1) != UNZ_OK) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    _("File %s is missing in the zip file."), s);
+        return FALSE;
+    }
+
+    if (!(bindata = x3p_get_file_content(zipfile, &size, error)))
+        return FALSE;
+
+    if (err_SIZE_MISMATCH(error, (x3pfile->ndata + 7)/8, size, TRUE)) {
+        g_free(bindata);
+        return FALSE;
+    }
+
+    for (i = 0; i < x3pfile->ndata; i++)
+        x3pfile->valid[i] = bindata[i/8] & (1 << (i % 8));
+
+    g_free(bindata);
+
+    return TRUE;
+}
+
+static GwyContainer*
+get_meta(X3PFile *x3pfile)
+{
+    GwyContainer *meta = gwy_container_new();
+
+    g_hash_table_foreach(x3pfile->hash, add_meta_record, meta);
+    if (gwy_container_get_n_items(meta))
+        return meta;
+
+    g_object_unref(meta);
+    return NULL;
+}
+
+static void
+add_meta_record(gpointer hkey, gpointer hvalue, gpointer user_data)
+{
+    const gchar *key = (const gchar*)hkey;
+    const gchar *value = (const gchar*)hvalue;
+    GwyContainer *meta = (GwyContainer*)user_data;
+
+    if (!gwy_stramong(key,
+                      "/ISO5436_2/Record1/Revision",
+                      "/ISO5436_2/Record1/FeatureType",
+                      "/ISO5436_2/Record2/Date",
+                      "/ISO5436_2/Record2/Creator",
+                      "/ISO5436_2/Record2/Instrument/Manufacturer",
+                      "/ISO5436_2/Record2/Instrument/Model",
+                      "/ISO5436_2/Record2/Instrument/Serial",
+                      "/ISO5436_2/Record2/Instrument/Version",
+                      "/ISO5436_2/Record2/CalibrationDate",
+                      "/ISO5436_2/Record2/ProbingSystem/Type",
+                      "/ISO5436_2/Record2/ProbingSystem/Identification",
+                      "/ISO5436_2/Record2/Comment",
+                      NULL)
+        && !g_str_has_prefix(key,
+                             "/ISO5436_2/Record2/ProbingSystem/Identification/"))
+        return;
+
+    key = strrchr(key, '/');
+    g_return_if_fail(key);
+    key++;
+    gwy_container_set_string_by_name(meta, key, (const guchar*)g_strdup(value));
 }
 
 static guchar*
@@ -533,6 +752,69 @@ x3p_file_free(X3PFile *x3pfile)
     x3pfile->values = NULL;
     g_free(x3pfile->valid);
     x3pfile->valid = NULL;
+}
+
+static gboolean
+x3p_file_get_data_type(const gchar *type,
+                       GwyRawDataType *rawtype,
+                       GError **error)
+{
+    if (gwy_strequal(type, "I")) {
+        *rawtype = GWY_RAW_DATA_SINT16;
+        return TRUE;
+    }
+    if (gwy_strequal(type, "L")) {
+        *rawtype = GWY_RAW_DATA_SINT32;
+        return TRUE;
+    }
+    if (gwy_strequal(type, "F")) {
+        *rawtype = GWY_RAW_DATA_FLOAT;
+        return TRUE;
+    }
+    if (gwy_strequal(type, "D")) {
+        *rawtype = GWY_RAW_DATA_DOUBLE;
+        return TRUE;
+    }
+
+    err_UNSUPPORTED(error, AXES_PREFIX "/CZ/DataType");
+    return FALSE;
+}
+
+static GwyDataField*
+mask_of_nans(GwyDataField *dfield, const gboolean *valid)
+{
+    GwyDataField *mask = NULL;
+    guint k, n = dfield->xres*dfield->yres;
+    gdouble *d = dfield->data;
+    gdouble avg;
+
+    /* Use the union of NaNs found in the data and invalid point mask to mark
+     * invalid points.  Gwyddion really does not like NaNs. */
+    for (k = 0; k < n; k++) {
+        if (gwy_isnan(d[k]) || gwy_isinf(d[k]) || !valid[k]) {
+            if (G_UNLIKELY(!mask)) {
+                mask = gwy_data_field_new_alike(dfield, TRUE);
+                gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(mask),
+                                            NULL);
+            }
+            mask->data[k] = 1.0;
+        }
+    }
+
+    if (!mask)
+        return mask;
+
+    avg = gwy_data_field_area_get_avg_mask(dfield, mask, GWY_MASK_EXCLUDE,
+                                           0, 0, dfield->xres, dfield->yres);
+    if (gwy_isnan(avg) || gwy_isinf(avg))
+        avg = 0.0;
+
+    for (k = 0; k < n; k++) {
+        if (gwy_isnan(d[k]) || gwy_isinf(d[k]))
+            d[k] = avg;
+    }
+
+    return mask;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
