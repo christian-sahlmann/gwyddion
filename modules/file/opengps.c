@@ -96,8 +96,6 @@ static void          add_meta_record       (gpointer hkey,
 static guchar*       x3p_get_file_content  (unzFile *zipfile,
                                             gsize *contentsize,
                                             GError **error);
-static gboolean      x3p_set_error         (gint status,
-                                            GError **error);
 static void          x3p_file_free         (X3PFile *x3pfile);
 static gboolean      x3p_file_get_data_type(const gchar *type,
                                             GwyRawDataType *rawtype,
@@ -681,14 +679,14 @@ x3p_get_file_content(unzFile *zipfile, gsize *contentsize, GError **error)
                                    NULL, 0,
                                    NULL, 0);
     if (status != UNZ_OK) {
-        x3p_set_error(status, error);
+        err_MINIZIP(status, error);
         return NULL;
     }
 
     gwy_debug("calling unzGetCurrentFileInfo()");
     status = unzOpenCurrentFile(zipfile);
     if (status != UNZ_OK) {
-        x3p_set_error(status, error);
+        err_MINIZIP(status, error);
         return NULL;
     }
 
@@ -697,7 +695,7 @@ x3p_get_file_content(unzFile *zipfile, gsize *contentsize, GError **error)
     gwy_debug("calling unzReadCurrentFile()");
     readbytes = unzReadCurrentFile(zipfile, buffer, size);
     if (readbytes != size) {
-        x3p_set_error(status, error);
+        err_MINIZIP(status, error);
         unzCloseCurrentFile(zipfile);
         g_free(buffer);
         return NULL;
@@ -709,32 +707,6 @@ x3p_get_file_content(unzFile *zipfile, gsize *contentsize, GError **error)
     if (contentsize)
         *contentsize = size;
     return buffer;
-}
-
-static gboolean
-x3p_set_error(gint status, GError **error)
-{
-    const gchar *errstr = _("Unknown error");
-
-    if (status == UNZ_ERRNO)
-        errstr = g_strerror(errno);
-    else if (status == UNZ_EOF)
-        errstr = _("End of file");
-    else if (status == UNZ_END_OF_LIST_OF_FILE)
-        errstr = _("End of list of files");
-    else if (status == UNZ_PARAMERROR)
-        errstr = _("Parameter error");
-    else if (status == UNZ_BADZIPFILE)
-        errstr = _("Bad zip file");
-    else if (status == UNZ_INTERNALERROR)
-        errstr = _("Internal error");
-    else if (status == UNZ_CRCERROR)
-        errstr = _("CRC error");
-
-    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                _("Minizip error while reading the zip file: %s."),
-                errstr);
-    return FALSE;
 }
 
 static void

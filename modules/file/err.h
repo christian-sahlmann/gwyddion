@@ -173,7 +173,8 @@ err_CANCELLED(GError **error)
                 _("File import was cancelled by user."));
 }
 
-static inline gboolean
+G_GNUC_UNUSED
+static gboolean
 require_keys(GHashTable *hash,
              GError **error,
              ...)
@@ -199,6 +200,35 @@ require_keys(GHashTable *hash,
 
     return TRUE;
 }
+
+#ifdef UNZ_OK
+G_GNUC_UNUSED
+static gboolean
+err_MINIZIP(gint status, GError **error)
+{
+    const gchar *errstr = _("Unknown error");
+
+    if (status == UNZ_ERRNO)
+        errstr = g_strerror(errno);
+    else if (status == UNZ_EOF)
+        errstr = _("End of file");
+    else if (status == UNZ_END_OF_LIST_OF_FILE)
+        errstr = _("End of list of files");
+    else if (status == UNZ_PARAMERROR)
+        errstr = _("Parameter error");
+    else if (status == UNZ_BADZIPFILE)
+        errstr = _("Bad zip file");
+    else if (status == UNZ_INTERNALERROR)
+        errstr = _("Internal error");
+    else if (status == UNZ_CRCERROR)
+        errstr = _("CRC error");
+
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                _("Minizip error while reading the zip file: %s."),
+                errstr);
+    return FALSE;
+}
+#endif
 
 #endif
 

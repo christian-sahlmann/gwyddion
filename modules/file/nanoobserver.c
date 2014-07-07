@@ -108,8 +108,6 @@ static gboolean      nao_parse_measure   (unzFile *zipfile,
 static guchar*       nao_get_file_content(unzFile *zipfile,
                                           gsize *contentsize,
                                           GError **error);
-static gboolean      nao_set_error       (gint status,
-                                          GError **error);
 static void          nao_file_free       (NAOFile *naofile);
 
 static GwyModuleInfo module_info = {
@@ -117,7 +115,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Reads NanoObserver .nao files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2012",
 };
@@ -521,14 +519,14 @@ nao_get_file_content(unzFile *zipfile, gsize *contentsize, GError **error)
                                    NULL, 0,
                                    NULL, 0);
     if (status != UNZ_OK) {
-        nao_set_error(status, error);
+        err_MINIZIP(status, error);
         return NULL;
     }
 
     gwy_debug("calling unzGetCurrentFileInfo()");
     status = unzOpenCurrentFile(zipfile);
     if (status != UNZ_OK) {
-        nao_set_error(status, error);
+        err_MINIZIP(status, error);
         return NULL;
     }
 
@@ -537,7 +535,7 @@ nao_get_file_content(unzFile *zipfile, gsize *contentsize, GError **error)
     gwy_debug("calling unzReadCurrentFile()");
     readbytes = unzReadCurrentFile(zipfile, buffer, size);
     if (readbytes != size) {
-        nao_set_error(status, error);
+        err_MINIZIP(status, error);
         unzCloseCurrentFile(zipfile);
         g_free(buffer);
         return NULL;
@@ -549,32 +547,6 @@ nao_get_file_content(unzFile *zipfile, gsize *contentsize, GError **error)
     if (contentsize)
         *contentsize = size;
     return buffer;
-}
-
-static gboolean
-nao_set_error(gint status, GError **error)
-{
-    const gchar *errstr = _("Unknown error");
-
-    if (status == UNZ_ERRNO)
-        errstr = g_strerror(errno);
-    else if (status == UNZ_EOF)
-        errstr = _("End of file");
-    else if (status == UNZ_END_OF_LIST_OF_FILE)
-        errstr = _("End of list of files");
-    else if (status == UNZ_PARAMERROR)
-        errstr = _("Parameter error");
-    else if (status == UNZ_BADZIPFILE)
-        errstr = _("Bad zip file");
-    else if (status == UNZ_INTERNALERROR)
-        errstr = _("Internal error");
-    else if (status == UNZ_CRCERROR)
-        errstr = _("CRC error");
-
-    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                _("Minizip error while reading the zip file: %s."),
-                errstr);
-    return FALSE;
 }
 
 static void
