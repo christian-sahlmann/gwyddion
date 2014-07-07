@@ -336,7 +336,8 @@ x3p_text(G_GNUC_UNUSED GMarkupParseContext *context,
                           "matrix dimensions."));
             return;
         }
-        x3pfile->values[x3pfile->datapos] = g_ascii_strtod(text, NULL);
+        x3pfile->values[x3pfile->datapos]
+            = x3pfile->dz*g_ascii_strtod(text, NULL) + x3pfile->zoff;
         x3pfile->valid[x3pfile->datapos] = TRUE;
         gwy_debug("valid Datum %g", x3pfile->values[x3pfile->datapos]);
         x3pfile->datapos++;
@@ -538,6 +539,8 @@ data_start(X3PFile *x3pfile, GError **error)
     if (s)
         x3pfile->zoff = g_ascii_strtod(s, NULL);
 
+    gwy_debug("dz=%g, zoff=%g", x3pfile->dz, x3pfile->zoff);
+
     x3pfile->ndata = x3pfile->xres*x3pfile->yres*x3pfile->zres;
     x3pfile->values = g_new(gdouble, x3pfile->ndata);
     x3pfile->valid = g_new(gboolean, x3pfile->ndata);
@@ -588,7 +591,7 @@ read_binary_data(X3PFile *x3pfile, unzFile *zipfile, GError **error)
 
     gwy_convert_raw_data(bindata, x3pfile->ndata, 1,
                          rawtype, GWY_BYTE_ORDER_LITTLE_ENDIAN,
-                         x3pfile->values, 1.0, 0.0);
+                         x3pfile->values, x3pfile->dz, x3pfile->zoff);
     g_free(bindata);
 
     for (i = 0; i < x3pfile->ndata; i++)
