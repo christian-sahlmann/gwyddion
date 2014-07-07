@@ -5,6 +5,9 @@ Libraries:
   a function so it is available in pygwy now.
 
 Modules:
+- OpenGPS (new): Imports OpenGPS surface data format (ISO 5436-2).
+- Diffusion synthesis (new): Artificial surface generation by a diffussion
+  limited aggregation simulation.
 - Filters tool: Gaussian smoothing is no longer limited to integer FWHM.
 - Columnar synthesis: Can plot the evolution of some statistics during the
   growth.
