@@ -43,12 +43,24 @@
 #define BLOODY_UTF8_BOM "\xef\xbb\xbf"
 #define EXTENSION ".x3p"
 
+#define MAT_DIM_PREFIX "/ISO5436_2/Record3/MatrixDimension"
+#define AXES_PREFIX "/ISO5436_2/Record1/Axes"
+
 typedef struct {
     GHashTable *hash;
     GString *path;
     gboolean seen_datum;
-    GArray *values;
-    GArray *valid;
+    guint xres;
+    guint yres;
+    guint zres;
+    guint ndata;
+    guint datapos;
+    gdouble dx;
+    gdouble dy;
+    gdouble xoff;
+    gdouble yoff;
+    gdouble *values;
+    gboolean *valid;
 } X3PFile;
 
 static gboolean      module_register     (void);
@@ -59,6 +71,8 @@ static GwyContainer* x3p_load            (const gchar *filename,
                                           GError **error);
 static gboolean      x3p_parse_main      (unzFile *zipfile,
                                           X3PFile *x3pfile,
+                                          GError **error);
+static gboolean      data_start          (X3PFile *x3pfile,
                                           GError **error);
 static guchar*       x3p_get_file_content(unzFile *zipfile,
                                           gsize *contentsize,
@@ -147,8 +161,6 @@ x3p_load(const gchar *filename,
     }
 
     gwy_clear(&x3pfile, 1);
-    x3pfile.values = g_array_new(FALSE, FALSE, sizeof(gdouble));
-    x3pfile.valid = g_array_new(FALSE, FALSE, sizeof(gboolean));
     if (!x3p_parse_main(zipfile, &x3pfile, error))
         goto fail;
 
@@ -189,7 +201,7 @@ x3p_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
                   G_GNUC_UNUSED const gchar **attribute_names,
                   G_GNUC_UNUSED const gchar **attribute_values,
                   gpointer user_data,
-                  G_GNUC_UNUSED GError **error)
+                  GError **error)
 {
     X3PFile *x3pfile = (X3PFile*)user_data;
     gchar *path;
@@ -200,6 +212,12 @@ x3p_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
     path = x3pfile->path->str;
     gwy_debug("%s", path);
 
+    if (gwy_strequal(path, "/ISO5436_2/Record3/DataLink")
+        || gwy_strequal(path, "/ISO5436_2/Record3/DataList")) {
+        if (!data_start(x3pfile, error))
+            return;
+    }
+
     if (gwy_strequal(path, "/ISO5436_2/Record3/DataList/Datum"))
         x3pfile->seen_datum = FALSE;
 }
@@ -208,7 +226,7 @@ static void
 x3p_end_element(G_GNUC_UNUSED GMarkupParseContext *context,
                 const gchar *element_name,
                 gpointer user_data,
-                G_GNUC_UNUSED GError **error)
+                GError **error)
 {
     X3PFile *x3pfile = (X3PFile*)user_data;
     guint n, len = x3pfile->path->len;
@@ -225,10 +243,16 @@ x3p_end_element(G_GNUC_UNUSED GMarkupParseContext *context,
      * x3p_text() is not called at all and we must handle that here. */
     if (gwy_strequal(path, "/ISO5436_2/Record3/DataList/Datum")
         && !x3pfile->seen_datum) {
-        gdouble v = 0.0;
-        gboolean valid = FALSE;
-        g_array_append_val(x3pfile->values, v);
-        g_array_append_val(x3pfile->valid, valid);
+        if (x3pfile->datapos >= x3pfile->ndata) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Too many DataList items for given "
+                          "matrix dimensions."));
+            return;
+        }
+        x3pfile->values[x3pfile->datapos] = 0.0;
+        x3pfile->valid[x3pfile->datapos] = FALSE;
+        x3pfile->datapos++;
         gwy_debug("invalid Datum");
     }
 
@@ -248,12 +272,18 @@ x3p_text(G_GNUC_UNUSED GMarkupParseContext *context,
 
     /* Data represented directly in XML. */
     if (gwy_strequal(path, "/ISO5436_2/Record3/DataList/Datum")) {
-        gdouble v = g_ascii_strtod(text, NULL);
-        gboolean valid = TRUE;
-        g_array_append_val(x3pfile->values, v);
-        g_array_append_val(x3pfile->valid, valid);
+        if (x3pfile->datapos >= x3pfile->ndata) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Too many DataList items for given "
+                          "matrix dimensions."));
+            return;
+        }
+        x3pfile->values[x3pfile->datapos] = g_ascii_strtod(text, NULL);
+        x3pfile->valid[x3pfile->datapos] = TRUE;
+        gwy_debug("valid Datum %g", x3pfile->values[x3pfile->datapos]);
+        x3pfile->datapos++;
         x3pfile->seen_datum = TRUE;
-        gwy_debug("valid Datum %g", v);
         return;
     }
 
@@ -319,6 +349,102 @@ fail:
     g_free(content);
 
     return ok;
+}
+
+/* This is the main verification function that checks we have everything we
+ * need and the data are of a supported type. */
+static gboolean
+data_start(X3PFile *x3pfile, GError **error)
+{
+    gchar *s;
+
+    if (x3pfile->values) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("File main.xml contains multiple data elements."));
+        return FALSE;
+    }
+
+    /* First check axes to get meaningful error messages if their types are
+     * not as expected. */
+    if (!require_keys(x3pfile->hash, error,
+                      AXES_PREFIX "/CX/AxisType",
+                      AXES_PREFIX "/CY/AxisType",
+                      AXES_PREFIX "/CZ/AxisType",
+                      NULL))
+        return FALSE;
+
+    s = (gchar*)g_hash_table_lookup(x3pfile->hash, AXES_PREFIX "/CX/AxisType");
+    if (!gwy_strequal(s, "I")) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    /* TRANSLATORS: type and axis are symbols such as I, CX, ...*/
+                    _("Only type %s is supported for axis %s."),
+                    "I", "CX");
+        return FALSE;
+    }
+
+    s = (gchar*)g_hash_table_lookup(x3pfile->hash, AXES_PREFIX "/CY/AxisType");
+    if (!gwy_strequal(s, "I")) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Only type %s is supported for axis %s."),
+                    "I", "CY");
+        return FALSE;
+    }
+
+    s = (gchar*)g_hash_table_lookup(x3pfile->hash, AXES_PREFIX "/CZ/AxisType");
+    if (!gwy_strequal(s, "A")) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Only type %s is supported for axis %s."),
+                    "A", "CZ");
+        return FALSE;
+    }
+
+    /* Then check sizes, offsets and steps when we know the grid is regular. */
+    if (!require_keys(x3pfile->hash, error,
+                      AXES_PREFIX "/CX/Increment",
+                      AXES_PREFIX "/CY/Increment",
+                      AXES_PREFIX "/CX/Offset",
+                      AXES_PREFIX "/CY/Offset",
+                      MAT_DIM_PREFIX "/SizeX",
+                      MAT_DIM_PREFIX "/SizeY",
+                      MAT_DIM_PREFIX "/SizeZ",
+                      NULL))
+        return FALSE;
+
+    s = (gchar*)g_hash_table_lookup(x3pfile->hash, MAT_DIM_PREFIX "/SizeX");
+    x3pfile->xres = atoi(s);
+
+    s = (gchar*)g_hash_table_lookup(x3pfile->hash, MAT_DIM_PREFIX "/SizeY");
+    x3pfile->yres = atoi(s);
+
+    s = (gchar*)g_hash_table_lookup(x3pfile->hash, MAT_DIM_PREFIX "/SizeZ");
+    x3pfile->zres = atoi(s);
+
+    gwy_debug("xres=%u, yres=%u, zres=%u\n",
+              x3pfile->xres, x3pfile->yres, x3pfile->zres);
+
+    if (err_DIMENSION(error, x3pfile->xres)
+        || err_DIMENSION(error, x3pfile->yres)
+        || err_DIMENSION(error, x3pfile->zres))
+        return FALSE;
+
+    s = (gchar*)g_hash_table_lookup(x3pfile->hash, AXES_PREFIX "/CX/Increment");
+    x3pfile->dx = g_ascii_strtod(s, NULL);
+
+    s = (gchar*)g_hash_table_lookup(x3pfile->hash, AXES_PREFIX "/CY/Increment");
+    x3pfile->dy = g_ascii_strtod(s, NULL);
+
+    s = (gchar*)g_hash_table_lookup(x3pfile->hash, AXES_PREFIX "/CX/Offset");
+    x3pfile->xoff = g_ascii_strtod(s, NULL);
+
+    s = (gchar*)g_hash_table_lookup(x3pfile->hash, AXES_PREFIX "/CY/Offset");
+    x3pfile->yoff = g_ascii_strtod(s, NULL);
+
+    x3pfile->ndata = x3pfile->xres*x3pfile->yres*x3pfile->zres;
+    x3pfile->values = g_new(gdouble, x3pfile->ndata);
+    x3pfile->valid = g_new(gboolean, x3pfile->ndata);
+    x3pfile->datapos = 0;
+
+    return TRUE;
 }
 
 static guchar*
@@ -403,14 +529,10 @@ x3p_file_free(X3PFile *x3pfile)
         g_string_free(x3pfile->path, TRUE);
         x3pfile->path = NULL;
     }
-    if (x3pfile->values) {
-        g_array_free(x3pfile->values, TRUE);
-        x3pfile->values = NULL;
-    }
-    if (x3pfile->valid) {
-        g_array_free(x3pfile->valid, TRUE);
-        x3pfile->valid = NULL;
-    }
+    g_free(x3pfile->values);
+    x3pfile->values = NULL;
+    g_free(x3pfile->valid);
+    x3pfile->valid = NULL;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
