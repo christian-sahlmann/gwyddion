@@ -61,6 +61,7 @@
 #include "err.h"
 
 /*Macros*/
+#define FILE_TYPE "DAX"
 #define EXTENSION ".dax"
 #define MAGIC "PK\x03\x04"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
@@ -92,7 +93,7 @@ typedef struct {
     gint YRes;
     gdouble XReal;
     gdouble YReal;
-} APEDAX_ScanSize;
+} APEScanSize;
 
 /*Prototypes*/
 static gboolean      module_register               (void);
@@ -103,7 +104,7 @@ static GwyContainer* apedax_load                   (const gchar *filename,
                                                     GError **error);
 static GwyContainer* apedax_get_meta               (guchar *scanXmlContent,
                                                     gsize contentSize,
-                                                    APEDAX_ScanSize *scanSize);
+                                                    APEScanSize *scanSize);
 static guchar*       apedax_get_file_content       (unzFile uFile,
                                                     unz_file_info *uFileInfo,
                                                     gsize *size,
@@ -112,7 +113,7 @@ static gchar*        apedax_get_xml_field_as_string(xmlDocPtr doc,
                                                     const gchar *fieldXPath);
 static GwyDataField* apedax_get_data_field         (unzFile uFile,
                                                     const gchar *chFileName,
-                                                    const APEDAX_ScanSize *scanSize,
+                                                    const APEScanSize *scanSize,
                                                     gchar *zUnit,
                                                     gdouble scale,
                                                     GError **error);
@@ -122,7 +123,7 @@ static void          apedax_get_channels_data      (unzFile uFile,
                                                     const gchar *filename,
                                                     GwyContainer *container,
                                                     GwyContainer *meta,
-                                                    const APEDAX_ScanSize *scanSize,
+                                                    const APEScanSize *scanSize,
                                                     GError **error);
 static gchar*        apedax_format_date             (const gchar* datefield);
 
@@ -133,7 +134,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports A.P.E. Research DAX data files."),
     "Gianfranco Gallizia <infos@aperesearch.com>",
-    "0.2",
+    "0.3",
     "A.P.E. Research srl",
     "2012"
 };
@@ -143,7 +144,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
-    gwy_file_func_register("apedax",
+    gwy_file_func_register("apedaxfile",
                            N_("A.P.E. Research DAX Files (.dax)"),
                            (GwyFileDetectFunc)&apedax_detect,
                            (GwyFileLoadFunc)&apedax_load,
@@ -205,7 +206,7 @@ apedax_load(const gchar *filename,
     unz_file_info uFileInfo;
     guchar *buffer;
     gsize size = 0;
-    APEDAX_ScanSize scanSize;
+    APEScanSize scanSize;
 
     scanSize.XRes = 0;
     scanSize.YRes = 0;
@@ -216,14 +217,14 @@ apedax_load(const gchar *filename,
     uFile = unzOpen(filename);
 
     if (uFile == NULL) {
-        err_FILE_TYPE(error, "DAX");
+        err_FILE_TYPE(error, FILE_TYPE);
         unzClose(uFile);
         return NULL;
     }
 
     gwy_debug("Locating the XML file");
     if (unzLocateFile(uFile, "scan.xml", 0) != UNZ_OK) {
-        err_FILE_TYPE(error, "DAX");
+        err_FILE_TYPE(error, FILE_TYPE);
         unzClose(uFile);
         return NULL;
     }
@@ -252,7 +253,7 @@ apedax_load(const gchar *filename,
         gwy_debug("Metadata Container is NULL");
         g_object_unref(container);
         g_free(buffer);
-        err_FILE_TYPE(error, "DAX");
+        err_FILE_TYPE(error, FILE_TYPE);
         unzClose(uFile);
         return NULL;
     }
@@ -305,13 +306,11 @@ apedax_get_file_content(unzFile uFile,
 }
 
 /*Gets the metadata from the XML file*/
-
 static GwyContainer*
 apedax_get_meta(guchar *scanXmlContent,
                 gsize contentSize,
-                APEDAX_ScanSize *scanSize)
+                APEScanSize *scanSize)
 {
-
     GwyContainer* meta = NULL;
     xmlDocPtr doc = NULL;
     xmlNodePtr cur = NULL;
@@ -323,7 +322,7 @@ apedax_get_meta(guchar *scanXmlContent,
 
     meta = gwy_container_new();
 
-    gwy_debug("Parsing the XML file");
+    gwy_debug("Parsing the scan XML file");
     doc = xmlReadMemory(scanXmlContent,
                         contentSize,
                         "scan.xml",
@@ -401,7 +400,6 @@ apedax_get_meta(guchar *scanXmlContent,
     /*Remark*/
     buffer = apedax_get_xml_field_as_string(doc,
                                             "/Scan/Header/Remark");
-
     if (buffer) {
         gwy_container_set_string_by_name(meta,
                                          "Remark",
@@ -454,7 +452,6 @@ apedax_get_meta(guchar *scanXmlContent,
             }
 
         g_free(buffer);
-
         }
     }
 
@@ -581,7 +578,7 @@ apedax_get_xml_field_as_string(xmlDocPtr doc, const gchar *fieldXPath)
 static GwyDataField*
 apedax_get_data_field(unzFile uFile,
                       const gchar *chFileName,
-                      const APEDAX_ScanSize *scanSize,
+                      const APEScanSize *scanSize,
                       gchar *zUnit,
                       gdouble scale,
                       GError **error)
@@ -681,7 +678,7 @@ apedax_get_channels_data(unzFile uFile,
                          const gchar *filename,
                          GwyContainer *container,
                          GwyContainer *meta,
-                         const APEDAX_ScanSize *scanSize,
+                         const APEScanSize *scanSize,
                          GError **error)
 {
     xmlDocPtr doc = NULL;
@@ -803,7 +800,7 @@ apedax_get_channels_data(unzFile uFile,
     return;
 
 fail:
-    err_FILE_TYPE(error, "DAX");
+    err_FILE_TYPE(error, FILE_TYPE);
     if (doc)
         xmlFreeDoc(doc);
     return;
