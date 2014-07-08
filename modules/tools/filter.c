@@ -67,6 +67,7 @@ struct _GwyToolFilter {
     GwyRectSelectionLabels *rlabels;
     GtkWidget *filter_type;
     GtkObject *size;
+    GtkWidget *size_spin;
     GtkWidget *apply;
 
     /* potential class data */
@@ -249,11 +250,12 @@ gwy_tool_filter_init_dialog(GwyToolFilter *tool)
     row++;
 
     tool->size = gtk_adjustment_new(0.0, 0.0, 1.0, 0.1, 1.0, 0);
-    setup_size_adjustment(tool);
-    gwy_table_attach_hscale(GTK_WIDGET(table), row, _("Si_ze:"), "px",
-                            tool->size, 0);
+    tool->size_spin
+        = gwy_table_attach_hscale(GTK_WIDGET(table), row, _("Si_ze:"), "px",
+                                  tool->size, 0);
     gwy_table_hscale_set_sensitive
                  (tool->size, gwy_tool_filter_is_sized(tool->args.filter_type));
+    setup_size_adjustment(tool);
     g_signal_connect_swapped(tool->size, "value-changed",
                              G_CALLBACK(gwy_tool_filter_size_changed), tool);
     row++;
@@ -376,11 +378,15 @@ static void
 setup_size_adjustment(GwyToolFilter *tool)
 {
     GtkAdjustment *adj = GTK_ADJUSTMENT(tool->size);
-    if (tool->args.filter_type == GWY_FILTER_GAUSSIAN)
+    if (tool->args.filter_type == GWY_FILTER_GAUSSIAN) {
         gtk_adjustment_configure(adj, tool->args.gauss_size,
                                  0.01, 40.0, 0.01, 1.0, 0);
-    else
+        gtk_spin_button_set_digits(GTK_SPIN_BUTTON(tool->size_spin), 2);
+    }
+    else {
         gtk_adjustment_configure(adj, tool->args.size, 2, 20, 1, 5, 0);
+        gtk_spin_button_set_digits(GTK_SPIN_BUTTON(tool->size_spin), 0);
+    }
 }
 
 static void
