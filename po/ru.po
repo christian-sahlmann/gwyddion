@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-07-02 03:58+0200\n"
-"PO-Revision-Date: 2014-07-02 12:15+0300\n"
+"POT-Creation-Date: 2014-07-08 03:58+0200\n"
+"PO-Revision-Date: 2014-07-08 11:11+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -886,7 +886,7 @@ msgstr "точек"
 #: modules/process/calcoefs_new.c:348 modules/process/calibrate.c:392
 #: modules/process/col_synth.c:384 modules/process/correct_affine.c:307
 #: modules/process/curvature.c:605 modules/process/cwt.c:135
-#: modules/process/deposit_synth.c:361 modules/process/diff_synth.c:403
+#: modules/process/deposit_synth.c:361 modules/process/diff_synth.c:411
 #: modules/process/domain_synth.c:368 modules/process/drift.c:240
 #: modules/process/dwt.c:166 modules/process/dwtanisotropy.c:184
 #: modules/process/edge.c:655 modules/process/extend.c:192
@@ -3247,9 +3247,42 @@ msgstr "В файле отсутствует канал, который можн
 msgid "File import was cancelled by user."
 msgstr "Импорт файла отменён пользователем"
 
-#: modules/file/err.h:186
+#: modules/file/err.h:187
 msgid "Missing header."
 msgstr "Отсутствует заголовок."
+
+#: modules/file/err.h:209
+msgid "Unknown error"
+msgstr "Неизвестная ошибка"
+
+#: modules/file/err.h:214
+msgid "End of file"
+msgstr "Конец файла"
+
+#: modules/file/err.h:216
+msgid "End of list of files"
+msgstr "Конец списка файлов"
+
+#: modules/file/err.h:218
+msgid "Parameter error"
+msgstr "Ошибка параметра"
+
+#: modules/file/err.h:220
+msgid "Bad zip file"
+msgstr "Плохой файл zip"
+
+#: modules/file/err.h:222
+msgid "Internal error"
+msgstr "Внутренняя ошибка"
+
+#: modules/file/err.h:224
+msgid "CRC error"
+msgstr "Ошибка контрольной суммы"
+
+#: modules/file/err.h:227
+#, c-format
+msgid "Minizip error while reading the zip file: %s."
+msgstr "Ошибка minizip при чтении zip-файла: %s."
 
 #: modules/file/ezdfile.c:135
 msgid "Imports Nanosurf EZD and NID data files."
@@ -4079,54 +4112,24 @@ msgstr "Заголовок закончился внутри таблицы Mult
 msgid "Missing data start marker \\x1a\\x04."
 msgstr "Отсутствует маркер начала данных \\x1a\\x04."
 
-#: modules/file/nanoobserver.c:118
+#: modules/file/nanoobserver.c:116
 msgid "Reads NanoObserver .nao files."
 msgstr "Читает файлы NanoObserver .nao."
 
-#: modules/file/nanoobserver.c:131
+#: modules/file/nanoobserver.c:129
 msgid "NanoObserver data (.nao)"
 msgstr "Данные NanoObserver (.nao)"
 
-#: modules/file/nanoobserver.c:189 modules/file/nanoscantech.c:206
+#: modules/file/nanoobserver.c:187 modules/file/nanoscantech.c:204
+#: modules/file/opengps.c:181
 msgid "Minizip cannot open the file as a ZIP file."
 msgstr "Minizip не может открыть файл как архив ZIP."
 
-#: modules/file/nanoobserver.c:461
-msgid "File Scan/Measure.xml is missing in the zip file."
-msgstr "Файл Scan/Measure.xml отсутствует в zip-архиве."
-
-#: modules/file/nanoobserver.c:556 modules/file/nanoscantech.c:911
-msgid "Unknown error"
-msgstr "Неизвестная ошибка"
-
-#: modules/file/nanoobserver.c:561 modules/file/nanoscantech.c:916
-msgid "End of file"
-msgstr "Конец файла"
-
-#: modules/file/nanoobserver.c:563 modules/file/nanoscantech.c:918
-msgid "End of list of files"
-msgstr "Конец списка файлов"
-
-#: modules/file/nanoobserver.c:565 modules/file/nanoscantech.c:920
-msgid "Parameter error"
-msgstr "Ошибка параметра"
-
-#: modules/file/nanoobserver.c:567 modules/file/nanoscantech.c:922
-msgid "Bad zip file"
-msgstr "Плохой файл zip"
-
-#: modules/file/nanoobserver.c:569 modules/file/nanoscantech.c:924
-msgid "Internal error"
-msgstr "Внутренняя ошибка"
-
-#: modules/file/nanoobserver.c:571 modules/file/nanoscantech.c:926
-msgid "CRC error"
-msgstr "Ошибка контрольной суммы"
-
-#: modules/file/nanoobserver.c:574 modules/file/nanoscantech.c:929
+#: modules/file/nanoobserver.c:459 modules/file/opengps.c:375
+#: modules/file/opengps.c:570 modules/file/opengps.c:606
 #, c-format
-msgid "Minizip error while reading the zip file: %s."
-msgstr "Ошибка minizip при чтении zip-файла: %s."
+msgid "File %s is missing in the zip file."
+msgstr "Файл %s отсутствует в zip-архиве."
 
 #: modules/file/nanoscan.c:188
 msgid "Imports NanoScan XML files."
@@ -4140,11 +4143,11 @@ msgstr "Файлы NanoScan XML (.xml)"
 msgid "Wrong size of Base64 encoded data."
 msgstr "Неправильный размер данных, кодированных Base64."
 
-#: modules/file/nanoscantech.c:131
+#: modules/file/nanoscantech.c:129
 msgid "Imports NanoScanTech .nstdat files."
 msgstr "Импортирует файлы NanoScanTech .nstdat"
 
-#: modules/file/nanoscantech.c:144
+#: modules/file/nanoscantech.c:142
 msgid "NanoScanTech data (.nstdat)"
 msgstr "Данные NanoScanTech (.nstdat)"
 
@@ -4497,6 +4500,29 @@ msgstr "Найдены вложенные каталоги"
 msgid "Truncated data in block %s"
 msgstr "Неполные данные в блоке %s"
 
+#: modules/file/opengps.c:109
+msgid "Reads OpenGPS .x3p files."
+msgstr "Читает файлы OpenGPS .x3p."
+
+#: modules/file/opengps.c:122
+msgid "OpenGPS data (.x3p)"
+msgstr "Данные OpenGPS (.x3p)"
+
+#: modules/file/opengps.c:306 modules/file/opengps.c:335
+msgid "Too many DataList items for given matrix dimensions."
+msgstr "Слишком много элементов DataList для заданных размеров матрицы."
+
+#: modules/file/opengps.c:425
+msgid "File main.xml contains multiple data elements."
+msgstr "Файл main.xml содержит несколько элементов данных."
+
+#. TRANSLATORS: type and axis are symbols such as I, CX, ...
+#: modules/file/opengps.c:458 modules/file/opengps.c:466
+#: modules/file/opengps.c:474
+#, c-format
+msgid "Only type %s is supported for axis %s."
+msgstr "Только тип %s доступен для оси %s."
+
 #: modules/file/pixmap.c:376
 msgid "All channels"
 msgstr "Все каналы"
@@ -4650,7 +4676,7 @@ msgid "_Zoom:"
 msgstr "_Увеличение:"
 
 #: modules/file/pixmap.c:3296 modules/process/col_synth.c:483
-#: modules/process/diff_synth.c:531 modules/process/domain_synth.c:529
+#: modules/process/diff_synth.c:538 modules/process/domain_synth.c:529
 #: modules/process/grain_mark.c:309 modules/process/lat_synth.c:732
 #: modules/process/obj_synth.c:567 modules/process/pat_synth.c:871
 #: modules/process/pat_synth.c:1173 modules/process/pat_synth.c:1508
@@ -7010,7 +7036,7 @@ msgstr "Создать столбчатую поверхность"
 
 #: modules/process/col_synth.c:281 modules/process/col_synth.c:719
 #: modules/process/deposit_synth.c:279 modules/process/deposit_synth.c:879
-#: modules/process/diff_synth.c:302 modules/process/diff_synth.c:670
+#: modules/process/diff_synth.c:308 modules/process/diff_synth.c:691
 #: modules/process/domain_synth.c:266 modules/process/domain_synth.c:764
 #: modules/process/lat_synth.c:468 modules/process/neural.c:1275
 #: modules/process/pid.c:336 modules/process/xydenoise.c:220
@@ -7019,7 +7045,7 @@ msgstr "Запускается..."
 
 #: modules/process/col_synth.c:319 modules/process/deposit_synth.c:317
 #: modules/process/deposit_synth.c:329 modules/process/deposit_synth.c:549
-#: modules/process/deposit_synth.c:563 modules/process/diff_synth.c:338
+#: modules/process/deposit_synth.c:563 modules/process/diff_synth.c:346
 #: modules/process/domain_synth.c:330 modules/process/domain_synth.c:339
 #: modules/process/fft_synth.c:323 modules/process/lat_synth.c:506
 #: modules/process/lno_synth.c:413 modules/process/noise_synth.c:321
@@ -7028,7 +7054,7 @@ msgstr "Запускается..."
 msgid "Generated"
 msgstr "Сгенерированное"
 
-#: modules/process/col_synth.c:344 modules/process/diff_synth.c:363
+#: modules/process/col_synth.c:344 modules/process/diff_synth.c:371
 msgid "Mean height"
 msgstr "Средняя высота"
 
@@ -7036,13 +7062,13 @@ msgstr "Средняя высота"
 msgid "Grow Columnar Surface"
 msgstr "Вырастить столбчатую поверхность"
 
-#: modules/process/col_synth.c:432 modules/process/diff_synth.c:451
+#: modules/process/col_synth.c:432 modules/process/diff_synth.c:459
 #: modules/process/domain_synth.c:426
 msgid "Progressive preview"
 msgstr "Прогрессивное обновление"
 
 #: modules/process/col_synth.c:455 modules/process/deposit_synth.c:430
-#: modules/process/diff_synth.c:474 modules/process/domain_synth.c:449
+#: modules/process/diff_synth.c:482 modules/process/domain_synth.c:449
 #: modules/process/fft_synth.c:416 modules/process/lat_synth.c:605
 #: modules/process/lno_synth.c:504 modules/process/noise_synth.c:412
 #: modules/process/obj_synth.c:491 modules/process/pat_synth.c:461
@@ -7051,14 +7077,14 @@ msgid "Dimensions"
 msgstr "Размеры"
 
 #: modules/process/col_synth.c:464 modules/process/deposit_synth.c:440
-#: modules/process/diff_synth.c:483 modules/process/domain_synth.c:457
+#: modules/process/diff_synth.c:491 modules/process/domain_synth.c:457
 #: modules/process/fft_synth.c:427 modules/process/lno_synth.c:515
 #: modules/process/noise_synth.c:423 modules/process/obj_synth.c:502
 #: modules/process/pat_synth.c:473 modules/process/wave_synth.c:436
 msgid "Generator"
 msgstr "Генератор"
 
-#: modules/process/col_synth.c:470 modules/process/diff_synth.c:489
+#: modules/process/col_synth.c:470 modules/process/diff_synth.c:497
 #: modules/process/lno_synth.c:1055 modules/process/obj_synth.c:513
 msgid "Co_verage:"
 msgstr "По_крытие:"
@@ -7087,7 +7113,7 @@ msgstr "Тип релаксации:"
 msgid "Evolution"
 msgstr "Эволюция"
 
-#: modules/process/col_synth.c:531 modules/process/diff_synth.c:538
+#: modules/process/col_synth.c:531 modules/process/diff_synth.c:551
 msgid "Plot graphs:"
 msgstr "Строить графики:"
 
@@ -7099,7 +7125,7 @@ msgstr "Слабая"
 msgid "Strong"
 msgstr "Сильная"
 
-#: modules/process/col_synth.c:768 modules/process/diff_synth.c:719
+#: modules/process/col_synth.c:768 modules/process/diff_synth.c:741
 msgid "Depositing particles..."
 msgstr "Осаждаются частицы..."
 
@@ -7559,41 +7585,49 @@ msgstr "Ошибка: частицы слишком большие."
 msgid "Error: particles too small."
 msgstr "Ошибка: частицы слишком маленькие."
 
-#: modules/process/diff_synth.c:198
+#: modules/process/diff_synth.c:204
 msgid "Number of islands"
 msgstr "Число островков"
 
-#: modules/process/diff_synth.c:214
+#: modules/process/diff_synth.c:220
 msgid "Generates surfaces by diffusion limited aggregation."
 msgstr "Создаёт поверхность с помощью агрегации, ограниченной диффузией"
 
-#: modules/process/diff_synth.c:228
+#: modules/process/diff_synth.c:234
 msgid "/S_ynthetic/_Diffusion..."
 msgstr "/Син_тез/Ди_ффузия..."
 
-#: modules/process/diff_synth.c:232
+#: modules/process/diff_synth.c:238
 msgid "Generate surface by diffusion limited aggregation"
 msgstr "Создать поверхность используя агрегацию, ограниченную диффузией"
 
-#: modules/process/diff_synth.c:401
+#: modules/process/diff_synth.c:409
 msgid "Diffusion Limited Aggregation"
 msgstr "Агрегация, ограниченная диффузией"
 
-#: modules/process/diff_synth.c:497
+#: modules/process/diff_synth.c:505
 msgid "Log10 of _flux:"
 msgstr "Log10 _потока:"
 
-#: modules/process/diff_synth.c:505 modules/process/domain_synth.c:482
+#: modules/process/diff_synth.c:513 modules/process/domain_synth.c:482
 msgid "_Temperature:"
 msgstr "_Температура:"
 
-#: modules/process/diff_synth.c:513
+#: modules/process/diff_synth.c:521
 msgid "_Sticking _probability:"
 msgstr "_Вероятность прилипания:"
 
-#: modules/process/diff_synth.c:522
-msgid "Sch_woebel probability:"
-msgstr "Вероятность по _Швёбелю:"
+#: modules/process/diff_synth.c:530
+#, fuzzy
+msgid "Sch_woebel passing:"
+msgstr "Прохождение _Швёбеля:"
+
+#: modules/process/diff_synth.c:542 modules/process/domain_synth.c:533
+#: modules/process/fft_synth.c:436 modules/process/lat_synth.c:737
+#: modules/process/lno_synth.c:551 modules/process/noise_synth.c:455
+#: modules/process/obj_synth.c:571 modules/process/wave_synth.c:471
+msgid "_Like Current Channel"
+msgstr "Как _у текущего канала"
 
 #: modules/process/dimensions.h:456
 msgid "S_quare image"
@@ -7674,13 +7708,6 @@ msgstr "Временной шаг метода _Монте-Карло:"
 #: modules/process/domain_synth.c:523 modules/process/fft_filter_2d.c:635
 msgid "Output Options"
 msgstr "Параметры вывода"
-
-#: modules/process/domain_synth.c:533 modules/process/fft_synth.c:436
-#: modules/process/lat_synth.c:737 modules/process/lno_synth.c:551
-#: modules/process/noise_synth.c:455 modules/process/obj_synth.c:571
-#: modules/process/wave_synth.c:471
-msgid "_Like Current Channel"
-msgstr "Как _у текущего канала"
 
 #: modules/process/domain_synth.c:542 modules/process/fft_filter_2d.c:640
 #: modules/process/mask_edt.c:163 modules/process/slope_dist.c:324
