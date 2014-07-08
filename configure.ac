@@ -802,9 +802,9 @@ enabled_formats=
 disabled_formats=
 
 if test "x$enable_minizip" != xno; then
-  enabled_formats="$enabled_formats, NanoObserver, NanoScanTech"
+  enabled_formats="$enabled_formats, NanoObserver, NanoScanTech, OpenGPS"
 else
-  disabled_formats="$disabled_formats, NanoObserver, NanoScanTech"
+  disabled_formats="$disabled_formats, NanoObserver, NanoScanTech, OpenGPS"
 fi
 
 if test "x$enable_exr" != xno; then
