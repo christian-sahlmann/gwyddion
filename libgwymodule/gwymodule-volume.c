@@ -46,6 +46,7 @@ typedef struct {
 } ProcFuncForeachData;
 
 static GHashTable *volume_funcs = NULL;
+static GPtrArray *call_stack = NULL;
 
 /**
  * gwy_volume_func_register:
@@ -97,6 +98,7 @@ gwy_volume_func_register(const gchar *name,
         gwy_debug("Initializing...");
         volume_funcs = g_hash_table_new_full(g_str_hash, g_str_equal,
                                               NULL, g_free);
+        call_stack = g_ptr_array_new();
     }
 
     if (!gwy_strisident(name, "_-", NULL))
@@ -144,7 +146,10 @@ gwy_volume_func_run(const gchar *name,
 
     func_info = g_hash_table_lookup(volume_funcs, name);
     g_return_if_fail(run & func_info->run);
+    g_ptr_array_add(call_stack, func_info);
     func_info->func(data, run, name);
+    g_return_if_fail(call_stack->len);
+    g_ptr_array_set_size(call_stack, call_stack->len-1);
 }
 
 static void
@@ -307,6 +312,35 @@ gwy_volume_func_get_sensitivity_mask(const gchar *name)
     g_return_val_if_fail(func_info, 0);
 
     return func_info->sens_mask;
+}
+
+/**
+ * gwy_volume_func_current:
+ *
+ * Obtains the name of currently running volume data processing function.
+ *
+ * If no volume data processing function is currently running, %NULL is
+ * returned.
+ *
+ * If multiple nested functions are running (which is not usual but technically
+ * possible), the innermost function name is returned.
+ *
+ * Returns: The name of currently running volume data processing function or
+ *          %NULL.
+ *
+ * Since: 2.38
+ **/
+const gchar*
+gwy_volume_func_current(void)
+{
+    GwyVolumeFuncInfo *func_info;
+
+    if (!call_stack || !call_stack->len)
+        return NULL;
+
+    func_info = (GwyVolumeFuncInfo*)g_ptr_array_index(call_stack,
+                                                      call_stack->len-1);
+    return func_info->name;
 }
 
 gboolean

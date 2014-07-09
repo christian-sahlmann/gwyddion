@@ -93,6 +93,7 @@ GwyFileOperationType gwy_file_func_get_operations (const gchar *name);
 const gchar*         gwy_file_func_get_description(const gchar *name);
 void                 gwy_file_func_foreach        (GFunc function,
                                                    gpointer user_data);
+const gchar*         gwy_file_func_current        (void);
 
 /* high-level interface */
 const gchar*        gwy_file_detect           (const gchar *filename,

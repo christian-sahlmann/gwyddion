@@ -45,6 +45,7 @@ const gchar* gwy_graph_func_get_tooltip         (const gchar *name);
 guint        gwy_graph_func_get_sensitivity_mask(const gchar *name);
 void         gwy_graph_func_foreach             (GFunc function,
                                                  gpointer user_data);
+const gchar* gwy_graph_func_current             (void);
 
 G_END_DECLS
 

@@ -86,6 +86,7 @@ static void    gwy_file_container_finalized(gpointer userdata,
 
 static GHashTable *file_funcs = NULL;
 static GList *container_list = NULL;
+static GPtrArray *call_stack = NULL;
 
 /**
  * gwy_file_func_register:
@@ -131,6 +132,7 @@ gwy_file_func_register(const gchar *name,
         gwy_debug("Initializing...");
         file_funcs = g_hash_table_new_full(g_str_hash, g_str_equal,
                                            NULL, &g_free);
+        call_stack = g_ptr_array_new();
     }
 
     if (!gwy_strisident(name, "_-", NULL))
@@ -232,9 +234,13 @@ gwy_file_func_run_load(const gchar *name,
     g_return_val_if_fail(func_info, NULL);
     g_return_val_if_fail(func_info->load, NULL);
 
+    g_ptr_array_add(call_stack, func_info);
     data = func_info->load(filename, mode, error, name);
     if (data)
         gwy_file_type_info_set(data, name, filename);
+
+    g_return_val_if_fail(call_stack->len, data);
+    g_ptr_array_set_size(call_stack, call_stack->len-1);
 
     return data;
 }
@@ -275,10 +281,14 @@ gwy_file_func_run_save(const gchar *name,
     g_return_val_if_fail(func_info->save, FALSE);
 
     g_object_ref(data);
+    g_ptr_array_add(call_stack, func_info);
     status = func_info->save(data, filename, mode, error, name);
     if (status)
         gwy_file_type_info_set(data, name, filename);
     g_object_unref(data);
+
+    g_return_val_if_fail(call_stack->len, status);
+    g_ptr_array_set_size(call_stack, call_stack->len-1);
 
     return status;
 }
@@ -319,8 +329,12 @@ gwy_file_func_run_export(const gchar *name,
     g_return_val_if_fail(func_info->export_, FALSE);
 
     g_object_ref(data);
+    g_ptr_array_add(call_stack, func_info);
     status = func_info->export_(data, filename, mode, error, name);
     g_object_unref(data);
+
+    g_return_val_if_fail(call_stack->len, status);
+    g_ptr_array_set_size(call_stack, call_stack->len-1);
 
     return status;
 }
@@ -816,6 +830,35 @@ gwy_file_func_set_is_detectable(const gchar *name,
     func_info = g_hash_table_lookup(file_funcs, name);
     g_return_if_fail(func_info);
     func_info->is_detectable = is_detectable;
+}
+
+/**
+ * gwy_file_func_current:
+ *
+ * Obtains the name of currently running file type function.
+ *
+ * Detection routines are not included, only load, save and export functions.
+ *
+ * If no file type function is currently running, %NULL is returned.
+ *
+ * If multiple nested functions are running (which is not usual but technically
+ * possible), the innermost function name is returned.
+ *
+ * Returns: The name of currently running file type function or %NULL.
+ *
+ * Since: 2.38
+ **/
+const gchar*
+gwy_file_func_current(void)
+{
+    GwyFileFuncInfo *func_info;
+
+    if (!call_stack || !call_stack->len)
+        return NULL;
+
+    func_info = (GwyFileFuncInfo*)g_ptr_array_index(call_stack,
+                                                     call_stack->len-1);
+    return func_info->name;
 }
 
 gboolean

@@ -50,6 +50,7 @@ const gchar* gwy_process_func_get_tooltip         (const gchar *name);
 guint        gwy_process_func_get_sensitivity_mask(const gchar *name);
 void         gwy_process_func_foreach             (GFunc function,
                                                    gpointer user_data);
+const gchar* gwy_process_func_current             (void);
 
 G_END_DECLS
 
