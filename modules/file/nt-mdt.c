@@ -21,6 +21,8 @@
 
 /* TODO: some metadata ... */
 
+#define DEBUG
+
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-nt-mdt-spm">
@@ -324,6 +326,47 @@ typedef struct {
 } MDTScannedDataFrame;
 
 typedef struct {
+    MDTAxisScale x_scale;
+    MDTAxisScale y_scale;
+    MDTAxisScale z_scale;
+    guint sp_mode;
+    guint sp_filter;
+    gdouble u_begin;
+    gdouble u_end;
+    gint z_up;
+    gint z_down;
+    guint sp_averaging;
+    gboolean sp_repeat;
+    gboolean sp_back;
+    gint sp_4nx;
+    gboolean sp_osc;
+    gchar sp_n4;
+    gdouble sp_4x0;
+    gdouble sp_4xr;
+    gint sp_4u;
+    gint sp_4i;
+    gint sp_nx;
+    gchar sp_reserved[3];
+    gchar sp_ev2;
+    /* XXX: much more stuff can be here */
+
+    /* Frame mode stuff */
+    guint fm_mode;    /* m_mode */
+    guint fm_xres;    /* m_nx */
+    guint fm_yres;    /* m_ny */
+    guint fm_ndots;   /* m_nd */
+
+    /* Data */
+    const guchar *dots;
+    const guchar *data;
+
+    /* Stuff after data */
+    guint title_len;
+    const guchar *title;
+    gchar *xmlstuff;
+} MDTSpectroscopyDataFrame;
+
+typedef struct {
     guint totLen;
     guint nameLen;
     const gchar *name;
@@ -508,9 +551,9 @@ static gboolean       mdt_real_load         (const guchar *buffer,
                                              MDTFile *mdtfile,
                                              GError **error);
 static GwyDataField*  extract_scanned_data  (MDTScannedDataFrame *dataframe);
-static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe,
+static GwyGraphModel* extract_scanned_spectrum (MDTSpectroscopyDataFrame *dataframe,
                                                 guint number);
-static GwySpectra*    extract_sps_curve(MDTScannedDataFrame *dataframe,
+static GwySpectra*    extract_sps_curve(MDTSpectroscopyDataFrame *dataframe,
                                         guint number);
 static GwySpectra*    extract_new_curve(MDTNewSpecFrame *dataframe,
                                         guint number);
@@ -804,7 +847,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NT-MDT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.20",
+    "0.21",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1046,30 +1089,30 @@ mdt_load(const gchar *filename,
             g_free(mdaframe);
         }
         else if (mdtfile.frames[i].type == MDT_FRAME_SPECTROSCOPY) {
-            MDTScannedDataFrame *sdframe;
+            MDTSpectroscopyDataFrame *spframe;
             GwyGraphModel *gmodel;
 
-            sdframe = (MDTScannedDataFrame*)mdtfile.frames[i].frame_data;
-            gmodel = extract_scanned_spectrum(sdframe, i+1);
+            spframe = (MDTSpectroscopyDataFrame*)mdtfile.frames[i].frame_data;
+            gmodel = extract_scanned_spectrum(spframe, i+1);
             g_string_printf(key, "/0/graph/graph/%d", n+1);
             gwy_container_set_object_by_name(data, key->str, gmodel);
             g_object_unref(gmodel);
-            g_free((gpointer)sdframe->title);
-            g_free(sdframe);
+            g_free((gpointer)spframe->title);
+            g_free(spframe);
 
             n++;
         }
         else if (mdtfile.frames[i].type == MDT_FRAME_CURVES) {
-            MDTScannedDataFrame *sdframe;
+            MDTSpectroscopyDataFrame *spframe;
             GwySpectra *gspectra;
 
-            sdframe = (MDTScannedDataFrame*)mdtfile.frames[i].frame_data;
-            gspectra = extract_sps_curve(sdframe, i+1);
+            spframe = (MDTSpectroscopyDataFrame*)mdtfile.frames[i].frame_data;
+            gspectra = extract_sps_curve(spframe, i+1);
             g_string_printf(key, "/sps/%d", n);
             gwy_container_set_object_by_name(data, key->str, gspectra);
             g_object_unref(gspectra);
-            g_free((gpointer)sdframe->title);
-            g_free(sdframe);
+            g_free((gpointer)spframe->title);
+            g_free(spframe);
             n++;
         }
         else if (mdtfile.frames[i].type == MDT_FRAME_CURVES_NEW) {
@@ -1544,6 +1587,7 @@ mdt_scanned_data_vars(const guchar *p,
         frame->dots = p;
         p += 14 + frame->fm_ndots * 16;
     }
+
     if (frame->fm_xres * frame->fm_yres) {
         frame->image = p;
         p += sizeof(gint16)*frame->fm_xres*frame->fm_yres;
@@ -1592,6 +1636,97 @@ mdt_scanned_data_vars(const guchar *p,
         g_string_free(str, TRUE);
     }
 #endif
+
+    return TRUE;
+}
+
+static gboolean
+mdt_spectroscopy_data_vars(const guchar *p,
+                      const guchar *fstart,
+                      MDTSpectroscopyDataFrame *frame,
+                      guint frame_size,
+                      guint vars_size,
+                      GError **error)
+{
+    mdt_read_axis_scales(p, &frame->x_scale, &frame->y_scale, &frame->z_scale);
+    p += AXIS_SCALES_SIZE;
+    frame->sp_mode = gwy_get_guint16_le(&p);
+    frame->sp_filter = gwy_get_guint16_le(&p);
+    frame->u_begin = gwy_get_gfloat_le(&p);
+    frame->u_end = gwy_get_gfloat_le(&p);
+    frame->z_up = gwy_get_gint16_le(&p);
+    frame->z_down = gwy_get_gint16_le(&p);
+    frame->sp_averaging = gwy_get_guint16_le(&p);
+    frame->sp_repeat = (gboolean)(*p++);
+    frame->sp_back = (gboolean)(*p++);
+    frame->sp_4nx = gwy_get_gint16_le(&p);
+    frame->sp_osc = (gboolean)(*p++);
+    frame->sp_n4 = (*p++);
+    frame->sp_4x0 = gwy_get_gfloat_le(&p);
+    frame->sp_4xr = gwy_get_gfloat_le(&p);
+    frame->sp_4u = gwy_get_gint16_le(&p);
+    frame->sp_4i = gwy_get_gint16_le(&p);
+    frame->sp_nx = gwy_get_gint16_le(&p);
+
+    p = fstart + FRAME_HEADER_SIZE + vars_size;
+    if ((guint)(p - fstart) + FRAME_MODE_SIZE > frame_size) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_DATA,
+                    _("Frame is too short for Frame Mode."));
+        return FALSE;
+    }
+    frame->fm_mode = gwy_get_guint16_le(&p);
+    frame->fm_xres = gwy_get_guint16_le(&p);
+    frame->fm_yres = gwy_get_guint16_le(&p);
+    frame->fm_ndots = gwy_get_guint16_le(&p);
+    gwy_debug("mode = %u, xres = %u, yres = %u, ndots = %u",
+              frame->fm_mode, frame->fm_xres, frame->fm_yres, frame->fm_ndots);
+
+    if ((guint)(p - fstart)
+        + sizeof(gint16)*(2*frame->fm_ndots + frame->fm_xres * frame->fm_yres)
+        > frame_size) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_DATA,
+                    _("Frame is too short for dots or data."));
+        return FALSE;
+    }
+
+    if (frame->fm_ndots) {
+        frame->dots = p;
+        p += 14 + frame->fm_ndots * 16;
+    }
+
+    if (frame->fm_xres * frame->fm_yres) {
+        frame->data = p;
+        p += sizeof(gint16)*frame->fm_xres*frame->fm_yres;
+    }
+
+    gwy_debug("remaining stuff size: %u",
+                                    (guint)(frame_size - (p - fstart)));
+
+    /* Title */
+    if ((frame_size - (p - fstart)) > 4) {
+        frame->title_len = gwy_get_guint32_le(&p);
+        if (frame->title_len
+            && (guint)(frame_size - (p - fstart)) >= frame->title_len) {
+            frame->title = g_convert((const gchar*)p, frame->title_len,
+                                   "UTF-8", "cp1251", NULL, NULL, NULL);
+            p += frame->title_len;
+            gwy_debug("title = <%.*s>", frame->title_len, frame->title);
+        }
+    }
+
+    /* XML stuff */
+    if ((frame_size - (p - fstart)) > 4) {
+        guint len = gwy_get_guint32_le(&p);
+
+        if (len && (guint)(frame_size - (p - fstart)) >= len) {
+            frame->xmlstuff = g_convert((const gchar*)p, len,
+                                        "UTF-8", "UTF-16LE",
+                                        NULL, NULL, NULL);
+            p += len;
+        }
+    }
 
     return TRUE;
 }
@@ -1771,6 +1906,7 @@ mdt_real_load(const guchar *buffer,
     guint i;
     const guchar *p, *fstart;
     MDTScannedDataFrame *scannedframe;
+    MDTSpectroscopyDataFrame *spframe;
     MDTMDAFrame *mdaframe;
     MDTNewSpecFrame *newSpecFrame;
 
@@ -1840,23 +1976,36 @@ mdt_real_load(const guchar *buffer,
 
         switch (frame->type) {
             case MDT_FRAME_SCANNED:
-            case MDT_FRAME_SPECTROSCOPY:
-            case MDT_FRAME_CURVES:
-            // FIXME: this check fails with spectroscopy from nanoeducator2
-            /*
-            if (frame->var_size < AXIS_SCALES_SIZE + SCAN_VARS_MIN_SIZE) {
+            if (frame->var_size < AXIS_SCALES_SIZE) {
                 g_set_error(error, GWY_MODULE_FILE_ERROR,
                             GWY_MODULE_FILE_ERROR_DATA,
                             _("Frame #%u is too short for "
                               "scanned data header."), i);
                 return FALSE;
             }
-            */
+
             scannedframe = g_new0(MDTScannedDataFrame, 1);
             if (!mdt_scanned_data_vars(p, fstart, scannedframe,
                                        frame->size, frame->var_size, error))
                 return FALSE;
             frame->frame_data = scannedframe;
+            break;
+
+            case MDT_FRAME_SPECTROSCOPY:
+            case MDT_FRAME_CURVES:
+            if (frame->var_size < AXIS_SCALES_SIZE) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("Frame #%u is too short for "
+                              "spectroscopy data header."), i);
+                return FALSE;
+            }
+
+            spframe = g_new0(MDTSpectroscopyDataFrame, 1);
+            if (!mdt_spectroscopy_data_vars(p, fstart, spframe,
+                                       frame->size, frame->var_size, error))
+                return FALSE;
+            frame->frame_data = spframe;
             break;
 
             case MDT_FRAME_TEXT:
@@ -1969,7 +2118,7 @@ extract_scanned_data(MDTScannedDataFrame *dataframe)
 }
 
 static GwyGraphModel*
-extract_scanned_spectrum (MDTScannedDataFrame *dataframe, guint number)
+extract_scanned_spectrum (MDTSpectroscopyDataFrame *dataframe, guint number)
 {
     GwyGraphCurveModel *spectra;
     GwyGraphModel *gmodel;
@@ -2014,7 +2163,7 @@ extract_scanned_spectrum (MDTScannedDataFrame *dataframe, guint number)
     xdata = (gdouble *)g_malloc(res*sizeof(gdouble));
     ydata = (gdouble *)g_malloc(res*sizeof(gdouble));
 
-    p = (gint16*)dataframe->image;
+    p = (gint16*)dataframe->data;
     for (i = 0; i < dataframe->fm_xres; i++) {
         xdata[i] = i*deltax + pow10(power10x)*dataframe->x_scale.offset;
         ydata[i] = pow10(power10z)*dataframe->z_scale.offset
@@ -2169,7 +2318,7 @@ extract_new_curve (MDTNewSpecFrame *dataframe, guint number)
     return spectra;
 }
 
-static GwySpectra* extract_sps_curve (MDTScannedDataFrame *dataframe,
+static GwySpectra* extract_sps_curve (MDTSpectroscopyDataFrame *dataframe,
                                       guint number)
 {
     GwySpectra *spectra;
@@ -2201,6 +2350,7 @@ static GwySpectra* extract_sps_curve (MDTScannedDataFrame *dataframe,
     siunitz = gwy_si_unit_new_parse(unit, &power10z);
     zscale = pow10(power10z)*dataframe->z_scale.step;
 
+    fprintf(stderr, "dots = %p data =%p\n", dataframe->dots, dataframe->data);
     p = dataframe->dots;
     numpoints = dataframe->fm_ndots;
 
@@ -2209,6 +2359,10 @@ static GwySpectra* extract_sps_curve (MDTScannedDataFrame *dataframe,
     coordheader.coordsize = gwy_get_gint32_le(&p);
     coordheader.version = gwy_get_gint32_le(&p);
     coordheader.xyunits = (MDTUnit)gwy_get_gint16_le(&p);
+    fprintf(stderr,"coordhead = %d %d %d %d\n", coordheader.headersize,
+                                                coordheader.coordsize,
+                                                coordheader.version,
+                                                coordheader.xyunits);
 
     spectra = gwy_spectra_new();
 
@@ -2227,9 +2381,14 @@ static GwySpectra* extract_sps_curve (MDTScannedDataFrame *dataframe,
         coordinates[i].coordy = gwy_get_gfloat_le(&p);
         coordinates[i].forward_size = gwy_get_gint32_le(&p);
         coordinates[i].backward_size = gwy_get_gint32_le(&p);
+        fprintf(stderr,"coords [%d] = %g %g %d %d\n", i,
+                coordinates[i].coordx, coordinates[i].coordy,
+                coordinates[i].forward_size,
+                coordinates[i].backward_size
+        );
     }
 
-    p = dataframe->image;
+    p = dataframe->data;
 
     for (i_p = 0; i_p < numpoints; i_p++) {
         dline = gwy_data_line_new(coordinates[i_p].forward_size,
@@ -2262,6 +2421,8 @@ static GwySpectra* extract_sps_curve (MDTScannedDataFrame *dataframe,
         gwy_spectra_add_spectrum(spectra, dline,
                     coordinates[i_p].coordx*pow10(power10coordxy),
                     coordinates[i_p].coordy*pow10(power10coordxy));
+        fprintf(stderr,"XY = %g %g\n",coordinates[i_p].coordx*pow10(power10coordxy),
+                                      coordinates[i_p].coordy*pow10(power10coordxy));
     }
 
     if (dataframe->title_len && dataframe->title) {
