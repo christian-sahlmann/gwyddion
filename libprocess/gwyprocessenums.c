@@ -492,6 +492,7 @@ gwy_masking_type_get_enum(void)
  * @GWY_DATA_FIELD_CACHE_ARF: Auto-range from.
  * @GWY_DATA_FIELD_CACHE_ART: Auto-range to.
  * @GWY_DATA_FIELD_CACHE_ARE: Surface area.
+ * @GWY_DATA_FIELD_CACHE_VAR: Variation.
  * @GWY_DATA_FIELD_CACHE_SIZE: The size of statistics cache.
  *
  * Cached data field quantity type.

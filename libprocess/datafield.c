@@ -138,7 +138,8 @@ gwy_data_field_new(gint xres, gint yres,
         data_field->data = g_new0(gdouble, data_field->xres*data_field->yres);
         /* We can precompute stats */
         data_field->cached = CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
-                             | CBIT(MED) | CBIT(ARF) | CBIT(ART);
+                             | CBIT(MED) | CBIT(ARF) | CBIT(ART)
+                             | CBIT(ARE) | CBIT(VAR);
         /* Values cleared implicitely */
     }
     else
@@ -179,7 +180,8 @@ gwy_data_field_new_alike(GwyDataField *model,
         data_field->data = g_new0(gdouble, data_field->xres*data_field->yres);
         /* We can precompute stats */
         data_field->cached = CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
-                             | CBIT(MED) | CBIT(ARF) | CBIT(ART);
+                             | CBIT(MED) | CBIT(ARF) | CBIT(ART)
+                             | CBIT(ARE) | CBIT(VAR);
         /* Values cleared implicitely */
     }
     else
@@ -957,7 +959,7 @@ gwy_data_field_set_xreal(GwyDataField *data_field, gdouble xreal)
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(xreal > 0.0);
     if (xreal != data_field->xreal) {
-        data_field->cached &= ~CBIT(ARE);
+        data_field->cached &= ~(CBIT(ARE) | CBIT(VAR));
         data_field->xreal = xreal;
     }
 }
@@ -975,7 +977,7 @@ gwy_data_field_set_yreal(GwyDataField *data_field, gdouble yreal)
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(yreal > 0.0);
     if (yreal != data_field->yreal) {
-        data_field->cached &= ~CBIT(ARE);
+        data_field->cached &= ~(CBIT(ARE) | CBIT(VAR));
         data_field->yreal = yreal;
     }
 }
@@ -1486,7 +1488,8 @@ gwy_data_field_invert(GwyDataField *data_field,
 
         /* We can transform stats */
         data_field->cached &= CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
-                              | CBIT(MED) | CBIT(ARF) | CBIT(ART) | CBIT(ARE);
+                              | CBIT(MED) | CBIT(ARF) | CBIT(ART) | CBIT(ARE)
+                              | CBIT(VAR);
         CVAL(data_field, MIN) = 2.0 * avg - CVAL(data_field, MIN);
         CVAL(data_field, MAX) = 2.0 * avg - CVAL(data_field, MAX);
         GWY_SWAP(gdouble, CVAL(data_field, MIN), CVAL(data_field, MAX));
@@ -1526,7 +1529,8 @@ gwy_data_field_invert(GwyDataField *data_field,
 
     /* No cached value changes */
     data_field->cached &= CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
-                          | CBIT(MED) | CBIT(ARF) | CBIT(ART) | CBIT(ARE);
+                          | CBIT(MED) | CBIT(ARF) | CBIT(ART) | CBIT(ARE)
+                          | CBIT(VAR);
 }
 
 /**
@@ -1606,7 +1610,8 @@ gwy_data_field_clear(GwyDataField *data_field)
 
     /* We can precompute stats */
     data_field->cached = CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
-                         | CBIT(MED) | CBIT(ARF) | CBIT(ART);
+                         | CBIT(MED) | CBIT(ARF) | CBIT(ART)
+                         | CBIT(ARE) | CBIT(VAR);
     CVAL(data_field, MIN) = 0.0;
     CVAL(data_field, MAX) = 0.0;
     CVAL(data_field, SUM) = 0.0;
@@ -1614,6 +1619,8 @@ gwy_data_field_clear(GwyDataField *data_field)
     CVAL(data_field, MED) = 0.0;
     CVAL(data_field, ARF) = 0.0;
     CVAL(data_field, ART) = 0.0;
+    CVAL(data_field, ARE) = 0.0;
+    CVAL(data_field, VAR) = 0.0;
 }
 
 /**
@@ -1742,7 +1749,8 @@ gwy_data_field_add(GwyDataField *data_field, gdouble value)
 
     /* We can transform stats */
     data_field->cached &= CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
-                          | CBIT(MED) | CBIT(ARF) | CBIT(ART) | CBIT(ARE);
+                          | CBIT(MED) | CBIT(ARF) | CBIT(ART) | CBIT(ARE)
+                          | CBIT(VAR);
     CVAL(data_field, MIN) += value;
     CVAL(data_field, MAX) += value;
     CVAL(data_field, SUM) += data_field->xres * data_field->yres * value;

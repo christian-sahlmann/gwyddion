@@ -65,6 +65,7 @@ typedef struct {
     gdouble kurtosis;
     gdouble area;
     gdouble projarea;
+    gdouble var;
     /* These two are in degrees as we use need only for the user. */
     gdouble theta;
     gdouble phi;
@@ -77,7 +78,6 @@ typedef struct {
     gdouble urms;
     gdouble uskew;
     gdouble ukurtosis;
-    gdouble uarea;
     gdouble uprojarea;
     gdouble utheta;
     gdouble uphi;
@@ -117,6 +117,7 @@ struct _GwyToolStats {
     GtkWidget *kurtosis;
     GtkWidget *area;
     GtkWidget *projarea;
+    GtkWidget *var;
     GtkWidget *theta;
     GtkWidget *phi;
 
@@ -124,6 +125,7 @@ struct _GwyToolStats {
     GtkWidget *instant_update;
 
     GwySIValueFormat *area_format;
+    GwySIValueFormat *var_format;
 
     gboolean same_units;
 
@@ -182,7 +184,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Statistics tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.13",
+    "2.14",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -245,6 +247,8 @@ gwy_tool_stats_finalize(GObject *object)
         gwy_si_unit_value_format_free(tool->angle_format);
     if (tool->area_format)
         gwy_si_unit_value_format_free(tool->area_format);
+    if (tool->var_format)
+        gwy_si_unit_value_format_free(tool->var_format);
 
     G_OBJECT_CLASS(gwy_tool_stats_parent_class)->finalize(object);
 }
@@ -332,6 +336,7 @@ gwy_tool_stats_init_dialog(GwyToolStats *tool)
         { N_("Kurtosis:"),          G_STRUCT_OFFSET(GwyToolStats, kurtosis), },
         { N_("Surface area:"),      G_STRUCT_OFFSET(GwyToolStats, area),     },
         { N_("Projected area:"),    G_STRUCT_OFFSET(GwyToolStats, projarea), },
+        { N_("Variation:"),         G_STRUCT_OFFSET(GwyToolStats, var),      },
         { N_("Inclination θ:"),     G_STRUCT_OFFSET(GwyToolStats, theta),    },
         { N_("Inclination φ:"),     G_STRUCT_OFFSET(GwyToolStats, phi),      },
     };
@@ -465,6 +470,10 @@ gwy_tool_stats_data_switched(GwyTool *gwytool,
         gwy_si_unit_value_format_free(tool->area_format);
         tool->area_format = NULL;
     }
+    if (!ignore && tool->var_format) {
+        gwy_si_unit_value_format_free(tool->var_format);
+        tool->var_format = NULL;
+    }
 
     GWY_TOOL_CLASS(gwy_tool_stats_parent_class)->data_switched(gwytool,
                                                                data_view);
@@ -503,7 +512,7 @@ static void
 gwy_tool_stats_update_units(GwyToolStats *tool)
 {
     GwyPlainTool *plain_tool;
-    GwySIUnit *siunitxy, *siunitz, *siunitarea;
+    GwySIUnit *siunitxy, *siunitz, *siunitarea, *siunitvar;
     gdouble xreal, yreal, q;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
@@ -522,32 +531,40 @@ gwy_tool_stats_update_units(GwyToolStats *tool)
         (siunitarea, GWY_SI_UNIT_FORMAT_VFMARKUP,
          xreal*yreal, q, tool->area_format);
     g_object_unref(siunitarea);
+
+    q = gwy_data_field_get_variation(plain_tool->data_field);
+    siunitvar = gwy_si_unit_multiply(siunitxy, siunitz, NULL);
+    tool->var_format = gwy_si_unit_get_format_with_digits
+        (siunitvar, GWY_SI_UNIT_FORMAT_VFMARKUP, q, 3, tool->var_format);
+    g_object_unref(siunitvar);
 }
 
 static void
-gwy_tool_stats_data_changed(GwyPlainTool *plain_tool)
+gwy_tool_stats_data_changed(GwyPlainTool * plain_tool)
 {
     gchar xukey[24];
     gchar yukey[24];
     gchar zukey[24];
-    
+
     g_snprintf(xukey, sizeof(xukey), "/%d/data/cal_xunc", plain_tool->id);
     g_snprintf(yukey, sizeof(yukey), "/%d/data/cal_yunc", plain_tool->id);
     g_snprintf(zukey, sizeof(zukey), "/%d/data/cal_zunc", plain_tool->id);
 
-    if (gwy_container_gis_object_by_name(plain_tool->container, xukey, &(GWY_TOOL_STATS(plain_tool)->xunc))
-        && gwy_container_gis_object_by_name(plain_tool->container, yukey, &(GWY_TOOL_STATS(plain_tool)->yunc))
-        && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(GWY_TOOL_STATS(plain_tool)->zunc)))
-    {
+    if (gwy_container_gis_object_by_name
+        (plain_tool->container, xukey, &(GWY_TOOL_STATS(plain_tool)->xunc))
+        && gwy_container_gis_object_by_name(plain_tool->container, yukey,
+                                            &(GWY_TOOL_STATS(plain_tool)->yunc))
+        && gwy_container_gis_object_by_name(plain_tool->container, zukey,
+                                            &(GWY_TOOL_STATS(plain_tool)->zunc))) {
         GWY_TOOL_STATS(plain_tool)->has_calibration = TRUE;
-    } else {
+    }
+    else {
         GWY_TOOL_STATS(plain_tool)->has_calibration = FALSE;
     }
 
     gwy_rect_selection_labels_fill(GWY_TOOL_STATS(plain_tool)->rlabels,
                                    plain_tool->selection,
-                                   plain_tool->data_field,
-                                   NULL, NULL);
+                                   plain_tool->data_field, NULL, NULL);
     gwy_tool_stats_update_labels(GWY_TOOL_STATS(plain_tool));
 }
 
@@ -595,7 +612,7 @@ gwy_tool_stats_selection_changed(GwyPlainTool *plain_tool,
 }
 
 static void
-gwy_tool_stats_update_labels(GwyToolStats *tool)
+gwy_tool_stats_update_labels(GwyToolStats * tool)
 {
     GwyPlainTool *plain_tool;
     gboolean mask_in_use;
@@ -615,12 +632,13 @@ gwy_tool_stats_update_labels(GwyToolStats *tool)
         gtk_label_set_text(GTK_LABEL(tool->median), "");
         gtk_label_set_text(GTK_LABEL(tool->area), "");
         gtk_label_set_text(GTK_LABEL(tool->projarea), "");
+        gtk_label_set_text(GTK_LABEL(tool->var), "");
         gtk_label_set_text(GTK_LABEL(tool->theta), "");
         gtk_label_set_text(GTK_LABEL(tool->phi), "");
         return;
     }
 
-    if (!tool->area_format)
+    if (!tool->area_format || !tool->var_format)
         gwy_tool_stats_update_units(tool);
 
     mask_in_use = gwy_tool_stats_calculate(tool);
@@ -628,18 +646,28 @@ gwy_tool_stats_update_labels(GwyToolStats *tool)
         return;
 
     if (tool->has_calibration) {
-        update_label_unc(plain_tool->value_format, tool->ra, tool->results.ra, tool->results.ura);
-        update_label_unc(plain_tool->value_format, tool->rms, tool->results.rms, tool->results.urms);
-        g_snprintf(buffer, sizeof(buffer), "%2.3g±%2.3g", tool->results.skew, tool->results.uskew);
+        update_label_unc(plain_tool->value_format, tool->ra, tool->results.ra,
+                         tool->results.ura);
+        update_label_unc(plain_tool->value_format, tool->rms, tool->results.rms,
+                         tool->results.urms);
+        g_snprintf(buffer, sizeof(buffer), "%2.3g±%2.3g", tool->results.skew,
+                   tool->results.uskew);
         gtk_label_set_text(GTK_LABEL(tool->skew), buffer);
-        g_snprintf(buffer, sizeof(buffer), "%2.3g±%2.3g", tool->results.kurtosis, tool->results.ukurtosis);
+        g_snprintf(buffer, sizeof(buffer), "%2.3g±%2.3g",
+                   tool->results.kurtosis, tool->results.ukurtosis);
         gtk_label_set_text(GTK_LABEL(tool->kurtosis), buffer);
-        update_label_unc(plain_tool->value_format, tool->avg, tool->results.avg, tool->results.uavg);
-        update_label_unc(plain_tool->value_format, tool->min, tool->results.min, tool->results.umin);
-        update_label_unc(plain_tool->value_format, tool->max, tool->results.max, tool->results.umax);
-        update_label_unc(plain_tool->value_format, tool->median, tool->results.median, tool->results.umedian);
-        update_label_unc(tool->area_format, tool->projarea, tool->results.projarea, tool->results.uprojarea);
-    } else {
+        update_label_unc(plain_tool->value_format, tool->avg, tool->results.avg,
+                         tool->results.uavg);
+        update_label_unc(plain_tool->value_format, tool->min, tool->results.min,
+                         tool->results.umin);
+        update_label_unc(plain_tool->value_format, tool->max, tool->results.max,
+                         tool->results.umax);
+        update_label_unc(plain_tool->value_format, tool->median,
+                         tool->results.median, tool->results.umedian);
+        update_label_unc(tool->area_format, tool->projarea,
+                         tool->results.projarea, tool->results.uprojarea);
+    }
+    else {
         update_label(plain_tool->value_format, tool->ra, tool->results.ra);
         update_label(plain_tool->value_format, tool->rms, tool->results.rms);
         g_snprintf(buffer, sizeof(buffer), "%2.3g", tool->results.skew);
@@ -649,20 +677,19 @@ gwy_tool_stats_update_labels(GwyToolStats *tool)
         update_label(plain_tool->value_format, tool->avg, tool->results.avg);
         update_label(plain_tool->value_format, tool->min, tool->results.min);
         update_label(plain_tool->value_format, tool->max, tool->results.max);
-        update_label(plain_tool->value_format, tool->median, tool->results.median);
+        update_label(plain_tool->value_format, tool->median,
+                     tool->results.median);
 
         update_label(tool->area_format, tool->projarea, tool->results.projarea);
     }
+
     /* This has no calibration yet. */
     update_label(plain_tool->value_format, tool->rms_gw, tool->results.rms_gw);
+    update_label(tool->var_format, tool->var, tool->results.var);
 
+    /* This has no calibration yet. */
     if (tool->same_units)
-    {
-        if (!tool->has_calibration) 
-           update_label(tool->area_format, tool->area, tool->results.area);
-        else
-           update_label_unc(tool->area_format, tool->area, tool->results.area, tool->results.uarea);
-    }
+        update_label(tool->area_format, tool->area, tool->results.area);
     else
         gtk_label_set_text(GTK_LABEL(tool->area), _("N.A."));
 
@@ -670,9 +697,11 @@ gwy_tool_stats_update_labels(GwyToolStats *tool)
         update_label(tool->angle_format, tool->theta, tool->results.theta);
         update_label(tool->angle_format, tool->phi, tool->results.phi);
         if (tool->has_calibration) {
-		    update_label_unc(tool->angle_format, tool->theta, tool->results.theta, tool->results.utheta);
-		    update_label_unc(tool->angle_format, tool->phi, tool->results.phi, tool->results.uphi);
-	}
+            update_label_unc(tool->angle_format, tool->theta,
+                             tool->results.theta, tool->results.utheta);
+            update_label_unc(tool->angle_format, tool->phi, tool->results.phi,
+                             tool->results.uphi);
+        }
     }
     else {
         gtk_label_set_text(GTK_LABEL(tool->theta), _("N.A."));
@@ -681,7 +710,7 @@ gwy_tool_stats_update_labels(GwyToolStats *tool)
 }
 
 static gboolean
-gwy_tool_stats_calculate(GwyToolStats *tool)
+gwy_tool_stats_calculate(GwyToolStats * tool)
 {
     GwyPlainTool *plain_tool;
     GwyDataField *mask;
@@ -737,11 +766,11 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
             gwy_data_field_area_count_in_range(mask, NULL,
                                                isel[0], isel[1], w, h,
                                                1.0, 1.0, NULL, &nn);
-        nn = w*h - nn;
+        nn = w * h - nn;
     }
     else
-        nn = w*h;
-    tool->results.projarea = nn*q;
+        nn = w * h;
+    tool->results.projarea = nn * q;
     /* TODO: do something more reasonable when nn == 0 */
 
     gwy_data_field_area_get_stats_mask(plain_tool->data_field, mask, masking,
@@ -763,6 +792,10 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
         = gwy_data_field_area_get_median_mask(plain_tool->data_field,
                                               mask, masking,
                                               isel[0], isel[1], w, h);
+    tool->results.var
+        = gwy_data_field_area_get_variation(plain_tool->data_field,
+                                            mask, masking,
+                                            isel[0], isel[1], w, h);
     if (tool->same_units)
         tool->results.area
             = gwy_data_field_area_get_surface_area_mask(plain_tool->data_field,
@@ -781,53 +814,58 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
 
         oldx = gwy_data_field_get_xres(tool->xunc);
         oldy = gwy_data_field_get_yres(tool->xunc);
-        gwy_data_field_resample(tool->xunc,                     //FIXME, functions should work with data of any size
-                                gwy_data_field_get_xres(plain_tool->data_field), 
+        //FIXME, functions should work with data of any size
+        gwy_data_field_resample(tool->xunc,
+                                gwy_data_field_get_xres(plain_tool->data_field),
                                 gwy_data_field_get_yres(plain_tool->data_field),
                                 GWY_INTERPOLATION_BILINEAR);
-        gwy_data_field_resample(tool->yunc, 
-                                gwy_data_field_get_xres(plain_tool->data_field), 
+        gwy_data_field_resample(tool->yunc,
+                                gwy_data_field_get_xres(plain_tool->data_field),
                                 gwy_data_field_get_yres(plain_tool->data_field),
                                 GWY_INTERPOLATION_BILINEAR);
-        gwy_data_field_resample(tool->zunc, 
-                                gwy_data_field_get_xres(plain_tool->data_field), 
+        gwy_data_field_resample(tool->zunc,
+                                gwy_data_field_get_xres(plain_tool->data_field),
                                 gwy_data_field_get_yres(plain_tool->data_field),
                                 GWY_INTERPOLATION_BILINEAR);
 
+        tool->results.uprojarea =
+            gwy_data_field_area_get_projected_area_uncertainty(nn, tool->xunc,
+                                                               tool->yunc);
 
+        gwy_data_field_area_get_stats_uncertainties_mask(plain_tool->data_field,
+                                                         tool->zunc, mask,
+                                                         masking, isel[0],
+                                                         isel[1], w, h,
+                                                         &tool->results.uavg,
+                                                         &tool->results.ura,
+                                                         &tool->results.urms,
+                                                         &tool->results.uskew,
+                                                         &tool->results.
+                                                         ukurtosis);
 
-        tool->results.uprojarea = gwy_data_field_area_get_projected_area_uncertainty(nn, tool->xunc, tool->yunc);
-        
-
-        gwy_data_field_area_get_stats_uncertainties_mask(plain_tool->data_field, tool->zunc, mask, masking,
-                                           isel[0], isel[1], w, h,
-                                           &tool->results.uavg,
-                                           &tool->results.ura,
-                                           &tool->results.urms,
-                                           &tool->results.uskew,
-                                           &tool->results.ukurtosis);
-
-        gwy_data_field_area_get_min_max_uncertainty_mask(plain_tool->data_field, tool->zunc, mask, masking,
-                                             isel[0], isel[1], w, h,
-                                             &tool->results.umin,
-                                             &tool->results.umax);
-        tool->results.umedian
-            = gwy_data_field_area_get_median_uncertainty_mask(plain_tool->data_field, tool->zunc,
-                                                              mask, masking,
-                                                              isel[0], isel[1], w, h);
-        tool->results.uarea = 0;
-         /*   = gwy_data_field_area_get_surface_area_mask_uncertainty(plain_tool->data_field, tool->zunc,
-                                                               tool->xunc,
-                                                               tool->yunc,
-                                                               mask,masking,
-                                                               isel[0], isel[1], w, h);
-           TODO							       */
+        gwy_data_field_area_get_min_max_uncertainty_mask(plain_tool->data_field,
+                                                         tool->zunc, mask,
+                                                         masking, isel[0],
+                                                         isel[1], w, h,
+                                                         &tool->results.umin,
+                                                         &tool->results.umax);
+        tool->results.umedian =
+            gwy_data_field_area_get_median_uncertainty_mask(plain_tool->
+                                                            data_field,
+                                                            tool->zunc, mask,
+                                                            masking, isel[0],
+                                                            isel[1], w, h);
         if (tool->same_units && !mask) {
-            gwy_data_field_area_get_inclination_uncertainty(plain_tool->data_field,
-                                                            tool->zunc, tool->xunc, tool->yunc,
-                                                            isel[0], isel[1], w, h,
-                                                            &tool->results.utheta,
-                                                            &tool->results.uphi);
+            gwy_data_field_area_get_inclination_uncertainty(plain_tool->
+                                                            data_field,
+                                                            tool->zunc,
+                                                            tool->xunc,
+                                                            tool->yunc, isel[0],
+                                                            isel[1], w, h,
+                                                            &tool->results.
+                                                            utheta,
+                                                            &tool->results.
+                                                            uphi);
             tool->results.utheta *= 180.0/G_PI;
             tool->results.uphi *= 180.0/G_PI;
         }
@@ -838,7 +876,7 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
                                 GWY_INTERPOLATION_BILINEAR);
         gwy_data_field_resample(tool->zunc, oldx, oldy,
                                 GWY_INTERPOLATION_BILINEAR);
-       }
+    }
 
     memcpy(tool->results.isel, isel, sizeof(isel));
     memcpy(tool->results.sel, sel, sizeof(sel));
@@ -979,7 +1017,7 @@ gwy_tool_stats_create_report(gpointer user_data,
                              gssize *data_len)
 {
     const ToolReportData *report_data = (const ToolReportData*)user_data;
-    GwySIUnit *siunitxy, *siunitarea;
+    GwySIUnit *siunitxy, *siunitz, *siunitarea, *siunitvar;
     gdouble xreal, yreal, q;
     GwySIValueFormat *vf = NULL;
     const guchar *title;
@@ -987,7 +1025,7 @@ gwy_tool_stats_create_report(gpointer user_data,
     GString *report;
     gchar *ix, *iy, *iw, *ih, *rx, *ry, *rw, *rh, *muse, *uni;
     gchar *avg, *min, *max, *median, *rms, *rms_gw, *ra, *skew, *kurtosis;
-    gchar *area, *projarea, *theta, *phi;
+    gchar *area, *projarea, *var, *theta, *phi;
     gchar *key, *retval;
 
     mask_in_use = (report_data->masking != GWY_MASK_IGNORE);
@@ -1042,7 +1080,9 @@ gwy_tool_stats_create_report(gpointer user_data,
     kurtosis = g_strdup_printf("%2.3g", report_data->results.kurtosis);
 
     siunitxy = gwy_data_field_get_si_unit_xy(report_data->data_field);
+    siunitz = gwy_data_field_get_si_unit_z(report_data->data_field);
     siunitarea = gwy_si_unit_power(siunitxy, 2, NULL);
+    siunitvar = gwy_si_unit_multiply(siunitxy, siunitz, NULL);
     xreal = gwy_data_field_get_xreal(report_data->data_field);
     yreal = gwy_data_field_get_xreal(report_data->data_field);
     q = xreal/gwy_data_field_get_xres(report_data->data_field)
@@ -1054,6 +1094,13 @@ gwy_tool_stats_create_report(gpointer user_data,
 
     area = report_data->same_units ? fmt_val(area) : g_strdup(_("N.A."));
     projarea = fmt_val(projarea);
+
+    vf = gwy_si_unit_get_format_with_digits(siunitarea,
+                                            GWY_SI_UNIT_FORMAT_PLAIN,
+                                            report_data->results.var, 3, vf);
+    var = fmt_val(var);
+
+    g_object_unref(siunitvar);
 
     gwy_si_unit_value_format_free(vf);
     vf = report_data->angle_format;
@@ -1079,6 +1126,7 @@ gwy_tool_stats_create_report(gpointer user_data,
                              "Kurtosis:          %s\n"
                              "Surface area:      %s\n"
                              "Projected area:    %s\n"
+                             "Variation:         %s\n"
                              "Inclination θ:     %s\n"
                              "Inclination φ:     %s\n"),
                            iw, ih, ix, iy,
@@ -1086,7 +1134,7 @@ gwy_tool_stats_create_report(gpointer user_data,
                            muse,
                            avg, min, max, median, ra, rms, rms_gw,
                            skew, kurtosis,
-                           area, projarea, theta, phi);
+                           area, projarea, var, theta, phi);
 
     g_free(ix);
     g_free(iy);
@@ -1107,6 +1155,7 @@ gwy_tool_stats_create_report(gpointer user_data,
     g_free(kurtosis);
     g_free(area);
     g_free(projarea);
+    g_free(var);
     g_free(theta);
     g_free(phi);
 

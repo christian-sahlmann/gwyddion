@@ -3555,7 +3555,7 @@ calculate_surface_area(GwyDataField *dfield,
  *
  * This quantity is cached.
  *
- * Returns: surface area
+ * Returns: The surface area.
  **/
 gdouble
 gwy_data_field_get_surface_area(GwyDataField *data_field)
@@ -3645,13 +3645,511 @@ gwy_data_field_area_get_surface_area_mask(GwyDataField *data_field,
                          area);
 
     /* The result is the same, but it can be cached. */
-    if (!mask
+    if ((!mask || mode == GWY_MASK_IGNORE)
         && row == 0 && col == 0
         && width == data_field->xres && height == data_field->yres)
         return gwy_data_field_get_surface_area(data_field);
 
     return calculate_surface_area(data_field, mask, mode,
                                   col, row, width, height);
+}
+
+/**
+ * square_var1:
+ * @z1: Z-value in first corner.
+ * @z2: Z-value in second corner.
+ * @z3: Z-value in third corner.
+ * @z4: Z-value in fourth corner.
+ * @q: One fourth of rectangle projected var (x-size * ysize).
+ *
+ * Calculates approximate variation of a one square pixel.
+ *
+ * Returns: The variation.
+ **/
+static inline gdouble
+square_var1(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
+            gdouble q)
+{
+    gdouble z12 = z1 - z2, z23 = z2 - z3, z34 = z3 - z4, z41 = z4 - z1;
+
+    return (sqrt((z12*z12 + z41*z41)/q)
+            + sqrt((z23*z23 + z12*z12)/q)
+            + sqrt((z34*z34 + z23*z23)/q)
+            + sqrt((z41*z41 + z34*z34)/q));
+}
+
+/**
+ * square_var1w:
+ * @z1: Z-value in first corner.
+ * @z2: Z-value in second corner.
+ * @z3: Z-value in third corner.
+ * @z4: Z-value in fourth corner.
+ * @w1: Weight of first corner (0 or 1).
+ * @w2: Weight of second corner (0 or 1).
+ * @w3: Weight of third corner (0 or 1).
+ * @w4: Weight of fourth corner (0 or 1).
+ * @q: One fourth of rectangle projected var (x-size * ysize).
+ *
+ * Calculates approximate variation of a one square pixel with some corners
+ * possibly missing.
+ *
+ * Returns: The variation.
+ **/
+static inline gdouble
+square_var1w(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
+             gint w1, gint w2, gint w3, gint w4,
+             gdouble q)
+{
+    gdouble z12 = z1 - z2, z23 = z2 - z3, z34 = z3 - z4, z41 = z4 - z1;
+
+    return (w1*sqrt((z12*z12 + z41*z41)/q)
+            + w2*sqrt((z23*z23 + z12*z12)/q)
+            + w3*sqrt((z34*z34 + z23*z23)/q)
+            + w4*sqrt((z41*z41 + z34*z34)/q));
+}
+
+/**
+ * square_var2:
+ * @z1: Z-value in first corner.
+ * @z2: Z-value in second corner.
+ * @z3: Z-value in third corner.
+ * @z4: Z-value in fourth corner.
+ * @x: One fourth of square of rectangle width (x-size).
+ * @y: One fourth of square of rectangle height (y-size).
+ *
+ * Calculates approximate variation of a one general rectangular pixel.
+ *
+ * Returns: The variation.
+ **/
+static inline gdouble
+square_var2(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
+            gdouble x, gdouble y)
+{
+    gdouble z12 = z1 - z2, z23 = z2 - z3, z34 = z3 - z4, z41 = z4 - z1;
+
+    return (sqrt(z12*z12/x + z41*z41/y)
+            + sqrt(z23*z23/y + z12*z12/x)
+            + sqrt(z34*z34/x + z23*z23/y)
+            + sqrt(z41*z41/y + z34*z34/x));
+}
+
+/**
+ * square_var2w:
+ * @z1: Z-value in first corner.
+ * @z2: Z-value in second corner.
+ * @z3: Z-value in third corner.
+ * @z4: Z-value in fourth corner.
+ * @w1: Weight of first corner (0 or 1).
+ * @w2: Weight of second corner (0 or 1).
+ * @w3: Weight of third corner (0 or 1).
+ * @w4: Weight of fourth corner (0 or 1).
+ * @x: One fourth of square of rectangle width (x-size).
+ * @y: One fourth of square of rectangle height (y-size).
+ *
+ * Calculates approximate variation of a one general rectangular pixel with
+ * some corners possibly missing.
+ *
+ * Returns: The variation.
+ **/
+static inline gdouble
+square_var2w(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
+             gint w1, gint w2, gint w3, gint w4,
+             gdouble x, gdouble y)
+{
+    gdouble z12 = z1 - z2, z23 = z2 - z3, z34 = z3 - z4, z41 = z4 - z1;
+
+    return (w1*sqrt(z12*z12/x + z41*z41/y)
+            + w2*sqrt(z23*z23/y + z12*z12/x)
+            + w3*sqrt(z34*z34/x + z23*z23/y)
+            + w4*sqrt(z41*z41/y + z34*z34/x));
+}
+
+/**
+ * stripe_var1:
+ * @n: The number of values in @r, @rr, @m.
+ * @stride: Stride in @r, @rr, @m.
+ * @r: Array of @n z-values of vertices, this row of vertices is considered
+ *     inside.
+ * @rr: Array of @n z-values of vertices, this row of vertices is considered
+ *      outside.
+ * @m: Mask for @r (@rr does not need mask since it has zero weight by
+ *     definition), or %NULL to sum over all @r vertices.
+ * @mode: Masking mode.
+ * @q: One fourth of rectangle projected var (x-size * ysize).
+ *
+ * Calculates approximate variation of a half-pixel stripe.
+ *
+ * Returns: The variation.
+ **/
+static gdouble
+stripe_var1(gint n,
+            gint stride,
+            const gdouble *r,
+            const gdouble *rr,
+            const gdouble *m,
+            GwyMaskingType mode,
+            gdouble q)
+{
+    gdouble sum = 0.0;
+    gint j;
+
+    if (m && mode != GWY_MASK_IGNORE) {
+        if (mode == GWY_MASK_INCLUDE) {
+            for (j = 0; j < n-1; j++)
+                sum += square_var1w(r[j*stride], r[(j + 1)*stride],
+                                    rr[(j + 1)*stride], rr[j*stride],
+                                    m[j*stride] > 0.0, m[(j + 1)*stride] > 0.0,
+                                    0, 0,
+                                    q);
+        }
+        else {
+            for (j = 0; j < n-1; j++)
+                sum += square_var1w(r[j*stride], r[(j + 1)*stride],
+                                    rr[(j + 1)*stride], rr[j*stride],
+                                    m[j*stride] < 1.0, m[(j + 1)*stride] < 1.0,
+                                    0, 0,
+                                    q);
+        }
+    }
+    else {
+        for (j = 0; j < n-1; j++)
+            sum += square_var1w(r[j*stride], r[(j + 1)*stride],
+                                rr[(j + 1)*stride], rr[j*stride],
+                                1, 1, 0, 0,
+                                q);
+    }
+
+    return sum;
+}
+
+/**
+ * stripe_var2:
+ * @n: The number of values in @r, @rr, @m.
+ * @stride: Stride in @r, @rr, @m.
+ * @r: Array of @n z-values of vertices, this row of vertices is considered
+ *     inside.
+ * @rr: Array of @n z-values of vertices, this row of vertices is considered
+ *      outside.
+ * @m: Mask for @r (@rr does not need mask since it has zero weight by
+ *     definition), or %NULL to sum over all @r vertices.
+ * @x: One fourth of square of rectangle width (x-size).
+ * @y: One fourth of square of rectangle height (y-size).
+ *
+ * Calculates approximate variation of a half-pixel stripe.
+ *
+ * Returns: The variation.
+ **/
+static gdouble
+stripe_var2(gint n,
+            gint stride,
+            const gdouble *r,
+            const gdouble *rr,
+            const gdouble *m,
+            GwyMaskingType mode,
+            gdouble x,
+            gdouble y)
+{
+    gdouble sum = 0.0;
+    gint j;
+
+    if (m && mode == GWY_MASK_INCLUDE) {
+        for (j = 0; j < n-1; j++)
+            sum += square_var2w(r[j*stride], r[(j + 1)*stride],
+                                rr[(j + 1)*stride], rr[j*stride],
+                                m[j*stride] > 0.0, m[(j + 1)*stride] > 0.0,
+                                0, 0,
+                                x, y);
+    }
+    else if (m && mode == GWY_MASK_EXCLUDE) {
+        for (j = 0; j < n-1; j++)
+            sum += square_var2w(r[j*stride], r[(j + 1)*stride],
+                                rr[(j + 1)*stride], rr[j*stride],
+                                m[j*stride] < 1.0, m[(j + 1)*stride] < 1.0,
+                                0, 0,
+                                x, y);
+    }
+    else {
+        for (j = 0; j < n-1; j++)
+            sum += square_var2w(r[j*stride], r[(j + 1)*stride],
+                                rr[(j + 1)*stride], rr[j*stride],
+                                1, 1, 0, 0,
+                                x, y);
+    }
+
+    return sum;
+}
+
+static gdouble
+calculate_variation(GwyDataField *dfield,
+                    GwyDataField *mask,
+                    GwyMaskingType mode,
+                    gint col, gint row,
+                    gint width, gint height)
+{
+    const gdouble *r, *m, *dataul, *maskul;
+    gint i, j, xres, yres, s;
+    gdouble x, y, q, sum = 0.0;
+
+    /* special cases */
+    if (!width || !height)
+        return sum;
+
+    xres = dfield->xres;
+    yres = dfield->yres;
+    x = dfield->xreal/dfield->xres;
+    y = dfield->yreal/dfield->yres;
+    q = x*y;
+    x = x*x;
+    y = y*y;
+    dataul = dfield->data + xres*row + col;
+
+    if (mask && mode != GWY_MASK_IGNORE) {
+        maskul = mask->data + xres*row + col;
+        if (fabs(log(x/y)) < 1e-7) {
+            /* Inside */
+            for (i = 0; i < height-1; i++) {
+                r = dataul + xres*i;
+                m = maskul + xres*i;
+                if (mode == GWY_MASK_INCLUDE) {
+                    for (j = 0; j < width-1; j++)
+                        sum += square_var1w(r[j], r[j+1],
+                                            r[j+xres+1], r[j+xres],
+                                            m[j] > 0.0, m[j+1] > 0.0,
+                                            m[j+xres+1] > 0.0, m[j+xres] > 0.0,
+                                            q);
+                }
+                else {
+                    for (j = 0; j < width-1; j++)
+                        sum += square_var1w(r[j], r[j+1],
+                                            r[j+xres+1], r[j+xres],
+                                            m[j] < 1.0, m[j+1] < 1.0,
+                                            m[j+xres+1] < 1.0, m[j+xres] < 1.0,
+                                            q);
+                }
+            }
+
+            /* Top row */
+            s = !(row == 0);
+            sum += stripe_var1(width, 1, dataul, dataul - s*xres,
+                               maskul, mode, q);
+
+            /* Bottom row */
+            s = !(row + height == yres);
+            sum += stripe_var1(width, 1,
+                               dataul + xres*(height-1),
+                               dataul + xres*(height-1 + s),
+                               maskul + xres*(height-1), mode, q);
+
+            /* Left column */
+            s = !(col == 0);
+            sum += stripe_var1(height, xres, dataul, dataul - s,
+                               maskul, mode, q);
+            /* Right column */
+            s = !(col + width == xres);
+            sum += stripe_var1(height, xres,
+                               dataul + width-1, dataul + width-1 + s,
+                               maskul + width-1, mode, q);
+        }
+        else {
+            /* Inside */
+            for (i = 0; i < height-1; i++) {
+                r = dataul + xres*i;
+                m = maskul + xres*i;
+                if (mode == GWY_MASK_INCLUDE) {
+                    for (j = 0; j < width-1; j++)
+                        sum += square_var2w(r[j], r[j+1],
+                                            r[j+xres+1], r[j+xres],
+                                            m[j] > 0.0, m[j+1] > 0.0,
+                                            m[j+xres+1] > 0.0, m[j+xres] > 0.0,
+                                            x, y);
+                }
+                else {
+                    for (j = 0; j < width-1; j++)
+                        sum += square_var2w(r[j], r[j+1],
+                                            r[j+xres+1], r[j+xres],
+                                            m[j] < 1.0, m[j+1] < 1.0,
+                                            m[j+xres+1] < 1.0, m[j+xres] < 1.0,
+                                            x, y);
+                }
+            }
+
+            /* Top row */
+            s = !(row == 0);
+            sum += stripe_var2(width, 1, dataul, dataul - s*xres, maskul,
+                               mode, x, y);
+
+            /* Bottom row */
+            s = !(row + height == yres);
+            sum += stripe_var2(width, 1,
+                               dataul + xres*(height-1),
+                               dataul + xres*(height-1 + s),
+                               maskul + xres*(height-1),
+                               mode, x, y);
+
+            /* Left column */
+            s = !(col == 0);
+            sum += stripe_var2(height, xres, dataul, dataul - s, maskul,
+                               mode, y, x);
+
+            /* Right column */
+            s = !(col + width == xres);
+            sum += stripe_var2(height, xres,
+                               dataul + width-1, dataul + width-1 + s,
+                               maskul + width-1,
+                               mode, y, x);
+        }
+    }
+    else {
+        if (fabs(log(x/y)) < 1e-7) {
+            /* Inside */
+            for (i = 0; i < height-1; i++) {
+                r = dataul + xres*i;
+                for (j = 0; j < width-1; j++)
+                    sum += square_var1(r[j], r[j+1], r[j+xres+1], r[j+xres],
+                                       q);
+            }
+
+            /* Top row */
+            s = !(row == 0);
+            sum += stripe_var1(width, 1, dataul, dataul - s*xres,
+                               NULL, GWY_MASK_IGNORE, q);
+
+            /* Bottom row */
+            s = !(row + height == yres);
+            sum += stripe_var1(width, 1,
+                               dataul + xres*(height-1),
+                               dataul + xres*(height-1 + s),
+                               NULL, GWY_MASK_IGNORE, q);
+
+            /* Left column */
+            s = !(col == 0);
+            sum += stripe_var1(height, xres, dataul, dataul - s,
+                               NULL, GWY_MASK_IGNORE, q);
+
+            /* Right column */
+            s = !(col + width == xres);
+            sum += stripe_var1(height, xres,
+                               dataul + width-1, dataul + width-1 + s,
+                               NULL, GWY_MASK_IGNORE, q);
+        }
+        else {
+            for (i = 0; i < height-1; i++) {
+                r = dataul + xres*i;
+                for (j = 0; j < width-1; j++)
+                    sum += square_var2(r[j], r[j+1], r[j+xres+1], r[j+xres],
+                                       x, y);
+            }
+
+            /* Top row */
+            s = !(row == 0);
+            sum += stripe_var2(width, 1, dataul, dataul - s*xres, NULL,
+                               GWY_MASK_IGNORE, x, y);
+
+            /* Bottom row */
+            s = !(row + height == yres);
+            sum += stripe_var2(width, 1,
+                               dataul + xres*(height-1),
+                               dataul + xres*(height-1 + s),
+                               NULL,
+                               GWY_MASK_IGNORE, x, y);
+
+            /* Left column */
+            s = !(col == 0);
+            sum += stripe_var2(height, xres, dataul, dataul - s, NULL,
+                               GWY_MASK_IGNORE, y, x);
+
+            /* Right column */
+            s = !(col + width == xres);
+            sum += stripe_var2(height, xres,
+                               dataul + width-1, dataul + width-1 + s, NULL,
+                               GWY_MASK_IGNORE, y, x);
+        }
+    }
+
+    return sum*q/4;
+}
+
+/**
+ * gwy_data_field_get_variation:
+ * @data_field: A data field.
+ *
+ * Computes the total variation of a data field.
+ *
+ * See gwy_data_field_area_get_variation() for the definition.
+ *
+ * This quantity is cached.
+ *
+ * Returns: The variation.
+ *
+ * Since: 2.38
+ **/
+gdouble
+gwy_data_field_get_variation(GwyDataField *data_field)
+{
+    gdouble var = 0.0;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), var);
+
+    gwy_debug("%s", CTEST(data_field, VAR) ? "cache" : "lame");
+    if (CTEST(data_field, VAR))
+        return CVAL(data_field, VAR);
+
+    var = calculate_variation(data_field, NULL, GWY_MASK_IGNORE,
+                              0, 0, data_field->xres, data_field->yres);
+
+    CVAL(data_field, VAR) = var;
+    data_field->cached |= CBIT(VAR);
+
+    return var;
+}
+
+/**
+ * gwy_data_field_area_get_variation:
+ * @data_field: A data field.
+ * @mask: Mask specifying which values to take into account/exclude, or %NULL.
+ * @mode: Masking mode to use.  See the introduction for description of
+ *        masking modes.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Computes the total variation of a rectangular part of a data field.
+ *
+ * The total variation is estimated as the integral of the absolute value of
+ * local gradient.
+ *
+ * Returns: The variation.
+ *
+ * Since: 2.38
+ **/
+gdouble
+gwy_data_field_area_get_variation(GwyDataField *data_field,
+                                  GwyDataField *mask,
+                                  GwyMaskingType mode,
+                                  gint col, gint row,
+                                  gint width, gint height)
+{
+    gdouble var = 0.0;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), var);
+    g_return_val_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
+                                   && mask->xres == data_field->xres
+                                   && mask->yres == data_field->yres), var);
+    g_return_val_if_fail(col >= 0 && row >= 0
+                         && width >= 0 && height >= 0
+                         && col + width <= data_field->xres
+                         && row + height <= data_field->yres,
+                         var);
+
+    /* The result is the same, but it can be cached. */
+    if ((!mask || mode == GWY_MASK_IGNORE)
+        && row == 0 && col == 0
+        && width == data_field->xres && height == data_field->yres)
+        return gwy_data_field_get_variation(data_field);
+
+    return calculate_variation(data_field, mask, mode,
+                               col, row, width, height);
 }
 
 /**
