@@ -158,7 +158,7 @@ module_register(void)
 
 static gint
 apedax_detect(const GwyFileDetectInfo *fileinfo,
-               gboolean only_name)
+              gboolean only_name)
 {
     gint score = 0;
     unzFile uFile;
