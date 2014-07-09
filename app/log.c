@@ -56,43 +56,44 @@ typedef struct {
     GtkWidget *close;
 } LogBrowser;
 
-static void           data_log_add_valist   (GwyContainer *data,
-                                             LogKeyFync log_key,
-                                             gint previd,
-                                             gint newid,
-                                             const gchar *function,
-                                             va_list ap);
-static GwyStringList* get_data_log          (GwyContainer *data,
-                                             GQuark quark,
-                                             gboolean create);
-static GtkWidget*     get_log_browser       (GwyContainer *data,
-                                             BrowserDataType type,
-                                             gint id);
-static LogBrowser*    log_browser_new       (GwyContainer *data,
-                                             BrowserDataType type,
-                                             gint id,
-                                             const gchar *key);
-static void           log_browser_construct (LogBrowser *browser);
-static void           log_cell_renderer     (GtkTreeViewColumn *column,
-                                             GtkCellRenderer *renderer,
-                                             GtkTreeModel *model,
-                                             GtkTreeIter *iter,
-                                             gpointer userdata);
-static void           gwy_log_export        (LogBrowser *browser);
-static void           gwy_log_clear         (LogBrowser *browser);
-static void           log_changed           (GwyStringList *slog,
-                                             LogBrowser *browser);
-static void           gwy_log_destroy       (LogBrowser *browser);
-static void           gwy_log_data_finalized(LogBrowser *browser);
-static gchar*         format_args           (const gchar *prefix);
-static void           format_arg            (gpointer hkey,
-                                             gpointer hvalue,
-                                             gpointer user_data);
-static GQuark         channel_log_key       (gint id);
-static GQuark         volume_log_key        (gint id);
-static gboolean       find_settings_prefix  (const gchar *function,
-                                             const gchar *settings_name,
-                                             GString *prefix);
+static void           data_log_add_valist          (GwyContainer *data,
+                                                    LogKeyFync log_key,
+                                                    gint previd,
+                                                    gint newid,
+                                                    const gchar *function,
+                                                    va_list ap);
+static GwyStringList* get_data_log                 (GwyContainer *data,
+                                                    GQuark quark,
+                                                    gboolean create);
+static GtkWidget*     get_log_browser              (GwyContainer *data,
+                                                    BrowserDataType type,
+                                                    gint id);
+static LogBrowser*    log_browser_new              (GwyContainer *data,
+                                                    BrowserDataType type,
+                                                    gint id,
+                                                    const gchar *key);
+static void           log_browser_construct        (LogBrowser *browser);
+static void           log_cell_renderer            (GtkTreeViewColumn *column,
+                                                    GtkCellRenderer *renderer,
+                                                    GtkTreeModel *model,
+                                                    GtkTreeIter *iter,
+                                                    gpointer userdata);
+static void           gwy_log_export               (LogBrowser *browser);
+static void           gwy_log_clear                (LogBrowser *browser);
+static void           log_changed                  (GwyStringList *slog,
+                                                    LogBrowser *browser);
+static void           gwy_log_destroy              (LogBrowser *browser);
+static void           gwy_log_data_finalized       (LogBrowser *browser);
+static gchar*         format_args                  (const gchar *prefix);
+static void           format_arg                   (gpointer hkey,
+                                                    gpointer hvalue,
+                                                    gpointer user_data);
+static GQuark         channel_log_key              (gint id);
+static GQuark         volume_log_key               (gint id);
+static gboolean       find_settings_prefix         (const gchar *function,
+                                                    const gchar *settings_name,
+                                                    GString *prefix);
+static const gchar*   current_function_name_by_type(const gchar *type);
 
 static gboolean log_disabled = FALSE;
 
@@ -133,6 +134,37 @@ gwy_app_channel_log_add(GwyContainer *data,
 }
 
 /**
+ * gwy_app_channel_log_add_proc:
+ * @data: A data container.
+ * @previd: Identifier of the previous (source) data channel in the container.
+ *          Pass -1 for a no-source (or unclear source) operation.
+ * @newid: Identifier of the new (target) data channel in the container.
+ *
+ * Adds an entry to the log of the current data processing operations
+ * for a channel.
+ *
+ * This simplified variant of gwy_app_channel_log_add() takes the currently
+ * running data processing function name and constructs the qualified function
+ * name from that.
+ *
+ * Since: 2.38
+ **/
+void
+gwy_app_channel_log_add_proc(GwyContainer *data,
+                             gint previd,
+                             gint newid)
+{
+    const gchar *funcname;
+    gchar *qname = NULL;
+
+    funcname = current_function_name_by_type("proc");
+    g_return_if_fail(funcname);
+    qname = g_strconcat("proc::", funcname, NULL);
+    gwy_app_channel_log_add(data, previd, newid, qname);
+    g_free(qname);
+}
+
+/**
  * gwy_app_volume_log_add:
  * @data: A data container.
  * @previd: Identifier of the previous (source) volume data in the container.
@@ -166,6 +198,37 @@ gwy_app_volume_log_add(GwyContainer *data,
     va_start(ap, function);
     data_log_add_valist(data, volume_log_key, previd, newid, function, ap);
     va_end(ap);
+}
+
+/**
+ * gwy_app_volume_log_add_volume:
+ * @data: A data container.
+ * @previd: Identifier of the previous (source) volume data in the container.
+ *          Pass -1 for a no-source (or unclear source) operation.
+ * @newid: Identifier of the new (target) volume data in the container.
+ *
+ * Adds an entry to the log of the current volume data processing operations
+ * for volume data.
+ *
+ * This simplified variant of gwy_app_volume_log_add() takes the currently
+ * running function volume data processing name and constructs the qualified
+ * function name from that.
+ *
+ * Since: 2.38
+ **/
+void
+gwy_app_volume_log_add_volume(GwyContainer *data,
+                              gint previd,
+                              gint newid)
+{
+    const gchar *funcname;
+    gchar *qname = NULL;
+
+    funcname = current_function_name_by_type("volume");
+    g_return_if_fail(funcname);
+    qname = g_strconcat("volume::", funcname, NULL);
+    gwy_app_volume_log_add(data, previd, newid, qname);
+    g_free(qname);
 }
 
 static void
@@ -812,6 +875,26 @@ void
 gwy_log_set_enabled(gboolean setting)
 {
     log_disabled = !setting;
+}
+
+static const gchar*
+current_function_name_by_type(const gchar *type)
+{
+    const gchar *funcname = NULL;
+
+    if (gwy_strequal(type, "proc"))
+        funcname = gwy_process_func_current();
+    else if (gwy_strequal(type, "graph"))
+        funcname = gwy_graph_func_current();
+    else if (gwy_strequal(type, "file"))
+        funcname = gwy_file_func_current();
+    else if (gwy_strequal(type, "volume"))
+        funcname = gwy_volume_func_current();
+    else if (gwy_strequal(type, "tool"))
+        funcname = gwy_app_current_tool_name();
+
+    g_return_val_if_fail(funcname, NULL);
+    return funcname;
 }
 
 /************************** Documentation ****************************/

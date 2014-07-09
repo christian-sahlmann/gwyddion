@@ -1700,9 +1700,13 @@ gwy_app_brick_popup_menu_popup_key(GtkWidget *menu,
 
 /**
  * gwy_app_switch_tool:
- * @toolname: Tool name, that is #GType name of the tool type.
+ * @toolname: Tool name, that is type name of the tool object in the GLib
+ *            type system.  This can be for instance "GwyToolGrainMeasure".
  *
- * Switches the current tool.
+ * Switches the current tool to given tool.
+ *
+ * If the tool is already active it is shown when hidden and hidden when
+ * visible.
  **/
 void
 gwy_app_switch_tool(const gchar *toolname)
@@ -1745,6 +1749,31 @@ gwy_app_switch_tool(const gchar *toolname)
         gwy_tool_spectra_switched(current_tool, spectra);
         gwy_tool_show(current_tool);
     }
+}
+
+/**
+ * gwy_app_current_tool_name:
+ *
+ * Obtains the name of currently active tool.
+ *
+ * See gwy_app_switch_tool() for the name description.
+ *
+ * In some rare circumstances, this function can return %NULL because no tool
+ * is active.  This includes program startup and shutdown and during the
+ * construction of a new #GwyTool object while switching tools.  Also, %NULL
+ * is typically returned outside Gwyddion in program just using the libraries.
+ *
+ * Returns: The tool name.
+ *
+ * Since: 2.38
+ **/
+const gchar*
+gwy_app_current_tool_name(void)
+{
+    if (!current_tool)
+        return NULL;
+
+    return G_OBJECT_TYPE_NAME(current_tool);
 }
 
 static void

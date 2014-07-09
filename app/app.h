@@ -27,22 +27,23 @@
 
 G_BEGIN_DECLS
 
-void       gwy_app_switch_tool                (const gchar *toolname);
-void       gwy_app_add_main_accel_group       (GtkWindow *window);
-void       gwy_app_save_window_position       (GtkWindow *window,
-                                               const gchar *prefix,
-                                               gboolean position,
-                                               gboolean size);
-void       gwy_app_restore_window_position    (GtkWindow *window,
-                                               const gchar *prefix,
-                                               gboolean grow_only);
-GtkWidget* gwy_app_main_window_get            (void);
-void       gwy_app_data_view_change_mask_color(GwyDataView *data_view);
-gboolean   gwy_app_quit                       (void);
-void       gwy_app_init_widget_styles         (void);
-void       gwy_app_init_i18n                  (void);
-gboolean   gwy_app_init_common                (GError **error,
-                                               ...);
+void         gwy_app_switch_tool                (const gchar *toolname);
+const gchar* gwy_app_current_tool_name          (void);
+void         gwy_app_add_main_accel_group       (GtkWindow *window);
+void         gwy_app_save_window_position       (GtkWindow *window,
+                                                 const gchar *prefix,
+                                                 gboolean position,
+                                                 gboolean size);
+void         gwy_app_restore_window_position    (GtkWindow *window,
+                                                 const gchar *prefix,
+                                                 gboolean grow_only);
+GtkWidget*   gwy_app_main_window_get            (void);
+void         gwy_app_data_view_change_mask_color(GwyDataView *data_view);
+gboolean     gwy_app_quit                       (void);
+void         gwy_app_init_widget_styles         (void);
+void         gwy_app_init_i18n                  (void);
+gboolean     gwy_app_init_common                (GError **error,
+                                                 ...);
 
 G_END_DECLS
 

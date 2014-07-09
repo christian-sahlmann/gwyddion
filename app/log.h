@@ -38,6 +38,12 @@ void       gwy_app_volume_log_add         (GwyContainer *data,
                                            gint newid,
                                            const gchar *function,
                                            ...);
+void       gwy_app_channel_log_add_proc   (GwyContainer *data,
+                                           gint previd,
+                                           gint newid);
+void       gwy_app_volume_log_add_volume  (GwyContainer *data,
+                                           gint previd,
+                                           gint newid);
 GtkWidget* gwy_app_log_browser_for_channel(GwyContainer *data,
                                            gint id);
 GtkWidget* gwy_app_log_browser_for_volume (GwyContainer *data,
