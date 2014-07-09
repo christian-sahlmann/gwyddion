@@ -143,10 +143,6 @@ The Board of Trustees of the University of Illinois
     The list of HDF tags in the hdf4file module was taken from libHDF4 header
     files (the rest is a clean-room implementation).
 
-Gtk+ Mac OS X project
-    OS X menubar integration app/ige-mac-menu.[ch] was copied from this
-    project, see the files for more.
-
 Ross Hemsley, Bristol University
     3D Delaunay triangulation and interpolation, see libprocess/natural.c for
     more.
