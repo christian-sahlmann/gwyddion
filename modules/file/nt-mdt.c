@@ -21,8 +21,6 @@
 
 /* TODO: some metadata ... */
 
-#define DEBUG
-
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-nt-mdt-spm">
@@ -1691,6 +1689,8 @@ mdt_spectroscopy_data_vars(const guchar *p,
         return FALSE;
     }
 
+    gwy_debug("remaining stuff size 0: %u",
+                                    (guint)(frame_size - (p - fstart)));
     if (frame->fm_ndots) {
         frame->dots = p;
         p += 14 + frame->fm_ndots * 16;
@@ -1701,7 +1701,7 @@ mdt_spectroscopy_data_vars(const guchar *p,
         p += sizeof(gint16)*frame->fm_xres*frame->fm_yres;
     }
 
-    gwy_debug("remaining stuff size: %u",
+    gwy_debug("remaining stuff size 1: %u",
                                     (guint)(frame_size - (p - fstart)));
 
     /* Title */
@@ -1728,6 +1728,8 @@ mdt_spectroscopy_data_vars(const guchar *p,
         }
     }
 
+    gwy_debug("remaining stuff size 2: %u",
+                                    (guint)(frame_size - (p - fstart)));
     return TRUE;
 }
 
@@ -2350,7 +2352,6 @@ static GwySpectra* extract_sps_curve (MDTSpectroscopyDataFrame *dataframe,
     siunitz = gwy_si_unit_new_parse(unit, &power10z);
     zscale = pow10(power10z)*dataframe->z_scale.step;
 
-    fprintf(stderr, "dots = %p data =%p\n", dataframe->dots, dataframe->data);
     p = dataframe->dots;
     numpoints = dataframe->fm_ndots;
 
@@ -2359,10 +2360,6 @@ static GwySpectra* extract_sps_curve (MDTSpectroscopyDataFrame *dataframe,
     coordheader.coordsize = gwy_get_gint32_le(&p);
     coordheader.version = gwy_get_gint32_le(&p);
     coordheader.xyunits = (MDTUnit)gwy_get_gint16_le(&p);
-    fprintf(stderr,"coordhead = %d %d %d %d\n", coordheader.headersize,
-                                                coordheader.coordsize,
-                                                coordheader.version,
-                                                coordheader.xyunits);
 
     spectra = gwy_spectra_new();
 
@@ -2381,48 +2378,45 @@ static GwySpectra* extract_sps_curve (MDTSpectroscopyDataFrame *dataframe,
         coordinates[i].coordy = gwy_get_gfloat_le(&p);
         coordinates[i].forward_size = gwy_get_gint32_le(&p);
         coordinates[i].backward_size = gwy_get_gint32_le(&p);
-        fprintf(stderr,"coords [%d] = %g %g %d %d\n", i,
-                coordinates[i].coordx, coordinates[i].coordy,
-                coordinates[i].forward_size,
-                coordinates[i].backward_size
-        );
     }
 
     p = dataframe->data;
 
     for (i_p = 0; i_p < numpoints; i_p++) {
-        dline = gwy_data_line_new(coordinates[i_p].forward_size,
-                        coordinates[i_p].forward_size * deltax, FALSE);
-        gwy_data_line_set_si_unit_x(dline, siunitx);
-        gwy_data_line_set_si_unit_y(dline, siunitz);
-        gwy_data_line_set_offset(dline,
-                            pow10(power10x)*dataframe->x_scale.offset);
-        ydata = gwy_data_line_get_data(dline);
-        for (i = 0; i < coordinates[i_p].forward_size; i++) {
-            ydata[i] = pow10(power10z)*dataframe->z_scale.offset
-                     + zscale*GINT16_FROM_LE(*(gint16 *)p);
-            p += 2;
+        if (coordinates[i_p].forward_size > 0) {
+            dline = gwy_data_line_new(coordinates[i_p].forward_size,
+                         coordinates[i_p].forward_size * deltax, FALSE);
+            gwy_data_line_set_si_unit_x(dline, siunitx);
+            gwy_data_line_set_si_unit_y(dline, siunitz);
+            gwy_data_line_set_offset(dline,
+                             pow10(power10x)*dataframe->x_scale.offset);
+            ydata = gwy_data_line_get_data(dline);
+            for (i = 0; i < coordinates[i_p].forward_size; i++) {
+                ydata[i] = pow10(power10z)*dataframe->z_scale.offset
+                                  + zscale*GINT16_FROM_LE(*(gint16 *)p);
+                p += 2;
+            }
+            gwy_spectra_add_spectrum(spectra, dline,
+                         coordinates[i_p].coordx*pow10(power10coordxy),
+                         coordinates[i_p].coordy*pow10(power10coordxy));
         }
-        gwy_spectra_add_spectrum(spectra, dline,
-                    coordinates[i_p].coordx*pow10(power10coordxy),
-                    coordinates[i_p].coordy*pow10(power10coordxy));
-        dline = gwy_data_line_new(coordinates[i_p].backward_size,
+        if (coordinates[i_p].backward_size > 0) {
+            dline = gwy_data_line_new(coordinates[i_p].backward_size,
                         coordinates[i_p].backward_size * deltax, FALSE);
-        gwy_data_line_set_si_unit_x(dline, siunitx);
-        gwy_data_line_set_si_unit_y(dline, siunitz);
-        gwy_data_line_set_offset(dline,
-                            pow10(power10x)*dataframe->x_scale.offset);
-        ydata = gwy_data_line_get_data(dline);
-        for (i = 0; i < coordinates[i_p].backward_size; i++) {
-            ydata[i] = pow10(power10z)*dataframe->z_scale.offset
-                     + zscale*GINT16_FROM_LE(*(gint16 *)p);
-            p += 2;
+            gwy_data_line_set_si_unit_x(dline, siunitx);
+            gwy_data_line_set_si_unit_y(dline, siunitz);
+            gwy_data_line_set_offset(dline,
+                             pow10(power10x)*dataframe->x_scale.offset);
+            ydata = gwy_data_line_get_data(dline);
+            for (i = 0; i < coordinates[i_p].backward_size; i++) {
+                ydata[i] = pow10(power10z)*dataframe->z_scale.offset
+                                  + zscale*GINT16_FROM_LE(*(gint16 *)p);
+                p += 2;
+            }
+            gwy_spectra_add_spectrum(spectra, dline,
+                         coordinates[i_p].coordx*pow10(power10coordxy),
+                         coordinates[i_p].coordy*pow10(power10coordxy));
         }
-        gwy_spectra_add_spectrum(spectra, dline,
-                    coordinates[i_p].coordx*pow10(power10coordxy),
-                    coordinates[i_p].coordy*pow10(power10coordxy));
-        fprintf(stderr,"XY = %g %g\n",coordinates[i_p].coordx*pow10(power10coordxy),
-                                      coordinates[i_p].coordy*pow10(power10coordxy));
     }
 
     if (dataframe->title_len && dataframe->title) {
@@ -2436,7 +2430,6 @@ static GwySpectra* extract_sps_curve (MDTSpectroscopyDataFrame *dataframe,
     g_object_unref(siunitx);
     g_object_unref(siunitz);
     g_free(coordinates);
-    g_free(ydata);
 
     return spectra;
 }
