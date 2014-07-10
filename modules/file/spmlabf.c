@@ -280,7 +280,7 @@ slf_load(const gchar *filename,
                              "InputGainSelector", NULL)))
         gwy_container_set_object_by_name(container, "/0/meta", meta);
 
-    gwy_file_channel_import_log_add(container, 0, "spmlabf", filename);
+    gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
 fail:
     g_free(header);

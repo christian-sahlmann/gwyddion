@@ -741,7 +741,7 @@ nmi_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **error)
         gwy_container_set_object_by_name(container, buf, meta);
         g_object_unref(meta);
 
-        gwy_file_channel_import_log_add(container, channelno, "nanomagnetics",
+        gwy_file_channel_import_log_add(container, channelno, NULL,
                                         filename);
     }
 

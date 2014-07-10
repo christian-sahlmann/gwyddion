@@ -127,7 +127,7 @@ zeiss_load(const gchar *filename,
 
     container = zeiss_load_tiff(tiff, error);
     if (container)
-        gwy_file_channel_import_log_add(container, 0, "zeiss", filename);
+        gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
     gwy_tiff_free(tiff);
 

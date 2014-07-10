@@ -414,7 +414,7 @@ add_channel(GwyContainer *container,
         gwy_container_set_string_by_name(container, key, title);
         g_free(key);
     }
-    gwy_file_channel_import_log_add(container, id, "nanoscan", filename);
+    gwy_file_channel_import_log_add(container, id, NULL, filename);
     channel->already_added = TRUE;
 }
 

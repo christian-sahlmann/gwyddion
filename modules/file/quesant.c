@@ -289,7 +289,7 @@ quesant_load(const gchar *filename,
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
     gwy_app_channel_title_fall_back(container, 0);
-    gwy_file_channel_import_log_add(container, 0, "quesant", filename);
+    gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
     gwy_file_abandon_contents(buffer, size, NULL);
     return container;

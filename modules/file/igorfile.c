@@ -441,7 +441,7 @@ igor_load(const gchar *filename,
         gwy_object_unref(meta);
         gwy_object_unref(maskfield);
 
-        gwy_file_channel_import_log_add(container, chid, "igorfile", filename);
+        gwy_file_channel_import_log_add(container, chid, NULL, filename);
     }
 
 fail:

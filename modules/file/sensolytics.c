@@ -261,7 +261,7 @@ sly_load(const gchar *filename,
         else
             gwy_app_channel_title_fall_back(container, i);
 
-        gwy_file_channel_import_log_add(container, i, "sensolytics", filename);
+        gwy_file_channel_import_log_add(container, i, NULL, filename);
     }
 
     meta = get_meta(hash);

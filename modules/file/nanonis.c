@@ -500,7 +500,7 @@ read_data_field(GwyContainer *container,
         flip_vertically = TRUE;
 
     gwy_data_field_invert(dfield, flip_vertically, flip_horizontally, FALSE);
-    gwy_file_channel_import_log_add(container, *id, "nanonis", filename);
+    gwy_file_channel_import_log_add(container, *id, NULL, filename);
 
     (*id)++;
 }

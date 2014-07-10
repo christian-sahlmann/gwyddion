@@ -169,7 +169,7 @@ amb_load(const gchar *filename,
                                      g_strdup("Topography"));
     g_object_unref(dfield);
 
-    gwy_file_channel_import_log_add(container, 0, "ambfile", filename);
+    gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);

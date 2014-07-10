@@ -820,7 +820,7 @@ gxsm_load(const gchar *filename,
                 g_free(pt);
                 g_object_unref(dfield);
 
-                gwy_file_channel_import_log_add(data, frame_i, "gsxmfile",
+                gwy_file_channel_import_log_add(data, frame_i, NULL,
                                                 filename);
             }
         }

@@ -273,7 +273,7 @@ burleigh_load(const gchar *filename,
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
 
-    gwy_file_channel_import_log_add(container, 0, "burleigh", filename);
+    gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
     return container;
 }

@@ -336,7 +336,7 @@ anfatec_load(const gchar *filename,
         dataname = g_hash_table_lookup(hash, key);
         g_free(key);
 
-        gwy_file_channel_import_log_add(container, id, "anfatec", dataname);
+        gwy_file_channel_import_log_add(container, id, NULL, dataname);
     }
 
     err_NO_DATA(error);

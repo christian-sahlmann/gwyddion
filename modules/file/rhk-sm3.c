@@ -677,7 +677,7 @@ rhk_sm3_load(const gchar *filename,
         g_object_unref(meta);
 
         gwy_app_channel_check_nonsquare(container, count);
-        gwy_file_channel_import_log_add(container, count, "rhk-sm3", filename);
+        gwy_file_channel_import_log_add(container, count, NULL, filename);
         count++;
     }
 

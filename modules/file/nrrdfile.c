@@ -468,7 +468,7 @@ nrrdfile_load(const gchar *filename,
             g_object_unref(chanmeta);
             g_free(key);
         }
-        gwy_file_channel_import_log_add(container, i, "nrrdfile", filename);
+        gwy_file_channel_import_log_add(container, i, NULL, filename);
     }
 
     /* TODO: Read key-values and possible other fields as metadata. */

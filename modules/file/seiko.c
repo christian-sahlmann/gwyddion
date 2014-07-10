@@ -232,7 +232,7 @@ seiko_load(const gchar *filename,
     }
 
     gwy_app_channel_check_nonsquare(container, 0);
-    gwy_file_channel_import_log_add(container, 0, "seiko", filename);
+    gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
     gwy_file_abandon_contents(buffer, size, NULL);
 

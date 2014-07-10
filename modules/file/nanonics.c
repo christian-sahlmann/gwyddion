@@ -300,7 +300,7 @@ nanonics_load(const gchar *filename,
                                                      g_strdup(title));
                 g_free(key);
             }
-            gwy_file_channel_import_log_add(container, 2*i + j, "nanonics",
+            gwy_file_channel_import_log_add(container, 2*i + j, NULL,
                                             filename);
         }
     }

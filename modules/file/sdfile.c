@@ -330,7 +330,7 @@ sdfile_load_bin(const gchar *filename,
     g_object_unref(dfield);
     gwy_container_set_string_by_name(container, "/0/data/title",
                                      g_strdup("Topography"));
-    gwy_file_channel_import_log_add(container, 0, "sdfile-bin", filename);
+    gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
     return container;
 }
@@ -394,7 +394,7 @@ sdfile_load_text(const gchar *filename,
     }
     g_free(buffer);
 
-    gwy_file_channel_import_log_add(container, 0, "sdfile-text", filename);
+    gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
     return container;
 }
@@ -527,7 +527,7 @@ micromap_load(const gchar *filename,
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     gwy_container_set_string_by_name(container, "/0/data/title",
                                      g_strdup("Topography"));
-    gwy_file_channel_import_log_add(container, 0, "micromap", filename);
+    gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
 fail:
     g_object_unref(dfield);

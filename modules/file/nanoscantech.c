@@ -254,10 +254,8 @@ nst_load(const gchar *filename,
                                                      title);
                     g_free(strkey);
 
-                    gwy_file_channel_import_log_add(container,
-                                                    channelno,
-                                                    "nanoscantech",
-                                                    filename);
+                    gwy_file_channel_import_log_add(container, channelno,
+                                                    NULL, filename);
                 }
                 if (titlestr) {
                     g_free(titlestr);
@@ -321,10 +319,8 @@ nst_load(const gchar *filename,
                     g_free(strkey);
                     g_object_unref(brick);
                     g_object_unref(dfield);
-                    gwy_file_volume_import_log_add(container,
-                                                   channelno,
-                                                   "nanoscantech",
-                                                   filename);
+                    gwy_file_volume_import_log_add(container, channelno,
+                                                   NULL, filename);
                 }
                 if (titlestr) {
                     g_free(titlestr);

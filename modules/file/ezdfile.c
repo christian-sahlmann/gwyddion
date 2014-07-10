@@ -246,7 +246,7 @@ ezdfile_load(const gchar *filename,
             g_object_unref(meta);
         }
 
-        gwy_file_channel_import_log_add(container, i, "ezdfile", filename);
+        gwy_file_channel_import_log_add(container, i, NULL, filename);
         i++;
     }
     gwy_file_abandon_contents(buffer, size, NULL);

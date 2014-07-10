@@ -328,7 +328,7 @@ mifile_load(const gchar *filename,
             g_object_unref(dfield);
             process_metadata(mifile, i, container, container_key);
             g_free(container_key);
-            gwy_file_channel_import_log_add(container, i, "mifile", filename);
+            gwy_file_channel_import_log_add(container, i, NULL, filename);
         }
 
         image_file_free(mifile);

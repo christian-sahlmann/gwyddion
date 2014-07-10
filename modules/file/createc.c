@@ -300,7 +300,7 @@ createc_load(const gchar *filename,
             g_object_unref(meta);
         }
 
-        gwy_file_channel_import_log_add(container, id, "createc", filename);
+        gwy_file_channel_import_log_add(container, id, NULL, filename);
     }
 
 fail:

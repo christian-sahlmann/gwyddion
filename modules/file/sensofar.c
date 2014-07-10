@@ -334,7 +334,7 @@ sensofar_load(const gchar *filename,
             g_object_unref(mfield);
         }
         gwy_app_channel_title_fall_back(container, 0);
-        gwy_file_channel_import_log_add(container, 0, "sensofar", filename);
+        gwy_file_channel_import_log_add(container, 0, NULL, filename);
         break;
 
         case MES_PERFIL:

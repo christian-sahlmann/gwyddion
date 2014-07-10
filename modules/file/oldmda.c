@@ -392,8 +392,7 @@ oldmda_read_data(OldMDAFile *mdafile, const gchar *buffer)
     g_object_unref(dfield);
     g_object_unref(brick);
 
-    gwy_file_volume_import_log_add(mdafile->data,
-                                   0, "oldmda", mdafile->filename);
+    gwy_file_volume_import_log_add(mdafile->data, 0, NULL, mdafile->filename);
 }
 
 static gchar*

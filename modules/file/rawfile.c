@@ -373,7 +373,7 @@ rawfile_load(const gchar *filename,
         data = gwy_container_new();
         gwy_container_set_object_by_name(data, "/0/data", dfield);
         g_object_unref(dfield);
-        gwy_file_channel_import_log_add(data, 0, "rawfile", filename);
+        gwy_file_channel_import_log_add(data, 0, NULL, filename);
     }
     else
         err_CANCELLED(error);

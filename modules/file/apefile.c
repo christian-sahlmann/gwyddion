@@ -473,7 +473,7 @@ apefile_load(const gchar *filename,
         gwy_container_set_object_by_name(container, key, tmp);
         g_object_unref(tmp);
 
-        gwy_file_channel_import_log_add(container, n, "apefile", filename);
+        gwy_file_channel_import_log_add(container, n, NULL, filename);
 
         n++;
     }

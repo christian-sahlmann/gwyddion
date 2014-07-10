@@ -426,7 +426,7 @@ nanoscope_load(const gchar *filename,
                 g_object_unref(meta);
 
                 gwy_app_channel_check_nonsquare(container, i);
-                gwy_file_channel_import_log_add(container, i, "nanoscope",
+                gwy_file_channel_import_log_add(container, i, NULL,
                                                 filename);
                 i++;
             }

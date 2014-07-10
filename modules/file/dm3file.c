@@ -503,7 +503,7 @@ dm3_read_image(DM3File *dm3file,
             g_free(key);
             title = NULL;
         }
-        gwy_file_channel_import_log_add(container, *id, "dm3file",
+        gwy_file_channel_import_log_add(container, *id, NULL,
                                         dm3file->filename);
 
         (*id)++;

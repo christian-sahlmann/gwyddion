@@ -370,7 +370,7 @@ ome_load_tiff(const GwyTIFF *tiff, const gchar *filename, GError **error)
                                      g_strdup(colour_channel_gradients[ch]));
             }
 
-            gwy_file_channel_import_log_add(container, id, "ometiff",
+            gwy_file_channel_import_log_add(container, id, NULL,
                                             filename);
             id++;
         }

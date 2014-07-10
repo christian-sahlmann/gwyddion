@@ -258,7 +258,7 @@ asc_load(const gchar *filename,
         g_object_unref(mfield);
     }
 
-    gwy_file_channel_import_log_add(container, 0, "spip-asc", filename);
+    gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
 fail:
     gwy_object_unref(dfield);

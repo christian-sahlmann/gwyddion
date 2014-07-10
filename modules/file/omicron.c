@@ -295,7 +295,7 @@ omicron_load(const gchar *filename,
             g_object_unref(meta);
         }
 
-        gwy_file_channel_import_log_add(container, i, "omicron", datafilename);
+        gwy_file_channel_import_log_add(container, i, NULL, datafilename);
         g_free(datafilename);
     }
 

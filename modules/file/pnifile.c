@@ -284,7 +284,7 @@ pni_load(const gchar *filename,
     else
         g_warning("Data type %d is unknown", data_type);
 
-    gwy_file_channel_import_log_add(container, 0, "pnifile", filename);
+    gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
     return container;
 }

@@ -806,7 +806,7 @@ load_channels(ISO28600FieldValue *header,
             gwy_container_set_string_by_name(container, key, g_strdup(title));
         }
 
-        gwy_file_channel_import_log_add(container, id, "iso28600", filename);
+        gwy_file_channel_import_log_add(container, id, NULL, filename);
     }
 
 fail:

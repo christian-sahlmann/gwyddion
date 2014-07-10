@@ -262,7 +262,7 @@ unisoku_load(const gchar *filename,
     gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
 
-    gwy_file_channel_import_log_add(container, 0, "unisoku", data_name);
+    gwy_file_channel_import_log_add(container, 0, NULL, data_name);
 
     unisoku_file_free(&ufile);
     g_free(data_name);

@@ -284,7 +284,7 @@ microprof_load(const gchar *filename,
         g_object_unref(dfield);
 
         gwy_app_channel_title_fall_back(container, i);
-        gwy_file_channel_import_log_add(container, i, "microprof", filename);
+        gwy_file_channel_import_log_add(container, i, NULL, filename);
     }
 
 fail:
@@ -450,7 +450,7 @@ microprof_txt_load(const gchar *filename,
     gwy_container_set_string_by_name(container, "/0/data/title",
                                      g_strdup("Topography"));
 
-    gwy_file_channel_import_log_add(container, 0, "microprof", filename);
+    gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);

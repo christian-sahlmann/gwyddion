@@ -698,7 +698,7 @@ jeol_load(const gchar *filename,
     gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
 
-    gwy_file_channel_import_log_add(container, 0, "jeol", filename);
+    gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);

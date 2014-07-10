@@ -311,7 +311,7 @@ text_dump_import(gchar *buffer,
             g_free(key);
         }
 
-        gwy_file_channel_import_log_add(data, id, "dumbfile", filename);
+        gwy_file_channel_import_log_add(data, id, NULL, filename);
     }
     return data;
 

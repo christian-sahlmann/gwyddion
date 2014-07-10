@@ -428,7 +428,7 @@ mat5_load(const gchar *filename,
                 gwy_container_set_string_by_name(container, key,
                                                  g_strdup(name->str));
                 g_free(key);
-                gwy_file_channel_import_log_add(container, id, "matfile",
+                gwy_file_channel_import_log_add(container, id, NULL,
                                                 filename);
                 id++;
             }

@@ -344,7 +344,7 @@ rawxyz_load(const gchar *filename,
         gwy_container_set_object_by_name(container, "/0/data", dfield);
         gwy_container_set_string_by_name(container, "/0/data/title",
                                          g_strdup("Regularized XYZ"));
-        gwy_file_channel_import_log_add(container, 0, "rawxyz", filename);
+        gwy_file_channel_import_log_add(container, 0, NULL, filename);
     }
 
 fail:

@@ -268,7 +268,7 @@ wsxmfile_load(const gchar *filename,
         g_object_unref(dfield);
         process_metadata(meta, container);
 
-        gwy_file_channel_import_log_add(container, 0, "wsxmfile", filename);
+        gwy_file_channel_import_log_add(container, 0, NULL, filename);
     }
     g_hash_table_destroy(meta);
     g_free(header);

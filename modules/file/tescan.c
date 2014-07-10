@@ -162,7 +162,7 @@ tsc_load(const gchar *filename,
 
     container = tsc_load_tiff(tiff, entry, error);
     if (container)
-        gwy_file_channel_import_log_add(container, 0, "tescan", filename);
+        gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
     gwy_tiff_free(tiff);
 

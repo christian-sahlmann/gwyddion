@@ -238,7 +238,7 @@ wsf_load(const gchar *filename,
         g_object_unref(meta);
     }
 
-    gwy_file_channel_import_log_add(container, 0, "wsffile", filename);
+    gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
 fail:
     gwy_object_unref(dfield);

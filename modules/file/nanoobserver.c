@@ -255,7 +255,7 @@ nao_load(const gchar *filename,
                         g_free(strkey);
                     }
                     gwy_file_channel_import_log_add(container, channelno,
-                                                    "nanoobserver", filename);
+                                                    NULL, filename);
 
                     channelno++;
                 }

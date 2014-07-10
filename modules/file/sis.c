@@ -556,7 +556,7 @@ sis_load(const gchar *filename,
                         gwy_container_set_string_by_name(data, key->str,
                                                          g_strdup(s));
                     add_metadata(&sisfile, n, i, data);
-                    gwy_file_channel_import_log_add(data, n, "sis", filename);
+                    gwy_file_channel_import_log_add(data, n, NULL, filename);
                     n++;
                 }
             }

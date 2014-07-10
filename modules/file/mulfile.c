@@ -517,7 +517,7 @@ mul_read_image(GwyContainer *container,
     g_object_unref(meta);
 
     gwy_app_channel_check_nonsquare(container, label->id);
-    gwy_file_channel_import_log_add(container, label->id, "mulfile", filename);
+    gwy_file_channel_import_log_add(container, label->id, NULL, filename);
 }
 
 static GwyContainer*

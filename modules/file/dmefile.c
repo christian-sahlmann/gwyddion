@@ -268,7 +268,7 @@ dme_load(const gchar *filename,
         gwy_container_set_string_by_name(container, "/0/data/title",
                                          g_strdup("Topography"));
 
-    gwy_file_channel_import_log_add(container, 0, "dmefile", filename);
+    gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
     return container;
 }

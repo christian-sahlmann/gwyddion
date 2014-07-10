@@ -272,7 +272,7 @@ asc_load(const gchar *filename,
     if ((value = g_hash_table_lookup(hash, "scanspeed")))
         gwy_container_set_string_by_name(meta, "Scan Speed", g_strdup(value));
 
-    gwy_file_channel_import_log_add(container, 0, "attocube", filename);
+    gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
 fail:
     g_free(buffer);

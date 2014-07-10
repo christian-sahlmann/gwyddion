@@ -1468,8 +1468,7 @@ wip_read_data(GNode *node, gpointer filedata)
 
                 gwy_file_volume_import_log_add(filecontent->data,
                                                filecontent->numbricks,
-                                               "wipfile",
-                                               filecontent->filename);
+                                               NULL, filecontent->filename);
             }
         }
         else {
@@ -1506,8 +1505,7 @@ wip_read_data(GNode *node, gpointer filedata)
 
             gwy_file_channel_import_log_add(filecontent->data,
                                             filecontent->numimages,
-                                            "wipfile",
-                                            filecontent->filename);
+                                            NULL, filecontent->filename);
         }
     }
     else if (!strncmp(tag->name, "TDBitmap", 8)) {
@@ -1535,8 +1533,7 @@ wip_read_data(GNode *node, gpointer filedata)
 
             gwy_file_channel_import_log_add(filecontent->data,
                                             filecontent->numimages,
-                                            "wipfile",
-                                            filecontent->filename);
+                                            NULL, filecontent->filename);
         }
     }
 

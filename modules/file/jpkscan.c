@@ -343,7 +343,7 @@ jpk_load_channel(const GwyTIFF *tiff,
         gwy_container_set_object_by_name(container, key->str, tmp);
         g_object_unref(tmp);
     }
-    gwy_file_channel_import_log_add(container, idx, "jpkscan", filename);
+    gwy_file_channel_import_log_add(container, idx, NULL, filename);
 
     g_string_free(key, TRUE);
 }

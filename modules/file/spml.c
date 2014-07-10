@@ -1037,8 +1037,8 @@ spml_load(const gchar *filename)
                     object = gwy_container_new();
                 }
                 /* put datachannel into container */
-                gwy_channel_location =
-                    g_strdup_printf("/%i/data", channel_number++);
+                gwy_channel_location = g_strdup_printf("/%i/data",
+                                                       channel_number);
                 gwy_container_set_object_by_name(object, gwy_channel_location,
                                                  (GObject *)dfield);
 
@@ -1050,8 +1050,9 @@ spml_load(const gchar *filename)
                 g_free(gwy_channel_location);
                 g_object_unref(dfield);
 
-                gwy_file_channel_import_log_add(object, channel_number-1,
-                                                "spml", filename);
+                gwy_file_channel_import_log_add(object, channel_number,
+                                                NULL, filename);
+                channel_number++;
             }
             /* Free possibly allocated memory */
             if (data)

@@ -421,7 +421,7 @@ pt3file_load(const gchar *filename,
     gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
 
-    gwy_file_channel_import_log_add(container, 0, "pt3file", filename);
+    gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
     gmodel = pt3file_extract_decay(&pt3file, p);
     gwy_container_set_object_by_name(container, "/0/graph/graph/1", gmodel);

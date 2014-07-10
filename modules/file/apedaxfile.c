@@ -783,7 +783,7 @@ apedax_get_channels_data(unzFile uFile,
             g_snprintf(key, sizeof(key), "/%d/data", i);
             gwy_container_set_object_by_name(container, key, dfield);
             g_object_unref(dfield);
-            gwy_file_channel_import_log_add(container, i, "apedaxfile",
+            gwy_file_channel_import_log_add(container, i, NULL,
                                             filename);
 
             tmp = gwy_container_duplicate(meta);

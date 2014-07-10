@@ -240,7 +240,7 @@ robotics_load(const gchar *filename,
                                  gwy_app_get_data_key_for_id(i),
                                  dfield[i]);
         g_object_unref(dfield[i]);
-        gwy_file_channel_import_log_add(container, i, "robotics", filename);
+        gwy_file_channel_import_log_add(container, i, NULL, filename);
     }
 
     gwy_container_set_string_by_name(container, "/0/data/title",

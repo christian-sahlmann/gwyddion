@@ -401,8 +401,7 @@ tia_load(const gchar *filename,
                                                      g_strdup("TEM"));
                     g_free(strkey);
                     gwy_file_channel_import_log_add(container, i,
-                                                    "tiaser",
-                                                    filename);
+                                                    NULL, filename);
                 }
             }
         }
@@ -495,8 +494,7 @@ tia_load(const gchar *filename,
             gwy_container_set_string_by_name(container,
                                           "/brick/0/title",
                                           g_strdup("TEM Spectroscopy"));
-            gwy_file_volume_import_log_add(container, 0, "tiaser",
-                                           filename);
+            gwy_file_volume_import_log_add(container, 0, NULL, filename);
         }
     }
 

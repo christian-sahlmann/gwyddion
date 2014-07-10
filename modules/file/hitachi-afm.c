@@ -228,7 +228,7 @@ hitachi_load(const gchar *filename,
                                      g_strdup("Topography"));
 
     gwy_app_channel_check_nonsquare(container, 0);
-    gwy_file_channel_import_log_add(container, 0, name, filename);
+    gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
     return container;
 }

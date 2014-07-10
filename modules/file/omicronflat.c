@@ -986,28 +986,28 @@ omicronflat_read2dimage(GwyContainer *container, GwyContainer *metainfo,
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     gwy_container_set_string_by_name(container, "/0/data/title",
                                      g_strdup("Trace Up"));
-    gwy_file_channel_import_log_add(container, 0, "omicronflat", filename);
+    gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
     if (xmirrored) {
         dfield = g_ptr_array_index(dfield_arr, 1);
         gwy_container_set_object_by_name(container, "/1/data", dfield);
         gwy_container_set_string_by_name(container, "/1/data/title",
                                          g_strdup("reTrace Up"));
-        gwy_file_channel_import_log_add(container, 1, "omicronflat", filename);
+        gwy_file_channel_import_log_add(container, 1, NULL, filename);
     }
     if (ymirrored) {
         dfield = g_ptr_array_index(dfield_arr, xmirrored ? 2 : 1);
         gwy_container_set_object_by_name(container, "/2/data", dfield);
         gwy_container_set_string_by_name(container, "/2/data/title",
                                          g_strdup("Trace down"));
-        gwy_file_channel_import_log_add(container, 2, "omicronflat", filename);
+        gwy_file_channel_import_log_add(container, 2, NULL, filename);
     }
     if (xmirrored && ymirrored) {
         dfield = g_ptr_array_index(dfield_arr, 3);
         gwy_container_set_object_by_name(container, "/3/data", dfield);
         gwy_container_set_string_by_name(container, "/3/data/title",
                                          g_strdup("reTrace down"));
-        gwy_file_channel_import_log_add(container, 3, "omicronflat", filename);
+        gwy_file_channel_import_log_add(container, 3, NULL, filename);
     }
 
     g_ptr_array_free(data_arr, TRUE);

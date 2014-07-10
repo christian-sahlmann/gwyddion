@@ -335,7 +335,7 @@ read_aist_raster(const guchar **p, gsize *size, AistContext *context)
     gwy_container_set_object_by_name(context->container, key, dfield);
     g_object_unref(dfield);
     gwy_file_channel_import_log_add(context->container, context->channel_id,
-                                    "aistfile", context->filename);
+                                    NULL, context->filename);
 
     if ((s = strchr(raster.common.name, '[')))
         s = g_strchomp(g_strndup(raster.common.name, s - raster.common.name));

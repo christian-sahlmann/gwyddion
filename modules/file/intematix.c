@@ -274,7 +274,7 @@ isdf_load(const gchar *filename,
         gwy_container_set_string_by_name(container, "/0/data/title",
                                          g_strdup(p));
     gwy_app_channel_title_fall_back(container, 0);
-    gwy_file_channel_import_log_add(container, 0, "intematix", filename);
+    gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
 fail:
     isdf_image_free(&image);

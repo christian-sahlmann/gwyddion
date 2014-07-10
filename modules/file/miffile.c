@@ -650,7 +650,7 @@ mif_load(const gchar *filename,
         gwy_container_set_object(container, quark, dfield);
         g_object_unref(dfield);
         gwy_app_channel_title_fall_back(container, i);
-        gwy_file_channel_import_log_add(container, i, "miffile", filename);
+        gwy_file_channel_import_log_add(container, i, NULL, filename);
     }
 
     if (!container)

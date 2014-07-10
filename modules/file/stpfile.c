@@ -247,7 +247,7 @@ stpfile_load(const gchar *filename,
             process_metadata(stpfile, i, container, container_key);
             g_free(container_key);
 
-            gwy_file_channel_import_log_add(container, i, "stpfile", filename);
+            gwy_file_channel_import_log_add(container, i, NULL, filename);
         }
     }
 

@@ -304,7 +304,7 @@ psia_load(const gchar *filename,
 
     container = psia_load_tiff(tiff, error);
     if (container)
-        gwy_file_channel_import_log_add(container, 0, "psia", filename);
+        gwy_file_channel_import_log_add(container, 0, NULL, filename);
     gwy_tiff_free(tiff);
 
     return container;

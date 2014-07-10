@@ -697,7 +697,7 @@ gdef_load(const gchar *filename,
                 g_object_unref(meta);
                 g_free(key);
             }
-            gwy_file_channel_import_log_add(container, i, "gdeffile",
+            gwy_file_channel_import_log_add(container, i, NULL,
                                             filename);
             i++;
         }

@@ -378,7 +378,7 @@ opd_load(const gchar *filename,
         gwy_container_set_boolean_by_name(container, s, TRUE);
         g_free(s);
 
-        gwy_file_channel_import_log_add(container, j, "opdfile", filename);
+        gwy_file_channel_import_log_add(container, j, NULL, filename);
 
         j++;
     }
@@ -829,7 +829,7 @@ opd_asc_load(const gchar *filename,
             gwy_container_set_boolean_by_name(container, s, TRUE);
             g_free(s);
 
-            gwy_file_channel_import_log_add(container, j, "opdfile-asc",
+            gwy_file_channel_import_log_add(container, j, NULL,
                                             filename);
 
             j++;

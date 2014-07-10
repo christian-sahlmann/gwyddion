@@ -217,7 +217,7 @@ winSTM_load(const gchar *filename,
         g_object_unref(meta);
         g_object_unref(dfield);
     }
-    gwy_file_channel_import_log_add(container, 0, "win_stm", filename);
+    gwy_file_channel_import_log_add(container, 0, NULL, filename);
     gwy_file_abandon_contents(buffer, size, NULL);
     return container;
 }

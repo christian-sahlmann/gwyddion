@@ -957,7 +957,7 @@ mdt_load(const gchar *filename,
             gwy_container_set_object_by_name(data, key->str, meta);
             g_object_unref(meta);
             g_free(sdframe);
-            gwy_file_channel_import_log_add(data, n, "nt-mdt", filename);
+            gwy_file_channel_import_log_add(data, n, NULL, filename);
 
             n++;
         }
@@ -987,7 +987,7 @@ mdt_load(const gchar *filename,
                 g_string_printf(key, "/%d/meta", n);
                 gwy_container_set_object_by_name(data, key->str, meta);
                 g_object_unref(meta);
-                gwy_file_channel_import_log_add(data, n, "nt-mdt", filename);
+                gwy_file_channel_import_log_add(data, n, NULL, filename);
 
                 n++;
             }
@@ -1048,7 +1048,7 @@ mdt_load(const gchar *filename,
                     g_object_unref(brick);
                     g_object_unref(dfield);
 
-                    gwy_file_volume_import_log_add(data, n, "nt-mdt", filename);
+                    gwy_file_volume_import_log_add(data, n, NULL, filename);
 
                     n++;
 
@@ -1067,7 +1067,7 @@ mdt_load(const gchar *filename,
                             gwy_container_set_string_by_name(data, key->str,
                                                              g_strdup_printf("%s, %s", gwy_container_get_string_by_name(data, key->str), lTitle));
 
-                            gwy_file_channel_import_log_add(data, n, "nt-mdt", filename);
+                            gwy_file_channel_import_log_add(data, n, NULL, filename);
                         }
                         g_free(scanData);
                     }

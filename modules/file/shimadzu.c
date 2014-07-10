@@ -248,7 +248,7 @@ shimadzu_load(const gchar *filename,
         else
             gwy_app_channel_title_fall_back(container, 0);
 
-        gwy_file_channel_import_log_add(container, 0, "shimadzu", filename);
+        gwy_file_channel_import_log_add(container, 0, NULL, filename);
     }
 
     g_free(head);

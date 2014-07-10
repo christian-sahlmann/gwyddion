@@ -224,7 +224,7 @@ zemax_load(const gchar *filename,
         gwy_container_set_object_by_name(container, str->str, channelmeta);
         g_object_unref(channelmeta);
 
-        gwy_file_channel_import_log_add(container, i, "zemax", filename);
+        gwy_file_channel_import_log_add(container, i, NULL, filename);
     }
     g_string_free(str, TRUE);
     g_object_unref(meta);

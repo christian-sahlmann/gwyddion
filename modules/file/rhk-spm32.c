@@ -312,7 +312,7 @@ rhkspm32_load(const gchar *filename,
             else
                 gwy_app_channel_title_fall_back(container, i);
 
-            gwy_file_channel_import_log_add(container, i, "rhk-spm32",
+            gwy_file_channel_import_log_add(container, i, NULL,
                                             filename);
         }
         else if (rhkpage->type == RHK_TYPE_LINE) { // niv - after omicron.c
