@@ -825,6 +825,7 @@ col_synth_do(const ColSynthArgs *args,
 
         zsum += height;
         if (any_graphs && ip >= nextgraphx) {
+            gwy_data_field_invalidate(dfield);
             height = zsum/(xres*yres) * zscale;
             g_array_append_val(evolution[GRAPH_NFLAGS], height);
             if (evolution[GRAPH_MAX]) {
@@ -833,13 +834,11 @@ col_synth_do(const ColSynthArgs *args,
             }
             if (evolution[GRAPH_RMS]) {
                 gdouble rms;
-                gwy_data_field_invalidate(dfield);
                 rms = gwy_data_field_get_rms(dfield) * zscale;
                 g_array_append_val(evolution[GRAPH_RMS], rms);
             }
             if (evolution[GRAPH_NMAX]) {
                 gdouble nmax;
-                gwy_data_field_invalidate(dfield);
                 nmax = gwy_data_field_count_maxima(dfield);
                 g_array_append_val(evolution[GRAPH_NMAX], nmax);
             }
