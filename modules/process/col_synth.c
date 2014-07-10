@@ -734,7 +734,7 @@ col_synth_do(const ColSynthArgs *args,
     RelaxationType relaxation;
     gint xres, yres;
     guint i;
-    gulong npart, ip;
+    guint64 npart, ip;
     gdouble zmax, zsum, nextgraphx;
     gdouble lasttime = 0.0, lastpreviewtime = 0.0, currtime;
     GTimer *timer;
@@ -764,7 +764,7 @@ col_synth_do(const ColSynthArgs *args,
     gwy_data_field_add(dfield, -gwy_data_field_get_max(dfield));
     zmax = zsum = nextgraphx = 0.0;
 
-    npart = args->coverage * xres*yres;
+    npart = args->coverage * (guint64)(xres*yres);
     gwy_app_wait_set_message(_("Depositing particles..."));
     gwy_app_wait_set_fraction(0.0);
 
