@@ -465,7 +465,7 @@ col_synth_dialog(ColSynthArgs *args,
     row = 0;
 
     controls.coverage = gtk_adjustment_new(args->coverage,
-                                           0.1, 1000.0, 0.001, 1.0, 0);
+                                           0.1, 10000.0, 0.001, 1.0, 0);
     g_object_set_data(G_OBJECT(controls.coverage), "target", &args->coverage);
     gwy_table_attach_hscale(table, row, _("Co_verage:"), NULL,
                             controls.coverage, GWY_HSCALE_SQRT);
@@ -982,7 +982,7 @@ col_synth_sanitize_args(ColSynthArgs *args)
     args->seed = MAX(0, args->seed);
     args->randomize = !!args->randomize;
     args->animated = !!args->animated;
-    args->coverage = CLAMP(args->coverage, 0.1, 1000.0);
+    args->coverage = CLAMP(args->coverage, 0.1, 10000.0);
     args->height = CLAMP(args->height, 0.001, 10000.0);
     args->height_noise = CLAMP(args->height_noise, 0.0, 1.0);
     args->theta = CLAMP(args->theta, 0, G_PI/2.0);
