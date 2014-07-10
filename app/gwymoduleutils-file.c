@@ -24,6 +24,7 @@
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/stats.h>
+#include <libgwymodule/gwymodule-file.h>
 #include <app/data-browser.h>
 #include <app/settings.h>
 #include <app/log.h>
@@ -638,7 +639,9 @@ gwy_text_header_context_get_lineno(const GwyTextHeaderContext *context)
  * @data: A data container.
  * @id: Data channel id.
  * @filetype: File type, i.e. the name of the function importing the data
- *            (without any "file::" prefix).
+ *            (without any "file::" prefix).  Since 2.38 it is possible to
+ *            pass %NULL to fill the name of the currently running file type
+ *            function automatically.
  * @filename: Name of the imported file.  If it is not valid UTF-8, it will be
  *            converted to UTF-8 using g_filename_to_utf8().  Failing even
  *            that, non-ASCII characters will be escaped.
@@ -664,7 +667,9 @@ gwy_file_channel_import_log_add(GwyContainer *data,
  * @data: A data container.
  * @id: Volume data id.
  * @filetype: File type, i.e. the name of the function importing the data
- *            (without any "file::" prefix).
+ *            (without any "file::" prefix).  Since 2.38 it is possible to
+ *            pass %NULL to fill the name of the currently running file type
+ *            function automatically.
  * @filename: Name of the imported file.  If it is not valid UTF-8, it will be
  *            converted to UTF-8 using g_filename_to_utf8().  Failing even
  *            that, non-ASCII characters will be escaped.
@@ -699,6 +704,9 @@ add_import_log(GwyContainer *data,
     GValue savedval;
     GQuark quark;
     gchar *myfilename = NULL, *fskey, *qualname;
+
+    if (!filetype)
+        filetype = gwy_file_func_current();
 
     g_return_if_fail(filename);
     g_return_if_fail(filetype);
