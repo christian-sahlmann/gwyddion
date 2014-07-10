@@ -59,8 +59,9 @@ typedef enum {
 } RelaxationType;
 
 typedef enum {
-    GRAPH_MAX = 0,
-    GRAPH_RMS = 1,
+    GRAPH_MAX  = 0,
+    GRAPH_RMS  = 1,
+    GRAPH_NMAX = 2,
     GRAPH_NFLAGS,
 } GraphFlags;
 
@@ -169,9 +170,10 @@ static void       col_synth_save_args     (GwyContainer *container,
 
 #include "synth.h"
 
-static const gchar* graph_flags[] = {
+static const gchar* graph_flags[GRAPH_NFLAGS] = {
     N_("Maximum"),
     N_("RMS"),
+    N_("Number of maxima"),
 };
 
 static const ColSynthArgs col_synth_defaults = {
@@ -351,10 +353,12 @@ run_noninteractive(ColSynthArgs *args,
         g_object_set(gmodel, "si-unit-x", unit, NULL);
         g_object_unref(unit);
 
-        unit = gwy_data_field_get_si_unit_z(newfield);
-        unit = gwy_si_unit_duplicate(unit);
-        g_object_set(gmodel, "si-unit-y", unit, NULL);
-        g_object_unref(unit);
+        if (i == GRAPH_MAX || i == GRAPH_RMS) {
+            unit = gwy_data_field_get_si_unit_z(newfield);
+            unit = gwy_si_unit_duplicate(unit);
+            g_object_set(gmodel, "si-unit-y", unit, NULL);
+            g_object_unref(unit);
+        }
 
         gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
     }
@@ -465,7 +469,7 @@ col_synth_dialog(ColSynthArgs *args,
     row = 0;
 
     controls.coverage = gtk_adjustment_new(args->coverage,
-                                           0.1, 10000.0, 0.001, 1.0, 0);
+                                           0.1, 2000.0, 0.001, 1.0, 0);
     g_object_set_data(G_OBJECT(controls.coverage), "target", &args->coverage);
     gwy_table_attach_hscale(table, row, _("Co_verage:"), NULL,
                             controls.coverage, GWY_HSCALE_SQRT);
@@ -834,6 +838,12 @@ col_synth_do(const ColSynthArgs *args,
                 rms = gwy_data_field_get_rms(dfield) * zscale;
                 g_array_append_val(evolution[GRAPH_RMS], rms);
             }
+            if (evolution[GRAPH_NMAX]) {
+                gdouble nmax;
+                gwy_data_field_invalidate(dfield);
+                nmax = gwy_data_field_count_maxima(dfield);
+                g_array_append_val(evolution[GRAPH_NMAX], nmax);
+            }
 
             nextgraphx = 1.2*nextgraphx + 1.0;
         }
@@ -982,7 +992,7 @@ col_synth_sanitize_args(ColSynthArgs *args)
     args->seed = MAX(0, args->seed);
     args->randomize = !!args->randomize;
     args->animated = !!args->animated;
-    args->coverage = CLAMP(args->coverage, 0.1, 10000.0);
+    args->coverage = CLAMP(args->coverage, 0.1, 2000.0);
     args->height = CLAMP(args->height, 0.001, 10000.0);
     args->height_noise = CLAMP(args->height_noise, 0.0, 1.0);
     args->theta = CLAMP(args->theta, 0, G_PI/2.0);
