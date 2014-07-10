@@ -392,6 +392,8 @@ void    gwy_data_field_get_line_stats       (GwyDataField *data_field,
                                              GwyDataLine *target_line,
                                              GwyLineStatQuantity quantity,
                                              GwyOrientation orientation);
+guint   gwy_data_field_count_maxima         (GwyDataField *data_field);
+guint   gwy_data_field_count_minima         (GwyDataField *data_field);
 
 G_END_DECLS
 

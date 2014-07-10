@@ -5604,6 +5604,64 @@ gwy_data_field_get_line_stats(GwyDataField *data_field,
                                        quantity, orientation);
 }
 
+/**
+ * gwy_data_field_count_maxima:
+ * @data_field: A data field.
+ *
+ * Counts the number of regional maxima in a data field.
+ *
+ * See gwy_data_field_mark_extrema() for the definition of a regional maximum.
+ *
+ * Returns: The number of regional maxima.
+ *
+ * Since: 2.38
+ **/
+guint
+gwy_data_field_count_maxima(GwyDataField *data_field)
+{
+    GwyDataField *mask;
+    gint *grains;
+    guint ngrains;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0);
+    mask = gwy_data_field_new_alike(data_field, FALSE);
+    gwy_data_field_mark_extrema(data_field, mask, TRUE);
+    grains = g_new0(gint, data_field->xres*data_field->yres);
+    ngrains = gwy_data_field_number_grains(mask, grains);
+    g_free(grains);
+    g_object_unref(mask);
+    return ngrains;
+}
+
+/**
+ * gwy_data_field_count_minima:
+ * @data_field: A data field
+ *
+ * Counts the number of regional minima in a data field.
+ *
+ * See gwy_data_field_mark_extrema() for the definition of a regional minimum.
+ *
+ * Returns: The number of regional minima.
+ *
+ * Since: 2.38
+ **/
+guint
+gwy_data_field_count_minima(GwyDataField *data_field)
+{
+    GwyDataField *mask;
+    gint *grains;
+    guint ngrains;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0);
+    mask = gwy_data_field_new_alike(data_field, FALSE);
+    gwy_data_field_mark_extrema(data_field, mask, FALSE);
+    grains = g_new0(gint, data_field->xres*data_field->yres);
+    ngrains = gwy_data_field_number_grains(mask, grains);
+    g_free(grains);
+    g_object_unref(mask);
+    return ngrains;
+}
+
 /************************** Documentation ****************************/
 
 /**
