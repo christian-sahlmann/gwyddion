@@ -160,7 +160,7 @@ gwy_app_channel_log_add_proc(GwyContainer *data,
     funcname = current_function_name_by_type("proc");
     g_return_if_fail(funcname);
     qname = g_strconcat("proc::", funcname, NULL);
-    gwy_app_channel_log_add(data, previd, newid, qname);
+    gwy_app_channel_log_add(data, previd, newid, qname, NULL);
     g_free(qname);
 }
 
@@ -227,7 +227,7 @@ gwy_app_volume_log_add_volume(GwyContainer *data,
     funcname = current_function_name_by_type("volume");
     g_return_if_fail(funcname);
     qname = g_strconcat("volume::", funcname, NULL);
-    gwy_app_volume_log_add(data, previd, newid, qname);
+    gwy_app_volume_log_add(data, previd, newid, qname, NULL);
     g_free(qname);
 }
 
