@@ -79,6 +79,7 @@ struct _GwyToolSpotRemover {
 
     GtkWidget *zoomview;
     GtkWidget *method;
+    GtkWidget *message_label;
     GtkWidget *apply;
     GtkWidget *clear;
     GwySelection *zselection;
@@ -91,6 +92,9 @@ struct _GwyToolSpotRemover {
 
     /* to prevent double-update on data_changed -- badly designed code? */
     gboolean drawn;
+
+    gboolean has_selection;
+    gboolean has_zselection;
 
     /* potential class data */
     GType layer_type_point;
@@ -118,6 +122,7 @@ static void gwy_tool_spot_remover_zselection_changed(GwySelection *selection,
                                                      gint hint,
                                                      GwyToolSpotRemover *tool);
 static void gwy_tool_spot_remover_draw_zoom         (GwyToolSpotRemover *tool);
+static void gwy_tool_spot_remover_update_message    (GwyToolSpotRemover *tool);
 static void gwy_tool_spot_remover_method_changed    (GtkComboBox *combo,
                                                      GwyToolSpotRemover *tool);
 static void gwy_tool_spot_remover_apply             (GwyToolSpotRemover *tool);
@@ -153,7 +158,7 @@ static GwyModuleInfo module_info = {
     N_("Spot removal tool, interpolates small parts of data (displayed on "
        "a zoomed view) using selected algorithm."),
     "Yeti <yeti@gwyddion.net>",
-    "2.5",
+    "2.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -307,7 +312,7 @@ gwy_tool_spot_remover_init_dialog(GwyToolSpotRemover *tool)
     gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 0);
 
     /* Options */
-    table = GTK_TABLE(gtk_table_new(3, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(4, 4, FALSE));
     gtk_table_set_col_spacings(table, 6);
     gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -333,6 +338,13 @@ gwy_tool_spot_remover_init_dialog(GwyToolSpotRemover *tool)
     gtk_table_attach(table, tool->method,
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
+
+    gtk_table_set_row_spacing(table, row-1, 8);
+
+    tool->message_label = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(tool->message_label), 0.0, 0.5);
+    gtk_table_attach(table, tool->message_label,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     tool->clear = gtk_dialog_add_button(dialog, GTK_STOCK_CLEAR,
                                         GWY_TOOL_RESPONSE_CLEAR);
@@ -466,9 +478,12 @@ gwy_tool_spot_remover_selection_changed(GwyPlainTool *plain_tool,
     else
         xr.from = yr.from = xr.to = yr.to = -1;
 
+    tool->has_selection = has_selection;
     if (tool->xr.from == xr.from && tool->yr.from == tool->yr.from
-        && tool->xr.to == xr.to && tool->yr.to == yr.to)
+        && tool->xr.to == xr.to && tool->yr.to == yr.to) {
+        gwy_tool_spot_remover_update_message(tool);
         return;
+    }
 
     tool->xr = xr;
     tool->yr = yr;
@@ -512,6 +527,9 @@ gwy_tool_spot_remover_zselection_changed(GwySelection *selection,
         gtk_widget_set_sensitive(tool->clear, FALSE);
 
     gtk_widget_set_sensitive(tool->apply, is_ok);
+
+    tool->has_zselection = gwy_selection_get_data(selection, NULL);
+    gwy_tool_spot_remover_update_message(tool);
 }
 
 static void
@@ -541,6 +559,34 @@ gwy_tool_spot_remover_draw_zoom(GwyToolSpotRemover *tool)
                                  tool->xr.dest, tool->yr.dest);
     }
     gwy_data_field_data_changed(tool->detail);
+}
+
+static void
+gwy_tool_spot_remover_update_message(GwyToolSpotRemover *tool)
+{
+    static const gchar *message_data = NULL;
+    static const gchar *message_zoom = NULL;
+
+    if (!message_data)
+        message_data = _("No point in the image selected.");
+    if (!message_zoom)
+        message_zoom = _("No area in the zoom selected.");
+
+    if (tool->has_selection) {
+        if (tool->has_zselection)
+            gtk_label_set_text(GTK_LABEL(tool->message_label), NULL);
+        else
+            gtk_label_set_text(GTK_LABEL(tool->message_label), message_zoom);
+    }
+    else {
+        if (tool->has_zselection)
+            gtk_label_set_text(GTK_LABEL(tool->message_label), message_data);
+        else {
+            gchar *s = g_strconcat(message_data, "\n", message_zoom, NULL);
+            gtk_label_set_text(GTK_LABEL(tool->message_label), s);
+            g_free(s);
+        }
+    }
 }
 
 static gboolean

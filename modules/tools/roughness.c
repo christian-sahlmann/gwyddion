@@ -188,6 +188,7 @@ struct _GwyToolRoughness {
     GtkWidget *interpolation;
 
     GtkBox *aux_box;
+    GtkWidget *message_label;
     GtkWidget *copy;
     GtkWidget *save;
 
@@ -620,9 +621,8 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Calculate surface profile parameters."),
-    "Martin Hasoň <hasonm@physics.muni.cz>, "
-        "Yeti <yeti@gwyddion.net>",
-    "1.8",
+    "Martin Hasoň <hasonm@physics.muni.cz>, Yeti <yeti@gwyddion.net>",
+    "1.9",
     "Martin Hasoň & David Nečas (Yeti)",
     "2006",
 };
@@ -820,7 +820,12 @@ gwy_tool_roughness_init_dialog(GwyToolRoughness *tool)
     hbox = gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(vbox_left), hbox, FALSE, FALSE, 0);
     tool->aux_box = GTK_BOX(hbox);
-  
+
+    tool->message_label = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(tool->message_label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(tool->aux_box), tool->message_label,
+                       TRUE, TRUE, 4);
+
     tool->save = gwy_tool_roughness_add_aux_button(tool, GTK_STOCK_SAVE,
                                                    _("Save table to a file"));
     g_signal_connect_swapped(tool->save, "clicked",
@@ -1267,8 +1272,12 @@ gwy_tool_roughness_update(GwyToolRoughness *tool)
         gwy_tool_roughness_update_graphs(tool);
         gtk_tree_model_foreach(GTK_TREE_MODEL(tool->store),
                                emit_row_changed, NULL);
+        gtk_label_set_text(GTK_LABEL(tool->message_label),
+                           _("No profile selected."));
         return;
     }
+
+    gtk_label_set_text(GTK_LABEL(tool->message_label), NULL);
 
     g_return_if_fail(plain_tool->selection);
     g_return_if_fail(gwy_selection_get_object(plain_tool->selection, 0, line));
