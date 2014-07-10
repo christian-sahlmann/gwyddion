@@ -1,8 +1,14 @@
 2.38 (0000-00-00)
 Libraries:
 - libgwyprocess: New function to find a height threshold by the Otsu method.
+- libgwyprocess: New functions to calculate data field total variation.
 - libgwyprocess: Macro gwy_data_field_invalidate() is also provided as
   a function so it is available in pygwy now.
+- libgwymodule: New functions to obtain the name of the currently running
+  file, proc, volume and graph module functions.
+- libgwyprocess: New functions to count regional minima and maxima.
+- libgwyapp: New simplified logging functions that do not require passing the
+  function name.
 
 Modules:
 - OpenGPS (new): Imports OpenGPS surface data format (ISO 5436-2).
@@ -11,6 +17,7 @@ Modules:
 - Filters tool: Gaussian smoothing is no longer limited to integer FWHM.
 - Columnar synthesis: Can plot the evolution of some statistics during the
   growth.
+- APE DAX: Warning about invalid logging function name was fixed.
 
 
 2.37 (2014-06-27)
