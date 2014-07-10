@@ -354,7 +354,7 @@ volcal(GwyContainer *data, GwyRunType run)
     g_object_unref(dfield);
 
     gwy_app_set_brick_title(data, newid, _("Recalibrated Data"));
-    gwy_app_volume_log_add(data, id, newid, "volume::volcal", NULL);
+    gwy_app_volume_log_add_volume(data, id, newid);
 }
 
 static gboolean
