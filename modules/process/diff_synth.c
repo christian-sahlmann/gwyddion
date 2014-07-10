@@ -56,7 +56,7 @@ enum {
 };
 
 typedef enum {
-    GRAPH_NGRAINS = 0,
+    GRAPH_VAR = 0,
     GRAPH_NFLAGS,
 } GraphFlags;
 
@@ -172,7 +172,8 @@ static void               preview                  (DiffSynthControls *controls)
 static gboolean           diff_synth_do            (DiffSynthArgs *args,
                                                     GwyDataField *dfield,
                                                     GwyGraphCurveModel **gcmodels,
-                                                    gdouble preview_time);
+                                                    gdouble preview_time,
+                                                    gdouble zscale);
 static ParticleNeighbours random_direction         (GRand *rng);
 static void               particle_try_move        (Particle *p,
                                                     guint *hfield,
@@ -201,7 +202,8 @@ static void               diff_synth_save_args     (GwyContainer *container,
 
 #include "synth.h"
 
-static const gchar* graph_flags[] = {
+static const gchar* graph_flags[GRAPH_NFLAGS + 1/*unused*/] = {
+    N_("Variation"),
     N_("Number of islands"),
 };
 
@@ -279,6 +281,7 @@ run_noninteractive(DiffSynthArgs *args,
     GwyGraphCurveModel *gcmodels[GRAPH_NFLAGS];
     gboolean replace = dimsargs->replace && dfield;
     gboolean add = dimsargs->add && dfield;
+    gdouble zscale;
     gint newid;
     guint i;
     gboolean ok;
@@ -305,9 +308,10 @@ run_noninteractive(DiffSynthArgs *args,
         gwy_si_unit_set_from_string(siunit, dimsargs->zunits);
     }
 
+    zscale = pow10(dimsargs->zpow10) * args->height;
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid),
                        _("Starting..."));
-    ok = diff_synth_do(args, newfield, gcmodels, HUGE_VAL);
+    ok = diff_synth_do(args, newfield, gcmodels, HUGE_VAL, zscale);
     gwy_app_wait_finish();
 
     if (!ok) {
@@ -315,7 +319,7 @@ run_noninteractive(DiffSynthArgs *args,
         return;
     }
 
-    gwy_data_field_multiply(newfield, pow10(dimsargs->zpow10) * args->height);
+    gwy_data_field_multiply(newfield, zscale);
 
     if (replace) {
         gwy_app_undo_qcheckpointv(data, 1, &quark);
@@ -378,10 +382,13 @@ run_noninteractive(DiffSynthArgs *args,
         g_object_set(gmodel, "si-unit-x", unit, NULL);
         g_object_unref(unit);
 
-        unit = gwy_data_field_get_si_unit_z(newfield);
-        unit = gwy_si_unit_duplicate(unit);
-        g_object_set(gmodel, "si-unit-y", unit, NULL);
-        g_object_unref(unit);
+        if (i == GRAPH_VAR) {
+            unit = gwy_si_unit_multiply(gwy_data_field_get_si_unit_z(newfield),
+                                        gwy_data_field_get_si_unit_xy(newfield),
+                                        NULL);
+            g_object_set(gmodel, "si-unit-y", unit, NULL);
+            g_object_unref(unit);
+        }
 
         gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
     }
@@ -704,7 +711,7 @@ preview(DiffSynthControls *controls)
         gwy_data_field_clear(dfield);
 
     gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Starting..."));
-    diff_synth_do(args, dfield, NULL, 1.25);
+    diff_synth_do(args, dfield, NULL, 1.25, 1.0);
     gwy_app_wait_finish();
 
     gwy_data_field_data_changed(dfield);
@@ -714,25 +721,24 @@ static gboolean
 diff_synth_do(DiffSynthArgs *args,
               GwyDataField *dfield,
               GwyGraphCurveModel **gcmodels,
-              gdouble preview_time)
+              gdouble preview_time,
+              gdouble zscale)
 {
     gint xres, yres, k;
     guint i;
+    gdouble nextgraphx;
     gdouble lasttime = 0.0, lastpreviewtime = 0.0, currtime;
-    gdouble threshold;
+    gdouble height, threshold;
     GTimer *timer;
     guint64 workdone, niter, iter;
     DiffSynthState *dstate;
     GArray *particles;
-    /*
     GArray **evolution = NULL;
     gboolean any_graphs = FALSE;
-    */
     gboolean finished = FALSE;
 
     timer = g_timer_new();
 
-    /*
     evolution = g_new0(GArray*, GRAPH_NFLAGS + 1);
     if (gcmodels) {
         for (i = 0; i < GRAPH_NFLAGS; i++) {
@@ -744,14 +750,13 @@ diff_synth_do(DiffSynthArgs *args,
         if (any_graphs)
             evolution[GRAPH_NFLAGS] = g_array_new(FALSE, FALSE, sizeof(gdouble));
     }
-    */
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
 
     threshold = gwy_data_field_otsu_threshold(dfield);
     gwy_data_field_threshold(dfield, threshold, 0.0, 1.0);
-    /* zmax = zsum = nextgraphx = 0.0; */
+    nextgraphx = 0.0;
 
     gwy_app_wait_set_message(_("Depositing particles..."));
     gwy_app_wait_set_fraction(0.0);
@@ -801,29 +806,42 @@ diff_synth_do(DiffSynthArgs *args,
             }
             workdone -= WORK_UPDATE_CHECK;
         }
+
+        if (any_graphs && iter >= nextgraphx) {
+            for (k = 0; k < xres*yres; k++)
+                dfield->data[k] = dstate->hfield[k] * zscale;
+            gwy_data_field_invalidate(dfield);
+
+            height = iter*dstate->fluxperiter * zscale;
+            g_array_append_val(evolution[GRAPH_NFLAGS], height);
+            if (evolution[GRAPH_VAR]) {
+                gdouble var = gwy_data_field_get_variation(dfield);
+                g_array_append_val(evolution[GRAPH_VAR], var);
+            }
+
+            nextgraphx += 0.001/dstate->flux + MIN(0.2*nextgraphx,
+                                                   0.05/dstate->flux);
+        }
     }
     finalize_moving_particles(dstate);
 
     if (gcmodels) {
+        const gdouble *xdata;
         for (i = 0; i < GRAPH_NFLAGS; i++) {
-            gcmodels[i] = NULL;
-        }
-    }
-    /*
-    for (i = 0; i < GRAPH_NFLAGS; i++) {
-        if (!evolution[i]) {
-            gcmodels[i] = NULL;
-            continue;
-        }
+            if (!evolution[i]) {
+                gcmodels[i] = NULL;
+                continue;
+            }
 
-        gcmodels[i] = gwy_graph_curve_model_new();
-        gwy_graph_curve_model_set_data(gcmodels[i],
-                                       (gdouble*)evolution[GRAPH_NFLAGS]->data,
-                                       (gdouble*)evolution[i]->data,
-                                       evolution[GRAPH_NFLAGS]->len);
-        g_object_set(gcmodels[i], "description", _(graph_flags[i]), NULL);
+            xdata = (const gdouble*)evolution[GRAPH_NFLAGS]->data;
+            gcmodels[i] = gwy_graph_curve_model_new();
+            gwy_graph_curve_model_set_data(gcmodels[i],
+                                           xdata,
+                                           (gdouble*)evolution[i]->data,
+                                           evolution[GRAPH_NFLAGS]->len);
+            g_object_set(gcmodels[i], "description", _(graph_flags[i]), NULL);
+        }
     }
-    */
 
     for (k = 0; k < xres*yres; k++)
         dfield->data[k] = dstate->hfield[k];
@@ -834,13 +852,11 @@ diff_synth_do(DiffSynthArgs *args,
 fail:
     g_timer_destroy(timer);
     diff_synth_state_free(dstate);
-    /*
     for (i = 0; i <= GRAPH_NFLAGS; i++) {
         if (evolution[i])
             g_array_free(evolution[i], TRUE);
     }
     g_free(evolution);
-    */
 
     return finished;
 }
