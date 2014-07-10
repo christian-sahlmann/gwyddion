@@ -819,8 +819,8 @@ diff_synth_do(DiffSynthArgs *args,
                 g_array_append_val(evolution[GRAPH_VAR], var);
             }
 
-            nextgraphx += 0.001/dstate->flux + MIN(0.2*nextgraphx,
-                                                   0.05/dstate->flux);
+            nextgraphx += 0.0001/dstate->flux + MIN(0.2*nextgraphx,
+                                                    0.08/dstate->flux);
         }
     }
     finalize_moving_particles(dstate);
