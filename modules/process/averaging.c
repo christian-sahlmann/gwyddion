@@ -109,7 +109,7 @@ averaging(GwyContainer *data, GwyRunType run)
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
         gwy_app_set_data_field_title(data, newid, _("Averaged"));
-        gwy_app_channel_log_add(data, id, newid, "proc::averaging", NULL);
+        gwy_app_channel_log_add_proc(data, id, newid);
 
         g_object_unref(score);
     }

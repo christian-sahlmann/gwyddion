@@ -276,7 +276,7 @@ correct_affine(GwyContainer *data, GwyRunType run)
     newid = affcor_dialog(&args, data, dfield, id);
     affcor_save_args(gwy_app_settings_get(), &args);
     if (newid != -1)
-        gwy_app_channel_log_add(data, id, newid, "proc::correct_affine", NULL);
+        gwy_app_channel_log_add_proc(data, id, newid);
 }
 
 static gint

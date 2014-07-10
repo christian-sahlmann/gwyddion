@@ -180,7 +180,7 @@ scale(GwyContainer *data, GwyRunType run)
     }
 
     gwy_app_set_data_field_title(data, newid, _("Scaled Data"));
-    gwy_app_channel_log_add(data, oldid, newid, "proc::scale", NULL);
+    gwy_app_channel_log_add_proc(data, oldid, newid);
 }
 
 static gboolean

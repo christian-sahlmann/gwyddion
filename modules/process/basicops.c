@@ -166,7 +166,7 @@ flip_horizontally(GwyContainer *data, GwyRunType run)
             gwy_data_field_data_changed(dfields[i]);
         }
     }
-    gwy_app_channel_log_add(data, id, id, "proc::flip_horizontally", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static void
@@ -194,7 +194,7 @@ flip_vertically(GwyContainer *data, GwyRunType run)
             gwy_data_field_data_changed(dfields[i]);
         }
     }
-    gwy_app_channel_log_add(data, id, id, "proc::flip_vertically", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static void
@@ -220,7 +220,7 @@ invert_value(GwyContainer *data, GwyRunType run)
             gwy_data_field_data_changed(dfields[i]);
         }
     }
-    gwy_app_channel_log_add(data, id, id, "proc::invert_value", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static void
@@ -250,7 +250,7 @@ rotate_clockwise_90(GwyContainer *data, GwyRunType run)
         }
     }
     gwy_app_data_clear_selections(data, id);
-    gwy_app_channel_log_add(data, id, id, "proc::rotate_90_cw", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static void
@@ -280,7 +280,7 @@ rotate_counterclockwise_90(GwyContainer *data, GwyRunType run)
         }
     }
     gwy_app_data_clear_selections(data, id);
-    gwy_app_channel_log_add(data, id, id, "proc::rotate_90_ccw", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static void
@@ -338,7 +338,7 @@ rotate_180(GwyContainer *data, GwyRunType run)
             gwy_data_field_data_changed(dfields[i]);
         }
     }
-    gwy_app_channel_log_add(data, id, id, "proc::rotate_180", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static void
@@ -411,7 +411,7 @@ square_samples(GwyContainer *data, GwyRunType run)
         g_object_unref(dfields[2]);
     }
 
-    gwy_app_channel_log_add(data, oldid, newid, "proc::square_samples", NULL);
+    gwy_app_channel_log_add_proc(data, oldid, newid);
 }
 
 static void
@@ -455,7 +455,7 @@ null_offsets(GwyContainer *data,
         }
     }
 
-    gwy_app_channel_log_add(data, id, id, "proc::null_offsets", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

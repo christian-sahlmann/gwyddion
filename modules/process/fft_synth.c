@@ -296,7 +296,7 @@ run_noninteractive(FFTSynthArgs *args,
         else
             gwy_data_field_copy(out_re, dfield, FALSE);
 
-        gwy_app_channel_log_add(data, oldid, oldid, "proc::fft_synth", NULL);
+        gwy_app_channel_log_add_proc(data, oldid, oldid);
         gwy_data_field_data_changed(dfield);
     }
     else {
@@ -321,9 +321,7 @@ run_noninteractive(FFTSynthArgs *args,
         }
 
         gwy_app_set_data_field_title(data, newid, _("Generated"));
-
-        gwy_app_channel_log_add(data, add ? oldid : -1, newid,
-                                "proc::fft_synth", NULL);
+        gwy_app_channel_log_add_proc(data, add ? oldid : -1, newid);
     }
 
     g_object_unref(out_re);

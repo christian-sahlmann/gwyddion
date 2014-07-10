@@ -276,7 +276,7 @@ xydenoise_do(XYdenoiseArgs *args)
                             GWY_DATA_ITEM_GRADIENT, 0);
 
     gwy_app_set_data_field_title(data, newid, _("Denoised"));
-    gwy_app_channel_log_add(data, -1, newid, "proc::xydenoise", NULL);
+    gwy_app_channel_log_add_proc(data, -1, newid);
     gwy_app_wait_finish();
 
     g_object_unref(result);

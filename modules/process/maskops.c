@@ -109,7 +109,7 @@ mask_invert(GwyContainer *data, GwyRunType run)
     gwy_data_field_multiply(mfield, -1.0);
     gwy_data_field_add(mfield, 1.0);
     gwy_data_field_data_changed(mfield);
-    gwy_app_channel_log_add(data, id, id, "proc::mask_invert", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static void
@@ -126,7 +126,7 @@ mask_remove(GwyContainer *data, GwyRunType run)
 
     gwy_app_undo_qcheckpointv(data, 1, &mquark);
     gwy_container_remove(data, mquark);
-    gwy_app_channel_log_add(data, id, id, "proc::mask_remove", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static void
@@ -153,7 +153,7 @@ mask_extract(GwyContainer *data, GwyRunType run)
     newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
     g_object_unref(dfield);
     gwy_app_set_data_field_title(data, newid, _("Mask"));
-    gwy_app_channel_log_add(data, oldid, newid, "proc::mask_extract", NULL);
+    gwy_app_channel_log_add_proc(data, oldid, newid);
 }
 
 static void
@@ -173,7 +173,7 @@ remove_touching(GwyContainer *data, GwyRunType run)
     gwy_app_undo_qcheckpointv(data, 1, &mquark);
     gwy_data_field_grains_remove_touching_border(mfield);
     gwy_data_field_data_changed(mfield);
-    gwy_app_channel_log_add(data, id, id, "proc::grain_rem_touching", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

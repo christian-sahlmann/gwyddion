@@ -158,7 +158,7 @@ hough(GwyContainer *data, GwyRunType run)
     g_object_unref(f1);
     g_object_unref(f2);
 
-    gwy_app_channel_log_add(data, id, newid, "proc::hough", NULL);
+    gwy_app_channel_log_add_proc(data, id, newid);
 }
 
 

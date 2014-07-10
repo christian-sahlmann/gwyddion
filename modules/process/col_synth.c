@@ -295,7 +295,7 @@ run_noninteractive(ColSynthArgs *args,
         gwy_app_undo_qcheckpointv(data, 1, &quark);
         gwy_container_set_object(data, gwy_app_get_data_key_for_id(oldid),
                                  newfield);
-        gwy_app_channel_log_add(data, oldid, oldid, "proc::col_synth", NULL);
+        gwy_app_channel_log_add_proc(data, oldid, oldid);
         g_object_unref(newfield);
         newid = oldid;
     }
@@ -319,8 +319,7 @@ run_noninteractive(ColSynthArgs *args,
         }
 
         gwy_app_set_data_field_title(data, newid, _("Generated"));
-        gwy_app_channel_log_add(data, add ? oldid : -1, newid,
-                                "proc::col_synth", NULL);
+        gwy_app_channel_log_add_proc(data, add ? oldid : -1, newid);
         g_object_unref(newfield);
     }
 

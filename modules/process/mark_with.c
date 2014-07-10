@@ -470,8 +470,7 @@ mark_dialog(MarkArgs *args,
     dfield = gwy_container_get_object_by_name(controls.mydata, "/1/mask");
     gwy_app_undo_qcheckpointv(target->data, 1, &mquark);
     gwy_container_set_object(target->data, mquark, dfield);
-    gwy_app_channel_log_add(target->data, target->id, target->id,
-                            "proc::mark_with", NULL);
+    gwy_app_channel_log_add_proc(target->data, target->id, target->id);
 
     g_object_unref(controls.mydata);
 }

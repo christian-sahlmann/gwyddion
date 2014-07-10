@@ -146,7 +146,7 @@ dwt(GwyContainer *data, GwyRunType run)
     gwy_app_set_data_field_title(data, newid, _("DWT"));
     gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
                             GWY_DATA_ITEM_PALETTE, 0);
-    gwy_app_channel_log_add(data, oldid, newid, "proc::dwt", NULL);
+    gwy_app_channel_log_add_proc(data, oldid, newid);
 
     g_object_unref(wtcoefs);
 }

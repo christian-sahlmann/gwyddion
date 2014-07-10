@@ -522,7 +522,7 @@ run_noninteractive(DistortArgs *args,
                             GWY_DATA_ITEM_MASK_COLOR,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
-    gwy_app_channel_log_add(data, id, newid, "proc::polydistort", NULL);
+    gwy_app_channel_log_add_proc(data, id, newid);
 
     g_object_unref(result);
 

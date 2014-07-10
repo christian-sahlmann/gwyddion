@@ -123,7 +123,7 @@ mask_edt(GwyContainer *data, GwyRunType run)
                                 GWY_DATA_ITEM_REAL_SQUARE,
                                 0);
         gwy_app_set_data_field_title(data, newid, _("Distance Transform"));
-        gwy_app_channel_log_add(data, oldid, newid, "proc::mask_edt", NULL);
+        gwy_app_channel_log_add_proc(data, oldid, newid);
     }
     maskedt_save_args(gwy_app_settings_get(), &args);
 }

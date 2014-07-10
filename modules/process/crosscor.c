@@ -645,8 +645,7 @@ crosscor_do(CrosscorArgs * args)
         newid = gwy_app_data_browser_add_data_field(dfieldx, data, TRUE);
         gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT, 0);
-        gwy_app_channel_log_add(data, args->op1.id, newid, "proc::crosscor",
-                                NULL);
+        gwy_app_channel_log_add_proc(data, args->op1.id, newid);
 
         /* create score mask if requested */
         if (args->add_ls_mask) {
@@ -666,8 +665,7 @@ crosscor_do(CrosscorArgs * args)
         newid = gwy_app_data_browser_add_data_field(dfieldy, data, TRUE);
         gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT, 0);
-        gwy_app_channel_log_add(data, args->op1.id, newid, "proc::crosscor",
-                                NULL);
+        gwy_app_channel_log_add_proc(data, args->op1.id, newid);
 
         /* create score mask if requested */
         if (args->add_ls_mask) {
@@ -686,8 +684,7 @@ crosscor_do(CrosscorArgs * args)
         newid = gwy_app_data_browser_add_data_field(abs, data, TRUE);
         gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT, 0);
-        gwy_app_channel_log_add(data, args->op1.id, newid, "proc::crosscor",
-                                NULL);
+        gwy_app_channel_log_add_proc(data, args->op1.id, newid);
 
         /* create score mask if requested */
         if (args->add_ls_mask) {
@@ -706,8 +703,7 @@ crosscor_do(CrosscorArgs * args)
         newid = gwy_app_data_browser_add_data_field(dir, data, TRUE);
         gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT, 0);
-        gwy_app_channel_log_add(data, args->op1.id, newid, "proc::crosscor",
-                                NULL);
+        gwy_app_channel_log_add_proc(data, args->op1.id, newid);
 
         /* create score mask if requested */
         if (args->add_ls_mask) {
@@ -727,8 +723,7 @@ crosscor_do(CrosscorArgs * args)
         newid = gwy_app_data_browser_add_data_field(score, data, TRUE);
         gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT, 0);
-        gwy_app_channel_log_add(data, args->op1.id, newid, "proc::crosscor",
-                                NULL);
+        gwy_app_channel_log_add_proc(data, args->op1.id, newid);
 
         /* create score mask if requested */
         if (args->add_ls_mask) {

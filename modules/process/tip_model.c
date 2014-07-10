@@ -466,8 +466,7 @@ tip_model_do(TipModelArgs *args,
                             args->object.id, newid, FALSE,
                             GWY_DATA_ITEM_GRADIENT, 0);
     gwy_app_set_data_field_title(args->object.data, newid, _("Modelled tip"));
-    gwy_app_channel_log_add(args->object.data, -1, newid,
-                            "proc::tip_model", NULL);
+    gwy_app_channel_log_add_proc(args->object.data, -1, newid);
     controls->tipdone = TRUE;
 }
 

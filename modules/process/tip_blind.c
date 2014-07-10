@@ -916,8 +916,7 @@ tip_blind_do_single(TipBlindControls *controls,
                             0, newid, FALSE,
                             GWY_DATA_ITEM_GRADIENT, 0);
     gwy_app_set_data_field_title(args->source.data, newid, _("Estimated tip"));
-    gwy_app_channel_log_add(args->source.data, -1, newid, "proc::tip_blind",
-                            NULL);
+    gwy_app_channel_log_add_proc(args->source.data, -1, newid);
     controls->tipdone = TRUE;
 }
 
@@ -943,8 +942,7 @@ tip_blind_do_images(TipBlindControls *controls,
                                 _("Estimated tip"), i+1, args->nstripes);
         g_snprintf(key, sizeof(key), "/%d/data/title", newid);
         gwy_container_set_string_by_name(args->source.data, key, title);
-        gwy_app_channel_log_add(args->source.data, -1, newid, "proc::tip_blind",
-                                NULL);
+        gwy_app_channel_log_add_proc(args->source.data, -1, newid);
     }
 
     /* XXX: Have no idea what this means. */

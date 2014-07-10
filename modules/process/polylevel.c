@@ -282,7 +282,7 @@ poly_level_do(GwyContainer *data,
         bg = gwy_data_field_new_alike(dfield, TRUE);
 
     poly_level_do_with_mask(dfield, mfield, dfield, bg, args, NULL);
-    gwy_app_channel_log_add(data, oldid, oldid, "proc::polylevel", NULL);
+    gwy_app_channel_log_add_proc(data, oldid, oldid);
 
     if (!args->do_extract)
         return;

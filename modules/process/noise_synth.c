@@ -276,7 +276,7 @@ run_noninteractive(NoiseSynthArgs *args,
         if (!add)
             gwy_data_field_clear(dfield);
 
-        gwy_app_channel_log_add(data, oldid, oldid, "proc::noise_synth", NULL);
+        gwy_app_channel_log_add_proc(data, oldid, oldid);
     }
     else {
         if (add)
@@ -319,8 +319,7 @@ run_noninteractive(NoiseSynthArgs *args,
         }
 
         gwy_app_set_data_field_title(data, newid, _("Generated"));
-        gwy_app_channel_log_add(data, add ? oldid : -1, newid,
-                                "proc::noise_synth", NULL);
+        gwy_app_channel_log_add_proc(data, add ? oldid : -1, newid);
     }
     g_object_unref(dfield);
 }

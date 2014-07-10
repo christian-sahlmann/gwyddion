@@ -109,8 +109,8 @@ mcrop(GwyContainer *data, GwyRunType run)
             quark2 = gwy_app_get_data_key_for_id(op2.id);
             gwy_app_undo_qcheckpoint(data, quark1, quark2, NULL);
             mcrop_do(&op1, &op2);
-            gwy_app_channel_log_add(data, op1.id, op1.id, "proc::mcrop", NULL);
-            gwy_app_channel_log_add(data, op2.id, op2.id, "proc::mcrop", NULL);
+            gwy_app_channel_log_add_proc(data, op1.id, op1.id);
+            gwy_app_channel_log_add_proc(data, op2.id, op2.id);
         }
     }
 }

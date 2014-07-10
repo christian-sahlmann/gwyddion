@@ -135,7 +135,7 @@ level_grains(GwyContainer *data,
     }
 
     level_grains_do(&args, data, quark, id, dfield, mfield);
-    gwy_app_channel_log_add(data, id, id, "proc::level_grains", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static void

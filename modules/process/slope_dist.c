@@ -208,7 +208,7 @@ slope_dist(GwyContainer *data, GwyRunType run)
                                 GWY_DATA_ITEM_PALETTE,
                                 0);
         gwy_app_set_data_field_title(data, newid, _("Slope distribution"));
-        gwy_app_channel_log_add(data, oldid, newid, "proc::slope_dist", NULL);
+        gwy_app_channel_log_add_proc(data, oldid, newid);
         break;
 
         case SLOPE_DIST_GRAPH_PHI:

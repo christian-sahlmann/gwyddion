@@ -292,7 +292,7 @@ run_noninteractive(DomainSynthArgs *args,
         else {
             g_assert_not_reached();
         }
-        gwy_app_channel_log_add(data, oldid, oldid, "proc::domain_synth", NULL);
+        gwy_app_channel_log_add_proc(data, oldid, oldid);
         g_object_unref(ufield);
         g_object_unref(vfield);
         return;
@@ -328,8 +328,7 @@ run_noninteractive(DomainSynthArgs *args,
                                     GWY_DATA_ITEM_GRADIENT,
                                     0);
         gwy_app_set_data_field_title(data, unewid, _("Generated"));
-        gwy_app_channel_log_add(data, add ? oldid : -1, unewid,
-                                "proc::domain_synth", NULL);
+        gwy_app_channel_log_add_proc(data, add ? oldid : -1, unewid);
     }
     if (vout) {
         if (oldid != -1)
@@ -337,8 +336,7 @@ run_noninteractive(DomainSynthArgs *args,
                                     GWY_DATA_ITEM_GRADIENT,
                                     0);
         gwy_app_set_data_field_title(data, vnewid, _("Generated"));
-        gwy_app_channel_log_add(data, add ? oldid : -1, vnewid,
-                                "proc::domain_synth", NULL);
+        gwy_app_channel_log_add_proc(data, add ? oldid : -1, vnewid);
     }
     g_object_unref(ufield);
     g_object_unref(vfield);

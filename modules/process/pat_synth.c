@@ -321,7 +321,7 @@ run_noninteractive(PatSynthArgs *args,
         if (!add)
             gwy_data_field_clear(dfield);
 
-        gwy_app_channel_log_add(data, oldid, oldid, "proc::pat_synth", NULL);
+        gwy_app_channel_log_add_proc(data, oldid, oldid);
     }
     else {
         if (add)
@@ -366,8 +366,7 @@ run_noninteractive(PatSynthArgs *args,
         }
 
         gwy_app_set_data_field_title(data, newid, _("Generated"));
-        gwy_app_channel_log_add(data, add ? oldid : -1, newid,
-                                "proc::pat_synth", NULL);
+        gwy_app_channel_log_add_proc(data, add ? oldid : -1, newid);
     }
     g_object_unref(dfield);
 }

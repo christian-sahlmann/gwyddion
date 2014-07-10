@@ -169,7 +169,7 @@ facet_level(GwyContainer *data, GwyRunType run)
     if (!cancelled) {
         gwy_app_undo_qcheckpointv(data, 1, &quark);
         gwy_data_field_copy(dfield, old, FALSE);
-        gwy_app_channel_log_add(data, id, id, "proc::facet-level", NULL);
+        gwy_app_channel_log_add_proc(data, id, id);
         gwy_data_field_data_changed(old);
     }
     g_object_unref(dfield);

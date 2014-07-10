@@ -537,7 +537,7 @@ deposit_synth_dialog(DepositSynthArgs *args,
             gwy_app_undo_qcheckpointv(data, 1, &quark);
             gwy_data_field_copy(controls.out, controls.original, FALSE);
             gwy_data_field_data_changed(controls.original);
-            gwy_app_channel_log_add(data, id, id, "proc::deposit_synth", NULL);
+            gwy_app_channel_log_add_proc(data, id, id);
         }
         else {
             if (data) {
@@ -547,8 +547,7 @@ deposit_synth_dialog(DepositSynthArgs *args,
                                         GWY_DATA_ITEM_GRADIENT,
                                         0);
                 gwy_app_set_data_field_title(data, newid, _("Generated"));
-                gwy_app_channel_log_add(data, id, newid,
-                                        "proc::deposit_synth", NULL);
+                gwy_app_channel_log_add_proc(data, id, newid);
             }
             else {
                 newid = 0;
@@ -561,8 +560,7 @@ deposit_synth_dialog(DepositSynthArgs *args,
                                                       GWY_VISIBILITY_RESET_SHOW_ALL);
                 g_object_unref(newdata);
                 gwy_app_set_data_field_title(newdata, newid, _("Generated"));
-                gwy_app_channel_log_add(newdata, -1, newid,
-                                        "proc::deposit_synth", NULL);
+                gwy_app_channel_log_add_proc(newdata, -1, newid);
             }
 
         }

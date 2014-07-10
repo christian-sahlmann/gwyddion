@@ -117,7 +117,7 @@ laplace(GwyContainer *data, GwyRunType run)
     if (!cancelled) {
         gwy_app_undo_qcheckpointv(data, 1, &dquark);
         gwy_container_set_object(data, dquark, dfield);
-        gwy_app_channel_log_add(data, id, id, "proc::laplace", NULL);
+        gwy_app_channel_log_add_proc(data, id, id);
     }
     g_object_unref(dfield);
     g_object_unref(buffer);

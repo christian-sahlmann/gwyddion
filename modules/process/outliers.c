@@ -109,7 +109,7 @@ outliers(GwyContainer *data, GwyRunType run)
             gwy_container_remove(data, mquark);
         /* otherwise: do nothing */
     }
-    gwy_app_channel_log_add(data, id, id, "proc::outliers", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 
     g_object_unref(maskfield);
 }

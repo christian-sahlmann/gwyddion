@@ -564,7 +564,7 @@ merge_do(MergeArgs *args)
                                 GWY_DATA_ITEM_RANGE,
                                 0);
         g_object_unref(result);
-        gwy_app_channel_log_add(data, -1, newid, "proc::merge", NULL);
+        gwy_app_channel_log_add_proc(data, -1, newid);
     }
 
     g_object_unref(correlation_data);
@@ -644,7 +644,7 @@ merge_do_uncorrelated(MergeArgs *args)
                             GWY_DATA_ITEM_MASK_COLOR,
                             GWY_DATA_ITEM_RANGE,
                             0);
-    gwy_app_channel_log_add(data, -1, newid, "proc::merge", NULL);
+    gwy_app_channel_log_add_proc(data, -1, newid);
     g_object_unref(result);
 }
 

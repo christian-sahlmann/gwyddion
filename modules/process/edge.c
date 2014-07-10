@@ -290,7 +290,6 @@ edge(GwyContainer *data, GwyRunType run, const gchar *name)
     GwyDataField *dfield, *showfield;
     GQuark dquark, squark;
     GwySIUnit *siunit;
-    gchar *qualname;
     gint id;
     guint i;
 
@@ -326,10 +325,7 @@ edge(GwyContainer *data, GwyRunType run, const gchar *name)
 
     gwy_data_field_normalize(showfield);
     gwy_data_field_data_changed(showfield);
-
-    qualname = g_strconcat("proc::", functions[i].name, NULL);
-    gwy_app_channel_log_add(data, id, id, qualname, NULL);
-    g_free(qualname);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 /* Note this is the limiting case when LoG reduces for discrete data just to
@@ -598,7 +594,7 @@ slope_map(GwyContainer *data, GwyRunType run)
 
     newid = gwy_app_data_browser_add_data_field(sfield, data, TRUE);
     gwy_app_set_data_field_title(data, newid, _("Slope map"));
-    gwy_app_channel_log_add(data, oldid, newid, "proc::slope_map", NULL);
+    gwy_app_channel_log_add_proc(data, oldid, newid);
     g_object_unref(sfield);
 }
 

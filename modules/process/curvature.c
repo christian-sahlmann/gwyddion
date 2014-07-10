@@ -216,7 +216,7 @@ curvature(GwyContainer *data, GwyRunType run)
     }
     curvature_do(data, dfield, mfield, id, &args);
     if (args.set_selection)
-        gwy_app_channel_log_add(data, id, id, "proc::curvature", NULL);
+        gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static int

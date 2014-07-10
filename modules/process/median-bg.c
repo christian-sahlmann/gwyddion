@@ -150,7 +150,7 @@ median(GwyContainer *data, GwyRunType run)
     gwy_app_undo_qcheckpointv(data, 1, &dquark);
     gwy_data_field_subtract_fields(dfield, dfield, background);
     gwy_data_field_data_changed(dfield);
-    gwy_app_channel_log_add(data, oldid, oldid, "proc::median-bg", NULL);
+    gwy_app_channel_log_add_proc(data, oldid, oldid);
 
     if (!args.do_extract) {
         g_object_unref(background);

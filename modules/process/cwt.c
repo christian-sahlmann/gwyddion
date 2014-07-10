@@ -120,7 +120,7 @@ cwt(GwyContainer *data, GwyRunType run)
 
     g_object_unref(dfield);
     gwy_app_set_data_field_title(data, newid, _("CWT"));
-    gwy_app_channel_log_add(data, oldid, newid, "proc::cwt", NULL);
+    gwy_app_channel_log_add_proc(data, oldid, newid);
 }
 
 static gboolean

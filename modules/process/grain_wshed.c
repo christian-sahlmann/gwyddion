@@ -150,7 +150,7 @@ grain_wshed(GwyContainer *data, GwyRunType run)
 
     if (run == GWY_RUN_IMMEDIATE) {
         run_noninteractive(&args, data, dfield, mquark, id);
-        gwy_app_channel_log_add(data, id, id, "proc::grain_wshed", NULL);
+        gwy_app_channel_log_add_proc(data, id, id);
     }
     else
         wshed_dialog(&args, data, dfield, id, mquark);
@@ -352,7 +352,7 @@ wshed_dialog(WshedArgs *args,
         run_noninteractive(args, data, dfield, mquark, id);
     }
 
-    gwy_app_channel_log_add(data, id, id, "proc::grain_wshed", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static void

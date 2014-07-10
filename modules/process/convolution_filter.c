@@ -216,8 +216,7 @@ convolution_filter(GwyContainer *data,
     }
     else {
         convolution_filter_run_noninteractive(&args, data, dfield, dquark);
-        gwy_app_channel_log_add(data, id, id, "proc::convolution_filter",
-                                NULL);
+        gwy_app_channel_log_add_proc(data, id, id);
     }
 }
 
@@ -331,7 +330,7 @@ convolution_filter_dialog(ConvolutionArgs *args,
     }
 
     convolution_filter_save_args(gwy_app_settings_get(), args);
-    gwy_app_channel_log_add(data, id, id, "proc::convolution_filter", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static GtkWidget*

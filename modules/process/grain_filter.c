@@ -271,7 +271,7 @@ grain_filter(GwyContainer *data, GwyRunType run)
 
     if (run == GWY_RUN_IMMEDIATE) {
         run_noninteractive(&args, data, mfield, mquark);
-        gwy_app_channel_log_add(data, id, id, "proc::grain_filter", NULL);
+        gwy_app_channel_log_add_proc(data, id, id);
     }
     else
         gfilter_dialog(&args, data, dfield, mfield, id, mquark);
@@ -600,7 +600,7 @@ gfilter_dialog(GFilterArgs *args,
         run_noninteractive(args, data, controls.mask, mquark);
     }
 
-    gwy_app_channel_log_add(data, id, id, "proc::grain_filter", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static void

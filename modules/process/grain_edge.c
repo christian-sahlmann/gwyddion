@@ -145,7 +145,7 @@ grain_edge(GwyContainer *data, GwyRunType run)
 
     if (run == GWY_RUN_IMMEDIATE) {
         run_noninteractive(&args, data, dfield, mquark);
-        gwy_app_channel_log_add(data, id, id, "proc::grain_edge", NULL);
+        gwy_app_channel_log_add_proc(data, id, id);
     }
     else
         gedge_dialog(&args, data, dfield, id, mquark);
@@ -348,7 +348,7 @@ gedge_dialog(GEdgeArgs *args,
     gtk_widget_destroy(dialog);
 
     gedge_save_args(gwy_app_settings_get(), args);
-    gwy_app_channel_log_add(data, id, id, "proc::grain_edge", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 
     g_object_unref(controls.mydata);
     run_noninteractive(args, data, dfield, mquark);

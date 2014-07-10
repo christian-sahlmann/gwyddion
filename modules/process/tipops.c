@@ -307,19 +307,15 @@ tipops_do(TipOpsArgs *args,
                        _("Initializing"));
 
     if (op == DILATION || op == EROSION) {
-        const gchar *qualname;
-
         if (op == DILATION) {
             ok = gwy_tip_dilation(tip, target, dfield,
                                   gwy_app_wait_set_fraction,
                                   gwy_app_wait_set_message) != NULL;
-            qualname = "proc::tip_dilation";
         }
         else {
             ok = gwy_tip_erosion(tip, target, dfield,
                                  gwy_app_wait_set_fraction,
                                  gwy_app_wait_set_message) != NULL;
-            qualname = "proc::tip_reconstruction";
         }
         gwy_app_wait_finish();
 
@@ -332,8 +328,8 @@ tipops_do(TipOpsArgs *args,
                                     GWY_DATA_ITEM_PALETTE, 0);
             gwy_app_set_data_field_title(args->target.data, newid,
                                          data_titles[op]);
-            gwy_app_channel_log_add(args->target.data, args->target.id, newid,
-                                    qualname, NULL);
+            gwy_app_channel_log_add_proc(args->target.data,
+                                         args->target.id, newid);
         }
     }
     else {
@@ -346,9 +342,8 @@ tipops_do(TipOpsArgs *args,
             quark = gwy_app_get_mask_key_for_id(args->target.id);
             gwy_app_undo_qcheckpointv(args->target.data, 1, &quark);
             gwy_container_set_object(args->target.data, quark, dfield);
-            gwy_app_channel_log_add(args->target.data, args->target.id,
-                                    args->target.id,
-                                    "proc::tip_map", NULL);
+            gwy_app_channel_log_add_proc(args->target.data,
+                                         args->target.id, args->target.id);
         }
     }
     g_object_unref(dfield);

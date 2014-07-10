@@ -113,7 +113,7 @@ rank(GwyContainer *data, GwyRunType run)
             return;
     }
     rank_do(data, &args);
-    gwy_app_channel_log_add(data, id, id, "proc::rank", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static gboolean

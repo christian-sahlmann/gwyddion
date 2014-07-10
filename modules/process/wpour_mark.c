@@ -231,7 +231,7 @@ wpour_mark(GwyContainer *data, GwyRunType run)
 
     if (run == GWY_RUN_IMMEDIATE) {
         run_noninteractive(&args, data, dfield, mquark);
-        gwy_app_channel_log_add(data, id, id, "proc::wpour_mark", NULL);
+        gwy_app_channel_log_add_proc(data, id, id);
     }
     else {
         wpour_dialog(&args, data, dfield, id, mquark);
@@ -483,7 +483,7 @@ wpour_dialog(WPourArgs *args,
     g_object_unref(controls.mydata);
     run_noninteractive(args, data, dfield, mquark);
     wpour_save_args(gwy_app_settings_get(), args);
-    gwy_app_channel_log_add(data, id, id, "proc::wpour_mark", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static void

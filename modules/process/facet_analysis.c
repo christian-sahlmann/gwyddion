@@ -210,7 +210,7 @@ facets_analyse(GwyContainer *data, GwyRunType run)
     args.phi0 = gwy_container_get_double_by_name(fdata, "/phi0");
     if (run == GWY_RUN_IMMEDIATE) {
         run_noninteractive(&args, data, fdata, dfield, mfield, mquark);
-        gwy_app_channel_log_add(data, id, id, "proc::facet_analysis", NULL);
+        gwy_app_channel_log_add_proc(data, id, id);
     }
     else {
         facets_dialog(&args, data, fdata, dfield, mfield, id, mquark);
@@ -481,7 +481,7 @@ facets_dialog(FacetsArgs *args,
     }
 
     facets_save_args(gwy_app_settings_get(), args);
-    gwy_app_channel_log_add(data, id, id, "proc::facet_analysis", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static inline void

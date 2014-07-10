@@ -156,7 +156,7 @@ angle_dist(GwyContainer *data, GwyRunType run)
                             GWY_DATA_ITEM_PALETTE,
                             0);
     gwy_app_set_data_field_title(data, newid, _("Angle distribution"));
-    gwy_app_channel_log_add(data, oldid, newid, "proc::angle_dist", NULL);
+    gwy_app_channel_log_add_proc(data, oldid, newid);
 }
 
 static gboolean

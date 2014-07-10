@@ -184,7 +184,7 @@ sphrev(GwyContainer *data, GwyRunType run)
     }
     gwy_data_field_subtract_fields(dfield, dfield, background);
     gwy_data_field_data_changed(dfield);
-    gwy_app_channel_log_add(data, oldid, oldid, "proc::arc_revolve", NULL);
+    gwy_app_channel_log_add_proc(data, oldid, oldid);
 
     if (!args.do_extract) {
         g_object_unref(background);

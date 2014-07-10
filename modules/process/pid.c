@@ -155,7 +155,7 @@ pid(GwyContainer *data, GwyRunType run)
                                 0);
         g_object_unref(presult);
         gwy_app_set_data_field_title(data, newid, _("PID FW result"));
-        gwy_app_channel_log_add(data, oldid, newid, "proc::pid", NULL);
+        gwy_app_channel_log_add_proc(data, oldid, newid);
 
         newid = gwy_app_data_browser_add_data_field(fresult, data, TRUE);
         gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
@@ -164,7 +164,7 @@ pid(GwyContainer *data, GwyRunType run)
                                 0);
         g_object_unref(fresult);
         gwy_app_set_data_field_title(data, newid, _("PID FW max. force"));
-        gwy_app_channel_log_add(data, oldid, newid, "proc::pid", NULL);
+        gwy_app_channel_log_add_proc(data, oldid, newid);
 
         newid = gwy_app_data_browser_add_data_field(rpresult, data, TRUE);
         gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
@@ -173,7 +173,7 @@ pid(GwyContainer *data, GwyRunType run)
                                 0);
         g_object_unref(rpresult);
         gwy_app_set_data_field_title(data, newid, _("PID REV result"));
-        gwy_app_channel_log_add(data, oldid, newid, "proc::pid", NULL);
+        gwy_app_channel_log_add_proc(data, oldid, newid);
 
         newid = gwy_app_data_browser_add_data_field(rfresult, data, TRUE);
         gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
@@ -182,7 +182,7 @@ pid(GwyContainer *data, GwyRunType run)
                                 0);
         g_object_unref(rfresult);
         gwy_app_set_data_field_title(data, newid, _("PID REV max. force"));
-        gwy_app_channel_log_add(data, oldid, newid, "proc::pid", NULL);
+        gwy_app_channel_log_add_proc(data, oldid, newid);
     }
 }
 

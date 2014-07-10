@@ -113,7 +113,7 @@ presentation_remove(GwyContainer *data, GwyRunType run)
     g_return_if_fail(quark);
     gwy_app_undo_qcheckpointv(data, 1, &quark);
     gwy_container_remove(data, quark);
-    gwy_app_channel_log_add(data, id, id, "proc::presentation_remove", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static void
@@ -137,8 +137,7 @@ presentation_extract(GwyContainer *data, GwyRunType run)
                             GWY_DATA_ITEM_GRADIENT,
                             0);
     gwy_app_set_data_field_title(data, newid, NULL);
-    gwy_app_channel_log_add(data, oldid, newid, "proc::presentation_extract",
-                            NULL);
+    gwy_app_channel_log_add_proc(data, oldid, newid);
 }
 
 static void
@@ -198,7 +197,7 @@ presentation_logscale(GwyContainer *data, GwyRunType run)
     }
 
     gwy_data_field_data_changed(sfield);
-    gwy_app_channel_log_add(data, id, id, "proc::presentation_logscale", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static void
@@ -260,8 +259,7 @@ presentation_attach(G_GNUC_UNUSED GwyContainer *data,
             /* The data must be always compatible at least with itself */
             g_assert(source.data);
             presentation_attach_do(&source, &target);
-            gwy_app_channel_log_add(data, target.id, target.id,
-                                    "proc::presentation_attach", NULL);
+            gwy_app_channel_log_add_proc(data, target.id, target.id);
             break;
 
             default:

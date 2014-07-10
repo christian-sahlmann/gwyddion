@@ -205,7 +205,7 @@ arithmetic(GwyContainer *data, GwyRunType run)
                                 GWY_DATA_ITEM_GRADIENT,
                                 GWY_DATA_ITEM_REAL_SQUARE,
                                 0);
-        gwy_app_channel_log_add(data, -1, newid, "proc::arithmetic", NULL);
+        gwy_app_channel_log_add_proc(data, -1, newid);
     }
     g_ptr_array_free(args.ok_masks, TRUE);
     gwy_expr_free(args.expr);

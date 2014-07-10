@@ -538,8 +538,7 @@ fftf_1d_do(Fftf1dControls *controls, gint id)
                                                 TRUE);
     gwy_app_set_data_field_title(controls->original_data, newid,
                                  _("1D FFT Filtered Data"));
-    gwy_app_channel_log_add(controls->original_data, id, newid,
-                            "proc::fft_filter_1d", NULL);
+    gwy_app_channel_log_add_proc(controls->original_data, id, newid);
 }
 
 static void

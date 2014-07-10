@@ -215,7 +215,7 @@ fft_create_output(GwyContainer *data,
     newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
     g_object_unref(dfield);
     gwy_app_set_data_field_title(data, newid, output_name);
-    gwy_app_channel_log_add(data, id, newid, "proc::fft", NULL);
+    gwy_app_channel_log_add_proc(data, id, newid);
 
     /* make fft more visible by choosing a good gradient and using auto range */
     key = g_strdup_printf("/%i/base/palette", newid);

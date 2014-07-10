@@ -208,7 +208,7 @@ rotate(GwyContainer *data, GwyRunType run)
     }
 
     gwy_app_set_data_field_title(data, newid, _("Rotated Data"));
-    gwy_app_channel_log_add(data, oldid, newid, "proc::rotate", NULL);
+    gwy_app_channel_log_add_proc(data, oldid, newid);
 }
 
 /* create a smaller copy of data */

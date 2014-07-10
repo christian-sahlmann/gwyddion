@@ -532,9 +532,7 @@ run_noninteractive(DriftArgs *args,
             /* drift correct *this* channel */
             if (args->replace)  {
                 apply_drift(dfield, drift, args->interp);
-                gwy_app_channel_log_add(data, id_ctr, id_ctr, "proc::drift",
-                                        NULL);
-
+                gwy_app_channel_log_add_proc(data, id_ctr, id_ctr);
                 gwy_data_field_data_changed(dfield);
                 g_string_printf(str, "/%d/mask", id_ctr);
                 if (gwy_container_gis_object_by_name(data, str->str, &mfield)) {
@@ -564,8 +562,7 @@ run_noninteractive(DriftArgs *args,
                                         GWY_DATA_ITEM_REAL_SQUARE,
                                         0);
                 gwy_object_unref(result);
-                gwy_app_channel_log_add(data, id_ctr, newid, "proc::drift",
-                                        NULL);
+                gwy_app_channel_log_add_proc(data, id_ctr, newid);
                 g_string_printf(str, "/%d/mask", id_ctr);
                 if (gwy_container_gis_object_by_name(data,
                                                      str->str,

@@ -360,8 +360,7 @@ maskcor_do(MaskcorArgs *args)
         gwy_app_set_data_field_title(args->data.data, newid,
                                      _("Correlation score"));
         g_object_unref(score);
-        gwy_app_channel_log_add(args->data.data, args->data.id, newid,
-                                "proc::maskcor", NULL);
+        gwy_app_channel_log_add_proc(args->data.data, args->data.id, newid);
     }
     else {
         /* add mask */
@@ -376,8 +375,8 @@ maskcor_do(MaskcorArgs *args)
             gwy_data_field_threshold(retfield, args->threshold, 0.0, 1.0);
 
         gwy_container_set_object(args->data.data, quark, retfield);
-        gwy_app_channel_log_add(args->data.data, args->data.id, args->data.id,
-                                "proc::maskcor", NULL);
+        gwy_app_channel_log_add_proc(args->data.data,
+                                     args->data.id, args->data.id);
     }
     g_object_unref(retfield);
 }

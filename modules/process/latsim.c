@@ -132,7 +132,7 @@ latsim(GwyContainer *data, GwyRunType run)
                                 0);
         g_object_unref(forward);
         gwy_app_set_data_field_title(data, newid, _("Fw lateral force "));
-        gwy_app_channel_log_add(data, oldid, newid, "proc::latsim", NULL);
+        gwy_app_channel_log_add_proc(data, oldid, newid);
 
         newid = gwy_app_data_browser_add_data_field(reverse, data, TRUE);
         gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
@@ -141,7 +141,7 @@ latsim(GwyContainer *data, GwyRunType run)
                                 0);
         g_object_unref(reverse);
         gwy_app_set_data_field_title(data, newid, _("Rev lateral force"));
-        gwy_app_channel_log_add(data, oldid, newid, "proc::latsim", NULL);
+        gwy_app_channel_log_add_proc(data, oldid, newid);
     }
 }
 

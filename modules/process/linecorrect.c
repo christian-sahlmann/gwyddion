@@ -176,7 +176,7 @@ line_correct_modus(GwyContainer *data, GwyRunType run)
     g_object_unref(modi);
     g_object_unref(line);
     gwy_data_field_data_changed(dfield);
-    gwy_app_channel_log_add(data, id, id, "proc::line_correct_modus", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static void
@@ -263,7 +263,7 @@ line_correct_median(GwyContainer *data, GwyRunType run)
     g_object_unref(modi);
     g_object_unref(line);
     gwy_data_field_data_changed(dfield);
-    gwy_app_channel_log_add(data, id, id, "proc::line_correct_median", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static gboolean
@@ -395,8 +395,7 @@ line_correct_median_difference(GwyContainer *data, GwyRunType run)
 
     g_free(diffs);
     gwy_data_field_data_changed(dfield);
-    gwy_app_channel_log_add(data, id, id,
-                            "proc::line_correct_median_difference", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static gdouble
@@ -565,7 +564,7 @@ line_correct_match(GwyContainer *data,
     g_object_unref(shifts);
     g_free(w);
     gwy_data_field_data_changed(dfield);
-    gwy_app_channel_log_add(data, id, id, "proc::line_correct_match", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 #if 0
@@ -809,7 +808,7 @@ line_correct_step(GwyContainer *data,
 
     gwy_data_field_filter_conservative(dfield, 5);
     gwy_data_field_data_changed(dfield);
-    gwy_app_channel_log_add(data, id, id, "proc::line_correct_step", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

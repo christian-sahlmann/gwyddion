@@ -132,7 +132,7 @@ tilt(GwyContainer *data, GwyRunType run)
     }
 
     gwy_data_field_data_changed(dfield);
-    gwy_app_channel_log_add(data, id, id, "proc::tilt", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static gboolean

@@ -77,7 +77,7 @@ fraccor(GwyContainer *data, GwyRunType run)
     gwy_app_undo_qcheckpointv(data, 1, &dquark);
     gwy_data_field_fractal_correction(dfield, mfield, GWY_INTERPOLATION_LINEAR);
     gwy_data_field_data_changed(dfield);
-    gwy_app_channel_log_add(data, id, id, "proc::fraccor", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

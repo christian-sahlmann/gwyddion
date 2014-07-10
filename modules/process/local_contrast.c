@@ -113,7 +113,7 @@ maximize_local_contrast(GwyContainer *data, GwyRunType run)
             return;
     }
     contrast_do(data, &args);
-    gwy_app_channel_log_add(data, id, id, "proc::local_contrast", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static gboolean

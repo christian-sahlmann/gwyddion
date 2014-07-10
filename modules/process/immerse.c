@@ -798,7 +798,7 @@ immerse_do(ImmerseArgs *args)
     newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
     gwy_app_set_data_field_title(data, newid, _("Immersed detail"));
     g_object_unref(result);
-    gwy_app_channel_log_add(data, args->image.id, newid, "proc::immerse", NULL);
+    gwy_app_channel_log_add_proc(data, args->image.id, newid);
 }
 
 static void

@@ -110,7 +110,7 @@ otsu_threshold(GwyContainer *data,
     thresh = gwy_data_field_otsu_threshold(mfield);
     gwy_data_field_threshold(mfield, thresh, 0.0, 1.0);
     gwy_data_field_data_changed(mfield);
-    gwy_app_channel_log_add(data, id, id, "proc::otsu-threshold", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 
     return;
 }

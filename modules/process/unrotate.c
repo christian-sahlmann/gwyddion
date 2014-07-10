@@ -170,7 +170,7 @@ unrotate(GwyContainer *data, GwyRunType run)
         gwy_data_field_rotate(sfield, phi, args.interp);
         gwy_data_field_data_changed(sfield);
     }
-    gwy_app_channel_log_add(data, id, id, "proc::unrotate", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 /* create a smaller copy of data */

@@ -169,7 +169,7 @@ threshold(GwyContainer *data, GwyRunType run)
 
     if (run == GWY_RUN_IMMEDIATE) {
         run_noninteractive(&args, &ranges, data, dfield, quark);
-        gwy_app_channel_log_add(data, id, id, "proc::threshold", NULL);
+        gwy_app_channel_log_add_proc(data, id, id);
     }
     else {
         threshold_sanitize_min_max(&args, &ranges);
@@ -389,7 +389,7 @@ threshold_dialog(ThresholdArgs *args,
     g_object_unref(controls.mydata);
     gwy_si_unit_value_format_free(controls.format);
     run_noninteractive(args, ranges, data, controls.dfield, quark);
-    gwy_app_channel_log_add(data, id, id, "proc::threshold", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static void
