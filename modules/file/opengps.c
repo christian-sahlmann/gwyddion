@@ -1,6 +1,6 @@
 /*
  *  $Id$
- *  Copyright (C) 2012 David Necas (Yeti).
+ *  Copyright (C) 2014 David Necas (Yeti).
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
  *  Boston, MA 02110-1301, USA.
  */
 
-#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -35,6 +34,12 @@
 #include <app/data-browser.h>
 
 #include "err.h"
+
+#ifdef HAVE_MEMRCHR
+#define strlenrchr(s,c,len) (gchar*)memrchr((s),(c),(len))
+#else
+#define strlenrchr(s,c,len) strrchr((s),(c))
+#endif
 
 #define MAGIC "PK\x03\x04"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
@@ -81,6 +86,10 @@ static gint          x3p_detect            (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* x3p_load              (const gchar *filename,
                                             GwyRunType mode,
                                             GError **error);
+static void          create_images         (const X3PFile *x3pfile,
+                                            GwyContainer *container);
+static void          create_profiles       (const X3PFile *x3pfile,
+                                            GwyContainer *container);
 static gboolean      x3p_parse_main        (unzFile *zipfile,
                                             X3PFile *x3pfile,
                                             GError **error);
@@ -89,7 +98,7 @@ static gboolean      data_start            (X3PFile *x3pfile,
 static gboolean      read_binary_data      (X3PFile *x3pfile,
                                             unzFile *zipfile,
                                             GError **error);
-static GwyContainer* get_meta              (X3PFile *x3pfile);
+static GwyContainer* get_meta              (const X3PFile *x3pfile);
 static void          add_meta_record       (gpointer hkey,
                                             gpointer hvalue,
                                             gpointer user_data);
@@ -169,10 +178,9 @@ x3p_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
          GError **error)
 {
-    GwyContainer *container = NULL, *meta = NULL;
+    GwyContainer *container = NULL;
     X3PFile x3pfile;
     unzFile zipfile;
-    gint id;
 
     zipfile = unzOpen(filename);
     if (!zipfile) {
@@ -197,20 +205,40 @@ x3p_load(const gchar *filename,
     }
 
     container = gwy_container_new();
-    /* It is not clear if the format actually can have multiple z values, i.e.
-     * channels.  But We have no problem implementing that. */
-    for (id = 0; id < x3pfile.zres; id++) {
-        guint n = x3pfile.xres*x3pfile.yres;
+    if (x3pfile.feature_type == X3P_FEATURE_SUR)
+        create_images(&x3pfile, container);
+    else if (x3pfile.feature_type == X3P_FEATURE_PRF)
+        create_profiles(&x3pfile, container);
+    else {
+        g_assert_not_reached();
+    }
+
+fail:
+    gwy_debug("calling unzClose()");
+    unzClose(zipfile);
+    x3p_file_free(&x3pfile);
+
+    return container;
+}
+
+static void
+create_images(const X3PFile *x3pfile, GwyContainer *container)
+{
+    gint id;
+
+    for (id = 0; id < x3pfile->zres; id++) {
+        GwyContainer *meta;
+        guint n = x3pfile->xres*x3pfile->yres;
         GwyDataField *dfield, *mask;
         GQuark quark;
         gchar buf[40];
 
-        dfield = gwy_data_field_new(x3pfile.xres,
-                                    x3pfile.yres,
-                                    x3pfile.xres*x3pfile.dx,
-                                    x3pfile.yres*x3pfile.dy,
+        dfield = gwy_data_field_new(x3pfile->xres,
+                                    x3pfile->yres,
+                                    x3pfile->xres*x3pfile->dx,
+                                    x3pfile->yres*x3pfile->dy,
                                     FALSE);
-        memcpy(dfield->data, x3pfile.values + id*n, n*sizeof(gdouble));
+        memcpy(dfield->data, x3pfile->values + id*n, n*sizeof(gdouble));
 
         quark = gwy_app_get_data_key_for_id(id);
         gwy_container_set_object(container, quark, dfield);
@@ -220,26 +248,88 @@ x3p_load(const gchar *filename,
         gwy_app_channel_title_fall_back(container, id);
         gwy_app_channel_check_nonsquare(container, id);
 
-        if ((mask = mask_of_nans(dfield, x3pfile.valid + id*n))) {
+        if ((mask = mask_of_nans(dfield, x3pfile->valid + id*n))) {
             quark = gwy_app_get_mask_key_for_id(id);
             gwy_container_set_object(container, quark, mask);
             g_object_unref(mask);
         }
         g_object_unref(dfield);
 
-        if ((meta = get_meta(&x3pfile))) {
+        if ((meta = get_meta(x3pfile))) {
             g_snprintf(buf, sizeof(buf), "/%u/meta", id);
             gwy_container_set_object_by_name(container, buf, meta);
             g_object_unref(meta);
         }
     }
+}
 
-fail:
-    gwy_debug("calling unzClose()");
-    unzClose(zipfile);
-    x3p_file_free(&x3pfile);
+static void
+create_profiles(const X3PFile *x3pfile,
+                GwyContainer *container)
+{
+    GwyGraphModel *gmodel;
+    GwySIUnit *siunitx, *siunity;
+    GArray *validx, *validy;
+    GQuark quark;
+    gint id;
 
-    return container;
+    gmodel = gwy_graph_model_new();
+    siunitx = gwy_si_unit_new("m");
+    siunity = gwy_si_unit_new("m");
+    g_object_set(gmodel,
+                 "title", "Profiles",
+                 "si-unit-x", siunitx,
+                 "si-unit-y", siunity,
+                 NULL);
+    g_object_unref(siunity);
+    g_object_unref(siunitx);
+
+    validx = g_array_new(FALSE, FALSE, sizeof(gdouble));
+    validy = g_array_new(FALSE, FALSE, sizeof(gdouble));
+    for (id = 0; id < x3pfile->zres; id++) {
+        guint n = x3pfile->xres;
+        GwyGraphCurveModel *gcmodel;
+        gchar *title;
+        guint j;
+
+        g_array_set_size(validx, 0);
+        g_array_set_size(validy, 0);
+        for (j = 0; j < x3pfile->xres; j++) {
+            gdouble v = x3pfile->values[id*n + j];
+
+            if (gwy_isnan(v) || gwy_isinf(v) || !x3pfile->valid[id*n + j])
+                continue;
+
+            g_array_append_val(validy, v);
+            v = j*x3pfile->dx;
+            g_array_append_val(validx, v);
+        }
+
+        if (!validx->len)
+            continue;
+
+        gcmodel = gwy_graph_curve_model_new();
+        title = g_strdup_printf("Profile %u", id+1);
+        g_object_set(gcmodel,
+                     "mode", GWY_GRAPH_CURVE_LINE,
+                     "description", title,
+                     "color", gwy_graph_get_preset_color(id),
+                     NULL);
+        g_free(title);
+        gwy_graph_curve_model_set_data(gcmodel,
+                                       (gdouble*)validx->data,
+                                       (gdouble*)validy->data,
+                                       validx->len);
+        gwy_graph_model_add_curve(gmodel, gcmodel);
+        g_object_unref(gcmodel);
+    }
+
+    g_array_free(validy, TRUE);
+    g_array_free(validx, TRUE);
+
+    quark = gwy_app_get_graph_key_for_id(0);
+    gwy_container_set_object(container, quark, gmodel);
+    g_object_unref(gmodel);
 }
 
 static const gchar*
@@ -324,8 +414,12 @@ x3p_text(G_GNUC_UNUSED GMarkupParseContext *context,
          G_GNUC_UNUSED GError **error)
 {
     X3PFile *x3pfile = (X3PFile*)user_data;
+    const gchar *semicolon;
     gchar *path = x3pfile->path->str;
     gchar *value;
+
+    if (!strlen(text))
+        return;
 
     /* Data represented directly in XML. */
     if (gwy_strequal(path, "/ISO5436_2/Record3/DataList/Datum")) {
@@ -336,6 +430,13 @@ x3p_text(G_GNUC_UNUSED GMarkupParseContext *context,
                           "matrix dimensions."));
             return;
         }
+        /* There can be a ;-separated list.  And it can contain dummy values
+         * for the unused y-axis for profiles (poor design).  Since we do not
+         * care about PCL, we only ever want the last value of the list,
+         * whatever it is. */
+        if ((semicolon = strlenrchr(text, ';', text_len)))
+            text = semicolon + 1;
+
         x3pfile->values[x3pfile->datapos]
             = x3pfile->dz*g_ascii_strtod(text, NULL) + x3pfile->zoff;
         x3pfile->valid[x3pfile->datapos] = TRUE;
@@ -344,9 +445,6 @@ x3p_text(G_GNUC_UNUSED GMarkupParseContext *context,
         x3pfile->seen_datum = TRUE;
         return;
     }
-
-    if (!strlen(text))
-        return;
 
     value = g_strdup(text);
     g_strstrip(value);
@@ -444,9 +542,8 @@ data_start(X3PFile *x3pfile, GError **error)
         return FALSE;
     }
 
-    /* TODO: Support also PRF feature types (profile N×1×M), i.e. a set of line
-     * profiles. */
-    if (x3pfile->feature_type != X3P_FEATURE_SUR) {
+    if (x3pfile->feature_type != X3P_FEATURE_SUR
+        && x3pfile->feature_type != X3P_FEATURE_PRF) {
         err_UNSUPPORTED(error, "/ISO5436_2/Record1/FeatureType");
         return FALSE;
     }
@@ -461,7 +558,7 @@ data_start(X3PFile *x3pfile, GError **error)
     }
 
     s = (gchar*)g_hash_table_lookup(x3pfile->hash, AXES_PREFIX "/CY/AxisType");
-    if (!gwy_strequal(s, "I")) {
+    if (x3pfile->feature_type != X3P_FEATURE_PRF && !gwy_strequal(s, "I")) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Only type %s is supported for axis %s."),
                     "I", "CY");
@@ -504,6 +601,12 @@ data_start(X3PFile *x3pfile, GError **error)
         || err_DIMENSION(error, x3pfile->yres)
         || err_DIMENSION(error, x3pfile->zres))
         return FALSE;
+
+    /* PRF feature types are sets of profiles N×1×M. */
+    if (x3pfile->feature_type == X3P_FEATURE_PRF && x3pfile->yres != 1) {
+        err_UNSUPPORTED(error, MAT_DIM_PREFIX "/SizeY");
+        return FALSE;
+    }
 
     s = (gchar*)g_hash_table_lookup(x3pfile->hash, AXES_PREFIX "/CX/Increment");
     x3pfile->dx = g_ascii_strtod(s, NULL);
@@ -624,7 +727,7 @@ read_binary_data(X3PFile *x3pfile, unzFile *zipfile, GError **error)
 }
 
 static GwyContainer*
-get_meta(X3PFile *x3pfile)
+get_meta(const X3PFile *x3pfile)
 {
     GwyContainer *meta = gwy_container_new();
 
@@ -658,7 +761,9 @@ add_meta_record(gpointer hkey, gpointer hvalue, gpointer user_data)
                       "/ISO5436_2/Record2/Comment",
                       NULL)
         && !g_str_has_prefix(key,
-                             "/ISO5436_2/Record2/ProbingSystem/Identification/"))
+                             "/ISO5436_2/Record2/ProbingSystem/Identification/")
+        && !g_str_has_prefix(key,
+                             "/ISO5436_2/Record1/Axes/Rotation"))
         return;
 
     key = strrchr(key, '/');
