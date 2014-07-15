@@ -21,6 +21,7 @@
 
 #include "config.h"
 #include <string.h>
+#include <gdk/gdkkeysyms.h>
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
@@ -31,6 +32,8 @@
 #include <windows.h>
 #include <shellapi.h>
 #endif
+
+#define UG_ONLINE_BASE "http://gwyddion.net/documentation/user-guide-"
 
 typedef struct {
     const gchar *fulluri;   /* Use for external mapping. */
@@ -199,13 +202,58 @@ get_uri_path_for_module(const gchar *modname)
     return g_hash_table_lookup(userguidemap, (gpointer)modname);
 }
 
+static gchar*
+get_user_guide_online_base(void)
+{
+    /* We know we have these guides available. */
+    static const gchar *user_guides[] = { "en", "fr", "ru" };
+
+    /* TRANSLATORS: For user guide location.  Translate this to fr, ru, cs,
+     * de, ...  even if the corresponding guide does not exist. */
+    const gchar *lang = gwy_sgettext("current-language-code|en");
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS(user_guides); i++) {
+        if (gwy_strequal(user_guides[i], lang))
+            break;
+    }
+    lang = user_guides[(i == G_N_ELEMENTS(user_guides)) ? 0 : i];
+    return g_strconcat(UG_ONLINE_BASE, lang, NULL);
+}
+
+static gchar*
+get_user_guide_settings_base(void)
+{
+    GwyContainer *settings = gwy_app_settings_get();
+    const guchar *settingsugbase = NULL;
+    guint len;
+    gchar *base;
+
+    if (!gwy_container_gis_string_by_name(settings,
+                                          "/app/help/user-guide-base",
+                                          &settingsugbase))
+        return NULL;
+
+    base = g_strdup(settingsugbase);
+    len = strlen(base);
+    while (len && base[len-1] == '/')
+        len--;
+    base[len] = '\0';
+
+    return base;
+}
+
 static const gchar*
 get_user_guide_base(void)
 {
-    /* TODO:
-     * - use language
-     * - permit other locations (local files) */
-    return "http://gwyddion.net/documentation/user-guide-en";
+    gchar *base = NULL;
+
+    if (G_UNLIKELY(!base)) {
+        if (!(base = get_user_guide_settings_base()))
+            base = get_user_guide_online_base();
+    }
+
+    return base;
 }
 
 static gchar*
@@ -261,6 +309,22 @@ dialog_response(GtkDialog *dialog,
     show_help_uri(uri);
 }
 
+static gboolean
+key_press_event(G_GNUC_UNUSED GtkWidget *widget,
+                GdkEventKey *event,
+                gpointer user_data)
+{
+    const gchar *uri = (const gchar*)user_data;
+
+    if ((event->keyval != GDK_Help
+         && event->keyval != GDK_F1)
+        || (event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK)))
+        return FALSE;
+
+    show_help_uri(uri);
+    return TRUE;
+}
+
 /**
  * gwy_help_add_proc_dialog_button:
  * @dialog: Main dialog for a data processing function.
@@ -290,6 +354,8 @@ gwy_help_add_proc_dialog_button(GtkDialog *dialog)
                           GTK_STOCK_HELP, GTK_RESPONSE_HELP);
     g_signal_connect(dialog, "response",
                      G_CALLBACK(dialog_response), uri);
+    g_signal_connect(dialog, "key-press-event",
+                     G_CALLBACK(key_press_event), uri);
     g_object_weak_ref(G_OBJECT(dialog), (GWeakNotify)g_free, uri);
 }
 
