@@ -34,6 +34,7 @@
 #include <app/gradient-editor.h>
 #include <app/gwytool.h>
 #include <app/gwyplaintool.h>
+#include <app/help.h>
 #include <app/log.h>
 #include <app/menu.h>
 #include <app/meta.h>
