@@ -123,6 +123,11 @@ show_help_uri(const gchar *uri)
             return TRUE;
     }
 
+    /* TODO: Show some error instead of a silent failure.  Possibly offer
+     * some advice what may be broken dependin on the base prefix: for
+     * http(s):// we need network connection; for file:// and paths we need the
+     * guide to be present locally.  At least do this the first time this
+     * happens (may want to disable help for the rest of the session). */
     return FALSE;
 }
 
