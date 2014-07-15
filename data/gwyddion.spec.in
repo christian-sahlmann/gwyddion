@@ -256,6 +256,7 @@ fi
 %{pkgdatadir}/glmaterials/*
 %{pkgdatadir}/pygwy/*
 %{pkgdatadir}/ui/*
+%{pkgdatadir}/user-guide-modules
 %dir %{pkgdatadir}/pixmaps
 %dir %{pkgdatadir}/gradients
 %dir %{pkgdatadir}/glmaterials
