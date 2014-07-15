@@ -192,8 +192,9 @@ level_dialog(LevelArgs *args,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gwy_help_add_proc_dialog_button(GTK_DIALOG(dialog));
 
-    table = gtk_table_new(12, 3, FALSE);
+    table = gtk_table_new(4, 3, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);

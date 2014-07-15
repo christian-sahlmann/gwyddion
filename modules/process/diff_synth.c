@@ -420,6 +420,7 @@ diff_synth_dialog(DiffSynthArgs *args,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gwy_help_add_proc_dialog_button(GTK_DIALOG(dialog));
     controls.dialog = dialog;
 
     hbox = gtk_hbox_new(FALSE, 2);
