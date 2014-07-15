@@ -7,8 +7,11 @@ libgwydraw = $(top_builddir)/libdraw/libgwydraw2.la
 libgwydgets = $(top_builddir)/libgwydgets/libgwydgets2.la
 libgwyapp = $(top_builddir)/app/libgwyapp2.la
 moduledir = $(top_srcdir)/modules
+ugmapdatadir = $(pkgdatadir)
 
 GUIDE_MAP = user-guide-modules
+
+ugmapdata_DATA = $(GUIDE_MAP)
 
 EXTRA_DIST = \
 	extract-file-magic.py \
