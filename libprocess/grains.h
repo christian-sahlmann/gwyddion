@@ -93,6 +93,8 @@ void gwy_data_field_grains_intersect(GwyDataField *grain_field,
 
 gint gwy_data_field_number_grains(GwyDataField *mask_field,
                                   gint *grains);
+gint gwy_data_field_number_grains_periodic(GwyDataField *mask_field,
+                                           gint *grains);
 gint* gwy_data_field_get_grain_bounding_boxes(GwyDataField *mask_field,
                                               gint ngrains,
                                               const gint *grains,

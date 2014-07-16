@@ -9,6 +9,8 @@ Libraries:
 - libgwyprocess: New functions to count regional minima and maxima.
 - libgwyapp: New simplified logging functions that do not require passing the
   function name.
+- libgwyprocess: New function for numbering grains assuming the mask is
+  periodic and grains can touch across the opposite edges.
 
 Modules:
 - OpenGPS (new): Imports OpenGPS surface data format (ISO 5436-2).

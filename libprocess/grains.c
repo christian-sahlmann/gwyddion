@@ -3511,6 +3511,36 @@ resolve_grain_map(gint *m, gint i, gint j)
     m[jj] = k;
 }
 
+static inline gint
+finalise_grain_numbering(gint *m, gint max_id,
+                         gint *grains, gint n)
+{
+    gint *mm;
+    gint i, id;
+
+    /* Resolve remianing grain number links in map */
+    for (i = 1; i <= max_id; i++)
+        m[i] = m[m[i]];
+
+    /* Compactify grain numbers */
+    mm = g_new0(gint, max_id + 1);
+    id = 0;
+    for (i = 1; i <= max_id; i++) {
+        if (!mm[m[i]]) {
+            id++;
+            mm[m[i]] = id;
+        }
+        m[i] = mm[m[i]];
+    }
+    g_free(mm);
+
+    /* Renumber grains (we make use of the fact m[0] = 0) */
+    for (i = 0; i < n; i++)
+        grains[i] = m[grains[i]];
+
+    return id;
+}
+
 /**
  * gwy_data_field_number_grains:
  * @mask_field: Data field containing positive values in grains, nonpositive
@@ -3530,7 +3560,10 @@ gwy_data_field_number_grains(GwyDataField *mask_field,
 {
     const gdouble *data;
     gint xres, yres, i, j, grain_id, max_id, id;
-    gint *m, *mm;
+    gint *m;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(mask_field), 0);
+    g_return_val_if_fail(grains, 0);
 
     xres = mask_field->xres;
     yres = mask_field->yres;
@@ -3583,29 +3616,73 @@ gwy_data_field_number_grains(GwyDataField *mask_field,
         }
     }
 
-    /* Resolve remianing grain number links in map */
-    for (i = 1; i <= max_id; i++)
-        m[i] = m[m[i]];
+    max_id = finalise_grain_numbering(m, max_id, grains, xres*yres);
+    g_free(m);
 
-    /* Compactify grain numbers */
-    mm = g_new0(gint, max_id + 1);
-    id = 0;
-    for (i = 1; i <= max_id; i++) {
-        if (!mm[m[i]]) {
-            id++;
-            mm[m[i]] = id;
+    return max_id;
+}
+
+/**
+ * gwy_data_field_number_grains_periodic:
+ * @mask_field: Data field containing positive values in grains, nonpositive
+ *              in free space.
+ * @grains: Zero-filled array of integers of equal size to @mask_field to put
+ *          grain numbers to.  Empty space will be left 0, pixels inside a
+ *          grain will be set to grain number.  Grains are numbered
+ *          sequentially 1, 2, 3, ...
+ *
+ * Numbers grains in a periodic mask data field.
+ *
+ * This function differs from gwy_data_field_number_grains() by the assumption
+ * of periodicity, i.e. grains can touch across the opposite field edges.
+ *
+ * Returns: The number of last grain (note they are numbered from 1).
+ *
+ * Since: 2.38
+ **/
+gint
+gwy_data_field_number_grains_periodic(GwyDataField *mask_field,
+                                      gint *grains)
+{
+    gint xres, yres, i, j, ngrains;
+    gboolean merged_anything = FALSE;
+    const gdouble *data;
+    gint *m;
+
+    ngrains = gwy_data_field_number_grains(mask_field, grains);
+    if (ngrains < 2)
+        return ngrains;
+
+    xres = mask_field->xres;
+    yres = mask_field->yres;
+    data = mask_field->data;
+
+    m = g_new0(gint, ngrains+1);
+    for (j = 0; i <= ngrains; j++)
+        m[j] = j;
+
+    for (i = 0; i < xres; i++) {
+        gint gno1 = grains[i], gno2 = grains[i + (yres-1)*xres];
+        if (gno1 && gno2 && gno1 != gno2) {
+            resolve_grain_map(m, gno1, gno2);
+            merged_anything = TRUE;
         }
-        m[i] = mm[m[i]];
     }
-    g_free(mm);
 
-    /* Renumber grains (we make use of the fact m[0] = 0) */
-    for (i = 0; i < xres*yres; i++)
-        grains[i] = m[grains[i]];
+    for (i = 0; i < yres; i++) {
+        gint gno1 = grains[i*xres], gno2 = grains[i*xres + xres-1];
+        if (gno1 && gno2 && gno1 != gno2) {
+            resolve_grain_map(m, gno1, gno2);
+            merged_anything = TRUE;
+        }
+    }
+
+    if (merged_anything)
+        ngrains = finalise_grain_numbering(m, ngrains, grains, xres*yres);
 
     g_free(m);
 
-    return id;
+    return ngrains;
 }
 
 /**
