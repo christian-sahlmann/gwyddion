@@ -56,7 +56,8 @@ enum {
 };
 
 typedef enum {
-    GRAPH_VAR = 0,
+    GRAPH_VAR     = 0,
+    GRAPH_NGRAINS = 1,
     GRAPH_NFLAGS,
 } GraphFlags;
 
@@ -371,7 +372,7 @@ run_noninteractive(DiffSynthArgs *args,
         g_object_set(gmodel,
                      "title", title,
                      "x-logarithmic", TRUE,
-                     "y-logarithmic", TRUE,
+                     "y-logarithmic", i != GRAPH_NGRAINS,
                      "axis-label-bottom", _("Mean height"),
                      "axis-label-left", _(graph_flags[i]),
                      NULL);
@@ -388,6 +389,9 @@ run_noninteractive(DiffSynthArgs *args,
                                         NULL);
             g_object_set(gmodel, "si-unit-y", unit, NULL);
             g_object_unref(unit);
+        }
+        else if (i == GRAPH_NGRAINS) {
+            /* Unitless. */
         }
 
         gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
@@ -718,6 +722,31 @@ preview(DiffSynthControls *controls)
     gwy_data_field_data_changed(dfield);
 }
 
+/* Exclude the still-free particles.  This makes more sense if plotting for
+ * instance the number of islands over time.  Also avoids random scale jumps
+ * in the progessive preview. */
+static void
+copy_hfield_to_data_field(DiffSynthState *dstate,
+                          GwyDataField *dfield,
+                          gdouble zscale)
+{
+    GArray *particles = dstate->particles;
+    guint *hfield = dstate->hfield;
+    guint xres = dstate->xres, yres = dstate->yres;
+    gdouble *data = dfield->data;
+    guint k;
+
+    for (k = 0; k < xres*yres; k++)
+        data[k] = hfield[k] * zscale;
+
+    for (k = 0; k < particles->len; k++) {
+        Particle *p = &g_array_index(particles, Particle, k);
+        data[p->k] -= zscale;
+    }
+
+    gwy_data_field_invalidate(dfield);
+}
+
 static gboolean
 diff_synth_do(DiffSynthArgs *args,
               GwyDataField *dfield,
@@ -730,6 +759,7 @@ diff_synth_do(DiffSynthArgs *args,
     gdouble nextgraphx;
     gdouble lasttime = 0.0, lastpreviewtime = 0.0, currtime;
     gdouble height, threshold;
+    gint *grains = NULL;
     GTimer *timer;
     guint64 workdone, niter, iter;
     DiffSynthState *dstate;
@@ -754,9 +784,12 @@ diff_synth_do(DiffSynthArgs *args,
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
+    grains = g_new(gint, xres*yres);
 
-    threshold = gwy_data_field_otsu_threshold(dfield);
-    gwy_data_field_threshold(dfield, threshold, 0.0, 1.0);
+    if (gwy_data_field_get_rms(dfield)) {
+        threshold = gwy_data_field_otsu_threshold(dfield);
+        gwy_data_field_threshold(dfield, threshold, 0.0, 1.0);
+    }
     nextgraphx = 0.0;
 
     gwy_app_wait_set_message(_("Depositing particles..."));
@@ -798,9 +831,7 @@ diff_synth_do(DiffSynthArgs *args,
 
                 if (args->animated
                     && currtime - lastpreviewtime >= preview_time) {
-                    for (k = 0; k < xres*yres; k++)
-                        dfield->data[k] = dstate->hfield[k];
-                    gwy_data_field_invalidate(dfield);
+                    copy_hfield_to_data_field(dstate, dfield, zscale);
                     gwy_data_field_data_changed(dfield);
                     lastpreviewtime = lasttime;
                 }
@@ -809,15 +840,18 @@ diff_synth_do(DiffSynthArgs *args,
         }
 
         if (any_graphs && iter >= nextgraphx) {
-            for (k = 0; k < xres*yres; k++)
-                dfield->data[k] = dstate->hfield[k] * zscale;
-            gwy_data_field_invalidate(dfield);
-
+            copy_hfield_to_data_field(dstate, dfield, zscale);
             height = iter*dstate->fluxperiter * zscale;
             g_array_append_val(evolution[GRAPH_NFLAGS], height);
             if (evolution[GRAPH_VAR]) {
                 gdouble var = gwy_data_field_get_variation(dfield);
                 g_array_append_val(evolution[GRAPH_VAR], var);
+            }
+            if (evolution[GRAPH_NGRAINS]) {
+                gdouble ngrains;
+                gwy_clear(grains, xres*yres);
+                ngrains = gwy_data_field_number_grains_periodic(dfield, grains);
+                g_array_append_val(evolution[GRAPH_NGRAINS], ngrains);
             }
 
             nextgraphx += 0.0001/dstate->flux + MIN(0.2*nextgraphx,
@@ -844,10 +878,7 @@ diff_synth_do(DiffSynthArgs *args,
         }
     }
 
-    for (k = 0; k < xres*yres; k++)
-        dfield->data[k] = dstate->hfield[k];
-
-    gwy_data_field_invalidate(dfield);
+    copy_hfield_to_data_field(dstate, dfield, zscale);
     finished = TRUE;
 
 fail:
@@ -858,6 +889,7 @@ fail:
             g_array_free(evolution[i], TRUE);
     }
     g_free(evolution);
+    g_free(grains);
 
     return finished;
 }
@@ -1039,10 +1071,8 @@ finalize_moving_particles(DiffSynthState *dstate)
         ps = p_stick[p->nneigh];
         if (ps == 1.0 || (ps && g_rand_double(rng) < ps))
             g_array_remove_index_fast(particles, i);
-        else {
-            hfield[p->k]--;
+        else
             i++;
-        }
     }
 }
 
