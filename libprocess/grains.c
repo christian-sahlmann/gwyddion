@@ -3658,7 +3658,7 @@ gwy_data_field_number_grains_periodic(GwyDataField *mask_field,
     data = mask_field->data;
 
     m = g_new0(gint, ngrains+1);
-    for (j = 0; i <= ngrains; j++)
+    for (j = 0; j <= ngrains; j++)
         m[j] = j;
 
     for (i = 0; i < xres; i++) {
