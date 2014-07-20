@@ -71,41 +71,6 @@ show_uri_win32(G_GNUC_UNUSED const gchar *uri)
 #endif
 }
 
-/* Of course, Apple must be special.  I didn't find documents saying to just
- * run the bloody browser.  So use the open-magic. */
-static gboolean
-show_uri_apple(G_GNUC_UNUSED const gchar *uri)
-{
-#ifdef __APPLE__
-    gchar **args;
-    gchar *fullpath = NULL;
-    gboolean ok;
-
-    if (!(fullpath = g_find_program_in_path("open")))
-        return FALSE;
-
-    /* We suppose an Apple user will have Safari available. */
-    if (!uri) {
-        g_free(fullpath);
-        return TRUE;
-    }
-
-    /* Run: open -a safari http://gwyddion.net/ */
-    args = g_new(gchar*, 5);
-    args[0] = fullpath;
-    args[1] = g_strdup("-a");
-    args[2] = g_strdup("safari");
-    args[3] = g_strdup(uri);
-    args[4] = NULL;
-    ok = g_spawn_async(NULL, args, NULL, 0, NULL, NULL, NULL, NULL);
-    g_strfreev(args);
-
-    return ok;
-#else
-    return FALSE;
-#endif
-}
-
 /* The show-uri thing seems to have an unfortunate side-effect of switching to
  * the busy mouse cursor for a while. */
 static gboolean
@@ -128,6 +93,12 @@ show_uri_spawn(G_GNUC_UNUSED const gchar *uri)
 {
 #ifndef G_OS_WIN32
     static const gchar *programs[] = {
+        /* OS X has this little program called "open".  Sure, other systems
+         * have it too but it does something completely different.  So only
+         * use "open" on OS X. */
+#ifdef __APPLE__
+        "open",
+#endif
         "xdg-open", "htmlview",
         "chrome", "chromium",  /* Normally installed by people who want them. */
         "firefox", "seamonkey",
@@ -171,7 +142,6 @@ show_help_uri(const gchar *uri)
     /* The platform-specific ones go first. */
     static const ShowUriFunc backends[] = {
         &show_uri_win32,
-        &show_uri_apple,
         &show_uri_gtk,
         &show_uri_spawn,
     };
