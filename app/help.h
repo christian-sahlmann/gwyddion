@@ -23,10 +23,33 @@
 #define __GWY_APP_HELP_H__
 
 #include <gtk/gtk.h>
+#include <app/gwytool.h>
 
 G_BEGIN_DECLS
 
-void gwy_help_add_proc_dialog_button(GtkDialog *dialog);
+typedef enum {
+    GWY_HELP_DEFAULT = 0,
+    GWY_HELP_NO_BUTTON = 1 << 1,
+} GwyHelpFlags;
+
+void gwy_help_add_to_proc_dialog  (GtkDialog *dialog,
+                                   GwyHelpFlags flags);
+void gwy_help_add_to_graph_dialog (GtkDialog *dialog,
+                                   GwyHelpFlags flags);
+void gwy_help_add_to_volume_dialog(GtkDialog *dialog,
+                                   GwyHelpFlags flags);
+void gwy_help_add_to_file_dialog  (GtkDialog *dialog,
+                                   GwyHelpFlags flags);
+void gwy_help_add_to_tool_dialog  (GtkDialog *dialog,
+                                   GwyTool *tool,
+                                   GwyHelpFlags flags);
+void gwy_help_add_to_window       (GtkWindow *window,
+                                   const gchar *filename,
+                                   const gchar *fragment,
+                                   GwyHelpFlags flags);
+void gwy_help_add_to_window_uri   (GtkWindow *window,
+                                   const gchar *uri,
+                                   GwyHelpFlags flags);
 
 G_END_DECLS
 

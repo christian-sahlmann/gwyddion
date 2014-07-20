@@ -41,6 +41,8 @@ typedef struct {
     const gchar *fragment;
 } HelpURI;
 
+/* The function is expected to just return TRUE if @uri is NULL but the backend
+ * seems to be available. */
 typedef gboolean (*ShowUriFunc)(const gchar *uri);
 
 static gboolean
@@ -49,6 +51,9 @@ show_uri_win32(G_GNUC_UNUSED const gchar *uri)
 #ifdef G_OS_WIN32
     static gboolean initialised_com = FALSE;
     gint status;
+
+    if (!uri)
+        return TRUE;
 
     if (G_UNLIKELY(!initialised_com)) {
         initialised_com = TRUE;
@@ -66,10 +71,52 @@ show_uri_win32(G_GNUC_UNUSED const gchar *uri)
 #endif
 }
 
+/* Of course, Apple must be special.  I didn't find documents saying to just
+ * run the bloody browser.  So use the open-magic. */
+static gboolean
+show_uri_apple(G_GNUC_UNUSED const gchar *uri)
+{
+#ifdef __APPLE__
+    gchar **args;
+    gchar *fullpath = NULL;
+    gboolean ok;
+
+    if (!(fullpath = g_find_program_in_path("open")))
+        return FALSE;
+
+    /* We suppose an Apple user will have Safari available. */
+    if (!uri) {
+        g_free(fullpath);
+        return TRUE;
+    }
+
+    /* Run: open -a safari http://gwyddion.net/ */
+    args = g_new(gchar*, 5);
+    args[0] = fullpath;
+    args[1] = g_strdup("-a");
+    args[2] = g_strdup("safari");
+    args[3] = g_strdup(uri);
+    args[4] = NULL;
+    ok = g_spawn_async(NULL, args, NULL, 0, NULL, NULL, NULL, NULL);
+    g_strfreev(args);
+
+    return ok;
+#else
+    return FALSE;
+#endif
+}
+
+/* The show-uri thing seems to have an unfortunate side-effect of switching to
+ * the busy mouse cursor for a while. */
 static gboolean
 show_uri_gtk(G_GNUC_UNUSED const gchar *uri)
 {
 #if GTK_CHECK_VERSION(2,14,0)
+    /* This may not be the whole story because GVfs may not support our URI
+     * scheme.  But leave this to the diagnosis when things fail to work. */
+    if (!uri)
+        return TRUE;
+
     return gtk_show_uri(NULL, uri, GDK_CURRENT_TIME, NULL);
 #else
     return FALSE;
@@ -80,7 +127,13 @@ static gboolean
 show_uri_spawn(G_GNUC_UNUSED const gchar *uri)
 {
 #ifndef G_OS_WIN32
-    static const gchar *programs[] = { "xdg-open", "htmlview" };
+    static const gchar *programs[] = {
+        "xdg-open", "htmlview",
+        "chrome", "chromium",  /* Normally installed by people who want them. */
+        "firefox", "seamonkey",
+        "konqueror",
+        "midori", "epiphany",
+    };
 
     gchar **args;
     gchar *fullpath = NULL;
@@ -93,6 +146,11 @@ show_uri_spawn(G_GNUC_UNUSED const gchar *uri)
     }
     if (!fullpath)
         return FALSE;
+
+    if (!uri) {
+        g_free(fullpath);
+        return TRUE;
+    }
 
     args = g_new(gchar*, 3);
     args[0] = fullpath;
@@ -110,8 +168,10 @@ show_uri_spawn(G_GNUC_UNUSED const gchar *uri)
 static gboolean
 show_help_uri(const gchar *uri)
 {
+    /* The platform-specific ones go first. */
     static const ShowUriFunc backends[] = {
         &show_uri_win32,
+        &show_uri_apple,
         &show_uri_gtk,
         &show_uri_spawn,
     };
@@ -330,19 +390,44 @@ key_press_event(G_GNUC_UNUSED GtkWidget *widget,
     return TRUE;
 }
 
+static void
+add_help_to_window(GtkWindow *window,
+                   gchar *uri,
+                   GwyHelpFlags flags)
+{
+    if (g_object_get_data(G_OBJECT(window), "gwy-help-uri")) {
+        g_warning("Window %p already has help URI: %s",
+                  window,
+                  (gchar*)g_object_get_data(G_OBJECT(window), "gwy-help-uri"));
+        return;
+    }
+    g_object_set_data(G_OBJECT(window), "gwy-help-uri", uri);
+
+    if (!(flags & GWY_HELP_NO_BUTTON) && GTK_IS_DIALOG(window)) {
+        gtk_dialog_add_button(GTK_DIALOG(window),
+                              GTK_STOCK_HELP, GTK_RESPONSE_HELP);
+        g_signal_connect(window, "response",
+                         G_CALLBACK(dialog_response), uri);
+    }
+    g_signal_connect(window, "key-press-event",
+                     G_CALLBACK(key_press_event), uri);
+    g_object_weak_ref(G_OBJECT(window), (GWeakNotify)g_free, uri);
+}
+
 /**
- * gwy_help_add_proc_dialog_button:
+ * gwy_help_add_to_proc_dialog:
  * @dialog: Main dialog for a data processing function.
+ * @flags: Flags allowing to modify the help setup.
  *
- * Adds a Help button to a data processing function dialog.
+ * Adds help to a data processing function dialog.
  *
- * Note the help button may not be added if no help URI is found for the
+ * Note the help button will not be added if no help URI is found for the
  * currently running function.
  *
  * Since: 2.38
  **/
 void
-gwy_help_add_proc_dialog_button(GtkDialog *dialog)
+gwy_help_add_to_proc_dialog(GtkDialog *dialog, GwyHelpFlags flags)
 {
     const gchar *funcname;
     gchar *uri;
@@ -351,17 +436,197 @@ gwy_help_add_proc_dialog_button(GtkDialog *dialog)
     funcname = gwy_process_func_current();
     g_return_if_fail(funcname);
 
-    uri = build_uri_for_function("proc", funcname);
-    if (!uri)
+    if (!(uri = build_uri_for_function("proc", funcname)))
         return;
 
-    gtk_dialog_add_button(GTK_DIALOG(dialog),
-                          GTK_STOCK_HELP, GTK_RESPONSE_HELP);
-    g_signal_connect(dialog, "response",
-                     G_CALLBACK(dialog_response), uri);
-    g_signal_connect(dialog, "key-press-event",
-                     G_CALLBACK(key_press_event), uri);
-    g_object_weak_ref(G_OBJECT(dialog), (GWeakNotify)g_free, uri);
+    add_help_to_window(GTK_WINDOW(dialog), uri, flags);
+}
+
+/**
+ * gwy_help_add_to_graph_dialog:
+ * @dialog: Main dialog for a graph function.
+ * @flags: Flags allowing to modify the help setup.
+ *
+ * Adds help to a graph function dialog.
+ *
+ * Note the help button will not be added if no help URI is found for the
+ * currently running function.
+ *
+ * Since: 2.38
+ **/
+void
+gwy_help_add_to_graph_dialog(GtkDialog *dialog, GwyHelpFlags flags)
+{
+    const gchar *funcname;
+    gchar *uri;
+
+    g_return_if_fail(GTK_IS_DIALOG(dialog));
+    funcname = gwy_graph_func_current();
+    g_return_if_fail(funcname);
+
+    if (!(uri = build_uri_for_function("graph", funcname)))
+        return;
+
+    add_help_to_window(GTK_WINDOW(dialog), uri, flags);
+}
+
+/**
+ * gwy_help_add_to_volume_dialog:
+ * @dialog: Main dialog for a volume data processing function.
+ * @flags: Flags allowing to modify the help setup.
+ *
+ * Adds help to a volume data processing function dialog.
+ *
+ * Note the help button will not be added if no help URI is found for the
+ * currently running function.
+ *
+ * Since: 2.38
+ **/
+void
+gwy_help_add_to_volume_dialog(GtkDialog *dialog, GwyHelpFlags flags)
+{
+    const gchar *funcname;
+    gchar *uri;
+
+    g_return_if_fail(GTK_IS_DIALOG(dialog));
+    funcname = gwy_volume_func_current();
+    g_return_if_fail(funcname);
+
+    if (!(uri = build_uri_for_function("volume", funcname)))
+        return;
+
+    add_help_to_window(GTK_WINDOW(dialog), uri, flags);
+}
+
+/**
+ * gwy_help_add_to_file_dialog:
+ * @dialog: Main dialog for a file function.
+ * @flags: Flags allowing to modify the help setup.
+ *
+ * Adds help to a file function dialog.
+ *
+ * Note the help button will not be added if no help URI is found for the
+ * currently running function.
+ *
+ * Since: 2.38
+ **/
+void
+gwy_help_add_to_file_dialog(GtkDialog *dialog, GwyHelpFlags flags)
+{
+    const gchar *funcname;
+    gchar *uri;
+
+    g_return_if_fail(GTK_IS_DIALOG(dialog));
+    funcname = gwy_file_func_current();
+    g_return_if_fail(funcname);
+
+    if (!(uri = build_uri_for_function("file", funcname)))
+        return;
+
+    add_help_to_window(GTK_WINDOW(dialog), uri, flags);
+}
+
+/**
+ * gwy_help_add_to_tool_dialog:
+ * @dialog: Main dialog for a tool function.
+ * @tool: The tool.
+ * @flags: Flags allowing to modify the help setup.
+ *
+ * Adds help to a tool dialog.
+ *
+ * Note the help button will not be added if no help URI is found for the
+ * currently running function.
+ *
+ * Since: 2.38
+ **/
+void
+gwy_help_add_to_tool_dialog(GtkDialog *dialog,
+                            GwyTool *tool,
+                            GwyHelpFlags flags)
+{
+    const gchar *funcname;
+    gchar *uri;
+
+    g_return_if_fail(GTK_IS_DIALOG(dialog));
+    g_return_if_fail(GWY_IS_TOOL(tool));
+    funcname = G_OBJECT_TYPE_NAME(tool);
+    g_return_if_fail(funcname);
+
+    if (!(uri = build_uri_for_function("tool", funcname)))
+        return;
+
+    add_help_to_window(GTK_WINDOW(dialog), uri, flags);
+}
+
+/**
+ * gwy_help_add_to_window:
+ * @window: A window.
+ * @filename: Base file name in the user guide without any path or extensions,
+ *            for instance "statistical-analysis".
+ * @fragment: Fragment identifier (without "#"), or possibly %NULL.
+ * @flags: Flags allowing to modify the help setup.
+ *
+ * Adds help to a window pointing to the user guide.
+ *
+ * If the window is a #GtkDialog a help button will be added by default (this
+ * can be modified with @flags).  Normal windows do not get help buttons.
+ *
+ * This is a relatively low-level function and should not be necessary in
+ * modules.  An exception may be modules with multiple user interfaces
+ * described in different parts of the guide – but this should be rare.
+ *
+ * It is a suitable functions for adding help to base application windows,
+ * such as channel or volume windows.
+ *
+ * Since: 2.38
+ **/
+void
+gwy_help_add_to_window(GtkWindow *window,
+                       const gchar *filename,
+                       const gchar *fragment,
+                       GwyHelpFlags flags)
+{
+    const gchar *ugbase;
+    gchar *uri;
+
+    g_return_if_fail(GTK_IS_WINDOW(window));
+    g_return_if_fail(filename);
+
+    ugbase = get_user_guide_base();
+    uri = g_strconcat(ugbase, "/",
+                      filename, ".html",
+                      fragment ? "#" : NULL, fragment, NULL);
+    add_help_to_window(window, uri, flags);
+}
+
+/**
+ * gwy_help_add_to_window:
+ * @window: A window.
+ * @uri: Full URI pointing to the help for @window.
+ * @flags: Flags allowing to modify the help setup.
+ *
+ * Adds help to a window pointing to an arbitrary URI.
+ *
+ * If the window is a #GtkDialog a help button will be added by default (this
+ * can be modified with @flags).  Normal windows do not get help buttons.
+ *
+ * This function should not be necessary anywhere within Gwyddion itself.
+ * Use the functions pointing to the user guide instead as they can handle
+ * language versions or changing the user guide base location.
+ *
+ * It may be useful for third-party modules if they wish to add a help facility
+ * behaving similarly to built-in modules.
+ *
+ * Since: 2.38
+ **/
+void
+gwy_help_add_to_window_uri(GtkWindow *window,
+                           const gchar *uri,
+                           GwyHelpFlags flags)
+{
+    g_return_if_fail(GTK_IS_WINDOW(window));
+    g_return_if_fail(uri);
+    add_help_to_window(window, g_strdup(uri), flags);
 }
 
 /************************** Documentation ****************************/
@@ -370,6 +635,24 @@ gwy_help_add_proc_dialog_button(GtkDialog *dialog)
  * SECTION:help
  * @title: help
  * @short_description: User guide access
+ *
+ * Help functions add a Help button to dialogs and install a key press handler
+ * responding to Help and F1 keys to all windows.  For built-in modules,
+ * invoking the help opens a web browser (using some generic and
+ * system-specific means) pointing to the corresponding location in the user
+ * guide.  Third-party modules can use gwy_help_add_to_window_uri() to open a
+ * web browser at an arbitrary URI.
+ **/
+
+/**
+ * GwyHelpFlags:
+ * @GWY_HELP_DEFAULT: No flags, the default behaviour.
+ * @GWY_HELP_NO_BUTTON: Do not add a Help button, even to windows that are
+ *                      dialogs.
+ *
+ * Flags controlling help setup and behaviour.
+ *
+ * Since: 2.38
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
