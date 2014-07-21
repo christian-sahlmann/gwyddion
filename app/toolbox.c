@@ -77,6 +77,7 @@ static void       gwy_app_toolbox_create_group (GtkBox *box,
                                                 const gchar *id,
                                                 GtkWidget *toolbox);
 static void       gwy_app_toolbox_showhide_cb  (GtkWidget *expander);
+static void       show_user_guide              (void);
 static void       toolbox_dnd_data_received    (GtkWidget *widget,
                                                 GdkDragContext *context,
                                                 gint x,
@@ -698,6 +699,14 @@ gwy_app_menu_create_info_menu(GtkAccelGroup *accel_group)
             "<Separator>",
             NULL },
         {
+            N_("/_User Guide"),
+            "",
+            show_user_guide,
+            0,
+            "<StockItem>",
+            GTK_STOCK_HELP
+        },
+        {
             N_("/_Tip of the Day"),
             NULL,
             gwy_app_tip_of_the_day,
@@ -973,6 +982,12 @@ gwy_app_toolbox_showhide_cb(GtkWidget *expander)
     quark = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(expander), "key"));
     visible = gtk_expander_get_expanded(GTK_EXPANDER(expander));
     gwy_container_set_boolean(settings, quark, visible);
+}
+
+static void
+show_user_guide(void)
+{
+    gwy_help_show("index", NULL);
 }
 
 static gboolean

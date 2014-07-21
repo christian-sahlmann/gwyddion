@@ -50,6 +50,8 @@ void gwy_help_add_to_window       (GtkWindow *window,
 void gwy_help_add_to_window_uri   (GtkWindow *window,
                                    const gchar *uri,
                                    GwyHelpFlags flags);
+void gwy_help_show                (const gchar *filename,
+                                   const gchar *fragment);
 
 G_END_DECLS
 

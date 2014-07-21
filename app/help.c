@@ -599,6 +599,35 @@ gwy_help_add_to_window_uri(GtkWindow *window,
     add_help_to_window(window, g_strdup(uri), flags);
 }
 
+/**
+ * gwy_help_show:
+ * @filename: Base file name in the user guide without any path or extensions,
+ *            for instance "statistical-analysis".
+ * @fragment: Fragment identifier (without "#"), or possibly %NULL.
+ *
+ * Immediately shows a specific help location.
+ *
+ * This function should be rarely needed.
+ *
+ * Since: 2.38
+ **/
+void
+gwy_help_show(const gchar *filename,
+              const gchar *fragment)
+{
+    const gchar *ugbase;
+    gchar *uri;
+
+    g_return_if_fail(filename);
+
+    ugbase = get_user_guide_base();
+    uri = g_strconcat(ugbase, "/",
+                      filename, ".html",
+                      fragment ? "#" : NULL, fragment, NULL);
+    show_help_uri(uri);
+    g_free(uri);
+}
+
 /************************** Documentation ****************************/
 
 /**
