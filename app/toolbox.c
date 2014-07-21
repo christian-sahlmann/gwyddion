@@ -610,6 +610,8 @@ gwy_app_toolbox_create(void)
     gtk_window_set_title(GTK_WINDOW(toolbox), g_get_application_name());
     gtk_window_set_role(GTK_WINDOW(toolbox), GWY_TOOLBOX_WM_ROLE);
     gtk_window_set_resizable(GTK_WINDOW(toolbox), FALSE);
+    gwy_help_add_to_window(GTK_WINDOW(toolbox), "main-window", NULL,
+                           GWY_HELP_DEFAULT);
     gwy_app_main_window_set(toolbox);
 
     accel_group = gtk_accel_group_new();

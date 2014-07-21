@@ -4993,6 +4993,8 @@ gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
     gtk_window_set_title(GTK_WINDOW(browser->window), _("Data Browser"));
     gtk_window_set_role(GTK_WINDOW(browser->window), GWY_DATABROWSER_WM_ROLE);
     gwy_app_add_main_accel_group(GTK_WINDOW(browser->window));
+    gwy_help_add_to_window(GTK_WINDOW(browser->window), "data-browser", NULL,
+                           GWY_HELP_DEFAULT);
 
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(browser->window), vbox);
