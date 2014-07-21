@@ -1,5 +1,5 @@
 /*
- *  @(#) $Id: graph_cut.c 8017 2007-05-09 20:44:12Z yeti-dn $
+ *  @(#) $Id$
  *  Copyright (C) 2003-2007 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
@@ -146,6 +146,7 @@ cut_dialog(CutArgs *args)
                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_OK, GTK_RESPONSE_OK);
+    gwy_help_add_to_graph_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     hbox = gtk_hbox_new(FALSE, 2);
@@ -508,6 +509,5 @@ all_changed(GtkToggleButton *check,
     controls->args->is_all = gtk_toggle_button_get_active(check);
     pick_curves(controls);
 }
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

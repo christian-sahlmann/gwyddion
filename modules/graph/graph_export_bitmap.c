@@ -61,7 +61,7 @@ export(GwyGraph *graph)
     GdkPixbuf *pixbuf;
     gchar *filename;
 
-    dialog = gtk_file_chooser_dialog_new("Export to Bitmap",
+    dialog = gtk_file_chooser_dialog_new(_("Export to PNG"),
                                          NULL,
                                          GTK_FILE_CHOOSER_ACTION_SAVE,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,

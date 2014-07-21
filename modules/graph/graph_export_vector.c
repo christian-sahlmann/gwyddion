@@ -64,7 +64,7 @@ export(GwyGraph *graph)
     GString *str;
     FILE *fw;
 
-    dialog = gtk_file_chooser_dialog_new("Export to postscript",
+    dialog = gtk_file_chooser_dialog_new(_("Export to Postscript"),
                                          NULL,
                                          GTK_FILE_CHOOSER_ACTION_SAVE,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
