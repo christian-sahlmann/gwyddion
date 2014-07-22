@@ -2,6 +2,7 @@
 import sys, re
 
 max_versions = {
+    'gio': (2, 14),
     'glib': (2, 14),
     'gobject': (2, 14),
     'pango': (1, 10),
