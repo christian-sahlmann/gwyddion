@@ -28,12 +28,7 @@
 #include <libprocess/level.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-file.h>
-#include <app/app.h>
-#include <app/menu.h>
-#include <app/settings.h>
-#include <app/filelist.h>
-#include <app/data-browser.h>
-#include <app/validate.h>
+#include <app/gwyapp.h>
 #include "gwyappinternal.h"
 
 enum {
@@ -269,6 +264,8 @@ _gwy_app_file_chooser_get(GtkFileChooserAction action)
         break;
     }
 
+    gwy_help_add_to_window(GTK_WINDOW(dialog), "managing-files", NULL,
+                           GWY_HELP_DEFAULT);
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_OK);
     gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(dialog), TRUE);
 

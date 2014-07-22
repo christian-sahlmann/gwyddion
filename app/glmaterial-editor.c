@@ -28,6 +28,7 @@
 #include <libdraw/gwyglmaterial.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
+#include <app/help.h>
 #include <app/resource-editor.h>
 #include <app/glmaterial-editor.h>
 
@@ -129,6 +130,9 @@ gwy_app_gl_material_editor(void)
     editor = g_object_new(GWY_TYPE_GL_MATERIAL_EDITOR, NULL);
     gwy_resource_editor_setup(editor);
     g_type_class_unref(klass);
+    gwy_help_add_to_window(GTK_WINDOW(editor),
+                           "opengl-3d-view", "opengl-material-editor",
+                           GWY_HELP_DEFAULT);
     gtk_widget_show_all(GTK_WIDGET(editor));
 }
 

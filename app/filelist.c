@@ -234,6 +234,9 @@ gwy_app_recent_file_list_new(void)
                                 3*gdk_screen_height()/4);
     gwy_app_restore_window_position(GTK_WINDOW(gcontrols.window),
                                     "/app/document-history", FALSE);
+    gwy_help_add_to_window(GTK_WINDOW(gcontrols.window),
+                           "managing-files", "document-history",
+                           GWY_HELP_DEFAULT);
     g_signal_connect(gcontrols.window, "unmap",
                      G_CALLBACK(gwy_app_recent_file_list_unmapped), NULL);
 

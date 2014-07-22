@@ -347,6 +347,8 @@ _gwy_app_data_window_setup(GwyDataWindow *data_window)
     gtk_widget_show_all(ebox);
 
     gwy_data_window_set_ul_corner_widget(data_window, ebox);
+    gwy_help_add_to_window(GTK_WINDOW(data_window), "data-windows", NULL,
+                           GWY_HELP_DEFAULT);
 
     data_view = gwy_data_window_get_data_view(data_window);
     g_signal_connect_swapped(data_view, "button-press-event",
@@ -692,6 +694,8 @@ _gwy_app_graph_window_setup(GwyGraphWindow *graph_window)
     }
 
     gwy_app_add_main_accel_group(GTK_WINDOW(graph_window));
+    gwy_help_add_to_window(GTK_WINDOW(graph_window), "graph-windows", NULL,
+                           GWY_HELP_DEFAULT);
 
     graph = gwy_graph_window_get_graph(graph_window);
     g_signal_connect_swapped(graph, "button-press-event",
@@ -786,6 +790,9 @@ _gwy_app_3d_window_setup(Gwy3DWindow *window3d)
                              window3d);
 
     gwy_app_3d_window_add_overlay_menu(GWY_3D_WINDOW(window3d));
+
+    gwy_help_add_to_window(GTK_WINDOW(window3d), "opengl-3d-view", NULL,
+                           GWY_HELP_DEFAULT);
 }
 
 /* a widget for the 3dwindow as overlay chooser */
@@ -1336,6 +1343,8 @@ _gwy_app_brick_window_setup(GwyDataWindow *data_window)
     }
 
     gwy_app_add_main_accel_group(GTK_WINDOW(data_window));
+    gwy_help_add_to_window(GTK_WINDOW(data_window), "volume-data", NULL,
+                           GWY_HELP_DEFAULT);
 
     data_view = gwy_data_window_get_data_view(data_window);
     g_signal_connect_swapped(data_view, "button-press-event",

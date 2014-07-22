@@ -29,6 +29,7 @@
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/app.h>
+#include <app/help.h>
 #include <app/data-browser.h>
 #include <app/gwymoduleutils.h>
 
@@ -169,6 +170,8 @@ metadata_browser_new(void)
     browser = g_new0(MetadataBrowser, 1);
     gwy_meta_browser_construct(browser);
     browser->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gwy_help_add_to_window(GTK_WINDOW(browser->window), "metadata", NULL,
+                           GWY_HELP_DEFAULT);
 
     gtk_widget_size_request(browser->treeview, &request);
     request.width = MAX(request.width, 320);

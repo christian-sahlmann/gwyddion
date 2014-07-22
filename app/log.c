@@ -431,6 +431,8 @@ log_browser_new(GwyContainer *data,
     browser->buf = g_string_new(NULL);
     log_browser_construct(browser);
     browser->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gwy_help_add_to_window(GTK_WINDOW(browser->window), "logging", NULL,
+                           GWY_HELP_DEFAULT);
 
     if (type == BROWSER_DATA_CHANNEL)
         dataname = gwy_app_get_data_field_title(data, id);
