@@ -1,4 +1,10 @@
 2.38 (0000-00-00)
+Application:
+- Pressing F1 shows help, i.e. it points a web browser to the relevant part
+  of the user guide (in most program windows).  Most dialogs also have a Help
+  button now.
+- Translations updated: Russian.
+
 Libraries:
 - libgwyprocess: New function to find a height threshold by the Otsu method.
 - libgwyprocess: New functions to calculate data field total variation.
@@ -11,6 +17,7 @@ Libraries:
   function name.
 - libgwyprocess: New function for numbering grains assuming the mask is
   periodic and grains can touch across the opposite edges.
+- libgwyapp: New functions for help handling.
 
 Modules:
 - OpenGPS (new): Imports OpenGPS surface data format (ISO 5436-2).
@@ -21,6 +28,7 @@ Modules:
   growth.
 - APE DAX: Warning about invalid logging function name was fixed.
 - NT-MDT: fixed loading of old spectroscopy from Nanoeducator2 data.
+- Pygwy: It is possible to write volume data processing modules in Python.
 
 
 2.37 (2014-06-27)
