@@ -162,6 +162,7 @@ nanoindent_adjust_window_construct(NanoindentAdjustArgs *args)
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
 
     table = gtk_table_new(2, 10, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);

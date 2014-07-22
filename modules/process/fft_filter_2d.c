@@ -459,6 +459,7 @@ run_dialog(ControlsType *controls)
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
 
     /* Setup tooltips */
     hash_tips = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);

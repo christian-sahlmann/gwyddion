@@ -165,6 +165,7 @@ static gboolean mcrop_dialog (GwyDataObjectId *op1, GwyDataObjectId *op2)
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
 
     table = gtk_table_new(2, 1, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);

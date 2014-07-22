@@ -339,6 +339,7 @@ cc_view_dialog(CCViewArgs *args,
                           GTK_STOCK_OK, GTK_RESPONSE_OK);
 
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
     controls.dialog = dialog;
 
     hbox = gtk_hbox_new(FALSE, 2);

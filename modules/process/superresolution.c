@@ -146,8 +146,9 @@ supres_dialog(SupresArgs *args)
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
-    controls.dialog = dialog;
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
+    controls.dialog = dialog;
 
     table = gtk_table_new(4 + NARGS, 2, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);

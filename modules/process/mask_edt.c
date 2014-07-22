@@ -152,6 +152,7 @@ maskedt_dialog(MaskEdtArgs *args)
                                          GTK_RESPONSE_OK,
                                          NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
     controls.dialog = dialog;
 
     table = gtk_table_new(5, 1, FALSE);

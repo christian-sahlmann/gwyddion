@@ -471,8 +471,9 @@ neural_train_dialog(NeuralTrainArgs *args)
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
-    controls.dialog = dialog;
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
+    controls.dialog = dialog;
 
     hbox = gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 4);
@@ -775,9 +776,10 @@ neural_apply_dialog(NeuralApplyArgs *args,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
-    controls.dialog = dialog;
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
     gtk_window_set_default_size(GTK_WINDOW(dialog), -1, 320);
+    controls.dialog = dialog;
 
     controls.store = gwy_inventory_store_new(gwy_neural_networks());
     controls.networklist = create_network_list(GTK_TREE_MODEL(controls.store),

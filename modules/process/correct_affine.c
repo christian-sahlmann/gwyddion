@@ -308,6 +308,7 @@ affcor_dialog(AffcorArgs *args,
     gtk_dialog_add_button(dialog, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
     button = gtk_dialog_add_button(dialog, GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_OK);
+    gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
     gwy_sensitivity_group_add_widget(controls.sens, button,
                                      SENS_VALID_LATTICE);
 

@@ -249,6 +249,7 @@ immerse_dialog(ImmerseArgs *args)
     gtk_dialog_add_button(dialog, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
     gtk_dialog_add_button(dialog, GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_OK);
+    gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
 
     hbox = gtk_hbox_new(FALSE, 2);
     gtk_box_pack_start(GTK_BOX(dialog->vbox), hbox, FALSE, FALSE, 4);

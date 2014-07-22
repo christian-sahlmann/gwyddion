@@ -209,6 +209,7 @@ grain_cross_dialog(GrainCrossArgs *args,
                                          NULL);
     controls.dialog = GTK_DIALOG(dialog);
     gtk_dialog_set_default_response(controls.dialog, GTK_RESPONSE_OK);
+    gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
     gtk_window_set_default_size(GTK_WINDOW(dialog), 720, 480);
 
     table = GTK_TABLE(gtk_table_new(2, 2, FALSE));

@@ -223,6 +223,7 @@ grain_stat(GwyContainer *data, GwyRunType run)
     dialog = gtk_dialog_new_with_buttons(_("Grain Statistics"), NULL, 0,
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                          NULL);
+    gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
 
     table = gtk_table_new(10, 2, FALSE);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);

@@ -195,6 +195,7 @@ prof_dialog(ProfArgs *args,
     dialog = GTK_DIALOG(controls.dialog);
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_OK);
     gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_OK, FALSE);
+    gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
 
     hbox = gtk_hbox_new(FALSE, 2);
 

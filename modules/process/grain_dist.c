@@ -245,6 +245,7 @@ grain_dist_dialog(GrainDistArgs *args,
                                                     NULL));
     controls.ok = gtk_dialog_add_button(dialog, GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_OK);
+    gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
     gtk_window_set_default_size(GTK_WINDOW(dialog), -1, 520);
 
     hbox = gtk_hbox_new(FALSE, 2);
