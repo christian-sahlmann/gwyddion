@@ -244,7 +244,7 @@ get_user_guide_online_base(void)
     static const gchar *user_guides[] = { "en", "fr", "ru" };
 
     /* TRANSLATORS: For user guide location.  Translate this to fr, ru, cs,
-     * de, ...  even if the corresponding guide does not exist. */
+       de, ...  even if the corresponding guide does not exist. */
     const gchar *lang = gwy_sgettext("current-language-code|en");
     guint i;
 
