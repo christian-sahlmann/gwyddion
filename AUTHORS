@@ -68,6 +68,8 @@ Vinicius Barboza <vinicius.barboza@lnnano.cnpem.br>
     Otsu thresholding.
 Jeffrey J. Schwartz <schwartz@physics.ucla.edu>
     WinSTM file import.
+Christian Bühler <christian.buehler@uni-ulm.de>
+    Pygwy volume data processing module type.
 
 
 === Translators ===
