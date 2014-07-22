@@ -20,6 +20,7 @@ Modules:
 - Columnar synthesis: Can plot the evolution of some statistics during the
   growth.
 - APE DAX: Warning about invalid logging function name was fixed.
+- NT-MDT: fixed loading of old spectroscopy from Nanoeducator2 data.
 
 
 2.37 (2014-06-27)
