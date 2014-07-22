@@ -64,6 +64,16 @@ following functions:
   filename: full path to output file
   return value: True when export is successful, False otherwise 
 
+
+Volume module
+==============
+Volume module is used to manipulate with bricks. Only one function
+must be defined:
+- run()
+  return value: not important
+The process module can use predefined variable gwy.data which contains
+the current data container.
+
 Module variables
 ================
 Every module must have defined variables which are used to determine 
@@ -76,6 +86,10 @@ plugin_desc = "High definition stable format store (.hdsf)"
 Required variables for process type module (example):
 plugin_menu = "/Poodle" # the plugin will be located in Data Process/Poodle
 plugin_type = "PROCESS"
+
+Required variables for volume type module (example):
+plugin_menu = "/Poodle" # the plugin will be located in Volume Data/Poodle
+plugin_type = "VOLUME"
 
 Module debuging
 ===============

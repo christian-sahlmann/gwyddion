@@ -59,7 +59,7 @@ typedef struct {
 
 
 typedef enum {
-    PYGWY_PROCESS, PYGWY_FILE, PYGWY_GRAPH, PYGWY_LAYER, PYGWY_TOOL, PYGWY_UNDEFINED
+    PYGWY_PROCESS, PYGWY_FILE, PYGWY_GRAPH, PYGWY_LAYER, PYGWY_TOOL, PYGWY_VOLUME, PYGWY_UNDEFINED
 } PygwyPluginType;
 
 const gchar pygwy_plugin_dir_name[] = "pygwy";
@@ -430,6 +430,8 @@ pygwy_get_plugin_metadata(const gchar *filename,
         *type = PYGWY_LAYER;
     } else if (g_ascii_strcasecmp ("TOOL", type_str) == 0) {
         *type = PYGWY_TOOL;
+    } else if (g_ascii_strcasecmp ("VOLUME", type_str) == 0) {
+        *type = PYGWY_VOLUME;
     } else {
         g_warning("Unknown type '%s' in '%s'", type_str, filename);
         *type = PYGWY_UNDEFINED;
@@ -598,6 +600,53 @@ pygwy_register_graph_plugin(gchar *filename,
 
 }
 
+static gboolean
+pygwy_register_volume_plugin(gchar *filename,
+                             PyObject *code,
+                             gchar *name,
+                             gchar *menu_path)
+{
+    PygwyPluginInfo *info;
+
+    if (!code) {
+        g_warning("Cannot create code object for file '%s'", filename);
+        return FALSE;
+    }
+    if (!name) {
+        g_warning("Cannot register. Undefined 'plugin_name' variable in '%s'",
+                  filename);
+        return FALSE;
+    }
+    if (!menu_path) {
+        g_warning("Cannot register. Undefined 'menu_path' variable in '%s'",
+                  filename);
+        return FALSE;
+    }
+    info = pygwy_create_plugin_info(filename, name, code);
+
+    gwy_debug("Registering volume func.");
+    if (gwy_volume_func_register(info->name,
+                                 pygwy_proc_run,
+                                 menu_path,
+                                 NULL,
+                                 GWY_RUN_IMMEDIATE,
+                                 GWY_MENU_FLAG_VOLUME,
+                                 N_("Function written in Python")) ) { // not very descriptive
+        // append plugin to list of plugins
+        s_pygwy.plugins = g_list_append(s_pygwy.plugins, info);
+    } else {
+        // FIXME: Terminated by glib free(): invalid pointer: blabla
+        // when inserting duplicate module
+        // g_free(info->name);
+        // g_free(info->filename);
+        // g_free(info);
+        g_warning("Cannot register plugin '%s'", filename);
+        return FALSE;
+    }
+    return TRUE;
+
+}
+
 static void
 pygwy_register_plugins(void)
 {
@@ -704,6 +753,21 @@ pygwy_register_plugins(void)
                                   " and plugin_name not defined.");
                     }
 
+                    break;
+                case PYGWY_VOLUME:
+                    if (plugin_code != NULL
+                        && plugin_name != NULL
+                        && plugin_menu_path != NULL)
+                    {
+                        pygwy_register_volume_plugin(plugin_fullpath_filename,
+                                                   plugin_code,
+                                                   plugin_name,
+                                                   plugin_menu_path);
+                    } else {
+                        g_warning("Could not register volume module: "
+                                  "variables plugin_menu, "
+                                  "plugin_type and plugin_name not defined.");
+                    }
                     break;
                 case PYGWY_UNDEFINED:
                     g_warning("Cannot register plugin without defined "
