@@ -1379,22 +1379,25 @@ create_difference_graph(FitArgs *args, GwyContainer *container)
     GwyGraphCurveModel *cmodel_fit = gwy_graph_model_get_curve(gmodel, 1);
     GwyGraphCurveModel *cmodel;
     const gdouble *xs, *yds, *yfs;
+    gdouble xmin, xmax;
     gdouble *ys;
-    gint ns, i;
+    gint ns, i, j;
 
     gmodel = gwy_graph_model_duplicate(gmodel);
-    gwy_graph_model_remove_curve(gmodel, 1);
     cmodel = gwy_graph_model_get_curve(gmodel, 0);
-    ns = gwy_graph_curve_model_get_ndata(cmodel);
-    xs = gwy_graph_curve_model_get_xdata(cmodel_data);
+    ns = gwy_graph_curve_model_get_ndata(cmodel_fit);
+    gwy_graph_curve_model_get_x_range(cmodel_fit, &xmin, &xmax);
+    xs = gwy_graph_curve_model_get_xdata(cmodel_fit);
     yds = gwy_graph_curve_model_get_ydata(cmodel_data);
     yfs = gwy_graph_curve_model_get_ydata(cmodel_fit);
     ys = g_new(gdouble, ns);
-    for (i = 0; i < ns; i++)
-        ys[i] = yds[i] - yfs[i];
+    for (i = 0; xs[i] < xmin; i++);
+    for (j = 0; j < ns; i++, j++)
+        ys[j] = yds[i] - yfs[i];
 
     gwy_graph_curve_model_set_data(cmodel, xs, ys, ns);
     g_free(ys);
+    gwy_graph_model_remove_curve(gmodel, 1);
     gwy_app_data_browser_add_graph_model(gmodel, container, TRUE);
     g_object_unref(gmodel);
 }
