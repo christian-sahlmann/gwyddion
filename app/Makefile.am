@@ -96,7 +96,7 @@ libgwyapp2.def: $(libgwyapp2_la_OBJECTS)
 		| awk -F' ' '($$2=="T" && $$3 ~ /^gwy_/){print "     ",$$3}'; \
 	done | sort >>libgwyapp2.def
 
-AM_CFLAGS = $(darwin_cflags) @GTK_MAC_CFLAGS@ @FFTW3_CFLAGS@ @UNIQUE_CFLAGS@ @COMMON_CFLAGS@
+AM_CFLAGS = $(darwin_cflags) @GTK_MAC_CFLAGS@ @FFTW3_CFLAGS@ @UNIQUE_CFLAGS@ @COMMON_CFLAGS@ @GIO_CFLAGS@
 AM_CPPFLAGS = -I$(top_srcdir)
 AM_LDFLAGS = $(darwin_ldflags)
 
@@ -107,7 +107,7 @@ AM_LDFLAGS = $(darwin_ldflags)
 # Changing ifaces     C:   R:   0
 libversion = -version-info 10:1:10
 #libversion = -release @LIBRARY_RELEASE@
-libgwyapp2_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -export-dynamic $(no_undefined) $(export_symbols) $(libversion)
+libgwyapp2_la_LDFLAGS = @GTKGLEXT_LIBS@ @GIO_LIBS@ @BASIC_LIBS@ -export-dynamic $(no_undefined) $(export_symbols) $(libversion)
 libgwyapp2_la_CPPFLAGS = -DG_LOG_DOMAIN=\"GwyApp\" $(AM_CPPFLAGS)
 libgwyapp2_la_LIBADD = $(libgwyapp_libadd)
 
@@ -149,7 +149,7 @@ gwyddion_SOURCES = \
 	toolbox.c
 
 
-gwyddion_LDADD = @COMMON_LDFLAGS@ @GTK_MAC_LIBS@ @GTKGLEXT_LIBS@ @FFTW3_LIBS@ @UNIQUE_LIBS@ @BASIC_LIBS@ $(LIBXMU) \
+gwyddion_LDADD = @COMMON_LDFLAGS@ @GTK_MAC_LIBS@ @GTKGLEXT_LIBS@ @FFTW3_LIBS@ @UNIQUE_LIBS@ @GIO_LIBS@ @BASIC_LIBS@ $(LIBXMU) \
 	libgwyapp2.la \
 	$(libgwymodule) \
 	$(libgwydgets) \

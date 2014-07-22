@@ -736,6 +736,9 @@ gwy_app_menu_create_info_menu(GtkAccelGroup *accel_group)
     gtk_item_factory_create_items(item_factory,
                                   G_N_ELEMENTS(menu_items), menu_items, NULL);
 
+    if (!gwy_help_is_available())
+        gtk_item_factory_delete_item(item_factory, "<meta>/User Guide");
+
     return gtk_item_factory_get_widget(item_factory, "<meta>");
 }
 

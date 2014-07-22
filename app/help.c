@@ -21,6 +21,7 @@
 
 #include "config.h"
 #include <string.h>
+#include <gio/gio.h>
 #include <gdk/gdkkeysyms.h>
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
@@ -44,6 +45,17 @@ typedef struct {
 /* The function is expected to just return TRUE if @uri is NULL but the backend
  * seems to be available. */
 typedef gboolean (*ShowUriFunc)(const gchar *uri);
+
+static gboolean show_uri_win32(const gchar *uri);
+static gboolean show_uri_gtk  (const gchar *uri);
+static gboolean show_uri_spawn(const gchar *uri);
+
+/* The platform-specific ones go first. */
+static const ShowUriFunc backends[] = {
+    &show_uri_win32,
+    &show_uri_gtk,
+    &show_uri_spawn,
+};
 
 static gboolean
 show_uri_win32(G_GNUC_UNUSED const gchar *uri)
@@ -137,15 +149,30 @@ show_uri_spawn(G_GNUC_UNUSED const gchar *uri)
 }
 
 static gboolean
+any_backend_available(void)
+{
+    static gboolean available = FALSE;
+    static gboolean tested = FALSE;
+
+    guint i;
+
+    if (G_LIKELY(tested))
+        return available;
+
+    for (i = 0; i < G_N_ELEMENTS(backends); i++) {
+        if (backends[i](NULL)) {
+            available = TRUE;
+            break;
+        }
+    }
+    tested = TRUE;
+
+    return available;
+}
+
+static gboolean
 show_help_uri(const gchar *uri)
 {
-    /* The platform-specific ones go first. */
-    static const ShowUriFunc backends[] = {
-        &show_uri_win32,
-        &show_uri_gtk,
-        &show_uri_spawn,
-    };
-
     guint i;
 
     for (i = 0; i < G_N_ELEMENTS(backends); i++) {
@@ -234,6 +261,12 @@ get_uri_path_for_module(const gchar *modname)
     if (G_UNLIKELY(!userguidemap))
         userguidemap = build_user_guide_map();
 
+    if (!modname) {
+        if (g_hash_table_size(userguidemap))
+            return GUINT_TO_POINTER(TRUE);
+        return NULL;
+    }
+
     return g_hash_table_lookup(userguidemap, (gpointer)modname);
 }
 
@@ -254,6 +287,39 @@ get_user_guide_online_base(void)
     }
     lang = user_guides[(i == G_N_ELEMENTS(user_guides)) ? 0 : i];
     return g_strconcat(UG_ONLINE_BASE, lang, NULL);
+}
+
+/* If an URI points to a local file, check if it exists.  Otherwise just assume
+ * it exists. */
+static gboolean
+check_local_file_uri(const gchar *uri)
+{
+    GFile *gfile = g_file_new_for_uri(uri);
+    gchar *path, *scheme;
+    GFileType filetype;
+
+    /* If we use g_file_new_for_uri() on a bare path the tests below will not
+     * behave as expected. */
+    if (!(scheme = g_file_get_uri_scheme(gfile))) {
+        g_object_unref(gfile);
+        gfile = g_file_new_for_path(uri);
+    }
+    else
+        g_free(scheme);
+
+    if (!g_file_hash(gfile))
+        return FALSE;
+
+    if (!(path = g_file_get_path(gfile))) {
+        g_object_unref(gfile);
+        return TRUE;
+    }
+    g_free(path);
+
+    filetype = g_file_query_file_type(gfile, 0, NULL);
+    g_object_unref(gfile);
+
+    return filetype == G_FILE_TYPE_REGULAR;
 }
 
 static gchar*
@@ -297,7 +363,7 @@ build_uri_for_function(const gchar *type, const gchar *funcname)
     static GHashTable *userguidemap = NULL;
 
     const HelpURI *helpuri;
-    const gchar *modname, *ugbase;
+    const gchar *modname;
     gchar *qname, *uri;
 
     if (G_UNLIKELY(!userguidemap))
@@ -315,8 +381,7 @@ build_uri_for_function(const gchar *type, const gchar *funcname)
     if (helpuri->fulluri)
         return g_strdup(helpuri->fulluri);
 
-    ugbase = get_user_guide_base();
-    uri = g_strconcat(ugbase, "/",
+    uri = g_strconcat(get_user_guide_base(), "/",
                       helpuri->filename, ".html",
                       helpuri->fragment ? "#" : NULL, helpuri->fragment, NULL);
 
@@ -365,10 +430,19 @@ add_help_to_window(GtkWindow *window,
                    gchar *uri,
                    GwyHelpFlags flags)
 {
+    if (!any_backend_available())
+        return;
+
+    if (!check_local_file_uri(uri)) {
+        g_free(uri);
+        return;
+    }
+
     if (g_object_get_data(G_OBJECT(window), "gwy-help-uri")) {
         g_warning("Window %p already has help URI: %s",
                   window,
                   (gchar*)g_object_get_data(G_OBJECT(window), "gwy-help-uri"));
+        g_free(uri);
         return;
     }
     g_object_set_data(G_OBJECT(window), "gwy-help-uri", uri);
@@ -392,7 +466,7 @@ add_help_to_window(GtkWindow *window,
  * Adds help to a data processing function dialog.
  *
  * Note the help button will not be added if no help URI is found for the
- * currently running function.
+ * currently running function or help is not available.
  *
  * Since: 2.38
  **/
@@ -420,7 +494,7 @@ gwy_help_add_to_proc_dialog(GtkDialog *dialog, GwyHelpFlags flags)
  * Adds help to a graph function dialog.
  *
  * Note the help button will not be added if no help URI is found for the
- * currently running function.
+ * currently running function or help is not available.
  *
  * Since: 2.38
  **/
@@ -448,7 +522,7 @@ gwy_help_add_to_graph_dialog(GtkDialog *dialog, GwyHelpFlags flags)
  * Adds help to a volume data processing function dialog.
  *
  * Note the help button will not be added if no help URI is found for the
- * currently running function.
+ * currently running function or help is not available.
  *
  * Since: 2.38
  **/
@@ -476,7 +550,7 @@ gwy_help_add_to_volume_dialog(GtkDialog *dialog, GwyHelpFlags flags)
  * Adds help to a file function dialog.
  *
  * Note the help button will not be added if no help URI is found for the
- * currently running function.
+ * currently running function or help is not available.
  *
  * Since: 2.38
  **/
@@ -505,7 +579,7 @@ gwy_help_add_to_file_dialog(GtkDialog *dialog, GwyHelpFlags flags)
  * Adds help to a tool dialog.
  *
  * Note the help button will not be added if no help URI is found for the
- * currently running function.
+ * currently running function or help is not available.
  *
  * Since: 2.38
  **/
@@ -540,6 +614,7 @@ gwy_help_add_to_tool_dialog(GtkDialog *dialog,
  *
  * If the window is a #GtkDialog a help button will be added by default (this
  * can be modified with @flags).  Normal windows do not get help buttons.
+ * No help may be added if help is not available.
  *
  * This is a relatively low-level function and should not be necessary in
  * modules.  An exception may be modules with multiple user interfaces
@@ -556,14 +631,12 @@ gwy_help_add_to_window(GtkWindow *window,
                        const gchar *fragment,
                        GwyHelpFlags flags)
 {
-    const gchar *ugbase;
     gchar *uri;
 
     g_return_if_fail(GTK_IS_WINDOW(window));
     g_return_if_fail(filename);
 
-    ugbase = get_user_guide_base();
-    uri = g_strconcat(ugbase, "/",
+    uri = g_strconcat(get_user_guide_base(), "/",
                       filename, ".html",
                       fragment ? "#" : NULL, fragment, NULL);
     add_help_to_window(window, uri, flags);
@@ -579,6 +652,7 @@ gwy_help_add_to_window(GtkWindow *window,
  *
  * If the window is a #GtkDialog a help button will be added by default (this
  * can be modified with @flags).  Normal windows do not get help buttons.
+ * No help may be added if help is not available.
  *
  * This function should not be necessary anywhere within Gwyddion itself.
  * Use the functions pointing to the user guide instead as they can handle
@@ -607,7 +681,8 @@ gwy_help_add_to_window_uri(GtkWindow *window,
  *
  * Immediately shows a specific help location.
  *
- * This function should be rarely needed.
+ * This function should be rarely needed.  It may fail if help is not
+ * available.
  *
  * Since: 2.38
  **/
@@ -615,17 +690,52 @@ void
 gwy_help_show(const gchar *filename,
               const gchar *fragment)
 {
-    const gchar *ugbase;
     gchar *uri;
 
     g_return_if_fail(filename);
 
-    ugbase = get_user_guide_base();
-    uri = g_strconcat(ugbase, "/",
+    uri = g_strconcat(get_user_guide_base(), "/",
                       filename, ".html",
                       fragment ? "#" : NULL, fragment, NULL);
     show_help_uri(uri);
     g_free(uri);
+}
+
+/**
+ * gwy_help_is_available:
+ *
+ * Check whether help is available.
+ *
+ * This is a weak check that finds if we have any help-showing backend that
+ * might work at all, have the user guide module map, and if the user guide
+ * locations is a local directory it checks whether it exists.  If it returns
+ * %TRUE it does not guarantee help will work. If it returns %FALSE, however,
+ * it means help will not work.
+ *
+ * Returns: %TRUE if help seems available, %FALSE if it is not.
+ *
+ * Since: 2.38.
+ **/
+gboolean
+gwy_help_is_available(void)
+{
+    gboolean ok = FALSE;
+    gchar *uri;
+
+    /* We must have a user guide map. */
+    if (!get_uri_path_for_module(NULL))
+        return FALSE;
+
+    /* We must have a backend. */
+    if (!any_backend_available())
+        return FALSE;
+
+    /* If the user guide location is local, it must exist. */
+    uri = g_strconcat(get_user_guide_base(), "/index.html", NULL);
+    ok = check_local_file_uri(uri);
+    g_free(uri);
+
+    return ok;
 }
 
 /************************** Documentation ****************************/
