@@ -129,7 +129,9 @@ static void     gwy_3d_window_gradient_selected    (GtkWidget *item,
                                                     Gwy3DWindow *gwy3dwindow);
 static void     gwy_3d_window_material_selected    (GtkWidget *item,
                                                     Gwy3DWindow *gwy3dwindow);
-static void     gwy_3d_window_make_zscale_1_1      (Gwy3DWindow *window);
+static void     gwy_3d_window_set_zscale           (Gwy3DWindow *window);
+static void     update_physcale_entry              (Gwy3DWindow *window,
+                                                    GtkAdjustment *adj);
 
 /* These are actually class data.  To put them to Class struct someone would
  * have to do class_ref() and live with this reference to the end of time. */
@@ -741,7 +743,7 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
 {
     Gwy3DView *view;
     Gwy3DSetup *setup;
-    GtkWidget *vbox, *spin, *table, *check, *button;
+    GtkWidget *vbox, *spin, *table, *check, *button, *label;
     GtkObject *adj;
     gint row;
 
@@ -780,12 +782,25 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
     spin = gwy_table_attach_spinbutton(table, row++,
                                        _("_Value scale:"), NULL, adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 5);
+    g_signal_connect_swapped(adj, "value-changed",
+                             G_CALLBACK(update_physcale_entry), window);
 
-    button = gtk_button_new_with_mnemonic(_("Make _1:1"));
+    label = gtk_label_new_with_mnemonic(_("Ph_ysical scale:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+    window->physcale_entry = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(window->physcale_entry), 8);
+    gtk_table_attach(GTK_TABLE(table), window->physcale_entry,
+                     1, 2, row, row+1, GTK_FILL, 0, 0, 0);
+    update_physcale_entry(window, GTK_ADJUSTMENT(adj));
+
+    button = gtk_button_new_with_mnemonic(gwy_sgettext("verb|Set"));
     gtk_table_attach(GTK_TABLE(table), button,
-                     1, 3, row, row+1, 0, 0, 0, 0);
+                     2, 3, row, row+1, 0, 0, 0, 0);
     g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(gwy_3d_window_make_zscale_1_1), window);
+                             G_CALLBACK(gwy_3d_window_set_zscale), window);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
@@ -1711,14 +1726,47 @@ gwy_3d_window_material_selected(GtkWidget *item,
 }
 
 static void
-gwy_3d_window_make_zscale_1_1(Gwy3DWindow *window)
+gwy_3d_window_set_zscale(Gwy3DWindow *window)
 {
     Gwy3DView *view;
     GwyContainer *container;
     const gchar *data_key;
     Gwy3DSetup *setup;
     GwyDataField *dfield = NULL;
-    gdouble min, max, xreal, yreal, scale, zscale;
+    gdouble min, max, xreal, yreal, scale, zscale, entryval;
+
+    view = GWY_3D_VIEW(window->gwy3dview);
+    container = gwy_3d_view_get_data(view);
+    setup = gwy_3d_view_get_setup(view);
+    data_key = gwy_3d_view_get_data_key(view);
+    if (!container || !setup || !data_key)
+        return;
+    if (!gwy_container_gis_object_by_name(container, data_key, &dfield))
+        return;
+
+    entryval = g_strtod(gtk_entry_get_text(GTK_ENTRY(window->physcale_entry)),
+                        NULL);
+
+    /* FIXME: We need to carefully emulate the code from 3D view here. */
+    gwy_data_field_get_min_max(dfield, &min, &max);
+    xreal = gwy_data_field_get_xreal(dfield);
+    yreal = gwy_data_field_get_yreal(dfield);
+    scale = 2.0/MAX(xreal, yreal);
+    zscale = scale*2*(max - min) * entryval;
+
+    g_object_set(setup, "z-scale", zscale, NULL);
+}
+
+static void
+update_physcale_entry(Gwy3DWindow *window, GtkAdjustment *adj)
+{
+    Gwy3DView *view;
+    GwyContainer *container;
+    const gchar *data_key;
+    Gwy3DSetup *setup;
+    GwyDataField *dfield = NULL;
+    gdouble min, max, xreal, yreal, scale, physcale;
+    gchar buf[40];
 
     view = GWY_3D_VIEW(window->gwy3dview);
     container = gwy_3d_view_get_data(view);
@@ -1734,9 +1782,13 @@ gwy_3d_window_make_zscale_1_1(Gwy3DWindow *window)
     xreal = gwy_data_field_get_xreal(dfield);
     yreal = gwy_data_field_get_yreal(dfield);
     scale = 2.0/MAX(xreal, yreal);
-    zscale = scale*2*(max - min);
+    if (max <= min)
+        physcale = 0.0;
+    else
+        physcale = gtk_adjustment_get_value(adj)/(scale*2*(max - min));
 
-    g_object_set(setup, "z-scale", zscale, NULL);
+    g_snprintf(buf, sizeof(buf), "%g", physcale);
+    gtk_entry_set_text(GTK_ENTRY(window->physcale_entry), buf);
 }
 
 /************************** Documentation ****************************/

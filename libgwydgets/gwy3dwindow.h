@@ -70,12 +70,12 @@ struct _Gwy3DWindow {
     GdkWindow *resize_grip;
 
     GtkWidget *dataov_menu;
-    GtkWidget *widget3;
+    GtkWidget *physcale_entry;
     GtkWidget *widget4;
     GtkWidget *widget5;
 
     gboolean in_update;
-    guint controls_full;  /* should be boolean, keep ABI */
+    guint controls_full;  /* should be boolean, but keep ABI */
 
     gpointer reserved1;
     gpointer reserved2;
