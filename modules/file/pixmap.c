@@ -1088,6 +1088,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                                          NULL);
     controls.dialog = dialog;
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gwy_help_add_to_file_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
     g_free(title);
 
     hbox = gtk_hbox_new(FALSE, 20);
