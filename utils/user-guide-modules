@@ -148,7 +148,7 @@ otsu_threshold	grain-analysis	grain-threshold-otsu
 outliers	editing-correction	mask-of-outliers
 pathlevel	editing-correction	path-level
 pat_synth	synthetic	pattern-synthesis
-pixmap	managing-files
+pixmap	specific-data-import	pixmap-file-import
 pltfile	managing-files
 plugin-proxy	plugins
 pnifile	managing-files
@@ -163,8 +163,8 @@ pt3file	managing-files
 quesant	managing-files
 rank	presentations	rank
 rawfile	raw-file-import
-rawgraph	specific-data-import
-rawxyz	specific-data-import
+rawgraph	specific-data-import	graph-curve-import
+rawxyz	specific-data-import	raw-xyz-import
 readvalue	basic-operations	read-value
 rectangle	selections
 rhk-sm3	managing-files
