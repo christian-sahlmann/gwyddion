@@ -374,6 +374,7 @@ volcal_dialog(VolcalArgs *args,
 
     controls.ok = gtk_dialog_add_button(GTK_DIALOG(dialog), GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gwy_help_add_to_volume_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
 
     controls.args = args;
     controls.in_update = TRUE;
