@@ -94,3 +94,20 @@ else:
       shape = (field.get_xres(),field.get_yres())
       return np.array(gwydfdatap(addr,shape),copy=False)
     
+   def brick_data_as_array(brick):
+      class gwydfdatap():
+         def __init__(self,addr,shape):
+            data = (addr,False)
+            stride = (8,shape[0]*8,shape[0]*shape[1]*8)
+            self.__array_interface__= {
+               'strides' : stride,
+               'shape'   : shape,
+               'data'    : data,
+               'typestr' : "|f8",
+               'version' : 3}
+
+
+
+      addr = brick.get_data_pointer()
+      shape = (brick.get_xres(),brick.get_yres(),brick.get_zres())
+      return np.array(gwydfdatap(addr,shape),copy=False)

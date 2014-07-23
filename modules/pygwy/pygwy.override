@@ -326,6 +326,27 @@ _wrap_gwy_data_field_get_data_pointer(PyGObject *self)
 }
 
 %%
+define GwyBrick.get_data_pointer noargs
+/**
+ * gwy_brick_get_data_pointer:
+ *
+ * Get Pointer to data which the brick contains.
+ *
+ * Returns: integer pointing to the raw data of the brick
+**/
+static PyObject *
+_wrap_gwy_brick_get_data_pointer(PyGObject *self)
+{
+   gdouble* data;
+   unsigned long ptr;
+
+   data = gwy_brick_get_data(GWY_BRICK(self->obj));
+   ptr = (long)data;
+
+   return PyLong_FromUnsignedLong(ptr);
+}
+
+%%
 define GwyDataLine.get_data noargs
 static PyObject *
 _wrap_gwy_data_line_get_data(PyGObject *self)
