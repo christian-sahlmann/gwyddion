@@ -44,12 +44,12 @@ typedef struct {
 
 /* The function is expected to just return TRUE if @uri is NULL but the backend
  * seems to be available. */
-typedef gboolean (*ShowUriFunc)(const gchar *uri);
+typedef gboolean (*ShowUriFunc)(const gchar *uri, gboolean complain);
 
-static gboolean show_uri_win32   (const gchar *uri);
-static gboolean show_uri_gtk     (const gchar *uri);
-static gboolean show_uri_open    (const gchar *uri);
-static gboolean show_uri_browsers(const gchar *uri);
+static gboolean show_uri_win32   (const gchar *uri, gboolean complain);
+static gboolean show_uri_gtk     (const gchar *uri, gboolean complain);
+static gboolean show_uri_open    (const gchar *uri, gboolean complain);
+static gboolean show_uri_browsers(const gchar *uri, gboolean complain);
 
 /* The platform-specific ones go first. */
 static const ShowUriFunc backends[] = {
@@ -60,11 +60,12 @@ static const ShowUriFunc backends[] = {
 };
 
 static gboolean
-show_uri_win32(G_GNUC_UNUSED const gchar *uri)
+show_uri_win32(G_GNUC_UNUSED const gchar *uri, gboolean complain)
 {
 #ifdef G_OS_WIN32
     static gboolean initialised_com = FALSE;
     gint status;
+    gboolean ok;
 
     if (!uri)
         return TRUE;
@@ -79,8 +80,15 @@ show_uri_win32(G_GNUC_UNUSED const gchar *uri)
      * Apparenly gdk_win32_window_get_impl_hwnd() can provide it but this is
      * a late addition to Gdk, must check availability properly. */
     status = ShellExecute(NULL, NULL, uri, NULL, NULL, SW_SHOWNORMAL);
-    return status > 32;  /* Otherwise it's the error code. */
+    ok = status > 32;  /* Otherwise it's the error code. */
+    if (!ok && complain) {
+        g_warning("Help ShellExecute() for URI `%s' failed with code %d.",
+                  uri, status);
+    }
+    return ok;
 #else
+    if (complain)
+        g_warning("Help backend win32 is not available (not on MS Windows).");
     return FALSE;
 #endif
 }
@@ -89,23 +97,37 @@ show_uri_win32(G_GNUC_UNUSED const gchar *uri)
  * switching to the busy mouse cursor for a while.  Thus it lost the chance to
  * become our preferred mechanism. */
 static gboolean
-show_uri_gtk(G_GNUC_UNUSED const gchar *uri)
+show_uri_gtk(G_GNUC_UNUSED const gchar *uri, gboolean complain)
 {
 #if GTK_CHECK_VERSION(2,14,0)
+    GError *error = NULL;
+    gboolean ok;
+
     /* This may not be the whole story because GVfs may not support our URI
      * scheme.  But leave this to the diagnosis when things fail to work. */
     if (!uri)
         return TRUE;
 
-    return gtk_show_uri(NULL, uri, GDK_CURRENT_TIME, NULL);
+    ok = gtk_show_uri(NULL, uri, GDK_CURRENT_TIME, &error);
+    if (!ok) {
+        if (complain) {
+            g_warning("Help gtk_show_uri() for URI `%s' failed with: %s",
+                      uri, error->message);
+        }
+        g_clear_error(&error);
+    }
+    return ok;
 #else
+    if (complain)
+        g_warning("Help backend gtk is not available (too old Gtk+).");
     return FALSE;
 #endif
 }
 
 static gboolean
 show_uri_spawn_program(G_GNUC_UNUSED const gchar *uri,
-                       const gchar **programs, guint nprograms)
+                       const gchar **programs, guint nprograms,
+                       gboolean complain)
 {
     gchar **args;
     gchar *fullpath = NULL;
@@ -115,6 +137,9 @@ show_uri_spawn_program(G_GNUC_UNUSED const gchar *uri,
     for (i = 0; i < nprograms; i++) {
         if ((fullpath = g_find_program_in_path(programs[i])))
             break;
+
+        if (complain)
+            g_warning("Cannot find program %s in PATH.", programs[i]);
     }
     if (!fullpath)
         return FALSE;
@@ -135,7 +160,7 @@ show_uri_spawn_program(G_GNUC_UNUSED const gchar *uri,
 }
 
 static gboolean
-show_uri_open(G_GNUC_UNUSED const gchar *uri)
+show_uri_open(G_GNUC_UNUSED const gchar *uri, gboolean complain)
 {
 #ifndef G_OS_WIN32
     static const gchar *programs[] = {
@@ -151,24 +176,30 @@ show_uri_open(G_GNUC_UNUSED const gchar *uri)
          * people having these will also have xdg-open nowadays. */
     };
 
-    return show_uri_spawn_program(uri, programs, G_N_ELEMENTS(programs));
+    return show_uri_spawn_program(uri, programs, G_N_ELEMENTS(programs),
+                                  complain);
 #else
     return FALSE;
 #endif
 }
 
 static gboolean
-show_uri_browsers(G_GNUC_UNUSED const gchar *uri)
+show_uri_browsers(G_GNUC_UNUSED const gchar *uri, gboolean complain)
 {
 #ifndef G_OS_WIN32
     static const gchar *programs[] = {
-        "chrome", "chromium",  /* Normally installed by people who want them. */
+        /* Not worth trying platform browsers (safari, iexplore) probably as
+         * we would get them using the platform open-mechanism. */
         "firefox", "seamonkey", "mozilla",
+        "google-chrome", "chromium-browser",
         "konqueror",
-        "midori", "epiphany", "galeon",
+        "midori", "epiphany",
+        "opera",
+        "dillo",
     };
 
-    return show_uri_spawn_program(uri, programs, G_N_ELEMENTS(programs));
+    return show_uri_spawn_program(uri, programs, G_N_ELEMENTS(programs),
+                                  complain);
 #else
     return FALSE;
 #endif
@@ -186,7 +217,7 @@ any_backend_available(void)
         return available;
 
     for (i = 0; i < G_N_ELEMENTS(backends); i++) {
-        if (backends[i](NULL)) {
+        if (backends[i](NULL, FALSE)) {
             available = TRUE;
             break;
         }
@@ -197,20 +228,41 @@ any_backend_available(void)
 }
 
 static gboolean
-show_help_uri(const gchar *uri)
+show_help_uri(GtkWindow *parent, const gchar *uri)
 {
+    GtkWidget *dialog;
     guint i;
 
+    /* Try to display the help. */
     for (i = 0; i < G_N_ELEMENTS(backends); i++) {
-        if (backends[i](uri))
+        if (backends[i](uri, FALSE))
             return TRUE;
     }
 
-    /* TODO: Show some error instead of a silent failure.  Possibly offer
-     * some advice what may be broken dependin on the base prefix: for
-     * http(s):// we need network connection; for file:// and paths we need the
-     * guide to be present locally.  At least do this the first time this
-     * happens (may want to disable help for the rest of the session). */
+    /* If don't succeed, try again but dump all errors to the log.  If we,
+     * for whatever reason, succeed now we pretend nothing happened. */
+    for (i = 0; i < G_N_ELEMENTS(backends); i++) {
+        if (backends[i](uri, TRUE))
+            return TRUE;
+    }
+
+    dialog = gtk_message_dialog_new(parent,
+                                    GTK_DIALOG_MODAL
+                                    | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                    GTK_MESSAGE_ERROR,
+                                    GTK_BUTTONS_CLOSE,
+                                    _("Cannot display the help."));
+    gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog),
+                                             _("No working method to show\n"
+                                               "%s\n"
+                                               "in a web browser was found. "
+                                               "Details about the attempts "
+                                               "can be found in the console "
+                                               "or gwyddion.log."),
+                                             uri);
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+
     return FALSE;
 }
 
@@ -432,11 +484,11 @@ dialog_response(GtkDialog *dialog,
     g_signal_stop_emission(dialog, signal_id, 0);
     g_return_if_fail(uri);
 
-    show_help_uri(uri);
+    show_help_uri(GTK_WINDOW(dialog), uri);
 }
 
 static gboolean
-key_press_event(G_GNUC_UNUSED GtkWidget *widget,
+key_press_event(GtkWidget *widget,
                 GdkEventKey *event,
                 gpointer user_data)
 {
@@ -447,7 +499,7 @@ key_press_event(G_GNUC_UNUSED GtkWidget *widget,
         || (event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK)))
         return FALSE;
 
-    show_help_uri(uri);
+    show_help_uri(GTK_WINDOW(widget), uri);
     return TRUE;
 }
 
@@ -723,7 +775,7 @@ gwy_help_show(const gchar *filename,
     uri = g_strconcat(get_user_guide_base(), "/",
                       filename, ".html",
                       fragment ? "#" : NULL, fragment, NULL);
-    show_help_uri(uri);
+    show_help_uri(NULL, uri);
     g_free(uri);
 }
 
