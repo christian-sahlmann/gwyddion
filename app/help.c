@@ -643,7 +643,7 @@ gwy_help_add_to_window(GtkWindow *window,
 }
 
 /**
- * gwy_help_add_to_window:
+ * gwy_help_add_to_window_uri:
  * @window: A window.
  * @uri: Full URI pointing to the help for @window.
  * @flags: Flags allowing to modify the help setup.
