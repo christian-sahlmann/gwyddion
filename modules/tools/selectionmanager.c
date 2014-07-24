@@ -258,6 +258,7 @@ render_type(G_GNUC_UNUSED GtkTreeViewColumn *column,
         { "GwySelectionLine",      N_("Lines"),              },
         { "GwySelectionPoint",     N_("Points"),             },
         { "GwySelectionRectangle", N_("Rectangles"),         },
+        { "GwySelectionLattice",   N_("Lattice"),            },
     };
 
     GwySelection *sel;
@@ -373,6 +374,7 @@ gwy_tool_selection_manager_init_dialog(GwyToolSelectionManager *tool)
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
     gtk_dialog_add_button(GTK_DIALOG(GWY_TOOL(tool)->dialog),
                           GTK_STOCK_CLEAR, GWY_TOOL_RESPONSE_CLEAR);
+    gwy_help_add_to_tool_dialog(dialog, GWY_TOOL(tool), GWY_HELP_NO_BUTTON);
 
     gtk_widget_show_all(dialog->vbox);
 }

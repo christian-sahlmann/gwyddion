@@ -265,6 +265,7 @@ gwy_tool_path_level_init_dialog(GwyToolPathLevel *tool)
     tool->apply = gtk_dialog_add_button(dialog, GTK_STOCK_APPLY,
                                         GTK_RESPONSE_APPLY);
     gtk_widget_set_sensitive(tool->apply, FALSE);
+    gwy_help_add_to_tool_dialog(dialog, GWY_TOOL(tool), GWY_HELP_NO_BUTTON);
 
     gtk_widget_show_all(dialog->vbox);
 }

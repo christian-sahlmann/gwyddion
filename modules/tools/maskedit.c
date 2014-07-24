@@ -638,6 +638,7 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
     row++;
 
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
+    gwy_help_add_to_tool_dialog(dialog, GWY_TOOL(tool), GWY_HELP_NO_BUTTON);
     gwy_radio_buttons_set_current(tool->style, style);
 
     g_object_unref(sizegroup);

@@ -307,6 +307,7 @@ gwy_tool_grain_measure_init_dialog(GwyToolGrainMeasure *tool)
 
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
+    gwy_help_add_to_tool_dialog(dialog, GWY_TOOL(tool), GWY_HELP_NO_BUTTON);
 
     gtk_widget_show_all(dialog->vbox);
 }

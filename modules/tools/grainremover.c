@@ -236,6 +236,7 @@ gwy_tool_grain_remover_init_dialog(GwyToolGrainRemover *tool)
     gtk_widget_set_sensitive(tool->method_label, sensitive);
 
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
+    gwy_help_add_to_tool_dialog(dialog, GWY_TOOL(tool), GWY_HELP_NO_BUTTON);
 
     gtk_widget_show_all(dialog->vbox);
 }

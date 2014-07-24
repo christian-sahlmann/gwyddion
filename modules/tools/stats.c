@@ -444,6 +444,7 @@ gwy_tool_stats_init_dialog(GwyToolStats *tool)
     gtk_button_set_image(GTK_BUTTON(tool->update), image);
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
+    gwy_help_add_to_tool_dialog(dialog, GWY_TOOL(tool), GWY_HELP_NO_BUTTON);
 
     gtk_widget_set_sensitive(tool->update, !tool->args.instant_update);
 

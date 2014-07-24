@@ -236,6 +236,7 @@ gwy_tool_distance_init_dialog(GwyToolDistance *tool)
 
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
+    gwy_help_add_to_tool_dialog(dialog, GWY_TOOL(tool), GWY_HELP_NO_BUTTON);
 
     gwy_tool_distance_update_headers(tool);
 

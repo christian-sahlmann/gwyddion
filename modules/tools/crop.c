@@ -225,6 +225,7 @@ gwy_tool_crop_init_dialog(GwyToolCrop *tool)
     tool->apply = gtk_dialog_add_button(dialog, GTK_STOCK_APPLY,
                                         GTK_RESPONSE_APPLY);
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_APPLY);
+    gwy_help_add_to_tool_dialog(dialog, GWY_TOOL(tool), GWY_HELP_NO_BUTTON);
 
     gtk_widget_show_all(dialog->vbox);
 }

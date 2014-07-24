@@ -265,6 +265,7 @@ gwy_tool_level3_init_dialog(GwyToolLevel3 *tool)
     tool->apply = gtk_dialog_add_button(dialog, GTK_STOCK_APPLY,
                                         GTK_RESPONSE_APPLY);
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_APPLY);
+    gwy_help_add_to_tool_dialog(dialog, GWY_TOOL(tool), GWY_HELP_NO_BUTTON);
 
     gwy_tool_level3_update_headers(tool);
 

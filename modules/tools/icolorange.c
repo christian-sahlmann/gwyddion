@@ -415,6 +415,7 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
                        FALSE, FALSE, 0);
 
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
+    gwy_help_add_to_tool_dialog(dialog, GWY_TOOL(tool), GWY_HELP_NO_BUTTON);
 
     gtk_widget_show_all(dialog->vbox);
 }
