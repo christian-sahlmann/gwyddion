@@ -46,15 +46,17 @@ typedef struct {
  * seems to be available. */
 typedef gboolean (*ShowUriFunc)(const gchar *uri);
 
-static gboolean show_uri_win32(const gchar *uri);
-static gboolean show_uri_gtk  (const gchar *uri);
-static gboolean show_uri_spawn(const gchar *uri);
+static gboolean show_uri_win32   (const gchar *uri);
+static gboolean show_uri_gtk     (const gchar *uri);
+static gboolean show_uri_open    (const gchar *uri);
+static gboolean show_uri_browsers(const gchar *uri);
 
 /* The platform-specific ones go first. */
 static const ShowUriFunc backends[] = {
     &show_uri_win32,
+    &show_uri_open,
     &show_uri_gtk,
-    &show_uri_spawn,
+    &show_uri_browsers,
 };
 
 static gboolean
@@ -83,8 +85,9 @@ show_uri_win32(G_GNUC_UNUSED const gchar *uri)
 #endif
 }
 
-/* The show-uri thing seems to have an unfortunate side-effect of switching to
- * the busy mouse cursor for a while. */
+/* The Gtk+ show-uri thing seems to have an unfortunate side-effect of
+ * switching to the busy mouse cursor for a while.  Thus it lost the chance to
+ * become our preferred mechanism. */
 static gboolean
 show_uri_gtk(G_GNUC_UNUSED const gchar *uri)
 {
@@ -101,29 +104,15 @@ show_uri_gtk(G_GNUC_UNUSED const gchar *uri)
 }
 
 static gboolean
-show_uri_spawn(G_GNUC_UNUSED const gchar *uri)
+show_uri_spawn_program(G_GNUC_UNUSED const gchar *uri,
+                       const gchar **programs, guint nprograms)
 {
-#ifndef G_OS_WIN32
-    static const gchar *programs[] = {
-        /* OS X has this little program called "open".  Sure, other systems
-         * have it too but it does something completely different.  So only
-         * use "open" on OS X. */
-#ifdef __APPLE__
-        "open",
-#endif
-        "xdg-open", "htmlview",
-        "chrome", "chromium",  /* Normally installed by people who want them. */
-        "firefox", "seamonkey",
-        "konqueror",
-        "midori", "epiphany",
-    };
-
     gchar **args;
     gchar *fullpath = NULL;
     gboolean ok;
     guint i;
 
-    for (i = 0; i < G_N_ELEMENTS(programs); i++) {
+    for (i = 0; i < nprograms; i++) {
         if ((fullpath = g_find_program_in_path(programs[i])))
             break;
     }
@@ -143,6 +132,43 @@ show_uri_spawn(G_GNUC_UNUSED const gchar *uri)
     g_strfreev(args);
 
     return ok;
+}
+
+static gboolean
+show_uri_open(G_GNUC_UNUSED const gchar *uri)
+{
+#ifndef G_OS_WIN32
+    static const gchar *programs[] = {
+        /* OS X has this little program called "open".  Sure, other systems
+         * have it too but it does something completely different.  So only
+         * use "open" on OS X. */
+#ifdef __APPLE__
+        "open",
+#endif
+        "xdg-open", "sensible-browser", "x-www-browser",
+        /* Do not run things like gnome-open, kde-open, exo-open, etc. Who
+         * knows if they belong to the active desktop environment.  Normally,
+         * people having these will also have xdg-open nowadays. */
+    };
+
+    return show_uri_spawn_program(uri, programs, G_N_ELEMENTS(programs));
+#else
+    return FALSE;
+#endif
+}
+
+static gboolean
+show_uri_browsers(G_GNUC_UNUSED const gchar *uri)
+{
+#ifndef G_OS_WIN32
+    static const gchar *programs[] = {
+        "chrome", "chromium",  /* Normally installed by people who want them. */
+        "firefox", "seamonkey", "mozilla",
+        "konqueror",
+        "midori", "epiphany", "galeon",
+    };
+
+    return show_uri_spawn_program(uri, programs, G_N_ELEMENTS(programs));
 #else
     return FALSE;
 #endif
