@@ -63,7 +63,7 @@ Optional, for better KDE integration (SPM file thumbnails):
 - KDE4 libraries, including development files, and all their dependencies
   http://www.kde.org/
 
-Optional, for SPML file support:
+Optional, for SPML and APE DAX file support:
 - LibXML2, including development files
   http://xmlsoft.org/
 
@@ -76,7 +76,7 @@ Optional, for compressed NRRD file support:
 - libbz2, including development files
   http://www.bzip.org/
 
-Optional, for APE DAX, NanoObserver NAO, NanoScanTech file support:
+Optional, for APE DAX, NanoObserver NAO, NanoScanTech, OpenGPS file support:
 - minizip, including development files
   http://www.gzip.org/zlib/
 
