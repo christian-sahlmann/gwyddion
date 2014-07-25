@@ -388,7 +388,12 @@ static const StartupTip tips[] = {
     },
     /* General and bragging. */
     {
-        GWY_STOCK_GWYDDION,
+        GTK_STOCK_HELP,
+        N_("Pressing F1 or the Help buttons in most windows shows a relevant "
+           "part of the user guide in a web browser."),
+    },
+    {
+        GTK_STOCK_HELP,
         N_("Gwyddion User Guide explains in detail "
            "many of the methods and algorithms implemented in Gwyddion."),
     },
