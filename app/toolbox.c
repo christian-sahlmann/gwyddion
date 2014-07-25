@@ -736,8 +736,13 @@ gwy_app_menu_create_info_menu(GtkAccelGroup *accel_group)
     gtk_item_factory_create_items(item_factory,
                                   G_N_ELEMENTS(menu_items), menu_items, NULL);
 
+    /* Don't do this.  We hide all other help access options if help does not
+     * seem available.  But if it happens the user should have means to provoke
+     * Gwyddion into telling him why it thinks help is not available. */
+    /*
     if (!gwy_help_is_available())
         gtk_item_factory_delete_item(item_factory, "<meta>/User Guide");
+        */
 
     return gtk_item_factory_get_widget(item_factory, "<meta>");
 }
