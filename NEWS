@@ -18,6 +18,7 @@ Libraries:
 - libgwyprocess: New function for numbering grains assuming the mask is
   periodic and grains can touch across the opposite edges.
 - libgwyapp: New functions for help handling.
+- libgwydgets: Real scale in 3D view can be set arbitrarily, not just 1:1.
 
 Modules:
 - OpenGPS (new): Imports OpenGPS surface data format (ISO 5436-2).
@@ -29,6 +30,8 @@ Modules:
 - APE DAX: Warning about invalid logging function name was fixed.
 - NT-MDT: fixed loading of old spectroscopy from Nanoeducator2 data.
 - Pygwy: It is possible to write volume data processing modules in Python.
+- Color range tool: The range can be set to the range of masked/unmasked
+  values.
 
 
 2.37 (2014-06-27)
