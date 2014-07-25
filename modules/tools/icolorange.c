@@ -69,6 +69,7 @@ struct _GwyToolColorRange {
     GtkLabel *max;
     GtkLabel *datamin;
     GtkLabel *datamax;
+    GtkWidget *mask_hbox;
 
     ColorRangeSource range_source;
     gboolean programmatic_update;
@@ -96,6 +97,7 @@ static void   gwy_tool_color_range_data_switched    (GwyTool *gwytool,
 static void   gwy_tool_color_range_make_keys        (GwyToolColorRange *tool,
                                                      GwyDataView *data_view);
 static void   gwy_tool_color_range_data_changed     (GwyPlainTool *plain_tool);
+static void   gwy_tool_color_range_mask_changed     (GwyPlainTool *plain_tool);
 static void   gwy_tool_color_range_selection_changed(GwyPlainTool *plain_tool,
                                                      gint hint);
 static void   gwy_tool_color_range_xsel_changed     (GwySelection *selection,
@@ -113,7 +115,9 @@ static void   gwy_tool_color_range_get_min_max      (GwyToolColorRange *tool,
 static void   gwy_tool_color_range_set_min_max      (GwyToolColorRange *tool);
 static void   gwy_tool_color_range_update_fullrange (GwyToolColorRange *tool);
 static void   gwy_tool_color_range_update_histogram (GwyToolColorRange *tool);
-static void   gwy_tool_color_range_spin_changed      (GwyToolColorRange *tool);
+static void   gwy_tool_color_range_spin_changed     (GwyToolColorRange *tool);
+static void   set_range_to_masked                   (GwyToolColorRange *tool);
+static void   set_range_to_unmasked                 (GwyToolColorRange *tool);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -122,7 +126,7 @@ static GwyModuleInfo module_info = {
        "color scale should map to, either on data or on height distribution "
        "histogram."),
     "Yeti <yeti@gwyddion.net>",
-    "3.12",
+    "3.13",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -155,6 +159,7 @@ gwy_tool_color_range_class_init(GwyToolColorRangeClass *klass)
     tool_class->data_switched = gwy_tool_color_range_data_switched;
 
     ptool_class->data_changed = gwy_tool_color_range_data_changed;
+    ptool_class->mask_changed = gwy_tool_color_range_mask_changed;
     ptool_class->selection_changed = gwy_tool_color_range_selection_changed;
 }
 
@@ -315,7 +320,7 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
                        TRUE, TRUE, 2);
 
     /* Data ranges */
-    table = GTK_TABLE(gtk_table_new(6, 1, FALSE));
+    table = GTK_TABLE(gtk_table_new(7, 3, FALSE));
     gtk_table_set_col_spacings(table, 6);
     gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -378,7 +383,23 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    label = gwy_label_new_header(_("Full"));
+    tool->mask_hbox = gtk_hbox_new(FALSE, 0);
+    gtk_table_attach(table, tool->mask_hbox,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    button = gtk_button_new_with_mnemonic(_("Set to _Unmasked"));
+    gtk_box_pack_end(GTK_BOX(tool->mask_hbox), button, FALSE, TRUE, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(set_range_to_unmasked), tool);
+
+    button = gtk_button_new_with_mnemonic(_("Set to _Masked"));
+    gtk_box_pack_end(GTK_BOX(tool->mask_hbox), button, FALSE, TRUE, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(set_range_to_masked), tool);
+    row++;
+
+    gtk_table_set_row_spacing(table, row-1, 8);
+    label = gwy_label_new_header(gwy_sgettext("range|Full"));
     gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
@@ -478,6 +499,7 @@ gwy_tool_color_range_data_switched(GwyTool *gwytool,
     }
     gwy_radio_buttons_set_current(tool->modelist, range_type);
     gwy_tool_color_range_update_fullrange(tool);
+    gwy_tool_color_range_mask_changed(plain_tool);
     gwy_tool_color_range_set_min_max(tool);
 }
 
@@ -516,6 +538,13 @@ gwy_tool_color_range_data_changed(GwyPlainTool *plain_tool)
                                    NULL, NULL);
     gwy_tool_color_range_update_histogram(GWY_TOOL_COLOR_RANGE(plain_tool));
     gwy_tool_color_range_selection_changed(plain_tool, 0);
+}
+
+static void
+gwy_tool_color_range_mask_changed(GwyPlainTool *plain_tool)
+{
+    gtk_widget_set_sensitive(GWY_TOOL_COLOR_RANGE(plain_tool)->mask_hbox,
+                             !!plain_tool->mask_field);
 }
 
 static void
@@ -865,6 +894,44 @@ gwy_tool_color_range_spin_changed(GwyToolColorRange *tool)
     tool->programmatic_update = TRUE;
     gwy_selection_set_data(tool->graph_selection, 1, sel);
     tool->programmatic_update = FALSE;
+}
+
+static void
+set_range_using_mask(GwyToolColorRange *tool, GwyMaskingType masking)
+{
+    GwyPlainTool *plain_tool = GWY_PLAIN_TOOL(tool);
+    GwyDataField *dfield = plain_tool->data_field,
+                 *mask = plain_tool->mask_field;
+    gdouble sel[2];
+
+    if (!dfield || !mask)
+        return;
+
+    gwy_data_field_area_get_min_max_mask(dfield, mask, masking,
+                                         0, 0, dfield->xres, dfield->yres,
+                                         &sel[0], &sel[1]);
+    /* No valid pixels? */
+    if (sel[1] < sel[0])
+        gwy_data_field_get_min_max(dfield, &sel[0], &sel[1]);
+
+    gwy_container_set_double(plain_tool->container, tool->key_min, sel[0]);
+    gwy_container_set_double(plain_tool->container, tool->key_max, sel[1]);
+
+    tool->programmatic_update = TRUE;
+    gwy_selection_set_data(tool->graph_selection, 1, sel);
+    tool->programmatic_update = FALSE;
+}
+
+static void
+set_range_to_masked(GwyToolColorRange *tool)
+{
+    set_range_using_mask(tool, GWY_MASK_INCLUDE);
+}
+
+static void
+set_range_to_unmasked(GwyToolColorRange *tool)
+{
+    set_range_using_mask(tool, GWY_MASK_EXCLUDE);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
