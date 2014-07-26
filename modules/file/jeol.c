@@ -529,7 +529,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports JEOL data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -712,6 +712,7 @@ jeol_read_image_header(const guchar *p,
     p += TIFF_HEADER_SIZE;
 
     header->winspm_version = gwy_get_guint16_le(&p);
+    gwy_debug("version: %u", header->winspm_version);
     p += 80;  /* there isn't anything interesting in internal_filename_old */
     header->xres = gwy_get_guint16_le(&p);
     header->yres = gwy_get_guint16_le(&p);
@@ -955,6 +956,7 @@ jeol_get_metadata(const JEOLImageHeader *header)
     meta = gwy_container_new();
 
     spm_param = &header->spm_param;
+    format_meta(meta, "WinSPM Version", "%.2f", header->winspm_version/100.0);
     format_meta(meta, "Clock", "%g ms", spm_param->clock);
     format_meta(meta, "Rotation", "%g deg", spm_param->rotation);
     format_meta(meta, "Feedback filter", "%g Hz", spm_param->feedback_filter);
