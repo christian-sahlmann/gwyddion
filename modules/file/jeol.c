@@ -860,23 +860,20 @@ jeol_read_data_field(const guchar *buffer,
                      const JEOLImageHeader *header)
 {
     GwyDataField *dfield;
-    GwySIUnit *siunit;
-    const guint16 *d16;
-    gdouble *data;
+    const gchar *unitstr;
     gdouble q, z0;
-    gint i;
 
     switch (header->spm_misc_param.measurement_signal) {
         case JEOL_MEASUREMENT_SIGNAL_TOPOGRAPHY:
         z0 = Nanometer*header->z0;
         q = (header->z255 - header->z0)/65535.0*Nanometer;
-        siunit = gwy_si_unit_new("m");
+        unitstr = "m";
         break;
 
         case JEOL_MEASUREMENT_SIGNAL_LINEAR_CURRENT:
         z0 = Nanoampere*header->z0;
         q = (header->z255 - header->z0)/65535.0*Nanoampere;
-        siunit = gwy_si_unit_new("A");
+        unitstr = "A";
         break;
 
         /* We just guess it's always voltage.  At least sometimes it is. */
@@ -884,7 +881,7 @@ jeol_read_data_field(const guchar *buffer,
         case JEOL_MEASUREMENT_SIGNAL_AUX2:
         z0 = header->z0;
         q = (header->z255 - header->z0)/65535.0;
-        siunit = gwy_si_unit_new("V");
+        unitstr = "V";
         break;
 
         default:
@@ -897,18 +894,12 @@ jeol_read_data_field(const guchar *buffer,
                                 Nanometer*header->yreal,
                                 FALSE);
 
-    gwy_data_field_set_si_unit_z(dfield, siunit);
-    g_object_unref(siunit);
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), unitstr);
 
-    siunit = gwy_si_unit_new("m");
-    gwy_data_field_set_si_unit_xy(dfield, siunit);
-    g_object_unref(siunit);
-
-    data = gwy_data_field_get_data(dfield);
-    d16 = (const guint16*)buffer;
-    for (i = 0; i < header->xres*header->yres; i++)
-        data[i] = q*GUINT16_FROM_LE(d16[i]) + z0;
-
+    gwy_convert_raw_data(buffer, header->xres*header->yres, 1,
+                         GWY_RAW_DATA_UINT16, GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                         gwy_data_field_get_data(dfield), q, z0);
     return dfield;
 }
 
