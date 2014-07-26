@@ -376,7 +376,7 @@ file_detect_max_score_cb(const gchar *key,
  * Detects the type of a file.
  *
  * Returns: The type name (i.e., the same name as passed to
- *          e.g. gwy_run_file_load_func()) of most probable type of @filename,
+ *          e.g. gwy_file_func_run_load()) of most probable type of @filename,
  *          or %NULL if there's no probable one.
  **/
 const gchar*
@@ -398,7 +398,7 @@ gwy_file_detect(const gchar *filename,
  * Detects the type of a file and gives the score.
  *
  * Returns: The type name (i.e., the same name as passed to
- *          e.g. gwy_run_file_load_func()) of most probable type of @filename,
+ *          e.g. gwy_file_func_run_load()) of most probable type of @filename,
  *          or %NULL if there's no probable one.
  *
  * Since: 2.1
@@ -757,7 +757,7 @@ get_operations(const GwyFileFuncInfo *func_info)
  *
  * Gets file function description.
  *
- * That is, the @file_desc field of #GwyFileFuncInfo.
+ * That is, the @description argument of gwy_file_func_register() .
  *
  * Returns: File function description, as a string owned by module loader.
  **/

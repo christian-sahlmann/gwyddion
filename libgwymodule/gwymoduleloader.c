@@ -722,7 +722,7 @@ gwy_module_lookup(const gchar *name)
  * Module registration function type.
  *
  * It actually runs particular featrue registration functions, like
- * gwy_module_register_file_func() and gwy_module_register_process_func().
+ * gwy_file_func_register() and gwy_process_func_register().
  *
  * Returns: Whether the registration succeeded.  When it returns %FALSE, the
  *          module and its features are unloaded (FIXME: maybe. Currenly only
