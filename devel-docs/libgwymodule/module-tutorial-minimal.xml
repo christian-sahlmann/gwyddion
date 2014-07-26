@@ -109,7 +109,7 @@ my_invert_value(GwyContainer *data,
       declares basic #GwyDataField methods,
       <filename><link linkend="libgwydgets-gwystock">gwystock.h</link></filename>
       contains stock icon definitions,
-      <filename><link linkend="libgwymodule-gwymoduleloader-process">gwymodule-process.h</link></filename>
+      <filename><link linkend="libgwymodule-gwymodule-process">gwymodule-process.h</link></filename>
       declares functions essential for registering the module and its data processing functions,
       and <filename><link linkend="libgwyapp-gwyapp">gwyapp.h</link></filename>
       includes everything necessary for interfacing with the application.
