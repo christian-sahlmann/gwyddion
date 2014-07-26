@@ -219,10 +219,10 @@ simple_load(const gchar *filename,
                                 simple.xres*simple.measure,
                                 simple.yres*simple.measure,
                                 FALSE);
-    data = gwy_data_field_get_data(dfield);
-    rawdata = (const guint16*)p;
-    for (i = 0; i &lt; simple.xres*simple.yres; i++)
-        data[i] = GUINT16_FROM_LE(rawdata[i])*simple.gain + simple.z0;
+    gwy_convert_raw_data(p, simple.xres*simple.yres, 1,
+                         GWY_RAW_DATA_UINT16, GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                         gwy_data_field_get_data(dfield),
+                         simple.gain, simple.offset);
 
     unit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, unit);
@@ -430,11 +430,13 @@ simple.gain = gwy_get_gfloat_le(&p);
       <application>Gwyddion</application> always works with values in base
       SI units, we have to convert the raw data values to physical values.
       If the file uses non-base units (which is common in SPM), we have to
-      multiply the data by the corresponding factor: in your case with
+      multiply the data by the corresponding factor: in this case with
       10<superscript>-9</superscript> as the physcial quantities are stored
       in nanometers in the file.
-      Data reading can be most easily performed with GLibs function like
-      GUINT16_FROM_LE().
+      Raw data conversion can be most easily performed with the convenience
+      function gwy_convert_raw_data().  Sometimes it may be not sufficient
+      so you can resort to the low-level GLib macros such as GUINT16_FROM_LE()
+      or Gwyddion get-functions gwy_get_gdouble_be().
     </para>
     <informalexample><programlisting><![CDATA[
 simple.measure *= 1e-9;
@@ -444,10 +446,10 @@ dfield = gwy_data_field_new(simple.xres, simple.yres,
                             simple.xres*simple.measure,
                             simple.yres*simple.measure,
                             FALSE);
-data = gwy_data_field_get_data(dfield);
-rawdata = (const guint16*)p;
-for (i = 0; i < simple.xres*simple.yres; i++)
-    data[i] = GUINT16_FROM_LE(rawdata[i])*simple.gain + simple.z0;
+gwy_convert_raw_data(p, simple.xres*simple.yres, 1,
+                     GWY_RAW_DATA_UINT16, GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                     gwy_data_field_get_data(dfield),
+                     simple.gain, simple.offset);
 ]]></programlisting></informalexample>
     <para>
       We have to set also the lateral and value units of the created data
@@ -606,8 +608,8 @@ fread(&header, sizeof(header), 1, filehandle);
       <para>
         Then we have <emphasis>byte order</emphasis>.  If we are on a platform
         with different native byte order than the file uses, we have to reverse
-        the bytes in each multi-byte value.  GLib provides macros as
-        GUINT16_FROM_LE() to ease this task.
+        the bytes in each multi-byte value.  GLib provides macros such as
+        GUINT16_FROM_LE() to simplify this task.
       </para>
       <para>
         And last but not least, different ABIs prescribe different
@@ -622,7 +624,7 @@ fread(&header, sizeof(header), 1, filehandle);
         The answer to (almost) all the problems above is: Don't do that then.
         Avoid direct reading of structures, read the data into a flat byte
         buffer instead and use the
-        <link linkend="libgwyapp-gwymoduleutils-file">file module utils</link>
+        <link linkend="libgwyapp-file-module-utils">file module utils</link>
         functions to obtain individual values.
       </para>
     </refsect2>
