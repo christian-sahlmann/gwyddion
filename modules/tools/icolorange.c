@@ -282,12 +282,6 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     g_signal_connect(tool->is_default, "toggled",
                      G_CALLBACK(gwy_tool_color_range_set_default_mode), tool);
 
-    /* Switch to the default */
-    gwy_container_gis_enum_by_name(gwy_app_settings_get(),
-                                   APP_RANGE_KEY, &range_type);
-    gwy_radio_buttons_set_current(tool->modelist, range_type);
-    gwy_tool_color_range_type_changed(NULL, tool);
-
     /* Height distribution */
     tool->heightdist = gwy_data_line_new(1.0, 1.0, TRUE);
     cmodel = gwy_graph_curve_model_new();
@@ -438,6 +432,12 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
     gwy_help_add_to_tool_dialog(dialog, GWY_TOOL(tool), GWY_HELP_NO_BUTTON);
 
+    /* Switch to the default */
+    gwy_container_gis_enum_by_name(gwy_app_settings_get(),
+                                   APP_RANGE_KEY, &range_type);
+    gwy_radio_buttons_set_current(tool->modelist, range_type);
+    gwy_tool_color_range_type_changed(NULL, tool);
+
     gtk_widget_show_all(dialog->vbox);
 }
 
@@ -543,8 +543,12 @@ gwy_tool_color_range_data_changed(GwyPlainTool *plain_tool)
 static void
 gwy_tool_color_range_mask_changed(GwyPlainTool *plain_tool)
 {
-    gtk_widget_set_sensitive(GWY_TOOL_COLOR_RANGE(plain_tool)->mask_hbox,
-                             !!plain_tool->mask_field);
+    GwyToolColorRange *tool = GWY_TOOL_COLOR_RANGE(plain_tool);
+    gboolean have_mask = !!plain_tool->mask_field;
+    gboolean range_type = gwy_tool_color_range_get_range_type(tool);
+    gtk_widget_set_sensitive(tool->mask_hbox,
+                             have_mask
+                             && range_type == GWY_LAYER_BASIC_RANGE_FIXED);
 }
 
 static void
@@ -656,6 +660,7 @@ gwy_tool_color_range_type_changed(GtkWidget *radio,
     gtk_widget_set_sensitive(tool->is_default, old_mode != range_type);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->is_default),
                                  old_mode == range_type);
+    gwy_tool_color_range_mask_changed(plain_tool);
 }
 
 static void
