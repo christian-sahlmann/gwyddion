@@ -33,6 +33,13 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # JEOL SPM data (old, simpler)
+ * 0 string II\x2a\x00\xd4\x17\x00\x00\x00\x04 JEOL SPM data,
+ * >10 leshort x version %d
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * JEOL
  * .tif
