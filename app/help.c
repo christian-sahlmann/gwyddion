@@ -374,6 +374,7 @@ check_local_file_uri(const gchar *uri)
 {
     GFile *gfile = g_file_new_for_uri(uri);
     gchar *path, *scheme;
+    GFileInfo *fileinfo;
     GFileType filetype;
 
     /* If we use g_file_new_for_uri() on a bare path the tests below will not
@@ -394,8 +395,11 @@ check_local_file_uri(const gchar *uri)
     }
     g_free(path);
 
-    filetype = g_file_query_file_type(gfile, 0, NULL);
+    fileinfo = g_file_query_info(gfile, G_FILE_ATTRIBUTE_STANDARD_TYPE,
+                                 0, NULL, NULL);
+    filetype = g_file_info_get_file_type(fileinfo);
     g_object_unref(gfile);
+    g_object_unref(fileinfo);
 
     return filetype == G_FILE_TYPE_REGULAR;
 }
