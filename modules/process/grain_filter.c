@@ -460,7 +460,7 @@ gfilter_dialog(GFilterArgs *args,
         controls.header[i] = gtk_label_new(NULL);
         gtk_misc_set_alignment(GTK_MISC(controls.header[i]), 0.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), controls.header[i],
-                         0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+                         0, 4, row, row+1, GTK_FILL, 0, 0, 0);
         row++;
 
         /* The values are set properly later. */
