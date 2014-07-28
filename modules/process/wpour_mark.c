@@ -20,6 +20,7 @@
  */
 
 #include "config.h"
+#include "string.h"
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -74,6 +75,16 @@ typedef struct {
     guint len;
     gint *data;
 } IntList;
+
+typedef struct {
+    guint a;
+    guint b;
+} UIntPair;
+
+typedef struct {
+    gdouble min_barrier;
+    gdouble min_bsum;
+} GrainNeighbour;
 
 typedef struct {
     gboolean inverted;
@@ -1016,6 +1027,152 @@ replace_value(GwyDataField *dfield, gdouble from, gdouble to)
             d[k] = to;
     }
     gwy_data_field_invalidate(dfield);
+}
+
+static guint
+uint_pair_hash(gconstpointer p)
+{
+    const UIntPair *pair = (const UIntPair*)p;
+    return pair->a*1103515245 + pair->b;
+}
+
+static gboolean
+uint_pair_equal(gconstpointer pa, gconstpointer pb)
+{
+    const UIntPair *paira = (const UIntPair*)pa;
+    const UIntPair *pairb = (const UIntPair*)pb;
+    return paira->a == pairb->a && paira->b == pairb->b;
+}
+
+static void
+uint_pair_free(gpointer p)
+{
+    g_slice_free(UIntPair, p);
+}
+
+static void
+grain_neighbour_free(gpointer p)
+{
+    g_slice_free(GrainNeighbour, p);
+}
+
+static inline gboolean
+is_merge_pixel(const gint *gc, gint *pg1, gint *pg2)
+{
+    gint gnn[4], g1, g2;
+    guint n, i;
+
+    n = 0;
+    for (i = 0; i < 4; i++) {
+        if (gc[i])
+            gnn[n++] = gc[i];
+    }
+
+    if (n < 2)
+        return FALSE;
+
+    g1 = gnn[0];
+    g2 = gnn[1];
+    if (n >= 3) {
+        if (g1 == g2) {
+            g2 = gnn[2];
+            if (n == 4 && g1 == g2)
+                g2 = gnn[3];
+        }
+        else {
+            if (gnn[2] != g1 && gnn[2] != g2)
+                return FALSE;
+            if (n == 4 && gnn[3] != g1 && gnn[3] != g2)
+                return FALSE;
+        }
+    }
+
+    if (g1 == g2)
+        return FALSE;
+
+    *pg1 = g1;
+    *pg2 = g2;
+    return TRUE;
+}
+
+static GHashTable*
+analyse_grain_network(GwyDataField *dfield, const gint *grains)
+{
+    GHashTable *gnetwork;
+    guint xres = dfield->xres, yres = dfield->yres;
+    const gdouble *data = dfield->data;
+    guint i, j, k;
+
+    gnetwork = g_hash_table_new_full(uint_pair_hash, uint_pair_equal,
+                                     uint_pair_free, grain_neighbour_free);
+
+    /* Scan possible merge-pixles.  A pixel touching more than 2 different
+     * grains is not a possible merge-pixel if don't do simultaneous
+     * multi-grain merging.  We never merge through a dialonal; mergeable
+     * grains always touch via a 4-connected pixel. */
+    k = 0;
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++, k++) {
+            gint g1, g2, gc[4], n = 0, m;
+            gdouble min_barrier, min_bsum, z, zc[4];
+            GrainNeighbour *neighbour;
+            UIntPair pair;
+
+            if (grains[k])
+                continue;
+
+            /* Figure out how many different grains touch this non-grain pixel.
+             */
+            gc[0] = i ? grains[k - xres] : 0;
+            gc[1] = j ? grains[k-1] : 0;
+            gc[2] = j < xres-1 ? grains[k+1] : 0;
+            gc[3] = i < yres-1 ? grains[k + xres] : 0;
+            if (!is_merge_pixel(gc, &g1, &g2))
+                continue;
+
+            /* Now we know we have a non-grain pixel that can connect exactly
+             * two grains together.  So we will be definitely adding it.
+             * Find the barrier. */
+            min_barrier = min_bsum = G_MAXDOUBLE;
+            z = data[k];
+            zc[0] = i ? fabs(z - data[k - xres]) : G_MAXDOUBLE;
+            zc[1] = j ? fabs(z - data[k-1]) : G_MAXDOUBLE;
+            zc[2] = j < xres-1 ? fabs(z - data[k+1]) : G_MAXDOUBLE;
+            zc[3] = i < yres-1 ? fabs(z - data[k + xres]) : G_MAXDOUBLE;
+            for (n = 1; n < 4; n++) {
+                if (!gc[n])
+                    continue;
+
+                min_barrier = MIN(min_barrier, zc[n]);
+                for (m = 0; m < n; m++) {
+                    if (!gc[m] || gc[m] == gc[n])
+                        continue;
+
+                    min_bsum = MIN(min_bsum, zc[m] + zc[n]);
+                }
+            }
+
+            pair.a = MIN(g1, g2);
+            pair.b = MAX(g1, g2);
+            neighbour = g_hash_table_lookup(gnetwork, &pair);
+            if (neighbour) {
+                neighbour->min_barrier = MIN(neighbour->min_barrier,
+                                             min_barrier);
+                neighbour->min_bsum = MIN(neighbour->min_bsum, min_bsum);
+            }
+            else {
+                UIntPair *ppair = g_slice_dup(UIntPair, &pair);
+                neighbour = g_slice_new(GrainNeighbour);
+                neighbour->min_barrier = min_barrier;
+                neighbour->min_bsum = min_bsum;
+                g_hash_table_insert(gnetwork, ppair, neighbour);
+            }
+        }
+    }
+
+    /* Now we have the symmetrical irreflexive neighbour relation encoded
+     * in gnetwork together with barriers between the neighbour grains. */
+    return gnetwork;
 }
 
 static const gchar inverted_key[]          = "/module/wpour_mark/inverted";
