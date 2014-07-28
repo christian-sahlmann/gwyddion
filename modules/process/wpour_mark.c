@@ -18,7 +18,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  */
-
+#define DEBUG 1
 #include "config.h"
 #include "string.h"
 #include <gtk/gtk.h>
@@ -182,6 +182,8 @@ static void           prefill_minima              (GwyDataField *dfield,
 static void           replace_value               (GwyDataField *dfield,
                                                    gdouble from,
                                                    gdouble to);
+static GHashTable*    analyse_grain_network       (GwyDataField *dfield,
+                                                   const gint *grains);
 static void           wpour_load_args             (GwyContainer *container,
                                                    WPourArgs *args);
 static void           wpour_save_args             (GwyContainer *container,
@@ -760,9 +762,11 @@ wpour_do(GwyDataField *dfield,
          GwyDataField *preproc,
          WPourArgs *args)
 {
-    guint xres = dfield->xres, yres = dfield->yres;
+    GHashTable *gnetwork;
+    guint xres = dfield->xres, yres = dfield->yres, ngrains;
     IntList *inqueue = int_list_new(0);
     IntList *outqueue = int_list_new(0);
+    gint *grains;
     gdouble barmax;
 
     if (preproc) {
@@ -796,7 +800,16 @@ wpour_do(GwyDataField *dfield,
 
     int_list_free(outqueue);
     int_list_free(inqueue);
+
+    grains = g_new0(gint, xres*yres);
+    ngrains = gwy_data_field_number_grains(maskfield, grains);
+    gnetwork = analyse_grain_network(preproc, grains);
+
+    /* XXX: neither grains nor gnetwork used for anything at this moment. */
+
     g_object_unref(preproc);
+    g_free(grains);
+    g_hash_table_destroy(gnetwork);
 }
 
 static void
@@ -892,20 +905,14 @@ normal_vector_difference(GwyDataField *result,
             normal_vector(bxrow[j], byrow[j], &nx, &ny, &nz);
             if (j < xres-1) {
                 normal_vector(bxrow[j+1], byrow[j+1], &nxr, &nyr, &nzr);
-                nxr -= nx;
-                nyr -= ny;
-                nzr -= nz;
-                ch = sqrt(nxr*nxr + nyr*nyr + nzr*nzr);
+                ch = nxr - nx;
                 row[j] += ch;
                 row[j+1] += ch;
             }
 
             if (i < yres-1) {
                 normal_vector(nextbx[j], nextby[j], &nxd, &nyd, &nzd);
-                nxd -= nx;
-                nyd -= ny;
-                nzd -= nz;
-                cv = sqrt(nxd*nxd + nyd*nyd + nzd*nzd);
+                cv = nyd - ny;
                 row[j] += cv;
                 next[j] += cv;
             }
