@@ -76,6 +76,7 @@
 
 #define Nanometer (1e-9)
 #define Picometer (1e-12)
+#define Nanoampere (1e-9)
 
 enum {
     TIFF_HEADER_SIZE = 0x000a,
@@ -84,12 +85,17 @@ enum {
 typedef struct {
     guint offset;
     guint len;
+    /* I don't know what these numbers really mean but seems a good guess. */
+    guint type;
+    guint version;
 } JSPMHeaderBlock;
 
 typedef struct {
     GArray *blocks;
     /* Useful information we are actually able to extract from the blocks. */
     guint winspm_version;
+    guint mode1;
+    guint mode2;
     guint xres;
     guint yres;
     gdouble xreal;
@@ -112,8 +118,9 @@ static gboolean      read_image_header_block(JSPMFile *jspmfile,
                                              const guchar *buffer,
                                              gsize size,
                                              GError **error);
-static GwyDataField* jspm_read_data_field   (const JSPMFile *jspmfile,
-                                             const guchar *buffer);
+static void          jspm_add_data_field    (const JSPMFile *jspmfile,
+                                             const guchar *buffer,
+                                             GwyContainer *container);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -167,7 +174,6 @@ jspm_load(const gchar *filename,
     guchar *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
-    GwyDataField *dfield = NULL;
 
     gwy_clear(&jspmfile, 1);
 
@@ -188,12 +194,7 @@ jspm_load(const gchar *filename,
         goto fail;
 
     container = gwy_container_new();
-
-    dfield = jspm_read_data_field(&jspmfile, buffer);
-    gwy_container_set_object_by_name(container, "/0/data", dfield);
-    g_object_unref(dfield);
-
-    gwy_app_channel_title_fall_back(container, 0);
+    jspm_add_data_field(&jspmfile, buffer, container);
     gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
 fail:
@@ -245,14 +246,14 @@ jspm_read_headers(JSPMFile *jspmfile,
             return FALSE;
         }
 
-        gwy_debug("block #%u intro %02x %02x %02x %02x",
-                  jspmfile->blocks->len+1, p[0], p[1], p[2], p[3]);
-
-        p += 4;
+        block.type = gwy_get_guint16_le(&p);
+        block.version = gwy_get_guint16_le(&p);
         next = gwy_get_guint32_le(&p);
         block.len = gwy_get_guint16_le(&p);
-        gwy_debug("block #%u: 0x%x bytes at 0x%x",
-                  jspmfile->blocks->len+1, block.len, block.offset);
+        gwy_debug("block #%u of type %u (v%u): 0x%x bytes at 0x%x",
+                  jspmfile->blocks->len+1,
+                  block.type, block.version,
+                  block.len, block.offset);
         if (block.offset + block.len > size) {
             err_JSPM_BLOCK(error, jspmfile->blocks->len);
             return FALSE;
@@ -268,6 +269,8 @@ jspm_read_headers(JSPMFile *jspmfile,
         p = buffer + next;
     } while (block.offset);
 
+    /* TODO: At pos 0x66 of file header (type 1) there seems to be a comment. */
+
     if (!read_image_header_block(jspmfile, buffer, size, error))
         return FALSE;
 
@@ -282,6 +285,7 @@ read_image_header_block(JSPMFile *jspmfile, const guchar *buffer, gsize size,
         DATAPOS_OFFSET = 0x0a,
         RES_OFFSET = 0x18,
         REAL_OFFSET = 0x1c,
+        DATATYPE_OFFSET = 0x28,
     };
 
     JSPMHeaderBlock *block;
@@ -296,7 +300,7 @@ read_image_header_block(JSPMFile *jspmfile, const guchar *buffer, gsize size,
 
     block = &g_array_index(jspmfile->blocks, JSPMHeaderBlock, 1);
     p = buffer + block->offset;
-    if (p[0] != 0x0a || p[1] != 0x00 || block->len != 0x0bc) {
+    if (p[0] != 0x0a || p[1] != 0x00 || block->len < 0x030) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Cannot find image header block."));
         return FALSE;
@@ -304,14 +308,24 @@ read_image_header_block(JSPMFile *jspmfile, const guchar *buffer, gsize size,
 
     p = buffer + block->offset + DATAPOS_OFFSET;
     jspmfile->data_offset = gwy_get_guint32_le(&p);
+    gwy_debug("data_offset 0x%04x", jspmfile->data_offset);
 
     p = buffer + block->offset + RES_OFFSET;
     jspmfile->xres = gwy_get_guint16_le(&p);
     jspmfile->yres = gwy_get_guint16_le(&p);
+    gwy_debug("res %ux%u", jspmfile->xres, jspmfile->yres);
 
     p = buffer + block->offset + REAL_OFFSET;
     jspmfile->xreal = gwy_get_gfloat_le(&p);
     jspmfile->yreal = gwy_get_gfloat_le(&p);
+    gwy_debug("real %gx%g", jspmfile->xreal, jspmfile->yreal);
+
+    /* Don't know what they really mean.  But they appear 100% correlated with
+     * the data type. */
+    p = buffer + block->offset + DATATYPE_OFFSET;
+    jspmfile->mode1 = gwy_get_guint16_le(&p);
+    jspmfile->mode2 = gwy_get_guint16_le(&p);
+    gwy_debug("mode %u, %u", jspmfile->mode1, jspmfile->mode2);
 
     if (err_DIMENSION(error, jspmfile->xres)
         || err_DIMENSION(error, jspmfile->yres))
@@ -335,27 +349,68 @@ read_image_header_block(JSPMFile *jspmfile, const guchar *buffer, gsize size,
     return TRUE;
 }
 
-static GwyDataField*
-jspm_read_data_field(const JSPMFile *jspmfile,
-                     const guchar *buffer)
+static void
+jspm_add_data_field(const JSPMFile *jspmfile,
+                    const guchar *buffer,
+                    GwyContainer *container)
 
 {
     GwyDataField *dfield;
+    gdouble min, max;
+    gdouble q = 1.0, z0 = 0.0;
+    const gchar *unitstr = NULL, *title = "Raw data";
 
     dfield = gwy_data_field_new(jspmfile->xres, jspmfile->yres,
                                 Nanometer*jspmfile->xreal,
                                 Nanometer*jspmfile->yreal,
                                 FALSE);
+    if (jspmfile->mode1 == 1 && jspmfile->mode2 == 3) {
+        /* Topography */
+        q = Picometer;
+        unitstr = "m";
+        title = "Topography";
+    }
+    else if (jspmfile->mode1 == 7 && jspmfile->mode2 == 0) {
+        /* Conductive AFM XXX probably not right */
+        q = 1.0/32767.0 * Nanoampere;
+        z0 = -1.5 * Nanoampere;
+        unitstr = "A";
+        title = "Current"; 
+    }
+    else if (jspmfile->mode1 == 15 && jspmfile->mode2 == 5) {
+        /* Phase FIXME the factor might be good, the offset is rubbish. */
+        q = 1.0/262.143;
+        z0 = -40000.0*q;
+        unitstr = "deg";
+        title = "Phase"; 
+    }
+    else if (jspmfile->mode1 == 17 && jspmfile->mode2 == 2) {
+        /* KPFM */
+        q = 1.0/3276.7;
+        z0 = -10.0;
+        unitstr = "V";
+        title = "Voltage"; 
+    }
+    else {
+        g_warning("Unknown data type %u.%u, importing as raw.",
+                  jspmfile->mode1, jspmfile->mode2);
+    }
 
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
-    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), "m");
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), unitstr);
 
     gwy_convert_raw_data(buffer + jspmfile->data_offset,
                          jspmfile->xres*jspmfile->yres, 1,
                          GWY_RAW_DATA_UINT32, GWY_BYTE_ORDER_LITTLE_ENDIAN,
-                         gwy_data_field_get_data(dfield), Picometer, 0.0);
+                         gwy_data_field_get_data(dfield), q, z0);
+    gwy_data_field_invalidate(dfield);
+    gwy_data_field_get_min_max(dfield, &min, &max);
 
-    return dfield;
+    gwy_container_set_object_by_name(container, "/0/data", dfield);
+    g_object_unref(dfield);
+
+    gwy_container_set_string_by_name(container, "/0/data/title",
+                                     g_strdup(title));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
