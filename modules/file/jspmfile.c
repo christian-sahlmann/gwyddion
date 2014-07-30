@@ -101,6 +101,7 @@ typedef struct {
     gdouble xreal;
     gdouble yreal;
     guint data_offset;
+    gchar *comment;
 } JSPMFile;
 
 static gboolean      module_register        (void);
@@ -118,8 +119,14 @@ static gboolean      read_image_header_block(JSPMFile *jspmfile,
                                              const guchar *buffer,
                                              gsize size,
                                              GError **error);
+static gboolean      read_file_header_block (JSPMFile *jspmfile,
+                                             const guchar *buffer,
+                                             gsize size,
+                                             GError **error);
 static void          jspm_add_data_field    (const JSPMFile *jspmfile,
                                              const guchar *buffer,
+                                             GwyContainer *container);
+static void          jspm_add_meta          (JSPMFile *jspmfile,
                                              GwyContainer *container);
 
 static GwyModuleInfo module_info = {
@@ -195,9 +202,11 @@ jspm_load(const gchar *filename,
 
     container = gwy_container_new();
     jspm_add_data_field(&jspmfile, buffer, container);
+    jspm_add_meta(&jspmfile, container);
     gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
 fail:
+    g_free(jspmfile.comment);
     if (jspmfile.blocks)
         g_array_free(jspmfile.blocks, TRUE);
     gwy_file_abandon_contents(buffer, size, NULL);
@@ -269,8 +278,8 @@ jspm_read_headers(JSPMFile *jspmfile,
         p = buffer + next;
     } while (block.offset);
 
-    /* TODO: At pos 0x66 of file header (type 1) there seems to be a comment. */
-
+    if (!read_file_header_block(jspmfile, buffer, size, error))
+        return FALSE;
     if (!read_image_header_block(jspmfile, buffer, size, error))
         return FALSE;
 
@@ -278,7 +287,8 @@ jspm_read_headers(JSPMFile *jspmfile,
 }
 
 static gboolean
-read_image_header_block(JSPMFile *jspmfile, const guchar *buffer, gsize size,
+read_image_header_block(JSPMFile *jspmfile,
+                        const guchar *buffer, gsize size,
                         GError **error)
 {
     enum {
@@ -299,8 +309,7 @@ read_image_header_block(JSPMFile *jspmfile, const guchar *buffer, gsize size,
     }
 
     block = &g_array_index(jspmfile->blocks, JSPMHeaderBlock, 1);
-    p = buffer + block->offset;
-    if (p[0] != 0x0a || p[1] != 0x00 || block->len < 0x030) {
+    if (block->type != 10 || block->len < 0x30) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Cannot find image header block."));
         return FALSE;
@@ -344,6 +353,44 @@ read_image_header_block(JSPMFile *jspmfile, const guchar *buffer, gsize size,
     if (!((jspmfile->yreal = fabs(jspmfile->yreal)) > 0)) {
         g_warning("Real y size is 0.0, fixing to 1.0");
         jspmfile->yreal = 1.0;
+    }
+
+    return TRUE;
+}
+
+static gboolean
+read_file_header_block(JSPMFile *jspmfile,
+                       const guchar *buffer, G_GNUC_UNUSED gsize size,
+                       GError **error)
+{
+    enum {
+        COMMENT_OFFSET = 0x66,
+    };
+
+    JSPMHeaderBlock *block;
+    const guchar *p;
+
+    if (jspmfile->blocks->len < 1) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Cannot find image header block."));
+        return FALSE;
+    }
+
+    block = &g_array_index(jspmfile->blocks, JSPMHeaderBlock, 0);
+    if (block->type != 1 || block->len < 0x70) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Cannot find image header block."));
+        return FALSE;
+    }
+
+    p = buffer + block->offset + COMMENT_OFFSET;
+    if (*p) {
+        gchar *comment = g_strndup(p, block->len - COMMENT_OFFSET);
+        jspmfile->comment = g_convert(comment, -1,
+                                      "iso-8859-1", "utf-8", NULL, NULL, NULL);
+        g_free(comment);
+        g_strdelimit(jspmfile->comment, "\n\r", ' ');
+        gwy_debug("comment %s", jspmfile->comment);
     }
 
     return TRUE;
@@ -411,6 +458,34 @@ jspm_add_data_field(const JSPMFile *jspmfile,
 
     gwy_container_set_string_by_name(container, "/0/data/title",
                                      g_strdup(title));
+}
+
+static void
+format_meta(GwyContainer *meta,
+            const gchar *name,
+            const gchar *format,
+            ...)
+{
+    gchar *s;
+    va_list ap;
+
+    va_start(ap, format);
+    s = g_strdup_vprintf(format, ap);
+    va_end(ap);
+    gwy_container_set_string_by_name(meta, name, s);
+}
+
+static void
+jspm_add_meta(JSPMFile *jspmfile, GwyContainer *container)
+{
+    GwyContainer *meta = gwy_container_new();
+
+    format_meta(meta, "WinSPM Version", "%.2f", jspmfile->winspm_version/100.0);
+    if (jspmfile->comment)
+        format_meta(meta, "Comment", "%s", jspmfile->comment);
+
+    gwy_container_set_object_by_name(container, "/0/meta", meta);
+    g_object_unref(meta);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
