@@ -389,7 +389,8 @@ read_file_header_block(JSPMFile *jspmfile,
         jspmfile->comment = g_convert(comment, -1,
                                       "iso-8859-1", "utf-8", NULL, NULL, NULL);
         g_free(comment);
-        g_strdelimit(jspmfile->comment, "\n\r", ' ');
+        if (jspmfile->comment)
+            g_strdelimit(jspmfile->comment, "\n\r", ' ');
         gwy_debug("comment %s", jspmfile->comment);
     }
 
