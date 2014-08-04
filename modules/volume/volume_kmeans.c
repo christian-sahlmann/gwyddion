@@ -38,8 +38,6 @@ static gboolean module_register                    (void);
 static void     volume_kmeans_do                   (GwyContainer *data,
                                                     GwyRunType run);
 
-
-
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -75,7 +73,7 @@ volume_kmeans_do(GwyContainer *container, GwyRunType run)
     GRand *rand;
     const gdouble *data;
     gdouble *centers, *oldcenters, *sum, *data1;
-    gdouble wmin, wmax, min, dist;
+    gdouble min, dist;
     gdouble epsilon = 1e-12;
     gint xres, yres, zres;
     gint *npix;
@@ -99,8 +97,6 @@ volume_kmeans_do(GwyContainer *container, GwyRunType run)
     yres = gwy_brick_get_yres(brick);
     zres = gwy_brick_get_zres(brick);
     data = gwy_brick_get_data_const(brick);
-    wmin = gwy_brick_get_min(brick);
-    wmax = gwy_brick_get_max(brick);
 
     centers = g_malloc(zres*k*sizeof(gdouble));
     oldcenters = g_malloc (zres*k*sizeof(gdouble));
@@ -109,15 +105,17 @@ volume_kmeans_do(GwyContainer *container, GwyRunType run)
     data1 = gwy_data_field_get_data(dfield);
 
     rand=g_rand_new();
-    for (c = 0; c < k; c++)
+    for (c = 0; c < k; c++) {
+        i = g_rand_int_range(rand, 0, xres);
+        j = g_rand_int_range(rand, 0, yres);
         for (l = 0; l < zres; l++) {
-            *(centers + c * zres + l)
-                                = g_rand_double_range(rand, wmin, wmax);
-         };
+            *(centers + c * zres + l) = *(data + l * xres * yres + j * xres + i);
+        };
+    };
     g_rand_free(rand);
 
     while (!converged) {
-        // pixels belong to cluster with min distance 
+        /* pixels belong to cluster with min distance */
         for (i = 0; i < xres; i++)
             for (j = 0; j < yres; j++) {
                 *(data1 + j * xres + i) = 0;
@@ -128,9 +126,9 @@ volume_kmeans_do(GwyContainer *container, GwyRunType run)
                         *(oldcenters + c * zres + l)
                                             = *(centers + c * zres + l);
                         dist += (*(data + l * xres * yres + j * xres + i)
-                               - *(centers + c * zres + l)
+                               - *(centers + c * zres + l))
                               * (*(data + l * xres * yres + j * xres + i)
-                               - *(centers + c * zres + l)));
+                               - *(centers + c * zres + l));
                     }
                     if (dist < min) {
                         min = dist;
@@ -138,7 +136,7 @@ volume_kmeans_do(GwyContainer *container, GwyRunType run)
                     }
                 }
             }
-        // new center coordinates as average of pixels 
+        /* new center coordinates as average of pixels */
 
         for (c = 0; c < k; c++) {
             *(npix + c) = 0;
@@ -156,12 +154,12 @@ volume_kmeans_do(GwyContainer *container, GwyRunType run)
                 }
             }
 
-        for (c = 0; c < k; c++) 
-			for (l =0; l < zres; l++) {
-				*(centers + c * zres + l) = (*(npix + c) > 0) ?
+        for (c = 0; c < k; c++)
+            for (l =0; l < zres; l++) {
+                *(centers + c * zres + l) = (*(npix + c) > 0) ?
                      *(sum + c * zres + l) / (gdouble)(*(npix + c)) : 0;
         }
-        
+
         converged = TRUE;
         for (c = 0; c < k; c++)
             for (l = 0; l < zres; l++)
@@ -175,7 +173,7 @@ volume_kmeans_do(GwyContainer *container, GwyRunType run)
         iterations++;
     }
 
-	gwy_data_field_data_changed (dfield);
+    gwy_data_field_data_changed (dfield);
     g_free(npix);
     g_free(sum);
     g_free(oldcenters);
