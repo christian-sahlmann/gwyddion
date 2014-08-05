@@ -262,9 +262,9 @@ extract(GwyContainer *data, GwyRunType run)
 
 static void
 extract_dialog(ExtractArgs *args,
-                  GwyContainer *data,
-                  GwyBrick *brick,
-                  gint id)
+               GwyContainer *data,
+               GwyBrick *brick,
+               gint id)
 {
     static const GwyEnum types[] = {
         { N_("X cross-section"), CUT_DIRX, },

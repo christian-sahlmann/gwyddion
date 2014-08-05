@@ -53,7 +53,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
-    gwy_volume_func_register("volume_kmeans",
+    gwy_volume_func_register("kmeans",
                               (GwyVolumeFunc)&volume_kmeans_do,
                               N_("/_K-means clustering"),
                               NULL,
@@ -69,19 +69,20 @@ volume_kmeans_do(GwyContainer *container, GwyRunType run)
 {
     GwyBrick *brick = NULL;
     GwyDataField *dfield = NULL;
+    GwyGraphCurveModel *gcmodel;
+    GwyGraphModel *gmodel;
+    GwyDataLine *calibration = NULL;
     gint id;
     GRand *rand;
     const gdouble *data;
-    gdouble *centers, *oldcenters, *sum, *data1;
-    gdouble min, dist;
+    gdouble *centers, *oldcenters, *sum, *data1, *xdata, *ydata;
+    gdouble min, dist, xreal, yreal;
     gdouble epsilon = 1e-12;
-    gint xres, yres, zres;
+    gint xres, yres, zres, i, j, l, c, newid;
     gint *npix;
     gint k = 10;
-    gint i, j, l, c;
     gint iterations = 0;
     gboolean converged = FALSE;
-    gchar key[50];
 
     g_return_if_fail(run & VOLUME_KMEANS_RUN_MODES);
 
@@ -90,13 +91,14 @@ volume_kmeans_do(GwyContainer *container, GwyRunType run)
                                      0);
     g_return_if_fail(GWY_IS_BRICK(brick));
 
-    g_snprintf(key, sizeof(key), "/brick/%d/preview", id);
-    dfield = (GwyDataField *)gwy_container_get_object(container, g_quark_from_string(key));
-
     xres = gwy_brick_get_xres(brick);
     yres = gwy_brick_get_yres(brick);
     zres = gwy_brick_get_zres(brick);
+    xreal = gwy_brick_get_xreal(brick);
+    yreal = gwy_brick_get_yreal(brick);
     data = gwy_brick_get_data_const(brick);
+
+    dfield = gwy_data_field_new(xres, yres, xreal, yreal, TRUE);
 
     centers = g_malloc(zres*k*sizeof(gdouble));
     oldcenters = g_malloc (zres*k*sizeof(gdouble));
@@ -164,7 +166,7 @@ volume_kmeans_do(GwyContainer *container, GwyRunType run)
         for (c = 0; c < k; c++)
             for (l = 0; l < zres; l++)
                 if (*(oldcenters + c * zres + l)
-                  - *(centers + c * zres + l) > epsilon) {
+                                - *(centers + c * zres + l) > epsilon) {
                     converged = FALSE;
                     break;
                 }
@@ -173,7 +175,47 @@ volume_kmeans_do(GwyContainer *container, GwyRunType run)
         iterations++;
     }
 
-    gwy_data_field_data_changed (dfield);
+    if (container) {
+        newid = gwy_app_data_browser_add_data_field(dfield,
+                                                    container, TRUE);
+        g_object_unref(dfield);
+        // gwy_app_set_data_field_title(data, newid, description);
+        gwy_app_channel_log_add(container, -1, newid, "volume::kmeans",
+                                NULL);
+
+        gmodel = gwy_graph_model_new();
+        calibration = gwy_brick_get_zcalibration(brick);
+        if (calibration) {
+            xdata = gwy_data_line_get_data(calibration);
+        }
+        else { // FIXME
+            xdata = g_malloc(zres * sizeof(gdouble));
+            for (i = 0; i < zres; i++)
+                *(xdata + i) = i;
+        }
+        for (c = 0; c < k; c++) {
+            ydata = g_memdup(centers + c * zres,
+                             zres * sizeof(gdouble));
+            gcmodel = gwy_graph_curve_model_new();
+            gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, zres);
+            g_object_set(gcmodel,
+                         "mode", GWY_GRAPH_CURVE_LINE,
+                         "description",
+                         g_strdup_printf(_("K-means center %d"), c),
+                         NULL);
+            gwy_graph_model_add_curve(gmodel, gcmodel);
+            g_object_unref(gcmodel);
+        }
+        g_object_set(gmodel,
+             //        "si-unit-x", gwy_data_line_get_si_unit_x(dline),
+             //        "si-unit-y", gwy_data_line_get_si_unit_y(dline),
+                     "axis-label-bottom", "x",
+                     "axis-label-left", "y",
+                     NULL);
+        gwy_app_data_browser_add_graph_model(gmodel, container, TRUE);
+        g_object_unref(gmodel);
+    }
+
     g_free(npix);
     g_free(sum);
     g_free(oldcenters);
