@@ -43,7 +43,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Calculates K-means clustering on volume data"),
     "Daniil Bratashov <dn2010@gmail.com> & Evgeniy Ryabov",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov & Evgeniy Ryabov",
     "2014",
 };
@@ -64,25 +64,62 @@ module_register(void)
     return TRUE;
 }
 
+GwyBrick *
+normalize_brick(GwyBrick *brick)
+{
+    GwyBrick *result;
+    gdouble wmin, dataval, integral;
+    gint i, j, l, xres, yres, zres;
+    const gdouble *olddata;
+    gdouble *newdata;
+
+    result = gwy_brick_new_alike(brick, TRUE);
+    wmin = gwy_brick_get_min(brick);
+    xres = gwy_brick_get_xres(brick);
+    yres = gwy_brick_get_yres(brick);
+    zres = gwy_brick_get_zres(brick);
+    olddata = gwy_brick_get_data_const(brick);
+    newdata = gwy_brick_get_data(result);
+
+    for (i = 0; i < xres; i++)
+        for (j = 0; j < yres; j++) {
+            integral = 0;
+            for (l = 0; l < zres; l++) {
+                dataval = *(olddata + l * xres * yres + j * xres + i);
+                integral += (dataval - wmin);
+            }
+            for (l = 0; l < zres; l++) {
+                dataval = *(olddata + l * xres * yres + j * xres + i);
+                if (integral != 0.0) {
+                    *(newdata + l * xres * yres + j * xres + i)
+                                   = (dataval - wmin) * zres / integral;
+                }
+            }
+        }
+
+    return result;
+}
+
 static void
 volume_kmeans_do(GwyContainer *container, GwyRunType run)
 {
-    GwyBrick *brick = NULL;
+    GwyBrick *brick = NULL, *normalized = NULL;
     GwyDataField *dfield = NULL;
     GwyGraphCurveModel *gcmodel;
     GwyGraphModel *gmodel;
     GwyDataLine *calibration = NULL;
+    // GwySIUnit *siunit;
     gint id;
     GRand *rand;
     const gdouble *data;
     gdouble *centers, *oldcenters, *sum, *data1, *xdata, *ydata;
-    gdouble min, dist, xreal, yreal;
+    gdouble min, dist, xreal, yreal, zreal, xoffset, yoffset, zoffset;
     gdouble epsilon = 1e-12;
     gint xres, yres, zres, i, j, l, c, newid;
     gint *npix;
     gint k = 10;
     gint iterations = 0;
-    gboolean converged = FALSE;
+    gboolean converged = FALSE, normalize = TRUE;
 
     g_return_if_fail(run & VOLUME_KMEANS_RUN_MODES);
 
@@ -96,9 +133,22 @@ volume_kmeans_do(GwyContainer *container, GwyRunType run)
     zres = gwy_brick_get_zres(brick);
     xreal = gwy_brick_get_xreal(brick);
     yreal = gwy_brick_get_yreal(brick);
-    data = gwy_brick_get_data_const(brick);
+    zreal = gwy_brick_get_zreal(brick);
+    xoffset = gwy_brick_get_xoffset(brick);
+    yoffset = gwy_brick_get_yoffset(brick);
+    zoffset = gwy_brick_get_zoffset(brick);
+
+    if (normalize) {
+        normalized = normalize_brick(brick);
+        data = gwy_brick_get_data_const(normalized);
+    }
+    else {
+        data = gwy_brick_get_data_const(brick);
+    }
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, TRUE);
+    gwy_data_field_set_xoffset(dfield, xoffset);
+    gwy_data_field_set_yoffset(dfield, yoffset);
 
     centers = g_malloc(zres*k*sizeof(gdouble));
     oldcenters = g_malloc (zres*k*sizeof(gdouble));
@@ -111,7 +161,8 @@ volume_kmeans_do(GwyContainer *container, GwyRunType run)
         i = g_rand_int_range(rand, 0, xres);
         j = g_rand_int_range(rand, 0, yres);
         for (l = 0; l < zres; l++) {
-            *(centers + c * zres + l) = *(data + l * xres * yres + j * xres + i);
+            *(centers + c * zres + l)
+                             = *(data + l * xres * yres + j * xres + i);
         };
     };
     g_rand_free(rand);
@@ -127,10 +178,11 @@ volume_kmeans_do(GwyContainer *container, GwyRunType run)
                     for (l = 0; l < zres; l++) {
                         *(oldcenters + c * zres + l)
                                             = *(centers + c * zres + l);
-                        dist += (*(data + l * xres * yres + j * xres + i)
-                               - *(centers + c * zres + l))
-                              * (*(data + l * xres * yres + j * xres + i)
-                               - *(centers + c * zres + l));
+                        dist
+                            += (*(data + l * xres * yres + j * xres + i)
+                              - *(centers + c * zres + l))
+                             * (*(data + l * xres * yres + j * xres + i)
+                              - *(centers + c * zres + l));
                     }
                     if (dist < min) {
                         min = dist;
@@ -188,10 +240,10 @@ volume_kmeans_do(GwyContainer *container, GwyRunType run)
         if (calibration) {
             xdata = gwy_data_line_get_data(calibration);
         }
-        else { // FIXME
+        else {
             xdata = g_malloc(zres * sizeof(gdouble));
             for (i = 0; i < zres; i++)
-                *(xdata + i) = i;
+                *(xdata + i) = zreal * i / zres + zoffset;
         }
         for (c = 0; c < k; c++) {
             ydata = g_memdup(centers + c * zres,
@@ -216,6 +268,9 @@ volume_kmeans_do(GwyContainer *container, GwyRunType run)
         g_object_unref(gmodel);
     }
 
+    if (normalized) {
+        g_object_unref(normalized);
+    }
     g_free(npix);
     g_free(sum);
     g_free(oldcenters);
