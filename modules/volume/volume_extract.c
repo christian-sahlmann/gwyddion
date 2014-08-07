@@ -137,9 +137,9 @@ typedef struct {
 } ExtractControls;
 
 static gboolean module_register                    (void);
-static void     extract                         (GwyContainer *data,
+static void     extract                            (GwyContainer *data,
                                                     GwyRunType run);
-static void     extract_dialog                  (ExtractArgs *args,
+static void     extract_dialog                     (ExtractArgs *args,
                                                     GwyContainer *data,
                                                     GwyBrick *brick,
                                                     gint id);

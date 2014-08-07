@@ -32,11 +32,36 @@
 #include <libgwymodule/gwymodule-volume.h>
 #include <app/gwyapp.h>
 
-#define VOLUME_KMEANS_RUN_MODES (GWY_RUN_IMMEDIATE)
+#define VOLUME_KMEANS_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
-static gboolean module_register                    (void);
-static void     volume_kmeans_do                   (GwyContainer *data,
-                                                    GwyRunType run);
+typedef struct {
+    gint k;              /* number of clusters */
+    gdouble epsilon;     /* convergence precision */
+    gint max_iterations; /* maximum number of main cycle iterations */
+    gboolean normalize;  /* normalize brick before K-means run */
+} KMeansArgs;
+
+static gboolean module_register     (void);
+static void     volume_kmeans       (GwyContainer *data,
+                                     GwyRunType run);
+static void     kmeans_dialog       (KMeansArgs *args,
+                                     GwyContainer *data,
+                                     GwyBrick *brick,
+                                     gint id);
+GwyBrick *      normalize_brick     (GwyBrick *brick);
+static void     volume_kmeans_do    (GwyContainer *data,
+                                     KMeansArgs *args);
+static void     kmeans_load_args    (GwyContainer *container,
+                                     KMeansArgs *args);
+static void     kmeans_save_args    (GwyContainer *container,
+                                     KMeansArgs *args);
+
+static const KMeansArgs kmeans_defaults = {
+    10,
+    1.0e-12,
+    100,
+    FALSE,
+};
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -54,7 +79,7 @@ static gboolean
 module_register(void)
 {
     gwy_volume_func_register("kmeans",
-                              (GwyVolumeFunc)&volume_kmeans_do,
+                              (GwyVolumeFunc)&volume_kmeans,
                               N_("/_K-means clustering"),
                               NULL,
                               VOLUME_KMEANS_RUN_MODES,
@@ -62,6 +87,37 @@ module_register(void)
                               N_("Calculate K-means clustering on volume data"));
 
     return TRUE;
+}
+
+static void
+volume_kmeans(GwyContainer *data, GwyRunType run)
+{
+    KMeansArgs args;
+    GwyBrick *brick = NULL;
+    gint id;
+
+    g_return_if_fail(run & VOLUME_KMEANS_RUN_MODES);
+
+    kmeans_load_args(gwy_app_settings_get(), &args);
+    gwy_app_data_browser_get_current(GWY_APP_BRICK, &brick,
+                                     GWY_APP_BRICK_ID, &id,
+                                     0);
+    g_return_if_fail(GWY_IS_BRICK(brick));
+    if (run == GWY_RUN_INTERACTIVE) {
+        kmeans_dialog(&args, data, brick, id);
+    }
+    else if (run == GWY_RUN_IMMEDIATE) {
+        volume_kmeans_do(data, &args);
+    }
+}
+
+static void
+kmeans_dialog (KMeansArgs *args,
+               GwyContainer *data,
+               GwyBrick *brick,
+               gint id)
+{
+    volume_kmeans_do(data, args);
 }
 
 GwyBrick *
@@ -101,7 +157,7 @@ normalize_brick(GwyBrick *brick)
 }
 
 static void
-volume_kmeans_do(GwyContainer *container, GwyRunType run)
+volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
 {
     GwyBrick *brick = NULL, *normalized = NULL;
     GwyDataField *dfield = NULL;
@@ -114,14 +170,14 @@ volume_kmeans_do(GwyContainer *container, GwyRunType run)
     const gdouble *data;
     gdouble *centers, *oldcenters, *sum, *data1, *xdata, *ydata;
     gdouble min, dist, xreal, yreal, zreal, xoffset, yoffset, zoffset;
-    gdouble epsilon = 1e-12;
+    gdouble epsilon = args->epsilon;
     gint xres, yres, zres, i, j, l, c, newid;
     gint *npix;
-    gint k = 10;
+    gint k = args->k;
     gint iterations = 0;
-    gboolean converged = FALSE, normalize = TRUE;
-
-    g_return_if_fail(run & VOLUME_KMEANS_RUN_MODES);
+    gint max_iterations = args->max_iterations;
+    gboolean converged = FALSE;
+    gboolean normalize = args->normalize;
 
     gwy_app_data_browser_get_current(GWY_APP_BRICK, &brick,
                                      GWY_APP_BRICK_ID, &id,
@@ -222,7 +278,7 @@ volume_kmeans_do(GwyContainer *container, GwyRunType run)
                     converged = FALSE;
                     break;
                 }
-        if (iterations == 100)
+        if (iterations == max_iterations)
             converged = TRUE;
         iterations++;
     }
@@ -279,5 +335,50 @@ volume_kmeans_do(GwyContainer *container, GwyRunType run)
     gwy_app_volume_log_add_volume(container, id, id);
 }
 
+static const gchar kmeans_k_key[]       = "/module/kmeans/k";
+static const gchar epsilon_key[]        = "/module/kmeans/epsilon";
+static const gchar max_iterations_key[]
+                                      = "/module/kmeans/max_iterations";
+static const gchar normalize_key[]      = "/module/kmeans/normalize";
+
+static void
+kmeans_sanitize_args(KMeansArgs *args)
+{
+    args->k = CLAMP(args->k, 1, 100);
+    args->epsilon = CLAMP(args->epsilon, G_MINDOUBLE, 1.0);
+    args->max_iterations = CLAMP(args->max_iterations, 0, 10000);
+    args->normalize = !!args->normalize;
+
+}
+
+static void
+kmeans_load_args(GwyContainer *container,
+                 KMeansArgs *args)
+{
+    *args = kmeans_defaults;
+
+    gwy_container_gis_int32_by_name(container, kmeans_k_key, &args->k);
+    gwy_container_gis_double_by_name(container, epsilon_key,
+                                                        &args->epsilon);
+    gwy_container_gis_int32_by_name(container, max_iterations_key,
+                                                 &args->max_iterations);
+    gwy_container_gis_boolean_by_name(container, normalize_key,
+                                                      &args->normalize);
+
+    kmeans_sanitize_args(args);
+}
+
+static void
+kmeans_save_args(GwyContainer *container,
+                 KMeansArgs *args)
+{
+    gwy_container_set_int32_by_name(container, kmeans_k_key, args->k);
+    gwy_container_set_double_by_name(container, epsilon_key,
+                                                         args->epsilon);
+    gwy_container_set_int32_by_name(container, max_iterations_key,
+                                                  args->max_iterations);
+    gwy_container_set_boolean_by_name(container, normalize_key,
+                                                       args->normalize);
+}
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
