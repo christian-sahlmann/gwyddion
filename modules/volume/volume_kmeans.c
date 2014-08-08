@@ -29,10 +29,15 @@
 #include <libprocess/filters.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydataview.h>
+#include <libgwydgets/gwydgets.h>
 #include <libgwymodule/gwymodule-volume.h>
 #include <app/gwyapp.h>
 
-#define VOLUME_KMEANS_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
+#define KMEANS_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
+
+enum {
+    RESPONSE_RESET   = 1,
+};
 
 typedef struct {
     gint k;              /* number of clusters */
@@ -41,13 +46,24 @@ typedef struct {
     gboolean normalize;  /* normalize brick before K-means run */
 } KMeansArgs;
 
+typedef struct {
+    GtkObject *k;
+    GtkObject *epsilon;
+    GtkObject *max_iterations;
+    GtkWidget *normalize;
+} KMeansControls;
+
 static gboolean module_register     (void);
 static void     volume_kmeans       (GwyContainer *data,
                                      GwyRunType run);
-static void     kmeans_dialog       (KMeansArgs *args,
-                                     GwyContainer *data,
-                                     GwyBrick *brick,
-                                     gint id);
+static void     kmeans_dialog       (GwyContainer *data,
+                                     KMeansArgs *args);
+static void     epsilon_changed_cb  (GtkAdjustment *adj,
+                                     KMeansArgs *args);
+static void     kmeans_dialog_update(KMeansControls *controls,
+                                     KMeansArgs *args);
+static void     kmeans_values_update(KMeansControls *controls,
+                                     KMeansArgs *args);
 GwyBrick *      normalize_brick     (GwyBrick *brick);
 static void     volume_kmeans_do    (GwyContainer *data,
                                      KMeansArgs *args);
@@ -68,7 +84,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Calculates K-means clustering on volume data"),
     "Daniil Bratashov <dn2010@gmail.com> & Evgeniy Ryabov",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov & Evgeniy Ryabov",
     "2014",
 };
@@ -80,9 +96,9 @@ module_register(void)
 {
     gwy_volume_func_register("kmeans",
                               (GwyVolumeFunc)&volume_kmeans,
-                              N_("/_K-means clustering"),
+                              N_("/_K-means clustering..."),
                               NULL,
-                              VOLUME_KMEANS_RUN_MODES,
+                              KMEANS_RUN_MODES,
                               GWY_MENU_FLAG_VOLUME,
                               N_("Calculate K-means clustering on volume data"));
 
@@ -96,7 +112,7 @@ volume_kmeans(GwyContainer *data, GwyRunType run)
     GwyBrick *brick = NULL;
     gint id;
 
-    g_return_if_fail(run & VOLUME_KMEANS_RUN_MODES);
+    g_return_if_fail(run & KMEANS_RUN_MODES);
 
     kmeans_load_args(gwy_app_settings_get(), &args);
     gwy_app_data_browser_get_current(GWY_APP_BRICK, &brick,
@@ -104,7 +120,7 @@ volume_kmeans(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(GWY_IS_BRICK(brick));
     if (run == GWY_RUN_INTERACTIVE) {
-        kmeans_dialog(&args, data, brick, id);
+        kmeans_dialog(data, &args);
     }
     else if (run == GWY_RUN_IMMEDIATE) {
         volume_kmeans_do(data, &args);
@@ -112,12 +128,110 @@ volume_kmeans(GwyContainer *data, GwyRunType run)
 }
 
 static void
-kmeans_dialog (KMeansArgs *args,
-               GwyContainer *data,
-               GwyBrick *brick,
-               gint id)
+kmeans_dialog (GwyContainer *data, KMeansArgs *args)
 {
-    volume_kmeans_do(data, args);
+    GtkWidget *dialog, *table, *spin;
+    gint response;
+    KMeansControls controls;
+    gint row = 0;
+
+    dialog = gtk_dialog_new_with_buttons(_("K-means"),
+                                         NULL, 0, NULL);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          _("_Reset"), RESPONSE_RESET);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
+    gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
+                                 gwy_stock_like_button_new(_("_Run"),
+                                                          GTK_STOCK_OK),
+                                 GTK_RESPONSE_OK);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog),
+                                    GTK_RESPONSE_CANCEL);
+    gwy_help_add_to_volume_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
+
+    table = gtk_table_new(4, 4, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
+                       TRUE, TRUE, 4);
+
+    controls.k = gtk_adjustment_new(args->k, 2, 100, 1, 10, 0);
+    spin = gwy_table_attach_spinbutton(table, row,
+                                       _("_Number of clusters:"), "",
+                                       controls.k);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    row++;
+
+    controls.epsilon = gtk_adjustment_new(args->epsilon,
+                                          1e-20, 0.1, 1, 10, 0);
+    spin = gwy_table_attach_hscale(table, row,
+                                   _("Convergence _Precision:"), NULL,
+                                   controls.epsilon, GWY_HSCALE_LOG);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 20);
+    g_object_set_data(G_OBJECT(controls.epsilon),
+                      "controls", &controls);
+    g_signal_connect(controls.epsilon, "value-changed",
+                     G_CALLBACK(epsilon_changed_cb), args);
+    row++;
+
+    controls.max_iterations = gtk_adjustment_new(args->max_iterations,
+                                                 1, 10000, 1, 1, 0);
+    spin = gwy_table_attach_spinbutton(table, row,
+                                       _("_Max. iterations:"), "",
+                                       controls.max_iterations);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    row++;
+
+    controls.normalize
+        = gtk_check_button_new_with_mnemonic(_("_Normalize"));
+    gtk_table_attach_defaults(GTK_TABLE(table), controls.normalize,
+                              0, 3, row, row+1);
+
+    kmeans_dialog_update(&controls, args);
+    gtk_widget_show_all(dialog);
+
+    do {
+        response = gtk_dialog_run(GTK_DIALOG(dialog));
+        switch (response) {
+            case GTK_RESPONSE_CANCEL:
+            case GTK_RESPONSE_DELETE_EVENT:
+                kmeans_values_update(&controls, args);
+                gtk_widget_destroy(dialog);
+            case GTK_RESPONSE_NONE:
+            return;
+            break;
+
+            case GTK_RESPONSE_OK:
+                kmeans_values_update(&controls, args);
+                volume_kmeans_do(data, args);
+            break;
+
+            case RESPONSE_RESET:
+                *args = kmeans_defaults;
+                kmeans_dialog_update(&controls, args);
+            break;
+
+            default:
+                g_assert_not_reached();
+            break;
+        }
+    } while (response != GTK_RESPONSE_OK);
+
+    kmeans_values_update(&controls, args);
+    kmeans_save_args(gwy_app_settings_get(), args);
+    gtk_widget_destroy(dialog);
+}
+
+static void
+epsilon_changed_cb(GtkAdjustment *adj,
+                   KMeansArgs *args)
+{
+    KMeansControls *controls;
+
+    controls = g_object_get_data(G_OBJECT(adj), "controls");
+    args->epsilon = gtk_adjustment_get_value(adj);
+    kmeans_dialog_update(controls, args);
 }
 
 GwyBrick *
@@ -154,6 +268,36 @@ normalize_brick(GwyBrick *brick)
         }
 
     return result;
+}
+
+static void
+kmeans_values_update(KMeansControls *controls,
+                     KMeansArgs *args)
+{
+    args->k
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->k));
+    args->epsilon
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->epsilon));
+    args->max_iterations
+        = gtk_adjustment_get_value(
+                              GTK_ADJUSTMENT(controls->max_iterations));
+    args->normalize
+        = gtk_toggle_button_get_active(
+                                GTK_TOGGLE_BUTTON(controls->normalize));
+}
+
+static void
+kmeans_dialog_update(KMeansControls *controls,
+                     KMeansArgs *args)
+{
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->k),
+                             args->k);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->epsilon),
+                             args->epsilon);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->max_iterations),
+                             args->max_iterations);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->normalize),
+                                 args->normalize);
 }
 
 static void
@@ -344,8 +488,8 @@ static const gchar normalize_key[]      = "/module/kmeans/normalize";
 static void
 kmeans_sanitize_args(KMeansArgs *args)
 {
-    args->k = CLAMP(args->k, 1, 100);
-    args->epsilon = CLAMP(args->epsilon, G_MINDOUBLE, 1.0);
+    args->k = CLAMP(args->k, 2, 100);
+    args->epsilon = CLAMP(args->epsilon, 1e-20, 0.1);
     args->max_iterations = CLAMP(args->max_iterations, 0, 10000);
     args->normalize = !!args->normalize;
 
