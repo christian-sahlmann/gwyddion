@@ -310,6 +310,7 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
     GwyGraphModel *gmodel;
     GwyDataLine *calibration = NULL;
     GwySIUnit *siunit;
+    const GwyRGBA *rgba;
     gint id;
     gchar *description;
     GRand *rand;
@@ -354,7 +355,7 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
 
     siunit = gwy_brick_get_si_unit_x(brick);
     gwy_data_field_set_si_unit_xy(dfield, siunit);
-    gwy_si_unit_set_from_string(siunit, _("Cluster"));
+    siunit = gwy_si_unit_new(_("Cluster"));
     gwy_data_field_set_si_unit_z(dfield, siunit);
 
     centers = g_malloc(zres*k*sizeof(gdouble));
@@ -436,6 +437,7 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
     }
 
     if (container) {
+        gwy_data_field_add(dfield, 1.0);
         newid = gwy_app_data_browser_add_data_field(dfield,
                                                     container, TRUE);
         g_object_unref(dfield);
@@ -465,10 +467,12 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
                              zres * sizeof(gdouble));
             gcmodel = gwy_graph_curve_model_new();
             gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, zres);
+            rgba = gwy_graph_get_preset_color(c);
             g_object_set(gcmodel,
                          "mode", GWY_GRAPH_CURVE_LINE,
                          "description",
-                         g_strdup_printf(_("K-means center %d"), c),
+                         g_strdup_printf(_("K-means center %d"), c + 1),
+                         "color", rgba,
                          NULL);
             gwy_graph_model_add_curve(gmodel, gcmodel);
             g_object_unref(gcmodel);
