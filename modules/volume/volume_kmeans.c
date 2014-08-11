@@ -82,9 +82,9 @@ static const KMeansArgs kmeans_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Calculates K-means clustering on volume data"),
+    N_("Calculates K-means clustering on volume data."),
     "Daniil Bratashov <dn2010@gmail.com> & Evgeniy Ryabov",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov & Evgeniy Ryabov",
     "2014",
 };
@@ -308,8 +308,9 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
     GwyGraphCurveModel *gcmodel;
     GwyGraphModel *gmodel;
     GwyDataLine *calibration = NULL;
-    // GwySIUnit *siunit;
+    GwySIUnit *siunit;
     gint id;
+    gchar *description;
     GRand *rand;
     const gdouble *data;
     gdouble *centers, *oldcenters, *sum, *data1, *xdata, *ydata;
@@ -349,6 +350,11 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, TRUE);
     gwy_data_field_set_xoffset(dfield, xoffset);
     gwy_data_field_set_yoffset(dfield, yoffset);
+
+    siunit = gwy_brick_get_si_unit_x(brick);
+    gwy_data_field_set_si_unit_xy(dfield, siunit);
+    gwy_si_unit_set_from_string(siunit, _("Cluster"));
+    gwy_data_field_set_si_unit_z(dfield, siunit);
 
     centers = g_malloc(zres*k*sizeof(gdouble));
     oldcenters = g_malloc (zres*k*sizeof(gdouble));
@@ -390,8 +396,8 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
                     }
                 }
             }
-        /* new center coordinates as average of pixels */
 
+        /* new center coordinates as average of pixels */
         for (c = 0; c < k; c++) {
             *(npix + c) = 0;
             for (l = 0; l < zres; l++) {
@@ -422,8 +428,9 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
                     converged = FALSE;
                     break;
                 }
-        if (iterations == max_iterations)
+        if (iterations == max_iterations) {
             converged = TRUE;
+        }
         iterations++;
     }
 
@@ -431,7 +438,12 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
         newid = gwy_app_data_browser_add_data_field(dfield,
                                                     container, TRUE);
         g_object_unref(dfield);
-        // gwy_app_set_data_field_title(data, newid, description);
+        description = gwy_app_get_brick_title(container, id);
+        gwy_app_set_data_field_title(container, newid,
+                                     g_strdup_printf(_("K-means of %s"),
+                                                     description)
+                                     );
+        g_free(description);
         gwy_app_channel_log_add(container, -1, newid, "volume::kmeans",
                                 NULL);
 
@@ -439,11 +451,13 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
         calibration = gwy_brick_get_zcalibration(brick);
         if (calibration) {
             xdata = gwy_data_line_get_data(calibration);
+            siunit = gwy_data_line_get_si_unit_y(calibration);
         }
         else {
             xdata = g_malloc(zres * sizeof(gdouble));
             for (i = 0; i < zres; i++)
                 *(xdata + i) = zreal * i / zres + zoffset;
+            siunit = gwy_brick_get_si_unit_z(brick);
         }
         for (c = 0; c < k; c++) {
             ydata = g_memdup(centers + c * zres,
@@ -459,8 +473,8 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
             g_object_unref(gcmodel);
         }
         g_object_set(gmodel,
-             //        "si-unit-x", gwy_data_line_get_si_unit_x(dline),
-             //        "si-unit-y", gwy_data_line_get_si_unit_y(dline),
+                     "si-unit-x", siunit,
+                     "si-unit-y", gwy_brick_get_si_unit_w(brick),
                      "axis-label-bottom", "x",
                      "axis-label-left", "y",
                      NULL);
