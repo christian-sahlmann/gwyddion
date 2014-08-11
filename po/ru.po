@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-07-29 03:58+0200\n"
-"PO-Revision-Date: 2014-07-29 13:48+0300\n"
+"POT-Creation-Date: 2014-08-11 03:58+0200\n"
+"PO-Revision-Date: 2014-08-11 08:57+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -913,6 +913,7 @@ msgstr "точек"
 #: modules/process/unrotate.c:228 modules/process/volumize_layers.c:213
 #: modules/process/wave_synth.c:361 modules/process/wpour_mark.c:296
 #: modules/volume/volume_calibrate.c:371 modules/volume/volume_extract.c:331
+#: modules/volume/volume_kmeans.c:141
 msgid "_Reset"
 msgstr "_Сброс"
 
@@ -3834,20 +3835,21 @@ msgstr "Изображения сканирований JPK (.jpk)"
 msgid "File does not contain grid dimensions."
 msgstr "Файл не содержит размеров сетки"
 
-#: modules/file/jspmfile.c:121
+#: modules/file/jspmfile.c:135
 msgid "Imports JEOL JSPM data files."
 msgstr "Импортирует файлы данных JEOL JSPM."
 
-#: modules/file/jspmfile.c:134
+#: modules/file/jspmfile.c:148
 msgid "JEOL JSPM data files (.tif)"
 msgstr "Файлы данных JEOL JSPM (.tif)"
 
-#: modules/file/jspmfile.c:217
+#: modules/file/jspmfile.c:227
 #, c-format
 msgid "Header block %u has invalid position or size."
 msgstr "Блок %u заголовка содержит неправильное положение или размер."
 
-#: modules/file/jspmfile.c:293 modules/file/jspmfile.c:301
+#: modules/file/jspmfile.c:307 modules/file/jspmfile.c:314
+#: modules/file/jspmfile.c:375 modules/file/jspmfile.c:382
 msgid "Cannot find image header block."
 msgstr "Не удаётся найти блок заголовка изображения."
 
@@ -12969,6 +12971,47 @@ msgstr "/_Инвертировать значение"
 #: modules/volume/volume_invert.c:69
 msgid "Invert value in volume data"
 msgstr "Инвертирует значения в объёмных данных"
+
+#: modules/volume/volume_kmeans.c:85
+msgid "Calculates K-means clustering on volume data"
+msgstr "Рассчитывает кластеризацию K-средних для объёмных данных"
+
+#: modules/volume/volume_kmeans.c:99
+msgid "/_K-means clustering..."
+msgstr "/_Кластеризация K-средних..."
+
+#: modules/volume/volume_kmeans.c:103
+msgid "Calculate K-means clustering on volume data"
+msgstr "Рассчитать кластеризацию K-средних для объёмных данных"
+
+#: modules/volume/volume_kmeans.c:138
+msgid "K-means"
+msgstr "K-средних"
+
+#: modules/volume/volume_kmeans.c:145
+msgid "_Run"
+msgstr "_Выполнить"
+
+#: modules/volume/volume_kmeans.c:161
+msgid "_Number of clusters:"
+msgstr "_Количество кластеров:"
+
+#: modules/volume/volume_kmeans.c:169
+msgid "Convergence _Precision:"
+msgstr "_Точность сходимости:"
+
+#: modules/volume/volume_kmeans.c:181
+msgid "_Max. iterations:"
+msgstr "_Макс. число шагов:"
+
+#: modules/volume/volume_kmeans.c:187
+msgid "_Normalize"
+msgstr "_Нормализовать"
+
+#: modules/volume/volume_kmeans.c:456
+#, c-format
+msgid "K-means center %d"
+msgstr "Центр кластера %d"
 
 #~ msgid "Make _1:1"
 #~ msgstr "Сделать _1:1"
