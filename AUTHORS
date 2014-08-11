@@ -45,7 +45,7 @@ Matthew Caldwell <m.caldwell@ucl.ac.uk>
 Даниил Браташов <dn2010@gmail.com>
     NT-MDT improvements namely MDA frame import and old MDA import,
     Nanoeducator, WIP, TIA SER and NanoScanTech import, Mutual crop,
-    DOS modules.
+    DoS, K-means modules.
 François Bianco <francois.bianco@unige.ch>
     Omicron flat file format import.
 Luke Somers <lsomers@sas.upenn.edu>
@@ -70,6 +70,8 @@ Jeffrey J. Schwartz <schwartz@physics.ucla.edu>
     WinSTM file import.
 Christian Bühler <christian.buehler@uni-ulm.de>
     Pygwy volume data processing module type.
+Евгений Рябов <k1u2r3ka@mail.ru>
+    K-means
 
 
 === Translators ===

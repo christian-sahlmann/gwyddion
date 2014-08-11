@@ -2259,7 +2259,7 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
                                   windowing,
                                   GWY_TRANSFORM_DIRECTION_FORWARD,
                                   interpolation,
-                                  TRUE, 2); 
+                                  TRUE, 2);
         re = re_field->data;
         im = im_field->data;
         for (i = 0; i < height; i++) {
@@ -5150,7 +5150,7 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
     xres = data_field->xres;
     yres = data_field->yres;
     data = data_field->data + row*xres + col;
-    
+
 
     if (orientation == GWY_ORIENTATION_VERTICAL) {
         gwy_data_line_resample(target_line, width, GWY_INTERPOLATION_NONE);

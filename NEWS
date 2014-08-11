@@ -24,6 +24,7 @@ Modules:
 - OpenGPS (new): Imports OpenGPS surface data format (ISO 5436-2).
 - Diffusion synthesis (new): Artificial surface generation by a diffussion
   limited aggregation simulation.
+- K-means (new): K-means clustering for volume data.
 - Filters tool: Gaussian smoothing is no longer limited to integer FWHM.
 - Columnar synthesis: Can plot the evolution of some statistics during the
   growth.

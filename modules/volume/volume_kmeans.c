@@ -1,7 +1,8 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek,
+ *  Daniil Bratashov, Evgeniy Ryabov.
+ *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net, dn2010@gmail.com.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -84,7 +85,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Calculates K-means clustering on volume data."),
     "Daniil Bratashov <dn2010@gmail.com> & Evgeniy Ryabov",
-    "0.4",
+    "1.0",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov & Evgeniy Ryabov",
     "2014",
 };
