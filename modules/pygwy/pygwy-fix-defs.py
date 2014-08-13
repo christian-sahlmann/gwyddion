@@ -89,6 +89,10 @@ extra_method_type['gwy_graph_area_get_x_grid_data'] = [ ['ndata'], ['GIntValue']
 extra_method_type['gwy_graph_area_get_y_grid_data'] = [ ['ndata'], ['GIntValue'] ]
 #extra_method_type['gwy_selection_get_data'] = [['data'],['GDoubleArrayToFill']]
 extra_method_type['gwy_selection_get_data_wrap'] = [['len'],['GIntValue']]
+extra_method_type['gwy_app_data_browser_add_brick'] = (['preview', 'data'],['GwyDataField*', 'GwyContainer*'], [True, True])
+extra_method_type['gwy_app_data_browser_add_data_field'] = (['data'],['GwyContainer*'], [True])
+extra_method_type['gwy_app_data_browser_add_spectra'] = (['data'],['GwyContainer*'], [True])
+extra_method_type['gwy_app_data_browser_add_graph_model'] = (['data'],['GwyContainer*'], [True])
 
 extended_parameters = {}
 #extended_parameters['gwy_interpolation_resolve_coeffs_1d'] = [['data'],['data|n']]
@@ -115,6 +119,8 @@ for f in parser.functions:
          for i in range(len(extra_method_type[f.c_name][0])):
             if p.pname == extra_method_type[f.c_name][0][i]:
                p.ptype = extra_method_type[f.c_name][1][i]
+               if len(extra_method_type[f.c_name]) == 3:
+                  p.pnull = extra_method_type[f.c_name][2][i]
             if p.pname == "from":
                p.pname = "_from"
    if extended_parameters.has_key(f.c_name):
