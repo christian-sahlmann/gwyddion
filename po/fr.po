@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-08-06 03:58+0200\n"
-"PO-Revision-Date: 2014-08-06 22:41+0100\n"
+"POT-Creation-Date: 2014-08-13 03:58+0200\n"
+"PO-Revision-Date: 2014-08-13 13:14+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -908,6 +908,7 @@ msgstr "pixels"
 #: modules/process/unrotate.c:228 modules/process/volumize_layers.c:213
 #: modules/process/wave_synth.c:361 modules/process/wpour_mark.c:296
 #: modules/volume/volume_calibrate.c:371 modules/volume/volume_extract.c:331
+#: modules/volume/volume_kmeans.c:142
 msgid "_Reset"
 msgstr "_Remise à zéro"
 
@@ -13018,19 +13019,52 @@ msgstr "/_Inverser les valeurs"
 msgid "Invert value in volume data"
 msgstr "Inverser les valeurs dans les données volumiques"
 
-#: modules/volume/volume_kmeans.c:44
-msgid "Calculates K-means clustering on volume data"
-msgstr "Calcule le partitionnement par k-moyennes de données volumiques"
+#: modules/volume/volume_kmeans.c:86
+msgid "Calculates K-means clustering on volume data."
+msgstr "Calcule le partitionnement par k-moyennes de données volumiques."
 
-#: modules/volume/volume_kmeans.c:58
-msgid "/_K-means clustering"
-msgstr "/Partitionnement par _k-moyennes"
+#: modules/volume/volume_kmeans.c:100
+msgid "/_K-means clustering..."
+msgstr "/Partitionnement par _k-moyennes..."
 
-#: modules/volume/volume_kmeans.c:62
+#: modules/volume/volume_kmeans.c:104
 msgid "Calculate K-means clustering on volume data"
 msgstr "Calculer le partitionnement par k-moyennes de données volumiques"
 
-#: modules/volume/volume_kmeans.c:204
+#: modules/volume/volume_kmeans.c:139
+msgid "K-means"
+msgstr "k-moyennes"
+
+#: modules/volume/volume_kmeans.c:146
+msgid "_Run"
+msgstr "Lance_r"
+
+#: modules/volume/volume_kmeans.c:162
+msgid "_Number of clusters:"
+msgstr "_Nombre de partitions :"
+
+#: modules/volume/volume_kmeans.c:170
+msgid "Convergence _Precision:"
+msgstr "_Précision de convergence :"
+
+#: modules/volume/volume_kmeans.c:182
+msgid "_Max. iterations:"
+msgstr "Nombre d'itérations _max :"
+
+#: modules/volume/volume_kmeans.c:188
+msgid "_Normalize"
+msgstr "_Normaliser"
+
+#: modules/volume/volume_kmeans.c:358
+msgid "Cluster"
+msgstr "Partition"
+
+#: modules/volume/volume_kmeans.c:446
+#, c-format
+msgid "K-means of %s"
+msgstr "k-moyennes de %s"
+
+#: modules/volume/volume_kmeans.c:474
 #, c-format
 msgid "K-means center %d"
 msgstr "Centre %d des k-moyennes"
