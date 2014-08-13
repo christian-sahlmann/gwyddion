@@ -1,4 +1,5 @@
 import gwy
+
 def save_dfield_to_png(container, datafield_name, filename, run_type):
    """
    Save desired datafield given by name stored in container to file.
@@ -6,7 +7,7 @@ def save_dfield_to_png(container, datafield_name, filename, run_type):
    @param container: gwy.Container which has datafield of given name
    @param datafield_name: datafield name in string representation (like '/0/data')
    @param filename: expected filename
-   @run_type: select of interactive (RUN_INTERACTIVE) or noninteractive mode (RUN_NONINTERACTIVE)
+   @param run_type: select of interactive (RUN_INTERACTIVE) or noninteractive mode (RUN_NONINTERACTIVE)
    """
    gwy.gwy_app_data_browser_reset_visibility(container, gwy.VISIBILITY_RESET_SHOW_ALL)
    datafield_num = int(datafield_name.split('/')[1])
@@ -73,28 +74,42 @@ def get_current_container():
 
 try:
   import numpy as np
-except ImportError: 
+except ImportError:
   pass
 else:
    def data_field_data_as_array(field):
+      """Create a view the DataField's data as numpy array.
+
+      The array can point to an invalid memory location after using other
+      gwyddion functions and lead to application crash. Use with care.
+
+      @param field: the L{gwy.DataField} to view
+      @return: array viewing the data
+      """
       class gwydfdatap():
          def __init__(self,addr,shape):
             data = (addr,False)
             stride = (8,shape[0]*8)
-            self.__array_interface__= { 
+            self.__array_interface__= {
                'strides' : stride,
                'shape'   : shape,
                'data'    : data,
                'typestr' : "|f8",
                'version' : 3}
-         
-
 
       addr = field.get_data_pointer()
       shape = (field.get_xres(),field.get_yres())
       return np.array(gwydfdatap(addr,shape),copy=False)
-    
+
    def brick_data_as_array(brick):
+      """Create a view the Brick's data as numpy array.
+
+      The array can point to an invalid memory location after using other
+      gwyddion functions and lead to application crash. Use with care.
+
+      @param field: the L{gwy.Brick} to view
+      @return: array viewing the data
+      """
       class gwydfdatap():
          def __init__(self,addr,shape):
             data = (addr,False)
@@ -105,8 +120,6 @@ else:
                'data'    : data,
                'typestr' : "|f8",
                'version' : 3}
-
-
 
       addr = brick.get_data_pointer()
       shape = (brick.get_xres(),brick.get_yres(),brick.get_zres())
