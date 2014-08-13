@@ -381,8 +381,9 @@ static Py_ssize_t _map_gwy_container_length(PyGObject *cont)
 static PyObject * _map_gwy_container_subscript(PyGObject * cont, PyObject * key)
 {
    gchar* name;
-
+   PyGObject* ret;
    GValue val;
+
    if (!PyString_Check(key))
    {
         PyErr_SetString(PyExc_TypeError, "Expected key to be a string.");
@@ -393,7 +394,9 @@ static PyObject * _map_gwy_container_subscript(PyGObject * cont, PyObject * key)
 
    if (gwy_container_contains_by_name((GWY_CONTAINER(cont->obj)), name)) {
      val = gwy_container_get_value_by_name((GWY_CONTAINER(cont->obj)), name);
-     return pyg_value_as_pyobject(&val,0);
+     ret = pyg_value_as_pyobject(&val,0);
+     g_value_unset(&val);
+     return ret;
    }
 
    PyErr_SetString(PyExc_KeyError,"Nothing stored here");
@@ -426,6 +429,9 @@ static int _map_gwy_container_ass_subscript(PyGObject *cont, PyObject *key, PyOb
      g_value_init(&val, G_TYPE_FUNDAMENTAL(g_type));
      pyg_value_from_pyobject(&val,v);
      gwy_container_set_value_by_name((GWY_CONTAINER(cont->obj)), name, &val, NULL);
+     g_value_unset(&val);
+
+     return 0;
    }
    else
    {
