@@ -425,8 +425,8 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
         converged = TRUE;
         for (c = 0; c < k; c++)
             for (l = 0; l < zres; l++)
-                if (*(oldcenters + c * zres + l)
-                                - *(centers + c * zres + l) > epsilon) {
+                if (fabs(*(oldcenters + c * zres + l)
+                               - *(centers + c * zres + l)) > epsilon) {
                     converged = FALSE;
                     break;
                 }
