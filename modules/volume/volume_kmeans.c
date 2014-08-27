@@ -85,7 +85,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Calculates K-means clustering on volume data."),
     "Daniil Bratashov <dn2010@gmail.com> & Evgeniy Ryabov",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov & Evgeniy Ryabov",
     "2014",
 };
@@ -305,7 +305,7 @@ static void
 volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
 {
     GwyBrick *brick = NULL, *normalized = NULL;
-    GwyDataField *dfield = NULL;
+    GwyDataField *dfield = NULL, *errormap = NULL;
     GwyGraphCurveModel *gcmodel;
     GwyGraphModel *gmodel;
     GwyDataLine *calibration = NULL;
@@ -316,6 +316,7 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
     GRand *rand;
     const gdouble *data;
     gdouble *centers, *oldcenters, *sum, *data1, *xdata, *ydata;
+    gdouble *errordata;
     gdouble min, dist, xreal, yreal, zreal, xoffset, yoffset, zoffset;
     gdouble epsilon = args->epsilon;
     gint xres, yres, zres, i, j, l, c, newid;
@@ -437,6 +438,24 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
     }
 
     if (container) {
+        errormap = gwy_data_field_new_alike(dfield, TRUE);
+        siunit = gwy_si_unit_new(_("Error"));
+        gwy_data_field_set_si_unit_z(errormap, siunit);
+        errordata = gwy_data_field_get_data(errormap);
+
+        for (i = 0; i < xres; i++)
+            for (j = 0; j < yres; j++) {
+                dist = 0.0;
+                c = (gint)(*(data1 + j * xres + i));
+                for (l = 0; l < zres; l++) {
+                    dist += (*(data + l * xres * yres + j * xres + i)
+                           - *(centers + c * zres + l))
+                          * (*(data + l * xres * yres + j * xres + i)
+                           - *(centers + c * zres + l));
+                }
+                *(errordata + j * xres + i) = sqrt(dist);
+            }
+
         gwy_data_field_add(dfield, 1.0);
         newid = gwy_app_data_browser_add_data_field(dfield,
                                                     container, TRUE);
@@ -445,6 +464,17 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
         gwy_app_set_data_field_title(container, newid,
                                      g_strdup_printf(_("K-means of %s"),
                                                      description)
+                                     );
+        gwy_app_channel_log_add(container, -1, newid, "volume::kmeans",
+                                NULL);
+
+        newid = gwy_app_data_browser_add_data_field(errormap,
+                                                    container, TRUE);
+        g_object_unref(errormap);
+        gwy_app_set_data_field_title(container, newid,
+                                     g_strdup_printf(
+                                               _("K-means error of %s"),
+                                               description)
                                      );
         g_free(description);
         gwy_app_channel_log_add(container, -1, newid, "volume::kmeans",
