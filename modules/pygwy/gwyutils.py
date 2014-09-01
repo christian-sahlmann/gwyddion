@@ -73,9 +73,9 @@ def get_current_container():
 #   return d
 
 try:
-  import numpy as np
+   import numpy as np
 except ImportError:
-  pass
+   pass
 else:
    def data_field_data_as_array(field):
       """Create a view the DataField's data as numpy array.
@@ -124,3 +124,40 @@ else:
       addr = brick.get_data_pointer()
       shape = (brick.get_xres(),brick.get_yres(),brick.get_zres())
       return np.array(gwydfdatap(addr,shape),copy=False)
+
+   def data_field_get_data(datafield):
+        """Gets the data from a data field.
+
+        The returned array is a copy of the data.
+        But it can be safely stored without ever referring to invalid memory.
+        """
+        return data_field_data_as_array(datafield).copy()
+
+   def data_field_set_data(datafield, data):
+        """Sets the data of a data field.
+
+        The data shape must correspond to the data field shape.
+        """
+        dest = data_field_data_as_array(datafield)
+        if dest.shape != data.shape:
+           raise ValueError("Data needs same size as the DataField.")
+        dest[:] = data
+
+   def brick_get_data(brick):
+        """Gets the data from a brick.
+
+        The returned array is a copy of the data.
+        But it can be safely stored without ever referring to invalid memory.
+        """
+        return brick_data_as_array(brick).copy()
+
+   def brick_set_data(brick, data):
+        """Sets the data of a brick.
+
+        The data shape must correspond to the brick shape.
+        """
+        dest = brick_data_as_array(brick)
+        if dest.shape != data.shape:
+           raise ValueError("Data needs same size as the Brick.")
+        dest[:] = data
+
