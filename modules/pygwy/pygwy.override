@@ -157,9 +157,9 @@ define gwy_app_data_browser_get_current kwargs
 /**
  *  gwy_app_data_browser_get_current:
  *  @obj_type: object type, expected values: C{B{APP_DATA_FIELD_ID, APP_GRAPH_MODEL_ID,
- *  APP_SPECTRA_ID, APP_DATA_FIELD_KEY, APP_MASK_FIELD_KEY, APP_SHOW_FIELD_KEY,
- *  APP_GRAPH_MODEL_KEY, APP_SPECTRA_KEY, APP_CONTAINER, APP_DATA_VIEW, APP_GRAPH,
- *  APP_DATA_FIELD, APP_MASK_FIELD, APP_SHOW_FIELD, APP_GRAPH_MODEL, APP_SPECTRA}}
+ *  APP_SPECTRA_ID, APP_BRICK_ID, APP_DATA_FIELD_KEY, APP_MASK_FIELD_KEY, APP_SHOW_FIELD_KEY,
+ *  APP_GRAPH_MODEL_KEY, APP_SPECTRA_KEY, APP_BRICK_KEY, APP_CONTAINER, APP_DATA_VIEW, APP_GRAPH,
+ *  APP_DATA_FIELD, APP_MASK_FIELD, APP_SHOW_FIELD, APP_GRAPH_MODEL, APP_SPECTRA, APP_BRICK}}
  *
  *  Get current object of given type.
  *
@@ -183,6 +183,7 @@ _wrap_gwy_app_data_browser_get_current(PyObject *self, PyObject *args, PyObject 
       case GWY_APP_DATA_FIELD_ID:
       case GWY_APP_GRAPH_MODEL_ID:
       case GWY_APP_SPECTRA_ID:
+      case GWY_APP_BRICK_ID:
          // integer
          gwy_app_data_browser_get_current(obj_type, &iobj, NULL);
          return PyInt_FromLong(iobj);
@@ -192,6 +193,7 @@ _wrap_gwy_app_data_browser_get_current(PyObject *self, PyObject *args, PyObject 
       case GWY_APP_SHOW_FIELD_KEY:
       case GWY_APP_GRAPH_MODEL_KEY:
       case GWY_APP_SPECTRA_KEY:
+      case GWY_APP_BRICK_KEY:
          // quark
          gwy_app_data_browser_get_current(obj_type, &qobj, NULL);
          return PyLong_FromLong(qobj);
@@ -204,6 +206,7 @@ _wrap_gwy_app_data_browser_get_current(PyObject *self, PyObject *args, PyObject 
       case GWY_APP_SHOW_FIELD:
       case GWY_APP_GRAPH_MODEL:
       case GWY_APP_SPECTRA:
+      case GWY_APP_BRICK:
          // gobject
          gwy_app_data_browser_get_current(obj_type, &gobj, NULL);
          return pygobject_new(gobj);
