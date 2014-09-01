@@ -254,6 +254,25 @@ _wrap_gwy_data_field_duplicate(PyGObject *self)
 }
 
 %%
+define GwyBrick.duplicate noargs
+/**
+ * gwy_brick_duplicate:
+ *
+ * Duplicate brick
+ *
+ * Returns: duplicated brick
+**/
+static PyObject *
+_wrap_gwy_brick_duplicate(PyGObject *self)
+{
+   GwyBrick *ret;
+
+   ret = gwy_brick_duplicate(GWY_BRICK(self->obj));
+
+   return pygobject_new((GObject *)ret);
+}
+
+%%
 override gwy_app_undo_qcheckpointv kwargs
 static PyObject *
 _wrap_gwy_app_undo_qcheckpointv(PyObject *self, PyObject *args, PyObject *kwargs)
@@ -848,4 +867,4 @@ _wrap_gwy_data_field_grains_get_values(PyGObject *self, PyObject *args, PyObject
 
 
 // TODO: use G_OBJECT_TYPE_NAME instead of string values in set_object_by_name
-/* vim: set ft=c cin et ts=4 sw=4 cino=>1s syntax=c,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+/* vim: set ft=c cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
