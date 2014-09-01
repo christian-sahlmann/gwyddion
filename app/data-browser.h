@@ -31,6 +31,8 @@
 
 G_BEGIN_DECLS
 
+/* NB: If you add more items here, update also the support in pygwy.override's
+ * gwy_app_data_browser_get_current(). */
 typedef enum {
     GWY_APP_CONTAINER = 1,
     GWY_APP_DATA_VIEW,
