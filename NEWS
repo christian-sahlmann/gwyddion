@@ -22,6 +22,7 @@ Libraries:
 
 Modules:
 - OpenGPS (new): Imports OpenGPS surface data format (ISO 5436-2).
+- JEOL JSPM (new): Imports JEOL JSPM data files.
 - Diffusion synthesis (new): Artificial surface generation by a diffussion
   limited aggregation simulation.
 - K-means (new): K-means clustering for volume data.
@@ -31,6 +32,8 @@ Modules:
 - APE DAX: Warning about invalid logging function name was fixed.
 - NT-MDT: fixed loading of old spectroscopy from Nanoeducator2 data.
 - Pygwy: It is possible to write volume data processing modules in Python.
+  Brick has a duplicate() method, gwy_app_data_browser_get_current() supports
+  brick-related items.
 - Color range tool: The range can be set to the range of masked/unmasked
   values.
 
