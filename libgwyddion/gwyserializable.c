@@ -1361,7 +1361,7 @@ gwy_deserialize_object_hash(const guchar *buffer,
     g_return_val_if_fail(mysize, NULL);
     *position += mysize;
 
-    mysize = gwy_deserialize_int32(buffer, size, position);
+    mysize = (guint32)gwy_deserialize_int32(buffer, size, position);
     g_return_val_if_fail(mysize <= size - *position, NULL);
     items = gwy_deserialize_hash_items(buffer + *position, mysize, nitems);
     *position += mysize;
