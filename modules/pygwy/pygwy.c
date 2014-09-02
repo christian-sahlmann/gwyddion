@@ -1123,7 +1123,7 @@ pygwy_file_load_run(const gchar *filename,
                           "    result = func(filename)\n"
                           "else:\n"
                           "    result = func(filename, mode)\n"
-                          "print result",
+                          /*"print result"*/,
                           info->name,
                           info->name,
                           (mode == GWY_RUN_INTERACTIVE)
