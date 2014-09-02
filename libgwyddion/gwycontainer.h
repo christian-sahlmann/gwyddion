@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004,2014 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -150,6 +150,9 @@ gboolean      gwy_container_gis_double            (GwyContainer *container,
 void          gwy_container_set_string            (GwyContainer *container,
                                                    GQuark key,
                                                    const guchar *value);
+void          gwy_container_set_const_string      (GwyContainer *container,
+                                                   GQuark key,
+                                                   const guchar *value);
 const guchar* gwy_container_get_string            (GwyContainer *container,
                                                    GQuark key);
 gboolean      gwy_container_gis_string            (GwyContainer *container,
@@ -192,6 +195,7 @@ GwyContainer* gwy_container_deserialize_from_text (const gchar *text);
 #define gwy_container_get_double_by_name(c,n)    gwy_container_get_double(c,g_quark_try_string(n))
 #define gwy_container_gis_double_by_name(c,n,v)  gwy_container_gis_double(c,g_quark_from_string(n),v)
 #define gwy_container_set_string_by_name(c,n,v)  gwy_container_set_string(c,g_quark_from_string(n),v)
+#define gwy_container_set_const_string_by_name(c,n,v)  gwy_container_set_const_string(c,g_quark_from_string(n),v)
 #define gwy_container_get_string_by_name(c,n)    gwy_container_get_string(c,g_quark_try_string(n))
 #define gwy_container_gis_string_by_name(c,n,v)  gwy_container_gis_string(c,g_quark_from_string(n),v)
 #define gwy_container_set_object_by_name(c,n,v)  gwy_container_set_object(c,g_quark_from_string(n),v)

@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004,2014 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -1751,6 +1751,47 @@ gwy_container_set_string(GwyContainer *container,
     /* This is necessary because we do g_value_copy() in
      * gwy_container_try_set_one(). */
     g_free((gchar*)value);
+}
+
+/**
+ * gwy_container_set_const_string_by_name:
+ * @c: A container.
+ * @n: A nul-terminated name (id).
+ * @v: A nul-terminated string.
+ *
+ * Stores a string into container @c, identified by name @n.
+ *
+ * The container makes a copy of the string, so it can be used on static
+ * strings.
+ *
+ * Since: 2.38
+ **/
+
+/**
+ * gwy_container_set_const_string:
+ * @container: A container.
+ * @key: A #GQuark key.
+ * @value: A nul-terminated string.
+ *
+ * Stores a string into @container, identified by @key.
+ *
+ * The container makes a copy of the string, so it can be used on static
+ * strings.
+ *
+ * Since: 2.38
+ **/
+void
+gwy_container_set_const_string(GwyContainer *container,
+                               GQuark key,
+                               const guchar *value)
+{
+    GValue gvalue;
+
+    gwy_clear(&gvalue, 1);
+    g_value_init(&gvalue, G_TYPE_STRING);
+    g_value_take_string(&gvalue, (gchar*)value);
+    /* This is OK because gwy_container_try_set_one() makes a copy. */
+    gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
 }
 
 /**
