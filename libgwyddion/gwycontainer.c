@@ -1412,10 +1412,7 @@ gwy_container_try_set_one(GwyContainer *container,
         changed = TRUE;
     }
     g_value_init(old, G_VALUE_TYPE(value));
-    if (G_VALUE_HOLDS_STRING(value))
-        g_value_take_string(old, g_value_peek_pointer(value));
-    else
-        g_value_copy(value, old);
+    g_value_copy(value, old);
 
     if (changed && !container->in_construction)
         g_signal_emit(container, container_signals[ITEM_CHANGED], key, key);
@@ -1751,6 +1748,9 @@ gwy_container_set_string(GwyContainer *container,
     g_value_init(&gvalue, G_TYPE_STRING);
     g_value_take_string(&gvalue, (gchar*)value);
     gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
+    /* This is necessary because we do g_value_copy() in
+     * gwy_container_try_set_one(). */
+    g_free((gchar*)value);
 }
 
 /**
