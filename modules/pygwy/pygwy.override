@@ -398,11 +398,12 @@ override-slot GwyContainer.tp_as_mapping
 static Py_ssize_t _map_gwy_container_length(PyGObject *cont)
 {
     return gwy_container_get_n_items(GWY_CONTAINER(cont->obj));
-};
+}
 
 static PyObject * _map_gwy_container_subscript(PyGObject * cont, PyObject * key)
 {
    gchar* name;
+   PyGObject *ret;
    GValue val;
 
    if (!PyString_Check(key)) {
@@ -414,49 +415,52 @@ static PyObject * _map_gwy_container_subscript(PyGObject * cont, PyObject * key)
 
    if (gwy_container_contains_by_name((GWY_CONTAINER(cont->obj)), name)) {
      val = gwy_container_get_value_by_name((GWY_CONTAINER(cont->obj)), name);
-     return pyg_value_as_pyobject(&val, 0);
+     ret = pyg_value_as_pyobject(&val, 0);
+     g_value_unset(&val);
+     return ret;
    }
 
    PyErr_SetString(PyExc_KeyError, "Nothing stored here");
    return NULL;
-};
+}
 
 static int _map_gwy_container_ass_subscript(PyGObject *cont,
                                             PyObject *key,
                                             PyObject *v){
-   char* name;
-   GValue val;
-   GType g_type;
-   PyObject* py_type;
-   gwy_clear(&val,1);
+    char* name;
+    GValue val;
+    GType g_type;
+    PyObject* py_type;
+    gwy_clear(&val,1);
 
-   if (!PyString_Check(key))
-   {
+    if (!PyString_Check(key))
+    {
         PyErr_SetString(PyExc_TypeError, "Expected key to be a string.");
         return -1;
-   }
+    }
 
-   name = PyString_AsString(key);
+    name = PyString_AsString(key);
 
-   if(v!=NULL) {
-     py_type = PyObject_Type(v);
-     g_type = pyg_type_from_object(py_type);
-     Py_DECREF(py_type);
-     if(g_type==0)
-     {
-        return -1;
-     };
-     g_value_init(&val, G_TYPE_FUNDAMENTAL(g_type));
-     pyg_value_from_pyobject(&val,v);
-     gwy_container_set_value_by_name((GWY_CONTAINER(cont->obj)), name, &val, NULL);
-   }
-   else
-   {
-     gwy_container_remove_by_name((GWY_CONTAINER(cont->obj)), name);
-   };
+    if(v!=NULL) {
+        py_type = PyObject_Type(v);
+        g_type = pyg_type_from_object(py_type);
+        Py_DECREF(py_type);
+        if(g_type==0)
+        {
+            return -1;
+        }
+        g_value_init(&val, G_TYPE_FUNDAMENTAL(g_type));
+        pyg_value_from_pyobject(&val,v);
+        gwy_container_set_value_by_name((GWY_CONTAINER(cont->obj)), name, &val, NULL);
+        g_value_unset(&val);
+    }
+    else
+    {
+        gwy_container_remove_by_name((GWY_CONTAINER(cont->obj)), name);
+    }
 
-   return 0;
-};
+    return 0;
+}
 
 PyMappingMethods G_GNUC_INTERNAL _wrap_gwy_container_tp_as_mapping = {
   (lenfunc) _map_gwy_container_length,
@@ -624,14 +628,14 @@ _wrap_gwy_container_set_value_by_name(PyGObject *self, PyObject *args, PyObject 
    if(g_type==0)
    {
       return NULL;
-   };
+   }
    g_value_init(&val, G_TYPE_FUNDAMENTAL(g_type));
    pyg_value_from_pyobject(&val,v);
    gwy_container_set_value_by_name((GWY_CONTAINER(self->obj)), name, &val, NULL);
 
    Py_RETURN_NONE;
 
-};
+}
 
 %%
 override gwy_app_file_load kwargs
