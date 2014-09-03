@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2014-06-27 09:24+0200\n"
-"PO-Revision-Date: 2014-09-03 20:09+0100\n"
+"PO-Revision-Date: 2014-09-03 20:32+0100\n"
 "Last-Translator: Lennart Fricke <lennart@die-frickes.eu>\n"
 "Language-Team: deutsch <de@li.org>\n"
 "Language: de\n"
@@ -1518,9 +1518,8 @@ msgid "Set the current view setup as the default"
 msgstr "Momentane Ansicht als Vorgabe setzen"
 
 #: app/app.c:843
-#, fuzzy
 msgid "_Show mask"
-msgstr "_Achsen anzeigen"
+msgstr "_Maske anzeigen"
 
 #: app/app.c:1011
 #, c-format
@@ -2019,9 +2018,8 @@ msgid "_Graph"
 msgstr "_Graph"
 
 #: app/menu.c:645 app/toolbox.c:638
-#, fuzzy
 msgid "_Volume Data"
-msgstr "Volumen"
+msgstr "_Volumen Daten"
 
 #: app/menu.c:677
 msgid "Re-show Last"
