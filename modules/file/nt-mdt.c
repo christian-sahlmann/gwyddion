@@ -21,6 +21,8 @@
 
 /* TODO: some metadata ... */
 
+#define DEBUG
+
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-nt-mdt-spm">
@@ -3006,7 +3008,7 @@ static gchar*
 mdt_find_data_name(const gchar *headername, const gchar *dataname)
 {
     gchar *dirname = g_path_get_dirname(headername);
-    gchar *dname, *filename;
+    gchar *dname, *filename, *ext;
 
     filename = g_build_filename(dirname, dataname, NULL);
     gwy_debug("trying <%s>", filename);
@@ -3014,6 +3016,21 @@ mdt_find_data_name(const gchar *headername, const gchar *dataname)
         g_free(dirname);
         return filename;
     }
+    g_free(filename);
+
+    dname = g_strdup(headername);
+    ext = g_strrstr(dname, ".mdt");
+    if (ext) {
+        g_snprintf(ext, 5, ".dat");
+    }
+    filename = g_build_filename(dname, dataname, NULL);
+    gwy_debug("trying <%s>", filename);
+    if (g_file_test(filename, G_FILE_TEST_IS_REGULAR)) {
+        g_free(dname);
+        g_free(dirname);
+        return filename;
+    }
+    g_free(dname);
     g_free(filename);
 
     dname = g_ascii_strup(dataname, -1);
