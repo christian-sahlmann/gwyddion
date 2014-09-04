@@ -21,8 +21,6 @@
 
 /* TODO: some metadata ... */
 
-#define DEBUG
-
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-nt-mdt-spm">
