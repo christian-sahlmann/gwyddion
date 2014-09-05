@@ -56,6 +56,15 @@ opengps_module =
 disabled_sources += nanoobserver.c nanoscantech.c opengps.c
 endif
 
+# If cfitsio is disabled, put the dependent sources to EXTRA_DIST to include
+# them in make dist.
+if HAVE_CFITSIO
+fitsfile_module = fitsfile.la
+else
+fitsfile_module =
+disabled_sources += fitsfile.c
+endif
+
 filedir = $(pkglibdir)/modules/file
 
 file_LTLIBRARIES = \
@@ -81,6 +90,7 @@ file_LTLIBRARIES = \
 	dumbfile.la \
 	ecsfile.la \
 	ezdfile.la \
+	$(fitsfile_module) \
 	gdeffile.la \
 	gsffile.la \
 	gwyfile.la \
@@ -339,6 +349,12 @@ nanoscantech_la_LIBADD   = @MINIZIP_LIBS@
 opengps_la_SOURCES  = opengps.c
 opengps_la_CFLAGS   = $(AM_CFLAGS) @MINIZIP_CFLAGS@
 opengps_la_LIBADD   = @MINIZIP_LIBS@
+endif
+
+if HAVE_CFITSIO
+fitsfile_la_SOURCES  = fitsfile.c
+fitsfile_la_CFLAGS   = $(AM_CFLAGS) @CFITSIO_CFLAGS@
+fitsfile_la_LIBADD   = @CFITSIO_LIBS@
 endif
 
 clean-local:

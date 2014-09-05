@@ -555,6 +555,16 @@ PKG_CHECK_MODULES(EXR, [OpenEXR],
 AM_CONDITIONAL([HAVE_EXR],[test x$enable_exr != xno])
 
 #############################################################################
+# CFITSIO
+# Optional.  Used for FITS image import.
+enable_cfitsio=yes
+PKG_CHECK_MODULES(CFITSIO, [cfitsio],
+                  [AC_DEFINE(HAVE_CFITSIO,1,
+                            [Define if we have the cfitsio package.])],
+                  [enable_cfitsio=no])
+AM_CONDITIONAL([HAVE_CFITSIO],[test x$enable_cfitsio != xno])
+
+#############################################################################
 # LibXML2.
 # Optional, for SPML importer.
 GWY_WITH([libxml2],,[build with libxml2 support])
@@ -817,6 +827,12 @@ if test "x$enable_exr" != xno; then
   enabled_formats="$enabled_formats, OpenEXR"
 else
   disabled_formats="$disabled_formats, OpenEXR"
+fi
+
+if test "x$enable_cfitsio" != xno; then
+  enabled_formats="$enabled_formats, FITS"
+else
+  disabled_formats="$disabled_formats, FITS"
 fi
 
 if test "x$enable_zlib" != xno; then
