@@ -80,6 +80,14 @@ Optional, for APE DAX, NanoObserver NAO, NanoScanTech, OpenGPS file support:
 - minizip, including development files
   http://www.gzip.org/zlib/
 
+Optional, for OpenEXR image support:
+- OpenEXR, including development files
+  http://www.openexr.com/
+
+Optional, for FITS image support:
+- cfitsio, including development files
+  http://heasarc.gsfc.nasa.gov/fitsio/fitsio.html
+
 Optional, for alternative `remote control' backend:
 - LibXmu (a part of X11, though packaged separately since Xorg 7.0), including
   development files
