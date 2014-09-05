@@ -36,12 +36,19 @@
 #define EXTENSION1 ".fits"
 #define EXTENSION2 ".fit"
 
-static gboolean      module_register       (void);
-static gint          fits_detect            (const GwyFileDetectInfo *fileinfo,
-                                            gboolean only_name);
-static GwyContainer* fits_load              (const gchar *filename,
-                                            GwyRunType mode,
-                                            GError **error);
+static gboolean      module_register    (void);
+static gint          fits_detect        (const GwyFileDetectInfo *fileinfo,
+                                         gboolean only_name);
+static GwyContainer* fits_load          (const gchar *filename,
+                                         GwyRunType mode,
+                                         GError **error);
+static gboolean      get_real_and_offset(fitsfile *fptr,
+                                         gint i,
+                                         guint res,
+                                         gdouble *real,
+                                         gdouble *off);
+static GwyDataField* mask_of_nans       (GwyDataField *dfield,
+                                         const gchar *invalid);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -107,12 +114,15 @@ fits_load(const gchar *filename,
 {
     GwyContainer *container = NULL;
     fitsfile *fptr = NULL;
+    GwyDataField *field = NULL;
     gint status = 0;   /* Must be initialised to zero! */
-    gint hdutype, naxis, i;
+    gint hdutype, naxis, anynull, nkeys;
     glong res[3];    /* First index is the fast looping one. */
+    char strvalue[FLEN_VALUE];
+    gchar *invalid = NULL;
+    gdouble real, off;
 
-    if ((i = fits_open_image(&fptr, filename, READONLY, &status))) {
-        g_printerr("%d %d\n", i, status);
+    if (fits_open_image(&fptr, filename, READONLY, &status)) {
         err_FITS(error, status);
         return NULL;
     }
@@ -156,17 +166,111 @@ fits_load(const gchar *filename,
     if (err_DIMENSION(error, res[0]) || err_DIMENSION(error, res[1]))
         goto fail;
 
-    err_NO_DATA(error);
+    field = gwy_data_field_new(res[0], res[1], res[0], res[1], FALSE);
+    invalid = g_new(gchar, res[0]*res[1]);
+    if (fits_read_imgnull(fptr, TDOUBLE, 1, res[0]*res[1],
+                          field->data, invalid, &anynull, &status)) {
+        err_FITS(error, status);
+        goto fail;
+    }
+
+    container = gwy_container_new();
+    gwy_container_set_object_by_name(container, "/0/data", field);
+
+    /* Failures here are non-fatal.  We already have an image. */
+    if (fits_get_hdrspace(fptr, &nkeys, NULL, &status)) {
+        g_warning("Cannot get the first hdrspace.");
+        goto fail;
+    }
+
+    if (!fits_read_key(fptr, TSTRING, "BUINT   ", strvalue, NULL, &status)) {
+        gint power10;
+
+        gwy_debug("BUINT = <%s>", strvalue);
+        gwy_si_unit_set_from_string_parse(gwy_data_field_get_si_unit_z(field),
+                                          strvalue, &power10);
+        if (power10)
+            gwy_data_field_multiply(field, pow10(power10));
+    }
+    status = 0;
+
+    if (get_real_and_offset(fptr, 1, res[0], &real, &off)) {
+        if (real < 0.0) {
+            off += real;
+            real = -real;
+            gwy_data_field_invert(field, FALSE, TRUE, FALSE);
+        }
+        gwy_data_field_set_xreal(field, real);
+        gwy_data_field_set_xoffset(field, off);
+    }
+
+    if (get_real_and_offset(fptr, 2, res[1], &real, &off)) {
+        if (real < 0.0) {
+            off += real;
+            real = -real;
+            gwy_data_field_invert(field, TRUE, FALSE, FALSE);
+        }
+        gwy_data_field_set_yreal(field, real);
+        gwy_data_field_set_yoffset(field, off);
+    }
+
+    /* Create a mask of invalid data. */
+    if (anynull) {
+        GwyDataField *mask = mask_of_nans(field, invalid);
+        if (mask) {
+            gwy_container_set_object_by_name(container, "/0/mask", mask);
+            g_object_unref(mask);
+        }
+    }
 
 fail:
     fits_close_file(fptr, &status);
+    gwy_object_unref(field);
+    g_free(invalid);
 
     return container;
 }
 
-#if 0
+static gboolean
+get_real_and_offset(fitsfile *fptr, gint i,
+                    guint res, gdouble *real, gdouble *off)
+{
+    char keyname[FLEN_KEYWORD];
+    gdouble delt, refval, refpix;
+    gint status = 0;
+
+    fits_make_keyn("CDELT", i, keyname, &status);
+    gwy_debug("looking for %s", keyname);
+    if (fits_read_key(fptr, TDOUBLE, keyname, &delt, NULL, &status))
+        return FALSE;
+    gwy_debug("%s = %g", keyname, delt);
+
+    if (!(delt != 0.0))
+        return FALSE;
+
+    *real = res*delt;
+    *off = 0.0;
+
+    fits_make_keyn("CRPIX", i, keyname, &status);
+    gwy_debug("looking for %s", keyname);
+    if (fits_read_key(fptr, TDOUBLE, keyname, &refpix, NULL, &status))
+        return TRUE;
+    gwy_debug("%s = %g", keyname, refpix);
+
+    fits_make_keyn("CRVAL", i, keyname, &status);
+    gwy_debug("looking for %s", keyname);
+    if (fits_read_key(fptr, TDOUBLE, keyname, &refval, NULL, &status))
+        return TRUE;
+    gwy_debug("%s = %g", keyname, refval);
+
+    /* Not sure about their pixel numbering, so offset may be wrong. */
+    *off = refval + delt*(1.0 - refpix);
+
+    return TRUE;
+}
+
 static GwyDataField*
-mask_of_nans(GwyDataField *dfield, const gboolean *valid)
+mask_of_nans(GwyDataField *dfield, const gchar *invalid)
 {
     GwyDataField *mask = NULL;
     guint k, n = dfield->xres*dfield->yres;
@@ -176,7 +280,7 @@ mask_of_nans(GwyDataField *dfield, const gboolean *valid)
     /* Use the union of NaNs found in the data and invalid point mask to mark
      * invalid points.  Gwyddion really does not like NaNs. */
     for (k = 0; k < n; k++) {
-        if (gwy_isnan(d[k]) || gwy_isinf(d[k]) || !valid[k]) {
+        if (gwy_isnan(d[k]) || gwy_isinf(d[k]) || invalid[k]) {
             if (G_UNLIKELY(!mask)) {
                 mask = gwy_data_field_new_alike(dfield, TRUE);
                 gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(mask),
@@ -201,6 +305,5 @@ mask_of_nans(GwyDataField *dfield, const gboolean *valid)
 
     return mask;
 }
-#endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
