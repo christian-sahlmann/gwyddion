@@ -535,13 +535,16 @@ pygwy_console_command_execute(GtkEntry *entry,
     const gchar *command;
     GString *output;
 
-    input_line = g_strconcat(">>> ", gtk_entry_get_text(entry), "\n", NULL);
-    output = g_string_new(input_line);
-    command = gtk_entry_get_text(GTK_ENTRY(entry));
-    output = g_string_append(output,
-                             pygwy_console_run_command(command, Py_single_input));
+    command = gtk_entry_get_text(entry);
+    if (!strlen(command))
+        return;
 
-    pygwy_console_append((gchar *)output->str);
+    input_line = g_strconcat(">>> ", command, "\n", NULL);
+    output = g_string_new(input_line);
+    g_string_append(output,
+                    pygwy_console_run_command(command, Py_single_input));
+
+    pygwy_console_append(output->str);
     g_string_free(output, TRUE);
 
     gtk_editable_select_region(GTK_EDITABLE(entry), 0, -1);
