@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-08-13 03:58+0200\n"
-"PO-Revision-Date: 2014-08-13 13:14+0100\n"
+"POT-Creation-Date: 2014-09-06 03:58+0200\n"
+"PO-Revision-Date: 2014-09-06 18:18+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -3348,6 +3348,24 @@ msgstr "La première section n'est pas un DataSet"
 msgid "GroupCount in [DataSet]"
 msgstr "GroupCount dans [DataSet]"
 
+#: modules/file/fitsfile.c:56
+msgid "Reads Flexible Image Transport System (FITS) files."
+msgstr "Importe les images Flexible Image Transport System (FITS)."
+
+#: modules/file/fitsfile.c:69
+msgid "Flexible Image Transport System FITS (.fits)"
+msgstr "Flexible Image Transport System FITS (.fits)"
+
+#: modules/file/fitsfile.c:106
+#, c-format
+msgid "CFITSIO error while reading the FITS file: %s."
+msgstr "Erreur CFITSIO lors de la lecture du fichier FITS : %s."
+
+#: modules/file/fitsfile.c:138 modules/file/fitsfile.c:150
+#: modules/file/fitsfile.c:161
+msgid "Only two-dimensional images are supported."
+msgstr "Seules les images bi-dimensionnelles sont supportées."
+
 #: modules/file/gdeffile.c:130
 msgid "Imports DME GDEF data files."
 msgstr "Importe les fichiers DME GDEF."
@@ -6023,7 +6041,7 @@ msgstr "Paramètre"
 
 #: modules/graph/graph_cd.c:308 modules/graph/graph_fdfit.c:364
 #: modules/graph/graph_fit.c:372 modules/process/fit_2d.c:349
-#: modules/volume/volume_fdfit.c:449
+#: modules/volume/volume_fdfit.c:449 modules/volume/volume_kmeans.c:442
 msgid "Error"
 msgstr "Erreur"
 
@@ -13055,16 +13073,21 @@ msgstr "Nombre d'itérations _max :"
 msgid "_Normalize"
 msgstr "_Normaliser"
 
-#: modules/volume/volume_kmeans.c:358
+#: modules/volume/volume_kmeans.c:359
 msgid "Cluster"
 msgstr "Partition"
 
-#: modules/volume/volume_kmeans.c:446
+#: modules/volume/volume_kmeans.c:465
 #, c-format
 msgid "K-means of %s"
 msgstr "k-moyennes de %s"
 
-#: modules/volume/volume_kmeans.c:474
+#: modules/volume/volume_kmeans.c:476
+#, c-format
+msgid "K-means error of %s"
+msgstr "Erreur des k-moyennes de %s"
+
+#: modules/volume/volume_kmeans.c:504
 #, c-format
 msgid "K-means center %d"
 msgstr "Centre %d des k-moyennes"
