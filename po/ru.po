@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-08-12 03:58+0200\n"
-"PO-Revision-Date: 2014-08-12 07:16+0300\n"
+"POT-Creation-Date: 2014-09-06 03:58+0200\n"
+"PO-Revision-Date: 2014-09-06 10:05+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -3349,6 +3349,24 @@ msgstr "Первая секция не DataSet"
 msgid "GroupCount in [DataSet]"
 msgstr "GroupCount в [DataSet]"
 
+#: modules/file/fitsfile.c:56
+msgid "Reads Flexible Image Transport System (FITS) files."
+msgstr "Читает файлы Flexible Image Transport System (FITS)."
+
+#: modules/file/fitsfile.c:69
+msgid "Flexible Image Transport System FITS (.fits)"
+msgstr "Flexible Image Transport System FITS (.fits)"
+
+#: modules/file/fitsfile.c:106
+#, c-format
+msgid "CFITSIO error while reading the FITS file: %s."
+msgstr "Ошибка CFITSIO при чтении файла FITS: %s."
+
+#: modules/file/fitsfile.c:138 modules/file/fitsfile.c:150
+#: modules/file/fitsfile.c:161
+msgid "Only two-dimensional images are supported."
+msgstr "Поддерживаются только двумерные изображения."
+
 #: modules/file/gdeffile.c:130
 msgid "Imports DME GDEF data files."
 msgstr "Импортирует файлы данных DME GDEF."
@@ -5987,7 +6005,7 @@ msgstr "Параметр"
 
 #: modules/graph/graph_cd.c:308 modules/graph/graph_fdfit.c:364
 #: modules/graph/graph_fit.c:372 modules/process/fit_2d.c:349
-#: modules/volume/volume_fdfit.c:449
+#: modules/volume/volume_fdfit.c:449 modules/volume/volume_kmeans.c:442
 msgid "Error"
 msgstr "Ошибка"
 
@@ -13008,22 +13026,21 @@ msgstr "_Макс. число шагов:"
 msgid "_Normalize"
 msgstr "_Нормализовать"
 
-#: modules/volume/volume_kmeans.c:358
+#: modules/volume/volume_kmeans.c:359
 msgid "Cluster"
 msgstr "Кластер"
 
-#: modules/volume/volume_kmeans.c:446
+#: modules/volume/volume_kmeans.c:465
 #, c-format
 msgid "K-means of %s"
 msgstr "K-средних для %s"
 
-#: modules/volume/volume_kmeans.c:474
+#: modules/volume/volume_kmeans.c:476
+#, c-format
+msgid "K-means error of %s"
+msgstr "Ошибка K-средних для %s"
+
+#: modules/volume/volume_kmeans.c:504
 #, c-format
 msgid "K-means center %d"
 msgstr "Центр кластера %d"
-
-#~ msgid "Make _1:1"
-#~ msgstr "Сделать _1:1"
-
-#~ msgid "Full"
-#~ msgstr "Полный"
