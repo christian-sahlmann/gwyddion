@@ -33,8 +33,17 @@
 
 #define MAGIC "SIMPLE  ="
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
+#define MAGIC2 "BITPIX  ="
+#define MAGIC2_SIZE (sizeof(MAGIC2)-1)
+#define MAGIC3 "NAXIS   ="
+#define MAGIC3_SIZE (sizeof(MAGIC3)-1)
+
 #define EXTENSION1 ".fits"
 #define EXTENSION2 ".fit"
+
+enum {
+    FITS_BLOCK_LEN = 80
+};
 
 static gboolean      module_register    (void);
 static gint          fits_detect        (const GwyFileDetectInfo *fileinfo,
@@ -87,8 +96,10 @@ fits_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
     }
 
-    if (fileinfo->file_size < MAGIC_SIZE
-        || memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) != 0)
+    if (fileinfo->file_size < 3*FITS_BLOCK_LEN
+        || memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) != 0
+        || memcmp(fileinfo->head + FITS_BLOCK_LEN, MAGIC2, MAGIC2_SIZE) != 0
+        || memcmp(fileinfo->head + 2*FITS_BLOCK_LEN, MAGIC3, MAGIC3_SIZE) != 0)
         return 0;
 
     /* Permit some more specific importers to take over. */
