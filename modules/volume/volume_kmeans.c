@@ -54,24 +54,24 @@ typedef struct {
     GtkWidget *normalize;
 } KMeansControls;
 
-static gboolean module_register     (void);
-static void     volume_kmeans       (GwyContainer *data,
-                                     GwyRunType run);
-static void     kmeans_dialog       (GwyContainer *data,
-                                     KMeansArgs *args);
-static void     epsilon_changed_cb  (GtkAdjustment *adj,
-                                     KMeansArgs *args);
-static void     kmeans_dialog_update(KMeansControls *controls,
-                                     KMeansArgs *args);
-static void     kmeans_values_update(KMeansControls *controls,
-                                     KMeansArgs *args);
-GwyBrick *      normalize_brick     (GwyBrick *brick);
-static void     volume_kmeans_do    (GwyContainer *data,
-                                     KMeansArgs *args);
-static void     kmeans_load_args    (GwyContainer *container,
-                                     KMeansArgs *args);
-static void     kmeans_save_args    (GwyContainer *container,
-                                     KMeansArgs *args);
+static gboolean  module_register     (void);
+static void      volume_kmeans       (GwyContainer *data,
+                                      GwyRunType run);
+static void      kmeans_dialog       (GwyContainer *data,
+                                      KMeansArgs *args);
+static void      epsilon_changed_cb  (GtkAdjustment *adj,
+                                      KMeansArgs *args);
+static void      kmeans_dialog_update(KMeansControls *controls,
+                                      KMeansArgs *args);
+static void      kmeans_values_update(KMeansControls *controls,
+                                      KMeansArgs *args);
+static GwyBrick* normalize_brick     (GwyBrick *brick);
+static void      volume_kmeans_do    (GwyContainer *data,
+                                      KMeansArgs *args);
+static void      kmeans_load_args    (GwyContainer *container,
+                                      KMeansArgs *args);
+static void      kmeans_save_args    (GwyContainer *container,
+                                      KMeansArgs *args);
 
 static const KMeansArgs kmeans_defaults = {
     10,
@@ -235,7 +235,7 @@ epsilon_changed_cb(GtkAdjustment *adj,
     kmeans_dialog_update(controls, args);
 }
 
-GwyBrick *
+static GwyBrick*
 normalize_brick(GwyBrick *brick)
 {
     GwyBrick *result;
