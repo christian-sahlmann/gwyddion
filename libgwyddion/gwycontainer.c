@@ -78,22 +78,14 @@ static GValue*  gwy_container_gis_value_of_type  (GwyContainer *container,
                                                   GType type);
 static gboolean gwy_container_try_set_one        (GwyContainer *container,
                                                   GQuark key,
-                                                  GValue *value,
-                                                  gboolean do_replace,
-                                                  gboolean do_create);
+                                                  GValue *value);
 static void     gwy_container_try_setv           (GwyContainer *container,
                                                   gsize nvalues,
-                                                  GwyKeyVal *values,
-                                                  gboolean do_replace,
-                                                  gboolean do_create);
+                                                  GwyKeyVal *values);
 static void     gwy_container_try_set_valist     (GwyContainer *container,
-                                                  va_list ap,
-                                                  gboolean do_replace,
-                                                  gboolean do_create);
+                                                  va_list ap);
 static void     gwy_container_set_by_name_valist (GwyContainer *container,
-                                                  va_list ap,
-                                                  gboolean do_replace,
-                                                  gboolean do_create);
+                                                  va_list ap);
 static GByteArray* gwy_container_serialize       (GObject *object,
                                                   GByteArray *buffer);
 static gsize    gwy_container_get_size           (GObject *object);
@@ -1368,9 +1360,7 @@ gwy_container_values_equal(GValue *value1,
 static gboolean
 gwy_container_try_set_one(GwyContainer *container,
                           GQuark key,
-                          GValue *value,
-                          gboolean do_replace,
-                          gboolean do_create)
+                          GValue *value)
 {
     GValue *old;
     gboolean changed;
@@ -1397,15 +1387,11 @@ gwy_container_try_set_one(GwyContainer *container,
 
     old = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
     if (old) {
-        if (!do_replace)
-            return FALSE;
         g_assert(G_IS_VALUE(old));
         changed = !gwy_container_values_equal(value, old);
         g_value_unset(old);
     }
     else {
-        if (!do_create)
-            return FALSE;
         /* old is actually new here, but who cares... */
         old = g_new0(GValue, 1);
         g_hash_table_insert(container->values, GUINT_TO_POINTER(key), old);
@@ -1423,25 +1409,19 @@ gwy_container_try_set_one(GwyContainer *container,
 static void
 gwy_container_try_setv(GwyContainer *container,
                        gsize nvalues,
-                       GwyKeyVal *values,
-                       gboolean do_replace,
-                       gboolean do_create)
+                       GwyKeyVal *values)
 {
     gsize i;
 
     for (i = 0; i < nvalues; i++)
         values[i].changed = gwy_container_try_set_one(container,
                                                       values[i].key,
-                                                      values[i].value,
-                                                      do_replace,
-                                                      do_create);
+                                                      values[i].value);
 }
 
 static void
 gwy_container_try_set_valist(GwyContainer *container,
-                             va_list ap,
-                             gboolean do_replace,
-                             gboolean do_create)
+                             va_list ap)
 {
     GwyKeyVal *values;
     gsize n, i;
@@ -1462,7 +1442,7 @@ gwy_container_try_set_valist(GwyContainer *container,
         i++;
         key = va_arg(ap, GQuark);
     }
-    gwy_container_try_setv(container, i, values, do_replace, do_create);
+    gwy_container_try_setv(container, i, values);
     g_free(values);
 }
 
@@ -1480,15 +1460,13 @@ gwy_container_set_value(GwyContainer *container,
     va_list ap;
 
     va_start(ap, container);
-    gwy_container_try_set_valist(container, ap, TRUE, TRUE);
+    gwy_container_try_set_valist(container, ap);
     va_end(ap);
 }
 
 static void
 gwy_container_set_by_name_valist(GwyContainer *container,
-                                 va_list ap,
-                                 gboolean do_replace,
-                                 gboolean do_create)
+                                 va_list ap)
 {
     GwyKeyVal *values;
     gsize n, i;
@@ -1511,7 +1489,7 @@ gwy_container_set_by_name_valist(GwyContainer *container,
         i++;
         name = va_arg(ap, guchar*);
     }
-    gwy_container_try_setv(container, i, values, do_replace, do_create);
+    gwy_container_try_setv(container, i, values);
     g_free(values);
 }
 
@@ -1529,7 +1507,7 @@ gwy_container_set_value_by_name(GwyContainer *container,
     va_list ap;
 
     va_start(ap, container);
-    gwy_container_set_by_name_valist(container, ap, TRUE, TRUE);
+    gwy_container_set_by_name_valist(container, ap);
     va_end(ap);
 }
 
@@ -1560,7 +1538,7 @@ gwy_container_set_boolean(GwyContainer *container,
     gwy_clear(&gvalue, 1);
     g_value_init(&gvalue, G_TYPE_BOOLEAN);
     g_value_set_boolean(&gvalue, !!value);
-    gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
+    gwy_container_try_set_one(container, key, &gvalue);
 }
 
 /**
@@ -1590,7 +1568,7 @@ gwy_container_set_uchar(GwyContainer *container,
     gwy_clear(&gvalue, 1);
     g_value_init(&gvalue, G_TYPE_UCHAR);
     g_value_set_uchar(&gvalue, value);
-    gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
+    gwy_container_try_set_one(container, key, &gvalue);
 }
 
 /**
@@ -1620,7 +1598,7 @@ gwy_container_set_int32(GwyContainer *container,
     gwy_clear(&gvalue, 1);
     g_value_init(&gvalue, G_TYPE_INT);
     g_value_set_int(&gvalue, value);
-    gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
+    gwy_container_try_set_one(container, key, &gvalue);
 }
 
 /**
@@ -1681,7 +1659,7 @@ gwy_container_set_int64(GwyContainer *container,
     gwy_clear(&gvalue, 1);
     g_value_init(&gvalue, G_TYPE_INT64);
     g_value_set_int64(&gvalue, value);
-    gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
+    gwy_container_try_set_one(container, key, &gvalue);
 }
 
 /**
@@ -1711,7 +1689,7 @@ gwy_container_set_double(GwyContainer *container,
     gwy_clear(&gvalue, 1);
     g_value_init(&gvalue, G_TYPE_DOUBLE);
     g_value_set_double(&gvalue, value);
-    gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
+    gwy_container_try_set_one(container, key, &gvalue);
 }
 
 /**
@@ -1747,7 +1725,7 @@ gwy_container_set_string(GwyContainer *container,
     gwy_clear(&gvalue, 1);
     g_value_init(&gvalue, G_TYPE_STRING);
     g_value_take_string(&gvalue, (gchar*)value);
-    gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
+    gwy_container_try_set_one(container, key, &gvalue);
     /* This is necessary because we do g_value_copy() in
      * gwy_container_try_set_one(). */
     g_free((gchar*)value);
@@ -1791,7 +1769,7 @@ gwy_container_set_const_string(GwyContainer *container,
     g_value_init(&gvalue, G_TYPE_STRING);
     g_value_take_string(&gvalue, (gchar*)value);
     /* This is OK because gwy_container_try_set_one() makes a copy. */
-    gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
+    gwy_container_try_set_one(container, key, &gvalue);
 }
 
 /**
@@ -1830,7 +1808,7 @@ gwy_container_set_object(GwyContainer *container,
     gwy_clear(&gvalue, 1);
     g_value_init(&gvalue, G_TYPE_OBJECT);
     g_value_set_object(&gvalue, value);  /* this increases refcount too */
-    gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
+    gwy_container_try_set_one(container, key, &gvalue);
     g_object_unref(value);
 }
 
