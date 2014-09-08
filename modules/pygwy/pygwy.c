@@ -100,7 +100,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Pygwy, the Gwyddion Python wrapper."),
     "Jan Hořák <xhorak@gmail.com>",
-    "0.4",
+    "0.5",
     "Jan Hořák",
     "2007"
 };
@@ -278,8 +278,8 @@ pygwy_initialize_stderr_redirect(PyObject *d)
     // redirect stderr to temporary file
     pygwy_run_string("import sys, tempfile\n"
                      "_stderr_redir = tempfile.TemporaryFile()\n"
+                     "_stderr_orig = sys.stderr\n"
                      "sys.stderr = _stderr_redir\n",
-                     //"sys.stdout = _stderr_redir",
                      Py_file_input,
                      d,
                      d);
@@ -293,7 +293,8 @@ pygwy_finalize_stderr_redirect(PyObject *d)
     // rewind redirected stderr file, read its content and display it in error window
     pygwy_run_string("_stderr_redir.seek(0)\n"
                      "_stderr_str = _stderr_redir.read()\n"
-                     "_stderr_redir.close()",
+                     "_stderr_redir.close()\n"
+                     "sys.stderr = _stderr_orig",
                      Py_file_input,
                      d,
                      d);
