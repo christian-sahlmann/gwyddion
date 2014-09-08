@@ -230,13 +230,15 @@ pygwy_initialize(void)
     }
 }
 
-PyObject*
+void
 pygwy_run_string(const char *cmd, int type, PyObject *g, PyObject *l) {
     PyObject *ret = PyRun_String(cmd, type, g, l);
     if (!ret) {
         PyErr_Print();
     }
-    return ret;
+    else {
+        Py_DECREF(ret);
+    }
 }
 
 static void
