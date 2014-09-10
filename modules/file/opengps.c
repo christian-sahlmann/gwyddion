@@ -41,6 +41,10 @@
 #define strlenrchr(s,c,len) strrchr((s),(c))
 #endif
 
+#ifndef NAN
+#define NAN (0.0/0.0)
+#endif
+
 #define MAGIC "PK\x03\x04"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 #define MAGIC1 "main.xml"
@@ -109,8 +113,6 @@ static void          x3p_file_free         (X3PFile *x3pfile);
 static gboolean      x3p_file_get_data_type(const gchar *type,
                                             GwyRawDataType *rawtype,
                                             GError **error);
-static GwyDataField* mask_of_nans          (GwyDataField *dfield,
-                                            const gboolean *valid);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -228,8 +230,9 @@ create_images(const X3PFile *x3pfile, GwyContainer *container)
 
     for (id = 0; id < x3pfile->zres; id++) {
         GwyContainer *meta;
-        guint n = x3pfile->xres*x3pfile->yres;
+        guint n = x3pfile->xres*x3pfile->yres, k;
         GwyDataField *dfield, *mask;
+        const gboolean *valid = x3pfile->valid + id*n;
         GQuark quark;
         gchar buf[40];
 
@@ -239,6 +242,10 @@ create_images(const X3PFile *x3pfile, GwyContainer *container)
                                     x3pfile->yres*x3pfile->dy,
                                     FALSE);
         memcpy(dfield->data, x3pfile->values + id*n, n*sizeof(gdouble));
+        for (k = 0; k < n; k++) {
+            if (!valid[k])
+                dfield->data[k] = NAN;
+        }
 
         quark = gwy_app_get_data_key_for_id(id);
         gwy_container_set_object(container, quark, dfield);
@@ -248,7 +255,7 @@ create_images(const X3PFile *x3pfile, GwyContainer *container)
         gwy_app_channel_title_fall_back(container, id);
         gwy_app_channel_check_nonsquare(container, id);
 
-        if ((mask = mask_of_nans(dfield, x3pfile->valid + id*n))) {
+        if ((mask = gwy_app_channel_mask_of_nans(dfield, TRUE))) {
             quark = gwy_app_get_mask_key_for_id(id);
             gwy_container_set_object(container, quark, mask);
             g_object_unref(mask);
@@ -858,43 +865,6 @@ x3p_file_get_data_type(const gchar *type,
 
     err_UNSUPPORTED(error, AXES_PREFIX "/CZ/DataType");
     return FALSE;
-}
-
-static GwyDataField*
-mask_of_nans(GwyDataField *dfield, const gboolean *valid)
-{
-    GwyDataField *mask = NULL;
-    guint k, n = dfield->xres*dfield->yres;
-    gdouble *d = dfield->data;
-    gdouble avg;
-
-    /* Use the union of NaNs found in the data and invalid point mask to mark
-     * invalid points.  Gwyddion really does not like NaNs. */
-    for (k = 0; k < n; k++) {
-        if (gwy_isnan(d[k]) || gwy_isinf(d[k]) || !valid[k]) {
-            if (G_UNLIKELY(!mask)) {
-                mask = gwy_data_field_new_alike(dfield, TRUE);
-                gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(mask),
-                                            NULL);
-            }
-            mask->data[k] = 1.0;
-        }
-    }
-
-    if (!mask)
-        return mask;
-
-    avg = gwy_data_field_area_get_avg_mask(dfield, mask, GWY_MASK_EXCLUDE,
-                                           0, 0, dfield->xres, dfield->yres);
-    if (gwy_isnan(avg) || gwy_isinf(avg))
-        avg = 0.0;
-
-    for (k = 0; k < n; k++) {
-        if (gwy_isnan(d[k]) || gwy_isinf(d[k]))
-            d[k] = avg;
-    }
-
-    return mask;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

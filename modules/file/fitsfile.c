@@ -28,8 +28,13 @@
 #include <libprocess/stats.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/data-browser.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
+
+#ifndef NAN
+#define NAN (0.0/0.0)
+#endif
 
 #define MAGIC "SIMPLE  ="
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
@@ -56,8 +61,6 @@ static gboolean      get_real_and_offset(fitsfile *fptr,
                                          guint res,
                                          gdouble *real,
                                          gdouble *off);
-static GwyDataField* mask_of_nans       (GwyDataField *dfield,
-                                         const gchar *invalid);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -125,9 +128,9 @@ fits_load(const gchar *filename,
 {
     GwyContainer *container = NULL;
     fitsfile *fptr = NULL;
-    GwyDataField *field = NULL;
+    GwyDataField *field = NULL, *mask;
     gint status = 0;   /* Must be initialised to zero! */
-    gint hdutype, naxis, anynull, nkeys;
+    gint hdutype, naxis, anynull, nkeys, k;
     glong res[3];    /* First index is the fast looping one. */
     char strvalue[FLEN_VALUE];
     gchar *invalid = NULL;
@@ -226,12 +229,13 @@ fits_load(const gchar *filename,
     }
 
     /* Create a mask of invalid data. */
-    if (anynull) {
-        GwyDataField *mask = mask_of_nans(field, invalid);
-        if (mask) {
-            gwy_container_set_object_by_name(container, "/0/mask", mask);
-            g_object_unref(mask);
-        }
+    for (k = 0; k < field->xres*field->yres; k++) {
+        if (invalid[k])
+            field->data[k] = NAN;
+    }
+    if ((mask = gwy_app_channel_mask_of_nans(field, TRUE))) {
+        gwy_container_set_object_by_name(container, "/0/mask", mask);
+        g_object_unref(mask);
     }
 
 fail:
@@ -278,43 +282,6 @@ get_real_and_offset(fitsfile *fptr, gint i,
     *off = refval + delt*(1.0 - refpix);
 
     return TRUE;
-}
-
-static GwyDataField*
-mask_of_nans(GwyDataField *dfield, const gchar *invalid)
-{
-    GwyDataField *mask = NULL;
-    guint k, n = dfield->xres*dfield->yres;
-    gdouble *d = dfield->data;
-    gdouble avg;
-
-    /* Use the union of NaNs found in the data and invalid point mask to mark
-     * invalid points.  Gwyddion really does not like NaNs. */
-    for (k = 0; k < n; k++) {
-        if (gwy_isnan(d[k]) || gwy_isinf(d[k]) || invalid[k]) {
-            if (G_UNLIKELY(!mask)) {
-                mask = gwy_data_field_new_alike(dfield, TRUE);
-                gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(mask),
-                                            NULL);
-            }
-            mask->data[k] = 1.0;
-        }
-    }
-
-    if (!mask)
-        return mask;
-
-    avg = gwy_data_field_area_get_avg_mask(dfield, mask, GWY_MASK_EXCLUDE,
-                                           0, 0, dfield->xres, dfield->yres);
-    if (gwy_isnan(avg) || gwy_isinf(avg))
-        avg = 0.0;
-
-    for (k = 0; k < n; k++) {
-        if (gwy_isnan(d[k]) || gwy_isinf(d[k]))
-            d[k] = avg;
-    }
-
-    return mask;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
