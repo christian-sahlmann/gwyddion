@@ -274,7 +274,7 @@ static GwyModuleInfo module_info = {
     N_("Imports 16bit grayscale PPM, PNG and TIFF images, imports and exports "
        "OpenEXR images (if available)."),
     "Yeti <yeti@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -1100,6 +1100,7 @@ exr_load_image(const gchar *filename,
         gwy_convert_raw_data(l->data, xres*yres, 1,
                              rawdatatype, GWY_BYTE_ORDER_NATIVE,
                              d, q, z0);
+        GwyDataField *mask = gwy_app_channel_mask_of_nans(dfield, TRUE);
 
         if (unitxy) {
             GwySIUnit *u = gwy_data_field_get_si_unit_xy(dfield);
@@ -1112,6 +1113,12 @@ exr_load_image(const gchar *filename,
 
         GQuark quark = gwy_app_get_data_key_for_id(id);
         gwy_container_set_object(container, quark, dfield);
+
+        if (mask) {
+            GQuark mquark = gwy_app_get_mask_key_for_id(id);
+            gwy_container_set_object(container, mquark, mask);
+            g_object_unref(mask);
+        }
 
         gchar *key = g_strconcat(g_quark_to_string(quark), "/title", NULL);
         gchar *title;
@@ -2026,6 +2033,7 @@ load_tiff_channels(GwyContainer *container,
     for (guint cid = 0; cid < nchannels; cid++) {
         GwyDataField *dfield = gwy_data_field_new(xres, yres, xreal, yreal,
                                                   FALSE);
+        GwyDataField *mask = NULL;
         gdouble *d = gwy_data_field_get_data(dfield);
         gchar *key;
         const gchar *title;
@@ -2033,6 +2041,9 @@ load_tiff_channels(GwyContainer *container,
         for (guint i = 0; i < yres; i++)
             gwy_tiff_read_image_row(tiff, reader, cid, i, zreal,
                                     0.0, d + i*xres);
+
+        if (reader->sample_format == GWY_TIFF_SAMPLE_FORMAT_FLOAT)
+            mask = gwy_app_channel_mask_of_nans(dfield, TRUE);
 
         GwySIUnit *u;
         u = gwy_data_field_get_si_unit_xy(dfield);
@@ -2049,6 +2060,12 @@ load_tiff_channels(GwyContainer *container,
         gwy_container_set_string_by_name(container, key,
                                          (const guchar*)g_strdup(title));
         g_free(key);
+
+        if (mask) {
+            GQuark mquark = gwy_app_get_mask_key_for_id(*id);
+            gwy_container_set_object(container, mquark, mask);
+            g_object_unref(mask);
+        }
 
         if (gwy_stramong(title, "Red", "Green", "Blue", NULL)) {
             gchar *palette;
