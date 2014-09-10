@@ -3,7 +3,7 @@ Application:
 - Pressing F1 shows help, i.e. it points a web browser to the relevant part
   of the user guide (in most program windows).  Most dialogs also have a Help
   button now.
-- Translations updated: Russian.
+- Translations updated: French, German, Russian, Spanish.
 
 Libraries:
 - libgwyprocess: New function to find a height threshold by the Otsu method.
@@ -19,6 +19,7 @@ Libraries:
   periodic and grains can touch across the opposite edges.
 - libgwyapp: New functions for help handling.
 - libgwydgets: Real scale in 3D view can be set arbitrarily, not just 1:1.
+- libgwyapp: New file module utility function for masking NaNs and infs.
 
 Modules:
 - OpenGPS (new): Imports OpenGPS surface data format (ISO 5436-2).
@@ -26,6 +27,7 @@ Modules:
 - Diffusion synthesis (new): Artificial surface generation by a diffussion
   limited aggregation simulation.
 - K-means (new): K-means clustering for volume data.
+- FITS (new): Imports Fleximple Image Transport System images.
 - Filters tool: Gaussian smoothing is no longer limited to integer FWHM.
 - Columnar synthesis: Can plot the evolution of some statistics during the
   growth.
@@ -33,9 +35,12 @@ Modules:
 - NT-MDT: fixed loading of old spectroscopy from Nanoeducator2 data.
 - Pygwy: It is possible to write volume data processing modules in Python.
   Brick has a duplicate() method, gwy_app_data_browser_get_current() supports
-  brick-related items.
+  brick-related items.  Python error messages are no longer silenced after
+  Python modules are run.
 - Color range tool: The range can be set to the range of masked/unmasked
   values.
+- HDR image: NaNs and infinites in floating point images are removed and
+  masked upon import.
 
 
 2.37 (2014-06-27)
