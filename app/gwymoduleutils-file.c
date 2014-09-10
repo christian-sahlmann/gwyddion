@@ -23,6 +23,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libprocess/stats.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/data-browser.h>
@@ -217,6 +218,64 @@ gwy_app_channel_remove_bad_data(GwyDataField *dfield, GwyDataField *mfield)
     gwy_debug("mcount = %u", mcount);
 
     return mcount;
+}
+
+/**
+ * gwy_app_channel_mask_of_nans:
+ * @dfield: A data field possibly containing NaNs and infinities.
+ * @removebad: Automatically remove the invalid values.
+ *
+ * Creates a mask corresponding to not-a-number and infinite values in a data
+ * field.
+ *
+ * NaNs and infinities are not normally allowed in Gwyddion so this function
+ * should be used upon import if the source file format can represent such
+ * values.
+ *
+ * The invalid values can be automatically removed using the same method as
+ * gwy_app_channel_remove_bad_data().
+ *
+ * Returns: A newly created data field with 1.0 in pixels corresponding to a
+ *          NaN or infinity in @dfield.  If no such pixels are present, %NULL
+ *          is returned.
+ *
+ * Since: 2.38
+ **/
+GwyDataField*
+gwy_app_channel_mask_of_nans(GwyDataField *dfield,
+                             gboolean removebad)
+{
+    GwyDataField *mask = NULL;
+    guint k, n = dfield->xres*dfield->yres;
+    gdouble *d = dfield->data, *m;
+    gdouble avg;
+
+    for (k = 0; k < n; k++) {
+        if (gwy_isnan(d[k]) || gwy_isinf(d[k])) {
+            if (G_UNLIKELY(!mask)) {
+                mask = gwy_data_field_new_alike(dfield, TRUE);
+                gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(mask),
+                                            NULL);
+            }
+            mask->data[k] = 1.0;
+        }
+    }
+
+    if (!mask || !removebad)
+        return mask;
+
+    avg = gwy_data_field_area_get_avg_mask(dfield, mask, GWY_MASK_EXCLUDE,
+                                           0, 0, dfield->xres, dfield->yres);
+    if (gwy_isnan(avg) || gwy_isinf(avg))
+        avg = 0.0;
+
+    m = mask->data;
+    for (k = 0; k < n; k++) {
+        if (m[k])
+            d[k] = avg;
+    }
+
+    return mask;
 }
 
 /**

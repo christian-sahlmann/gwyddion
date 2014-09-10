@@ -307,12 +307,14 @@ gwy_get_pascal_real_be(const guchar **ppv)
     return x;
 }
 
-gboolean gwy_app_channel_check_nonsquare(GwyContainer *data,
-                                         gint id);
-gboolean gwy_app_channel_title_fall_back(GwyContainer *data,
-                                         gint id);
-guint    gwy_app_channel_remove_bad_data(GwyDataField *dfield,
-                                         GwyDataField *mfield);
+gboolean      gwy_app_channel_check_nonsquare(GwyContainer *data,
+                                              gint id);
+gboolean      gwy_app_channel_title_fall_back(GwyContainer *data,
+                                              gint id);
+guint         gwy_app_channel_remove_bad_data(GwyDataField *dfield,
+                                              GwyDataField *mfield);
+GwyDataField* gwy_app_channel_mask_of_nans   (GwyDataField *dfield,
+                                              gboolean removebad);
 
 #define GWY_TEXT_HEADER_ERROR gwy_text_header_error_quark()
 
