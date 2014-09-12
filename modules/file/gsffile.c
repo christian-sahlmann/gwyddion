@@ -90,7 +90,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Reads and exports Gwyddion Simple Field files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2010",
 };
@@ -416,7 +416,7 @@ append_num(GString *str,
 
     g_string_append(str, key);
     g_string_append(str, " = ");
-    g_ascii_formatd(buf, sizeof(buf), "%.6g", d);
+    g_ascii_formatd(buf, sizeof(buf), "%.14g", d);
     g_string_append(str, buf);
     g_string_append_c(str, '\n');
 }
