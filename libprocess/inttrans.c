@@ -973,6 +973,57 @@ gwy_data_field_2dfft_dehumanize(GwyDataField *data_field)
 }
 
 /**
+ * gwy_data_field_fft_postprocess:
+ * @data_field: A data field.
+ * @humanize: %TRUE to rearrange data to have the frequency origin in the
+ *            centre.
+ *
+ * Updates units, dimensions and offsets for a 2D FFT-processed field.
+ *
+ * The field is expected to have dimensions and units of the original
+ * direct-space data.  The lateral units and resolutions are updated to
+ * correspond to its Fourier transform.
+ *
+ * If @humanize is %TRUE gwy_data_field_2dfft_humanize() is applied to the
+ * field data and the lateral offsets are set accordingly.  Otherwise the
+ * offsets are cleared.
+ *
+ * Value units are kept intact.
+ *
+ * Since: 2.38
+ **/
+void
+gwy_data_field_fft_postprocess(GwyDataField *dfield,
+                               gboolean humanize)
+{
+    GwySIUnit *xyunit;
+    gint res;
+    gdouble r;
+
+    xyunit = gwy_data_field_get_si_unit_xy(dfield);
+    gwy_si_unit_power(xyunit, -1, xyunit);
+
+    gwy_data_field_set_xreal(dfield, 1.0/gwy_data_field_get_xmeasure(dfield));
+    gwy_data_field_set_yreal(dfield, 1.0/gwy_data_field_get_ymeasure(dfield));
+
+    if (!humanize) {
+        gwy_data_field_set_xoffset(dfield, 0.0);
+        gwy_data_field_set_yoffset(dfield, 0.0);
+        return;
+    }
+
+    gwy_data_field_2dfft_humanize(dfield);
+
+    res = gwy_data_field_get_xres(dfield);
+    r = (res + 1 - res % 2)/2.0;
+    gwy_data_field_set_xoffset(dfield, -gwy_data_field_jtor(dfield, r));
+
+    res = gwy_data_field_get_yres(dfield);
+    r = (res + 1 - res % 2)/2.0;
+    gwy_data_field_set_yoffset(dfield, -gwy_data_field_itor(dfield, r));
+}
+
+/**
  * gwy_data_field_area_1dfft:
  * @rin: Real input data field.
  * @iin: Imaginary input data field.  It can be %NULL for real-to-complex

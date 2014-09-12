@@ -19,6 +19,7 @@ Libraries:
   periodic and grains can touch across the opposite edges.
 - libgwyapp: New functions for help handling.
 - libgwydgets: Real scale in 3D view can be set arbitrarily, not just 1:1.
+- libgwyprocess: New function to update units and dimensions of 2D FFT output.
 - libgwyapp: New file module utility function for masking NaNs and infs.
 
 Modules:
