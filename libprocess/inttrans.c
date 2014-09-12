@@ -546,6 +546,9 @@ gwy_data_field_area_2dfft(GwyDataField *rin, GwyDataField *iin,
  * Since 2.8 the dimensions need not to be from the set of sizes returned
  * by gwy_fft_find_nice_size().
  *
+ * Lateral dimensions, offsets and units are unchanged.  See
+ * gwy_data_field_fft_postprocess() for that.
+ *
  * Since: 2.1
  **/
 void
@@ -832,6 +835,9 @@ gwy_data_field_2dfft_real_do(GwyDataField *rin,
  *
  * If requested a windowing and/or leveling is applied to preprocess data to
  * obtain reasonable results.
+ *
+ * Lateral dimensions, offsets and units are unchanged.  See
+ * gwy_data_field_fft_postprocess() for that.
  **/
 void
 gwy_data_field_2dfft(GwyDataField *rin, GwyDataField *iin,

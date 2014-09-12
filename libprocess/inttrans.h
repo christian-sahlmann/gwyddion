@@ -113,6 +113,8 @@ void gwy_data_field_2dfft_raw       (GwyDataField *rin,
                                      GwyTransformDirection direction);
 void gwy_data_field_2dfft_humanize  (GwyDataField *data_field);
 void gwy_data_field_2dfft_dehumanize(GwyDataField *data_field);
+void gwy_data_field_fft_postprocess (GwyDataField *data_field,
+                                     gboolean humanize);
 void gwy_data_field_fft_filter_1d   (GwyDataField *data_field,
                                      GwyDataField *result_field,
                                      GwyDataLine *weights,
