@@ -3,7 +3,7 @@ Application:
 - Pressing F1 shows help, i.e. it points a web browser to the relevant part
   of the user guide (in most program windows).  Most dialogs also have a Help
   button now.
-- Translations updated: French, German, Russian, Spanish.
+- Translations updated: Czech, French, German, Russian, Spanish.
 
 Libraries:
 - libgwyprocess: New function to find a height threshold by the Otsu method.
