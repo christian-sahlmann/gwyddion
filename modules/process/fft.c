@@ -64,7 +64,6 @@ static void     fft_create_output     (GwyContainer *data,
                                        gint id,
                                        GwyDataField *dfield,
                                        const gchar *window_name);
-static void     fft_postprocess       (GwyDataField *dfield);
 static gboolean fft_dialog            (FFTArgs *args);
 static void     zeromean_changed_cb   (GtkToggleButton *button,
                                        FFTArgs *args);
@@ -96,7 +95,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Two-dimensional FFT (Fast Fourier Transform)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.12",
+    "1.13",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -151,8 +150,8 @@ fft(GwyContainer *data, GwyRunType run)
                          args.preserverms,
                          args.zeromean ? 1 : 0);
 
-    fft_postprocess(raout);
-    fft_postprocess(ipout);
+    gwy_data_field_fft_postprocess(raout, TRUE);
+    gwy_data_field_fft_postprocess(ipout, TRUE);
 
     if (args.out == GWY_FFT_OUTPUT_REAL_IMG
         || args.out == GWY_FFT_OUTPUT_REAL)
@@ -177,30 +176,6 @@ fft(GwyContainer *data, GwyRunType run)
 
     g_object_unref(raout);
     g_object_unref(ipout);
-}
-
-static void
-fft_postprocess(GwyDataField *dfield)
-{
-    GwySIUnit *xyunit;
-    gint res;
-    gdouble r;
-
-    gwy_data_field_2dfft_humanize(dfield);
-
-    xyunit = gwy_data_field_get_si_unit_xy(dfield);
-    gwy_si_unit_power(xyunit, -1, xyunit);
-
-    gwy_data_field_set_xreal(dfield, 1.0/gwy_data_field_get_xmeasure(dfield));
-    gwy_data_field_set_yreal(dfield, 1.0/gwy_data_field_get_ymeasure(dfield));
-
-    res = gwy_data_field_get_xres(dfield);
-    r = (res + 1 - res % 2)/2.0;
-    gwy_data_field_set_xoffset(dfield, -gwy_data_field_jtor(dfield, r));
-
-    res = gwy_data_field_get_yres(dfield);
-    r = (res + 1 - res % 2)/2.0;
-    gwy_data_field_set_yoffset(dfield, -gwy_data_field_itor(dfield, r));
 }
 
 static void

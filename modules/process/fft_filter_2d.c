@@ -169,7 +169,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("2D FFT Filtering"),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "1.10",
+    "1.11",
     "Chris Anderson, Molecular Imaging Corp.",
     "2005",
 };
@@ -319,19 +319,6 @@ run_main(GwyContainer *data, GwyRunType run)
         }
 
         if (controls.out_mode & OUTPUT_FFT) {
-            gint res;
-            gdouble r;
-
-            res = gwy_data_field_get_xres(out_fft);
-            r = (res + 1 - res % 2)/2.0;
-            gwy_data_field_set_xoffset(out_fft,
-                                       -gwy_data_field_jtor(out_fft, r));
-
-            res = gwy_data_field_get_yres(out_fft);
-            r = (res + 1 - res % 2)/2.0;
-            gwy_data_field_set_yoffset(out_fft,
-                                       -gwy_data_field_itor(out_fft, r));
-
             newid = gwy_app_data_browser_add_data_field(out_fft, data, TRUE);
             gwy_app_sync_data_items(controls.mydata, data, 0, newid, FALSE,
                                     GWY_DATA_ITEM_GRADIENT,
@@ -1106,7 +1093,7 @@ set_dfield_modulus(GwyDataField *re, GwyDataField *im, GwyDataField *target)
     dataim = gwy_data_field_get_data_const(im);
     data = gwy_data_field_get_data(target);
     for (i = xres*yres; i; i--, datare++, dataim++, data++)
-        *data = hypot(*datare, *dataim);
+        *data = sqrt((*datare)*(*datare) + (*dataim)*(*dataim));
 }
 
 static void
@@ -1213,26 +1200,15 @@ fft_filter_2d(GwyDataField *input,
     gwy_data_field_2dfft_raw(r_in, NULL, r_out, i_out,
                              GWY_TRANSFORM_DIRECTION_FORWARD);
 
+    /* Must be done before gwy_data_field_2dfft_humanize() because it humanizes
+     * the field by gwy_data_field_fft_postprocess(). */
+    if (output_fft != NULL) {
+        set_dfield_modulus(r_out, i_out, output_fft);
+        gwy_data_field_fft_postprocess(output_fft, TRUE);
+    }
+
     gwy_data_field_2dfft_humanize(r_out);
     gwy_data_field_2dfft_humanize(i_out);
-
-    if (output_fft != NULL) {
-        GwySIUnit *siunit;
-
-        set_dfield_modulus(r_out, i_out, output_fft);
-
-        siunit = gwy_data_field_get_si_unit_xy(input);
-        siunit = gwy_si_unit_power(siunit, -1, NULL);
-        gwy_data_field_set_si_unit_xy(output_fft, siunit);
-        g_object_unref(siunit);
-
-        gwy_data_field_set_xreal(output_fft,
-                                 gwy_data_field_get_xres(input)
-                                 /gwy_data_field_get_xreal(input));
-        gwy_data_field_set_yreal(output_fft,
-                                 gwy_data_field_get_yres(input)
-                                 /gwy_data_field_get_yreal(input));
-    }
 
     /* Apply mask to the fft */
     gwy_data_field_multiply_fields(r_out, r_out, mask);

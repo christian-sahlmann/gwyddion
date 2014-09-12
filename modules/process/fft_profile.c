@@ -120,7 +120,7 @@ static GwyModuleInfo module_info = {
     N_("Reads radial sections of two-dimensional power spectrum density "
        "function."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -521,23 +521,11 @@ prof_psdf(GwyDataField *dfield,
 
     g_object_unref(fftim);
 
-    gwy_data_field_2dfft_humanize(fftre);
-    xyunit = gwy_data_field_get_si_unit_xy(fftre);
-    gwy_si_unit_power(gwy_data_field_get_si_unit_xy(dfield), -1, xyunit);
+    gwy_data_field_fft_postprocess(fftre, TRUE);
+
     zunit = gwy_data_field_get_si_unit_z(fftre);
     gwy_si_unit_power(gwy_data_field_get_si_unit_z(dfield), 2, zunit);
     gwy_si_unit_multiply(gwy_data_field_get_si_unit_xy(dfield), zunit, zunit);
-
-    gwy_data_field_set_xreal(fftre, 1.0/gwy_data_field_get_xmeasure(fftre));
-    gwy_data_field_set_yreal(fftre, 1.0/gwy_data_field_get_ymeasure(fftre));
-
-    res = gwy_data_field_get_xres(fftre);
-    r = (res + 1 - res % 2)/2.0;
-    gwy_data_field_set_xoffset(fftre, -gwy_data_field_jtor(fftre, r));
-
-    res = gwy_data_field_get_yres(fftre);
-    r = (res + 1 - res % 2)/2.0;
-    gwy_data_field_set_yoffset(fftre, -gwy_data_field_itor(fftre, r));
 
     return fftre;
 }
