@@ -26,7 +26,7 @@
 #include "gwyprocessinternal.h"
 
 /* for compatibility checks */
-#define EPSILON 1e-6
+#define EPSILON 5e-6
 
 /**
  * gwy_data_field_sum_fields:
