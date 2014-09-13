@@ -69,9 +69,10 @@ Vinicius Barboza <vinicius.barboza@lnnano.cnpem.br>
 Jeffrey J. Schwartz <schwartz@physics.ucla.edu>
     WinSTM file import.
 Christian Bühler <christian.buehler@uni-ulm.de>
-    Pygwy volume data processing module type.
+    Pygwy volume data processing module type and other volume data processing
+    improvements.
 Евгений Рябов <k1u2r3ka@mail.ru>
-    K-means
+    K-means.
 
 
 === Translators ===
