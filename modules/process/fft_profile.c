@@ -495,11 +495,10 @@ prof_psdf(GwyDataField *dfield,
           const ProfArgs *args)
 {
     GwyDataField *fftre, *fftim;
-    GwySIUnit *xyunit, *zunit;
+    GwySIUnit *zunit;
     const gdouble *im;
     gdouble *re;
-    gint xres, yres, i, res;
-    gdouble r;
+    gint xres, yres, i;
 
     fftre = gwy_data_field_new_alike(dfield, FALSE);
     fftim = gwy_data_field_new_alike(dfield, FALSE);
