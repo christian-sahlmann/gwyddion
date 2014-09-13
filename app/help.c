@@ -253,6 +253,7 @@ show_help_uri(GtkWindow *parent, const gchar *uri)
                                     GTK_BUTTONS_CLOSE,
                                     _("Cannot display the help."));
     gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog),
+    /* TRANSLATORS: %s will be replaced with an URL. */
                                              _("No working method to show\n"
                                                "%s\n"
                                                "in a web browser was found. "
