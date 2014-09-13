@@ -33,7 +33,8 @@ Modules:
 - Columnar synthesis: Can plot the evolution of some statistics during the
   growth.
 - APE DAX: Warning about invalid logging function name was fixed.
-- NT-MDT: fixed loading of old spectroscopy from Nanoeducator2 data.
+- NT-MDT: Fixed loading of old spectroscopy from Nanoeducator2 data.
+  Search of external data in another possible location is implemented.
 - Pygwy: It is possible to write volume data processing modules in Python.
   Brick has a duplicate() method, gwy_app_data_browser_get_current() supports
   brick-related items.  Python error messages are no longer silenced after
