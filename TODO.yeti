@@ -8,8 +8,6 @@
   - nanoindentation
 - Graph minor and major ticks are misaligned
 - Selection on logarithmic graphs doesn't work
-- Ruler:
-  - When range is all negative, units are not placed anywhere
 - Surf file: units and scales are botched
 - 3D:
   light source grid not visible on some machines?
@@ -19,7 +17,6 @@
               GwyTipType
   libgwydgets: GwyGraphStatusType, GwyGraphPointType, GwyGraphLabelPosition
 - Check whether we always emit notification when object properties change
-- Add preview to: artithmetic
 - Invent some initialization for Laplace solver so that it can only converge
   for near final state
 - Write a Postscript export module based on JP's work -- or wait for Cairo?
