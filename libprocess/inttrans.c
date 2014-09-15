@@ -1013,6 +1013,7 @@ gwy_data_field_fft_postprocess(GwyDataField *dfield,
     gwy_data_field_set_yreal(dfield, 1.0/gwy_data_field_get_ymeasure(dfield));
 
     if (!humanize) {
+        gwy_data_field_invalidate(dfield);
         gwy_data_field_set_xoffset(dfield, 0.0);
         gwy_data_field_set_yoffset(dfield, 0.0);
         return;
@@ -1020,11 +1021,11 @@ gwy_data_field_fft_postprocess(GwyDataField *dfield,
 
     gwy_data_field_2dfft_humanize(dfield);
 
-    res = gwy_data_field_get_xres(dfield);
+    res = dfield->xres;
     r = (res + 1 - res % 2)/2.0;
     gwy_data_field_set_xoffset(dfield, -gwy_data_field_jtor(dfield, r));
 
-    res = gwy_data_field_get_yres(dfield);
+    res = dfield->yres;
     r = (res + 1 - res % 2)/2.0;
     gwy_data_field_set_yoffset(dfield, -gwy_data_field_itor(dfield, r));
 }
