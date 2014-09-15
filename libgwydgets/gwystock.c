@@ -1063,6 +1063,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Synthetic-Diffusion" stock icon.
  * <inlinegraphic fileref="gwy_synthetic_diffusion-24.png" format="PNG"/>
+ *
+ * Since: 2.38
  **/
 
 /**
