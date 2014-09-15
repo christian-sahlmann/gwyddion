@@ -1720,15 +1720,41 @@ gwy_container_set_string(GwyContainer *container,
                          GQuark key,
                          const guchar *value)
 {
-    GValue gvalue;
+    gboolean changed = FALSE;
+    GValue *gvalue;
+    gpointer pkey;
+    const gchar *oldstring;
 
-    gwy_clear(&gvalue, 1);
-    g_value_init(&gvalue, G_TYPE_STRING);
-    g_value_take_string(&gvalue, (gchar*)value);
-    gwy_container_try_set_one(container, key, &gvalue);
-    /* This is necessary because we do g_value_copy() in
-     * gwy_container_try_set_one(). */
-    g_free((gchar*)value);
+    g_return_if_fail(GWY_IS_CONTAINER(container));
+    g_return_if_fail(key);
+
+    pkey = GUINT_TO_POINTER(key);
+    gvalue = (GValue*)g_hash_table_lookup(container->values, pkey);
+    if (gvalue) {
+        g_assert(G_IS_VALUE(gvalue));
+        if (!G_VALUE_HOLDS_STRING(gvalue)) {
+            g_value_unset(gvalue);
+            g_value_init(gvalue, G_TYPE_STRING);
+            changed = TRUE;
+        }
+        oldstring = g_value_get_string(gvalue);
+        if ((oldstring && !value)
+            || (!oldstring && value)
+            || (oldstring && value && !gwy_strequal(oldstring, value)))
+            changed = TRUE;
+    }
+    else {
+        gvalue = g_new0(GValue, 1);
+        g_value_init(gvalue, G_TYPE_STRING);
+        g_hash_table_insert(container->values, pkey, gvalue);
+        changed = TRUE;
+    }
+    /* XXX: We MUST do this.  There is code relying on @value being consumed
+     * and kept alive, not just immediately freed by this function. */
+    g_value_take_string(gvalue, (gchar*)value);
+
+    if (changed && !container->in_construction)
+        g_signal_emit(container, container_signals[ITEM_CHANGED], key, key);
 }
 
 /**
