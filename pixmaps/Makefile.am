@@ -11,7 +11,7 @@ icondatadir = $(datadir)/icons/hicolor/48x48/apps
 # Since 2.29: polynom_level
 # Since 2.34: pygwy
 # Since 2.37: correct_affine extend mark_with synthetic_columnar synthetic_domains synthetic_lattice synthetic_line_noise synthetic_noise synthetic_objects synthetic_particles synthetic_pattern synthetic_waves
-# Since: 2.38 synthetic_diffusion
+# Since 2.38: synthetic_diffusion
 
 # If you add new stock icons here, add them to a `Since' line above and run
 # ./utils/stockgen.py from the top-level directory to update source code
