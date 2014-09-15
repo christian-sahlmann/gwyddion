@@ -28,7 +28,8 @@ Modules:
 - Diffusion synthesis (new): Artificial surface generation by a diffussion
   limited aggregation simulation.
 - K-means (new): K-means clustering for volume data.
-- FITS (new): Imports Fleximple Image Transport System images.
+- FITS (new): Imports Flexible Image Transport System images.
+- FemtoScan TXT (new): Imports FemtoScan exported TXT data files.
 - Filters tool: Gaussian smoothing is no longer limited to integer FWHM.
 - Columnar synthesis: Can plot the evolution of some statistics during the
   growth.
