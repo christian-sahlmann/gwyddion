@@ -36,6 +36,7 @@ curvature	leveling-and-background	curvature
 cwt	wavelet-transform	cwt
 deposit_synth	synthetic
 distance	basic-operations	distance
+diff_synth	synthetic	diffusion-synthesis
 dm3file	managing-files
 dmefile	managing-files
 domain_synth	synthetic	domain-synthesis
@@ -57,6 +58,7 @@ fft_profile	fourier-transform
 fft_synth	synthetic	spectral-synthesis
 filter	filters	basic-filters
 fit_2d	leveling-and-background	fit-sphere
+fitsfile	managing-files
 fraccor	editing-correction	fractal-correction
 fractal	fractal-analysis	fractal-dimension
 gdeffile	managing-files
@@ -64,9 +66,11 @@ gradient	presentations	gradient
 grain_cross	grain-analysis	grain-correlation
 grain_dist	grain-analysis	grain-distributions
 grain_edge	grain-analysis	grain-edge
+grain_filter	grain-analysis	grain-filter
 grain_mark	grain-analysis	grain-threshold
 grainmeasure	grain-analysis	grain-measure
 grainremover	editing-correction	remove-grains
+grain_stat	grain-analysis
 grain_wshed	grain-analysis	grain-watershed
 graph_cd	graph-processing	graph-critical-dimension
 graph_cut	graph-processing
@@ -93,6 +97,7 @@ intematix	managing-files
 iso28600	managing-files
 jeol	managing-files
 jpkscan	managing-files
+jspmfile	managing-files
 laplace	editing-correction	remove-data-under-mask
 lattice	selections
 lat_synth	synthetic	lattice-synthesis
@@ -144,6 +149,7 @@ omicronflat	managing-files
 omicron	managing-files
 omicronmatrix	managing-files
 opdfile	managing-files
+opengps	managing-files
 otsu_threshold	grain-analysis	grain-threshold-otsu
 outliers	editing-correction	mask-of-outliers
 pathlevel	editing-correction	path-level
