@@ -34,6 +34,12 @@
  **/
 
 /**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # SPIP ASCII data
+ * 0 string #\ File\ Format\ =\ ASCII\r\n SPIP ASCII export SPM text data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * SPIP ASCII
  * .asc
