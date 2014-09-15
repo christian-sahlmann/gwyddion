@@ -1723,10 +1723,10 @@ gwy_container_set_string(GwyContainer *container,
     gboolean changed = FALSE;
     GValue *gvalue;
     gpointer pkey;
-    const gchar *oldstring;
 
     g_return_if_fail(GWY_IS_CONTAINER(container));
     g_return_if_fail(key);
+    g_return_if_fail(value);
 
     pkey = GUINT_TO_POINTER(key);
     gvalue = (GValue*)g_hash_table_lookup(container->values, pkey);
@@ -1737,10 +1737,7 @@ gwy_container_set_string(GwyContainer *container,
             g_value_init(gvalue, G_TYPE_STRING);
             changed = TRUE;
         }
-        oldstring = g_value_get_string(gvalue);
-        if ((oldstring && !value)
-            || (!oldstring && value)
-            || (oldstring && value && !gwy_strequal(oldstring, value)))
+        else if (!gwy_strequal(g_value_get_string(gvalue), value))
             changed = TRUE;
     }
     else {
@@ -1791,6 +1788,7 @@ gwy_container_set_const_string(GwyContainer *container,
 {
     GValue gvalue;
 
+    g_return_if_fail(value);
     gwy_clear(&gvalue, 1);
     g_value_init(&gvalue, G_TYPE_STRING);
     g_value_take_string(&gvalue, (gchar*)value);
