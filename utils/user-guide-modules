@@ -51,6 +51,7 @@ extend	basic-operations	extend
 ezdfile	managing-files
 facet_analysis	statistical-analysis	facet-analysis
 facet-level	leveling-and-background	facet-level
+femtoscan-txt	managing-files
 fft_filter_1d	edit-extended	fft-filter-1d
 fft_filter_2d	edit-extended	fft-filter-2d
 fft	fourier-transform
@@ -225,6 +226,7 @@ win_stm	managing-files
 wipfile	managing-files
 witec-asc	managing-files
 witfile	managing-files
+wpour_mark	grain-analysis
 wsffile	managing-files
 wsxmfile	managing-files
 xydenoise	edit-extended	xy-denoise
