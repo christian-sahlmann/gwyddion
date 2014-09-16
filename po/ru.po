@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-09-06 03:58+0200\n"
-"PO-Revision-Date: 2014-09-06 10:05+0300\n"
+"POT-Creation-Date: 2014-09-16 03:58+0200\n"
+"PO-Revision-Date: 2014-09-16 06:35+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -884,7 +884,7 @@ msgstr "_Размер:"
 msgid "pixels"
 msgstr "точек"
 
-#: libgwydgets/gwy3dwindow.c:1148 modules/file/hdrimage.cc:2196
+#: libgwydgets/gwy3dwindow.c:1148 modules/file/hdrimage.cc:2213
 #: modules/file/pixmap.c:1085 modules/file/pixmap.c:3244
 #: modules/file/rawfile.c:402 modules/process/angle_dist.c:172
 #: modules/process/calcoefs_new.c:348 modules/process/calibrate.c:392
@@ -895,7 +895,7 @@ msgstr "точек"
 #: modules/process/dwt.c:166 modules/process/dwtanisotropy.c:184
 #: modules/process/edge.c:651 modules/process/extend.c:192
 #: modules/process/facet-level.c:190 modules/process/facet_analysis.c:276
-#: modules/process/fft.c:283 modules/process/fft_filter_2d.c:457
+#: modules/process/fft.c:258 modules/process/fft_filter_2d.c:444
 #: modules/process/fft_synth.c:351 modules/process/fractal.c:207
 #: modules/process/grain_edge.c:218 modules/process/grain_mark.c:264
 #: modules/process/grain_wshed.c:183 modules/process/hough.c:179
@@ -1813,42 +1813,42 @@ msgstr ""
 "Чтобы избежать потери сохранённых настроек попыток обновить его делаться не "
 "будет до тех пор, пока он не будет исправлен или удалён."
 
-#: app/gwymoduleutils-file.c:440
+#: app/gwymoduleutils-file.c:499
 #, c-format
 msgid "Section %s ended at line %u but it has never started."
 msgstr "Секция %s закончилась в строке %u, но никогда не начиналась."
 
-#: app/gwymoduleutils-file.c:448
+#: app/gwymoduleutils-file.c:507
 #, c-format
 msgid "Section %s ended at line %u instead of %s."
 msgstr "Секция %s закончилась в строке %u вместо %s."
 
-#: app/gwymoduleutils-file.c:485
+#: app/gwymoduleutils-file.c:544
 #, c-format
 msgid "Section %s started at line %u before %s ended."
 msgstr "Секция %s закончилась в строке %u до того, как %s закончилась."
 
-#: app/gwymoduleutils-file.c:491
+#: app/gwymoduleutils-file.c:550
 #, c-format
 msgid "Empty section name at header line %u."
 msgstr "Пустое название секции в строке заголовка %u."
 
-#: app/gwymoduleutils-file.c:526
+#: app/gwymoduleutils-file.c:585
 #, c-format
 msgid "Header line %u lacks prefix %s."
 msgstr "В строке заголовка %u отсутствует префикс %s."
 
-#: app/gwymoduleutils-file.c:551
+#: app/gwymoduleutils-file.c:610
 #, c-format
 msgid "Header line %u lacks key-value separator."
 msgstr "В строке заголовка %u отсутствует разделитель ключ-значение."
 
-#: app/gwymoduleutils-file.c:559
+#: app/gwymoduleutils-file.c:618
 #, c-format
 msgid "Key at header line %u is empty."
 msgstr "Ключ в строке заголовка %u пустой."
 
-#: app/gwymoduleutils-file.c:586
+#: app/gwymoduleutils-file.c:645
 #, c-format
 msgid "Header suddenly ended at line %u; end of header marker is missing"
 msgstr ""
@@ -1906,7 +1906,8 @@ msgstr "Убрать диалог инструментов (Esc)"
 msgid "Cannot display the help."
 msgstr "Не удаётся показать справку."
 
-#: app/help.c:256
+#. TRANSLATORS: %s will be replaced with an URL.
+#: app/help.c:257
 #, c-format
 msgid ""
 "No working method to show\n"
@@ -1921,7 +1922,7 @@ msgstr ""
 
 #. TRANSLATORS: For user guide location.  Translate this to fr, ru, cs,
 #. de, ...  even if the corresponding guide does not exist.
-#: app/help.c:359
+#: app/help.c:360
 msgid "current-language-code|en"
 msgstr "ru"
 
@@ -3349,21 +3350,39 @@ msgstr "Первая секция не DataSet"
 msgid "GroupCount in [DataSet]"
 msgstr "GroupCount в [DataSet]"
 
-#: modules/file/fitsfile.c:56
+#: modules/file/femtoscan-txt.c:78
+msgid "Imports FemtoScan TXT files."
+msgstr "Импортирует файлы FemtoScan TXT."
+
+#: modules/file/femtoscan-txt.c:91
+msgid "FemtoScan text files (.txt)"
+msgstr "Текстовые файлы FemtoScan (.txt)"
+
+#: modules/file/femtoscan-txt.c:190
+msgid "Data line does not start with a Y abscissa."
+msgstr "Строка данных не начинается с абсциссы Y."
+
+#: modules/file/femtoscan-txt.c:198
+#, c-format
+msgid ""
+"Data line length %u does not correspond to the number of X abscissas %u."
+msgstr "Длина строки данных %u не соответствует числу абсцисс X, равному %u."
+
+#: modules/file/fitsfile.c:68
 msgid "Reads Flexible Image Transport System (FITS) files."
 msgstr "Читает файлы Flexible Image Transport System (FITS)."
 
-#: modules/file/fitsfile.c:69
+#: modules/file/fitsfile.c:81
 msgid "Flexible Image Transport System FITS (.fits)"
 msgstr "Flexible Image Transport System FITS (.fits)"
 
-#: modules/file/fitsfile.c:106
+#: modules/file/fitsfile.c:120
 #, c-format
 msgid "CFITSIO error while reading the FITS file: %s."
 msgstr "Ошибка CFITSIO при чтении файла FITS: %s."
 
-#: modules/file/fitsfile.c:138 modules/file/fitsfile.c:150
-#: modules/file/fitsfile.c:161
+#: modules/file/fitsfile.c:152 modules/file/fitsfile.c:164
+#: modules/file/fitsfile.c:175
 msgid "Only two-dimensional images are supported."
 msgstr "Поддерживаются только двумерные изображения."
 
@@ -3597,61 +3616,61 @@ msgstr "Чтение изображения EXR было неудачным с �
 msgid "OpenEXR data type %u is invalid or unsupported."
 msgstr "Тип данных OpenEXR %u неправилен или не поддерживается."
 
-#: modules/file/hdrimage.cc:1426 modules/file/hdrimage.cc:1435
+#: modules/file/hdrimage.cc:1433 modules/file/hdrimage.cc:1442
 #: modules/file/pixmap.c:1623 modules/file/pixmap.c:1633
 #, c-format
 msgid "libpng initialization error (in %s)"
 msgstr "ошибка инициализации libpng (в %s)"
 
-#: modules/file/hdrimage.cc:1444 modules/file/pixmap.c:1693
+#: modules/file/hdrimage.cc:1451 modules/file/pixmap.c:1693
 msgid "libpng error occured"
 msgstr "Произошла ошибка libpng"
 
 #. TRANSLATORS: Dialog title; %s is PNG, TIFF, ...
-#: modules/file/hdrimage.cc:2193 modules/file/pixmap.c:1082
+#: modules/file/hdrimage.cc:2210 modules/file/pixmap.c:1082
 #, c-format
 msgid "Import %s"
 msgstr "Импортировать %s"
 
-#: modules/file/hdrimage.cc:2220 modules/file/pixmap.c:1109
+#: modules/file/hdrimage.cc:2237 modules/file/pixmap.c:1109
 msgid "Image Information"
 msgstr "Информация о изображении"
 
-#: modules/file/hdrimage.cc:2229 modules/file/pixmap.c:1116
+#: modules/file/hdrimage.cc:2246 modules/file/pixmap.c:1116
 msgid "Horizontal size:"
 msgstr "Горизонтальный размер:"
 
-#: modules/file/hdrimage.cc:2229 modules/file/hdrimage.cc:2235
+#: modules/file/hdrimage.cc:2246 modules/file/hdrimage.cc:2252
 #: modules/file/pixmap.c:1116 modules/file/pixmap.c:1122
 msgid "px"
 msgstr "пикс."
 
-#: modules/file/hdrimage.cc:2235 modules/file/pixmap.c:1122
+#: modules/file/hdrimage.cc:2252 modules/file/pixmap.c:1122
 msgid "Vertical size:"
 msgstr "Вертикальный размер:"
 
-#: modules/file/hdrimage.cc:2240 modules/file/pixmap.c:1127
+#: modules/file/hdrimage.cc:2257 modules/file/pixmap.c:1127
 msgid "Channels:"
 msgstr "Каналы:"
 
-#: modules/file/hdrimage.cc:2246
+#: modules/file/hdrimage.cc:2263
 msgid "Pages:"
 msgstr "Страницы:"
 
-#: modules/file/hdrimage.cc:2273 modules/file/pixmap.c:1158
+#: modules/file/hdrimage.cc:2290 modules/file/pixmap.c:1158
 #: modules/file/rawfile.c:627 modules/file/rawxyz.c:572
 #: modules/process/dimensions.h:466
 msgid "Physical Dimensions"
 msgstr "Физические размеры"
 
-#: modules/file/hdrimage.cc:2287 modules/file/pixmap.c:1168
+#: modules/file/hdrimage.cc:2304 modules/file/pixmap.c:1168
 #: modules/file/pixmap.c:3288 modules/file/rawfile.c:636
 #: modules/process/crosscor.c:215 modules/process/dimensions.h:472
 #: modules/process/tip_blind.c:337
 msgid "_Width:"
 msgstr "_Ширина:"
 
-#: modules/file/hdrimage.cc:2313 modules/file/hdrimage.cc:2378
+#: modules/file/hdrimage.cc:2330 modules/file/hdrimage.cc:2395
 #: modules/file/pixmap.c:1190 modules/file/pixmap.c:1245
 #: modules/file/rawfile.c:659 modules/file/rawfile.c:715
 #: modules/process/calcoefs_new.c:385 modules/process/calcoefs_new.c:452
@@ -3664,23 +3683,23 @@ msgstr "_Ширина:"
 msgid "verb|Change"
 msgstr "Изменить"
 
-#: modules/file/hdrimage.cc:2328 modules/file/pixmap.c:1203
+#: modules/file/hdrimage.cc:2345 modules/file/pixmap.c:1203
 #: modules/file/rawfile.c:672 modules/process/crosscor.c:226
 #: modules/process/dimensions.h:476
 msgid "H_eight:"
 msgstr "_Высота:"
 
-#: modules/file/hdrimage.cc:2337 modules/file/pixmap.c:1210
+#: modules/file/hdrimage.cc:2354 modules/file/pixmap.c:1210
 #: modules/file/rawfile.c:679 modules/file/rawxyz.c:553
 msgid "Identical _measures"
 msgstr "Одинаковый _масштаб"
 
-#: modules/file/hdrimage.cc:2351 modules/file/pixmap.c:1222
+#: modules/file/hdrimage.cc:2368 modules/file/pixmap.c:1222
 #: modules/file/rawfile.c:691
 msgid "_Z-scale (per sample unit):"
 msgstr "Масштаб _Z (на единицу дискретизации):"
 
-#: modules/file/hdrimage.cc:2540 modules/file/pixmap.c:1472
+#: modules/file/hdrimage.cc:2557 modules/file/pixmap.c:1472
 #: modules/file/rawfile.c:1325 modules/process/calcoefs_new.c:777
 #: modules/process/calcoefs_simple.c:1192 modules/process/calcoefs_view.c:1394
 #: modules/process/calibrate.c:975 modules/process/dimensions.h:194
@@ -3688,7 +3707,7 @@ msgstr "Масштаб _Z (на единицу дискретизации):"
 msgid "Change Units"
 msgstr "Изменить единицы измерения"
 
-#: modules/file/hdrimage.cc:2554 modules/file/pixmap.c:1486
+#: modules/file/hdrimage.cc:2571 modules/file/pixmap.c:1486
 #: modules/file/rawfile.c:1339 modules/process/calcoefs_new.c:790
 #: modules/process/calcoefs_simple.c:1205 modules/process/calcoefs_view.c:1407
 #: modules/process/calibrate.c:989 modules/process/dimensions.h:207
@@ -3736,34 +3755,34 @@ msgstr "Невозможно загрузить изображение: %s."
 msgid "Field DataSize %ux%u does not match image dimensions %ux%u."
 msgstr "Размер поля данных %u×%u не соответствует размерам изображения %u×%u."
 
-#: modules/file/igorfile.c:201
+#: modules/file/igorfile.c:200
 msgid "Imports Igor binary waves (.ibw)."
 msgstr "Импортирует Igor binary waves (.ibw)."
 
-#: modules/file/igorfile.c:214
+#: modules/file/igorfile.c:213
 msgid "Igor binary waves (.ibw)"
 msgstr "Двоичные волны Igor (.ibw)"
 
-#: modules/file/igorfile.c:274
+#: modules/file/igorfile.c:273
 #, c-format
 msgid "Format version is %d.  Only version 5 is supported."
 msgstr "Версия формата %d.  Поддерживается только версия 5."
 
-#: modules/file/igorfile.c:295
+#: modules/file/igorfile.c:294
 msgid "Only two-dimensional data are supported."
 msgstr "Поддерживаются только двумерные данные."
 
-#: modules/file/igorfile.c:307
+#: modules/file/igorfile.c:306
 #, c-format
 msgid "Number of data points %u does not match resolutions %u×%u×%u."
 msgstr "Число точек данных %u не соответствует разрешению %u×%u×%u."
 
-#: modules/file/igorfile.c:321
+#: modules/file/igorfile.c:320
 #, c-format
 msgid "Data size %u does not match the number of data points %u×%u."
 msgstr "Размер данных %u не соответствует числу точек данных %u×%u."
 
-#: modules/file/igorfile.c:359
+#: modules/file/igorfile.c:358
 msgid "Cannot read channel labels."
 msgstr "Не удаётся прочесть метки каналов."
 
@@ -3807,14 +3826,14 @@ msgstr ""
 
 #: modules/file/iso28600.c:757 modules/file/iso28600.c:869
 #: modules/file/sdfile.c:848 modules/file/sdfile.c:865
-#: modules/file/spip-asc.c:224 modules/file/witec-asc.c:223
+#: modules/file/spip-asc.c:230 modules/file/witec-asc.c:223
 #: modules/file/wsffile.c:216
 #, c-format
 msgid "End of file reached when reading sample #%d of %d"
 msgstr "Достигнут конец файла при чтении значения #%d из %d"
 
 #: modules/file/iso28600.c:766 modules/file/iso28600.c:878
-#: modules/file/spip-asc.c:231 modules/file/witec-asc.c:230
+#: modules/file/spip-asc.c:237 modules/file/witec-asc.c:230
 #: modules/file/wsffile.c:223
 #, c-format
 msgid "Malformed data encountered when reading sample #%d of %d"
@@ -4198,12 +4217,12 @@ msgid "NanoObserver data (.nao)"
 msgstr "Данные NanoObserver (.nao)"
 
 #: modules/file/nanoobserver.c:187 modules/file/nanoscantech.c:204
-#: modules/file/opengps.c:189
+#: modules/file/opengps.c:191
 msgid "Minizip cannot open the file as a ZIP file."
 msgstr "Minizip не может открыть файл как архив ZIP."
 
-#: modules/file/nanoobserver.c:459 modules/file/opengps.c:473
-#: modules/file/opengps.c:673 modules/file/opengps.c:709
+#: modules/file/nanoobserver.c:459 modules/file/opengps.c:480
+#: modules/file/opengps.c:680 modules/file/opengps.c:716
 #, c-format
 msgid "File %s is missing in the zip file."
 msgstr "Файл %s отсутствует в zip-архиве."
@@ -4587,25 +4606,25 @@ msgstr "Найдены вложенные каталоги"
 msgid "Truncated data in block %s"
 msgstr "Неполные данные в блоке %s"
 
-#: modules/file/opengps.c:118
+#: modules/file/opengps.c:120
 msgid "Reads OpenGPS .x3p files."
 msgstr "Читает файлы OpenGPS .x3p."
 
-#: modules/file/opengps.c:131
+#: modules/file/opengps.c:133
 msgid "OpenGPS data (.x3p)"
 msgstr "Данные OpenGPS (.x3p)"
 
-#: modules/file/opengps.c:396 modules/file/opengps.c:429
+#: modules/file/opengps.c:403 modules/file/opengps.c:436
 msgid "Too many DataList items for given matrix dimensions."
 msgstr "Слишком много элементов DataList для заданных размеров матрицы."
 
-#: modules/file/opengps.c:523
+#: modules/file/opengps.c:530
 msgid "File main.xml contains multiple data elements."
 msgstr "Файл main.xml содержит несколько элементов данных."
 
 #. TRANSLATORS: type and axis are symbols such as I, CX, ...
-#: modules/file/opengps.c:555 modules/file/opengps.c:563
-#: modules/file/opengps.c:571
+#: modules/file/opengps.c:562 modules/file/opengps.c:570
+#: modules/file/opengps.c:578
 #, c-format
 msgid "Only type %s is supported for axis %s."
 msgstr "Только тип %s доступен для оси %s."
@@ -5660,11 +5679,11 @@ msgstr "Достигнут конец файла внутри блока кан�
 msgid "End of file reached when another channel was expected."
 msgstr "Достигнут конец файла в то время, как ожидался другой канал."
 
-#: modules/file/spip-asc.c:76
+#: modules/file/spip-asc.c:82
 msgid "Imports SPIP ASC files."
 msgstr "Импортирует файлы SPIP ASC."
 
-#: modules/file/spip-asc.c:89
+#: modules/file/spip-asc.c:95
 msgid "SPIP ASCII files (.asc)"
 msgstr "ASCII файлы SPIP (.asc)"
 
@@ -7305,11 +7324,11 @@ msgstr "Исправить аффинное искажение"
 msgid "Affine Correction"
 msgstr "Аффинная коррекция"
 
-#: modules/process/correct_affine.c:371 modules/process/fft_filter_2d.c:577
+#: modules/process/correct_affine.c:371 modules/process/fft_filter_2d.c:564
 msgid "Preview Options"
 msgstr "Параметры предпросмотра"
 
-#: modules/process/correct_affine.c:376 modules/process/fft_filter_2d.c:582
+#: modules/process/correct_affine.c:376 modules/process/fft_filter_2d.c:569
 msgid "Display:"
 msgstr "Показать:"
 
@@ -7438,7 +7457,7 @@ msgstr "Расстояние по Y"
 msgid "Score"
 msgstr "Степень"
 
-#: modules/process/crosscor.c:272 modules/process/fft.c:310
+#: modules/process/crosscor.c:272 modules/process/fft.c:285
 #: modules/process/maskcor.c:174
 msgid "Output _type:"
 msgstr "Тип в_ывода:"
@@ -7815,11 +7834,11 @@ msgstr "_Смещение:"
 msgid "_Monte Carlo time step:"
 msgstr "Временной шаг метода _Монте-Карло:"
 
-#: modules/process/domain_synth.c:522 modules/process/fft_filter_2d.c:633
+#: modules/process/domain_synth.c:522 modules/process/fft_filter_2d.c:620
 msgid "Output Options"
 msgstr "Параметры вывода"
 
-#: modules/process/domain_synth.c:541 modules/process/fft_filter_2d.c:638
+#: modules/process/domain_synth.c:541 modules/process/fft_filter_2d.c:625
 #: modules/process/mask_edt.c:164 modules/process/slope_dist.c:325
 msgid "Output type:"
 msgstr "Тип вывода:"
@@ -8104,7 +8123,7 @@ msgstr "ср. квадр. в окр."
 msgid "verb|Display"
 msgstr "Показать"
 
-#: modules/process/edge.c:721 modules/process/fft_filter_2d.c:411
+#: modules/process/edge.c:721 modules/process/fft_filter_2d.c:398
 msgid "Original _image"
 msgstr "Исходное _изображение"
 
@@ -8244,71 +8263,71 @@ msgstr ""
 "Предупреждение: Единицы измерения горизонтальных размеров и значений "
 "различаются. Углы не имеют физического смысла."
 
-#: modules/process/fft.c:97
+#: modules/process/fft.c:96
 msgid "Two-dimensional FFT (Fast Fourier Transform)."
 msgstr "Двумерное БПФ (быстрое преобразование Фурье)."
 
-#: modules/process/fft.c:111
+#: modules/process/fft.c:110
 msgid "/_Integral Transforms/2D _FFT..."
 msgstr "/_Интегральные преобразования/2D _БПФ..."
 
-#: modules/process/fft.c:115
+#: modules/process/fft.c:114
 msgid "Compute Fast Fourier Transform"
 msgstr "Вычислить быстрое преобразование Фурье"
 
-#: modules/process/fft.c:160
+#: modules/process/fft.c:159
 msgid "FFT Real"
 msgstr "Действительная часть БПФ"
 
-#: modules/process/fft.c:164
+#: modules/process/fft.c:163
 msgid "FFT Imag"
 msgstr "Мнимая часть БПФ"
 
-#: modules/process/fft.c:169
+#: modules/process/fft.c:168
 msgid "FFT Modulus"
 msgstr "Абсолютное значение БПФ"
 
-#: modules/process/fft.c:175
+#: modules/process/fft.c:174
 msgid "FFT Phase"
 msgstr "Фаза БПФ"
 
-#: modules/process/fft.c:271
+#: modules/process/fft.c:246
 msgid "Real + Imaginary"
 msgstr "Действительное + Мнимое"
 
-#: modules/process/fft.c:272
+#: modules/process/fft.c:247
 msgid "Modulus + Phase"
 msgstr "Абсолютная величина + Фаза"
 
-#: modules/process/fft.c:273
+#: modules/process/fft.c:248
 msgid "Real"
 msgstr "Действительное"
 
-#: modules/process/fft.c:274
+#: modules/process/fft.c:249
 msgid "Imaginary"
 msgstr "Мнимое"
 
-#: modules/process/fft.c:275
+#: modules/process/fft.c:250
 msgid "Modulus"
 msgstr "Абсолютная величина: "
 
-#: modules/process/fft.c:276 modules/process/wave_synth.c:601
+#: modules/process/fft.c:251 modules/process/wave_synth.c:601
 msgid "Phase"
 msgstr "Фаза"
 
-#: modules/process/fft.c:282
+#: modules/process/fft.c:257
 msgid "2D FFT"
 msgstr "Двумерное БПФ"
 
-#: modules/process/fft.c:302
+#: modules/process/fft.c:277
 msgid "_Windowing type:"
 msgstr "Тип о_кна:"
 
-#: modules/process/fft.c:315
+#: modules/process/fft.c:290
 msgid "Subtract mean _value beforehand"
 msgstr "Сначала вычесть среднее _значение"
 
-#: modules/process/fft.c:326
+#: modules/process/fft.c:301
 msgid "_Preserve RMS"
 msgstr "Со_хранять среднеквадратичное отклонение"
 
@@ -8360,7 +8379,7 @@ msgstr "Тип _фильтра:"
 msgid "1D FFT Filtered Data"
 msgstr "Отфильтрованные данные одномерного БПФ"
 
-#: modules/process/fft_filter_2d.c:170 modules/process/fft_filter_2d.c:456
+#: modules/process/fft_filter_2d.c:170 modules/process/fft_filter_2d.c:443
 msgid "2D FFT Filtering"
 msgstr "Двумерный фильтр БПФ"
 
@@ -8381,103 +8400,103 @@ msgstr "Отфильтрованные данные"
 msgid "Difference"
 msgstr "Разница"
 
-#: modules/process/fft_filter_2d.c:343
+#: modules/process/fft_filter_2d.c:330
 msgid "Filtered FFT"
 msgstr "Отфильтрованное БПФ"
 
-#: modules/process/fft_filter_2d.c:381
+#: modules/process/fft_filter_2d.c:368
 msgid "Add an ellipse to the FFT mask"
 msgstr "Добавить эллипс к маске БПФ"
 
-#: modules/process/fft_filter_2d.c:386
+#: modules/process/fft_filter_2d.c:373
 msgid "Add a rectangle to the FFT mask"
 msgstr "Добавить прямоугольник к маске БПФ"
 
-#: modules/process/fft_filter_2d.c:391
+#: modules/process/fft_filter_2d.c:378
 msgid "Subtract an ellipse from the FFT mask"
 msgstr "Вычесть эллипс из маски БПФ"
 
-#: modules/process/fft_filter_2d.c:396
+#: modules/process/fft_filter_2d.c:383
 msgid "Subtract a rectange from the FFT mask"
 msgstr "Вычесть прямоугольник из маски БПФ"
 
-#: modules/process/fft_filter_2d.c:407
+#: modules/process/fft_filter_2d.c:394
 msgid "_FFT mask editor"
 msgstr "Редактор маски _БПФ"
 
-#: modules/process/fft_filter_2d.c:415
+#: modules/process/fft_filter_2d.c:402
 msgid "Fi_ltered image"
 msgstr "Отфи_льтрованное изображение"
 
-#: modules/process/fft_filter_2d.c:419
+#: modules/process/fft_filter_2d.c:406
 msgid "Image _difference"
 msgstr "_Разница изображений"
 
-#: modules/process/fft_filter_2d.c:430
+#: modules/process/fft_filter_2d.c:417
 msgid "Filtered i_mage"
 msgstr "От_фильтрованное изображение"
 
-#: modules/process/fft_filter_2d.c:434
+#: modules/process/fft_filter_2d.c:421
 msgid "Ima_ge difference"
 msgstr "_Разница изображений"
 
-#: modules/process/fft_filter_2d.c:438
+#: modules/process/fft_filter_2d.c:425
 msgid "Filtered FFT mo_dulus"
 msgstr "Отфильтрованный _модуль БПФ"
 
-#: modules/process/fft_filter_2d.c:502
+#: modules/process/fft_filter_2d.c:489
 msgid "Filter Mask"
 msgstr "Маска фильтра"
 
-#: modules/process/fft_filter_2d.c:537
+#: modules/process/fft_filter_2d.c:524
 msgid "_Undo"
 msgstr "_Отменить"
 
-#: modules/process/fft_filter_2d.c:546 modules/tools/maskedit.c:536
+#: modules/process/fft_filter_2d.c:533 modules/tools/maskedit.c:536
 msgid "_Remove"
 msgstr "_Удалить"
 
-#: modules/process/fft_filter_2d.c:554 modules/tools/maskedit.c:544
+#: modules/process/fft_filter_2d.c:541 modules/tools/maskedit.c:544
 msgid "_Fill"
 msgstr "_Заполнить"
 
-#: modules/process/fft_filter_2d.c:564
+#: modules/process/fft_filter_2d.c:551
 msgid "_Snap to origin"
 msgstr "_Прикрепить к началу координат"
 
-#: modules/process/fft_filter_2d.c:612
+#: modules/process/fft_filter_2d.c:599
 msgid "Zoom:"
 msgstr "Масштаб:"
 
-#: modules/process/fft_filter_2d.c:1299
+#: modules/process/fft_filter_2d.c:1275
 msgid "Draw ellipses on the mask"
 msgstr "Рисовать эллипсы на маске БПФ"
 
-#: modules/process/fft_filter_2d.c:1301
+#: modules/process/fft_filter_2d.c:1277
 msgid "Draw rectangles on the mask"
 msgstr "Рисовать прямоугольники на маске БПФ"
 
-#: modules/process/fft_filter_2d.c:1303
+#: modules/process/fft_filter_2d.c:1279
 msgid "Undraw ellipses on the mask"
 msgstr "Вырезать эллипсы из маски БПФ"
 
-#: modules/process/fft_filter_2d.c:1305
+#: modules/process/fft_filter_2d.c:1281
 msgid "Undraw rectangles on the mask"
 msgstr "Вырезать прямоугольники из маски БПФ"
 
-#: modules/process/fft_filter_2d.c:1307
+#: modules/process/fft_filter_2d.c:1283
 msgid "Undo the last change to the filter mask"
 msgstr "Отменить последнее изменение маски фильтра"
 
-#: modules/process/fft_filter_2d.c:1309
+#: modules/process/fft_filter_2d.c:1285
 msgid "Clear the entire filter mask"
 msgstr "Очистить всю маску фильтра"
 
-#: modules/process/fft_filter_2d.c:1311
+#: modules/process/fft_filter_2d.c:1287
 msgid "Fill the entire filter mask"
 msgstr "Заполнить всю маску фильтра"
 
-#: modules/process/fft_filter_2d.c:1313
+#: modules/process/fft_filter_2d.c:1289
 msgid "Force shapes to center around the origin"
 msgstr "Центрирует фигуры относительно начала координат"
 
@@ -11728,15 +11747,15 @@ msgstr "Команда"
 msgid "Pygwy, the Gwyddion Python wrapper."
 msgstr "Pygwy, оболочка Python в Gwyddion."
 
-#: pygwy.c:539 pygwy.c:632
+#: pygwy.c:542 pygwy.c:635
 msgid "Function written in Python"
 msgstr "Функция на языке Python"
 
-#: pygwy.c:585
+#: pygwy.c:588
 msgid "Graph function written in Python"
 msgstr "Графическая функция на языке Python"
 
-#: pygwy.c:1057
+#: pygwy.c:1060
 #, c-format
 msgid ""
 "Pygwy plugin: %s (%s)\n"
