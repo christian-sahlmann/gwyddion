@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-09-12 03:58+0200\n"
-"PO-Revision-Date: 2014-09-12 19:04+0200\n"
+"POT-Creation-Date: 2014-09-16 03:58+0200\n"
+"PO-Revision-Date: 2014-09-16 13:07+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "Language: cs\n"
@@ -886,7 +886,7 @@ msgstr "pixelů"
 #: modules/process/dwt.c:166 modules/process/dwtanisotropy.c:184
 #: modules/process/edge.c:651 modules/process/extend.c:192
 #: modules/process/facet-level.c:190 modules/process/facet_analysis.c:276
-#: modules/process/fft.c:283 modules/process/fft_filter_2d.c:457
+#: modules/process/fft.c:258 modules/process/fft_filter_2d.c:444
 #: modules/process/fft_synth.c:351 modules/process/fractal.c:207
 #: modules/process/grain_edge.c:218 modules/process/grain_mark.c:264
 #: modules/process/grain_wshed.c:183 modules/process/hough.c:179
@@ -1892,7 +1892,8 @@ msgstr "Skrýt okno nástroje (Esc)"
 msgid "Cannot display the help."
 msgstr "Nápovědu nelze zobrazit."
 
-#: app/help.c:256
+#. TRANSLATORS: %s will be replaced with an URL.
+#: app/help.c:257
 #, c-format
 msgid ""
 "No working method to show\n"
@@ -1907,7 +1908,7 @@ msgstr ""
 
 #. TRANSLATORS: For user guide location.  Translate this to fr, ru, cs,
 #. de, ...  even if the corresponding guide does not exist.
-#: app/help.c:359
+#: app/help.c:360
 msgid "current-language-code|en"
 msgstr "current-language-code|cs"
 
@@ -3307,6 +3308,24 @@ msgstr "První sekce není DataSet"
 msgid "GroupCount in [DataSet]"
 msgstr "GroupCount v [DataSet]"
 
+#: modules/file/femtoscan-txt.c:78
+msgid "Imports FemtoScan TXT files."
+msgstr "Načítá TXT datové soubory NanoScan."
+
+#: modules/file/femtoscan-txt.c:91
+msgid "FemtoScan text files (.txt)"
+msgstr "FemtoScan textové soubory (.txt)"
+
+#: modules/file/femtoscan-txt.c:190
+msgid "Data line does not start with a Y abscissa."
+msgstr "Datový řádek nezačíná hodnotou Y souřadnice."
+
+#: modules/file/femtoscan-txt.c:198
+msgid ""
+"Data line length %u does not correspond to the number of X abscissas %u."
+msgstr ""
+"Délka %u datového řádku neodpovídá počtu souřadnic X."
+
 #: modules/file/fitsfile.c:68
 msgid "Reads Flexible Image Transport System (FITS) files."
 msgstr "Načítá soubory Flexible Image Transport System (FITS)."
@@ -3316,6 +3335,7 @@ msgid "Flexible Image Transport System FITS (.fits)"
 msgstr "Flexible Image Transport System FITS (.fits)"
 
 #: modules/file/fitsfile.c:120
+#, c-format
 msgid "CFITSIO error while reading the FITS file: %s."
 msgstr "Chyba CFITSIO při načítání FITS souboru: %s."
 
@@ -3759,14 +3779,14 @@ msgstr "Seznam ‚%s‘ má %u položek, což se liší od počtu %u daného ‚
 
 #: modules/file/iso28600.c:757 modules/file/iso28600.c:869
 #: modules/file/sdfile.c:848 modules/file/sdfile.c:865
-#: modules/file/spip-asc.c:224 modules/file/witec-asc.c:223
+#: modules/file/spip-asc.c:230 modules/file/witec-asc.c:223
 #: modules/file/wsffile.c:216
 #, c-format
 msgid "End of file reached when reading sample #%d of %d"
 msgstr "Soubor skončil při čtení vzorku č. %d z %d."
 
 #: modules/file/iso28600.c:766 modules/file/iso28600.c:878
-#: modules/file/spip-asc.c:231 modules/file/witec-asc.c:230
+#: modules/file/spip-asc.c:237 modules/file/witec-asc.c:230
 #: modules/file/wsffile.c:223
 #, c-format
 msgid "Malformed data encountered when reading sample #%d of %d"
@@ -4153,6 +4173,7 @@ msgstr "Minizip nedokáže otevřít soubor coby soubor ZIP."
 
 #: modules/file/nanoobserver.c:459 modules/file/opengps.c:480
 #: modules/file/opengps.c:680 modules/file/opengps.c:716
+#, c-format
 msgid "File %s is missing in the zip file."
 msgstr "V zip souboru schází soubor %s."
 
@@ -4399,6 +4420,7 @@ msgid "Frame #%u is too short for scanned data header."
 msgstr "Rám č. %u je příliš krátký pro hlavičku dat skenu."
 
 #: modules/file/nt-mdt.c:2001
+#, c-format
 msgid "Frame #%u is too short for spectroscopy data header."
 msgstr "Rám č. %u je příliš krátký pro hlavičku spektroskopických dat."
 
@@ -5590,11 +5612,11 @@ msgstr "Soubor skončil v bloku kanálu."
 msgid "End of file reached when another channel was expected."
 msgstr "Soubor skončil v místě, kde by měl být další kanál."
 
-#: modules/file/spip-asc.c:76
+#: modules/file/spip-asc.c:82
 msgid "Imports SPIP ASC files."
 msgstr "Načítá ASCII datové soubory SPIP."
 
-#: modules/file/spip-asc.c:89
+#: modules/file/spip-asc.c:95
 msgid "SPIP ASCII files (.asc)"
 msgstr "SPIP ASCII soubory (.asc)"
 
@@ -7227,11 +7249,11 @@ msgstr "Opravit afinní pokřivené"
 msgid "Affine Correction"
 msgstr "Afinní pokřivení"
 
-#: modules/process/correct_affine.c:371 modules/process/fft_filter_2d.c:577
+#: modules/process/correct_affine.c:371 modules/process/fft_filter_2d.c:564
 msgid "Preview Options"
 msgstr "Volby náhledu"
 
-#: modules/process/correct_affine.c:376 modules/process/fft_filter_2d.c:582
+#: modules/process/correct_affine.c:376 modules/process/fft_filter_2d.c:569
 msgid "Display:"
 msgstr "Zobrazovat:"
 
@@ -7360,7 +7382,7 @@ msgstr "Vzdálenost v ose Y"
 msgid "Score"
 msgstr "Skóre"
 
-#: modules/process/crosscor.c:272 modules/process/fft.c:310
+#: modules/process/crosscor.c:272 modules/process/fft.c:285
 #: modules/process/maskcor.c:174
 msgid "Output _type:"
 msgstr "T_yp výstupu:"
@@ -7735,11 +7757,11 @@ msgstr "Pře_dpětí:"
 msgid "_Monte Carlo time step:"
 msgstr "Časový krok _Monte Carlo:"
 
-#: modules/process/domain_synth.c:522 modules/process/fft_filter_2d.c:633
+#: modules/process/domain_synth.c:522 modules/process/fft_filter_2d.c:620
 msgid "Output Options"
 msgstr "Možnosti výstupu"
 
-#: modules/process/domain_synth.c:541 modules/process/fft_filter_2d.c:638
+#: modules/process/domain_synth.c:541 modules/process/fft_filter_2d.c:625
 #: modules/process/mask_edt.c:164 modules/process/slope_dist.c:325
 msgid "Output type:"
 msgstr "Typ výstupu:"
@@ -8019,7 +8041,7 @@ msgstr "NRMS"
 msgid "verb|Display"
 msgstr "Zobrazovat"
 
-#: modules/process/edge.c:721 modules/process/fft_filter_2d.c:411
+#: modules/process/edge.c:721 modules/process/fft_filter_2d.c:398
 msgid "Original _image"
 msgstr "_Původní obraz"
 
@@ -8159,71 +8181,71 @@ msgstr ""
 "Pozor: Jednotky podélných rozměrů a hodnot se liší. Úhly nedávají fyzikálně "
 "smysl."
 
-#: modules/process/fft.c:97
+#: modules/process/fft.c:96
 msgid "Two-dimensional FFT (Fast Fourier Transform)."
 msgstr "Dvourozměrná FFT (rychlá Fourierova transformace)."
 
-#: modules/process/fft.c:111
+#: modules/process/fft.c:110
 msgid "/_Integral Transforms/2D _FFT..."
 msgstr "/_Integrální transformace/2D _FFT..."
 
-#: modules/process/fft.c:115
+#: modules/process/fft.c:114
 msgid "Compute Fast Fourier Transform"
 msgstr "Vypočíst rychlou Fourierovu transformaci (FFT)"
 
-#: modules/process/fft.c:160
+#: modules/process/fft.c:159
 msgid "FFT Real"
 msgstr "Reálná část FFT"
 
-#: modules/process/fft.c:164
+#: modules/process/fft.c:163
 msgid "FFT Imag"
 msgstr "Imaginární část FFT"
 
-#: modules/process/fft.c:169
+#: modules/process/fft.c:168
 msgid "FFT Modulus"
 msgstr "Modul FFT"
 
-#: modules/process/fft.c:175
+#: modules/process/fft.c:174
 msgid "FFT Phase"
 msgstr "Fáze FFT"
 
-#: modules/process/fft.c:271
+#: modules/process/fft.c:246
 msgid "Real + Imaginary"
 msgstr "Reálný + imaginární"
 
-#: modules/process/fft.c:272
+#: modules/process/fft.c:247
 msgid "Modulus + Phase"
 msgstr "Modul + fáze"
 
-#: modules/process/fft.c:273
+#: modules/process/fft.c:248
 msgid "Real"
 msgstr "Reálný"
 
-#: modules/process/fft.c:274
+#: modules/process/fft.c:249
 msgid "Imaginary"
 msgstr "Imaginární"
 
-#: modules/process/fft.c:275
+#: modules/process/fft.c:250
 msgid "Modulus"
 msgstr "Modul FFT"
 
-#: modules/process/fft.c:276 modules/process/wave_synth.c:601
+#: modules/process/fft.c:251 modules/process/wave_synth.c:601
 msgid "Phase"
 msgstr "Fáze"
 
-#: modules/process/fft.c:282
+#: modules/process/fft.c:257
 msgid "2D FFT"
 msgstr "2D FFT"
 
-#: modules/process/fft.c:302
+#: modules/process/fft.c:277
 msgid "_Windowing type:"
 msgstr "Typ _okénkové funkce:"
 
-#: modules/process/fft.c:315
+#: modules/process/fft.c:290
 msgid "Subtract mean _value beforehand"
 msgstr "Nejprve odečíst _střední hodnotu"
 
-#: modules/process/fft.c:326
+#: modules/process/fft.c:301
 msgid "_Preserve RMS"
 msgstr "_Zachovat RMS"
 
@@ -8275,7 +8297,7 @@ msgstr "Typ _filtru:"
 msgid "1D FFT Filtered Data"
 msgstr "1D FFT filtrovaná data"
 
-#: modules/process/fft_filter_2d.c:170 modules/process/fft_filter_2d.c:456
+#: modules/process/fft_filter_2d.c:170 modules/process/fft_filter_2d.c:443
 msgid "2D FFT Filtering"
 msgstr "Dvourozměrné FFT filtrování"
 
@@ -8296,103 +8318,103 @@ msgstr "Filtrovaná data"
 msgid "Difference"
 msgstr "Rozdíl"
 
-#: modules/process/fft_filter_2d.c:343
+#: modules/process/fft_filter_2d.c:330
 msgid "Filtered FFT"
 msgstr "Filtrované FFT"
 
-#: modules/process/fft_filter_2d.c:381
+#: modules/process/fft_filter_2d.c:368
 msgid "Add an ellipse to the FFT mask"
 msgstr "Přidat k FFT masce elipsu"
 
-#: modules/process/fft_filter_2d.c:386
+#: modules/process/fft_filter_2d.c:373
 msgid "Add a rectangle to the FFT mask"
 msgstr "Přidat k FFT masce obdélník"
 
-#: modules/process/fft_filter_2d.c:391
+#: modules/process/fft_filter_2d.c:378
 msgid "Subtract an ellipse from the FFT mask"
 msgstr "Odstranit z FFT masky elipsu"
 
-#: modules/process/fft_filter_2d.c:396
+#: modules/process/fft_filter_2d.c:383
 msgid "Subtract a rectange from the FFT mask"
 msgstr "Odstranit z FFT masky obdélník"
 
-#: modules/process/fft_filter_2d.c:407
+#: modules/process/fft_filter_2d.c:394
 msgid "_FFT mask editor"
 msgstr "Editor _FFT masky"
 
-#: modules/process/fft_filter_2d.c:415
+#: modules/process/fft_filter_2d.c:402
 msgid "Fi_ltered image"
 msgstr "F_iltrovaný obraz"
 
-#: modules/process/fft_filter_2d.c:419
+#: modules/process/fft_filter_2d.c:406
 msgid "Image _difference"
 msgstr "_Rozdíl obrazů"
 
-#: modules/process/fft_filter_2d.c:430
+#: modules/process/fft_filter_2d.c:417
 msgid "Filtered i_mage"
 msgstr "Filtrovaný obra_z"
 
-#: modules/process/fft_filter_2d.c:434
+#: modules/process/fft_filter_2d.c:421
 msgid "Ima_ge difference"
 msgstr "Rozdíl o_brazů"
 
-#: modules/process/fft_filter_2d.c:438
+#: modules/process/fft_filter_2d.c:425
 msgid "Filtered FFT mo_dulus"
 msgstr "Filtrovaný mod_ul FFT"
 
-#: modules/process/fft_filter_2d.c:502
+#: modules/process/fft_filter_2d.c:489
 msgid "Filter Mask"
 msgstr "Maska filtru"
 
-#: modules/process/fft_filter_2d.c:537
+#: modules/process/fft_filter_2d.c:524
 msgid "_Undo"
 msgstr "_Zpět"
 
-#: modules/process/fft_filter_2d.c:546 modules/tools/maskedit.c:536
+#: modules/process/fft_filter_2d.c:533 modules/tools/maskedit.c:536
 msgid "_Remove"
 msgstr "_Odstranit"
 
-#: modules/process/fft_filter_2d.c:554 modules/tools/maskedit.c:544
+#: modules/process/fft_filter_2d.c:541 modules/tools/maskedit.c:544
 msgid "_Fill"
 msgstr "_Vyplnění"
 
-#: modules/process/fft_filter_2d.c:564
+#: modules/process/fft_filter_2d.c:551
 msgid "_Snap to origin"
 msgstr "Při_chytit k počátku"
 
-#: modules/process/fft_filter_2d.c:612
+#: modules/process/fft_filter_2d.c:599
 msgid "Zoom:"
 msgstr "_Zvětšení:"
 
-#: modules/process/fft_filter_2d.c:1299
+#: modules/process/fft_filter_2d.c:1275
 msgid "Draw ellipses on the mask"
 msgstr "Nakreslit na masku elipsu"
 
-#: modules/process/fft_filter_2d.c:1301
+#: modules/process/fft_filter_2d.c:1277
 msgid "Draw rectangles on the mask"
 msgstr "Nakreslit na masku obdélník"
 
-#: modules/process/fft_filter_2d.c:1303
+#: modules/process/fft_filter_2d.c:1279
 msgid "Undraw ellipses on the mask"
 msgstr "Vymazat z masky elipsu"
 
-#: modules/process/fft_filter_2d.c:1305
+#: modules/process/fft_filter_2d.c:1281
 msgid "Undraw rectangles on the mask"
 msgstr "Vymazat z masky obdélník"
 
-#: modules/process/fft_filter_2d.c:1307
+#: modules/process/fft_filter_2d.c:1283
 msgid "Undo the last change to the filter mask"
 msgstr "Vrátit zpět poslední změnu masky filtru"
 
-#: modules/process/fft_filter_2d.c:1309
+#: modules/process/fft_filter_2d.c:1285
 msgid "Clear the entire filter mask"
 msgstr "Vymazat celou masku filtru"
 
-#: modules/process/fft_filter_2d.c:1311
+#: modules/process/fft_filter_2d.c:1287
 msgid "Fill the entire filter mask"
 msgstr "Vyplnit celou masku filtru"
 
-#: modules/process/fft_filter_2d.c:1313
+#: modules/process/fft_filter_2d.c:1289
 msgid "Force shapes to center around the origin"
 msgstr "Upevnit středy nových oblastí do počátku"
 
@@ -12605,6 +12627,7 @@ msgid "No"
 msgstr "Ne"
 
 #: modules/tools/stats.c:1115
+#, c-format
 msgid ""
 "Selected area:     %s × %s at (%s, %s) px\n"
 "                   %s × %s at (%s, %s) %s\n"
@@ -12839,6 +12862,7 @@ msgid "Load volume data"
 msgstr "Načíst objemová data"
 
 #: modules/volume/volume_extract.c:1217
+#, c-format
 msgid "Shown range %g to %g"
 msgstr "Zobrazený rozsah %g až %g"
 
@@ -12933,47 +12957,3 @@ msgstr "K-means chyba z %s"
 msgid "K-means center %d"
 msgstr "K-means střed %d"
 
-#~ msgid "Make _1:1"
-#~ msgstr "Naškálovat _1:1:"
-
-#~ msgid "Full"
-#~ msgstr "Plný"
-
-#~ msgid "Direction difference"
-#~ msgstr "Směr rozdílu"
-
-#~ msgid "Scaling"
-#~ msgstr "Škálování"
-
-#~ msgid "Removes grains by thresholding (height, size)."
-#~ msgstr "Odstraňuje zrna podle prahu (výšky, velikosti)."
-
-#~ msgid "Remove grains by threshold"
-#~ msgstr "Odstranění zrn podle prahu"
-
-#~ msgid "Remove Grains by Threshold"
-#~ msgstr "Odstranění zrn podle prahu"
-
-#~ msgid "_Area:"
-#~ msgstr "_Plocha:"
-
-#~ msgid "_Selection mode:"
-#~ msgstr "Způsob výběru:"
-
-#~ msgid "Lanzcos"
-#~ msgstr "Lanzcos"
-
-#~ msgid "File header is too short."
-#~ msgstr "Hlavička souboru je příliš krátká."
-
-#~ msgid "Select area of interest"
-#~ msgstr "Vyber oblast zájmu"
-
-#~ msgid "_Source:"
-#~ msgstr "_Zdroj:"
-
-#~ msgid "source|Directional"
-#~ msgstr "Směrový"
-
-#~ msgid "Top-level element is not ‘TiffTagDescData’."
-#~ msgstr "Nejvyšší element není ‚TiffTagDescData‘."
