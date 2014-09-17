@@ -91,7 +91,7 @@ file_LTLIBRARIES = \
 	ecsfile.la \
 	ezdfile.la \
 	$(fitsfile_module) \
-	femtoscan-txt.la
+	femtoscan-txt.la \
 	gdeffile.la \
 	gsffile.la \
 	gwyfile.la \
