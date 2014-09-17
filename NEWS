@@ -44,6 +44,7 @@ Modules:
   values.
 - HDR image: NaNs and infinites in floating point images are removed and
   masked upon import.
+- Slope distribution: A bad typecast causing Gtk+ warning was fixed.
 
 
 2.37 (2014-06-27)

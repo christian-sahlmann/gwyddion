@@ -150,7 +150,7 @@ static GwyModuleInfo module_info = {
     N_("Calculates one- or two-dimensional distribution of slopes "
        "or graph of their angular distribution."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -246,7 +246,7 @@ slope_dialog(SlopeArgs *args, gboolean same_units,
         { N_("_Inclination (θ) graph"),        SLOPE_DIST_GRAPH_THETA,    },
         { N_("Inclination (gra_dient) graph"), SLOPE_DIST_GRAPH_GRADIENT, },
     };
-    GtkWidget *dialog, *table, *label, *hbox, *vbox;
+    GtkWidget *dialog, *table, *label, *hbox, *vbox, *button;
     GwyGraphModel *gmodel;
     GwyPixmapLayer *layer;
     SlopeControls controls;
@@ -411,7 +411,8 @@ slope_dialog(SlopeArgs *args, gboolean same_units,
     else
         controls.masking = NULL;
 
-    output_type_changed(GTK_TOGGLE_BUTTON(controls.output_type), &controls);
+    button = gwy_radio_buttons_find(controls.output_type, args->output_type);
+    output_type_changed(GTK_TOGGLE_BUTTON(button), &controls);
     fit_plane_changed(&controls, GTK_TOGGLE_BUTTON(controls.fit_plane));
     if (args->update) {
         gtk_dialog_set_response_sensitive(GTK_DIALOG(controls.dialog),
