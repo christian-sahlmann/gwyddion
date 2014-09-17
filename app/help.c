@@ -381,8 +381,16 @@ check_local_file_uri(const gchar *uri)
     /* If we use g_file_new_for_uri() on a bare path the tests below will not
      * behave as expected. */
     if (!(scheme = g_file_get_uri_scheme(gfile))) {
+        const gchar *p;
+
         g_object_unref(gfile);
-        gfile = g_file_new_for_path(uri);
+        if ((p = strchr(uri, '#'))) {
+            path = g_strndup(uri, p - uri);
+            gfile = g_file_new_for_path(path);
+            g_free(path);
+        }
+        else
+            gfile = g_file_new_for_path(uri);
     }
     else
         g_free(scheme);
@@ -398,6 +406,10 @@ check_local_file_uri(const gchar *uri)
 
     fileinfo = g_file_query_info(gfile, G_FILE_ATTRIBUTE_STANDARD_TYPE,
                                  0, NULL, NULL);
+    if (!fileinfo) {
+        g_object_unref(gfile);
+        return FALSE;
+    }
     filetype = g_file_info_get_file_type(fileinfo);
     g_object_unref(gfile);
     g_object_unref(fileinfo);
