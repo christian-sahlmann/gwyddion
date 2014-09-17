@@ -18,6 +18,13 @@
  *  Boston, MA 02110-1301, USA.
  */
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Flexible Image Transport System (FITS)
+ * .fits, .fit
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>

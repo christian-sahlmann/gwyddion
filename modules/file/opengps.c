@@ -18,6 +18,13 @@
  *  Boston, MA 02110-1301, USA.
  */
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * OpenGPS X3P (ISO 5436-2)
+ * .x3p
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
