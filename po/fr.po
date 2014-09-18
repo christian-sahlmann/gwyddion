@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-09-16 03:58+0200\n"
+"POT-Creation-Date: 2014-09-18 09:32+0200\n"
 "PO-Revision-Date: 2014-09-16 19:20+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
@@ -3369,21 +3369,21 @@ msgstr ""
 "La longueur de la ligne de données %u ne correspond pas au nombre "
 "d'abscisses X %u."
 
-#: modules/file/fitsfile.c:68
+#: modules/file/fitsfile.c:75
 msgid "Reads Flexible Image Transport System (FITS) files."
 msgstr "Importe les images Flexible Image Transport System (FITS)."
 
-#: modules/file/fitsfile.c:81
+#: modules/file/fitsfile.c:88
 msgid "Flexible Image Transport System FITS (.fits)"
 msgstr "Flexible Image Transport System FITS (.fits)"
 
-#: modules/file/fitsfile.c:120
+#: modules/file/fitsfile.c:127
 #, c-format
 msgid "CFITSIO error while reading the FITS file: %s."
 msgstr "Erreur CFITSIO lors de la lecture du fichier FITS : %s."
 
-#: modules/file/fitsfile.c:152 modules/file/fitsfile.c:164
-#: modules/file/fitsfile.c:175
+#: modules/file/fitsfile.c:159 modules/file/fitsfile.c:171
+#: modules/file/fitsfile.c:182
 msgid "Only two-dimensional images are supported."
 msgstr "Seules les images bi-dimensionnelles sont supportées."
 
@@ -4240,12 +4240,12 @@ msgid "NanoObserver data (.nao)"
 msgstr "NanoObserver (.nao)"
 
 #: modules/file/nanoobserver.c:187 modules/file/nanoscantech.c:204
-#: modules/file/opengps.c:191
+#: modules/file/opengps.c:198
 msgid "Minizip cannot open the file as a ZIP file."
 msgstr "Minizip n'arrive pas à ouvrir le fichier en tant que fichier ZIP."
 
-#: modules/file/nanoobserver.c:459 modules/file/opengps.c:480
-#: modules/file/opengps.c:680 modules/file/opengps.c:716
+#: modules/file/nanoobserver.c:459 modules/file/opengps.c:487
+#: modules/file/opengps.c:687 modules/file/opengps.c:723
 #, c-format
 msgid "File %s is missing in the zip file."
 msgstr "Le fichier %s est absent du fichier zip."
@@ -4637,27 +4637,27 @@ msgstr "Des dossiers emboîtés ont été trouvés"
 msgid "Truncated data in block %s"
 msgstr "Données tronquées dans le bloc %s"
 
-#: modules/file/opengps.c:120
+#: modules/file/opengps.c:127
 msgid "Reads OpenGPS .x3p files."
 msgstr "Importe les fichiers OpenGPS (.x3p)"
 
-#: modules/file/opengps.c:133
+#: modules/file/opengps.c:140
 msgid "OpenGPS data (.x3p)"
 msgstr "OpenGPS (.x3p)"
 
-#: modules/file/opengps.c:403 modules/file/opengps.c:436
+#: modules/file/opengps.c:410 modules/file/opengps.c:443
 msgid "Too many DataList items for given matrix dimensions."
 msgstr ""
 "Il y a trop d'éléments DataList par rapport aux dimensions données pour la "
 "matrice."
 
-#: modules/file/opengps.c:530
+#: modules/file/opengps.c:537
 msgid "File main.xml contains multiple data elements."
 msgstr "Le fichier main.xml contient plusieurs éléments de données."
 
 #. TRANSLATORS: type and axis are symbols such as I, CX, ...
-#: modules/file/opengps.c:562 modules/file/opengps.c:570
-#: modules/file/opengps.c:578
+#: modules/file/opengps.c:569 modules/file/opengps.c:577
+#: modules/file/opengps.c:585
 #, c-format
 msgid "Only type %s is supported for axis %s."
 msgstr "Seul le type %s est supporté pour l'axe %s."
@@ -11085,19 +11085,19 @@ msgstr "Graphe d'inclinaison (gradient)"
 msgid "Slope Distribution"
 msgstr "Distribution des pentes"
 
-#: modules/process/slope_dist.c:704
+#: modules/process/slope_dist.c:705
 msgid "Angular Slope Distribution"
 msgstr "Distribution angulaires des pentes"
 
-#: modules/process/slope_dist.c:716 modules/process/tilt.c:178
+#: modules/process/slope_dist.c:717 modules/process/tilt.c:178
 msgid "Slopes"
 msgstr "Pentes"
 
-#: modules/process/slope_dist.c:779 modules/process/slope_dist.c:856
+#: modules/process/slope_dist.c:780 modules/process/slope_dist.c:857
 msgid "Inclination Distribution"
 msgstr "Distribution des inclinaisons"
 
-#: modules/process/slope_dist.c:791 modules/process/slope_dist.c:868
+#: modules/process/slope_dist.c:792 modules/process/slope_dist.c:869
 msgid "Inclinations"
 msgstr "Inclinaisons"
 

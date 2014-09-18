@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-09-16 03:58+0200\n"
+"POT-Creation-Date: 2014-09-18 09:32+0200\n"
 "PO-Revision-Date: 2014-09-16 13:07+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -3321,26 +3321,26 @@ msgid "Data line does not start with a Y abscissa."
 msgstr "Datový řádek nezačíná hodnotou Y souřadnice."
 
 #: modules/file/femtoscan-txt.c:198
+#, fuzzy, c-format
 msgid ""
 "Data line length %u does not correspond to the number of X abscissas %u."
-msgstr ""
-"Délka %u datového řádku neodpovídá počtu souřadnic X."
+msgstr "Délka %u datového řádku neodpovídá počtu souřadnic X."
 
-#: modules/file/fitsfile.c:68
+#: modules/file/fitsfile.c:75
 msgid "Reads Flexible Image Transport System (FITS) files."
 msgstr "Načítá soubory Flexible Image Transport System (FITS)."
 
-#: modules/file/fitsfile.c:81
+#: modules/file/fitsfile.c:88
 msgid "Flexible Image Transport System FITS (.fits)"
 msgstr "Flexible Image Transport System FITS (.fits)"
 
-#: modules/file/fitsfile.c:120
+#: modules/file/fitsfile.c:127
 #, c-format
 msgid "CFITSIO error while reading the FITS file: %s."
 msgstr "Chyba CFITSIO při načítání FITS souboru: %s."
 
-#: modules/file/fitsfile.c:152 modules/file/fitsfile.c:164
-#: modules/file/fitsfile.c:175
+#: modules/file/fitsfile.c:159 modules/file/fitsfile.c:171
+#: modules/file/fitsfile.c:182
 msgid "Only two-dimensional images are supported."
 msgstr "Jsou podporovány pouze dvourozměrné obrázky."
 
@@ -4167,12 +4167,12 @@ msgid "NanoObserver data (.nao)"
 msgstr "NanoObserver data (.nao)"
 
 #: modules/file/nanoobserver.c:187 modules/file/nanoscantech.c:204
-#: modules/file/opengps.c:191
+#: modules/file/opengps.c:198
 msgid "Minizip cannot open the file as a ZIP file."
 msgstr "Minizip nedokáže otevřít soubor coby soubor ZIP."
 
-#: modules/file/nanoobserver.c:459 modules/file/opengps.c:480
-#: modules/file/opengps.c:680 modules/file/opengps.c:716
+#: modules/file/nanoobserver.c:459 modules/file/opengps.c:487
+#: modules/file/opengps.c:687 modules/file/opengps.c:723
 #, c-format
 msgid "File %s is missing in the zip file."
 msgstr "V zip souboru schází soubor %s."
@@ -4545,25 +4545,25 @@ msgstr "Struktura obsahuje vnořené adresáře"
 msgid "Truncated data in block %s"
 msgstr "Data v bloku %s jsou uříznutá"
 
-#: modules/file/opengps.c:120
+#: modules/file/opengps.c:127
 msgid "Reads OpenGPS .x3p files."
 msgstr "Načítá datové soubory OpenGPS .x3p."
 
-#: modules/file/opengps.c:133
+#: modules/file/opengps.c:140
 msgid "OpenGPS data (.x3p)"
 msgstr "OpenGPS data (.x3p)"
 
-#: modules/file/opengps.c:403 modules/file/opengps.c:436
+#: modules/file/opengps.c:410 modules/file/opengps.c:443
 msgid "Too many DataList items for given matrix dimensions."
 msgstr "Příliš mnoho položek DataList pro dané rozměry matice."
 
-#: modules/file/opengps.c:530
+#: modules/file/opengps.c:537
 msgid "File main.xml contains multiple data elements."
 msgstr "Soubor main.xml obsahuje několik elementů ‚data‘."
 
 #. TRANSLATORS: type and axis are symbols such as I, CX, ...
-#: modules/file/opengps.c:562 modules/file/opengps.c:570
-#: modules/file/opengps.c:578
+#: modules/file/opengps.c:569 modules/file/opengps.c:577
+#: modules/file/opengps.c:585
 #, c-format
 msgid "Only type %s is supported for axis %s."
 msgstr "Pro osu %2$s je podporován pouze typ %1$s."
@@ -10944,19 +10944,19 @@ msgstr "_Sklonový graf (gradient)"
 msgid "Slope Distribution"
 msgstr "Rozdělení sklonu"
 
-#: modules/process/slope_dist.c:704
+#: modules/process/slope_dist.c:705
 msgid "Angular Slope Distribution"
 msgstr "Úhlové rozdělení sklonů"
 
-#: modules/process/slope_dist.c:716 modules/process/tilt.c:178
+#: modules/process/slope_dist.c:717 modules/process/tilt.c:178
 msgid "Slopes"
 msgstr "Sklony"
 
-#: modules/process/slope_dist.c:779 modules/process/slope_dist.c:856
+#: modules/process/slope_dist.c:780 modules/process/slope_dist.c:857
 msgid "Inclination Distribution"
 msgstr "Rozdělení sklonů"
 
-#: modules/process/slope_dist.c:791 modules/process/slope_dist.c:868
+#: modules/process/slope_dist.c:792 modules/process/slope_dist.c:869
 msgid "Inclinations"
 msgstr "Sklony"
 
@@ -12956,4 +12956,3 @@ msgstr "K-means chyba z %s"
 #, c-format
 msgid "K-means center %d"
 msgstr "K-means střed %d"
-

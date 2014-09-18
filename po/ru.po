@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-09-16 03:58+0200\n"
+"POT-Creation-Date: 2014-09-18 09:32+0200\n"
 "PO-Revision-Date: 2014-09-16 06:35+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
@@ -3368,21 +3368,21 @@ msgid ""
 "Data line length %u does not correspond to the number of X abscissas %u."
 msgstr "Длина строки данных %u не соответствует числу абсцисс X, равному %u."
 
-#: modules/file/fitsfile.c:68
+#: modules/file/fitsfile.c:75
 msgid "Reads Flexible Image Transport System (FITS) files."
 msgstr "Читает файлы Flexible Image Transport System (FITS)."
 
-#: modules/file/fitsfile.c:81
+#: modules/file/fitsfile.c:88
 msgid "Flexible Image Transport System FITS (.fits)"
 msgstr "Flexible Image Transport System FITS (.fits)"
 
-#: modules/file/fitsfile.c:120
+#: modules/file/fitsfile.c:127
 #, c-format
 msgid "CFITSIO error while reading the FITS file: %s."
 msgstr "Ошибка CFITSIO при чтении файла FITS: %s."
 
-#: modules/file/fitsfile.c:152 modules/file/fitsfile.c:164
-#: modules/file/fitsfile.c:175
+#: modules/file/fitsfile.c:159 modules/file/fitsfile.c:171
+#: modules/file/fitsfile.c:182
 msgid "Only two-dimensional images are supported."
 msgstr "Поддерживаются только двумерные изображения."
 
@@ -4217,12 +4217,12 @@ msgid "NanoObserver data (.nao)"
 msgstr "Данные NanoObserver (.nao)"
 
 #: modules/file/nanoobserver.c:187 modules/file/nanoscantech.c:204
-#: modules/file/opengps.c:191
+#: modules/file/opengps.c:198
 msgid "Minizip cannot open the file as a ZIP file."
 msgstr "Minizip не может открыть файл как архив ZIP."
 
-#: modules/file/nanoobserver.c:459 modules/file/opengps.c:480
-#: modules/file/opengps.c:680 modules/file/opengps.c:716
+#: modules/file/nanoobserver.c:459 modules/file/opengps.c:487
+#: modules/file/opengps.c:687 modules/file/opengps.c:723
 #, c-format
 msgid "File %s is missing in the zip file."
 msgstr "Файл %s отсутствует в zip-архиве."
@@ -4606,25 +4606,25 @@ msgstr "Найдены вложенные каталоги"
 msgid "Truncated data in block %s"
 msgstr "Неполные данные в блоке %s"
 
-#: modules/file/opengps.c:120
+#: modules/file/opengps.c:127
 msgid "Reads OpenGPS .x3p files."
 msgstr "Читает файлы OpenGPS .x3p."
 
-#: modules/file/opengps.c:133
+#: modules/file/opengps.c:140
 msgid "OpenGPS data (.x3p)"
 msgstr "Данные OpenGPS (.x3p)"
 
-#: modules/file/opengps.c:403 modules/file/opengps.c:436
+#: modules/file/opengps.c:410 modules/file/opengps.c:443
 msgid "Too many DataList items for given matrix dimensions."
 msgstr "Слишком много элементов DataList для заданных размеров матрицы."
 
-#: modules/file/opengps.c:530
+#: modules/file/opengps.c:537
 msgid "File main.xml contains multiple data elements."
 msgstr "Файл main.xml содержит несколько элементов данных."
 
 #. TRANSLATORS: type and axis are symbols such as I, CX, ...
-#: modules/file/opengps.c:562 modules/file/opengps.c:570
-#: modules/file/opengps.c:578
+#: modules/file/opengps.c:569 modules/file/opengps.c:577
+#: modules/file/opengps.c:585
 #, c-format
 msgid "Only type %s is supported for axis %s."
 msgstr "Только тип %s доступен для оси %s."
@@ -11039,19 +11039,19 @@ msgstr "График наклонов (гра_диент)"
 msgid "Slope Distribution"
 msgstr "Распределение наклонов"
 
-#: modules/process/slope_dist.c:704
+#: modules/process/slope_dist.c:705
 msgid "Angular Slope Distribution"
 msgstr "Распределение наклонов по углам"
 
-#: modules/process/slope_dist.c:716 modules/process/tilt.c:178
+#: modules/process/slope_dist.c:717 modules/process/tilt.c:178
 msgid "Slopes"
 msgstr "Наклоны"
 
-#: modules/process/slope_dist.c:779 modules/process/slope_dist.c:856
+#: modules/process/slope_dist.c:780 modules/process/slope_dist.c:857
 msgid "Inclination Distribution"
 msgstr "Распределение наклона"
 
-#: modules/process/slope_dist.c:791 modules/process/slope_dist.c:868
+#: modules/process/slope_dist.c:792 modules/process/slope_dist.c:869
 msgid "Inclinations"
 msgstr "Наклоны"
 
