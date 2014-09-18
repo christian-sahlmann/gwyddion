@@ -345,7 +345,7 @@ wpour_dialog(WPourArgs *args,
     controls.blur_fwhm = GTK_ADJUSTMENT(gtkobj);
     g_object_set_data(G_OBJECT(gtkobj), "target", &args->blur_fwhm);
     gwy_table_attach_hscale(table, row,
-                            _("Gaussian _smoothening:"), "px", gtkobj,
+                            _("Gaussian _smoothing:"), "px", gtkobj,
                             GWY_HSCALE_SQRT);
     g_signal_connect_swapped(gtkobj, "value-changed",
                              G_CALLBACK(wpour_update_double), &controls);
