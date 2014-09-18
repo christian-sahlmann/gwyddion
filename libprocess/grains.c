@@ -3646,7 +3646,6 @@ gwy_data_field_number_grains_periodic(GwyDataField *mask_field,
 {
     gint xres, yres, i, j, ngrains;
     gboolean merged_anything = FALSE;
-    const gdouble *data;
     gint *m;
 
     ngrains = gwy_data_field_number_grains(mask_field, grains);
@@ -3655,7 +3654,6 @@ gwy_data_field_number_grains_periodic(GwyDataField *mask_field,
 
     xres = mask_field->xres;
     yres = mask_field->yres;
-    data = mask_field->data;
 
     m = g_new0(gint, ngrains+1);
     for (j = 0; j <= ngrains; j++)
