@@ -1,4 +1,4 @@
-2.38 (0000-00-00)
+2.38 (2014-09-18)
 Application:
 - Pressing F1 shows help, i.e. it points a web browser to the relevant part
   of the user guide (in most program windows).  Most dialogs also have a Help
