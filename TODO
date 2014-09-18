@@ -5,6 +5,12 @@ Unimplemented stuff:
 
 ============================================================================
 Release checklist:
+- make sure modules/pygwy/Makefile.am includes all relevant header files in
+  PYGWY_H_FILES
+- update library versions, if something has changed
+- run utils/update-api-indices.py to index the new symbols
+- update version in configure.ac
+- update version in gwyddion-night-build
 - must build on Linux from svn and tarballs
 - must cross-build for MS Windows
 - update user guide module map
@@ -13,14 +19,9 @@ Release checklist:
   really final versions, making dists in general updates po again)
 - make sure global library headers (libfoo.h) include all other public
   headers
-- make sure modules/pygwy/Makefile.am includes all relevant header files in
-  PYGWY_H_FILES
-- update library versions, if something has changed
-- run utils/update-api-indices.py to index the new symbols
-- update version in configure.ac
-- update version in gwyddion-night-build
 - check full rebuild
-- check and update NEWS, generate HTML version (utils/gen-news.py)
+- check and update NEWS, set release data, generate the HTML version
+  (utils/gen-news.py)
 - generate on-line module list (make module-list in utils, may need manual
   filtering of non-released modules)
 - generate stable API docs for gwyddion.net (using gwyddion.net-doc-build SVN
@@ -34,6 +35,7 @@ Release checklist:
 - update gwyddion main page
 - publish files on SourceForge
   rsync --progress -e ssh gwyddion-2.28.tar.xz yeti-dn@frs.sourceforge.net:/home/frs/project/gwyddion/gwyddion/2.28/
+- README.txt with release info should be uploaded from web browser; does not
+  work well with rsync
 - send e-mail to the mailing lists
-- update the list of supported file formats on gwyddion.net and in the user
-  guide (at least occasionally)
+- update the list of supported file formats in the user guide
