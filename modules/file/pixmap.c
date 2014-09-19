@@ -92,6 +92,7 @@
 #define GWY_TARGA_EXTENSIONS ".tga,.targa"
 
 #define pangoscale ((gdouble)PANGO_SCALE)
+#define fixzero(x) (fabs(x) < 1e-14 ? 0.0 : (x))
 
 #define ZOOM2LW(x) ((x) > 1 ? ((x) + 0.4) : 1)
 
@@ -4307,9 +4308,12 @@ typedef struct {
     PixmapSaveRect fmscale_unit_label;
     PixmapSaveRect title_label;
 
-    GwySIValueFormat *vf_ruler;
+    GwySIValueFormat *vf_hruler;
+    GwySIValueFormat *vf_vruler;
     RulerTicks hruler_ticks;
+    RulerTicks vruler_ticks;
     gdouble hruler_label_height;
+    gdouble vruler_label_width;
 
     /* Actual rectangles, including positions, of the image parts. */
     PixmapSaveRect image;
@@ -4323,33 +4327,38 @@ typedef struct {
     PixmapSaveRect canvas;
 } PixmapSaveSizes;
 
-static GwySIValueFormat*
-find_hruler_ticks(GwySIUnit *unit, gdouble size, gdouble real, gdouble offset,
-                  RulerTicks *ticks, gdouble *height,
+static void
+find_hruler_ticks(const PixmapSaveArgs *args, PixmapSaveSizes *sizes,
                   PangoLayout *layout, GString *s)
 {
+    GwySIUnit *xyunit = gwy_data_field_get_si_unit_xy(args->dfield);
+    gdouble size = sizes->image.w;
+    gdouble real = gwy_data_field_get_xreal(args->dfield);
+    gdouble offset = gwy_data_field_get_xoffset(args->dfield);
+    RulerTicks *ticks = &sizes->hruler_ticks;
     PangoRectangle logical1, logical2;
     GwySIValueFormat *vf;
-    gdouble len, bs;
+    gdouble len, bs, height;
     guint n;
 
-    vf = gwy_si_unit_get_format_with_resolution(unit,
+    vf = gwy_si_unit_get_format_with_resolution(xyunit,
                                                 GWY_SI_UNIT_FORMAT_VFMARKUP,
                                                 real, real/12,
                                                 NULL);
+    sizes->vf_hruler = vf;
     gwy_debug("unit '%s'", vf->units);
     offset /= vf->magnitude;
     real /= vf->magnitude;
-    format_layout(layout, &logical1, s, "%.*f",
-                  vf->precision, -real);
+    format_layout(layout, &logical1, s, "%.*f", vf->precision, -real);
     gwy_debug("right '%s'", s->str);
     format_layout(layout, &logical2, s, "%.*f %s",
                   vf->precision, offset, vf->units);
     gwy_debug("first '%s'", s->str);
 
-    *height = MAX(logical1.height/pangoscale, logical2.height/pangoscale);
+    height = MAX(logical1.height/pangoscale, logical2.height/pangoscale);
+    sizes->hruler_label_height = height;
     len = MAX(logical1.width/pangoscale, logical2.width/pangoscale);
-    gwy_debug("label len %g, height %g", len, *height);
+    gwy_debug("label len %g, height %g", len, height);
     n = CLAMP(GWY_ROUND(size/len), 1, 10);
     gwy_debug("nticks %u", n);
     ticks->step = real/n;
@@ -4360,7 +4369,7 @@ find_hruler_ticks(GwySIUnit *unit, gdouble size, gdouble real, gdouble offset,
     else if (ticks->step <= 5.0)
         ticks->step = 5.0;
     else {
-        ticks->base *= 10;
+        ticks->base *= 10.0;
         ticks->step = 1.0;
         if (vf->precision)
             vf->precision--;
@@ -4369,10 +4378,71 @@ find_hruler_ticks(GwySIUnit *unit, gdouble size, gdouble real, gdouble offset,
 
     bs = ticks->base * ticks->step;
     ticks->from = ceil(offset/bs - 1e-14)*bs;
+    ticks->from = fixzero(ticks->from);
     ticks->to = floor((real + offset)/bs + 1e-14)*bs;
+    ticks->to = fixzero(ticks->to);
+    gwy_debug("from %g, to %g", ticks->from, ticks->to);
+}
+
+/* This must be called after find_hruler_ticks().  For unit consistency, we
+ * choose the units in the horizontal ruler and force the same here. */
+static void
+find_vruler_ticks(const PixmapSaveArgs *args, PixmapSaveSizes *sizes,
+                  PangoLayout *layout, GString *s)
+{
+    gdouble size = sizes->image.h;
+    gdouble real = gwy_data_field_get_yreal(args->dfield);
+    gdouble offset = gwy_data_field_get_yoffset(args->dfield);
+    RulerTicks *ticks = &sizes->vruler_ticks;
+    PangoRectangle logical1, logical2;
+    GwySIValueFormat *vf;
+    gdouble height, bs, width;
+
+    *ticks = sizes->hruler_ticks;
+    vf = sizes->vf_vruler = gwy_si_unit_value_format_copy(sizes->vf_hruler);
+    offset /= vf->magnitude;
+    real /= vf->magnitude;
+    format_layout(layout, &logical1, s, "%.*f", vf->precision, offset);
+    gwy_debug("top '%s'", s->str);
+    format_layout(layout, &logical2, s, "%.*f", vf->precision, offset + real);
+    gwy_debug("last '%s'", s->str);
+
+    height = MAX(logical1.height/pangoscale, logical2.height/pangoscale);
+    gwy_debug("label height %g", height);
+
+    /* Fix too dense ticks */
+    while (ticks->base*ticks->step/real*size < 1.1*height) {
+        if (ticks->step == 1.0)
+            ticks->step = 2.0;
+        else if (ticks->step == 2.0)
+            ticks->step = 5.0;
+        else {
+            ticks->step = 1.0;
+            ticks->base *= 10.0;
+            if (vf->precision)
+                vf->precision--;
+        }
+    }
+    /* XXX: We also want to fix too sparse ticks but we do not want to make
+     * the verical ruler different from the horizontal unless it really looks
+     * bad.  So some ‘looks really bad’ criterion is necessary. */
+    gwy_debug("base %g, step %g", ticks->base, ticks->step);
+
+    bs = ticks->base * ticks->step;
+    ticks->from = ceil(offset/bs - 1e-14)*bs;
+    ticks->from = fixzero(ticks->from);
+    ticks->to = floor((real + offset)/bs + 1e-14)*bs;
+    ticks->to = fixzero(ticks->to);
     gwy_debug("from %g, to %g", ticks->from, ticks->to);
 
-    return vf;
+    /* Update widths for the new ticks. */
+    format_layout(layout, &logical1, s, "%.*f", vf->precision, ticks->from);
+    gwy_debug("top2 '%s'", s->str);
+    format_layout(layout, &logical2, s, "%.*f", vf->precision, ticks->to);
+    gwy_debug("last2 '%s'", s->str);
+
+    width = MAX(logical1.width/pangoscale, logical2.width/pangoscale);
+    sizes->vruler_label_width = width;
 }
 
 static PixmapSaveSizes*
@@ -4387,12 +4457,10 @@ calculate_sizes(const PixmapSaveArgs *args,
     guint yres = gwy_data_field_get_yres(args->dfield);
     gdouble xreal = gwy_data_field_get_xreal(args->dfield);
     gdouble yreal = gwy_data_field_get_yreal(args->dfield);
-    gdouble xoffset = gwy_data_field_get_xoffset(args->dfield);
-    gdouble yoffset = gwy_data_field_get_yoffset(args->dfield);
-    GwySIUnit *xyunit = gwy_data_field_get_si_unit_xy(args->dfield);
     GString *s = g_string_new(NULL);
     gdouble lw = args->lw;
 
+    /* Data */
     if (args->realsquare) {
         gdouble scale = MAX(xres/xreal, yres/yreal);
         /* This is how GwyDataView rounds it so we should get a pixmap of
@@ -4407,19 +4475,27 @@ calculate_sizes(const PixmapSaveArgs *args,
     sizes->image.w += 2.0*lw;
     sizes->image.h += 2.0*lw;
 
-    sizes->vf_ruler = find_hruler_ticks(xyunit, xres, xreal, xoffset,
-                                        &sizes->hruler_ticks,
-                                        &sizes->hruler_label_height,
-                                        layout, s);
+    /* Horizontal ruler */
+    find_hruler_ticks(args, sizes, layout, s);
     if (args->xytype == PIXMAP_RULERS) {
-        sizes->hruler.h = sizes->hruler_label_height
-                          + 1.1*TICK_LENGTH;
         sizes->hruler.w = sizes->image.w;
+        sizes->hruler.h = sizes->hruler_label_height + 1.1*TICK_LENGTH;
     }
 
+    /* Vertical ruler */
+    find_vruler_ticks(args, sizes, layout, s);
+    if (args->xytype == PIXMAP_RULERS) {
+        sizes->vruler.w = sizes->vruler_label_width + 1.1*TICK_LENGTH;
+        sizes->vruler.h = sizes->image.h;
+    }
+
+    sizes->hruler.x += sizes->vruler.w;
+    sizes->vruler.y += sizes->hruler.h;
+    sizes->image.x += sizes->vruler.w;
     sizes->image.y += sizes->hruler.h;
 
-    sizes->canvas.w = sizes->image.w;
+    /* Canvas */
+    sizes->canvas.w = sizes->image.w + sizes->vruler.w;
     sizes->canvas.h = sizes->image.h + sizes->hruler.h;
 
     g_string_free(s, TRUE);
@@ -4433,8 +4509,10 @@ calculate_sizes(const PixmapSaveArgs *args,
 static void
 destroy_sizes(PixmapSaveSizes *sizes)
 {
-    if (sizes->vf_ruler)
-        gwy_si_unit_value_format_free(sizes->vf_ruler);
+    if (sizes->vf_hruler)
+        gwy_si_unit_value_format_free(sizes->vf_hruler);
+    if (sizes->vf_vruler)
+        gwy_si_unit_value_format_free(sizes->vf_vruler);
     g_free(sizes);
 }
 
@@ -4460,7 +4538,8 @@ pixmap_draw_data(const PixmapSaveArgs *args,
     cairo_rectangle(cr, rect->x + lw, rect->y + lw, w, h);
     cairo_clip(cr);
     gdk_cairo_set_source_pixbuf(cr, pixbuf, rect->x + lw, rect->y + lw);
-    /* Pixelated zoom, this is what we want for data! */
+    /* Pixelated zoom, this is what we usually want for data.  But we can
+     * make it configurable. */
     cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_NEAREST);
     cairo_paint(cr);
     cairo_restore(cr);
@@ -4484,20 +4563,20 @@ pixmap_draw_hruler(const PixmapSaveArgs *args,
     gdouble xoffset = gwy_data_field_get_xoffset(args->dfield);
     const PixmapSaveRect *rect = &sizes->hruler;
     const RulerTicks *ticks = &sizes->hruler_ticks;
-    GwySIValueFormat *vf = sizes->vf_ruler;
+    GwySIValueFormat *vf = sizes->vf_hruler;
     GString *s = g_string_new(NULL);
     gdouble lw = args->lw;
     gdouble x, bs, scale, ximg;
     gboolean units_placed = FALSE;
 
-    scale = (rect->w - 2.0*lw)/(xreal/sizes->vf_ruler->magnitude);
+    scale = (rect->w - 2.0*lw)/(xreal/vf->magnitude);
     bs = ticks->step*ticks->base;
 
     cairo_save(cr);
     cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
     cairo_set_line_width(cr, lw);
     for (x = ticks->from; x <= ticks->to + 1e-14*bs; x += bs) {
-        ximg = (x - xoffset)*scale + lw;
+        ximg = (x - xoffset)*scale + rect->x + lw;
         gwy_debug("x %g -> %g", x, ximg);
         cairo_move_to(cr, ximg, rect->h);
         cairo_line_to(cr, ximg, rect->h - TICK_LENGTH);
@@ -4510,9 +4589,8 @@ pixmap_draw_hruler(const PixmapSaveArgs *args,
     for (x = ticks->from; x <= ticks->to + 1e-14*bs; x += bs) {
         PangoRectangle logical;
 
-        if (fabs(x) < 1e-14)
-            x = 0.0;
-        ximg = (x - xoffset)*scale + lw;
+        x = fixzero(x);
+        ximg = (x - xoffset)*scale + rect->x + lw;
         if (!units_placed && (x >= 0.0 || ticks->to <= -1e-14)) {
             format_layout(layout, &logical, s, "%.*f %s",
                           vf->precision, x, vf->units);
@@ -4524,6 +4602,55 @@ pixmap_draw_hruler(const PixmapSaveArgs *args,
         if (ximg + logical.width/pangoscale <= rect->w) {
             cairo_move_to(cr, ximg, rect->h - 1.1*TICK_LENGTH);
             cairo_rel_move_to(cr, 0.0, -logical.height/pangoscale);
+            pango_cairo_show_layout(cr, layout);
+        }
+    };
+    cairo_restore(cr);
+
+    g_string_free(s, TRUE);
+}
+
+static void
+pixmap_draw_vruler(const PixmapSaveArgs *args,
+                   const PixmapSaveSizes *sizes,
+                   PangoLayout *layout,
+                   cairo_t *cr)
+{
+    gdouble yreal = gwy_data_field_get_yreal(args->dfield);
+    gdouble yoffset = gwy_data_field_get_yoffset(args->dfield);
+    const PixmapSaveRect *rect = &sizes->vruler;
+    const RulerTicks *ticks = &sizes->vruler_ticks;
+    GwySIValueFormat *vf = sizes->vf_vruler;
+    GString *s = g_string_new(NULL);
+    gdouble lw = args->lw;
+    gdouble y, bs, scale, yimg;
+
+    scale = (rect->h - 2.0*lw)/(yreal/vf->magnitude);
+    bs = ticks->step*ticks->base;
+
+    cairo_save(cr);
+    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    cairo_set_line_width(cr, lw);
+    for (y = ticks->from; y <= ticks->to + 1e-14*bs; y += bs) {
+        yimg = (y - yoffset)*scale + rect->y + lw;
+        gwy_debug("y %g -> %g", y, yimg);
+        cairo_move_to(cr, rect->w, yimg);
+        cairo_line_to(cr, rect->w - TICK_LENGTH, yimg);
+    };
+    cairo_stroke(cr);
+    cairo_restore(cr);
+
+    cairo_save(cr);
+    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    for (y = ticks->from; y <= ticks->to + 1e-14*bs; y += bs) {
+        PangoRectangle logical;
+
+        y = fixzero(y);
+        yimg = (y - yoffset)*scale + rect->y + lw;
+        format_layout(layout, &logical, s, "%.*f", vf->precision, y);
+        if (yimg + logical.height/pangoscale <= rect->h) {
+            cairo_move_to(cr, rect->w - 1.1*TICK_LENGTH, yimg);
+            cairo_rel_move_to(cr, -logical.width/pangoscale, 0.0);
             pango_cairo_show_layout(cr, layout);
         }
     };
@@ -4545,6 +4672,7 @@ pixmap_draw_cairo(GwyContainer *data,
 
     pixmap_draw_data(args, sizes, cr);
     pixmap_draw_hruler(args, sizes, layout, cr);
+    pixmap_draw_vruler(args, sizes, layout, cr);
 
     g_object_unref(layout);
 }
