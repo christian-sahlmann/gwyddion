@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004-2013 David Necas (Yeti).
+ *  Copyright (C) 2004-2014 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -38,6 +38,27 @@
 #include <glib/gstdio.h>
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
+
+#include <cairo.h>
+/* FIXME: We also need pangocairo, i.e. Pango 1.8+, maybe newer. */
+
+/* We want cairo_ps_surface_set_eps().  So if we don't get it we just pretend
+ * cairo doesn't have the PS surface at all. */
+#if (CAIRO_VERSION_MAJOR < 1 || (CAIRO_VERSION_MAJOR == 1 && CAIRO_VERSION_MINOR < 6))
+#undef CAIRO_HAS_PS_SURFACE
+#endif
+
+#ifdef CAIRO_HAS_PDF_SURFACE
+#include <cairo-pdf.h>
+#endif
+
+#ifdef CAIRO_HAS_PS_SURFACE
+#include <cairo-ps.h>
+#endif
+
+#ifdef CAIRO_HAS_SVG_SURFACE
+#include <cairo-svg.h>
+#endif
 
 #ifdef HAVE_PNG
 #include <png.h>
@@ -156,6 +177,9 @@ typedef struct {
     gint xres;
     gint yres;
     gboolean realsquare;
+
+    /* New args */
+    gboolean transparent;
 } PixmapSaveArgs;
 
 typedef struct {
@@ -371,6 +395,11 @@ static gchar*            scalebar_auto_length        (GwyDataField *dfield,
                                                       gdouble *p);
 static gboolean          inset_length_ok             (GwyDataField *dfield,
                                                       const gchar *inset_length);
+static gboolean          pixmap_save_cairo           (GwyContainer *data,
+                                                      const gchar *filename,
+                                                      GwyRunType mode,
+                                                      GError **error,
+                                                      const gchar *name);
 
 static const GwyEnum value_map_types[] = {
     { N_("All channels"), PIXMAP_MAP_ALL,   },
@@ -426,6 +455,30 @@ saveable_formats[] = {
         GWY_TARGA_EXTENSIONS,
         (GwyFileSaveFunc)&pixmap_save_targa
     },
+#ifdef CAIRO_HAS_PDF_SURFACE
+    {
+        "pdf",
+        N_("Portable document format (.pdf)"),
+        ".pdf",
+        &pixmap_save_cairo
+    },
+#endif
+#ifdef CAIRO_HAS_PS_SURFACE
+    {
+        "eps",
+        N_("Encapsulated PostScript (.eps)"),
+        ".eps",
+        &pixmap_save_cairo
+    },
+#endif
+#ifdef CAIRO_HAS_SVG_SURFACE
+    {
+        "svg",
+        N_("Scalable Vector Graphics (.svg)"),
+        ".svg",
+        &pixmap_save_cairo
+    },
+#endif
 };
 
 static struct {
@@ -472,6 +525,9 @@ static const PixmapSaveArgs pixmap_save_defaults = {
     0, "",
     /* Interface only */
     NULL, NULL, FALSE, 0, 0, FALSE,
+
+    /* New args */
+    FALSE,
 };
 
 static const PixmapLoadArgs pixmap_load_defaults = {
@@ -4155,6 +4211,244 @@ prepare_layout(gdouble zoom, const gchar *font)
     pango_font_description_free(fontdesc);
 
     return layout;
+}
+
+static PangoLayout*
+create_layout(const gchar *fontname, gdouble fontsize, cairo_t *cr)
+{
+    PangoContext *context;
+    PangoFontDescription *fontdesc;
+    PangoLayout *layout;
+    gchar *full_font;
+
+    /* This creates a layout with private context so we can modify the
+     * context at will. */
+    layout = pango_cairo_create_layout(cr);
+
+    full_font = g_strdup_printf("%s %.2f", fontname, fontsize);
+    fontdesc = pango_font_description_from_string(full_font);
+    g_free(full_font);
+    pango_font_description_set_size(fontdesc, PANGO_SCALE*fontsize);
+    context = pango_layout_get_context(layout);
+    pango_context_set_font_description(context, fontdesc);
+    pango_font_description_free(fontdesc);
+    pango_layout_context_changed(layout);
+    /* XXX: Must call pango_cairo_update_layout() if we change the
+     * transformation afterwards. */
+
+    return layout;
+}
+
+static cairo_surface_t*
+create_surface(const PixmapSaveArgs *args,
+               const gchar *name,
+               const gchar *filename,
+               gdouble width, gdouble height)
+{
+    cairo_surface_t *surface = NULL;
+    cairo_format_t imageformat = CAIRO_FORMAT_RGB24;
+    gint iwidth, iheight;
+
+    if (width <= 0.0)
+        width = 100.0;
+    if (height <= 0.0)
+        height = 100.0;
+
+    iwidth = (gint)ceil(width);
+    iheight = (gint)ceil(height);
+
+    if (gwy_stramong(name, "png", "jpeg2000", NULL)) {
+        if (args->transparent)
+            imageformat = CAIRO_FORMAT_ARGB32;
+        surface = cairo_image_surface_create(imageformat, iwidth, iheight);
+    }
+    else if (gwy_stramong(name, "jpeg", "tiff", "pnm", "bmp", "tga", NULL))
+        surface = cairo_image_surface_create(imageformat, iwidth, iheight);
+#ifdef CAIRO_HAS_PDF_SURFACE
+    else if (gwy_strequal(name, "pdf"))
+        surface = cairo_pdf_surface_create(filename, width, height);
+#endif
+#ifdef CAIRO_HAS_PS_SURFACE
+    else if (gwy_strequal(name, "eps")) {
+        surface = cairo_ps_surface_create(filename, width, height);
+        /* Requires cairo 1.6. */
+        cairo_ps_surface_set_eps(surface, TRUE);
+    }
+#endif
+#ifdef CAIRO_HAS_SVG_SURFACE
+    else if (gwy_strequal(name, "svg")) {
+        surface = cairo_svg_surface_create(filename, width, height);
+    }
+#endif
+    else {
+        g_assert_not_reached();
+    }
+
+    return surface;
+}
+
+typedef struct {
+    gdouble x, y;
+    gdouble w, h;
+} PixmapSaveRect;
+
+typedef struct {
+    /* Only the width and height are meaningful here */
+    PixmapSaveRect hruler_label;
+    PixmapSaveRect vruler_label;
+    PixmapSaveRect inset_label;
+    PixmapSaveRect fmscale_label;
+    PixmapSaveRect fmscale_unit_label;
+    PixmapSaveRect title_label;
+
+    /* Actual rectangles, including positions, of the image parts. */
+    PixmapSaveRect image;
+    PixmapSaveRect hruler;
+    PixmapSaveRect vruler;
+    PixmapSaveRect inset_ruler;
+    PixmapSaveRect fmscale;
+    PixmapSaveRect title;
+
+    /* Union of all above (plus maybe borders). */
+    PixmapSaveRect canvas;
+} PixmapSaveSizes;
+
+static PixmapSaveSizes*
+calculate_sizes(const PixmapSaveArgs *args,
+                const gchar *name)
+{
+    cairo_surface_t *surface = create_surface(args, name, NULL, 0.0, 0.0);
+    cairo_t *cr = cairo_create(surface);
+    PangoLayout *layout = create_layout(args->font, 12.0, cr);
+    PixmapSaveSizes *sizes = g_new0(PixmapSaveSizes, 1);
+    gdouble lw = 1.0;
+
+    sizes->image.w = gwy_data_field_get_xres(args->dfield);
+    sizes->image.h = gwy_data_field_get_yres(args->dfield);
+    /* XXX: Does not work with realsquare!!! */
+
+    sizes->canvas.w = sizes->image.w + 2*lw;
+    sizes->canvas.h = sizes->image.h + 2*lw;
+
+    g_object_unref(layout);
+    cairo_destroy(cr);
+    cairo_surface_destroy(surface);
+
+    return sizes;
+}
+
+static void
+pixmap_draw_data(const PixmapSaveArgs *args,
+                 const PixmapSaveSizes *sizes,
+                 cairo_t *cr)
+{
+    GwyPixmapLayer *layer;
+    GdkPixbuf *pixbuf;
+    gdouble lw = 1.0;
+    gint w, h;
+
+    layer = gwy_data_view_get_base_layer(args->data_view);
+    g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
+
+    /*
+    has_presentation
+        = gwy_layer_basic_get_has_presentation(GWY_LAYER_BASIC(layer));
+        */
+
+    pixbuf = gwy_data_view_export_pixbuf(args->data_view, 1.0,
+                                         args->draw_mask, args->draw_selection);
+    w = gdk_pixbuf_get_width(pixbuf);
+    h = gdk_pixbuf_get_height(pixbuf);
+
+    cairo_save(cr);
+    cairo_rectangle(cr,
+                    sizes->image.x + lw, sizes->image.y + lw,
+                    w, h);
+    cairo_clip(cr);
+    gdk_cairo_set_source_pixbuf(cr, pixbuf,
+                                sizes->image.x + lw, sizes->image.y + lw);
+    cairo_paint(cr);
+    cairo_restore(cr);
+
+    cairo_save(cr);
+    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    cairo_set_line_width(cr, lw);
+    cairo_rectangle(cr,
+                    sizes->image.x + 0.5*lw, sizes->image.y + 0.5*lw,
+                    w + lw, h + lw);
+    cairo_stroke(cr);
+    cairo_restore(cr);
+}
+
+/* We assume cr is already created for the layout with the correct scale(!). */
+static void
+pixmap_draw_cairo(GwyContainer *data,
+                  const PixmapSaveArgs *args,
+                  const PixmapSaveSizes *sizes,
+                  cairo_t *cr)
+{
+    PangoLayout *layout;
+
+    layout = create_layout(args->font, 12.0, cr);
+
+    pixmap_draw_data(args, sizes, cr);
+
+    g_object_unref(layout);
+}
+
+/*
+ * How to determine the size?
+ * - Axes and scales dimensions depend on the text dimensions.
+ * - We can measure text in Pango units (convertible with PANGO_PIXELS to
+ *   device units: pixels or points) and only need a layout.
+ * - For PangoCairo rendering the layout must be created with
+ *   pango_cairo_create_layout(cr), i.e. we need a Cairo context.
+ * - Cairo context can be only created for a Cairo surface.
+ * - This is a cyclic dependence.
+ *
+ * So we create text-measuring Cairo surface of more or less random dimensions.
+ * It is of the same type but not used for any rendering.  We measure labels
+ * using this surface and calculate positions and sizes of all components of
+ * the exported image.  Then we actually render them.
+ *
+ * To avoid doing everything twice, the measurement phase should provide
+ * directly interpretable information about positions and sizes.
+ **/
+static gboolean
+pixmap_save_cairo(GwyContainer *data,
+                  const gchar *filename,
+                  GwyRunType mode,
+                  GError **error,
+                  const gchar *name)
+{
+    GwyContainer *settings;
+    PixmapSaveArgs args;
+    PixmapSaveSizes *sizes;
+    cairo_surface_t *surface;
+    cairo_t *cr;
+
+    settings = gwy_app_settings_get();
+    pixmap_save_load_args(settings, &args);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &args.data_view,
+                                     GWY_APP_DATA_FIELD, &args.dfield,
+                                     0);
+    sizes = calculate_sizes(&args, name);
+
+    surface = create_surface(&args, name, filename,
+                             args.zoom*sizes->canvas.w,
+                             args.zoom*sizes->canvas.h);
+    cr = cairo_create(surface);
+    cairo_scale(cr, args.zoom, args.zoom);
+
+    pixmap_draw_cairo(data, &args, sizes, cr);
+
+    cairo_surface_flush(surface);
+    cairo_destroy(cr);
+    cairo_surface_destroy(surface);
+
+    g_free(sizes);
+
+    return TRUE;
 }
 
 /***************************************************************************
