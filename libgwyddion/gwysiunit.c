@@ -665,6 +665,25 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
 }
 
 /**
+ * gwy_si_unit_value_format_copy:
+ * @format: A value format to copy.
+ *
+ * Copies a value format structure.
+ *
+ * Returns: Newly allocated value format, identical to @format.
+ *
+ * Since: 2.39
+ **/
+GwySIValueFormat*
+gwy_si_unit_value_format_copy(GwySIValueFormat *format)
+{
+    GwySIValueFormat *vf = g_memdup(format, sizeof(GwySIValueFormat));
+    vf->units_gstring = g_string_new(format->units);
+    vf->units = vf->units_gstring->str;
+    return vf;
+}
+
+/**
  * gwy_si_unit_value_format_free:
  * @format: A value format to free.
  *
