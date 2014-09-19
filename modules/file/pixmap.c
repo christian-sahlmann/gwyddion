@@ -28,7 +28,7 @@
  * [2] Usually lossy, intended for presentational purposes.  16bit grayscale
  * export is possible to PNG, TIFF and PNM.
  **/
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <errno.h>
@@ -90,6 +90,8 @@
 #define GWY_PPM_EXTENSIONS   ".ppm,.pnm"
 #define GWY_BMP_EXTENSIONS   ".bmp"
 #define GWY_TARGA_EXTENSIONS ".tga,.targa"
+
+#define pangoscale ((gdouble)PANGO_SCALE)
 
 #define ZOOM2LW(x) ((x) > 1 ? ((x) + 0.4) : 1)
 
@@ -180,6 +182,7 @@ typedef struct {
 
     /* New args */
     gboolean transparent;
+    gdouble lw;
 } PixmapSaveArgs;
 
 typedef struct {
@@ -528,6 +531,7 @@ static const PixmapSaveArgs pixmap_save_defaults = {
 
     /* New args */
     FALSE,
+    1.0,
 };
 
 static const PixmapLoadArgs pixmap_load_defaults = {
@@ -4293,13 +4297,19 @@ typedef struct {
 } PixmapSaveRect;
 
 typedef struct {
+    gdouble from, to, step, base;
+} RulerTicks;
+
+typedef struct {
     /* Only the width and height are meaningful here */
-    PixmapSaveRect hruler_label;
-    PixmapSaveRect vruler_label;
     PixmapSaveRect inset_label;
     PixmapSaveRect fmscale_label;
     PixmapSaveRect fmscale_unit_label;
     PixmapSaveRect title_label;
+
+    GwySIValueFormat *vf_ruler;
+    RulerTicks hruler_ticks;
+    gdouble hruler_label_height;
 
     /* Actual rectangles, including positions, of the image parts. */
     PixmapSaveRect image;
@@ -4313,6 +4323,58 @@ typedef struct {
     PixmapSaveRect canvas;
 } PixmapSaveSizes;
 
+static GwySIValueFormat*
+find_hruler_ticks(GwySIUnit *unit, gdouble size, gdouble real, gdouble offset,
+                  RulerTicks *ticks, gdouble *height,
+                  PangoLayout *layout, GString *s)
+{
+    PangoRectangle logical1, logical2;
+    GwySIValueFormat *vf;
+    gdouble len, bs;
+    guint n;
+
+    vf = gwy_si_unit_get_format_with_resolution(unit,
+                                                GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                real, real/12,
+                                                NULL);
+    gwy_debug("unit '%s'", vf->units);
+    offset /= vf->magnitude;
+    real /= vf->magnitude;
+    format_layout(layout, &logical1, s, "%.*f",
+                  vf->precision, -real);
+    gwy_debug("right '%s'", s->str);
+    format_layout(layout, &logical2, s, "%.*f %s",
+                  vf->precision, offset, vf->units);
+    gwy_debug("first '%s'", s->str);
+
+    *height = MAX(logical1.height/pangoscale, logical2.height/pangoscale);
+    len = MAX(logical1.width/pangoscale, logical2.width/pangoscale);
+    gwy_debug("label len %g, height %g", len, *height);
+    n = CLAMP(GWY_ROUND(size/len), 1, 10);
+    gwy_debug("nticks %u", n);
+    ticks->step = real/n;
+    ticks->base = pow10(floor(log10(ticks->step)));
+    ticks->step /= ticks->base;
+    if (ticks->step <= 2.0)
+        ticks->step = 2.0;
+    else if (ticks->step <= 5.0)
+        ticks->step = 5.0;
+    else {
+        ticks->base *= 10;
+        ticks->step = 1.0;
+        if (vf->precision)
+            vf->precision--;
+    }
+    gwy_debug("base %g, step %g", ticks->base, ticks->step);
+
+    bs = ticks->base * ticks->step;
+    ticks->from = ceil(offset/bs - 1e-14)*bs;
+    ticks->to = floor((real + offset)/bs + 1e-14)*bs;
+    gwy_debug("from %g, to %g", ticks->from, ticks->to);
+
+    return vf;
+}
+
 static PixmapSaveSizes*
 calculate_sizes(const PixmapSaveArgs *args,
                 const gchar *name)
@@ -4321,15 +4383,46 @@ calculate_sizes(const PixmapSaveArgs *args,
     cairo_t *cr = cairo_create(surface);
     PangoLayout *layout = create_layout(args->font, 12.0, cr);
     PixmapSaveSizes *sizes = g_new0(PixmapSaveSizes, 1);
-    gdouble lw = 1.0;
+    guint xres = gwy_data_field_get_xres(args->dfield);
+    guint yres = gwy_data_field_get_yres(args->dfield);
+    gdouble xreal = gwy_data_field_get_xreal(args->dfield);
+    gdouble yreal = gwy_data_field_get_yreal(args->dfield);
+    gdouble xoffset = gwy_data_field_get_xoffset(args->dfield);
+    gdouble yoffset = gwy_data_field_get_yoffset(args->dfield);
+    GwySIUnit *xyunit = gwy_data_field_get_si_unit_xy(args->dfield);
+    GString *s = g_string_new(NULL);
+    gdouble lw = args->lw;
 
-    sizes->image.w = gwy_data_field_get_xres(args->dfield);
-    sizes->image.h = gwy_data_field_get_yres(args->dfield);
-    /* XXX: Does not work with realsquare!!! */
+    if (args->realsquare) {
+        gdouble scale = MAX(xres/xreal, yres/yreal);
+        /* This is how GwyDataView rounds it so we should get a pixmap of
+         * this size. */
+        sizes->image.w = GWY_ROUND(xreal*scale);
+        sizes->image.h = GWY_ROUND(yreal*scale);
+    }
+    else {
+        sizes->image.w = xres;
+        sizes->image.h = yres;
+    }
+    sizes->image.w += 2.0*lw;
+    sizes->image.h += 2.0*lw;
 
-    sizes->canvas.w = sizes->image.w + 2*lw;
-    sizes->canvas.h = sizes->image.h + 2*lw;
+    sizes->vf_ruler = find_hruler_ticks(xyunit, xres, xreal, xoffset,
+                                        &sizes->hruler_ticks,
+                                        &sizes->hruler_label_height,
+                                        layout, s);
+    if (args->xytype == PIXMAP_RULERS) {
+        sizes->hruler.h = sizes->hruler_label_height
+                          + 1.1*TICK_LENGTH;
+        sizes->hruler.w = sizes->image.w;
+    }
 
+    sizes->image.y += sizes->hruler.h;
+
+    sizes->canvas.w = sizes->image.w;
+    sizes->canvas.h = sizes->image.h + sizes->hruler.h;
+
+    g_string_free(s, TRUE);
     g_object_unref(layout);
     cairo_destroy(cr);
     cairo_surface_destroy(surface);
@@ -4338,46 +4431,105 @@ calculate_sizes(const PixmapSaveArgs *args,
 }
 
 static void
+destroy_sizes(PixmapSaveSizes *sizes)
+{
+    if (sizes->vf_ruler)
+        gwy_si_unit_value_format_free(sizes->vf_ruler);
+    g_free(sizes);
+}
+
+static void
 pixmap_draw_data(const PixmapSaveArgs *args,
                  const PixmapSaveSizes *sizes,
                  cairo_t *cr)
 {
     GwyPixmapLayer *layer;
+    const PixmapSaveRect *rect = &sizes->image;
     GdkPixbuf *pixbuf;
-    gdouble lw = 1.0;
+    gdouble lw = args->lw;
     gint w, h;
 
     layer = gwy_data_view_get_base_layer(args->data_view);
     g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
-
-    /*
-    has_presentation
-        = gwy_layer_basic_get_has_presentation(GWY_LAYER_BASIC(layer));
-        */
-
     pixbuf = gwy_data_view_export_pixbuf(args->data_view, 1.0,
                                          args->draw_mask, args->draw_selection);
     w = gdk_pixbuf_get_width(pixbuf);
     h = gdk_pixbuf_get_height(pixbuf);
 
     cairo_save(cr);
-    cairo_rectangle(cr,
-                    sizes->image.x + lw, sizes->image.y + lw,
-                    w, h);
+    cairo_rectangle(cr, rect->x + lw, rect->y + lw, w, h);
     cairo_clip(cr);
-    gdk_cairo_set_source_pixbuf(cr, pixbuf,
-                                sizes->image.x + lw, sizes->image.y + lw);
+    gdk_cairo_set_source_pixbuf(cr, pixbuf, rect->x + lw, rect->y + lw);
+    /* Pixelated zoom, this is what we want for data! */
+    cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_NEAREST);
     cairo_paint(cr);
     cairo_restore(cr);
+    g_object_unref(pixbuf);
 
     cairo_save(cr);
     cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
     cairo_set_line_width(cr, lw);
-    cairo_rectangle(cr,
-                    sizes->image.x + 0.5*lw, sizes->image.y + 0.5*lw,
-                    w + lw, h + lw);
+    cairo_rectangle(cr, rect->x + 0.5*lw, rect->y + 0.5*lw, w + lw, h + lw);
     cairo_stroke(cr);
     cairo_restore(cr);
+}
+
+static void
+pixmap_draw_hruler(const PixmapSaveArgs *args,
+                   const PixmapSaveSizes *sizes,
+                   PangoLayout *layout,
+                   cairo_t *cr)
+{
+    gdouble xreal = gwy_data_field_get_xreal(args->dfield);
+    gdouble xoffset = gwy_data_field_get_xoffset(args->dfield);
+    const PixmapSaveRect *rect = &sizes->hruler;
+    const RulerTicks *ticks = &sizes->hruler_ticks;
+    GwySIValueFormat *vf = sizes->vf_ruler;
+    GString *s = g_string_new(NULL);
+    gdouble lw = args->lw;
+    gdouble x, bs, scale, ximg;
+    gboolean units_placed = FALSE;
+
+    scale = (rect->w - 2.0*lw)/(xreal/sizes->vf_ruler->magnitude);
+    bs = ticks->step*ticks->base;
+
+    cairo_save(cr);
+    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    cairo_set_line_width(cr, lw);
+    for (x = ticks->from; x <= ticks->to + 1e-14*bs; x += bs) {
+        ximg = (x - xoffset)*scale + lw;
+        gwy_debug("x %g -> %g", x, ximg);
+        cairo_move_to(cr, ximg, rect->h);
+        cairo_line_to(cr, ximg, rect->h - TICK_LENGTH);
+    };
+    cairo_stroke(cr);
+    cairo_restore(cr);
+
+    cairo_save(cr);
+    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    for (x = ticks->from; x <= ticks->to + 1e-14*bs; x += bs) {
+        PangoRectangle logical;
+
+        if (fabs(x) < 1e-14)
+            x = 0.0;
+        ximg = (x - xoffset)*scale + lw;
+        if (!units_placed && (x >= 0.0 || ticks->to <= -1e-14)) {
+            format_layout(layout, &logical, s, "%.*f %s",
+                          vf->precision, x, vf->units);
+            units_placed = TRUE;
+        }
+        else
+            format_layout(layout, &logical, s, "%.*f", vf->precision, x);
+
+        if (ximg + logical.width/pangoscale <= rect->w) {
+            cairo_move_to(cr, ximg, rect->h - 1.1*TICK_LENGTH);
+            cairo_rel_move_to(cr, 0.0, -logical.height/pangoscale);
+            pango_cairo_show_layout(cr, layout);
+        }
+    };
+    cairo_restore(cr);
+
+    g_string_free(s, TRUE);
 }
 
 /* We assume cr is already created for the layout with the correct scale(!). */
@@ -4392,6 +4544,7 @@ pixmap_draw_cairo(GwyContainer *data,
     layout = create_layout(args->font, 12.0, cr);
 
     pixmap_draw_data(args, sizes, cr);
+    pixmap_draw_hruler(args, sizes, layout, cr);
 
     g_object_unref(layout);
 }
@@ -4434,6 +4587,8 @@ pixmap_save_cairo(GwyContainer *data,
                                      0);
     sizes = calculate_sizes(&args, name);
 
+    /* FIXME: This is good for pixmap images; we need a different size
+     * determination method for vector graphics. */
     surface = create_surface(&args, name, filename,
                              args.zoom*sizes->canvas.w,
                              args.zoom*sizes->canvas.h);
@@ -4446,7 +4601,7 @@ pixmap_save_cairo(GwyContainer *data,
     cairo_destroy(cr);
     cairo_surface_destroy(surface);
 
-    g_free(sizes);
+    destroy_sizes(sizes);
 
     return TRUE;
 }
