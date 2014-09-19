@@ -182,6 +182,21 @@ G_DEFINE_TYPE_EXTENDED
     (GwySIUnit, gwy_si_unit, G_TYPE_OBJECT, 0,
      GWY_IMPLEMENT_SERIALIZABLE(gwy_si_unit_serializable_init))
 
+GType
+gwy_si_value_format_get_type(void)
+{
+    static GType type = 0;
+
+    if (G_UNLIKELY(!type)) {
+        type = g_boxed_type_register_static
+                        ("GwySIValueFormat",
+                         (GBoxedCopyFunc)&gwy_si_unit_value_format_copy,
+                         (GBoxedFreeFunc)&gwy_si_unit_value_format_free);
+    }
+
+    return type;
+}
+
 static void
 gwy_si_unit_serializable_init(GwySerializableIface *iface)
 {

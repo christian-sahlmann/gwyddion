@@ -35,6 +35,8 @@ G_BEGIN_DECLS
 #define GWY_IS_SI_UNIT_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_SI_UNIT))
 #define GWY_SI_UNIT_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_SI_UNIT, GwySIUnitClass))
 
+#define GWY_TYPE_SI_VALUE_FORMAT          (gwy_si_value_format_get_type())
+
 typedef struct _GwySIUnit GwySIUnit;
 typedef struct _GwySIUnitClass GwySIUnitClass;
 
@@ -68,7 +70,8 @@ struct _GwySIUnitClass {
 #define gwy_si_unit_duplicate(siunit) \
         (GWY_SI_UNIT(gwy_serializable_duplicate(G_OBJECT(siunit))))
 
-GType gwy_si_unit_get_type  (void) G_GNUC_CONST;
+GType gwy_si_unit_get_type        (void) G_GNUC_CONST;
+GType gwy_si_value_format_get_type(void) G_GNUC_CONST;
 
 GwySIUnit*        gwy_si_unit_new                  (const gchar *unit_string);
 GwySIUnit*        gwy_si_unit_new_parse            (const gchar *unit_string,
