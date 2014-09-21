@@ -397,7 +397,7 @@ static void              pixmap_load_save_args       (GwyContainer *container,
 static void              pixmap_load_sanitize_args   (PixmapLoadArgs *args);
 static gchar*            scalebar_auto_length        (GwyDataField *dfield,
                                                       gdouble *p);
-static gboolean          inset_length_ok             (GwyDataField *dfield,
+static gdouble           inset_length_ok             (GwyDataField *dfield,
                                                       const gchar *inset_length);
 static gboolean          pixmap_save_cairo           (GwyContainer *data,
                                                       const gchar *filename,
@@ -2375,7 +2375,7 @@ pixmap_draw_pixbuf(GwyContainer *data,
     gwy_container_gis_boolean_by_name(data, buf, &args.realsquare);
     g_free(buf);
 
-    if (!inset_length_ok(args.dfield, args.inset_length)) {
+    if (!(inset_length_ok(args.dfield, args.inset_length) > 0.0)) {
         g_free(args.inset_length);
         args.inset_length = scalebar_auto_length(args.dfield, NULL);
     }
@@ -3126,7 +3126,7 @@ inset_length_changed(GtkEntry *entry,
     dfield = args->dfield;
     text = gtk_entry_get_text(entry);
     g_free(args->inset_length);
-    if (inset_length_ok(dfield, text)) {
+    if (inset_length_ok(dfield, text) > 0.0) {
         /* XXX: We should check markup validity here. */
         args->inset_length = g_strdup(text);
     }
@@ -3141,30 +3141,40 @@ inset_length_changed(GtkEntry *entry,
     save_update_preview(controls);
 }
 
-static gboolean
+static gdouble
 inset_length_ok(GwyDataField *dfield,
                 const gchar *inset_length)
 {
     gdouble xreal, length;
     gint power10;
     GwySIUnit *siunit, *siunitxy;
-    gchar *end;
+    gchar *end, *plain_text_length = NULL;
     gboolean ok;
 
     if (!inset_length || !*inset_length)
-        return FALSE;
+        return 0.0;
 
-    length = g_strtod(inset_length, &end);
+    gwy_debug("checking inset <%s>", inset_length);
+    if (!pango_parse_markup(inset_length, -1, 0,
+                            NULL, &plain_text_length, NULL, NULL))
+        return 0.0;
+
+    gwy_debug("plain_text version <%s>", plain_text_length);
+    length = g_strtod(plain_text_length, &end);
+    gwy_debug("unit part <%s>", end);
     siunit = gwy_si_unit_new_parse(end, &power10);
+    gwy_debug("power10 %d", power10);
     length *= pow10(power10);
     xreal = gwy_data_field_get_xreal(dfield);
     siunitxy = gwy_data_field_get_si_unit_xy(dfield);
     ok = (gwy_si_unit_equal(siunit, siunitxy)
           && length > 0.1*xreal
           && length < 0.85*xreal);
+    g_free(plain_text_length);
     g_object_unref(siunit);
+    gwy_debug("xreal %g, length %g, ok: %d", xreal, length, ok);
 
-    return ok;
+    return ok ? length : 0.0;
 }
 
 static void
@@ -4303,7 +4313,6 @@ typedef struct {
 
 typedef struct {
     /* Only the width and height are meaningful here */
-    PixmapSaveRect inset_label;
     PixmapSaveRect fmscale_label;
     PixmapSaveRect fmscale_unit_label;
     PixmapSaveRect title_label;
@@ -4314,12 +4323,13 @@ typedef struct {
     RulerTicks vruler_ticks;
     gdouble hruler_label_height;
     gdouble vruler_label_width;
+    gdouble inset_length;
 
     /* Actual rectangles, including positions, of the image parts. */
     PixmapSaveRect image;
     PixmapSaveRect hruler;
     PixmapSaveRect vruler;
-    PixmapSaveRect inset_ruler;
+    PixmapSaveRect inset;
     PixmapSaveRect fmscale;
     PixmapSaveRect title;
 
@@ -4445,6 +4455,48 @@ find_vruler_ticks(const PixmapSaveArgs *args, PixmapSaveSizes *sizes,
     sizes->vruler_label_width = width;
 }
 
+static void
+measure_inset(const PixmapSaveArgs *args, PixmapSaveSizes *sizes,
+              PangoLayout *layout, GString *s)
+{
+    PixmapSaveRect *rect = &sizes->inset;
+    gdouble hsize = sizes->image.w, vsize = sizes->image.h;
+    gdouble real = gwy_data_field_get_xreal(args->dfield);
+    PangoRectangle logical;
+    InsetPosType pos = args->inset_pos;
+    gdouble lw = args->lw;
+
+    sizes->inset_length = inset_length_ok(args->dfield, args->inset_length);
+    if (!(sizes->inset_length > 0.0))
+        return;
+
+    rect->w = sizes->inset_length/real*(hsize - 2.0*lw);
+    rect->h = lw;
+    if (args->inset_draw_ticks)
+        rect->h += TICK_LENGTH;
+
+    if (args->inset_draw_label) {
+        format_layout(layout, &logical, s, "%s", args->inset_length);
+        rect->w = MAX(rect->w, logical.width/pangoscale);
+        rect->h += logical.height/pangoscale + lw;
+    }
+
+    /* TODO: split horizontal and vertical gap */
+    if (pos == INSET_POS_TOP_LEFT
+        || pos == INSET_POS_TOP_CENTER
+        || pos == INSET_POS_TOP_RIGHT)
+        rect->y = lw + TICK_LENGTH*args->inset_gap;
+    else
+        rect->y = vsize - lw - rect->h - TICK_LENGTH*args->inset_gap;
+
+    if (pos == INSET_POS_TOP_LEFT || pos == INSET_POS_BOTTOM_LEFT)
+        rect->x = 2.0*lw + TICK_LENGTH*args->inset_gap;
+    else if (pos == INSET_POS_TOP_RIGHT || pos == INSET_POS_BOTTOM_RIGHT)
+        rect->x = hsize - 2.0*lw - rect->w - TICK_LENGTH*args->inset_gap;
+    else
+        rect->x = hsize/2 - 0.5*rect->w;
+}
+
 static PixmapSaveSizes*
 calculate_sizes(const PixmapSaveArgs *args,
                 const gchar *name)
@@ -4477,22 +4529,23 @@ calculate_sizes(const PixmapSaveArgs *args,
 
     /* Horizontal ruler */
     find_hruler_ticks(args, sizes, layout, s);
-    if (args->xytype == PIXMAP_RULERS) {
-        sizes->hruler.w = sizes->image.w;
-        sizes->hruler.h = sizes->hruler_label_height + 1.1*TICK_LENGTH;
-    }
+    sizes->hruler.w = sizes->image.w;
+    sizes->hruler.h = sizes->hruler_label_height + TICK_LENGTH + lw;
 
     /* Vertical ruler */
     find_vruler_ticks(args, sizes, layout, s);
-    if (args->xytype == PIXMAP_RULERS) {
-        sizes->vruler.w = sizes->vruler_label_width + 1.1*TICK_LENGTH;
-        sizes->vruler.h = sizes->image.h;
-    }
+    sizes->vruler.w = sizes->vruler_label_width + TICK_LENGTH + lw;
+    sizes->vruler.h = sizes->image.h;
 
     sizes->hruler.x += sizes->vruler.w;
     sizes->vruler.y += sizes->hruler.h;
     sizes->image.x += sizes->vruler.w;
     sizes->image.y += sizes->hruler.h;
+
+    /* Inset scale bar */
+    measure_inset(args, sizes, layout, s);
+    sizes->inset.x += sizes->image.x;
+    sizes->inset.y += sizes->image.y;
 
     /* Canvas */
     sizes->canvas.w = sizes->image.w + sizes->vruler.w;
@@ -4557,6 +4610,7 @@ static void
 pixmap_draw_hruler(const PixmapSaveArgs *args,
                    const PixmapSaveSizes *sizes,
                    PangoLayout *layout,
+                   GString *s,
                    cairo_t *cr)
 {
     gdouble xreal = gwy_data_field_get_xreal(args->dfield);
@@ -4564,7 +4618,6 @@ pixmap_draw_hruler(const PixmapSaveArgs *args,
     const PixmapSaveRect *rect = &sizes->hruler;
     const RulerTicks *ticks = &sizes->hruler_ticks;
     GwySIValueFormat *vf = sizes->vf_hruler;
-    GString *s = g_string_new(NULL);
     gdouble lw = args->lw;
     gdouble x, bs, scale, ximg;
     gboolean units_placed = FALSE;
@@ -4600,20 +4653,19 @@ pixmap_draw_hruler(const PixmapSaveArgs *args,
             format_layout(layout, &logical, s, "%.*f", vf->precision, x);
 
         if (ximg + logical.width/pangoscale <= rect->w) {
-            cairo_move_to(cr, ximg, rect->h - 1.1*TICK_LENGTH);
+            cairo_move_to(cr, ximg, rect->h - TICK_LENGTH - lw);
             cairo_rel_move_to(cr, 0.0, -logical.height/pangoscale);
             pango_cairo_show_layout(cr, layout);
         }
     };
     cairo_restore(cr);
-
-    g_string_free(s, TRUE);
 }
 
 static void
 pixmap_draw_vruler(const PixmapSaveArgs *args,
                    const PixmapSaveSizes *sizes,
                    PangoLayout *layout,
+                   GString *s,
                    cairo_t *cr)
 {
     gdouble yreal = gwy_data_field_get_yreal(args->dfield);
@@ -4621,7 +4673,6 @@ pixmap_draw_vruler(const PixmapSaveArgs *args,
     const PixmapSaveRect *rect = &sizes->vruler;
     const RulerTicks *ticks = &sizes->vruler_ticks;
     GwySIValueFormat *vf = sizes->vf_vruler;
-    GString *s = g_string_new(NULL);
     gdouble lw = args->lw;
     gdouble y, bs, scale, yimg;
 
@@ -4649,14 +4700,61 @@ pixmap_draw_vruler(const PixmapSaveArgs *args,
         yimg = (y - yoffset)*scale + rect->y + lw;
         format_layout(layout, &logical, s, "%.*f", vf->precision, y);
         if (yimg + logical.height/pangoscale <= rect->h) {
-            cairo_move_to(cr, rect->w - 1.1*TICK_LENGTH, yimg);
+            cairo_move_to(cr, rect->w - TICK_LENGTH - lw, yimg);
             cairo_rel_move_to(cr, -logical.width/pangoscale, 0.0);
             pango_cairo_show_layout(cr, layout);
         }
     };
     cairo_restore(cr);
+}
 
-    g_string_free(s, TRUE);
+static void
+pixmap_draw_inset(const PixmapSaveArgs *args,
+                  const PixmapSaveSizes *sizes,
+                  PangoLayout *layout,
+                  GString *s,
+                  cairo_t *cr)
+{
+    gdouble xreal = gwy_data_field_get_xreal(args->dfield);
+    const PixmapSaveRect *rect = &sizes->inset;
+    const GwyRGBA *colour = &args->inset_color;
+    PangoRectangle logical;
+    gdouble lw = args->lw;
+    gdouble xcentre, length, y;
+
+    length = (sizes->image.w - 2.0*lw)/xreal*sizes->inset_length;
+    xcentre = rect->x + 0.5*rect->w;
+    y = 0.5*lw;
+
+    cairo_save(cr);
+    cairo_set_source_rgba(cr, colour->r, colour->g, colour->b, colour->a);
+    cairo_set_line_width(cr, lw);
+    if (args->inset_draw_ticks) {
+        cairo_move_to(cr, xcentre - 0.5*length, rect->y);
+        cairo_rel_line_to(cr, 0.0, TICK_LENGTH);
+        cairo_move_to(cr, xcentre + 0.5*length, rect->y);
+        cairo_rel_line_to(cr, 0.0, TICK_LENGTH);
+        y = 0.5*TICK_LENGTH;
+    }
+    cairo_move_to(cr, xcentre - 0.5*length, rect->y + y);
+    cairo_line_to(cr, xcentre + 0.5*length, rect->y + y);
+    cairo_stroke(cr);
+    cairo_restore(cr);
+
+    if (args->inset_draw_ticks)
+        y = TICK_LENGTH + lw;
+    else
+        y = 2.0*lw;
+
+    if (!args->inset_draw_label)
+        return;
+
+    cairo_save(cr);
+    cairo_set_source_rgba(cr, colour->r, colour->g, colour->b, colour->a);
+    format_layout(layout, &logical, s, "%s", args->inset_length);
+    cairo_move_to(cr, xcentre - 0.5*logical.width/pangoscale, rect->y + y);
+    pango_cairo_show_layout(cr, layout);
+    cairo_restore(cr);
 }
 
 /* We assume cr is already created for the layout with the correct scale(!). */
@@ -4667,14 +4765,17 @@ pixmap_draw_cairo(GwyContainer *data,
                   cairo_t *cr)
 {
     PangoLayout *layout;
+    GString *s = g_string_new(NULL);
 
     layout = create_layout(args->font, 12.0, cr);
 
     pixmap_draw_data(args, sizes, cr);
-    pixmap_draw_hruler(args, sizes, layout, cr);
-    pixmap_draw_vruler(args, sizes, layout, cr);
+    pixmap_draw_hruler(args, sizes, layout, s, cr);
+    pixmap_draw_vruler(args, sizes, layout, s, cr);
+    pixmap_draw_inset(args, sizes, layout, s, cr);
 
     g_object_unref(layout);
+    g_string_free(s, TRUE);
 }
 
 /*
