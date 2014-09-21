@@ -4313,24 +4313,26 @@ typedef struct {
 
 typedef struct {
     /* Only the width and height are meaningful here */
-    PixmapSaveRect fmscale_label;
-    PixmapSaveRect fmscale_unit_label;
-    PixmapSaveRect title_label;
-
     GwySIValueFormat *vf_hruler;
     GwySIValueFormat *vf_vruler;
+    GwySIValueFormat *vf_fmruler;
     RulerTicks hruler_ticks;
     RulerTicks vruler_ticks;
+    RulerTicks fmruler_ticks;
     gdouble hruler_label_height;
     gdouble vruler_label_width;
+    gdouble fmruler_label_width;
     gdouble inset_length;
+    GwyLayerBasicRangeType fm_rangetype;
+    gboolean fm_inverted;
 
     /* Actual rectangles, including positions, of the image parts. */
     PixmapSaveRect image;
     PixmapSaveRect hruler;
     PixmapSaveRect vruler;
     PixmapSaveRect inset;
-    PixmapSaveRect fmscale;
+    PixmapSaveRect fmgrad;
+    PixmapSaveRect fmruler;
     PixmapSaveRect title;
 
     /* Union of all above (plus maybe borders). */
@@ -4456,6 +4458,76 @@ find_vruler_ticks(const PixmapSaveArgs *args, PixmapSaveSizes *sizes,
 }
 
 static void
+find_fmscale_ticks(const PixmapSaveArgs *args, PixmapSaveSizes *sizes,
+                   PangoLayout *layout, GString *s)
+{
+    GwySIUnit *zunit = gwy_data_field_get_si_unit_z(args->dfield);
+    GwyPixmapLayer *layer;
+    gdouble size = sizes->image.h;
+    gdouble min, max, real;
+    RulerTicks *ticks = &sizes->fmruler_ticks;
+    PangoRectangle logical1, logical2;
+    GwySIValueFormat *vf;
+    gdouble bs, height, width;
+    guint n;
+
+    layer = gwy_data_view_get_base_layer(args->data_view);
+    g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
+    gwy_layer_basic_get_range(GWY_LAYER_BASIC(layer), &min, &max);
+    real = MAX(fabs(min), fabs(max));
+
+    sizes->fm_inverted = (max < min);
+    sizes->fm_rangetype = gwy_layer_basic_get_range_type(GWY_LAYER_BASIC(layer));
+
+    /* TODO: Handle inverted range! */
+    vf = gwy_si_unit_get_format_with_resolution(zunit,
+                                                GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                real, real/240,
+                                                NULL);
+    sizes->vf_fmruler = vf;
+    gwy_debug("unit '%s'", vf->units);
+    min /= vf->magnitude;
+    max /= vf->magnitude;
+    real /= vf->magnitude;
+    /* TODO: Do this when we place units to the ticks.  We can also place them
+     * to the axis label. */
+    format_layout(layout, &logical1, s, "%.*f %s",
+                  vf->precision, max, vf->units);
+    gwy_debug("max '%s'", s->str);
+    format_layout(layout, &logical2, s, "%.*f", vf->precision, min);
+    gwy_debug("min '%s'", s->str);
+
+    width = MAX(logical1.width/pangoscale, logical2.width/pangoscale);
+    sizes->fmruler_label_width = width;
+    height = MAX(logical1.height/pangoscale, logical2.height/pangoscale);
+    gwy_debug("label width %g, height %g", width, height);
+    n = CLAMP(GWY_ROUND(size/height), 1, 10);
+    gwy_debug("nticks %u", n);
+    ticks->step = real/n;
+    ticks->base = pow10(floor(log10(ticks->step)));
+    ticks->step /= ticks->base;
+    if (ticks->step <= 2.0)
+        ticks->step = 2.0;
+    else if (ticks->step <= 5.0)
+        ticks->step = 5.0;
+    else {
+        ticks->base *= 10.0;
+        ticks->step = 1.0;
+        if (vf->precision)
+            vf->precision--;
+    }
+    gwy_debug("base %g, step %g", ticks->base, ticks->step);
+
+    /* XXX: This is rudimentary.  Must create the end-axis ticks! */
+    bs = ticks->base * ticks->step;
+    ticks->from = ceil(min/bs - 1e-14)*bs;
+    ticks->from = fixzero(ticks->from);
+    ticks->to = floor(max/bs + 1e-14)*bs;
+    ticks->to = fixzero(ticks->to);
+    gwy_debug("from %g, to %g", ticks->from, ticks->to);
+}
+
+static void
 measure_inset(const PixmapSaveArgs *args, PixmapSaveSizes *sizes,
               PangoLayout *layout, GString *s)
 {
@@ -4503,7 +4575,7 @@ calculate_sizes(const PixmapSaveArgs *args,
 {
     cairo_surface_t *surface = create_surface(args, name, NULL, 0.0, 0.0);
     cairo_t *cr = cairo_create(surface);
-    PangoLayout *layout = create_layout(args->font, 12.0, cr);
+    PangoLayout *layout = create_layout(args->font, args->font_size, cr);
     PixmapSaveSizes *sizes = g_new0(PixmapSaveSizes, 1);
     guint xres = gwy_data_field_get_xres(args->dfield);
     guint yres = gwy_data_field_get_yres(args->dfield);
@@ -4547,9 +4619,23 @@ calculate_sizes(const PixmapSaveArgs *args,
     sizes->inset.x += sizes->image.x;
     sizes->inset.y += sizes->image.y;
 
+    /* False colour gradient */
+    sizes->fmgrad = sizes->image;
+    /* NB: We subtract lw here to make the fmscale visually just touch the
+     * image in the case of zero gap. */
+    sizes->fmgrad.x += sizes->image.w + TICK_LENGTH*args->fmscale_gap - lw;
+    sizes->fmgrad.w = 1.5*args->font_size + 2.0*lw;
+
+    /* False colour axis */
+    find_fmscale_ticks(args, sizes, layout, s);
+    sizes->fmruler.x = sizes->fmgrad.x + sizes->fmgrad.w;
+    sizes->fmruler.y = sizes->fmgrad.y;
+    sizes->fmruler.w = sizes->fmruler_label_width;
+    sizes->fmruler.h = sizes->fmgrad.h;
+
     /* Canvas */
-    sizes->canvas.w = sizes->image.w + sizes->vruler.w;
-    sizes->canvas.h = sizes->image.h + sizes->hruler.h;
+    sizes->canvas.w = sizes->fmruler.x + sizes->fmruler.w;
+    sizes->canvas.h = sizes->image.y + sizes->image.h;
 
     g_string_free(s, TRUE);
     g_object_unref(layout);
@@ -4566,6 +4652,8 @@ destroy_sizes(PixmapSaveSizes *sizes)
         gwy_si_unit_value_format_free(sizes->vf_hruler);
     if (sizes->vf_vruler)
         gwy_si_unit_value_format_free(sizes->vf_vruler);
+    if (sizes->vf_fmruler)
+        gwy_si_unit_value_format_free(sizes->vf_fmruler);
     g_free(sizes);
 }
 
@@ -4574,18 +4662,15 @@ pixmap_draw_data(const PixmapSaveArgs *args,
                  const PixmapSaveSizes *sizes,
                  cairo_t *cr)
 {
-    GwyPixmapLayer *layer;
     const PixmapSaveRect *rect = &sizes->image;
     GdkPixbuf *pixbuf;
     gdouble lw = args->lw;
-    gint w, h;
+    gdouble w, h;
 
-    layer = gwy_data_view_get_base_layer(args->data_view);
-    g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
     pixbuf = gwy_data_view_export_pixbuf(args->data_view, 1.0,
                                          args->draw_mask, args->draw_selection);
-    w = gdk_pixbuf_get_width(pixbuf);
-    h = gdk_pixbuf_get_height(pixbuf);
+    w = rect->w - 2.0*lw;
+    h = rect->h - 2.0*lw;
 
     cairo_save(cr);
     cairo_rectangle(cr, rect->x + lw, rect->y + lw, w, h);
@@ -4716,17 +4801,22 @@ pixmap_draw_inset(const PixmapSaveArgs *args,
                   cairo_t *cr)
 {
     gdouble xreal = gwy_data_field_get_xreal(args->dfield);
-    const PixmapSaveRect *rect = &sizes->inset;
+    const PixmapSaveRect *rect = &sizes->inset, *imgrect = &sizes->image;
     const GwyRGBA *colour = &args->inset_color;
     PangoRectangle logical;
     gdouble lw = args->lw;
-    gdouble xcentre, length, y;
+    gdouble xcentre, length, y, w, h;
 
     length = (sizes->image.w - 2.0*lw)/xreal*sizes->inset_length;
     xcentre = rect->x + 0.5*rect->w;
     y = 0.5*lw;
 
+    w = imgrect->w - 2.0*lw;
+    h = imgrect->h - 2.0*lw;
+
     cairo_save(cr);
+    cairo_rectangle(cr, imgrect->x + lw, imgrect->y + lw, w, h);
+    cairo_clip(cr);
     cairo_set_source_rgba(cr, colour->r, colour->g, colour->b, colour->a);
     cairo_set_line_width(cr, lw);
     if (args->inset_draw_ticks) {
@@ -4750,10 +4840,70 @@ pixmap_draw_inset(const PixmapSaveArgs *args,
         return;
 
     cairo_save(cr);
+    cairo_rectangle(cr, imgrect->x + lw, imgrect->y + lw, w, h);
+    cairo_clip(cr);
     cairo_set_source_rgba(cr, colour->r, colour->g, colour->b, colour->a);
     format_layout(layout, &logical, s, "%s", args->inset_length);
     cairo_move_to(cr, xcentre - 0.5*logical.width/pangoscale, rect->y + y);
     pango_cairo_show_layout(cr, layout);
+    cairo_restore(cr);
+}
+
+static void
+pixmap_draw_fmgrad(GwyContainer *data,
+                   const PixmapSaveArgs *args,
+                   const PixmapSaveSizes *sizes,
+                   cairo_t *cr)
+{
+    GwyPixmapLayer *layer;
+    const PixmapSaveRect *rect = &sizes->fmgrad;
+    GwyGradient *gradient;
+    const GwyGradientPoint *points;
+    cairo_pattern_t *pat;
+    const guchar *name = NULL, *key;
+    gint w, h, npoints, i;
+    gdouble lw = args->lw;
+    gboolean inverted = sizes->fm_inverted;
+
+    layer = gwy_data_view_get_base_layer(args->data_view);
+    key = gwy_layer_basic_get_gradient_key(GWY_LAYER_BASIC(layer));
+    if (key)
+        gwy_container_gis_string_by_name(data, key, &name);
+    gradient = gwy_gradients_get_gradient(name);
+    points = gwy_gradient_get_points(gradient, &npoints);
+
+    w = rect->w - 2.0*lw;
+    h = rect->h - 2.0*lw;
+
+    if (inverted)
+        pat = cairo_pattern_create_linear(rect->x, rect->y + lw,
+                                          rect->x, rect->y + h);
+    else
+        pat = cairo_pattern_create_linear(rect->x, rect->y + h,
+                                          rect->x, rect->y + lw);
+    for (i = 0; i < npoints; i++) {
+        const GwyGradientPoint *gpt = points + i;
+        const GwyRGBA *color = &gpt->color;
+
+        cairo_pattern_add_color_stop_rgb(pat, gpt->x,
+                                         color->r, color->g, color->b);
+    }
+    cairo_pattern_set_filter(pat, CAIRO_FILTER_BILINEAR);
+
+    cairo_save(cr);
+    cairo_rectangle(cr, rect->x + lw, rect->y + lw, w, h);
+    cairo_clip(cr);
+    cairo_set_source(cr, pat);
+    cairo_paint(cr);
+    cairo_restore(cr);
+
+    cairo_pattern_destroy(pat);
+
+    cairo_save(cr);
+    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    cairo_set_line_width(cr, lw);
+    cairo_rectangle(cr, rect->x + 0.5*lw, rect->y + 0.5*lw, w + lw, h + lw);
+    cairo_stroke(cr);
     cairo_restore(cr);
 }
 
@@ -4767,12 +4917,13 @@ pixmap_draw_cairo(GwyContainer *data,
     PangoLayout *layout;
     GString *s = g_string_new(NULL);
 
-    layout = create_layout(args->font, 12.0, cr);
+    layout = create_layout(args->font, args->font_size, cr);
 
     pixmap_draw_data(args, sizes, cr);
     pixmap_draw_hruler(args, sizes, layout, s, cr);
     pixmap_draw_vruler(args, sizes, layout, s, cr);
     pixmap_draw_inset(args, sizes, layout, s, cr);
+    pixmap_draw_fmgrad(data, args, sizes, cr);
 
     g_object_unref(layout);
     g_string_free(s, TRUE);
@@ -4811,6 +4962,7 @@ pixmap_save_cairo(GwyContainer *data,
 
     settings = gwy_app_settings_get();
     pixmap_save_load_args(settings, &args);
+    args.font_size = 12.0; // XXX XXX XXX
     gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &args.data_view,
                                      GWY_APP_DATA_FIELD, &args.dfield,
                                      0);
