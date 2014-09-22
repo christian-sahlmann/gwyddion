@@ -101,6 +101,8 @@ typedef enum {
     INSET_NPOS
 } InsetPosType;
 
+struct ImgExportFormat;
+
 typedef struct {
     gdouble x, y;
     gdouble w, h;
@@ -154,9 +156,10 @@ typedef struct {
     gboolean inset_draw_label;
     gdouble fmscale_gap;
     gdouble inset_gap;
-    guint grayscale;
+    guint greyscale;
     gchar *inset_length;
     /* Interface only */
+    const struct _ImgExportFormat *format;
     GwyDataView *data_view;
     GwyDataField *dfield;
     GwyContainer *data;
@@ -168,7 +171,6 @@ typedef struct {
     gboolean realsquare;
 
     /* New args */
-    gboolean transparent;
     gdouble lw;
 } ImgExportArgs;
 
@@ -186,35 +188,35 @@ typedef gboolean (*WriteImageFunc)(const ImgExportArgs *args,
                                    const gchar *filename,
                                    GError **error);
 
-typedef struct {
+typedef struct _ImgExportFormat {
     const gchar *name;
     const gchar *description;
     const gchar *extensions;
     WritePixbufFunc write_pixbuf;   /* If NULL, use generic GdkPixbuf func. */
     WriteImageFunc write_grey16;    /* 16bit grey */
     WriteImageFunc write_vector;    /* scalable */
-} ImageExportFormat;
+} ImgExportFormat;
 
-static gboolean           module_register         (void);
-static gint               img_export_detect           (const GwyFileDetectInfo *fileinfo,
-                                                   gboolean only_name,
-                                                   const gchar *name);
-static gboolean           img_export_export        (GwyContainer *data,
-                                                   const gchar *filename,
-                                                   GwyRunType mode,
-                                                   GError **error,
-                                                   const gchar *name);
-static gint               gwy_pixmap_step_to_prec (gdouble d);
-static void               img_export_free_args    (ImgExportArgs *args);
-static void               img_export_load_args    (GwyContainer *container,
-                                                   ImgExportArgs *args);
-static void               img_export_save_args    (GwyContainer *container,
-                                                   ImgExportArgs *args);
-static void               img_export_sanitize_args(ImgExportArgs *args);
-static gchar*             scalebar_auto_length    (GwyDataField *dfield,
-                                                   gdouble *p);
-static gdouble            inset_length_ok         (GwyDataField *dfield,
-                                                   const gchar *inset_length);
+static gboolean module_register         (void);
+static gint     img_export_detect       (const GwyFileDetectInfo *fileinfo,
+                                         gboolean only_name,
+                                         const gchar *name);
+static gboolean img_export_export       (GwyContainer *data,
+                                         const gchar *filename,
+                                         GwyRunType mode,
+                                         GError **error,
+                                         const gchar *name);
+static gint     gwy_pixmap_step_to_prec (gdouble d);
+static void     img_export_free_args    (ImgExportArgs *args);
+static void     img_export_load_args    (GwyContainer *container,
+                                         ImgExportArgs *args);
+static void     img_export_save_args    (GwyContainer *container,
+                                         ImgExportArgs *args);
+static void     img_export_sanitize_args(ImgExportArgs *args);
+static gchar*   scalebar_auto_length    (GwyDataField *dfield,
+                                         gdouble *p);
+static gdouble  inset_length_ok         (GwyDataField *dfield,
+                                         const gchar *inset_length);
 
 #ifdef HAVE_PNG
 static gboolean write_image_png16(const ImgExportArgs *args,
@@ -258,7 +260,7 @@ static gboolean write_pixbuf_targa  (GdkPixbuf *pixbuf,
                                      const gchar *filename,
                                      GError **error);
 
-static ImageExportFormat image_formats[] = {
+static ImgExportFormat image_formats[] = {
     {
         "png",
         N_("Portable Network Graphics (.png)"),
@@ -329,10 +331,9 @@ static const ImgExportArgs img_export_defaults = {
     1.0, 1.0,
     0, "",
     /* Interface only */
-    NULL, NULL, NULL, 0, 0, 0, FALSE,
+    NULL, NULL, NULL, NULL, 0, 0, 0, FALSE,
 
     /* New args */
-    FALSE,
     1.0,
 };
 
@@ -351,13 +352,13 @@ static GwyModuleInfo module_info = {
 
 GWY_MODULE_QUERY(module_info)
 
-static ImageExportFormat*
+static ImgExportFormat*
 find_format(const gchar *name, gboolean cairoext)
 {
     guint i, len;
 
     for (i = 0; i < G_N_ELEMENTS(image_formats); i++) {
-        ImageExportFormat *format = image_formats + i;
+        ImgExportFormat *format = image_formats + i;
 
         if (cairoext) {
             len = strlen(format->name);
@@ -386,7 +387,7 @@ module_register(void)
     for (l = pixbuf_formats; l; l = g_slist_next(l)) {
         GdkPixbufFormat *pixbuf_format = (GdkPixbufFormat*)l->data;
         const gchar *name;
-        ImageExportFormat *format;
+        ImgExportFormat *format;
 
         name = gdk_pixbuf_format_get_name(pixbuf_format);
         if (!gdk_pixbuf_format_is_writable(pixbuf_format)) {
@@ -415,7 +416,7 @@ module_register(void)
      * that users can see the formats listed in the file dialog.  We must use
      * names different from the pixmap module, so append "cairo". */
     for (i = 0; i < G_N_ELEMENTS(image_formats); i++) {
-        ImageExportFormat *format = image_formats + i;
+        ImgExportFormat *format = image_formats + i;
         gchar *caironame;
 
         if (!format->write_pixbuf
@@ -440,7 +441,7 @@ img_export_detect(const GwyFileDetectInfo *fileinfo,
                   G_GNUC_UNUSED gboolean only_name,
                   const gchar *name)
 {
-    ImageExportFormat *format;
+    ImgExportFormat *format;
     gint score;
     gchar **extensions;
     guint i;
@@ -612,12 +613,12 @@ create_surface(const ImgExportArgs *args,
     iwidth = (gint)ceil(width);
     iheight = (gint)ceil(height);
 
-    if (gwy_stramong(name, "png", "jpeg2000", NULL)) {
-        if (args->transparent)
-            imageformat = CAIRO_FORMAT_ARGB32;
-        surface = cairo_image_surface_create(imageformat, iwidth, iheight);
-    }
-    else if (gwy_stramong(name, "jpeg", "tiff", "pnm", "bmp", "tga", NULL))
+    /* XXX: PNG supports transparency.  But Cairo draws with premultiplied
+     * alpha, which means we would have to decompose it again for PNG.   This
+     * can turn ugly. */
+    if (gwy_stramong(name,
+                     "png", "jpeg2000", "jpeg", "tiff", "pnm",
+                     "bmp", "tga", NULL))
         surface = cairo_image_surface_create(imageformat, iwidth, iheight);
 #ifdef CAIRO_HAS_PDF_SURFACE
     else if (gwy_strequal(name, "pdf"))
@@ -876,9 +877,7 @@ static ImgExportSizes*
 calculate_sizes(const ImgExportArgs *args,
                 const gchar *name)
 {
-    cairo_surface_t *surface = create_surface(args, name, NULL, 0.0, 0.0);
-    cairo_t *cr = cairo_create(surface);
-    PangoLayout *layout = create_layout(args->font, args->font_size, cr);
+    PangoLayout *layout;
     ImgExportSizes *sizes = g_new0(ImgExportSizes, 1);
     guint xres = gwy_data_field_get_xres(args->dfield);
     guint yres = gwy_data_field_get_yres(args->dfield);
@@ -886,6 +885,13 @@ calculate_sizes(const ImgExportArgs *args,
     gdouble yreal = gwy_data_field_get_yreal(args->dfield);
     GString *s = g_string_new(NULL);
     gdouble lw = args->lw;
+    cairo_surface_t *surface;
+    cairo_t *cr;
+
+    surface = create_surface(args, name, NULL, 0.0, 0.0);
+    g_return_val_if_fail(surface, NULL);
+    cr = cairo_create(surface);
+    layout = create_layout(args->font, args->font_size, cr);
 
     /* Data */
     if (args->realsquare) {
@@ -1212,10 +1218,10 @@ pixmap_draw_fmgrad(GwyContainer *data,
 
 /* We assume cr is already created for the layout with the correct scale(!). */
 static void
-pixmap_draw_cairo(GwyContainer *data,
-                  const ImgExportArgs *args,
-                  const ImgExportSizes *sizes,
-                  cairo_t *cr)
+image_draw_cairo(GwyContainer *data,
+                 const ImgExportArgs *args,
+                 const ImgExportSizes *sizes,
+                 cairo_t *cr)
 {
     PangoLayout *layout;
     GString *s = g_string_new(NULL);
@@ -1230,6 +1236,63 @@ pixmap_draw_cairo(GwyContainer *data,
 
     g_object_unref(layout);
     g_string_free(s, TRUE);
+}
+
+static GdkPixbuf*
+render_pixbuf(const ImgExportArgs *args, const gchar *name)
+{
+    ImgExportSizes *sizes;
+    cairo_surface_t *surface;
+    GdkPixbuf *pixbuf;
+    guchar *imgdata, *pixels;
+    guint xres, yres, imgrowstride, pixrowstride, i, j;
+    cairo_format_t imgformat;
+    cairo_t *cr;
+
+    sizes = calculate_sizes(args, name);
+    g_return_val_if_fail(sizes, FALSE);
+    surface = create_surface(args, name, NULL,
+                             args->zoom*sizes->canvas.w,
+                             args->zoom*sizes->canvas.h);
+    cr = cairo_create(surface);
+    cairo_scale(cr, args->zoom, args->zoom);
+    image_draw_cairo(args->data, args, sizes, cr);
+    cairo_surface_flush(surface);
+    cairo_destroy(cr);
+
+    imgdata = cairo_image_surface_get_data(surface);
+    xres = cairo_image_surface_get_width(surface);
+    yres = cairo_image_surface_get_height(surface);
+    imgrowstride = cairo_image_surface_get_stride(surface);
+    imgformat = cairo_image_surface_get_format(surface);
+    g_return_val_if_fail(imgformat == CAIRO_FORMAT_RGB24, NULL);
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, xres, yres);
+    pixrowstride = gdk_pixbuf_get_rowstride(pixbuf);
+    pixels = gdk_pixbuf_get_pixels(pixbuf);
+    for (i = 0; i < yres; i++) {
+        const guchar *p = imgdata + i*imgrowstride;
+        guchar *q = pixels + i*pixrowstride;
+
+        if (G_BYTE_ORDER == G_LITTLE_ENDIAN) {
+            for (j = xres; j; j--, p += 4, q += 3) {
+                *q = *(p + 2);
+                *(q + 1) = *(p + 1);
+                *(q + 2) = *p;
+            }
+        }
+        else {
+            for (j = xres; j; j--, p += 4, q += 3) {
+                *q = *(p + 1);
+                *(q + 1) = *(p + 2);
+                *(q + 2) = *(p + 3);
+            }
+        }
+    }
+
+    cairo_surface_destroy(surface);
+    destroy_sizes(sizes);
+
+    return pixbuf;
 }
 
 /*
@@ -1259,35 +1322,47 @@ img_export_export(GwyContainer *data,
 {
     GwyContainer *settings;
     ImgExportArgs args;
-    ImgExportSizes *sizes;
-    cairo_surface_t *surface;
-    cairo_t *cr;
+    const ImgExportFormat *format;
+    gboolean ok;
 
     settings = gwy_app_settings_get();
     img_export_load_args(settings, &args);
+    format = args.format = find_format(name, TRUE);
+    g_return_val_if_fail(args.format, FALSE);
+
     args.font_size = 12.0; // XXX XXX XXX
+    args.data = data;
     gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &args.data_view,
                                      GWY_APP_DATA_FIELD, &args.dfield,
+                                     GWY_APP_DATA_FIELD_ID, &args.id,
                                      0);
-    sizes = calculate_sizes(&args, name);
 
-    /* FIXME: This is good for pixmap images; we need a different size
-     * determination method for vector graphics. */
-    surface = create_surface(&args, name, filename,
-                             args.zoom*sizes->canvas.w,
-                             args.zoom*sizes->canvas.h);
-    cr = cairo_create(surface);
-    cairo_scale(cr, args.zoom, args.zoom);
+    // TODO: Run some GUI here.
+    ok = TRUE;
 
-    pixmap_draw_cairo(data, &args, sizes, cr);
+    if (ok) {
+        if (format->write_vector)
+            ok = format->write_vector(&args, format->name, filename, error);
+        else if (format->write_grey16 && args.greyscale)
+            ok = format->write_grey16(&args, format->name, filename, error);
+        else if (format->write_pixbuf) {
+            GdkPixbuf *pixbuf = render_pixbuf(&args, format->name);
+            ok = format->write_pixbuf(pixbuf, format->name, filename, error);
+            g_object_unref(pixbuf);
+        }
+        else {
+            ok = FALSE;
+            g_assert_not_reached();
+        }
+    }
+    else {
+        err_CANCELLED(error);
+    }
 
-    cairo_surface_flush(surface);
-    cairo_destroy(cr);
-    cairo_surface_destroy(surface);
+    img_export_save_args(settings, &args);
+    img_export_free_args(&args);
 
-    destroy_sizes(sizes);
-
-    return TRUE;
+    return ok;
 }
 
 static guint16*
@@ -1556,16 +1631,16 @@ write_image_tiff16(const ImgExportArgs *args,
     *(guint32*)(tiff_head + BYTES_OFFSET) = GUINT32_TO_LE(nbytes);
 
     if (fwrite(tiff_head, 1, sizeof(tiff_head), fh) != sizeof(tiff_head)) {
-        fclose(fh);
         err_WRITE(error);
+        fclose(fh);
         return FALSE;
     }
 
     pixels = render_image_grey16(dfield);
     if (fwrite(pixels, sizeof(guint16), xres*yres, fh) != xres*yres) {
+        err_WRITE(error);
         fclose(fh);
         g_free(pixels);
-        err_WRITE(error);
         return FALSE;
     }
 
@@ -1688,8 +1763,35 @@ write_vector_generic(const ImgExportArgs *args,
                      const gchar *filename,
                      GError **error)
 {
+    gboolean ok = TRUE;
+    ImgExportSizes *sizes;
+    cairo_surface_t *surface;
+    cairo_status_t status;
+    cairo_t *cr;
 
-    return FALSE;
+    /* FIXME: We need some size determination method for vector drawings.
+     * Note this requires changing the canvas and the cairo scale transform. */
+    sizes = calculate_sizes(args, name);
+    g_return_val_if_fail(sizes, FALSE);
+    surface = create_surface(args, name, filename,
+                             sizes->canvas.w, sizes->canvas.h);
+    g_return_val_if_fail(surface, FALSE);
+    cr = cairo_create(surface);
+    image_draw_cairo(args->data, args, sizes, cr);
+    cairo_surface_flush(surface);
+    if ((status = cairo_status(cr))
+        || (status = cairo_surface_status(surface))) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("Cairo error occurred: %s"),
+                    cairo_status_to_string(status));
+        ok = FALSE;
+    }
+    cairo_destroy(cr);
+    cairo_surface_destroy(surface);
+    destroy_sizes(sizes);
+
+    return ok;
 }
 
 static gboolean
@@ -1709,15 +1811,109 @@ write_pixbuf_generic(GdkPixbuf *pixbuf,
     return FALSE;
 }
 
+/* Expand a word and double-word into LSB-ordered sequence of bytes */
+#define W(x) (x)&0xff, (x)>>8
+#define Q(x) (x)&0xff, ((x)>>8)&0xff, ((x)>>16)&0xff, (x)>>24
+
 static gboolean
 write_pixbuf_tiff(GdkPixbuf *pixbuf,
                   const gchar *name,
                   const gchar *filename,
                   GError **error)
 {
+    enum {
+        N_ENTRIES = 14,
+        ESTART = 4 + 4 + 2,
+        HEAD_SIZE = ESTART + 12*N_ENTRIES + 4,  /* head + 0th directory */
+        /* offsets of things we have to fill run-time */
+        WIDTH_OFFSET = ESTART + 12*0 + 8,
+        HEIGHT_OFFSET = ESTART + 12*1 + 8,
+        ROWS_OFFSET = ESTART + 12*8 + 8,
+        BYTES_OFFSET = ESTART + 12*9 + 8,
+        BIT_DEPTH = 8,
+        NCHANNELS = 3,
+    };
 
-    return FALSE;
+    static guchar tiff_head[] = {
+        0x49, 0x49,   /* magic (LSB) */
+        W(42),        /* more magic */
+        Q(8),         /* 0th directory offset */
+        W(N_ENTRIES), /* number of entries */
+        W(GWY_TIFFTAG_IMAGE_WIDTH), W(GWY_TIFF_SHORT), Q(1), Q(0),
+        W(GWY_TIFFTAG_IMAGE_LENGTH), W(GWY_TIFF_SHORT), Q(1), Q(0),
+        W(GWY_TIFFTAG_BITS_PER_SAMPLE), W(GWY_TIFF_SHORT), Q(3), Q(HEAD_SIZE),
+        W(GWY_TIFFTAG_COMPRESSION), W(GWY_TIFF_SHORT), Q(1),
+            Q(GWY_TIFF_COMPRESSION_NONE),
+        W(GWY_TIFFTAG_PHOTOMETRIC), W(GWY_TIFF_SHORT), Q(1),
+            Q(GWY_TIFF_PHOTOMETRIC_RGB),
+        W(GWY_TIFFTAG_STRIP_OFFSETS), W(GWY_TIFF_LONG), Q(1),
+            Q(HEAD_SIZE + 22),
+        W(GWY_TIFFTAG_ORIENTATION), W(GWY_TIFF_SHORT), Q(1),
+            Q(GWY_TIFF_ORIENTATION_TOPLEFT),
+        W(GWY_TIFFTAG_SAMPLES_PER_PIXEL), W(GWY_TIFF_SHORT), Q(1), Q(NCHANNELS),
+        W(GWY_TIFFTAG_ROWS_PER_STRIP), W(GWY_TIFF_SHORT), Q(1), Q(0),
+        W(GWY_TIFFTAG_STRIP_BYTE_COUNTS), W(GWY_TIFF_LONG), Q(1), Q(0),
+        W(GWY_TIFFTAG_X_RESOLUTION), W(GWY_TIFF_RATIONAL), Q(1),
+            Q(HEAD_SIZE + 6),
+        W(GWY_TIFFTAG_Y_RESOLUTION), W(GWY_TIFF_RATIONAL), Q(1),
+            Q(HEAD_SIZE + 14),
+        W(GWY_TIFFTAG_PLANAR_CONFIG), W(GWY_TIFF_SHORT), Q(1),
+            Q(GWY_TIFF_PLANAR_CONFIG_CONTIGNUOUS),
+        W(GWY_TIFFTAG_RESOLUTION_UNIT), W(GWY_TIFF_SHORT), Q(1),
+            Q(GWY_TIFF_RESOLUTION_UNIT_INCH),
+        Q(0),              /* next directory (0 = none) */
+        /* header data */
+        W(BIT_DEPTH), W(BIT_DEPTH), W(BIT_DEPTH),
+        Q(72), Q(1),       /* x-resolution */
+        Q(72), Q(1),       /* y-resolution */
+        /* here starts the image data */
+    };
+
+    guint xres, yres, rowstride, i, nbytes, nchannels;
+    guchar *pixels;
+    FILE *fh;
+
+    g_return_val_if_fail(gwy_strequal(name, "tiffcairo"), FALSE);
+
+    nchannels = gdk_pixbuf_get_n_channels(pixbuf);
+    g_return_val_if_fail(nchannels == 3, FALSE);
+
+    if (!(fh = g_fopen(filename, "wb"))) {
+        err_OPEN_WRITE(error);
+        return FALSE;
+    }
+
+    xres = gdk_pixbuf_get_width(pixbuf);
+    yres = gdk_pixbuf_get_height(pixbuf);
+    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
+    pixels = gdk_pixbuf_get_pixels(pixbuf);
+    nbytes = xres*yres*NCHANNELS;
+
+    *(guint32*)(tiff_head + WIDTH_OFFSET) = GUINT32_TO_LE(xres);
+    *(guint32*)(tiff_head + HEIGHT_OFFSET) = GUINT32_TO_LE(yres);
+    *(guint32*)(tiff_head + ROWS_OFFSET) = GUINT32_TO_LE(yres);
+    *(guint32*)(tiff_head + BYTES_OFFSET) = GUINT32_TO_LE(nbytes);
+
+    if (fwrite(tiff_head, 1, sizeof(tiff_head), fh) != sizeof(tiff_head)) {
+        err_WRITE(error);
+        fclose(fh);
+        return FALSE;
+    }
+
+    for (i = 0; i < yres; i++) {
+        if (fwrite(pixels + i*rowstride, NCHANNELS, xres, fh) != xres) {
+            err_WRITE(error);
+            fclose(fh);
+            return FALSE;
+        }
+    }
+
+    fclose(fh);
+    return TRUE;
 }
+
+#undef Q
+#undef W
 
 static gboolean
 write_pixbuf_ppm(GdkPixbuf *pixbuf,
@@ -1755,7 +1951,7 @@ write_pixbuf_ppm(GdkPixbuf *pixbuf,
     }
 
     for (i = 0; i < yres; i++) {
-        if (fwrite(pixels + i*rowstride, 3, xres, fh) != xres) {
+        if (fwrite(pixels + i*rowstride, nchannels, xres, fh) != xres) {
             err_WRITE(error);
             goto end;
         }
@@ -1776,8 +1972,81 @@ write_pixbuf_bmp(GdkPixbuf *pixbuf,
                  const gchar *filename,
                  GError **error)
 {
+    static guchar bmp_head[] = {
+        'B', 'M',    /* magic */
+        0, 0, 0, 0,  /* file size */
+        0, 0, 0, 0,  /* reserved */
+        54, 0, 0, 0, /* offset */
+        40, 0, 0, 0, /* header size */
+        0, 0, 0, 0,  /* width */
+        0, 0, 0, 0,  /* height */
+        1, 0,        /* bit planes */
+        24, 0,       /* bpp */
+        0, 0, 0, 0,  /* compression type */
+        0, 0, 0, 0,  /* (compressed) image size */
+        0, 0, 0, 0,  /* x resolution */
+        0, 0, 0, 0,  /* y resolution */
+        0, 0, 0, 0,  /* ncl */
+        0, 0, 0, 0,  /* nic */
+    };
 
-    return FALSE;
+    guchar *pixels, *buffer = NULL;
+    guint i, j, xres, yres, nchannels, rowstride, bmplen, bmprowstride;
+    FILE *fh;
+
+    g_return_val_if_fail(gwy_strequal(name, "bmpcairo"), FALSE);
+
+    nchannels = gdk_pixbuf_get_n_channels(pixbuf);
+    g_return_val_if_fail(nchannels == 3, FALSE);
+
+    xres = gdk_pixbuf_get_width(pixbuf);
+    yres = gdk_pixbuf_get_height(pixbuf);
+    pixels = gdk_pixbuf_get_pixels(pixbuf);
+    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
+
+    bmprowstride = ((nchannels*xres + 3)/4)*4;
+    bmplen = yres*bmprowstride + sizeof(bmp_head);
+
+    *(guint32*)(bmp_head + 2) = GUINT32_TO_LE(bmplen);
+    *(guint32*)(bmp_head + 18) = GUINT32_TO_LE(xres);
+    *(guint32*)(bmp_head + 22) = GUINT32_TO_LE(yres);
+    *(guint32*)(bmp_head + 34) = GUINT32_TO_LE(yres*bmprowstride);
+
+    if (!(fh = g_fopen(filename, "wb"))) {
+        err_OPEN_WRITE(error);
+        return FALSE;
+    }
+
+    if (fwrite(bmp_head, 1, sizeof(bmp_head), fh) != sizeof(bmp_head)) {
+        err_WRITE(error);
+        fclose(fh);
+        return FALSE;
+    }
+
+    /* The ugly part: BMP uses BGR instead of RGB and is written upside down,
+     * this silliness may originate nowhere else than in MS... */
+    buffer = g_new(guchar, bmprowstride);
+    memset(buffer, 0xff, sizeof(bmprowstride));
+    for (i = 0; i < yres; i++) {
+        const guchar *p = pixels + (yres-1 - i)*rowstride;
+        guchar *q = buffer;
+
+        for (j = xres; j; j--, p += 3, q += 3) {
+            *q = *(p + 2);
+            *(q + 1) = *(p + 1);
+            *(q + 2) = *p;
+        }
+        if (!fwrite(buffer, 1, bmprowstride, fh) != bmprowstride) {
+            err_WRITE(error);
+            fclose(fh);
+            g_free(buffer);
+            return FALSE;
+        }
+    }
+    g_free(buffer);
+    fclose(fh);
+
+    return TRUE;
 }
 
 static gboolean
@@ -1786,8 +2055,76 @@ write_pixbuf_targa(GdkPixbuf *pixbuf,
                    const gchar *filename,
                    GError **error)
 {
+   static guchar targa_head[] = {
+     0,           /* idlength */
+     0,           /* colourmaptype */
+     2,           /* datatypecode: uncompressed RGB */
+     0, 0, 0, 0,  /* colourmaporigin, colourmaplength */
+     0,           /* colourmapdepth */
+     0, 0, 0, 0,  /* x-origin, y-origin */
+     0, 0,        /* width */
+     0, 0,        /* height */
+     24,          /* bits per pixel */
+     0x20,        /* image descriptor flags: origin upper */
+    };
 
-    return FALSE;
+    guchar *pixels, *buffer = NULL;
+    guint nchannels, xres, yres, rowstride, i, j;
+    FILE *fh;
+
+    g_return_val_if_fail(gwy_strequal(name, "tgacairo"), FALSE);
+
+    nchannels = gdk_pixbuf_get_n_channels(pixbuf);
+    g_return_val_if_fail(nchannels == 3, FALSE);
+
+    xres = gdk_pixbuf_get_width(pixbuf);
+    yres = gdk_pixbuf_get_height(pixbuf);
+    pixels = gdk_pixbuf_get_pixels(pixbuf);
+    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
+
+    if (xres >= 65535 || yres >= 65535) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Image is too large to be stored as TARGA."));
+        return FALSE;
+    }
+
+    *(guint16*)(targa_head + 12) = GUINT16_TO_LE((guint16)xres);
+    *(guint16*)(targa_head + 14) = GUINT16_TO_LE((guint16)yres);
+
+    if (!(fh = g_fopen(filename, "wb"))) {
+        err_OPEN_WRITE(error);
+        return FALSE;
+    }
+
+    if (fwrite(targa_head, 1, sizeof(targa_head), fh) != sizeof(targa_head)) {
+        err_WRITE(error);
+        fclose(fh);
+        return FALSE;
+    }
+
+    /* The ugly part: TARGA uses BGR instead of RGB */
+    buffer = g_new(guchar, nchannels*xres);
+    memset(buffer, 0xff, nchannels*xres);
+    for (i = 0; i < yres; i++) {
+        const guchar *p = pixels + i*rowstride;
+        guchar *q = buffer;
+
+        for (j = xres; j; j--, p += 3, q += 3) {
+            *q = *(p + 2);
+            *(q + 1) = *(p + 1);
+            *(q + 2) = *p;
+        }
+        if (fwrite(buffer, nchannels, xres, fh) != xres) {
+            err_WRITE(error);
+            fclose(fh);
+            g_free(buffer);
+            return FALSE;
+        }
+    }
+    fclose(fh);
+    g_free(buffer);
+
+    return TRUE;
 }
 
 /* Use the pixmap prefix for compatibility */
@@ -1796,7 +2133,7 @@ static const gchar draw_selection_key[]   = "/module/pixmap/draw_selection";
 static const gchar text_antialias_key[]   = "/module/pixmap/text_antialias";
 static const gchar font_key[]             = "/module/pixmap/font";
 static const gchar font_size_key[]        = "/module/pixmap/font_size";
-static const gchar grayscale_key[]        = "/module/pixmap/grayscale";
+static const gchar greyscale_key[]        = "/module/pixmap/grayscale";
 static const gchar inset_color_key[]      = "/module/pixmap/inset_color";
 static const gchar inset_pos_key[]        = "/module/pixmap/inset_pos";
 static const gchar inset_draw_ticks_key[] = "/module/pixmap/inset_draw_ticks";
@@ -1827,7 +2164,7 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->font_size = CLAMP(args->font_size, 1.2, 120.0);
     args->fmscale_gap = CLAMP(args->fmscale_gap, 0.0, 2.0);
     args->inset_gap = CLAMP(args->inset_gap, 0.0, 2.0);
-    args->grayscale = (args->grayscale == 16) ? 16 : 0;
+    args->greyscale = (args->greyscale == 16) ? 16 : 0;
 }
 
 static void
@@ -1866,7 +2203,7 @@ img_export_load_args(GwyContainer *container,
                                      &args->fmscale_gap);
     gwy_container_gis_double_by_name(container, inset_gap_key,
                                      &args->inset_gap);
-    gwy_container_gis_int32_by_name(container, grayscale_key, &args->grayscale);
+    gwy_container_gis_int32_by_name(container, greyscale_key, &args->greyscale);
     gwy_container_gis_boolean_by_name(container, inset_draw_ticks_key,
                                       &args->inset_draw_ticks);
     gwy_container_gis_boolean_by_name(container, inset_draw_label_key,
@@ -1905,7 +2242,7 @@ img_export_save_args(GwyContainer *container,
                                      args->fmscale_gap);
     gwy_container_set_double_by_name(container, inset_gap_key,
                                      args->inset_gap);
-    gwy_container_set_int32_by_name(container, grayscale_key, args->grayscale);
+    gwy_container_set_int32_by_name(container, greyscale_key, args->greyscale);
     gwy_container_set_boolean_by_name(container, inset_draw_ticks_key,
                                       args->inset_draw_ticks);
     gwy_container_set_boolean_by_name(container, inset_draw_label_key,
