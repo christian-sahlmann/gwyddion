@@ -484,7 +484,7 @@ gwy_app_settings_apply(GwyContainer *settings)
  * Returns a list of directories to search modules in.
  *
  * Returns: The list of module directories as a newly allocated array of
- *          newly allocated strings, to be freed with g_str_freev() when
+ *          newly allocated strings, to be freed with g_strfreev() when
  *          not longer needed.
  **/
 gchar**
