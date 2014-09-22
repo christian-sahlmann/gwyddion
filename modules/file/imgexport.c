@@ -194,8 +194,13 @@ typedef struct {
 } ImageExportFormat;
 
 static gboolean           module_register         (void);
-static gint               pixmap_detect           (const GwyFileDetectInfo *fileinfo,
+static gint               img_export_detect           (const GwyFileDetectInfo *fileinfo,
                                                    gboolean only_name,
+                                                   const gchar *name);
+static gboolean           img_export_export        (GwyContainer *data,
+                                                   const gchar *filename,
+                                                   GwyRunType mode,
+                                                   GError **error,
                                                    const gchar *name);
 static gint               gwy_pixmap_step_to_prec (gdouble d);
 static void               img_export_free_args    (ImgExportArgs *args);
@@ -208,11 +213,6 @@ static gchar*             scalebar_auto_length    (GwyDataField *dfield,
                                                    gdouble *p);
 static gdouble            inset_length_ok         (GwyDataField *dfield,
                                                    const gchar *inset_length);
-static gboolean           img_export_cairo        (GwyContainer *data,
-                                                   const gchar *filename,
-                                                   GwyRunType mode,
-                                                   GError **error,
-                                                   const gchar *name);
 
 #ifdef HAVE_PNG
 static gboolean write_image_png16(const ImgExportArgs *args,
@@ -349,131 +349,94 @@ static GwyModuleInfo module_info = {
 
 GWY_MODULE_QUERY(module_info)
 
-static gboolean
-module_register(void)
-{
-#if 0
-    ImageFormatInfo *format_info;
-    GSList *formats, *l;
-    gboolean registered[G_N_ELEMENTS(saveable_formats)];
-    guint i;
-
-    gwy_clear(registered, G_N_ELEMENTS(registered));
-    formats = gdk_pixbuf_get_formats();
-    for (l = formats; l; l = g_slist_next(l)) {
-        GdkPixbufFormat *pixbuf_format = (GdkPixbufFormat*)l->data;
-        GwyFileSaveFunc save = NULL;
-        gchar *fmtname;
-
-        /* Ignore all vector formats */
-        fmtname = gdk_pixbuf_format_get_name(pixbuf_format);
-        gwy_debug("Found format %s", fmtname);
-        if (gdk_pixbuf_format_is_scalable(pixbuf_format)) {
-            gwy_debug("Ignoring scalable GdkPixbuf format %s.", fmtname);
-            continue;
-        }
-
-        /* Use a whitelist of safe formats, namely those with an explicit
-         * detection in pixmap_detect().  GdkPixbuf loaders tend to accept
-         * any rubbish as their format and then crash because it isn't. */
-        if (!gwy_stramong(fmtname,
-                          "bmp", "gif", "icns", "jpeg", "jpeg2000", "pcx",
-                          "png", "pnm", "ras", "tga", "tiff", "xpm", NULL)) {
-            gwy_debug("Ignoring GdkPixbuf format %s because it is not on "
-                      "the whitelist.", fmtname);
-            continue;
-        }
-
-        format_info = g_new0(ImageFormatInfo, 1);
-        format_info->name = fmtname;
-        format_info->pixbuf_format = pixbuf_format;
-        for (i = 0; i < G_N_ELEMENTS(saveable_formats); i++) {
-            /* FIXME: hope we have the same format names */
-            if (gwy_strequal(fmtname, saveable_formats[i].name)) {
-                gwy_debug("Found GdkPixbuf loader for known type: %s", fmtname);
-                format_info->description = saveable_formats[i].description;
-                save = saveable_formats[i].save;
-                format_info->extensions = saveable_formats[i].extensions;
-                registered[i] = TRUE;
-                break;
-            }
-        }
-        if (!save) {
-            gchar *s, **ext;
-
-            gwy_debug("Found GdkPixbuf loader for new type: %s", fmtname);
-            format_info->description
-                = gdk_pixbuf_format_get_description(pixbuf_format);
-            ext = gdk_pixbuf_format_get_extensions(pixbuf_format);
-            s = g_strjoinv(",.", ext);
-            format_info->extensions = g_strconcat(".", s, NULL);
-            g_free(s);
-            g_strfreev(ext);
-
-            /* Fix silly descriptions starting `The image format...' or
-             * something like that that are unusable for a sorted list. */
-            for (i = 0; i < G_N_ELEMENTS(known_formats); i++) {
-                if (gwy_strequal(fmtname, known_formats[i].name)) {
-                    gwy_debug("Fixing the description of known type: %s",
-                              fmtname);
-                    format_info->description = known_formats[i].description;
-                    break;
-                }
-            }
-        }
-        gwy_file_func_register(format_info->name,
-                               format_info->description,
-                               &pixmap_detect,
-                               &pixmap_load,
-                               NULL,
-                               save);
-        pixmap_formats = g_slist_append(pixmap_formats, format_info);
-    }
-
-    for (i = 0; i < G_N_ELEMENTS(saveable_formats); i++) {
-        if (registered[i])
-            continue;
-        gwy_debug("Saveable format %s not known to GdkPixbuf",
-                  saveable_formats[i].name);
-        format_info = g_new0(ImageFormatInfo, 1);
-        format_info->name = saveable_formats[i].name;
-        format_info->description = saveable_formats[i].description;
-        format_info->extensions = saveable_formats[i].extensions;
-
-        gwy_file_func_register(format_info->name,
-                               format_info->description,
-                               &pixmap_detect,
-                               NULL,
-                               NULL,
-                               saveable_formats[i].save);
-        pixmap_formats = g_slist_append(pixmap_formats, format_info);
-    }
-
-    g_slist_free(formats);
-#endif
-    return TRUE;
-}
-
 static ImageExportFormat*
-find_format(const gchar *name)
+find_format(const gchar *name, gboolean cairoext)
 {
     guint i, len;
 
     for (i = 0; i < G_N_ELEMENTS(image_formats); i++) {
         ImageExportFormat *format = image_formats + i;
-        len = strlen(format->name);
-        if (strncmp(name, format->name, len) == 0
-            && strcmp(name + len, "cairo") == 0)
-            return format;
+
+        if (cairoext) {
+            len = strlen(format->name);
+            if (strncmp(name, format->name, len) == 0
+                && strcmp(name + len, "cairo") == 0)
+                return format;
+        }
+        else {
+            if (gwy_strequal(name, format->name))
+                return format;
+        }
     }
 
     return NULL;
 }
 
+static gboolean
+module_register(void)
+{
+    GSList *l, *pixbuf_formats;
+    guint i;
+
+    /* Find out which image formats we can write using generic GdkPixbuf
+     * functions. */
+    pixbuf_formats = gdk_pixbuf_get_formats();
+    for (l = pixbuf_formats; l; l = g_slist_next(l)) {
+        GdkPixbufFormat *pixbuf_format = (GdkPixbufFormat*)l->data;
+        const gchar *name;
+        gboolean writable;
+        ImageExportFormat *format;
+
+        name = gdk_pixbuf_format_get_name(pixbuf_format);
+        if (!gdk_pixbuf_format_is_writable(pixbuf_format)) {
+            gwy_debug("Ignoring pixbuf format %s, not writable", name);
+            continue;
+        }
+
+        if (!(format = find_format(name, FALSE))) {
+            g_warning("Skipping writable pixbuf format %s "
+                      "because we don't know it.", name);
+            continue;
+        }
+
+        if (format->write_pixbuf) {
+            gwy_debug("Skipping pixbuf format %s, we have our own writer.",
+                      name);
+            continue;
+        }
+
+        format->write_pixbuf = write_pixbuf_generic;
+    }
+    g_slist_free(pixbuf_formats);
+
+    /* Register file functions for the formats.  We want separate functions so
+     * that users can see the formats listed in the file dialog.  We must use
+     * names different from the pixmap module, so append "cairo". */
+    for (i = 0; i < G_N_ELEMENTS(image_formats); i++) {
+        ImageExportFormat *format = image_formats + i;
+        gchar *caironame;
+
+        if (!format->write_pixbuf
+            && !format->write_grey16
+            && !format->write_vector)
+            continue;
+
+        caironame = g_strconcat(format->name, "cairo", NULL);
+        gwy_file_func_register(caironame,
+                               format->description,
+                               &img_export_detect,
+                               NULL,
+                               NULL,
+                               &img_export_export);
+    }
+
+    return TRUE;
+}
+
 static gint
-pixmap_detect(const GwyFileDetectInfo *fileinfo,
-              G_GNUC_UNUSED gboolean only_name,
-              const gchar *name)
+img_export_detect(const GwyFileDetectInfo *fileinfo,
+                  G_GNUC_UNUSED gboolean only_name,
+                  const gchar *name)
 {
     ImageExportFormat *format;
     gint score;
@@ -482,11 +445,8 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
 
     gwy_debug("Running detection for file type %s", name);
 
-    format = find_format(name);
+    format = find_format(name, TRUE);
     g_return_val_if_fail(format, 0);
-
-    if (!format->write_pixbuf && !format->write_grey16 && !format->write_vector)
-        return 0;
 
     extensions = g_strsplit(format->extensions, ",", 0);
     g_assert(extensions);
@@ -494,7 +454,8 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
         if (g_str_has_suffix(fileinfo->name_lowercase, extensions[i]))
             break;
     }
-    score = extensions[i] ? 25 : 0;
+    /* TODO: Raise score once the module works. */
+    score = extensions[i] ? 15 : 0;
     g_strfreev(extensions);
 
     return score;
@@ -1288,11 +1249,11 @@ pixmap_draw_cairo(GwyContainer *data,
  * directly interpretable information about positions and sizes.
  **/
 static gboolean
-img_export_cairo(GwyContainer *data,
-                 const gchar *filename,
-                 GwyRunType mode,
-                 GError **error,
-                 const gchar *name)
+img_export_export(GwyContainer *data,
+                  const gchar *filename,
+                  GwyRunType mode,
+                  GError **error,
+                  const gchar *name)
 {
     GwyContainer *settings;
     ImgExportArgs args;
