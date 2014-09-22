@@ -1,3 +1,18 @@
+2.39 (0000-00-00)
+Application:
+- Pango 1.10 and Cairo 1.2 are now required.
+
+Libraries:
+- libgwyddion: A function for copying GwySIValueFormat was added; the
+  structure is also registered as a boxed type now.
+
+Modules:
+- Image export (new): Replaces image rendering in the pixmap module; can
+  export to vector graphics formats: PDF, EPS and SVG.  The corresponding
+  file types are called ‘pdfcairo’, ‘pngcairo’, etc.
+- Pixmap: Only used for image import; image rendering functions were removed.
+
+
 2.38 (2014-09-18)
 Application:
 - Pressing F1 shows help, i.e. it points a web browser to the relevant part
