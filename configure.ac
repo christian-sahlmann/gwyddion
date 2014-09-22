@@ -422,7 +422,7 @@ AC_SUBST(LIBXMU)
 # Full Gtk+ check
 # XXX: We do not need pangoft2, but we export a deprecated function to obtain
 # Pango FT2 context.  Get rid of this once possible.
-PKG_CHECK_MODULES(GTK, [$pangoft2 pangocairo gtk+-2.0 >= 2.8.0])
+PKG_CHECK_MODULES(GTK, [$pangoft2 cairo >= 1.2 pango >= 1.10 pangocairo gtk+-2.0 >= 2.8.0])
 
 #############################################################################
 # FFTW3
