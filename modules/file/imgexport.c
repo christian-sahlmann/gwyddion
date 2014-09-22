@@ -71,6 +71,7 @@
 #include <app/gwymoduleutils-file.h>
 
 #include "err.h"
+#include "gwytiff.h"
 #include "image-keys.h"
 
 #define pangoscale ((gdouble)PANGO_SCALE)
@@ -158,7 +159,8 @@ typedef struct {
     /* Interface only */
     GwyDataView *data_view;
     GwyDataField *dfield;
-    gboolean supports_16bit;
+    GwyContainer *data;
+    gint id;
     /* These two are `1:1' sizes, i.e. they differ from data field sizes when
      * realsquare is TRUE. */
     gint xres;
@@ -327,7 +329,7 @@ static const ImgExportArgs img_export_defaults = {
     1.0, 1.0,
     0, "",
     /* Interface only */
-    NULL, NULL, FALSE, 0, 0, FALSE,
+    NULL, NULL, NULL, 0, 0, 0, FALSE,
 
     /* New args */
     FALSE,
@@ -384,7 +386,6 @@ module_register(void)
     for (l = pixbuf_formats; l; l = g_slist_next(l)) {
         GdkPixbufFormat *pixbuf_format = (GdkPixbufFormat*)l->data;
         const gchar *name;
-        gboolean writable;
         ImageExportFormat *format;
 
         name = gdk_pixbuf_format_get_name(pixbuf_format);
@@ -394,7 +395,7 @@ module_register(void)
         }
 
         if (!(format = find_format(name, FALSE))) {
-            g_warning("Skipping writable pixbuf format %s "
+            gwy_debug("Skipping writable pixbuf format %s "
                       "because we don't know it.", name);
             continue;
         }
@@ -405,6 +406,7 @@ module_register(void)
             continue;
         }
 
+        gwy_debug("Adding generic pixbuf writer for %s.", name);
         format->write_pixbuf = write_pixbuf_generic;
     }
     g_slist_free(pixbuf_formats);
@@ -1288,17 +1290,208 @@ img_export_export(GwyContainer *data,
     return TRUE;
 }
 
+static guint16*
+render_image_grey16(GwyDataField *dfield)
+{
+    guint xres = gwy_data_field_get_xres(dfield);
+    guint yres = gwy_data_field_get_yres(dfield);
+    gdouble min, max;
+    guint16 *pixels;
+
+    pixels = g_new(guint16, xres*yres);
+    gwy_data_field_get_min_max(dfield, &min, &max);
+    if (min == max)
+        memset(pixels, 0, xres*yres*sizeof(guint16));
+    else {
+        const gdouble *d = gwy_data_field_get_data_const(dfield);
+        gdouble q = 65535.999999/(max - min);
+        guint i;
+
+        for (i = 0; i < xres*yres; i++)
+            pixels[i] = (guint16)(q*(d[i] - min));
+    }
+
+    return pixels;
+}
+
 #ifdef HAVE_PNG
+static void
+add_png_text_chunk_string(png_text *chunk,
+                          const gchar *key,
+                          const gchar *str,
+                          gboolean take)
+{
+    chunk->compression = PNG_TEXT_COMPRESSION_NONE;
+    chunk->key = (char*)key;
+    chunk->text = take ? (char*)str : g_strdup(str);
+    chunk->text_length = strlen(chunk->text);
+}
+
+static void
+add_png_text_chunk_float(png_text *chunk,
+                         const gchar *key,
+                         gdouble value)
+{
+    gchar buffer[G_ASCII_DTOSTR_BUF_SIZE];
+
+    chunk->compression = PNG_TEXT_COMPRESSION_NONE;
+    chunk->key = (char*)key;
+    g_ascii_dtostr(buffer, sizeof(buffer), value);
+    chunk->text = g_strdup(buffer);
+    chunk->text_length = strlen(chunk->text);
+}
+
 static gboolean
 write_image_png16(const ImgExportArgs *args,
                   const gchar *name,
                   const gchar *filename,
                   GError **error)
 {
+    enum { NCHUNKS = 11 };
 
-    return FALSE;
+    const guchar *title = "Data";
+
+    GwyDataField *dfield = args->dfield;
+    guint xres = gwy_data_field_get_xres(dfield);
+    guint yres = gwy_data_field_get_yres(dfield);
+    guint16 *pixels;
+    png_structp writer;
+    png_infop writer_info;
+    png_byte **rows = NULL;
+    png_text *text_chunks = NULL;
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+    guint transform_flags = PNG_TRANSFORM_SWAP_ENDIAN;
+#endif
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+    guint transform_flags = PNG_TRANSFORM_IDENTITY;
+#endif
+    /* A bit of convoluted typing to get a png_charpp equivalent. */
+    gchar param0[G_ASCII_DTOSTR_BUF_SIZE], param1[G_ASCII_DTOSTR_BUF_SIZE];
+    gchar *s, *params[2];
+    gdouble min, max;
+    gboolean ok = FALSE;
+    FILE *fh;
+    guint i;
+
+    g_return_val_if_fail(gwy_strequal(name, "pngcairo"), FALSE);
+
+    if (!(fh = g_fopen(filename, "wb"))) {
+        err_OPEN_WRITE(error);
+        return FALSE;
+    }
+
+    writer = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (!writer) {
+        fclose(fh);
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("libpng initialization error (in %s)"),
+                    "png_create_write_struct");
+        return FALSE;
+    }
+
+    writer_info = png_create_info_struct(writer);
+    if (!writer_info) {
+        fclose(fh);
+        png_destroy_read_struct(&writer, NULL, NULL);
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("libpng initialization error (in %s)"),
+                    "png_create_info_struct");
+        return FALSE;
+    }
+
+    gwy_data_field_get_min_max(dfield, &min, &max);
+    s = g_strdup_printf("/%d/data/title", args->id);
+    gwy_container_gis_string_by_name(args->data, s, &title);
+    g_free(s);
+
+    /* Create the chunks dynamically because the fields of png_text are
+     * variable. */
+    text_chunks = g_new0(png_text, NCHUNKS);
+    i = 0;
+    /* Standard PNG keys */
+    add_png_text_chunk_string(text_chunks + i++, "Title", title, FALSE);
+    add_png_text_chunk_string(text_chunks + i++, "Software", "Gwyddion", FALSE);
+    /* Gwyddion GSF keys */
+    gwy_data_field_get_min_max(dfield, &min, &max);
+    add_png_text_chunk_float(text_chunks + i++, GWY_IMGKEY_XREAL,
+                             gwy_data_field_get_xreal(dfield));
+    add_png_text_chunk_float(text_chunks + i++, GWY_IMGKEY_YREAL,
+                             gwy_data_field_get_yreal(dfield));
+    add_png_text_chunk_float(text_chunks + i++, GWY_IMGKEY_XOFFSET,
+                             gwy_data_field_get_xoffset(dfield));
+    add_png_text_chunk_float(text_chunks + i++, GWY_IMGKEY_YOFFSET,
+                             gwy_data_field_get_yoffset(dfield));
+    add_png_text_chunk_float(text_chunks + i++, GWY_IMGKEY_ZMIN, min);
+    add_png_text_chunk_float(text_chunks + i++, GWY_IMGKEY_ZMAX, max);
+    s = gwy_si_unit_get_string(gwy_data_field_get_si_unit_xy(dfield),
+                               GWY_SI_UNIT_FORMAT_PLAIN);
+    add_png_text_chunk_string(text_chunks + i++, GWY_IMGKEY_XYUNIT, s, TRUE);
+    s = gwy_si_unit_get_string(gwy_data_field_get_si_unit_z(dfield),
+                               GWY_SI_UNIT_FORMAT_PLAIN);
+    add_png_text_chunk_string(text_chunks + i++, GWY_IMGKEY_ZUNIT, s, TRUE);
+    add_png_text_chunk_string(text_chunks + i++, GWY_IMGKEY_TITLE, title, FALSE);
+    g_assert(i == NCHUNKS);
+
+    png_set_text(writer, writer_info, text_chunks, NCHUNKS);
+
+    /* Present the scaling information also as calibration chunks.
+     * Unfortunately, they cannot represent it fully – the rejected xCAL and
+     * yCAL chunks would be necessary for that. */
+    png_set_sCAL(writer, writer_info, PNG_SCALE_METER,  /* Usually... */
+                 gwy_data_field_get_xreal(dfield),
+                 gwy_data_field_get_yreal(dfield));
+    s = gwy_si_unit_get_string(gwy_data_field_get_si_unit_z(dfield),
+                               GWY_SI_UNIT_FORMAT_PLAIN);
+    g_ascii_dtostr(param0, sizeof(param0), min);
+    g_ascii_dtostr(param1, sizeof(param1), (max - min)/G_MAXUINT16);
+    params[0] = param0;
+    params[1] = param1;
+    png_set_pCAL(writer, writer_info, "Z", 0, G_MAXUINT16, 0, 2, s, params);
+    g_free(s);
+
+    pixels = render_image_grey16(dfield);
+    rows = g_new(png_bytep, yres);
+    for (i = 0; i < yres; i++)
+        rows[i] = (png_bytep)pixels + i*xres*sizeof(guint16);
+
+    if (setjmp(png_jmpbuf(writer))) {
+        /* FIXME: Not very helpful.  Thread-unsafe. */
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("libpng error occured"));
+        goto end;
+    }
+
+    png_init_io(writer, fh);
+    png_set_filter(writer, 0, PNG_ALL_FILTERS);
+    png_set_compression_level(writer, Z_BEST_COMPRESSION);
+    png_set_IHDR(writer, writer_info, xres, yres,
+                 16, PNG_COLOR_TYPE_GRAY, PNG_INTERLACE_NONE,
+                 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+    /* XXX */
+    png_set_rows(writer, writer_info, rows);
+    png_write_png(writer, writer_info, transform_flags, NULL);
+
+    ok = TRUE;
+
+end:
+    fclose(fh);
+    g_free(rows);
+    g_free(pixels);
+    png_destroy_write_struct(&writer, &writer_info);
+    for (i = 0; i < NCHUNKS; i++)
+        g_free(text_chunks[i].text);
+    g_free(text_chunks);
+
+    return ok;
 }
 #endif
+
+/* Expand a word and double-word into LSB-ordered sequence of bytes */
+#define W(x) (x)&0xff, (x)>>8
+#define Q(x) (x)&0xff, ((x)>>8)&0xff, ((x)>>16)&0xff, (x)>>24
 
 static gboolean
 write_image_tiff16(const ImgExportArgs *args,
@@ -1306,8 +1499,105 @@ write_image_tiff16(const ImgExportArgs *args,
                    const gchar *filename,
                    GError **error)
 {
+    enum {
+        N_ENTRIES = 11,
+        ESTART = 4 + 4 + 2,
+        HEAD_SIZE = ESTART + 12*N_ENTRIES + 4,  /* head + 0th directory */
+        /* offsets of things we have to fill run-time */
+        WIDTH_OFFSET = ESTART + 12*0 + 8,
+        HEIGHT_OFFSET = ESTART + 12*1 + 8,
+        BPS_OFFSET = ESTART + 12*2 + 8,
+        ROWS_OFFSET = ESTART + 12*8 + 8,
+        BYTES_OFFSET = ESTART + 12*9 + 8,
+        BIT_DEPTH = 16,
+    };
 
-    return FALSE;
+    static guchar tiff_head[] = {
+        0x49, 0x49,   /* magic (LSB) */
+        W(42),        /* more magic */
+        Q(8),         /* 0th directory offset */
+        W(N_ENTRIES), /* number of entries */
+        W(GWY_TIFFTAG_IMAGE_WIDTH), W(GWY_TIFF_SHORT), Q(1), Q(0),
+        W(GWY_TIFFTAG_IMAGE_LENGTH), W(GWY_TIFF_SHORT), Q(1), Q(0),
+        W(GWY_TIFFTAG_BITS_PER_SAMPLE), W(GWY_TIFF_SHORT), Q(1), Q(BIT_DEPTH),
+        W(GWY_TIFFTAG_COMPRESSION), W(GWY_TIFF_SHORT), Q(1),
+            Q(GWY_TIFF_COMPRESSION_NONE),
+        W(GWY_TIFFTAG_PHOTOMETRIC), W(GWY_TIFF_SHORT), Q(1),
+            Q(GWY_TIFF_PHOTOMETRIC_MIN_IS_BLACK),
+        W(GWY_TIFFTAG_STRIP_OFFSETS), W(GWY_TIFF_LONG), Q(1), Q(HEAD_SIZE),
+        W(GWY_TIFFTAG_ORIENTATION), W(GWY_TIFF_SHORT), Q(1),
+            Q(GWY_TIFF_ORIENTATION_TOPLEFT),
+        W(GWY_TIFFTAG_SAMPLES_PER_PIXEL), W(GWY_TIFF_SHORT), Q(1), Q(1),
+        W(GWY_TIFFTAG_ROWS_PER_STRIP), W(GWY_TIFF_SHORT), Q(1), Q(0),
+        W(GWY_TIFFTAG_STRIP_BYTE_COUNTS), W(GWY_TIFF_LONG), Q(1), Q(0),
+        W(GWY_TIFFTAG_PLANAR_CONFIG), W(GWY_TIFF_SHORT), Q(1),
+            Q(GWY_TIFF_PLANAR_CONFIG_CONTIGNUOUS),
+        Q(0),              /* next directory (0 = none) */
+        /* Here start the image data */
+    };
+
+    GwyDataField *dfield = args->dfield;
+    guint xres = gwy_data_field_get_xres(dfield);
+    guint yres = gwy_data_field_get_yres(dfield);
+    guint nbytes = BIT_DEPTH*xres*yres;
+    guint16 *pixels;
+    FILE *fh;
+
+    g_return_val_if_fail(gwy_strequal(name, "tiffcairo"), FALSE);
+
+    if (!(fh = g_fopen(filename, "wb"))) {
+        err_OPEN_WRITE(error);
+        return FALSE;
+    }
+
+    *(guint32*)(tiff_head + WIDTH_OFFSET) = GUINT32_TO_LE(xres);
+    *(guint32*)(tiff_head + HEIGHT_OFFSET) = GUINT32_TO_LE(yres);
+    *(guint32*)(tiff_head + ROWS_OFFSET) = GUINT32_TO_LE(yres);
+    *(guint32*)(tiff_head + BYTES_OFFSET) = GUINT32_TO_LE(nbytes);
+
+    if (fwrite(tiff_head, 1, sizeof(tiff_head), fh) != sizeof(tiff_head)) {
+        fclose(fh);
+        err_WRITE(error);
+        return FALSE;
+    }
+
+    pixels = render_image_grey16(dfield);
+    if (fwrite(pixels, sizeof(guint16), xres*yres, fh) != xres*yres) {
+        fclose(fh);
+        g_free(pixels);
+        err_WRITE(error);
+        return FALSE;
+    }
+
+    fclose(fh);
+    g_free(pixels);
+
+    return TRUE;
+}
+
+#undef Q
+#undef W
+
+static void
+add_ppm_comment_string(GString *str,
+                       const gchar *key,
+                       const gchar *value,
+                       gboolean take)
+{
+    g_string_append_printf(str, "# %s %s\n", key, value);
+    if (take)
+        g_free((gpointer)value);
+}
+
+static void
+add_ppm_comment_float(GString *str,
+                      const gchar *key,
+                      gdouble value)
+{
+    gchar buffer[G_ASCII_DTOSTR_BUF_SIZE];
+
+    g_ascii_dtostr(buffer, sizeof(buffer), value);
+    g_string_append_printf(str, "# %s %s\n", key, buffer);
 }
 
 static gboolean
@@ -1316,8 +1606,80 @@ write_image_pgm16(const ImgExportArgs *args,
                   const gchar *filename,
                   GError **error)
 {
+    static const gchar pgm_header[] = "P5\n%s%u\n%u\n65535\n";
+    const guchar *title = "Data";
 
-    return FALSE;
+    GwyDataField *dfield;
+    guint xres, yres, i;
+    gdouble min, max;
+    gboolean ok = FALSE;
+    gchar *s, *ppmh = NULL;
+    GString *str;
+    guint16 *pixels;
+    FILE *fh;
+
+    g_return_val_if_fail(gwy_strequal(name, "pnmcairo"), FALSE);
+
+    if (!(fh = g_fopen(filename, "wb"))) {
+        err_OPEN_WRITE(error);
+        return FALSE;
+    }
+
+    dfield = args->dfield;
+    pixels = render_image_grey16(dfield);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    gwy_data_field_get_min_max(dfield, &min, &max);
+
+    s = g_strdup_printf("/%d/data/title", args->id);
+    gwy_container_gis_string_by_name(args->data, s, &title);
+    g_free(s);
+
+    /* Gwyddion GSF keys */
+    str = g_string_new(NULL);
+    add_ppm_comment_float(str, GWY_IMGKEY_XREAL,
+                          gwy_data_field_get_xreal(dfield));
+    add_ppm_comment_float(str, GWY_IMGKEY_YREAL,
+                          gwy_data_field_get_yreal(dfield));
+    add_ppm_comment_float(str, GWY_IMGKEY_XOFFSET,
+                          gwy_data_field_get_xoffset(dfield));
+    add_ppm_comment_float(str, GWY_IMGKEY_YOFFSET,
+                          gwy_data_field_get_yoffset(dfield));
+    add_ppm_comment_float(str, GWY_IMGKEY_ZMIN, min);
+    add_ppm_comment_float(str, GWY_IMGKEY_ZMAX, max);
+    s = gwy_si_unit_get_string(gwy_data_field_get_si_unit_xy(dfield),
+                               GWY_SI_UNIT_FORMAT_PLAIN);
+    add_ppm_comment_string(str, GWY_IMGKEY_XYUNIT, s, TRUE);
+    s = gwy_si_unit_get_string(gwy_data_field_get_si_unit_z(dfield),
+                               GWY_SI_UNIT_FORMAT_PLAIN);
+    add_ppm_comment_string(str, GWY_IMGKEY_ZUNIT, s, TRUE);
+    add_ppm_comment_string(str, GWY_IMGKEY_TITLE, title, FALSE);
+
+    ppmh = g_strdup_printf(pgm_header, str->str, xres, yres);
+    g_string_free(str, TRUE);
+
+    if (fwrite(ppmh, 1, strlen(ppmh), fh) != strlen(ppmh)) {
+        err_WRITE(error);
+        goto end;
+    }
+
+    if (G_BYTE_ORDER != G_BIG_ENDIAN) {
+        for (i = 0; i < xres*yres; i++)
+            pixels[i] = GUINT16_TO_BE(pixels[i]);
+    }
+
+    if (fwrite(pixels, sizeof(guint16), xres*yres, fh) != xres*yres) {
+        err_WRITE(error);
+        goto end;
+    }
+    ok = TRUE;
+
+end:
+    g_free(pixels);
+    g_free(ppmh);
+    fclose(fh);
+
+    return ok;
 }
 
 static gboolean
@@ -1336,7 +1698,14 @@ write_pixbuf_generic(GdkPixbuf *pixbuf,
                      const gchar *filename,
                      GError **error)
 {
+    GError *err = NULL;
 
+    if (gdk_pixbuf_save(pixbuf, filename, name, &err, NULL))
+        return TRUE;
+
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                _("Pixbuf save failed: %s."), err->message);
+    g_clear_error(&err);
     return FALSE;
 }
 
@@ -1356,8 +1725,49 @@ write_pixbuf_ppm(GdkPixbuf *pixbuf,
                  const gchar *filename,
                  GError **error)
 {
+    static const gchar ppm_header[] = "P6\n%u\n%u\n255\n";
 
-    return FALSE;
+    guint xres, yres, rowstride, nchannels, i;
+    guchar *pixels;
+    gboolean ok = FALSE;
+    gchar *ppmh = NULL;
+    FILE *fh;
+
+    g_return_val_if_fail(gwy_strequal(name, "pnmcairo"), FALSE);
+
+    nchannels = gdk_pixbuf_get_n_channels(pixbuf);
+    g_return_val_if_fail(nchannels == 3, FALSE);
+
+    if (!(fh = g_fopen(filename, "wb"))) {
+        err_OPEN_WRITE(error);
+        return FALSE;
+    }
+
+    xres = gdk_pixbuf_get_width(pixbuf);
+    yres = gdk_pixbuf_get_height(pixbuf);
+    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
+    pixels = gdk_pixbuf_get_pixels(pixbuf);
+
+    ppmh = g_strdup_printf(ppm_header, xres, yres);
+    if (fwrite(ppmh, 1, strlen(ppmh), fh) != strlen(ppmh)) {
+        err_WRITE(error);
+        goto end;
+    }
+
+    for (i = 0; i < yres; i++) {
+        if (fwrite(pixels + i*rowstride, 3, xres, fh) != xres) {
+            err_WRITE(error);
+            goto end;
+        }
+    }
+
+    ok = TRUE;
+
+end:
+    fclose(fh);
+    g_object_unref(pixbuf);
+    g_free(ppmh);
+    return ok;
 }
 
 static gboolean
