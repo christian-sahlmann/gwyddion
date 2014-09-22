@@ -101,6 +101,7 @@ file_LTLIBRARIES = \
 	hitachi-afm.la \
 	hitachi-sem.la \
 	igorfile.la \
+	imgexport.la \
 	intematix.la \
 	iso28600.la \
 	jeol.la \
@@ -236,6 +237,7 @@ hdf4file_la_SOURCES      = hdf4file.c
 hitachi_afm_la_SOURCES   = hitachi-afm.c
 hitachi_sem_la_SOURCES   = hitachi-sem.c
 igorfile_la_SOURCES      = igorfile.c
+imgexport_la_SOURCES     = imgexport.c image-keys.h
 intematix_la_SOURCES     = intematix.c gwytiff.h
 iso28600_la_SOURCES      = iso28600.c
 jeol_la_SOURCES          = jeol.c
@@ -312,6 +314,8 @@ createc_la_LIBADD        = @ZLIB@
 nrrdfile_la_LIBADD       = @ZLIB@ @BZIP2@
 pixmap_la_LIBADD         = @PNG_LIBS@
 pixmap_la_CFLAGS         = $(AM_CFLAGS) @PNG_CFLAGS@
+imgexport_la_LIBADD      = @PNG_LIBS@
+imgexport_la_CFLAGS      = $(AM_CFLAGS) @PNG_CFLAGS@
 rhk_sm4_la_LIBADD        = @ZLIB@
 hdrimage_la_LIBADD       = @EXR_LIBS@ @PNG_LIBS@
 hdrimage_la_CXXFLAGS     = $(AM_CXXFLAGS) @PNG_CFLAGS@ @EXR_CFLAGS@
