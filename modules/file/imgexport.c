@@ -123,8 +123,11 @@ typedef struct {
     gdouble hruler_label_height;
     gdouble vruler_label_width;
     gdouble fmruler_label_width;
+    gdouble fmruler_label_height;
     gdouble inset_length;
     GwyLayerBasicRangeType fm_rangetype;
+    gdouble fm_min;
+    gdouble fm_max;
     gboolean fm_inverted;
 
     /* Actual rectangles, including positions, of the image parts. */
@@ -778,9 +781,10 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     layer = gwy_data_view_get_base_layer(args->data_view);
     g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
     gwy_layer_basic_get_range(GWY_LAYER_BASIC(layer), &min, &max);
-    real = MAX(fabs(min), fabs(max));
 
-    sizes->fm_inverted = (max < min);
+    if ((sizes->fm_inverted = (max < min)))
+        GWY_SWAP(gdouble, min, max);
+    real = max - min;
     sizes->fm_rangetype = gwy_layer_basic_get_range_type(GWY_LAYER_BASIC(layer));
 
     /* TODO: Handle inverted range! */
@@ -790,6 +794,7 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
                                                 NULL);
     sizes->vf_fmruler = vf;
     gwy_debug("unit '%s'", vf->units);
+    /* TODO: Support presentations, non-linear mapping, ... */
     min /= vf->magnitude;
     max /= vf->magnitude;
     real /= vf->magnitude;
@@ -802,8 +807,9 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     gwy_debug("min '%s'", s->str);
 
     width = MAX(logical1.width/pangoscale, logical2.width/pangoscale);
-    sizes->fmruler_label_width = width;
+    sizes->fmruler_label_width = width + TICK_LENGTH + args->lw;
     height = MAX(logical1.height/pangoscale, logical2.height/pangoscale);
+    sizes->fmruler_label_height = height;
     gwy_debug("label width %g, height %g", width, height);
     n = CLAMP(GWY_ROUND(size/height), 1, 10);
     gwy_debug("nticks %u", n);
@@ -821,6 +827,8 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
             vf->precision--;
     }
     gwy_debug("base %g, step %g", ticks->base, ticks->step);
+    sizes->fm_min = min;
+    sizes->fm_max = max;
 
     /* XXX: This is rudimentary.  Must create the end-axis ticks! */
     bs = ticks->base * ticks->step;
@@ -946,6 +954,21 @@ calculate_sizes(const ImgExportArgs *args,
     sizes->canvas.w = sizes->fmruler.x + sizes->fmruler.w;
     sizes->canvas.h = sizes->image.y + sizes->image.h;
 
+    gwy_debug("canvas %g x %g at (%g, %g)",
+              sizes->canvas.w, sizes->canvas.h, sizes->canvas.x, sizes->canvas.y);
+    gwy_debug("hruler %g x %g at (%g, %g)",
+              sizes->hruler.w, sizes->hruler.h, sizes->hruler.x, sizes->hruler.y);
+    gwy_debug("vruler %g x %g at (%g, %g)",
+              sizes->vruler.w, sizes->vruler.h, sizes->vruler.x, sizes->vruler.y);
+    gwy_debug("image %g x %g at (%g, %g)",
+              sizes->image.w, sizes->image.h, sizes->image.x, sizes->image.y);
+    gwy_debug("inset %g x %g at (%g, %g)",
+              sizes->inset.w, sizes->inset.h, sizes->inset.x, sizes->inset.y);
+    gwy_debug("fmgrad %g x %g at (%g, %g)",
+              sizes->fmgrad.w, sizes->fmgrad.h, sizes->fmgrad.x, sizes->fmgrad.y);
+    gwy_debug("fmruler %g x %g at (%g, %g)",
+              sizes->fmruler.w, sizes->fmruler.h, sizes->fmruler.x, sizes->fmruler.y);
+
     g_string_free(s, TRUE);
     g_object_unref(layout);
     cairo_destroy(cr);
@@ -967,9 +990,9 @@ destroy_sizes(ImgExportSizes *sizes)
 }
 
 static void
-pixmap_draw_data(const ImgExportArgs *args,
-                 const ImgExportSizes *sizes,
-                 cairo_t *cr)
+draw_data(const ImgExportArgs *args,
+          const ImgExportSizes *sizes,
+          cairo_t *cr)
 {
     const ImgExportRect *rect = &sizes->image;
     GdkPixbuf *pixbuf;
@@ -982,30 +1005,32 @@ pixmap_draw_data(const ImgExportArgs *args,
     h = rect->h - 2.0*lw;
 
     cairo_save(cr);
-    cairo_rectangle(cr, rect->x + lw, rect->y + lw, w, h);
+    cairo_translate(cr, rect->x + lw, rect->y + lw);
+    cairo_rectangle(cr, 0.0, 0.0, w, h);
     cairo_clip(cr);
-    gdk_cairo_set_source_pixbuf(cr, pixbuf, rect->x + lw, rect->y + lw);
+    gdk_cairo_set_source_pixbuf(cr, pixbuf, 0.0, 0.0);
     /* Pixelated zoom, this is what we usually want for data.  But we can
-     * make it configurable. */
+     * make it configurable for data.  Mask must be drawn pixelated! */
     cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_NEAREST);
     cairo_paint(cr);
     cairo_restore(cr);
     g_object_unref(pixbuf);
 
     cairo_save(cr);
+    cairo_translate(cr, rect->x, rect->y);
     cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
     cairo_set_line_width(cr, lw);
-    cairo_rectangle(cr, rect->x + 0.5*lw, rect->y + 0.5*lw, w + lw, h + lw);
+    cairo_rectangle(cr, 0.5*lw, 0.5*lw, w + lw, h + lw);
     cairo_stroke(cr);
     cairo_restore(cr);
 }
 
 static void
-pixmap_draw_hruler(const ImgExportArgs *args,
-                   const ImgExportSizes *sizes,
-                   PangoLayout *layout,
-                   GString *s,
-                   cairo_t *cr)
+draw_hruler(const ImgExportArgs *args,
+            const ImgExportSizes *sizes,
+            PangoLayout *layout,
+            GString *s,
+            cairo_t *cr)
 {
     gdouble xreal = gwy_data_field_get_xreal(args->dfield);
     gdouble xoffset = gwy_data_field_get_xoffset(args->dfield);
@@ -1016,14 +1041,15 @@ pixmap_draw_hruler(const ImgExportArgs *args,
     gdouble x, bs, scale, ximg;
     gboolean units_placed = FALSE;
 
-    scale = (rect->w - 2.0*lw)/(xreal/vf->magnitude);
+    scale = (rect->w - lw)/(xreal/vf->magnitude);
     bs = ticks->step*ticks->base;
 
     cairo_save(cr);
+    cairo_translate(cr, rect->x, rect->y);
     cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
     cairo_set_line_width(cr, lw);
     for (x = ticks->from; x <= ticks->to + 1e-14*bs; x += bs) {
-        ximg = (x - xoffset)*scale + rect->x + lw;
+        ximg = (x - xoffset)*scale + 0.5*lw;
         gwy_debug("x %g -> %g", x, ximg);
         cairo_move_to(cr, ximg, rect->h);
         cairo_line_to(cr, ximg, rect->h - TICK_LENGTH);
@@ -1032,12 +1058,13 @@ pixmap_draw_hruler(const ImgExportArgs *args,
     cairo_restore(cr);
 
     cairo_save(cr);
+    cairo_translate(cr, rect->x, rect->y);
     cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
     for (x = ticks->from; x <= ticks->to + 1e-14*bs; x += bs) {
         PangoRectangle logical;
 
         x = fixzero(x);
-        ximg = (x - xoffset)*scale + rect->x + lw;
+        ximg = (x - xoffset)*scale + 0.5*lw;
         if (!units_placed && (x >= 0.0 || ticks->to <= -1e-14)) {
             format_layout(layout, &logical, s, "%.*f %s",
                           vf->precision, x, vf->units);
@@ -1056,11 +1083,11 @@ pixmap_draw_hruler(const ImgExportArgs *args,
 }
 
 static void
-pixmap_draw_vruler(const ImgExportArgs *args,
-                   const ImgExportSizes *sizes,
-                   PangoLayout *layout,
-                   GString *s,
-                   cairo_t *cr)
+draw_vruler(const ImgExportArgs *args,
+            const ImgExportSizes *sizes,
+            PangoLayout *layout,
+            GString *s,
+            cairo_t *cr)
 {
     gdouble yreal = gwy_data_field_get_yreal(args->dfield);
     gdouble yoffset = gwy_data_field_get_yoffset(args->dfield);
@@ -1070,14 +1097,15 @@ pixmap_draw_vruler(const ImgExportArgs *args,
     gdouble lw = args->lw;
     gdouble y, bs, scale, yimg;
 
-    scale = (rect->h - 2.0*lw)/(yreal/vf->magnitude);
+    scale = (rect->h - lw)/(yreal/vf->magnitude);
     bs = ticks->step*ticks->base;
 
     cairo_save(cr);
+    cairo_translate(cr, rect->x, rect->y);
     cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
     cairo_set_line_width(cr, lw);
     for (y = ticks->from; y <= ticks->to + 1e-14*bs; y += bs) {
-        yimg = (y - yoffset)*scale + rect->y + lw;
+        yimg = (y - yoffset)*scale + 0.5*lw;
         gwy_debug("y %g -> %g", y, yimg);
         cairo_move_to(cr, rect->w, yimg);
         cairo_line_to(cr, rect->w - TICK_LENGTH, yimg);
@@ -1086,12 +1114,13 @@ pixmap_draw_vruler(const ImgExportArgs *args,
     cairo_restore(cr);
 
     cairo_save(cr);
+    cairo_translate(cr, rect->x, rect->y);
     cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
     for (y = ticks->from; y <= ticks->to + 1e-14*bs; y += bs) {
         PangoRectangle logical;
 
         y = fixzero(y);
-        yimg = (y - yoffset)*scale + rect->y + lw;
+        yimg = (y - yoffset)*scale + 0.5*lw;
         format_layout(layout, &logical, s, "%.*f", vf->precision, y);
         if (yimg + logical.height/pangoscale <= rect->h) {
             cairo_move_to(cr, rect->w - TICK_LENGTH - lw, yimg);
@@ -1103,11 +1132,11 @@ pixmap_draw_vruler(const ImgExportArgs *args,
 }
 
 static void
-pixmap_draw_inset(const ImgExportArgs *args,
-                  const ImgExportSizes *sizes,
-                  PangoLayout *layout,
-                  GString *s,
-                  cairo_t *cr)
+draw_inset(const ImgExportArgs *args,
+           const ImgExportSizes *sizes,
+           PangoLayout *layout,
+           GString *s,
+           cairo_t *cr)
 {
     gdouble xreal = gwy_data_field_get_xreal(args->dfield);
     const ImgExportRect *rect = &sizes->inset, *imgrect = &sizes->image;
@@ -1116,8 +1145,11 @@ pixmap_draw_inset(const ImgExportArgs *args,
     gdouble lw = args->lw;
     gdouble xcentre, length, y, w, h;
 
+    if (!(sizes->inset_length > 0.0))
+        return;
+
     length = (sizes->image.w - 2.0*lw)/xreal*sizes->inset_length;
-    xcentre = rect->x + 0.5*rect->w;
+    xcentre = 0.5*rect->w;
     y = 0.5*lw;
 
     w = imgrect->w - 2.0*lw;
@@ -1126,17 +1158,18 @@ pixmap_draw_inset(const ImgExportArgs *args,
     cairo_save(cr);
     cairo_rectangle(cr, imgrect->x + lw, imgrect->y + lw, w, h);
     cairo_clip(cr);
+    cairo_translate(cr, rect->x, rect->y);
     cairo_set_source_rgba(cr, colour->r, colour->g, colour->b, colour->a);
     cairo_set_line_width(cr, lw);
     if (args->inset_draw_ticks) {
-        cairo_move_to(cr, xcentre - 0.5*length, rect->y);
+        cairo_move_to(cr, xcentre - 0.5*length, 0.0);
         cairo_rel_line_to(cr, 0.0, TICK_LENGTH);
-        cairo_move_to(cr, xcentre + 0.5*length, rect->y);
+        cairo_move_to(cr, xcentre + 0.5*length, 0.0);
         cairo_rel_line_to(cr, 0.0, TICK_LENGTH);
         y = 0.5*TICK_LENGTH;
     }
-    cairo_move_to(cr, xcentre - 0.5*length, rect->y + y);
-    cairo_line_to(cr, xcentre + 0.5*length, rect->y + y);
+    cairo_move_to(cr, xcentre - 0.5*length, y);
+    cairo_line_to(cr, xcentre + 0.5*length, y);
     cairo_stroke(cr);
     cairo_restore(cr);
 
@@ -1151,18 +1184,19 @@ pixmap_draw_inset(const ImgExportArgs *args,
     cairo_save(cr);
     cairo_rectangle(cr, imgrect->x + lw, imgrect->y + lw, w, h);
     cairo_clip(cr);
+    cairo_translate(cr, rect->x, rect->y);
     cairo_set_source_rgba(cr, colour->r, colour->g, colour->b, colour->a);
     format_layout(layout, &logical, s, "%s", args->inset_length);
-    cairo_move_to(cr, xcentre - 0.5*logical.width/pangoscale, rect->y + y);
+    cairo_move_to(cr, xcentre - 0.5*logical.width/pangoscale, y);
     pango_cairo_show_layout(cr, layout);
     cairo_restore(cr);
 }
 
 static void
-pixmap_draw_fmgrad(GwyContainer *data,
-                   const ImgExportArgs *args,
-                   const ImgExportSizes *sizes,
-                   cairo_t *cr)
+draw_fmgrad(GwyContainer *data,
+            const ImgExportArgs *args,
+            const ImgExportSizes *sizes,
+            cairo_t *cr)
 {
     GwyPixmapLayer *layer;
     const ImgExportRect *rect = &sizes->fmgrad;
@@ -1185,11 +1219,10 @@ pixmap_draw_fmgrad(GwyContainer *data,
     h = rect->h - 2.0*lw;
 
     if (inverted)
-        pat = cairo_pattern_create_linear(rect->x, rect->y + lw,
-                                          rect->x, rect->y + h);
+        pat = cairo_pattern_create_linear(0.0, lw, 0.0, lw + h);
     else
-        pat = cairo_pattern_create_linear(rect->x, rect->y + h,
-                                          rect->x, rect->y + lw);
+        pat = cairo_pattern_create_linear(0.0, lw + h, 0.0, lw);
+
     for (i = 0; i < npoints; i++) {
         const GwyGradientPoint *gpt = points + i;
         const GwyRGBA *color = &gpt->color;
@@ -1200,7 +1233,8 @@ pixmap_draw_fmgrad(GwyContainer *data,
     cairo_pattern_set_filter(pat, CAIRO_FILTER_BILINEAR);
 
     cairo_save(cr);
-    cairo_rectangle(cr, rect->x + lw, rect->y + lw, w, h);
+    cairo_translate(cr, rect->x, rect->y);
+    cairo_rectangle(cr, lw, lw, w, h);
     cairo_clip(cr);
     cairo_set_source(cr, pat);
     cairo_paint(cr);
@@ -1209,10 +1243,102 @@ pixmap_draw_fmgrad(GwyContainer *data,
     cairo_pattern_destroy(pat);
 
     cairo_save(cr);
+    cairo_translate(cr, rect->x, rect->y);
     cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
     cairo_set_line_width(cr, lw);
-    cairo_rectangle(cr, rect->x + 0.5*lw, rect->y + 0.5*lw, w + lw, h + lw);
+    cairo_rectangle(cr, 0.5*lw, 0.5*lw, w + lw, h + lw);
     cairo_stroke(cr);
+    cairo_restore(cr);
+}
+
+static void
+draw_fmruler(const ImgExportArgs *args,
+             const ImgExportSizes *sizes,
+             PangoLayout *layout,
+             GString *s,
+             cairo_t *cr)
+{
+    const ImgExportRect *rect = &sizes->fmruler;
+    const RulerTicks *ticks = &sizes->fmruler_ticks;
+    GwySIValueFormat *vf = sizes->vf_fmruler;
+    gdouble lw = args->lw;
+    gdouble z, bs, scale, yimg, real;
+    PangoRectangle logical;
+    gboolean inverted = sizes->fm_inverted;
+
+    /* Draw the edge ticks first */
+    cairo_save(cr);
+    cairo_translate(cr, rect->x, rect->y);
+    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    cairo_set_line_width(cr, lw);
+    cairo_move_to(cr, 0.0, 0.5*lw);
+    cairo_rel_line_to(cr, TICK_LENGTH, 0.0);
+    cairo_move_to(cr, 0.0, rect->h - 0.5*lw);
+    cairo_rel_line_to(cr, TICK_LENGTH, 0.0);
+    cairo_stroke(cr);
+    cairo_restore(cr);
+
+    cairo_save(cr);
+    cairo_translate(cr, rect->x, rect->y);
+    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    format_layout(layout, &logical, s, "%.*f %s",
+                  vf->precision, sizes->fm_max, vf->units);
+    cairo_move_to(cr, TICK_LENGTH + lw, lw);
+    pango_cairo_show_layout(cr, layout);
+    format_layout(layout, &logical, s, "%.*f",
+                  vf->precision, sizes->fm_min);
+    cairo_move_to(cr,
+                  TICK_LENGTH + lw, rect->h - lw - logical.height/pangoscale);
+    pango_cairo_show_layout(cr, layout);
+    cairo_restore(cr);
+
+    real = sizes->fm_max - sizes->fm_min;
+    if (real < 1e-14)  /* TODO: Or the mapping is not normal... */
+        return;
+
+    scale = (rect->h - lw)/real;
+    bs = ticks->step*ticks->base;
+
+    cairo_save(cr);
+    cairo_translate(cr, rect->x, rect->y);
+    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    cairo_set_line_width(cr, lw);
+    for (z = ticks->from; z <= ticks->to + 1e-14*bs; z += bs) {
+        if (inverted)
+            yimg = (z - sizes->fm_min)*scale + lw;
+        else
+            yimg = (sizes->fm_max - z)*scale + lw;
+
+        if (yimg <= sizes->fmruler_label_height + 4.0*lw
+            || yimg + sizes->fmruler_label_height + 4.0*lw >= rect->h)
+            continue;
+
+        gwy_debug("z %g -> %g", z, yimg);
+        cairo_move_to(cr, 0.0, yimg);
+        cairo_rel_line_to(cr, TICK_LENGTH, 0.0);
+    };
+    cairo_stroke(cr);
+    cairo_restore(cr);
+
+    cairo_save(cr);
+    cairo_translate(cr, rect->x, rect->y);
+    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    for (z = ticks->from; z <= ticks->to + 1e-14*bs; z += bs) {
+        z = fixzero(z);
+
+        if (inverted)
+            yimg = (z - sizes->fm_min)*scale + lw;
+        else
+            yimg = (sizes->fm_max - z)*scale + lw;
+
+        if (yimg <= sizes->fmruler_label_height + 4.0*lw
+            || yimg + 2.0*sizes->fmruler_label_height + 4.0*lw >= rect->h)
+            continue;
+
+        format_layout(layout, &logical, s, "%.*f", vf->precision, z);
+        cairo_move_to(cr, TICK_LENGTH + lw, yimg);
+        pango_cairo_show_layout(cr, layout);
+    };
     cairo_restore(cr);
 }
 
@@ -1228,11 +1354,12 @@ image_draw_cairo(GwyContainer *data,
 
     layout = create_layout(args->font, args->font_size, cr);
 
-    pixmap_draw_data(args, sizes, cr);
-    pixmap_draw_hruler(args, sizes, layout, s, cr);
-    pixmap_draw_vruler(args, sizes, layout, s, cr);
-    pixmap_draw_inset(args, sizes, layout, s, cr);
-    pixmap_draw_fmgrad(data, args, sizes, cr);
+    draw_data(args, sizes, cr);
+    draw_hruler(args, sizes, layout, s, cr);
+    draw_vruler(args, sizes, layout, s, cr);
+    draw_inset(args, sizes, layout, s, cr);
+    draw_fmgrad(data, args, sizes, cr);
+    draw_fmruler(args, sizes, layout, s, cr);
 
     g_object_unref(layout);
     g_string_free(s, TRUE);
