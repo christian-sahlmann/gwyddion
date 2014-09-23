@@ -209,7 +209,6 @@ static gboolean img_export_export       (GwyContainer *data,
                                          GwyRunType mode,
                                          GError **error,
                                          const gchar *name);
-static gint     gwy_pixmap_step_to_prec (gdouble d);
 static void     img_export_free_args    (ImgExportArgs *args);
 static void     img_export_load_args    (GwyContainer *container,
                                          ImgExportArgs *args);
@@ -1006,8 +1005,6 @@ draw_data(const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x + lw, rect->y + lw);
-    cairo_rectangle(cr, 0.0, 0.0, w, h);
-    cairo_clip(cr);
     gdk_cairo_set_source_pixbuf(cr, pixbuf, 0.0, 0.0);
     /* Pixelated zoom, this is what we usually want for data.  But we can
      * make it configurable for data.  Mask must be drawn pixelated! */
