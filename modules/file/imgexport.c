@@ -79,8 +79,13 @@
 
 enum {
     TICK_LENGTH     = 10,
-    PREVIEW_SIZE    = 240,
+    PREVIEW_SIZE    = 400,
 };
+
+typedef enum {
+    IMGEXPORT_MODE_PRESENTATION,
+    IMGEXPORT_MODE_GREY16,
+} ImgExportMode;
 
 /* What is present on the exported image
  * XXX: Makes no sense */
@@ -144,6 +149,7 @@ typedef struct {
 } ImgExportSizes;
 
 typedef struct {
+    ImgExportMode mode;
     gdouble zoom;
     ImageOutput xytype;
     ImageOutput ztype;
@@ -175,11 +181,24 @@ typedef struct {
 
     /* New args */
     gdouble lw;
+    gdouble borderw;
 } ImgExportArgs;
 
 typedef struct {
     ImgExportArgs *args;
     GtkWidget *dialog;
+    GtkWidget *preview;
+
+    GtkWidget *mode;
+    GtkWidget *notebook;
+
+    GtkWidget *table_basic;
+
+    GtkWidget *table_lateral;
+
+    GtkWidget *table_value;
+
+    gboolean in_update;
 } ImgExportControls;
 
 typedef gboolean (*WritePixbufFunc)(GdkPixbuf *pixbuf,
@@ -326,6 +345,7 @@ static ImgExportFormat image_formats[] = {
 };
 
 static const ImgExportArgs img_export_defaults = {
+    IMGEXPORT_MODE_PRESENTATION,
     1.0, PIXMAP_RULERS, PIXMAP_FMSCALE,
     { 1.0, 1.0, 1.0, 1.0 }, INSET_POS_BOTTOM_RIGHT,
     TRUE, TRUE, TRUE,
@@ -336,7 +356,7 @@ static const ImgExportArgs img_export_defaults = {
     NULL, NULL, NULL, NULL, 0, 0, 0, FALSE,
 
     /* New args */
-    1.0,
+    1.0, 0.0,
 };
 
 static GwyModuleInfo module_info = {
@@ -620,8 +640,15 @@ create_surface(const ImgExportArgs *args,
      * can turn ugly. */
     if (gwy_stramong(name,
                      "png", "jpeg2000", "jpeg", "tiff", "pnm",
-                     "bmp", "tga", NULL))
+                     "bmp", "tga", NULL)) {
+        cairo_t *cr;
+
         surface = cairo_image_surface_create(imageformat, iwidth, iheight);
+        cr = cairo_create(surface);
+        cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+        cairo_paint(cr);
+        cairo_destroy(cr);
+    }
 #ifdef CAIRO_HAS_PDF_SURFACE
     else if (gwy_strequal(name, "pdf"))
         surface = cairo_pdf_surface_create(filename, width, height);
@@ -880,6 +907,13 @@ measure_inset(const ImgExportArgs *args, ImgExportSizes *sizes,
         rect->x = hsize/2 - 0.5*rect->w;
 }
 
+static void
+rect_move(ImgExportRect *rect, gdouble x, gdouble y)
+{
+    rect->x += x;
+    rect->y += y;
+}
+
 static ImgExportSizes*
 calculate_sizes(const ImgExportArgs *args,
                 const gchar *name)
@@ -892,6 +926,7 @@ calculate_sizes(const ImgExportArgs *args,
     gdouble yreal = gwy_data_field_get_yreal(args->dfield);
     GString *s = g_string_new(NULL);
     gdouble lw = args->lw;
+    gdouble borderw = args->borderw;
     cairo_surface_t *surface;
     cairo_t *cr;
 
@@ -924,22 +959,20 @@ calculate_sizes(const ImgExportArgs *args,
     find_vruler_ticks(args, sizes, layout, s);
     sizes->vruler.w = sizes->vruler_label_width + TICK_LENGTH + lw;
     sizes->vruler.h = sizes->image.h;
-
-    sizes->hruler.x += sizes->vruler.w;
-    sizes->vruler.y += sizes->hruler.h;
-    sizes->image.x += sizes->vruler.w;
-    sizes->image.y += sizes->hruler.h;
+    rect_move(&sizes->hruler, sizes->vruler.w, 0.0);
+    rect_move(&sizes->vruler, 0.0, sizes->hruler.h);
+    rect_move(&sizes->image, sizes->vruler.w, sizes->hruler.h);
 
     /* Inset scale bar */
     measure_inset(args, sizes, layout, s);
-    sizes->inset.x += sizes->image.x;
-    sizes->inset.y += sizes->image.y;
+    rect_move(&sizes->inset, sizes->image.x, sizes->image.y);
 
     /* False colour gradient */
     sizes->fmgrad = sizes->image;
     /* NB: We subtract lw here to make the fmscale visually just touch the
      * image in the case of zero gap. */
-    sizes->fmgrad.x += sizes->image.w + TICK_LENGTH*args->fmscale_gap - lw;
+    rect_move(&sizes->fmgrad,
+              sizes->image.w + TICK_LENGTH*args->fmscale_gap - lw, 0.0);
     sizes->fmgrad.w = 1.5*args->font_size + 2.0*lw;
 
     /* False colour axis */
@@ -949,9 +982,20 @@ calculate_sizes(const ImgExportArgs *args,
     sizes->fmruler.w = sizes->fmruler_label_width;
     sizes->fmruler.h = sizes->fmgrad.h;
 
+    /* Border */
+    rect_move(&sizes->image, borderw, borderw);
+    rect_move(&sizes->hruler, borderw, borderw);
+    rect_move(&sizes->vruler, borderw, borderw);
+    rect_move(&sizes->inset, borderw, borderw);
+    rect_move(&sizes->fmgrad, borderw, borderw);
+    rect_move(&sizes->fmruler, borderw, borderw);
+
     /* Canvas */
-    sizes->canvas.w = sizes->fmruler.x + sizes->fmruler.w;
-    sizes->canvas.h = sizes->image.y + sizes->image.h;
+    sizes->canvas.w = sizes->fmruler.x + sizes->fmruler.w + borderw;
+    sizes->canvas.h = sizes->image.y + sizes->image.h + borderw;
+
+
+    /* TODO: Ensure image starts at integer coordinates for pixmap export. */
 
     gwy_debug("canvas %g x %g at (%g, %g)",
               sizes->canvas.w, sizes->canvas.h, sizes->canvas.x, sizes->canvas.y);
@@ -1419,24 +1463,152 @@ render_pixbuf(const ImgExportArgs *args, const gchar *name)
     return pixbuf;
 }
 
-/*
- * How to determine the size?
- * - Axes and scales dimensions depend on the text dimensions.
- * - We can measure text in Pango units (convertible with PANGO_PIXELS to
- *   device units: pixels or points) and only need a layout.
- * - For PangoCairo rendering the layout must be created with
- *   pango_cairo_create_layout(cr), i.e. we need a Cairo context.
- * - Cairo context can be only created for a Cairo surface.
- * - This is a cyclic dependence.
- *
- * So we create text-measuring Cairo surface of more or less random dimensions.
- * It is of the same type but not used for any rendering.  We measure labels
- * using this surface and calculate positions and sizes of all components of
- * the exported image.  Then we actually render them.
- *
- * To avoid doing everything twice, the measurement phase should provide
- * directly interpretable information about positions and sizes.
- **/
+static void
+preview(ImgExportControls *controls)
+{
+    ImgExportArgs *args = controls->args;
+    GwyDataField *dfield = args->dfield;
+    guint xres = gwy_data_field_get_xres(dfield);
+    guint yres = gwy_data_field_get_yres(dfield);
+    gdouble zoom = args->zoom, borderw = args->borderw;
+    gdouble w, h;
+    GdkPixbuf *pixbuf;
+
+    if (args->realsquare) {
+        gdouble xreal = gwy_data_field_get_xreal(dfield);
+        gdouble yreal = gwy_data_field_get_yreal(dfield);
+        gdouble scale = MAX(xres/xreal, yres/yreal);
+        w = GWY_ROUND(xreal*scale);
+        h = GWY_ROUND(yreal*scale);
+    }
+    else {
+        w = xres;
+        h = yres;
+    }
+
+    args->zoom = PREVIEW_SIZE/MAX(w, h);
+    args->borderw += 1.0/args->zoom;
+    pixbuf = render_pixbuf(args, "png");
+    gtk_image_set_from_pixbuf(GTK_IMAGE(controls->preview), pixbuf);
+    g_object_unref(pixbuf);
+    args->zoom = zoom;
+    args->borderw = borderw;
+}
+
+static gboolean
+img_export_dialog(ImgExportArgs *args)
+{
+    enum { RESPONSE_RESET = 1 };
+
+    ImgExportControls controls;
+    GtkWidget *dialog, *vbox, *hbox, *check;
+    GtkTable *table;
+    GtkObject *adj;
+    gint response;
+    gchar *s, *title;
+    gint row;
+
+    gwy_clear(&controls, 1);
+    controls.args = args;
+    controls.in_update = TRUE;
+
+    s = g_ascii_strup(args->format->name, -1);
+    title = g_strdup_printf(_("Export %s"), s);
+    g_free(s);
+    dialog = gtk_dialog_new_with_buttons(title, NULL, 0,
+                                         _("_Reset"), RESPONSE_RESET,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                         NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    g_free(title);
+    controls.dialog = dialog;
+
+    hbox = gtk_hbox_new(FALSE, 20);
+    gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 0);
+
+    vbox = gtk_vbox_new(FALSE, 8);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
+
+    if (args->format->write_grey16) {
+        check = gtk_check_button_new_with_mnemonic(_("Export as 1_6 bit "
+                                                     "grayscale"));
+        controls.mode = check;
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
+                                     args->mode == IMGEXPORT_MODE_GREY16);
+        gtk_box_pack_start(GTK_BOX(vbox), check, FALSE, FALSE, 0);
+        /*
+        g_signal_connect_swapped(check, "toggled",
+                                 G_CALLBACK(mode_changed), &controls);
+                                 */
+    }
+
+    controls.notebook = gtk_notebook_new();
+    gtk_box_pack_start(GTK_BOX(vbox), controls.notebook, TRUE, TRUE, 0);
+    if (args->mode == IMGEXPORT_MODE_GREY16)
+        gtk_widget_set_sensitive(controls.notebook, FALSE);
+
+    controls.table_basic = gtk_table_new(5, 3, FALSE);
+    table = GTK_TABLE(controls.table_basic);
+    gtk_table_set_row_spacings(table, 2);
+    gtk_table_set_col_spacings(table, 6);
+    gtk_notebook_append_page(GTK_NOTEBOOK(controls.notebook),
+                             controls.table_basic,
+                             gtk_label_new(gwy_sgettext("imgexport|Basic")));
+
+    controls.table_lateral = gtk_table_new(5, 3, FALSE);
+    table = GTK_TABLE(controls.table_lateral);
+    gtk_table_set_row_spacings(table, 2);
+    gtk_table_set_col_spacings(table, 6);
+    gtk_notebook_append_page(GTK_NOTEBOOK(controls.notebook),
+                             controls.table_lateral,
+                             gtk_label_new(_("Lateral Scale")));
+
+    controls.table_value = gtk_table_new(5, 3, FALSE);
+    table = GTK_TABLE(controls.table_value);
+    gtk_table_set_row_spacings(table, 2);
+    gtk_table_set_col_spacings(table, 6);
+    gtk_notebook_append_page(GTK_NOTEBOOK(controls.notebook),
+                             controls.table_value,
+                             gtk_label_new(_("Value Scale")));
+
+    controls.preview = gtk_image_new();
+    gtk_box_pack_start(GTK_BOX(hbox), controls.preview, FALSE, FALSE, 0);
+
+    preview(&controls);
+    controls.in_update = FALSE;
+
+    gtk_widget_show_all(dialog);
+    do {
+        response = gtk_dialog_run(GTK_DIALOG(dialog));
+        switch (response) {
+            case GTK_RESPONSE_CANCEL:
+            case GTK_RESPONSE_DELETE_EVENT:
+            gtk_widget_destroy(dialog);
+            case GTK_RESPONSE_NONE:
+            return FALSE;
+            break;
+
+            case GTK_RESPONSE_OK:
+            break;
+
+            case RESPONSE_RESET:
+            controls.in_update = TRUE;
+            controls.in_update = FALSE;
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
+    } while (response != GTK_RESPONSE_OK);
+
+    gtk_widget_destroy(dialog);
+
+    return TRUE;
+}
+
 static gboolean
 img_export_export(GwyContainer *data,
                   const gchar *filename,
@@ -1447,7 +1619,7 @@ img_export_export(GwyContainer *data,
     GwyContainer *settings;
     ImgExportArgs args;
     const ImgExportFormat *format;
-    gboolean ok;
+    gboolean ok = TRUE;
 
     settings = gwy_app_settings_get();
     img_export_load_args(settings, &args);
@@ -1461,8 +1633,11 @@ img_export_export(GwyContainer *data,
                                      GWY_APP_DATA_FIELD_ID, &args.id,
                                      0);
 
-    // TODO: Run some GUI here.
-    ok = TRUE;
+    if (args.mode == IMGEXPORT_MODE_GREY16 && !format->write_grey16)
+        args.mode = IMGEXPORT_MODE_PRESENTATION;
+
+    if (mode == GWY_RUN_INTERACTIVE)
+        ok = img_export_dialog(&args);
 
     if (ok) {
         if (format->write_vector)
