@@ -149,6 +149,18 @@ typedef struct {
 } ImgExportSizes;
 
 typedef struct {
+    const struct _ImgExportFormat *format;
+    GwyDataView *data_view;
+    GwyDataField *dfield;
+    GwyContainer *data;
+    gint id;
+    guint xres;
+    guint yres;
+    gboolean realsquare;
+} ImgExportEnv;
+
+typedef struct {
+    ImgExportEnv *env;
     ImgExportMode mode;
     gdouble zoom;
     ImageOutput xytype;
@@ -167,19 +179,10 @@ typedef struct {
     gdouble inset_gap;
     guint greyscale;
     gchar *inset_length;
-    /* Interface only */
-    const struct _ImgExportFormat *format;
-    GwyDataView *data_view;
-    GwyDataField *dfield;
-    GwyContainer *data;
-    gint id;
-    /* These two are `1:1' sizes, i.e. they differ from data field sizes when
-     * realsquare is TRUE. */
-    gint xres;
-    gint yres;
-    gboolean realsquare;
 
     /* New args */
+    gdouble width;
+    gdouble height;
     gdouble lw;
     gdouble borderw;
 } ImgExportArgs;
@@ -193,6 +196,9 @@ typedef struct {
     GtkWidget *notebook;
 
     GtkWidget *table_basic;
+    GtkObject *zoom;
+    GtkObject *width;
+    GtkObject *height;
 
     GtkWidget *table_lateral;
 
@@ -345,6 +351,7 @@ static ImgExportFormat image_formats[] = {
 };
 
 static const ImgExportArgs img_export_defaults = {
+    NULL,
     IMGEXPORT_MODE_PRESENTATION,
     1.0, PIXMAP_RULERS, PIXMAP_FMSCALE,
     { 1.0, 1.0, 1.0, 1.0 }, INSET_POS_BOTTOM_RIGHT,
@@ -352,10 +359,8 @@ static const ImgExportArgs img_export_defaults = {
     "Helvetica", 12.0, TRUE, TRUE, TRUE,
     1.0, 1.0,
     0, "",
-    /* Interface only */
-    NULL, NULL, NULL, NULL, 0, 0, 0, FALSE,
-
     /* New args */
+    100.0, 100.0,
     1.0, 0.0,
 };
 
@@ -643,6 +648,7 @@ create_surface(const ImgExportArgs *args,
                      "bmp", "tga", NULL)) {
         cairo_t *cr;
 
+        gwy_debug("%u %u %u", imageformat, iwidth, iheight);
         surface = cairo_image_surface_create(imageformat, iwidth, iheight);
         cr = cairo_create(surface);
         cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
@@ -676,10 +682,11 @@ static void
 find_hruler_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
                   PangoLayout *layout, GString *s)
 {
-    GwySIUnit *xyunit = gwy_data_field_get_si_unit_xy(args->dfield);
+    GwyDataField *dfield = args->env->dfield;
+    GwySIUnit *xyunit = gwy_data_field_get_si_unit_xy(dfield);
     gdouble size = sizes->image.w;
-    gdouble real = gwy_data_field_get_xreal(args->dfield);
-    gdouble offset = gwy_data_field_get_xoffset(args->dfield);
+    gdouble real = gwy_data_field_get_xreal(dfield);
+    gdouble offset = gwy_data_field_get_xoffset(dfield);
     RulerTicks *ticks = &sizes->hruler_ticks;
     PangoRectangle logical1, logical2;
     GwySIValueFormat *vf;
@@ -735,9 +742,10 @@ static void
 find_vruler_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
                   PangoLayout *layout, GString *s)
 {
+    GwyDataField *dfield = args->env->dfield;
     gdouble size = sizes->image.h;
-    gdouble real = gwy_data_field_get_yreal(args->dfield);
-    gdouble offset = gwy_data_field_get_yoffset(args->dfield);
+    gdouble real = gwy_data_field_get_yreal(dfield);
+    gdouble offset = gwy_data_field_get_yoffset(dfield);
     RulerTicks *ticks = &sizes->vruler_ticks;
     PangoRectangle logical1, logical2;
     GwySIValueFormat *vf;
@@ -794,7 +802,8 @@ static void
 find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
                    PangoLayout *layout, GString *s)
 {
-    GwySIUnit *zunit = gwy_data_field_get_si_unit_z(args->dfield);
+    GwyDataField *dfield = args->env->dfield;
+    GwySIUnit *zunit = gwy_data_field_get_si_unit_z(dfield);
     GwyPixmapLayer *layer;
     gdouble size = sizes->image.h;
     gdouble min, max, real;
@@ -804,7 +813,7 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     gdouble bs, height, width;
     guint n;
 
-    layer = gwy_data_view_get_base_layer(args->data_view);
+    layer = gwy_data_view_get_base_layer(args->env->data_view);
     g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
     gwy_layer_basic_get_range(GWY_LAYER_BASIC(layer), &min, &max);
 
@@ -869,14 +878,15 @@ static void
 measure_inset(const ImgExportArgs *args, ImgExportSizes *sizes,
               PangoLayout *layout, GString *s)
 {
+    GwyDataField *dfield = args->env->dfield;
     ImgExportRect *rect = &sizes->inset;
     gdouble hsize = sizes->image.w, vsize = sizes->image.h;
-    gdouble real = gwy_data_field_get_xreal(args->dfield);
+    gdouble real = gwy_data_field_get_xreal(dfield);
     PangoRectangle logical;
     InsetPosType pos = args->inset_pos;
     gdouble lw = args->lw;
 
-    sizes->inset_length = inset_length_ok(args->dfield, args->inset_length);
+    sizes->inset_length = inset_length_ok(dfield, args->inset_length);
     if (!(sizes->inset_length > 0.0))
         return;
 
@@ -920,10 +930,6 @@ calculate_sizes(const ImgExportArgs *args,
 {
     PangoLayout *layout;
     ImgExportSizes *sizes = g_new0(ImgExportSizes, 1);
-    guint xres = gwy_data_field_get_xres(args->dfield);
-    guint yres = gwy_data_field_get_yres(args->dfield);
-    gdouble xreal = gwy_data_field_get_xreal(args->dfield);
-    gdouble yreal = gwy_data_field_get_yreal(args->dfield);
     GString *s = g_string_new(NULL);
     gdouble lw = args->lw;
     gdouble borderw = args->borderw;
@@ -936,19 +942,8 @@ calculate_sizes(const ImgExportArgs *args,
     layout = create_layout(args->font, args->font_size, cr);
 
     /* Data */
-    if (args->realsquare) {
-        gdouble scale = MAX(xres/xreal, yres/yreal);
-        /* This is how GwyDataView rounds it so we should get a pixmap of
-         * this size. */
-        sizes->image.w = GWY_ROUND(xreal*scale);
-        sizes->image.h = GWY_ROUND(yreal*scale);
-    }
-    else {
-        sizes->image.w = xres;
-        sizes->image.h = yres;
-    }
-    sizes->image.w += 2.0*lw;
-    sizes->image.h += 2.0*lw;
+    sizes->image.w = args->env->xres + 2.0*lw;
+    sizes->image.h = args->env->yres + 2.0*lw;
 
     /* Horizontal ruler */
     find_hruler_ticks(args, sizes, layout, s);
@@ -1042,7 +1037,7 @@ draw_data(const ImgExportArgs *args,
     gdouble lw = args->lw;
     gdouble w, h;
 
-    pixbuf = gwy_data_view_export_pixbuf(args->data_view, 1.0,
+    pixbuf = gwy_data_view_export_pixbuf(args->env->data_view, 1.0,
                                          args->draw_mask, args->draw_selection);
     w = rect->w - 2.0*lw;
     h = rect->h - 2.0*lw;
@@ -1073,8 +1068,9 @@ draw_hruler(const ImgExportArgs *args,
             GString *s,
             cairo_t *cr)
 {
-    gdouble xreal = gwy_data_field_get_xreal(args->dfield);
-    gdouble xoffset = gwy_data_field_get_xoffset(args->dfield);
+    GwyDataField *dfield = args->env->dfield;
+    gdouble xreal = gwy_data_field_get_xreal(dfield);
+    gdouble xoffset = gwy_data_field_get_xoffset(dfield);
     const ImgExportRect *rect = &sizes->hruler;
     const RulerTicks *ticks = &sizes->hruler_ticks;
     GwySIValueFormat *vf = sizes->vf_hruler;
@@ -1130,8 +1126,9 @@ draw_vruler(const ImgExportArgs *args,
             GString *s,
             cairo_t *cr)
 {
-    gdouble yreal = gwy_data_field_get_yreal(args->dfield);
-    gdouble yoffset = gwy_data_field_get_yoffset(args->dfield);
+    GwyDataField *dfield = args->env->dfield;
+    gdouble yreal = gwy_data_field_get_yreal(dfield);
+    gdouble yoffset = gwy_data_field_get_yoffset(dfield);
     const ImgExportRect *rect = &sizes->vruler;
     const RulerTicks *ticks = &sizes->vruler_ticks;
     GwySIValueFormat *vf = sizes->vf_vruler;
@@ -1179,7 +1176,8 @@ draw_inset(const ImgExportArgs *args,
            GString *s,
            cairo_t *cr)
 {
-    gdouble xreal = gwy_data_field_get_xreal(args->dfield);
+    GwyDataField *dfield = args->env->dfield;
+    gdouble xreal = gwy_data_field_get_xreal(dfield);
     const ImgExportRect *rect = &sizes->inset, *imgrect = &sizes->image;
     const GwyRGBA *colour = &args->inset_color;
     PangoRectangle logical;
@@ -1249,7 +1247,7 @@ draw_fmgrad(GwyContainer *data,
     gdouble lw = args->lw;
     gboolean inverted = sizes->fm_inverted;
 
-    layer = gwy_data_view_get_base_layer(args->data_view);
+    layer = gwy_data_view_get_base_layer(args->env->data_view);
     key = gwy_layer_basic_get_gradient_key(GWY_LAYER_BASIC(layer));
     if (key)
         gwy_container_gis_string_by_name(data, key, &name);
@@ -1424,7 +1422,7 @@ render_pixbuf(const ImgExportArgs *args, const gchar *name)
                              args->zoom*sizes->canvas.h);
     cr = cairo_create(surface);
     cairo_scale(cr, args->zoom, args->zoom);
-    image_draw_cairo(args->data, args, sizes, cr);
+    image_draw_cairo(args->env->data, args, sizes, cr);
     cairo_surface_flush(surface);
     cairo_destroy(cr);
 
@@ -1467,26 +1465,10 @@ static void
 preview(ImgExportControls *controls)
 {
     ImgExportArgs *args = controls->args;
-    GwyDataField *dfield = args->dfield;
-    guint xres = gwy_data_field_get_xres(dfield);
-    guint yres = gwy_data_field_get_yres(dfield);
     gdouble zoom = args->zoom, borderw = args->borderw;
-    gdouble w, h;
     GdkPixbuf *pixbuf;
 
-    if (args->realsquare) {
-        gdouble xreal = gwy_data_field_get_xreal(dfield);
-        gdouble yreal = gwy_data_field_get_yreal(dfield);
-        gdouble scale = MAX(xres/xreal, yres/yreal);
-        w = GWY_ROUND(xreal*scale);
-        h = GWY_ROUND(yreal*scale);
-    }
-    else {
-        w = xres;
-        h = yres;
-    }
-
-    args->zoom = PREVIEW_SIZE/MAX(w, h);
+    args->zoom = PREVIEW_SIZE/(gdouble)MAX(args->env->xres, args->env->yres);
     args->borderw += 1.0/args->zoom;
     pixbuf = render_pixbuf(args, "png");
     gtk_image_set_from_pixbuf(GTK_IMAGE(controls->preview), pixbuf);
@@ -1495,24 +1477,156 @@ preview(ImgExportControls *controls)
     args->borderw = borderw;
 }
 
+static void
+zoom_changed(ImgExportControls *controls)
+{
+    ImgExportArgs *args = controls->args;
+    ImgExportEnv *env = args->env;
+
+    args->zoom = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->zoom));
+    if (controls->in_update)
+        return;
+
+    g_return_if_fail(!env->format->write_vector);
+    controls->in_update = TRUE;
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->width),
+                             GWY_ROUND(args->zoom*env->xres));
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height),
+                             GWY_ROUND(args->zoom*env->yres));
+    controls->in_update = FALSE;
+}
+
+static void
+width_changed(ImgExportControls *controls)
+{
+    gdouble width = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->width));
+    ImgExportArgs *args = controls->args;
+    ImgExportEnv *env = args->env;
+
+    if (env->format->write_vector) {
+        args->width = width;
+        if (controls->in_update)
+            return;
+
+        controls->in_update = TRUE;
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height),
+                                 width*env->yres/env->xres);
+        controls->in_update = FALSE;
+    }
+    else {
+        gdouble zoom = width/env->xres;
+        controls->in_update = TRUE;
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zoom), zoom);
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height),
+                                 GWY_ROUND(zoom*env->yres));
+        controls->in_update = FALSE;
+    }
+}
+
+static void
+height_changed(ImgExportControls *controls)
+{
+    gdouble height = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->height));
+    ImgExportArgs *args = controls->args;
+    ImgExportEnv *env = args->env;
+
+    if (env->format->write_vector) {
+        args->height = height;
+        if (controls->in_update)
+            return;
+
+        controls->in_update = TRUE;
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->width),
+                                 height*env->xres/env->yres);
+        controls->in_update = FALSE;
+    }
+    else {
+        gdouble zoom = height/env->yres;
+        controls->in_update = TRUE;
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zoom), zoom);
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->width),
+                                 GWY_ROUND(zoom*env->xres));
+        controls->in_update = FALSE;
+    }
+}
+
+static void
+create_basic_controls(ImgExportControls *controls)
+{
+    ImgExportArgs *args = controls->args;
+    ImgExportEnv *env = args->env;
+    gboolean is_vector = !!env->format->write_vector;
+    const gchar *sizeunit;
+    GtkWidget *table, *spin;
+    gint row = 0, digits;
+
+    table = controls->table_basic = gtk_table_new(5, 3, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+
+    if (is_vector) {
+        gdouble zoom = args->width/env->xres;
+
+        sizeunit = "mm";
+        digits = 1;
+        controls->width = gtk_adjustment_new(args->width, 1.0, 1000.0,
+                                             0.1, 10.0, 0);
+        controls->height = gtk_adjustment_new(zoom*env->yres, 1.0, 1000.0,
+                                              0.1, 10.0, 0);
+    }
+    else {
+        gdouble minzoom = 2.0/MIN(env->xres, env->yres);
+        gdouble maxzoom = 16384.0/MAX(env->xres, env->yres);
+
+        sizeunit = "px";
+        digits = 0;
+        controls->zoom = gtk_adjustment_new(args->zoom, minzoom, maxzoom,
+                                           0.001, 1.0, 0);
+        gwy_table_attach_spinbutton(table, row,
+                                    _("_Zoom:"), NULL, controls->zoom);
+        g_signal_connect_swapped(controls->zoom, "value-changed",
+                                 G_CALLBACK(zoom_changed), controls);
+        row++;
+
+        controls->width = gtk_adjustment_new(args->width, 2.0, 16384.0,
+                                             1.0, 10.0, 0);
+        controls->height = gtk_adjustment_new(args->height, 2.0, 16384.0,
+                                              1.0, 10.0, 0);
+    }
+
+    spin = gwy_table_attach_spinbutton(table, row,
+                                       _("_Width:"), sizeunit, controls->width);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), digits);
+    g_signal_connect_swapped(controls->width, "value-changed",
+                             G_CALLBACK(width_changed), controls);
+    row++;
+
+    spin = gwy_table_attach_spinbutton(table, row,
+                                       _("_Height:"), sizeunit, controls->height);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), digits);
+    g_signal_connect_swapped(controls->height, "value-changed",
+                             G_CALLBACK(height_changed), controls);
+    row++;
+}
+
 static gboolean
 img_export_dialog(ImgExportArgs *args)
 {
     enum { RESPONSE_RESET = 1 };
 
     ImgExportControls controls;
+    ImgExportEnv *env = args->env;
+    const ImgExportFormat *format = env->format;
     GtkWidget *dialog, *vbox, *hbox, *check;
     GtkTable *table;
-    GtkObject *adj;
     gint response;
     gchar *s, *title;
-    gint row;
 
     gwy_clear(&controls, 1);
     controls.args = args;
     controls.in_update = TRUE;
 
-    s = g_ascii_strup(args->format->name, -1);
+    s = g_ascii_strup(format->name, -1);
     title = g_strdup_printf(_("Export %s"), s);
     g_free(s);
     dialog = gtk_dialog_new_with_buttons(title, NULL, 0,
@@ -1531,7 +1645,7 @@ img_export_dialog(ImgExportArgs *args)
     vbox = gtk_vbox_new(FALSE, 8);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
-    if (args->format->write_grey16) {
+    if (format->write_grey16) {
         check = gtk_check_button_new_with_mnemonic(_("Export as 1_6 bit "
                                                      "grayscale"));
         controls.mode = check;
@@ -1549,10 +1663,7 @@ img_export_dialog(ImgExportArgs *args)
     if (args->mode == IMGEXPORT_MODE_GREY16)
         gtk_widget_set_sensitive(controls.notebook, FALSE);
 
-    controls.table_basic = gtk_table_new(5, 3, FALSE);
-    table = GTK_TABLE(controls.table_basic);
-    gtk_table_set_row_spacings(table, 2);
-    gtk_table_set_col_spacings(table, 6);
+    create_basic_controls(&controls);
     gtk_notebook_append_page(GTK_NOTEBOOK(controls.notebook),
                              controls.table_basic,
                              gtk_label_new(gwy_sgettext("imgexport|Basic")));
@@ -1618,20 +1729,54 @@ img_export_export(GwyContainer *data,
 {
     GwyContainer *settings;
     ImgExportArgs args;
+    ImgExportEnv env;
     const ImgExportFormat *format;
     gboolean ok = TRUE;
+    guint xres, yres;
+    const gchar *key;
+    gchar *s;
 
     settings = gwy_app_settings_get();
     img_export_load_args(settings, &args);
-    format = args.format = find_format(name, TRUE);
-    g_return_val_if_fail(args.format, FALSE);
+    args.env = &env;
+    format = env.format = find_format(name, TRUE);
+    g_return_val_if_fail(env.format, FALSE);
 
     args.font_size = 12.0; // XXX XXX XXX
-    args.data = data;
-    gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &args.data_view,
-                                     GWY_APP_DATA_FIELD, &args.dfield,
-                                     GWY_APP_DATA_FIELD_ID, &args.id,
+    env.data = data;
+    gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &env.data_view,
+                                     GWY_APP_DATA_FIELD, &env.dfield,
+                                     GWY_APP_DATA_FIELD_ID, &env.id,
                                      0);
+    if (!env.data_view) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("Data must be displayed in a window for pixmap export."));
+        return FALSE;
+    }
+
+    key = gwy_data_view_get_data_prefix(env.data_view);
+    s = g_strconcat(key, "/realsquare", NULL);
+    gwy_container_gis_boolean_by_name(data, s, &env.realsquare);
+    g_free(s);
+
+    /* Find out native pixel sizes for the data bitmaps. */
+    xres = gwy_data_field_get_xres(env.dfield);
+    yres = gwy_data_field_get_yres(env.dfield);
+    if (env.realsquare) {
+        gdouble xreal = gwy_data_field_get_xreal(env.dfield);
+        gdouble yreal = gwy_data_field_get_yreal(env.dfield);
+        gdouble scale = MAX(xres/xreal, yres/yreal);
+        /* This is how GwyDataView rounds it so we should get a pixmap of
+         * this size. */
+        env.xres = GWY_ROUND(xreal*scale);
+        env.yres = GWY_ROUND(yreal*scale);
+    }
+    else {
+        env.xres = xres;
+        env.yres = yres;
+    }
+    gwy_debug("env.xres %u, env.yres %u", env.xres, env.yres);
 
     if (args.mode == IMGEXPORT_MODE_GREY16 && !format->write_grey16)
         args.mode = IMGEXPORT_MODE_PRESENTATION;
@@ -1725,7 +1870,7 @@ write_image_png16(const ImgExportArgs *args,
 
     const guchar *title = "Data";
 
-    GwyDataField *dfield = args->dfield;
+    GwyDataField *dfield = args->env->dfield;
     guint xres = gwy_data_field_get_xres(dfield);
     guint yres = gwy_data_field_get_yres(dfield);
     guint16 *pixels;
@@ -1776,8 +1921,8 @@ write_image_png16(const ImgExportArgs *args,
     }
 
     gwy_data_field_get_min_max(dfield, &min, &max);
-    s = g_strdup_printf("/%d/data/title", args->id);
-    gwy_container_gis_string_by_name(args->data, s, &title);
+    s = g_strdup_printf("/%d/data/title", args->env->id);
+    gwy_container_gis_string_by_name(args->env->data, s, &title);
     g_free(s);
 
     /* Create the chunks dynamically because the fields of png_text are
@@ -1910,7 +2055,7 @@ write_image_tiff16(const ImgExportArgs *args,
         /* Here start the image data */
     };
 
-    GwyDataField *dfield = args->dfield;
+    GwyDataField *dfield = args->env->dfield;
     guint xres = gwy_data_field_get_xres(dfield);
     guint yres = gwy_data_field_get_yres(dfield);
     guint nbytes = BIT_DEPTH*xres*yres;
@@ -1983,8 +2128,10 @@ write_image_pgm16(const ImgExportArgs *args,
     static const gchar pgm_header[] = "P5\n%s%u\n%u\n65535\n";
     const guchar *title = "Data";
 
-    GwyDataField *dfield;
-    guint xres, yres, i;
+    GwyDataField *dfield = args->env->dfield;
+    guint xres = gwy_data_field_get_xres(dfield);
+    guint yres = gwy_data_field_get_yres(dfield);
+    guint i;
     gdouble min, max;
     gboolean ok = FALSE;
     gchar *s, *ppmh = NULL;
@@ -1999,14 +2146,11 @@ write_image_pgm16(const ImgExportArgs *args,
         return FALSE;
     }
 
-    dfield = args->dfield;
     pixels = render_image_grey16(dfield);
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
     gwy_data_field_get_min_max(dfield, &min, &max);
 
-    s = g_strdup_printf("/%d/data/title", args->id);
-    gwy_container_gis_string_by_name(args->data, s, &title);
+    s = g_strdup_printf("/%d/data/title", args->env->id);
+    gwy_container_gis_string_by_name(args->env->data, s, &title);
     g_free(s);
 
     /* Gwyddion GSF keys */
@@ -2076,7 +2220,7 @@ write_vector_generic(const ImgExportArgs *args,
                              sizes->canvas.w, sizes->canvas.h);
     g_return_val_if_fail(surface, FALSE);
     cr = cairo_create(surface);
-    image_draw_cairo(args->data, args, sizes, cr);
+    image_draw_cairo(args->env->data, args, sizes, cr);
     cairo_surface_flush(surface);
     if ((status = cairo_status(cr))
         || (status = cairo_surface_status(surface))) {
