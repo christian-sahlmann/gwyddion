@@ -275,6 +275,7 @@ fail:
     return container;
 }
 
+/* XXX: Code identical to nxiifile.c */
 static gboolean
 read_bmp_header(const guchar *p,
                 guint *xres,
@@ -305,7 +306,8 @@ read_bmp_header(const guchar *p,
         return FALSE;
     if ((x = gwy_get_guint32_le(&p)) != 0)   /* Compression */
         return FALSE;
-    if ((x = gwy_get_guint32_le(&p)) + BMP_HEADER_SIZE != *size)   /* Compresed size */
+    if ((x = gwy_get_guint32_le(&p))
+        && x + BMP_HEADER_SIZE != *size)   /* Compresed size, may be 0 */
         return FALSE;
 
     if (3*(*xres)*(*yres) + BMP_HEADER_SIZE != *size)
