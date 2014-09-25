@@ -2,7 +2,7 @@
  *  $Id$
  *  Copyright (C) 2014 Daniil Bratashov (dn2010).
  *  Data structures are copyright (c) 2011 Renishaw plc.
- * 
+ *
  *  E-mail: dn2010@gmail.com.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -20,7 +20,9 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  */
- 
+
+#define DEBUG
+
  /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-renishaw-spm">
@@ -43,7 +45,7 @@
  * [FILE-MAGIC-USERGUIDE]
  * Renishaw Wire Data File
  * .wdf
- * 
+ *
  **/
 
 #include "config.h"
@@ -69,7 +71,8 @@
 #define EXTENSION ".wdf"
 
 enum {
-	WDF_HEADER_SIZE = 512
+    WDF_HEADER_SIZE = 512,
+    WDF_BLOCK_HEADER_SIZE = 16
 };
 
 typedef struct {
@@ -114,20 +117,24 @@ typedef struct {
 } WdfHeader;
 
 static gboolean       module_register        (void);
-static gint           wdf_detect      		 (const GwyFileDetectInfo *fileinfo,
+static gint           wdf_detect             (const GwyFileDetectInfo *fileinfo,
                                               gboolean only_name);
 static GwyContainer*  wdf_load               (const gchar *filename,
                                               GwyRunType mode,
                                               GError **error);
-static gsize		  wdf_read_header (const guchar *buffer,
-									   gsize size,
-									   WdfHeader *header,
-									   GError **error);                                              
+static gsize          wdf_read_header (const guchar *buffer,
+                                       gsize size,
+                                       WdfHeader *header,
+                                       GError **error);
+static gsize          wdf_read_block_header (const guchar *buffer,
+                                             gsize size,
+                                             WdfBlock *header,
+                                             GError **error);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Imports Renishaw Wire data files (WDF)."),
+    N_("Imports Renishaw WiRE data files (WDF)."),
     "Daniil Bratashov <dn2010@gmail.com>",
     "0.1",
     "Daniil Bratashov (dn2010), Renishaw plc.",
@@ -140,7 +147,7 @@ static gboolean
 module_register(void)
 {
     gwy_file_func_register("renishaw",
-                           N_("Renishaw Wire data files (.wdf)"),
+                           N_("Renishaw WiRE data files (.wdf)"),
                            (GwyFileDetectFunc)&wdf_detect,
                            (GwyFileLoadFunc)&wdf_load,
                            NULL,
@@ -174,14 +181,15 @@ wdf_load(const gchar *filename,
     GwyContainer *container = NULL;
     gchar *buffer = NULL;
     gsize len, size = 0;
-    GError *err = NULL; 
-    
+    GError *err = NULL;
+
     GwyBrick *brick;
     GwyDataField *dfield;
     gdouble *data;
     WdfHeader fileheader;
-    gchar *p; 
-    gint i, j, k;  
+    WdfBlock block;
+    const guchar *p;
+    gint i, j, k;
     gint xres = 180, yres =120, zres = 0;
     gdouble xreal = 180*1.4e-6, yreal = 120*1.4e-6, zreal = 1.0;
 
@@ -189,29 +197,39 @@ wdf_load(const gchar *filename,
         err_GET_FILE_CONTENTS(error, &err);
         goto fail;
     }
-    
+
     p = buffer;
-    if ((len = wdf_read_header(p, size, &fileheader, error)) 
+    if ((len = wdf_read_header(p, size, &fileheader, error))
                                                      != WDF_HEADER_SIZE)
         goto fail;
-	p += WDF_HEADER_SIZE;
-	fprintf(stderr,"%d %d\n", fileheader.npoints, fileheader.nspectra);
-	fprintf(stderr,"x=%d y=%d\n", fileheader.xlistcount, fileheader.ylistcount);
+    p += WDF_HEADER_SIZE;
+    size -= WDF_HEADER_SIZE;
+    gwy_debug("npoints = %d, nspectra=%" G_GUINT64_FORMAT "",
+              fileheader.npoints,
+              fileheader.nspectra);
 
-	zres = fileheader.npoints;
-	brick = gwy_brick_new(xres, yres, zres, xreal, yreal, zreal, TRUE);
-	data = gwy_brick_get_data(brick);
-	
-	p = buffer + 528;
+    while (size > 0) {
+        if ((len = wdf_read_block_header(p, size, &block, error)) == 0)
+            goto fail;
+
+        p += len;
+        size -= len;
+    }
+
+    zres = fileheader.npoints;
+    brick = gwy_brick_new(xres, yres, zres, xreal, yreal, zreal, TRUE);
+    data = gwy_brick_get_data(brick);
+
+    p = buffer + 528;
 
     for (i = 0; i < xres; i++)
-		for (j = 0; j < yres; j++) 
-			for (k = 0; k < zres; k++) {
+        for (j = 0; j < yres; j++)
+            for (k = 0; k < zres; k++) {
                 *(data + k * xres * yres + i + j * xres)
-									   = (gdouble)gwy_get_gfloat_le(&p);
+                                       = (gdouble)gwy_get_gfloat_le(&p);
             }
-    
-	container = gwy_container_new();
+
+    container = gwy_container_new();
 
     dfield = gwy_data_field_new(xres, yres,
                                 xreal, yreal,
@@ -229,7 +247,7 @@ wdf_load(const gchar *filename,
     gwy_file_volume_import_log_add(container, 0, NULL, filename);
     fail:
     g_free(buffer);
-    
+
     return container;
 }
 
@@ -239,9 +257,9 @@ wdf_read_header(const guchar *buffer,
                 WdfHeader *header,
                 GError **error)
 {
-	gint i;
-	
-	if (size < WDF_HEADER_SIZE) {
+    gint i;
+
+    if (size < WDF_HEADER_SIZE) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_DATA,
                     _("File header is truncated"));
@@ -253,55 +271,89 @@ wdf_read_header(const guchar *buffer,
         err_FILE_TYPE(error, "Renishaw WDF");
         return 0;
     }
-    
+
     header->signature   = gwy_get_guint32_le(&buffer);
     header->version     = gwy_get_guint32_le(&buffer);
-    header->size	    = gwy_get_guint64_le(&buffer);
-    header->flags	    = gwy_get_guint64_le(&buffer);
+    header->size        = gwy_get_guint64_le(&buffer);
+    header->flags       = gwy_get_guint64_le(&buffer);
     for (i = 0; i < 4; i++) {
-		header->uuid[i] = gwy_get_guint32_le(&buffer);
-	}
+        header->uuid[i] = gwy_get_guint32_le(&buffer);
+    }
     header->unused0     = gwy_get_guint64_le(&buffer);
     header->unused1     = gwy_get_guint32_le(&buffer);
-    header->ntracks		= gwy_get_guint32_le(&buffer);
-    header->status		= gwy_get_guint32_le(&buffer);
-    header->npoints		= gwy_get_guint32_le(&buffer);
-    header->nspectra	= gwy_get_guint64_le(&buffer);
-    header->ncollected	= gwy_get_guint64_le(&buffer);
+    header->ntracks     = gwy_get_guint32_le(&buffer);
+    header->status      = gwy_get_guint32_le(&buffer);
+    header->npoints     = gwy_get_guint32_le(&buffer);
+    header->nspectra    = gwy_get_guint64_le(&buffer);
+    header->ncollected  = gwy_get_guint64_le(&buffer);
     header->naccum      = gwy_get_guint32_le(&buffer);
     header->ylistcount  = gwy_get_guint32_le(&buffer);
     header->xlistcount  = gwy_get_guint32_le(&buffer);
-    header->origincount	= gwy_get_guint32_le(&buffer);
+    header->origincount = gwy_get_guint32_le(&buffer);
     for (i = 0; i < 24; i++) {
-		header->appname[i] = *(buffer++);
-	}
+        header->appname[i] = *(buffer++);
+    }
     for (i = 0; i < 4; i++) {
-		header->appversion[i] = gwy_get_guint16_le(&buffer);
-	}
-    header->scantype	= gwy_get_guint32_le(&buffer);
-    header->type		= gwy_get_guint32_le(&buffer);
-    header->time_start	= gwy_get_guint64_le(&buffer);
-    header->time_end	= gwy_get_guint64_le(&buffer);
-    header->units		= gwy_get_guint32_le(&buffer);
+        header->appversion[i] = gwy_get_guint16_le(&buffer);
+    }
+    header->scantype    = gwy_get_guint32_le(&buffer);
+    header->type        = gwy_get_guint32_le(&buffer);
+    header->time_start  = gwy_get_guint64_le(&buffer);
+    header->time_end    = gwy_get_guint64_le(&buffer);
+    header->units       = gwy_get_guint32_le(&buffer);
     header->laserwavenum = gwy_get_gfloat_le(&buffer);
     for (i = 0; i < 6; i++) {
-		header->spare[i] = gwy_get_guint64_le(&buffer);
-	}    
+        header->spare[i] = gwy_get_guint64_le(&buffer);
+    }
     for (i = 0; i < 24; i++) {
-		header->user[i] = *(buffer++);
-	}
+        header->user[i] = *(buffer++);
+    }
     for (i = 0; i < 24; i++) {
-		header->title[i] = *(buffer++);
-	}
+        header->title[i] = *(buffer++);
+    }
     for (i = 0; i < 6; i++) {
-		header->padding[i] = gwy_get_guint64_le(&buffer);
-	} 
+        header->padding[i] = gwy_get_guint64_le(&buffer);
+    }
     for (i = 0; i < 4; i++) {
-		header->free[i] = gwy_get_guint64_le(&buffer);
-	} 
+        header->free[i] = gwy_get_guint64_le(&buffer);
+    }
     for (i = 0; i < 4; i++) {
-		header->reserved[i] = gwy_get_guint64_le(&buffer);
-	} 
-	
-	return WDF_HEADER_SIZE;		
-}                
+        header->reserved[i] = gwy_get_guint64_le(&buffer);
+    }
+
+    return WDF_HEADER_SIZE;
+}
+
+static gsize
+wdf_read_block_header(const guchar *buffer,
+                      gsize size,
+                      WdfBlock *header,
+                      GError **error)
+{
+    if (size < WDF_BLOCK_HEADER_SIZE) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_DATA,
+                    _("Block header is truncated"));
+        return 0;
+    }
+
+    header->id   = gwy_get_guint32_le(&buffer);
+    header->uid  = gwy_get_guint32_le(&buffer);
+    header->size = gwy_get_guint64_le(&buffer);
+    gwy_debug("Block id=%d uid=%d size=%" G_GUINT64_FORMAT "",
+              header->id,
+              header->uid,
+              header->size);
+
+    if (size < header->size) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_DATA,
+                    _("Data block is truncated"));
+        return 0;
+    }
+
+    return header->size;
+}
+
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
