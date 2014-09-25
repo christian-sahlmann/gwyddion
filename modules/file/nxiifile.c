@@ -73,6 +73,7 @@ typedef struct {
      * and 100-byte comment and some 30-bytes FlattenType info. */
     guint scan_rate;
     guint cruise_time;
+    /* The last 15 bytes of this are the PAL data. */
     gchar unknown_3[119];
 } NXIIFile;
 
