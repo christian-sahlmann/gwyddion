@@ -1,7 +1,7 @@
 /*
  *  $Id$
  *  Copyright (C) 2014 Daniil Bratashov (dn2010).
- *  Data structures are copyright (c) 2011 Renishaw plc.
+ *  Data structures and constants are copyright (c) 2011 Renishaw plc.
  *
  *  E-mail: dn2010@gmail.com.
  *
@@ -26,7 +26,7 @@
  /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-renishaw-spm">
- *   <comment>Renishaw Wire Data File</comment>
+ *   <comment>Renishaw WiRE Data File</comment>
  *   <magic priority="80">
  *     <match type="string" offset="0" value="WDF1"/>
  *   </magic>
@@ -38,12 +38,12 @@
 /**
  * [FILE-MAGIC-FILEMAGIC]
  * # Renishaw
- * 0 string WDF1 Renishaw Wire Data File
+ * 0 string WDF1 Renishaw WiRE Data File
  **/
 
 /**
  * [FILE-MAGIC-USERGUIDE]
- * Renishaw Wire Data File
+ * Renishaw WiRE Data File
  * .wdf
  *
  **/
@@ -75,10 +75,55 @@ enum {
     WDF_BLOCK_HEADER_SIZE = 16
 };
 
+typedef enum {
+	WDF_BLOCKID_FILE           = 0x31464457UL, /* "WDF1" */
+	WDF_BLOCKID_DATA           = 0x41544144UL, /* "DATA" */
+	WDF_BLOCKID_YLIST          = 0x54534C59UL, /* "YLST" */ 
+	WDF_BLOCKID_XLIST          = 0x54534C58UL, /* "XLST" */
+	WDF_BLOCKID_ORIGIN         = 0x4E47524FUL, /* "ORGN" */
+	WDF_BLOCKID_COMMENT        = 0x54584554UL, /* "TEXT" */
+	WDF_BLOCKID_WIREDATA       = 0x41445857UL, /* "WXDA" */
+	WDF_BLOCKID_DATASETDATA    = 0x42445857UL, /* "WXDB" */
+	WDF_BLOCKID_MEASUREMENT    = 0x4d445857UL, /* "WXDM" */
+	WDF_BLOCKID_CALIBRATION    = 0x53435857UL, /* "WXCS" */
+	WDF_BLOCKID_INSTRUMENT     = 0x53495857UL, /* "WXIS" */
+	WDF_BLOCKID_MAPAREA        = 0x50414D57UL, /* "WMAP" */
+	WDF_BLOCKID_WHITELIGHT     = 0x4C544857UL, /* "WHTL" */
+	WDF_BLOCKID_THUMBNAIL      = 0x4C49414EUL, /* "NAIL" */
+	WDF_BLOCKID_MAP            = 0x2050414DUL, /* "MAP " */
+	WDF_BLOCKID_CURVEFIT       = 0x52414643UL, /* "CFAR" */
+	WDF_BLOCKID_COMPONENT      = 0x534C4344UL, /* "DCLS" */
+	WDF_BLOCKID_PCA            = 0x52414350UL, /* "PCAR" */
+	WDF_BLOCKID_EM             = 0x4552434DUL, /* "MCRE" */
+	WDF_BLOCKID_ZELDAC         = 0x43444C5AUL, /* "ZLDC" */
+	WDF_BLOCKID_RESPONSECAL    = 0x4C414352UL, /* "RCAL" */
+	WDF_BLOCKID_CAP            = 0x20504143UL, /* "CAP " */
+	WDF_BLOCKID_PROCESSING     = 0x50524157UL, /* "WARP" */
+	WDF_BLOCKID_ANALYSIS       = 0x41524157UL, /* "WARA" */
+	WDF_BLOCKID_SPECTRUMLABELS = 0x4C424C57UL, /* "WLBL" */
+	WDF_BLOCKID_CHECKSUM       = 0x4B484357UL, /* "WCHK" */
+	WDF_BLOCKID_RXCALDATA      = 0x44435852UL, /* "RXCD" */
+	WDF_BLOCKID_RXCALFIT       = 0x46435852UL, /* "RXCF" */
+	WDF_BLOCKID_XCAL           = 0x4C414358UL, /* "XCAL" */
+	WDF_BLOCKID_SPECSEARCH     = 0x48435253UL, /* "SRCH" */
+	WDF_BLOCKID_TEMPPROFILE    = 0x504D4554UL, /* "TEMP" */
+	WDF_BLOCKID_UNITCONVERT    = 0x56434E55UL, /* "UNCV" */
+	WDF_BLOCKID_ARPLATE        = 0x52505241UL, /* "ARPR" */
+	WDF_BLOCKID_ELECSIGN       = 0x43454C45UL, /* "ELEC" */
+	WDF_BLOCKID_BKXLIST        = 0x4C584B42UL, /* "BKXL" */
+	WDF_BLOCKID_AUXILARYDATA   = 0x20585541UL, /* "AUX " */                 
+	WDF_BLOCKID_CHANGELOG      = 0x474C4843UL, /* "CHLG" */
+	WDF_BLOCKID_SURFACE        = 0x46525553UL, /* "SURF" */
+	WDF_BLOCKID_ANY            = 0xFFFFFFFFUL, 
+	                       /* reserved value for @ref Wdf_FindSection */ 
+	WDF_STREAM_IS_PSET         = 0x54455350UL /* "PSET" */
+} WdfBlockIDs;
+
 typedef struct {
     guint32 id;
     guint32 uid;
     guint64 size;
+    const guchar *data;
 } WdfBlock;
 
 typedef struct {
@@ -95,15 +140,17 @@ typedef struct {
     guint32 status;      /* file status word (error code) */
     guint32 npoints;     /* number of points per spectrum */
     guint64 nspectra;    /* number of actual spectra (capacity) */
-    guint64 ncollected;  /* number of spectra written into the file (count) */
+    guint64 ncollected;  /* number of spectra written into the file */
     guint32 naccum;      /* number of accumulations per spectrum */
-    guint32 ylistcount;  /* number of elements in the y-list (>1 for image) */
+    guint32 ylistcount;  /* number of elements in the y-list 
+													   (>1 for image) */
     guint32 xlistcount;  /* number of elements for the x-list */
     guint32 origincount; /* number of data origin lists */
-    gchar   appname[24];   /* application name (utf-8 encoded) */
-    guint16 appversion[4]; /* application version (major,minor,patch,build) */
-    guint32 scantype;    /* scan type - WdfScanType enum  */
-    guint32 type;        /* measurement type - WdfType enum  */
+    gchar   appname[24]; /* application name (utf-8) */
+    guint16 appversion[4]; /* application version 
+										 (major, minor, patch, build) */
+    guint32 scantype;    /* scan type - WdfScanType */
+    guint32 type;        /* measurement type - WdfType */
     guint64 time_start;  /* collection start time as FILETIME */
     guint64 time_end;    /* collection end time as FILETIME */
     guint32 units;       /* spectral data units (one of WdfDataUnits) */
@@ -185,6 +232,7 @@ wdf_load(const gchar *filename,
 
     GwyBrick *brick;
     GwyDataField *dfield;
+    GwyDataLine *cal;
     gdouble *data;
     WdfHeader fileheader;
     WdfBlock block;
@@ -211,7 +259,18 @@ wdf_load(const gchar *filename,
     while (size > 0) {
         if ((len = wdf_read_block_header(p, size, &block, error)) == 0)
             goto fail;
-
+		
+		if (block.id == WDF_BLOCKID_ORIGIN) {
+			gwy_debug("ORGN offset = %" G_GUINT64_FORMAT " size=%" G_GUINT64_FORMAT "",
+			          ((guint64)p - (guint64)buffer), block.size);
+			
+		}
+		else if (block.id == WDF_BLOCKID_WHITELIGHT) {
+			gwy_debug("WL offset = %" G_GUINT64_FORMAT " size=%" G_GUINT64_FORMAT "",
+			          ((guint64)p - (guint64)buffer), block.size);
+			
+		}
+				
         p += len;
         size -= len;
     }
@@ -228,6 +287,17 @@ wdf_load(const gchar *filename,
                 *(data + k * xres * yres + i + j * xres)
                                        = (gdouble)gwy_get_gfloat_le(&p);
             }
+
+    p = buffer + 87696580;
+
+    cal = gwy_data_line_new(zres, zres, FALSE);
+    data = gwy_data_line_get_data(cal);
+    for (k = 0; k < zres; k++) {
+        *(data++) = (gdouble)gwy_get_gfloat_le(&p);;
+    }
+    // gwy_data_line_set_si_unit_y(cal, mdafile->siunitz);
+    gwy_brick_set_zcalibration(brick, cal);
+    g_object_unref(cal);
 
     container = gwy_container_new();
 
@@ -336,11 +406,11 @@ wdf_read_block_header(const guchar *buffer,
                     _("Block header is truncated"));
         return 0;
     }
-
+	
     header->id   = gwy_get_guint32_le(&buffer);
     header->uid  = gwy_get_guint32_le(&buffer);
     header->size = gwy_get_guint64_le(&buffer);
-    gwy_debug("Block id=%d uid=%d size=%" G_GUINT64_FORMAT "",
+    gwy_debug("Block id=%X uid=%d size=%" G_GUINT64_FORMAT "",
               header->id,
               header->uid,
               header->size);
@@ -351,6 +421,8 @@ wdf_read_block_header(const guchar *buffer,
                     _("Data block is truncated"));
         return 0;
     }
+    
+	header->data = buffer;
 
     return header->size;
 }
