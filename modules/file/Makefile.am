@@ -129,6 +129,7 @@ file_LTLIBRARIES = \
 	netcdf.la \
 	nrrdfile.la \
 	nt-mdt.la \
+	nxiifile.la \
 	oldmda.la \
 	ols.la \
 	ometiff.la \
@@ -263,6 +264,7 @@ nanotop_la_SOURCES       = nanotop.c
 netcdf_la_SOURCES        = netcdf.c
 nrrdfile_la_SOURCES      = nrrdfile.c
 nt_mdt_la_SOURCES        = nt-mdt.c
+nxiifile_la_SOURCES      = nxiifile.c
 oldmda_la_SOURCES        = oldmda.c
 ols_la_SOURCES           = ols.c gwytiff.h
 ometiff_la_SOURCES       = ometiff.c
