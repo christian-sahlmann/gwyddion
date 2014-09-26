@@ -10,7 +10,10 @@ Modules:
 - Image export (new): Replaces image rendering in the pixmap module; can
   export to vector graphics formats: PDF, EPS and SVG.  The corresponding
   file types are called ‘pdfcairo’, ‘pngcairo’, etc.
+- NX II (new): Imports EMSYS NX II AFM files.
 - Pixmap: Only used for image import; image rendering functions were removed.
+- Statistical quantity: Crash in saving the statistics was fixed (introduced
+  in 2.38).
 
 
 2.38 (2014-09-18)
