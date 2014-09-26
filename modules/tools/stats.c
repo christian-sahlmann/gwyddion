@@ -184,7 +184,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Statistics tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.14",
+    "2.15",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -1096,7 +1096,7 @@ gwy_tool_stats_create_report(gpointer user_data,
     area = report_data->same_units ? fmt_val(area) : g_strdup(_("N.A."));
     projarea = fmt_val(projarea);
 
-    vf = gwy_si_unit_get_format_with_digits(siunitarea,
+    vf = gwy_si_unit_get_format_with_digits(siunitvar,
                                             GWY_SI_UNIT_FORMAT_PLAIN,
                                             report_data->results.var, 3, vf);
     var = fmt_val(var);
