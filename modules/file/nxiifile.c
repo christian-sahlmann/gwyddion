@@ -35,6 +35,7 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
+#include <libprocess/stats.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwyapp.h>
 #include <app/gwymoduleutils-file.h>
@@ -50,6 +51,10 @@ enum {
     BMP_HEADER_SIZE = 54,
     HEADER_SIZE = 243
 };
+
+typedef struct {
+    guint r, g, b;
+} NXIIPalItem;
 
 /* I have got some header field documentation but their physical order in the
  * file is not clear. */
@@ -73,8 +78,8 @@ typedef struct {
      * and 100-byte comment and some 30-bytes FlattenType info. */
     guint scan_rate;
     guint cruise_time;
-    /* The last 15 bytes of this are the PAL data. */
-    gchar unknown_3[119];
+    gchar unknown_3[104];
+    NXIIPalItem pal[5];
 } NXIIFile;
 
 static gboolean      module_register (void);
@@ -83,6 +88,7 @@ static gint          nxii_detect     (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* nxii_load       (const gchar *filename,
                                       GwyRunType mode,
                                       GError **error);
+static GwyContainer* get_meta        (NXIIFile *nxiifile);
 static gboolean      read_nxii_header(const guchar *p,
                                       NXIIFile *nxiifile,
                                       GError **error);
@@ -149,11 +155,13 @@ nxii_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
          GError **error)
 {
-    GwyContainer *container = NULL;
+    GwyContainer *container = NULL, *meta = NULL;
     guchar *buffer = NULL;
     const guchar *p;
+    char *s;
     NXIIFile nxiifile;
     guint xres, yres, bmpfilesize, expected_size;
+    gdouble min, max;
     gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield;
@@ -184,20 +192,32 @@ nxii_load(const gchar *filename,
     dfield = gwy_data_field_new(nxiifile.xres, nxiifile.yres,
                                 nxiifile.xreal*Micron, nxiifile.yreal*Micron,
                                 FALSE);
+    gwy_data_field_set_xoffset(dfield, nxiifile.xoff*Micron);
+    gwy_data_field_set_yoffset(dfield, nxiifile.yoff*Micron);
     gwy_convert_raw_data(buffer + bmpfilesize + HEADER_SIZE,
                          nxiifile.xres*nxiifile.yres, 1,
                          GWY_RAW_DATA_UINT16, GWY_BYTE_ORDER_LITTLE_ENDIAN,
-                         gwy_data_field_get_data(dfield),
-                         nxiifile.zreal*1e-9, 0.0);
+                         gwy_data_field_get_data(dfield), 1.0, 0.0);
+    gwy_data_field_get_min_max(dfield, &min, &max);
+    if (min >= max)
+        gwy_data_field_clear(dfield);
+    else
+        gwy_data_field_multiply(dfield, nxiifile.zreal*Micron/(max - min));
 
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), "m");
 
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
-    gwy_container_set_string_by_name(container, "/0/data/title",
-                                     g_strdup("Topography"));
     g_object_unref(dfield);
+
+    s = g_strndup(nxiifile.head_mode, 6);
+    g_strstrip(s);
+    gwy_container_set_string_by_name(container, "/0/data/title", s);
+
+    meta = get_meta(&nxiifile);
+    gwy_container_set_object_by_name(container, "/0/meta", meta);
+    g_object_unref(meta);
 
     gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
@@ -207,10 +227,55 @@ fail:
     return container;
 }
 
+#define add_meta_str(name, field) \
+    gwy_container_set_string_by_name(meta, name, \
+                                     g_strstrip(g_strndup(nxiifile->field, \
+                                                          sizeof(nxiifile->field))))
+
+#define add_meta_uint(name, field) \
+    gwy_container_set_string_by_name(meta, name, \
+                                     g_strdup_printf("%u", nxiifile->field))
+
+static GwyContainer*
+get_meta(NXIIFile *nxiifile)
+{
+    GwyContainer *meta = gwy_container_new();
+    guint i;
+
+    add_meta_str("Version", file_version);
+    add_meta_str("Head mode", head_mode);
+    add_meta_uint("Year", year);
+    add_meta_uint("Month", month);
+    add_meta_uint("Day", day);
+    add_meta_uint("Hour", hour);
+    add_meta_uint("Minute", minute);
+    add_meta_uint("Scan rate", scan_rate);
+    add_meta_uint("Cruise time", cruise_time);
+    for (i = 0; i < G_N_ELEMENTS(nxiifile->pal); i++) {
+        gchar name[12];
+
+        g_snprintf(name, sizeof(name), "Pal %u R", i);
+        gwy_container_set_string_by_name(meta, name,
+                                         g_strdup_printf("%u",
+                                                         nxiifile->pal[i].r));
+        g_snprintf(name, sizeof(name), "Pal %u G", i);
+        gwy_container_set_string_by_name(meta, name,
+                                         g_strdup_printf("%u",
+                                                         nxiifile->pal[i].g));
+        g_snprintf(name, sizeof(name), "Pal %u B", i);
+        gwy_container_set_string_by_name(meta, name,
+                                         g_strdup_printf("%u",
+                                                         nxiifile->pal[i].b));
+    }
+
+    return meta;
+}
+
 static gboolean
 read_nxii_header(const guchar *p, NXIIFile *nxiifile, GError **error)
 {
     const guchar *q = p;
+    guint i;
 
     get_CHARARRAY(nxiifile->file_version, &p);
     gwy_debug("version %.10s", nxiifile->file_version);
@@ -225,7 +290,7 @@ read_nxii_header(const guchar *p, NXIIFile *nxiifile, GError **error)
               nxiifile->year, nxiifile->month, nxiifile->day,
               nxiifile->hour, nxiifile->minute);
     get_CHARARRAY(nxiifile->head_mode, &p);
-    gwy_debug("head mode %.5s", nxiifile->head_mode);
+    gwy_debug("head mode %.6s", nxiifile->head_mode);
     get_CHARARRAY(nxiifile->unknown_2, &p);
     nxiifile->xres = gwy_get_guint16_le(&p);
     nxiifile->yres = gwy_get_guint16_le(&p);
@@ -257,9 +322,14 @@ read_nxii_header(const guchar *p, NXIIFile *nxiifile, GError **error)
     gwy_debug("yreal %g, yoff %g", nxiifile->yreal, nxiifile->yoff);
     gwy_debug("zreal %g", nxiifile->zreal);
     nxiifile->scan_rate = gwy_get_guint16_le(&p);
-    /* For some reason, the software says 150 when we read 300 here. */
     nxiifile->cruise_time = gwy_get_guint16_le(&p);
+
     get_CHARARRAY(nxiifile->unknown_3, &p);
+    for (i = 0; i < G_N_ELEMENTS(nxiifile->pal); i++) {
+        nxiifile->pal[i].r = *(p++);
+        nxiifile->pal[i].g = *(p++);
+        nxiifile->pal[i].b = *(p++);
+    }
 
     g_assert(p - q == HEADER_SIZE);
     return TRUE;
