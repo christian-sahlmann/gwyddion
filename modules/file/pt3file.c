@@ -914,7 +914,7 @@ pt3file_extract_decay(const PicoHarpFile *pt3file,
 
 #define add_meta_uint(name, field) \
     gwy_container_set_string_by_name(meta, name, \
-                                     g_strdup_printf("%u", pt3file->field)) \
+                                     g_strdup_printf("%u", pt3file->field))
 
 static GwyContainer*
 pt3file_get_metadata(PicoHarpFile *pt3file)
