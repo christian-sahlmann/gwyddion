@@ -689,7 +689,7 @@ read_binary_ubedata(gint n,
 
     gwy_convert_raw_data(buffer, n, 1,
                          rawtypes[bpp], GWY_BYTE_ORDER_BIG_ENDIAN,
-                         data, 1.0/(1 << (8*bpp)), 0.0);
+                         data, pow(1.0/256.0, bpp), 0.0);
     return TRUE;
 }
 

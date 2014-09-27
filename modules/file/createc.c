@@ -132,7 +132,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Createc data files."),
     "Rok Zitko <rok.zitko@ijs.si>",
-    "1.1",
+    "1.2",
     "Rok Zitko, David Nečas (Yeti)",
     "2004",
 };
@@ -731,33 +731,16 @@ read_binary_data(gint n,
                  const gchar *buffer,
                  gint bpp)
 {
-    gint i;
-    gdouble q;
-
-    q = 1.0/(1 << (8*bpp));
-    switch (bpp) {
-        case 2:
-        {
-            const gint16 *p = (const gint16*)buffer;
-
-            for (i = 0; i < n; i++)
-                data[i] = q*GINT16_FROM_LE(p[i]);
-        }
-        break;
-
-        case 4:
-        {
-            const guchar *p = (const guchar*)buffer;
-
-            for (i = 0; i < n; i++)
-                data[i] = gwy_get_gfloat_le(&p);
-        }
-
-        break;
-
-        default:
+    if (bpp == 2)
+        gwy_convert_raw_data(buffer, n, 1,
+                             GWY_RAW_DATA_SINT16, GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                             data, pow(1.0/256.0, bpp), 0.0);
+    else if (bpp == 4)
+        gwy_convert_raw_data(buffer, n, 1,
+                             GWY_RAW_DATA_FLOAT, GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                             data, 1.0, 0.0);
+    else {
         g_return_if_reached();
-        break;
     }
 }
 

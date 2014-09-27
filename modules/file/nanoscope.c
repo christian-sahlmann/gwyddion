@@ -821,7 +821,7 @@ hash_to_brick(GHashTable *hash,
 
     //gwy_debug("brick size expected to be %dx%dx%d (two bricks loaded), data length %d, expected %d", xres, yres, zres, length, xres*yres*zres*bpp*2);
 
-    q = 1.0/(1 << (8*bpp));
+    q = pow(1.0/256.0, bpp);
     d = (gint16*)(buffer + offset);
 
     storage = (gdouble*) malloc((xres*yres*zres*2 + 100) * sizeof(gdouble));
@@ -1422,7 +1422,7 @@ read_text_data(guint n, gdouble *data,
     gchar *end;
     long l, min, max;
 
-    q = 1.0/(1 << (8*bpp));
+    q = pow(1.0/256.0, bpp);
     min = 10000000;
     max = -10000000;
     for (i = 0; i < n; i++) {
@@ -1459,7 +1459,7 @@ read_binary_data(gint n, gdouble *data,
     }
     gwy_convert_raw_data(buffer, n, 1,
                          rawtypes[bpp], GWY_BYTE_ORDER_LITTLE_ENDIAN,
-                         data, 1.0/(1 << (8*bpp)), 0.0);
+                         data, pow(1.0/256.0, bpp), 0.0);
     return TRUE;
 }
 

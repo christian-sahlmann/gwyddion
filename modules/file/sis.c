@@ -587,17 +587,21 @@ extract_data(SISFile *sisfile,
              guint im,
              GError **error)
 {
+    static const GwyRawDataType rawtypes[] = {
+        0, GWY_RAW_DATA_UINT8, GWY_RAW_DATA_UINT16, 0, GWY_RAW_DATA_UINT32,
+    };
+
     GwyDataField *dfield;
     GwySIUnit *siunit;
     SISChannel *channel;
     SISImage *image;
     gdouble xreal, yreal, zreal;
     gdouble *d;
-    guint n, i;
+    guint n;
 
     channel = sisfile->channels + ch;
     image = channel->images + im;
-    if (image->bpp != 1 && image->bpp != 2 && image->bpp != 4) {
+    if (image->bpp >= G_N_ELEMENTS(rawtypes) || !rawtypes[image->bpp]) {
         err_BPP(error, image->bpp);
         return NULL;
     }
@@ -627,34 +631,9 @@ extract_data(SISFile *sisfile,
 
     d = gwy_data_field_get_data(dfield);
     n = image->width * image->height;
-    switch (image->bpp) {
-        case 1:
-        for (i = 0; i < n; i++)
-            d[i] = image->image_data[i]*zreal/255.0;
-        break;
-
-        case 2:
-        {
-            const guint16 *d16 = (const guint16*)image->image_data;
-
-            for (i = 0; i < n; i++)
-                d[i] = GUINT16_FROM_LE(d16[i])*zreal/65535.0;
-        }
-        break;
-
-        case 4:
-        {
-            const guint32 *d32 = (const guint32*)image->image_data;
-
-            for (i = 0; i < n; i++)
-                d[i] = GUINT32_FROM_LE(d32[i])*zreal/4294967296.0;
-        }
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
+    gwy_convert_raw_data(image->image_data, n, 1,
+                         rawtypes[image->bpp], GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                         d, zreal/(pow(256.0, image->bpp) - 1.0), 0.0);
 
     siunit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, siunit);
