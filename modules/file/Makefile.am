@@ -91,6 +91,7 @@ file_LTLIBRARIES = \
 	ecsfile.la \
 	ezdfile.la \
 	$(fitsfile_module) \
+	femtoscan.la \
 	femtoscan-txt.la \
 	gdeffile.la \
 	gsffile.la \
@@ -229,6 +230,7 @@ dm3file_la_SOURCES       = dm3file.c
 dumbfile_la_SOURCES      = dumbfile.c
 ecsfile_la_SOURCES       = ecsfile.c
 ezdfile_la_SOURCES       = ezdfile.c
+femtoscan_la_SOURCES     = femtoscan.c
 femtoscan_txt_la_SOURCES = femtoscan-txt.c
 gdeffile_la_SOURCES      = gdeffile.c
 gsffile_la_SOURCES       = gsffile.c
