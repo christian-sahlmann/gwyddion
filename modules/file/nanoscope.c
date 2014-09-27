@@ -201,7 +201,7 @@ static GwyModuleInfo module_info = {
     N_("Imports Veeco (Digital Instruments) Nanoscope data files, "
        "version 3 or newer."),
     "Yeti <yeti@gwyddion.net>",
-    "0.31",
+    "0.32",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1443,49 +1443,23 @@ read_text_data(guint n, gdouble *data,
     return TRUE;
 }
 
-/* FIXME: We hope Nanoscope files always use little endian, because we only
- * have seen them on Intel. */
 static gboolean
 read_binary_data(gint n, gdouble *data,
                  gchar *buffer,
                  gint bpp,
                  GError **error)
 {
-    gint i;
-    gdouble q;
+    static const GwyRawDataType rawtypes[] = {
+        0, GWY_RAW_DATA_SINT8, GWY_RAW_DATA_SINT16, 0, GWY_RAW_DATA_SINT32,
+    };
 
-    q = 1.0/(1 << (8*bpp));
-    switch (bpp) {
-        case 1:
-        for (i = 0; i < n; i++)
-            data[i] = q*buffer[i];
-        break;
-
-        case 2:
-        {
-            gint16 *p = (gint16*)buffer;
-
-            for (i = 0; i < n; i++)
-                data[i] = q*GINT16_FROM_LE(p[i]);
-        }
-        break;
-
-        case 4:
-        {
-            gint32 *p = (gint32*)buffer;
-
-            for (i = 0; i < n; i++)
-                data[i] = q*GINT32_FROM_LE(p[i]);
-
-        }
-        break;
-
-        default:
+    if (bpp >= G_N_ELEMENTS(rawtypes) || !rawtypes[bpp]) {
         err_BPP(error, bpp);
         return FALSE;
-        break;
     }
-
+    gwy_convert_raw_data(buffer, n, 1,
+                         rawtypes[bpp], GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                         data, 1.0/(1 << (8*bpp)), 0.0);
     return TRUE;
 }
 

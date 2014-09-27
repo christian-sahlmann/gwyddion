@@ -231,7 +231,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Omicron STMPRG data files (tp ta)."),
     "Rok Zitko <rok.zitko@ijs.si>, Yeti <yeti@gwyddion.net>",
-    "0.11",
+    "0.12",
     "Rok Zitko & David Nečas (Yeti)",
     "2004",
 };
@@ -680,39 +680,16 @@ read_binary_ubedata(gint n,
                     const guchar *buffer,
                     gint bpp)
 {
-    gint i;
-    gdouble q;
+    static const GwyRawDataType rawtypes[] = {
+        0, GWY_RAW_DATA_UINT8, GWY_RAW_DATA_UINT16, 0, GWY_RAW_DATA_UINT32,
+    };
 
-    q = 1.0/(1 << (8 * bpp));
-    switch (bpp) {
-        case 1:
-            for (i = 0; i < n; i++)
-                data[i] = q * buffer[i];
-            break;
-
-        case 2: {
-            guint16 *p = (guint16 *) buffer;
-
-            for (i = 0; i < n; i++) {
-                data[i] = q * GUINT16_FROM_BE(p[i]);
-            }
-        }
-        break;
-
-        case 4: {
-            guint32 *p = (guint32 *)buffer;
-
-            for (i = 0; i < n; i++) {
-                data[i] = q * GUINT32_FROM_BE(p[i]);
-            }
-        }
-        break;
-
-        default:
+    if (bpp >= G_N_ELEMENTS(rawtypes) || !rawtypes[bpp])
         return FALSE;
-        break;
-    }
 
+    gwy_convert_raw_data(buffer, n, 1,
+                         rawtypes[bpp], GWY_BYTE_ORDER_BIG_ENDIAN,
+                         data, 1.0/(1 << (8*bpp)), 0.0);
     return TRUE;
 }
 
