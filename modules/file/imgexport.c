@@ -87,6 +87,14 @@ typedef enum {
     IMGEXPORT_MODE_GREY16,
 } ImgExportMode;
 
+/* This is what we get from Cairo so for vector we don't really have any
+ * other options.  For pixmaps, we could render them ourselves or using
+ * GdkPixbuf. */
+typedef enum {
+    IMGEXPORT_INTERPOLATION_PIXELATE,
+    IMGEXPORT_INTERPOLATION_LINEAR,
+} ImgExportInterpolation;
+
 /* What is present on the exported image
  * XXX: Makes no sense */
 typedef enum {
@@ -152,7 +160,9 @@ typedef struct {
     const struct _ImgExportFormat *format;
     GwyDataView *data_view;
     GwyDataField *dfield;
+    GwyDataField *mask;
     GwyContainer *data;
+    GwyRGBA mask_colour;
     gint id;
     guint xres;
     guint yres;
@@ -185,6 +195,7 @@ typedef struct {
     gdouble height;
     gdouble lw;
     gdouble borderw;
+    ImgExportInterpolation interpolation;
 } ImgExportArgs;
 
 typedef struct {
@@ -362,6 +373,7 @@ static const ImgExportArgs img_export_defaults = {
     /* New args */
     100.0, 100.0,
     1.0, 0.0,
+    IMGEXPORT_INTERPOLATION_LINEAR,
 };
 
 static GwyModuleInfo module_info = {
@@ -837,9 +849,11 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
      * to the axis label. */
     format_layout(layout, &logical1, s, "%.*f %s",
                   vf->precision, max, vf->units);
-    gwy_debug("max '%s'", s->str);
+    gwy_debug("max '%s' (%g x %g)",
+              s->str, logical1.width/pangoscale, logical1.height/pangoscale);
     format_layout(layout, &logical2, s, "%.*f", vf->precision, min);
-    gwy_debug("min '%s'", s->str);
+    gwy_debug("min '%s' (%g x %g)",
+              s->str, logical2.width/pangoscale, logical2.height/pangoscale);
 
     width = MAX(logical1.width/pangoscale, logical2.width/pangoscale);
     sizes->fmruler_label_width = width + TICK_LENGTH + args->lw;
@@ -939,6 +953,8 @@ calculate_sizes(const ImgExportArgs *args,
     surface = create_surface(args, name, NULL, 0.0, 0.0);
     g_return_val_if_fail(surface, NULL);
     cr = cairo_create(surface);
+    /* XXX: Really want to do this for both pixmap and vector? */
+    cairo_scale(cr, args->zoom, args->zoom);
     layout = create_layout(args->font, args->font_size, cr);
 
     /* Data */
@@ -957,6 +973,17 @@ calculate_sizes(const ImgExportArgs *args,
     rect_move(&sizes->hruler, sizes->vruler.w, 0.0);
     rect_move(&sizes->vruler, 0.0, sizes->hruler.h);
     rect_move(&sizes->image, sizes->vruler.w, sizes->hruler.h);
+
+    /* Ensure the image starts at integer coordinates in pixmas */
+    if (cairo_surface_get_type(surface) == CAIRO_SURFACE_TYPE_IMAGE) {
+        gdouble xmove = ceil(sizes->image.x + lw) - (sizes->image.x + lw);
+        gdouble ymove = ceil(sizes->image.y + lw) - (sizes->image.y + lw);
+
+        gwy_debug("moving image by (%g,%g) to integer coordinates", xmove, ymove);
+        rect_move(&sizes->image, xmove, ymove);
+        rect_move(&sizes->hruler, xmove, ymove);
+        rect_move(&sizes->vruler, xmove, ymove);
+    }
 
     /* Inset scale bar */
     measure_inset(args, sizes, layout, s);
@@ -1027,30 +1054,122 @@ destroy_sizes(ImgExportSizes *sizes)
     g_free(sizes);
 }
 
+static cairo_surface_t*
+draw_mask_surface(const ImgExportArgs *args)
+{
+    GwyDataField *mask = args->env->mask;
+    cairo_surface_t *surface;
+    guint xres, yres, stride, i, j, x8, b;
+    const gdouble *mdata, *mrow;
+    guchar *data, *row;
+
+    g_return_val_if_fail(mask, NULL);
+    xres = gwy_data_field_get_xres(mask);
+    yres = gwy_data_field_get_xres(mask);
+    surface = cairo_image_surface_create(CAIRO_FORMAT_A1, xres, yres);
+    data = cairo_image_surface_get_data(surface);
+    stride = cairo_image_surface_get_stride(surface);
+    gwy_clear(data, yres*stride);
+    mdata = gwy_data_field_get_data_const(mask);
+    for (i = 0; i < yres; i++) {
+        mrow = mdata + i*xres;
+        row = data + i*stride;
+        x8 = 0;
+        if (G_BYTE_ORDER == G_LITTLE_ENDIAN) {
+            b = 1;
+            for (j = 0; j < xres; j++) {
+                if (mrow[j] >= 0.5)
+                    x8 |= b;
+                if ((j & 7) == 7) {
+                    row[j/8] = x8;
+                    x8 = 0;
+                    b = 1;
+                }
+                else {
+                    b <<= 1;
+                }
+            }
+        }
+        else {
+            b = 0x80;
+            for (j = 0; j < xres; j++) {
+                if (mrow[j] >= 0.5)
+                    x8 |= b;
+                if ((j & 7) == 7) {
+                    row[j/8] = x8;
+                    x8 = 0;
+                    b = 0x80;
+                }
+                else {
+                    b >>= 1;
+                }
+            }
+        }
+        if (x8)
+            row[j/8] = x8;
+    }
+
+    cairo_surface_mark_dirty(surface);
+
+    return surface;
+}
+
 static void
 draw_data(const ImgExportArgs *args,
           const ImgExportSizes *sizes,
           cairo_t *cr)
 {
     const ImgExportRect *rect = &sizes->image;
+    ImgExportEnv *env = args->env;
+    cairo_surface_t *mask_surface;
     GdkPixbuf *pixbuf;
     gdouble lw = args->lw;
     gdouble w, h;
 
-    pixbuf = gwy_data_view_export_pixbuf(args->env->data_view, 1.0,
-                                         args->draw_mask, args->draw_selection);
-    w = rect->w - 2.0*lw;
-    h = rect->h - 2.0*lw;
+    /* Mask must be drawn pixelated so we can only draw data and mask together
+     * when data is also pixelated or we are not drawing any mask. */
+    if (args->interpolation == IMGEXPORT_INTERPOLATION_PIXELATE
+        || !args->draw_mask || !env->mask) {
+        pixbuf = gwy_data_view_export_pixbuf(env->data_view, 1.0,
+                                             args->draw_mask, FALSE);
+        w = rect->w - 2.0*lw;
+        h = rect->h - 2.0*lw;
 
-    cairo_save(cr);
-    cairo_translate(cr, rect->x + lw, rect->y + lw);
-    gdk_cairo_set_source_pixbuf(cr, pixbuf, 0.0, 0.0);
-    /* Pixelated zoom, this is what we usually want for data.  But we can
-     * make it configurable for data.  Mask must be drawn pixelated! */
-    cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_NEAREST);
-    cairo_paint(cr);
-    cairo_restore(cr);
-    g_object_unref(pixbuf);
+        cairo_save(cr);
+        cairo_translate(cr, rect->x + lw, rect->y + lw);
+        gdk_cairo_set_source_pixbuf(cr, pixbuf, 0.0, 0.0);
+        cairo_pattern_set_filter(cairo_get_source(cr), args->interpolation);
+        cairo_paint(cr);
+        cairo_restore(cr);
+        g_object_unref(pixbuf);
+    }
+    else {
+        pixbuf = gwy_data_view_export_pixbuf(env->data_view, 1.0,
+                                             FALSE, FALSE);
+        w = rect->w - 2.0*lw;
+        h = rect->h - 2.0*lw;
+
+        cairo_save(cr);
+        cairo_translate(cr, rect->x + lw, rect->y + lw);
+        gdk_cairo_set_source_pixbuf(cr, pixbuf, 0.0, 0.0);
+        cairo_pattern_set_filter(cairo_get_source(cr), args->interpolation);
+        cairo_paint(cr);
+        cairo_restore(cr);
+        g_object_unref(pixbuf);
+
+        cairo_save(cr);
+        cairo_translate(cr, rect->x + lw, rect->y + lw);
+        mask_surface = draw_mask_surface(args);
+        cairo_set_source_rgba(cr,
+                              env->mask_colour.r,
+                              env->mask_colour.g,
+                              env->mask_colour.b,
+                              env->mask_colour.a);
+        cairo_mask_surface(cr, mask_surface, 0.0, 0.0);
+        cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_NEAREST);
+        cairo_restore(cr);
+        cairo_surface_destroy(mask_surface);
+    }
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
@@ -1322,10 +1441,14 @@ draw_fmruler(const ImgExportArgs *args,
     cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
     format_layout(layout, &logical, s, "%.*f %s",
                   vf->precision, sizes->fm_max, vf->units);
+    gwy_debug("max '%s' (%g x %g)",
+              s->str, logical.width/pangoscale, logical.height/pangoscale);
     cairo_move_to(cr, TICK_LENGTH + lw, lw);
     pango_cairo_show_layout(cr, layout);
     format_layout(layout, &logical, s, "%.*f",
                   vf->precision, sizes->fm_min);
+    gwy_debug("min '%s' (%g x %g)",
+              s->str, logical.width/pangoscale, logical.height/pangoscale);
     cairo_move_to(cr,
                   TICK_LENGTH + lw, rect->h - lw - logical.height/pangoscale);
     pango_cairo_show_layout(cr, layout);
@@ -1747,6 +1870,7 @@ img_export_export(GwyContainer *data,
     gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &env.data_view,
                                      GWY_APP_DATA_FIELD, &env.dfield,
                                      GWY_APP_DATA_FIELD_ID, &env.id,
+                                     GWY_APP_MASK_FIELD, &env.mask,
                                      0);
     if (!env.data_view) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,
@@ -1758,6 +1882,12 @@ img_export_export(GwyContainer *data,
     key = gwy_data_view_get_data_prefix(env.data_view);
     s = g_strconcat(key, "/realsquare", NULL);
     gwy_container_gis_boolean_by_name(data, s, &env.realsquare);
+    g_free(s);
+
+    s = g_strdup_printf("/%d/mask", env.id);
+    if (!gwy_rgba_get_from_container(&env.mask_colour, data, s))
+        gwy_rgba_get_from_container(&env.mask_colour, gwy_app_settings_get(),
+                                    "/mask");
     g_free(s);
 
     /* Find out native pixel sizes for the data bitmaps. */
