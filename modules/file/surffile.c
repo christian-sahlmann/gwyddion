@@ -291,7 +291,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Surf data files."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "0.10",
+    "0.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -550,7 +550,6 @@ fill_data_fields(SurfFile *surffile,
                  GError **error)
 {
     gdouble *data;
-    guint i, j;
 
     surffile->dfield = gwy_data_field_new(surffile->xres,
                                           surffile->yres,
@@ -561,27 +560,15 @@ fill_data_fields(SurfFile *surffile,
     data = gwy_data_field_get_data(surffile->dfield);
     switch (surffile->pointsize) {
         case 16:
-        {
-            const gint16 *row, *d16 = (const gint16*)buffer;
-
-            for (i = 0; i < surffile->xres; i++) {
-                row = d16 + i*surffile->yres;
-                for (j = 0; j < surffile->yres; j++)
-                    *(data++) = GINT16_FROM_LE(row[j]) * surffile->dz;
-            }
-        }
+        gwy_convert_raw_data(buffer, surffile->xres*surffile->yres, 1,
+                             GWY_RAW_DATA_SINT16, GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                             data, surffile->dz, 0.0);
         break;
 
         case 32:
-        {
-            const gint32 *row, *d32 = (const gint32*)buffer;
-
-            for (i = 0; i < surffile->xres; i++) {
-                row = d32 + i*surffile->yres;
-                for (j = 0; j < surffile->yres; j++)
-                    *(data++) = GINT32_FROM_LE(row[j]) * surffile->dz;
-            }
-        }
+        gwy_convert_raw_data(buffer, surffile->xres*surffile->yres, 1,
+                             GWY_RAW_DATA_SINT32, GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                             data, surffile->dz, 0.0);
         break;
 
         default:
@@ -907,3 +894,5 @@ get_unit(char *unit,
     strncpy(unit, units[i], 16);
     *power = 12 - i * 3;
 }
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
