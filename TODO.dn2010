@@ -1,0 +1,23 @@
+The features I want to be implemented, WIP is for the parts that are
+developed just now: 
+- data loading from Renishaw WDF files (WIP).
+- more simple interface for volume data extraction. Implement missing
+  parts of volume infrastructure.
+- more work on volume clustering and preprocessing of volume data (WIP).
+- export of the whole project data file with some basic preprocessing,
+  i.e. we're saving zip archive with all datafield exported into png
+  with current image presets, all metadata and logs to textfiles
+  or something like image EXIF tags, graphs are stored both in pixmap
+  and text formats with current presets.
+- graph metadata.
+- RGB images as another basic datatype, support for it in 3D overlays
+  and presentations (somewhere in the far future of gwyddion4 era, we
+  need the plain list of all data without categories and single data
+  processing menu to add another datatypes).
+- graph filter module with all basic graph processing.
+- more deconvolution algorithms.
+- better image segmentation algorithms for the noisy data.
+- machine learning infrastructure for the above.
+- better jumping mode (QNM, Hybrid, ... in other implementations)
+  processing (currently I have no good examples of such file).
+- more work on image export, isolines support, better XY rulers, ...
