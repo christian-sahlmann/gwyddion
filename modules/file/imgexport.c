@@ -182,7 +182,7 @@ typedef struct {
     gboolean text_antialias;
     gchar *font;
     gdouble font_size;
-    gboolean scale_font;
+    gboolean scale_font;   /* FALSE = font size tied data pixels */
     gboolean inset_draw_ticks;
     gboolean inset_draw_label;
     gdouble fmscale_gap;
@@ -193,7 +193,7 @@ typedef struct {
     /* New args */
     gdouble width;
     gdouble height;
-    gdouble lw;
+    gdouble line_width;
     gdouble borderw;
     ImgExportInterpolation interpolation;
 } ImgExportArgs;
@@ -210,11 +210,16 @@ typedef struct {
     GtkObject *zoom;
     GtkObject *width;
     GtkObject *height;
+    GtkWidget *font;
+    GtkObject *font_size;
+    GtkObject *line_width;
+    GtkWidget *scale_font;
 
     GtkWidget *table_lateral;
 
     GtkWidget *table_value;
 
+    gulong sid;
     gboolean in_update;
 } ImgExportControls;
 
@@ -856,7 +861,7 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
               s->str, logical2.width/pangoscale, logical2.height/pangoscale);
 
     width = MAX(logical1.width/pangoscale, logical2.width/pangoscale);
-    sizes->fmruler_label_width = width + TICK_LENGTH + args->lw;
+    sizes->fmruler_label_width = width + TICK_LENGTH + args->line_width;
     height = MAX(logical1.height/pangoscale, logical2.height/pangoscale);
     sizes->fmruler_label_height = height;
     gwy_debug("label width %g, height %g", width, height);
@@ -898,7 +903,7 @@ measure_inset(const ImgExportArgs *args, ImgExportSizes *sizes,
     gdouble real = gwy_data_field_get_xreal(dfield);
     PangoRectangle logical;
     InsetPosType pos = args->inset_pos;
-    gdouble lw = args->lw;
+    gdouble lw = args->line_width;
 
     sizes->inset_length = inset_length_ok(dfield, args->inset_length);
     if (!(sizes->inset_length > 0.0))
@@ -907,7 +912,7 @@ measure_inset(const ImgExportArgs *args, ImgExportSizes *sizes,
     rect->w = sizes->inset_length/real*(hsize - 2.0*lw);
     rect->h = lw;
     if (args->inset_draw_ticks)
-        rect->h += TICK_LENGTH;
+        rect->h += TICK_LENGTH + lw;
 
     if (args->inset_draw_label) {
         format_layout(layout, &logical, s, "%s", args->inset_length);
@@ -945,7 +950,7 @@ calculate_sizes(const ImgExportArgs *args,
     PangoLayout *layout;
     ImgExportSizes *sizes = g_new0(ImgExportSizes, 1);
     GString *s = g_string_new(NULL);
-    gdouble lw = args->lw;
+    gdouble lw = args->line_width;
     gdouble borderw = args->borderw;
     cairo_surface_t *surface;
     cairo_t *cr;
@@ -1123,7 +1128,7 @@ draw_data(const ImgExportArgs *args,
     ImgExportEnv *env = args->env;
     cairo_surface_t *mask_surface;
     GdkPixbuf *pixbuf;
-    gdouble lw = args->lw;
+    gdouble lw = args->line_width;
     gdouble w, h;
 
     /* Mask must be drawn pixelated so we can only draw data and mask together
@@ -1193,7 +1198,7 @@ draw_hruler(const ImgExportArgs *args,
     const ImgExportRect *rect = &sizes->hruler;
     const RulerTicks *ticks = &sizes->hruler_ticks;
     GwySIValueFormat *vf = sizes->vf_hruler;
-    gdouble lw = args->lw;
+    gdouble lw = args->line_width;
     gdouble x, bs, scale, ximg;
     gboolean units_placed = FALSE;
 
@@ -1251,7 +1256,7 @@ draw_vruler(const ImgExportArgs *args,
     const ImgExportRect *rect = &sizes->vruler;
     const RulerTicks *ticks = &sizes->vruler_ticks;
     GwySIValueFormat *vf = sizes->vf_vruler;
-    gdouble lw = args->lw;
+    gdouble lw = args->line_width;
     gdouble y, bs, scale, yimg;
 
     scale = (rect->h - lw)/(yreal/vf->magnitude);
@@ -1300,7 +1305,7 @@ draw_inset(const ImgExportArgs *args,
     const ImgExportRect *rect = &sizes->inset, *imgrect = &sizes->image;
     const GwyRGBA *colour = &args->inset_color;
     PangoRectangle logical;
-    gdouble lw = args->lw;
+    gdouble lw = args->line_width;
     gdouble xcentre, length, y, w, h;
 
     if (!(sizes->inset_length > 0.0))
@@ -1321,18 +1326,18 @@ draw_inset(const ImgExportArgs *args,
     cairo_set_line_width(cr, lw);
     if (args->inset_draw_ticks) {
         cairo_move_to(cr, xcentre - 0.5*length, 0.0);
-        cairo_rel_line_to(cr, 0.0, TICK_LENGTH);
+        cairo_rel_line_to(cr, 0.0, TICK_LENGTH + lw);
         cairo_move_to(cr, xcentre + 0.5*length, 0.0);
-        cairo_rel_line_to(cr, 0.0, TICK_LENGTH);
+        cairo_rel_line_to(cr, 0.0, TICK_LENGTH + lw);
         y = 0.5*TICK_LENGTH;
     }
-    cairo_move_to(cr, xcentre - 0.5*length, y);
-    cairo_line_to(cr, xcentre + 0.5*length, y);
+    cairo_move_to(cr, xcentre - 0.5*length, y + 0.5*lw);
+    cairo_line_to(cr, xcentre + 0.5*length, y + 0.5*lw);
     cairo_stroke(cr);
     cairo_restore(cr);
 
     if (args->inset_draw_ticks)
-        y = TICK_LENGTH + lw;
+        y = TICK_LENGTH + 2.0*lw;
     else
         y = 2.0*lw;
 
@@ -1363,7 +1368,7 @@ draw_fmgrad(GwyContainer *data,
     cairo_pattern_t *pat;
     const guchar *name = NULL, *key;
     gint w, h, npoints, i;
-    gdouble lw = args->lw;
+    gdouble lw = args->line_width;
     gboolean inverted = sizes->fm_inverted;
 
     layer = gwy_data_view_get_base_layer(args->env->data_view);
@@ -1419,7 +1424,7 @@ draw_fmruler(const ImgExportArgs *args,
     const ImgExportRect *rect = &sizes->fmruler;
     const RulerTicks *ticks = &sizes->fmruler_ticks;
     GwySIValueFormat *vf = sizes->vf_fmruler;
-    gdouble lw = args->lw;
+    gdouble lw = args->line_width;
     gdouble z, bs, scale, yimg, real;
     PangoRectangle logical;
     gboolean inverted = sizes->fm_inverted;
@@ -1600,6 +1605,25 @@ preview(ImgExportControls *controls)
     args->borderw = borderw;
 }
 
+static gboolean
+preview_gsource(gpointer user_data)
+{
+    ImgExportControls *controls = (ImgExportControls*)user_data;
+    controls->sid = 0;
+    preview(controls);
+    return FALSE;
+}
+
+static void
+update_preview(ImgExportControls *controls)
+{
+    /* create preview if instant updates are on */
+    if (!controls->in_update && !controls->sid) {
+        controls->sid = g_idle_add_full(G_PRIORITY_LOW, preview_gsource,
+                                        controls, NULL);
+    }
+}
+
 static void
 zoom_changed(ImgExportControls *controls)
 {
@@ -1617,6 +1641,8 @@ zoom_changed(ImgExportControls *controls)
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height),
                              GWY_ROUND(args->zoom*env->yres));
     controls->in_update = FALSE;
+
+    update_preview(controls);
 }
 
 static void
@@ -1644,6 +1670,8 @@ width_changed(ImgExportControls *controls)
                                  GWY_ROUND(zoom*env->yres));
         controls->in_update = FALSE;
     }
+
+    update_preview(controls);
 }
 
 static void
@@ -1671,6 +1699,78 @@ height_changed(ImgExportControls *controls)
                                  GWY_ROUND(zoom*env->xres));
         controls->in_update = FALSE;
     }
+
+    update_preview(controls);
+}
+
+static void
+font_changed(ImgExportControls *controls,
+             GtkFontButton *button)
+{
+    ImgExportArgs *args = controls->args;
+    const gchar *full_font = gtk_font_button_get_font_name(button);
+    const gchar *size_pos = strrchr(full_font, ' ');
+    gchar *end;
+    gdouble size;
+
+    if (!size_pos) {
+        g_warning("Cannot parse font description `%s' into name and size.",
+                  full_font);
+        return;
+    }
+    size = g_ascii_strtod(size_pos+1, &end);
+    if (end == size_pos+1) {
+        g_warning("Cannot parse font description `%s' into name and size.",
+                  full_font);
+        return;
+    }
+
+    g_free(args->font);
+    args->font = g_strndup(full_font, size_pos-full_font);
+
+    update_preview(controls);
+}
+
+static void
+update_selected_font(ImgExportControls *controls)
+{
+    ImgExportArgs *args = controls->args;
+    gchar *full_font;
+    gdouble font_size;
+
+    font_size = args->font_size;
+    /* TODO: reflect the scale_font setting */
+    full_font = g_strdup_printf("%s %g", controls->args->font, font_size);
+    gtk_font_button_set_font_name(GTK_FONT_BUTTON(controls->font), full_font);
+    g_free(full_font);
+}
+
+static void
+font_size_changed(ImgExportControls *controls,
+                  GtkAdjustment *adj)
+{
+    controls->args->font_size = gtk_adjustment_get_value(adj);
+    update_selected_font(controls);
+    update_preview(controls);
+}
+
+static void
+line_width_changed(ImgExportControls *controls,
+                   GtkAdjustment *adj)
+{
+    controls->args->line_width = gtk_adjustment_get_value(adj);
+    update_preview(controls);
+}
+
+static void
+scale_font_changed(ImgExportControls *controls,
+                   GtkToggleButton *check)
+{
+    ImgExportArgs *args = controls->args;
+
+    args->scale_font = gtk_toggle_button_get_active(check);
+    update_selected_font(controls);
+    update_preview(controls);
 }
 
 static void
@@ -1680,10 +1780,11 @@ create_basic_controls(ImgExportControls *controls)
     ImgExportEnv *env = args->env;
     gboolean is_vector = !!env->format->write_vector;
     const gchar *sizeunit;
-    GtkWidget *table, *spin;
+    GtkWidget *table, *spin, *label;
     gint row = 0, digits;
 
-    table = controls->table_basic = gtk_table_new(5, 3, FALSE);
+    table = controls->table_basic = gtk_table_new(6, 3, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
 
@@ -1729,6 +1830,49 @@ create_basic_controls(ImgExportControls *controls)
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), digits);
     g_signal_connect_swapped(controls->height, "value-changed",
                              G_CALLBACK(height_changed), controls);
+    row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    label = gtk_label_new(_("Font:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    controls->font = gtk_font_button_new();
+    gtk_font_button_set_show_size(GTK_FONT_BUTTON(controls->font), FALSE);
+    gtk_font_button_set_use_font(GTK_FONT_BUTTON(controls->font), TRUE);
+    gtk_table_attach(GTK_TABLE(table), controls->font,
+                     1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls->font, "font-set",
+                             G_CALLBACK(font_changed), controls);
+    row++;
+
+    controls->font_size = gtk_adjustment_new(args->font_size, 1.0, 1024.0,
+                                             1.0, 10.0, 0);
+    spin = gwy_table_attach_spinbutton(GTK_WIDGET(table), row,
+                                       _("_Font size:"), NULL,
+                                       controls->font_size);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 1);
+    g_signal_connect_swapped(controls->font_size, "value-changed",
+                             G_CALLBACK(font_size_changed), controls);
+    row++;
+
+    controls->line_width = gtk_adjustment_new(args->line_width, 0.0, 16.0,
+                                              0.01, 1.0, 0);
+    spin = gwy_table_attach_spinbutton(GTK_WIDGET(table), row,
+                                       _("Line t_hickness:"), NULL,
+                                       controls->line_width);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    g_signal_connect_swapped(controls->line_width, "value-changed",
+                             G_CALLBACK(line_width_changed), controls);
+    row++;
+
+    controls->scale_font
+        = gtk_check_button_new_with_mnemonic(_("Scale with _data pixels"));
+    gtk_table_attach(GTK_TABLE(table), controls->scale_font,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls->scale_font, "toggled",
+                             G_CALLBACK(scale_font_changed), controls);
     row++;
 }
 
@@ -1838,6 +1982,11 @@ img_export_dialog(ImgExportArgs *args)
         }
     } while (response != GTK_RESPONSE_OK);
 
+    if (controls.sid) {
+        g_source_remove(controls.sid);
+        controls.sid = 0;
+    }
+
     gtk_widget_destroy(dialog);
 
     return TRUE;
@@ -1865,7 +2014,6 @@ img_export_export(GwyContainer *data,
     format = env.format = find_format(name, TRUE);
     g_return_val_if_fail(env.format, FALSE);
 
-    args.font_size = 12.0; // XXX XXX XXX
     env.data = data;
     gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &env.data_view,
                                      GWY_APP_DATA_FIELD, &env.dfield,
