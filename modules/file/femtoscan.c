@@ -131,7 +131,7 @@ femtoscan_load(const gchar *filename,
     G_GNUC_UNUSED const gchar *self;
     gsize size = 0, headerlen;
     GList *l, *all_sections = NULL, *globals = NULL, *images = NULL;
-    gchar *header, *key;
+    gchar *header, *key, *title;
     gint id = 0;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -173,6 +173,11 @@ femtoscan_load(const gchar *filename,
         gwy_container_set_object(container,
                                  gwy_app_get_data_key_for_id(id), dfield);
         g_object_unref(dfield);
+
+        title = (gchar*)g_hash_table_lookup(hash, "Image data");
+        key = g_strdup_printf("/%d/data/title", id);
+        gwy_container_set_const_string_by_name(container, key, title);
+        g_free(key);
 
         id++;
     }
