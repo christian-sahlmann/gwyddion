@@ -318,7 +318,7 @@ wdf_load(const gchar *filename,
         goto fail;
     p += WDF_HEADER_SIZE;
     size -= WDF_HEADER_SIZE;
-    filedata.header = &header;
+    filedata.header = &fileheader;
     gwy_debug("npoints = %d, nspectra=%" G_GUINT64_FORMAT "",
               fileheader.npoints,
               fileheader.nspectra);
