@@ -79,7 +79,6 @@
 #define fixzero(x) (fabs(x) < 1e-14 ? 0.0 : (x))
 
 enum {
-    TICK_LENGTH     = 10,
     PREVIEW_SIZE    = 400,
 };
 
@@ -127,10 +126,15 @@ typedef struct {
 } RulerTicks;
 
 typedef struct {
-    /* Scaled parameters */
     gdouble font_size;
     gdouble line_width;
     gdouble border_width;
+    gdouble tick_length;
+} SizeSettings;
+
+typedef struct {
+    /* Scaled parameters */
+    SizeSettings sizes;
 
     /* Various component sizes */
     GwySIValueFormat *vf_hruler;
@@ -179,6 +183,7 @@ typedef struct {
     ImgExportEnv *env;
     ImgExportMode mode;
     gdouble zoom;
+    SizeSettings sizes;
     ImageOutput xytype;
     ImageOutput ztype;
     GwyRGBA inset_color;
@@ -187,7 +192,6 @@ typedef struct {
     gboolean draw_selection;
     gboolean text_antialias;
     gchar *font;
-    gdouble font_size;
     gboolean scale_font;   /* TRUE = font size tied to data pixels */
     gboolean inset_draw_ticks;
     gboolean inset_draw_label;
@@ -199,8 +203,6 @@ typedef struct {
     /* New args */
     gdouble width;
     gdouble height;
-    gdouble line_width;
-    gdouble border_width;
     ImgExportInterpolation interpolation;
 } ImgExportArgs;
 
@@ -220,6 +222,7 @@ typedef struct {
     GtkObject *font_size;
     GtkObject *line_width;
     GtkObject *border_width;
+    GtkObject *tick_length;
     GtkWidget *scale_font;
 
     GtkWidget *table_lateral;
@@ -376,15 +379,15 @@ static ImgExportFormat image_formats[] = {
 static const ImgExportArgs img_export_defaults = {
     NULL,
     IMGEXPORT_MODE_PRESENTATION,
-    1.0, PIXMAP_RULERS, PIXMAP_FMSCALE,
+    1.0, { 12.0, 1.0, 0.0, 10.0 },
+    PIXMAP_RULERS, PIXMAP_FMSCALE,
     { 1.0, 1.0, 1.0, 1.0 }, INSET_POS_BOTTOM_RIGHT,
     TRUE, TRUE, TRUE,
-    "Helvetica", 12.0, FALSE, TRUE, TRUE,
+    "Helvetica", FALSE, TRUE, TRUE,
     1.0, 1.0,
     0, "",
     /* New args */
     100.0, 100.0,
-    1.0, 0.0,
     IMGEXPORT_INTERPOLATION_LINEAR,
 };
 
@@ -868,7 +871,8 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
               s->str, logical2.width/pangoscale, logical2.height/pangoscale);
 
     width = MAX(logical1.width/pangoscale, logical2.width/pangoscale);
-    sizes->fmruler_label_width = width + TICK_LENGTH + sizes->line_width;
+    sizes->fmruler_label_width = (width + sizes->sizes.tick_length
+                                  + sizes->sizes.line_width);
     height = MAX(logical1.height/pangoscale, logical2.height/pangoscale);
     sizes->fmruler_label_height = height;
     gwy_debug("label width %g, height %g", width, height);
@@ -910,7 +914,8 @@ measure_inset(const ImgExportArgs *args, ImgExportSizes *sizes,
     gdouble real = gwy_data_field_get_xreal(dfield);
     PangoRectangle logical;
     InsetPosType pos = args->inset_pos;
-    gdouble lw = sizes->line_width;
+    gdouble lw = sizes->sizes.line_width;
+    gdouble tl = sizes->sizes.tick_length;
 
     sizes->inset_length = inset_length_ok(dfield, args->inset_length);
     if (!(sizes->inset_length > 0.0))
@@ -919,7 +924,7 @@ measure_inset(const ImgExportArgs *args, ImgExportSizes *sizes,
     rect->w = sizes->inset_length/real*(hsize - 2.0*lw);
     rect->h = lw;
     if (args->inset_draw_ticks)
-        rect->h += TICK_LENGTH + lw;
+        rect->h += tl + lw;
 
     if (args->inset_draw_label) {
         format_layout(layout, &logical, s, "%s", args->inset_length);
@@ -931,14 +936,14 @@ measure_inset(const ImgExportArgs *args, ImgExportSizes *sizes,
     if (pos == INSET_POS_TOP_LEFT
         || pos == INSET_POS_TOP_CENTER
         || pos == INSET_POS_TOP_RIGHT)
-        rect->y = lw + TICK_LENGTH*args->inset_gap;
+        rect->y = lw + tl*args->inset_gap;
     else
-        rect->y = vsize - lw - rect->h - TICK_LENGTH*args->inset_gap;
+        rect->y = vsize - lw - rect->h - tl*args->inset_gap;
 
     if (pos == INSET_POS_TOP_LEFT || pos == INSET_POS_BOTTOM_LEFT)
-        rect->x = 2.0*lw + TICK_LENGTH*args->inset_gap;
+        rect->x = 2.0*lw + tl*args->inset_gap;
     else if (pos == INSET_POS_TOP_RIGHT || pos == INSET_POS_BOTTOM_RIGHT)
-        rect->x = hsize - 2.0*lw - rect->w - TICK_LENGTH*args->inset_gap;
+        rect->x = hsize - 2.0*lw - rect->w - tl*args->inset_gap;
     else
         rect->x = hsize/2 - 0.5*rect->w;
 }
@@ -950,6 +955,15 @@ rect_move(ImgExportRect *rect, gdouble x, gdouble y)
     rect->y += y;
 }
 
+static void
+scale_sizes(SizeSettings *sizes, gdouble factor)
+{
+    sizes->line_width *= factor;
+    sizes->border_width *= factor;
+    sizes->font_size *= factor;
+    sizes->tick_length *= factor;
+}
+
 static ImgExportSizes*
 calculate_sizes(const ImgExportArgs *args,
                 const gchar *name)
@@ -957,27 +971,24 @@ calculate_sizes(const ImgExportArgs *args,
     PangoLayout *layout;
     ImgExportSizes *sizes = g_new0(ImgExportSizes, 1);
     GString *s = g_string_new(NULL);
-    gdouble lw, borderw, zoom = args->zoom;
+    gdouble lw, borderw, tl, zoom = args->zoom;
     cairo_surface_t *surface;
     cairo_t *cr;
 
+    gwy_debug("zoom %g", zoom);
     surface = create_surface(args, name, NULL, 0.0, 0.0);
     g_return_val_if_fail(surface, NULL);
     cr = cairo_create(surface);
     /* With scale_font unset, the sizes are on the final rendering, i.e. they
      * do not scale with zoom.  When scale_font is set, they do scale with
      * zoom.  */
-    sizes->line_width = args->line_width;
-    sizes->border_width = args->border_width;
-    sizes->font_size = args->font_size;
-    if (args->scale_font) {
-        sizes->line_width *= zoom;
-        sizes->border_width *= zoom;
-        sizes->font_size *= zoom;
-    }
-    lw = sizes->line_width;
-    borderw = sizes->border_width;
-    layout = create_layout(args->font, sizes->font_size, cr);
+    sizes->sizes = args->sizes;
+    if (args->scale_font)
+        scale_sizes(&sizes->sizes, zoom);
+    lw = sizes->sizes.line_width;
+    borderw = sizes->sizes.border_width;
+    tl = sizes->sizes.tick_length;
+    layout = create_layout(args->font, sizes->sizes.font_size, cr);
 
     /* Data */
     sizes->image.w = zoom*args->env->xres + 2.0*lw;
@@ -986,11 +997,11 @@ calculate_sizes(const ImgExportArgs *args,
     /* Horizontal ruler */
     find_hruler_ticks(args, sizes, layout, s);
     sizes->hruler.w = sizes->image.w;
-    sizes->hruler.h = sizes->hruler_label_height + TICK_LENGTH + lw;
+    sizes->hruler.h = sizes->hruler_label_height + tl + lw;
 
     /* Vertical ruler */
     find_vruler_ticks(args, sizes, layout, s);
-    sizes->vruler.w = sizes->vruler_label_width + TICK_LENGTH + lw;
+    sizes->vruler.w = sizes->vruler_label_width + tl + lw;
     sizes->vruler.h = sizes->image.h;
     rect_move(&sizes->hruler, sizes->vruler.w, 0.0);
     rect_move(&sizes->vruler, 0.0, sizes->hruler.h);
@@ -1016,8 +1027,8 @@ calculate_sizes(const ImgExportArgs *args,
     /* NB: We subtract lw here to make the fmscale visually just touch the
      * image in the case of zero gap. */
     rect_move(&sizes->fmgrad,
-              sizes->image.w + TICK_LENGTH*args->fmscale_gap - lw, 0.0);
-    sizes->fmgrad.w = 1.5*sizes->font_size + 2.0*lw;
+              sizes->image.w + tl*args->fmscale_gap - lw, 0.0);
+    sizes->fmgrad.w = 1.5*sizes->sizes.font_size + 2.0*lw;
 
     /* False colour axis */
     find_fmscale_ticks(args, sizes, layout, s);
@@ -1145,7 +1156,7 @@ draw_data(const ImgExportArgs *args,
     ImgExportEnv *env = args->env;
     cairo_surface_t *mask_surface;
     GdkPixbuf *pixbuf;
-    gdouble lw = sizes->line_width;
+    gdouble lw = sizes->sizes.line_width;
     gdouble w, h;
 
     /* Mask must be drawn pixelated so we can only draw data and mask together
@@ -1218,7 +1229,8 @@ draw_hruler(const ImgExportArgs *args,
     const ImgExportRect *rect = &sizes->hruler;
     const RulerTicks *ticks = &sizes->hruler_ticks;
     GwySIValueFormat *vf = sizes->vf_hruler;
-    gdouble lw = sizes->line_width;
+    gdouble lw = sizes->sizes.line_width;
+    gdouble tl = sizes->sizes.tick_length;
     gdouble x, bs, scale, ximg;
     gboolean units_placed = FALSE;
 
@@ -1233,7 +1245,7 @@ draw_hruler(const ImgExportArgs *args,
         ximg = (x - xoffset)*scale + 0.5*lw;
         gwy_debug("x %g -> %g", x, ximg);
         cairo_move_to(cr, ximg, rect->h);
-        cairo_line_to(cr, ximg, rect->h - TICK_LENGTH);
+        cairo_line_to(cr, ximg, rect->h - tl);
     };
     cairo_stroke(cr);
     cairo_restore(cr);
@@ -1255,7 +1267,7 @@ draw_hruler(const ImgExportArgs *args,
             format_layout(layout, &logical, s, "%.*f", vf->precision, x);
 
         if (ximg + logical.width/pangoscale <= rect->w) {
-            cairo_move_to(cr, ximg, rect->h - TICK_LENGTH - lw);
+            cairo_move_to(cr, ximg, rect->h - tl - lw);
             cairo_rel_move_to(cr, 0.0, -logical.height/pangoscale);
             pango_cairo_show_layout(cr, layout);
         }
@@ -1276,7 +1288,8 @@ draw_vruler(const ImgExportArgs *args,
     const ImgExportRect *rect = &sizes->vruler;
     const RulerTicks *ticks = &sizes->vruler_ticks;
     GwySIValueFormat *vf = sizes->vf_vruler;
-    gdouble lw = sizes->line_width;
+    gdouble lw = sizes->sizes.line_width;
+    gdouble tl = sizes->sizes.tick_length;
     gdouble y, bs, scale, yimg;
 
     scale = (rect->h - lw)/(yreal/vf->magnitude);
@@ -1290,7 +1303,7 @@ draw_vruler(const ImgExportArgs *args,
         yimg = (y - yoffset)*scale + 0.5*lw;
         gwy_debug("y %g -> %g", y, yimg);
         cairo_move_to(cr, rect->w, yimg);
-        cairo_line_to(cr, rect->w - TICK_LENGTH, yimg);
+        cairo_line_to(cr, rect->w - tl, yimg);
     };
     cairo_stroke(cr);
     cairo_restore(cr);
@@ -1305,7 +1318,7 @@ draw_vruler(const ImgExportArgs *args,
         yimg = (y - yoffset)*scale + 0.5*lw;
         format_layout(layout, &logical, s, "%.*f", vf->precision, y);
         if (yimg + logical.height/pangoscale <= rect->h) {
-            cairo_move_to(cr, rect->w - TICK_LENGTH - lw, yimg);
+            cairo_move_to(cr, rect->w - tl - lw, yimg);
             cairo_rel_move_to(cr, -logical.width/pangoscale, 0.0);
             pango_cairo_show_layout(cr, layout);
         }
@@ -1325,7 +1338,8 @@ draw_inset(const ImgExportArgs *args,
     const ImgExportRect *rect = &sizes->inset, *imgrect = &sizes->image;
     const GwyRGBA *colour = &args->inset_color;
     PangoRectangle logical;
-    gdouble lw = sizes->line_width;
+    gdouble lw = sizes->sizes.line_width;
+    gdouble tl = sizes->sizes.tick_length;
     gdouble xcentre, length, y, w, h;
 
     if (!(sizes->inset_length > 0.0))
@@ -1346,10 +1360,10 @@ draw_inset(const ImgExportArgs *args,
     cairo_set_line_width(cr, lw);
     if (args->inset_draw_ticks) {
         cairo_move_to(cr, xcentre - 0.5*length, 0.0);
-        cairo_rel_line_to(cr, 0.0, TICK_LENGTH + lw);
+        cairo_rel_line_to(cr, 0.0, tl + lw);
         cairo_move_to(cr, xcentre + 0.5*length, 0.0);
-        cairo_rel_line_to(cr, 0.0, TICK_LENGTH + lw);
-        y = 0.5*TICK_LENGTH;
+        cairo_rel_line_to(cr, 0.0, tl + lw);
+        y = 0.5*tl;
     }
     cairo_move_to(cr, xcentre - 0.5*length, y + 0.5*lw);
     cairo_line_to(cr, xcentre + 0.5*length, y + 0.5*lw);
@@ -1357,7 +1371,7 @@ draw_inset(const ImgExportArgs *args,
     cairo_restore(cr);
 
     if (args->inset_draw_ticks)
-        y = TICK_LENGTH + 2.0*lw;
+        y = tl + 2.0*lw;
     else
         y = 2.0*lw;
 
@@ -1388,7 +1402,7 @@ draw_fmgrad(GwyContainer *data,
     cairo_pattern_t *pat;
     const guchar *name = NULL, *key;
     gint w, h, npoints, i;
-    gdouble lw = sizes->line_width;
+    gdouble lw = sizes->sizes.line_width;
     gboolean inverted = sizes->fm_inverted;
 
     layer = gwy_data_view_get_base_layer(args->env->data_view);
@@ -1444,7 +1458,8 @@ draw_fmruler(const ImgExportArgs *args,
     const ImgExportRect *rect = &sizes->fmruler;
     const RulerTicks *ticks = &sizes->fmruler_ticks;
     GwySIValueFormat *vf = sizes->vf_fmruler;
-    gdouble lw = sizes->line_width;
+    gdouble lw = sizes->sizes.line_width;
+    gdouble tl = sizes->sizes.tick_length;
     gdouble z, bs, scale, yimg, real;
     PangoRectangle logical;
     gboolean inverted = sizes->fm_inverted;
@@ -1455,9 +1470,9 @@ draw_fmruler(const ImgExportArgs *args,
     cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
     cairo_set_line_width(cr, lw);
     cairo_move_to(cr, 0.0, 0.5*lw);
-    cairo_rel_line_to(cr, TICK_LENGTH, 0.0);
+    cairo_rel_line_to(cr, tl, 0.0);
     cairo_move_to(cr, 0.0, rect->h - 0.5*lw);
-    cairo_rel_line_to(cr, TICK_LENGTH, 0.0);
+    cairo_rel_line_to(cr, tl, 0.0);
     cairo_stroke(cr);
     cairo_restore(cr);
 
@@ -1468,14 +1483,14 @@ draw_fmruler(const ImgExportArgs *args,
                   vf->precision, sizes->fm_max, vf->units);
     gwy_debug("max '%s' (%g x %g)",
               s->str, logical.width/pangoscale, logical.height/pangoscale);
-    cairo_move_to(cr, TICK_LENGTH + lw, lw);
+    cairo_move_to(cr, tl + lw, lw);
     pango_cairo_show_layout(cr, layout);
     format_layout(layout, &logical, s, "%.*f",
                   vf->precision, sizes->fm_min);
     gwy_debug("min '%s' (%g x %g)",
               s->str, logical.width/pangoscale, logical.height/pangoscale);
     cairo_move_to(cr,
-                  TICK_LENGTH + lw, rect->h - lw - logical.height/pangoscale);
+                  tl + lw, rect->h - lw - logical.height/pangoscale);
     pango_cairo_show_layout(cr, layout);
     cairo_restore(cr);
 
@@ -1502,7 +1517,7 @@ draw_fmruler(const ImgExportArgs *args,
 
         gwy_debug("z %g -> %g", z, yimg);
         cairo_move_to(cr, 0.0, yimg);
-        cairo_rel_line_to(cr, TICK_LENGTH, 0.0);
+        cairo_rel_line_to(cr, tl, 0.0);
     };
     cairo_stroke(cr);
     cairo_restore(cr);
@@ -1523,7 +1538,7 @@ draw_fmruler(const ImgExportArgs *args,
             continue;
 
         format_layout(layout, &logical, s, "%.*f", vf->precision, z);
-        cairo_move_to(cr, TICK_LENGTH + lw, yimg);
+        cairo_move_to(cr, tl + lw, yimg);
         pango_cairo_show_layout(cr, layout);
     };
     cairo_restore(cr);
@@ -1539,7 +1554,7 @@ image_draw_cairo(GwyContainer *data,
     PangoLayout *layout;
     GString *s = g_string_new(NULL);
 
-    layout = create_layout(args->font, sizes->font_size, cr);
+    layout = create_layout(args->font, sizes->sizes.font_size, cr);
 
     draw_data(args, sizes, cr);
     draw_hruler(args, sizes, layout, s, cr);
@@ -1613,9 +1628,7 @@ preview(ImgExportControls *controls)
     ImgExportArgs *args = controls->args;
     ImgExportSizes *sizes;
     gdouble zoom = args->zoom;
-    gdouble font_size = args->font_size;
-    gdouble line_width = args->line_width;
-    gdouble border_width = args->border_width;
+    SizeSettings savedsizes = args->sizes;
     gboolean scale_font = args->scale_font;
     GdkPixbuf *pixbuf;
 
@@ -1624,18 +1637,22 @@ preview(ImgExportControls *controls)
     /* Make all things in the preview scale. */
     args->scale_font = TRUE;
     args->zoom = PREVIEW_SIZE/MAX(sizes->canvas.w, sizes->canvas.h);
-    args->font_size *= zoom/args->zoom;
-    args->line_width *= zoom/args->zoom;
-    args->border_width *= zoom/args->zoom;
+    if (scale_font) {
+        /* XXX: Some factor seems necessary here, at least for vector drawing.
+         */
+        scale_sizes(&args->sizes, zoom/args->zoom);
+    }
+    else {
+        /* XXX: Possibly completely screwed up at this moment. */
+        scale_sizes(&args->sizes, sizes->canvas.w/(mm2pt*args->width));
+    }
     destroy_sizes(sizes);
 
     pixbuf = render_pixbuf(args, "png");
     gtk_image_set_from_pixbuf(GTK_IMAGE(controls->preview), pixbuf);
     g_object_unref(pixbuf);
 
-    args->font_size = font_size;
-    args->line_width = line_width;
-    args->border_width = border_width;
+    args->sizes = savedsizes;
     args->scale_font = scale_font;
     args->zoom = zoom;
 }
@@ -1746,7 +1763,7 @@ font_changed(ImgExportControls *controls,
     const gchar *full_font = gtk_font_button_get_font_name(button);
     const gchar *size_pos = strrchr(full_font, ' ');
     gchar *end;
-    gdouble size;
+    G_GNUC_UNUSED gdouble size;
 
     if (!size_pos) {
         g_warning("Cannot parse font description `%s' into name and size.",
@@ -1771,9 +1788,8 @@ update_selected_font(ImgExportControls *controls)
 {
     ImgExportArgs *args = controls->args;
     gchar *full_font;
-    gdouble font_size;
+    gdouble font_size = args->sizes.font_size;
 
-    font_size = args->font_size;
     /* TODO: reflect the scale_font setting */
     full_font = g_strdup_printf("%s %g", controls->args->font, font_size);
     gtk_font_button_set_font_name(GTK_FONT_BUTTON(controls->font), full_font);
@@ -1784,7 +1800,7 @@ static void
 font_size_changed(ImgExportControls *controls,
                   GtkAdjustment *adj)
 {
-    controls->args->font_size = gtk_adjustment_get_value(adj);
+    controls->args->sizes.font_size = gtk_adjustment_get_value(adj);
     update_selected_font(controls);
     update_preview(controls);
 }
@@ -1793,7 +1809,7 @@ static void
 line_width_changed(ImgExportControls *controls,
                    GtkAdjustment *adj)
 {
-    controls->args->line_width = gtk_adjustment_get_value(adj);
+    controls->args->sizes.line_width = gtk_adjustment_get_value(adj);
     update_preview(controls);
 }
 
@@ -1801,7 +1817,15 @@ static void
 border_width_changed(ImgExportControls *controls,
                      GtkAdjustment *adj)
 {
-    controls->args->border_width = gtk_adjustment_get_value(adj);
+    controls->args->sizes.border_width = gtk_adjustment_get_value(adj);
+    update_preview(controls);
+}
+
+static void
+tick_length_changed(ImgExportControls *controls,
+                    GtkAdjustment *adj)
+{
+    controls->args->sizes.tick_length = gtk_adjustment_get_value(adj);
     update_preview(controls);
 }
 
@@ -1826,7 +1850,7 @@ create_basic_controls(ImgExportControls *controls)
     GtkWidget *table, *spin, *label;
     gint row = 0, digits;
 
-    table = controls->table_basic = gtk_table_new(6, 3, FALSE);
+    table = controls->table_basic = gtk_table_new(8, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -1891,8 +1915,8 @@ create_basic_controls(ImgExportControls *controls)
                              G_CALLBACK(font_changed), controls);
     row++;
 
-    controls->font_size = gtk_adjustment_new(args->font_size, 1.0, 1024.0,
-                                             1.0, 10.0, 0);
+    controls->font_size = gtk_adjustment_new(args->sizes.font_size,
+                                             1.0, 1024.0, 1.0, 10.0, 0);
     spin = gwy_table_attach_spinbutton(GTK_WIDGET(table), row,
                                        _("_Font size:"), NULL,
                                        controls->font_size);
@@ -1901,8 +1925,8 @@ create_basic_controls(ImgExportControls *controls)
                              G_CALLBACK(font_size_changed), controls);
     row++;
 
-    controls->line_width = gtk_adjustment_new(args->line_width, 0.0, 16.0,
-                                              0.01, 1.0, 0);
+    controls->line_width = gtk_adjustment_new(args->sizes.line_width,
+                                              0.0, 16.0, 0.01, 1.0, 0);
     spin = gwy_table_attach_spinbutton(GTK_WIDGET(table), row,
                                        _("Line t_hickness:"), NULL,
                                        controls->line_width);
@@ -1911,14 +1935,24 @@ create_basic_controls(ImgExportControls *controls)
                              G_CALLBACK(line_width_changed), controls);
     row++;
 
-    controls->border_width = gtk_adjustment_new(args->border_width, 0.0, 1024.0,
-                                                0.1, 1.0, 0);
+    controls->border_width = gtk_adjustment_new(args->sizes.border_width,
+                                                0.0, 1024.0, 0.1, 1.0, 0);
     spin = gwy_table_attach_spinbutton(GTK_WIDGET(table), row,
                                        _("_Border width:"), NULL,
                                        controls->border_width);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 1);
     g_signal_connect_swapped(controls->border_width, "value-changed",
                              G_CALLBACK(border_width_changed), controls);
+    row++;
+
+    controls->tick_length = gtk_adjustment_new(args->sizes.tick_length,
+                                               0.0, 1024.0, 0.1, 1.0, 0);
+    spin = gwy_table_attach_spinbutton(GTK_WIDGET(table), row,
+                                       _("_Tick length:"), NULL,
+                                       controls->tick_length);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 1);
+    g_signal_connect_swapped(controls->tick_length, "value-changed",
+                             G_CALLBACK(tick_length_changed), controls);
     row++;
 
     controls->scale_font
@@ -2547,8 +2581,6 @@ write_vector_generic(ImgExportArgs *args,
     cairo_t *cr;
     gdouble zoom = args->zoom;
 
-    /* FIXME: We need some size determination method for vector drawings.
-     * Note this requires changing the canvas and the cairo scale transform. */
     gwy_debug("requested width %g mm", args->width);
     args->zoom = mm2pt*args->width/args->env->xres;
     gwy_debug("must set zoom to %g", args->zoom);
@@ -2917,6 +2949,9 @@ static const gchar draw_selection_key[]   = "/module/pixmap/draw_selection";
 static const gchar text_antialias_key[]   = "/module/pixmap/text_antialias";
 static const gchar font_key[]             = "/module/pixmap/font";
 static const gchar font_size_key[]        = "/module/pixmap/font_size";
+static const gchar line_width_key[]       = "/module/pixmap/line_width";
+static const gchar border_width_key[]     = "/module/pixmap/border_width";
+static const gchar tick_length_key[]      = "/module/pixmap/tick_length";
 static const gchar greyscale_key[]        = "/module/pixmap/grayscale";
 static const gchar inset_color_key[]      = "/module/pixmap/inset_color";
 static const gchar inset_pos_key[]        = "/module/pixmap/inset_pos";
@@ -2945,7 +2980,10 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->scale_font = !!args->scale_font;
     args->inset_draw_ticks = !!args->inset_draw_ticks;
     args->inset_draw_label = !!args->inset_draw_label;
-    args->font_size = CLAMP(args->font_size, 1.2, 120.0);
+    args->sizes.font_size = CLAMP(args->sizes.font_size, 1.0, 1024.0);
+    args->sizes.line_width = CLAMP(args->sizes.line_width, 1.0, 16.0);
+    args->sizes.border_width = CLAMP(args->sizes.border_width, 1.0, 1024.0);
+    args->sizes.tick_length = CLAMP(args->sizes.tick_length, 1.0, 120.0);
     args->fmscale_gap = CLAMP(args->fmscale_gap, 0.0, 2.0);
     args->inset_gap = CLAMP(args->inset_gap, 0.0, 2.0);
     args->greyscale = (args->greyscale == 16) ? 16 : 0;
@@ -2965,6 +3003,14 @@ img_export_load_args(GwyContainer *container,
     *args = img_export_defaults;
 
     gwy_container_gis_double_by_name(container, zoom_key, &args->zoom);
+    gwy_container_gis_double_by_name(container, font_size_key,
+                                     &args->sizes.font_size);
+    gwy_container_gis_double_by_name(container, line_width_key,
+                                     &args->sizes.line_width);
+    gwy_container_gis_double_by_name(container, border_width_key,
+                                     &args->sizes.border_width);
+    gwy_container_gis_double_by_name(container, tick_length_key,
+                                     &args->sizes.tick_length);
     gwy_container_gis_enum_by_name(container, xytype_key, &args->xytype);
     gwy_container_gis_enum_by_name(container, ztype_key, &args->ztype);
     gwy_rgba_get_from_container(&args->inset_color, container, inset_color_key);
@@ -2981,8 +3027,6 @@ img_export_load_args(GwyContainer *container,
                                      (const guchar**)&args->font);
     gwy_container_gis_boolean_by_name(container, scale_font_key,
                                       &args->scale_font);
-    gwy_container_gis_double_by_name(container, font_size_key,
-                                     &args->font_size);
     gwy_container_gis_double_by_name(container, fmscale_gap_key,
                                      &args->fmscale_gap);
     gwy_container_gis_double_by_name(container, inset_gap_key,
@@ -3004,6 +3048,14 @@ img_export_save_args(GwyContainer *container,
                      ImgExportArgs *args)
 {
     gwy_container_set_double_by_name(container, zoom_key, args->zoom);
+    gwy_container_set_double_by_name(container, font_size_key,
+                                     args->sizes.font_size);
+    gwy_container_set_double_by_name(container, line_width_key,
+                                     args->sizes.line_width);
+    gwy_container_set_double_by_name(container, border_width_key,
+                                     args->sizes.border_width);
+    gwy_container_set_double_by_name(container, tick_length_key,
+                                     args->sizes.tick_length);
     gwy_container_set_enum_by_name(container, xytype_key, args->xytype);
     gwy_container_set_enum_by_name(container, ztype_key, args->ztype);
     gwy_rgba_store_to_container(&args->inset_color, container, inset_color_key);
@@ -3020,8 +3072,6 @@ img_export_save_args(GwyContainer *container,
                                      g_strdup(args->font));
     gwy_container_set_boolean_by_name(container, scale_font_key,
                                       args->scale_font);
-    gwy_container_set_double_by_name(container, font_size_key,
-                                     args->font_size);
     gwy_container_set_double_by_name(container, fmscale_gap_key,
                                      args->fmscale_gap);
     gwy_container_set_double_by_name(container, inset_gap_key,
