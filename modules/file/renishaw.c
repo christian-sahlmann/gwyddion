@@ -45,7 +45,7 @@
  * [FILE-MAGIC-USERGUIDE]
  * Renishaw WiRE Data File
  * .wdf
- *
+ * SPS
  **/
 
 #include "config.h"
@@ -223,9 +223,12 @@ typedef struct {
 } WdfHeader;
 
 typedef struct {
-    WdfHeader *header;
-    gfloat    *data;
-    gsize      datasize;
+    WdfHeader    *header;
+    gfloat       *data;
+    gsize        datasize;
+    WdfDataType  xlisttype;
+    WdfDataUnits xlistunits;
+    gfloat       *xlistdata;
 } WdfFile;
 
 static gboolean       module_register        (void);
@@ -248,7 +251,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Renishaw WiRE data files (WDF)."),
     "Daniil Bratashov <dn2010@gmail.com>",
-    "0.1",
+    "0.2",
     "Daniil Bratashov (dn2010), Renishaw plc.",
     "2014",
 };
@@ -294,15 +297,18 @@ wdf_load(const gchar *filename,
     gchar *buffer = NULL;
     gsize len, size = 0;
     GError *err = NULL;
-
-    GwyBrick *brick;
-    GwyDataField *dfield;
-    GwyDataLine *cal;
-    gdouble *data;
     WdfFile filedata;
     WdfHeader fileheader;
     WdfBlock block;
     const guchar *p;
+    gchar *title = NULL;
+
+    GwyBrick *brick;
+    GwyDataField *dfield;
+    GwyDataLine *cal;
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *gcmodel;
+    gdouble *ydata, *xdata;
     gint i, j, k;
     gint xres = 180, yres =120, zres = 0;
     gdouble xreal = 180*1.4e-6, yreal = 120*1.4e-6, zreal = 1.0;
@@ -329,13 +335,35 @@ wdf_load(const gchar *filename,
         if (block.id == WDF_BLOCKID_DATA) {
             gwy_debug("DATA offset = %" G_GUINT64_FORMAT " size=%" G_GUINT64_FORMAT "",
                       ((guint64)p - (guint64)buffer), block.size);
-            filedata.data = (gfloat *)p;
             filedata.datasize = block.size - WDF_BLOCK_HEADER_SIZE;
+            if (filedata.datasize != fileheader.npoints
+                               * fileheader.nspectra * sizeof(gfloat)) {
+                err_SIZE_MISMATCH(error,
+                                  fileheader.npoints
+                                * fileheader.nspectra * sizeof(gfloat),
+                                  filedata.datasize, TRUE);
+                goto fail;
+            }
+            filedata.data = (gfloat *)(p + WDF_BLOCK_HEADER_SIZE);
         }
         else if (block.id == WDF_BLOCKID_XLIST) {
             gwy_debug("XLST offset = %" G_GUINT64_FORMAT " size=%" G_GUINT64_FORMAT "",
                       ((guint64)p - (guint64)buffer), block.size);
-
+            if (block.size != WDF_BLOCK_HEADER_SIZE
+                            + 2 * sizeof(guint32)
+                            + fileheader.npoints * sizeof(gfloat)) {
+                err_SIZE_MISMATCH(error,
+                                  WDF_BLOCK_HEADER_SIZE
+                                  + 2 * sizeof(guint32)
+                                  + fileheader.npoints * sizeof(gfloat),
+                                  block.size, TRUE);
+                goto fail;
+            }
+            p += WDF_BLOCK_HEADER_SIZE;
+            filedata.xlisttype = gwy_get_guint32_le(&p);
+            filedata.xlistunits = gwy_get_guint32_le(&p);
+            filedata.xlistdata = (gfloat *)p;
+            p -= WDF_BLOCK_HEADER_SIZE + 2 * sizeof(guint32);
         }
         else if (block.id == WDF_BLOCKID_ORIGIN) {
             gwy_debug("ORGN offset = %" G_GUINT64_FORMAT " size=%" G_GUINT64_FORMAT "",
@@ -352,12 +380,51 @@ wdf_load(const gchar *filename,
         size -= len;
     }
 
+    container = gwy_container_new();
+
+    if (fileheader.nspectra == 1) { /* Single spectrum */
+        zres = fileheader.npoints;
+        ydata = g_malloc(zres * sizeof(gdouble));
+        gwy_convert_raw_data(filedata.data, zres, 1,
+                             GWY_RAW_DATA_FLOAT,
+                             GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                             ydata, 1.0, 0.0);
+        xdata = g_malloc(zres * sizeof(gdouble));
+        gwy_convert_raw_data(filedata.xlistdata, zres, 1,
+                             GWY_RAW_DATA_FLOAT,
+                             GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                             xdata, 1.0, 0.0);
+        title = g_strdup(fileheader.title);
+        gmodel = g_object_new(GWY_TYPE_GRAPH_MODEL,
+                             "title", title,
+                       //    "si-unit-x", siunitx,
+                       //    "si-unit-y", siunity,
+                             NULL);
+        gcmodel = g_object_new(GWY_TYPE_GRAPH_CURVE_MODEL,
+                              "description", title,
+                              "mode", GWY_GRAPH_CURVE_LINE,
+                              "color", gwy_graph_get_preset_color(0),
+                              NULL);
+     // g_object_unref(siunitx);
+     // g_object_unref(siunity);
+        gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, zres);
+        g_free(xdata);
+        g_free(ydata);
+        gwy_graph_model_add_curve(gmodel, gcmodel);
+        g_object_unref(gcmodel);
+        g_free(title);
+        gwy_container_set_object_by_name(container, "/0/graph/graph/1",
+                                         gmodel);
+        g_object_unref(gmodel);
+    }
+
+    /*
+
+    p = buffer + 528;
+
     zres = fileheader.npoints;
     brick = gwy_brick_new(xres, yres, zres, xreal, yreal, zreal, TRUE);
     data = gwy_brick_get_data(brick);
-
-    /*
-    p = buffer + 528;
 
     for (i = 0; i < xres; i++)
         for (j = 0; j < yres; j++)
@@ -496,6 +563,7 @@ wdf_read_block_header(const guchar *buffer,
               header->size);
 
     if (size < header->size) {
+		fprintf(stderr, "%d %d\n", size, header->size);
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_DATA,
                     _("Data block is truncated"));
