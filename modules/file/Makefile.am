@@ -49,11 +49,13 @@ if HAVE_MINIZIP
 nanoobserver_module = nanoobserver.la
 nanoscantech_module = nanoscantech.la
 opengps_module = opengps.la
+spmxfile_module = spmxfile.la
 else
 nanoobserver_module =
 nanoscantech_module =
 opengps_module =
-disabled_sources += nanoobserver.c nanoscantech.c opengps.c
+spmxfile_module =
+disabled_sources += nanoobserver.c nanoscantech.c opengps.c spmxfile.c
 endif
 
 # If cfitsio is disabled, put the dependent sources to EXTRA_DIST to include
@@ -165,6 +167,7 @@ file_LTLIBRARIES = \
 	$(spml_module) \
 	spmlab.la \
 	spmlabf.la \
+	$(spmxfile_module) \
 	stmprg.la \
 	stpfile.la \
 	surffile.la \
@@ -361,6 +364,10 @@ nanoscantech_la_LIBADD   = @MINIZIP_LIBS@
 opengps_la_SOURCES  = opengps.c
 opengps_la_CFLAGS   = $(AM_CFLAGS) @MINIZIP_CFLAGS@
 opengps_la_LIBADD   = @MINIZIP_LIBS@
+
+spmxfile_la_SOURCES  = spmxfile.c
+spmxfile_la_CFLAGS   = $(AM_CFLAGS) @MINIZIP_CFLAGS@
+spmxfile_la_LIBADD   = @MINIZIP_LIBS@
 endif
 
 if HAVE_CFITSIO
