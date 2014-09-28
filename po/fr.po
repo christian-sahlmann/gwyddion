@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-09-21 03:58+0200\n"
-"PO-Revision-Date: 2014-09-21 23:42+0100\n"
+"POT-Creation-Date: 2014-09-26 03:58+0200\n"
+"PO-Revision-Date: 2014-09-28 13:54+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -744,7 +744,7 @@ msgstr "Basiques"
 msgid "Light & Material"
 msgstr "Lumière et matériau"
 
-#: libgwydgets/gwy3dwindow.c:652 modules/file/pixmap.c:3366
+#: libgwydgets/gwy3dwindow.c:652 modules/file/pixmap.c:3326
 msgid "Labels"
 msgstr "Labels"
 
@@ -880,35 +880,35 @@ msgid "pixels"
 msgstr "pixels"
 
 #: libgwydgets/gwy3dwindow.c:1148 modules/file/hdrimage.cc:2213
-#: modules/file/pixmap.c:1146 modules/file/pixmap.c:3305
-#: modules/file/rawfile.c:402 modules/process/angle_dist.c:172
-#: modules/process/calcoefs_new.c:348 modules/process/calibrate.c:392
-#: modules/process/col_synth.c:387 modules/process/correct_affine.c:307
-#: modules/process/curvature.c:605 modules/process/cwt.c:135
-#: modules/process/deposit_synth.c:361 modules/process/diff_synth.c:422
-#: modules/process/domain_synth.c:366 modules/process/drift.c:240
-#: modules/process/dwt.c:166 modules/process/dwtanisotropy.c:184
-#: modules/process/edge.c:651 modules/process/extend.c:192
-#: modules/process/facet-level.c:190 modules/process/facet_analysis.c:276
-#: modules/process/fft.c:258 modules/process/fft_filter_2d.c:444
-#: modules/process/fft_synth.c:351 modules/process/fractal.c:207
-#: modules/process/grain_edge.c:218 modules/process/grain_mark.c:264
-#: modules/process/grain_wshed.c:183 modules/process/hough.c:179
-#: modules/process/lat_synth.c:539 modules/process/latsim.c:158
-#: modules/process/level.c:262 modules/process/linecorrect.c:281
-#: modules/process/lno_synth.c:440 modules/process/local_contrast.c:130
-#: modules/process/median-bg.c:179 modules/process/noise_synth.c:347
-#: modules/process/obj_synth.c:427 modules/process/pat_synth.c:397
-#: modules/process/pid.c:199 modules/process/polydistort.c:218
-#: modules/process/polylevel.c:377 modules/process/rank.c:132
-#: modules/process/rotate.c:266 modules/process/scale.c:196
-#: modules/process/scars.c:477 modules/process/shade.c:216
-#: modules/process/slope_dist.c:268 modules/process/sphere-revolve.c:218
-#: modules/process/tilt.c:160 modules/process/tip_model.c:170
-#: modules/process/unrotate.c:228 modules/process/volumize_layers.c:213
-#: modules/process/wave_synth.c:361 modules/process/wpour_mark.c:296
-#: modules/volume/volume_calibrate.c:371 modules/volume/volume_extract.c:331
-#: modules/volume/volume_kmeans.c:142
+#: modules/file/imgexport.c:1633 modules/file/pixmap.c:1096
+#: modules/file/pixmap.c:3265 modules/file/rawfile.c:402
+#: modules/process/angle_dist.c:172 modules/process/calcoefs_new.c:348
+#: modules/process/calibrate.c:392 modules/process/col_synth.c:387
+#: modules/process/correct_affine.c:307 modules/process/curvature.c:605
+#: modules/process/cwt.c:135 modules/process/deposit_synth.c:361
+#: modules/process/diff_synth.c:422 modules/process/domain_synth.c:366
+#: modules/process/drift.c:240 modules/process/dwt.c:166
+#: modules/process/dwtanisotropy.c:184 modules/process/edge.c:651
+#: modules/process/extend.c:192 modules/process/facet-level.c:190
+#: modules/process/facet_analysis.c:276 modules/process/fft.c:258
+#: modules/process/fft_filter_2d.c:444 modules/process/fft_synth.c:351
+#: modules/process/fractal.c:207 modules/process/grain_edge.c:218
+#: modules/process/grain_mark.c:264 modules/process/grain_wshed.c:183
+#: modules/process/hough.c:179 modules/process/lat_synth.c:539
+#: modules/process/latsim.c:158 modules/process/level.c:262
+#: modules/process/linecorrect.c:281 modules/process/lno_synth.c:440
+#: modules/process/local_contrast.c:130 modules/process/median-bg.c:179
+#: modules/process/noise_synth.c:347 modules/process/obj_synth.c:427
+#: modules/process/pat_synth.c:397 modules/process/pid.c:199
+#: modules/process/polydistort.c:218 modules/process/polylevel.c:377
+#: modules/process/rank.c:132 modules/process/rotate.c:266
+#: modules/process/scale.c:196 modules/process/scars.c:477
+#: modules/process/shade.c:216 modules/process/slope_dist.c:268
+#: modules/process/sphere-revolve.c:218 modules/process/tilt.c:160
+#: modules/process/tip_model.c:170 modules/process/unrotate.c:228
+#: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:361
+#: modules/process/wpour_mark.c:296 modules/volume/volume_calibrate.c:371
+#: modules/volume/volume_extract.c:331 modules/volume/volume_kmeans.c:142
 msgid "_Reset"
 msgstr "_Remise à zéro"
 
@@ -1236,7 +1236,7 @@ msgid "Preview"
 msgstr "Aperçu"
 
 #: libgwymodule/gwymodule-file.c:550 modules/file/err.h:41
-#: modules/file/pixmap.c:854
+#: modules/file/pixmap.c:804
 #, c-format
 msgid "Cannot open file for reading: %s."
 msgstr "Impossible d'ouvrir le fichier pour le lire : %s."
@@ -2962,7 +2962,7 @@ msgstr "Unités :"
 msgid "Export Text"
 msgstr "Exporter au format texte"
 
-#: modules/file/asciiexport.c:274 modules/file/pixmap.c:3421
+#: modules/file/asciiexport.c:274 modules/file/pixmap.c:3381
 #: modules/file/rawfile.c:724 modules/file/rawxyz.c:673
 #: modules/process/calibrate.c:605 modules/process/col_synth.c:517
 #: modules/process/correct_affine.c:490 modules/process/diff_synth.c:573
@@ -3618,39 +3618,41 @@ msgid "OpenEXR data type %u is invalid or unsupported."
 msgstr "Le type de données OpenEXR %u est invalide ou non supportée."
 
 #: modules/file/hdrimage.cc:1433 modules/file/hdrimage.cc:1442
-#: modules/file/pixmap.c:1684 modules/file/pixmap.c:1694
+#: modules/file/imgexport.c:1907 modules/file/imgexport.c:1918
+#: modules/file/pixmap.c:1634 modules/file/pixmap.c:1644
 #, c-format
 msgid "libpng initialization error (in %s)"
 msgstr "Erreur d'initialisation de libpng (dans %s)"
 
-#: modules/file/hdrimage.cc:1451 modules/file/pixmap.c:1754
+#: modules/file/hdrimage.cc:1451 modules/file/imgexport.c:1982
+#: modules/file/pixmap.c:1704
 msgid "libpng error occured"
 msgstr "Une erreur s'est produite dans libpng"
 
 #. TRANSLATORS: Dialog title; %s is PNG, TIFF, ...
-#: modules/file/hdrimage.cc:2210 modules/file/pixmap.c:1143
+#: modules/file/hdrimage.cc:2210 modules/file/pixmap.c:1093
 #, c-format
 msgid "Import %s"
 msgstr "Importer %s"
 
-#: modules/file/hdrimage.cc:2237 modules/file/pixmap.c:1170
+#: modules/file/hdrimage.cc:2237 modules/file/pixmap.c:1120
 msgid "Image Information"
 msgstr "Information sur l'image"
 
-#: modules/file/hdrimage.cc:2246 modules/file/pixmap.c:1177
+#: modules/file/hdrimage.cc:2246 modules/file/pixmap.c:1127
 msgid "Horizontal size:"
 msgstr "Taille horizontale :"
 
 #: modules/file/hdrimage.cc:2246 modules/file/hdrimage.cc:2252
-#: modules/file/pixmap.c:1177 modules/file/pixmap.c:1183
+#: modules/file/pixmap.c:1127 modules/file/pixmap.c:1133
 msgid "px"
 msgstr "px"
 
-#: modules/file/hdrimage.cc:2252 modules/file/pixmap.c:1183
+#: modules/file/hdrimage.cc:2252 modules/file/pixmap.c:1133
 msgid "Vertical size:"
 msgstr "Taille verticale :"
 
-#: modules/file/hdrimage.cc:2257 modules/file/pixmap.c:1188
+#: modules/file/hdrimage.cc:2257 modules/file/pixmap.c:1138
 msgid "Channels:"
 msgstr "Canaux :"
 
@@ -3658,21 +3660,21 @@ msgstr "Canaux :"
 msgid "Pages:"
 msgstr "Pages : "
 
-#: modules/file/hdrimage.cc:2290 modules/file/pixmap.c:1219
+#: modules/file/hdrimage.cc:2290 modules/file/pixmap.c:1169
 #: modules/file/rawfile.c:627 modules/file/rawxyz.c:572
 #: modules/process/dimensions.h:466
 msgid "Physical Dimensions"
 msgstr "Dimensions physiques"
 
-#: modules/file/hdrimage.cc:2304 modules/file/pixmap.c:1229
-#: modules/file/pixmap.c:3349 modules/file/rawfile.c:636
-#: modules/process/crosscor.c:215 modules/process/dimensions.h:472
-#: modules/process/tip_blind.c:337
+#: modules/file/hdrimage.cc:2304 modules/file/imgexport.c:1598
+#: modules/file/pixmap.c:1179 modules/file/pixmap.c:3309
+#: modules/file/rawfile.c:636 modules/process/crosscor.c:215
+#: modules/process/dimensions.h:472 modules/process/tip_blind.c:337
 msgid "_Width:"
 msgstr "Largeur :"
 
 #: modules/file/hdrimage.cc:2330 modules/file/hdrimage.cc:2395
-#: modules/file/pixmap.c:1251 modules/file/pixmap.c:1306
+#: modules/file/pixmap.c:1201 modules/file/pixmap.c:1256
 #: modules/file/rawfile.c:659 modules/file/rawfile.c:715
 #: modules/process/calcoefs_new.c:385 modules/process/calcoefs_new.c:452
 #: modules/process/calcoefs_simple.c:392 modules/process/calcoefs_simple.c:459
@@ -3684,23 +3686,23 @@ msgstr "Largeur :"
 msgid "verb|Change"
 msgstr "Changer"
 
-#: modules/file/hdrimage.cc:2345 modules/file/pixmap.c:1264
+#: modules/file/hdrimage.cc:2345 modules/file/pixmap.c:1214
 #: modules/file/rawfile.c:672 modules/process/crosscor.c:226
 #: modules/process/dimensions.h:476
 msgid "H_eight:"
 msgstr "Hauteur :"
 
-#: modules/file/hdrimage.cc:2354 modules/file/pixmap.c:1271
+#: modules/file/hdrimage.cc:2354 modules/file/pixmap.c:1221
 #: modules/file/rawfile.c:679 modules/file/rawxyz.c:553
 msgid "Identical _measures"
 msgstr "_Mesures identiques"
 
-#: modules/file/hdrimage.cc:2368 modules/file/pixmap.c:1283
+#: modules/file/hdrimage.cc:2368 modules/file/pixmap.c:1233
 #: modules/file/rawfile.c:691
 msgid "_Z-scale (per sample unit):"
 msgstr "Échelle _Z (par unité d'échantillon) :"
 
-#: modules/file/hdrimage.cc:2557 modules/file/pixmap.c:1533
+#: modules/file/hdrimage.cc:2557 modules/file/pixmap.c:1483
 #: modules/file/rawfile.c:1325 modules/process/calcoefs_new.c:777
 #: modules/process/calcoefs_simple.c:1192 modules/process/calcoefs_view.c:1394
 #: modules/process/calibrate.c:975 modules/process/dimensions.h:194
@@ -3708,7 +3710,7 @@ msgstr "Échelle _Z (par unité d'échantillon) :"
 msgid "Change Units"
 msgstr "Changer les unités"
 
-#: modules/file/hdrimage.cc:2571 modules/file/pixmap.c:1547
+#: modules/file/hdrimage.cc:2571 modules/file/pixmap.c:1497
 #: modules/file/rawfile.c:1339 modules/process/calcoefs_new.c:790
 #: modules/process/calcoefs_simple.c:1205 modules/process/calcoefs_view.c:1407
 #: modules/process/calibrate.c:989 modules/process/dimensions.h:207
@@ -3792,6 +3794,108 @@ msgstr ""
 #: modules/file/igorfile.c:358
 msgid "Cannot read channel labels."
 msgstr "Impossible de lire les labels des canaux."
+
+#: modules/file/imgexport.c:293 modules/file/pixmap.c:402
+msgid "Portable Network Graphics (.png)"
+msgstr "PNG (.png)"
+
+#: modules/file/imgexport.c:299 modules/file/pixmap.c:408
+msgid "JPEG (.jpeg,.jpg)"
+msgstr "JPEG (.jpeg, .jpg)"
+
+#: modules/file/imgexport.c:305 modules/file/pixmap.c:414
+msgid "TIFF (.tiff,.tif)"
+msgstr "TIFF (.tiff, .tif)"
+
+#: modules/file/imgexport.c:311
+msgid "Portable Image (.ppm,.pnm)"
+msgstr "PPM (.ppm, .pnm)"
+
+#: modules/file/imgexport.c:317 modules/file/pixmap.c:426
+msgid "Windows or OS2 Bitmap (.bmp)"
+msgstr "BMP (.bmp)"
+
+#: modules/file/imgexport.c:323 modules/file/pixmap.c:432
+msgid "TARGA (.tga,.targa)"
+msgstr "TARGA (.tga, .targa)"
+
+#: modules/file/imgexport.c:330
+msgid "Portable document format (.pdf)"
+msgstr "Document PDF (.pdf)"
+
+#: modules/file/imgexport.c:338
+msgid "Encapsulated PostScript (.eps)"
+msgstr "PostScript encapsulé (.eps)"
+
+#: modules/file/imgexport.c:346
+msgid "Scalable Vector Graphics (.svg)"
+msgstr "Image vectorielle SVG (.svg)"
+
+#: modules/file/imgexport.c:370 modules/file/pixmap.c:495
+msgid ""
+"Renders data into pixmap images and imports data from pixmap images. It "
+"supports the following image formats for export: PNG, JPEG, TIFF, PPM, BMP, "
+"TARGA. Import support relies on GDK and thus may be installation-dependent."
+msgstr ""
+"Exporte les données sous forme d'images et importe des données à partir "
+"d'une image. Les formats d'image suivants sont supportés pour l'export : "
+"PNG, JPEG, TIFF, PPM, BMP, TARGA. L'import dépend de GDK et peut ainsi "
+"dépendre de l'installation."
+
+#: modules/file/imgexport.c:1586 modules/file/pixmap.c:3300
+msgid "_Zoom:"
+msgstr "_Zoom :"
+
+#: modules/file/imgexport.c:1605 modules/file/pixmap.c:3318
+#: modules/process/col_synth.c:487 modules/process/diff_synth.c:525
+#: modules/process/domain_synth.c:528 modules/process/grain_mark.c:310
+#: modules/process/lat_synth.c:732 modules/process/obj_synth.c:567
+#: modules/process/pat_synth.c:871 modules/process/pat_synth.c:1173
+#: modules/process/pat_synth.c:1508 modules/process/tip_blind.c:344
+msgid "_Height:"
+msgstr "_Hauteur :"
+
+#: modules/file/imgexport.c:1630 modules/file/pixmap.c:3262
+#, c-format
+msgid "Export %s"
+msgstr "Exporter %s"
+
+#: modules/file/imgexport.c:1649 modules/file/pixmap.c:3414
+msgid "Export as 1_6 bit grayscale"
+msgstr "Exporter en niveaux de gris 1_6 bits"
+
+#: modules/file/imgexport.c:1669
+msgid "imgexport|Basic"
+msgstr "Basique"
+
+#: modules/file/imgexport.c:1677 modules/file/pixmap.c:3440
+msgid "Lateral Scale"
+msgstr "Échelle latérale"
+
+#: modules/file/imgexport.c:1685 modules/file/pixmap.c:3560
+msgid "Value Scale"
+msgstr "Valeur d'échelle"
+
+#: modules/file/imgexport.c:1754 modules/file/pixmap.c:2319
+msgid "Data must be displayed in a window for pixmap export."
+msgstr ""
+"Les données doivent affichées dans une fenêtre pour l'export vers un format "
+"image."
+
+#: modules/file/imgexport.c:2229
+#, c-format
+msgid "Cairo error occurred: %s"
+msgstr "Une erreur s'est produite dans Cairo : %s"
+
+#: modules/file/imgexport.c:2252 modules/file/pixmap.c:1791
+#: modules/file/pixmap.c:1819
+#, c-format
+msgid "Pixbuf save failed: %s."
+msgstr "La sauvegarde de l'image à échoué : %s."
+
+#: modules/file/imgexport.c:2530 modules/file/pixmap.c:2240
+msgid "Image is too large to be stored as TARGA."
+msgstr "L'image est trop grande pour être enregistrée au format TARGA"
 
 #: modules/file/intematix.c:126
 msgid "Imports Intematix SDF data files."
@@ -4132,7 +4236,8 @@ msgid "Spectra data starts past the end of file."
 msgstr "Les données du spectre commencent après la fin du fichier."
 
 #: modules/file/nanoeducator.c:648 modules/file/opdfile.c:277
-#: modules/file/sensofar.c:257 modules/file/witec-asc.c:161
+#: modules/file/renishaw.c:335 modules/file/sensofar.c:257
+#: modules/file/witec-asc.c:161
 msgid "File header is truncated"
 msgstr "L'en-tête de fichier est tronqué."
 
@@ -4513,6 +4618,14 @@ msgid "Frame #%u is too short for spectroscopy data header."
 msgstr ""
 "La trame #%u est trop courte pour l'en-tête des données speectroscopiques."
 
+#: modules/file/nxiifile.c:97
+msgid "Imports EM4SYS data files."
+msgstr "Importe les fichiers EM4SYS."
+
+#: modules/file/nxiifile.c:110
+msgid "EM4SYS NX II files (.bmp)"
+msgstr "EM4SYS NX II (.bmp)"
+
 #: modules/file/oldmda.c:153
 msgid "Imports old NTMDT MDA Spectra files."
 msgstr "Importe les anciens fichiers de spectres MDA NT-MDT."
@@ -4662,277 +4775,189 @@ msgstr "Le fichier main.xml contient plusieurs éléments de données."
 msgid "Only type %s is supported for axis %s."
 msgstr "Seul le type %s est supporté pour l'axe %s."
 
-#: modules/file/pixmap.c:409
+#: modules/file/pixmap.c:383
 msgid "All channels"
 msgstr "Tous les canaux"
 
-#: modules/file/pixmap.c:410
+#: modules/file/pixmap.c:384
 msgid "Red"
 msgstr "Rouge"
 
-#: modules/file/pixmap.c:411
+#: modules/file/pixmap.c:385
 msgid "Green"
 msgstr "Vert"
 
-#: modules/file/pixmap.c:412
+#: modules/file/pixmap.c:386
 msgid "Blue"
 msgstr "Bleu"
 
-#: modules/file/pixmap.c:413
+#: modules/file/pixmap.c:387
 msgid "Value (max)"
 msgstr "Valeur (max)"
 
-#: modules/file/pixmap.c:414
+#: modules/file/pixmap.c:388
 msgid "RGB sum"
 msgstr "Somme RVB"
 
-#: modules/file/pixmap.c:415
+#: modules/file/pixmap.c:389
 msgid "Luma"
 msgstr "Luma"
 
-#: modules/file/pixmap.c:416
+#: modules/file/pixmap.c:390
 msgid "Alpha"
 msgstr "Alpha"
 
-#: modules/file/pixmap.c:428
-msgid "Portable Network Graphics (.png)"
-msgstr "PNG (.png)"
-
-#: modules/file/pixmap.c:434
-msgid "JPEG (.jpeg,.jpg)"
-msgstr "JPEG (.jpeg, .jpg)"
-
-#: modules/file/pixmap.c:440
-msgid "TIFF (.tiff,.tif)"
-msgstr "TIFF (.tiff, .tif)"
-
-#: modules/file/pixmap.c:446
+#: modules/file/pixmap.c:420
 msgid "Portable Pixmap (.ppm,.pnm)"
 msgstr "PPM (.ppm, .pnm)"
 
-#: modules/file/pixmap.c:452
-msgid "Windows or OS2 Bitmap (.bmp)"
-msgstr "BMP (.bmp)"
-
-#: modules/file/pixmap.c:458
-msgid "TARGA (.tga,.targa)"
-msgstr "TARGA (.tga, .targa)"
-
-#: modules/file/pixmap.c:465
-msgid "Portable document format (.pdf)"
-msgstr "Document PDF (.pdf)"
-
-#: modules/file/pixmap.c:473
-msgid "Encapsulated PostScript (.eps)"
-msgstr "PostScript encapsulé (.eps)"
-
-#: modules/file/pixmap.c:481
-msgid "Scalable Vector Graphics (.svg)"
-msgstr "Image vectorielle SVG (.svg)"
-
-#: modules/file/pixmap.c:495
+#: modules/file/pixmap.c:445
 msgid "Graphics Interchange Format (.gif)"
 msgstr "GIF (.gif)"
 
-#: modules/file/pixmap.c:499
+#: modules/file/pixmap.c:449
 msgid "JPEG 2000 (.jpx)"
 msgstr "JPEG 2000 (.jpx)"
 
-#: modules/file/pixmap.c:503
+#: modules/file/pixmap.c:453
 msgid "PCX (.pcx)"
 msgstr "PCX (.pcx)"
 
-#: modules/file/pixmap.c:507
+#: modules/file/pixmap.c:457
 msgid "X Pixmap (.xpm)"
 msgstr "XPM (.xpm)"
 
-#: modules/file/pixmap.c:511
+#: modules/file/pixmap.c:461
 msgid "Sun raster image (.ras)"
 msgstr "Sun raster (.ras)"
 
-#: modules/file/pixmap.c:515
+#: modules/file/pixmap.c:465
 msgid "Apple icon (.icns)"
 msgstr "Icône Apple (.icns)"
 
-#: modules/file/pixmap.c:545
-msgid ""
-"Renders data into pixmap images and imports data from pixmap images. It "
-"supports the following image formats for export: PNG, JPEG, TIFF, PPM, BMP, "
-"TARGA. Import support relies on GDK and thus may be installation-dependent."
-msgstr ""
-"Exporte les données sous forme d'images et importe des données à partir "
-"d'une image. Les formats d'image suivants sont supportés pour l'export : "
-"PNG, JPEG, TIFF, PPM, BMP, TARGA. L'import dépend de GDK et peut ainsi "
-"dépendre de l'installation."
-
-#: modules/file/pixmap.c:848
+#: modules/file/pixmap.c:798
 #, c-format
 msgid "Pixmap has not registered file type `%s'."
 msgstr "L'image ne peut enregistrée avec le type de fichier `%s'."
 
-#: modules/file/pixmap.c:863
+#: modules/file/pixmap.c:813
 #, c-format
 msgid "Cannot get pixbuf loader: %s."
 msgstr "Chargeur d'image non disponible : %s."
 
-#: modules/file/pixmap.c:876 modules/file/pixmap.c:889
+#: modules/file/pixmap.c:826 modules/file/pixmap.c:839
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr "Le chargeur d'image refuse les données : %s."
 
-#: modules/file/pixmap.c:1316
+#: modules/file/pixmap.c:1266
 msgid ""
 "Warning: Colorful images cannot be reliably mapped to meaningful values."
 msgstr ""
 "Attention : des valeurs correctes ne peuvent être appliquées de manière "
 "fiable à des images en couleurs ."
 
-#: modules/file/pixmap.c:1335
+#: modules/file/pixmap.c:1285
 msgid "verb|Use"
 msgstr "Utiliser"
 
-#: modules/file/pixmap.c:1335
+#: modules/file/pixmap.c:1285
 msgid "as data"
 msgstr "en tant que données"
 
-#: modules/file/pixmap.c:1841 modules/file/pixmap.c:1869
-#, c-format
-msgid "Pixbuf save failed: %s."
-msgstr "La sauvegarde de l'image à échoué : %s."
-
-#: modules/file/pixmap.c:2290
-msgid "Image is too large to be stored as TARGA."
-msgstr "L'image est trop grande pour être enregistrée au format TARGA"
-
-#: modules/file/pixmap.c:2369
-msgid "Data must be displayed in a window for pixmap export."
-msgstr ""
-"Les données doivent affichées dans une fenêtre pour l'export vers un format "
-"image."
-
-#: modules/file/pixmap.c:3189
+#: modules/file/pixmap.c:3149
 msgid "Change Inset Color"
 msgstr "Changer l'échelle de couleurs"
 
-#: modules/file/pixmap.c:3258
+#: modules/file/pixmap.c:3218
 msgid "Gap:"
 msgstr "Écart :"
 
-#: modules/file/pixmap.c:3302
-#, c-format
-msgid "Export %s"
-msgstr "Exporter %s"
-
-#: modules/file/pixmap.c:3340
-msgid "_Zoom:"
-msgstr "_Zoom :"
-
-#: modules/file/pixmap.c:3358 modules/process/col_synth.c:487
-#: modules/process/diff_synth.c:525 modules/process/domain_synth.c:528
-#: modules/process/grain_mark.c:310 modules/process/lat_synth.c:732
-#: modules/process/obj_synth.c:567 modules/process/pat_synth.c:871
-#: modules/process/pat_synth.c:1173 modules/process/pat_synth.c:1508
-#: modules/process/tip_blind.c:344
-msgid "_Height:"
-msgstr "_Hauteur :"
-
-#: modules/file/pixmap.c:3370
+#: modules/file/pixmap.c:3330
 msgid "Font:"
 msgstr "Police :"
 
-#: modules/file/pixmap.c:3385
+#: modules/file/pixmap.c:3345
 msgid "Scale text _proportionally"
 msgstr "Mettre le texte _proportionnellement à l'échelle"
 
-#: modules/file/pixmap.c:3400
+#: modules/file/pixmap.c:3360
 msgid "_Font size:"
 msgstr "Taille de police :"
 
-#: modules/file/pixmap.c:3411
+#: modules/file/pixmap.c:3371
 msgid "Use antialiasing"
 msgstr "Anticrénelage"
 
-#: modules/file/pixmap.c:3425
+#: modules/file/pixmap.c:3385
 msgid "Draw _mask"
 msgstr "Dessiner le _masque"
 
-#: modules/file/pixmap.c:3434
+#: modules/file/pixmap.c:3394
 msgid "Draw _selection"
 msgstr "Dessiner la _sélection"
 
-#: modules/file/pixmap.c:3450
+#: modules/file/pixmap.c:3410
 msgid "Grayscale Mode"
 msgstr "Mode niveaux de gris"
 
-#: modules/file/pixmap.c:3454
-msgid "Export as 1_6 bit grayscale"
-msgstr "Exporter en niveaux de gris 1_6 bits"
-
-#: modules/file/pixmap.c:3480
-msgid "Lateral Scale"
-msgstr "Échelle latérale"
-
-#: modules/file/pixmap.c:3487 modules/file/pixmap.c:3607
+#: modules/file/pixmap.c:3447 modules/file/pixmap.c:3567
 msgid "ruler|_None"
 msgstr "_Aucune"
 
-#: modules/file/pixmap.c:3488
+#: modules/file/pixmap.c:3448
 msgid "_Rulers"
 msgstr "G_raduations"
 
-#: modules/file/pixmap.c:3489
+#: modules/file/pixmap.c:3449
 msgid "_Inset scale bar"
 msgstr "Échelle"
 
-#: modules/file/pixmap.c:3499
+#: modules/file/pixmap.c:3459
 msgid "Color:"
 msgstr "Couleur :"
 
-#: modules/file/pixmap.c:3515 modules/process/immerse.c:322
+#: modules/file/pixmap.c:3475 modules/process/immerse.c:322
 msgid "Position:"
 msgstr "Position :"
 
-#: modules/file/pixmap.c:3520
+#: modules/file/pixmap.c:3480
 msgid "left"
 msgstr "gauche"
 
-#: modules/file/pixmap.c:3524
+#: modules/file/pixmap.c:3484
 msgid "center"
 msgstr "centre"
 
-#: modules/file/pixmap.c:3528
+#: modules/file/pixmap.c:3488
 msgid "right"
 msgstr "droite"
 
-#: modules/file/pixmap.c:3533
+#: modules/file/pixmap.c:3493
 msgid "top"
 msgstr "haut"
 
-#: modules/file/pixmap.c:3545
+#: modules/file/pixmap.c:3505
 msgid "bottom"
 msgstr "bas"
 
-#: modules/file/pixmap.c:3556 modules/process/lno_synth.c:1067
+#: modules/file/pixmap.c:3516 modules/process/lno_synth.c:1067
 msgid "_Length:"
 msgstr "_Longueur :"
 
-#: modules/file/pixmap.c:3572
+#: modules/file/pixmap.c:3532
 msgid "_Auto"
 msgstr "_Auto"
 
-#: modules/file/pixmap.c:3580
+#: modules/file/pixmap.c:3540
 msgid "Draw _ticks"
 msgstr "Afficher les gradua_tions"
 
-#: modules/file/pixmap.c:3590
+#: modules/file/pixmap.c:3550
 msgid "Draw _label"
 msgstr "Dessiner les _labels"
 
-#: modules/file/pixmap.c:3600
-msgid "Value Scale"
-msgstr "Valeur d'échelle"
-
-#: modules/file/pixmap.c:3608
+#: modules/file/pixmap.c:3568
 msgid "_False color ruler"
 msgstr "Échelle de couleurs"
 
@@ -5483,6 +5508,22 @@ msgid "XYZ data regularization failed due to numerical instability."
 msgstr ""
 "La régularisation des données XYZ a échoué à cause d'une instabilité "
 "numérique."
+
+#: modules/file/renishaw.c:184
+msgid "Imports Renishaw WiRE data files (WDF)."
+msgstr "Importe les fichiers Renishaw WiRE (.wdf)."
+
+#: modules/file/renishaw.c:197
+msgid "Renishaw WiRE data files (.wdf)"
+msgstr "Renishaw WiRE (.wdf)"
+
+#: modules/file/renishaw.c:406
+msgid "Block header is truncated"
+msgstr "Le bloc d'en-tête est tronqué."
+
+#: modules/file/renishaw.c:421
+msgid "Data block is truncated"
+msgstr "Le bloc de données est tronqué."
 
 #: modules/file/rhk-sm3.c:236
 msgid "Imports RHK Technology SM3 data files."
