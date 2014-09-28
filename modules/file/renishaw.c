@@ -522,10 +522,10 @@ wdf_read_header(const guchar *buffer,
     for (i = 0; i < 6; i++) {
         header->spare[i] = gwy_get_guint64_le(&buffer);
     }
-    for (i = 0; i < 24; i++) {
+    for (i = 0; i < 32; i++) {
         header->user[i] = *(buffer++);
     }
-    for (i = 0; i < 24; i++) {
+    for (i = 0; i < 160; i++) {
         header->title[i] = *(buffer++);
     }
     for (i = 0; i < 6; i++) {
@@ -563,7 +563,6 @@ wdf_read_block_header(const guchar *buffer,
               header->size);
 
     if (size < header->size) {
-		fprintf(stderr, "%d %d\n", size, header->size);
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_DATA,
                     _("Data block is truncated"));
