@@ -18,11 +18,23 @@
  *  Boston, MA 02110-1301, USA.
  */
 
+/* NB: There is a draft of ISO 25178 Part 72, which may replace 5436-2
+ * eventually.  The identifiers may change then. */
+
 /**
  * [FILE-MAGIC-USERGUIDE]
  * OpenGPS X3P (ISO 5436-2)
  * .x3p
  * Read
+ **/
+
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-iso5436-2-spm">
+ *   <comment>ISO 5436-2 OpenGPS X3P data</comment>
+ *   <glob pattern="*.x3p"/>
+ *   <glob pattern="*.X3P"/>
+ * </mime-type>
  **/
 
 #include "config.h"
@@ -124,9 +136,9 @@ static gboolean      x3p_file_get_data_type(const gchar *type,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Reads OpenGPS .x3p files."),
+    N_("Reads ISO 5436-2 OpenGPS .x3p files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2014",
 };
@@ -137,7 +149,7 @@ static gboolean
 module_register(void)
 {
     gwy_file_func_register("opengps",
-                           N_("OpenGPS data (.x3p)"),
+                           N_("ISO 5436-2 OpenGPS data (.x3p)"),
                            (GwyFileDetectFunc)&x3p_detect,
                            (GwyFileLoadFunc)&x3p_load,
                            NULL,
@@ -151,6 +163,8 @@ x3p_detect(const GwyFileDetectInfo *fileinfo,
            gboolean only_name)
 {
     unzFile zipfile;
+    guchar *content;
+    gint score = 0;
 
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 15 : 0;
@@ -168,18 +182,21 @@ x3p_detect(const GwyFileDetectInfo *fileinfo,
                        MAGIC2, MAGIC2_SIZE))
         return 0;
 
-    /* We have to realy look inside. */
-    if (!(zipfile = unzOpen(fileinfo->name)))
-        return 0;
-
-    if (unzLocateFile(zipfile, "main.xml", 1) != UNZ_OK) {
+    /* We have to realy look inside.  And since main.xml is a popular name
+     * for the main XML document within such files, we also have to see if
+     * we find "ISO5436_2" somewehre near the begining of the file. */
+    if ((zipfile = unzOpen(fileinfo->name))) {
+        if (unzLocateFile(zipfile, "main.xml", 1) == UNZ_OK) {
+            if ((content = x3p_get_file_content(zipfile, NULL, NULL))) {
+                if (g_strstr_len(content, 4096, "ISO5436_2"))
+                    score = 100;
+                g_free(content);
+            }
+        }
         unzClose(zipfile);
-        return 0;
     }
 
-    unzClose(zipfile);
-
-    return 100;
+    return score;
 }
 
 static GwyContainer*
