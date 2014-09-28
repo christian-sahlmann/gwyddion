@@ -42,15 +42,11 @@
  * Read
  **/
 #include "config.h"
-#include <errno.h>
 #include <string.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
-#include <libgwydgets/gwygraphmodel.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
 #include <app/data-browser.h>
