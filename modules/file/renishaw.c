@@ -1,6 +1,6 @@
 /*
  *  $Id$
- *  Copyright (C) 2014 Daniil Bratashov (dn2010).
+ *  Copyright (C) 2014 Daniil Bratashov (dn2010), David Necas (Yeti)..
  *  Data structures and constants are copyright (c) 2011 Renishaw plc.
  *
  *  E-mail: dn2010@gmail.com.
@@ -61,6 +61,7 @@
 #include <libgwydgets/gwygraphbasics.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include "err.h"
 #include "get.h"
@@ -229,6 +230,7 @@ typedef struct {
     WdfDataType  xlisttype;
     WdfDataUnits xlistunits;
     gfloat       *xlistdata;
+    GdkPixbuf    *whitelight;
 } WdfFile;
 
 static gboolean       module_register        (void);
@@ -252,7 +254,7 @@ static GwyModuleInfo module_info = {
     N_("Imports Renishaw WiRE data files (WDF)."),
     "Daniil Bratashov <dn2010@gmail.com>",
     "0.2",
-    "Daniil Bratashov (dn2010), Renishaw plc.",
+    "Daniil Bratashov (dn2010), David Necas (Yeti), Renishaw plc.",
     "2014",
 };
 
@@ -308,10 +310,14 @@ wdf_load(const gchar *filename,
     GwyDataLine *cal;
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
-    gdouble *ydata, *xdata;
+    gdouble *ydata, *xdata, *data;
     gint i, j, k;
     gint xres = 180, yres =120, zres = 0;
+    gint width, height, rowstride, bpp;
     gdouble xreal = 180*1.4e-6, yreal = 120*1.4e-6, zreal = 1.0;
+    GdkPixbufLoader *loader;
+    GdkPixbuf *pixbuf = NULL;
+    guchar *pixels, *pix_p;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -325,16 +331,18 @@ wdf_load(const gchar *filename,
     p += WDF_HEADER_SIZE;
     size -= WDF_HEADER_SIZE;
     filedata.header = &fileheader;
+
     gwy_debug("npoints = %d, nspectra=%" G_GUINT64_FORMAT "",
               fileheader.npoints,
               fileheader.nspectra);
 
+    filedata.whitelight = NULL;
+    filedata.data = NULL;
+    filedata.xlistdata = NULL;
     while (size > 0) {
         if ((len = wdf_read_block_header(p, size, &block, error)) == 0)
             goto fail;
         if (block.id == WDF_BLOCKID_DATA) {
-            gwy_debug("DATA offset = %" G_GUINT64_FORMAT " size=%" G_GUINT64_FORMAT "",
-                      ((guint64)p - (guint64)buffer), block.size);
             filedata.datasize = block.size - WDF_BLOCK_HEADER_SIZE;
             if (filedata.datasize != fileheader.npoints
                                * fileheader.nspectra * sizeof(gfloat)) {
@@ -347,8 +355,6 @@ wdf_load(const gchar *filename,
             filedata.data = (gfloat *)(p + WDF_BLOCK_HEADER_SIZE);
         }
         else if (block.id == WDF_BLOCKID_XLIST) {
-            gwy_debug("XLST offset = %" G_GUINT64_FORMAT " size=%" G_GUINT64_FORMAT "",
-                      ((guint64)p - (guint64)buffer), block.size);
             if (block.size != WDF_BLOCK_HEADER_SIZE
                             + 2 * sizeof(guint32)
                             + fileheader.npoints * sizeof(gfloat)) {
@@ -371,9 +377,35 @@ wdf_load(const gchar *filename,
 
         }
         else if (block.id == WDF_BLOCKID_WHITELIGHT) {
-            gwy_debug("WL offset = %" G_GUINT64_FORMAT " size=%" G_GUINT64_FORMAT "",
-                      ((guint64)p - (guint64)buffer), block.size);
-
+            loader = gdk_pixbuf_loader_new();
+            if (!gdk_pixbuf_loader_write(loader, block.data, block.size,
+                                                                &err)) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("Pixbuf loader refused data: %s."),
+                            err->message);
+                g_clear_error(&err);
+                g_object_unref(loader);
+                goto fail;
+            }
+            gwy_debug("Closing the loader.");
+            if (!gdk_pixbuf_loader_close(loader, &err)) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("Pixbuf loader refused data: %s."),
+                            err->message);
+                g_clear_error(&err);
+                g_object_unref(loader);
+                goto fail;
+            }
+            gwy_debug("Trying to get the pixbuf.");
+            pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
+            gwy_debug("Pixbuf is: %p.", pixbuf);
+            g_assert(pixbuf);
+            g_object_ref(pixbuf);
+            gwy_debug("Finalizing loader.");
+            g_object_unref(loader);
+            filedata.whitelight = pixbuf;
         }
 
         p += len;
@@ -384,6 +416,10 @@ wdf_load(const gchar *filename,
 
     if (fileheader.nspectra == 1) { /* Single spectrum */
         zres = fileheader.npoints;
+        if ((zres <= 0) || !(filedata.data) || !(filedata.xlistdata)) {
+            err_FILE_TYPE(error, "Renishaw WDF");
+            goto fail;
+        }
         ydata = g_malloc(zres * sizeof(gdouble));
         gwy_convert_raw_data(filedata.data, zres, 1,
                              GWY_RAW_DATA_FLOAT,
@@ -418,6 +454,35 @@ wdf_load(const gchar *filename,
         g_object_unref(gmodel);
     }
 
+    if (filedata.whitelight) {
+        pixbuf = filedata.whitelight;
+        pixels = gdk_pixbuf_get_pixels(pixbuf);
+        width = gdk_pixbuf_get_width(pixbuf);
+        height = gdk_pixbuf_get_height(pixbuf);
+        rowstride = gdk_pixbuf_get_rowstride(pixbuf);
+        bpp = gdk_pixbuf_get_has_alpha(pixbuf) ? 4 : 3;
+
+        dfield = gwy_data_field_new(width, height, width, height, TRUE);
+        data = gwy_data_field_get_data(dfield);
+        for (i = 0; i < height; i++) {
+            pix_p = pixels + i * rowstride;
+            for (j = 0; j < width; j++) {
+                guchar red = pix_p[bpp*j];
+                guchar green = pix_p[bpp*j+1];
+                guchar blue = pix_p[bpp*j+2];
+
+                *(data + i * width + j) = (0.2126 * red
+                                         + 0.7152 * green
+                                         + 0.0722 * blue) / 255.0;
+            }
+        }
+        gwy_container_set_object_by_name(container, "/0/data", dfield);
+        g_object_unref(dfield);
+        title = g_strdup_printf("%s (WhiteLight)", fileheader.title);
+        gwy_container_set_string_by_name(container, "/0/data/title",
+                                         title);
+        gwy_file_channel_import_log_add(container, 1, NULL, filename);
+    }
     /*
 
     p = buffer + 528;
