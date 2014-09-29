@@ -215,19 +215,21 @@ nxii_load(const gchar *filename,
     gwy_data_field_get_min_max(dfield, &min, &max);
     if (min >= max)
         gwy_data_field_clear(dfield);
-    else if (nxiifile.mode == 2 || nxiifile.mode == 4 || nxiifile.mode == 5) {
-        /* XXX: For LFM there seems to be some special formula. */
+    else if (nxiifile.mode == NXII_MODE_FFM || nxiifile.mode == NXII_MODE_FMM)
+        gwy_data_field_multiply(dfield, nxiifile.zreal*Nano/(max - min));
+    else if (nxiifile.mode == NXII_MODE_LFM) {
+        /* XXX: This may be incorrect. */
+        gwy_data_field_add(dfield, -32768.0);
         gwy_data_field_multiply(dfield, nxiifile.zreal*Nano/(max - min));
     }
-    else {
+    else
         gwy_data_field_multiply(dfield, nxiifile.zreal*Micron/(max - min));
-    }
 
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
     unitz = gwy_data_field_get_si_unit_z(dfield);
-    if (nxiifile.mode == 2 || nxiifile.mode == 4)
+    if (nxiifile.mode == NXII_MODE_LFM || nxiifile.mode == NXII_MODE_FFM)
         gwy_si_unit_set_from_string(unitz, "N");
-    else if (nxiifile.mode == 5)
+    else if (nxiifile.mode == NXII_MODE_FMM)
         gwy_si_unit_set_from_string(unitz, "N/m");
     else
         gwy_si_unit_set_from_string(unitz, "m");
