@@ -19,9 +19,6 @@
  *  Boston, MA 02110-1301, USA.
  */
 
-/* FIXME: Is it possible that the BMP resolution does not match the data
- * resolution? */
-
 /**
  * [FILE-MAGIC-USERGUIDE]
  * EM4SYS NX II
@@ -46,11 +43,24 @@
 #define EXTENSION ".bmp"
 
 #define Micron (1e-6)
+#define Nano (1e-9)
 
 enum {
     BMP_HEADER_SIZE = 54,
     HEADER_SIZE = 243
 };
+
+/* Keep the names matching the 6-letter identifiers in the file. */
+typedef enum {
+    NXII_MODE_NORMAL = 0,
+    NXII_MODE_NONCON = 1,
+    NXII_MODE_LFM    = 2,
+    NXII_MODE_SCRIBI = 3,
+    NXII_MODE_FFM    = 4,
+    NXII_MODE_FMM    = 5,
+    NXII_MODE_TAPPIN = 6,
+    NXII_MODE_TWOSEN = 7,
+} NXIIMode;
 
 typedef struct {
     guint r, g, b;
@@ -80,6 +90,9 @@ typedef struct {
     guint cruise_time;
     gchar unknown_3[104];
     NXIIPalItem pal[5];
+
+    /* Our data */
+    NXIIMode mode;
 } NXIIFile;
 
 static gboolean      module_register (void);
@@ -160,6 +173,7 @@ nxii_load(const gchar *filename,
     const guchar *p;
     char *s;
     NXIIFile nxiifile;
+    GwySIUnit *unitz;
     guint xres, yres, bmpfilesize, expected_size;
     gdouble min, max;
     gsize size = 0;
@@ -201,11 +215,22 @@ nxii_load(const gchar *filename,
     gwy_data_field_get_min_max(dfield, &min, &max);
     if (min >= max)
         gwy_data_field_clear(dfield);
-    else
+    else if (nxiifile.mode == 2 || nxiifile.mode == 4 || nxiifile.mode == 5) {
+        /* XXX: For LFM there seems to be some special formula. */
+        gwy_data_field_multiply(dfield, nxiifile.zreal*Nano/(max - min));
+    }
+    else {
         gwy_data_field_multiply(dfield, nxiifile.zreal*Micron/(max - min));
+    }
 
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
-    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), "m");
+    unitz = gwy_data_field_get_si_unit_z(dfield);
+    if (nxiifile.mode == 2 || nxiifile.mode == 4)
+        gwy_si_unit_set_from_string(unitz, "N");
+    else if (nxiifile.mode == 5)
+        gwy_si_unit_set_from_string(unitz, "N/m");
+    else
+        gwy_si_unit_set_from_string(unitz, "m");
 
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
@@ -257,7 +282,19 @@ get_meta(NXIIFile *nxiifile)
 static gboolean
 read_nxii_header(const guchar *p, NXIIFile *nxiifile, GError **error)
 {
+    static const GwyEnum modes[] = {
+        { "Normal", NXII_MODE_NORMAL, },
+        { "NONCON", NXII_MODE_NONCON, },
+        { "LFM",    NXII_MODE_LFM,    },
+        { "Scribi", NXII_MODE_SCRIBI, },
+        { "FFM",    NXII_MODE_FFM,    },
+        { "FMM",    NXII_MODE_FMM,    },
+        { "TAPPIN", NXII_MODE_TAPPIN, },
+        { "TWOSEN", NXII_MODE_TWOSEN, },
+    };
+
     const guchar *q = p;
+    gchar s[7];
     guint i;
 
     get_CHARARRAY(nxiifile->file_version, &p);
@@ -313,6 +350,11 @@ read_nxii_header(const guchar *p, NXIIFile *nxiifile, GError **error)
         nxiifile->pal[i].g = *(p++);
         nxiifile->pal[i].b = *(p++);
     }
+
+    memcpy(s, nxiifile->head_mode, 6);
+    g_strstrip(s);
+    nxiifile->mode = gwy_string_to_enum(s, modes, G_N_ELEMENTS(modes));
+    gwy_debug("recognised mode %d", nxiifile->mode);
 
     g_assert(p - q == HEADER_SIZE);
     return TRUE;
