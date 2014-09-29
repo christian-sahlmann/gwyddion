@@ -45,7 +45,7 @@
  * [FILE-MAGIC-USERGUIDE]
  * Renishaw WiRE Data File
  * .wdf
- * SPS
+ * Read SPS Volume
  **/
 
 #include "config.h"
@@ -73,7 +73,8 @@
 
 enum {
     WDF_HEADER_SIZE = 512,
-    WDF_BLOCK_HEADER_SIZE = 16
+    WDF_BLOCK_HEADER_SIZE = 16,
+    WDF_MAP_AREA_SIZE = 64
 };
 
 typedef enum {
@@ -179,6 +180,19 @@ typedef enum {
     WdfDataUnits_EndMarker
 } WdfDataUnits;
 
+typedef enum {
+    WdfMapArea_RandomPoints = (1 << 0),     /* rectangle area */
+    WdfMapArea_ColumnMajor  = (1 << 1),     /* X first then Y. */
+    WdfMapArea_Alternating  = (1 << 2),     /* raster or snake */
+    WdfMapArea_LineFocusMapping = (1 << 3), /* see also linefocus_height */
+    // The following two values are deprecated; negative step-size is sufficient information.
+    // [Deprecated] WdfMapArea_InvertedRows = (1 << 4),     /* true if rows collected right to left */
+    // [Deprecated] WdfMapArea_InvertedColumns = (1 << 5),  /* true if columns collected bottom to top */
+    WdfMapArea_SurfaceProfile = (1 << 6),   /* true if the Z data is non-regular (surface maps) */
+    WdfMapArea_XyLine = (1 << 7),           /* line or depth slice forming a single line along the XY plane:
+                                               length.x contains number of points along line; length.y = 1 */
+} WdfMapAreaType;
+
 typedef struct {
     guint32 id;
     guint32 uid;
@@ -224,6 +238,15 @@ typedef struct {
 } WdfHeader;
 
 typedef struct {
+    guint32 flags;          /* scan mode flags of (WdfMapAreaType)*/
+    guint32 unused;
+    gfloat  location[3];    /* origin location XYZ */
+    gfloat  stepsize[3];    /* real step in XYZ */
+    guint32 length[3];      /* xres, yres, zres */
+    guint32 linefocus_size; /* length of linefocus line */
+} WdfMapArea;
+
+typedef struct {
     WdfHeader    *header;
     gfloat       *data;
     gsize        datasize;
@@ -231,29 +254,32 @@ typedef struct {
     WdfDataUnits xlistunits;
     gfloat       *xlistdata;
     GdkPixbuf    *whitelight;
+    WdfMapArea   *maparea;
 } WdfFile;
 
 static gboolean       module_register        (void);
-static gint           wdf_detect             (const GwyFileDetectInfo *fileinfo,
-                                              gboolean only_name);
+static gint           wdf_detect     (const GwyFileDetectInfo *fileinfo,
+                                      gboolean only_name);
 static GwyContainer*  wdf_load               (const gchar *filename,
                                               GwyRunType mode,
                                               GError **error);
-static gsize          wdf_read_header (const guchar *buffer,
-                                       gsize size,
-                                       WdfHeader *header,
-                                       GError **error);
-static gsize          wdf_read_block_header (const guchar *buffer,
-                                             gsize size,
-                                             WdfBlock *header,
-                                             GError **error);
+static gsize          wdf_read_header        (const guchar *buffer,
+                                              gsize size,
+                                              WdfHeader *header,
+                                              GError **error);
+static gsize          wdf_read_block_header  (const guchar *buffer,
+                                              gsize size,
+                                              WdfBlock *header,
+                                              GError **error);
+static void           wdf_read_maparea_block (const guchar *buffer,
+                                              WdfMapArea *maparea);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Renishaw WiRE data files (WDF)."),
     "Daniil Bratashov <dn2010@gmail.com>",
-    "0.2",
+    "0.3",
     "Daniil Bratashov (dn2010), David Necas (Yeti), Renishaw plc.",
     "2014",
 };
@@ -304,7 +330,6 @@ wdf_load(const gchar *filename,
     WdfBlock block;
     const guchar *p;
     gchar *title = NULL;
-
     GwyBrick *brick;
     GwyDataField *dfield;
     GwyDataLine *cal;
@@ -312,9 +337,9 @@ wdf_load(const gchar *filename,
     GwyGraphCurveModel *gcmodel;
     gdouble *ydata, *xdata, *data;
     gint i, j, k;
-    gint xres = 180, yres =120, zres = 0;
+    gint xres, yres, zres;
     gint width, height, rowstride, bpp;
-    gdouble xreal = 180*1.4e-6, yreal = 120*1.4e-6, zreal = 1.0;
+    gdouble xreal, yreal, zreal;
     GdkPixbufLoader *loader;
     GdkPixbuf *pixbuf = NULL;
     guchar *pixels, *pix_p;
@@ -339,6 +364,7 @@ wdf_load(const gchar *filename,
     filedata.whitelight = NULL;
     filedata.data = NULL;
     filedata.xlistdata = NULL;
+    filedata.maparea = NULL;
     while (size > 0) {
         if ((len = wdf_read_block_header(p, size, &block, error)) == 0)
             goto fail;
@@ -375,6 +401,16 @@ wdf_load(const gchar *filename,
             gwy_debug("ORGN offset = %" G_GUINT64_FORMAT " size=%" G_GUINT64_FORMAT "",
                       ((guint64)p - (guint64)buffer), block.size);
 
+        }
+        else if (block.id == WDF_BLOCKID_MAPAREA) {
+            if (block.size != WDF_MAP_AREA_SIZE) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("MapArea block is truncated"));
+                goto fail;
+            }
+            filedata.maparea = g_new(WdfMapArea, 1);
+            wdf_read_maparea_block(block.data, filedata.maparea);
         }
         else if (block.id == WDF_BLOCKID_WHITELIGHT) {
             loader = gdk_pixbuf_loader_new();
@@ -453,6 +489,61 @@ wdf_load(const gchar *filename,
                                          gmodel);
         g_object_unref(gmodel);
     }
+    else { /* some kind of scan */
+        if (!filedata.maparea) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("MapArea block is absent for scan"));
+            goto fail;
+        }
+
+        if (filedata.maparea->length[2] != 1) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("3D Volume is unsupported now"));
+            goto fail;
+        }
+
+        zres = fileheader.npoints;
+        xres = filedata.maparea->length[0];
+        yres = filedata.maparea->length[1];
+        brick = gwy_brick_new(xres, yres, zres, xres, yres, zres, TRUE);
+        data = gwy_brick_get_data(brick);
+        p = (guchar *)filedata.data;
+
+        for (i = 0; i < xres; i++)
+            for (j = 0; j < yres; j++)
+                for (k = 0; k < zres; k++) {
+                    *(data + k * xres * yres + i + j * xres)
+                                       = (gdouble)gwy_get_gfloat_le(&p);
+                }
+
+        cal = gwy_data_line_new(zres, zres, FALSE);
+        data = gwy_data_line_get_data(cal);
+        gwy_convert_raw_data(filedata.xlistdata, zres, 1,
+                             GWY_RAW_DATA_FLOAT,
+                             GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                             data, 1.0, 0.0);
+     // gwy_data_line_set_si_unit_y(cal, mdafile->siunitz);
+        gwy_brick_set_zcalibration(brick, cal);
+        g_object_unref(cal);
+
+        gwy_container_set_object_by_name(container, "/brick/0", brick);
+        title = g_strdup_printf("%s (WhiteLight)", fileheader.title);
+        gwy_container_set_string_by_name(container, "/brick/0/title",
+                                         title);
+        dfield = gwy_data_field_new(xres, yres,
+                                    xres, yres,
+                                    TRUE);
+        gwy_brick_mean_plane(brick, dfield, 0, 0, 0,
+                             xres, yres, -1, FALSE);
+        gwy_container_set_object_by_name(container, "/brick/0/preview",
+                                         dfield);
+        g_object_unref(dfield);
+        g_object_unref(brick);
+
+        gwy_file_volume_import_log_add(container, 0, NULL, filename);
+    }
 
     if (filedata.whitelight) {
         pixbuf = filedata.whitelight;
@@ -483,49 +574,6 @@ wdf_load(const gchar *filename,
                                          title);
         gwy_file_channel_import_log_add(container, 1, NULL, filename);
     }
-    /*
-
-    p = buffer + 528;
-
-    zres = fileheader.npoints;
-    brick = gwy_brick_new(xres, yres, zres, xreal, yreal, zreal, TRUE);
-    data = gwy_brick_get_data(brick);
-
-    for (i = 0; i < xres; i++)
-        for (j = 0; j < yres; j++)
-            for (k = 0; k < zres; k++) {
-                *(data + k * xres * yres + i + j * xres)
-                                       = (gdouble)gwy_get_gfloat_le(&p);
-            }
-
-    p = buffer + 87696580;
-
-    cal = gwy_data_line_new(zres, zres, FALSE);
-    data = gwy_data_line_get_data(cal);
-    for (k = 0; k < zres; k++) {
-        *(data++) = (gdouble)gwy_get_gfloat_le(&p);;
-    }
-    // gwy_data_line_set_si_unit_y(cal, mdafile->siunitz);
-    gwy_brick_set_zcalibration(brick, cal);
-    g_object_unref(cal);
-
-    container = gwy_container_new();
-
-    dfield = gwy_data_field_new(xres, yres,
-                                xreal, yreal,
-                                TRUE);
-    gwy_container_set_object_by_name(container, "/brick/0", brick);
-    gwy_container_set_string_by_name(container, "/brick/0/title",
-                                     g_strdup("Renishaw"));
-    gwy_brick_mean_plane(brick, dfield, 0, 0, 0,
-                         xres, yres, -1, FALSE);
-    gwy_container_set_object_by_name(container, "/brick/0/preview",
-                                     dfield);
-    g_object_unref(dfield);
-    g_object_unref(brick);
-
-    gwy_file_volume_import_log_add(container, 0, NULL, filename);
-    */
 
     fail:
     g_free(buffer);
@@ -639,5 +687,35 @@ wdf_read_block_header(const guchar *buffer,
     return header->size;
 }
 
+static void
+wdf_read_maparea_block(const guchar *buffer,
+                       WdfMapArea *maparea)
+{
+    gint i;
+
+    maparea->flags  = gwy_get_guint32_le(&buffer);
+    gwy_debug("flags=%d", maparea->flags);
+    maparea->unused = gwy_get_guint32_le(&buffer);
+    for (i = 0; i < 3; i++)
+        maparea->location[i] = gwy_get_gfloat_le(&buffer);
+    gwy_debug("location=%g, %g %g",
+              maparea->location[0],
+              maparea->location[1],
+              maparea->location[2]);
+    for (i = 0; i < 3; i++)
+        maparea->stepsize[i] = gwy_get_gfloat_le(&buffer);
+    gwy_debug("stepsize=%g, %g %g",
+              maparea->stepsize[0],
+              maparea->stepsize[1],
+              maparea->stepsize[2]);
+    for (i = 0; i < 3; i++)
+        maparea->length[i] = gwy_get_guint32_le(&buffer);
+    gwy_debug("length=%d, %d %d",
+              maparea->length[0],
+              maparea->length[1],
+              maparea->length[2]);
+    maparea->linefocus_size = gwy_get_guint32_le(&buffer);
+    gwy_debug("linefocus_length=%d", maparea->linefocus_size);
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
