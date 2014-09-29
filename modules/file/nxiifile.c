@@ -240,7 +240,6 @@ static GwyContainer*
 get_meta(NXIIFile *nxiifile)
 {
     GwyContainer *meta = gwy_container_new();
-    guint i;
 
     add_meta_str("Version", file_version);
     add_meta_str("Head mode", head_mode);
@@ -251,22 +250,6 @@ get_meta(NXIIFile *nxiifile)
     add_meta_uint("Minute", minute);
     add_meta_uint("Scan rate", scan_rate);
     add_meta_uint("Cruise time", cruise_time);
-    for (i = 0; i < G_N_ELEMENTS(nxiifile->pal); i++) {
-        gchar name[12];
-
-        g_snprintf(name, sizeof(name), "Pal %u R", i);
-        gwy_container_set_string_by_name(meta, name,
-                                         g_strdup_printf("%u",
-                                                         nxiifile->pal[i].r));
-        g_snprintf(name, sizeof(name), "Pal %u G", i);
-        gwy_container_set_string_by_name(meta, name,
-                                         g_strdup_printf("%u",
-                                                         nxiifile->pal[i].g));
-        g_snprintf(name, sizeof(name), "Pal %u B", i);
-        gwy_container_set_string_by_name(meta, name,
-                                         g_strdup_printf("%u",
-                                                         nxiifile->pal[i].b));
-    }
 
     return meta;
 }
