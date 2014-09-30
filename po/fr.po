@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-09-26 03:58+0200\n"
-"PO-Revision-Date: 2014-09-28 13:54+0100\n"
+"POT-Creation-Date: 2014-09-30 03:58+0200\n"
+"PO-Revision-Date: 2014-09-30 20:51+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -880,7 +880,7 @@ msgid "pixels"
 msgstr "pixels"
 
 #: libgwydgets/gwy3dwindow.c:1148 modules/file/hdrimage.cc:2213
-#: modules/file/imgexport.c:1633 modules/file/pixmap.c:1096
+#: modules/file/imgexport.c:1990 modules/file/pixmap.c:1096
 #: modules/file/pixmap.c:3265 modules/file/rawfile.c:402
 #: modules/process/angle_dist.c:172 modules/process/calcoefs_new.c:348
 #: modules/process/calibrate.c:392 modules/process/col_synth.c:387
@@ -1003,7 +1003,7 @@ msgstr "Taille de _point :"
 msgid "_Line type:"
 msgstr "Type de _ligne :"
 
-#: libgwydgets/gwygraphareadialog.c:167
+#: libgwydgets/gwygraphareadialog.c:167 modules/file/imgexport.c:1931
 msgid "Line t_hickness:"
 msgstr "Épaisseur de ligne :"
 
@@ -3051,7 +3051,7 @@ msgid "Burleigh exported data (.txt, .bin)"
 msgstr "Burleigh données exportées (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:227 modules/file/burleigh_exp.c:268
-#: modules/file/nanoscope.c:1528 modules/file/omicron.c:415
+#: modules/file/nanoscope.c:1502 modules/file/omicron.c:415
 #: modules/file/shimadzu.c:468
 msgid "Missing colon in header line."
 msgstr "Il manque une colonne dans la ligne d'en-tête."
@@ -3077,7 +3077,7 @@ msgstr "Createc (.dat)"
 msgid "Neither `%s' nor `%s' header field found."
 msgstr "Les champs d'en-tête `%s' et `%s' n'ont pas été trouvés."
 
-#: modules/file/createc.c:788 modules/file/matfile.c:600
+#: modules/file/createc.c:771 modules/file/matfile.c:600
 #: modules/file/rhk-sm4.c:1449
 #, c-format
 msgid "zlib initialization failed with error %d, cannot decompress data."
@@ -3085,12 +3085,12 @@ msgstr ""
 "L'initialisation de zlib a échoué avec l'erreur %d, impossible de "
 "décompresser les données."
 
-#: modules/file/createc.c:802 modules/file/rhk-sm4.c:1463
+#: modules/file/createc.c:785 modules/file/rhk-sm4.c:1463
 #, c-format
 msgid "Decompression of compressed data failed with error %d."
 msgstr "La décompression des données a échoué avec l'erreur %d."
 
-#: modules/file/createc.c:847 modules/file/rhk-sm4.c:1506
+#: modules/file/createc.c:830 modules/file/rhk-sm4.c:1506
 msgid "Cannot decompress compressed data.  Zlib support was not built in."
 msgstr ""
 "Impossible de décompresser les données. Le support Zlib n'a pas été intégré."
@@ -3349,25 +3349,38 @@ msgstr "La première section n'est pas un DataSet"
 msgid "GroupCount in [DataSet]"
 msgstr "GroupCount dans [DataSet]"
 
-#: modules/file/femtoscan-txt.c:78
+#: modules/file/femtoscan-txt.c:77
 msgid "Imports FemtoScan TXT files."
 msgstr "Importe les fichiers FemtoScan TXT."
 
-#: modules/file/femtoscan-txt.c:91
+#: modules/file/femtoscan-txt.c:90
 msgid "FemtoScan text files (.txt)"
 msgstr "Fichiers texte FemtoScan (.txt)"
 
-#: modules/file/femtoscan-txt.c:190
+#: modules/file/femtoscan-txt.c:189
 msgid "Data line does not start with a Y abscissa."
 msgstr "La ligne de données ne démarre pas avec une abscisse Y."
 
-#: modules/file/femtoscan-txt.c:198
+#: modules/file/femtoscan-txt.c:197
 #, c-format
 msgid ""
 "Data line length %u does not correspond to the number of X abscissas %u."
 msgstr ""
 "La longueur de la ligne de données %u ne correspond pas au nombre "
 "d'abscisses X %u."
+
+#: modules/file/femtoscan.c:81
+msgid "Imports FemtoScan SPM data files."
+msgstr "Importe les fichiers FemtoScan SPM."
+
+#: modules/file/femtoscan.c:94
+msgid "FemtoScan SPM files"
+msgstr "FemtoScan SPM  (.spm)"
+
+#: modules/file/femtoscan.c:285 modules/file/miffile.c:688
+#: modules/file/mulfile.c:305
+msgid "Image data are outside the file."
+msgstr "Les données de l'image sont en dehors du fichier."
 
 #: modules/file/fitsfile.c:75
 msgid "Reads Flexible Image Transport System (FITS) files."
@@ -3383,7 +3396,7 @@ msgid "CFITSIO error while reading the FITS file: %s."
 msgstr "Erreur CFITSIO lors de la lecture du fichier FITS : %s."
 
 #: modules/file/fitsfile.c:159 modules/file/fitsfile.c:171
-#: modules/file/fitsfile.c:182
+#: modules/file/fitsfile.c:182 modules/file/spmxfile.c:396
 msgid "Only two-dimensional images are supported."
 msgstr "Seules les images bi-dimensionnelles sont supportées."
 
@@ -3618,13 +3631,13 @@ msgid "OpenEXR data type %u is invalid or unsupported."
 msgstr "Le type de données OpenEXR %u est invalide ou non supportée."
 
 #: modules/file/hdrimage.cc:1433 modules/file/hdrimage.cc:1442
-#: modules/file/imgexport.c:1907 modules/file/imgexport.c:1918
+#: modules/file/imgexport.c:2275 modules/file/imgexport.c:2286
 #: modules/file/pixmap.c:1634 modules/file/pixmap.c:1644
 #, c-format
 msgid "libpng initialization error (in %s)"
 msgstr "Erreur d'initialisation de libpng (dans %s)"
 
-#: modules/file/hdrimage.cc:1451 modules/file/imgexport.c:1982
+#: modules/file/hdrimage.cc:1451 modules/file/imgexport.c:2350
 #: modules/file/pixmap.c:1704
 msgid "libpng error occured"
 msgstr "Une erreur s'est produite dans libpng"
@@ -3666,7 +3679,7 @@ msgstr "Pages : "
 msgid "Physical Dimensions"
 msgstr "Dimensions physiques"
 
-#: modules/file/hdrimage.cc:2304 modules/file/imgexport.c:1598
+#: modules/file/hdrimage.cc:2304 modules/file/imgexport.c:1889
 #: modules/file/pixmap.c:1179 modules/file/pixmap.c:3309
 #: modules/file/rawfile.c:636 modules/process/crosscor.c:215
 #: modules/process/dimensions.h:472 modules/process/tip_blind.c:337
@@ -3795,43 +3808,43 @@ msgstr ""
 msgid "Cannot read channel labels."
 msgstr "Impossible de lire les labels des canaux."
 
-#: modules/file/imgexport.c:293 modules/file/pixmap.c:402
+#: modules/file/imgexport.c:319 modules/file/pixmap.c:402
 msgid "Portable Network Graphics (.png)"
 msgstr "PNG (.png)"
 
-#: modules/file/imgexport.c:299 modules/file/pixmap.c:408
+#: modules/file/imgexport.c:325 modules/file/pixmap.c:408
 msgid "JPEG (.jpeg,.jpg)"
 msgstr "JPEG (.jpeg, .jpg)"
 
-#: modules/file/imgexport.c:305 modules/file/pixmap.c:414
+#: modules/file/imgexport.c:331 modules/file/pixmap.c:414
 msgid "TIFF (.tiff,.tif)"
 msgstr "TIFF (.tiff, .tif)"
 
-#: modules/file/imgexport.c:311
+#: modules/file/imgexport.c:337
 msgid "Portable Image (.ppm,.pnm)"
-msgstr "PPM (.ppm, .pnm)"
+msgstr "Image PPM (.ppm, .pnm)"
 
-#: modules/file/imgexport.c:317 modules/file/pixmap.c:426
+#: modules/file/imgexport.c:343 modules/file/pixmap.c:426
 msgid "Windows or OS2 Bitmap (.bmp)"
-msgstr "BMP (.bmp)"
+msgstr "Image BMP (.bmp)"
 
-#: modules/file/imgexport.c:323 modules/file/pixmap.c:432
+#: modules/file/imgexport.c:349 modules/file/pixmap.c:432
 msgid "TARGA (.tga,.targa)"
-msgstr "TARGA (.tga, .targa)"
+msgstr "Image TARGA (.tga, .targa)"
 
-#: modules/file/imgexport.c:330
+#: modules/file/imgexport.c:356
 msgid "Portable document format (.pdf)"
 msgstr "Document PDF (.pdf)"
 
-#: modules/file/imgexport.c:338
+#: modules/file/imgexport.c:364
 msgid "Encapsulated PostScript (.eps)"
 msgstr "PostScript encapsulé (.eps)"
 
-#: modules/file/imgexport.c:346
+#: modules/file/imgexport.c:372
 msgid "Scalable Vector Graphics (.svg)"
 msgstr "Image vectorielle SVG (.svg)"
 
-#: modules/file/imgexport.c:370 modules/file/pixmap.c:495
+#: modules/file/imgexport.c:397 modules/file/pixmap.c:495
 msgid ""
 "Renders data into pixmap images and imports data from pixmap images. It "
 "supports the following image formats for export: PNG, JPEG, TIFF, PPM, BMP, "
@@ -3842,11 +3855,11 @@ msgstr ""
 "PNG, JPEG, TIFF, PPM, BMP, TARGA. L'import dépend de GDK et peut ainsi "
 "dépendre de l'installation."
 
-#: modules/file/imgexport.c:1586 modules/file/pixmap.c:3300
+#: modules/file/imgexport.c:1877 modules/file/pixmap.c:3300
 msgid "_Zoom:"
 msgstr "_Zoom :"
 
-#: modules/file/imgexport.c:1605 modules/file/pixmap.c:3318
+#: modules/file/imgexport.c:1896 modules/file/pixmap.c:3318
 #: modules/process/col_synth.c:487 modules/process/diff_synth.c:525
 #: modules/process/domain_synth.c:528 modules/process/grain_mark.c:310
 #: modules/process/lat_synth.c:732 modules/process/obj_synth.c:567
@@ -3855,45 +3868,65 @@ msgstr "_Zoom :"
 msgid "_Height:"
 msgstr "_Hauteur :"
 
-#: modules/file/imgexport.c:1630 modules/file/pixmap.c:3262
+#: modules/file/imgexport.c:1903 modules/file/pixmap.c:3330
+msgid "Font:"
+msgstr "Police :"
+
+#: modules/file/imgexport.c:1921 modules/file/pixmap.c:3360
+msgid "_Font size:"
+msgstr "Taille de police :"
+
+#: modules/file/imgexport.c:1941
+msgid "_Border width:"
+msgstr "Épaisseur des bordures :"
+
+#: modules/file/imgexport.c:1951
+msgid "_Tick length:"
+msgstr "Longueur des gradua_tions :"
+
+#: modules/file/imgexport.c:1959
+msgid "Tie sizes to _data pixels"
+msgstr "Lier les _dimensions aux pixels"
+
+#: modules/file/imgexport.c:1987 modules/file/pixmap.c:3262
 #, c-format
 msgid "Export %s"
 msgstr "Exporter %s"
 
-#: modules/file/imgexport.c:1649 modules/file/pixmap.c:3414
+#: modules/file/imgexport.c:2006 modules/file/pixmap.c:3414
 msgid "Export as 1_6 bit grayscale"
 msgstr "Exporter en niveaux de gris 1_6 bits"
 
-#: modules/file/imgexport.c:1669
+#: modules/file/imgexport.c:2026
 msgid "imgexport|Basic"
 msgstr "Basique"
 
-#: modules/file/imgexport.c:1677 modules/file/pixmap.c:3440
+#: modules/file/imgexport.c:2034 modules/file/pixmap.c:3440
 msgid "Lateral Scale"
 msgstr "Échelle latérale"
 
-#: modules/file/imgexport.c:1685 modules/file/pixmap.c:3560
+#: modules/file/imgexport.c:2042 modules/file/pixmap.c:3560
 msgid "Value Scale"
 msgstr "Valeur d'échelle"
 
-#: modules/file/imgexport.c:1754 modules/file/pixmap.c:2319
+#: modules/file/imgexport.c:2116 modules/file/pixmap.c:2319
 msgid "Data must be displayed in a window for pixmap export."
 msgstr ""
 "Les données doivent affichées dans une fenêtre pour l'export vers un format "
 "image."
 
-#: modules/file/imgexport.c:2229
+#: modules/file/imgexport.c:2601
 #, c-format
 msgid "Cairo error occurred: %s"
 msgstr "Une erreur s'est produite dans Cairo : %s"
 
-#: modules/file/imgexport.c:2252 modules/file/pixmap.c:1791
+#: modules/file/imgexport.c:2625 modules/file/pixmap.c:1791
 #: modules/file/pixmap.c:1819
 #, c-format
 msgid "Pixbuf save failed: %s."
 msgstr "La sauvegarde de l'image à échoué : %s."
 
-#: modules/file/imgexport.c:2530 modules/file/pixmap.c:2240
+#: modules/file/imgexport.c:2903 modules/file/pixmap.c:2240
 msgid "Image is too large to be stored as TARGA."
 msgstr "L'image est trop grande pour être enregistrée au format TARGA"
 
@@ -4178,10 +4211,6 @@ msgstr "La taille du bloc d'information de fichier est invalide."
 msgid "Unique id record is too short."
 msgstr "L'identifiant unique est trop court."
 
-#: modules/file/miffile.c:688 modules/file/mulfile.c:305
-msgid "Image data are outside the file."
-msgstr "Les données de l'image sont en dehors du fichier."
-
 #: modules/file/mifile.c:173
 msgid "Imports Molecular Imaging MI data files."
 msgstr "Importe les fichiers Molecular Imaging MI."
@@ -4236,7 +4265,7 @@ msgid "Spectra data starts past the end of file."
 msgstr "Les données du spectre commencent après la fin du fichier."
 
 #: modules/file/nanoeducator.c:648 modules/file/opdfile.c:277
-#: modules/file/renishaw.c:335 modules/file/sensofar.c:257
+#: modules/file/renishaw.c:595 modules/file/sensofar.c:257
 #: modules/file/witec-asc.c:161
 msgid "File header is truncated"
 msgstr "L'en-tête de fichier est tronqué."
@@ -4345,12 +4374,13 @@ msgid "NanoObserver data (.nao)"
 msgstr "NanoObserver (.nao)"
 
 #: modules/file/nanoobserver.c:187 modules/file/nanoscantech.c:204
-#: modules/file/opengps.c:198
+#: modules/file/opengps.c:215 modules/file/spmxfile.c:172
 msgid "Minizip cannot open the file as a ZIP file."
 msgstr "Minizip n'arrive pas à ouvrir le fichier en tant que fichier ZIP."
 
-#: modules/file/nanoobserver.c:459 modules/file/opengps.c:487
-#: modules/file/opengps.c:687 modules/file/opengps.c:723
+#: modules/file/nanoobserver.c:459 modules/file/opengps.c:504
+#: modules/file/opengps.c:704 modules/file/opengps.c:740
+#: modules/file/spmxfile.c:216 modules/file/spmxfile.c:524
 #, c-format
 msgid "File %s is missing in the zip file."
 msgstr "Le fichier %s est absent du fichier zip."
@@ -4427,7 +4457,7 @@ msgstr "Impossible d'analyser le champ `Scan size'."
 msgid "Garbage after data sample #%u."
 msgstr "Données erronées après l'échantillon #%u."
 
-#: modules/file/nanoscope.c:1518
+#: modules/file/nanoscope.c:1492
 msgid "Truncated header line."
 msgstr "Ligne d'en-tête tronquée."
 
@@ -4618,11 +4648,11 @@ msgid "Frame #%u is too short for spectroscopy data header."
 msgstr ""
 "La trame #%u est trop courte pour l'en-tête des données speectroscopiques."
 
-#: modules/file/nxiifile.c:97
+#: modules/file/nxiifile.c:116
 msgid "Imports EM4SYS data files."
 msgstr "Importe les fichiers EM4SYS."
 
-#: modules/file/nxiifile.c:110
+#: modules/file/nxiifile.c:129
 msgid "EM4SYS NX II files (.bmp)"
 msgstr "EM4SYS NX II (.bmp)"
 
@@ -4750,27 +4780,27 @@ msgstr "Des dossiers emboîtés ont été trouvés"
 msgid "Truncated data in block %s"
 msgstr "Données tronquées dans le bloc %s"
 
-#: modules/file/opengps.c:127
-msgid "Reads OpenGPS .x3p files."
-msgstr "Importe les fichiers OpenGPS (.x3p)"
+#: modules/file/opengps.c:139
+msgid "Reads ISO 5436-2 OpenGPS .x3p files."
+msgstr "Importe les fichiers ISO 5436-2 OpenGPS (.x3p)"
 
-#: modules/file/opengps.c:140
-msgid "OpenGPS data (.x3p)"
-msgstr "OpenGPS (.x3p)"
+#: modules/file/opengps.c:152
+msgid "ISO 5436-2 OpenGPS data (.x3p)"
+msgstr "ISO 5436-2 OpenGPS (.x3p)"
 
-#: modules/file/opengps.c:410 modules/file/opengps.c:443
+#: modules/file/opengps.c:427 modules/file/opengps.c:460
 msgid "Too many DataList items for given matrix dimensions."
 msgstr ""
 "Il y a trop d'éléments DataList par rapport aux dimensions données pour la "
 "matrice."
 
-#: modules/file/opengps.c:537
+#: modules/file/opengps.c:554
 msgid "File main.xml contains multiple data elements."
 msgstr "Le fichier main.xml contient plusieurs éléments de données."
 
 #. TRANSLATORS: type and axis are symbols such as I, CX, ...
-#: modules/file/opengps.c:569 modules/file/opengps.c:577
-#: modules/file/opengps.c:585
+#: modules/file/opengps.c:586 modules/file/opengps.c:594
+#: modules/file/opengps.c:602
 #, c-format
 msgid "Only type %s is supported for axis %s."
 msgstr "Seul le type %s est supporté pour l'axe %s."
@@ -4846,6 +4876,7 @@ msgid "Cannot get pixbuf loader: %s."
 msgstr "Chargeur d'image non disponible : %s."
 
 #: modules/file/pixmap.c:826 modules/file/pixmap.c:839
+#: modules/file/renishaw.c:421 modules/file/renishaw.c:431
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr "Le chargeur d'image refuse les données : %s."
@@ -4873,17 +4904,9 @@ msgstr "Changer l'échelle de couleurs"
 msgid "Gap:"
 msgstr "Écart :"
 
-#: modules/file/pixmap.c:3330
-msgid "Font:"
-msgstr "Police :"
-
 #: modules/file/pixmap.c:3345
 msgid "Scale text _proportionally"
 msgstr "Mettre le texte _proportionnellement à l'échelle"
-
-#: modules/file/pixmap.c:3360
-msgid "_Font size:"
-msgstr "Taille de police :"
 
 #: modules/file/pixmap.c:3371
 msgid "Use antialiasing"
@@ -5509,19 +5532,31 @@ msgstr ""
 "La régularisation des données XYZ a échoué à cause d'une instabilité "
 "numérique."
 
-#: modules/file/renishaw.c:184
+#: modules/file/renishaw.c:280
 msgid "Imports Renishaw WiRE data files (WDF)."
 msgstr "Importe les fichiers Renishaw WiRE (.wdf)."
 
-#: modules/file/renishaw.c:197
+#: modules/file/renishaw.c:293
 msgid "Renishaw WiRE data files (.wdf)"
 msgstr "Renishaw WiRE (.wdf)"
 
-#: modules/file/renishaw.c:406
+#: modules/file/renishaw.c:409
+msgid "MapArea block is truncated"
+msgstr "Le bloc MapArea est tronqué"
+
+#: modules/file/renishaw.c:496
+msgid "MapArea block is absent for scan"
+msgstr "Le bloc MapArea est absent pour le scan"
+
+#: modules/file/renishaw.c:503
+msgid "3D Volume is unsupported now"
+msgstr "Le volume 3D n'est actuellement pas supporté"
+
+#: modules/file/renishaw.c:666
 msgid "Block header is truncated"
 msgstr "Le bloc d'en-tête est tronqué."
 
-#: modules/file/renishaw.c:421
+#: modules/file/renishaw.c:681
 msgid "Data block is truncated"
 msgstr "Le bloc de données est tronqué."
 
@@ -5742,31 +5777,31 @@ msgstr "Importe les fichiers SIS (Surface Imaging Systems)."
 msgid "SIS files (.sis)"
 msgstr "SIS (.sis)"
 
-#: modules/file/sis.c:832
+#: modules/file/sis.c:811
 msgid "Block not a document block."
 msgstr "Le bloc n'est pas un bloc document."
 
-#: modules/file/sis.c:841
+#: modules/file/sis.c:820
 msgid "Too short document info."
 msgstr "Information de document trop courte."
 
-#: modules/file/sis.c:862
+#: modules/file/sis.c:841
 msgid "Too short parameter info."
 msgstr "Information de paramètre trop courte."
 
-#: modules/file/sis.c:969
+#: modules/file/sis.c:948
 msgid "Unexpected image block."
 msgstr "Bloc image inattendu."
 
-#: modules/file/sis.c:1002 modules/file/sis.c:1033
+#: modules/file/sis.c:981 modules/file/sis.c:1012
 msgid "End of file reached in image block."
 msgstr "Fin du fichier atteinte dans le bloc image."
 
-#: modules/file/sis.c:1047
+#: modules/file/sis.c:1026
 msgid "End of file reached in channel block."
 msgstr "Fin du fichier atteinte dans le bloc de canal."
 
-#: modules/file/sis.c:1071
+#: modules/file/sis.c:1050
 msgid "End of file reached when another channel was expected."
 msgstr "Fin du fichier atteinte alors qu'un autre canal était attendu."
 
@@ -5810,6 +5845,14 @@ msgstr "SPMLab virgule flottante (.flt)"
 #: modules/file/spmlabf.c:154
 msgid "Missing data start marker [Data]."
 msgstr "Il manque le marqueur de début de données [Data]."
+
+#: modules/file/spmxfile.c:96
+msgid "Reads ATC SPMxFormat files."
+msgstr "Importe les fichiers ATC SPMxFormat."
+
+#: modules/file/spmxfile.c:109
+msgid "ATC SPMxFormat data (.spm)"
+msgstr "ATC SPMxFormat (.spm)"
 
 #: modules/file/stmprg.c:232
 msgid "Imports Omicron STMPRG data files (tp ta)."
