@@ -200,7 +200,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports DME MIF data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti)",
     "2010",
 };
@@ -667,13 +667,15 @@ mif_read_data_field(const MIFImageHeader *image_header,
                     gsize size,
                     GError **error)
 {
-    gint xres = image_header->setup.xres;
-    gint yres = image_header->setup.yres;
-    gdouble xreal = image_header->setup.xreal;
-    gdouble yreal = image_header->setup.yreal;
-    gdouble xoff = image_header->setup.xoff;
-    gdouble yoff = image_header->setup.yoff;
-    gdouble q = image_header->configuration.scan_int_to_meter;
+    const MIFScanSetup *setup = &image_header->setup;
+    const MIFImageConfiguration *configuration = &image_header->configuration;
+    gint xres = setup->xres;
+    gint yres = setup->yres;
+    gdouble xreal = setup->xreal * image_header->configuration.xcal;
+    gdouble yreal = setup->yreal * image_header->configuration.ycal;
+    gdouble xoff = setup->xoff;
+    gdouble yoff = setup->yoff;
+    gdouble q = configuration->scan_int_to_meter * configuration->zcal;
     GwyDataField *dfield;
     gdouble *data;
     const gint16 *d16;
