@@ -70,6 +70,7 @@
 typedef enum {
     MPRO_PHASE_RES_NORMAL = 0,
     MPRO_PHASE_RES_HIGH   = 1,
+    MPRO_PHASE_RES_HIGH2  = 2,
 } MProPhaseResType;
 
 typedef struct {
@@ -338,7 +339,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports binary MetroPro (Zygo) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -899,8 +900,10 @@ fill_data_fields(MProFile *mprofile,
         ndata++;
 
         i = 4096;
-        if (mprofile->phase_res == 1)
+        if (mprofile->phase_res == MPRO_PHASE_RES_HIGH)
             i = 32768;
+        else if (mprofile->phase_res == MPRO_PHASE_RES_HIGH2)
+            i = 131072;
 
         q = mprofile->intf_scale_factor * mprofile->obliquity_factor
             * mprofile->wavelength_in/i;
