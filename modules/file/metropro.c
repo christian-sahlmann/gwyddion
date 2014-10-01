@@ -899,11 +899,17 @@ fill_data_fields(MProFile *mprofile,
 
         ndata++;
 
-        i = 4096;
-        if (mprofile->phase_res == MPRO_PHASE_RES_HIGH)
+        if (mprofile->phase_res == MPRO_PHASE_RES_NORMAL)
+            i = 4096;
+        else if (mprofile->phase_res == MPRO_PHASE_RES_HIGH)
             i = 32768;
         else if (mprofile->phase_res == MPRO_PHASE_RES_HIGH2)
             i = 131072;
+        else {
+            g_warning("Unknown phase_res %u, scaling will be wrong.",
+                      mprofile->phase_res);
+            i = 131072;
+        }
 
         q = mprofile->intf_scale_factor * mprofile->obliquity_factor
             * mprofile->wavelength_in/i;
