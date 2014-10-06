@@ -599,6 +599,7 @@ mprofile_read_header(const guchar *buffer,
     mprofile->min_mod = gwy_get_gint32_be(&p);
     mprofile->min_mod_count = gwy_get_gint32_be(&p);
     mprofile->phase_res = gwy_get_gint16_be(&p);
+    gwy_debug("phase_res %u", mprofile->phase_res);
     mprofile->min_area = gwy_get_gint32_be(&p);
     mprofile->discon_action = gwy_get_gint16_be(&p);
     mprofile->discon_filter = gwy_get_gfloat_be(&p);
