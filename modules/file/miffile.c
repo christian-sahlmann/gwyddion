@@ -675,7 +675,7 @@ mif_read_data_field(const MIFImageHeader *image_header,
     gdouble yreal = setup->yreal * image_header->configuration.ycal;
     gdouble xoff = setup->xoff;
     gdouble yoff = setup->yoff;
-    gdouble q = configuration->scan_int_to_meter * configuration->zcal;
+    gdouble q = configuration->zcal/65536.0;
     GwyDataField *dfield;
     gdouble *data;
     const gint16 *d16;
@@ -703,9 +703,13 @@ mif_read_data_field(const MIFImageHeader *image_header,
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), "m");
 
-    // FIXME: Don't know why this factor.  It seems to match what MIF spmview
-    // profile reader shows though.
-    q *= 1.0e4;
+    // XXX: Don't know why this range.  A user got it from DME.  Have no idea
+    // why scan_int_to_meter does not appear here.
+    if (!configuration->z_linearized)
+        q *= 15e-6;
+    else
+        q *= 20e-6;
+
     for (i = 0; i < yres; i++) {
         for (j = 0; j < yres; j++) {
             data[(yres-1 - i)*xres + j] = q*GINT16_FROM_LE(d16[i*xres + j]);
