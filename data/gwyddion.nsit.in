@@ -141,8 +141,9 @@ Function ChooseLocale
     !insertmacro GWY_LOCALE_CHOOSER "German" "de_DE.UTF-8" 36u
     !insertmacro GWY_LOCALE_CHOOSER "French" "fr_FR.UTF-8" 48u
     !insertmacro GWY_LOCALE_CHOOSER "Italian" "it_IT.UTF-8" 60u
-    !insertmacro GWY_LOCALE_CHOOSER "Russian" "ru_RU.UTF-8" 72u
-    !insertmacro GWY_LOCALE_CHOOSER "Spanish" "es_ES.UTF-8" 84u
+    !insertmacro GWY_LOCALE_CHOOSER "Korean" "ko_KR.UTF-8" 72u
+    !insertmacro GWY_LOCALE_CHOOSER "Russian" "ru_RU.UTF-8" 84u
+    !insertmacro GWY_LOCALE_CHOOSER "Spanish" "es_ES.UTF-8" 96u
 # @@@ GENERATED LANG NSIS-MENU END @@@
 
     nsDialogs::Show
@@ -258,6 +259,7 @@ Section "Gwyddion (required)"
     GwyExpandFiles "share\locale\de\LC_MESSAGES\*.mo"
     GwyExpandFiles "share\locale\fr\LC_MESSAGES\*.mo"
     GwyExpandFiles "share\locale\it\LC_MESSAGES\*.mo"
+    GwyExpandFiles "share\locale\ko\LC_MESSAGES\*.mo"
     GwyExpandFiles "share\locale\ru\LC_MESSAGES\*.mo"
     GwyExpandFiles "share\locale\es\LC_MESSAGES\*.mo"
 # @@@ GENERATED LANG NSIS-MO END @@@

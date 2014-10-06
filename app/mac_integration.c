@@ -231,6 +231,7 @@ gwy_osx_set_locale()
         { "de_DE.UTF-8", "de" },
         { "fr_FR.UTF-8", "fr" },
         { "it_IT.UTF-8", "it" },
+        { "ko_KR.UTF-8", "ko" },
         { "ru_RU.UTF-8", "ru" },
         { "es_ES.UTF-8", "es" },
 /* @@@ GENERATED LANG OS X END @@@ */

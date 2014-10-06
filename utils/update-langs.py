@@ -29,6 +29,7 @@ languages = (
     Language('de', 'de_DE.UTF-8', 'German'),
     Language('fr', 'fr_FR.UTF-8', 'French'),
     Language('it', 'it_IT.UTF-8', 'Italian'),
+    Language('ko', 'ko_KR.UTF-8', 'Korean'),
     Language('ru', 'ru_RU.UTF-8', 'Russian'),
     Language('es', 'es_ES.UTF-8', 'Spanish'),
 )
