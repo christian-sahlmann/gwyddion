@@ -218,9 +218,12 @@ nxii_load(const gchar *filename,
     else if (nxiifile.mode == NXII_MODE_FFM || nxiifile.mode == NXII_MODE_FMM)
         gwy_data_field_multiply(dfield, nxiifile.zreal*Nano/(max - min));
     else if (nxiifile.mode == NXII_MODE_LFM) {
-        /* XXX: This may be incorrect. */
-        gwy_data_field_add(dfield, -32768.0);
-        gwy_data_field_multiply(dfield, nxiifile.zreal*Nano/(max - min));
+        /* LFM can contain negative values.  This should be the correct
+         * formula.  No warranty. */
+        gdouble k3 = 32767.0 - min, k5 = max - min;
+        gdouble zoff = -GWY_ROUND(65536.0*k3/k5)/65536.0*k5;
+        gwy_data_field_add(dfield, zoff);
+        gwy_data_field_multiply(dfield, nxiifile.zreal*Nano/k5);
     }
     else
         gwy_data_field_multiply(dfield, nxiifile.zreal*Micron/(max - min));
