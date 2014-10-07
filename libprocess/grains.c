@@ -939,6 +939,10 @@ gwy_data_field_grains_remove_touching_border(GwyDataField *grain_field)
  * Puts number of grains vs. grain value data into @distribution, units, scales
  * and offsets of @distribution are updated accordingly.
  *
+ * Note the @i-th bin is [@i*@dx+@off,(@i+1)*@dx+@off] so the central value
+ * you probably want to use for plotting is (@i+0.5)*@dx+@off (where @dx is
+ * the @distribution data line pixel size, @off is its offset).
+ *
  * Returns: A data line with the distribution: @distribution itself if it was
  *          not %NULL, otherwise a newly created #GwyDataLine caller must
  *          destroy.  If there are no grains, %NULL is returned and

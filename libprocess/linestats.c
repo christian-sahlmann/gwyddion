@@ -487,6 +487,10 @@ gwy_data_line_psdf(GwyDataLine *data_line,
  * output normalization (chosen to make the integral unity), output units
  * (again set to make the integral unity), automated binning.
  *
+ * Note the @i-th bin is [@i*@dx+@off,(@i+1)*@dx+@off] so the central value
+ * you probably want to use for plotting is (@i+0.5)*@dx+@off (where @dx is
+ * the @distribution data line pixel size, @off is its offset).
+ *
  * If all values are equal and @ymin, @ymax are not explictly specified, the
  * range is chosen as [@v-|@v|/2,@v+|@v/2] where @v is the unique value,
  * except when @v=0, in which case the range is set to [-1,1].
