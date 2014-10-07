@@ -1797,8 +1797,7 @@ gwy_axis_set_si_unit(GwyAxis *axis, GwySIUnit *unit)
         return;
 
     gwy_serializable_clone(G_OBJECT(unit), G_OBJECT(axis->unit));
-    if (GTK_WIDGET_DRAWABLE(axis))
-        gtk_widget_queue_draw(GTK_WIDGET(axis));
+    gwy_axis_adjust(axis, -1, -1);
 }
 
 /**
