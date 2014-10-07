@@ -151,7 +151,7 @@ static GwyModuleInfo module_info = {
     N_("Evaluates distribution of grains (continuous parts of mask)."),
     "Petr Klapetek <petr@klapetek.cz>, Sven Neumann <neumann@jpk.com>, "
         "Yeti <yeti@gwyddion.net>",
-    "4.0",
+    "4.1",
     "David Nečas (Yeti) & Petr Klapetek & Sven Neumann",
     "2003",
 };
@@ -533,6 +533,12 @@ add_one_distribution(GwyDataField *dfield,
     /* FIXME: Direct access. */
     dline->res = ngrains;
     gwy_data_line_distribution(dline, distribution, 0.0, 0.0, FALSE, res);
+    /* Make the values centered in bins.  Changing gwy_data_line_distribution()
+     * to do that itself would be incompatible and of course changing
+     * gwy_graph_curve_model_set_data_from_dataline() is impossible. */
+    gwy_data_line_set_offset(distribution,
+                             distribution->off
+                             + 0.5*distribution->real/distribution->res);
 
     gmodel = gwy_graph_model_new();
     cmodel = gwy_graph_curve_model_new();
