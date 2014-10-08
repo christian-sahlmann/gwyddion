@@ -175,14 +175,15 @@ typedef struct {
     GwyRGBA mask_colour;
     gint id;
     guint xres;
-    guint yres;
+    guint yres;            /* Already after realsquare resampling! */
     gboolean realsquare;
 } ImgExportEnv;
 
 typedef struct {
     ImgExportEnv *env;
     ImgExportMode mode;
-    gdouble zoom;
+    gdouble pxwidth;       /* Pixel width in mm for vector. */
+    gdouble zoom;          /* Pixelwise for pixmaps. */
     SizeSettings sizes;
     ImageOutput xytype;
     ImageOutput ztype;
@@ -201,8 +202,6 @@ typedef struct {
     gchar *inset_length;
 
     /* New args */
-    gdouble width;
-    gdouble height;
     ImgExportInterpolation interpolation;
 } ImgExportArgs;
 
@@ -215,7 +214,9 @@ typedef struct {
     GtkWidget *notebook;
 
     GtkWidget *table_basic;
-    GtkObject *zoom;
+    GtkObject *zoom;        /* Pixmap only */
+    GtkObject *pxwidth;     /* Vector only [mm] */
+    GtkObject *ppi;         /* Vector only, pixels per inch */
     GtkObject *width;
     GtkObject *height;
     GtkWidget *font;
@@ -386,7 +387,8 @@ static ImgExportFormat image_formats[] = {
 static const ImgExportArgs img_export_defaults = {
     NULL,
     IMGEXPORT_MODE_PRESENTATION,
-    1.0, { 12.0, 1.0, 0.0, 10.0 },
+    0.1, 1.0,
+    { 12.0, 1.0, 0.0, 10.0 },
     PIXMAP_RULERS, PIXMAP_FMSCALE,
     { 1.0, 1.0, 1.0, 1.0 }, INSET_POS_BOTTOM_RIGHT,
     TRUE, TRUE, TRUE,
@@ -394,7 +396,6 @@ static const ImgExportArgs img_export_defaults = {
     1.0, 1.0,
     0, "",
     /* New args */
-    100.0, 100.0,
     IMGEXPORT_INTERPOLATION_LINEAR,
 };
 
@@ -1651,7 +1652,8 @@ preview(ImgExportControls *controls)
     }
     else {
         /* XXX: Possibly completely screwed up at this moment. */
-        scale_sizes(&args->sizes, sizes->canvas.w/(mm2pt*args->width));
+        gdouble wpt = mm2pt*args->pxwidth*args->env->xres;
+        scale_sizes(&args->sizes, sizes->canvas.w/wpt);
     }
     destroy_sizes(sizes);
 
@@ -1683,6 +1685,18 @@ update_preview(ImgExportControls *controls)
     }
 }
 
+static gdouble
+pxwidth_to_ppi(gdouble pxwidth)
+{
+    return 25.4/pxwidth;
+}
+
+static gdouble
+ppi_to_pxwidth(gdouble pxwidth)
+{
+    return 25.4/pxwidth;
+}
+
 static void
 zoom_changed(ImgExportControls *controls)
 {
@@ -1705,59 +1719,130 @@ zoom_changed(ImgExportControls *controls)
 }
 
 static void
-width_changed(ImgExportControls *controls)
+width_changed_vector(ImgExportControls *controls)
 {
     gdouble width = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->width));
     ImgExportArgs *args = controls->args;
     ImgExportEnv *env = args->env;
+    gdouble pxwidth = width/env->xres;
 
-    if (env->format->write_vector) {
-        args->width = width;
-        if (controls->in_update)
-            return;
+    if (controls->in_update)
+        return;
 
-        controls->in_update = TRUE;
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height),
-                                 width*env->yres/env->xres);
-        controls->in_update = FALSE;
-    }
-    else {
-        gdouble zoom = width/env->xres;
-        controls->in_update = TRUE;
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zoom), zoom);
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height),
-                                 GWY_ROUND(zoom*env->yres));
-        controls->in_update = FALSE;
-    }
+    controls->in_update = TRUE;
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height),
+                             pxwidth*env->yres);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->pxwidth), pxwidth);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ppi),
+                             pxwidth_to_ppi(pxwidth));
+    controls->in_update = FALSE;
 
     update_preview(controls);
 }
 
 static void
-height_changed(ImgExportControls *controls)
+width_changed_pixmap(ImgExportControls *controls)
+{
+    gdouble width = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->width));
+    ImgExportArgs *args = controls->args;
+    ImgExportEnv *env = args->env;
+    gdouble zoom = width/env->xres;
+
+    if (controls->in_update)
+        return;
+
+    controls->in_update = TRUE;
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zoom), zoom);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height),
+                             GWY_ROUND(zoom*env->yres));
+    controls->in_update = FALSE;
+
+    update_preview(controls);
+}
+
+static void
+height_changed_vector(ImgExportControls *controls)
 {
     gdouble height = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->height));
     ImgExportArgs *args = controls->args;
     ImgExportEnv *env = args->env;
+    gdouble pxwidth = height/env->yres;
 
-    if (env->format->write_vector) {
-        args->height = height;
-        if (controls->in_update)
-            return;
+    if (controls->in_update)
+        return;
 
-        controls->in_update = TRUE;
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->width),
-                                 height*env->xres/env->yres);
-        controls->in_update = FALSE;
-    }
-    else {
-        gdouble zoom = height/env->yres;
-        controls->in_update = TRUE;
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zoom), zoom);
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->width),
-                                 GWY_ROUND(zoom*env->xres));
-        controls->in_update = FALSE;
-    }
+    controls->in_update = TRUE;
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->width),
+                             pxwidth*env->xres);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->pxwidth), pxwidth);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ppi),
+                             pxwidth_to_ppi(pxwidth));
+    controls->in_update = FALSE;
+
+    update_preview(controls);
+}
+
+static void
+height_changed_pixmap(ImgExportControls *controls)
+{
+    gdouble height = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->height));
+    ImgExportArgs *args = controls->args;
+    ImgExportEnv *env = args->env;
+    gdouble zoom = height/env->yres;
+
+    if (controls->in_update)
+        return;
+
+    controls->in_update = TRUE;
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zoom), zoom);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->width),
+                             GWY_ROUND(zoom*env->xres));
+    controls->in_update = FALSE;
+
+    update_preview(controls);
+}
+
+static void
+pxwidth_changed(ImgExportControls *controls)
+{
+    gdouble pxwidth = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->pxwidth));
+    ImgExportArgs *args = controls->args;
+    ImgExportEnv *env = args->env;
+
+    args->pxwidth = pxwidth;
+    if (controls->in_update)
+        return;
+
+    controls->in_update = TRUE;
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->width),
+                             pxwidth*env->xres);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height),
+                             pxwidth*env->yres);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ppi),
+                             pxwidth_to_ppi(pxwidth));
+    controls->in_update = FALSE;
+
+    update_preview(controls);
+}
+
+static void
+ppi_changed(ImgExportControls *controls)
+{
+    gdouble ppi = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->ppi));
+    ImgExportArgs *args = controls->args;
+    ImgExportEnv *env = args->env;
+    gdouble pxwidth = ppi_to_pxwidth(ppi);
+
+    if (controls->in_update)
+        return;
+
+    controls->in_update = TRUE;
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->width),
+                             pxwidth*env->xres);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height),
+                             pxwidth*env->yres);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->pxwidth), pxwidth);
+    controls->in_update = FALSE;
 
     update_preview(controls);
 }
@@ -1855,26 +1940,53 @@ create_basic_controls(ImgExportControls *controls)
     gboolean is_vector = !!env->format->write_vector;
     const gchar *sizeunit;
     GtkWidget *table, *spin, *label;
+    GCallback width_cb, height_cb;
     gint row = 0, digits;
 
-    table = controls->table_basic = gtk_table_new(8, 3, FALSE);
+    table = controls->table_basic = gtk_table_new(11 + 1*is_vector, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
 
+    gtk_table_attach(GTK_TABLE(table),
+                     gwy_label_new_header(_("Physical Dimensions")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
     if (is_vector) {
-        gdouble zoom = args->width/env->xres;
+        gdouble pxwidth = args->pxwidth;
+        gdouble ppi = pxwidth_to_ppi(args->pxwidth);
+
+        controls->pxwidth = gtk_adjustment_new(args->pxwidth, 0.01, 25.4,
+                                               0.001, 0.1, 0);
+        spin = gwy_table_attach_spinbutton(table, row, _("Pi_xel size:"), "mm",
+                                    controls->pxwidth);
+        gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
+        g_signal_connect_swapped(controls->pxwidth, "value-changed",
+                                 G_CALLBACK(pxwidth_changed), controls);
+        row++;
+
+        controls->ppi = gtk_adjustment_new(ppi, 1.0, 2540.0, 1.0, 100.0, 0);
+        gwy_table_attach_spinbutton(table, row, _("Pixels per _inch:"), NULL,
+                                    controls->ppi);
+        g_signal_connect_swapped(controls->ppi, "value-changed",
+                                 G_CALLBACK(ppi_changed), controls);
+        row++;
 
         sizeunit = "mm";
         digits = 1;
-        controls->width = gtk_adjustment_new(args->width, 1.0, 1000.0,
+        controls->width = gtk_adjustment_new(env->xres*pxwidth, 10.0, 1000.0,
                                              0.1, 10.0, 0);
-        controls->height = gtk_adjustment_new(zoom*env->yres, 1.0, 1000.0,
+        controls->height = gtk_adjustment_new(env->yres*pxwidth, 10.0, 1000.0,
                                               0.1, 10.0, 0);
+        width_cb = G_CALLBACK(width_changed_vector);
+        height_cb = G_CALLBACK(height_changed_vector);
     }
     else {
         gdouble minzoom = 2.0/MIN(env->xres, env->yres);
         gdouble maxzoom = 16384.0/MAX(env->xres, env->yres);
+        gdouble w = CLAMP(args->zoom, minzoom, maxzoom)*env->xres;
+        gdouble h = CLAMP(args->zoom, minzoom, maxzoom)*env->yres;
 
         sizeunit = "px";
         digits = 0;
@@ -1886,27 +1998,32 @@ create_basic_controls(ImgExportControls *controls)
                                  G_CALLBACK(zoom_changed), controls);
         row++;
 
-        controls->width = gtk_adjustment_new(args->width, 2.0, 16384.0,
-                                             1.0, 10.0, 0);
-        controls->height = gtk_adjustment_new(args->height, 2.0, 16384.0,
-                                              1.0, 10.0, 0);
+        controls->width = gtk_adjustment_new(w, 2.0, 16384.0, 1.0, 10.0, 0);
+        controls->height = gtk_adjustment_new(h, 2.0, 16384.0, 1.0, 10.0, 0);
+        width_cb = G_CALLBACK(width_changed_pixmap);
+        height_cb = G_CALLBACK(height_changed_pixmap);
     }
 
-    spin = gwy_table_attach_spinbutton(table, row,
-                                       _("_Width:"), sizeunit, controls->width);
+    spin = gwy_table_attach_spinbutton(table, row, _("_Width:"), sizeunit,
+                                       controls->width);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), digits);
     g_signal_connect_swapped(controls->width, "value-changed",
-                             G_CALLBACK(width_changed), controls);
+                             G_CALLBACK(width_cb), controls);
     row++;
 
-    spin = gwy_table_attach_spinbutton(table, row,
-                                       _("_Height:"), sizeunit, controls->height);
+    spin = gwy_table_attach_spinbutton(table, row, _("_Height:"), sizeunit,
+                                       controls->height);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), digits);
     g_signal_connect_swapped(controls->height, "value-changed",
-                             G_CALLBACK(height_changed), controls);
+                             height_cb, controls);
     row++;
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    gtk_table_attach(GTK_TABLE(table),
+                     gwy_label_new_header(_("Parameters")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
     label = gtk_label_new(_("Font:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -2588,8 +2705,8 @@ write_vector_generic(ImgExportArgs *args,
     cairo_t *cr;
     gdouble zoom = args->zoom;
 
-    gwy_debug("requested width %g mm", args->width);
-    args->zoom = mm2pt*args->width/args->env->xres;
+    gwy_debug("requested width %g mm", args->pxwidth*args->env->xres);
+    args->zoom = mm2pt*args->pxwidth;
     gwy_debug("must set zoom to %g", args->zoom);
     sizes = calculate_sizes(args, name);
     g_return_val_if_fail(sizes, FALSE);
@@ -2951,23 +3068,24 @@ write_pixbuf_targa(GdkPixbuf *pixbuf,
 }
 
 /* Use the pixmap prefix for compatibility */
+static const gchar border_width_key[]     = "/module/pixmap/border_width";
 static const gchar draw_mask_key[]        = "/module/pixmap/draw_mask";
 static const gchar draw_selection_key[]   = "/module/pixmap/draw_selection";
-static const gchar text_antialias_key[]   = "/module/pixmap/text_antialias";
+static const gchar fmscale_gap_key[]      = "/module/pixmap/fmscale_gap";
 static const gchar font_key[]             = "/module/pixmap/font";
 static const gchar font_size_key[]        = "/module/pixmap/font_size";
-static const gchar line_width_key[]       = "/module/pixmap/line_width";
-static const gchar border_width_key[]     = "/module/pixmap/border_width";
-static const gchar tick_length_key[]      = "/module/pixmap/tick_length";
 static const gchar greyscale_key[]        = "/module/pixmap/grayscale";
 static const gchar inset_color_key[]      = "/module/pixmap/inset_color";
-static const gchar inset_pos_key[]        = "/module/pixmap/inset_pos";
-static const gchar inset_draw_ticks_key[] = "/module/pixmap/inset_draw_ticks";
 static const gchar inset_draw_label_key[] = "/module/pixmap/inset_draw_label";
-static const gchar inset_length_key[]     = "/module/pixmap/inset_length";
-static const gchar scale_font_key[]       = "/module/pixmap/scale_font";
-static const gchar fmscale_gap_key[]      = "/module/pixmap/fmscale_gap";
+static const gchar inset_draw_ticks_key[] = "/module/pixmap/inset_draw_ticks";
 static const gchar inset_gap_key[]        = "/module/pixmap/inset_gap";
+static const gchar inset_length_key[]     = "/module/pixmap/inset_length";
+static const gchar inset_pos_key[]        = "/module/pixmap/inset_pos";
+static const gchar line_width_key[]       = "/module/pixmap/line_width";
+static const gchar pxwidth_key[]          = "/module/pixmap/pxwidth";
+static const gchar scale_font_key[]       = "/module/pixmap/scale_font";
+static const gchar text_antialias_key[]   = "/module/pixmap/text_antialias";
+static const gchar tick_length_key[]      = "/module/pixmap/tick_length";
 static const gchar xytype_key[]           = "/module/pixmap/xytype";
 static const gchar zoom_key[]             = "/module/pixmap/zoom";
 static const gchar ztype_key[]            = "/module/pixmap/ztype";
@@ -2981,6 +3099,7 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->inset_pos = MIN(args->inset_pos, INSET_NPOS - 1);
     /* handle inset_length later, its usability depends on the data field. */
     args->zoom = CLAMP(args->zoom, 0.06, 16.0);
+    args->pxwidth = CLAMP(args->pxwidth, 0.01, 25.4);
     args->draw_mask = !!args->draw_mask;
     args->draw_selection = !!args->draw_selection;
     args->text_antialias = !!args->text_antialias;
@@ -2988,9 +3107,9 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->inset_draw_ticks = !!args->inset_draw_ticks;
     args->inset_draw_label = !!args->inset_draw_label;
     args->sizes.font_size = CLAMP(args->sizes.font_size, 1.0, 1024.0);
-    args->sizes.line_width = CLAMP(args->sizes.line_width, 1.0, 16.0);
-    args->sizes.border_width = CLAMP(args->sizes.border_width, 1.0, 1024.0);
-    args->sizes.tick_length = CLAMP(args->sizes.tick_length, 1.0, 120.0);
+    args->sizes.line_width = CLAMP(args->sizes.line_width, 0.0, 16.0);
+    args->sizes.border_width = CLAMP(args->sizes.border_width, 0.0, 1024.0);
+    args->sizes.tick_length = CLAMP(args->sizes.tick_length, 0.0, 120.0);
     args->fmscale_gap = CLAMP(args->fmscale_gap, 0.0, 2.0);
     args->inset_gap = CLAMP(args->inset_gap, 0.0, 2.0);
     args->greyscale = (args->greyscale == 16) ? 16 : 0;
@@ -3010,6 +3129,7 @@ img_export_load_args(GwyContainer *container,
     *args = img_export_defaults;
 
     gwy_container_gis_double_by_name(container, zoom_key, &args->zoom);
+    gwy_container_gis_double_by_name(container, pxwidth_key, &args->pxwidth);
     gwy_container_gis_double_by_name(container, font_size_key,
                                      &args->sizes.font_size);
     gwy_container_gis_double_by_name(container, line_width_key,
@@ -3055,6 +3175,7 @@ img_export_save_args(GwyContainer *container,
                      ImgExportArgs *args)
 {
     gwy_container_set_double_by_name(container, zoom_key, args->zoom);
+    gwy_container_set_double_by_name(container, pxwidth_key, args->pxwidth);
     gwy_container_set_double_by_name(container, font_size_key,
                                      args->sizes.font_size);
     gwy_container_set_double_by_name(container, line_width_key,
