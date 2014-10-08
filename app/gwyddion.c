@@ -201,9 +201,13 @@ main(int argc, char *argv[])
      * because that can set the directory. */
 #ifdef G_OS_WIN32
     {
-        const gchar *cwd = g_get_home_dir();
+        const gchar *cwd;
 
-        if (g_file_test(cwd, G_FILE_TEST_IS_DIR))
+        if ((cwd = g_get_user_data_dir()
+             && g_file_test(cwd, G_FILE_TEST_IS_DIR)))
+            gwy_app_set_current_directory(cwd);
+        else if ((cwd = g_get_home_dir()
+             && g_file_test(cwd, G_FILE_TEST_IS_DIR)))
             gwy_app_set_current_directory(cwd);
         else if (g_file_test("c:\\", G_FILE_TEST_IS_DIR))
             gwy_app_set_current_directory("c:\\");
