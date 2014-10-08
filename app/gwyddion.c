@@ -196,6 +196,20 @@ main(int argc, char *argv[])
     gwy_app_splash_finish();
     debug_time(timer, "destroy splash");
 
+    /* Win32 does not give programs a reasonable physical cwd.  So try to set
+     * something reasonable here.  Do it before opening files from arguments
+     * because that can set the directory. */
+#ifdef G_OS_WIN32
+    {
+        const gchar *cwd = g_get_home_dir();
+
+        if (g_file_test(cwd, G_FILE_TEST_IS_DIR))
+            gwy_app_set_current_directory(cwd);
+        else if (g_file_test("c:\\", G_FILE_TEST_IS_DIR))
+            gwy_app_set_current_directory("c:\\");
+    }
+#endif
+
     open_command_line_files(argc - 1, argv + 1);
     if (has_settings && !settings_ok) {
         warn_broken_settings_file(toolbox,
