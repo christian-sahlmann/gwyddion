@@ -326,6 +326,13 @@ static ImgExportFormat image_formats[] = {
         ".jpeg,.jpg,.jpe",
         NULL, NULL, NULL,
     },
+    /* Seems writable on Win32, maybe also Mac. */
+    {
+        "gif",
+        N_("Graphics Interchange Format GIF (.gif)"),
+        ".gif",
+        NULL, NULL, NULL,
+    },
     {
         "tiff",
         N_("TIFF (.tiff,.tif)"),
