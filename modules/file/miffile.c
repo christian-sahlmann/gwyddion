@@ -54,7 +54,7 @@
  * .mif
  * Read
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <stdio.h>
 #include <libgwyddion/gwymath.h>
@@ -696,11 +696,11 @@ mif_read_data_field(const MIFImageHeader *image_header,
     if (err_SIZE_MISMATCH(error, datasize, block->size, FALSE))
         return NULL;
 
-    if (datasize + xres*sizeof(gint16) <= block->size) {
-        gwy_debug("There may be %u correction data after the image.", xres);
-        linecorrdata = g_new(gdouble, xres);
+    if (datasize + yres*sizeof(gint16) <= block->size) {
+        gwy_debug("There may be %u correction data after the image.", yres);
+        linecorrdata = g_new(gdouble, yres);
         d16 = (const gint16*)(buffer + block->offset + datasize);
-        for (i = 0; i < xres; i++) {
+        for (i = 0; i < yres; i++) {
             linecorrdata[i] = pow(2.0, d16[i] - 13);
             gwy_debug("corr[%u] %g", i, linecorrdata[i]);
         }
@@ -723,8 +723,9 @@ mif_read_data_field(const MIFImageHeader *image_header,
         q *= 20e-6;
 
     for (i = 0; i < yres; i++) {
+        gdouble qi = linecorrdata ? q*linecorrdata[i] : q;
         for (j = 0; j < yres; j++) {
-            data[(yres-1 - i)*xres + j] = q*GINT16_FROM_LE(d16[i*xres + j]);
+            data[(yres-1 - i)*xres + j] = qi*GINT16_FROM_LE(d16[i*xres + j]);
         }
     }
 
