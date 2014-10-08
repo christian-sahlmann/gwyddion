@@ -357,6 +357,7 @@ read_nxii_header(const guchar *p, NXIIFile *nxiifile, GError **error)
     }
 
     memcpy(s, nxiifile->head_mode, 6);
+    s[6] = '\0';
     g_strstrip(s);
     nxiifile->mode = gwy_string_to_enum(s, modes, G_N_ELEMENTS(modes));
     gwy_debug("recognised mode %d", nxiifile->mode);
