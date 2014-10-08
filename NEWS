@@ -6,6 +6,8 @@ Application:
 Libraries:
 - libgwyddion: A function for copying GwySIValueFormat was added; the
   structure is also registered as a boxed type now.
+- libgwydgets: gwy_axis_get_magnification_string() returns string for the new
+  units after gwy_axis_set_si_unit().
 
 Modules:
 - Image export (new): Replaces image rendering in the pixmap module; can
@@ -21,7 +23,10 @@ Modules:
   of main.xml also if it really looks like an ISO 5436-2 XML file.
 - MIF: X, Y and Z calibration factors are applied to data upon import and
   a different Z conversion formula is used according to z_linearized.
+  Multiplicative factors encoded after the image are applied to the data.
 - MetroPro: Z scale in files with PhaseRes value of 2 is correct now.
+- Grain distributions: The graph abscissas are bin centres now, as usual,
+  instead of bin left edges.
 
 
 2.38 (2014-09-18)
