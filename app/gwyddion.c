@@ -203,8 +203,8 @@ main(int argc, char *argv[])
     {
         const gchar *cwd;
 
-        if ((cwd = g_get_user_data_dir())
-             && g_file_test(cwd, G_FILE_TEST_IS_DIR))
+        if ((cwd = g_get_user_special_dir())
+             && g_file_test(cwd, G_USER_DIRECTORY_DOCUMENTS))
             gwy_app_set_current_directory(cwd);
         else if ((cwd = g_get_home_dir())
              && g_file_test(cwd, G_FILE_TEST_IS_DIR))
