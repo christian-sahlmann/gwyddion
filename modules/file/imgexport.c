@@ -30,7 +30,6 @@
 #include <gtk/gtk.h>
 
 #include <cairo.h>
-/* FIXME: We also need pangocairo, i.e. Pango 1.8+, maybe newer. */
 
 /* We want cairo_ps_surface_set_eps().  So if we don't get it we just pretend
  * cairo doesn't have the PS surface at all. */
@@ -95,14 +94,18 @@ typedef enum {
     IMGEXPORT_INTERPOLATION_LINEAR,
 } ImgExportInterpolation;
 
-/* What is present on the exported image
- * XXX: Makes no sense */
 typedef enum {
-    PIXMAP_LATERAL_NONE,
-    PIXMAP_RULERS,
-    PIXMAP_FMSCALE = PIXMAP_RULERS,
-    PIXMAP_SCALEBAR
-} ImageOutput;
+    IMGEXPORT_LATERAL_NONE,
+    IMGEXPORT_LATERAL_RULERS,
+    IMGEXPORT_LATERAL_INSET,
+    IMGEXPORT_LATERAL_NTYPES
+} ImgExportLateralType;
+
+typedef enum {
+    IMGEXPORT_VALUE_NONE,
+    IMGEXPORT_VALUE_FMSCALE,
+    IMGEXPORT_VALUE_NTYPES
+} ImgExportValueType;
 
 typedef enum {
     INSET_POS_TOP_LEFT,
@@ -185,8 +188,8 @@ typedef struct {
     gdouble pxwidth;       /* Pixel width in mm for vector. */
     gdouble zoom;          /* Pixelwise for pixmaps. */
     SizeSettings sizes;
-    ImageOutput xytype;
-    ImageOutput ztype;
+    ImgExportLateralType xytype;
+    ImgExportValueType ztype;
     GwyRGBA inset_color;
     InsetPosType inset_pos;
     gboolean draw_mask;
@@ -197,7 +200,8 @@ typedef struct {
     gboolean inset_draw_ticks;
     gboolean inset_draw_label;
     gdouble fmscale_gap;
-    gdouble inset_gap;
+    gdouble inset_xgap;
+    gdouble inset_ygap;
     guint greyscale;
     gchar *inset_length;
 
@@ -213,6 +217,7 @@ typedef struct {
     GtkWidget *mode;
     GtkWidget *notebook;
 
+    /* Basic */
     GtkWidget *table_basic;
     GtkObject *zoom;        /* Pixmap only */
     GtkObject *pxwidth;     /* Vector only [mm] */
@@ -226,7 +231,23 @@ typedef struct {
     GtkObject *tick_length;
     GtkWidget *scale_font;
 
+    /* Lateral Scale */
     GtkWidget *table_lateral;
+    GQuark rb_quark;
+    GSList *xytype;
+    GtkObject *inset_xgap;
+    GtkObject *inset_ygap;
+    GtkWidget *inset_color_label;
+    GtkWidget *inset_color;
+    GtkWidget *inset_black;
+    GtkWidget *inset_white;
+    GSList *inset_pos;
+    GtkWidget *inset_pos_label[6];
+    GtkWidget *inset_length_label;
+    GtkWidget *inset_length;
+    GtkWidget *inset_length_auto;
+    GtkWidget *inset_draw_ticks;
+    GtkWidget *inset_draw_label;
 
     GtkWidget *table_value;
 
@@ -389,11 +410,11 @@ static const ImgExportArgs img_export_defaults = {
     IMGEXPORT_MODE_PRESENTATION,
     0.1, 1.0,
     { 12.0, 1.0, 0.0, 10.0 },
-    PIXMAP_RULERS, PIXMAP_FMSCALE,
+    IMGEXPORT_LATERAL_RULERS, IMGEXPORT_VALUE_FMSCALE,
     { 1.0, 1.0, 1.0, 1.0 }, INSET_POS_BOTTOM_RIGHT,
     TRUE, TRUE, TRUE,
     "Helvetica", FALSE, TRUE, TRUE,
-    1.0, 1.0,
+    1.0, 1.0, 1.0,
     0, "",
     /* New args */
     IMGEXPORT_INTERPOLATION_LINEAR,
@@ -713,6 +734,20 @@ create_surface(const ImgExportArgs *args,
     return surface;
 }
 
+static gboolean
+precision_is_sufficient(gdouble bs, guint precision)
+{
+    gchar *s0 = g_strdup_printf("%.*f", precision, bs);
+    gchar *s1 = g_strdup_printf("%.*f", precision, 2.0*bs);
+    gchar *s2 = g_strdup_printf("%.*f", precision, 3.0*bs);
+    gboolean ok = !gwy_strequal(s0, s1) && !gwy_strequal(s1, s2);
+
+    g_free(s0);
+    g_free(s1);
+    g_free(s2);
+    return ok;
+}
+
 static void
 find_hruler_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
                   PangoLayout *layout, GString *s)
@@ -761,9 +796,14 @@ find_hruler_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
         if (vf->precision)
             vf->precision--;
     }
-    gwy_debug("base %g, step %g", ticks->base, ticks->step);
 
     bs = ticks->base * ticks->step;
+    if (!precision_is_sufficient(bs, vf->precision))
+        vf->precision++;
+    else if (vf->precision && precision_is_sufficient(bs, vf->precision))
+        vf->precision--;
+
+    gwy_debug("base %g, step %g", ticks->base, ticks->step);
     ticks->from = ceil(offset/bs - 1e-14)*bs;
     ticks->from = fixzero(ticks->from);
     ticks->to = floor((real + offset)/bs + 1e-14)*bs;
@@ -940,18 +980,17 @@ measure_inset(const ImgExportArgs *args, ImgExportSizes *sizes,
         rect->h += logical.height/pangoscale + lw;
     }
 
-    /* TODO: split horizontal and vertical gap */
     if (pos == INSET_POS_TOP_LEFT
         || pos == INSET_POS_TOP_CENTER
         || pos == INSET_POS_TOP_RIGHT)
-        rect->y = lw + tl*args->inset_gap;
+        rect->y = lw + tl*args->inset_ygap;
     else
-        rect->y = vsize - lw - rect->h - tl*args->inset_gap;
+        rect->y = vsize - lw - rect->h - tl*args->inset_ygap;
 
     if (pos == INSET_POS_TOP_LEFT || pos == INSET_POS_BOTTOM_LEFT)
-        rect->x = 2.0*lw + tl*args->inset_gap;
+        rect->x = 2.0*lw + tl*args->inset_xgap;
     else if (pos == INSET_POS_TOP_RIGHT || pos == INSET_POS_BOTTOM_RIGHT)
-        rect->x = hsize - 2.0*lw - rect->w - tl*args->inset_gap;
+        rect->x = hsize - 2.0*lw - rect->w - tl*args->inset_xgap;
     else
         rect->x = hsize/2 - 0.5*rect->w;
 }
@@ -1003,47 +1042,58 @@ calculate_sizes(const ImgExportArgs *args,
     sizes->image.h = zoom*args->env->yres + 2.0*lw;
 
     /* Horizontal ruler */
-    find_hruler_ticks(args, sizes, layout, s);
-    sizes->hruler.w = sizes->image.w;
-    sizes->hruler.h = sizes->hruler_label_height + tl + lw;
+    if (args->xytype == IMGEXPORT_LATERAL_RULERS) {
+        find_hruler_ticks(args, sizes, layout, s);
+        sizes->hruler.w = sizes->image.w;
+        sizes->hruler.h = sizes->hruler_label_height + tl + lw;
+    }
 
     /* Vertical ruler */
-    find_vruler_ticks(args, sizes, layout, s);
-    sizes->vruler.w = sizes->vruler_label_width + tl + lw;
-    sizes->vruler.h = sizes->image.h;
-    rect_move(&sizes->hruler, sizes->vruler.w, 0.0);
-    rect_move(&sizes->vruler, 0.0, sizes->hruler.h);
-    rect_move(&sizes->image, sizes->vruler.w, sizes->hruler.h);
+    if (args->xytype == IMGEXPORT_LATERAL_RULERS) {
+        find_vruler_ticks(args, sizes, layout, s);
+        sizes->vruler.w = sizes->vruler_label_width + tl + lw;
+        sizes->vruler.h = sizes->image.h;
+        rect_move(&sizes->hruler, sizes->vruler.w, 0.0);
+        rect_move(&sizes->vruler, 0.0, sizes->hruler.h);
+        rect_move(&sizes->image, sizes->vruler.w, sizes->hruler.h);
+    }
 
     /* Ensure the image starts at integer coordinates in pixmas */
     if (cairo_surface_get_type(surface) == CAIRO_SURFACE_TYPE_IMAGE) {
         gdouble xmove = ceil(sizes->image.x + lw) - (sizes->image.x + lw);
         gdouble ymove = ceil(sizes->image.y + lw) - (sizes->image.y + lw);
 
-        gwy_debug("moving image by (%g,%g) to integer coordinates", xmove, ymove);
+        gwy_debug("moving image by (%g,%g) to integer coordinates",
+                  xmove, ymove);
         rect_move(&sizes->image, xmove, ymove);
         rect_move(&sizes->hruler, xmove, ymove);
         rect_move(&sizes->vruler, xmove, ymove);
     }
 
     /* Inset scale bar */
-    measure_inset(args, sizes, layout, s);
-    rect_move(&sizes->inset, sizes->image.x, sizes->image.y);
+    if (args->xytype == IMGEXPORT_LATERAL_INSET) {
+        measure_inset(args, sizes, layout, s);
+        rect_move(&sizes->inset, sizes->image.x, sizes->image.y);
+    }
 
     /* False colour gradient */
-    sizes->fmgrad = sizes->image;
-    /* NB: We subtract lw here to make the fmscale visually just touch the
-     * image in the case of zero gap. */
-    rect_move(&sizes->fmgrad,
-              sizes->image.w + tl*args->fmscale_gap - lw, 0.0);
-    sizes->fmgrad.w = 1.5*sizes->sizes.font_size + 2.0*lw;
+    if (args->ztype == IMGEXPORT_VALUE_FMSCALE) {
+        sizes->fmgrad = sizes->image;
+        /* NB: We subtract lw here to make the fmscale visually just touch the
+         * image in the case of zero gap. */
+        rect_move(&sizes->fmgrad,
+                  sizes->image.w + tl*args->fmscale_gap - lw, 0.0);
+        sizes->fmgrad.w = 1.5*sizes->sizes.font_size + 2.0*lw;
 
-    /* False colour axis */
-    find_fmscale_ticks(args, sizes, layout, s);
-    sizes->fmruler.x = sizes->fmgrad.x + sizes->fmgrad.w;
-    sizes->fmruler.y = sizes->fmgrad.y;
-    sizes->fmruler.w = sizes->fmruler_label_width;
-    sizes->fmruler.h = sizes->fmgrad.h;
+        /* False colour axis */
+        find_fmscale_ticks(args, sizes, layout, s);
+        sizes->fmruler.x = sizes->fmgrad.x + sizes->fmgrad.w;
+        sizes->fmruler.y = sizes->fmgrad.y;
+        sizes->fmruler.w = sizes->fmruler_label_width;
+        sizes->fmruler.h = sizes->fmgrad.h;
+    }
+
+    /* TODO: Title, possibly with units */
 
     /* Border */
     rect_move(&sizes->image, borderw, borderw);
@@ -1242,6 +1292,9 @@ draw_hruler(const ImgExportArgs *args,
     gdouble x, bs, scale, ximg;
     gboolean units_placed = FALSE;
 
+    if (args->xytype != IMGEXPORT_LATERAL_RULERS)
+        return;
+
     scale = (rect->w - lw)/(xreal/vf->magnitude);
     bs = ticks->step*ticks->base;
 
@@ -1300,6 +1353,9 @@ draw_vruler(const ImgExportArgs *args,
     gdouble tl = sizes->sizes.tick_length;
     gdouble y, bs, scale, yimg;
 
+    if (args->xytype != IMGEXPORT_LATERAL_RULERS)
+        return;
+
     scale = (rect->h - lw)/(yreal/vf->magnitude);
     bs = ticks->step*ticks->base;
 
@@ -1349,6 +1405,9 @@ draw_inset(const ImgExportArgs *args,
     gdouble lw = sizes->sizes.line_width;
     gdouble tl = sizes->sizes.tick_length;
     gdouble xcentre, length, y, w, h;
+
+    if (args->xytype != IMGEXPORT_LATERAL_INSET)
+        return;
 
     if (!(sizes->inset_length > 0.0))
         return;
@@ -1630,6 +1689,17 @@ render_pixbuf(const ImgExportArgs *args, const gchar *name)
     return pixbuf;
 }
 
+/*
+ * TODO: Use an iterative process to obtain a reasonably sized preview:
+ * 1. calculate_sizes()
+ * 2. estimate zoom
+ * 3. render
+ * 4. if dimensions not within a certain tolerance, correct zoom and rerender
+ */
+/*
+ * TODO: Try to ensure the preview looks at least a bit like the final
+ * rendering.  Slight sizing issues can be forgiven but we must not change tick
+ * step and tick label precision between preview and final rendering. */
 static void
 preview(ImgExportControls *controls)
 {
@@ -2090,6 +2160,395 @@ create_basic_controls(ImgExportControls *controls)
     row++;
 }
 
+static void
+update_lateral_sensitivity(ImgExportControls *controls)
+{
+    gboolean insetsens = (controls->args->xytype == IMGEXPORT_LATERAL_INSET);
+    gboolean hgapsens = (controls->args->inset_pos % 3 != 1);
+    GSList *l;
+    guint i;
+
+    gtk_widget_set_sensitive(controls->inset_color_label, insetsens);
+    gtk_widget_set_sensitive(controls->inset_color, insetsens);
+    gtk_widget_set_sensitive(controls->inset_black, insetsens);
+    gtk_widget_set_sensitive(controls->inset_white, insetsens);
+    gtk_widget_set_sensitive(controls->inset_length_label, insetsens);
+    gtk_widget_set_sensitive(controls->inset_length, insetsens);
+    gtk_widget_set_sensitive(controls->inset_length_auto, insetsens);
+    gtk_widget_set_sensitive(controls->inset_draw_ticks, insetsens);
+    gtk_widget_set_sensitive(controls->inset_draw_label, insetsens);
+    for (i = 0; i < G_N_ELEMENTS(controls->inset_pos_label); i++)
+        gtk_widget_set_sensitive(controls->inset_pos_label[i], insetsens);
+    gwy_table_hscale_set_sensitive(controls->inset_xgap, insetsens*hgapsens);
+    gwy_table_hscale_set_sensitive(controls->inset_ygap, insetsens);
+    for (l = controls->inset_pos; l; l = g_slist_next(l))
+        gtk_widget_set_sensitive(GTK_WIDGET(l->data), insetsens);
+}
+
+static void
+inset_xgap_changed(ImgExportControls *controls,
+                   GtkAdjustment *adj)
+{
+    controls->args->inset_xgap = gtk_adjustment_get_value(adj);
+    update_preview(controls);
+}
+
+static void
+inset_ygap_changed(ImgExportControls *controls,
+                   GtkAdjustment *adj)
+{
+    controls->args->inset_ygap = gtk_adjustment_get_value(adj);
+    update_preview(controls);
+}
+
+static void
+xytype_changed(G_GNUC_UNUSED GtkToggleButton *toggle,
+               ImgExportControls *controls)
+{
+    controls->args->xytype = gwy_radio_buttons_get_current(controls->xytype);
+    update_lateral_sensitivity(controls);
+    update_preview(controls);
+}
+
+static void
+select_inset_color(ImgExportControls *controls,
+                   GwyColorButton *button)
+{
+    GtkWindow *parent;
+    GtkWidget *dialog, *selector;
+    GdkColor gdkcolor;
+    gint response;
+
+    gwy_rgba_to_gdk_color(&controls->args->inset_color, &gdkcolor);
+
+    dialog = gtk_color_selection_dialog_new(_("Change Inset Color"));
+    selector = GTK_COLOR_SELECTION_DIALOG(dialog)->colorsel;
+    gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(selector),
+                                          &gdkcolor);
+    gtk_color_selection_set_has_palette(GTK_COLOR_SELECTION(selector), FALSE);
+    gtk_color_selection_set_has_opacity_control(GTK_COLOR_SELECTION(selector),
+                                                FALSE);
+
+    parent = GTK_WINDOW(controls->dialog);
+    gtk_window_set_transient_for(GTK_WINDOW(dialog), parent);
+    gtk_window_set_modal(parent, FALSE);
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_color_selection_get_current_color(GTK_COLOR_SELECTION(selector),
+                                          &gdkcolor);
+    gtk_widget_destroy(dialog);
+    gtk_window_set_modal(parent, TRUE);
+
+    if (response != GTK_RESPONSE_OK)
+        return;
+
+    gwy_rgba_from_gdk_color(&controls->args->inset_color, &gdkcolor);
+    gwy_color_button_set_color(button, &controls->args->inset_color);
+    update_preview(controls);
+}
+
+static void
+inset_color_black(ImgExportControls *controls)
+{
+    static const GwyRGBA black = { 0.0, 0.0, 0.0, 1.0 };
+
+    controls->args->inset_color = black;
+    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->inset_color),
+                               &controls->args->inset_color);
+    update_preview(controls);
+}
+
+static void
+inset_color_white(ImgExportControls *controls)
+{
+    static const GwyRGBA white = { 1.0, 1.0, 1.0, 1.0 };
+
+    controls->args->inset_color = white;
+    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->inset_color),
+                               &controls->args->inset_color);
+    update_preview(controls);
+}
+
+static void
+inset_draw_ticks_toggled(ImgExportControls *controls,
+                         GtkToggleButton *button)
+{
+    ImgExportArgs *args = controls->args;
+
+    args->inset_draw_ticks = gtk_toggle_button_get_active(button);
+    if (controls->in_update || args->xytype != IMGEXPORT_LATERAL_INSET)
+        return;
+
+    update_preview(controls);
+}
+
+static void
+inset_draw_label_toggled(ImgExportControls *controls,
+                         GtkToggleButton *button)
+{
+    ImgExportArgs *args = controls->args;
+
+    args->inset_draw_label = gtk_toggle_button_get_active(button);
+    if (controls->in_update || args->xytype != IMGEXPORT_LATERAL_INSET)
+        return;
+
+    update_preview(controls);
+}
+
+static void
+inset_pos_changed(ImgExportControls *controls,
+                  GtkToggleButton *button)
+{
+    ImgExportArgs *args = controls->args;
+
+    if (!gtk_toggle_button_get_active(button))
+        return;
+
+    args->inset_pos = gwy_radio_buttons_get_current(controls->inset_pos);
+    if (controls->in_update || args->xytype != IMGEXPORT_LATERAL_INSET)
+        return;
+
+    update_lateral_sensitivity(controls);
+    update_preview(controls);
+}
+
+static void
+inset_length_set_auto(ImgExportControls *controls)
+{
+    /* Setting an invalid value causes reset to default. */
+    gtk_entry_set_text(GTK_ENTRY(controls->inset_length), "");
+    gtk_widget_activate(controls->inset_length);
+}
+
+static void
+inset_length_changed(ImgExportControls *controls,
+                     GtkEntry *entry)
+{
+    ImgExportArgs *args = controls->args;
+    ImgExportEnv *env = args->env;
+    GwyDataField *dfield;
+    const gchar *text;
+
+    dfield = env->dfield;
+    text = gtk_entry_get_text(entry);
+    g_free(args->inset_length);
+    if (inset_length_ok(dfield, text) > 0.0) {
+        /* XXX: We should check markup validity here. */
+        args->inset_length = g_strdup(text);
+    }
+    else {
+        args->inset_length = scalebar_auto_length(dfield, NULL);
+        gtk_entry_set_text(entry, args->inset_length);
+    }
+
+    if (controls->in_update || args->xytype != IMGEXPORT_LATERAL_INSET)
+        return;
+
+    update_preview(controls);
+}
+
+static GtkObject*
+attach_gap(GtkWidget *table,
+           const gchar *label,
+           gint row,
+           gdouble max,
+           gdouble value)
+{
+    GtkWidget *widget;
+    GtkObject *adj;
+
+    adj = gtk_adjustment_new(value, 0.0, max, 0.01, 0.1, 0);
+    gwy_table_attach_hscale(table, row, label, NULL, adj, GWY_HSCALE_DEFAULT);
+
+    /* Make the hscale take more columns to accommodate for inset position
+     * controls. */
+    widget = gwy_table_get_child_widget(table, row, 2);
+    g_object_ref(widget);
+    gtk_container_remove(GTK_CONTAINER(table), widget);
+    gtk_table_attach(GTK_TABLE(table), widget,
+                     3, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_object_unref(widget);
+
+    widget = gwy_table_get_child_widget(table, row, 1);
+    g_object_ref(widget);
+    gtk_container_remove(GTK_CONTAINER(table), widget);
+    gtk_table_attach(GTK_TABLE(table), widget,
+                     1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_object_unref(widget);
+
+    return adj;
+}
+
+static void
+inset_pos_add(ImgExportControls *controls,
+              GtkTable *table,
+              InsetPosType pos,
+              gint col, gint row)
+{
+    GtkWidget *button;
+
+    button = gtk_radio_button_new_with_label(controls->inset_pos, NULL);
+    if (pos == controls->args->inset_pos)
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), TRUE);
+    controls->inset_pos = gtk_radio_button_get_group(GTK_RADIO_BUTTON(button));
+    g_object_set_qdata(G_OBJECT(button), controls->rb_quark,
+                       GUINT_TO_POINTER(pos));
+    gtk_table_attach(table, button, col, col+1, row, row+1, 0, 0, 0, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(inset_pos_changed), controls);
+}
+
+static void
+create_lateral_controls(ImgExportControls *controls)
+{
+    ImgExportArgs *args = controls->args;
+    GtkWidget *table, *label;
+    gint row = 0;
+
+    table = controls->table_lateral = gtk_table_new(11, 4, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+
+    controls->xytype
+        = gwy_radio_buttons_createl(G_CALLBACK(xytype_changed), controls,
+                                    args->xytype,
+                                    gwy_sgettext("ruler|_None"),
+                                    IMGEXPORT_LATERAL_NONE,
+                                    _("_Rulers"),
+                                    IMGEXPORT_LATERAL_RULERS,
+                                    _("_Inset scale bar"),
+                                    IMGEXPORT_LATERAL_INSET,
+                                    NULL);
+    row = gwy_radio_buttons_attach_to_table(controls->xytype, GTK_TABLE(table),
+                                            3, row);
+
+    controls->inset_xgap = attach_gap(table, _("Horizontal _gap:"), row, 4.0,
+                                      args->inset_xgap);
+    g_signal_connect_swapped(controls->inset_xgap, "value-changed",
+                             G_CALLBACK(inset_xgap_changed), controls);
+    row++;
+
+    controls->inset_ygap = attach_gap(table, _("_Vertical gap:"), row, 2.0,
+                                      args->inset_ygap);
+    g_signal_connect_swapped(controls->inset_ygap, "value-changed",
+                             G_CALLBACK(inset_ygap_changed), controls);
+    row++;
+
+    controls->inset_color_label = gtk_label_new(_("Color:"));
+    gtk_misc_set_alignment(GTK_MISC(controls->inset_color_label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls->inset_color_label,
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    controls->inset_color = gwy_color_button_new_with_color(&args->inset_color);
+    gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls->inset_color),
+                                   FALSE);
+    gtk_table_attach(GTK_TABLE(table), controls->inset_color,
+                     1, 2, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls->inset_color, "clicked",
+                             G_CALLBACK(select_inset_color), controls);
+
+    controls->inset_black = gtk_button_new_with_mnemonic(_("_Black"));
+    gtk_table_attach(GTK_TABLE(table), controls->inset_black,
+                     2, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls->inset_black, "clicked",
+                             G_CALLBACK(inset_color_black), controls);
+
+    controls->inset_white = gtk_button_new_with_mnemonic(_("_White"));
+    gtk_table_attach(GTK_TABLE(table), controls->inset_white,
+                     3, 4, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls->inset_white, "clicked",
+                             G_CALLBACK(inset_color_white), controls);
+    row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+
+    controls->inset_pos_label[0] = label = gtk_label_new(_("Position:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    controls->inset_pos_label[1] = label = gtk_label_new(_("left"));
+    gtk_table_attach(GTK_TABLE(table), label, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    controls->inset_pos_label[2] = label = gtk_label_new(_("center"));
+    gtk_table_attach(GTK_TABLE(table), label, 2, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    controls->inset_pos_label[3] = label = gtk_label_new(_("right"));
+    gtk_table_attach(GTK_TABLE(table), label, 3, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls->inset_pos_label[4] = label = gtk_label_new(_("top"));
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    controls->rb_quark = g_quark_from_string("gwy-radiobuttons-key");
+
+    inset_pos_add(controls, GTK_TABLE(table), INSET_POS_TOP_LEFT, 1, row);
+    inset_pos_add(controls, GTK_TABLE(table), INSET_POS_TOP_CENTER, 2, row);
+    inset_pos_add(controls, GTK_TABLE(table), INSET_POS_TOP_RIGHT, 3, row);
+    row++;
+
+    controls->inset_pos_label[5] = label = gtk_label_new(_("bottom"));
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    inset_pos_add(controls, GTK_TABLE(table), INSET_POS_BOTTOM_LEFT, 1, row);
+    inset_pos_add(controls, GTK_TABLE(table), INSET_POS_BOTTOM_CENTER, 2, row);
+    inset_pos_add(controls, GTK_TABLE(table), INSET_POS_BOTTOM_RIGHT, 3, row);
+    row++;
+
+    controls->inset_length_label
+        = label = gtk_label_new_with_mnemonic(_("_Length:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    controls->inset_length = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(controls->inset_length), 8);
+    gtk_entry_set_text(GTK_ENTRY(controls->inset_length),
+                       controls->args->inset_length);
+    gwy_widget_set_activate_on_unfocus(controls->inset_length, TRUE);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->inset_length);
+    g_signal_connect_swapped(controls->inset_length, "activate",
+                             G_CALLBACK(inset_length_changed), controls);
+    gtk_table_attach(GTK_TABLE(table), controls->inset_length,
+                     1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    controls->inset_length_auto = gtk_button_new_with_mnemonic(_("_Auto"));
+    g_signal_connect_swapped(controls->inset_length_auto, "clicked",
+                             G_CALLBACK(inset_length_set_auto), controls);
+    gtk_table_attach(GTK_TABLE(table), controls->inset_length_auto,
+                     3, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls->inset_draw_ticks
+        = gtk_check_button_new_with_mnemonic(_("Draw _ticks"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->inset_draw_ticks),
+                                 args->inset_draw_ticks);
+    gtk_table_attach(GTK_TABLE(table), controls->inset_draw_ticks,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls->inset_draw_ticks, "toggled",
+                             G_CALLBACK(inset_draw_ticks_toggled), controls);
+    row++;
+
+    controls->inset_draw_label
+        = gtk_check_button_new_with_mnemonic(_("Draw _label"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->inset_draw_label),
+                                 args->inset_draw_label);
+    gtk_table_attach(GTK_TABLE(table), controls->inset_draw_label,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls->inset_draw_label, "toggled",
+                             G_CALLBACK(inset_draw_label_toggled), controls);
+    row++;
+
+    update_lateral_sensitivity(controls);
+}
+
 static gboolean
 img_export_dialog(ImgExportArgs *args)
 {
@@ -2147,12 +2606,10 @@ img_export_dialog(ImgExportArgs *args)
     create_basic_controls(&controls);
     gtk_notebook_append_page(GTK_NOTEBOOK(controls.notebook),
                              controls.table_basic,
-                             gtk_label_new(gwy_sgettext("imgexport|Basic")));
+                             gtk_label_new(gwy_sgettext("adjective|Basic")));
 
     controls.table_lateral = gtk_table_new(5, 3, FALSE);
-    table = GTK_TABLE(controls.table_lateral);
-    gtk_table_set_row_spacings(table, 2);
-    gtk_table_set_col_spacings(table, 6);
+    create_lateral_controls(&controls);
     gtk_notebook_append_page(GTK_NOTEBOOK(controls.notebook),
                              controls.table_lateral,
                              gtk_label_new(_("Lateral Scale")));
@@ -2163,7 +2620,7 @@ img_export_dialog(ImgExportArgs *args)
     gtk_table_set_col_spacings(table, 6);
     gtk_notebook_append_page(GTK_NOTEBOOK(controls.notebook),
                              controls.table_value,
-                             gtk_label_new(_("Value Scale")));
+                             gtk_label_new(_("Values")));
 
     controls.preview = gtk_image_new();
     gtk_box_pack_start(GTK_BOX(hbox), controls.preview, FALSE, FALSE, 0);
@@ -3078,7 +3535,8 @@ static const gchar greyscale_key[]        = "/module/pixmap/grayscale";
 static const gchar inset_color_key[]      = "/module/pixmap/inset_color";
 static const gchar inset_draw_label_key[] = "/module/pixmap/inset_draw_label";
 static const gchar inset_draw_ticks_key[] = "/module/pixmap/inset_draw_ticks";
-static const gchar inset_gap_key[]        = "/module/pixmap/inset_gap";
+static const gchar inset_xgap_key[]       = "/module/pixmap/inset_xgap";
+static const gchar inset_ygap_key[]       = "/module/pixmap/inset_ygap";
 static const gchar inset_length_key[]     = "/module/pixmap/inset_length";
 static const gchar inset_pos_key[]        = "/module/pixmap/inset_pos";
 static const gchar line_width_key[]       = "/module/pixmap/line_width";
@@ -3093,9 +3551,8 @@ static const gchar ztype_key[]            = "/module/pixmap/ztype";
 static void
 img_export_sanitize_args(ImgExportArgs *args)
 {
-    args->xytype = MIN(args->xytype, PIXMAP_SCALEBAR);
-    args->ztype = MIN(args->ztype, PIXMAP_FMSCALE);
-    args->inset_color.a = 1.0;
+    args->xytype = MIN(args->xytype, IMGEXPORT_LATERAL_NTYPES-1);
+    args->ztype = MIN(args->ztype, IMGEXPORT_VALUE_NTYPES-1);
     args->inset_pos = MIN(args->inset_pos, INSET_NPOS - 1);
     /* handle inset_length later, its usability depends on the data field. */
     args->zoom = CLAMP(args->zoom, 0.06, 16.0);
@@ -3111,7 +3568,8 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->sizes.border_width = CLAMP(args->sizes.border_width, 0.0, 1024.0);
     args->sizes.tick_length = CLAMP(args->sizes.tick_length, 0.0, 120.0);
     args->fmscale_gap = CLAMP(args->fmscale_gap, 0.0, 2.0);
-    args->inset_gap = CLAMP(args->inset_gap, 0.0, 2.0);
+    args->inset_xgap = CLAMP(args->inset_xgap, 0.0, 4.0);
+    args->inset_ygap = CLAMP(args->inset_ygap, 0.0, 2.0);
     args->greyscale = (args->greyscale == 16) ? 16 : 0;
 }
 
@@ -3156,8 +3614,10 @@ img_export_load_args(GwyContainer *container,
                                       &args->scale_font);
     gwy_container_gis_double_by_name(container, fmscale_gap_key,
                                      &args->fmscale_gap);
-    gwy_container_gis_double_by_name(container, inset_gap_key,
-                                     &args->inset_gap);
+    gwy_container_gis_double_by_name(container, inset_xgap_key,
+                                     &args->inset_xgap);
+    gwy_container_gis_double_by_name(container, inset_ygap_key,
+                                     &args->inset_ygap);
     gwy_container_gis_int32_by_name(container, greyscale_key, &args->greyscale);
     gwy_container_gis_boolean_by_name(container, inset_draw_ticks_key,
                                       &args->inset_draw_ticks);
@@ -3202,8 +3662,10 @@ img_export_save_args(GwyContainer *container,
                                       args->scale_font);
     gwy_container_set_double_by_name(container, fmscale_gap_key,
                                      args->fmscale_gap);
-    gwy_container_set_double_by_name(container, inset_gap_key,
-                                     args->inset_gap);
+    gwy_container_set_double_by_name(container, inset_xgap_key,
+                                     args->inset_xgap);
+    gwy_container_set_double_by_name(container, inset_ygap_key,
+                                     args->inset_ygap);
     gwy_container_set_int32_by_name(container, greyscale_key, args->greyscale);
     gwy_container_set_boolean_by_name(container, inset_draw_ticks_key,
                                       args->inset_draw_ticks);
