@@ -153,10 +153,6 @@ typedef struct {
     gdouble fmruler_label_width;
     gdouble fmruler_label_height;
     gdouble inset_length;
-    GwyLayerBasicRangeType fm_rangetype;
-    gdouble fm_min;
-    gdouble fm_max;
-    gboolean fm_inverted;
 
     /* Actual rectangles, including positions, of the image parts. */
     ImgExportRect image;
@@ -178,6 +174,12 @@ typedef struct {
     GwyDataField *mask;
     GwyContainer *data;
     GwyRGBA mask_colour;
+    GwyGradient *gradient;
+    GwyLayerBasicRangeType fm_rangetype;
+    gdouble fm_min;
+    gdouble fm_max;
+    gboolean fm_inverted;
+    gboolean has_presentation;
     gint id;
     guint xres;
     guint yres;            /* Already after realsquare resampling! */
@@ -882,9 +884,9 @@ static void
 find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
                    PangoLayout *layout, GString *s)
 {
+    const ImgExportEnv *env = args->env;
     GwyDataField *dfield = args->env->dfield;
     GwySIUnit *zunit = gwy_data_field_get_si_unit_z(dfield);
-    GwyPixmapLayer *layer;
     gdouble size = sizes->image.h;
     gdouble min, max, real;
     RulerTicks *ticks = &sizes->fmruler_ticks;
@@ -893,14 +895,9 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     gdouble bs, height, width;
     guint n;
 
-    layer = gwy_data_view_get_base_layer(args->env->data_view);
-    g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
-    gwy_layer_basic_get_range(GWY_LAYER_BASIC(layer), &min, &max);
-
-    if ((sizes->fm_inverted = (max < min)))
-        GWY_SWAP(gdouble, min, max);
+    min = env->fm_min;
+    max = env->fm_max;
     real = max - min;
-    sizes->fm_rangetype = gwy_layer_basic_get_range_type(GWY_LAYER_BASIC(layer));
 
     /* TODO: Handle inverted range! */
     vf = gwy_si_unit_get_format_with_resolution(zunit,
@@ -909,7 +906,15 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
                                                 NULL);
     sizes->vf_fmruler = vf;
     gwy_debug("unit '%s'", vf->units);
-    /* TODO: Support presentations, non-linear mapping, ... */
+
+    /* Return after creating vf, we are supposed to do that. */
+    if (env->has_presentation) {
+        sizes->fmruler_label_width = (sizes->sizes.tick_length +
+                                      sizes->sizes.line_width);
+        sizes->fmruler_label_height = 0.0;
+        return;
+    }
+
     min /= vf->magnitude;
     max /= vf->magnitude;
     real /= vf->magnitude;
@@ -929,6 +934,10 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     height = MAX(logical1.height/pangoscale, logical2.height/pangoscale);
     sizes->fmruler_label_height = height;
     gwy_debug("label width %g, height %g", width, height);
+    /* Draw interior ticks only for linear mapping. */
+    if (env->fm_rangetype == GWY_LAYER_BASIC_RANGE_ADAPT)
+        return;
+
     n = CLAMP(GWY_ROUND(size/height), 1, 10);
     gwy_debug("nticks %u", n);
     ticks->step = real/n;
@@ -945,8 +954,6 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
             vf->precision--;
     }
     gwy_debug("base %g, step %g", ticks->base, ticks->step);
-    sizes->fm_min = min;
-    sizes->fm_max = max;
 
     /* XXX: This is rudimentary.  Must create the end-axis ticks! */
     bs = ticks->base * ticks->step;
@@ -1120,23 +1127,25 @@ calculate_sizes(const ImgExportArgs *args,
     sizes->canvas.w = sizes->fmruler.x + sizes->fmruler.w + borderw;
     sizes->canvas.h = sizes->image.y + sizes->image.h + borderw;
 
-
-    /* TODO: Ensure image starts at integer coordinates for pixmap export. */
-
     gwy_debug("canvas %g x %g at (%g, %g)",
-              sizes->canvas.w, sizes->canvas.h, sizes->canvas.x, sizes->canvas.y);
+              sizes->canvas.w, sizes->canvas.h,
+              sizes->canvas.x, sizes->canvas.y);
     gwy_debug("hruler %g x %g at (%g, %g)",
-              sizes->hruler.w, sizes->hruler.h, sizes->hruler.x, sizes->hruler.y);
+              sizes->hruler.w, sizes->hruler.h,
+              sizes->hruler.x, sizes->hruler.y);
     gwy_debug("vruler %g x %g at (%g, %g)",
-              sizes->vruler.w, sizes->vruler.h, sizes->vruler.x, sizes->vruler.y);
+              sizes->vruler.w, sizes->vruler.h,
+              sizes->vruler.x, sizes->vruler.y);
     gwy_debug("image %g x %g at (%g, %g)",
               sizes->image.w, sizes->image.h, sizes->image.x, sizes->image.y);
     gwy_debug("inset %g x %g at (%g, %g)",
               sizes->inset.w, sizes->inset.h, sizes->inset.x, sizes->inset.y);
     gwy_debug("fmgrad %g x %g at (%g, %g)",
-              sizes->fmgrad.w, sizes->fmgrad.h, sizes->fmgrad.x, sizes->fmgrad.y);
+              sizes->fmgrad.w, sizes->fmgrad.h,
+              sizes->fmgrad.x, sizes->fmgrad.y);
     gwy_debug("fmruler %g x %g at (%g, %g)",
-              sizes->fmruler.w, sizes->fmruler.h, sizes->fmruler.x, sizes->fmruler.y);
+              sizes->fmruler.w, sizes->fmruler.h,
+              sizes->fmruler.x, sizes->fmruler.y);
 
     g_string_free(s, TRUE);
     g_object_unref(layout);
@@ -1433,30 +1442,20 @@ draw_inset(const ImgExportArgs *args,
 }
 
 static void
-draw_fmgrad(GwyContainer *data,
-            const ImgExportArgs *args,
+draw_fmgrad(const ImgExportArgs *args,
             const ImgExportSizes *sizes,
             cairo_t *cr)
 {
-    GwyPixmapLayer *layer;
+    const ImgExportEnv *env = args->env;
     const ImgExportRect *rect = &sizes->fmgrad;
-    GwyGradient *gradient;
     const GwyGradientPoint *points;
     cairo_pattern_t *pat;
-    const guchar *name = NULL, *key;
     gint w, h, npoints, i;
     gdouble lw = sizes->sizes.line_width;
-    gboolean inverted = sizes->fm_inverted;
+    gboolean inverted = env->fm_inverted;
 
     if (args->ztype != IMGEXPORT_VALUE_FMSCALE)
         return;
-
-    layer = gwy_data_view_get_base_layer(args->env->data_view);
-    key = gwy_layer_basic_get_gradient_key(GWY_LAYER_BASIC(layer));
-    if (key)
-        gwy_container_gis_string_by_name(data, key, &name);
-    gradient = gwy_gradients_get_gradient(name);
-    points = gwy_gradient_get_points(gradient, &npoints);
 
     w = rect->w - 2.0*lw;
     h = rect->h - 2.0*lw;
@@ -1466,6 +1465,7 @@ draw_fmgrad(GwyContainer *data,
     else
         pat = cairo_pattern_create_linear(0.0, lw + h, 0.0, lw);
 
+    points = gwy_gradient_get_points(env->gradient, &npoints);
     for (i = 0; i < npoints; i++) {
         const GwyGradientPoint *gpt = points + i;
         const GwyRGBA *color = &gpt->color;
@@ -1501,17 +1501,22 @@ draw_fmruler(const ImgExportArgs *args,
              GString *s,
              cairo_t *cr)
 {
+    const ImgExportEnv *env = args->env;
     const ImgExportRect *rect = &sizes->fmruler;
     const RulerTicks *ticks = &sizes->fmruler_ticks;
     GwySIValueFormat *vf = sizes->vf_fmruler;
     gdouble lw = sizes->sizes.line_width;
     gdouble tl = sizes->sizes.tick_length;
-    gdouble z, bs, scale, yimg, real;
+    gdouble z, bs, scale, yimg, min, max, real;
     PangoRectangle logical;
-    gboolean inverted = sizes->fm_inverted;
+    gboolean inverted = env->fm_inverted;
 
     if (args->ztype != IMGEXPORT_VALUE_FMSCALE)
         return;
+
+    min = env->fm_min/vf->magnitude;
+    max = env->fm_max/vf->magnitude;
+    real = max - min;
 
     /* Draw the edge ticks first */
     cairo_save(cr);
@@ -1525,17 +1530,19 @@ draw_fmruler(const ImgExportArgs *args,
     cairo_stroke(cr);
     cairo_restore(cr);
 
+    if (env->has_presentation)
+        return;
+
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
     cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
     format_layout(layout, &logical, s, "%.*f %s",
-                  vf->precision, sizes->fm_max, vf->units);
+                  vf->precision, max, vf->units);
     gwy_debug("max '%s' (%g x %g)",
               s->str, logical.width/pangoscale, logical.height/pangoscale);
     cairo_move_to(cr, tl + lw, lw);
     pango_cairo_show_layout(cr, layout);
-    format_layout(layout, &logical, s, "%.*f",
-                  vf->precision, sizes->fm_min);
+    format_layout(layout, &logical, s, "%.*f", vf->precision, min);
     gwy_debug("min '%s' (%g x %g)",
               s->str, logical.width/pangoscale, logical.height/pangoscale);
     cairo_move_to(cr,
@@ -1543,8 +1550,8 @@ draw_fmruler(const ImgExportArgs *args,
     pango_cairo_show_layout(cr, layout);
     cairo_restore(cr);
 
-    real = sizes->fm_max - sizes->fm_min;
-    if (real < 1e-14)  /* TODO: Or the mapping is not normal... */
+    if (env->fm_rangetype == GWY_LAYER_BASIC_RANGE_ADAPT
+        || real < 1e-14)
         return;
 
     scale = (rect->h - lw)/real;
@@ -1556,9 +1563,9 @@ draw_fmruler(const ImgExportArgs *args,
     cairo_set_line_width(cr, lw);
     for (z = ticks->from; z <= ticks->to + 1e-14*bs; z += bs) {
         if (inverted)
-            yimg = (z - sizes->fm_min)*scale + lw;
+            yimg = (z - min)*scale + lw;
         else
-            yimg = (sizes->fm_max - z)*scale + lw;
+            yimg = (max - z)*scale + lw;
 
         if (yimg <= sizes->fmruler_label_height + 4.0*lw
             || yimg + sizes->fmruler_label_height + 4.0*lw >= rect->h)
@@ -1578,9 +1585,9 @@ draw_fmruler(const ImgExportArgs *args,
         z = fixzero(z);
 
         if (inverted)
-            yimg = (z - sizes->fm_min)*scale + lw;
+            yimg = (z - min)*scale + lw;
         else
-            yimg = (sizes->fm_max - z)*scale + lw;
+            yimg = (max - z)*scale + lw;
 
         if (yimg <= sizes->fmruler_label_height + 4.0*lw
             || yimg + 2.0*sizes->fmruler_label_height + 4.0*lw >= rect->h)
@@ -1595,8 +1602,7 @@ draw_fmruler(const ImgExportArgs *args,
 
 /* We assume cr is already created for the layout with the correct scale(!). */
 static void
-image_draw_cairo(GwyContainer *data,
-                 const ImgExportArgs *args,
+image_draw_cairo(const ImgExportArgs *args,
                  const ImgExportSizes *sizes,
                  cairo_t *cr)
 {
@@ -1609,7 +1615,7 @@ image_draw_cairo(GwyContainer *data,
     draw_hruler(args, sizes, layout, s, cr);
     draw_vruler(args, sizes, layout, s, cr);
     draw_inset(args, sizes, layout, s, cr);
-    draw_fmgrad(data, args, sizes, cr);
+    draw_fmgrad(args, sizes, cr);
     draw_fmruler(args, sizes, layout, s, cr);
 
     g_object_unref(layout);
@@ -1632,7 +1638,7 @@ render_pixbuf(const ImgExportArgs *args, const gchar *name)
     surface = create_surface(args, name, NULL,
                              sizes->canvas.w, sizes->canvas.h);
     cr = cairo_create(surface);
-    image_draw_cairo(args->env->data, args, sizes, cr);
+    image_draw_cairo(args, sizes, cr);
     cairo_surface_flush(surface);
     cairo_destroy(cr);
 
@@ -2842,6 +2848,15 @@ img_export_export(GwyContainer *data,
                                      GWY_APP_DATA_FIELD_ID, &env.id,
                                      GWY_APP_MASK_FIELD, &env.mask,
                                      0);
+
+    /*
+     * XXX: We need the data view for two things:
+     * 1) Data rendering with selections, realsquare, etc.
+     * 2) Obtaining various settings from the layer
+     * We can emulate both here and for selections we probably want emulate it.
+     * Once that is done we can export images not shown in any data wiew which
+     * would be nice from pygwy scripts.
+     */
     if (!env.data_view) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_SPECIFIC,
@@ -2885,6 +2900,28 @@ img_export_export(GwyContainer *data,
 
     if (args.mode == IMGEXPORT_MODE_GREY16 && !format->write_grey16)
         args.mode = IMGEXPORT_MODE_PRESENTATION;
+
+    if (args.mode == IMGEXPORT_MODE_PRESENTATION) {
+        GwyPixmapLayer *layer;
+        GwyLayerBasic *blayer;
+        const guchar *gradname = NULL;
+
+        layer = gwy_data_view_get_base_layer(env.data_view);
+        g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), FALSE);
+        blayer = GWY_LAYER_BASIC(layer);
+        key = gwy_layer_basic_get_gradient_key(blayer);
+        if (key)
+            gwy_container_gis_string_by_name(data, key, &gradname);
+        env.gradient = gwy_gradients_get_gradient(gradname);
+
+        env.fm_rangetype = gwy_layer_basic_get_range_type(blayer);
+        gwy_layer_basic_get_range(blayer, &env.fm_min, &env.fm_max);
+        if ((env.fm_inverted = (env.fm_max < env.fm_min)))
+            GWY_SWAP(gdouble, env.fm_min, env.fm_max);
+
+        env.has_presentation = gwy_layer_basic_get_has_presentation(blayer);
+        gwy_debug("has_presentation %d", env.has_presentation);
+    }
 
     if (mode == GWY_RUN_INTERACTIVE)
         ok = img_export_dialog(&args);
@@ -3329,7 +3366,7 @@ write_vector_generic(ImgExportArgs *args,
                              sizes->canvas.w, sizes->canvas.h);
     g_return_val_if_fail(surface, FALSE);
     cr = cairo_create(surface);
-    image_draw_cairo(args->env->data, args, sizes, cr);
+    image_draw_cairo(args, sizes, cr);
     cairo_surface_flush(surface);
     if ((status = cairo_status(cr))
         || (status = cairo_surface_status(surface))) {
