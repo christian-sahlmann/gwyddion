@@ -418,7 +418,7 @@ static const ImgExportArgs img_export_defaults = {
     IMGEXPORT_LATERAL_RULERS, IMGEXPORT_VALUE_FMSCALE,
     { 1.0, 1.0, 1.0, 1.0 }, INSET_POS_BOTTOM_RIGHT,
     TRUE, TRUE,
-    "Helvetica", FALSE, TRUE, TRUE,
+    "Helvetica", TRUE, TRUE, TRUE,
     1.0, 1.0, 1.0,
     0, "",
     IMGEXPORT_INTERPOLATION_LINEAR,
@@ -746,6 +746,7 @@ precision_is_sufficient(gdouble bs, guint precision)
     gchar *s2 = g_strdup_printf("%.*f", precision, 3.0*bs);
     gboolean ok = !gwy_strequal(s0, s1) && !gwy_strequal(s1, s2);
 
+    gwy_debug("<%s> vs <%s> vs <%s>", s0, s1, s2);
     g_free(s0);
     g_free(s1);
     g_free(s2);
@@ -804,7 +805,7 @@ find_hruler_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     bs = ticks->base * ticks->step;
     if (!precision_is_sufficient(bs, vf->precision))
         vf->precision++;
-    else if (vf->precision && precision_is_sufficient(bs, vf->precision))
+    else if (vf->precision && precision_is_sufficient(bs, vf->precision-1))
         vf->precision--;
 
     gwy_debug("base %g, step %g", ticks->base, ticks->step);
@@ -964,7 +965,7 @@ measure_inset(const ImgExportArgs *args, ImgExportSizes *sizes,
     ImgExportRect *rect = &sizes->inset;
     gdouble hsize = sizes->image.w, vsize = sizes->image.h;
     gdouble real = gwy_data_field_get_xreal(dfield);
-    PangoRectangle logical;
+    PangoRectangle logical, ink;
     InsetPosType pos = args->inset_pos;
     gdouble lw = sizes->sizes.line_width;
     gdouble tl = sizes->sizes.tick_length;
@@ -981,7 +982,10 @@ measure_inset(const ImgExportArgs *args, ImgExportSizes *sizes,
     if (args->inset_draw_label) {
         format_layout(layout, &logical, s, "%s", args->inset_length);
         rect->w = MAX(rect->w, logical.width/pangoscale);
-        rect->h += logical.height/pangoscale + lw;
+        /* We need ink rectangle to position labels with no ink below baseline,
+         * such as 100 nm, as expected. */
+        pango_layout_get_extents(layout, &ink, NULL);
+        rect->h += (ink.height + ink.y)/pangoscale + lw;
     }
 
     if (pos == INSET_POS_TOP_LEFT
@@ -1094,6 +1098,7 @@ calculate_sizes(const ImgExportArgs *args,
     }
     else {
         /* This is in fact the right border line around the image. */
+        sizes->fmgrad.x = sizes->image.x + sizes->image.w;
         sizes->fmgrad.w = lw;
     }
     sizes->fmruler.x = sizes->fmgrad.x + sizes->fmgrad.w;
@@ -1672,9 +1677,10 @@ preview(ImgExportControls *controls)
 {
     ImgExportArgs *args = controls->args;
     ImgExportSizes *sizes;
-    gdouble zoom = args->zoom;
+    gdouble zoom = args->zoom, zoomcorr;
     SizeSettings savedsizes = args->sizes;
     gboolean scale_font = args->scale_font;
+    guint width, height;
     GdkPixbuf *pixbuf;
 
     sizes = calculate_sizes(args, "png");
@@ -1695,6 +1701,26 @@ preview(ImgExportControls *controls)
     destroy_sizes(sizes);
 
     pixbuf = render_pixbuf(args, "png");
+    /* The sizes may be way off when the fonts are huge compared to the
+     * image and so on.  Try to correct that and render again. */
+    width = gdk_pixbuf_get_width(pixbuf);
+    height = gdk_pixbuf_get_height(pixbuf);
+    zoomcorr = (gdouble)PREVIEW_SIZE/MAX(width, height);
+    gwy_debug("zoomcorr %g", zoomcorr);
+    /* This is a big tolerance but we are almost always several percents off so
+     * don't make much fuss about it. */
+    if (fabs(log(zoomcorr)) > 0.08) {
+        g_object_unref(pixbuf);
+        scale_sizes(&args->sizes, pow(zoomcorr, 1.25));
+        pixbuf = render_pixbuf(args, "png");
+#ifdef DEBUG
+        width = gdk_pixbuf_get_width(pixbuf);
+        height = gdk_pixbuf_get_height(pixbuf);
+        zoomcorr = (gdouble)PREVIEW_SIZE/MAX(width, height);
+#endif
+        gwy_debug("improved zoomcorr %g", zoomcorr);
+    }
+
     gtk_image_set_from_pixbuf(GTK_IMAGE(controls->preview), pixbuf);
     g_object_unref(pixbuf);
 
@@ -2295,10 +2321,8 @@ inset_length_changed(ImgExportControls *controls,
     dfield = env->dfield;
     text = gtk_entry_get_text(entry);
     g_free(args->inset_length);
-    if (inset_length_ok(dfield, text)) {
-        /* XXX: We should check markup validity here. */
+    if (inset_length_ok(dfield, text))
         args->inset_length = g_strdup(text);
-    }
     else {
         args->inset_length = scalebar_auto_length(dfield, NULL);
         gtk_entry_set_text(entry, args->inset_length);
