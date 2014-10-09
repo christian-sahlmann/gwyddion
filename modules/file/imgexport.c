@@ -1221,9 +1221,19 @@ draw_data(const ImgExportArgs *args,
 
         cairo_save(cr);
         cairo_translate(cr, rect->x + lw, rect->y + lw);
-        /* FIXME: Probably does not work with realsquare! */
-        cairo_scale(cr, args->zoom, args->zoom);
         pixbuf = draw_mask_pixbuf(args);
+        if (env->realsquare) {
+            gdouble mw = gdk_pixbuf_get_width(pixbuf);
+            gdouble mh = gdk_pixbuf_get_height(pixbuf);
+            gdouble r = (env->yres/mh)/(env->xres/mw);
+            r = 1.0 + fixzero(r - 1.0);
+            if (r >= 1.0)
+                cairo_scale(cr, args->zoom, r*args->zoom);
+            else
+                cairo_scale(cr, args->zoom/r, args->zoom);
+        }
+        else
+            cairo_scale(cr, args->zoom, args->zoom);
         gdk_cairo_set_source_pixbuf(cr, pixbuf, 0.0, 0.0);
         cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_NEAREST);
         cairo_paint(cr);
