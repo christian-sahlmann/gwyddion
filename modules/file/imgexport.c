@@ -78,7 +78,8 @@
 #define fixzero(x) (fabs(x) < 1e-14 ? 0.0 : (x))
 
 enum {
-    PREVIEW_SIZE    = 400,
+    PREVIEW_SIZE = 400,
+    NPAGES       = 3,
 };
 
 typedef enum {
@@ -186,6 +187,7 @@ typedef struct {
 typedef struct {
     ImgExportEnv *env;
     ImgExportMode mode;
+    guint active_page;
     gdouble pxwidth;       /* Pixel width in mm for vector. */
     gdouble zoom;          /* Pixelwise for pixmaps. */
     SizeSettings sizes;
@@ -410,8 +412,7 @@ static ImgExportFormat image_formats[] = {
 };
 
 static const ImgExportArgs img_export_defaults = {
-    NULL,
-    IMGEXPORT_MODE_PRESENTATION,
+    NULL, IMGEXPORT_MODE_PRESENTATION, 0,
     0.1, 1.0,
     { 12.0, 1.0, 0.0, 10.0 },
     IMGEXPORT_LATERAL_RULERS, IMGEXPORT_VALUE_FMSCALE,
@@ -2294,7 +2295,7 @@ inset_length_changed(ImgExportControls *controls,
     dfield = env->dfield;
     text = gtk_entry_get_text(entry);
     g_free(args->inset_length);
-    if (inset_length_ok(dfield, text) > 0.0) {
+    if (inset_length_ok(dfield, text)) {
         /* XXX: We should check markup validity here. */
         args->inset_length = g_strdup(text);
     }
@@ -2602,7 +2603,6 @@ create_value_controls(ImgExportControls *controls)
                              G_CALLBACK(draw_selection_changed), controls);
     row++;
 
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     label = gtk_label_new_with_mnemonic(_("_Rendering:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -2621,6 +2621,7 @@ create_value_controls(ImgExportControls *controls)
                      1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Value Scale")),
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
@@ -2645,6 +2646,26 @@ create_value_controls(ImgExportControls *controls)
     row++;
 
     update_value_sensitivity(controls);
+}
+
+static void
+unqueue_preview(ImgExportControls *controls)
+{
+    if (controls->sid) {
+        g_source_remove(controls->sid);
+        controls->sid = 0;
+    }
+}
+
+static void
+page_switched(ImgExportControls *controls,
+              G_GNUC_UNUSED GtkNotebookPage *page,
+              gint pagenum)
+{
+    if (controls->in_update)
+        return;
+
+    controls->args->active_page = pagenum;
 }
 
 static gboolean
@@ -2674,6 +2695,8 @@ img_export_dialog(ImgExportArgs *args)
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     g_free(title);
     controls.dialog = dialog;
+    g_signal_connect_swapped(dialog, "destroy",
+                             G_CALLBACK(unqueue_preview), &controls);
 
     hbox = gtk_hbox_new(FALSE, 20);
     gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
@@ -2720,8 +2743,14 @@ img_export_dialog(ImgExportArgs *args)
 
     preview(&controls);
     controls.in_update = FALSE;
-
     gtk_widget_show_all(dialog);
+
+    /* Must be done when widgets are shown, see GtkNotebook docs */
+    gtk_notebook_set_current_page(GTK_NOTEBOOK(controls.notebook),
+                                  args->active_page);
+    g_signal_connect_swapped(controls.notebook, "switch-page",
+                             G_CALLBACK(page_switched), &controls);
+
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
         switch (response) {
@@ -2745,11 +2774,6 @@ img_export_dialog(ImgExportArgs *args)
             break;
         }
     } while (response != GTK_RESPONSE_OK);
-
-    if (controls.sid) {
-        g_source_remove(controls.sid);
-        controls.sid = 0;
-    }
 
     gtk_widget_destroy(dialog);
 
@@ -2819,6 +2843,11 @@ img_export_export(GwyContainer *data,
         env.yres = yres;
     }
     gwy_debug("env.xres %u, env.yres %u", env.xres, env.yres);
+
+    if (!inset_length_ok(env.dfield, args.inset_length)) {
+        g_free(args.inset_length);
+        args.inset_length = scalebar_auto_length(env.dfield, NULL);
+    }
 
     if (args.mode == IMGEXPORT_MODE_GREY16 && !format->write_grey16)
         args.mode = IMGEXPORT_MODE_PRESENTATION;
@@ -3618,6 +3647,7 @@ write_pixbuf_targa(GdkPixbuf *pixbuf,
 }
 
 /* Use the pixmap prefix for compatibility */
+static const gchar active_page_key[]      = "/module/pixmap/grayscale";
 static const gchar border_width_key[]     = "/module/pixmap/border_width";
 static const gchar draw_mask_key[]        = "/module/pixmap/draw_mask";
 static const gchar draw_selection_key[]   = "/module/pixmap/draw_selection";
@@ -3644,6 +3674,8 @@ static const gchar ztype_key[]            = "/module/pixmap/ztype";
 static void
 img_export_sanitize_args(ImgExportArgs *args)
 {
+    args->greyscale = (args->greyscale == 16) ? 16 : 0;
+    args->active_page = MIN(args->active_page, NPAGES-1);
     args->xytype = MIN(args->xytype, IMGEXPORT_LATERAL_NTYPES-1);
     args->ztype = MIN(args->ztype, IMGEXPORT_VALUE_NTYPES-1);
     args->inset_pos = MIN(args->inset_pos, INSET_NPOS-1);
@@ -3663,7 +3695,6 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->fmscale_gap = CLAMP(args->fmscale_gap, 0.0, 2.0);
     args->inset_xgap = CLAMP(args->inset_xgap, 0.0, 4.0);
     args->inset_ygap = CLAMP(args->inset_ygap, 0.0, 2.0);
-    args->greyscale = (args->greyscale == 16) ? 16 : 0;
 }
 
 static void
@@ -3679,6 +3710,9 @@ img_export_load_args(GwyContainer *container,
 {
     *args = img_export_defaults;
 
+    gwy_container_gis_int32_by_name(container, greyscale_key, &args->greyscale);
+    gwy_container_gis_int32_by_name(container, active_page_key,
+                                    &args->active_page);
     gwy_container_gis_double_by_name(container, zoom_key, &args->zoom);
     gwy_container_gis_double_by_name(container, pxwidth_key, &args->pxwidth);
     gwy_container_gis_double_by_name(container, font_size_key,
@@ -3711,7 +3745,6 @@ img_export_load_args(GwyContainer *container,
                                      &args->inset_xgap);
     gwy_container_gis_double_by_name(container, inset_ygap_key,
                                      &args->inset_ygap);
-    gwy_container_gis_int32_by_name(container, greyscale_key, &args->greyscale);
     gwy_container_gis_boolean_by_name(container, inset_draw_ticks_key,
                                       &args->inset_draw_ticks);
     gwy_container_gis_boolean_by_name(container, inset_draw_label_key,
@@ -3727,6 +3760,9 @@ static void
 img_export_save_args(GwyContainer *container,
                      ImgExportArgs *args)
 {
+    gwy_container_set_int32_by_name(container, greyscale_key, args->greyscale);
+    gwy_container_set_int32_by_name(container, active_page_key,
+                                    args->active_page);
     gwy_container_set_double_by_name(container, zoom_key, args->zoom);
     gwy_container_set_double_by_name(container, pxwidth_key, args->pxwidth);
     gwy_container_set_double_by_name(container, font_size_key,
@@ -3759,7 +3795,6 @@ img_export_save_args(GwyContainer *container,
                                      args->inset_xgap);
     gwy_container_set_double_by_name(container, inset_ygap_key,
                                      args->inset_ygap);
-    gwy_container_set_int32_by_name(container, greyscale_key, args->greyscale);
     gwy_container_set_boolean_by_name(container, inset_draw_ticks_key,
                                       args->inset_draw_ticks);
     gwy_container_set_boolean_by_name(container, inset_draw_label_key,
