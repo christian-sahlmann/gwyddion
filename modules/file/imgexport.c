@@ -899,7 +899,6 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     max = env->fm_max;
     real = max - min;
 
-    /* TODO: Handle inverted range! */
     vf = gwy_si_unit_get_format_with_resolution(zunit,
                                                 GWY_SI_UNIT_FORMAT_VFMARKUP,
                                                 real, real/240,
@@ -955,7 +954,6 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     }
     gwy_debug("base %g, step %g", ticks->base, ticks->step);
 
-    /* XXX: This is rudimentary.  Must create the end-axis ticks! */
     bs = ticks->base * ticks->step;
     ticks->from = ceil(min/bs - 1e-14)*bs;
     ticks->from = fixzero(ticks->from);
@@ -1104,9 +1102,8 @@ calculate_sizes(const ImgExportArgs *args,
         find_fmscale_ticks(args, sizes, layout, s);
     }
     else {
-        /* This is in fact the right border line around the image. */
         sizes->fmgrad.x = sizes->image.x + sizes->image.w;
-        sizes->fmgrad.w = lw;
+        sizes->fmgrad.w = 0;
     }
     sizes->fmruler.x = sizes->fmgrad.x + sizes->fmgrad.w;
     sizes->fmruler.y = sizes->fmgrad.y;
@@ -1195,15 +1192,15 @@ draw_data(const ImgExportArgs *args,
     gdouble lw = sizes->sizes.line_width;
     gdouble w, h;
 
+    w = rect->w - 2.0*lw;
+    h = rect->h - 2.0*lw;
+
     /* Mask must be drawn pixelated so we can only draw data and mask together
      * when data is also pixelated or we are not drawing any mask. */
     if (args->interpolation == IMGEXPORT_INTERPOLATION_PIXELATE
         || !args->draw_mask || !env->mask) {
         pixbuf = gwy_data_view_export_pixbuf(env->data_view, 1.0,
                                              args->draw_mask, FALSE);
-        w = rect->w - 2.0*lw;
-        h = rect->h - 2.0*lw;
-
         cairo_save(cr);
         cairo_translate(cr, rect->x + lw, rect->y + lw);
         cairo_scale(cr, args->zoom, args->zoom);
@@ -1216,9 +1213,10 @@ draw_data(const ImgExportArgs *args,
     else {
         pixbuf = gwy_data_view_export_pixbuf(env->data_view, 1.0,
                                              FALSE, FALSE);
-        w = rect->w - 2.0*lw;
-        h = rect->h - 2.0*lw;
-
+        /* XXX: This produces fading into background (white) on the edge
+         * pixels when we render to pixmaps.  It's probably best to do all
+         * interpolation ourselves when we render pixmaps; this also offers
+         * the full range of interpolations Gwyddion can do. */
         cairo_save(cr);
         cairo_translate(cr, rect->x + lw, rect->y + lw);
         cairo_scale(cr, args->zoom, args->zoom);
@@ -1450,8 +1448,8 @@ draw_fmgrad(const ImgExportArgs *args,
     const ImgExportRect *rect = &sizes->fmgrad;
     const GwyGradientPoint *points;
     cairo_pattern_t *pat;
-    gint w, h, npoints, i;
-    gdouble lw = sizes->sizes.line_width;
+    gint npoints, i;
+    gdouble w, h, lw = sizes->sizes.line_width;
     gboolean inverted = env->fm_inverted;
 
     if (args->ztype != IMGEXPORT_VALUE_FMSCALE)
@@ -1678,13 +1676,6 @@ render_pixbuf(const ImgExportArgs *args, const gchar *name)
 }
 
 /*
- * TODO: Use an iterative process to obtain a reasonably sized preview:
- * 1. calculate_sizes()
- * 2. estimate zoom
- * 3. render
- * 4. if dimensions not within a certain tolerance, correct zoom and rerender
- */
-/*
  * TODO: Try to ensure the preview looks at least a bit like the final
  * rendering.  Slight sizing issues can be forgiven but we must not change tick
  * step and tick label precision between preview and final rendering. */
@@ -1710,7 +1701,6 @@ preview(ImgExportControls *controls)
         scale_sizes(&args->sizes, zoom/args->zoom);
     }
     else {
-        /* XXX: Possibly completely screwed up at this moment. */
         gdouble wpt = mm2pt*args->pxwidth*args->env->xres;
         scale_sizes(&args->sizes, sizes->canvas.w/wpt);
     }
