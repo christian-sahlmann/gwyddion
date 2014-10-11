@@ -1,6 +1,7 @@
 2.39 (0000-00-00)
 Application:
 - Pango 1.10 and Cairo 1.2 are now required.
+- The program should start with a saner working directory by default.
 - Translations updated: French, Russian.
 
 Libraries:
@@ -8,6 +9,16 @@ Libraries:
   structure is also registered as a boxed type now.
 - libgwydgets: gwy_axis_get_magnification_string() returns string for the new
   units after gwy_axis_set_si_unit().
+- libgwydraw: Adaptive false colour mapping was improved by making it more
+  adaptive.
+- libgwydraw: It is possible to map user-given values to gradient positions
+  using the same mapping as gwy_pixbuf_draw_data_field_adaptive() uses.
+- libgwydgets: GwyColorAxis has a new ‘unlabelled’ ticks mode in which the
+  interior ticks are drawn without labels.
+- libgwydgets: GwyColorAxis permits specifying a non-linear value to gradient
+  mapping function.
+- libgwyapp: When adaptive false colour mapping is used, the axis is set to
+  the new ‘unlabelled’ mode so the mapping non-linearity can be seen.
 
 Modules:
 - Image export (new): Replaces image rendering in the pixmap module; can
@@ -25,7 +36,7 @@ Modules:
   a different Z conversion formula is used according to z_linearized.
   Multiplicative factors encoded after the image are applied to the data.
 - MetroPro: Z scale in files with PhaseRes value of 2 is correct now.
-- Grain distributions: The graph abscissas are bin centres now, as usual,
+- Grain distributions: The graph abscissas are bin centres now, as is usual,
   instead of bin left edges.
 
 
