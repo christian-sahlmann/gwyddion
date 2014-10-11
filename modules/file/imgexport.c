@@ -948,11 +948,12 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     height = MAX(logical1.height/pangoscale, logical2.height/pangoscale);
     sizes->fmruler_label_height = height;
     gwy_debug("label width %g, height %g", width, height);
-    /* Draw interior ticks only for linear mapping. */
-    if (env->fm_rangetype == GWY_LAYER_BASIC_RANGE_ADAPT)
-        return;
 
-    n = CLAMP(GWY_ROUND(size/height), 1, 10);
+    if (env->fm_rangetype == GWY_LAYER_BASIC_RANGE_ADAPT)
+        n = CLAMP(GWY_ROUND(size/height), 1, 30);
+    else
+        n = CLAMP(GWY_ROUND(size/height), 1, 10);
+
     gwy_debug("nticks %u", n);
     ticks->step = real/n;
     ticks->base = pow10(floor(log10(ticks->step)));
@@ -1597,6 +1598,8 @@ draw_fmruler(const ImgExportArgs *args,
     gdouble z, bs, scale, yimg, min, max, real;
     PangoRectangle logical;
     gboolean inverted = env->fm_inverted;
+    GArray *mticks;
+    guint nticks, i;
 
     if (args->ztype != IMGEXPORT_VALUE_FMSCALE)
         return;
@@ -1637,18 +1640,38 @@ draw_fmruler(const ImgExportArgs *args,
     pango_cairo_show_layout(cr, layout);
     cairo_restore(cr);
 
-    if (env->fm_rangetype == GWY_LAYER_BASIC_RANGE_ADAPT
-        || real < 1e-14)
+    if (real < 1e-14)
         return;
 
     scale = (rect->h - lw)/real;
     bs = ticks->step*ticks->base;
 
+    mticks = g_array_new(FALSE, FALSE, sizeof(gdouble));
+    for (z = ticks->from; z <= ticks->to + 1e-14*bs; z += bs) {
+        gdouble zz = z*vf->magnitude;
+        g_array_append_val(mticks, zz);
+    }
+    nticks = mticks->len;
+
+    if (env->fm_rangetype == GWY_LAYER_BASIC_RANGE_ADAPT
+        && env->fm_min < env->fm_max) {
+        gdouble *td;
+
+        g_array_set_size(mticks, 2*nticks);
+        td = (gdouble*)mticks->data;
+        gwy_draw_data_field_map_adaptive(env->dfield, td, td + nticks, nticks);
+        for (i = 0; i < nticks; i++)
+            td[i] = ticks->from + (ticks->to - ticks->from)*td[i + nticks];
+
+        g_array_set_size(mticks, nticks);
+    }
+
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
     cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
     cairo_set_line_width(cr, lw);
-    for (z = ticks->from; z <= ticks->to + 1e-14*bs; z += bs) {
+    for (i = 0; i < nticks; i++) {
+        z = g_array_index(mticks, gdouble, i);
         if (inverted)
             yimg = (z - min)*scale + lw;
         else
@@ -1665,10 +1688,16 @@ draw_fmruler(const ImgExportArgs *args,
     cairo_stroke(cr);
     cairo_restore(cr);
 
+    if (env->fm_rangetype == GWY_LAYER_BASIC_RANGE_ADAPT) {
+        g_array_free(mticks, TRUE);
+        return;
+    }
+
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
     cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
-    for (z = ticks->from; z <= ticks->to + 1e-14*bs; z += bs) {
+    for (i = 0; i < nticks; i++) {
+        z = g_array_index(mticks, gdouble, i);
         z = fixzero(z);
 
         if (inverted)
@@ -1685,6 +1714,8 @@ draw_fmruler(const ImgExportArgs *args,
         pango_cairo_show_layout(cr, layout);
     };
     cairo_restore(cr);
+
+    g_array_free(mticks, TRUE);
 }
 
 /* We assume cr is already created for the layout with the correct scale(!). */
