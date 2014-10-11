@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2006-2013 David Necas (Yeti), Petr Klapetek, Chris Anderson
+ *  Copyright (C) 2006-2014 David Necas (Yeti), Petr Klapetek, Chris Anderson
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net, sidewinderasu@gmail.com.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -2765,12 +2765,40 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
 }
 
 static void
+adaptive_color_axis_map_func(G_GNUC_UNUSED GwyColorAxis *axis,
+                             const gdouble *z,
+                             gdouble *mapped,
+                             guint n,
+                             gpointer user_data)
+{
+    GwyDataWindow *data_window = GWY_DATA_WINDOW(user_data);
+    GwyDataView *data_view;
+    GwyPixmapLayer *layer;
+    GObject *dfield;
+    GwyContainer *data;
+    const gchar *key;
+
+    data_view = gwy_data_window_get_data_view(data_window);
+    data = gwy_data_view_get_data(data_view);
+    layer = gwy_data_view_get_base_layer(data_view);
+    key = gwy_pixmap_layer_get_data_key(layer);
+    if (!gwy_container_gis_object_by_name(data, key, &dfield)) {
+        gwy_clear(mapped, n);
+        return;
+    }
+
+    gwy_draw_data_field_map_adaptive(GWY_DATA_FIELD(dfield), z, mapped, n);
+}
+
+static void
 gwy_app_update_data_range_type(GwyDataView *data_view,
                                gint id)
 {
     GtkWidget *data_window, *widget;
     GwyPixmapLayer *layer;
     GwyColorAxis *color_axis;
+    GwyColorAxisMapFunc map_func = NULL;
+    gpointer map_func_data = NULL;
     GwyContainer *data;
     GwyTicksStyle ticks_style;
     gboolean show_labels;
@@ -2804,7 +2832,9 @@ gwy_app_update_data_range_type(GwyDataView *data_view,
             break;
 
             case GWY_LAYER_BASIC_RANGE_ADAPT:
-            ticks_style = GWY_TICKS_STYLE_NONE;
+            ticks_style = GWY_TICKS_STYLE_UNLABELLED;
+            map_func = &adaptive_color_axis_map_func;
+            map_func_data = data_window;
             show_labels = TRUE;
             break;
 
@@ -2818,6 +2848,7 @@ gwy_app_update_data_range_type(GwyDataView *data_view,
 
     gwy_color_axis_set_ticks_style(color_axis, ticks_style);
     gwy_color_axis_set_labels_visible(color_axis, show_labels);
+    gwy_color_axis_set_tick_map_func(color_axis, map_func, map_func_data);
 }
 
 static void
