@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2014 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -26,19 +26,23 @@
 #include <libprocess/datafield.h>
 #include <libdraw/gwygradient.h>
 
-void gwy_pixbuf_draw_data_field            (GdkPixbuf *pixbuf,
-                                            GwyDataField *data_field,
-                                            GwyGradient *gradient);
-void gwy_pixbuf_draw_data_field_with_range (GdkPixbuf *pixbuf,
-                                            GwyDataField *data_field,
-                                            GwyGradient *gradient,
-                                            gdouble minimum,
-                                            gdouble maximum);
-void gwy_pixbuf_draw_data_field_adaptive   (GdkPixbuf *pixbuf,
-                                            GwyDataField *data_field,
-                                            GwyGradient *gradient);
-void gwy_pixbuf_draw_data_field_as_mask    (GdkPixbuf *pixbuf,
-                                            GwyDataField *data_field,
-                                            const GwyRGBA *color);
+void gwy_pixbuf_draw_data_field           (GdkPixbuf *pixbuf,
+                                           GwyDataField *data_field,
+                                           GwyGradient *gradient);
+void gwy_pixbuf_draw_data_field_with_range(GdkPixbuf *pixbuf,
+                                           GwyDataField *data_field,
+                                           GwyGradient *gradient,
+                                           gdouble minimum,
+                                           gdouble maximum);
+void gwy_pixbuf_draw_data_field_adaptive  (GdkPixbuf *pixbuf,
+                                           GwyDataField *data_field,
+                                           GwyGradient *gradient);
+void gwy_draw_data_field_map_adaptive     (GwyDataField *data_field,
+                                           const gdouble *z,
+                                           gdouble *mapped,
+                                           guint n);
+void gwy_pixbuf_draw_data_field_as_mask   (GdkPixbuf *pixbuf,
+                                           GwyDataField *data_field,
+                                           const GwyRGBA *color);
 
 #endif /*__GWY_PIXFIELD__*/

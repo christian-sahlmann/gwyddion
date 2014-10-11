@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2014 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -24,6 +24,8 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/stats.h>
 #include "gwypixfield.h"
+
+static gint* calc_cdh(GwyDataField *dfield, gint *cdh_size);
 
 /**
  * gwy_pixbuf_draw_data_field_with_range:
@@ -161,13 +163,12 @@ gwy_pixbuf_draw_data_field_adaptive(GdkPixbuf *pixbuf,
                                     GwyDataField *data_field,
                                     GwyGradient *gradient)
 {
-    enum { CDH_SIZE = 81 };
-    gint cdh[CDH_SIZE];
     const gdouble *data, *row;
-    gdouble min, max, cor, q, v;
+    gdouble min, max, cor, q, v, m;
     guchar *pixels, *line;
     const guchar *samples, *s;
-    gint xres, yres, i, j, h, rowstride, palsize;
+    gint xres, yres, i, j, h, rowstride, palsize, cdh_size;
+    gint *cdh;
 
     gwy_data_field_get_min_max(data_field, &min, &max);
     if (min == max) {
@@ -180,31 +181,22 @@ gwy_pixbuf_draw_data_field_adaptive(GdkPixbuf *pixbuf,
     g_return_if_fail(xres == gdk_pixbuf_get_width(pixbuf));
     g_return_if_fail(yres == gdk_pixbuf_get_height(pixbuf));
 
+    cdh = calc_cdh(data_field, &cdh_size);
+    q = (cdh_size - 1.0)/(max - min);
     data = gwy_data_field_get_data_const(data_field);
-    q = (CDH_SIZE - 1.0)/(max - min);
-
-    cdh[0] = 0;
-    for (i = 1; i < CDH_SIZE; i++)
-        cdh[i] = xres*yres/(2*CDH_SIZE);
-    for (i = 0; i < xres*yres; i++) {
-        h = (gint)((data[i] - min)*q + 1);
-        cdh[GWY_CLAMP(h, 0, CDH_SIZE-1)]++;
-    }
-    for (i = 1; i < CDH_SIZE; i++)
-        cdh[i] += cdh[i-1];
-    cdh[0] = 0;
 
     pixels = gdk_pixbuf_get_pixels(pixbuf);
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
     samples = gwy_gradient_get_samples(gradient, &palsize);
-    cor = (palsize - 1.0)/cdh[CDH_SIZE-1];
+    cor = (palsize - 1.0)/cdh[cdh_size-1];
 
+    m = cdh_size - 1.000001;
     for (i = 0; i < yres; i++) {
         line = pixels + i*rowstride;
         row = data + i*xres;
         for (j = 0; j < xres; j++) {
             v = (row[j] - min)*q;
-            v = GWY_CLAMP(v, 0.0, CDH_SIZE-1.000001);
+            v = GWY_CLAMP(v, 0.0, m);
             h = (gint)v;
             v -= h;
             h = (gint)((cdh[h]*(1.0 - v) + cdh[h+1]*v)*cor + 0.5);
@@ -214,6 +206,90 @@ gwy_pixbuf_draw_data_field_adaptive(GdkPixbuf *pixbuf,
             *(line++) = *s;
         }
     }
+
+    g_free(cdh);
+}
+
+/**
+ * gwy_draw_data_field_map_adaptive:
+ * @data_field: A data field to draw.
+ * @z: Array of @n data values to map.
+ * @mapped: Output array of size @n where mapped @z values are to be stored.
+ * @n: Number of elements in @z and @mapped.
+ *
+ * Maps ordinate values to interval [0,1] as
+ * gwy_pixbuf_draw_data_field_adaptive() would do.
+ *
+ * This is useful to find out which positions in the false colour gradient
+ * correspond to specific values.
+ *
+ * Since: 2.39
+ **/
+void
+gwy_draw_data_field_map_adaptive(GwyDataField *data_field,
+                                 const gdouble *z,
+                                 gdouble *mapped,
+                                 guint n)
+{
+    gdouble min, max, cor, q, v, m;
+    gint i, h, cdh_size;
+    gint *cdh;
+
+    gwy_data_field_get_min_max(data_field, &min, &max);
+    if (min == max) {
+        for (i = 0; i < n; i++)
+            mapped[i] = 0.5;
+        return;
+    }
+
+    cdh = calc_cdh(data_field, &cdh_size);
+    q = (cdh_size - 1.0)/(max - min);
+    cor = 1.0/cdh[cdh_size-1];
+
+    m = cdh_size - 1.000001;
+    for (i = 0; i < n; i++) {
+        v = (z[i] - min)*q;
+        v = GWY_CLAMP(v, 0.0, m);
+        h = (gint)v;
+        v -= h;
+        v = (cdh[h]*(1.0 - v) + cdh[h+1]*v)*cor;
+        mapped[i] = GWY_CLAMP(v, 0.0, 1.0);
+    }
+
+    g_free(cdh);
+}
+
+static gint*
+calc_cdh(GwyDataField *dfield, gint *cdh_size)
+{
+    const gdouble *data;
+    gdouble q, min, max;
+    gint i, n, xres, yres;
+    gint *cdh;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    gwy_data_field_get_min_max(dfield, &min, &max);
+
+    n = GWY_ROUND(pow(xres*yres, 2.0/3.0));
+    data = gwy_data_field_get_data_const(dfield);
+    q = (n - 1.0)/(max - min);
+    cdh = g_new(gint, n);
+
+    cdh[0] = 0;
+    for (i = 1; i < n; i++)
+        cdh[i] = xres*yres/(2*n);
+    for (i = 0; i < xres*yres; i++) {
+        gint h = (gint)((data[i] - min)*q + 1);
+        cdh[GWY_CLAMP(h, 0, n-1)]++;
+    }
+    for (i = 1; i < n; i++)
+        cdh[i] += cdh[i-1];
+    cdh[0] = 0;
+
+    *cdh_size = n;
+
+    return cdh;
 }
 
 /**
