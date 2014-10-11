@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2014 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -40,6 +40,14 @@ G_BEGIN_DECLS
 typedef struct _GwyColorAxis      GwyColorAxis;
 typedef struct _GwyColorAxisClass GwyColorAxisClass;
 
+struct _GwyColorAxisPrivate;
+
+typedef void (*GwyColorAxisMapFunc)(GwyColorAxis *axis,
+                                    const gdouble *z,
+                                    gdouble *mapped,
+                                    guint n,
+                                    gpointer user_data);
+
 struct _GwyColorAxis {
     GtkWidget widget;
 
@@ -65,7 +73,7 @@ struct _GwyColorAxis {
 
     gboolean inverted;
 
-    gpointer reserved1;
+    struct _GwyColorAxisPrivate *priv;
     gpointer reserved2;
 };
 
@@ -100,6 +108,9 @@ void          gwy_color_axis_set_ticks_style   (GwyColorAxis *axis,
 gboolean      gwy_color_axis_get_labels_visible(GwyColorAxis *axis);
 void          gwy_color_axis_set_labels_visible(GwyColorAxis *axis,
                                                 gboolean labels_visible);
+void          gwy_color_axis_set_tick_map_func (GwyColorAxis *axis,
+                                                GwyColorAxisMapFunc func,
+                                                gpointer user_data);
 
 G_END_DECLS
 

@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2014 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -37,6 +37,13 @@ enum {
 };
 
 enum { MIN_TICK_DISTANCE = 30 };
+
+struct _GwyColorAxisPrivate {
+    GwyColorAxisMapFunc map_ticks;
+    gpointer map_ticks_data;
+};
+
+typedef struct _GwyColorAxisPrivate GwyColorAxisPrivate;
 
 static void     gwy_color_axis_set_property (GObject *object,
                                              guint prop_id,
@@ -75,6 +82,8 @@ gwy_color_axis_class_init(GwyColorAxisClass *klass)
     gobject_class = G_OBJECT_CLASS(klass);
     object_class = GTK_OBJECT_CLASS(klass);
     widget_class = GTK_WIDGET_CLASS(klass);
+
+    g_type_class_add_private(klass, sizeof(GwyColorAxisPrivate));
 
     gobject_class->get_property = gwy_color_axis_get_property;
     gobject_class->set_property = gwy_color_axis_set_property;
@@ -138,6 +147,8 @@ gwy_color_axis_class_init(GwyColorAxisClass *klass)
 static void
 gwy_color_axis_init(GwyColorAxis *axis)
 {
+    axis->priv = G_TYPE_INSTANCE_GET_PRIVATE(axis, GWY_TYPE_COLOR_AXIS,
+                                             GwyColorAxisPrivate);
     axis->orientation = GTK_ORIENTATION_VERTICAL;
     axis->tick_length = 6;
     axis->stripe_width = 10;
@@ -469,12 +480,14 @@ static void
 gwy_color_axis_draw_labels_ticks(GwyColorAxis *axis)
 {
     GtkWidget *widget;
-    gint xthickness, ythickness, width, height, swidth, off, tlength, size, pos,
-         prec = 1, mintdist = MIN_TICK_DISTANCE;
+    gint xthickness, ythickness, width, height, swidth, off, tlength, size,
+         pos, prec = 1, mintdist = MIN_TICK_DISTANCE;
+    guint txlen, i;
     gdouble scale, x, x2, m, tickdist, max;
     GString *strlabel;
     PangoLayout *layoutlabel;
     PangoRectangle rectlabel;
+    GArray *tickx;
     GdkGC *gc;
     GwySIValueFormat *format = NULL;
 
@@ -529,7 +542,8 @@ gwy_color_axis_draw_labels_ticks(GwyColorAxis *axis)
     format = gwy_si_unit_get_format(axis->siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
                                     max, NULL);
 
-    if (axis->ticks_style == GWY_TICKS_STYLE_AUTO) {
+    if (axis->ticks_style == GWY_TICKS_STYLE_AUTO
+        || axis->ticks_style == GWY_TICKS_STYLE_UNLABELLED) {
         scale = size/(axis->max - axis->min);
         x = MIN_TICK_DISTANCE/scale;
         m = pow10(floor(log10(x)));
@@ -592,50 +606,74 @@ gwy_color_axis_draw_labels_ticks(GwyColorAxis *axis)
             gwy_color_axis_draw_labels(axis, prec);
         }
         gwy_debug("tickdist: %g x: %g max: %g", tickdist, x, max);
+        tickx = g_array_new(FALSE, FALSE, sizeof(gdouble));
+        while (x <= max) {
+            g_array_append_val(tickx, x);
+            x += tickdist;
+        }
+        txlen = tickx->len;
+        if (axis->priv->map_ticks && txlen) {
+            gdouble *tmx = g_new(gdouble, txlen);
+
+            axis->priv->map_ticks(axis,
+                                  (const gdouble*)tickx->data, tmx, txlen,
+                                  axis->priv->map_ticks_data);
+            g_array_set_size(tickx, 0);
+            for (i = 0; i < txlen; i++) {
+                x = axis->min + (axis->max - axis->min)*tmx[i];
+                g_array_append_val(tickx, x);
+            }
+            g_free(tmx);
+        }
         if (axis->orientation == GTK_ORIENTATION_VERTICAL) {
-            while (x <= max) {
+            for (i = 0; i < txlen; i++) {
+                x = g_array_index(tickx, gdouble, i);
                 pos = size-1 - GWY_ROUND((x - axis->min)*scale);
                 if (pos > axis->labelb_size && pos < size-1-axis->labele_size) {
                     gdk_draw_line(widget->window, gc, swidth, pos,
                                   swidth + tlength/2, pos);
                     /* draw only if labels_visible */
-                    if (axis->labels_visible) {
-                        g_string_printf(strlabel, "%3.*f", prec,
-                                        x/format->magnitude);
-                        pango_layout_set_markup(layoutlabel, strlabel->str,
-                                                strlabel->len);
-                        pango_layout_get_pixel_extents(layoutlabel, NULL,
-                                                       &rectlabel);
-                        /* prevent drawing over maximum label */
-                        if (pos-rectlabel.height > axis->labelb_size)
-                            gdk_draw_layout(widget->window, gc, off,
-                                            pos-rectlabel.height, layoutlabel);
-                    }
+                    if (axis->ticks_style != GWY_TICKS_STYLE_AUTO
+                        || !axis->labels_visible)
+                        continue;
+
+                    g_string_printf(strlabel, "%3.*f", prec,
+                                    x/format->magnitude);
+                    pango_layout_set_markup(layoutlabel, strlabel->str,
+                                            strlabel->len);
+                    pango_layout_get_pixel_extents(layoutlabel, NULL,
+                                                   &rectlabel);
+                    /* prevent drawing over maximum label */
+                    if (pos-rectlabel.height > axis->labelb_size)
+                        gdk_draw_layout(widget->window, gc, off,
+                                        pos-rectlabel.height, layoutlabel);
                 }
-                x += tickdist;
             }
+            g_array_free(tickx, TRUE);
         }
         else {
-            while (x <= max) {
+            for (i = 0; i < txlen; i++) {
+                x = g_array_index(tickx, gdouble, i);
                 pos = GWY_ROUND((x - axis->min)*scale);
                 if (pos > axis->labelb_size && pos < size-1-axis->labele_size) {
                     gdk_draw_line(widget->window, gc, pos, swidth, pos,
                                   swidth + tlength/2);
                     /* draw only if labels_visible */
-                    if (axis->labels_visible) {
-                        g_string_printf(strlabel, "%3.*f", prec,
-                                        x/format->magnitude);
-                        pango_layout_set_markup(layoutlabel, strlabel->str,
-                                                strlabel->len);
-                        pango_layout_get_pixel_extents(layoutlabel, NULL,
-                                                       &rectlabel);
-                        /* prevent drawing over maximum label */
-                        if (pos+rectlabel.width < size-1-axis->labele_size)
-                            gdk_draw_layout(widget->window, gc, pos, off,
-                                            layoutlabel);
-                    }
+                    if (axis->ticks_style != GWY_TICKS_STYLE_AUTO
+                        || !axis->labels_visible)
+                        continue;
+
+                    g_string_printf(strlabel, "%3.*f", prec,
+                                    x/format->magnitude);
+                    pango_layout_set_markup(layoutlabel, strlabel->str,
+                                            strlabel->len);
+                    pango_layout_get_pixel_extents(layoutlabel, NULL,
+                                                   &rectlabel);
+                    /* prevent drawing over maximum label */
+                    if (pos+rectlabel.width < size-1-axis->labele_size)
+                        gdk_draw_layout(widget->window, gc, pos, off,
+                                        layoutlabel);
                 }
-                x += tickdist;
             }
         }
     }
@@ -1008,7 +1046,7 @@ gwy_color_axis_set_ticks_style(GwyColorAxis *axis,
                                GwyTicksStyle ticks_style)
 {
     g_return_if_fail(GWY_IS_COLOR_AXIS(axis));
-    g_return_if_fail(ticks_style <= GWY_TICKS_STYLE_AUTO);
+    g_return_if_fail(ticks_style <= GWY_TICKS_STYLE_UNLABELLED);
 
     if (axis->ticks_style == ticks_style)
         return;
@@ -1071,6 +1109,39 @@ gwy_color_axis_changed(GwyColorAxis *axis)
         gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
 
+/**
+ * gwy_color_axis_set_tick_map_func:
+ * @axis: A color axis.
+ * @func: Tick mapping function.
+ * @data: Data to pass to @func.
+ *
+ * Set the tick mapping function for a color axis.
+ *
+ * The axis calculates tick positions as for the linear axis and then places
+ * them non-linearly using @func.  Hence a mapping function should be used with
+ * ticks mode %GWY_TICKS_STYLE_UNLABELLED because minimum tick spacing is not
+ * guaranteed.
+ *
+ * Since: 2.39
+ **/
+void
+gwy_color_axis_set_tick_map_func(GwyColorAxis *axis,
+                                 GwyColorAxisMapFunc func,
+                                 gpointer user_data)
+{
+    GwyColorAxisPrivate *priv;
+
+    g_return_if_fail(GWY_IS_COLOR_AXIS(axis));
+    priv = axis->priv;
+
+    if (priv->map_ticks == func && priv->map_ticks_data == user_data)
+        return;
+
+    priv->map_ticks = func;
+    priv->map_ticks_data = user_data;
+    gwy_color_axis_changed(axis);
+}
+
 /************************** Documentation ****************************/
 
 /**
@@ -1079,6 +1150,19 @@ gwy_color_axis_changed(GwyColorAxis *axis)
  * @short_description: Simple axis with a false color scale
  * @see_also: #GwyAxis -- Axis for use in graphs,
  *            #GwyRuler -- Horizontal and vertical rulers
+ **/
+
+/**
+ * GwyColorAxisMapFunc:
+ * @axis: A color axis.
+ * @z: Array of length @n of tick values.
+ * @mapped: Array of length @n where values mapped to [0,1] should be placed.
+ * @n: Length of @z and @mapped.
+ * @user_data: Data passed to gwy_color_axis_set_tick_map_func().
+ *
+ * Type of color axis non-linear tick mapping function.
+ *
+ * Since: 2.39
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
