@@ -152,6 +152,7 @@ typedef struct {
     GwySIValueFormat *vf_hruler;
     GwySIValueFormat *vf_vruler;
     GwySIValueFormat *vf_fmruler;
+    GwySIValueFormat *vf_title;
     RulerTicks hruler_ticks;
     RulerTicks vruler_ticks;
     RulerTicks fmruler_ticks;
@@ -912,6 +913,7 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     max = env->fm_max;
     real = max - min;
 
+    /* This format must be the same as sizes->vf_title. */
     vf = gwy_si_unit_get_format_with_resolution(zunit,
                                                 GWY_SI_UNIT_FORMAT_VFMARKUP,
                                                 real, real/240,
@@ -931,10 +933,11 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     min /= vf->magnitude;
     max /= vf->magnitude;
     real /= vf->magnitude;
-    /* TODO: Do this when we place units to the ticks.  We can also place them
-     * to the axis label. */
-    format_layout(layout, &logical1, s, "%.*f %s",
-                  vf->precision, max, vf->units);
+    if (args->units_in_title)
+        format_layout(layout, &logical1, s, "%.*f", vf->precision, max);
+    else
+        format_layout(layout, &logical1, s, "%.*f %s",
+                      vf->precision, max, vf->units);
     gwy_debug("max '%s' (%g x %g)",
               s->str, logical1.width/pangoscale, logical1.height/pangoscale);
     format_layout(layout, &logical2, s, "%.*f", vf->precision, min);
@@ -1031,9 +1034,28 @@ measure_title(const ImgExportArgs *args, ImgExportSizes *sizes,
     ImgExportRect *rect = &sizes->title;
     PangoRectangle logical;
 
-    /* TODO: add units, support gap, may need ink extents like in inset */
-    format_layout(layout, &logical, s, "%s", env->title);
-    /* Straight.  This is rotated according to the type later */
+    g_string_truncate(s, 0);
+    if (args->units_in_title) {
+        GwyDataField *dfield = args->env->dfield;
+        GwySIUnit *zunit = gwy_data_field_get_si_unit_z(dfield);
+        GwySIValueFormat *vf;
+        gdouble real;
+
+        /* This format must be the same as sizes->vf_fmruler. */
+        real= env->fm_max - env->fm_min;
+        vf = gwy_si_unit_get_format_with_resolution(zunit,
+                                                    GWY_SI_UNIT_FORMAT_MARKUP,
+                                                    real, real/240,
+                                                    NULL);
+        sizes->vf_title = vf;
+        if (strlen(vf->units))
+            format_layout(layout, &logical, s, "%s [%s]",
+                          env->title, vf->units);
+    }
+    if (!s->len)
+        format_layout(layout, &logical, s, "%s", env->title);
+
+    /* Straight.  This is rotated according to the type when drawing. */
     rect->w = logical.width/pangoscale;
     rect->h = logical.height/pangoscale;
 }
@@ -1135,7 +1157,8 @@ calculate_sizes(const ImgExportArgs *args,
             gdouble ymove = sizes->image.y + sizes->image.h;
 
             ymove -= 0.5*(sizes->image.h - sizes->title.w);
-            if (sizes->zunits_nonempty && args->units_in_title)
+            /* Center the title visually, not physically. */
+            if (sizes->zunits_nonempty && !args->units_in_title)
                 ymove += 0.5*sizes->fmruler_label_height;
 
             rect_move(&sizes->title,
@@ -1225,6 +1248,8 @@ destroy_sizes(ImgExportSizes *sizes)
         gwy_si_unit_value_format_free(sizes->vf_vruler);
     if (sizes->vf_fmruler)
         gwy_si_unit_value_format_free(sizes->vf_fmruler);
+    if (sizes->vf_title)
+        gwy_si_unit_value_format_free(sizes->vf_title);
     g_free(sizes);
 }
 
@@ -1513,6 +1538,7 @@ draw_title(const ImgExportArgs *args,
     const ImgExportEnv *env = args->env;
     const ImgExportRect *rect = &sizes->title;
     PangoRectangle logical;
+    GwySIValueFormat *vf;
 
     if (args->title_type == IMGEXPORT_TITLE_NONE)
         return;
@@ -1520,7 +1546,11 @@ draw_title(const ImgExportArgs *args,
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
     cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
-    format_layout(layout, &logical, s, "%s", env->title);
+    vf = sizes->vf_title;
+    if (args->units_in_title && strlen(vf->units))
+        format_layout(layout, &logical, s, "%s [%s]", env->title, vf->units);
+    else
+        format_layout(layout, &logical, s, "%s", env->title);
     cairo_move_to(cr, 0.0, 0.0);
     if (args->title_type == IMGEXPORT_TITLE_FMSCALE)
         cairo_rotate(cr, -0.5*G_PI);
@@ -1626,8 +1656,11 @@ draw_fmruler(const ImgExportArgs *args,
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
     cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
-    format_layout(layout, &logical, s, "%.*f %s",
-                  vf->precision, max, vf->units);
+    if (args->units_in_title)
+        format_layout(layout, &logical, s, "%.*f", vf->precision, max);
+    else
+        format_layout(layout, &logical, s, "%.*f %s",
+                      vf->precision, max, vf->units);
     gwy_debug("max '%s' (%g x %g)",
               s->str, logical.width/pangoscale, logical.height/pangoscale);
     cairo_move_to(cr, tl + lw, lw);
@@ -2852,7 +2885,7 @@ create_value_controls(ImgExportControls *controls)
                                   IMGEXPORT_TITLE_NONE,
                                   _("At the top"),
                                   IMGEXPORT_TITLE_TOP,
-                                  _("Along gradient"),
+                                  _("Along the right edge"),
                                   IMGEXPORT_TITLE_FMSCALE,
                                   NULL);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->title_type);
