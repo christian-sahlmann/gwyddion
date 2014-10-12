@@ -79,7 +79,7 @@
 
 enum {
     PREVIEW_SIZE = 400,
-    NPAGES       = 3,
+    NPAGES       = 4,
 };
 
 typedef enum {
@@ -180,6 +180,7 @@ typedef struct {
     GwyDataField *dfield;
     GwyDataField *mask;
     GwyContainer *data;
+    GArray *selections;
     GwyRGBA mask_colour;
     GwyGradient *gradient;
     GwyGradient *grey;
@@ -220,6 +221,7 @@ typedef struct {
     ImgExportInterpolation interpolation;
     ImgExportTitleType title_type;
     gboolean units_in_title;
+    gchar *selection;
 } ImgExportArgs;
 
 typedef struct {
@@ -265,7 +267,6 @@ typedef struct {
     /* Values */
     GtkWidget *table_value;
     GtkWidget *draw_mask;
-    /* GtkWidget *draw_selection; */
     GtkWidget *interpolation;
     GSList *ztype;
     GtkObject *fmscale_gap;
@@ -273,9 +274,31 @@ typedef struct {
     GtkObject *title_gap;
     GtkWidget *units_in_title;
 
+    /* Selection */
+    GtkWidget *table_selection;
+    GtkWidget *draw_selection;
+    GtkWidget *selections;
+    gint sel_row_start;
+    GtkWidget *sel_options_label;
+    GSList *sel_options;
+
     gulong sid;
     gboolean in_update;
 } ImgExportControls;
+
+typedef void (*SelOptionsFunc)(ImgExportControls *controls);
+typedef void (*SelDrawFunc)(const ImgExportArgs *args,
+                            const ImgExportSizes *sizes,
+                            PangoLayout *layout,
+                            GString *s,
+                            cairo_t *cr);
+
+typedef struct {
+    const gchar *typename;
+    const gchar *description;
+    SelOptionsFunc create_options;
+    SelDrawFunc draw;
+} ImgExportSelectionType;
 
 typedef gboolean (*WritePixbufFunc)(GdkPixbuf *pixbuf,
                                     const gchar *name,
@@ -428,17 +451,46 @@ static ImgExportFormat image_formats[] = {
 #endif
 };
 
+static const ImgExportSelectionType known_selections[] =
+{
+    {
+        "GwySelectionAxis", N_("Horiz./vert. lines"),
+        NULL, NULL,
+    },
+    {
+        "GwySelectionEllipse", N_("Ellipses"),
+        NULL, NULL,
+    },
+    {
+        "GwySelectionLine", N_("Lines"),
+        NULL, NULL,
+    },
+    { 
+        "GwySelectionPoint", N_("Points"),
+        NULL, NULL,
+    },
+    { 
+        "GwySelectionRectangle", N_("Rectangles"),
+        NULL, NULL,
+    },
+    { 
+        "GwySelectionLattice", N_("Lattice"),
+        NULL, NULL,
+    },
+};
+
 static const ImgExportArgs img_export_defaults = {
     NULL, IMGEXPORT_MODE_PRESENTATION, 0,
     0.1, 1.0,
     { 12.0, 1.0, 0.0, 10.0 },
     IMGEXPORT_LATERAL_RULERS, IMGEXPORT_VALUE_FMSCALE,
     { 1.0, 1.0, 1.0, 1.0 }, INSET_POS_BOTTOM_RIGHT,
-    TRUE, TRUE,
+    TRUE, FALSE,
     "Helvetica", TRUE, TRUE, TRUE,
     1.0, 1.0, 1.0, 0.0, "",
     IMGEXPORT_INTERPOLATION_PIXELATE,
     IMGEXPORT_TITLE_NONE, FALSE,
+    "line",
 };
 
 static GwyModuleInfo module_info = {
@@ -2801,18 +2853,6 @@ draw_mask_changed(ImgExportControls *controls,
     update_preview(controls);
 }
 
-/*
-static void
-draw_selection_changed(ImgExportControls *controls,
-                       GtkToggleButton *button)
-{
-    ImgExportArgs *args = controls->args;
-
-    args->draw_selection = gtk_toggle_button_get_active(button);
-    update_preview(controls);
-}
-*/
-
 static void
 title_type_changed(GtkComboBox *combo,
                    ImgExportControls *controls)
@@ -2857,30 +2897,6 @@ create_value_controls(ImgExportControls *controls)
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    controls->draw_mask
-        = check = gtk_check_button_new_with_mnemonic(_("Draw _mask"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), args->draw_mask);
-    gtk_widget_set_sensitive(check, !!env->mask);
-    gtk_table_attach(GTK_TABLE(table), check, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    g_signal_connect_swapped(check, "toggled",
-                             G_CALLBACK(draw_mask_changed), controls);
-    row++;
-
-    /* TODO: We should handle selections better.  For now, just recreate
-     * what pixmap did. */
-    /*
-    controls->draw_selection
-        = check = gtk_check_button_new_with_mnemonic(_("Draw _selection"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
-                                 args->draw_selection);
-    gtk_table_attach(GTK_TABLE(table), check, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    g_signal_connect_swapped(check, "toggled",
-                             G_CALLBACK(draw_selection_changed), controls);
-    row++;
-    */
-
     label = gtk_label_new_with_mnemonic(_("_Interpolation type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -2897,6 +2913,16 @@ create_value_controls(ImgExportControls *controls)
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->interpolation);
     gtk_table_attach(GTK_TABLE(table), controls->interpolation,
                      1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls->draw_mask
+        = check = gtk_check_button_new_with_mnemonic(_("Draw _mask"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), args->draw_mask);
+    gtk_widget_set_sensitive(check, !!env->mask);
+    gtk_table_attach(GTK_TABLE(table), check, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(check, "toggled",
+                             G_CALLBACK(draw_mask_changed), controls);
     row++;
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
@@ -2967,6 +2993,180 @@ create_value_controls(ImgExportControls *controls)
     row++;
 
     update_value_sensitivity(controls);
+}
+
+static void
+update_selection_sensitivity(ImgExportControls *controls)
+{
+    gboolean sens = controls->args->draw_selection;
+    GSList *l;
+
+    gtk_widget_set_sensitive(controls->selections, sens);
+    gtk_widget_set_sensitive(controls->sel_options_label, sens);
+    for (l = controls->sel_options; l; l = g_slist_next(l))
+        gtk_widget_set_sensitive(GTK_WIDGET(l->data), sens);
+}
+
+static GwySelection*
+get_selection(const ImgExportEnv *env,
+              guint id)
+{
+    GArray *selections = env->selections;
+    GQuark quark = g_array_index(selections, GQuark, id);
+    GwySelection *sel;
+    gchar *key;
+
+    key = g_strdup_printf("/%d/select/%s", env->id, g_quark_to_string(quark));
+    sel = GWY_SELECTION(gwy_container_get_object_by_name(env->data, key));
+    g_free(key);
+
+    return sel;
+}
+
+static void
+render_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
+            GtkCellRenderer *renderer,
+            GtkTreeModel *model,
+            GtkTreeIter *iter,
+            gpointer user_data)
+{
+    ImgExportControls *controls = (ImgExportControls*)user_data;
+    GArray *selections = controls->args->env->selections;
+    GQuark quark;
+    guint id;
+
+    gtk_tree_model_get(model, iter, 0, &id, -1);
+    quark = g_array_index(selections, GQuark, id);
+    g_object_set(renderer, "text", g_quark_to_string(quark), NULL);
+}
+
+static void
+render_type(G_GNUC_UNUSED GtkTreeViewColumn *column,
+            GtkCellRenderer *renderer,
+            GtkTreeModel *model,
+            GtkTreeIter *iter,
+            gpointer user_data)
+{
+    ImgExportControls *controls = (ImgExportControls*)user_data;
+    GwySelection *sel;
+    const gchar *typename;
+    guint id, i;
+
+    gtk_tree_model_get(model, iter, 0, &id, -1);
+    sel = get_selection(controls->args->env, id);
+    typename = G_OBJECT_TYPE_NAME(sel);
+    for (i = 0; i < G_N_ELEMENTS(known_selections); i++) {
+        if (gwy_strequal(typename, known_selections[i].typename)) {
+            g_object_set(renderer,
+                         "text", _(known_selections[i].description),
+                         NULL);
+            return;
+        }
+    }
+}
+
+static void
+render_objects(G_GNUC_UNUSED GtkTreeViewColumn *column,
+               GtkCellRenderer *renderer,
+               GtkTreeModel *model,
+               GtkTreeIter *iter,
+               G_GNUC_UNUSED gpointer user_data)
+{
+    ImgExportControls *controls = (ImgExportControls*)user_data;
+    GwySelection *sel;
+    gchar buf[12];
+    guint id;
+
+    gtk_tree_model_get(model, iter, 0, &id, -1);
+    sel = get_selection(controls->args->env, id);
+    g_snprintf(buf, sizeof(buf), "%u", gwy_selection_get_data(sel, NULL));
+    g_object_set(renderer, "text", buf, NULL);
+}
+
+static void
+draw_selection_changed(ImgExportControls *controls,
+                       GtkToggleButton *button)
+{
+    ImgExportArgs *args = controls->args;
+
+    args->draw_selection = gtk_toggle_button_get_active(button);
+    update_selection_sensitivity(controls);
+    update_preview(controls);
+}
+
+static void
+create_selection_controls(ImgExportControls *controls)
+{
+    ImgExportArgs *args = controls->args;
+    ImgExportEnv *env = args->env;
+    GtkWidget *table, *check;
+    GtkTreeViewColumn *column;
+    GtkCellRenderer *renderer;
+    GwyNullStore *store;
+    GtkTreeView *treeview;
+    GtkTreeSelection *treesel;
+    gint row = 0;
+
+    table = controls->table_selection = gtk_table_new(10, 3, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+
+    controls->draw_selection
+        = check = gtk_check_button_new_with_mnemonic(_("Draw _selection"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
+                                 args->draw_selection);
+    gtk_table_attach(GTK_TABLE(table), check, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(check, "toggled",
+                             G_CALLBACK(draw_selection_changed), controls);
+    row++;
+
+    store = gwy_null_store_new(env->selections->len);
+
+    controls->selections = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+    treeview = GTK_TREE_VIEW(controls->selections);
+    gtk_table_attach(GTK_TABLE(table), controls->selections, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
+    row++;
+
+    treesel = gtk_tree_view_get_selection(treeview);
+    gtk_tree_selection_set_mode(treesel, GTK_SELECTION_BROWSE);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, _("Name"));
+    gtk_tree_view_append_column(treeview, column);
+    renderer = gtk_cell_renderer_text_new();
+    gtk_tree_view_column_pack_start(column, renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_name, controls, NULL);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, "Type");
+    gtk_tree_view_append_column(treeview, column);
+    renderer = gtk_cell_renderer_text_new();
+    gtk_tree_view_column_pack_start(column, renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_type, controls, NULL);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, _("Objects"));
+    gtk_tree_view_append_column(treeview, column);
+    renderer = gtk_cell_renderer_text_new();
+    gtk_tree_view_column_pack_start(column, renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_objects, controls, NULL);
+
+    controls->sel_options_label = gwy_label_new_header(_("Options"));
+    gtk_table_attach(GTK_TABLE(table), controls->sel_options_label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls->sel_row_start = row;
+
+    /* TODO: Init options for the currently selected selection */
+
+    update_selection_sensitivity(controls);
 }
 
 static void
@@ -3134,6 +3334,11 @@ img_export_dialog(ImgExportArgs *args)
                              controls.table_value,
                              gtk_label_new(_("Values")));
 
+    create_selection_controls(&controls);
+    gtk_notebook_append_page(GTK_NOTEBOOK(controls.notebook),
+                             controls.table_selection,
+                             gtk_label_new(_("Selection")));
+
     controls.preview = gtk_image_new();
     gtk_box_pack_start(GTK_BOX(hbox), controls.preview, FALSE, FALSE, 0);
 
@@ -3173,6 +3378,42 @@ img_export_dialog(ImgExportArgs *args)
     gtk_widget_destroy(dialog);
 
     return TRUE;
+}
+
+static void
+add_selection(gpointer hkey, gpointer hvalue, gpointer data)
+{
+    GQuark quark = GPOINTER_TO_UINT(hkey);
+    GValue *value = (GValue*)hvalue;
+    GArray *selections = (GArray*)data;
+    GwySelection *sel = g_value_get_object(value);
+    const gchar *s = g_quark_to_string(quark), *typename;
+    guint i;
+
+    if (!gwy_selection_get_data(sel, NULL)) {
+        gwy_debug("ignoring empty selection %s", s);
+        return;
+    }
+
+    typename = G_OBJECT_TYPE_NAME(sel);
+    for (i = 0; i < G_N_ELEMENTS(known_selections); i++) {
+        if (gwy_strequal(typename, known_selections[i].typename))
+            break;
+    }
+    if (i == G_N_ELEMENTS(known_selections)) {
+        gwy_debug("ignoring unknown selection %s (%s)", s, typename);
+        return;
+    }
+    gwy_debug("found selection %s (%s)", s, typename);
+
+    g_return_if_fail(*s == '/');
+    s++;
+    while (g_ascii_isdigit(*s))
+        s++;
+    g_return_if_fail(g_str_has_prefix(s, "/select/"));
+    s += strlen("/select/");
+    quark = g_quark_from_string(s);
+    g_array_append_val(selections, quark);
 }
 
 static void
@@ -3267,6 +3508,10 @@ img_export_load_env(ImgExportEnv *env,
         gwy_resource_use(GWY_RESOURCE(env->grey));
     }
 
+    env->selections = g_array_new(FALSE, FALSE, sizeof(GQuark));
+    g_string_printf(s, "/%d/select", env->id);
+    gwy_container_foreach(data, s->str, &add_selection, env->selections);
+
     g_string_free(s, TRUE);
 }
 
@@ -3282,6 +3527,7 @@ img_export_export(GwyContainer *data,
     ImgExportEnv env;
     const ImgExportFormat *format;
     gboolean ok = TRUE;
+    guint i;
 
     format = find_format(name, TRUE);
     g_return_val_if_fail(format, FALSE);
@@ -3298,6 +3544,23 @@ img_export_export(GwyContainer *data,
     if (!inset_length_ok(env.dfield, args.inset_length)) {
         g_free(args.inset_length);
         args.inset_length = scalebar_auto_length(env.dfield, NULL);
+    }
+
+    if (!env.selections->len)
+        args.draw_selection = FALSE;
+    else {
+        /* FIXME: We need to find the selection again to select it at the
+         * begining.  Consolidate. */
+        for (i = 0; i < env.selections->len; i++) {
+            GQuark quark = g_array_index(env.selections, GQuark, i);
+            if (gwy_strequal(args.selection, g_quark_to_string(quark)))
+                break;
+        }
+        if (i == env.selections->len) {
+            GQuark quark = g_array_index(env.selections, GQuark, 0);
+            g_free(args.selection);
+            args.selection = g_strdup(g_quark_to_string(quark));
+        }
     }
 
     if (mode == GWY_RUN_INTERACTIVE)
@@ -4115,6 +4378,7 @@ static const gchar line_width_key[]       = "/module/pixmap/line_width";
 static const gchar mode_key[]             = "/module/pixmap/mode";
 static const gchar pxwidth_key[]          = "/module/pixmap/pxwidth";
 static const gchar scale_font_key[]       = "/module/pixmap/scale_font";
+static const gchar selection_key[]        = "/module/pixmap/selection";
 static const gchar tick_length_key[]      = "/module/pixmap/tick_length";
 static const gchar title_gap_key[]        = "/module/pixmap/title_gap";
 static const gchar title_type_key[]       = "/module/pixmap/title_type";
@@ -4159,6 +4423,7 @@ img_export_free_args(ImgExportArgs *args)
 {
     g_free(args->font);
     g_free(args->inset_length);
+    g_free(args->selection);
 }
 
 static void
@@ -4168,6 +4433,7 @@ img_export_free_env(ImgExportEnv *env)
         gwy_resource_release(GWY_RESOURCE(env->grey));
     gwy_resource_release(GWY_RESOURCE(env->gradient));
     g_free(env->title);
+    g_array_free(env->selections, TRUE);
 }
 
 static void
@@ -4221,9 +4487,12 @@ img_export_load_args(GwyContainer *container,
                                       &args->inset_draw_label);
     gwy_container_gis_boolean_by_name(container, units_in_title_key,
                                       &args->units_in_title);
+    gwy_container_gis_string_by_name(container, selection_key,
+                                     (const guchar**)&args->selection);
 
     args->font = g_strdup(args->font);
     args->inset_length = g_strdup(args->inset_length);
+    args->selection = g_strdup(args->selection);
 
     img_export_sanitize_args(args);
 }
@@ -4277,6 +4546,8 @@ img_export_save_args(GwyContainer *container,
                                       args->inset_draw_label);
     gwy_container_set_boolean_by_name(container, units_in_title_key,
                                       args->units_in_title);
+    gwy_container_set_string_by_name(container, selection_key,
+                                     g_strdup(args->selection));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
