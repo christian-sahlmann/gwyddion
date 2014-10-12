@@ -178,7 +178,6 @@ typedef struct {
 
 typedef struct {
     const struct _ImgExportFormat *format;
-    GwyDataView *data_view;
     GwyDataField *dfield;
     GwyDataField *mask;
     GwyContainer *data;
@@ -2877,7 +2876,7 @@ create_value_controls(ImgExportControls *controls)
     row++;
     */
 
-    label = gtk_label_new_with_mnemonic(_("_Interpolation:"));
+    label = gtk_label_new_with_mnemonic(_("_Interpolation type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -3112,26 +3111,23 @@ img_export_dialog(ImgExportArgs *args)
     return TRUE;
 }
 
-static gboolean
+static void
 img_export_load_env(ImgExportEnv *env,
                     const ImgExportFormat *format,
                     GwyContainer *data)
 {
-    GwyPixmapLayer *layer;
-    GwyLayerBasic *blayer;
     GwyDataField *dfield, *show;
     GwyInventory *gradients;
     const guchar *gradname = NULL;
     guint xres, yres;
-    const gchar *key;
-    gchar *s;
+    GString *s;
 
+    s = g_string_new(NULL);
     gwy_clear(env, 1);
 
     env->format = format;
     env->data = data;
-    gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &env->data_view,
-                                     GWY_APP_DATA_FIELD, &dfield,
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &env->id,
                                      GWY_APP_MASK_FIELD, &env->mask,
                                      GWY_APP_SHOW_FIELD, &show,
@@ -3144,19 +3140,13 @@ img_export_load_env(ImgExportEnv *env,
     else
         env->dfield = dfield;
 
-    if (!env->data_view)
-        return FALSE;
+    g_string_printf(s, "/%d/data/realsquare", env->id);
+    gwy_container_gis_boolean_by_name(data, s->str, &env->realsquare);
 
-    key = gwy_data_view_get_data_prefix(env->data_view);
-    s = g_strconcat(key, "/realsquare", NULL);
-    gwy_container_gis_boolean_by_name(data, s, &env->realsquare);
-    g_free(s);
-
-    s = g_strdup_printf("/%d/mask", env->id);
-    if (!gwy_rgba_get_from_container(&env->mask_colour, data, s))
+    g_string_printf(s, "/%d/mask", env->id);
+    if (!gwy_rgba_get_from_container(&env->mask_colour, data, s->str))
         gwy_rgba_get_from_container(&env->mask_colour, gwy_app_settings_get(),
                                     "/mask");
-    g_free(s);
 
     /* Find out native pixel sizes for the data bitmaps. */
     xres = gwy_data_field_get_xres(env->dfield);
@@ -3176,31 +3166,34 @@ img_export_load_env(ImgExportEnv *env,
     }
     gwy_debug("env->xres %u, env->yres %u", env->xres, env->yres);
 
-    layer = gwy_data_view_get_base_layer(env->data_view);
-    g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), FALSE);
-    blayer = GWY_LAYER_BASIC(layer);
-    key = gwy_layer_basic_get_gradient_key(blayer);
-    if (key)
-        gwy_container_gis_string_by_name(data, key, &gradname);
+    g_string_printf(s, "/%d/base/palette", env->id);
+    gwy_container_gis_string_by_name(data, s->str, &gradname);
 
     gradients = gwy_gradients();
     env->gradient = gwy_inventory_get_item_or_default(gradients, gradname);
     gwy_resource_use(GWY_RESOURCE(env->gradient));
 
-    env->fm_rangetype = gwy_layer_basic_get_range_type(blayer);
-    gwy_layer_basic_get_range(blayer, &env->fm_min, &env->fm_max);
-    if ((env->fm_inverted = (env->fm_max < env->fm_min)))
-        GWY_SWAP(gdouble, env->fm_min, env->fm_max);
+    g_string_printf(s, "/%d/base/range-type", env->id);
+    env->fm_rangetype = GWY_LAYER_BASIC_RANGE_FULL;
+    gwy_container_gis_enum_by_name(data, s->str, &env->fm_rangetype);
 
     /* The current behaviour is that all mappings work on presentations, but
-     * fixed range cannot be set so it means full. */
-    if (env->has_presentation) {
-        if (env->fm_rangetype == GWY_LAYER_BASIC_RANGE_AUTO)
-            gwy_data_field_get_autorange(env->dfield,
-                                         &env->fm_min, &env->fm_max);
-        else
-            gwy_data_field_get_min_max(env->dfield, &env->fm_min, &env->fm_max);
+     * fixed range is ignored so it means full. */
+    gwy_data_field_get_min_max(env->dfield, &env->fm_min, &env->fm_max);
+    if (env->fm_rangetype == GWY_LAYER_BASIC_RANGE_AUTO)
+        gwy_data_field_get_autorange(env->dfield,
+                                     &env->fm_min, &env->fm_max);
+    if (!env->has_presentation
+        && env->fm_rangetype == GWY_LAYER_BASIC_RANGE_FIXED) {
+        /* These may not be actually set; for this we always init with full. */
+        g_string_printf(s, "/%d/base/min", env->id);
+        gwy_container_gis_double_by_name(data, s->str, &env->fm_min);
+        g_string_printf(s, "/%d/base/max", env->id);
+        gwy_container_gis_double_by_name(data, s->str, &env->fm_max);
     }
+
+    if ((env->fm_inverted = (env->fm_max < env->fm_min)))
+        GWY_SWAP(gdouble, env->fm_min, env->fm_max);
 
     env->title = gwy_app_get_data_field_title(data, env->id);
     g_strstrip(env->title);
@@ -3209,8 +3202,6 @@ img_export_load_env(ImgExportEnv *env,
         env->grey = gwy_inventory_get_item(gradients, "Gray");
         gwy_resource_use(GWY_RESOURCE(env->grey));
     }
-
-    return TRUE;
 }
 
 static gboolean
@@ -3235,22 +3226,8 @@ img_export_export(GwyContainer *data,
     if (args.mode == IMGEXPORT_MODE_GREY16 && !format->write_grey16)
         args.mode = IMGEXPORT_MODE_PRESENTATION;
 
-    /*
-     * XXX: We need the data view for two things:
-     * 1) Data rendering with selections, realsquare, etc.
-     * 2) Obtaining various settings from the layer
-     * We can emulate both here and for selections we probably want emulate it.
-     * Once that is done we can export images not shown in any data wiew which
-     * would be nice from pygwy scripts.
-     */
     args.env = &env;
-    if (!img_export_load_env(&env, format, data)) {
-        img_export_free_args(&args);
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_SPECIFIC,
-                    _("Data must be displayed in a window for pixmap export."));
-        return FALSE;
-    }
+    img_export_load_env(&env, format, data);
 
     if (!inset_length_ok(env.dfield, args.inset_length)) {
         g_free(args.inset_length);
