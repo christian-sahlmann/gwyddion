@@ -217,6 +217,7 @@ typedef struct {
     gdouble fmscale_gap;
     gdouble inset_xgap;
     gdouble inset_ygap;
+    gdouble title_gap;
     gchar *inset_length;
     ImgExportInterpolation interpolation;
     ImgExportTitleType title_type;
@@ -266,11 +267,12 @@ typedef struct {
     /* Values */
     GtkWidget *table_value;
     GtkWidget *draw_mask;
-    GtkWidget *draw_selection;
+    /* GtkWidget *draw_selection; */
     GtkWidget *interpolation;
     GSList *ztype;
     GtkObject *fmscale_gap;
     GtkWidget *title_type;
+    GtkObject *title_gap;
     GtkWidget *units_in_title;
 
     gulong sid;
@@ -436,8 +438,7 @@ static const ImgExportArgs img_export_defaults = {
     { 1.0, 1.0, 1.0, 1.0 }, INSET_POS_BOTTOM_RIGHT,
     TRUE, TRUE,
     "Helvetica", TRUE, TRUE, TRUE,
-    1.0, 1.0, 1.0,
-    "",
+    1.0, 1.0, 1.0, 0.0, "",
     IMGEXPORT_INTERPOLATION_LINEAR,
     IMGEXPORT_TITLE_NONE, FALSE,
 };
@@ -993,6 +994,7 @@ measure_inset(const ImgExportArgs *args, ImgExportSizes *sizes,
     InsetPosType pos = args->inset_pos;
     gdouble lw = sizes->sizes.line_width;
     gdouble tl = sizes->sizes.tick_length;
+    gdouble fs = sizes->sizes.font_size;
 
     sizes->inset_length = inset_length_ok(dfield, args->inset_length);
     if (!(sizes->inset_length > 0.0))
@@ -1015,14 +1017,14 @@ measure_inset(const ImgExportArgs *args, ImgExportSizes *sizes,
     if (pos == INSET_POS_TOP_LEFT
         || pos == INSET_POS_TOP_CENTER
         || pos == INSET_POS_TOP_RIGHT)
-        rect->y = lw + tl*args->inset_ygap;
+        rect->y = lw + fs*args->inset_ygap;
     else
-        rect->y = vsize - lw - rect->h - tl*args->inset_ygap;
+        rect->y = vsize - lw - rect->h - fs*args->inset_ygap;
 
     if (pos == INSET_POS_TOP_LEFT || pos == INSET_POS_BOTTOM_LEFT)
-        rect->x = 2.0*lw + tl*args->inset_xgap;
+        rect->x = 2.0*lw + fs*args->inset_xgap;
     else if (pos == INSET_POS_TOP_RIGHT || pos == INSET_POS_BOTTOM_RIGHT)
-        rect->x = hsize - 2.0*lw - rect->w - tl*args->inset_xgap;
+        rect->x = hsize - 2.0*lw - rect->w - fs*args->inset_xgap;
     else
         rect->x = hsize/2 - 0.5*rect->w;
 }
@@ -1034,6 +1036,8 @@ measure_title(const ImgExportArgs *args, ImgExportSizes *sizes,
     const ImgExportEnv *env = args->env;
     ImgExportRect *rect = &sizes->title;
     PangoRectangle logical;
+    gdouble fs = sizes->sizes.font_size;
+    gdouble gap;
 
     g_string_truncate(s, 0);
     if (args->units_in_title) {
@@ -1057,8 +1061,11 @@ measure_title(const ImgExportArgs *args, ImgExportSizes *sizes,
         format_layout(layout, &logical, s, "%s", env->title);
 
     /* Straight.  This is rotated according to the type when drawing. */
+    gap = fs*args->title_gap;
+    if (args->title_type != IMGEXPORT_TITLE_FMSCALE)
+        gap = MAX(gap, 0.0);
     rect->w = logical.width/pangoscale;
-    rect->h = logical.height/pangoscale;
+    rect->h = logical.height/pangoscale + gap;
 }
 
 static void
@@ -1084,7 +1091,7 @@ calculate_sizes(const ImgExportArgs *args,
     PangoLayout *layout;
     ImgExportSizes *sizes = g_new0(ImgExportSizes, 1);
     GString *s = g_string_new(NULL);
-    gdouble lw, borderw, tl, zoom = args->zoom;
+    gdouble lw, fs, borderw, tl, zoom = args->zoom;
     cairo_surface_t *surface;
     cairo_t *cr;
 
@@ -1101,7 +1108,8 @@ calculate_sizes(const ImgExportArgs *args,
     lw = sizes->sizes.line_width;
     borderw = sizes->sizes.border_width;
     tl = sizes->sizes.tick_length;
-    layout = create_layout(args->font, sizes->sizes.font_size, cr);
+    fs = sizes->sizes.font_size;
+    layout = create_layout(args->font, fs, cr);
 
     /* Data */
     sizes->image.w = zoom*args->env->xres + 2.0*lw;
@@ -1133,11 +1141,11 @@ calculate_sizes(const ImgExportArgs *args,
     /* False colour gradient */
     sizes->fmgrad = sizes->image;
     rect_move(&sizes->fmgrad,
-              sizes->image.w + tl*args->fmscale_gap - lw, 0.0);
+              sizes->image.w + fs*args->fmscale_gap - lw, 0.0);
     if (args->ztype == IMGEXPORT_VALUE_FMSCALE) {
         /* NB: We subtract lw here to make the fmscale visually just touch the
          * image in the case of zero gap. */
-        sizes->fmgrad.w = 1.5*sizes->sizes.font_size + 2.0*lw;
+        sizes->fmgrad.w = 1.5*fs + 2.0*lw;
 
         /* False colour axis */
         find_fmscale_ticks(args, sizes, layout, s);
@@ -1172,6 +1180,7 @@ calculate_sizes(const ImgExportArgs *args,
             rect_move(&sizes->image, 0.0, sizes->title.h);
             rect_move(&sizes->vruler, 0.0, sizes->title.h);
             rect_move(&sizes->hruler, 0.0, sizes->title.h);
+            rect_move(&sizes->inset, 0.0, sizes->title.h);
             rect_move(&sizes->fmgrad, 0.0, sizes->title.h);
             rect_move(&sizes->fmruler, 0.0, sizes->title.h);
         }
@@ -1562,12 +1571,17 @@ draw_title(const ImgExportArgs *args,
     const ImgExportRect *rect = &sizes->title;
     PangoRectangle logical;
     GwySIValueFormat *vf;
+    gdouble fs = sizes->sizes.font_size;
+    gdouble gap = 0.0;
 
     if (args->title_type == IMGEXPORT_TITLE_NONE)
         return;
 
+    if (args->title_type == IMGEXPORT_TITLE_FMSCALE)
+        gap = fs*args->title_gap;
+
     cairo_save(cr);
-    cairo_translate(cr, rect->x, rect->y);
+    cairo_translate(cr, rect->x + gap, rect->y);
     cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
     vf = sizes->vf_title;
     if (args->units_in_title && strlen(vf->units))
@@ -2611,7 +2625,7 @@ create_lateral_controls(ImgExportControls *controls)
     row = gwy_radio_buttons_attach_to_table(controls->xytype, GTK_TABLE(table),
                                             3, row);
 
-    controls->inset_xgap = attach_gap(table, _("Horizontal _gap:"), row, 4.0,
+    controls->inset_xgap = attach_gap(table, _("Hori_zontal gap:"), row, 4.0,
                                       args->inset_xgap);
     g_signal_connect_swapped(controls->inset_xgap, "value-changed",
                              G_CALLBACK(inset_xgap_changed), controls);
@@ -2742,8 +2756,10 @@ static void
 update_value_sensitivity(ImgExportControls *controls)
 {
     gboolean fmsens = (controls->args->ztype == IMGEXPORT_VALUE_FMSCALE);
+    gboolean titlesens = (controls->args->title_type != IMGEXPORT_TITLE_NONE);
 
     gwy_table_hscale_set_sensitive(controls->fmscale_gap, fmsens);
+    gwy_table_hscale_set_sensitive(controls->title_gap, titlesens);
 }
 
 static void
@@ -2798,6 +2814,14 @@ title_type_changed(GtkComboBox *combo,
                    ImgExportControls *controls)
 {
     controls->args->title_type = gwy_enum_combo_box_get_active(combo);
+    update_preview(controls);
+}
+
+static void
+title_gap_changed(ImgExportControls *controls,
+                  GtkAdjustment *adj)
+{
+    controls->args->title_gap = gtk_adjustment_get_value(adj);
     update_preview(controls);
 }
 
@@ -2889,7 +2913,7 @@ create_value_controls(ImgExportControls *controls)
 
     controls->fmscale_gap = gtk_adjustment_new(args->fmscale_gap,
                                                0.0, 2.0, 0.01, 0.1, 0);
-    gwy_table_attach_hscale(table, row, _("Horizontal _gap:"), NULL,
+    gwy_table_attach_hscale(table, row, _("Hori_zontal gap:"), NULL,
                             controls->fmscale_gap, GWY_HSCALE_DEFAULT);
     g_signal_connect_swapped(controls->fmscale_gap, "value-changed",
                              G_CALLBACK(fmscale_gap_changed), controls);
@@ -2918,6 +2942,14 @@ create_value_controls(ImgExportControls *controls)
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->title_type);
     gtk_table_attach(GTK_TABLE(table), controls->title_type,
                      1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls->title_gap = gtk_adjustment_new(args->title_gap,
+                                             -1.0, 1.0, 0.01, 0.1, 0);
+    gwy_table_attach_hscale(table, row, _("_Gap:"), NULL,
+                            controls->title_gap, GWY_HSCALE_DEFAULT);
+    g_signal_connect_swapped(controls->title_gap, "value-changed",
+                             G_CALLBACK(title_gap_changed), controls);
     row++;
 
     controls->units_in_title
@@ -4041,6 +4073,7 @@ static const gchar mode_key[]             = "/module/pixmap/mode";
 static const gchar pxwidth_key[]          = "/module/pixmap/pxwidth";
 static const gchar scale_font_key[]       = "/module/pixmap/scale_font";
 static const gchar tick_length_key[]      = "/module/pixmap/tick_length";
+static const gchar title_gap_key[]        = "/module/pixmap/title_gap";
 static const gchar title_type_key[]       = "/module/pixmap/title_type";
 static const gchar units_in_title_key[]   = "/module/pixmap/units_in_title";
 static const gchar xytype_key[]           = "/module/pixmap/xytype";
@@ -4075,6 +4108,7 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->fmscale_gap = CLAMP(args->fmscale_gap, 0.0, 2.0);
     args->inset_xgap = CLAMP(args->inset_xgap, 0.0, 4.0);
     args->inset_ygap = CLAMP(args->inset_ygap, 0.0, 2.0);
+    args->title_gap = CLAMP(args->title_gap, -1.0, 1.0);
 }
 
 static void
@@ -4136,6 +4170,8 @@ img_export_load_args(GwyContainer *container,
                                      &args->inset_xgap);
     gwy_container_gis_double_by_name(container, inset_ygap_key,
                                      &args->inset_ygap);
+    gwy_container_gis_double_by_name(container, title_gap_key,
+                                     &args->title_gap);
     gwy_container_gis_boolean_by_name(container, inset_draw_ticks_key,
                                       &args->inset_draw_ticks);
     gwy_container_gis_boolean_by_name(container, inset_draw_label_key,
@@ -4190,6 +4226,8 @@ img_export_save_args(GwyContainer *container,
                                      args->inset_xgap);
     gwy_container_set_double_by_name(container, inset_ygap_key,
                                      args->inset_ygap);
+    gwy_container_set_double_by_name(container, title_gap_key,
+                                     args->title_gap);
     gwy_container_set_boolean_by_name(container, inset_draw_ticks_key,
                                       args->inset_draw_ticks);
     gwy_container_set_boolean_by_name(container, inset_draw_label_key,
