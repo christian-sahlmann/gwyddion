@@ -1900,7 +1900,7 @@ preview(ImgExportControls *controls)
         previewargs.sizes.line_width = 0.0;
         previewargs.draw_mask = FALSE;
         previewargs.draw_selection = FALSE;
-        /* XXX? previewargs.interpolation = IMGEXPORT_INTERPOLATION_PIXELATE; */
+        previewargs.interpolation = IMGEXPORT_INTERPOLATION_PIXELATE;
     }
 
     sizes = calculate_sizes(&previewargs, "png");
@@ -1910,15 +1910,10 @@ preview(ImgExportControls *controls)
     zoomcorr = PREVIEW_SIZE/MAX(sizes->canvas.w, sizes->canvas.h);
     previewargs.zoom *= zoomcorr;
     if (is_vector) {
-        if (args->scale_font) {
-            /* XXX: Some factor seems necessary here, at least for vector
-             * drawing.  */
+        if (args->scale_font)
             scale_sizes(&previewargs.sizes, zoom/previewargs.zoom);
-        }
-        else {
-            gdouble wpt = mm2pt*previewargs.pxwidth*previewargs.env->xres;
-            scale_sizes(&previewargs.sizes, sizes->canvas.w/wpt);
-        }
+        else
+            scale_sizes(&previewargs.sizes, 1.0/mm2pt/previewargs.pxwidth);
     }
     else {
         if (!args->scale_font)
