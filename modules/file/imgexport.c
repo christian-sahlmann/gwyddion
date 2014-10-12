@@ -91,9 +91,8 @@ typedef enum {
  * other options.  For pixmaps, we could render them ourselves or using
  * GdkPixbuf. */
 typedef enum {
-    IMGEXPORT_INTERPOLATION_PIXELATE,
-    IMGEXPORT_INTERPOLATION_LINEAR,
-    IMGEXPORT_INTERPOLATION_NTYPES
+    IMGEXPORT_INTERPOLATION_PIXELATE = GWY_INTERPOLATION_ROUND,
+    IMGEXPORT_INTERPOLATION_LINEAR = GWY_INTERPOLATION_LINEAR,
 } ImgExportInterpolation;
 
 typedef enum {
@@ -438,7 +437,7 @@ static const ImgExportArgs img_export_defaults = {
     TRUE, TRUE,
     "Helvetica", TRUE, TRUE, TRUE,
     1.0, 1.0, 1.0, 0.0, "",
-    IMGEXPORT_INTERPOLATION_LINEAR,
+    IMGEXPORT_INTERPOLATION_PIXELATE,
     IMGEXPORT_TITLE_NONE, FALSE,
 };
 
@@ -1335,6 +1334,7 @@ draw_data(const ImgExportArgs *args,
 {
     const ImgExportRect *rect = &sizes->image;
     ImgExportEnv *env = args->env;
+    cairo_filter_t interp;
     GdkPixbuf *pixbuf;
     gdouble lw = sizes->sizes.line_width;
     gdouble w, h;
@@ -1342,8 +1342,11 @@ draw_data(const ImgExportArgs *args,
     w = rect->w - 2.0*lw;
     h = rect->h - 2.0*lw;
 
-    /* Mask must be drawn pixelated so we can only draw data and mask together
-     * when data is also pixelated or we are not drawing any mask. */
+    if (args->interpolation == IMGEXPORT_INTERPOLATION_LINEAR)
+        interp = CAIRO_FILTER_BILINEAR;
+    else
+        interp = CAIRO_FILTER_NEAREST;
+
     pixbuf = draw_data_pixbuf(args);
     /* FIXME: This produces fading into background (white) on the edge
      * pixels when we render to pixmaps.  It's probably best to do all
@@ -1351,12 +1354,19 @@ draw_data(const ImgExportArgs *args,
      * the full range of interpolations Gwyddion can do. */
     cairo_save(cr);
     cairo_translate(cr, rect->x + lw, rect->y + lw);
+    /* Avoid bleeding.  May not be necessary once we do interpolation
+     * ourselves. */
+    if (interp == CAIRO_FILTER_BILINEAR) {
+        cairo_rectangle(cr, -0.5*lw, -0.5*lw, w + lw, h + lw);
+        cairo_clip(cr);
+    }
     stretch_pixbuf_source(cr, pixbuf, args);
-    cairo_pattern_set_filter(cairo_get_source(cr), args->interpolation);
+    cairo_pattern_set_filter(cairo_get_source(cr), interp);
     cairo_paint(cr);
     cairo_restore(cr);
     g_object_unref(pixbuf);
 
+    /* Mask must be drawn pixelated. */
     if (env->mask && args->draw_mask) {
         cairo_save(cr);
         cairo_translate(cr, rect->x + lw, rect->y + lw);
@@ -3000,6 +3010,67 @@ mode_changed(ImgExportControls *controls,
     update_preview(controls);
 }
 
+static void
+reset_to_defaults(ImgExportControls *controls)
+{
+    ImgExportArgs *args = controls->args;
+    const ImgExportArgs *defaults = &img_export_defaults;
+
+    if (controls->mode)
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->mode),
+                                     defaults->mode == 16);
+
+    if (controls->pxwidth)
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->pxwidth),
+                                 defaults->pxwidth);
+    if (controls->zoom)
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zoom),
+                                 defaults->zoom);
+
+    args->sizes.font_size = defaults->sizes.font_size;
+    g_free(args->font);
+    args->font = g_strdup(defaults->font);
+    update_selected_font(controls);
+
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->line_width),
+                             defaults->sizes.line_width);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->tick_length),
+                             defaults->sizes.tick_length);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->border_width),
+                             defaults->sizes.border_width);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->scale_font),
+                                 defaults->scale_font);
+
+    gwy_radio_buttons_set_current(controls->xytype, defaults->xytype);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->inset_xgap),
+                             defaults->inset_xgap);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->inset_ygap),
+                             defaults->inset_ygap);
+    gwy_radio_buttons_set_current(controls->inset_pos, defaults->inset_pos);
+    inset_length_set_auto(controls);
+    args->inset_color = defaults->inset_color;
+    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->inset_color),
+                               &args->inset_color);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->inset_draw_ticks),
+                                 defaults->inset_draw_ticks);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->inset_draw_label),
+                                 defaults->inset_draw_label);
+
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->draw_mask),
+                                 defaults->draw_mask);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interpolation),
+                                  defaults->interpolation);
+    gwy_radio_buttons_set_current(controls->ztype, defaults->ztype);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->fmscale_gap),
+                             defaults->fmscale_gap);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->title_type),
+                                  defaults->title_type);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->title_gap),
+                             defaults->title_gap);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->units_in_title),
+                                 defaults->units_in_title);
+}
+
 static gboolean
 img_export_dialog(ImgExportArgs *args)
 {
@@ -3095,9 +3166,7 @@ img_export_dialog(ImgExportArgs *args)
             break;
 
             case RESPONSE_RESET:
-            controls.in_update = TRUE;
-            /* TODO */
-            controls.in_update = FALSE;
+            reset_to_defaults(&controls);
             break;
 
             default:
@@ -4068,8 +4137,8 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->xytype = MIN(args->xytype, IMGEXPORT_LATERAL_NTYPES-1);
     args->ztype = MIN(args->ztype, IMGEXPORT_VALUE_NTYPES-1);
     args->inset_pos = MIN(args->inset_pos, INSET_NPOS-1);
-    args->interpolation = MIN(args->interpolation,
-                              IMGEXPORT_INTERPOLATION_NTYPES-1);
+    if (args->interpolation != IMGEXPORT_INTERPOLATION_LINEAR)
+        args->interpolation = IMGEXPORT_INTERPOLATION_PIXELATE;
     args->title_type = MIN(args->title_type, IMGEXPORT_TITLE_NTYPES-1);
     /* handle inset_length later, its usability depends on the data field. */
     args->zoom = CLAMP(args->zoom, 0.06, 16.0);
