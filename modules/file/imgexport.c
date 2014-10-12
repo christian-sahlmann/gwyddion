@@ -215,7 +215,6 @@ typedef struct {
     gdouble fmscale_gap;
     gdouble inset_xgap;
     gdouble inset_ygap;
-    guint greyscale;
     gchar *inset_length;
     ImgExportInterpolation interpolation;
     ImgExportTitleType title_type;
@@ -385,7 +384,7 @@ static ImgExportFormat image_formats[] = {
     },
     {
         "pnm",
-        N_("Portable Image (.ppm,.pnm)"),
+        N_("Portable Pixmap (.ppm,.pnm)"),
         ".ppm,.pnm",
         write_pixbuf_ppm, write_image_pgm16, NULL,
     },
@@ -436,7 +435,7 @@ static const ImgExportArgs img_export_defaults = {
     TRUE, TRUE,
     "Helvetica", TRUE, TRUE, TRUE,
     1.0, 1.0, 1.0,
-    0, "",
+    "",
     IMGEXPORT_INTERPOLATION_LINEAR,
     IMGEXPORT_TITLE_NONE, FALSE,
 };
@@ -562,7 +561,7 @@ img_export_detect(const GwyFileDetectInfo *fileinfo,
             break;
     }
     /* TODO: Raise score once the module works. */
-    score = extensions[i] ? 15 : 0;
+    score = extensions[i] ? 20 : 0;
     g_strfreev(extensions);
 
     return score;
@@ -1553,6 +1552,7 @@ draw_fmgrad(const ImgExportArgs *args,
     else
         pat = cairo_pattern_create_linear(0.0, lw + h, 0.0, lw);
 
+    /* We don't get here in grey16 export mode so we don't care. */
     points = gwy_gradient_get_points(env->gradient, &npoints);
     for (i = 0; i < npoints; i++) {
         const GwyGradientPoint *gpt = points + i;
@@ -1803,30 +1803,43 @@ static void
 preview(ImgExportControls *controls)
 {
     ImgExportArgs *args = controls->args;
+    ImgExportArgs previewargs;
     ImgExportSizes *sizes;
     gdouble zoom = args->zoom, zoomcorr;
-    SizeSettings savedsizes = args->sizes;
     gboolean scale_font = args->scale_font;
     guint width, height;
     GdkPixbuf *pixbuf;
 
-    sizes = calculate_sizes(args, "png");
+    previewargs = *args;
+    controls->args = &previewargs;
+
+    if (previewargs.mode == IMGEXPORT_MODE_GREY16) {
+        previewargs.xytype = IMGEXPORT_LATERAL_NONE;
+        previewargs.ztype = IMGEXPORT_VALUE_NONE;
+        previewargs.title_type = IMGEXPORT_TITLE_NONE;
+        previewargs.sizes.line_width = 0.0;
+        previewargs.draw_mask = FALSE;
+        previewargs.draw_selection = FALSE;
+        previewargs.interpolation = IMGEXPORT_INTERPOLATION_PIXELATE;
+    }
+
+    sizes = calculate_sizes(&previewargs, "png");
     g_return_if_fail(sizes);
     /* Make all things in the preview scale. */
-    args->scale_font = TRUE;
-    args->zoom = PREVIEW_SIZE/MAX(sizes->canvas.w, sizes->canvas.h);
+    previewargs.scale_font = TRUE;
+    previewargs.zoom = PREVIEW_SIZE/MAX(sizes->canvas.w, sizes->canvas.h);
     if (scale_font) {
         /* XXX: Some factor seems necessary here, at least for vector drawing.
          */
-        scale_sizes(&args->sizes, zoom/args->zoom);
+        scale_sizes(&previewargs.sizes, zoom/previewargs.zoom);
     }
     else {
-        gdouble wpt = mm2pt*args->pxwidth*args->env->xres;
-        scale_sizes(&args->sizes, sizes->canvas.w/wpt);
+        gdouble wpt = mm2pt*previewargs.pxwidth*previewargs.env->xres;
+        scale_sizes(&previewargs.sizes, sizes->canvas.w/wpt);
     }
     destroy_sizes(sizes);
 
-    pixbuf = render_pixbuf(args, "png");
+    pixbuf = render_pixbuf(&previewargs, "png");
     /* The sizes may be way off when the fonts are huge compared to the
      * image and so on.  Try to correct that and render again. */
     width = gdk_pixbuf_get_width(pixbuf);
@@ -1837,8 +1850,8 @@ preview(ImgExportControls *controls)
      * don't make much fuss about it. */
     if (fabs(log(zoomcorr)) > 0.08) {
         g_object_unref(pixbuf);
-        scale_sizes(&args->sizes, pow(zoomcorr, 1.25));
-        pixbuf = render_pixbuf(args, "png");
+        scale_sizes(&previewargs.sizes, pow(zoomcorr, 1.25));
+        pixbuf = render_pixbuf(&previewargs, "png");
 #ifdef DEBUG
         width = gdk_pixbuf_get_width(pixbuf);
         height = gdk_pixbuf_get_height(pixbuf);
@@ -1850,9 +1863,7 @@ preview(ImgExportControls *controls)
     gtk_image_set_from_pixbuf(GTK_IMAGE(controls->preview), pixbuf);
     g_object_unref(pixbuf);
 
-    args->sizes = savedsizes;
-    args->scale_font = scale_font;
-    args->zoom = zoom;
+    controls->args = args;
 }
 
 static gboolean
@@ -2872,6 +2883,22 @@ page_switched(ImgExportControls *controls,
     controls->args->active_page = pagenum;
 }
 
+static void
+mode_changed(ImgExportControls *controls,
+             GtkToggleButton *toggle)
+{
+    if (gtk_toggle_button_get_active(toggle)) {
+        controls->args->mode = IMGEXPORT_MODE_GREY16;
+        gtk_widget_set_sensitive(controls->notebook, FALSE);
+    }
+    else {
+        controls->args->mode = IMGEXPORT_MODE_PRESENTATION;
+        gtk_widget_set_sensitive(controls->notebook, TRUE);
+    }
+
+    update_preview(controls);
+}
+
 static gboolean
 img_export_dialog(ImgExportArgs *args)
 {
@@ -2916,10 +2943,8 @@ img_export_dialog(ImgExportArgs *args)
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
                                      args->mode == IMGEXPORT_MODE_GREY16);
         gtk_box_pack_start(GTK_BOX(vbox), check, FALSE, FALSE, 0);
-        /*
         g_signal_connect_swapped(check, "toggled",
                                  G_CALLBACK(mode_changed), &controls);
-                                 */
     }
 
     controls.notebook = gtk_notebook_new();
@@ -2987,10 +3012,12 @@ img_export_dialog(ImgExportArgs *args)
 
 static gboolean
 img_export_load_env(ImgExportEnv *env,
-                    const ImgExportArgs *args,
                     const ImgExportFormat *format,
                     GwyContainer *data)
 {
+    GwyPixmapLayer *layer;
+    GwyLayerBasic *blayer;
+    const guchar *gradname = NULL;
     guint xres, yres;
     const gchar *key;
     gchar *s;
@@ -3037,30 +3064,24 @@ img_export_load_env(ImgExportEnv *env,
     }
     gwy_debug("env->xres %u, env->yres %u", env->xres, env->yres);
 
-    if (args->mode == IMGEXPORT_MODE_PRESENTATION) {
-        GwyPixmapLayer *layer;
-        GwyLayerBasic *blayer;
-        const guchar *gradname = NULL;
+    layer = gwy_data_view_get_base_layer(env->data_view);
+    g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), FALSE);
+    blayer = GWY_LAYER_BASIC(layer);
+    key = gwy_layer_basic_get_gradient_key(blayer);
+    if (key)
+        gwy_container_gis_string_by_name(data, key, &gradname);
+    env->gradient = gwy_gradients_get_gradient(gradname);
 
-        layer = gwy_data_view_get_base_layer(env->data_view);
-        g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), FALSE);
-        blayer = GWY_LAYER_BASIC(layer);
-        key = gwy_layer_basic_get_gradient_key(blayer);
-        if (key)
-            gwy_container_gis_string_by_name(data, key, &gradname);
-        env->gradient = gwy_gradients_get_gradient(gradname);
+    env->fm_rangetype = gwy_layer_basic_get_range_type(blayer);
+    gwy_layer_basic_get_range(blayer, &env->fm_min, &env->fm_max);
+    if ((env->fm_inverted = (env->fm_max < env->fm_min)))
+        GWY_SWAP(gdouble, env->fm_min, env->fm_max);
 
-        env->fm_rangetype = gwy_layer_basic_get_range_type(blayer);
-        gwy_layer_basic_get_range(blayer, &env->fm_min, &env->fm_max);
-        if ((env->fm_inverted = (env->fm_max < env->fm_min)))
-            GWY_SWAP(gdouble, env->fm_min, env->fm_max);
+    env->has_presentation = gwy_layer_basic_get_has_presentation(blayer);
+    gwy_debug("has_presentation %d", env->has_presentation);
 
-        env->has_presentation = gwy_layer_basic_get_has_presentation(blayer);
-        gwy_debug("has_presentation %d", env->has_presentation);
-
-        env->title = gwy_app_get_data_field_title(data, env->id);
-        g_strstrip(env->title);
-    }
+    env->title = gwy_app_get_data_field_title(data, env->id);
+    g_strstrip(env->title);
 
     return TRUE;
 }
@@ -3096,7 +3117,7 @@ img_export_export(GwyContainer *data,
      * would be nice from pygwy scripts.
      */
     args.env = &env;
-    if (!img_export_load_env(&env, &args, format, data)) {
+    if (!img_export_load_env(&env, format, data)) {
         img_export_free_args(&args);
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_SPECIFIC,
@@ -3115,8 +3136,9 @@ img_export_export(GwyContainer *data,
     if (ok) {
         if (format->write_vector)
             ok = format->write_vector(&args, format->name, filename, error);
-        else if (format->write_grey16 && args.greyscale)
+        else if (format->write_grey16 && args.mode == IMGEXPORT_MODE_GREY16) {
             ok = format->write_grey16(&args, format->name, filename, error);
+        }
         else if (format->write_pixbuf) {
             GdkPixbuf *pixbuf = render_pixbuf(&args, format->name);
             ok = format->write_pixbuf(pixbuf, format->name, filename, error);
@@ -3221,7 +3243,7 @@ write_image_png16(ImgExportArgs *args,
     FILE *fh;
     guint i;
 
-    g_return_val_if_fail(gwy_strequal(name, "pngcairo"), FALSE);
+    g_return_val_if_fail(gwy_strequal(name, "png"), FALSE);
 
     if (!(fh = g_fopen(filename, "wb"))) {
         err_OPEN_WRITE(error);
@@ -3391,7 +3413,7 @@ write_image_tiff16(ImgExportArgs *args,
     guint16 *pixels;
     FILE *fh;
 
-    g_return_val_if_fail(gwy_strequal(name, "tiffcairo"), FALSE);
+    g_return_val_if_fail(gwy_strequal(name, "tiff"), FALSE);
 
     if (!(fh = g_fopen(filename, "wb"))) {
         err_OPEN_WRITE(error);
@@ -3468,7 +3490,7 @@ write_image_pgm16(ImgExportArgs *args,
     guint16 *pixels;
     FILE *fh;
 
-    g_return_val_if_fail(gwy_strequal(name, "pnmcairo"), FALSE);
+    g_return_val_if_fail(gwy_strequal(name, "pnm"), FALSE);
 
     if (!(fh = g_fopen(filename, "wb"))) {
         err_OPEN_WRITE(error);
@@ -3649,7 +3671,7 @@ write_pixbuf_tiff(GdkPixbuf *pixbuf,
     guchar *pixels;
     FILE *fh;
 
-    g_return_val_if_fail(gwy_strequal(name, "tiffcairo"), FALSE);
+    g_return_val_if_fail(gwy_strequal(name, "tiff"), FALSE);
 
     nchannels = gdk_pixbuf_get_n_channels(pixbuf);
     g_return_val_if_fail(nchannels == 3, FALSE);
@@ -3705,7 +3727,7 @@ write_pixbuf_ppm(GdkPixbuf *pixbuf,
     gchar *ppmh = NULL;
     FILE *fh;
 
-    g_return_val_if_fail(gwy_strequal(name, "pnmcairo"), FALSE);
+    g_return_val_if_fail(gwy_strequal(name, "pnm"), FALSE);
 
     nchannels = gdk_pixbuf_get_n_channels(pixbuf);
     g_return_val_if_fail(nchannels == 3, FALSE);
@@ -3770,7 +3792,7 @@ write_pixbuf_bmp(GdkPixbuf *pixbuf,
     guint i, j, xres, yres, nchannels, rowstride, bmplen, bmprowstride;
     FILE *fh;
 
-    g_return_val_if_fail(gwy_strequal(name, "bmpcairo"), FALSE);
+    g_return_val_if_fail(gwy_strequal(name, "bmp"), FALSE);
 
     nchannels = gdk_pixbuf_get_n_channels(pixbuf);
     g_return_val_if_fail(nchannels == 3, FALSE);
@@ -3848,7 +3870,7 @@ write_pixbuf_targa(GdkPixbuf *pixbuf,
     guint nchannels, xres, yres, rowstride, i, j;
     FILE *fh;
 
-    g_return_val_if_fail(gwy_strequal(name, "tgacairo"), FALSE);
+    g_return_val_if_fail(gwy_strequal(name, "tga"), FALSE);
 
     nchannels = gdk_pixbuf_get_n_channels(pixbuf);
     g_return_val_if_fail(nchannels == 3, FALSE);
@@ -3904,28 +3926,28 @@ write_pixbuf_targa(GdkPixbuf *pixbuf,
 }
 
 /* Use the pixmap prefix for compatibility */
-static const gchar active_page_key[]      = "/module/pixmap/grayscale";
+static const gchar active_page_key[]      = "/module/pixmap/active_page";
 static const gchar border_width_key[]     = "/module/pixmap/border_width";
 static const gchar draw_mask_key[]        = "/module/pixmap/draw_mask";
 static const gchar draw_selection_key[]   = "/module/pixmap/draw_selection";
 static const gchar fmscale_gap_key[]      = "/module/pixmap/fmscale_gap";
 static const gchar font_key[]             = "/module/pixmap/font";
 static const gchar font_size_key[]        = "/module/pixmap/font_size";
-static const gchar greyscale_key[]        = "/module/pixmap/grayscale";
 static const gchar inset_color_key[]      = "/module/pixmap/inset_color";
 static const gchar inset_draw_label_key[] = "/module/pixmap/inset_draw_label";
-static const gchar units_in_title_key[]   = "/module/pixmap/units_in_title";
 static const gchar inset_draw_ticks_key[] = "/module/pixmap/inset_draw_ticks";
-static const gchar inset_xgap_key[]       = "/module/pixmap/inset_xgap";
-static const gchar inset_ygap_key[]       = "/module/pixmap/inset_ygap";
 static const gchar inset_length_key[]     = "/module/pixmap/inset_length";
 static const gchar inset_pos_key[]        = "/module/pixmap/inset_pos";
+static const gchar inset_xgap_key[]       = "/module/pixmap/inset_xgap";
+static const gchar inset_ygap_key[]       = "/module/pixmap/inset_ygap";
 static const gchar interpolation_key[]    = "/module/pixmap/interpolation";
-static const gchar title_type_key[]       = "/module/pixmap/title_type";
 static const gchar line_width_key[]       = "/module/pixmap/line_width";
+static const gchar mode_key[]             = "/module/pixmap/mode";
 static const gchar pxwidth_key[]          = "/module/pixmap/pxwidth";
 static const gchar scale_font_key[]       = "/module/pixmap/scale_font";
 static const gchar tick_length_key[]      = "/module/pixmap/tick_length";
+static const gchar title_type_key[]       = "/module/pixmap/title_type";
+static const gchar units_in_title_key[]   = "/module/pixmap/units_in_title";
 static const gchar xytype_key[]           = "/module/pixmap/xytype";
 static const gchar zoom_key[]             = "/module/pixmap/zoom";
 static const gchar ztype_key[]            = "/module/pixmap/ztype";
@@ -3933,7 +3955,8 @@ static const gchar ztype_key[]            = "/module/pixmap/ztype";
 static void
 img_export_sanitize_args(ImgExportArgs *args)
 {
-    args->greyscale = (args->greyscale == 16) ? 16 : 0;
+    if (args->mode != IMGEXPORT_MODE_GREY16)
+        args->mode = IMGEXPORT_MODE_PRESENTATION;
     args->active_page = MIN(args->active_page, NPAGES-1);
     args->xytype = MIN(args->xytype, IMGEXPORT_LATERAL_NTYPES-1);
     args->ztype = MIN(args->ztype, IMGEXPORT_VALUE_NTYPES-1);
@@ -3978,7 +4001,6 @@ img_export_load_args(GwyContainer *container,
 {
     *args = img_export_defaults;
 
-    gwy_container_gis_int32_by_name(container, greyscale_key, &args->greyscale);
     gwy_container_gis_int32_by_name(container, active_page_key,
                                     &args->active_page);
     gwy_container_gis_double_by_name(container, zoom_key, &args->zoom);
@@ -3991,6 +4013,7 @@ img_export_load_args(GwyContainer *container,
                                      &args->sizes.border_width);
     gwy_container_gis_double_by_name(container, tick_length_key,
                                      &args->sizes.tick_length);
+    gwy_container_gis_enum_by_name(container, mode_key, &args->mode);
     gwy_container_gis_enum_by_name(container, xytype_key, &args->xytype);
     gwy_container_gis_enum_by_name(container, ztype_key, &args->ztype);
     gwy_container_gis_enum_by_name(container, interpolation_key,
@@ -4032,7 +4055,6 @@ static void
 img_export_save_args(GwyContainer *container,
                      ImgExportArgs *args)
 {
-    gwy_container_set_int32_by_name(container, greyscale_key, args->greyscale);
     gwy_container_set_int32_by_name(container, active_page_key,
                                     args->active_page);
     gwy_container_set_double_by_name(container, zoom_key, args->zoom);
@@ -4045,6 +4067,7 @@ img_export_save_args(GwyContainer *container,
                                      args->sizes.border_width);
     gwy_container_set_double_by_name(container, tick_length_key,
                                      args->sizes.tick_length);
+    gwy_container_set_enum_by_name(container, mode_key, args->mode);
     gwy_container_set_enum_by_name(container, xytype_key, args->xytype);
     gwy_container_set_enum_by_name(container, ztype_key, args->ztype);
     gwy_container_set_enum_by_name(container, interpolation_key,
