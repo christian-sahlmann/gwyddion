@@ -184,6 +184,7 @@ typedef struct {
     GwyContainer *data;
     GwyRGBA mask_colour;
     GwyGradient *gradient;
+    GwyGradient *grey;
     gchar *title;
     GwyLayerBasicRangeType fm_rangetype;
     gdouble fm_min;
@@ -899,7 +900,7 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
                    PangoLayout *layout, GString *s)
 {
     const ImgExportEnv *env = args->env;
-    GwyDataField *dfield = args->env->dfield;
+    GwyDataField *dfield = env->dfield;
     GwySIUnit *zunit = gwy_data_field_get_si_unit_z(dfield);
     gdouble size = sizes->image.h;
     gdouble min, max, real;
@@ -1036,7 +1037,7 @@ measure_title(const ImgExportArgs *args, ImgExportSizes *sizes,
 
     g_string_truncate(s, 0);
     if (args->units_in_title) {
-        GwyDataField *dfield = args->env->dfield;
+        GwyDataField *dfield = env->dfield;
         GwySIUnit *zunit = gwy_data_field_get_si_unit_z(dfield);
         GwySIValueFormat *vf;
         gdouble real;
@@ -1253,6 +1254,32 @@ destroy_sizes(ImgExportSizes *sizes)
     g_free(sizes);
 }
 
+/* XXX: We may want to do resampling here when exporting to pixmap images
+ * because we know many more interpolation methods than Cairo. */
+static GdkPixbuf*
+draw_data_pixbuf(const ImgExportArgs *args)
+{
+    const ImgExportEnv *env = args->env;
+    GwyDataField *dfield = env->dfield;
+    GwyGradient *gradient = ((args->mode == IMGEXPORT_MODE_GREY16)
+                             ? env->grey
+                             : env->gradient);
+    GwyLayerBasicRangeType range_type = env->fm_rangetype;
+    GdkPixbuf *pixbuf;
+    guint xres, yres;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, xres, yres);
+
+    if (range_type == GWY_LAYER_BASIC_RANGE_ADAPT)
+        gwy_pixbuf_draw_data_field_adaptive(pixbuf, dfield, gradient);
+    else
+        gwy_pixbuf_draw_data_field_with_range(pixbuf, dfield, gradient,
+                                              env->fm_min, env->fm_max);
+    return pixbuf;
+}
+
 static GdkPixbuf*
 draw_mask_pixbuf(const ImgExportArgs *args)
 {
@@ -1271,6 +1298,29 @@ draw_mask_pixbuf(const ImgExportArgs *args)
 }
 
 static void
+stretch_pixbuf_source(cairo_t *cr,
+                      GdkPixbuf *pixbuf,
+                      const ImgExportArgs *args)
+{
+    ImgExportEnv *env = args->env;
+
+    if (env->realsquare) {
+        gdouble mw = gdk_pixbuf_get_width(pixbuf);
+        gdouble mh = gdk_pixbuf_get_height(pixbuf);
+        gdouble r = (env->yres/mh)/(env->xres/mw);
+        r = 1.0 + fixzero(r - 1.0);
+        if (r >= 1.0)
+            cairo_scale(cr, args->zoom, r*args->zoom);
+        else
+            cairo_scale(cr, args->zoom/r, args->zoom);
+    }
+    else
+        cairo_scale(cr, args->zoom, args->zoom);
+
+    gdk_cairo_set_source_pixbuf(cr, pixbuf, 0.0, 0.0);
+}
+
+static void
 draw_data(const ImgExportArgs *args,
           const ImgExportSizes *sizes,
           cairo_t *cr)
@@ -1286,51 +1336,24 @@ draw_data(const ImgExportArgs *args,
 
     /* Mask must be drawn pixelated so we can only draw data and mask together
      * when data is also pixelated or we are not drawing any mask. */
-    if (args->interpolation == IMGEXPORT_INTERPOLATION_PIXELATE
-        || !args->draw_mask || !env->mask) {
-        pixbuf = gwy_data_view_export_pixbuf(env->data_view, 1.0,
-                                             args->draw_mask, FALSE);
-        cairo_save(cr);
-        cairo_translate(cr, rect->x + lw, rect->y + lw);
-        cairo_scale(cr, args->zoom, args->zoom);
-        gdk_cairo_set_source_pixbuf(cr, pixbuf, 0.0, 0.0);
-        cairo_pattern_set_filter(cairo_get_source(cr), args->interpolation);
-        cairo_paint(cr);
-        cairo_restore(cr);
-        g_object_unref(pixbuf);
-    }
-    else {
-        pixbuf = gwy_data_view_export_pixbuf(env->data_view, 1.0,
-                                             FALSE, FALSE);
-        /* XXX: This produces fading into background (white) on the edge
-         * pixels when we render to pixmaps.  It's probably best to do all
-         * interpolation ourselves when we render pixmaps; this also offers
-         * the full range of interpolations Gwyddion can do. */
-        cairo_save(cr);
-        cairo_translate(cr, rect->x + lw, rect->y + lw);
-        cairo_scale(cr, args->zoom, args->zoom);
-        gdk_cairo_set_source_pixbuf(cr, pixbuf, 0.0, 0.0);
-        cairo_pattern_set_filter(cairo_get_source(cr), args->interpolation);
-        cairo_paint(cr);
-        cairo_restore(cr);
-        g_object_unref(pixbuf);
+    pixbuf = draw_data_pixbuf(args);
+    /* FIXME: This produces fading into background (white) on the edge
+     * pixels when we render to pixmaps.  It's probably best to do all
+     * interpolation ourselves when we render pixmaps; this also offers
+     * the full range of interpolations Gwyddion can do. */
+    cairo_save(cr);
+    cairo_translate(cr, rect->x + lw, rect->y + lw);
+    stretch_pixbuf_source(cr, pixbuf, args);
+    cairo_pattern_set_filter(cairo_get_source(cr), args->interpolation);
+    cairo_paint(cr);
+    cairo_restore(cr);
+    g_object_unref(pixbuf);
 
+    if (env->mask && args->draw_mask) {
         cairo_save(cr);
         cairo_translate(cr, rect->x + lw, rect->y + lw);
         pixbuf = draw_mask_pixbuf(args);
-        if (env->realsquare) {
-            gdouble mw = gdk_pixbuf_get_width(pixbuf);
-            gdouble mh = gdk_pixbuf_get_height(pixbuf);
-            gdouble r = (env->yres/mh)/(env->xres/mw);
-            r = 1.0 + fixzero(r - 1.0);
-            if (r >= 1.0)
-                cairo_scale(cr, args->zoom, r*args->zoom);
-            else
-                cairo_scale(cr, args->zoom/r, args->zoom);
-        }
-        else
-            cairo_scale(cr, args->zoom, args->zoom);
-        gdk_cairo_set_source_pixbuf(cr, pixbuf, 0.0, 0.0);
+        stretch_pixbuf_source(cr, pixbuf, args);
         cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_NEAREST);
         cairo_paint(cr);
         cairo_restore(cr);
@@ -1854,7 +1877,7 @@ preview(ImgExportControls *controls)
         previewargs.sizes.line_width = 0.0;
         previewargs.draw_mask = FALSE;
         previewargs.draw_selection = FALSE;
-        previewargs.interpolation = IMGEXPORT_INTERPOLATION_PIXELATE;
+        /* XXX? previewargs.interpolation = IMGEXPORT_INTERPOLATION_PIXELATE; */
     }
 
     sizes = calculate_sizes(&previewargs, "png");
@@ -2758,6 +2781,7 @@ draw_mask_changed(ImgExportControls *controls,
     update_preview(controls);
 }
 
+/*
 static void
 draw_selection_changed(ImgExportControls *controls,
                        GtkToggleButton *button)
@@ -2767,6 +2791,7 @@ draw_selection_changed(ImgExportControls *controls,
     args->draw_selection = gtk_toggle_button_get_active(button);
     update_preview(controls);
 }
+*/
 
 static void
 title_type_changed(GtkComboBox *combo,
@@ -2816,6 +2841,7 @@ create_value_controls(ImgExportControls *controls)
 
     /* TODO: We should handle selections better.  For now, just recreate
      * what pixmap did. */
+    /*
     controls->draw_selection
         = check = gtk_check_button_new_with_mnemonic(_("Draw _selection"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
@@ -2825,6 +2851,7 @@ create_value_controls(ImgExportControls *controls)
     g_signal_connect_swapped(check, "toggled",
                              G_CALLBACK(draw_selection_changed), controls);
     row++;
+    */
 
     label = gtk_label_new_with_mnemonic(_("_Interpolation:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -3060,6 +3087,8 @@ img_export_load_env(ImgExportEnv *env,
 {
     GwyPixmapLayer *layer;
     GwyLayerBasic *blayer;
+    GwyDataField *dfield, *show;
+    GwyInventory *gradients;
     const guchar *gradname = NULL;
     guint xres, yres;
     const gchar *key;
@@ -3070,10 +3099,18 @@ img_export_load_env(ImgExportEnv *env,
     env->format = format;
     env->data = data;
     gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &env->data_view,
-                                     GWY_APP_DATA_FIELD, &env->dfield,
+                                     GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &env->id,
                                      GWY_APP_MASK_FIELD, &env->mask,
+                                     GWY_APP_SHOW_FIELD, &show,
                                      0);
+
+    if (show) {
+        env->has_presentation = TRUE;
+        env->dfield = show;
+    }
+    else
+        env->dfield = dfield;
 
     if (!env->data_view)
         return FALSE;
@@ -3113,18 +3150,33 @@ img_export_load_env(ImgExportEnv *env,
     key = gwy_layer_basic_get_gradient_key(blayer);
     if (key)
         gwy_container_gis_string_by_name(data, key, &gradname);
-    env->gradient = gwy_gradients_get_gradient(gradname);
+
+    gradients = gwy_gradients();
+    env->gradient = gwy_inventory_get_item_or_default(gradients, gradname);
+    gwy_resource_use(GWY_RESOURCE(env->gradient));
 
     env->fm_rangetype = gwy_layer_basic_get_range_type(blayer);
     gwy_layer_basic_get_range(blayer, &env->fm_min, &env->fm_max);
     if ((env->fm_inverted = (env->fm_max < env->fm_min)))
         GWY_SWAP(gdouble, env->fm_min, env->fm_max);
 
-    env->has_presentation = gwy_layer_basic_get_has_presentation(blayer);
-    gwy_debug("has_presentation %d", env->has_presentation);
+    /* The current behaviour is that all mappings work on presentations, but
+     * fixed range cannot be set so it means full. */
+    if (env->has_presentation) {
+        if (env->fm_rangetype == GWY_LAYER_BASIC_RANGE_AUTO)
+            gwy_data_field_get_autorange(env->dfield,
+                                         &env->fm_min, &env->fm_max);
+        else
+            gwy_data_field_get_min_max(env->dfield, &env->fm_min, &env->fm_max);
+    }
 
     env->title = gwy_app_get_data_field_title(data, env->id);
     g_strstrip(env->title);
+
+    if (format->write_grey16) {
+        env->grey = gwy_inventory_get_item(gradients, "Gray");
+        gwy_resource_use(GWY_RESOURCE(env->grey));
+    }
 
     return TRUE;
 }
@@ -4035,6 +4087,9 @@ img_export_free_args(ImgExportArgs *args)
 static void
 img_export_free_env(ImgExportEnv *env)
 {
+    if (env->grey)
+        gwy_resource_release(GWY_RESOURCE(env->grey));
+    gwy_resource_release(GWY_RESOURCE(env->gradient));
     g_free(env->title);
 }
 
