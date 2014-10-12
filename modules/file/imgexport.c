@@ -1647,10 +1647,8 @@ draw_fmruler(const ImgExportArgs *args,
     bs = ticks->step*ticks->base;
 
     mticks = g_array_new(FALSE, FALSE, sizeof(gdouble));
-    for (z = ticks->from; z <= ticks->to + 1e-14*bs; z += bs) {
-        gdouble zz = z*vf->magnitude;
-        g_array_append_val(mticks, zz);
-    }
+    for (z = ticks->from; z <= ticks->to + 1e-14*bs; z += bs)
+        g_array_append_val(mticks, z);
     nticks = mticks->len;
 
     if (env->fm_rangetype == GWY_LAYER_BASIC_RANGE_ADAPT
@@ -1659,6 +1657,8 @@ draw_fmruler(const ImgExportArgs *args,
 
         g_array_set_size(mticks, 2*nticks);
         td = (gdouble*)mticks->data;
+        for (i = 0; i < nticks; i++)
+            td[i] *= vf->magnitude;
         gwy_draw_data_field_map_adaptive(env->dfield, td, td + nticks, nticks);
         for (i = 0; i < nticks; i++)
             td[i] = ticks->from + (ticks->to - ticks->from)*td[i + nticks];
@@ -1806,12 +1806,13 @@ preview(ImgExportControls *controls)
     ImgExportArgs previewargs;
     ImgExportSizes *sizes;
     gdouble zoom = args->zoom, zoomcorr;
-    gboolean scale_font = args->scale_font;
+    gboolean is_vector;
     guint width, height;
     GdkPixbuf *pixbuf;
 
     previewargs = *args;
     controls->args = &previewargs;
+    is_vector = !!args->env->format->write_vector;
 
     if (previewargs.mode == IMGEXPORT_MODE_GREY16) {
         previewargs.xytype = IMGEXPORT_LATERAL_NONE;
@@ -1827,15 +1828,22 @@ preview(ImgExportControls *controls)
     g_return_if_fail(sizes);
     /* Make all things in the preview scale. */
     previewargs.scale_font = TRUE;
-    previewargs.zoom = PREVIEW_SIZE/MAX(sizes->canvas.w, sizes->canvas.h);
-    if (scale_font) {
-        /* XXX: Some factor seems necessary here, at least for vector drawing.
-         */
-        scale_sizes(&previewargs.sizes, zoom/previewargs.zoom);
+    zoomcorr = PREVIEW_SIZE/MAX(sizes->canvas.w, sizes->canvas.h);
+    previewargs.zoom *= zoomcorr;
+    if (is_vector) {
+        if (args->scale_font) {
+            /* XXX: Some factor seems necessary here, at least for vector
+             * drawing.  */
+            scale_sizes(&previewargs.sizes, zoom/previewargs.zoom);
+        }
+        else {
+            gdouble wpt = mm2pt*previewargs.pxwidth*previewargs.env->xres;
+            scale_sizes(&previewargs.sizes, sizes->canvas.w/wpt);
+        }
     }
     else {
-        gdouble wpt = mm2pt*previewargs.pxwidth*previewargs.env->xres;
-        scale_sizes(&previewargs.sizes, sizes->canvas.w/wpt);
+        if (!args->scale_font)
+            scale_sizes(&previewargs.sizes, 1.0/args->zoom);
     }
     destroy_sizes(sizes);
 
@@ -1850,14 +1858,15 @@ preview(ImgExportControls *controls)
      * don't make much fuss about it. */
     if (fabs(log(zoomcorr)) > 0.08) {
         g_object_unref(pixbuf);
-        scale_sizes(&previewargs.sizes, pow(zoomcorr, 1.25));
+        previewargs.zoom *= zoomcorr;
+        scale_sizes(&previewargs.sizes, zoomcorr);
         pixbuf = render_pixbuf(&previewargs, "png");
 #ifdef DEBUG
         width = gdk_pixbuf_get_width(pixbuf);
         height = gdk_pixbuf_get_height(pixbuf);
         zoomcorr = (gdouble)PREVIEW_SIZE/MAX(width, height);
-#endif
         gwy_debug("improved zoomcorr %g", zoomcorr);
+#endif
     }
 
     gtk_image_set_from_pixbuf(GTK_IMAGE(controls->preview), pixbuf);
@@ -2191,9 +2200,10 @@ create_basic_controls(ImgExportControls *controls)
         sizeunit = "px";
         digits = 0;
         controls->zoom = gtk_adjustment_new(args->zoom, minzoom, maxzoom,
-                                           0.001, 1.0, 0);
-        gwy_table_attach_spinbutton(table, row,
-                                    _("_Zoom:"), NULL, controls->zoom);
+                                            0.001, 1.0, 0);
+        spin = gwy_table_attach_spinbutton(table, row,
+                                           _("_Zoom:"), NULL, controls->zoom);
+        gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
         g_signal_connect_swapped(controls->zoom, "value-changed",
                                  G_CALLBACK(zoom_changed), controls);
         row++;
