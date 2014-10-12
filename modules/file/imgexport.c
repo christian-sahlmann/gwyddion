@@ -3202,6 +3202,8 @@ img_export_load_env(ImgExportEnv *env,
         env->grey = gwy_inventory_get_item(gradients, "Gray");
         gwy_resource_use(GWY_RESOURCE(env->grey));
     }
+
+    g_string_free(s, TRUE);
 }
 
 static gboolean
