@@ -279,6 +279,10 @@ typedef struct {
     GtkWidget *table_selection;
     GtkWidget *draw_selection;
     GtkWidget *selections;
+    GtkWidget *sel_color_label;
+    GtkWidget *sel_color;
+    GtkWidget *sel_black;
+    GtkWidget *sel_white;
     gint sel_row_start;
     GtkWidget *sel_options_label;
     GSList *sel_options;
@@ -290,6 +294,7 @@ typedef struct {
 typedef void (*SelOptionsFunc)(ImgExportControls *controls);
 typedef void (*SelDrawFunc)(const ImgExportArgs *args,
                             const ImgExportSizes *sizes,
+                            GwySelection *sel,
                             PangoLayout *layout,
                             GString *s,
                             cairo_t *cr);
@@ -381,16 +386,39 @@ static gboolean write_pixbuf_targa  (GdkPixbuf *pixbuf,
                                      const gchar *name,
                                      const gchar *filename,
                                      GError **error);
+static void     draw_sel_axis       (const ImgExportArgs *args,
+                                     const ImgExportSizes *sizes,
+                                     GwySelection *sel,
+                                     PangoLayout *layout,
+                                     GString *s,
+                                     cairo_t *cr);
+static void     draw_sel_ellipse    (const ImgExportArgs *args,
+                                     const ImgExportSizes *sizes,
+                                     GwySelection *sel,
+                                     PangoLayout *layout,
+                                     GString *s,
+                                     cairo_t *cr);
 static void     draw_sel_line       (const ImgExportArgs *args,
                                      const ImgExportSizes *sizes,
+                                     GwySelection *sel,
                                      PangoLayout *layout,
                                      GString *s,
                                      cairo_t *cr);
 static void     draw_sel_point      (const ImgExportArgs *args,
                                      const ImgExportSizes *sizes,
+                                     GwySelection *sel,
                                      PangoLayout *layout,
                                      GString *s,
                                      cairo_t *cr);
+static void     draw_sel_rectangle  (const ImgExportArgs *args,
+                                     const ImgExportSizes *sizes,
+                                     GwySelection *sel,
+                                     PangoLayout *layout,
+                                     GString *s,
+                                     cairo_t *cr);
+
+static const GwyRGBA black = { 0.0, 0.0, 0.0, 1.0 };
+static const GwyRGBA white = { 1.0, 1.0, 1.0, 1.0 };
 
 static ImgExportFormat image_formats[] = {
     {
@@ -466,11 +494,11 @@ static const ImgExportSelectionType known_selections[] =
 {
     {
         "GwySelectionAxis", N_("Horiz./vert. lines"),
-        NULL, NULL,
+        NULL, &draw_sel_axis,
     },
     {
         "GwySelectionEllipse", N_("Ellipses"),
-        NULL, NULL,
+        NULL, &draw_sel_ellipse,
     },
     {
         "GwySelectionLine", N_("Lines"),
@@ -482,7 +510,7 @@ static const ImgExportSelectionType known_selections[] =
     },
     { 
         "GwySelectionRectangle", N_("Rectangles"),
-        NULL, NULL,
+        NULL, &draw_sel_rectangle,
     },
     { 
         "GwySelectionLattice", N_("Lattice"),
@@ -1440,6 +1468,19 @@ draw_data(const ImgExportArgs *args,
         cairo_restore(cr);
         g_object_unref(pixbuf);
     }
+}
+
+static void
+draw_data_frame(G_GNUC_UNUSED const ImgExportArgs *args,
+                const ImgExportSizes *sizes,
+                cairo_t *cr)
+{
+    const ImgExportRect *rect = &sizes->image;
+    gdouble lw = sizes->sizes.line_width;
+    gdouble w, h;
+
+    w = rect->w - 2.0*lw;
+    h = rect->h - 2.0*lw;
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
@@ -1860,6 +1901,36 @@ draw_fmruler(const ImgExportArgs *args,
     g_array_free(mticks, TRUE);
 }
 
+static void
+draw_selection(const ImgExportArgs *args,
+               const ImgExportSizes *sizes,
+               PangoLayout *layout,
+               GString *s,
+               cairo_t *cr)
+{
+    const ImgExportEnv *env = args->env;
+    GwySelection *sel;
+    const gchar *typename;
+    guint i;
+
+    if (!args->draw_selection || !strlen(args->selection))
+        return;
+
+    g_string_printf(s, "/%d/select/%s", env->id, args->selection);
+    sel = GWY_SELECTION(gwy_container_get_object_by_name(env->data, s->str));
+    typename = G_OBJECT_TYPE_NAME(sel);
+    for (i = 0; i < G_N_ELEMENTS(known_selections); i++) {
+        if (gwy_strequal(typename, known_selections[i].typename)) {
+            if (known_selections[i].draw)
+                known_selections[i].draw(args, sizes, sel, layout, s, cr);
+            else
+                g_warning("Can't draw %s yet.", typename);
+            return;
+        }
+    }
+    g_assert_not_reached();
+}
+
 /* We assume cr is already created for the layout with the correct scale(!). */
 static void
 image_draw_cairo(const ImgExportArgs *args,
@@ -1872,14 +1943,14 @@ image_draw_cairo(const ImgExportArgs *args,
     layout = create_layout(args->font, sizes->sizes.font_size, cr);
 
     draw_data(args, sizes, cr);
+    draw_inset(args, sizes, layout, s, cr);
+    draw_selection(args, sizes, layout, s, cr);
+    draw_data_frame(args, sizes, cr);
     draw_hruler(args, sizes, layout, s, cr);
     draw_vruler(args, sizes, layout, s, cr);
-    draw_inset(args, sizes, layout, s, cr);
     draw_fmgrad(args, sizes, cr);
     draw_fmruler(args, sizes, layout, s, cr);
     draw_title(args, sizes, layout, s, cr);
-
-    draw_sel_line(args, sizes, layout, s, cr);
 
     g_object_unref(layout);
     g_string_free(s, TRUE);
@@ -1951,8 +2022,8 @@ preview(ImgExportControls *controls)
     ImgExportSizes *sizes;
     gdouble zoom = args->zoom, zoomcorr;
     gboolean is_vector;
-    guint width, height;
-    GdkPixbuf *pixbuf;
+    guint width, height, iter;
+    GdkPixbuf *pixbuf = NULL;
 
     previewargs = *args;
     controls->args = &previewargs;
@@ -1986,26 +2057,21 @@ preview(ImgExportControls *controls)
     }
     destroy_sizes(sizes);
 
-    pixbuf = render_pixbuf(&previewargs, "png");
-    /* The sizes may be way off when the fonts are huge compared to the
-     * image and so on.  Try to correct that and render again. */
-    width = gdk_pixbuf_get_width(pixbuf);
-    height = gdk_pixbuf_get_height(pixbuf);
-    zoomcorr = (gdouble)PREVIEW_SIZE/MAX(width, height);
-    gwy_debug("zoomcorr %g", zoomcorr);
-    /* This is a big tolerance but we are almost always several percents off so
-     * don't make much fuss about it. */
-    if (fabs(log(zoomcorr)) > 0.08) {
-        g_object_unref(pixbuf);
-        previewargs.zoom *= zoomcorr;
-        scale_sizes(&previewargs.sizes, zoomcorr);
+    for (iter = 0; iter < 4; iter++) {
+        gwy_object_unref(pixbuf);
         pixbuf = render_pixbuf(&previewargs, "png");
-#ifdef DEBUG
+        /* The sizes may be way off when the fonts are huge compared to the
+         * image and so on.  Try to correct that and render again. */
         width = gdk_pixbuf_get_width(pixbuf);
         height = gdk_pixbuf_get_height(pixbuf);
         zoomcorr = (gdouble)PREVIEW_SIZE/MAX(width, height);
-        gwy_debug("improved zoomcorr %g", zoomcorr);
-#endif
+        gwy_debug("zoomcorr#%u %g", iter, zoomcorr);
+        /* This is a big tolerance but we are almost always several percents
+         * off so don't make much fuss about it. */
+        if (fabs(log(zoomcorr)) < 0.05)
+            break;
+
+        previewargs.zoom *= pow(zoomcorr, 0.9);
     }
 
     gtk_image_set_from_pixbuf(GTK_IMAGE(controls->preview), pixbuf);
@@ -2230,7 +2296,6 @@ update_selected_font(ImgExportControls *controls)
     gchar *full_font;
     gdouble font_size = args->sizes.font_size;
 
-    /* TODO: reflect the scale_font setting */
     full_font = g_strdup_printf("%s %g", controls->args->font, font_size);
     gtk_font_button_set_font_name(GTK_FONT_BUTTON(controls->font), full_font);
     g_free(full_font);
@@ -2491,46 +2556,57 @@ xytype_changed(G_GNUC_UNUSED GtkToggleButton *toggle,
 }
 
 static void
-select_inset_color(ImgExportControls *controls,
-                   GwyColorButton *button)
+select_colour(ImgExportControls *controls,
+              GwyColorButton *button,
+              const gchar *title,
+              GwyRGBA *target)
 {
+    GtkColorSelection *colorsel;
     GtkWindow *parent;
     GtkWidget *dialog, *selector;
     GdkColor gdkcolor;
     gint response;
+    guint alpha16;
 
-    gwy_rgba_to_gdk_color(&controls->args->inset_color, &gdkcolor);
+    gwy_rgba_to_gdk_color(target, &gdkcolor);
+    alpha16 = gwy_rgba_to_gdk_alpha(target);
 
-    dialog = gtk_color_selection_dialog_new(_("Change Inset Color"));
+    dialog = gtk_color_selection_dialog_new(title);
     selector = GTK_COLOR_SELECTION_DIALOG(dialog)->colorsel;
-    gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(selector),
-                                          &gdkcolor);
-    gtk_color_selection_set_has_palette(GTK_COLOR_SELECTION(selector), FALSE);
-    gtk_color_selection_set_has_opacity_control(GTK_COLOR_SELECTION(selector),
-                                                FALSE);
+    colorsel = GTK_COLOR_SELECTION(selector);
+    gtk_color_selection_set_current_color(colorsel, &gdkcolor);
+    gtk_color_selection_set_current_alpha(colorsel, alpha16);
+    gtk_color_selection_set_has_palette(colorsel, FALSE);
+    gtk_color_selection_set_has_opacity_control(colorsel, TRUE);
 
     parent = GTK_WINDOW(controls->dialog);
     gtk_window_set_transient_for(GTK_WINDOW(dialog), parent);
     gtk_window_set_modal(parent, FALSE);
     response = gtk_dialog_run(GTK_DIALOG(dialog));
-    gtk_color_selection_get_current_color(GTK_COLOR_SELECTION(selector),
-                                          &gdkcolor);
+    gtk_color_selection_get_current_color(colorsel, &gdkcolor);
+    alpha16 = gtk_color_selection_get_current_alpha(colorsel);
     gtk_widget_destroy(dialog);
     gtk_window_set_modal(parent, TRUE);
 
     if (response != GTK_RESPONSE_OK)
         return;
 
-    gwy_rgba_from_gdk_color(&controls->args->inset_color, &gdkcolor);
-    gwy_color_button_set_color(button, &controls->args->inset_color);
+    gwy_rgba_from_gdk_color_and_alpha(target, &gdkcolor, alpha16);
+    gwy_color_button_set_color(button, target);
     update_preview(controls);
+}
+
+static void
+select_inset_color(ImgExportControls *controls,
+                   GwyColorButton *button)
+{
+    select_colour(controls, button, _("Change Inset Color"),
+                  &controls->args->inset_color);
 }
 
 static void
 inset_color_black(ImgExportControls *controls)
 {
-    static const GwyRGBA black = { 0.0, 0.0, 0.0, 1.0 };
-
     controls->args->inset_color = black;
     gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->inset_color),
                                &controls->args->inset_color);
@@ -2540,8 +2616,6 @@ inset_color_black(ImgExportControls *controls)
 static void
 inset_color_white(ImgExportControls *controls)
 {
-    static const GwyRGBA white = { 1.0, 1.0, 1.0, 1.0 };
-
     controls->args->inset_color = white;
     gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->inset_color),
                                &controls->args->inset_color);
@@ -2673,7 +2747,7 @@ static void
 create_lateral_controls(ImgExportControls *controls)
 {
     ImgExportArgs *args = controls->args;
-    GtkWidget *table, *label;
+    GtkWidget *table, *label, *hbox;
     gint row = 0;
 
     table = controls->table_lateral = gtk_table_new(11, 4, FALSE);
@@ -2711,26 +2785,26 @@ create_lateral_controls(ImgExportControls *controls)
     gtk_table_attach(GTK_TABLE(table), controls->inset_color_label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
+    hbox = gtk_hbox_new(TRUE, 4);
+    gtk_table_attach(GTK_TABLE(table), hbox,
+                     1, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
     controls->inset_color = gwy_color_button_new_with_color(&args->inset_color);
     gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls->inset_color),
                                    FALSE);
-    gtk_table_attach(GTK_TABLE(table), controls->inset_color,
-                     1, 2, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), controls->inset_color, TRUE, TRUE, 0);
     g_signal_connect_swapped(controls->inset_color, "clicked",
                              G_CALLBACK(select_inset_color), controls);
 
     controls->inset_black = gtk_button_new_with_mnemonic(_("_Black"));
-    gtk_table_attach(GTK_TABLE(table), controls->inset_black,
-                     2, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), controls->inset_black, TRUE, TRUE, 0);
     g_signal_connect_swapped(controls->inset_black, "clicked",
                              G_CALLBACK(inset_color_black), controls);
 
     controls->inset_white = gtk_button_new_with_mnemonic(_("_White"));
-    gtk_table_attach(GTK_TABLE(table), controls->inset_white,
-                     3, 4, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), controls->inset_white, TRUE, TRUE, 0);
     g_signal_connect_swapped(controls->inset_white, "clicked",
                              G_CALLBACK(inset_color_white), controls);
-    row++;
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
@@ -3016,6 +3090,10 @@ update_selection_sensitivity(ImgExportControls *controls)
 
     gtk_widget_set_sensitive(controls->selections, sens);
     gtk_widget_set_sensitive(controls->sel_options_label, sens);
+    gtk_widget_set_sensitive(controls->sel_color_label, sens);
+    gtk_widget_set_sensitive(controls->sel_color, sens);
+    gtk_widget_set_sensitive(controls->sel_black, sens);
+    gtk_widget_set_sensitive(controls->sel_white, sens);
     for (l = controls->sel_options; l; l = g_slist_next(l))
         gtk_widget_set_sensitive(GTK_WIDGET(l->data), sens);
 }
@@ -3118,14 +3196,42 @@ selection_selected(ImgExportControls *controls,
     GQuark quark;
     guint id;
 
-    if (!gtk_tree_selection_get_selected(selection, &model, &iter)) {
-        g_return_if_reached();
+    if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
+        gtk_tree_model_get(model, &iter, 0, &id, -1);
+        g_free(args->selection);
+        quark = g_array_index(selections, GQuark, id);
+        args->selection = g_strdup(g_quark_to_string(quark));
     }
+    else {
+        g_free(args->selection);
+        args->selection = g_strdup("");
+    }
+    update_preview(controls);
+}
 
-    gtk_tree_model_get(model, &iter, 0, &id, -1);
-    g_free(args->selection);
-    quark = g_array_index(selections, GQuark, id);
-    args->selection = g_strdup(g_quark_to_string(quark));
+static void
+select_sel_color(ImgExportControls *controls,
+                 GwyColorButton *button)
+{
+    select_colour(controls, button, _("Change Selection Color"),
+                  &controls->args->sel_color);
+}
+
+static void
+sel_color_black(ImgExportControls *controls)
+{
+    controls->args->sel_color = black;
+    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->sel_color),
+                               &controls->args->sel_color);
+    update_preview(controls);
+}
+
+static void
+sel_color_white(ImgExportControls *controls)
+{
+    controls->args->sel_color = white;
+    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->sel_color),
+                               &controls->args->sel_color);
     update_preview(controls);
 }
 
@@ -3134,7 +3240,8 @@ create_selection_controls(ImgExportControls *controls)
 {
     ImgExportArgs *args = controls->args;
     ImgExportEnv *env = args->env;
-    GtkWidget *table, *check;
+    GArray *selections = env->selections;
+    GtkWidget *table, *check, *hbox;
     GtkTreeViewColumn *column;
     GtkCellRenderer *renderer;
     GwyNullStore *store;
@@ -3142,6 +3249,7 @@ create_selection_controls(ImgExportControls *controls)
     GtkTreeSelection *treesel;
     GtkTreeIter iter;
     gint row = 0;
+    guint i;
 
     table = controls->table_selection = gtk_table_new(10, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -3158,7 +3266,7 @@ create_selection_controls(ImgExportControls *controls)
                              G_CALLBACK(draw_selection_changed), controls);
     row++;
 
-    store = gwy_null_store_new(env->selections->len);
+    store = gwy_null_store_new(selections->len);
 
     controls->selections = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
     treeview = GTK_TREE_VIEW(controls->selections);
@@ -3168,12 +3276,20 @@ create_selection_controls(ImgExportControls *controls)
 
     treesel = gtk_tree_view_get_selection(treeview);
     gtk_tree_selection_set_mode(treesel, GTK_SELECTION_BROWSE);
-    /* TODO: Set initial selection according to args->selection.  Handle
-     * empty treeview! */
-    gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter);
-    gtk_tree_selection_select_iter(treesel, &iter);
-    g_signal_connect(treesel, "changed",
-                     G_CALLBACK(selection_selected), controls);
+    for (i = 0; i < selections->len; i++) {
+        GQuark quark = g_array_index(selections, GQuark, i);
+        if (gwy_strequal(args->selection, g_quark_to_string(quark))) {
+            gtk_tree_model_iter_nth_child(GTK_TREE_MODEL(store), &iter, NULL,
+                                          i);
+            gtk_tree_selection_select_iter(treesel, &iter);
+            break;
+        }
+    }
+    if (i == selections->len) {
+        g_assert(selections->len == 0);
+    }
+    g_signal_connect_swapped(treesel, "changed",
+                             G_CALLBACK(selection_selected), controls);
 
     column = gtk_tree_view_column_new();
     gtk_tree_view_column_set_title(column, _("Name"));
@@ -3198,6 +3314,33 @@ create_selection_controls(ImgExportControls *controls)
     gtk_tree_view_column_pack_start(column, renderer, TRUE);
     gtk_tree_view_column_set_cell_data_func(column, renderer,
                                             render_objects, controls, NULL);
+
+
+    controls->sel_color_label = gtk_label_new(_("Color:"));
+    gtk_misc_set_alignment(GTK_MISC(controls->sel_color_label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls->sel_color_label,
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    hbox = gtk_hbox_new(TRUE, 4);
+    gtk_table_attach(GTK_TABLE(table), hbox,
+                     1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls->sel_color = gwy_color_button_new_with_color(&args->sel_color);
+    gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls->sel_color),
+                                   FALSE);
+    gtk_box_pack_start(GTK_BOX(hbox), controls->sel_color, TRUE, TRUE, 0);
+    g_signal_connect_swapped(controls->sel_color, "clicked",
+                             G_CALLBACK(select_sel_color), controls);
+
+    controls->sel_black = gtk_button_new_with_mnemonic(_("_Black"));
+    gtk_box_pack_start(GTK_BOX(hbox), controls->sel_black, TRUE, TRUE, 0);
+    g_signal_connect_swapped(controls->sel_black, "clicked",
+                             G_CALLBACK(sel_color_black), controls);
+
+    controls->sel_white = gtk_button_new_with_mnemonic(_("_White"));
+    gtk_box_pack_start(GTK_BOX(hbox), controls->sel_white, TRUE, TRUE, 0);
+    g_signal_connect_swapped(controls->sel_white, "clicked",
+                             G_CALLBACK(sel_color_white), controls);
+    row++;
 
     controls->sel_options_label = gwy_label_new_header(_("Options"));
     gtk_table_attach(GTK_TABLE(table), controls->sel_options_label,
@@ -3264,10 +3407,11 @@ reset_to_defaults(ImgExportControls *controls)
         gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zoom),
                                  defaults->zoom);
 
-    args->sizes.font_size = defaults->sizes.font_size;
     g_free(args->font);
     args->font = g_strdup(defaults->font);
     update_selected_font(controls);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->font_size),
+                             defaults->sizes.font_size);
 
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->line_width),
                              defaults->sizes.line_width);
@@ -3306,6 +3450,11 @@ reset_to_defaults(ImgExportControls *controls)
                              defaults->title_gap);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->units_in_title),
                                  defaults->units_in_title);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->draw_selection),
+                                 defaults->draw_selection);
+    args->sel_color = defaults->sel_color;
+    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->sel_color),
+                               &args->sel_color);
 }
 
 static gboolean
@@ -3439,8 +3588,12 @@ add_selection(gpointer hkey, gpointer hvalue, gpointer data)
 
     typename = G_OBJECT_TYPE_NAME(sel);
     for (i = 0; i < G_N_ELEMENTS(known_selections); i++) {
-        if (gwy_strequal(typename, known_selections[i].typename))
-            break;
+        if (gwy_strequal(typename, known_selections[i].typename)) {
+            if (known_selections[i].draw)
+                break;
+            gwy_debug("we know %s but don't have a drawing func for it",
+                      typename);
+        }
     }
     if (i == G_N_ELEMENTS(known_selections)) {
         gwy_debug("ignoring unknown selection %s (%s)", s, typename);
@@ -3588,25 +3741,26 @@ img_export_export(GwyContainer *data,
         args.inset_length = scalebar_auto_length(env.dfield, NULL);
     }
 
-    if (!env.selections->len)
-        args.draw_selection = FALSE;
-    else {
-        /* FIXME: We need to find the selection again to select it at the
-         * begining.  Consolidate. */
-        for (i = 0; i < env.selections->len; i++) {
-            GQuark quark = g_array_index(env.selections, GQuark, i);
-            if (gwy_strequal(args.selection, g_quark_to_string(quark)))
-                break;
-        }
-        if (i == env.selections->len) {
+    gwy_debug("args.selection %s", args.selection);
+    for (i = 0; i < env.selections->len; i++) {
+        GQuark quark = g_array_index(env.selections, GQuark, i);
+        if (gwy_strequal(args.selection, g_quark_to_string(quark)))
+            break;
+    }
+    if (i == env.selections->len) {
+        if (env.selections->len) {
             GQuark quark = g_array_index(env.selections, GQuark, 0);
+            gwy_debug("not found, trying %s", g_quark_to_string(quark));
             g_free(args.selection);
             args.selection = g_strdup(g_quark_to_string(quark));
         }
-
-        /* XXX XXX XXX XXX */
-        args.selection = g_strdup("line");
+        else {
+            gwy_debug("not found, trying NONE");
+            g_free(args.selection);
+            args.selection = g_strdup("");
+        }
     }
+    gwy_debug("feasible selection %s", args.selection);
 
     if (mode == GWY_RUN_INTERACTIVE)
         ok = img_export_dialog(&args);
@@ -4404,46 +4558,133 @@ write_pixbuf_targa(GdkPixbuf *pixbuf,
 }
 
 static void
-draw_sel_line(const ImgExportArgs *args,
-              const ImgExportSizes *sizes,
-              G_GNUC_UNUSED PangoLayout *layout,
-              GString *s,
-              cairo_t *cr)
+sel_setup_cairo(const ImgExportArgs *args,
+                const ImgExportSizes *sizes,
+                gdouble *qx, gdouble *qy,
+                cairo_t *cr)
 {
+    const ImgExportRect *rect = &sizes->image;
+    gdouble lw = sizes->sizes.line_width;
+    const GwyRGBA *colour = &args->sel_color;
     const ImgExportEnv *env = args->env;
     GwyDataField *dfield = env->dfield;
     gdouble xreal = gwy_data_field_get_xreal(dfield);
     gdouble yreal = gwy_data_field_get_yreal(dfield);
-    const ImgExportRect *rect = &sizes->image;
-    const GwyRGBA *colour = &args->sel_color;
-    gdouble lw = sizes->sizes.line_width;
-    GwySelection *sel;
-    gdouble w, h, xf, yf, xt, yt, xy[4];
-    guint n, i;
+    gdouble w, h;
 
     w = rect->w - 2.0*lw;
     h = rect->h - 2.0*lw;
 
-    g_string_printf(s, "/%d/select/%s", env->id, args->selection);
-    gwy_debug("key %s", s->str);
-    sel = GWY_SELECTION(gwy_container_get_object_by_name(env->data, s->str));
-    g_return_if_fail(sel);
-    g_return_if_fail(g_type_is_a(G_OBJECT_TYPE(sel),
-                                 g_type_from_name("GwySelectionLine")));
-    n = gwy_selection_get_data(sel, NULL);
-
-    cairo_save(cr);
     cairo_translate(cr, rect->x + lw, rect->y + lw);
     cairo_rectangle(cr, 0.0, 0.0, w, h);
     cairo_clip(cr);
     cairo_set_source_rgba(cr, colour->r, colour->g, colour->b, colour->a);
     cairo_set_line_width(cr, lw);
+
+    *qx = w/xreal;
+    *qy = h/yreal;
+}
+
+/* Borrowed from libgwyui4 */
+static void
+draw_ellipse(cairo_t *cr,
+             gdouble x, gdouble y, gdouble xr, gdouble yr)
+{
+    const gdouble q = 0.552;
+
+    cairo_move_to(cr, x + xr, y);
+    cairo_curve_to(cr, x + xr, y + q*yr, x + q*xr, y + yr, x, y + yr);
+    cairo_curve_to(cr, x - q*xr, y + yr, x - xr, y + q*yr, x - xr, y);
+    cairo_curve_to(cr, x - xr, y - q*yr, x - q*xr, y - yr, x, y - yr);
+    cairo_curve_to(cr, x + q*xr, y - yr, x + xr, y - q*yr, x + xr, y);
+    cairo_close_path(cr);
+}
+
+static void
+draw_sel_axis(const ImgExportArgs *args,
+              const ImgExportSizes *sizes,
+              GwySelection *sel,
+              G_GNUC_UNUSED PangoLayout *layout,
+              G_GNUC_UNUSED GString *s,
+              cairo_t *cr)
+{
+    gdouble lw = sizes->sizes.line_width;
+    gdouble qx, qy, w, h, p, xy[1];
+    GwyOrientation orientation;
+    guint n, i;
+
+    w = sizes->image.w - 2.0*lw;
+    h = sizes->image.h - 2.0*lw;
+
+    cairo_save(cr);
+    sel_setup_cairo(args, sizes, &qx, &qy, cr);
+    g_object_get(sel, "orientation", &orientation, NULL);
+    n = gwy_selection_get_data(sel, NULL);
     for (i = 0; i < n; i++) {
         gwy_selection_get_object(sel, i, xy);
-        xf = xy[0] * w/xreal;
-        yf = xy[1] * h/yreal;
-        xt = xy[2] * w/xreal;
-        yt = xy[3] * h/yreal;
+        if (orientation == GWY_ORIENTATION_HORIZONTAL) {
+            p = qy*xy[0];
+            cairo_move_to(cr, 0.0, p);
+            cairo_line_to(cr, w, p);
+        }
+        else {
+            p = qx*xy[0];
+            cairo_move_to(cr, p, 0.0);
+            cairo_line_to(cr, p, h);
+        }
+        cairo_stroke(cr);
+    }
+    cairo_restore(cr);
+}
+
+static void
+draw_sel_ellipse(const ImgExportArgs *args,
+                 const ImgExportSizes *sizes,
+                 GwySelection *sel,
+                 G_GNUC_UNUSED PangoLayout *layout,
+                 G_GNUC_UNUSED GString *s,
+                 cairo_t *cr)
+{
+    gdouble qx, qy, xf, yf, xt, yt, xy[4];
+    guint n, i;
+
+    cairo_save(cr);
+    sel_setup_cairo(args, sizes, &qx, &qy, cr);
+    n = gwy_selection_get_data(sel, NULL);
+    for (i = 0; i < n; i++) {
+        gwy_selection_get_object(sel, i, xy);
+        xf = qx*xy[0];
+        yf = qy*xy[1];
+        xt = qx*xy[2];
+        yt = qy*xy[3];
+        draw_ellipse(cr,
+                     0.5*(xf + xt), 0.5*(yf + yt),
+                     0.5*(xt - xf), 0.5*(yt - yf));
+        cairo_stroke(cr);
+    }
+    cairo_restore(cr);
+}
+
+static void
+draw_sel_line(const ImgExportArgs *args,
+              const ImgExportSizes *sizes,
+              GwySelection *sel,
+              G_GNUC_UNUSED PangoLayout *layout,
+              G_GNUC_UNUSED GString *s,
+              cairo_t *cr)
+{
+    gdouble qx, qy, xf, yf, xt, yt, xy[4];
+    guint n, i;
+
+    cairo_save(cr);
+    sel_setup_cairo(args, sizes, &qx, &qy, cr);
+    n = gwy_selection_get_data(sel, NULL);
+    for (i = 0; i < n; i++) {
+        gwy_selection_get_object(sel, i, xy);
+        xf = qx*xy[0];
+        yf = qy*xy[1];
+        xt = qx*xy[2];
+        yt = qy*xy[3];
         cairo_move_to(cr, xf, yf);
         cairo_line_to(cr, xt, yt);
         cairo_stroke(cr);
@@ -4454,47 +4695,52 @@ draw_sel_line(const ImgExportArgs *args,
 static void
 draw_sel_point(const ImgExportArgs *args,
                const ImgExportSizes *sizes,
+               GwySelection *sel,
                G_GNUC_UNUSED PangoLayout *layout,
-               GString *s,
+               G_GNUC_UNUSED GString *s,
                cairo_t *cr)
 {
-    const ImgExportEnv *env = args->env;
-    GwyDataField *dfield = env->dfield;
-    gdouble xreal = gwy_data_field_get_xreal(dfield);
-    gdouble yreal = gwy_data_field_get_yreal(dfield);
-    const ImgExportRect *rect = &sizes->image;
-    const GwyRGBA *colour = &args->sel_color;
-    gdouble lw = sizes->sizes.line_width;
     gdouble tl = G_SQRT2*sizes->sizes.tick_length;
-    GwySelection *sel;
-    gdouble w, h, x, y, xy[2];
+    gdouble qx, qy, x, y, xy[2];
     guint n, i;
 
-    w = rect->w - 2.0*lw;
-    h = rect->h - 2.0*lw;
-
-    g_string_printf(s, "/%d/select/%s", env->id, args->selection);
-    gwy_debug("key %s", s->str);
-    sel = GWY_SELECTION(gwy_container_get_object_by_name(env->data, s->str));
-    g_return_if_fail(sel);
-    g_return_if_fail(g_type_is_a(G_OBJECT_TYPE(sel),
-                                 g_type_from_name("GwySelectionPoint")));
-    n = gwy_selection_get_data(sel, NULL);
-
     cairo_save(cr);
-    cairo_translate(cr, rect->x + lw, rect->y + lw);
-    cairo_rectangle(cr, 0.0, 0.0, w, h);
-    cairo_clip(cr);
-    cairo_set_source_rgba(cr, colour->r, colour->g, colour->b, colour->a);
-    cairo_set_line_width(cr, lw);
+    sel_setup_cairo(args, sizes, &qx, &qy, cr);
+    n = gwy_selection_get_data(sel, NULL);
     for (i = 0; i < n; i++) {
         gwy_selection_get_object(sel, i, xy);
-        x = xy[0] * w/xreal;
-        y = xy[1] * h/yreal;
+        x = qx*xy[0];
+        y = qy*xy[1];
         cairo_move_to(cr, x - 0.5*tl, y);
         cairo_rel_line_to(cr, tl, 0.0);
         cairo_move_to(cr, x, y - 0.5*tl);
         cairo_rel_line_to(cr, 0.0, tl);
+        cairo_stroke(cr);
+    }
+    cairo_restore(cr);
+}
+
+static void
+draw_sel_rectangle(const ImgExportArgs *args,
+                   const ImgExportSizes *sizes,
+                   GwySelection *sel,
+                   G_GNUC_UNUSED PangoLayout *layout,
+                   G_GNUC_UNUSED GString *s,
+                   cairo_t *cr)
+{
+    gdouble qx, qy, xf, yf, xt, yt, xy[4];
+    guint n, i;
+
+    cairo_save(cr);
+    sel_setup_cairo(args, sizes, &qx, &qy, cr);
+    n = gwy_selection_get_data(sel, NULL);
+    for (i = 0; i < n; i++) {
+        gwy_selection_get_object(sel, i, xy);
+        xf = qx*xy[0];
+        yf = qy*xy[1];
+        xt = qx*xy[2];
+        yt = qy*xy[3];
+        cairo_rectangle(cr, xf, yf, xt - xf, yt - yf);
         cairo_stroke(cr);
     }
     cairo_restore(cr);
