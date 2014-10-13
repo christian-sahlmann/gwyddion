@@ -2020,7 +2020,7 @@ preview(ImgExportControls *controls)
     ImgExportArgs *args = controls->args;
     ImgExportArgs previewargs;
     ImgExportSizes *sizes;
-    gdouble zoom = args->zoom, zoomcorr;
+    gdouble zoomcorr;
     gboolean is_vector;
     guint width, height, iter;
     GdkPixbuf *pixbuf = NULL;
@@ -2044,18 +2044,14 @@ preview(ImgExportControls *controls)
     /* Make all things in the preview scale. */
     previewargs.scale_font = TRUE;
     zoomcorr = PREVIEW_SIZE/MAX(sizes->canvas.w, sizes->canvas.h);
+    destroy_sizes(sizes);
     previewargs.zoom *= zoomcorr;
-    if (is_vector) {
-        if (args->scale_font)
-            scale_sizes(&previewargs.sizes, zoom/previewargs.zoom);
-        else
+    if (!args->scale_font) {
+        if (is_vector)
             scale_sizes(&previewargs.sizes, 1.0/mm2pt/previewargs.pxwidth);
-    }
-    else {
-        if (!args->scale_font)
+        else
             scale_sizes(&previewargs.sizes, 1.0/args->zoom);
     }
-    destroy_sizes(sizes);
 
     for (iter = 0; iter < 4; iter++) {
         gwy_object_unref(pixbuf);
@@ -2071,7 +2067,7 @@ preview(ImgExportControls *controls)
         if (fabs(log(zoomcorr)) < 0.05)
             break;
 
-        previewargs.zoom *= pow(zoomcorr, 0.9);
+        previewargs.zoom *= pow(zoomcorr, 0.92);
     }
 
     gtk_image_set_from_pixbuf(GTK_IMAGE(controls->preview), pixbuf);
