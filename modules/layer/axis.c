@@ -273,9 +273,9 @@ gwy_selection_axis_crop_object(GwySelection *selection,
 
     gwy_selection_get_object(selection, i, xy);
     if (selection_axis->orientation == GWY_ORIENTATION_VERTICAL)
-        return xy[0] >= minmax[1] && xy[0] <= minmax[3];
-    else
         return xy[0] >= minmax[0] && xy[0] <= minmax[2];
+    else
+        return xy[0] >= minmax[1] && xy[0] <= minmax[3];
 }
 
 static void
