@@ -194,6 +194,7 @@ typedef struct {
     guint xres;
     guint yres;            /* Already after realsquare resampling! */
     gboolean realsquare;
+    GQuark vlayer_sel_key;
     gboolean sel_line_have_layer;
     gboolean sel_point_have_layer;
     gdouble sel_line_thickness;
@@ -3765,6 +3766,8 @@ img_export_load_env(ImgExportEnv *env,
         && gwy_container_gis_object_by_name(data, key, &sel)) {
         const gchar *typename = G_OBJECT_TYPE_NAME(sel);
 
+        env->vlayer_sel_key = g_quark_from_string(key + s->len);
+
         if (gwy_strequal(typename, "GwySelectionLine")) {
             gint lt;
 
@@ -3817,6 +3820,14 @@ img_export_export(GwyContainer *data,
         args.inset_length = scalebar_auto_length(env.dfield, NULL);
     }
 
+    /* When run interactively, try to show the same selection that is currently
+     * shown on the data, if any.  But in non-interactive usage strive for
+     * predictable behaviour. */
+    if (mode == GWY_RUN_INTERACTIVE && env.vlayer_sel_key) {
+        g_free(args.selection);
+        args.selection = g_strdup(g_quark_to_string(env.vlayer_sel_key));
+    }
+
     gwy_debug("args.selection %s", args.selection);
     for (i = 0; i < env.selections->len; i++) {
         GQuark quark = g_array_index(env.selections, GQuark, i);
@@ -3824,8 +3835,6 @@ img_export_export(GwyContainer *data,
             break;
     }
     if (i == env.selections->len) {
-        /* Make non-interactive behaviour predictable and auto-set things when
-         * run interactively. */
         if (env.selections->len && mode == GWY_RUN_INTERACTIVE) {
             GQuark quark = g_array_index(env.selections, GQuark, 0);
             gwy_debug("not found, trying %s", g_quark_to_string(quark));
@@ -3841,8 +3850,6 @@ img_export_export(GwyContainer *data,
     gwy_debug("feasible selection %s", args.selection);
 
     if (mode == GWY_RUN_INTERACTIVE) {
-        /* Make non-interactive behaviour predictable and only auto-set things
-         * when run interactively. */
         if (env.sel_line_have_layer) {
             args.sel_line_thickness = env.sel_line_thickness;
         }
@@ -4757,13 +4764,17 @@ static void
 draw_sel_line(const ImgExportArgs *args,
               const ImgExportSizes *sizes,
               GwySelection *sel,
-              G_GNUC_UNUSED PangoLayout *layout,
-              G_GNUC_UNUSED GString *s,
+              PangoLayout *layout,
+              GString *s,
               cairo_t *cr)
 {
     gdouble lw = sizes->sizes.line_width;
-    gdouble qx, qy, xf, yf, xt, yt, xy[4];
+    gdouble lt = args->sel_line_thickness;
+    gdouble px, py, qx, qy, xf, yf, xt, yt, xy[4];
     guint n, i;
+
+    px = sizes->image.w/gwy_data_field_get_xres(args->env->dfield);
+    py = sizes->image.h/gwy_data_field_get_yres(args->env->dfield);
 
     cairo_save(cr);
     sel_setup_cairo(args, sizes, &qx, &qy, cr);
@@ -4779,12 +4790,10 @@ draw_sel_line(const ImgExportArgs *args,
 
         gwy_debug("sel_line_thickness %g", args->sel_line_thickness);
         if (args->sel_line_thickness > 0.0) {
-            gdouble lt = args->sel_line_thickness;
             gdouble xd = yt - yf, yd = xf - xt;
             gdouble h = sqrt(xd*xd + yd*yd);
-            /* TODO: Actually convert to data pixels. */
-            xd *= lt/h;
-            yd *= lt/h;
+            xd *= lt*px/h;
+            yd *= lt*py/h;
 
             cairo_move_to(cr, xf - 0.5*xd, yf - 0.5*yd);
             cairo_rel_line_to(cr, xd, yd);
@@ -4829,8 +4838,12 @@ draw_sel_point(const ImgExportArgs *args,
 {
     gdouble tl = G_SQRT2*sizes->sizes.tick_length;
     gdouble lw = sizes->sizes.line_width;
-    gdouble qx, qy, x, y, xy[2];
+    gdouble pr = args->sel_point_radius;
+    gdouble px, py, qx, qy, x, y, xy[2];
     guint n, i;
+
+    px = sizes->image.w/gwy_data_field_get_xres(args->env->dfield);
+    py = sizes->image.h/gwy_data_field_get_yres(args->env->dfield);
 
     cairo_save(cr);
     sel_setup_cairo(args, sizes, &qx, &qy, cr);
@@ -4844,6 +4857,12 @@ draw_sel_point(const ImgExportArgs *args,
         cairo_move_to(cr, x, y - 0.5*tl);
         cairo_rel_line_to(cr, 0.0, tl);
         cairo_stroke(cr);
+
+        if (args->sel_point_radius > 0.0) {
+            gdouble xr = pr*px, yr = pr*py;
+            draw_ellipse(cr, x, y, xr, yr);
+            cairo_stroke(cr);
+        }
 
         if (args->sel_number_objects) {
             PangoRectangle logical;
@@ -4896,8 +4915,29 @@ static void
 sel_line_thickness_changed(ImgExportControls *controls,
                            GtkAdjustment *adj)
 {
-    controls->args->sel_line_thickness = gwy_adjustment_get_int(adj);
+    controls->args->sel_line_thickness = gtk_adjustment_get_value(adj);
     update_preview(controls);
+}
+
+static void
+sel_point_radius_changed(ImgExportControls *controls,
+                         GtkAdjustment *adj)
+{
+    controls->args->sel_point_radius = gtk_adjustment_get_value(adj);
+    update_preview(controls);
+}
+
+static GSList*
+add_table_row_to_list(GtkWidget *table, gint row, guint ncols, GSList *list)
+{
+    GtkWidget *w;
+    guint i;
+
+    for (i = 0; i < ncols; i++) {
+        w = gwy_table_get_child_widget(table, row, i);
+        list = g_slist_prepend(list, w);
+    }
+    return list;
 }
 
 static void
@@ -4922,6 +4962,8 @@ options_sel_line(ImgExportControls *controls)
     adj = gtk_adjustment_new(args->sel_line_thickness, 0.0, 32.0, 1.0, 5.0, 0);
     gwy_table_attach_spinbutton(GTK_WIDGET(table), row,
                                 _("_End marker length:"), "px", adj);
+    controls->sel_options = add_table_row_to_list(GTK_WIDGET(table), row, 3,
+                                                  controls->sel_options);
     g_signal_connect_swapped(adj, "value-changed",
                              G_CALLBACK(sel_line_thickness_changed), controls);
     row++;
@@ -4933,6 +4975,7 @@ options_sel_point(ImgExportControls *controls)
     GtkTable *table = GTK_TABLE(controls->table_selection);
     ImgExportArgs *args = controls->args;
     GtkWidget *check;
+    GtkObject *adj;
     gint row = controls->sel_row_start;
 
     check = gtk_check_button_new_with_mnemonic(_("Draw _numbers"));
@@ -4943,6 +4986,15 @@ options_sel_point(ImgExportControls *controls)
     gtk_table_attach(table, check, 0, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls->sel_options = g_slist_prepend(controls->sel_options, check);
+    row++;
+
+    adj = gtk_adjustment_new(args->sel_point_radius, 0.0, 1024.0, 1.0, 10.0, 0);
+    gwy_table_attach_spinbutton(GTK_WIDGET(table), row,
+                                _("Marker _radius:"), "px", adj);
+    controls->sel_options = add_table_row_to_list(GTK_WIDGET(table), row, 3,
+                                                  controls->sel_options);
+    g_signal_connect_swapped(adj, "value-changed",
+                             G_CALLBACK(sel_point_radius_changed), controls);
     row++;
 }
 
