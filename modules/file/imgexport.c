@@ -194,6 +194,10 @@ typedef struct {
     guint xres;
     guint yres;            /* Already after realsquare resampling! */
     gboolean realsquare;
+    gboolean sel_line_have_layer;
+    gboolean sel_point_have_layer;
+    gdouble sel_line_thickness;
+    gdouble sel_point_radius;
 } ImgExportEnv;
 
 typedef struct {
@@ -223,6 +227,11 @@ typedef struct {
     gboolean units_in_title;
     gchar *selection;
     GwyRGBA sel_color;
+    /* Selection-specific options.  If we find a layer displaying the
+     * selection we try to oppostuntistically init them from the layer.  */
+    gboolean sel_number_objects;
+    gdouble sel_line_thickness;
+    gdouble sel_point_radius;
 } ImgExportArgs;
 
 typedef struct {
@@ -416,6 +425,8 @@ static void     draw_sel_rectangle  (const ImgExportArgs *args,
                                      PangoLayout *layout,
                                      GString *s,
                                      cairo_t *cr);
+static void     options_sel_line    (ImgExportControls *controls);
+static void     options_sel_point   (ImgExportControls *controls);
 
 static const GwyRGBA black = { 0.0, 0.0, 0.0, 1.0 };
 static const GwyRGBA white = { 1.0, 1.0, 1.0, 1.0 };
@@ -502,11 +513,11 @@ static const ImgExportSelectionType known_selections[] =
     },
     {
         "GwySelectionLine", N_("Lines"),
-        NULL, &draw_sel_line,
+        &options_sel_line, &draw_sel_line,
     },
     { 
         "GwySelectionPoint", N_("Points"),
-        NULL, &draw_sel_point,
+        &options_sel_point, &draw_sel_point,
     },
     { 
         "GwySelectionRectangle", N_("Rectangles"),
@@ -530,6 +541,7 @@ static const ImgExportArgs img_export_defaults = {
     IMGEXPORT_INTERPOLATION_PIXELATE,
     IMGEXPORT_TITLE_NONE, FALSE,
     "line", { 1.0, 1.0, 1.0, 1.0 },
+    TRUE, 0.0, 0.0,
 };
 
 static GwyModuleInfo module_info = {
@@ -1901,6 +1913,40 @@ draw_fmruler(const ImgExportArgs *args,
     g_array_free(mticks, TRUE);
 }
 
+static const ImgExportSelectionType*
+find_selection_type(const ImgExportArgs *args,
+                    const gchar *name,
+                    GwySelection **psel)
+{
+    const ImgExportEnv *env = args->env;
+    const gchar *typename;
+    GwySelection *sel;
+    gchar *key;
+    guint i;
+
+    if (psel)
+        *psel = NULL;
+
+    if (!strlen(name))
+        return NULL;
+
+    key = g_strdup_printf("/%d/select/%s", env->id, name);
+    sel = GWY_SELECTION(gwy_container_get_object_by_name(env->data, key));
+    g_free(key);
+
+    if (psel)
+        *psel = sel;
+
+    typename = G_OBJECT_TYPE_NAME(sel);
+    for (i = 0; i < G_N_ELEMENTS(known_selections); i++) {
+        const ImgExportSelectionType *seltype = known_selections + i;
+        if (gwy_strequal(typename, seltype->typename)) {
+            return seltype;
+        }
+    }
+    return NULL;
+}
+
 static void
 draw_selection(const ImgExportArgs *args,
                const ImgExportSizes *sizes,
@@ -1908,27 +1954,19 @@ draw_selection(const ImgExportArgs *args,
                GString *s,
                cairo_t *cr)
 {
-    const ImgExportEnv *env = args->env;
+    const ImgExportSelectionType *seltype;
     GwySelection *sel;
-    const gchar *typename;
-    guint i;
 
-    if (!args->draw_selection || !strlen(args->selection))
+    if (!args->draw_selection)
         return;
 
-    g_string_printf(s, "/%d/select/%s", env->id, args->selection);
-    sel = GWY_SELECTION(gwy_container_get_object_by_name(env->data, s->str));
-    typename = G_OBJECT_TYPE_NAME(sel);
-    for (i = 0; i < G_N_ELEMENTS(known_selections); i++) {
-        if (gwy_strequal(typename, known_selections[i].typename)) {
-            if (known_selections[i].draw)
-                known_selections[i].draw(args, sizes, sel, layout, s, cr);
-            else
-                g_warning("Can't draw %s yet.", typename);
-            return;
-        }
+    if (!(seltype = find_selection_type(args, args->selection, &sel)))
+        return;
+    if (!seltype->draw) {
+        g_warning("Can't draw %s yet.", seltype->typename);
+        return;
     }
-    g_assert_not_reached();
+    seltype->draw(args, sizes, sel, layout, s, cr);
 }
 
 /* We assume cr is already created for the layout with the correct scale(!). */
@@ -3094,22 +3132,6 @@ update_selection_sensitivity(ImgExportControls *controls)
         gtk_widget_set_sensitive(GTK_WIDGET(l->data), sens);
 }
 
-static GwySelection*
-get_selection(const ImgExportEnv *env,
-              guint id)
-{
-    GArray *selections = env->selections;
-    GQuark quark = g_array_index(selections, GQuark, id);
-    GwySelection *sel;
-    gchar *key;
-
-    key = g_strdup_printf("/%d/select/%s", env->id, g_quark_to_string(quark));
-    sel = GWY_SELECTION(gwy_container_get_object_by_name(env->data, key));
-    g_free(key);
-
-    return sel;
-}
-
 static void
 render_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
             GtkCellRenderer *renderer,
@@ -3134,22 +3156,16 @@ render_type(G_GNUC_UNUSED GtkTreeViewColumn *column,
             GtkTreeIter *iter,
             gpointer user_data)
 {
+    const ImgExportSelectionType *seltype;
     ImgExportControls *controls = (ImgExportControls*)user_data;
-    GwySelection *sel;
-    const gchar *typename;
-    guint id, i;
+    GQuark quark;
+    guint id;
 
     gtk_tree_model_get(model, iter, 0, &id, -1);
-    sel = get_selection(controls->args->env, id);
-    typename = G_OBJECT_TYPE_NAME(sel);
-    for (i = 0; i < G_N_ELEMENTS(known_selections); i++) {
-        if (gwy_strequal(typename, known_selections[i].typename)) {
-            g_object_set(renderer,
-                         "text", _(known_selections[i].description),
-                         NULL);
-            return;
-        }
-    }
+    quark = g_array_index(controls->args->env->selections, GQuark, id);
+    seltype = find_selection_type(controls->args, g_quark_to_string(quark),
+                                  NULL);
+    g_object_set(renderer, "text", _(seltype->description), NULL);
 }
 
 static void
@@ -3157,15 +3173,25 @@ render_objects(G_GNUC_UNUSED GtkTreeViewColumn *column,
                GtkCellRenderer *renderer,
                GtkTreeModel *model,
                GtkTreeIter *iter,
-               G_GNUC_UNUSED gpointer user_data)
+               gpointer user_data)
 {
+
     ImgExportControls *controls = (ImgExportControls*)user_data;
+    const ImgExportEnv *env = controls->args->env;
+    GArray *selections = env->selections;
+    GQuark quark;
     GwySelection *sel;
+    gchar *key;
     gchar buf[12];
     guint id;
 
     gtk_tree_model_get(model, iter, 0, &id, -1);
-    sel = get_selection(controls->args->env, id);
+    quark = g_array_index(selections, GQuark, id);
+
+    key = g_strdup_printf("/%d/select/%s", env->id, g_quark_to_string(quark));
+    sel = GWY_SELECTION(gwy_container_get_object_by_name(env->data, key));
+    g_free(key);
+
     g_snprintf(buf, sizeof(buf), "%u", gwy_selection_get_data(sel, NULL));
     g_object_set(renderer, "text", buf, NULL);
 }
@@ -3179,6 +3205,31 @@ draw_selection_changed(ImgExportControls *controls,
     args->draw_selection = gtk_toggle_button_get_active(button);
     update_selection_sensitivity(controls);
     update_preview(controls);
+}
+
+static void
+update_selection_options(ImgExportControls *controls)
+{
+    const ImgExportSelectionType *seltype;
+    ImgExportArgs *args = controls->args;
+    GSList *l;
+
+    for (l = controls->sel_options; l; l = g_slist_next(l))
+        gtk_widget_destroy(GTK_WIDGET(l->data));
+    g_slist_free(controls->sel_options);
+    controls->sel_options = NULL;
+
+    if ((seltype = find_selection_type(controls->args, args->selection, NULL))
+        && seltype->create_options) {
+        gtk_widget_set_no_show_all(controls->sel_options_label, FALSE);
+        seltype->create_options(controls);
+    }
+    else {
+        gtk_widget_set_no_show_all(controls->sel_options_label, TRUE);
+        gtk_widget_hide(controls->sel_options_label);
+    }
+
+    gtk_widget_show_all(controls->table_selection);
 }
 
 static void
@@ -3202,6 +3253,7 @@ selection_selected(ImgExportControls *controls,
         g_free(args->selection);
         args->selection = g_strdup("");
     }
+    update_selection_options(controls);
     update_preview(controls);
 }
 
@@ -3345,8 +3397,7 @@ create_selection_controls(ImgExportControls *controls)
 
     controls->sel_row_start = row;
 
-    /* TODO: Init options for the currently selected selection */
-
+    update_selection_options(controls);
     update_selection_sensitivity(controls);
 }
 
@@ -3613,8 +3664,11 @@ img_export_load_env(ImgExportEnv *env,
                     GwyContainer *data)
 {
     GwyDataField *dfield, *show;
+    GwyDataView *dataview;
+    GwyVectorLayer *vlayer;
+    GObject *sel;
     GwyInventory *gradients;
-    const guchar *gradname = NULL;
+    const guchar *gradname = NULL, *key;
     guint xres, yres;
     GString *s;
 
@@ -3627,6 +3681,7 @@ img_export_load_env(ImgExportEnv *env,
                                      GWY_APP_DATA_FIELD_ID, &env->id,
                                      GWY_APP_MASK_FIELD, &env->mask,
                                      GWY_APP_SHOW_FIELD, &show,
+                                     GWY_APP_DATA_VIEW, &dataview,
                                      0);
 
     if (show) {
@@ -3700,8 +3755,33 @@ img_export_load_env(ImgExportEnv *env,
     }
 
     env->selections = g_array_new(FALSE, FALSE, sizeof(GQuark));
-    g_string_printf(s, "/%d/select", env->id);
+    g_string_printf(s, "/%d/select/", env->id);
     gwy_container_foreach(data, s->str, &add_selection, env->selections);
+
+    if (dataview
+        && (vlayer = gwy_data_view_get_top_layer(dataview))
+        && (key = gwy_vector_layer_get_selection_key(vlayer))
+        && g_str_has_prefix(key, s->str)
+        && gwy_container_gis_object_by_name(data, key, &sel)) {
+        const gchar *typename = G_OBJECT_TYPE_NAME(sel);
+
+        if (gwy_strequal(typename, "GwySelectionLine")) {
+            gint lt;
+
+            env->sel_line_have_layer = TRUE;
+            g_object_get(vlayer, "thickness", &lt, NULL);
+            gwy_debug("got thickness from layer %d", lt);
+            env->sel_line_thickness = lt;
+        }
+        else if (gwy_strequal(typename, "GwySelectionPoint")) {
+            gint pr;
+
+            env->sel_point_have_layer = TRUE;
+            g_object_get(vlayer, "marker-radius", &pr, NULL);
+            gwy_debug("got radius from layer %d", pr);
+            env->sel_point_radius = pr;
+        }
+    }
 
     g_string_free(s, TRUE);
 }
@@ -3744,7 +3824,9 @@ img_export_export(GwyContainer *data,
             break;
     }
     if (i == env.selections->len) {
-        if (env.selections->len) {
+        /* Make non-interactive behaviour predictable and auto-set things when
+         * run interactively. */
+        if (env.selections->len && mode == GWY_RUN_INTERACTIVE) {
             GQuark quark = g_array_index(env.selections, GQuark, 0);
             gwy_debug("not found, trying %s", g_quark_to_string(quark));
             g_free(args.selection);
@@ -3758,8 +3840,18 @@ img_export_export(GwyContainer *data,
     }
     gwy_debug("feasible selection %s", args.selection);
 
-    if (mode == GWY_RUN_INTERACTIVE)
+    if (mode == GWY_RUN_INTERACTIVE) {
+        /* Make non-interactive behaviour predictable and only auto-set things
+         * when run interactively. */
+        if (env.sel_line_have_layer) {
+            args.sel_line_thickness = env.sel_line_thickness;
+        }
+        if (env.sel_point_have_layer) {
+            args.sel_point_radius = env.sel_point_radius;
+        }
+
         ok = img_export_dialog(&args);
+    }
 
     if (ok) {
         if (format->write_vector)
@@ -4669,6 +4761,7 @@ draw_sel_line(const ImgExportArgs *args,
               G_GNUC_UNUSED GString *s,
               cairo_t *cr)
 {
+    gdouble lw = sizes->sizes.line_width;
     gdouble qx, qy, xf, yf, xt, yt, xy[4];
     guint n, i;
 
@@ -4683,7 +4776,45 @@ draw_sel_line(const ImgExportArgs *args,
         yt = qy*xy[3];
         cairo_move_to(cr, xf, yf);
         cairo_line_to(cr, xt, yt);
+
+        gwy_debug("sel_line_thickness %g", args->sel_line_thickness);
+        if (args->sel_line_thickness > 0.0) {
+            gdouble lt = args->sel_line_thickness;
+            gdouble xd = yt - yf, yd = xf - xt;
+            gdouble h = sqrt(xd*xd + yd*yd);
+            /* TODO: Actually convert to data pixels. */
+            xd *= lt/h;
+            yd *= lt/h;
+
+            cairo_move_to(cr, xf - 0.5*xd, yf - 0.5*yd);
+            cairo_rel_line_to(cr, xd, yd);
+            cairo_move_to(cr, xt - 0.5*xd, yt - 0.5*yd);
+            cairo_rel_line_to(cr, xd, yd);
+        }
+
         cairo_stroke(cr);
+
+        if (args->sel_number_objects) {
+            PangoRectangle logical;
+            gdouble xc = 0.5*(xf + xt), yc = 0.5*(yf + yt);
+            gdouble xd = yt - yf, yd = xf - xt;
+            gdouble h = sqrt(xd*xd + yd*yd);
+
+            if (yd < -1e-14) {
+                xd = -xd;
+                yd = -yd;
+            }
+            xd /= h;
+            yd /= h;
+            format_layout(layout, &logical, s, "%u", i+1);
+            xc -= 0.5*logical.width/pangoscale;
+            yc -= 0.5*logical.height/pangoscale;
+            xd *= (0.5*lw + 0.45*logical.height/pangoscale);
+            yd *= (0.5*lw + 0.45*logical.height/pangoscale);
+            cairo_move_to(cr, xc + xd, yc + yd);
+            pango_cairo_show_layout(cr, layout);
+        }
+
     }
     cairo_restore(cr);
 }
@@ -4692,11 +4823,12 @@ static void
 draw_sel_point(const ImgExportArgs *args,
                const ImgExportSizes *sizes,
                GwySelection *sel,
-               G_GNUC_UNUSED PangoLayout *layout,
-               G_GNUC_UNUSED GString *s,
+               PangoLayout *layout,
+               GString *s,
                cairo_t *cr)
 {
     gdouble tl = G_SQRT2*sizes->sizes.tick_length;
+    gdouble lw = sizes->sizes.line_width;
     gdouble qx, qy, x, y, xy[2];
     guint n, i;
 
@@ -4712,6 +4844,16 @@ draw_sel_point(const ImgExportArgs *args,
         cairo_move_to(cr, x, y - 0.5*tl);
         cairo_rel_line_to(cr, 0.0, tl);
         cairo_stroke(cr);
+
+        if (args->sel_number_objects) {
+            PangoRectangle logical;
+
+            format_layout(layout, &logical, s, "%u", i+1);
+            cairo_move_to(cr,
+                          x + lw + 0.05*logical.height/pangoscale,
+                          y + lw + 0.05*logical.height/pangoscale);
+            pango_cairo_show_layout(cr, layout);
+        }
     }
     cairo_restore(cr);
 }
@@ -4742,35 +4884,100 @@ draw_sel_rectangle(const ImgExportArgs *args,
     cairo_restore(cr);
 }
 
+static void
+sel_number_objects_changed(ImgExportControls *controls,
+                           GtkToggleButton *toggle)
+{
+    controls->args->sel_number_objects = gtk_toggle_button_get_active(toggle);
+    update_preview(controls);
+}
+
+static void
+sel_line_thickness_changed(ImgExportControls *controls,
+                           GtkAdjustment *adj)
+{
+    controls->args->sel_line_thickness = gwy_adjustment_get_int(adj);
+    update_preview(controls);
+}
+
+static void
+options_sel_line(ImgExportControls *controls)
+{
+    GtkTable *table = GTK_TABLE(controls->table_selection);
+    ImgExportArgs *args = controls->args;
+    GtkWidget *check;
+    GtkObject *adj;
+    gint row = controls->sel_row_start;
+
+    check = gtk_check_button_new_with_mnemonic(_("Draw _numbers"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
+                                 args->sel_number_objects);
+    gtk_table_attach(table, check, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(check, "toggled",
+                             G_CALLBACK(sel_number_objects_changed), controls);
+    controls->sel_options = g_slist_prepend(controls->sel_options, check);
+    row++;
+
+    adj = gtk_adjustment_new(args->sel_line_thickness, 0.0, 32.0, 1.0, 5.0, 0);
+    gwy_table_attach_spinbutton(GTK_WIDGET(table), row,
+                                _("_End marker length:"), "px", adj);
+    g_signal_connect_swapped(adj, "value-changed",
+                             G_CALLBACK(sel_line_thickness_changed), controls);
+    row++;
+}
+
+static void
+options_sel_point(ImgExportControls *controls)
+{
+    GtkTable *table = GTK_TABLE(controls->table_selection);
+    ImgExportArgs *args = controls->args;
+    GtkWidget *check;
+    gint row = controls->sel_row_start;
+
+    check = gtk_check_button_new_with_mnemonic(_("Draw _numbers"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
+                                 args->sel_number_objects);
+    g_signal_connect_swapped(check, "toggled",
+                             G_CALLBACK(sel_number_objects_changed), controls);
+    gtk_table_attach(table, check, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls->sel_options = g_slist_prepend(controls->sel_options, check);
+    row++;
+}
+
 /* Use the pixmap prefix for compatibility */
-static const gchar active_page_key[]      = "/module/pixmap/active_page";
-static const gchar border_width_key[]     = "/module/pixmap/border_width";
-static const gchar draw_mask_key[]        = "/module/pixmap/draw_mask";
-static const gchar draw_selection_key[]   = "/module/pixmap/draw_selection";
-static const gchar fmscale_gap_key[]      = "/module/pixmap/fmscale_gap";
-static const gchar font_key[]             = "/module/pixmap/font";
-static const gchar font_size_key[]        = "/module/pixmap/font_size";
-static const gchar inset_color_key[]      = "/module/pixmap/inset_color";
-static const gchar inset_draw_label_key[] = "/module/pixmap/inset_draw_label";
-static const gchar inset_draw_ticks_key[] = "/module/pixmap/inset_draw_ticks";
-static const gchar inset_length_key[]     = "/module/pixmap/inset_length";
-static const gchar inset_pos_key[]        = "/module/pixmap/inset_pos";
-static const gchar inset_xgap_key[]       = "/module/pixmap/inset_xgap";
-static const gchar inset_ygap_key[]       = "/module/pixmap/inset_ygap";
-static const gchar interpolation_key[]    = "/module/pixmap/interpolation";
-static const gchar line_width_key[]       = "/module/pixmap/line_width";
-static const gchar mode_key[]             = "/module/pixmap/mode";
-static const gchar pxwidth_key[]          = "/module/pixmap/pxwidth";
-static const gchar scale_font_key[]       = "/module/pixmap/scale_font";
-static const gchar sel_color_key[]        = "/module/pixmap/sel_color";
-static const gchar selection_key[]        = "/module/pixmap/selection";
-static const gchar tick_length_key[]      = "/module/pixmap/tick_length";
-static const gchar title_gap_key[]        = "/module/pixmap/title_gap";
-static const gchar title_type_key[]       = "/module/pixmap/title_type";
-static const gchar units_in_title_key[]   = "/module/pixmap/units_in_title";
-static const gchar xytype_key[]           = "/module/pixmap/xytype";
-static const gchar zoom_key[]             = "/module/pixmap/zoom";
-static const gchar ztype_key[]            = "/module/pixmap/ztype";
+static const gchar active_page_key[]        = "/module/pixmap/active_page";
+static const gchar border_width_key[]       = "/module/pixmap/border_width";
+static const gchar draw_mask_key[]          = "/module/pixmap/draw_mask";
+static const gchar draw_selection_key[]     = "/module/pixmap/draw_selection";
+static const gchar fmscale_gap_key[]        = "/module/pixmap/fmscale_gap";
+static const gchar sel_line_thickness_key[] = "/module/pixmap/sel_line_thickness";
+static const gchar sel_point_radius_key[]   = "/module/pixmap/sel_point_radius";
+static const gchar sel_number_objects_key[] = "/module/pixmap/sel_number_objects";
+static const gchar font_key[]               = "/module/pixmap/font";
+static const gchar font_size_key[]          = "/module/pixmap/font_size";
+static const gchar inset_color_key[]        = "/module/pixmap/inset_color";
+static const gchar inset_draw_label_key[]   = "/module/pixmap/inset_draw_label";
+static const gchar inset_draw_ticks_key[]   = "/module/pixmap/inset_draw_ticks";
+static const gchar inset_length_key[]       = "/module/pixmap/inset_length";
+static const gchar inset_pos_key[]          = "/module/pixmap/inset_pos";
+static const gchar inset_xgap_key[]         = "/module/pixmap/inset_xgap";
+static const gchar inset_ygap_key[]         = "/module/pixmap/inset_ygap";
+static const gchar interpolation_key[]      = "/module/pixmap/interpolation";
+static const gchar line_width_key[]         = "/module/pixmap/line_width";
+static const gchar mode_key[]               = "/module/pixmap/mode";
+static const gchar pxwidth_key[]            = "/module/pixmap/pxwidth";
+static const gchar scale_font_key[]         = "/module/pixmap/scale_font";
+static const gchar sel_color_key[]          = "/module/pixmap/sel_color";
+static const gchar selection_key[]          = "/module/pixmap/selection";
+static const gchar tick_length_key[]        = "/module/pixmap/tick_length";
+static const gchar title_gap_key[]          = "/module/pixmap/title_gap";
+static const gchar title_type_key[]         = "/module/pixmap/title_type";
+static const gchar units_in_title_key[]     = "/module/pixmap/units_in_title";
+static const gchar xytype_key[]             = "/module/pixmap/xytype";
+static const gchar zoom_key[]               = "/module/pixmap/zoom";
+static const gchar ztype_key[]              = "/module/pixmap/ztype";
 
 static void
 img_export_sanitize_args(ImgExportArgs *args)
@@ -4801,6 +5008,9 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->inset_xgap = CLAMP(args->inset_xgap, 0.0, 4.0);
     args->inset_ygap = CLAMP(args->inset_ygap, 0.0, 2.0);
     args->title_gap = CLAMP(args->title_gap, -1.0, 1.0);
+    args->sel_number_objects = !!args->sel_number_objects;
+    args->sel_line_thickness = CLAMP(args->sel_line_thickness, 0.0, 1024.0);
+    args->sel_point_radius = CLAMP(args->sel_point_radius, 0.0, 1024.0);
 }
 
 static void
@@ -4875,6 +5085,12 @@ img_export_load_args(GwyContainer *container,
                                       &args->units_in_title);
     gwy_container_gis_string_by_name(container, selection_key,
                                      (const guchar**)&args->selection);
+    gwy_container_gis_boolean_by_name(container, sel_number_objects_key,
+                                      &args->sel_number_objects);
+    gwy_container_gis_double_by_name(container, sel_line_thickness_key,
+                                     &args->sel_line_thickness);
+    gwy_container_gis_double_by_name(container, sel_point_radius_key,
+                                     &args->sel_point_radius);
 
     args->font = g_strdup(args->font);
     args->inset_length = g_strdup(args->inset_length);
@@ -4935,6 +5151,12 @@ img_export_save_args(GwyContainer *container,
                                       args->units_in_title);
     gwy_container_set_string_by_name(container, selection_key,
                                      g_strdup(args->selection));
+    gwy_container_set_boolean_by_name(container, sel_number_objects_key,
+                                      args->sel_number_objects);
+    gwy_container_set_double_by_name(container, sel_line_thickness_key,
+                                     args->sel_line_thickness);
+    gwy_container_set_double_by_name(container, sel_point_radius_key,
+                                     args->sel_point_radius);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
