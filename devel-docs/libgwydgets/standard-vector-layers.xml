@@ -146,6 +146,14 @@
             </para>
           </listitem>
         </varlistentry>
+        <varlistentry><term><anchor id="GwyLayerLine--thickness"/>&quot;<literal>thickness</literal>&quot; (gint : Read / Write)</term>
+          <listitem>
+            <para>
+              Width of orthogonal ticks at line ends.
+              Default is no ticks.
+            </para>
+          </listitem>
+        </varlistentry>
       </variablelist>
     </sect2>
     <sect2>
@@ -184,6 +192,23 @@
               If set to zero and/or if &quot;<literal>draw-marker</literal>&quot; is
               set to FALSE, no circle will be drawn.
               Default is a radius of zero.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry><term><anchor id="GwyLayerLine--point-numbers"/>&quot;<literal>point-numbers</literal>&quot; (gboolean : Read / Write)</term>
+          <listitem>
+            <para>
+              Whether point numbers should be displayed next to them.
+              Default is not to show point numbers.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry><term><anchor id="GwyLayerLine--draw-as-vector"/>&quot;<literal>draw-as-vector</literal>&quot; (gboolean : Read / Write)</term>
+          <listitem>
+            <para>
+              Whether points should be instead drawn as vector from the origin.
+              This setting may interact poorly with other drawing options.
+              Default is to draw points as points.
             </para>
           </listitem>
         </varlistentry>
