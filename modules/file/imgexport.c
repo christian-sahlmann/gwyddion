@@ -87,14 +87,6 @@ typedef enum {
     IMGEXPORT_MODE_GREY16,
 } ImgExportMode;
 
-/* This is what we get from Cairo so for vector we don't really have any
- * other options.  For pixmaps, we could render them ourselves or using
- * GdkPixbuf. */
-typedef enum {
-    IMGEXPORT_INTERPOLATION_PIXELATE = GWY_INTERPOLATION_ROUND,
-    IMGEXPORT_INTERPOLATION_LINEAR = GWY_INTERPOLATION_LINEAR,
-} ImgExportInterpolation;
-
 typedef enum {
     IMGEXPORT_LATERAL_NONE,
     IMGEXPORT_LATERAL_RULERS,
@@ -223,7 +215,7 @@ typedef struct {
     gdouble inset_ygap;
     gdouble title_gap;
     gchar *inset_length;
-    ImgExportInterpolation interpolation;
+    GwyInterpolationType interpolation;
     ImgExportTitleType title_type;
     gboolean units_in_title;
     gchar *selection;
@@ -539,7 +531,7 @@ static const ImgExportArgs img_export_defaults = {
     TRUE, FALSE,
     "Helvetica", TRUE, TRUE, TRUE,
     1.0, 1.0, 1.0, 0.0, "",
-    IMGEXPORT_INTERPOLATION_PIXELATE,
+    GWY_INTERPOLATION_ROUND,
     IMGEXPORT_TITLE_NONE, FALSE,
     "line", { 1.0, 1.0, 1.0, 1.0 },
     TRUE, 0.0, 0.0,
@@ -1365,10 +1357,8 @@ destroy_sizes(ImgExportSizes *sizes)
     g_free(sizes);
 }
 
-/* XXX: We may want to do resampling here when exporting to pixmap images
- * because we know many more interpolation methods than Cairo. */
 static GdkPixbuf*
-draw_data_pixbuf(const ImgExportArgs *args)
+draw_data_pixbuf_1_1(const ImgExportArgs *args)
 {
     const ImgExportEnv *env = args->env;
     GwyDataField *dfield = env->dfield;
@@ -1392,6 +1382,40 @@ draw_data_pixbuf(const ImgExportArgs *args)
 }
 
 static GdkPixbuf*
+draw_data_pixbuf_resampled(const ImgExportArgs *args,
+                           const ImgExportSizes *sizes)
+{
+    const ImgExportEnv *env = args->env;
+    GwyDataField *dfield = env->dfield, *resampled;
+    GwyGradient *gradient = env->gradient;
+    GwyLayerBasicRangeType range_type = env->fm_rangetype;
+    gdouble lw = sizes->sizes.line_width;
+    GdkPixbuf *pixbuf;
+    gdouble w = sizes->image.w - 2.0*lw;
+    gdouble h = sizes->image.h - 2.0*lw;
+    guint width, height;
+
+    width = GWY_ROUND(MAX(w, 2.0));
+    height = GWY_ROUND(MAX(h, 2.0));
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, width, height);
+
+    resampled = gwy_data_field_new_resampled(dfield, width, height,
+                                             args->interpolation);
+
+    /* XXX: Resampling can influence adaptive mapping.  But it should not
+     * be noticeable in normal circumstances.  */
+    if (range_type == GWY_LAYER_BASIC_RANGE_ADAPT)
+        gwy_pixbuf_draw_data_field_adaptive(pixbuf, resampled, gradient);
+    else
+        gwy_pixbuf_draw_data_field_with_range(pixbuf, resampled, gradient,
+                                              env->fm_min, env->fm_max);
+
+    g_object_unref(resampled);
+
+    return pixbuf;
+}
+
+static GdkPixbuf*
 draw_mask_pixbuf(const ImgExportArgs *args)
 {
     const ImgExportEnv *env = args->env;
@@ -1411,23 +1435,15 @@ draw_mask_pixbuf(const ImgExportArgs *args)
 static void
 stretch_pixbuf_source(cairo_t *cr,
                       GdkPixbuf *pixbuf,
-                      const ImgExportArgs *args)
+                      const ImgExportSizes *sizes)
 {
-    ImgExportEnv *env = args->env;
+    gdouble mw = gdk_pixbuf_get_width(pixbuf);
+    gdouble mh = gdk_pixbuf_get_height(pixbuf);
+    gdouble lw = sizes->sizes.line_width;
+    gdouble w = sizes->image.w - 2.0*lw;
+    gdouble h = sizes->image.h - 2.0*lw;
 
-    if (env->realsquare) {
-        gdouble mw = gdk_pixbuf_get_width(pixbuf);
-        gdouble mh = gdk_pixbuf_get_height(pixbuf);
-        gdouble r = (env->yres/mh)/(env->xres/mw);
-        r = 1.0 + fixzero(r - 1.0);
-        if (r >= 1.0)
-            cairo_scale(cr, args->zoom, r*args->zoom);
-        else
-            cairo_scale(cr, args->zoom/r, args->zoom);
-    }
-    else
-        cairo_scale(cr, args->zoom, args->zoom);
-
+    cairo_scale(cr, w/mw, h/mh);
     gdk_cairo_set_source_pixbuf(cr, pixbuf, 0.0, 0.0);
 }
 
@@ -1438,33 +1454,36 @@ draw_data(const ImgExportArgs *args,
 {
     const ImgExportRect *rect = &sizes->image;
     ImgExportEnv *env = args->env;
+    gboolean drawing_as_vector;
     cairo_filter_t interp;
     GdkPixbuf *pixbuf;
+    gint xres = gwy_data_field_get_xres(env->dfield);
+    gint yres = gwy_data_field_get_yres(env->dfield);
     gdouble lw = sizes->sizes.line_width;
-    gdouble w, h;
+    gdouble w = rect->w - 2.0*lw;
+    gdouble h = rect->h - 2.0*lw;
 
-    w = rect->w - 2.0*lw;
-    h = rect->h - 2.0*lw;
-
-    if (args->interpolation == IMGEXPORT_INTERPOLATION_LINEAR)
+    /* Never draw pixmap images with anything else than CAIRO_FILTER_BILINEAR
+     * because it causes bleeding and fading at the image borders. */
+    interp = CAIRO_FILTER_NEAREST;
+    drawing_as_vector = (cairo_surface_get_type(cairo_get_target(cr))
+                         != CAIRO_SURFACE_TYPE_IMAGE);
+    if (drawing_as_vector && args->interpolation != GWY_INTERPOLATION_ROUND)
         interp = CAIRO_FILTER_BILINEAR;
-    else
-        interp = CAIRO_FILTER_NEAREST;
 
-    pixbuf = draw_data_pixbuf(args);
-    /* FIXME: This produces fading into background (white) on the edge
-     * pixels when we render to pixmaps.  It's probably best to do all
-     * interpolation ourselves when we render pixmaps; this also offers
-     * the full range of interpolations Gwyddion can do. */
+    if (drawing_as_vector
+        || args->mode == IMGEXPORT_MODE_GREY16
+        || args->interpolation == GWY_INTERPOLATION_ROUND
+        || (fabs(xres - w) < 0.001 && fabs(yres - h) < 0.001))
+        pixbuf = draw_data_pixbuf_1_1(args);
+    else {
+        pixbuf = draw_data_pixbuf_resampled(args, sizes);
+        interp = CAIRO_FILTER_NEAREST;
+    }
+
     cairo_save(cr);
     cairo_translate(cr, rect->x + lw, rect->y + lw);
-    /* Avoid bleeding.  May not be necessary once we do interpolation
-     * ourselves. */
-    if (interp == CAIRO_FILTER_BILINEAR) {
-        cairo_rectangle(cr, -0.5*lw, -0.5*lw, w + lw, h + lw);
-        cairo_clip(cr);
-    }
-    stretch_pixbuf_source(cr, pixbuf, args);
+    stretch_pixbuf_source(cr, pixbuf, sizes);
     cairo_pattern_set_filter(cairo_get_source(cr), interp);
     cairo_paint(cr);
     cairo_restore(cr);
@@ -1475,7 +1494,7 @@ draw_data(const ImgExportArgs *args,
         cairo_save(cr);
         cairo_translate(cr, rect->x + lw, rect->y + lw);
         pixbuf = draw_mask_pixbuf(args);
-        stretch_pixbuf_source(cr, pixbuf, args);
+        stretch_pixbuf_source(cr, pixbuf, sizes);
         cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_NEAREST);
         cairo_paint(cr);
         cairo_restore(cr);
@@ -1490,10 +1509,8 @@ draw_data_frame(G_GNUC_UNUSED const ImgExportArgs *args,
 {
     const ImgExportRect *rect = &sizes->image;
     gdouble lw = sizes->sizes.line_width;
-    gdouble w, h;
-
-    w = rect->w - 2.0*lw;
-    h = rect->h - 2.0*lw;
+    gdouble w = rect->w - 2.0*lw;
+    gdouble h = rect->h - 2.0*lw;
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
@@ -1634,7 +1651,9 @@ draw_inset(const ImgExportArgs *args,
     PangoRectangle logical;
     gdouble lw = sizes->sizes.line_width;
     gdouble tl = sizes->sizes.tick_length;
-    gdouble xcentre, length, y, w, h;
+    gdouble xcentre, length, y;
+    gdouble w = imgrect->w - 2.0*lw;
+    gdouble h = imgrect->h - 2.0*lw;
 
     if (args->xytype != IMGEXPORT_LATERAL_INSET)
         return;
@@ -1645,9 +1664,6 @@ draw_inset(const ImgExportArgs *args,
     length = (sizes->image.w - 2.0*lw)/xreal*sizes->inset_length;
     xcentre = 0.5*rect->w;
     y = 0.5*lw;
-
-    w = imgrect->w - 2.0*lw;
-    h = imgrect->h - 2.0*lw;
 
     cairo_save(cr);
     cairo_rectangle(cr, imgrect->x + lw, imgrect->y + lw, w, h);
@@ -1731,14 +1747,13 @@ draw_fmgrad(const ImgExportArgs *args,
     const GwyGradientPoint *points;
     cairo_pattern_t *pat;
     gint npoints, i;
-    gdouble w, h, lw = sizes->sizes.line_width;
+    gdouble lw = sizes->sizes.line_width;
     gboolean inverted = env->fm_inverted;
+    gdouble w = rect->w - 2.0*lw;
+    gdouble h = rect->h - 2.0*lw;
 
     if (args->ztype != IMGEXPORT_VALUE_FMSCALE)
         return;
-
-    w = rect->w - 2.0*lw;
-    h = rect->h - 2.0*lw;
 
     if (inverted)
         pat = cairo_pattern_create_linear(0.0, lw, 0.0, lw + h);
@@ -2006,6 +2021,7 @@ render_pixbuf(const ImgExportArgs *args, const gchar *name)
     cairo_format_t imgformat;
     cairo_t *cr;
 
+    gwy_debug("format name %s", name);
     sizes = calculate_sizes(args, name);
     g_return_val_if_fail(sizes, FALSE);
     surface = create_surface(name, NULL, sizes->canvas.w, sizes->canvas.h);
@@ -2075,7 +2091,7 @@ preview(ImgExportControls *controls)
         previewargs.sizes.line_width = 0.0;
         previewargs.draw_mask = FALSE;
         previewargs.draw_selection = FALSE;
-        previewargs.interpolation = IMGEXPORT_INTERPOLATION_PIXELATE;
+        previewargs.interpolation = GWY_INTERPOLATION_ROUND;
     }
 
     sizes = calculate_sizes(&previewargs, "png");
@@ -3024,14 +3040,25 @@ create_value_controls(ImgExportControls *controls)
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    controls->interpolation
-        = gwy_enum_combo_box_newl(G_CALLBACK(interpolation_changed), controls,
-                                  args->interpolation,
-                                  _("Round"),
-                                  IMGEXPORT_INTERPOLATION_PIXELATE,
-                                  _("Linear"),
-                                  IMGEXPORT_INTERPOLATION_LINEAR,
-                                  NULL);
+    if (controls->args->env->format->write_vector) {
+        /* Vector formats can only handle these two. */
+        if (args->interpolation != GWY_INTERPOLATION_ROUND)
+            args->interpolation = GWY_INTERPOLATION_LINEAR;
+
+        controls->interpolation
+            = gwy_enum_combo_box_newl(G_CALLBACK(interpolation_changed),
+                                      controls,
+                                      args->interpolation,
+                                      _("Round"), GWY_INTERPOLATION_ROUND,
+                                      _("Linear"), GWY_INTERPOLATION_LINEAR,
+                                      NULL);
+    }
+    else {
+        controls->interpolation
+            = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
+                                     G_CALLBACK(interpolation_changed),
+                                     controls, args->interpolation, TRUE);
+    }
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->interpolation);
     gtk_table_attach(GTK_TABLE(table), controls->interpolation,
                      1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -4665,10 +4692,8 @@ sel_setup_cairo(const ImgExportArgs *args,
     GwyDataField *dfield = env->dfield;
     gdouble xreal = gwy_data_field_get_xreal(dfield);
     gdouble yreal = gwy_data_field_get_yreal(dfield);
-    gdouble w, h;
-
-    w = rect->w - 2.0*lw;
-    h = rect->h - 2.0*lw;
+    gdouble w = rect->w - 2.0*lw;
+    gdouble h = rect->h - 2.0*lw;
 
     cairo_translate(cr, rect->x + lw, rect->y + lw);
     cairo_rectangle(cr, 0.0, 0.0, w, h);
@@ -4704,12 +4729,11 @@ draw_sel_axis(const ImgExportArgs *args,
               cairo_t *cr)
 {
     gdouble lw = sizes->sizes.line_width;
-    gdouble qx, qy, w, h, p, xy[1];
+    gdouble qx, qy, p, xy[1];
     GwyOrientation orientation;
+    gdouble w = sizes->image.w - 2.0*lw;
+    gdouble h = sizes->image.h - 2.0*lw;
     guint n, i;
-
-    w = sizes->image.w - 2.0*lw;
-    h = sizes->image.h - 2.0*lw;
 
     cairo_save(cr);
     sel_setup_cairo(args, sizes, &qx, &qy, cr);
@@ -4791,9 +4815,9 @@ draw_sel_line(const ImgExportArgs *args,
         gwy_debug("sel_line_thickness %g", args->sel_line_thickness);
         if (args->sel_line_thickness > 0.0) {
             gdouble xd = yt - yf, yd = xf - xt;
-            gdouble h = sqrt(xd*xd + yd*yd);
-            xd *= lt*px/h;
-            yd *= lt*py/h;
+            gdouble len = sqrt(xd*xd + yd*yd);
+            xd *= lt*px/len;
+            yd *= lt*py/len;
 
             cairo_move_to(cr, xf - 0.5*xd, yf - 0.5*yd);
             cairo_rel_line_to(cr, xd, yd);
@@ -4807,14 +4831,14 @@ draw_sel_line(const ImgExportArgs *args,
             PangoRectangle logical;
             gdouble xc = 0.5*(xf + xt), yc = 0.5*(yf + yt);
             gdouble xd = yt - yf, yd = xf - xt;
-            gdouble h = sqrt(xd*xd + yd*yd);
+            gdouble len = sqrt(xd*xd + yd*yd);
 
             if (yd < -1e-14) {
                 xd = -xd;
                 yd = -yd;
             }
-            xd /= h;
-            yd /= h;
+            xd /= len;
+            yd /= len;
             format_layout(layout, &logical, s, "%u", i+1);
             xc -= 0.5*logical.width/pangoscale;
             yc -= 0.5*logical.height/pangoscale;
@@ -5040,8 +5064,8 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->xytype = MIN(args->xytype, IMGEXPORT_LATERAL_NTYPES-1);
     args->ztype = MIN(args->ztype, IMGEXPORT_VALUE_NTYPES-1);
     args->inset_pos = MIN(args->inset_pos, INSET_NPOS-1);
-    if (args->interpolation != IMGEXPORT_INTERPOLATION_LINEAR)
-        args->interpolation = IMGEXPORT_INTERPOLATION_PIXELATE;
+    args->interpolation = gwy_enum_sanitize_value(args->interpolation,
+                                                  GWY_TYPE_INTERPOLATION_TYPE);
     args->title_type = MIN(args->title_type, IMGEXPORT_TITLE_NTYPES-1);
     /* handle inset_length later, its usability depends on the data field. */
     args->zoom = CLAMP(args->zoom, 0.06, 16.0);
