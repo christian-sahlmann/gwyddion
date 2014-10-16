@@ -131,6 +131,7 @@ typedef struct {
 typedef struct {
     gdouble font_size;
     gdouble line_width;
+    gdouble outline_width;
     gdouble border_width;
     gdouble tick_length;
 } SizeSettings;
@@ -245,6 +246,7 @@ typedef struct {
     GtkWidget *font;
     GtkObject *font_size;
     GtkObject *line_width;
+    GtkObject *outline_width;
     GtkObject *border_width;
     GtkObject *tick_length;
     GtkWidget *scale_font;
@@ -525,7 +527,7 @@ static const ImgExportSelectionType known_selections[] =
 static const ImgExportArgs img_export_defaults = {
     NULL, IMGEXPORT_MODE_PRESENTATION, 0,
     0.1, 1.0,
-    { 12.0, 1.0, 0.0, 10.0 },
+    { 12.0, 1.0, 0.0, 0.0, 10.0 },
     IMGEXPORT_LATERAL_RULERS, IMGEXPORT_VALUE_FMSCALE,
     { 1.0, 1.0, 1.0, 1.0 }, INSET_POS_BOTTOM_RIGHT,
     TRUE, FALSE,
@@ -1173,6 +1175,7 @@ static void
 scale_sizes(SizeSettings *sizes, gdouble factor)
 {
     sizes->line_width *= factor;
+    sizes->outline_width *= factor;
     sizes->border_width *= factor;
     sizes->font_size *= factor;
     sizes->tick_length *= factor;
@@ -1651,6 +1654,7 @@ draw_inset(const ImgExportArgs *args,
     PangoRectangle logical;
     gdouble lw = sizes->sizes.line_width;
     gdouble tl = sizes->sizes.tick_length;
+    gdouble olw = sizes->sizes.outline_width;
     gdouble xcentre, length, y;
     gdouble w = imgrect->w - 2.0*lw;
     gdouble h = imgrect->h - 2.0*lw;
@@ -1699,6 +1703,13 @@ draw_inset(const ImgExportArgs *args,
     format_layout(layout, &logical, s, "%s", args->inset_length);
     cairo_move_to(cr, xcentre - 0.5*logical.width/pangoscale, y);
     pango_cairo_show_layout(cr, layout);
+    if (olw > 0.0) {
+        pango_cairo_layout_path(cr, layout);
+        /* XXX XXX XXX just testing... */
+        cairo_set_source_rgba(cr, 0.8, 0.0, 0.8, colour->a);
+        cairo_set_line_width(cr, olw);
+        cairo_stroke(cr);
+    }
     cairo_restore(cr);
 }
 
@@ -2370,6 +2381,14 @@ line_width_changed(ImgExportControls *controls,
 }
 
 static void
+outline_width_changed(ImgExportControls *controls,
+                      GtkAdjustment *adj)
+{
+    controls->args->sizes.outline_width = gtk_adjustment_get_value(adj);
+    update_preview(controls);
+}
+
+static void
 border_width_changed(ImgExportControls *controls,
                      GtkAdjustment *adj)
 {
@@ -2407,7 +2426,7 @@ create_basic_controls(ImgExportControls *controls)
     GCallback width_cb, height_cb;
     gint row = 0, digits;
 
-    table = controls->table_basic = gtk_table_new(11 + 1*is_vector, 3, FALSE);
+    table = controls->table_basic = gtk_table_new(12 + 1*is_vector, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -2523,6 +2542,16 @@ create_basic_controls(ImgExportControls *controls)
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     g_signal_connect_swapped(controls->line_width, "value-changed",
                              G_CALLBACK(line_width_changed), controls);
+    row++;
+
+    controls->outline_width = gtk_adjustment_new(args->sizes.outline_width,
+                                                 0.0, 16.0, 0.01, 1.0, 0);
+    spin = gwy_table_attach_spinbutton(GTK_WIDGET(table), row,
+                                       _("O_utline thickness:"), NULL,
+                                       controls->outline_width);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    g_signal_connect_swapped(controls->outline_width, "value-changed",
+                             G_CALLBACK(outline_width_changed), controls);
     row++;
 
     controls->border_width = gtk_adjustment_new(args->sizes.border_width,
@@ -5028,9 +5057,6 @@ static const gchar border_width_key[]       = "/module/pixmap/border_width";
 static const gchar draw_mask_key[]          = "/module/pixmap/draw_mask";
 static const gchar draw_selection_key[]     = "/module/pixmap/draw_selection";
 static const gchar fmscale_gap_key[]        = "/module/pixmap/fmscale_gap";
-static const gchar sel_line_thickness_key[] = "/module/pixmap/sel_line_thickness";
-static const gchar sel_point_radius_key[]   = "/module/pixmap/sel_point_radius";
-static const gchar sel_number_objects_key[] = "/module/pixmap/sel_number_objects";
 static const gchar font_key[]               = "/module/pixmap/font";
 static const gchar font_size_key[]          = "/module/pixmap/font_size";
 static const gchar inset_color_key[]        = "/module/pixmap/inset_color";
@@ -5043,10 +5069,14 @@ static const gchar inset_ygap_key[]         = "/module/pixmap/inset_ygap";
 static const gchar interpolation_key[]      = "/module/pixmap/interpolation";
 static const gchar line_width_key[]         = "/module/pixmap/line_width";
 static const gchar mode_key[]               = "/module/pixmap/mode";
+static const gchar outline_width_key[]      = "/module/pixmap/outline_width";
 static const gchar pxwidth_key[]            = "/module/pixmap/pxwidth";
 static const gchar scale_font_key[]         = "/module/pixmap/scale_font";
 static const gchar sel_color_key[]          = "/module/pixmap/sel_color";
 static const gchar selection_key[]          = "/module/pixmap/selection";
+static const gchar sel_line_thickness_key[] = "/module/pixmap/sel_line_thickness";
+static const gchar sel_number_objects_key[] = "/module/pixmap/sel_number_objects";
+static const gchar sel_point_radius_key[]   = "/module/pixmap/sel_point_radius";
 static const gchar tick_length_key[]        = "/module/pixmap/tick_length";
 static const gchar title_gap_key[]          = "/module/pixmap/title_gap";
 static const gchar title_type_key[]         = "/module/pixmap/title_type";
@@ -5078,6 +5108,7 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->units_in_title = !!args->units_in_title;
     args->sizes.font_size = CLAMP(args->sizes.font_size, 1.0, 1024.0);
     args->sizes.line_width = CLAMP(args->sizes.line_width, 0.0, 16.0);
+    args->sizes.outline_width = CLAMP(args->sizes.outline_width, 0.0, 16.0);
     args->sizes.border_width = CLAMP(args->sizes.border_width, 0.0, 1024.0);
     args->sizes.tick_length = CLAMP(args->sizes.tick_length, 0.0, 120.0);
     args->fmscale_gap = CLAMP(args->fmscale_gap, 0.0, 2.0);
@@ -5121,6 +5152,8 @@ img_export_load_args(GwyContainer *container,
                                      &args->sizes.font_size);
     gwy_container_gis_double_by_name(container, line_width_key,
                                      &args->sizes.line_width);
+    gwy_container_gis_double_by_name(container, outline_width_key,
+                                     &args->sizes.outline_width);
     gwy_container_gis_double_by_name(container, border_width_key,
                                      &args->sizes.border_width);
     gwy_container_gis_double_by_name(container, tick_length_key,
@@ -5187,6 +5220,8 @@ img_export_save_args(GwyContainer *container,
                                      args->sizes.font_size);
     gwy_container_set_double_by_name(container, line_width_key,
                                      args->sizes.line_width);
+    gwy_container_set_double_by_name(container, outline_width_key,
+                                     args->sizes.outline_width);
     gwy_container_set_double_by_name(container, border_width_key,
                                      args->sizes.border_width);
     gwy_container_set_double_by_name(container, tick_length_key,
