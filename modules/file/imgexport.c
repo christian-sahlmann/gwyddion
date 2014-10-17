@@ -1371,7 +1371,11 @@ set_cairo_source_rgba(cairo_t *cr, const GwyRGBA *rgba)
     cairo_set_source_rgba(cr, rgba->r, rgba->g, rgba->b, rgba->a);
 }
 
-/* XXX: Outlines interact poorly with transparency. */
+/* XXX: Outlines interact poorly with transparency.  A possible way to fix it
+ * is using cairo_push_group(cr), drawing everything as fully opaque and then
+ * rendering the group with cairo_pop_group_to_source(cr)
+ * cairo_paint_with_alpha(cr, alpha).  This requires the line and outline
+ * to have the same alpha -- which is probably reasonable. */
 static void
 draw_text_with_outline(cairo_t *cr, PangoLayout *layout,
                        const GwyRGBA *colour, const GwyRGBA *outcolour,
