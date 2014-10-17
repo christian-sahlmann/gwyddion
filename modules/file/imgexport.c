@@ -3043,8 +3043,7 @@ units_in_title_changed(ImgExportControls *controls,
     ImgExportArgs *args = controls->args;
 
     args->units_in_title = gtk_toggle_button_get_active(button);
-    if (args->title_type != IMGEXPORT_TITLE_NONE)
-        update_preview(controls);
+    update_preview(controls);
 }
 
 static void
