@@ -204,6 +204,7 @@ typedef struct {
     ImgExportLateralType xytype;
     ImgExportValueType ztype;
     GwyRGBA inset_color;
+    GwyRGBA inset_outline_color;
     InsetPosType inset_pos;
     gboolean draw_mask;
     gboolean draw_selection;
@@ -221,6 +222,7 @@ typedef struct {
     gboolean units_in_title;
     gchar *selection;
     GwyRGBA sel_color;
+    GwyRGBA sel_outline_color;
     /* Selection-specific options.  If we find a layer displaying the
      * selection we try to oppostuntistically init them from the layer.  */
     gboolean sel_number_objects;
@@ -423,8 +425,11 @@ static void     draw_sel_rectangle  (const ImgExportArgs *args,
 static void     options_sel_line    (ImgExportControls *controls);
 static void     options_sel_point   (ImgExportControls *controls);
 
-static const GwyRGBA black = { 0.0, 0.0, 0.0, 1.0 };
-static const GwyRGBA white = { 1.0, 1.0, 1.0, 1.0 };
+#define GWYRGBA_BLACK { 0.0, 0.0, 0.0, 1.0 }
+#define GWYRGBA_WHITE { 1.0, 1.0, 1.0, 1.0 }
+
+static const GwyRGBA black = GWYRGBA_BLACK;
+static const GwyRGBA white = GWYRGBA_WHITE;
 
 static ImgExportFormat image_formats[] = {
     {
@@ -529,13 +534,13 @@ static const ImgExportArgs img_export_defaults = {
     0.1, 1.0,
     { 12.0, 1.0, 0.0, 0.0, 10.0 },
     IMGEXPORT_LATERAL_RULERS, IMGEXPORT_VALUE_FMSCALE,
-    { 1.0, 1.0, 1.0, 1.0 }, INSET_POS_BOTTOM_RIGHT,
+    GWYRGBA_WHITE, GWYRGBA_WHITE, INSET_POS_BOTTOM_RIGHT,
     TRUE, FALSE,
     "Helvetica", TRUE, TRUE, TRUE,
     1.0, 1.0, 1.0, 0.0, "",
     GWY_INTERPOLATION_ROUND,
     IMGEXPORT_TITLE_NONE, FALSE,
-    "line", { 1.0, 1.0, 1.0, 1.0 },
+    "line", GWYRGBA_WHITE, GWYRGBA_WHITE,
     TRUE, 0.0, 0.0,
 };
 
@@ -1360,6 +1365,74 @@ destroy_sizes(ImgExportSizes *sizes)
     g_free(sizes);
 }
 
+static void
+set_cairo_source_rgba(cairo_t *cr, const GwyRGBA *rgba)
+{
+    cairo_set_source_rgba(cr, rgba->r, rgba->g, rgba->b, rgba->a);
+}
+
+/* XXX: Outlines interact poorly with transparency. */
+static void
+draw_text_with_outline(cairo_t *cr, PangoLayout *layout,
+                       const GwyRGBA *colour, const GwyRGBA *outcolour,
+                       gdouble olw)
+{
+    if (olw > 0.0) {
+        gdouble x, y;
+
+        cairo_get_current_point(cr, &x, &y);
+        pango_cairo_layout_path(cr, layout);
+        set_cairo_source_rgba(cr, outcolour);
+        cairo_set_line_width(cr, 2.0*olw);
+        cairo_stroke(cr);
+        cairo_move_to(cr, x, y);
+    }
+    set_cairo_source_rgba(cr, colour);
+    cairo_set_line_width(cr, 0.0);
+    pango_cairo_show_layout(cr, layout);
+}
+
+/* Can be only used with closed paths and with SQUARE and ROUND line ends --
+ * which we don't use because then we can't get invisible line end ticks. */
+static void
+stroke_path_with_outline(cairo_t *cr,
+                         const GwyRGBA *colour, const GwyRGBA *outcolour,
+                         gdouble lw, gdouble olw)
+{
+    if (olw > 0.0) {
+        set_cairo_source_rgba(cr, outcolour);
+        cairo_set_line_width(cr, lw + 2.0*olw);
+        cairo_stroke_preserve(cr);
+    }
+    set_cairo_source_rgba(cr, colour);
+    cairo_set_line_width(cr, lw);
+    cairo_stroke(cr);
+}
+
+/* Draw outline (only) for a BUTT line, adding correct outline at the ends. */
+static void
+draw_line_outline(cairo_t *cr,
+                  gdouble xf, gdouble yf, gdouble xt, gdouble yt,
+                  const GwyRGBA *outcolour,
+                  gdouble lw, gdouble olw)
+{
+    gdouble vx = xt - xf, vy = yt - yf;
+    gdouble len = sqrt(vx*vx + vy*vy);
+
+    if (len < 1e-9 || olw <= 0.0)
+        return;
+
+    vx *= olw/len;
+    vy *= olw/len;
+    cairo_save(cr);
+    cairo_move_to(cr, xf - vx, yf - vy);
+    cairo_line_to(cr, xt + vx, yt + vy);
+    cairo_set_line_width(cr, lw + 2.0*olw);
+    set_cairo_source_rgba(cr, outcolour);
+    cairo_stroke(cr);
+    cairo_restore(cr);
+}
+
 static GdkPixbuf*
 draw_data_pixbuf_1_1(const ImgExportArgs *args)
 {
@@ -1517,7 +1590,7 @@ draw_data_frame(G_GNUC_UNUSED const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
-    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    set_cairo_source_rgba(cr, &black);
     cairo_set_line_width(cr, lw);
     cairo_rectangle(cr, 0.5*lw, 0.5*lw, w + lw, h + lw);
     cairo_stroke(cr);
@@ -1550,7 +1623,7 @@ draw_hruler(const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
-    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    set_cairo_source_rgba(cr, &black);
     cairo_set_line_width(cr, lw);
     for (x = ticks->from; x <= ticks->to + 1e-14*bs; x += bs) {
         ximg = (x - xoffset)*scale + 0.5*lw;
@@ -1563,7 +1636,7 @@ draw_hruler(const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
-    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    set_cairo_source_rgba(cr, &black);
     for (x = ticks->from; x <= ticks->to + 1e-14*bs; x += bs) {
         PangoRectangle logical;
 
@@ -1611,7 +1684,7 @@ draw_vruler(const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
-    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    set_cairo_source_rgba(cr, &black);
     cairo_set_line_width(cr, lw);
     for (y = ticks->from; y <= ticks->to + 1e-14*bs; y += bs) {
         yimg = (y - yoffset)*scale + 0.5*lw;
@@ -1624,7 +1697,7 @@ draw_vruler(const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
-    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    set_cairo_source_rgba(cr, &black);
     for (y = ticks->from; y <= ticks->to + 1e-14*bs; y += bs) {
         PangoRectangle logical;
 
@@ -1651,6 +1724,7 @@ draw_inset(const ImgExportArgs *args,
     gdouble xreal = gwy_data_field_get_xreal(dfield);
     const ImgExportRect *rect = &sizes->inset, *imgrect = &sizes->image;
     const GwyRGBA *colour = &args->inset_color;
+    const GwyRGBA *outcolour = &args->inset_outline_color;
     PangoRectangle logical;
     gdouble lw = sizes->sizes.line_width;
     gdouble tl = sizes->sizes.tick_length;
@@ -1673,17 +1747,35 @@ draw_inset(const ImgExportArgs *args,
     cairo_rectangle(cr, imgrect->x + lw, imgrect->y + lw, w, h);
     cairo_clip(cr);
     cairo_translate(cr, rect->x, rect->y);
-    cairo_set_source_rgba(cr, colour->r, colour->g, colour->b, colour->a);
-    cairo_set_line_width(cr, lw);
+    if (args->inset_draw_ticks)
+        y = 0.5*tl;
+
+    if (olw > 0.0) {
+        if (args->inset_draw_ticks) {
+            draw_line_outline(cr,
+                              xcentre - 0.5*length, 0.0,
+                              xcentre - 0.5*length, tl + lw,
+                              outcolour, lw, olw);
+            draw_line_outline(cr,
+                              xcentre + 0.5*length, 0.0,
+                              xcentre + 0.5*length, tl + lw,
+                              outcolour, lw, olw);
+        }
+        draw_line_outline(cr,
+                          xcentre - 0.5*length, y + 0.5*lw,
+                          xcentre + 0.5*length, y + 0.5*lw,
+                          outcolour, lw, olw);
+    }
     if (args->inset_draw_ticks) {
         cairo_move_to(cr, xcentre - 0.5*length, 0.0);
         cairo_rel_line_to(cr, 0.0, tl + lw);
         cairo_move_to(cr, xcentre + 0.5*length, 0.0);
         cairo_rel_line_to(cr, 0.0, tl + lw);
-        y = 0.5*tl;
     }
     cairo_move_to(cr, xcentre - 0.5*length, y + 0.5*lw);
     cairo_line_to(cr, xcentre + 0.5*length, y + 0.5*lw);
+    cairo_set_line_width(cr, lw);
+    set_cairo_source_rgba(cr, colour);
     cairo_stroke(cr);
     cairo_restore(cr);
 
@@ -1699,17 +1791,9 @@ draw_inset(const ImgExportArgs *args,
     cairo_rectangle(cr, imgrect->x + lw, imgrect->y + lw, w, h);
     cairo_clip(cr);
     cairo_translate(cr, rect->x, rect->y);
-    cairo_set_source_rgba(cr, colour->r, colour->g, colour->b, colour->a);
     format_layout(layout, &logical, s, "%s", args->inset_length);
     cairo_move_to(cr, xcentre - 0.5*logical.width/pangoscale, y);
-    pango_cairo_show_layout(cr, layout);
-    if (olw > 0.0) {
-        pango_cairo_layout_path(cr, layout);
-        /* XXX XXX XXX just testing... */
-        cairo_set_source_rgba(cr, 0.8, 0.0, 0.8, colour->a);
-        cairo_set_line_width(cr, olw);
-        cairo_stroke(cr);
-    }
+    draw_text_with_outline(cr, layout, colour, outcolour, olw);
     cairo_restore(cr);
 }
 
@@ -1735,7 +1819,7 @@ draw_title(const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x + gap, rect->y);
-    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    set_cairo_source_rgba(cr, &black);
     vf = sizes->vf_title;
     if (args->units_in_title && strlen(vf->units))
         format_layout(layout, &logical, s, "%s [%s]", env->title, vf->units);
@@ -1794,7 +1878,7 @@ draw_fmgrad(const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
-    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    set_cairo_source_rgba(cr, &black);
     cairo_set_line_width(cr, lw);
     cairo_rectangle(cr, 0.5*lw, 0.5*lw, w + lw, h + lw);
     cairo_stroke(cr);
@@ -1830,7 +1914,7 @@ draw_fmruler(const ImgExportArgs *args,
     /* Draw the edge ticks first */
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
-    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    set_cairo_source_rgba(cr, &black);
     cairo_set_line_width(cr, lw);
     cairo_move_to(cr, 0.0, 0.5*lw);
     cairo_rel_line_to(cr, tl, 0.0);
@@ -1844,7 +1928,7 @@ draw_fmruler(const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
-    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    set_cairo_source_rgba(cr, &black);
     if (args->units_in_title)
         format_layout(layout, &logical, s, "%.*f", vf->precision, max);
     else
@@ -1890,7 +1974,7 @@ draw_fmruler(const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
-    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    set_cairo_source_rgba(cr, &black);
     cairo_set_line_width(cr, lw);
     for (i = 0; i < nticks; i++) {
         z = g_array_index(mticks, gdouble, i);
@@ -1917,7 +2001,7 @@ draw_fmruler(const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
-    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    set_cairo_source_rgba(cr, &black);
     for (i = 0; i < nticks; i++) {
         z = g_array_index(mticks, gdouble, i);
         z = fixzero(z);
@@ -4726,7 +4810,7 @@ sel_setup_cairo(const ImgExportArgs *args,
     cairo_translate(cr, rect->x + lw, rect->y + lw);
     cairo_rectangle(cr, 0.0, 0.0, w, h);
     cairo_clip(cr);
-    cairo_set_source_rgba(cr, colour->r, colour->g, colour->b, colour->a);
+    set_cairo_source_rgba(cr, colour);
     cairo_set_line_width(cr, lw);
 
     *qx = w/xreal;
@@ -4757,6 +4841,8 @@ draw_sel_axis(const ImgExportArgs *args,
               cairo_t *cr)
 {
     gdouble lw = sizes->sizes.line_width;
+    gdouble olw = sizes->sizes.outline_width;
+    const GwyRGBA *outcolour = &args->sel_outline_color;
     gdouble qx, qy, p, xy[1];
     GwyOrientation orientation;
     gdouble w = sizes->image.w - 2.0*lw;
@@ -4771,11 +4857,15 @@ draw_sel_axis(const ImgExportArgs *args,
         gwy_selection_get_object(sel, i, xy);
         if (orientation == GWY_ORIENTATION_HORIZONTAL) {
             p = qy*xy[0];
+            if (olw > 0.0)
+                draw_line_outline(cr, 0.0, p, w, p, outcolour, lw, olw);
             cairo_move_to(cr, 0.0, p);
             cairo_line_to(cr, w, p);
         }
         else {
             p = qx*xy[0];
+            if (olw > 0.0)
+                draw_line_outline(cr, p, 0.0, p, h, outcolour, lw, olw);
             cairo_move_to(cr, p, 0.0);
             cairo_line_to(cr, p, h);
         }
@@ -4792,6 +4882,10 @@ draw_sel_ellipse(const ImgExportArgs *args,
                  G_GNUC_UNUSED GString *s,
                  cairo_t *cr)
 {
+    gdouble lw = sizes->sizes.line_width;
+    gdouble olw = sizes->sizes.outline_width;
+    const GwyRGBA *colour = &args->sel_color;
+    const GwyRGBA *outcolour = &args->sel_outline_color;
     gdouble qx, qy, xf, yf, xt, yt, xy[4];
     guint n, i;
 
@@ -4807,7 +4901,7 @@ draw_sel_ellipse(const ImgExportArgs *args,
         draw_ellipse(cr,
                      0.5*(xf + xt), 0.5*(yf + yt),
                      0.5*(xt - xf), 0.5*(yt - yf));
-        cairo_stroke(cr);
+        stroke_path_with_outline(cr, colour, outcolour, lw, olw);
     }
     cairo_restore(cr);
 }
@@ -4822,6 +4916,9 @@ draw_sel_line(const ImgExportArgs *args,
 {
     gdouble lw = sizes->sizes.line_width;
     gdouble lt = args->sel_line_thickness;
+    gdouble olw = sizes->sizes.outline_width;
+    const GwyRGBA *colour = &args->sel_color;
+    const GwyRGBA *outcolour = &args->sel_outline_color;
     gdouble px, py, qx, qy, xf, yf, xt, yt, xy[4];
     guint n, i;
 
@@ -4873,7 +4970,7 @@ draw_sel_line(const ImgExportArgs *args,
             xd *= (0.5*lw + 0.45*logical.height/pangoscale);
             yd *= (0.5*lw + 0.45*logical.height/pangoscale);
             cairo_move_to(cr, xc + xd, yc + yd);
-            pango_cairo_show_layout(cr, layout);
+            draw_text_with_outline(cr, layout, colour, outcolour, olw);
         }
 
     }
@@ -4890,6 +4987,9 @@ draw_sel_point(const ImgExportArgs *args,
 {
     gdouble tl = G_SQRT2*sizes->sizes.tick_length;
     gdouble lw = sizes->sizes.line_width;
+    gdouble olw = sizes->sizes.outline_width;
+    const GwyRGBA *colour = &args->sel_color;
+    const GwyRGBA *outcolour = &args->sel_outline_color;
     gdouble pr = args->sel_point_radius;
     gdouble px, py, qx, qy, x, y, xy[2];
     guint n, i;
@@ -4904,6 +5004,12 @@ draw_sel_point(const ImgExportArgs *args,
         gwy_selection_get_object(sel, i, xy);
         x = qx*xy[0];
         y = qy*xy[1];
+        if (olw > 0.0) {
+            draw_line_outline(cr, x - 0.5*tl, y, x + 0.5*tl, y,
+                              outcolour, lw, olw);
+            draw_line_outline(cr, x, y - 0.5*tl, x, y + 0.5*tl,
+                              outcolour, lw, olw);
+        }
         cairo_move_to(cr, x - 0.5*tl, y);
         cairo_rel_line_to(cr, tl, 0.0);
         cairo_move_to(cr, x, y - 0.5*tl);
@@ -4913,7 +5019,7 @@ draw_sel_point(const ImgExportArgs *args,
         if (args->sel_point_radius > 0.0) {
             gdouble xr = pr*px, yr = pr*py;
             draw_ellipse(cr, x, y, xr, yr);
-            cairo_stroke(cr);
+            stroke_path_with_outline(cr, colour, outcolour, lw, olw);
         }
 
         if (args->sel_number_objects) {
@@ -4923,7 +5029,7 @@ draw_sel_point(const ImgExportArgs *args,
             cairo_move_to(cr,
                           x + lw + 0.05*logical.height/pangoscale,
                           y + lw + 0.05*logical.height/pangoscale);
-            pango_cairo_show_layout(cr, layout);
+            draw_text_with_outline(cr, layout, colour, outcolour, olw);
         }
     }
     cairo_restore(cr);
@@ -4937,6 +5043,10 @@ draw_sel_rectangle(const ImgExportArgs *args,
                    G_GNUC_UNUSED GString *s,
                    cairo_t *cr)
 {
+    gdouble lw = sizes->sizes.line_width;
+    gdouble olw = sizes->sizes.outline_width;
+    const GwyRGBA *colour = &args->sel_color;
+    const GwyRGBA *outcolour = &args->sel_outline_color;
     gdouble qx, qy, xf, yf, xt, yt, xy[4];
     guint n, i;
 
@@ -4950,7 +5060,7 @@ draw_sel_rectangle(const ImgExportArgs *args,
         xt = qx*xy[2];
         yt = qy*xy[3];
         cairo_rectangle(cr, xf, yf, xt - xf, yt - yf);
-        cairo_stroke(cr);
+        stroke_path_with_outline(cr, colour, outcolour, lw, olw);
     }
     cairo_restore(cr);
 }
