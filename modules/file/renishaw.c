@@ -122,75 +122,81 @@ typedef enum {
 } WdfBlockIDs;
 
 typedef enum {
-    WdfDataType_Arbitrary,      /* arbitrary type */
-    WdfDataType_Spectral,       /* DEPRECATED: Use Frequency instead */
-    WdfDataType_Intensity,      /* intensity */
-    WdfDataType_Spatial_X,      /* X position */
-    WdfDataType_Spatial_Y,      /* Y axis position */
-    WdfDataType_Spatial_Z,      /* Z axis (vertical) position */
-    WdfDataType_Spatial_R,      /* rotary stage R axis position */
-    WdfDataType_Spatial_Theta,  /* rotary stage theta angle */
-    WdfDataType_Spatial_Phi,    /* rotary stage phi angle */
-    WdfDataType_Temperature,    /* temperature */
-    WdfDataType_Pressure,       /* pressure */
-    WdfDataType_Time,           /* time */
-    WdfDataType_Derived,        /* derivative type */
-    WdfDataType_Polarization,   /* polarization */
-    WdfDataType_FocusTrack,     /* focus track Z position */
-    WdfDataType_RampRate,       /* temperature ramp rate */
-    WdfDataType_Checksum,       /* spectrum data checksum */
-    WdfDataType_Flags,          /* bit flags */
-    WdfDataType_ElapsedTime,    /* elapsed time intervals */
-    WdfDataType_Frequency,      /* frequency */
+    WDF_DATATYPE_ARBITRARY,      /* arbitrary type */
+    WDF_DATATYPE_SPECTRAL,       /* DEPRECATED: Use Frequency instead */
+    WDF_DATATYPE_INTENSITY,      /* intensity */
+    WDF_DATATYPE_SPATIAL_X,      /* X position */
+    WDF_DATATYPE_SPATIAL_Y,      /* Y axis position */
+    WDF_DATATYPE_SPATIAL_Z,      /* Z axis (vertical) position */
+    WDF_DATATYPE_SPATIAL_R,      /* rotary stage R axis position */
+    WDF_DATATYPE_SPATIAL_THETA,  /* rotary stage theta angle */
+    WDF_DATATYPE_SPATIAL_PHI,    /* rotary stage phi angle */
+    WDF_DATATYPE_TEMPERATURE,    /* temperature */
+    WDF_DATATYPE_PRESSURE,       /* pressure */
+    WDF_DATATYPE_TIME,           /* time */
+    WDF_DATATYPE_DERIVED,        /* derivative type */
+    WDF_DATATYPE_POLARIZATION,   /* polarization */
+    WDF_DATATYPE_FOCUSTRACK,     /* focus track Z position */
+    WDF_DATATYPE_RAMPRATE,       /* temperature ramp rate */
+    WDF_DATATYPE_CHECKSUM,       /* spectrum data checksum */
+    WDF_DATATYPE_FLAGS,          /* bit flags */
+    WDF_DATATYPE_ELAPSEDTIME,    /* elapsed time intervals */
+    WDF_DATATYPE_FREQUENCY,      /* frequency */
     /* Microplate mapping origins */
-    WdfDataType_Mp_Well_Spatial_X,
-    WdfDataType_Mp_Well_Spatial_Y,
-    WdfDataType_Mp_LocationIndex,
-    WdfDataType_Mp_WellReference,
-
-    WdfDataType_EndMarker       /* THIS SHOULD ALWAYS BE LAST */
+    WDF_DATATYPE_MP_WELL_SPATIAL_X,
+    WDF_DATATYPE_MP_WELL_SPATIAL_Y,
+    WDF_DATATYPE_MP_LOCATIONINDEX,
+    WDF_DATATYPE_MP_WELLREFERENCE,
+    WDF_DATATYPE_ENDMARKER       /* THIS SHOULD ALWAYS BE LAST */
 } WdfDataType;
 
 typedef enum {
-    WdfDataUnits_Arbitrary,    /* arbitrary units */
-    WdfDataUnits_RamanShift,   /* Raman shift (cm^-1) */
-    WdfDataUnits_Wavenumber,   /* wavenumber (nm) */
-    WdfDataUnits_Nanometre,    /* 10-9 metres (nm) */
-    WdfDataUnits_ElectronVolt, /* electron volts (eV) */
-    WdfDataUnits_Micron,       /* 10-6 metres (um) */
-    WdfDataUnits_Counts,       /* counts */
-    WdfDataUnits_Electrons,    /* electrons */
-    WdfDataUnits_Millimetres,  /* 10^-3 metres (mm) */
-    WdfDataUnits_Metres,       /* metres (m) */
-    WdfDataUnits_Kelvin,       /* degrees Kelvin (K) */
-    WdfDataUnits_Pascal,       /* Pascals (Pa) */
-    WdfDataUnits_Seconds,      /* seconds (s) */
-    WdfDataUnits_Milliseconds, /* 10^-3 seconds (ms) */
-    WdfDataUnits_Hours,
-    WdfDataUnits_Days,
-    WdfDataUnits_Pixels,
-    WdfDataUnits_Intensity,
-    WdfDataUnits_RelativeIntensity,
-    WdfDataUnits_Degrees,
-    WdfDataUnits_Radians,
-    WdfDataUnits_Celcius,
-    WdfDataUnits_Farenheit,
-    WdfDataUnits_KelvinPerMinute,
-    WdfDataUnits_FileTime,     /* date-time as a Windows FILETIME */
-    WdfDataUnits_EndMarker
+    WDF_DATAUNITS_ARBITRARY,    /* arbitrary units */
+    WDF_DATAUNITS_RAMANSHIFT,   /* Raman shift (cm^{-1}) */
+    WDF_DATAUNITS_WAVENUMBER,   /* wavenumber (nm) */
+    WDF_DATAUNITS_NANOMETRE,    /* 10^{-9} metres (nm) */
+    WDF_DATAUNITS_ELECTRONVOLT, /* electron volts (eV) */
+    WDF_DATAUNITS_MICRON,       /* 10^{-6} metres (um) */
+    WDF_DATAUNITS_COUNTS,       /* counts */
+    WDF_DATAUNITS_ELECTRONS,    /* electrons */
+    WDF_DATAUNITS_MILLIMETRES,  /* 10^{-3} metres (mm) */
+    WDF_DATAUNITS_METRES,       /* metres (m) */
+    WDF_DATAUNITS_KELVIN,       /* degrees Kelvin (K) */
+    WDF_DATAUNITS_PASCAL,       /* Pascals (Pa) */
+    WDF_DATAUNITS_SECONDS,      /* seconds (s) */
+    WDF_DATAUNITS_MILLISECONDS, /* 10^{-3} seconds (ms) */
+    WDF_DATAUNITS_HOURS,
+    WDF_DATAUNITS_DAYS,
+    WDF_DATAUNITS_PIXELS,
+    WDF_DATAUNITS_INTENSITY,
+    WDF_DATAUNITS_RELATIVEINTENSITY,
+    WDF_DATAUNITS_DEGREES,
+    WDF_DATAUNITS_RADIANS,
+    WDF_DATAUNITS_CELCIUS,
+    WDF_DATAUNITS_FARENHEIT,
+    WDF_DATAUNITS_KELVINPERMINUTE,
+    WDF_DATAUNITS_FILETIME,     /* date-time as a Windows FILETIME */
+    WDF_DATAUNITS_ENDMARKER
 } WdfDataUnits;
 
 typedef enum {
-    WdfMapArea_RandomPoints = (1 << 0),     /* rectangle area */
-    WdfMapArea_ColumnMajor  = (1 << 1),     /* X first then Y. */
-    WdfMapArea_Alternating  = (1 << 2),     /* raster or snake */
-    WdfMapArea_LineFocusMapping = (1 << 3), /* see also linefocus_height */
-    // The following two values are deprecated; negative step-size is sufficient information.
-    // [Deprecated] WdfMapArea_InvertedRows = (1 << 4),     /* true if rows collected right to left */
-    // [Deprecated] WdfMapArea_InvertedColumns = (1 << 5),  /* true if columns collected bottom to top */
-    WdfMapArea_SurfaceProfile = (1 << 6),   /* true if the Z data is non-regular (surface maps) */
-    WdfMapArea_XyLine = (1 << 7),           /* line or depth slice forming a single line along the XY plane:
-                                               length.x contains number of points along line; length.y = 1 */
+    WDF_MAPAREA_RANDOMPOINTS = 1,     /* rectangle area */
+    WDF_MAPAREA_COLUMNMAJOR  = 2,     /* X first then Y. */
+    WDF_MAPAREA_ALTERNATING  = 4,     /* raster or snake */
+    WDF_MAPAREA_LINEFOCUSMAPPING = 8, /* see also linefocus_height */
+    /*
+     *  The following two values are deprecated;
+     *  negative step-size is sufficient information.
+     */
+    /* WDF_MAPAREA_INVERTEDROWS = 16,     /* true if rows collected
+                                                        right to left */
+    /* WDF_MAPAREA_INVERTEDCOLUMNS = 32,  /* true if columns collected
+     *                                                  bottom to top */
+    WDF_MAPAREA_SURFACEPROFILE = 64,  /* true if the Z data
+                                        is non-regular (surface maps) */
+    WDF_MAPAREA_XYLINE = 128,
+    /* line or depth slice forming a single line along the XY plane:
+       length.x contains number of points along line; length.y = 1 */
 } WdfMapAreaType;
 
 typedef struct {

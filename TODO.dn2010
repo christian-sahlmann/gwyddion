@@ -3,6 +3,7 @@ developed just now:
 - data loading from Renishaw WDF files (WIP).
 - more simple interface for volume data extraction. Implement missing
   parts of volume infrastructure.
+- Tool to recalculate calibrations for volume data.
 - more work on volume clustering and preprocessing of volume data (WIP).
 - export of the whole project data file with some basic preprocessing,
   i.e. we're saving zip archive with all datafield exported into png
