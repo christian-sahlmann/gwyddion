@@ -4955,6 +4955,26 @@ draw_sel_line(const ImgExportArgs *args,
         yf = qy*xy[1];
         xt = qx*xy[2];
         yt = qy*xy[3];
+
+        if (olw > 0.0) {
+            draw_line_outline(cr, xf, yf, xt, yt, outcolour, lw, olw);
+            if (args->sel_line_thickness > 0.0) {
+                gdouble xd = yt - yf, yd = xf - xt;
+                gdouble len = sqrt(xd*xd + yd*yd);
+                xd *= lt*px/len;
+                yd *= lt*py/len;
+
+                draw_line_outline(cr,
+                                  xf - 0.5*xd, yf - 0.5*yd,
+                                  xf + 0.5*xd, yf + 0.5*yd,
+                                  outcolour, lw, olw);
+                draw_line_outline(cr,
+                                  xt - 0.5*xd, yt - 0.5*yd,
+                                  xt + 0.5*xd, yt + 0.5*yd,
+                                  outcolour, lw, olw);
+            }
+        }
+
         cairo_move_to(cr, xf, yf);
         cairo_line_to(cr, xt, yt);
 
@@ -4971,6 +4991,7 @@ draw_sel_line(const ImgExportArgs *args,
             cairo_rel_line_to(cr, xd, yd);
         }
 
+        set_cairo_source_rgb(cr, colour);
         cairo_stroke(cr);
 
         if (args->sel_number_objects) {
@@ -4990,10 +5011,11 @@ draw_sel_line(const ImgExportArgs *args,
             yc -= 0.5*logical.height/pangoscale;
             xd *= (0.5*lw + 0.45*logical.height/pangoscale);
             yd *= (0.5*lw + 0.45*logical.height/pangoscale);
+            cairo_save(cr);
             cairo_move_to(cr, xc + xd, yc + yd);
             draw_text_with_outline(cr, layout, colour, outcolour, olw);
+            cairo_restore(cr);
         }
-
     }
 }
 
@@ -5035,6 +5057,7 @@ draw_sel_point(const ImgExportArgs *args,
         cairo_rel_line_to(cr, 0.0, tl);
         cairo_stroke(cr);
 
+        cairo_save(cr);
         if (args->sel_point_radius > 0.0) {
             gdouble xr = pr*px, yr = pr*py;
             draw_ellipse(cr, x, y, xr, yr);
@@ -5050,6 +5073,7 @@ draw_sel_point(const ImgExportArgs *args,
                           y + lw + 0.05*logical.height/pangoscale);
             draw_text_with_outline(cr, layout, colour, outcolour, olw);
         }
+        cairo_restore(cr);
     }
 }
 
