@@ -231,6 +231,13 @@ typedef struct {
 } ImgExportArgs;
 
 typedef struct {
+    GtkWidget *label;
+    GtkWidget *button;
+    GtkWidget *setblack;
+    GtkWidget *setwhite;
+} ImgExportColourControls;
+
+typedef struct {
     ImgExportArgs *args;
     GtkWidget *dialog;
     GtkWidget *preview;
@@ -259,10 +266,8 @@ typedef struct {
     GSList *xytype;
     GtkObject *inset_xgap;
     GtkObject *inset_ygap;
-    GtkWidget *inset_color_label;
-    GtkWidget *inset_color;
-    GtkWidget *inset_black;
-    GtkWidget *inset_white;
+    ImgExportColourControls inset_colour;
+    ImgExportColourControls inset_outline_colour;
     GSList *inset_pos;
     GtkWidget *inset_pos_label[6];
     GtkWidget *inset_length_label;
@@ -285,10 +290,8 @@ typedef struct {
     GtkWidget *table_selection;
     GtkWidget *draw_selection;
     GtkWidget *selections;
-    GtkWidget *sel_color_label;
-    GtkWidget *sel_color;
-    GtkWidget *sel_black;
-    GtkWidget *sel_white;
+    ImgExportColourControls sel_colour;
+    ImgExportColourControls sel_outline_colour;
     gint sel_row_start;
     GtkWidget *sel_options_label;
     GSList *sel_options;
@@ -2722,6 +2725,16 @@ create_basic_controls(ImgExportControls *controls)
 }
 
 static void
+update_colour_controls_sensitivity(ImgExportColourControls *colourctrl,
+                                   gboolean sens)
+{
+    gtk_widget_set_sensitive(colourctrl->label, sens);
+    gtk_widget_set_sensitive(colourctrl->button, sens);
+    gtk_widget_set_sensitive(colourctrl->setblack, sens);
+    gtk_widget_set_sensitive(colourctrl->setwhite, sens);
+}
+
+static void
 update_lateral_sensitivity(ImgExportControls *controls)
 {
     gboolean insetsens = (controls->args->xytype == IMGEXPORT_LATERAL_INSET);
@@ -2729,10 +2742,9 @@ update_lateral_sensitivity(ImgExportControls *controls)
     GSList *l;
     guint i;
 
-    gtk_widget_set_sensitive(controls->inset_color_label, insetsens);
-    gtk_widget_set_sensitive(controls->inset_color, insetsens);
-    gtk_widget_set_sensitive(controls->inset_black, insetsens);
-    gtk_widget_set_sensitive(controls->inset_white, insetsens);
+    update_colour_controls_sensitivity(&controls->inset_colour, insetsens);
+    update_colour_controls_sensitivity(&controls->inset_outline_colour,
+                                       insetsens);
     gtk_widget_set_sensitive(controls->inset_length_label, insetsens);
     gtk_widget_set_sensitive(controls->inset_length, insetsens);
     gtk_widget_set_sensitive(controls->inset_length_auto, insetsens);
@@ -2773,68 +2785,59 @@ xytype_changed(G_GNUC_UNUSED GtkToggleButton *toggle,
 
 static void
 select_colour(ImgExportControls *controls,
-              GwyColorButton *button,
-              const gchar *title,
-              GwyRGBA *target)
+              GwyColorButton *button)
 {
     GtkColorSelection *colorsel;
     GtkWindow *parent;
     GtkWidget *dialog, *selector;
     GdkColor gdkcolor;
+    GwyRGBA *target;
     gint response;
-    guint alpha16;
+
+    target = (GwyRGBA*)g_object_get_data(G_OBJECT(button), "target");
+    g_return_if_fail(target);
 
     gwy_rgba_to_gdk_color(target, &gdkcolor);
-    alpha16 = gwy_rgba_to_gdk_alpha(target);
 
-    dialog = gtk_color_selection_dialog_new(title);
+    dialog = gtk_color_selection_dialog_new(_("Select Color"));
     selector = GTK_COLOR_SELECTION_DIALOG(dialog)->colorsel;
     colorsel = GTK_COLOR_SELECTION(selector);
     gtk_color_selection_set_current_color(colorsel, &gdkcolor);
-    gtk_color_selection_set_current_alpha(colorsel, alpha16);
     gtk_color_selection_set_has_palette(colorsel, FALSE);
-    gtk_color_selection_set_has_opacity_control(colorsel, TRUE);
+    gtk_color_selection_set_has_opacity_control(colorsel, FALSE);
 
     parent = GTK_WINDOW(controls->dialog);
     gtk_window_set_transient_for(GTK_WINDOW(dialog), parent);
     gtk_window_set_modal(parent, FALSE);
     response = gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_color_selection_get_current_color(colorsel, &gdkcolor);
-    alpha16 = gtk_color_selection_get_current_alpha(colorsel);
     gtk_widget_destroy(dialog);
     gtk_window_set_modal(parent, TRUE);
 
     if (response != GTK_RESPONSE_OK)
         return;
 
-    gwy_rgba_from_gdk_color_and_alpha(target, &gdkcolor, alpha16);
+    gwy_rgba_from_gdk_color(target, &gdkcolor);  /* OK, doesn't touch alpha */
     gwy_color_button_set_color(button, target);
     update_preview(controls);
 }
 
 static void
-select_inset_color(ImgExportControls *controls,
-                   GwyColorButton *button)
+set_colour_to(ImgExportControls *controls,
+              GObject *button)
 {
-    select_colour(controls, button, _("Change Inset Color"),
-                  &controls->args->inset_color);
-}
+    GwyColorButton *colourbutton;
+    const GwyRGBA *settocolour;
+    GwyRGBA *target;
 
-static void
-inset_color_black(ImgExportControls *controls)
-{
-    controls->args->inset_color = black;
-    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->inset_color),
-                               &controls->args->inset_color);
-    update_preview(controls);
-}
+    target = (GwyRGBA*)g_object_get_data(button, "target");
+    settocolour = (const GwyRGBA*)g_object_get_data(button, "settocolour");
+    colourbutton = (GwyColorButton*)g_object_get_data(button, "colourbutton");
+    g_return_if_fail(target);
+    g_return_if_fail(colourbutton);
 
-static void
-inset_color_white(ImgExportControls *controls)
-{
-    controls->args->inset_color = white;
-    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->inset_color),
-                               &controls->args->inset_color);
+    *target = *settocolour;
+    gwy_color_button_set_color(colourbutton, target);
     update_preview(controls);
 }
 
@@ -2960,13 +2963,64 @@ inset_pos_add(ImgExportControls *controls,
 }
 
 static void
+create_colour_control(GtkTable *table,
+                      guint row,
+                      const gchar *name,
+                      GwyRGBA *target,
+                      ImgExportControls *controls,
+                      ImgExportColourControls *colourctrl)
+{
+    GtkWidget *label, *colour, *setblack, *setwhite, *hbox;
+    gint ncols;
+
+    label = gtk_label_new_with_mnemonic(name);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label,
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    hbox = gtk_hbox_new(TRUE, 4);
+    g_object_get(table, "n-columns", &ncols, NULL);
+    gtk_table_attach(table, hbox,
+                     1, ncols, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    colour = gwy_color_button_new_with_color(target);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), colour);
+    gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(colour), FALSE);
+    gtk_box_pack_start(GTK_BOX(hbox), colour, TRUE, TRUE, 0);
+    g_object_set_data(G_OBJECT(colour), "target", target);
+    g_signal_connect_swapped(colour, "clicked",
+                             G_CALLBACK(select_colour), controls);
+
+    setblack = gtk_button_new_with_mnemonic(_("_Black"));
+    gtk_box_pack_start(GTK_BOX(hbox), setblack, TRUE, TRUE, 0);
+    g_object_set_data(G_OBJECT(setblack), "target", target);
+    g_object_set_data(G_OBJECT(setblack), "settocolour", (gpointer)&black);
+    g_object_set_data(G_OBJECT(setblack), "colourbutton", colour);
+    g_signal_connect_swapped(setblack, "clicked",
+                             G_CALLBACK(set_colour_to), controls);
+
+    setwhite = gtk_button_new_with_mnemonic(_("_White"));
+    gtk_box_pack_start(GTK_BOX(hbox), setwhite, TRUE, TRUE, 0);
+    g_object_set_data(G_OBJECT(setwhite), "target", target);
+    g_object_set_data(G_OBJECT(setwhite), "settocolour", (gpointer)&white);
+    g_object_set_data(G_OBJECT(setwhite), "colourbutton", colour);
+    g_signal_connect_swapped(setwhite, "clicked",
+                             G_CALLBACK(set_colour_to), controls);
+
+    colourctrl->label = label;
+    colourctrl->button = colour;
+    colourctrl->setblack = setblack;
+    colourctrl->setwhite = setblack;
+}
+
+static void
 create_lateral_controls(ImgExportControls *controls)
 {
     ImgExportArgs *args = controls->args;
-    GtkWidget *table, *label, *hbox;
+    GtkWidget *table, *label;
     gint row = 0;
 
-    table = controls->table_lateral = gtk_table_new(11, 4, FALSE);
+    table = controls->table_lateral = gtk_table_new(12, 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -2996,31 +3050,15 @@ create_lateral_controls(ImgExportControls *controls)
                              G_CALLBACK(inset_ygap_changed), controls);
     row++;
 
-    controls->inset_color_label = gtk_label_new(_("Color:"));
-    gtk_misc_set_alignment(GTK_MISC(controls->inset_color_label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), controls->inset_color_label,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    hbox = gtk_hbox_new(TRUE, 4);
-    gtk_table_attach(GTK_TABLE(table), hbox,
-                     1, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    create_colour_control(GTK_TABLE(table), row++,
+                          _("Colo_r:"), &args->inset_color,
+                          controls, &controls->inset_colour);
     row++;
-    controls->inset_color = gwy_color_button_new_with_color(&args->inset_color);
-    gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls->inset_color),
-                                   FALSE);
-    gtk_box_pack_start(GTK_BOX(hbox), controls->inset_color, TRUE, TRUE, 0);
-    g_signal_connect_swapped(controls->inset_color, "clicked",
-                             G_CALLBACK(select_inset_color), controls);
 
-    controls->inset_black = gtk_button_new_with_mnemonic(_("_Black"));
-    gtk_box_pack_start(GTK_BOX(hbox), controls->inset_black, TRUE, TRUE, 0);
-    g_signal_connect_swapped(controls->inset_black, "clicked",
-                             G_CALLBACK(inset_color_black), controls);
-
-    controls->inset_white = gtk_button_new_with_mnemonic(_("_White"));
-    gtk_box_pack_start(GTK_BOX(hbox), controls->inset_white, TRUE, TRUE, 0);
-    g_signal_connect_swapped(controls->inset_white, "clicked",
-                             G_CALLBACK(inset_color_white), controls);
+    create_colour_control(GTK_TABLE(table), row++,
+                          _("Out_line color:"), &args->inset_outline_color,
+                          controls, &controls->inset_outline_colour);
+    row++;
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
@@ -3316,10 +3354,8 @@ update_selection_sensitivity(ImgExportControls *controls)
 
     gtk_widget_set_sensitive(controls->selections, sens);
     gtk_widget_set_sensitive(controls->sel_options_label, sens);
-    gtk_widget_set_sensitive(controls->sel_color_label, sens);
-    gtk_widget_set_sensitive(controls->sel_color, sens);
-    gtk_widget_set_sensitive(controls->sel_black, sens);
-    gtk_widget_set_sensitive(controls->sel_white, sens);
+    update_colour_controls_sensitivity(&controls->sel_colour, sens);
+    update_colour_controls_sensitivity(&controls->sel_outline_colour, sens);
     for (l = controls->sel_options; l; l = g_slist_next(l))
         gtk_widget_set_sensitive(GTK_WIDGET(l->data), sens);
 }
@@ -3450,38 +3486,12 @@ selection_selected(ImgExportControls *controls,
 }
 
 static void
-select_sel_color(ImgExportControls *controls,
-                 GwyColorButton *button)
-{
-    select_colour(controls, button, _("Change Selection Color"),
-                  &controls->args->sel_color);
-}
-
-static void
-sel_color_black(ImgExportControls *controls)
-{
-    controls->args->sel_color = black;
-    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->sel_color),
-                               &controls->args->sel_color);
-    update_preview(controls);
-}
-
-static void
-sel_color_white(ImgExportControls *controls)
-{
-    controls->args->sel_color = white;
-    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->sel_color),
-                               &controls->args->sel_color);
-    update_preview(controls);
-}
-
-static void
 create_selection_controls(ImgExportControls *controls)
 {
     ImgExportArgs *args = controls->args;
     ImgExportEnv *env = args->env;
     GArray *selections = env->selections;
-    GtkWidget *table, *check, *hbox;
+    GtkWidget *table, *check;
     GtkTreeViewColumn *column;
     GtkCellRenderer *renderer;
     GwyNullStore *store;
@@ -3491,7 +3501,7 @@ create_selection_controls(ImgExportControls *controls)
     gint row = 0;
     guint i;
 
-    table = controls->table_selection = gtk_table_new(10, 3, FALSE);
+    table = controls->table_selection = gtk_table_new(11, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -3555,32 +3565,17 @@ create_selection_controls(ImgExportControls *controls)
     gtk_tree_view_column_set_cell_data_func(column, renderer,
                                             render_objects, controls, NULL);
 
-
-    controls->sel_color_label = gtk_label_new(_("Color:"));
-    gtk_misc_set_alignment(GTK_MISC(controls->sel_color_label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), controls->sel_color_label,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    hbox = gtk_hbox_new(TRUE, 4);
-    gtk_table_attach(GTK_TABLE(table), hbox,
-                     1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    controls->sel_color = gwy_color_button_new_with_color(&args->sel_color);
-    gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls->sel_color),
-                                   FALSE);
-    gtk_box_pack_start(GTK_BOX(hbox), controls->sel_color, TRUE, TRUE, 0);
-    g_signal_connect_swapped(controls->sel_color, "clicked",
-                             G_CALLBACK(select_sel_color), controls);
-
-    controls->sel_black = gtk_button_new_with_mnemonic(_("_Black"));
-    gtk_box_pack_start(GTK_BOX(hbox), controls->sel_black, TRUE, TRUE, 0);
-    g_signal_connect_swapped(controls->sel_black, "clicked",
-                             G_CALLBACK(sel_color_black), controls);
-
-    controls->sel_white = gtk_button_new_with_mnemonic(_("_White"));
-    gtk_box_pack_start(GTK_BOX(hbox), controls->sel_white, TRUE, TRUE, 0);
-    g_signal_connect_swapped(controls->sel_white, "clicked",
-                             G_CALLBACK(sel_color_white), controls);
+    create_colour_control(GTK_TABLE(table), row++,
+                          _("Colo_r:"), &args->sel_color,
+                          controls, &controls->sel_colour);
     row++;
+
+    create_colour_control(GTK_TABLE(table), row++,
+                          _("Out_line color:"), &args->sel_outline_color,
+                          controls, &controls->sel_outline_colour);
+    row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
     controls->sel_options_label = gwy_label_new_header(_("Options"));
     gtk_table_attach(GTK_TABLE(table), controls->sel_options_label,
@@ -3669,8 +3664,11 @@ reset_to_defaults(ImgExportControls *controls)
     gwy_radio_buttons_set_current(controls->inset_pos, defaults->inset_pos);
     inset_length_set_auto(controls);
     args->inset_color = defaults->inset_color;
-    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->inset_color),
+    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->inset_colour.button),
                                &args->inset_color);
+    args->inset_outline_color = defaults->inset_outline_color;
+    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->inset_outline_colour.button),
+                               &args->inset_outline_color);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->inset_draw_ticks),
                                  defaults->inset_draw_ticks);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->inset_draw_label),
@@ -3692,8 +3690,11 @@ reset_to_defaults(ImgExportControls *controls)
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->draw_selection),
                                  defaults->draw_selection);
     args->sel_color = defaults->sel_color;
-    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->sel_color),
+    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->sel_colour.button),
                                &args->sel_color);
+    args->sel_outline_color = defaults->sel_outline_color;
+    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->sel_outline_colour.button),
+                               &args->sel_outline_color);
 }
 
 static gboolean
