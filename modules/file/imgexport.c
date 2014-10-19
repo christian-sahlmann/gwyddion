@@ -20,6 +20,7 @@
  */
 #define DEBUG 1
 #include "config.h"
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <math.h>
@@ -72,6 +73,7 @@
 #include "err.h"
 #include "gwytiff.h"
 #include "image-keys.h"
+#include "imgexportpreset.h"
 
 #define mm2pt (72.0/25.4)
 #define pangoscale ((gdouble)PANGO_SCALE)
@@ -79,43 +81,7 @@
 
 enum {
     PREVIEW_SIZE = 400,
-    NPAGES       = 4,
 };
-
-typedef enum {
-    IMGEXPORT_MODE_PRESENTATION,
-    IMGEXPORT_MODE_GREY16,
-} ImgExportMode;
-
-typedef enum {
-    IMGEXPORT_LATERAL_NONE,
-    IMGEXPORT_LATERAL_RULERS,
-    IMGEXPORT_LATERAL_INSET,
-    IMGEXPORT_LATERAL_NTYPES
-} ImgExportLateralType;
-
-typedef enum {
-    IMGEXPORT_VALUE_NONE,
-    IMGEXPORT_VALUE_FMSCALE,
-    IMGEXPORT_VALUE_NTYPES
-} ImgExportValueType;
-
-typedef enum {
-    IMGEXPORT_TITLE_NONE,
-    IMGEXPORT_TITLE_TOP,
-    IMGEXPORT_TITLE_FMSCALE,
-    IMGEXPORT_TITLE_NTYPES
-} ImgExportTitleType;
-
-typedef enum {
-    INSET_POS_TOP_LEFT,
-    INSET_POS_TOP_CENTER,
-    INSET_POS_TOP_RIGHT,
-    INSET_POS_BOTTOM_LEFT,
-    INSET_POS_BOTTOM_CENTER,
-    INSET_POS_BOTTOM_RIGHT,
-    INSET_NPOS
-} InsetPosType;
 
 struct ImgExportFormat;
 
@@ -127,14 +93,6 @@ typedef struct {
 typedef struct {
     gdouble from, to, step, base;
 } RulerTicks;
-
-typedef struct {
-    gdouble font_size;
-    gdouble line_width;
-    gdouble outline_width;
-    gdouble border_width;
-    gdouble tick_length;
-} SizeSettings;
 
 typedef struct {
     /* Scaled parameters */
@@ -168,7 +126,7 @@ typedef struct {
     ImgExportRect canvas;
 } ImgExportSizes;
 
-typedef struct {
+struct _ImgExportEnv {
     const struct _ImgExportFormat *format;
     GwyDataField *dfield;
     GwyDataField *mask;
@@ -192,43 +150,7 @@ typedef struct {
     gboolean sel_point_have_layer;
     gdouble sel_line_thickness;
     gdouble sel_point_radius;
-} ImgExportEnv;
-
-typedef struct {
-    ImgExportEnv *env;
-    ImgExportMode mode;
-    guint active_page;
-    gdouble pxwidth;       /* Pixel width in mm for vector. */
-    gdouble zoom;          /* Pixelwise for pixmaps. */
-    SizeSettings sizes;
-    ImgExportLateralType xytype;
-    ImgExportValueType ztype;
-    GwyRGBA inset_color;
-    GwyRGBA inset_outline_color;
-    InsetPosType inset_pos;
-    gboolean draw_mask;
-    gboolean draw_selection;
-    gchar *font;
-    gboolean scale_font;   /* TRUE = font size tied to data pixels */
-    gboolean inset_draw_ticks;
-    gboolean inset_draw_label;
-    gdouble fmscale_gap;
-    gdouble inset_xgap;
-    gdouble inset_ygap;
-    gdouble title_gap;
-    gchar *inset_length;
-    GwyInterpolationType interpolation;
-    ImgExportTitleType title_type;
-    gboolean units_in_title;
-    gchar *selection;
-    GwyRGBA sel_color;
-    GwyRGBA sel_outline_color;
-    /* Selection-specific options.  If we find a layer displaying the
-     * selection we try to oppostuntistically init them from the layer.  */
-    gboolean sel_number_objects;
-    gdouble sel_line_thickness;
-    gdouble sel_point_radius;
-} ImgExportArgs;
+};
 
 typedef struct {
     GtkWidget *label;
@@ -346,13 +268,11 @@ static gboolean img_export_export       (GwyContainer *data,
                                          GwyRunType mode,
                                          GError **error,
                                          const gchar *name);
-static void     img_export_free_args    (ImgExportArgs *args);
 static void     img_export_free_env     (ImgExportEnv *env);
 static void     img_export_load_args    (GwyContainer *container,
                                          ImgExportArgs *args);
 static void     img_export_save_args    (GwyContainer *container,
                                          ImgExportArgs *args);
-static void     img_export_sanitize_args(ImgExportArgs *args);
 static gchar*   scalebar_auto_length    (GwyDataField *dfield,
                                          gdouble *p);
 static gdouble  inset_length_ok         (GwyDataField *dfield,
@@ -441,9 +361,6 @@ static void     draw_sel_rectangle  (const ImgExportArgs *args,
                                      cairo_t *cr);
 static void     options_sel_line    (ImgExportControls *controls);
 static void     options_sel_point   (ImgExportControls *controls);
-
-#define GWYRGBA_BLACK { 0.0, 0.0, 0.0, 1.0 }
-#define GWYRGBA_WHITE { 1.0, 1.0, 1.0, 1.0 }
 
 static const GwyRGBA black = GWYRGBA_BLACK;
 static const GwyRGBA white = GWYRGBA_WHITE;
@@ -544,21 +461,6 @@ static const ImgExportSelectionType known_selections[] =
         "GwySelectionLattice", N_("Lattice"),
         NULL, NULL,
     },
-};
-
-static const ImgExportArgs img_export_defaults = {
-    NULL, IMGEXPORT_MODE_PRESENTATION, 0,
-    0.1, 1.0,
-    { 12.0, 1.0, 0.0, 0.0, 10.0 },
-    IMGEXPORT_LATERAL_RULERS, IMGEXPORT_VALUE_FMSCALE,
-    GWYRGBA_WHITE, GWYRGBA_WHITE, INSET_POS_BOTTOM_RIGHT,
-    TRUE, FALSE,
-    "Helvetica", TRUE, TRUE, TRUE,
-    1.0, 1.0, 1.0, 0.0, "",
-    GWY_INTERPOLATION_ROUND,
-    IMGEXPORT_TITLE_NONE, FALSE,
-    "line", GWYRGBA_WHITE, GWYRGBA_WHITE,
-    TRUE, 0.0, 0.0,
 };
 
 static GwyModuleInfo module_info = {
@@ -5277,51 +5179,6 @@ static const gchar zoom_key[]               = "/module/pixmap/zoom";
 static const gchar ztype_key[]              = "/module/pixmap/ztype";
 
 static void
-img_export_sanitize_args(ImgExportArgs *args)
-{
-    if (args->mode != IMGEXPORT_MODE_GREY16)
-        args->mode = IMGEXPORT_MODE_PRESENTATION;
-    args->active_page = MIN(args->active_page, NPAGES-1);
-    args->xytype = MIN(args->xytype, IMGEXPORT_LATERAL_NTYPES-1);
-    args->ztype = MIN(args->ztype, IMGEXPORT_VALUE_NTYPES-1);
-    args->inset_pos = MIN(args->inset_pos, INSET_NPOS-1);
-    args->interpolation = gwy_enum_sanitize_value(args->interpolation,
-                                                  GWY_TYPE_INTERPOLATION_TYPE);
-    args->title_type = MIN(args->title_type, IMGEXPORT_TITLE_NTYPES-1);
-    /* handle inset_length later, its usability depends on the data field. */
-    args->zoom = CLAMP(args->zoom, 0.06, 16.0);
-    args->pxwidth = CLAMP(args->pxwidth, 0.01, 25.4);
-    args->draw_mask = !!args->draw_mask;
-    args->draw_selection = !!args->draw_selection;
-    args->scale_font = !!args->scale_font;
-    args->inset_draw_ticks = !!args->inset_draw_ticks;
-    args->inset_draw_label = !!args->inset_draw_label;
-    args->units_in_title = !!args->units_in_title;
-    args->sizes.font_size = CLAMP(args->sizes.font_size, 1.0, 1024.0);
-    args->sizes.line_width = CLAMP(args->sizes.line_width, 0.0, 16.0);
-    args->sizes.outline_width = CLAMP(args->sizes.outline_width, 0.0, 16.0);
-    args->sizes.border_width = CLAMP(args->sizes.border_width, 0.0, 1024.0);
-    args->sizes.tick_length = CLAMP(args->sizes.tick_length, 0.0, 120.0);
-    args->fmscale_gap = CLAMP(args->fmscale_gap, 0.0, 2.0);
-    args->inset_xgap = CLAMP(args->inset_xgap, 0.0, 4.0);
-    args->inset_ygap = CLAMP(args->inset_ygap, 0.0, 2.0);
-    args->title_gap = CLAMP(args->title_gap, -1.0, 1.0);
-    args->inset_outline_color.a = args->inset_color.a;
-    args->sel_outline_color.a = args->sel_color.a;
-    args->sel_number_objects = !!args->sel_number_objects;
-    args->sel_line_thickness = CLAMP(args->sel_line_thickness, 0.0, 1024.0);
-    args->sel_point_radius = CLAMP(args->sel_point_radius, 0.0, 1024.0);
-}
-
-static void
-img_export_free_args(ImgExportArgs *args)
-{
-    g_free(args->font);
-    g_free(args->inset_length);
-    g_free(args->selection);
-}
-
-static void
 img_export_free_env(ImgExportEnv *env)
 {
     if (env->grey)
@@ -5394,10 +5251,7 @@ img_export_load_args(GwyContainer *container,
     gwy_container_gis_double_by_name(container, sel_point_radius_key,
                                      &args->sel_point_radius);
 
-    args->font = g_strdup(args->font);
-    args->inset_length = g_strdup(args->inset_length);
-    args->selection = g_strdup(args->selection);
-
+    img_export_unconst_args(args);
     img_export_sanitize_args(args);
 }
 
