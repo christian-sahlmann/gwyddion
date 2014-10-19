@@ -1009,6 +1009,8 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     sizes->fmruler_label_height = height;
     gwy_debug("label width %g, height %g", width, height);
 
+    /* FIXME: Does not work properly.  If the image has small pixel dimensions
+     * we get very few ticks, even if the font size is comparatively tiny. */
     if (env->fm_rangetype == GWY_LAYER_BASIC_RANGE_ADAPT)
         n = CLAMP(GWY_ROUND(size/height), 1, 30);
     else
@@ -3260,6 +3262,7 @@ create_value_controls(ImgExportControls *controls)
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
+    /* TODO: Change to radiobutton */
     controls->title_type
         = gwy_enum_combo_box_new(title_types, G_N_ELEMENTS(title_types),
                                  G_CALLBACK(title_type_changed), controls,
