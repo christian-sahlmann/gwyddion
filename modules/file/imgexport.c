@@ -80,7 +80,7 @@
 #define fixzero(x) (fabs(x) < 1e-14 ? 0.0 : (x))
 
 enum {
-    PREVIEW_SIZE = 400,
+    PREVIEW_SIZE = 440,
 };
 
 struct ImgExportFormat;
@@ -219,6 +219,15 @@ typedef struct {
     gint sel_row_start;
     GtkWidget *sel_options_label;
     GSList *sel_options;
+
+    /* Presets */
+    GtkWidget *table_presets;
+    GtkWidget *presets;
+    GtkWidget *preset_name;
+    GtkWidget *preset_load;
+    GtkWidget *preset_save;
+    GtkWidget *preset_rename;
+    GtkWidget *preset_delete;
 
     gulong sid;
     gboolean in_update;
@@ -463,6 +472,23 @@ static const ImgExportSelectionType known_selections[] =
     },
 };
 
+static const GwyEnum lateral_types[] = {
+    { N_("ruler|_None"),      IMGEXPORT_LATERAL_NONE,   },
+    { N_("_Rulers"),          IMGEXPORT_LATERAL_RULERS, },
+    { N_("_Inset scale bar"), IMGEXPORT_LATERAL_INSET,  },
+};
+
+static const GwyEnum value_types[] = {
+    { N_("ruler|_None"),        IMGEXPORT_VALUE_NONE,    },
+    { N_("_False color ruler"), IMGEXPORT_VALUE_FMSCALE, },
+};
+
+static const GwyEnum title_types[] = {
+    { N_("title|None"),           IMGEXPORT_TITLE_NONE,    },
+    { N_("At the top"),           IMGEXPORT_TITLE_TOP,     },
+    { N_("Along the right edge"), IMGEXPORT_TITLE_FMSCALE, },
+};
+
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -504,8 +530,18 @@ find_format(const gchar *name, gboolean cairoext)
 static gboolean
 module_register(void)
 {
+    static gint types_initialized = 0;
+
+    GwyResourceClass *klass;
     GSList *l, *pixbuf_formats;
     guint i;
+
+    if (!types_initialized) {
+        types_initialized += gwy_img_export_preset_get_type();
+        klass = g_type_class_ref(GWY_TYPE_IMG_EXPORT_PRESET);
+        gwy_resource_class_load(klass);
+        g_type_class_unref(klass);
+    }
 
     /* Find out which image formats we can write using generic GdkPixbuf
      * functions. */
@@ -2941,15 +2977,9 @@ create_lateral_controls(ImgExportControls *controls)
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
 
     controls->xytype
-        = gwy_radio_buttons_createl(G_CALLBACK(xytype_changed), controls,
-                                    args->xytype,
-                                    gwy_sgettext("ruler|_None"),
-                                    IMGEXPORT_LATERAL_NONE,
-                                    _("_Rulers"),
-                                    IMGEXPORT_LATERAL_RULERS,
-                                    _("_Inset scale bar"),
-                                    IMGEXPORT_LATERAL_INSET,
-                                    NULL);
+        = gwy_radio_buttons_create(lateral_types, G_N_ELEMENTS(lateral_types),
+                                   G_CALLBACK(xytype_changed), controls,
+                                   args->xytype);
     row = gwy_radio_buttons_attach_to_table(controls->xytype, GTK_TABLE(table),
                                             3, row);
 
@@ -3206,13 +3236,9 @@ create_value_controls(ImgExportControls *controls)
     row++;
 
     controls->ztype
-        = gwy_radio_buttons_createl(G_CALLBACK(ztype_changed), controls,
-                                    args->ztype,
-                                    gwy_sgettext("ruler|_None"),
-                                    IMGEXPORT_VALUE_NONE,
-                                    _("_False color ruler"),
-                                    IMGEXPORT_VALUE_FMSCALE,
-                                    NULL);
+        = gwy_radio_buttons_create(value_types, G_N_ELEMENTS(value_types),
+                                   G_CALLBACK(ztype_changed), controls,
+                                   args->ztype);
     row = gwy_radio_buttons_attach_to_table(controls->ztype,
                                             GTK_TABLE(table), 3, row);
 
@@ -3235,15 +3261,9 @@ create_value_controls(ImgExportControls *controls)
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     controls->title_type
-        = gwy_enum_combo_box_newl(G_CALLBACK(title_type_changed), controls,
-                                  args->title_type,
-                                  gwy_sgettext("title|None"),
-                                  IMGEXPORT_TITLE_NONE,
-                                  _("At the top"),
-                                  IMGEXPORT_TITLE_TOP,
-                                  _("Along the right edge"),
-                                  IMGEXPORT_TITLE_FMSCALE,
-                                  NULL);
+        = gwy_enum_combo_box_new(title_types, G_N_ELEMENTS(title_types),
+                                 G_CALLBACK(title_type_changed), controls,
+                                 args->title_type, TRUE);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->title_type);
     gtk_table_attach(GTK_TABLE(table), controls->title_type,
                      1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -3286,11 +3306,11 @@ update_selection_sensitivity(ImgExportControls *controls)
 }
 
 static void
-render_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
-            GtkCellRenderer *renderer,
-            GtkTreeModel *model,
-            GtkTreeIter *iter,
-            gpointer user_data)
+sel_render_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                GtkCellRenderer *renderer,
+                GtkTreeModel *model,
+                GtkTreeIter *iter,
+                gpointer user_data)
 {
     ImgExportControls *controls = (ImgExportControls*)user_data;
     GArray *selections = controls->args->env->selections;
@@ -3303,11 +3323,11 @@ render_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
 }
 
 static void
-render_type(G_GNUC_UNUSED GtkTreeViewColumn *column,
-            GtkCellRenderer *renderer,
-            GtkTreeModel *model,
-            GtkTreeIter *iter,
-            gpointer user_data)
+sel_render_type(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                GtkCellRenderer *renderer,
+                GtkTreeModel *model,
+                GtkTreeIter *iter,
+                gpointer user_data)
 {
     const ImgExportSelectionType *seltype;
     ImgExportControls *controls = (ImgExportControls*)user_data;
@@ -3322,11 +3342,11 @@ render_type(G_GNUC_UNUSED GtkTreeViewColumn *column,
 }
 
 static void
-render_objects(G_GNUC_UNUSED GtkTreeViewColumn *column,
-               GtkCellRenderer *renderer,
-               GtkTreeModel *model,
-               GtkTreeIter *iter,
-               gpointer user_data)
+sel_render_objects(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                   GtkCellRenderer *renderer,
+                   GtkTreeModel *model,
+                   GtkTreeIter *iter,
+                   gpointer user_data)
 {
 
     ImgExportControls *controls = (ImgExportControls*)user_data;
@@ -3482,15 +3502,15 @@ create_selection_controls(ImgExportControls *controls)
     renderer = gtk_cell_renderer_text_new();
     gtk_tree_view_column_pack_start(column, renderer, TRUE);
     gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                            render_name, controls, NULL);
+                                            sel_render_name, controls, NULL);
 
     column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_title(column, "Type");
+    gtk_tree_view_column_set_title(column, _("Type"));
     gtk_tree_view_append_column(treeview, column);
     renderer = gtk_cell_renderer_text_new();
     gtk_tree_view_column_pack_start(column, renderer, TRUE);
     gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                            render_type, controls, NULL);
+                                            sel_render_type, controls, NULL);
 
     column = gtk_tree_view_column_new();
     gtk_tree_view_column_set_title(column, _("Objects"));
@@ -3498,7 +3518,7 @@ create_selection_controls(ImgExportControls *controls)
     renderer = gtk_cell_renderer_text_new();
     gtk_tree_view_column_pack_start(column, renderer, TRUE);
     gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                            render_objects, controls, NULL);
+                                            sel_render_objects, controls, NULL);
 
     create_colour_control(GTK_TABLE(table), row++,
                           _("Colo_r:"), &args->sel_color,
@@ -3529,6 +3549,467 @@ create_selection_controls(ImgExportControls *controls)
 
     update_selection_options(controls);
     update_selection_sensitivity(controls);
+}
+
+static void
+reset_to_preset(ImgExportControls *controls,
+                const ImgExportArgs *src)
+{
+    ImgExportArgs *args = controls->args;
+    gboolean sel_number_objects = args->sel_number_objects;
+    gdouble sel_line_thickness = args->sel_line_thickness;
+    gdouble sel_point_radius = args->sel_point_radius;
+
+    gwy_img_export_preset_data_copy(src, args);
+    /* XXX: Maybe we should reset these too; however, the defaults for
+     * selection-specific settings actually come from the environment. */
+    args->sel_number_objects = sel_number_objects;
+    args->sel_line_thickness = sel_line_thickness;
+    args->sel_point_radius = sel_point_radius;
+
+    if (controls->mode)
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->mode),
+                                     src->mode == 16);
+
+    if (controls->pxwidth)
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->pxwidth),
+                                 src->pxwidth);
+    if (controls->zoom)
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zoom),
+                                 src->zoom);
+
+    update_selected_font(controls);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->font_size),
+                             src->sizes.font_size);
+
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->line_width),
+                             src->sizes.line_width);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->tick_length),
+                             src->sizes.tick_length);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->border_width),
+                             src->sizes.border_width);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->scale_font),
+                                 src->scale_font);
+
+    gwy_radio_buttons_set_current(controls->xytype, src->xytype);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->inset_xgap),
+                             src->inset_xgap);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->inset_ygap),
+                             src->inset_ygap);
+    gwy_radio_buttons_set_current(controls->inset_pos, src->inset_pos);
+    inset_length_set_auto(controls);
+    args->inset_color = src->inset_color;
+    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->inset_colour.button),
+                               &args->inset_color);
+    args->inset_outline_color = src->inset_outline_color;
+    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->inset_outline_colour.button),
+                               &args->inset_outline_color);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->inset_draw_ticks),
+                                 src->inset_draw_ticks);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->inset_draw_label),
+                                 src->inset_draw_label);
+
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->draw_mask),
+                                 src->draw_mask);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interpolation),
+                                  src->interpolation);
+    gwy_radio_buttons_set_current(controls->ztype, src->ztype);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->fmscale_gap),
+                             src->fmscale_gap);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->title_type),
+                                  src->title_type);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->title_gap),
+                             src->title_gap);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->units_in_title),
+                                 src->units_in_title);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->draw_selection),
+                                 src->draw_selection);
+    args->sel_color = src->sel_color;
+    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->sel_colour.button),
+                               &args->sel_color);
+    args->sel_outline_color = src->sel_outline_color;
+    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->sel_outline_colour.button),
+                               &args->sel_outline_color);
+}
+
+static gboolean
+preset_validate_name(const gchar *name)
+{
+    if (!name || !*name || strchr(name, '/') || strchr(name, '\\'))
+        return FALSE;
+    return TRUE;
+}
+
+static void
+update_preset_sensitivity(ImgExportControls *controls)
+{
+    GwyInventory *inventory;
+    GtkTreeSelection *selection;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    const gchar *name;
+    gboolean sens, goodname, havename;
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presets));
+    sens = gtk_tree_selection_get_selected(selection, &model, &iter);
+    name = gtk_entry_get_text(GTK_ENTRY(controls->preset_name));
+    inventory = gwy_img_export_presets();
+    goodname = preset_validate_name(name);
+    havename = !!gwy_inventory_get_item(inventory, name);
+    gwy_debug("selected: %d, goodname: %d, havename: %d",
+              sens, goodname, havename);
+
+    gtk_widget_set_sensitive(controls->preset_load, sens);
+    gtk_widget_set_sensitive(controls->preset_delete, sens);
+    gtk_widget_set_sensitive(controls->preset_rename,
+                             sens && goodname && !havename);
+    gtk_widget_set_sensitive(controls->preset_save, goodname);
+}
+
+static void
+preset_render_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                   GtkCellRenderer *cell,
+                   GtkTreeModel *model,
+                   GtkTreeIter *iter,
+                   G_GNUC_UNUSED gpointer user_data)
+{
+    GwyImgExportPreset *preset;
+
+    gtk_tree_model_get(model, iter, 0, &preset, -1);
+    g_object_set(cell, "text", gwy_resource_get_name(GWY_RESOURCE(preset)),
+                 NULL);
+}
+
+static void
+preset_render_lateral(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                      GtkCellRenderer *cell,
+                      GtkTreeModel *model,
+                      GtkTreeIter *iter,
+                      G_GNUC_UNUSED gpointer user_data)
+{
+    GwyImgExportPreset *preset;
+    const gchar *type;
+    gchar *s;
+
+    gtk_tree_model_get(model, iter, 0, &preset, -1);
+    type = gwy_enum_to_string(preset->data.xytype,
+                              lateral_types, G_N_ELEMENTS(lateral_types));
+    s = gwy_strkill(g_strdup(type), "_:");
+    g_object_set(cell, "text", s, NULL);
+    g_free(s);
+}
+
+static void
+preset_render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                    GtkCellRenderer *cell,
+                    GtkTreeModel *model,
+                    GtkTreeIter *iter,
+                    G_GNUC_UNUSED gpointer user_data)
+{
+    GwyImgExportPreset *preset;
+    const gchar *type;
+    gchar *s;
+
+    gtk_tree_model_get(model, iter, 0, &preset, -1);
+    type = gwy_enum_to_string(preset->data.ztype,
+                              value_types, G_N_ELEMENTS(value_types));
+    s = gwy_strkill(g_strdup(type), "_:");
+    g_object_set(cell, "text", s, NULL);
+    g_free(s);
+}
+
+static void
+preset_render_title(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                    GtkCellRenderer *cell,
+                    GtkTreeModel *model,
+                    GtkTreeIter *iter,
+                    G_GNUC_UNUSED gpointer user_data)
+{
+    GwyImgExportPreset *preset;
+    const gchar *type;
+    gchar *s;
+
+    gtk_tree_model_get(model, iter, 0, &preset, -1);
+    type = gwy_enum_to_string(preset->data.xytype,
+                              title_types, G_N_ELEMENTS(title_types));
+    s = gwy_strkill(g_strdup(type), "_:");
+    g_object_set(cell, "text", s, NULL);
+    g_free(s);
+}
+
+static void
+preset_selected(ImgExportControls *controls)
+{
+    GwyImgExportPreset *preset;
+    GtkTreeModel *model;
+    GtkTreeSelection *selection;
+    GtkTreeIter iter;
+    const gchar *name;
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presets));
+    if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
+        gtk_tree_model_get(model, &iter, 0, &preset, -1);
+        name = gwy_resource_get_name(GWY_RESOURCE(preset));
+        gtk_entry_set_text(GTK_ENTRY(controls->preset_name), name);
+        g_free(controls->args->preset_name);
+        controls->args->preset_name = g_strdup(name);
+    }
+    else {
+        gtk_entry_set_text(GTK_ENTRY(controls->preset_name), "");
+        g_free(controls->args->preset_name);
+        controls->args->preset_name = NULL;
+    }
+}
+
+static void
+load_preset(ImgExportControls *controls)
+{
+    GwyImgExportPreset *preset;
+    GtkTreeModel *store;
+    GtkTreeSelection *selection;
+    GtkTreeIter iter;
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presets));
+    if (!gtk_tree_selection_get_selected(selection, &store, &iter))
+        return;
+
+    gtk_tree_model_get(store, &iter, 0, &preset, -1);
+    reset_to_preset(controls, &preset->data);
+}
+
+static void
+store_preset(ImgExportControls *controls)
+{
+    GwyImgExportPreset *preset;
+    GtkTreeModel *model;
+    GtkTreeSelection *selection;
+    GtkTreeIter iter;
+    const gchar *name;
+    gchar *filename;
+    GString *str;
+    FILE *fh;
+
+    name = gtk_entry_get_text(GTK_ENTRY(controls->preset_name));
+    if (!preset_validate_name(name))
+        return;
+
+    gwy_debug("Now I'm saving `%s'", name);
+    preset = gwy_inventory_get_item(gwy_img_export_presets(), name);
+    if (!preset) {
+        gwy_debug("Appending `%s'", name);
+        preset = gwy_img_export_preset_new(name, controls->args, FALSE);
+        gwy_inventory_insert_item(gwy_img_export_presets(), preset);
+        g_object_unref(preset);
+    }
+    else {
+        gwy_debug("Setting `%s'", name);
+        gwy_img_export_preset_data_copy(controls->args, &preset->data);
+        gwy_resource_data_changed(GWY_RESOURCE(preset));
+    }
+
+    filename = gwy_resource_build_filename(GWY_RESOURCE(preset));
+    fh = g_fopen(filename, "w");
+    if (!fh) {
+        g_warning("Cannot save preset: %s", filename);
+        g_free(filename);
+        return;
+    }
+    g_free(filename);
+
+    str = gwy_resource_dump(GWY_RESOURCE(preset));
+    fwrite(str->str, 1, str->len, fh);
+    fclose(fh);
+    g_string_free(str, TRUE);
+
+    gwy_resource_data_saved(GWY_RESOURCE(preset));
+
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(controls->presets));
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presets));
+    gwy_inventory_store_get_iter(GWY_INVENTORY_STORE(model), name, &iter);
+    gtk_tree_selection_select_iter(selection, &iter);
+}
+
+static void
+rename_preset(ImgExportControls *controls)
+{
+    GwyImgExportPreset *preset;
+    GwyInventory *inventory;
+    GtkTreeModel *model;
+    GtkTreeSelection *selection;
+    GtkTreeIter iter;
+    const gchar *newname, *oldname;
+    gchar *oldfilename, *newfilename;
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presets));
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter))
+        return;
+
+    inventory = gwy_img_export_presets();
+    gtk_tree_model_get(model, &iter, 0, &preset, -1);
+    oldname = gwy_resource_get_name(GWY_RESOURCE(preset));
+    newname = gtk_entry_get_text(GTK_ENTRY(controls->preset_name));
+    if (gwy_strequal(newname, oldname)
+        || !preset_validate_name(newname)
+        || gwy_inventory_get_item(inventory, newname))
+        return;
+
+    gwy_debug("Now I will rename `%s' to `%s'", oldname, newname);
+
+    oldfilename = gwy_resource_build_filename(GWY_RESOURCE(preset));
+    gwy_inventory_rename_item(inventory, oldname, newname);
+    newfilename = gwy_resource_build_filename(GWY_RESOURCE(preset));
+    if (g_rename(oldfilename, newfilename) != 0) {
+        g_warning("Cannot rename preset %s to %s", oldfilename, newfilename);
+        gwy_inventory_rename_item(inventory, newname, oldname);
+    }
+    g_free(oldfilename);
+    g_free(newfilename);
+
+    gwy_inventory_store_get_iter(GWY_INVENTORY_STORE(model), newname, &iter);
+    gtk_tree_selection_select_iter(selection, &iter);
+}
+
+static void
+delete_preset(ImgExportControls *controls)
+{
+    GwyImgExportPreset *preset;
+    GtkTreeModel *model;
+    GtkTreeSelection *selection;
+    GtkTreeIter iter;
+    gchar *filename;
+    const gchar *name;
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presets));
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter))
+        return;
+
+    gtk_tree_model_get(model, &iter, 0, &preset, -1);
+    name = gwy_resource_get_name(GWY_RESOURCE(preset));
+    filename = gwy_resource_build_filename(GWY_RESOURCE(preset));
+    if (g_remove(filename))
+        g_warning("Cannot remove preset %s", filename);
+    g_free(filename);
+    gwy_inventory_delete_item(gwy_img_export_presets(), name);
+}
+
+static void
+create_preset_controls(ImgExportControls *controls)
+{
+    ImgExportArgs *args = controls->args;
+    GwyInventoryStore *store;
+    GtkTreeSelection *selection;
+    GtkCellRenderer *renderer;
+    GtkTreeViewColumn *column;
+    GtkTreeView *treeview;
+    GtkTreeIter iter;
+    GtkWidget *vbox, *table, *button, *scroll, *bbox;
+    guint row;
+
+    vbox = gtk_vbox_new(FALSE, 0);
+    controls->table_presets = vbox;
+    gtk_container_set_border_width(GTK_CONTAINER(vbox), 4);
+
+    store = gwy_inventory_store_new(gwy_img_export_presets());
+    controls->presets = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+    treeview = GTK_TREE_VIEW(controls->presets);
+    g_object_unref(store);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, _("Name"));
+    gtk_tree_view_append_column(treeview, column);
+    renderer = gtk_cell_renderer_text_new();
+    gtk_tree_view_column_pack_start(column, renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            preset_render_name, controls, NULL);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, "Lateral");
+    gtk_tree_view_column_set_expand(column, TRUE);
+    gtk_tree_view_append_column(treeview, column);
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
+    gtk_tree_view_column_pack_start(column, renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            preset_render_lateral, controls, NULL);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, _("Value"));
+    gtk_tree_view_column_set_expand(column, TRUE);
+    gtk_tree_view_append_column(treeview, column);
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
+    gtk_tree_view_column_pack_start(column, renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            preset_render_value, controls, NULL);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, _("Title"));
+    gtk_tree_view_column_set_expand(column, TRUE);
+    gtk_tree_view_append_column(treeview, column);
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
+    gtk_tree_view_column_pack_start(column, renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            preset_render_title, controls, NULL);
+
+    scroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
+                                   GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
+    gtk_container_add(GTK_CONTAINER(scroll), controls->presets);
+    gtk_box_pack_start(GTK_BOX(vbox), scroll, TRUE, TRUE, 0);
+
+    bbox = gtk_hbutton_box_new();
+    gtk_button_box_set_layout(GTK_BUTTON_BOX(bbox), GTK_BUTTONBOX_START);
+    gtk_box_pack_start(GTK_BOX(vbox), bbox, FALSE, FALSE, 0);
+
+    button = gtk_button_new_with_mnemonic(gwy_sgettext("verb|_Load"));
+    controls->preset_load = button;
+    gtk_container_add(GTK_CONTAINER(bbox), button);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(load_preset), controls);
+
+    button = gtk_button_new_with_mnemonic(gwy_sgettext("verb|_Store"));
+    controls->preset_save = button;
+    gtk_container_add(GTK_CONTAINER(bbox), button);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(store_preset), controls);
+
+    button = gtk_button_new_with_mnemonic(_("_Rename"));
+    controls->preset_rename = button;
+    gtk_container_add(GTK_CONTAINER(bbox), button);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(rename_preset), controls);
+
+    button = gtk_button_new_with_mnemonic(_("_Delete"));
+    controls->preset_delete = button;
+    gtk_container_add(GTK_CONTAINER(bbox), button);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(delete_preset), controls);
+
+    table = gtk_table_new(1, 3, FALSE);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 4);
+    row = 0;
+
+    controls->preset_name = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(controls->preset_name),
+                       args->preset_name ? args->preset_name : "");
+    gwy_table_attach_row(table, row, _("Preset _name:"), "",
+                         controls->preset_name);
+    gtk_entry_set_max_length(GTK_ENTRY(controls->preset_name), 40);
+    g_signal_connect_swapped(controls->preset_name, "changed",
+                             G_CALLBACK(update_preset_sensitivity), controls);
+    row++;
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presets));
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
+    g_signal_connect_swapped(selection, "changed",
+                             G_CALLBACK(preset_selected), controls);
+    if (args->preset_name
+        && gwy_inventory_store_get_iter(store, args->preset_name, &iter))
+        gtk_tree_selection_select_iter(selection, &iter);
+
+    update_preset_sensitivity(controls);
 }
 
 static void
@@ -3565,79 +4046,6 @@ mode_changed(ImgExportControls *controls,
     }
 
     update_preview(controls);
-}
-
-static void
-reset_to_defaults(ImgExportControls *controls)
-{
-    ImgExportArgs *args = controls->args;
-    const ImgExportArgs *defaults = &img_export_defaults;
-
-    if (controls->mode)
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->mode),
-                                     defaults->mode == 16);
-
-    if (controls->pxwidth)
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->pxwidth),
-                                 defaults->pxwidth);
-    if (controls->zoom)
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zoom),
-                                 defaults->zoom);
-
-    g_free(args->font);
-    args->font = g_strdup(defaults->font);
-    update_selected_font(controls);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->font_size),
-                             defaults->sizes.font_size);
-
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->line_width),
-                             defaults->sizes.line_width);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->tick_length),
-                             defaults->sizes.tick_length);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->border_width),
-                             defaults->sizes.border_width);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->scale_font),
-                                 defaults->scale_font);
-
-    gwy_radio_buttons_set_current(controls->xytype, defaults->xytype);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->inset_xgap),
-                             defaults->inset_xgap);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->inset_ygap),
-                             defaults->inset_ygap);
-    gwy_radio_buttons_set_current(controls->inset_pos, defaults->inset_pos);
-    inset_length_set_auto(controls);
-    args->inset_color = defaults->inset_color;
-    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->inset_colour.button),
-                               &args->inset_color);
-    args->inset_outline_color = defaults->inset_outline_color;
-    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->inset_outline_colour.button),
-                               &args->inset_outline_color);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->inset_draw_ticks),
-                                 defaults->inset_draw_ticks);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->inset_draw_label),
-                                 defaults->inset_draw_label);
-
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->draw_mask),
-                                 defaults->draw_mask);
-    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interpolation),
-                                  defaults->interpolation);
-    gwy_radio_buttons_set_current(controls->ztype, defaults->ztype);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->fmscale_gap),
-                             defaults->fmscale_gap);
-    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->title_type),
-                                  defaults->title_type);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->title_gap),
-                             defaults->title_gap);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->units_in_title),
-                                 defaults->units_in_title);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->draw_selection),
-                                 defaults->draw_selection);
-    args->sel_color = defaults->sel_color;
-    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->sel_colour.button),
-                               &args->sel_color);
-    args->sel_outline_color = defaults->sel_outline_color;
-    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->sel_outline_colour.button),
-                               &args->sel_outline_color);
 }
 
 static gboolean
@@ -3713,6 +4121,11 @@ img_export_dialog(ImgExportArgs *args)
                              controls.table_selection,
                              gtk_label_new(_("Selection")));
 
+    create_preset_controls(&controls);
+    gtk_notebook_append_page(GTK_NOTEBOOK(controls.notebook),
+                             controls.table_presets,
+                             gtk_label_new(_("Presets")));
+
     controls.preview = gtk_image_new();
     gtk_box_pack_start(GTK_BOX(hbox), controls.preview, FALSE, FALSE, 0);
 
@@ -3740,7 +4153,7 @@ img_export_dialog(ImgExportArgs *args)
             break;
 
             case RESPONSE_RESET:
-            reset_to_defaults(&controls);
+            reset_to_preset(&controls, &img_export_defaults);
             break;
 
             default:
@@ -3931,12 +4344,16 @@ img_export_export(GwyContainer *data,
                   GError **error,
                   const gchar *name)
 {
+    GwyResourceClass *rklass;
     GwyContainer *settings;
     ImgExportArgs args;
     ImgExportEnv env;
     const ImgExportFormat *format;
     gboolean ok = TRUE;
     guint i;
+
+    rklass = g_type_class_peek(GWY_TYPE_IMG_EXPORT_PRESET);
+    gwy_resource_class_mkdir(rklass);
 
     format = find_format(name, TRUE);
     g_return_val_if_fail(format, FALSE);

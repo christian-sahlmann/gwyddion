@@ -30,7 +30,7 @@
 #define GWYRGBA_WHITE { 1.0, 1.0, 1.0, 1.0 }
 
 enum {
-    NPAGES       = 4,
+    NPAGES = 5,
 };
 
 typedef enum {
@@ -79,9 +79,12 @@ typedef struct {
 typedef struct _ImgExportEnv ImgExportEnv;
 
 typedef struct {
+    /* env, preset_name and active_page are only meaningful for settings, not
+     * presets. */
     ImgExportEnv *env;
-    ImgExportMode mode;
+    gchar *preset_name;
     guint active_page;
+    ImgExportMode mode;
     gdouble pxwidth;       /* Pixel width in mm for vector. */
     gdouble zoom;          /* Pixelwise for pixmaps. */
     SizeSettings sizes;
@@ -138,8 +141,8 @@ static GwyResource*        gwy_img_export_preset_parse   (const gchar *text,
 
 
 static const ImgExportArgs img_export_defaults = {
-    NULL,
-    IMGEXPORT_MODE_PRESENTATION, 0,
+    NULL, NULL, 0,
+    IMGEXPORT_MODE_PRESENTATION,
     0.1, 1.0,
     { 12.0, 1.0, 0.0, 0.0, 10.0 },
     IMGEXPORT_LATERAL_RULERS, IMGEXPORT_VALUE_FMSCALE,
@@ -180,6 +183,7 @@ img_export_unconst_args(ImgExportArgs *args)
     args->font = g_strdup(args->font);
     args->inset_length = g_strdup(args->inset_length);
     args->selection = g_strdup(args->selection);
+    args->preset_name = g_strdup(args->preset_name);
 }
 
 static void
@@ -196,6 +200,7 @@ img_export_free_args(ImgExportArgs *args)
     g_free(args->font);
     g_free(args->inset_length);
     g_free(args->selection);
+    g_free(args->preset_name);
 }
 
 static void
@@ -250,12 +255,24 @@ gwy_img_export_preset_data_copy(const ImgExportArgs *src,
                                 ImgExportArgs *dest)
 {
     ImgExportEnv *env = dest->env;
+    gchar *preset_name = dest->preset_name;
+    gchar *selection = dest->selection;
+    guint active_page = dest->active_page;
 
     g_return_if_fail(src != (const ImgExportArgs*)dest);
+    dest->preset_name = NULL;
+    dest->selection = NULL;
     img_export_free_args(dest);
+
     *dest = *src;
     img_export_unconst_args(dest);
+
+    g_free(dest->preset_name);
+    g_free(dest->selection);
     dest->env = env;
+    dest->preset_name = preset_name;
+    dest->selection = selection;
+    dest->active_page = active_page;
 }
 
 static GwyImgExportPreset*
