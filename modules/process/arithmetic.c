@@ -147,7 +147,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Simple arithmetic operations with data fields."),
     "Yeti <yeti@gwyddion.net>",
-    "3.3",
+    "3.4",
     "David Nečas (Yeti)",
     "2004",
 };
@@ -516,7 +516,7 @@ arithmetic_show_state(ArithmeticControls *controls,
             gtk_label_set_text(GTK_LABEL(controls->result), message);
     }
 
-    ok = (args->err == ARITHMETIC_OK || args->err == ARITHMETIC_NUMERIC);
+    ok = (args->err == ARITHMETIC_OK);
     gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_OK, ok);
     gtk_dialog_set_response_sensitive(dialog, RESPONSE_PREVIEW, ok);
 
