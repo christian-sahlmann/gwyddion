@@ -179,6 +179,35 @@ typedef enum {
     WDF_DATAUNITS_ENDMARKER
 } WdfDataUnits;
 
+static const GwyEnum wdf_units[] = {
+    {"",          WDF_DATAUNITS_ARBITRARY },
+    {"1/cm",      WDF_DATAUNITS_RAMANSHIFT },
+    {"nm",        WDF_DATAUNITS_WAVENUMBER },
+    {"nm",        WDF_DATAUNITS_NANOMETRE },
+    {"eV",        WDF_DATAUNITS_ELECTRONVOLT },
+    {"µm",        WDF_DATAUNITS_MICRON },
+    {"Counts",    WDF_DATAUNITS_COUNTS },
+    {"electrons", WDF_DATAUNITS_ELECTRONS },
+    {"mm",        WDF_DATAUNITS_MILLIMETRES },
+    {"m",         WDF_DATAUNITS_METRES },
+    {"K",         WDF_DATAUNITS_KELVIN },
+    {"Pa",        WDF_DATAUNITS_PASCAL },
+    {"s",         WDF_DATAUNITS_SECONDS },
+    {"ms",        WDF_DATAUNITS_MILLISECONDS },
+    {"hours",     WDF_DATAUNITS_HOURS },
+    {"days",      WDF_DATAUNITS_DAYS },
+    {"px",        WDF_DATAUNITS_PIXELS },
+    {"",          WDF_DATAUNITS_INTENSITY },
+    {"",          WDF_DATAUNITS_RELATIVEINTENSITY },
+    {"deg",       WDF_DATAUNITS_DEGREES },
+    {"rads",      WDF_DATAUNITS_RADIANS },
+    {"°C",        WDF_DATAUNITS_CELCIUS },
+    {"°F",        WDF_DATAUNITS_FARENHEIT },
+    {"K/min",     WDF_DATAUNITS_KELVINPERMINUTE },
+    {"",          WDF_DATAUNITS_FILETIME },
+    {"",          WDF_DATAUNITS_ENDMARKER }
+};
+
 typedef enum {
     WDF_MAPAREA_RANDOMPOINTS = 1,     /* rectangle area */
     WDF_MAPAREA_COLUMNMAJOR  = 2,     /* X first then Y. */
@@ -341,14 +370,17 @@ wdf_load(const gchar *filename,
     GwyDataLine *cal;
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
+    GwySIUnit *siunitx, *siunity, *siunitz, *siunitw;
     gdouble *ydata, *xdata, *data;
     gint i, j, k;
     gint xres, yres, zres;
     gint width, height, rowstride, bpp;
-    gdouble xreal, yreal, zreal;
+    gint power10z, power10w;
+    gdouble xreal, yreal, zscale, wscale;
     GdkPixbufLoader *loader;
     GdkPixbuf *pixbuf = NULL;
     guchar *pixels, *pix_p;
+    const gchar *unit;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -370,6 +402,7 @@ wdf_load(const gchar *filename,
     filedata.whitelight = NULL;
     filedata.data = NULL;
     filedata.xlistdata = NULL;
+    filedata.xlistunits = WDF_DATAUNITS_ARBITRARY;
     filedata.maparea = NULL;
     while (size > 0) {
         if ((len = wdf_read_block_header(p, size, &block, error)) == 0)
@@ -404,9 +437,10 @@ wdf_load(const gchar *filename,
             p -= WDF_BLOCK_HEADER_SIZE + 2 * sizeof(guint32);
         }
         else if (block.id == WDF_BLOCKID_ORIGIN) {
-            gwy_debug("ORGN offset = %" G_GUINT64_FORMAT " size=%" G_GUINT64_FORMAT "",
-                      ((guint64)p - (guint64)buffer), block.size);
-
+            /* FIXME: nothing to do with it now,
+             * but we can implement data triangulation
+             * for random points somewhere in the future
+             */
         }
         else if (block.id == WDF_BLOCKID_MAPAREA) {
             if (block.size != WDF_MAP_AREA_SIZE) {
@@ -456,6 +490,24 @@ wdf_load(const gchar *filename,
 
     container = gwy_container_new();
 
+    wscale = 1.0;
+    gwy_debug("w units = %d", fileheader.units);
+    unit = gwy_enum_to_string(fileheader.units, wdf_units, 26);
+    siunitw = gwy_si_unit_new_parse(unit, &power10w);
+    wscale = pow10(power10w);
+    if (wscale == 0.0) {
+        wscale = 1.0;
+    }
+
+    zscale = 1.0;
+    gwy_debug("z units = %d", filedata.xlistunits);
+    unit = gwy_enum_to_string(filedata.xlistunits, wdf_units, 26);
+    siunitz = gwy_si_unit_new_parse(unit, &power10z);
+    zscale = pow10(power10z);
+    if (zscale == 0.0) {
+        zscale = 1.0;
+    }
+
     if (fileheader.nspectra == 1) { /* Single spectrum */
         zres = fileheader.npoints;
         if ((zres <= 0) || !(filedata.data) || !(filedata.xlistdata)) {
@@ -466,25 +518,25 @@ wdf_load(const gchar *filename,
         gwy_convert_raw_data(filedata.data, zres, 1,
                              GWY_RAW_DATA_FLOAT,
                              GWY_BYTE_ORDER_LITTLE_ENDIAN,
-                             ydata, 1.0, 0.0);
+                             ydata, wscale, 0.0);
         xdata = g_malloc(zres * sizeof(gdouble));
         gwy_convert_raw_data(filedata.xlistdata, zres, 1,
                              GWY_RAW_DATA_FLOAT,
                              GWY_BYTE_ORDER_LITTLE_ENDIAN,
-                             xdata, 1.0, 0.0);
+                             xdata, zscale, 0.0);
         title = g_strdup(fileheader.title);
         gmodel = g_object_new(GWY_TYPE_GRAPH_MODEL,
                              "title", title,
-                       //    "si-unit-x", siunitx,
-                       //    "si-unit-y", siunity,
+                             "si-unit-x", siunitz,
+                             "si-unit-y", siunitw,
                              NULL);
         gcmodel = g_object_new(GWY_TYPE_GRAPH_CURVE_MODEL,
                               "description", title,
                               "mode", GWY_GRAPH_CURVE_LINE,
                               "color", gwy_graph_get_preset_color(0),
                               NULL);
-     // g_object_unref(siunitx);
-     // g_object_unref(siunity);
+        g_object_unref(siunitz);
+        g_object_unref(siunitw);
         gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, zres);
         g_free(xdata);
         g_free(ydata);
@@ -510,30 +562,46 @@ wdf_load(const gchar *filename,
             goto fail;
         }
 
+        if ((filedata.maparea->flags & WDF_MAPAREA_RANDOMPOINTS) == 1) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Random points order unsupported"));
+            goto fail;
+        }
+
         zres = fileheader.npoints;
         xres = filedata.maparea->length[0];
         yres = filedata.maparea->length[1];
+
         brick = gwy_brick_new(xres, yres, zres, xres, yres, zres, TRUE);
+        gwy_brick_set_si_unit_z(brick, siunitz);
+        gwy_brick_set_si_unit_w(brick, siunitw);
+        g_object_unref(siunitw);
+
+        /* read data */
+        /* FIXME: will be right only for some scan directions */
         data = gwy_brick_get_data(brick);
         p = (guchar *)filedata.data;
-
         for (i = 0; i < xres; i++)
             for (j = 0; j < yres; j++)
                 for (k = 0; k < zres; k++) {
                     *(data + k * xres * yres + i + j * xres)
-                                       = (gdouble)gwy_get_gfloat_le(&p);
+                              = (gdouble)gwy_get_gfloat_le(&p) * wscale;
                 }
 
+        /* reading calibration */
         cal = gwy_data_line_new(zres, zres, FALSE);
         data = gwy_data_line_get_data(cal);
         gwy_convert_raw_data(filedata.xlistdata, zres, 1,
                              GWY_RAW_DATA_FLOAT,
                              GWY_BYTE_ORDER_LITTLE_ENDIAN,
-                             data, 1.0, 0.0);
-     // gwy_data_line_set_si_unit_y(cal, mdafile->siunitz);
+                             data, zscale, 0.0);
+        gwy_data_line_set_si_unit_y(cal, siunitz);
+        g_object_unref(siunitz);
         gwy_brick_set_zcalibration(brick, cal);
         g_object_unref(cal);
 
+        /* packing */
         gwy_container_set_object_by_name(container, "/brick/0", brick);
         title = g_strdup_printf("%s (WhiteLight)", fileheader.title);
         gwy_container_set_string_by_name(container, "/brick/0/title",
