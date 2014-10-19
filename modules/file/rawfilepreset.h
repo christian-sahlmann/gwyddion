@@ -95,15 +95,15 @@ struct _GwyRawFilePresetClass {
     GwyResourceClass parent_class;
 };
 
-static GType       gwy_raw_file_preset_get_type (void) G_GNUC_CONST;
-static void        gwy_raw_file_preset_finalize (GObject *object);
-static GwyRawFilePreset* gwy_raw_file_preset_new(const gchar *name,
-                                              const GwyRawFilePresetData *data,
-                                              gboolean is_const);
-static void           gwy_raw_file_preset_dump  (GwyResource *resource,
-                                                 GString *str);
-static GwyResource*   gwy_raw_file_preset_parse (const gchar *text,
-                                                 gboolean is_const);
+static GType             gwy_raw_file_preset_get_type(void)                             G_GNUC_CONST;
+static void              gwy_raw_file_preset_finalize(GObject *object);
+static GwyRawFilePreset* gwy_raw_file_preset_new     (const gchar *name,
+                                                      const GwyRawFilePresetData *data,
+                                                      gboolean is_const);
+static void              gwy_raw_file_preset_dump    (GwyResource *resource,
+                                                      GString *str);
+static GwyResource*      gwy_raw_file_preset_parse   (const gchar *text,
+                                                      gboolean is_const);
 
 
 static const GwyRawFilePresetData rawfilepresetdata_default = {
@@ -243,15 +243,17 @@ gwy_raw_file_preset_dump(GwyResource *resource,
           yreal[G_ASCII_DTOSTR_BUF_SIZE],
           zscale[G_ASCII_DTOSTR_BUF_SIZE];
     GwyRawFilePreset *preset;
+    GwyRawFilePresetData *data;
     gchar *s;
 
     g_return_if_fail(GWY_IS_RAW_FILE_PRESET(resource));
     preset = GWY_RAW_FILE_PRESET(resource);
+    data = &preset->data;
 
     /* Information */
-    g_ascii_dtostr(xreal, sizeof(xreal), preset->data.xreal);
-    g_ascii_dtostr(yreal, sizeof(yreal), preset->data.yreal);
-    g_ascii_dtostr(zscale, sizeof(zscale), preset->data.zscale);
+    g_ascii_dtostr(xreal, sizeof(xreal), data->xreal);
+    g_ascii_dtostr(yreal, sizeof(yreal), data->yreal);
+    g_ascii_dtostr(zscale, sizeof(zscale), data->zscale);
     g_string_append_printf(str,
                            "format %u\n"
                            "xres %d\n"
@@ -261,20 +263,20 @@ gwy_raw_file_preset_dump(GwyResource *resource,
                            "xyexponent %d\n"
                            "zscale %s\n"
                            "zexponent %d\n",
-                           preset->data.format,
-                           preset->data.xres,
-                           preset->data.yres,
+                           data->format,
+                           data->xres,
+                           data->yres,
                            xreal, yreal,
-                           preset->data.xyexponent,
+                           data->xyexponent,
                            zscale,
-                           preset->data.zexponent);
-    if (preset->data.xyunit && *preset->data.xyunit) {
-        s = g_strescape(preset->data.xyunit, NULL);
+                           data->zexponent);
+    if (data->xyunit && *data->xyunit) {
+        s = g_strescape(data->xyunit, NULL);
         g_string_append_printf(str, "xyunit \"%s\"\n", s);
         g_free(s);
     }
-    if (preset->data.zunit && *preset->data.zunit) {
-        s = g_strescape(preset->data.zunit, NULL);
+    if (data->zunit && *data->zunit) {
+        s = g_strescape(data->zunit, NULL);
         g_string_append_printf(str, "zunit \"%s\"\n", s);
         g_free(s);
     }
@@ -290,26 +292,26 @@ gwy_raw_file_preset_dump(GwyResource *resource,
                            "revsample %d\n"
                            "revbyte %d\n"
                            "byteswap %u\n",
-                           preset->data.builtin,
-                           preset->data.offset,
-                           preset->data.size,
-                           preset->data.skip,
-                           preset->data.rowskip,
-                           preset->data.sign,
-                           preset->data.revsample,
-                           preset->data.revbyte,
-                           preset->data.byteswap);
+                           data->builtin,
+                           data->offset,
+                           data->size,
+                           data->skip,
+                           data->rowskip,
+                           data->sign,
+                           data->revsample,
+                           data->revbyte,
+                           data->byteswap);
 
     /* Text */
     g_string_append_printf(str,
                            "lineoffset %u\n"
                            "skipfields %u\n"
                            "decomma %d\n",
-                           preset->data.lineoffset,
-                           preset->data.skipfields,
-                           preset->data.decomma);
-    if (preset->data.delimiter && *preset->data.delimiter) {
-        s = g_strescape(preset->data.delimiter, NULL);
+                           data->lineoffset,
+                           data->skipfields,
+                           data->decomma);
+    if (data->delimiter && *data->delimiter) {
+        s = g_strescape(data->delimiter, NULL);
         g_string_append_printf(str, "delimiter \"%s\"\n", s);
         g_free(s);
     }
@@ -438,3 +440,5 @@ gwy_raw_file_presets(void)
     return GWY_RESOURCE_CLASS(g_type_class_peek
                                         (GWY_TYPE_RAW_FILE_PRESET))->inventory;
 }
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
