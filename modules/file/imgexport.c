@@ -268,6 +268,7 @@ typedef struct {
     GtkObject *inset_ygap;
     ImgExportColourControls inset_colour;
     ImgExportColourControls inset_outline_colour;
+    GtkObject *inset_opacity;
     GSList *inset_pos;
     GtkWidget *inset_pos_label[6];
     GtkWidget *inset_length_label;
@@ -292,6 +293,7 @@ typedef struct {
     GtkWidget *selections;
     ImgExportColourControls sel_colour;
     ImgExportColourControls sel_outline_colour;
+    GtkObject *sel_opacity;
     gint sel_row_start;
     GtkWidget *sel_options_label;
     GSList *sel_options;
@@ -2745,6 +2747,7 @@ update_lateral_sensitivity(ImgExportControls *controls)
     update_colour_controls_sensitivity(&controls->inset_colour, insetsens);
     update_colour_controls_sensitivity(&controls->inset_outline_colour,
                                        insetsens);
+    gwy_table_hscale_set_sensitive(controls->inset_opacity, insetsens);
     gtk_widget_set_sensitive(controls->inset_length_label, insetsens);
     gtk_widget_set_sensitive(controls->inset_length, insetsens);
     gtk_widget_set_sensitive(controls->inset_length_auto, insetsens);
@@ -2771,6 +2774,16 @@ inset_ygap_changed(ImgExportControls *controls,
                    GtkAdjustment *adj)
 {
     controls->args->inset_ygap = gtk_adjustment_get_value(adj);
+    update_preview(controls);
+}
+
+static void
+inset_opacity_changed(ImgExportControls *controls,
+                      GtkAdjustment *adj)
+{
+    gdouble alpha = gtk_adjustment_get_value(adj);
+    controls->args->inset_color.a = alpha;
+    controls->args->inset_outline_color.a = alpha;
     update_preview(controls);
 }
 
@@ -2976,7 +2989,7 @@ create_colour_control(GtkTable *table,
     label = gtk_label_new_with_mnemonic(name);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
     hbox = gtk_hbox_new(TRUE, 4);
     g_object_get(table, "n-columns", &ncols, NULL);
@@ -2991,7 +3004,7 @@ create_colour_control(GtkTable *table,
     g_signal_connect_swapped(colour, "clicked",
                              G_CALLBACK(select_colour), controls);
 
-    setblack = gtk_button_new_with_mnemonic(_("_Black"));
+    setblack = gtk_button_new_with_label(_("Black"));
     gtk_box_pack_start(GTK_BOX(hbox), setblack, TRUE, TRUE, 0);
     g_object_set_data(G_OBJECT(setblack), "target", target);
     g_object_set_data(G_OBJECT(setblack), "settocolour", (gpointer)&black);
@@ -2999,7 +3012,7 @@ create_colour_control(GtkTable *table,
     g_signal_connect_swapped(setblack, "clicked",
                              G_CALLBACK(set_colour_to), controls);
 
-    setwhite = gtk_button_new_with_mnemonic(_("_White"));
+    setwhite = gtk_button_new_with_label(_("White"));
     gtk_box_pack_start(GTK_BOX(hbox), setwhite, TRUE, TRUE, 0);
     g_object_set_data(G_OBJECT(setwhite), "target", target);
     g_object_set_data(G_OBJECT(setwhite), "settocolour", (gpointer)&white);
@@ -3010,7 +3023,7 @@ create_colour_control(GtkTable *table,
     colourctrl->label = label;
     colourctrl->button = colour;
     colourctrl->setblack = setblack;
-    colourctrl->setwhite = setblack;
+    colourctrl->setwhite = setwhite;
 }
 
 static void
@@ -3020,7 +3033,7 @@ create_lateral_controls(ImgExportControls *controls)
     GtkWidget *table, *label;
     gint row = 0;
 
-    table = controls->table_lateral = gtk_table_new(12, 4, FALSE);
+    table = controls->table_lateral = gtk_table_new(13, 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -3038,29 +3051,29 @@ create_lateral_controls(ImgExportControls *controls)
     row = gwy_radio_buttons_attach_to_table(controls->xytype, GTK_TABLE(table),
                                             3, row);
 
-    controls->inset_xgap = attach_gap(table, _("Hori_zontal gap:"), row, 4.0,
-                                      args->inset_xgap);
-    g_signal_connect_swapped(controls->inset_xgap, "value-changed",
-                             G_CALLBACK(inset_xgap_changed), controls);
-    row++;
+    controls->inset_length_label
+        = label = gtk_label_new_with_mnemonic(_("_Length:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    controls->inset_ygap = attach_gap(table, _("_Vertical gap:"), row, 2.0,
-                                      args->inset_ygap);
-    g_signal_connect_swapped(controls->inset_ygap, "value-changed",
-                             G_CALLBACK(inset_ygap_changed), controls);
-    row++;
+    controls->inset_length = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(controls->inset_length), 8);
+    gtk_entry_set_text(GTK_ENTRY(controls->inset_length),
+                       controls->args->inset_length);
+    gwy_widget_set_activate_on_unfocus(controls->inset_length, TRUE);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->inset_length);
+    g_signal_connect_swapped(controls->inset_length, "activate",
+                             G_CALLBACK(inset_length_changed), controls);
+    gtk_table_attach(GTK_TABLE(table), controls->inset_length,
+                     1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    create_colour_control(GTK_TABLE(table), row++,
-                          _("Colo_r:"), &args->inset_color,
-                          controls, &controls->inset_colour);
+    controls->inset_length_auto = gtk_button_new_with_mnemonic(_("_Auto"));
+    g_signal_connect_swapped(controls->inset_length_auto, "clicked",
+                             G_CALLBACK(inset_length_set_auto), controls);
+    gtk_table_attach(GTK_TABLE(table), controls->inset_length_auto,
+                     3, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
-
-    create_colour_control(GTK_TABLE(table), row++,
-                          _("Out_line color:"), &args->inset_outline_color,
-                          controls, &controls->inset_outline_colour);
-    row++;
-
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
     controls->inset_pos_label[0] = label = gtk_label_new(_("Placement:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -3102,29 +3115,37 @@ create_lateral_controls(ImgExportControls *controls)
     inset_pos_add(controls, GTK_TABLE(table), INSET_POS_BOTTOM_RIGHT, 3, row);
     row++;
 
-    controls->inset_length_label
-        = label = gtk_label_new_with_mnemonic(_("_Length:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
-    controls->inset_length = gtk_entry_new();
-    gtk_entry_set_width_chars(GTK_ENTRY(controls->inset_length), 8);
-    gtk_entry_set_text(GTK_ENTRY(controls->inset_length),
-                       controls->args->inset_length);
-    gwy_widget_set_activate_on_unfocus(controls->inset_length, TRUE);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->inset_length);
-    g_signal_connect_swapped(controls->inset_length, "activate",
-                             G_CALLBACK(inset_length_changed), controls);
-    gtk_table_attach(GTK_TABLE(table), controls->inset_length,
-                     1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    controls->inset_length_auto = gtk_button_new_with_mnemonic(_("_Auto"));
-    g_signal_connect_swapped(controls->inset_length_auto, "clicked",
-                             G_CALLBACK(inset_length_set_auto), controls);
-    gtk_table_attach(GTK_TABLE(table), controls->inset_length_auto,
-                     3, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls->inset_xgap = attach_gap(table, _("Hori_zontal gap:"), row, 4.0,
+                                      args->inset_xgap);
+    g_signal_connect_swapped(controls->inset_xgap, "value-changed",
+                             G_CALLBACK(inset_xgap_changed), controls);
     row++;
+
+    controls->inset_ygap = attach_gap(table, _("_Vertical gap:"), row, 2.0,
+                                      args->inset_ygap);
+    g_signal_connect_swapped(controls->inset_ygap, "value-changed",
+                             G_CALLBACK(inset_ygap_changed), controls);
+    row++;
+
+    create_colour_control(GTK_TABLE(table), row++,
+                          _("Colo_r:"), &args->inset_color,
+                          controls, &controls->inset_colour);
+    row++;
+
+    create_colour_control(GTK_TABLE(table), row++,
+                          _("Out_line color:"), &args->inset_outline_color,
+                          controls, &controls->inset_outline_colour);
+    row++;
+
+    controls->inset_opacity = attach_gap(table, _("O_pacity:"), row, 1.0,
+                                         args->inset_color.a);
+    g_signal_connect_swapped(controls->inset_opacity, "value-changed",
+                             G_CALLBACK(inset_opacity_changed), controls);
+    row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
     controls->inset_draw_ticks
         = gtk_check_button_new_with_mnemonic(_("Draw _ticks"));
@@ -3199,6 +3220,7 @@ title_type_changed(GtkComboBox *combo,
                    ImgExportControls *controls)
 {
     controls->args->title_type = gwy_enum_combo_box_get_active(combo);
+    update_value_sensitivity(controls);
     update_preview(controls);
 }
 
@@ -3356,6 +3378,7 @@ update_selection_sensitivity(ImgExportControls *controls)
     gtk_widget_set_sensitive(controls->sel_options_label, sens);
     update_colour_controls_sensitivity(&controls->sel_colour, sens);
     update_colour_controls_sensitivity(&controls->sel_outline_colour, sens);
+    gwy_table_hscale_set_sensitive(controls->sel_opacity, sens);
     for (l = controls->sel_options; l; l = g_slist_next(l))
         gtk_widget_set_sensitive(GTK_WIDGET(l->data), sens);
 }
@@ -3436,6 +3459,16 @@ draw_selection_changed(ImgExportControls *controls,
 }
 
 static void
+sel_opacity_changed(ImgExportControls *controls,
+                    GtkAdjustment *adj)
+{
+    gdouble alpha = gtk_adjustment_get_value(adj);
+    controls->args->sel_color.a = alpha;
+    controls->args->sel_outline_color.a = alpha;
+    update_preview(controls);
+}
+
+static void
 update_selection_options(ImgExportControls *controls)
 {
     const ImgExportSelectionType *seltype;
@@ -3501,7 +3534,7 @@ create_selection_controls(ImgExportControls *controls)
     gint row = 0;
     guint i;
 
-    table = controls->table_selection = gtk_table_new(11, 3, FALSE);
+    table = controls->table_selection = gtk_table_new(12, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -3573,6 +3606,14 @@ create_selection_controls(ImgExportControls *controls)
     create_colour_control(GTK_TABLE(table), row++,
                           _("Out_line color:"), &args->sel_outline_color,
                           controls, &controls->sel_outline_colour);
+    row++;
+
+    controls->sel_opacity = gtk_adjustment_new(args->sel_color.a,
+                                               0.0, 1.0, 0.001, 0.1, 0);
+    gwy_table_attach_hscale(table, row, _("O_pacity:"), NULL,
+                            controls->sel_opacity, GWY_HSCALE_DEFAULT);
+    g_signal_connect_swapped(controls->sel_opacity, "value-changed",
+                             G_CALLBACK(sel_opacity_changed), controls);
     row++;
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
@@ -5265,6 +5306,8 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->inset_xgap = CLAMP(args->inset_xgap, 0.0, 4.0);
     args->inset_ygap = CLAMP(args->inset_ygap, 0.0, 2.0);
     args->title_gap = CLAMP(args->title_gap, -1.0, 1.0);
+    args->inset_outline_color.a = args->inset_color.a;
+    args->sel_outline_color.a = args->sel_color.a;
     args->sel_number_objects = !!args->sel_number_objects;
     args->sel_line_thickness = CLAMP(args->sel_line_thickness, 0.0, 1024.0);
     args->sel_point_radius = CLAMP(args->sel_point_radius, 0.0, 1024.0);
