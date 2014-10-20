@@ -17,7 +17,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  */
-#define DEBUG 1
+
 /**
  * [FILE-MAGIC-USERGUIDE]
  * ATC SPMxFormat data

@@ -35,7 +35,6 @@
  * * FIXME: Correct width and length of datafiels (rounding problem)
  *
  */
-/*#define DEBUG*/
 
 /* XXX: The typical length of a XML declaration is about 40 bytes.  So while
  * there can be more stuff before <SPML than 60 bytes, we have to find a
