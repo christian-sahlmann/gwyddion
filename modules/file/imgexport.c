@@ -619,7 +619,6 @@ img_export_detect(const GwyFileDetectInfo *fileinfo,
         if (g_str_has_suffix(fileinfo->name_lowercase, extensions[i]))
             break;
     }
-    /* TODO: Raise score once the module works. */
     score = extensions[i] ? 20 : 0;
     g_strfreev(extensions);
 
@@ -974,7 +973,7 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     /* This format must be the same as sizes->vf_title. */
     vf = gwy_si_unit_get_format_with_resolution(zunit,
                                                 GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                real, real/240,
+                                                real, real/96.0,
                                                 NULL);
     sizes->vf_fmruler = vf;
     sizes->zunits_nonempty = strlen(vf->units);
@@ -1009,12 +1008,10 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     sizes->fmruler_label_height = height;
     gwy_debug("label width %g, height %g", width, height);
 
-    /* FIXME: Does not work properly.  If the image has small pixel dimensions
-     * we get very few ticks, even if the font size is comparatively tiny. */
     if (env->fm_rangetype == GWY_LAYER_BASIC_RANGE_ADAPT)
-        n = CLAMP(GWY_ROUND(size/height), 1, 30);
+        n = CLAMP(GWY_ROUND(size/height), 1, 36);
     else
-        n = CLAMP(GWY_ROUND(size/height), 1, 10);
+        n = CLAMP(GWY_ROUND(size/height), 1, 12);
 
     gwy_debug("nticks %u", n);
     ticks->step = real/n;
