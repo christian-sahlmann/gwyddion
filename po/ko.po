@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2014-09-18 03:58+0200\n"
-"PO-Revision-Date: 2014-09-29 23:00+0900\n"
+"PO-Revision-Date: 2014-10-21 13:35+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Korean_gwyddion\n"
 "Language: ko\n"
@@ -927,7 +927,7 @@ msgstr ""
 
 #: libgwydgets/gwy3dwindow.c:1621 libgwydgets/gwy3dwindow.c:1644
 msgid "S_witch to Color Gradient Mode"
-msgstr ""
+msgstr "색상 변화표 모드로 전환(W)"
 
 #: libgwydgets/gwy3dwindow.c:1660
 msgid "T_oggle light"
@@ -952,7 +952,7 @@ msgstr ""
 
 #: libgwydgets/gwydatawindow.c:916 libgwydgets/gwyoptionmenus.c:828
 msgid "Choose Color Gradient"
-msgstr ""
+msgstr "색상 변화표 선택"
 
 #: libgwydgets/gwydgetenums.c:46 modules/process/neural.c:415
 msgid "Hidden"
@@ -969,7 +969,7 @@ msgstr ""
 
 #: libgwydgets/gwydgetutils.c:564
 msgid "Change Mask Color"
-msgstr ""
+msgstr "마스크 색상 변경"
 
 #: libgwydgets/gwygrainvaluemenu.c:184
 msgid "Quantity"
@@ -1122,7 +1122,7 @@ msgstr ""
 
 #: libgwydgets/gwygraphwindow.c:152 app/toolbox.c:114
 msgid "Graph"
-msgstr ""
+msgstr "그래프"
 
 #: libgwydgets/gwygraphwindow.c:159 modules/file/hdrimage.cc:472
 #: modules/process/fit_2d.c:741
@@ -1205,7 +1205,7 @@ msgstr ""
 
 #: libgwydgets/gwyoptionmenus.c:827
 msgid "Color Gradient"
-msgstr ""
+msgstr "색상 변화표"
 
 #: libgwydgets/gwyoptionmenus.c:842
 msgid "GL Material"
@@ -1530,7 +1530,7 @@ msgstr ""
 
 #: app/data-browser.c:5045 modules/volume/volume_extract.c:444
 msgid "Graphs"
-msgstr ""
+msgstr "그래프"
 
 #: app/data-browser.c:5059
 msgid "Spectra"
@@ -1673,12 +1673,12 @@ msgstr ""
 
 #: app/gradient-editor.c:126
 msgid "Color Gradient Editor"
-msgstr ""
+msgstr "색상 변화표 편집기"
 
 #: app/gradient-editor.c:127
 #, c-format
 msgid "Color Gradient `%s'"
-msgstr ""
+msgstr "색상 변화표 `%s'"
 
 #: app/gradient-editor.c:228
 msgid "_Points"
@@ -1748,7 +1748,7 @@ msgstr ""
 
 #: app/gwyddion.c:148
 msgid "color gradients"
-msgstr ""
+msgstr "색상 변화표"
 
 #: app/gwyddion.c:150
 msgid "GL materials"
@@ -1931,15 +1931,15 @@ msgstr ""
 
 #: app/menu.c:558 app/toolbox.c:635
 msgid "_Data Process"
-msgstr ""
+msgstr "데이터 프로세스(D)"
 
 #: app/menu.c:600 app/toolbox.c:638
 msgid "_Graph"
-msgstr ""
+msgstr "그래프(G)"
 
 #: app/menu.c:645 app/toolbox.c:641
 msgid "_Volume Data"
-msgstr ""
+msgstr "3차원 데이터(V)"
 
 #: app/menu.c:677
 msgid "Re-show Last"
@@ -2419,31 +2419,31 @@ msgstr ""
 
 #: app/tips.c:402
 msgid "Gwyddion is a son of Math."
-msgstr ""
+msgstr "Gwyddion은 수학의 아들입니다. "
 
 #: app/tips.c:449
 msgid "Gwyddion Tip of the Day"
-msgstr ""
+msgstr "Gwyddion 오늘의 팁"
 
 #: app/tips.c:462
 msgid "_Previous Tip"
-msgstr ""
+msgstr "이전 팁(P)"
 
 #: app/tips.c:468
 msgid "_Next Tip"
-msgstr ""
+msgstr "다음 팁(N)"
 
 #: app/toolbox.c:114
 msgid "View"
-msgstr ""
+msgstr "보기"
 
 #: app/toolbox.c:114
 msgid "Data Process"
-msgstr ""
+msgstr "데이터 프로세스"
 
 #: app/toolbox.c:114
 msgid "Tools"
-msgstr ""
+msgstr "도구"
 
 #: app/toolbox.c:170
 msgid "Display a 3D view of data"
@@ -2451,103 +2451,103 @@ msgstr ""
 
 #: app/toolbox.c:177
 msgid "Zoom in"
-msgstr ""
+msgstr "확대"
 
 #: app/toolbox.c:181
 msgid "Zoom 1:1"
-msgstr ""
+msgstr "1:1 보기"
 
 #: app/toolbox.c:185
 msgid "Zoom out"
-msgstr ""
+msgstr "축소"
 
 #: app/toolbox.c:629
 msgid "_File"
-msgstr ""
+msgstr "파일(F)"
 
 #: app/toolbox.c:631
 msgid "_Edit"
-msgstr ""
+msgstr "편집(E)"
 
 #: app/toolbox.c:644
 msgid "_Info"
-msgstr ""
+msgstr "정보(I)"
 
 #: app/toolbox.c:679
 msgid "/Show _Data Browser"
-msgstr ""
+msgstr "/데이터 브라우저 보기(D)"
 
 #: app/toolbox.c:687
 msgid "/Module _Browser"
-msgstr ""
+msgstr "/모듈 브라우저(B)"
 
 #: app/toolbox.c:702
 msgid "/_User Guide"
-msgstr ""
+msgstr "/사용자 메뉴얼(U)"
 
 #: app/toolbox.c:710
 msgid "/_Tip of the Day"
-msgstr ""
+msgstr "/오늘의 팁(T)"
 
 #: app/toolbox.c:718
 msgid "/_About Gwyddion"
-msgstr ""
+msgstr "/Gwyddion 정보(A)"
 
 #: app/toolbox.c:755
 msgid "/_Open..."
-msgstr ""
+msgstr "/열기(O)..."
 
 #: app/toolbox.c:763
 msgid "/_Merge..."
-msgstr ""
+msgstr "/병합(M)..."
 
 #: app/toolbox.c:771
 msgid "/Open _Recent"
-msgstr ""
+msgstr "/최근 파일 열기(R)"
 
 #: app/toolbox.c:779
 msgid "/_Save"
-msgstr ""
+msgstr "/저장(S)"
 
 #: app/toolbox.c:787
 msgid "/Save _As..."
-msgstr ""
+msgstr "/다른 이름으로 저장(A)..."
 
 #: app/toolbox.c:795
 msgid "/Remo_ve All Logs"
-msgstr ""
+msgstr "/로그 기록 모두 삭제(V)"
 
 #: app/toolbox.c:811
 msgid "/_Quit"
-msgstr ""
+msgstr "/끝내기(Q)"
 
 #: app/toolbox.c:850
 msgid "/_Undo"
-msgstr ""
+msgstr "/실행 취소(U)"
 
 #: app/toolbox.c:858
 msgid "/_Redo"
-msgstr ""
+msgstr "/다시 실행(R)"
 
 #: app/toolbox.c:874
 msgid "/Default Mask _Color..."
-msgstr ""
+msgstr "/초기 마스크 색상(C) ..."
 
 #: app/toolbox.c:882
 msgid "/Color _Gradients..."
-msgstr ""
+msgstr "/색상 변화표(G)..."
 
 #: app/toolbox.c:890
 msgid "/G_L Materials..."
-msgstr ""
+msgstr "/GL 색상표(L)"
 
 #: app/toolbox.c:898
 msgid "/_Keyboard Shortcuts"
-msgstr ""
+msgstr "/키보드 단축키(K)"
 
 #: app/toolbox.c:906
 msgid "/_Logging Enabled"
-msgstr ""
+msgstr "/로그 기록 활성화(L)"
 
 #: app/toolbox.c:1204
 msgid "Change Default Mask Color"
@@ -5481,7 +5481,7 @@ msgstr ""
 
 #: modules/file/stpfile.c:118
 msgid "Topography"
-msgstr ""
+msgstr "표면 형상"
 
 #: modules/file/stpfile.c:119
 msgid "Current or Deflection or Amplitude"
@@ -5730,7 +5730,7 @@ msgstr ""
 
 #: modules/graph/graph_cd.c:154
 msgid "/_Critical Dimension..."
-msgstr ""
+msgstr "/Critical 규격(C)..."
 
 #: modules/graph/graph_cd.c:157
 msgid "Fit critical dimension"
@@ -5850,11 +5850,11 @@ msgstr ""
 
 #: modules/graph/graph_cut.c:87
 msgid "Cut graph"
-msgstr ""
+msgstr "그래프 자르기"
 
 #: modules/graph/graph_cut.c:101
 msgid "/_Cut Graph..."
-msgstr ""
+msgstr "/그래프 자르기(C)..."
 
 #: modules/graph/graph_cut.c:104
 msgid "Extract part of graph into new one"
@@ -5862,7 +5862,7 @@ msgstr ""
 
 #: modules/graph/graph_cut.c:143
 msgid "Cut Graph"
-msgstr ""
+msgstr "그래프 자르기"
 
 #: modules/graph/graph_cut.c:176
 msgid "Cut _all curves"
@@ -5870,11 +5870,11 @@ msgstr ""
 
 #: modules/graph/graph_dos_spectrum.c:42
 msgid "DOS Spectrum"
-msgstr ""
+msgstr "DOS 스펙트럼"
 
 #: modules/graph/graph_dos_spectrum.c:56
 msgid "/_DOS Spectrum"
-msgstr ""
+msgstr "/DOS 스펙트럼(D)"
 
 #: modules/graph/graph_dos_spectrum.c:59
 msgid "Calculate DOS spectrum from I-V tunneling spectroscopy"
@@ -5912,15 +5912,15 @@ msgstr ""
 
 #: modules/graph/graph_export_ascii.c:72
 msgid "Exports graph data to text files."
-msgstr ""
+msgstr "텍스트 파일로 그래프 데이터 내보내기"
 
 #: modules/graph/graph_export_ascii.c:86
 msgid "/Export _Text..."
-msgstr ""
+msgstr "/텍스트로 내보내기(T)..."
 
 #: modules/graph/graph_export_ascii.c:89
 msgid "Export graph data to a text file"
-msgstr ""
+msgstr "텍스트 파일로 그래프 데이터 내보내기"
 
 #: modules/graph/graph_export_ascii.c:129
 msgid "POSIX _number format"
@@ -5940,51 +5940,51 @@ msgstr ""
 
 #: modules/graph/graph_export_bitmap.c:35
 msgid "Export graph into bitmap"
-msgstr ""
+msgstr "비트맵 파일로 그래프 데이터 내보내기"
 
 #: modules/graph/graph_export_bitmap.c:49
 msgid "/Export _Bitmap"
-msgstr ""
+msgstr "/Bitmap 파일로 내보내기 "
 
 #: modules/graph/graph_export_bitmap.c:52
 msgid "Export graph to a raster image"
-msgstr ""
+msgstr "래스터 이미지로 그래프 데이터 내보내기"
 
 #: modules/graph/graph_export_bitmap.c:64
 msgid "Export to PNG"
-msgstr ""
+msgstr "PNG 파일로 내보내기"
 
 #: modules/graph/graph_export_vector.c:37
 msgid "Export graph in postscript"
-msgstr ""
+msgstr "포스트스크립트(*.ps) 파일로 그래프 데이터 내보내기"
 
 #: modules/graph/graph_export_vector.c:51
 msgid "/Export _PostScript"
-msgstr ""
+msgstr "/포스트스크립트(*.ps) 파일로 내보내기(P)"
 
 #: modules/graph/graph_export_vector.c:54
 msgid "Export graph to a vector image"
-msgstr ""
+msgstr "벡터 이미지로 그래프 데이터 내보내기"
 
 #: modules/graph/graph_export_vector.c:67
 msgid "Export to Postscript"
-msgstr ""
+msgstr "포스트스크립트(*.ps) 파일로 내보내기"
 
 #: modules/graph/graph_fdfit.c:172
 msgid "Fit force-distance data"
-msgstr ""
+msgstr "힘-거리 데이터 맞춤"
 
 #: modules/graph/graph_fdfit.c:186
 msgid "/_Fit FD Curve..."
-msgstr ""
+msgstr "/FD 곡선 맞춤(F)"
 
 #: modules/graph/graph_fdfit.c:189
 msgid "Fit a force-distance curve"
-msgstr ""
+msgstr "힘-거리 곡선 맞추기"
 
 #: modules/graph/graph_fdfit.c:252 modules/volume/volume_fdfit.c:297
 msgid "Fit FD Curve"
-msgstr ""
+msgstr "FD 곡선 맞춤"
 
 #: modules/graph/graph_fdfit.c:259 modules/graph/graph_fit.c:272
 #: modules/process/fit_2d.c:255 modules/volume/volume_fdfit.c:304
@@ -6049,15 +6049,15 @@ msgstr ""
 
 #: modules/graph/graph_filter.c:39
 msgid "Remove graph noise by filtering."
-msgstr ""
+msgstr "필터를 사용한 그래프 노이즈 제거"
 
 #: modules/graph/graph_filter.c:53
 msgid "/_Filter"
-msgstr ""
+msgstr "/필터(F)"
 
 #: modules/graph/graph_filter.c:56
 msgid "Remove noise from graph curves"
-msgstr ""
+msgstr "그래프 곡선 내 노이즈 제거 "
 
 #: modules/graph/graph_fit.c:183
 msgid "Fit graph with function"
@@ -6065,7 +6065,7 @@ msgstr ""
 
 #: modules/graph/graph_fit.c:197
 msgid "/_Fit Function..."
-msgstr ""
+msgstr "/함수에 맞추기(F)"
 
 #: modules/graph/graph_fit.c:200
 msgid "Fit a function on graph data"
@@ -6085,11 +6085,11 @@ msgstr ""
 
 #: modules/graph/graph_level.c:52
 msgid "/_Level"
-msgstr ""
+msgstr "/높이 레벨 맞추기(L)"
 
 #: modules/graph/graph_level.c:55
 msgid "Level graph curves"
-msgstr ""
+msgstr "그래프 곡선의 높이 레벨 맞추기"
 
 #: modules/layer/axis.c:140
 msgid "Layer allowing selection of horizontal or vertical lines."
@@ -6126,7 +6126,7 @@ msgstr ""
 
 #: modules/plugin-proxy.c:463
 msgid "/_Plug-Ins"
-msgstr ""
+msgstr "/플러그인(P)"
 
 #: modules/plugin-proxy.c:464
 #, c-format
@@ -6183,7 +6183,7 @@ msgstr ""
 
 #: modules/process/acf2d.c:51
 msgid "/_Statistics/2D Auto_correlation"
-msgstr ""
+msgstr "/통계(S)/2D 자동 correlation(C)"
 
 #: modules/process/acf2d.c:55
 msgid "Calculate 2D autocorrelation function"
@@ -6201,7 +6201,7 @@ msgstr ""
 
 #: modules/process/angle_dist.c:115
 msgid "/_Statistics/An_gle Distribution..."
-msgstr ""
+msgstr "/통계(S)/각도 분포(G)..."
 
 #: modules/process/angle_dist.c:119
 msgid "Calculate two-dimensional angle distribution"
@@ -6245,7 +6245,7 @@ msgstr ""
 
 #: modules/process/arithmetic.c:162
 msgid "/M_ultidata/_Arithmetic..."
-msgstr ""
+msgstr "/멀티데이터(M)/산술 연산(A)..."
 
 #: modules/process/arithmetic.c:166
 msgid "Arithmetic operations on data"
@@ -6306,7 +6306,7 @@ msgstr ""
 
 #: modules/process/averaging.c:73
 msgid "/_Correct Data/_Correlation averaging..."
-msgstr ""
+msgstr "/데이터 교정(C)/Correlation averaging(C)..."
 
 #: modules/process/averaging.c:77
 msgid "Averaging of similar structures"
@@ -6332,7 +6332,7 @@ msgstr ""
 
 #: modules/process/basicops.c:71
 msgid "/_Basic Operations/_Invert Value"
-msgstr ""
+msgstr "/기본 기능(B)/값 부호 반전(I)"
 
 #: modules/process/basicops.c:75
 msgid "Invert values about mean"
@@ -6340,55 +6340,55 @@ msgstr ""
 
 #: modules/process/basicops.c:78
 msgid "/_Basic Operations/Flip _Horizontally"
-msgstr ""
+msgstr "/기본 기능(B)/y축 대칭 변환(H)"
 
 #: modules/process/basicops.c:82
 msgid "Flip data horizontally"
-msgstr ""
+msgstr "데이터 y축 대칭 변환"
 
 #: modules/process/basicops.c:85
 msgid "/_Basic Operations/Flip _Vertically"
-msgstr ""
+msgstr "/기본 기능(B)/x축 대칭 변환(V)"
 
 #: modules/process/basicops.c:89
 msgid "Flip data vertically"
-msgstr ""
+msgstr "데이터 x축 대칭 변환"
 
 #: modules/process/basicops.c:92
 msgid "/_Basic Operations/Flip _Both"
-msgstr ""
+msgstr "/기본 기능(B)/원점 대칭 변환(B)"
 
 #: modules/process/basicops.c:96
 msgid "Flip data both horizontally and vertically"
-msgstr ""
+msgstr "데이터 원점 대칭 변환시키기  "
 
 #: modules/process/basicops.c:99
 msgid "/_Basic Operations/Rotate C_lockwise"
-msgstr ""
+msgstr "/기본 기능(B)/시계 방향 회전(L)"
 
 #: modules/process/basicops.c:103
 msgid "Rotate data 90 degrees clockwise"
-msgstr ""
+msgstr "데이터 시계 방향으로 90도 회전 "
 
 #: modules/process/basicops.c:106
 msgid "/_Basic Operations/Rotate _Counterclockwise"
-msgstr ""
+msgstr "/기본 기능(B)/시계 반대 방향 회전(C)"
 
 #: modules/process/basicops.c:110
 msgid "Rotate data 90 degrees counterclockwise"
-msgstr ""
+msgstr "데이터 시계 반대 방향으로 90도 회전 "
 
 #: modules/process/basicops.c:113
 msgid "/_Basic Operations/S_quare Samples"
-msgstr ""
+msgstr "/기본 기능(B)/1:1 데이터로 샘플 변환(Q)"
 
 #: modules/process/basicops.c:117
 msgid "Resample data with non-1:1 aspect ratio to square samples"
-msgstr ""
+msgstr "1:1 비율 갖도록 데이터 재샘플링"
 
 #: modules/process/basicops.c:121
 msgid "/_Basic Operations/_Null Offsets"
-msgstr ""
+msgstr "/기본 기능(B)/Null Offsets(N)"
 
 #: modules/process/basicops.c:125
 msgid "Null horizontall offsets, moving the origin to the upper left corner"
@@ -6400,7 +6400,7 @@ msgstr ""
 
 #: modules/process/calcoefs_load.c:94
 msgid "/Cali_bration/_Load From Text File..."
-msgstr ""
+msgstr "/켈리브레이션(I)/텍스트파일로부터 불러오기(L)..."
 
 #: modules/process/calcoefs_load.c:98
 msgid "Load calibration data from text file."
@@ -6470,7 +6470,7 @@ msgstr ""
 
 #: modules/process/calcoefs_new.c:180
 msgid "/Cali_bration/_Create..."
-msgstr ""
+msgstr "/켈리브레이션(I)/생성(C)"
 
 #: modules/process/calcoefs_new.c:184
 msgid "Specify simple calibration data."
@@ -6534,7 +6534,7 @@ msgstr ""
 
 #: modules/process/calcoefs_simple.c:187
 msgid "/Cali_bration/_Get Simple Errop Map..."
-msgstr ""
+msgstr "/켈리브레이션(I)/Simple Error Map 얻기(G)"
 
 #: modules/process/calcoefs_simple.c:191
 msgid "Simple error mapping"
@@ -6623,7 +6623,7 @@ msgstr ""
 
 #: modules/process/calcoefs_stage.c:94
 msgid "/Cali_bration/_3D Calibration/_Get From Stage map..."
-msgstr ""
+msgstr "/켈리브레이션(I)/3D 켈리브레이션(3)/Stage map에서 얻기(G)"
 
 #: modules/process/calcoefs_stage.c:98
 msgid "Stage error mapping"
@@ -6639,7 +6639,7 @@ msgstr ""
 
 #: modules/process/calcoefs_view.c:262
 msgid "/Cali_bration/_Apply to Data..."
-msgstr ""
+msgstr "/켈리브레이션(I)/데이터에 적용(A)"
 
 #: modules/process/calcoefs_view.c:266
 msgid "3D calibration and uncertainty"
@@ -6794,7 +6794,7 @@ msgstr ""
 
 #: modules/process/calibrate.c:196
 msgid "/_Basic Operations/_Dimensions and Units..."
-msgstr ""
+msgstr "/기본 기능(B)/크기 및 단위(D)..."
 
 #: modules/process/calibrate.c:200 modules/volume/volume_calibrate.c:194
 msgid "Change physical dimensions, units or value scale"
@@ -6958,7 +6958,7 @@ msgstr ""
 
 #: modules/process/col_synth.c:535 modules/process/diff_synth.c:578
 msgid "Plot graphs:"
-msgstr ""
+msgstr "그래프 그리기:"
 
 #: modules/process/col_synth.c:603
 msgid "Weak"
@@ -7283,7 +7283,7 @@ msgstr ""
 
 #: modules/process/curvature.c:676
 msgid "_Plot graph"
-msgstr ""
+msgstr "그래프 그리기(P)"
 
 #: modules/process/curvature.c:687 modules/process/facet-level.c:204
 #: modules/process/level.c:276 modules/process/linecorrect.c:295
@@ -7850,7 +7850,7 @@ msgstr ""
 
 #: modules/process/extend.c:120
 msgid "/_Basic Operations/E_xtend..."
-msgstr ""
+msgstr "/기본 기능(B)/확장(X)..."
 
 #: modules/process/extend.c:124
 msgid "Extend by adding borders"
@@ -8596,7 +8596,7 @@ msgstr ""
 
 #: modules/process/grain_dist.c:222
 msgid "Plot _graphs"
-msgstr ""
+msgstr "그래프 그리기(G)"
 
 #: modules/process/grain_dist.c:239
 msgid "Grain Distributions"
