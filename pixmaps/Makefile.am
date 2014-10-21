@@ -165,6 +165,7 @@ xcf_sources = \
 	gwy_crop-24.xcf \
 	gwy_direction-24.xcf \
 	gwy_edge-24.xcf \
+	gwy_favourite-24.xcf \
 	gwy_fft-24.xcf \
 	gwy_filter-24.xcf \
 	gwy_flip_horizontally-24.xcf \
@@ -211,4 +212,3 @@ EXTRA_DIST = \
 	$(icondata_DATA) \
 	$(pixmapdata_DATA) \
 	$(xcf_sources)
-
