@@ -36,10 +36,11 @@
 #include <app/gwyapp.h>
 
 #define CNEW_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
+
 typedef enum {
-   DUPLICATE_NONE = 0,
-   DUPLICATE_OVERWRITE = 1,
-   DUPLICATE_APPEND = 2
+    DUPLICATE_NONE      = 0,
+    DUPLICATE_OVERWRITE = 1,
+    DUPLICATE_APPEND    = 2
 } ResponseDuplicate;
 
 typedef struct {
@@ -87,56 +88,54 @@ typedef struct {
     GtkEntry *name;
 } CNewControls;
 
-static gboolean    module_register            (void);
-static void        cnew                        (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean    cnew_dialog                 (CNewArgs *args,
-                                                GwyDataField *dfield);
-static void        cnew_load_args              (GwyContainer *container,
-                                               CNewArgs *args);
-static void        cnew_save_args              (GwyContainer *container,
-                                               CNewArgs *args);
-static void        cnew_dialog_update          (CNewControls *controls,
-                                               CNewArgs *args);
-static void        xyexponent_changed_cb       (GtkWidget *combo,
-                                               CNewControls *controls);
-static void        xyuexponent_changed_cb      (GtkWidget *combo,
-                                               CNewControls *controls);
-static void        zexponent_changed_cb       (GtkWidget *combo,
-                                               CNewControls *controls);
-static void        zuexponent_changed_cb       (GtkWidget *combo,
-                                               CNewControls *controls);
-static void        units_change_cb             (GtkWidget *button,
-                                               CNewControls *controls);
-static void        set_combo_from_unit       (GtkWidget *combo,
-                                              const gchar *str,
-                                              gint basepower);
-static void        xfrom_changed_cb           (GtkAdjustment *adj,
-                                               CNewControls *controls);
-static void        xto_changed_cb           (GtkAdjustment *adj,
-                                               CNewControls *controls);
-static void        yfrom_changed_cb           (GtkAdjustment *adj,
-                                               CNewControls *controls);
-static void        yto_changed_cb           (GtkAdjustment *adj,
-                                               CNewControls *controls);
-static void        zfrom_changed_cb           (GtkAdjustment *adj,
-                                               CNewControls *controls);
-static void        zto_changed_cb           (GtkAdjustment *adj,
-                                               CNewControls *controls);
-static void        xunc_changed_cb           (GtkAdjustment *adj,
-                                               CNewControls *controls);
-static void        yunc_changed_cb           (GtkAdjustment *adj,
-                                               CNewControls *controls);
-static void        zunc_changed_cb           (GtkAdjustment *adj,
-                                               CNewControls *controls);
-
-static void        xmult_changed_cb           (GtkAdjustment *adj,
-                                               CNewControls *controls);
-static void        ymult_changed_cb           (GtkAdjustment *adj,
-                                               CNewControls *controls);
-static void        zmult_changed_cb           (GtkAdjustment *adj,
-                                               CNewControls *controls);
-
+static gboolean module_register       (void);
+static void     cnew                  (GwyContainer *data,
+                                       GwyRunType run);
+static gboolean cnew_dialog           (CNewArgs *args,
+                                       GwyDataField *dfield);
+static void     cnew_load_args        (GwyContainer *container,
+                                       CNewArgs *args);
+static void     cnew_save_args        (GwyContainer *container,
+                                       CNewArgs *args);
+static void     cnew_dialog_update    (CNewControls *controls,
+                                       CNewArgs *args);
+static void     xyexponent_changed_cb (GtkWidget *combo,
+                                       CNewControls *controls);
+static void     xyuexponent_changed_cb(GtkWidget *combo,
+                                       CNewControls *controls);
+static void     zexponent_changed_cb  (GtkWidget *combo,
+                                       CNewControls *controls);
+static void     zuexponent_changed_cb (GtkWidget *combo,
+                                       CNewControls *controls);
+static void     units_change_cb       (GtkWidget *button,
+                                       CNewControls *controls);
+static void     set_combo_from_unit   (GtkWidget *combo,
+                                       const gchar *str,
+                                       gint basepower);
+static void     xfrom_changed_cb      (GtkAdjustment *adj,
+                                       CNewControls *controls);
+static void     xto_changed_cb        (GtkAdjustment *adj,
+                                       CNewControls *controls);
+static void     yfrom_changed_cb      (GtkAdjustment *adj,
+                                       CNewControls *controls);
+static void     yto_changed_cb        (GtkAdjustment *adj,
+                                       CNewControls *controls);
+static void     zfrom_changed_cb      (GtkAdjustment *adj,
+                                       CNewControls *controls);
+static void     zto_changed_cb        (GtkAdjustment *adj,
+                                       CNewControls *controls);
+static void     xunc_changed_cb       (GtkAdjustment *adj,
+                                       CNewControls *controls);
+static void     yunc_changed_cb       (GtkAdjustment *adj,
+                                       CNewControls *controls);
+static void     zunc_changed_cb       (GtkAdjustment *adj,
+                                       CNewControls *controls);
+static void     xmult_changed_cb      (GtkAdjustment *adj,
+                                       CNewControls *controls);
+static void     ymult_changed_cb      (GtkAdjustment *adj,
+                                       CNewControls *controls);
+static void     zmult_changed_cb      (GtkAdjustment *adj,
+                                       CNewControls *controls);
 
 
 static const CNewArgs cnew_defaults = {
@@ -178,7 +177,7 @@ module_register(void)
     gwy_process_func_register("cnew",
                               (GwyProcessFunc)&cnew,
                               N_("/Cali_bration/_Create..."),
-                              GWY_STOCK_CWT,
+                              NULL,
                               CNEW_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Specify simple calibration data."));

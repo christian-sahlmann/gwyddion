@@ -36,12 +36,12 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
-#define CNEW_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
+#define CLOAD_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 typedef enum {
-       DUPLICATE_NONE = 0,
-          DUPLICATE_OVERWRITE = 1,
-             DUPLICATE_APPEND = 2
+    DUPLICATE_NONE      = 0,
+    DUPLICATE_OVERWRITE = 1,
+    DUPLICATE_APPEND    = 2
 } ResponseDuplicate;
 
 typedef struct {
@@ -60,12 +60,12 @@ typedef struct {
 
 enum { RESPONSE_LOAD = 1 };
 
-static gboolean    module_register            (void);
-static void        cload                        (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean    cload_dialog                 (CLoadArgs *args,
-                                                GwyDataField *dfield);
-static void         load_caldata              (CLoadControls *controls);
+static gboolean module_register(void);
+static void     cload          (GwyContainer *data,
+                                GwyRunType run);
+static gboolean cload_dialog   (CLoadArgs *args,
+                                GwyDataField *dfield);
+static void     load_caldata   (CLoadControls *controls);
 
 
 static const CLoadArgs cload_defaults = {
@@ -92,8 +92,8 @@ module_register(void)
     gwy_process_func_register("cload",
                               (GwyProcessFunc)&cload,
                               N_("/Cali_bration/_Load From Text File..."),
-                              GWY_STOCK_CWT,
-                              CNEW_RUN_MODES,
+                              NULL,
+                              CLOAD_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Load calibration data from text file."));
 
@@ -119,7 +119,7 @@ cload(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     FILE *fh;
 
 
-    g_return_if_fail(run & CNEW_RUN_MODES);
+    g_return_if_fail(run & CLOAD_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &oldid,
                                      0);
