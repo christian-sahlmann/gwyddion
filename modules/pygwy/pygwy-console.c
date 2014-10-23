@@ -27,6 +27,7 @@
 #include <glib/gstdio.h>
 #include <gdk/gdkkeysyms.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
@@ -55,7 +56,7 @@ pygwy_register_console()
     gwy_process_func_register("pygwy_console",
                               pygwy_console_run,
                               N_("/Pygwy Console"),
-                              NULL,
+                              GWY_STOCK_PYGWY,
                               GWY_RUN_IMMEDIATE,
                               0,
                               N_("Python wrapper console"));
