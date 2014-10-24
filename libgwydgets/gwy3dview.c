@@ -1133,6 +1133,8 @@ gwy_3d_view_update_lists(Gwy3DView *gwy3dview)
 static gboolean gwy_3d_view_update_timer(gpointer user_data)
 {
     Gwy3DView *gwy3dview = (Gwy3DView*)user_data;
+    gwy3dview->timeout2_id = 0;
+
     gwy_3d_make_list(gwy3dview,
                      gwy3dview->downsampled,
                      gwy3dview->ovlays,
