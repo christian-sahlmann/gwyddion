@@ -36,6 +36,7 @@ process_LTLIBRARIES = \
 	extend.la \
 	facet-level.la \
 	facet_analysis.la \
+	fbm_synth.la \
 	fft.la \
 	fft_filter_1d.la \
 	fft_filter_2d.la \
@@ -146,6 +147,7 @@ edge_la_SOURCES                = edge.c
 extend_la_SOURCES              = extend.c
 facet_analysis_la_SOURCES      = facet_analysis.c
 facet_level_la_SOURCES         = facet-level.c
+fbm_synth_la_SOURCES           = fbm_synth.c dimensions.h synth.h
 fft_filter_1d_la_SOURCES       = fft_filter_1d.c
 fft_filter_2d_la_SOURCES       = fft_filter_2d.c
 fft_profile_la_SOURCES         = fft_profile.c
