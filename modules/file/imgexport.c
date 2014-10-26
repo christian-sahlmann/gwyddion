@@ -3921,7 +3921,7 @@ create_preset_controls(ImgExportControls *controls)
                                             preset_render_name, controls, NULL);
 
     column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_title(column, "Lateral");
+    gtk_tree_view_column_set_title(column, _("Lateral"));
     gtk_tree_view_column_set_expand(column, TRUE);
     gtk_tree_view_append_column(treeview, column);
     renderer = gtk_cell_renderer_text_new();
