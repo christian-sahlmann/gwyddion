@@ -39,7 +39,7 @@
 
 #define GWY_SQRT6 2.449489742783178098197284074705
 
-#define NOISE_DISTRIBUTION_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
+#define NOISE_SYNTH_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 #define DECLARE_NOISE(name) \
     static gdouble noise_##name##_both(GwyRandGenSet *rng, gdouble sigma); \
@@ -220,7 +220,7 @@ module_register(void)
                               (GwyProcessFunc)&noise_synth,
                               N_("/S_ynthetic/_Noise..."),
                               GWY_STOCK_SYNTHETIC_NOISE,
-                              NOISE_DISTRIBUTION_RUN_MODES,
+                              NOISE_SYNTH_RUN_MODES,
                               0,
                               N_("Generate surface of uncorrelated noise"));
 
@@ -236,7 +236,7 @@ noise_synth(GwyContainer *data, GwyRunType run)
     GQuark quark;
     gint id;
 
-    g_return_if_fail(run & NOISE_DISTRIBUTION_RUN_MODES);
+    g_return_if_fail(run & NOISE_SYNTH_RUN_MODES);
     noise_synth_load_args(gwy_app_settings_get(), &args, &dimsargs);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
@@ -244,10 +244,11 @@ noise_synth(GwyContainer *data, GwyRunType run)
                                      0);
 
     if (run == GWY_RUN_IMMEDIATE
-        || noise_synth_dialog(&args, &dimsargs, data, dfield, id)) {
-        noise_synth_save_args(gwy_app_settings_get(), &args, &dimsargs);
+        || noise_synth_dialog(&args, &dimsargs, data, dfield, id))
         run_noninteractive(&args, &dimsargs, data, dfield, id, quark);
-    }
+
+    if (run == GWY_RUN_INTERACTIVE)
+        noise_synth_save_args(gwy_app_settings_get(), &args, &dimsargs);
 
     gwy_dimensions_free_args(&dimsargs);
 }

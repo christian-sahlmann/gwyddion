@@ -319,10 +319,11 @@ lno_synth(GwyContainer *data, GwyRunType run)
                                      0);
 
     if (run == GWY_RUN_IMMEDIATE
-        || lno_synth_dialog(&args, &dimsargs, data, dfield, id)) {
-        lno_synth_save_args(gwy_app_settings_get(), &args, &dimsargs);
+        || lno_synth_dialog(&args, &dimsargs, data, dfield, id))
         run_noninteractive(&args, &dimsargs, data, dfield, id, quark);
-    }
+
+    if (run == GWY_RUN_INTERACTIVE)
+        lno_synth_save_args(gwy_app_settings_get(), &args, &dimsargs);
 
     gwy_dimensions_free_args(&dimsargs);
 }
