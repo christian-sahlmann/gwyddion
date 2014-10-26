@@ -514,10 +514,13 @@ update_controls(FBMSynthControls *controls,
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->seed), args->seed);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->randomize),
                                  args->randomize);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->H), args->H);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->power), args->power);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->hom_scale),
+                             args->hom_scale);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->sigma), args->sigma);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->distribution),
                                   args->distribution);
-    /* TODO */
 }
 
 static void
