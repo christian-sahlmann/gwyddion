@@ -400,8 +400,10 @@ check_local_file_uri(const gchar *uri)
         g_free(scheme);
 
     /* We used g_file_hash() here but it segfaults under wine.  No idea why. */
-    if (!(path = g_file_get_basename(gfile)))
+    if (!(path = g_file_get_basename(gfile))) {
+        g_object_unref(gfile);
         return FALSE;
+    }
     g_free(path);
 
     if (!(path = g_file_get_path(gfile))) {
