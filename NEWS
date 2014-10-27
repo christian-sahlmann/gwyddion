@@ -27,6 +27,8 @@ Modules:
 - NX II (new): Imports EMSYS NX II AFM files.
 - FemtoScan (new): Imports FemtoScan SPM files.
 - SPMx (new): Imports ACT/FemtoScan SPMxFormat files.
+- Fractional Brownian motion (new): Generation of fBm-like artifical
+  surfaces.
 - Pixmap: Only used for image import; image rendering functions were removed.
 - Statistical quantity: Crash in saving the statistics was fixed (introduced
   in 2.38).
@@ -38,6 +40,7 @@ Modules:
 - MetroPro: Z scale in files with PhaseRes value of 2 is correct now.
 - Grain distributions: The graph abscissas are bin centres now, as is usual,
   instead of bin left edges.
+- Noise and line noise synthesis: Settings are remembered also on Cancel.
 
 
 2.38 (2014-09-18)
