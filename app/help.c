@@ -79,7 +79,7 @@ show_uri_win32(G_GNUC_UNUSED const gchar *uri, gboolean complain)
     /* XXX: The first arg is handle to the window.  May want to pass it.
      * Apparenly gdk_win32_window_get_impl_hwnd() can provide it but this is
      * a late addition to Gdk, must check availability properly. */
-    status = ShellExecute(NULL, NULL, uri, NULL, NULL, SW_SHOWNORMAL);
+    status = (int)ShellExecute(NULL, NULL, uri, NULL, NULL, SW_SHOWNORMAL);
     ok = status > 32;  /* Otherwise it's the error code. */
     if (!ok && complain) {
         g_warning("Help ShellExecute() for URI `%s' failed with code %d.",
@@ -124,6 +124,7 @@ show_uri_gtk(G_GNUC_UNUSED const gchar *uri, gboolean complain)
 #endif
 }
 
+G_GNUC_UNUSED
 static gboolean
 show_uri_spawn_program(G_GNUC_UNUSED const gchar *uri,
                        const gchar **programs, guint nprograms,
@@ -160,7 +161,8 @@ show_uri_spawn_program(G_GNUC_UNUSED const gchar *uri,
 }
 
 static gboolean
-show_uri_open(G_GNUC_UNUSED const gchar *uri, gboolean complain)
+show_uri_open(G_GNUC_UNUSED const gchar *uri,
+              G_GNUC_UNUSED gboolean complain)
 {
 #ifndef G_OS_WIN32
     static const gchar *programs[] = {
@@ -184,7 +186,8 @@ show_uri_open(G_GNUC_UNUSED const gchar *uri, gboolean complain)
 }
 
 static gboolean
-show_uri_browsers(G_GNUC_UNUSED const gchar *uri, gboolean complain)
+show_uri_browsers(G_GNUC_UNUSED const gchar *uri,
+                  G_GNUC_UNUSED gboolean complain)
 {
 #ifndef G_OS_WIN32
     static const gchar *programs[] = {
@@ -373,13 +376,14 @@ get_user_guide_online_base(void)
 static gboolean
 check_local_file_uri(const gchar *uri)
 {
-    GFile *gfile = g_file_new_for_uri(uri);
+    GFile *gfile;
     gchar *path, *scheme;
     GFileInfo *fileinfo;
     GFileType filetype;
 
     /* If we use g_file_new_for_uri() on a bare path the tests below will not
      * behave as expected. */
+    gfile = g_file_new_for_uri(uri);
     if (!(scheme = g_file_get_uri_scheme(gfile))) {
         const gchar *p;
 
