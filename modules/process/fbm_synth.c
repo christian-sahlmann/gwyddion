@@ -828,7 +828,7 @@ fbm_synth_sanitize_args(FBMSynthArgs *args)
     args->update = !!args->update;
     args->seed = MAX(0, args->seed);
     args->randomize = !!args->randomize;
-    args->H = CLAMP(args->H, 0.001, 0.999);
+    args->H = CLAMP(args->H, -0.999, 0.999);
     args->hom_scale = CLAMP(args->hom_scale, 2, 8192);
     args->distribution = MIN(args->distribution, FBM_DISTRIBUTION_NTYPES-1);
     args->power = CLAMP(args->power, 2.01, 12.0);
