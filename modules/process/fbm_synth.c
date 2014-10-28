@@ -391,7 +391,7 @@ fbm_synth_dialog(FBMSynthArgs *args,
     row = 0;
 
     controls.H = gtk_adjustment_new(args->H, -0.999, 0.999, 0.001, 0.1, 0);
-    gwy_table_attach_hscale(table, row, _("_Hurst parameter:"), NULL,
+    gwy_table_attach_hscale(table, row, _("_Hurst exponent:"), NULL,
                             controls.H, GWY_HSCALE_DEFAULT);
     g_signal_connect_swapped(controls.H, "value-changed",
                              G_CALLBACK(H_changed), &controls);
