@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-10-23 03:58+0200\n"
-"PO-Revision-Date: 2014-10-23 09:05+0300\n"
+"POT-Creation-Date: 2014-10-27 03:58+0100\n"
+"PO-Revision-Date: 2014-10-29 23:05+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -889,7 +889,7 @@ msgstr "точек"
 #: libgwydgets/gwy3dwindow.c:1148 modules/file/hdrimage.cc:2213
 #: modules/file/imgexport.c:4069 modules/file/pixmap.c:791
 #: modules/file/rawfile.c:402 modules/process/angle_dist.c:172
-#: modules/process/calcoefs_new.c:348 modules/process/calibrate.c:392
+#: modules/process/calcoefs_new.c:347 modules/process/calibrate.c:392
 #: modules/process/col_synth.c:387 modules/process/correct_affine.c:307
 #: modules/process/curvature.c:605 modules/process/cwt.c:135
 #: modules/process/deposit_synth.c:361 modules/process/diff_synth.c:422
@@ -897,25 +897,25 @@ msgstr "точек"
 #: modules/process/dwt.c:166 modules/process/dwtanisotropy.c:184
 #: modules/process/edge.c:651 modules/process/extend.c:192
 #: modules/process/facet-level.c:190 modules/process/facet_analysis.c:276
-#: modules/process/fft.c:258 modules/process/fft_filter_2d.c:444
-#: modules/process/fft_synth.c:351 modules/process/fractal.c:207
-#: modules/process/grain_edge.c:218 modules/process/grain_mark.c:264
-#: modules/process/grain_wshed.c:183 modules/process/hough.c:179
-#: modules/process/lat_synth.c:539 modules/process/latsim.c:158
-#: modules/process/level.c:262 modules/process/linecorrect.c:281
-#: modules/process/lno_synth.c:440 modules/process/local_contrast.c:130
-#: modules/process/median-bg.c:179 modules/process/noise_synth.c:347
-#: modules/process/obj_synth.c:427 modules/process/pat_synth.c:397
-#: modules/process/pid.c:199 modules/process/polydistort.c:218
-#: modules/process/polylevel.c:377 modules/process/rank.c:132
-#: modules/process/rotate.c:266 modules/process/scale.c:196
-#: modules/process/scars.c:477 modules/process/shade.c:216
-#: modules/process/slope_dist.c:268 modules/process/sphere-revolve.c:218
-#: modules/process/tilt.c:160 modules/process/tip_model.c:170
-#: modules/process/unrotate.c:228 modules/process/volumize_layers.c:213
-#: modules/process/wave_synth.c:361 modules/process/wpour_mark.c:296
-#: modules/volume/volume_calibrate.c:371 modules/volume/volume_extract.c:331
-#: modules/volume/volume_kmeans.c:142
+#: modules/process/fbm_synth.c:315 modules/process/fft.c:258
+#: modules/process/fft_filter_2d.c:444 modules/process/fft_synth.c:351
+#: modules/process/fractal.c:207 modules/process/grain_edge.c:218
+#: modules/process/grain_mark.c:264 modules/process/grain_wshed.c:183
+#: modules/process/hough.c:179 modules/process/lat_synth.c:539
+#: modules/process/latsim.c:158 modules/process/level.c:262
+#: modules/process/linecorrect.c:281 modules/process/lno_synth.c:441
+#: modules/process/local_contrast.c:130 modules/process/median-bg.c:179
+#: modules/process/noise_synth.c:348 modules/process/obj_synth.c:427
+#: modules/process/pat_synth.c:397 modules/process/pid.c:199
+#: modules/process/polydistort.c:218 modules/process/polylevel.c:377
+#: modules/process/rank.c:132 modules/process/rotate.c:266
+#: modules/process/scale.c:196 modules/process/scars.c:477
+#: modules/process/shade.c:216 modules/process/slope_dist.c:268
+#: modules/process/sphere-revolve.c:218 modules/process/tilt.c:160
+#: modules/process/tip_model.c:170 modules/process/unrotate.c:228
+#: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:361
+#: modules/process/wpour_mark.c:296 modules/volume/volume_calibrate.c:371
+#: modules/volume/volume_extract.c:331 modules/volume/volume_kmeans.c:142
 msgid "_Reset"
 msgstr "_Сброс"
 
@@ -3691,7 +3691,7 @@ msgstr "_Ширина:"
 #: modules/file/hdrimage.cc:2330 modules/file/hdrimage.cc:2395
 #: modules/file/pixmap.c:896 modules/file/pixmap.c:951
 #: modules/file/rawfile.c:659 modules/file/rawfile.c:715
-#: modules/process/calcoefs_new.c:385 modules/process/calcoefs_new.c:452
+#: modules/process/calcoefs_new.c:384 modules/process/calcoefs_new.c:451
 #: modules/process/calcoefs_simple.c:392 modules/process/calcoefs_simple.c:459
 #: modules/process/calcoefs_view.c:529 modules/process/calcoefs_view.c:567
 #: modules/process/calibrate.c:464 modules/process/calibrate.c:547
@@ -3718,7 +3718,7 @@ msgid "_Z-scale (per sample unit):"
 msgstr "Масштаб _Z (на единицу дискретизации):"
 
 #: modules/file/hdrimage.cc:2557 modules/file/pixmap.c:1178
-#: modules/file/rawfile.c:1325 modules/process/calcoefs_new.c:777
+#: modules/file/rawfile.c:1325 modules/process/calcoefs_new.c:776
 #: modules/process/calcoefs_simple.c:1192 modules/process/calcoefs_view.c:1394
 #: modules/process/calibrate.c:975 modules/process/dimensions.h:194
 #: modules/volume/volume_calibrate.c:1018
@@ -3726,7 +3726,7 @@ msgid "Change Units"
 msgstr "Изменить единицы измерения"
 
 #: modules/file/hdrimage.cc:2571 modules/file/pixmap.c:1192
-#: modules/file/rawfile.c:1339 modules/process/calcoefs_new.c:790
+#: modules/file/rawfile.c:1339 modules/process/calcoefs_new.c:789
 #: modules/process/calcoefs_simple.c:1205 modules/process/calcoefs_view.c:1407
 #: modules/process/calibrate.c:989 modules/process/dimensions.h:207
 #: modules/volume/volume_calibrate.c:1032
@@ -3961,7 +3961,7 @@ msgstr "Чёрный"
 msgid "White"
 msgstr "Белый"
 
-#: modules/file/imgexport.c:2986 modules/process/lno_synth.c:1067
+#: modules/file/imgexport.c:2986 modules/process/lno_synth.c:1068
 msgid "_Length:"
 msgstr "_Длина:"
 
@@ -4063,11 +4063,15 @@ msgstr "Поместить единицы измерения в _заголов�
 
 #: modules/file/imgexport.c:3464
 msgid "Draw _selection"
-msgstr "Рисовать в_ыбранную область"
+msgstr "Рисовать в_ыделенные элементы"
 
 #: modules/file/imgexport.c:3515 modules/tools/selectionmanager.c:347
 msgid "Objects"
 msgstr "Объекты"
+
+#: modules/file/imgexport.c:3924
+msgid "Lateral"
+msgstr "Горизонтальные"
 
 #: modules/file/imgexport.c:3963 modules/file/rawfile.c:1006
 #: modules/process/calcoefs_load.c:216 modules/process/neural.c:693
@@ -4086,7 +4090,7 @@ msgstr "_Переименовать"
 
 #: modules/file/imgexport.c:3995 modules/file/rawfile.c:1037
 msgid "Preset _name:"
-msgstr "_Название предустановки:"
+msgstr "_Название набора настроек:"
 
 #: modules/file/imgexport.c:4066
 #, c-format
@@ -4103,7 +4107,7 @@ msgstr "Основные"
 
 #: modules/file/imgexport.c:4110
 msgid "Lateral Scale"
-msgstr "Горизонтальный масштаб:"
+msgstr "Горизонтальный масштаб"
 
 #: modules/file/imgexport.c:4115
 msgid "Values"
@@ -6887,7 +6891,7 @@ msgstr "Загрузить данные калибровки из текстов
 msgid "Error loading file: %s\n"
 msgstr "Ошибка загрузки файла %s\n"
 
-#: modules/process/calcoefs_load.c:174 modules/process/calcoefs_new.c:310
+#: modules/process/calcoefs_load.c:174 modules/process/calcoefs_new.c:309
 #, c-format
 msgid "Cannot save preset: %s"
 msgstr "Невозможно сохранить набор предустановок: %s"
@@ -6896,7 +6900,7 @@ msgstr "Невозможно сохранить набор предустано�
 msgid "Load Calibration Data"
 msgstr "Загрузить данные калибровки"
 
-#: modules/process/calcoefs_load.c:229 modules/process/calcoefs_new.c:567
+#: modules/process/calcoefs_load.c:229 modules/process/calcoefs_new.c:566
 #: modules/process/calcoefs_simple.c:476
 msgid "Calibration name:"
 msgstr "Имя калибровки:"
@@ -6906,18 +6910,18 @@ msgstr "Имя калибровки:"
 msgid "No data loaded"
 msgstr "Данные не загружены"
 
-#: modules/process/calcoefs_load.c:268 modules/process/calcoefs_new.c:636
+#: modules/process/calcoefs_load.c:268 modules/process/calcoefs_new.c:635
 #: modules/process/calcoefs_simple.c:540
 #, c-format
 msgid "Calibration '%s' already exists"
 msgstr "Калибровка `%s' уже существует"
 
-#: modules/process/calcoefs_load.c:270 modules/process/calcoefs_new.c:638
+#: modules/process/calcoefs_load.c:270 modules/process/calcoefs_new.c:637
 #: modules/process/calcoefs_simple.c:542
 msgid "Overwrite"
 msgstr "Перезаписать"
 
-#: modules/process/calcoefs_load.c:271 modules/process/calcoefs_new.c:639
+#: modules/process/calcoefs_load.c:271 modules/process/calcoefs_new.c:638
 #: modules/process/calcoefs_simple.c:543
 msgid "Append"
 msgstr "Добавить"
@@ -6940,67 +6944,67 @@ msgstr "Ошибка: недостаточно точек."
 msgid "Loaded %d data points"
 msgstr "Загружено %d точек данных"
 
-#: modules/process/calcoefs_new.c:166
+#: modules/process/calcoefs_new.c:165
 msgid "Create simple calibration data"
 msgstr "Создаёт простые данные калибровки"
 
-#: modules/process/calcoefs_new.c:180
+#: modules/process/calcoefs_new.c:179
 msgid "/Cali_bration/_Create..."
 msgstr "/_Калибровка/_Создать..."
 
-#: modules/process/calcoefs_new.c:184
+#: modules/process/calcoefs_new.c:183
 msgid "Specify simple calibration data."
 msgstr "Задать простые данные калибровки"
 
-#: modules/process/calcoefs_new.c:347
+#: modules/process/calcoefs_new.c:346
 msgid "Simple Calibration Data"
 msgstr "Простые данные калибровки"
 
-#: modules/process/calcoefs_new.c:365
+#: modules/process/calcoefs_new.c:364
 msgid "_X from:"
 msgstr "_X от:"
 
-#: modules/process/calcoefs_new.c:392
+#: modules/process/calcoefs_new.c:391
 msgid "_X to:"
 msgstr "X _до:"
 
-#: modules/process/calcoefs_new.c:405
+#: modules/process/calcoefs_new.c:404
 msgid "_Y from:"
 msgstr "_Y от:"
 
-#: modules/process/calcoefs_new.c:418
+#: modules/process/calcoefs_new.c:417
 msgid "_Y to:"
 msgstr "Y до:"
 
-#: modules/process/calcoefs_new.c:432
+#: modules/process/calcoefs_new.c:431
 msgid "_Z from:"
 msgstr "_Z от:"
 
-#: modules/process/calcoefs_new.c:459
+#: modules/process/calcoefs_new.c:458
 msgid "_Z to:"
 msgstr "Z до:"
 
-#: modules/process/calcoefs_new.c:472
+#: modules/process/calcoefs_new.c:471
 msgid "_X uncertainty:"
 msgstr "_Погрешность по X"
 
-#: modules/process/calcoefs_new.c:493
+#: modules/process/calcoefs_new.c:492
 msgid "_Y uncertainty:"
 msgstr "По_грешность по Y"
 
-#: modules/process/calcoefs_new.c:508
+#: modules/process/calcoefs_new.c:507
 msgid "_Z uncertainty:"
 msgstr "Пог_решность по Z"
 
-#: modules/process/calcoefs_new.c:530
+#: modules/process/calcoefs_new.c:529
 msgid "_X correction factor:"
 msgstr "_Множитель калибровки по X:"
 
-#: modules/process/calcoefs_new.c:542
+#: modules/process/calcoefs_new.c:541
 msgid "_Y correction factor:"
 msgstr "М_ножитель калибровки по Y:"
 
-#: modules/process/calcoefs_new.c:554
+#: modules/process/calcoefs_new.c:553
 msgid "_Z correction factor:"
 msgstr "Мно_житель калибровки по Z:"
 
@@ -7368,10 +7372,10 @@ msgstr "Запускается..."
 #: modules/process/deposit_synth.c:329 modules/process/deposit_synth.c:550
 #: modules/process/deposit_synth.c:563 modules/process/diff_synth.c:352
 #: modules/process/domain_synth.c:330 modules/process/domain_synth.c:338
-#: modules/process/fft_synth.c:323 modules/process/lat_synth.c:506
-#: modules/process/lno_synth.c:413 modules/process/noise_synth.c:321
-#: modules/process/obj_synth.c:398 modules/process/pat_synth.c:368
-#: modules/process/wave_synth.c:334
+#: modules/process/fbm_synth.c:289 modules/process/fft_synth.c:323
+#: modules/process/lat_synth.c:506 modules/process/lno_synth.c:414
+#: modules/process/noise_synth.c:322 modules/process/obj_synth.c:398
+#: modules/process/pat_synth.c:368 modules/process/wave_synth.c:334
 msgid "Generated"
 msgstr "Сгенерированное"
 
@@ -7390,23 +7394,24 @@ msgstr "Прогрессивное обновление"
 
 #: modules/process/col_synth.c:459 modules/process/deposit_synth.c:431
 #: modules/process/diff_synth.c:494 modules/process/domain_synth.c:448
-#: modules/process/fft_synth.c:415 modules/process/lat_synth.c:605
-#: modules/process/lno_synth.c:504 modules/process/noise_synth.c:412
-#: modules/process/obj_synth.c:491 modules/process/pat_synth.c:461
-#: modules/process/wave_synth.c:425
+#: modules/process/fbm_synth.c:379 modules/process/fft_synth.c:415
+#: modules/process/lat_synth.c:605 modules/process/lno_synth.c:505
+#: modules/process/noise_synth.c:413 modules/process/obj_synth.c:491
+#: modules/process/pat_synth.c:461 modules/process/wave_synth.c:425
 msgid "Dimensions"
 msgstr "Размеры"
 
 #: modules/process/col_synth.c:468 modules/process/deposit_synth.c:441
 #: modules/process/diff_synth.c:503 modules/process/domain_synth.c:456
-#: modules/process/fft_synth.c:426 modules/process/lno_synth.c:515
-#: modules/process/noise_synth.c:423 modules/process/obj_synth.c:502
-#: modules/process/pat_synth.c:473 modules/process/wave_synth.c:436
+#: modules/process/fbm_synth.c:390 modules/process/fft_synth.c:426
+#: modules/process/lno_synth.c:516 modules/process/noise_synth.c:424
+#: modules/process/obj_synth.c:502 modules/process/pat_synth.c:473
+#: modules/process/wave_synth.c:436
 msgid "Generator"
 msgstr "Генератор"
 
 #: modules/process/col_synth.c:474 modules/process/diff_synth.c:509
-#: modules/process/lno_synth.c:1055 modules/process/obj_synth.c:513
+#: modules/process/lno_synth.c:1056 modules/process/obj_synth.c:513
 msgid "Co_verage:"
 msgstr "По_крытие:"
 
@@ -7935,9 +7940,10 @@ msgid "_Flux:"
 msgstr "_Поток:"
 
 #: modules/process/diff_synth.c:529 modules/process/domain_synth.c:532
-#: modules/process/fft_synth.c:435 modules/process/lat_synth.c:737
-#: modules/process/lno_synth.c:551 modules/process/noise_synth.c:455
-#: modules/process/obj_synth.c:571 modules/process/wave_synth.c:471
+#: modules/process/fbm_synth.c:431 modules/process/fft_synth.c:435
+#: modules/process/lat_synth.c:737 modules/process/lno_synth.c:552
+#: modules/process/noise_synth.c:456 modules/process/obj_synth.c:571
+#: modules/process/wave_synth.c:471
 msgid "_Like Current Channel"
 msgstr "Как _у текущего канала"
 
@@ -8466,6 +8472,64 @@ msgstr ""
 "Предупреждение: Единицы измерения горизонтальных размеров и значений "
 "различаются. Углы не имеют физического смысла."
 
+#: modules/process/fbm_synth.c:173
+msgid "Generates random surfaces similar to fractional Brownian motion."
+msgstr ""
+"Создать случайные поверхности, похожие на дробное броуновское движение."
+
+#: modules/process/fbm_synth.c:187
+msgid "/S_ynthetic/_Brownian..."
+msgstr "/Син_тез/_Броуновский..."
+
+#: modules/process/fbm_synth.c:191
+msgid "Generate fractional Brownian motion-like surface"
+msgstr "Создать поверхность, похожую на дробное броуновское движение"
+
+#: modules/process/fbm_synth.c:313
+msgid "Fractional Brownian Motion"
+msgstr "Дробное броуновское движение"
+
+#: modules/process/fbm_synth.c:394
+msgid "_Hurst parameter:"
+msgstr "Параметр _Хёрста:"
+
+#: modules/process/fbm_synth.c:402
+msgid "_Stationarity scale:"
+msgstr "Масштаб _стационарности:"
+
+#: modules/process/fbm_synth.c:409 modules/process/lno_synth.c:524
+#: modules/process/noise_synth.c:428
+msgid "_Distribution:"
+msgstr "_Распределение:"
+
+#: modules/process/fbm_synth.c:415 modules/process/fft_synth.c:543
+msgid "Po_wer:"
+msgstr "С_тепень:"
+
+#: modules/process/fbm_synth.c:427 modules/process/fft_synth.c:431
+#: modules/process/lno_synth.c:548 modules/process/noise_synth.c:452
+msgid "_RMS:"
+msgstr "Ср. _квадр.:"
+
+#: modules/process/fbm_synth.c:494 modules/process/lno_synth.c:264
+#: modules/process/noise_synth.c:194
+msgid "distribution|Uniform"
+msgstr "Равномерное"
+
+#: modules/process/fbm_synth.c:495 modules/process/lno_synth.c:254
+#: modules/process/noise_synth.c:184
+msgid "distribution|Gaussian"
+msgstr "Гауссово"
+
+#: modules/process/fbm_synth.c:496 modules/process/lno_synth.c:259
+#: modules/process/noise_synth.c:189
+msgid "distribution|Exponential"
+msgstr "Экспоненциальное"
+
+#: modules/process/fbm_synth.c:497
+msgid "distribution|Power"
+msgstr "Степенное"
+
 #: modules/process/fft.c:96
 msgid "Two-dimensional FFT (Fast Fourier Transform)."
 msgstr "Двумерное БПФ (быстрое преобразование Фурье)."
@@ -8756,11 +8820,6 @@ msgstr "Создать поверхность используя спектра�
 msgid "Spectral Synthesis"
 msgstr "Спектральный синтез"
 
-#: modules/process/fft_synth.c:431 modules/process/lno_synth.c:547
-#: modules/process/noise_synth.c:451
-msgid "_RMS:"
-msgstr "Ср. _квадр.:"
-
 #: modules/process/fft_synth.c:446
 msgid "M_inimum frequency:"
 msgstr "М_инимальная частота:"
@@ -8784,10 +8843,6 @@ msgstr "Разрешить _лоренцев множитель"
 #: modules/process/fft_synth.c:532
 msgid "Enable _power multiplier"
 msgstr "Разрешить сте_пенной множитель"
-
-#: modules/process/fft_synth.c:543
-msgid "Po_wer:"
-msgstr "С_тепень:"
 
 #: modules/process/fit_2d.c:174
 msgid "2D fitting"
@@ -10047,18 +10102,6 @@ msgstr "Исправить ступеньки в линиях"
 msgid "Median Line Correction"
 msgstr "Коррекция линий по срединному"
 
-#: modules/process/lno_synth.c:254 modules/process/noise_synth.c:184
-msgid "distribution|Gaussian"
-msgstr "Гауссово"
-
-#: modules/process/lno_synth.c:259 modules/process/noise_synth.c:189
-msgid "distribution|Exponential"
-msgstr "Экспоненциальное"
-
-#: modules/process/lno_synth.c:264 modules/process/noise_synth.c:194
-msgid "distribution|Uniform"
-msgstr "Равномерное"
-
 #: modules/process/lno_synth.c:269 modules/process/noise_synth.c:199
 msgid "distribution|Triangular"
 msgstr "Треугольное"
@@ -10083,51 +10126,47 @@ msgstr "/Син_тез/_Линейный Шум..."
 msgid "Generate line noise"
 msgstr "Генерация линейного шума"
 
-#: modules/process/lno_synth.c:438
+#: modules/process/lno_synth.c:439
 msgid "Line Noise"
 msgstr "Линейный шум"
 
-#: modules/process/lno_synth.c:518
+#: modules/process/lno_synth.c:519
 msgid "Distribution"
 msgstr "Распределение"
 
-#: modules/process/lno_synth.c:523 modules/process/noise_synth.c:427
-msgid "_Distribution:"
-msgstr "_Распределение:"
-
-#: modules/process/lno_synth.c:528 modules/process/noise_synth.c:432
+#: modules/process/lno_synth.c:529 modules/process/noise_synth.c:433
 msgid "Direction:"
 msgstr "Направление:"
 
-#: modules/process/lno_synth.c:537 modules/process/noise_synth.c:441
+#: modules/process/lno_synth.c:538 modules/process/noise_synth.c:442
 msgid "S_ymmetrical"
 msgstr "Си_мметрично"
 
-#: modules/process/lno_synth.c:538 modules/process/noise_synth.c:442
+#: modules/process/lno_synth.c:539 modules/process/noise_synth.c:443
 msgid "One-sided _positive"
 msgstr "В одну _положительную сторону"
 
-#: modules/process/lno_synth.c:539 modules/process/noise_synth.c:443
+#: modules/process/lno_synth.c:540 modules/process/noise_synth.c:444
 msgid "One-sided _negative"
 msgstr "В одну отр_ицательною сторону"
 
-#: modules/process/lno_synth.c:560
+#: modules/process/lno_synth.c:561
 msgid "Noise Type"
 msgstr "Тип шума"
 
-#: modules/process/lno_synth.c:565
+#: modules/process/lno_synth.c:566
 msgid "_Noise type:"
 msgstr "Тип _шума:"
 
-#: modules/process/lno_synth.c:867
+#: modules/process/lno_synth.c:868
 msgid "Densi_ty:"
 msgstr "П_лотность:"
 
-#: modules/process/lno_synth.c:878
+#: modules/process/lno_synth.c:879
 msgid "_Within line:"
 msgstr "_В пределах линии:"
 
-#: modules/process/lno_synth.c:885
+#: modules/process/lno_synth.c:886
 msgid "C_umulative"
 msgstr "К_умулятивный"
 
@@ -10660,7 +10699,7 @@ msgstr "/Син_тез/_Шум..."
 msgid "Generate surface of uncorrelated noise"
 msgstr "Создать поверхность из некоррелированного шума"
 
-#: modules/process/noise_synth.c:345
+#: modules/process/noise_synth.c:346
 msgid "Random Noise"
 msgstr "Случайный шум"
 
@@ -11901,47 +11940,47 @@ msgstr "Расчёт обратного БПФ..."
 msgid "Denoised"
 msgstr "Без шума"
 
-#: modules/pygwy/pygwy-console.c:57
+#: modules/pygwy/pygwy-console.c:58
 msgid "/Pygwy Console"
 msgstr "/Консоль Pygwy"
 
-#: modules/pygwy/pygwy-console.c:61
+#: modules/pygwy/pygwy-console.c:62
 msgid "Python wrapper console"
 msgstr "Командная строка оболочки Python"
 
-#: modules/pygwy/pygwy-console.c:163
+#: modules/pygwy/pygwy-console.c:164
 msgid ">>> Running file content of below textfield\n"
 msgstr ">>> Запускается содержимое файла из нижнего текстового поля\n"
 
-#: modules/pygwy/pygwy-console.c:216
+#: modules/pygwy/pygwy-console.c:217
 msgid "Open Python script"
 msgstr "Открыть скрипт Python"
 
-#: modules/pygwy/pygwy-console.c:297
+#: modules/pygwy/pygwy-console.c:298
 msgid "Save Script as"
 msgstr "Сохранить скрипт как"
 
-#: modules/pygwy/pygwy-console.c:349
+#: modules/pygwy/pygwy-console.c:350
 msgid "Pygwy Console"
 msgstr "Консоль Pygwy"
 
-#: modules/pygwy/pygwy-console.c:362
+#: modules/pygwy/pygwy-console.c:363
 msgid "Clear Log"
 msgstr "Очистить лог"
 
-#: modules/pygwy/pygwy-console.c:366
+#: modules/pygwy/pygwy-console.c:367
 msgid "Open script in Python language (Ctrl-O)"
 msgstr "Открыть скрипт на языке Python (Ctrl-O)"
 
-#: modules/pygwy/pygwy-console.c:368
+#: modules/pygwy/pygwy-console.c:369
 msgid "Save script (Ctrl-S)"
 msgstr "Сохранить сценарий (Ctrl-S)"
 
-#: modules/pygwy/pygwy-console.c:370
+#: modules/pygwy/pygwy-console.c:371
 msgid "Execute script (Ctrl-E)"
 msgstr "Выполнить сценарий (Ctrl-E)"
 
-#: modules/pygwy/pygwy-console.c:448
+#: modules/pygwy/pygwy-console.c:449
 msgid "Command"
 msgstr "Команда"
 
