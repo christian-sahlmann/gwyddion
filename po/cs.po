@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2014-10-30 03:59+0100\n"
-"PO-Revision-Date: 2014-10-30 09:10+0100\n"
+"PO-Revision-Date: 2014-10-30 16:41+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "Language: cs\n"
@@ -5541,32 +5541,28 @@ msgid "Renishaw WiRE data files (.wdf)"
 msgstr "Renishaw WiRE datové soubory (.wdf)"
 
 #: modules/file/renishaw.c:449
-#, fuzzy
 msgid "MapArea block is truncated"
-msgstr "Kontrolní blok popisu je předčasně ukončený."
+msgstr "Blok MapArea je předčasně ukončený"
 
 #: modules/file/renishaw.c:554
 msgid "MapArea block is absent for scan"
-msgstr ""
+msgstr "Schází blok MapArea pro sken"
 
 #: modules/file/renishaw.c:561
 msgid "3D Volume is unsupported now"
-msgstr ""
+msgstr "3D objem je zatím nepodporovaný"
 
 #: modules/file/renishaw.c:568
-#, fuzzy
 msgid "Random points order unsupported"
-msgstr "Nestejné počty bitů na vzorek nejsou podporovány."
+msgstr "Náhodné pořadí bodů není podporováno."
 
 #: modules/file/renishaw.c:740
-#, fuzzy
 msgid "Block header is truncated"
-msgstr "Hlavička souboru je uříznutá."
+msgstr "Hlavička bloku je předčasně ukončená."
 
 #: modules/file/renishaw.c:755
-#, fuzzy
 msgid "Data block is truncated"
-msgstr "Kontrolní blok popisu je předčasně ukončený."
+msgstr "Blok dat je předčasně ukončený."
 
 #: modules/file/rhk-sm3.c:236
 msgid "Imports RHK Technology SM3 data files."
@@ -5855,11 +5851,11 @@ msgstr "Chybí značka začátku dat [Data]."
 
 #: modules/file/spmxfile.c:96
 msgid "Reads ATC SPMxFormat files."
-msgstr ""
+msgstr "Načítá ATC SPMxFormat soubory."
 
 #: modules/file/spmxfile.c:109
 msgid "ATC SPMxFormat data (.spm)"
-msgstr ""
+msgstr "ATC SPMxFormat data (.spm)"
 
 #: modules/file/stmprg.c:232
 msgid "Imports Omicron STMPRG data files (tp ta)."
@@ -8392,33 +8388,28 @@ msgstr ""
 "smysl."
 
 #: modules/process/fbm_synth.c:173
-#, fuzzy
 msgid "Generates random surfaces similar to fractional Brownian motion."
-msgstr "Vytvoření náhodného povrchu spektrální syntézou"
+msgstr "Generuje náhodné povrchy podobné zlomkovému Brownově pohybu."
 
 #: modules/process/fbm_synth.c:187
-#, fuzzy
 msgid "/S_ynthetic/_Brownian..."
-msgstr "/S_yntetická/_Domény..."
+msgstr "/S_yntetická/_Brownův pohyb..."
 
 #: modules/process/fbm_synth.c:191
-#, fuzzy
 msgid "Generate fractional Brownian motion-like surface"
-msgstr "Generovat sloupcový povrch"
+msgstr "Generovat povrch podobný zlomkovému Brownově pohybu"
 
 #: modules/process/fbm_synth.c:313
-#, fuzzy
 msgid "Fractional Brownian Motion"
-msgstr "Fraktální interpolace"
+msgstr "Zlomový Brownův pohyb"
 
 #: modules/process/fbm_synth.c:394
 msgid "_Hurst exponent:"
-msgstr ""
+msgstr "_Hurstův exponent:"
 
 #: modules/process/fbm_synth.c:402
-#, fuzzy
 msgid "_Stationarity scale:"
-msgstr "_Příčná škála:"
+msgstr "Škála _stacionarity:"
 
 #: modules/process/fbm_synth.c:409 modules/process/lno_synth.c:524
 #: modules/process/noise_synth.c:428
