@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-10-27 03:58+0100\n"
-"PO-Revision-Date: 2014-10-29 23:05+0300\n"
+"POT-Creation-Date: 2014-10-31 03:58+0100\n"
+"PO-Revision-Date: 2014-10-31 08:27+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -1905,12 +1905,12 @@ msgstr "Скрыть"
 msgid "Hide tool dialog (Esc)"
 msgstr "Убрать диалог инструментов (Esc)"
 
-#: app/help.c:254
+#: app/help.c:257
 msgid "Cannot display the help."
 msgstr "Не удаётся показать справку."
 
 #. TRANSLATORS: %s will be replaced with an URL.
-#: app/help.c:257
+#: app/help.c:260
 #, c-format
 msgid ""
 "No working method to show\n"
@@ -1925,7 +1925,7 @@ msgstr ""
 
 #. TRANSLATORS: For user guide location.  Translate this to fr, ru, cs,
 #. de, ...  even if the corresponding guide does not exist.
-#: app/help.c:360
+#: app/help.c:363
 msgid "current-language-code|en"
 msgstr "ru"
 
@@ -3896,11 +3896,11 @@ msgstr "Вдоль правой стороны"
 #: modules/file/imgexport.c:495
 msgid ""
 "Renders data into vector (SVG, PDF, EPS) and pixmap (PNG, JPEG, TIFF, PPM, "
-"BMP, TARGA, GIF) images.Export to some formats relies on GDK and other "
+"BMP, TARGA, GIF) images. Export to some formats relies on GDK and other "
 "libraries thus may be installation-dependent."
 msgstr ""
 "Отрисовывает данные в векторные (SVG, PDF, EPS) и растровые (PNG, JPEG, "
-"TIFF, PPM, BMP, TARGA, GIF) изображения Экспорт в некоторые форматы основан "
+"TIFF, PPM, BMP, TARGA, GIF) изображения. Экспорт в некоторые форматы основан "
 "на GDK и других библиотеках, и, вследствие этого, может зависеть от варианта "
 "установки."
 
@@ -8490,8 +8490,8 @@ msgid "Fractional Brownian Motion"
 msgstr "Дробное броуновское движение"
 
 #: modules/process/fbm_synth.c:394
-msgid "_Hurst parameter:"
-msgstr "Параметр _Хёрста:"
+msgid "_Hurst exponent:"
+msgstr "Экспонента _Хёрста:"
 
 #: modules/process/fbm_synth.c:402
 msgid "_Stationarity scale:"
