@@ -376,8 +376,10 @@ wdf_load(const gchar *filename,
     gint i, j, k;
     gint xres, yres, zres, xstart, xend, xstep, ystart, yend, ystep;
     gint width, height, rowstride, bpp;
-    gint power10z, power10w;
-    gdouble xreal, yreal, zscale, wscale;
+    gint xunits = 0, yunits = 0, power10x, power10y, power10z, power10w;
+    guint norigins, units, type;
+    gchar origin_name[16];
+    gdouble xreal, yreal, xscale, yscale, zscale, wscale;
     GdkPixbufLoader *loader;
     GdkPixbuf *pixbuf = NULL;
     guchar *pixels, *pix_p;
@@ -442,6 +444,27 @@ wdf_load(const gchar *filename,
              * but we can implement data triangulation
              * for random points somewhere in the future
              */
+			p += WDF_BLOCK_HEADER_SIZE;
+			norigins = gwy_get_guint32_le(&p);
+			gwy_debug("norigins=%d", norigins);
+			for (i = 0; i < norigins; i++) {
+				type = gwy_get_guint32_le(&p);
+				units = gwy_get_guint32_le(&p);
+				for (j = 0; j < 16; j++)
+					origin_name[j] = *(p++);
+				gwy_debug("name=%s units=%d type=%d",
+				          origin_name, units, type);
+				p += fileheader.nspectra * sizeof(gdouble);
+				if (!g_strcmp0(origin_name, "X")) {
+					xunits = units;
+				}
+				else if (!g_strcmp0(origin_name, "Y")) {
+					yunits = units;
+				}
+			}
+			p -= WDF_BLOCK_HEADER_SIZE + sizeof(guint32)
+			   + norigins * (2 * sizeof(guint32) + 16 
+				               + fileheader.nspectra * sizeof(gdouble));
         }
         else if (block.id == WDF_BLOCKID_MAPAREA) {
             if (block.size != WDF_MAP_AREA_SIZE) {
@@ -491,6 +514,24 @@ wdf_load(const gchar *filename,
 
     container = gwy_container_new();
 
+    xscale = 1.0;
+    gwy_debug("x units = %d", xunits);
+    unit = gwy_enum_to_string(xunits, wdf_units, 26);
+    siunitx = gwy_si_unit_new_parse(unit, &power10w);
+    xscale = pow10(power10x);
+    if (xscale == 0.0) {
+        xscale = 1.0;
+    }
+
+    yscale = 1.0;
+    gwy_debug("y units = %d", yunits);
+    unit = gwy_enum_to_string(yunits, wdf_units, 26);
+    siunity= gwy_si_unit_new_parse(unit, &power10y);
+    yscale = pow10(power10y);
+    if (yscale == 0.0) {
+        yscale = 1.0;
+    }
+    
     wscale = 1.0;
     gwy_debug("w units = %d", fileheader.units);
     unit = gwy_enum_to_string(fileheader.units, wdf_units, 26);
@@ -573,7 +614,7 @@ wdf_load(const gchar *filename,
         zres = fileheader.npoints;
         xres = filedata.maparea->length[0];
         yres = filedata.maparea->length[1];
-        xreal = filedata.maparea->stepsize[0] * xres;
+        xreal = filedata.maparea->stepsize[0] * xres * xscale;
         if (xreal < 0) {
             xreal = fabs(xreal);
             xstart = xres;
@@ -585,7 +626,7 @@ wdf_load(const gchar *filename,
             xend = xres;
             xstep = 1;
         }
-        yreal = filedata.maparea->stepsize[1] * yres;
+        yreal = filedata.maparea->stepsize[1] * yres * yscale;
         if (yreal < 0) {
             yreal = fabs(yreal);
             ystart = yres - 1;
@@ -600,6 +641,8 @@ wdf_load(const gchar *filename,
 
         brick = gwy_brick_new(xres, yres, zres,
                               xreal, yreal, zres, TRUE);
+        gwy_brick_set_si_unit_x(brick, siunitx);
+        gwy_brick_set_si_unit_y(brick, siunity);
         gwy_brick_set_si_unit_z(brick, siunitz);
         gwy_brick_set_si_unit_w(brick, siunitw);
         g_object_unref(siunitw);
