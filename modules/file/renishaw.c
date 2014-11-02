@@ -214,15 +214,16 @@ typedef enum {
     WDF_MAPAREA_ALTERNATING  = 4,     /* raster or snake */
     WDF_MAPAREA_LINEFOCUSMAPPING = 8, /* see also linefocus_height */
     /*
-     *  The following two values are deprecated;
+     *  The following two values are deprecated:
      *  negative step-size is sufficient information.
      */
-    /* WDF_MAPAREA_INVERTEDROWS = 16,     /* true if rows collected
-                                                        right to left */
-    /* WDF_MAPAREA_INVERTEDCOLUMNS = 32,  /* true if columns collected
-     *                                                  bottom to top */
-    WDF_MAPAREA_SURFACEPROFILE = 64,  /* true if the Z data
-                                        is non-regular (surface maps) */
+    /*
+     * WDF_MAPAREA_INVERTEDROWS = 16, // rows collected right to left
+     * WDF_MAPAREA_INVERTEDCOLUMNS = 32, // columns collected
+     *                                   //             bottom to top
+     */
+    WDF_MAPAREA_SURFACEPROFILE = 64, /* Z data is non-regular
+                                                       (surface maps) */
     WDF_MAPAREA_XYLINE = 128,
     /* line or depth slice forming a single line along the XY plane:
        length.x contains number of points along line; length.y = 1 */
@@ -314,7 +315,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Renishaw WiRE data files (WDF)."),
     "Daniil Bratashov <dn2010@gmail.com>",
-    "0.3",
+    "0.4",
     "Daniil Bratashov (dn2010), David Necas (Yeti), Renishaw plc.",
     "2014",
 };
@@ -373,7 +374,7 @@ wdf_load(const gchar *filename,
     GwySIUnit *siunitx, *siunity, *siunitz, *siunitw;
     gdouble *ydata, *xdata, *data;
     gint i, j, k;
-    gint xres, yres, zres;
+    gint xres, yres, zres, xstart, xend, xstep, ystart, yend, ystep;
     gint width, height, rowstride, bpp;
     gint power10z, power10w;
     gdouble xreal, yreal, zscale, wscale;
@@ -572,22 +573,99 @@ wdf_load(const gchar *filename,
         zres = fileheader.npoints;
         xres = filedata.maparea->length[0];
         yres = filedata.maparea->length[1];
+        xreal = filedata.maparea->stepsize[0] * xres;
+        if (xreal < 0) {
+            xreal = fabs(xreal);
+            xstart = xres;
+            xend = 0;
+            xstep = -1;
+        }
+        else {
+            xstart = 0;
+            xend = xres;
+            xstep = 1;
+        }
+        yreal = filedata.maparea->stepsize[1] * yres;
+        if (yreal < 0) {
+            yreal = fabs(yreal);
+            ystart = yres - 1;
+            yend = -1;
+            ystep = -1;
+        }
+        else {
+            ystart = 0;
+            yend = yres;
+            ystep = 1;
+        }
 
-        brick = gwy_brick_new(xres, yres, zres, xres, yres, zres, TRUE);
+        brick = gwy_brick_new(xres, yres, zres,
+                              xreal, yreal, zres, TRUE);
         gwy_brick_set_si_unit_z(brick, siunitz);
         gwy_brick_set_si_unit_w(brick, siunitw);
         g_object_unref(siunitw);
 
         /* read data */
-        /* FIXME: will be right only for some scan directions */
+        gwy_debug("flags = %d", filedata.maparea->flags);
         data = gwy_brick_get_data(brick);
         p = (guchar *)filedata.data;
-        for (i = 0; i < xres; i++)
-            for (j = 0; j < yres; j++)
-                for (k = 0; k < zres; k++) {
-                    *(data + k * xres * yres + i + j * xres)
+        if (filedata.maparea->flags & WDF_MAPAREA_COLUMNMAJOR) {
+            if (filedata.maparea->flags & WDF_MAPAREA_ALTERNATING) {
+                for (i = xstart; i != xend; i += xstep) {
+                    if (ystep < 0) {
+                        ystart = 0;
+                        yend = yres;
+                        ystep = 1;
+                    }
+                    else {
+                        ystart = yres - 1;
+                        yend = -1;
+                        ystep = -1;
+                    }
+                    for (j = ystart; j != yend; j += ystep)
+                        for (k = 0; k < zres; k++) {
+                            *(data + k * xres * yres + i + j * xres)
                               = (gdouble)gwy_get_gfloat_le(&p) * wscale;
+                        }
                 }
+            }
+            else {
+                for (i = xstart; i != xend; i += xstep)
+                    for (j = ystart; j != yend; j += ystep)
+                        for (k = 0; k < zres; k++) {
+                            *(data + k * xres * yres + i + j * xres)
+                              = (gdouble)gwy_get_gfloat_le(&p) * wscale;
+                        }
+            }
+        }
+        else {
+            if (filedata.maparea->flags & WDF_MAPAREA_ALTERNATING) {
+                for (j = ystart; j != yend; j += ystep) {
+                    if (xstep < 0) {
+                        xstart = 0;
+                        xend = xres;
+                        xstep = 1;
+                    }
+                    else {
+                        xstart = xres - 1;
+                        xend = -1;
+                        xstep = -1;
+                    }
+                    for (i = xstart; i != xend; i += xstep)
+                        for (k = 0; k < zres; k++) {
+                            *(data + k * xres * yres + i + j * xres)
+                              = (gdouble)gwy_get_gfloat_le(&p) * wscale;
+                        }
+                }
+            }
+            else {
+                for (j = ystart; j != yend; j += ystep)
+                    for (i = xstart; i != xend; i += xstep)
+                        for (k = 0; k < zres; k++) {
+                            *(data + k * xres * yres + i + j * xres)
+                              = (gdouble)gwy_get_gfloat_le(&p) * wscale;
+                        }
+            }
+        }
 
         /* reading calibration */
         cal = gwy_data_line_new(zres, zres, FALSE);
