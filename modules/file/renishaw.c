@@ -376,7 +376,8 @@ wdf_load(const gchar *filename,
     gint i, j, k, l, lsize;
     gint xres, yres, zres, xstart, xend, xstep, ystart, yend, ystep;
     gint width, height, rowstride, bpp;
-    gint xunits = 0, yunits = 0, power10x, power10y, power10z, power10w;
+    gint xunits = 0, yunits = 0, zunits = 0;
+    gint power10x, power10y, power10z, power10w;
     guint norigins, units, type;
     gchar origin_name[16];
     gdouble xreal, yreal, xscale, yscale, zscale, wscale;
@@ -568,15 +569,15 @@ wdf_load(const gchar *filename,
                              xdata, zscale, 0.0);
         title = g_strdup(fileheader.title);
         gmodel = g_object_new(GWY_TYPE_GRAPH_MODEL,
-                             "title", title,
-                             "si-unit-x", siunitz,
-                             "si-unit-y", siunitw,
-                             NULL);
-        gcmodel = g_object_new(GWY_TYPE_GRAPH_CURVE_MODEL,
-                              "description", title,
-                              "mode", GWY_GRAPH_CURVE_LINE,
-                              "color", gwy_graph_get_preset_color(0),
+                              "title", title,
+                              "si-unit-x", siunitz,
+                              "si-unit-y", siunitw,
                               NULL);
+        gcmodel = g_object_new(GWY_TYPE_GRAPH_CURVE_MODEL,
+                               "description", title,
+                               "mode", GWY_GRAPH_CURVE_LINE,
+                               "color", gwy_graph_get_preset_color(0),
+                               NULL);
         g_object_unref(siunitz);
         g_object_unref(siunitw);
         gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, zres);
@@ -589,15 +590,61 @@ wdf_load(const gchar *filename,
                                          gmodel);
         g_object_unref(gmodel);
     }
-    else { /* some kind of scan */
-        if (!filedata.maparea) {
-            g_set_error(error, GWY_MODULE_FILE_ERROR,
-                        GWY_MODULE_FILE_ERROR_DATA,
-                        _("MapArea block is absent for scan"));
+    else if (!filedata.maparea) { /* zscan */
+        zres = fileheader.npoints;
+        if ((zres <= 0) || !(filedata.data) || !(filedata.xlistdata)) {
+            err_FILE_TYPE(error, "Renishaw WDF");
             goto fail;
         }
 
-        if (filedata.maparea->length[2] != 1) {
+        title = g_strdup(fileheader.title);
+        gmodel = g_object_new(GWY_TYPE_GRAPH_MODEL,
+                              "title", title,
+                              "si-unit-x", siunitz,
+                              "si-unit-y", siunitw,
+                              NULL);
+        g_free(title);
+        xdata = g_malloc(zres * sizeof(gdouble));
+        gwy_convert_raw_data(filedata.xlistdata, zres, 1,
+                             GWY_RAW_DATA_FLOAT,
+                             GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                             xdata, zscale, 0.0);
+
+        for (i = 0; i < fileheader.nspectra; i++) {
+            ydata = g_malloc(zres * sizeof(gdouble));
+            gwy_convert_raw_data(filedata.data + i * zres,
+                                 zres, 1,
+                                 GWY_RAW_DATA_FLOAT,
+                                 GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                                 ydata, wscale, 0.0);
+            title = g_strdup_printf("%d", i);
+            gcmodel = g_object_new(GWY_TYPE_GRAPH_CURVE_MODEL,
+                                   "description", title,
+                                   "mode", GWY_GRAPH_CURVE_LINE,
+                                   "color",
+                                          gwy_graph_get_preset_color(i),
+                                   NULL);
+            g_free(title);
+            gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, zres);
+            g_free(ydata);
+            gwy_graph_model_add_curve(gmodel, gcmodel);
+            g_object_unref(gcmodel);
+        }
+
+        g_object_unref(siunitz);
+        g_object_unref(siunitw);
+        g_free(xdata);
+        gwy_container_set_object_by_name(container, "/0/graph/graph/1",
+                                         gmodel);
+        g_object_unref(gmodel);
+    }
+    else { /* some kind of scan */
+        gwy_debug("length = %d %d %d",
+                  filedata.maparea->length[0],
+                  filedata.maparea->length[1],
+                  filedata.maparea->length[2]);
+        if ((filedata.maparea->length[2] != 1)
+                                && (filedata.maparea->length[1] != 1)) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
                         _("3D Volume is unsupported now"));
@@ -613,8 +660,28 @@ wdf_load(const gchar *filename,
 
         zres = fileheader.npoints;
         xres = filedata.maparea->length[0];
-        yres = filedata.maparea->length[1];
+        if (filedata.maparea->flags & WDF_MAPAREA_XYLINE) {
+            yres = filedata.maparea->length[2];
+            yreal = filedata.maparea->stepsize[2] * yres * yscale;
+            g_object_unref(siunity);
+            yscale = 1.0;
+            gwy_debug("y units = %d", yunits);
+            unit = gwy_enum_to_string(zunits, wdf_units, 26);
+            siunity= gwy_si_unit_new_parse(unit, &power10y);
+            yscale = pow10(power10y);
+            if (yscale == 0.0) {
+                yscale = 1.0;
+            }
+        }
+        else {
+            yres = filedata.maparea->length[1];
+            yreal = filedata.maparea->stepsize[1] * yres * yscale;
+        }
+
         xreal = filedata.maparea->stepsize[0] * xres * xscale;
+        if (xreal == 0) {
+            xreal = 1.0;
+        }
         if (xreal < 0) {
             xreal = fabs(xreal);
             xstart = xres;
@@ -626,7 +693,10 @@ wdf_load(const gchar *filename,
             xend = xres;
             xstep = 1;
         }
-        yreal = filedata.maparea->stepsize[1] * yres * yscale;
+
+        if (yreal == 0) {
+            yreal = 1.0;
+        }
         if (yreal < 0) {
             yreal = fabs(yreal);
             ystart = yres - 1;
@@ -727,8 +797,13 @@ wdf_load(const gchar *filename,
             }
         }
         else if (filedata.maparea->flags & WDF_MAPAREA_XYLINE) {
-            /* FIXME: need some example data to test */
             gwy_debug("XY line");
+            for (j = ystart; j != yend; j += ystep)
+                for (i = xstart; i != xend; i += xstep)
+                    for (k = 0; k < zres; k++) {
+                        *(data + k * xres * yres + i + j * xres)
+                          = (gdouble)gwy_get_gfloat_le(&p) * wscale;
+                    }
         }
         else {
             if (filedata.maparea->flags & WDF_MAPAREA_ALTERNATING) {
