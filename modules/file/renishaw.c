@@ -463,11 +463,11 @@ wdf_load(const gchar *filename,
                 }
                 else if (!g_strcmp0(origin_name, "Z")) {
                     zunits = units;
-                    zdata 
+                    zdata
                       = g_malloc(fileheader.nspectra * sizeof(gdouble));
                     for (j = 0; j < fileheader.nspectra; j++)
-						*(zdata++) = gwy_get_gdouble_le(&p);
-					zdata -= fileheader.nspectra;
+                        *(zdata++) = gwy_get_gdouble_le(&p);
+                    zdata -= fileheader.nspectra;
                     p -= fileheader.nspectra * sizeof(gdouble);
                 }
                 p += fileheader.nspectra * sizeof(gdouble);
@@ -629,9 +629,9 @@ wdf_load(const gchar *filename,
 
             unit = gwy_enum_to_string(zunits, wdf_units, 26);
             if (zdata)
-				title = g_strdup_printf("Z = %g %s", zdata[i], unit);
+                title = g_strdup_printf("Z = %g %s", zdata[i], unit);
             else
-				title = g_strdup_printf("%d", i + 1);
+                title = g_strdup_printf("%d", i + 1);
             gcmodel = g_object_new(GWY_TYPE_GRAPH_CURVE_MODEL,
                                    "description", title,
                                    "mode", GWY_GRAPH_CURVE_LINE,
@@ -729,7 +729,7 @@ wdf_load(const gchar *filename,
         gwy_brick_set_si_unit_y(brick, siunity);
         gwy_brick_set_si_unit_z(brick, siunitz);
         gwy_brick_set_si_unit_w(brick, siunitw);
-        g_object_unref(siunitx);        
+        g_object_unref(siunitx);
         g_object_unref(siunity);
         g_object_unref(siunitw);
 
@@ -871,7 +871,7 @@ wdf_load(const gchar *filename,
 
         /* packing */
         gwy_container_set_object_by_name(container, "/brick/0", brick);
-        title = g_strdup_printf("%s (WhiteLight)", fileheader.title);
+        title = g_strdup(fileheader.title);
         gwy_container_set_string_by_name(container, "/brick/0/title",
                                          title);
         dfield = gwy_data_field_new(xres, yres,
@@ -919,8 +919,8 @@ wdf_load(const gchar *filename,
 
     fail:
     if (zdata) {
-		g_free(zdata);
-	}
+        g_free(zdata);
+    }
     g_free(buffer);
 
     return container;
