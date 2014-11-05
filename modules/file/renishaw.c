@@ -462,6 +462,9 @@ wdf_load(const gchar *filename,
                 else if (!g_strcmp0(origin_name, "Y")) {
                     yunits = units;
                 }
+                else if (!g_strcmp0(origin_name, "Z")) {
+                    zunits = units;
+                }
             }
             p -= WDF_BLOCK_HEADER_SIZE + sizeof(guint32)
                + norigins * (2 * sizeof(guint32) + 16
@@ -617,6 +620,8 @@ wdf_load(const gchar *filename,
                                  GWY_RAW_DATA_FLOAT,
                                  GWY_BYTE_ORDER_LITTLE_ENDIAN,
                                  ydata, wscale, 0.0);
+
+            // unit = gwy_enum_to_string(zunits, wdf_units, 26);
             title = g_strdup_printf("%d", i);
             gcmodel = g_object_new(GWY_TYPE_GRAPH_CURVE_MODEL,
                                    "description", title,
@@ -726,6 +731,11 @@ wdf_load(const gchar *filename,
             if (filedata.maparea->flags & WDF_MAPAREA_ALTERNATING) {
                 /* Zigzag scanning mode */
                 for (i = xstart; i != xend; i += xstep) {
+                    for (j = ystart; j != yend; j += ystep)
+                        for (k = 0; k < zres; k++) {
+                            *(data + k * xres * yres + i + j * xres)
+                              = (gdouble)gwy_get_gfloat_le(&p) * wscale;
+                        }
                     if (ystep < 0) {
                         ystart = 0;
                         yend = yres;
@@ -736,11 +746,6 @@ wdf_load(const gchar *filename,
                         yend = -1;
                         ystep = -1;
                     }
-                    for (j = ystart; j != yend; j += ystep)
-                        for (k = 0; k < zres; k++) {
-                            *(data + k * xres * yres + i + j * xres)
-                              = (gdouble)gwy_get_gfloat_le(&p) * wscale;
-                        }
                 }
             }
             else {
@@ -758,16 +763,6 @@ wdf_load(const gchar *filename,
             lsize = filedata.maparea->linefocus_size;
             if (filedata.maparea->flags & WDF_MAPAREA_ALTERNATING) {
                 for (j = 0; j < yres; j += lsize) {
-                    if (xstep < 0) {
-                        xstart = 0;
-                        xend = xres;
-                        xstep = 1;
-                    }
-                    else {
-                        xstart = xres - 1;
-                        xend = -1;
-                        xstep = -1;
-                    }
                     for (i = xstart; i != xend; i += xstep)
                         for (l = 0;
                             (l < lsize) && (l + j * lsize < yres);
@@ -779,6 +774,16 @@ wdf_load(const gchar *filename,
                                                                * wscale;
                             }
                         }
+                    if (xstep < 0) {
+                        xstart = 0;
+                        xend = xres;
+                        xstep = 1;
+                    }
+                    else {
+                        xstart = xres - 1;
+                        xend = -1;
+                        xstep = -1;
+                    }
                 }
             }
             else {
@@ -808,6 +813,11 @@ wdf_load(const gchar *filename,
         else {
             if (filedata.maparea->flags & WDF_MAPAREA_ALTERNATING) {
                 for (j = ystart; j != yend; j += ystep) {
+                    for (i = xstart; i != xend; i += xstep)
+                        for (k = 0; k < zres; k++) {
+                            *(data + k * xres * yres + i + j * xres)
+                              = (gdouble)gwy_get_gfloat_le(&p) * wscale;
+                        }
                     if (xstep < 0) {
                         xstart = 0;
                         xend = xres;
@@ -818,11 +828,6 @@ wdf_load(const gchar *filename,
                         xend = -1;
                         xstep = -1;
                     }
-                    for (i = xstart; i != xend; i += xstep)
-                        for (k = 0; k < zres; k++) {
-                            *(data + k * xres * yres + i + j * xres)
-                              = (gdouble)gwy_get_gfloat_le(&p) * wscale;
-                        }
                 }
             }
             else {
