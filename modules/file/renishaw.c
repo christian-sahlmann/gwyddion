@@ -372,7 +372,7 @@ wdf_load(const gchar *filename,
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
     GwySIUnit *siunitx, *siunity, *siunitz, *siunitw;
-    gdouble *ydata, *xdata, *data;
+    gdouble *ydata, *xdata, *data, *zdata = NULL;
     gint i, j, k, l, lsize;
     gint xres, yres, zres, xstart, xend, xstep, ystart, yend, ystep;
     gint width, height, rowstride, bpp;
@@ -455,7 +455,6 @@ wdf_load(const gchar *filename,
                     origin_name[j] = *(p++);
                 gwy_debug("name=%s units=%d type=%d",
                           origin_name, units, type);
-                p += fileheader.nspectra * sizeof(gdouble);
                 if (!g_strcmp0(origin_name, "X")) {
                     xunits = units;
                 }
@@ -464,7 +463,14 @@ wdf_load(const gchar *filename,
                 }
                 else if (!g_strcmp0(origin_name, "Z")) {
                     zunits = units;
+                    zdata 
+                      = g_malloc(fileheader.nspectra * sizeof(gdouble));
+                    for (j = 0; j < fileheader.nspectra; j++)
+						*(zdata++) = gwy_get_gdouble_le(&p);
+					zdata -= fileheader.nspectra;
+                    p -= fileheader.nspectra * sizeof(gdouble);
                 }
+                p += fileheader.nspectra * sizeof(gdouble);
             }
             p -= WDF_BLOCK_HEADER_SIZE + sizeof(guint32)
                + norigins * (2 * sizeof(guint32) + 16
@@ -621,8 +627,11 @@ wdf_load(const gchar *filename,
                                  GWY_BYTE_ORDER_LITTLE_ENDIAN,
                                  ydata, wscale, 0.0);
 
-            // unit = gwy_enum_to_string(zunits, wdf_units, 26);
-            title = g_strdup_printf("%d", i);
+            unit = gwy_enum_to_string(zunits, wdf_units, 26);
+            if (zdata)
+				title = g_strdup_printf("Z = %g %s", zdata[i], unit);
+            else
+				title = g_strdup_printf("%d", i + 1);
             gcmodel = g_object_new(GWY_TYPE_GRAPH_CURVE_MODEL,
                                    "description", title,
                                    "mode", GWY_GRAPH_CURVE_LINE,
@@ -720,6 +729,8 @@ wdf_load(const gchar *filename,
         gwy_brick_set_si_unit_y(brick, siunity);
         gwy_brick_set_si_unit_z(brick, siunitz);
         gwy_brick_set_si_unit_w(brick, siunitw);
+        g_object_unref(siunitx);        
+        g_object_unref(siunity);
         g_object_unref(siunitw);
 
         /* read data */
@@ -907,6 +918,9 @@ wdf_load(const gchar *filename,
     }
 
     fail:
+    if (zdata) {
+		g_free(zdata);
+	}
     g_free(buffer);
 
     return container;
