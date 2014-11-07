@@ -9,6 +9,7 @@ max_versions = {
     'gdk2': (2, 8),
     'gdk-pixbuf': (2, 8),
     'gtk2': (2, 8),
+    'cairo': (1, 2),
 }
 
 accept = frozenset([
