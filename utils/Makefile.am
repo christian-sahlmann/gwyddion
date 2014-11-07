@@ -54,4 +54,4 @@ dump_modules_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ \
 CLEANFILES = $(GUIDE_MAP).tmp
 
 clean-local:
-	rm -f module-lists core.* *~
+	rm -rf module-lists core.* *~
