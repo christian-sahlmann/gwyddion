@@ -817,7 +817,7 @@ gwy_help_show(const gchar *filename,
  *
  * Returns: %TRUE if help seems available, %FALSE if it is not.
  *
- * Since: 2.38.
+ * Since: 2.38
  **/
 gboolean
 gwy_help_is_available(void)
