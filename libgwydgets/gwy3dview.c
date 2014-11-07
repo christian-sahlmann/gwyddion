@@ -1130,7 +1130,8 @@ gwy_3d_view_update_lists(Gwy3DView *gwy3dview)
     gwy_3d_view_timeout_start(gwy3dview, TRUE);
 }
 
-static gboolean gwy_3d_view_update_timer(gpointer user_data)
+static gboolean
+gwy_3d_view_update_timer(gpointer user_data)
 {
     Gwy3DView *gwy3dview = (Gwy3DView*)user_data;
     gwy3dview->timeout2_id = 0;
