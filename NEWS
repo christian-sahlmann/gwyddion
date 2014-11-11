@@ -17,6 +17,8 @@ Libraries:
   interior ticks are drawn without labels.
 - libgwydgets: GwyColorAxis permits specifying a non-linear value to gradient
   mapping function.
+- libgwydgets: Crash when changing color maps in Gwy3DView with gtk+ version
+  greater 2.29 was fixed.
 - libgwyapp: When adaptive false colour mapping is used, the axis is set to
   the new ‘unlabelled’ mode so the mapping non-linearity can be seen.
 
