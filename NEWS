@@ -31,6 +31,7 @@ Modules:
 - SPMx (new): Imports ACT/FemtoScan SPMxFormat files.
 - Fractional Brownian motion (new): Generation of fBm-like artifical
   surfaces.
+- Renishaw (new): Imports Renishaw WiRE data files.
 - Pixmap: Only used for image import; image rendering functions were removed.
 - Statistical quantity: Crash in saving the statistics was fixed (introduced
   in 2.38).
