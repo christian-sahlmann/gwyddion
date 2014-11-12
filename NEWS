@@ -3,6 +3,7 @@ Application:
 - Pango 1.10 and Cairo 1.2 are now required.
 - The program should start with a saner working directory by default.
 - Translations updated: Czech, French, Russian.
+- New translation: Korean.
 
 Libraries:
 - libgwyddion: A function for copying GwySIValueFormat was added; the
