@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2014-09-18 03:58+0200\n"
-"PO-Revision-Date: 2014-10-21 13:35+0900\n"
+"PO-Revision-Date: 2014-11-12 21:07+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Korean_gwyddion\n"
 "Language: ko\n"
@@ -427,94 +427,95 @@ msgstr ""
 
 #: libprocess/gwygrainvalue.c:1090
 msgid "Id"
-msgstr ""
+msgstr "아이디"
 
 #: libprocess/gwygrainvalue.c:1091 modules/process/wave_synth.c:500
 #: modules/tools/readvalue.c:262
 msgid "Position"
-msgstr ""
+msgstr "위치"
 
 #: libprocess/gwygrainvalue.c:1092 app/meta.c:384
 #: modules/process/curvature.c:746 modules/tools/level3.c:457
 #: modules/tools/readvalue.c:297
 msgid "Value"
-msgstr ""
+msgstr "값"
 
 #: libprocess/gwygrainvalue.c:1093
 msgid "Area"
-msgstr ""
+msgstr "면적"
 
 #: libprocess/gwygrainvalue.c:1094 app/data-browser.c:5073 app/toolbox.c:114
 msgid "Volume"
-msgstr ""
+msgstr "부피"
 
 #: libprocess/gwygrainvalue.c:1095
 msgid "Boundary"
-msgstr ""
+msgstr "경계"
 
 #: libprocess/gwygrainvalue.c:1096 modules/process/pat_synth.c:848
 #: modules/process/pat_synth.c:1150 modules/process/pat_synth.c:1485
 #: modules/tools/linestats.c:157
 msgid "Slope"
-msgstr ""
+msgstr "기울기"
 
 #: libprocess/gwygrainvalue.c:1097 modules/process/curvature.c:603
 msgid "Curvature"
-msgstr ""
+msgstr "곡률"
 
 #: libprocess/gwygrainvalue.c:1098
 msgid "Moment"
-msgstr ""
+msgstr "순간"
 
 #: libprocess/gwygrainvalue.c:1102
 msgid "User"
-msgstr ""
+msgstr "사용자"
 
 #: libprocess/gwyprocessenums.c:44
 msgid "Union"
-msgstr ""
+msgstr "조합"
 
 #: libprocess/gwyprocessenums.c:45
+#, fuzzy
 msgid "Intersection"
-msgstr ""
+msgstr "교차점"
 
 #: libprocess/gwyprocessenums.c:79
 msgid "Detected"
-msgstr ""
+msgstr "측정된"
 
 #: libprocess/gwyprocessenums.c:80
 msgid "Parallel"
-msgstr ""
+msgstr "평행의"
 
 #: libprocess/gwyprocessenums.c:81
 msgid "Triangular"
-msgstr ""
+msgstr "삼각형의"
 
 #: libprocess/gwyprocessenums.c:82
 msgid "symmetry|Square"
-msgstr ""
+msgstr "정사각형의"
 
 #: libprocess/gwyprocessenums.c:83
 msgid "Rhombic"
-msgstr ""
+msgstr "마름모꼴의"
 
 #: libprocess/gwyprocessenums.c:84
 msgid "Hexagonal"
-msgstr ""
+msgstr "육각형의"
 
 #: libprocess/gwyprocessenums.c:102
 msgid "Hat"
-msgstr ""
+msgstr "모자"
 
 #: libprocess/gwyprocessenums.c:126
 #: libgwydgets/gwygraphwindowmeasuredialog.c:52
 #: modules/process/convolution_filter.c:427
 msgid "Horizontal"
-msgstr ""
+msgstr "수평의"
 
 #: libprocess/gwyprocessenums.c:127 modules/process/convolution_filter.c:443
 msgid "Vertical"
-msgstr ""
+msgstr "수직의"
 
 #: libprocess/gwyprocessenums.c:144
 msgid "Haar"
@@ -554,16 +555,17 @@ msgstr ""
 
 #. TRANSLATORS: Interpolation type (AKA nearest neighbour)
 #: libprocess/gwyprocessenums.c:207 modules/file/rawxyz.c:685
+#, fuzzy
 msgid "Round"
-msgstr ""
+msgstr "둥근"
 
 #: libprocess/gwyprocessenums.c:208 modules/file/rawxyz.c:686
 msgid "Linear"
-msgstr ""
+msgstr "선형적인"
 
 #: libprocess/gwyprocessenums.c:209
 msgid "Key"
-msgstr ""
+msgstr "키"
 
 #: libprocess/gwyprocessenums.c:210
 msgid "BSpline"
@@ -627,7 +629,7 @@ msgstr ""
 
 #: libprocess/gwyprocessenums.c:265
 msgid "FFT"
-msgstr ""
+msgstr "FFT"
 
 #: libprocess/gwyprocessenums.c:266
 msgid "Phase only"
@@ -793,15 +795,15 @@ msgstr ""
 
 #: libgwydgets/gwy3dwindow.c:807
 msgid "Show _axes"
-msgstr ""
+msgstr "축 보기(A)"
 
 #: libgwydgets/gwy3dwindow.c:816
 msgid "Show _labels"
-msgstr ""
+msgstr "라벨 보기(L)"
 
 #: libgwydgets/gwy3dwindow.c:825
 msgid "Show false _colorbar"
-msgstr ""
+msgstr "거짓 색생바 보기(C)"
 
 #: libgwydgets/gwy3dwindow.c:834
 msgid "_Ortographic projection"
@@ -809,80 +811,80 @@ msgstr ""
 
 #: libgwydgets/gwy3dwindow.c:850
 msgid "_Lighting"
-msgstr ""
+msgstr "조명식(L)"
 
 #: libgwydgets/gwy3dwindow.c:851
 msgid "_Gradient"
-msgstr ""
+msgstr "구배식(G)"
 
 #: libgwydgets/gwy3dwindow.c:852
 msgid "_Overlay"
-msgstr ""
+msgstr "중첩 모드(O)"
 
 #: libgwydgets/gwy3dwindow.c:853
 msgid "_Overlay - no light"
-msgstr ""
+msgstr "중첩 모드(O) - 조명 제거"
 
 #: libgwydgets/gwy3dwindow.c:926
 msgid "_Material:"
-msgstr ""
+msgstr "재료(M):"
 
 #: libgwydgets/gwy3dwindow.c:949
 msgid "_Light φ:"
-msgstr ""
+msgstr "조명(L) φ:"
 
 #: libgwydgets/gwy3dwindow.c:957
 msgid "L_ight θ:"
-msgstr ""
+msgstr "조명(I) θ:"
 
 #: libgwydgets/gwy3dwindow.c:1050
 msgid "X-axis"
-msgstr ""
+msgstr "X축"
 
 #: libgwydgets/gwy3dwindow.c:1051
 msgid "Y-axis"
-msgstr ""
+msgstr "Y축"
 
 #: libgwydgets/gwy3dwindow.c:1052
 msgid "Minimum z value"
-msgstr ""
+msgstr "Z 최소값"
 
 #: libgwydgets/gwy3dwindow.c:1053
 msgid "Maximum z value"
-msgstr ""
+msgstr "Z 최대값"
 
 #: libgwydgets/gwy3dwindow.c:1076
 msgid "_Label:"
-msgstr ""
+msgstr "라벨(L):"
 
 #: libgwydgets/gwy3dwindow.c:1081
 msgid "_Text:"
-msgstr ""
+msgstr "텍스트(T):"
 
 #: libgwydgets/gwy3dwindow.c:1101
 msgid "Move label"
-msgstr ""
+msgstr "라벨 이동"
 
 #: libgwydgets/gwy3dwindow.c:1110
 msgid "_Horizontally:"
-msgstr ""
+msgstr "수평방향(H):"
 
 #: libgwydgets/gwy3dwindow.c:1120
 msgid "_Vertically:"
-msgstr ""
+msgstr "수직방향(V)"
 
 #: libgwydgets/gwy3dwindow.c:1128
 msgid "Scale size _automatically"
-msgstr ""
+msgstr "크기 자동 조정(A)"
 
 #: libgwydgets/gwy3dwindow.c:1140 modules/tools/filter.c:254
 msgid "Si_ze:"
-msgstr ""
+msgstr "크기(Z):"
 
 #: libgwydgets/gwy3dwindow.c:1140 modules/process/cwt.c:151
 #: modules/process/hough.c:212
 msgid "pixels"
-msgstr ""
+msgstr "픽셀"
 
 #: libgwydgets/gwy3dwindow.c:1148 modules/file/hdrimage.cc:2213
 #: modules/file/pixmap.c:1085 modules/file/pixmap.c:3244
@@ -915,15 +917,15 @@ msgstr ""
 #: modules/volume/volume_calibrate.c:371 modules/volume/volume_extract.c:331
 #: modules/volume/volume_kmeans.c:142
 msgid "_Reset"
-msgstr ""
+msgstr "초기화(R)"
 
 #: libgwydgets/gwy3dwindow.c:1599 libgwydgets/gwy3dwindow.c:1652
 msgid "S_witch to Lighting Mode"
-msgstr ""
+msgstr "조명식 모드로 전환(W)"
 
 #: libgwydgets/gwy3dwindow.c:1607 libgwydgets/gwy3dwindow.c:1629
 msgid "S_witch to Overlay Mode"
-msgstr ""
+msgstr "중첩 모드로 전환"
 
 #: libgwydgets/gwy3dwindow.c:1621 libgwydgets/gwy3dwindow.c:1644
 msgid "S_witch to Color Gradient Mode"
@@ -931,24 +933,24 @@ msgstr "색상 변화표 모드로 전환(W)"
 
 #: libgwydgets/gwy3dwindow.c:1660
 msgid "T_oggle light"
-msgstr ""
+msgstr "조명 토글 "
 
 #: libgwydgets/gwyaxisdialog.c:99
 msgid "Axis Properties"
-msgstr ""
+msgstr "축 설정"
 
 #: libgwydgets/gwyaxisdialog.c:101 libgwydgets/gwygraphlabeldialog.c:63
 msgid "Label Properties"
-msgstr ""
+msgstr "라벨 설정"
 
 #: libgwydgets/gwyaxisdialog.c:184 libgwydgets/gwygraphareadialog.c:173
 msgid "Label Text"
-msgstr ""
+msgstr "라벨 텍스트"
 
 #. TRANSLATORS: Countable (more false colour gradients).
 #: libgwydgets/gwydatawindow.c:887
 msgid "More..."
-msgstr ""
+msgstr "더보기..."
 
 #: libgwydgets/gwydatawindow.c:916 libgwydgets/gwyoptionmenus.c:828
 msgid "Choose Color Gradient"
@@ -956,16 +958,16 @@ msgstr "색상 변화표 선택"
 
 #: libgwydgets/gwydgetenums.c:46 modules/process/neural.c:415
 msgid "Hidden"
-msgstr ""
+msgstr "숨김"
 
 #: libgwydgets/gwydgetenums.c:47 libgwydgets/gwygraphwindowmeasuredialog.c:572
 #: modules/tools/selectionmanager.c:259
 msgid "Points"
-msgstr ""
+msgstr "점"
 
 #: libgwydgets/gwydgetenums.c:49
 msgid "Line + points"
-msgstr ""
+msgstr "선 + 점"
 
 #: libgwydgets/gwydgetutils.c:564
 msgid "Change Mask Color"
@@ -973,152 +975,152 @@ msgstr "마스크 색상 변경"
 
 #: libgwydgets/gwygrainvaluemenu.c:184
 msgid "Quantity"
-msgstr ""
+msgstr "수량"
 
 #: libgwydgets/gwygrainvaluemenu.c:194 libgwydgets/gwygrainvaluemenu.c:207
 #: modules/process/curvature.c:737
 msgid "Symbol"
-msgstr ""
+msgstr "부호"
 
 #: libgwydgets/gwygrainvaluemenu.c:217
 msgid "Enabled"
-msgstr ""
+msgstr "사용가능한"
 
 #: libgwydgets/gwygraphareadialog.c:97
 msgid "Curve Properties"
-msgstr ""
+msgstr "곡선 설정"
 
 #: libgwydgets/gwygraphareadialog.c:113
 msgid "Plot _style:"
-msgstr ""
+msgstr "그리기 스타일(S):"
 
 #: libgwydgets/gwygraphareadialog.c:134
 msgid "Pl_ot color:"
-msgstr ""
+msgstr "그리기 색상(O):"
 
 #: libgwydgets/gwygraphareadialog.c:145
 msgid "Point _type:"
-msgstr ""
+msgstr "점 종류(T):"
 
 #: libgwydgets/gwygraphareadialog.c:151
 msgid "_Point size:"
-msgstr ""
+msgstr "점 크기(P):"
 
 #: libgwydgets/gwygraphareadialog.c:161
 msgid "_Line type:"
-msgstr ""
+msgstr "선 종류(L):"
 
 #: libgwydgets/gwygraphareadialog.c:167
 msgid "Line t_hickness:"
-msgstr ""
+msgstr "선 굵기(H):"
 
 #: libgwydgets/gwygraphareadialog.c:383
 msgid "Set Curve Color"
-msgstr ""
+msgstr "곡선 색상 설정"
 
 #: libgwydgets/gwygraphareadialog.c:530
 msgid "Square"
-msgstr ""
+msgstr "정사각형"
 
 #: libgwydgets/gwygraphareadialog.c:532
 msgid "Diamond"
-msgstr ""
+msgstr "다이아몬드"
 
 #: libgwydgets/gwygraphareadialog.c:533
 msgid "Cross"
-msgstr ""
+msgstr "십자가"
 
 #: libgwydgets/gwygraphareadialog.c:534
 msgid "Diagonal cross"
-msgstr ""
+msgstr "대각 십자가"
 
 #: libgwydgets/gwygraphareadialog.c:535
 msgid "Asterisk"
-msgstr ""
+msgstr "별표"
 
 #: libgwydgets/gwygraphareadialog.c:536
 msgid "Star"
-msgstr ""
+msgstr "별"
 
 #: libgwydgets/gwygraphareadialog.c:537
 msgid "Triangle up"
-msgstr ""
+msgstr "윗쪽 삼각형"
 
 #: libgwydgets/gwygraphareadialog.c:538
 msgid "Triangle down"
-msgstr ""
+msgstr "아랫쪽 삼각형"
 
 #: libgwydgets/gwygraphareadialog.c:539
 msgid "Triangle left"
-msgstr ""
+msgstr "왼쪽 삼각형"
 
 #: libgwydgets/gwygraphareadialog.c:540
 msgid "Triangle right"
-msgstr ""
+msgstr "오른쪽 삼각형"
 
 #: libgwydgets/gwygraphareadialog.c:541
 msgid "Full square"
-msgstr ""
+msgstr "꽉찬 정사각형"
 
 #: libgwydgets/gwygraphareadialog.c:542
 msgid "Disc"
-msgstr ""
+msgstr "디스크"
 
 #: libgwydgets/gwygraphareadialog.c:543
 msgid "Full diamond"
-msgstr ""
+msgstr "꽉찬 다이아몬드"
 
 #: libgwydgets/gwygraphareadialog.c:544
 msgid "Full triangle up"
-msgstr ""
+msgstr "꽉찬 윗쪽 삼각형"
 
 #: libgwydgets/gwygraphareadialog.c:545
 msgid "Full triangle down"
-msgstr ""
+msgstr "꽉찬 아래쪽 삼각형"
 
 #: libgwydgets/gwygraphareadialog.c:546
 msgid "Full triangle left"
-msgstr ""
+msgstr "꽉찬 왼쪽 삼각형"
 
 #: libgwydgets/gwygraphareadialog.c:547
 msgid "Full triangle right"
-msgstr ""
+msgstr "꽉찬 오른쪽 삼각형"
 
 #: libgwydgets/gwygraphareadialog.c:609
 msgid "line-style|Solid"
-msgstr ""
+msgstr "선 종류|실선"
 
 #: libgwydgets/gwygraphareadialog.c:610
 msgid "line-style|Dash"
-msgstr ""
+msgstr "선 종류|점선"
 
 #: libgwydgets/gwygraphcurves.c:448
 msgid "Description"
-msgstr ""
+msgstr "설명"
 
 #: libgwydgets/gwygraphcurves.c:460
 msgid "Mode"
-msgstr ""
+msgstr "모드"
 
 #: libgwydgets/gwygraphcurves.c:478
 msgid "Color"
-msgstr ""
+msgstr "색상"
 
 #: libgwydgets/gwygraphcurves.c:491
 msgid "Point Type"
-msgstr ""
+msgstr "점 종류"
 
 #: libgwydgets/gwygraphcurves.c:513
 msgid "Line Style"
-msgstr ""
+msgstr "선 종류"
 
 #: libgwydgets/gwygraphlabeldialog.c:74
 msgid "Frame thickness:"
-msgstr ""
+msgstr "외곽선 두께:"
 
 #: libgwydgets/gwygraphlabeldialog.c:81
 msgid "_Reversed layout"
-msgstr ""
+msgstr "반전된 레이아웃(R)"
 
 #: libgwydgets/gwygraphwindow.c:152 app/toolbox.c:114
 msgid "Graph"
@@ -1127,45 +1129,45 @@ msgstr "그래프"
 #: libgwydgets/gwygraphwindow.c:159 modules/file/hdrimage.cc:472
 #: modules/process/fit_2d.c:741
 msgid "Data"
-msgstr ""
+msgstr "데이터"
 
 #: libgwydgets/gwygraphwindow.c:172
 msgid "Curves"
-msgstr ""
+msgstr "곡선"
 
 #: libgwydgets/gwygraphwindow.c:186
 msgid "Measure distances in graph"
-msgstr ""
+msgstr "그래프내 거리 측정"
 
 #: libgwydgets/gwygraphwindow.c:198
 msgid "Zoom in by mouse selection"
-msgstr ""
+msgstr "마우스 선택영역 확대"
 
 #: libgwydgets/gwygraphwindow.c:210
 msgid "Zoom out to full curve"
-msgstr ""
+msgstr "전체 곡선 보기"
 
 #: libgwydgets/gwygraphwindow.c:222
 msgid "Toggle logarithmic x axis"
-msgstr ""
+msgstr "X축 로그스케일로 변환"
 
 #: libgwydgets/gwygraphwindow.c:234
 msgid "Toggle logarithmic y axis"
-msgstr ""
+msgstr "Y축 로그스케일로 변환"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:51
 msgid "Intersections"
-msgstr ""
+msgstr "교차점"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:53
 msgid "Points anywhere"
-msgstr ""
+msgstr "임의의 점"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:394
 #: libgwydgets/gwygraphwindowmeasuredialog.c:580 modules/tools/linestats.c:156
 #: modules/tools/roughness.c:525
 msgid "Length"
-msgstr ""
+msgstr "길이"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:398
 #: libgwydgets/gwygraphwindowmeasuredialog.c:588 app/gwyplaintool.c:1026
@@ -1173,35 +1175,35 @@ msgstr ""
 #: modules/process/pat_synth.c:865 modules/process/pat_synth.c:1167
 #: modules/process/pat_synth.c:1502
 msgid "Height"
-msgstr ""
+msgstr "높이"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:526
 msgid "Measure Distances"
-msgstr ""
+msgstr "거리 측정"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:548
 msgid "Curve:"
-msgstr ""
+msgstr "곡선:"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:553
 msgid "Method:"
-msgstr ""
+msgstr "방법:"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:592
 #: modules/process/crosscor.c:269
 msgid "Angle"
-msgstr ""
+msgstr "각ㄱ도"
 
 #. TRANSLATORS: Preferred resource.
 #: libgwydgets/gwyoptionmenus.c:456
 msgid "Preferred"
-msgstr ""
+msgstr "선호 방법"
 
 #: libgwydgets/gwyoptionmenus.c:470 app/meta.c:383 modules/file/rawfile.c:961
 #: modules/process/convolution_filter.c:553 modules/process/neural.c:413
 #: modules/tools/selectionmanager.c:331
 msgid "Name"
-msgstr ""
+msgstr "이름"
 
 #: libgwydgets/gwyoptionmenus.c:827
 msgid "Color Gradient"
@@ -1209,114 +1211,114 @@ msgstr "색상 변화표"
 
 #: libgwydgets/gwyoptionmenus.c:842
 msgid "GL Material"
-msgstr ""
+msgstr "GL 재료"
 
 #: libgwydgets/gwyoptionmenus.c:843
 msgid "Choose GL Material"
-msgstr ""
+msgstr "GL 재료 선택"
 
 #: libgwydgets/gwyscitext.c:80
 msgid "_Bold"
-msgstr ""
+msgstr "진하게(B)"
 
 #: libgwydgets/gwyscitext.c:86
 msgid "_Italic"
-msgstr ""
+msgstr "기울이기(I)"
 
 #: libgwydgets/gwyscitext.c:92
 msgid "_Subscript"
-msgstr ""
+msgstr "아래첨자(S)"
 
 #: libgwydgets/gwyscitext.c:98
 msgid "Su_perscript"
-msgstr ""
+msgstr "위첨자(P)"
 
 #: libgwydgets/gwyscitext.c:251
 msgid "A_dd symbol"
-msgstr ""
+msgstr "기호 추가(D)"
 
 #: libgwydgets/gwyscitext.c:274 modules/file/rawfile.c:531
 #: modules/file/rawxyz.c:425
 msgid "Preview"
-msgstr ""
+msgstr "미리보기"
 
 #: libgwymodule/gwymodule-file.c:550 modules/file/err.h:41
 #: modules/file/pixmap.c:793
 #, c-format
 msgid "Cannot open file for reading: %s."
-msgstr ""
+msgstr "%s 파일을 읽을수 없습니다. "
 
 #: libgwymodule/gwymodule-file.c:559
 msgid "No module can load this file type."
-msgstr ""
+msgstr "이 파일 형식을 읽을 수 없습니다. "
 
 #: libgwymodule/gwymodule-file.c:666
 msgid "No module can save to this file type."
-msgstr ""
+msgstr "이 파일 형식으로 저장 할 수 없습니다. "
 
 #: libgwymodule/gwymodulebrowser.c:67
 msgid "Module Browser"
-msgstr ""
+msgstr "모듈 탐색기"
 
 #: libgwymodule/gwymodulebrowser.c:190
 msgid "Module"
-msgstr ""
+msgstr "모듈"
 
 #: libgwymodule/gwymodulebrowser.c:190
 msgid "Version"
-msgstr ""
+msgstr "버전"
 
 #: libgwymodule/gwymodulebrowser.c:190
 msgid "Author"
-msgstr ""
+msgstr "저자"
 
 #: libgwymodule/gwymodulebrowser.c:246
 msgid "Name-Version:"
-msgstr ""
+msgstr "버전 이름:"
 
 #: libgwymodule/gwymodulebrowser.c:247 libgwymodule/gwymodulebrowser.c:270
 #: modules/process/grain_stat.c:186
 msgid "File:"
-msgstr ""
+msgstr "파일:"
 
 #: libgwymodule/gwymodulebrowser.c:248
 msgid "Registered functions:"
-msgstr ""
+msgstr "등록된 기능:"
 
 #: libgwymodule/gwymodulebrowser.c:249
 msgid "Authors:"
-msgstr ""
+msgstr "저자들:"
 
 #: libgwymodule/gwymodulebrowser.c:250
 msgid "Copyright:"
-msgstr ""
+msgstr "저작권:"
 
 #: libgwymodule/gwymodulebrowser.c:251
 msgid "Date:"
-msgstr ""
+msgstr "날짜:"
 
 #: libgwymodule/gwymodulebrowser.c:252
 msgid "Description:"
-msgstr ""
+msgstr "설명:"
 
 #: libgwymodule/gwymodulebrowser.c:269
 msgid "Name:"
-msgstr ""
+msgstr "이름:"
 
 #: libgwymodule/gwymodulebrowser.c:271
 msgid "Failure:"
-msgstr ""
+msgstr "실패:"
 
 #: app/about.c:57
 #, c-format
 msgid "About %s"
-msgstr ""
+msgstr "약 %s"
 
 #. TRANSLATORS: %s is replaced with date in ISO format YYYY-MM-DD.
 #: app/about.c:92
 #, c-format
 msgid "Released %s\n"
-msgstr ""
+msgstr "배포됨 %s\n"
 
 #: app/about.c:93
 msgid "An SPM data visualization and analysis tool."
@@ -1324,15 +1326,15 @@ msgstr ""
 
 #: app/about.c:101
 msgid "Report bugs to:"
-msgstr ""
+msgstr "버그 보내는 곳:"
 
 #: app/about.c:116
 msgid "Credits"
-msgstr ""
+msgstr "참여자"
 
 #: app/about.c:133
 msgid "License"
-msgstr ""
+msgstr "사용 허가"
 
 #: app/about.c:138
 #, c-format
@@ -1346,27 +1348,27 @@ msgstr ""
 
 #: app/about.c:160
 msgid "Features"
-msgstr ""
+msgstr "특징"
 
 #: app/about.c:220
 msgid "Developers"
-msgstr ""
+msgstr "개발자"
 
 #: app/about.c:221
 msgid "Translators"
-msgstr ""
+msgstr "번역가"
 
 #: app/about.c:225
 msgid "Development is supported by the Czech Metrology Institute: "
-msgstr ""
+msgstr "본 개발은 Czech Metrology Institute의 지원을 : "
 
 #: app/about.c:253 app/about.c:256
 msgid "OpenGL 3D View"
-msgstr ""
+msgstr "OpenGL 3D 뷰"
 
 #: app/about.c:257 app/about.c:271 app/about.c:291
 msgid "not available\n"
-msgstr ""
+msgstr "이용 불가\n"
 
 #: app/about.c:262 app/about.c:265
 msgid "Fast Fourier Transform"
@@ -1390,7 +1392,7 @@ msgstr ""
 
 #: app/about.c:282
 msgid "Remote Control"
-msgstr ""
+msgstr "원격제어"
 
 #: app/about.c:286 app/about.c:290
 msgid "Python Scripting Interface"
@@ -1403,93 +1405,96 @@ msgid ""
 "%s\n"
 "Really quit?"
 msgstr ""
+"일부 데이터가 저장되지 않았습니다:\n"
+"%s\n"
+"정말로 종료하시겠습니까?"
 
 #: app/app.c:390
 msgid "Mask _Color..."
-msgstr ""
+msgstr "마스크 색상(C)..."
 
 #: app/app.c:406 app/app.c:1605
 msgid "Zoom _1:1"
-msgstr ""
+msgstr "1:1 크기로 보기(1)"
 
 #: app/app.c:410 app/app.c:1609
 msgid "Metadata _Browser..."
-msgstr ""
+msgstr "메타데이터 탐색기(B)..."
 
 #: app/app.c:415 app/app.c:1614
 msgid "View _Log..."
-msgstr ""
+msgstr "로그 보기(L)..."
 
 #: app/app.c:613
 msgid "Pi_xelwise Square"
-msgstr ""
+msgstr "픽셀방식의 정사각형"
 
 #: app/app.c:623
 msgid "_Physically Square"
-msgstr ""
+msgstr "물리적 정사각형(P)"
 
 #: app/app.c:771
 msgid "verb|Save"
-msgstr ""
+msgstr "동사|저장하기"
 
 #: app/app.c:774 app/app.c:778
 msgid "Save 3D view to an image"
-msgstr ""
+msgstr "3D 뷰를 이미지로 저장"
 
 #: app/app.c:784
 msgid "Set as Default"
-msgstr ""
+msgstr "기본값으로 설정"
 
 #: app/app.c:786
 msgid "Set the current view setup as the default"
-msgstr ""
+msgstr "현재 뷰 설정을 기본값으로 설정"
 
 #: app/app.c:850
 msgid "_Show mask"
-msgstr ""
+msgstr "마스크 보기(S)"
 
 #: app/app.c:1018
 #, c-format
 msgid "Saving of 3D view to `%s' failed"
-msgstr ""
+msgstr "3D 뷰를 `%s'로 저장하기를 실패하였습니다."
 
 #: app/app.c:1062
 msgid "Export 3D View"
-msgstr ""
+msgstr "3D 뷰 내보내기"
 
 #: app/app.c:1363
 msgid "_Change Preview"
-msgstr ""
+msgstr "미리보기 바꾸기(C)"
 
 #: app/app.c:1463
 msgid "Change Volume Data Preview"
-msgstr ""
+msgstr "볼륨 데이터 미로보기 바꾸기"
 
 #: app/app.c:1473
 msgid "Preview quantity:"
-msgstr ""
+msgstr "미리보기 개수:"
 
 #: app/app.c:1483 modules/process/extend.c:267 modules/tools/linestats.c:152
 msgid "Mean"
-msgstr ""
+msgstr "평균"
 
 #: app/app.c:1484 modules/process/polydistort.c:275 modules/tools/filter.c:209
 #: modules/tools/icolorange.c:401 modules/tools/linestats.c:154
 msgid "Minimum"
-msgstr ""
+msgstr "최소"
 
 #: app/app.c:1485 modules/process/col_synth.c:174 modules/tools/filter.c:210
 #: modules/tools/icolorange.c:412 modules/tools/linestats.c:155
 msgid "Maximum"
-msgstr ""
+msgstr "최대"
 
 #: app/app.c:1486
 msgid "Min. position"
-msgstr ""
+msgstr "최소 위치"
 
 #: app/app.c:1487
 msgid "Max. position"
-msgstr ""
+msgstr "최대 위치"
 
 #: app/app.c:1488 modules/process/col_synth.c:175 modules/process/scars.c:538
 #: modules/process/scars.c:545 modules/process/threshold.c:357
@@ -1498,35 +1503,35 @@ msgstr ""
 
 #: app/app.c:1489 modules/file/asciiexport.c:186
 msgid "Channel:"
-msgstr ""
+msgstr "채널:"
 
 #: app/app.c:1490
 msgid "Section:"
-msgstr ""
+msgstr "부분:"
 
 #: app/data-browser.c:4946
 msgid "Extract to a new file"
-msgstr ""
+msgstr "새 파일로 확장"
 
 #: app/data-browser.c:4947
 msgid "Duplicate"
-msgstr ""
+msgstr "사본 만들기"
 
 #: app/data-browser.c:4948
 msgid "Delete"
-msgstr ""
+msgstr "제거하기"
 
 #: app/data-browser.c:4993
 msgid "Data Browser"
-msgstr ""
+msgstr "데이터 탐색기"
 
 #: app/data-browser.c:5018
 msgid "Close file"
-msgstr ""
+msgstr "파일 닫기"
 
 #: app/data-browser.c:5031
 msgid "Channels"
-msgstr ""
+msgstr "채널"
 
 #: app/data-browser.c:5045 modules/volume/volume_extract.c:444
 msgid "Graphs"
@@ -1534,25 +1539,25 @@ msgstr "그래프"
 
 #: app/data-browser.c:5059
 msgid "Spectra"
-msgstr ""
+msgstr "스펙트럼"
 
 #: app/data-browser.c:6593
 #, c-format
 msgid "Unknown channel %d"
-msgstr ""
+msgstr "알 수 없는 채널 %d"
 
 #: app/data-browser.c:6679
 #, c-format
 msgid "Unknown volume %d"
-msgstr ""
+msgstr "알 수 없는 볼륨 %d"
 
 #: app/datachooser.c:201 app/datachooser.c:403
 msgid "channel|None"
-msgstr ""
+msgstr "채널|없음"
 
 #: app/file.c:209
 msgid "Imported data are likely incorrect."
-msgstr ""
+msgstr "입력된 데이터가 정확하지 않습니다. "
 
 #: app/file.c:213
 #, c-format
@@ -1573,103 +1578,103 @@ msgstr ""
 #: app/file.c:280
 #, c-format
 msgid "Opening of `%s' failed"
-msgstr ""
+msgstr "`%s' 열기를 실패하였습니다."
 
 #: app/file.c:286 app/file.c:506
 #, c-format
 msgid "Full file path: %s."
-msgstr ""
+msgstr "전체 파일 경로: %s."
 
 #: app/file.c:289
 #, c-format
 msgid "Loaded using: %s."
-msgstr ""
+msgstr "%s 을 사용해서 불러왔습니다. "
 
 #: app/file.c:363
 msgid "Merge File"
-msgstr ""
+msgstr "파일 병합"
 
 #: app/file.c:365 app/gwyappfilechooser.c:223
 msgid "Open File"
-msgstr ""
+msgstr "파일 열기"
 
 #: app/file.c:500 app/gwymoduleutils.c:191
 #, c-format
 msgid "Saving of `%s' failed"
-msgstr ""
+msgstr "`%s' 저장을 실패하였습니다. "
 
 #: app/file.c:509
 #, c-format
 msgid "Saved using: %s."
-msgstr ""
+msgstr "%s 을 사용해서 저장되었습니다."
 
 #: app/file.c:650
 #, c-format
 msgid "File `%s' already exists.  Replace?"
-msgstr ""
+msgstr "파일 '%s'는 이미 존재합니다. 대체하시겠습니까?"
 
 #: app/file.c:654
 #, c-format
 msgid ""
 "The file already exists in `%s'.  Replacing it will overwrite its contents."
-msgstr ""
+msgstr "그 파일은 이미 '%s'에 존재합니다. 같은 이름으로 덮어씁니다. "
 
 #: app/file.c:657
 msgid "Replace File?"
-msgstr ""
+msgstr "파일을 대체하시겠습니까? "
 
 #: app/filelist.c:232
 msgid "Document History"
-msgstr ""
+msgstr "문서 내역"
 
 #: app/filelist.c:262
 msgid "_Prune"
-msgstr ""
+msgstr "제거하다(P)"
 
 #: app/filelist.c:266
 msgid "Remove entries of files that no longer exist"
-msgstr ""
+msgstr "더이상 존재하진 않는 파일 목록을 제거하기"
 
 #: app/filelist.c:275
 msgid "Close file list"
-msgstr ""
+msgstr "파일 목록 닫기"
 
 #: app/filelist.c:282
 msgid "Open selected file"
-msgstr ""
+msgstr "선택된 파일 열기"
 
 #: app/filelist.c:568
 msgid "_Filter:"
-msgstr ""
+msgstr "필터(F):"
 
 #: app/filelist.c:606
 msgid "Case _sensitive"
-msgstr ""
+msgstr "대소문자 구별"
 
 #: app/glmaterial-editor.c:92
 msgid "GL Material Editor"
-msgstr ""
+msgstr "GL 재료 편집기"
 
 #: app/glmaterial-editor.c:93
 #, c-format
 msgid "GL Material  `%s'"
-msgstr ""
+msgstr "GL 재료  `%s'"
 
 #: app/glmaterial-editor.c:143
 msgid "_Ambient"
-msgstr ""
+msgstr "은은한(A)"
 
 #: app/glmaterial-editor.c:144
 msgid "_Diffuse"
-msgstr ""
+msgstr "분산된(D)"
 
 #: app/glmaterial-editor.c:145
 msgid "Spe_cular"
-msgstr ""
+msgstr "반사된(C)"
 
 #: app/glmaterial-editor.c:194
 msgid "Sh_ininess:"
-msgstr ""
+msgstr "빛나는(I)"
 
 #: app/gradient-editor.c:126
 msgid "Color Gradient Editor"
@@ -1682,45 +1687,46 @@ msgstr "색상 변화표 `%s'"
 
 #: app/gradient-editor.c:228
 msgid "_Points"
-msgstr ""
+msgstr "점(P)"
 
 #: app/gradient-editor.c:229
 msgid "_Curve"
-msgstr ""
+msgstr "곡선(C)"
 
 #: app/gradient-editor.c:267
 msgid "_Snap to control points"
-msgstr ""
+msgstr "조정 점으로 움직이기"
 
 #: app/gwyappfilechooser.c:228
 msgid "Save File"
-msgstr ""
+msgstr "파일 저장"
 
 #: app/gwyappfilechooser.c:410
 #, c-format
 msgid "File _type: %s, filtered"
-msgstr ""
+msgstr "파일 종류(T): %s, 필터적용됨"
 
 #: app/gwyappfilechooser.c:412
 #, c-format
 msgid "File _type: %s"
-msgstr ""
+msgstr "파일 종류(T): %s"
 
 #: app/gwyappfilechooser.c:490
 msgid "Automatic by extension"
-msgstr ""
+msgstr "확대되어 자동의"
 
 #: app/gwyappfilechooser.c:499
 msgid "Automatically detected"
-msgstr ""
+msgstr "자동으로 감지된"
 
 #: app/gwyappfilechooser.c:550
 msgid "Show only loadable files"
-msgstr ""
+msgstr "읽을 수 있는 파일만 보기"
 
 #: app/gwyappfilechooser.c:677
+#, fuzzy
 msgid "Plane-level previewed data"
-msgstr ""
+msgstr "평면으로 평평하게 만들기 적용된 미리보기 데이터"
 
 #: app/gwyappfilechooser.c:693
 msgid "Row-level previewed data"
@@ -1728,19 +1734,19 @@ msgstr ""
 
 #: app/gwyappfilechooser.c:802
 msgid "…"
-msgstr ""
+msgstr "..."
 
 #: app/gwyappfilechooser.c:953
 msgid "Cannot preview"
-msgstr ""
+msgstr "미리보기가 불가능합니다. "
 
 #: app/gwyddion.c:138
 msgid "Loading document history"
-msgstr ""
+msgstr "문서 내역 불러오는중"
 
 #: app/gwyddion.c:143
 msgid "Registering "
-msgstr ""
+msgstr "등록하기"
 
 #: app/gwyddion.c:144
 msgid "stock items"
@@ -1752,31 +1758,31 @@ msgstr "색상 변화표"
 
 #: app/gwyddion.c:150
 msgid "GL materials"
-msgstr ""
+msgstr "GL 재료"
 
 #: app/gwyddion.c:152
 msgid "grain quantities"
-msgstr ""
+msgstr "그레인 개수"
 
 #: app/gwyddion.c:154
 msgid "calibrations"
-msgstr ""
+msgstr "켈리브레이션"
 
 #: app/gwyddion.c:159
 msgid "Loading settings"
-msgstr ""
+msgstr "설정값 불러오기"
 
 #: app/gwyddion.c:166
 msgid "Registering modules"
-msgstr ""
+msgstr "모듈 등록하기"
 
 #: app/gwyddion.c:188
 msgid "Initializing GUI"
-msgstr ""
+msgstr "GUI 초기화하기"
 
 #: app/gwyddion.c:397
 msgid "Could not read settings."
-msgstr ""
+msgstr "설정값을 읽어올 수 없습니다. "
 
 #: app/gwyddion.c:400
 #, c-format
@@ -1820,7 +1826,7 @@ msgstr ""
 #: app/gwymoduleutils-file.c:618
 #, c-format
 msgid "Key at header line %u is empty."
-msgstr ""
+msgstr "헤더 파일 %u에 키 값이 비어있습니다. "
 
 #: app/gwymoduleutils-file.c:645
 #, c-format
@@ -1831,11 +1837,11 @@ msgstr ""
 #: modules/file/err.h:62
 #, c-format
 msgid "Cannot write to file: %s."
-msgstr ""
+msgstr "%s 파일에 작성할 수 없습니다. "
 
 #: app/gwyplaintool.c:574
 msgid "<big><b>Missing layer module.</b></big>"
-msgstr ""
+msgstr "<big><b>레이어 모듈을 .</b></big>"
 
 #: app/gwyplaintool.c:580
 #, c-format
@@ -1843,38 +1849,40 @@ msgid ""
 "This tool requires layer of type %s to work, which does not seem to be "
 "installed.  Please check your installation."
 msgstr ""
+"이 도구를 사용하기 위해서는 %s 종류의 레이어가 필요합니다만 현재 설치가 되어 "
+"있지 않은 것 같습니다.  설치환경을 다시 확인 바랍니다. "
 
 #: app/gwyplaintool.c:796
 msgid "Clear selected objects"
-msgstr ""
+msgstr "선택된 대상 지우기"
 
 #. TRANSLATORS: Origin of the selected rectangle.
 #: app/gwyplaintool.c:1008
 msgid "Origin"
-msgstr ""
+msgstr "원점"
 
 #: app/gwyplaintool.c:1019 modules/file/rawfile.c:963
 #: modules/process/convolution_filter.c:364
 #: modules/process/convolution_filter.c:568 modules/process/neural.c:414
 #: modules/process/obj_synth.c:531 modules/process/pat_synth.c:1468
 msgid "Size"
-msgstr ""
+msgstr "크기"
 
 #: app/gwyplaintool.c:1022
 msgid "Width"
-msgstr ""
+msgstr "폭"
 
 #: app/gwytool.c:294
 msgid "verb|Hide"
-msgstr ""
+msgstr "동사|숨기기"
 
 #: app/gwytool.c:296
 msgid "Hide tool dialog (Esc)"
-msgstr ""
+msgstr "도구 창 숨기기(Esc)"
 
 #: app/help.c:254
 msgid "Cannot display the help."
-msgstr ""
+msgstr "도움말을 표시할 수 없습니다. "
 
 #. TRANSLATORS: %s will be replaced with an URL.
 #: app/help.c:257
@@ -1890,44 +1898,44 @@ msgstr ""
 #. de, ...  even if the corresponding guide does not exist.
 #: app/help.c:360
 msgid "current-language-code|en"
-msgstr ""
+msgstr "현재-언어-코드|en"
 
 #: app/log.c:445
 #, c-format
 msgid "Log of %s (%s)"
-msgstr ""
+msgstr "%s (%s)의 로그"
 
 #: app/log.c:497 app/meta.c:201
 msgid "_Export"
-msgstr ""
+msgstr "내보내기(E)"
 
 #: app/log.c:503
 msgid "Clea_r"
-msgstr ""
+msgstr "지우기(R)"
 
 #: app/log.c:508 app/meta.c:217
 msgid "_Close"
-msgstr ""
+msgstr "닫기(C)"
 
 #: app/log.c:524 modules/file/rawfile.c:962
 msgid "Type"
-msgstr ""
+msgstr "종류"
 
 #: app/log.c:525
 msgid "Function"
-msgstr ""
+msgstr "기능"
 
 #: app/log.c:526 modules/process/neural.c:610 modules/tools/stats.c:407
 msgid "Parameters"
-msgstr ""
+msgstr "변수"
 
 #: app/log.c:527
 msgid "Time"
-msgstr ""
+msgstr "시간"
 
 #: app/log.c:639
 msgid "Export Log"
-msgstr ""
+msgstr "로그 내보내기"
 
 #: app/menu.c:558 app/toolbox.c:635
 msgid "_Data Process"
@@ -1943,78 +1951,78 @@ msgstr "3차원 데이터(V)"
 
 #: app/menu.c:677
 msgid "Re-show Last"
-msgstr ""
+msgstr "최근값 다시 보여주기"
 
 #: app/menu.c:692
 msgid "Repeat Last"
-msgstr ""
+msgstr "방금한 프로세스 다시실행"
 
 #: app/menu.c:820
 msgid "Repeat"
-msgstr ""
+msgstr "다시하기"
 
 #: app/menu.c:826
 msgid "Re-show"
-msgstr ""
+msgstr "다시보기"
 
 #: app/menu.c:1095
 msgid "_Document history"
-msgstr ""
+msgstr "문서 작성 내역(D)"
 
 #: app/meta.c:207
 msgid "_New"
-msgstr ""
+msgstr "새로 만들기(N)"
 
 #: app/meta.c:212 modules/file/rawfile.c:1024 modules/process/neural.c:711
 msgid "_Delete"
-msgstr ""
+msgstr "삭제하기(D)"
 
 #: app/meta.c:269
 #, c-format
 msgid "Metadata of %s (%s)"
-msgstr ""
+msgstr "%s (%s)의 메타데이터 "
 
 #: app/meta.c:592
 msgid "New item"
-msgstr ""
+msgstr "새 아이템"
 
 #: app/meta.c:710
 msgid "Save Metadata"
-msgstr ""
+msgstr "메타데이터 저장하기"
 
 #: app/resource-editor.c:135
 msgid "Edit selected item"
-msgstr ""
+msgstr "선택된 아이템 편집하기"
 
 #: app/resource-editor.c:141 modules/process/convolution_filter.c:518
 msgid "Create a new item"
-msgstr ""
+msgstr "새 아이템 생성"
 
 #: app/resource-editor.c:147 modules/process/convolution_filter.c:523
 msgid "Create a new item based on selected one"
-msgstr ""
+msgstr "선택한 것을 바탕으로 새 아이템 생성"
 
 #: app/resource-editor.c:153 modules/process/convolution_filter.c:528
 msgid "Delete selected item"
-msgstr ""
+msgstr "선택된 아이템 삭제하기"
 
 #: app/resource-editor.c:159
 msgid "Set selected item as default"
-msgstr ""
+msgstr "선택된 아이템을 기본값으로 설정"
 
 #: app/settings.c:125 modules/file/err.h:55
 #, c-format
 msgid "Cannot open file for writing: %s."
-msgstr ""
+msgstr "작성하기 위해 파일 %s를 열수 없습니다. "
 
 #: app/settings.c:182 modules/file/err.h:33
 #, c-format
 msgid "Cannot read file contents: %s"
-msgstr ""
+msgstr "%s의 파일 내용을 읽을 수 없습니다. "
 
 #: app/settings.c:190
 msgid "File is empty."
-msgstr ""
+msgstr "파일이 비어있습니다. "
 
 #: app/settings.c:200
 msgid "File is corrupted, magic header does not match."
@@ -2041,11 +2049,11 @@ msgstr ""
 
 #: app/splash.c:652
 msgid "Starting "
-msgstr ""
+msgstr "시작하는 중"
 
 #: app/splash.c:698
 msgid " is free software released under GNU GPL."
-msgstr ""
+msgstr "은 GNU GPL기반 무료 프로그랩입니다."
 
 #: app/tips.c:52
 msgid ""
@@ -2447,7 +2455,7 @@ msgstr "도구"
 
 #: app/toolbox.c:170
 msgid "Display a 3D view of data"
-msgstr ""
+msgstr "데이터를 3D 뷰로 보여주기"
 
 #: app/toolbox.c:177
 msgid "Zoom in"
@@ -2551,11 +2559,11 @@ msgstr "/로그 기록 활성화(L)"
 
 #: app/toolbox.c:1204
 msgid "Change Default Mask Color"
-msgstr ""
+msgstr "기본 마스크 색상 변경하기"
 
 #: app/toolbox.c:1232
 msgid "OpenGL 3D graphics not available"
-msgstr ""
+msgstr "OpenGL 3D 그래픽이 사용불가합니다."
 
 #: app/toolbox.c:1237
 msgid "OpenGL was disabled with a command-line option."
@@ -2574,12 +2582,12 @@ msgstr ""
 #: app/validate.c:112 app/validate.c:133
 #, c-format
 msgid "byte at position %d"
-msgstr ""
+msgstr "%d 위치의 바이트(byte)"
 
 #: app/validate.c:159 app/validate.c:172
 #, c-format
 msgid "%s instead of %s"
-msgstr ""
+msgstr "%s는  %s를 대체한다"
 
 #: app/validate.c:365
 #, c-format
@@ -2781,19 +2789,19 @@ msgstr ""
 
 #: modules/file/asciiexport.c:192 modules/file/asciiexport.c:207
 msgid "Width:"
-msgstr ""
+msgstr "폭:"
 
 #: modules/file/asciiexport.c:199 modules/file/asciiexport.c:211
 msgid "Height:"
-msgstr ""
+msgstr "높이:"
 
 #: modules/file/asciiexport.c:219
 msgid "Value units:"
-msgstr ""
+msgstr "값 단위:"
 
 #: modules/file/asciiexport.c:263 modules/graph/graph_export_ascii.c:113
 msgid "Export Text"
-msgstr ""
+msgstr "텍스트 내보내기"
 
 #: modules/file/asciiexport.c:274 modules/file/pixmap.c:3360
 #: modules/file/rawfile.c:724 modules/file/rawxyz.c:673
@@ -2806,11 +2814,11 @@ msgstr ""
 #: modules/process/wpour_mark.c:382 modules/tools/spotremove.c:322
 #: modules/tools/stats.c:384
 msgid "Options"
-msgstr ""
+msgstr "옵션"
 
 #: modules/file/asciiexport.c:277
 msgid "Use _dot as decimal separator"
-msgstr ""
+msgstr "점을 소수점으로 사용하기"
 
 #: modules/file/asciiexport.c:284 modules/process/grain_dist.c:315
 msgid "Add _informational comment header"
@@ -2818,7 +2826,7 @@ msgstr ""
 
 #: modules/file/asciiexport.c:293
 msgid "_Precision:"
-msgstr ""
+msgstr "정밀도(P):"
 
 #: modules/file/assing-afm.c:70
 msgid "Imports Assing AFM data files."
@@ -6085,7 +6093,7 @@ msgstr ""
 
 #: modules/graph/graph_level.c:52
 msgid "/_Level"
-msgstr "/높이 레벨 맞추기(L)"
+msgstr "/평평하게 만들기(L)"
 
 #: modules/graph/graph_level.c:55
 msgid "Level graph curves"
@@ -6332,7 +6340,7 @@ msgstr ""
 
 #: modules/process/basicops.c:71
 msgid "/_Basic Operations/_Invert Value"
-msgstr "/기본 기능(B)/값 부호 반전(I)"
+msgstr "/기본 기능(B)/값 반전(I)"
 
 #: modules/process/basicops.c:75
 msgid "Invert values about mean"
@@ -6806,7 +6814,7 @@ msgstr ""
 
 #: modules/process/calibrate.c:391
 msgid "Dimensions and Units"
-msgstr ""
+msgstr "면적 및 단위"
 
 #: modules/process/calibrate.c:412 modules/volume/volume_calibrate.c:390
 msgid "New Real Dimensions"
@@ -7234,35 +7242,35 @@ msgstr ""
 
 #: modules/process/curvature.c:125
 msgid "Center value"
-msgstr ""
+msgstr "중간 값"
 
 #: modules/process/curvature.c:126
 msgid "Curvature radius 1"
-msgstr ""
+msgstr "곡률 반경 1"
 
 #: modules/process/curvature.c:127
 msgid "Curvature radius 2"
-msgstr ""
+msgstr "곡률 반경 2"
 
 #: modules/process/curvature.c:128
 msgid "Direction 1"
-msgstr ""
+msgstr "방향 1"
 
 #: modules/process/curvature.c:129
 msgid "Direction 2"
-msgstr ""
+msgstr "방향 2"
 
 #: modules/process/curvature.c:155
 msgid "Calculates overall curvature."
-msgstr ""
+msgstr "전체 곡률 계산하기."
 
 #: modules/process/curvature.c:169
 msgid "/_Level/_Curvature..."
-msgstr ""
+msgstr "/평평하게 만들기(L)/굴곡면(C)..."
 
 #: modules/process/curvature.c:173
 msgid "Calculate overall curvature"
-msgstr ""
+msgstr "전체 곡률 계산하기"
 
 #: modules/process/curvature.c:203
 msgid ""
@@ -7275,7 +7283,7 @@ msgstr ""
 
 #: modules/process/curvature.c:659
 msgid "Output Type"
-msgstr ""
+msgstr "출력 종류"
 
 #: modules/process/curvature.c:666
 msgid "_Set selection"
@@ -7291,19 +7299,19 @@ msgstr "그래프 그리기(P)"
 #: modules/process/slope_dist.c:399 modules/tools/sfunctions.c:458
 #: modules/tools/stats.c:371
 msgid "Masking Mode"
-msgstr ""
+msgstr "마스킹 모드"
 
 #: modules/process/curvature.c:757 modules/process/grain_stat.c:345
 #: modules/process/polylevel.c:620 modules/tools/distance.c:228
 #: modules/tools/roughness.c:830 modules/tools/stats.c:432
 msgid "Save table to a file"
-msgstr ""
+msgstr "표를 파일로 저장"
 
 #: modules/process/curvature.c:762 modules/process/grain_stat.c:350
 #: modules/process/polylevel.c:630 modules/tools/distance.c:233
 #: modules/tools/roughness.c:835 modules/tools/stats.c:437
 msgid "Copy table to clipboard"
-msgstr ""
+msgstr "표를 클립보드로 복사"
 
 #: modules/process/curvature.c:889
 msgid "Axes are outside the image."
@@ -7311,7 +7319,7 @@ msgstr ""
 
 #: modules/process/curvature.c:954
 msgid "Save Curvature"
-msgstr ""
+msgstr "곡률 저장"
 
 #: modules/process/cwt.c:65
 msgid "Two-dimensional CWT (Continuous Wavelet Transform)."
@@ -7568,7 +7576,7 @@ msgstr ""
 
 #: modules/process/drift.c:180
 msgid "/_Correct Data/Compensate _Drift..."
-msgstr ""
+msgstr "/데이터 교정(C)/드리프트 보정(D)..."
 
 #: modules/process/drift.c:184
 msgid "Evaluate/correct thermal drift in fast scan axis"
@@ -7900,7 +7908,7 @@ msgstr ""
 
 #: modules/process/facet-level.c:78
 msgid "/_Level/_Facet Level"
-msgstr ""
+msgstr "/평평하게 만들기(L)/경계면 평평하게 만들기(F).."
 
 #: modules/process/facet-level.c:82
 msgid "Level data to make facets point upward"
@@ -7929,7 +7937,7 @@ msgstr ""
 
 #: modules/process/facet_analysis.c:181
 msgid "Mark areas by 2D slope"
-msgstr ""
+msgstr "2D 기울기를 이용 영역 표시하기"
 
 #: modules/process/facet_analysis.c:271
 msgid "Mark Facets"
@@ -8036,27 +8044,27 @@ msgstr ""
 
 #: modules/process/fft_filter_1d.c:129
 msgid "FFT filtering"
-msgstr ""
+msgstr "FFT 필터링"
 
 #: modules/process/fft_filter_1d.c:143
 msgid "/_Correct Data/1D _FFT Filtering..."
-msgstr ""
+msgstr "/데이터 교정(C)/1D FFT 필터링(F)..."
 
 #: modules/process/fft_filter_1d.c:147
 msgid "1D FFT Filtering"
-msgstr ""
+msgstr "1D FFT 필터링"
 
 #: modules/process/fft_filter_1d.c:177 modules/process/wpour_mark.c:424
 msgid "Marked"
-msgstr ""
+msgstr "표시된"
 
 #: modules/process/fft_filter_1d.c:178
 msgid "Unmarked"
-msgstr ""
+msgstr "표시 안 된"
 
 #: modules/process/fft_filter_1d.c:181
 msgid "Null"
-msgstr ""
+msgstr "무효"
 
 #: modules/process/fft_filter_1d.c:182
 msgid "Suppress"
@@ -8064,52 +8072,52 @@ msgstr ""
 
 #: modules/process/fft_filter_1d.c:195
 msgid "1D FFT filter"
-msgstr ""
+msgstr "1D FFT 필터"
 
 #: modules/process/fft_filter_1d.c:305
 msgid "_Direction:"
-msgstr ""
+msgstr "방향(D):"
 
 #: modules/process/fft_filter_1d.c:313
 msgid "_Suppress type:"
-msgstr ""
+msgstr "제거 방식(S):"
 
 #: modules/process/fft_filter_1d.c:321
 msgid "_Filter type:"
-msgstr ""
+msgstr "필터 종류(F):"
 
 #: modules/process/fft_filter_1d.c:541
 msgid "1D FFT Filtered Data"
-msgstr ""
+msgstr "1D FFT 필터링된 데이터"
 
 #: modules/process/fft_filter_2d.c:170 modules/process/fft_filter_2d.c:443
 msgid "2D FFT Filtering"
-msgstr ""
+msgstr "2D FFT 필터링"
 
 #: modules/process/fft_filter_2d.c:184
 msgid "/_Correct Data/_2D FFT Filtering..."
-msgstr ""
+msgstr "/데이터 교정(C)/2D FFT 필터(2)..."
 
 #: modules/process/fft_filter_2d.c:188
 msgid "Two-dimensional FFT filtering"
-msgstr ""
+msgstr "이차원 FFT  필터링"
 
 #: modules/process/fft_filter_2d.c:302
 msgid "Filtered Data"
-msgstr ""
+msgstr "필터링된 데이터"
 
 #: modules/process/fft_filter_2d.c:317 modules/process/fit_2d.c:743
 #: modules/process/neural.c:560
 msgid "Difference"
-msgstr ""
+msgstr "차이"
 
 #: modules/process/fft_filter_2d.c:330
 msgid "Filtered FFT"
-msgstr ""
+msgstr "필터링된 FFT"
 
 #: modules/process/fft_filter_2d.c:368
 msgid "Add an ellipse to the FFT mask"
-msgstr ""
+msgstr "FFT 마스크에 ellipse추가 "
 
 #: modules/process/fft_filter_2d.c:373
 msgid "Add a rectangle to the FFT mask"
@@ -8125,51 +8133,51 @@ msgstr ""
 
 #: modules/process/fft_filter_2d.c:394
 msgid "_FFT mask editor"
-msgstr ""
+msgstr "FFT 마스크 편집기(F)"
 
 #: modules/process/fft_filter_2d.c:402
 msgid "Fi_ltered image"
-msgstr ""
+msgstr "필터링된 이미지(l)"
 
 #: modules/process/fft_filter_2d.c:406
 msgid "Image _difference"
-msgstr ""
+msgstr "이미지 차이점"
 
 #: modules/process/fft_filter_2d.c:417
 msgid "Filtered i_mage"
-msgstr ""
+msgstr "필터링된 이미지(M)"
 
 #: modules/process/fft_filter_2d.c:421
 msgid "Ima_ge difference"
-msgstr ""
+msgstr "이미지 차이점(G)"
 
 #: modules/process/fft_filter_2d.c:425
 msgid "Filtered FFT mo_dulus"
-msgstr ""
+msgstr "필터링된 FFT 모듈러스"
 
 #: modules/process/fft_filter_2d.c:489
 msgid "Filter Mask"
-msgstr ""
+msgstr "필터 마스크"
 
 #: modules/process/fft_filter_2d.c:524
 msgid "_Undo"
-msgstr ""
+msgstr "실행 취소(U)"
 
 #: modules/process/fft_filter_2d.c:533 modules/tools/maskedit.c:536
 msgid "_Remove"
-msgstr ""
+msgstr "제거(R)"
 
 #: modules/process/fft_filter_2d.c:541 modules/tools/maskedit.c:544
 msgid "_Fill"
-msgstr ""
+msgstr "채우기(F)"
 
 #: modules/process/fft_filter_2d.c:551
 msgid "_Snap to origin"
-msgstr ""
+msgstr "원점에 맞추기(S)"
 
 #: modules/process/fft_filter_2d.c:599
 msgid "Zoom:"
-msgstr ""
+msgstr "확대:"
 
 #: modules/process/fft_filter_2d.c:1275
 msgid "Draw ellipses on the mask"
@@ -8294,7 +8302,7 @@ msgstr ""
 
 #: modules/process/fit_2d.c:188
 msgid "/_Level/_Fit Sphere..."
-msgstr ""
+msgstr "/평평하게 만들기(L)/구면 맞추기(F)"
 
 #: modules/process/fit_2d.c:192
 msgid "Fit by sphere"
@@ -9394,7 +9402,7 @@ msgstr ""
 
 #: modules/process/level.c:94
 msgid "/_Level/Plane _Level"
-msgstr ""
+msgstr "/평평하게 만들기(L)/평면으로 맞추기(L)"
 
 #: modules/process/level.c:98
 msgid "Level data by mean plane subtraction"
@@ -9402,7 +9410,7 @@ msgstr ""
 
 #: modules/process/level.c:101
 msgid "/_Level/Level _Rotate"
-msgstr ""
+msgstr "/평평하게 만들기(L)/회전시키기(R)"
 
 #: modules/process/level.c:105
 msgid "Automatically level data by plane rotation"
@@ -9410,7 +9418,7 @@ msgstr ""
 
 #: modules/process/level.c:108
 msgid "/_Level/Fix _Zero"
-msgstr ""
+msgstr "/평평하게 만들기(L)/0으로 고정하기(Z)"
 
 #: modules/process/level.c:112
 msgid "Shift minimum data value to zero"
@@ -9418,7 +9426,7 @@ msgstr ""
 
 #: modules/process/level.c:115
 msgid "/_Level/Zero _Mean Value"
-msgstr ""
+msgstr "/평평하게 만들기(L)/평균값을 0으로 맞추기(M)"
 
 #: modules/process/level.c:119
 msgid "Shift mean data value to zero"
@@ -9426,7 +9434,7 @@ msgstr ""
 
 #: modules/process/level.c:127
 msgid "Plane Level"
-msgstr ""
+msgstr "평면으로 평평하게 만들기"
 
 #: modules/process/level.c:133
 msgid "Level Rotate"
@@ -9829,7 +9837,7 @@ msgstr ""
 
 #: modules/process/median-bg.c:95
 msgid "/_Level/_Median Level..."
-msgstr ""
+msgstr "/평평하게 만들기(L)/중간값으로 맞추기(M)"
 
 #: modules/process/median-bg.c:99
 msgid "Level data by local median subtraction"
@@ -10417,51 +10425,51 @@ msgstr ""
 
 #: modules/process/polylevel.c:159
 msgid "/_Level/_Polynomial Background..."
-msgstr ""
+msgstr "/평평하게 만들기(L)/배경 다항식으로 맞추기(P)"
 
 #: modules/process/polylevel.c:163
 msgid "Remove polynomial background"
-msgstr ""
+msgstr "다항식 배경값 제거하기"
 
 #: modules/process/polylevel.c:361
 msgid "Independent degrees"
-msgstr ""
+msgstr "독립 차수"
 
 #: modules/process/polylevel.c:362
 msgid "Limited total degree"
-msgstr ""
+msgstr "총 차수 제한 "
 
 #: modules/process/polylevel.c:375
 msgid "Remove Polynomial Background"
-msgstr ""
+msgstr "다항식 배경값 제거하기"
 
 #: modules/process/polylevel.c:425
 msgid "Leveled data"
-msgstr ""
+msgstr "평평하게 맞춰진 데이터"
 
 #: modules/process/polylevel.c:455
 msgid "_Horizontal polynom degree:"
-msgstr ""
+msgstr "수평 다항식 차수(H):"
 
 #: modules/process/polylevel.c:463
 msgid "_Vertical polynom degree:"
-msgstr ""
+msgstr "수직 다항식 차수(V):"
 
 #: modules/process/polylevel.c:469
 msgid "_Same degrees"
-msgstr ""
+msgstr "같은 차수(S)"
 
 #: modules/process/polylevel.c:487
 msgid "_Maximum polynom degree:"
-msgstr ""
+msgstr "최대 다항식 차수(M):"
 
 #: modules/process/polylevel.c:574
 msgid "Polynomial Coefficients"
-msgstr ""
+msgstr "다항식 계수"
 
 #: modules/process/polylevel.c:947 modules/tools/distance.c:521
 msgid "Save Table"
-msgstr ""
+msgstr "표 저장하기"
 
 #: modules/process/presentationops.c:58
 msgid "Basic operations with presentation: extraction, removal."
@@ -10533,67 +10541,67 @@ msgstr ""
 
 #: modules/process/rotate.c:101
 msgid "/_Basic Operations/Rotate by _Angle..."
-msgstr ""
+msgstr "/기본 기능(B)/각도로 회전시키기(A)"
 
 #: modules/process/rotate.c:105
 msgid "Rotate by arbitrary angle"
-msgstr ""
+msgstr "임의 각도로 회전시키기"
 
 #: modules/process/rotate.c:210
 msgid "Rotated Data"
-msgstr ""
+msgstr "데이터 회전시키기"
 
 #: modules/process/rotate.c:265
 msgid "Rotate"
-msgstr ""
+msgstr "회전시키기"
 
 #: modules/process/rotate.c:286
 msgid "Rotate by _angle:"
-msgstr ""
+msgstr "각도로 회전시키기(A)"
 
 #: modules/process/rotate.c:300
 msgid "E_xpand result to fit complete data"
-msgstr ""
+msgstr "완성 데이터에 맞춰 결과값 확장"
 
 #: modules/process/scale.c:92
 msgid "Scales data by arbitrary factor."
-msgstr ""
+msgstr "임의의 값으로 데이터 크기변경"
 
 #: modules/process/scale.c:106
 msgid "/_Basic Operations/_Scale..."
-msgstr ""
+msgstr "/기본 기능(B)/크기 변경(S)..."
 
 #: modules/process/scale.c:110
 msgid "Scale data"
-msgstr ""
+msgstr "데이터 크기변경"
 
 #: modules/process/scale.c:182
 msgid "Scaled Data"
-msgstr ""
+msgstr "크기변경된 데이터"
 
 #: modules/process/scale.c:195
 msgid "verb|Scale"
-msgstr ""
+msgstr "동사|크기변경"
 
 #: modules/process/scale.c:215
 msgid "Scale by _ratio:"
-msgstr ""
+msgstr "비율로 크기변경(R)"
 
 #: modules/process/scale.c:223
 msgid "_proportional"
-msgstr ""
+msgstr "비례적으로(P)"
 
 #: modules/process/scale.c:234
 msgid "New _width:"
-msgstr ""
+msgstr "새 너비(W):"
 
 #: modules/process/scale.c:242
 msgid "New _height:"
-msgstr ""
+msgstr "새 높이(H)"
 
 #: modules/process/scars.c:125
 msgid "Marks and/or removes scars (horizontal linear artefacts)."
-msgstr ""
+msgstr "상처 표시 또는 제거 (horizontal linear artefacts)."
 
 #: modules/process/scars.c:139
 msgid "/_Correct Data/M_ark Scars..."
@@ -10613,35 +10621,37 @@ msgstr ""
 
 #: modules/process/scars.c:456
 msgid "Positive"
-msgstr ""
+msgstr "양성의"
 
 #: modules/process/scars.c:457
 msgid "Negative"
-msgstr ""
+msgstr "음성의"
 
 #: modules/process/scars.c:458
 msgid "Both"
-msgstr ""
+msgstr "모두"
 
 #: modules/process/scars.c:472
 msgid "Mark Scars"
-msgstr ""
+msgstr "튄 자국 표시"
 
 #: modules/process/scars.c:523
 msgid "Maximum _width:"
-msgstr ""
+msgstr "최대 너비(W)"
 
 #: modules/process/scars.c:530
 msgid "Minimum _length:"
-msgstr ""
+msgstr "최소 길이(L)"
 
 #: modules/process/scars.c:537
+#, fuzzy
 msgid "_Hard threshold:"
-msgstr ""
+msgstr "Hard threshold(H):"
 
 #: modules/process/scars.c:545
+#, fuzzy
 msgid "_Soft threshold:"
-msgstr ""
+msgstr "Soft threshold(S):"
 
 #: modules/process/scars.c:553
 msgid "Scars type:"
@@ -10727,7 +10737,7 @@ msgstr ""
 
 #: modules/process/sphere-revolve.c:112
 msgid "/_Level/Revolve _Arc..."
-msgstr ""
+msgstr "/평평하게 만들기/호 회전시키기(A)..."
 
 #: modules/process/sphere-revolve.c:116
 msgid "Level data by arc revolution"
@@ -10736,20 +10746,20 @@ msgstr ""
 #: modules/process/sphere-revolve.c:207 modules/tools/polynom.c:199
 #: modules/tools/sfunctions.c:339
 msgid "_Horizontal direction"
-msgstr ""
+msgstr "수평 방향(H)"
 
 #: modules/process/sphere-revolve.c:208 modules/tools/polynom.c:200
 #: modules/tools/sfunctions.c:340
 msgid "_Vertical direction"
-msgstr ""
+msgstr "수직 방향(V)"
 
 #: modules/process/sphere-revolve.c:209
 msgid "_Both directions"
-msgstr ""
+msgstr "양쪽 방향(B)"
 
 #: modules/process/sphere-revolve.c:217
 msgid "Revolve Arc"
-msgstr ""
+msgstr "호 회전시키기"
 
 #: modules/process/superresolution.c:88
 msgid ""
@@ -10818,97 +10828,98 @@ msgstr ""
 
 #: modules/process/threshold.c:124
 msgid "Limit the data range using a lower/upper threshold."
-msgstr ""
+msgstr "최대/최소 값을 이용한 데이터 범위 제한"
 
 #: modules/process/threshold.c:138
 msgid "/_Basic Operations/Li_mit range..."
-msgstr ""
+msgstr "/기본 기능(B)/범위 제한(M)..."
 
 #: modules/process/threshold.c:142
 msgid "Limit data range"
-msgstr ""
+msgstr "데이터 범위 제한"
 
 #: modules/process/threshold.c:252
 msgid "Limit Range"
-msgstr ""
+msgstr "범위제한"
 
 #: modules/process/threshold.c:298
 msgid "Specify _thresholds"
-msgstr ""
+msgstr "역치값 설정(T)"
 
 #: modules/process/threshold.c:300
 msgid "Use _display range"
-msgstr ""
+msgstr "디스플레이 범위 사용"
 
 #: modules/process/threshold.c:302
+#, fuzzy
 msgid "Cut off outlier_s"
-msgstr ""
+msgstr "잘라내기 기준점(S)"
 
 #: modules/process/threshold.c:311
 msgid "_Lower:"
-msgstr ""
+msgstr "이하(L):"
 
 #: modules/process/threshold.c:317
 msgid "_Upper:"
-msgstr ""
+msgstr "이상(U):"
 
 #: modules/process/threshold.c:322
 msgid "Set to _Full Range"
-msgstr ""
+msgstr "전체 범위로 설정(F)"
 
 #. TRANSLATORS: This is a range: 123 to 456.
 #: modules/process/threshold.c:335
 #, c-format
 msgid "%.*f to %.*f"
-msgstr ""
+msgstr "%.*f 부터 %.*f 까지"
 
 #: modules/process/threshold.c:357
 msgid "F_arther than:"
-msgstr ""
+msgstr "최소 값(A):"
 
 #: modules/process/tilt.c:74
 msgid "Tilts image by specified amount."
-msgstr ""
+msgstr "특정 값만큼 이미지 기울이기"
 
 #: modules/process/tilt.c:88
 msgid "/_Basic Operations/_Tilt..."
-msgstr ""
+msgstr "/기본 기능(B)/기울이기(T)..."
 
 #: modules/process/tilt.c:92
 msgid "Tilt by specified amount"
-msgstr ""
+msgstr "특정 값만큼 기울이기"
 
 #: modules/process/tilt.c:159
 msgid "Tilt"
-msgstr ""
+msgstr "기울이기"
 
 #: modules/process/tilt.c:184
 msgid "_X:"
-msgstr ""
+msgstr "X(X):"
 
 #: modules/process/tilt.c:193
 msgid "_Y:"
-msgstr ""
+msgstr "Y(Y):"
 
 #: modules/process/tilt.c:203
 msgid "Angles"
-msgstr ""
+msgstr "각도"
 
 #: modules/process/tip_blind.c:180
 msgid "Blind estimation of SPM tip using Villarubia's algorithm."
-msgstr ""
+msgstr "Villarubia 알고리즘을 이용한 SPM 팁 추정 효과 가리기"
 
 #: modules/process/tip_blind.c:194
 msgid "/_Tip/_Blind Estimation..."
-msgstr ""
+msgstr "/팁(T)/추정효과 가리기(B)..."
 
 #: modules/process/tip_blind.c:198
 msgid "Blind tip estimation"
-msgstr ""
+msgstr "팁 추정 효과 가리기"
 
 #: modules/process/tip_blind.c:236
 msgid "Blind Tip Estimation"
-msgstr ""
+msgstr "팁 추정 효과 가리기"
 
 #: modules/process/tip_blind.c:237
 msgid "Run _Partial"
@@ -10970,7 +10981,7 @@ msgstr ""
 
 #: modules/process/tip_blind.c:919 modules/process/tip_blind.c:943
 msgid "Estimated tip"
-msgstr ""
+msgstr "추정된 팁"
 
 #: modules/process/tip_blind.c:1203 modules/process/tip_blind.c:1212
 msgid "Tip radius evolution"
@@ -11121,7 +11132,7 @@ msgstr ""
 
 #: modules/process/volumize.c:74
 msgid "/_Basic Operations/Volumize..."
-msgstr ""
+msgstr "/기본 기능(B)/Volumize..."
 
 #: modules/process/volumize.c:78
 msgid "Convert datafield to 3D data"
@@ -11133,7 +11144,7 @@ msgstr ""
 
 #: modules/process/volumize_layers.c:99
 msgid "/_Basic Operations/Volumize Layers..."
-msgstr ""
+msgstr "/기본 기능(B)/Volumize Layers..."
 
 #: modules/process/volumize_layers.c:103
 msgid "Convert all datafields to 3D data"
@@ -11190,7 +11201,7 @@ msgstr ""
 #: modules/process/wave_synth.c:454 modules/process/wave_synth.c:600
 #: modules/tools/roughness.c:283
 msgid "Amplitude"
-msgstr ""
+msgstr "크기"
 
 #: modules/process/wave_synth.c:459
 msgid "_Wave form:"
@@ -11198,11 +11209,11 @@ msgstr ""
 
 #: modules/process/wave_synth.c:466
 msgid "Amplitude:"
-msgstr ""
+msgstr "크기:"
 
 #: modules/process/wave_synth.c:484
 msgid "Frequency"
-msgstr ""
+msgstr "주파수"
 
 #: modules/process/wave_synth.c:490
 msgid "_Spatial frequency:"
@@ -11378,7 +11389,7 @@ msgstr ""
 
 #: modules/pygwy/pygwy-console.c:362
 msgid "Clear Log"
-msgstr ""
+msgstr "로그 지우기"
 
 #: modules/pygwy/pygwy-console.c:366
 msgid "Open script in Python language (Ctrl-O)"
@@ -11394,7 +11405,7 @@ msgstr ""
 
 #: modules/pygwy/pygwy-console.c:448
 msgid "Command"
-msgstr ""
+msgstr "명령어"
 
 #: pygwy.c:99
 msgid "Pygwy, the Gwyddion Python wrapper."
@@ -11421,11 +11432,11 @@ msgstr ""
 
 #: modules/tools/crop.c:121
 msgid "Crop"
-msgstr ""
+msgstr "잘라내기"
 
 #: modules/tools/crop.c:122
 msgid "Crop data"
-msgstr ""
+msgstr "데이터 잘라내기"
 
 #: modules/tools/distance.c:102
 msgid "Distance measurement tool, measures distances and angles."
@@ -11486,11 +11497,11 @@ msgstr ""
 
 #: modules/tools/grainremover.c:108
 msgid "_Mask"
-msgstr ""
+msgstr "마스크(M)"
 
 #: modules/tools/grainremover.c:110
 msgid "_Both"
-msgstr ""
+msgstr "모두(B)"
 
 #: modules/tools/grainremover.c:114 modules/tools/spotremove.c:271
 msgid "Laplace solver"
@@ -11510,7 +11521,7 @@ msgstr ""
 
 #: modules/tools/grainremover.c:203
 msgid "Remove:"
-msgstr ""
+msgstr "제거:"
 
 #: modules/tools/grainremover.c:216 modules/tools/spotremove.c:326
 msgid "_Interpolation method:"
@@ -11524,7 +11535,7 @@ msgstr ""
 
 #: modules/tools/icolorange.c:156
 msgid "Color Range"
-msgstr ""
+msgstr "색상 범위"
 
 #: modules/tools/icolorange.c:157
 msgid "Stretch color range to part of data"
@@ -11552,19 +11563,19 @@ msgstr ""
 
 #: modules/tools/icolorange.c:289
 msgid "Height histogram"
-msgstr ""
+msgstr "높이 히스토그램"
 
 #: modules/tools/icolorange.c:325
 msgid "Range"
-msgstr ""
+msgstr "범위"
 
 #: modules/tools/icolorange.c:330
 msgid "_Minimum"
-msgstr ""
+msgstr "최소(M)"
 
 #: modules/tools/icolorange.c:355
 msgid "M_aximum"
-msgstr ""
+msgstr "최대(A)"
 
 #: modules/tools/icolorange.c:384
 msgid "Set to _Unmasked"
@@ -11602,7 +11613,7 @@ msgstr ""
 
 #: modules/tools/level3.c:255
 msgid "Set plane to _zero"
-msgstr ""
+msgstr "평면을 0으로 설정"
 
 #: modules/tools/linestats.c:125
 msgid ""
@@ -11620,19 +11631,19 @@ msgstr ""
 
 #: modules/tools/linestats.c:159
 msgid "Ra"
-msgstr ""
+msgstr "Ra"
 
 #: modules/tools/linestats.c:160
 msgid "Rq (RMS)"
-msgstr ""
+msgstr "Rq (RMS)"
 
 #: modules/tools/linestats.c:161
 msgid "Rz"
-msgstr ""
+msgstr "Rz"
 
 #: modules/tools/linestats.c:162
 msgid "Rt"
-msgstr ""
+msgstr "Rt"
 
 #: modules/tools/linestats.c:163
 msgid "Skew"
@@ -11660,7 +11671,7 @@ msgstr ""
 
 #: modules/tools/linestats.c:338
 msgid "Average:"
-msgstr ""
+msgstr "평균:"
 
 #: modules/tools/linestats.c:347 modules/tools/profile.c:406
 #: modules/tools/sfunctions.c:377 modules/tools/spectro.c:333
@@ -11706,7 +11717,7 @@ msgstr ""
 
 #: modules/tools/maskedit.c:341
 msgid "Elliptic shapes"
-msgstr ""
+msgstr "타원 모양"
 
 #: modules/tools/maskedit.c:346
 msgid "Thin lines"
@@ -11730,7 +11741,7 @@ msgstr ""
 
 #: modules/tools/maskedit.c:396
 msgid "Editor"
-msgstr ""
+msgstr "편집기"
 
 #: modules/tools/maskedit.c:401
 msgid "_Shapes"
@@ -11738,19 +11749,19 @@ msgstr ""
 
 #: modules/tools/maskedit.c:411
 msgid "Mode:"
-msgstr ""
+msgstr "모드:"
 
 #: modules/tools/maskedit.c:440
 msgid "Shape:"
-msgstr ""
+msgstr "모양:"
 
 #: modules/tools/maskedit.c:471
 msgid "_Drawing Tools"
-msgstr ""
+msgstr "그리기 도구(D)"
 
 #: modules/tools/maskedit.c:481
 msgid "Tool:"
-msgstr ""
+msgstr "도구:"
 
 #: modules/tools/maskedit.c:512
 msgid "_Radius:"
@@ -11878,17 +11889,17 @@ msgstr ""
 #: modules/tools/profile.c:841
 #, c-format
 msgid "X error %d"
-msgstr ""
+msgstr "X 에러 %d"
 
 #: modules/tools/profile.c:844
 #, c-format
 msgid "Y error %d"
-msgstr ""
+msgstr "Y 에러  %d"
 
 #: modules/tools/profile.c:847
 #, c-format
 msgid "Z error %d"
-msgstr ""
+msgstr "Z 에러 %d"
 
 #: modules/tools/profile.c:850
 #, c-format
@@ -11925,15 +11936,15 @@ msgstr ""
 
 #: modules/tools/readvalue.c:170
 msgid "Read Value"
-msgstr ""
+msgstr "값 읽기"
 
 #: modules/tools/readvalue.c:171
 msgid "Read value under mouse cursor"
-msgstr ""
+msgstr "마우스 커서 아래 값 읽기"
 
 #: modules/tools/readvalue.c:315
 msgid "Set _Zero"
-msgstr ""
+msgstr "0값으로 설정"
 
 #: modules/tools/readvalue.c:318
 msgid "Shift plane z=0 to pass through the selected point"
@@ -12170,7 +12181,7 @@ msgstr ""
 
 #: modules/tools/sfunctions.c:189
 msgid "Height distribution"
-msgstr ""
+msgstr "높이 분포"
 
 #: modules/tools/sfunctions.c:190
 msgid "Cum. height distribution"
@@ -12186,15 +12197,15 @@ msgstr ""
 
 #: modules/tools/sfunctions.c:193
 msgid "ACF"
-msgstr ""
+msgstr "ACF"
 
 #: modules/tools/sfunctions.c:194
 msgid "HHCF"
-msgstr ""
+msgstr "HHCF"
 
 #: modules/tools/sfunctions.c:195
 msgid "PSDF"
-msgstr ""
+msgstr "PSDF"
 
 #: modules/tools/sfunctions.c:196
 msgid "Radial PSDF"
@@ -12250,7 +12261,7 @@ msgstr ""
 
 #: modules/tools/spectro.c:476
 msgid "Spectroscopy"
-msgstr ""
+msgstr "분광학"
 
 #: modules/tools/spotremove.c:158
 msgid ""
@@ -12260,7 +12271,7 @@ msgstr ""
 
 #: modules/tools/spotremove.c:201
 msgid "Remove Spots"
-msgstr ""
+msgstr "점 제거하기"
 
 #: modules/tools/spotremove.c:202
 msgid "Interpolate small defects, manually selected"
@@ -12352,11 +12363,11 @@ msgstr ""
 
 #: modules/tools/stats.c:1068
 msgid "Yes"
-msgstr ""
+msgstr "네"
 
 #: modules/tools/stats.c:1068
 msgid "No"
-msgstr ""
+msgstr "아니오"
 
 #: modules/tools/stats.c:1115
 #, c-format
@@ -12387,11 +12398,11 @@ msgstr ""
 
 #: modules/volume/volume_calibrate.c:190
 msgid "/_Dimensions and Units..."
-msgstr ""
+msgstr "/면적 및 단위(D)..."
 
 #: modules/volume/volume_calibrate.c:370
 msgid "Volume Dimensions and Units"
-msgstr ""
+msgstr "3차원 크기 및 단위"
 
 #: modules/volume/volume_calibrate.c:527
 msgid "_Value range:"
@@ -12411,55 +12422,55 @@ msgstr ""
 
 #: modules/volume/volume_extract.c:237
 msgid "/Show and _extract..."
-msgstr ""
+msgstr "/보기 또는 추출하기(E)..."
 
 #: modules/volume/volume_extract.c:241
 msgid "Show and/or extract a section of volume data"
-msgstr ""
+msgstr "3D데이터에서 한 부분을 보기 또는 추출하기 "
 
 #: modules/volume/volume_extract.c:270
 msgid "X cross-section"
-msgstr ""
+msgstr "X축 단면"
 
 #: modules/volume/volume_extract.c:271
 msgid "Y cross-section"
-msgstr ""
+msgstr "Y축 단면"
 
 #: modules/volume/volume_extract.c:272
 msgid "Z cross-section"
-msgstr ""
+msgstr "Z축 단면"
 
 #: modules/volume/volume_extract.c:273 modules/volume/volume_extract.c:697
 msgid "X direction sum"
-msgstr ""
+msgstr "X축 합"
 
 #: modules/volume/volume_extract.c:274 modules/volume/volume_extract.c:699
 msgid "Y direction sum"
-msgstr ""
+msgstr "Y축 합"
 
 #: modules/volume/volume_extract.c:275 modules/volume/volume_extract.c:701
 msgid "Z direction sum"
-msgstr ""
+msgstr "Z축 합"
 
 #: modules/volume/volume_extract.c:278
 msgid "X direction"
-msgstr ""
+msgstr "X축 방향"
 
 #: modules/volume/volume_extract.c:279
 msgid "Y direction"
-msgstr ""
+msgstr "Y축 방향"
 
 #: modules/volume/volume_extract.c:280
 msgid "Z direction"
-msgstr ""
+msgstr "Z축 방향"
 
 #: modules/volume/volume_extract.c:322
 msgid "Volume data"
-msgstr ""
+msgstr "3차원 데이터"
 
 #: modules/volume/volume_extract.c:324
 msgid "_Load"
-msgstr ""
+msgstr "불러오기(L)"
 
 #: modules/volume/volume_extract.c:336
 msgid "_Extract projection"
@@ -12471,15 +12482,15 @@ msgstr ""
 
 #: modules/volume/volume_extract.c:390
 msgid "X position"
-msgstr ""
+msgstr "X 위치"
 
 #: modules/volume/volume_extract.c:397
 msgid "Y position"
-msgstr ""
+msgstr "Y 위치"
 
 #: modules/volume/volume_extract.c:404
 msgid "Z position"
-msgstr ""
+msgstr "Z 위치"
 
 #: modules/volume/volume_extract.c:409
 msgid "Shown cut direction:"
@@ -12487,7 +12498,7 @@ msgstr ""
 
 #: modules/volume/volume_extract.c:419 modules/volume/volume_extract.c:499
 msgid "Show mode:"
-msgstr ""
+msgstr "모드 보기:"
 
 #: modules/volume/volume_extract.c:489
 msgid "Graph cut direction:"
@@ -12495,11 +12506,11 @@ msgstr ""
 
 #: modules/volume/volume_extract.c:524
 msgid "3D view"
-msgstr ""
+msgstr "3D 뷰"
 
 #: modules/volume/volume_extract.c:549
 msgid "Zoom"
-msgstr ""
+msgstr "확대 보기"
 
 #: modules/volume/volume_extract.c:557
 msgid "Wireframe threshold"
@@ -12507,7 +12518,7 @@ msgstr ""
 
 #: modules/volume/volume_extract.c:565
 msgid "Z scale"
-msgstr ""
+msgstr "Z축 크기"
 
 #: modules/volume/volume_extract.c:573
 msgid "Opacity scale"
@@ -12523,15 +12534,15 @@ msgstr ""
 
 #: modules/volume/volume_extract.c:597
 msgid "X view"
-msgstr ""
+msgstr "X축 시점 보기"
 
 #: modules/volume/volume_extract.c:603
 msgid "Y view"
-msgstr ""
+msgstr "Y축 시점 보기"
 
 #: modules/volume/volume_extract.c:609
 msgid "Z view"
-msgstr ""
+msgstr "Z축 시점 보기"
 
 #: modules/volume/volume_extract.c:682
 #, c-format
@@ -12565,7 +12576,7 @@ msgstr ""
 
 #: modules/volume/volume_extract.c:759
 msgid "w"
-msgstr ""
+msgstr "w"
 
 #: modules/volume/volume_extract.c:775
 msgid "Brick graph"
@@ -12586,15 +12597,15 @@ msgstr ""
 
 #: modules/volume/volume_fdfit.c:200
 msgid "Evaluate volume force-distance data"
-msgstr ""
+msgstr "Volume force-distance 데이터 평가"
 
 #: modules/volume/volume_fdfit.c:214
 msgid "/_Evaluate FD data..."
-msgstr ""
+msgstr "/FD 데이터 평가(E)..."
 
 #: modules/volume/volume_fdfit.c:218
 msgid "Evaluate force-distance volume data"
-msgstr ""
+msgstr "Force-distance volume 데이터 평가"
 
 #: modules/volume/volume_fdfit.c:369
 msgid "Curve _X position:"
@@ -12606,39 +12617,39 @@ msgstr ""
 
 #: modules/volume/volume_invert.c:51
 msgid "Inverts value in volume data"
-msgstr ""
+msgstr "3차원 데이터 값 반전"
 
 #: modules/volume/volume_invert.c:65
 msgid "/_Invert value"
-msgstr ""
+msgstr "/값 반전(I)"
 
 #: modules/volume/volume_invert.c:69
 msgid "Invert value in volume data"
-msgstr ""
+msgstr "3차원 데이터 값 반전"
 
 #: modules/volume/volume_kmeans.c:86
 msgid "Calculates K-means clustering on volume data."
-msgstr ""
+msgstr "3차원 데이터 K-평균 클러스터링 계산"
 
 #: modules/volume/volume_kmeans.c:100
 msgid "/_K-means clustering..."
-msgstr ""
+msgstr "/K-평균 클러스터링(K)..."
 
 #: modules/volume/volume_kmeans.c:104
 msgid "Calculate K-means clustering on volume data"
-msgstr ""
+msgstr "3차원 데이터 K-평균 클러스터링 계산"
 
 #: modules/volume/volume_kmeans.c:139
 msgid "K-means"
-msgstr ""
+msgstr "K-평균"
 
 #: modules/volume/volume_kmeans.c:146
 msgid "_Run"
-msgstr ""
+msgstr "실행(R)"
 
 #: modules/volume/volume_kmeans.c:162
 msgid "_Number of clusters:"
-msgstr ""
+msgstr "클러스터 개수"
 
 #: modules/volume/volume_kmeans.c:170
 msgid "Convergence _Precision:"
@@ -12654,19 +12665,19 @@ msgstr ""
 
 #: modules/volume/volume_kmeans.c:359
 msgid "Cluster"
-msgstr ""
+msgstr "클러스터"
 
 #: modules/volume/volume_kmeans.c:465
 #, c-format
 msgid "K-means of %s"
-msgstr ""
+msgstr "%s의 K-평균"
 
 #: modules/volume/volume_kmeans.c:476
 #, c-format
 msgid "K-means error of %s"
-msgstr ""
+msgstr "%s의 K-평균 "
 
 #: modules/volume/volume_kmeans.c:504
 #, c-format
 msgid "K-means center %d"
-msgstr ""
+msgstr "K-평균 중심 %d"
