@@ -21,8 +21,6 @@
  *  Boston, MA 02110-1301, USA.
  */
 
-#define DEBUG
-
  /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-renishaw-spm">
