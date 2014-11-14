@@ -3728,7 +3728,7 @@ preset_render_title(G_GNUC_UNUSED GtkTreeViewColumn *column,
     gchar *s;
 
     gtk_tree_model_get(model, iter, 0, &preset, -1);
-    type = gwy_enum_to_string(preset->data.xytype,
+    type = gwy_enum_to_string(preset->data.title_type,
                               title_types, G_N_ELEMENTS(title_types));
     s = gwy_strkill(g_strdup(gwy_sgettext(type)), "_:");
     g_object_set(cell, "text", s, NULL);
