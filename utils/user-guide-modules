@@ -51,6 +51,8 @@ extend	basic-operations	extend
 ezdfile	managing-files
 facet_analysis	statistical-analysis	facet-analysis
 facet-level	leveling-and-background	facet-level
+fbm_synth	synthetic	brownian-synthesis
+femtoscan	managing-files
 femtoscan-txt	managing-files
 fft_filter_1d	edit-extended	fft-filter-1d
 fft_filter_2d	edit-extended	fft-filter-2d
@@ -93,6 +95,7 @@ hitachi-afm	managing-files
 hitachi-sem	managing-files
 icolorange	color-map	color-range
 igorfile	managing-files
+imgexport	image-export
 immerse	multidata	immerse
 intematix	managing-files
 iso28600	managing-files
@@ -142,6 +145,7 @@ neural	multidata	neural-network
 noise_synth	synthetic	noise-synthesis
 nrrdfile	managing-files
 nt-mdt	managing-files
+nxiifile	managing-files
 obj_synth	synthetic	object-synthesis
 oldmda	managing-files
 ols	managing-files
@@ -174,6 +178,7 @@ rawgraph	specific-data-import	graph-curve-import
 rawxyz	specific-data-import	raw-xyz-import
 readvalue	basic-operations	read-value
 rectangle	selections
+renishaw	managing-files
 rhk-sm3	managing-files
 rhk-sm4	managing-files
 rhk-spm32	managing-files
@@ -200,6 +205,7 @@ spip-asc	managing-files
 spmlabf	managing-files
 spmlab	managing-files
 spml	managing-files
+spmxfile	managing-files
 spotremove	editing-correction	remove-spots
 stats	statistical-analysis	stat-quantities
 stmprg	managing-files
