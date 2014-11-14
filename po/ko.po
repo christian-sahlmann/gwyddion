@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-09-18 03:58+0200\n"
+"POT-Creation-Date: 2014-11-14 16:38+0100\n"
 "PO-Revision-Date: 2014-11-12 21:07+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Korean_gwyddion\n"
@@ -124,9 +124,9 @@ msgid "contact: Hertz (paraboloid)"
 msgstr "Hertz 방식 접촉  ()"
 
 #: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:665
-#: app/data-browser.c:2091 app/data-browser.c:2854 app/data-browser.c:3710
-#: app/data-browser.c:3869 app/data-browser.c:4155 app/data-browser.c:4569
-#: app/data-browser.c:6555 app/data-browser.c:6637 app/resource-editor.c:367
+#: app/data-browser.c:2091 app/data-browser.c:2885 app/data-browser.c:3741
+#: app/data-browser.c:3900 app/data-browser.c:4186 app/data-browser.c:4600
+#: app/data-browser.c:6586 app/data-browser.c:6668 app/resource-editor.c:367
 #: modules/process/convolution_filter.c:706
 msgid "Untitled"
 msgstr "제목 없음"
@@ -435,8 +435,8 @@ msgid "Position"
 msgstr "위치"
 
 #: libprocess/gwygrainvalue.c:1092 app/meta.c:384
-#: modules/process/curvature.c:746 modules/tools/level3.c:457
-#: modules/tools/readvalue.c:297
+#: modules/file/imgexport.c:3934 modules/process/curvature.c:746
+#: modules/tools/level3.c:457 modules/tools/readvalue.c:297
 msgid "Value"
 msgstr "값"
 
@@ -444,7 +444,7 @@ msgstr "값"
 msgid "Area"
 msgstr "면적"
 
-#: libprocess/gwygrainvalue.c:1094 app/data-browser.c:5073 app/toolbox.c:114
+#: libprocess/gwygrainvalue.c:1094 app/data-browser.c:5104 app/toolbox.c:114
 msgid "Volume"
 msgstr "부피"
 
@@ -554,12 +554,14 @@ msgid "Scale and space adaptive"
 msgstr ""
 
 #. TRANSLATORS: Interpolation type (AKA nearest neighbour)
-#: libprocess/gwyprocessenums.c:207 modules/file/rawxyz.c:685
+#: libprocess/gwyprocessenums.c:207 modules/file/imgexport.c:3208
+#: modules/file/rawxyz.c:685
 #, fuzzy
 msgid "Round"
 msgstr "둥근"
 
-#: libprocess/gwyprocessenums.c:208 modules/file/rawxyz.c:686
+#: libprocess/gwyprocessenums.c:208 modules/file/imgexport.c:3209
+#: modules/file/rawxyz.c:686
 msgid "Linear"
 msgstr "선형적인"
 
@@ -743,15 +745,15 @@ msgstr ""
 msgid "Hide full controls"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:642
-msgid "3dcontrols|Basic"
+#: libgwydgets/gwy3dwindow.c:642 modules/file/imgexport.c:4105
+msgid "adjective|Basic"
 msgstr ""
 
 #: libgwydgets/gwy3dwindow.c:647
 msgid "Light & Material"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:652 modules/file/pixmap.c:3305
+#: libgwydgets/gwy3dwindow.c:652
 msgid "Labels"
 msgstr ""
 
@@ -887,9 +889,9 @@ msgid "pixels"
 msgstr "픽셀"
 
 #: libgwydgets/gwy3dwindow.c:1148 modules/file/hdrimage.cc:2213
-#: modules/file/pixmap.c:1085 modules/file/pixmap.c:3244
+#: modules/file/imgexport.c:4069 modules/file/pixmap.c:791
 #: modules/file/rawfile.c:402 modules/process/angle_dist.c:172
-#: modules/process/calcoefs_new.c:348 modules/process/calibrate.c:392
+#: modules/process/calcoefs_new.c:347 modules/process/calibrate.c:392
 #: modules/process/col_synth.c:387 modules/process/correct_affine.c:307
 #: modules/process/curvature.c:605 modules/process/cwt.c:135
 #: modules/process/deposit_synth.c:361 modules/process/diff_synth.c:422
@@ -897,25 +899,25 @@ msgstr "픽셀"
 #: modules/process/dwt.c:166 modules/process/dwtanisotropy.c:184
 #: modules/process/edge.c:651 modules/process/extend.c:192
 #: modules/process/facet-level.c:190 modules/process/facet_analysis.c:276
-#: modules/process/fft.c:258 modules/process/fft_filter_2d.c:444
-#: modules/process/fft_synth.c:351 modules/process/fractal.c:207
-#: modules/process/grain_edge.c:218 modules/process/grain_mark.c:264
-#: modules/process/grain_wshed.c:183 modules/process/hough.c:179
-#: modules/process/lat_synth.c:539 modules/process/latsim.c:158
-#: modules/process/level.c:262 modules/process/linecorrect.c:281
-#: modules/process/lno_synth.c:440 modules/process/local_contrast.c:130
-#: modules/process/median-bg.c:179 modules/process/noise_synth.c:347
-#: modules/process/obj_synth.c:427 modules/process/pat_synth.c:397
-#: modules/process/pid.c:199 modules/process/polydistort.c:218
-#: modules/process/polylevel.c:377 modules/process/rank.c:132
-#: modules/process/rotate.c:266 modules/process/scale.c:196
-#: modules/process/scars.c:477 modules/process/shade.c:216
-#: modules/process/slope_dist.c:268 modules/process/sphere-revolve.c:218
-#: modules/process/tilt.c:160 modules/process/tip_model.c:170
-#: modules/process/unrotate.c:228 modules/process/volumize_layers.c:213
-#: modules/process/wave_synth.c:361 modules/process/wpour_mark.c:296
-#: modules/volume/volume_calibrate.c:371 modules/volume/volume_extract.c:331
-#: modules/volume/volume_kmeans.c:142
+#: modules/process/fbm_synth.c:315 modules/process/fft.c:258
+#: modules/process/fft_filter_2d.c:444 modules/process/fft_synth.c:351
+#: modules/process/fractal.c:207 modules/process/grain_edge.c:218
+#: modules/process/grain_mark.c:264 modules/process/grain_wshed.c:183
+#: modules/process/hough.c:179 modules/process/lat_synth.c:539
+#: modules/process/latsim.c:158 modules/process/level.c:262
+#: modules/process/linecorrect.c:281 modules/process/lno_synth.c:441
+#: modules/process/local_contrast.c:130 modules/process/median-bg.c:179
+#: modules/process/noise_synth.c:348 modules/process/obj_synth.c:427
+#: modules/process/pat_synth.c:397 modules/process/pid.c:199
+#: modules/process/polydistort.c:218 modules/process/polylevel.c:377
+#: modules/process/rank.c:132 modules/process/rotate.c:266
+#: modules/process/scale.c:196 modules/process/scars.c:477
+#: modules/process/shade.c:216 modules/process/slope_dist.c:268
+#: modules/process/sphere-revolve.c:218 modules/process/tilt.c:160
+#: modules/process/tip_model.c:170 modules/process/unrotate.c:228
+#: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:361
+#: modules/process/wpour_mark.c:296 modules/volume/volume_calibrate.c:371
+#: modules/volume/volume_extract.c:331 modules/volume/volume_kmeans.c:142
 msgid "_Reset"
 msgstr "초기화(R)"
 
@@ -961,7 +963,7 @@ msgid "Hidden"
 msgstr "숨김"
 
 #: libgwydgets/gwydgetenums.c:47 libgwydgets/gwygraphwindowmeasuredialog.c:572
-#: modules/tools/selectionmanager.c:259
+#: modules/file/imgexport.c:462 modules/tools/selectionmanager.c:259
 msgid "Points"
 msgstr "점"
 
@@ -1010,7 +1012,7 @@ msgstr "점 크기(P):"
 msgid "_Line type:"
 msgstr "선 종류(L):"
 
-#: libgwydgets/gwygraphareadialog.c:167
+#: libgwydgets/gwygraphareadialog.c:167 modules/file/imgexport.c:2618
 msgid "Line t_hickness:"
 msgstr "선 굵기(H):"
 
@@ -1199,9 +1201,10 @@ msgstr "각ㄱ도"
 msgid "Preferred"
 msgstr "선호 방법"
 
-#: libgwydgets/gwyoptionmenus.c:470 app/meta.c:383 modules/file/rawfile.c:961
-#: modules/process/convolution_filter.c:553 modules/process/neural.c:413
-#: modules/tools/selectionmanager.c:331
+#: libgwydgets/gwyoptionmenus.c:470 app/meta.c:383
+#: modules/file/imgexport.c:3499 modules/file/imgexport.c:3916
+#: modules/file/rawfile.c:961 modules/process/convolution_filter.c:553
+#: modules/process/neural.c:413 modules/tools/selectionmanager.c:331
 msgid "Name"
 msgstr "이름"
 
@@ -1243,7 +1246,7 @@ msgid "Preview"
 msgstr "미리보기"
 
 #: libgwymodule/gwymodule-file.c:550 modules/file/err.h:41
-#: modules/file/pixmap.c:793
+#: modules/file/pixmap.c:499
 #, c-format
 msgid "Cannot open file for reading: %s."
 msgstr "%s 파일을 읽을수 없습니다. "
@@ -1509,44 +1512,44 @@ msgstr "채널:"
 msgid "Section:"
 msgstr "부분:"
 
-#: app/data-browser.c:4946
+#: app/data-browser.c:4977
 msgid "Extract to a new file"
 msgstr "새 파일로 확장"
 
-#: app/data-browser.c:4947
+#: app/data-browser.c:4978
 msgid "Duplicate"
 msgstr "사본 만들기"
 
-#: app/data-browser.c:4948
+#: app/data-browser.c:4979
 msgid "Delete"
 msgstr "제거하기"
 
-#: app/data-browser.c:4993
+#: app/data-browser.c:5024
 msgid "Data Browser"
 msgstr "데이터 탐색기"
 
-#: app/data-browser.c:5018
+#: app/data-browser.c:5049
 msgid "Close file"
 msgstr "파일 닫기"
 
-#: app/data-browser.c:5031
+#: app/data-browser.c:5062
 msgid "Channels"
 msgstr "채널"
 
-#: app/data-browser.c:5045 modules/volume/volume_extract.c:444
+#: app/data-browser.c:5076 modules/volume/volume_extract.c:444
 msgid "Graphs"
 msgstr "그래프"
 
-#: app/data-browser.c:5059
+#: app/data-browser.c:5090
 msgid "Spectra"
 msgstr "스펙트럼"
 
-#: app/data-browser.c:6593
+#: app/data-browser.c:6624
 #, c-format
 msgid "Unknown channel %d"
 msgstr "알 수 없는 채널 %d"
 
-#: app/data-browser.c:6679
+#: app/data-browser.c:6710
 #, c-format
 msgid "Unknown volume %d"
 msgstr "알 수 없는 볼륨 %d"
@@ -1780,11 +1783,11 @@ msgstr "모듈 등록하기"
 msgid "Initializing GUI"
 msgstr "GUI 초기화하기"
 
-#: app/gwyddion.c:397
+#: app/gwyddion.c:415
 msgid "Could not read settings."
 msgstr "설정값을 읽어올 수 없습니다. "
 
-#: app/gwyddion.c:400
+#: app/gwyddion.c:418
 #, c-format
 msgid ""
 "Settings file `%s' cannot be read: %s\n"
@@ -1880,12 +1883,12 @@ msgstr "동사|숨기기"
 msgid "Hide tool dialog (Esc)"
 msgstr "도구 창 숨기기(Esc)"
 
-#: app/help.c:254
+#: app/help.c:257
 msgid "Cannot display the help."
 msgstr "도움말을 표시할 수 없습니다. "
 
 #. TRANSLATORS: %s will be replaced with an URL.
-#: app/help.c:257
+#: app/help.c:260
 #, c-format
 msgid ""
 "No working method to show\n"
@@ -1896,7 +1899,7 @@ msgstr ""
 
 #. TRANSLATORS: For user guide location.  Translate this to fr, ru, cs,
 #. de, ...  even if the corresponding guide does not exist.
-#: app/help.c:360
+#: app/help.c:363
 msgid "current-language-code|en"
 msgstr "현재-언어-코드|en"
 
@@ -1917,7 +1920,7 @@ msgstr "지우기(R)"
 msgid "_Close"
 msgstr "닫기(C)"
 
-#: app/log.c:524 modules/file/rawfile.c:962
+#: app/log.c:524 modules/file/imgexport.c:3507 modules/file/rawfile.c:962
 msgid "Type"
 msgstr "종류"
 
@@ -1925,7 +1928,8 @@ msgstr "종류"
 msgid "Function"
 msgstr "기능"
 
-#: app/log.c:526 modules/process/neural.c:610 modules/tools/stats.c:407
+#: app/log.c:526 modules/file/imgexport.c:2585 modules/process/neural.c:610
+#: modules/tools/stats.c:407
 msgid "Parameters"
 msgstr "변수"
 
@@ -1973,7 +1977,8 @@ msgstr "문서 작성 내역(D)"
 msgid "_New"
 msgstr "새로 만들기(N)"
 
-#: app/meta.c:212 modules/file/rawfile.c:1024 modules/process/neural.c:711
+#: app/meta.c:212 modules/file/imgexport.c:3981 modules/file/rawfile.c:1024
+#: modules/process/neural.c:711
 msgid "_Delete"
 msgstr "삭제하기(D)"
 
@@ -2803,7 +2808,7 @@ msgstr "값 단위:"
 msgid "Export Text"
 msgstr "텍스트 내보내기"
 
-#: modules/file/asciiexport.c:274 modules/file/pixmap.c:3360
+#: modules/file/asciiexport.c:274 modules/file/imgexport.c:3542
 #: modules/file/rawfile.c:724 modules/file/rawxyz.c:673
 #: modules/process/calibrate.c:605 modules/process/col_synth.c:517
 #: modules/process/correct_affine.c:490 modules/process/diff_synth.c:573
@@ -2892,7 +2897,7 @@ msgid "Burleigh exported data (.txt, .bin)"
 msgstr ""
 
 #: modules/file/burleigh_exp.c:227 modules/file/burleigh_exp.c:268
-#: modules/file/nanoscope.c:1528 modules/file/omicron.c:415
+#: modules/file/nanoscope.c:1502 modules/file/omicron.c:415
 #: modules/file/shimadzu.c:468
 msgid "Missing colon in header line."
 msgstr ""
@@ -2918,18 +2923,18 @@ msgstr ""
 msgid "Neither `%s' nor `%s' header field found."
 msgstr ""
 
-#: modules/file/createc.c:788 modules/file/matfile.c:600
+#: modules/file/createc.c:771 modules/file/matfile.c:600
 #: modules/file/rhk-sm4.c:1449
 #, c-format
 msgid "zlib initialization failed with error %d, cannot decompress data."
 msgstr ""
 
-#: modules/file/createc.c:802 modules/file/rhk-sm4.c:1463
+#: modules/file/createc.c:785 modules/file/rhk-sm4.c:1463
 #, c-format
 msgid "Decompression of compressed data failed with error %d."
 msgstr ""
 
-#: modules/file/createc.c:847 modules/file/rhk-sm4.c:1506
+#: modules/file/createc.c:830 modules/file/rhk-sm4.c:1506
 msgid "Cannot decompress compressed data.  Zlib support was not built in."
 msgstr ""
 
@@ -3177,22 +3182,35 @@ msgstr ""
 msgid "GroupCount in [DataSet]"
 msgstr ""
 
-#: modules/file/femtoscan-txt.c:78
+#: modules/file/femtoscan-txt.c:77
 msgid "Imports FemtoScan TXT files."
 msgstr ""
 
-#: modules/file/femtoscan-txt.c:91
+#: modules/file/femtoscan-txt.c:90
 msgid "FemtoScan text files (.txt)"
 msgstr ""
 
-#: modules/file/femtoscan-txt.c:190
+#: modules/file/femtoscan-txt.c:189
 msgid "Data line does not start with a Y abscissa."
 msgstr ""
 
-#: modules/file/femtoscan-txt.c:198
+#: modules/file/femtoscan-txt.c:197
 #, c-format
 msgid ""
 "Data line length %u does not correspond to the number of X abscissas %u."
+msgstr ""
+
+#: modules/file/femtoscan.c:81
+msgid "Imports FemtoScan SPM data files."
+msgstr ""
+
+#: modules/file/femtoscan.c:94
+msgid "FemtoScan SPM files"
+msgstr ""
+
+#: modules/file/femtoscan.c:285 modules/file/miffile.c:691
+#: modules/file/mulfile.c:305
+msgid "Image data are outside the file."
 msgstr ""
 
 #: modules/file/fitsfile.c:75
@@ -3209,7 +3227,7 @@ msgid "CFITSIO error while reading the FITS file: %s."
 msgstr ""
 
 #: modules/file/fitsfile.c:159 modules/file/fitsfile.c:171
-#: modules/file/fitsfile.c:182
+#: modules/file/fitsfile.c:182 modules/file/spmxfile.c:396
 msgid "Only two-dimensional images are supported."
 msgstr ""
 
@@ -3437,39 +3455,39 @@ msgid "OpenEXR data type %u is invalid or unsupported."
 msgstr ""
 
 #: modules/file/hdrimage.cc:1433 modules/file/hdrimage.cc:1442
-#: modules/file/pixmap.c:1623 modules/file/pixmap.c:1633
+#: modules/file/imgexport.c:4535 modules/file/imgexport.c:4546
 #, c-format
 msgid "libpng initialization error (in %s)"
 msgstr ""
 
-#: modules/file/hdrimage.cc:1451 modules/file/pixmap.c:1693
+#: modules/file/hdrimage.cc:1451 modules/file/imgexport.c:4610
 msgid "libpng error occured"
 msgstr ""
 
 #. TRANSLATORS: Dialog title; %s is PNG, TIFF, ...
-#: modules/file/hdrimage.cc:2210 modules/file/pixmap.c:1082
+#: modules/file/hdrimage.cc:2210 modules/file/pixmap.c:788
 #, c-format
 msgid "Import %s"
 msgstr ""
 
-#: modules/file/hdrimage.cc:2237 modules/file/pixmap.c:1109
+#: modules/file/hdrimage.cc:2237 modules/file/pixmap.c:815
 msgid "Image Information"
 msgstr ""
 
-#: modules/file/hdrimage.cc:2246 modules/file/pixmap.c:1116
+#: modules/file/hdrimage.cc:2246 modules/file/pixmap.c:822
 msgid "Horizontal size:"
 msgstr ""
 
 #: modules/file/hdrimage.cc:2246 modules/file/hdrimage.cc:2252
-#: modules/file/pixmap.c:1116 modules/file/pixmap.c:1122
+#: modules/file/pixmap.c:822 modules/file/pixmap.c:828
 msgid "px"
 msgstr ""
 
-#: modules/file/hdrimage.cc:2252 modules/file/pixmap.c:1122
+#: modules/file/hdrimage.cc:2252 modules/file/pixmap.c:828
 msgid "Vertical size:"
 msgstr ""
 
-#: modules/file/hdrimage.cc:2257 modules/file/pixmap.c:1127
+#: modules/file/hdrimage.cc:2257 modules/file/pixmap.c:833
 msgid "Channels:"
 msgstr ""
 
@@ -3477,23 +3495,23 @@ msgstr ""
 msgid "Pages:"
 msgstr ""
 
-#: modules/file/hdrimage.cc:2290 modules/file/pixmap.c:1158
-#: modules/file/rawfile.c:627 modules/file/rawxyz.c:572
-#: modules/process/dimensions.h:466
+#: modules/file/hdrimage.cc:2290 modules/file/imgexport.c:2513
+#: modules/file/pixmap.c:864 modules/file/rawfile.c:627
+#: modules/file/rawxyz.c:572 modules/process/dimensions.h:466
 msgid "Physical Dimensions"
 msgstr ""
 
-#: modules/file/hdrimage.cc:2304 modules/file/pixmap.c:1168
-#: modules/file/pixmap.c:3288 modules/file/rawfile.c:636
+#: modules/file/hdrimage.cc:2304 modules/file/imgexport.c:2569
+#: modules/file/pixmap.c:874 modules/file/rawfile.c:636
 #: modules/process/crosscor.c:215 modules/process/dimensions.h:472
 #: modules/process/tip_blind.c:337
 msgid "_Width:"
 msgstr ""
 
 #: modules/file/hdrimage.cc:2330 modules/file/hdrimage.cc:2395
-#: modules/file/pixmap.c:1190 modules/file/pixmap.c:1245
+#: modules/file/pixmap.c:896 modules/file/pixmap.c:951
 #: modules/file/rawfile.c:659 modules/file/rawfile.c:715
-#: modules/process/calcoefs_new.c:385 modules/process/calcoefs_new.c:452
+#: modules/process/calcoefs_new.c:384 modules/process/calcoefs_new.c:451
 #: modules/process/calcoefs_simple.c:392 modules/process/calcoefs_simple.c:459
 #: modules/process/calcoefs_view.c:529 modules/process/calcoefs_view.c:567
 #: modules/process/calibrate.c:464 modules/process/calibrate.c:547
@@ -3503,32 +3521,32 @@ msgstr ""
 msgid "verb|Change"
 msgstr ""
 
-#: modules/file/hdrimage.cc:2345 modules/file/pixmap.c:1203
+#: modules/file/hdrimage.cc:2345 modules/file/pixmap.c:909
 #: modules/file/rawfile.c:672 modules/process/crosscor.c:226
 #: modules/process/dimensions.h:476
 msgid "H_eight:"
 msgstr ""
 
-#: modules/file/hdrimage.cc:2354 modules/file/pixmap.c:1210
+#: modules/file/hdrimage.cc:2354 modules/file/pixmap.c:916
 #: modules/file/rawfile.c:679 modules/file/rawxyz.c:553
 msgid "Identical _measures"
 msgstr ""
 
-#: modules/file/hdrimage.cc:2368 modules/file/pixmap.c:1222
+#: modules/file/hdrimage.cc:2368 modules/file/pixmap.c:928
 #: modules/file/rawfile.c:691
 msgid "_Z-scale (per sample unit):"
 msgstr ""
 
-#: modules/file/hdrimage.cc:2557 modules/file/pixmap.c:1472
-#: modules/file/rawfile.c:1325 modules/process/calcoefs_new.c:777
+#: modules/file/hdrimage.cc:2557 modules/file/pixmap.c:1178
+#: modules/file/rawfile.c:1325 modules/process/calcoefs_new.c:776
 #: modules/process/calcoefs_simple.c:1192 modules/process/calcoefs_view.c:1394
 #: modules/process/calibrate.c:975 modules/process/dimensions.h:194
 #: modules/volume/volume_calibrate.c:1018
 msgid "Change Units"
 msgstr ""
 
-#: modules/file/hdrimage.cc:2571 modules/file/pixmap.c:1486
-#: modules/file/rawfile.c:1339 modules/process/calcoefs_new.c:790
+#: modules/file/hdrimage.cc:2571 modules/file/pixmap.c:1192
+#: modules/file/rawfile.c:1339 modules/process/calcoefs_new.c:789
 #: modules/process/calcoefs_simple.c:1205 modules/process/calcoefs_view.c:1407
 #: modules/process/calibrate.c:989 modules/process/dimensions.h:207
 #: modules/volume/volume_calibrate.c:1032
@@ -3605,6 +3623,357 @@ msgstr ""
 #: modules/file/igorfile.c:358
 msgid "Cannot read channel labels."
 msgstr ""
+
+#: modules/file/imgexport.c:380 modules/file/pixmap.c:180
+msgid "Portable Network Graphics (.png)"
+msgstr ""
+
+#: modules/file/imgexport.c:386 modules/file/pixmap.c:184
+msgid "JPEG (.jpeg,.jpg)"
+msgstr ""
+
+#: modules/file/imgexport.c:393 modules/file/pixmap.c:204
+msgid "Graphics Interchange Format GIF (.gif)"
+msgstr ""
+
+#: modules/file/imgexport.c:399 modules/file/pixmap.c:188
+msgid "TIFF (.tiff,.tif)"
+msgstr ""
+
+#: modules/file/imgexport.c:405 modules/file/pixmap.c:192
+msgid "Portable Pixmap (.ppm,.pnm)"
+msgstr ""
+
+#: modules/file/imgexport.c:411 modules/file/pixmap.c:196
+msgid "Windows or OS2 Bitmap (.bmp)"
+msgstr ""
+
+#: modules/file/imgexport.c:417 modules/file/pixmap.c:200
+msgid "TARGA (.tga,.targa)"
+msgstr ""
+
+#: modules/file/imgexport.c:424
+msgid "Portable document format (.pdf)"
+msgstr ""
+
+#: modules/file/imgexport.c:432
+msgid "Encapsulated PostScript (.eps)"
+msgstr ""
+
+#: modules/file/imgexport.c:440
+msgid "Scalable Vector Graphics (.svg)"
+msgstr ""
+
+#: modules/file/imgexport.c:450 modules/tools/selectionmanager.c:256
+msgid "Horiz./vert. lines"
+msgstr ""
+
+#: modules/file/imgexport.c:454 modules/tools/selectionmanager.c:257
+msgid "Ellipses"
+msgstr ""
+
+#: modules/file/imgexport.c:458 modules/tools/selectionmanager.c:258
+msgid "Lines"
+msgstr ""
+
+#: modules/file/imgexport.c:466 modules/tools/selectionmanager.c:260
+msgid "Rectangles"
+msgstr ""
+
+#: modules/file/imgexport.c:470 modules/process/lat_synth.c:537
+#: modules/process/lat_synth.c:616 modules/tools/selectionmanager.c:261
+msgid "Lattice"
+msgstr ""
+
+#: modules/file/imgexport.c:476 modules/file/imgexport.c:482
+msgid "ruler|_None"
+msgstr ""
+
+#: modules/file/imgexport.c:477
+msgid "_Rulers"
+msgstr ""
+
+#: modules/file/imgexport.c:478
+msgid "_Inset scale bar"
+msgstr ""
+
+#: modules/file/imgexport.c:483
+msgid "_False color ruler"
+msgstr ""
+
+#: modules/file/imgexport.c:487
+msgid "title|None"
+msgstr ""
+
+#: modules/file/imgexport.c:488
+msgid "At the top"
+msgstr ""
+
+#: modules/file/imgexport.c:489
+msgid "Along the right edge"
+msgstr ""
+
+#: modules/file/imgexport.c:495
+msgid ""
+"Renders data into vector (SVG, PDF, EPS) and pixmap (PNG, JPEG, TIFF, PPM, "
+"BMP, TARGA, GIF) images. Export to some formats relies on GDK and other "
+"libraries thus may be installation-dependent."
+msgstr ""
+
+#: modules/file/imgexport.c:2523
+#, fuzzy
+msgid "Pi_xel size:"
+msgstr "점 크기(P):"
+
+#: modules/file/imgexport.c:2531
+msgid "Pixels per _inch:"
+msgstr ""
+
+#: modules/file/imgexport.c:2557
+msgid "_Zoom:"
+msgstr ""
+
+#: modules/file/imgexport.c:2576 modules/process/col_synth.c:487
+#: modules/process/diff_synth.c:525 modules/process/domain_synth.c:528
+#: modules/process/grain_mark.c:310 modules/process/lat_synth.c:732
+#: modules/process/obj_synth.c:567 modules/process/pat_synth.c:871
+#: modules/process/pat_synth.c:1173 modules/process/pat_synth.c:1508
+#: modules/process/tip_blind.c:344
+msgid "_Height:"
+msgstr ""
+
+#: modules/file/imgexport.c:2589
+msgid "_Font:"
+msgstr ""
+
+#: modules/file/imgexport.c:2608
+msgid "_Font size:"
+msgstr ""
+
+#: modules/file/imgexport.c:2628
+#, fuzzy
+msgid "O_utline thickness:"
+msgstr "선 굵기(H):"
+
+#: modules/file/imgexport.c:2638
+#, fuzzy
+msgid "_Border width:"
+msgstr "새 너비(W):"
+
+#: modules/file/imgexport.c:2648
+#, fuzzy
+msgid "_Tick length:"
+msgstr "최소 길이(L)"
+
+#: modules/file/imgexport.c:2656
+msgid "Tie sizes to _data pixels"
+msgstr ""
+
+#: modules/file/imgexport.c:2752
+#, fuzzy
+msgid "Select Color"
+msgstr "곡선 색상 설정"
+
+#: modules/file/imgexport.c:2944
+msgid "Black"
+msgstr ""
+
+#: modules/file/imgexport.c:2952
+msgid "White"
+msgstr ""
+
+#: modules/file/imgexport.c:2986 modules/process/lno_synth.c:1068
+msgid "_Length:"
+msgstr ""
+
+#: modules/file/imgexport.c:3002
+msgid "_Auto"
+msgstr ""
+
+#: modules/file/imgexport.c:3009
+msgid "Placement:"
+msgstr ""
+
+#: modules/file/imgexport.c:3014
+msgid "left"
+msgstr ""
+
+#: modules/file/imgexport.c:3018
+msgid "center"
+msgstr ""
+
+#: modules/file/imgexport.c:3022
+msgid "right"
+msgstr ""
+
+#: modules/file/imgexport.c:3027
+msgid "top"
+msgstr ""
+
+#: modules/file/imgexport.c:3039
+msgid "bottom"
+msgstr ""
+
+#: modules/file/imgexport.c:3051 modules/file/imgexport.c:3247
+#, fuzzy
+msgid "Hori_zontal gap:"
+msgstr "수평의"
+
+#: modules/file/imgexport.c:3057
+#, fuzzy
+msgid "_Vertical gap:"
+msgstr "수직방향(V)"
+
+#: modules/file/imgexport.c:3064 modules/file/imgexport.c:3523
+#, fuzzy
+msgid "Colo_r:"
+msgstr "색상"
+
+#: modules/file/imgexport.c:3069 modules/file/imgexport.c:3528
+msgid "Out_line color:"
+msgstr ""
+
+#: modules/file/imgexport.c:3073 modules/file/imgexport.c:3534
+msgid "O_pacity:"
+msgstr ""
+
+#: modules/file/imgexport.c:3082
+msgid "Draw _ticks"
+msgstr ""
+
+#: modules/file/imgexport.c:3092
+msgid "Draw _label"
+msgstr ""
+
+#: modules/file/imgexport.c:3190
+msgid "Image"
+msgstr ""
+
+#: modules/file/imgexport.c:3194 modules/file/rawxyz.c:677
+#: modules/process/correct_affine.c:508 modules/process/drift.c:301
+#: modules/process/dwt.c:206 modules/process/dwtanisotropy.c:202
+#: modules/process/fft_filter_1d.c:330 modules/process/fft_profile.c:299
+#: modules/process/fractal.c:229 modules/process/nanoindent_adjust.c:229
+#: modules/process/polydistort.c:267 modules/process/rotate.c:295
+#: modules/process/scale.c:252 modules/process/unrotate.c:285
+#: modules/tools/linestats.c:401 modules/tools/profile.c:461
+#: modules/tools/roughness.c:876 modules/tools/sfunctions.c:431
+msgid "_Interpolation type:"
+msgstr ""
+
+#: modules/file/imgexport.c:3224
+msgid "Draw _mask"
+msgstr ""
+
+#: modules/file/imgexport.c:3234
+msgid "Value Scale"
+msgstr ""
+
+#: modules/file/imgexport.c:3254 modules/file/imgexport.c:3944
+#, fuzzy
+msgid "Title"
+msgstr "제목 없음"
+
+#: modules/file/imgexport.c:3258
+#, fuzzy
+msgid "Posi_tion:"
+msgstr "위치"
+
+#: modules/file/imgexport.c:3273
+msgid "_Gap:"
+msgstr ""
+
+#: modules/file/imgexport.c:3280
+msgid "Put _units to title"
+msgstr ""
+
+#: modules/file/imgexport.c:3464
+msgid "Draw _selection"
+msgstr ""
+
+#: modules/file/imgexport.c:3515 modules/tools/selectionmanager.c:347
+msgid "Objects"
+msgstr ""
+
+#: modules/file/imgexport.c:3924
+#, fuzzy
+msgid "Lateral"
+msgstr "GL 재료"
+
+#: modules/file/imgexport.c:3963 modules/file/rawfile.c:1006
+#: modules/process/calcoefs_load.c:216 modules/process/neural.c:693
+msgid "verb|_Load"
+msgstr ""
+
+#: modules/file/imgexport.c:3969 modules/file/rawfile.c:1012
+#: modules/process/neural.c:699
+msgid "verb|_Store"
+msgstr ""
+
+#: modules/file/imgexport.c:3975 modules/file/rawfile.c:1018
+#: modules/process/neural.c:705
+msgid "_Rename"
+msgstr ""
+
+#: modules/file/imgexport.c:3995 modules/file/rawfile.c:1037
+msgid "Preset _name:"
+msgstr ""
+
+#: modules/file/imgexport.c:4066
+#, c-format
+msgid "Export %s"
+msgstr ""
+
+#: modules/file/imgexport.c:4087
+msgid "Export as 1_6 bit grayscale"
+msgstr ""
+
+#: modules/file/imgexport.c:4110
+msgid "Lateral Scale"
+msgstr ""
+
+#: modules/file/imgexport.c:4115
+#, fuzzy
+msgid "Values"
+msgstr "값"
+
+#: modules/file/imgexport.c:4120
+#, fuzzy
+msgid "Selection"
+msgstr "부분:"
+
+#: modules/file/imgexport.c:4125 modules/file/rawfile.c:440
+#: modules/process/convolution_filter.c:290
+msgid "Presets"
+msgstr ""
+
+#: modules/file/imgexport.c:4860
+#, c-format
+msgid "Cairo error occurred: %s"
+msgstr ""
+
+#: modules/file/imgexport.c:4884
+#, c-format
+msgid "Pixbuf save failed: %s."
+msgstr ""
+
+#: modules/file/imgexport.c:5162
+msgid "Image is too large to be stored as TARGA."
+msgstr ""
+
+#: modules/file/imgexport.c:5513 modules/file/imgexport.c:5542
+#, fuzzy
+msgid "Draw _numbers"
+msgstr "Grain number"
+
+#: modules/file/imgexport.c:5525
+msgid "_End marker length:"
+msgstr ""
+
+#: modules/file/imgexport.c:5554
+#, fuzzy
+msgid "Marker _radius:"
+msgstr "곡률 반경 1"
 
 #: modules/file/intematix.c:126
 msgid "Imports Intematix SDF data files."
@@ -3809,15 +4178,15 @@ msgstr ""
 msgid "Decompression of compressed variable failed with error %d."
 msgstr ""
 
-#: modules/file/metropro.c:339
+#: modules/file/metropro.c:340
 msgid "Imports binary MetroPro (Zygo) data files."
 msgstr ""
 
-#: modules/file/metropro.c:352
+#: modules/file/metropro.c:353
 msgid "MetroPro files (.dat)"
 msgstr ""
 
-#: modules/file/metropro.c:533
+#: modules/file/metropro.c:534
 msgid "File header is larger than file."
 msgstr ""
 
@@ -3868,10 +4237,6 @@ msgstr ""
 
 #: modules/file/miffile.c:399
 msgid "Unique id record is too short."
-msgstr ""
-
-#: modules/file/miffile.c:688 modules/file/mulfile.c:305
-msgid "Image data are outside the file."
 msgstr ""
 
 #: modules/file/mifile.c:173
@@ -3926,7 +4291,8 @@ msgid "Spectra data starts past the end of file."
 msgstr ""
 
 #: modules/file/nanoeducator.c:648 modules/file/opdfile.c:277
-#: modules/file/sensofar.c:257 modules/file/witec-asc.c:161
+#: modules/file/renishaw.c:952 modules/file/sensofar.c:257
+#: modules/file/witec-asc.c:161
 msgid "File header is truncated"
 msgstr ""
 
@@ -4029,12 +4395,13 @@ msgid "NanoObserver data (.nao)"
 msgstr ""
 
 #: modules/file/nanoobserver.c:187 modules/file/nanoscantech.c:204
-#: modules/file/opengps.c:198
+#: modules/file/opengps.c:215 modules/file/spmxfile.c:172
 msgid "Minizip cannot open the file as a ZIP file."
 msgstr ""
 
-#: modules/file/nanoobserver.c:459 modules/file/opengps.c:487
-#: modules/file/opengps.c:687 modules/file/opengps.c:723
+#: modules/file/nanoobserver.c:459 modules/file/opengps.c:504
+#: modules/file/opengps.c:704 modules/file/opengps.c:740
+#: modules/file/spmxfile.c:216 modules/file/spmxfile.c:524
 #, c-format
 msgid "File %s is missing in the zip file."
 msgstr ""
@@ -4100,7 +4467,7 @@ msgstr ""
 msgid "Garbage after data sample #%u."
 msgstr ""
 
-#: modules/file/nanoscope.c:1518
+#: modules/file/nanoscope.c:1492
 msgid "Truncated header line."
 msgstr ""
 
@@ -4273,6 +4640,15 @@ msgstr ""
 msgid "Frame #%u is too short for spectroscopy data header."
 msgstr ""
 
+#: modules/file/nxiifile.c:116
+#, fuzzy
+msgid "Imports EM4SYS data files."
+msgstr "텍스트 파일로 그래프 데이터 내보내기"
+
+#: modules/file/nxiifile.c:129
+msgid "EM4SYS NX II files (.bmp)"
+msgstr ""
+
 #: modules/file/oldmda.c:153
 msgid "Imports old NTMDT MDA Spectra files."
 msgstr ""
@@ -4392,281 +4768,114 @@ msgstr ""
 msgid "Truncated data in block %s"
 msgstr ""
 
-#: modules/file/opengps.c:127
-msgid "Reads OpenGPS .x3p files."
+#: modules/file/opengps.c:139
+msgid "Reads ISO 5436-2 OpenGPS .x3p files."
 msgstr ""
 
-#: modules/file/opengps.c:140
-msgid "OpenGPS data (.x3p)"
+#: modules/file/opengps.c:152
+msgid "ISO 5436-2 OpenGPS data (.x3p)"
 msgstr ""
 
-#: modules/file/opengps.c:410 modules/file/opengps.c:443
+#: modules/file/opengps.c:427 modules/file/opengps.c:460
 msgid "Too many DataList items for given matrix dimensions."
 msgstr ""
 
-#: modules/file/opengps.c:537
+#: modules/file/opengps.c:554
 msgid "File main.xml contains multiple data elements."
 msgstr ""
 
 #. TRANSLATORS: type and axis are symbols such as I, CX, ...
-#: modules/file/opengps.c:569 modules/file/opengps.c:577
-#: modules/file/opengps.c:585
+#: modules/file/opengps.c:586 modules/file/opengps.c:594
+#: modules/file/opengps.c:602
 #, c-format
 msgid "Only type %s is supported for axis %s."
 msgstr ""
 
-#: modules/file/pixmap.c:376
+#: modules/file/pixmap.c:163
 msgid "All channels"
 msgstr ""
 
-#: modules/file/pixmap.c:377
+#: modules/file/pixmap.c:164
 msgid "Red"
 msgstr ""
 
-#: modules/file/pixmap.c:378
+#: modules/file/pixmap.c:165
 msgid "Green"
 msgstr ""
 
-#: modules/file/pixmap.c:379
+#: modules/file/pixmap.c:166
 msgid "Blue"
 msgstr ""
 
-#: modules/file/pixmap.c:380
+#: modules/file/pixmap.c:167
 msgid "Value (max)"
 msgstr ""
 
-#: modules/file/pixmap.c:381
+#: modules/file/pixmap.c:168
 msgid "RGB sum"
 msgstr ""
 
-#: modules/file/pixmap.c:382
+#: modules/file/pixmap.c:169
 msgid "Luma"
 msgstr ""
 
-#: modules/file/pixmap.c:383
+#: modules/file/pixmap.c:170
 msgid "Alpha"
 msgstr ""
 
-#: modules/file/pixmap.c:395
-msgid "Portable Network Graphics (.png)"
-msgstr ""
-
-#: modules/file/pixmap.c:401
-msgid "JPEG (.jpeg,.jpg)"
-msgstr ""
-
-#: modules/file/pixmap.c:407
-msgid "TIFF (.tiff,.tif)"
-msgstr ""
-
-#: modules/file/pixmap.c:413
-msgid "Portable Pixmap (.ppm,.pnm)"
-msgstr ""
-
-#: modules/file/pixmap.c:419
-msgid "Windows or OS2 Bitmap (.bmp)"
-msgstr ""
-
-#: modules/file/pixmap.c:425
-msgid "TARGA (.tga,.targa)"
-msgstr ""
-
-#: modules/file/pixmap.c:438
-msgid "Graphics Interchange Format (.gif)"
-msgstr ""
-
-#: modules/file/pixmap.c:442
+#: modules/file/pixmap.c:208
 msgid "JPEG 2000 (.jpx)"
 msgstr ""
 
-#: modules/file/pixmap.c:446
+#: modules/file/pixmap.c:212
 msgid "PCX (.pcx)"
 msgstr ""
 
-#: modules/file/pixmap.c:450
+#: modules/file/pixmap.c:216
 msgid "X Pixmap (.xpm)"
 msgstr ""
 
-#: modules/file/pixmap.c:454
+#: modules/file/pixmap.c:220
 msgid "Sun raster image (.ras)"
 msgstr ""
 
-#: modules/file/pixmap.c:458
+#: modules/file/pixmap.c:224
 msgid "Apple icon (.icns)"
 msgstr ""
 
-#: modules/file/pixmap.c:484
+#: modules/file/pixmap.c:238
 msgid ""
-"Renders data into pixmap images and imports data from pixmap images. It "
-"supports the following image formats for export: PNG, JPEG, TIFF, PPM, BMP, "
-"TARGA. Import support relies on GDK and thus may be installation-dependent."
+"Imports data from low-depth pixmap images (PNG, TIFF, JPEG, ...).  The set "
+"of available formats depends on available GDK pixbuf loaders."
 msgstr ""
 
-#: modules/file/pixmap.c:787
+#: modules/file/pixmap.c:493
 #, c-format
 msgid "Pixmap has not registered file type `%s'."
 msgstr ""
 
-#: modules/file/pixmap.c:802
+#: modules/file/pixmap.c:508
 #, c-format
 msgid "Cannot get pixbuf loader: %s."
 msgstr ""
 
-#: modules/file/pixmap.c:815 modules/file/pixmap.c:828
+#: modules/file/pixmap.c:521 modules/file/pixmap.c:534
+#: modules/file/renishaw.c:507 modules/file/renishaw.c:517
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr ""
 
-#: modules/file/pixmap.c:1255
+#: modules/file/pixmap.c:961
 msgid ""
 "Warning: Colorful images cannot be reliably mapped to meaningful values."
 msgstr ""
 
-#: modules/file/pixmap.c:1274
+#: modules/file/pixmap.c:980
 msgid "verb|Use"
 msgstr ""
 
-#: modules/file/pixmap.c:1274
+#: modules/file/pixmap.c:980
 msgid "as data"
-msgstr ""
-
-#: modules/file/pixmap.c:1780 modules/file/pixmap.c:1808
-#, c-format
-msgid "Pixbuf save failed: %s."
-msgstr ""
-
-#: modules/file/pixmap.c:2229
-msgid "Image is too large to be stored as TARGA."
-msgstr ""
-
-#: modules/file/pixmap.c:2308
-msgid "Data must be displayed in a window for pixmap export."
-msgstr ""
-
-#: modules/file/pixmap.c:3128
-msgid "Change Inset Color"
-msgstr ""
-
-#: modules/file/pixmap.c:3197
-msgid "Gap:"
-msgstr ""
-
-#: modules/file/pixmap.c:3241
-#, c-format
-msgid "Export %s"
-msgstr ""
-
-#: modules/file/pixmap.c:3279
-msgid "_Zoom:"
-msgstr ""
-
-#: modules/file/pixmap.c:3297 modules/process/col_synth.c:487
-#: modules/process/diff_synth.c:525 modules/process/domain_synth.c:528
-#: modules/process/grain_mark.c:310 modules/process/lat_synth.c:732
-#: modules/process/obj_synth.c:567 modules/process/pat_synth.c:871
-#: modules/process/pat_synth.c:1173 modules/process/pat_synth.c:1508
-#: modules/process/tip_blind.c:344
-msgid "_Height:"
-msgstr ""
-
-#: modules/file/pixmap.c:3309
-msgid "Font:"
-msgstr ""
-
-#: modules/file/pixmap.c:3324
-msgid "Scale text _proportionally"
-msgstr ""
-
-#: modules/file/pixmap.c:3339
-msgid "_Font size:"
-msgstr ""
-
-#: modules/file/pixmap.c:3350
-msgid "Use antialiasing"
-msgstr ""
-
-#: modules/file/pixmap.c:3364
-msgid "Draw _mask"
-msgstr ""
-
-#: modules/file/pixmap.c:3373
-msgid "Draw _selection"
-msgstr ""
-
-#: modules/file/pixmap.c:3389
-msgid "Grayscale Mode"
-msgstr ""
-
-#: modules/file/pixmap.c:3393
-msgid "Export as 1_6 bit grayscale"
-msgstr ""
-
-#: modules/file/pixmap.c:3419
-msgid "Lateral Scale"
-msgstr ""
-
-#: modules/file/pixmap.c:3426 modules/file/pixmap.c:3546
-msgid "ruler|_None"
-msgstr ""
-
-#: modules/file/pixmap.c:3427
-msgid "_Rulers"
-msgstr ""
-
-#: modules/file/pixmap.c:3428
-msgid "_Inset scale bar"
-msgstr ""
-
-#: modules/file/pixmap.c:3438
-msgid "Color:"
-msgstr ""
-
-#: modules/file/pixmap.c:3454 modules/process/immerse.c:322
-msgid "Position:"
-msgstr ""
-
-#: modules/file/pixmap.c:3459
-msgid "left"
-msgstr ""
-
-#: modules/file/pixmap.c:3463
-msgid "center"
-msgstr ""
-
-#: modules/file/pixmap.c:3467
-msgid "right"
-msgstr ""
-
-#: modules/file/pixmap.c:3472
-msgid "top"
-msgstr ""
-
-#: modules/file/pixmap.c:3484
-msgid "bottom"
-msgstr ""
-
-#: modules/file/pixmap.c:3495 modules/process/lno_synth.c:1067
-msgid "_Length:"
-msgstr ""
-
-#: modules/file/pixmap.c:3511
-msgid "_Auto"
-msgstr ""
-
-#: modules/file/pixmap.c:3519
-msgid "Draw _ticks"
-msgstr ""
-
-#: modules/file/pixmap.c:3529
-msgid "Draw _label"
-msgstr ""
-
-#: modules/file/pixmap.c:3539
-msgid "Value Scale"
-msgstr ""
-
-#: modules/file/pixmap.c:3547
-msgid "_False color ruler"
 msgstr ""
 
 #: modules/file/pltfile.c:80
@@ -4825,10 +5034,6 @@ msgstr ""
 msgid "Data Format"
 msgstr ""
 
-#: modules/file/rawfile.c:440 modules/process/convolution_filter.c:290
-msgid "Presets"
-msgstr ""
-
 #: modules/file/rawfile.c:545 modules/file/rawxyz.c:439
 #: modules/process/arithmetic.c:236 modules/process/calcoefs_view.c:333
 #: modules/process/convolution_filter.c:245
@@ -4983,23 +5188,6 @@ msgstr ""
 msgid "Info"
 msgstr ""
 
-#: modules/file/rawfile.c:1006 modules/process/calcoefs_load.c:216
-#: modules/process/neural.c:693
-msgid "verb|_Load"
-msgstr ""
-
-#: modules/file/rawfile.c:1012 modules/process/neural.c:699
-msgid "verb|_Store"
-msgstr ""
-
-#: modules/file/rawfile.c:1018 modules/process/neural.c:705
-msgid "_Rename"
-msgstr ""
-
-#: modules/file/rawfile.c:1037
-msgid "Preset _name:"
-msgstr ""
-
 #: modules/file/rawfile.c:1121
 #, c-format
 msgid ""
@@ -5132,18 +5320,6 @@ msgstr ""
 msgid "_Value units:"
 msgstr ""
 
-#: modules/file/rawxyz.c:677 modules/process/correct_affine.c:508
-#: modules/process/drift.c:301 modules/process/dwt.c:206
-#: modules/process/dwtanisotropy.c:202 modules/process/fft_filter_1d.c:330
-#: modules/process/fft_profile.c:299 modules/process/fractal.c:229
-#: modules/process/nanoindent_adjust.c:229 modules/process/polydistort.c:267
-#: modules/process/rotate.c:295 modules/process/scale.c:252
-#: modules/process/unrotate.c:285 modules/tools/linestats.c:401
-#: modules/tools/profile.c:461 modules/tools/roughness.c:876
-#: modules/tools/sfunctions.c:431
-msgid "_Interpolation type:"
-msgstr ""
-
 #: modules/file/rawxyz.c:687
 msgid "Field"
 msgstr ""
@@ -5185,6 +5361,34 @@ msgstr ""
 
 #: modules/file/rawxyz.c:1052
 msgid "XYZ data regularization failed due to numerical instability."
+msgstr ""
+
+#: modules/file/renishaw.c:314
+msgid "Imports Renishaw WiRE data files (WDF)."
+msgstr ""
+
+#: modules/file/renishaw.c:327
+msgid "Renishaw WiRE data files (.wdf)"
+msgstr ""
+
+#: modules/file/renishaw.c:495
+msgid "MapArea block is truncated"
+msgstr ""
+
+#: modules/file/renishaw.c:676
+msgid "3D Volume is unsupported now"
+msgstr ""
+
+#: modules/file/renishaw.c:683
+msgid "Random points order unsupported"
+msgstr ""
+
+#: modules/file/renishaw.c:1023
+msgid "Block header is truncated"
+msgstr ""
+
+#: modules/file/renishaw.c:1038
+msgid "Data block is truncated"
 msgstr ""
 
 #: modules/file/rhk-sm3.c:236
@@ -5402,31 +5606,31 @@ msgstr ""
 msgid "SIS files (.sis)"
 msgstr ""
 
-#: modules/file/sis.c:832
+#: modules/file/sis.c:811
 msgid "Block not a document block."
 msgstr ""
 
-#: modules/file/sis.c:841
+#: modules/file/sis.c:820
 msgid "Too short document info."
 msgstr ""
 
-#: modules/file/sis.c:862
+#: modules/file/sis.c:841
 msgid "Too short parameter info."
 msgstr ""
 
-#: modules/file/sis.c:969
+#: modules/file/sis.c:948
 msgid "Unexpected image block."
 msgstr ""
 
-#: modules/file/sis.c:1002 modules/file/sis.c:1033
+#: modules/file/sis.c:981 modules/file/sis.c:1012
 msgid "End of file reached in image block."
 msgstr ""
 
-#: modules/file/sis.c:1047
+#: modules/file/sis.c:1026
 msgid "End of file reached in channel block."
 msgstr ""
 
-#: modules/file/sis.c:1071
+#: modules/file/sis.c:1050
 msgid "End of file reached when another channel was expected."
 msgstr ""
 
@@ -5438,11 +5642,11 @@ msgstr ""
 msgid "SPIP ASCII files (.asc)"
 msgstr ""
 
-#: modules/file/spml.c:110
+#: modules/file/spml.c:109
 msgid "Loads SPML (Scanning Probe Microscopy Markup Language) data files."
 msgstr ""
 
-#: modules/file/spml.c:124
+#: modules/file/spml.c:123
 msgid "SPML files (.xml)"
 msgstr ""
 
@@ -5469,6 +5673,14 @@ msgstr ""
 
 #: modules/file/spmlabf.c:154
 msgid "Missing data start marker [Data]."
+msgstr ""
+
+#: modules/file/spmxfile.c:96
+msgid "Reads ATC SPMxFormat files."
+msgstr ""
+
+#: modules/file/spmxfile.c:109
+msgid "ATC SPMxFormat data (.spm)"
 msgstr ""
 
 #: modules/file/stmprg.c:232
@@ -6419,7 +6631,7 @@ msgstr ""
 msgid "Error loading file: %s\n"
 msgstr ""
 
-#: modules/process/calcoefs_load.c:174 modules/process/calcoefs_new.c:310
+#: modules/process/calcoefs_load.c:174 modules/process/calcoefs_new.c:309
 #, c-format
 msgid "Cannot save preset: %s"
 msgstr ""
@@ -6428,7 +6640,7 @@ msgstr ""
 msgid "Load Calibration Data"
 msgstr ""
 
-#: modules/process/calcoefs_load.c:229 modules/process/calcoefs_new.c:567
+#: modules/process/calcoefs_load.c:229 modules/process/calcoefs_new.c:566
 #: modules/process/calcoefs_simple.c:476
 msgid "Calibration name:"
 msgstr ""
@@ -6438,18 +6650,18 @@ msgstr ""
 msgid "No data loaded"
 msgstr ""
 
-#: modules/process/calcoefs_load.c:268 modules/process/calcoefs_new.c:636
+#: modules/process/calcoefs_load.c:268 modules/process/calcoefs_new.c:635
 #: modules/process/calcoefs_simple.c:540
 #, c-format
 msgid "Calibration '%s' already exists"
 msgstr ""
 
-#: modules/process/calcoefs_load.c:270 modules/process/calcoefs_new.c:638
+#: modules/process/calcoefs_load.c:270 modules/process/calcoefs_new.c:637
 #: modules/process/calcoefs_simple.c:542
 msgid "Overwrite"
 msgstr ""
 
-#: modules/process/calcoefs_load.c:271 modules/process/calcoefs_new.c:639
+#: modules/process/calcoefs_load.c:271 modules/process/calcoefs_new.c:638
 #: modules/process/calcoefs_simple.c:543
 msgid "Append"
 msgstr ""
@@ -6472,67 +6684,67 @@ msgstr ""
 msgid "Loaded %d data points"
 msgstr ""
 
-#: modules/process/calcoefs_new.c:166
+#: modules/process/calcoefs_new.c:165
 msgid "Create simple calibration data"
 msgstr ""
 
-#: modules/process/calcoefs_new.c:180
+#: modules/process/calcoefs_new.c:179
 msgid "/Cali_bration/_Create..."
 msgstr "/켈리브레이션(I)/생성(C)"
 
-#: modules/process/calcoefs_new.c:184
+#: modules/process/calcoefs_new.c:183
 msgid "Specify simple calibration data."
 msgstr ""
 
-#: modules/process/calcoefs_new.c:347
+#: modules/process/calcoefs_new.c:346
 msgid "Simple Calibration Data"
 msgstr ""
 
-#: modules/process/calcoefs_new.c:365
+#: modules/process/calcoefs_new.c:364
 msgid "_X from:"
 msgstr ""
 
-#: modules/process/calcoefs_new.c:392
+#: modules/process/calcoefs_new.c:391
 msgid "_X to:"
 msgstr ""
 
-#: modules/process/calcoefs_new.c:405
+#: modules/process/calcoefs_new.c:404
 msgid "_Y from:"
 msgstr ""
 
-#: modules/process/calcoefs_new.c:418
+#: modules/process/calcoefs_new.c:417
 msgid "_Y to:"
 msgstr ""
 
-#: modules/process/calcoefs_new.c:432
+#: modules/process/calcoefs_new.c:431
 msgid "_Z from:"
 msgstr ""
 
-#: modules/process/calcoefs_new.c:459
+#: modules/process/calcoefs_new.c:458
 msgid "_Z to:"
 msgstr ""
 
-#: modules/process/calcoefs_new.c:472
+#: modules/process/calcoefs_new.c:471
 msgid "_X uncertainty:"
 msgstr ""
 
-#: modules/process/calcoefs_new.c:493
+#: modules/process/calcoefs_new.c:492
 msgid "_Y uncertainty:"
 msgstr ""
 
-#: modules/process/calcoefs_new.c:508
+#: modules/process/calcoefs_new.c:507
 msgid "_Z uncertainty:"
 msgstr ""
 
-#: modules/process/calcoefs_new.c:530
+#: modules/process/calcoefs_new.c:529
 msgid "_X correction factor:"
 msgstr ""
 
-#: modules/process/calcoefs_new.c:542
+#: modules/process/calcoefs_new.c:541
 msgid "_Y correction factor:"
 msgstr ""
 
-#: modules/process/calcoefs_new.c:554
+#: modules/process/calcoefs_new.c:553
 msgid "_Z correction factor:"
 msgstr ""
 
@@ -6898,10 +7110,10 @@ msgstr ""
 #: modules/process/deposit_synth.c:329 modules/process/deposit_synth.c:550
 #: modules/process/deposit_synth.c:563 modules/process/diff_synth.c:352
 #: modules/process/domain_synth.c:330 modules/process/domain_synth.c:338
-#: modules/process/fft_synth.c:323 modules/process/lat_synth.c:506
-#: modules/process/lno_synth.c:413 modules/process/noise_synth.c:321
-#: modules/process/obj_synth.c:398 modules/process/pat_synth.c:368
-#: modules/process/wave_synth.c:334
+#: modules/process/fbm_synth.c:289 modules/process/fft_synth.c:323
+#: modules/process/lat_synth.c:506 modules/process/lno_synth.c:414
+#: modules/process/noise_synth.c:322 modules/process/obj_synth.c:398
+#: modules/process/pat_synth.c:368 modules/process/wave_synth.c:334
 msgid "Generated"
 msgstr ""
 
@@ -6920,23 +7132,24 @@ msgstr ""
 
 #: modules/process/col_synth.c:459 modules/process/deposit_synth.c:431
 #: modules/process/diff_synth.c:494 modules/process/domain_synth.c:448
-#: modules/process/fft_synth.c:415 modules/process/lat_synth.c:605
-#: modules/process/lno_synth.c:504 modules/process/noise_synth.c:412
-#: modules/process/obj_synth.c:491 modules/process/pat_synth.c:461
-#: modules/process/wave_synth.c:425
+#: modules/process/fbm_synth.c:379 modules/process/fft_synth.c:415
+#: modules/process/lat_synth.c:605 modules/process/lno_synth.c:505
+#: modules/process/noise_synth.c:413 modules/process/obj_synth.c:491
+#: modules/process/pat_synth.c:461 modules/process/wave_synth.c:425
 msgid "Dimensions"
 msgstr ""
 
 #: modules/process/col_synth.c:468 modules/process/deposit_synth.c:441
 #: modules/process/diff_synth.c:503 modules/process/domain_synth.c:456
-#: modules/process/fft_synth.c:426 modules/process/lno_synth.c:515
-#: modules/process/noise_synth.c:423 modules/process/obj_synth.c:502
-#: modules/process/pat_synth.c:473 modules/process/wave_synth.c:436
+#: modules/process/fbm_synth.c:390 modules/process/fft_synth.c:426
+#: modules/process/lno_synth.c:516 modules/process/noise_synth.c:424
+#: modules/process/obj_synth.c:502 modules/process/pat_synth.c:473
+#: modules/process/wave_synth.c:436
 msgid "Generator"
 msgstr ""
 
 #: modules/process/col_synth.c:474 modules/process/diff_synth.c:509
-#: modules/process/lno_synth.c:1055 modules/process/obj_synth.c:513
+#: modules/process/lno_synth.c:1056 modules/process/obj_synth.c:513
 msgid "Co_verage:"
 msgstr ""
 
@@ -7459,9 +7672,10 @@ msgid "_Flux:"
 msgstr ""
 
 #: modules/process/diff_synth.c:529 modules/process/domain_synth.c:532
-#: modules/process/fft_synth.c:435 modules/process/lat_synth.c:737
-#: modules/process/lno_synth.c:551 modules/process/noise_synth.c:455
-#: modules/process/obj_synth.c:571 modules/process/wave_synth.c:471
+#: modules/process/fbm_synth.c:431 modules/process/fft_synth.c:435
+#: modules/process/lat_synth.c:737 modules/process/lno_synth.c:552
+#: modules/process/noise_synth.c:456 modules/process/obj_synth.c:571
+#: modules/process/wave_synth.c:471
 msgid "_Like Current Channel"
 msgstr ""
 
@@ -7974,6 +8188,64 @@ msgid ""
 "meaningful."
 msgstr ""
 
+#: modules/process/fbm_synth.c:173
+msgid "Generates random surfaces similar to fractional Brownian motion."
+msgstr ""
+
+#: modules/process/fbm_synth.c:187
+msgid "/S_ynthetic/_Brownian..."
+msgstr ""
+
+#: modules/process/fbm_synth.c:191
+msgid "Generate fractional Brownian motion-like surface"
+msgstr ""
+
+#: modules/process/fbm_synth.c:313
+msgid "Fractional Brownian Motion"
+msgstr ""
+
+#: modules/process/fbm_synth.c:394
+msgid "_Hurst exponent:"
+msgstr ""
+
+#: modules/process/fbm_synth.c:402
+msgid "_Stationarity scale:"
+msgstr ""
+
+#: modules/process/fbm_synth.c:409 modules/process/lno_synth.c:524
+#: modules/process/noise_synth.c:428
+msgid "_Distribution:"
+msgstr ""
+
+#: modules/process/fbm_synth.c:415 modules/process/fft_synth.c:543
+msgid "Po_wer:"
+msgstr ""
+
+#: modules/process/fbm_synth.c:427 modules/process/fft_synth.c:431
+#: modules/process/lno_synth.c:548 modules/process/noise_synth.c:452
+msgid "_RMS:"
+msgstr ""
+
+#: modules/process/fbm_synth.c:494 modules/process/lno_synth.c:264
+#: modules/process/noise_synth.c:194
+msgid "distribution|Uniform"
+msgstr ""
+
+#: modules/process/fbm_synth.c:495 modules/process/lno_synth.c:254
+#: modules/process/noise_synth.c:184
+msgid "distribution|Gaussian"
+msgstr ""
+
+#: modules/process/fbm_synth.c:496 modules/process/lno_synth.c:259
+#: modules/process/noise_synth.c:189
+msgid "distribution|Exponential"
+msgstr ""
+
+#: modules/process/fbm_synth.c:497
+#, fuzzy
+msgid "distribution|Power"
+msgstr "높이 분포"
+
 #: modules/process/fft.c:96
 msgid "Two-dimensional FFT (Fast Fourier Transform)."
 msgstr ""
@@ -8263,11 +8535,6 @@ msgstr ""
 msgid "Spectral Synthesis"
 msgstr ""
 
-#: modules/process/fft_synth.c:431 modules/process/lno_synth.c:547
-#: modules/process/noise_synth.c:451
-msgid "_RMS:"
-msgstr ""
-
 #: modules/process/fft_synth.c:446
 msgid "M_inimum frequency:"
 msgstr ""
@@ -8290,10 +8557,6 @@ msgstr ""
 
 #: modules/process/fft_synth.c:532
 msgid "Enable _power multiplier"
-msgstr ""
-
-#: modules/process/fft_synth.c:543
-msgid "Po_wer:"
 msgstr ""
 
 #: modules/process/fit_2d.c:174
@@ -8610,11 +8873,11 @@ msgstr "그래프 그리기(G)"
 msgid "Grain Distributions"
 msgstr ""
 
-#: modules/process/grain_dist.c:545
+#: modules/process/grain_dist.c:551
 msgid "count"
 msgstr ""
 
-#: modules/process/grain_dist.c:609
+#: modules/process/grain_dist.c:615
 msgid "Export Raw Grain Values"
 msgstr ""
 
@@ -8908,6 +9171,10 @@ msgstr ""
 
 #: modules/process/immerse.c:317
 msgid "_Detail image:"
+msgstr ""
+
+#: modules/process/immerse.c:322
+msgid "Position:"
 msgstr ""
 
 #: modules/process/immerse.c:335
@@ -9308,11 +9575,6 @@ msgstr ""
 msgid "lattice|Triangular"
 msgstr ""
 
-#: modules/process/lat_synth.c:537 modules/process/lat_synth.c:616
-#: modules/tools/selectionmanager.c:261
-msgid "Lattice"
-msgstr ""
-
 #: modules/process/lat_synth.c:623
 msgid "_Lattice:"
 msgstr ""
@@ -9527,18 +9789,6 @@ msgstr ""
 msgid "Median Line Correction"
 msgstr ""
 
-#: modules/process/lno_synth.c:254 modules/process/noise_synth.c:184
-msgid "distribution|Gaussian"
-msgstr ""
-
-#: modules/process/lno_synth.c:259 modules/process/noise_synth.c:189
-msgid "distribution|Exponential"
-msgstr ""
-
-#: modules/process/lno_synth.c:264 modules/process/noise_synth.c:194
-msgid "distribution|Uniform"
-msgstr ""
-
 #: modules/process/lno_synth.c:269 modules/process/noise_synth.c:199
 msgid "distribution|Triangular"
 msgstr ""
@@ -9563,51 +9813,47 @@ msgstr ""
 msgid "Generate line noise"
 msgstr ""
 
-#: modules/process/lno_synth.c:438
+#: modules/process/lno_synth.c:439
 msgid "Line Noise"
 msgstr ""
 
-#: modules/process/lno_synth.c:518
+#: modules/process/lno_synth.c:519
 msgid "Distribution"
 msgstr ""
 
-#: modules/process/lno_synth.c:523 modules/process/noise_synth.c:427
-msgid "_Distribution:"
-msgstr ""
-
-#: modules/process/lno_synth.c:528 modules/process/noise_synth.c:432
+#: modules/process/lno_synth.c:529 modules/process/noise_synth.c:433
 msgid "Direction:"
 msgstr ""
 
-#: modules/process/lno_synth.c:537 modules/process/noise_synth.c:441
+#: modules/process/lno_synth.c:538 modules/process/noise_synth.c:442
 msgid "S_ymmetrical"
 msgstr ""
 
-#: modules/process/lno_synth.c:538 modules/process/noise_synth.c:442
+#: modules/process/lno_synth.c:539 modules/process/noise_synth.c:443
 msgid "One-sided _positive"
 msgstr ""
 
-#: modules/process/lno_synth.c:539 modules/process/noise_synth.c:443
+#: modules/process/lno_synth.c:540 modules/process/noise_synth.c:444
 msgid "One-sided _negative"
 msgstr ""
 
-#: modules/process/lno_synth.c:560
+#: modules/process/lno_synth.c:561
 msgid "Noise Type"
 msgstr ""
 
-#: modules/process/lno_synth.c:565
+#: modules/process/lno_synth.c:566
 msgid "_Noise type:"
 msgstr ""
 
-#: modules/process/lno_synth.c:867
+#: modules/process/lno_synth.c:868
 msgid "Densi_ty:"
 msgstr ""
 
-#: modules/process/lno_synth.c:878
+#: modules/process/lno_synth.c:879
 msgid "_Within line:"
 msgstr ""
 
-#: modules/process/lno_synth.c:885
+#: modules/process/lno_synth.c:886
 msgid "C_umulative"
 msgstr ""
 
@@ -10138,7 +10384,7 @@ msgstr ""
 msgid "Generate surface of uncorrelated noise"
 msgstr ""
 
-#: modules/process/noise_synth.c:345
+#: modules/process/noise_synth.c:346
 msgid "Random Noise"
 msgstr ""
 
@@ -11264,7 +11510,7 @@ msgid "Preprocessing"
 msgstr ""
 
 #: modules/process/wpour_mark.c:348
-msgid "Gaussian _smoothening:"
+msgid "Gaussian _smoothing:"
 msgstr ""
 
 #: modules/process/wpour_mark.c:355
@@ -11363,47 +11609,47 @@ msgstr ""
 msgid "Denoised"
 msgstr ""
 
-#: modules/pygwy/pygwy-console.c:57
+#: modules/pygwy/pygwy-console.c:58
 msgid "/Pygwy Console"
 msgstr ""
 
-#: modules/pygwy/pygwy-console.c:61
+#: modules/pygwy/pygwy-console.c:62
 msgid "Python wrapper console"
 msgstr ""
 
-#: modules/pygwy/pygwy-console.c:163
+#: modules/pygwy/pygwy-console.c:164
 msgid ">>> Running file content of below textfield\n"
 msgstr ""
 
-#: modules/pygwy/pygwy-console.c:216
+#: modules/pygwy/pygwy-console.c:217
 msgid "Open Python script"
 msgstr ""
 
-#: modules/pygwy/pygwy-console.c:297
+#: modules/pygwy/pygwy-console.c:298
 msgid "Save Script as"
 msgstr ""
 
-#: modules/pygwy/pygwy-console.c:349
+#: modules/pygwy/pygwy-console.c:350
 msgid "Pygwy Console"
 msgstr ""
 
-#: modules/pygwy/pygwy-console.c:362
+#: modules/pygwy/pygwy-console.c:363
 msgid "Clear Log"
 msgstr "로그 지우기"
 
-#: modules/pygwy/pygwy-console.c:366
+#: modules/pygwy/pygwy-console.c:367
 msgid "Open script in Python language (Ctrl-O)"
 msgstr ""
 
-#: modules/pygwy/pygwy-console.c:368
+#: modules/pygwy/pygwy-console.c:369
 msgid "Save script (Ctrl-S)"
 msgstr ""
 
-#: modules/pygwy/pygwy-console.c:370
+#: modules/pygwy/pygwy-console.c:371
 msgid "Execute script (Ctrl-E)"
 msgstr ""
 
-#: modules/pygwy/pygwy-console.c:448
+#: modules/pygwy/pygwy-console.c:449
 msgid "Command"
 msgstr "명령어"
 
@@ -12142,26 +12388,6 @@ msgstr ""
 
 #: modules/tools/selectionmanager.c:162
 msgid "Display and copy selections"
-msgstr ""
-
-#: modules/tools/selectionmanager.c:256
-msgid "Horiz./vert. lines"
-msgstr ""
-
-#: modules/tools/selectionmanager.c:257
-msgid "Ellipses"
-msgstr ""
-
-#: modules/tools/selectionmanager.c:258
-msgid "Lines"
-msgstr ""
-
-#: modules/tools/selectionmanager.c:260
-msgid "Rectangles"
-msgstr ""
-
-#: modules/tools/selectionmanager.c:347
-msgid "Objects"
 msgstr ""
 
 #: modules/tools/selectionmanager.c:357

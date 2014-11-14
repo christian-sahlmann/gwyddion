@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-10-28 03:58+0100\n"
+"POT-Creation-Date: 2014-11-14 16:38+0100\n"
 "PO-Revision-Date: 2014-10-28 21:06+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
@@ -738,9 +738,9 @@ msgstr "Montrer tous les contrôles"
 msgid "Hide full controls"
 msgstr "Masquer tous les contrôles"
 
-#: libgwydgets/gwy3dwindow.c:642
-msgid "3dcontrols|Basic"
-msgstr "Basiques"
+#: libgwydgets/gwy3dwindow.c:642 modules/file/imgexport.c:4105
+msgid "adjective|Basic"
+msgstr "Basique"
 
 #: libgwydgets/gwy3dwindow.c:647
 msgid "Light & Material"
@@ -3901,9 +3901,10 @@ msgid "Along the right edge"
 msgstr "Le long du bord droit"
 
 #: modules/file/imgexport.c:495
+#, fuzzy
 msgid ""
 "Renders data into vector (SVG, PDF, EPS) and pixmap (PNG, JPEG, TIFF, PPM, "
-"BMP, TARGA, GIF) images.Export to some formats relies on GDK and other "
+"BMP, TARGA, GIF) images. Export to some formats relies on GDK and other "
 "libraries thus may be installation-dependent."
 msgstr ""
 "Exporte les données sous forme vectorielle (SVG, PDF, EPS) et d'images (PNG, "
@@ -4106,10 +4107,6 @@ msgstr "Exporter %s"
 #: modules/file/imgexport.c:4087
 msgid "Export as 1_6 bit grayscale"
 msgstr "Exporter en niveaux de gris 1_6 bits"
-
-#: modules/file/imgexport.c:4105
-msgid "adjective|Basic"
-msgstr "Basique"
 
 #: modules/file/imgexport.c:4110
 msgid "Lateral Scale"
@@ -4489,7 +4486,7 @@ msgid "Spectra data starts past the end of file."
 msgstr "Les données du spectre commencent après la fin du fichier."
 
 #: modules/file/nanoeducator.c:648 modules/file/opdfile.c:277
-#: modules/file/renishaw.c:669 modules/file/sensofar.c:257
+#: modules/file/renishaw.c:952 modules/file/sensofar.c:257
 #: modules/file/witec-asc.c:161
 msgid "File header is truncated"
 msgstr "L'en-tête de fichier est tronqué."
@@ -5101,7 +5098,7 @@ msgid "Cannot get pixbuf loader: %s."
 msgstr "Chargeur d'image non disponible : %s."
 
 #: modules/file/pixmap.c:521 modules/file/pixmap.c:534
-#: modules/file/renishaw.c:461 modules/file/renishaw.c:471
+#: modules/file/renishaw.c:507 modules/file/renishaw.c:517
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr "Le chargeur d'image refuse les données : %s."
@@ -5636,35 +5633,31 @@ msgstr ""
 "La régularisation des données XYZ a échoué à cause d'une instabilité "
 "numérique."
 
-#: modules/file/renishaw.c:315
+#: modules/file/renishaw.c:314
 msgid "Imports Renishaw WiRE data files (WDF)."
 msgstr "Importe les fichiers Renishaw WiRE (.wdf)."
 
-#: modules/file/renishaw.c:328
+#: modules/file/renishaw.c:327
 msgid "Renishaw WiRE data files (.wdf)"
 msgstr "Renishaw WiRE (.wdf)"
 
-#: modules/file/renishaw.c:449
+#: modules/file/renishaw.c:495
 msgid "MapArea block is truncated"
 msgstr "Le bloc MapArea est tronqué"
 
-#: modules/file/renishaw.c:554
-msgid "MapArea block is absent for scan"
-msgstr "Le bloc MapArea est absent pour le scan"
-
-#: modules/file/renishaw.c:561
+#: modules/file/renishaw.c:676
 msgid "3D Volume is unsupported now"
 msgstr "Le volume 3D n'est actuellement pas supporté"
 
-#: modules/file/renishaw.c:568
+#: modules/file/renishaw.c:683
 msgid "Random points order unsupported"
 msgstr "Les points donnés dans un ordre aléatoire ne sont pas supportés."
 
-#: modules/file/renishaw.c:740
+#: modules/file/renishaw.c:1023
 msgid "Block header is truncated"
 msgstr "Le bloc d'en-tête est tronqué."
 
-#: modules/file/renishaw.c:755
+#: modules/file/renishaw.c:1038
 msgid "Data block is truncated"
 msgstr "Le bloc de données est tronqué."
 
@@ -8522,7 +8515,8 @@ msgid "Fractional Brownian Motion"
 msgstr "Mouvement brownien fractionnaire"
 
 #: modules/process/fbm_synth.c:394
-msgid "_Hurst parameter:"
+#, fuzzy
+msgid "_Hurst exponent:"
 msgstr "Paramètre de _Hurst :"
 
 #: modules/process/fbm_synth.c:402
@@ -13329,6 +13323,12 @@ msgstr "Erreur des k-moyennes de %s"
 #, c-format
 msgid "K-means center %d"
 msgstr "Centre %d des k-moyennes"
+
+#~ msgid "3dcontrols|Basic"
+#~ msgstr "Basiques"
+
+#~ msgid "MapArea block is absent for scan"
+#~ msgstr "Le bloc MapArea est absent pour le scan"
 
 #~ msgid "Change Inset Color"
 #~ msgstr "Changer l'échelle de couleurs"

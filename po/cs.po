@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-10-30 03:59+0100\n"
+"POT-Creation-Date: 2014-11-14 16:38+0100\n"
 "PO-Revision-Date: 2014-10-30 16:41+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -734,8 +734,8 @@ msgstr "Zobraz kompletní ovládací prvky"
 msgid "Hide full controls"
 msgstr "Skryj kompletní ovládací prvky"
 
-#: libgwydgets/gwy3dwindow.c:642
-msgid "3dcontrols|Basic"
+#: libgwydgets/gwy3dwindow.c:642 modules/file/imgexport.c:4105
+msgid "adjective|Basic"
 msgstr "Základní"
 
 #: libgwydgets/gwy3dwindow.c:647
@@ -3326,6 +3326,7 @@ msgid "Data line does not start with a Y abscissa."
 msgstr "Datový řádek nezačíná hodnotou Y souřadnice."
 
 #: modules/file/femtoscan-txt.c:197
+#, c-format
 msgid ""
 "Data line length %u does not correspond to the number of X abscissas %u."
 msgstr "Délka %u datového řádku neodpovídá počtu %u souřadnic X."
@@ -3853,8 +3854,8 @@ msgid ""
 "libraries thus may be installation-dependent."
 msgstr ""
 "Exportuje data do vektorových (SVG, PDF, ESP) a rastrových (PNG, JPEG, TIFF, "
-"PPM, TARGA, GIF) obrázků. Export do některých formátů se spoléhá na GDK "
-"a další knihovny, tudíž se může u různých instalací lišit."
+"PPM, TARGA, GIF) obrázků. Export do některých formátů se spoléhá na GDK a "
+"další knihovny, tudíž se může u různých instalací lišit."
 
 #: modules/file/imgexport.c:2523
 msgid "Pi_xel size:"
@@ -4052,10 +4053,6 @@ msgstr "Export %s"
 #: modules/file/imgexport.c:4087
 msgid "Export as 1_6 bit grayscale"
 msgstr "Exportovat s 16bitovou hloubkou"
-
-#: modules/file/imgexport.c:4105
-msgid "adjective|Basic"
-msgstr "Základní"
 
 #: modules/file/imgexport.c:4110
 msgid "Lateral Scale"
@@ -4420,7 +4417,7 @@ msgid "Spectra data starts past the end of file."
 msgstr "Data spekter začínají za koncem souboru."
 
 #: modules/file/nanoeducator.c:648 modules/file/opdfile.c:277
-#: modules/file/renishaw.c:669 modules/file/sensofar.c:257
+#: modules/file/renishaw.c:952 modules/file/sensofar.c:257
 #: modules/file/witec-asc.c:161
 msgid "File header is truncated"
 msgstr "Hlavička souboru je uříznutá."
@@ -4991,8 +4988,9 @@ msgid ""
 "Imports data from low-depth pixmap images (PNG, TIFF, JPEG, ...).  The set "
 "of available formats depends on available GDK pixbuf loaders."
 msgstr ""
-"Načítá data z rastrových obrázků s nízkou bitovou hloubkou (PNG, TIFF, JPEG "
-"...).  Množina dostupných formátů závisí na dostupných GDK pixbuf loaderech."
+"Načítá data z rastrových obrázků s nízkou bitovou hloubkou (PNG, TIFF, "
+"JPEG ...).  Množina dostupných formátů závisí na dostupných GDK pixbuf "
+"loaderech."
 
 #: modules/file/pixmap.c:493
 #, c-format
@@ -5005,7 +5003,7 @@ msgid "Cannot get pixbuf loader: %s."
 msgstr "Nelze získat pixbuf loader: %s."
 
 #: modules/file/pixmap.c:521 modules/file/pixmap.c:534
-#: modules/file/renishaw.c:461 modules/file/renishaw.c:471
+#: modules/file/renishaw.c:507 modules/file/renishaw.c:517
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr "Pixbuf loader odmítl data: %s."
@@ -5532,35 +5530,31 @@ msgstr ""
 msgid "XYZ data regularization failed due to numerical instability."
 msgstr "Regularizace XYZ dat selhala kvůli numerické nestabilitě."
 
-#: modules/file/renishaw.c:315
+#: modules/file/renishaw.c:314
 msgid "Imports Renishaw WiRE data files (WDF)."
 msgstr "Načítá datové soubory Renishaw WiRE (WDF)."
 
-#: modules/file/renishaw.c:328
+#: modules/file/renishaw.c:327
 msgid "Renishaw WiRE data files (.wdf)"
 msgstr "Renishaw WiRE datové soubory (.wdf)"
 
-#: modules/file/renishaw.c:449
+#: modules/file/renishaw.c:495
 msgid "MapArea block is truncated"
 msgstr "Blok MapArea je předčasně ukončený"
 
-#: modules/file/renishaw.c:554
-msgid "MapArea block is absent for scan"
-msgstr "Schází blok MapArea pro sken"
-
-#: modules/file/renishaw.c:561
+#: modules/file/renishaw.c:676
 msgid "3D Volume is unsupported now"
 msgstr "3D objem je zatím nepodporovaný"
 
-#: modules/file/renishaw.c:568
+#: modules/file/renishaw.c:683
 msgid "Random points order unsupported"
 msgstr "Náhodné pořadí bodů není podporováno."
 
-#: modules/file/renishaw.c:740
+#: modules/file/renishaw.c:1023
 msgid "Block header is truncated"
 msgstr "Hlavička bloku je předčasně ukončená."
 
-#: modules/file/renishaw.c:755
+#: modules/file/renishaw.c:1038
 msgid "Data block is truncated"
 msgstr "Blok dat je předčasně ukončený."
 
@@ -13173,6 +13167,12 @@ msgstr "K-means chyba z %s"
 #, c-format
 msgid "K-means center %d"
 msgstr "K-means střed %d"
+
+#~ msgid "3dcontrols|Basic"
+#~ msgstr "Základní"
+
+#~ msgid "MapArea block is absent for scan"
+#~ msgstr "Schází blok MapArea pro sken"
 
 #~ msgid "Data must be displayed in a window for pixmap export."
 #~ msgstr "Pro export obrázku musejí být data zobrazena v okně."
