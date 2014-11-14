@@ -350,6 +350,20 @@ wdf_detect(const GwyFileDetectInfo *fileinfo,
     return score;
 }
 
+#if GLIB_CHECK_VERSION(2, 16, 0)
+#define gwystrcmp0 g_strcmp0
+#else
+static inline gint
+gwystrcmp0(const gchar *s1, const gchar *s2)
+{
+    if (!s1)
+        return -(s1 != s2);
+    if (!s2)
+        return s1 != s2;
+    return strcmp(s1, s2);
+}
+#endif
+
 static GwyContainer*
 wdf_load(const gchar *filename,
              G_GNUC_UNUSED GwyRunType mode,
@@ -453,13 +467,13 @@ wdf_load(const gchar *filename,
                     origin_name[j] = *(p++);
                 gwy_debug("name=%s units=%d type=%d",
                           origin_name, units, type);
-                if (!g_strcmp0(origin_name, "X")) {
+                if (!gwystrcmp0(origin_name, "X")) {
                     xunits = units;
                 }
-                else if (!g_strcmp0(origin_name, "Y")) {
+                else if (!gwystrcmp0(origin_name, "Y")) {
                     yunits = units;
                 }
-                else if (!g_strcmp0(origin_name, "Z")) {
+                else if (!gwystrcmp0(origin_name, "Z")) {
                     zunits = units;
                     zdata
                       = g_malloc(fileheader.nspectra * sizeof(gdouble));
