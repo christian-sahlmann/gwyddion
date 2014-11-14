@@ -1,4 +1,4 @@
-2.39 (0000-00-00)
+2.39 (2014-11-14)
 Application:
 - Pango 1.10 and Cairo 1.2 are now required.
 - The program should start with a saner working directory by default.
@@ -34,7 +34,7 @@ Modules:
   surfaces.
 - Renishaw (new): Imports Renishaw WiRE data files.
 - Pixmap: Only used for image import; image rendering functions were removed.
-- Statistical quantity: Crash in saving the statistics was fixed (introduced
+- Statistical quantities: Crash in saving the statistics was fixed (introduced
   in 2.38).
 - OpenGPS: Format detection was improved to check not just for the presence
   of main.xml also if it really looks like an ISO 5436-2 XML file.
