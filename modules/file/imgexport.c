@@ -3692,7 +3692,7 @@ preset_render_lateral(G_GNUC_UNUSED GtkTreeViewColumn *column,
     gtk_tree_model_get(model, iter, 0, &preset, -1);
     type = gwy_enum_to_string(preset->data.xytype,
                               lateral_types, G_N_ELEMENTS(lateral_types));
-    s = gwy_strkill(g_strdup(_(type)), "_:");
+    s = gwy_strkill(g_strdup(gwy_sgettext(type)), "_:");
     g_object_set(cell, "text", s, NULL);
     g_free(s);
 }
@@ -3711,7 +3711,7 @@ preset_render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
     gtk_tree_model_get(model, iter, 0, &preset, -1);
     type = gwy_enum_to_string(preset->data.ztype,
                               value_types, G_N_ELEMENTS(value_types));
-    s = gwy_strkill(g_strdup(_(type)), "_:");
+    s = gwy_strkill(g_strdup(gwy_sgettext(type)), "_:");
     g_object_set(cell, "text", s, NULL);
     g_free(s);
 }
@@ -3730,7 +3730,7 @@ preset_render_title(G_GNUC_UNUSED GtkTreeViewColumn *column,
     gtk_tree_model_get(model, iter, 0, &preset, -1);
     type = gwy_enum_to_string(preset->data.xytype,
                               title_types, G_N_ELEMENTS(title_types));
-    s = gwy_strkill(g_strdup(_(type)), "_:");
+    s = gwy_strkill(g_strdup(gwy_sgettext(type)), "_:");
     g_object_set(cell, "text", s, NULL);
     g_free(s);
 }
