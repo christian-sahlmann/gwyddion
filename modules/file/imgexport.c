@@ -1247,7 +1247,7 @@ calculate_sizes(const ImgExportArgs *args,
                       sizes->fmruler.x + sizes->fmruler.w, ymove);
         }
         else if (args->title_type == IMGEXPORT_TITLE_TOP) {
-            gdouble xcentre = sizes->image.y + 0.5*sizes->image.h;
+            gdouble xcentre = sizes->image.x + 0.5*sizes->image.w;
 
             rect_move(&sizes->title, xcentre - 0.5*sizes->title.w, 0.0);
             rect_move(&sizes->image, 0.0, sizes->title.h);
