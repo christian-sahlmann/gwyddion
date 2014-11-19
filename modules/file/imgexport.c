@@ -202,6 +202,7 @@ typedef struct {
     /* Values */
     GtkWidget *table_value;
     GtkWidget *draw_mask;
+    GtkWidget *draw_frame;
     GtkWidget *interpolation;
     GSList *ztype;
     GtkObject *fmscale_gap;
@@ -497,7 +498,7 @@ static GwyModuleInfo module_info = {
        "Export to some formats relies on GDK and other libraries thus may "
        "be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2014",
 };
@@ -809,6 +810,18 @@ create_surface(const gchar *name,
     }
 
     return surface;
+}
+
+static gboolean
+should_draw_frame(const ImgExportArgs *args)
+{
+    if (args->draw_frame)
+        return TRUE;
+    if (args->xytype == IMGEXPORT_LATERAL_RULERS)
+        return TRUE;
+    if (args->ztype == IMGEXPORT_VALUE_FMSCALE)
+        return TRUE;
+    return FALSE;
 }
 
 static gboolean
@@ -1147,7 +1160,7 @@ calculate_sizes(const ImgExportArgs *args,
     PangoLayout *layout;
     ImgExportSizes *sizes = g_new0(ImgExportSizes, 1);
     GString *s = g_string_new(NULL);
-    gdouble lw, fs, borderw, tl, zoom = args->zoom;
+    gdouble fw, lw, fs, borderw, tl, zoom = args->zoom;
     cairo_surface_t *surface;
     cairo_t *cr;
 
@@ -1162,26 +1175,30 @@ calculate_sizes(const ImgExportArgs *args,
     if (args->scale_font)
         scale_sizes(&sizes->sizes, zoom);
     lw = sizes->sizes.line_width;
+    fw = should_draw_frame(args) ? lw : 0.0;
     borderw = sizes->sizes.border_width;
     tl = sizes->sizes.tick_length;
     fs = sizes->sizes.font_size;
     layout = create_layout(args->font, fs, cr);
 
+    gwy_debug("lw = %g, fw = %g, borderw = %g", lw, fw, borderw);
+    gwy_debug("tl = %g, fs = %g", tl, fs);
+
     /* Data */
-    sizes->image.w = zoom*args->env->xres + 2.0*lw;
-    sizes->image.h = zoom*args->env->yres + 2.0*lw;
+    sizes->image.w = zoom*args->env->xres + 2.0*fw;
+    sizes->image.h = zoom*args->env->yres + 2.0*fw;
 
     /* Horizontal ruler */
     if (args->xytype == IMGEXPORT_LATERAL_RULERS) {
         find_hruler_ticks(args, sizes, layout, s);
         sizes->hruler.w = sizes->image.w;
-        sizes->hruler.h = sizes->hruler_label_height + tl + lw;
+        sizes->hruler.h = sizes->hruler_label_height + tl + fw;
     }
 
     /* Vertical ruler */
     if (args->xytype == IMGEXPORT_LATERAL_RULERS) {
         find_vruler_ticks(args, sizes, layout, s);
-        sizes->vruler.w = sizes->vruler_label_width + tl + lw;
+        sizes->vruler.w = sizes->vruler_label_width + tl + fw;
         sizes->vruler.h = sizes->image.h;
         rect_move(&sizes->hruler, sizes->vruler.w, 0.0);
         rect_move(&sizes->vruler, 0.0, sizes->hruler.h);
@@ -1197,11 +1214,11 @@ calculate_sizes(const ImgExportArgs *args,
     /* False colour gradient */
     sizes->fmgrad = sizes->image;
     rect_move(&sizes->fmgrad,
-              sizes->image.w + fs*args->fmscale_gap - lw, 0.0);
+              sizes->image.w + fs*args->fmscale_gap - fw, 0.0);
     if (args->ztype == IMGEXPORT_VALUE_FMSCALE) {
-        /* NB: We subtract lw here to make the fmscale visually just touch the
+        /* NB: We subtract fw here to make the fmscale visually just touch the
          * image in the case of zero gap. */
-        sizes->fmgrad.w = 1.5*fs + 2.0*lw;
+        sizes->fmgrad.w = 1.5*fs + 2.0*fw;
 
         /* False colour axis */
         find_fmscale_ticks(args, sizes, layout, s);
@@ -1253,8 +1270,8 @@ calculate_sizes(const ImgExportArgs *args,
 
     /* Ensure the image starts at integer coordinates in pixmas */
     if (cairo_surface_get_type(surface) == CAIRO_SURFACE_TYPE_IMAGE) {
-        gdouble xmove = ceil(sizes->image.x + lw) - (sizes->image.x + lw);
-        gdouble ymove = ceil(sizes->image.y + lw) - (sizes->image.y + lw);
+        gdouble xmove = ceil(sizes->image.x + fw) - (sizes->image.x + fw);
+        gdouble ymove = ceil(sizes->image.y + fw) - (sizes->image.y + fw);
 
         if (xmove < 0.98 && ymove < 0.98) {
             gwy_debug("moving image by (%g,%g) to integer coordinates",
@@ -1425,9 +1442,10 @@ draw_data_pixbuf_resampled(const ImgExportArgs *args,
     GwyGradient *gradient = env->gradient;
     GwyLayerBasicRangeType range_type = env->fm_rangetype;
     gdouble lw = sizes->sizes.line_width;
+    gdouble fw = should_draw_frame(args) ? lw : 0.0;
     GdkPixbuf *pixbuf;
-    gdouble w = sizes->image.w - 2.0*lw;
-    gdouble h = sizes->image.h - 2.0*lw;
+    gdouble w = sizes->image.w - 2.0*fw;
+    gdouble h = sizes->image.h - 2.0*fw;
     guint width, height;
 
     width = GWY_ROUND(MAX(w, 2.0));
@@ -1470,13 +1488,15 @@ draw_mask_pixbuf(const ImgExportArgs *args)
 static void
 stretch_pixbuf_source(cairo_t *cr,
                       GdkPixbuf *pixbuf,
+                      const ImgExportArgs *args,
                       const ImgExportSizes *sizes)
 {
     gdouble mw = gdk_pixbuf_get_width(pixbuf);
     gdouble mh = gdk_pixbuf_get_height(pixbuf);
     gdouble lw = sizes->sizes.line_width;
-    gdouble w = sizes->image.w - 2.0*lw;
-    gdouble h = sizes->image.h - 2.0*lw;
+    gdouble fw = should_draw_frame(args) ? lw : 0.0;
+    gdouble w = sizes->image.w - 2.0*fw;
+    gdouble h = sizes->image.h - 2.0*fw;
 
     cairo_scale(cr, w/mw, h/mh);
     gdk_cairo_set_source_pixbuf(cr, pixbuf, 0.0, 0.0);
@@ -1495,8 +1515,9 @@ draw_data(const ImgExportArgs *args,
     gint xres = gwy_data_field_get_xres(env->dfield);
     gint yres = gwy_data_field_get_yres(env->dfield);
     gdouble lw = sizes->sizes.line_width;
-    gdouble w = rect->w - 2.0*lw;
-    gdouble h = rect->h - 2.0*lw;
+    gdouble fw = should_draw_frame(args) ? lw : 0.0;
+    gdouble w = rect->w - 2.0*fw;
+    gdouble h = rect->h - 2.0*fw;
 
     /* Never draw pixmap images with anything else than CAIRO_FILTER_BILINEAR
      * because it causes bleeding and fading at the image borders. */
@@ -1517,8 +1538,8 @@ draw_data(const ImgExportArgs *args,
     }
 
     cairo_save(cr);
-    cairo_translate(cr, rect->x + lw, rect->y + lw);
-    stretch_pixbuf_source(cr, pixbuf, sizes);
+    cairo_translate(cr, rect->x + fw, rect->y + fw);
+    stretch_pixbuf_source(cr, pixbuf, args, sizes);
     cairo_pattern_set_filter(cairo_get_source(cr), interp);
     cairo_paint(cr);
     cairo_restore(cr);
@@ -1527,9 +1548,9 @@ draw_data(const ImgExportArgs *args,
     /* Mask must be drawn pixelated. */
     if (env->mask && args->draw_mask) {
         cairo_save(cr);
-        cairo_translate(cr, rect->x + lw, rect->y + lw);
+        cairo_translate(cr, rect->x + fw, rect->y + fw);
         pixbuf = draw_mask_pixbuf(args);
-        stretch_pixbuf_source(cr, pixbuf, sizes);
+        stretch_pixbuf_source(cr, pixbuf, args, sizes);
         cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_NEAREST);
         cairo_paint(cr);
         cairo_restore(cr);
@@ -1538,20 +1559,23 @@ draw_data(const ImgExportArgs *args,
 }
 
 static void
-draw_data_frame(G_GNUC_UNUSED const ImgExportArgs *args,
+draw_data_frame(const ImgExportArgs *args,
                 const ImgExportSizes *sizes,
                 cairo_t *cr)
 {
     const ImgExportRect *rect = &sizes->image;
-    gdouble lw = sizes->sizes.line_width;
-    gdouble w = rect->w - 2.0*lw;
-    gdouble h = rect->h - 2.0*lw;
+    gdouble fw = sizes->sizes.line_width;
+    gdouble w = rect->w - 2.0*fw;
+    gdouble h = rect->h - 2.0*fw;
+
+    if (!should_draw_frame(args))
+        return;
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
     set_cairo_source_rgba(cr, &black);
-    cairo_set_line_width(cr, lw);
-    cairo_rectangle(cr, 0.5*lw, 0.5*lw, w + lw, h + lw);
+    cairo_set_line_width(cr, fw);
+    cairo_rectangle(cr, 0.5*fw, 0.5*fw, w + fw, h + fw);
     cairo_stroke(cr);
     cairo_restore(cr);
 }
@@ -2699,6 +2723,21 @@ update_lateral_sensitivity(ImgExportControls *controls)
 }
 
 static void
+update_value_sensitivity(ImgExportControls *controls)
+{
+    const ImgExportArgs *args = controls->args;
+    gboolean fmsens = (args->ztype == IMGEXPORT_VALUE_FMSCALE);
+    gboolean titlesens = (args->title_type != IMGEXPORT_TITLE_NONE);
+    gboolean framesens = (args->ztype == IMGEXPORT_VALUE_NONE
+                          && (args->xytype == IMGEXPORT_LATERAL_NONE
+                              || args->xytype == IMGEXPORT_LATERAL_INSET));
+
+    gwy_table_hscale_set_sensitive(controls->fmscale_gap, fmsens);
+    gwy_table_hscale_set_sensitive(controls->title_gap, titlesens);
+    gtk_widget_set_sensitive(controls->draw_frame, framesens);
+}
+
+static void
 inset_xgap_changed(ImgExportControls *controls,
                    GtkAdjustment *adj)
 {
@@ -2730,6 +2769,7 @@ xytype_changed(G_GNUC_UNUSED GtkToggleButton *toggle,
 {
     controls->args->xytype = gwy_radio_buttons_get_current(controls->xytype);
     update_lateral_sensitivity(controls);
+    update_value_sensitivity(controls);    /* For draw_frame */
     update_preview(controls);
 }
 
@@ -3102,16 +3142,6 @@ create_lateral_controls(ImgExportControls *controls)
 }
 
 static void
-update_value_sensitivity(ImgExportControls *controls)
-{
-    gboolean fmsens = (controls->args->ztype == IMGEXPORT_VALUE_FMSCALE);
-    gboolean titlesens = (controls->args->title_type != IMGEXPORT_TITLE_NONE);
-
-    gwy_table_hscale_set_sensitive(controls->fmscale_gap, fmsens);
-    gwy_table_hscale_set_sensitive(controls->title_gap, titlesens);
-}
-
-static void
 interpolation_changed(GtkComboBox *combo,
                       ImgExportControls *controls)
 {
@@ -3143,6 +3173,16 @@ draw_mask_changed(ImgExportControls *controls,
     ImgExportArgs *args = controls->args;
 
     args->draw_mask = gtk_toggle_button_get_active(button);
+    update_preview(controls);
+}
+
+static void
+draw_frame_changed(ImgExportControls *controls,
+                  GtkToggleButton *button)
+{
+    ImgExportArgs *args = controls->args;
+
+    args->draw_frame = gtk_toggle_button_get_active(button);
     update_preview(controls);
 }
 
@@ -3228,6 +3268,15 @@ create_value_controls(ImgExportControls *controls)
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(check, "toggled",
                              G_CALLBACK(draw_mask_changed), controls);
+    row++;
+
+    controls->draw_frame
+        = check = gtk_check_button_new_with_mnemonic(_("Draw _frame"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), args->draw_frame);
+    gtk_table_attach(GTK_TABLE(table), check, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(check, "toggled",
+                             G_CALLBACK(draw_frame_changed), controls);
     row++;
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
@@ -3610,6 +3659,8 @@ reset_to_preset(ImgExportControls *controls,
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->draw_mask),
                                  src->draw_mask);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->draw_frame),
+                                 src->draw_frame);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interpolation),
                                   src->interpolation);
     gwy_radio_buttons_set_current(controls->ztype, src->ztype);
@@ -5563,6 +5614,7 @@ options_sel_point(ImgExportControls *controls)
 static const gchar active_page_key[]        = "/module/pixmap/active_page";
 static const gchar border_width_key[]       = "/module/pixmap/border_width";
 static const gchar draw_mask_key[]          = "/module/pixmap/draw_mask";
+static const gchar draw_frame_key[]         = "/module/pixmap/draw_frame";
 static const gchar draw_selection_key[]     = "/module/pixmap/draw_selection";
 static const gchar fmscale_gap_key[]        = "/module/pixmap/fmscale_gap";
 static const gchar font_key[]               = "/module/pixmap/font";
@@ -5637,6 +5689,8 @@ img_export_load_args(GwyContainer *container,
                                      (const guchar**)&args->inset_length);
     gwy_container_gis_boolean_by_name(container, draw_mask_key,
                                       &args->draw_mask);
+    gwy_container_gis_boolean_by_name(container, draw_frame_key,
+                                      &args->draw_frame);
     gwy_container_gis_boolean_by_name(container, draw_selection_key,
                                       &args->draw_selection);
     gwy_container_gis_string_by_name(container, font_key,
@@ -5702,6 +5756,8 @@ img_export_save_args(GwyContainer *container,
                                      g_strdup(args->inset_length));
     gwy_container_set_boolean_by_name(container, draw_mask_key,
                                       args->draw_mask);
+    gwy_container_set_boolean_by_name(container, draw_frame_key,
+                                      args->draw_frame);
     gwy_container_set_boolean_by_name(container, draw_selection_key,
                                       args->draw_selection);
     gwy_container_set_string_by_name(container, font_key,
