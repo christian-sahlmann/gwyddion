@@ -94,6 +94,7 @@ typedef struct {
     GwyRGBA inset_outline_color;
     InsetPosType inset_pos;
     gboolean draw_mask;
+    gboolean draw_frame;
     gboolean draw_selection;
     gchar *font;
     gboolean scale_font;   /* TRUE = font size tied to data pixels */
@@ -147,7 +148,7 @@ static const ImgExportArgs img_export_defaults = {
     { 12.0, 1.0, 0.0, 0.0, 10.0 },
     IMGEXPORT_LATERAL_RULERS, IMGEXPORT_VALUE_FMSCALE,
     GWYRGBA_WHITE, GWYRGBA_WHITE, INSET_POS_BOTTOM_RIGHT,
-    TRUE, FALSE,
+    TRUE, TRUE, FALSE,
     "Helvetica", TRUE, TRUE, TRUE,
     1.0, 1.0, 1.0, 0.0, "",
     GWY_INTERPOLATION_ROUND,
@@ -229,6 +230,7 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->zoom = CLAMP(args->zoom, 0.06, 16.0);
     args->pxwidth = CLAMP(args->pxwidth, 0.01, 25.4);
     args->draw_mask = !!args->draw_mask;
+    args->draw_frame = !!args->draw_frame;
     args->draw_selection = !!args->draw_selection;
     args->scale_font = !!args->scale_font;
     args->inset_draw_ticks = !!args->inset_draw_ticks;
@@ -329,11 +331,13 @@ gwy_img_export_preset_dump(GwyResource *resource,
                            "ztype %u\n"
                            "inset_pos %u\n"
                            "draw_mask %d\n"
+                           "draw_frame %d\n"
                            "draw_selection %d\n"
                            "font \"%s\"\n",
                            data->mode, d1, d2, data->scale_font,
                            data->xytype, data->ztype, data->inset_pos,
-                           data->draw_mask, data->draw_selection, s);
+                           data->draw_mask, data->draw_frame,
+                           data->draw_selection, s);
     g_free(s);
 
     g_ascii_dtostr(d1, sizeof(d1), data->sizes.font_size);
@@ -467,6 +471,8 @@ gwy_img_export_preset_parse(const gchar *text,
             data.title_type = atoi(value);
         else if (gwy_strequal(key, "draw_mask"))
             data.draw_mask = atoi(value);
+        else if (gwy_strequal(key, "draw_frame"))
+            data.draw_frame = atoi(value);
         else if (gwy_strequal(key, "draw_selection"))
             data.draw_selection = atoi(value);
         else if (gwy_strequal(key, "scale_font"))
