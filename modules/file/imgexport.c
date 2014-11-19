@@ -1427,9 +1427,12 @@ draw_data_pixbuf_1_1(const ImgExportArgs *args)
 
     if (range_type == GWY_LAYER_BASIC_RANGE_ADAPT)
         gwy_pixbuf_draw_data_field_adaptive(pixbuf, dfield, gradient);
-    else
+    else {
+        gdouble min = env->fm_inverted ? env->fm_max : env->fm_min;
+        gdouble max = env->fm_inverted ? env->fm_min : env->fm_max;
         gwy_pixbuf_draw_data_field_with_range(pixbuf, dfield, gradient,
-                                              env->fm_min, env->fm_max);
+                                              min, max);
+    }
     return pixbuf;
 }
 
@@ -1459,9 +1462,12 @@ draw_data_pixbuf_resampled(const ImgExportArgs *args,
      * be noticeable in normal circumstances.  */
     if (range_type == GWY_LAYER_BASIC_RANGE_ADAPT)
         gwy_pixbuf_draw_data_field_adaptive(pixbuf, resampled, gradient);
-    else
+    else {
+        gdouble min = env->fm_inverted ? env->fm_max : env->fm_min;
+        gdouble max = env->fm_inverted ? env->fm_min : env->fm_max;
         gwy_pixbuf_draw_data_field_with_range(pixbuf, resampled, gradient,
-                                              env->fm_min, env->fm_max);
+                                              min, max);
+    }
 
     g_object_unref(resampled);
 
