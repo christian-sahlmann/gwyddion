@@ -75,6 +75,8 @@
 #include "image-keys.h"
 #include "imgexportpreset.h"
 
+#define APP_RANGE_KEY "/app/default-range-type"
+
 #define mm2pt (72.0/25.4)
 #define pangoscale ((gdouble)PANGO_SCALE)
 #define fixzero(x) (fabs(x) < 1e-14 ? 0.0 : (x))
@@ -1458,8 +1460,9 @@ draw_data_pixbuf_resampled(const ImgExportArgs *args,
     resampled = gwy_data_field_new_resampled(dfield, width, height,
                                              args->interpolation);
 
-    /* XXX: Resampling can influence adaptive mapping.  But it should not
-     * be noticeable in normal circumstances.  */
+    /* XXX: Resampling can influence adaptive mapping, i.e. adaptive-mapping
+     * resampled image is not the same as adaptive-mapping the original.  But
+     * it should not be noticeable in normal circumstances.  */
     if (range_type == GWY_LAYER_BASIC_RANGE_ADAPT)
         gwy_pixbuf_draw_data_field_adaptive(pixbuf, resampled, gradient);
     else {
@@ -4264,6 +4267,7 @@ add_selection(gpointer hkey, gpointer hvalue, gpointer data)
 
 static void
 img_export_load_env(ImgExportEnv *env,
+                    GwyContainer *settings,
                     const ImgExportFormat *format,
                     GwyContainer *data)
 {
@@ -4300,8 +4304,7 @@ img_export_load_env(ImgExportEnv *env,
 
     g_string_printf(s, "/%d/mask", env->id);
     if (!gwy_rgba_get_from_container(&env->mask_colour, data, s->str))
-        gwy_rgba_get_from_container(&env->mask_colour, gwy_app_settings_get(),
-                                    "/mask");
+        gwy_rgba_get_from_container(&env->mask_colour, settings, "/mask");
 
     /* Find out native pixel sizes for the data bitmaps. */
     xres = gwy_data_field_get_xres(env->dfield);
@@ -4328,9 +4331,13 @@ img_export_load_env(ImgExportEnv *env,
     env->gradient = gwy_inventory_get_item_or_default(gradients, gradname);
     gwy_resource_use(GWY_RESOURCE(env->gradient));
 
-    g_string_printf(s, "/%d/base/range-type", env->id);
     env->fm_rangetype = GWY_LAYER_BASIC_RANGE_FULL;
+    gwy_container_gis_enum_by_name(settings, APP_RANGE_KEY, &env->fm_rangetype);
+    gwy_debug("default range type: %u", env->fm_rangetype);
+
+    g_string_printf(s, "/%d/base/range-type", env->id);
     gwy_container_gis_enum_by_name(data, s->str, &env->fm_rangetype);
+    gwy_debug("data range type: %u", env->fm_rangetype);
 
     /* The current behaviour is that all mappings work on presentations, but
      * fixed range is ignored so it means full. */
@@ -4420,7 +4427,7 @@ img_export_export(GwyContainer *data,
         args.mode = IMGEXPORT_MODE_PRESENTATION;
 
     args.env = &env;
-    img_export_load_env(&env, format, data);
+    img_export_load_env(&env, settings, format, data);
 
     if (!inset_length_ok(env.dfield, args.inset_length)) {
         g_free(args.inset_length);
