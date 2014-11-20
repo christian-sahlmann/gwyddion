@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-11-14 16:38+0100\n"
-"PO-Revision-Date: 2014-10-28 21:06+0100\n"
+"POT-Creation-Date: 2014-11-20 03:58+0100\n"
+"PO-Revision-Date: 2014-11-20 23:44+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -430,7 +430,7 @@ msgid "Position"
 msgstr "Position"
 
 #: libprocess/gwygrainvalue.c:1092 app/meta.c:384
-#: modules/file/imgexport.c:3934 modules/process/curvature.c:746
+#: modules/file/imgexport.c:3994 modules/process/curvature.c:746
 #: modules/tools/level3.c:457 modules/tools/readvalue.c:297
 msgid "Value"
 msgstr "Valeur"
@@ -548,12 +548,12 @@ msgid "Scale and space adaptive"
 msgstr "Échelle et espace adaptatifs"
 
 #. TRANSLATORS: Interpolation type (AKA nearest neighbour)
-#: libprocess/gwyprocessenums.c:207 modules/file/imgexport.c:3208
+#: libprocess/gwyprocessenums.c:207 modules/file/imgexport.c:3257
 #: modules/file/rawxyz.c:685
 msgid "Round"
 msgstr "Arrondi"
 
-#: libprocess/gwyprocessenums.c:208 modules/file/imgexport.c:3209
+#: libprocess/gwyprocessenums.c:208 modules/file/imgexport.c:3258
 #: modules/file/rawxyz.c:686
 msgid "Linear"
 msgstr "Linéaire"
@@ -738,7 +738,7 @@ msgstr "Montrer tous les contrôles"
 msgid "Hide full controls"
 msgstr "Masquer tous les contrôles"
 
-#: libgwydgets/gwy3dwindow.c:642 modules/file/imgexport.c:4105
+#: libgwydgets/gwy3dwindow.c:642 modules/file/imgexport.c:4165
 msgid "adjective|Basic"
 msgstr "Basique"
 
@@ -882,7 +882,7 @@ msgid "pixels"
 msgstr "pixels"
 
 #: libgwydgets/gwy3dwindow.c:1148 modules/file/hdrimage.cc:2213
-#: modules/file/imgexport.c:4069 modules/file/pixmap.c:791
+#: modules/file/imgexport.c:4129 modules/file/pixmap.c:791
 #: modules/file/rawfile.c:402 modules/process/angle_dist.c:172
 #: modules/process/calcoefs_new.c:347 modules/process/calibrate.c:392
 #: modules/process/col_synth.c:387 modules/process/correct_affine.c:307
@@ -956,7 +956,7 @@ msgid "Hidden"
 msgstr "Caché"
 
 #: libgwydgets/gwydgetenums.c:47 libgwydgets/gwygraphwindowmeasuredialog.c:572
-#: modules/file/imgexport.c:462 modules/tools/selectionmanager.c:259
+#: modules/file/imgexport.c:465 modules/tools/selectionmanager.c:259
 msgid "Points"
 msgstr "Points"
 
@@ -1005,7 +1005,7 @@ msgstr "Taille de _point :"
 msgid "_Line type:"
 msgstr "Type de _ligne :"
 
-#: libgwydgets/gwygraphareadialog.c:167 modules/file/imgexport.c:2618
+#: libgwydgets/gwygraphareadialog.c:167 modules/file/imgexport.c:2651
 msgid "Line t_hickness:"
 msgstr "Épaisseur de ligne :"
 
@@ -1195,7 +1195,7 @@ msgid "Preferred"
 msgstr "Préféré"
 
 #: libgwydgets/gwyoptionmenus.c:470 app/meta.c:383
-#: modules/file/imgexport.c:3499 modules/file/imgexport.c:3916
+#: modules/file/imgexport.c:3557 modules/file/imgexport.c:3976
 #: modules/file/rawfile.c:961 modules/process/convolution_filter.c:553
 #: modules/process/neural.c:413 modules/tools/selectionmanager.c:331
 msgid "Name"
@@ -1939,7 +1939,7 @@ msgstr "Efface_r"
 msgid "_Close"
 msgstr "Fermer"
 
-#: app/log.c:524 modules/file/imgexport.c:3507 modules/file/rawfile.c:962
+#: app/log.c:524 modules/file/imgexport.c:3565 modules/file/rawfile.c:962
 msgid "Type"
 msgstr "Type"
 
@@ -1947,7 +1947,7 @@ msgstr "Type"
 msgid "Function"
 msgstr "Fonction"
 
-#: app/log.c:526 modules/file/imgexport.c:2585 modules/process/neural.c:610
+#: app/log.c:526 modules/file/imgexport.c:2618 modules/process/neural.c:610
 #: modules/tools/stats.c:407
 msgid "Parameters"
 msgstr "Paramètres"
@@ -1996,7 +1996,7 @@ msgstr "_Historique"
 msgid "_New"
 msgstr "_Nouveau"
 
-#: app/meta.c:212 modules/file/imgexport.c:3981 modules/file/rawfile.c:1024
+#: app/meta.c:212 modules/file/imgexport.c:4041 modules/file/rawfile.c:1024
 #: modules/process/neural.c:711
 msgid "_Delete"
 msgstr "Supprimer"
@@ -2967,7 +2967,7 @@ msgstr "Unités :"
 msgid "Export Text"
 msgstr "Exporter au format texte"
 
-#: modules/file/asciiexport.c:274 modules/file/imgexport.c:3542
+#: modules/file/asciiexport.c:274 modules/file/imgexport.c:3600
 #: modules/file/rawfile.c:724 modules/file/rawxyz.c:673
 #: modules/process/calibrate.c:605 modules/process/col_synth.c:517
 #: modules/process/correct_affine.c:490 modules/process/diff_synth.c:573
@@ -3636,12 +3636,12 @@ msgid "OpenEXR data type %u is invalid or unsupported."
 msgstr "Le type de données OpenEXR %u est invalide ou non supportée."
 
 #: modules/file/hdrimage.cc:1433 modules/file/hdrimage.cc:1442
-#: modules/file/imgexport.c:4535 modules/file/imgexport.c:4546
+#: modules/file/imgexport.c:4599 modules/file/imgexport.c:4610
 #, c-format
 msgid "libpng initialization error (in %s)"
 msgstr "Erreur d'initialisation de libpng (dans %s)"
 
-#: modules/file/hdrimage.cc:1451 modules/file/imgexport.c:4610
+#: modules/file/hdrimage.cc:1451 modules/file/imgexport.c:4674
 msgid "libpng error occured"
 msgstr "Une erreur s'est produite dans libpng"
 
@@ -3676,13 +3676,13 @@ msgstr "Canaux :"
 msgid "Pages:"
 msgstr "Pages : "
 
-#: modules/file/hdrimage.cc:2290 modules/file/imgexport.c:2513
+#: modules/file/hdrimage.cc:2290 modules/file/imgexport.c:2546
 #: modules/file/pixmap.c:864 modules/file/rawfile.c:627
 #: modules/file/rawxyz.c:572 modules/process/dimensions.h:466
 msgid "Physical Dimensions"
 msgstr "Dimensions physiques"
 
-#: modules/file/hdrimage.cc:2304 modules/file/imgexport.c:2569
+#: modules/file/hdrimage.cc:2304 modules/file/imgexport.c:2602
 #: modules/file/pixmap.c:874 modules/file/rawfile.c:636
 #: modules/process/crosscor.c:215 modules/process/dimensions.h:472
 #: modules/process/tip_blind.c:337
@@ -3811,97 +3811,96 @@ msgstr ""
 msgid "Cannot read channel labels."
 msgstr "Impossible de lire les labels des canaux."
 
-#: modules/file/imgexport.c:380 modules/file/pixmap.c:180
+#: modules/file/imgexport.c:383 modules/file/pixmap.c:180
 msgid "Portable Network Graphics (.png)"
 msgstr "Image PNG (.png)"
 
-#: modules/file/imgexport.c:386 modules/file/pixmap.c:184
+#: modules/file/imgexport.c:389 modules/file/pixmap.c:184
 msgid "JPEG (.jpeg,.jpg)"
 msgstr "Image JPEG (.jpeg, .jpg)"
 
-#: modules/file/imgexport.c:393 modules/file/pixmap.c:204
+#: modules/file/imgexport.c:396 modules/file/pixmap.c:204
 msgid "Graphics Interchange Format GIF (.gif)"
 msgstr "Image GIF (.gif)"
 
-#: modules/file/imgexport.c:399 modules/file/pixmap.c:188
+#: modules/file/imgexport.c:402 modules/file/pixmap.c:188
 msgid "TIFF (.tiff,.tif)"
 msgstr "Image TIFF (.tiff, .tif)"
 
-#: modules/file/imgexport.c:405 modules/file/pixmap.c:192
+#: modules/file/imgexport.c:408 modules/file/pixmap.c:192
 msgid "Portable Pixmap (.ppm,.pnm)"
 msgstr "Image PPM (.ppm, .pnm)"
 
-#: modules/file/imgexport.c:411 modules/file/pixmap.c:196
+#: modules/file/imgexport.c:414 modules/file/pixmap.c:196
 msgid "Windows or OS2 Bitmap (.bmp)"
 msgstr "Image BMP (.bmp)"
 
-#: modules/file/imgexport.c:417 modules/file/pixmap.c:200
+#: modules/file/imgexport.c:420 modules/file/pixmap.c:200
 msgid "TARGA (.tga,.targa)"
 msgstr "Image TARGA (.tga, .targa)"
 
-#: modules/file/imgexport.c:424
+#: modules/file/imgexport.c:427
 msgid "Portable document format (.pdf)"
 msgstr "Document PDF (.pdf)"
 
-#: modules/file/imgexport.c:432
+#: modules/file/imgexport.c:435
 msgid "Encapsulated PostScript (.eps)"
 msgstr "Document PostScript encapsulé (.eps)"
 
-#: modules/file/imgexport.c:440
+#: modules/file/imgexport.c:443
 msgid "Scalable Vector Graphics (.svg)"
 msgstr "Image vectorielle SVG (.svg)"
 
-#: modules/file/imgexport.c:450 modules/tools/selectionmanager.c:256
+#: modules/file/imgexport.c:453 modules/tools/selectionmanager.c:256
 msgid "Horiz./vert. lines"
 msgstr "Lignes horiz./vert."
 
-#: modules/file/imgexport.c:454 modules/tools/selectionmanager.c:257
+#: modules/file/imgexport.c:457 modules/tools/selectionmanager.c:257
 msgid "Ellipses"
 msgstr "Ellipses"
 
-#: modules/file/imgexport.c:458 modules/tools/selectionmanager.c:258
+#: modules/file/imgexport.c:461 modules/tools/selectionmanager.c:258
 msgid "Lines"
 msgstr "Lignes"
 
-#: modules/file/imgexport.c:466 modules/tools/selectionmanager.c:260
+#: modules/file/imgexport.c:469 modules/tools/selectionmanager.c:260
 msgid "Rectangles"
 msgstr "Rectangles"
 
-#: modules/file/imgexport.c:470 modules/process/lat_synth.c:537
+#: modules/file/imgexport.c:473 modules/process/lat_synth.c:537
 #: modules/process/lat_synth.c:616 modules/tools/selectionmanager.c:261
 msgid "Lattice"
 msgstr "Maillage"
 
-#: modules/file/imgexport.c:476 modules/file/imgexport.c:482
+#: modules/file/imgexport.c:479 modules/file/imgexport.c:485
 msgid "ruler|_None"
 msgstr "_Aucune"
 
-#: modules/file/imgexport.c:477
+#: modules/file/imgexport.c:480
 msgid "_Rulers"
 msgstr "G_raduations"
 
-#: modules/file/imgexport.c:478
+#: modules/file/imgexport.c:481
 msgid "_Inset scale bar"
 msgstr "Échelle"
 
-#: modules/file/imgexport.c:483
+#: modules/file/imgexport.c:486
 msgid "_False color ruler"
 msgstr "Échelle de couleurs"
 
-#: modules/file/imgexport.c:487
+#: modules/file/imgexport.c:490
 msgid "title|None"
 msgstr "Aucun"
 
-#: modules/file/imgexport.c:488
+#: modules/file/imgexport.c:491
 msgid "At the top"
 msgstr "En haut"
 
-#: modules/file/imgexport.c:489
+#: modules/file/imgexport.c:492
 msgid "Along the right edge"
 msgstr "Le long du bord droit"
 
-#: modules/file/imgexport.c:495
-#, fuzzy
+#: modules/file/imgexport.c:498
 msgid ""
 "Renders data into vector (SVG, PDF, EPS) and pixmap (PNG, JPEG, TIFF, PPM, "
 "BMP, TARGA, GIF) images. Export to some formats relies on GDK and other "
@@ -3911,19 +3910,19 @@ msgstr ""
 "JPEG, TIFF, PPM, BMP, TARGA, GIF). L'export sous certains formats est basé "
 "sur GDK et d'autres librairies, et peut ainsi dépendre de votre installation."
 
-#: modules/file/imgexport.c:2523
+#: modules/file/imgexport.c:2556
 msgid "Pi_xel size:"
 msgstr "Taille des pi_xels :"
 
-#: modules/file/imgexport.c:2531
+#: modules/file/imgexport.c:2564
 msgid "Pixels per _inch:"
 msgstr "P_ixels par pouce :"
 
-#: modules/file/imgexport.c:2557
+#: modules/file/imgexport.c:2590
 msgid "_Zoom:"
 msgstr "_Zoom :"
 
-#: modules/file/imgexport.c:2576 modules/process/col_synth.c:487
+#: modules/file/imgexport.c:2609 modules/process/col_synth.c:487
 #: modules/process/diff_synth.c:525 modules/process/domain_synth.c:528
 #: modules/process/grain_mark.c:310 modules/process/lat_synth.c:732
 #: modules/process/obj_synth.c:567 modules/process/pat_synth.c:871
@@ -3932,107 +3931,107 @@ msgstr "_Zoom :"
 msgid "_Height:"
 msgstr "_Hauteur :"
 
-#: modules/file/imgexport.c:2589
+#: modules/file/imgexport.c:2622
 msgid "_Font:"
 msgstr "Police :"
 
-#: modules/file/imgexport.c:2608
+#: modules/file/imgexport.c:2641
 msgid "_Font size:"
 msgstr "Taille de police :"
 
-#: modules/file/imgexport.c:2628
+#: modules/file/imgexport.c:2661
 msgid "O_utline thickness:"
 msgstr "Épaisse_ur du pourtour :"
 
-#: modules/file/imgexport.c:2638
+#: modules/file/imgexport.c:2671
 msgid "_Border width:"
 msgstr "Épaisseur des bordures :"
 
-#: modules/file/imgexport.c:2648
+#: modules/file/imgexport.c:2681
 msgid "_Tick length:"
 msgstr "Longueur des gradua_tions :"
 
-#: modules/file/imgexport.c:2656
+#: modules/file/imgexport.c:2689
 msgid "Tie sizes to _data pixels"
 msgstr "Lier les _dimensions aux pixels"
 
-#: modules/file/imgexport.c:2752
+#: modules/file/imgexport.c:2801
 msgid "Select Color"
 msgstr "Couleur des sélections"
 
-#: modules/file/imgexport.c:2944
+#: modules/file/imgexport.c:2993
 msgid "Black"
 msgstr "Noir"
 
-#: modules/file/imgexport.c:2952
+#: modules/file/imgexport.c:3001
 msgid "White"
 msgstr "Blanc"
 
-#: modules/file/imgexport.c:2986 modules/process/lno_synth.c:1068
+#: modules/file/imgexport.c:3035 modules/process/lno_synth.c:1068
 msgid "_Length:"
 msgstr "_Longueur :"
 
-#: modules/file/imgexport.c:3002
+#: modules/file/imgexport.c:3051
 msgid "_Auto"
 msgstr "_Auto"
 
-#: modules/file/imgexport.c:3009
+#: modules/file/imgexport.c:3058
 msgid "Placement:"
 msgstr "Positionnement :"
 
-#: modules/file/imgexport.c:3014
+#: modules/file/imgexport.c:3063
 msgid "left"
 msgstr "gauche"
 
-#: modules/file/imgexport.c:3018
+#: modules/file/imgexport.c:3067
 msgid "center"
 msgstr "centre"
 
-#: modules/file/imgexport.c:3022
+#: modules/file/imgexport.c:3071
 msgid "right"
 msgstr "droite"
 
-#: modules/file/imgexport.c:3027
+#: modules/file/imgexport.c:3076
 msgid "top"
 msgstr "haut"
 
-#: modules/file/imgexport.c:3039
+#: modules/file/imgexport.c:3088
 msgid "bottom"
 msgstr "bas"
 
-#: modules/file/imgexport.c:3051 modules/file/imgexport.c:3247
+#: modules/file/imgexport.c:3100 modules/file/imgexport.c:3305
 msgid "Hori_zontal gap:"
 msgstr "Écart hori_zontal :"
 
-#: modules/file/imgexport.c:3057
+#: modules/file/imgexport.c:3106
 msgid "_Vertical gap:"
 msgstr "Écart vertical :"
 
-#: modules/file/imgexport.c:3064 modules/file/imgexport.c:3523
+#: modules/file/imgexport.c:3113 modules/file/imgexport.c:3581
 msgid "Colo_r:"
 msgstr "Couleu_r :"
 
-#: modules/file/imgexport.c:3069 modules/file/imgexport.c:3528
+#: modules/file/imgexport.c:3118 modules/file/imgexport.c:3586
 msgid "Out_line color:"
 msgstr "Cou_leur du pourtour :"
 
-#: modules/file/imgexport.c:3073 modules/file/imgexport.c:3534
+#: modules/file/imgexport.c:3122 modules/file/imgexport.c:3592
 msgid "O_pacity:"
 msgstr "O_pacité :"
 
-#: modules/file/imgexport.c:3082
+#: modules/file/imgexport.c:3131
 msgid "Draw _ticks"
 msgstr "Afficher les gradua_tions"
 
-#: modules/file/imgexport.c:3092
+#: modules/file/imgexport.c:3141
 msgid "Draw _label"
 msgstr "Dessiner les _labels"
 
-#: modules/file/imgexport.c:3190
+#: modules/file/imgexport.c:3239
 msgid "Image"
 msgstr "Image"
 
-#: modules/file/imgexport.c:3194 modules/file/rawxyz.c:677
+#: modules/file/imgexport.c:3243 modules/file/rawxyz.c:677
 #: modules/process/correct_affine.c:508 modules/process/drift.c:301
 #: modules/process/dwt.c:206 modules/process/dwtanisotropy.c:202
 #: modules/process/fft_filter_1d.c:330 modules/process/fft_profile.c:299
@@ -4044,110 +4043,114 @@ msgstr "Image"
 msgid "_Interpolation type:"
 msgstr "Type d'interpolation :"
 
-#: modules/file/imgexport.c:3224
+#: modules/file/imgexport.c:3273
 msgid "Draw _mask"
 msgstr "Dessiner le _masque"
 
-#: modules/file/imgexport.c:3234
+#: modules/file/imgexport.c:3283
+msgid "Draw _frame"
+msgstr "Dessiner le cadre"
+
+#: modules/file/imgexport.c:3292
 msgid "Value Scale"
 msgstr "Échelle de valeurs"
 
-#: modules/file/imgexport.c:3254 modules/file/imgexport.c:3944
+#: modules/file/imgexport.c:3312 modules/file/imgexport.c:4004
 msgid "Title"
 msgstr "Titre"
 
-#: modules/file/imgexport.c:3258
+#: modules/file/imgexport.c:3316
 msgid "Posi_tion:"
 msgstr "Posi_tion :"
 
-#: modules/file/imgexport.c:3273
+#: modules/file/imgexport.c:3331
 msgid "_Gap:"
 msgstr "Écart :"
 
-#: modules/file/imgexport.c:3280
+#: modules/file/imgexport.c:3338
 msgid "Put _units to title"
 msgstr "Ajouter les _unités dans le titre"
 
-#: modules/file/imgexport.c:3464
+#: modules/file/imgexport.c:3522
 msgid "Draw _selection"
 msgstr "Dessiner la _sélection"
 
-#: modules/file/imgexport.c:3515 modules/tools/selectionmanager.c:347
+#: modules/file/imgexport.c:3573 modules/tools/selectionmanager.c:347
 msgid "Objects"
 msgstr "Objets"
 
-#: modules/file/imgexport.c:3924
+#: modules/file/imgexport.c:3984
 msgid "Lateral"
 msgstr "Latéral"
 
-#: modules/file/imgexport.c:3963 modules/file/rawfile.c:1006
+#: modules/file/imgexport.c:4023 modules/file/rawfile.c:1006
 #: modules/process/calcoefs_load.c:216 modules/process/neural.c:693
 msgid "verb|_Load"
 msgstr "Charger"
 
-#: modules/file/imgexport.c:3969 modules/file/rawfile.c:1012
+#: modules/file/imgexport.c:4029 modules/file/rawfile.c:1012
 #: modules/process/neural.c:699
 msgid "verb|_Store"
 msgstr "Enregi_strer"
 
-#: modules/file/imgexport.c:3975 modules/file/rawfile.c:1018
+#: modules/file/imgexport.c:4035 modules/file/rawfile.c:1018
 #: modules/process/neural.c:705
 msgid "_Rename"
 msgstr "_Renommer"
 
-#: modules/file/imgexport.c:3995 modules/file/rawfile.c:1037
+#: modules/file/imgexport.c:4055 modules/file/rawfile.c:1037
 msgid "Preset _name:"
 msgstr "_Nom du préréglage :"
 
-#: modules/file/imgexport.c:4066
+#: modules/file/imgexport.c:4126
 #, c-format
 msgid "Export %s"
 msgstr "Exporter %s"
 
-#: modules/file/imgexport.c:4087
+#: modules/file/imgexport.c:4147
 msgid "Export as 1_6 bit grayscale"
 msgstr "Exporter en niveaux de gris 1_6 bits"
 
-#: modules/file/imgexport.c:4110
+#: modules/file/imgexport.c:4170
 msgid "Lateral Scale"
 msgstr "Échelle latérale"
 
-#: modules/file/imgexport.c:4115
+#: modules/file/imgexport.c:4175
 msgid "Values"
 msgstr "Valeurs"
 
-#: modules/file/imgexport.c:4120
+#: modules/file/imgexport.c:4180
 msgid "Selection"
 msgstr "Sélection"
 
-#: modules/file/imgexport.c:4125 modules/file/rawfile.c:440
+#: modules/file/imgexport.c:4185 modules/file/rawfile.c:440
 #: modules/process/convolution_filter.c:290
 msgid "Presets"
 msgstr "Préréglages"
 
-#: modules/file/imgexport.c:4860
+#: modules/file/imgexport.c:4924
 #, c-format
 msgid "Cairo error occurred: %s"
 msgstr "Une erreur s'est produite dans Cairo : %s"
 
-#: modules/file/imgexport.c:4884
+#: modules/file/imgexport.c:4948
 #, c-format
 msgid "Pixbuf save failed: %s."
 msgstr "La sauvegarde de l'image à échoué : %s."
 
-#: modules/file/imgexport.c:5162
+#: modules/file/imgexport.c:5226
 msgid "Image is too large to be stored as TARGA."
 msgstr "L'image est trop grande pour être enregistrée au format TARGA"
 
-#: modules/file/imgexport.c:5513 modules/file/imgexport.c:5542
+#: modules/file/imgexport.c:5577 modules/file/imgexport.c:5606
 msgid "Draw _numbers"
 msgstr "Dessiner les _nombres"
 
-#: modules/file/imgexport.c:5525
+#: modules/file/imgexport.c:5589
 msgid "_End marker length:"
 msgstr "Longu_eur du marqueur de fin :"
 
-#: modules/file/imgexport.c:5554
+#: modules/file/imgexport.c:5618
 msgid "Marker _radius:"
 msgstr "_Rayon du marqueur :"
 
@@ -8515,9 +8518,8 @@ msgid "Fractional Brownian Motion"
 msgstr "Mouvement brownien fractionnaire"
 
 #: modules/process/fbm_synth.c:394
-#, fuzzy
 msgid "_Hurst exponent:"
-msgstr "Paramètre de _Hurst :"
+msgstr "Exposant de _Hurst :"
 
 #: modules/process/fbm_synth.c:402
 msgid "_Stationarity scale:"
@@ -11974,6 +11976,18 @@ msgstr "Calcul de la TF inverse en cours..."
 #: modules/process/xydenoise.c:279
 msgid "Denoised"
 msgstr "Débruité"
+
+#: modules/process/zigzag.c:46
+msgid "Fixes zigzag-like interlacing pattern"
+msgstr "Corrige les défauts d'entrelacement en forme de zigzag"
+
+#: modules/process/zigzag.c:60
+msgid "/_Correct Data/_Zigzag"
+msgstr "/_Correction des données/_Zigzag"
+
+#: modules/process/zigzag.c:64
+msgid "Fix zigzag interlacing pattern"
+msgstr "Corrige les défauts d'entrelacement en forme de zigzag"
 
 #: modules/pygwy/pygwy-console.c:58
 msgid "/Pygwy Console"
