@@ -188,7 +188,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports network Common Data Form (netCDF) files created by GXSM."),
     "Yeti <yeti@gwyddion.net>",
-    "0.7",
+    "0.8",
     "David Nečas (Yeti), Petr Klapetek & Niv Levy",
     "2006",
 };
@@ -1041,18 +1041,18 @@ create_meta
         /* not sure if this would be a valid string, so create a new one with
         * fixed length */
         gwy_container_set_string_by_name(meta, "Comments",
-                                        g_strndup(cdffile.buffer + var->begin,
-                                                  var->vsize));
+                                         g_strndup(cdffile.buffer + var->begin,
+                                                   var->vsize));
     }
     if ((var = cdffile_get_var(&cdffile, "dateofscan"))) {
         /* not sure if this would be a valid string, so create a new one with
         * fixed length */
         gwy_container_set_string_by_name(meta, "Date and time",
-                                        g_strndup(cdffile.buffer + var->begin,
-                                                  var->vsize));
+                                         g_strndup(cdffile.buffer + var->begin,
+                                                   var->vsize));
     }
     if ((siunit = read_real_size(&cdffile, "time",
-                                &real, &power10))) {
+                                 &real, &power10))) {
         gwy_container_set_string_by_name(meta, "Scan time",
                                          g_strdup_printf("%5.2f s", real));
         g_object_unref(siunit);
@@ -1061,24 +1061,34 @@ create_meta
     * using the sranger 2 dsp gets this); but since these details depend in
     * gxsm on the plugin, i see no better option */
     if ((siunit = read_real_size(&cdffile, "sranger_mk2_hwi_bias",
-                                &real, &power10))) {
+                                 &real, &power10))) {
         gwy_container_set_string_by_name(meta, "V_bias",
                                         g_strdup_printf("%5.2g V",
                                                         real*pow10(power10)));
         g_object_unref(siunit);
     }
+
     if ((siunit = read_real_size(&cdffile,
-                                "sranger_mk2_hwi_mix0_current_set_point",
-                                &real, &power10))) {
+                                 "sranger_mk2_hwi_mix0_set_point",
+                                 &real, &power10))) {
         gwy_container_set_string_by_name(meta, "I_setpoint",
-                                        g_strdup_printf("%5.2g A",
-                                                        real*pow10(power10)));
+                                         g_strdup_printf("%5.2g A",
+                                                         real*pow10(power10)));
         g_object_unref(siunit);
     }
+    else if ((siunit = read_real_size(&cdffile,
+                                      "sranger_mk2_hwi_mix0_current_set_point",
+                                      &real, &power10))) {
+        gwy_container_set_string_by_name(meta, "I_setpoint",
+                                         g_strdup_printf("%5.2g A",
+                                                         real*pow10(power10)));
+        g_object_unref(siunit);
+    }
+
     if ((var = cdffile_get_var(&cdffile, "spm_scancontrol"))) {
         gwy_container_set_string_by_name(meta, "Slow scan",
-                                        g_strndup(cdffile.buffer + var->begin,
-                                                  var->vsize));
+                                         g_strndup(cdffile.buffer + var->begin,
+                                                   var->vsize));
     }
     return meta ;
 }
