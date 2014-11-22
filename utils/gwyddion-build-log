@@ -73,6 +73,7 @@ cat >install_to_tmp.ignore <<':'
 cat >check_deps_versions.ignore <<':'
 ^WARNING: Malformed symbol name: "The Poke() method" (type=method) in gio.
 ^libgwyddion/gwyutils.c:[0-9]*: glib-2.16 required for g_win32_get_package_installation_directory_of_module
+^modules/file/renishaw.c:300: glib-2.16 required for g_strcmp0
 ':'
 :
 
