@@ -49,7 +49,7 @@
  * [1] Not all variants are implemented.
  * [2] Data are exported in a fixed attached native-endian float point format.
  **/
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -152,6 +152,13 @@ static GwyDataField* read_raw_data_field (guint xres,
                                           GwyByteOrder byteorder,
                                           GHashTable *fields,
                                           const guchar *data);
+static GwyBrick*     read_raw_brick      (guint xres,
+                                          guint yres,
+                                          guint zres,
+                                          GwyRawDataType rawdatatype,
+                                          GwyByteOrder byteorder,
+                                          GHashTable *fields,
+                                          const guchar *data);
 static GwyContainer* nrrd_make_meta      (GHashTable *keyvalue);
 static gboolean      parse_uint_vector   (const gchar *value,
                                           guint n,
@@ -216,16 +223,17 @@ nrrdfile_load(const gchar *filename,
 {
     GwyContainer *meta = NULL, *container = NULL;
     GHashTable *hash, *fields = NULL, *keyvalue = NULL;
+    GwyDataField *dfield = NULL;
     GSList *l, *buffers_to_free = NULL;
     guchar *buffer = NULL, *data_buffer = NULL, *header_end;
     const guchar *data_start;
     gsize data_size, size = 0;
     GError *err = NULL;
-    GwyDataField *dfield = NULL;
     guint sizes[3] = { 1, 1, 1 };
     G_GNUC_UNUSED guint version;
-    guint dimension, xres, yres, header_size, i,
-          stride, rowstride, fieldstride, chanaxis, xaxis, yaxis, nchannels;
+    guint dimension, xres = 0, yres = 0, zres = 0, header_size, i,
+          stride = 0, rowstride = 0, fieldstride = 0, chanaxis, xaxis, yaxis,
+          nchannels = 0;
     gchar *value, *vkeyvalue, *vfield, *p, *line, *datafile = NULL;
     gchar **kinds = NULL;
     gboolean unix_eol, detached_header = FALSE;
@@ -401,36 +409,43 @@ nrrdfile_load(const gchar *filename,
 
     chanaxis = pick_channel_axis(dimension, sizes, kinds);
     gwy_debug("picked %u as the channel axis", chanaxis);
-    nchannels = sizes[chanaxis];
-    if (chanaxis == 0) {
-        xaxis = 1;
-        yaxis = 2;
-        stride = nchannels;
-        rowstride = nchannels*sizes[xaxis];
-        fieldstride = 1;
-    }
-    else if (chanaxis == 1) {
-        xaxis = 0;
-        yaxis = 2;
-        stride = 1;
-        rowstride = nchannels*sizes[xaxis];
-        fieldstride = sizes[xaxis];
-    }
-    else if (chanaxis == 2) {
-        xaxis = 0;
-        yaxis = 1;
-        stride = 1;
-        rowstride = sizes[xaxis];
-        fieldstride = sizes[xaxis]*sizes[yaxis];
+    if (chanaxis == G_MAXUINT) {
+        xres = sizes[0];
+        yres = sizes[1];
+        zres = sizes[2];
     }
     else {
-        g_assert_not_reached();
+        nchannels = sizes[chanaxis];
+        if (chanaxis == 0) {
+            xaxis = 1;
+            yaxis = 2;
+            stride = nchannels;
+            rowstride = nchannels*sizes[xaxis];
+            fieldstride = 1;
+        }
+        else if (chanaxis == 1) {
+            xaxis = 0;
+            yaxis = 2;
+            stride = 1;
+            rowstride = nchannels*sizes[xaxis];
+            fieldstride = sizes[xaxis];
+        }
+        else if (chanaxis == 2) {
+            xaxis = 0;
+            yaxis = 1;
+            stride = 1;
+            rowstride = sizes[xaxis];
+            fieldstride = sizes[xaxis]*sizes[yaxis];
+        }
+        else {
+            g_assert_not_reached();
+        }
+        xres = sizes[xaxis];
+        yres = sizes[yaxis];
+        gwy_debug("xres: %u, yres: %u, nchannels: %u", xres, yres, nchannels);
+        gwy_debug("stride: %u, rowstride: %u, fieldstride: %u",
+                  stride, rowstride, fieldstride);
     }
-    xres = sizes[xaxis];
-    yres = sizes[yaxis];
-    gwy_debug("xres: %u, yres: %u, nchannels: %u", xres, yres, nchannels);
-    gwy_debug("stride: %u, rowstride: %u, fieldstride: %u",
-              stride, rowstride, fieldstride);
 
     if (!(data_start = get_raw_data_pointer(data_buffer, &data_size,
                                             sizes[0]*sizes[1]*sizes[2],
@@ -443,35 +458,54 @@ nrrdfile_load(const gchar *filename,
     container = gwy_container_new();
     meta = nrrd_make_meta(keyvalue);
 
-    for (i = 0; i < nchannels; i++) {
-        const guchar *chandata = data_start
-                                 + i*fieldstride*gwy_raw_data_size(rawdatatype);
-        dfield = read_raw_data_field(xres, yres,
-                                     stride, rowstride, rawdatatype, byteorder,
-                                     fields, chandata);
-        quark = gwy_app_get_data_key_for_id(i);
-        gwy_container_set_object(container, quark, dfield);
+    if (chanaxis == G_MAXUINT) {
+        GwyBrick *brick = read_raw_brick(xres, yres, zres,
+                                         rawdatatype, byteorder,
+                                         fields, data_start);
+        quark = gwy_app_get_brick_key_for_id(0);
+        gwy_container_set_object(container, quark, brick);
+        dfield = gwy_data_field_new(xres, yres,
+                                    gwy_brick_get_xreal(brick),
+                                    gwy_brick_get_yreal(brick),
+                                    FALSE);
+        gwy_brick_mean_plane(brick, dfield, 0, 0, 0, xres, yres, -1, FALSE);
+        gwy_container_set_object_by_name(container, "/brick/0/preview", dfield);
+        g_object_unref(brick);
         g_object_unref(dfield);
-
-        if ((value = g_hash_table_lookup(fields, "content"))) {
-            gchar *key = g_strconcat(g_quark_to_string(quark), "/title", NULL);
-            gwy_container_set_string_by_name(container, key, g_strdup(value));
-            g_free(key);
-        }
-        if (meta) {
-            gchar *key = g_strdup(g_quark_to_string(quark));
-            GwyContainer *chanmeta = gwy_container_duplicate(meta);
-
-            g_assert(g_str_has_suffix(key, "/data"));
-            strcpy(key + strlen(key)-4, "meta");
-            gwy_container_set_object_by_name(container, key, chanmeta);
-            g_object_unref(chanmeta);
-            g_free(key);
-        }
-        gwy_file_channel_import_log_add(container, i, NULL, filename);
     }
+    else {
+        for (i = 0; i < nchannels; i++) {
+            const guchar *chandata;
+            chandata = (data_start
+                        + i*fieldstride*gwy_raw_data_size(rawdatatype));
+            dfield = read_raw_data_field(xres, yres,
+                                         stride, rowstride,
+                                         rawdatatype, byteorder,
+                                         fields, chandata);
+            quark = gwy_app_get_data_key_for_id(i);
+            gwy_container_set_object(container, quark, dfield);
+            g_object_unref(dfield);
 
-    /* TODO: Read key-values and possible other fields as metadata. */
+            if ((value = g_hash_table_lookup(fields, "content"))) {
+                gchar *key = g_strconcat(g_quark_to_string(quark), "/title",
+                                         NULL);
+                gwy_container_set_string_by_name(container, key,
+                                                 g_strdup(value));
+                g_free(key);
+            }
+            if (meta) {
+                gchar *key = g_strdup(g_quark_to_string(quark));
+                GwyContainer *chanmeta = gwy_container_duplicate(meta);
+
+                g_assert(g_str_has_suffix(key, "/data"));
+                strcpy(key + strlen(key)-4, "meta");
+                gwy_container_set_object_by_name(container, key, chanmeta);
+                g_object_unref(chanmeta);
+                g_free(key);
+            }
+            gwy_file_channel_import_log_add(container, i, NULL, filename);
+        }
+    }
 
 fail:
     gwy_object_unref(meta);
@@ -792,10 +826,13 @@ pick_channel_axis(guint dimension,
                   const guint *sizes,
                   gchar **kinds)
 {
-    gboolean xdomain = TRUE, ydomain = TRUE, zdomain = TRUE;
+    guint xdomain = TRUE, ydomain = TRUE, zdomain = TRUE;
+    guint m;
 
     if (dimension == 2)
         return 2;
+
+    g_return_val_if_fail(dimension == 3, 0);
 
     if (kinds) {
         normalise_field_name(kinds[0]);
@@ -830,24 +867,21 @@ pick_channel_axis(guint dimension,
         return 0;
 
     /* If that fails try the axis much smaller than the other two. */
-    if (sizes[2]*sqrt(sizes[2]) < MIN(sizes[0], sizes[1]))
-        return 2;
-    if (sizes[0]*sqrt(sizes[0]) < MIN(sizes[1], sizes[2]))
-        return 0;
-    if (sizes[1]*sqrt(sizes[1]) < MIN(sizes[0], sizes[2]))
-        return 1;
+    if (sizes[2] <= (m = MIN(sizes[0], sizes[1]))) {
+        if (sizes[2] < 5 || sizes[2]*sizes[2] < m)
+            return 2;
+    }
+    if (sizes[0] <= (m = MIN(sizes[1], sizes[2]))) {
+        if (sizes[0] < 5 || sizes[0]*sizes[0] < m)
+            return 0;
+    }
+    if (sizes[1] <= (m = MIN(sizes[0], sizes[2]))) {
+        if (sizes[1] < 5 || sizes[1]*sizes[1] < m)
+            return 1;
+    }
 
-    /* Then the non-square axis */
-    if (sizes[1] == sizes[0] && sizes[2] != sizes[0])
-        return 2;
-    if (sizes[2] == sizes[1] && sizes[0] != sizes[1])
-        return 0;
-    if (sizes[0] == sizes[2] && sizes[1] != sizes[2])
-        return 1;
-
-    /* If everything fails just choose arbitrarily; choosing z gives the best
-     * memory access pattern... */
-    return 2;
+    /* Import as volume data */
+    return G_MAXUINT;
 }
 
 static guchar*
@@ -1172,6 +1206,7 @@ read_raw_data_field(guint xres, guint yres,
     if ((value = g_hash_table_lookup(fields, "oldmax")))
         q = g_ascii_strtod(value, NULL) - z0;
 
+    /* FIXME: This is probably wrong if dimensions == 3 && chanaxis != 2. */
     if ((value = g_hash_table_lookup(fields, "spacings"))
         && parse_float_vector(value, 2, &dx, &dy)) {
         /* Use negated positive conditions to catch NaNs */
@@ -1186,6 +1221,7 @@ read_raw_data_field(guint xres, guint yres,
         }
     }
 
+    /* FIXME: This is probably wrong if dimensions == 3 && chanaxis != 2. */
     if ((value = g_hash_table_lookup(fields, "axismins"))
         && parse_float_vector(value, 2, &xoff, &yoff)) {
         if (gwy_isnan(xoff) || gwy_isinf(xoff))
@@ -1195,6 +1231,7 @@ read_raw_data_field(guint xres, guint yres,
     }
 
     /* Prefer axismaxs if both spacings and axismaxs are given. */
+    /* FIXME: This is probably wrong if dimensions == 3 && chanaxis != 2. */
     if ((value = g_hash_table_lookup(fields, "axismaxs"))
         && parse_float_vector(value, 2, &dx, &dy)) {
         dx = (dx - xoff)/xres;
@@ -1250,6 +1287,133 @@ read_raw_data_field(guint xres, guint yres,
     }
 
     return dfield;
+}
+
+static GwyBrick*
+read_raw_brick(guint xres, guint yres, guint zres,
+               GwyRawDataType rawdatatype, GwyByteOrder byteorder,
+               GHashTable *fields,
+               const guchar *data)
+{
+    GwyBrick *brick;
+    GwySIUnit *siunitz = NULL, *siunitx = NULL, *siunity = NULL,
+              *siunitw = NULL;
+    gdouble dx = 1.0, dy = 1.0, dz = 1.0, q = 1.0, w0 = 0.0,
+            xoff = 0.0, yoff = 0.0, zoff = 0.0;
+    gdouble *d;
+    gint power10;
+    gchar *value;
+
+    if ((value = g_hash_table_lookup(fields, "oldmin")))
+        w0 = g_ascii_strtod(value, NULL);
+
+    if ((value = g_hash_table_lookup(fields, "oldmax")))
+        q = g_ascii_strtod(value, NULL) - w0;
+
+    if ((value = g_hash_table_lookup(fields, "spacings"))
+        && parse_float_vector(value, 3, &dx, &dy, &dz)) {
+        /* Use negated positive conditions to catch NaNs */
+        if (!((dx = fabs(dx)) > 0)) {
+            g_warning("Real x step is 0.0, fixing to 1.0");
+            dx = 1.0;
+        }
+        /* Use negated positive conditions to catch NaNs */
+        if (!((dy = fabs(dy)) > 0)) {
+            g_warning("Real y step is 0.0, fixing to 1.0");
+            dy = 1.0;
+        }
+        /* Use negated positive conditions to catch NaNs */
+        if (!((dz = fabs(dz)) > 0)) {
+            g_warning("Real z step is 0.0, fixing to 1.0");
+            dz = 1.0;
+        }
+    }
+
+    /* FIXME: This is complete bullshit.  Must fix parse_float_vector() to
+     * only modify the values if they are all sane.  And then we don't need any
+     * subsequent tests. */
+    if ((value = g_hash_table_lookup(fields, "axismins"))
+        && parse_float_vector(value, 3, &xoff, &yoff, &zoff)) {
+        if (gwy_isnan(xoff) || gwy_isinf(xoff))
+            xoff = 0.0;
+        if (gwy_isnan(yoff) || gwy_isinf(yoff))
+            yoff = 0.0;
+        if (gwy_isnan(zoff) || gwy_isinf(zoff))
+            zoff = 0.0;
+    }
+
+    /* Prefer axismaxs if both spacings and axismaxs are given. */
+    if ((value = g_hash_table_lookup(fields, "axismaxs"))
+        && parse_float_vector(value, 3, &dx, &dy, &dz)) {
+        dx = (dx - xoff)/xres;
+        dy = (dy - xoff)/xres;
+        dz = (dz - zoff)/zres;
+        /* Use negated positive conditions to catch NaNs */
+        if (!((dx = fabs(dx)) > 0)) {
+            g_warning("Real x step is 0.0, fixing to 1.0");
+            dx = 1.0;
+        }
+        /* Use negated positive conditions to catch NaNs */
+        if (!((dy = fabs(dy)) > 0)) {
+            g_warning("Real y step is 0.0, fixing to 1.0");
+            dy = 1.0;
+        }
+        /* Use negated positive conditions to catch NaNs */
+        if (!((dz = fabs(dz)) > 0)) {
+            g_warning("Real z step is 0.0, fixing to 1.0");
+            dz = 1.0;
+        }
+    }
+
+    if ((value = g_hash_table_lookup(fields, "sampleunits"))) {
+        siunitw = gwy_si_unit_new_parse(value, &power10);
+        q *= pow10(power10);
+        w0 *= pow10(power10);
+    }
+
+    if ((value = g_hash_table_lookup(fields, "units"))) {
+        /* TODO */
+#if 0
+        gchar *start, *end;
+        /* Parse only the first axis unit.  We would not know what to do with
+         * different X and Y units anyway. */
+        if ((start = strchr(value, '"')) && (end = strchr(start+1, '"'))) {
+            value = g_strndup(start+1, end-start-1);
+            siunitxy = gwy_si_unit_new_parse(value, &power10);
+            g_free(value);
+            dx *= pow10(power10);
+            dy *= pow10(power10);
+            dz *= pow10(power10);
+        }
+#endif
+    }
+
+    brick = gwy_brick_new(xres, yres, zres, xres*dx, yres*dy, zres*dz, FALSE);
+    gwy_brick_set_xoffset(brick, xoff);
+    gwy_brick_set_yoffset(brick, yoff);
+    gwy_brick_set_zoffset(brick, zoff);
+    d = gwy_brick_get_data(brick);
+    gwy_convert_raw_data(data, xres*yres*zres, 1, rawdatatype, byteorder, d,
+                         q, w0);
+
+    if (siunitx) {
+        gwy_brick_set_si_unit_x(brick, siunitx);
+        g_object_unref(siunitx);
+    }
+    if (siunity) {
+        gwy_brick_set_si_unit_y(brick, siunity);
+        g_object_unref(siunity);
+    }
+    if (siunitz) {
+        gwy_brick_set_si_unit_z(brick, siunitz);
+        g_object_unref(siunitz);
+    }
+    if (siunitz) {
+        gwy_brick_set_si_unit_w(brick, siunitw);
+        g_object_unref(siunitw);
+    }
+
+    return brick;
 }
 
 static void
