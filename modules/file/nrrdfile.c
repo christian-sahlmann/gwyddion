@@ -1209,12 +1209,10 @@ read_raw_data_field(guint xres, guint yres,
     /* FIXME: This is probably wrong if dimensions == 3 && chanaxis != 2. */
     if ((value = g_hash_table_lookup(fields, "spacings"))
         && parse_float_vector(value, 2, &dx, &dy)) {
-        /* Use negated positive conditions to catch NaNs */
         if (!((dx = fabs(dx)) > 0)) {
             g_warning("Real x step is 0.0, fixing to 1.0");
             dx = 1.0;
         }
-        /* Use negated positive conditions to catch NaNs */
         if (!((dy = fabs(dy)) > 0)) {
             g_warning("Real y step is 0.0, fixing to 1.0");
             dy = 1.0;
@@ -1222,13 +1220,8 @@ read_raw_data_field(guint xres, guint yres,
     }
 
     /* FIXME: This is probably wrong if dimensions == 3 && chanaxis != 2. */
-    if ((value = g_hash_table_lookup(fields, "axismins"))
-        && parse_float_vector(value, 2, &xoff, &yoff)) {
-        if (gwy_isnan(xoff) || gwy_isinf(xoff))
-            xoff = 0.0;
-        if (gwy_isnan(yoff) || gwy_isinf(yoff))
-            yoff = 0.0;
-    }
+    if ((value = g_hash_table_lookup(fields, "axismins")))
+        parse_float_vector(value, 2, &xoff, &yoff);
 
     /* Prefer axismaxs if both spacings and axismaxs are given. */
     /* FIXME: This is probably wrong if dimensions == 3 && chanaxis != 2. */
@@ -1236,12 +1229,10 @@ read_raw_data_field(guint xres, guint yres,
         && parse_float_vector(value, 2, &dx, &dy)) {
         dx = (dx - xoff)/xres;
         dy = (dy - xoff)/xres;
-        /* Use negated positive conditions to catch NaNs */
         if (!((dx = fabs(dx)) > 0)) {
             g_warning("Real x step is 0.0, fixing to 1.0");
             dx = 1.0;
         }
-        /* Use negated positive conditions to catch NaNs */
         if (!((dy = fabs(dy)) > 0)) {
             g_warning("Real y step is 0.0, fixing to 1.0");
             dy = 1.0;
@@ -1312,35 +1303,22 @@ read_raw_brick(guint xres, guint yres, guint zres,
 
     if ((value = g_hash_table_lookup(fields, "spacings"))
         && parse_float_vector(value, 3, &dx, &dy, &dz)) {
-        /* Use negated positive conditions to catch NaNs */
         if (!((dx = fabs(dx)) > 0)) {
             g_warning("Real x step is 0.0, fixing to 1.0");
             dx = 1.0;
         }
-        /* Use negated positive conditions to catch NaNs */
         if (!((dy = fabs(dy)) > 0)) {
             g_warning("Real y step is 0.0, fixing to 1.0");
             dy = 1.0;
         }
-        /* Use negated positive conditions to catch NaNs */
         if (!((dz = fabs(dz)) > 0)) {
             g_warning("Real z step is 0.0, fixing to 1.0");
             dz = 1.0;
         }
     }
 
-    /* FIXME: This is complete bullshit.  Must fix parse_float_vector() to
-     * only modify the values if they are all sane.  And then we don't need any
-     * subsequent tests. */
-    if ((value = g_hash_table_lookup(fields, "axismins"))
-        && parse_float_vector(value, 3, &xoff, &yoff, &zoff)) {
-        if (gwy_isnan(xoff) || gwy_isinf(xoff))
-            xoff = 0.0;
-        if (gwy_isnan(yoff) || gwy_isinf(yoff))
-            yoff = 0.0;
-        if (gwy_isnan(zoff) || gwy_isinf(zoff))
-            zoff = 0.0;
-    }
+    if ((value = g_hash_table_lookup(fields, "axismins")))
+        parse_float_vector(value, 3, &xoff, &yoff, &zoff);
 
     /* Prefer axismaxs if both spacings and axismaxs are given. */
     if ((value = g_hash_table_lookup(fields, "axismaxs"))
@@ -1348,17 +1326,14 @@ read_raw_brick(guint xres, guint yres, guint zres,
         dx = (dx - xoff)/xres;
         dy = (dy - xoff)/xres;
         dz = (dz - zoff)/zres;
-        /* Use negated positive conditions to catch NaNs */
         if (!((dx = fabs(dx)) > 0)) {
             g_warning("Real x step is 0.0, fixing to 1.0");
             dx = 1.0;
         }
-        /* Use negated positive conditions to catch NaNs */
         if (!((dy = fabs(dy)) > 0)) {
             g_warning("Real y step is 0.0, fixing to 1.0");
             dy = 1.0;
         }
-        /* Use negated positive conditions to catch NaNs */
         if (!((dz = fabs(dz)) > 0)) {
             g_warning("Real z step is 0.0, fixing to 1.0");
             dz = 1.0;
@@ -1444,23 +1419,31 @@ parse_uint_vector(const gchar *value,
                   guint n,
                   ...)
 {
+    guint *values;
     va_list ap;
     gchar *end;
     guint i;
 
-    va_start(ap, n);
+    values = g_new(guint, n);
 
     for (i = 0; i < n; i++) {
-        guint *u = va_arg(ap, guint*);
-
-        *u = g_ascii_strtoull(value, &end, 10);
+        values[i] = g_ascii_strtoull(value, &end, 10);
         if (end == value) {
-            va_end(ap);
+            g_free(values);
             return FALSE;
         }
         value = end;
     }
+
+    /* Guarantee that we don't touch args pointers if we don't return TRUE. */
+    va_start(ap, n);
+    for (i = 0; i < n; i++) {
+        guint *u = va_arg(ap, guint*);
+        *u = values[i];
+    }
     va_end(ap);
+
+    g_free(values);
 
     return TRUE;
 }
@@ -1470,23 +1453,30 @@ parse_float_vector(const gchar *value,
                    guint n,
                    ...)
 {
+    gdouble *values;
     va_list ap;
     gchar *end;
     guint i;
 
-    va_start(ap, n);
+    values = g_new(gdouble, n);
 
     for (i = 0; i < n; i++) {
-        gdouble *d = va_arg(ap, gdouble*);
-
-        *d = g_ascii_strtod(value, &end);
-        if (end == value || gwy_isnan(*d) || gwy_isinf(*d)) {
-            va_end(ap);
+        values[i] = g_ascii_strtod(value, &end);
+        if (end == value || gwy_isnan(values[i]) || gwy_isinf(values[i])) {
             return FALSE;
         }
         value = end;
     }
+
+    /* Guarantee that we don't touch args pointers if we don't return TRUE. */
+    va_start(ap, n);
+    for (i = 0; i < n; i++) {
+        gdouble *d = va_arg(ap, gdouble*);
+        *d = values[i];
+    }
     va_end(ap);
+
+    g_free(values);
 
     return TRUE;
 }
