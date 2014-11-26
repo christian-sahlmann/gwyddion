@@ -49,7 +49,7 @@
  * [1] Not all variants are implemented.
  * [2] Data are exported in a fixed attached native-endian float point format.
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -166,6 +166,9 @@ static gboolean      parse_uint_vector   (const gchar *value,
 static gboolean      parse_float_vector  (const gchar *value,
                                           guint n,
                                           ...);
+static gboolean      parse_string_vector (const gchar *value,
+                                          guint n,
+                                          ...);
 static gchar**       split_per_axis_field(const gchar *value,
                                           const gchar *name,
                                           guint nitems,
@@ -177,7 +180,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports and exports nearly raw raster data (NRRD) files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -408,13 +411,14 @@ nrrdfile_load(const gchar *filename,
     }
 
     chanaxis = pick_channel_axis(dimension, sizes, kinds);
-    gwy_debug("picked %u as the channel axis", chanaxis);
     if (chanaxis == G_MAXUINT) {
+        gwy_debug("after much deliberation, we decided it's volume data");
         xres = sizes[0];
         yres = sizes[1];
         zres = sizes[2];
     }
     else {
+        gwy_debug("we picked %u as the channel axis", chanaxis);
         nchannels = sizes[chanaxis];
         if (chanaxis == 0) {
             xaxis = 1;
@@ -472,6 +476,14 @@ nrrdfile_load(const gchar *filename,
         gwy_container_set_object_by_name(container, "/brick/0/preview", dfield);
         g_object_unref(brick);
         g_object_unref(dfield);
+
+        if ((value = g_hash_table_lookup(fields, "content"))) {
+            gwy_container_set_const_string_by_name(container, "/brick/0/title",
+                                                   value);
+        }
+
+        if (meta)
+            gwy_container_set_object_by_name(container, "/brick/0/meta", meta);
     }
     else {
         for (i = 0; i < nchannels; i++) {
@@ -1246,15 +1258,15 @@ read_raw_data_field(guint xres, guint yres,
     }
 
     if ((value = g_hash_table_lookup(fields, "units"))) {
-        gchar *start, *end;
-        /* Parse only the first axis unit.  We would not know what to do with
-         * different X and Y units anyway. */
-        if ((start = strchr(value, '"')) && (end = strchr(start+1, '"'))) {
-            value = g_strndup(start+1, end-start-1);
-            siunitxy = gwy_si_unit_new_parse(value, &power10);
-            g_free(value);
+        gchar *unitx, *unity;
+        if (parse_string_vector(value, 2, &unitx, &unity)) {
+            if (!gwy_strequal(unitx, unity))
+                g_warning("X and Y units differ, using X");
+            siunitxy = gwy_si_unit_new_parse(unitx, &power10);
             dx *= pow10(power10);
             dy *= pow10(power10);
+            g_free(unitx);
+            g_free(unity);
         }
     }
 
@@ -1347,20 +1359,18 @@ read_raw_brick(guint xres, guint yres, guint zres,
     }
 
     if ((value = g_hash_table_lookup(fields, "units"))) {
-        /* TODO */
-#if 0
-        gchar *start, *end;
-        /* Parse only the first axis unit.  We would not know what to do with
-         * different X and Y units anyway. */
-        if ((start = strchr(value, '"')) && (end = strchr(start+1, '"'))) {
-            value = g_strndup(start+1, end-start-1);
-            siunitxy = gwy_si_unit_new_parse(value, &power10);
-            g_free(value);
+        gchar *unitx, *unity, *unitz;
+        if (parse_string_vector(value, 3, &unitx, &unity, &unitz)) {
+            siunitx = gwy_si_unit_new_parse(unitx, &power10);
             dx *= pow10(power10);
+            siunity = gwy_si_unit_new_parse(unity, &power10);
             dy *= pow10(power10);
+            siunitz = gwy_si_unit_new_parse(unitz, &power10);
             dz *= pow10(power10);
+            g_free(unitx);
+            g_free(unity);
+            g_free(unitz);
         }
-#endif
     }
 
     brick = gwy_brick_new(xres, yres, zres, xres*dx, yres*dy, zres*dz, FALSE);
@@ -1383,7 +1393,7 @@ read_raw_brick(guint xres, guint yres, guint zres,
         gwy_brick_set_si_unit_z(brick, siunitz);
         g_object_unref(siunitz);
     }
-    if (siunitz) {
+    if (siunitw) {
         gwy_brick_set_si_unit_w(brick, siunitw);
         g_object_unref(siunitw);
     }
@@ -1473,6 +1483,70 @@ parse_float_vector(const gchar *value,
     for (i = 0; i < n; i++) {
         gdouble *d = va_arg(ap, gdouble*);
         *d = values[i];
+    }
+    va_end(ap);
+
+    g_free(values);
+
+    return TRUE;
+}
+
+static gboolean
+parse_string_vector(const gchar *value,
+                    guint n,
+                    ...)
+{
+    gchar **values;
+    va_list ap;
+    guint i;
+
+    values = g_new0(gchar*, n+1);
+
+    for (i = 0; i < n; i++) {
+        const gchar *begin;
+        gboolean backslashed = FALSE, backslashedany = FALSE;
+
+        while (g_ascii_isspace(*value))
+            value++;
+
+        if (*value != '"') {
+            g_strfreev(values);
+            return FALSE;
+        }
+        value++;
+        begin = value;
+
+        while (*value && (backslashed || *value != '"')) {
+            if (backslashed)
+                backslashed = FALSE;
+            else if (*value == '\\')
+                backslashed = backslashedany = TRUE;
+            value++;
+        }
+
+        if (!*value) {
+            g_strfreev(values);
+            return FALSE;
+        }
+
+        if (backslashedany) {
+            gchar *compressed = g_strndup(begin, value - begin);
+            values[i] = g_strcompress(compressed);
+            g_free(compressed);
+        }
+        else
+            values[i] = g_strndup(begin, value - begin);
+
+        /* Technically this means we do not require whitespace between an
+         * ending " and another starting ". */
+        value++;
+    }
+
+    /* Guarantee that we don't touch args pointers if we don't return TRUE. */
+    va_start(ap, n);
+    for (i = 0; i < n; i++) {
+        gchar **u = va_arg(ap, gchar**);
+        *u = values[i];
     }
     va_end(ap);
 
