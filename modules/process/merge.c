@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004,2014 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -76,54 +76,58 @@ typedef struct {
     GwyMergeDirectionType direction;
     GwyMergeModeType mode;
     GwyMergeBoundaryType boundary;
+    gboolean create_mask;
+    gboolean crop_to_rectangle;
     GwyDataObjectId op1;
     GwyDataObjectId op2;
 } MergeArgs;
 
-static gboolean module_register      (void);
-static void     merge                (GwyContainer *data,
-                                      GwyRunType run);
-static gboolean merge_dialog         (MergeArgs *args);
-static void     merge_data_cb        (GwyDataChooser *chooser,
-                                      GwyDataObjectId *object);
-static gboolean merge_data_filter    (GwyContainer *data,
-                                      gint id,
-                                      gpointer user_data);
-static gboolean merge_do             (MergeArgs *args);
-static void     merge_do_uncorrelated(MergeArgs *args);
-static void     merge_direction_cb   (GtkWidget *combo,
-                                      MergeArgs *args);
-static void     merge_mode_cb        (GtkWidget *combo,
-                                      MergeArgs *args);
-static void     merge_boundary_cb    (GtkWidget *combo,
-                                      MergeArgs *args);
-static void     merge_load_args      (GwyContainer *settings,
-                                      MergeArgs *args);
-static void     merge_save_args      (GwyContainer *settings,
-                                      MergeArgs *args);
-static void     merge_sanitize_args  (MergeArgs *args);
-static gboolean get_score_iteratively(GwyDataField *data_field,
-                                      GwyDataField *kernel_field,
-                                      GwyDataField *score,
-                                      MergeArgs *args);
-static void     find_score_maximum   (GwyDataField *correlation_score,
-                                      gint *max_col,
-                                      gint *max_row);
-static void     merge_boundary       (GwyDataField *dfield1,
-                                      GwyDataField *dfield2,
-                                      GwyDataField *result,
-                                      GwyRectangle res_rect,
-                                      GwyCoord f1_pos,
-                                      GwyCoord f2_pos);
-
-static void     put_fields           (GwyDataField *dfield1,
-                                      GwyDataField *dfield2,
-                                      GwyDataField *result,
-                                      GwyMergeBoundaryType boundary,
-                                      gint px1,
-                                      gint py1,
-                                      gint px2,
-                                      gint py2);
+static gboolean module_register        (void);
+static void     merge                  (GwyContainer *data,
+                                        GwyRunType run);
+static gboolean merge_dialog           (MergeArgs *args);
+static void     merge_data_changed     (GwyDataChooser *chooser,
+                                        GwyDataObjectId *object);
+static gboolean merge_data_filter      (GwyContainer *data,
+                                        gint id,
+                                        gpointer user_data);
+static gboolean merge_do               (MergeArgs *args);
+static void     merge_do_uncorrelated  (MergeArgs *args);
+static void     merge_direction_changed(GtkWidget *combo,
+                                        MergeArgs *args);
+static void     merge_mode_changed     (GtkWidget *combo,
+                                        MergeArgs *args);
+static void     merge_boundary_changed (GtkWidget *combo,
+                                        MergeArgs *args);
+static void     create_mask_changed    (GtkToggleButton *toggle,
+                                        MergeArgs *args);
+static void     merge_load_args        (GwyContainer *settings,
+                                        MergeArgs *args);
+static void     merge_save_args        (GwyContainer *settings,
+                                        MergeArgs *args);
+static void     merge_sanitize_args    (MergeArgs *args);
+static gboolean get_score_iteratively  (GwyDataField *data_field,
+                                        GwyDataField *kernel_field,
+                                        GwyDataField *score,
+                                        MergeArgs *args);
+static void     find_score_maximum     (GwyDataField *correlation_score,
+                                        gint *max_col,
+                                        gint *max_row);
+static void     merge_boundary         (GwyDataField *dfield1,
+                                        GwyDataField *dfield2,
+                                        GwyDataField *result,
+                                        GwyRectangle res_rect,
+                                        GwyCoord f1_pos,
+                                        GwyCoord f2_pos);
+static void     put_fields             (GwyDataField *dfield1,
+                                        GwyDataField *dfield2,
+                                        GwyDataField *result,
+                                        GwyDataField *outsidemask,
+                                        GwyMergeBoundaryType boundary,
+                                        gint px1,
+                                        gint py1,
+                                        gint px2,
+                                        gint py2);
 
 static const GwyEnum directions[] = {
     { N_("Up"),           GWY_MERGE_DIRECTION_UP,    },
@@ -147,6 +151,7 @@ static const MergeArgs merge_defaults = {
     GWY_MERGE_DIRECTION_RIGHT,
     GWY_MERGE_MODE_CORRELATE,
     GWY_MERGE_BOUNDARY_FIRST,
+    FALSE, FALSE,
     { NULL, -1 },
     { NULL, -1 },
 };
@@ -155,8 +160,8 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Merges two images."),
-    "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.8",
+    "Petr Klapetek <klapetek@gwyddion.net>, Yeti <yeti@gwyddion.net>",
+    "1.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -203,7 +208,7 @@ merge(GwyContainer *data, GwyRunType run)
 static gboolean
 merge_dialog(MergeArgs *args)
 {
-    GtkWidget *dialog, *table, *chooser, *combo;
+    GtkWidget *dialog, *table, *chooser, *combo, *check;
     gint response, row;
     gboolean ok;
 
@@ -214,7 +219,7 @@ merge_dialog(MergeArgs *args)
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
 
-    table = gtk_table_new(4, 4, FALSE);
+    table = gtk_table_new(6, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -227,32 +232,52 @@ merge_dialog(MergeArgs *args)
     gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(chooser),
                                 merge_data_filter, &args->op1, NULL);
     g_signal_connect(chooser, "changed",
-                     G_CALLBACK(merge_data_cb), &args->op2);
-    merge_data_cb(GWY_DATA_CHOOSER(chooser), &args->op2);
+                     G_CALLBACK(merge_data_changed), &args->op2);
+    merge_data_changed(GWY_DATA_CHOOSER(chooser), &args->op2);
     gwy_table_attach_hscale(table, row, _("_Merge with:"), NULL,
                             GTK_OBJECT(chooser), GWY_HSCALE_WIDGET);
     row++;
 
     /* Parameters */
     combo = gwy_enum_combo_box_new(directions, G_N_ELEMENTS(directions),
-                                   G_CALLBACK(merge_direction_cb), args,
+                                   G_CALLBACK(merge_direction_changed), args,
                                    args->direction, TRUE);
     gwy_table_attach_hscale(table, row, _("_Put second operand:"), NULL,
                             GTK_OBJECT(combo), GWY_HSCALE_WIDGET);
     row++;
 
     combo = gwy_enum_combo_box_new(modes, G_N_ELEMENTS(modes),
-                                   G_CALLBACK(merge_mode_cb), args,
+                                   G_CALLBACK(merge_mode_changed), args,
                                    args->mode, TRUE);
     gwy_table_attach_hscale(table, row, _("_Align second operand:"), NULL,
                             GTK_OBJECT(combo), GWY_HSCALE_WIDGET);
     row++;
 
     combo = gwy_enum_combo_box_new(boundaries, G_N_ELEMENTS(boundaries),
-                                   G_CALLBACK(merge_boundary_cb), args,
+                                   G_CALLBACK(merge_boundary_changed), args,
                                    args->boundary, TRUE);
     gwy_table_attach_hscale(table, row, _("_Boundary treatment:"), NULL,
                             GTK_OBJECT(combo), GWY_HSCALE_WIDGET);
+    row++;
+
+    // Only make sensitive if:
+    // - crop result is not active
+    // - correlation mode is active or fields are different-sized
+    check = gtk_check_button_new_with_mnemonic(_("_Mask outside pixels"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), args->create_mask);
+    gtk_table_attach(GTK_TABLE(table), check,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect(check, "toggled",
+                     G_CALLBACK(create_mask_changed), args);
+    row++;
+
+    // Only make sensitive if:
+    // - correlation mode is active or fields are different-sized
+    check = gtk_check_button_new_with_mnemonic(_("Crop result to _rectangle"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
+                                 args->crop_to_rectangle);
+    gtk_table_attach(GTK_TABLE(table), check,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     gtk_widget_show_all(dialog);
@@ -285,8 +310,8 @@ merge_dialog(MergeArgs *args)
 }
 
 static void
-merge_data_cb(GwyDataChooser *chooser,
-              GwyDataObjectId *object)
+merge_data_changed(GwyDataChooser *chooser,
+                   GwyDataObjectId *object)
 {
     GtkWidget *dialog;
 
@@ -321,21 +346,27 @@ merge_data_filter(GwyContainer *data,
 }
 
 static void
-merge_direction_cb(GtkWidget *combo, MergeArgs *args)
+merge_direction_changed(GtkWidget *combo, MergeArgs *args)
 {
     args->direction = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 static void
-merge_mode_cb(GtkWidget *combo, MergeArgs *args)
+merge_mode_changed(GtkWidget *combo, MergeArgs *args)
 {
     args->mode = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 static void
-merge_boundary_cb(GtkWidget *combo, MergeArgs *args)
+merge_boundary_changed(GtkWidget *combo, MergeArgs *args)
 {
     args->boundary = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
+}
+
+static void
+create_mask_changed(GtkToggleButton *toggle, MergeArgs *args)
+{
+    args->create_mask = gtk_toggle_button_get_active(toggle);
 }
 
 static gboolean
@@ -344,7 +375,7 @@ merge_do(MergeArgs *args)
     GwyContainer *data;
     GwyDataField *dfield1, *dfield2;
     GwyDataField *correlation_data, *correlation_kernel, *correlation_score;
-    GwyDataField *result;
+    GwyDataField *result, *outsidemask = NULL;
     GwyRectangle cdata, kdata;
     gint max_col, max_row;
     gint newxres, newyres;
@@ -551,7 +582,13 @@ merge_do(MergeArgs *args)
     }
 
     gwy_data_field_resample(result, newxres, newyres, GWY_INTERPOLATION_NONE);
-    put_fields(dfield1, dfield2, result, real_boundary, px1, py1, px2, py2);
+    if (args->create_mask) {
+        outsidemask = gwy_data_field_new_alike(result, FALSE);
+        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(outsidemask),
+                                    NULL);
+    }
+    put_fields(dfield1, dfield2, result, outsidemask,
+               real_boundary, px1, py1, px2, py2);
 
     /* set right output */
     if (result) {
@@ -565,6 +602,13 @@ merge_do(MergeArgs *args)
                                 GWY_DATA_ITEM_RANGE,
                                 0);
         g_object_unref(result);
+
+        if (outsidemask) {
+            quark = gwy_app_get_mask_key_for_id(newid);
+            gwy_container_set_object(data, quark, outsidemask);
+            g_object_unref(outsidemask);
+        }
+
         gwy_app_channel_log_add_proc(data, -1, newid);
     }
 
@@ -651,7 +695,7 @@ merge_do_uncorrelated(MergeArgs *args)
 
 static void
 put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
-           GwyDataField *result,
+           GwyDataField *result, GwyDataField *outsidemask,
            GwyMergeBoundaryType boundary,
            gint px1, gint py1,
            gint px2, gint py2)
@@ -659,56 +703,34 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
     GwyRectangle res_rect;
     GwyCoord f1_pos;
     GwyCoord f2_pos;
-    gint x1, x2, y1_, y2, w1, w2, h1, h2;
+    gint w1, w2, h1, h2;
+    gdouble xreal, yreal;
 
     gwy_debug("px1: %d, py1: %d, px2: %d, py2: %d", px1, py1, px2, py2);
-
-    /* Use the pixels sizes of field 1 but they must be identical. */
-    gwy_data_field_set_xreal(result,
-                             gwy_data_field_get_xres(result)
-                             * gwy_data_field_get_xmeasure(dfield1));
-    gwy_data_field_set_yreal(result,
-                             gwy_data_field_get_yres(result)
-                             * gwy_data_field_get_ymeasure(dfield1));
 
     gwy_data_field_fill(result,
                         MIN(gwy_data_field_get_min(dfield1),
                             gwy_data_field_get_min(dfield2)));
 
-    x1 = y1_ = x2 = y2 = 0;
     w1 = gwy_data_field_get_xres(dfield1);
     h1 = gwy_data_field_get_yres(dfield1);
     w2 = gwy_data_field_get_xres(dfield2);
     h2 = gwy_data_field_get_yres(dfield2);
 
-    /*
-    g_assert(w1 + x1 <= dfield1->xres);
-    g_assert(h1 + y1_ <= dfield1->yres);
-    g_assert(w2 + x2 <= dfield2->xres);
-    g_assert(h2 + y2 <= dfield2->yres);
-    g_assert(w1 + px1 <= result->xres);
-    g_assert(h1 + py1 <= result->yres);
-    g_assert(w2 + px2 <= result->xres);
-    g_assert(h2 + py2 <= result->yres);
-    */
-
     if (boundary == GWY_MERGE_BOUNDARY_SMOOTH
         || boundary == GWY_MERGE_BOUNDARY_SECOND) {
-        gwy_data_field_area_copy(dfield1, result,
-                                 x1, y1_, w1, h1,
-                                 px1, py1);
-        gwy_data_field_area_copy(dfield2, result,
-                                 x2, y2, w2, h2,
-                                 px2, py2);
+        gwy_data_field_area_copy(dfield1, result, 0, 0, w1, h1, px1, py1);
+        gwy_data_field_area_copy(dfield2, result, 0, 0, w2, h2, px2, py2);
     }
     else {
-        gwy_data_field_area_copy(dfield2, result,
-                                 x2, y2, w2, h2,
-                                 px2, py2);
+        gwy_data_field_area_copy(dfield2, result, 0, 0, w2, h2, px2, py2);
+        gwy_data_field_area_copy(dfield1, result, 0, 0, w1, h1, px1, py1);
+    }
 
-        gwy_data_field_area_copy(dfield1, result,
-                                 x1, y1_, w1, h1,
-                                 px1, py1);
+    if (outsidemask) {
+        gwy_data_field_fill(outsidemask, 1.0);
+        gwy_data_field_area_clear(outsidemask, px1, py1, w1, h1);
+        gwy_data_field_area_clear(outsidemask, px2, py2, w2, h2);
     }
 
     /* adjust boundary to be as smooth as possible */
@@ -734,12 +756,22 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
         res_rect.height = MIN(res_rect.height, MIN(h1, h2));
         res_rect.width = MIN(res_rect.width, MIN(w1, w2));
 
-        f1_pos.x = res_rect.x - (px1 - x1);
-        f1_pos.y = res_rect.y - (py1 - y1_);
-        f2_pos.x = res_rect.x - (px2 - x2);
-        f2_pos.y = res_rect.y - (py2 - y2);
+        f1_pos.x = res_rect.x - px1;
+        f1_pos.y = res_rect.y - py1;
+        f2_pos.x = res_rect.x - px2;
+        f2_pos.y = res_rect.y - py2;
 
         merge_boundary(dfield1, dfield2, result, res_rect, f1_pos, f2_pos);
+    }
+
+    /* Use the pixels sizes of field 1 -- they must be identical. */
+    xreal = result->xres * gwy_data_field_get_xmeasure(dfield1);
+    yreal = result->yres * gwy_data_field_get_ymeasure(dfield1);
+    gwy_data_field_set_xreal(result, xreal);
+    gwy_data_field_set_yreal(result, yreal);
+    if (outsidemask) {
+        gwy_data_field_set_xreal(outsidemask, xreal);
+        gwy_data_field_set_yreal(outsidemask, yreal);
     }
 }
 
@@ -856,9 +888,11 @@ merge_boundary(GwyDataField *dfield1,
     }
 }
 
-static const gchar direction_key[] = "/module/merge/direction";
-static const gchar mode_key[]      = "/module/merge/mode";
-static const gchar boundary_key[]  = "/module/merge/boundary";
+static const gchar boundary_key[]          = "/module/merge/boundary";
+static const gchar create_mask_key[]       = "/module/merge/create_mask";
+static const gchar crop_to_rectangle_key[] = "/module/merge/crop_to_rectangle";
+static const gchar direction_key[]         = "/module/merge/direction";
+static const gchar mode_key[]              = "/module/merge/mode";
 
 static void
 merge_sanitize_args(MergeArgs *args)
@@ -866,6 +900,8 @@ merge_sanitize_args(MergeArgs *args)
     args->direction = MIN(args->direction, GWY_MERGE_DIRECTION_LAST - 1);
     args->mode = MIN(args->mode, GWY_MERGE_MODE_LAST - 1);
     args->boundary = MIN(args->boundary, GWY_MERGE_BOUNDARY_LAST - 1);
+    args->create_mask = !!args->create_mask;
+    args->crop_to_rectangle = !!args->crop_to_rectangle;
 }
 
 static void
@@ -876,6 +912,10 @@ merge_load_args(GwyContainer *settings,
     gwy_container_gis_enum_by_name(settings, direction_key, &args->direction);
     gwy_container_gis_enum_by_name(settings, mode_key, &args->mode);
     gwy_container_gis_enum_by_name(settings, boundary_key, &args->boundary);
+    gwy_container_gis_boolean_by_name(settings, create_mask_key,
+                                      &args->create_mask);
+    gwy_container_gis_boolean_by_name(settings, crop_to_rectangle_key,
+                                      &args->crop_to_rectangle);
     merge_sanitize_args(args);
 }
 
@@ -886,6 +926,10 @@ merge_save_args(GwyContainer *settings,
     gwy_container_set_enum_by_name(settings, direction_key, args->direction);
     gwy_container_set_enum_by_name(settings, mode_key, args->mode);
     gwy_container_set_enum_by_name(settings, boundary_key, args->boundary);
+    gwy_container_set_boolean_by_name(settings, create_mask_key,
+                                      args->create_mask);
+    gwy_container_set_boolean_by_name(settings, crop_to_rectangle_key,
+                                      args->crop_to_rectangle);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
