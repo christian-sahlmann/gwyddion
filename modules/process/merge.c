@@ -52,7 +52,8 @@ typedef enum {
 typedef enum {
     GWY_MERGE_BOUNDARY_FIRST,
     GWY_MERGE_BOUNDARY_SECOND,
-    GWY_MERGE_BOUNDARY_SMOOTH,
+    GWY_MERGE_BOUNDARY_AVERAGE,
+    GWY_MERGE_BOUNDARY_INTERPOLATE,
     GWY_MERGE_BOUNDARY_LAST
 } GwyMergeBoundaryType;
 
@@ -126,7 +127,8 @@ static void     merge_boundary           (GwyDataField *dfield1,
                                           GwyDataField *result,
                                           GwyRectangle res_rect,
                                           GwyCoord f1_pos,
-                                          GwyCoord f2_pos);
+                                          GwyCoord f2_pos,
+                                          GwyMergeBoundaryType boundary);
 static void     put_fields               (GwyDataField *dfield1,
                                           GwyDataField *dfield2,
                                           GwyDataField *result,
@@ -158,9 +160,10 @@ static const GwyEnum modes[] = {
 };
 
 static const GwyEnum boundaries[] = {
-    { N_("First operand"),   GWY_MERGE_BOUNDARY_FIRST  },
-    { N_("Second operand"),  GWY_MERGE_BOUNDARY_SECOND },
-    { N_("Smooth"),          GWY_MERGE_BOUNDARY_SMOOTH },
+    { N_("First operand"),  GWY_MERGE_BOUNDARY_FIRST,       },
+    { N_("Second operand"), GWY_MERGE_BOUNDARY_SECOND,      },
+    { N_("Average"),        GWY_MERGE_BOUNDARY_AVERAGE,     },
+    { N_("Interpolation"),  GWY_MERGE_BOUNDARY_INTERPOLATE, },
 };
 
 static const MergeArgs merge_defaults = {
@@ -733,8 +736,7 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
     w2 = gwy_data_field_get_xres(dfield2);
     h2 = gwy_data_field_get_yres(dfield2);
 
-    if (boundary == GWY_MERGE_BOUNDARY_SMOOTH
-        || boundary == GWY_MERGE_BOUNDARY_SECOND) {
+    if (boundary == GWY_MERGE_BOUNDARY_SECOND) {
         gwy_data_field_area_copy(dfield1, result, 0, 0, w1, h1, px1, py1);
         gwy_data_field_area_copy(dfield2, result, 0, 0, w2, h2, px2, py2);
     }
@@ -750,7 +752,8 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
     }
 
     /* adjust boundary to be as smooth as possible */
-    if (boundary == GWY_MERGE_BOUNDARY_SMOOTH) {
+    if (boundary == GWY_MERGE_BOUNDARY_AVERAGE
+        || boundary == GWY_MERGE_BOUNDARY_INTERPOLATE) {
         if (px1 < px2) {
             res_rect.x = px2;
             res_rect.width = px1 + w1 - px2;
@@ -777,7 +780,8 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
         f2_pos.x = res_rect.x - px2;
         f2_pos.y = res_rect.y - py2;
 
-        merge_boundary(dfield1, dfield2, result, res_rect, f1_pos, f2_pos);
+        merge_boundary(dfield1, dfield2, result, res_rect, f1_pos, f2_pos,
+                       boundary);
     }
 
     /* Use the pixels sizes of field 1 -- they must be identical. */
@@ -895,6 +899,16 @@ gwy_data_field_inside(GwyDataField *data_field, gint i, gint j)
         return FALSE;
 }
 
+static void
+assign_edge(gint edgepos, gint pos1, gint pos2, gint *w1, gint *w2)
+{
+    gboolean onedge1 = (pos1 == edgepos);
+    gboolean onedge2 = (pos2 == edgepos);
+
+    g_assert(onedge1 || onedge2);
+    *w1 = onedge2;
+    *w2 = onedge1;
+}
 
 static void
 merge_boundary(GwyDataField *dfield1,
@@ -902,31 +916,72 @@ merge_boundary(GwyDataField *dfield1,
                GwyDataField *result,
                GwyRectangle res_rect,
                GwyCoord f1_pos,
-               GwyCoord f2_pos)
+               GwyCoord f2_pos,
+               GwyMergeBoundaryType boundary)
 {
-    gint col, row;
+    gint xres1, xres2, xres, col, row;
     gdouble weight, val1, val2;
+    gint w1top = 0, w1bot = 0, w1left = 0, w1right = 0;
+    gint w2top = 0, w2bot = 0, w2left = 0, w2right = 0;
+    const gdouble *d1, *d2;
+    gdouble *d;
+
+    xres1 = dfield1->xres;
+    xres2 = dfield2->xres;
+    xres = result->xres;
 
     gwy_debug("dfield1: %d x %d at (%d, %d)",
-              dfield1->xres, dfield1->yres, f1_pos.x, f1_pos.y);
+              xres1, dfield1->yres, f1_pos.x, f1_pos.y);
     gwy_debug("dfield2: %d x %d at (%d, %d)",
-              dfield2->xres, dfield2->yres, f2_pos.x, f2_pos.y);
-    gwy_debug("result: %d x %d", result->xres, result->yres);
+              xres2, dfield2->yres, f2_pos.x, f2_pos.y);
+    gwy_debug("result: %d x %d", xres, result->yres);
     gwy_debug("rect in result : %d x %d at (%d,%d)",
               res_rect.width, res_rect.height, res_rect.x, res_rect.y);
 
-    for (col = 0; col < res_rect.width; col++) {
-        for (row = 0; row < res_rect.height; row++) {
+    assign_edge(res_rect.x, f1_pos.x, f2_pos.x, &w1left, &w2left);
+    assign_edge(res_rect.y, f1_pos.y, f2_pos.y, &w1top, &w2top);
+    assign_edge(res_rect.x + res_rect.width,
+                f1_pos.x + xres1, f2_pos.x + xres2,
+                &w1right, &w2right);
+    assign_edge(res_rect.y + res_rect.height,
+                f1_pos.y + dfield1->yres, f2_pos.y + dfield2->yres,
+                &w1bot, &w2bot);
 
-            weight = 0.5; /*FIXME adapt weight to direction*/
+    d1 = gwy_data_field_get_data_const(dfield1);
+    d2 = gwy_data_field_get_data_const(dfield2);
+    d = gwy_data_field_get_data(result);
 
-            val1 = gwy_data_field_get_val(dfield1,
-                                          col + f1_pos.x, row + f1_pos.y);
-            val2 = gwy_data_field_get_val(dfield2,
-                                          col + f2_pos.x, row + f2_pos.y);
-            gwy_data_field_set_val(result,
-                                   col + res_rect.x, row + res_rect.y,
-                                   (1 - weight)*val1 + weight*val2);
+    for (row = 0; row < res_rect.height; row++) {
+        gint dtop = row + 1, dbot = res_rect.height - row;
+        for (col = 0; col < res_rect.width; col++) {
+            weight = 0.5;
+            if (boundary == GWY_MERGE_BOUNDARY_INTERPOLATE) {
+                gint dleft = col + 1, dright = res_rect.width - col;
+                gint d1min = G_MAXINT, d2min = G_MAXINT;
+                /* FIXME: This can be probably simplified... */
+                if (w1top && dtop < d1min)
+                    d1min = dtop;
+                if (w1bot && dbot < d1min)
+                    d1min = dbot;
+                if (w1left && dleft < d1min)
+                    d1min = dleft;
+                if (w1right && dright < d1min)
+                    d1min = dright;
+                if (w2top && dtop < d2min)
+                    d2min = dtop;
+                if (w2bot && dbot < d2min)
+                    d2min = dbot;
+                if (w2left && dleft < d2min)
+                    d2min = dleft;
+                if (w2right && dright < d2min)
+                    d2min = dright;
+
+                weight = (gdouble)d2min/(d1min + d2min);
+            }
+            val1 = d1[xres1*(row + f1_pos.y) + (col + f1_pos.x)];
+            val2 = d2[xres2*(row + f2_pos.y) + (col + f2_pos.x)];
+            d[xres*(row + res_rect.y) + col + res_rect.x]
+                = (1.0 - weight)*val1 + weight*val2;
         }
     }
 }
