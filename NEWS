@@ -3,6 +3,14 @@ Modules:
 - Image export: It is possible do disable the frame if there are no rulers.
   False colour rendering for inverted gradients and default non-full mappings
   was corrected.  Title centering for non-square images was corrected.
+- NetCDF: The new setpoint variable ‘sranger_mk2_hwi_mix0_set_point’ is used
+  for metadata, if found.
+- NRRD: 3D data with all three resolutions large are loaded a volume data
+  instead of sequences of channels.
+- Merge: Can mask pixels in the result that were outside of either image.  It
+  is also possible to automatically crop the result to only inside pixels.
+  A new merge type ‘Interpolation’ produces smoother transitions than the old
+  ‘Smooth’ which was renamed to ‘Average’.
 
 
 2.39 (2014-11-14)
