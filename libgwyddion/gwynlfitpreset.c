@@ -1120,7 +1120,6 @@ builtin_scale(GwyNLFitPreset *preset,
     /* Generic parameter scaling when there are no peculiarities */
     for (i = 0; i < preset->builtin->nparams; i++) {
         const GwyNLFitParam *p = preset->builtin->param + i;
-
         param[i] *= pow(xscale, -dir*p->power_x)*pow(yscale, -dir*p->power_y);
     }
 }
@@ -1736,7 +1735,7 @@ gwy_nlfit_preset_fit(GwyNLFitPreset *preset,
     /*recompute parameters to be scaled as original data*/
     /* FIXME: builtin */
     builtin_scale(preset, param, xscale, yscale, -1);
-    if (ok)
+    if (ok && err)
         builtin_scale(preset, err, xscale, yscale, -1);
 
     g_free(ysc);
