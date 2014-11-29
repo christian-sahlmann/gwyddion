@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-11-20 03:58+0100\n"
-"PO-Revision-Date: 2014-11-20 23:44+0100\n"
+"POT-Creation-Date: 2014-11-29 03:58+0100\n"
+"PO-Revision-Date: 2014-11-29 16:48+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -132,75 +132,75 @@ msgstr "contact : Hertz (paraboloïde)"
 msgid "Untitled"
 msgstr "Sans titre"
 
-#: libgwyddion/gwynlfitpreset.c:1205 libprocess/gwyprocessenums.c:101
+#: libgwyddion/gwynlfitpreset.c:1204 libprocess/gwyprocessenums.c:101
 msgid "Gaussian"
 msgstr "Gaussienne"
 
-#: libgwyddion/gwynlfitpreset.c:1221
+#: libgwyddion/gwynlfitpreset.c:1220
 msgid "Gaussian (PSDF)"
 msgstr "Gaussienne (PSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1235
+#: libgwyddion/gwynlfitpreset.c:1234
 msgid "Gaussian (ACF)"
 msgstr "Gaussienne (ACF)"
 
-#: libgwyddion/gwynlfitpreset.c:1249
+#: libgwyddion/gwynlfitpreset.c:1248
 msgid "Gaussian (HHCF)"
 msgstr "Gaussienne (HHCF)"
 
-#: libgwyddion/gwynlfitpreset.c:1263
+#: libgwyddion/gwynlfitpreset.c:1262
 msgid "Gaussian (RPSDF)"
 msgstr "Gaussienne (RPSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1277
+#: libgwyddion/gwynlfitpreset.c:1276
 msgid "Exponential"
 msgstr "Exponentielle"
 
-#: libgwyddion/gwynlfitpreset.c:1290
+#: libgwyddion/gwynlfitpreset.c:1289
 msgid "Exponential (PSDF)"
 msgstr "Exponentielle (PSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1304
+#: libgwyddion/gwynlfitpreset.c:1303
 msgid "Exponential (ACF)"
 msgstr "Exponentielle (ACF)"
 
-#: libgwyddion/gwynlfitpreset.c:1317
+#: libgwyddion/gwynlfitpreset.c:1316
 msgid "Exponential (HHCF)"
 msgstr "Exponentielle (HHCF)"
 
-#: libgwyddion/gwynlfitpreset.c:1331
+#: libgwyddion/gwynlfitpreset.c:1330
 msgid "Exponential (RPSDF)"
 msgstr "Exponentielle (RPSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1346
+#: libgwyddion/gwynlfitpreset.c:1345
 msgid "Polynomial (order 0)"
 msgstr "Polynôme (ordre 0)"
 
-#: libgwyddion/gwynlfitpreset.c:1358
+#: libgwyddion/gwynlfitpreset.c:1357
 msgid "Polynomial (order 1)"
 msgstr "Polynôme (ordre 1)"
 
-#: libgwyddion/gwynlfitpreset.c:1370
+#: libgwyddion/gwynlfitpreset.c:1369
 msgid "Polynomial (order 2)"
 msgstr "Polynôme (ordre 2)"
 
-#: libgwyddion/gwynlfitpreset.c:1383
+#: libgwyddion/gwynlfitpreset.c:1382
 msgid "Polynomial (order 3)"
 msgstr "Polynôme (ordre 3)"
 
-#: libgwyddion/gwynlfitpreset.c:1397
+#: libgwyddion/gwynlfitpreset.c:1396
 msgid "Square wave"
 msgstr "Onde carrée"
 
-#: libgwyddion/gwynlfitpreset.c:1414
+#: libgwyddion/gwynlfitpreset.c:1413
 msgid "Power"
 msgstr "Puissance"
 
-#: libgwyddion/gwynlfitpreset.c:1427
+#: libgwyddion/gwynlfitpreset.c:1426
 msgid "Lorentzian"
 msgstr "Lorentzienne"
 
-#: libgwyddion/gwynlfitpreset.c:1442
+#: libgwyddion/gwynlfitpreset.c:1441
 msgid "Sinc"
 msgstr "Sinus cardinal"
 
@@ -3214,8 +3214,8 @@ msgstr "ECS (.img)"
 msgid "Scan size header field overlaps with data."
 msgstr "Le champ d'en-tête de la taille de scan recouvre les données."
 
-#: modules/file/err.h:48 modules/file/nrrdfile.c:718
-#: modules/file/nrrdfile.c:763
+#: modules/file/err.h:48 modules/file/nrrdfile.c:764
+#: modules/file/nrrdfile.c:809
 #, c-format
 msgid "Cannot read from file: %s."
 msgstr "Impossible de lire à partir du fichier : %s."
@@ -3941,7 +3941,7 @@ msgstr "Taille de police :"
 
 #: modules/file/imgexport.c:2661
 msgid "O_utline thickness:"
-msgstr "Épaisse_ur du pourtour :"
+msgstr "Épaisse_ur des contours :"
 
 #: modules/file/imgexport.c:2671
 msgid "_Border width:"
@@ -4013,7 +4013,7 @@ msgstr "Couleu_r :"
 
 #: modules/file/imgexport.c:3118 modules/file/imgexport.c:3586
 msgid "Out_line color:"
-msgstr "Cou_leur du pourtour :"
+msgstr "Cou_leur des contours :"
 
 #: modules/file/imgexport.c:3122 modules/file/imgexport.c:3592
 msgid "O_pacity:"
@@ -4021,11 +4021,11 @@ msgstr "O_pacité :"
 
 #: modules/file/imgexport.c:3131
 msgid "Draw _ticks"
-msgstr "Afficher les gradua_tions"
+msgstr "Afficher les ex_trémités"
 
 #: modules/file/imgexport.c:3141
 msgid "Draw _label"
-msgstr "Dessiner les _labels"
+msgstr "Afficher _l'annotation"
 
 #: modules/file/imgexport.c:3239
 msgid "Image"
@@ -4073,7 +4073,7 @@ msgstr "Ajouter les _unités dans le titre"
 
 #: modules/file/imgexport.c:3522
 msgid "Draw _selection"
-msgstr "Dessiner la _sélection"
+msgstr "Dessiner les _sélections"
 
 #: modules/file/imgexport.c:3573 modules/tools/selectionmanager.c:347
 msgid "Objects"
@@ -4676,7 +4676,7 @@ msgstr ""
 msgid "Cannot parse `Scan size' field."
 msgstr "Impossible d'analyser le champ `Scan size'."
 
-#: modules/file/nanoscope.c:1437 modules/file/nrrdfile.c:1025
+#: modules/file/nanoscope.c:1437 modules/file/nrrdfile.c:1071
 #, c-format
 msgid "Garbage after data sample #%u."
 msgstr "Données erronées après l'échantillon #%u."
@@ -4729,108 +4729,108 @@ msgstr ""
 msgid "Time series order is wrong."
 msgstr "L'ordre des séries de temps est incorrect."
 
-#: modules/file/netcdf.c:1239
+#: modules/file/netcdf.c:1249
 #, c-format
 msgid "File ended unexpectedly inside `%s'."
 msgstr "Le fichier s'est terminé de manière inattendue dans `%s'."
 
-#: modules/file/netcdf.c:1248
+#: modules/file/netcdf.c:1258
 #, c-format
 msgid "Expected `%s' array or `ABSENT'."
 msgstr "Tableau `%s' attendu ou `ABSENT'."
 
-#: modules/file/netcdf.c:1256
+#: modules/file/netcdf.c:1266
 #, c-format
 msgid "Array `%s' has non-zero number of elements in spite of being absent."
 msgstr "Le tableau `%s', bien qu'absent, possède un nombre d'élément non nul."
 
-#: modules/file/netcdf.c:1315
+#: modules/file/netcdf.c:1325
 msgid "More than one record dimension found."
 msgstr "Plus d'une dimension d'enregistrement a été trouvée."
 
-#: modules/file/nrrdfile.c:171
+#: modules/file/nrrdfile.c:181
 msgid "Imports and exports nearly raw raster data (NRRD) files."
 msgstr "Importe et exporte les fichiers nearly raw raster data (NRRD)."
 
-#: modules/file/nrrdfile.c:184
+#: modules/file/nrrdfile.c:194
 msgid "Nearly raw raster data (NRRD) files (.nrrd)"
 msgstr "Fichiers nearly raw raster data (NRRD) (.nrrd)"
 
-#: modules/file/nrrdfile.c:319
+#: modules/file/nrrdfile.c:330
 msgid "Deatched header does not refer to any data file."
 msgstr "L'en-tête détaché ne fait référence à aucun fichier de données."
 
-#: modules/file/nrrdfile.c:347
+#: modules/file/nrrdfile.c:358
 msgid "Only two- and three-dimensional data are supported."
 msgstr ""
 "Seules les données bi-dimensionnelles et tri-dimensionnelles sont supportées."
 
-#: modules/file/nrrdfile.c:368
+#: modules/file/nrrdfile.c:379
 msgid "Non-zero lineskip is supported only for uncompressed files."
 msgstr ""
 "Le saut de ligne non nul n'est supporté que pour les fichiers non compressés."
 
-#: modules/file/nrrdfile.c:395
+#: modules/file/nrrdfile.c:406
 msgid "Compression is supported only for detached files."
 msgstr "La compression n'est supportée que pour les fichiers détachés."
 
-#: modules/file/nrrdfile.c:684
+#: modules/file/nrrdfile.c:730
 msgid "Split detached data files are not supported."
 msgstr "Les fichiers détachés en plusieurs parties ne sont pas supportés."
 
-#: modules/file/nrrdfile.c:730
+#: modules/file/nrrdfile.c:776
 msgid "Cannot decompress gzip-encoded data.  Zlib support was not built in."
 msgstr ""
 "Impossible de décompresser les données encodées au format gzip. Le support "
 "Zlib n'a pas été intégré."
 
-#: modules/file/nrrdfile.c:775
+#: modules/file/nrrdfile.c:821
 msgid "Cannot decompress bzip2-encoded data.  Bzip2 support was not built in."
 msgstr ""
 "Impossible de décompresser les données encodées au format Bzip2. Le support "
 "Bzip2 n'a pas été intégré."
 
-#: modules/file/nrrdfile.c:907
+#: modules/file/nrrdfile.c:953
 #, c-format
 msgid "Hex data contains less values (%u) than corresponds to the sizes (%u)."
 msgstr ""
 "Les données hexadécimales contiennent moins de valeurs (%u) que celles "
 "correspondant aux tailles (%u)."
 
-#: modules/file/nrrdfile.c:1020
+#: modules/file/nrrdfile.c:1066
 #, c-format
 msgid "Text data contains less values (%u) than corresponds to the sizes (%u)."
 msgstr ""
 "Les données texte contiennent moins de valeurs (%u) que celles correspondant "
 "aux tailles (%u)."
 
-#: modules/file/nrrdfile.c:1074
+#: modules/file/nrrdfile.c:1120
 msgid "Field byteskip cannot be -1 for text encodings."
 msgstr "Le champ de saut d'octet ne peut être -1 pour les encodages de texte."
 
-#: modules/file/nrrdfile.c:1085
+#: modules/file/nrrdfile.c:1131
 msgid "Field lineskip specifies more lines than there are in the file."
 msgstr ""
 "Le champ de saut de ligne spécifie plus de lignes que n'en contient le "
 "fichier."
 
-#: modules/file/nrrdfile.c:1128
+#: modules/file/nrrdfile.c:1174
 msgid "Field byteskip specifies more bytes than there are in the file."
 msgstr ""
 "Le champ de saut d'octet spécifie plus d'octets que n'en contient le fichier."
 
-#: modules/file/nrrdfile.c:1351
+#: modules/file/nrrdfile.c:1579
 #, c-format
 msgid "Items of per-axis header field %s are not quoted."
 msgstr ""
 "Les éléments du champ d'en-tête d'axe %s ne sont pas entre apostrophes."
 
-#: modules/file/nrrdfile.c:1362
+#: modules/file/nrrdfile.c:1590
 #, c-format
 msgid "Per-axis header field %s contains too many items."
 msgstr "Le champ d'en-tête d'axe %s contient trop d'éléments."
 
-#: modules/file/nrrdfile.c:1371
+#: modules/file/nrrdfile.c:1599
 #, c-format
 msgid "Per-axis header field %s contains too few items."
 msgstr "Le champ d'en-tête d'axe %s ne contient pas assez d'éléments."
@@ -7119,13 +7119,13 @@ msgstr "Recherche annulée"
 
 #: modules/process/calcoefs_simple.c:632 modules/process/grain_wshed.c:506
 #: modules/process/maskcor.c:328 modules/process/mcrop.c:328
-#: modules/process/merge.c:765 modules/process/tip_blind.c:783
+#: modules/process/merge.c:844 modules/process/tip_blind.c:783
 #: modules/process/tipops.c:308
 msgid "Initializing"
 msgstr "Initialisation"
 
 #: modules/process/calcoefs_simple.c:634 modules/process/maskcor.c:330
-#: modules/process/mcrop.c:330 modules/process/merge.c:767
+#: modules/process/mcrop.c:330 modules/process/merge.c:846
 msgid "Correlating"
 msgstr "Corrélation"
 
@@ -9017,6 +9017,18 @@ msgstr ""
 "\n"
 "Matrice de corrélation\n"
 
+#: modules/process/flatten_base.c:43
+msgid "Levels the flat base of a surface with positive features."
+msgstr "Met à niveau la base plane d'une surface ayant des éléments en relief."
+
+#: modules/process/flatten_base.c:57
+msgid "/_Level/Flatten _Base"
+msgstr "/Niveau/Aplanir la _base"
+
+#: modules/process/flatten_base.c:61
+msgid "Flatten base of surface with positive features"
+msgstr "Aplanir la base d'une surface ayant des éléments en relief"
+
 #: modules/process/fraccor.c:38
 msgid "Removes data under mask using fractal interpolation."
 msgstr ""
@@ -10455,75 +10467,87 @@ msgstr "_Rayon réel :"
 msgid "_Pixel radius:"
 msgstr "Rayon du _pixel :"
 
-#: modules/process/merge.c:129
+#: modules/process/merge.c:151
 msgid "Up"
 msgstr "En haut"
 
-#: modules/process/merge.c:130
+#: modules/process/merge.c:152
 msgid "Down"
 msgstr "En bas"
 
-#: modules/process/merge.c:131
+#: modules/process/merge.c:153
 msgid "adverb|Right"
 msgstr "À droite"
 
-#: modules/process/merge.c:132
+#: modules/process/merge.c:154
 msgid "adverb|Left"
 msgstr "À gauche"
 
-#: modules/process/merge.c:136
+#: modules/process/merge.c:158
 msgid "Correlation"
 msgstr "Corrélation"
 
-#: modules/process/merge.c:137
+#: modules/process/merge.c:159
 msgid "merge-mode|None"
 msgstr "Aucun"
 
-#: modules/process/merge.c:141
+#: modules/process/merge.c:163
 msgid "First operand"
 msgstr "Premier opérande"
 
-#: modules/process/merge.c:142
+#: modules/process/merge.c:164
 msgid "Second operand"
 msgstr "Second opérande"
 
-#: modules/process/merge.c:143
-msgid "Smooth"
-msgstr "Doux"
+#: modules/process/merge.c:165
+msgid "Average"
+msgstr "Moyenne"
 
-#: modules/process/merge.c:157
+#: modules/process/merge.c:166
+msgid "Interpolation"
+msgstr "Interpolation"
+
+#: modules/process/merge.c:181
 msgid "Merges two images."
 msgstr "Fusionner deux images."
 
-#: modules/process/merge.c:171
+#: modules/process/merge.c:195
 msgid "/M_ultidata/_Merge..."
 msgstr "/M_ultidonnées/Fusion..."
 
-#: modules/process/merge.c:175
+#: modules/process/merge.c:199
 msgid "Merge two images"
 msgstr "Fusionner deux images"
 
-#: modules/process/merge.c:210
+#: modules/process/merge.c:238
 msgid "Merge Data"
 msgstr "Fusionner des données"
 
-#: modules/process/merge.c:232
+#: modules/process/merge.c:260
 msgid "_Merge with:"
 msgstr "Fusionner avec :"
 
-#: modules/process/merge.c:240
+#: modules/process/merge.c:268
 msgid "_Put second operand:"
 msgstr "Placer le second o_pérande :"
 
-#: modules/process/merge.c:247
+#: modules/process/merge.c:275
 msgid "_Align second operand:"
 msgstr "_Aligner le second opérande :"
 
-#: modules/process/merge.c:254
+#: modules/process/merge.c:282
 msgid "_Boundary treatment:"
 msgstr "Traitement des _bords :"
 
-#: modules/process/merge.c:560 modules/process/merge.c:641
+#: modules/process/merge.c:286
+msgid "Crop result to _avoid outside pixels"
+msgstr "Rogner le résultat afin d'éviter les pixels externes"
+
+#: modules/process/merge.c:296
+msgid "Add _mask of outside pixels"
+msgstr "Ajouter le _masque sur les pixels externes"
+
+#: modules/process/merge.c:576 modules/process/merge.c:694
 msgid "Merged images"
 msgstr "Images fusionnées"
 
@@ -13338,6 +13362,9 @@ msgstr "Erreur des k-moyennes de %s"
 msgid "K-means center %d"
 msgstr "Centre %d des k-moyennes"
 
+#~ msgid "Smooth"
+#~ msgstr "Doux"
+
 #~ msgid "3dcontrols|Basic"
 #~ msgstr "Basiques"
 
@@ -13492,9 +13519,6 @@ msgstr "Centre %d des k-moyennes"
 #~ msgid ""
 #~ "It is necessary to select more data points than free volfit parameters"
 #~ msgstr "Il faut sélectionner plus de points que de paramètres volfit libres"
-
-#~ msgid "Average"
-#~ msgstr "Moyenne"
 
 #~ msgid "Raman Image Import"
 #~ msgstr "Import d'image Raman"
