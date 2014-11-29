@@ -82,6 +82,51 @@ enum {
     TIFF_HEADER_SIZE = 0x000a,
 };
 
+typedef enum {
+    JSPM_SIGNAL_UNKNOWN = 0,
+    JSPM_SIGNAL_TOPOGRAPHY,
+    JSPM_SIGNAL_LOG_I,
+    JSPM_SIGNAL_LIN_I,
+    JSPM_SIGNAL_AUX1,
+    JSPM_SIGNAL_AUX2,
+    JSPM_SIGNAL_AUX3,
+    JSPM_SIGNAL_EXT_VOLTAGE,
+    JSPM_SIGNAL_FORCE,
+    JSPM_SIGNAL_AFM,
+    JSPM_SIGNAL_FRICTION,
+    JSPM_SIGNAL_PHASE,
+    JSPM_SIGNAL_MFM,
+    JSPM_SIGNAL_ELASTICITY,
+    JSPM_SIGNAL_VISCOSITY,
+    JSPM_SIGNAL_FFM_FRICTION,
+    JSPM_SIGNAL_SURFACE_V,
+    JSPM_SIGNAL_PRESCAN,
+    JSPM_SIGNAL_RMS,
+    JSPM_SIGNAL_FMD,
+} JSPMSignalName;
+
+typedef enum {
+    JSPM_UNIT_NANOAMPERE = 0,
+    JSPM_UNIT_LOG_NANOAMPERE,
+    JSPM_UNIT_VOLT,
+    JSPM_UNIT_NANOMETRE,
+    JSPM_UNIT_NANONEWTON,
+    JSPM_UNIT_DEGREE,
+    JSPM_UNIT_HERTZ,
+    JSPM_UNIT_NONE = 255
+} JSPMUnitType;
+
+typedef enum {
+    JSPM_MEAS_IMAGE = 1,
+    JSPM_MEAS_VCO,
+    JSPM_MEAS_SINGLE_SPS,
+    JSPM_MEAS_SPS_MAPPING,
+    JSPM_MEAS_INTERRUPT_SPS,
+    JSPM_MEAS_LOCK_IN_AMP,
+    JSPM_MEAS_MAP_LITOGRAPHIC_ORIG_IMAGE,
+    JSPM_MEAS_TEMPERATURE_CHANGE_CONT_PROFILE,
+} JSPMMeasurementType;
+
 typedef struct {
     guint offset;
     guint len;
@@ -94,14 +139,18 @@ typedef struct {
     GArray *blocks;
     /* Useful information we are actually able to extract from the blocks. */
     guint winspm_version;
-    guint mode1;
-    guint mode2;
+    guint meas_type;
+    guint signal_name;
+    guint unit;
     guint xres;
     guint yres;
     gdouble xreal;
     gdouble yreal;
     guint data_offset;
     gchar *comment;
+    gdouble piezo_a;
+    gdouble piezo_b;
+    gdouble piezo_c;
 } JSPMFile;
 
 static gboolean      module_register        (void);
@@ -123,6 +172,10 @@ static gboolean      read_file_header_block (JSPMFile *jspmfile,
                                              const guchar *buffer,
                                              gsize size,
                                              GError **error);
+static gboolean      read_piezo_header_block(JSPMFile *jspmfile,
+                                             const guchar *buffer,
+                                             gsize size,
+                                             GError **error);
 static void          jspm_add_data_field    (const JSPMFile *jspmfile,
                                              const guchar *buffer,
                                              GwyContainer *container);
@@ -134,7 +187,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports JEOL JSPM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2014",
 };
@@ -282,6 +335,8 @@ jspm_read_headers(JSPMFile *jspmfile,
         return FALSE;
     if (!read_image_header_block(jspmfile, buffer, size, error))
         return FALSE;
+    if (!read_piezo_header_block(jspmfile, buffer, size, error))
+        return FALSE;
 
     return TRUE;
 }
@@ -332,9 +387,9 @@ read_image_header_block(JSPMFile *jspmfile,
     /* Don't know what they really mean.  But they appear 100% correlated with
      * the data type. */
     p = buffer + block->offset + DATATYPE_OFFSET;
-    jspmfile->mode1 = gwy_get_guint16_le(&p);
-    jspmfile->mode2 = gwy_get_guint16_le(&p);
-    gwy_debug("mode %u, %u", jspmfile->mode1, jspmfile->mode2);
+    jspmfile->signal_name = gwy_get_guint16_le(&p);
+    jspmfile->unit = gwy_get_guint16_le(&p);
+    gwy_debug("mode %u, %u", jspmfile->signal_name, jspmfile->unit);
 
     if (err_DIMENSION(error, jspmfile->xres)
         || err_DIMENSION(error, jspmfile->yres))
@@ -365,6 +420,7 @@ read_file_header_block(JSPMFile *jspmfile,
 {
     enum {
         COMMENT_OFFSET = 0x66,
+        MEAS_OFFSET = 0x01a6,
     };
 
     JSPMHeaderBlock *block;
@@ -394,6 +450,50 @@ read_file_header_block(JSPMFile *jspmfile,
         gwy_debug("comment %s", jspmfile->comment);
     }
 
+    if (block->len >= MEAS_OFFSET + sizeof(gint16)) {
+        p = buffer + block->offset + MEAS_OFFSET;
+        jspmfile->meas_type = gwy_get_guint16_le(&p);
+        gwy_debug("meas_type %u", jspmfile->meas_type);
+    }
+
+    return TRUE;
+}
+
+static gboolean
+read_piezo_header_block(JSPMFile *jspmfile,
+                        const guchar *buffer, G_GNUC_UNUSED gsize size,
+                        GError **error)
+{
+    enum {
+        ABC_OFFSET = 0x146,
+    };
+
+    JSPMHeaderBlock *block = NULL;
+    const guchar *p;
+    guint i;
+
+    for (i = 0; i < jspmfile->blocks->len; i++) {
+        block = &g_array_index(jspmfile->blocks, JSPMHeaderBlock, i);
+        if (block->type == 30 && block->len >= ABC_OFFSET + 3*sizeof(gfloat))
+            break;
+        block = NULL;
+    }
+    if (!block) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Cannot find piezo header block."));
+        return FALSE;
+    }
+
+    p = buffer + block->offset + ABC_OFFSET;
+    jspmfile->piezo_a = gwy_get_gfloat_le(&p);
+    jspmfile->piezo_b = gwy_get_gfloat_le(&p);
+    jspmfile->piezo_c = gwy_get_gfloat_le(&p);
+    /* XXX: According to JEOL info, there should be a topography conversion
+     * formula of the form ax²+bx+c, x being the raw value (at present a=c=0).
+     * But I can't get anything reasonable this way. */
+    gwy_debug("piezo a=%g, b=%g, c=%g",
+              jspmfile->piezo_a, jspmfile->piezo_b, jspmfile->piezo_c);
+
     return TRUE;
 }
 
@@ -403,56 +503,101 @@ jspm_add_data_field(const JSPMFile *jspmfile,
                     GwyContainer *container)
 
 {
+    static const GwyEnum signal_names[] = {
+        { "Topography",       JSPM_SIGNAL_TOPOGRAPHY,   },
+        { "Log Current (nA)", JSPM_SIGNAL_LOG_I,        },
+        { "Lin Current",      JSPM_SIGNAL_LIN_I,        },
+        { "AUX1",             JSPM_SIGNAL_AUX1,         },
+        { "AUX2",             JSPM_SIGNAL_AUX2,         },
+        { "AUX3",             JSPM_SIGNAL_AUX3,         },
+        { "EXT (Voltage)",    JSPM_SIGNAL_EXT_VOLTAGE,  },
+        { "Force",            JSPM_SIGNAL_FORCE,        },
+        { "AFM",              JSPM_SIGNAL_AFM,          },
+        { "Friction",         JSPM_SIGNAL_FRICTION,     },
+        { "Phase",            JSPM_SIGNAL_PHASE,        },
+        { "MFM",              JSPM_SIGNAL_MFM,          },
+        { "Elasticity",       JSPM_SIGNAL_ELASTICITY,   },
+        { "Viscosity",        JSPM_SIGNAL_VISCOSITY,    },
+        { "FFM_Friction",     JSPM_SIGNAL_FFM_FRICTION, },
+        { "Surface V",        JSPM_SIGNAL_SURFACE_V,    },
+        { "Prescan",          JSPM_SIGNAL_PRESCAN,      },
+        { "RMS",              JSPM_SIGNAL_RMS,          },
+        { "FMD",              JSPM_SIGNAL_FMD,          },
+    };
+
+    static const GwyEnum unit_types[] = {
+        { "nA",  JSPM_UNIT_NANOAMPERE,     },
+        { "",    JSPM_UNIT_LOG_NANOAMPERE, }, /* Can't do log(I) properly. */
+        { "V",   JSPM_UNIT_VOLT,           },
+        { "nm",  JSPM_UNIT_NANOMETRE,      },
+        { "nN",  JSPM_UNIT_NANONEWTON,     },
+        { "deg", JSPM_UNIT_DEGREE,         },
+        { "Hz",  JSPM_UNIT_HERTZ,          },
+        { "",    JSPM_UNIT_NONE,           },
+    };
+
     GwyDataField *dfield;
-    gdouble min, max;
+    GwySIUnit *zunit;
     gdouble q = 1.0, z0 = 0.0;
-    const gchar *unitstr = NULL, *title = "Raw data";
+    gint power10 = 0;
+    const gchar *unitstr, *title;
 
     dfield = gwy_data_field_new(jspmfile->xres, jspmfile->yres,
                                 Nanometer*jspmfile->xreal,
                                 Nanometer*jspmfile->yreal,
                                 FALSE);
-    if (jspmfile->mode1 == 1 && jspmfile->mode2 == 3) {
-        /* Topography */
-        q = Picometer;
-        unitstr = "m";
-        title = "Topography";
+
+    title = gwy_enum_to_string(jspmfile->signal_name,
+                               signal_names, G_N_ELEMENTS(signal_names));
+    if (!title || !strlen(title))
+        title = "Raw data";
+
+    unitstr = gwy_enum_to_string(jspmfile->unit,
+                                 unit_types, G_N_ELEMENTS(unit_types));
+
+    zunit = gwy_data_field_get_si_unit_z(dfield);
+    gwy_si_unit_set_from_string_parse(zunit, unitstr, &power10);
+
+#if 0
+    /* This is what we apparently should be doing for topography but it does
+     * not work. */
+    q = 1e-9 * jspmfile->piezo_b * 400.0/2097151.0;
+    /* And this for voltages; this one kind of works. */
+    q = 20.0/65535.0;
+    z0 = -10.0;
+#endif
+
+    if (jspmfile->unit == JSPM_UNIT_NANOMETRE) {
+        q = Picometer;   /* (sic) */
     }
-    else if (jspmfile->mode1 == 7 && jspmfile->mode2 == 0) {
-        /* Conductive AFM XXX probably not right */
+    else if (jspmfile->unit == JSPM_UNIT_NANOAMPERE) {
+        /* Probably not right */
         q = 1.0/32767.0 * Nanoampere;
         z0 = -1.5 * Nanoampere;
-        unitstr = "A";
-        title = "Current"; 
     }
-    else if (jspmfile->mode1 == 15 && jspmfile->mode2 == 5) {
+    else if (jspmfile->unit == JSPM_UNIT_DEGREE) {
         /* Phase FIXME the factor might be good, the offset is rubbish. */
-        q = 1.0/262.143;
+        q = 1000.0/262143.0;
         z0 = -40000.0*q;
-        unitstr = "deg";
-        title = "Phase"; 
     }
-    else if (jspmfile->mode1 == 17 && jspmfile->mode2 == 2) {
-        /* KPFM */
-        q = 1.0/3276.7;
+    else if (jspmfile->unit == JSPM_UNIT_VOLT) {
+        /* Voltage */
+        q = 10.0/32767.0;
         z0 = -10.0;
-        unitstr = "V";
-        title = "Voltage"; 
     }
     else {
         g_warning("Unknown data type %u.%u, importing as raw.",
-                  jspmfile->mode1, jspmfile->mode2);
+                  jspmfile->signal_name, jspmfile->unit);
+        q = 1.0/32767.0 * pow10(power10);
     }
 
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
-    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), unitstr);
 
     gwy_convert_raw_data(buffer + jspmfile->data_offset,
                          jspmfile->xres*jspmfile->yres, 1,
                          GWY_RAW_DATA_UINT32, GWY_BYTE_ORDER_LITTLE_ENDIAN,
                          gwy_data_field_get_data(dfield), q, z0);
     gwy_data_field_invalidate(dfield);
-    gwy_data_field_get_min_max(dfield, &min, &max);
 
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
