@@ -52,8 +52,8 @@ struct _GwySpectra {
     gdouble     double2;
     gdouble     double3;
     gdouble     double4;
-    gpointer    reserved1;
-    gpointer    reserved2;
+    gchar       *spec_xlabel;
+    gchar       *spec_ylabel;
     gpointer    reserved3;
     gpointer    reserved4;
     gint        int1;
@@ -74,7 +74,7 @@ struct _GwySpectraClass {
 #define gwy_spectra_duplicate(spectra) \
         (GWY_SPECTRA(gwy_serializable_duplicate(G_OBJECT(spectra))))
 
-GType        gwy_spectra_get_type             (void) G_GNUC_CONST;
+GType        gwy_spectra_get_type             (void)                       G_GNUC_CONST;
 GwySpectra*  gwy_spectra_new                  (void);
 GwySpectra*  gwy_spectra_new_alike            (GwySpectra *model);
 void         gwy_spectra_data_changed         (GwySpectra *spectra);
@@ -117,6 +117,12 @@ void         gwy_spectra_remove_spectrum      (GwySpectra *spectra,
 const gchar* gwy_spectra_get_title            (GwySpectra *spectra);
 void         gwy_spectra_set_title            (GwySpectra *spectra,
                                                const gchar *title);
+const gchar* gwy_spectra_get_spectrum_x_label (GwySpectra *spectra);
+void         gwy_spectra_set_spectrum_x_label (GwySpectra *spectra,
+                                               const gchar *label);
+const gchar* gwy_spectra_get_spectrum_y_label (GwySpectra *spectra);
+void         gwy_spectra_set_spectrum_y_label (GwySpectra *spectra,
+                                               const gchar *label);
 void         gwy_spectra_clear                (GwySpectra *spectra);
 
 G_END_DECLS

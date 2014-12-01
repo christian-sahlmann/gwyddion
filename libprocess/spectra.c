@@ -38,6 +38,8 @@
 enum {
     PROP_0,
     PROP_TITLE,
+    PROP_SPECTRUM_X_LABEL,
+    PROP_SPECTRUM_Y_LABEL,
     PROP_LAST
 };
 
@@ -114,6 +116,38 @@ gwy_spectra_class_init(GwySpectraClass *klass)
                              G_PARAM_READWRITE));
 
     /**
+     * GwySpectra:spectrum-x-label:
+     *
+     * Label of spectrum abscissa, as it should appear on extracted graphs.
+     *
+     * Since: 2.40
+     **/
+    g_object_class_install_property
+        (gobject_class,
+         PROP_SPECTRUM_X_LABEL,
+         g_param_spec_string("spectrum-x-label",
+                             "Spectrum X label",
+                             "Label of spectrum abscissa",
+                             NULL,
+                             G_PARAM_READWRITE));
+
+    /**
+     * GwySpectra:spectrum-y-label:
+     *
+     * Label of spectrum ordinate, as it should appear on extracted graphs.
+     *
+     * Since: 2.40
+     **/
+    g_object_class_install_property
+        (gobject_class,
+         PROP_SPECTRUM_Y_LABEL,
+         g_param_spec_string("spectrum-y-label",
+                             "Spectrum Y label",
+                             "Label of spectrum ordinate",
+                             NULL,
+                             G_PARAM_READWRITE));
+
+    /**
      * GwySpectra::data-changed:
      * @gwyspectra: The #GwySpectra which received the signal.
      *
@@ -156,6 +190,8 @@ gwy_spectra_finalize(GObject *object)
     spectra->spectra = NULL;
 
     g_free(spectra->title);
+    g_free(spectra->spec_xlabel);
+    g_free(spectra->spec_ylabel);
 
     G_OBJECT_CLASS(gwy_spectra_parent_class)->finalize(object);
 }
@@ -171,6 +207,14 @@ gwy_spectra_set_property(GObject *object,
     switch (prop_id) {
         case PROP_TITLE:
         gwy_spectra_set_title(spectra, g_value_get_string(value));
+        break;
+
+        case PROP_SPECTRUM_X_LABEL:
+        gwy_spectra_set_spectrum_x_label(spectra, g_value_get_string(value));
+        break;
+
+        case PROP_SPECTRUM_Y_LABEL:
+        gwy_spectra_set_spectrum_y_label(spectra, g_value_get_string(value));
         break;
 
         default:
@@ -190,6 +234,14 @@ gwy_spectra_get_property(GObject*object,
     switch (prop_id) {
         case PROP_TITLE:
         g_value_set_string(value, spectra->title);
+        break;
+
+        case PROP_SPECTRUM_X_LABEL:
+        g_value_set_string(value, spectra->spec_xlabel);
+        break;
+
+        case PROP_SPECTRUM_Y_LABEL:
+        g_value_set_string(value, spectra->spec_ylabel);
         break;
 
         default:
@@ -278,6 +330,22 @@ separate_arrays(GArray *spectra,
     }
 }
 
+static guint
+fix_serialisation_spec(GwySerializeSpec *spec)
+{
+    /* Don't serialise spec_xlabel and spec_ylabel if they are NULL. */
+    if (!spec[6].value) {
+        if (!spec[5].value)
+            return 5;
+        return 6;
+    }
+    else if (!spec[5].value) {
+        GWY_SWAP(GwySerializeSpec, spec[5], spec[6]);
+        return 6;
+    }
+    return 7;
+}
+
 static GByteArray*
 gwy_spectra_serialize(GObject *obj,
                       GByteArray *buffer)
@@ -303,16 +371,19 @@ gwy_spectra_serialize(GObject *obj,
 
     {
         GwySerializeSpec spec[] = {
-            { 's', "title",      &spectra->title,      NULL,       },
-            { 'o', "si_unit_xy", &spectra->si_unit_xy, NULL,       },
-            { 'D', "coords",     &coords,              &ncoords,   },
-            { 'I', "selected",   &selected,            &nselected, },
-            { 'O', "data",       &curves,              &ncurves,   },
+            { 's', "title",       &spectra->title,       NULL,       },
+            { 'o', "si_unit_xy",  &spectra->si_unit_xy,  NULL,       },
+            { 'D', "coords",      &coords,               &ncoords,   },
+            { 'I', "selected",    &selected,             &nselected, },
+            { 'O', "data",        &curves,               &ncurves,   },
+            { 's', "spec_xlabel", &spectra->spec_xlabel, NULL,       },
+            { 's', "spec_ylabel", &spectra->spec_ylabel, NULL,       },
         };
+        guint nspec = fix_serialisation_spec(spec);
 
         retval = gwy_serialize_pack_object_struct(buffer,
                                                   GWY_SPECTRA_TYPE_NAME,
-                                                  G_N_ELEMENTS(spec), spec);
+                                                  nspec, spec);
     }
     g_free(curves);
     g_free(coords);
@@ -345,15 +416,18 @@ gwy_spectra_get_size(GObject *obj)
 
     {
         GwySerializeSpec spec[] = {
-            { 's', "title",      &spectra->title,      NULL,       },
-            { 'o', "si_unit_xy", &spectra->si_unit_xy, NULL,       },
-            { 'D', "coords",     &coords,              &ncoords,   },
-            { 'I', "selected",   &selected,            &nselected, },
-            { 'O', "data",       &curves,              &ncurves,   },
+            { 's', "title",       &spectra->title,       NULL,       },
+            { 'o', "si_unit_xy",  &spectra->si_unit_xy,  NULL,       },
+            { 'D', "coords",      &coords,               &ncoords,   },
+            { 'I', "selected",    &selected,             &nselected, },
+            { 'O', "data",        &curves,               &ncurves,   },
+            { 's', "spec_xlabel", &spectra->spec_xlabel, NULL,       },
+            { 's', "spec_ylabel", &spectra->spec_ylabel, NULL,       },
         };
+        guint nspec = fix_serialisation_spec(spec);
 
         retval = gwy_serialize_get_struct_size(GWY_SPECTRA_TYPE_NAME,
-                                               G_N_ELEMENTS(spec), spec);
+                                               nspec, spec);
     }
     g_free(curves);
     g_free(coords);
@@ -373,7 +447,7 @@ gwy_spectra_deserialize(const guchar *buffer,
     GwySIUnit *si_unit_xy = NULL;
     GwyDataLine **curves = NULL;
     GwySpectra *spectra;
-    gchar* title = NULL;
+    gchar* title = NULL, *spec_xlabel = NULL, *spec_ylabel = NULL;
     guint isize, i;
 
     gwy_debug("");
@@ -381,11 +455,13 @@ gwy_spectra_deserialize(const guchar *buffer,
 
     {
         GwySerializeSpec spec[] = {
-            { 's', "title",      &title,      NULL,       },
-            { 'o', "si_unit_xy", &si_unit_xy, NULL,       },
-            { 'D', "coords",     &coords,     &ncoords,   },
-            { 'I', "selected",   &selected,   &nselected, },
-            { 'O', "data",       &curves,     &ncurves,   },
+            { 's', "title",       &title,       NULL,       },
+            { 'o', "si_unit_xy",  &si_unit_xy,  NULL,       },
+            { 'D', "coords",      &coords,      &ncoords,   },
+            { 'I', "selected",    &selected,    &nselected, },
+            { 'O', "data",        &curves,      &ncurves,   },
+            { 's', "spec_xlabel", &spec_xlabel, NULL,       },
+            { 's', "spec_ylabel", &spec_ylabel, NULL,       },
         };
 
         if (!gwy_serialize_unpack_object_struct(buffer, size, position,
@@ -396,6 +472,9 @@ gwy_spectra_deserialize(const guchar *buffer,
             g_free(curves);
             g_free(coords);
             g_free(selected);
+            g_free(title);
+            g_free(spec_xlabel);
+            g_free(spec_ylabel);
             gwy_object_unref(si_unit_xy);
 
             return NULL;
@@ -412,6 +491,9 @@ gwy_spectra_deserialize(const guchar *buffer,
         g_free(curves);
         g_free(coords);
         g_free(selected);
+        g_free(title);
+        g_free(spec_xlabel);
+        g_free(spec_ylabel);
         gwy_object_unref(si_unit_xy);
 
         return NULL;
@@ -421,6 +503,11 @@ gwy_spectra_deserialize(const guchar *buffer,
 
     g_free(spectra->title);
     spectra->title = title;
+    g_free(spectra->spec_xlabel);
+    spectra->spec_xlabel = spec_xlabel;
+    g_free(spectra->spec_ylabel);
+    spectra->spec_ylabel = spec_ylabel;
+
     /* Preallocate ncurves items */
     g_array_set_size(spectra->spectra, ncurves);
     g_array_set_size(spectra->spectra, 0);
@@ -1053,6 +1140,98 @@ gwy_spectra_set_title(GwySpectra *spectra,
     g_free(old);
 
     g_object_notify(G_OBJECT(spectra), "title");
+}
+
+/**
+ * gwy_spectra_get_spectrum_x_label:
+ * @spectra: A spectra object.
+ *
+ * Gets the spectrum abscissa label of a spectra object.
+ *
+ * Returns: The abscissa label.  The string is owned by @spectra and must not
+ *          be modified nor freed.
+ *
+ * Since: 2.40
+ **/
+const gchar*
+gwy_spectra_get_spectrum_x_label(GwySpectra *spectra)
+{
+    g_return_val_if_fail(GWY_IS_SPECTRA(spectra), NULL);
+    return spectra->spec_xlabel;
+}
+
+/**
+ * gwy_spectra_set_spectrum_x_label:
+ * @spectra: A spectra object.
+ * @label: New abscissa label.
+ *
+ * Sets the spectrum abscissa label of a spectra object.
+ *
+ * Since: 2.40
+ **/
+void
+gwy_spectra_set_spectrum_x_label(GwySpectra *spectra,
+                                 const gchar *label)
+{
+    gchar *old;
+
+    g_return_if_fail(GWY_IS_SPECTRA(spectra));
+
+    if (!label && !spectra->spec_xlabel)
+        return;
+    if (label && spectra->spec_xlabel && gwy_strequal(label,
+                                                      spectra->spec_xlabel))
+        return;
+
+    old = spectra->spec_xlabel;
+    spectra->spec_xlabel = g_strdup(label);
+    g_free(old);
+}
+
+/**
+ * gwy_spectra_get_spectrum_y_label:
+ * @spectra: A spectra object.
+ *
+ * Gets the spectrum ordinate label of a spectra object.
+ *
+ * Returns: The ordinate label.  The string is owned by @spectra and must not
+ *          be modified nor freed.
+ *
+ * Since: 2.40
+ **/
+const gchar*
+gwy_spectra_get_spectrum_y_label(GwySpectra *spectra)
+{
+    g_return_val_if_fail(GWY_IS_SPECTRA(spectra), NULL);
+    return spectra->spec_ylabel;
+}
+
+/**
+ * gwy_spectra_set_spectrum_y_label:
+ * @spectra: A spectra object.
+ * @label: New ordinate label.
+ *
+ * Sets the spectrum ordinate label of a spectra object.
+ *
+ * Since: 2.40
+ **/
+void
+gwy_spectra_set_spectrum_y_label(GwySpectra *spectra,
+                                 const gchar *label)
+{
+    gchar *old;
+
+    g_return_if_fail(GWY_IS_SPECTRA(spectra));
+
+    if (!label && !spectra->spec_ylabel)
+        return;
+    if (label && spectra->spec_ylabel && gwy_strequal(label,
+                                                      spectra->spec_ylabel))
+        return;
+
+    old = spectra->spec_ylabel;
+    spectra->spec_ylabel = g_strdup(label);
+    g_free(old);
 }
 
 /**
