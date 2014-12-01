@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2013 Owain Davies, David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2014 Owain Davies, David Necas (Yeti), Petr Klapetek.
  *  E-mail: owain.davies@blueyonder.co.uk, yeti@gwyddion.net,
  *          klapetek@gwyddion.net.
  *
@@ -141,7 +141,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Point Spectrum, extracts point spectra to a graph."),
     "Owain Davies <owain.davies@blueyonder.co.uk>",
-    "0.7",
+    "0.8",
     "Owain Davies, David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -447,6 +447,7 @@ gwy_tool_spectro_spectra_switched(GwyTool *gwytool,
     GtkTreeSelection *selection;
     GwyNullStore *store;
     GString *str;
+    const gchar *spec_xlabel, *spec_ylabel;
     guint nspec, i;
 
     gwy_debug("spectra: %p", spectra);
@@ -473,7 +474,11 @@ gwy_tool_spectro_spectra_switched(GwyTool *gwytool,
     }
 
     if (!spectra) {
-        g_object_set(tool->gmodel, "title", _("Spectroscopy"), NULL);
+        g_object_set(tool->gmodel,
+                     "title", _("Spectroscopy"),
+                     "axis-label-bottom", "x",
+                     "axis-label-left", "y",
+                     NULL);
         tool->ignore_tree_selection = TRUE;
         gwy_null_store_set_n_rows(store, 0);
         tool->ignore_tree_selection = FALSE;
@@ -492,6 +497,14 @@ gwy_tool_spectro_spectra_switched(GwyTool *gwytool,
     g_object_set(tool->gmodel,
                  "title", gwy_spectra_get_title(tool->spectra),
                  NULL);
+
+    if (!(spec_xlabel = gwy_spectra_get_spectrum_x_label(tool->spectra)))
+        spec_xlabel = "x";
+    gwy_graph_model_set_axis_label(tool->gmodel, GTK_POS_BOTTOM, spec_xlabel);
+
+    if (!(spec_ylabel = gwy_spectra_get_spectrum_y_label(tool->spectra)))
+        spec_ylabel = "y";
+    gwy_graph_model_set_axis_label(tool->gmodel, GTK_POS_LEFT, spec_ylabel);
 
     nspec = gwy_spectra_get_n_spectra(spectra);
     gwy_selection_set_max_objects(plain_tool->selection, nspec);
