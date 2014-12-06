@@ -1,8 +1,9 @@
-/*
+﻿/*
  *  @(#) $Id$
  *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek,
  *  Daniil Bratashov, Evgeniy Ryabov.
- *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net, dn2010@gmail.com.
+ *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net,
+ *  dn2010@gmail.com, k1u2r3ka@mail.ru.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -34,46 +35,50 @@
 #include <libgwymodule/gwymodule-volume.h>
 #include <app/gwyapp.h>
 
-#define KMEANS_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
+#define KMEDIANS_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
-    RESPONSE_RESET   = 1,
+    RESPONSE_RESET = 1,
 };
 
 typedef struct {
     gint k;              /* number of clusters */
     gdouble epsilon;     /* convergence precision */
     gint max_iterations; /* maximum number of main cycle iterations */
-    gboolean normalize;  /* normalize brick before K-means run */
-} KMeansArgs;
+    gboolean normalize;  /* normalize brick before K-medians run */
+} KMediansArgs;
 
 typedef struct {
     GtkObject *k;
     GtkObject *epsilon;
     GtkObject *max_iterations;
     GtkWidget *normalize;
-} KMeansControls;
+} KMediansControls;
 
-static gboolean  module_register     (void);
-static void      volume_kmeans       (GwyContainer *data,
-                                      GwyRunType run);
-static void      kmeans_dialog       (GwyContainer *data,
-                                      KMeansArgs *args);
-static void      epsilon_changed_cb  (GtkAdjustment *adj,
-                                      KMeansArgs *args);
-static void      kmeans_dialog_update(KMeansControls *controls,
-                                      KMeansArgs *args);
-static void      kmeans_values_update(KMeansControls *controls,
-                                      KMeansArgs *args);
-static GwyBrick* normalize_brick     (GwyBrick *brick);
-static void      volume_kmeans_do    (GwyContainer *data,
-                                      KMeansArgs *args);
-static void      kmeans_load_args    (GwyContainer *container,
-                                      KMeansArgs *args);
-static void      kmeans_save_args    (GwyContainer *container,
-                                      KMeansArgs *args);
+static gboolean  module_register        (void);
+static void      volume_kmedians        (GwyContainer *data,
+                                         GwyRunType run);
+static void      kmedians_dialog        (GwyContainer *data,
+                                         KMediansArgs *args);
+static void      epsilon_changed_cb     (GtkAdjustment *adj,
+                                         KMediansArgs *args);
+static void      kmedians_dialog_update (KMediansControls *controls,
+                                         KMediansArgs *args);
+static void      kmedians_values_update (KMediansControls *controls,
+                                         KMediansArgs *args);
+static GwyBrick* normalize_brick        (GwyBrick *brick);
+static void      volume_kmedians_do     (GwyContainer *data,
+                                         KMediansArgs *args);
+static void      kmedians_load_args     (GwyContainer *container,
+                                         KMediansArgs *args);
+static void      kmedians_save_args     (GwyContainer *container,
+                                         KMediansArgs *args);
+static gint      compare_func           (gconstpointer a,
+                                         gconstpointer b,
+                                         gpointer user_data);
 
-static const KMeansArgs kmeans_defaults = {
+
+static const KMediansArgs kmedians_defaults = {
     10,
     1.0e-12,
     100,
@@ -83,9 +88,9 @@ static const KMeansArgs kmeans_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Calculates K-means clustering on volume data."),
-    "Daniil Bratashov <dn2010@gmail.com> & Evgeniy Ryabov",
-    "1.1",
+    N_("Calculates K-medians clustering on volume data."),
+    "Daniil Bratashov <dn2010@gmail.com> & Evgeniy Ryabov <k1u2r3ka@mail.ru>",
+    "0.1",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov & Evgeniy Ryabov",
     "2014",
 };
@@ -95,48 +100,48 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
-    gwy_volume_func_register("kmeans",
-                              (GwyVolumeFunc)&volume_kmeans,
-                              N_("/_K-means clustering..."),
-                              NULL,
-                              KMEANS_RUN_MODES,
-                              GWY_MENU_FLAG_VOLUME,
-                              N_("Calculate K-means clustering on volume data"));
+    gwy_volume_func_register("kmedians",
+                             (GwyVolumeFunc)&volume_kmedians,
+                             N_("/_K-medians clustering..."),
+                             NULL,
+                             KMEDIANS_RUN_MODES,
+                             GWY_MENU_FLAG_VOLUME,
+                             N_("Calculate K-medians clustering on volume data"));
 
     return TRUE;
 }
 
 static void
-volume_kmeans(GwyContainer *data, GwyRunType run)
+volume_kmedians(GwyContainer *data, GwyRunType run)
 {
-    KMeansArgs args;
+    KMediansArgs args;
     GwyBrick *brick = NULL;
     gint id;
 
-    g_return_if_fail(run & KMEANS_RUN_MODES);
+    g_return_if_fail(run & KMEDIANS_RUN_MODES);
 
-    kmeans_load_args(gwy_app_settings_get(), &args);
+    kmedians_load_args(gwy_app_settings_get(), &args);
     gwy_app_data_browser_get_current(GWY_APP_BRICK, &brick,
                                      GWY_APP_BRICK_ID, &id,
                                      0);
     g_return_if_fail(GWY_IS_BRICK(brick));
     if (run == GWY_RUN_INTERACTIVE) {
-        kmeans_dialog(data, &args);
+        kmedians_dialog(data, &args);
     }
     else if (run == GWY_RUN_IMMEDIATE) {
-        volume_kmeans_do(data, &args);
+        volume_kmedians_do(data, &args);
     }
 }
 
 static void
-kmeans_dialog (GwyContainer *data, KMeansArgs *args)
+kmedians_dialog (GwyContainer *data, KMediansArgs *args)
 {
     GtkWidget *dialog, *table, *spin;
     gint response;
-    KMeansControls controls;
+    KMediansControls controls;
     gint row = 0;
 
-    dialog = gtk_dialog_new_with_buttons(_("K-means"),
+    dialog = gtk_dialog_new_with_buttons(_("K-medians"),
                                          NULL, 0, NULL);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           _("_Reset"), RESPONSE_RESET);
@@ -189,7 +194,7 @@ kmeans_dialog (GwyContainer *data, KMeansArgs *args)
     gtk_table_attach_defaults(GTK_TABLE(table), controls.normalize,
                               0, 3, row, row+1);
 
-    kmeans_dialog_update(&controls, args);
+    kmedians_dialog_update(&controls, args);
     gtk_widget_show_all(dialog);
 
     do {
@@ -197,20 +202,20 @@ kmeans_dialog (GwyContainer *data, KMeansArgs *args)
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-                kmeans_values_update(&controls, args);
+                kmedians_values_update(&controls, args);
                 gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return;
             break;
 
             case GTK_RESPONSE_OK:
-                kmeans_values_update(&controls, args);
-                volume_kmeans_do(data, args);
+                kmedians_values_update(&controls, args);
+                volume_kmedians_do(data, args);
             break;
 
             case RESPONSE_RESET:
-                *args = kmeans_defaults;
-                kmeans_dialog_update(&controls, args);
+                *args = kmedians_defaults;
+                kmedians_dialog_update(&controls, args);
             break;
 
             default:
@@ -219,20 +224,20 @@ kmeans_dialog (GwyContainer *data, KMeansArgs *args)
         }
     } while (response != GTK_RESPONSE_OK);
 
-    kmeans_values_update(&controls, args);
-    kmeans_save_args(gwy_app_settings_get(), args);
+    kmedians_values_update(&controls, args);
+    kmedians_save_args(gwy_app_settings_get(), args);
     gtk_widget_destroy(dialog);
 }
 
 static void
 epsilon_changed_cb(GtkAdjustment *adj,
-                   KMeansArgs *args)
+                   KMediansArgs *args)
 {
-    KMeansControls *controls;
+    KMediansControls *controls;
 
     controls = g_object_get_data(G_OBJECT(adj), "controls");
     args->epsilon = gtk_adjustment_get_value(adj);
-    kmeans_dialog_update(controls, args);
+    kmedians_dialog_update(controls, args);
 }
 
 static GwyBrick*
@@ -272,8 +277,8 @@ normalize_brick(GwyBrick *brick)
 }
 
 static void
-kmeans_values_update(KMeansControls *controls,
-                     KMeansArgs *args)
+kmedians_values_update(KMediansControls *controls,
+                     KMediansArgs *args)
 {
     args->k
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->k));
@@ -287,9 +292,21 @@ kmeans_values_update(KMeansControls *controls,
                                 GTK_TOGGLE_BUTTON(controls->normalize));
 }
 
+static gint
+compare_func (gconstpointer a, gconstpointer b,
+              G_GNUC_UNUSED gpointer user_data)
+{
+    const gdouble *aa = a;
+    const gdouble *bb = b;
+
+    return *aa - *bb;
+}
+
+
+
 static void
-kmeans_dialog_update(KMeansControls *controls,
-                     KMeansArgs *args)
+kmedians_dialog_update(KMediansControls *controls,
+                     KMediansArgs *args)
 {
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->k),
                              args->k);
@@ -302,7 +319,7 @@ kmeans_dialog_update(KMeansControls *controls,
 }
 
 static void
-volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
+volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
 {
     GwyBrick *brick = NULL, *normalized = NULL;
     GwyDataField *dfield = NULL, *errormap = NULL;
@@ -315,7 +332,7 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
     gchar *description;
     GRand *rand;
     const gdouble *data;
-    gdouble *centers, *oldcenters, *sum, *data1, *xdata, *ydata;
+    gdouble *centers, *oldcenters, *plane, *data1, *xdata, *ydata;
     gdouble *errordata;
     gdouble min, dist, xreal, yreal, zreal, xoffset, yoffset, zoffset;
     gdouble epsilon = args->epsilon;
@@ -359,10 +376,10 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
     siunit = gwy_si_unit_new(_("Cluster"));
     gwy_data_field_set_si_unit_z(dfield, siunit);
 
-    centers = g_malloc(zres*k*sizeof(gdouble));
-    oldcenters = g_malloc (zres*k*sizeof(gdouble));
-    sum = g_malloc(zres*k*sizeof(gdouble));
-    npix = g_malloc(k*sizeof(gint));
+    centers = g_malloc(zres * k * sizeof(gdouble));
+    oldcenters = g_malloc(zres * k * sizeof(gdouble));
+    plane = g_malloc(xres * yres * k * sizeof(gdouble));
+    npix = g_malloc(k * sizeof(gint));
     data1 = gwy_data_field_get_data(dfield);
 
     rand=g_rand_new();
@@ -379,7 +396,7 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
     while (!converged) {
         /* pixels belong to cluster with min distance */
         for (j = 0; j < yres; j++)
-			for (i = 0; i < xres; i++) {
+            for (i = 0; i < xres; i++) {
                 *(data1 + j * xres + i) = 0;
                 min = G_MAXDOUBLE;
                 for (c = 0; c < k; c++ ) {
@@ -400,27 +417,30 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
                 }
             }
 
-        /* new center coordinates as average of pixels */
-        for (c = 0; c < k; c++) {
-            *(npix + c) = 0;
-            for (l = 0; l < zres; l++) {
-                *(sum + c * zres + l) = 0;
-            }
-        }
-        for (i = 0; i < xres; i++)
-            for (j = 0; j < yres; j++) {
-                c = (gint)(*(data1 + j * xres + i));
-                *(npix + c) += 1;
-                for (l = 0; l < zres; l++) {
-                    *(sum + c * zres + l)
-                            += *(data + l * xres * yres + j * xres + i);
-                }
+        /* We're calculating median per one coordinate of all pixels
+         * that belongs to same cluster and use it as this coordinate
+         * position for cluster center */
+        for (l = 0; l < zres; l++) {
+            for (c = 0; c < k; c++) {
+                *(npix + c) = 0;
             }
 
-        for (c = 0; c < k; c++)
-            for (l =0; l < zres; l++) {
-                *(centers + c * zres + l) = (*(npix + c) > 0) ?
-                     *(sum + c * zres + l) / (gdouble)(*(npix + c)) : 0;
+            for (j = 0; j < yres; j++)
+                for (i = 0; i < xres; i++) {
+                    c = (gint)(*(data1 + j * xres + i));
+                    (*(npix + c))++;
+                    *(plane + c * xres * yres + *(npix + c) - 1)
+                             = *(data + l * xres * yres + j * xres + i);
+                }
+            for (c = 0; c < k; c++) {
+                g_qsort_with_data (plane + c * xres * yres,
+                                   *(npix + c),
+                                   sizeof(gdouble),
+                                   compare_func,
+                                   NULL);
+                *(centers + c * zres + l)
+                         = *(plane + c * xres * yres + *(npix + c) / 2);
+            }
         }
 
         converged = TRUE;
@@ -462,10 +482,12 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
         g_object_unref(dfield);
         description = gwy_app_get_brick_title(container, id);
         gwy_app_set_data_field_title(container, newid,
-                                     g_strdup_printf(_("K-means of %s"),
-                                                     description)
+                                     g_strdup_printf(
+                                                   _("K-medians of %s"),
+                                                   description)
                                      );
-        gwy_app_channel_log_add(container, -1, newid, "volume::kmeans",
+        gwy_app_channel_log_add(container, -1, newid,
+                                "volume::kmedians",
                                 NULL);
 
         newid = gwy_app_data_browser_add_data_field(errormap,
@@ -473,11 +495,12 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
         g_object_unref(errormap);
         gwy_app_set_data_field_title(container, newid,
                                      g_strdup_printf(
-                                               _("K-means error of %s"),
-                                               description)
+                                             _("K-medians error of %s"),
+                                             description)
                                      );
         g_free(description);
-        gwy_app_channel_log_add(container, -1, newid, "volume::kmeans",
+        gwy_app_channel_log_add(container, -1, newid,
+                                "volume::kmedians",
                                 NULL);
 
         gmodel = gwy_graph_model_new();
@@ -501,7 +524,8 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
             g_object_set(gcmodel,
                          "mode", GWY_GRAPH_CURVE_LINE,
                          "description",
-                         g_strdup_printf(_("K-means center %d"), c + 1),
+                         g_strdup_printf(_("K-medians center %d"),
+                                         c + 1),
                          "color", rgba,
                          NULL);
             gwy_graph_model_add_curve(gmodel, gcmodel);
@@ -521,21 +545,21 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
         g_object_unref(normalized);
     }
     g_free(npix);
-    g_free(sum);
+    g_free(plane);
     g_free(oldcenters);
     g_free(centers);
 
     gwy_app_volume_log_add_volume(container, id, id);
 }
 
-static const gchar kmeans_k_key[]       = "/module/kmeans/k";
-static const gchar epsilon_key[]        = "/module/kmeans/epsilon";
+static const gchar kmedians_k_key[]     = "/module/kmedians/k";
+static const gchar epsilon_key[]        = "/module/kmedians/epsilon";
 static const gchar max_iterations_key[]
-                                      = "/module/kmeans/max_iterations";
-static const gchar normalize_key[]      = "/module/kmeans/normalize";
+                                    = "/module/kmedians/max_iterations";
+static const gchar normalize_key[]      = "/module/kmedians/normalize";
 
 static void
-kmeans_sanitize_args(KMeansArgs *args)
+kmedians_sanitize_args(KMediansArgs *args)
 {
     args->k = CLAMP(args->k, 2, 100);
     args->epsilon = CLAMP(args->epsilon, 1e-20, 0.1);
@@ -545,12 +569,13 @@ kmeans_sanitize_args(KMeansArgs *args)
 }
 
 static void
-kmeans_load_args(GwyContainer *container,
-                 KMeansArgs *args)
+kmedians_load_args(GwyContainer *container,
+                 KMediansArgs *args)
 {
-    *args = kmeans_defaults;
+    *args = kmedians_defaults;
 
-    gwy_container_gis_int32_by_name(container, kmeans_k_key, &args->k);
+    gwy_container_gis_int32_by_name(container, kmedians_k_key,
+                                                              &args->k);
     gwy_container_gis_double_by_name(container, epsilon_key,
                                                         &args->epsilon);
     gwy_container_gis_int32_by_name(container, max_iterations_key,
@@ -558,14 +583,14 @@ kmeans_load_args(GwyContainer *container,
     gwy_container_gis_boolean_by_name(container, normalize_key,
                                                       &args->normalize);
 
-    kmeans_sanitize_args(args);
+    kmedians_sanitize_args(args);
 }
 
 static void
-kmeans_save_args(GwyContainer *container,
-                 KMeansArgs *args)
+kmedians_save_args(GwyContainer *container,
+                 KMediansArgs *args)
 {
-    gwy_container_set_int32_by_name(container, kmeans_k_key, args->k);
+    gwy_container_set_int32_by_name(container, kmedians_k_key, args->k);
     gwy_container_set_double_by_name(container, epsilon_key,
                                                          args->epsilon);
     gwy_container_set_int32_by_name(container, max_iterations_key,

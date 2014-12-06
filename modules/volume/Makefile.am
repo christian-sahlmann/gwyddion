@@ -12,7 +12,8 @@ volume_LTLIBRARIES = \
 	volume_extract.la \
 	volume_fdfit.la \
 	volume_invert.la \
-	volume_kmeans.la
+	volume_kmeans.la \
+	volume_kmedians.la
 
 EXTRA_DIST = \
 	$(disabled_sources)
@@ -41,6 +42,7 @@ volume_extract_la_SOURCES = volume_extract.c
 volume_fdfit_la_SOURCES = volume_fdfit.c
 volume_invert_la_SOURCES = volume_invert.c
 volume_kmeans_la_SOURCES = volume_kmeans.c
+volume_kmedians_la_SOURCES = volume_kmedians.c
 
 clean-local:
 	rm -f core.* *~
