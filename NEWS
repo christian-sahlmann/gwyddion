@@ -1,5 +1,9 @@
 2.40 (0000-00-00)
+Libraries:
+- libgwyprocess: Pass a NULL error array to gwy_nlfit_preset_fit() works now.
+
 Modules:
+- Flatten base (new): Flattens the base of a surface with positive features.
 - Image export: It is possible do disable the frame if there are no rulers.
   False colour rendering for inverted gradients and default non-full mappings
   was corrected.  Title centering for non-square images was corrected.
@@ -11,6 +15,7 @@ Modules:
   is also possible to automatically crop the result to only inside pixels.
   A new merge type ‘Interpolation’ produces smoother transitions than the old
   ‘Smooth’ which was renamed to ‘Average’.
+- Omicron: X and Y spectra axislabels are set according to the imported file.
 
 
 2.39 (2014-11-14)
