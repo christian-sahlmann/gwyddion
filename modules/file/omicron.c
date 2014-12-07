@@ -162,7 +162,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.12",
+    "0.13",
     "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2006",
 };
@@ -809,6 +809,7 @@ omicron_read_cs_data(OmicronFile *ofile,
     GError *err = NULL;
     GwyDataLine *dline;
     GwySIUnit *siunit = NULL, *coord_unit = NULL;
+    const gchar *xlabel = NULL, *ylabel = NULL;
     GwySpectra *spectra = NULL;
     GPtrArray *spectrum = NULL;
     gchar *filename;
@@ -880,6 +881,7 @@ omicron_read_cs_data(OmicronFile *ofile,
         if (strstr(line, "BEGIN") && !strstr(line, "COORD")) {
             gdouble real = ((channel->end - channel->start)*channel->npoints
                             /(channel->npoints - 1));
+
             /* Read spectroscopy points */
             dline = gwy_data_line_new(channel->npoints, real, FALSE);
             gwy_data_line_set_offset(dline, (channel->start));
@@ -900,6 +902,7 @@ omicron_read_cs_data(OmicronFile *ofile,
             }
 
             /* Set Units for the parameter (x) axis */
+            xlabel = channel->param;
             if ((channel->param[0] == 'V') || (channel->param[0] == 'E')) {
                 siunit = gwy_si_unit_new("V");
                 power10 = 0;
@@ -929,6 +932,7 @@ omicron_read_cs_data(OmicronFile *ofile,
             }
 
             /* Set Units for the Value (y) Axis */
+            ylabel = channel->name;
             siunit = gwy_si_unit_new_parse(channel->units, &power10);
             gwy_data_line_set_si_unit_y(dline, siunit);
             g_object_unref(siunit);
@@ -975,6 +979,11 @@ omicron_read_cs_data(OmicronFile *ofile,
         g_object_unref(dline);
     }
 
+    if (xlabel)
+        gwy_spectra_set_spectrum_x_label(spectra, xlabel);
+    if (ylabel)
+        gwy_spectra_set_spectrum_y_label(spectra, ylabel);
+
     g_ptr_array_free(spectrum, TRUE);
     g_free(coords);
     g_free(buffer);
@@ -994,6 +1003,7 @@ omicron_read_be_data(OmicronFile *ofile,
             z0 = channel->min_phys - q*channel->min_raw;
     GError *err = NULL;
     GwySIUnit *siunit = NULL, *coord_unit = NULL;
+    const gchar *xlabel = NULL, *ylabel = NULL;
     GwySpectra *spectra = NULL;
     gsize size;
     gchar *filename;
@@ -1051,6 +1061,7 @@ omicron_read_be_data(OmicronFile *ofile,
                                  gwy_data_line_get_data(dline), q, z0);
 
             /* Set Units for the parameter (x) axis */
+            xlabel = channel->param;
             if ((channel->param[0] == 'V') || (channel->param[0] == 'E')) {
                 siunit = gwy_si_unit_new("V");
                 power10 = 0;
@@ -1080,6 +1091,7 @@ omicron_read_be_data(OmicronFile *ofile,
             }
 
             /* Set Units for the Value (y) Axis */
+            ylabel = channel->name;
             siunit = gwy_si_unit_new_parse(channel->units, &power10);
             gwy_data_line_set_si_unit_y(dline, siunit);
             g_object_unref(siunit);
@@ -1092,6 +1104,11 @@ omicron_read_be_data(OmicronFile *ofile,
             g_object_unref(dline);
         }
     }
+
+    if (xlabel)
+        gwy_spectra_set_spectrum_x_label(spectra, xlabel);
+    if (ylabel)
+        gwy_spectra_set_spectrum_y_label(spectra, ylabel);
 
     return spectra;
 }
