@@ -289,7 +289,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanoeducator data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -1043,6 +1043,8 @@ nanoedu_read_fd_spectra(const guchar *pos_buffer, gsize pos_size,
     gwy_spectra_set_si_unit_xy(spectra, siunit);
     g_object_unref(siunit);
     gwy_spectra_set_title(spectra, _("F-D spectra"));
+    gwy_spectra_set_spectrum_x_label(spectra, "D");
+    gwy_spectra_set_spectrum_y_label(spectra, "F");
 
     /* For FD curves, there are always two spectra: forward and backward.
      * The backward one is really stored backwards, so we revert it upon
@@ -1134,6 +1136,8 @@ nanoedu_read_iv_spectra(const guchar *pos_buffer, gsize pos_size,
     gwy_spectra_set_si_unit_xy(spectra, siunit);
     g_object_unref(siunit);
     gwy_spectra_set_title(spectra, _("I-V spectra"));
+    gwy_spectra_set_spectrum_x_label(spectra, "V");
+    gwy_spectra_set_spectrum_y_label(spectra, "I");
 
     for (i = 0; i < nspectra; i++) {
         x = xscale * GINT16_FROM_LE(p16[pointstep*i]);
@@ -1217,6 +1221,8 @@ nanoedu_read_iz_spectra(const guchar *pos_buffer, gsize pos_size,
     gwy_spectra_set_si_unit_xy(spectra, siunit);
     g_object_unref(siunit);
     gwy_spectra_set_title(spectra, _("I-Z spectra"));
+    gwy_spectra_set_spectrum_x_label(spectra, "Z");
+    gwy_spectra_set_spectrum_y_label(spectra, "I");
 
     for (i = 0; i < nspectra; i++) {
         x = xscale * GINT16_FROM_LE(p16[pointstep*i]);
