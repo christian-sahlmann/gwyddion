@@ -20,6 +20,7 @@
  */
 
 #include "config.h"
+#include <stdlib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/arithmetic.h>
@@ -29,6 +30,7 @@
 #include <app/gwyapp.h>
 
 #define MASKEDT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
+#define MASKTHIN_RUN_MODES GWY_RUN_IMMEDIATE
 
 typedef enum {
     MASKEDT_INTERIOR = 0,
@@ -36,6 +38,11 @@ typedef enum {
     MASKEDT_SIGNED   = 2,
     MASKEDT_NTYPES
 } MaskEdtType;
+
+typedef struct {
+    gdouble dist, ndist;
+    gint j, i;
+} ThinCandidate;
 
 typedef struct {
     MaskEdtType type;
@@ -50,6 +57,9 @@ typedef struct {
 } MaskEdtControls;
 
 static gboolean      module_register              (void);
+static void          mask_thin                    (GwyContainer *data,
+                                                   GwyRunType run);
+static void          thin_mask                    (GwyDataField *mask);
 static void          mask_edt                     (GwyContainer *data,
                                                    GwyRunType run);
 static gboolean      maskedt_dialog               (MaskEdtArgs *args);
@@ -76,7 +86,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Performs Euclidean distance transform of masks."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2014",
 };
@@ -93,8 +103,195 @@ module_register(void)
                               MASKEDT_RUN_MODES,
                               GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
                               N_("Euclidean distance transform of mask"));
+    gwy_process_func_register("mask_thin",
+                              (GwyProcessFunc)&mask_thin,
+                              N_("/_Mask/Thi_n"),
+                              NULL,
+                              MASKTHIN_RUN_MODES,
+                              GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
+                              N_("Thin mask"));
 
     return TRUE;
+}
+
+static void
+mask_thin(GwyContainer *data, GwyRunType run)
+{
+    GwyDataField *mfield;
+    GQuark quark;
+    gint id;
+
+    g_return_if_fail(run & MASKTHIN_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_MASK_FIELD, &mfield,
+                                     GWY_APP_MASK_FIELD_KEY, &quark,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
+    g_return_if_fail(mfield);
+
+    gwy_app_undo_qcheckpointv(data, 1, &quark);
+    thin_mask(mfield);
+    gwy_data_field_data_changed(mfield);
+    gwy_app_channel_log_add_proc(data, id, id);
+}
+
+static gint
+compare_candidate(gconstpointer pa, gconstpointer pb)
+{
+    const ThinCandidate *a = (const ThinCandidate*)pa;
+    const ThinCandidate *b = (const ThinCandidate*)pb;
+
+    /* Take pixels with lowest Euclidean distances first. */
+    if (a->dist < b->dist)
+        return -1;
+    if (a->dist > b->dist)
+        return 1;
+
+    /* If equal, take pixels with largest Euclidean distance *of their
+     * neighbours* first.  This essentially mean flat edges go before corners,
+     * preserving useful branches. */
+    if (a->ndist > b->ndist)
+        return -1;
+    if (a->ndist < b->ndist)
+        return 1;
+
+    /* When desperate, sort bottom and right coordinates first so that we try
+     * to remove them first.  Anyway we must impose some rule to make the
+     * sort stable. */
+    if (a->i > b->i)
+        return -1;
+    if (a->i < b->i)
+        return 1;
+    if (a->j > b->j)
+        return -1;
+    if (a->j < b->j)
+        return 1;
+
+    return 0;
+}
+
+static void
+thin_mask(GwyDataField *mask)
+{
+    /* TRUE means removing the central pixel in a 3x3 pixel configuration does
+     * not break any currently connected parts. */
+    static const gboolean ok_to_remove[0x100] = {
+        TRUE,  TRUE,  TRUE,  TRUE,  TRUE,  TRUE,  TRUE,  TRUE,
+        TRUE,  TRUE,  FALSE, FALSE, TRUE,  TRUE,  TRUE,  TRUE,
+        TRUE,  TRUE,  TRUE,  TRUE,  TRUE,  TRUE,  TRUE,  TRUE,
+        TRUE,  TRUE,  FALSE, FALSE, TRUE,  TRUE,  TRUE,  TRUE,
+        TRUE,  TRUE,  FALSE, FALSE, TRUE,  TRUE,  FALSE, FALSE,
+        FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
+        TRUE,  TRUE,  FALSE, FALSE, TRUE,  TRUE,  FALSE, FALSE,
+        TRUE,  TRUE,  FALSE, FALSE, TRUE,  TRUE,  TRUE,  TRUE,
+        TRUE,  TRUE,  TRUE,  TRUE,  TRUE,  TRUE,  TRUE,  TRUE,
+        TRUE,  TRUE,  FALSE, FALSE, TRUE,  TRUE,  TRUE,  TRUE,
+        TRUE,  TRUE,  TRUE,  TRUE,  TRUE,  TRUE,  TRUE,  TRUE,
+        TRUE,  TRUE,  FALSE, FALSE, TRUE,  TRUE,  TRUE,  TRUE,
+        TRUE,  TRUE,  FALSE, FALSE, TRUE,  TRUE,  FALSE, FALSE,
+        FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
+        TRUE,  TRUE,  FALSE, FALSE, TRUE,  TRUE,  FALSE, FALSE,
+        TRUE,  TRUE,  FALSE, FALSE, TRUE,  TRUE,  TRUE,  TRUE,
+        TRUE,  TRUE,  FALSE, TRUE,  TRUE,  TRUE,  FALSE, TRUE,
+        FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE,
+        TRUE,  TRUE,  FALSE, TRUE,  TRUE,  TRUE,  FALSE, TRUE,
+        FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE,
+        FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
+        FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
+        FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
+        FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE,
+        TRUE,  TRUE,  FALSE, TRUE,  TRUE,  TRUE,  FALSE, TRUE,
+        FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE,
+        TRUE,  TRUE,  FALSE, TRUE,  TRUE,  TRUE,  FALSE, TRUE,
+        FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE,
+        TRUE,  TRUE,  FALSE, TRUE,  TRUE,  TRUE,  FALSE, TRUE,
+        FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE,
+        TRUE,  TRUE,  FALSE, TRUE,  TRUE,  TRUE,  FALSE, TRUE,
+        TRUE,  TRUE,  FALSE, TRUE,  TRUE,  TRUE,  TRUE,  TRUE,
+    };
+
+    GwyDataField *dfield;
+    gint i, j, k, xres = mask->xres, yres = mask->yres, ncand;
+    gdouble *d, *m;
+    ThinCandidate *candidates;
+
+    dfield = gwy_data_field_duplicate(mask);
+    gwy_data_field_copy(mask, dfield, FALSE);
+    gwy_data_field_grain_distance_transform(dfield);
+    d = gwy_data_field_get_data(dfield);
+    m = gwy_data_field_get_data(mask);
+
+    ncand = 0;
+    for (k = 0; k < xres*yres; k++) {
+        if (d[k] > 0.0)
+            ncand++;
+    }
+
+    candidates = g_new(ThinCandidate, ncand);
+    k = 0;
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            if (d[i*xres + j] > 0.0) {
+                gdouble ndist = 0.0;
+                candidates[k].i = i;
+                candidates[k].j = j;
+                candidates[k].dist = d[i*xres + j];
+
+                if (i && j)
+                   ndist += d[(i-1)*xres + (j-1)];
+                if (i)
+                   ndist += d[(i-1)*xres + j];
+                if (i && j < xres-1)
+                    ndist += d[(i-1)*xres + (j+1)];
+                if (j < xres-1)
+                    ndist += d[i*xres + (j+1)];
+                if (i < yres-1 && j < xres-1)
+                    ndist += d[(i+1)*xres + (j+1)];
+                if (i < yres-1)
+                    ndist += d[(i+1)*xres + j];
+                if (i < yres-1 && j)
+                    ndist += d[(i+1)*xres + (j-1)];
+                if (j)
+                   ndist += d[i*xres + (j-1)];
+
+                candidates[k].ndist = ndist;
+                k++;
+            }
+        }
+    }
+    g_assert(k == ncand);
+
+    qsort(candidates, ncand, sizeof(ThinCandidate), &compare_candidate);
+
+    for (k = 0; k < ncand; k++) {
+        guint b = 0;
+
+        i = candidates[k].i;
+        j = candidates[k].j;
+        if (i && j && d[(i-1)*xres + (j-1)] > 0.0)
+            b |= 1;
+        if (i && d[(i-1)*xres + j] > 0.0)
+            b |= 2;
+        if (i && j < xres-1 && d[(i-1)*xres + (j+1)] > 0.0)
+            b |= 4;
+        if (j < xres-1 && d[i*xres + (j+1)] > 0.0)
+            b |= 8;
+        if (i < yres-1 && j < xres-1 && d[(i+1)*xres + (j+1)] > 0.0)
+            b |= 16;
+        if (i < yres-1 && d[(i+1)*xres + j] > 0.0)
+            b |= 32;
+        if (i < yres-1 && j && d[(i+1)*xres + (j-1)] > 0.0)
+            b |= 64;
+        if (j && d[i*xres + (j-1)] > 0.0)
+            b |= 128;
+
+        if (ok_to_remove[b]) {
+            d[i*xres + j] = 0.0;
+            m[i*xres + j] = 0.0;
+        }
+    }
+
+    g_free(candidates);
+    g_object_unref(dfield);
 }
 
 static void
