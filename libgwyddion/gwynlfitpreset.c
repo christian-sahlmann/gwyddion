@@ -196,6 +196,65 @@ psdf_get_units(G_GNUC_UNUSED GwyNLFitPreset *preset,
     }
 }
 
+/******************** two-gaussian PSDF ***************************/
+static gdouble
+gauss2_psdf_func(gdouble x,
+                 G_GNUC_UNUSED gint n_param,
+                 const gdouble *b,
+                 G_GNUC_UNUSED gpointer user_data,
+                 gboolean *fres)
+{
+    gdouble f1, f2;
+    gboolean fres1, fres2;
+    f1 = gauss_psdf_func(x, 2, b, NULL, &fres1);
+    f2 = gauss_psdf_func(x, 2, b + 2, NULL, &fres2);
+    *fres = fres1 && fres2;
+    return f1 + f2;
+}
+
+static void
+gauss2_psdf_guess(gint n_dat,
+                  const gdouble *x,
+                  const gdouble *y,
+                  gdouble *param,
+                  gboolean *fres)
+{
+    gauss_psdf_guess(n_dat, x, y, param, fres);
+
+    if (!*fres) {
+        param[2] = 0.0;
+        param[3] = 1.0;
+        return;
+    }
+
+    /* Don't actually try to guess.  Use the one-Gauss estimate, split sigma
+     * and make sure Ts are somewhat different. */
+    param[2] = param[0] /= G_SQRT2;
+
+    param[3] = GWY_SQRT3*param[1];
+    param[1] /= GWY_SQRT3;
+}
+
+static void
+psdf2_scale(GwyNLFitPreset *preset,
+           gdouble *param,
+           gdouble xscale,
+           gdouble yscale,
+           gint dir)
+{
+    psdf_scale(preset, param, xscale, yscale, dir);
+    psdf_scale(preset, param + 2, xscale, yscale, dir);
+}
+
+static GwySIUnit*
+psdf2_get_units(GwyNLFitPreset *preset,
+                guint param,
+                GwySIUnit *siunit_x,
+                GwySIUnit *siunit_y)
+{
+    return psdf_get_units(preset, param % 2, siunit_x, siunit_y);
+}
+
 /******************* gaussian HHCF ********************************/
 static gdouble
 gauss_hhcf_func(gdouble x,
@@ -1160,9 +1219,18 @@ static const GwyNLFitParam exp_params[] = {
    { "b",             1, 0, },
 };
 
+/* XXX: σ power is fractional, attempted to fix case-by-case */
 static const GwyNLFitParam gauss_two_params[] = {
-   { "σ", 0, 0, },   /* XXX: Fractional, attempted to fix case-by-case */
+   { "σ", 0, 0, },
    { "T", 1, 0, },
+};
+
+/* XXX: σ power is fractional, attempted to fix case-by-case */
+static const GwyNLFitParam gauss2_four_params[] = {
+   { "σ<sub>1</sub>", 0, 0, },
+   { "T<sub>1</sub>", 1, 0, },
+   { "σ<sub>2</sub>", 0, 0, },
+   { "T<sub>2</sub>", 1, 0, },
 };
 
 static const GwyNLFitParam poly3_params[] = {
@@ -1271,6 +1339,22 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &weights_linear_decrease,
         G_N_ELEMENTS(gauss_two_params),
         gauss_two_params,
+    },
+    {
+        N_("Two Gaussians (PSDF)"),
+        "<i>f</i>(<i>x</i>) "
+            "= σ<sub>1</sub><sup>2</sup><i>T</i><sub>1</sub>/(2√π) "
+            "exp[−(<i>x</i><i>T</i><sub>1</sub>/2)<sup>2</sup>] "
+            "+ σ<sub>2</sub><sup>2</sup><i>T</i><sub>2</sub>/(2√π) "
+            "exp[−(<i>x</i><i>T</i><sub>2</sub>/2)<sup>2</sup>]",
+        &gauss2_psdf_func,
+        NULL,
+        &gauss2_psdf_guess,
+        &psdf2_scale,
+        &psdf2_get_units,
+        NULL,
+        G_N_ELEMENTS(gauss2_four_params),
+        gauss2_four_params,
     },
     {
         N_("Exponential"),
