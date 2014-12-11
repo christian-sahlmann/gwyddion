@@ -1,4 +1,4 @@
-﻿/*
+/*
  *  @(#) $Id$
  *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek,
  *  Daniil Bratashov, Evgeniy Ryabov.
