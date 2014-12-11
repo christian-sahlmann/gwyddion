@@ -1,6 +1,7 @@
 The features I want to be implemented, WIP is for the parts that are
 developed just now: 
-- data loading from Renishaw WDF files (WIP).
+- implement metadata loading for Renishaw WDF and load some additional
+  info from it (WIP).
 - more simple interface for volume data extraction. Implement missing
   parts of volume infrastructure.
 - Tool to recalculate calibrations for volume data.
@@ -21,4 +22,7 @@ developed just now:
 - machine learning infrastructure for the above.
 - better jumping mode (QNM, Hybrid, ... in other implementations)
   processing (currently I have no good examples of such file).
-- more work on image export, isolines support, better XY rulers, ...
+- isolines support for image export
+- smarter units and metadata (keeping some relevant info about scan type
+  and parameters in defined way for modules that can use it,
+  probably also for gwyddion4)

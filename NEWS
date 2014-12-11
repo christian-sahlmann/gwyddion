@@ -6,7 +6,7 @@ Libraries:
 
 Modules:
 - Flatten base (new): Flattens the base of a surface with positive features.
-- K-means (new): K-means clustering for volume data.
+- K-medians (new): K-medians clustering for volume data.
 - Image export: It is possible do disable the frame if there are no rulers.
   False colour rendering for inverted gradients and default non-full mappings
   was corrected.  Title centering for non-square images was corrected.
