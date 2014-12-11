@@ -925,6 +925,93 @@ square_guess(gint n_dat,
     *fres = TRUE;
 }
 
+/******************* parabolic step ********************************/
+static gdouble
+parstep_func(gdouble x,
+             G_GNUC_UNUSED gint n_param,
+             const gdouble *b,
+             G_GNUC_UNUSED gpointer user_data,
+             gboolean *fres)
+{
+    gdouble xc = b[0], yc = b[1], w = b[2], h = b[3], s = b[4];
+    gdouble xleft, xright;
+
+    if (h == 0.0 || w == 0.0) {
+        *fres = FALSE;
+        return 0.0;
+    }
+
+    *fres = TRUE;
+    x -= xc;
+    xleft = MAX(1.0 + 0.5*s/h, 0.0);
+    xright = MAX(1.0 - 0.5*s/h, 0.0);
+    xleft = -0.5*fabs(w)*sqrt(xleft);
+    xright = 0.5*fabs(w)*sqrt(xright);
+    if (x <= xleft)
+        return yc - 0.5*s;
+    if (x >= xright)
+        return yc + 0.5*s;
+
+    x *= 2.0/w;
+    return yc + h*(1.0 - x*x);
+}
+
+static void
+parstep_guess(gint n_dat,
+              const gdouble *x,
+              const gdouble *y,
+              gdouble *param,
+              gboolean *fres)
+{
+    gint i;
+    gdouble xmin, xmax, yxmin, yxmax, ymin, ymax, yminx, ymaxx;
+
+    xmin = G_MAXDOUBLE;
+    xmax = -G_MAXDOUBLE;
+    ymin = G_MAXDOUBLE;
+    ymax = -G_MAXDOUBLE;
+    yxmax = yxmin = yminx = ymaxx = 0.0;
+    for (i = 0; i < n_dat; i++) {
+        if (ymin > y[i]) {
+            ymin = y[i];
+            yminx = x[i];
+        }
+        if (ymax < y[i]) {
+            ymax = y[i];
+            ymaxx = x[i];
+        }
+        if (xmin > x[i]) {
+            xmin = x[i];
+            yxmin = y[i];
+        }
+        if (xmax < x[i]) {
+            xmax = x[i];
+            yxmax = y[i];
+        }
+    }
+    param[0] = param[1] = param[4] = 0.0;
+    param[2] = param[3] = 1.0;
+    *fres = FALSE;
+    if (xmax <= xmin)
+        return;
+
+    param[1] = 0.5*(yxmin + yxmax);
+    param[4] = yxmax - yxmin;
+    param[2] = (xmax - xmin)/6.0;
+    if (fabs(ymax - param[1]) >= fabs(ymin - param[1])) {
+        /* Positive parabola. */
+        param[0] = ymaxx;
+        param[3] = ymax - param[1];
+    }
+    else {
+        /* Negative parabola. */
+        param[0] = yminx;
+        param[3] = ymin - param[1];
+    }
+
+    *fres = TRUE;
+}
+
 /******************* power function ********************************/
 static gdouble
 power_func(gdouble x,
@@ -1247,6 +1334,14 @@ static const GwyNLFitParam square_params[] = {
     { "b", 0, 1, },
 };
 
+static const GwyNLFitParam parstep_params[] = {
+    { "x<sub>0</sub>", 1, 0, },
+    { "y<sub>0</sub>", 0, 1, },
+    { "w", 1, 0, },
+    { "h", 0, 1, },
+    { "s", 0, 1, },
+};
+
 static const GwyNLFitParam power_params[] = {
     { "a", 0, 1, },
     { "b", 0, 1, },
@@ -1492,6 +1587,23 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         NULL,
         G_N_ELEMENTS(square_params),
         square_params,
+    },
+    {
+        N_("Parabolic step"),
+        "<i>f</i>(<i>x</i>) "
+            "= y<sub>0</sub> + "
+            "{−<i>s</i>/2 or "
+            "<i>h</i>[1 − (<i>x</i> − <i>x</i><sub>0</sub>)<sup>2</sup>"
+            "/4<i>w</i><sup>2</sup>] or "
+            "<i>s</i>/2}",
+        &parstep_func,
+        NULL,
+        &parstep_guess,
+        NULL,
+        NULL,
+        NULL,
+        G_N_ELEMENTS(parstep_params),
+        parstep_params,
     },
     {
         N_("Power"),
