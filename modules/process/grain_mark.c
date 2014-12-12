@@ -144,7 +144,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks grains by thresholding (height, slope, curvature)."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.16",
+    "1.17",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -632,9 +632,7 @@ mask_process(GwyDataField *dfield,
     output_field = gwy_data_field_new_alike(dfield, FALSE);
 
     if (args->is_height) {
-        gwy_data_field_grains_mark_height(dfield, maskfield,
-                                          args->inverted
-                                          ? 100.0 - args->height : args->height,
+        gwy_data_field_grains_mark_height(dfield, maskfield, args->height,
                                           args->inverted);
         is_field = TRUE;
     }
