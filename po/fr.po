@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-11-29 03:58+0100\n"
-"PO-Revision-Date: 2014-11-29 16:48+0100\n"
+"POT-Creation-Date: 2014-12-14 03:59+0100\n"
+"PO-Revision-Date: 2014-12-14 13:30+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -132,75 +132,83 @@ msgstr "contact : Hertz (paraboloïde)"
 msgid "Untitled"
 msgstr "Sans titre"
 
-#: libgwyddion/gwynlfitpreset.c:1204 libprocess/gwyprocessenums.c:101
+#: libgwyddion/gwynlfitpreset.c:1367 libprocess/gwyprocessenums.c:101
 msgid "Gaussian"
 msgstr "Gaussienne"
 
-#: libgwyddion/gwynlfitpreset.c:1220
+#: libgwyddion/gwynlfitpreset.c:1383
 msgid "Gaussian (PSDF)"
 msgstr "Gaussienne (PSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1234
+#: libgwyddion/gwynlfitpreset.c:1397
 msgid "Gaussian (ACF)"
 msgstr "Gaussienne (ACF)"
 
-#: libgwyddion/gwynlfitpreset.c:1248
+#: libgwyddion/gwynlfitpreset.c:1411
 msgid "Gaussian (HHCF)"
 msgstr "Gaussienne (HHCF)"
 
-#: libgwyddion/gwynlfitpreset.c:1262
+#: libgwyddion/gwynlfitpreset.c:1425
 msgid "Gaussian (RPSDF)"
 msgstr "Gaussienne (RPSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1276
+#: libgwyddion/gwynlfitpreset.c:1439
+msgid "Two Gaussians (PSDF)"
+msgstr "Gaussienne double (PSDF)"
+
+#: libgwyddion/gwynlfitpreset.c:1455
 msgid "Exponential"
 msgstr "Exponentielle"
 
-#: libgwyddion/gwynlfitpreset.c:1289
+#: libgwyddion/gwynlfitpreset.c:1468
 msgid "Exponential (PSDF)"
 msgstr "Exponentielle (PSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1303
+#: libgwyddion/gwynlfitpreset.c:1482
 msgid "Exponential (ACF)"
 msgstr "Exponentielle (ACF)"
 
-#: libgwyddion/gwynlfitpreset.c:1316
+#: libgwyddion/gwynlfitpreset.c:1495
 msgid "Exponential (HHCF)"
 msgstr "Exponentielle (HHCF)"
 
-#: libgwyddion/gwynlfitpreset.c:1330
+#: libgwyddion/gwynlfitpreset.c:1509
 msgid "Exponential (RPSDF)"
 msgstr "Exponentielle (RPSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1345
+#: libgwyddion/gwynlfitpreset.c:1524
 msgid "Polynomial (order 0)"
 msgstr "Polynôme (ordre 0)"
 
-#: libgwyddion/gwynlfitpreset.c:1357
+#: libgwyddion/gwynlfitpreset.c:1536
 msgid "Polynomial (order 1)"
 msgstr "Polynôme (ordre 1)"
 
-#: libgwyddion/gwynlfitpreset.c:1369
+#: libgwyddion/gwynlfitpreset.c:1548
 msgid "Polynomial (order 2)"
 msgstr "Polynôme (ordre 2)"
 
-#: libgwyddion/gwynlfitpreset.c:1382
+#: libgwyddion/gwynlfitpreset.c:1561
 msgid "Polynomial (order 3)"
 msgstr "Polynôme (ordre 3)"
 
-#: libgwyddion/gwynlfitpreset.c:1396
+#: libgwyddion/gwynlfitpreset.c:1575
 msgid "Square wave"
 msgstr "Onde carrée"
 
-#: libgwyddion/gwynlfitpreset.c:1413
+#: libgwyddion/gwynlfitpreset.c:1592
+msgid "Parabolic step"
+msgstr "Porte parabolique"
+
+#: libgwyddion/gwynlfitpreset.c:1609
 msgid "Power"
 msgstr "Puissance"
 
-#: libgwyddion/gwynlfitpreset.c:1426
+#: libgwyddion/gwynlfitpreset.c:1622
 msgid "Lorentzian"
 msgstr "Lorentzienne"
 
-#: libgwyddion/gwynlfitpreset.c:1441
+#: libgwyddion/gwynlfitpreset.c:1637
 msgid "Sinc"
 msgstr "Sinus cardinal"
 
@@ -911,6 +919,7 @@ msgstr "pixels"
 #: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:361
 #: modules/process/wpour_mark.c:296 modules/volume/volume_calibrate.c:371
 #: modules/volume/volume_extract.c:331 modules/volume/volume_kmeans.c:142
+#: modules/volume/volume_kmedians.c:147
 msgid "_Reset"
 msgstr "_Remise à zéro"
 
@@ -4105,7 +4114,7 @@ msgstr "_Nom du préréglage :"
 #: modules/file/imgexport.c:4126
 #, c-format
 msgid "Export %s"
-msgstr "Exporter %s"
+msgstr "Exporter au format %s"
 
 #: modules/file/imgexport.c:4147
 msgid "Export as 1_6 bit grayscale"
@@ -4246,23 +4255,27 @@ msgstr "JPK image de scan (.jpk)"
 msgid "File does not contain grid dimensions."
 msgstr "Le fichier ne contient pas les dimensions de la grille."
 
-#: modules/file/jspmfile.c:135
+#: modules/file/jspmfile.c:188
 msgid "Imports JEOL JSPM data files."
 msgstr "Importe les fichiers JEOL JSPM."
 
-#: modules/file/jspmfile.c:148
+#: modules/file/jspmfile.c:201
 msgid "JEOL JSPM data files (.tif)"
 msgstr "JEOL JSPM (.tif)"
 
-#: modules/file/jspmfile.c:227
+#: modules/file/jspmfile.c:280
 #, c-format
 msgid "Header block %u has invalid position or size."
 msgstr "Le bloc d'en-tête %u a une position ou une taille invalide."
 
-#: modules/file/jspmfile.c:307 modules/file/jspmfile.c:314
-#: modules/file/jspmfile.c:375 modules/file/jspmfile.c:382
+#: modules/file/jspmfile.c:362 modules/file/jspmfile.c:369
+#: modules/file/jspmfile.c:431 modules/file/jspmfile.c:438
 msgid "Cannot find image header block."
 msgstr "Impossible de trouver le bloc d'en-tête de l'image."
+
+#: modules/file/jspmfile.c:483
+msgid "Cannot find piezo header block."
+msgstr "Impossible de trouver le bloc d'en-tête piezo."
 
 #: modules/file/lextfile.c:80
 msgid "Imports LEXT data files."
@@ -4509,11 +4522,11 @@ msgstr "Profil %d"
 msgid "F-D spectra"
 msgstr "Spectres F-D"
 
-#: modules/file/nanoeducator.c:1136
+#: modules/file/nanoeducator.c:1138
 msgid "I-V spectra"
 msgstr "Spectres I-V"
 
-#: modules/file/nanoeducator.c:1219
+#: modules/file/nanoeducator.c:1223
 msgid "I-Z spectra"
 msgstr "Spectres I-Z"
 
@@ -6263,6 +6276,7 @@ msgstr "Paramètre"
 #: modules/graph/graph_cd.c:308 modules/graph/graph_fdfit.c:364
 #: modules/graph/graph_fit.c:372 modules/process/fit_2d.c:349
 #: modules/volume/volume_fdfit.c:449 modules/volume/volume_kmeans.c:442
+#: modules/volume/volume_kmedians.c:462
 msgid "Error"
 msgstr "Erreur"
 
@@ -8083,7 +8097,7 @@ msgid "Output Options"
 msgstr "Options de sortie"
 
 #: modules/process/domain_synth.c:541 modules/process/fft_filter_2d.c:625
-#: modules/process/mask_edt.c:164 modules/process/slope_dist.c:325
+#: modules/process/mask_edt.c:361 modules/process/slope_dist.c:325
 msgid "Output type:"
 msgstr "Type de sortie :"
 
@@ -10310,35 +10324,43 @@ msgstr "_Minimum :"
 msgid "M_aximum:"
 msgstr "M_aximum :"
 
-#: modules/process/mask_edt.c:77
+#: modules/process/mask_edt.c:87
 msgid "Performs Euclidean distance transform of masks."
 msgstr "Affiche la carte de distances euclidiennes des masques."
 
-#: modules/process/mask_edt.c:91
+#: modules/process/mask_edt.c:101
 msgid "/_Mask/_Euclidean Distance Transform..."
 msgstr "/_Masque/Carte de distances _euclidiennes..."
 
-#: modules/process/mask_edt.c:95
+#: modules/process/mask_edt.c:105
 msgid "Euclidean distance transform of mask"
 msgstr "Carte de distances euclidiennes du masque"
 
-#: modules/process/mask_edt.c:125 modules/process/mask_edt.c:147
+#: modules/process/mask_edt.c:108
+msgid "/_Mask/Thi_n"
+msgstr "/_Masque/Affiner"
+
+#: modules/process/mask_edt.c:112
+msgid "Thin mask"
+msgstr "Affiner le masque"
+
+#: modules/process/mask_edt.c:322 modules/process/mask_edt.c:344
 msgid "Distance Transform"
 msgstr "Carte de distances"
 
-#: modules/process/mask_edt.c:135
+#: modules/process/mask_edt.c:332
 msgid "Interior"
 msgstr "Intérieur"
 
-#: modules/process/mask_edt.c:136
+#: modules/process/mask_edt.c:333
 msgid "Exterior"
 msgstr "Exterieur"
 
-#: modules/process/mask_edt.c:137
+#: modules/process/mask_edt.c:334
 msgid "Two-sided"
 msgstr "Les deux côtés"
 
-#: modules/process/mask_edt.c:179 modules/tools/maskedit.c:618
+#: modules/process/mask_edt.c:376 modules/tools/maskedit.c:618
 msgid "Shrink from _border"
 msgstr "Éroder à partir du _bord"
 
@@ -12918,7 +12940,7 @@ msgstr "_Spectres séparés"
 msgid "_Average spectra"
 msgstr "Moyenner les spectres"
 
-#: modules/tools/spectro.c:476
+#: modules/tools/spectro.c:478
 msgid "Spectroscopy"
 msgstr "Spectroscopie"
 
@@ -13323,27 +13345,27 @@ msgstr "Calculer le partitionnement par k-moyennes de données volumiques"
 msgid "K-means"
 msgstr "k-moyennes"
 
-#: modules/volume/volume_kmeans.c:146
+#: modules/volume/volume_kmeans.c:146 modules/volume/volume_kmedians.c:151
 msgid "_Run"
 msgstr "Lance_r"
 
-#: modules/volume/volume_kmeans.c:162
+#: modules/volume/volume_kmeans.c:162 modules/volume/volume_kmedians.c:167
 msgid "_Number of clusters:"
 msgstr "_Nombre de partitions :"
 
-#: modules/volume/volume_kmeans.c:170
+#: modules/volume/volume_kmeans.c:170 modules/volume/volume_kmedians.c:175
 msgid "Convergence _Precision:"
 msgstr "_Précision de convergence :"
 
-#: modules/volume/volume_kmeans.c:182
+#: modules/volume/volume_kmeans.c:182 modules/volume/volume_kmedians.c:187
 msgid "_Max. iterations:"
 msgstr "Nombre d'itérations _max :"
 
-#: modules/volume/volume_kmeans.c:188
+#: modules/volume/volume_kmeans.c:188 modules/volume/volume_kmedians.c:193
 msgid "_Normalize"
 msgstr "_Normaliser"
 
-#: modules/volume/volume_kmeans.c:359
+#: modules/volume/volume_kmeans.c:359 modules/volume/volume_kmedians.c:376
 msgid "Cluster"
 msgstr "Partition"
 
@@ -13361,6 +13383,37 @@ msgstr "Erreur des k-moyennes de %s"
 #, c-format
 msgid "K-means center %d"
 msgstr "Centre %d des k-moyennes"
+
+#: modules/volume/volume_kmedians.c:91
+msgid "Calculates K-medians clustering on volume data."
+msgstr "Calcule le partitionnement par k-médianes de données volumiques."
+
+#: modules/volume/volume_kmedians.c:105
+msgid "/_K-medians clustering..."
+msgstr "/Partitionnement par _k-médianes..."
+
+#: modules/volume/volume_kmedians.c:109
+msgid "Calculate K-medians clustering on volume data"
+msgstr "Calculer le partitionnement par k-médianes de données volumiques"
+
+#: modules/volume/volume_kmedians.c:144
+msgid "K-medians"
+msgstr "k-médianes"
+
+#: modules/volume/volume_kmedians.c:486
+#, c-format
+msgid "K-medians of %s"
+msgstr "k-médianes de %s"
+
+#: modules/volume/volume_kmedians.c:498
+#, c-format
+msgid "K-medians error of %s"
+msgstr "Erreur des k-médianes de %s"
+
+#: modules/volume/volume_kmedians.c:527
+#, c-format
+msgid "K-medians center %d"
+msgstr "Centre %d des k-médianes"
 
 #~ msgid "Smooth"
 #~ msgstr "Doux"
