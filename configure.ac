@@ -84,6 +84,17 @@ m4_defun([_LT_AC_LANG_F77_CONFIG],[:])
 AC_DISABLE_STATIC
 AC_PROG_CC
 AC_PROG_CXX
+
+# Check if the compiler is "g++" but it is not GNU C++.  This means it's just
+# the fallback when no actual compiler is found.
+AC_MSG_CHECKING([if C++ compiler is real])
+if test x$CXX = "xg++" && test x$GCC_CXX != xyes; then
+  cxx_is_not_fake=no
+else
+  cxx_is_not_fake=yes
+fi
+AC_MSG_RESULT([$cxx_is_not_fake])
+
 dnl FIXME: Can't do this, see math section below
 dnl AC_PROG_CC_C99
 AC_USE_SYSTEM_EXTENSIONS
@@ -548,7 +559,7 @@ AM_CONDITIONAL([HAVE_PNG],[test x$enable_png != xno])
 #############################################################################
 # OpenEXR
 # Optional.  Used for HDR greyscale OpenEXR pixmap import/export.
-enable_exr=yes
+enable_exr=$cxx_is_not_fake
 PKG_CHECK_MODULES(EXR, [OpenEXR],
                   [AC_DEFINE(HAVE_EXR,1,
                             [Define if we have the OpenEXR package.])],
