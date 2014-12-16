@@ -67,6 +67,15 @@ fitsfile_module =
 disabled_sources += fitsfile.c
 endif
 
+# If C++ is not available, put the dependent sources to EXTRA_DIST to include
+# them in make dist.
+if HAVE_CXX
+hdrimage_module = hdrimage.la
+else
+hdrimage_module =
+disabled_sources += hdrimage.cc
+endif
+
 filedir = $(pkglibdir)/modules/file
 
 file_LTLIBRARIES = \
@@ -100,7 +109,7 @@ file_LTLIBRARIES = \
 	gwyfile.la \
 	gxyzffile.la \
 	hdf4file.la \
-	hdrimage.la \
+	$(hdrimage_module) \
 	hitachi-afm.la \
 	hitachi-sem.la \
 	igorfile.la \
@@ -239,7 +248,6 @@ gdeffile_la_SOURCES      = gdeffile.c
 gsffile_la_SOURCES       = gsffile.c
 gwyfile_la_SOURCES       = gwyfile.c
 gxyzffile_la_SOURCES     = gxyzffile.c
-hdrimage_la_SOURCES      = hdrimage.cc gwytiff.h image-keys.h
 hdf4file_la_SOURCES      = hdf4file.c
 hitachi_afm_la_SOURCES   = hitachi-afm.c
 hitachi_sem_la_SOURCES   = hitachi-sem.c
@@ -374,6 +382,10 @@ if HAVE_CFITSIO
 fitsfile_la_SOURCES  = fitsfile.c
 fitsfile_la_CFLAGS   = $(AM_CFLAGS) @CFITSIO_CFLAGS@
 fitsfile_la_LIBADD   = @CFITSIO_LIBS@
+endif
+
+if HAVE_CXX
+hdrimage_la_SOURCES  = hdrimage.cc gwytiff.h image-keys.h
 endif
 
 clean-local:
