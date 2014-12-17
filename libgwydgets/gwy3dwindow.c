@@ -102,6 +102,8 @@ static void     gwy_3d_window_projection_changed   (GtkToggleButton *check,
                                                     Gwy3DWindow *window);
 static void     gwy_3d_window_show_axes_changed    (GtkToggleButton *check,
                                                     Gwy3DWindow *window);
+static void     gwy_3d_window_hide_masked_changed  (GtkToggleButton *check,
+                                                    Gwy3DWindow *window);
 static void     gwy_3d_window_show_labels_changed  (GtkToggleButton *check,
                                                     Gwy3DWindow *window);
 static void     gwy_3d_window_show_fmscale_changed (GtkToggleButton *check,
@@ -840,6 +842,15 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
                      G_CALLBACK(gwy_3d_window_projection_changed), window);
     row++;
 
+    check = gtk_check_button_new_with_mnemonic(_("_Hide masked"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
+                                 setup->hide_masked);
+    gtk_table_attach(GTK_TABLE(table), check,
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect(check, "toggled",
+                     G_CALLBACK(gwy_3d_window_hide_masked_changed), window);
+    row++;
+
     return vbox;
 }
 
@@ -1416,6 +1427,20 @@ gwy_3d_window_projection_changed(GtkToggleButton *check,
 
     if (projection != setup->projection)
         g_object_set(setup, "projection", projection, NULL);
+}
+
+static void
+gwy_3d_window_hide_masked_changed(GtkToggleButton *check,
+                                 Gwy3DWindow *window)
+{
+    Gwy3DSetup *setup;
+    gboolean hide_masked;
+
+    setup = gwy_3d_view_get_setup(GWY_3D_VIEW(window->gwy3dview));
+    hide_masked = gtk_toggle_button_get_active(check);
+
+    if (hide_masked != setup->hide_masked)
+        g_object_set(setup, "hide_masked", hide_masked, NULL);
 }
 
 static void

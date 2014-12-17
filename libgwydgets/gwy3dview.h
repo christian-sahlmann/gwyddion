@@ -108,7 +108,7 @@ struct _Gwy3DView {
     PangoContext *ft2_context;    /* For text rendering */
     PangoFontMap *ft2_font_map;   /* Font map for text rendering */
 
-    gboolean b_reserved1;
+    gboolean hide_masked;
     gboolean b_reserved2;
     gboolean b_reserved3;
     gboolean b_reserved4;
@@ -118,7 +118,7 @@ struct _Gwy3DView {
 
     guint     *ovlay_updated_id;
     gpointer p_reserved3;
-    gpointer p_reserved4;
+    gpointer priv;
 };
 
 struct _Gwy3DViewClass {
@@ -174,6 +174,9 @@ void              gwy_3d_view_set_scale_range   (Gwy3DView *gwy3dview,
                                                  gdouble max_scale);
 
 void              gwy_3d_view_class_disable_axis_drawing(gboolean disable);
+const gchar*      gwy_3d_view_get_mask_key      (Gwy3DView *gwy3dview);
+void              gwy_3d_view_set_mask_key      (Gwy3DView *gwy3dview,
+                                                 const gchar *key);
 
 G_END_DECLS
 

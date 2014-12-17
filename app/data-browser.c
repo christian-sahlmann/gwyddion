@@ -3321,6 +3321,7 @@ gwy_app_data_browser_create_3d(G_GNUC_UNUSED GwyAppDataBrowser *browser,
     GObject *dfield = NULL;
     GwyApp3DAssociation *assoc;
     gchar key[40];
+    GQuark mask_key;
     const guchar *palette = NULL;
     guint len;
 
@@ -3364,6 +3365,10 @@ gwy_app_data_browser_create_3d(G_GNUC_UNUSED GwyAppDataBrowser *browser,
     key[len] = '\0';
     g_strlcat(key, "3d/material", sizeof(key));
     gwy_3d_view_set_material_key(GWY_3D_VIEW(view3d), key);
+
+    mask_key = gwy_app_get_mask_key_for_id(id);
+    gwy_3d_view_set_mask_key(GWY_3D_VIEW(view3d),
+			     g_quark_to_string(mask_key));
 
     window3d = gwy_3d_window_new(GWY_3D_VIEW(view3d));
 

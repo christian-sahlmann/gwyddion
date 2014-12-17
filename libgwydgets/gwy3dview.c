@@ -67,6 +67,8 @@
 #include <libdraw/gwypixfield.h>
 #include <glib/gprintf.h>
 
+#define GWY_3D_VIEW_GET_PRIVATE(o) ((Gwy3DViewPrivate*) o->priv)
+
 #define DEG_2_RAD (G_PI/180.0)
 #define RAD_2_DEG (180.0/G_PI)
 
@@ -113,6 +115,7 @@ enum {
     PROP_SETUP_PREFIX,
     PROP_GRADIENT_KEY,
     PROP_MATERIAL_KEY,
+    PROP_MASK_KEY,
     PROP_LAST
 };
 
@@ -133,6 +136,14 @@ typedef struct {
     guint size;
     guint64 pool;
 } Gwy3DListPool;
+
+typedef struct {
+    GwyDataField *mask_field;
+    GwyDataField *downsampled_mask;
+    GQuark mask_key;
+    gulong mask_id;
+    gulong mask_item_id;
+} Gwy3DViewPrivate;
 
 static void     gwy_3d_view_destroy              (GtkObject *object);
 static void     gwy_3d_view_finalize             (GObject *object);
@@ -191,6 +202,7 @@ static gboolean gwy_3d_view_motion_notify        (GtkWidget *widget,
                                                   GdkEventMotion *event);
 static void     gwy_3d_make_list                 (Gwy3DView *gwy3D,
                                                   GwyDataField *dfield,
+                                                  GwyDataField *mask,
                                                   GwyPixmapLayer **ovlays,
                                                   gint shape);
 static void     gwy_3d_draw_axes                 (Gwy3DView *gwy3dview,
@@ -218,6 +230,10 @@ static void     gwy_3d_view_class_make_list_pool (Gwy3DListPool *pool);
 static void     gwy_3d_view_assign_lists         (Gwy3DView *gwy3dview);
 static void     gwy_3d_view_release_lists        (Gwy3DView *gwy3dview);
 static void     gwy_3d_view_timeout_update       (Gwy3DView *gwy3dview);
+static void     gwy_3d_view_mask_item_changed    (Gwy3DView *gwy3dview);
+static void     gwy_3d_view_mask_field_connect   (Gwy3DView *gwy3dview);
+static void     gwy_3d_view_mask_field_disconnect(Gwy3DView *gwy3dview);
+static void     gwy_3d_view_mask_field_changed   (Gwy3DView *gwy3dview);
 
 /* Must match Gwy3DViewLabel */
 static const struct {
@@ -245,7 +261,7 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
     GtkWidgetClass *widget_class;
 
     gwy_debug(" ");
-
+    g_type_class_add_private(klass, sizeof(Gwy3DViewPrivate));
     object_class = (GtkObjectClass*)klass;
     widget_class = (GtkWidgetClass*)klass;
 
@@ -322,6 +338,14 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
                              "Material key",
                              "Key identifying GL material in container",
                              NULL, G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_MASK_KEY,
+         g_param_spec_string("mask-key",
+                             "Mask key",
+                             "Key identifying mask field in container",
+                             NULL, G_PARAM_READWRITE));
 }
 
 static void
@@ -332,6 +356,9 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
     gwy3dview->movement       = GWY_3D_MOVEMENT_NONE;
     gwy3dview->reduced_size   = 96;
     gwy3dview->ovlays         = NULL;
+    gwy3dview->priv = G_TYPE_INSTANCE_GET_PRIVATE(gwy3dview,
+                                                   GWY_TYPE_3D_VIEW,
+                                                   Gwy3DViewPrivate);
 
     gwy3dview->variables = g_hash_table_new_full(g_str_hash, g_str_equal,
                                                  NULL, g_free);
@@ -344,16 +371,21 @@ static void
 gwy_3d_view_destroy(GtkObject *object)
 {
     Gwy3DView *gwy3dview;
+    Gwy3DViewPrivate *priv;
     guint i;
 
     gwy3dview = GWY_3D_VIEW(object);
+    priv = GWY_3D_VIEW_GET_PRIVATE(gwy3dview);
 
     gwy_signal_handler_disconnect(gwy3dview->data, gwy3dview->data_item_id);
+    gwy_signal_handler_disconnect(gwy3dview->data,
+                                  priv->mask_item_id);
     gwy_signal_handler_disconnect(gwy3dview->data, gwy3dview->gradient_item_id);
     gwy_signal_handler_disconnect(gwy3dview->data, gwy3dview->material_item_id);
 
     gwy_3d_view_setup_disconnect(gwy3dview);
     gwy_3d_view_data_field_disconnect(gwy3dview);
+    gwy_3d_view_mask_field_disconnect(gwy3dview);
     gwy_3d_view_gradient_disconnect(gwy3dview);
     gwy_3d_view_material_disconnect(gwy3dview);
 
@@ -361,6 +393,8 @@ gwy_3d_view_destroy(GtkObject *object)
         gwy_3d_view_release_lists(gwy3dview);
 
     gwy_object_unref(gwy3dview->data_field);
+    gwy_object_unref(priv->mask_field);
+    gwy_object_unref(priv->downsampled_mask);
     gwy_object_unref(gwy3dview->downsampled);
     gwy_object_unref(gwy3dview->data);
 
@@ -427,6 +461,10 @@ gwy_3d_view_set_property(GObject *object,
         gwy_3d_view_set_material_key(view, g_value_get_string(value));
         break;
 
+        case PROP_MASK_KEY:
+        gwy_3d_view_set_mask_key(view, g_value_get_string(value));
+        break;
+
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -466,6 +504,11 @@ gwy_3d_view_get_property(GObject*object,
         g_value_set_static_string(value, g_quark_to_string(view->material_key));
         break;
 
+        case PROP_MASK_KEY:
+          g_value_set_static_string(value,
+                   g_quark_to_string(GWY_3D_VIEW_GET_PRIVATE(view)->mask_key));
+        break;
+
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -486,6 +529,7 @@ gwy_3d_view_unrealize(GtkWidget *widget)
 
     gwy_3d_view_release_lists(gwy3dview);
     gwy_object_unref(gwy3dview->downsampled);
+    gwy_object_unref(GWY_3D_VIEW_GET_PRIVATE(gwy3dview)->downsampled_mask);
 
     if (GTK_WIDGET_CLASS(gwy_3d_view_parent_class)->unrealize)
         GTK_WIDGET_CLASS(gwy_3d_view_parent_class)->unrealize(widget);
@@ -915,6 +959,10 @@ gwy_3d_view_setup_changed(Gwy3DView *gwy3dview,
             gwy_3d_view_update_lists(gwy3dview);
             return;
         };
+        if (gwy_strequal(pspec->name, "hide-masked")) {
+            gwy_3d_view_update_lists(gwy3dview);
+            return;
+        };
     }
 
     gwy_3d_view_timeout_start(gwy3dview, TRUE);
@@ -1116,15 +1164,21 @@ gwy_3d_view_material_changed(Gwy3DView *gwy3dview)
 static void
 gwy_3d_view_update_lists(Gwy3DView *gwy3dview)
 {
+    Gwy3DViewPrivate *priv = GWY_3D_VIEW_GET_PRIVATE(gwy3dview);
+    GwyDataField *mask = priv->mask_field;
+    GwyDataField *downsampled_mask = priv->downsampled_mask;
+
     if (!GTK_WIDGET_REALIZED(gwy3dview))
         return;
 
     gwy_3d_view_downsample_data(gwy3dview);
 
     gwy_3d_make_list(gwy3dview, gwy3dview->downsampled,
+                     downsampled_mask,
                      gwy3dview->ovlays,
                      GWY_3D_SHAPE_REDUCED);
     gwy_3d_make_list(gwy3dview, gwy3dview->data_field,
+                     mask,
                      gwy3dview->ovlays,
                      GWY_3D_SHAPE_FULL);
     gwy_3d_view_timeout_start(gwy3dview, TRUE);
@@ -1134,14 +1188,20 @@ static gboolean
 gwy_3d_view_update_timer(gpointer user_data)
 {
     Gwy3DView *gwy3dview = (Gwy3DView*)user_data;
+    Gwy3DViewPrivate *priv = GWY_3D_VIEW_GET_PRIVATE(gwy3dview);
+    GwyDataField *mask = priv->mask_field;
+    GwyDataField *downsampled_mask = priv->downsampled_mask;
+
     gwy3dview->timeout2_id = 0;
 
     gwy_3d_make_list(gwy3dview,
                      gwy3dview->downsampled,
+                     downsampled_mask,
                      gwy3dview->ovlays,
                      GWY_3D_SHAPE_REDUCED);
     gwy_3d_make_list(gwy3dview,
                      gwy3dview->data_field,
+                     mask,
                      gwy3dview->ovlays,
                      GWY_3D_SHAPE_FULL);
     gwy_3d_view_timeout_start(gwy3dview, TRUE);
@@ -1258,6 +1318,7 @@ gwy_3d_view_downsample_data(Gwy3DView *gwy3dview)
 {
     gint rx, ry;
     gdouble rs;
+    Gwy3DViewPrivate *priv = GWY_3D_VIEW_GET_PRIVATE(gwy3dview);
 
     rx = gwy_data_field_get_xres(gwy3dview->data_field);
     ry = gwy_data_field_get_yres(gwy3dview->data_field);
@@ -1282,6 +1343,11 @@ gwy_3d_view_downsample_data(Gwy3DView *gwy3dview)
     gwy3dview->downsampled
         = gwy_data_field_new_resampled(gwy3dview->data_field,
                                        rx, ry, GWY_INTERPOLATION_BILINEAR);
+    if GWY_IS_DATA_FIELD(priv->mask_field) {
+        priv->downsampled_mask
+          = gwy_data_field_new_resampled(priv->mask_field,
+                                         rx, ry, GWY_INTERPOLATION_BILINEAR);
+    };
 }
 
 /**
@@ -2007,9 +2073,22 @@ gwy_3d_make_normals(GwyDataField *dfield,
    return normals;
 }
 
+#define GWY_3D_VERTEX(i,j) \
+  z = data[(yres-1 - (j))*xres + i];               \
+  color = colors + (yres-1 - (j))*rowstride + i*3; \
+  glNormal3d(normals[(j)*xres+i].x,                \
+             normals[(j)*xres+i].y,                \
+             normals[(j)*xres+i].z);               \
+  glColor3d((GLfloat) *(color)/255.,               \
+            (GLfloat) *(color+1)/255.,             \
+            (GLfloat) *(color+2)/255.);            \
+  glVertex3d(i*dx, (j)*dy, z);
+
+
 static void
 gwy_3d_make_list(Gwy3DView *gwy3dview,
                  GwyDataField *dfield,
+                 GwyDataField *mask_field,
                  GwyPixmapLayer** ovlays,
                  gint shape)
 {
@@ -2018,10 +2097,12 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
     GLfloat dx, dy;
     Gwy3DVector *normals;
     const gdouble *data;
+    const gdouble *mask = NULL;
     GwyGradient *grad;
     GdkPixbuf* pixbuf;
-    guchar* data2pixels;
+    guchar* colors;
     gboolean freepixbuf = FALSE;
+    gboolean glon;
     Gwy3DVisualization visualization = gwy3dview->setup->visualization;
 
     if (!dfield && shape == GWY_3D_SHAPE_REDUCED)
@@ -2032,6 +2113,9 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
     gwy_data_field_get_min_max(dfield, &data_min, &data_max);
 
     data = gwy_data_field_get_data_const(dfield);
+    if GWY_IS_DATA_FIELD(mask_field) {
+        mask = gwy_data_field_get_data_const(mask_field);
+    };
 
     grad = gwy3dview->gradient;
     if (!grad)
@@ -2073,7 +2157,7 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
         freepixbuf = TRUE;
     };
 
-    data2pixels = gdk_pixbuf_get_pixels(pixbuf);
+    colors = gdk_pixbuf_get_pixels(pixbuf);
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
 
     glNewList(gwy3dview->shape_list_base + shape, GL_COMPILE);
@@ -2087,28 +2171,41 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
      * it only upon a switch to gradient mode. */
     for (j = 0; j < yres-1; j++) {
         glBegin(GL_TRIANGLE_STRIP);
+        glon = TRUE;
         for (i = 0; i < xres-1; i++) {
-          gdouble a, b;
-          guchar *a2, *b2;
-
-            a = data[(yres-1 - j)*xres + i];
-            b = data[(yres-2 - j)*xres + i];
-            a2 = data2pixels + (yres-1 - j)*rowstride + i*3;
-            b2 = data2pixels + (yres-2 - j)*rowstride + i*3;
-            glNormal3d(normals[j*xres+i].x,
-                       normals[j*xres+i].y,
-                       normals[j*xres+i].z);
-            glColor3d((GLfloat) *(a2)/255.,
-                      (GLfloat) *(a2+1)/255.,
-                      (GLfloat) *(a2+2)/255.);
-            glVertex3d(i*dx, j*dy, a);
-            glNormal3d(normals[(j+1)*xres+i].x,
-                       normals[(j+1)*xres+i].y,
-                       normals[(j+1)*xres+i].z);
-            glColor3d((GLfloat) *(b2)/255.,
-                      (GLfloat) *(b2+1)/255.,
-                      (GLfloat) *(b2+2)/255.);
-            glVertex3d(i*dx, (j+1)*dy, b);
+          gdouble z;
+          guchar *color;
+          if (gwy3dview->setup->hide_masked && mask != NULL) {
+            if (mask[(yres-1 - (j))*xres + i] == 0
+                && mask[(yres-2 - j)*xres + i] == 0
+                && !glon) {
+              glBegin(GL_TRIANGLE_STRIP);
+              glon = TRUE;
+              if (mask[(yres-1 - (j))*xres + i - 1] > 0
+                  && mask[(yres-2 - j)*xres + i - 1] > 0) {
+                GWY_3D_VERTEX(i, j);
+              }
+              else if (mask[(yres-1 - (j))*xres + i - 1] > 0) {
+                GWY_3D_VERTEX(i-1, j+1);
+              }
+              else if (mask[(yres-2 - j)*xres + i - 1] > 0.) {
+                GWY_3D_VERTEX(i-1, j);
+              }
+            }
+            if (mask[(yres-1 - (j))*xres + i] == 0 && glon)
+              GWY_3D_VERTEX(i, j);
+            if (mask[(yres-2 - (j))*xres + i] == 0 && glon)
+              GWY_3D_VERTEX(i, j+1);
+            if (mask[(yres-1 - (j))*xres + i] > 0
+                || mask[(yres-1 - (j))*xres + i] > 0) {
+              glEnd();
+              glon = FALSE;
+            }
+          }
+          else {
+            GWY_3D_VERTEX(i, j);
+            GWY_3D_VERTEX(i, j+1);
+          };
         }
         glEnd();
     }
@@ -2456,6 +2553,10 @@ gwy_3d_view_realize_gl(Gwy3DView *gwy3dview)
 {
     GdkGLContext *glcontext;
     GdkGLDrawable *gldrawable;
+    Gwy3DViewPrivate *priv = GWY_3D_VIEW_GET_PRIVATE(gwy3dview);
+    GwyDataField *mask = priv->mask_field;
+    GwyDataField *downsampled_mask = priv->downsampled_mask;
+
 
     GLfloat ambient[] = { 0.1, 0.1, 0.1, 1.0 };
     GLfloat diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
@@ -2495,10 +2596,12 @@ gwy_3d_view_realize_gl(Gwy3DView *gwy3dview)
     gwy_3d_view_assign_lists(gwy3dview);
     gwy_3d_make_list(gwy3dview,
                      gwy3dview->data_field,
+                     mask,
                      gwy3dview->ovlays,
                      GWY_3D_SHAPE_FULL);
     gwy_3d_make_list(gwy3dview,
                      gwy3dview->downsampled,
+                     downsampled_mask,
                      gwy3dview->ovlays,
                      GWY_3D_SHAPE_REDUCED);
 
@@ -3091,6 +3194,101 @@ gwy_3d_view_release_lists(Gwy3DView *gwy3dview)
     gwy3dview->shape_list_base = 0;
 }
 
+
+/**
+ * gwy_3d_view_set_mask_key:
+ * @gwy3dview: A 3D data view widget.
+ * @key: Container string key identifying the mask field for visualisation
+ *
+ * Sets the container key identifying the mask field for
+ * visualisation in a 3D view.
+ **/
+void
+gwy_3d_view_set_mask_key(Gwy3DView *gwy3dview,
+                         const gchar *key)
+{
+    GQuark quark;
+    Gwy3DViewPrivate *priv = GWY_3D_VIEW_GET_PRIVATE(gwy3dview);
+
+    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
+    gwy_debug("%p <%s>", gwy3dview, key);
+
+    quark = key ? g_quark_from_string(key) : 0;
+    if (priv->mask_key == quark)
+        return;
+
+    gwy_signal_handler_disconnect(gwy3dview->data, priv->mask_item_id);
+    gwy_3d_view_mask_field_disconnect(gwy3dview);
+    priv->mask_key = quark;
+    gwy_3d_view_mask_field_connect(gwy3dview);
+    gwy_3d_view_container_connect(gwy3dview, g_quark_to_string(quark),
+                                  &priv->mask_item_id,
+                                  G_CALLBACK(gwy_3d_view_mask_item_changed));
+    g_object_notify(G_OBJECT(gwy3dview), "mask-key");
+    gwy_3d_view_mask_field_changed(gwy3dview);
+}
+
+/**
+ * gwy_3d_view_get_mask_key:
+ * @gwy3dview: A 3D data view widget.
+ *
+ * Gets the container key identifying the mask field for
+ * visualisation in a 3D view.
+ *
+ * Returns: The string key, or %NULL if it isn't set.
+ **/
+const gchar*
+gwy_3d_view_get_mask_key(Gwy3DView *gwy3dview)
+{
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
+    return g_quark_to_string(GWY_3D_VIEW_GET_PRIVATE(gwy3dview)->mask_key);
+}
+
+static void
+gwy_3d_view_mask_item_changed(Gwy3DView *gwy3dview)
+{
+    gwy_3d_view_mask_field_disconnect(gwy3dview);
+    gwy_3d_view_mask_field_connect(gwy3dview);
+    gwy_3d_view_mask_field_changed(gwy3dview);
+}
+
+static void
+gwy_3d_view_mask_field_connect(Gwy3DView *gwy3dview)
+{
+    Gwy3DViewPrivate *priv = GWY_3D_VIEW_GET_PRIVATE(gwy3dview);
+    g_return_if_fail(!priv->mask_field);
+    if (!priv->mask_key)
+        return;
+
+    if (!gwy_container_gis_object(gwy3dview->data, priv->mask_key,
+                                  &priv->mask_field))
+        return;
+
+    g_object_ref(priv->mask_field);
+    priv->mask_id
+        = g_signal_connect_swapped(priv->mask_field,
+                                   "data-changed",
+                                   G_CALLBACK(gwy_3d_view_mask_field_changed),
+                                   gwy3dview);
+}
+
+static void
+gwy_3d_view_mask_field_disconnect(Gwy3DView *gwy3dview)
+{
+    Gwy3DViewPrivate *priv = GWY_3D_VIEW_GET_PRIVATE(gwy3dview);
+
+    gwy_signal_handler_disconnect(priv->mask_field, priv->mask_id);
+    gwy_object_unref(priv->mask_field);
+}
+
+static void
+gwy_3d_view_mask_field_changed(Gwy3DView *gwy3dview)
+{
+    gwy3dview->changed |= GWY_3D_DATA_FIELD;
+    gwy_3d_view_update_labels(gwy3dview);
+    gwy_3d_view_update_lists(gwy3dview);
+}
+
 #else /* HAVE_GTKGLEXT */
 /* Export the same set of symbols if we don't have OpenGL support.  But let
  * them all fail. */
@@ -3142,6 +3340,20 @@ gwy_3d_view_get_data_key(G_GNUC_UNUSED Gwy3DView *gwy3dview)
 
 void
 gwy_3d_view_set_data_key(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                         G_GNUC_UNUSED const gchar *key)
+{
+    g_critical("OpenGL support was not compiled in.");
+}
+
+const gchar*
+gwy_3d_view_get_mask_key(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return NULL;
+}
+
+void
+gwy_3d_view_set_mask_key(G_GNUC_UNUSED Gwy3DView *gwy3dview,
                          G_GNUC_UNUSED const gchar *key)
 {
     g_critical("OpenGL support was not compiled in.");

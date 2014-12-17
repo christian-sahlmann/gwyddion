@@ -48,7 +48,7 @@ struct _Gwy3DSetup {
     gboolean axes_visible;
     gboolean labels_visible;
     gboolean fmscale_visible;
-    gboolean b_reserved2;
+    gboolean hide_masked;
     gboolean b_reserved3;
     gboolean b_reserved4;
 

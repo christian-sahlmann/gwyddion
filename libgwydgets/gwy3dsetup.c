@@ -40,6 +40,7 @@ enum {
     PROP_Z_SCALE,
     PROP_LIGHT_PHI,
     PROP_LIGHT_THETA,
+    PROP_HIDE_MASKED,
     PROP_LAST
 };
 
@@ -191,6 +192,14 @@ gwy_3d_setup_class_init(Gwy3DSetupClass *klass)
                              -G_MAXDOUBLE, G_MAXDOUBLE, 0.0,
                              G_PARAM_READWRITE));
 
+    g_object_class_install_property
+        (gobject_class,
+         PROP_HIDE_MASKED,
+         g_param_spec_boolean("hide_masked",
+			      "Hide masked",
+			      "Hide masked vertices",
+			      FALSE,
+			      G_PARAM_READWRITE));
 }
 
 static void
@@ -264,6 +273,10 @@ gwy_3d_setup_set_property(GObject *object,
         setup->light_theta = g_value_get_double(value);
         break;
 
+        case PROP_HIDE_MASKED:
+        setup->hide_masked = g_value_get_boolean(value);
+        break;
+
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -323,6 +336,10 @@ gwy_3d_setup_get_property(GObject *object,
         g_value_set_double(value, setup->light_theta);
         break;
 
+        case PROP_HIDE_MASKED:
+        g_value_set_boolean(value, setup->hide_masked);
+        break;
+
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -352,6 +369,7 @@ gwy_3d_setup_serialize(GObject *serializable,
             { 'd', "z-scale", &setup->z_scale, NULL, },
             { 'd', "light-phi", &setup->light_phi, NULL, },
             { 'd', "light-theta", &setup->light_theta, NULL, },
+	    { 'b', "hide-masked", &setup->hide_masked, NULL, },
         };
 
         return gwy_serialize_pack_object_struct(buffer,
@@ -382,6 +400,7 @@ gwy_3d_setup_get_size(GObject *object)
             { 'd', "z-scale", &setup->z_scale, NULL, },
             { 'd', "light-phi", &setup->light_phi, NULL, },
             { 'd', "light-theta", &setup->light_theta, NULL, },
+	    { 'b', "hide-masked", &setup->hide_masked, NULL, },
         };
 
         return gwy_serialize_get_struct_size(GWY_3D_SETUP_TYPE_NAME,
@@ -413,6 +432,7 @@ gwy_3d_setup_deserialize(const guchar *buffer,
             { 'd', "z-scale", &setup->z_scale, NULL, },
             { 'd', "light-phi", &setup->light_phi, NULL, },
             { 'd', "light-theta", &setup->light_theta, NULL, },
+	    { 'b', "hide-masked", &setup->hide_masked, NULL, },
         };
 
         if (!gwy_serialize_unpack_object_struct(buffer, size, position,
@@ -452,6 +472,7 @@ gwy_3d_setup_clone(GObject *source,
         clone->axes_visible = setup->axes_visible;
         g_object_notify(copy, "axes-visible");
     }
+
     if (clone->labels_visible != setup->labels_visible) {
         clone->labels_visible = setup->labels_visible;
         g_object_notify(copy, "labels-visible");
@@ -488,6 +509,11 @@ gwy_3d_setup_clone(GObject *source,
         g_object_notify(copy, "light-theta");
     }
 
+    if (clone->hide_masked != setup->hide_masked) {
+        clone->hide_masked = setup->hide_masked;
+        g_object_notify(copy, "hide-masked");
+    }
+
     g_object_thaw_notify(copy);
 }
 
@@ -512,6 +538,8 @@ gwy_3d_setup_duplicate_real(GObject *object)
     duplicate->z_scale = setup->z_scale;
     duplicate->light_phi = setup->light_phi;
     duplicate->light_theta = setup->light_theta;
+
+    duplicate->hide_masked = setup->hide_masked;
 
     return (GObject*)duplicate;
 }
