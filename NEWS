@@ -23,6 +23,11 @@ Modules:
 - Omicron, Nanoeducator: X and Y spectra axis labels are set according to the
   imported spectrum type.
 - Euclidean distance transform: Function for mask thinning was added.
+- Mark by threshold: Percentage interpretation for inverted height was
+  changed to be less confusing.
+
+Other:
+- Does not attempt to build the hdrimage module with C++ compiler unavailable.
 
 
 2.39 (2014-11-14)
