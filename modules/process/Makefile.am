@@ -84,6 +84,7 @@ process_LTLIBRARIES = \
 	presentationops.la \
 	rank.la \
 	rotate.la \
+	semsim.la \
 	scale.la \
 	scars.la \
 	shade.la \
@@ -198,6 +199,7 @@ polydistort_la_SOURCES         = polydistort.c
 presentationops_la_SOURCES     = presentationops.c
 rank_la_SOURCES                = rank.c
 rotate_la_SOURCES              = rotate.c
+semsim_la_SOURCES              = semsim.c
 scale_la_SOURCES               = scale.c
 scars_la_SOURCES               = scars.c
 shade_la_SOURCES               = shade.c
