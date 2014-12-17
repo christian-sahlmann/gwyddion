@@ -79,6 +79,7 @@ static void          maskedt_save_args            (GwyContainer *settings,
 
 static const MaskEdtArgs maskedt_defaults = {
     MASKEDT_INTERIOR,
+    TRUE,
 };
 
 static GwyModuleInfo module_info = {
