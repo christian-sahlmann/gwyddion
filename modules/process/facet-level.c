@@ -113,8 +113,9 @@ facet_level(GwyContainer *data, GwyRunType run)
                          GTK_DIALOG_DESTROY_WITH_PARENT,
                          GTK_MESSAGE_ERROR,
                          GTK_BUTTONS_OK,
-                         _("Facet level: Lateral dimensions and value must "
-                           "be the same physical quantity."));
+                         _("%s: Lateral dimensions and value must "
+                           "be the same physical quantity."),
+                         _("Facet Level"));
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
         return;
