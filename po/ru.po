@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-12-13 03:58+0100\n"
-"PO-Revision-Date: 2014-12-13 16:40+0300\n"
+"POT-Creation-Date: 2014-12-20 03:59+0100\n"
+"PO-Revision-Date: 2014-12-20 13:16+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -128,9 +128,9 @@ msgid "contact: Hertz (paraboloid)"
 msgstr "контакт: Герц (параболоид)"
 
 #: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:665
-#: app/data-browser.c:2091 app/data-browser.c:2885 app/data-browser.c:3741
-#: app/data-browser.c:3900 app/data-browser.c:4186 app/data-browser.c:4600
-#: app/data-browser.c:6586 app/data-browser.c:6668 app/resource-editor.c:367
+#: app/data-browser.c:2091 app/data-browser.c:2885 app/data-browser.c:3746
+#: app/data-browser.c:3905 app/data-browser.c:4191 app/data-browser.c:4605
+#: app/data-browser.c:6591 app/data-browser.c:6673 app/resource-editor.c:367
 #: modules/process/convolution_filter.c:706
 msgid "Untitled"
 msgstr "Безымянный"
@@ -441,7 +441,7 @@ msgid "Position"
 msgstr "Позиция"
 
 #: libprocess/gwygrainvalue.c:1092 app/meta.c:384
-#: modules/file/imgexport.c:3994 modules/process/curvature.c:746
+#: modules/file/imgexport.c:3994 modules/process/curvature.c:747
 #: modules/tools/level3.c:457 modules/tools/readvalue.c:297
 msgid "Value"
 msgstr "Значение"
@@ -450,7 +450,7 @@ msgstr "Значение"
 msgid "Area"
 msgstr "Площадь"
 
-#: libprocess/gwygrainvalue.c:1094 app/data-browser.c:5104 app/toolbox.c:114
+#: libprocess/gwygrainvalue.c:1094 app/data-browser.c:5109 app/toolbox.c:114
 msgid "Volume"
 msgstr "Объём"
 
@@ -464,7 +464,8 @@ msgstr "Граница"
 msgid "Slope"
 msgstr "Уклон"
 
-#: libprocess/gwygrainvalue.c:1097 modules/process/curvature.c:603
+#: libprocess/gwygrainvalue.c:1097 modules/process/curvature.c:205
+#: modules/process/curvature.c:604
 msgid "Curvature"
 msgstr "Кривизна"
 
@@ -727,50 +728,50 @@ msgstr "Запускается частичная оценка"
 msgid "Starting full estimation"
 msgstr "Запускается полная оценка"
 
-#: libgwydgets/gwy3dwindow.c:502
+#: libgwydgets/gwy3dwindow.c:504
 msgid "Rotate view (R)"
 msgstr "Повернуть вид (R)"
 
-#: libgwydgets/gwy3dwindow.c:507
+#: libgwydgets/gwy3dwindow.c:509
 msgid "Scale view as a whole (S)"
 msgstr "Масштабировать вид как целое (S)"
 
-#: libgwydgets/gwy3dwindow.c:512
+#: libgwydgets/gwy3dwindow.c:514
 msgid "Scale value range (V)"
 msgstr "Масштабировать диапазон значений (V)"
 
-#: libgwydgets/gwy3dwindow.c:517
+#: libgwydgets/gwy3dwindow.c:519
 msgid "Move light source (L)"
 msgstr "Переместить источник света (L)"
 
-#: libgwydgets/gwy3dwindow.c:599
+#: libgwydgets/gwy3dwindow.c:601
 msgid "Show full controls"
 msgstr "Показать все элементы управления"
 
-#: libgwydgets/gwy3dwindow.c:626
+#: libgwydgets/gwy3dwindow.c:628
 msgid "Hide full controls"
 msgstr "Скрыть все элементы управления"
 
-#: libgwydgets/gwy3dwindow.c:642 modules/file/imgexport.c:4165
+#: libgwydgets/gwy3dwindow.c:644 modules/file/imgexport.c:4165
 msgid "adjective|Basic"
 msgstr "Основные"
 
-#: libgwydgets/gwy3dwindow.c:647
+#: libgwydgets/gwy3dwindow.c:649
 msgid "Light & Material"
 msgstr "Свет и материал"
 
-#: libgwydgets/gwy3dwindow.c:652
+#: libgwydgets/gwy3dwindow.c:654
 msgid "Labels"
 msgstr "Метки"
 
-#: libgwydgets/gwy3dwindow.c:765 modules/process/facet_analysis.c:359
+#: libgwydgets/gwy3dwindow.c:767 modules/process/facet_analysis.c:359
 #: modules/process/facet_analysis.c:375 modules/process/shade.c:253
 #: modules/process/tilt.c:222
 msgid "φ:"
 msgstr "φ:"
 
-#: libgwydgets/gwy3dwindow.c:765 libgwydgets/gwy3dwindow.c:771
-#: libgwydgets/gwy3dwindow.c:949 libgwydgets/gwy3dwindow.c:957
+#: libgwydgets/gwy3dwindow.c:767 libgwydgets/gwy3dwindow.c:773
+#: libgwydgets/gwy3dwindow.c:960 libgwydgets/gwy3dwindow.c:968
 #: modules/process/facet_analysis.c:403 modules/process/indent_analyze.c:461
 #: modules/process/rotate.c:286 modules/process/shade.c:245
 #: modules/process/shade.c:253 modules/process/tilt.c:210
@@ -779,132 +780,136 @@ msgstr "φ:"
 msgid "deg"
 msgstr "°"
 
-#: libgwydgets/gwy3dwindow.c:771 modules/process/facet_analysis.c:358
+#: libgwydgets/gwy3dwindow.c:773 modules/process/facet_analysis.c:358
 #: modules/process/facet_analysis.c:374 modules/process/shade.c:245
 #: modules/process/tilt.c:210
 msgid "θ:"
 msgstr "θ:"
 
-#: libgwydgets/gwy3dwindow.c:776 modules/process/cwt.c:151
+#: libgwydgets/gwy3dwindow.c:778 modules/process/cwt.c:151
 msgid "_Scale:"
 msgstr "_Масштаб:"
 
-#: libgwydgets/gwy3dwindow.c:783
+#: libgwydgets/gwy3dwindow.c:785
 msgid "_Value scale:"
 msgstr "Масштаб _значений:"
 
-#: libgwydgets/gwy3dwindow.c:788
+#: libgwydgets/gwy3dwindow.c:790
 msgid "Ph_ysical scale:"
 msgstr "_Физический масштаб:"
 
-#: libgwydgets/gwy3dwindow.c:799
+#: libgwydgets/gwy3dwindow.c:801
 msgid "verb|Set"
 msgstr "Установить"
 
-#: libgwydgets/gwy3dwindow.c:807
+#: libgwydgets/gwy3dwindow.c:809
 msgid "Show _axes"
 msgstr "Показывать _оси"
 
-#: libgwydgets/gwy3dwindow.c:816
+#: libgwydgets/gwy3dwindow.c:818
 msgid "Show _labels"
 msgstr "Показывать м_етки"
 
-#: libgwydgets/gwy3dwindow.c:825
+#: libgwydgets/gwy3dwindow.c:827
 msgid "Show false _colorbar"
 msgstr "Показывать линейку псевдо_цвета"
 
-#: libgwydgets/gwy3dwindow.c:834
+#: libgwydgets/gwy3dwindow.c:836
 msgid "_Ortographic projection"
 msgstr "_Прямоугольная проекция"
 
-#: libgwydgets/gwy3dwindow.c:850
+#: libgwydgets/gwy3dwindow.c:845
+msgid "_Hide masked"
+msgstr "Скр_ыть под маской"
+
+#: libgwydgets/gwy3dwindow.c:861
 msgid "_Lighting"
 msgstr "О_свещение"
 
-#: libgwydgets/gwy3dwindow.c:851
+#: libgwydgets/gwy3dwindow.c:862
 msgid "_Gradient"
 msgstr "_Градиент"
 
-#: libgwydgets/gwy3dwindow.c:852
+#: libgwydgets/gwy3dwindow.c:863
 msgid "_Overlay"
 msgstr "_Наложение"
 
-#: libgwydgets/gwy3dwindow.c:853
+#: libgwydgets/gwy3dwindow.c:864
 msgid "_Overlay - no light"
 msgstr "Наложение - _без света"
 
-#: libgwydgets/gwy3dwindow.c:926
+#: libgwydgets/gwy3dwindow.c:937
 msgid "_Material:"
 msgstr "_Материал:"
 
-#: libgwydgets/gwy3dwindow.c:949
+#: libgwydgets/gwy3dwindow.c:960
 msgid "_Light φ:"
 msgstr "_Угол φ света:"
 
-#: libgwydgets/gwy3dwindow.c:957
+#: libgwydgets/gwy3dwindow.c:968
 msgid "L_ight θ:"
 msgstr "Уг_ол θ света:"
 
-#: libgwydgets/gwy3dwindow.c:1050
+#: libgwydgets/gwy3dwindow.c:1061
 msgid "X-axis"
 msgstr "Ось X"
 
-#: libgwydgets/gwy3dwindow.c:1051
+#: libgwydgets/gwy3dwindow.c:1062
 msgid "Y-axis"
 msgstr "Ось Y"
 
-#: libgwydgets/gwy3dwindow.c:1052
+#: libgwydgets/gwy3dwindow.c:1063
 msgid "Minimum z value"
 msgstr "Минимальное значение z"
 
-#: libgwydgets/gwy3dwindow.c:1053
+#: libgwydgets/gwy3dwindow.c:1064
 msgid "Maximum z value"
 msgstr "Максимальное значение z"
 
-#: libgwydgets/gwy3dwindow.c:1076
+#: libgwydgets/gwy3dwindow.c:1087
 msgid "_Label:"
 msgstr "_Метка:"
 
-#: libgwydgets/gwy3dwindow.c:1081
+#: libgwydgets/gwy3dwindow.c:1092
 msgid "_Text:"
 msgstr "_Текст:"
 
-#: libgwydgets/gwy3dwindow.c:1101
+#: libgwydgets/gwy3dwindow.c:1112
 msgid "Move label"
 msgstr "Переместить метку"
 
-#: libgwydgets/gwy3dwindow.c:1110
+#: libgwydgets/gwy3dwindow.c:1121
 msgid "_Horizontally:"
 msgstr "_Горизонтально:"
 
-#: libgwydgets/gwy3dwindow.c:1120
+#: libgwydgets/gwy3dwindow.c:1131
 msgid "_Vertically:"
 msgstr "_Вертикально:"
 
-#: libgwydgets/gwy3dwindow.c:1128
+#: libgwydgets/gwy3dwindow.c:1139
 msgid "Scale size _automatically"
 msgstr "Масштабировать размер _автоматически"
 
-#: libgwydgets/gwy3dwindow.c:1140 modules/tools/filter.c:254
+#: libgwydgets/gwy3dwindow.c:1151 modules/tools/filter.c:254
 msgid "Si_ze:"
 msgstr "_Размер:"
 
-#: libgwydgets/gwy3dwindow.c:1140 modules/process/cwt.c:151
+#: libgwydgets/gwy3dwindow.c:1151 modules/process/cwt.c:151
 #: modules/process/hough.c:212
 msgid "pixels"
 msgstr "точек"
 
-#: libgwydgets/gwy3dwindow.c:1148 modules/file/hdrimage.cc:2213
+#: libgwydgets/gwy3dwindow.c:1159 modules/file/hdrimage.cc:2213
 #: modules/file/imgexport.c:4129 modules/file/pixmap.c:791
 #: modules/file/rawfile.c:402 modules/process/angle_dist.c:172
 #: modules/process/calcoefs_new.c:347 modules/process/calibrate.c:392
 #: modules/process/col_synth.c:387 modules/process/correct_affine.c:307
-#: modules/process/curvature.c:605 modules/process/cwt.c:135
+#: modules/process/curvature.c:606 modules/process/cwt.c:135
 #: modules/process/deposit_synth.c:361 modules/process/diff_synth.c:422
 #: modules/process/domain_synth.c:366 modules/process/drift.c:240
 #: modules/process/dwt.c:166 modules/process/dwtanisotropy.c:184
 #: modules/process/edge.c:651 modules/process/extend.c:192
-#: modules/process/facet-level.c:190 modules/process/facet_analysis.c:276
+#: modules/process/facet-level.c:191 modules/process/facet_analysis.c:276
 #: modules/process/fbm_synth.c:315 modules/process/fft.c:258
 #: modules/process/fft_filter_2d.c:444 modules/process/fft_synth.c:351
 #: modules/process/fractal.c:207 modules/process/grain_edge.c:218
@@ -918,29 +923,29 @@ msgstr "точек"
 #: modules/process/polydistort.c:218 modules/process/polylevel.c:377
 #: modules/process/rank.c:132 modules/process/rotate.c:266
 #: modules/process/scale.c:196 modules/process/scars.c:477
-#: modules/process/shade.c:216 modules/process/slope_dist.c:268
-#: modules/process/sphere-revolve.c:218 modules/process/tilt.c:160
-#: modules/process/tip_model.c:170 modules/process/unrotate.c:228
-#: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:361
-#: modules/process/wpour_mark.c:296 modules/volume/volume_calibrate.c:371
-#: modules/volume/volume_extract.c:331 modules/volume/volume_kmeans.c:142
-#: modules/volume/volume_kmedians.c:147
+#: modules/process/semsim.c:211 modules/process/shade.c:216
+#: modules/process/slope_dist.c:268 modules/process/sphere-revolve.c:218
+#: modules/process/tilt.c:160 modules/process/tip_model.c:170
+#: modules/process/unrotate.c:228 modules/process/volumize_layers.c:213
+#: modules/process/wave_synth.c:361 modules/process/wpour_mark.c:296
+#: modules/volume/volume_calibrate.c:371 modules/volume/volume_extract.c:331
+#: modules/volume/volume_kmeans.c:142 modules/volume/volume_kmedians.c:147
 msgid "_Reset"
 msgstr "_Сброс"
 
-#: libgwydgets/gwy3dwindow.c:1599 libgwydgets/gwy3dwindow.c:1652
+#: libgwydgets/gwy3dwindow.c:1624 libgwydgets/gwy3dwindow.c:1677
 msgid "S_witch to Lighting Mode"
 msgstr "_Переключиться на режим освещения"
 
-#: libgwydgets/gwy3dwindow.c:1607 libgwydgets/gwy3dwindow.c:1629
+#: libgwydgets/gwy3dwindow.c:1632 libgwydgets/gwy3dwindow.c:1654
 msgid "S_witch to Overlay Mode"
 msgstr "П_ереключиться на режим наложенного изображения"
 
-#: libgwydgets/gwy3dwindow.c:1621 libgwydgets/gwy3dwindow.c:1644
+#: libgwydgets/gwy3dwindow.c:1646 libgwydgets/gwy3dwindow.c:1669
 msgid "S_witch to Color Gradient Mode"
 msgstr "Пе_реключиться на режим цветового градиента"
 
-#: libgwydgets/gwy3dwindow.c:1660
+#: libgwydgets/gwy3dwindow.c:1685
 msgid "T_oggle light"
 msgstr "Включить _освещение"
 
@@ -987,7 +992,7 @@ msgid "Quantity"
 msgstr "Количество"
 
 #: libgwydgets/gwygrainvaluemenu.c:194 libgwydgets/gwygrainvaluemenu.c:207
-#: modules/process/curvature.c:737
+#: modules/process/curvature.c:738
 msgid "Symbol"
 msgstr "Символ"
 
@@ -1194,7 +1199,7 @@ msgstr "Измерение расстояний"
 msgid "Curve:"
 msgstr "Кривая:"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:553
+#: libgwydgets/gwygraphwindowmeasuredialog.c:553 modules/process/semsim.c:249
 msgid "Method:"
 msgstr "Способ:"
 
@@ -1525,44 +1530,44 @@ msgstr "Канал:"
 msgid "Section:"
 msgstr "Сечение:"
 
-#: app/data-browser.c:4977
+#: app/data-browser.c:4982
 msgid "Extract to a new file"
 msgstr "Извлечь в новый файл"
 
-#: app/data-browser.c:4978
+#: app/data-browser.c:4983
 msgid "Duplicate"
 msgstr "Сделать копию"
 
-#: app/data-browser.c:4979
+#: app/data-browser.c:4984
 msgid "Delete"
 msgstr "Удалить"
 
-#: app/data-browser.c:5024
+#: app/data-browser.c:5029
 msgid "Data Browser"
 msgstr "Браузер данных"
 
-#: app/data-browser.c:5049
+#: app/data-browser.c:5054
 msgid "Close file"
 msgstr "Закрыть файл"
 
-#: app/data-browser.c:5062
+#: app/data-browser.c:5067
 msgid "Channels"
 msgstr "Каналы"
 
-#: app/data-browser.c:5076 modules/volume/volume_extract.c:444
+#: app/data-browser.c:5081 modules/volume/volume_extract.c:444
 msgid "Graphs"
 msgstr "Графики"
 
-#: app/data-browser.c:5090
+#: app/data-browser.c:5095
 msgid "Spectra"
 msgstr "Спектры"
 
-#: app/data-browser.c:6624
+#: app/data-browser.c:6629
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Неизвестный канал %d"
 
-#: app/data-browser.c:6710
+#: app/data-browser.c:6715
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Неизвестный объём %d"
@@ -4495,7 +4500,7 @@ msgstr "Заголовок файла усечён"
 msgid "Parameter header is truncated"
 msgstr "Заголовок параметров усечён"
 
-#: modules/file/nanoeducator.c:932 modules/process/curvature.c:445
+#: modules/file/nanoeducator.c:932 modules/process/curvature.c:446
 #: modules/tools/profile.c:824
 #, c-format
 msgid "Profile %d"
@@ -6233,7 +6238,7 @@ msgid "F_unction:"
 msgstr "_Функция:"
 
 #: modules/graph/graph_cd.c:306 modules/graph/graph_fdfit.c:362
-#: modules/graph/graph_fit.c:370 modules/process/curvature.c:729
+#: modules/graph/graph_fit.c:370 modules/process/curvature.c:730
 #: modules/volume/volume_fdfit.c:447
 msgid "Parameter"
 msgstr "Параметр"
@@ -7759,30 +7764,31 @@ msgstr "/_Выравнивание/_Кривизна..."
 msgid "Calculate overall curvature"
 msgstr "Рассчитать общую кривизну"
 
-#: modules/process/curvature.c:203
-msgid ""
-"Curvature: Lateral dimensions and value must be the same physical quantity."
+#: modules/process/curvature.c:203 modules/process/facet-level.c:116
+#: modules/process/semsim.c:164
+#, c-format
+msgid "%s: Lateral dimensions and value must be the same physical quantity."
 msgstr ""
-"Кривизна: горизонтальные размеры и значения данных должны быть одной "
-"физической величиной."
+"%s: горизонтальные размеры и значения данных должны быть одной физической "
+"величиной."
 
-#: modules/process/curvature.c:436
+#: modules/process/curvature.c:437
 msgid "Curvature Sections"
 msgstr "Сечения кривизны"
 
-#: modules/process/curvature.c:659
+#: modules/process/curvature.c:660
 msgid "Output Type"
 msgstr "Тип вывода"
 
-#: modules/process/curvature.c:666
+#: modules/process/curvature.c:667
 msgid "_Set selection"
 msgstr "_Установить выделение"
 
-#: modules/process/curvature.c:676
+#: modules/process/curvature.c:677
 msgid "_Plot graph"
 msgstr "Строить _график"
 
-#: modules/process/curvature.c:687 modules/process/facet-level.c:204
+#: modules/process/curvature.c:688 modules/process/facet-level.c:205
 #: modules/process/level.c:276 modules/process/linecorrect.c:295
 #: modules/process/neural.c:593 modules/process/polylevel.c:504
 #: modules/process/slope_dist.c:399 modules/tools/sfunctions.c:458
@@ -7790,23 +7796,23 @@ msgstr "Строить _график"
 msgid "Masking Mode"
 msgstr "Режим использования маски"
 
-#: modules/process/curvature.c:757 modules/process/grain_stat.c:345
+#: modules/process/curvature.c:758 modules/process/grain_stat.c:345
 #: modules/process/polylevel.c:620 modules/tools/distance.c:228
 #: modules/tools/roughness.c:830 modules/tools/stats.c:432
 msgid "Save table to a file"
 msgstr "Сохранить таблицу в файл"
 
-#: modules/process/curvature.c:762 modules/process/grain_stat.c:350
+#: modules/process/curvature.c:763 modules/process/grain_stat.c:350
 #: modules/process/polylevel.c:630 modules/tools/distance.c:233
 #: modules/tools/roughness.c:835 modules/tools/stats.c:437
 msgid "Copy table to clipboard"
 msgstr "Скопировать таблицу в буфер обмена"
 
-#: modules/process/curvature.c:889
+#: modules/process/curvature.c:890
 msgid "Axes are outside the image."
 msgstr "Оси снаружи изображения."
 
-#: modules/process/curvature.c:954
+#: modules/process/curvature.c:955
 msgid "Save Curvature"
 msgstr "Сохранить кривизну"
 
@@ -8058,7 +8064,7 @@ msgid "Output Options"
 msgstr "Параметры вывода"
 
 #: modules/process/domain_synth.c:541 modules/process/fft_filter_2d.c:625
-#: modules/process/mask_edt.c:361 modules/process/slope_dist.c:325
+#: modules/process/mask_edt.c:362 modules/process/slope_dist.c:325
 msgid "Output type:"
 msgstr "Тип вывода:"
 
@@ -8418,18 +8424,11 @@ msgstr "/_Выравнивание/Выравнивание _граней"
 msgid "Level data to make facets point upward"
 msgstr "Выровнять данные заставив грани смотреть вверх"
 
-#: modules/process/facet-level.c:116
-msgid ""
-"Facet level: Lateral dimensions and value must be the same physical quantity."
-msgstr ""
-"Выравнивание граней: горизонтальные размеры и значения данных должны быть "
-"одной и той же физической величиной."
-
-#: modules/process/facet-level.c:128
+#: modules/process/facet-level.c:118 modules/process/facet-level.c:129
 msgid "Facet Level"
 msgstr "Выравнивание граней"
 
-#: modules/process/facet-level.c:141
+#: modules/process/facet-level.c:142
 msgid "Facet-leveling"
 msgstr "Выравнивание граней"
 
@@ -10285,43 +10284,43 @@ msgstr "М_инимум:"
 msgid "M_aximum:"
 msgstr "М_аксимум:"
 
-#: modules/process/mask_edt.c:87
+#: modules/process/mask_edt.c:88
 msgid "Performs Euclidean distance transform of masks."
 msgstr "Преобразует маски в евклидово расстояние."
 
-#: modules/process/mask_edt.c:101
+#: modules/process/mask_edt.c:102
 msgid "/_Mask/_Euclidean Distance Transform..."
 msgstr "/_Маска/Преобразование в эвклидово расстояние..."
 
-#: modules/process/mask_edt.c:105
+#: modules/process/mask_edt.c:106
 msgid "Euclidean distance transform of mask"
 msgstr "Преобразование маски в евклидово расстояние"
 
-#: modules/process/mask_edt.c:108
+#: modules/process/mask_edt.c:109
 msgid "/_Mask/Thi_n"
 msgstr "/_Маска/_Тоньше"
 
-#: modules/process/mask_edt.c:112
+#: modules/process/mask_edt.c:113
 msgid "Thin mask"
 msgstr "Сделать маску тоньше"
 
-#: modules/process/mask_edt.c:322 modules/process/mask_edt.c:344
+#: modules/process/mask_edt.c:323 modules/process/mask_edt.c:345
 msgid "Distance Transform"
 msgstr "Преобразование расстояния"
 
-#: modules/process/mask_edt.c:332
+#: modules/process/mask_edt.c:333
 msgid "Interior"
 msgstr "Внутреннее"
 
-#: modules/process/mask_edt.c:333
+#: modules/process/mask_edt.c:334
 msgid "Exterior"
 msgstr "Внешнее"
 
-#: modules/process/mask_edt.c:334
+#: modules/process/mask_edt.c:335
 msgid "Two-sided"
 msgstr "Двустороннее"
 
-#: modules/process/mask_edt.c:376 modules/tools/maskedit.c:618
+#: modules/process/mask_edt.c:377 modules/tools/maskedit.c:618
 msgid "Shrink from _border"
 msgstr "Ужать от _границы"
 
@@ -11262,6 +11261,42 @@ msgstr "_Мягкий порог:"
 #: modules/process/scars.c:553
 msgid "Scars type:"
 msgstr "Тип царапин:"
+
+#: modules/process/semsim.c:117
+msgid "Simple SEM image simulation from topography."
+msgstr "Простое моделирование изображений РЭМ по топографии."
+
+#: modules/process/semsim.c:131
+msgid "/_Presentation/_SEM Image..."
+msgstr "/_Презентация/Изображение Р_ЭМ..."
+
+#: modules/process/semsim.c:135
+msgid "Simple SEM simulation from topography"
+msgstr "Простое моделирование РЭМ по топографии"
+
+#: modules/process/semsim.c:166 modules/process/semsim.c:209
+msgid "SEM Image"
+msgstr "Изображение РЭМ"
+
+#: modules/process/semsim.c:185
+msgid "SEM image simulation..."
+msgstr "Модель изображения РЭМ..."
+
+#: modules/process/semsim.c:227
+msgid "_Integration radius:"
+msgstr "Радиус _интегрирования:"
+
+#: modules/process/semsim.c:258
+msgid "Integration"
+msgstr "Интегрирование"
+
+#: modules/process/semsim.c:260
+msgid "Monte Carlo"
+msgstr "Монте-Карло"
+
+#: modules/process/semsim.c:267
+msgid "_Quality:"
+msgstr "_Качество:"
 
 #: modules/process/shade.c:98
 msgid "Creates a shaded presentation of data."
@@ -13370,6 +13405,13 @@ msgstr "Ошибка K-срединных для %s"
 #, c-format
 msgid "K-medians center %d"
 msgstr "Центр кластера %d"
+
+#~ msgid ""
+#~ "Facet level: Lateral dimensions and value must be the same physical "
+#~ "quantity."
+#~ msgstr ""
+#~ "Выравнивание граней: горизонтальные размеры и значения данных должны быть "
+#~ "одной и той же физической величиной."
 
 #~ msgid "Smooth"
 #~ msgstr "Плавный переход"
