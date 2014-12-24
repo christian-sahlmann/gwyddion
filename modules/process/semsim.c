@@ -263,7 +263,7 @@ semsim_dialog(SEMsimArgs *args, GwyDataField *dfield)
     row = gwy_radio_buttons_attach_to_table(controls.method, GTK_TABLE(table),
                                             3, row);
 
-    controls.quality = gtk_adjustment_new(args->quality, 1.0, 5.0, 0.1, 1.0, 0);
+    controls.quality = gtk_adjustment_new(args->quality, 1.0, 7.0, 0.1, 1.0, 0);
     gwy_table_attach_hscale(table, row++, _("_Quality:"), NULL,
                             controls.quality, GWY_HSCALE_SQRT);
     g_signal_connect_swapped(controls.quality, "value-changed",
@@ -534,7 +534,7 @@ semsim_sanitize_args(SEMsimArgs *args)
     args->sigma = CLAMP(args->sigma, 0.5, MAX_SIZE);
     if (args->method != SEMSIM_METHOD_INTEGRATION)
         args->method = SEMSIM_METHOD_MONTECARLO;
-    args->quality = CLAMP(args->quality, 1.0, 5.0);
+    args->quality = CLAMP(args->quality, 1.0, 7.0);
 }
 
 static void
