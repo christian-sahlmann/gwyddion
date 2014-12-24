@@ -309,6 +309,9 @@ semsim_dialog_reset(SEMsimControls *controls)
 {
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->sigma),
                              semsim_defaults.sigma);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->quality),
+                             semsim_defaults.quality);
+    gwy_radio_buttons_set_current(controls->method, semsim_defaults.method);
 }
 
 static void
