@@ -1760,7 +1760,9 @@ gwy_deserialize_string_array(const guchar *buffer,
         return NULL;
     if (!(newasize = gwy_deserialize_int32(buffer, size, position)))
         return NULL;
-    g_return_val_if_fail(*position + newasize*sizeof(guchar) <= size, NULL);
+    /* Minimum string size is 1 byte */
+    if (newasize > (size - *position))
+        return NULL;
     value = g_new(guchar*, newasize);
     for (j = 0; j < newasize; j++) {
         value[j] = gwy_deserialize_string(buffer, size, position);
@@ -1809,7 +1811,8 @@ gwy_deserialize_object_array(const guchar *buffer,
     minsize = 2*sizeof(guchar) + sizeof(gint32);  /* Size of empty object */
     if (!(newasize = gwy_deserialize_int32(buffer, size, position)))
         return NULL;
-    g_return_val_if_fail(*position + newasize*minsize <= size, NULL);
+    if (newasize > (size - *position)/minsize)
+        return NULL;
     value = g_new(GObject*, newasize);
     for (j = 0; j < newasize; j++) {
         value[j] = gwy_serializable_deserialize(buffer, size, position);
