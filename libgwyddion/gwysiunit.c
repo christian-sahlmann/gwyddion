@@ -1042,6 +1042,8 @@ gwy_si_unit_parse(GwySIUnit *siunit,
         string = end;
     }
 
+    g_string_free(buf, TRUE);
+
     gwy_si_unit_canonicalize(siunit);
 
     return TRUE;
