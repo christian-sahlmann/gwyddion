@@ -1894,7 +1894,7 @@ gwy_deserialize_spec_value(const guchar *buffer,
                 *(guchar**)p = val;
                 g_free(old);
             }
-            else
+            else if (!*(guchar**)p)
                 return FALSE;
         }
         break;
@@ -1909,7 +1909,7 @@ gwy_deserialize_spec_value(const guchar *buffer,
                 *(guchar**)p = val;
                 g_free(old);
             }
-            else
+            else if (!*(guchar**)p)
                 return FALSE;
         }
         break;
@@ -1924,7 +1924,7 @@ gwy_deserialize_spec_value(const guchar *buffer,
                 *(guint32**)p = val;
                 g_free(old);
             }
-            else
+            else if (!*(guint32**)p)
                 return FALSE;
         }
         break;
@@ -1939,7 +1939,7 @@ gwy_deserialize_spec_value(const guchar *buffer,
                 *(guint64**)p = val;
                 g_free(old);
             }
-            else
+            else if (!*(guint64**)p)
                 return FALSE;
         }
         break;
@@ -1954,7 +1954,7 @@ gwy_deserialize_spec_value(const guchar *buffer,
                 *(gdouble**)p = val;
                 g_free(old);
             }
-            else
+            else if (!*(double**)p)
                 return FALSE;
         }
         break;
@@ -1973,7 +1973,7 @@ gwy_deserialize_spec_value(const guchar *buffer,
                     g_free(old);
                 }
             }
-            else
+            else if (!*(guchar***)p)
                 return FALSE;
         }
         break;
@@ -1992,7 +1992,7 @@ gwy_deserialize_spec_value(const guchar *buffer,
                     g_free(old);
                 }
             }
-            else
+            else if (!*(GObject***)p)
                 return FALSE;
         }
         break;
