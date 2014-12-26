@@ -116,7 +116,7 @@ gwy_string_list_finalize(GObject *object)
 
 static GByteArray*
 gwy_string_list_serialize(GObject *obj,
-                      GByteArray *buffer)
+                          GByteArray *buffer)
 {
     GwyStringList *strlist;
     GByteArray *retval;
@@ -167,8 +167,8 @@ gwy_string_list_get_size(GObject *obj)
 
 static GObject*
 gwy_string_list_deserialize(const guchar *buffer,
-                        gsize size,
-                        gsize *position)
+                            gsize size,
+                            gsize *position)
 {
     gchar **pstr = NULL;
     guint32 len = 0;
