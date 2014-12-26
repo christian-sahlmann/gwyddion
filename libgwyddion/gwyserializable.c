@@ -1479,8 +1479,11 @@ gwy_deserialize_char_array(const guchar *buffer,
     gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
               buffer, size, *position);
 
-    g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
+    if (*position + sizeof(gint32) > size)
+        return NULL;
     if (!(newasize = gwy_deserialize_int32(buffer, size, position)))
+        return NULL;
+    if (newasize > (size - *position))
         return NULL;
     g_return_val_if_fail(*position + newasize*sizeof(guchar) <= size, NULL);
     value = g_memdup(buffer + *position, newasize*sizeof(guchar));
@@ -1516,10 +1519,12 @@ gwy_deserialize_int32_array(const guchar *buffer,
     gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
               buffer, size, *position);
 
-    g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
+    if (*position + sizeof(gint32) > size)
+        return NULL;
     if (!(newasize = gwy_deserialize_int32(buffer, size, position)))
         return NULL;
-    g_return_val_if_fail(*position + newasize*sizeof(gint32) <= size, NULL);
+    if (newasize > (size - *position)/sizeof(gint32))
+        return NULL;
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
     value = g_memdup(buffer + *position, newasize*sizeof(gint32));
 #else
@@ -1591,10 +1596,12 @@ gwy_deserialize_int64_array(const guchar *buffer,
     gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
               buffer, size, *position);
 
-    g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
+    if (*position + sizeof(gint32) > size)
+        return NULL;
     if (!(newasize = gwy_deserialize_int32(buffer, size, position)))
         return NULL;
-    g_return_val_if_fail(*position + newasize*sizeof(gint64) <= size, NULL);
+    if (newasize > (size - *position)/sizeof(gint64))
+        return NULL;
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
     value = g_memdup(buffer + *position, newasize*sizeof(gint64));
 #else
@@ -1670,10 +1677,12 @@ gwy_deserialize_double_array(const guchar *buffer,
     gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
               buffer, size, *position);
 
-    g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
+    if (*position + sizeof(gint32) > size)
+        return NULL;
     if (!(newasize = gwy_deserialize_int32(buffer, size, position)))
         return NULL;
-    g_return_val_if_fail(*position + newasize*sizeof(gdouble) <= size, NULL);
+    if (newasize > (size - *position)/sizeof(gdouble))
+        return NULL;
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
     value = g_memdup(buffer + *position, newasize*sizeof(gdouble));
 #else
@@ -1747,7 +1756,8 @@ gwy_deserialize_string_array(const guchar *buffer,
     gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
               buffer, size, *position);
 
-    g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
+    if (*position + sizeof(gint32) > size)
+        return NULL;
     if (!(newasize = gwy_deserialize_int32(buffer, size, position)))
         return NULL;
     g_return_val_if_fail(*position + newasize*sizeof(guchar) <= size, NULL);
@@ -1794,7 +1804,8 @@ gwy_deserialize_object_array(const guchar *buffer,
     gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
               buffer, size, *position);
 
-    g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
+    if (*position + sizeof(gint32) > size)
+        return NULL;
     minsize = 2*sizeof(guchar) + sizeof(gint32);  /* Size of empty object */
     if (!(newasize = gwy_deserialize_int32(buffer, size, position)))
         return NULL;
@@ -1850,6 +1861,8 @@ gwy_deserialize_spec_value(const guchar *buffer,
                 *(GObject**)p = val;
                 gwy_object_unref(old);
             }
+            else
+                return FALSE;
         }
         break;
 
@@ -1881,6 +1894,8 @@ gwy_deserialize_spec_value(const guchar *buffer,
                 *(guchar**)p = val;
                 g_free(old);
             }
+            else
+                return FALSE;
         }
         break;
 
@@ -1894,6 +1909,8 @@ gwy_deserialize_spec_value(const guchar *buffer,
                 *(guchar**)p = val;
                 g_free(old);
             }
+            else
+                return FALSE;
         }
         break;
 
@@ -1907,6 +1924,8 @@ gwy_deserialize_spec_value(const guchar *buffer,
                 *(guint32**)p = val;
                 g_free(old);
             }
+            else
+                return FALSE;
         }
         break;
 
@@ -1920,6 +1939,8 @@ gwy_deserialize_spec_value(const guchar *buffer,
                 *(guint64**)p = val;
                 g_free(old);
             }
+            else
+                return FALSE;
         }
         break;
 
@@ -1933,6 +1954,8 @@ gwy_deserialize_spec_value(const guchar *buffer,
                 *(gdouble**)p = val;
                 g_free(old);
             }
+            else
+                return FALSE;
         }
         break;
 
@@ -1950,6 +1973,8 @@ gwy_deserialize_spec_value(const guchar *buffer,
                     g_free(old);
                 }
             }
+            else
+                return FALSE;
         }
         break;
 
@@ -1967,6 +1992,8 @@ gwy_deserialize_spec_value(const guchar *buffer,
                     g_free(old);
                 }
             }
+            else
+                return FALSE;
         }
         break;
 
