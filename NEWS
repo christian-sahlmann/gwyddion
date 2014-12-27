@@ -3,6 +3,7 @@ Libraries:
 - libgwyprocess: GwySpectra has properties specifying the abscissa and
   ordinate labels for the spectra curves.
 - libgwyprocess: Pass a NULL error array to gwy_nlfit_preset_fit() works now.
+- libgwydgets: In 3D View masked data points can be made completely transparent.
 
 Modules:
 - Flatten base (new): Flattens the base of a surface with positive features.
