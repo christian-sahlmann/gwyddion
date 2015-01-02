@@ -546,6 +546,8 @@ merge_do(MergeArgs *args)
         py1 = -py2;
         py2 = 0;
     }
+    gwy_debug("field1 %dx%d", dfield1->xres, dfield1->yres);
+    gwy_debug("field2 %dx%d", dfield2->xres, dfield2->yres);
     gwy_debug("px1: %d, py1: %d, px2: %d, py2: %d", px1, py1, px2, py2);
 
     newxres = MAX(dfield1->xres + px1, dfield2->xres + px2);
@@ -775,6 +777,8 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
         res_rect.height = MIN(res_rect.height, MIN(h1, h2));
         res_rect.width = MIN(res_rect.width, MIN(w1, w2));
 
+        /* This is where the result rectangle is positioned in the fields,
+         * not where the fields themselves are placed! */
         f1_pos.x = res_rect.x - px1;
         f1_pos.y = res_rect.y - py1;
         f2_pos.x = res_rect.x - px2;
@@ -919,7 +923,7 @@ merge_boundary(GwyDataField *dfield1,
                GwyCoord f2_pos,
                GwyMergeBoundaryType boundary)
 {
-    gint xres1, xres2, xres, col, row;
+    gint xres1, xres2, xres, yres1, yres2, col, row;
     gdouble weight, val1, val2;
     gint w1top = 0, w1bot = 0, w1left = 0, w1right = 0;
     gint w2top = 0, w2bot = 0, w2left = 0, w2right = 0;
@@ -927,25 +931,31 @@ merge_boundary(GwyDataField *dfield1,
     gdouble *d;
 
     xres1 = dfield1->xres;
+    yres1 = dfield1->yres;
     xres2 = dfield2->xres;
+    yres2 = dfield2->yres;
     xres = result->xres;
 
     gwy_debug("dfield1: %d x %d at (%d, %d)",
-              xres1, dfield1->yres, f1_pos.x, f1_pos.y);
+              xres1, yres1, f1_pos.x, f1_pos.y);
     gwy_debug("dfield2: %d x %d at (%d, %d)",
-              xres2, dfield2->yres, f2_pos.x, f2_pos.y);
+              xres2, yres2, f2_pos.x, f2_pos.y);
     gwy_debug("result: %d x %d", xres, result->yres);
     gwy_debug("rect in result : %d x %d at (%d,%d)",
               res_rect.width, res_rect.height, res_rect.x, res_rect.y);
 
     assign_edge(res_rect.x, f1_pos.x, f2_pos.x, &w1left, &w2left);
+    gwy_debug("left: %d %d", w1left, w2left);
     assign_edge(res_rect.y, f1_pos.y, f2_pos.y, &w1top, &w2top);
-    assign_edge(res_rect.x + res_rect.width,
-                f1_pos.x + xres1, f2_pos.x + xres2,
+    gwy_debug("top: %d %d", w1top, w2top);
+    assign_edge(res_rect.width,
+                xres1 - f1_pos.x, xres2 - f2_pos.x,
                 &w1right, &w2right);
-    assign_edge(res_rect.y + res_rect.height,
-                f1_pos.y + dfield1->yres, f2_pos.y + dfield2->yres,
+    gwy_debug("right: %d %d", w1right, w2right);
+    assign_edge(res_rect.height,
+                yres1 - f1_pos.y, yres2 - f2_pos.y,
                 &w1bot, &w2bot);
+    gwy_debug("bot: %d %d", w1bot, w2bot);
 
     d1 = gwy_data_field_get_data_const(dfield1);
     d2 = gwy_data_field_get_data_const(dfield2);
