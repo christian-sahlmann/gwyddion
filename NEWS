@@ -3,11 +3,17 @@ Libraries:
 - libgwyprocess: GwySpectra has properties specifying the abscissa and
   ordinate labels for the spectra curves.
 - libgwyprocess: Pass a NULL error array to gwy_nlfit_preset_fit() works now.
-- libgwydgets: In 3D View masked data points can be made completely transparent.
+- libgwyprocess: New fitting presets: Two-Gaussian PSDF and parabolic step.
+- libgwydgets: In 3D View masked data points can be made completely
+  transparent.
+- libgwyddion: Aborting/crashing on deserialisation of invalid-sized arrays
+  was fixed.
 
 Modules:
 - Flatten base (new): Flattens the base of a surface with positive features.
 - K-medians (new): K-medians clustering for volume data.
+- SEM image (new): Presentation resembling SEM image corresponding to given
+  topography.
 - Image export: It is possible do disable the frame if there are no rulers.
   False colour rendering for inverted gradients and default non-full mappings
   was corrected.  Title centering for non-square images was corrected.
