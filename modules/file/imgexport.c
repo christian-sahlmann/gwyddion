@@ -1154,7 +1154,7 @@ measure_mask_legend(const ImgExportArgs *args, ImgExportSizes *sizes,
 
     h = 1.5*fs + 2.0*lw;    /* Match fmscale width */
     vgap = fs*args->maskkey_gap;
-    hgap = 0.5*h;
+    hgap = 0.4*h;
     rect->h = h + vgap;
     rect->w = 1.4*h + hgap + logical.width/pangoscale;
 }
@@ -1879,7 +1879,7 @@ draw_mask_legend(const ImgExportArgs *args,
     PangoRectangle logical;
     gdouble fs = sizes->sizes.font_size;
     gdouble lw = sizes->sizes.line_width;
-    gdouble h, hgap, vgap;
+    gdouble h, hgap, vgap, yoff;
 
     if (!args->draw_mask || !args->draw_maskkey || !env->mask)
         return;
@@ -1890,15 +1890,19 @@ draw_mask_legend(const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y + vgap);
+    cairo_rectangle(cr, 0.5*lw, 0.5*lw, 1.4*h - lw, h - lw);
     set_cairo_source_rgba(cr, &env->mask_colour);
-    cairo_rectangle(cr, 0.0, 0.0, 1.4*h, h);
-    cairo_fill(cr);
+    cairo_fill_preserve(cr);
+    set_cairo_source_rgba(cr, &black);
+    cairo_set_line_width(cr, lw);
+    cairo_stroke(cr);
     cairo_restore(cr);
 
     cairo_save(cr);
-    cairo_translate(cr, rect->x + 1.4*h + hgap, rect->y + vgap);
-    set_cairo_source_rgba(cr, &black);
     format_layout(layout, &logical, s, "%s", args->mask_key);
+    yoff = 0.5*(logical.height/pangoscale - h);
+    cairo_translate(cr, rect->x + 1.4*h + hgap, rect->y + vgap - yoff);
+    set_cairo_source_rgba(cr, &black);
     pango_cairo_show_layout(cr, layout);
     cairo_restore(cr);
 }
