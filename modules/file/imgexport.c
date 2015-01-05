@@ -209,7 +209,7 @@ typedef struct {
     GtkWidget *interpolation;
     GSList *ztype;
     GtkObject *fmscale_gap;
-    GSList *title_type;
+    GtkWidget *title_type;
     GtkObject *title_gap;
     GtkWidget *units_in_title;
 
@@ -2291,6 +2291,7 @@ preview(ImgExportControls *controls)
         previewargs.title_type = IMGEXPORT_TITLE_NONE;
         previewargs.sizes.line_width = 0.0;
         previewargs.draw_mask = FALSE;
+        previewargs.draw_maskkey = FALSE;
         previewargs.draw_selection = FALSE;
         previewargs.interpolation = GWY_INTERPOLATION_ROUND;
     }
@@ -3275,11 +3276,9 @@ draw_frame_changed(ImgExportControls *controls,
 }
 
 static void
-title_type_changed(G_GNUC_UNUSED GtkToggleButton *button,
-                   ImgExportControls *controls)
+title_type_changed(GtkComboBox *combo, ImgExportControls *controls)
 {
-    controls->args->title_type
-        = gwy_radio_buttons_get_current(controls->title_type);
+    controls->args->title_type = gwy_enum_combo_box_get_active(combo);
     update_value_sensitivity(controls);
     update_preview(controls);
 }
@@ -3348,6 +3347,15 @@ create_value_controls(ImgExportControls *controls)
                      1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
+    controls->draw_frame
+        = check = gtk_check_button_new_with_mnemonic(_("Draw _frame"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), args->draw_frame);
+    gtk_table_attach(GTK_TABLE(table), check, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(check, "toggled",
+                             G_CALLBACK(draw_frame_changed), controls);
+    row++;
+
     controls->draw_mask
         = check = gtk_check_button_new_with_mnemonic(_("Draw _mask"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), args->draw_mask);
@@ -3356,15 +3364,6 @@ create_value_controls(ImgExportControls *controls)
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(check, "toggled",
                              G_CALLBACK(draw_mask_changed), controls);
-    row++;
-
-    controls->draw_frame
-        = check = gtk_check_button_new_with_mnemonic(_("Draw _frame"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), args->draw_frame);
-    gtk_table_attach(GTK_TABLE(table), check, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    g_signal_connect_swapped(check, "toggled",
-                             G_CALLBACK(draw_frame_changed), controls);
     row++;
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
@@ -3395,15 +3394,16 @@ create_value_controls(ImgExportControls *controls)
     label = gtk_label_new_with_mnemonic(_("Posi_tion:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     controls->title_type
-        = gwy_radio_buttons_create(title_types, G_N_ELEMENTS(title_types),
-                                   G_CALLBACK(title_type_changed), controls,
-                                   args->title_type);
-    row = gwy_radio_buttons_attach_to_table(controls->title_type,
-                                            GTK_TABLE(table), 3, row);
+        = gwy_enum_combo_box_new(title_types, G_N_ELEMENTS(title_types),
+                                 G_CALLBACK(title_type_changed), controls,
+                                 args->title_type, TRUE);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->title_type);
+    gtk_table_attach(GTK_TABLE(table), controls->title_type,
+                     1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
 
     controls->title_gap = gtk_adjustment_new(args->title_gap,
                                              -1.0, 1.0, 0.01, 0.1, 0);
@@ -3754,7 +3754,8 @@ reset_to_preset(ImgExportControls *controls,
     gwy_radio_buttons_set_current(controls->ztype, src->ztype);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->fmscale_gap),
                              src->fmscale_gap);
-    gwy_radio_buttons_set_current(controls->title_type, src->title_type);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->title_type),
+                                  src->title_type);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->title_gap),
                              src->title_gap);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->units_in_title),
