@@ -96,6 +96,7 @@ typedef struct {
     gboolean draw_mask;
     gboolean draw_frame;
     gboolean draw_selection;
+    gboolean draw_maskkey;
     gchar *font;
     gboolean scale_font;   /* TRUE = font size tied to data pixels */
     gboolean inset_draw_ticks;
@@ -150,7 +151,7 @@ static const ImgExportArgs img_export_defaults = {
     { 12.0, 1.0, 0.0, 0.0, 10.0 },
     IMGEXPORT_LATERAL_RULERS, IMGEXPORT_VALUE_FMSCALE,
     GWYRGBA_WHITE, GWYRGBA_WHITE, INSET_POS_BOTTOM_RIGHT,
-    TRUE, TRUE, FALSE,
+    TRUE, TRUE, FALSE, FALSE,
     "Helvetica", TRUE, TRUE, TRUE,
     1.0, 1.0, 1.0, 0.0, 1.0, "", N_("Mask"),
     GWY_INTERPOLATION_ROUND,
@@ -236,6 +237,7 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->draw_mask = !!args->draw_mask;
     args->draw_frame = !!args->draw_frame;
     args->draw_selection = !!args->draw_selection;
+    args->draw_maskkey = !!args->draw_maskkey;
     args->scale_font = !!args->scale_font;
     args->inset_draw_ticks = !!args->inset_draw_ticks;
     args->inset_draw_label = !!args->inset_draw_label;
@@ -337,11 +339,13 @@ gwy_img_export_preset_dump(GwyResource *resource,
                            "draw_mask %d\n"
                            "draw_frame %d\n"
                            "draw_selection %d\n"
+                           "draw_maskkey %d\n"
                            "font \"%s\"\n",
                            data->mode, d1, d2, data->scale_font,
                            data->xytype, data->ztype, data->inset_pos,
                            data->draw_mask, data->draw_frame,
-                           data->draw_selection, s);
+                           data->draw_selection, data->draw_maskkey,
+                           s);
     g_free(s);
 
     g_ascii_dtostr(d1, sizeof(d1), data->sizes.font_size);
@@ -484,6 +488,8 @@ gwy_img_export_preset_parse(const gchar *text,
             data.draw_frame = atoi(value);
         else if (gwy_strequal(key, "draw_selection"))
             data.draw_selection = atoi(value);
+        else if (gwy_strequal(key, "draw_maskkey"))
+            data.draw_maskkey = atoi(value);
         else if (gwy_strequal(key, "scale_font"))
             data.scale_font = atoi(value);
         else if (gwy_strequal(key, "inset_draw_ticks"))
