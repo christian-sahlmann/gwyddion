@@ -18,7 +18,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
@@ -123,6 +123,7 @@ typedef struct {
     ImgExportRect fmgrad;
     ImgExportRect fmruler;
     ImgExportRect title;
+    ImgExportRect maskkey;
 
     /* Union of all above (plus maybe borders). */
     ImgExportRect canvas;
@@ -1139,6 +1140,26 @@ measure_title(const ImgExportArgs *args, ImgExportSizes *sizes,
 }
 
 static void
+measure_mask_legend(const ImgExportArgs *args, ImgExportSizes *sizes,
+                    PangoLayout *layout, GString *s)
+{
+    ImgExportRect *rect = &sizes->maskkey;
+    PangoRectangle logical;
+    gdouble fs = sizes->sizes.font_size;
+    gdouble lw = sizes->sizes.line_width;
+    gdouble h, hgap, vgap;
+
+    g_string_truncate(s, 0);
+    format_layout(layout, &logical, s, "%s", args->mask_key);
+
+    h = 1.5*fs + 2.0*lw;    /* Match fmscale width */
+    vgap = fs*args->maskkey_gap;
+    hgap = 0.5*h;
+    rect->h = h + vgap;
+    rect->w = 1.4*h + hgap + logical.width/pangoscale;
+}
+
+static void
 rect_move(ImgExportRect *rect, gdouble x, gdouble y)
 {
     rect->x += x;
@@ -1261,6 +1282,13 @@ calculate_sizes(const ImgExportArgs *args,
         }
     }
 
+    /* Mask key */
+    if (args->env->mask && args->draw_mask && args->draw_maskkey) {
+        measure_mask_legend(args, sizes, layout, s);
+        rect_move(&sizes->maskkey,
+                  sizes->image.x, sizes->image.y + sizes->image.h);
+    }
+
     /* Border */
     rect_move(&sizes->image, borderw, borderw);
     rect_move(&sizes->hruler, borderw, borderw);
@@ -1269,6 +1297,7 @@ calculate_sizes(const ImgExportArgs *args,
     rect_move(&sizes->fmgrad, borderw, borderw);
     rect_move(&sizes->fmruler, borderw, borderw);
     rect_move(&sizes->title, borderw, borderw);
+    rect_move(&sizes->maskkey, borderw, borderw);
 
     /* Ensure the image starts at integer coordinates in pixmas */
     if (cairo_surface_get_type(surface) == CAIRO_SURFACE_TYPE_IMAGE) {
@@ -1285,6 +1314,7 @@ calculate_sizes(const ImgExportArgs *args,
             rect_move(&sizes->fmgrad, xmove, ymove);
             rect_move(&sizes->fmruler, xmove, ymove);
             rect_move(&sizes->title, xmove, ymove);
+            rect_move(&sizes->maskkey, xmove, ymove);
         }
     }
 
@@ -1292,7 +1322,9 @@ calculate_sizes(const ImgExportArgs *args,
     sizes->canvas.w = sizes->fmruler.x + sizes->fmruler.w + borderw;
     if (args->title_type == IMGEXPORT_TITLE_FMSCALE)
         sizes->canvas.w += sizes->title.h;
-    sizes->canvas.h = sizes->image.y + sizes->image.h + borderw;
+
+    sizes->canvas.h = (sizes->image.y + sizes->image.h + sizes->maskkey.h
+                       + borderw);
 
     gwy_debug("canvas %g x %g at (%g, %g)",
               sizes->canvas.w, sizes->canvas.h,
@@ -1315,6 +1347,9 @@ calculate_sizes(const ImgExportArgs *args,
               sizes->fmruler.x, sizes->fmruler.y);
     gwy_debug("title %g x %g at (%g, %g)",
               sizes->title.w, sizes->title.h, sizes->title.x, sizes->title.y);
+    gwy_debug("maskkey %g x %g at (%g, %g)",
+              sizes->maskkey.w, sizes->maskkey.h,
+              sizes->maskkey.x, sizes->maskkey.y);
 
     g_string_free(s, TRUE);
     g_object_unref(layout);
@@ -1833,6 +1868,42 @@ draw_title(const ImgExportArgs *args,
 }
 
 static void
+draw_mask_legend(const ImgExportArgs *args,
+                 const ImgExportSizes *sizes,
+                 PangoLayout *layout,
+                 GString *s,
+                 cairo_t *cr)
+{
+    const ImgExportEnv *env = args->env;
+    const ImgExportRect *rect = &sizes->maskkey;
+    PangoRectangle logical;
+    gdouble fs = sizes->sizes.font_size;
+    gdouble lw = sizes->sizes.line_width;
+    gdouble h, hgap, vgap;
+
+    if (!args->draw_mask || !args->draw_maskkey || !env->mask)
+        return;
+
+    h = 1.5*fs + 2.0*lw;    /* Match fmscale width */
+    vgap = fs*args->maskkey_gap;
+    hgap = 0.5*h;
+
+    cairo_save(cr);
+    cairo_translate(cr, rect->x, rect->y + vgap);
+    set_cairo_source_rgba(cr, &env->mask_colour);
+    cairo_rectangle(cr, 0.0, 0.0, 1.4*h, h);
+    cairo_fill(cr);
+    cairo_restore(cr);
+
+    cairo_save(cr);
+    cairo_translate(cr, rect->x + 1.4*h + hgap, rect->y + vgap);
+    set_cairo_source_rgba(cr, &black);
+    format_layout(layout, &logical, s, "%s", args->mask_key);
+    pango_cairo_show_layout(cr, layout);
+    cairo_restore(cr);
+}
+
+static void
 draw_fmgrad(const ImgExportArgs *args,
             const ImgExportSizes *sizes,
             cairo_t *cr)
@@ -1926,6 +1997,9 @@ draw_fmruler(const ImgExportArgs *args,
     if (env->has_presentation)
         return;
 
+    /* FIXME: The numbers are aligned oddly when negative numbers are present.
+     * Alignment to the right might be better in some cases but it must be
+     * done to the right edge of the numbers, not the units.*/
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
     set_cairo_source_rgba(cr, &black);
@@ -2127,6 +2201,7 @@ image_draw_cairo(const ImgExportArgs *args,
     draw_fmgrad(args, sizes, cr);
     draw_fmruler(args, sizes, layout, s, cr);
     draw_title(args, sizes, layout, s, cr);
+    draw_mask_legend(args, sizes, layout, s, cr);
 
     g_object_unref(layout);
     g_string_free(s, TRUE);

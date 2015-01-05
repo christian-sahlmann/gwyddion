@@ -151,7 +151,7 @@ static const ImgExportArgs img_export_defaults = {
     { 12.0, 1.0, 0.0, 0.0, 10.0 },
     IMGEXPORT_LATERAL_RULERS, IMGEXPORT_VALUE_FMSCALE,
     GWYRGBA_WHITE, GWYRGBA_WHITE, INSET_POS_BOTTOM_RIGHT,
-    TRUE, TRUE, FALSE, FALSE,
+    TRUE, TRUE, FALSE, TRUE,
     "Helvetica", TRUE, TRUE, TRUE,
     1.0, 1.0, 1.0, 0.0, 1.0, "", N_("Mask"),
     GWY_INTERPOLATION_ROUND,
