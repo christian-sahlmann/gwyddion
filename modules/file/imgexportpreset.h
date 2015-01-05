@@ -104,7 +104,9 @@ typedef struct {
     gdouble inset_xgap;
     gdouble inset_ygap;
     gdouble title_gap;
+    gdouble maskkey_gap;
     gchar *inset_length;
+    gchar *mask_key;
     GwyInterpolationType interpolation;
     ImgExportTitleType title_type;
     gboolean units_in_title;
@@ -150,7 +152,7 @@ static const ImgExportArgs img_export_defaults = {
     GWYRGBA_WHITE, GWYRGBA_WHITE, INSET_POS_BOTTOM_RIGHT,
     TRUE, TRUE, FALSE,
     "Helvetica", TRUE, TRUE, TRUE,
-    1.0, 1.0, 1.0, 0.0, "",
+    1.0, 1.0, 1.0, 0.0, 1.0, "", N_("Mask"),
     GWY_INTERPOLATION_ROUND,
     IMGEXPORT_TITLE_NONE, FALSE,
     "line", GWYRGBA_WHITE, GWYRGBA_WHITE,
@@ -183,6 +185,7 @@ img_export_unconst_args(ImgExportArgs *args)
 {
     args->font = g_strdup(args->font);
     args->inset_length = g_strdup(args->inset_length);
+    args->mask_key = g_strdup(args->mask_key);
     args->selection = g_strdup(args->selection);
     args->preset_name = g_strdup(args->preset_name);
 }
@@ -200,6 +203,7 @@ img_export_free_args(ImgExportArgs *args)
 {
     g_free(args->font);
     g_free(args->inset_length);
+    g_free(args->mask_key);
     g_free(args->selection);
     g_free(args->preset_name);
 }
@@ -363,12 +367,17 @@ gwy_img_export_preset_dump(GwyResource *resource,
     g_ascii_dtostr(d2, sizeof(d2), data->inset_xgap);
     g_ascii_dtostr(d3, sizeof(d3), data->inset_ygap);
     g_ascii_dtostr(d4, sizeof(d4), data->title_gap);
+    g_ascii_dtostr(d5, sizeof(d5), data->maskkey_gap);
+    s = g_strescape(data->mask_key, NULL);
     g_string_append_printf(str,
                            "fmscale_gap %s\n"
                            "inset_xgap %s\n"
                            "inset_ygap %s\n"
-                           "title_gap %s\n",
-                           d1, d2, d3, d4);
+                           "title_gap %s\n"
+                           "maskkey_gap %s\n"
+                           "mask_key %s\n",
+                           d1, d2, d3, d4, d5, s);
+    g_free(s);
 
     s = g_strescape(data->inset_length, NULL);
     g_string_append_printf(str,
@@ -507,6 +516,8 @@ gwy_img_export_preset_parse(const gchar *text,
             data.inset_ygap = g_ascii_strtod(value, NULL);
         else if (gwy_strequal(key, "title_gap"))
             data.title_gap = g_ascii_strtod(value, NULL);
+        else if (gwy_strequal(key, "maskkey_gap"))
+            data.maskkey_gap = g_ascii_strtod(value, NULL);
         else if (gwy_strequal(key, "sel_line_thickness"))
             data.sel_line_thickness = g_ascii_strtod(value, NULL);
         else if (gwy_strequal(key, "sel_point_radius"))
@@ -536,6 +547,15 @@ gwy_img_export_preset_parse(const gchar *text,
                 value++;
                 g_free(data.inset_length);
                 data.inset_length = g_strcompress(value);
+            }
+        }
+        else if (gwy_strequal(key, "mask_key")) {
+            len = strlen(value);
+            if (value[0] == '"' && len >= 2 && value[len-1] == '"') {
+                value[len-1] = '\0';
+                value++;
+                g_free(data.mask_key);
+                data.mask_key = g_strcompress(value);
             }
         }
         else if (gwy_strequal(key, "inset_opacity")) {
