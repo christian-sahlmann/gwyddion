@@ -18,7 +18,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
@@ -204,8 +204,12 @@ typedef struct {
 
     /* Values */
     GtkWidget *table_value;
-    GtkWidget *draw_mask;
     GtkWidget *draw_frame;
+    GtkWidget *draw_mask;
+    GtkWidget *draw_maskkey;
+    GtkWidget *mask_key;
+    GtkWidget *mask_key_label;
+    GtkObject *maskkey_gap;
     GtkWidget *interpolation;
     GSList *ztype;
     GtkObject *fmscale_gap;
@@ -2815,15 +2819,22 @@ static void
 update_value_sensitivity(ImgExportControls *controls)
 {
     const ImgExportArgs *args = controls->args;
+    gboolean masksens = args->draw_mask && !!args->env->mask;
+    gboolean maskkeysens = masksens && args->draw_maskkey;
     gboolean fmsens = (args->ztype == IMGEXPORT_VALUE_FMSCALE);
     gboolean titlesens = (args->title_type != IMGEXPORT_TITLE_NONE);
     gboolean framesens = (args->ztype == IMGEXPORT_VALUE_NONE
                           && (args->xytype == IMGEXPORT_LATERAL_NONE
-                              || args->xytype == IMGEXPORT_LATERAL_INSET));
+                              || args->xytype == IMGEXPORT_LATERAL_INSET)
+                          && !maskkeysens);
 
     gwy_table_hscale_set_sensitive(controls->fmscale_gap, fmsens);
     gwy_table_hscale_set_sensitive(controls->title_gap, titlesens);
     gtk_widget_set_sensitive(controls->draw_frame, framesens);
+    gtk_widget_set_sensitive(controls->draw_maskkey, masksens);
+    gtk_widget_set_sensitive(controls->mask_key, maskkeysens);
+    gtk_widget_set_sensitive(controls->mask_key_label, maskkeysens);
+    gwy_table_hscale_set_sensitive(controls->maskkey_gap, maskkeysens);
 }
 
 static void
@@ -3256,22 +3267,53 @@ ztype_changed(G_GNUC_UNUSED GtkToggleButton *toggle,
 }
 
 static void
-draw_mask_changed(ImgExportControls *controls,
-                  GtkToggleButton *button)
-{
-    ImgExportArgs *args = controls->args;
-
-    args->draw_mask = gtk_toggle_button_get_active(button);
-    update_preview(controls);
-}
-
-static void
 draw_frame_changed(ImgExportControls *controls,
                   GtkToggleButton *button)
 {
     ImgExportArgs *args = controls->args;
 
     args->draw_frame = gtk_toggle_button_get_active(button);
+    update_preview(controls);
+}
+
+static void
+draw_mask_changed(ImgExportControls *controls,
+                  GtkToggleButton *button)
+{
+    ImgExportArgs *args = controls->args;
+
+    args->draw_mask = gtk_toggle_button_get_active(button);
+    update_value_sensitivity(controls);
+    update_preview(controls);
+}
+
+static void
+draw_maskkey_changed(ImgExportControls *controls,
+                     GtkToggleButton *button)
+{
+    ImgExportArgs *args = controls->args;
+
+    args->draw_maskkey = gtk_toggle_button_get_active(button);
+    update_value_sensitivity(controls);
+    update_preview(controls);
+}
+
+static void
+mask_key_changed(ImgExportControls *controls,
+                 GtkEntry *entry)
+{
+    ImgExportArgs *args = controls->args;
+
+    g_free(args->mask_key);
+    args->mask_key = g_strdup(gtk_entry_get_text(entry));
+    update_preview(controls);
+}
+
+static void
+maskkey_gap_changed(ImgExportControls *controls,
+                    GtkAdjustment *adj)
+{
+    controls->args->maskkey_gap = gtk_adjustment_get_value(adj);
     update_preview(controls);
 }
 
@@ -3364,6 +3406,41 @@ create_value_controls(ImgExportControls *controls)
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(check, "toggled",
                              G_CALLBACK(draw_mask_changed), controls);
+    row++;
+
+    controls->draw_maskkey
+        = check = gtk_check_button_new_with_mnemonic(_("Draw mask _legend"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), args->draw_maskkey);
+    gtk_widget_set_sensitive(check, !!env->mask && args->draw_mask);
+    gtk_table_attach(GTK_TABLE(table), check, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(check, "toggled",
+                             G_CALLBACK(draw_maskkey_changed), controls);
+    row++;
+
+    controls->mask_key_label
+        = label = gtk_label_new_with_mnemonic(_("_Label:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    controls->mask_key = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(controls->mask_key), 8);
+    gtk_entry_set_text(GTK_ENTRY(controls->mask_key), controls->args->mask_key);
+    gwy_widget_set_activate_on_unfocus(controls->mask_key, TRUE);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->mask_key);
+    g_signal_connect_swapped(controls->mask_key, "activate",
+                             G_CALLBACK(mask_key_changed), controls);
+    gtk_table_attach(GTK_TABLE(table), controls->mask_key,
+                     1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls->maskkey_gap = gtk_adjustment_new(args->maskkey_gap,
+                                               0.0, 2.0, 0.01, 0.1, 0);
+    gwy_table_attach_hscale(table, row, _("_Vertical gap:"), NULL,
+                            controls->maskkey_gap, GWY_HSCALE_DEFAULT);
+    g_signal_connect_swapped(controls->maskkey_gap, "value-changed",
+                             G_CALLBACK(maskkey_gap_changed), controls);
     row++;
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
@@ -3745,10 +3822,16 @@ reset_to_preset(ImgExportControls *controls,
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->inset_draw_label),
                                  src->inset_draw_label);
 
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->draw_mask),
-                                 src->draw_mask);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->draw_frame),
                                  src->draw_frame);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->draw_mask),
+                                 src->draw_mask);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->draw_maskkey),
+                                 src->draw_maskkey);
+    gtk_entry_set_text(GTK_ENTRY(controls->mask_key), src->mask_key);
+    gtk_widget_activate(controls->mask_key);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->maskkey_gap),
+                             src->maskkey_gap);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interpolation),
                                   src->interpolation);
     gwy_radio_buttons_set_current(controls->ztype, src->ztype);
@@ -5706,8 +5789,9 @@ options_sel_point(ImgExportControls *controls)
 /* Use the pixmap prefix for compatibility */
 static const gchar active_page_key[]        = "/module/pixmap/active_page";
 static const gchar border_width_key[]       = "/module/pixmap/border_width";
-static const gchar draw_mask_key[]          = "/module/pixmap/draw_mask";
 static const gchar draw_frame_key[]         = "/module/pixmap/draw_frame";
+static const gchar draw_maskkey_key[]       = "/module/pixmap/draw_maskkey";
+static const gchar draw_mask_key[]          = "/module/pixmap/draw_mask";
 static const gchar draw_selection_key[]     = "/module/pixmap/draw_selection";
 static const gchar fmscale_gap_key[]        = "/module/pixmap/fmscale_gap";
 static const gchar font_key[]               = "/module/pixmap/font";
@@ -5721,6 +5805,8 @@ static const gchar inset_xgap_key[]         = "/module/pixmap/inset_xgap";
 static const gchar inset_ygap_key[]         = "/module/pixmap/inset_ygap";
 static const gchar interpolation_key[]      = "/module/pixmap/interpolation";
 static const gchar line_width_key[]         = "/module/pixmap/line_width";
+static const gchar maskkey_gap_key[]        = "/module/pixmap/maskkey_gap";
+static const gchar mask_key_key[]           = "/module/pixmap/mask_key";
 static const gchar mode_key[]               = "/module/pixmap/mode";
 static const gchar outline_width_key[]      = "/module/pixmap/outline_width";
 static const gchar pxwidth_key[]            = "/module/pixmap/pxwidth";
@@ -5780,12 +5866,16 @@ img_export_load_args(GwyContainer *container,
     gwy_container_gis_enum_by_name(container, inset_pos_key, &args->inset_pos);
     gwy_container_gis_string_by_name(container, inset_length_key,
                                      (const guchar**)&args->inset_length);
-    gwy_container_gis_boolean_by_name(container, draw_mask_key,
-                                      &args->draw_mask);
     gwy_container_gis_boolean_by_name(container, draw_frame_key,
                                       &args->draw_frame);
+    gwy_container_gis_boolean_by_name(container, draw_mask_key,
+                                      &args->draw_mask);
+    gwy_container_gis_boolean_by_name(container, draw_maskkey_key,
+                                      &args->draw_maskkey);
     gwy_container_gis_boolean_by_name(container, draw_selection_key,
                                       &args->draw_selection);
+    gwy_container_gis_string_by_name(container, mask_key_key,
+                                     (const guchar**)&args->mask_key);
     gwy_container_gis_string_by_name(container, font_key,
                                      (const guchar**)&args->font);
     gwy_container_gis_boolean_by_name(container, scale_font_key,
@@ -5798,6 +5888,8 @@ img_export_load_args(GwyContainer *container,
                                      &args->inset_ygap);
     gwy_container_gis_double_by_name(container, title_gap_key,
                                      &args->title_gap);
+    gwy_container_gis_double_by_name(container, maskkey_gap_key,
+                                     &args->maskkey_gap);
     gwy_container_gis_boolean_by_name(container, inset_draw_ticks_key,
                                       &args->inset_draw_ticks);
     gwy_container_gis_boolean_by_name(container, inset_draw_label_key,
@@ -5847,12 +5939,16 @@ img_export_save_args(GwyContainer *container,
     gwy_container_set_enum_by_name(container, inset_pos_key, args->inset_pos);
     gwy_container_set_string_by_name(container, inset_length_key,
                                      g_strdup(args->inset_length));
-    gwy_container_set_boolean_by_name(container, draw_mask_key,
-                                      args->draw_mask);
     gwy_container_set_boolean_by_name(container, draw_frame_key,
                                       args->draw_frame);
+    gwy_container_set_boolean_by_name(container, draw_mask_key,
+                                      args->draw_mask);
+    gwy_container_set_boolean_by_name(container, draw_maskkey_key,
+                                      args->draw_maskkey);
     gwy_container_set_boolean_by_name(container, draw_selection_key,
                                       args->draw_selection);
+    gwy_container_set_string_by_name(container, mask_key_key,
+                                     g_strdup(args->mask_key));
     gwy_container_set_string_by_name(container, font_key,
                                      g_strdup(args->font));
     gwy_container_set_boolean_by_name(container, scale_font_key,
@@ -5865,6 +5961,8 @@ img_export_save_args(GwyContainer *container,
                                      args->inset_ygap);
     gwy_container_set_double_by_name(container, title_gap_key,
                                      args->title_gap);
+    gwy_container_set_double_by_name(container, maskkey_gap_key,
+                                     args->maskkey_gap);
     gwy_container_set_boolean_by_name(container, inset_draw_ticks_key,
                                       args->inset_draw_ticks);
     gwy_container_set_boolean_by_name(container, inset_draw_label_key,
