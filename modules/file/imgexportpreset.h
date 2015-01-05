@@ -375,13 +375,13 @@ gwy_img_export_preset_dump(GwyResource *resource,
                            "inset_ygap %s\n"
                            "title_gap %s\n"
                            "maskkey_gap %s\n"
-                           "mask_key %s\n",
+                           "mask_key \"%s\"\n",
                            d1, d2, d3, d4, d5, s);
     g_free(s);
 
     s = g_strescape(data->inset_length, NULL);
     g_string_append_printf(str,
-                           "inset_length %s\n"
+                           "inset_length \"%s\"\n"
                            "interpolation %u\n"
                            "title_type %u\n"
                            "units_in_title %d\n",
@@ -393,7 +393,7 @@ gwy_img_export_preset_dump(GwyResource *resource,
     g_ascii_dtostr(d1, sizeof(d1), data->sel_line_thickness);
     g_ascii_dtostr(d2, sizeof(d2), data->sel_point_radius);
     g_string_append_printf(str,
-                           "selection %s\n"
+                           "selection \"%s\"\n"
                            "sel_number_objects %d\n"
                            "sel_line_thickness %s\n"
                            "sel_point_radius %s\n",
