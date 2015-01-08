@@ -14,6 +14,7 @@ Modules:
 - K-medians (new): K-medians clustering for volume data.
 - SEM image (new): Presentation resembling SEM image corresponding to given
   topography.
+- XYZ export (new): Exports channel values to simple XYZ text file.
 - Image export: It is possible do disable the frame if there are no rulers.
   False colour rendering for inverted gradients and default non-full mappings
   was corrected.  Title centering for non-square images was corrected.
@@ -32,6 +33,8 @@ Modules:
 - Euclidean distance transform: Function for mask thinning was added.
 - Mark by threshold: Percentage interpretation for inverted height was
   changed to be less confusing.
+- Raw XYZ: The square image option is not enforced on regular grid data when
+  it is not available in the dialog.
 
 Other:
 - Does not attempt to build the hdrimage module with C++ compiler unavailable.
