@@ -190,6 +190,7 @@ file_LTLIBRARIES = \
 	witfile.la \
 	wsffile.la \
 	wsxmfile.la \
+	xyzexport.la \
 	zeiss.la \
 	zemax.la
 
@@ -323,6 +324,7 @@ witfile_la_SOURCES       = witfile.c
 witec_asc_la_SOURCES     = witec-asc.c
 wsffile_la_SOURCES       = wsffile.c
 wsxmfile_la_SOURCES      = wsxmfile.c
+xyzexport_la_SOURCES     = xyzexport.c
 zeiss_la_SOURCES         = zeiss.c
 zemax_la_SOURCES         = zemax.c
 
