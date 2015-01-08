@@ -22,7 +22,7 @@
  * [FILE-MAGIC-USERGUIDE]
  * XYZ data
  * .xyz .dat
- * Read[1]
+ * Read[1] Export
  * [1] XYZ data are interpolated to a regular grid upon import.
  **/
 
@@ -369,7 +369,7 @@ rawxyz_dialog(RawXYZArgs *args,
     gwy_resource_use(GWY_RESOURCE(controls.gradient));
 
     /* Enforce xydimeq */
-    if (args->xydimeq) {
+    if (rfile->regular == RAW_XYZ_IRREGULAR && args->xydimeq) {
         gdouble c, dx, dy;
 
         dx = args->xmax - args->xmin;
@@ -1056,6 +1056,7 @@ rawxyz_do(RawXYZFile *rfile,
     }
 
     /* Fix the scales according to real units. */
+    g_printerr("%g %g :: %g %g\n", args->xmin, args->xmax, args->ymin, args->ymax);
     gwy_data_field_set_xreal(dfield, mag*(args->xmax - args->xmin));
     gwy_data_field_set_yreal(dfield, mag*(args->ymax - args->ymin));
     gwy_data_field_set_xoffset(dfield, mag*args->xmin);
@@ -1323,8 +1324,14 @@ initialize_ranges(const RawXYZFile *rfile,
         round_to_nice(&args->ymin, &args->ymax);
     }
     else {
+        gdouble dx = (args->xmax - args->xmin)/rfile->regular_xres;
+        gdouble dy = (args->ymax - args->ymin)/rfile->regular_yres;
         args->xres = rfile->regular_xres;
         args->yres = rfile->regular_yres;
+        args->xmax += 0.5*dx;
+        args->xmin -= 0.5*dx;
+        args->ymax += 0.5*dy;
+        args->ymin -= 0.5*dy;
     }
 }
 
@@ -1475,6 +1482,7 @@ analyse_points(RawXYZFile *rfile,
         else if (pt->z > rfile->zmax)
             rfile->zmax = pt->z;
     }
+    g_printerr("%g %g :: %g %g\n", rfile->xmin, rfile->xmax, rfile->ymin, rfile->ymax);
 
     if (check_regular_grid(rfile))
         return;
