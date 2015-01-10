@@ -32,6 +32,8 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
+#include <libprocess/gwyprocesstypes.h>
+#include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
 
@@ -43,6 +45,7 @@ typedef struct {
     gboolean add_comment;
     gboolean decimal_dot;
     guint precision;
+    GwyMaskingType masking;
 } XYZExportArgs;
 
 static gboolean module_register        (void);
@@ -53,6 +56,7 @@ static gboolean xyzexport_export       (GwyContainer *data,
                                         GwyRunType mode,
                                         GError **error);
 static gboolean xyzexport_export_dialog(XYZExportArgs *args,
+                                        gboolean have_mask,
                                         gboolean needs_decimal_dot);
 static void     xyzexport_load_args    (GwyContainer *settings,
                                         XYZExportArgs *args);
@@ -60,7 +64,7 @@ static void     xyzexport_save_args    (GwyContainer *settings,
                                         XYZExportArgs *args);
 
 static const XYZExportArgs xyzexport_defaults = {
-    FALSE, TRUE, 5
+    FALSE, TRUE, 5, GWY_MASK_IGNORE,
 };
 
 static GwyModuleInfo module_info = {
@@ -129,19 +133,20 @@ xyzexport_export(G_GNUC_UNUSED GwyContainer *data,
                  GError **error)
 {
     XYZExportArgs args;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *mfield;
     gint xres, yres, i, j, id;
     struct lconv *locale_data;
     const gchar *decimal_dot;
     guint precision, decimal_dot_len;
     gboolean needs_decimal_dot;
     gdouble dx, dy, xoff, yoff;
-    gdouble *d;
+    const gdouble *d, *m = NULL;
     gchar buf[40];
     FILE *fh;
 
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_MASK_FIELD, &mfield,
                                      0);
     if (!dfield) {
         err_NO_CHANNEL_EXPORT(error);
@@ -157,7 +162,7 @@ xyzexport_export(G_GNUC_UNUSED GwyContainer *data,
     needs_decimal_dot = !gwy_strequal(decimal_dot, ".");
 
     if (mode == GWY_RUN_INTERACTIVE) {
-        if (!xyzexport_export_dialog(&args, needs_decimal_dot)) {
+        if (!xyzexport_export_dialog(&args, !!mfield, needs_decimal_dot)) {
             err_CANCELLED(error);
             return FALSE;
         }
@@ -170,7 +175,10 @@ xyzexport_export(G_GNUC_UNUSED GwyContainer *data,
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
-    d = gwy_data_field_get_data(dfield);
+    d = gwy_data_field_get_data_const(dfield);
+    if (mfield && args.masking != GWY_MASK_IGNORE)
+        m = gwy_data_field_get_data_const(mfield);
+
     if (args.add_comment) {
         GwySIUnit *units;
         const guchar *title = "Unknown channel";
@@ -201,11 +209,19 @@ xyzexport_export(G_GNUC_UNUSED GwyContainer *data,
             gdouble y = dy*(i + 0.5) + yoff;
             for (j = 0; j < xres; j++) {
                 gdouble x = dx*(j + 0.5) + xoff;
-                g_snprintf(buf, sizeof(buf), "%.*g ", precision, x);
+
+                if (m) {
+                    if (args.masking == GWY_MASK_EXCLUDE && m[i*xres + j] > 0.5)
+                        continue;
+                    if (args.masking == GWY_MASK_INCLUDE && m[i*xres + j] < 0.5)
+                        continue;
+                }
+
+                g_snprintf(buf, sizeof(buf), "%.*g\t", precision, x);
                 if (print_with_decimal_dot(fh, buf,
                                            decimal_dot, decimal_dot_len) == EOF)
                     goto fail;
-                g_snprintf(buf, sizeof(buf), "%.*g ", precision, y);
+                g_snprintf(buf, sizeof(buf), "%.*g\t", precision, y);
                 if (print_with_decimal_dot(fh, buf,
                                            decimal_dot, decimal_dot_len) == EOF)
                     goto fail;
@@ -217,6 +233,25 @@ xyzexport_export(G_GNUC_UNUSED GwyContainer *data,
         }
     }
     else {
+        for (i = 0; i < yres; i++) {
+            gdouble y = dy*(i + 0.5) + yoff;
+            for (j = 0; j < xres; j++) {
+                gdouble x = dx*(j + 0.5) + xoff;
+
+                if (m) {
+                    if (args.masking == GWY_MASK_EXCLUDE && m[i*xres + j] > 0.5)
+                        continue;
+                    if (args.masking == GWY_MASK_INCLUDE && m[i*xres + j] < 0.5)
+                        continue;
+                }
+
+                if (fprintf(fh, "%.*g\t%.*g\t%.*g\n",
+                            precision, x,
+                            precision, y,
+                            precision, d[i*xres + j]) < 3)
+                    goto fail;
+            }
+        }
     }
     fclose(fh);
 
@@ -232,10 +267,12 @@ fail:
 
 static gboolean
 xyzexport_export_dialog(XYZExportArgs *args,
+                        gboolean have_mask,
                         gboolean needs_decimal_dot)
 {
     GtkWidget *dialog, *vbox, *hbox, *label, *decimal_dot, *add_comment,
               *precision;
+    GSList *masking = NULL;
     gint response;
 
     dialog = gtk_dialog_new_with_buttons(_("Export XYZ"), NULL, 0,
@@ -273,7 +310,22 @@ xyzexport_export_dialog(XYZExportArgs *args,
     precision = gtk_spin_button_new_with_range(0, 16, 1);
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(precision), args->precision);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), precision);
-    gtk_box_pack_start(GTK_BOX(hbox), precision, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), precision, FALSE, FALSE, 4);
+
+    if (have_mask) {
+        GSList *l;
+
+        label = gwy_label_new_header(_("Masking Mode"));
+        gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
+
+        l = masking = gwy_radio_buttons_create(gwy_masking_type_get_enum(), -1,
+                                               NULL, NULL, args->masking);
+        while (l) {
+            gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(l->data),
+                               FALSE, FALSE, 0);
+            l = g_slist_next(l);
+        }
+    }
 
     gtk_widget_show_all(dialog);
     response = gtk_dialog_run(GTK_DIALOG(dialog));
@@ -285,6 +337,8 @@ xyzexport_export_dialog(XYZExportArgs *args,
             = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(add_comment));
         args->precision
             = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(precision));
+        if (masking)
+            args->masking = gwy_radio_buttons_get_current(masking);
         xyzexport_save_args(gwy_app_settings_get(), args);
         gtk_widget_destroy(dialog);
     }
@@ -292,8 +346,9 @@ xyzexport_export_dialog(XYZExportArgs *args,
     return response == GTK_RESPONSE_OK;
 }
 
-static const gchar decimal_dot_key[] = "/module/xyzexport/decimal-dot";
 static const gchar add_comment_key[] = "/module/xyzexport/add-comment";
+static const gchar decimal_dot_key[] = "/module/xyzexport/decimal-dot";
+static const gchar masking_key[]     = "/module/xyzexport/masking";
 static const gchar precision_key[]   = "/module/xyzexport/precision";
 
 static void
@@ -307,8 +362,11 @@ xyzexport_load_args(GwyContainer *settings,
     gwy_container_gis_boolean_by_name(settings, add_comment_key,
                                       &args->add_comment);
     gwy_container_gis_int32_by_name(settings, precision_key, &args->precision);
+    gwy_container_gis_enum_by_name(settings, masking_key, &args->masking);
 
     args->precision = MIN(args->precision, 16);
+    args->masking = gwy_enum_sanitize_value(args->masking,
+                                            GWY_TYPE_MASKING_TYPE);
 }
 
 static void
@@ -320,6 +378,7 @@ xyzexport_save_args(GwyContainer *settings,
     gwy_container_set_boolean_by_name(settings, add_comment_key,
                                       args->add_comment);
     gwy_container_set_int32_by_name(settings, precision_key, args->precision);
+    gwy_container_set_enum_by_name(settings, masking_key, args->masking);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
