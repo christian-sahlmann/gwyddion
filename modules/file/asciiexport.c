@@ -188,7 +188,7 @@ asciiexport_export(G_GNUC_UNUSED GwyContainer *data,
         vf = gwy_data_field_get_value_format_xy(dfield,
                                                 GWY_SI_UNIT_FORMAT_VFMARKUP,
                                                 vf);
-        if (args.decimal_dot) {
+        if (needs_decimal_dot && args.decimal_dot) {
             fprintf(fh, "# %s ", _("Width:"));
             g_snprintf(buf, sizeof(buf), "%.*f",
                        vf->precision,
@@ -223,7 +223,7 @@ asciiexport_export(G_GNUC_UNUSED GwyContainer *data,
     }
 
     precision = args.precision;
-    if (args.decimal_dot) {
+    if (needs_decimal_dot && args.decimal_dot) {
         for (i = 0; i < xres*yres; i++) {
             g_snprintf(buf, sizeof(buf), "%.*g%c",
                        precision, d[i], (i + 1) % xres ? '\t' : '\n');

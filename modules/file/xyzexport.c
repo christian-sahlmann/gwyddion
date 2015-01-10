@@ -204,7 +204,7 @@ xyzexport_export(G_GNUC_UNUSED GwyContainer *data,
     xoff = gwy_data_field_get_xoffset(dfield);
     yoff = gwy_data_field_get_yoffset(dfield);
     precision = args.precision;
-    if (args.decimal_dot) {
+    if (needs_decimal_dot && args.decimal_dot) {
         for (i = 0; i < yres; i++) {
             gdouble y = dy*(i + 0.5) + yoff;
             for (j = 0; j < xres; j++) {
@@ -303,14 +303,14 @@ xyzexport_export_dialog(XYZExportArgs *args,
     gtk_box_pack_start(GTK_BOX(vbox), add_comment, FALSE, FALSE, 0);
 
     hbox = gtk_hbox_new(FALSE, 6);
-    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 4);
 
     label = gtk_label_new_with_mnemonic(_("_Precision:"));
     gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
     precision = gtk_spin_button_new_with_range(0, 16, 1);
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(precision), args->precision);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), precision);
-    gtk_box_pack_start(GTK_BOX(hbox), precision, FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), precision, FALSE, FALSE, 0);
 
     if (have_mask) {
         GSList *l;
