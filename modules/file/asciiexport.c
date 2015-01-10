@@ -73,7 +73,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Exports data as simple ASCII matrix."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti)",
     "2004",
 };
@@ -140,7 +140,7 @@ asciiexport_export(G_GNUC_UNUSED GwyContainer *data,
     const gchar *decimal_dot;
     guint precision, decimal_dot_len;
     gboolean needs_decimal_dot;
-    gdouble *d;
+    const gdouble *d;
     gchar buf[40];
     FILE *fh;
 
@@ -174,7 +174,7 @@ asciiexport_export(G_GNUC_UNUSED GwyContainer *data,
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
-    d = gwy_data_field_get_data(dfield);
+    d = gwy_data_field_get_data_const(dfield);
     if (args.add_comment) {
         GwySIUnit *units;
         GwySIValueFormat *vf = NULL;
