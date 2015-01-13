@@ -26,6 +26,8 @@
  *
  * TODO: metadata loading
  */
+ 
+#define DEBUG
 
 /**
  * [FILE-MAGIC-FREEDESKTOP]
@@ -70,6 +72,7 @@
 #include "get.h"
 
 #define MAGIC "WIT_PRCT"
+#define MAGIC2 "WIT_PR06"
 #define MAGIC_SIZE (8)
 
 #define EXTENSION ".wip"
@@ -281,7 +284,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports WItec Project data files."),
     "Daniil Bratashov <dn2010@gmail.com>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov",
     "2010",
 };
@@ -308,10 +311,12 @@ wip_detect(const GwyFileDetectInfo *fileinfo,
     gint score = 0;
 
     if (only_name)
-        return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
+        return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION)
+                                                               ? 20 : 0;
 
     if (fileinfo->buffer_len > MAGIC_SIZE
-        && memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) == 0)
+        && (memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) == 0
+        || memcmp(fileinfo->head, MAGIC2, MAGIC_SIZE) == 0))
         score = 100;
 
     return score;
@@ -345,10 +350,10 @@ wip_read_tag(guchar **pos, gsize *start, gsize *end)
         return NULL;
     }
     tag->data = (gpointer)p;
-    /*
-    gwy_debug("%d %s %d %lld %lld\n",  tag->name_length,
+
+    fprintf(stderr, "%d %s %d %lld %lld\n",  tag->name_length,
               tag->name, tag->type, tag->data_start, tag->data_end);
-    */
+
     *pos = (guchar *)p;
 
     return tag;
@@ -1561,7 +1566,7 @@ wip_load(const gchar *filename,
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
-
+    
     p = buffer + 8; /* skip magic header */
     cur = 8;
     if (!(tag = wip_read_tag(&p, &cur, &size))) {
@@ -1591,6 +1596,7 @@ wip_load(const gchar *filename,
 
     g_node_traverse(tagtree, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                     wip_free_leave, NULL);
+
     g_node_destroy(tagtree);
     g_free(filedata);
     gwy_file_abandon_contents(buffer, size, NULL);
