@@ -26,7 +26,7 @@
  *
  * TODO: metadata loading
  */
- 
+
 #define DEBUG
 
 /**
@@ -658,6 +658,12 @@ wip_read_bmp(const guchar *bmpdata,
 
     header = g_new0(WIPBMPHeader, 1);
     p = bmpdata;
+
+    if (!p) {
+        g_free(header);
+        return NULL;
+    }
+
     if (p[0] != 'B' || p[1] != 'M') {
         g_free(header);
         return NULL;
@@ -1566,7 +1572,7 @@ wip_load(const gchar *filename,
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
-    
+
     p = buffer + 8; /* skip magic header */
     cur = 8;
     if (!(tag = wip_read_tag(&p, &cur, &size))) {
