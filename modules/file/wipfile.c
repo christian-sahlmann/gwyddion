@@ -27,8 +27,6 @@
  * TODO: metadata loading
  */
 
-#define DEBUG
-
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-wipfile-spm">
@@ -119,10 +117,6 @@ typedef enum {
     WIP_UNIT_EV_REL      = 6,
     WIP_UNIT_MEV_REL     = 7
 } WIPUnitIndex;
-
-enum {
-    BMP_HEADER_SIZE = 54
-};
 
 typedef struct {
     guint32       name_length;
@@ -220,15 +214,6 @@ typedef struct {
     guint id;
     GNode *node;
 } WIPIdNode;
-
-typedef struct {
-    gsize size;
-    gsize offset;
-    guint width;
-    guint height;
-    guint bpp;
-    gsize datasize;
-} WIPBMPHeader;
 
 static gboolean      module_register           (void);
 static gint          wip_detect (const GwyFileDetectInfo *fileinfo,
@@ -351,7 +336,7 @@ wip_read_tag(guchar **pos, gsize *start, gsize *end)
     }
     tag->data = (gpointer)p;
 
-    fprintf(stderr, "%d %s %d %lld %lld\n",  tag->name_length,
+    gwy_debug("%d %s %d %lld %lld\n",  tag->name_length,
               tag->name, tag->type, tag->data_start, tag->data_end);
 
     *pos = (guchar *)p;
@@ -647,92 +632,64 @@ wip_read_bmp(const guchar *bmpdata,
              gdouble xscale, gdouble yscale,
              gint power10xy)
 {
-    const guchar *p;
-    gint tmp;
-    WIPBMPHeader *header;
-    GwyDataField *dfield;
+    GwyDataField *dfield = NULL;
     gdouble *data;
-    gint i, j;
-    guint r, g, b;
-    gdouble y;
+    gint i, j, width, height, rowstride, bpp;
+    GdkPixbufLoader *loader;
+    GError *err = NULL;    
+    GdkPixbuf *pixbuf = NULL;
+    guchar *pixels, *pix_p;
+    
+    if (!bmpdata) {
+		return NULL;
+	}
+	
+    loader = gdk_pixbuf_loader_new();
+	if (!gdk_pixbuf_loader_write(loader, bmpdata, datasize,	&err)) {
+		g_object_unref(loader);
+		g_clear_error(&err);
+		return NULL;
+	}
+	gwy_debug("Closing the loader.");
+	if (!gdk_pixbuf_loader_close(loader, &err)) {
+		g_object_unref(loader);
+		g_clear_error(&err);
+		return NULL;
+	}
+	gwy_debug("Trying to get the pixbuf.");
+	pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
+	gwy_debug("Pixbuf is: %p.", pixbuf);
+	g_assert(pixbuf);
+	g_object_ref(pixbuf);
+	gwy_debug("Finalizing loader.");
+	g_object_unref(loader);
 
-    header = g_new0(WIPBMPHeader, 1);
-    p = bmpdata;
+    if (pixbuf) {
+        pixels = gdk_pixbuf_get_pixels(pixbuf);
+        width = gdk_pixbuf_get_width(pixbuf);
+        height = gdk_pixbuf_get_height(pixbuf);
+        rowstride = gdk_pixbuf_get_rowstride(pixbuf);
+        bpp = gdk_pixbuf_get_has_alpha(pixbuf) ? 4 : 3;
 
-    if (!p) {
-        g_free(header);
-        return NULL;
-    }
+        dfield = gwy_data_field_new(width, height,
+						         width * xscale * pow(10.0, power10xy),
+						         height * yscale * pow(10.0, power10xy),
+                                 TRUE);
+        data = gwy_data_field_get_data(dfield);
+        for (i = 0; i < height; i++) {
+            pix_p = pixels + i * rowstride;
+            for (j = 0; j < width; j++) {
+                guchar red = pix_p[bpp*j];
+                guchar green = pix_p[bpp*j+1];
+                guchar blue = pix_p[bpp*j+2];
 
-    if (p[0] != 'B' || p[1] != 'M') {
-        g_free(header);
-        return NULL;
-    }
-    p += 2;
-
-    if (((header->size = gwy_get_guint32_le(&p)) < BMP_HEADER_SIZE)
-     || (header->size != datasize)) { /* Size */
-
-        g_free(header);
-        return NULL;
-    }
-    if ((tmp = gwy_get_guint32_le(&p)) != 0) { /* Reserved */
-        g_free(header);
-        return NULL;
-    }
-    if ((header->offset = gwy_get_guint32_le(&p)) != 54) { /* Offset */
-        g_free(header);
-        return NULL;
-    }
-    if ((tmp = gwy_get_guint32_le(&p)) != 40) { /* Header size */
-        g_free(header);
-        return NULL;
-    }
-    if ((header->width = gwy_get_guint32_le(&p)) == 0) {  /* Width */
-        g_free(header);
-        return NULL;
-    }
-    if ((header->height = gwy_get_guint32_le(&p)) == 0) { /* Height */
-        g_free(header);
-        return NULL;
-    }
-    if ((tmp = gwy_get_guint16_le(&p)) != 1) { /* Bit planes */
-        g_free(header);
-        return NULL;
-    }
-    if ((header->bpp = gwy_get_guint16_le(&p)) != 24) { /* BPP */
-        g_free(header);
-        return NULL;
-    }
-    if ((tmp = gwy_get_guint32_le(&p)) != 0) { /* Compression */
-        g_free(header);
-        return NULL;
-    }
-    if (((header->datasize = gwy_get_guint32_le(&p))
-        + BMP_HEADER_SIZE != datasize)
-      || (header->datasize != 3 * header->width * header->height)) {
-       /* Compresed size */
-        g_free(header);
-        return NULL;
-    }
-
-    p = bmpdata + header->offset;
-    dfield = gwy_data_field_new(header->width, header->height,
-                         header->width * xscale * pow(10.0, power10xy),
-                         header->height * yscale * pow(10.0, power10xy),
-                         FALSE);
-    data = gwy_data_field_get_data(dfield);
-
-    for (i = 0; i < header->height; i++)
-        for (j = 0; j < header->width; j++) {
-            r = *(p++);
-            g = *(p++);
-            b = *(p++);
-            y = (0.2125 * r + 0.7154 * g + 0.0721 * b) / 255.0;
-            *(data++) = y;
-        }
-
-    g_free(header);
+                *(data + i * width + j) = (0.2126 * red
+                                         + 0.7152 * green
+                                         + 0.0722 * blue) / 255.0;
+            }
+        }            
+	}
+	
     return dfield;
 }
 
