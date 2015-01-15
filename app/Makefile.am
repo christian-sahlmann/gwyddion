@@ -62,6 +62,7 @@ BUILT_SOURCES = \
 if OS_MSWIN
 no_undefined = -no-undefined
 export_symbols = -export-symbols libgwyapp2.def
+win32_libs = -lole32 -loleaut32
 libgwyapp2_la_DEPENDENCIES = libgwyapp2.def
 endif
 
@@ -85,7 +86,7 @@ include $(top_srcdir)/utils/mkenum.mk
 
 if OS_DARWIN
 darwin_cflags = -ObjC -g
-darwin_ldflags = -framework AppKit -framework ApplicationServices 
+darwin_ldflags = -framework AppKit -framework ApplicationServices
 endif
 
 libgwyapp2.def: $(libgwyapp2_la_OBJECTS)
@@ -107,7 +108,7 @@ AM_LDFLAGS = $(darwin_ldflags)
 # Changing ifaces     C:   R:   0
 libversion = -version-info 11:1:11
 #libversion = -release @LIBRARY_RELEASE@
-libgwyapp2_la_LDFLAGS = @GTKGLEXT_LIBS@ @GIO_LIBS@ @BASIC_LIBS@ -export-dynamic $(no_undefined) $(export_symbols) $(libversion)
+libgwyapp2_la_LDFLAGS = @GTKGLEXT_LIBS@ @GIO_LIBS@ @BASIC_LIBS@ $(win32_libs) -export-dynamic $(no_undefined) $(export_symbols) $(libversion)
 libgwyapp2_la_CPPFLAGS = -DG_LOG_DOMAIN=\"GwyApp\" $(AM_CPPFLAGS)
 libgwyapp2_la_LIBADD = $(libgwyapp_libadd)
 
