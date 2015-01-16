@@ -816,8 +816,8 @@ read_channel_labels(const gchar *p,
         gwy_debug("label%u=%s", i, (gchar*)g_ptr_array_index(array, i));
     }
     for (i = l; i < n; i++) {
-      g_ptr_array_add(array,NULL);
-      gwy_debug("label%u=NULL", i);
+        g_ptr_array_add(array, NULL);
+        gwy_debug("label%u=NULL", i);
     };
 
     return array;
