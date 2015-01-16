@@ -33,6 +33,7 @@
  *   <comment>WITec Project data</comment>
  *   <magic priority="80">
  *     <match type="string" offset="0" value="WIT_PRCT"/>
+ *     <match type="string" offset="0" value="WIT_PR06"/>
  *   </magic>
  *   <glob pattern="*.wip"/>
  *   <glob pattern="*.WIP"/>
@@ -43,6 +44,7 @@
  * [FILE-MAGIC-FILEMAGIC]
  * # WITec
  * 0 string WIT_PRCT WITec Project data
+ * 0 string WIT_PR06 WITec Project data
  **/
 
 /**
@@ -636,33 +638,33 @@ wip_read_bmp(const guchar *bmpdata,
     gdouble *data;
     gint i, j, width, height, rowstride, bpp;
     GdkPixbufLoader *loader;
-    GError *err = NULL;    
+    GError *err = NULL;
     GdkPixbuf *pixbuf = NULL;
     guchar *pixels, *pix_p;
-    
+
     if (!bmpdata) {
-		return NULL;
-	}
-	
+        return NULL;
+    }
+
     loader = gdk_pixbuf_loader_new();
-	if (!gdk_pixbuf_loader_write(loader, bmpdata, datasize,	&err)) {
-		g_object_unref(loader);
-		g_clear_error(&err);
-		return NULL;
-	}
-	gwy_debug("Closing the loader.");
-	if (!gdk_pixbuf_loader_close(loader, &err)) {
-		g_object_unref(loader);
-		g_clear_error(&err);
-		return NULL;
-	}
-	gwy_debug("Trying to get the pixbuf.");
-	pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
-	gwy_debug("Pixbuf is: %p.", pixbuf);
-	g_assert(pixbuf);
-	g_object_ref(pixbuf);
-	gwy_debug("Finalizing loader.");
-	g_object_unref(loader);
+    if (!gdk_pixbuf_loader_write(loader, bmpdata, datasize, &err)) {
+        g_object_unref(loader);
+        g_clear_error(&err);
+        return NULL;
+    }
+    gwy_debug("Closing the loader.");
+    if (!gdk_pixbuf_loader_close(loader, &err)) {
+        g_object_unref(loader);
+        g_clear_error(&err);
+        return NULL;
+    }
+    gwy_debug("Trying to get the pixbuf.");
+    pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
+    gwy_debug("Pixbuf is: %p.", pixbuf);
+    g_assert(pixbuf);
+    g_object_ref(pixbuf);
+    gwy_debug("Finalizing loader.");
+    g_object_unref(loader);
 
     if (pixbuf) {
         pixels = gdk_pixbuf_get_pixels(pixbuf);
@@ -672,8 +674,8 @@ wip_read_bmp(const guchar *bmpdata,
         bpp = gdk_pixbuf_get_has_alpha(pixbuf) ? 4 : 3;
 
         dfield = gwy_data_field_new(width, height,
-						         width * xscale * pow(10.0, power10xy),
-						         height * yscale * pow(10.0, power10xy),
+                                 width * xscale * pow(10.0, power10xy),
+                                 height * yscale * pow(10.0, power10xy),
                                  TRUE);
         data = gwy_data_field_get_data(dfield);
         for (i = 0; i < height; i++) {
@@ -687,9 +689,9 @@ wip_read_bmp(const guchar *bmpdata,
                                          + 0.7152 * green
                                          + 0.0722 * blue) / 255.0;
             }
-        }            
-	}
-	
+        }
+    }
+
     return dfield;
 }
 
