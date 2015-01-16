@@ -233,11 +233,11 @@ polylevel_with_mask(GwyDataField *dfield, GwyDataField *mask,
 static void
 flatten_base(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield, *origfield, *mfield;
+    GwyDataField *dfield, *origfield, *mfield = NULL;
     GQuark quark;
     gdouble mean, sigma, min, a, bx, by;
     gboolean found_peak;
-    gint id, i;
+    gint id, i, totalsteps = 5 + 4, step = 0;
 
     g_return_if_fail(run & FLATTEN_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &quark,
@@ -245,6 +245,10 @@ flatten_base(GwyContainer *data, GwyRunType run)
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(origfield && quark);
+
+    gwy_app_wait_start(gwy_app_find_window_for_channel(data, id),
+                       _("Facet-leveling..."));
+    gwy_app_wait_set_fraction(0.0);
 
     dfield = gwy_data_field_duplicate(origfield);
     found_peak = find_base_peak(dfield, &mean, &sigma);
@@ -262,7 +266,14 @@ flatten_base(GwyContainer *data, GwyRunType run)
                   i, found_peak ? "OK" : "NOT FOUND", mean, sigma);
         if (!found_peak)
             break;
+
+        if (!gwy_app_wait_set_fraction((step + i + 1.0)/totalsteps))
+            goto cancelled;
     }
+
+    step = 5;
+    if (!gwy_app_wait_set_message(_("Polynomial leveling...")))
+        goto cancelled;
 
     mfield = gwy_data_field_new_alike(dfield, FALSE);
     for (i = 2; i <= 5; i++) {
@@ -272,8 +283,12 @@ flatten_base(GwyContainer *data, GwyRunType run)
                   i, found_peak ? "OK" : "NOT FOUND", mean, sigma);
         if (!found_peak)
             break;
+
+        if (!gwy_app_wait_set_fraction((step + i - 1.0)/totalsteps))
+            goto cancelled;
     }
-    g_object_unref(mfield);
+
+    gwy_app_wait_finish();
 
     if (found_peak)
         gwy_data_field_add(dfield, -mean);
@@ -283,9 +298,12 @@ flatten_base(GwyContainer *data, GwyRunType run)
 
     gwy_app_undo_qcheckpoint(data, quark, NULL);
     gwy_data_field_copy(dfield, origfield, FALSE);
-    g_object_unref(dfield);
     gwy_app_channel_log_add_proc(data, id, id);
     gwy_data_field_data_changed(origfield);
+
+cancelled:
+    gwy_object_unref(mfield);
+    g_object_unref(dfield);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

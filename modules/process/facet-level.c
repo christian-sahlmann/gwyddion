@@ -139,7 +139,7 @@ facet_level(GwyContainer *data, GwyRunType run)
     i = 0;
     progress = 0.0;
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, id),
-                       _("Facet-leveling"));
+                       _("Facet-leveling..."));
     while (i < 100) {
         if (!gwy_data_field_fit_facet_plane(dfield, mfield, args.masking,
                                             &c, &bx, &by)) {
