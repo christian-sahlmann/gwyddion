@@ -62,7 +62,7 @@ BUILT_SOURCES = \
 if OS_MSWIN
 no_undefined = -no-undefined
 export_symbols = -export-symbols libgwyapp2.def
-win32_libs = -lole32 -loleaut32
+win32_libs = -lole32
 libgwyapp2_la_DEPENDENCIES = libgwyapp2.def
 endif
 
