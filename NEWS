@@ -19,6 +19,7 @@ Modules:
   False colour rendering for inverted gradients and default non-full mappings
   was corrected.  Title centering for non-square images was corrected.  A mask
   colour sample can be rendered below the image with a label.
+- APE DAX: Can also import APDT files now.
 - NetCDF: The new setpoint variable ‘sranger_mk2_hwi_mix0_set_point’ is used
   for metadata, if found.
 - NRRD: 3D data with all three resolutions large are loaded a volume data

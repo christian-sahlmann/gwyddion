@@ -59,7 +59,7 @@ Lennart Fricke <pge08aqw@studserv.uni-leipzig.de>
 Jozef Veselý <vesely@gjh.sk>
     Standalone python gwy module, old Nanoscope import improvements.
 Gianfranco Gallizia <gianfranco.gallizia@aperesearch.com>
-    APE DAX import module.
+    APE DAX and APDT import module.
 Sameer Grover <sameer.grover.1@gmail.com>
     Nanomagnetics NMI import module, drift correction improvements.
 Niv Levy <nivl2000@gmail.com>
