@@ -3,8 +3,8 @@
  *  Copyright (C) 2005 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
- *  DAX file format Importer Module
- *  Copyright (C) 2012 A.P.E. Research srl
+ *  APDT and DAX file format Importer Module
+ *  Copyright (C) 2015 A.P.E. Research srl
  *  E-mail: infos@aperesearch.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -63,11 +63,22 @@
 /*Macros*/
 #define FILE_TYPE "DAX"
 #define EXTENSION ".dax"
+#define APDT_FILE_TYPE "APDT"
+#define APDT_EXTENSION ".apdt"
 #define MAGIC "PK\x03\x04"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 #define REGPATTERN "^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-2][0-9]:[0-6][0-9]:[0-6][0-9])[^+-]*([+-][0-9]{2}:[0-9]{2})$"
 
 /*Enums*/
+
+/*Field Types*/
+typedef enum {
+    FIELD_TYPE_STRING,
+    FIELD_TYPE_DATE,
+    FIELD_TYPE_LAST
+} APEFieldType;
+
+/*SPM modes*/
 typedef enum {
     SPM_MODE_SNOM = 0,
     SPM_MODE_AFM_NONCONTACT = 1,
@@ -86,6 +97,18 @@ static const GwyEnum spm_modes[] = {
     { "Phase detection AFM",   SPM_MODE_PHASE_DETECT_AFM },
 };
 
+/*APDT Sensor types*/
+typedef enum {
+    Unknown = -1,
+    Cantilever = 0,
+    Capacitive = 1
+} SensorType;
+
+static const GwyEnum sensor_types[] = {
+    { "Unknown",                Unknown    },
+    { "Cantilever",             Cantilever },
+    { "Capacitive",             Capacitive }
+ };
 
 /*Structures*/
 typedef struct {
@@ -95,7 +118,55 @@ typedef struct {
     gdouble YReal;
 } APEScanSize;
 
+typedef struct {
+    APEFieldType type;
+    gchar *name;
+    gchar *xpath;
+    gboolean optional;
+} APEXmlField;
+
+/*XML fields arrays*/
+static const APEXmlField dax_afm_c[] = {
+    {FIELD_TYPE_STRING, "File Version", "/Scan/Header/FileVersion", FALSE},
+    {FIELD_TYPE_DATE, "Date", "/Scan/Header/Date", FALSE},
+    {FIELD_TYPE_STRING, "Remark", "/Scan/Header/Remark", TRUE},
+    {FIELD_TYPE_STRING, "BIAS DC Voltage", "/Scan/Header/VPmt1", FALSE}
+};
+
+static const APEXmlField dax_afm_nc[] = {
+    {FIELD_TYPE_STRING, "File Version", "/Scan/Header/FileVersion", FALSE},
+    {FIELD_TYPE_DATE, "Date", "/Scan/Header/Date", FALSE},
+    {FIELD_TYPE_STRING, "Remark", "/Scan/Header/Remark", TRUE},
+    {FIELD_TYPE_STRING, "Tip Oscillation Frequency", "/Scan/Header/TipOscFreq", FALSE},
+    {FIELD_TYPE_STRING, "BIAS DC Voltage", "/Scan/Header/VPmt1", FALSE}
+};
+
+static const APEXmlField dax_snom[] = {
+    {FIELD_TYPE_STRING, "File Version", "/Scan/Header/FileVersion", FALSE},
+    {FIELD_TYPE_DATE, "Date", "/Scan/Header/Date", FALSE},
+    {FIELD_TYPE_STRING, "Remark", "/Scan/Header/Remark", TRUE},
+    {FIELD_TYPE_STRING, "Tip Oscillation Frequency", "/Scan/Header/TipOscFreq", FALSE},
+    {FIELD_TYPE_STRING, "PMT 1 Voltage", "/Scan/Header/VPmt1", FALSE},
+    {FIELD_TYPE_STRING, "PMT 2 Voltage", "/Scan/Header/VPmt2", FALSE}
+};
+
+static const APEXmlField dax_stm[] = {
+    {FIELD_TYPE_STRING, "File Version", "/Scan/Header/FileVersion", FALSE},
+    {FIELD_TYPE_DATE, "Date", "/Scan/Header/Date", FALSE},
+    {FIELD_TYPE_STRING, "Remark", "/Scan/Header/Remark", TRUE}
+};
+
+static const APEXmlField apdt_std[] = {
+    {FIELD_TYPE_STRING, "File Version", "/Scan/Header/FileVersion", FALSE},
+    {FIELD_TYPE_STRING, "Project Name", "/Scan/Header/ProjectName", TRUE},
+    {FIELD_TYPE_STRING, "Sensor Type", "/Scan/Header/SensorType", FALSE},
+    {FIELD_TYPE_STRING, "Exchange Axes", "/Scan/Header/ExchangeAxes", FALSE},
+    {FIELD_TYPE_DATE, "Date", "/Scan/Header/Date", FALSE},
+    {FIELD_TYPE_STRING, "Remark", "/Scan/Header/Remark", TRUE}
+};
+
 /*Prototypes*/
+
 static gboolean      module_register               (void);
 static gint          apedax_detect                 (const GwyFileDetectInfo *fileinfo,
                                                     gboolean only_name);
@@ -104,13 +175,17 @@ static GwyContainer* apedax_load                   (const gchar *filename,
                                                     GError **error);
 static GwyContainer* apedax_get_meta               (guchar *scanXmlContent,
                                                     gsize contentSize,
-                                                    APEScanSize *scanSize);
+                                                    APEScanSize *scanSize,
+                                                    gboolean apdtFile);
 static guchar*       apedax_get_file_content       (unzFile uFile,
                                                     unz_file_info *uFileInfo,
                                                     gsize *size,
                                                     GError **error);
 static gchar*        apedax_get_xml_field_as_string(xmlDocPtr doc,
                                                     const gchar *fieldXPath);
+static gboolean      apedax_set_meta_field         (GwyContainer *meta,
+                                                    xmlDocPtr doc,
+                                                    APEXmlField data);
 static GwyDataField* apedax_get_data_field         (unzFile uFile,
                                                     const gchar *chFileName,
                                                     const APEScanSize *scanSize,
@@ -133,10 +208,10 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports A.P.E. Research DAX data files."),
-    "Gianfranco Gallizia <infos@aperesearch.com>",
-    "0.3",
+    "Andrea Cervesato <infos@aperesearch.com>, Gianfranco Gallizia <infos@aperesearch.com>",
+    "0.4",
     "A.P.E. Research srl",
-    "2012"
+    "2015"
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -145,7 +220,7 @@ static gboolean
 module_register(void)
 {
     gwy_file_func_register("apedaxfile",
-                           N_("A.P.E. Research DAX Files (.dax)"),
+                           N_("A.P.E. Research DAX Files (.dax) and APDT File (.apdt)"),
                            (GwyFileDetectFunc)&apedax_detect,
                            (GwyFileLoadFunc)&apedax_load,
                            NULL,
@@ -164,6 +239,7 @@ apedax_detect(const GwyFileDetectInfo *fileinfo,
     unzFile uFile;
 
     score += (g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 10 : 0);
+    score += (g_str_has_suffix(fileinfo->name_lowercase, APDT_EXTENSION) ? 10 : 0);
 
     if (only_name)
         return score;
@@ -206,6 +282,8 @@ apedax_load(const gchar *filename,
     unz_file_info uFileInfo;
     guchar *buffer;
     gsize size = 0;
+    gboolean apdt_flag = FALSE;
+    gchar *lowercaseFilename;
     APEScanSize scanSize;
 
     scanSize.XRes = 0;
@@ -213,18 +291,36 @@ apedax_load(const gchar *filename,
     scanSize.XReal = 0.0;
     scanSize.YReal = 0.0;
 
+    lowercaseFilename = g_ascii_strdown(filename, -1);
+
+    if (g_str_has_suffix(filename, APDT_EXTENSION)) {
+        apdt_flag = TRUE;
+    }
+
+    g_free(lowercaseFilename);
+
     gwy_debug("Opening the file with MiniZIP");
     uFile = unzOpen(filename);
 
     if (uFile == NULL) {
-        err_FILE_TYPE(error, FILE_TYPE);
+        if (apdt_flag) {
+            err_FILE_TYPE(error, APDT_FILE_TYPE);
+        }
+        else {
+            err_FILE_TYPE(error, FILE_TYPE);
+        }
         unzClose(uFile);
         return NULL;
     }
 
     gwy_debug("Locating the XML file");
     if (unzLocateFile(uFile, "scan.xml", 0) != UNZ_OK) {
-        err_FILE_TYPE(error, FILE_TYPE);
+        if (apdt_flag) {
+            err_FILE_TYPE(error, APDT_FILE_TYPE);
+        }
+        else {
+            err_FILE_TYPE(error, FILE_TYPE);
+        }
         unzClose(uFile);
         return NULL;
     }
@@ -247,7 +343,7 @@ apedax_load(const gchar *filename,
 
     container = gwy_container_new();
 
-    meta = apedax_get_meta(buffer, size, &scanSize);
+    meta = apedax_get_meta(buffer, size, &scanSize, apdt_flag);
 
     if (meta == NULL) {
         gwy_debug("Metadata Container is NULL");
@@ -305,17 +401,67 @@ apedax_get_file_content(unzFile uFile,
     return buffer;
 }
 
+/*Sets the field into the metadata container*/
+static gboolean      apedax_set_meta_field         (GwyContainer *meta,
+                                                    xmlDocPtr doc,
+                                                    APEXmlField data)
+{
+    gboolean outcome = FALSE;
+    gchar* buffer = NULL;
+
+    buffer = apedax_get_xml_field_as_string(doc, data.xpath);
+
+    if (buffer) {
+
+        switch (data.type) {
+            case FIELD_TYPE_STRING:
+                gwy_container_set_string_by_name(meta,
+                                                 data.name,
+                                                 g_strdup(buffer));
+                break;
+            case FIELD_TYPE_DATE:
+                {
+                    gchar *datestring = apedax_format_date(buffer);
+
+                    if (datestring != NULL) {
+                        gwy_container_set_string_by_name(meta,
+                                                         "Date",
+                                                         g_strdup(datestring));
+                        g_free(datestring);
+                    }
+                    else {
+                        g_free(buffer);
+                        return FALSE;
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+
+        g_free(buffer);
+        outcome = TRUE;
+
+    }
+
+    return outcome;
+}
+
 /*Gets the metadata from the XML file*/
 static GwyContainer*
 apedax_get_meta(guchar *scanXmlContent,
                 gsize contentSize,
-                APEScanSize *scanSize)
+                APEScanSize *scanSize,
+                gboolean apdtFile)
 {
     GwyContainer* meta = NULL;
     xmlDocPtr doc = NULL;
     xmlNodePtr cur = NULL;
     gchar* buffer = NULL;
     gint currentSPMMode = -1;
+    const APEXmlField *fields = NULL;
+    guint fields_size = 0;
+    guint i = 0;
 
     if (scanXmlContent == NULL || contentSize == 0)
         return NULL;
@@ -343,131 +489,63 @@ apedax_get_meta(guchar *scanXmlContent,
 
     gwy_debug("Populating metadata container");
 
-    /*File Version*/
-    buffer = apedax_get_xml_field_as_string(doc,
-                                            "/Scan/Header/FileVersion");
-
-    if (buffer) {
-        gwy_container_set_string_by_name(meta,
-                                         "File Version",
-                                         g_strdup(buffer));
-        g_free(buffer);
+    if (apdtFile) {
+        gwy_debug("Selected APDT file fields");
+        /*Set fields and fields_size*/
+        fields = apdt_std;
+        fields_size = G_N_ELEMENTS(apdt_std);
     }
     else {
-        goto fail;
-    }
-
-    /*SPM Mode*/
-    buffer = apedax_get_xml_field_as_string(doc,
-                                            "/Scan/Header/SpmMode");
-
-    if (buffer) {
-        gwy_container_set_string_by_name(meta,
-                                         "SPM Mode",
-                                         g_strdup(buffer));
-
-        currentSPMMode = gwy_string_to_enum(buffer,
-                                            spm_modes,
-                                            G_N_ELEMENTS(spm_modes));
-
-        g_free(buffer);
-    }
-    else {
-        goto fail;
-    }
-
-    /*Date*/
-    buffer = apedax_get_xml_field_as_string(doc,
-                                            "/Scan/Header/Date");
-
-    if (buffer) {
-
-        gchar *datestring = apedax_format_date(buffer);
-
-        if (datestring != NULL) {
-            gwy_container_set_string_by_name(meta,
-                                             "Date",
-                                             g_strdup(datestring));
-            g_free(datestring);
-        }
-
-        g_free(buffer);
-
-    } else {
-        goto fail;
-    }
-
-    /*Remark*/
-    buffer = apedax_get_xml_field_as_string(doc,
-                                            "/Scan/Header/Remark");
-    if (buffer) {
-        gwy_container_set_string_by_name(meta,
-                                         "Remark",
-                                         g_strdup(buffer));
-        g_free(buffer);
-    }
-
-    /*Tip Oscillation Frequency*/
-    switch (currentSPMMode) {
-        case SPM_MODE_SNOM:
-        case SPM_MODE_AFM_NONCONTACT:
-            buffer = apedax_get_xml_field_as_string(doc,
-                                                    "/Scan/Header/TipOscFreq");
-            if (buffer) {
-                gwy_container_set_string_by_name(meta,
-                                                 "Tip Oscillation Frequency",
-                                                 g_strdup(buffer));
-                g_free(buffer);
-            }
-
-            break;
-        default:
-            /*Do Nothing*/
-            break;
-    }
-
-    /*VPmt1*/
-    if (currentSPMMode != SPM_MODE_STM) {
+        gwy_debug("Selected DAX file fields");
+        /*Fetch the SPM Mode*/
         buffer = apedax_get_xml_field_as_string(doc,
-                                                "/Scan/Header/VPmt1");
-        if (buffer) {
+                                                "/Scan/Header/SpmMode");
 
-            switch (currentSPMMode) {
-                case SPM_MODE_SNOM:
-                    gwy_container_set_string_by_name(meta,
-                                                     "PMT 1 Voltage",
-                                                     g_strdup(buffer));
-                    break;
-                case SPM_MODE_AFM_CONTACT:
-                case SPM_MODE_AFM_NONCONTACT:
-                    gwy_container_set_string_by_name(meta,
-                                                     "BIAS DC Voltage",
-                                                     g_strdup(buffer));
-
-                    break;
-                default:
-                    g_free(buffer);
-                    goto get_resolution;
-                    break;
-            }
-
-        g_free(buffer);
-        }
-    }
-
-    /*VPmt2*/
-    if (currentSPMMode == SPM_MODE_SNOM) {
-        buffer = apedax_get_xml_field_as_string(doc,
-                                                "/Scan/Header/VPmt2");
         if (buffer) {
             gwy_container_set_string_by_name(meta,
-                                             "PMT 2 Voltage",
+                                             "SPM Mode",
                                              g_strdup(buffer));
+
+            currentSPMMode = gwy_string_to_enum(buffer,
+                                                spm_modes,
+                                                G_N_ELEMENTS(spm_modes));
+
+            /*Set fields and fields_size according to SPM Mode*/
+            switch (currentSPMMode) {
+                case SPM_MODE_AFM_CONTACT:
+                    fields = dax_afm_c;
+                    fields_size = G_N_ELEMENTS(dax_afm_c);
+                    break;
+                case SPM_MODE_AFM_NONCONTACT:
+                    fields = dax_afm_nc;
+                    fields_size = G_N_ELEMENTS(dax_afm_nc);
+                    break;
+                case SPM_MODE_SNOM:
+                    fields = dax_snom;
+                    fields_size = G_N_ELEMENTS(dax_snom);
+                    break;
+                case SPM_MODE_STM:
+                    fields = dax_stm;
+                    fields_size = G_N_ELEMENTS(dax_stm);
+                    break;
+            }
+
             g_free(buffer);
         }
+        else {
+            gwy_debug("Cannot get SpmMode field");
+            goto fail;
+        }
     }
 
-get_resolution:
+    for (i = 0; i < fields_size; i++) {
+        gboolean result = apedax_set_meta_field(meta, doc, fields[i]);
+        if (result == FALSE) {
+            gwy_debug("Cannot get %s field", fields[i].xpath);
+            if (fields[i].optional == FALSE)
+                goto fail;
+        }
+    }
 
     /*Number of columns (XRes)*/
     buffer = apedax_get_xml_field_as_string(doc,
@@ -526,6 +604,7 @@ get_resolution:
     return meta;
 
 fail:
+    gwy_debug("Cleaning up after a fail");
     if (doc)
         xmlFreeDoc(doc);
     gwy_object_unref(meta);
