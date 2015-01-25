@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-01-10 03:58+0100\n"
-"PO-Revision-Date: 2015-01-10 21:40+0300\n"
+"POT-Creation-Date: 2015-01-25 03:58+0100\n"
+"PO-Revision-Date: 2015-01-25 15:35+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -1522,7 +1522,7 @@ msgstr "Положение максимума"
 msgid "RMS"
 msgstr "Ср. квадр."
 
-#: app/app.c:1489 modules/file/asciiexport.c:186 modules/file/xyzexport.c:181
+#: app/app.c:1489 modules/file/asciiexport.c:186 modules/file/xyzexport.c:189
 msgid "Channel:"
 msgstr "Канал:"
 
@@ -2949,13 +2949,13 @@ msgstr "Для FileDescEnd не найден соответствующий File
 msgid "FileDescBegin has no corresponding FileDescEnd."
 msgstr "Для FileDescBegin не найден соответствующий FileDescEnd."
 
-#: modules/file/apedaxfile.c:135
+#: modules/file/apedaxfile.c:210
 msgid "Imports A.P.E. Research DAX data files."
 msgstr "Импортирует файлы данных A.P.E. Research DAX."
 
-#: modules/file/apedaxfile.c:148
-msgid "A.P.E. Research DAX Files (.dax)"
-msgstr "Файлы A.P.E. Research DAX (.dax)"
+#: modules/file/apedaxfile.c:223
+msgid "A.P.E. Research DAX Files (.dax) and APDT File (.apdt)"
+msgstr "Файлы A.P.E. Research DAX (.dax) и APDT (.apdt)"
 
 #: modules/file/apefile.c:196
 msgid "Imports APE (Applied Physics and Engineering) data files."
@@ -2981,7 +2981,7 @@ msgstr "Ширина:"
 msgid "Height:"
 msgstr "Высота:"
 
-#: modules/file/asciiexport.c:219 modules/file/xyzexport.c:190
+#: modules/file/asciiexport.c:219 modules/file/xyzexport.c:198
 msgid "Value units:"
 msgstr "Единицы измерения:"
 
@@ -2991,7 +2991,7 @@ msgstr "Экспортировать текст"
 
 #: modules/file/asciiexport.c:274 modules/file/imgexport.c:3756
 #: modules/file/rawfile.c:724 modules/file/rawxyz.c:673
-#: modules/file/xyzexport.c:252 modules/process/calibrate.c:605
+#: modules/file/xyzexport.c:289 modules/process/calibrate.c:605
 #: modules/process/col_synth.c:517 modules/process/correct_affine.c:490
 #: modules/process/diff_synth.c:573 modules/process/extend.c:259
 #: modules/process/fft_filter_1d.c:297 modules/process/grain_dist.c:304
@@ -3002,16 +3002,16 @@ msgstr "Экспортировать текст"
 msgid "Options"
 msgstr "Параметры"
 
-#: modules/file/asciiexport.c:277 modules/file/xyzexport.c:255
+#: modules/file/asciiexport.c:277 modules/file/xyzexport.c:292
 msgid "Use _dot as decimal separator"
 msgstr "Использовать точку как _десятичный разделитель"
 
-#: modules/file/asciiexport.c:284 modules/file/xyzexport.c:262
+#: modules/file/asciiexport.c:284 modules/file/xyzexport.c:299
 #: modules/process/grain_dist.c:315
 msgid "Add _informational comment header"
 msgstr "Добавить _информационный заголовок-комментарий"
 
-#: modules/file/asciiexport.c:293 modules/file/xyzexport.c:271
+#: modules/file/asciiexport.c:293 modules/file/xyzexport.c:308
 msgid "_Precision:"
 msgstr "_Точность:"
 
@@ -6127,11 +6127,11 @@ msgstr "Импортирует файлы WinSTM (.stm)."
 msgid "WinSTM files (.stm)"
 msgstr "Файлы WinSTM (.stm)"
 
-#: modules/file/wipfile.c:282
+#: modules/file/wipfile.c:272
 msgid "Imports WItec Project data files."
 msgstr "Импортирует файлы данных WItec Project."
 
-#: modules/file/wipfile.c:295
+#: modules/file/wipfile.c:285
 msgid "WItec Project files (.wip)"
 msgstr "Файлы WItec Project (.wip)"
 
@@ -6184,21 +6184,29 @@ msgstr "количество строк"
 msgid "Unknown data type `%s'."
 msgstr "Неизвестный тип данных `%s'."
 
-#: modules/file/xyzexport.c:69
+#: modules/file/xyzexport.c:73
 msgid "Exports data as simple XYZ text file."
 msgstr "Экспортирует данные как простой текстовый файл XYZ"
 
-#: modules/file/xyzexport.c:82
+#: modules/file/xyzexport.c:86
 msgid "XYZ text data (.xyz)"
 msgstr "Текстовые данные XYZ (.xyz)"
 
-#: modules/file/xyzexport.c:185
+#: modules/file/xyzexport.c:193
 msgid "Lateral units:"
 msgstr "Единицы горизонтальных размеров:"
 
-#: modules/file/xyzexport.c:241
+#: modules/file/xyzexport.c:278
 msgid "Export XYZ"
 msgstr "Экспорт XYZ"
+
+#: modules/file/xyzexport.c:318 modules/process/curvature.c:688
+#: modules/process/facet-level.c:205 modules/process/level.c:276
+#: modules/process/linecorrect.c:295 modules/process/neural.c:593
+#: modules/process/polylevel.c:504 modules/process/slope_dist.c:399
+#: modules/tools/sfunctions.c:458 modules/tools/stats.c:371
+msgid "Masking Mode"
+msgstr "Режим использования маски"
 
 #: modules/file/zeiss.c:61
 msgid "Imports Carl Zeiss SEM images."
@@ -7813,14 +7821,6 @@ msgstr "_Установить выделение"
 msgid "_Plot graph"
 msgstr "Строить _график"
 
-#: modules/process/curvature.c:688 modules/process/facet-level.c:205
-#: modules/process/level.c:276 modules/process/linecorrect.c:295
-#: modules/process/neural.c:593 modules/process/polylevel.c:504
-#: modules/process/slope_dist.c:399 modules/tools/sfunctions.c:458
-#: modules/tools/stats.c:371
-msgid "Masking Mode"
-msgstr "Режим использования маски"
-
 #: modules/process/curvature.c:758 modules/process/grain_stat.c:345
 #: modules/process/polylevel.c:620 modules/tools/distance.c:228
 #: modules/tools/roughness.c:830 modules/tools/stats.c:432
@@ -8453,9 +8453,9 @@ msgstr "Выровнять данные заставив грани смотре
 msgid "Facet Level"
 msgstr "Выравнивание граней"
 
-#: modules/process/facet-level.c:142
-msgid "Facet-leveling"
-msgstr "Выравнивание граней"
+#: modules/process/facet-level.c:142 modules/process/flatten_base.c:250
+msgid "Facet-leveling..."
+msgstr "Выравнивание граней..."
 
 #: modules/process/facet_analysis.c:163
 msgid "Visualizes, marks and measures facet orientation."
@@ -9034,6 +9034,10 @@ msgstr "/_Выравнивание/Выровнять _основание"
 #: modules/process/flatten_base.c:61
 msgid "Flatten base of surface with positive features"
 msgstr "Выравнивает основание поверхности с выступающими особенностями"
+
+#: modules/process/flatten_base.c:275
+msgid "Polynomial leveling..."
+msgstr "Полиноминальное выравнивание..."
 
 #: modules/process/fraccor.c:38
 msgid "Removes data under mask using fractal interpolation."
@@ -12039,18 +12043,6 @@ msgstr "Расчёт обратного БПФ..."
 msgid "Denoised"
 msgstr "Без шума"
 
-#: modules/process/zigzag.c:46
-msgid "Fixes zigzag-like interlacing pattern"
-msgstr "Исправляет зигзагоподобные черезстрочные искажения"
-
-#: modules/process/zigzag.c:60
-msgid "/_Correct Data/_Zigzag"
-msgstr "/Исправить _данные/_Зигзаг"
-
-#: modules/process/zigzag.c:64
-msgid "Fix zigzag interlacing pattern"
-msgstr "Исправить чересстрочный зигзаг"
-
 #: modules/pygwy/pygwy-console.c:58
 msgid "/Pygwy Console"
 msgstr "/Консоль Pygwy"
@@ -13427,54 +13419,11 @@ msgstr "Ошибка K-срединных для %s"
 msgid "K-medians center %d"
 msgstr "Центр кластера %d"
 
-#~ msgid ""
-#~ "Facet level: Lateral dimensions and value must be the same physical "
-#~ "quantity."
-#~ msgstr ""
-#~ "Выравнивание граней: горизонтальные размеры и значения данных должны быть "
-#~ "одной и той же физической величиной."
+#~ msgid "Fixes zigzag-like interlacing pattern"
+#~ msgstr "Исправляет зигзагоподобные черезстрочные искажения"
 
-#~ msgid "Smooth"
-#~ msgstr "Плавный переход"
+#~ msgid "/_Correct Data/_Zigzag"
+#~ msgstr "/Исправить _данные/_Зигзаг"
 
-#~ msgid "3dcontrols|Basic"
-#~ msgstr "Основные"
-
-#~ msgid "MapArea block is absent for scan"
-#~ msgstr "Блок MapArea для скана отсутствует"
-
-#~ msgid "Portable Image (.ppm,.pnm)"
-#~ msgstr "Portable Image (.ppm,.pnm)"
-
-#~ msgid "Change Inset Color"
-#~ msgstr "Изменить цвет отрезка"
-
-#~ msgid "_Rendering:"
-#~ msgstr "В_изуализация:"
-
-#~ msgid "Pixelated"
-#~ msgstr "Пикселизованная"
-
-#~ msgid "Linear interpolation"
-#~ msgstr "Линейная интерполяция"
-
-#~ msgid "Data must be displayed in a window for pixmap export."
-#~ msgstr "Данные должны отображаться в окне для экспорта изображения."
-
-#~ msgid "Graphics Interchange Format (.gif)"
-#~ msgstr "Graphics Interchange Format (.gif)"
-
-#~ msgid "Font:"
-#~ msgstr "Шрифт:"
-
-#~ msgid "Scale text _proportionally"
-#~ msgstr "_Пропорциональный масштаб текста"
-
-#~ msgid "Use antialiasing"
-#~ msgstr "Использовать сглаживание"
-
-#~ msgid "Grayscale Mode"
-#~ msgstr "Градации серого"
-
-#~ msgid "imgexport|Basic"
-#~ msgstr "Основные"
+#~ msgid "Fix zigzag interlacing pattern"
+#~ msgstr "Исправить чересстрочный зигзаг"
