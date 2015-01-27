@@ -60,8 +60,10 @@
 
 #define MAGIC "PK\x03\x04"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
-#define MAGIC1 "Scan/Measure.xml"
-#define MAGIC1_SIZE (sizeof(MAGIC1)-1)
+#define MAGIC0 "Scan"
+#define MAGIC1 "Scan/Streams.xml"
+#define MAGIC2 "Scan/Measure.xml"
+#define MAGIC3 "Scan/Data"
 #define BLOODY_UTF8_BOM "\xef\xbb\xbf"
 #define EXTENSION ".nao"
 
@@ -151,7 +153,15 @@ nao_detect(const GwyFileDetectInfo *fileinfo,
 
     /* It contains directory Scan so this should be somewehre near the begining
      * of the file. */
-    if (!gwy_memmem(fileinfo->head, fileinfo->buffer_len, MAGIC1, MAGIC1_SIZE))
+    if (!gwy_memmem(fileinfo->head, fileinfo->buffer_len,
+                    MAGIC0, sizeof(MAGIC0)-1))
+        return 0;
+    if (!gwy_memmem(fileinfo->head, fileinfo->buffer_len,
+                    MAGIC1, sizeof(MAGIC1)-1)
+        && !gwy_memmem(fileinfo->head, fileinfo->buffer_len,
+                       MAGIC2, sizeof(MAGIC2)-1)
+        && !gwy_memmem(fileinfo->head, fileinfo->buffer_len,
+                       MAGIC3, sizeof(MAGIC3)-1))
         return 0;
 
     /* We have to realy look inside. */
@@ -207,8 +217,10 @@ nao_load(const gchar *filename,
         /* NB: We do not need @fileinfo for anything but at least some versions
          * of minizip seem to require it whatever the other arguments are. */
         gwy_debug("calling unzGetCurrentFileInfo()");
-        if (unzGetCurrentFileInfo(zipfile, &fileinfo, filename_buf, PATH_MAX,
-                                  NULL, 0, NULL, 0) != UNZ_OK) {
+        if ((status = unzGetCurrentFileInfo(zipfile, &fileinfo,
+                                            filename_buf, PATH_MAX,
+                                            NULL, 0, NULL, 0)) != UNZ_OK) {
+            err_MINIZIP(status, error);
             goto fail;
         }
         if (g_str_has_prefix(filename_buf, "Scan/Data/")) {
@@ -273,7 +285,8 @@ fail:
     gwy_object_unref(meta);
     if (!channelno) {
         gwy_object_unref(container);
-        err_NO_DATA(error);
+        if (error && !*error)
+            err_NO_DATA(error);
     }
 
     return container;
