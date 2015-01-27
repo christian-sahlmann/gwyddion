@@ -57,6 +57,7 @@
 #include <app/data-browser.h>
 
 #include "err.h"
+#include "gwyminizip.h"
 
 #define MAGIC "PK\x03\x04"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
@@ -117,7 +118,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Reads NanoObserver .nao files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti)",
     "2012",
 };

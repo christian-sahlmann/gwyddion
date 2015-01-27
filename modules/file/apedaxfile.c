@@ -59,6 +59,7 @@
 #include <unzip.h>
 
 #include "err.h"
+#include "gwyminizip.h"
 
 /*Macros*/
 #define FILE_TYPE "DAX"
@@ -209,7 +210,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports A.P.E. Research DAX data files."),
     "Andrea Cervesato <infos@aperesearch.com>, Gianfranco Gallizia <infos@aperesearch.com>",
-    "0.4",
+    "0.5",
     "A.P.E. Research srl",
     "2015"
 };
@@ -251,7 +252,7 @@ apedax_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     gwy_debug("Opening the file with MiniZIP");
-    uFile = unzOpen(fileinfo->name);
+    uFile = gwyminizip_unzOpen(fileinfo->name);
 
     if (uFile == NULL) {
         unzClose(uFile);
@@ -300,7 +301,7 @@ apedax_load(const gchar *filename,
     g_free(lowercaseFilename);
 
     gwy_debug("Opening the file with MiniZIP");
-    uFile = unzOpen(filename);
+    uFile = gwyminizip_unzOpen(filename);
 
     if (uFile == NULL) {
         if (apdt_flag) {

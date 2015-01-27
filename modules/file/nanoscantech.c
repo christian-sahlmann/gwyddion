@@ -63,6 +63,7 @@
 #include <app/data-browser.h>
 
 #include "err.h"
+#include "gwyminizip.h"
 
 #define MAGIC "PK\x03\x04"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
@@ -128,7 +129,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NanoScanTech .nstdat files."),
     "Daniil Bratashov (dn2010@gmail.com)",
-    "0.7",
+    "0.8",
     "David Nečas (Yeti), Daniil Bratashov (dn2010)",
     "2012",
 };
@@ -168,7 +169,7 @@ nst_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     /* We have to realy look inside. */
-    if (!(zipfile = unzOpen(fileinfo->name)))
+    if (!(zipfile = gwyminizip_unzOpen(fileinfo->name)))
         return 0;
 
     if (unzLocateFile(zipfile, "0.lsdlsd", 1) != UNZ_OK) {
@@ -197,7 +198,7 @@ nst_load(const gchar *filename,
     gchar *titlestr = NULL;
     gsize size = 0;
 
-    zipfile = unzOpen(filename);
+    zipfile = gwyminizip_unzOpen(filename);
     if (!zipfile) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_SPECIFIC,

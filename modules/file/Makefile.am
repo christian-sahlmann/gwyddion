@@ -351,7 +351,7 @@ endif
 # These require the respective libraries.
 if HAVE_XML2
 if HAVE_MINIZIP
-apedaxfile_la_SOURCES    = apedaxfile.c
+apedaxfile_la_SOURCES    = apedaxfile.c gwyminizip.h
 apedaxfile_la_CFLAGS     = $(AM_CFLAGS) @XML2_CFLAGS@ @MINIZIP_CFLAGS@
 apedaxfile_la_LIBADD     = @XML2_LIBS@ @MINIZIP_LIBS@
 endif
@@ -363,19 +363,19 @@ if HAVE_ZLIB
 endif
 
 if HAVE_MINIZIP
-nanoobserver_la_SOURCES  = nanoobserver.c
+nanoobserver_la_SOURCES  = nanoobserver.c gwyminizip.h
 nanoobserver_la_CFLAGS   = $(AM_CFLAGS) @MINIZIP_CFLAGS@
 nanoobserver_la_LIBADD   = @MINIZIP_LIBS@
 
-nanoscantech_la_SOURCES  = nanoscantech.c
+nanoscantech_la_SOURCES  = nanoscantech.c gwyminizip.h
 nanoscantech_la_CFLAGS   = $(AM_CFLAGS) @MINIZIP_CFLAGS@
 nanoscantech_la_LIBADD   = @MINIZIP_LIBS@
 
-opengps_la_SOURCES  = opengps.c
+opengps_la_SOURCES  = opengps.c gwyminizip.h
 opengps_la_CFLAGS   = $(AM_CFLAGS) @MINIZIP_CFLAGS@
 opengps_la_LIBADD   = @MINIZIP_LIBS@
 
-spmxfile_la_SOURCES  = spmxfile.c
+spmxfile_la_SOURCES  = spmxfile.c gwyminizip.h
 spmxfile_la_CFLAGS   = $(AM_CFLAGS) @MINIZIP_CFLAGS@
 spmxfile_la_LIBADD   = @MINIZIP_LIBS@
 endif

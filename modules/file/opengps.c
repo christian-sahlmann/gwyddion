@@ -53,6 +53,7 @@
 #include <app/data-browser.h>
 
 #include "err.h"
+#include "gwyminizip.h"
 
 #ifdef HAVE_MEMRCHR
 #define strlenrchr(s,c,len) (gchar*)memrchr((s),(c),(len))
@@ -138,7 +139,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Reads ISO 5436-2 OpenGPS .x3p files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2014",
 };
@@ -185,7 +186,7 @@ x3p_detect(const GwyFileDetectInfo *fileinfo,
     /* We have to realy look inside.  And since main.xml is a popular name
      * for the main XML document within such files, we also have to see if
      * we find "ISO5436_2" somewehre near the begining of the file. */
-    if ((zipfile = unzOpen(fileinfo->name))) {
+    if ((zipfile = gwyminizip_unzOpen(fileinfo->name))) {
         if (unzLocateFile(zipfile, "main.xml", 1) == UNZ_OK) {
             if ((content = x3p_get_file_content(zipfile, NULL, NULL))) {
                 if (g_strstr_len(content, 4096, "ISO5436_2"))
@@ -208,7 +209,7 @@ x3p_load(const gchar *filename,
     X3PFile x3pfile;
     unzFile zipfile;
 
-    zipfile = unzOpen(filename);
+    zipfile = gwyminizip_unzOpen(filename);
     if (!zipfile) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_SPECIFIC,
