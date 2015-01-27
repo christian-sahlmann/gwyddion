@@ -99,15 +99,15 @@ static const GwyEnum spm_modes[] = {
 
 /*APDT Sensor types*/
 typedef enum {
-    Unknown = -1,
-    Cantilever = 0,
-    Capacitive = 1
+    SENSOR_UNKNOWN = -1,
+    SENSOR_CANTILEVER = 0,
+    SENSOR_CAPACITIVE = 1
 } SensorType;
 
 static const GwyEnum sensor_types[] = {
-    { "Unknown",                Unknown    },
-    { "Cantilever",             Cantilever },
-    { "Capacitive",             Capacitive }
+    { "Unknown",    SENSOR_UNKNOWN,    },
+    { "Cantilever", SENSOR_CANTILEVER, },
+    { "Capacitive", SENSOR_CAPACITIVE, },
  };
 
 /*Structures*/
