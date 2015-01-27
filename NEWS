@@ -38,6 +38,8 @@ Modules:
 - Raw XYZ: The square image option is not enforced on regular grid data when
   it is not available in the dialog.
 - WITec Project: WIT_PR06 recognized as another variant of magic header.
+- APE DAX, NanoObserver, NanoScanTech, OpenGPS, SPMx: Opening of files with
+  non-ASCII names should work better on MS Windows.
 
 Other:
 - Does not attempt to build the hdrimage module with C++ compiler unavailable.
