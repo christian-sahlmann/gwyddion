@@ -165,7 +165,7 @@ nao_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     /* We have to realy look inside. */
-    if (!(zipfile = unzOpen(fileinfo->name)))
+    if (!(zipfile = gwyminizip_unzOpen(fileinfo->name)))
         return 0;
 
     if (unzLocateFile(zipfile, "Scan/Measure.xml", 1) != UNZ_OK) {
@@ -190,7 +190,7 @@ nao_load(const gchar *filename,
     guint id, channelno = 0;
     gint status;
 
-    zipfile = unzOpen(filename);
+    zipfile = gwyminizip_unzOpen(filename);
     if (!zipfile) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_SPECIFIC,
