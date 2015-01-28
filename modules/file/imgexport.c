@@ -5338,7 +5338,7 @@ write_pixbuf_bmp(GdkPixbuf *pixbuf,
             *(q + 1) = *(p + 1);
             *(q + 2) = *p;
         }
-        if (!fwrite(buffer, 1, bmprowstride, fh) != bmprowstride) {
+        if (fwrite(buffer, 1, bmprowstride, fh) != bmprowstride) {
             err_WRITE(error);
             fclose(fh);
             g_free(buffer);
