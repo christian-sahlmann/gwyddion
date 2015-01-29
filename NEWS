@@ -18,7 +18,8 @@ Modules:
 - Image export: It is possible do disable the frame if there are no rulers.
   False colour rendering for inverted gradients and default non-full mappings
   was corrected.  Title centering for non-square images was corrected.  A mask
-  colour sample can be rendered below the image with a label.
+  colour sample can be rendered below the image with a label.  Error message
+  saying ‘Success’ when exporting BMP files was fixed.
 - APE DAX: Can also import APDT files now.
 - NetCDF: The new setpoint variable ‘sranger_mk2_hwi_mix0_set_point’ is used
   for metadata, if found.
