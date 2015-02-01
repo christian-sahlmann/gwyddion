@@ -390,7 +390,7 @@ wdf_load(const gchar *filename,
     gint width, height, rowstride, bpp;
     gint xunits = 0, yunits = 0, zunits = 0;
     gint power10x, power10y, power10z, power10w;
-    guint norigins, units, type;
+    guint norigins, units, G_GNUC_UNUSED type;
     gchar origin_name[16];
     gdouble xreal, yreal, xscale, yscale, zscale, wscale;
     GdkPixbufLoader *loader;
