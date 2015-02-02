@@ -21,7 +21,6 @@ burleigh	managing-files
 calcoefs_load	caldata
 calcoefs_new	caldata
 calcoefs_simple	caldata
-calcoefs_stage	caldata
 calcoefs_view	caldata
 calibrate	basic-operations	dimensions-and-units
 codevfile	managing-files
@@ -62,6 +61,7 @@ fft_synth	synthetic	spectral-synthesis
 filter	filters	basic-filters
 fit_2d	leveling-and-background	fit-sphere
 fitsfile	managing-files
+flatten_base	leveling-and-background	flatten-base
 fraccor	editing-correction	fractal-correction
 fractal	fractal-analysis	fractal-dimension
 gdeffile	managing-files
@@ -191,6 +191,7 @@ scars	editing-correction	remove-scars
 sdfile	managing-files
 seiko	managing-files
 selectionmanager	selections	selection-manager
+semsim	presentations	semsim
 sensofar	managing-files
 sensolytics	managing-files
 sfunctions	statistical-analysis	sfunctions
@@ -236,5 +237,6 @@ wpour_mark	grain-analysis
 wsffile	managing-files
 wsxmfile	managing-files
 xydenoise	edit-extended	xy-denoise
+xyzexport	managing-files
 zeiss	managing-files
 zemax	managing-files
