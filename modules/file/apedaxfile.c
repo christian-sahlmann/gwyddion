@@ -39,6 +39,13 @@
  * Read
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * A.P.E. Research APDT
+ * .apdt
+ * Read
+ **/
+
 /*Includes*/
 
 #include "config.h"
