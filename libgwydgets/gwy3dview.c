@@ -2074,15 +2074,17 @@ gwy_3d_make_normals(GwyDataField *dfield,
 }
 
 #define GWY_3D_VERTEX(i,j) \
-  z = data[(yres-1 - (j))*xres + i];               \
-  color = colors + (yres-1 - (j))*rowstride + i*3; \
-  glNormal3d(normals[(j)*xres+i].x,                \
-             normals[(j)*xres+i].y,                \
-             normals[(j)*xres+i].z);               \
-  glColor3d((GLfloat) *(color)/255.,               \
-            (GLfloat) *(color+1)/255.,             \
-            (GLfloat) *(color+2)/255.);            \
-  glVertex3d(i*dx, (j)*dy, z);
+  do { \
+  z = data[(yres-1 - (j))*xres + (i)];               \
+  color = colors + (yres-1 - (j))*rowstride + (i)*3; \
+  glNormal3d(normals[(j)*xres+(i)].x,                \
+             normals[(j)*xres+(i)].y,                \
+             normals[(j)*xres+(i)].z);               \
+  glColor3d((GLfloat) *(color)/255.,                 \
+            (GLfloat) *(color+1)/255.,               \
+            (GLfloat) *(color+2)/255.);              \
+  glVertex3d((i)*dx, (j)*dy, z);                     \
+  } while (0)
 
 
 static void
