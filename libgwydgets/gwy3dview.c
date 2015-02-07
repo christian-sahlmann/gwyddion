@@ -1343,7 +1343,7 @@ gwy_3d_view_downsample_data(Gwy3DView *gwy3dview)
     gwy3dview->downsampled
         = gwy_data_field_new_resampled(gwy3dview->data_field,
                                        rx, ry, GWY_INTERPOLATION_BILINEAR);
-    if GWY_IS_DATA_FIELD(priv->mask_field) {
+    if (GWY_IS_DATA_FIELD(priv->mask_field)) {
         priv->downsampled_mask
           = gwy_data_field_new_resampled(priv->mask_field,
                                          rx, ry, GWY_INTERPOLATION_BILINEAR);
@@ -2115,7 +2115,7 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
     gwy_data_field_get_min_max(dfield, &data_min, &data_max);
 
     data = gwy_data_field_get_data_const(dfield);
-    if GWY_IS_DATA_FIELD(mask_field) {
+    if (GWY_IS_DATA_FIELD(mask_field)) {
         mask = gwy_data_field_get_data_const(mask_field);
     };
 
