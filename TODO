@@ -22,8 +22,8 @@ Release checklist:
 - check full rebuild
 - check and update NEWS, set release data, generate the HTML version
   (utils/gen-news.py)
-- generate on-line module list (make module-list in utils, may need manual
-  filtering of non-released modules)
+- generate on-line module list (run ./make-module-list in utils, may need
+  manual filtering of non-released modules)
 - generate stable API docs for gwyddion.net (using gwyddion.net-doc-build SVN
   module) and upload them
   docbase=$HOME/Projects/Gwyddion/gwyddion/devel-docs ./gendoc.sh
@@ -33,9 +33,12 @@ Release checklist:
 - sign packages and upload signatures
   gpg2 -u yeti@gwyddion.net -b gwyddion-2.28.tar.gz
 - update gwyddion main page
-- publish files on SourceForge
+- publish files at SourceForge
   rsync --progress -e ssh gwyddion-2.28.tar.xz yeti-dn@frs.sourceforge.net:/home/frs/project/gwyddion/gwyddion/2.28/
 - README.txt with release info should be uploaded from web browser; does not
   work well with rsync
+- publish project NEWS at Sourceforge in the ‘News’ blog
+- publish project on Freshcode.club (note: there is no login; just fill the
+  info)
 - send e-mail to the mailing lists
 - update the list of supported file formats in the user guide
