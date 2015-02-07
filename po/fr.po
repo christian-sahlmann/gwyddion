@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-02-03 03:58+0100\n"
+"POT-Creation-Date: 2015-02-07 21:39+0100\n"
 "PO-Revision-Date: 2015-02-03 19:34+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
@@ -125,9 +125,9 @@ msgid "contact: Hertz (paraboloid)"
 msgstr "contact : Hertz (paraboloïde)"
 
 #: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:665
-#: app/data-browser.c:2091 app/data-browser.c:2885 app/data-browser.c:3746
-#: app/data-browser.c:3905 app/data-browser.c:4191 app/data-browser.c:4605
-#: app/data-browser.c:6591 app/data-browser.c:6673 app/resource-editor.c:367
+#: app/data-browser.c:2091 app/data-browser.c:2885 app/data-browser.c:3745
+#: app/data-browser.c:3904 app/data-browser.c:4190 app/data-browser.c:4604
+#: app/data-browser.c:6590 app/data-browser.c:6672 app/resource-editor.c:367
 #: modules/process/convolution_filter.c:706
 msgid "Untitled"
 msgstr "Sans titre"
@@ -447,7 +447,7 @@ msgstr "Valeur"
 msgid "Area"
 msgstr "Surface"
 
-#: libprocess/gwygrainvalue.c:1094 app/data-browser.c:5109 app/toolbox.c:114
+#: libprocess/gwygrainvalue.c:1094 app/data-browser.c:5108 app/toolbox.c:114
 msgid "Volume"
 msgstr "Volume"
 
@@ -1524,44 +1524,44 @@ msgstr "Canal :"
 msgid "Section:"
 msgstr "Section :"
 
-#: app/data-browser.c:4982
+#: app/data-browser.c:4981
 msgid "Extract to a new file"
 msgstr "Extraire en tant que nouveau fichier"
 
-#: app/data-browser.c:4983
+#: app/data-browser.c:4982
 msgid "Duplicate"
 msgstr "Dupliquer"
 
-#: app/data-browser.c:4984
+#: app/data-browser.c:4983
 msgid "Delete"
 msgstr "Supprimer"
 
-#: app/data-browser.c:5029
+#: app/data-browser.c:5028
 msgid "Data Browser"
 msgstr "Navigateur de données"
 
-#: app/data-browser.c:5054
+#: app/data-browser.c:5053
 msgid "Close file"
 msgstr "Fermer le fichier"
 
-#: app/data-browser.c:5067
+#: app/data-browser.c:5066
 msgid "Channels"
 msgstr "Canaux"
 
-#: app/data-browser.c:5081 modules/volume/volume_extract.c:444
+#: app/data-browser.c:5080 modules/volume/volume_extract.c:444
 msgid "Graphs"
 msgstr "Graphes"
 
-#: app/data-browser.c:5095
+#: app/data-browser.c:5094
 msgid "Spectra"
 msgstr "Spectres"
 
-#: app/data-browser.c:6629
+#: app/data-browser.c:6628
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Canal inconnu %d"
 
-#: app/data-browser.c:6715
+#: app/data-browser.c:6714
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Volume %d inconnu"
@@ -2941,11 +2941,11 @@ msgstr "FileDescEnd n'a pas de FileDescBegin correspondant."
 msgid "FileDescBegin has no corresponding FileDescEnd."
 msgstr "FileDescBegin n'a pas de FileDescEnd correspondant."
 
-#: modules/file/apedaxfile.c:211
+#: modules/file/apedaxfile.c:218
 msgid "Imports A.P.E. Research DAX data files."
 msgstr "Importe les fichiers A.P.E. Research DAX."
 
-#: modules/file/apedaxfile.c:224
+#: modules/file/apedaxfile.c:231
 msgid "A.P.E. Research DAX Files (.dax) and APDT File (.apdt)"
 msgstr "A.P.E. Research DAX (.dax) et APDT (.apdt)"
 

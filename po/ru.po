@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-01-25 03:58+0100\n"
+"POT-Creation-Date: 2015-02-07 21:39+0100\n"
 "PO-Revision-Date: 2015-01-25 15:35+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
@@ -128,9 +128,9 @@ msgid "contact: Hertz (paraboloid)"
 msgstr "контакт: Герц (параболоид)"
 
 #: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:665
-#: app/data-browser.c:2091 app/data-browser.c:2885 app/data-browser.c:3746
-#: app/data-browser.c:3905 app/data-browser.c:4191 app/data-browser.c:4605
-#: app/data-browser.c:6591 app/data-browser.c:6673 app/resource-editor.c:367
+#: app/data-browser.c:2091 app/data-browser.c:2885 app/data-browser.c:3745
+#: app/data-browser.c:3904 app/data-browser.c:4190 app/data-browser.c:4604
+#: app/data-browser.c:6590 app/data-browser.c:6672 app/resource-editor.c:367
 #: modules/process/convolution_filter.c:706
 msgid "Untitled"
 msgstr "Безымянный"
@@ -450,7 +450,7 @@ msgstr "Значение"
 msgid "Area"
 msgstr "Площадь"
 
-#: libprocess/gwygrainvalue.c:1094 app/data-browser.c:5109 app/toolbox.c:114
+#: libprocess/gwygrainvalue.c:1094 app/data-browser.c:5108 app/toolbox.c:114
 msgid "Volume"
 msgstr "Объём"
 
@@ -1530,44 +1530,44 @@ msgstr "Канал:"
 msgid "Section:"
 msgstr "Сечение:"
 
-#: app/data-browser.c:4982
+#: app/data-browser.c:4981
 msgid "Extract to a new file"
 msgstr "Извлечь в новый файл"
 
-#: app/data-browser.c:4983
+#: app/data-browser.c:4982
 msgid "Duplicate"
 msgstr "Сделать копию"
 
-#: app/data-browser.c:4984
+#: app/data-browser.c:4983
 msgid "Delete"
 msgstr "Удалить"
 
-#: app/data-browser.c:5029
+#: app/data-browser.c:5028
 msgid "Data Browser"
 msgstr "Браузер данных"
 
-#: app/data-browser.c:5054
+#: app/data-browser.c:5053
 msgid "Close file"
 msgstr "Закрыть файл"
 
-#: app/data-browser.c:5067
+#: app/data-browser.c:5066
 msgid "Channels"
 msgstr "Каналы"
 
-#: app/data-browser.c:5081 modules/volume/volume_extract.c:444
+#: app/data-browser.c:5080 modules/volume/volume_extract.c:444
 msgid "Graphs"
 msgstr "Графики"
 
-#: app/data-browser.c:5095
+#: app/data-browser.c:5094
 msgid "Spectra"
 msgstr "Спектры"
 
-#: app/data-browser.c:6629
+#: app/data-browser.c:6628
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Неизвестный канал %d"
 
-#: app/data-browser.c:6715
+#: app/data-browser.c:6714
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Неизвестный объём %d"
@@ -2949,11 +2949,11 @@ msgstr "Для FileDescEnd не найден соответствующий File
 msgid "FileDescBegin has no corresponding FileDescEnd."
 msgstr "Для FileDescBegin не найден соответствующий FileDescEnd."
 
-#: modules/file/apedaxfile.c:210
+#: modules/file/apedaxfile.c:218
 msgid "Imports A.P.E. Research DAX data files."
 msgstr "Импортирует файлы данных A.P.E. Research DAX."
 
-#: modules/file/apedaxfile.c:223
+#: modules/file/apedaxfile.c:231
 msgid "A.P.E. Research DAX Files (.dax) and APDT File (.apdt)"
 msgstr "Файлы A.P.E. Research DAX (.dax) и APDT (.apdt)"
 
@@ -3313,39 +3313,6 @@ msgstr "Импорт файла отменён пользователем"
 msgid "Missing header."
 msgstr "Отсутствует заголовок."
 
-#: modules/file/err.h:209
-msgid "Unknown error"
-msgstr "Неизвестная ошибка"
-
-#: modules/file/err.h:214
-msgid "End of file"
-msgstr "Конец файла"
-
-#: modules/file/err.h:216
-msgid "End of list of files"
-msgstr "Конец списка файлов"
-
-#: modules/file/err.h:218
-msgid "Parameter error"
-msgstr "Ошибка параметра"
-
-#: modules/file/err.h:220
-msgid "Bad zip file"
-msgstr "Плохой файл zip"
-
-#: modules/file/err.h:222
-msgid "Internal error"
-msgstr "Внутренняя ошибка"
-
-#: modules/file/err.h:224
-msgid "CRC error"
-msgstr "Ошибка контрольной суммы"
-
-#: modules/file/err.h:227
-#, c-format
-msgid "Minizip error while reading the zip file: %s."
-msgstr "Ошибка minizip при чтении zip-файла: %s."
-
 #: modules/file/ezdfile.c:135
 msgid "Imports Nanosurf EZD and NID data files."
 msgstr "Импортирует файлы данных Nanosurf EZD и NID."
@@ -3415,7 +3382,7 @@ msgid "CFITSIO error while reading the FITS file: %s."
 msgstr "Ошибка CFITSIO при чтении файла FITS: %s."
 
 #: modules/file/fitsfile.c:159 modules/file/fitsfile.c:171
-#: modules/file/fitsfile.c:182 modules/file/spmxfile.c:396
+#: modules/file/fitsfile.c:182 modules/file/spmxfile.c:397
 msgid "Only two-dimensional images are supported."
 msgstr "Поддерживаются только двумерные изображения."
 
@@ -3484,6 +3451,39 @@ msgid ""
 msgstr ""
 "Разбор данных завершился успешно, но в результате был получен неожиданный "
 "объект %s."
+
+#: modules/file/gwyminizip.h:119
+msgid "Unknown error"
+msgstr "Неизвестная ошибка"
+
+#: modules/file/gwyminizip.h:124
+msgid "End of file"
+msgstr "Конец файла"
+
+#: modules/file/gwyminizip.h:126
+msgid "End of list of files"
+msgstr "Конец списка файлов"
+
+#: modules/file/gwyminizip.h:128
+msgid "Parameter error"
+msgstr "Ошибка параметра"
+
+#: modules/file/gwyminizip.h:130
+msgid "Bad zip file"
+msgstr "Плохой файл zip"
+
+#: modules/file/gwyminizip.h:132
+msgid "Internal error"
+msgstr "Внутренняя ошибка"
+
+#: modules/file/gwyminizip.h:134
+msgid "CRC error"
+msgstr "Ошибка контрольной суммы"
+
+#: modules/file/gwyminizip.h:137
+#, c-format
+msgid "Minizip error while reading the zip file: %s."
+msgstr "Ошибка minizip при чтении zip-файла: %s."
 
 #: modules/file/gwytiff.h:324
 #, c-format
@@ -4594,22 +4594,22 @@ msgstr "Заголовок закончился внутри таблицы Mult
 msgid "Missing data start marker \\x1a\\x04."
 msgstr "Отсутствует маркер начала данных \\x1a\\x04."
 
-#: modules/file/nanoobserver.c:116
+#: modules/file/nanoobserver.c:119
 msgid "Reads NanoObserver .nao files."
 msgstr "Читает файлы NanoObserver .nao."
 
-#: modules/file/nanoobserver.c:129
+#: modules/file/nanoobserver.c:132
 msgid "NanoObserver data (.nao)"
 msgstr "Данные NanoObserver (.nao)"
 
-#: modules/file/nanoobserver.c:187 modules/file/nanoscantech.c:204
-#: modules/file/opengps.c:215 modules/file/spmxfile.c:172
+#: modules/file/nanoobserver.c:198 modules/file/nanoscantech.c:205
+#: modules/file/opengps.c:216 modules/file/spmxfile.c:173
 msgid "Minizip cannot open the file as a ZIP file."
 msgstr "Minizip не может открыть файл как архив ZIP."
 
-#: modules/file/nanoobserver.c:459 modules/file/opengps.c:504
-#: modules/file/opengps.c:704 modules/file/opengps.c:740
-#: modules/file/spmxfile.c:216 modules/file/spmxfile.c:524
+#: modules/file/nanoobserver.c:473 modules/file/opengps.c:505
+#: modules/file/opengps.c:705 modules/file/opengps.c:741
+#: modules/file/spmxfile.c:217 modules/file/spmxfile.c:525
 #, c-format
 msgid "File %s is missing in the zip file."
 msgstr "Файл %s отсутствует в zip-архиве."
@@ -4626,11 +4626,11 @@ msgstr "Файлы NanoScan XML (.xml)"
 msgid "Wrong size of Base64 encoded data."
 msgstr "Неправильный размер данных, кодированных Base64."
 
-#: modules/file/nanoscantech.c:129
+#: modules/file/nanoscantech.c:130
 msgid "Imports NanoScanTech .nstdat files."
 msgstr "Импортирует файлы NanoScanTech .nstdat"
 
-#: modules/file/nanoscantech.c:142
+#: modules/file/nanoscantech.c:143
 msgid "NanoScanTech data (.nstdat)"
 msgstr "Данные NanoScanTech (.nstdat)"
 
@@ -5001,25 +5001,25 @@ msgstr "Найдены вложенные каталоги"
 msgid "Truncated data in block %s"
 msgstr "Неполные данные в блоке %s"
 
-#: modules/file/opengps.c:139
+#: modules/file/opengps.c:140
 msgid "Reads ISO 5436-2 OpenGPS .x3p files."
 msgstr "Читает файлы ISO 5436-2 OpenGPS .x3p."
 
-#: modules/file/opengps.c:152
+#: modules/file/opengps.c:153
 msgid "ISO 5436-2 OpenGPS data (.x3p)"
 msgstr "Данные ISO 5436-2 OpenGPS (.x3p)"
 
-#: modules/file/opengps.c:427 modules/file/opengps.c:460
+#: modules/file/opengps.c:428 modules/file/opengps.c:461
 msgid "Too many DataList items for given matrix dimensions."
 msgstr "Слишком много элементов DataList для заданных размеров матрицы."
 
-#: modules/file/opengps.c:554
+#: modules/file/opengps.c:555
 msgid "File main.xml contains multiple data elements."
 msgstr "Файл main.xml содержит несколько элементов данных."
 
 #. TRANSLATORS: type and axis are symbols such as I, CX, ...
-#: modules/file/opengps.c:586 modules/file/opengps.c:594
-#: modules/file/opengps.c:602
+#: modules/file/opengps.c:587 modules/file/opengps.c:595
+#: modules/file/opengps.c:603
 #, c-format
 msgid "Only type %s is supported for axis %s."
 msgstr "Только тип %s доступен для оси %s."
@@ -5943,11 +5943,11 @@ msgstr "Файлы с плавающей точкой SPMLab (.flt)"
 msgid "Missing data start marker [Data]."
 msgstr "Отсутствует маркер начала данных [Data]."
 
-#: modules/file/spmxfile.c:96
+#: modules/file/spmxfile.c:97
 msgid "Reads ATC SPMxFormat files."
 msgstr "Читает файлы ATC SPMxFormat."
 
-#: modules/file/spmxfile.c:109
+#: modules/file/spmxfile.c:110
 msgid "ATC SPMxFormat data (.spm)"
 msgstr "Данные ATC SPMxFormat (.spm)"
 

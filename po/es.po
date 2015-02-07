@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2014-11-14 16:38+0100\n"
+"POT-Creation-Date: 2015-02-07 21:39+0100\n"
 "PO-Revision-Date: 2014-09-06 17:28+0200\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: the Gwyddion team <gwyddion.net>\n"
@@ -123,82 +123,91 @@ msgid "contact: Hertz (paraboloid)"
 msgstr ""
 
 #: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:665
-#: app/data-browser.c:2091 app/data-browser.c:2885 app/data-browser.c:3741
-#: app/data-browser.c:3900 app/data-browser.c:4186 app/data-browser.c:4600
-#: app/data-browser.c:6586 app/data-browser.c:6668 app/resource-editor.c:367
+#: app/data-browser.c:2091 app/data-browser.c:2885 app/data-browser.c:3745
+#: app/data-browser.c:3904 app/data-browser.c:4190 app/data-browser.c:4604
+#: app/data-browser.c:6590 app/data-browser.c:6672 app/resource-editor.c:367
 #: modules/process/convolution_filter.c:706
 msgid "Untitled"
 msgstr "Sin título"
 
-#: libgwyddion/gwynlfitpreset.c:1205 libprocess/gwyprocessenums.c:101
+#: libgwyddion/gwynlfitpreset.c:1367 libprocess/gwyprocessenums.c:101
 msgid "Gaussian"
 msgstr "Gaussiano"
 
-#: libgwyddion/gwynlfitpreset.c:1221
+#: libgwyddion/gwynlfitpreset.c:1383
 msgid "Gaussian (PSDF)"
 msgstr "Gaussiano (PSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1235
+#: libgwyddion/gwynlfitpreset.c:1397
 msgid "Gaussian (ACF)"
 msgstr "Gaussiano (ACF)"
 
-#: libgwyddion/gwynlfitpreset.c:1249
+#: libgwyddion/gwynlfitpreset.c:1411
 msgid "Gaussian (HHCF)"
 msgstr "Gaussiano (HHCF)"
 
-#: libgwyddion/gwynlfitpreset.c:1263
+#: libgwyddion/gwynlfitpreset.c:1425
 msgid "Gaussian (RPSDF)"
 msgstr "Gaussiano (RPSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1277
+#: libgwyddion/gwynlfitpreset.c:1439
+#, fuzzy
+msgid "Two Gaussians (PSDF)"
+msgstr "Gaussiano (PSDF)"
+
+#: libgwyddion/gwynlfitpreset.c:1455
 msgid "Exponential"
 msgstr "Exponencial"
 
-#: libgwyddion/gwynlfitpreset.c:1290
+#: libgwyddion/gwynlfitpreset.c:1468
 msgid "Exponential (PSDF)"
 msgstr "Exponencial (PSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1304
+#: libgwyddion/gwynlfitpreset.c:1482
 msgid "Exponential (ACF)"
 msgstr "Exponencial(ACF)"
 
-#: libgwyddion/gwynlfitpreset.c:1317
+#: libgwyddion/gwynlfitpreset.c:1495
 msgid "Exponential (HHCF)"
 msgstr "Exponencial(HHCF)"
 
-#: libgwyddion/gwynlfitpreset.c:1331
+#: libgwyddion/gwynlfitpreset.c:1509
 msgid "Exponential (RPSDF)"
 msgstr "Exponencial(RPSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1346
+#: libgwyddion/gwynlfitpreset.c:1524
 msgid "Polynomial (order 0)"
 msgstr "Polinomial(orden 0)"
 
-#: libgwyddion/gwynlfitpreset.c:1358
+#: libgwyddion/gwynlfitpreset.c:1536
 msgid "Polynomial (order 1)"
 msgstr "Polinomial(orden 1)"
 
-#: libgwyddion/gwynlfitpreset.c:1370
+#: libgwyddion/gwynlfitpreset.c:1548
 msgid "Polynomial (order 2)"
 msgstr "Polinomial (orden 2)"
 
-#: libgwyddion/gwynlfitpreset.c:1383
+#: libgwyddion/gwynlfitpreset.c:1561
 msgid "Polynomial (order 3)"
 msgstr "Polinomial(orden 3)"
 
-#: libgwyddion/gwynlfitpreset.c:1397
+#: libgwyddion/gwynlfitpreset.c:1575
 msgid "Square wave"
 msgstr "Onda cuadrada"
 
-#: libgwyddion/gwynlfitpreset.c:1414
+#: libgwyddion/gwynlfitpreset.c:1592
+msgid "Parabolic step"
+msgstr ""
+
+#: libgwyddion/gwynlfitpreset.c:1609
 msgid "Power"
 msgstr "Potenciación"
 
-#: libgwyddion/gwynlfitpreset.c:1427
+#: libgwyddion/gwynlfitpreset.c:1622
 msgid "Lorentzian"
 msgstr "Lorentziana"
 
-#: libgwyddion/gwynlfitpreset.c:1442
+#: libgwyddion/gwynlfitpreset.c:1637
 msgid "Sinc"
 msgstr "Sinc"
 
@@ -430,7 +439,7 @@ msgid "Position"
 msgstr "Posición"
 
 #: libprocess/gwygrainvalue.c:1092 app/meta.c:384
-#: modules/file/imgexport.c:3934 modules/process/curvature.c:746
+#: modules/file/imgexport.c:4157 modules/process/curvature.c:747
 #: modules/tools/level3.c:457 modules/tools/readvalue.c:297
 msgid "Value"
 msgstr "Valor"
@@ -439,7 +448,7 @@ msgstr "Valor"
 msgid "Area"
 msgstr "Área"
 
-#: libprocess/gwygrainvalue.c:1094 app/data-browser.c:5104 app/toolbox.c:114
+#: libprocess/gwygrainvalue.c:1094 app/data-browser.c:5108 app/toolbox.c:114
 msgid "Volume"
 msgstr "Volumen"
 
@@ -455,7 +464,8 @@ msgstr "Límite"
 msgid "Slope"
 msgstr "Rampa"
 
-#: libprocess/gwygrainvalue.c:1097 modules/process/curvature.c:603
+#: libprocess/gwygrainvalue.c:1097 modules/process/curvature.c:205
+#: modules/process/curvature.c:604
 msgid "Curvature"
 msgstr "Curvatura"
 
@@ -550,12 +560,12 @@ msgid "Scale and space adaptive"
 msgstr "Adaptable en en escala y espacio"
 
 #. TRANSLATORS: Interpolation type (AKA nearest neighbour)
-#: libprocess/gwyprocessenums.c:207 modules/file/imgexport.c:3208
+#: libprocess/gwyprocessenums.c:207 modules/file/imgexport.c:3377
 #: modules/file/rawxyz.c:685
 msgid "Round"
 msgstr "Redondo"
 
-#: libprocess/gwyprocessenums.c:208 modules/file/imgexport.c:3209
+#: libprocess/gwyprocessenums.c:208 modules/file/imgexport.c:3378
 #: modules/file/rawxyz.c:686
 msgid "Linear"
 msgstr "Lineal"
@@ -720,50 +730,50 @@ msgstr ""
 msgid "Starting full estimation"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:502
+#: libgwydgets/gwy3dwindow.c:504
 msgid "Rotate view (R)"
 msgstr "Rotar vista (R)"
 
-#: libgwydgets/gwy3dwindow.c:507
+#: libgwydgets/gwy3dwindow.c:509
 msgid "Scale view as a whole (S)"
 msgstr "Usar escala de la vista al completo (S)"
 
-#: libgwydgets/gwy3dwindow.c:512
+#: libgwydgets/gwy3dwindow.c:514
 msgid "Scale value range (V)"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:517
+#: libgwydgets/gwy3dwindow.c:519
 msgid "Move light source (L)"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:599
+#: libgwydgets/gwy3dwindow.c:601
 msgid "Show full controls"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:626
+#: libgwydgets/gwy3dwindow.c:628
 msgid "Hide full controls"
 msgstr "Esconder controles completos"
 
-#: libgwydgets/gwy3dwindow.c:642 modules/file/imgexport.c:4105
+#: libgwydgets/gwy3dwindow.c:644 modules/file/imgexport.c:4328
 msgid "adjective|Basic"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:647
+#: libgwydgets/gwy3dwindow.c:649
 msgid "Light & Material"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:652
+#: libgwydgets/gwy3dwindow.c:654
 msgid "Labels"
 msgstr "Etiquetas"
 
-#: libgwydgets/gwy3dwindow.c:765 modules/process/facet_analysis.c:359
+#: libgwydgets/gwy3dwindow.c:767 modules/process/facet_analysis.c:359
 #: modules/process/facet_analysis.c:375 modules/process/shade.c:253
 #: modules/process/tilt.c:222
 msgid "φ:"
 msgstr "φ:"
 
-#: libgwydgets/gwy3dwindow.c:765 libgwydgets/gwy3dwindow.c:771
-#: libgwydgets/gwy3dwindow.c:949 libgwydgets/gwy3dwindow.c:957
+#: libgwydgets/gwy3dwindow.c:767 libgwydgets/gwy3dwindow.c:773
+#: libgwydgets/gwy3dwindow.c:960 libgwydgets/gwy3dwindow.c:968
 #: modules/process/facet_analysis.c:403 modules/process/indent_analyze.c:461
 #: modules/process/rotate.c:286 modules/process/shade.c:245
 #: modules/process/shade.c:253 modules/process/tilt.c:210
@@ -772,150 +782,154 @@ msgstr "φ:"
 msgid "deg"
 msgstr "grad"
 
-#: libgwydgets/gwy3dwindow.c:771 modules/process/facet_analysis.c:358
+#: libgwydgets/gwy3dwindow.c:773 modules/process/facet_analysis.c:358
 #: modules/process/facet_analysis.c:374 modules/process/shade.c:245
 #: modules/process/tilt.c:210
 msgid "θ:"
 msgstr "θ:"
 
-#: libgwydgets/gwy3dwindow.c:776 modules/process/cwt.c:151
+#: libgwydgets/gwy3dwindow.c:778 modules/process/cwt.c:151
 msgid "_Scale:"
 msgstr "E_scala:"
 
-#: libgwydgets/gwy3dwindow.c:783
+#: libgwydgets/gwy3dwindow.c:785
 msgid "_Value scale:"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:788
+#: libgwydgets/gwy3dwindow.c:790
 msgid "Ph_ysical scale:"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:799
+#: libgwydgets/gwy3dwindow.c:801
 msgid "verb|Set"
 msgstr "Ajustar"
 
-#: libgwydgets/gwy3dwindow.c:807
+#: libgwydgets/gwy3dwindow.c:809
 msgid "Show _axes"
 msgstr ""
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "xfce4-sensors-plugin"
-#: libgwydgets/gwy3dwindow.c:816
+#: libgwydgets/gwy3dwindow.c:818
 msgid "Show _labels"
 msgstr "Mostrar _etiquetas"
 
-#: libgwydgets/gwy3dwindow.c:825
+#: libgwydgets/gwy3dwindow.c:827
 msgid "Show false _colorbar"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:834
+#: libgwydgets/gwy3dwindow.c:836
 msgid "_Ortographic projection"
 msgstr "Proyección _ortográfica"
 
-#: libgwydgets/gwy3dwindow.c:850
+#: libgwydgets/gwy3dwindow.c:845
+msgid "_Hide masked"
+msgstr ""
+
+#: libgwydgets/gwy3dwindow.c:861
 msgid "_Lighting"
 msgstr "_Iluminación:"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "gimp"
-#: libgwydgets/gwy3dwindow.c:851
+#: libgwydgets/gwy3dwindow.c:862
 msgid "_Gradient"
 msgstr "_Degradado"
 
-#: libgwydgets/gwy3dwindow.c:852
+#: libgwydgets/gwy3dwindow.c:863
 msgid "_Overlay"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:853
+#: libgwydgets/gwy3dwindow.c:864
 msgid "_Overlay - no light"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:926
+#: libgwydgets/gwy3dwindow.c:937
 msgid "_Material:"
 msgstr "_Material:"
 
-#: libgwydgets/gwy3dwindow.c:949
+#: libgwydgets/gwy3dwindow.c:960
 msgid "_Light φ:"
 msgstr "_Luz φ:"
 
-#: libgwydgets/gwy3dwindow.c:957
+#: libgwydgets/gwy3dwindow.c:968
 msgid "L_ight θ:"
 msgstr "L_uz θ:"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "gretl"
-#: libgwydgets/gwy3dwindow.c:1050
+#: libgwydgets/gwy3dwindow.c:1061
 msgid "X-axis"
 msgstr "eje X"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "gretl"
-#: libgwydgets/gwy3dwindow.c:1051
+#: libgwydgets/gwy3dwindow.c:1062
 msgid "Y-axis"
 msgstr "eje Y"
 
-#: libgwydgets/gwy3dwindow.c:1052
+#: libgwydgets/gwy3dwindow.c:1063
 msgid "Minimum z value"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:1053
+#: libgwydgets/gwy3dwindow.c:1064
 msgid "Maximum z value"
 msgstr ""
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "plugin_htmlbar"
-#: libgwydgets/gwy3dwindow.c:1076
+#: libgwydgets/gwy3dwindow.c:1087 modules/file/imgexport.c:3422
 msgid "_Label:"
 msgstr "E_tiqueta:"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "drivel"
-#: libgwydgets/gwy3dwindow.c:1081
+#: libgwydgets/gwy3dwindow.c:1092
 msgid "_Text:"
 msgstr "_Texto:"
 
-#: libgwydgets/gwy3dwindow.c:1101
+#: libgwydgets/gwy3dwindow.c:1112
 msgid "Move label"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:1110
+#: libgwydgets/gwy3dwindow.c:1121
 msgid "_Horizontally:"
 msgstr "_Horizontalmente:"
 
-#: libgwydgets/gwy3dwindow.c:1120
+#: libgwydgets/gwy3dwindow.c:1131
 msgid "_Vertically:"
 msgstr "_Verticalmente:"
 
-#: libgwydgets/gwy3dwindow.c:1128
+#: libgwydgets/gwy3dwindow.c:1139
 msgid "Scale size _automatically"
 msgstr ""
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "plugin_htmlbar"
-#: libgwydgets/gwy3dwindow.c:1140 modules/tools/filter.c:254
+#: libgwydgets/gwy3dwindow.c:1151 modules/tools/filter.c:254
 msgid "Si_ze:"
 msgstr "_Tamaño:"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "avant-window-navigator"
-#: libgwydgets/gwy3dwindow.c:1140 modules/process/cwt.c:151
+#: libgwydgets/gwy3dwindow.c:1151 modules/process/cwt.c:151
 #: modules/process/hough.c:212
 msgid "pixels"
 msgstr "píxeles"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "aisleriot"
-#: libgwydgets/gwy3dwindow.c:1148 modules/file/hdrimage.cc:2213
-#: modules/file/imgexport.c:4069 modules/file/pixmap.c:791
+#: libgwydgets/gwy3dwindow.c:1159 modules/file/hdrimage.cc:2213
+#: modules/file/imgexport.c:4292 modules/file/pixmap.c:791
 #: modules/file/rawfile.c:402 modules/process/angle_dist.c:172
 #: modules/process/calcoefs_new.c:347 modules/process/calibrate.c:392
 #: modules/process/col_synth.c:387 modules/process/correct_affine.c:307
-#: modules/process/curvature.c:605 modules/process/cwt.c:135
+#: modules/process/curvature.c:606 modules/process/cwt.c:135
 #: modules/process/deposit_synth.c:361 modules/process/diff_synth.c:422
 #: modules/process/domain_synth.c:366 modules/process/drift.c:240
 #: modules/process/dwt.c:166 modules/process/dwtanisotropy.c:184
 #: modules/process/edge.c:651 modules/process/extend.c:192
-#: modules/process/facet-level.c:190 modules/process/facet_analysis.c:276
+#: modules/process/facet-level.c:191 modules/process/facet_analysis.c:276
 #: modules/process/fbm_synth.c:315 modules/process/fft.c:258
 #: modules/process/fft_filter_2d.c:444 modules/process/fft_synth.c:351
 #: modules/process/fractal.c:207 modules/process/grain_edge.c:218
@@ -929,28 +943,29 @@ msgstr "píxeles"
 #: modules/process/polydistort.c:218 modules/process/polylevel.c:377
 #: modules/process/rank.c:132 modules/process/rotate.c:266
 #: modules/process/scale.c:196 modules/process/scars.c:477
-#: modules/process/shade.c:216 modules/process/slope_dist.c:268
-#: modules/process/sphere-revolve.c:218 modules/process/tilt.c:160
-#: modules/process/tip_model.c:170 modules/process/unrotate.c:228
-#: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:361
-#: modules/process/wpour_mark.c:296 modules/volume/volume_calibrate.c:371
-#: modules/volume/volume_extract.c:331 modules/volume/volume_kmeans.c:142
+#: modules/process/semsim.c:211 modules/process/shade.c:216
+#: modules/process/slope_dist.c:268 modules/process/sphere-revolve.c:218
+#: modules/process/tilt.c:160 modules/process/tip_model.c:170
+#: modules/process/unrotate.c:228 modules/process/volumize_layers.c:213
+#: modules/process/wave_synth.c:361 modules/process/wpour_mark.c:296
+#: modules/volume/volume_calibrate.c:371 modules/volume/volume_extract.c:331
+#: modules/volume/volume_kmeans.c:142 modules/volume/volume_kmedians.c:147
 msgid "_Reset"
 msgstr "_Reiniciar"
 
-#: libgwydgets/gwy3dwindow.c:1599 libgwydgets/gwy3dwindow.c:1652
+#: libgwydgets/gwy3dwindow.c:1624 libgwydgets/gwy3dwindow.c:1677
 msgid "S_witch to Lighting Mode"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:1607 libgwydgets/gwy3dwindow.c:1629
+#: libgwydgets/gwy3dwindow.c:1632 libgwydgets/gwy3dwindow.c:1654
 msgid "S_witch to Overlay Mode"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:1621 libgwydgets/gwy3dwindow.c:1644
+#: libgwydgets/gwy3dwindow.c:1646 libgwydgets/gwy3dwindow.c:1669
 msgid "S_witch to Color Gradient Mode"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:1660
+#: libgwydgets/gwy3dwindow.c:1685
 msgid "T_oggle light"
 msgstr ""
 
@@ -984,7 +999,7 @@ msgid "Hidden"
 msgstr "Oculto"
 
 #: libgwydgets/gwydgetenums.c:47 libgwydgets/gwygraphwindowmeasuredialog.c:572
-#: modules/file/imgexport.c:462 modules/tools/selectionmanager.c:259
+#: modules/file/imgexport.c:470 modules/tools/selectionmanager.c:259
 msgid "Points"
 msgstr "Puntos"
 
@@ -1005,7 +1020,7 @@ msgstr "Cantidad"
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "abiword"
 #: libgwydgets/gwygrainvaluemenu.c:194 libgwydgets/gwygrainvaluemenu.c:207
-#: modules/process/curvature.c:737
+#: modules/process/curvature.c:738
 msgid "Symbol"
 msgstr "Símbolo"
 
@@ -1039,7 +1054,7 @@ msgstr ""
 msgid "_Line type:"
 msgstr ""
 
-#: libgwydgets/gwygraphareadialog.c:167 modules/file/imgexport.c:2618
+#: libgwydgets/gwygraphareadialog.c:167 modules/file/imgexport.c:2735
 msgid "Line t_hickness:"
 msgstr ""
 
@@ -1238,7 +1253,7 @@ msgstr ""
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "audacious-plugins"
-#: libgwydgets/gwygraphwindowmeasuredialog.c:553
+#: libgwydgets/gwygraphwindowmeasuredialog.c:553 modules/process/semsim.c:249
 msgid "Method:"
 msgstr "Método:"
 
@@ -1259,7 +1274,7 @@ msgstr "Preferidos"
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "lang"
 #: libgwydgets/gwyoptionmenus.c:470 app/meta.c:383
-#: modules/file/imgexport.c:3499 modules/file/imgexport.c:3916
+#: modules/file/imgexport.c:3713 modules/file/imgexport.c:4139
 #: modules/file/rawfile.c:961 modules/process/convolution_filter.c:553
 #: modules/process/neural.c:413 modules/tools/selectionmanager.c:331
 msgid "Name"
@@ -1607,7 +1622,7 @@ msgstr "RMS"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "centerim"
-#: app/app.c:1489 modules/file/asciiexport.c:186
+#: app/app.c:1489 modules/file/asciiexport.c:186 modules/file/xyzexport.c:189
 msgid "Channel:"
 msgstr "Canal:"
 
@@ -1617,50 +1632,50 @@ msgstr "Canal:"
 msgid "Section:"
 msgstr "Sección: "
 
-#: app/data-browser.c:4977
+#: app/data-browser.c:4981
 msgid "Extract to a new file"
 msgstr "Extraer a un nuevo archivo"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "gtk2_ardour"
-#: app/data-browser.c:4978
+#: app/data-browser.c:4982
 msgid "Duplicate"
 msgstr "Duplicar"
 
-#: app/data-browser.c:4979
+#: app/data-browser.c:4983
 msgid "Delete"
 msgstr "Suprimir"
 
-#: app/data-browser.c:5024
+#: app/data-browser.c:5028
 msgid "Data Browser"
 msgstr ""
 
-#: app/data-browser.c:5049
+#: app/data-browser.c:5053
 msgid "Close file"
 msgstr "Cierra archivo"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "gtk2_ardour"
-#: app/data-browser.c:5062
+#: app/data-browser.c:5066
 msgid "Channels"
 msgstr "Canales"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "amule"
-#: app/data-browser.c:5076 modules/volume/volume_extract.c:444
+#: app/data-browser.c:5080 modules/volume/volume_extract.c:444
 msgid "Graphs"
 msgstr "Gráficos"
 
-#: app/data-browser.c:5090
+#: app/data-browser.c:5094
 msgid "Spectra"
 msgstr "Espectros"
 
-#: app/data-browser.c:6624
+#: app/data-browser.c:6628
 #, c-format
 msgid "Unknown channel %d"
 msgstr ""
 
-#: app/data-browser.c:6710
+#: app/data-browser.c:6714
 #, c-format
 msgid "Unknown volume %d"
 msgstr ""
@@ -2052,7 +2067,7 @@ msgstr "_Cerrar"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "abiword"
-#: app/log.c:524 modules/file/imgexport.c:3507 modules/file/rawfile.c:962
+#: app/log.c:524 modules/file/imgexport.c:3721 modules/file/rawfile.c:962
 msgid "Type"
 msgstr "Tipo"
 
@@ -2064,7 +2079,7 @@ msgstr "Función"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "audacity"
-#: app/log.c:526 modules/file/imgexport.c:2585 modules/process/neural.c:610
+#: app/log.c:526 modules/file/imgexport.c:2702 modules/process/neural.c:610
 #: modules/tools/stats.c:407
 msgid "Parameters"
 msgstr "Parámetros"
@@ -2121,7 +2136,7 @@ msgstr ""
 msgid "_New"
 msgstr "_Nuevo"
 
-#: app/meta.c:212 modules/file/imgexport.c:3981 modules/file/rawfile.c:1024
+#: app/meta.c:212 modules/file/imgexport.c:4204 modules/file/rawfile.c:1024
 #: modules/process/neural.c:711
 msgid "_Delete"
 msgstr "_Suprimir"
@@ -2961,12 +2976,13 @@ msgstr ""
 msgid "FileDescBegin has no corresponding FileDescEnd."
 msgstr ""
 
-#: modules/file/apedaxfile.c:135
+#: modules/file/apedaxfile.c:218
 msgid "Imports A.P.E. Research DAX data files."
 msgstr "Importa A.P.E. Research DAX archivos de datos."
 
-#: modules/file/apedaxfile.c:148
-msgid "A.P.E. Research DAX Files (.dax)"
+#: modules/file/apedaxfile.c:231
+#, fuzzy
+msgid "A.P.E. Research DAX Files (.dax) and APDT File (.apdt)"
 msgstr "Archivos A.P.E. Research DAX (.dax)"
 
 #: modules/file/apefile.c:196
@@ -2997,7 +3013,7 @@ msgstr "Anchura:"
 msgid "Height:"
 msgstr "Altura:"
 
-#: modules/file/asciiexport.c:219
+#: modules/file/asciiexport.c:219 modules/file/xyzexport.c:198
 msgid "Value units:"
 msgstr ""
 
@@ -3007,28 +3023,29 @@ msgstr ""
 msgid "Export Text"
 msgstr "Exportar Texto"
 
-#: modules/file/asciiexport.c:274 modules/file/imgexport.c:3542
+#: modules/file/asciiexport.c:274 modules/file/imgexport.c:3756
 #: modules/file/rawfile.c:724 modules/file/rawxyz.c:673
-#: modules/process/calibrate.c:605 modules/process/col_synth.c:517
-#: modules/process/correct_affine.c:490 modules/process/diff_synth.c:573
-#: modules/process/extend.c:259 modules/process/fft_filter_1d.c:297
-#: modules/process/grain_dist.c:304 modules/process/grain_edge.c:271
-#: modules/process/grain_mark.c:345 modules/process/grain_wshed.c:279
-#: modules/process/slope_dist.c:348 modules/process/tip_blind.c:361
-#: modules/process/wpour_mark.c:382 modules/tools/spotremove.c:322
-#: modules/tools/stats.c:384
+#: modules/file/xyzexport.c:289 modules/process/calibrate.c:605
+#: modules/process/col_synth.c:517 modules/process/correct_affine.c:490
+#: modules/process/diff_synth.c:573 modules/process/extend.c:259
+#: modules/process/fft_filter_1d.c:297 modules/process/grain_dist.c:304
+#: modules/process/grain_edge.c:271 modules/process/grain_mark.c:345
+#: modules/process/grain_wshed.c:279 modules/process/slope_dist.c:348
+#: modules/process/tip_blind.c:361 modules/process/wpour_mark.c:382
+#: modules/tools/spotremove.c:322 modules/tools/stats.c:384
 msgid "Options"
 msgstr "Opciones"
 
-#: modules/file/asciiexport.c:277
+#: modules/file/asciiexport.c:277 modules/file/xyzexport.c:292
 msgid "Use _dot as decimal separator"
 msgstr ""
 
-#: modules/file/asciiexport.c:284 modules/process/grain_dist.c:315
+#: modules/file/asciiexport.c:284 modules/file/xyzexport.c:299
+#: modules/process/grain_dist.c:315
 msgid "Add _informational comment header"
 msgstr ""
 
-#: modules/file/asciiexport.c:293
+#: modules/file/asciiexport.c:293 modules/file/xyzexport.c:308
 msgid "_Precision:"
 msgstr ""
 
@@ -3247,8 +3264,8 @@ msgstr "Archivos ECS (.img)"
 msgid "Scan size header field overlaps with data."
 msgstr ""
 
-#: modules/file/err.h:48 modules/file/nrrdfile.c:718
-#: modules/file/nrrdfile.c:763
+#: modules/file/err.h:48 modules/file/nrrdfile.c:764
+#: modules/file/nrrdfile.c:809
 #, c-format
 msgid "Cannot read from file: %s."
 msgstr ""
@@ -3324,47 +3341,6 @@ msgstr ""
 msgid "Missing header."
 msgstr ""
 
-# Translation for this string generated by http://littlesvr.ca/ostd/
-# based on translation from "bacula"
-#: modules/file/err.h:209
-msgid "Unknown error"
-msgstr "Error desconocido"
-
-# Translation for this string generated by http://littlesvr.ca/ostd/
-# based on translation from "gimp"
-#: modules/file/err.h:214
-msgid "End of file"
-msgstr "Fin del archivo"
-
-#: modules/file/err.h:216
-msgid "End of list of files"
-msgstr ""
-
-# Translation for this string generated by http://littlesvr.ca/ostd/
-# based on translation from "sympa"
-#: modules/file/err.h:218
-msgid "Parameter error"
-msgstr "Error de parámetro"
-
-#: modules/file/err.h:220
-msgid "Bad zip file"
-msgstr ""
-
-# Translation for this string generated by http://littlesvr.ca/ostd/
-# based on translation from "adduser"
-#: modules/file/err.h:222
-msgid "Internal error"
-msgstr "Error interno"
-
-#: modules/file/err.h:224
-msgid "CRC error"
-msgstr ""
-
-#: modules/file/err.h:227
-#, c-format
-msgid "Minizip error while reading the zip file: %s."
-msgstr ""
-
 #: modules/file/ezdfile.c:135
 msgid "Imports Nanosurf EZD and NID data files."
 msgstr "Importa Nanosurf EZD y NID archivos de datos."
@@ -3438,7 +3414,7 @@ msgid "CFITSIO error while reading the FITS file: %s."
 msgstr ""
 
 #: modules/file/fitsfile.c:159 modules/file/fitsfile.c:171
-#: modules/file/fitsfile.c:182 modules/file/spmxfile.c:396
+#: modules/file/fitsfile.c:182 modules/file/spmxfile.c:397
 msgid "Only two-dimensional images are supported."
 msgstr ""
 
@@ -3501,6 +3477,47 @@ msgstr ""
 #, c-format
 msgid ""
 "Data deserialization succeeded, but resulted in an unexpected object %s."
+msgstr ""
+
+# Translation for this string generated by http://littlesvr.ca/ostd/
+# based on translation from "bacula"
+#: modules/file/gwyminizip.h:119
+msgid "Unknown error"
+msgstr "Error desconocido"
+
+# Translation for this string generated by http://littlesvr.ca/ostd/
+# based on translation from "gimp"
+#: modules/file/gwyminizip.h:124
+msgid "End of file"
+msgstr "Fin del archivo"
+
+#: modules/file/gwyminizip.h:126
+msgid "End of list of files"
+msgstr ""
+
+# Translation for this string generated by http://littlesvr.ca/ostd/
+# based on translation from "sympa"
+#: modules/file/gwyminizip.h:128
+msgid "Parameter error"
+msgstr "Error de parámetro"
+
+#: modules/file/gwyminizip.h:130
+msgid "Bad zip file"
+msgstr ""
+
+# Translation for this string generated by http://littlesvr.ca/ostd/
+# based on translation from "adduser"
+#: modules/file/gwyminizip.h:132
+msgid "Internal error"
+msgstr "Error interno"
+
+#: modules/file/gwyminizip.h:134
+msgid "CRC error"
+msgstr ""
+
+#: modules/file/gwyminizip.h:137
+#, c-format
+msgid "Minizip error while reading the zip file: %s."
 msgstr ""
 
 #: modules/file/gwytiff.h:324
@@ -3670,12 +3687,12 @@ msgid "OpenEXR data type %u is invalid or unsupported."
 msgstr ""
 
 #: modules/file/hdrimage.cc:1433 modules/file/hdrimage.cc:1442
-#: modules/file/imgexport.c:4535 modules/file/imgexport.c:4546
+#: modules/file/imgexport.c:4762 modules/file/imgexport.c:4773
 #, c-format
 msgid "libpng initialization error (in %s)"
 msgstr ""
 
-#: modules/file/hdrimage.cc:1451 modules/file/imgexport.c:4610
+#: modules/file/hdrimage.cc:1451 modules/file/imgexport.c:4837
 msgid "libpng error occured"
 msgstr ""
 
@@ -3718,7 +3735,7 @@ msgstr "Canales:"
 msgid "Pages:"
 msgstr "Páginas:"
 
-#: modules/file/hdrimage.cc:2290 modules/file/imgexport.c:2513
+#: modules/file/hdrimage.cc:2290 modules/file/imgexport.c:2630
 #: modules/file/pixmap.c:864 modules/file/rawfile.c:627
 #: modules/file/rawxyz.c:572 modules/process/dimensions.h:466
 msgid "Physical Dimensions"
@@ -3726,7 +3743,7 @@ msgstr ""
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "plugin_htmlbar"
-#: modules/file/hdrimage.cc:2304 modules/file/imgexport.c:2569
+#: modules/file/hdrimage.cc:2304 modules/file/imgexport.c:2686
 #: modules/file/pixmap.c:874 modules/file/rawfile.c:636
 #: modules/process/crosscor.c:215 modules/process/dimensions.h:472
 #: modules/process/tip_blind.c:337
@@ -3851,130 +3868,130 @@ msgstr ""
 msgid "Cannot read channel labels."
 msgstr ""
 
-#: modules/file/imgexport.c:380 modules/file/pixmap.c:180
+#: modules/file/imgexport.c:388 modules/file/pixmap.c:180
 msgid "Portable Network Graphics (.png)"
 msgstr "Portable Network Graphics (.png)"
 
-#: modules/file/imgexport.c:386 modules/file/pixmap.c:184
+#: modules/file/imgexport.c:394 modules/file/pixmap.c:184
 msgid "JPEG (.jpeg,.jpg)"
 msgstr "JPEG (.jpeg,.jpg)"
 
-#: modules/file/imgexport.c:393 modules/file/pixmap.c:204
+#: modules/file/imgexport.c:401 modules/file/pixmap.c:204
 #, fuzzy
 msgid "Graphics Interchange Format GIF (.gif)"
 msgstr "Graphics Interchange Format (.gif)"
 
-#: modules/file/imgexport.c:399 modules/file/pixmap.c:188
+#: modules/file/imgexport.c:407 modules/file/pixmap.c:188
 msgid "TIFF (.tiff,.tif)"
 msgstr "TIFF (.tiff,.tif)"
 
-#: modules/file/imgexport.c:405 modules/file/pixmap.c:192
+#: modules/file/imgexport.c:413 modules/file/pixmap.c:192
 msgid "Portable Pixmap (.ppm,.pnm)"
 msgstr "Portable Pixmap (.ppm,.pnm)"
 
-#: modules/file/imgexport.c:411 modules/file/pixmap.c:196
+#: modules/file/imgexport.c:419 modules/file/pixmap.c:196
 msgid "Windows or OS2 Bitmap (.bmp)"
 msgstr "Windows o OS2 Bitmap (.bmp)"
 
-#: modules/file/imgexport.c:417 modules/file/pixmap.c:200
+#: modules/file/imgexport.c:425 modules/file/pixmap.c:200
 msgid "TARGA (.tga,.targa)"
 msgstr "TARGA (.tga,.targa)"
 
-#: modules/file/imgexport.c:424
+#: modules/file/imgexport.c:432
 #, fuzzy
 msgid "Portable document format (.pdf)"
 msgstr "Portable Network Graphics (.png)"
 
-#: modules/file/imgexport.c:432
+#: modules/file/imgexport.c:440
 msgid "Encapsulated PostScript (.eps)"
 msgstr ""
 
-#: modules/file/imgexport.c:440
+#: modules/file/imgexport.c:448
 #, fuzzy
 msgid "Scalable Vector Graphics (.svg)"
 msgstr "Portable Network Graphics (.png)"
 
-#: modules/file/imgexport.c:450 modules/tools/selectionmanager.c:256
+#: modules/file/imgexport.c:458 modules/tools/selectionmanager.c:256
 msgid "Horiz./vert. lines"
 msgstr ""
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "inkscape"
-#: modules/file/imgexport.c:454 modules/tools/selectionmanager.c:257
+#: modules/file/imgexport.c:462 modules/tools/selectionmanager.c:257
 msgid "Ellipses"
 msgstr "Elipses"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "anjuta"
-#: modules/file/imgexport.c:458 modules/tools/selectionmanager.c:258
+#: modules/file/imgexport.c:466 modules/tools/selectionmanager.c:258
 msgid "Lines"
 msgstr "Líneas"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "inkscape"
-#: modules/file/imgexport.c:466 modules/tools/selectionmanager.c:260
+#: modules/file/imgexport.c:474 modules/tools/selectionmanager.c:260
 msgid "Rectangles"
 msgstr "Rectángulos"
 
-#: modules/file/imgexport.c:470 modules/process/lat_synth.c:537
+#: modules/file/imgexport.c:478 modules/process/lat_synth.c:537
 #: modules/process/lat_synth.c:616 modules/tools/selectionmanager.c:261
 msgid "Lattice"
 msgstr ""
 
-#: modules/file/imgexport.c:476 modules/file/imgexport.c:482
+#: modules/file/imgexport.c:484 modules/file/imgexport.c:490
 msgid "ruler|_None"
 msgstr ""
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "inkscape"
-#: modules/file/imgexport.c:477
+#: modules/file/imgexport.c:485
 msgid "_Rulers"
 msgstr "_Reglas"
 
-#: modules/file/imgexport.c:478
+#: modules/file/imgexport.c:486
 msgid "_Inset scale bar"
 msgstr ""
 
-#: modules/file/imgexport.c:483
+#: modules/file/imgexport.c:491
 msgid "_False color ruler"
 msgstr ""
 
-#: modules/file/imgexport.c:487
+#: modules/file/imgexport.c:495
 msgid "title|None"
 msgstr ""
 
-#: modules/file/imgexport.c:488
+#: modules/file/imgexport.c:496
 msgid "At the top"
 msgstr ""
 
-#: modules/file/imgexport.c:489
+#: modules/file/imgexport.c:497
 msgid "Along the right edge"
 msgstr ""
 
-#: modules/file/imgexport.c:495
+#: modules/file/imgexport.c:503
 msgid ""
 "Renders data into vector (SVG, PDF, EPS) and pixmap (PNG, JPEG, TIFF, PPM, "
 "BMP, TARGA, GIF) images. Export to some formats relies on GDK and other "
 "libraries thus may be installation-dependent."
 msgstr ""
 
-#: modules/file/imgexport.c:2523
+#: modules/file/imgexport.c:2640
 msgid "Pi_xel size:"
 msgstr ""
 
-#: modules/file/imgexport.c:2531
+#: modules/file/imgexport.c:2648
 msgid "Pixels per _inch:"
 msgstr ""
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "docky"
-#: modules/file/imgexport.c:2557
+#: modules/file/imgexport.c:2674
 msgid "_Zoom:"
 msgstr "_Zoom:"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "plugin_htmlbar"
-#: modules/file/imgexport.c:2576 modules/process/col_synth.c:487
+#: modules/file/imgexport.c:2693 modules/process/col_synth.c:487
 #: modules/process/diff_synth.c:525 modules/process/domain_synth.c:528
 #: modules/process/grain_mark.c:310 modules/process/lat_synth.c:732
 #: modules/process/obj_synth.c:567 modules/process/pat_synth.c:871
@@ -3983,130 +4000,130 @@ msgstr "_Zoom:"
 msgid "_Height:"
 msgstr "_Alto:"
 
-#: modules/file/imgexport.c:2589
+#: modules/file/imgexport.c:2706
 #, fuzzy
 msgid "_Font:"
 msgstr "Tipo de letra:"
 
-#: modules/file/imgexport.c:2608
+#: modules/file/imgexport.c:2725
 msgid "_Font size:"
 msgstr ""
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "gimp"
-#: modules/file/imgexport.c:2628
+#: modules/file/imgexport.c:2745
 #, fuzzy
 msgid "O_utline thickness:"
 msgstr "G_rosor:"
 
-#: modules/file/imgexport.c:2638
+#: modules/file/imgexport.c:2755
 #, fuzzy
 msgid "_Border width:"
 msgstr "Nueva _anchura:"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "banshee"
-#: modules/file/imgexport.c:2648
+#: modules/file/imgexport.c:2765
 #, fuzzy
 msgid "_Tick length:"
 msgstr "longitud"
 
-#: modules/file/imgexport.c:2656
+#: modules/file/imgexport.c:2773
 msgid "Tie sizes to _data pixels"
 msgstr ""
 
-#: modules/file/imgexport.c:2752
+#: modules/file/imgexport.c:2892
 msgid "Select Color"
 msgstr ""
 
-#: modules/file/imgexport.c:2944
+#: modules/file/imgexport.c:3084
 #, fuzzy
 msgid "Black"
 msgstr "Blackmann"
 
-#: modules/file/imgexport.c:2952
+#: modules/file/imgexport.c:3092
 msgid "White"
 msgstr ""
 
-#: modules/file/imgexport.c:2986 modules/process/lno_synth.c:1068
+#: modules/file/imgexport.c:3126 modules/process/lno_synth.c:1068
 msgid "_Length:"
 msgstr ""
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "gimp"
-#: modules/file/imgexport.c:3002
+#: modules/file/imgexport.c:3142
 msgid "_Auto"
 msgstr "_Auto"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "abiword"
-#: modules/file/imgexport.c:3009
+#: modules/file/imgexport.c:3149
 #, fuzzy
 msgid "Placement:"
 msgstr "Colocación"
 
-#: modules/file/imgexport.c:3014
+#: modules/file/imgexport.c:3154
 msgid "left"
 msgstr "izquierda"
 
-#: modules/file/imgexport.c:3018
+#: modules/file/imgexport.c:3158
 msgid "center"
 msgstr "centro"
 
-#: modules/file/imgexport.c:3022
+#: modules/file/imgexport.c:3162
 msgid "right"
 msgstr "derecha"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "bluefish"
-#: modules/file/imgexport.c:3027
+#: modules/file/imgexport.c:3167
 msgid "top"
 msgstr "arriba"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "bluefish"
-#: modules/file/imgexport.c:3039
+#: modules/file/imgexport.c:3179
 msgid "bottom"
 msgstr "abajo"
 
-#: modules/file/imgexport.c:3051 modules/file/imgexport.c:3247
+#: modules/file/imgexport.c:3191 modules/file/imgexport.c:3460
 #, fuzzy
 msgid "Hori_zontal gap:"
 msgstr "Horizontal"
 
-#: modules/file/imgexport.c:3057
+#: modules/file/imgexport.c:3197 modules/file/imgexport.c:3440
 #, fuzzy
 msgid "_Vertical gap:"
 msgstr "_Verticalmente:"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "abiword"
-#: modules/file/imgexport.c:3064 modules/file/imgexport.c:3523
+#: modules/file/imgexport.c:3204 modules/file/imgexport.c:3737
 #, fuzzy
 msgid "Colo_r:"
 msgstr "Color:"
 
-#: modules/file/imgexport.c:3069 modules/file/imgexport.c:3528
+#: modules/file/imgexport.c:3209 modules/file/imgexport.c:3742
 msgid "Out_line color:"
 msgstr ""
 
-#: modules/file/imgexport.c:3073 modules/file/imgexport.c:3534
+#: modules/file/imgexport.c:3213 modules/file/imgexport.c:3748
 msgid "O_pacity:"
 msgstr ""
 
-#: modules/file/imgexport.c:3082
+#: modules/file/imgexport.c:3222
 msgid "Draw _ticks"
 msgstr ""
 
-#: modules/file/imgexport.c:3092
+#: modules/file/imgexport.c:3232
 msgid "Draw _label"
 msgstr ""
 
-#: modules/file/imgexport.c:3190
+#: modules/file/imgexport.c:3359
 msgid "Image"
 msgstr ""
 
-#: modules/file/imgexport.c:3194 modules/file/rawxyz.c:677
+#: modules/file/imgexport.c:3363 modules/file/rawxyz.c:677
 #: modules/process/correct_affine.c:508 modules/process/drift.c:301
 #: modules/process/dwt.c:206 modules/process/dwtanisotropy.c:202
 #: modules/process/fft_filter_1d.c:330 modules/process/fft_profile.c:299
@@ -4118,131 +4135,148 @@ msgstr ""
 msgid "_Interpolation type:"
 msgstr ""
 
-#: modules/file/imgexport.c:3224
+# Translation for this string generated by http://littlesvr.ca/ostd/
+# based on translation from "orage"
+#: modules/file/imgexport.c:3393
+#, fuzzy
+msgid "Draw _frame"
+msgstr "Mostrar _marco"
+
+#: modules/file/imgexport.c:3402
 msgid "Draw _mask"
 msgstr ""
 
-#: modules/file/imgexport.c:3234
+#: modules/file/imgexport.c:3412
+msgid "Draw mask _legend"
+msgstr ""
+
+#: modules/file/imgexport.c:3447
 msgid "Value Scale"
 msgstr ""
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "plugin_htmlbar"
-#: modules/file/imgexport.c:3254 modules/file/imgexport.c:3944
+#: modules/file/imgexport.c:3467 modules/file/imgexport.c:4167
 #, fuzzy
 msgid "Title"
 msgstr "_Título:"
 
-#: modules/file/imgexport.c:3258
+#: modules/file/imgexport.c:3471
 #, fuzzy
 msgid "Posi_tion:"
 msgstr "Posición:"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "po"
-#: modules/file/imgexport.c:3273
+#: modules/file/imgexport.c:3487
 #, fuzzy
 msgid "_Gap:"
 msgstr "Intervalo:"
 
-#: modules/file/imgexport.c:3280
+#: modules/file/imgexport.c:3494
 msgid "Put _units to title"
 msgstr ""
 
-#: modules/file/imgexport.c:3464
+#: modules/file/imgexport.c:3678
 msgid "Draw _selection"
 msgstr ""
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "celestia"
-#: modules/file/imgexport.c:3515 modules/tools/selectionmanager.c:347
+#: modules/file/imgexport.c:3729 modules/tools/selectionmanager.c:347
 msgid "Objects"
 msgstr "Objetos"
 
-#: modules/file/imgexport.c:3924
+#: modules/file/imgexport.c:4147
 #, fuzzy
 msgid "Lateral"
 msgstr "Material GL"
 
-#: modules/file/imgexport.c:3963 modules/file/rawfile.c:1006
+#: modules/file/imgexport.c:4186 modules/file/rawfile.c:1006
 #: modules/process/calcoefs_load.c:216 modules/process/neural.c:693
 msgid "verb|_Load"
 msgstr "_Cargar"
 
-#: modules/file/imgexport.c:3969 modules/file/rawfile.c:1012
+#: modules/file/imgexport.c:4192 modules/file/rawfile.c:1012
 #: modules/process/neural.c:699
 msgid "verb|_Store"
 msgstr "_Archivar"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "anjuta"
-#: modules/file/imgexport.c:3975 modules/file/rawfile.c:1018
+#: modules/file/imgexport.c:4198 modules/file/rawfile.c:1018
 #: modules/process/neural.c:705
 msgid "_Rename"
 msgstr "_Renombrar"
 
-#: modules/file/imgexport.c:3995 modules/file/rawfile.c:1037
+#: modules/file/imgexport.c:4218 modules/file/rawfile.c:1037
 msgid "Preset _name:"
 msgstr ""
 
-#: modules/file/imgexport.c:4066
+#: modules/file/imgexport.c:4289
 #, c-format
 msgid "Export %s"
 msgstr ""
 
-#: modules/file/imgexport.c:4087
+#: modules/file/imgexport.c:4310
 msgid "Export as 1_6 bit grayscale"
 msgstr ""
 
-#: modules/file/imgexport.c:4110
+#: modules/file/imgexport.c:4333
 msgid "Lateral Scale"
 msgstr ""
 
-#: modules/file/imgexport.c:4115
+#: modules/file/imgexport.c:4338
 #, fuzzy
 msgid "Values"
 msgstr "Valor"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "aptitude"
-#: modules/file/imgexport.c:4120
+#: modules/file/imgexport.c:4343
 #, fuzzy
 msgid "Selection"
 msgstr "Sección: "
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "audacious-plugins"
-#: modules/file/imgexport.c:4125 modules/file/rawfile.c:440
+#: modules/file/imgexport.c:4348 modules/file/rawfile.c:440
 #: modules/process/convolution_filter.c:290
 msgid "Presets"
 msgstr "Predefinidos"
 
-#: modules/file/imgexport.c:4860
+#: modules/file/imgexport.c:5087
 #, c-format
 msgid "Cairo error occurred: %s"
 msgstr ""
 
-#: modules/file/imgexport.c:4884
+#: modules/file/imgexport.c:5111
 #, c-format
 msgid "Pixbuf save failed: %s."
 msgstr ""
 
-#: modules/file/imgexport.c:5162
+#: modules/file/imgexport.c:5389
 msgid "Image is too large to be stored as TARGA."
 msgstr ""
 
-#: modules/file/imgexport.c:5513 modules/file/imgexport.c:5542
+#: modules/file/imgexport.c:5740 modules/file/imgexport.c:5769
 msgid "Draw _numbers"
 msgstr ""
 
-#: modules/file/imgexport.c:5525
+#: modules/file/imgexport.c:5752
 msgid "_End marker length:"
 msgstr ""
 
-#: modules/file/imgexport.c:5554
+#: modules/file/imgexport.c:5781
 #, fuzzy
 msgid "Marker _radius:"
 msgstr "Radio medio"
+
+# Translation for this string generated by http://littlesvr.ca/ostd/
+# based on translation from "eiciel"
+#: modules/file/imgexportpreset.h:156 modules/process/maskops.c:155
+msgid "Mask"
+msgstr "Máscara"
 
 #: modules/file/intematix.c:126
 msgid "Imports Intematix SDF data files."
@@ -4327,22 +4361,26 @@ msgstr "Imágenes JPK (.jpk)"
 msgid "File does not contain grid dimensions."
 msgstr ""
 
-#: modules/file/jspmfile.c:135
+#: modules/file/jspmfile.c:188
 msgid "Imports JEOL JSPM data files."
 msgstr "Importa JEOL JSPM archivos de datos."
 
-#: modules/file/jspmfile.c:148
+#: modules/file/jspmfile.c:201
 msgid "JEOL JSPM data files (.tif)"
 msgstr "Archivos JEOL JSPM (.tif)"
 
-#: modules/file/jspmfile.c:227
+#: modules/file/jspmfile.c:280
 #, c-format
 msgid "Header block %u has invalid position or size."
 msgstr ""
 
-#: modules/file/jspmfile.c:307 modules/file/jspmfile.c:314
-#: modules/file/jspmfile.c:375 modules/file/jspmfile.c:382
+#: modules/file/jspmfile.c:362 modules/file/jspmfile.c:369
+#: modules/file/jspmfile.c:431 modules/file/jspmfile.c:438
 msgid "Cannot find image header block."
+msgstr ""
+
+#: modules/file/jspmfile.c:483
+msgid "Cannot find piezo header block."
 msgstr ""
 
 #: modules/file/lextfile.c:80
@@ -4570,7 +4608,7 @@ msgstr ""
 msgid "Parameter header is truncated"
 msgstr ""
 
-#: modules/file/nanoeducator.c:932 modules/process/curvature.c:445
+#: modules/file/nanoeducator.c:932 modules/process/curvature.c:446
 #: modules/tools/profile.c:824
 #, c-format
 msgid "Profile %d"
@@ -4580,11 +4618,11 @@ msgstr ""
 msgid "F-D spectra"
 msgstr ""
 
-#: modules/file/nanoeducator.c:1136
+#: modules/file/nanoeducator.c:1138
 msgid "I-V spectra"
 msgstr ""
 
-#: modules/file/nanoeducator.c:1219
+#: modules/file/nanoeducator.c:1223
 msgid "I-Z spectra"
 msgstr ""
 
@@ -4655,22 +4693,22 @@ msgstr ""
 msgid "Missing data start marker \\x1a\\x04."
 msgstr ""
 
-#: modules/file/nanoobserver.c:116
+#: modules/file/nanoobserver.c:119
 msgid "Reads NanoObserver .nao files."
 msgstr "Importa NanoObserver .nao archivos."
 
-#: modules/file/nanoobserver.c:129
+#: modules/file/nanoobserver.c:132
 msgid "NanoObserver data (.nao)"
 msgstr "Datos NanoObserver (.nao)"
 
-#: modules/file/nanoobserver.c:187 modules/file/nanoscantech.c:204
-#: modules/file/opengps.c:215 modules/file/spmxfile.c:172
+#: modules/file/nanoobserver.c:198 modules/file/nanoscantech.c:205
+#: modules/file/opengps.c:216 modules/file/spmxfile.c:173
 msgid "Minizip cannot open the file as a ZIP file."
 msgstr ""
 
-#: modules/file/nanoobserver.c:459 modules/file/opengps.c:504
-#: modules/file/opengps.c:704 modules/file/opengps.c:740
-#: modules/file/spmxfile.c:216 modules/file/spmxfile.c:524
+#: modules/file/nanoobserver.c:473 modules/file/opengps.c:505
+#: modules/file/opengps.c:705 modules/file/opengps.c:741
+#: modules/file/spmxfile.c:217 modules/file/spmxfile.c:525
 #, c-format
 msgid "File %s is missing in the zip file."
 msgstr ""
@@ -4687,11 +4725,11 @@ msgstr "Archivos NanoScan XML (.xml)"
 msgid "Wrong size of Base64 encoded data."
 msgstr ""
 
-#: modules/file/nanoscantech.c:129
+#: modules/file/nanoscantech.c:130
 msgid "Imports NanoScanTech .nstdat files."
 msgstr "Importa NanoScanTech .nstdat archivos."
 
-#: modules/file/nanoscantech.c:142
+#: modules/file/nanoscantech.c:143
 msgid "NanoScanTech data (.nstdat)"
 msgstr "Datos NanoScanTech (.nstdat)"
 
@@ -4733,7 +4771,7 @@ msgstr ""
 msgid "Cannot parse `Scan size' field."
 msgstr ""
 
-#: modules/file/nanoscope.c:1437 modules/file/nrrdfile.c:1025
+#: modules/file/nanoscope.c:1437 modules/file/nrrdfile.c:1071
 #, c-format
 msgid "Garbage after data sample #%u."
 msgstr ""
@@ -4783,94 +4821,94 @@ msgstr ""
 msgid "Time series order is wrong."
 msgstr ""
 
-#: modules/file/netcdf.c:1239
+#: modules/file/netcdf.c:1249
 #, c-format
 msgid "File ended unexpectedly inside `%s'."
 msgstr ""
 
-#: modules/file/netcdf.c:1248
+#: modules/file/netcdf.c:1258
 #, c-format
 msgid "Expected `%s' array or `ABSENT'."
 msgstr ""
 
-#: modules/file/netcdf.c:1256
+#: modules/file/netcdf.c:1266
 #, c-format
 msgid "Array `%s' has non-zero number of elements in spite of being absent."
 msgstr ""
 
-#: modules/file/netcdf.c:1315
+#: modules/file/netcdf.c:1325
 msgid "More than one record dimension found."
 msgstr ""
 
-#: modules/file/nrrdfile.c:171
+#: modules/file/nrrdfile.c:181
 msgid "Imports and exports nearly raw raster data (NRRD) files."
 msgstr "Importa y exporta nearly raw raster data (NRRD) archivos de datos."
 
-#: modules/file/nrrdfile.c:184
+#: modules/file/nrrdfile.c:194
 msgid "Nearly raw raster data (NRRD) files (.nrrd)"
 msgstr "Archivos Nearly raw raster data (NRRD) (.nrrd)"
 
-#: modules/file/nrrdfile.c:319
+#: modules/file/nrrdfile.c:330
 msgid "Deatched header does not refer to any data file."
 msgstr ""
 
-#: modules/file/nrrdfile.c:347
+#: modules/file/nrrdfile.c:358
 msgid "Only two- and three-dimensional data are supported."
 msgstr ""
 
-#: modules/file/nrrdfile.c:368
+#: modules/file/nrrdfile.c:379
 msgid "Non-zero lineskip is supported only for uncompressed files."
 msgstr ""
 
-#: modules/file/nrrdfile.c:395
+#: modules/file/nrrdfile.c:406
 msgid "Compression is supported only for detached files."
 msgstr ""
 
-#: modules/file/nrrdfile.c:684
+#: modules/file/nrrdfile.c:730
 msgid "Split detached data files are not supported."
 msgstr ""
 
-#: modules/file/nrrdfile.c:730
+#: modules/file/nrrdfile.c:776
 msgid "Cannot decompress gzip-encoded data.  Zlib support was not built in."
 msgstr ""
 
-#: modules/file/nrrdfile.c:775
+#: modules/file/nrrdfile.c:821
 msgid "Cannot decompress bzip2-encoded data.  Bzip2 support was not built in."
 msgstr ""
 
-#: modules/file/nrrdfile.c:907
+#: modules/file/nrrdfile.c:953
 #, c-format
 msgid "Hex data contains less values (%u) than corresponds to the sizes (%u)."
 msgstr ""
 
-#: modules/file/nrrdfile.c:1020
+#: modules/file/nrrdfile.c:1066
 #, c-format
 msgid "Text data contains less values (%u) than corresponds to the sizes (%u)."
 msgstr ""
 
-#: modules/file/nrrdfile.c:1074
+#: modules/file/nrrdfile.c:1120
 msgid "Field byteskip cannot be -1 for text encodings."
 msgstr ""
 
-#: modules/file/nrrdfile.c:1085
+#: modules/file/nrrdfile.c:1131
 msgid "Field lineskip specifies more lines than there are in the file."
 msgstr ""
 
-#: modules/file/nrrdfile.c:1128
+#: modules/file/nrrdfile.c:1174
 msgid "Field byteskip specifies more bytes than there are in the file."
 msgstr ""
 
-#: modules/file/nrrdfile.c:1351
+#: modules/file/nrrdfile.c:1579
 #, c-format
 msgid "Items of per-axis header field %s are not quoted."
 msgstr ""
 
-#: modules/file/nrrdfile.c:1362
+#: modules/file/nrrdfile.c:1590
 #, c-format
 msgid "Per-axis header field %s contains too many items."
 msgstr ""
 
-#: modules/file/nrrdfile.c:1371
+#: modules/file/nrrdfile.c:1599
 #, c-format
 msgid "Per-axis header field %s contains too few items."
 msgstr ""
@@ -5041,25 +5079,25 @@ msgstr ""
 msgid "Truncated data in block %s"
 msgstr ""
 
-#: modules/file/opengps.c:139
+#: modules/file/opengps.c:140
 msgid "Reads ISO 5436-2 OpenGPS .x3p files."
 msgstr ""
 
-#: modules/file/opengps.c:152
+#: modules/file/opengps.c:153
 msgid "ISO 5436-2 OpenGPS data (.x3p)"
 msgstr ""
 
-#: modules/file/opengps.c:427 modules/file/opengps.c:460
+#: modules/file/opengps.c:428 modules/file/opengps.c:461
 msgid "Too many DataList items for given matrix dimensions."
 msgstr ""
 
-#: modules/file/opengps.c:554
+#: modules/file/opengps.c:555
 msgid "File main.xml contains multiple data elements."
 msgstr ""
 
 #. TRANSLATORS: type and axis are symbols such as I, CX, ...
-#: modules/file/opengps.c:586 modules/file/opengps.c:594
-#: modules/file/opengps.c:602
+#: modules/file/opengps.c:587 modules/file/opengps.c:595
+#: modules/file/opengps.c:603
 #, c-format
 msgid "Only type %s is supported for axis %s."
 msgstr ""
@@ -5979,11 +6017,11 @@ msgstr ""
 msgid "Missing data start marker [Data]."
 msgstr ""
 
-#: modules/file/spmxfile.c:96
+#: modules/file/spmxfile.c:97
 msgid "Reads ATC SPMxFormat files."
 msgstr ""
 
-#: modules/file/spmxfile.c:109
+#: modules/file/spmxfile.c:110
 msgid "ATC SPMxFormat data (.spm)"
 msgstr ""
 
@@ -6165,11 +6203,11 @@ msgstr "Importa WinSTM (.stm) archivos."
 msgid "WinSTM files (.stm)"
 msgstr "Archivos WinSTM (.stm)"
 
-#: modules/file/wipfile.c:282
+#: modules/file/wipfile.c:272
 msgid "Imports WItec Project data files."
 msgstr "Importa WItec Project archivos de datos."
 
-#: modules/file/wipfile.c:295
+#: modules/file/wipfile.c:285
 msgid "WItec Project files (.wip)"
 msgstr "WItec Project (.wip)"
 
@@ -6220,6 +6258,35 @@ msgstr ""
 #: modules/file/wsxmfile.c:255
 #, c-format
 msgid "Unknown data type `%s'."
+msgstr ""
+
+#: modules/file/xyzexport.c:73
+#, fuzzy
+msgid "Exports data as simple XYZ text file."
+msgstr "Exporta datos de gráfico a archivos de texto. "
+
+#: modules/file/xyzexport.c:86
+msgid "XYZ text data (.xyz)"
+msgstr ""
+
+#: modules/file/xyzexport.c:193
+#, fuzzy
+msgid "Lateral units:"
+msgstr "Material GL"
+
+# Translation for this string generated by http://littlesvr.ca/ostd/
+# based on translation from "almanah"
+#: modules/file/xyzexport.c:278
+#, fuzzy
+msgid "Export XYZ"
+msgstr "_Exportar"
+
+#: modules/file/xyzexport.c:318 modules/process/curvature.c:688
+#: modules/process/facet-level.c:205 modules/process/level.c:276
+#: modules/process/linecorrect.c:295 modules/process/neural.c:593
+#: modules/process/polylevel.c:504 modules/process/slope_dist.c:399
+#: modules/tools/sfunctions.c:458 modules/tools/stats.c:371
+msgid "Masking Mode"
 msgstr ""
 
 #: modules/file/zeiss.c:61
@@ -6287,7 +6354,7 @@ msgstr "F_unción:"
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "beast"
 #: modules/graph/graph_cd.c:306 modules/graph/graph_fdfit.c:362
-#: modules/graph/graph_fit.c:370 modules/process/curvature.c:729
+#: modules/graph/graph_fit.c:370 modules/process/curvature.c:730
 #: modules/volume/volume_fdfit.c:447
 msgid "Parameter"
 msgstr "Parámetro"
@@ -6297,6 +6364,7 @@ msgstr "Parámetro"
 #: modules/graph/graph_cd.c:308 modules/graph/graph_fdfit.c:364
 #: modules/graph/graph_fit.c:372 modules/process/fit_2d.c:349
 #: modules/volume/volume_fdfit.c:449 modules/volume/volume_kmeans.c:442
+#: modules/volume/volume_kmedians.c:462
 msgid "Error"
 msgstr "Error"
 
@@ -7171,13 +7239,13 @@ msgstr ""
 # based on translation from "banshee-community-extensions"
 #: modules/process/calcoefs_simple.c:632 modules/process/grain_wshed.c:506
 #: modules/process/maskcor.c:328 modules/process/mcrop.c:328
-#: modules/process/merge.c:765 modules/process/tip_blind.c:783
+#: modules/process/merge.c:848 modules/process/tip_blind.c:783
 #: modules/process/tipops.c:308
 msgid "Initializing"
 msgstr "Inicialización"
 
 #: modules/process/calcoefs_simple.c:634 modules/process/maskcor.c:330
-#: modules/process/mcrop.c:330 modules/process/merge.c:767
+#: modules/process/mcrop.c:330 modules/process/merge.c:850
 msgid "Correlating"
 msgstr ""
 
@@ -7879,52 +7947,45 @@ msgstr ""
 msgid "Calculate overall curvature"
 msgstr ""
 
-#: modules/process/curvature.c:203
-msgid ""
-"Curvature: Lateral dimensions and value must be the same physical quantity."
+#: modules/process/curvature.c:203 modules/process/facet-level.c:116
+#: modules/process/semsim.c:164
+#, c-format
+msgid "%s: Lateral dimensions and value must be the same physical quantity."
 msgstr ""
 
-#: modules/process/curvature.c:436
+#: modules/process/curvature.c:437
 msgid "Curvature Sections"
 msgstr ""
 
-#: modules/process/curvature.c:659
+#: modules/process/curvature.c:660
 msgid "Output Type"
 msgstr ""
 
-#: modules/process/curvature.c:666
+#: modules/process/curvature.c:667
 msgid "_Set selection"
 msgstr ""
 
-#: modules/process/curvature.c:676
+#: modules/process/curvature.c:677
 msgid "_Plot graph"
 msgstr "_Presenta gráfico"
 
-#: modules/process/curvature.c:687 modules/process/facet-level.c:204
-#: modules/process/level.c:276 modules/process/linecorrect.c:295
-#: modules/process/neural.c:593 modules/process/polylevel.c:504
-#: modules/process/slope_dist.c:399 modules/tools/sfunctions.c:458
-#: modules/tools/stats.c:371
-msgid "Masking Mode"
-msgstr ""
-
-#: modules/process/curvature.c:757 modules/process/grain_stat.c:345
+#: modules/process/curvature.c:758 modules/process/grain_stat.c:345
 #: modules/process/polylevel.c:620 modules/tools/distance.c:228
 #: modules/tools/roughness.c:830 modules/tools/stats.c:432
 msgid "Save table to a file"
 msgstr "Guardar tabla a un archivo"
 
-#: modules/process/curvature.c:762 modules/process/grain_stat.c:350
+#: modules/process/curvature.c:763 modules/process/grain_stat.c:350
 #: modules/process/polylevel.c:630 modules/tools/distance.c:233
 #: modules/tools/roughness.c:835 modules/tools/stats.c:437
 msgid "Copy table to clipboard"
 msgstr ""
 
-#: modules/process/curvature.c:889
+#: modules/process/curvature.c:890
 msgid "Axes are outside the image."
 msgstr ""
 
-#: modules/process/curvature.c:954
+#: modules/process/curvature.c:955
 msgid "Save Curvature"
 msgstr "Guardar Curvatura"
 
@@ -8182,7 +8243,7 @@ msgid "Output Options"
 msgstr "Opciones de salida"
 
 #: modules/process/domain_synth.c:541 modules/process/fft_filter_2d.c:625
-#: modules/process/mask_edt.c:164 modules/process/slope_dist.c:325
+#: modules/process/mask_edt.c:362 modules/process/slope_dist.c:325
 msgid "Output type:"
 msgstr ""
 
@@ -8548,17 +8609,12 @@ msgstr ""
 msgid "Level data to make facets point upward"
 msgstr ""
 
-#: modules/process/facet-level.c:116
-msgid ""
-"Facet level: Lateral dimensions and value must be the same physical quantity."
-msgstr ""
-
-#: modules/process/facet-level.c:128
+#: modules/process/facet-level.c:118 modules/process/facet-level.c:129
 msgid "Facet Level"
 msgstr ""
 
-#: modules/process/facet-level.c:141
-msgid "Facet-leveling"
+#: modules/process/facet-level.c:142 modules/process/flatten_base.c:250
+msgid "Facet-leveling..."
 msgstr ""
 
 #: modules/process/facet_analysis.c:163
@@ -9150,6 +9206,25 @@ msgid ""
 "\n"
 "Correlation matrix\n"
 msgstr ""
+
+#: modules/process/flatten_base.c:43
+msgid "Levels the flat base of a surface with positive features."
+msgstr ""
+
+#: modules/process/flatten_base.c:57
+msgid "/_Level/Flatten _Base"
+msgstr ""
+
+#: modules/process/flatten_base.c:61
+msgid "Flatten base of surface with positive features"
+msgstr ""
+
+# Translation for this string generated by http://littlesvr.ca/ostd/
+# based on translation from "goffice"
+#: modules/process/flatten_base.c:275
+#, fuzzy
+msgid "Polynomial leveling..."
+msgstr "Polinómico"
 
 #: modules/process/fraccor.c:38
 msgid "Removes data under mask using fractal interpolation."
@@ -10435,37 +10510,46 @@ msgstr "_Mínimo:"
 msgid "M_aximum:"
 msgstr "M_áximo:"
 
-#: modules/process/mask_edt.c:77
+#: modules/process/mask_edt.c:88
 msgid "Performs Euclidean distance transform of masks."
 msgstr ""
 
-#: modules/process/mask_edt.c:91
+#: modules/process/mask_edt.c:102
 msgid "/_Mask/_Euclidean Distance Transform..."
 msgstr ""
 
-#: modules/process/mask_edt.c:95
+#: modules/process/mask_edt.c:106
 msgid "Euclidean distance transform of mask"
 msgstr ""
 
-#: modules/process/mask_edt.c:125 modules/process/mask_edt.c:147
+#: modules/process/mask_edt.c:109
+msgid "/_Mask/Thi_n"
+msgstr ""
+
+#: modules/process/mask_edt.c:113
+#, fuzzy
+msgid "Thin mask"
+msgstr "Editar máscara"
+
+#: modules/process/mask_edt.c:323 modules/process/mask_edt.c:345
 msgid "Distance Transform"
 msgstr ""
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "geeqie"
-#: modules/process/mask_edt.c:135
+#: modules/process/mask_edt.c:333
 msgid "Interior"
 msgstr "Interior"
 
-#: modules/process/mask_edt.c:136
+#: modules/process/mask_edt.c:334
 msgid "Exterior"
 msgstr ""
 
-#: modules/process/mask_edt.c:137
+#: modules/process/mask_edt.c:335
 msgid "Two-sided"
 msgstr ""
 
-#: modules/process/mask_edt.c:179 modules/tools/maskedit.c:618
+#: modules/process/mask_edt.c:377 modules/tools/maskedit.c:618
 msgid "Shrink from _border"
 msgstr ""
 
@@ -10541,12 +10625,6 @@ msgstr ""
 msgid "Remove grains touching image edges"
 msgstr ""
 
-# Translation for this string generated by http://littlesvr.ca/ostd/
-# based on translation from "eiciel"
-#: modules/process/maskops.c:155
-msgid "Mask"
-msgstr "Máscara"
-
 #: modules/process/mcrop.c:71
 msgid "Crops non-intersecting regions of two images."
 msgstr ""
@@ -10597,81 +10675,97 @@ msgstr ""
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "audacity"
-#: modules/process/merge.c:129
+#: modules/process/merge.c:151
 msgid "Up"
 msgstr "Arriba"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "audacity"
-#: modules/process/merge.c:130
+#: modules/process/merge.c:152
 msgid "Down"
 msgstr "Abajo"
 
-#: modules/process/merge.c:131
+#: modules/process/merge.c:153
 msgid "adverb|Right"
 msgstr "Derecho"
 
-#: modules/process/merge.c:132
+#: modules/process/merge.c:154
 msgid "adverb|Left"
 msgstr "Izquierda"
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "gnumeric"
-#: modules/process/merge.c:136
+#: modules/process/merge.c:158
 msgid "Correlation"
 msgstr "Correlación"
 
-#: modules/process/merge.c:137
+#: modules/process/merge.c:159
 msgid "merge-mode|None"
 msgstr "Ninguno"
 
-#: modules/process/merge.c:141
+#: modules/process/merge.c:163
 msgid "First operand"
 msgstr ""
 
-#: modules/process/merge.c:142
+#: modules/process/merge.c:164
 msgid "Second operand"
 msgstr ""
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
-# based on translation from "gtk2_ardour"
-#: modules/process/merge.c:143
-msgid "Smooth"
-msgstr "Suave"
+# based on translation from "enigma"
+#: modules/process/merge.c:165
+#, fuzzy
+msgid "Average"
+msgstr "Media:"
 
-#: modules/process/merge.c:157
+# Translation for this string generated by http://littlesvr.ca/ostd/
+# based on translation from "audacity"
+#: modules/process/merge.c:166
+#, fuzzy
+msgid "Interpolation"
+msgstr "Interpolación:"
+
+#: modules/process/merge.c:181
 msgid "Merges two images."
 msgstr "Fusiona dos imágenes. "
 
-#: modules/process/merge.c:171
+#: modules/process/merge.c:195
 msgid "/M_ultidata/_Merge..."
 msgstr "/M_ultidatos/_Fusionar..."
 
-#: modules/process/merge.c:175
+#: modules/process/merge.c:199
 msgid "Merge two images"
 msgstr "Fusiona dos imágenes"
 
-#: modules/process/merge.c:210
+#: modules/process/merge.c:238
 msgid "Merge Data"
 msgstr "Fusiona Datos"
 
-#: modules/process/merge.c:232
+#: modules/process/merge.c:260
 msgid "_Merge with:"
 msgstr "_Fusiona con:"
 
-#: modules/process/merge.c:240
+#: modules/process/merge.c:268
 msgid "_Put second operand:"
 msgstr ""
 
-#: modules/process/merge.c:247
+#: modules/process/merge.c:275
 msgid "_Align second operand:"
 msgstr ""
 
-#: modules/process/merge.c:254
+#: modules/process/merge.c:282
 msgid "_Boundary treatment:"
 msgstr ""
 
-#: modules/process/merge.c:560 modules/process/merge.c:641
+#: modules/process/merge.c:286
+msgid "Crop result to _avoid outside pixels"
+msgstr ""
+
+#: modules/process/merge.c:296
+msgid "Add _mask of outside pixels"
+msgstr ""
+
+#: modules/process/merge.c:578 modules/process/merge.c:696
 msgid "Merged images"
 msgstr "Imágenes fusionadas"
 
@@ -11451,6 +11545,49 @@ msgstr ""
 
 #: modules/process/scars.c:553
 msgid "Scars type:"
+msgstr ""
+
+#: modules/process/semsim.c:117
+msgid "Simple SEM image simulation from topography."
+msgstr ""
+
+#: modules/process/semsim.c:131
+msgid "/_Presentation/_SEM Image..."
+msgstr ""
+
+#: modules/process/semsim.c:135
+msgid "Simple SEM simulation from topography"
+msgstr ""
+
+#: modules/process/semsim.c:166 modules/process/semsim.c:209
+msgid "SEM Image"
+msgstr ""
+
+#: modules/process/semsim.c:185
+#, fuzzy
+msgid "SEM image simulation..."
+msgstr "Triangulación..."
+
+# Translation for this string generated by http://littlesvr.ca/ostd/
+# based on translation from "audacity"
+#: modules/process/semsim.c:227
+#, fuzzy
+msgid "_Integration radius:"
+msgstr "Interpolación:"
+
+# Translation for this string generated by http://littlesvr.ca/ostd/
+# based on translation from "audacity"
+#: modules/process/semsim.c:258
+#, fuzzy
+msgid "Integration"
+msgstr "Interpolación:"
+
+#: modules/process/semsim.c:260
+msgid "Monte Carlo"
+msgstr ""
+
+#: modules/process/semsim.c:267
+msgid "_Quality:"
 msgstr ""
 
 #: modules/process/shade.c:98
@@ -13119,7 +13256,7 @@ msgstr ""
 msgid "_Average spectra"
 msgstr ""
 
-#: modules/tools/spectro.c:476
+#: modules/tools/spectro.c:478
 msgid "Spectroscopy"
 msgstr ""
 
@@ -13517,29 +13654,29 @@ msgstr ""
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "alleyoop"
-#: modules/volume/volume_kmeans.c:146
+#: modules/volume/volume_kmeans.c:146 modules/volume/volume_kmedians.c:151
 msgid "_Run"
 msgstr "_Ejecutar"
 
-#: modules/volume/volume_kmeans.c:162
+#: modules/volume/volume_kmeans.c:162 modules/volume/volume_kmedians.c:167
 msgid "_Number of clusters:"
 msgstr ""
 
-#: modules/volume/volume_kmeans.c:170
+#: modules/volume/volume_kmeans.c:170 modules/volume/volume_kmedians.c:175
 msgid "Convergence _Precision:"
 msgstr ""
 
-#: modules/volume/volume_kmeans.c:182
+#: modules/volume/volume_kmeans.c:182 modules/volume/volume_kmedians.c:187
 msgid "_Max. iterations:"
 msgstr ""
 
 # Translation for this string generated by http://littlesvr.ca/ostd/
 # based on translation from "gimp"
-#: modules/volume/volume_kmeans.c:188
+#: modules/volume/volume_kmeans.c:188 modules/volume/volume_kmedians.c:193
 msgid "_Normalize"
 msgstr "_Normalizar"
 
-#: modules/volume/volume_kmeans.c:359
+#: modules/volume/volume_kmeans.c:359 modules/volume/volume_kmedians.c:376
 msgid "Cluster"
 msgstr "Grupo"
 
@@ -13557,6 +13694,45 @@ msgstr ""
 #, c-format
 msgid "K-means center %d"
 msgstr ""
+
+#: modules/volume/volume_kmedians.c:91
+msgid "Calculates K-medians clustering on volume data."
+msgstr ""
+
+#: modules/volume/volume_kmedians.c:105
+msgid "/_K-medians clustering..."
+msgstr ""
+
+#: modules/volume/volume_kmedians.c:109
+msgid "Calculate K-medians clustering on volume data"
+msgstr ""
+
+# Translation for this string generated by http://littlesvr.ca/ostd/
+# based on translation from "setup"
+#: modules/volume/volume_kmedians.c:144
+#, fuzzy
+msgid "K-medians"
+msgstr "Medo"
+
+#: modules/volume/volume_kmedians.c:486
+#, c-format
+msgid "K-medians of %s"
+msgstr ""
+
+#: modules/volume/volume_kmedians.c:498
+#, c-format
+msgid "K-medians error of %s"
+msgstr ""
+
+#: modules/volume/volume_kmedians.c:527
+#, c-format
+msgid "K-medians center %d"
+msgstr ""
+
+# Translation for this string generated by http://littlesvr.ca/ostd/
+# based on translation from "gtk2_ardour"
+#~ msgid "Smooth"
+#~ msgstr "Suave"
 
 #~ msgid "3dcontrols|Basic"
 #~ msgstr "Basico"

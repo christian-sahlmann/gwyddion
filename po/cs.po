@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-02-02 03:58+0100\n"
+"POT-Creation-Date: 2015-02-07 21:39+0100\n"
 "PO-Revision-Date: 2015-02-02 10:45+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -119,9 +119,9 @@ msgid "contact: Hertz (paraboloid)"
 msgstr "kontaktní: Hertz (paraboloid)"
 
 #: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:665
-#: app/data-browser.c:2091 app/data-browser.c:2885 app/data-browser.c:3746
-#: app/data-browser.c:3905 app/data-browser.c:4191 app/data-browser.c:4605
-#: app/data-browser.c:6591 app/data-browser.c:6673 app/resource-editor.c:367
+#: app/data-browser.c:2091 app/data-browser.c:2885 app/data-browser.c:3745
+#: app/data-browser.c:3904 app/data-browser.c:4190 app/data-browser.c:4604
+#: app/data-browser.c:6590 app/data-browser.c:6672 app/resource-editor.c:367
 #: modules/process/convolution_filter.c:706
 msgid "Untitled"
 msgstr "Nepojmenovaný"
@@ -441,7 +441,7 @@ msgstr "Hodnota"
 msgid "Area"
 msgstr "Plocha"
 
-#: libprocess/gwygrainvalue.c:1094 app/data-browser.c:5109 app/toolbox.c:114
+#: libprocess/gwygrainvalue.c:1094 app/data-browser.c:5108 app/toolbox.c:114
 msgid "Volume"
 msgstr "Objem"
 
@@ -1520,44 +1520,44 @@ msgstr "Kanál:"
 msgid "Section:"
 msgstr "Řez:"
 
-#: app/data-browser.c:4982
+#: app/data-browser.c:4981
 msgid "Extract to a new file"
 msgstr "Extrahovat do nového souboru"
 
-#: app/data-browser.c:4983
+#: app/data-browser.c:4982
 msgid "Duplicate"
 msgstr "Zduplikovat"
 
-#: app/data-browser.c:4984
+#: app/data-browser.c:4983
 msgid "Delete"
 msgstr "Smazat"
 
-#: app/data-browser.c:5029
+#: app/data-browser.c:5028
 msgid "Data Browser"
 msgstr "Prohlížeč dat"
 
-#: app/data-browser.c:5054
+#: app/data-browser.c:5053
 msgid "Close file"
 msgstr "Zavřít soubor"
 
-#: app/data-browser.c:5067
+#: app/data-browser.c:5066
 msgid "Channels"
 msgstr "Kanály"
 
-#: app/data-browser.c:5081 modules/volume/volume_extract.c:444
+#: app/data-browser.c:5080 modules/volume/volume_extract.c:444
 msgid "Graphs"
 msgstr "Grafy"
 
-#: app/data-browser.c:5095
+#: app/data-browser.c:5094
 msgid "Spectra"
 msgstr "Spektra"
 
-#: app/data-browser.c:6629
+#: app/data-browser.c:6628
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Neznámý kanál %d"
 
-#: app/data-browser.c:6715
+#: app/data-browser.c:6714
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Neznámá objemová data %d"
@@ -2907,11 +2907,11 @@ msgstr "FileDescEnd nemá odpovídající FileDescBegin"
 msgid "FileDescBegin has no corresponding FileDescEnd."
 msgstr "FileDescBegin nemá odpovídající FileDescEnd"
 
-#: modules/file/apedaxfile.c:211
+#: modules/file/apedaxfile.c:218
 msgid "Imports A.P.E. Research DAX data files."
 msgstr "Načítá datové soubory A.P.E. Research DAX."
 
-#: modules/file/apedaxfile.c:224
+#: modules/file/apedaxfile.c:231
 msgid "A.P.E. Research DAX Files (.dax) and APDT File (.apdt)"
 msgstr "A.P.E. Research DAX soubory (.dax) a APDT soubory (.apdt)"
 
@@ -7723,6 +7723,7 @@ msgstr "Vypočíst celkovou křivost"
 
 #: modules/process/curvature.c:203 modules/process/facet-level.c:116
 #: modules/process/semsim.c:164
+#, c-format
 msgid "%s: Lateral dimensions and value must be the same physical quantity."
 msgstr "%s: Rozměry a hodnota musejí být tatáž fyzikální veličina."
 
@@ -13294,14 +13295,17 @@ msgid "K-medians"
 msgstr "K-mediány"
 
 #: modules/volume/volume_kmedians.c:486
+#, c-format
 msgid "K-medians of %s"
 msgstr "K-mediány z %s"
 
 #: modules/volume/volume_kmedians.c:498
+#, c-format
 msgid "K-medians error of %s"
 msgstr "K-means chyba z %s"
 
 #: modules/volume/volume_kmedians.c:527
+#, c-format
 msgid "K-medians center %d"
 msgstr "K-means střed %d"
 
