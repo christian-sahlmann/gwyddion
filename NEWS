@@ -1,4 +1,7 @@
 2.40 (2015-02-07)
+Application:
+- Translations updated: Czech, French, Russian.
+
 Libraries:
 - libgwyprocess: GwySpectra has properties specifying the abscissa and
   ordinate labels for the spectra curves.
