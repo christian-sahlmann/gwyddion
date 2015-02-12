@@ -44,6 +44,7 @@ extra_method_type['gwy_data_field_area_fit_plane'] = [['pa', 'pbx', 'pby'], ['GD
 extra_method_type['gwy_data_field_fit_plane'] = [['pa', 'pbx', 'pby'], ['GDoubleValue', 'GDoubleValue', 'GDoubleValue']]
 extra_method_type['gwy_spectra_itoxy'] = [['x', 'y'], ['GDoubleValue', 'GDoubleValue']]
 extra_method_type['gwy_data_field_get_min_max'] = [['min', 'max'], ['GDoubleValue', 'GDoubleValue']]
+extra_method_type['gwy_data_field_get_autorange'] = [['from', 'to'], ['GDoubleValue', 'GDoubleValue']]
 extra_method_type['gwy_spectra_itoxy'] = [['min', 'max'], ['GDoubleValue', 'GDoubleValue']]
 extra_method_type['gwy_data_field_get_stats'] = [['avg', 'ra', 'rms', 'skew', 'kurtosis'], ['GDoubleValue', 'GDoubleValue', 'GDoubleValue', 'GDoubleValue', 'GDoubleValue']]
 extra_method_type['gwy_data_field_area_get_stats'] = [['avg', 'ra', 'rms', 'skew', 'kurtosis'], ['GDoubleValue', 'GDoubleValue', 'GDoubleValue', 'GDoubleValue', 'GDoubleValue']]
