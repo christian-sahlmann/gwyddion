@@ -15,13 +15,13 @@ AUTOMAKE=${AUTOMAKE:-automake}
 ACLOCAL=${ACLOCAL:-aclocal}
 AUTOHEADER=${AUTOHEADER:-autoheader}
 GETTEXT=${GETTEXT:-gettext}
-gettextize=`which gettextize`
+gettextize=$(which gettextize)
 GETTEXTIZE=${GETTEXTIZE:-$gettextize}
 
 get_version() {
   local v
   local v2
-  v=`$1 --version </dev/null | sed -e '2,$ d' -e 's/ *([^()]*)$//' -e 's/.* \(.*\)/\1/' -e 's/-p[0-9]*//'`
+  v=$($1 --version </dev/null | sed -e '2,$ d' -e 's/ *([^()]*)$//' -e 's/.* \(.*\)/\1/' -e 's/-p[0-9]*//')
   v2=${v#*.}
   echo ${v%%.*}.${v2%%.*}
 }
@@ -37,7 +37,7 @@ check_tool() {
 
   eval $VERBOSE echo "Looking for $cmd"
   if $cmd --version </dev/null >/dev/null 2>&1; then
-    ver=`get_version "$cmd"`
+    ver=$(get_version "$cmd")
     eval $VERBOSE echo "Found $cmd $ver"
     vermajor=${ver%%.*}
     verminor=${ver##*.}
@@ -48,7 +48,7 @@ check_tool() {
       for othercmd in $othercmds; do
         eval $VERBOSE echo "Looking for $othercmd"
         if $othercmd --version </dev/null >/dev/null 2>&1; then
-          otherver=`get_version "$othercmd"`
+          otherver=$(get_version "$othercmd")
           eval $VERBOSE echo "Found $othercmd $otherver"
           if test "$otherver" != "$ver"; then
             diewhy=otherversion
@@ -107,15 +107,19 @@ if test -f config.rpath; then
   # Nothing to do
   :
 else
-  for x in prefix datarootdir gettext_dir; do
-    eval `grep "^$x=" $GETTEXTIZE`
+  for x in prefix datarootdir gettext_dir gettext_datadir; do
+    eval $(grep "^$x=" $GETTEXTIZE)
+    eval $(grep "^: \${$x=" $GETTEXTIZE)
   done
-  if cp "$gettext_dir/config.rpath" config.rpath; then
+  if test ! -n "$gettext_datadir"; then
+    gettext_datadir="$gettext_dir"
+  fi
+  if cp "$gettext_datadir/config.rpath" config.rpath; then
     # OK
     :
   else
     echo
-    echo "ERROR: Cannot find config.rpath in $gettext_dir."
+    echo "ERROR: Cannot find config.rpath in $gettext_datadir."
     echo "       Make sure you Gettext installation is complete."
     DIE=1
   fi
