@@ -46,6 +46,8 @@
  * Read SPS Volume
  **/
 
+#define DEBUG
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -177,6 +179,29 @@ typedef enum {
     WDF_DATAUNITS_ENDMARKER
 } WdfDataUnits;
 
+typedef enum {
+    WDF_PTYPE_CHAR   = 'c', /* 8 bit integer */
+    WDF_PTYPE_INT16  = 's', /* 16 bit integer */
+    WDF_PTYPE_INT32  = 'i', /* 32 bit integer */
+    WDF_PTYPE_INT64  = 'w', /* 64 bit integer */
+    WDF_PTYPE_FLOAT  = 'r', /* real value (32 bit IEEE single precision
+                               floating point) */
+    WDF_PTYPE_DOUBLE = 'q', /* real value (64 bit IEEE single precision
+                               floating point) */
+    WDF_PTYPE_TIME   = 't', /* time value (Win32 FILETIME) */
+    WDF_PTYPE_STRING = 'u', /* string (length prefixed utf-8 encoded
+                               string) */
+    WDF_PTYPE_BINARY = 'b', /* binary (length prefixed binary data) */
+    WDF_PTYPE_NESTED = 'p', /* nested property-set */
+    WDF_PTYPE_KEY    = 'k'  /* key name (length prefixed utf-8 encoded
+                               string) */
+} WdfPropertyType;
+
+typedef enum {
+    WDF_PFLAG_ARRAY      = 0x80, /* array */
+    WDF_PFLAG_COMPRESSED = 0x40  /* compressed (zlib) */
+} WdfPropertyFlag;
+
 static const GwyEnum wdf_units[] = {
     {"",          WDF_DATAUNITS_ARBITRARY },
     {"1/cm",      WDF_DATAUNITS_RAMANSHIFT },
@@ -281,6 +306,15 @@ typedef struct {
 } WdfMapArea;
 
 typedef struct {
+    WdfPropertyType type; /* gchar */
+    WdfPropertyFlag flag; /* gchar */
+    guint16         key;
+    guint32         size;
+    guint32         length;
+    const guchar   *data;
+} WdfPropertySet;
+
+typedef struct {
     WdfHeader    *header;
     gfloat       *data;
     gsize        datasize;
@@ -307,13 +341,15 @@ static gsize          wdf_read_block_header  (const guchar *buffer,
                                               GError **error);
 static void           wdf_read_maparea_block (const guchar *buffer,
                                               WdfMapArea *maparea);
+static void           wdf_read_pset          (const guchar *buffer,
+                                              WdfPropertySet *pset);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Renishaw WiRE data files (WDF)."),
     "Daniil Bratashov <dn2010@gmail.com>",
-    "0.4",
+    "0.5",
     "Daniil Bratashov (dn2010), David Necas (Yeti), Renishaw plc.",
     "2014",
 };
@@ -376,6 +412,7 @@ wdf_load(const gchar *filename,
     WdfFile filedata;
     WdfHeader fileheader;
     WdfBlock block;
+    WdfPropertySet pset;
     const guchar *p;
     gchar *title = NULL;
     GwyBrick *brick;
@@ -390,6 +427,7 @@ wdf_load(const gchar *filename,
     gint width, height, rowstride, bpp;
     gint xunits = 0, yunits = 0, zunits = 0;
     gint power10x, power10y, power10z, power10w;
+    gint magic, pset_size = 0;
     guint norigins, units, G_GNUC_UNUSED type;
     gchar origin_name[16];
     gdouble xreal, yreal, xscale, yscale, zscale, wscale;
@@ -528,6 +566,21 @@ wdf_load(const gchar *filename,
             gwy_debug("Finalizing loader.");
             g_object_unref(loader);
             filedata.whitelight = pixbuf;
+        }
+        else if ((block.id == WDF_BLOCKID_CALIBRATION)
+              || (block.id == WDF_BLOCKID_INSTRUMENT)
+              || (block.id == WDF_BLOCKID_MEASUREMENT)
+              || (block.id == WDF_BLOCKID_WIREDATA)) {
+            p += WDF_BLOCK_HEADER_SIZE;
+            magic = gwy_get_guint32_le(&p);
+            pset_size = gwy_get_guint32_le(&p);
+            gwy_debug("pset size = %d", pset_size);
+            if (magic != WDF_STREAM_IS_PSET) {
+                gwy_debug("bad magic in pset");
+                goto fail;
+            }
+            wdf_read_pset(p, &pset);
+            p -= WDF_BLOCK_HEADER_SIZE + 2 * sizeof(guint32);
         }
 
         p += len;
@@ -1073,6 +1126,25 @@ wdf_read_maparea_block(const guchar *buffer,
               maparea->length[2]);
     maparea->linefocus_size = gwy_get_guint32_le(&buffer);
     gwy_debug("linefocus_length=%d", maparea->linefocus_size);
+}
+
+static void
+wdf_read_pset(const guchar *buffer,
+              WdfPropertySet *pset)
+{
+    pset->type = *(buffer++);
+    pset->flag = *(buffer++);
+    pset->key = gwy_get_guint16_le(&buffer);
+    pset->size = gwy_get_guint32_le(&buffer);
+    pset->length = gwy_get_guint32_le(&buffer);
+    pset->data   = buffer;
+
+    gwy_debug("type = %c, flag = %x, key = %d, size = %d, len = %d",
+              pset->type,
+              pset->flag,
+              pset->key,
+              pset->size,
+              pset->length);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
