@@ -160,9 +160,7 @@ pygwy_console_run_file(GtkToolButton *btn, gpointer user_data)
     textview = GTK_TEXT_VIEW(console_setup->console_file_content);
     console_file_buf = gtk_text_view_get_buffer(textview);
 
-    file_info_line
-        = g_strdup_printf(_(">>> Running file content of below textfield\n"));
-
+    file_info_line = g_strdup_printf(_(">>> Running the script above\b"));
     pygwy_console_append(file_info_line);
 
     gtk_text_buffer_get_bounds(console_file_buf, &start_iter, &end_iter);
