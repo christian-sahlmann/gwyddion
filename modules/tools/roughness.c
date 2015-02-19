@@ -622,7 +622,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Calculate surface profile parameters."),
     "Martin Hasoň <hasonm@physics.muni.cz>, Yeti <yeti@gwyddion.net>",
-    "1.9",
+    "1.10",
     "Martin Hasoň & David Nečas (Yeti)",
     "2006",
 };
@@ -1875,12 +1875,19 @@ gwy_tool_roughness_Da(GwyDataLine *data_line)
 static gdouble
 gwy_tool_roughness_Dq(GwyDataLine *data_line)
 {
-    gdouble q;
+    gdouble Dq = 0.0;
+    const gdouble *data;
+    gint i, res;
 
-    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0.0);
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), Dq);
 
-    q = gwy_data_line_get_res(data_line)/gwy_data_line_get_real(data_line);
-    return gwy_tool_roughness_Xq(data_line)*sqrt(q);
+    data = gwy_data_line_get_data_const(data_line);
+    res = gwy_data_line_get_res(data_line);
+
+    for (i = 1; i < res; i++)
+        Dq += (data[i] - data[i-1])*(data[i] - data[i-1]);
+
+    return sqrt(Dq/(res - 1.0))*res/gwy_data_line_get_real(data_line);
 }
 
 static gdouble
