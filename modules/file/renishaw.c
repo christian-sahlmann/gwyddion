@@ -780,186 +780,193 @@ wdf_load(const gchar *filename,
             yend = yres;
             ystep = 1;
         }
-        
+
+        p = (guchar *)filedata.data;
         for (z = 0; z < filedata.maparea->length[2]; z++) {
-	        brick = gwy_brick_new(xres, yres, zres,
-	                              xreal, yreal, zres, TRUE);
-	        gwy_brick_set_si_unit_x(brick, siunitx);
-	        gwy_brick_set_si_unit_y(brick, siunity);
-	        gwy_brick_set_si_unit_z(brick, siunitz);
-	        gwy_brick_set_si_unit_w(brick, siunitw);
-	
-	        /* read data */
-	        gwy_debug("flags = %d", filedata.maparea->flags);
-	        data = gwy_brick_get_data(brick);
-	        p = (guchar *)filedata.data;
-	        if (filedata.maparea->flags & WDF_MAPAREA_COLUMNMAJOR) {
-	            /* YX, the most modes use it */
-	            if (filedata.maparea->flags & WDF_MAPAREA_ALTERNATING) {
-	                /* Zigzag scanning mode */
-	                for (i = xstart; i != xend; i += xstep) {
-	                    for (j = ystart; j != yend; j += ystep)
-	                        for (k = 0; k < zres; k++) {
-	                            *(data + k * xres * yres + i + j * xres)
-	                              = (gdouble)gwy_get_gfloat_le(&p) * wscale;
-	                        }
-	                    if (ystep < 0) {
-	                        ystart = 0;
-	                        yend = yres;
-	                        ystep = 1;
-	                    }
-	                    else {
-	                        ystart = yres - 1;
-	                        yend = -1;
-	                        ystep = -1;
-	                    }
-	                }
-	            }
-	            else {
-	                for (i = xstart; i != xend; i += xstep)
-	                    for (j = ystart; j != yend; j += ystep)
-	                        for (k = 0; k < zres; k++) {
-	                            *(data + k * xres * yres + i + j * xres)
-	                              = (gdouble)gwy_get_gfloat_le(&p) * wscale;
-	                        }
-	            }
-	        }
-	        else if (filedata.maparea->flags & WDF_MAPAREA_LINEFOCUSMAPPING) {
-	            /* FIXME: need some example data to test */
-	            gwy_debug("linefocus mode");
-	            lsize = filedata.maparea->linefocus_size;
-	            if (filedata.maparea->flags & WDF_MAPAREA_ALTERNATING) {
-	                for (j = 0; j < yres; j += lsize) {
-	                    for (i = xstart; i != xend; i += xstep)
-	                        for (l = 0;
-	                            (l < lsize) && (l + j * lsize < yres);
-	                             l++) {
-	                            for (k = 0; k < zres; k++) {
-	                                *(data + k * xres * yres + i
-	                                               + (j * lsize + l) * xres)
-	                                        = (gdouble)gwy_get_gfloat_le(&p)
-	                                                               * wscale;
-	                            }
-	                        }
-	                    if (xstep < 0) {
-	                        xstart = 0;
-	                        xend = xres;
-	                        xstep = 1;
-	                    }
-	                    else {
-	                        xstart = xres - 1;
-	                        xend = -1;
-	                        xstep = -1;
-	                    }
-	                }
-	            }
-	            else {
-	                for (j = 0; j < yres; j += lsize)
-	                    for (i = xstart; i != xend; i += xstep)
-	                        for (l = 0;
-	                            (l < lsize) && (l + j * lsize < yres);
-	                             l++) {
-	                            for (k = 0; k < zres; k++) {
-	                                *(data + k * xres * yres + i
-	                                               + (j * lsize + l) * xres)
-	                                        = (gdouble)gwy_get_gfloat_le(&p)
-	                                                               * wscale;
-	                            }
-	                        }
-	            }
-	        }
-	        else if (filedata.maparea->flags & WDF_MAPAREA_XYLINE) {
-	            gwy_debug("XY line");
-	            for (j = ystart; j != yend; j += ystep)
-	                for (i = xstart; i != xend; i += xstep)
-	                    for (k = 0; k < zres; k++) {
-	                        *(data + k * xres * yres + i + j * xres)
-	                          = (gdouble)gwy_get_gfloat_le(&p) * wscale;
-	                    }
-	        }
-	        else {
-	            if (filedata.maparea->flags & WDF_MAPAREA_ALTERNATING) {
-	                for (j = ystart; j != yend; j += ystep) {
-	                    for (i = xstart; i != xend; i += xstep)
-	                        for (k = 0; k < zres; k++) {
-	                            *(data + k * xres * yres + i + j * xres)
-	                              = (gdouble)gwy_get_gfloat_le(&p) * wscale;
-	                        }
-	                    if (xstep < 0) {
-	                        xstart = 0;
-	                        xend = xres;
-	                        xstep = 1;
-	                    }
-	                    else {
-	                        xstart = xres - 1;
-	                        xend = -1;
-	                        xstep = -1;
-	                    }
-	                }
-	            }
-	            else {
-	                for (j = ystart; j != yend; j += ystep)
-	                    for (i = xstart; i != xend; i += xstep)
-	                        for (k = 0; k < zres; k++) {
-	                            *(data + k * xres * yres + i + j * xres)
-	                              = (gdouble)gwy_get_gfloat_le(&p) * wscale;
-	                        }
-	            }
-	        }
-	
-	        /* reading calibration */
-	        cal = gwy_data_line_new(zres, zres, FALSE);
-	        data = gwy_data_line_get_data(cal);
-	        gwy_convert_raw_data(filedata.xlistdata, zres, 1,
-	                             GWY_RAW_DATA_FLOAT,
-	                             GWY_BYTE_ORDER_LITTLE_ENDIAN,
-	                             data, zscale, 0.0);
-	        gwy_data_line_set_si_unit_y(cal, siunitz);
-	        
-	        gwy_brick_set_zcalibration(brick, cal);
-	        g_object_unref(cal);
-	
-	        /* offsets of the data */
-	        gwy_brick_set_xoffset(brick, filedata.maparea->location[0]
-	                                                              * xscale);
-	        gwy_brick_set_yoffset(brick, filedata.maparea->location[1]
-	                                                              * yscale);
-	
-	        /* packing */
-	        key = g_strdup_printf("/brick/%d", z);
-	        gwy_container_set_object_by_name(container, key, brick);
-	        g_free(key);
-	        if (filedata.maparea->length[2] == 1) {
-				title = g_strdup(fileheader.title);
-			}
-			else if (zdata) {
-				unit = gwy_enum_to_string(zunits, wdf_units, 26);
+            brick = gwy_brick_new(xres, yres, zres,
+                                  xreal, yreal, zres, TRUE);
+            gwy_brick_set_si_unit_x(brick, siunitx);
+            gwy_brick_set_si_unit_y(brick, siunity);
+            gwy_brick_set_si_unit_z(brick, siunitz);
+            gwy_brick_set_si_unit_w(brick, siunitw);
+
+            /* read data */
+            gwy_debug("flags = %d", filedata.maparea->flags);
+            data = gwy_brick_get_data(brick);
+
+            if (filedata.maparea->flags & WDF_MAPAREA_COLUMNMAJOR) {
+                /* YX, the most modes use it */
+                if (filedata.maparea->flags & WDF_MAPAREA_ALTERNATING) {
+                    /* Zigzag scanning mode */
+                    for (i = xstart; i != xend; i += xstep) {
+                        for (j = ystart; j != yend; j += ystep)
+                            for (k = 0; k < zres; k++) {
+                                *(data + k * xres * yres + i + j * xres)
+                                        = (gdouble)gwy_get_gfloat_le(&p)
+                                                               * wscale;
+                            }
+                        if (ystep < 0) {
+                            ystart = 0;
+                            yend = yres;
+                            ystep = 1;
+                        }
+                        else {
+                            ystart = yres - 1;
+                            yend = -1;
+                            ystep = -1;
+                        }
+                    }
+                }
+                else {
+                    for (i = xstart; i != xend; i += xstep)
+                        for (j = ystart; j != yend; j += ystep)
+                            for (k = 0; k < zres; k++) {
+                                *(data + k * xres * yres + i + j * xres)
+                                        = (gdouble)gwy_get_gfloat_le(&p)
+                                                               * wscale;
+                            }
+                }
+            }
+            else if (filedata.maparea->flags
+                                       & WDF_MAPAREA_LINEFOCUSMAPPING) {
+                /* FIXME: need some example data to test */
+                gwy_debug("linefocus mode");
+                lsize = filedata.maparea->linefocus_size;
+                if (filedata.maparea->flags & WDF_MAPAREA_ALTERNATING) {
+                    for (j = 0; j < yres; j += lsize) {
+                        for (i = xstart; i != xend; i += xstep)
+                            for (l = 0;
+                                (l < lsize) && (l + j * lsize < yres);
+                                 l++) {
+                                for (k = 0; k < zres; k++) {
+                                    *(data + k * xres * yres + i
+                                               + (j * lsize + l) * xres)
+                                        = (gdouble)gwy_get_gfloat_le(&p)
+                                                               * wscale;
+                                }
+                            }
+                        if (xstep < 0) {
+                            xstart = 0;
+                            xend = xres;
+                            xstep = 1;
+                        }
+                        else {
+                            xstart = xres - 1;
+                            xend = -1;
+                            xstep = -1;
+                        }
+                    }
+                }
+                else {
+                    for (j = 0; j < yres; j += lsize)
+                        for (i = xstart; i != xend; i += xstep)
+                            for (l = 0;
+                                (l < lsize) && (l + j * lsize < yres);
+                                 l++) {
+                                for (k = 0; k < zres; k++) {
+                                    *(data + k * xres * yres + i
+                                               + (j * lsize + l) * xres)
+                                        = (gdouble)gwy_get_gfloat_le(&p)
+                                                               * wscale;
+                                }
+                            }
+                }
+            }
+            else if (filedata.maparea->flags & WDF_MAPAREA_XYLINE) {
+                gwy_debug("XY line");
+                for (j = ystart; j != yend; j += ystep)
+                    for (i = xstart; i != xend; i += xstep)
+                        for (k = 0; k < zres; k++) {
+                            *(data + k * xres * yres + i + j * xres)
+                              = (gdouble)gwy_get_gfloat_le(&p) * wscale;
+                        }
+            }
+            else {
+                if (filedata.maparea->flags & WDF_MAPAREA_ALTERNATING) {
+                    for (j = ystart; j != yend; j += ystep) {
+                        for (i = xstart; i != xend; i += xstep)
+                            for (k = 0; k < zres; k++) {
+                                *(data + k * xres * yres + i + j * xres)
+                                        = (gdouble)gwy_get_gfloat_le(&p)
+                                                               * wscale;
+                            }
+                        if (xstep < 0) {
+                            xstart = 0;
+                            xend = xres;
+                            xstep = 1;
+                        }
+                        else {
+                            xstart = xres - 1;
+                            xend = -1;
+                            xstep = -1;
+                        }
+                    }
+                }
+                else {
+                    for (j = ystart; j != yend; j += ystep)
+                        for (i = xstart; i != xend; i += xstep)
+                            for (k = 0; k < zres; k++) {
+                                *(data + k * xres * yres + i + j * xres)
+                                        = (gdouble)gwy_get_gfloat_le(&p)
+                                                               * wscale;
+                            }
+                }
+            }
+
+            /* reading calibration */
+            cal = gwy_data_line_new(zres, zres, FALSE);
+            data = gwy_data_line_get_data(cal);
+            gwy_convert_raw_data(filedata.xlistdata, zres, 1,
+                                 GWY_RAW_DATA_FLOAT,
+                                 GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                                 data, zscale, 0.0);
+            gwy_data_line_set_si_unit_y(cal, siunitz);
+
+            gwy_brick_set_zcalibration(brick, cal);
+            g_object_unref(cal);
+
+            /* offsets of the data */
+            gwy_brick_set_xoffset(brick, filedata.maparea->location[0]
+                                                              * xscale);
+            gwy_brick_set_yoffset(brick, filedata.maparea->location[1]
+                                                              * yscale);
+
+            /* packing */
+            key = g_strdup_printf("/brick/%d", z);
+            gwy_container_set_object_by_name(container, key, brick);
+            g_free(key);
+            if (filedata.maparea->length[2] == 1) {
+                title = g_strdup(fileheader.title);
+            }
+            else if (zdata) {
+                unit = gwy_enum_to_string(zunits, wdf_units, 26);
                 title = g_strdup_printf("%s (z = %g %s)",
-										fileheader.title,
+                                        fileheader.title,
                                         zdata[z * xres * yres], unit);
             }
             else {
-				title = g_strdup_printf("%s (z = %d)", 
-				                        fileheader.title,
-				                        z);
-			}
-			key = g_strdup_printf("/brick/%d/title", z);
-	        gwy_container_set_string_by_name(container, key, title);
-			g_free(key);
-	        dfield = gwy_data_field_new(xres, yres,
-	                                    xres, yres,
-	                                    TRUE);
-	        gwy_brick_mean_plane(brick, dfield, 0, 0, 0,
-	                             xres, yres, -1, FALSE);
-			key = g_strdup_printf("/brick/%d/preview", z);
-	        gwy_container_set_object_by_name(container, key, dfield);
-	        g_free(key);
-	        g_object_unref(dfield);
-	        g_object_unref(brick);
-	
-	        gwy_file_volume_import_log_add(container, z, NULL, filename);
-		}
-		g_object_unref(siunitx);
+                title = g_strdup_printf("%s (z = %d)",
+                                        fileheader.title,
+                                        z);
+            }
+            key = g_strdup_printf("/brick/%d/title", z);
+            gwy_container_set_string_by_name(container, key, title);
+            g_free(key);
+            dfield = gwy_data_field_new(xres, yres,
+                                        xres, yres,
+                                        TRUE);
+            gwy_brick_mean_plane(brick, dfield, 0, 0, 0,
+                                 xres, yres, -1, FALSE);
+            key = g_strdup_printf("/brick/%d/preview", z);
+            gwy_container_set_object_by_name(container, key, dfield);
+            g_free(key);
+            g_object_unref(dfield);
+            g_object_unref(brick);
+
+            gwy_file_volume_import_log_add(container,
+                                           z, NULL, filename);
+        }
+        g_object_unref(siunitx);
         g_object_unref(siunity);
         g_object_unref(siunitz);
         g_object_unref(siunitw);
@@ -1145,9 +1152,9 @@ static void
 wdf_read_pset(const guchar *buffer,
               WdfPropertySet *pset)
 {
-	gchar str[256]; 
-	guint i;
-	
+    gchar str[256];
+    guint i;
+
     pset->type = *(buffer++);
     pset->flag = *(buffer++);
     pset->key = gwy_get_guint16_le(&buffer);
@@ -1160,42 +1167,42 @@ wdf_read_pset(const guchar *buffer,
               pset->flag,
               pset->key,
               pset->size);
-              
+
     if (pset->type == 'i') {
-	    pset->type = *(buffer++);
-	    pset->flag = *(buffer++);
-	    pset->key = gwy_get_guint16_le(&buffer);
-	    pset->size = gwy_get_guint32_le(&buffer);
-	    // pset->length = gwy_get_guint32_le(&buffer);
-	    pset->data   = buffer;
-	
-	    gwy_debug("type = %c, flag = %x, key = %d, size = %d",
-	              pset->type,
-	              pset->flag,
-	              pset->key,
-	              pset->size);
-	}
-              
-	if (pset->type == 'u') {
-		for (i = 0; i < pset->size; i++)
-			str[i] = *(buffer++);
-		gwy_debug("str = %s", str);
-	    pset->type = *(buffer++);
-	    pset->flag = *(buffer++);
-	    pset->key = gwy_get_guint16_le(&buffer);
-	    pset->size = gwy_get_guint32_le(&buffer);
-	    // pset->length = gwy_get_guint32_le(&buffer);
-	    pset->data   = buffer;
-	
-	    gwy_debug("type = %c, flag = %x, key = %d, size = %d",
-	              pset->type,
-	              pset->flag,
-	              pset->key,
-	              pset->size);	
-		for (i = 0; i < pset->size; i++)
-			str[i] = *(buffer++);
-		gwy_debug("str = %s", str);	              	
-	}
+        pset->type = *(buffer++);
+        pset->flag = *(buffer++);
+        pset->key = gwy_get_guint16_le(&buffer);
+        pset->size = gwy_get_guint32_le(&buffer);
+        // pset->length = gwy_get_guint32_le(&buffer);
+        pset->data   = buffer;
+
+        gwy_debug("type = %c, flag = %x, key = %d, size = %d",
+                  pset->type,
+                  pset->flag,
+                  pset->key,
+                  pset->size);
+    }
+
+    if (pset->type == 'u') {
+        for (i = 0; i < pset->size; i++)
+            str[i] = *(buffer++);
+        gwy_debug("str = %s", str);
+        pset->type = *(buffer++);
+        pset->flag = *(buffer++);
+        pset->key = gwy_get_guint16_le(&buffer);
+        pset->size = gwy_get_guint32_le(&buffer);
+        // pset->length = gwy_get_guint32_le(&buffer);
+        pset->data   = buffer;
+
+        gwy_debug("type = %c, flag = %x, key = %d, size = %d",
+                  pset->type,
+                  pset->flag,
+                  pset->key,
+                  pset->size);
+        for (i = 0; i < pset->size; i++)
+            str[i] = *(buffer++);
+        gwy_debug("str = %s", str);
+    }
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
