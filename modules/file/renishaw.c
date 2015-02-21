@@ -722,13 +722,6 @@ wdf_load(const gchar *filename,
                   filedata.maparea->length[0],
                   filedata.maparea->length[1],
                   filedata.maparea->length[2]);
-        if ((filedata.maparea->length[2] != 1)
-                                && (filedata.maparea->length[1] != 1)) {
-            g_set_error(error, GWY_MODULE_FILE_ERROR,
-                        GWY_MODULE_FILE_ERROR_DATA,
-                        _("3D Volume is unsupported now"));
-            goto fail;
-        }
 
         if ((filedata.maparea->flags & WDF_MAPAREA_RANDOMPOINTS) == 1) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
@@ -1132,19 +1125,57 @@ static void
 wdf_read_pset(const guchar *buffer,
               WdfPropertySet *pset)
 {
+	gchar str[256]; 
+	guint i;
+	
     pset->type = *(buffer++);
     pset->flag = *(buffer++);
     pset->key = gwy_get_guint16_le(&buffer);
     pset->size = gwy_get_guint32_le(&buffer);
-    pset->length = gwy_get_guint32_le(&buffer);
+    // pset->length = gwy_get_guint32_le(&buffer);
     pset->data   = buffer;
 
-    gwy_debug("type = %c, flag = %x, key = %d, size = %d, len = %d",
+    gwy_debug("type = %c, flag = %x, key = %d, size = %d",
               pset->type,
               pset->flag,
               pset->key,
-              pset->size,
-              pset->length);
+              pset->size);
+              
+    if (pset->type == 'i') {
+	    pset->type = *(buffer++);
+	    pset->flag = *(buffer++);
+	    pset->key = gwy_get_guint16_le(&buffer);
+	    pset->size = gwy_get_guint32_le(&buffer);
+	    // pset->length = gwy_get_guint32_le(&buffer);
+	    pset->data   = buffer;
+	
+	    gwy_debug("type = %c, flag = %x, key = %d, size = %d",
+	              pset->type,
+	              pset->flag,
+	              pset->key,
+	              pset->size);
+	}
+              
+	if (pset->type == 'u') {
+		for (i = 0; i < pset->size; i++)
+			str[i] = *(buffer++);
+		gwy_debug("str = %s", str);
+	    pset->type = *(buffer++);
+	    pset->flag = *(buffer++);
+	    pset->key = gwy_get_guint16_le(&buffer);
+	    pset->size = gwy_get_guint32_le(&buffer);
+	    // pset->length = gwy_get_guint32_le(&buffer);
+	    pset->data   = buffer;
+	
+	    gwy_debug("type = %c, flag = %x, key = %d, size = %d",
+	              pset->type,
+	              pset->flag,
+	              pset->key,
+	              pset->size);	
+		for (i = 0; i < pset->size; i++)
+			str[i] = *(buffer++);
+		gwy_debug("str = %s", str);	              	
+	}
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
