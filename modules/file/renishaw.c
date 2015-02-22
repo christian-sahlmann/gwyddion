@@ -965,6 +965,13 @@ wdf_load(const gchar *filename,
 
             gwy_file_volume_import_log_add(container,
                                            z, NULL, filename);
+            if (filedata.maparea->flags & WDF_MAPAREA_XYLINE) {
+                /* FIXME: it is better to do it here and don't break
+                 * all other logic and implement reading of XYLINE
+                 *  separately
+                 **/
+                break;
+            }
         }
         g_object_unref(siunitx);
         g_object_unref(siunity);
