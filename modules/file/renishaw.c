@@ -181,6 +181,7 @@ typedef enum {
 
 typedef enum {
     WDF_PTYPE_CHAR   = 'c', /* 8 bit integer */
+    WDF_PTYPE_UINT8  = '?',
     WDF_PTYPE_INT16  = 's', /* 16 bit integer */
     WDF_PTYPE_INT32  = 'i', /* 32 bit integer */
     WDF_PTYPE_INT64  = 'w', /* 64 bit integer */
@@ -342,6 +343,7 @@ static gsize          wdf_read_block_header  (const guchar *buffer,
 static void           wdf_read_maparea_block (const guchar *buffer,
                                               WdfMapArea *maparea);
 static void           wdf_read_pset          (const guchar *buffer,
+                                              gsize size,
                                               WdfPropertySet *pset);
 
 static GwyModuleInfo module_info = {
@@ -579,7 +581,7 @@ wdf_load(const gchar *filename,
                 gwy_debug("bad magic in pset");
                 goto fail;
             }
-            wdf_read_pset(p, &pset);
+            wdf_read_pset(p, pset_size, &pset);
             p -= WDF_BLOCK_HEADER_SIZE + 2 * sizeof(guint32);
         }
 
@@ -1157,59 +1159,101 @@ wdf_read_maparea_block(const guchar *buffer,
 
 static void
 wdf_read_pset(const guchar *buffer,
+              gsize size,
               WdfPropertySet *pset)
 {
-    gchar str[256];
-    guint i;
+    // FIXME: it is all quick and dirty debug print
+    gchar str[100000];
+    gint remaining, len;
+    gint i;
 
-    pset->type = *(buffer++);
-    pset->flag = *(buffer++);
-    pset->key = gwy_get_guint16_le(&buffer);
-    pset->size = gwy_get_guint32_le(&buffer);
-    // pset->length = gwy_get_guint32_le(&buffer);
-    pset->data   = buffer;
+    remaining = size;
 
-    gwy_debug("type = %c, flag = %x, key = %d, size = %d",
-              pset->type,
-              pset->flag,
-              pset->key,
-              pset->size);
-
-    if (pset->type == 'i') {
+    while (remaining > 0) {
         pset->type = *(buffer++);
         pset->flag = *(buffer++);
         pset->key = gwy_get_guint16_le(&buffer);
-        pset->size = gwy_get_guint32_le(&buffer);
-        // pset->length = gwy_get_guint32_le(&buffer);
-        pset->data   = buffer;
+        remaining -= 4;
+        gwy_debug("type = %d, flag = %d, key = %d",
+				  pset->type,
+				  pset->flag,
+				  pset->key);
+        switch (pset->type) {
+            case WDF_PTYPE_CHAR:
+                gwy_debug("c = %d", *(buffer++));
+                remaining -= 1;
+            break;
+            case WDF_PTYPE_UINT8:
+                gwy_debug("? = %d", *(buffer++));
+                remaining -= 1;
+            break;
+            case WDF_PTYPE_INT16:
+                gwy_debug("s = %d", gwy_get_gint16_le(&buffer));
+                remaining -= 2;
+            break;
+            case WDF_PTYPE_INT32:
+                gwy_debug("i = %d", gwy_get_gint32_le(&buffer));
+                remaining -= 4;
+            break;
+            case WDF_PTYPE_INT64:
+                gwy_debug("w = %" G_GINT64_FORMAT "",
+                          gwy_get_gint64_le(&buffer));
+                remaining -= 8;
+            break;
+            case WDF_PTYPE_FLOAT:
+                gwy_debug("r = %g", gwy_get_gfloat_le(&buffer));
+                remaining -= 4;
+            break;
+            case WDF_PTYPE_DOUBLE:
+                gwy_debug("q = %g", gwy_get_gdouble_le(&buffer));
+                remaining -= 8;
+            break;
+            case WDF_PTYPE_TIME:
+                gwy_debug("t = %" G_GINT64_FORMAT "",
+                          gwy_get_gint64_le(&buffer));
+                remaining -= 8;
+            break;
+            case WDF_PTYPE_STRING:
+                pset->size = gwy_get_guint32_le(&buffer);
+                remaining -= 4 + pset->size;
+                for (i = 0; i < pset->size; i++) {
+                    str[i] = *(buffer++);
+                }
+                gwy_debug("u size=%d str=%s", pset->size, g_strndup(str, pset->size));
+            break;
+            case WDF_PTYPE_BINARY:
+                pset->size = gwy_get_guint32_le(&buffer);
+                remaining -= 4 + pset->size;
+                for (i = 0; i < pset->size; i++) {
+                    str[i] = *(buffer++);
+                }
+                gwy_debug("b size=%d", pset->size);
+            break;
+            case WDF_PTYPE_NESTED:
+                pset->size = gwy_get_guint32_le(&buffer);
+                remaining -= 4;
+                gwy_debug("p size=%d", pset->size);
 
-        gwy_debug("type = %c, flag = %x, key = %d, size = %d",
-                  pset->type,
-                  pset->flag,
-                  pset->key,
-                  pset->size);
+            break;
+            case WDF_PTYPE_KEY:
+                gwy_debug("k");
+                pset->size = gwy_get_guint32_le(&buffer);
+                for (i = 0; i < pset->size; i++) {
+                    str[i] = *(buffer++);
+                }
+                gwy_debug("k key=%s", g_strndup(str, pset->size));
+                remaining -= 4 + pset->size;
+            break;
+            default:
+                gwy_debug("something wrong");
+                gwy_debug("type = %c, flag = %c, key = %d",
+                          pset->type, pset->flag, pset->key);
+                goto fail;
+        }
     }
+    fail:
+    gwy_debug("remaining = %d", remaining);
 
-    if (pset->type == 'u') {
-        for (i = 0; i < pset->size; i++)
-            str[i] = *(buffer++);
-        gwy_debug("str = %s", str);
-        pset->type = *(buffer++);
-        pset->flag = *(buffer++);
-        pset->key = gwy_get_guint16_le(&buffer);
-        pset->size = gwy_get_guint32_le(&buffer);
-        // pset->length = gwy_get_guint32_le(&buffer);
-        pset->data   = buffer;
-
-        gwy_debug("type = %c, flag = %x, key = %d, size = %d",
-                  pset->type,
-                  pset->flag,
-                  pset->key,
-                  pset->size);
-        for (i = 0; i < pset->size; i++)
-            str[i] = *(buffer++);
-        gwy_debug("str = %s", str);
-    }
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
