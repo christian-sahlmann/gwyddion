@@ -505,7 +505,7 @@ static GwyModuleInfo module_info = {
        "Export to some formats relies on GDK and other libraries thus may "
        "be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2014",
 };
@@ -5787,42 +5787,44 @@ options_sel_point(ImgExportControls *controls)
 }
 
 /* Use the pixmap prefix for compatibility */
-static const gchar active_page_key[]        = "/module/pixmap/active_page";
-static const gchar border_width_key[]       = "/module/pixmap/border_width";
-static const gchar draw_frame_key[]         = "/module/pixmap/draw_frame";
-static const gchar draw_maskkey_key[]       = "/module/pixmap/draw_maskkey";
-static const gchar draw_mask_key[]          = "/module/pixmap/draw_mask";
-static const gchar draw_selection_key[]     = "/module/pixmap/draw_selection";
-static const gchar fmscale_gap_key[]        = "/module/pixmap/fmscale_gap";
-static const gchar font_key[]               = "/module/pixmap/font";
-static const gchar font_size_key[]          = "/module/pixmap/font_size";
-static const gchar inset_color_key[]        = "/module/pixmap/inset_color";
-static const gchar inset_draw_label_key[]   = "/module/pixmap/inset_draw_label";
-static const gchar inset_draw_ticks_key[]   = "/module/pixmap/inset_draw_ticks";
-static const gchar inset_length_key[]       = "/module/pixmap/inset_length";
-static const gchar inset_pos_key[]          = "/module/pixmap/inset_pos";
-static const gchar inset_xgap_key[]         = "/module/pixmap/inset_xgap";
-static const gchar inset_ygap_key[]         = "/module/pixmap/inset_ygap";
-static const gchar interpolation_key[]      = "/module/pixmap/interpolation";
-static const gchar line_width_key[]         = "/module/pixmap/line_width";
-static const gchar maskkey_gap_key[]        = "/module/pixmap/maskkey_gap";
-static const gchar mask_key_key[]           = "/module/pixmap/mask_key";
-static const gchar mode_key[]               = "/module/pixmap/mode";
-static const gchar outline_width_key[]      = "/module/pixmap/outline_width";
-static const gchar pxwidth_key[]            = "/module/pixmap/pxwidth";
-static const gchar scale_font_key[]         = "/module/pixmap/scale_font";
-static const gchar sel_color_key[]          = "/module/pixmap/sel_color";
-static const gchar selection_key[]          = "/module/pixmap/selection";
-static const gchar sel_line_thickness_key[] = "/module/pixmap/sel_line_thickness";
-static const gchar sel_number_objects_key[] = "/module/pixmap/sel_number_objects";
-static const gchar sel_point_radius_key[]   = "/module/pixmap/sel_point_radius";
-static const gchar tick_length_key[]        = "/module/pixmap/tick_length";
-static const gchar title_gap_key[]          = "/module/pixmap/title_gap";
-static const gchar title_type_key[]         = "/module/pixmap/title_type";
-static const gchar units_in_title_key[]     = "/module/pixmap/units_in_title";
-static const gchar xytype_key[]             = "/module/pixmap/xytype";
-static const gchar zoom_key[]               = "/module/pixmap/zoom";
-static const gchar ztype_key[]              = "/module/pixmap/ztype";
+static const gchar active_page_key[]         = "/module/pixmap/active_page";
+static const gchar border_width_key[]        = "/module/pixmap/border_width";
+static const gchar draw_frame_key[]          = "/module/pixmap/draw_frame";
+static const gchar draw_mask_key[]           = "/module/pixmap/draw_mask";
+static const gchar draw_maskkey_key[]        = "/module/pixmap/draw_maskkey";
+static const gchar draw_selection_key[]      = "/module/pixmap/draw_selection";
+static const gchar fmscale_gap_key[]         = "/module/pixmap/fmscale_gap";
+static const gchar font_key[]                = "/module/pixmap/font";
+static const gchar font_size_key[]           = "/module/pixmap/font_size";
+static const gchar inset_color_key[]         = "/module/pixmap/inset_color";
+static const gchar inset_draw_label_key[]    = "/module/pixmap/inset_draw_label";
+static const gchar inset_draw_ticks_key[]    = "/module/pixmap/inset_draw_ticks";
+static const gchar inset_length_key[]        = "/module/pixmap/inset_length";
+static const gchar inset_outline_color_key[] = "/module/pixmap/inset_outline_color";
+static const gchar inset_pos_key[]           = "/module/pixmap/inset_pos";
+static const gchar inset_xgap_key[]          = "/module/pixmap/inset_xgap";
+static const gchar inset_ygap_key[]          = "/module/pixmap/inset_ygap";
+static const gchar interpolation_key[]       = "/module/pixmap/interpolation";
+static const gchar line_width_key[]          = "/module/pixmap/line_width";
+static const gchar mask_key_key[]            = "/module/pixmap/mask_key";
+static const gchar maskkey_gap_key[]         = "/module/pixmap/maskkey_gap";
+static const gchar mode_key[]                = "/module/pixmap/mode";
+static const gchar outline_width_key[]       = "/module/pixmap/outline_width";
+static const gchar pxwidth_key[]             = "/module/pixmap/pxwidth";
+static const gchar scale_font_key[]          = "/module/pixmap/scale_font";
+static const gchar sel_color_key[]           = "/module/pixmap/sel_color";
+static const gchar sel_line_thickness_key[]  = "/module/pixmap/sel_line_thickness";
+static const gchar sel_number_objects_key[]  = "/module/pixmap/sel_number_objects";
+static const gchar sel_outline_color_key[]   = "/module/pixmap/sel_outline_color";
+static const gchar sel_point_radius_key[]    = "/module/pixmap/sel_point_radius";
+static const gchar selection_key[]           = "/module/pixmap/selection";
+static const gchar tick_length_key[]         = "/module/pixmap/tick_length";
+static const gchar title_gap_key[]           = "/module/pixmap/title_gap";
+static const gchar title_type_key[]          = "/module/pixmap/title_type";
+static const gchar units_in_title_key[]      = "/module/pixmap/units_in_title";
+static const gchar xytype_key[]              = "/module/pixmap/xytype";
+static const gchar zoom_key[]                = "/module/pixmap/zoom";
+static const gchar ztype_key[]               = "/module/pixmap/ztype";
 
 static void
 img_export_free_env(ImgExportEnv *env)
@@ -5863,6 +5865,10 @@ img_export_load_args(GwyContainer *container,
                                    &args->title_type);
     gwy_rgba_get_from_container(&args->inset_color, container, inset_color_key);
     gwy_rgba_get_from_container(&args->sel_color, container, sel_color_key);
+    gwy_rgba_get_from_container(&args->inset_outline_color, container,
+                                inset_outline_color_key);
+    gwy_rgba_get_from_container(&args->sel_outline_color, container,
+                                sel_outline_color_key);
     gwy_container_gis_enum_by_name(container, inset_pos_key, &args->inset_pos);
     gwy_container_gis_string_by_name(container, inset_length_key,
                                      (const guchar**)&args->inset_length);
@@ -5936,6 +5942,10 @@ img_export_save_args(GwyContainer *container,
                                    args->title_type);
     gwy_rgba_store_to_container(&args->inset_color, container, inset_color_key);
     gwy_rgba_store_to_container(&args->sel_color, container, sel_color_key);
+    gwy_rgba_store_to_container(&args->inset_outline_color, container,
+                                inset_outline_color_key);
+    gwy_rgba_store_to_container(&args->sel_outline_color, container,
+                                sel_outline_color_key);
     gwy_container_set_enum_by_name(container, inset_pos_key, args->inset_pos);
     gwy_container_set_string_by_name(container, inset_length_key,
                                      g_strdup(args->inset_length));
