@@ -37,7 +37,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Level graph by line."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -60,10 +60,17 @@ module_register(void)
 static void
 level(GwyGraph *graph)
 {
+    GwyContainer *data;
     GwyGraphCurveModel *cmodel;
     const gdouble *xdata, *ydata;
     GArray *newydata;
     gint i, ncurves, ndata;
+    GQuark quark;
+
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data,
+                                     GWY_APP_GRAPH_MODEL_KEY, &quark,
+                                     0);
+    gwy_app_undo_qcheckpointv(data, 1, &quark);
 
     ncurves = gwy_graph_model_get_n_curves(gwy_graph_get_model(graph));
     newydata = g_array_new(FALSE, FALSE, sizeof(gdouble));

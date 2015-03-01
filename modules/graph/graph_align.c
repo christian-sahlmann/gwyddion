@@ -73,11 +73,13 @@ module_register(void)
 static void
 graph_align(GwyGraph *graph)
 {
+    GwyContainer *data;
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *cmodel, *basecmodel = NULL;
     gint i, ncurves, ndata, ndatamax = 0;
     const gdouble *xdata;
     gdouble len, maxlen = 0.0;
+    GQuark quark;
 
     gmodel = gwy_graph_get_model(graph);
     ncurves = gwy_graph_model_get_n_curves(gmodel);
@@ -104,6 +106,11 @@ graph_align(GwyGraph *graph)
         gwy_debug("base curve has only %d points", ndatamax);
         return;
     }
+
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data,
+                                     GWY_APP_GRAPH_MODEL_KEY, &quark,
+                                     0);
+    gwy_app_undo_qcheckpointv(data, 1, &quark);
 
     for (i = 0; i < ncurves; i++) {
         cmodel = gwy_graph_model_get_curve(gmodel, i);
