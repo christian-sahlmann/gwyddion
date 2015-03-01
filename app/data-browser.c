@@ -956,10 +956,12 @@ gwy_app_data_proxy_reconnect_graph(GwyAppDataProxy *proxy,
                                    GtkTreeIter *iter,
                                    GObject *object)
 {
+    GwyGraph *graph;
     GObject *old;
 
     gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store), iter,
                        MODEL_OBJECT, &old,
+                       MODEL_WIDGET, &graph,
                        -1);
     g_signal_handlers_disconnect_by_func(old,
                                          gwy_app_data_proxy_graph_changed,
@@ -970,6 +972,10 @@ gwy_app_data_proxy_reconnect_graph(GwyAppDataProxy *proxy,
                        -1);
     g_signal_connect(object, "notify::n-curves", /* FIXME */
                      G_CALLBACK(gwy_app_data_proxy_graph_changed), proxy);
+    if (graph) {
+        gwy_graph_set_model(graph, GWY_GRAPH_MODEL(object));
+        g_object_unref(graph);
+    }
     g_object_unref(old);
 }
 
