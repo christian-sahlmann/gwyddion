@@ -3,6 +3,7 @@
 graphdir = $(pkglibdir)/modules/graph
 
 graph_LTLIBRARIES = \
+	graph_align.la \
 	graph_cd.la \
 	graph_cut.la \
 	graph_dos_spectrum.la \
@@ -33,16 +34,17 @@ module_libadd = \
 	@GTK_LIBS@
 endif
 
-graph_export_ascii_la_SOURCES = graph_export_ascii.c
+graph_align_la_SOURCES         = graph_align.c
+graph_cd_la_SOURCES            = graph_cd.c
+graph_cut_la_SOURCES           = graph_cut.c
+graph_dos_spectrum_la_SOURCES  = graph_dos_spectrum.c
+graph_export_ascii_la_SOURCES  = graph_export_ascii.c
 graph_export_bitmap_la_SOURCES = graph_export_bitmap.c
 graph_export_vector_la_SOURCES = graph_export_vector.c
-graph_fdfit_la_SOURCES = graph_fdfit.c
-graph_filter_la_SOURCES = graph_filter.c
-graph_fit_la_SOURCES = graph_fit.c
-graph_cd_la_SOURCES = graph_cd.c
-graph_cut_la_SOURCES = graph_cut.c
-graph_level_la_SOURCES = graph_level.c
-graph_dos_spectrum_la_SOURCES = graph_dos_spectrum.c
+graph_fdfit_la_SOURCES         = graph_fdfit.c
+graph_filter_la_SOURCES        = graph_filter.c
+graph_fit_la_SOURCES           = graph_fit.c
+graph_level_la_SOURCES         = graph_level.c
 
 clean-local:
 	rm -f core.* *~
