@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-02-07 21:39+0100\n"
-"PO-Revision-Date: 2015-01-25 15:35+0300\n"
+"POT-Creation-Date: 2015-03-08 03:58+0100\n"
+"PO-Revision-Date: 2015-03-08 21:22+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -128,9 +128,9 @@ msgid "contact: Hertz (paraboloid)"
 msgstr "контакт: Герц (параболоид)"
 
 #: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:665
-#: app/data-browser.c:2091 app/data-browser.c:2885 app/data-browser.c:3745
-#: app/data-browser.c:3904 app/data-browser.c:4190 app/data-browser.c:4604
-#: app/data-browser.c:6590 app/data-browser.c:6672 app/resource-editor.c:367
+#: app/data-browser.c:2097 app/data-browser.c:2891 app/data-browser.c:3751
+#: app/data-browser.c:3910 app/data-browser.c:4196 app/data-browser.c:4610
+#: app/data-browser.c:6596 app/data-browser.c:6678 app/resource-editor.c:367
 #: modules/process/convolution_filter.c:706
 msgid "Untitled"
 msgstr "Безымянный"
@@ -450,7 +450,7 @@ msgstr "Значение"
 msgid "Area"
 msgstr "Площадь"
 
-#: libprocess/gwygrainvalue.c:1094 app/data-browser.c:5108 app/toolbox.c:114
+#: libprocess/gwygrainvalue.c:1094 app/data-browser.c:5114 app/toolbox.c:114
 msgid "Volume"
 msgstr "Объём"
 
@@ -1530,44 +1530,44 @@ msgstr "Канал:"
 msgid "Section:"
 msgstr "Сечение:"
 
-#: app/data-browser.c:4981
+#: app/data-browser.c:4987
 msgid "Extract to a new file"
 msgstr "Извлечь в новый файл"
 
-#: app/data-browser.c:4982
+#: app/data-browser.c:4988
 msgid "Duplicate"
 msgstr "Сделать копию"
 
-#: app/data-browser.c:4983
+#: app/data-browser.c:4989
 msgid "Delete"
 msgstr "Удалить"
 
-#: app/data-browser.c:5028
+#: app/data-browser.c:5034
 msgid "Data Browser"
 msgstr "Браузер данных"
 
-#: app/data-browser.c:5053
+#: app/data-browser.c:5059
 msgid "Close file"
 msgstr "Закрыть файл"
 
-#: app/data-browser.c:5066
+#: app/data-browser.c:5072
 msgid "Channels"
 msgstr "Каналы"
 
-#: app/data-browser.c:5080 modules/volume/volume_extract.c:444
+#: app/data-browser.c:5086 modules/volume/volume_extract.c:444
 msgid "Graphs"
 msgstr "Графики"
 
-#: app/data-browser.c:5094
+#: app/data-browser.c:5100
 msgid "Spectra"
 msgstr "Спектры"
 
-#: app/data-browser.c:6628
+#: app/data-browser.c:6634
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Неизвестный канал %d"
 
-#: app/data-browser.c:6714
+#: app/data-browser.c:6720
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Неизвестный объём %d"
@@ -4499,7 +4499,7 @@ msgid "Spectra data starts past the end of file."
 msgstr "Данные спектроскопии начинаются после конца файла."
 
 #: modules/file/nanoeducator.c:648 modules/file/opdfile.c:277
-#: modules/file/renishaw.c:952 modules/file/sensofar.c:257
+#: modules/file/renishaw.c:1034 modules/file/sensofar.c:257
 #: modules/file/witec-asc.c:161
 msgid "File header is truncated"
 msgstr "Заголовок файла усечён"
@@ -5097,7 +5097,7 @@ msgid "Cannot get pixbuf loader: %s."
 msgstr "Не удаётся получить загрузчик pixbuf: %s."
 
 #: modules/file/pixmap.c:521 modules/file/pixmap.c:534
-#: modules/file/renishaw.c:507 modules/file/renishaw.c:517
+#: modules/file/renishaw.c:547 modules/file/renishaw.c:557
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr "Загрузчик pixbuf не принял данные: %s."
@@ -5628,31 +5628,27 @@ msgid "XYZ data regularization failed due to numerical instability."
 msgstr ""
 "Упорядочение XYZ-данных закончилось неудачно из-за численной нестабильности."
 
-#: modules/file/renishaw.c:314
+#: modules/file/renishaw.c:352
 msgid "Imports Renishaw WiRE data files (WDF)."
 msgstr "Импортирует файлы данных Renishaw WiRE (WDF)."
 
-#: modules/file/renishaw.c:327
+#: modules/file/renishaw.c:365
 msgid "Renishaw WiRE data files (.wdf)"
 msgstr "Файлы данных Renishaw WiRE (.wdf)"
 
-#: modules/file/renishaw.c:495
+#: modules/file/renishaw.c:535
 msgid "MapArea block is truncated"
 msgstr "Блок MapArea неполон."
 
-#: modules/file/renishaw.c:676
-msgid "3D Volume is unsupported now"
-msgstr "Объёмные сканы в данный момент не поддерживаются"
-
-#: modules/file/renishaw.c:683
+#: modules/file/renishaw.c:731
 msgid "Random points order unsupported"
 msgstr "Случайный порядок точек не поддерживается"
 
-#: modules/file/renishaw.c:1023
+#: modules/file/renishaw.c:1105
 msgid "Block header is truncated"
 msgstr "Заголовок блока усечён"
 
-#: modules/file/renishaw.c:1038
+#: modules/file/renishaw.c:1120
 msgid "Data block is truncated"
 msgstr "Блок данных неполон."
 
@@ -6237,6 +6233,18 @@ msgstr "Код единиц измерения %d неправилен или н
 #: modules/file/zemax.c:351
 msgid "The first line contains too many items."
 msgstr "Первая строка содержит слишком много элементов."
+
+#: modules/graph/graph_align.c:51
+msgid "Aligns graph curves."
+msgstr "Выравнивает кривые графиков"
+
+#: modules/graph/graph_align.c:65
+msgid "/_Align"
+msgstr "/Выр_авнивание"
+
+#: modules/graph/graph_align.c:68
+msgid "Align curves"
+msgstr "Выровнять кривые"
 
 #: modules/graph/graph_cd.c:140
 msgid "Critical dimension measurements"
@@ -12051,39 +12059,39 @@ msgstr "/Консоль Pygwy"
 msgid "Python wrapper console"
 msgstr "Командная строка оболочки Python"
 
-#: modules/pygwy/pygwy-console.c:164
-msgid ">>> Running file content of below textfield\n"
-msgstr ">>> Запускается содержимое файла из нижнего текстового поля\n"
+#: modules/pygwy/pygwy-console.c:163
+msgid ">>> Running the script above\n"
+msgstr ">>> Запускается вышеприведённый скрипт\n"
 
-#: modules/pygwy/pygwy-console.c:217
+#: modules/pygwy/pygwy-console.c:215
 msgid "Open Python script"
 msgstr "Открыть скрипт Python"
 
-#: modules/pygwy/pygwy-console.c:298
+#: modules/pygwy/pygwy-console.c:296
 msgid "Save Script as"
 msgstr "Сохранить скрипт как"
 
-#: modules/pygwy/pygwy-console.c:350
+#: modules/pygwy/pygwy-console.c:348
 msgid "Pygwy Console"
 msgstr "Консоль Pygwy"
 
-#: modules/pygwy/pygwy-console.c:363
+#: modules/pygwy/pygwy-console.c:361
 msgid "Clear Log"
 msgstr "Очистить лог"
 
-#: modules/pygwy/pygwy-console.c:367
+#: modules/pygwy/pygwy-console.c:365
 msgid "Open script in Python language (Ctrl-O)"
 msgstr "Открыть скрипт на языке Python (Ctrl-O)"
 
-#: modules/pygwy/pygwy-console.c:369
+#: modules/pygwy/pygwy-console.c:367
 msgid "Save script (Ctrl-S)"
 msgstr "Сохранить сценарий (Ctrl-S)"
 
-#: modules/pygwy/pygwy-console.c:371
+#: modules/pygwy/pygwy-console.c:369
 msgid "Execute script (Ctrl-E)"
 msgstr "Выполнить сценарий (Ctrl-E)"
 
-#: modules/pygwy/pygwy-console.c:449
+#: modules/pygwy/pygwy-console.c:447
 msgid "Command"
 msgstr "Команда"
 
@@ -12555,7 +12563,7 @@ msgstr "Режим аппроксимации"
 
 #: modules/tools/polynom.c:253
 msgid "_Exclude area if selected"
-msgstr "_Исключить область если выбрано"
+msgstr "_Исключить область если включено"
 
 #: modules/tools/polynom.c:262
 msgid "(otherwise it will be used for fitting)"
@@ -12812,25 +12820,25 @@ msgstr "Относительная опорная кривая"
 msgid "Surface Profiles"
 msgstr "Профили поверхности"
 
-#: modules/tools/roughness.c:1990
+#: modules/tools/roughness.c:1997
 msgid "Save Roughness Parameters"
 msgstr "Сохранить параметры шероховатости"
 
-#: modules/tools/roughness.c:2047
+#: modules/tools/roughness.c:2054
 msgid "Roughness Parameters"
 msgstr "Параметры шероховатости"
 
-#: modules/tools/roughness.c:2053 modules/tools/stats.c:1042
+#: modules/tools/roughness.c:2060 modules/tools/stats.c:1042
 #, c-format
 msgid "File:              %s\n"
 msgstr "Файл:              %s\n"
 
-#: modules/tools/roughness.c:2057 modules/tools/stats.c:1046
+#: modules/tools/roughness.c:2064 modules/tools/stats.c:1046
 #, c-format
 msgid "Data channel:      %s\n"
 msgstr "Канал данных:      %s\n"
 
-#: modules/tools/roughness.c:2088
+#: modules/tools/roughness.c:2095
 #, c-format
 msgid ""
 "Selected line:     (%s, %s) to (%s, %s) px\n"
@@ -13418,6 +13426,12 @@ msgstr "Ошибка K-срединных для %s"
 #, c-format
 msgid "K-medians center %d"
 msgstr "Центр кластера %d"
+
+#~ msgid "3D Volume is unsupported now"
+#~ msgstr "Объёмные сканы в данный момент не поддерживаются"
+
+#~ msgid ">>> Running file content of below textfield\n"
+#~ msgstr ">>> Запускается содержимое файла из нижнего текстового поля\n"
 
 #~ msgid "Fixes zigzag-like interlacing pattern"
 #~ msgstr "Исправляет зигзагоподобные черезстрочные искажения"
