@@ -583,11 +583,11 @@ gwy_tool_distance_create_report(GwyToolDistance *tool)
 
         g_string_append_printf(text, "%d %.*f %.*f %.*f %.*f %.*f\n",
                                i+1,
-                               vf_dx->precision, val_dx/vf_dx->magnitude,
-                               vf_dy->precision, val_dy/vf_dy->magnitude,
-                               vf_phi->precision, val_phi/vf_phi->magnitude,
-                               vf_r->precision, val_r/vf_r->magnitude,
-                               vf_dz->precision, val_dz/vf_dz->magnitude);
+                               vf_dx->precision+1, val_dx/vf_dx->magnitude,
+                               vf_dy->precision+1, val_dy/vf_dy->magnitude,
+                               vf_phi->precision+1, val_phi/vf_phi->magnitude,
+                               vf_r->precision+1, val_r/vf_r->magnitude,
+                               vf_dz->precision+1, val_dz/vf_dz->magnitude);
     }
 
     retval = text->str;
