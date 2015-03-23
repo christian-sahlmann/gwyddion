@@ -747,7 +747,7 @@ gwy_tool_color_range_set_min_max(GwyToolColorRange *tool)
     GwyPlainTool *plain_tool;
     const GwySIValueFormat *vf;
     gboolean clear = FALSE;
-    gchar buf[40];
+    gchar buf[64];
     gdouble sel[4];
     gint isel[4];
 
@@ -828,7 +828,7 @@ gwy_tool_color_range_update_fullrange(GwyToolColorRange *tool)
     GwyPlainTool *plain_tool;
     const GwySIValueFormat *vf;
     gdouble min, max;
-    gchar buf[40];
+    gchar buf[64];
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     if (!plain_tool->container) {
