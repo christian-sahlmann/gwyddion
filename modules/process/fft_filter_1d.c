@@ -128,7 +128,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("FFT filtering"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "2.6",
+    "2.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
