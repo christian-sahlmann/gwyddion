@@ -82,6 +82,7 @@ process_LTLIBRARIES = \
 	polylevel.la \
 	polydistort.la \
 	presentationops.la \
+	psdf_logphi.la \
 	rank.la \
 	rotate.la \
 	semsim.la \
@@ -196,6 +197,7 @@ pid_la_SOURCES                 = pid.c
 polylevel_la_SOURCES           = polylevel.c
 polydistort_la_SOURCES         = polydistort.c
 presentationops_la_SOURCES     = presentationops.c
+psdf_logphi_la_SOURCES         = psdf_logphi.c
 rank_la_SOURCES                = rank.c
 rotate_la_SOURCES              = rotate.c
 semsim_la_SOURCES              = semsim.c
