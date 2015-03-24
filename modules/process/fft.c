@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2015 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -24,6 +24,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/gwyprocesstypes.h>
+#include <libprocess/arithmetic.h>
 #include <libprocess/inttrans.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwydgetutils.h>
@@ -44,50 +45,79 @@ typedef enum {
 } GwyFFTOutputType;
 
 typedef struct {
+    GwyContainer *data;
+    gint id;
+} GwyDataObjectId;
+
+typedef struct {
+    gboolean raw_transform;
     gboolean zeromean;
     gboolean preserverms;
+    gboolean use_imgpart;
+    gboolean inverse_transform;
     GwyWindowingType window;
     GwyFFTOutputType out;
+    GwyDataObjectId imgpart;
 } FFTArgs;
 
 typedef struct {
+    FFTArgs *args;
+    GtkWidget *raw_transform;
     GtkWidget *zeromean;
     GtkWidget *preserverms;
+    GtkWidget *inverse_transform;
     GtkWidget *window;
     GtkWidget *out;
+    GtkWidget *imgpart;
+    GtkWidget *use_imgpart;
+    GwyDataField *dfield;
 } FFTControls;
 
-static gboolean module_register       (void);
-static void     fft                   (GwyContainer *data,
-                                       GwyRunType run);
-static void     fft_create_output     (GwyContainer *data,
-                                       gint id,
-                                       GwyDataField *dfield,
-                                       const gchar *window_name);
-static gboolean fft_dialog            (FFTArgs *args);
-static void     zeromean_changed_cb   (GtkToggleButton *button,
-                                       FFTArgs *args);
-static void     preserverms_changed_cb(GtkToggleButton *button,
-                                       FFTArgs *args);
-static void     fft_dialog_update     (FFTControls *controls,
-                                       FFTArgs *args);
-static void     set_dfield_modulus    (GwyDataField *re,
-                                       GwyDataField *im,
-                                       GwyDataField *target);
-static void     set_dfield_phase      (GwyDataField *re,
-                                       GwyDataField *im,
-                                       GwyDataField *target);
-static void     fft_load_args         (GwyContainer *container,
-                                       FFTArgs *args);
-static void     fft_save_args         (GwyContainer *container,
-                                       FFTArgs *args);
-static void     fft_sanitize_args     (FFTArgs *args);
+static gboolean module_register          (void);
+static void     fft                      (GwyContainer *data,
+                                          GwyRunType run);
+static void     fft_create_output        (GwyContainer *data,
+                                          gint id,
+                                          GwyDataField *dfield,
+                                          const gchar *window_name,
+                                          gboolean itransform);
+static gboolean fft_dialog               (FFTArgs *args,
+                                          GwyDataField *dfield);
+static void     raw_transform_changed    (GtkToggleButton *button,
+                                          FFTControls *controls);
+static void     zeromean_changed         (GtkToggleButton *button,
+                                          FFTArgs *args);
+static void     preserverms_changed      (GtkToggleButton *button,
+                                          FFTArgs *args);
+static void     use_imgpart_changed      (GtkToggleButton *button,
+                                          FFTArgs *args);
+static void     inverse_transform_changed(GtkToggleButton *button,
+                                          FFTArgs *args);
+static void     imgpart_changed          (GwyDataChooser *chooser,
+                                          FFTArgs *args);
+static gboolean fft_imgpart_filter       (GwyContainer *data,
+                                          gint id,
+                                          gpointer user_data);
+static void     update_sensitivity       (FFTControls *controls);
+static void     fft_dialog_update        (FFTControls *controls,
+                                          FFTArgs *args);
+static void     set_dfield_modulus       (GwyDataField *re,
+                                          GwyDataField *im,
+                                          GwyDataField *target);
+static void     set_dfield_phase         (GwyDataField *re,
+                                          GwyDataField *im,
+                                          GwyDataField *target);
+static void     fft_load_args            (GwyContainer *container,
+                                          FFTArgs *args);
+static void     fft_save_args            (GwyContainer *container,
+                                          FFTArgs *args);
+static void     fft_sanitize_args        (FFTArgs *args);
 
 static const FFTArgs fft_defaults = {
-    TRUE,
-    FALSE,
+    FALSE, TRUE, FALSE, FALSE, FALSE,
     GWY_WINDOWING_HANN,
     GWY_FFT_OUTPUT_MOD,
+    { NULL, -1 },
 };
 
 static GwyModuleInfo module_info = {
@@ -95,7 +125,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Two-dimensional FFT (Fast Fourier Transform)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.13",
+    "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -119,9 +149,9 @@ module_register(void)
 static void
 fft(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield, *tmp, *raout, *ipout;
+    GwyDataField *dfield, *imgpart, *tmp, *raout, *ipout;
     FFTArgs args;
-    gboolean ok;
+    gboolean is_inv, ok;
     gint id;
 
     g_return_if_fail(run & FFT_RUN_MODES);
@@ -131,9 +161,12 @@ fft(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(dfield);
 
+    args.imgpart.data = data;
+    args.imgpart.id = id;
+
     fft_load_args(gwy_app_settings_get(), &args);
     if (run == GWY_RUN_INTERACTIVE) {
-        ok = fft_dialog(&args);
+        ok = fft_dialog(&args, dfield);
         fft_save_args(gwy_app_settings_get(), &args);
         if (!ok)
             return;
@@ -142,36 +175,68 @@ fft(GwyContainer *data, GwyRunType run)
     raout = gwy_data_field_new_alike(dfield, FALSE);
     ipout = gwy_data_field_new_alike(dfield, FALSE);
 
-    gwy_data_field_2dfft(dfield, NULL,
-                         raout, ipout,
-                         args.window,
-                         GWY_TRANSFORM_DIRECTION_FORWARD,
-                         GWY_INTERPOLATION_LINEAR,  /* ignored */
-                         args.preserverms,
-                         args.zeromean ? 1 : 0);
+    is_inv = args.inverse_transform && args.raw_transform;
+    imgpart = NULL;
+    if (args.use_imgpart && args.imgpart.data && args.imgpart.id >= 0) {
+        GQuark quark = gwy_app_get_data_key_for_id(args.imgpart.id);
+        imgpart = GWY_DATA_FIELD(gwy_container_get_object(args.imgpart.data,
+                                                          quark));
+    }
 
-    gwy_data_field_fft_postprocess(raout, TRUE);
-    gwy_data_field_fft_postprocess(ipout, TRUE);
+    if (is_inv) {
+        GwyDataField *rein = gwy_data_field_duplicate(dfield);
+        GwyDataField *imin = imgpart ? gwy_data_field_duplicate(imgpart) : NULL;
+
+        gwy_data_field_2dfft_dehumanize(rein);
+        gwy_data_field_fft_postprocess(rein, FALSE);
+        if (imin) {
+            gwy_data_field_2dfft_dehumanize(imin);
+            gwy_data_field_fft_postprocess(imin, FALSE);
+        }
+
+        gwy_data_field_2dfft_raw(rein, imin, raout, ipout,
+                                 GWY_TRANSFORM_DIRECTION_BACKWARD);
+        g_object_unref(rein);
+        g_object_unref(imin);
+
+        gwy_data_field_fft_postprocess(raout, FALSE);
+        gwy_data_field_fft_postprocess(ipout, FALSE);
+    }
+    else if (args.raw_transform) {
+        gwy_data_field_2dfft_raw(dfield, imgpart, raout, ipout,
+                                 GWY_TRANSFORM_DIRECTION_FORWARD);
+        gwy_data_field_fft_postprocess(raout, TRUE);
+        gwy_data_field_fft_postprocess(ipout, TRUE);
+    }
+    else {
+        gwy_data_field_2dfft(dfield, imgpart, raout, ipout,
+                             args.window, GWY_TRANSFORM_DIRECTION_FORWARD,
+                             GWY_INTERPOLATION_LINEAR,  /* ignored */
+                             args.preserverms,
+                             args.zeromean ? 1 : 0);
+        gwy_data_field_fft_postprocess(raout, TRUE);
+        gwy_data_field_fft_postprocess(ipout, TRUE);
+    }
 
     if (args.out == GWY_FFT_OUTPUT_REAL_IMG
         || args.out == GWY_FFT_OUTPUT_REAL)
         fft_create_output(data, id, gwy_data_field_duplicate(raout),
-                          _("FFT Real"));
+                          _("FFT Real"), is_inv);
     if (args.out == GWY_FFT_OUTPUT_REAL_IMG
         || args.out == GWY_FFT_OUTPUT_IMG)
         fft_create_output(data, id, gwy_data_field_duplicate(ipout),
-                          _("FFT Imag"));
+                          _("FFT Imag"), is_inv);
     if (args.out == GWY_FFT_OUTPUT_MOD_PHASE
         || args.out == GWY_FFT_OUTPUT_MOD) {
         tmp = gwy_data_field_new_alike(raout, FALSE);
         set_dfield_modulus(raout, ipout, tmp);
-        fft_create_output(data, id, tmp, _("FFT Modulus"));
+        fft_create_output(data, id, tmp, _("FFT Modulus"), is_inv);
     }
     if (args.out == GWY_FFT_OUTPUT_MOD_PHASE
         || args.out == GWY_FFT_OUTPUT_PHASE) {
         tmp = gwy_data_field_new_alike(raout, FALSE);
         set_dfield_phase(raout, ipout, tmp);
-        fft_create_output(data, id, tmp, _("FFT Phase"));
+        fft_create_output(data, id, tmp, _("FFT Phase"), is_inv);
     }
 
     g_object_unref(raout);
@@ -182,7 +247,8 @@ static void
 fft_create_output(GwyContainer *data,
                   gint id,
                   GwyDataField *dfield,
-                  const gchar *output_name)
+                  const gchar *output_name,
+                  gboolean itransform)
 {
     gint newid;
     gchar *key;
@@ -191,6 +257,9 @@ fft_create_output(GwyContainer *data,
     g_object_unref(dfield);
     gwy_app_set_data_field_title(data, newid, output_name);
     gwy_app_channel_log_add_proc(data, id, newid);
+
+    if (itransform)
+        return;
 
     /* make fft more visible by choosing a good gradient and using auto range */
     key = g_strdup_printf("/%i/base/palette", newid);
@@ -239,7 +308,8 @@ set_dfield_phase(GwyDataField *re, GwyDataField *im,
 }
 
 static gboolean
-fft_dialog(FFTArgs *args)
+fft_dialog(FFTArgs *args,
+           GwyDataField *dfield)
 {
     enum { RESPONSE_RESET = 1 };
     static const GwyEnum fft_outputs[] = {
@@ -254,6 +324,8 @@ fft_dialog(FFTArgs *args)
     FFTControls controls;
     gint response, row;
 
+    controls.args = args;
+
     dialog = gtk_dialog_new_with_buttons(_("2D FFT"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -262,7 +334,7 @@ fft_dialog(FFTArgs *args)
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
 
-    table = gtk_table_new(4, 4, FALSE);
+    table = gtk_table_new(7, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -270,20 +342,63 @@ fft_dialog(FFTArgs *args)
                        FALSE, FALSE, 4);
     row = 0;
 
-    controls.window
-        = gwy_enum_combo_box_new(gwy_windowing_type_get_enum(), -1,
-                                 G_CALLBACK(gwy_enum_combo_box_update_int),
-                                 &args->window, args->window, TRUE);
-    gwy_table_attach_row(table, row, _("_Windowing type:"), NULL,
-                         controls.window);
+    controls.raw_transform
+        = gtk_check_button_new_with_mnemonic(_("Ra_w transform"));
+    gtk_table_attach(GTK_TABLE(table), controls.raw_transform,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.raw_transform),
+                                 args->raw_transform);
+    g_signal_connect(controls.raw_transform, "toggled",
+                     G_CALLBACK(raw_transform_changed), &controls);
+    row++;
+
+    controls.imgpart = gwy_data_chooser_new_channels();
+    gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(controls.imgpart),
+                                fft_imgpart_filter, dfield, NULL);
+    gwy_data_chooser_set_active(GWY_DATA_CHOOSER(controls.imgpart),
+                                args->imgpart.data, args->imgpart.id);
+    gwy_table_attach_hscale(table, row, _("I_maginary part:"), NULL,
+                            GTK_OBJECT(controls.imgpart),
+                            GWY_HSCALE_WIDGET | GWY_HSCALE_CHECK);
+    controls.use_imgpart
+        = gwy_table_hscale_get_check(GTK_OBJECT(controls.imgpart));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.use_imgpart),
+                                 args->use_imgpart);
+    gwy_table_hscale_set_sensitive(GTK_OBJECT(controls.imgpart),
+                                   args->use_imgpart);
+    g_signal_connect(controls.imgpart, "changed",
+                     G_CALLBACK(imgpart_changed), args);
+    g_signal_connect(controls.use_imgpart, "toggled",
+                     G_CALLBACK(use_imgpart_changed), args);
+    row++;
+
+    controls.inverse_transform
+        = gtk_check_button_new_with_mnemonic(_("_Inverse transform"));
+    gtk_table_attach(GTK_TABLE(table), controls.inverse_transform,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.inverse_transform),
+                                 args->inverse_transform);
+    g_signal_connect(controls.inverse_transform, "toggled",
+                     G_CALLBACK(inverse_transform_changed), args);
     row++;
 
     controls.out
         = gwy_enum_combo_box_new(fft_outputs, G_N_ELEMENTS(fft_outputs),
                                  G_CALLBACK(gwy_enum_combo_box_update_int),
                                  &args->out, args->out, TRUE);
-    gwy_table_attach_row(table, row, _("Output _type:"), NULL,
-                         controls.out);
+    gwy_table_attach_hscale(table, row, _("Output _type:"), NULL,
+                            GTK_OBJECT(controls.out),
+                            GWY_HSCALE_WIDGET);
+    row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    controls.window
+        = gwy_enum_combo_box_new(gwy_windowing_type_get_enum(), -1,
+                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                 &args->window, args->window, TRUE);
+    gwy_table_attach_hscale(table, row, _("_Windowing type:"), NULL,
+                            GTK_OBJECT(controls.window),
+                            GWY_HSCALE_WIDGET);
     row++;
 
     controls.zeromean
@@ -294,7 +409,7 @@ fft_dialog(FFTArgs *args)
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.zeromean),
                                  args->zeromean);
     g_signal_connect(controls.zeromean, "toggled",
-                     G_CALLBACK(zeromean_changed_cb), args);
+                     G_CALLBACK(zeromean_changed), args);
     row++;
 
     controls.preserverms
@@ -304,8 +419,10 @@ fft_dialog(FFTArgs *args)
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.preserverms),
                                  args->preserverms);
     g_signal_connect(controls.preserverms, "toggled",
-                     G_CALLBACK(preserverms_changed_cb), args);
+                     G_CALLBACK(preserverms_changed), args);
     row++;
+
+    update_sensitivity(&controls);
 
     gtk_widget_show_all(dialog);
     do {
@@ -322,8 +439,12 @@ fft_dialog(FFTArgs *args)
             break;
 
             case RESPONSE_RESET:
-            *args = fft_defaults;
-            fft_dialog_update(&controls, args);
+            {
+                GwyDataObjectId imgpart = args->imgpart;
+                *args = fft_defaults;
+                args->imgpart = imgpart;
+                fft_dialog_update(&controls, args);
+            }
             break;
 
             default:
@@ -338,37 +459,107 @@ fft_dialog(FFTArgs *args)
 }
 
 static void
-zeromean_changed_cb(GtkToggleButton *button, FFTArgs *args)
+raw_transform_changed(GtkToggleButton *button, FFTControls *controls)
+{
+    controls->args->raw_transform = gtk_toggle_button_get_active(button);
+    update_sensitivity(controls);
+}
+
+static void
+zeromean_changed(GtkToggleButton *button, FFTArgs *args)
 {
     args->zeromean = gtk_toggle_button_get_active(button);
 }
 
 static void
-preserverms_changed_cb(GtkToggleButton *button, FFTArgs *args)
+preserverms_changed(GtkToggleButton *button, FFTArgs *args)
 {
     args->preserverms = gtk_toggle_button_get_active(button);
+}
+
+static void
+use_imgpart_changed(GtkToggleButton *button, FFTArgs *args)
+{
+    args->use_imgpart = gtk_toggle_button_get_active(button);
+}
+
+static void
+inverse_transform_changed(GtkToggleButton *button, FFTArgs *args)
+{
+    args->inverse_transform = gtk_toggle_button_get_active(button);
+}
+
+static void
+imgpart_changed(GwyDataChooser *chooser,
+                FFTArgs *args)
+{
+    args->imgpart.data = gwy_data_chooser_get_active(chooser,
+                                                     &args->imgpart.id);
+}
+
+static gboolean
+fft_imgpart_filter(GwyContainer *data,
+                   gint id,
+                   gpointer user_data)
+{
+    GwyDataField *dfield = (GwyDataField*)user_data;
+    GwyDataField *imgpart;
+    GQuark quark;
+
+    quark = gwy_app_get_data_key_for_id(id);
+    imgpart = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
+
+    return !gwy_data_field_check_compatibility(imgpart, dfield,
+                                               GWY_DATA_COMPATIBILITY_ALL);
+}
+
+static void
+update_sensitivity(FFTControls *controls)
+{
+    gboolean is_raw = controls->args->raw_transform;
+
+    gtk_widget_set_sensitive(controls->preserverms, !is_raw);
+    gtk_widget_set_sensitive(controls->zeromean, !is_raw);
+    gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->window), !is_raw);
+    gtk_widget_set_sensitive(controls->inverse_transform, is_raw);
 }
 
 static void
 fft_dialog_update(FFTControls *controls,
                   FFTArgs *args)
 {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->raw_transform),
+                                 args->raw_transform);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->inverse_transform),
+                                 args->inverse_transform);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->preserverms),
+                                 args->preserverms);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->zeromean),
+                                 args->zeromean);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->use_imgpart),
+                                 args->use_imgpart);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->out),
                                   args->out);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->window),
                                   args->window);
 }
 
-static const gchar zeromean_key[]    = "/module/fft/zeromean";
-static const gchar preserverms_key[] = "/module/fft/preserverms";
-static const gchar window_key[]      = "/module/fft/window";
-static const gchar out_key[]         = "/module/fft/out";
+static const gchar inverse_transform_key[] = "/module/fft/inverse_transform";
+static const gchar out_key[]               = "/module/fft/out";
+static const gchar preserverms_key[]       = "/module/fft/preserverms";
+static const gchar raw_transform_key[]     = "/module/fft/raw_transform";
+static const gchar use_imgpart_key[]       = "/module/fft/use_imgpart";
+static const gchar window_key[]            = "/module/fft/window";
+static const gchar zeromean_key[]          = "/module/fft/zeromean";
 
 static void
 fft_sanitize_args(FFTArgs *args)
 {
+    args->raw_transform = !!args->raw_transform;
     args->zeromean = !!args->zeromean;
     args->preserverms = !!args->preserverms;
+    args->use_imgpart = !!args->use_imgpart;
+    args->inverse_transform = !!args->inverse_transform;
     args->window = gwy_enum_sanitize_value(args->window,
                                            GWY_TYPE_WINDOWING_TYPE);
     args->out = MIN(args->out, GWY_FFT_OUTPUT_PHASE);
@@ -380,9 +571,15 @@ fft_load_args(GwyContainer *container,
 {
     *args = fft_defaults;
 
+    gwy_container_gis_boolean_by_name(container, raw_transform_key,
+                                      &args->raw_transform);
     gwy_container_gis_boolean_by_name(container, zeromean_key, &args->zeromean);
     gwy_container_gis_boolean_by_name(container, preserverms_key,
                                       &args->preserverms);
+    gwy_container_gis_boolean_by_name(container, use_imgpart_key,
+                                      &args->use_imgpart);
+    gwy_container_gis_boolean_by_name(container, inverse_transform_key,
+                                      &args->inverse_transform);
     gwy_container_gis_enum_by_name(container, window_key, &args->window);
     gwy_container_gis_enum_by_name(container, out_key, &args->out);
     fft_sanitize_args(args);
@@ -392,9 +589,15 @@ static void
 fft_save_args(GwyContainer *container,
               FFTArgs *args)
 {
+    gwy_container_set_boolean_by_name(container, raw_transform_key,
+                                      args->raw_transform);
     gwy_container_set_boolean_by_name(container, zeromean_key, args->zeromean);
     gwy_container_set_boolean_by_name(container, preserverms_key,
                                       args->preserverms);
+    gwy_container_set_boolean_by_name(container, use_imgpart_key,
+                                      args->use_imgpart);
+    gwy_container_set_boolean_by_name(container, inverse_transform_key,
+                                      args->inverse_transform);
     gwy_container_set_enum_by_name(container, window_key, args->window);
     gwy_container_set_enum_by_name(container, out_key, args->out);
 }

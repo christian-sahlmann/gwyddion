@@ -26,7 +26,6 @@
 #include <libprocess/gwyprocesstypes.h>
 #include <libprocess/inttrans.h>
 #include <libprocess/filters.h>
-#include <libprocess/stats.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwystock.h>

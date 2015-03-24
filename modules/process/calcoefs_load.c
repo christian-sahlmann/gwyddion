@@ -107,7 +107,8 @@ cload(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
     CLoadArgs args;
     gboolean ok;
-    gint oldid, n;
+    gint oldid;
+    G_GNUC_UNUSED gint n;
     GwyCalibration *calibration;
     GwyCalData *caldata = NULL;
     gchar *filename;
