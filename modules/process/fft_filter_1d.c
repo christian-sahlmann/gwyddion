@@ -410,7 +410,9 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
     GwyGraphCurveModel *cmodel;
     GwyGraphArea *area;
     GwySelection *selection;
-    gint nofselection;
+    gint nofselection, i, res;
+    gdouble m;
+    gdouble *d;
 
     dline = gwy_data_line_new(MAX_PREV, MAX_PREV, FALSE);
     dfield = controls->original_field;
@@ -423,8 +425,11 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
     gwy_data_line_resample(dline, MAX_PREV, args->interpolation);
 
     /* use magnitude instead of power so lesser components become visible */
-    gwy_data_line_sqrt(dline);
-    gwy_data_line_multiply(dline, 1.0/gwy_data_line_get_max(dline));
+    m = gwy_data_line_get_max(dline);
+    d = gwy_data_line_get_data(dline);
+    res = gwy_data_line_get_res(dline);
+    for (i = 0; i < res; i++)
+        d[i] = d[i] > 0.0 ? sqrt(d[i]/m) : 0.0;
 
     gwy_graph_model_remove_all_curves(controls->gmodel);
 
