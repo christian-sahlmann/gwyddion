@@ -376,6 +376,14 @@ static void     draw_sel_rectangle  (const ImgExportArgs *args,
                                      PangoLayout *layout,
                                      GString *s,
                                      cairo_t *cr);
+static void     draw_sel_lattice    (const ImgExportArgs *args,
+                                     const ImgExportSizes *sizes,
+                                     GwySelection *sel,
+                                     gdouble qx,
+                                     gdouble qy,
+                                     PangoLayout *layout,
+                                     GString *s,
+                                     cairo_t *cr);
 static void     options_sel_line    (ImgExportControls *controls);
 static void     options_sel_point   (ImgExportControls *controls);
 
@@ -476,7 +484,7 @@ static const ImgExportSelectionType known_selections[] =
     },
     { 
         "GwySelectionLattice", N_("Lattice"),
-        NULL, NULL,
+        NULL, &draw_sel_lattice,
     },
 };
 
@@ -505,7 +513,7 @@ static GwyModuleInfo module_info = {
        "Export to some formats relies on GDK and other libraries thus may "
        "be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti)",
     "2014",
 };
@@ -5689,6 +5697,53 @@ draw_sel_rectangle(const ImgExportArgs *args,
         cairo_rectangle(cr, xf, yf, xt - xf, yt - yf);
         stroke_path_with_outline(cr, colour, outcolour, lw, olw);
     }
+}
+
+static void
+draw_sel_lattice(const ImgExportArgs *args,
+                 const ImgExportSizes *sizes,
+                 GwySelection *sel,
+                 gdouble qx, gdouble qy,
+                 G_GNUC_UNUSED PangoLayout *layout,
+                 G_GNUC_UNUSED GString *s,
+                 cairo_t *cr)
+{
+    enum { maxlines = 80 };
+
+    gdouble lw = sizes->sizes.line_width;
+    gdouble olw = sizes->sizes.outline_width;
+    const GwyRGBA *colour = &args->sel_color;
+    const GwyRGBA *outcolour = &args->sel_outline_color;
+    gdouble xf, yf, xt, yt, xy[4];
+    gdouble w = sizes->image.w - 2.0*lw;
+    gdouble h = sizes->image.h - 2.0*lw;
+    guint n;
+    gint i;
+
+    n = gwy_selection_get_data(sel, NULL);
+    if (n < 1)
+        return;
+
+    /* XXX: Draw the first lattice.  It makes little sense to have multiple
+     * objects in this selection type. */
+    gwy_selection_get_object(sel, 0, xy);
+    for (i = -maxlines; i <= maxlines; i++) {
+        xf = qx*(i*xy[0] - maxlines*xy[2]) + 0.5*w;
+        yf = qy*(i*xy[1] - maxlines*xy[3]) + 0.5*h;
+        xt = qx*(i*xy[0] + maxlines*xy[2]) + 0.5*w;
+        yt = qy*(i*xy[1] + maxlines*xy[3]) + 0.5*h;
+        cairo_move_to(cr, xf, yf);
+        cairo_line_to(cr, xt, yt);
+    }
+    for (i = -maxlines; i <= maxlines; i++) {
+        xf = qx*(-maxlines*xy[0] + i*xy[2]) + 0.5*w;
+        yf = qy*(-maxlines*xy[1] + i*xy[3]) + 0.5*h;
+        xt = qx*(maxlines*xy[0] + i*xy[2]) + 0.5*w;
+        yt = qy*(maxlines*xy[1] + i*xy[3]) + 0.5*h;
+        cairo_move_to(cr, xf, yf);
+        cairo_line_to(cr, xt, yt);
+    }
+    stroke_path_with_outline(cr, colour, outcolour, lw, olw);
 }
 
 static void
