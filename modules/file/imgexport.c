@@ -111,6 +111,7 @@ typedef struct {
     gdouble hruler_label_height;
     gdouble vruler_label_width;
     gdouble fmruler_label_width;
+    gdouble fmruler_units_width;
     gdouble fmruler_label_height;
     gdouble inset_length;
     gboolean zunits_nonempty;
@@ -980,6 +981,53 @@ find_vruler_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
 }
 
 static void
+measure_fmscale_label(GwySIValueFormat *vf,
+                      const ImgExportArgs *args, ImgExportSizes *sizes,
+                      PangoLayout *layout, GString *s)
+{
+    PangoRectangle logical1, logical2;
+    const ImgExportEnv *env = args->env;
+    gdouble min, max, width, height;
+
+    min = env->fm_min/vf->magnitude;
+    max = env->fm_max/vf->magnitude;
+
+    sizes->fmruler_units_width = 0.0;
+
+    /* Maximum, where we attach the units. */
+    format_layout(layout, &logical1, s, "%.*f", vf->precision, max);
+    if (!args->units_in_title) {
+        sizes->fmruler_units_width -= logical1.width/pangoscale;
+        format_layout(layout, &logical1, s, "%.*f %s",
+                      vf->precision, max, vf->units);
+        sizes->fmruler_units_width += logical1.width/pangoscale;
+    }
+    gwy_debug("max '%s' (%g x %g)",
+              s->str, logical1.width/pangoscale, logical1.height/pangoscale);
+
+    /* Minimum, where we do not attach the units but must include them in size
+     * calculation due to alignment of the numbers. */
+    format_layout(layout, &logical2, s, "%.*f", vf->precision, min);
+    if (!args->units_in_title) {
+        sizes->fmruler_units_width -= logical2.width/pangoscale;
+        format_layout(layout, &logical2, s, "%.*f %s",
+                      vf->precision, min, vf->units);
+        sizes->fmruler_units_width += logical2.width/pangoscale;
+    }
+    gwy_debug("min '%s' (%g x %g)",
+              s->str, logical2.width/pangoscale, logical2.height/pangoscale);
+
+    width = MAX(logical1.width/pangoscale, logical2.width/pangoscale);
+    sizes->fmruler_label_width = (width + sizes->sizes.tick_length
+                                  + sizes->sizes.line_width);
+    height = MAX(logical1.height/pangoscale, logical2.height/pangoscale);
+    sizes->fmruler_label_height = height;
+    gwy_debug("label width %g, height %g", width, height);
+    sizes->fmruler_units_width *= 0.5;
+    gwy_debug("units width %g", sizes->fmruler_units_width);
+}
+
+static void
 find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
                    PangoLayout *layout, GString *s)
 {
@@ -989,9 +1037,8 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     gdouble size = sizes->image.h;
     gdouble min, max, real;
     RulerTicks *ticks = &sizes->fmruler_ticks;
-    PangoRectangle logical1, logical2;
     GwySIValueFormat *vf;
-    gdouble bs, height, width;
+    gdouble bs, height;
     guint n;
 
     min = env->fm_min;
@@ -1003,6 +1050,10 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
                                                 GWY_SI_UNIT_FORMAT_VFMARKUP,
                                                 real, real/96.0,
                                                 NULL);
+    min /= vf->magnitude;
+    max /= vf->magnitude;
+    real /= vf->magnitude;
+
     sizes->vf_fmruler = vf;
     sizes->zunits_nonempty = strlen(vf->units);
     gwy_debug("unit '%s'", vf->units);
@@ -1012,29 +1063,12 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
         sizes->fmruler_label_width = (sizes->sizes.tick_length +
                                       sizes->sizes.line_width);
         sizes->fmruler_label_height = 0.0;
+        sizes->fmruler_units_width = 0.0;
         return;
     }
 
-    min /= vf->magnitude;
-    max /= vf->magnitude;
-    real /= vf->magnitude;
-    if (args->units_in_title)
-        format_layout(layout, &logical1, s, "%.*f", vf->precision, max);
-    else
-        format_layout(layout, &logical1, s, "%.*f %s",
-                      vf->precision, max, vf->units);
-    gwy_debug("max '%s' (%g x %g)",
-              s->str, logical1.width/pangoscale, logical1.height/pangoscale);
-    format_layout(layout, &logical2, s, "%.*f", vf->precision, min);
-    gwy_debug("min '%s' (%g x %g)",
-              s->str, logical2.width/pangoscale, logical2.height/pangoscale);
-
-    width = MAX(logical1.width/pangoscale, logical2.width/pangoscale);
-    sizes->fmruler_label_width = (width + sizes->sizes.tick_length
-                                  + sizes->sizes.line_width);
-    height = MAX(logical1.height/pangoscale, logical2.height/pangoscale);
-    sizes->fmruler_label_height = height;
-    gwy_debug("label width %g, height %g", width, height);
+    measure_fmscale_label(vf, args, sizes, layout, s);
+    height = sizes->fmruler_label_height;
 
     if (env->fm_rangetype == GWY_LAYER_BASIC_RANGE_ADAPT)
         n = CLAMP(GWY_ROUND(size/height), 1, 36);
@@ -1045,6 +1079,7 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     ticks->step = real/n;
     ticks->base = pow10(floor(log10(ticks->step)));
     ticks->step /= ticks->base;
+    gwy_debug("estimated base %g, step %g", ticks->base, ticks->step);
     if (ticks->step <= 2.0)
         ticks->step = 2.0;
     else if (ticks->step <= 5.0)
@@ -1052,8 +1087,10 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     else {
         ticks->base *= 10.0;
         ticks->step = 1.0;
-        if (vf->precision)
+        if (vf->precision) {
             vf->precision--;
+            measure_fmscale_label(vf, args, sizes, layout, s);
+        }
     }
     gwy_debug("base %g, step %g", ticks->base, ticks->step);
 
@@ -1985,7 +2022,8 @@ draw_fmruler(const ImgExportArgs *args,
     GwySIValueFormat *vf = sizes->vf_fmruler;
     gdouble lw = sizes->sizes.line_width;
     gdouble tl = sizes->sizes.tick_length;
-    gdouble z, bs, scale, yimg, min, max, real;
+    gdouble uw = sizes->fmruler_units_width;
+    gdouble z, bs, scale, yimg, min, max, real, w;
     PangoRectangle logical;
     gboolean inverted = env->fm_inverted;
     GArray *mticks;
@@ -2013,9 +2051,6 @@ draw_fmruler(const ImgExportArgs *args,
     if (env->has_presentation)
         return;
 
-    /* FIXME: The numbers are aligned oddly when negative numbers are present.
-     * Alignment to the right might be better in some cases but it must be
-     * done to the right edge of the numbers, not the units.*/
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
     set_cairo_source_rgba(cr, &black);
@@ -2024,15 +2059,16 @@ draw_fmruler(const ImgExportArgs *args,
     else
         format_layout(layout, &logical, s, "%.*f %s",
                       vf->precision, max, vf->units);
-    gwy_debug("max '%s' (%g x %g)",
-              s->str, logical.width/pangoscale, logical.height/pangoscale);
-    cairo_move_to(cr, tl + lw, lw);
+    w = logical.width/pangoscale;
+    gwy_debug("max '%s' (%g x %g)", s->str, w, logical.height/pangoscale);
+    cairo_move_to(cr, rect->w - w, lw);
     pango_cairo_show_layout(cr, layout);
     format_layout(layout, &logical, s, "%.*f", vf->precision, min);
+    w = logical.width/pangoscale;
     gwy_debug("min '%s' (%g x %g)",
               s->str, logical.width/pangoscale, logical.height/pangoscale);
     cairo_move_to(cr,
-                  tl + lw, rect->h - lw - logical.height/pangoscale);
+                  rect->w - uw - w, rect->h - lw - logical.height/pangoscale);
     pango_cairo_show_layout(cr, layout);
     cairo_restore(cr);
 
@@ -2077,7 +2113,6 @@ draw_fmruler(const ImgExportArgs *args,
             || yimg + sizes->fmruler_label_height + 4.0*lw >= rect->h)
             continue;
 
-        gwy_debug("z %g -> %g", z, yimg);
         cairo_move_to(cr, 0.0, yimg);
         cairo_rel_line_to(cr, tl, 0.0);
     };
@@ -2106,7 +2141,8 @@ draw_fmruler(const ImgExportArgs *args,
             continue;
 
         format_layout(layout, &logical, s, "%.*f", vf->precision, z);
-        cairo_move_to(cr, tl + lw, yimg);
+        w = logical.width/pangoscale;
+        cairo_move_to(cr, rect->w - uw - w, yimg);
         pango_cairo_show_layout(cr, layout);
     };
     cairo_restore(cr);
