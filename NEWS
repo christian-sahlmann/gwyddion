@@ -1,6 +1,16 @@
 2.41 (0000-00-00)
+Libraries:
+- libgwyapp: Undo/redo functions now work with graphs so graph modules can
+  save undo information.
+
 Modules:
 - Align graph (new): Aligns horizontally graph curves.
+- Log-Phi PSDF (new): Calculates 2D PSDF transformed to angle-log(frequency)
+  coordinates.
+- 2D FFT: It is possible to provide the imaginary part and perform inverse
+  transforms.
+- 1D FFT filter: Occasional ‘Axis with extreme range!’ error was fixed.
+- Image export: Drawing of ‘lattice’ selections was implemented.
 
 
 2.40 (2015-02-07)
