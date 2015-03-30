@@ -107,7 +107,7 @@ static GwyModuleInfo module_info = {
     N_("Filter tool, processes selected part of data with a filter "
        "(conservative denoise, mean, median. Kuwahara, minimum, maximum)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "3.8",
+    "3.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
