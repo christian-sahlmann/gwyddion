@@ -47,7 +47,8 @@ typedef enum {
     GWY_FILTER_MAXIMUM       = 4,
     GWY_FILTER_KUWAHARA      = 5,
     GWY_FILTER_DECHECKER     = 6,
-    GWY_FILTER_GAUSSIAN      = 7
+    GWY_FILTER_GAUSSIAN      = 7,
+    GWY_FILTER_SHARPEN       = 8
 } GwyFilterType;
 
 typedef struct _GwyToolFilter      GwyToolFilter;
@@ -95,6 +96,7 @@ static void     gwy_tool_filter_size_changed     (GwyToolFilter *tool,
 static void     gwy_tool_filter_type_changed     (GtkComboBox *combo,
                                                   GwyToolFilter *tool);
 static gboolean gwy_tool_filter_is_sized         (GwyFilterType type);
+static gboolean gwy_tool_filter_is_float_sized   (GwyFilterType type);
 static void     setup_size_adjustment            (GwyToolFilter *tool);
 static void     gwy_tool_filter_apply            (GwyToolFilter *tool);
 static void     gwy_tool_filter_save_args        (GwyToolFilter *tool);
@@ -211,6 +213,7 @@ gwy_tool_filter_init_dialog(GwyToolFilter *tool)
         { N_("Kuwahara"),             GWY_FILTER_KUWAHARA,     },
         { N_("Dechecker"),            GWY_FILTER_DECHECKER,    },
         { N_("filter|Gaussian"),      GWY_FILTER_GAUSSIAN,     },
+        { N_("Sharpen"),              GWY_FILTER_SHARPEN,      },
     };
     GtkDialog *dialog;
     GtkTable *table;
@@ -346,7 +349,7 @@ static void
 gwy_tool_filter_size_changed(GwyToolFilter *tool,
                              GtkAdjustment *adj)
 {
-    if (tool->args.filter_type == GWY_FILTER_GAUSSIAN)
+    if (gwy_tool_filter_is_float_sized(tool->args.filter_type))
         tool->args.gauss_size = gtk_adjustment_get_value(adj);
     else
         tool->args.size = gwy_adjustment_get_int(adj);
@@ -357,15 +360,24 @@ gwy_tool_filter_type_changed(GtkComboBox *combo,
                              GwyToolFilter *tool)
 {
     GwyFilterType prevtype, newtype;
-    gboolean sensitive;
+    gboolean sensitive, prevfloat, newfloat;
 
     prevtype = tool->args.filter_type;
     tool->args.filter_type = newtype = gwy_enum_combo_box_get_active(combo);
     sensitive = gwy_tool_filter_is_sized(tool->args.filter_type);
     gwy_table_hscale_set_sensitive(tool->size, sensitive);
 
-    if (prevtype == GWY_FILTER_GAUSSIAN || newtype == GWY_FILTER_GAUSSIAN)
+    prevfloat = gwy_tool_filter_is_float_sized(prevtype);
+    newfloat = gwy_tool_filter_is_float_sized(newtype);
+    if (prevfloat ^ newfloat)
         setup_size_adjustment(tool);
+}
+
+static gboolean
+gwy_tool_filter_is_float_sized(GwyFilterType type)
+{
+    return (type == GWY_FILTER_GAUSSIAN
+            || type == GWY_FILTER_SHARPEN);
 }
 
 static gboolean
@@ -379,7 +391,7 @@ static void
 setup_size_adjustment(GwyToolFilter *tool)
 {
     GtkAdjustment *adj = GTK_ADJUSTMENT(tool->size);
-    if (tool->args.filter_type == GWY_FILTER_GAUSSIAN) {
+    if (gwy_tool_filter_is_float_sized(tool->args.filter_type)) {
         gtk_adjustment_configure(adj, tool->args.gauss_size,
                                  0.01, 40.0, 0.01, 1.0, 0);
         gtk_spin_button_set_digits(GTK_SPIN_BUTTON(tool->size_spin), 2);
@@ -388,6 +400,29 @@ setup_size_adjustment(GwyToolFilter *tool)
         gtk_adjustment_configure(adj, tool->args.size, 2, 20, 1, 5, 0);
         gtk_spin_button_set_digits(GTK_SPIN_BUTTON(tool->size_spin), 0);
     }
+}
+
+static void
+filter_area_sharpen(GwyDataField *dfield, gdouble sigma,
+                    gint col, gint row, gint width, gint height)
+{
+    GwyDataField *origpart;
+    gint xres, i, j;
+    gdouble *d, *p;
+
+    origpart = gwy_data_field_area_extract(dfield, col, row, width, height);
+    gwy_data_field_area_filter_gaussian(dfield, sigma, col, row, width, height);
+
+    xres = dfield->xres;
+
+    for (i = 0; i < height; i++) {
+        d = dfield->data + (i + row)*xres + col;
+        p = origpart->data + i*width;
+        for (j = 0; j < width; j++)
+            d[j] = 2*p[j] - d[j];
+    }
+
+    g_object_unref(origpart);
 }
 
 static void
@@ -476,6 +511,13 @@ gwy_tool_filter_apply(GwyToolFilter *tool)
                                             tool->args.gauss_size*FWHM2SIGMA,
                                             isel[0], isel[1],
                                             isel[2], isel[3]);
+        break;
+
+        case GWY_FILTER_SHARPEN:
+        filter_area_sharpen(plain_tool->data_field,
+                            tool->args.gauss_size*FWHM2SIGMA,
+                            isel[0], isel[1],
+                            isel[2], isel[3]);
         break;
 
         default:
