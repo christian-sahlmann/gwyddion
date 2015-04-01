@@ -33,7 +33,11 @@
 #include "gwyappinternal.h"
 
 enum {
-    UNDO_LEVELS = 3
+#if (SIZEOF_VOIDP > 4)
+    UNDO_LEVELS = 8
+#else
+    UNDO_LEVELS = 4
+#endif
 };
 
 typedef struct {
