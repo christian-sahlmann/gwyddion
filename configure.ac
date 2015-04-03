@@ -551,7 +551,7 @@ AM_CONDITIONAL([HAVE_PNG],[test x$enable_png != xno])
 # the fallback when no actual compiler is found.  We have to disable the
 # hdrimage stuff completely.
 AC_MSG_CHECKING([if the C++ compiler is a real thing])
-if test x$CXX = "xg++" && test x$GCC_CXX != xyes; then
+if test "x$CXX" = "xg++" && test "x$GCC_CXX" != xyes; then
   cxx_is_not_fake=no
 else
   cxx_is_not_fake=yes
