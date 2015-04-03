@@ -13,7 +13,8 @@ volume_LTLIBRARIES = \
 	volume_fdfit.la \
 	volume_invert.la \
 	volume_kmeans.la \
-	volume_kmedians.la
+	volume_kmedians.la \
+	volume_slice.la
 
 EXTRA_DIST = \
 	$(disabled_sources)
@@ -38,11 +39,12 @@ module_libadd = \
 endif
 
 volume_calibrate_la_SOURCES = volume_calibrate.c
-volume_extract_la_SOURCES = volume_extract.c
-volume_fdfit_la_SOURCES = volume_fdfit.c
-volume_invert_la_SOURCES = volume_invert.c
-volume_kmeans_la_SOURCES = volume_kmeans.c
-volume_kmedians_la_SOURCES = volume_kmedians.c
+volume_extract_la_SOURCES   = volume_extract.c
+volume_fdfit_la_SOURCES     = volume_fdfit.c
+volume_invert_la_SOURCES    = volume_invert.c
+volume_kmeans_la_SOURCES    = volume_kmeans.c
+volume_kmedians_la_SOURCES  = volume_kmedians.c
+volume_slice_la_SOURCES     = volume_slice.c
 
 clean-local:
 	rm -f core.* *~
