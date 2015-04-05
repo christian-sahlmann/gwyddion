@@ -130,6 +130,7 @@ static void     update_labels          (SliceControls *controls);
 static void     extract_image_plane    (const SliceArgs *args,
                                         GwyDataField *dfield);
 static void     extract_graph_curve    (const SliceArgs *args,
+                                        GwyGraphModel *gmodel,
                                         GwyGraphCurveModel *gcmodel);
 static void     flip_xy                (GwyDataField *dfield);
 static void     slice_sanitize_args    (SliceArgs *args);
@@ -512,7 +513,7 @@ point_selection_changed(SliceControls *controls,
 
     gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
     gcmodel = gwy_graph_model_get_curve(gmodel, 0);
-    extract_graph_curve(controls->args, gcmodel);
+    extract_graph_curve(controls->args, gmodel, gcmodel);
 
     update_labels(controls);
 }
@@ -756,11 +757,11 @@ slice_do(SliceArgs *args, GwyContainer *data, gint id)
         GwyGraphModel *gmodel = gwy_graph_model_new();
         GwyGraphCurveModel *gcmodel = gwy_graph_curve_model_new();
 
-        extract_graph_curve(args, gcmodel);
+        extract_graph_curve(args, gmodel, gcmodel);
         gwy_graph_model_add_curve(gmodel, gcmodel);
         g_object_unref(gcmodel);
 
-        newid = gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+        gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
         g_object_unref(gmodel);
     }
 }
@@ -799,12 +800,16 @@ extract_image_plane(const SliceArgs *args, GwyDataField *dfield)
 }
 
 static void
-extract_graph_curve(const SliceArgs *args, GwyGraphCurveModel *gcmodel)
+extract_graph_curve(const SliceArgs *args,
+                    GwyGraphModel *gmodel,
+                    GwyGraphCurveModel *gcmodel)
 {
     SliceBasePlane base_plane = args->base_plane;
     GwyDataLine *line = gwy_data_line_new(1, 1.0, FALSE);
     GwyDataLine *calibration = NULL;
     GwyBrick *brick = args->brick;
+    const gchar *xlabel, *ylabel;
+    gchar desc[80];
 
     if (base_plane == PLANE_XY || base_plane == PLANE_YX) {
         gwy_brick_extract_line(brick, line,
@@ -815,31 +820,76 @@ extract_graph_curve(const SliceArgs *args, GwyGraphCurveModel *gcmodel)
          * right. */
         calibration = gwy_brick_get_zcalibration(brick);
         if (calibration
-            && gwy_data_line_get_res(line) != gwy_data_line_get_res(calibration))
+            && (gwy_data_line_get_res(line)
+                != gwy_data_line_get_res(calibration)))
             calibration = NULL;
+
+        xlabel = "x";
+        ylabel = "y";
+        if (base_plane == PLANE_YX)
+            GWY_SWAP(const gchar*, xlabel, ylabel);
+
+        g_snprintf(desc, sizeof(desc), _("Z graph at x: %d y: %d"),
+                   args->xpos, args->ypos);
     }
     else if (base_plane == PLANE_YZ || base_plane == PLANE_ZY) {
         gwy_brick_extract_line(brick, line,
                                0, args->ypos, args->zpos,
                                brick->xres-1, args->ypos, args->zpos,
                                FALSE);
+
+        xlabel = "y";
+        ylabel = "z";
+        if (base_plane == PLANE_ZY)
+            GWY_SWAP(const gchar*, xlabel, ylabel);
+
+        g_snprintf(desc, sizeof(desc), _("X graph at y: %d z: %d"),
+                   args->ypos, args->zpos);
     }
     else if (base_plane == PLANE_XZ || base_plane == PLANE_ZX) {
         gwy_brick_extract_line(brick, line,
                                args->xpos, 0, args->zpos,
                                args->xpos, brick->yres-1, args->zpos,
                                FALSE);
+
+        xlabel = "x";
+        ylabel = "z";
+        if (base_plane == PLANE_ZX)
+            GWY_SWAP(const gchar*, xlabel, ylabel);
+
+        g_snprintf(desc, sizeof(desc), _("Y graph at x: %d z: %d"),
+                   args->xpos, args->zpos);
     }
+    else {
+        g_return_if_reached();
+    }
+
+    g_object_set(gcmodel,
+                 "description", _("Brick graph"),
+                 "mode", GWY_GRAPH_CURVE_LINE,
+                 NULL);
 
     if (calibration) {
         gwy_graph_curve_model_set_data(gcmodel,
                                        gwy_data_line_get_data(calibration),
                                        gwy_data_line_get_data(line),
                                        gwy_data_line_get_res(line));
+        /* XXX: This unit object sharing is safe only because we are going to
+         * destroy the data line immediately. */
+        gwy_data_line_set_si_unit_x(line,
+                                    gwy_data_line_get_si_unit_y(calibration));
     }
     else
         gwy_graph_curve_model_set_data_from_dataline(gcmodel, line, 0, 0);
+
+    gwy_graph_model_set_units_from_data_line(gmodel, line);
     g_object_unref(line);
+
+    g_object_set(gmodel,
+                 "title", desc,
+                 "axis-label-bottom", xlabel,
+                 "axis-label-left", ylabel,
+                 NULL);
 }
 
 static void
