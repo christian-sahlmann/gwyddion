@@ -20,6 +20,7 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -98,7 +99,9 @@ typedef struct {
 static gboolean module_register        (void);
 static void     slice                  (GwyContainer *data,
                                         GwyRunType run);
-static gboolean slice_dialog           (SliceArgs *args);
+static gboolean slice_dialog           (SliceArgs *args,
+                                        GwyContainer *data,
+                                        gint id);
 static void     slice_do               (SliceArgs *args,
                                         GwyContainer *data,
                                         gint id);
@@ -199,7 +202,7 @@ slice(GwyContainer *data, GwyRunType run)
     if (CLAMP(args.zpos, 0, brick->zres-1) != args.zpos)
         args.zpos = brick->zres/2;
 
-    if (slice_dialog(&args)) {
+    if (slice_dialog(&args, data, id)) {
         slice_do(&args, data, id);
     }
 
@@ -209,7 +212,7 @@ slice(GwyContainer *data, GwyRunType run)
 }
 
 static gboolean
-slice_dialog(SliceArgs *args)
+slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
 {
     static const GwyEnum base_planes[] = {
         { "XY", PLANE_XY, },
@@ -236,6 +239,8 @@ slice_dialog(SliceArgs *args)
     GwyPixmapLayer *layer;
     GwyVectorLayer *vlayer = NULL;
     GwySelection *selection;
+    const guchar *gradient;
+    gchar key[40];
 
     controls.args = args;
     controls.in_update = TRUE;
@@ -260,9 +265,18 @@ slice_dialog(SliceArgs *args)
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
     g_object_unref(dfield);
 
+    g_snprintf(key, sizeof(key), "/brick/%d/preview/palette", id);
+    if (gwy_container_gis_string_by_name(data, key, &gradient)) {
+        gwy_container_set_const_string_by_name(controls.mydata,
+                                               "/0/base/palette", gradient);
+    }
+
     controls.view = gwy_data_view_new(controls.mydata);
     controls.player = layer = gwy_layer_basic_new();
-    g_object_set(layer, "data-key", "/0/data", NULL);
+    g_object_set(layer,
+                 "data-key", "/0/data",
+                 "gradient-key", "/0/base/palette",
+                 NULL);
     gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
     gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
@@ -384,7 +398,7 @@ slice_dialog(SliceArgs *args)
     gtk_misc_set_alignment(GTK_MISC(controls.yposreal), 1.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), controls.yposreal,
                      3, 4, row, row+1, GTK_FILL, 0, 0, 0);
-    controls.yvf = gwy_brick_get_value_format_x(brick,
+    controls.yvf = gwy_brick_get_value_format_y(brick,
                                                 GWY_SI_UNIT_FORMAT_VFMARKUP,
                                                 NULL);
     label = gtk_label_new(controls.yvf->units);
@@ -409,7 +423,7 @@ slice_dialog(SliceArgs *args)
                                                         NULL);
     }
     else {
-        controls.zvf = gwy_brick_get_value_format_x(brick,
+        controls.zvf = gwy_brick_get_value_format_z(brick,
                                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
                                                     NULL);
     }
@@ -748,10 +762,73 @@ slice_do(SliceArgs *args, GwyContainer *data, gint id)
 
     if (output_type == OUTPUT_IMAGES) {
         GwyDataField *dfield = gwy_data_field_new(1, 1, 1.0, 1.0, TRUE);
+        GwyDataLine *calibration;
+        GwySIValueFormat *vf;
+        const guchar *gradient;
+        gchar *title = NULL;
+        gchar key[40];
+        gdouble r;
+        gint i;
 
         extract_image_plane(args, dfield);
         newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
         g_object_unref(dfield);
+
+        gwy_app_channel_log_add(data, -1, newid, "volume::volume_slice", NULL);
+
+        g_snprintf(key, sizeof(key), "/brick/%d/preview/palette", id);
+        if (gwy_container_gis_string_by_name(data, key, &gradient)) {
+            g_snprintf(key, sizeof(key), "/%d/base/palette", newid);
+            gwy_container_set_const_string_by_name(data, key, gradient);
+        }
+
+        if (base_plane == PLANE_XY || base_plane == PLANE_YX) {
+            i = args->zpos;
+            if ((calibration = gwy_brick_get_zcalibration(brick))) {
+                r = gwy_data_line_get_val(calibration, i);
+                vf = gwy_data_line_get_value_format_y(calibration,
+                                                      GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                      NULL);
+            }
+            else {
+                r = gwy_brick_ktor(brick, i);
+                vf = gwy_brick_get_value_format_z(brick,
+                                                  GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                  NULL);
+            }
+            title = g_strdup_printf(_("Z cross-section at Z = %.*f%s%s (#%d)"),
+                                    vf->precision, r/vf->magnitude,
+                                    strlen(vf->units) ? " " : "", vf->units,
+                                    i);
+        }
+        else if (base_plane == PLANE_XZ || base_plane == PLANE_ZX) {
+            i = args->ypos;
+            r = gwy_brick_jtor(brick, i);
+            vf = gwy_brick_get_value_format_y(brick,
+                                              GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                              NULL);
+            title = g_strdup_printf(_("Y cross-section at Y = %.*f%s%s (#%d)"),
+                                    vf->precision, r/vf->magnitude,
+                                    strlen(vf->units) ? " " : "", vf->units,
+                                    i);
+        }
+        else if (base_plane == PLANE_YZ || base_plane == PLANE_ZY) {
+            i = args->xpos;
+            r = gwy_brick_itor(brick, i);
+            vf = gwy_brick_get_value_format_x(brick,
+                                              GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                              NULL);
+            title = g_strdup_printf(_("X cross-section at X = %.*f%s%s (#%d)"),
+                                    vf->precision, r/vf->magnitude,
+                                    strlen(vf->units) ? " " : "", vf->units,
+                                    i);
+        }
+        else {
+            g_return_if_reached();
+        }
+        gwy_si_unit_value_format_free(vf);
+        g_snprintf(key, sizeof(key), "/%d/data/title", newid);
+        gwy_container_set_string_by_name(data, key, (const guchar*)title);
     }
     else if (output_type == OUTPUT_GRAPHS) {
         GwyGraphModel *gmodel = gwy_graph_model_new();
