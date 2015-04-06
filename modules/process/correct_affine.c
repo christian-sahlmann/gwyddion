@@ -1327,9 +1327,6 @@ do_correction(AffcorControls *controls)
         tmp[1] = sin(alpha);
         tmp[2] = -sin(alpha);
         matrix_matrix(m, tmp, m);
-
-        /* To create the corrected lattice selection on result. */
-        matrix_vector(a1a2_corr, tmp, a1a2_corr);
     }
 
     if (args->scaling == SCALING_PRESERVE_AREA)
