@@ -33,6 +33,12 @@
  *
  *****************************************************************************/
 
+typedef enum {
+    DATA_CHOOSER_CHANNEL = 0,
+    DATA_CHOOSER_VOLUME  = 1,
+    DATA_CHOOSER_GRAPH   = 2,
+} DataChooserKind;
+
 struct _GwyDataChooser {
     GtkComboBox parent_instance;
 
@@ -49,6 +55,7 @@ struct _GwyDataChooser {
     GList *events;
     gulong watcher_id;
     guint update_id;
+    DataChooserKind kind;
 };
 
 struct _GwyDataChooserClass {
@@ -158,7 +165,13 @@ gwy_data_chooser_destroy(GtkObject *object)
         gwy_object_unref(chooser->store);
     }
     if (chooser->watcher_id) {
-        gwy_app_data_browser_remove_channel_watch(chooser->watcher_id);
+        if (chooser->kind == DATA_CHOOSER_CHANNEL)
+            gwy_app_data_browser_remove_channel_watch(chooser->watcher_id);
+        else if (chooser->kind == DATA_CHOOSER_GRAPH)
+            gwy_app_data_browser_remove_graph_watch(chooser->watcher_id);
+        else {
+            g_warning("Watcher removal function missing?");
+        }
         chooser->watcher_id = 0;
     }
     if (chooser->update_id)
@@ -724,6 +737,7 @@ gwy_data_chooser_new_channels(void)
     GtkCellLayout *layout;
 
     chooser = (GwyDataChooser*)g_object_new(GWY_TYPE_DATA_CHOOSER, NULL);
+    chooser->kind = DATA_CHOOSER_CHANNEL;
     gwy_app_data_browser_foreach(gwy_data_chooser_channels_fill, chooser);
     layout = GTK_CELL_LAYOUT(chooser);
 
@@ -844,6 +858,7 @@ gwy_data_chooser_new_volumes(void)
     GtkCellLayout *layout;
 
     chooser = (GwyDataChooser*)g_object_new(GWY_TYPE_DATA_CHOOSER, NULL);
+    chooser->kind = DATA_CHOOSER_VOLUME;
     gwy_app_data_browser_foreach(gwy_data_chooser_volumes_fill, chooser);
     layout = GTK_CELL_LAYOUT(chooser);
 
@@ -914,15 +929,19 @@ gwy_data_chooser_graphs_render_name(G_GNUC_UNUSED GtkCellLayout *layout,
     if (!proxy->name) {
         GwyGraphModel *gmodel;
         GQuark quark;
+        gchar *s;
 
         gtk_tree_model_get(model, iter,
                            MODEL_COLUMN_CONTAINER, &container,
                            MODEL_COLUMN_ID, &id,
                            -1);
         quark = gwy_app_get_graph_key_for_id(id);
-        gmodel = (GwyGraphModel*)gwy_container_get_object(data, quark);
+        gmodel = (GwyGraphModel*)gwy_container_get_object(container, quark);
         g_return_if_fail(gmodel);
-        g_object_get(gmodel, "title", &proxy->name, NULL);
+        g_object_get(gmodel, "title", &s, NULL);
+        proxy->name = g_strdup_printf("%s (%d)",
+                                      s, gwy_graph_model_get_n_curves(gmodel));
+        g_free(s);
         g_object_unref(container);
     }
     g_object_set(renderer, "text", proxy->name, NULL);
@@ -956,6 +975,7 @@ gwy_data_chooser_new_graphs(void)
     GtkCellLayout *layout;
 
     chooser = (GwyDataChooser*)g_object_new(GWY_TYPE_DATA_CHOOSER, NULL);
+    chooser->kind = DATA_CHOOSER_GRAPH;
     gwy_app_data_browser_foreach(gwy_data_chooser_graphs_fill, chooser);
     layout = GTK_CELL_LAYOUT(chooser);
 
