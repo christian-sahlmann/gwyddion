@@ -45,6 +45,7 @@ typedef struct _GwyDataChooserClass GwyDataChooserClass;
 
 GtkWidget* gwy_data_chooser_new_channels(void);
 GtkWidget* gwy_data_chooser_new_volumes (void);
+GtkWidget* gwy_data_chooser_new_graphs  (void);
 
 GType         gwy_data_chooser_get_type  (void) G_GNUC_CONST;
 gboolean      gwy_data_chooser_set_active(GwyDataChooser *chooser,
@@ -60,6 +61,7 @@ const gchar*  gwy_data_chooser_get_none  (GwyDataChooser *chooser);
 void          gwy_data_chooser_set_none  (GwyDataChooser *chooser,
                                           const gchar *none);
 GtkTreeModel *gwy_data_chooser_get_filter (GwyDataChooser *chooser);
+
 G_END_DECLS
 
 #endif /* __GWY_DATA_CHOOSER_H__ */

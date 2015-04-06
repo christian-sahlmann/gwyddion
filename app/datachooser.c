@@ -867,6 +867,111 @@ gwy_data_chooser_new_volumes(void)
     return (GtkWidget*)chooser;
 }
 
+/*****************************************************************************
+ *
+ * Graphs.
+ *
+ *****************************************************************************/
+
+static void
+gwy_data_chooser_graphs_fill(GwyContainer *data,
+                             gpointer user_data)
+{
+    GtkListStore *store;
+    GtkTreeIter iter;
+    Proxy *proxy;
+    gint *ids;
+    gint i;
+
+    store = GWY_DATA_CHOOSER(user_data)->store;
+    ids = gwy_app_data_browser_get_graph_ids(data);
+    for (i = 0; ids[i] > 0; i++) {
+        gwy_debug("inserting %p %d", data, ids[i]);
+        /* NB: The Pixbuf field is unused as we cannot render graph thumbnails
+         * presently. */
+        proxy = g_new0(Proxy, 1);
+        gtk_list_store_insert_with_values(store, &iter, G_MAXINT,
+                                          MODEL_COLUMN_CONTAINER, data,
+                                          MODEL_COLUMN_ID, ids[i],
+                                          MODEL_COLUMN_PROXY, proxy,
+                                          -1);
+    }
+    g_free(ids);
+}
+
+static void
+gwy_data_chooser_graphs_render_name(G_GNUC_UNUSED GtkCellLayout *layout,
+                                    GtkCellRenderer *renderer,
+                                    GtkTreeModel *model,
+                                    GtkTreeIter *iter,
+                                    G_GNUC_UNUSED gpointer data)
+{
+    GwyContainer *container;
+    Proxy *proxy;
+    gint id;
+
+    gtk_tree_model_get(model, iter, MODEL_COLUMN_PROXY, &proxy, -1);
+    if (!proxy->name) {
+        GwyGraphModel *gmodel;
+        GQuark quark;
+
+        gtk_tree_model_get(model, iter,
+                           MODEL_COLUMN_CONTAINER, &container,
+                           MODEL_COLUMN_ID, &id,
+                           -1);
+        quark = gwy_app_get_graph_key_for_id(id);
+        gmodel = (GwyGraphModel*)gwy_container_get_object(data, quark);
+        g_return_if_fail(gmodel);
+        g_object_get(gmodel, "title", &proxy->name, NULL);
+        g_object_unref(container);
+    }
+    g_object_set(renderer, "text", proxy->name, NULL);
+}
+
+static void
+gwy_data_chooser_graphs_setup_watcher(GwyDataChooser *chooser)
+{
+    gint id;
+
+    id = gwy_app_data_browser_add_graph_watch(gwy_data_chooser_receive_event,
+                                              chooser);
+    chooser->watcher_id = id;
+}
+
+/**
+ * gwy_data_chooser_new_graphs:
+ *
+ * Creates a data chooser for graphs.
+ *
+ * Returns: A new graph chooser.  Nothing may be assumed about the type and
+ *          properties of the returned widget as they can change in the future.
+ *
+ * Since: 2.41
+ **/
+GtkWidget*
+gwy_data_chooser_new_graphs(void)
+{
+    GwyDataChooser *chooser;
+    GtkCellRenderer *renderer;
+    GtkCellLayout *layout;
+
+    chooser = (GwyDataChooser*)g_object_new(GWY_TYPE_DATA_CHOOSER, NULL);
+    gwy_app_data_browser_foreach(gwy_data_chooser_graphs_fill, chooser);
+    layout = GTK_CELL_LAYOUT(chooser);
+
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "xalign", 0.0, NULL);
+    gtk_cell_layout_pack_start(layout, renderer, TRUE);
+    gtk_cell_layout_set_cell_data_func(layout, renderer,
+                                       gwy_data_chooser_graphs_render_name,
+                                       chooser, NULL);
+
+    gwy_data_chooser_choose_whatever(chooser);
+    gwy_data_chooser_graphs_setup_watcher(chooser);
+
+    return (GtkWidget*)chooser;
+}
+
 /************************** Documentation ****************************/
 
 /**
