@@ -81,13 +81,6 @@ enum {
     MODEL_NCOLUMNS
 };
 
-/*****************************************/
-GtkTreeModel *gwy_data_chooser_get_filter(GwyDataChooser *chooser)
-{
-    return chooser->filter;
-}
-/******************************************/
-
 static void     gwy_data_chooser_finalize       (GObject *object);
 static void     gwy_data_chooser_destroy        (GtkObject *object);
 static gboolean gwy_data_chooser_is_visible     (GtkTreeModel *model,
@@ -351,6 +344,25 @@ gwy_data_chooser_set_filter(GwyDataChooser *chooser,
 
     gtk_tree_model_filter_refilter(GTK_TREE_MODEL_FILTER(chooser->filter));
     gwy_data_chooser_choose_whatever(chooser);
+}
+
+/**
+ * gwy_data_chooser_get_filter:
+ * @chooser: A data chooser.
+ *
+ * Gets the tree model filter used in a data chooser.
+ *
+ * In general, you should not access the filter directly.  An exception being
+ * gtk_tree_model_filter_refilter() when the filtering functions given in
+ * gwy_data_chooser_set_filter() depends on external state and that state
+ * changes.
+ *
+ * Returns: The #GtkTreeModelFilter object used by the chooser.
+ **/
+GtkTreeModel*
+gwy_data_chooser_get_filter(GwyDataChooser *chooser)
+{
+    return chooser->filter;
 }
 
 /**
