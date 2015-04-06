@@ -45,7 +45,7 @@ enum {
 #define GWY_TOOL_SELECTION_MANAGER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_SELECTION_MANAGER, GwyToolSelectionManagerClass))
 
 enum {
-    NLAYERTYPES = 5
+    NLAYERTYPES = 6
 };
 
 enum {
@@ -117,7 +117,7 @@ static GwyModuleInfo module_info = {
     N_("Grain removal tool, removes continuous parts of mask and/or "
        "underlying data."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -125,6 +125,7 @@ static GwyModuleInfo module_info = {
 static const gchar *const layer_types[NLAYERTYPES] = {
     "GwyLayerAxis",
     "GwyLayerEllipse",
+    "GwyLayerLattice",
     "GwyLayerLine",
     "GwyLayerPoint",
     "GwyLayerRectangle",
