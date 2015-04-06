@@ -135,6 +135,7 @@ typedef struct {
     GtkWidget *different_lengths;
     GtkWidget *a2_corr;
     GtkWidget *phi_corr;
+    GwySelection *selection_corr;
     guint invalid_corr;
     gboolean calculated;
     gulong recalculate_id;
@@ -237,7 +238,7 @@ static GwyModuleInfo module_info = {
     N_("Corrects affine distortion of images by matching image Bravais "
        "lattice to the true one."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti)",
     "2013",
 };
@@ -294,6 +295,8 @@ affcor_dialog(AffcorArgs *args,
     gint response, row, newid = -1;
     GwyPixmapLayer *layer;
     GwyVectorLayer *vlayer;
+    GObject *selection;
+    gchar selkey[40];
     GwySIUnit *unitphi;
     guint flags;
 
@@ -328,8 +331,6 @@ affcor_dialog(AffcorArgs *args,
 
     calculate_acffield_full(&controls, dfield);
     gwy_app_sync_data_items(data, controls.mydata, id, 1, FALSE,
-                            GWY_DATA_ITEM_RANGE_TYPE,
-                            GWY_DATA_ITEM_RANGE,
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
@@ -350,11 +351,12 @@ affcor_dialog(AffcorArgs *args,
     gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
 
     vlayer = g_object_new(g_type_from_name("GwyLayerLattice"),
-                          "selection-key", "/0/select/vector",
+                          "selection-key", "/0/select/lattice",
                           NULL);
     controls.vlayer = g_object_ref(vlayer);
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.view), vlayer);
     controls.selection = gwy_vector_layer_ensure_selection(vlayer);
+    g_object_ref(controls.selection);
     gwy_selection_set_max_objects(controls.selection, 1);
     g_signal_connect_swapped(controls.selection, "changed",
                              G_CALLBACK(selection_changed), &controls);
@@ -534,7 +536,16 @@ affcor_dialog(AffcorArgs *args,
                      2, 5, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    init_selection(controls.selection, dfield);
+    g_snprintf(selkey, sizeof(selkey), "/%d/select/lattice", id);
+    if (gwy_container_gis_object_by_name(data, selkey, &selection)
+        && gwy_selection_get_data(GWY_SELECTION(selection), NULL) == 1)
+        gwy_serializable_clone(selection, G_OBJECT(controls.selection));
+    else
+        init_selection(controls.selection, dfield);
+
+    controls.selection_corr
+        = GWY_SELECTION(gwy_serializable_duplicate(G_OBJECT(controls.selection)));
+
     flags = args->different_lengths ? SENS_DIFFERENT_LENGTHS : 0;
     gwy_sensitivity_group_set_state(controls.sens,
                                     SENS_DIFFERENT_LENGTHS, flags);
@@ -576,8 +587,19 @@ affcor_dialog(AffcorArgs *args,
                             GWY_DATA_ITEM_GRADIENT,
                             0);
 
+    g_snprintf(selkey, sizeof(selkey), "/%d/select/lattice", newid);
+    gwy_container_set_object_by_name(data, selkey, controls.selection_corr);
+
     gtk_widget_destroy(controls.dialog);
+
 finalize:
+    g_snprintf(selkey, sizeof(selkey), "/%d/select/lattice", id);
+    selection = gwy_serializable_duplicate(G_OBJECT(controls.selection));
+    gwy_container_set_object_by_name(data, selkey, selection);
+    g_object_unref(selection);
+    g_object_unref(controls.selection);
+    g_object_unref(controls.selection_corr);
+
     if (controls.recalculate_id)
         g_source_remove(controls.recalculate_id);
     g_object_unref(controls.vlayer);
@@ -890,19 +912,33 @@ image_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
     layer = gwy_data_view_get_base_layer(dataview);
 
     if (args->image_mode == IMAGE_DATA) {
-        gwy_pixmap_layer_set_data_key(layer, "/0/data");
+        g_object_set(layer,
+                     "data-key", "/0/data",
+                     "range-type-key", "/0/base/range-type",
+                     "min-max-key", "/0/base",
+                     NULL);
         if (!gwy_data_view_get_top_layer(dataview))
             gwy_data_view_set_top_layer(dataview, controls->vlayer);
     }
     else if (args->image_mode == IMAGE_ACF) {
-        gwy_pixmap_layer_set_data_key(layer, "/1/data");
+        /* There are no range-type and min-max keys, which is the point,
+         * because we want full-colour-scale ACF, whatever the image has set. */
+        g_object_set(layer,
+                     "data-key", "/1/data",
+                     "range-type-key", "/1/base/range-type",
+                     "min-max-key", "/1/base",
+                     NULL);
         if (!gwy_data_view_get_top_layer(dataview))
             gwy_data_view_set_top_layer(dataview, controls->vlayer);
     }
     else if (args->image_mode == IMAGE_CORRECTED) {
         if (!controls->calculated)
             do_correction(controls);
-        gwy_pixmap_layer_set_data_key(layer, "/2/data");
+        g_object_set(layer,
+                     "data-key", "/2/data",
+                     "range-type-key", "/0/base/range-type",
+                     "min-max-key", "/0/base",
+                     NULL);
         gwy_data_view_set_top_layer(dataview, NULL);
     }
 
@@ -1269,7 +1305,8 @@ do_correction(AffcorControls *controls)
     a1a2_corr[1] = 0.0;
     a1a2_corr[2] = args->a2 * controls->vf->magnitude * cos(args->phi);
     a1a2_corr[3] = -args->a2 * controls->vf->magnitude * sin(args->phi);
-    gwy_debug("a1a2_corr %g %g %g %g", a1a2_corr[0], a1a2_corr[1], a1a2_corr[2], a1a2_corr[3]);
+    gwy_debug("a1a2_corr %g %g %g %g",
+              a1a2_corr[0], a1a2_corr[1], a1a2_corr[2], a1a2_corr[3]);
     /* This is an approximate rotation correction to get the base more or less
      * oriented in the plane as expected and not upside down. */
     if (args->avoid_rotation) {
@@ -1290,6 +1327,9 @@ do_correction(AffcorControls *controls)
         tmp[1] = sin(alpha);
         tmp[2] = -sin(alpha);
         matrix_matrix(m, tmp, m);
+
+        /* To create the corrected lattice selection on result. */
+        matrix_vector(a1a2_corr, tmp, a1a2_corr);
     }
 
     if (args->scaling == SCALING_PRESERVE_AREA)
@@ -1297,8 +1337,14 @@ do_correction(AffcorControls *controls)
     else if (args->scaling == SCALING_PRESERVE_X)
         q = 1.0/hypot(m[0], m[2]);
 
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < 4; i++) {
         m[i] *= q;
+        /* To create the corrected lattice selection on result. */
+        a1a2_corr[i] *= q;
+    }
+
+    /* Now save the corrected lattice selection on result. */
+    gwy_selection_set_data(controls->selection_corr, 1, a1a2_corr);
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
