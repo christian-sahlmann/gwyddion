@@ -135,6 +135,9 @@ void   gwy_app_data_browser_foreach         (GwyAppDataForeachFunc function,
 gulong gwy_app_data_browser_add_channel_watch   (GwyAppDataWatchFunc function,
                                                  gpointer user_data);
 void   gwy_app_data_browser_remove_channel_watch(gulong id);
+gulong gwy_app_data_browser_add_graph_watch     (GwyAppDataWatchFunc function,
+                                                 gpointer user_data);
+void   gwy_app_data_browser_remove_graph_watch  (gulong id);
 
 void   gwy_app_sync_data_items          (GwyContainer *source,
                                          GwyContainer *dest,

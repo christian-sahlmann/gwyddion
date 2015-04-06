@@ -258,8 +258,8 @@ static gboolean gui_disabled = FALSE;
 
 static gulong watcher_id = 0;
 static GList *channel_watchers = NULL;
+static GList *graph_watchers   = NULL;
 /*
-static GList *graph_watchers = NULL;
 static GList *spectra_watchers = NULL;
 static GList *volume_watchers = NULL;
 */
@@ -8244,7 +8244,7 @@ gwy_app_data_browser_remove_watch(GList **watchers,
  * Returns: The id of the added watch func that can be used to remove it later
  *          using gwy_app_data_browser_remove_channel_watch().
  *
- * Since 2.21.
+ * Since 2.21
  **/
 gulong
 gwy_app_data_browser_add_channel_watch(GwyAppDataWatchFunc function,
@@ -8267,6 +8267,45 @@ void
 gwy_app_data_browser_remove_channel_watch(gulong id)
 {
     gwy_app_data_browser_remove_watch(&channel_watchers, id);
+}
+
+/**
+ * gwy_app_data_browser_add_graph_watch:
+ * @function: Function to call when a graph changes.
+ * @user_data: User data to pass to @function.
+ *
+ * Adds a watch function called when a graph changes.
+ *
+ * The function is called whenever a graph is added, removed or its properties
+ * change.  If a graph is removed it may longer exist when the function is
+ * called.
+ *
+ * Returns: The id of the added watch func that can be used to remove it later
+ *          using gwy_app_data_browser_remove_graph_watch().
+ *
+ * Since 2.41
+ **/
+gulong
+gwy_app_data_browser_add_graph_watch(GwyAppDataWatchFunc function,
+                                       gpointer user_data)
+{
+    return gwy_app_data_browser_add_watch(&graph_watchers,
+                                          function, user_data);
+}
+
+/**
+ * gwy_app_data_browser_remove_graph_watch:
+ * @id: Watch function id, as returned by
+ *      gwy_app_data_browser_add_graph_watch().
+ *
+ * Removes a graph watch function.
+ *
+ * Since: 2.41
+ **/
+void
+gwy_app_data_browser_remove_graph_watch(gulong id)
+{
+    gwy_app_data_browser_remove_watch(&graph_watchers, id);
 }
 
 /************************** Documentation ****************************/
