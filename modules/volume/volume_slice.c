@@ -69,8 +69,6 @@ typedef struct {
     gint zpos;
     /* Dynamic state. */
     GwyBrick *brick;
-    GArray *graph_coords;
-    GArray *image_planes;
 } SliceArgs;
 
 typedef struct {
@@ -105,6 +103,7 @@ static gboolean slice_dialog           (SliceArgs *args,
 static void     slice_do               (SliceArgs *args,
                                         GwyContainer *data,
                                         gint id);
+static void     slice_reset            (SliceControls *controls);
 static void     set_graph_max          (SliceControls *controls);
 static void     point_selection_changed(SliceControls *controls,
                                         gint id,
@@ -146,7 +145,7 @@ static const SliceArgs slice_defaults = {
     PLANE_XY, OUTPUT_IMAGES,
     -1, -1, -1,
     /* Dynamic state. */
-    NULL, NULL, NULL,
+    NULL,
 };
 
 static GwyModuleInfo module_info = {
@@ -192,9 +191,6 @@ slice(GwyContainer *data, GwyRunType run)
     g_return_if_fail(GWY_IS_BRICK(brick));
     args.brick = brick;
 
-    args.graph_coords = g_array_new(FALSE, FALSE, 2*sizeof(gint));
-    args.image_planes = g_array_new(FALSE, FALSE, sizeof(gint));
-
     if (CLAMP(args.xpos, 0, brick->xres-1) != args.xpos)
         args.xpos = brick->xres/2;
     if (CLAMP(args.ypos, 0, brick->yres-1) != args.ypos)
@@ -207,8 +203,6 @@ slice(GwyContainer *data, GwyRunType run)
     }
 
     slice_save_args(gwy_app_settings_get(), &args);
-    g_array_free(args.graph_coords, TRUE);
-    g_array_free(args.image_planes, TRUE);
 }
 
 static gboolean
@@ -287,7 +281,6 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
     gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.view), vlayer);
     selection = gwy_vector_layer_ensure_selection(vlayer);
-    /* TODO: Init the selection */
     g_signal_connect_swapped(selection, "changed",
                              G_CALLBACK(point_selection_changed), &controls);
 
@@ -460,7 +453,7 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
             break;
 
             case RESPONSE_RESET:
-            /* TODO */
+            slice_reset(&controls);
             break;
 
             default:
@@ -476,6 +469,21 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
     gwy_si_unit_value_format_free(controls.zvf);
 
     return TRUE;
+}
+
+static void
+slice_reset(SliceControls *controls)
+{
+    SliceArgs *args = controls->args;
+    GwyBrick *brick = args->brick;
+
+    args->xpos = brick->xres/2;
+    args->ypos = brick->yres/2;
+    args->zpos = brick->zres/2;
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->base_plane),
+                                  slice_defaults.base_plane);
+    gwy_radio_buttons_set_current(controls->output_type,
+                                  slice_defaults.output_type);
 }
 
 static void
