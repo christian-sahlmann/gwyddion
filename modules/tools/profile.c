@@ -1042,9 +1042,7 @@ static void
 gwy_tool_profile_update_target_graphs(GwyToolProfile *tool)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(tool->target_graph);
-    GtkTreeModel *filter = gwy_data_chooser_get_filter(chooser);
-
-    gtk_tree_model_filter_refilter(GTK_TREE_MODEL_FILTER(filter));
+    gwy_data_chooser_refilter(chooser);
 }
 
 static gboolean
