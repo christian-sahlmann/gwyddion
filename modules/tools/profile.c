@@ -174,7 +174,7 @@ static void       gwy_tool_profile_both_changed         (GtkToggleButton *check,
                                                          GwyToolProfile *tool);
 static void       gwy_tool_profile_interpolation_changed(GtkComboBox *combo,
                                                          GwyToolProfile *tool);
-static void       gwy_tool_profile_update_targets_graphs(GwyToolProfile *tool);
+static void       gwy_tool_profile_update_target_graphs (GwyToolProfile *tool);
 static gboolean   filter_target_graphs                  (GwyContainer *data,
                                                          gint id,
                                                          gpointer user_data);
@@ -603,7 +603,7 @@ gwy_tool_profile_data_switched(GwyTool *gwytool,
 
     gwy_graph_model_remove_all_curves(tool->gmodel);
     gwy_tool_profile_update_all_curves(tool);
-    gwy_tool_profile_update_targets_graphs(tool);
+    gwy_tool_profile_update_target_graphs(tool);
 }
 
 static void
@@ -620,7 +620,7 @@ static void
 gwy_tool_profile_data_changed(GwyPlainTool *plain_tool)
 {
     gwy_tool_profile_update_all_curves(GWY_TOOL_PROFILE(plain_tool));
-    gwy_tool_profile_update_targets_graphs(GWY_TOOL_PROFILE(plain_tool));
+    gwy_tool_profile_update_target_graphs(GWY_TOOL_PROFILE(plain_tool));
 }
 
 static void
@@ -1039,7 +1039,7 @@ gwy_tool_profile_interpolation_changed(GtkComboBox *combo,
 }
 
 static void
-gwy_tool_profile_update_targets_graphs(GwyToolProfile *tool)
+gwy_tool_profile_update_target_graphs(GwyToolProfile *tool)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(tool->target_graph);
     GtkTreeModel *filter = gwy_data_chooser_get_filter(chooser);
