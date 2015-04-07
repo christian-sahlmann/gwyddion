@@ -564,6 +564,13 @@ gwy_data_chooser_process_events(gpointer user_data)
         }
     }
 
+    if (!gtk_combo_box_get_active_iter(GTK_COMBO_BOX(chooser), &iter)) {
+        if (chooser->none_label)
+            gwy_data_chooser_set_active(chooser, NULL, -1);
+        else
+            gwy_data_chooser_choose_whatever(chooser);
+    }
+
     return FALSE;
 }
 
