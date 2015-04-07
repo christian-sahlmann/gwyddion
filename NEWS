@@ -2,18 +2,26 @@
 Libraries:
 - libgwyapp: Undo/redo functions now work with graphs so graph modules can
   save undo information.
+- libgwyapp: Data choosers are available for graphs.
+- libgwyapp: Data browser has functions for watching graphs.
+- libgwyapp: Data choosers respond to the current item disappearing by choosing
+  ‘none’ (preferably) or at least something.
 
 Modules:
 - Align graph (new): Aligns horizontally graph curves.
 - Slice volume (new): Simple extraction of planes and lines from volume data.
 - Log-Phi PSDF (new): Calculates 2D PSDF transformed to angle-log(frequency)
   coordinates.
+- Profiles tool: It is possible to select a target graph for the curves.
 - 2D FFT: It is possible to provide the imaginary part and perform inverse
   transforms.
 - 1D FFT filter: Occasional ‘Axis with extreme range!’ error was fixed.
 - Image export: Alignment of numbers on false colour map scale was improved.
   Drawing of ‘lattice’ selections was implemented.
 - Filters tool: A simple Gaussian sharpening filter was added.
+- Affine distortion: The lattice is remembered and recalled.  ACF image uses
+  full colour range, correcting problems when fixed colour range is set.
+- Selection manager tool: Lattice selections arw shown when chosen in the list.
 
 
 2.40 (2015-02-07)
