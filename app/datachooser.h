@@ -47,7 +47,7 @@ GtkWidget* gwy_data_chooser_new_channels(void);
 GtkWidget* gwy_data_chooser_new_volumes (void);
 GtkWidget* gwy_data_chooser_new_graphs  (void);
 
-GType         gwy_data_chooser_get_type  (void) G_GNUC_CONST;
+GType         gwy_data_chooser_get_type  (void)                            G_GNUC_CONST;
 gboolean      gwy_data_chooser_set_active(GwyDataChooser *chooser,
                                           GwyContainer *data,
                                           gint id);
@@ -60,7 +60,8 @@ void          gwy_data_chooser_set_filter(GwyDataChooser *chooser,
 const gchar*  gwy_data_chooser_get_none  (GwyDataChooser *chooser);
 void          gwy_data_chooser_set_none  (GwyDataChooser *chooser,
                                           const gchar *none);
-GtkTreeModel *gwy_data_chooser_get_filter (GwyDataChooser *chooser);
+GtkTreeModel* gwy_data_chooser_get_filter(GwyDataChooser *chooser);
+void          gwy_data_chooser_refilter  (GwyDataChooser *chooser);
 
 G_END_DECLS
 

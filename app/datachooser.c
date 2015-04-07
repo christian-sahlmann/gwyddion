@@ -339,6 +339,9 @@ gwy_data_chooser_is_visible(GtkTreeModel *model,
  *
  * The display of an item corresponding to no data is controlled by
  * gwy_data_chooser_set_none(), @filter function is only called for real data.
+ *
+ * Use gwy_data_chooser_refilter() to update the list if the filter depends on
+ * external state and that changes.
  **/
 void
 gwy_data_chooser_set_filter(GwyDataChooser *chooser,
@@ -354,9 +357,7 @@ gwy_data_chooser_set_filter(GwyDataChooser *chooser,
     chooser->filter_func = filter;
     chooser->filter_data = user_data;
     chooser->filter_destroy = destroy;
-
-    gtk_tree_model_filter_refilter(GTK_TREE_MODEL_FILTER(chooser->filter));
-    gwy_data_chooser_choose_whatever(chooser);
+    gwy_data_chooser_refilter(chooser);
 }
 
 /**
@@ -368,14 +369,40 @@ gwy_data_chooser_set_filter(GwyDataChooser *chooser,
  * In general, you should not access the filter directly.  An exception being
  * gtk_tree_model_filter_refilter() when the filtering functions given in
  * gwy_data_chooser_set_filter() depends on external state and that state
- * changes.
+ * changes.  However, gwy_data_chooser_refilter() is usually more useful.
  *
  * Returns: The #GtkTreeModelFilter object used by the chooser.
  **/
 GtkTreeModel*
 gwy_data_chooser_get_filter(GwyDataChooser *chooser)
 {
+    g_return_val_if_fail(GWY_IS_DATA_CHOOSER(chooser), NULL);
     return chooser->filter;
+}
+
+/**
+ * gwy_data_chooser_refilter:
+ * @chooser: A data chooser.
+ *
+ * Reruns the filter function of a data chooser.
+ *
+ * This function is useful when the filtering functions given in
+ * gwy_data_chooser_set_filter() depends on external state and that state
+ * changes.
+ *
+ * If the currently selected item becomes filtered out the chooser selects the
+ * no-data item if enabled.  If the no-data item is disabled but the list
+ * contains some items then an arbitrary item is selected.  At present, this
+ * means the first item in the list.
+ *
+ * Since: 2.41
+ **/
+void
+gwy_data_chooser_refilter(GwyDataChooser *chooser)
+{
+    g_return_if_fail(GWY_IS_DATA_CHOOSER(chooser));
+    gtk_tree_model_filter_refilter(GTK_TREE_MODEL_FILTER(chooser->filter));
+    gwy_data_chooser_choose_whatever(chooser);
 }
 
 /**
@@ -385,7 +412,7 @@ gwy_data_chooser_get_filter(GwyDataChooser *chooser)
  * Gets the label of the item corresponding to no data.
  *
  * Returns: The label corresponding to no data, an empty string for the default
- *          label and %NULL if the chooser does not display `none' item.
+ *          label and %NULL if the chooser does not display the no-data item.
  **/
 const gchar*
 gwy_data_chooser_get_none(GwyDataChooser *chooser)
@@ -447,6 +474,7 @@ gwy_data_chooser_choose_whatever(GwyDataChooser *chooser)
     if (gtk_combo_box_get_active_iter(combo, &iter))
         return;
 
+    /* The ‘none’ item is always first.  So we choose that if enabled. */
     if (gtk_tree_model_get_iter_first(chooser->filter, &iter))
         gtk_combo_box_set_active_iter(combo, &iter);
 }
@@ -564,13 +592,7 @@ gwy_data_chooser_process_events(gpointer user_data)
         }
     }
 
-    if (!gtk_combo_box_get_active_iter(GTK_COMBO_BOX(chooser), &iter)) {
-        if (chooser->none_label)
-            gwy_data_chooser_set_active(chooser, NULL, -1);
-        else
-            gwy_data_chooser_choose_whatever(chooser);
-    }
-
+    gwy_data_chooser_choose_whatever(chooser);
     return FALSE;
 }
 
