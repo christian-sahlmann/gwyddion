@@ -866,7 +866,7 @@ gwy_app_data_proxy_reconnect_mask(GwyAppDataProxy *proxy,
  **/
 static void
 gwy_app_data_proxy_graph_changed(GwyGraphModel *graph,
-                                 G_GNUC_UNUSED GParamSpec *pspec,
+                                 GParamSpec *pspec,
                                  GwyAppDataProxy *proxy)
 {
     GwyAppKeyType type;
@@ -878,6 +878,12 @@ gwy_app_data_proxy_graph_changed(GwyGraphModel *graph,
     if (!(quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(graph),
                                                       own_key_quark))))
         return;
+    /* Respond to non-cosmetic changes.  The title and number of curves are
+     * relevant metadata, units can be used for compatibility checks. */
+    if (!gwy_stramong(pspec->name,
+                      "n-curves", "si-unit-x", "si-unit-y", "title",
+                      NULL))
+        return;
     id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &type, NULL);
     g_return_if_fail(type == KEY_IS_GRAPH);
     if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_GRAPHS].store, id,
@@ -885,12 +891,14 @@ gwy_app_data_proxy_graph_changed(GwyGraphModel *graph,
         return;
     gwy_list_store_row_changed(proxy->lists[PAGE_GRAPHS].store,
                                &iter, NULL, -1);
+    gwy_app_data_browser_notify_watch(graph_watchers, proxy->container, id,
+                                      GWY_DATA_WATCH_EVENT_CHANGED);
 }
 
 /**
  * gwy_app_data_proxy_connect_graph:
  * @proxy: Data proxy.
- * @i: Channel id.
+ * @id: Graph id.
  * @object: The graph model to add (passed as #GObject).
  *
  * Adds a graph model as graph of specified id, setting qdata and connecting
@@ -898,21 +906,23 @@ gwy_app_data_proxy_graph_changed(GwyGraphModel *graph,
  **/
 static void
 gwy_app_data_proxy_connect_graph(GwyAppDataProxy *proxy,
-                                 gint i,
+                                 gint id,
                                  GtkTreeIter *iter,
                                  GObject *object)
 {
     GQuark quark;
 
-    gwy_app_data_proxy_add_object(&proxy->lists[PAGE_GRAPHS], i, iter,
+    gwy_app_data_proxy_add_object(&proxy->lists[PAGE_GRAPHS], id, iter,
                                   object);
-    gwy_debug("%p: %d in %p", object, i, proxy->container);
-    quark = gwy_app_get_graph_key_for_id(i);
+    gwy_debug("%p: %d in %p", object, id, proxy->container);
+    quark = gwy_app_get_graph_key_for_id(id);
     g_object_set_qdata(object, container_quark, proxy->container);
     g_object_set_qdata(object, own_key_quark, GUINT_TO_POINTER(quark));
 
-    g_signal_connect(object, "notify::n-curves", /* FIXME */
+    g_signal_connect(object, "notify",
                      G_CALLBACK(gwy_app_data_proxy_graph_changed), proxy);
+    gwy_app_data_browser_notify_watch(graph_watchers, proxy->container, id,
+                                      GWY_DATA_WATCH_EVENT_ADDED);
 }
 
 /**
@@ -928,8 +938,10 @@ gwy_app_data_proxy_disconnect_graph(GwyAppDataProxy *proxy,
                                     GtkTreeIter *iter)
 {
     GObject *object;
+    gint id;
 
     gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store), iter,
+                       MODEL_ID, &id,
                        MODEL_OBJECT, &object,
                        -1);
     gwy_debug("%p: from %p", object, proxy->container);
@@ -940,6 +952,8 @@ gwy_app_data_proxy_disconnect_graph(GwyAppDataProxy *proxy,
                                          proxy);
     g_object_unref(object);
     gtk_list_store_remove(proxy->lists[PAGE_GRAPHS].store, iter);
+    gwy_app_data_browser_notify_watch(graph_watchers, proxy->container, id,
+                                      GWY_DATA_WATCH_EVENT_REMOVED);
 }
 
 /**
@@ -958,10 +972,12 @@ gwy_app_data_proxy_reconnect_graph(GwyAppDataProxy *proxy,
 {
     GwyGraph *graph;
     GObject *old;
+    gint id;
 
     gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store), iter,
                        MODEL_OBJECT, &old,
                        MODEL_WIDGET, &graph,
+                       MODEL_ID, &id,
                        -1);
     g_signal_handlers_disconnect_by_func(old,
                                          gwy_app_data_proxy_graph_changed,
@@ -970,13 +986,16 @@ gwy_app_data_proxy_reconnect_graph(GwyAppDataProxy *proxy,
     gtk_list_store_set(proxy->lists[PAGE_GRAPHS].store, iter,
                        MODEL_OBJECT, object,
                        -1);
-    g_signal_connect(object, "notify::n-curves", /* FIXME */
+    g_signal_connect(object, "notify",
                      G_CALLBACK(gwy_app_data_proxy_graph_changed), proxy);
     if (graph) {
         gwy_graph_set_model(graph, GWY_GRAPH_MODEL(object));
         g_object_unref(graph);
     }
     g_object_unref(old);
+
+    gwy_app_data_browser_notify_watch(graph_watchers, proxy->container, id,
+                                      GWY_DATA_WATCH_EVENT_CHANGED);
 }
 
 /**
@@ -1938,6 +1957,7 @@ gwy_app_data_proxy_finalize(gpointer user_data)
     proxy->finalize_id = 0;
 
     gwy_app_data_proxy_watch_remove_all(channel_watchers, PAGE_CHANNELS, proxy);
+    gwy_app_data_proxy_watch_remove_all(graph_watchers, PAGE_GRAPHS, proxy);
 
     if (gwy_app_data_proxy_visible_count(proxy)) {
         g_assert(gwy_app_data_browser_get_proxy(gwy_app_data_browser,
