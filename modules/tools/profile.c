@@ -77,7 +77,6 @@ typedef struct {
     gboolean fixres;
     GwyInterpolationType interpolation;
     gboolean separate;
-    gboolean export;
     gboolean both;
     GwyDataObjectId target;
 } ToolArgs;
@@ -104,9 +103,9 @@ struct _GwyToolProfile {
     GtkWidget *apply;
     GtkWidget *menu_display;
     GtkWidget *callabel;
-    GtkWidget *export;
     GtkWidget *both;
     GtkWidget *target_graph;
+    GtkWidget *target_hbox;
 
     GwyDataField *xerr;
     GwyDataField *yerr;
@@ -202,7 +201,6 @@ static const gchar interpolation_key[]   = "/module/profile/interpolation";
 static const gchar options_visible_key[] = "/module/profile/options_visible";
 static const gchar resolution_key[]      = "/module/profile/resolution";
 static const gchar separate_key[]        = "/module/profile/separate";
-static const gchar export_key[]          = "/module/profile/export";
 static const gchar both_key[]            = "/module/profile/both";
 static const gchar thickness_key[]       = "/module/profile/thickness";
 
@@ -213,7 +211,6 @@ static const ToolArgs default_args = {
     FALSE,
     GWY_INTERPOLATION_LINEAR,
     FALSE,
-    TRUE,
     TRUE,
     { NULL, -1 },
 };
@@ -273,8 +270,6 @@ gwy_tool_profile_finalize(GObject *object)
                                    tool->args.interpolation);
     gwy_container_set_boolean_by_name(settings, separate_key,
                                       tool->args.separate);
-    gwy_container_set_boolean_by_name(settings, export_key,
-                                      tool->args.export);
     gwy_container_set_boolean_by_name(settings, both_key,
                                       tool->args.both);
 
@@ -324,8 +319,6 @@ gwy_tool_profile_init(GwyToolProfile *tool)
                                   GWY_TYPE_INTERPOLATION_TYPE);
     gwy_container_gis_boolean_by_name(settings, separate_key,
                                       &tool->args.separate);
-    gwy_container_gis_boolean_by_name(settings, export_key,
-                                      &tool->args.export);
     gwy_container_gis_boolean_by_name(settings, both_key,
                                       &tool->args.both);
 
@@ -483,7 +476,7 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
     gtk_box_pack_end(GTK_BOX(hbox2), tool->interpolation, FALSE, FALSE, 0);
     row++;
 
-    hbox2 = gtk_hbox_new(FALSE, 6);
+    tool->target_hbox = hbox2 = gtk_hbox_new(FALSE, 6);
     gtk_table_attach(table, hbox2,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
@@ -499,9 +492,6 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
                                 filter_target_graphs, tool, NULL);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), tool->target_graph);
     gtk_box_pack_end(GTK_BOX(hbox2), tool->target_graph, FALSE, FALSE, 0);
-    /* TODO: Disable ‘separate’ option when the target is not new graph.
-     * And probably force-enable separate and disable target when calibrations
-     * are present?  */
     g_signal_connect_swapped(tool->target_graph, "changed",
                              G_CALLBACK(gwy_tool_profile_target_changed),
                              tool);
@@ -531,18 +521,6 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
     g_signal_connect(tool->both, "toggled",
                      G_CALLBACK(gwy_tool_profile_both_changed), tool);
     row++;
-
-    /*tool->export
-        = gtk_check_button_new_with_mnemonic(_("_Export uncertainties"));
-    gtk_table_attach(table, tool->export,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->export),
-                                 tool->args.export);
-    g_signal_connect(tool->export, "toggled",
-                     G_CALLBACK(gwy_tool_profile_export_changed), tool);
-    row++;
-    */
-    tool->args.export = TRUE;
 
     tool->gmodel = gwy_graph_model_new();
     g_object_set(tool->gmodel, "title", _("Profiles"), NULL);
@@ -614,15 +592,12 @@ gwy_tool_profile_data_switched(GwyTool *gwytool,
             gtk_widget_show(tool->menu_display);
             gtk_widget_show(tool->callabel);
             gtk_widget_show(tool->both);
-            //gtk_widget_show(tool->export);
         }
         else {
             tool->has_calibration = FALSE;
             gtk_widget_hide(tool->menu_display);
             gtk_widget_hide(tool->callabel);
             gtk_widget_hide(tool->both);
-            //gtk_widget_hide(tool->export);
-
         }
     }
 
@@ -743,10 +718,10 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
     gdouble line[4];
     gint xl1, yl1, xl2, yl2;
     gint n, lineres, multpos;
-    gdouble calxratio=1, calyratio=1;
+    gdouble calxratio = 1.0, calyratio = 1.0;
     gchar *desc;
     const GwyRGBA *color;
-    GwyDataLine *upunc=NULL, *lowunc=NULL;
+    GwyDataLine *upunc = NULL, *lowunc = NULL;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->selection);
@@ -757,10 +732,8 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
         calyratio = ((gdouble)gwy_data_field_get_yres(tool->xerr))/gwy_data_field_get_yres(plain_tool->data_field);
     }
 
-    if (tool->has_calibration) multpos = 9;
-    else multpos = 1;
-
-    i*=multpos;
+    multpos = tool->has_calibration ? 9 : 1;
+    i *= multpos;
 
     xl1 = floor(gwy_data_field_rtoj(plain_tool->data_field, line[0]));
     yl1 = floor(gwy_data_field_rtoi(plain_tool->data_field, line[1]));
@@ -1043,14 +1016,12 @@ gwy_tool_profile_separate_changed(GtkToggleButton *check,
                                   GwyToolProfile *tool)
 {
     tool->args.separate = gtk_toggle_button_get_active(check);
+    gtk_widget_set_sensitive(tool->target_hbox, !tool->args.separate);
+    if (tool->args.separate)
+        gwy_data_chooser_set_active(GWY_DATA_CHOOSER(tool->target_graph),
+                                    NULL, -1);
 }
-/*
-static void
-gwy_tool_profile_export_changed(GtkToggleButton *check,
-                                GwyToolProfile *tool)
-{
-    tool->args.export = gtk_toggle_button_get_active(check);
-}*/
+
 static void
 gwy_tool_profile_both_changed(GtkToggleButton *check,
                               GwyToolProfile *tool)
@@ -1137,11 +1108,6 @@ gwy_tool_profile_apply(GwyToolProfile *tool)
     n = gwy_selection_get_data(plain_tool->selection, NULL);
     g_return_if_fail(n);
 
-    if (tool->has_calibration)
-        multpos = 9;
-    else
-        multpos = 1;
-
     if (tool->args.target.data) {
         const GwyRGBA *color;
         GQuark quark;
@@ -1172,16 +1138,15 @@ gwy_tool_profile_apply(GwyToolProfile *tool)
         return;
     }
 
-    for (i = 0; i < n*multpos; i+=multpos) {
-
+    multpos = tool->has_calibration ? 9 : 1;
+    for (i = 0; i < n*multpos; i += multpos) {
         gmodel = gwy_graph_model_new_alike(tool->gmodel);
         g_object_set(gmodel, "label-visible", TRUE, NULL);
         gcmodel = gwy_graph_model_get_curve(tool->gmodel, i);
         gcmodel = gwy_graph_curve_model_duplicate(gcmodel);
 
         /*add calibration data to the curve*/
-        if (tool->has_calibration)
-        {
+        if (tool->has_calibration) {
             ccdata = (GwyCurveCalibrationData *)g_malloc(sizeof(GwyCurveCalibrationData));
 
             ccdata->xerr = g_memdup(gwy_graph_curve_model_get_ydata(gwy_graph_model_get_curve(tool->gmodel, i+1)),
@@ -1210,7 +1175,7 @@ gwy_tool_profile_apply(GwyToolProfile *tool)
         g_object_unref(gmodel);
 
 
-        if (tool->args.export && tool->display_type>0) {
+        if (tool->display_type > 0) {
             gmodel = gwy_graph_model_new_alike(tool->gmodel);
             g_object_set(gmodel, "label-visible", TRUE, NULL);
             gcmodel = gwy_graph_model_get_curve(tool->gmodel, i+tool->display_type);
@@ -1224,10 +1189,8 @@ gwy_tool_profile_apply(GwyToolProfile *tool)
             gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container,
                                              TRUE);
          }
-
     }
 }
-
 
 static GtkWidget*
 menu_display(GCallback callback, gpointer cbdata,
