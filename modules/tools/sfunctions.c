@@ -601,8 +601,6 @@ gwy_tool_sfunctions_response(GwyTool *tool,
     GWY_TOOL_CLASS(gwy_tool_sfunctions_parent_class)->response(tool,
                                                                response_id);
 
-
-
     if (response_id == GTK_RESPONSE_APPLY)
         gwy_tool_sfunctions_apply(GWY_TOOL_SFUNCTIONS(tool));
     else if (response_id == GWY_TOOL_RESPONSE_UPDATE)
@@ -1141,10 +1139,29 @@ gwy_tool_sfunctions_apply(GwyToolSFunctions *tool)
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->selection);
 
+    if (tool->args.target.data) {
+        GwyGraphCurveModel *gcmodel;
+        const GwyRGBA *color;
+        GQuark quark;
+        gint nn;
+
+        quark = gwy_app_get_graph_key_for_id(tool->args.target.id);
+        gmodel = gwy_container_get_object(tool->args.target.data, quark);
+        g_return_if_fail(gmodel);
+
+        nn = gwy_graph_model_get_n_curves(gmodel);
+        gcmodel = gwy_graph_model_get_curve(tool->gmodel, 0);
+        gcmodel = gwy_graph_curve_model_duplicate(gcmodel);
+        color = gwy_graph_get_preset_color(nn);
+        g_object_set(gcmodel, "color", color, NULL);
+        gwy_graph_model_add_curve(gmodel, gcmodel);
+        g_object_unref(gcmodel);
+        return;
+    }
+
     gmodel = gwy_graph_model_duplicate(tool->gmodel);
     if (tool->has_calibration && tool->has_uline && tool->args.separate
-        && gwy_graph_model_get_n_curves(gmodel)==2)
-    {
+        && gwy_graph_model_get_n_curves(gmodel) == 2) {
         ugmodel = gwy_graph_model_duplicate(tool->gmodel);
         g_object_get(ugmodel,"title", &str, NULL);
         g_snprintf(title, sizeof(title), "%s uncertainty", str);
@@ -1154,12 +1171,15 @@ gwy_tool_sfunctions_apply(GwyToolSFunctions *tool)
         gwy_graph_model_remove_curve(ugmodel, 0);
         gwy_graph_model_remove_curve(gmodel, 1);
 
-        gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container, TRUE);
-        gwy_app_data_browser_add_graph_model(ugmodel, plain_tool->container, TRUE);
+        gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container,
+                                             TRUE);
+        gwy_app_data_browser_add_graph_model(ugmodel, plain_tool->container,
+                                             TRUE);
 
     }
     else
-        gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container, TRUE);
+        gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container,
+                                             TRUE);
 
     g_object_unref(gmodel);
 }
