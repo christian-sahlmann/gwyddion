@@ -1160,23 +1160,68 @@ gwy_graph_model_get_curve_index(GwyGraphModel *gmodel,
 
 /**
  * gwy_graph_model_set_units_from_data_line:
- * @model: A graph model.
+ * @gmodel: A graph model.
  * @data_line: A data line to take units from.
  *
  * Sets x and y graph model units to match a data line.
  **/
 void
-gwy_graph_model_set_units_from_data_line(GwyGraphModel *model,
+gwy_graph_model_set_units_from_data_line(GwyGraphModel *gmodel,
                                          GwyDataLine *data_line)
 {
     GwySIUnit *unitx, *unity;
 
-    g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
+    g_return_if_fail(GWY_IS_GRAPH_MODEL(gmodel));
     g_return_if_fail(GWY_IS_DATA_LINE(data_line));
 
     unitx = gwy_data_line_get_si_unit_x(data_line);
     unity = gwy_data_line_get_si_unit_y(data_line);
-    g_object_set(model, "si-unit-x", unitx, "si-unit-y", unity, NULL);
+    g_object_set(gmodel, "si-unit-x", unitx, "si-unit-y", unity, NULL);
+}
+
+/**
+ * gwy_graph_model_units_are_compatible:
+ * @gmodel: A graph model.
+ * @othergmodel: Another graph model.
+ *
+ * Checks if the units of two graph models are compatible.
+ *
+ * This function is useful namely as a pre-check for moving curves between
+ * graphs.
+ *
+ * Returns: %TRUE if the abscissa and ordinate units of the two graphs are
+ *          compatible.
+ *
+ * Since: 2.41
+ **/
+gboolean
+gwy_graph_model_units_are_compatible(GwyGraphModel *gmodel,
+                                     GwyGraphModel *othergmodel)
+{
+    GwySIUnit *xunit, *yunit, *otherxunit, *otheryunit;
+    gboolean ok;
+
+    g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), FALSE);
+    g_return_val_if_fail(GWY_IS_GRAPH_MODEL(othergmodel), FALSE);
+
+    g_object_get(gmodel,
+                 "si-unit-x", &xunit,
+                 "si-unit-y", &yunit,
+                 NULL);
+    g_object_get(othergmodel,
+                 "si-unit-x", &otherxunit,
+                 "si-unit-y", &otheryunit,
+                 NULL);
+
+    ok = (gwy_si_unit_equal(xunit, otherxunit)
+          && gwy_si_unit_equal(yunit, otheryunit));
+
+    g_object_unref(xunit);
+    g_object_unref(yunit);
+    g_object_unref(otherxunit);
+    g_object_unref(otheryunit);
+
+    return ok;
 }
 
 /**

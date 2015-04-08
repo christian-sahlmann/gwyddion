@@ -125,8 +125,10 @@ GwyGraphCurveModel* gwy_graph_model_get_curve           (GwyGraphModel *gmodel,
 gint           gwy_graph_model_get_curve_index          (GwyGraphModel *gmodel,
                                                          GwyGraphCurveModel *curve);
 void           gwy_graph_model_remove_all_curves        (GwyGraphModel *gmodel);
-void           gwy_graph_model_set_units_from_data_line(GwyGraphModel *model,
-                                                        GwyDataLine *data_line);
+void           gwy_graph_model_set_units_from_data_line (GwyGraphModel *gmodel,
+                                                         GwyDataLine *data_line);
+gboolean       gwy_graph_model_units_are_compatible     (GwyGraphModel *gmodel,
+                                                         GwyGraphModel *othergmodel);
 gboolean       gwy_graph_model_x_data_can_be_logarithmed(GwyGraphModel *model);
 gboolean       gwy_graph_model_y_data_can_be_logarithmed(GwyGraphModel *model);
 void           gwy_graph_model_set_axis_label           (GwyGraphModel *model,
