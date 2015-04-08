@@ -1088,36 +1088,12 @@ static gboolean
 filter_target_graphs(GwyContainer *data, gint id, gpointer user_data)
 {
     GwyToolSFunctions *tool = (GwyToolSFunctions*)user_data;
-    GwyGraphModel *gmodel = tool->gmodel, *targetgmodel;
-    GwySIUnit *xunit, *yunit, *targetxunit, *targetyunit;
-    GQuark quark;
-    gboolean ok = FALSE;
+    GwyGraphModel *gmodel, *targetgmodel;
+    GQuark quark = gwy_app_get_graph_key_for_id(id);
 
-    if (!gmodel)
-        return FALSE;
-
-    quark = gwy_app_get_graph_key_for_id(id);
-    if (!gwy_container_gis_object(data, quark, (GObject**)&targetgmodel))
-        return FALSE;
-
-    g_object_get(gmodel,
-                 "si-unit-x", &xunit,
-                 "si-unit-y", &yunit,
-                 NULL);
-    g_object_get(targetgmodel,
-                 "si-unit-x", &targetxunit,
-                 "si-unit-y", &targetyunit,
-                 NULL);
-
-    ok = (gwy_si_unit_equal(xunit, targetxunit)
-          && gwy_si_unit_equal(yunit, targetyunit));
-
-    g_object_unref(xunit);
-    g_object_unref(yunit);
-    g_object_unref(targetxunit);
-    g_object_unref(targetyunit);
-
-    return ok;
+    return ((gmodel = tool->gmodel)
+            && gwy_container_gis_object(data, quark, (GObject**)&targetgmodel)
+            && gwy_graph_model_units_are_compatible(gmodel, targetgmodel));
 }
 
 static void
