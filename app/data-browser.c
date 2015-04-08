@@ -2501,10 +2501,8 @@ gwy_app_graph_window_dnd_curve_received(GtkWidget *destwidget,
     GwyGraphWindow *destwindow, *srcwindow;
     GwyGraphModel *destmodel, *srcmodel;
     GwyGraphCurveModel *gcmodel;
-    GwySIUnit *destunit, *srcunit;
     const gint *indices;
     GtkWidget *w;
-    gboolean ok;
 
     srcwindow = GWY_GRAPH_WINDOW(g_object_get_qdata(G_OBJECT(model),
                                                     graph_window_quark));
@@ -2516,24 +2514,8 @@ gwy_app_graph_window_dnd_curve_received(GtkWidget *destwidget,
     destmodel = gwy_graph_get_model(GWY_GRAPH(w));
 
     /* Ignore drops to the same graph */
-    if (srcmodel == destmodel)
-        return FALSE;
-
-    /* Check units compatibility */
-    g_object_get(srcmodel, "si-unit-x", &srcunit, NULL);
-    g_object_get(destmodel, "si-unit-x", &destunit, NULL);
-    ok = gwy_si_unit_equal(srcunit, destunit);
-    g_object_unref(srcunit);
-    g_object_unref(destunit);
-    if (!ok)
-        return FALSE;
-
-    g_object_get(srcmodel, "si-unit-y", &srcunit, NULL);
-    g_object_get(destmodel, "si-unit-y", &destunit, NULL);
-    ok = gwy_si_unit_equal(srcunit, destunit);
-    g_object_unref(srcunit);
-    g_object_unref(destunit);
-    if (!ok)
+    if (srcmodel == destmodel
+        || !gwy_graph_model_units_are_compatible(destmodel, srcmodel))
         return FALSE;
 
     /* Copy curve */
