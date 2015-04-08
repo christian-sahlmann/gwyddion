@@ -180,7 +180,7 @@ static void     gwy_app_recent_file_free           (GwyRecentFile *rf);
 static gchar* gwy_recent_file_thumbnail_name       (const gchar *uri);
 static const gchar* gwy_recent_file_thumbnail_dir  (void);
 
-static guint remember_recent_files = 512;
+static guint remember_recent_files = 1024;
 
 /* Note we assert initialization to zeroes */
 static Controls gcontrols;
