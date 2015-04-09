@@ -14,8 +14,8 @@ Modules:
 - Slice volume (new): Simple extraction of planes and lines from volume data.
 - Log-Phi PSDF (new): Calculates 2D PSDF transformed to angle-log(frequency)
   coordinates.
-- Profiles, Statistical functions and Row/column statistics tools: It is
-  possible to select a target graph for the curves.
+- Profiles, Statistical functions, Row/column statistics, Roughness and Spectro
+  tools: It is possible to select a target graph for the curves.
 - 2D FFT: It is possible to provide the imaginary part and perform inverse
   transforms.
 - 1D FFT filter: Occasional ‘Axis with extreme range!’ error was fixed.
