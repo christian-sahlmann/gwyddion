@@ -55,9 +55,15 @@ typedef struct _GwyToolSpectro      GwyToolSpectro;
 typedef struct _GwyToolSpectroClass GwyToolSpectroClass;
 
 typedef struct {
+    GwyContainer *data;
+    gint id;
+} GwyDataObjectId;
+
+typedef struct {
     gboolean options_visible;
     gboolean separate;
     gboolean average;
+    GwyDataObjectId target;
 } ToolArgs;
 
 struct _GwyToolSpectro {
@@ -78,6 +84,8 @@ struct _GwyToolSpectro {
     GtkWidget *average;
     GtkWidget *apply;
     GdkPixbuf *colorpixbuf;
+    GtkWidget *target_graph;
+    GtkWidget *target_hbox;
     gulong layer_object_chosen_id;
     gboolean ignore_tree_selection;
 
@@ -91,57 +99,62 @@ struct _GwyToolSpectroClass {
 
 static gboolean module_register(void);
 
-static GType gwy_tool_spectro_get_type        (void)                           G_GNUC_CONST;
-static void  gwy_tool_spectro_finalize        (GObject *object);
-static void  gwy_tool_spectro_init_dialog     (GwyToolSpectro *tool);
-static void  gwy_tool_spectro_data_switched   (GwyTool *gwytool,
-                                               GwyDataView *data_view);
-static void  gwy_tool_spectro_spectra_switched(GwyTool *gwytool,
-                                               GwySpectra *spectra);
-static void  gwy_tool_spectro_fill_locations  (GwyToolSpectro *tool);
-static void  gwy_tool_spectro_response        (GwyTool *tool,
-                                               gint response_id);
-static void  gwy_tool_spectro_tree_sel_changed(GtkTreeSelection *selection,
-                                               gpointer user_data);
-static void  gwy_tool_spectro_object_chosen   (GwyVectorLayer *gwyvectorlayer,
-                                               gint i,
-                                               gpointer *data);
-static void  gwy_tool_spectro_show_curve      (GwyToolSpectro *tool,
-                                               gint i);
-static void  gwy_tool_spectro_gather_curve    (GwyToolSpectro *tool,
-                                               gint i);
-static void  gwy_tool_spectro_show_averaged   (GwyToolSpectro *tool,
-                                               guint nsel);
-static void  gwy_tool_spectro_update_header   (GwyToolSpectro *tool,
-                                               guint col,
-                                               GString *str,
-                                               const gchar *title,
-                                               GwySIValueFormat *vf);
-static void  gwy_tool_spectro_render_cell     (GtkCellLayout *layout,
-                                               GtkCellRenderer *renderer,
-                                               GtkTreeModel *model,
-                                               GtkTreeIter *iter,
-                                               gpointer user_data);
-static void  gwy_tool_spectro_render_color    (GtkCellLayout *layout,
-                                               GtkCellRenderer *renderer,
-                                               GtkTreeModel *model,
-                                               GtkTreeIter *iter,
-                                               gpointer user_data);
-static void  gwy_tool_spectro_options_expanded(GtkExpander *expander,
-                                               GParamSpec *pspec,
-                                               GwyToolSpectro *tool);
-static void  gwy_tool_spectro_separate_changed(GtkToggleButton *check,
-                                               GwyToolSpectro *tool);
-static void  gwy_tool_spectro_average_changed (GtkToggleButton *check,
-                                               GwyToolSpectro *tool);
-static void  gwy_tool_spectro_apply           (GwyToolSpectro *tool);
+static GType    gwy_tool_spectro_get_type            (void)                           G_GNUC_CONST;
+static void     gwy_tool_spectro_finalize            (GObject *object);
+static void     gwy_tool_spectro_init_dialog         (GwyToolSpectro *tool);
+static void     gwy_tool_spectro_data_switched       (GwyTool *gwytool,
+                                                      GwyDataView *data_view);
+static void     gwy_tool_spectro_spectra_switched    (GwyTool *gwytool,
+                                                      GwySpectra *spectra);
+static void     gwy_tool_spectro_update_target_graphs(GwyToolSpectro *tool);
+static gboolean filter_target_graphs                 (GwyContainer *data,
+                                                      gint id,
+                                                      gpointer user_data);
+static void     gwy_tool_spectro_target_changed      (GwyToolSpectro *tool);
+static void     gwy_tool_spectro_fill_locations      (GwyToolSpectro *tool);
+static void     gwy_tool_spectro_response            (GwyTool *tool,
+                                                      gint response_id);
+static void     gwy_tool_spectro_tree_sel_changed    (GtkTreeSelection *selection,
+                                                      gpointer user_data);
+static void     gwy_tool_spectro_object_chosen       (GwyVectorLayer *gwyvectorlayer,
+                                                      gint i,
+                                                      gpointer *data);
+static void     gwy_tool_spectro_show_curve          (GwyToolSpectro *tool,
+                                                      gint i);
+static void     gwy_tool_spectro_gather_curve        (GwyToolSpectro *tool,
+                                                      gint i);
+static void     gwy_tool_spectro_show_averaged       (GwyToolSpectro *tool,
+                                                      guint nsel);
+static void     gwy_tool_spectro_update_header       (GwyToolSpectro *tool,
+                                                      guint col,
+                                                      GString *str,
+                                                      const gchar *title,
+                                                      GwySIValueFormat *vf);
+static void     gwy_tool_spectro_render_cell         (GtkCellLayout *layout,
+                                                      GtkCellRenderer *renderer,
+                                                      GtkTreeModel *model,
+                                                      GtkTreeIter *iter,
+                                                      gpointer user_data);
+static void     gwy_tool_spectro_render_color        (GtkCellLayout *layout,
+                                                      GtkCellRenderer *renderer,
+                                                      GtkTreeModel *model,
+                                                      GtkTreeIter *iter,
+                                                      gpointer user_data);
+static void     gwy_tool_spectro_options_expanded    (GtkExpander *expander,
+                                                      GParamSpec *pspec,
+                                                      GwyToolSpectro *tool);
+static void     gwy_tool_spectro_separate_changed    (GtkToggleButton *check,
+                                                      GwyToolSpectro *tool);
+static void     gwy_tool_spectro_average_changed     (GtkToggleButton *check,
+                                                      GwyToolSpectro *tool);
+static void     gwy_tool_spectro_apply               (GwyToolSpectro *tool);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Point Spectrum, extracts point spectra to a graph."),
     "Owain Davies <owain.davies@blueyonder.co.uk>",
-    "0.8",
+    "0.9",
     "Owain Davies, David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -154,6 +167,7 @@ static const ToolArgs default_args = {
     FALSE,
     FALSE,
     FALSE,
+    { NULL, -1 },
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -365,9 +379,26 @@ gwy_tool_spectro_init_dialog(GwyToolSpectro *tool)
                      G_CALLBACK(gwy_tool_spectro_average_changed), tool);
     row++;
 
-    hbox2 = gtk_hbox_new(FALSE, 6);
+    tool->target_hbox = hbox2 = gtk_hbox_new(FALSE, 6);
     gtk_table_attach(table, hbox2,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    label = gtk_label_new_with_mnemonic(_("Target _graph:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
+
+    tool->target_graph = gwy_data_chooser_new_graphs();
+    gwy_data_chooser_set_none(GWY_DATA_CHOOSER(tool->target_graph),
+                              _("New graph"));
+    gwy_data_chooser_set_active(GWY_DATA_CHOOSER(tool->target_graph), NULL, -1);
+    gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(tool->target_graph),
+                                filter_target_graphs, tool, NULL);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), tool->target_graph);
+    gtk_box_pack_end(GTK_BOX(hbox2), tool->target_graph, FALSE, FALSE, 0);
+    g_signal_connect_swapped(tool->target_graph, "changed",
+                             G_CALLBACK(gwy_tool_spectro_target_changed),
+                             tool);
+    row++;
 
     tool->gmodel = gwy_graph_model_new();
     tool->graph = gwy_graph_new(tool->gmodel);
@@ -436,6 +467,8 @@ gwy_tool_spectro_data_switched(GwyTool *gwytool,
         gwy_selection_set_max_objects(plain_tool->selection, nspec);
         gwy_tool_spectro_fill_locations(tool);
     }
+
+    gwy_tool_spectro_update_target_graphs(tool);
 }
 
 static void
@@ -541,6 +574,8 @@ gwy_tool_spectro_spectra_switched(GwyTool *gwytool,
     gwy_tool_spectro_update_header(tool, COLUMN_Y, str, "y",
                                    plain_tool->coord_format);
     g_string_free(str, TRUE);
+
+    gwy_tool_spectro_update_target_graphs(tool);
 }
 
 /* May be called either when the selection is empty or already filled but of
@@ -863,6 +898,10 @@ gwy_tool_spectro_separate_changed(GtkToggleButton *check,
                                   GwyToolSpectro *tool)
 {
     tool->args.separate = gtk_toggle_button_get_active(check);
+    gtk_widget_set_sensitive(tool->target_hbox, !tool->args.separate);
+    if (tool->args.separate)
+        gwy_data_chooser_set_active(GWY_DATA_CHOOSER(tool->target_graph),
+                                    NULL, -1);
 }
 
 static void
@@ -874,6 +913,34 @@ gwy_tool_spectro_average_changed(GtkToggleButton *check,
 
     tool->args.average = gtk_toggle_button_get_active(check);
     gwy_tool_spectro_tree_sel_changed(selection, (gpointer)tool);
+}
+
+static void
+gwy_tool_spectro_update_target_graphs(GwyToolSpectro *tool)
+{
+    GwyDataChooser *chooser = GWY_DATA_CHOOSER(tool->target_graph);
+    gwy_data_chooser_refilter(chooser);
+}
+
+static gboolean
+filter_target_graphs(GwyContainer *data, gint id, gpointer user_data)
+{
+    GwyToolSpectro *tool = (GwyToolSpectro*)user_data;
+    GwyGraphModel *gmodel, *targetgmodel;
+    GQuark quark = gwy_app_get_graph_key_for_id(id);
+
+    return ((gmodel = tool->gmodel)
+            && gwy_container_gis_object(data, quark, (GObject**)&targetgmodel)
+            && gwy_graph_model_units_are_compatible(gmodel, targetgmodel));
+}
+
+static void
+gwy_tool_spectro_target_changed(GwyToolSpectro *tool)
+{
+    GwyDataChooser *chooser = GWY_DATA_CHOOSER(tool->target_graph);
+    GwyDataObjectId *target = &tool->args.target;
+
+    target->data = gwy_data_chooser_get_active(chooser, &target->id);
 }
 
 static void
@@ -891,11 +958,32 @@ gwy_tool_spectro_apply(GwyToolSpectro *tool)
     g_return_if_fail(n);
 
     if (tool->args.average || !tool->args.separate) {
-        gmodel = gwy_graph_model_duplicate(tool->gmodel);
-        g_object_set(gmodel, "label-visible", TRUE, NULL);
-        gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container,
-                                             TRUE);
-        g_object_unref(gmodel);
+        if (tool->args.target.data) {
+            const GwyRGBA *color;
+            GQuark quark;
+            gint nn;
+
+            quark = gwy_app_get_graph_key_for_id(tool->args.target.id);
+            gmodel = gwy_container_get_object(tool->args.target.data, quark);
+            g_return_if_fail(gmodel);
+
+            nn = gwy_graph_model_get_n_curves(gmodel);
+            for (i = 0; i < n; i++) {
+                gcmodel = gwy_graph_model_get_curve(tool->gmodel, i);
+                gcmodel = gwy_graph_curve_model_duplicate(gcmodel);
+                color = gwy_graph_get_preset_color(nn + i);
+                g_object_set(gcmodel, "color", color, NULL);
+                gwy_graph_model_add_curve(gmodel, gcmodel);
+                g_object_unref(gcmodel);
+            }
+        }
+        else {
+            gmodel = gwy_graph_model_duplicate(tool->gmodel);
+            g_object_set(gmodel, "label-visible", TRUE, NULL);
+            gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container,
+                                                 TRUE);
+            g_object_unref(gmodel);
+        }
         return;
     }
 
