@@ -114,6 +114,11 @@ typedef struct _GwyToolRoughness      GwyToolRoughness;
 typedef struct _GwyToolRoughnessClass GwyToolRoughnessClass;
 
 typedef struct {
+    GwyContainer *data;
+    gint id;
+} GwyDataObjectId;
+
+typedef struct {
     GwyDataLine *texture;
     GwyDataLine *roughness;
     GwyDataLine *waviness;
@@ -144,6 +149,7 @@ typedef struct {
     gdouble cutoff;
     GwyInterpolationType interpolation;
     guint expanded;
+    GwyDataObjectId target;
 } ToolArgs;
 
 typedef struct {
@@ -175,7 +181,7 @@ struct _GwyToolRoughness {
     GwyRoughnessGraph graph_type;
 
     /* graph */
-    GwyGraphModel *graphmodel;
+    GwyGraphModel *gmodel;
     GtkWidget *graph;
 
     GwyGraphModel *graphmodel_profile;
@@ -186,6 +192,8 @@ struct _GwyToolRoughness {
     GtkObject *thickness;
     GtkObject *cutoff;
     GtkWidget *interpolation;
+    GtkWidget *target_graph;
+    GtkWidget *target_hbox;
 
     GtkBox *aux_box;
     GtkWidget *message_label;
@@ -201,79 +209,81 @@ struct _GwyToolRoughnessClass {
     GwyPlainToolClass parent_class;
 };
 
-static gboolean module_register                      (void);
-static GType    gwy_tool_roughness_get_type          (void) G_GNUC_CONST;
-static void     gwy_tool_roughness_finalize          (GObject *object);
-static void     gwy_tool_roughness_init_params       (GwyToolRoughness *tool);
-static void     gwy_tool_roughness_init_dialog       (GwyToolRoughness *tool);
-static GtkWidget* gwy_tool_roughness_param_view_new(GwyToolRoughness *tool);
-static GtkWidget* gwy_tool_roughness_add_aux_button  (GwyToolRoughness *tool,
-                                                      const gchar *stock_id,
-                                                      const gchar *tooltip);
-static void     gwy_tool_roughness_data_switched     (GwyTool *gwytool,
-                                                      GwyDataView *data_view);
-static void     gwy_tool_roughness_response          (GwyTool *tool,
-                                                      gint response_id);
-static void     gwy_tool_roughness_data_changed      (GwyPlainTool *plain_tool);
-static void     gwy_tool_roughness_update            (GwyToolRoughness *tool);
-static void     gwy_tool_roughness_update_units      (GwyToolRoughness *tool);
-static void     gwy_tool_roughness_update_parameters (GwyToolRoughness *tool);
-static void     gwy_tool_roughness_update_graphs     (GwyToolRoughness *tool);
-
-static void     gwy_tool_roughness_selection_changed (GwyPlainTool *plain_tool,
-                                                      gint hint);
-static void     gwy_tool_roughness_interpolation_changed
-                                                     (GtkComboBox *combo,
-                                                      GwyToolRoughness *tool);
-static void     gwy_tool_roughness_thickness_changed (GtkAdjustment *adj,
-                                                      GwyToolRoughness *tool);
-static void     gwy_tool_roughness_cutoff_changed    (GtkAdjustment *adj,
-                                                      GwyToolRoughness *tool);
-static void     gwy_tool_roughness_graph_changed     (GtkWidget *combo,
-                                                      GwyToolRoughness *tool);
-static void     gwy_tool_roughness_apply             (GwyToolRoughness *tool);
-
-static gint     gwy_data_line_extend                 (GwyDataLine *dline,
-                                                      GwyDataLine *extline);
-static void gwy_tool_roughness_set_data_from_profile(GwyRoughnessProfiles *profiles,
-                                                     GwyDataLine *dline,
-                                                     gdouble cutoff);
-static gint    gwy_tool_roughness_peaks        (GwyDataLine *data_line,
-                                                gdouble *peaks,
-                                                gint from,
-                                                gint to,
-                                                gdouble threshold,
-                                                gint k,
-                                                gboolean symmetrical);
-static gdouble gwy_tool_roughness_Xa           (GwyDataLine *data_line);
-static gdouble gwy_tool_roughness_Xq           (GwyDataLine *data_line);
-static gdouble gwy_tool_roughness_Xvm          (GwyDataLine *data_line,
-                                                gint m,
-                                                gint k);
-static gdouble gwy_tool_roughness_Xpm          (GwyDataLine *data_line,
-                                                gint m,
-                                                gint k);
-static gdouble gwy_tool_roughness_Xtm          (GwyDataLine *data_line,
-                                                gint m,
-                                                gint k);
-static gdouble gwy_tool_roughness_Xz           (GwyDataLine *data_line);
-static gdouble gwy_tool_roughness_Xsk          (GwyDataLine *data_line);
-static gdouble gwy_tool_roughness_Xku          (GwyDataLine *data_line);
-static gdouble gwy_tool_roughness_Pc           (GwyDataLine *data_line,
-                                                gdouble threshold);
-static gdouble gwy_tool_roughness_Da           (GwyDataLine *data_line);
-static gdouble gwy_tool_roughness_Dq           (GwyDataLine *data_line);
-static gdouble gwy_tool_roughness_l0           (GwyDataLine *data_line);
-static gdouble gwy_tool_roughness_lr           (GwyDataLine *data_line);
-static void    gwy_tool_roughness_distribution (GwyDataLine *data_line,
-                                                GwyDataLine *distr);
-static void    gwy_tool_roughness_graph_adf    (GwyRoughnessProfiles *profiles);
-static void    gwy_tool_roughness_graph_brc    (GwyRoughnessProfiles *profiles);
-static void    gwy_tool_roughness_graph_pc     (GwyRoughnessProfiles *profiles);
-static void    gwy_tool_roughness_save         (GwyToolRoughness *tool);
-static void    gwy_tool_roughness_copy         (GwyToolRoughness *tool);
-static gchar*  gwy_tool_roughness_create_report(gpointer user_data,
-                                                gssize *data_len);
+static gboolean   module_register                         (void);
+static GType      gwy_tool_roughness_get_type             (void)                            G_GNUC_CONST;
+static void       gwy_tool_roughness_finalize             (GObject *object);
+static void       gwy_tool_roughness_init_params          (GwyToolRoughness *tool);
+static void       gwy_tool_roughness_init_dialog          (GwyToolRoughness *tool);
+static GtkWidget* gwy_tool_roughness_param_view_new       (GwyToolRoughness *tool);
+static GtkWidget* gwy_tool_roughness_add_aux_button       (GwyToolRoughness *tool,
+                                                           const gchar *stock_id,
+                                                           const gchar *tooltip);
+static void       gwy_tool_roughness_data_switched        (GwyTool *gwytool,
+                                                           GwyDataView *data_view);
+static void       gwy_tool_roughness_response             (GwyTool *tool,
+                                                           gint response_id);
+static void       gwy_tool_roughness_data_changed         (GwyPlainTool *plain_tool);
+static void       gwy_tool_roughness_update               (GwyToolRoughness *tool);
+static void       gwy_tool_roughness_update_units         (GwyToolRoughness *tool);
+static void       gwy_tool_roughness_update_parameters    (GwyToolRoughness *tool);
+static void       gwy_tool_roughness_update_graphs        (GwyToolRoughness *tool);
+static void       gwy_tool_roughness_selection_changed    (GwyPlainTool *plain_tool,
+                                                           gint hint);
+static void       gwy_tool_roughness_interpolation_changed(GtkComboBox *combo,
+                                                           GwyToolRoughness *tool);
+static void       gwy_tool_roughness_thickness_changed    (GtkAdjustment *adj,
+                                                           GwyToolRoughness *tool);
+static void       gwy_tool_roughness_cutoff_changed       (GtkAdjustment *adj,
+                                                           GwyToolRoughness *tool);
+static void       gwy_tool_roughness_graph_changed        (GtkWidget *combo,
+                                                           GwyToolRoughness *tool);
+static void       gwy_tool_roughness_update_target_graphs (GwyToolRoughness *tool);
+static gboolean   filter_target_graphs                    (GwyContainer *data,
+                                                           gint id,
+                                                           gpointer user_data);
+static void       gwy_tool_roughness_target_changed       (GwyToolRoughness *tool);
+static void       gwy_tool_roughness_apply                (GwyToolRoughness *tool);
+static gint       gwy_data_line_extend                    (GwyDataLine *dline,
+                                                           GwyDataLine *extline);
+static void       gwy_tool_roughness_set_data_from_profile(GwyRoughnessProfiles *profiles,
+                                                           GwyDataLine *dline,
+                                                           gdouble cutoff);
+static gint       gwy_tool_roughness_peaks                (GwyDataLine *data_line,
+                                                           gdouble *peaks,
+                                                           gint from,
+                                                           gint to,
+                                                           gdouble threshold,
+                                                           gint k,
+                                                           gboolean symmetrical);
+static gdouble    gwy_tool_roughness_Xa                   (GwyDataLine *data_line);
+static gdouble    gwy_tool_roughness_Xq                   (GwyDataLine *data_line);
+static gdouble    gwy_tool_roughness_Xvm                  (GwyDataLine *data_line,
+                                                           gint m,
+                                                           gint k);
+static gdouble    gwy_tool_roughness_Xpm                  (GwyDataLine *data_line,
+                                                           gint m,
+                                                           gint k);
+static gdouble    gwy_tool_roughness_Xtm                  (GwyDataLine *data_line,
+                                                           gint m,
+                                                           gint k);
+static gdouble    gwy_tool_roughness_Xz                   (GwyDataLine *data_line);
+static gdouble    gwy_tool_roughness_Xsk                  (GwyDataLine *data_line);
+static gdouble    gwy_tool_roughness_Xku                  (GwyDataLine *data_line);
+static gdouble    gwy_tool_roughness_Pc                   (GwyDataLine *data_line,
+                                                           gdouble threshold);
+static gdouble    gwy_tool_roughness_Da                   (GwyDataLine *data_line);
+static gdouble    gwy_tool_roughness_Dq                   (GwyDataLine *data_line);
+static gdouble    gwy_tool_roughness_l0                   (GwyDataLine *data_line);
+static gdouble    gwy_tool_roughness_lr                   (GwyDataLine *data_line);
+static void       gwy_tool_roughness_distribution         (GwyDataLine *data_line,
+                                                           GwyDataLine *distr);
+static void       gwy_tool_roughness_graph_adf            (GwyRoughnessProfiles *profiles);
+static void       gwy_tool_roughness_graph_brc            (GwyRoughnessProfiles *profiles);
+static void       gwy_tool_roughness_graph_pc             (GwyRoughnessProfiles *profiles);
+static void       gwy_tool_roughness_save                 (GwyToolRoughness *tool);
+static void       gwy_tool_roughness_copy                 (GwyToolRoughness *tool);
+static gchar*     gwy_tool_roughness_create_report        (gpointer user_data,
+                                                           gssize *data_len);
 
 static const GwyRoughnessParameterInfo parameters[] = {
     {
@@ -615,6 +625,7 @@ static const ToolArgs default_args = {
     0.05,
     GWY_INTERPOLATION_LINEAR,
     0,
+    { NULL, -1 },
 };
 
 static GwyModuleInfo module_info = {
@@ -622,7 +633,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Calculate surface profile parameters."),
     "Martin Hasoň <hasonm@physics.muni.cz>, Yeti <yeti@gwyddion.net>",
-    "1.10",
+    "1.11",
     "Martin Hasoň & David Nečas (Yeti)",
     "2006",
 };
@@ -790,8 +801,8 @@ gwy_tool_roughness_init_dialog(GwyToolRoughness *tool)
 
     GtkDialog *dialog;
     GtkSizeGroup *sizegroup;
-    GtkWidget *dialog_vbox, *hbox, *vbox_left, *vbox_right, *table;
-    GtkWidget *scwin, *treeview, *spin;
+    GtkWidget *dialog_vbox, *hbox, *vbox_left, *vbox_right, *table, *hbox2;
+    GtkWidget *scwin, *treeview, *spin, *label;
     GwyAxis *axis;
     gint row;
 
@@ -836,7 +847,7 @@ gwy_tool_roughness_init_dialog(GwyToolRoughness *tool)
     g_signal_connect_swapped(tool->copy, "clicked",
                              G_CALLBACK(gwy_tool_roughness_copy), tool);
 
-    table = gtk_table_new(4, 4, FALSE);
+    table = gtk_table_new(5, 4, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -877,6 +888,27 @@ gwy_tool_roughness_init_dialog(GwyToolRoughness *tool)
                             GTK_OBJECT(tool->interpolation), GWY_HSCALE_WIDGET);
     row++;
 
+    tool->target_hbox = hbox2 = gtk_hbox_new(FALSE, 6);
+    gtk_table_attach(GTK_TABLE(table), hbox2,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    label = gtk_label_new_with_mnemonic(_("Target _graph:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
+
+    tool->target_graph = gwy_data_chooser_new_graphs();
+    gwy_data_chooser_set_none(GWY_DATA_CHOOSER(tool->target_graph),
+                              _("New graph"));
+    gwy_data_chooser_set_active(GWY_DATA_CHOOSER(tool->target_graph), NULL, -1);
+    gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(tool->target_graph),
+                                filter_target_graphs, tool, NULL);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), tool->target_graph);
+    gtk_box_pack_end(GTK_BOX(hbox2), tool->target_graph, FALSE, FALSE, 0);
+    g_signal_connect_swapped(tool->target_graph, "changed",
+                             G_CALLBACK(gwy_tool_roughness_target_changed),
+                             tool);
+    row++;
+
     tool->graphmodel_profile = gwy_graph_model_new();
     tool->graph_profile = gwy_graph_new(tool->graphmodel_profile);
     g_object_unref(tool->graphmodel_profile);
@@ -884,9 +916,9 @@ gwy_tool_roughness_init_dialog(GwyToolRoughness *tool)
     gwy_graph_enable_user_input(GWY_GRAPH(tool->graph_profile), FALSE);
     gtk_box_pack_start(GTK_BOX(vbox_right), tool->graph_profile, TRUE, TRUE, 0);
 
-    tool->graphmodel = gwy_graph_model_new();
-    tool->graph = gwy_graph_new(tool->graphmodel);
-    g_object_unref(tool->graphmodel);
+    tool->gmodel = gwy_graph_model_new();
+    tool->graph = gwy_graph_new(tool->gmodel);
+    g_object_unref(tool->gmodel);
     gtk_widget_set_size_request(tool->graph, 300, 250);
     gwy_graph_enable_user_input(GWY_GRAPH(tool->graph), FALSE);
     gtk_box_pack_start(GTK_BOX(vbox_right), tool->graph, TRUE, TRUE, 0);
@@ -1148,6 +1180,7 @@ gwy_tool_roughness_data_switched(GwyTool *gwytool,
     }
 
     gwy_tool_roughness_update(tool);
+    gwy_tool_roughness_update_target_graphs(tool);
 }
 
 static void
@@ -1157,6 +1190,7 @@ gwy_tool_roughness_data_changed(GwyPlainTool *plain_tool)
 
     tool = GWY_TOOL_ROUGHNESS(plain_tool);
     gwy_tool_roughness_update(tool);
+    gwy_tool_roughness_update_target_graphs(tool);
 }
 
 static void
@@ -1191,6 +1225,34 @@ gwy_tool_roughness_interpolation_changed(GtkComboBox *combo,
 }
 
 static void
+gwy_tool_roughness_update_target_graphs(GwyToolRoughness *tool)
+{
+    GwyDataChooser *chooser = GWY_DATA_CHOOSER(tool->target_graph);
+    gwy_data_chooser_refilter(chooser);
+}
+
+static gboolean
+filter_target_graphs(GwyContainer *data, gint id, gpointer user_data)
+{
+    GwyToolRoughness *tool = (GwyToolRoughness*)user_data;
+    GwyGraphModel *gmodel, *targetgmodel;
+    GQuark quark = gwy_app_get_graph_key_for_id(id);
+
+    return ((gmodel = tool->gmodel)
+            && gwy_container_gis_object(data, quark, (GObject**)&targetgmodel)
+            && gwy_graph_model_units_are_compatible(gmodel, targetgmodel));
+}
+
+static void
+gwy_tool_roughness_target_changed(GwyToolRoughness *tool)
+{
+    GwyDataChooser *chooser = GWY_DATA_CHOOSER(tool->target_graph);
+    GwyDataObjectId *target = &tool->args.target;
+
+    target->data = gwy_data_chooser_get_active(chooser, &target->id);
+}
+
+static void
 gwy_tool_roughness_thickness_changed(GtkAdjustment *adj,
                                      GwyToolRoughness *tool)
 {
@@ -1218,14 +1280,15 @@ gwy_tool_roughness_graph_changed(GtkWidget *combo, GwyToolRoughness *tool)
 {
     tool->graph_type = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     gwy_tool_roughness_update_graphs(tool);
+    gwy_tool_roughness_update_target_graphs(tool);
 }
 
 static void
 gwy_tool_roughness_apply(GwyToolRoughness *tool)
 {
     GwyPlainTool *plain_tool;
-    GwyGraphModel *graphmodel;
-    GwyGraphCurveModel *graphcmodel;
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *gcmodel;
     gchar *s;
     gint n;
 
@@ -1234,18 +1297,37 @@ gwy_tool_roughness_apply(GwyToolRoughness *tool)
     n = gwy_selection_get_data(plain_tool->selection, NULL);
     g_return_if_fail(n);
 
-    graphmodel = gwy_graph_model_new_alike(tool->graphmodel);
-    g_object_set(graphmodel, "label-visible", TRUE, NULL);
-    graphcmodel = gwy_graph_model_get_curve(tool->graphmodel, 0);
-    graphcmodel = gwy_graph_curve_model_duplicate(graphcmodel);
-    gwy_graph_model_add_curve(graphmodel, graphcmodel);
-    g_object_unref(graphcmodel);
-    g_object_get(graphcmodel, "description", &s, NULL);
-    g_object_set(graphmodel, "title", s, NULL);
+    if (tool->args.target.data) {
+        const GwyRGBA *color;
+        GQuark quark;
+        gint nn;
+
+        quark = gwy_app_get_graph_key_for_id(tool->args.target.id);
+        gmodel = gwy_container_get_object(tool->args.target.data, quark);
+        g_return_if_fail(gmodel);
+
+        nn = gwy_graph_model_get_n_curves(gmodel);
+        gcmodel = gwy_graph_model_get_curve(tool->gmodel, 0);
+        gcmodel = gwy_graph_curve_model_duplicate(gcmodel);
+        color = gwy_graph_get_preset_color(nn);
+        g_object_set(gcmodel, "color", color, NULL);
+        gwy_graph_model_add_curve(gmodel, gcmodel);
+        g_object_unref(gcmodel);
+        return;
+    }
+
+    gmodel = gwy_graph_model_new_alike(tool->gmodel);
+    g_object_set(gmodel, "label-visible", TRUE, NULL);
+    gcmodel = gwy_graph_model_get_curve(tool->gmodel, 0);
+    gcmodel = gwy_graph_curve_model_duplicate(gcmodel);
+    gwy_graph_model_add_curve(gmodel, gcmodel);
+    g_object_unref(gcmodel);
+    g_object_get(gcmodel, "description", &s, NULL);
+    g_object_set(gmodel, "title", s, NULL);
     g_free(s);
-    gwy_app_data_browser_add_graph_model(graphmodel, plain_tool->container,
+    gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container,
                                          TRUE);
-    g_object_unref(graphmodel);
+    g_object_unref(gmodel);
 }
 
 static gboolean
@@ -1404,7 +1486,7 @@ gwy_tool_roughness_update_graphs(GwyToolRoughness *tool)
     gint i;
 
     if (!tool->have_data) {
-        gwy_graph_model_remove_all_curves(tool->graphmodel);
+        gwy_graph_model_remove_all_curves(tool->gmodel);
         gwy_graph_model_remove_all_curves(tool->graphmodel_profile);
         return;
     }
@@ -1433,7 +1515,7 @@ gwy_tool_roughness_update_graphs(GwyToolRoughness *tool)
     gwy_graph_model_set_units_from_data_line(gmodel, tool->dataline);
 
     graph = graphs + tool->graph_type;
-    gmodel = tool->graphmodel;
+    gmodel = tool->gmodel;
     i = 0;
     if (gwy_graph_model_get_n_curves(gmodel))
         gcmodel = gwy_graph_model_get_curve(gmodel, i);
