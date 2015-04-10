@@ -33,6 +33,7 @@
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define SIMPLE_RUN_MODES GWY_RUN_INTERACTIVE
@@ -53,14 +54,8 @@ typedef enum {
     DUPLICATE_APPEND = 2
 } ResponseDuplicate;
 
-
 typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyDataObjectId;
-
-typedef struct {
-    GwyDataObjectId objects[NARGS];
+    GwyAppDataId objects[NARGS];
     gchar *name[NARGS];
     guint pos[NARGS];
     gdouble xoffset;

@@ -31,6 +31,7 @@
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define TIP_BLIND_RUN_MODES GWY_RUN_INTERACTIVE
@@ -41,11 +42,6 @@ enum {
     MIN_STRIPES = 2,
     MAX_STRIPES = 64,
 };
-
-typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyDataObjectId;
 
 typedef struct {
     gdouble k1;
@@ -67,8 +63,8 @@ typedef struct {
     gboolean create_images;
     gboolean plot_size_graph;
     guint nstripes;
-    GwyDataObjectId orig;  /* The original source, to filter out incompatible */
-    GwyDataObjectId source;
+    GwyAppDataId orig;  /* The original source, to filter out incompatible */
+    GwyAppDataId source;
     /* Stripe results */
     GwyDataField **stripetips;
     gboolean *goodtip;
@@ -136,7 +132,7 @@ static void           bound_changed           (GtkToggleButton *button,
 static void           same_resolution_changed (GtkToggleButton *button,
                                                TipBlindControls *controls);
 static void           data_changed            (GwyDataChooser *chooser,
-                                               GwyDataObjectId *object);
+                                               GwyAppDataId *object);
 static void           split_to_stripes_changed(GtkToggleButton *toggle,
                                                TipBlindControls *controls);
 static void           nstripes_changed        (GtkAdjustment *adj,
@@ -604,7 +600,7 @@ same_resolution_changed(GtkToggleButton *button,
 
 static void
 data_changed(GwyDataChooser *chooser,
-             GwyDataObjectId *object)
+             GwyAppDataId *object)
 {
     object->data = gwy_data_chooser_get_active(chooser, &object->id);
 }
@@ -657,7 +653,7 @@ tip_blind_source_filter(GwyContainer *data,
                         gint id,
                         gpointer user_data)
 {
-    GwyDataObjectId *object = (GwyDataObjectId*)user_data;
+    GwyAppDataId *object = (GwyAppDataId*)user_data;
     GwyDataField *source, *orig;
     GQuark quark;
 

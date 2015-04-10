@@ -25,14 +25,10 @@
 #include <libprocess/grains.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define MASKOPS_RUN_MODES GWY_RUN_IMMEDIATE
-
-typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyDataObjectId;
 
 static gboolean module_register(void);
 static void     mask_remove    (GwyContainer *data,

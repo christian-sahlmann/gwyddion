@@ -31,6 +31,7 @@
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define MERGE_RUN_MODES GWY_RUN_INTERACTIVE
@@ -58,11 +59,6 @@ typedef enum {
 } GwyMergeBoundaryType;
 
 typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyDataObjectId;
-
-typedef struct {
     gint x;
     gint y;
     gint width;
@@ -80,8 +76,8 @@ typedef struct {
     GwyMergeBoundaryType boundary;
     gboolean create_mask;
     gboolean crop_to_rectangle;
-    GwyDataObjectId op1;
-    GwyDataObjectId op2;
+    GwyAppDataId op1;
+    GwyAppDataId op2;
 } MergeArgs;
 
 typedef struct {
@@ -94,7 +90,7 @@ static void     merge                    (GwyContainer *data,
                                           GwyRunType run);
 static gboolean merge_dialog             (MergeArgs *args);
 static void     merge_data_changed       (GwyDataChooser *chooser,
-                                          GwyDataObjectId *object);
+                                          GwyAppDataId *object);
 static gboolean merge_data_filter        (GwyContainer *data,
                                           gint id,
                                           gpointer user_data);
@@ -334,7 +330,7 @@ merge_dialog(MergeArgs *args)
 
 static void
 merge_data_changed(GwyDataChooser *chooser,
-                   GwyDataObjectId *object)
+                   GwyAppDataId *object)
 {
     GtkWidget *dialog;
 
@@ -352,7 +348,7 @@ merge_data_filter(GwyContainer *data,
                   gint id,
                   gpointer user_data)
 {
-    GwyDataObjectId *object = (GwyDataObjectId*)user_data;
+    GwyAppDataId *object = (GwyAppDataId*)user_data;
     GwyDataField *op1, *op2;
     GQuark quark;
 

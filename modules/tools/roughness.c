@@ -114,11 +114,6 @@ typedef struct _GwyToolRoughness      GwyToolRoughness;
 typedef struct _GwyToolRoughnessClass GwyToolRoughnessClass;
 
 typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyDataObjectId;
-
-typedef struct {
     GwyDataLine *texture;
     GwyDataLine *roughness;
     GwyDataLine *waviness;
@@ -149,7 +144,7 @@ typedef struct {
     gdouble cutoff;
     GwyInterpolationType interpolation;
     guint expanded;
-    GwyDataObjectId target;
+    GwyAppDataId target;
 } ToolArgs;
 
 typedef struct {
@@ -1247,7 +1242,7 @@ static void
 gwy_tool_roughness_target_changed(GwyToolRoughness *tool)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(tool->target_graph);
-    GwyDataObjectId *target = &tool->args.target;
+    GwyAppDataId *target = &tool->args.target;
 
     target->data = gwy_data_chooser_get_active(chooser, &target->id);
 }

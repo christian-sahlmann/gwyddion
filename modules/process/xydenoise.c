@@ -30,18 +30,14 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define XYDENOISE_RUN_MODES GWY_RUN_INTERACTIVE
 
 typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyDataObjectId;
-
-typedef struct {
-    GwyDataObjectId op1;
-    GwyDataObjectId op2;
+    GwyAppDataId op1;
+    GwyAppDataId op2;
 } XYdenoiseArgs;
 
 static gboolean module_register       (void);
@@ -49,7 +45,7 @@ static void     xydenoise              (GwyContainer *data,
                                        GwyRunType run);
 static gboolean xydenoise_dialog       (XYdenoiseArgs *args);
 static void     xydenoise_data_cb      (GwyDataChooser *chooser,
-                                       GwyDataObjectId *object);
+                                       GwyAppDataId *object);
 static gboolean xydenoise_data_filter(GwyContainer *data,
                                        gint id,
                                        gpointer user_data);
@@ -163,7 +159,7 @@ xydenoise_dialog(XYdenoiseArgs *args)
 
 static void
 xydenoise_data_cb(GwyDataChooser *chooser,
-                 GwyDataObjectId *object)
+                 GwyAppDataId *object)
 {
     GtkWidget *dialog;
 
@@ -183,7 +179,7 @@ xydenoise_data_filter(GwyContainer *data,
                      gint id,
                      gpointer user_data)
 {
-    GwyDataObjectId *object = (GwyDataObjectId*)user_data;
+    GwyAppDataId *object = (GwyAppDataId*)user_data;
     GwyDataField *op1, *op2;
     GQuark quark;
 

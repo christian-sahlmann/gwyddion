@@ -31,6 +31,7 @@
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define GWY_TYPE_TOOL_SFUNCTIONS            (gwy_tool_sfunctions_get_type())
@@ -62,11 +63,6 @@ typedef struct _GwyToolSFunctions      GwyToolSFunctions;
 typedef struct _GwyToolSFunctionsClass GwyToolSFunctionsClass;
 
 typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyDataObjectId;
-
-typedef struct {
     GwyMaskingType masking;
     GwySFOutputType output_type;
     gboolean options_visible;
@@ -76,7 +72,7 @@ typedef struct {
     GwyOrientation direction;
     GwyInterpolationType interpolation;
     gboolean separate;
-    GwyDataObjectId target;
+    GwyAppDataId target;
 } ToolArgs;
 
 struct _GwyToolSFunctions {
@@ -1100,7 +1096,7 @@ static void
 gwy_tool_sfunctions_target_changed(GwyToolSFunctions *tool)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(tool->target_graph);
-    GwyDataObjectId *target = &tool->args.target;
+    GwyAppDataId *target = &tool->args.target;
 
     target->data = gwy_data_chooser_get_active(chooser, &target->id);
 }

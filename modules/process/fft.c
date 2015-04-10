@@ -31,6 +31,7 @@
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define FFT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
@@ -45,11 +46,6 @@ typedef enum {
 } GwyFFTOutputType;
 
 typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyDataObjectId;
-
-typedef struct {
     gboolean raw_transform;
     gboolean zeromean;
     gboolean preserverms;
@@ -57,7 +53,7 @@ typedef struct {
     gboolean inverse_transform;
     GwyWindowingType window;
     GwyFFTOutputType out;
-    GwyDataObjectId imgpart;
+    GwyAppDataId imgpart;
 } FFTArgs;
 
 typedef struct {
@@ -440,7 +436,7 @@ fft_dialog(FFTArgs *args,
 
             case RESPONSE_RESET:
             {
-                GwyDataObjectId imgpart = args->imgpart;
+                GwyAppDataId imgpart = args->imgpart;
                 *args = fft_defaults;
                 args->imgpart = imgpart;
                 fft_dialog_update(&controls, args);

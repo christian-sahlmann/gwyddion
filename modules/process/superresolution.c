@@ -30,8 +30,8 @@
 #include <libprocess/correlation.h>
 #include <libprocess/hough.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
-
 
 #define SUPRES_RUN_MODES GWY_RUN_INTERACTIVE
 
@@ -45,13 +45,8 @@ enum {
 };
 
 typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyDataObjectId;
-
-typedef struct {
     guint err;
-    GwyDataObjectId objects[NARGS];
+    GwyAppDataId objects[NARGS];
     gchar *name[NARGS];
     guint pos[NARGS];
 } SupresArgs;

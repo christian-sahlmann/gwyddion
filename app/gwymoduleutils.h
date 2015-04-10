@@ -27,6 +27,11 @@
 
 G_BEGIN_DECLS
 
+typedef struct {
+    GwyContainer *data;
+    gint id;
+} GwyAppDataId;
+
 typedef gchar* (*GwySaveAuxiliaryCreate)(gpointer user_data,
                                          gssize *data_len);
 typedef void (*GwySaveAuxiliaryDestroy)(gchar *data,

@@ -325,7 +325,7 @@ run_pid(GwyDataField *dfield, GwyContainer *data, gint id, GwyDataField *fw, Gwy
     gint xres, yres, i, j;
     gint col, tcol, row, trow;
     gdouble *dfw, *dffw, *drev, *dfrev, *surface;
-    gdouble force, setpoint;
+    gdouble force = 0.0, setpoint;
     gdouble accumulator;
     gdouble previous[1000];
     gint nprev;

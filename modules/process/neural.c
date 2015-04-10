@@ -49,12 +49,6 @@
 #define NEURAL_TRAIN_RUN_MODES GWY_RUN_INTERACTIVE
 #define NEURAL_APPLY_RUN_MODES GWY_RUN_INTERACTIVE
 
-typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyDataObjectId;
-
-
 enum {
     PREVIEW_SIZE = 360,
 };
@@ -75,8 +69,8 @@ enum {
 
 typedef struct {
     GwyNeuralNetwork *nn;
-    GwyDataObjectId tmodel;
-    GwyDataObjectId tsignal;
+    GwyAppDataId tmodel;
+    GwyAppDataId tsignal;
     guint trainsteps;
     GwyMaskingType masking;
     PreviewType preview_type;

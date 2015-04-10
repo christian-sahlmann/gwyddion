@@ -31,6 +31,7 @@
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define GWY_TYPE_TOOL_LINE_STATS            (gwy_tool_line_stats_get_type())
@@ -47,11 +48,6 @@ typedef struct _GwyToolLineStats      GwyToolLineStats;
 typedef struct _GwyToolLineStatsClass GwyToolLineStatsClass;
 
 typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyDataObjectId;
-
-typedef struct {
     GwyLineStatQuantity output_type;
     gboolean options_visible;
     gboolean instant_update;
@@ -59,7 +55,7 @@ typedef struct {
     gboolean fixres;
     GwyOrientation direction;
     GwyInterpolationType interpolation;
-    GwyDataObjectId target;
+    GwyAppDataId target;
 } ToolArgs;
 
 struct _GwyToolLineStats {
@@ -734,7 +730,7 @@ static void
 gwy_tool_line_stats_target_changed(GwyToolLineStats *tool)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(tool->target_graph);
-    GwyDataObjectId *target = &tool->args.target;
+    GwyAppDataId *target = &tool->args.target;
 
     target->data = gwy_data_chooser_get_active(chooser, &target->id);
 }

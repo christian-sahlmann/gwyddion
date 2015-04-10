@@ -299,4 +299,22 @@ gwy_set_data_preview_size(GwyDataView *data_view,
  * Since: 2.3
  **/
 
+/**
+ * GwyAppDataId:
+ * @container: Data container, presumably representing an open file.
+ * @id: Integer identifier, such as channel or graph number.
+ *
+ * Auxiliary structure representing one data item in an open file.
+ *
+ * This structure is directly not passed to or created by Gwyddion functions.
+ * However, it is commonly used as data item identifier in modules so it is
+ * defined publicly for convenience.
+ *
+ * A number of Gwyddion library functions take or return @data and @id, but as
+ * separate arguments, for instance gwy_data_chooser_set_active(),
+ * gwy_app_data_browser_add_data_field().
+ *
+ * Since: 2.41
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

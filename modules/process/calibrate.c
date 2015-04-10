@@ -31,17 +31,13 @@
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define CALIBRATE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 /* for compatibility checks */
 #define EPSILON 1e-6
-
-typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyDataObjectId;
 
 typedef struct {
     gdouble xratio;
@@ -70,8 +66,8 @@ typedef struct {
     gchar *xyunitorig;
     gchar *zunit;
     gchar *zunitorig;
-    GwyDataObjectId sizeid;
-    GwyDataObjectId targetid;
+    GwyAppDataId sizeid;
+    GwyAppDataId targetid;
 } CalibrateArgs;
 
 typedef struct {
@@ -1091,7 +1087,7 @@ mould_filter(GwyContainer *data,
              gint id,
              gpointer user_data)
 {
-    GwyDataObjectId *object = (GwyDataObjectId*)user_data;
+    GwyAppDataId *object = (GwyAppDataId*)user_data;
     return data != object->data || id != object->id;
 }
 

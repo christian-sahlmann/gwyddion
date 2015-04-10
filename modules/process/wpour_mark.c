@@ -763,7 +763,7 @@ wpour_do(GwyDataField *dfield,
          WPourArgs *args)
 {
     GHashTable *gnetwork;
-    guint xres = dfield->xres, yres = dfield->yres, ngrains;
+    guint xres = dfield->xres, yres = dfield->yres;
     IntList *inqueue = int_list_new(0);
     IntList *outqueue = int_list_new(0);
     gint *grains;
@@ -802,7 +802,7 @@ wpour_do(GwyDataField *dfield,
     int_list_free(inqueue);
 
     grains = g_new0(gint, xres*yres);
-    ngrains = gwy_data_field_number_grains(maskfield, grains);
+    /*ngrains = gwy_data_field_number_grains(maskfield, grains);*/
     gnetwork = analyse_grain_network(preproc, grains);
 
     /* XXX: neither grains nor gnetwork used for anything at this moment. */

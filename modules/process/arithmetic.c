@@ -76,18 +76,13 @@ enum {
 typedef GwyDataField* (*MakeFieldFunc)(GwyDataField *dfield);
 
 typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyDataObjectId;
-
-typedef struct {
     GwyExpr *expr;
     gchar *expression;
     gint dataunits;
     gchar *userunits;
     GtkTreeModel *history;
     guint err;
-    GwyDataObjectId objects[NARGS];
+    GwyAppDataId objects[NARGS];
     gchar *name[ARITHMETIC_NARGS];
     guint pos[ARITHMETIC_NARGS];
     GPtrArray *ok_masks;

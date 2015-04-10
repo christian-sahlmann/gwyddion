@@ -30,14 +30,10 @@
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define TIP_MODEL_RUN_MODES GWY_RUN_INTERACTIVE
-
-typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyDataObjectId;
 
 typedef struct {
     gint nsides;
@@ -45,7 +41,7 @@ typedef struct {
     gdouble radius;
     gdouble theta;
     GwyTipType type;
-    GwyDataObjectId object;
+    GwyAppDataId object;
 } TipModelArgs;
 
 typedef struct {

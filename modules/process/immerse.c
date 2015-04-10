@@ -34,6 +34,7 @@
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define IMMERSE_RUN_MODES GWY_RUN_INTERACTIVE
@@ -72,16 +73,11 @@ typedef enum {
 } ImmerseResponseType;
 
 typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyDataObjectId;
-
-typedef struct {
     GwyImmerseSamplingType sampling;
     GwyImmerseLevelType leveling;
     gboolean draw_frame;
-    GwyDataObjectId image;
-    GwyDataObjectId detail;
+    GwyAppDataId image;
+    GwyAppDataId detail;
     /* Interface only */
     gdouble xpos;
     gdouble ypos;
@@ -437,7 +433,7 @@ immerse_detail_cb(GwyDataChooser *chooser,
 {
     GwyDataField *dfield, *ifield;
     GQuark quark;
-    GwyDataObjectId *object;
+    GwyAppDataId *object;
 
     object = &controls->args->detail;
     object->data = gwy_data_chooser_get_active(chooser, &object->id);
@@ -519,7 +515,7 @@ immerse_data_filter(GwyContainer *data,
                     gint id,
                     gpointer user_data)
 {
-    GwyDataObjectId *object = (GwyDataObjectId*)user_data;
+    GwyAppDataId *object = (GwyAppDataId*)user_data;
     GwyDataField *image, *detail;
     GQuark quark;
 

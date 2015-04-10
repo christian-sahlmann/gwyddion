@@ -29,6 +29,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define CROSSCOR_RUN_MODES GWY_RUN_INTERACTIVE
@@ -44,11 +45,6 @@ typedef enum {
 } CrosscorResult;
 
 typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyDataObjectId;
-
-typedef struct {
     CrosscorResult result;
     gint search_x;
     gint search_y;
@@ -59,10 +55,10 @@ typedef struct {
     gboolean add_ls_mask;
     gdouble threshold;
     gboolean multiple;
-    GwyDataObjectId op1;
-    GwyDataObjectId op2;
-    GwyDataObjectId op3;
-    GwyDataObjectId op4;
+    GwyAppDataId op1;
+    GwyAppDataId op2;
+    GwyAppDataId op3;
+    GwyAppDataId op4;
 
 } CrosscorArgs;
 
@@ -89,7 +85,7 @@ static gboolean crosscor_dialog       (CrosscorArgs *args);
 static void     crosscor_operation_cb (GtkWidget *combo,
                                        CrosscorArgs *args);
 static void     crosscor_data_cb      (GwyDataChooser *chooser,
-                                       GwyDataObjectId *object);
+                                       GwyAppDataId *object);
 static gboolean crosscor_data_filter  (GwyContainer *data,
                                        gint id,
                                        gpointer user_data);
@@ -364,7 +360,7 @@ crosscor_dialog(CrosscorArgs *args)
 
 static void
 crosscor_data_cb(GwyDataChooser *chooser,
-                 GwyDataObjectId *object)
+                 GwyAppDataId *object)
 {
     GtkWidget *dialog;
 
@@ -406,7 +402,7 @@ crosscor_data_filter(GwyContainer *data,
                      gint id,
                      gpointer user_data)
 {
-    GwyDataObjectId *object = (GwyDataObjectId*)user_data;
+    GwyAppDataId *object = (GwyAppDataId*)user_data;
     GwyDataField *op1, *op2;
     GQuark quark;
 
@@ -433,7 +429,7 @@ crosscor_weaker_filter(GwyContainer *data,
                      gint id,
                      gpointer user_data)
 {
-    GwyDataObjectId *object = (GwyDataObjectId*)user_data;
+    GwyAppDataId *object = (GwyAppDataId*)user_data;
     GwyDataField *op1, *op2;
     GQuark quark;
 

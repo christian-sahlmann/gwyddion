@@ -35,6 +35,7 @@
 #include <libgwydgets/gwynullstore.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydgetutils.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define GWY_TYPE_TOOL_SPECTRO            (gwy_tool_spectro_get_type())
@@ -55,15 +56,10 @@ typedef struct _GwyToolSpectro      GwyToolSpectro;
 typedef struct _GwyToolSpectroClass GwyToolSpectroClass;
 
 typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyDataObjectId;
-
-typedef struct {
     gboolean options_visible;
     gboolean separate;
     gboolean average;
-    GwyDataObjectId target;
+    GwyAppDataId target;
 } ToolArgs;
 
 struct _GwyToolSpectro {
@@ -938,7 +934,7 @@ static void
 gwy_tool_spectro_target_changed(GwyToolSpectro *tool)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(tool->target_graph);
-    GwyDataObjectId *target = &tool->args.target;
+    GwyAppDataId *target = &tool->args.target;
 
     target->data = gwy_data_chooser_get_active(chooser, &target->id);
 }

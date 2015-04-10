@@ -26,6 +26,7 @@
 #include <libprocess/arithmetic.h>
 #include <libprocess/tip.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define TIP_OPS_RUN_MODES GWY_RUN_INTERACTIVE
@@ -37,13 +38,8 @@ typedef enum {
 } TipOperation;
 
 typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyDataObjectId;
-
-typedef struct {
-    GwyDataObjectId tip;
-    GwyDataObjectId target;
+    GwyAppDataId tip;
+    GwyAppDataId target;
 } TipOpsArgs;
 
 static gboolean module_register  (void);
@@ -260,7 +256,7 @@ tipops_tip_filter(GwyContainer *data,
                   gint id,
                   gpointer user_data)
 {
-    GwyDataObjectId *object = (GwyDataObjectId*)user_data;
+    GwyAppDataId *object = (GwyAppDataId*)user_data;
     GwyDataField *tip, *target;
     GQuark quark;
 

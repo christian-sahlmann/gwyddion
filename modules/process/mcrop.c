@@ -30,6 +30,7 @@
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define MCROP_RUN_MODES GWY_RUN_INTERACTIVE
@@ -41,26 +42,21 @@ typedef struct {
     gint height;
 } GwyRectangle;
 
-typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyDataObjectId;
-
 static gboolean module_register      (void);
 static void     mcrop                (GwyContainer *data,
                                       GwyRunType run);
 static void     mcrop_data_cb        (GwyDataChooser *chooser,
-                                      GwyDataObjectId *object);
+                                      GwyAppDataId *object);
 static gboolean mcrop_data_filter    (GwyContainer *data, gint id,
                                       gpointer user_data);
-static gboolean mcrop_dialog         (GwyDataObjectId *op1,
-                                      GwyDataObjectId *op2);
-static gboolean mcrop_do             (GwyDataObjectId *op1,
-                                      GwyDataObjectId *op2);
+static gboolean mcrop_dialog         (GwyAppDataId *op1,
+                                      GwyAppDataId *op2);
+static gboolean mcrop_do             (GwyAppDataId *op1,
+                                      GwyAppDataId *op2);
 static gboolean get_score_iteratively(GwyDataField *data_field,
                                       GwyDataField *kernel_field,
                                       GwyDataField *score,
-                                      GwyDataObjectId *op1);
+                                      GwyAppDataId *op1);
 static void     find_score_maximum   (GwyDataField *correlation_score,
                                       gint *max_col,
                                       gint *max_row);
@@ -94,7 +90,7 @@ module_register(void)
 static void
 mcrop(GwyContainer *data, GwyRunType run)
 {
-    GwyDataObjectId op1, op2;
+    GwyAppDataId op1, op2;
     GQuark quark1, quark2;
 
     g_return_if_fail(run & MCROP_RUN_MODES);
@@ -117,7 +113,7 @@ mcrop(GwyContainer *data, GwyRunType run)
 
 static void
 mcrop_data_cb(GwyDataChooser *chooser,
-              GwyDataObjectId *object)
+              GwyAppDataId *object)
 {
     GtkWidget *dialog;
 
@@ -133,7 +129,7 @@ mcrop_data_cb(GwyDataChooser *chooser,
 static gboolean
 mcrop_data_filter(GwyContainer *data, gint id, gpointer user_data)
 {
-    GwyDataObjectId *object = (GwyDataObjectId*)user_data;
+    GwyAppDataId *object = (GwyAppDataId*)user_data;
     GwyDataField *op1, *op2;
     GQuark quark;
 
@@ -152,7 +148,7 @@ mcrop_data_filter(GwyContainer *data, gint id, gpointer user_data)
                                                | GWY_DATA_COMPATIBILITY_VALUE);
 }
 
-static gboolean mcrop_dialog (GwyDataObjectId *op1, GwyDataObjectId *op2)
+static gboolean mcrop_dialog (GwyAppDataId *op1, GwyAppDataId *op2)
 {
     GtkWidget *dialog, *chooser, *table;
 
@@ -211,7 +207,7 @@ static gboolean mcrop_dialog (GwyDataObjectId *op1, GwyDataObjectId *op2)
 }
 
 static gboolean
-mcrop_do(GwyDataObjectId *op1, GwyDataObjectId *op2)
+mcrop_do(GwyAppDataId *op1, GwyAppDataId *op2)
 {
     GwyDataField *dfield1, *dfield2;
     GwyDataField *correlation_data, *correlation_kernel, *correlation_score;
@@ -309,7 +305,7 @@ mcrop_do(GwyDataObjectId *op1, GwyDataObjectId *op2)
 /* compute corelation */
 static gboolean
 get_score_iteratively(GwyDataField *data_field, GwyDataField *kernel_field,
-                      GwyDataField *score, GwyDataObjectId *op1)
+                      GwyDataField *score, GwyAppDataId *op1)
 {
     enum { WORK_PER_UPDATE = 50000000 };
     GwyComputationState *state;

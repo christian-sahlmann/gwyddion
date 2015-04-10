@@ -33,6 +33,7 @@
 #include <libgwydgets/gwynullstore.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydgetutils.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define GWY_TYPE_TOOL_PROFILE            (gwy_tool_profile_get_type())
@@ -50,7 +51,6 @@ typedef enum {
     GWY_CC_DISPLAY_Z_UNC = 6,
 } GwyCCDisplayType;
 
-
 enum {
     NLINES = 1024,
     MAX_THICKNESS = 128,
@@ -66,11 +66,6 @@ typedef struct _GwyToolProfile      GwyToolProfile;
 typedef struct _GwyToolProfileClass GwyToolProfileClass;
 
 typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyDataObjectId;
-
-typedef struct {
     gboolean options_visible;
     gint thickness;
     gint resolution;
@@ -78,7 +73,7 @@ typedef struct {
     GwyInterpolationType interpolation;
     gboolean separate;
     gboolean both;
-    GwyDataObjectId target;
+    GwyAppDataId target;
 } ToolArgs;
 
 struct _GwyToolProfile {
@@ -1061,7 +1056,7 @@ static void
 gwy_tool_profile_target_changed(GwyToolProfile *tool)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(tool->target_graph);
-    GwyDataObjectId *target = &tool->args.target;
+    GwyAppDataId *target = &tool->args.target;
 
     target->data = gwy_data_chooser_get_active(chooser, &target->id);
 }

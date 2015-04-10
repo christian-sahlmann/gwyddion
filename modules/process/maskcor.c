@@ -28,6 +28,7 @@
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define MASKCOR_RUN_MODES GWY_RUN_INTERACTIVE
@@ -40,16 +41,11 @@ typedef enum {
 } MaskcorResult;
 
 typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyDataObjectId;
-
-typedef struct {
     MaskcorResult result;
     gdouble threshold;
     GwyCorrelationType method;
-    GwyDataObjectId data;
-    GwyDataObjectId kernel;
+    GwyAppDataId data;
+    GwyAppDataId kernel;
 } MaskcorArgs;
 
 typedef struct {
@@ -66,7 +62,7 @@ static void     maskcor_operation_cb (GtkWidget *item,
 static void     maskcor_threshold_cb (GtkAdjustment *adj,
                                       gdouble *value);
 static void     maskcor_kernel_cb    (GwyDataChooser *chooser,
-                                      GwyDataObjectId *object);
+                                      GwyAppDataId *object);
 static gboolean maskcor_kernel_filter(GwyContainer *data,
                                       gint id,
                                       gpointer user_data);
@@ -235,7 +231,7 @@ maskcor_threshold_cb(GtkAdjustment *adj, gdouble *value)
 
 static void
 maskcor_kernel_cb(GwyDataChooser *chooser,
-                  GwyDataObjectId *object)
+                  GwyAppDataId *object)
 {
     GtkWidget *dialog;
 
@@ -253,7 +249,7 @@ maskcor_kernel_filter(GwyContainer *data,
                       gint id,
                       gpointer user_data)
 {
-    GwyDataObjectId *object = (GwyDataObjectId*)user_data;
+    GwyAppDataId *object = (GwyAppDataId*)user_data;
     GwyDataField *kernel, *dfield;
     GQuark quark;
 
