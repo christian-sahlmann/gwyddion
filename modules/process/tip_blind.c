@@ -175,7 +175,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Blind estimation of SPM tip using Villarubia's algorithm."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.7",
+    "1.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -964,7 +964,7 @@ free_stripe_results(TipBlindArgs *args)
     if (args->stripetips) {
         guint i;
         for (i = 0; i < args->nstripes; i++) {
-            g_object_unref(args->stripetips);
+            g_object_unref(args->stripetips[i]);
         }
         g_free(args->stripetips);
         args->stripetips = NULL;
