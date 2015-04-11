@@ -59,6 +59,7 @@ typedef struct {
     gboolean update;
     gint kernel_size;
     GwyMaskingType masking;
+    GwyAppDataId target_graph;
 } SlopeArgs;
 
 typedef struct {
@@ -73,6 +74,8 @@ typedef struct {
     GtkWidget *fit_plane;
     GtkWidget *update;
     GtkObject *kernel_size;
+    GtkWidget *target_graph;
+    GtkWidget *target_hbox;
     GSList *masking;
 
     GwyDataField *dfield;
@@ -105,6 +108,11 @@ static void           update_changed         (SlopeControls *controls,
                                               GtkToggleButton *check);
 static void           masking_changed        (GtkToggleButton *button,
                                               SlopeControls *controls);
+static void           update_target_graphs   (SlopeControls *controls);
+static gboolean       filter_target_graphs   (GwyContainer *data,
+                                              gint id,
+                                              gpointer user_data);
+static void           target_graph_changed   (SlopeControls *controls);
 static void           slope_invalidate       (SlopeControls *controls);
 static void           preview                (SlopeControls *controls);
 static GwyDataField*  slope_do_2d            (GwyDataField *dfield,
@@ -142,6 +150,7 @@ static const SlopeArgs slope_defaults = {
     TRUE,
     5,
     GWY_MASK_IGNORE,
+    { NULL, -1 },
 };
 
 static GwyModuleInfo module_info = {
@@ -150,7 +159,7 @@ static GwyModuleInfo module_info = {
     N_("Calculates one- or two-dimensional distribution of slopes "
        "or graph of their angular distribution."),
     "Yeti <yeti@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -246,7 +255,8 @@ slope_dialog(SlopeArgs *args, gboolean same_units,
         { N_("_Inclination (θ) graph"),        SLOPE_DIST_GRAPH_THETA,    },
         { N_("Inclination (gra_dient) graph"), SLOPE_DIST_GRAPH_GRADIENT, },
     };
-    GtkWidget *dialog, *table, *label, *hbox, *vbox, *button;
+    GtkWidget *dialog, *table, *label, *hbox, *hbox2, *vbox, *button;
+    GwyDataChooser *chooser;
     GwyGraphModel *gmodel;
     GwyPixmapLayer *layer;
     SlopeControls controls;
@@ -315,7 +325,7 @@ slope_dialog(SlopeArgs *args, gboolean same_units,
     if (args->output_type == SLOPE_DIST_2D_DIST)
         gtk_widget_set_no_show_all(controls.graph, TRUE);
 
-    table = gtk_table_new(10 + (mfield ? 4 : 0), 4, FALSE);
+    table = gtk_table_new(11 + (mfield ? 4 : 0), 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -344,7 +354,26 @@ slope_dialog(SlopeArgs *args, gboolean same_units,
     }
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    controls.target_hbox = hbox2 = gtk_hbox_new(FALSE, 6);
+    gtk_table_attach(GTK_TABLE(table), hbox2,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
+    label = gtk_label_new_with_mnemonic(_("Target _graph:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
+
+    controls.target_graph = gwy_data_chooser_new_graphs();
+    chooser = GWY_DATA_CHOOSER(controls.target_graph);
+    gwy_data_chooser_set_none(chooser, _("New graph"));
+    gwy_data_chooser_set_active(chooser, NULL, -1);
+    gwy_data_chooser_set_filter(chooser, filter_target_graphs, &controls, NULL);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.target_graph);
+    gtk_box_pack_end(GTK_BOX(hbox2), controls.target_graph, FALSE, FALSE, 0);
+    g_signal_connect_swapped(controls.target_graph, "changed",
+                             G_CALLBACK(target_graph_changed), &controls);
+    row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     label = gwy_label_new_header(_("Options"));
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -512,11 +541,13 @@ output_type_changed(GtkToggleButton *button, SlopeControls *controls)
     otype = gwy_radio_buttons_get_current(controls->output_type);
     controls->args->output_type = otype;
     gtk_widget_set_sensitive(controls->logscale, otype == SLOPE_DIST_2D_DIST);
+    gtk_widget_set_sensitive(controls->target_hbox, otype != SLOPE_DIST_2D_DIST);
     if (otype == SLOPE_DIST_2D_DIST) {
         gtk_widget_set_no_show_all(controls->graph, TRUE);
         gtk_widget_set_no_show_all(controls->view, FALSE);
         gtk_widget_hide(controls->graph);
         gtk_widget_show_all(controls->view);
+        update_target_graphs(controls);
     }
     else {
         gtk_widget_set_no_show_all(controls->view, TRUE);
@@ -528,7 +559,8 @@ output_type_changed(GtkToggleButton *button, SlopeControls *controls)
     if (!gtk_toggle_button_get_active(button))
         return;
 
-    slope_invalidate(controls);
+    if (!controls->in_init)
+        preview(controls);
 }
 
 static void
@@ -553,6 +585,37 @@ masking_changed(GtkToggleButton *button, SlopeControls *controls)
         return;
 
     slope_invalidate(controls);
+}
+
+static void
+update_target_graphs(SlopeControls *controls)
+{
+    GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
+    gwy_data_chooser_refilter(chooser);
+}
+
+static gboolean
+filter_target_graphs(GwyContainer *data, gint id, gpointer user_data)
+{
+    SlopeControls *controls = (SlopeControls*)user_data;
+    GwyGraphModel *gmodel, *targetgmodel;
+    GQuark quark = gwy_app_get_graph_key_for_id(id);
+
+    if (controls->args->output_type == SLOPE_DIST_2D_DIST)
+        return FALSE;
+
+    return ((gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph)))
+            && gwy_container_gis_object(data, quark, (GObject**)&targetgmodel)
+            && gwy_graph_model_units_are_compatible(gmodel, targetgmodel));
+}
+
+static void
+target_graph_changed(SlopeControls *controls)
+{
+    GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
+    GwyAppDataId *target = &controls->args->target_graph;
+
+    target->data = gwy_data_chooser_get_active(chooser, &target->id);
 }
 
 static void
@@ -593,6 +656,8 @@ preview(SlopeControls *controls)
 
     gwy_graph_set_model(GWY_GRAPH(controls->graph), gmodel);
     g_object_unref(gmodel);
+
+    update_target_graphs(controls);
 }
 
 static inline gboolean
