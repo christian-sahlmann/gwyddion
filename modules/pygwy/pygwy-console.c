@@ -46,12 +46,10 @@ static void pygwy_console_command_execute(GtkEntry *entry,
 static void pygwy_console_clear_output   (GtkToolButton *btn,
                                           gpointer user_data);
 
-extern gchar pygwy_plugin_dir_name[];
-
 static PygwyConsoleSetup *console_setup = NULL;
 
 void
-pygwy_register_console()
+pygwy_register_console(void)
 {
     gwy_process_func_register("pygwy_console",
                               pygwy_console_run,
@@ -74,7 +72,7 @@ pygwy_console_run_command(const gchar *cmd, int mode)
         g_warning("Console setup structure is not defined!");
         return NULL;
     }
-    // store _stderr_redir location
+    /* store _stderr_redir location */
     pygwy_run_string(cmd,
                      mode,
                      console_setup->dictionary,
@@ -89,21 +87,6 @@ pygwy_console_run_command(const gchar *cmd, int mode)
 
     return PyString_AsString(PyDict_GetItemString(console_setup->dictionary,
                                                   "_stderr_redir_string"));
-}
-
-static void
-pygwy_add_sys_path(PyObject *dir, gchar *path)
-{
-    gchar *sys_path_append;
-
-    if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
-        sys_path_append = g_strdup_printf("sys.path.append('%s')\n", path);
-        pygwy_run_string(sys_path_append, Py_file_input, dir, dir);
-        g_free(sys_path_append);
-    }
-    else {
-        g_warning("Cannot add non-existent path '%s'.", path);
-    }
 }
 
 static void
@@ -123,22 +106,22 @@ pygwy_console_append(gchar *msg)
         g_warning("Console setup structure is not defined!");
         return;
     }
-    // read string which contain last command output
+    /* read string which contain last command output */
     textview = GTK_TEXT_VIEW(console_setup->console_output);
     console_buf = gtk_text_view_get_buffer(textview);
     gtk_text_buffer_get_bounds(console_buf, &start_iter, &end_iter);
 
-    // get output widget content
+    /* get output widget content */
     output = g_string_new(gtk_text_buffer_get_text(console_buf,
                                                    &start_iter, &end_iter,
                                                    FALSE));
 
-    // append input line
+    /* append input line */
     output = g_string_append(output, msg);
     gtk_text_buffer_set_text(console_buf, output->str, -1);
     g_string_free(output, TRUE);
 
-    // scroll to end
+    /* scroll to end */
     gtk_text_buffer_get_end_iter(console_buf, &end_iter);
     end_mark = gtk_text_buffer_create_mark(console_buf, "cursor", &end_iter,
                                            FALSE);
@@ -242,11 +225,11 @@ pygwy_console_open_file(GtkToolButton *btn, gpointer user_data)
         else {
             fix_eols_to_unix(file_content);
 
-            // read string which contain last command output
+            /* read string which contain last command output */
             textview = GTK_TEXT_VIEW(console_setup->console_file_content);
             console_file_buf = gtk_text_view_get_buffer(textview);
 
-            // append input line
+            /* append input line */
             gtk_text_buffer_set_text(console_file_buf, file_content, -1);
 
             g_free(file_content);
@@ -301,7 +284,7 @@ pygwy_console_save_as_file(GtkToolButton *btn, gpointer user_data)
                                          NULL);
     gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(dialog), TRUE);
 
-    //gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), default_folder_for_saving);
+    /*gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), default_folder_for_saving); */
     gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog),
                                       "Untitled document");
 
@@ -341,16 +324,16 @@ pygwy_console_create_gui(void)
     GtkSourceLanguage *language;
 #endif
 
-    // create static structure;
+    /* create static structure; */
     console_setup = g_new(PygwyConsoleSetup, 1);
-    // create GUI
+    /* create GUI */
     console_win = console_setup->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(console_win), _("Pygwy Console"));
 
     vbox1 = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(console_win), vbox1);
 
-    // buttons
+    /* buttons */
     button_open = GTK_WIDGET(gtk_tool_button_new_from_stock(GTK_STOCK_OPEN));
     button_save = GTK_WIDGET(gtk_tool_button_new_from_stock(GTK_STOCK_SAVE));
     button_save_as = GTK_WIDGET(gtk_tool_button_new_from_stock(GTK_STOCK_SAVE_AS));
@@ -390,7 +373,7 @@ pygwy_console_create_gui(void)
     gtk_box_pack_start(GTK_BOX(vbox1), button_bar, FALSE, FALSE, 0);
     gtk_toolbar_set_style(GTK_TOOLBAR(button_bar), GTK_TOOLBAR_BOTH);
 
-    // window
+    /* window */
     vpaned = gtk_vpaned_new();
     gtk_box_pack_start(GTK_BOX(vbox1), vpaned, TRUE, TRUE, 0);
     file_scrolledwin = gtk_scrolled_window_new(NULL, NULL);
@@ -409,14 +392,14 @@ pygwy_console_create_gui(void)
                                         GTK_SHADOW_IN);
 
 
-    // console output
+    /* console output */
     console_setup->console_output = gtk_text_view_new();
     output_textview = GTK_TEXT_VIEW(console_setup->console_output);
     gtk_container_add(GTK_CONTAINER(console_scrolledwin),
                       console_setup->console_output);
     gtk_text_view_set_editable(output_textview, FALSE);
 
-    // file buffer
+    /* file buffer */
 #ifdef HAVE_GTKSOURCEVIEW
     console_setup->console_file_content = gtk_source_view_new();
     file_textview = GTK_TEXT_VIEW(console_setup->console_file_content);
@@ -435,7 +418,7 @@ pygwy_console_create_gui(void)
     console_setup->console_file_content = gtk_text_view_new();
     file_textview = GTK_TEXT_VIEW(console_setup->console_file_content);
 #endif
-    // set font
+    /* set font */
     font_desc = pango_font_description_from_string("Monospace 8");
     gtk_widget_modify_font(console_setup->console_file_content, font_desc);
     gtk_widget_modify_font(console_setup->console_output, font_desc);
@@ -452,10 +435,10 @@ pygwy_console_create_gui(void)
     gtk_widget_grab_focus(GTK_WIDGET(entry_input));
     gtk_paned_set_position(GTK_PANED(vpaned), 300);
 
-    // entry widget on ENTER
+    /* entry widget on ENTER */
     g_signal_connect(entry_input, "activate",
                      G_CALLBACK(pygwy_console_command_execute), NULL);
-    // open script signal connect
+    /* open script signal connect */
     g_signal_connect(button_open, "clicked",
                      G_CALLBACK(pygwy_console_open_file), NULL);
     g_signal_connect(button_run, "clicked",
@@ -467,7 +450,7 @@ pygwy_console_create_gui(void)
     g_signal_connect(button_clearout, "clicked",
                      G_CALLBACK(pygwy_console_clear_output), NULL);
 
-    // connect on window close()
+    /* connect on window close() */
     g_signal_connect(console_win, "delete-event",
                      G_CALLBACK(gtk_widget_hide_on_delete), NULL);
     gtk_text_view_set_wrap_mode(output_textview, GTK_WRAP_WORD_CHAR);
@@ -479,7 +462,6 @@ static void
 pygwy_console_run(GwyContainer *data, GwyRunType run, const gchar *name)
 {
     PyObject *d;
-    gchar *plugin_dir_name = NULL;
 
     if (console_setup && console_setup->window) {
         gtk_window_present(GTK_WINDOW(console_setup->window));
@@ -489,14 +471,14 @@ pygwy_console_run(GwyContainer *data, GwyRunType run, const gchar *name)
     pygwy_initialize();
     pygwy_console_create_gui();
     console_setup->script_filename = NULL;
-    // create new environment
-    d = create_environment("__console__", FALSE);
+    /* create new environment */
+    d = pygwy_create_environment("__console__", FALSE);
     if (!d) {
         g_warning("Cannot create copy of Python dictionary.");
         return;
     }
 
-    // redirect stdout & stderr to temporary file
+    /* redirect stdout & stderr to temporary file */
     pygwy_run_string("import sys, gwy, tempfile\n"
                      "from gwy import *\n"
                      "_stderr_redir = tempfile.TemporaryFile()\n"
@@ -505,22 +487,8 @@ pygwy_console_run(GwyContainer *data, GwyRunType run, const gchar *name)
                      Py_file_input,
                      d,
                      d);
-    gwy_find_self_dir("data");
 
-    // add .gwyddion/pygwy to sys.path
-    plugin_dir_name = g_build_filename(gwy_get_user_dir(),
-                                       pygwy_plugin_dir_name,
-                                       NULL);
-    pygwy_add_sys_path(d, plugin_dir_name);
-    g_free(plugin_dir_name);
-    // add /usr/local/share/gwyddion/pygwy to sys.path
-    plugin_dir_name = g_build_filename(gwy_find_self_dir("data"),
-                                       pygwy_plugin_dir_name,
-                                       NULL);
-    pygwy_add_sys_path(d, plugin_dir_name);
-    g_free(plugin_dir_name);
-
-    // store values for closing console
+    /* store values for closing console */
     console_setup->std_err = PyDict_GetItemString(d, "_stderr_redir");
     Py_INCREF(console_setup->std_err);
     console_setup->dictionary = d;

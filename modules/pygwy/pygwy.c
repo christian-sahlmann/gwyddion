@@ -60,8 +60,6 @@ typedef enum {
     PYGWY_PROCESS, PYGWY_FILE, PYGWY_GRAPH, PYGWY_LAYER, PYGWY_TOOL, PYGWY_VOLUME, PYGWY_UNDEFINED
 } PygwyPluginType;
 
-const gchar pygwy_plugin_dir_name[] = "pygwy";
-
 static gboolean         module_register       (void);
 static gboolean         check_pygtk_availability(void);
 static void             pygwy_proc_run        (GwyContainer *data,
@@ -98,7 +96,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Pygwy, the Gwyddion Python wrapper."),
     "Jan Hořák <xhorak@gmail.com>",
-    "0.5",
+    "0.6",
     "Jan Hořák",
     "2007"
 };
@@ -305,8 +303,45 @@ pygwy_finalize_stderr_redirect(PyObject *d)
     }
 }
 
-PyObject *
-create_environment(const gchar *filename, gboolean show_errors) {
+static void
+pygwy_add_sys_path(PyObject *dir, gchar *path)
+{
+    gchar *sys_path_append;
+
+    if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
+        sys_path_append = g_strdup_printf("import sys\n"
+                                          "sys.path.append('%s')\n",
+                                          path);
+        pygwy_run_string(sys_path_append, Py_file_input, dir, dir);
+        g_free(sys_path_append);
+    }
+    else {
+        g_warning("Cannot add non-existent path '%s'.", path);
+    }
+}
+
+static void
+augment_sys_path(PyObject *d)
+{
+    const gchar *userdir;
+    gchar *plugin_dir_name, *datadir;
+
+    /* add .gwyddion/pygwy to sys.path */
+    userdir = gwy_get_user_dir();
+    plugin_dir_name = g_build_filename(userdir, pygwy_plugin_dir_name, NULL);
+    pygwy_add_sys_path(d, plugin_dir_name);
+    g_free(plugin_dir_name);
+
+    /* add /usr/local/share/gwyddion/pygwy to sys.path */
+    datadir = gwy_find_self_dir("data");
+    plugin_dir_name = g_build_filename(datadir, pygwy_plugin_dir_name, NULL);
+    pygwy_add_sys_path(d, plugin_dir_name);
+    g_free(plugin_dir_name);
+}
+
+PyObject*
+pygwy_create_environment(const gchar *filename, gboolean show_errors)
+{
     PyObject *d, *plugin_filename;
     char *argv[1];
     argv[0] = NULL;
@@ -320,6 +355,8 @@ create_environment(const gchar *filename, gboolean show_errors) {
     /* redirect stderr and stdout of python script to temporary file */
     if (show_errors)
       pygwy_initialize_stderr_redirect(d);
+
+    augment_sys_path(d);
     return d;
 }
 
@@ -380,7 +417,8 @@ pygwy_get_plugin_metadata(const gchar *filename,
         g_warning("Cannot read content of file '%s'", filename);
         return;
     }
-    d = create_environment(filename, TRUE);
+    d = pygwy_create_environment(filename, TRUE);
+
     /* clear read values */
 
     if (!d) {
@@ -390,7 +428,7 @@ pygwy_get_plugin_metadata(const gchar *filename,
         goto error;
     }
     /* compile file of given filename to module */
-    *code = Py_CompileString((char *)plugin_file_content,
+    *code = Py_CompileString((char*)plugin_file_content,
                              module,
                              Py_file_input); /* new ref */
     if (!(*code)) {
@@ -887,7 +925,7 @@ pygwy_proc_run(GwyContainer *data, GwyRunType run, const gchar *name)
               info->filename);
 
     /* create new environment */
-    d = create_environment(info->filename, TRUE);
+    d = pygwy_create_environment(info->filename, TRUE);
     if (!d) {
         g_warning("Cannot create copy of Python dictionary.");
         return;
@@ -942,7 +980,7 @@ pygwy_graph_run(GwyGraph *graph, const gchar *name)
               info->filename);
 
     /* create new environment */
-    d = create_environment(info->filename, TRUE);
+    d = pygwy_create_environment(info->filename, TRUE);
     if (!d) {
         g_warning("Cannot create copy of Python dictionary.");
         return;
@@ -1003,7 +1041,7 @@ pygwy_file_save_run(GwyContainer *data,
               info->name,
               info->filename);
     /* create new environment */
-    d = create_environment(info->filename, TRUE);
+    d = pygwy_create_environment(info->filename, TRUE);
     if (!d) {
         g_warning("Cannot create copy of Python dictionary.");
         return FALSE;
@@ -1088,7 +1126,7 @@ pygwy_file_load_run(const gchar *filename,
               info->filename);
 
     /* create new environment */
-    d = create_environment(info->filename, TRUE);
+    d = pygwy_create_environment(info->filename, TRUE);
     if (!d) {
         g_warning("Cannot create copy of Python dictionary.");
         goto error;
@@ -1174,7 +1212,7 @@ pygwy_file_detect_run(const GwyFileDetectInfo *fileinfo,
               info->name,
               info->filename);
     /* create new environment */
-    d = create_environment(info->filename, TRUE);
+    d = pygwy_create_environment(info->filename, TRUE);
     if (!d) {
         g_warning("Cannot create copy of Python dictionary.");
         return FALSE;
