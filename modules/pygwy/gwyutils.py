@@ -62,16 +62,6 @@ def get_current_container():
    """
    return gwy.gwy_app_data_browser_get_current(gwy.APP_CONTAINER)
 
-#def gwy_datafield_get_stats(datafield):
-#   d = {}
-#   d["average"] = float()
-#   d["ra"] = float()
-#   d["rms"] = float()
-#   d["skew"] = float()
-#   d["kurtosis"] = float()
-#   datafield.get_stats(d["average"], d["ra"], d["rms"], d["skew"], d["kurtosis"])
-#   return d
-
 try:
    import numpy as np
 except ImportError:
