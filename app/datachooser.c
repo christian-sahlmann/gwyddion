@@ -79,6 +79,7 @@ typedef struct {
 typedef struct {
     GdkPixbuf *thumb;
     gchar *name;
+    gboolean is_none;
 } Proxy;
 
 enum {
@@ -205,6 +206,7 @@ gwy_data_chooser_init(GwyDataChooser *chooser)
     proxy->thumb = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, 20, 20);
     gdk_pixbuf_fill(proxy->thumb, 0x00000000);
     proxy->name = g_strdup(gwy_sgettext("channel|None"));
+    proxy->is_none = TRUE;
     gtk_list_store_insert_with_values(chooser->store, &iter, 0,
                                       MODEL_COLUMN_ID, -1,
                                       MODEL_COLUMN_PROXY, proxy,
@@ -710,7 +712,11 @@ gwy_data_chooser_channels_render_name(G_GNUC_UNUSED GtkCellLayout *layout,
         proxy->name = gwy_app_get_data_field_title(container, id);
         g_object_unref(container);
     }
-    g_object_set(renderer, "text", proxy->name, NULL);
+    g_object_set(renderer,
+                 "text", proxy->name,
+                 "style",
+                 proxy->is_none ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL,
+                 NULL);
 }
 
 static void
@@ -777,7 +783,7 @@ gwy_data_chooser_new_channels(void)
                                        chooser, NULL);
 
     renderer = gtk_cell_renderer_text_new();
-    g_object_set(renderer, "xalign", 0.0, NULL);
+    g_object_set(renderer, "xalign", 0.0, "style-set", TRUE, NULL);
     gtk_cell_layout_pack_start(layout, renderer, TRUE);
     gtk_cell_layout_set_cell_data_func(layout, renderer,
                                        gwy_data_chooser_channels_render_name,
@@ -839,7 +845,11 @@ gwy_data_chooser_volumes_render_name(G_GNUC_UNUSED GtkCellLayout *layout,
         proxy->name = gwy_app_get_brick_title(container, id);
         g_object_unref(container);
     }
-    g_object_set(renderer, "text", proxy->name, NULL);
+    g_object_set(renderer,
+                 "text", proxy->name,
+                 "style",
+                 proxy->is_none ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL,
+                 NULL);
 }
 
 static void
@@ -898,7 +908,7 @@ gwy_data_chooser_new_volumes(void)
                                        chooser, NULL);
 
     renderer = gtk_cell_renderer_text_new();
-    g_object_set(renderer, "xalign", 0.0, NULL);
+    g_object_set(renderer, "xalign", 0.0, "style-set", TRUE, NULL);
     gtk_cell_layout_pack_start(layout, renderer, TRUE);
     gtk_cell_layout_set_cell_data_func(layout, renderer,
                                        gwy_data_chooser_volumes_render_name,
@@ -973,7 +983,11 @@ gwy_data_chooser_graphs_render_name(G_GNUC_UNUSED GtkCellLayout *layout,
         g_free(s);
         g_object_unref(container);
     }
-    g_object_set(renderer, "text", proxy->name, NULL);
+    g_object_set(renderer,
+                 "text", proxy->name,
+                 "style",
+                 proxy->is_none ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL,
+                 NULL);
 }
 
 static void
@@ -1009,7 +1023,7 @@ gwy_data_chooser_new_graphs(void)
     layout = GTK_CELL_LAYOUT(chooser);
 
     renderer = gtk_cell_renderer_text_new();
-    g_object_set(renderer, "xalign", 0.0, NULL);
+    g_object_set(renderer, "xalign", 0.0, "style-set", TRUE, NULL);
     gtk_cell_layout_pack_start(layout, renderer, TRUE);
     gtk_cell_layout_set_cell_data_func(layout, renderer,
                                        gwy_data_chooser_graphs_render_name,
