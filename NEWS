@@ -16,6 +16,10 @@ Modules:
   coordinates.
 - Profiles, Statistical functions, Row/column statistics, Roughness and Spectro
   tools: It is possible to select a target graph for the curves.
+- Slope distribution, Grain correlations: It is possible to select a target
+  graph for the curves.
+- Pygwy: Python modules have sys.path set up the same way as the console now,
+  which namely includes the path to gwyutils.py.
 - 2D FFT: It is possible to provide the imaginary part and perform inverse
   transforms.
 - 1D FFT filter: Occasional ‘Axis with extreme range!’ error was fixed.
@@ -25,6 +29,7 @@ Modules:
 - Affine distortion: The lattice is remembered and recalled.  ACF image uses
   full colour range, correcting problems when fixed colour range is set.
 - Selection manager tool: Lattice selections arw shown when chosen in the list.
+- Tip blind estimate: A memory freeing error was fixed in the stripes mode.
 
 
 2.40 (2015-02-07)
