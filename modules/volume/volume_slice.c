@@ -899,7 +899,7 @@ extract_graph_curve(const SliceArgs *args,
     if (base_plane == PLANE_XY || base_plane == PLANE_YX) {
         gwy_brick_extract_line(brick, line,
                                args->xpos, args->ypos, 0,
-                               args->xpos, args->ypos, brick->zres-1,
+                               args->xpos, args->ypos, brick->zres,
                                FALSE);
         /* Try to use the calibration.  Ignore if the dimension does not seem
          * right. */
