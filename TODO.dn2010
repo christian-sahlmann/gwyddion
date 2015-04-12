@@ -1,5 +1,5 @@
 The features I want to be implemented, WIP is for the parts that are
-developed just now: 
+developed just now:
 - implement metadata loading for Renishaw WDF and load some additional
   info from it (WIP).
 - more simple interface for volume data extraction. Implement missing
@@ -17,6 +17,7 @@ developed just now:
   need the plain list of all data without categories and single data
   processing menu to add another datatypes).
 - graph filter module with all basic graph processing.
+- multiple graph arithmetic.
 - more deconvolution algorithms.
 - better image segmentation algorithms for the noisy data.
 - machine learning infrastructure for the above.
@@ -26,3 +27,7 @@ developed just now:
 - smarter units and metadata (keeping some relevant info about scan type
   and parameters in defined way for modules that can use it,
   probably also for gwyddion4)
+- Composite image (two or more channels with different color scale mixed
+  into RGB, export module).
+- Volume generation from different wavelet scales (more advanced
+  separation into background, waviness, roughness and noise).
