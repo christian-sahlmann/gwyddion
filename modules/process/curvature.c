@@ -687,7 +687,7 @@ curvature_dialog(CurvatureArgs *args,
 
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 4);
 
-    table = gtk_table_new(4 + (mfield ? 4 : 0), 4, FALSE);
+    table = gtk_table_new(5 + (mfield ? 4 : 0), 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);

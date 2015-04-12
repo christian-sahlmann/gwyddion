@@ -57,6 +57,7 @@ typedef struct {
     gint resolution;
     GwyInterpolationType interpolation;
     GwyWindowingType windowing;
+    GwyAppDataId target_graph;
 } ProfArgs;
 
 typedef struct {
@@ -75,43 +76,51 @@ typedef struct {
     GwyDataLine *line;
     GwyGraphModel *gmodel;
     GtkWidget *separate;
+    GtkWidget *target_graph;
+    GtkWidget *target_hbox;
     GwyContainer *mydata;
 } ProfControls;
 
-static gboolean      module_register            (void);
-static void          fft_profile                (GwyContainer *data,
-                                                 GwyRunType run);
-static void          prof_dialog                (ProfArgs *args,
-                                                 GwyContainer *data,
-                                                 GwyDataField *dfield,
-                                                 gint id);
-static void          prof_fixres_changed        (ProfControls *controls,
-                                                 GtkToggleButton *check);
-static void          prof_resolution_changed    (ProfControls *controls,
-                                                 GtkAdjustment *adj);
-static void          prof_interpolation_changed (GtkComboBox *combo,
-                                                 ProfControls *controls);
-static void          prof_separate_changed      (ProfControls *controls);
-static void          prof_selection_changed     (ProfControls *controls,
-                                                 gint hint);
-static void          prof_update_curve          (ProfControls *controls,
-                                                 gint i);
-static void          prof_execute               (ProfControls *controls,
-                                                 GwyContainer *container);
-static GwyDataField* prof_psdf                  (GwyDataField *dfield,
-                                                 const ProfArgs *args);
-static GwyDataField* prof_sqrt                  (GwyDataField *dfield);
-static void          prof_load_args             (GwyContainer *container,
-                                                 ProfArgs *args);
-static void          prof_save_args             (GwyContainer *container,
-                                                 ProfArgs *args);
-static void          prof_sanitize_args         (ProfArgs *args);
+static gboolean      module_register           (void);
+static void          fft_profile               (GwyContainer *data,
+                                                GwyRunType run);
+static void          prof_dialog               (ProfArgs *args,
+                                                GwyContainer *data,
+                                                GwyDataField *dfield,
+                                                gint id);
+static void          prof_fixres_changed       (ProfControls *controls,
+                                                GtkToggleButton *check);
+static void          prof_resolution_changed   (ProfControls *controls,
+                                                GtkAdjustment *adj);
+static void          prof_interpolation_changed(GtkComboBox *combo,
+                                                ProfControls *controls);
+static void          prof_separate_changed     (ProfControls *controls);
+static void          prof_selection_changed    (ProfControls *controls,
+                                                gint hint);
+static void          update_target_graphs      (ProfControls *controls);
+static gboolean      filter_target_graphs      (GwyContainer *data,
+                                                gint id,
+                                                gpointer user_data);
+static void          target_graph_changed      (ProfControls *controls);
+static void          prof_update_curve         (ProfControls *controls,
+                                                gint i);
+static void          prof_execute              (ProfControls *controls,
+                                                GwyContainer *data);
+static GwyDataField* prof_psdf                 (GwyDataField *dfield,
+                                                const ProfArgs *args);
+static GwyDataField* prof_sqrt                 (GwyDataField *dfield);
+static void          prof_load_args            (GwyContainer *container,
+                                                ProfArgs *args);
+static void          prof_save_args            (GwyContainer *container,
+                                                ProfArgs *args);
+static void          prof_sanitize_args        (ProfArgs *args);
 
 
 static const ProfArgs prof_defaults = {
     FALSE, FALSE, 120,
     GWY_INTERPOLATION_LINEAR,
     GWY_WINDOWING_HANN,
+    { NULL, -1 },
 };
 
 static GwyModuleInfo module_info = {
@@ -120,7 +129,7 @@ static GwyModuleInfo module_info = {
     N_("Reads radial sections of two-dimensional power spectrum density "
        "function."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -167,6 +176,7 @@ prof_dialog(ProfArgs *args,
             gint id)
 {
     GtkWidget *hbox, *hbox2, *vbox, *label;
+    GwyDataChooser *chooser;
     GtkTable *table;
     GtkDialog *dialog;
     GwyGraph *graph;
@@ -175,6 +185,7 @@ prof_dialog(ProfArgs *args,
     gint response;
     GwyPixmapLayer *layer;
     GwyVectorLayer *vlayer;
+    gdouble xy[2];
     gint row;
 
     controls.args = args;
@@ -260,7 +271,7 @@ prof_dialog(ProfArgs *args,
     gwy_graph_area_enable_user_input(area, FALSE);
     gtk_box_pack_start(GTK_BOX(vbox), controls.graph, TRUE, TRUE, 0);
 
-    table = GTK_TABLE(gtk_table_new(3, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(4, 4, FALSE));
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -308,6 +319,35 @@ prof_dialog(ProfArgs *args,
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.interpolation);
     gtk_box_pack_end(GTK_BOX(hbox2), controls.interpolation, FALSE, FALSE, 0);
     row++;
+
+    controls.target_hbox = hbox2 = gtk_hbox_new(FALSE, 6);
+    gtk_widget_set_sensitive(hbox2, !args->separate);
+    gtk_table_attach(GTK_TABLE(table), hbox2,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    label = gtk_label_new_with_mnemonic(_("Target _graph:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
+
+    controls.target_graph = gwy_data_chooser_new_graphs();
+    chooser = GWY_DATA_CHOOSER(controls.target_graph);
+    gwy_data_chooser_set_none(chooser, _("New graph"));
+    gwy_data_chooser_set_active(chooser, NULL, -1);
+    gwy_data_chooser_set_filter(chooser, filter_target_graphs, &controls, NULL);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.target_graph);
+    gtk_box_pack_end(GTK_BOX(hbox2), controls.target_graph, FALSE, FALSE, 0);
+    g_signal_connect_swapped(controls.target_graph, "changed",
+                             G_CALLBACK(target_graph_changed), &controls);
+    row++;
+
+    /* The graph units required for filtering are only set when a profile
+     * is actually taken.  We could set the units explicitly.  But this is
+     * lazier and ensures consistency... */
+    xy[0] = 0.25*controls.modfield->xreal;
+    xy[1] = 0.25*controls.modfield->yreal;
+    gwy_selection_set_data(controls.selection, 1, xy);
+    update_target_graphs(&controls);
+    gwy_selection_clear(controls.selection);
 
     gtk_widget_show_all(controls.dialog);
     do {
@@ -370,8 +410,11 @@ prof_interpolation_changed(GtkComboBox *combo,
 static void
 prof_separate_changed(ProfControls *controls)
 {
-    controls->args->separate
+    ProfArgs *args = controls->args;
+    args->separate
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->separate));
+    gtk_widget_set_sensitive(controls->target_hbox, !args->separate);
+    update_target_graphs(controls);
 }
 
 static void
@@ -392,6 +435,37 @@ prof_selection_changed(ProfControls *controls,
 
     gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
                                       GTK_RESPONSE_OK, n > 0);
+}
+
+static void
+update_target_graphs(ProfControls *controls)
+{
+    GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
+    gwy_data_chooser_refilter(chooser);
+}
+
+static gboolean
+filter_target_graphs(GwyContainer *data, gint id, gpointer user_data)
+{
+    ProfControls *controls = (ProfControls*)user_data;
+    GwyGraphModel *gmodel, *targetgmodel;
+    GQuark quark = gwy_app_get_graph_key_for_id(id);
+
+    if (controls->args->separate)
+        return FALSE;
+
+    return ((gmodel = controls->gmodel)
+            && gwy_container_gis_object(data, quark, (GObject**)&targetgmodel)
+            && gwy_graph_model_units_are_compatible(gmodel, targetgmodel));
+}
+
+static void
+target_graph_changed(ProfControls *controls)
+{
+    GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
+    GwyAppDataId *target = &controls->args->target_graph;
+
+    target->data = gwy_data_chooser_get_active(chooser, &target->id);
 }
 
 static void
@@ -456,22 +530,47 @@ prof_update_curve(ProfControls *controls,
 
 static void
 prof_execute(ProfControls *controls,
-             GwyContainer *container)
+             GwyContainer *data)
 {
     GwyGraphCurveModel *gcmodel;
     GwyGraphModel *gmodel;
+    ProfArgs *args = controls->args;
     gchar *s;
     gint i, n;
 
     n = gwy_selection_get_data(controls->selection, NULL);
     g_return_if_fail(n);
 
-    if (!controls->args->separate) {
-        gmodel = gwy_graph_model_duplicate(controls->gmodel);
-        g_object_set(gmodel, "label-visible", TRUE, NULL);
-        gwy_app_data_browser_add_graph_model(gmodel, container, TRUE);
-        g_object_unref(gmodel);
+    if (!args->separate) {
+        if (args->target_graph.data) {
+            GwyGraphModel *target_gmodel;
+            const GwyRGBA *color;
+            GQuark quark;
+            gint nn;
 
+            gmodel = controls->gmodel;
+            n = gwy_graph_model_get_n_curves(gmodel);
+            quark = gwy_app_get_graph_key_for_id(args->target_graph.id);
+            target_gmodel = gwy_container_get_object(args->target_graph.data,
+                                                     quark);
+            g_return_if_fail(target_gmodel);
+
+            nn = gwy_graph_model_get_n_curves(target_gmodel);
+            for (i = 0; i < n; i++) {
+                gcmodel = gwy_graph_model_get_curve(gmodel, i);
+                gcmodel = gwy_graph_curve_model_duplicate(gcmodel);
+                color = gwy_graph_get_preset_color(nn + i);
+                g_object_set(gcmodel, "color", color, NULL);
+                gwy_graph_model_add_curve(target_gmodel, gcmodel);
+                g_object_unref(gcmodel);
+            }
+        }
+        else {
+            gmodel = gwy_graph_model_duplicate(controls->gmodel);
+            g_object_set(gmodel, "label-visible", TRUE, NULL);
+            gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+            g_object_unref(gmodel);
+        }
         return;
     }
 
@@ -485,7 +584,7 @@ prof_execute(ProfControls *controls,
         g_object_get(gcmodel, "description", &s, NULL);
         g_object_set(gmodel, "title", s, NULL);
         g_free(s);
-        gwy_app_data_browser_add_graph_model(gmodel, container, TRUE);
+        gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
         g_object_unref(gmodel);
     }
 }
