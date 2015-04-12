@@ -526,26 +526,12 @@ curvature_do(GwyContainer *data,
         curvature_plot_graph(dfield, i1, i2, gmodel);
         if (args->target_graph.data) {
             GwyGraphModel *target_gmodel;
-            GwyGraphCurveModel *gcmodel;
-            const GwyRGBA *color;
-            GQuark quark;
-            gint nn, n, i;
+            GQuark quark = gwy_app_get_graph_key_for_id(args->target_graph.id);
 
-            n = gwy_graph_model_get_n_curves(gmodel);
-            quark = gwy_app_get_graph_key_for_id(args->target_graph.id);
             target_gmodel = gwy_container_get_object(args->target_graph.data,
                                                      quark);
             g_return_if_fail(target_gmodel);
-
-            nn = gwy_graph_model_get_n_curves(target_gmodel);
-            for (i = 0; i < n; i++) {
-                gcmodel = gwy_graph_model_get_curve(gmodel, i);
-                gcmodel = gwy_graph_curve_model_duplicate(gcmodel);
-                color = gwy_graph_get_preset_color(nn + i);
-                g_object_set(gcmodel, "color", color, NULL);
-                gwy_graph_model_add_curve(target_gmodel, gcmodel);
-                g_object_unref(gcmodel);
-            }
+            gwy_graph_model_append_curves(target_gmodel, gmodel, 1);
         }
         else {
             gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
