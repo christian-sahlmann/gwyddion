@@ -753,22 +753,10 @@ gwy_tool_line_stats_apply(GwyToolLineStats *tool)
     g_return_if_fail(plain_tool->selection);
 
     if (tool->args.target.data) {
-        GwyGraphCurveModel *gcmodel;
-        const GwyRGBA *color;
-        GQuark quark;
-        gint nn;
-
-        quark = gwy_app_get_graph_key_for_id(tool->args.target.id);
+        GQuark quark = gwy_app_get_graph_key_for_id(tool->args.target.id);
         gmodel = gwy_container_get_object(tool->args.target.data, quark);
         g_return_if_fail(gmodel);
-
-        nn = gwy_graph_model_get_n_curves(gmodel);
-        gcmodel = gwy_graph_model_get_curve(tool->gmodel, 0);
-        gcmodel = gwy_graph_curve_model_duplicate(gcmodel);
-        color = gwy_graph_get_preset_color(nn);
-        g_object_set(gcmodel, "color", color, NULL);
-        gwy_graph_model_add_curve(gmodel, gcmodel);
-        g_object_unref(gcmodel);
+        gwy_graph_model_append_curves(gmodel, tool->gmodel, 1);
         return;
     }
 
