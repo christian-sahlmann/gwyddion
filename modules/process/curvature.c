@@ -60,6 +60,7 @@ typedef struct {
     gboolean set_selection;
     gboolean plot_graph;
     GwyMaskingType masking;
+    GwyAppDataId target_graph;
 } CurvatureArgs;
 
 typedef struct {
@@ -70,6 +71,8 @@ typedef struct {
     GSList *masking_group;
     GtkWidget *set_selection;
     GtkWidget *plot_graph;
+    GtkWidget *target_graph;
+    GtkWidget *target_hbox;
     GtkWidget *view;
     GtkWidget *graph;
     GtkWidget *warning;
@@ -99,6 +102,11 @@ static void       curvature_set_selection_changed(GtkToggleButton *button,
                                                   CurvatureControls *controls);
 static void       curvature_plot_graph_changed   (GtkToggleButton *button,
                                                   CurvatureControls *controls);
+static void       update_target_graphs           (CurvatureControls *controls);
+static gboolean   filter_target_graphs           (GwyContainer *data,
+                                                  gint id,
+                                                  gpointer user_data);
+static void       target_graph_changed           (CurvatureControls *controls);
 static void       curvature_dialog_update        (CurvatureControls *controls,
                                                   CurvatureArgs *args);
 static void       curvature_masking_changed      (GtkToggleButton *button,
@@ -117,6 +125,7 @@ static const CurvatureArgs curvature_defaults = {
     TRUE,
     FALSE,
     GWY_MASK_IGNORE,
+    { NULL, -1 },
 };
 
 static const gchar *param_names[] = {
@@ -154,7 +163,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Calculates overall curvature."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -515,7 +524,32 @@ curvature_do(GwyContainer *data,
 
         gmodel = gwy_graph_model_new();
         curvature_plot_graph(dfield, i1, i2, gmodel);
-        gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+        if (args->target_graph.data) {
+            GwyGraphModel *target_gmodel;
+            GwyGraphCurveModel *gcmodel;
+            const GwyRGBA *color;
+            GQuark quark;
+            gint nn, n, i;
+
+            n = gwy_graph_model_get_n_curves(gmodel);
+            quark = gwy_app_get_graph_key_for_id(args->target_graph.id);
+            target_gmodel = gwy_container_get_object(args->target_graph.data,
+                                                     quark);
+            g_return_if_fail(target_gmodel);
+
+            nn = gwy_graph_model_get_n_curves(target_gmodel);
+            for (i = 0; i < n; i++) {
+                gcmodel = gwy_graph_model_get_curve(gmodel, i);
+                gcmodel = gwy_graph_curve_model_duplicate(gcmodel);
+                color = gwy_graph_get_preset_color(nn + i);
+                g_object_set(gcmodel, "color", color, NULL);
+                gwy_graph_model_add_curve(target_gmodel, gcmodel);
+                g_object_unref(gcmodel);
+            }
+        }
+        else {
+            gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+        }
         g_object_unref(gmodel);
     }
 }
@@ -587,7 +621,8 @@ curvature_dialog(CurvatureArgs *args,
                  gint id)
 {
     enum { RESPONSE_RESET = 1 };
-    GtkWidget *dialog, *table, *label, *hbox, *vbox, *treeview, *button;
+    GtkWidget *dialog, *table, *label, *hbox, *vbox, *treeview, *button, *hbox2;
+    GwyDataChooser *chooser;
     GtkTreeSelection *selection;
     GtkTreeViewColumn *column;
     GtkCellRenderer *renderer;
@@ -600,6 +635,7 @@ curvature_dialog(CurvatureArgs *args,
     controls.args = args;
     controls.unit = gwy_data_field_get_si_unit_xy(dfield);
     gwy_clear(controls.params, PARAM_NPARAMS);
+    controls.gmodel = gwy_graph_model_new();
 
     dialog = gtk_dialog_new_with_buttons(_("Curvature"),
                                          NULL, 0,
@@ -681,10 +717,31 @@ curvature_dialog(CurvatureArgs *args,
                                  args->plot_graph);
     g_signal_connect(controls.plot_graph, "toggled",
                      G_CALLBACK(curvature_plot_graph_changed), &controls);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    controls.target_hbox = hbox2 = gtk_hbox_new(FALSE, 6);
+    gtk_widget_set_sensitive(controls.target_hbox, args->plot_graph);
+    gtk_table_attach(GTK_TABLE(table), hbox2,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    label = gtk_label_new_with_mnemonic(_("Target _graph:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
+
+    controls.target_graph = gwy_data_chooser_new_graphs();
+    chooser = GWY_DATA_CHOOSER(controls.target_graph);
+    gwy_data_chooser_set_none(chooser, _("New graph"));
+    gwy_data_chooser_set_active(chooser, NULL, -1);
+    gwy_data_chooser_set_filter(chooser, filter_target_graphs, &controls, NULL);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.target_graph);
+    gtk_box_pack_end(GTK_BOX(hbox2), controls.target_graph, FALSE, FALSE, 0);
+    g_signal_connect_swapped(controls.target_graph, "changed",
+                             G_CALLBACK(target_graph_changed), &controls);
     row++;
 
     if (mfield) {
+        gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
         label = gwy_label_new_header(_("Masking Mode"));
         gtk_table_attach(GTK_TABLE(table), label,
                         0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -709,7 +766,6 @@ curvature_dialog(CurvatureArgs *args,
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 0);
 
-    controls.gmodel = gwy_graph_model_new();
     controls.graph = gwy_graph_new(controls.gmodel);
     gtk_widget_set_size_request(controls.graph, 320, 260);
     g_object_unref(controls.gmodel);
@@ -817,7 +873,7 @@ curvature_add_aux_button(GtkWidget *hbox,
 }
 static void
 curvature_dialog_update(CurvatureControls *controls,
-                         CurvatureArgs *args)
+                        CurvatureArgs *args)
 {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->set_selection),
                                  args->set_selection);
@@ -843,6 +899,7 @@ curvature_plot_graph_changed(GtkToggleButton *button,
     CurvatureArgs *args = controls->args;
 
     args->plot_graph = gtk_toggle_button_get_active(button);
+    gtk_widget_set_sensitive(controls->target_hbox, args->plot_graph);
 }
 
 static void
@@ -857,6 +914,34 @@ curvature_masking_changed(GtkToggleButton *button,
     args = controls->args;
     args->masking = gwy_radio_buttons_get_current(controls->masking_group);
     curvature_update_preview(controls, args);
+}
+
+static void
+update_target_graphs(CurvatureControls *controls)
+{
+    GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
+    gwy_data_chooser_refilter(chooser);
+}
+
+static gboolean
+filter_target_graphs(GwyContainer *data, gint id, gpointer user_data)
+{
+    CurvatureControls *controls = (CurvatureControls*)user_data;
+    GwyGraphModel *gmodel, *targetgmodel;
+    GQuark quark = gwy_app_get_graph_key_for_id(id);
+
+    return ((gmodel = controls->gmodel)
+            && gwy_container_gis_object(data, quark, (GObject**)&targetgmodel)
+            && gwy_graph_model_units_are_compatible(gmodel, targetgmodel));
+}
+
+static void
+target_graph_changed(CurvatureControls *controls)
+{
+    GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
+    GwyAppDataId *target = &controls->args->target_graph;
+
+    target->data = gwy_data_chooser_get_active(chooser, &target->id);
 }
 
 static void
@@ -889,6 +974,8 @@ curvature_update_preview(CurvatureControls *controls,
         gtk_label_set_text(GTK_LABEL(controls->warning),
                            _("Axes are outside the image."));
     }
+
+    update_target_graphs(controls);
 }
 
 static gchar*
