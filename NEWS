@@ -8,6 +8,8 @@ Libraries:
   ‘none’ (preferably) or at least something.
 - libgwydgets: A function for checking the compatibility of units of two
   graph models was added.
+- libgwydgets: A function for copying curves appending curves from another
+  graph model to a graph model was added.
 
 Modules:
 - Align graph (new): Aligns horizontally graph curves.
@@ -16,8 +18,8 @@ Modules:
   coordinates.
 - Profiles, Statistical functions, Row/column statistics, Roughness and Spectro
   tools: It is possible to select a target graph for the curves.
-- Slope distribution, Grain correlations, Curvature: It is possible to select a
-  target graph for the curves.
+- Slope distribution, Grain correlations, Curvature, Fractal dimension, FFT
+  profile: It is possible to select a target graph for the curves.
 - Pygwy: Python modules have sys.path set up the same way as the console now,
   which namely includes the path to gwyutils.py.
 - 2D FFT: It is possible to provide the imaginary part and perform inverse
