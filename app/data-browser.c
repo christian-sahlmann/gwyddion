@@ -8246,7 +8246,7 @@ gwy_app_data_browser_remove_watch(GList **watchers,
  * Returns: The id of the added watch func that can be used to remove it later
  *          using gwy_app_data_browser_remove_channel_watch().
  *
- * Since 2.21
+ * Since: 2.21
  **/
 gulong
 gwy_app_data_browser_add_channel_watch(GwyAppDataWatchFunc function,
@@ -8285,7 +8285,7 @@ gwy_app_data_browser_remove_channel_watch(gulong id)
  * Returns: The id of the added watch func that can be used to remove it later
  *          using gwy_app_data_browser_remove_graph_watch().
  *
- * Since 2.41
+ * Since: 2.41
  **/
 gulong
 gwy_app_data_browser_add_graph_watch(GwyAppDataWatchFunc function,
