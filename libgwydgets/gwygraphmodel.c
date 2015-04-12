@@ -1014,6 +1014,52 @@ gwy_graph_model_remove_all_curves(GwyGraphModel *gmodel)
 }
 
 /**
+ * gwy_graph_model_append_curves:
+ * @gmodel: A graph model.
+ * @source: Graph model containing the curves to append.
+ * @colorstep: Block size for curve color updating.
+ *
+ * Appends all curves from another graph model to a graph model.
+ *
+ * The colors of the curves can be updated, presumably to continue a preset
+ * color sequence.  This is controlled by argument @colorstep.  When @colorstep
+ * is zero no curve color modification is done.  When it is positive, a block
+ * of curves of size @colorstep is always given the same color, the first color
+ * being the first preset color corresponding to the number of curves already
+ * in @gmodel.  So pass @colorstep=1 for individual curves, @colorstep=2 for
+ * couples of curves (e.g. data and fit) that should have the same color, etc.
+ *
+ * Since: 2.41
+ **/
+void
+gwy_graph_model_append_curves(GwyGraphModel *gmodel,
+                              GwyGraphModel *source,
+                              gint colorstep)
+{
+    guint n, ns, i;
+
+    g_return_if_fail(GWY_IS_GRAPH_MODEL(gmodel));
+    g_return_if_fail(GWY_IS_GRAPH_MODEL(source));
+
+    n = gmodel->curves->len;
+    ns = source->curves->len;
+    if (!ns)
+        return;
+
+    for (i = 0; i < ns; i++) {
+        GwyGraphCurveModel *gcmodel = g_ptr_array_index(source->curves, i);
+        gcmodel = gwy_graph_curve_model_duplicate(gcmodel);
+        if (colorstep > 0) {
+            gint c = (n + colorstep-1)/colorstep + i/colorstep;
+            const GwyRGBA *color = gwy_graph_get_preset_color(c);
+            g_object_set(gcmodel, "color", color, NULL);
+        }
+        gwy_graph_model_add_curve(gmodel, gcmodel);
+        g_object_unref(gcmodel);
+    }
+}
+
+/**
  * gwy_graph_model_remove_curve_by_description:
  * @gmodel: A graph model.
  * @description: Curve description (label).

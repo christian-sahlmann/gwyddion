@@ -125,6 +125,9 @@ GwyGraphCurveModel* gwy_graph_model_get_curve           (GwyGraphModel *gmodel,
 gint           gwy_graph_model_get_curve_index          (GwyGraphModel *gmodel,
                                                          GwyGraphCurveModel *curve);
 void           gwy_graph_model_remove_all_curves        (GwyGraphModel *gmodel);
+void           gwy_graph_model_append_curves            (GwyGraphModel *gmodel,
+                                                         GwyGraphModel *source,
+                                                         gint colorstep);
 void           gwy_graph_model_set_units_from_data_line (GwyGraphModel *gmodel,
                                                          GwyDataLine *data_line);
 gboolean       gwy_graph_model_units_are_compatible     (GwyGraphModel *gmodel,
