@@ -127,6 +127,20 @@ static const GwyEnum methods[] = {
     { N_("Power spectrum"), GWY_FRACTAL_PSDF          },
 };
 
+static const GwyEnum abscissa_labels[] = {
+    { "log h", GWY_FRACTAL_PARTITIONING,  },
+    { "log h", GWY_FRACTAL_CUBECOUNTING,  },
+    { "log h", GWY_FRACTAL_TRIANGULATION, },
+    { "log k", GWY_FRACTAL_PSDF,          },
+};
+
+static const GwyEnum ordinate_labels[] = {
+    { "log S", GWY_FRACTAL_PARTITIONING,  },
+    { "log N", GWY_FRACTAL_CUBECOUNTING,  },
+    { "log A", GWY_FRACTAL_TRIANGULATION, },
+    { "log W", GWY_FRACTAL_PSDF,          },
+};
+
 static const FractalMethodFunc method_funcs[] = {
     gwy_data_field_fractal_partitioning,
     gwy_data_field_fractal_cubecounting,
@@ -147,7 +161,7 @@ static GwyModuleInfo module_info = {
     N_("Calculates fractal dimension using several methods "
        "(partitioning, box counting, triangulation, power spectrum)."),
     "Jindřich Bilek & Petr Klapetek <klapetek@gwyddion.net>",
-    "1.7",
+    "1.8",
     "David Nečas (Yeti) & Petr Klapetek & Jindřich Bílek",
     "2004",
 };
@@ -427,6 +441,7 @@ update_graph(FractalArgs *args,
 {
     GwyDataLine *xline, *yline, *xfit, *yfit, *xnline, *ynline;
     GwyGraphCurveModel *gcmodel;
+    const gchar *xlabel, *ylabel, *title;
     gint i, res;
     gboolean is_line;
     gdouble a, b;
@@ -446,16 +461,23 @@ update_graph(FractalArgs *args,
     gwy_graph_model_remove_all_curves(controls->graph_model);
 
     gcmodel = gwy_graph_curve_model_new();
+    xlabel = gwy_enum_to_string(args->out,
+                                abscissa_labels, G_N_ELEMENTS(abscissa_labels));
+    ylabel = gwy_enum_to_string(args->out,
+                                ordinate_labels, G_N_ELEMENTS(ordinate_labels));
+    title = gwy_enum_to_string(args->out, methods, G_N_ELEMENTS(methods));
     g_object_set(gcmodel,
                  "mode", GWY_GRAPH_CURVE_POINTS,
-                 "description", gettext(methods[args->out].name),
+                 "description", gettext(title),
                  NULL);
     gwy_graph_curve_model_set_data(gcmodel,
                                    gwy_data_line_get_data_const(xline),
                                    gwy_data_line_get_data_const(yline),
                                    gwy_data_line_get_res(xline));
     g_object_set(controls->graph_model,
-                 "title", gettext(methods[args->out].name),
+                 "title", gettext(title),
+                 "axis-label-bottom", xlabel,
+                 "axis-label-left", ylabel,
                  NULL);
     gwy_graph_model_add_curve(controls->graph_model, gcmodel);
     g_object_unref(gcmodel);
