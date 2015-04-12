@@ -19,6 +19,9 @@
  *  Boston, MA 02110-1301, USA.
  */
 
+/* FIXME: Is there any sane way to add support for target graphs here when we
+ * can create multiple graphs of incompatible quantities? */
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -102,36 +105,35 @@ typedef struct {
     gboolean add_comment;
 } GrainDistExportData;
 
-static gboolean       module_register           (void);
-static void           grain_dist                (GwyContainer *data,
-                                                 GwyRunType run);
-static void           grain_dist_dialog         (GrainDistArgs *args,
-                                                 GwyContainer *data,
-                                                 GwyDataField *dfield);
-static void           mode_changed              (GtkToggleButton *button,
-                                                 GrainDistControls *controls);
-static void           selected_changed          (GrainDistControls *controls);
-static void           resolution_changed        (GrainDistControls *controls,
-                                                 GtkAdjustment *adj);
-static void           fixres_changed            (GrainDistControls *controls,
-                                                 GtkToggleButton *check);
-static void           add_comment_changed       (GrainDistControls *controls,
-                                                 GtkToggleButton *check);
-static void           update_sensitivity        (GrainDistControls *controls,
-                                                 GrainDistArgs *args);
-static void           preview_dist              (GrainDistControls *controls);
-static GwyGraphModel* add_one_distribution      (GwyDataField *dfield,
-                                                 GrainDistExportData *expdata,
-                                                 guint i);
-static void           grain_dist_run            (GrainDistArgs *args,
-                                                 GwyContainer *data,
-                                                 GwyDataField *dfield);
-static gchar*         grain_dist_export_create  (gpointer user_data,
-                                                 gssize *data_len);
-static void           grain_dist_load_args      (GwyContainer *container,
-                                                 GrainDistArgs *args);
-static void           grain_dist_save_args      (GwyContainer *container,
-                                                 GrainDistArgs *args);
+static gboolean       module_register         (void);
+static void           grain_dist              (GwyContainer *data,
+                                               GwyRunType run);
+static gboolean       grain_dist_dialog       (GrainDistArgs *args,
+                                               GwyDataField *dfield);
+static void           mode_changed            (GtkToggleButton *button,
+                                               GrainDistControls *controls);
+static void           selected_changed        (GrainDistControls *controls);
+static void           resolution_changed      (GrainDistControls *controls,
+                                               GtkAdjustment *adj);
+static void           fixres_changed          (GrainDistControls *controls,
+                                               GtkToggleButton *check);
+static void           add_comment_changed     (GrainDistControls *controls,
+                                               GtkToggleButton *check);
+static void           update_sensitivity      (GrainDistControls *controls,
+                                               GrainDistArgs *args);
+static void           preview_dist            (GrainDistControls *controls);
+static GwyGraphModel* add_one_distribution    (GwyDataField *dfield,
+                                               GrainDistExportData *expdata,
+                                               guint i);
+static void           grain_dist_run          (GrainDistArgs *args,
+                                               GwyContainer *data,
+                                               GwyDataField *dfield);
+static gchar*         grain_dist_export_create(gpointer user_data,
+                                               gssize *data_len);
+static void           grain_dist_load_args    (GwyContainer *container,
+                                               GrainDistArgs *args);
+static void           grain_dist_save_args    (GwyContainer *container,
+                                               GrainDistArgs *args);
 
 static const GrainDistArgs grain_dist_defaults = {
     MODE_GRAPH,
@@ -205,16 +207,16 @@ grain_dist(GwyContainer *data, GwyRunType run)
     if (run == GWY_RUN_IMMEDIATE)
         grain_dist_run(&args, data, dfield);
     else {
-        grain_dist_dialog(&args, data, dfield);
+        if (grain_dist_dialog(&args, dfield))
+            grain_dist_run(&args, data, dfield);
         grain_dist_save_args(gwy_app_settings_get(), &args);
     }
 
     g_free(args.grains);
 }
 
-static void
+static gboolean
 grain_dist_dialog(GrainDistArgs *args,
-                  GwyContainer *data,
                   GwyDataField *dfield)
 {
     static const GwyEnum modes[] = {
@@ -352,7 +354,7 @@ grain_dist_dialog(GrainDistArgs *args,
             case GTK_RESPONSE_DELETE_EVENT:
             gtk_widget_destroy(GTK_WIDGET(dialog));
             case GTK_RESPONSE_NONE:
-            return;
+            return FALSE;
             break;
 
             case RESPONSE_CLEAR:
@@ -375,7 +377,7 @@ grain_dist_dialog(GrainDistArgs *args,
 
     gtk_widget_destroy(GTK_WIDGET(dialog));
 
-    grain_dist_run(args, data, dfield);
+    return TRUE;
 }
 
 static void
