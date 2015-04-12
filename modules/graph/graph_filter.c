@@ -38,7 +38,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Remove graph noise by filtering."),
     "Daniil Bratashov <dn2010@gmail.com>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov (dn2010)",
     "2012",
 };
@@ -61,10 +61,17 @@ module_register(void)
 static void
 filter(GwyGraph *graph)
 {
+    GwyContainer *data;
     GwyGraphCurveModel *cmodel;
     const gdouble *xdata, *ydata;
     GArray *newydata;
     gint i, ncurves, ndata;
+    GQuark quark;
+
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data,
+                                     GWY_APP_GRAPH_MODEL_KEY, &quark,
+                                     0);
+    gwy_app_undo_qcheckpointv(data, 1, &quark);
 
     ncurves = gwy_graph_model_get_n_curves(gwy_graph_get_model(graph));
     newydata = g_array_new(FALSE, FALSE, sizeof(gdouble));
@@ -97,8 +104,8 @@ filter_do(const gdouble *yold, gdouble *y, gdouble n)
 
     for (i = num; i < n-num; i++) {
         for (j = 1; j < num; j++)
-            y[i] += yold[i+j]+yold[i-j];
-        y[i] /= 2 * num - 1;
+            y[i] += yold[i+j] + yold[i-j];
+        y[i] /= 2*num - 1;
     }
 }
 
