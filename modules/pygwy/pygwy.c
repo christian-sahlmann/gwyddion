@@ -360,7 +360,7 @@ pygwy_create_environment(const gchar *filename, gboolean show_errors)
     return d;
 }
 
-void
+static void
 destroy_environment(PyObject *d, gboolean show_errors) {
     /* show content of temporary file which contains stderr and stdout of python */
     /* script and close it */
