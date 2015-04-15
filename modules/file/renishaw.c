@@ -1174,10 +1174,10 @@ wdf_read_pset(const guchar *buffer,
         pset->flag = *(buffer++);
         pset->key = gwy_get_guint16_le(&buffer);
         remaining -= 4;
-        gwy_debug("type = %d, flag = %d, key = %d",
-				  pset->type,
-				  pset->flag,
-				  pset->key);
+        gwy_debug("type = %c, flag = %d, key = %d",
+                  pset->type,
+                  pset->flag,
+                  pset->key);
         switch (pset->type) {
             case WDF_PTYPE_CHAR:
                 gwy_debug("c = %d", *(buffer++));
@@ -1224,9 +1224,12 @@ wdf_read_pset(const guchar *buffer,
             case WDF_PTYPE_BINARY:
                 pset->size = gwy_get_guint32_le(&buffer);
                 remaining -= 4 + pset->size;
+                /*
                 for (i = 0; i < pset->size; i++) {
                     str[i] = *(buffer++);
                 }
+                */
+                buffer += pset->size;
                 gwy_debug("b size=%d", pset->size);
             break;
             case WDF_PTYPE_NESTED:
