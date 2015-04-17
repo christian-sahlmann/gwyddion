@@ -140,6 +140,7 @@ struct _ImgExportEnv {
     GwyGradient *gradient;
     GwyGradient *grey;
     gchar *title;
+    gchar *decimal_symbol;
     GwyLayerBasicRangeType fm_rangetype;
     gdouble fm_min;
     gdouble fm_max;
@@ -185,6 +186,7 @@ typedef struct {
     GtkObject *border_width;
     GtkObject *tick_length;
     GtkWidget *scale_font;
+    GtkWidget *decomma;
 
     /* Lateral Scale */
     GtkWidget *table_lateral;
@@ -754,12 +756,37 @@ format_layout(PangoLayout *layout,
 {
     gchar *buffer;
     gint length;
-    va_list args;
+    va_list ap;
 
     g_string_truncate(string, 0);
-    va_start(args, format);
-    length = g_vasprintf(&buffer, format, args);
-    va_end(args);
+    va_start(ap, format);
+    length = g_vasprintf(&buffer, format, ap);
+    va_end(ap);
+    g_string_append_len(string, buffer, length);
+    g_free(buffer);
+
+    pango_layout_set_markup(layout, string->str, string->len);
+    pango_layout_get_extents(layout, NULL, logical);
+}
+
+static void
+format_layout_numeric(const ImgExportArgs *args,
+                      PangoLayout *layout,
+                      PangoRectangle *logical,
+                      GString *string,
+                      const gchar *format,
+                      ...)
+{
+    gchar *buffer;
+    gint length;
+    va_list ap;
+
+    /* TODO: Actually implement the decimal separator replacement */
+
+    g_string_truncate(string, 0);
+    va_start(ap, format);
+    length = g_vasprintf(&buffer, format, ap);
+    va_end(ap);
     g_string_append_len(string, buffer, length);
     g_free(buffer);
 
@@ -878,10 +905,11 @@ find_hruler_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     gwy_debug("unit '%s'", vf->units);
     offset /= vf->magnitude;
     real /= vf->magnitude;
-    format_layout(layout, &logical1, s, "%.*f", vf->precision, -real);
+    format_layout_numeric(args, layout, &logical1, s,
+                          "%.*f", vf->precision, -real);
     gwy_debug("right '%s'", s->str);
-    format_layout(layout, &logical2, s, "%.*f %s",
-                  vf->precision, offset, vf->units);
+    format_layout_numeric(args, layout, &logical2, s,
+                          "%.*f %s", vf->precision, offset, vf->units);
     gwy_debug("first '%s'", s->str);
 
     height = MAX(logical1.height/pangoscale, logical2.height/pangoscale);
@@ -937,9 +965,11 @@ find_vruler_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     vf = sizes->vf_vruler = gwy_si_unit_value_format_copy(sizes->vf_hruler);
     offset /= vf->magnitude;
     real /= vf->magnitude;
-    format_layout(layout, &logical1, s, "%.*f", vf->precision, offset);
+    format_layout_numeric(args, layout, &logical1, s,
+                          "%.*f", vf->precision, offset);
     gwy_debug("top '%s'", s->str);
-    format_layout(layout, &logical2, s, "%.*f", vf->precision, offset + real);
+    format_layout_numeric(args, layout, &logical2, s,
+                          "%.*f", vf->precision, offset + real);
     gwy_debug("last '%s'", s->str);
 
     height = MAX(logical1.height/pangoscale, logical2.height/pangoscale);
@@ -971,9 +1001,11 @@ find_vruler_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     gwy_debug("from %g, to %g", ticks->from, ticks->to);
 
     /* Update widths for the new ticks. */
-    format_layout(layout, &logical1, s, "%.*f", vf->precision, ticks->from);
+    format_layout_numeric(args, layout, &logical1, s,
+                          "%.*f", vf->precision, ticks->from);
     gwy_debug("top2 '%s'", s->str);
-    format_layout(layout, &logical2, s, "%.*f", vf->precision, ticks->to);
+    format_layout_numeric(args, layout, &logical2, s,
+                          "%.*f", vf->precision, ticks->to);
     gwy_debug("last2 '%s'", s->str);
 
     width = MAX(logical1.width/pangoscale, logical2.width/pangoscale);
@@ -995,11 +1027,12 @@ measure_fmscale_label(GwySIValueFormat *vf,
     sizes->fmruler_units_width = 0.0;
 
     /* Maximum, where we attach the units. */
-    format_layout(layout, &logical1, s, "%.*f", vf->precision, max);
+    format_layout_numeric(args, layout, &logical1, s,
+                          "%.*f", vf->precision, max);
     if (!args->units_in_title) {
         sizes->fmruler_units_width -= logical1.width/pangoscale;
-        format_layout(layout, &logical1, s, "%.*f %s",
-                      vf->precision, max, vf->units);
+        format_layout_numeric(args, layout, &logical1, s, "%.*f %s",
+                              vf->precision, max, vf->units);
         sizes->fmruler_units_width += logical1.width/pangoscale;
     }
     gwy_debug("max '%s' (%g x %g)",
@@ -1007,11 +1040,12 @@ measure_fmscale_label(GwySIValueFormat *vf,
 
     /* Minimum, where we do not attach the units but must include them in size
      * calculation due to alignment of the numbers. */
-    format_layout(layout, &logical2, s, "%.*f", vf->precision, min);
+    format_layout_numeric(args, layout, &logical2, s,
+                          "%.*f", vf->precision, min);
     if (!args->units_in_title) {
         sizes->fmruler_units_width -= logical2.width/pangoscale;
-        format_layout(layout, &logical2, s, "%.*f %s",
-                      vf->precision, min, vf->units);
+        format_layout_numeric(args, layout, &logical2, s,
+                              "%.*f %s", vf->precision, min, vf->units);
         sizes->fmruler_units_width += logical2.width/pangoscale;
     }
     gwy_debug("min '%s' (%g x %g)",
@@ -1719,12 +1753,13 @@ draw_hruler(const ImgExportArgs *args,
         x = fixzero(x);
         ximg = (x - xoffset)*scale + 0.5*lw;
         if (!units_placed && (x >= 0.0 || ticks->to <= -1e-14)) {
-            format_layout(layout, &logical, s, "%.*f %s",
-                          vf->precision, x, vf->units);
+            format_layout_numeric(args, layout, &logical, s,
+                                  "%.*f %s", vf->precision, x, vf->units);
             units_placed = TRUE;
         }
         else
-            format_layout(layout, &logical, s, "%.*f", vf->precision, x);
+            format_layout_numeric(args, layout, &logical, s,
+                                  "%.*f", vf->precision, x);
 
         if (ximg + logical.width/pangoscale <= rect->w) {
             cairo_move_to(cr, ximg, rect->h - tl - lw);
@@ -1779,7 +1814,8 @@ draw_vruler(const ImgExportArgs *args,
 
         y = fixzero(y);
         yimg = (y - yoffset)*scale + 0.5*lw;
-        format_layout(layout, &logical, s, "%.*f", vf->precision, y);
+        format_layout_numeric(args, layout, &logical, s,
+                              "%.*f", vf->precision, y);
         if (yimg + logical.height/pangoscale <= rect->h) {
             cairo_move_to(cr, rect->w - tl - lw, yimg);
             cairo_rel_move_to(cr, -logical.width/pangoscale, 0.0);
@@ -2055,15 +2091,17 @@ draw_fmruler(const ImgExportArgs *args,
     cairo_translate(cr, rect->x, rect->y);
     set_cairo_source_rgba(cr, &black);
     if (args->units_in_title)
-        format_layout(layout, &logical, s, "%.*f", vf->precision, max);
+        format_layout_numeric(args, layout, &logical, s,
+                              "%.*f", vf->precision, max);
     else
-        format_layout(layout, &logical, s, "%.*f %s",
-                      vf->precision, max, vf->units);
+        format_layout_numeric(args, layout, &logical, s,
+                              "%.*f %s", vf->precision, max, vf->units);
     w = logical.width/pangoscale;
     gwy_debug("max '%s' (%g x %g)", s->str, w, logical.height/pangoscale);
     cairo_move_to(cr, rect->w - w, lw);
     pango_cairo_show_layout(cr, layout);
-    format_layout(layout, &logical, s, "%.*f", vf->precision, min);
+    format_layout_numeric(args, layout, &logical, s,
+                          "%.*f", vf->precision, min);
     w = logical.width/pangoscale;
     gwy_debug("min '%s' (%g x %g)",
               s->str, logical.width/pangoscale, logical.height/pangoscale);
@@ -2140,7 +2178,8 @@ draw_fmruler(const ImgExportArgs *args,
             || yimg + 2.0*sizes->fmruler_label_height + 4.0*lw >= rect->h)
             continue;
 
-        format_layout(layout, &logical, s, "%.*f", vf->precision, z);
+        format_layout_numeric(args, layout, &logical, s,
+                              "%.*f", vf->precision, z);
         w = logical.width/pangoscale;
         cairo_move_to(cr, rect->w - uw - w, yimg);
         pango_cairo_show_layout(cr, layout);
@@ -2655,6 +2694,16 @@ scale_font_changed(ImgExportControls *controls,
 }
 
 static void
+decimal_comma_changed(ImgExportControls *controls,
+                      GtkToggleButton *check)
+{
+    ImgExportArgs *args = controls->args;
+
+    args->decomma = gtk_toggle_button_get_active(check);
+    update_preview(controls);
+}
+
+static void
 create_basic_controls(ImgExportControls *controls)
 {
     ImgExportArgs *args = controls->args;
@@ -2665,7 +2714,7 @@ create_basic_controls(ImgExportControls *controls)
     GCallback width_cb, height_cb;
     gint row = 0, digits;
 
-    table = controls->table_basic = gtk_table_new(12 + 1*is_vector, 3, FALSE);
+    table = controls->table_basic = gtk_table_new(13 + 1*is_vector, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -2822,6 +2871,18 @@ create_basic_controls(ImgExportControls *controls)
     g_signal_connect_swapped(controls->scale_font, "toggled",
                              G_CALLBACK(scale_font_changed), controls);
     row++;
+
+    controls->decomma
+        = gtk_check_button_new_with_mnemonic(_("_Decimal separator "
+                                               "is comma"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->decomma),
+                                 args->decomma);
+    gtk_table_attach(GTK_TABLE(table), controls->decomma,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls->decomma, "toggled",
+                             G_CALLBACK(decimal_comma_changed), controls);
+    row++;
+
 }
 
 static void
@@ -4484,11 +4545,15 @@ img_export_load_env(ImgExportEnv *env,
     GObject *sel;
     GwyInventory *gradients;
     const guchar *gradname = NULL, *key;
+    struct lconv *locale_data;
     guint xres, yres;
     GString *s;
 
     s = g_string_new(NULL);
     gwy_clear(env, 1);
+
+    locale_data = localeconv();
+    env->decimal_symbol = g_strdup(locale_data->decimal_point);
 
     env->format = format;
     env->data = data;
@@ -4879,6 +4944,7 @@ write_image_png16(ImgExportArgs *args,
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_SPECIFIC,
                     _("libpng error occured"));
+        ok = FALSE;   /* might be clobbered by longjmp otherwise, says gcc. */
         goto end;
     }
 
@@ -5880,6 +5946,7 @@ options_sel_point(ImgExportControls *controls)
 /* Use the pixmap prefix for compatibility */
 static const gchar active_page_key[]         = "/module/pixmap/active_page";
 static const gchar border_width_key[]        = "/module/pixmap/border_width";
+static const gchar decomma_key[]             = "/module/pixmap/decomma";
 static const gchar draw_frame_key[]          = "/module/pixmap/draw_frame";
 static const gchar draw_mask_key[]           = "/module/pixmap/draw_mask";
 static const gchar draw_maskkey_key[]        = "/module/pixmap/draw_maskkey";
@@ -5924,6 +5991,7 @@ img_export_free_env(ImgExportEnv *env)
         gwy_resource_release(GWY_RESOURCE(env->grey));
     gwy_resource_release(GWY_RESOURCE(env->gradient));
     g_free(env->title);
+    g_free(env->decimal_symbol);
     g_array_free(env->selections, TRUE);
 }
 
@@ -5977,6 +6045,8 @@ img_export_load_args(GwyContainer *container,
                                      (const guchar**)&args->font);
     gwy_container_gis_boolean_by_name(container, scale_font_key,
                                       &args->scale_font);
+    gwy_container_gis_boolean_by_name(container, decomma_key,
+                                      &args->decomma);
     gwy_container_gis_double_by_name(container, fmscale_gap_key,
                                      &args->fmscale_gap);
     gwy_container_gis_double_by_name(container, inset_xgap_key,
@@ -6054,6 +6124,8 @@ img_export_save_args(GwyContainer *container,
                                      g_strdup(args->font));
     gwy_container_set_boolean_by_name(container, scale_font_key,
                                       args->scale_font);
+    gwy_container_set_boolean_by_name(container, decomma_key,
+                                      args->decomma);
     gwy_container_set_double_by_name(container, fmscale_gap_key,
                                      args->fmscale_gap);
     gwy_container_set_double_by_name(container, inset_xgap_key,

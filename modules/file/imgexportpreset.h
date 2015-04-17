@@ -99,6 +99,7 @@ typedef struct {
     gboolean draw_maskkey;
     gchar *font;
     gboolean scale_font;   /* TRUE = font size tied to data pixels */
+    gboolean decomma;
     gboolean inset_draw_ticks;
     gboolean inset_draw_label;
     gdouble fmscale_gap;
@@ -152,7 +153,8 @@ static const ImgExportArgs img_export_defaults = {
     IMGEXPORT_LATERAL_RULERS, IMGEXPORT_VALUE_FMSCALE,
     GWYRGBA_WHITE, GWYRGBA_WHITE, INSET_POS_BOTTOM_RIGHT,
     TRUE, TRUE, FALSE, TRUE,
-    "Helvetica", TRUE, TRUE, TRUE,
+    "Helvetica", TRUE,
+    FALSE, TRUE, TRUE,
     1.0, 1.0, 1.0, 0.0, 1.0, "", N_("Mask"),
     GWY_INTERPOLATION_ROUND,
     IMGEXPORT_TITLE_NONE, FALSE,
@@ -239,6 +241,7 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->draw_selection = !!args->draw_selection;
     args->draw_maskkey = !!args->draw_maskkey;
     args->scale_font = !!args->scale_font;
+    args->decomma = !!args->decomma;
     args->inset_draw_ticks = !!args->inset_draw_ticks;
     args->inset_draw_label = !!args->inset_draw_label;
     args->units_in_title = !!args->units_in_title;
@@ -333,6 +336,7 @@ gwy_img_export_preset_dump(GwyResource *resource,
                            "pxwidth %s\n"
                            "zoom %s\n"
                            "scale_font %d\n"
+                           "decomma %d\n"
                            "xytype %u\n"
                            "ztype %u\n"
                            "inset_pos %u\n"
@@ -341,7 +345,7 @@ gwy_img_export_preset_dump(GwyResource *resource,
                            "draw_selection %d\n"
                            "draw_maskkey %d\n"
                            "font \"%s\"\n",
-                           data->mode, d1, d2, data->scale_font,
+                           data->mode, d1, d2, data->scale_font, data->decomma,
                            data->xytype, data->ztype, data->inset_pos,
                            data->draw_mask, data->draw_frame,
                            data->draw_selection, data->draw_maskkey,
@@ -492,6 +496,8 @@ gwy_img_export_preset_parse(const gchar *text,
             data.draw_maskkey = atoi(value);
         else if (gwy_strequal(key, "scale_font"))
             data.scale_font = atoi(value);
+        else if (gwy_strequal(key, "decomma"))
+            data.decomma = atoi(value);
         else if (gwy_strequal(key, "inset_draw_ticks"))
             data.inset_draw_ticks = atoi(value);
         else if (gwy_strequal(key, "inset_draw_label"))
