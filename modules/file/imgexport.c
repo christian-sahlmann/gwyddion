@@ -777,11 +777,10 @@ format_layout_numeric(const ImgExportArgs *args,
                       const gchar *format,
                       ...)
 {
-    gchar *buffer;
+    const gchar *decimal_symbol = args->env->decimal_symbol;
+    gchar *buffer, *s;
     gint length;
     va_list ap;
-
-    /* TODO: Actually implement the decimal separator replacement */
 
     g_string_truncate(string, 0);
     va_start(ap, format);
@@ -794,6 +793,33 @@ format_layout_numeric(const ImgExportArgs *args,
     if (string->str[0] == '-') {
         g_string_erase(string, 0, 1);
         g_string_prepend_unichar(string, 0x2212);
+    }
+
+    if (args->decomma) {
+        if (gwy_strequal(decimal_symbol, ".")) {
+            if ((s = strchr(string->str, '.'))) {
+                *s = ',';
+            }
+        }
+        else {
+            /* Keep the locale's symbol.  Most likely it's a comma.  If it
+             * isn't just close eyes and pretend it is.  */
+        }
+    }
+    else {
+        if (!gwy_strequal(decimal_symbol, ".")) {
+            length = strlen(decimal_symbol);
+            if (length == 1 && (s = strchr(string->str, decimal_symbol[0]))) {
+                *s = '.';
+            }
+            else if ((s = strstr(string->str, decimal_symbol))) {
+                *s = '.';
+                g_string_erase(string, s+1 - string->str, length-1);
+            }
+        }
+        else {
+            /* Keep the decimal dot. */
+        }
     }
 
     pango_layout_set_markup(layout, string->str, string->len);
@@ -4554,6 +4580,7 @@ img_export_load_env(ImgExportEnv *env,
 
     locale_data = localeconv();
     env->decimal_symbol = g_strdup(locale_data->decimal_point);
+    g_assert(strlen(env->decimal_symbol) != 0);
 
     env->format = format;
     env->data = data;
