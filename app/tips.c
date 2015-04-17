@@ -74,11 +74,13 @@ static const StartupTip tips[] = {
            "Presentation do not change the underlying data.  All subsequent "
            "operations still apply to the underlying data."),
     },
+/*
     {
         NULL,
         N_("Menus can be torn off by clicking the dashed line near the top "
            "for quick access to a subset of functions."),
     },
+*/
     {
         GTK_STOCK_EXECUTE,
         N_("Pressing Ctrl-F runs the last used data processing function with "
