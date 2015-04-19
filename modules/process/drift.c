@@ -64,6 +64,7 @@ typedef struct {
     GwyInterpolationType interp;
     gboolean distribute;
     gboolean replace;
+    GwyAppDataId target_graph;
 } DriftArgs;
 
 typedef struct {
@@ -79,10 +80,13 @@ typedef struct {
     GwyContainer *mydata;
     GwyDataField *result;
     GwyDataLine *drift;
+    GwyGraphModel *gmodel;
     gboolean computed;
     DriftArgs *args;
     GtkWidget *distribute;
     GtkWidget *replace;
+    GtkWidget *target_graph;
+    GtkWidget *target_hbox;
 } DriftControls;
 
 static gboolean      module_register              (void);
@@ -102,19 +106,33 @@ static void          run_noninteractive           (DriftArgs *args,
                                                    GwyDataField *result,
                                                    GwyDataLine *drift,
                                                    gint id);
-static void          mask_color_change_cb         (GtkWidget *color_button,
+static void          mask_color_changed           (GtkWidget *color_button,
                                                    DriftControls *controls);
 static void          load_mask_color              (GtkWidget *color_button,
                                                    GwyContainer *data);
 static GwyDataField* create_mask_field            (GwyDataField *dfield);
 static void          drift_dialog_update_controls (DriftControls *controls,
                                                    DriftArgs *args);
-static void          drift_dialog_update_values   (DriftControls *controls,
-                                                   DriftArgs *args);
-static void          drift_invalidate             (GObject *obj,
-                                                   DriftControls *controls);
+static void          range_changed                (DriftControls *controls,
+                                                   GtkAdjustment *adj);
+static void          do_graph_changed             (DriftControls *controls,
+                                                   GtkToggleButton *toggle);
+static void          do_correct_changed           (DriftControls *controls,
+                                                   GtkToggleButton *toggle);
+static void          exclude_linear_changed       (DriftControls *controls,
+                                                   GtkToggleButton *toggle);
+static void          distribute_changed           (DriftControls *controls,
+                                                   GtkToggleButton *toggle);
+static void          replace_changed              (DriftControls *controls,
+                                                   GtkToggleButton *toggle);
 static void          preview_type_changed         (GtkToggleButton *button,
                                                    DriftControls *controls);
+static void          drift_invalidate             (DriftControls *controls);
+static void          update_target_graphs         (DriftControls *controls);
+static gboolean      filter_target_graphs         (GwyContainer *data,
+                                                   gint id,
+                                                   gpointer user_data);
+static void          target_graph_changed         (DriftControls *controls);
 static void          preview                      (DriftControls *controls,
                                                    DriftArgs *args);
 static void          mask_process                 (GwyDataField *maskfield,
@@ -157,7 +175,8 @@ static const DriftArgs drift_defaults = {
     FALSE,
     GWY_INTERPOLATION_BSPLINE,
     FALSE,
-    FALSE
+    FALSE,
+    { NULL, -1 },
 };
 
 static GwyModuleInfo module_info = {
@@ -165,7 +184,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Evaluates and/or correct thermal drift in fast scan axis."),
     "Petr Klapetek <petr@klapetek.cz>, Yeti <yeti@gwyddion.net>",
-    "3.1",
+    "3.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2007",
 };
@@ -223,7 +242,9 @@ drift_dialog(DriftArgs *args,
         RESPONSE_PREVIEW = 2
     };
 
-    GtkWidget *dialog, *table, *hbox, *label;
+    GtkWidget *dialog, *table, *hbox, *label, *hbox2;
+    GwyDataChooser *chooser;
+    GwySIUnit *unit;
     DriftControls controls;
     gint response;
     GwyPixmapLayer *layer;
@@ -280,6 +301,14 @@ drift_dialog(DriftArgs *args,
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
+    /* Create an empty graph model just for compatibility check. */
+    unit = gwy_data_field_get_si_unit_xy(dfield);
+    controls.gmodel = gwy_graph_model_new();
+    g_object_set(controls.gmodel,
+                 "si-unit-x", unit,
+                 "si-unit-y", unit,
+                 NULL);
+
     table = gtk_table_new(11, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -290,8 +319,8 @@ drift_dialog(DriftArgs *args,
     controls.range = gtk_adjustment_new(args->range, 1.0, 50.0, 1.0, 5.0, 0);
     gwy_table_attach_hscale(table, row, _("_Search range:"), _("rows"),
                             controls.range, GWY_HSCALE_DEFAULT);
-    g_signal_connect(controls.range, "value-changed",
-                     G_CALLBACK(drift_invalidate), &controls);
+    g_signal_connect_swapped(controls.range, "value-changed",
+                             G_CALLBACK(range_changed), &controls);
     row++;
 
     controls.interp
@@ -304,24 +333,14 @@ drift_dialog(DriftArgs *args,
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    controls.do_graph
-        = gtk_check_button_new_with_mnemonic(_("Plot drift _graph"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.do_graph),
-                                 args->do_graph);
-    gtk_table_attach(GTK_TABLE(table), controls.do_graph,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    g_signal_connect(controls.do_graph, "toggled",
-                     G_CALLBACK(drift_invalidate), &controls);
-    row++;
-
     controls.do_correct
         = gtk_check_button_new_with_mnemonic(_("Correct _data"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.do_correct),
                                  args->do_correct);
     gtk_table_attach(GTK_TABLE(table), controls.do_correct,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    g_signal_connect(controls.do_correct, "toggled",
-                     G_CALLBACK(drift_invalidate), &controls);
+    g_signal_connect_swapped(controls.do_correct, "toggled",
+                             G_CALLBACK(do_correct_changed), &controls);
     row++;
 
     controls.exclude_linear
@@ -330,11 +349,41 @@ drift_dialog(DriftArgs *args,
                                  args->exclude_linear);
     gtk_table_attach(GTK_TABLE(table), controls.exclude_linear,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    g_signal_connect(controls.exclude_linear, "toggled",
-                     G_CALLBACK(drift_invalidate), &controls);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    g_signal_connect_swapped(controls.exclude_linear, "toggled",
+                             G_CALLBACK(exclude_linear_changed), &controls);
     row++;
 
+    controls.do_graph
+        = gtk_check_button_new_with_mnemonic(_("Plot drift _graph"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.do_graph),
+                                 args->do_graph);
+    gtk_table_attach(GTK_TABLE(table), controls.do_graph,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls.do_graph, "toggled",
+                             G_CALLBACK(do_graph_changed), &controls);
+    row++;
+
+    controls.target_hbox = hbox2 = gtk_hbox_new(FALSE, 6);
+    gtk_table_attach(GTK_TABLE(table), hbox2,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    label = gtk_label_new_with_mnemonic(_("Target _graph:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
+
+    controls.target_graph = gwy_data_chooser_new_graphs();
+    chooser = GWY_DATA_CHOOSER(controls.target_graph);
+    gwy_data_chooser_set_none(chooser, _("New graph"));
+    gwy_data_chooser_set_active(chooser, NULL, -1);
+    gwy_data_chooser_set_filter(chooser, filter_target_graphs, &controls, NULL);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.target_graph);
+    gtk_widget_set_sensitive(hbox2, args->do_graph);
+    gtk_box_pack_end(GTK_BOX(hbox2), controls.target_graph, FALSE, FALSE, 0);
+    g_signal_connect_swapped(controls.target_graph, "changed",
+                             G_CALLBACK(target_graph_changed), &controls);
+    row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     label = gtk_label_new(_("Preview:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -360,7 +409,7 @@ drift_dialog(DriftArgs *args,
                             GTK_OBJECT(controls.color_button),
                             GWY_HSCALE_WIDGET_NO_EXPAND);
     g_signal_connect(controls.color_button, "clicked",
-                     G_CALLBACK(mask_color_change_cb), &controls);
+                     G_CALLBACK(mask_color_changed), &controls);
     row++;
 
     controls.distribute = gtk_check_button_new_with_label(_("Distribute"));
@@ -368,8 +417,8 @@ drift_dialog(DriftArgs *args,
                                  args->distribute);
     gtk_table_attach(GTK_TABLE(table), controls.distribute, 0, 3,
                      row, row +1, GTK_FILL, 0, 0, 0);
-    g_signal_connect(controls.distribute, "toggled",
-                     G_CALLBACK(drift_invalidate), &controls);
+    g_signal_connect_swapped(controls.distribute, "toggled",
+                             G_CALLBACK(distribute_changed), &controls);
     row++;
 
     controls.replace = gtk_check_button_new_with_label(_("Replace"));
@@ -377,8 +426,8 @@ drift_dialog(DriftArgs *args,
                                  args->replace);
     gtk_table_attach(GTK_TABLE(table), controls.replace, 0, 3,
                      row, row +1, GTK_FILL, 0, 0, 0);
-    g_signal_connect(controls.replace, "toggled",
-                     G_CALLBACK(drift_invalidate), &controls);
+    g_signal_connect_swapped(controls.replace, "toggled",
+                             G_CALLBACK(replace_changed), &controls);
     row++;
 
     controls.computed = FALSE;
@@ -391,8 +440,8 @@ drift_dialog(DriftArgs *args,
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-            drift_dialog_update_values(&controls, args);
             gtk_widget_destroy(dialog);
+            gwy_object_unref(controls.gmodel);
             gwy_object_unref(controls.result);
             gwy_object_unref(controls.drift);
             case GTK_RESPONSE_NONE:
@@ -409,7 +458,6 @@ drift_dialog(DriftArgs *args,
             break;
 
             case RESPONSE_PREVIEW:
-            drift_dialog_update_values(&controls, args);
             preview(&controls, args);
             break;
 
@@ -419,8 +467,8 @@ drift_dialog(DriftArgs *args,
         }
     } while (response != GTK_RESPONSE_OK);
 
-    drift_dialog_update_values(&controls, args);
     gtk_widget_destroy(dialog);
+    gwy_object_unref(controls.gmodel);
 
     drift_save_args(gwy_app_settings_get(), args);
 
@@ -609,7 +657,19 @@ run_noninteractive(DriftArgs *args,
         gwy_graph_model_add_curve(gmodel, gcmodel);
         gwy_object_unref(gcmodel);
 
-        gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+        if (args->target_graph.data) {
+            GwyGraphModel *target_gmodel;
+            GQuark quark = gwy_app_get_graph_key_for_id(args->target_graph.id);
+
+            target_gmodel = gwy_container_get_object(args->target_graph.data,
+                                                     quark);
+            g_return_if_fail(target_gmodel);
+            gwy_graph_model_append_curves(target_gmodel, gmodel, 1);
+        }
+        else {
+            gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+        }
+
         gwy_object_unref(gmodel);
     }
     g_object_unref(drift);
@@ -636,27 +696,54 @@ drift_dialog_update_controls(DriftControls *controls,
 }
 
 static void
-drift_dialog_update_values(DriftControls *controls,
-                          DriftArgs *args)
+range_changed(DriftControls *controls,
+              GtkAdjustment *adj)
 {
-    args->range = gwy_adjustment_get_int(controls->range);
-    args->do_graph
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->do_graph));
-    args->do_correct
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->do_correct));
-    args->exclude_linear
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->exclude_linear));
-    args->distribute
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->distribute));
-    args->replace
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->replace));
+    controls->args->range = gwy_adjustment_get_int(adj);
+    drift_invalidate(controls);
 }
 
 static void
-drift_invalidate(G_GNUC_UNUSED GObject *obj,
-                 DriftControls *controls)
+do_graph_changed(DriftControls *controls,
+                 GtkToggleButton *toggle)
 {
-    controls->computed = FALSE;
+    DriftArgs *args = controls->args;
+    args->do_graph = gtk_toggle_button_get_active(toggle);
+    gtk_widget_set_sensitive(controls->target_hbox, args->do_graph);
+    update_target_graphs(controls);
+    drift_invalidate(controls);
+}
+
+static void
+do_correct_changed(DriftControls *controls,
+                   GtkToggleButton *toggle)
+{
+    controls->args->do_correct = gtk_toggle_button_get_active(toggle);
+    drift_invalidate(controls);
+}
+
+static void
+exclude_linear_changed(DriftControls *controls,
+                       GtkToggleButton *toggle)
+{
+    controls->args->exclude_linear = gtk_toggle_button_get_active(toggle);
+    drift_invalidate(controls);
+}
+
+static void
+distribute_changed(DriftControls *controls,
+                   GtkToggleButton *toggle)
+{
+    controls->args->distribute = gtk_toggle_button_get_active(toggle);
+    drift_invalidate(controls);
+}
+
+static void
+replace_changed(DriftControls *controls,
+                GtkToggleButton *toggle)
+{
+    controls->args->replace = gtk_toggle_button_get_active(toggle);
+    drift_invalidate(controls);
 }
 
 static void
@@ -692,8 +779,45 @@ preview_type_changed(GtkToggleButton *button,
 }
 
 static void
-mask_color_change_cb(GtkWidget *color_button,
-                     DriftControls *controls)
+update_target_graphs(DriftControls *controls)
+{
+    GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
+    gwy_data_chooser_refilter(chooser);
+}
+
+static gboolean
+filter_target_graphs(GwyContainer *data, gint id, gpointer user_data)
+{
+    DriftControls *controls = (DriftControls*)user_data;
+    GwyGraphModel *gmodel, *targetgmodel;
+    GQuark quark = gwy_app_get_graph_key_for_id(id);
+
+    if (!controls->args->do_graph)
+        return FALSE;
+
+    return ((gmodel = controls->gmodel)
+            && gwy_container_gis_object(data, quark, (GObject**)&targetgmodel)
+            && gwy_graph_model_units_are_compatible(gmodel, targetgmodel));
+}
+
+static void
+target_graph_changed(DriftControls *controls)
+{
+    GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
+    GwyAppDataId *target = &controls->args->target_graph;
+
+    target->data = gwy_data_chooser_get_active(chooser, &target->id);
+}
+
+static void
+drift_invalidate(DriftControls *controls)
+{
+    controls->computed = FALSE;
+}
+
+static void
+mask_color_changed(GtkWidget *color_button,
+                   DriftControls *controls)
 {
     GwyContainer *data;
 
