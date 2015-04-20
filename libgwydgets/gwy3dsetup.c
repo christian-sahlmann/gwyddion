@@ -196,10 +196,10 @@ gwy_3d_setup_class_init(Gwy3DSetupClass *klass)
         (gobject_class,
          PROP_HIDE_MASKED,
          g_param_spec_boolean("hide_masked",
-			      "Hide masked",
-			      "Hide masked vertices",
-			      FALSE,
-			      G_PARAM_READWRITE));
+                              "Hide masked",
+                              "Hide masked vertices",
+                              FALSE,
+                              G_PARAM_READWRITE));
 }
 
 static void
@@ -369,7 +369,7 @@ gwy_3d_setup_serialize(GObject *serializable,
             { 'd', "z-scale", &setup->z_scale, NULL, },
             { 'd', "light-phi", &setup->light_phi, NULL, },
             { 'd', "light-theta", &setup->light_theta, NULL, },
-	    { 'b', "hide-masked", &setup->hide_masked, NULL, },
+            { 'b', "hide-masked", &setup->hide_masked, NULL, },
         };
 
         return gwy_serialize_pack_object_struct(buffer,
@@ -400,7 +400,7 @@ gwy_3d_setup_get_size(GObject *object)
             { 'd', "z-scale", &setup->z_scale, NULL, },
             { 'd', "light-phi", &setup->light_phi, NULL, },
             { 'd', "light-theta", &setup->light_theta, NULL, },
-	    { 'b', "hide-masked", &setup->hide_masked, NULL, },
+            { 'b', "hide-masked", &setup->hide_masked, NULL, },
         };
 
         return gwy_serialize_get_struct_size(GWY_3D_SETUP_TYPE_NAME,
@@ -432,7 +432,7 @@ gwy_3d_setup_deserialize(const guchar *buffer,
             { 'd', "z-scale", &setup->z_scale, NULL, },
             { 'd', "light-phi", &setup->light_phi, NULL, },
             { 'd', "light-theta", &setup->light_theta, NULL, },
-	    { 'b', "hide-masked", &setup->hide_masked, NULL, },
+            { 'b', "hide-masked", &setup->hide_masked, NULL, },
         };
 
         if (!gwy_serialize_unpack_object_struct(buffer, size, position,
