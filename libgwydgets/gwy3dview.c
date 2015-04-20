@@ -351,7 +351,7 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
 static void
 gwy_3d_view_init(Gwy3DView *gwy3dview)
 {
-    gwy3dview->view_scale_max = 3.0;
+    gwy3dview->view_scale_max = 8.0;
     gwy3dview->view_scale_min = 0.5;
     gwy3dview->movement       = GWY_3D_MOVEMENT_NONE;
     gwy3dview->reduced_size   = 96;
