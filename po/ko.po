@@ -1,15 +1,14 @@
-# SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR "David Necas (Yeti) & Petr Klapetek"
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# This file is distributed under the same license as the Gwyddion package.
+# Jeong Jiseong <stopstar@gist.ac.kr>, 2014.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2015-02-07 21:39+0100\n"
-"PO-Revision-Date: 2014-11-12 21:07+0900\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2015-04-20 09:48+0200\n"
+"Last-Translator: Jeong Jiseong <stopstar@gist.ac.kr>\n"
 "Language-Team: Korean_gwyddion\n"
 "Language: ko\n"
 "MIME-Version: 1.0\n"
