@@ -84,9 +84,10 @@ typedef struct {
 typedef struct {
     MergeArgs *args;
     GtkWidget *dialog;
+    GtkWidget *op2;
+    GtkWidget *boundary;
     GtkWidget *crop_to_rectangle;
     GtkWidget *create_mask;
-    GtkWidget *op2;
 } MergeControls;
 
 static gboolean module_register          (void);
@@ -98,8 +99,9 @@ static void     merge_data_changed       (MergeControls *controls,
 static gboolean merge_data_filter        (GwyContainer *data,
                                           gint id,
                                           gpointer user_data);
-static gboolean merge_do                 (MergeArgs *args);
-static void     merge_do_uncorrelated    (MergeArgs *args);
+static void     merge_do_correlate       (MergeArgs *args);
+static void     merge_do_join            (MergeArgs *args);
+static void     merge_do_none            (MergeArgs *args);
 static void     merge_direction_changed  (GtkWidget *combo,
                                           MergeControls *control);
 static void     merge_mode_changed       (GtkWidget *combo,
@@ -130,6 +132,18 @@ static void     merge_boundary           (GwyDataField *dfield1,
                                           GwyCoord f1_pos,
                                           GwyCoord f2_pos,
                                           GwyMergeBoundaryType boundary);
+static void     create_merged_field      (GwyContainer *data,
+                                          gint id1,
+                                          GwyDataField *dfield1,
+                                          GwyDataField *dfield2,
+                                          gint px1,
+                                          gint py1,
+                                          gint px2,
+                                          gint py2,
+                                          GwyMergeBoundaryType boundary,
+                                          GwyMergeDirectionType dir,
+                                          gboolean create_mask,
+                                          gboolean crop_to_rectangle);
 static void     put_fields               (GwyDataField *dfield1,
                                           GwyDataField *dfield2,
                                           GwyDataField *result,
@@ -220,9 +234,11 @@ merge(GwyContainer *data, GwyRunType run)
 
     if (merge_dialog(&args)) {
         if (args.mode == GWY_MERGE_MODE_NONE)
-            merge_do_uncorrelated(&args);
+            merge_do_none(&args);
+        else if (args.mode == GWY_MERGE_MODE_JOIN)
+            merge_do_join(&args);
         else
-            merge_do(&args);
+            merge_do_correlate(&args);
     }
 
     merge_save_args(settings, &args);
@@ -287,6 +303,7 @@ merge_dialog(MergeArgs *args)
                                    G_CALLBACK(merge_boundary_changed),
                                    &controls,
                                    args->boundary, TRUE);
+    controls.boundary = combo;
     gwy_table_attach_hscale(table, row, _("_Boundary treatment:"), NULL,
                             GTK_OBJECT(combo), GWY_HSCALE_WIDGET);
     row++;
@@ -437,24 +454,22 @@ update_sensitivity(MergeControls *controls)
                              && !args->crop_to_rectangle);
     gtk_widget_set_sensitive(controls->crop_to_rectangle,
                              args->mode != GWY_MERGE_MODE_JOIN);
+    gtk_widget_set_sensitive(controls->boundary,
+                             args->mode != GWY_MERGE_MODE_NONE);
 }
 
-static gboolean
-merge_do(MergeArgs *args)
+static void
+merge_do_correlate(MergeArgs *args)
 {
-    GwyContainer *data;
     GwyDataField *dfield1, *dfield2;
     GwyDataField *correlation_data, *correlation_kernel, *correlation_score;
-    GwyDataField *result, *outsidemask = NULL;
     GwyRectangle cdata, kdata;
     gint max_col, max_row;
-    gint newxres, newyres;
     gint xres1, xres2, yres1, yres2;
-    GQuark quark;
-    gint newid;
     GwyMergeDirectionType real_dir = args->direction;
     GwyMergeBoundaryType real_boundary = args->boundary;
     gint px1, py1, px2, py2;
+    GQuark quark;
 
     quark = gwy_app_get_data_key_for_id(args->op1.id);
     dfield1 = GWY_DATA_FIELD(gwy_container_get_object(args->op1.data, quark));
@@ -473,15 +488,13 @@ merge_do(MergeArgs *args)
         else if (args->direction == GWY_MERGE_DIRECTION_RIGHT)
             real_dir = GWY_MERGE_DIRECTION_LEFT;
         else
-            g_return_val_if_reached(FALSE);
+            g_return_if_reached();
 
         if (args->boundary == GWY_MERGE_BOUNDARY_FIRST)
             real_boundary = GWY_MERGE_BOUNDARY_SECOND;
         else if (args->boundary == GWY_MERGE_BOUNDARY_SECOND)
             real_boundary = GWY_MERGE_BOUNDARY_FIRST;
     }
-
-    result = gwy_data_field_new_alike(dfield1, FALSE);
 
     xres1 = gwy_data_field_get_xres(dfield1);
     xres2 = gwy_data_field_get_xres(dfield2);
@@ -553,13 +566,8 @@ merge_do(MergeArgs *args)
 
     /* get appropriate correlation score */
     if (!get_score_iteratively(correlation_data, correlation_kernel,
-                               correlation_score, args)) {
-        g_object_unref(correlation_score);
-        g_object_unref(correlation_data);
-        g_object_unref(correlation_kernel);
-        g_object_unref(result);
-        return FALSE;
-    }
+                               correlation_score, args))
+        goto end;
 
     find_score_maximum(correlation_score, &max_col, &max_row);
     gwy_debug("c: %d %d %dx%d  k: %d %d %dx%d res: %d %d",
@@ -585,70 +593,31 @@ merge_do(MergeArgs *args)
         py1 = -py2;
         py2 = 0;
     }
-    gwy_debug("field1 %dx%d", dfield1->xres, dfield1->yres);
-    gwy_debug("field2 %dx%d", dfield2->xres, dfield2->yres);
-    gwy_debug("px1: %d, py1: %d, px2: %d, py2: %d", px1, py1, px2, py2);
 
-    newxres = MAX(dfield1->xres + px1, dfield2->xres + px2);
-    newyres = MAX(dfield1->yres + py1, dfield2->yres + py2);
+    create_merged_field(args->op1.data, args->op1.id,
+                        dfield1, dfield2,
+                        px1, py1, px2, py2,
+                        real_boundary, real_dir,
+                        args->create_mask, args->crop_to_rectangle);
 
-    gwy_data_field_resample(result, newxres, newyres, GWY_INTERPOLATION_NONE);
-    if (args->create_mask && !args->crop_to_rectangle) {
-        outsidemask = gwy_data_field_new_alike(result, FALSE);
-        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(outsidemask),
-                                    NULL);
-    }
-    put_fields(dfield1, dfield2, result, outsidemask,
-               real_boundary, px1, py1, px2, py2);
-
-    if (args->crop_to_rectangle) {
-        GwyOrientation orientation = GWY_ORIENTATION_HORIZONTAL;
-        if (real_dir == GWY_MERGE_DIRECTION_UP
-            || real_dir == GWY_MERGE_DIRECTION_DOWN)
-            orientation = GWY_ORIENTATION_VERTICAL;
-
-        crop_result(result, dfield1, dfield2, orientation, px1, py1, px2, py2);
-    }
-
-    /* set right output */
-    if (result) {
-        gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
-        newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
-        gwy_app_set_data_field_title(data, newid, _("Merged images"));
-        gwy_app_sync_data_items(args->op1.data, data, args->op1.id, newid,
-                                FALSE,
-                                GWY_DATA_ITEM_PALETTE,
-                                GWY_DATA_ITEM_MASK_COLOR,
-                                GWY_DATA_ITEM_RANGE,
-                                0);
-        g_object_unref(result);
-
-        if (outsidemask) {
-            quark = gwy_app_get_mask_key_for_id(newid);
-            gwy_container_set_object(data, quark, outsidemask);
-            g_object_unref(outsidemask);
-        }
-
-        gwy_app_channel_log_add_proc(data, -1, newid);
-    }
-
+end:
     g_object_unref(correlation_data);
     g_object_unref(correlation_kernel);
     g_object_unref(correlation_score);
-
-    return TRUE;
 }
 
 static void
-merge_do_uncorrelated(MergeArgs *args)
+merge_do_join(MergeArgs *args)
 {
-    GwyContainer *data;
-    GwyDataField *dfield1, *dfield2, *result, *outsidemask = NULL;
-    GwyOrientation orientation;
-    gint newxres, newyres, xres1, xres2, yres1, yres2;
+}
+
+static void
+merge_do_none(MergeArgs *args)
+{
+    GwyDataField *dfield1, *dfield2;
+    gint xres1, xres2, yres1, yres2;
+    gint px1, py1, px2, py2;
     GQuark quark;
-    gint newid;
-    gdouble m;
 
     quark = gwy_app_get_data_key_for_id(args->op1.id);
     dfield1 = GWY_DATA_FIELD(gwy_container_get_object(args->op1.data, quark));
@@ -660,80 +629,78 @@ merge_do_uncorrelated(MergeArgs *args)
     xres2 = gwy_data_field_get_xres(dfield2);
     yres1 = gwy_data_field_get_yres(dfield1);
     yres2 = gwy_data_field_get_yres(dfield2);
-    result = gwy_data_field_new_alike(dfield1, FALSE);
-    m = MIN(gwy_data_field_get_min(dfield1), gwy_data_field_get_min(dfield2));
 
-    orientation = GWY_ORIENTATION_HORIZONTAL;
-    if (args->direction == GWY_MERGE_DIRECTION_UP
-        || args->direction == GWY_MERGE_DIRECTION_DOWN)
-        orientation = GWY_ORIENTATION_VERTICAL;
-
-    if (orientation == GWY_ORIENTATION_VERTICAL) {
-        newyres = yres1 + yres2;
-        if (args->crop_to_rectangle)
-            newxres = xres1 = xres2 = MIN(xres1, xres2);
-        else
-            newxres = MAX(xres1, xres2);
+    if (args->direction == GWY_MERGE_DIRECTION_UP) {
+        px1 = px2 = 0;
+        py1 = yres2;
+        py2 = 0;
+    }
+    else if (args->direction == GWY_MERGE_DIRECTION_DOWN) {
+        px1 = px2 = 0;
+        py1 = 0;
+        py2 = yres1;
+    }
+    else if (args->direction == GWY_MERGE_DIRECTION_LEFT) {
+        py1 = py2 = 0;
+        px1 = xres2;
+        px2 = 0;
+    }
+    else if (args->direction == GWY_MERGE_DIRECTION_RIGHT) {
+        py1 = py2 = 0;
+        px1 = 0;
+        px2 = xres1;
     }
     else {
-        newxres = xres1 + xres2;
-        if (args->crop_to_rectangle)
-            newyres = yres1 = yres2 = MIN(yres1, yres2);
-        else
-            newyres = MAX(yres1, yres2);
+        g_assert_not_reached();
     }
 
-    gwy_data_field_resample(result, newxres, newyres, GWY_INTERPOLATION_NONE);
-    gwy_data_field_set_xreal(result,
-                             newxres*gwy_data_field_get_xmeasure(dfield1));
-    gwy_data_field_set_yreal(result,
-                             newyres*gwy_data_field_get_ymeasure(dfield1));
-    gwy_data_field_fill(result, m);
+    create_merged_field(args->op1.data, args->op1.id,
+                        dfield1, dfield2,
+                        px1, py1, px2, py2,
+                        args->boundary, args->direction,
+                        args->create_mask, args->crop_to_rectangle);
+}
 
-    if (args->create_mask && !args->crop_to_rectangle) {
+static void
+create_merged_field(GwyContainer *data, gint id1,
+                    GwyDataField *dfield1, GwyDataField *dfield2,
+                    gint px1, gint py1, gint px2, gint py2,
+                    GwyMergeBoundaryType boundary, GwyMergeDirectionType dir,
+                    gboolean create_mask, gboolean crop_to_rectangle)
+{
+    GwyDataField *result, *outsidemask = NULL;
+    gint newxres, newyres, newid;
+
+    gwy_debug("field1 %dx%d", dfield1->xres, dfield1->yres);
+    gwy_debug("field2 %dx%d", dfield2->xres, dfield2->yres);
+    gwy_debug("px1: %d, py1: %d, px2: %d, py2: %d", px1, py1, px2, py2);
+
+    result = gwy_data_field_new_alike(dfield1, FALSE);
+
+    newxres = MAX(dfield1->xres + px1, dfield2->xres + px2);
+    newyres = MAX(dfield1->yres + py1, dfield2->yres + py2);
+
+    gwy_data_field_resample(result, newxres, newyres, GWY_INTERPOLATION_NONE);
+    if (create_mask && !crop_to_rectangle) {
         outsidemask = gwy_data_field_new_alike(result, FALSE);
         gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(outsidemask),
                                     NULL);
-        gwy_data_field_fill(outsidemask, 1.0);
     }
+    put_fields(dfield1, dfield2, result, outsidemask,
+               boundary, px1, py1, px2, py2);
 
-    if (args->direction == GWY_MERGE_DIRECTION_UP) {
-        gwy_data_field_area_copy(dfield2, result, 0, 0, xres2, yres2, 0, 0);
-        gwy_data_field_area_copy(dfield1, result, 0, 0, xres1, yres1, 0, yres2);
-        if (outsidemask) {
-            gwy_data_field_area_clear(outsidemask, 0, 0, xres2, yres2);
-            gwy_data_field_area_clear(outsidemask, 0, yres2, xres1, yres1);
-        }
-    }
-    else if (args->direction == GWY_MERGE_DIRECTION_DOWN) {
-        gwy_data_field_area_copy(dfield1, result, 0, 0, xres1, yres1, 0, 0);
-        gwy_data_field_area_copy(dfield2, result, 0, 0, xres2, yres2, 0, yres1);
-        if (outsidemask) {
-            gwy_data_field_area_clear(outsidemask, 0, 0, xres1, yres1);
-            gwy_data_field_area_clear(outsidemask, 0, yres1, xres2, yres2);
-        }
-    }
-    else if (args->direction == GWY_MERGE_DIRECTION_LEFT) {
-        gwy_data_field_area_copy(dfield2, result, 0, 0, xres2, yres2, 0, 0);
-        gwy_data_field_area_copy(dfield1, result, 0, 0, xres1, yres1, xres2, 0);
-        if (outsidemask) {
-            gwy_data_field_area_clear(outsidemask, 0, 0, xres2, yres2);
-            gwy_data_field_area_clear(outsidemask, xres2, 0, xres1, yres1);
-        }
-    }
-    else if (args->direction == GWY_MERGE_DIRECTION_RIGHT) {
-        gwy_data_field_area_copy(dfield1, result, 0, 0, xres1, yres1, 0, 0);
-        gwy_data_field_area_copy(dfield2, result, 0, 0, xres2, yres2, xres1, 0);
-        if (outsidemask) {
-            gwy_data_field_area_clear(outsidemask, 0, 0, xres1, yres1);
-            gwy_data_field_area_clear(outsidemask, xres1, 0, xres2, yres2);
-        }
+    if (crop_to_rectangle) {
+        GwyOrientation orientation = GWY_ORIENTATION_HORIZONTAL;
+        if (dir == GWY_MERGE_DIRECTION_UP || dir == GWY_MERGE_DIRECTION_DOWN)
+            orientation = GWY_ORIENTATION_VERTICAL;
+
+        crop_result(result, dfield1, dfield2, orientation, px1, py1, px2, py2);
     }
 
     gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
     newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
     gwy_app_set_data_field_title(data, newid, _("Merged images"));
-    gwy_app_sync_data_items(args->op1.data, data, args->op1.id, newid,
+    gwy_app_sync_data_items(data, data, id1, newid,
                             FALSE,
                             GWY_DATA_ITEM_PALETTE,
                             GWY_DATA_ITEM_MASK_COLOR,
@@ -741,8 +708,10 @@ merge_do_uncorrelated(MergeArgs *args)
                             0);
 
     if (outsidemask) {
-        quark = gwy_app_get_mask_key_for_id(newid);
-        gwy_container_set_object(data, quark, outsidemask);
+        if (gwy_data_field_get_max(outsidemask) > 0.0) {
+            GQuark quark = gwy_app_get_mask_key_for_id(newid);
+            gwy_container_set_object(data, quark, outsidemask);
+        }
         g_object_unref(outsidemask);
     }
 
