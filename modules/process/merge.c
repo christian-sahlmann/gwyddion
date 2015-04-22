@@ -46,6 +46,7 @@ typedef enum {
 
 typedef enum {
     GWY_MERGE_MODE_CORRELATE,
+    GWY_MERGE_MODE_JOIN,
     GWY_MERGE_MODE_NONE,
     GWY_MERGE_MODE_LAST
 } GwyMergeModeType;
@@ -82,30 +83,34 @@ typedef struct {
 
 typedef struct {
     MergeArgs *args;
+    GtkWidget *dialog;
+    GtkWidget *crop_to_rectangle;
     GtkWidget *create_mask;
+    GtkWidget *op2;
 } MergeControls;
 
 static gboolean module_register          (void);
 static void     merge                    (GwyContainer *data,
                                           GwyRunType run);
 static gboolean merge_dialog             (MergeArgs *args);
-static void     merge_data_changed       (GwyDataChooser *chooser,
-                                          GwyAppDataId *object);
+static void     merge_data_changed       (MergeControls *controls,
+                                          GwyDataChooser *chooser);
 static gboolean merge_data_filter        (GwyContainer *data,
                                           gint id,
                                           gpointer user_data);
 static gboolean merge_do                 (MergeArgs *args);
 static void     merge_do_uncorrelated    (MergeArgs *args);
 static void     merge_direction_changed  (GtkWidget *combo,
-                                          MergeArgs *args);
+                                          MergeControls *control);
 static void     merge_mode_changed       (GtkWidget *combo,
-                                          MergeArgs *args);
-static void     merge_boundary_changed   (GtkWidget *combo,
-                                          MergeArgs *args);
-static void     create_mask_changed      (GtkToggleButton *toggle,
-                                          MergeArgs *args);
-static void     crop_to_rectangle_changed(GtkToggleButton *toggle,
                                           MergeControls *controls);
+static void     merge_boundary_changed   (GtkWidget *combo,
+                                          MergeControls *controls);
+static void     create_mask_changed      (MergeControls *controls,
+                                          GtkToggleButton *toggle);
+static void     crop_to_rectangle_changed(MergeControls *controls,
+                                          GtkToggleButton *toggle);
+static void     update_sensitivity       (MergeControls *controls);
 static void     merge_load_args          (GwyContainer *settings,
                                           MergeArgs *args);
 static void     merge_save_args          (GwyContainer *settings,
@@ -152,6 +157,7 @@ static const GwyEnum directions[] = {
 
 static const GwyEnum modes[] = {
     { N_("Correlation"),     GWY_MERGE_MODE_CORRELATE, },
+    { N_("merge-mode|Join"), GWY_MERGE_MODE_JOIN,      },
     { N_("merge-mode|None"), GWY_MERGE_MODE_NONE,      },
 };
 
@@ -218,6 +224,8 @@ merge(GwyContainer *data, GwyRunType run)
         else
             merge_do(&args);
     }
+
+    merge_save_args(settings, &args);
 }
 
 static gboolean
@@ -235,6 +243,7 @@ merge_dialog(MergeArgs *args)
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    controls.dialog = dialog;
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
 
@@ -247,33 +256,36 @@ merge_dialog(MergeArgs *args)
 
     /* Merge with */
     chooser = gwy_data_chooser_new_channels();
+    controls.op2 = chooser;
     g_object_set_data(G_OBJECT(chooser), "dialog", dialog);
     gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(chooser),
-                                merge_data_filter, &args->op1, NULL);
-    g_signal_connect(chooser, "changed",
-                     G_CALLBACK(merge_data_changed), &args->op2);
-    merge_data_changed(GWY_DATA_CHOOSER(chooser), &args->op2);
+                                merge_data_filter, args, NULL);
+    g_signal_connect_swapped(chooser, "changed",
+                             G_CALLBACK(merge_data_changed), &controls);
+    merge_data_changed(&controls, GWY_DATA_CHOOSER(chooser));
     gwy_table_attach_hscale(table, row, _("_Merge with:"), NULL,
                             GTK_OBJECT(chooser), GWY_HSCALE_WIDGET);
     row++;
 
     /* Parameters */
     combo = gwy_enum_combo_box_new(directions, G_N_ELEMENTS(directions),
-                                   G_CALLBACK(merge_direction_changed), args,
+                                   G_CALLBACK(merge_direction_changed),
+                                   &controls,
                                    args->direction, TRUE);
     gwy_table_attach_hscale(table, row, _("_Put second operand:"), NULL,
                             GTK_OBJECT(combo), GWY_HSCALE_WIDGET);
     row++;
 
     combo = gwy_enum_combo_box_new(modes, G_N_ELEMENTS(modes),
-                                   G_CALLBACK(merge_mode_changed), args,
+                                   G_CALLBACK(merge_mode_changed), &controls,
                                    args->mode, TRUE);
     gwy_table_attach_hscale(table, row, _("_Align second operand:"), NULL,
                             GTK_OBJECT(combo), GWY_HSCALE_WIDGET);
     row++;
 
     combo = gwy_enum_combo_box_new(boundaries, G_N_ELEMENTS(boundaries),
-                                   G_CALLBACK(merge_boundary_changed), args,
+                                   G_CALLBACK(merge_boundary_changed),
+                                   &controls,
                                    args->boundary, TRUE);
     gwy_table_attach_hscale(table, row, _("_Boundary treatment:"), NULL,
                             GTK_OBJECT(combo), GWY_HSCALE_WIDGET);
@@ -281,24 +293,25 @@ merge_dialog(MergeArgs *args)
 
     check = gtk_check_button_new_with_mnemonic(_("Crop result to _avoid "
                                                  "outside pixels"));
+    controls.crop_to_rectangle = check;
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
                                  args->crop_to_rectangle);
     gtk_table_attach(GTK_TABLE(table), check,
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
-    g_signal_connect(check, "toggled",
-                     G_CALLBACK(crop_to_rectangle_changed), &controls);
+    g_signal_connect_swapped(check, "toggled",
+                             G_CALLBACK(crop_to_rectangle_changed), &controls);
     row++;
 
     check = gtk_check_button_new_with_mnemonic(_("Add _mask of outside pixels"));
     controls.create_mask = check;
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), args->create_mask);
-    gtk_widget_set_sensitive(check, !args->crop_to_rectangle);
     gtk_table_attach(GTK_TABLE(table), check,
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
-    g_signal_connect(check, "toggled",
-                     G_CALLBACK(create_mask_changed), args);
+    g_signal_connect_swapped(check, "toggled",
+                             G_CALLBACK(create_mask_changed), &controls);
     row++;
 
+    update_sensitivity(&controls);
     gtk_widget_show_all(dialog);
 
     do {
@@ -308,7 +321,6 @@ merge_dialog(MergeArgs *args)
             case GTK_RESPONSE_DELETE_EVENT:
             case GTK_RESPONSE_NONE:
             gtk_widget_destroy(dialog);
-            merge_save_args(gwy_app_settings_get(), args);
             return FALSE;
             break;
 
@@ -323,24 +335,22 @@ merge_dialog(MergeArgs *args)
     } while (!ok);
 
     gtk_widget_destroy(dialog);
-    merge_save_args(gwy_app_settings_get(), args);
 
     return TRUE;
 }
 
 static void
-merge_data_changed(GwyDataChooser *chooser,
-                   GwyAppDataId *object)
+merge_data_changed(MergeControls *controls,
+                   GwyDataChooser *chooser)
 {
-    GtkWidget *dialog;
+    MergeArgs *args = controls->args;
 
-    object->data = gwy_data_chooser_get_active(chooser, &object->id);
-    gwy_debug("data: %p %d", object->data, object->id);
+    args->op2.data = gwy_data_chooser_get_active(chooser, &args->op2.id);
+    gwy_debug("data: %p %d", args->op2.data, args->op2.id);
 
-    dialog = g_object_get_data(G_OBJECT(chooser), "dialog");
-    g_assert(GTK_IS_DIALOG(dialog));
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_OK,
-                                      object->data != NULL);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      GTK_RESPONSE_OK,
+                                      args->op2.data != NULL);
 }
 
 static gboolean
@@ -348,52 +358,85 @@ merge_data_filter(GwyContainer *data,
                   gint id,
                   gpointer user_data)
 {
-    GwyAppDataId *object = (GwyAppDataId*)user_data;
+    MergeArgs *args = (MergeArgs*)user_data;
+    GwyDataCompatibilityFlags compatflags;
     GwyDataField *op1, *op2;
+    gboolean ok;
     GQuark quark;
 
+    quark = gwy_app_get_data_key_for_id(args->op1.id);
+    op1 = GWY_DATA_FIELD(gwy_container_get_object(args->op1.data, quark));
+
     quark = gwy_app_get_data_key_for_id(id);
-    op1 = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
+    op2 = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
-    quark = gwy_app_get_data_key_for_id(object->id);
-    op2 = GWY_DATA_FIELD(gwy_container_get_object(object->data, quark));
-
-    return !gwy_data_field_check_compatibility(op1, op2,
-                                               GWY_DATA_COMPATIBILITY_MEASURE
-                                               | GWY_DATA_COMPATIBILITY_LATERAL
-                                               | GWY_DATA_COMPATIBILITY_VALUE);
+    compatflags = (GWY_DATA_COMPATIBILITY_MEASURE
+                   | GWY_DATA_COMPATIBILITY_LATERAL
+                   | GWY_DATA_COMPATIBILITY_VALUE);
+    ok = !gwy_data_field_check_compatibility(op1, op2, compatflags);
+    if (args->mode == GWY_MERGE_MODE_JOIN) {
+        if (args->direction == GWY_MERGE_DIRECTION_UP
+            || args->direction == GWY_MERGE_DIRECTION_DOWN) {
+            if (op1->xres != op2->xres)
+                ok = FALSE;
+        }
+        if (args->direction == GWY_MERGE_DIRECTION_LEFT
+            || args->direction == GWY_MERGE_DIRECTION_RIGHT) {
+            if (op1->yres != op2->yres)
+                ok = FALSE;
+        }
+    }
+    return ok;
 }
 
 static void
-merge_direction_changed(GtkWidget *combo, MergeArgs *args)
+merge_direction_changed(GtkWidget *combo, MergeControls *controls)
 {
+    MergeArgs *args = controls->args;
     args->direction = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
+    gwy_data_chooser_refilter(GWY_DATA_CHOOSER(controls->op2));
 }
 
 static void
-merge_mode_changed(GtkWidget *combo, MergeArgs *args)
+merge_mode_changed(GtkWidget *combo, MergeControls *controls)
 {
+    MergeArgs *args = controls->args;
     args->mode = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
+    gwy_data_chooser_refilter(GWY_DATA_CHOOSER(controls->op2));
+    update_sensitivity(controls);
 }
 
 static void
-merge_boundary_changed(GtkWidget *combo, MergeArgs *args)
+merge_boundary_changed(GtkWidget *combo, MergeControls *controls)
 {
+    MergeArgs *args = controls->args;
     args->boundary = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 static void
-create_mask_changed(GtkToggleButton *toggle, MergeArgs *args)
+create_mask_changed(MergeControls *controls, GtkToggleButton *toggle)
 {
+    MergeArgs *args = controls->args;
     args->create_mask = gtk_toggle_button_get_active(toggle);
 }
 
 static void
-crop_to_rectangle_changed(GtkToggleButton *toggle, MergeControls *controls)
+crop_to_rectangle_changed(MergeControls *controls, GtkToggleButton *toggle)
 {
     MergeArgs *args = controls->args;
     args->crop_to_rectangle = gtk_toggle_button_get_active(toggle);
-    gtk_widget_set_sensitive(controls->create_mask, !args->crop_to_rectangle);
+    update_sensitivity(controls);
+}
+
+static void
+update_sensitivity(MergeControls *controls)
+{
+    MergeArgs *args = controls->args;
+    gtk_widget_set_sensitive(controls->create_mask,
+                             args->mode != GWY_MERGE_MODE_JOIN
+                             && !args->crop_to_rectangle);
+    gtk_widget_set_sensitive(controls->crop_to_rectangle,
+                             args->mode != GWY_MERGE_MODE_JOIN);
 }
 
 static gboolean
