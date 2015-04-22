@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004,2014 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004,2014-2015 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -113,11 +113,22 @@ static void     create_mask_changed      (MergeControls *controls,
 static void     crop_to_rectangle_changed(MergeControls *controls,
                                           GtkToggleButton *toggle);
 static void     update_sensitivity       (MergeControls *controls);
-static void     merge_load_args          (GwyContainer *settings,
-                                          MergeArgs *args);
-static void     merge_save_args          (GwyContainer *settings,
-                                          MergeArgs *args);
-static void     merge_sanitize_args      (MergeArgs *args);
+static gdouble  get_row_difference       (GwyDataField *dfield1,
+                                          gint col1,
+                                          gint row1,
+                                          GwyDataField *dfield2,
+                                          gint col2,
+                                          gint row2,
+                                          gint width,
+                                          gint height);
+static gdouble  get_column_difference    (GwyDataField *dfield1,
+                                          gint col1,
+                                          gint row1,
+                                          GwyDataField *dfield2,
+                                          gint col2,
+                                          gint row2,
+                                          gint width,
+                                          gint height);
 static gboolean get_score_iteratively    (GwyDataField *data_field,
                                           GwyDataField *kernel_field,
                                           GwyDataField *score,
@@ -161,6 +172,11 @@ static void     crop_result              (GwyDataField *result,
                                           gint py1,
                                           gint px2,
                                           gint py2);
+static void     merge_load_args          (GwyContainer *settings,
+                                          MergeArgs *args);
+static void     merge_save_args          (GwyContainer *settings,
+                                          MergeArgs *args);
+static void     merge_sanitize_args      (MergeArgs *args);
 
 static const GwyEnum directions[] = {
     { N_("Up"),           GWY_MERGE_DIRECTION_UP,    },
@@ -196,7 +212,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Merges two images."),
     "Petr Klapetek <klapetek@gwyddion.net>, Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "3.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -386,6 +402,9 @@ merge_data_filter(GwyContainer *data,
 
     quark = gwy_app_get_data_key_for_id(id);
     op2 = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
+
+    if (op1 == op2)
+        return FALSE;
 
     compatflags = (GWY_DATA_COMPATIBILITY_MEASURE
                    | GWY_DATA_COMPATIBILITY_LATERAL
@@ -609,6 +628,92 @@ end:
 static void
 merge_do_join(MergeArgs *args)
 {
+    GwyDataField *dfield1, *dfield2;
+    gint xres1, xres2, yres1, yres2;
+    gint maxover, i, off = 0;
+    gint px1, py1, px2, py2;
+    gdouble s, smin = G_MAXDOUBLE;
+    GwyMergeBoundaryType real_boundary = args->boundary;
+    GwyMergeDirectionType real_dir = args->direction;
+    GQuark quark;
+
+    quark = gwy_app_get_data_key_for_id(args->op1.id);
+    dfield1 = GWY_DATA_FIELD(gwy_container_get_object(args->op1.data, quark));
+
+    quark = gwy_app_get_data_key_for_id(args->op2.id);
+    dfield2 = GWY_DATA_FIELD(gwy_container_get_object(args->op2.data, quark));
+
+    /* Reduce joining to two cases. */
+    if (args->direction == GWY_MERGE_DIRECTION_UP
+        || args->direction == GWY_MERGE_DIRECTION_LEFT) {
+        GWY_SWAP(GwyDataField*, dfield1, dfield2);
+
+        if (args->direction == GWY_MERGE_DIRECTION_UP)
+            real_dir = GWY_MERGE_DIRECTION_DOWN;
+        else if (args->direction == GWY_MERGE_DIRECTION_LEFT)
+            real_dir = GWY_MERGE_DIRECTION_RIGHT;
+        else {
+            g_assert_not_reached();
+        }
+
+        if (args->boundary == GWY_MERGE_BOUNDARY_FIRST)
+            real_boundary = GWY_MERGE_BOUNDARY_SECOND;
+        else if (args->boundary == GWY_MERGE_BOUNDARY_SECOND)
+            real_boundary = GWY_MERGE_BOUNDARY_FIRST;
+    }
+
+    xres1 = gwy_data_field_get_xres(dfield1);
+    yres1 = gwy_data_field_get_yres(dfield1);
+    xres2 = gwy_data_field_get_xres(dfield2);
+    yres2 = gwy_data_field_get_yres(dfield2);
+
+    if (real_dir == GWY_MERGE_DIRECTION_DOWN) {
+        g_return_if_fail(xres1 == xres2);
+        maxover = 2*MIN(yres1, yres2)/5;
+        for (i = 1; i <= maxover; i++) {
+            s = get_row_difference(dfield1, 0, yres1 - i,
+                                   dfield2, 0, 0,
+                                   xres1, i);
+            if (s < smin) {
+                off = i;
+                smin = s;
+            }
+        }
+        /* Turn one-pixel overlap to no overlap. */
+        if (off == 1)
+            off = 0;
+        px1 = px2 = 0;
+        py1 = 0;
+        py2 = yres1 - off;
+    }
+    else if (real_dir == GWY_MERGE_DIRECTION_RIGHT) {
+        g_return_if_fail(yres1 == yres2);
+        maxover = 2*MIN(xres1, xres2)/5;
+        for (i = 1; i <= maxover; i++) {
+            s = get_column_difference(dfield1, xres1 - i, 0,
+                                      dfield2, 0, 0,
+                                      i, yres1);
+            if (s < smin) {
+                off = i;
+                smin = s;
+            }
+        }
+        /* Turn one-pixel overlap to no overlap. */
+        if (off == 1)
+            off = 0;
+        py1 = py2 = 0;
+        px1 = 0;
+        px2 = xres1 - off;
+    }
+    else {
+        g_assert_not_reached();
+    }
+
+    create_merged_field(args->op1.data, args->op1.id,
+                        dfield1, dfield2,
+                        px1, py1, px2, py2,
+                        real_boundary, real_dir,
+                        FALSE, FALSE);
 }
 
 static void
@@ -832,6 +937,108 @@ crop_result(GwyDataField *result,
         gwy_data_field_resize(result, left, 0, right, result->yres);
         gwy_data_field_set_xreal(result, xreal);
     }
+}
+
+/* Note this is not a correlation score since we care also about absolute
+ * differences and try to suppress the influence of outliers. */
+static gdouble
+get_row_difference(GwyDataField *dfield1,
+                   gint col1,
+                   gint row1,
+                   GwyDataField *dfield2,
+                   gint col2,
+                   gint row2,
+                   gint width,
+                   gint height)
+{
+    gint xres1, yres1, xres2, yres2, i, j;
+    const gdouble *data1, *data2;
+    gdouble *row;
+    gdouble s = 0.0;
+
+    g_return_val_if_fail(width > 0, G_MAXDOUBLE);
+    g_return_val_if_fail(height > 0, G_MAXDOUBLE);
+
+    xres1 = gwy_data_field_get_xres(dfield1);
+    yres1 = gwy_data_field_get_yres(dfield1);
+    xres2 = gwy_data_field_get_xres(dfield2);
+    yres2 = gwy_data_field_get_yres(dfield2);
+    data1 = gwy_data_field_get_data_const(dfield1);
+    data2 = gwy_data_field_get_data_const(dfield2);
+
+    g_return_val_if_fail(col1 + width <= xres1, G_MAXDOUBLE);
+    g_return_val_if_fail(col2 + width <= xres2, G_MAXDOUBLE);
+    g_return_val_if_fail(row1 + height <= yres1, G_MAXDOUBLE);
+    g_return_val_if_fail(row2 + height <= yres2, G_MAXDOUBLE);
+
+    row = g_new(gdouble, width);
+
+    for (i = 0; i < height; i++) {
+        const gdouble *d1 = data1 + (row1 + i)*xres1 + col1;
+        const gdouble *d2 = data2 + (row2 + i)*xres2 + col2;
+        gdouble d;
+
+        for (j = 0; j < width; j++) {
+            d = d1[j] - d2[j];
+            row[j] = d;
+        }
+        d = gwy_math_median(width, row);
+        s += d*d;
+    }
+
+    g_free(row);
+
+    return sqrt(s/height);
+}
+
+static gdouble
+get_column_difference(GwyDataField *dfield1,
+                      gint col1,
+                      gint row1,
+                      GwyDataField *dfield2,
+                      gint col2,
+                      gint row2,
+                      gint width,
+                      gint height)
+{
+    gint xres1, yres1, xres2, yres2, i, j;
+    const gdouble *data1, *data2;
+    gdouble *column;
+    gdouble s = 0.0;
+
+    g_return_val_if_fail(width > 0, G_MAXDOUBLE);
+    g_return_val_if_fail(height > 0, G_MAXDOUBLE);
+
+    xres1 = gwy_data_field_get_xres(dfield1);
+    yres1 = gwy_data_field_get_yres(dfield1);
+    xres2 = gwy_data_field_get_xres(dfield2);
+    yres2 = gwy_data_field_get_yres(dfield2);
+    data1 = gwy_data_field_get_data_const(dfield1);
+    data2 = gwy_data_field_get_data_const(dfield2);
+
+    g_return_val_if_fail(col1 + width <= xres1, G_MAXDOUBLE);
+    g_return_val_if_fail(col2 + width <= xres2, G_MAXDOUBLE);
+    g_return_val_if_fail(row1 + height <= yres1, G_MAXDOUBLE);
+    g_return_val_if_fail(row2 + height <= yres2, G_MAXDOUBLE);
+
+    column = g_new(gdouble, height);
+
+    for (j = 0; j < width; j++) {
+        const gdouble *d1 = data1 + row1*xres1 + col1 + j;
+        const gdouble *d2 = data2 + row2*xres2 + col2 + j;
+        gdouble d;
+
+        for (i = 0; i < height; i++) {
+            d = d1[i*xres1] - d2[i*xres2];
+            column[i] = d;
+        }
+        d = gwy_math_median(height, column);
+        s += d*d;
+    }
+
+    g_free(column);
+
+    return sqrt(s/height);
 }
 
 /* compute corelation */
