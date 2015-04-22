@@ -19,14 +19,18 @@ Modules:
 - Profiles, Statistical functions, Row/column statistics, Roughness and Spectro
   tools: It is possible to select a target graph for the curves.
 - Slope distribution, Grain correlations, Curvature, Fractal dimension, FFT
-  profile: It is possible to select a target graph for the curves.
+  profile, Drift correction: It is possible to select a target graph for the
+  curves.
+- Merge: New merge mode ‘Join’ suitable for slowly varying data without
+  significant features but well defined absolute Z values was added.
 - Pygwy: Python modules have sys.path set up the same way as the console now,
   which namely includes the path to gwyutils.py.
 - 2D FFT: It is possible to provide the imaginary part and perform inverse
   transforms.
 - 1D FFT filter: Occasional ‘Axis with extreme range!’ error was fixed.
 - Image export: Alignment of numbers on false colour map scale was improved.
-  Drawing of ‘lattice’ selections was implemented.
+  Drawing of ‘lattice’ selections was implemented.  The decimal separator
+  can be controlled.
 - Filters tool: A simple Gaussian sharpening filter was added.
 - Affine distortion: The lattice is remembered and recalled.  ACF image uses
   full colour range, correcting problems when fixed colour range is set.
