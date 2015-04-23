@@ -90,9 +90,12 @@ typedef void (*GwyAppDataWatchFunc)(GwyContainer *data,
                                     GwyDataWatchEventType event,
                                     gpointer user_data);
 
-void   gwy_app_data_browser_add             (GwyContainer *data);
-void   gwy_app_data_browser_remove          (GwyContainer *data);
-void   gwy_app_data_browser_merge           (GwyContainer *data);
+void          gwy_app_data_browser_add       (GwyContainer *data);
+void          gwy_app_data_browser_remove    (GwyContainer *data);
+void          gwy_app_data_browser_merge     (GwyContainer *data);
+GwyContainer* gwy_app_data_browser_get       (gint number);
+gint          gwy_app_data_browser_get_number(GwyContainer *data);
+
 gboolean gwy_app_data_browser_reset_visibility(GwyContainer *data,
                                                GwyVisibilityResetType reset_type);
 void   gwy_app_data_browser_set_keep_invisible(GwyContainer *data,

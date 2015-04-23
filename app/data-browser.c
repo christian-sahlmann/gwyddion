@@ -153,6 +153,7 @@ struct _GwyAppDataBrowser {
 struct _GwyAppDataProxy {
     guint finalize_id;
     gint untitled_no;
+    gint data_no;
     gboolean keep_invisible;
     gboolean resetting_visibility;
     struct _GwyAppDataBrowser *parent;
@@ -166,8 +167,7 @@ struct _GwyAppDataProxy {
 static GwyAppDataBrowser* gwy_app_get_data_browser        (void);
 static void gwy_app_data_browser_update_filename(GwyAppDataProxy *proxy);
 static GwyAppDataProxy* gwy_app_data_browser_get_proxy(GwyAppDataBrowser *browser,
-                                                       GwyContainer *data,
-                                                       gboolean do_create);
+                                                       GwyContainer *data);
 static gboolean gwy_app_data_proxy_find_object(GtkListStore *store,
                                                gint i,
                                                GtkTreeIter *iter);
@@ -255,6 +255,7 @@ static GQuark graph_window_quark = 0;
 /* The data browser */
 static GwyAppDataBrowser *gwy_app_data_browser = NULL;
 static gboolean gui_disabled = FALSE;
+static gint last_data_number = 0;
 
 static gulong watcher_id = 0;
 static GList *channel_watchers = NULL;
@@ -1961,7 +1962,7 @@ gwy_app_data_proxy_finalize(gpointer user_data)
 
     if (gwy_app_data_proxy_visible_count(proxy)) {
         g_assert(gwy_app_data_browser_get_proxy(gwy_app_data_browser,
-                                                proxy->container, FALSE));
+                                                proxy->container));
         return FALSE;
     }
 
@@ -2147,6 +2148,7 @@ gwy_app_data_proxy_new(GwyAppDataBrowser *browser,
     g_object_ref(data);
     proxy = g_new0(GwyAppDataProxy, 1);
     proxy->container = data;
+    proxy->data_no = ++last_data_number;
     proxy->parent = browser;
     proxy->untitled_no = ++browser->untitled_counter;
     browser->proxy_list = g_list_prepend(browser->proxy_list, proxy);
@@ -2170,19 +2172,15 @@ gwy_app_data_proxy_new(GwyAppDataBrowser *browser,
  * gwy_app_data_browser_get_proxy:
  * @browser: A data browser.
  * @data: The container to find data proxy for.
- * @do_create: %TRUE to create a new proxy when none is found, %FALSE to return
- *             %NULL when proxy is not found.
  *
  * Finds data proxy managing a container.
  *
- * Returns: The data proxy managing container (perhaps newly created when
- *          @do_create is %TRUE), or %NULL.  It is assumed only one proxy
- *          exists for each container.
+ * Returns: The data proxy managing container or %NULL.  It is assumed only one
+ *          proxy exists for each container.
  **/
 static GwyAppDataProxy*
 gwy_app_data_browser_get_proxy(GwyAppDataBrowser *browser,
-                               GwyContainer *data,
-                               gboolean do_create)
+                               GwyContainer *data)
 {
     GList *item;
 
@@ -2192,12 +2190,8 @@ gwy_app_data_browser_get_proxy(GwyAppDataBrowser *browser,
 
     item = g_list_find_custom(browser->proxy_list, data,
                               &gwy_app_data_proxy_compare_data);
-    if (!item) {
-        if (do_create)
-            return gwy_app_data_proxy_new(browser, data);
-        else
-            return NULL;
-    }
+    if (!item)
+        return NULL;
 
     /* Move container to head */
     if (item != browser->proxy_list) {
@@ -2478,7 +2472,7 @@ gwy_app_data_browser_channel_deleted(GwyDataWindow *data_window)
     g_return_val_if_fail(i >= 0 && type == KEY_IS_DATA, TRUE);
 
     browser = gwy_app_get_data_browser();
-    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    proxy = gwy_app_data_browser_get_proxy(browser, data);
     list = &proxy->lists[PAGE_CHANNELS];
     if (!gwy_app_data_proxy_find_object(list->store, i, &iter)) {
         g_critical("Cannot find data field %p (%d)", object, i);
@@ -2595,7 +2589,7 @@ gwy_app_window_dnd_data_received(GtkWidget *window,
         gwy_app_data_browser_copy_other(model, &iter, window, container);
     }
     else if (container) {
-        destproxy = gwy_app_data_browser_get_proxy(browser, container, FALSE);
+        destproxy = gwy_app_data_browser_get_proxy(browser, container);
         gwy_app_data_browser_copy_object(srcproxy, pageno, model, &iter,
                                          destproxy);
     }
@@ -2888,7 +2882,7 @@ gwy_app_update_data_window_title(GwyDataView *data_view,
         GwyAppDataProxy *proxy;
 
         browser = gwy_app_get_data_browser();
-        proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+        proxy = gwy_app_data_browser_get_proxy(browser, data);
         title = g_strdup_printf("%s %d [%s]",
                                 _("Untitled"), proxy->untitled_no, ctitle);
     }
@@ -3418,7 +3412,7 @@ gwy_app_data_browser_show_3d(GwyContainer *data,
     GList *item;
 
     browser = gwy_app_get_data_browser();
-    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    proxy = gwy_app_data_browser_get_proxy(browser, data);
     g_return_if_fail(proxy);
 
     if (gui_disabled)
@@ -3564,7 +3558,7 @@ gwy_app_data_browser_graph_deleted(GwyGraphWindow *graph_window)
     g_return_val_if_fail(i >= 0 && type == KEY_IS_GRAPH, TRUE);
 
     browser = gwy_app_get_data_browser();
-    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    proxy = gwy_app_data_browser_get_proxy(browser, data);
     list = &proxy->lists[PAGE_GRAPHS];
     if (!gwy_app_data_proxy_find_object(list->store, i, &iter)) {
         g_critical("Cannot find graph model %p (%d)", object, i);
@@ -4323,7 +4317,7 @@ gwy_app_data_browser_volume_deleted(GwyDataWindow *data_window)
     object = gwy_container_get_object(data, quark);
 
     browser = gwy_app_get_data_browser();
-    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    proxy = gwy_app_data_browser_get_proxy(browser, data);
     list = &proxy->lists[PAGE_VOLUMES];
     if (!gwy_app_data_proxy_find_object(list->store, i, &iter)) {
         g_critical("Cannot find brick %p (%d)", object, i);
@@ -4607,7 +4601,7 @@ gwy_app_update_brick_window_title(GwyDataView *data_view,
         GwyAppDataProxy *proxy;
 
         browser = gwy_app_get_data_browser();
-        proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+        proxy = gwy_app_data_browser_get_proxy(browser, data);
         title = g_strdup_printf("%s %d [%s]",
                                 _("Untitled"), proxy->untitled_no, btitle);
     }
@@ -5226,7 +5220,7 @@ gwy_app_data_browser_switch_data(GwyContainer *data)
     if (browser->current && browser->current->container == data)
         return;
 
-    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    proxy = gwy_app_data_browser_get_proxy(browser, data);
     g_return_if_fail(proxy);
     if (proxy->finalize_id)
         return;
@@ -5293,7 +5287,7 @@ gwy_app_data_browser_select_data_view(GwyDataView *data_view)
     data = gwy_data_view_get_data(data_view);
     gwy_app_data_browser_switch_data(data);
 
-    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    proxy = gwy_app_data_browser_get_proxy(browser, data);
     g_return_if_fail(proxy);
 
     layer = gwy_data_view_get_base_layer(data_view);
@@ -5386,7 +5380,7 @@ gwy_app_data_browser_select_graph(GwyGraph *graph)
     gwy_app_data_browser_switch_data(data);
 
     browser = gwy_app_get_data_browser();
-    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    proxy = gwy_app_data_browser_get_proxy(browser, data);
     g_return_if_fail(proxy);
 
     quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(gmodel),
@@ -5436,7 +5430,7 @@ gwy_app_data_browser_select_spectra(GwySpectra *spectra)
     gwy_app_data_browser_switch_data(data);
 
     browser = gwy_app_get_data_browser();
-    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    proxy = gwy_app_data_browser_get_proxy(browser, data);
     g_return_if_fail(proxy);
 
     quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(spectra),
@@ -5475,7 +5469,7 @@ gwy_app_data_browser_select_volume(GwyDataView *data_view)
     data = gwy_data_view_get_data(data_view);
     gwy_app_data_browser_switch_data(data);
 
-    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    proxy = gwy_app_data_browser_get_proxy(browser, data);
     g_return_if_fail(proxy);
 
     layer = gwy_data_view_get_base_layer(data_view);
@@ -5507,7 +5501,7 @@ gwy_app_data_browser_select(GwyContainer *data,
     gwy_app_data_browser_switch_data(data);
 
     browser = gwy_app_get_data_browser();
-    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    proxy = gwy_app_data_browser_get_proxy(browser, data);
     if (!gwy_app_data_proxy_find_object(proxy->lists[pageno].store, id,
                                         iter)) {
         g_warning("Cannot find object to select");
@@ -5639,7 +5633,7 @@ gwy_app_data_browser_reset_visibility(GwyContainer *data,
         return FALSE;
 
     if ((browser = gwy_app_data_browser))
-        proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+        proxy = gwy_app_data_browser_get_proxy(browser, data);
 
     if (!proxy) {
         g_critical("Data container is unknown to data browser.");
@@ -5714,9 +5708,16 @@ gwy_app_data_browser_reset_visibility(GwyContainer *data,
 void
 gwy_app_data_browser_add(GwyContainer *data)
 {
+    GwyAppDataBrowser *browser;
+    GwyAppDataProxy *proxy;
+
     g_return_if_fail(GWY_IS_CONTAINER(data));
 
-    gwy_app_data_browser_get_proxy(gwy_app_get_data_browser(), data, TRUE);
+    browser = gwy_app_get_data_browser();
+    proxy = gwy_app_data_browser_get_proxy(browser, data);
+    g_return_if_fail(!proxy);
+
+    gwy_app_data_proxy_new(browser, data);
 }
 
 /**
@@ -5730,8 +5731,7 @@ gwy_app_data_browser_remove(GwyContainer *data)
 {
     GwyAppDataProxy *proxy;
 
-    proxy = gwy_app_data_browser_get_proxy(gwy_app_get_data_browser(), data,
-                                           FALSE);
+    proxy = gwy_app_data_browser_get_proxy(gwy_app_get_data_browser(), data);
     g_return_if_fail(proxy);
 
     gwy_app_data_proxy_destroy_all_3d(proxy);
@@ -6105,7 +6105,7 @@ gwy_app_data_browser_merge(GwyContainer *container)
     g_return_if_fail(GWY_IS_CONTAINER(container));
     browser = gwy_app_get_data_browser();
 
-    proxy = gwy_app_data_browser_get_proxy(browser, container, FALSE);
+    proxy = gwy_app_data_browser_get_proxy(browser, container);
     if (proxy) {
         g_critical("Live files cannot be merged");
         return;
@@ -6144,6 +6144,69 @@ gwy_app_data_browser_merge(GwyContainer *container)
 }
 
 /**
+ * gwy_app_data_browser_get:
+ * @number: Numerical identifier of open data managed by the data browser, or
+ *          zero.
+ *
+ * Gets the data corresponding to a numerical identifier.
+ *
+ * The identifier can be obtained with gwy_app_data_browser_get_number().
+ * See its documentation for discussion.
+ *
+ * Returns: The corresponding data container.  %NULL is returned if @number
+ *          does not identify any existing data.
+ *
+ * Since: 2.41
+ **/
+GwyContainer*
+gwy_app_data_browser_get(gint number)
+{
+    GwyAppDataBrowser *browser;
+    GList *l;
+
+    browser = gwy_app_get_data_browser();
+    for (l = browser->proxy_list; l; l = g_list_next(l)) {
+        GwyAppDataProxy *proxy = (GwyAppDataProxy*)l->data;
+        if (proxy->data_no == number)
+            return proxy->container;
+    }
+    return NULL;
+}
+
+/**
+ * gwy_app_data_browser_get_number:
+ * @data: A data container managed by the data browser.  For convenience,
+ *        %NULL is also permitted.
+ *
+ * Gets the numerical identifier of data.
+ *
+ * Each time a data container is added with gwy_app_data_browser_add() it is
+ * assigned a new unique numerical identifier. This number can be used in
+ * multi-data modules to remember and restore secondary data.
+ *
+ * Note, however, that the number is only guaranteed to be unique within one
+ * process. It does not persist across different program invocations and it
+ * does not make sense to store it to the settings or other kinds of permanent
+ * storage.
+ *
+ * Returns: A positive numerical identifier of @data.  Zero is returned if
+ *          @data is %NULL.
+ *
+ * Since: 2.41
+ **/
+gint
+gwy_app_data_browser_get_number(GwyContainer *data)
+{
+    GwyAppDataBrowser *browser;
+    GwyAppDataProxy *proxy;
+
+    g_return_val_if_fail(!data || GWY_IS_CONTAINER(data), 0);
+    browser = gwy_app_get_data_browser();
+    proxy = gwy_app_data_browser_get_proxy(browser, data);
+    return proxy ? proxy->data_no : 0;
+}
+
+/**
  * gwy_app_data_browser_set_keep_invisible:
  * @data: A data container.
  * @keep_invisible: %TRUE to retain @data in the browser even when it becomes
@@ -6162,8 +6225,7 @@ gwy_app_data_browser_set_keep_invisible(GwyContainer *data,
 {
     GwyAppDataProxy *proxy;
 
-    proxy = gwy_app_data_browser_get_proxy(gwy_app_get_data_browser(), data,
-                                           FALSE);
+    proxy = gwy_app_data_browser_get_proxy(gwy_app_get_data_browser(), data);
     g_return_if_fail(proxy);
     proxy->keep_invisible = keep_invisible;
 }
@@ -6181,8 +6243,7 @@ gwy_app_data_browser_get_keep_invisible(GwyContainer *data)
 {
     GwyAppDataProxy *proxy;
 
-    proxy = gwy_app_data_browser_get_proxy(gwy_app_get_data_browser(), data,
-                                           FALSE);
+    proxy = gwy_app_data_browser_get_proxy(gwy_app_get_data_browser(), data);
     g_return_val_if_fail(proxy, FALSE);
 
     return proxy->keep_invisible;
@@ -6219,7 +6280,7 @@ gwy_app_data_browser_add_data_field(GwyDataField *dfield,
 
     browser = gwy_app_get_data_browser();
     if (data)
-        proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+        proxy = gwy_app_data_browser_get_proxy(browser, data);
     else
         proxy = browser->current;
     if (!proxy) {
@@ -6274,7 +6335,7 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
 
     browser = gwy_app_get_data_browser();
     if (data)
-        proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+        proxy = gwy_app_data_browser_get_proxy(browser, data);
     else
         proxy = browser->current;
     if (!proxy) {
@@ -6331,7 +6392,7 @@ gwy_app_data_browser_add_spectra(GwySpectra *spectra,
 
     browser = gwy_app_get_data_browser();
     if (data)
-        proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+        proxy = gwy_app_data_browser_get_proxy(browser, data);
     else
         proxy = browser->current;
     if (!proxy) {
@@ -6398,7 +6459,7 @@ gwy_app_data_browser_add_brick(GwyBrick *brick,
 
     browser = gwy_app_get_data_browser();
     if (data)
-        proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+        proxy = gwy_app_data_browser_get_proxy(browser, data);
     else
         proxy = browser->current;
     if (!proxy) {
@@ -7042,7 +7103,7 @@ gwy_app_data_list_get_object_ids(GwyContainer *data,
     gint n;
 
     browser = gwy_app_get_data_browser();
-    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    proxy = gwy_app_data_browser_get_proxy(browser, data);
     if (!proxy) {
         g_warning("Nothing is known about Container %p", data);
         /* Returning NULL would likely make the caller crash, avoid that. */
@@ -7183,7 +7244,7 @@ gwy_app_find_window_for_channel(GwyContainer *data,
     if (!browser)
         return NULL;
 
-    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    proxy = gwy_app_data_browser_get_proxy(browser, data);
     if (!proxy)
         return NULL;
 
