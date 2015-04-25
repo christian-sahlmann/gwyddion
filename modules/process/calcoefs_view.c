@@ -19,8 +19,6 @@
  *  Boston, MA 02110-1301, USA.
  */
 
-
-
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
@@ -52,8 +50,10 @@
 
 enum { PREVIEW_SIZE = 200 };
 
-enum { RESPONSE_PREVIEW = 1,
-       RESPONSE_LOAD = 2};
+enum {
+    RESPONSE_PREVIEW = 1,
+    RESPONSE_LOAD = 2,
+};
 
 typedef enum {
     GWY_CC_VIEW_DISPLAY_X_CORR   = 0,
@@ -296,7 +296,7 @@ cc_view_dialog(CCViewArgs *args,
     GwyInventory *inventory;
     GwyInventoryStore *store;
     GwyPixmapLayer *layer;
-    GwyCalibration *calibration;
+    /* GwyCalibration *calibration; */
     GtkCellRenderer *renderer;
     gboolean cropval;
     gint response;
@@ -649,13 +649,16 @@ cc_view_dialog(CCViewArgs *args,
     } while (response != GTK_RESPONSE_OK);
 
     args->calibration = gtk_combo_box_get_active(GTK_COMBO_BOX(controls.calibration));
+
+    /*
     if (args->calibration < gwy_inventory_get_n_items(inventory))
         calibration = gwy_inventory_get_nth_item(inventory, args->calibration);
-    else calibration = NULL;
+    else
+        calibration = NULL;
+    */
 
     gtk_widget_destroy(dialog);
     cc_view_dialog_abandon(&controls);
-
 }
 
 static gboolean
