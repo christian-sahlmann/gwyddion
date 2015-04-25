@@ -6850,6 +6850,11 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
             *otarget = current ? G_OBJECT(current->container) : NULL;
             break;
 
+            case GWY_APP_CONTAINER_ID:
+            itarget = va_arg(ap, gint*);
+            *itarget = current ? current->data_no : 0;
+            break;
+
             case GWY_APP_DATA_VIEW:
             otarget = va_arg(ap, GObject**);
             *otarget = NULL;
@@ -8450,8 +8455,9 @@ gwy_app_data_browser_remove_graph_watch(gulong id)
  *                       (Since 2.32).
  * @GWY_APP_BRICK: Data brick (volume data) (Since 2.32).
  * @GWY_APP_BRICK_KEY: Quark corresponding to the data brick (Since 2.32).
- * @GWY_APP_BRICK_ID: Number (id) of the the data brick in its container.
- *                    (Since 2.32)
+ * @GWY_APP_BRICK_ID: Number (id) of the the data brick in its container
+ *                    (Since 2.32).
+ * @GWY_APP_CONTAINER_ID: Numeric id of data container (Since 2.41).
  *
  * Types of current objects that can be requested with
  * gwy_app_data_browser_get_current().

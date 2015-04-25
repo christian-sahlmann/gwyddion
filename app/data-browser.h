@@ -53,7 +53,8 @@ typedef enum {
     GWY_APP_VOLUME_VIEW,
     GWY_APP_BRICK,
     GWY_APP_BRICK_KEY,
-    GWY_APP_BRICK_ID
+    GWY_APP_BRICK_ID,
+    GWY_APP_CONTAINER_ID
 } GwyAppWhat;
 /* XXX: silly name */
 
