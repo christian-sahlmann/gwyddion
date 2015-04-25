@@ -10,6 +10,11 @@ Libraries:
   graph models was added.
 - libgwydgets: A function for copying curves appending curves from another
   graph model to a graph model was added.
+- libgwyapp: Data containers corresponding to open files have assigned unique
+  numerical ids (within one program invocation) that can be requested from
+  the data browser.
+- libgwyapp: GwyDataChooser has selection setting and obtaining functions
+  that work with numerical ids.
 
 Modules:
 - Align graph (new): Aligns horizontally graph curves.
@@ -21,6 +26,7 @@ Modules:
 - Slope distribution, Grain correlations, Curvature, Fractal dimension, FFT
   profile, Drift correction: It is possible to select a target graph for the
   curves.
+- Arithmetic: Data fields 2 to 8 are remembered between invocations.
 - Merge: New merge mode ‘Join’ suitable for slowly varying data without
   significant features but well defined absolute Z values was added.
 - Pygwy: Python modules have sys.path set up the same way as the console now,
