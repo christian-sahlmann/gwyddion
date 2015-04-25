@@ -144,7 +144,7 @@ typedef struct {
     gdouble cutoff;
     GwyInterpolationType interpolation;
     guint expanded;
-    GwyAppDataId target;
+    GwyAppDataIdTmp target;
 } ToolArgs;
 
 typedef struct {
@@ -1242,7 +1242,7 @@ static void
 gwy_tool_roughness_target_changed(GwyToolRoughness *tool)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(tool->target_graph);
-    GwyAppDataId *target = &tool->args.target;
+    GwyAppDataIdTmp *target = &tool->args.target;
 
     target->data = gwy_data_chooser_get_active(chooser, &target->id);
 }

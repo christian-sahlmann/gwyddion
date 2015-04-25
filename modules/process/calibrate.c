@@ -66,8 +66,8 @@ typedef struct {
     gchar *xyunitorig;
     gchar *zunit;
     gchar *zunitorig;
-    GwyAppDataId sizeid;
-    GwyAppDataId targetid;
+    GwyAppDataIdTmp sizeid;
+    GwyAppDataIdTmp targetid;
 } CalibrateArgs;
 
 typedef struct {
@@ -1087,7 +1087,7 @@ mould_filter(GwyContainer *data,
              gint id,
              gpointer user_data)
 {
-    GwyAppDataId *object = (GwyAppDataId*)user_data;
+    GwyAppDataIdTmp *object = (GwyAppDataIdTmp*)user_data;
     return data != object->data || id != object->id;
 }
 

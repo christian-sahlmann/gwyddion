@@ -59,7 +59,7 @@ typedef struct {
     gboolean options_visible;
     gboolean separate;
     gboolean average;
-    GwyAppDataId target;
+    GwyAppDataIdTmp target;
 } ToolArgs;
 
 struct _GwyToolSpectro {
@@ -934,7 +934,7 @@ static void
 gwy_tool_spectro_target_changed(GwyToolSpectro *tool)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(tool->target_graph);
-    GwyAppDataId *target = &tool->args.target;
+    GwyAppDataIdTmp *target = &tool->args.target;
 
     target->data = gwy_data_chooser_get_active(chooser, &target->id);
 }

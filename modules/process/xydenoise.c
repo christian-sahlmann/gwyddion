@@ -36,8 +36,8 @@
 #define XYDENOISE_RUN_MODES GWY_RUN_INTERACTIVE
 
 typedef struct {
-    GwyAppDataId op1;
-    GwyAppDataId op2;
+    GwyAppDataIdTmp op1;
+    GwyAppDataIdTmp op2;
 } XYdenoiseArgs;
 
 static gboolean module_register       (void);
@@ -45,7 +45,7 @@ static void     xydenoise              (GwyContainer *data,
                                        GwyRunType run);
 static gboolean xydenoise_dialog       (XYdenoiseArgs *args);
 static void     xydenoise_data_cb      (GwyDataChooser *chooser,
-                                       GwyAppDataId *object);
+                                       GwyAppDataIdTmp *object);
 static gboolean xydenoise_data_filter(GwyContainer *data,
                                        gint id,
                                        gpointer user_data);
@@ -159,7 +159,7 @@ xydenoise_dialog(XYdenoiseArgs *args)
 
 static void
 xydenoise_data_cb(GwyDataChooser *chooser,
-                 GwyAppDataId *object)
+                 GwyAppDataIdTmp *object)
 {
     GtkWidget *dialog;
 
@@ -179,7 +179,7 @@ xydenoise_data_filter(GwyContainer *data,
                      gint id,
                      gpointer user_data)
 {
-    GwyAppDataId *object = (GwyAppDataId*)user_data;
+    GwyAppDataIdTmp *object = (GwyAppDataIdTmp*)user_data;
     GwyDataField *op1, *op2;
     GQuark quark;
 

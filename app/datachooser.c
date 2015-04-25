@@ -305,6 +305,66 @@ gwy_data_chooser_get_active(GwyDataChooser *chooser,
     return container;
 }
 
+/**
+ * gwy_data_chooser_set_active_id:
+ * @chooser: A data chooser.
+ * @id: Data item to select.
+ *
+ * Selects a data in a data chooser using numerical identifiers.
+ *
+ * Passing %NULL as @id is permitted as a request to select the ‘none’ item.
+ *
+ * Returns: %TRUE if selected item was set.
+ *
+ * Since: 2.41
+ **/
+gboolean
+gwy_data_chooser_set_active_id(GwyDataChooser *chooser,
+                               const GwyAppDataId *id)
+{
+    GwyContainer *data;
+
+    if (!id)
+        return gwy_data_chooser_set_active(chooser, NULL, -1);
+
+    data = gwy_app_data_browser_get(id->datano);
+    return gwy_data_chooser_set_active(chooser, data, data ? id->id : -1);
+}
+
+/**
+ * gwy_data_chooser_get_active_id:
+ * @chooser: A data chooser.
+ * @id: Location for the id selected data item.
+ *
+ * Gets the selected item in a data chooser as numerical identifiers.
+ *
+ * Returns: %TRUE if any actual data item is selected.  %FALSE is nothing is
+ *          selected or the ‘none’ item is selected.
+ *
+ * Since: 2.41
+ **/
+gboolean
+gwy_data_chooser_get_active_id(GwyDataChooser *chooser,
+                               GwyAppDataId *id)
+{
+    GwyContainer *data;
+    gint itemid;
+
+    data = gwy_data_chooser_get_active(chooser, &itemid);
+    if (!id)
+        return !!data;
+
+    if (!data) {
+        id->datano = 0;
+        id->id = -1;
+        return FALSE;
+    }
+
+    id->datano = gwy_app_data_browser_get_number(data);
+    id->id = itemid;
+    return TRUE;
+}
+
 static gboolean
 gwy_data_chooser_is_visible(GtkTreeModel *model,
                             GtkTreeIter *iter,
@@ -1098,5 +1158,31 @@ gwy_data_chooser_new_graphs(void)
  * Returns: %TRUE to display this data in the chooser, %FALSE to omit it.
  **/
 
-/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+/**
+ * GwyAppDataId:
+ * @datano: Numeric identifier of data container.  Zero is used for none.
+ * @id: Numeric identifier of a specific data item, such as channel or graph
+ *      number.  Value -1 is used for none.
+ *
+ * Auxiliary structure representing one data item in an open file.
+ *
+ * The data container number can be obtained with gwy_app_data_browser_get()
+ * and used to look up the container with gwy_app_data_browser_get_number().
+ *
+ * Since: 2.41
+ **/
 
+/**
+ * GWY_APP_DATA_ID_NONE:
+ *
+ * Initialiser for #GwyAppDataId that corresponds to no data.
+ *
+ * The macro would be typically used
+ * |[
+ * GwyAppDataId dataid = GWY_APP_DATA_ID_NONE;
+ * ]|
+ *
+ * Since: 2.41
+ **/
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

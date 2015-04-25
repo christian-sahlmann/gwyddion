@@ -46,17 +46,17 @@ static gboolean module_register      (void);
 static void     mcrop                (GwyContainer *data,
                                       GwyRunType run);
 static void     mcrop_data_cb        (GwyDataChooser *chooser,
-                                      GwyAppDataId *object);
+                                      GwyAppDataIdTmp *object);
 static gboolean mcrop_data_filter    (GwyContainer *data, gint id,
                                       gpointer user_data);
-static gboolean mcrop_dialog         (GwyAppDataId *op1,
-                                      GwyAppDataId *op2);
-static gboolean mcrop_do             (GwyAppDataId *op1,
-                                      GwyAppDataId *op2);
+static gboolean mcrop_dialog         (GwyAppDataIdTmp *op1,
+                                      GwyAppDataIdTmp *op2);
+static gboolean mcrop_do             (GwyAppDataIdTmp *op1,
+                                      GwyAppDataIdTmp *op2);
 static gboolean get_score_iteratively(GwyDataField *data_field,
                                       GwyDataField *kernel_field,
                                       GwyDataField *score,
-                                      GwyAppDataId *op1);
+                                      GwyAppDataIdTmp *op1);
 static void     find_score_maximum   (GwyDataField *correlation_score,
                                       gint *max_col,
                                       gint *max_row);
@@ -90,7 +90,7 @@ module_register(void)
 static void
 mcrop(GwyContainer *data, GwyRunType run)
 {
-    GwyAppDataId op1, op2;
+    GwyAppDataIdTmp op1, op2;
     GQuark quark1, quark2;
 
     g_return_if_fail(run & MCROP_RUN_MODES);
@@ -113,7 +113,7 @@ mcrop(GwyContainer *data, GwyRunType run)
 
 static void
 mcrop_data_cb(GwyDataChooser *chooser,
-              GwyAppDataId *object)
+              GwyAppDataIdTmp *object)
 {
     GtkWidget *dialog;
 
@@ -129,7 +129,7 @@ mcrop_data_cb(GwyDataChooser *chooser,
 static gboolean
 mcrop_data_filter(GwyContainer *data, gint id, gpointer user_data)
 {
-    GwyAppDataId *object = (GwyAppDataId*)user_data;
+    GwyAppDataIdTmp *object = (GwyAppDataIdTmp*)user_data;
     GwyDataField *op1, *op2;
     GQuark quark;
 
@@ -148,7 +148,7 @@ mcrop_data_filter(GwyContainer *data, gint id, gpointer user_data)
                                                | GWY_DATA_COMPATIBILITY_VALUE);
 }
 
-static gboolean mcrop_dialog (GwyAppDataId *op1, GwyAppDataId *op2)
+static gboolean mcrop_dialog (GwyAppDataIdTmp *op1, GwyAppDataIdTmp *op2)
 {
     GtkWidget *dialog, *chooser, *table;
 
@@ -207,7 +207,7 @@ static gboolean mcrop_dialog (GwyAppDataId *op1, GwyAppDataId *op2)
 }
 
 static gboolean
-mcrop_do(GwyAppDataId *op1, GwyAppDataId *op2)
+mcrop_do(GwyAppDataIdTmp *op1, GwyAppDataIdTmp *op2)
 {
     GwyDataField *dfield1, *dfield2;
     GwyDataField *correlation_data, *correlation_kernel, *correlation_score;
@@ -305,7 +305,7 @@ mcrop_do(GwyAppDataId *op1, GwyAppDataId *op2)
 /* compute corelation */
 static gboolean
 get_score_iteratively(GwyDataField *data_field, GwyDataField *kernel_field,
-                      GwyDataField *score, GwyAppDataId *op1)
+                      GwyDataField *score, GwyAppDataIdTmp *op1)
 {
     enum { WORK_PER_UPDATE = 50000000 };
     GwyComputationState *state;

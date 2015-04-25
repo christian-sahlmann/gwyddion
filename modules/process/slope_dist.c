@@ -59,7 +59,7 @@ typedef struct {
     gboolean update;
     gint kernel_size;
     GwyMaskingType masking;
-    GwyAppDataId target_graph;
+    GwyAppDataIdTmp target_graph;
 } SlopeArgs;
 
 typedef struct {
@@ -621,7 +621,7 @@ static void
 target_graph_changed(SlopeControls *controls)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
-    GwyAppDataId *target = &controls->args->target_graph;
+    GwyAppDataIdTmp *target = &controls->args->target_graph;
 
     target->data = gwy_data_chooser_get_active(chooser, &target->id);
 }

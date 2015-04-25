@@ -63,8 +63,8 @@ typedef struct {
     gboolean create_images;
     gboolean plot_size_graph;
     guint nstripes;
-    GwyAppDataId orig;  /* The original source, to filter out incompatible */
-    GwyAppDataId source;
+    GwyAppDataIdTmp orig;  /* The original source, to filter out incompatible */
+    GwyAppDataIdTmp source;
     /* Stripe results */
     GwyDataField **stripetips;
     gboolean *goodtip;
@@ -132,7 +132,7 @@ static void           bound_changed           (GtkToggleButton *button,
 static void           same_resolution_changed (GtkToggleButton *button,
                                                TipBlindControls *controls);
 static void           data_changed            (GwyDataChooser *chooser,
-                                               GwyAppDataId *object);
+                                               GwyAppDataIdTmp *object);
 static void           split_to_stripes_changed(GtkToggleButton *toggle,
                                                TipBlindControls *controls);
 static void           nstripes_changed        (GtkAdjustment *adj,
@@ -600,7 +600,7 @@ same_resolution_changed(GtkToggleButton *button,
 
 static void
 data_changed(GwyDataChooser *chooser,
-             GwyAppDataId *object)
+             GwyAppDataIdTmp *object)
 {
     object->data = gwy_data_chooser_get_active(chooser, &object->id);
 }
@@ -653,7 +653,7 @@ tip_blind_source_filter(GwyContainer *data,
                         gint id,
                         gpointer user_data)
 {
-    GwyAppDataId *object = (GwyAppDataId*)user_data;
+    GwyAppDataIdTmp *object = (GwyAppDataIdTmp*)user_data;
     GwyDataField *source, *orig;
     GQuark quark;
 

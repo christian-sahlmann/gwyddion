@@ -55,7 +55,7 @@ typedef enum {
 } ResponseDuplicate;
 
 typedef struct {
-    GwyAppDataId objects[NARGS];
+    GwyAppDataIdTmp objects[NARGS];
     gchar *name[NARGS];
     guint pos[NARGS];
     gdouble xoffset;

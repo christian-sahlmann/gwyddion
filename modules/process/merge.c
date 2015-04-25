@@ -77,8 +77,8 @@ typedef struct {
     GwyMergeBoundaryType boundary;
     gboolean create_mask;
     gboolean crop_to_rectangle;
-    GwyAppDataId op1;
-    GwyAppDataId op2;
+    GwyAppDataIdTmp op1;
+    GwyAppDataIdTmp op2;
 } MergeArgs;
 
 typedef struct {

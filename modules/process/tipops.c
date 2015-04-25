@@ -38,8 +38,8 @@ typedef enum {
 } TipOperation;
 
 typedef struct {
-    GwyAppDataId tip;
-    GwyAppDataId target;
+    GwyAppDataIdTmp tip;
+    GwyAppDataIdTmp target;
 } TipOpsArgs;
 
 static gboolean module_register  (void);
@@ -256,7 +256,7 @@ tipops_tip_filter(GwyContainer *data,
                   gint id,
                   gpointer user_data)
 {
-    GwyAppDataId *object = (GwyAppDataId*)user_data;
+    GwyAppDataIdTmp *object = (GwyAppDataIdTmp*)user_data;
     GwyDataField *tip, *target;
     GQuark quark;
 

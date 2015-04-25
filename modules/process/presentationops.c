@@ -42,8 +42,8 @@ static void     presentation_logscale     (GwyContainer *data,
                                            GwyRunType run);
 static void     presentation_attach       (GwyContainer *data,
                                            GwyRunType run);
-static void     presentation_attach_do    (const GwyAppDataId *source,
-                                           const GwyAppDataId *target);
+static void     presentation_attach_do    (const GwyAppDataIdTmp *source,
+                                           const GwyAppDataIdTmp *target);
 static gboolean presentation_attach_filter(GwyContainer *source,
                                            gint id,
                                            gpointer user_data);
@@ -201,7 +201,7 @@ presentation_attach(G_GNUC_UNUSED GwyContainer *data,
                     GwyRunType run)
 {
     GtkWidget *dialog, *table, *label, *chooser;
-    GwyAppDataId source, target;
+    GwyAppDataIdTmp source, target;
     gint row, response;
 
     g_return_if_fail(run & PRESENTATION_ATTACH_RUN_MODES);
@@ -273,7 +273,7 @@ presentation_attach_filter(GwyContainer *source,
                            gint id,
                            gpointer user_data)
 {
-    const GwyAppDataId *target = (const GwyAppDataId*)user_data;
+    const GwyAppDataIdTmp *target = (const GwyAppDataIdTmp*)user_data;
     GwyDataField *source_dfield, *target_dfield;
     GQuark quark;
 
@@ -291,8 +291,8 @@ presentation_attach_filter(GwyContainer *source,
 }
 
 static void
-presentation_attach_do(const GwyAppDataId *source,
-                       const GwyAppDataId *target)
+presentation_attach_do(const GwyAppDataIdTmp *source,
+                       const GwyAppDataIdTmp *target)
 {
     GwyDataField *dfield;
     GQuark quark;

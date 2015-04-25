@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2006-2013 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2006-2015 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -29,6 +29,13 @@
 
 G_BEGIN_DECLS
 
+typedef struct {
+    gint datano;
+    gint id;
+} GwyAppDataId;
+
+#define GWY_APP_DATA_ID_NONE { 0, -1 }
+
 #define GWY_TYPE_DATA_CHOOSER             (gwy_data_chooser_get_type())
 #define GWY_DATA_CHOOSER(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_DATA_CHOOSER, GwyDataChooser))
 #define GWY_DATA_CHOOSER_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_DATA_CHOOSER, GwyDataChooserClass))
@@ -47,25 +54,28 @@ GtkWidget* gwy_data_chooser_new_channels(void);
 GtkWidget* gwy_data_chooser_new_volumes (void);
 GtkWidget* gwy_data_chooser_new_graphs  (void);
 
-GType         gwy_data_chooser_get_type  (void)                            G_GNUC_CONST;
-gboolean      gwy_data_chooser_set_active(GwyDataChooser *chooser,
-                                          GwyContainer *data,
-                                          gint id);
-GwyContainer* gwy_data_chooser_get_active(GwyDataChooser *chooser,
-                                          gint *id);
-void          gwy_data_chooser_set_filter(GwyDataChooser *chooser,
-                                          GwyDataChooserFilterFunc filter,
-                                          gpointer user_data,
-                                          GtkDestroyNotify destroy);
-const gchar*  gwy_data_chooser_get_none  (GwyDataChooser *chooser);
-void          gwy_data_chooser_set_none  (GwyDataChooser *chooser,
-                                          const gchar *none);
-GtkTreeModel* gwy_data_chooser_get_filter(GwyDataChooser *chooser);
-void          gwy_data_chooser_refilter  (GwyDataChooser *chooser);
+GType         gwy_data_chooser_get_type     (void)                            G_GNUC_CONST;
+gboolean      gwy_data_chooser_set_active   (GwyDataChooser *chooser,
+                                             GwyContainer *data,
+                                             gint id);
+GwyContainer* gwy_data_chooser_get_active   (GwyDataChooser *chooser,
+                                             gint *id);
+gboolean      gwy_data_chooser_set_active_id(GwyDataChooser *chooser,
+                                             const GwyAppDataId *id);
+gboolean      gwy_data_chooser_get_active_id(GwyDataChooser *chooser,
+                                             GwyAppDataId *id);
+void          gwy_data_chooser_set_filter   (GwyDataChooser *chooser,
+                                             GwyDataChooserFilterFunc filter,
+                                             gpointer user_data,
+                                             GtkDestroyNotify destroy);
+const gchar*  gwy_data_chooser_get_none     (GwyDataChooser *chooser);
+void          gwy_data_chooser_set_none     (GwyDataChooser *chooser,
+                                             const gchar *none);
+GtkTreeModel* gwy_data_chooser_get_filter   (GwyDataChooser *chooser);
+void          gwy_data_chooser_refilter     (GwyDataChooser *chooser);
 
 G_END_DECLS
 
 #endif /* __GWY_DATA_CHOOSER_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-

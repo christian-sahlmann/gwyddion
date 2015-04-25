@@ -42,7 +42,7 @@ typedef struct {
     gboolean units_equal;
     guint ngrains;
     gint *grains;
-    GwyAppDataId target_graph;
+    GwyAppDataIdTmp target_graph;
 } GrainCrossArgs;
 
 typedef struct {
@@ -352,7 +352,7 @@ static void
 target_graph_changed(GrainCrossControls *controls)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
-    GwyAppDataId *target = &controls->args->target_graph;
+    GwyAppDataIdTmp *target = &controls->args->target_graph;
 
     target->data = gwy_data_chooser_get_active(chooser, &target->id);
 }

@@ -55,10 +55,10 @@ typedef struct {
     gboolean add_ls_mask;
     gdouble threshold;
     gboolean multiple;
-    GwyAppDataId op1;
-    GwyAppDataId op2;
-    GwyAppDataId op3;
-    GwyAppDataId op4;
+    GwyAppDataIdTmp op1;
+    GwyAppDataIdTmp op2;
+    GwyAppDataIdTmp op3;
+    GwyAppDataIdTmp op4;
 
 } CrosscorArgs;
 
@@ -85,7 +85,7 @@ static gboolean crosscor_dialog       (CrosscorArgs *args);
 static void     crosscor_operation_cb (GtkWidget *combo,
                                        CrosscorArgs *args);
 static void     crosscor_data_cb      (GwyDataChooser *chooser,
-                                       GwyAppDataId *object);
+                                       GwyAppDataIdTmp *object);
 static gboolean crosscor_data_filter  (GwyContainer *data,
                                        gint id,
                                        gpointer user_data);
@@ -360,7 +360,7 @@ crosscor_dialog(CrosscorArgs *args)
 
 static void
 crosscor_data_cb(GwyDataChooser *chooser,
-                 GwyAppDataId *object)
+                 GwyAppDataIdTmp *object)
 {
     GtkWidget *dialog;
 
@@ -402,7 +402,7 @@ crosscor_data_filter(GwyContainer *data,
                      gint id,
                      gpointer user_data)
 {
-    GwyAppDataId *object = (GwyAppDataId*)user_data;
+    GwyAppDataIdTmp *object = (GwyAppDataIdTmp*)user_data;
     GwyDataField *op1, *op2;
     GQuark quark;
 
@@ -429,7 +429,7 @@ crosscor_weaker_filter(GwyContainer *data,
                      gint id,
                      gpointer user_data)
 {
-    GwyAppDataId *object = (GwyAppDataId*)user_data;
+    GwyAppDataIdTmp *object = (GwyAppDataIdTmp*)user_data;
     GwyDataField *op1, *op2;
     GQuark quark;
 

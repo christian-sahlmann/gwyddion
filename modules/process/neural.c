@@ -69,8 +69,8 @@ enum {
 
 typedef struct {
     GwyNeuralNetwork *nn;
-    GwyAppDataId tmodel;
-    GwyAppDataId tsignal;
+    GwyAppDataIdTmp tmodel;
+    GwyAppDataIdTmp tsignal;
     guint trainsteps;
     GwyMaskingType masking;
     PreviewType preview_type;

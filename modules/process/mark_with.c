@@ -85,8 +85,8 @@ typedef struct {
     gdouble data_min;
     gdouble data_max;
     GwyDataField *original_mask;
-    GwyAppDataId target;
-    GwyAppDataId source;
+    GwyAppDataIdTmp target;
+    GwyAppDataIdTmp source;
     MarkArgs *args;
     gboolean in_construction;
     gboolean calculated;
@@ -96,7 +96,7 @@ static gboolean      module_register            (void);
 static void          mark                       (GwyContainer *data,
                                                  GwyRunType run);
 static void          mark_dialog                (MarkArgs *args,
-                                                 const GwyAppDataId *target,
+                                                 const GwyAppDataIdTmp *target,
                                                  GQuark mquark);
 static void          mark_load_args             (GwyContainer *container,
                                                  MarkArgs *args);
@@ -171,7 +171,7 @@ static void
 mark(GwyContainer *data, GwyRunType run)
 {
     MarkArgs args;
-    GwyAppDataId target;
+    GwyAppDataIdTmp target;
     GQuark mquark;
 
     g_return_if_fail(run & MARK_RUN_MODES);
@@ -188,7 +188,7 @@ mark(GwyContainer *data, GwyRunType run)
 
 static void
 mark_dialog(MarkArgs *args,
-            const GwyAppDataId *target,
+            const GwyAppDataIdTmp *target,
             GQuark mquark)
 {
     GtkWidget *dialog, *hbox, *vbox, *label, *vbox2;
@@ -732,7 +732,7 @@ mask_attach_filter(GwyContainer *source,
                    gint id,
                    gpointer user_data)
 {
-    const GwyAppDataId *target = (const GwyAppDataId*)user_data;
+    const GwyAppDataIdTmp *target = (const GwyAppDataIdTmp*)user_data;
     GwyDataField *source_dfield, *target_dfield;
     GQuark quark;
 
@@ -755,7 +755,7 @@ data_attach_filter(GwyContainer *source,
                    gint id,
                    gpointer user_data)
 {
-    const GwyAppDataId *target = (const GwyAppDataId*)user_data;
+    const GwyAppDataIdTmp *target = (const GwyAppDataIdTmp*)user_data;
     GwyDataField *source_dfield, *target_dfield;
     GQuark quark;
 
@@ -778,7 +778,7 @@ show_attach_filter(GwyContainer *source,
                    gint id,
                    gpointer user_data)
 {
-    const GwyAppDataId *target = (const GwyAppDataId*)user_data;
+    const GwyAppDataIdTmp *target = (const GwyAppDataIdTmp*)user_data;
     GwyDataField *source_dfield, *target_dfield;
     GQuark quark;
 

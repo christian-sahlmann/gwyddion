@@ -44,8 +44,8 @@ typedef struct {
     MaskcorResult result;
     gdouble threshold;
     GwyCorrelationType method;
-    GwyAppDataId data;
-    GwyAppDataId kernel;
+    GwyAppDataIdTmp data;
+    GwyAppDataIdTmp kernel;
 } MaskcorArgs;
 
 typedef struct {
@@ -62,7 +62,7 @@ static void     maskcor_operation_cb (GtkWidget *item,
 static void     maskcor_threshold_cb (GtkAdjustment *adj,
                                       gdouble *value);
 static void     maskcor_kernel_cb    (GwyDataChooser *chooser,
-                                      GwyAppDataId *object);
+                                      GwyAppDataIdTmp *object);
 static gboolean maskcor_kernel_filter(GwyContainer *data,
                                       gint id,
                                       gpointer user_data);
@@ -231,7 +231,7 @@ maskcor_threshold_cb(GtkAdjustment *adj, gdouble *value)
 
 static void
 maskcor_kernel_cb(GwyDataChooser *chooser,
-                  GwyAppDataId *object)
+                  GwyAppDataIdTmp *object)
 {
     GtkWidget *dialog;
 
@@ -249,7 +249,7 @@ maskcor_kernel_filter(GwyContainer *data,
                       gint id,
                       gpointer user_data)
 {
-    GwyAppDataId *object = (GwyAppDataId*)user_data;
+    GwyAppDataIdTmp *object = (GwyAppDataIdTmp*)user_data;
     GwyDataField *kernel, *dfield;
     GQuark quark;
 

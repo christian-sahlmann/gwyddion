@@ -41,7 +41,7 @@ typedef struct {
     gdouble radius;
     gdouble theta;
     GwyTipType type;
-    GwyAppDataId object;
+    GwyAppDataIdTmp object;
 } TipModelArgs;
 
 typedef struct {

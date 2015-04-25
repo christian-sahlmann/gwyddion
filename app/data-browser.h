@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2006-2013 David Necas (Yeti), Petr Klapetek, Chris Anderson
+ *  Copyright (C) 2006-2015 David Necas (Yeti), Petr Klapetek, Chris Anderson
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net, sidewinderasu@gmail.com.
  *
  *  This program is free software; you can redistribute it and/or modify

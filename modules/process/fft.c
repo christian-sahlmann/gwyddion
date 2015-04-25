@@ -53,7 +53,7 @@ typedef struct {
     gboolean inverse_transform;
     GwyWindowingType window;
     GwyFFTOutputType out;
-    GwyAppDataId imgpart;
+    GwyAppDataIdTmp imgpart;
 } FFTArgs;
 
 typedef struct {
@@ -436,7 +436,7 @@ fft_dialog(FFTArgs *args,
 
             case RESPONSE_RESET:
             {
-                GwyAppDataId imgpart = args->imgpart;
+                GwyAppDataIdTmp imgpart = args->imgpart;
                 *args = fft_defaults;
                 args->imgpart = imgpart;
                 fft_dialog_update(&controls, args);

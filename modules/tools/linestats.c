@@ -55,7 +55,7 @@ typedef struct {
     gboolean fixres;
     GwyOrientation direction;
     GwyInterpolationType interpolation;
-    GwyAppDataId target;
+    GwyAppDataIdTmp target;
 } ToolArgs;
 
 struct _GwyToolLineStats {
@@ -730,7 +730,7 @@ static void
 gwy_tool_line_stats_target_changed(GwyToolLineStats *tool)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(tool->target_graph);
-    GwyAppDataId *target = &tool->args.target;
+    GwyAppDataIdTmp *target = &tool->args.target;
 
     target->data = gwy_data_chooser_get_active(chooser, &target->id);
 }

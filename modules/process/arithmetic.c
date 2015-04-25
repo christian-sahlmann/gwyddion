@@ -82,7 +82,7 @@ typedef struct {
     gchar *userunits;
     GtkTreeModel *history;
     guint err;
-    GwyAppDataId objects[NARGS];
+    GwyAppDataIdTmp objects[NARGS];
     gchar *name[ARITHMETIC_NARGS];
     guint pos[ARITHMETIC_NARGS];
     GPtrArray *ok_masks;

@@ -61,7 +61,7 @@ typedef struct {
     gdouble from[GWY_FRACTAL_NMETHODS];
     gdouble to[GWY_FRACTAL_NMETHODS];
     gdouble result[GWY_FRACTAL_NMETHODS];
-    GwyAppDataId target_graph;
+    GwyAppDataIdTmp target_graph;
 } FractalArgs;
 
 typedef struct {
@@ -457,7 +457,7 @@ static void
 target_graph_changed(FractalControls *controls)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
-    GwyAppDataId *target = &controls->args->target_graph;
+    GwyAppDataIdTmp *target = &controls->args->target_graph;
 
     target->data = gwy_data_chooser_get_active(chooser, &target->id);
 }

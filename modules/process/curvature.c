@@ -60,7 +60,7 @@ typedef struct {
     gboolean set_selection;
     gboolean plot_graph;
     GwyMaskingType masking;
-    GwyAppDataId target_graph;
+    GwyAppDataIdTmp target_graph;
 } CurvatureArgs;
 
 typedef struct {
@@ -925,7 +925,7 @@ static void
 target_graph_changed(CurvatureControls *controls)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
-    GwyAppDataId *target = &controls->args->target_graph;
+    GwyAppDataIdTmp *target = &controls->args->target_graph;
 
     target->data = gwy_data_chooser_get_active(chooser, &target->id);
 }

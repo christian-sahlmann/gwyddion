@@ -46,7 +46,7 @@ enum {
 
 typedef struct {
     guint err;
-    GwyAppDataId objects[NARGS];
+    GwyAppDataIdTmp objects[NARGS];
     gchar *name[NARGS];
     guint pos[NARGS];
 } SupresArgs;

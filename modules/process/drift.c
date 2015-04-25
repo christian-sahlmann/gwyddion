@@ -64,7 +64,7 @@ typedef struct {
     GwyInterpolationType interp;
     gboolean distribute;
     gboolean replace;
-    GwyAppDataId target_graph;
+    GwyAppDataIdTmp target_graph;
 } DriftArgs;
 
 typedef struct {
@@ -804,7 +804,7 @@ static void
 target_graph_changed(DriftControls *controls)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
-    GwyAppDataId *target = &controls->args->target_graph;
+    GwyAppDataIdTmp *target = &controls->args->target_graph;
 
     target->data = gwy_data_chooser_get_active(chooser, &target->id);
 }

@@ -76,8 +76,8 @@ typedef struct {
     GwyImmerseSamplingType sampling;
     GwyImmerseLevelType leveling;
     gboolean draw_frame;
-    GwyAppDataId image;
-    GwyAppDataId detail;
+    GwyAppDataIdTmp image;
+    GwyAppDataIdTmp detail;
     /* Interface only */
     gdouble xpos;
     gdouble ypos;
@@ -433,7 +433,7 @@ immerse_detail_cb(GwyDataChooser *chooser,
 {
     GwyDataField *dfield, *ifield;
     GQuark quark;
-    GwyAppDataId *object;
+    GwyAppDataIdTmp *object;
 
     object = &controls->args->detail;
     object->data = gwy_data_chooser_get_active(chooser, &object->id);
@@ -515,7 +515,7 @@ immerse_data_filter(GwyContainer *data,
                     gint id,
                     gpointer user_data)
 {
-    GwyAppDataId *object = (GwyAppDataId*)user_data;
+    GwyAppDataIdTmp *object = (GwyAppDataIdTmp*)user_data;
     GwyDataField *image, *detail;
     GQuark quark;
 
