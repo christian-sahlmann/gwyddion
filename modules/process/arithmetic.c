@@ -137,12 +137,14 @@ static GwyDataField* make_y_der                   (GwyDataField *dfield);
 static const gchar default_units[] = "";
 static const gchar default_expression[] = "d1 - d2";
 
+static GwyAppDataId object_ids[NARGS];
+
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Simple arithmetic operations with data fields."),
     "Yeti <yeti@gwyddion.net>",
-    "3.4",
+    "3.5",
     "David Nečas (Yeti)",
     "2004",
 };
@@ -152,6 +154,12 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
+    guint i;
+
+    for (i = 0; i < NARGS; i++) {
+        object_ids[i].datano = 0;
+        object_ids[i].id = -1;
+    }
     gwy_process_func_register("arithmetic",
                               (GwyProcessFunc)&arithmetic,
                               N_("/M_ultidata/_Arithmetic..."),
@@ -179,13 +187,29 @@ arithmetic(GwyContainer *data, GwyRunType run)
                                      0);
 
     settings = gwy_app_settings_get();
-    for (i = 0; i < NARGS; i++) {
-        args.objects[i].datano = datano;
-        args.objects[i].id = id;
-    }
     arithmetic_load_args(settings, &args);
     args.ok_masks = g_ptr_array_new();
     args.expr = gwy_expr_new();
+
+    args.objects[0].datano = datano;
+    args.objects[0].id = id;
+
+    for (i = 1; i < NARGS; i++) {
+        GwyContainer *data2;
+        GQuark quark;
+
+        if (!(data2 = gwy_app_data_browser_get(args.objects[i].datano))) {
+            args.objects[i].datano = datano;
+            args.objects[i].id = id;
+            continue;
+        }
+        quark = gwy_app_get_data_key_for_id(args.objects[i].id);
+        if (!gwy_container_contains(data2, quark)) {
+            args.objects[i].datano = datano;
+            args.objects[i].id = id;
+            continue;
+        }
+    }
 
     gwy_expr_define_constant(args.expr, "pi", G_PI, NULL);
     gwy_expr_define_constant(args.expr, "π", G_PI, NULL);
@@ -975,6 +999,8 @@ arithmetic_load_args(GwyContainer *settings,
     }
     g_free(filename);
 
+    memcpy(args->objects, object_ids, NARGS*sizeof(GwyAppDataId));
+
     /* Ensures args->expression comes first */
     arithmetic_update_history(args);
 }
@@ -985,6 +1011,8 @@ arithmetic_save_args(GwyContainer *settings,
 {
     gchar *filename;
     FILE *fh;
+
+    memcpy(object_ids, args->objects, NARGS*sizeof(GwyAppDataId));
 
     gwy_container_set_string_by_name(settings, expression_key,
                                      args->expression);
