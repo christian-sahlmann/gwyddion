@@ -82,7 +82,7 @@ typedef struct {
     gchar *userunits;
     GtkTreeModel *history;
     guint err;
-    GwyAppDataIdTmp objects[NARGS];
+    GwyAppDataId objects[NARGS];
     gchar *name[ARITHMETIC_NARGS];
     guint pos[ARITHMETIC_NARGS];
     GPtrArray *ok_masks;
@@ -170,15 +170,17 @@ arithmetic(GwyContainer *data, GwyRunType run)
     guint i;
     GwyContainer *settings;
     gboolean dorun;
-    gint id, newid;
+    gint datano, id, newid;
 
     g_return_if_fail(run & ARITH_RUN_MODES);
 
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &id, 0);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_CONTAINER_ID, &datano,
+                                     0);
 
     settings = gwy_app_settings_get();
     for (i = 0; i < NARGS; i++) {
-        args.objects[i].data = data;
+        args.objects[i].datano = datano;
         args.objects[i].id = id;
     }
     arithmetic_load_args(settings, &args);
@@ -323,8 +325,8 @@ arithmetic_dialog(GwyContainer *data,
         args->name[NARGS*ARITHMETIC_DER_Y + i] = g_strdup_printf("by%d", i+1);
 
         chooser = gwy_data_chooser_new_channels();
-        gwy_data_chooser_set_active(GWY_DATA_CHOOSER(chooser),
-                                    args->objects[i].data, args->objects[i].id);
+        gwy_data_chooser_set_active_id(GWY_DATA_CHOOSER(chooser),
+                                       args->objects + i);
         g_signal_connect(chooser, "changed",
                          G_CALLBACK(arithmetic_data_chosen), &controls);
         g_object_set_data(G_OBJECT(chooser), "index", GUINT_TO_POINTER(i));
@@ -423,8 +425,7 @@ arithmetic_data_chosen(GwyDataChooser *chooser,
 
     args = controls->args;
     i = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(chooser), "index"));
-    args->objects[i].data = gwy_data_chooser_get_active(chooser,
-                                                        &args->objects[i].id);
+    gwy_data_chooser_get_active_id(chooser, args->objects + i);
     if (!(args->err & ARITHMETIC_EXPR))
         arithmetic_show_state(controls, NULL);
 }
@@ -551,14 +552,16 @@ arithmetic_check_fields(ArithmeticArgs *args)
     }
 
     /* each window must match with first, this is transitive */
-    data = args->objects[first].data;
+    data = gwy_app_data_browser_get(args->objects[first].datano);
+    g_return_val_if_fail(data, NULL);
     quark = gwy_app_get_data_key_for_id(args->objects[first].id);
     dfirst = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
     for (i = first+1; i < NARGS; i++) {
         if (!need_data[i])
             continue;
 
-        data = args->objects[i].data;
+        data = gwy_app_data_browser_get(args->objects[i].datano);
+        g_return_val_if_fail(data, NULL);
         quark = gwy_app_get_data_key_for_id(args->objects[i].id);
         dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
@@ -632,7 +635,8 @@ arithmetic_do(ArithmeticArgs *args, gint *id)
         if (!need_data[i])
             continue;
 
-        data = args->objects[i].data;
+        data = gwy_app_data_browser_get(args->objects[i].datano);
+        g_return_val_if_fail(data, NULL);
         quark = gwy_app_get_data_key_for_id(args->objects[i].id);
         dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
         data_fields[i] = dfield;
@@ -653,7 +657,8 @@ arithmetic_do(ArithmeticArgs *args, gint *id)
         if (!need_data[i % NARGS])
             continue;
 
-        data = args->objects[i % NARGS].data;
+        data = gwy_app_data_browser_get(args->objects[i % NARGS].datano);
+        g_return_val_if_fail(data, NULL);
         quark = gwy_app_get_data_key_for_id(args->objects[i % NARGS].id);
         dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
         if (first) {
@@ -712,7 +717,8 @@ arithmetic_do(ArithmeticArgs *args, gint *id)
     else {
         i = args->dataunits % NARGS;
         if (!(dfield = data_fields[i])) {
-            data = args->objects[i].data;
+            data = gwy_app_data_browser_get(args->objects[i].datano);
+            g_return_val_if_fail(data, NULL);
             quark = gwy_app_get_data_key_for_id(args->objects[i].id);
             dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
         }
