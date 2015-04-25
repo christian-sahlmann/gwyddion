@@ -47,6 +47,7 @@ typedef struct {
     gint zexponent;
     gboolean square;
     gboolean new_channel;
+    gboolean match_size;
     gdouble xreal;
     gdouble yreal;
     gdouble zreal;
@@ -66,8 +67,8 @@ typedef struct {
     gchar *xyunitorig;
     gchar *zunit;
     gchar *zunitorig;
-    GwyAppDataIdTmp sizeid;
-    GwyAppDataIdTmp targetid;
+    GwyAppDataId sizeid;
+    GwyAppDataId targetid;
 } CalibrateArgs;
 
 typedef struct {
@@ -151,9 +152,9 @@ static void     match_size_changed     (GtkToggleButton *toggle,
                                         CalibrateControls *controls);
 static void     size_channel_changed   (GwyDataChooser *toggle,
                                         CalibrateControls *controls);
-static gboolean mould_filter(GwyContainer *data,
-             gint id,
-             gpointer user_data);
+static gboolean mould_filter           (GwyContainer *data,
+                                        gint id,
+                                        gpointer user_data);
 static void     set_combo_from_unit    (GtkWidget *combo,
                                         const gchar *str,
                                         gint basepower);
@@ -164,20 +165,21 @@ static const CalibrateArgs calibrate_defaults = {
     1.0,
     -6,
     -6,
-    TRUE,
-    TRUE,
+    TRUE, TRUE, FALSE,
     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0,
     "m", "m", "m", "m",
-    { NULL, 0 },
-    { NULL, 0 },
+    GWY_APP_DATA_ID_NONE,
+    GWY_APP_DATA_ID_NONE,
 };
+
+static GwyAppDataId mould_id = GWY_APP_DATA_ID_NONE;
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Recalibrates scan lateral dimensions or value range."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.13",
+    "2.14",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -205,7 +207,7 @@ calibrate(GwyContainer *data, GwyRunType run)
     GwyDataField *dfields[3];
     GQuark quarks[3];
     GQuark quark;
-    gint oldid, newid;
+    gint oldid, newid, datano;
     CalibrateArgs args;
     gboolean ok;
     GwySIUnit *siunitxy, *siunitz;
@@ -218,11 +220,12 @@ calibrate(GwyContainer *data, GwyRunType run)
                                      GWY_APP_MASK_FIELD_KEY, quarks + 1,
                                      GWY_APP_SHOW_FIELD_KEY, quarks + 2,
                                      GWY_APP_DATA_FIELD_ID, &oldid,
+                                     GWY_APP_CONTAINER_ID, &datano,
                                      0);
     g_return_if_fail(dfields[0]);
 
     calibrate_load_args(gwy_app_settings_get(), &args);
-    args.targetid.data = data;
+    args.targetid.datano = datano;
     args.targetid.id = oldid;
     args.xorig = gwy_data_field_get_xreal(dfields[0]);
     args.yorig = gwy_data_field_get_yreal(dfields[0]);
@@ -380,6 +383,7 @@ calibrate_dialog(CalibrateArgs *args,
 {
     enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *spin, *table, *label;
+    GwyDataChooser *chooser;
     GwySIUnit *unit;
     CalibrateControls controls;
     gint row, response;
@@ -418,13 +422,13 @@ calibrate_dialog(CalibrateArgs *args,
                      G_CALLBACK(match_size_changed), &controls);
 
     controls.size_chooser = gwy_data_chooser_new_channels();
+    chooser = GWY_DATA_CHOOSER(controls.size_chooser);
     gtk_widget_set_sensitive(controls.size_chooser, FALSE);
-    gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(controls.size_chooser),
-                                mould_filter, &args->targetid, NULL);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls.size_chooser,
-                              1, 3, row, row+1);
-    if (gwy_data_chooser_get_active(GWY_DATA_CHOOSER(controls.size_chooser),
-                                    NULL)) {
+    gwy_data_chooser_set_filter(chooser, mould_filter, &args->targetid, NULL);
+    if (!gwy_data_chooser_set_active_id(chooser, &args->sizeid))
+        args->match_size = FALSE;
+
+    if (gwy_data_chooser_get_active(chooser, NULL)) {
         g_signal_connect(controls.size_chooser, "changed",
                          G_CALLBACK(size_channel_changed), &controls);
     }
@@ -432,7 +436,10 @@ calibrate_dialog(CalibrateArgs *args,
         gtk_widget_set_sensitive(controls.match_size, FALSE);
         gtk_widget_set_no_show_all(controls.match_size, TRUE);
         gtk_widget_set_no_show_all(controls.size_chooser, TRUE);
+        args->match_size = FALSE;
     }
+    gtk_table_attach_defaults(GTK_TABLE(table), controls.size_chooser,
+                              1, 3, row, row+1);
     row++;
 
     label = gtk_label_new_with_mnemonic(_("_X range:"));
@@ -638,6 +645,8 @@ calibrate_dialog(CalibrateArgs *args,
 
     controls.in_update = FALSE;
     /* sync all fields */
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.match_size),
+                                 args->match_size);
     calibrate_dialog_update(&controls, args);
 
     gtk_widget_show_all(dialog);
@@ -1020,6 +1029,7 @@ match_size_changed(GtkToggleButton *toggle,
 {
     gboolean matching = gtk_toggle_button_get_active(toggle);
 
+    controls->args->match_size = matching;
     gtk_widget_set_sensitive(controls->size_chooser, matching);
     gtk_widget_set_sensitive(controls->xreal_spin, !matching);
     gtk_widget_set_sensitive(controls->xreal_label, !matching);
@@ -1047,20 +1057,21 @@ size_channel_changed(GwyDataChooser *chooser,
                      CalibrateControls *controls)
 {
     CalibrateArgs *args = controls->args;
+    GwyContainer *data;
     GwyDataField *mould;
     GQuark quark;
     gdouble dx, dy;
     GwySIUnit *unit;
 
-    args->sizeid.data = gwy_data_chooser_get_active(chooser, &args->sizeid.id);
-    if (!args->sizeid.data) {
+    if (!gwy_data_chooser_get_active_id(chooser, &args->sizeid)) {
         gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
                                           GTK_RESPONSE_OK, FALSE);
         return;
     }
 
     quark = gwy_app_get_data_key_for_id(args->sizeid.id);
-    mould = GWY_DATA_FIELD(gwy_container_get_object(args->sizeid.data, quark));
+    data = gwy_app_data_browser_get(args->sizeid.datano);
+    mould = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
     dx = gwy_data_field_get_xmeasure(mould);
     dy = gwy_data_field_get_ymeasure(mould);
     unit = gwy_data_field_get_si_unit_xy(mould);
@@ -1087,8 +1098,9 @@ mould_filter(GwyContainer *data,
              gint id,
              gpointer user_data)
 {
-    GwyAppDataIdTmp *object = (GwyAppDataIdTmp*)user_data;
-    return data != object->data || id != object->id;
+    GwyAppDataId *object = (GwyAppDataId*)user_data;
+    GwyContainer *objdata = gwy_app_data_browser_get(object->datano);
+    return data != objdata || id != object->id;
 }
 
 static void
@@ -1169,6 +1181,7 @@ static const gchar zratio_key[]      = "/module/calibrate/zratio";
 static const gchar zshift_key[]      = "/module/calibrate/zshift";
 static const gchar square_key[]      = "/module/calibrate/square";
 static const gchar new_channel_key[] = "/module/calibrate/new_channel";
+static const gchar match_size_key[]  = "/module/calibrate/match_size";
 
 static void
 calibrate_sanitize_args(CalibrateArgs *args)
@@ -1179,6 +1192,7 @@ calibrate_sanitize_args(CalibrateArgs *args)
     args->zshift = CLAMP(args->zshift, -1e-9, 1e9);
     args->square = !!args->square;
     args->new_channel = !!args->new_channel;
+    args->match_size = !!args->match_size;
 }
 
 static void
@@ -1194,6 +1208,9 @@ calibrate_load_args(GwyContainer *container,
     gwy_container_gis_boolean_by_name(container, square_key, &args->square);
     gwy_container_gis_boolean_by_name(container, new_channel_key,
                                       &args->new_channel);
+    gwy_container_gis_boolean_by_name(container, match_size_key,
+                                      &args->match_size);
+    args->sizeid = mould_id;
     calibrate_sanitize_args(args);
 }
 
@@ -1201,6 +1218,7 @@ static void
 calibrate_save_args(GwyContainer *container,
                     CalibrateArgs *args)
 {
+    mould_id = args->sizeid;
     gwy_container_set_double_by_name(container, xratio_key, args->xratio);
     gwy_container_set_double_by_name(container, yratio_key, args->yratio);
     gwy_container_set_double_by_name(container, zratio_key, args->zratio);
@@ -1208,6 +1226,8 @@ calibrate_save_args(GwyContainer *container,
     gwy_container_set_boolean_by_name(container, square_key, args->square);
     gwy_container_set_boolean_by_name(container, new_channel_key,
                                       args->new_channel);
+    gwy_container_set_boolean_by_name(container, match_size_key,
+                                      args->match_size);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
