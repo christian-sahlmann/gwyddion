@@ -27,6 +27,8 @@ Modules:
   profile, Drift correction: It is possible to select a target graph for the
   curves.
 - Arithmetic: Data fields 2 to 8 are remembered between invocations.
+- Calibrate, Merge, Immerse: Second image is remembered between invocations.
+- Immerse: Detail positions are remembered.
 - Merge: New merge mode ‘Join’ suitable for slowly varying data without
   significant features but well defined absolute Z values was added.
 - Pygwy: Python modules have sys.path set up the same way as the console now,
