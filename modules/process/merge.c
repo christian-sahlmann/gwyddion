@@ -77,8 +77,8 @@ typedef struct {
     GwyMergeBoundaryType boundary;
     gboolean create_mask;
     gboolean crop_to_rectangle;
-    GwyAppDataIdTmp op1;
-    GwyAppDataIdTmp op2;
+    GwyAppDataId op1;
+    GwyAppDataId op2;
 } MergeArgs;
 
 typedef struct {
@@ -203,9 +203,11 @@ static const MergeArgs merge_defaults = {
     GWY_MERGE_MODE_CORRELATE,
     GWY_MERGE_BOUNDARY_FIRST,
     FALSE, FALSE,
-    { NULL, -1 },
-    { NULL, -1 },
+    { 0, -1 },
+    { 0, -1 },
 };
+
+static GwyAppDataId op2_id = GWY_APP_DATA_ID_NONE;
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -234,7 +236,7 @@ module_register(void)
 }
 
 static void
-merge(GwyContainer *data, GwyRunType run)
+merge(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 {
     MergeArgs args;
     GwyContainer *settings;
@@ -244,9 +246,9 @@ merge(GwyContainer *data, GwyRunType run)
     settings = gwy_app_settings_get();
     merge_load_args(settings, &args);
 
-    args.op1.data = data;
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.op1.id, 0);
-    args.op2 = args.op1;
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.op1.id,
+                                     GWY_APP_CONTAINER_ID, &args.op1.datano,
+                                     0);
 
     if (merge_dialog(&args)) {
         if (args.mode == GWY_MERGE_MODE_NONE)
@@ -264,7 +266,8 @@ static gboolean
 merge_dialog(MergeArgs *args)
 {
     MergeControls controls;
-    GtkWidget *dialog, *table, *chooser, *combo, *check;
+    GtkWidget *dialog, *table, *combo, *check;
+    GwyDataChooser *chooser;
     gint response, row;
     gboolean ok;
 
@@ -287,14 +290,14 @@ merge_dialog(MergeArgs *args)
     row = 0;
 
     /* Merge with */
-    chooser = gwy_data_chooser_new_channels();
-    controls.op2 = chooser;
+    controls.op2 = gwy_data_chooser_new_channels();
+    chooser = GWY_DATA_CHOOSER(controls.op2);
     g_object_set_data(G_OBJECT(chooser), "dialog", dialog);
-    gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(chooser),
-                                merge_data_filter, args, NULL);
+    gwy_data_chooser_set_active_id(chooser, &args->op2);
+    gwy_data_chooser_set_filter(chooser, merge_data_filter, args, NULL);
     g_signal_connect_swapped(chooser, "changed",
                              G_CALLBACK(merge_data_changed), &controls);
-    merge_data_changed(&controls, GWY_DATA_CHOOSER(chooser));
+    merge_data_changed(&controls, chooser);
     gwy_table_attach_hscale(table, row, _("_Merge with:"), NULL,
                             GTK_OBJECT(chooser), GWY_HSCALE_WIDGET);
     row++;
@@ -378,12 +381,12 @@ merge_data_changed(MergeControls *controls,
 {
     MergeArgs *args = controls->args;
 
-    args->op2.data = gwy_data_chooser_get_active(chooser, &args->op2.id);
-    gwy_debug("data: %p %d", args->op2.data, args->op2.id);
+    gwy_data_chooser_get_active_id(chooser, &args->op2);
+    gwy_debug("data: %d %d", args->op2.datano, args->op2.id);
 
     gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
                                       GTK_RESPONSE_OK,
-                                      args->op2.data != NULL);
+                                      args->op2.datano);
 }
 
 static gboolean
@@ -397,11 +400,12 @@ merge_data_filter(GwyContainer *data,
     gboolean ok;
     GQuark quark;
 
-    quark = gwy_app_get_data_key_for_id(args->op1.id);
-    op1 = GWY_DATA_FIELD(gwy_container_get_object(args->op1.data, quark));
-
     quark = gwy_app_get_data_key_for_id(id);
     op2 = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
+
+    data = gwy_app_data_browser_get(args->op1.datano);
+    quark = gwy_app_get_data_key_for_id(args->op1.id);
+    op1 = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
     if (op1 == op2)
         return FALSE;
@@ -488,13 +492,16 @@ merge_do_correlate(MergeArgs *args)
     GwyMergeDirectionType real_dir = args->direction;
     GwyMergeBoundaryType real_boundary = args->boundary;
     gint px1, py1, px2, py2;
+    GwyContainer *data1, *data2;
     GQuark quark;
 
+    data1 = gwy_app_data_browser_get(args->op1.datano);
     quark = gwy_app_get_data_key_for_id(args->op1.id);
-    dfield1 = GWY_DATA_FIELD(gwy_container_get_object(args->op1.data, quark));
+    dfield1 = GWY_DATA_FIELD(gwy_container_get_object(data1, quark));
 
+    data2 = gwy_app_data_browser_get(args->op2.datano);
     quark = gwy_app_get_data_key_for_id(args->op2.id);
-    dfield2 = GWY_DATA_FIELD(gwy_container_get_object(args->op2.data, quark));
+    dfield2 = GWY_DATA_FIELD(gwy_container_get_object(data2, quark));
 
     if ((dfield1->xres*dfield1->yres) < (dfield2->xres*dfield2->yres)) {
         GWY_SWAP(GwyDataField*, dfield1, dfield2);
@@ -613,7 +620,7 @@ merge_do_correlate(MergeArgs *args)
         py2 = 0;
     }
 
-    create_merged_field(args->op1.data, args->op1.id,
+    create_merged_field(data1, args->op1.id,
                         dfield1, dfield2,
                         px1, py1, px2, py2,
                         real_boundary, real_dir,
@@ -632,16 +639,19 @@ merge_do_join(MergeArgs *args)
     gint xres1, xres2, yres1, yres2;
     gint maxover, i, off = 0;
     gint px1, py1, px2, py2;
+    GwyContainer *data1, *data2;
     gdouble s, smin = G_MAXDOUBLE;
     GwyMergeBoundaryType real_boundary = args->boundary;
     GwyMergeDirectionType real_dir = args->direction;
     GQuark quark;
 
+    data1 = gwy_app_data_browser_get(args->op1.datano);
     quark = gwy_app_get_data_key_for_id(args->op1.id);
-    dfield1 = GWY_DATA_FIELD(gwy_container_get_object(args->op1.data, quark));
+    dfield1 = GWY_DATA_FIELD(gwy_container_get_object(data1, quark));
 
+    data2 = gwy_app_data_browser_get(args->op2.datano);
     quark = gwy_app_get_data_key_for_id(args->op2.id);
-    dfield2 = GWY_DATA_FIELD(gwy_container_get_object(args->op2.data, quark));
+    dfield2 = GWY_DATA_FIELD(gwy_container_get_object(data2, quark));
 
     /* Reduce joining to two cases. */
     if (args->direction == GWY_MERGE_DIRECTION_UP
@@ -709,7 +719,7 @@ merge_do_join(MergeArgs *args)
         g_assert_not_reached();
     }
 
-    create_merged_field(args->op1.data, args->op1.id,
+    create_merged_field(data1, args->op1.id,
                         dfield1, dfield2,
                         px1, py1, px2, py2,
                         real_boundary, real_dir,
@@ -722,13 +732,16 @@ merge_do_none(MergeArgs *args)
     GwyDataField *dfield1, *dfield2;
     gint xres1, xres2, yres1, yres2;
     gint px1, py1, px2, py2;
+    GwyContainer *data1, *data2;
     GQuark quark;
 
+    data1 = gwy_app_data_browser_get(args->op1.datano);
     quark = gwy_app_get_data_key_for_id(args->op1.id);
-    dfield1 = GWY_DATA_FIELD(gwy_container_get_object(args->op1.data, quark));
+    dfield1 = GWY_DATA_FIELD(gwy_container_get_object(data1, quark));
 
+    data2 = gwy_app_data_browser_get(args->op2.datano);
     quark = gwy_app_get_data_key_for_id(args->op2.id);
-    dfield2 = GWY_DATA_FIELD(gwy_container_get_object(args->op2.data, quark));
+    dfield2 = GWY_DATA_FIELD(gwy_container_get_object(data2, quark));
 
     xres1 = gwy_data_field_get_xres(dfield1);
     xres2 = gwy_data_field_get_xres(dfield2);
@@ -759,7 +772,7 @@ merge_do_none(MergeArgs *args)
         g_assert_not_reached();
     }
 
-    create_merged_field(args->op1.data, args->op1.id,
+    create_merged_field(data1, args->op1.id,
                         dfield1, dfield2,
                         px1, py1, px2, py2,
                         args->boundary, args->direction,
@@ -1048,6 +1061,7 @@ get_score_iteratively(GwyDataField *data_field, GwyDataField *kernel_field,
 {
     enum { WORK_PER_UPDATE = 50000000 };
     GwyComputationState *state;
+    GwyContainer *data;
     gboolean ok = FALSE;
     int work, wpi;
 
@@ -1058,8 +1072,8 @@ get_score_iteratively(GwyDataField *data_field, GwyDataField *kernel_field,
     state = gwy_data_field_correlate_init(data_field, kernel_field, score);
 
     /* FIXME */
-    gwy_app_wait_start(gwy_app_find_window_for_channel(args->op1.data,
-                                                       args->op1.id),
+    data = gwy_app_data_browser_get(args->op1.datano);
+    gwy_app_wait_start(gwy_app_find_window_for_channel(data, args->op1.id),
                        _("Initializing"));
     gwy_data_field_correlate_iteration(state);
     if (!gwy_app_wait_set_message(_("Correlating")))
@@ -1239,6 +1253,7 @@ merge_load_args(GwyContainer *settings,
                                       &args->create_mask);
     gwy_container_gis_boolean_by_name(settings, crop_to_rectangle_key,
                                       &args->crop_to_rectangle);
+    args->op2 = op2_id;
     merge_sanitize_args(args);
 }
 
@@ -1246,6 +1261,7 @@ static void
 merge_save_args(GwyContainer *settings,
                 MergeArgs *args)
 {
+    op2_id = args->op2;
     gwy_container_set_enum_by_name(settings, direction_key, args->direction);
     gwy_container_set_enum_by_name(settings, mode_key, args->mode);
     gwy_container_set_enum_by_name(settings, boundary_key, args->boundary);
