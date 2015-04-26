@@ -76,8 +76,8 @@ typedef struct {
     GwyImmerseSamplingType sampling;
     GwyImmerseLevelType leveling;
     gboolean draw_frame;
-    GwyAppDataIdTmp image;
-    GwyAppDataIdTmp detail;
+    GwyAppDataId image;
+    GwyAppDataId detail;
     /* Interface only */
     gdouble xpos;
     gdouble ypos;
@@ -158,19 +158,21 @@ static const ImmerseArgs immerse_defaults = {
     GWY_IMMERSE_SAMPLING_UP,
     GWY_IMMERSE_LEVEL_MEAN,
     TRUE,
-    { NULL, -1 },
-    { NULL, -1 },
+    GWY_APP_DATA_ID_NONE,
+    GWY_APP_DATA_ID_NONE,
     /* Ensure initial pos update */
     -1e38,
     -1e38,
 };
+
+static GwyAppDataId detail_id = GWY_APP_DATA_ID_NONE;
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Immerse high resolution detail into overall image."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -192,7 +194,7 @@ module_register(void)
 }
 
 static void
-immerse(GwyContainer *data, GwyRunType run)
+immerse(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 {
     ImmerseArgs args;
     GwyContainer *settings;
@@ -202,9 +204,9 @@ immerse(GwyContainer *data, GwyRunType run)
     settings = gwy_app_settings_get();
     immerse_load_args(settings, &args);
 
-    args.image.data = data;
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.image.id, 0);
-    args.detail.data = NULL;
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.image.id,
+                                     GWY_APP_CONTAINER_ID, &args.image.datano,
+                                     0);
 
     if (immerse_dialog(&args))
         immerse_do(&args);
@@ -214,6 +216,7 @@ static gboolean
 immerse_dialog(ImmerseArgs *args)
 {
     ImmerseControls controls;
+    GwyContainer *data;
     GtkDialog *dialog;
     GtkWidget *table, *chooser, *hbox, *alignment, *label, *button, *vbox;
     GtkTooltips *tooltips;
@@ -251,16 +254,16 @@ immerse_dialog(ImmerseArgs *args)
     gtk_box_pack_start(GTK_BOX(dialog->vbox), hbox, FALSE, FALSE, 4);
 
     /* Preview */
+    data = gwy_app_data_browser_get(args->image.datano);
     id = args->image.id;
-    dfield = gwy_container_get_object(args->image.data,
-                                      gwy_app_get_data_key_for_id(id));
+    dfield = gwy_container_get_object(data, gwy_app_get_data_key_for_id(id));
     controls.vf
         = gwy_data_field_get_value_format_xy(dfield,
                                              GWY_SI_UNIT_FORMAT_VFMARKUP, NULL);
 
     controls.mydata = gwy_container_new();
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
-    gwy_app_sync_data_items(args->image.data, controls.mydata, id, 0, FALSE,
+    gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
                             GWY_DATA_ITEM_PALETTE,
                             GWY_DATA_ITEM_MASK_COLOR,
                             GWY_DATA_ITEM_RANGE,
@@ -306,6 +309,7 @@ immerse_dialog(ImmerseArgs *args)
 
     /* Detail to immerse */
     chooser = gwy_data_chooser_new_channels();
+    gwy_data_chooser_set_active_id(GWY_DATA_CHOOSER(chooser), &args->detail);
     gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(chooser),
                                 immerse_data_filter, &args->image, NULL);
     g_signal_connect(chooser, "changed",
@@ -432,28 +436,31 @@ immerse_detail_cb(GwyDataChooser *chooser,
                   ImmerseControls *controls)
 {
     GwyDataField *dfield, *ifield;
+    GwyContainer *data;
     GQuark quark;
-    GwyAppDataIdTmp *object;
+    GwyAppDataId *object;
 
     object = &controls->args->detail;
-    object->data = gwy_data_chooser_get_active(chooser, &object->id);
-    gwy_debug("data: %p %d", object->data, object->id);
+    gwy_data_chooser_get_active_id(chooser, object);
+    gwy_debug("data: %d %d", object->datano, object->id);
+    data = gwy_app_data_browser_get(object->datano);
 
     gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
                                       GTK_RESPONSE_OK,
-                                      object->data != NULL);
+                                      data != NULL);
     gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
                                       IMMERSE_RESPONSE_LOCATE,
-                                      object->data != NULL);
+                                      data != NULL);
     gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
                                       IMMERSE_RESPONSE_IMPROVE,
-                                      object->data != NULL);
+                                      data != NULL);
 
-    if (object->data) {
+    if (data) {
         quark = gwy_app_get_data_key_for_id(object->id);
-        dfield = gwy_container_get_object(object->data, quark);
+        dfield = gwy_container_get_object(data, quark);
         quark = gwy_app_get_data_key_for_id(controls->args->image.id);
-        ifield = gwy_container_get_object(controls->args->image.data, quark);
+        data = gwy_app_data_browser_get(controls->args->image.datano);
+        ifield = gwy_container_get_object(data, quark);
         controls->xmax = (gwy_data_field_get_xreal(ifield)
                           - gwy_data_field_get_xreal(dfield)
                           + gwy_data_field_get_xmeasure(ifield)/2.0);
@@ -472,6 +479,7 @@ immerse_detail_cb(GwyDataChooser *chooser,
 static void
 immerse_update_detail_pixbuf(ImmerseControls *controls)
 {
+    GwyContainer *data;
     GwyDataField *dfield;
     GwyGradient *gradient;
     GdkPixbuf *pixbuf;
@@ -481,11 +489,12 @@ immerse_update_detail_pixbuf(ImmerseControls *controls)
     gint w, h, xres, yres;
 
     gwy_object_unref(controls->detail);
-    if (!controls->args->detail.data)
+    data = gwy_app_data_browser_get(controls->args->detail.datano);
+    if (!data)
         return;
 
     quark = gwy_app_get_data_key_for_id(controls->args->detail.id);
-    dfield = gwy_container_get_object(controls->args->detail.data, quark);
+    dfield = gwy_container_get_object(data, quark);
     gwy_data_view_coords_real_to_xy(GWY_DATA_VIEW(controls->view),
                                     gwy_data_field_get_xreal(dfield),
                                     gwy_data_field_get_yreal(dfield),
@@ -496,7 +505,8 @@ immerse_update_detail_pixbuf(ImmerseControls *controls)
 
     key = g_strdup_printf("/%d/base/palette", controls->args->image.id);
     name = NULL;
-    gwy_container_gis_string_by_name(controls->args->image.data, key, &name);
+    data = gwy_app_data_browser_get(controls->args->image.datano);
+    gwy_container_gis_string_by_name(data, key, &name);
     g_free(key);
     gradient = gwy_gradients_get_gradient(name);
 
@@ -515,15 +525,16 @@ immerse_data_filter(GwyContainer *data,
                     gint id,
                     gpointer user_data)
 {
-    GwyAppDataIdTmp *object = (GwyAppDataIdTmp*)user_data;
+    GwyAppDataId *object = (GwyAppDataId*)user_data;
     GwyDataField *image, *detail;
     GQuark quark;
 
     quark = gwy_app_get_data_key_for_id(id);
     detail = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
+    data = gwy_app_data_browser_get(object->datano);
     quark = gwy_app_get_data_key_for_id(object->id);
-    image = GWY_DATA_FIELD(gwy_container_get_object(object->data, quark));
+    image = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
     /* It does not make sense to immerse itself */
     if (detail == image)
@@ -548,12 +559,17 @@ immerse_search(ImmerseControls *controls,
     GwyDataField *dfield, *dfieldsub, *ifield, *iarea;
     gdouble wr, hr, xpos, ypos, deltax, deltay;
     gint w, h, xfrom, xto, yfrom, yto, ixres, iyres, col, row;
+    GwyContainer *data;
     GQuark quark;
 
+    data = gwy_app_data_browser_get(controls->args->detail.datano);
     quark = gwy_app_get_data_key_for_id(controls->args->detail.id);
-    dfield = gwy_container_get_object(controls->args->detail.data, quark);
+    dfield = gwy_container_get_object(data, quark);
+
+    data = gwy_app_data_browser_get(controls->args->image.datano);
     quark = gwy_app_get_data_key_for_id(controls->args->image.id);
-    ifield = gwy_container_get_object(controls->args->image.data, quark);
+    ifield = gwy_container_get_object(data, quark);
+
     ixres = gwy_data_field_get_xres(ifield);
     iyres = gwy_data_field_get_yres(ifield);
 
@@ -726,19 +742,21 @@ immerse_find_maximum(GwyDataField *score,
 static void
 immerse_do(ImmerseArgs *args)
 {
-    GwyContainer *data;
     GwyDataField *resampled, *image, *detail, *result;
+    GwyContainer *data;
     gint newid;
     gint kxres, kyres;
     gint x, y, w, h;
     gdouble iavg, davg;
     GQuark quark;
 
+    data = gwy_app_data_browser_get(args->image.datano);
     quark = gwy_app_get_data_key_for_id(args->image.id);
-    image = GWY_DATA_FIELD(gwy_container_get_object(args->image.data, quark));
+    image = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
+    data = gwy_app_data_browser_get(args->detail.datano);
     quark = gwy_app_get_data_key_for_id(args->detail.id);
-    detail = GWY_DATA_FIELD(gwy_container_get_object(args->detail.data, quark));
+    detail = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
     davg = gwy_data_field_get_avg(detail);
 
     kxres = gwy_data_field_get_xres(detail);
@@ -1008,20 +1026,22 @@ immerse_sanitize_args(ImmerseArgs *args)
 
 static void
 immerse_load_args(GwyContainer *settings,
-                   ImmerseArgs *args)
+                  ImmerseArgs *args)
 {
     *args = immerse_defaults;
     gwy_container_gis_enum_by_name(settings, sampling_key, &args->sampling);
     gwy_container_gis_enum_by_name(settings, leveling_key, &args->leveling);
     gwy_container_gis_boolean_by_name(settings, draw_frame_key,
                                       &args->draw_frame);
+    args->detail = detail_id;
     immerse_sanitize_args(args);
 }
 
 static void
 immerse_save_args(GwyContainer *settings,
-                   ImmerseArgs *args)
+                  ImmerseArgs *args)
 {
+    detail_id = args->detail;
     gwy_container_set_enum_by_name(settings, sampling_key, args->sampling);
     gwy_container_set_enum_by_name(settings, leveling_key, args->leveling);
     gwy_container_set_boolean_by_name(settings, draw_frame_key,
@@ -1029,4 +1049,3 @@ immerse_save_args(GwyContainer *settings,
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
