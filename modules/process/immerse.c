@@ -1015,6 +1015,8 @@ immerse_clamp_detail_offset(ImmerseControls *controls,
 static const gchar sampling_key[]   = "/module/immerse/sampling";
 static const gchar leveling_key[]   = "/module/immerse/leveling";
 static const gchar draw_frame_key[] = "/module/immerse/draw-frame";
+static const gchar xpos_key[]       = "/module/immerse/xpos";
+static const gchar ypos_key[]       = "/module/immerse/ypos";
 
 static void
 immerse_sanitize_args(ImmerseArgs *args)
@@ -1033,6 +1035,8 @@ immerse_load_args(GwyContainer *settings,
     gwy_container_gis_enum_by_name(settings, leveling_key, &args->leveling);
     gwy_container_gis_boolean_by_name(settings, draw_frame_key,
                                       &args->draw_frame);
+    gwy_container_gis_double_by_name(settings, xpos_key, &args->xpos);
+    gwy_container_gis_double_by_name(settings, ypos_key, &args->ypos);
     args->detail = detail_id;
     immerse_sanitize_args(args);
 }
@@ -1046,6 +1050,8 @@ immerse_save_args(GwyContainer *settings,
     gwy_container_set_enum_by_name(settings, leveling_key, args->leveling);
     gwy_container_set_boolean_by_name(settings, draw_frame_key,
                                       args->draw_frame);
+    gwy_container_set_double_by_name(settings, xpos_key, args->xpos);
+    gwy_container_set_double_by_name(settings, ypos_key, args->ypos);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
