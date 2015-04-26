@@ -53,7 +53,7 @@ typedef struct {
     gboolean inverse_transform;
     GwyWindowingType window;
     GwyFFTOutputType out;
-    GwyAppDataIdTmp imgpart;
+    GwyAppDataId imgpart;
 } FFTArgs;
 
 typedef struct {
@@ -113,8 +113,10 @@ static const FFTArgs fft_defaults = {
     FALSE, TRUE, FALSE, FALSE, FALSE,
     GWY_WINDOWING_HANN,
     GWY_FFT_OUTPUT_MOD,
-    { NULL, -1 },
+    GWY_APP_DATA_ID_NONE,
 };
+
+static GwyAppDataId imgpart_id = GWY_APP_DATA_ID_NONE;
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -146,21 +148,26 @@ static void
 fft(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *imgpart, *tmp, *raout, *ipout;
+    GwyContainer *idata;
     FFTArgs args;
     gboolean is_inv, ok;
-    gint id;
+    gint id, datano;
 
     g_return_if_fail(run & FFT_RUN_MODES);
 
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_CONTAINER_ID, &datano,
                                      0);
     g_return_if_fail(dfield);
 
-    args.imgpart.data = data;
-    args.imgpart.id = id;
-
     fft_load_args(gwy_app_settings_get(), &args);
+    idata = gwy_app_data_browser_get(args.imgpart.datano);
+    if (!fft_imgpart_filter(idata, args.imgpart.id, dfield)) {
+        args.imgpart.datano = datano;
+        args.imgpart.id = id;
+    }
+
     if (run == GWY_RUN_INTERACTIVE) {
         ok = fft_dialog(&args, dfield);
         fft_save_args(gwy_app_settings_get(), &args);
@@ -173,10 +180,10 @@ fft(GwyContainer *data, GwyRunType run)
 
     is_inv = args.inverse_transform && args.raw_transform;
     imgpart = NULL;
-    if (args.use_imgpart && args.imgpart.data && args.imgpart.id >= 0) {
+    if (args.use_imgpart && args.imgpart.datano && args.imgpart.id >= 0) {
         GQuark quark = gwy_app_get_data_key_for_id(args.imgpart.id);
-        imgpart = GWY_DATA_FIELD(gwy_container_get_object(args.imgpart.data,
-                                                          quark));
+        idata = gwy_app_data_browser_get(args.imgpart.datano);
+        imgpart = GWY_DATA_FIELD(gwy_container_get_object(idata, quark));
     }
 
     if (is_inv) {
@@ -351,8 +358,8 @@ fft_dialog(FFTArgs *args,
     controls.imgpart = gwy_data_chooser_new_channels();
     gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(controls.imgpart),
                                 fft_imgpart_filter, dfield, NULL);
-    gwy_data_chooser_set_active(GWY_DATA_CHOOSER(controls.imgpart),
-                                args->imgpart.data, args->imgpart.id);
+    gwy_data_chooser_set_active_id(GWY_DATA_CHOOSER(controls.imgpart),
+                                   &args->imgpart);
     gwy_table_attach_hscale(table, row, _("I_maginary part:"), NULL,
                             GTK_OBJECT(controls.imgpart),
                             GWY_HSCALE_WIDGET | GWY_HSCALE_CHECK);
@@ -436,7 +443,7 @@ fft_dialog(FFTArgs *args,
 
             case RESPONSE_RESET:
             {
-                GwyAppDataIdTmp imgpart = args->imgpart;
+                GwyAppDataId imgpart = args->imgpart;
                 *args = fft_defaults;
                 args->imgpart = imgpart;
                 fft_dialog_update(&controls, args);
@@ -489,8 +496,7 @@ static void
 imgpart_changed(GwyDataChooser *chooser,
                 FFTArgs *args)
 {
-    args->imgpart.data = gwy_data_chooser_get_active(chooser,
-                                                     &args->imgpart.id);
+    gwy_data_chooser_get_active_id(chooser, &args->imgpart);
 }
 
 static gboolean
@@ -502,8 +508,12 @@ fft_imgpart_filter(GwyContainer *data,
     GwyDataField *imgpart;
     GQuark quark;
 
+    if (!data || id < 0)
+        return FALSE;
+
     quark = gwy_app_get_data_key_for_id(id);
-    imgpart = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
+    if (!gwy_container_gis_object(data, quark, (GObject**)&imgpart))
+        return FALSE;
 
     return !gwy_data_field_check_compatibility(imgpart, dfield,
                                                GWY_DATA_COMPATIBILITY_ALL);
@@ -578,6 +588,7 @@ fft_load_args(GwyContainer *container,
                                       &args->inverse_transform);
     gwy_container_gis_enum_by_name(container, window_key, &args->window);
     gwy_container_gis_enum_by_name(container, out_key, &args->out);
+    args->imgpart = imgpart_id;
     fft_sanitize_args(args);
 }
 
@@ -585,6 +596,7 @@ static void
 fft_save_args(GwyContainer *container,
               FFTArgs *args)
 {
+    imgpart_id = args->imgpart;
     gwy_container_set_boolean_by_name(container, raw_transform_key,
                                       args->raw_transform);
     gwy_container_set_boolean_by_name(container, zeromean_key, args->zeromean);

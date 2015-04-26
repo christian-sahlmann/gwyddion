@@ -203,8 +203,8 @@ static const MergeArgs merge_defaults = {
     GWY_MERGE_MODE_CORRELATE,
     GWY_MERGE_BOUNDARY_FIRST,
     FALSE, FALSE,
-    { 0, -1 },
-    { 0, -1 },
+    GWY_APP_DATA_ID_NONE,
+    GWY_APP_DATA_ID_NONE,
 };
 
 static GwyAppDataId op2_id = GWY_APP_DATA_ID_NONE;
