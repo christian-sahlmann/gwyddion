@@ -55,10 +55,10 @@ typedef struct {
     gboolean add_ls_mask;
     gdouble threshold;
     gboolean multiple;
-    GwyAppDataIdTmp op1;
-    GwyAppDataIdTmp op2;
-    GwyAppDataIdTmp op3;
-    GwyAppDataIdTmp op4;
+    GwyAppDataId op1;
+    GwyAppDataId op2;
+    GwyAppDataId op3;
+    GwyAppDataId op4;
 
 } CrosscorArgs;
 
@@ -74,51 +74,58 @@ typedef struct {
     GtkWidget *add_ls_mask;
     GtkObject *threshold;
     GtkWidget *multiple;
+    GtkWidget *chooser_op2;
     GtkWidget *chooser_op3;
     GtkWidget *chooser_op4;
 } CrosscorControls;
 
-static gboolean module_register       (void);
-static void     crosscor              (GwyContainer *data,
-                                       GwyRunType run);
-static gboolean crosscor_dialog       (CrosscorArgs *args);
-static void     crosscor_operation_cb (GtkWidget *combo,
-                                       CrosscorArgs *args);
-static void     crosscor_data_cb      (GwyDataChooser *chooser,
-                                       GwyAppDataIdTmp *object);
-static gboolean crosscor_data_filter  (GwyContainer *data,
-                                       gint id,
-                                       gpointer user_data);
+static gboolean module_register         (void);
+static void     crosscor                (GwyContainer *data,
+                                         GwyRunType run);
+static gboolean crosscor_dialog         (CrosscorArgs *args);
+static void     crosscor_operation_cb   (GtkWidget *combo,
+                                         CrosscorArgs *args);
+static void     crosscor_data_changed   (GwyDataChooser *chooser,
+                                         GwyAppDataId *object);
+static gboolean crosscor_data_filter    (GwyContainer *data,
+                                         gint id,
+                                         gpointer user_data);
 static gboolean crosscor_weaker_filter  (GwyContainer *data,
-                                       gint id,
-                                       gpointer user_data);
-static void     crosscor_update_values(CrosscorControls *controls,
-                                       CrosscorArgs *args);
-static gboolean crosscor_do           (CrosscorArgs *args);
-static void     crosscor_load_args    (GwyContainer *settings,
-                                       CrosscorArgs *args);
-static void     crosscor_save_args    (GwyContainer *settings,
-                                       CrosscorArgs *args);
-static void     crosscor_sanitize_args(CrosscorArgs *args);
-static void     mask_changed_cb       (GtkToggleButton *button,
-                                       CrosscorControls *controls);
-static void     multiple_changed_cb   (GtkToggleButton *button,
-                                       CrosscorControls *controls);
+                                         gint id,
+                                         gpointer user_data);
+static void     crosscor_update_values  (CrosscorControls *controls,
+                                         CrosscorArgs *args);
+static gboolean crosscor_do             (CrosscorArgs *args);
+static void     crosscor_load_args      (GwyContainer *settings,
+                                         CrosscorArgs *args);
+static void     crosscor_save_args      (GwyContainer *settings,
+                                         CrosscorArgs *args);
+static void     crosscor_sanitize_args  (CrosscorArgs *args);
+static void     mask_changed_cb         (GtkToggleButton *button,
+                                         CrosscorControls *controls);
+static void     multiple_changed_cb     (GtkToggleButton *button,
+                                         CrosscorControls *controls);
 static void     crosscor_update_areas_cb(GtkObject *adj,
-                                       CrosscorControls *controls);
-
+                                         CrosscorControls *controls);
 
 static const CrosscorArgs crosscor_defaults = {
     GWY_CROSSCOR_ABS, 10, 10, 25, 25, 0.0, 0.0, 1, 0.95, 0,
-    { NULL, -1 }, { NULL, -1 }, { NULL, -1 }, { NULL, -1 },
+    GWY_APP_DATA_ID_NONE,
+    GWY_APP_DATA_ID_NONE,
+    GWY_APP_DATA_ID_NONE,
+    GWY_APP_DATA_ID_NONE,
 };
+
+static GwyAppDataId op2_id = GWY_APP_DATA_ID_NONE;
+static GwyAppDataId op3_id = GWY_APP_DATA_ID_NONE;
+static GwyAppDataId op4_id = GWY_APP_DATA_ID_NONE;
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Calculates cross-correlation of two data fields."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -140,7 +147,7 @@ module_register(void)
 }
 
 static void
-crosscor(GwyContainer *data, GwyRunType run)
+crosscor(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 {
     CrosscorArgs args;
     GwyContainer *settings;
@@ -151,9 +158,9 @@ crosscor(GwyContainer *data, GwyRunType run)
     settings = gwy_app_settings_get();
     crosscor_load_args(settings, &args);
 
-    args.op1.data = data;
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.op1.id, 0);
-    args.op2.data = NULL;
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.op1.id,
+                                     GWY_APP_CONTAINER_ID, &args.op1.datano,
+                                     0);
 
     dorun = crosscor_dialog(&args);
     crosscor_save_args(settings, &args);
@@ -166,7 +173,8 @@ static gboolean
 crosscor_dialog(CrosscorArgs *args)
 {
     CrosscorControls controls;
-    GtkWidget *dialog, *table, *chooser, *label, *combo;
+    GtkWidget *dialog, *table, *label, *combo;
+    GwyDataChooser *chooser;
     gint row, response;
     gboolean ok = FALSE;
 
@@ -187,13 +195,15 @@ crosscor_dialog(CrosscorArgs *args)
     row = 0;
 
     /* Correlate with */
-    chooser = gwy_data_chooser_new_channels();
+    controls.chooser_op2 = gwy_data_chooser_new_channels();
+    chooser = GWY_DATA_CHOOSER(controls.chooser_op2);
     g_object_set_data(G_OBJECT(chooser), "dialog", dialog);
-    gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(chooser),
+    gwy_data_chooser_set_active_id(chooser, &args->op2);
+    gwy_data_chooser_set_filter(chooser,
                                 crosscor_data_filter, &args->op1, NULL);
     g_signal_connect(chooser, "changed",
-                     G_CALLBACK(crosscor_data_cb), &args->op2);
-    crosscor_data_cb(GWY_DATA_CHOOSER(chooser), &args->op2);
+                     G_CALLBACK(crosscor_data_changed), &args->op2);
+    crosscor_data_changed(chooser, &args->op2);
     gwy_table_attach_hscale(table, row, _("Co_rrelate with:"), NULL,
                             GTK_OBJECT(chooser), GWY_HSCALE_WIDGET);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
@@ -300,12 +310,14 @@ crosscor_dialog(CrosscorArgs *args)
 
     /* Second set to correlate with: source */
     controls.chooser_op3 = gwy_data_chooser_new_channels();
-    g_object_set_data(G_OBJECT(controls.chooser_op3), "dialog", dialog);
-    gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(controls.chooser_op3),
+    chooser = GWY_DATA_CHOOSER(controls.chooser_op3);
+    g_object_set_data(G_OBJECT(chooser), "dialog", dialog);
+    gwy_data_chooser_set_active_id(chooser, &args->op3);
+    gwy_data_chooser_set_filter(chooser,
                                 crosscor_weaker_filter, &args->op1, NULL);
     g_signal_connect(controls.chooser_op3, "changed",
-                     G_CALLBACK(crosscor_data_cb), &args->op3);
-    crosscor_data_cb(GWY_DATA_CHOOSER(controls.chooser_op3), &args->op3);
+                     G_CALLBACK(crosscor_data_changed), &args->op3);
+    crosscor_data_changed(chooser, &args->op3);
     gwy_table_attach_hscale(table, row, _("Second _source data:"), NULL,
                             GTK_OBJECT(controls.chooser_op3), GWY_HSCALE_WIDGET);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
@@ -315,19 +327,19 @@ crosscor_dialog(CrosscorArgs *args)
 
     /* Second set to correlate with: second data */
     controls.chooser_op4 = gwy_data_chooser_new_channels();
+    chooser = GWY_DATA_CHOOSER(controls.chooser_op4);
     g_object_set_data(G_OBJECT(controls.chooser_op4), "dialog", dialog);
-    gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(controls.chooser_op4),
+    gwy_data_chooser_set_active_id(chooser, &args->op4);
+    gwy_data_chooser_set_filter(chooser,
                                 crosscor_weaker_filter, &args->op1, NULL);
     g_signal_connect(controls.chooser_op4, "changed",
-                     G_CALLBACK(crosscor_data_cb), &args->op4);
-    crosscor_data_cb(GWY_DATA_CHOOSER(controls.chooser_op4), &args->op4);
+                     G_CALLBACK(crosscor_data_changed), &args->op4);
+    crosscor_data_changed(chooser, &args->op4);
     gwy_table_attach_hscale(table, row, _("Correlate with:"), NULL,
                             GTK_OBJECT(controls.chooser_op4), GWY_HSCALE_WIDGET);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     gtk_widget_set_sensitive(controls.chooser_op4, args->multiple);
     row++;
-
-
 
     gtk_widget_show_all(dialog);
 
@@ -359,18 +371,18 @@ crosscor_dialog(CrosscorArgs *args)
 }
 
 static void
-crosscor_data_cb(GwyDataChooser *chooser,
-                 GwyAppDataIdTmp *object)
+crosscor_data_changed(GwyDataChooser *chooser,
+                      GwyAppDataId *object)
 {
     GtkWidget *dialog;
 
-    object->data = gwy_data_chooser_get_active(chooser, &object->id);
-    gwy_debug("data: %p %d", object->data, object->id);
+    gwy_data_chooser_get_active_id(chooser, object);
+    gwy_debug("data: %d %d", object->datano, object->id);
 
     dialog = g_object_get_data(G_OBJECT(chooser), "dialog");
     g_assert(GTK_IS_DIALOG(dialog));
     gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_OK,
-                                      object->data != NULL);
+                                      object->datano);
 }
 
 static void
@@ -402,15 +414,16 @@ crosscor_data_filter(GwyContainer *data,
                      gint id,
                      gpointer user_data)
 {
-    GwyAppDataIdTmp *object = (GwyAppDataIdTmp*)user_data;
+    GwyAppDataId *object = (GwyAppDataId*)user_data;
     GwyDataField *op1, *op2;
     GQuark quark;
 
     quark = gwy_app_get_data_key_for_id(id);
     op1 = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
+    data = gwy_app_data_browser_get(object->datano);
     quark = gwy_app_get_data_key_for_id(object->id);
-    op2 = GWY_DATA_FIELD(gwy_container_get_object(object->data, quark));
+    op2 = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
     /* It does not make sense to crosscorrelate with itself */
     if (op1 == op2)
@@ -423,21 +436,21 @@ crosscor_data_filter(GwyContainer *data,
                                                | GWY_DATA_COMPATIBILITY_VALUE);
 }
 
-
 static gboolean
 crosscor_weaker_filter(GwyContainer *data,
-                     gint id,
-                     gpointer user_data)
+                       gint id,
+                       gpointer user_data)
 {
-    GwyAppDataIdTmp *object = (GwyAppDataIdTmp*)user_data;
+    GwyAppDataId *object = (GwyAppDataId*)user_data;
     GwyDataField *op1, *op2;
     GQuark quark;
 
     quark = gwy_app_get_data_key_for_id(id);
     op1 = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
+    data = gwy_app_data_browser_get(object->datano);
     quark = gwy_app_get_data_key_for_id(object->id);
-    op2 = GWY_DATA_FIELD(gwy_container_get_object(object->data, quark));
+    op2 = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
     return !gwy_data_field_check_compatibility(op1, op2,
                                                GWY_DATA_COMPATIBILITY_RES
@@ -542,11 +555,13 @@ crosscor_do(CrosscorArgs * args)
     GwySIUnit *siunit;
     GQuark quark;
 
+    data = gwy_app_data_browser_get(args->op1.datano);
     quark = gwy_app_get_data_key_for_id(args->op1.id);
-    dfield1 = GWY_DATA_FIELD(gwy_container_get_object(args->op1.data, quark));
+    dfield1 = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
+    data = gwy_app_data_browser_get(args->op2.datano);
     quark = gwy_app_get_data_key_for_id(args->op2.id);
-    dfield2 = GWY_DATA_FIELD(gwy_container_get_object(args->op2.data, quark));
+    dfield2 = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
     /* result fields - after computation result should be at dfieldx */
     dfieldx = gwy_data_field_new_alike(dfield1, FALSE);
@@ -554,13 +569,13 @@ crosscor_do(CrosscorArgs * args)
     score = gwy_data_field_new_alike(dfield1, FALSE);
 
     if (args->multiple) {
+        data = gwy_app_data_browser_get(args->op3.datano);
         quark = gwy_app_get_data_key_for_id(args->op3.id);
-        dfield3 =
-            GWY_DATA_FIELD(gwy_container_get_object(args->op3.data, quark));
+        dfield3 = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
+        data = gwy_app_data_browser_get(args->op4.datano);
         quark = gwy_app_get_data_key_for_id(args->op4.id);
-        dfield4 =
-            GWY_DATA_FIELD(gwy_container_get_object(args->op4.data, quark));
+        dfield4 = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
         dfieldx2 = gwy_data_field_new_alike(dfield1, FALSE);
         dfieldy2 = gwy_data_field_new_alike(dfield1, FALSE);
@@ -568,8 +583,8 @@ crosscor_do(CrosscorArgs * args)
     }
 
     /* FIXME */
-    gwy_app_wait_start(gwy_app_find_window_for_channel(args->op1.data,
-                                                       args->op1.id),
+    data = gwy_app_data_browser_get(args->op1.datano);
+    gwy_app_wait_start(gwy_app_find_window_for_channel(data, args->op1.id),
                        _("Initializing..."));
 
     /* compute crosscorelation */
@@ -594,8 +609,7 @@ crosscor_do(CrosscorArgs * args)
 
     /* compute crosscorelation of second set if it is there */
     if (args->multiple) {
-        gwy_app_wait_start(gwy_app_find_window_for_channel(args->op1.data,
-                                                           args->op1.id),
+        gwy_app_wait_start(gwy_app_find_window_for_channel(data, args->op1.id),
                            _("Initializing..."));
 
         state = gwy_data_field_crosscorrelate_init(dfield3, dfield4,
@@ -638,7 +652,6 @@ crosscor_do(CrosscorArgs * args)
         siunit = gwy_data_field_get_si_unit_z(dfieldx);
         gwy_si_unit_set_from_string(siunit, NULL);
 
-        data = args->op1.data;
         newid = gwy_app_data_browser_add_data_field(dfieldx, data, TRUE);
         gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT, 0);
@@ -658,7 +671,6 @@ crosscor_do(CrosscorArgs * args)
         siunit = gwy_data_field_get_si_unit_z(dfieldy);
         gwy_si_unit_set_from_string(siunit, NULL);
 
-        data = args->op1.data;
         newid = gwy_app_data_browser_add_data_field(dfieldy, data, TRUE);
         gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT, 0);
@@ -677,7 +689,6 @@ crosscor_do(CrosscorArgs * args)
         siunit = gwy_data_field_get_si_unit_z(abs);
         gwy_si_unit_set_from_string(siunit, NULL);
 
-        data = args->op1.data;
         newid = gwy_app_data_browser_add_data_field(abs, data, TRUE);
         gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT, 0);
@@ -696,7 +707,6 @@ crosscor_do(CrosscorArgs * args)
         siunit = gwy_data_field_get_si_unit_z(dir);
         gwy_si_unit_set_from_string(siunit, NULL);
 
-        data = args->op1.data;
         newid = gwy_app_data_browser_add_data_field(dir, data, TRUE);
         gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT, 0);
@@ -716,7 +726,6 @@ crosscor_do(CrosscorArgs * args)
         siunit = gwy_data_field_get_si_unit_z(score);
         gwy_si_unit_set_from_string(siunit, NULL);
 
-        data = args->op1.data;
         newid = gwy_app_data_browser_add_data_field(score, data, TRUE);
         gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT, 0);
@@ -743,15 +752,16 @@ crosscor_do(CrosscorArgs * args)
     return TRUE;
 }
 
+static const gchar add_ls_mask_key[] = "/module/crosscor/add_ls_mask";
+static const gchar multiple_key[]    = "/module/crosscor/multiple";
 static const gchar result_key[]      = "/module/crosscor/result";
+static const gchar rot_neg_key[]     = "/module/crosscor/rot_neg";
+static const gchar rot_pos_key[]     = "/module/crosscor/rot_pos";
 static const gchar search_x_key[]    = "/module/crosscor/search_x";
 static const gchar search_y_key[]    = "/module/crosscor/search_y";
+static const gchar threshold_key[]   = "/module/crosscor/threshold";
 static const gchar window_x_key[]    = "/module/crosscor/window_x";
 static const gchar window_y_key[]    = "/module/crosscor/window_y";
-static const gchar add_ls_mask_key[] = "/module/crosscor/add_ls_mask";
-static const gchar threshold_key[]   = "/module/crosscor/threshold";
-static const gchar rot_pos_key[]     = "/module/crosscor/rot_pos";
-static const gchar rot_neg_key[]     = "/module/crosscor/rot_neg";
 
 static void
 crosscor_sanitize_args(CrosscorArgs *args)
@@ -778,8 +788,12 @@ crosscor_load_args(GwyContainer *settings,
     gwy_container_gis_double_by_name(settings, threshold_key, &args->threshold);
     gwy_container_gis_boolean_by_name(settings, add_ls_mask_key,
                                       &args->add_ls_mask);
+    gwy_container_gis_boolean_by_name(settings, multiple_key, &args->multiple);
     gwy_container_gis_double_by_name(settings, rot_pos_key, &args->rot_pos);
     gwy_container_gis_double_by_name(settings, rot_neg_key, &args->rot_neg);
+    args->op2 = op2_id;
+    args->op3 = op3_id;
+    args->op4 = op4_id;
     crosscor_sanitize_args(args);
 }
 
@@ -787,6 +801,9 @@ static void
 crosscor_save_args(GwyContainer *settings,
                    CrosscorArgs *args)
 {
+    op2_id = args->op2;
+    op3_id = args->op3;
+    op4_id = args->op4;
     gwy_container_set_enum_by_name(settings, result_key, args->result);
     gwy_container_set_int32_by_name(settings, search_x_key, args->search_x);
     gwy_container_set_int32_by_name(settings, search_y_key, args->search_y);
@@ -795,6 +812,7 @@ crosscor_save_args(GwyContainer *settings,
     gwy_container_set_double_by_name(settings, threshold_key, args->threshold);
     gwy_container_set_boolean_by_name(settings, add_ls_mask_key,
                                       args->add_ls_mask);
+    gwy_container_set_boolean_by_name(settings, multiple_key, args->multiple);
     gwy_container_set_double_by_name(settings, rot_pos_key, args->rot_pos);
     gwy_container_set_double_by_name(settings, rot_neg_key, args->rot_neg);
 }
