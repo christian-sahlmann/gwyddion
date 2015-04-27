@@ -68,6 +68,8 @@ typedef struct {
     gdouble min;
     gdouble max;
     gboolean update;
+    GwyAppDataId target;
+    GwyAppDataId source[MARK_WITH_N];
 } MarkArgs;
 
 typedef struct {
@@ -85,8 +87,6 @@ typedef struct {
     gdouble data_min;
     gdouble data_max;
     GwyDataField *original_mask;
-    GwyAppDataIdTmp target;
-    GwyAppDataIdTmp source;
     MarkArgs *args;
     gboolean in_construction;
     gboolean calculated;
@@ -96,7 +96,6 @@ static gboolean      module_register            (void);
 static void          mark                       (GwyContainer *data,
                                                  GwyRunType run);
 static void          mark_dialog                (MarkArgs *args,
-                                                 const GwyAppDataIdTmp *target,
                                                  GQuark mquark);
 static void          mark_load_args             (GwyContainer *container,
                                                  MarkArgs *args);
@@ -140,6 +139,12 @@ static const MarkArgs mark_with_defaults = {
     MASK_EDIT_SET,
     0.0, 1.0,
     FALSE,
+    GWY_APP_DATA_ID_NONE,
+    { GWY_APP_DATA_ID_NONE, GWY_APP_DATA_ID_NONE, GWY_APP_DATA_ID_NONE },
+};
+
+static GwyAppDataId source_ids[MARK_WITH_N] = {
+    GWY_APP_DATA_ID_NONE, GWY_APP_DATA_ID_NONE, GWY_APP_DATA_ID_NONE,
 };
 
 static GwyModuleInfo module_info = {
@@ -147,7 +152,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Creates or modifies a mask using other channels."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -168,32 +173,31 @@ module_register(void)
 }
 
 static void
-mark(GwyContainer *data, GwyRunType run)
+mark(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 {
     MarkArgs args;
-    GwyAppDataIdTmp target;
     GQuark mquark;
 
     g_return_if_fail(run & MARK_RUN_MODES);
 
     mark_load_args(gwy_app_settings_get(), &args);
 
-    target.data = data;
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &target.id,
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.target.id,
                                      GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     GWY_APP_CONTAINER_ID, &args.target.datano,
                                      0);
 
-    mark_dialog(&args, &target, mquark);
+    mark_dialog(&args, mquark);
 }
 
 static void
 mark_dialog(MarkArgs *args,
-            const GwyAppDataIdTmp *target,
             GQuark mquark)
 {
     GtkWidget *dialog, *hbox, *vbox, *label, *vbox2;
     GtkTable *table;
     MarkControls controls;
+    GwyContainer *data;
     GwyDataField *dfield;
     GwyPixmapLayer *layer;
     GSList *l;
@@ -221,8 +225,6 @@ mark_dialog(MarkArgs *args,
                        TRUE, TRUE, 4);
 
     controls.args = args;
-    controls.target = *target;
-    controls.source = *target;
     controls.original_mask = NULL;
     controls.calculated = FALSE;
     controls.in_construction = TRUE;
@@ -303,15 +305,17 @@ mark_dialog(MarkArgs *args,
         i = gwy_radio_button_get_value(GTK_WIDGET(l->data));
         controls.channels[i] = gwy_data_chooser_new_channels();
         chooser = GWY_DATA_CHOOSER(controls.channels[i]);
+        gwy_data_chooser_set_active_id(chooser, args->source + i);
+        g_object_set_data(G_OBJECT(chooser), "id", GUINT_TO_POINTER(i));
         if (i == MARK_WITH_MASK)
             gwy_data_chooser_set_filter(chooser, &mask_attach_filter,
-                                        &controls.target, NULL);
+                                        &args->target, NULL);
         else if (i == MARK_WITH_DATA)
             gwy_data_chooser_set_filter(chooser, &data_attach_filter,
-                                        &controls.target, NULL);
+                                        &args->target, NULL);
         else
             gwy_data_chooser_set_filter(chooser, &show_attach_filter,
-                                        &controls.target, NULL);
+                                        &args->target, NULL);
         gtk_table_attach(table, controls.channels[i],
                          1, 3, row, row+1, GTK_FILL, 0, 0, 0);
         controls.has_any[i] = !!gwy_data_chooser_get_active(chooser, NULL);
@@ -374,16 +378,17 @@ mark_dialog(MarkArgs *args,
 
     /* Really set up the data views after we know something sensible is
      * selected. */
-    gwy_container_gis_object(controls.target.data,
-                             gwy_app_get_mask_key_for_id(controls.target.id),
+    data = gwy_app_data_browser_get(args->target.datano);
+    gwy_container_gis_object(data,
+                             gwy_app_get_mask_key_for_id(args->target.id),
                              &controls.original_mask);
-    gwy_container_gis_object(controls.target.data,
-                             gwy_app_get_data_key_for_id(controls.target.id),
+    gwy_container_gis_object(data,
+                             gwy_app_get_data_key_for_id(args->target.id),
                              &dfield);
     setup_source_view_data(&controls);
 
     gwy_container_set_object_by_name(controls.mydata, "/1/data", dfield);
-    gwy_app_sync_data_items(target->data, controls.mydata, target->id, 1, FALSE,
+    gwy_app_sync_data_items(data, controls.mydata, args->target.id, 1, FALSE,
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_MASK_COLOR,
                             GWY_DATA_ITEM_RANGE,
@@ -464,9 +469,9 @@ mark_dialog(MarkArgs *args,
     mark_save_args(gwy_app_settings_get(), args);
 
     dfield = gwy_container_get_object_by_name(controls.mydata, "/1/mask");
-    gwy_app_undo_qcheckpointv(target->data, 1, &mquark);
-    gwy_container_set_object(target->data, mquark, dfield);
-    gwy_app_channel_log_add_proc(target->data, target->id, target->id);
+    gwy_app_undo_qcheckpointv(data, 1, &mquark);
+    gwy_container_set_object(data, mquark, dfield);
+    gwy_app_channel_log_add_proc(data, args->target.id, args->target.id);
 
     g_object_unref(controls.mydata);
 }
@@ -551,9 +556,11 @@ static void
 channel_changed(GwyDataChooser *chooser,
                 MarkControls *controls)
 {
+    MarkWithWhat what;
+
+    what = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(chooser), "id"));
     /* The channel type is recorded in mark_with, it cannot change here. */
-    controls->source.data = gwy_data_chooser_get_active(chooser,
-                                                        &controls->source.id);
+    gwy_data_chooser_get_active_id(chooser, controls->args->source + what);
     if (controls->in_construction)
         return;
 
@@ -588,18 +595,22 @@ max_changed(MarkControls *controls,
 static void
 setup_source_view_data(MarkControls *controls)
 {
+    MarkWithWhat what;
     MarkArgs *args = controls->args;
+    GwyContainer *data;
     GwyDataField *dfield, *mfield;
     GQuark quark;
 
     /* Base field to display under the source mask.  This is read-only, so
      * we can just reference it. */
-    if (args->mark_with == MARK_WITH_MASK || args->mark_with == MARK_WITH_DATA)
-        quark = gwy_app_get_data_key_for_id(controls->source.id);
+    what = args->mark_with;
+    if (what == MARK_WITH_MASK || what == MARK_WITH_DATA)
+        quark = gwy_app_get_data_key_for_id(args->source[what].id);
     else
-        quark = gwy_app_get_show_key_for_id(controls->source.id);
+        quark = gwy_app_get_show_key_for_id(args->source[what].id);
 
-    dfield = gwy_container_get_object(controls->source.data, quark);
+    data = gwy_app_data_browser_get(args->source[what].datano);
+    dfield = gwy_container_get_object(data, quark);
     gwy_container_set_object_by_name(controls->mydata, "/0/data", dfield);
 
     if (args->mark_with == MARK_WITH_DATA || args->mark_with == MARK_WITH_SHOW)
@@ -616,8 +627,9 @@ setup_source_view_data(MarkControls *controls)
         if (controls->original_mask)
             mfield = gwy_data_field_duplicate(controls->original_mask);
         else {
-            quark = gwy_app_get_data_key_for_id(controls->target.id);
-            mfield = gwy_container_get_object(controls->target.data, quark);
+            data = gwy_app_data_browser_get(args->target.datano);
+            quark = gwy_app_get_data_key_for_id(args->target.id);
+            mfield = gwy_container_get_object(data, quark);
             mfield = create_mask_field(mfield);
         }
         gwy_container_set_object_by_name(controls->mydata, "/0/mask", mfield);
@@ -625,12 +637,12 @@ setup_source_view_data(MarkControls *controls)
     }
 
     /* Sync meta-stuff to make the source look like in the rest of the app */
-    gwy_app_sync_data_items(controls->source.data, controls->mydata,
-                            controls->source.id, 0,
+    data = gwy_app_data_browser_get(args->source[what].datano);
+    gwy_app_sync_data_items(data, controls->mydata,
+                            args->source[what].id, 0,
                             TRUE,
                             GWY_DATA_ITEM_PALETTE,
                             GWY_DATA_ITEM_MASK_COLOR,
-                            /* FIXME: Does not work with show GWY_DATA_ITEM_RANGE, */
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
 
@@ -654,6 +666,7 @@ update_source_mask(MarkControls *controls)
 {
     MarkArgs *args = controls->args;
     GQuark quark;
+    GwyContainer *data;
     GwyDataField *dfield, *mfield;
     double d;
 
@@ -661,8 +674,9 @@ update_source_mask(MarkControls *controls)
     mfield = gwy_container_get_object_by_name(controls->mydata, "/0/mask");
 
     if (args->mark_with == MARK_WITH_MASK) {
-        quark = gwy_app_get_mask_key_for_id(controls->source.id);
-        dfield = gwy_container_get_object(controls->source.data, quark);
+        data = gwy_app_data_browser_get(args->source[MARK_WITH_MASK].datano);
+        quark = gwy_app_get_mask_key_for_id(args->source[MARK_WITH_MASK].id);
+        dfield = gwy_container_get_object(data, quark);
         gwy_data_field_copy(dfield, mfield, FALSE);
         gwy_data_field_data_changed(mfield);
         return;
@@ -732,17 +746,21 @@ mask_attach_filter(GwyContainer *source,
                    gint id,
                    gpointer user_data)
 {
-    const GwyAppDataIdTmp *target = (const GwyAppDataIdTmp*)user_data;
+    const GwyAppDataId *target = (const GwyAppDataId*)user_data;
     GwyDataField *source_dfield, *target_dfield;
+    GwyContainer *data;
     GQuark quark;
 
     quark = gwy_app_get_mask_key_for_id(id);
     if (!gwy_container_gis_object(source, quark, &source_dfield))
         return FALSE;
 
+    data = gwy_app_data_browser_get(target->datano);
     quark = gwy_app_get_data_key_for_id(target->id);
-    target_dfield = GWY_DATA_FIELD(gwy_container_get_object(target->data,
-                                                            quark));
+    if (!data)
+        return FALSE;
+    if (!gwy_container_gis_object(data, quark, (GObject**)&target_dfield))
+        return FALSE;
 
     return !gwy_data_field_check_compatibility(source_dfield, target_dfield,
                                                GWY_DATA_COMPATIBILITY_RES
@@ -755,17 +773,21 @@ data_attach_filter(GwyContainer *source,
                    gint id,
                    gpointer user_data)
 {
-    const GwyAppDataIdTmp *target = (const GwyAppDataIdTmp*)user_data;
+    const GwyAppDataId *target = (const GwyAppDataId*)user_data;
     GwyDataField *source_dfield, *target_dfield;
+    GwyContainer *data;
     GQuark quark;
 
     quark = gwy_app_get_data_key_for_id(id);
     if (!gwy_container_gis_object(source, quark, &source_dfield))
         return FALSE;
 
+    data = gwy_app_data_browser_get(target->datano);
     quark = gwy_app_get_data_key_for_id(target->id);
-    target_dfield = GWY_DATA_FIELD(gwy_container_get_object(target->data,
-                                                            quark));
+    if (!data)
+        return FALSE;
+    if (!gwy_container_gis_object(data, quark, (GObject**)&target_dfield))
+        return FALSE;
 
     return !gwy_data_field_check_compatibility(source_dfield, target_dfield,
                                                GWY_DATA_COMPATIBILITY_RES
@@ -778,17 +800,21 @@ show_attach_filter(GwyContainer *source,
                    gint id,
                    gpointer user_data)
 {
-    const GwyAppDataIdTmp *target = (const GwyAppDataIdTmp*)user_data;
+    const GwyAppDataId *target = (const GwyAppDataId*)user_data;
     GwyDataField *source_dfield, *target_dfield;
+    GwyContainer *data;
     GQuark quark;
 
     quark = gwy_app_get_show_key_for_id(id);
     if (!gwy_container_gis_object(source, quark, &source_dfield))
         return FALSE;
 
+    data = gwy_app_data_browser_get(target->datano);
     quark = gwy_app_get_data_key_for_id(target->id);
-    target_dfield = GWY_DATA_FIELD(gwy_container_get_object(target->data,
-                                                            quark));
+    if (!data)
+        return FALSE;
+    if (!gwy_container_gis_object(data, quark, (GObject**)&target_dfield))
+        return FALSE;
 
     return !gwy_data_field_check_compatibility(source_dfield, target_dfield,
                                                GWY_DATA_COMPATIBILITY_RES
@@ -816,14 +842,16 @@ static void
 mark_load_args(GwyContainer *container,
                MarkArgs *args)
 {
-    *args = mark_with_defaults;
+    guint i;
 
+    *args = mark_with_defaults;
     gwy_container_gis_enum_by_name(container, mark_with_key, &args->mark_with);
     gwy_container_gis_enum_by_name(container, operation_key, &args->operation);
     gwy_container_gis_double_by_name(container, min_key, &args->min);
     gwy_container_gis_double_by_name(container, max_key, &args->max);
     gwy_container_gis_boolean_by_name(container, update_key, &args->update);
-
+    for (i = 0; i < MARK_WITH_N; i++)
+        args->source[i] = source_ids[i];
     mark_sanitize_args(args);
 }
 
@@ -831,6 +859,10 @@ static void
 mark_save_args(GwyContainer *container,
                MarkArgs *args)
 {
+    guint i;
+
+    for (i = 0; i < MARK_WITH_N; i++)
+        source_ids[i] = args->source[i];
     gwy_container_set_enum_by_name(container, mark_with_key, args->mark_with);
     gwy_container_set_enum_by_name(container, operation_key, args->operation);
     gwy_container_set_double_by_name(container, min_key, args->min);
