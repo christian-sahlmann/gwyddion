@@ -355,7 +355,7 @@ def tokenize(lines, warnings):
     "`Parse' a C file returning a sequence of Tokens"
     re_com = re.compile(r'/\*.*?\*/|//.*')
     re_mac = re.compile(r'#.*')
-    re_str = re.compile(r'"([^\\"]+|\\"|\\[^"])*"')
+    re_str = re.compile(r'"([^\\"]*\\.)*[^\\"]*"')
     re_chr = re.compile(r'\'(?:.|\\.|\\[0-7]{3}|\\x[0-9a-f]{2})\'')
     # permit identifiers starting @ for Objective-C stuff in app/
     re_id = re.compile(r'@(?:interface|implementation|end|selector)\b|\b[A-Za-z_]\w*\b')
