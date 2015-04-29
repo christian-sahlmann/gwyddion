@@ -901,7 +901,7 @@ precision_is_sufficient(gdouble bs, guint precision)
     gchar *s2 = g_strdup_printf("%.*f", precision, 3.0*bs);
     gboolean ok = !gwy_strequal(s0, s1) && !gwy_strequal(s1, s2);
 
-    gwy_debug("<%s> vs <%s> vs <%s>", s0, s1, s2);
+    gwy_debug("<%s> vs <%s> vs <%s>: %s", s0, s1, s2, ok ? "OK" : "NOT OK");
     g_free(s0);
     g_free(s1);
     g_free(s2);
