@@ -959,10 +959,14 @@ find_hruler_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     }
 
     bs = ticks->base * ticks->step;
-    if (!precision_is_sufficient(bs, vf->precision))
+    if (!precision_is_sufficient(bs, vf->precision)) {
+        gwy_debug("precision %u insufficient, increasing by 1", vf->precision);
         vf->precision++;
-    else if (vf->precision && precision_is_sufficient(bs, vf->precision-1))
+    }
+    else if (vf->precision && precision_is_sufficient(bs, vf->precision-1)) {
+        gwy_debug("precision %u excessive, decreasing by 1", vf->precision);
         vf->precision--;
+    }
 
     gwy_debug("base %g, step %g", ticks->base, ticks->step);
     ticks->from = ceil(offset/bs - 1e-14)*bs;
