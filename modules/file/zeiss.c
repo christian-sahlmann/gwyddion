@@ -60,7 +60,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports Carl Zeiss SEM images."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -192,8 +192,10 @@ zeiss_load_tiff(const GwyTIFF *tiff, GError **error)
     if (!new_file)
         end = "m";
 
-    /* Request a reader, this ensures dimensions and stuff are defined. */
-    if (!(reader = gwy_tiff_get_image_reader(tiff, 0, 1, error)))
+    /* Request a reader, this ensures dimensions and stuff are defined.
+     * NB: Newer versions store the image as RGB.  Not useful here; just
+     * average the channels.  */
+    if (!(reader = gwy_tiff_get_image_reader(tiff, 0, 3, error)))
         goto fail;
 
     siunit = gwy_si_unit_new_parse(end, &power10);
@@ -206,9 +208,27 @@ zeiss_load_tiff(const GwyTIFF *tiff, GError **error)
     g_object_unref(siunit);
 
     data = gwy_data_field_get_data(dfield);
-    for (i = 0; i < reader->height; i++)
-        gwy_tiff_read_image_row(tiff, reader, 0, i, 1.0, 0.0,
-                                data + i*reader->width);
+    if (reader->samples_per_pixel > 1) {
+        gdouble *datarow = g_new(gdouble, reader->width);
+        gint ch, j, spp = reader->samples_per_pixel;
+
+        gwy_data_field_clear(dfield);
+        for (i = 0; i < reader->height; i++) {
+            for (ch = 0; ch < spp; ch++) {
+                gwy_tiff_read_image_row(tiff, reader, 0, i, 1.0, 0.0, datarow);
+                for (j = 0; j < reader->width; j++)
+                    data[i*reader->width + j] += datarow[j];
+            }
+        }
+        g_free(datarow);
+        gwy_data_field_multiply(dfield, 1.0/spp);
+        gwy_data_field_invalidate(dfield);
+    }
+    else {
+        for (i = 0; i < reader->height; i++)
+            gwy_tiff_read_image_row(tiff, reader, 0, i, 1.0, 0.0,
+                                    data + i*reader->width);
+    }
 
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
