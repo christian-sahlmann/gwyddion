@@ -285,7 +285,6 @@ fi
 %dir %{pkglibdir}/modules
 %dir %{pkglibdir}
 %{_libdir}/*.so.*
-%{python_sitearch}/gwy.so
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/mime/packages/%{name}.xml
 %{_datadir}/thumbnailers/%{name}.thumbnailer
@@ -309,6 +308,7 @@ fi
 %dir %{pkgincludedir}/libgwymodule
 %dir %{pkgincludedir}
 %{_libdir}/*.so
+%{python_sitearch}/gwy.so
 %{_libdir}/pkgconfig/gwyddion.pc
 %dir %{_libdir}/pkgconfig
 # Documentation
