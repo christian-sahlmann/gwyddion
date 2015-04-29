@@ -234,6 +234,8 @@ pygwy-doc: gwy.py
 
 gwy_la_SOURCES = gwy.c wrap_calls.c
 gwy_la_CFLAGS = @COMMON_CFLAGS@ @WARNING_NOUNUSED_PAR@ $(PYTHON_INCLUDES) $(PYGTK_CFLAGS)
+# Link with all libraries modules are linked with.  This is excessive but done
+# to prevent some nested dlopening ‘can't find DLL’ problems in Win32.
 gwy_la_LIBADD = \
 	$(top_builddir)/app/libgwyapp2.la \
 	$(top_builddir)/libdraw/libgwydraw2.la \
@@ -241,7 +243,8 @@ gwy_la_LIBADD = \
 	$(top_builddir)/libgwydgets/libgwydgets2.la \
 	$(top_builddir)/libgwymodule/libgwymodule2.la \
 	$(top_builddir)/libprocess/libgwyprocess2.la \
-	$(PYTHON_LIBS) $(PYGTK_LIBS) @GTK_LIBS@
+	$(PYTHON_LIBS) $(PYGTK_LIBS) @GTK_LIBS@ \
+	@PNG_LIBS@ @ZLIB@ @BZIP2@ @EXR_LIBS@ @XML2_LIBS@ @MINIZIP_LIBS@ @CFITSIO_LIBS@
 
 if OS_MSWIN
 install-exec-hook:
