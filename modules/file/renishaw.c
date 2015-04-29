@@ -46,8 +46,6 @@
  * Read SPS Volume
  **/
 
-#define DEBUG
-
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -316,6 +314,12 @@ typedef struct {
 } WdfPropertySet;
 
 typedef struct {
+    GHashTable *keys;
+    GHashTable *values;
+    GwyContainer *data;
+} WdfPsetData;
+
+typedef struct {
     WdfHeader    *header;
     gfloat       *data;
     gsize        datasize;
@@ -342,16 +346,15 @@ static gsize          wdf_read_block_header  (const guchar *buffer,
                                               GError **error);
 static void           wdf_read_maparea_block (const guchar *buffer,
                                               WdfMapArea *maparea);
-static void           wdf_read_pset          (const guchar *buffer,
-                                              gsize size,
-                                              WdfPropertySet *pset);
+static GwyContainer*  wdf_read_pset          (const guchar *buffer,
+                                              gsize size);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Renishaw WiRE data files (WDF)."),
     "Daniil Bratashov <dn2010@gmail.com>",
-    "0.5",
+    "0.6",
     "Daniil Bratashov (dn2010), David Necas (Yeti), Renishaw plc.",
     "2014",
 };
@@ -407,14 +410,13 @@ wdf_load(const gchar *filename,
              G_GNUC_UNUSED GwyRunType mode,
              GError **error)
 {
-    GwyContainer *container = NULL;
+    GwyContainer *container = NULL, *metadata = NULL, *pset_data;
     gchar *buffer = NULL;
     gsize len, size = 0;
     GError *err = NULL;
     WdfFile filedata;
     WdfHeader fileheader;
     WdfBlock block;
-    WdfPropertySet pset;
     const guchar *p;
     gchar *title = NULL, *key = NULL;
     GwyBrick *brick;
@@ -460,6 +462,8 @@ wdf_load(const gchar *filename,
     filedata.xlistdata = NULL;
     filedata.xlistunits = WDF_DATAUNITS_ARBITRARY;
     filedata.maparea = NULL;
+    metadata = gwy_container_new();
+
     while (size > 0) {
         if ((len = wdf_read_block_header(p, size, &block, error)) == 0)
             goto fail;
@@ -581,7 +585,23 @@ wdf_load(const gchar *filename,
                 gwy_debug("bad magic in pset");
                 goto fail;
             }
-            wdf_read_pset(p, pset_size, &pset);
+            pset_data = wdf_read_pset(p, pset_size);
+            if (pset_data) {
+                if (block.id == WDF_BLOCKID_CALIBRATION)
+                    key = g_strdup_printf("/calibration");
+                else if (block.id == WDF_BLOCKID_INSTRUMENT)
+                    key = g_strdup_printf("/instrument");
+                else if (block.id == WDF_BLOCKID_MEASUREMENT)
+                    key = g_strdup_printf("/measurement");
+                else if (block.id == WDF_BLOCKID_WIREDATA)
+                    key = g_strdup_printf("/data");
+                else
+                    key = g_strdup_printf("/");
+                gwy_container_transfer(pset_data,
+                                       metadata, "/", key, TRUE);
+                g_free(key);
+                g_object_unref(pset_data);
+            }
             p -= WDF_BLOCK_HEADER_SIZE + 2 * sizeof(guint32);
         }
 
@@ -965,6 +985,10 @@ wdf_load(const gchar *filename,
             g_object_unref(dfield);
             g_object_unref(brick);
 
+            key = g_strdup_printf("/brick/%d/meta", z);
+            gwy_container_set_object_by_name(container, key, metadata);
+            g_free(key);
+
             gwy_file_volume_import_log_add(container,
                                            z, NULL, filename);
             if (filedata.maparea->flags & WDF_MAPAREA_XYLINE) {
@@ -1157,17 +1181,40 @@ wdf_read_maparea_block(const guchar *buffer,
     gwy_debug("linefocus_length=%d", maparea->linefocus_size);
 }
 
-static void
-wdf_read_pset(const guchar *buffer,
-              gsize size,
-              WdfPropertySet *pset)
+void
+extract_metadata_from_values(gpointer key, gpointer value,
+                             gpointer user_data)
 {
-    // FIXME: it is all quick and dirty debug print
-    gchar str[100000];
-    gint remaining, len;
+    WdfPsetData *pdata;
+    gpointer value_value;
+
+    pdata = (WdfPsetData *)user_data;
+    value_value = g_hash_table_lookup(pdata->values, key);
+    if (value && value_value) {
+        gwy_container_set_string_by_name(pdata->data,
+                                         value, value_value);
+    }
+}
+
+static GwyContainer *
+wdf_read_pset(const guchar *buffer,
+              gsize size)
+{
+    gint remaining;
+    gchar c;
     gint i;
+    gint64 i64;
+    gdouble d;
+    gchar *str;
+    GHashTable *keys, *values;
+    WdfPropertySet *pset;
+    WdfPsetData *pdata = NULL;
+    GwyContainer *data = NULL;
 
     remaining = size;
+    keys = g_hash_table_new(g_direct_hash, g_direct_equal);
+    values = g_hash_table_new(g_direct_hash, g_direct_equal);
+    pset = g_new(WdfPropertySet, 1);
 
     while (remaining > 0) {
         pset->type = *(buffer++);
@@ -1180,46 +1227,83 @@ wdf_read_pset(const guchar *buffer,
                   pset->key);
         switch (pset->type) {
             case WDF_PTYPE_CHAR:
-                gwy_debug("c = %d", *(buffer++));
+                c = *(buffer++);
+                gwy_debug("c = %d", c);
+                g_hash_table_replace(values,
+                                     GINT_TO_POINTER (pset->key),
+                                     g_strdup_printf("%d", c));
                 remaining -= 1;
             break;
             case WDF_PTYPE_UINT8:
-                gwy_debug("? = %d", *(buffer++));
+                c = *(buffer++);
+                gwy_debug("? = %d", c);
+                g_hash_table_replace(values,
+                                     GINT_TO_POINTER (pset->key),
+                                     g_strdup_printf("%d", c));
                 remaining -= 1;
             break;
             case WDF_PTYPE_INT16:
-                gwy_debug("s = %d", gwy_get_gint16_le(&buffer));
+                i = gwy_get_gint16_le(&buffer);
+                gwy_debug("s = %d", i);
+                g_hash_table_replace(values,
+                                     GINT_TO_POINTER (pset->key),
+                                     g_strdup_printf("%d", i));
                 remaining -= 2;
             break;
             case WDF_PTYPE_INT32:
-                gwy_debug("i = %d", gwy_get_gint32_le(&buffer));
+                i = gwy_get_gint32_le(&buffer);
+                gwy_debug("i = %d", i);
+                g_hash_table_replace(values,
+                                     GINT_TO_POINTER (pset->key),
+                                     g_strdup_printf("%d", i));
                 remaining -= 4;
             break;
             case WDF_PTYPE_INT64:
-                gwy_debug("w = %" G_GINT64_FORMAT "",
-                          gwy_get_gint64_le(&buffer));
+                i64 = gwy_get_gint64_le(&buffer);
+                gwy_debug("w = %" G_GINT64_FORMAT "", i64);
+                g_hash_table_replace(values,
+                          GINT_TO_POINTER (pset->key),
+                          g_strdup_printf("%" G_GINT64_FORMAT "", i64));
                 remaining -= 8;
             break;
             case WDF_PTYPE_FLOAT:
-                gwy_debug("r = %g", gwy_get_gfloat_le(&buffer));
+                d = gwy_get_gfloat_le(&buffer);
+                gwy_debug("r = %g", d);
+                g_hash_table_replace(values,
+                                     GINT_TO_POINTER (pset->key),
+                                     g_strdup_printf("%g", d));
                 remaining -= 4;
             break;
             case WDF_PTYPE_DOUBLE:
-                gwy_debug("q = %g", gwy_get_gdouble_le(&buffer));
+                d = gwy_get_gdouble_le(&buffer);
+                gwy_debug("q = %g", d);
+                g_hash_table_replace(values,
+                                     GINT_TO_POINTER (pset->key),
+                                     g_strdup_printf("%g", d));
                 remaining -= 8;
             break;
             case WDF_PTYPE_TIME:
-                gwy_debug("t = %" G_GINT64_FORMAT "",
-                          gwy_get_gint64_le(&buffer));
+                // FIXME: we need to parse this into time
+                i64 = gwy_get_gint64_le(&buffer);
+                gwy_debug("t = %" G_GINT64_FORMAT "", i64);
+                g_hash_table_replace(values,
+                          GINT_TO_POINTER (pset->key),
+                          g_strdup_printf("%" G_GINT64_FORMAT "", i64));
                 remaining -= 8;
             break;
             case WDF_PTYPE_STRING:
                 pset->size = gwy_get_guint32_le(&buffer);
-                remaining -= 4 + pset->size;
+                str = g_malloc(pset->size + 1);
                 for (i = 0; i < pset->size; i++) {
                     str[i] = *(buffer++);
                 }
-                gwy_debug("u size=%d str=%s", pset->size, g_strndup(str, pset->size));
+                gwy_debug("u size=%d str=%s", pset->size,
+                          g_strndup(str, pset->size));
+                g_hash_table_replace(values,
+                                     GINT_TO_POINTER (pset->key),
+                                     g_strndup(str, pset->size));
+                g_free(str);
+                remaining -= 4 + pset->size;
             break;
             case WDF_PTYPE_BINARY:
                 pset->size = gwy_get_guint32_le(&buffer);
@@ -1239,12 +1323,16 @@ wdf_read_pset(const guchar *buffer,
 
             break;
             case WDF_PTYPE_KEY:
-                gwy_debug("k");
                 pset->size = gwy_get_guint32_le(&buffer);
+                str = g_malloc(pset->size + 1);
                 for (i = 0; i < pset->size; i++) {
                     str[i] = *(buffer++);
                 }
                 gwy_debug("k key=%s", g_strndup(str, pset->size));
+                g_hash_table_replace(keys,
+                                     GINT_TO_POINTER (pset->key),
+                                     g_strdup_printf("/%.*s", pset->size, str));
+                g_free(str);
                 remaining -= 4 + pset->size;
             break;
             default:
@@ -1254,9 +1342,24 @@ wdf_read_pset(const guchar *buffer,
                 goto fail;
         }
     }
+
+    data = gwy_container_new();
+    pdata = g_new(WdfPsetData, 1);
+    pdata->keys = keys;
+    pdata->values = values;
+    pdata->data = data;
+    g_hash_table_foreach(keys, extract_metadata_from_values,
+                         (gpointer)pdata);
+
     fail:
+    g_hash_table_unref(keys);
+    g_hash_table_unref(values);
+    if (pdata) {
+        g_free(pdata);
+    }
     gwy_debug("remaining = %d", remaining);
 
+    return data;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
