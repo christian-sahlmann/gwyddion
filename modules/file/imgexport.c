@@ -896,15 +896,20 @@ should_draw_frame(const ImgExportArgs *args)
 static gboolean
 precision_is_sufficient(gdouble bs, guint precision)
 {
-    gchar *s0 = g_strdup_printf("%.*f", precision, bs);
-    gchar *s1 = g_strdup_printf("%.*f", precision, 2.0*bs);
-    gchar *s2 = g_strdup_printf("%.*f", precision, 3.0*bs);
-    gboolean ok = !gwy_strequal(s0, s1) && !gwy_strequal(s1, s2);
+    gchar *s0 = g_strdup_printf("%.*f", precision, 0.0);
+    gchar *s1 = g_strdup_printf("%.*f", precision, bs);
+    gchar *s2 = g_strdup_printf("%.*f", precision, 2.0*bs);
+    gchar *s3 = g_strdup_printf("%.*f", precision, 3.0*bs);
+    gboolean ok = (!gwy_strequal(s0, s1)
+                   && !gwy_strequal(s1, s2)
+                   && !gwy_strequal(s2, s3));
 
-    gwy_debug("<%s> vs <%s> vs <%s>: %s", s0, s1, s2, ok ? "OK" : "NOT OK");
+    gwy_debug("<%s> vs <%s> vs <%s> vs <%s>: %s",
+              s0, s1, s2, s3, ok ? "OK" : "NOT OK");
     g_free(s0);
     g_free(s1);
     g_free(s2);
+    g_free(s3);
     return ok;
 }
 
