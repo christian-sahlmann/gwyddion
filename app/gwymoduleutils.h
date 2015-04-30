@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2007 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2007-2015 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -24,6 +24,7 @@
 
 #include <gtk/gtkwindow.h>
 #include <libgwydgets/gwydataview.h>
+#include <app/datachooser.h>
 
 G_BEGIN_DECLS
 
@@ -54,6 +55,12 @@ gwy_save_auxiliary_with_callback(const gchar *title,
 void
 gwy_set_data_preview_size(GwyDataView *data_view,
                           gint max_size);
+
+
+gboolean gwy_app_data_id_verify_channel(GwyAppDataId *id);
+gboolean gwy_app_data_id_verify_graph  (GwyAppDataId *id);
+gboolean gwy_app_data_id_verify_volume (GwyAppDataId *id);
+gboolean gwy_app_data_id_verify_spectra(GwyAppDataId *id);
 
 G_END_DECLS
 

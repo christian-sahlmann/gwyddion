@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2007 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2007-2015 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -29,6 +29,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/datafield.h>
 #include <app/file.h>
+#include <app/data-browser.h>
 #include <app/gwymoduleutils.h>
 
 typedef struct {
@@ -261,6 +262,156 @@ gwy_set_data_preview_size(GwyDataView *data_view,
         zoomval = max_size/(scale*MAX(xreal, yreal));
     }
     gwy_data_view_set_zoom(data_view, zoomval);
+}
+
+static gboolean
+clear_data_id(GwyAppDataId *id)
+{
+    id->datano = 0;
+    id->id = -1;
+    return FALSE;
+}
+
+/**
+ * gwy_app_data_id_verify_channel:
+ * @id: Numerical identifiers of a channel in data managed by the data browser.
+ *
+ * Checks if numerical channel identifiers correspond to an existing channel.
+ *
+ * If either the data contained referenced in @id or the channel does not exist
+ * the structure is cleared to %GWY_APP_DATA_ID_NONE and the function returns
+ * %FALSE.  If it represents an existing channel it is kept intact and the
+ * function return %TRUE.
+ *
+ * Returns: Whether @id refers to an existing channel now.
+ *
+ * Since: 2.41
+ **/
+gboolean
+gwy_app_data_id_verify_channel(GwyAppDataId *id)
+{
+    GwyContainer *container;
+    GObject *object;
+    GQuark quark;
+
+    g_return_val_if_fail(id, FALSE);
+
+    container = gwy_app_data_browser_get(id->datano);
+    if (!container)
+        return clear_data_id(id);
+
+    quark = gwy_app_get_data_key_for_id(id->id);
+    if (!gwy_container_gis_object(container, quark, &object))
+        return clear_data_id(id);
+
+    return GWY_IS_DATA_FIELD(object);
+}
+
+/**
+ * gwy_app_data_id_verify_graph:
+ * @id: Numerical identifiers of a graph in data managed by the data browser.
+ *
+ * Checks if numerical graph identifiers correspond to an existing graph.
+ *
+ * If either the data contained referenced in @id or the graph model does not
+ * exist the structure is cleared to %GWY_APP_DATA_ID_NONE and the function
+ * returns %FALSE.  If it represents an existing graph it is kept intact and
+ * the function return %TRUE.
+ *
+ * Returns: Whether @id refers to an existing graph now.
+ *
+ * Since: 2.41
+ **/
+gboolean
+gwy_app_data_id_verify_graph(GwyAppDataId *id)
+{
+    GwyContainer *container;
+    GObject *object;
+    GQuark quark;
+
+    g_return_val_if_fail(id, FALSE);
+
+    container = gwy_app_data_browser_get(id->datano);
+    if (!container)
+        return clear_data_id(id);
+
+    quark = gwy_app_get_graph_key_for_id(id->id);
+    if (!gwy_container_gis_object(container, quark, &object))
+        return clear_data_id(id);
+
+    return GWY_IS_GRAPH_MODEL(object);
+}
+
+/**
+ * gwy_app_data_id_verify_volume:
+ * @id: Numerical identifiers of volume data in data managed by the data
+ *      browser.
+ *
+ * Checks if numerical volume data identifiers correspond to existing volume
+ * data.
+ *
+ * If either the data contained referenced in @id or the volume data does not
+ * exist the structure is cleared to %GWY_APP_DATA_ID_NONE and the function
+ * returns %FALSE.  If it represents existing volume data it is kept intact
+ * and the function return %TRUE.
+ *
+ * Returns: Whether @id refers to existing volume data now.
+ *
+ * Since: 2.41
+ **/
+gboolean
+gwy_app_data_id_verify_volume(GwyAppDataId *id)
+{
+    GwyContainer *container;
+    GObject *object;
+    GQuark quark;
+
+    g_return_val_if_fail(id, FALSE);
+
+    container = gwy_app_data_browser_get(id->datano);
+    if (!container)
+        return clear_data_id(id);
+
+    quark = gwy_app_get_brick_key_for_id(id->id);
+    if (!gwy_container_gis_object(container, quark, &object))
+        return clear_data_id(id);
+
+    return GWY_IS_BRICK(object);
+}
+
+/**
+ * gwy_app_data_id_verify_spectra:
+ * @id: Numerical identifiers of spectra in data managed by the data browser.
+ *
+ * Checks if numerical spectra identifiers correspond to existing spectra.
+ *
+ * If either the data contained referenced in @id or the spectra does not
+ * exist the structure is cleared to %GWY_APP_DATA_ID_NONE and the function
+ * returns %FALSE.  If it represents existing spectra it is kept intact and
+ * the function return %TRUE.
+ *
+ * Returns: Whether @id refers to existing spectra now.
+ *
+ * Since: 2.41
+ **/
+gboolean
+gwy_app_data_id_verify_spectra(GwyAppDataId *id)
+{
+    GwyContainer *container;
+    GObject *object;
+    GQuark quark;
+
+    g_return_val_if_fail(id, FALSE);
+
+    container = gwy_app_data_browser_get(id->datano);
+    if (!container)
+        return clear_data_id(id);
+
+    quark = gwy_app_get_spectra_key_for_id(id->id);
+    if (!gwy_container_gis_object(container, quark, &object))
+        return clear_data_id(id);
+
+    return GWY_IS_SPECTRA(object);
 }
 
 /************************** Documentation ****************************/
