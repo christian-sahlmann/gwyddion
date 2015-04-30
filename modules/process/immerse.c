@@ -1024,6 +1024,7 @@ immerse_sanitize_args(ImmerseArgs *args)
     args->sampling = MIN(args->sampling, GWY_IMMERSE_SAMPLING_LAST - 1);
     args->leveling = MIN(args->leveling, GWY_IMMERSE_LEVEL_LAST - 1);
     args->draw_frame = !!args->draw_frame;
+    gwy_app_data_id_verify_channel(&args->detail);
 }
 
 static void

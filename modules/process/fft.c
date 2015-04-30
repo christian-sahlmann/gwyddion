@@ -569,6 +569,7 @@ fft_sanitize_args(FFTArgs *args)
     args->window = gwy_enum_sanitize_value(args->window,
                                            GWY_TYPE_WINDOWING_TYPE);
     args->out = MIN(args->out, GWY_FFT_OUTPUT_PHASE);
+    gwy_app_data_id_verify_channel(&args->imgpart);
 }
 
 static void

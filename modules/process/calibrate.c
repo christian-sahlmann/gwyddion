@@ -1193,6 +1193,7 @@ calibrate_sanitize_args(CalibrateArgs *args)
     args->square = !!args->square;
     args->new_channel = !!args->new_channel;
     args->match_size = !!args->match_size;
+    gwy_app_data_id_verify_channel(&args->sizeid);
 }
 
 static void

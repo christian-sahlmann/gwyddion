@@ -1239,6 +1239,7 @@ merge_sanitize_args(MergeArgs *args)
     args->boundary = MIN(args->boundary, GWY_MERGE_BOUNDARY_LAST - 1);
     args->create_mask = !!args->create_mask;
     args->crop_to_rectangle = !!args->crop_to_rectangle;
+    gwy_app_data_id_verify_channel(&args->op2);
 }
 
 static void

@@ -831,11 +831,15 @@ static const gchar update_key[]    = "/module/mark_with/update";
 static void
 mark_sanitize_args(MarkArgs *args)
 {
+    guint i;
+
     args->mark_with = MIN(args->mark_with, MARK_WITH_N-1);
     args->operation = MIN(args->operation, MASK_EDIT_INTERSECT);
     args->min = CLAMP(args->min, 0.0, 1.0);
     args->max = CLAMP(args->max, 0.0, 1.0);
     args->update = !!args->update;
+    for (i = 0; i < MARK_WITH_N; i++)
+        gwy_app_data_id_verify_channel(args->source + i);
 }
 
 static void

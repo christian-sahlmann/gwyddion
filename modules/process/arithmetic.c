@@ -186,30 +186,13 @@ arithmetic(GwyContainer *data, GwyRunType run)
                                      GWY_APP_CONTAINER_ID, &datano,
                                      0);
 
+    args.objects[0].datano = datano;
+    args.objects[0].id = id;
+
     settings = gwy_app_settings_get();
     arithmetic_load_args(settings, &args);
     args.ok_masks = g_ptr_array_new();
     args.expr = gwy_expr_new();
-
-    args.objects[0].datano = datano;
-    args.objects[0].id = id;
-
-    for (i = 1; i < NARGS; i++) {
-        GwyContainer *data2;
-        GQuark quark;
-
-        if (!(data2 = gwy_app_data_browser_get(args.objects[i].datano))) {
-            args.objects[i].datano = datano;
-            args.objects[i].id = id;
-            continue;
-        }
-        quark = gwy_app_get_data_key_for_id(args.objects[i].id);
-        if (!gwy_container_contains(data2, quark)) {
-            args.objects[i].datano = datano;
-            args.objects[i].id = id;
-            continue;
-        }
-    }
 
     gwy_expr_define_constant(args.expr, "pi", G_PI, NULL);
     gwy_expr_define_constant(args.expr, "π", G_PI, NULL);
@@ -967,6 +950,7 @@ arithmetic_load_args(GwyContainer *settings,
     const guchar *str;
     gchar *filename, *buffer, *line, *p;
     gsize size;
+    guint i;
 
     str = default_expression;
     gwy_container_gis_string_by_name(settings, expression_key, &str);
@@ -999,7 +983,12 @@ arithmetic_load_args(GwyContainer *settings,
     }
     g_free(filename);
 
-    memcpy(args->objects, object_ids, NARGS*sizeof(GwyAppDataId));
+    for (i = 1; i < NARGS; i++) {
+        args->objects[i] = object_ids[i];
+        /* Init to d1 instead of ‘none’ when we lose the fields. */
+        if (!gwy_app_data_id_verify_channel(args->objects + i))
+            args->objects[i] = args->objects[0];
+    }
 
     /* Ensures args->expression comes first */
     arithmetic_update_history(args);

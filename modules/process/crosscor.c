@@ -773,6 +773,9 @@ crosscor_sanitize_args(CrosscorArgs *args)
     args->window_y = CLAMP(args->window_y, 0, 100);
     args->threshold = CLAMP(args->threshold, -1.0, 1.0);
     args->add_ls_mask = !!args->add_ls_mask;
+    gwy_app_data_id_verify_channel(&args->op2);
+    gwy_app_data_id_verify_channel(&args->op3);
+    gwy_app_data_id_verify_channel(&args->op4);
 }
 
 static void
