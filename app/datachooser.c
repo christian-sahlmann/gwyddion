@@ -246,6 +246,7 @@ gwy_data_chooser_set_active(GwyDataChooser *chooser,
     combo = GTK_COMBO_BOX(chooser);
     if (!data) {
         if (chooser->none_label) {
+            /* Rely on none being always the first. */
             gtk_combo_box_set_active_iter(combo, &iter);
             return TRUE;
         }
@@ -257,7 +258,8 @@ gwy_data_chooser_set_active(GwyDataChooser *chooser,
                            MODEL_COLUMN_CONTAINER, &container,
                            MODEL_COLUMN_ID, &dataid,
                            -1);
-        g_object_unref(container);
+        if (container)
+            g_object_unref(container);
         if (container == data && dataid == id) {
             gtk_combo_box_set_active_iter(combo, &iter);
             return TRUE;
