@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2009 David Necas (Yeti).
+ *  Copyright (C) 2009-2015 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -60,7 +60,7 @@ typedef struct {
     gboolean set_selection;
     gboolean plot_graph;
     GwyMaskingType masking;
-    GwyAppDataIdTmp target_graph;
+    GwyAppDataId target_graph;
 } CurvatureArgs;
 
 typedef struct {
@@ -125,7 +125,7 @@ static const CurvatureArgs curvature_defaults = {
     TRUE,
     FALSE,
     GWY_MASK_IGNORE,
-    { NULL, -1 },
+    GWY_APP_DATA_ID_NONE,
 };
 
 static const gchar *param_names[] = {
@@ -158,12 +158,14 @@ static const gchar *param_symbols_plain[] = {
     "φ2",
 };
 
+static GwyAppDataId target_id = GWY_APP_DATA_ID_NONE;
+
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Calculates overall curvature."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -524,12 +526,12 @@ curvature_do(GwyContainer *data,
 
         gmodel = gwy_graph_model_new();
         curvature_plot_graph(dfield, i1, i2, gmodel);
-        if (args->target_graph.data) {
+        if (args->target_graph.datano) {
             GwyGraphModel *target_gmodel;
             GQuark quark = gwy_app_get_graph_key_for_id(args->target_graph.id);
 
-            target_gmodel = gwy_container_get_object(args->target_graph.data,
-                                                     quark);
+            data = gwy_app_data_browser_get(args->target_graph.datano);
+            target_gmodel = gwy_container_get_object(data, quark);
             g_return_if_fail(target_gmodel);
             gwy_graph_model_append_curves(target_gmodel, gmodel, 1);
         }
@@ -718,7 +720,6 @@ curvature_dialog(CurvatureArgs *args,
     controls.target_graph = gwy_data_chooser_new_graphs();
     chooser = GWY_DATA_CHOOSER(controls.target_graph);
     gwy_data_chooser_set_none(chooser, _("New graph"));
-    gwy_data_chooser_set_active(chooser, NULL, -1);
     gwy_data_chooser_set_filter(chooser, filter_target_graphs, &controls, NULL);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.target_graph);
     gtk_box_pack_end(GTK_BOX(hbox2), controls.target_graph, FALSE, FALSE, 0);
@@ -807,6 +808,9 @@ curvature_dialog(CurvatureArgs *args,
                              G_CALLBACK(curvature_copy), &controls);
 
     curvature_update_preview(&controls, args);
+    /* The filter shows the correct graphs only when our graph model already
+     * contains something. */
+    gwy_data_chooser_set_active_id(chooser, &args->target_graph);
 
     gtk_widget_show_all(dialog);
     do {
@@ -925,9 +929,9 @@ static void
 target_graph_changed(CurvatureControls *controls)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
-    GwyAppDataIdTmp *target = &controls->args->target_graph;
+    GwyAppDataId *target = &controls->args->target_graph;
 
-    target->data = gwy_data_chooser_get_active(chooser, &target->id);
+    gwy_data_chooser_get_active_id(chooser, target);
 }
 
 static void
@@ -1066,6 +1070,7 @@ load_args(GwyContainer *container,
                                       &args->set_selection);
     gwy_container_gis_boolean_by_name(container, plot_graph_key,
                                       &args->plot_graph);
+    args->target_graph = target_id;
     sanitize_args(args);
 }
 
@@ -1073,6 +1078,7 @@ static void
 save_args(GwyContainer *container,
           CurvatureArgs *args)
 {
+    target_id = args->target_graph;
     gwy_container_set_enum_by_name(container, masking_key, args->masking);
     gwy_container_set_boolean_by_name(container, set_selection_key,
                                       args->set_selection);
