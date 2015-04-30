@@ -15,6 +15,8 @@ Libraries:
   the data browser.
 - libgwyapp: GwyDataChooser has selection setting and obtaining functions
   that work with numerical ids.
+- libgwyapp: Functions for ensuring numerical data identifies identify
+  a still existing data object.
 
 Modules:
 - Align graph (new): Aligns horizontally graph curves.
@@ -38,7 +40,7 @@ Modules:
 - 1D FFT filter: Occasional ‘Axis with extreme range!’ error was fixed.
 - Image export: Alignment of numbers on false colour map scale was improved.
   Drawing of ‘lattice’ selections was implemented.  The decimal separator
-  can be controlled.
+  can be controlled.  A rare insufficient precision of ruler ticks was fixed.
 - Filters tool: A simple Gaussian sharpening filter was added.
 - Affine distortion: The lattice is remembered and recalled.  ACF image uses
   full colour range, correcting problems when fixed colour range is set.
@@ -46,6 +48,11 @@ Modules:
 - Tip blind estimate: A memory freeing error was fixed in the stripes mode.
 - Fractal dimension: Graph axis labels are somewhat more descriptive.
 - Graph level, Graph filter: They are now undoable.
+- Zeiss: RGB images are accepted and the channels are averaged upon import.
+
+Other:
+- Standalone Python module gwy is now in the gwyddion-devel package instead
+  of the main package (it required the devel package to work anyway).
 
 
 2.40 (2015-02-07)
