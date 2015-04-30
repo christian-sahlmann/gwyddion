@@ -126,7 +126,7 @@ static GwyModuleInfo module_info = {
        "color scale should map to, either on data or on height distribution "
        "histogram."),
     "Yeti <yeti@gwyddion.net>",
-    "3.13",
+    "3.14",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -488,6 +488,7 @@ gwy_tool_color_range_data_switched(GwyTool *gwytool,
 
     range_type = gwy_tool_color_range_get_range_type(tool);
     if (data_view) {
+        gwy_tool_color_range_type_changed(NULL, tool);
         if (range_type == GWY_LAYER_BASIC_RANGE_FIXED) {
             gdouble sel[2];
 
