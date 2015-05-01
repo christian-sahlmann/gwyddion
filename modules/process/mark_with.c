@@ -320,6 +320,7 @@ mark_dialog(MarkArgs *args,
                          1, 3, row, row+1, GTK_FILL, 0, 0, 0);
         controls.has_any[i] = !!gwy_data_chooser_get_active(chooser, NULL);
         gtk_widget_set_sensitive(GTK_WIDGET(l->data), controls.has_any[i]);
+        gwy_data_chooser_get_active_id(chooser, args->source + i);
         g_signal_connect(chooser, "changed",
                          G_CALLBACK(channel_changed), &controls);
         row++;
