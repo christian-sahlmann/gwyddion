@@ -295,6 +295,7 @@ merge_dialog(MergeArgs *args)
     g_object_set_data(G_OBJECT(chooser), "dialog", dialog);
     gwy_data_chooser_set_active_id(chooser, &args->op2);
     gwy_data_chooser_set_filter(chooser, merge_data_filter, args, NULL);
+    gwy_data_chooser_get_active_id(chooser, &args->op2);
     g_signal_connect_swapped(chooser, "changed",
                              G_CALLBACK(merge_data_changed), &controls);
     merge_data_changed(&controls, chooser);

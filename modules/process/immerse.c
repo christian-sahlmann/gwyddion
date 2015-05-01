@@ -312,6 +312,7 @@ immerse_dialog(ImmerseArgs *args)
     gwy_data_chooser_set_active_id(GWY_DATA_CHOOSER(chooser), &args->detail);
     gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(chooser),
                                 immerse_data_filter, &args->image, NULL);
+    gwy_data_chooser_get_active_id(GWY_DATA_CHOOSER(chooser), &args->detail);
     g_signal_connect(chooser, "changed",
                      G_CALLBACK(immerse_detail_cb), &controls);
     gwy_table_attach_hscale(table, row, _("_Detail image:"), NULL,
