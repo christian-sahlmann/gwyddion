@@ -376,7 +376,10 @@ drift_dialog(DriftArgs *args,
     controls.target_graph = gwy_data_chooser_new_graphs();
     chooser = GWY_DATA_CHOOSER(controls.target_graph);
     gwy_data_chooser_set_none(chooser, _("New graph"));
+    gwy_data_chooser_set_active(chooser, NULL, -1);
     gwy_data_chooser_set_filter(chooser, filter_target_graphs, &controls, NULL);
+    gwy_data_chooser_set_active_id(chooser, &args->target_graph);
+    gwy_data_chooser_get_active_id(chooser, &args->target_graph);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.target_graph);
     gtk_widget_set_sensitive(hbox2, args->do_graph);
     gtk_box_pack_end(GTK_BOX(hbox2), controls.target_graph, FALSE, FALSE, 0);
@@ -434,7 +437,6 @@ drift_dialog(DriftArgs *args,
     controls.computed = FALSE;
     /* Set up initial layer keys properly */
     preview_type_changed(NULL, &controls);
-    gwy_data_chooser_set_active_id(chooser, &args->target_graph);
 
     gtk_widget_show_all(dialog);
     do {

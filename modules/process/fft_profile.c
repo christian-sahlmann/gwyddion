@@ -520,16 +520,16 @@ prof_update_curve(ProfControls *controls,
 
 static void
 init_graph_model_units(GwyGraphModel *gmodel,
-                       GwyDataField *psdffield)
+                       GwyDataField *dfield)
 {
     GwySIUnit *unit;
 
-    unit = gwy_data_field_get_si_unit_xy(psdffield);
+    unit = gwy_data_field_get_si_unit_xy(dfield);
     unit = gwy_si_unit_duplicate(unit);
     g_object_set(gmodel, "si-unit-x", unit, NULL);
     g_object_unref(unit);
 
-    unit = gwy_data_field_get_si_unit_z(psdffield);
+    unit = gwy_data_field_get_si_unit_z(dfield);
     unit = gwy_si_unit_duplicate(unit);
     g_object_set(gmodel, "si-unit-y", unit, NULL);
     g_object_unref(unit);

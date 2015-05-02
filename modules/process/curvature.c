@@ -107,6 +107,8 @@ static gboolean   filter_target_graphs           (GwyContainer *data,
                                                   gint id,
                                                   gpointer user_data);
 static void       target_graph_changed           (CurvatureControls *controls);
+static void       init_graph_model_units         (GwyGraphModel *gmodel,
+                                                  GwyDataField *dfield);
 static void       curvature_dialog_update        (CurvatureControls *controls,
                                                   CurvatureArgs *args);
 static void       curvature_masking_changed      (GtkToggleButton *button,
@@ -623,7 +625,9 @@ curvature_dialog(CurvatureArgs *args,
     controls.args = args;
     controls.unit = gwy_data_field_get_si_unit_xy(dfield);
     gwy_clear(controls.params, PARAM_NPARAMS);
+
     controls.gmodel = gwy_graph_model_new();
+    init_graph_model_units(controls.gmodel, dfield);
 
     dialog = gtk_dialog_new_with_buttons(_("Curvature"),
                                          NULL, 0,
@@ -720,7 +724,10 @@ curvature_dialog(CurvatureArgs *args,
     controls.target_graph = gwy_data_chooser_new_graphs();
     chooser = GWY_DATA_CHOOSER(controls.target_graph);
     gwy_data_chooser_set_none(chooser, _("New graph"));
+    gwy_data_chooser_set_active(chooser, NULL, -1);
     gwy_data_chooser_set_filter(chooser, filter_target_graphs, &controls, NULL);
+    gwy_data_chooser_set_active_id(chooser, &args->target_graph);
+    gwy_data_chooser_get_active_id(chooser, &args->target_graph);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.target_graph);
     gtk_box_pack_end(GTK_BOX(hbox2), controls.target_graph, FALSE, FALSE, 0);
     g_signal_connect_swapped(controls.target_graph, "changed",
@@ -808,9 +815,6 @@ curvature_dialog(CurvatureArgs *args,
                              G_CALLBACK(curvature_copy), &controls);
 
     curvature_update_preview(&controls, args);
-    /* The filter shows the correct graphs only when our graph model already
-     * contains something. */
-    gwy_data_chooser_set_active_id(chooser, &args->target_graph);
 
     gtk_widget_show_all(dialog);
     do {
@@ -932,6 +936,23 @@ target_graph_changed(CurvatureControls *controls)
     GwyAppDataId *target = &controls->args->target_graph;
 
     gwy_data_chooser_get_active_id(chooser, target);
+}
+
+static void
+init_graph_model_units(GwyGraphModel *gmodel,
+                       GwyDataField *dfield)
+{
+    GwySIUnit *unit;
+
+    unit = gwy_data_field_get_si_unit_xy(dfield);
+    unit = gwy_si_unit_duplicate(unit);
+    g_object_set(gmodel, "si-unit-x", unit, NULL);
+    g_object_unref(unit);
+
+    unit = gwy_data_field_get_si_unit_z(dfield);
+    unit = gwy_si_unit_duplicate(unit);
+    g_object_set(gmodel, "si-unit-y", unit, NULL);
+    g_object_unref(unit);
 }
 
 static void
