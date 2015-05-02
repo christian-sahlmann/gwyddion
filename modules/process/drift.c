@@ -660,20 +660,7 @@ run_noninteractive(DriftArgs *args,
         g_object_set(gcmodel, "description", _("x-axis drift"), NULL);
         gwy_graph_model_add_curve(gmodel, gcmodel);
         gwy_object_unref(gcmodel);
-
-        if (args->target_graph.datano) {
-            GwyGraphModel *target_gmodel;
-            GQuark quark = gwy_app_get_graph_key_for_id(args->target_graph.id);
-
-            data = gwy_app_data_browser_get(args->target_graph.datano);
-            target_gmodel = gwy_container_get_object(data, quark);
-            g_return_if_fail(target_gmodel);
-            gwy_graph_model_append_curves(target_gmodel, gmodel, 1);
-        }
-        else {
-            gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
-        }
-
+        gwy_app_add_graph_or_curves(gmodel, data, &args->target_graph, 1);
         gwy_object_unref(gmodel);
     }
     g_object_unref(drift);

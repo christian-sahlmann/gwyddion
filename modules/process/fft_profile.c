@@ -549,28 +549,15 @@ prof_execute(ProfControls *controls,
     n = gwy_selection_get_data(controls->selection, NULL);
     g_return_if_fail(n);
 
+    g_object_set(controls->gmodel, "label-visible", TRUE, NULL);
     if (!args->separate) {
-        if (args->target_graph.datano) {
-            GwyGraphModel *target_gmodel;
-            GQuark quark = gwy_app_get_graph_key_for_id(args->target_graph.id);
-
-            data = gwy_app_data_browser_get(args->target_graph.datano);
-            target_gmodel = gwy_container_get_object(data, quark);
-            g_return_if_fail(target_gmodel);
-            gwy_graph_model_append_curves(target_gmodel, controls->gmodel, 1);
-        }
-        else {
-            gmodel = gwy_graph_model_duplicate(controls->gmodel);
-            g_object_set(gmodel, "label-visible", TRUE, NULL);
-            gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
-            g_object_unref(gmodel);
-        }
+        gwy_app_add_graph_or_curves(controls->gmodel,
+                                    data, &args->target_graph, 1);
         return;
     }
 
     for (i = 0; i < n; i++) {
         gmodel = gwy_graph_model_new_alike(controls->gmodel);
-        g_object_set(gmodel, "label-visible", TRUE, NULL);
         gcmodel = gwy_graph_model_get_curve(controls->gmodel, i);
         gcmodel = gwy_graph_curve_model_duplicate(gcmodel);
         gwy_graph_model_add_curve(gmodel, gcmodel);

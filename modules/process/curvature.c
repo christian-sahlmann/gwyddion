@@ -528,18 +528,7 @@ curvature_do(GwyContainer *data,
 
         gmodel = gwy_graph_model_new();
         curvature_plot_graph(dfield, i1, i2, gmodel);
-        if (args->target_graph.datano) {
-            GwyGraphModel *target_gmodel;
-            GQuark quark = gwy_app_get_graph_key_for_id(args->target_graph.id);
-
-            data = gwy_app_data_browser_get(args->target_graph.datano);
-            target_gmodel = gwy_container_get_object(data, quark);
-            g_return_if_fail(target_gmodel);
-            gwy_graph_model_append_curves(target_gmodel, gmodel, 1);
-        }
-        else {
-            gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
-        }
+        gwy_app_add_graph_or_curves(gmodel, data, &args->target_graph, 1);
         g_object_unref(gmodel);
     }
 }
