@@ -1057,6 +1057,7 @@ sanitize_args(CurvatureArgs *args)
     args->masking = MIN(args->masking, GWY_MASK_INCLUDE);
     args->set_selection = !!args->set_selection;
     args->plot_graph = !!args->plot_graph;
+    gwy_app_data_id_verify_graph(&args->target_graph);
 }
 
 static void
@@ -1071,7 +1072,6 @@ load_args(GwyContainer *container,
     gwy_container_gis_boolean_by_name(container, plot_graph_key,
                                       &args->plot_graph);
     args->target_graph = target_id;
-    gwy_app_data_id_verify_graph(&args->target_graph);
     sanitize_args(args);
 }
 

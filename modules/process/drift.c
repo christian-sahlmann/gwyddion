@@ -1229,6 +1229,7 @@ drift_sanitize_args(DriftArgs *args)
     args->preview_type = MAX(args->preview_type, PREVIEW_LAST);
     args->distribute = !!args->distribute;
     args->replace = !!args->replace;
+    gwy_app_data_id_verify_graph(&args->target_graph);
 }
 
 static void
@@ -1251,7 +1252,6 @@ drift_load_args(GwyContainer *container,
     gwy_container_gis_boolean_by_name(container, replace_key,
                                       &args->replace);
     args->target_graph = target_id;
-    gwy_app_data_id_verify_graph(&args->target_graph);
     drift_sanitize_args(args);
 }
 
