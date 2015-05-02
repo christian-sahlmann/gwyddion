@@ -61,7 +61,7 @@ typedef struct {
     gdouble from[GWY_FRACTAL_NMETHODS];
     gdouble to[GWY_FRACTAL_NMETHODS];
     gdouble result[GWY_FRACTAL_NMETHODS];
-    GwyAppDataIdTmp target_graph;
+    GwyAppDataId target_graph;
 } FractalArgs;
 
 typedef struct {
@@ -76,7 +76,7 @@ typedef struct {
     GtkWidget *graph;
     GtkWidget *target_graph;
     GtkWidget *results[GWY_FRACTAL_NMETHODS];
-    GwyGraphModel *graph_model;
+    GwyGraphModel *gmodel;
 } FractalControls;
 
 static gboolean   module_register         (void);
@@ -94,7 +94,7 @@ static void       out_changed_cb          (GtkWidget *combo,
                                            FractalControls *controls);
 static void       fractal_dialog_update   (FractalControls *controls,
                                            FractalArgs *args);
-static void       ok_cb                   (FractalArgs *args,
+static void       fractal_do              (FractalArgs *args,
                                            FractalControls *controls);
 static gboolean   update_graph            (FractalArgs *args,
                                            FractalControls *controls);
@@ -126,7 +126,7 @@ static const FractalArgs fractal_defaults = {
     { 0, 0, 0, 0, },
     { 0, 0, 0, 0, },
     { 0, 0, 0, 0, },
-    { NULL, -1 },
+    GWY_APP_DATA_ID_NONE,
 };
 
 static const GwyEnum methods[GWY_FRACTAL_NMETHODS] = {
@@ -163,6 +163,8 @@ static const FractalDimFunc dim_funcs[GWY_FRACTAL_NMETHODS] = {
     gwy_data_field_fractal_triangulation_dim,
     gwy_data_field_fractal_psdf_dim,
 };
+
+static GwyAppDataId target_id = GWY_APP_DATA_ID_NONE;
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -223,7 +225,8 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
 
     controls.args = args;
     controls.data = data;
-    controls.graph_model = gwy_graph_model_new();
+    controls.gmodel = gwy_graph_model_new();
+    /* The axes should be unitless so no unit initialisation is necessary. */
 
     dialog = gtk_dialog_new_with_buttons(_("Fractal Dimension"), NULL, 0, NULL);
     button = gwy_stock_like_button_new(_("Reco_mpute"), GTK_STOCK_EXECUTE);
@@ -335,6 +338,8 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     gwy_data_chooser_set_none(chooser, _("New graph"));
     gwy_data_chooser_set_active(chooser, NULL, -1);
     gwy_data_chooser_set_filter(chooser, filter_target_graphs, &controls, NULL);
+    gwy_data_chooser_set_active_id(chooser, &args->target_graph);
+    gwy_data_chooser_get_active_id(chooser, &args->target_graph);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.target_graph);
     gtk_box_pack_end(GTK_BOX(hbox2), controls.target_graph, FALSE, FALSE, 0);
     g_signal_connect_swapped(controls.target_graph, "changed",
@@ -342,8 +347,8 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     row++;
 
     /* Graph */
-    controls.graph = gwy_graph_new(controls.graph_model);
-    g_object_unref(controls.graph_model);
+    controls.graph = gwy_graph_new(controls.gmodel);
+    g_object_unref(controls.gmodel);
     gtk_widget_set_size_request(controls.graph, 400, 300);
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph, TRUE, TRUE, 4);
@@ -371,7 +376,7 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
             break;
 
             case GTK_RESPONSE_OK:
-            ok_cb(args, &controls);
+            fractal_do(args, &controls);
             break;
 
             case RESPONSE_RESET:
@@ -445,11 +450,11 @@ static gboolean
 filter_target_graphs(GwyContainer *data, gint id, gpointer user_data)
 {
     FractalControls *controls = (FractalControls*)user_data;
-    GwyGraphModel *gmodel, *targetgmodel;
+    GwyGraphModel *gmodel = controls->gmodel, *targetgmodel;
     GQuark quark = gwy_app_get_graph_key_for_id(id);
 
-    return ((gmodel = controls->graph_model)
-            && gwy_container_gis_object(data, quark, (GObject**)&targetgmodel)
+    g_return_val_if_fail(gmodel, FALSE);
+    return (gwy_container_gis_object(data, quark, (GObject**)&targetgmodel)
             && gwy_graph_model_units_are_compatible(gmodel, targetgmodel));
 }
 
@@ -457,9 +462,8 @@ static void
 target_graph_changed(FractalControls *controls)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
-    GwyAppDataIdTmp *target = &controls->args->target_graph;
 
-    target->data = gwy_data_chooser_get_active(chooser, &target->id);
+    gwy_data_chooser_get_active_id(chooser, &controls->args->target_graph);
 }
 
 /* update dialog after any recomputation. */
@@ -476,22 +480,23 @@ fractal_dialog_update(FractalControls *controls,
 }
 
 static void
-ok_cb(FractalArgs *args,
-      FractalControls *controls)
+fractal_do(FractalArgs *args,
+           FractalControls *controls)
 {
     update_graph(args, controls);
 
-    if (args->target_graph.data) {
+    if (args->target_graph.datano) {
         GwyGraphModel *target_gmodel;
         GQuark quark = gwy_app_get_graph_key_for_id(args->target_graph.id);
+        GwyContainer *data;
 
-        target_gmodel = gwy_container_get_object(args->target_graph.data,
-                                                 quark);
+        data = gwy_app_data_browser_get(args->target_graph.datano);
+        target_gmodel = gwy_container_get_object(data, quark);
         g_return_if_fail(target_gmodel);
-        gwy_graph_model_append_curves(target_gmodel, controls->graph_model, 2);
+        gwy_graph_model_append_curves(target_gmodel, controls->gmodel, 2);
     }
     else {
-        gwy_app_data_browser_add_graph_model(controls->graph_model,
+        gwy_app_data_browser_add_graph_model(controls->gmodel,
                                              controls->data,
                                              TRUE);
     }
@@ -520,7 +525,7 @@ update_graph(FractalArgs *args,
     if ((is_line = remove_datapoints(xline, yline, xnline, ynline, args)))
         args->result[args->out] = dim_funcs[args->out](xnline, ynline, &a, &b);
 
-    gwy_graph_model_remove_all_curves(controls->graph_model);
+    gwy_graph_model_remove_all_curves(controls->gmodel);
 
     gcmodel = gwy_graph_curve_model_new();
     xlabel = gwy_enum_to_string(args->out,
@@ -536,12 +541,12 @@ update_graph(FractalArgs *args,
                                    gwy_data_line_get_data_const(xline),
                                    gwy_data_line_get_data_const(yline),
                                    gwy_data_line_get_res(xline));
-    g_object_set(controls->graph_model,
+    g_object_set(controls->gmodel,
                  "title", gettext(title),
                  "axis-label-bottom", xlabel,
                  "axis-label-left", ylabel,
                  NULL);
-    gwy_graph_model_add_curve(controls->graph_model, gcmodel);
+    gwy_graph_model_add_curve(controls->gmodel, gcmodel);
     g_object_unref(gcmodel);
 
     res = gwy_data_line_get_res(xnline);
@@ -562,7 +567,7 @@ update_graph(FractalArgs *args,
                      "mode", GWY_GRAPH_CURVE_LINE,
                      "description", _("Linear fit"),
                      NULL);
-        gwy_graph_model_add_curve(controls->graph_model, gcmodel);
+        gwy_graph_model_add_curve(controls->gmodel, gcmodel);
         g_object_unref(gcmodel);
         g_object_unref(yfit);
     }
@@ -690,6 +695,7 @@ fractal_sanitize_args(FractalArgs *args)
     args->interp = gwy_enum_sanitize_value(args->interp,
                                            GWY_TYPE_INTERPOLATION_TYPE);
     args->out = MIN(args->out, GWY_FRACTAL_NMETHODS-1);
+    gwy_app_data_id_verify_graph(&args->target_graph);
 }
 
 static void
@@ -700,6 +706,7 @@ fractal_load_args(GwyContainer *container,
 
     gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
     gwy_container_gis_enum_by_name(container, out_key, &args->out);
+    args->target_graph = target_id;
     fractal_sanitize_args(args);
 }
 
@@ -709,6 +716,7 @@ fractal_save_args(GwyContainer *container,
 {
     gwy_container_set_enum_by_name(container, interp_key, args->interp);
     gwy_container_set_enum_by_name(container, out_key, args->out);
+    target_id = args->target_graph;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
