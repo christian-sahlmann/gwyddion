@@ -180,10 +180,13 @@ fft(GwyContainer *data, GwyRunType run)
 
     is_inv = args.inverse_transform && args.raw_transform;
     imgpart = NULL;
-    if (args.use_imgpart && args.imgpart.datano && args.imgpart.id >= 0) {
+    if (args.use_imgpart && args.imgpart.datano) {
         GQuark quark = gwy_app_get_data_key_for_id(args.imgpart.id);
         idata = gwy_app_data_browser_get(args.imgpart.datano);
         imgpart = GWY_DATA_FIELD(gwy_container_get_object(idata, quark));
+        if (gwy_data_field_check_compatibility(imgpart, dfield,
+                                               GWY_DATA_COMPATIBILITY_ALL))
+            imgpart = NULL;
     }
 
     if (is_inv) {
