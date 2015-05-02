@@ -450,6 +450,7 @@ filter_target_graphs(GwyContainer *data, gint id, gpointer user_data)
     if (controls->args->separate)
         return FALSE;
 
+    g_return_val_if_fail(gmodel, FALSE);
     return (gwy_container_gis_object(data, quark, (GObject**)&targetgmodel)
             && gwy_graph_model_units_are_compatible(gmodel, targetgmodel));
 }

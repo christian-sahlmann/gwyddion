@@ -921,11 +921,11 @@ static gboolean
 filter_target_graphs(GwyContainer *data, gint id, gpointer user_data)
 {
     CurvatureControls *controls = (CurvatureControls*)user_data;
-    GwyGraphModel *gmodel, *targetgmodel;
+    GwyGraphModel *gmodel = controls->gmodel, *targetgmodel;
     GQuark quark = gwy_app_get_graph_key_for_id(id);
 
-    return ((gmodel = controls->gmodel)
-            && gwy_container_gis_object(data, quark, (GObject**)&targetgmodel)
+    g_return_val_if_fail(gmodel, FALSE);
+    return (gwy_container_gis_object(data, quark, (GObject**)&targetgmodel)
             && gwy_graph_model_units_are_compatible(gmodel, targetgmodel));
 }
 
