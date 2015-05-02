@@ -57,7 +57,7 @@ typedef struct {
     gint resolution;
     GwyInterpolationType interpolation;
     GwyWindowingType windowing;
-    GwyAppDataIdTmp target_graph;
+    GwyAppDataId target_graph;
 } ProfArgs;
 
 typedef struct {
@@ -104,6 +104,8 @@ static gboolean      filter_target_graphs      (GwyContainer *data,
 static void          target_graph_changed      (ProfControls *controls);
 static void          prof_update_curve         (ProfControls *controls,
                                                 gint i);
+static void          init_graph_model_units    (GwyGraphModel *gmodel,
+                                                GwyDataField *psdffield);
 static void          prof_execute              (ProfControls *controls,
                                                 GwyContainer *data);
 static GwyDataField* prof_psdf                 (GwyDataField *dfield,
@@ -115,13 +117,14 @@ static void          prof_save_args            (GwyContainer *container,
                                                 ProfArgs *args);
 static void          prof_sanitize_args        (ProfArgs *args);
 
-
 static const ProfArgs prof_defaults = {
     FALSE, FALSE, 120,
     GWY_INTERPOLATION_LINEAR,
     GWY_WINDOWING_HANN,
-    { NULL, -1 },
+    GWY_APP_DATA_ID_NONE,
 };
+
+static GwyAppDataId target_id = GWY_APP_DATA_ID_NONE;
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -185,7 +188,6 @@ prof_dialog(ProfArgs *args,
     gint response;
     GwyPixmapLayer *layer;
     GwyVectorLayer *vlayer;
-    gdouble xy[2];
     gint row;
 
     controls.args = args;
@@ -257,6 +259,7 @@ prof_dialog(ProfArgs *args,
                  "axis-label-bottom", "k",
                  "axis-label-left", "W",
                  NULL);
+    init_graph_model_units(controls.gmodel, controls.psdffield);
     controls.line = gwy_data_line_new(1, 1.0, FALSE);
 
     controls.graph = gwy_graph_new(controls.gmodel);
@@ -334,20 +337,13 @@ prof_dialog(ProfArgs *args,
     gwy_data_chooser_set_none(chooser, _("New graph"));
     gwy_data_chooser_set_active(chooser, NULL, -1);
     gwy_data_chooser_set_filter(chooser, filter_target_graphs, &controls, NULL);
+    gwy_data_chooser_set_active_id(chooser, &args->target_graph);
+    gwy_data_chooser_get_active_id(chooser, &args->target_graph);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.target_graph);
     gtk_box_pack_end(GTK_BOX(hbox2), controls.target_graph, FALSE, FALSE, 0);
     g_signal_connect_swapped(controls.target_graph, "changed",
                              G_CALLBACK(target_graph_changed), &controls);
     row++;
-
-    /* The graph units required for filtering are only set when a profile
-     * is actually taken.  We could set the units explicitly.  But this is
-     * lazier and ensures consistency... */
-    xy[0] = 0.25*controls.modfield->xreal;
-    xy[1] = 0.25*controls.modfield->yreal;
-    gwy_selection_set_data(controls.selection, 1, xy);
-    update_target_graphs(&controls);
-    gwy_selection_clear(controls.selection);
 
     gtk_widget_show_all(controls.dialog);
     do {
@@ -448,14 +444,13 @@ static gboolean
 filter_target_graphs(GwyContainer *data, gint id, gpointer user_data)
 {
     ProfControls *controls = (ProfControls*)user_data;
-    GwyGraphModel *gmodel, *targetgmodel;
+    GwyGraphModel *gmodel = controls->gmodel, *targetgmodel;
     GQuark quark = gwy_app_get_graph_key_for_id(id);
 
     if (controls->args->separate)
         return FALSE;
 
-    return ((gmodel = controls->gmodel)
-            && gwy_container_gis_object(data, quark, (GObject**)&targetgmodel)
+    return (gwy_container_gis_object(data, quark, (GObject**)&targetgmodel)
             && gwy_graph_model_units_are_compatible(gmodel, targetgmodel));
 }
 
@@ -463,9 +458,8 @@ static void
 target_graph_changed(ProfControls *controls)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
-    GwyAppDataIdTmp *target = &controls->args->target_graph;
 
-    target->data = gwy_data_chooser_get_active(chooser, &target->id);
+    gwy_data_chooser_get_active_id(chooser, &controls->args->target_graph);
 }
 
 static void
@@ -516,16 +510,29 @@ prof_update_curve(ProfControls *controls,
                      NULL);
         gwy_graph_model_add_curve(controls->gmodel, gcmodel);
         g_object_unref(gcmodel);
-
-        if (i == 0)
-            gwy_graph_model_set_units_from_data_line(controls->gmodel,
-                                                     controls->line);
     }
 
     gwy_graph_curve_model_set_data_from_dataline(gcmodel, controls->line, 0, 0);
     desc = g_strdup_printf(_("PSDF %.0f°"), 180.0/G_PI*atan2(-xy[1], xy[0]));
     g_object_set(gcmodel, "description", desc, NULL);
     g_free(desc);
+}
+
+static void
+init_graph_model_units(GwyGraphModel *gmodel,
+                       GwyDataField *psdffield)
+{
+    GwySIUnit *unit;
+
+    unit = gwy_data_field_get_si_unit_xy(psdffield);
+    unit = gwy_si_unit_duplicate(unit);
+    g_object_set(gmodel, "si-unit-x", unit, NULL);
+    g_object_unref(unit);
+
+    unit = gwy_data_field_get_si_unit_z(psdffield);
+    unit = gwy_si_unit_duplicate(unit);
+    g_object_set(gmodel, "si-unit-y", unit, NULL);
+    g_object_unref(unit);
 }
 
 static void
@@ -542,12 +549,12 @@ prof_execute(ProfControls *controls,
     g_return_if_fail(n);
 
     if (!args->separate) {
-        if (args->target_graph.data) {
+        if (args->target_graph.datano) {
             GwyGraphModel *target_gmodel;
             GQuark quark = gwy_app_get_graph_key_for_id(args->target_graph.id);
 
-            target_gmodel = gwy_container_get_object(args->target_graph.data,
-                                                     quark);
+            data = gwy_app_data_browser_get(args->target_graph.datano);
+            target_gmodel = gwy_container_get_object(data, quark);
             g_return_if_fail(target_gmodel);
             gwy_graph_model_append_curves(target_gmodel, controls->gmodel, 1);
         }
@@ -644,6 +651,7 @@ prof_sanitize_args(ProfArgs *args)
     args->resolution = CLAMP(args->resolution, MIN_RESOLUTION, MAX_RESOLUTION);
     args->interpolation = gwy_enum_sanitize_value(args->interpolation,
                                                   GWY_TYPE_INTERPOLATION_TYPE);
+    gwy_app_data_id_verify_graph(&args->target_graph);
 }
 
 static void
@@ -658,6 +666,7 @@ prof_load_args(GwyContainer *container,
                                     &args->resolution);
     gwy_container_gis_enum_by_name(container, interpolation_key,
                                    &args->interpolation);
+    args->target_graph = target_id;
     prof_sanitize_args(args);
 }
 
@@ -671,6 +680,7 @@ prof_save_args(GwyContainer *container,
                                     args->resolution);
     gwy_container_set_enum_by_name(container, interpolation_key,
                                    args->interpolation);
+    target_id = args->target_graph;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
