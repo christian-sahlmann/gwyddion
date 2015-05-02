@@ -42,18 +42,20 @@ static void     presentation_logscale     (GwyContainer *data,
                                            GwyRunType run);
 static void     presentation_attach       (GwyContainer *data,
                                            GwyRunType run);
-static void     presentation_attach_do    (const GwyAppDataIdTmp *source,
-                                           const GwyAppDataIdTmp *target);
+static void     presentation_attach_do    (const GwyAppDataId *source,
+                                           const GwyAppDataId *target);
 static gboolean presentation_attach_filter(GwyContainer *source,
                                            gint id,
                                            gpointer user_data);
+
+static GwyAppDataId attach_source_id = GWY_APP_DATA_ID_NONE;
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Basic operations with presentation: extraction, removal."),
     "Yeti <yeti@gwyddion.net>",
-    "1.8",
+    "1.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -197,17 +199,19 @@ presentation_logscale(GwyContainer *data, GwyRunType run)
 }
 
 static void
-presentation_attach(G_GNUC_UNUSED GwyContainer *data,
+presentation_attach(GwyContainer *data,
                     GwyRunType run)
 {
     GtkWidget *dialog, *table, *label, *chooser;
-    GwyAppDataIdTmp source, target;
+    GwyAppDataId target;
     gint row, response;
 
     g_return_if_fail(run & PRESENTATION_ATTACH_RUN_MODES);
-    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &target.data,
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER_ID, &target.datano,
                                      GWY_APP_DATA_FIELD_ID, &target.id,
                                      0);
+
+    gwy_app_data_id_verify_channel(&attach_source_id);
 
     dialog = gtk_dialog_new_with_buttons(_("Attach Presentation"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -231,8 +235,8 @@ presentation_attach(G_GNUC_UNUSED GwyContainer *data,
     chooser = gwy_data_chooser_new_channels();
     gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(chooser),
                                 &presentation_attach_filter, &target, NULL);
-    gwy_data_chooser_set_active(GWY_DATA_CHOOSER(chooser),
-                                target.data, target.id);
+    gwy_data_chooser_set_active_id(GWY_DATA_CHOOSER(chooser),
+                                   &attach_source_id);
     gtk_table_attach(GTK_TABLE(table), chooser, 1, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), chooser);
@@ -251,11 +255,11 @@ presentation_attach(G_GNUC_UNUSED GwyContainer *data,
             break;
 
             case GTK_RESPONSE_OK:
-            source.data = gwy_data_chooser_get_active(GWY_DATA_CHOOSER(chooser),
-                                                      &source.id);
+            gwy_data_chooser_get_active_id(GWY_DATA_CHOOSER(chooser),
+                                           &attach_source_id);
             /* The data must be always compatible at least with itself */
-            g_assert(source.data);
-            presentation_attach_do(&source, &target);
+            g_assert(attach_source_id.datano);
+            presentation_attach_do(&attach_source_id, &target);
             gwy_app_channel_log_add_proc(data, target.id, target.id);
             break;
 
@@ -273,16 +277,17 @@ presentation_attach_filter(GwyContainer *source,
                            gint id,
                            gpointer user_data)
 {
-    const GwyAppDataIdTmp *target = (const GwyAppDataIdTmp*)user_data;
+    const GwyAppDataId *target = (const GwyAppDataId*)user_data;
     GwyDataField *source_dfield, *target_dfield;
+    GwyContainer *data;
     GQuark quark;
 
     quark = gwy_app_get_data_key_for_id(id);
     source_dfield = GWY_DATA_FIELD(gwy_container_get_object(source, quark));
 
+    data = gwy_app_data_browser_get(target->datano);
     quark = gwy_app_get_data_key_for_id(target->id);
-    target_dfield = GWY_DATA_FIELD(gwy_container_get_object(target->data,
-                                                            quark));
+    target_dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
     return !gwy_data_field_check_compatibility(source_dfield, target_dfield,
                                                GWY_DATA_COMPATIBILITY_RES
@@ -291,18 +296,21 @@ presentation_attach_filter(GwyContainer *source,
 }
 
 static void
-presentation_attach_do(const GwyAppDataIdTmp *source,
-                       const GwyAppDataIdTmp *target)
+presentation_attach_do(const GwyAppDataId *source,
+                       const GwyAppDataId *target)
 {
+    GwyContainer *sourcedata, *targetdata;
     GwyDataField *dfield;
     GQuark quark;
 
+    sourcedata = gwy_app_data_browser_get(source->datano);
+    targetdata = gwy_app_data_browser_get(target->datano);
     quark = gwy_app_get_data_key_for_id(source->id);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object(source->data, quark));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object(sourcedata, quark));
     dfield = gwy_data_field_duplicate(dfield);
     quark = gwy_app_get_show_key_for_id(target->id);
-    gwy_app_undo_qcheckpointv(target->data, 1, &quark);
-    gwy_container_set_object(target->data, quark, dfield);
+    gwy_app_undo_qcheckpointv(targetdata, 1, &quark);
+    gwy_container_set_object(targetdata, quark, dfield);
     g_object_unref(dfield);
 }
 
