@@ -38,23 +38,26 @@ typedef enum {
 } TipOperation;
 
 typedef struct {
-    GwyAppDataIdTmp tip;
-    GwyAppDataIdTmp target;
+    GwyAppDataId tip;
+    GwyAppDataId target;
 } TipOpsArgs;
 
-static gboolean module_register  (void);
-static void     tipops           (GwyContainer *data,
-                                  GwyRunType run,
-                                  const gchar *name);
-static gboolean tipops_dialog    (TipOpsArgs *args,
-                                  TipOperation op);
-static void     tipops_tip_cb    (GwyDataChooser *chooser,
-                                  TipOpsArgs *args);
-static gboolean tipops_tip_filter(GwyContainer *data,
-                                  gint id,
-                                  gpointer user_data);
-static void     tipops_do        (TipOpsArgs *args,
-                                  TipOperation op);
+static gboolean module_register   (void);
+static void     tipops            (GwyContainer *data,
+                                   GwyRunType run,
+                                   const gchar *name);
+static gboolean tipops_dialog     (TipOpsArgs *args,
+                                   TipOperation op);
+static void     tipops_tip_changed(GwyDataChooser *chooser,
+                                   TipOpsArgs *args);
+static gboolean tipops_tip_filter (GwyContainer *data,
+                                   gint id,
+                                   gpointer user_data);
+static void     tipops_do         (TipOpsArgs *args,
+                                   TipOperation op);
+
+/* Shared among tipops. */
+static GwyAppDataId tip_id = GWY_APP_DATA_ID_NONE;
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -62,7 +65,7 @@ static GwyModuleInfo module_info = {
     N_("Tip operations: dilation (convolution), erosion (reconstruction) "
        "and certainty map."),
     "Petr Klapetek <klapetek@gwyddion.net>, Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -98,7 +101,7 @@ module_register(void)
 }
 
 static void
-tipops(GwyContainer *data,
+tipops(G_GNUC_UNUSED GwyContainer *data,
        GwyRunType run,
        const gchar *name)
 {
@@ -118,9 +121,11 @@ tipops(GwyContainer *data,
         return;
     }
 
-    args.target.data = data;
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.target.id, 0);
-    args.tip.data = NULL;
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.target.id,
+                                     GWY_APP_CONTAINER_ID, &args.target.datano,
+                                     0);
+    args.tip = tip_id;
+    gwy_app_data_id_verify_channel(&args.tip);
 
     if (tipops_dialog(&args, op))
         tipops_do(&args, op);
@@ -161,9 +166,12 @@ tipops_dialog(TipOpsArgs *args,
 
     chooser = gwy_data_chooser_new_channels();
     g_object_set_data(G_OBJECT(chooser), "dialog", dialog);
+    gwy_data_chooser_set_active(GWY_DATA_CHOOSER(chooser), NULL, -1);
     gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(chooser),
                                 tipops_tip_filter, &args->target, NULL);
-    g_signal_connect(chooser, "changed", G_CALLBACK(tipops_tip_cb), args);
+    gwy_data_chooser_set_active_id(GWY_DATA_CHOOSER(chooser), &args->tip);
+    gwy_data_chooser_get_active_id(GWY_DATA_CHOOSER(chooser), &args->tip);
+    g_signal_connect(chooser, "changed", G_CALLBACK(tipops_tip_changed), args);
     gtk_table_attach_defaults(GTK_TABLE(table), chooser, 1, 2, row, row+1);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), chooser);
     row++;
@@ -174,7 +182,7 @@ tipops_dialog(TipOpsArgs *args,
                      0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_object_set_data(G_OBJECT(chooser), "warning-label", label);
 
-    tipops_tip_cb(GWY_DATA_CHOOSER(chooser), args);
+    tipops_tip_changed(GWY_DATA_CHOOSER(chooser), args);
     gtk_widget_show_all(dialog);
 
     do {
@@ -202,32 +210,35 @@ tipops_dialog(TipOpsArgs *args,
 }
 
 static void
-tipops_tip_cb(GwyDataChooser *chooser,
-              TipOpsArgs *args)
+tipops_tip_changed(GwyDataChooser *chooser,
+                   TipOpsArgs *args)
 {
     GtkWidget *dialog, *label;
     GwyDataField *tip, *target;
+    GwyContainer *data;
     gint xres, yres;
     GQuark quark;
     gchar *s;
 
-    args->tip.data = gwy_data_chooser_get_active(chooser, &args->tip.id);
-    gwy_debug("tip: %p %d", args->tip.data, args->tip.id);
+    gwy_data_chooser_get_active_id(chooser, &args->tip);
+    gwy_debug("tip: %d %d", args->tip.datano, args->tip.id);
 
     dialog = g_object_get_data(G_OBJECT(chooser), "dialog");
     g_assert(GTK_IS_DIALOG(dialog));
     gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_OK,
-                                      args->tip.data != NULL);
-    if (!args->tip.data)
+                                      args->tip.datano);
+    if (!args->tip.datano)
         return;
 
     label = g_object_get_data(G_OBJECT(chooser), "warning-label");
 
+    data = gwy_app_data_browser_get(args->tip.datano);
     quark = gwy_app_get_data_key_for_id(args->tip.id);
-    tip = GWY_DATA_FIELD(gwy_container_get_object(args->tip.data, quark));
+    tip = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
+    data = gwy_app_data_browser_get(args->target.datano);
     quark = gwy_app_get_data_key_for_id(args->target.id);
-    target = GWY_DATA_FIELD(gwy_container_get_object(args->target.data, quark));
+    target = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
     if (!gwy_data_field_check_compatibility(tip, target,
                                             GWY_DATA_COMPATIBILITY_MEASURE)) {
@@ -256,15 +267,16 @@ tipops_tip_filter(GwyContainer *data,
                   gint id,
                   gpointer user_data)
 {
-    GwyAppDataIdTmp *object = (GwyAppDataIdTmp*)user_data;
+    GwyAppDataId *object = (GwyAppDataId*)user_data;
     GwyDataField *tip, *target;
     GQuark quark;
 
     quark = gwy_app_get_data_key_for_id(id);
     tip = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
+    data = gwy_app_data_browser_get(object->datano);
     quark = gwy_app_get_data_key_for_id(object->id);
-    target = GWY_DATA_FIELD(gwy_container_get_object(object->data, quark));
+    target = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
     if (gwy_data_field_get_xreal(tip) <= gwy_data_field_get_xreal(target)/4
         && gwy_data_field_get_yreal(tip) <= gwy_data_field_get_yreal(target)/4
@@ -285,21 +297,24 @@ tipops_do(TipOpsArgs *args,
         N_("Surface reconstruction"),
     };
     GwyDataField *dfield, *tip, *target;
+    GwyContainer *tipdata, *targetdata;
     GQuark quark;
     gboolean ok;
     gint newid;
 
+    tipdata = gwy_app_data_browser_get(args->tip.datano);
     quark = gwy_app_get_data_key_for_id(args->tip.id);
-    tip = GWY_DATA_FIELD(gwy_container_get_object(args->tip.data, quark));
+    tip = GWY_DATA_FIELD(gwy_container_get_object(tipdata, quark));
 
+    targetdata = gwy_app_data_browser_get(args->target.datano);
     quark = gwy_app_get_data_key_for_id(args->target.id);
-    target = GWY_DATA_FIELD(gwy_container_get_object(args->target.data, quark));
+    target = GWY_DATA_FIELD(gwy_container_get_object(targetdata, quark));
 
     /* result fields - after computation result should be in dfield */
     dfield = gwy_data_field_new_alike(target, FALSE);
 
     /* FIXME */
-    gwy_app_wait_start(gwy_app_find_window_for_channel(args->target.data,
+    gwy_app_wait_start(gwy_app_find_window_for_channel(targetdata,
                                                        args->target.id),
                        _("Initializing"));
 
@@ -317,16 +332,13 @@ tipops_do(TipOpsArgs *args,
         gwy_app_wait_finish();
 
         if (ok) {
-            newid = gwy_app_data_browser_add_data_field(dfield,
-                                                        args->target.data,
+            newid = gwy_app_data_browser_add_data_field(dfield, targetdata,
                                                         TRUE);
-            gwy_app_sync_data_items(args->target.data, args->target.data,
+            gwy_app_sync_data_items(targetdata, targetdata,
                                     args->target.id, newid, FALSE,
                                     GWY_DATA_ITEM_PALETTE, 0);
-            gwy_app_set_data_field_title(args->target.data, newid,
-                                         data_titles[op]);
-            gwy_app_channel_log_add_proc(args->target.data,
-                                         args->target.id, newid);
+            gwy_app_set_data_field_title(targetdata, newid, data_titles[op]);
+            gwy_app_channel_log_add_proc(targetdata, args->target.id, newid);
         }
     }
     else {
@@ -337,9 +349,9 @@ tipops_do(TipOpsArgs *args,
 
         if (ok) {
             quark = gwy_app_get_mask_key_for_id(args->target.id);
-            gwy_app_undo_qcheckpointv(args->target.data, 1, &quark);
-            gwy_container_set_object(args->target.data, quark, dfield);
-            gwy_app_channel_log_add_proc(args->target.data,
+            gwy_app_undo_qcheckpointv(targetdata, 1, &quark);
+            gwy_container_set_object(targetdata, quark, dfield);
+            gwy_app_channel_log_add_proc(targetdata,
                                          args->target.id, args->target.id);
         }
     }
@@ -347,4 +359,3 @@ tipops_do(TipOpsArgs *args,
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
