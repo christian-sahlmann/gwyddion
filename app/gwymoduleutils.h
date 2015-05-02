@@ -24,6 +24,7 @@
 
 #include <gtk/gtkwindow.h>
 #include <libgwydgets/gwydataview.h>
+#include <libgwydgets/gwygraphmodel.h>
 #include <app/datachooser.h>
 
 G_BEGIN_DECLS
@@ -56,6 +57,12 @@ void
 gwy_set_data_preview_size(GwyDataView *data_view,
                           gint max_size);
 
+
+gint
+gwy_app_add_graph_or_curves(GwyGraphModel *gmodel,
+                            GwyContainer *data,
+                            const GwyAppDataId *target_graph,
+                            gint colorstep);
 
 gboolean gwy_app_data_id_verify_channel(GwyAppDataId *id);
 gboolean gwy_app_data_id_verify_graph  (GwyAppDataId *id);

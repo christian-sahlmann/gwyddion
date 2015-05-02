@@ -414,6 +414,57 @@ gwy_app_data_id_verify_spectra(GwyAppDataId *id)
     return GWY_IS_SPECTRA(object);
 }
 
+/**
+ * gwy_app_add_graph_or_curves:
+ * @gmodel: A graph model with curves to add.
+ * @data: Data container where the graph would be added.
+ * @target_graph: Graph where curves would be added.
+ * @colorstep: Curve block size as in gwy_graph_model_append_curves().
+ *
+ * Puts the curves of a graph to another graph if possible, or adds the graph
+ * as new.
+ *
+ * If the units of @gmodel are compatible with the units of the graph
+ * identified by @target_graph the curves are copied to the target graph with
+ * gwy_graph_model_append_curves().
+ *
+ * In all other cases, including when @target_graph does not refer to any
+ * existing graph, the graph model is added to @data as a new graph.
+ *
+ * Either way, the caller usually need to release its own reference afterwards.
+ *
+ * This function is useful particularly in modules that create graphs and can
+ * be run non-interactively.
+ *
+ * Returns: The numerical identifier of the newly-created graph of one was
+ *          created.  Value -1 is returned if curves were added to
+ *          @target_graph.
+ *
+ * Since: 2.41
+ **/
+gint
+gwy_app_add_graph_or_curves(GwyGraphModel *gmodel,
+                            GwyContainer *data,
+                            const GwyAppDataId *target_graph,
+                            gint colorstep)
+{
+    GwyAppDataId tgtgraph = *target_graph;
+
+    if (gwy_app_data_id_verify_graph(&tgtgraph)) {
+        GQuark quark = gwy_app_get_graph_key_for_id(tgtgraph.id);
+        GwyContainer *data2 = gwy_app_data_browser_get(tgtgraph.datano);
+        GwyGraphModel *target_gmodel = gwy_container_get_object(data2, quark);
+
+        g_return_val_if_fail(GWY_IS_GRAPH_MODEL(target_gmodel), -1);
+        if (gwy_graph_model_units_are_compatible(gmodel, target_gmodel)) {
+            gwy_graph_model_append_curves(target_gmodel, gmodel, colorstep);
+            return -1;
+        }
+    }
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
+    return gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+}
+
 /************************** Documentation ****************************/
 
 /**
