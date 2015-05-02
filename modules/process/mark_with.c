@@ -37,7 +37,7 @@
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
-#define MARK_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
+#define MARK_RUN_MODES GWY_RUN_INTERACTIVE
 
 typedef enum {
     MARK_WITH_MASK = 0,
