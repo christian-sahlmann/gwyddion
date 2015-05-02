@@ -15,8 +15,10 @@ Libraries:
   the data browser.
 - libgwyapp: GwyDataChooser has selection setting and obtaining functions
   that work with numerical ids.
-- libgwyapp: Functions for ensuring numerical data identifies identify
+- libgwyapp: New functions for ensuring numerical data identifies identify
   a still existing data object.
+- libgwyapp: New helper function for adding graph curves to another graph or
+  creaing a new graph if units are incompatibile.
 
 Modules:
 - Align graph (new): Aligns horizontally graph curves.
@@ -29,7 +31,8 @@ Modules:
   profile, Drift correction: It is possible to select a target graph for the
   curves.
 - Arithmetic: Data fields 2 to 8 are remembered between invocations.
-- Calibrate, Merge, Immerse: Second image is remembered between invocations.
+- Calibrate, Merge, Immerse, Attach Presentation, Cross-correlate, FFT, Mark
+  With: Second image is remembered between invocations.
 - Immerse: Detail positions are remembered.
 - Merge: New merge mode ‘Join’ suitable for slowly varying data without
   significant features but well defined absolute Z values was added.
@@ -49,6 +52,8 @@ Modules:
 - Fractal dimension: Graph axis labels are somewhat more descriptive.
 - Graph level, Graph filter: They are now undoable.
 - Zeiss: RGB images are accepted and the channels are averaged upon import.
+- Color range tool: Fixed color range controls are immediately sensitive when
+  this range type is the default.
 
 Other:
 - Standalone Python module gwy is now in the gwyddion-devel package instead
