@@ -64,7 +64,7 @@ typedef struct {
     GwyInterpolationType interp;
     gboolean distribute;
     gboolean replace;
-    GwyAppDataIdTmp target_graph;
+    GwyAppDataId target_graph;
 } DriftArgs;
 
 typedef struct {
@@ -176,8 +176,10 @@ static const DriftArgs drift_defaults = {
     GWY_INTERPOLATION_BSPLINE,
     FALSE,
     FALSE,
-    { NULL, -1 },
+    GWY_APP_DATA_ID_NONE,
 };
+
+static GwyAppDataId target_id = GWY_APP_DATA_ID_NONE;
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -374,7 +376,6 @@ drift_dialog(DriftArgs *args,
     controls.target_graph = gwy_data_chooser_new_graphs();
     chooser = GWY_DATA_CHOOSER(controls.target_graph);
     gwy_data_chooser_set_none(chooser, _("New graph"));
-    gwy_data_chooser_set_active(chooser, NULL, -1);
     gwy_data_chooser_set_filter(chooser, filter_target_graphs, &controls, NULL);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.target_graph);
     gtk_widget_set_sensitive(hbox2, args->do_graph);
@@ -433,6 +434,7 @@ drift_dialog(DriftArgs *args,
     controls.computed = FALSE;
     /* Set up initial layer keys properly */
     preview_type_changed(NULL, &controls);
+    gwy_data_chooser_set_active_id(chooser, &args->target_graph);
 
     gtk_widget_show_all(dialog);
     do {
@@ -657,12 +659,12 @@ run_noninteractive(DriftArgs *args,
         gwy_graph_model_add_curve(gmodel, gcmodel);
         gwy_object_unref(gcmodel);
 
-        if (args->target_graph.data) {
+        if (args->target_graph.datano) {
             GwyGraphModel *target_gmodel;
             GQuark quark = gwy_app_get_graph_key_for_id(args->target_graph.id);
 
-            target_gmodel = gwy_container_get_object(args->target_graph.data,
-                                                     quark);
+            data = gwy_app_data_browser_get(args->target_graph.datano);
+            target_gmodel = gwy_container_get_object(data, quark);
             g_return_if_fail(target_gmodel);
             gwy_graph_model_append_curves(target_gmodel, gmodel, 1);
         }
@@ -804,9 +806,8 @@ static void
 target_graph_changed(DriftControls *controls)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
-    GwyAppDataIdTmp *target = &controls->args->target_graph;
 
-    target->data = gwy_data_chooser_get_active(chooser, &target->id);
+    gwy_data_chooser_get_active_id(chooser, &controls->args->target_graph);
 }
 
 static void
@@ -1232,7 +1233,7 @@ drift_sanitize_args(DriftArgs *args)
 
 static void
 drift_load_args(GwyContainer *container,
-               DriftArgs *args)
+                DriftArgs *args)
 {
     *args = drift_defaults;
 
@@ -1249,13 +1250,16 @@ drift_load_args(GwyContainer *container,
                                       &args->distribute);
     gwy_container_gis_boolean_by_name(container, replace_key,
                                       &args->replace);
+    args->target_graph = target_id;
+    gwy_app_data_id_verify_graph(&args->target_graph);
     drift_sanitize_args(args);
 }
 
 static void
 drift_save_args(GwyContainer *container,
-               DriftArgs *args)
+                DriftArgs *args)
 {
+    target_id = args->target_graph;
     gwy_container_set_boolean_by_name(container, do_graph_key, args->do_graph);
     gwy_container_set_boolean_by_name(container, do_correct_key,
                                       args->do_correct);
