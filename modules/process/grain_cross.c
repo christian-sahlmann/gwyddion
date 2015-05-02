@@ -42,7 +42,7 @@ typedef struct {
     gboolean units_equal;
     guint ngrains;
     gint *grains;
-    GwyAppDataIdTmp target_graph;
+    GwyAppDataId target_graph;
 } GrainCrossArgs;
 
 typedef struct {
@@ -90,8 +90,10 @@ static const GrainCrossArgs grain_cross_defaults = {
     "Projected boundary length", 0,
     FALSE,
     0, NULL,
-    { NULL, -1 },
+    GWY_APP_DATA_ID_NONE,
 };
+
+static GwyAppDataId target_id = GWY_APP_DATA_ID_NONE;
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -228,7 +230,7 @@ grain_cross_dialog(GrainCrossArgs *args,
     gtk_box_pack_start(GTK_BOX(controls.dialog->vbox), GTK_WIDGET(table),
                        TRUE, TRUE, 0);
 
-    gmodel = gwy_graph_model_new();
+    gmodel = create_corr_graph(args, dfield);
     controls.graph = gwy_graph_new(gmodel);
     gtk_widget_set_size_request(controls.graph, 320, -1);
     g_object_unref(gmodel);
@@ -257,6 +259,8 @@ grain_cross_dialog(GrainCrossArgs *args,
     gwy_data_chooser_set_none(chooser, _("New graph"));
     gwy_data_chooser_set_active(chooser, NULL, -1);
     gwy_data_chooser_set_filter(chooser, filter_target_graphs, &controls, NULL);
+    gwy_data_chooser_set_active_id(chooser, &args->target_graph);
+    gwy_data_chooser_get_active_id(chooser, &args->target_graph);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.target_graph);
     gtk_box_pack_end(GTK_BOX(hbox2), controls.target_graph, TRUE, TRUE, 0);
     g_signal_connect_swapped(controls.target_graph, "changed",
@@ -343,8 +347,9 @@ filter_target_graphs(GwyContainer *data, gint id, gpointer user_data)
     GwyGraphModel *gmodel, *targetgmodel;
     GQuark quark = gwy_app_get_graph_key_for_id(id);
 
-    return ((gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph)))
-            && gwy_container_gis_object(data, quark, (GObject**)&targetgmodel)
+    gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
+    g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), FALSE);
+    return (gwy_container_gis_object(data, quark, (GObject**)&targetgmodel)
             && gwy_graph_model_units_are_compatible(gmodel, targetgmodel));
 }
 
@@ -352,9 +357,8 @@ static void
 target_graph_changed(GrainCrossControls *controls)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
-    GwyAppDataIdTmp *target = &controls->args->target_graph;
 
-    target->data = gwy_data_chooser_get_active(chooser, &target->id);
+    gwy_data_chooser_get_active_id(chooser, &controls->args->target_graph);
 }
 
 static GtkTreeView*
@@ -417,21 +421,8 @@ grain_cross_run(GrainCrossArgs *args,
                 GwyContainer *data,
                 GwyDataField *dfield)
 {
-    GwyGraphModel *gmodel;
-
-    gmodel = create_corr_graph(args, dfield);
-    if (args->target_graph.data) {
-        GwyGraphModel *target_gmodel;
-        GQuark quark = gwy_app_get_graph_key_for_id(args->target_graph.id);
-
-        target_gmodel = gwy_container_get_object(args->target_graph.data,
-                                                 quark);
-        g_return_if_fail(target_gmodel);
-        gwy_graph_model_append_curves(target_gmodel, gmodel, 1);
-    }
-    else
-        gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
-
+    GwyGraphModel *gmodel = create_corr_graph(args, dfield);
+    gwy_app_add_graph_or_curves(gmodel, data, &args->target_graph, 1);
     g_object_unref(gmodel);
 }
 
@@ -517,6 +508,8 @@ grain_cross_sanitize_args(GrainCrossArgs *args)
 
     if (!gwy_grain_values_get_grain_value(args->ordinate))
         args->ordinate = grain_cross_defaults.ordinate;
+
+    gwy_app_data_id_verify_graph(&args->target_graph);
 }
 
 static void
@@ -536,6 +529,7 @@ grain_cross_load_args(GwyContainer *container,
                                       &args->abscissa_expanded);
     gwy_container_gis_boolean_by_name(container, ordinate_expanded_key,
                                       &args->ordinate_expanded);
+    args->target_graph = target_id;
     grain_cross_sanitize_args(args);
 }
 
@@ -543,6 +537,7 @@ static void
 grain_cross_save_args(GwyContainer *container,
                       GrainCrossArgs *args)
 {
+    target_id = args->target_graph;
     gwy_container_set_string_by_name(container, abscissa_key,
                                      g_strdup(args->abscissa));
     gwy_container_set_boolean_by_name(container, abscissa_expanded_key,
