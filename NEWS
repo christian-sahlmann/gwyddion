@@ -25,6 +25,8 @@ Modules:
 - Slice volume (new): Simple extraction of planes and lines from volume data.
 - Log-Phi PSDF (new): Calculates 2D PSDF transformed to angle-log(frequency)
   coordinates.
+- Ballistic deposition synthesis (new): Simple growth simulation using the
+  ballistic deposition model.
 - Profiles, Statistical functions, Row/column statistics, Roughness and Spectro
   tools: It is possible to select a target graph for the curves.
 - Slope distribution, Grain correlations, Curvature, Fractal dimension, FFT
@@ -32,7 +34,8 @@ Modules:
   curves.
 - Arithmetic: Data fields 2 to 8 are remembered between invocations.
 - Calibrate, Merge, Immerse, Attach Presentation, Cross-correlate, FFT, Mark
-  With: Second image is remembered between invocations.
+  With, Mask by Correlation, Neural network training: Second image is
+  remembered between invocations.
 - Immerse: Detail positions are remembered.
 - Merge: New merge mode ‘Join’ suitable for slowly varying data without
   significant features but well defined absolute Z values was added.
