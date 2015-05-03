@@ -44,8 +44,8 @@ typedef struct {
     MaskcorResult result;
     gdouble threshold;
     GwyCorrelationType method;
-    GwyAppDataIdTmp data;
-    GwyAppDataIdTmp kernel;
+    GwyAppDataId data;
+    GwyAppDataId kernel;
 } MaskcorArgs;
 
 typedef struct {
@@ -53,37 +53,39 @@ typedef struct {
     GtkObject *threshold;
 } MaskcorControls;
 
-static gboolean module_register      (void);
-static void     maskcor              (GwyContainer *data,
-                                      GwyRunType run);
-static gboolean maskcor_dialog       (MaskcorArgs *args);
-static void     maskcor_operation_cb (GtkWidget *item,
-                                      MaskcorControls *controls);
-static void     maskcor_threshold_cb (GtkAdjustment *adj,
-                                      gdouble *value);
-static void     maskcor_kernel_cb    (GwyDataChooser *chooser,
-                                      GwyAppDataIdTmp *object);
-static gboolean maskcor_kernel_filter(GwyContainer *data,
-                                      gint id,
-                                      gpointer user_data);
-static void     maskcor_do           (MaskcorArgs *args);
-static void     maskcor_load_args    (GwyContainer *settings,
-                                      MaskcorArgs *args);
-static void     maskcor_save_args    (GwyContainer *settings,
-                                      MaskcorArgs *args);
-static void     maskcor_sanitize_args(MaskcorArgs *args);
+static gboolean module_register          (void);
+static void     maskcor                  (GwyContainer *data,
+                                          GwyRunType run);
+static gboolean maskcor_dialog           (MaskcorArgs *args);
+static void     maskcor_operation_changed(GtkWidget *item,
+                                          MaskcorControls *controls);
+static void     maskcor_threshold_changed(GtkAdjustment *adj,
+                                          gdouble *value);
+static void     maskcor_kernel_changed   (GwyDataChooser *chooser,
+                                          GwyAppDataId *object);
+static gboolean maskcor_kernel_filter    (GwyContainer *data,
+                                          gint id,
+                                          gpointer user_data);
+static void     maskcor_do               (MaskcorArgs *args);
+static void     maskcor_load_args        (GwyContainer *settings,
+                                          MaskcorArgs *args);
+static void     maskcor_save_args        (GwyContainer *settings,
+                                          MaskcorArgs *args);
+static void     maskcor_sanitize_args    (MaskcorArgs *args);
 
 static const MaskcorArgs maskcor_defaults = {
     GWY_MASKCOR_OBJECTS, 0.95, GWY_CORRELATION_NORMAL,
-    { NULL, -1 }, { NULL, -1 },
+    GWY_APP_DATA_ID_NONE, GWY_APP_DATA_ID_NONE,
 };
+
+static GwyAppDataId kernel_id = GWY_APP_DATA_ID_NONE;
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Creates mask by correlation with another data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -106,7 +108,7 @@ module_register(void)
 }
 
 static void
-maskcor(GwyContainer *data, GwyRunType run)
+maskcor(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 {
     MaskcorArgs args;
     GwyContainer *settings;
@@ -115,12 +117,14 @@ maskcor(GwyContainer *data, GwyRunType run)
     settings = gwy_app_settings_get();
     maskcor_load_args(settings, &args);
 
-    args.data.data = data;
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.data.id, 0);
-    args.kernel.data = NULL;
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.data.id,
+                                     GWY_APP_CONTAINER_ID, &args.data.datano,
+                                     0);
 
     if (maskcor_dialog(&args))
         maskcor_do(&args);
+
+    maskcor_save_args(gwy_app_settings_get(), &args);
 }
 
 static gboolean
@@ -151,18 +155,20 @@ maskcor_dialog(MaskcorArgs *args)
     /* Kernel */
     chooser = gwy_data_chooser_new_channels();
     g_object_set_data(G_OBJECT(chooser), "dialog", dialog);
+    gwy_data_chooser_set_active(GWY_DATA_CHOOSER(chooser), NULL, -1);
     gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(chooser),
                                 maskcor_kernel_filter, &args->data, NULL);
+    gwy_data_chooser_set_active_id(GWY_DATA_CHOOSER(chooser), &args->kernel);
+    gwy_data_chooser_get_active_id(GWY_DATA_CHOOSER(chooser), &args->kernel);
     g_signal_connect(chooser, "changed",
-                     G_CALLBACK(maskcor_kernel_cb), &args->kernel);
-    maskcor_kernel_cb(GWY_DATA_CHOOSER(chooser), &args->kernel);
+                     G_CALLBACK(maskcor_kernel_changed), &args->kernel);
     gwy_table_attach_hscale(table, row, _("Correlation _kernel:"), NULL,
                             GTK_OBJECT(chooser), GWY_HSCALE_WIDGET);
     row++;
 
     /* Result */
-    combo = gwy_enum_combo_box_newl(G_CALLBACK(maskcor_operation_cb), &controls,
-                                    args->result,
+    combo = gwy_enum_combo_box_newl(G_CALLBACK(maskcor_operation_changed),
+                                    &controls, args->result,
                                     _("Objects marked"), GWY_MASKCOR_OBJECTS,
                                     _("Correlation maxima"), GWY_MASKCOR_MAXIMA,
                                     _("Correlation score"), GWY_MASKCOR_SCORE,
@@ -183,7 +189,7 @@ maskcor_dialog(MaskcorArgs *args)
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     gwy_table_hscale_set_sensitive(adj, args->result != GWY_MASKCOR_SCORE);
     g_signal_connect(adj, "value-changed",
-                     G_CALLBACK(maskcor_threshold_cb), &args->threshold);
+                     G_CALLBACK(maskcor_threshold_changed), &args->threshold);
     row++;
 
     gtk_widget_show_all(dialog);
@@ -195,7 +201,6 @@ maskcor_dialog(MaskcorArgs *args)
             case GTK_RESPONSE_DELETE_EVENT:
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
-            maskcor_save_args(gwy_app_settings_get(), args);
             return FALSE;
             break;
 
@@ -210,12 +215,11 @@ maskcor_dialog(MaskcorArgs *args)
         }
     } while (!ok);
 
-    maskcor_save_args(gwy_app_settings_get(), args);
     return ok;
 }
 
 static void
-maskcor_operation_cb(GtkWidget *combo, MaskcorControls *controls)
+maskcor_operation_changed(GtkWidget *combo, MaskcorControls *controls)
 {
     controls->args->result
         = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
@@ -224,24 +228,24 @@ maskcor_operation_cb(GtkWidget *combo, MaskcorControls *controls)
 }
 
 static void
-maskcor_threshold_cb(GtkAdjustment *adj, gdouble *value)
+maskcor_threshold_changed(GtkAdjustment *adj, gdouble *value)
 {
     *value = gtk_adjustment_get_value(adj);
 }
 
 static void
-maskcor_kernel_cb(GwyDataChooser *chooser,
-                  GwyAppDataIdTmp *object)
+maskcor_kernel_changed(GwyDataChooser *chooser,
+                       GwyAppDataId *object)
 {
     GtkWidget *dialog;
 
-    object->data = gwy_data_chooser_get_active(chooser, &object->id);
-    gwy_debug("kernel: %p %d", object->data, object->id);
+    gwy_data_chooser_get_active_id(chooser, object);
+    gwy_debug("kernel: %d %d", object->datano, object->id);
 
     dialog = g_object_get_data(G_OBJECT(chooser), "dialog");
     g_assert(GTK_IS_DIALOG(dialog));
     gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_OK,
-                                      object->data != NULL);
+                                      object->datano);
 }
 
 static gboolean
@@ -249,15 +253,16 @@ maskcor_kernel_filter(GwyContainer *data,
                       gint id,
                       gpointer user_data)
 {
-    GwyAppDataIdTmp *object = (GwyAppDataIdTmp*)user_data;
+    GwyAppDataId *object = (GwyAppDataId*)user_data;
     GwyDataField *kernel, *dfield;
     GQuark quark;
 
     quark = gwy_app_get_data_key_for_id(id);
     kernel = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
+    data = gwy_app_data_browser_get(object->datano);
     quark = gwy_app_get_data_key_for_id(object->id);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object(object->data, quark));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
     if (gwy_data_field_get_xreal(kernel) <= gwy_data_field_get_xreal(dfield)/4
         && gwy_data_field_get_yreal(kernel) <= gwy_data_field_get_yreal(dfield)/4
@@ -305,22 +310,24 @@ maskcor_do(MaskcorArgs *args)
 {
     enum { WORK_PER_UPDATE = 50000000 };
     GwyDataField *dfield, *kernel, *retfield, *score;
+    GwyContainer *data, *kerneldata;
     GwyComputationState *state;
     GQuark quark;
     gint newid, work, wpi;
 
+    kerneldata = gwy_app_data_browser_get(args->kernel.datano);
     quark = gwy_app_get_data_key_for_id(args->kernel.id);
-    kernel = GWY_DATA_FIELD(gwy_container_get_object(args->kernel.data, quark));
+    kernel = GWY_DATA_FIELD(gwy_container_get_object(kerneldata, quark));
 
+    data = gwy_app_data_browser_get(args->data.datano);
     quark = gwy_app_get_data_key_for_id(args->data.id);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object(args->data.data, quark));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
     retfield = gwy_data_field_new_alike(dfield, FALSE);
 
     /* FIXME */
     if (args->method == GWY_CORRELATION_NORMAL) {
-        gwy_app_wait_start(gwy_app_find_window_for_channel(args->data.data,
-                                                           args->data.id),
+        gwy_app_wait_start(gwy_app_find_window_for_channel(data, args->data.id),
                            _("Initializing"));
         state = gwy_data_field_correlate_init(dfield, kernel, retfield);
         gwy_app_wait_set_message(_("Correlating"));
@@ -349,20 +356,19 @@ maskcor_do(MaskcorArgs *args)
     /* score - do new data with score */
     if (args->result == GWY_MASKCOR_SCORE) {
         score = gwy_data_field_duplicate(retfield);
-        newid = gwy_app_data_browser_add_data_field(score, args->data.data,
-                                                    TRUE);
-        gwy_app_sync_data_items(args->data.data, args->data.data,
+        newid = gwy_app_data_browser_add_data_field(score, data, TRUE);
+        gwy_app_sync_data_items(data, data,
                                 args->data.id, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT, 0);
-        gwy_app_set_data_field_title(args->data.data, newid,
+        gwy_app_set_data_field_title(data, newid,
                                      _("Correlation score"));
         g_object_unref(score);
-        gwy_app_channel_log_add_proc(args->data.data, args->data.id, newid);
+        gwy_app_channel_log_add_proc(data, args->data.id, newid);
     }
     else {
         /* add mask */
         quark = gwy_app_get_mask_key_for_id(args->data.id);
-        gwy_app_undo_qcheckpointv(args->data.data, 1, &quark);
+        gwy_app_undo_qcheckpointv(data, 1, &quark);
         if (args->result == GWY_MASKCOR_OBJECTS)
             plot_correlated(retfield,
                             gwy_data_field_get_xres(kernel),
@@ -371,9 +377,8 @@ maskcor_do(MaskcorArgs *args)
         else if (args->result == GWY_MASKCOR_MAXIMA)
             gwy_data_field_threshold(retfield, args->threshold, 0.0, 1.0);
 
-        gwy_container_set_object(args->data.data, quark, retfield);
-        gwy_app_channel_log_add_proc(args->data.data,
-                                     args->data.id, args->data.id);
+        gwy_container_set_object(data, quark, retfield);
+        gwy_app_channel_log_add_proc(data, args->data.id, args->data.id);
     }
     g_object_unref(retfield);
 }
@@ -388,6 +393,7 @@ maskcor_sanitize_args(MaskcorArgs *args)
     args->result = MIN(args->result, GWY_MASKCOR_LAST-1);
     args->method = MIN(args->method, GWY_CORRELATION_POC);
     args->threshold = CLAMP(args->threshold, -1.0, 1.0);
+    gwy_app_data_id_verify_channel(&args->kernel);
 }
 
 static void
@@ -398,6 +404,7 @@ maskcor_load_args(GwyContainer *settings,
     gwy_container_gis_enum_by_name(settings, result_key, &args->result);
     gwy_container_gis_enum_by_name(settings, method_key, &args->method);
     gwy_container_gis_double_by_name(settings, threshold_key, &args->threshold);
+    args->kernel = kernel_id;
     maskcor_sanitize_args(args);
 }
 
@@ -405,6 +412,7 @@ static void
 maskcor_save_args(GwyContainer *settings,
                   MaskcorArgs *args)
 {
+    kernel_id = args->kernel;
     gwy_container_set_enum_by_name(settings, result_key, args->result);
     gwy_container_set_enum_by_name(settings, method_key, args->method);
     gwy_container_set_double_by_name(settings, threshold_key, args->threshold);
