@@ -69,8 +69,8 @@ enum {
 
 typedef struct {
     GwyNeuralNetwork *nn;
-    GwyAppDataIdTmp tmodel;
-    GwyAppDataIdTmp tsignal;
+    GwyAppDataId tmodel;
+    GwyAppDataId tsignal;
     guint trainsteps;
     GwyMaskingType masking;
     PreviewType preview_type;
@@ -206,12 +206,14 @@ static const NeuralApplyArgs neural_apply_defaults = {
     FALSE
 };
 
+static GwyAppDataId nnsignal_id = GWY_APP_DATA_ID_NONE;
+
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Neural network SPM data processing"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2012",
 };
@@ -254,21 +256,35 @@ module_register(void)
 }
 
 void
-neural_train(GwyContainer *data, GwyRunType run)
+neural_train(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 {
     NeuralTrainArgs args;
     GwyContainer *settings;
-    gint id;
+    GwyDataField *dfield, *signalfield;
 
     g_return_if_fail(run & NEURAL_TRAIN_RUN_MODES);
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &id, 0);
-
     settings = gwy_app_settings_get();
     neural_train_load_args(settings, &args);
-    args.tmodel.data = data;
-    args.tmodel.id = id;
-    args.tsignal.data = data;
-    args.tsignal.id = id;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.tmodel.id,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_CONTAINER_ID, &args.tmodel.datano,
+                                     0);
+
+    /* Init signal to a field compatible with model. */
+    if (!args.tsignal.datano)
+        args.tsignal = args.tmodel;
+    else {
+        GwyContainer *signaldata = gwy_app_data_browser_get(args.tsignal.datano);
+        GQuark quark = gwy_app_get_data_key_for_id(args.tsignal.id);
+        signalfield = GWY_DATA_FIELD(gwy_container_get_object(signaldata,
+                                                              quark));
+        if (gwy_data_field_check_compatibility(dfield, signalfield,
+                                               GWY_DATA_COMPATIBILITY_RES
+                                               | GWY_DATA_COMPATIBILITY_REAL
+                                               | GWY_DATA_COMPATIBILITY_LATERAL))
+            args.tsignal = args.tmodel;
+    }
 
     neural_train_dialog(&args);
     neural_train_save_args(settings, &args);
@@ -310,18 +326,23 @@ static void
 setup_container(GwyContainer *mydata,
                 NeuralTrainArgs *args)
 {
+    GwyContainer *modeldata, *signaldata;
     GwyDataField *tmodel, *tsignal, *result, *diff;
     GQuark quark;
 
+    modeldata = gwy_app_data_browser_get(args->tmodel.datano);
     quark = gwy_app_get_data_key_for_id(args->tmodel.id);
-    tmodel = gwy_container_get_object(args->tmodel.data, quark);
+    tmodel = gwy_container_get_object(modeldata, quark);
+
+    signaldata = gwy_app_data_browser_get(args->tsignal.datano);
     quark = gwy_app_get_data_key_for_id(args->tsignal.id);
-    tsignal = gwy_container_get_object(args->tsignal.data, quark);
+    tsignal = gwy_container_get_object(signaldata, quark);
+
     result = gwy_data_field_new_alike(tsignal, TRUE);
     diff = gwy_data_field_new_alike(tsignal, TRUE);
 
     gwy_container_set_object_by_name(mydata, "/0/data", tmodel);
-    gwy_app_sync_data_items(args->tmodel.data, mydata, args->tmodel.id, 0,
+    gwy_app_sync_data_items(modeldata, mydata, args->tmodel.id, 0,
                             FALSE,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             GWY_DATA_ITEM_GRADIENT,
@@ -330,7 +351,7 @@ setup_container(GwyContainer *mydata,
                             0);
 
     gwy_container_set_object_by_name(mydata, "/1/data", tsignal);
-    gwy_app_sync_data_items(args->tsignal.data, mydata, args->tsignal.id, 1,
+    gwy_app_sync_data_items(signaldata, mydata, args->tsignal.id, 1,
                             FALSE,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             GWY_DATA_ITEM_GRADIENT,
@@ -340,7 +361,7 @@ setup_container(GwyContainer *mydata,
 
     gwy_container_set_object_by_name(mydata, "/2/data", result);
     g_object_unref(result);
-    gwy_app_sync_data_items(args->tsignal.data, mydata, args->tsignal.id, 2,
+    gwy_app_sync_data_items(signaldata, mydata, args->tsignal.id, 2,
                             FALSE,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             GWY_DATA_ITEM_GRADIENT,
@@ -350,7 +371,7 @@ setup_container(GwyContainer *mydata,
 
     gwy_container_set_object_by_name(mydata, "/3/data", diff);
     g_object_unref(diff);
-    gwy_app_sync_data_items(args->tsignal.data, mydata, args->tsignal.id, 3,
+    gwy_app_sync_data_items(signaldata, mydata, args->tsignal.id, 3,
                             FALSE,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             GWY_DATA_ITEM_GRADIENT,
@@ -513,8 +534,8 @@ neural_train_dialog(NeuralTrainArgs *args)
     controls.tmodel = gwy_data_chooser_new_channels();
     gwy_table_attach_hscale(table, row, _("_Model:"), NULL,
                             GTK_OBJECT(controls.tmodel), GWY_HSCALE_WIDGET);
-    gwy_data_chooser_set_active(GWY_DATA_CHOOSER(controls.tmodel),
-                                args->tmodel.data, args->tmodel.id);
+    gwy_data_chooser_set_active_id(GWY_DATA_CHOOSER(controls.tmodel),
+                                   &args->tmodel);
     g_object_set_data(G_OBJECT(controls.tmodel), "id", (gpointer)"model");
     g_signal_connect_swapped(controls.tmodel, "changed",
                              G_CALLBACK(train_data_changed), &controls);
@@ -523,8 +544,8 @@ neural_train_dialog(NeuralTrainArgs *args)
     controls.tsignal = gwy_data_chooser_new_channels();
     gwy_table_attach_hscale(table, row, _("_Signal:"), NULL,
                             GTK_OBJECT(controls.tsignal), GWY_HSCALE_WIDGET);
-    gwy_data_chooser_set_active(GWY_DATA_CHOOSER(controls.tsignal),
-                                args->tsignal.data, args->tsignal.id);
+    gwy_data_chooser_set_active_id(GWY_DATA_CHOOSER(controls.tsignal),
+                                   &args->tsignal);
     g_object_set_data(G_OBJECT(controls.tsignal), "id", (gpointer)"signal");
     g_signal_connect_swapped(controls.tsignal, "changed",
                              G_CALLBACK(train_data_changed), &controls);
@@ -896,20 +917,22 @@ train_data_changed(NeuralTrainControls *controls,
     GwyDataChooser *tmodel_chooser = GWY_DATA_CHOOSER(controls->tmodel),
                    *tsignal_chooser = GWY_DATA_CHOOSER(controls->tsignal);
     GwyDataField *tmodel, *tsignal;
+    GwyContainer *modeldata, *signaldata;
     const gchar *id, *message = "";
     gboolean ok;
     GSList *group;
     GQuark quark;
 
-    args->tmodel.data
-        = gwy_data_chooser_get_active(tmodel_chooser, &args->tmodel.id);
-    args->tsignal.data
-        = gwy_data_chooser_get_active(tsignal_chooser, &args->tsignal.id);
+    gwy_data_chooser_get_active_id(tmodel_chooser, &args->tmodel);
+    gwy_data_chooser_get_active_id(tsignal_chooser, &args->tsignal);
 
+    modeldata = gwy_app_data_browser_get(args->tmodel.datano);
     quark = gwy_app_get_data_key_for_id(args->tmodel.id);
-    tmodel = GWY_DATA_FIELD(gwy_container_get_object(args->tmodel.data, quark));
+    tmodel = GWY_DATA_FIELD(gwy_container_get_object(modeldata, quark));
+
+    signaldata = gwy_app_data_browser_get(args->tsignal.datano);
     quark = gwy_app_get_data_key_for_id(args->tsignal.id);
-    tsignal = GWY_DATA_FIELD(gwy_container_get_object(args->tsignal.data, quark));
+    tsignal = GWY_DATA_FIELD(gwy_container_get_object(signaldata, quark));
 
     ok = !gwy_data_field_check_compatibility(tmodel, tsignal,
                                              GWY_DATA_COMPATIBILITY_RES
@@ -956,7 +979,7 @@ train_data_changed(NeuralTrainControls *controls,
         GSList *l;
 
         quark = gwy_app_get_mask_key_for_id(args->tsignal.id);
-        ok = gwy_container_contains(args->tsignal.data, quark);
+        ok = gwy_container_contains(signaldata, quark);
         gtk_widget_set_sensitive(controls->masking_label, ok);
         for (l = controls->masking_group; l; l = g_slist_next(l))
             gtk_widget_set_sensitive(GTK_WIDGET(l->data), ok);
@@ -1260,6 +1283,7 @@ train_network(NeuralTrainControls *controls)
     GwyDataField *tmodel, *tsignal, *result, *diff, *mask = NULL;
     GwyDataLine *errors;
     GwyGraphCurveModel *gcmodel;
+    GwyContainer *signaldata;
     NeuralNetworkData backup;
     GwySIValueFormat *vf;
     gdouble sfactor, sshift;
@@ -1279,8 +1303,9 @@ train_network(NeuralTrainControls *controls)
     diff = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                            "/3/data"));
 
+    signaldata = gwy_app_data_browser_get(args->tsignal.datano);
     quark = gwy_app_get_mask_key_for_id(args->tsignal.id);
-    gwy_container_gis_object(args->tsignal.data, quark, &mask);
+    gwy_container_gis_object(signaldata, quark, &mask);
 
     errors = gwy_data_line_new(args->trainsteps, args->trainsteps, TRUE);
     gcmodel = gwy_graph_model_get_curve(controls->gmodel, 0);
@@ -1614,6 +1639,7 @@ neural_train_sanitize_args(NeuralTrainArgs *args)
 {
     args->trainsteps = MIN(args->trainsteps, 10000);
     args->masking = MIN(args->masking, GWY_MASK_INCLUDE);
+    gwy_app_data_id_verify_channel(&args->tsignal);
 }
 
 static void
@@ -1631,6 +1657,7 @@ neural_train_load_args(GwyContainer *settings,
                                     &args->trainsteps);
     gwy_container_gis_enum_by_name(settings, masking_key,
                                    &args->masking);
+    args->tsignal = nnsignal_id;
     neural_train_sanitize_args(args);
 
     if ((args->nn = gwy_inventory_get_item(gwy_neural_networks(), name)))
@@ -1644,6 +1671,7 @@ static void
 neural_train_save_args(GwyContainer *settings,
                        NeuralTrainArgs *args)
 {
+    nnsignal_id = args->tsignal;
     gwy_container_set_int32_by_name(settings, trainsteps_key,
                                     args->trainsteps);
     gwy_container_set_enum_by_name(settings, masking_key,
