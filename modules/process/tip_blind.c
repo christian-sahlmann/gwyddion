@@ -781,7 +781,7 @@ tip_blind_run(TipBlindControls *controls,
     data = gwy_app_data_browser_get(args->source.datano);
     quark = gwy_app_get_data_key_for_id(args->source.id);
     surface = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
-    gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Initializing"));
+    gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Initializing..."));
 
     /* control tip resolution and real/res ratio*/
     keep = prepare_fields(controls->tip, surface, args->xres, args->yres);

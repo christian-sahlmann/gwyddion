@@ -83,7 +83,7 @@ laplace(GwyContainer *data, GwyRunType run)
 
     maxer = gwy_data_field_get_rms(dfield)/1.0e4;
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, id),
-                       _("Laplace correction"));
+                       _("Laplace interpolation..."));
 
     dfield = gwy_data_field_duplicate(dfield);
     buffer = gwy_data_field_new_alike(dfield, TRUE);

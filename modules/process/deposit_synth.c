@@ -276,7 +276,8 @@ run_noninteractive(DepositSynthArgs *args,
         }
     }
 
-    gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid), _("Starting..."));
+    gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid),
+                       _("Starting..."));
     ndata = deposit_synth_do(args, out, NULL, &success);
     gwy_app_wait_finish();
 

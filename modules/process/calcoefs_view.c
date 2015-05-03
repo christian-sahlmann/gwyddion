@@ -807,7 +807,7 @@ update_view(CCViewControls *controls, CCViewArgs *args)
         {
             gwy_caldata_setup_interpolation(caldata);
         }
-        run = gwy_app_wait_set_message(_("Triangulation..."));
+        run = gwy_app_wait_set_message(_("Triangulating..."));
         run = gwy_app_wait_set_fraction(0);
 
         if (run && controls->args->crop) {

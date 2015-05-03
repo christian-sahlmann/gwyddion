@@ -141,7 +141,7 @@ median(GwyContainer *data, GwyRunType run)
         return;
 
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid),
-                       _("Median-leveling"));
+                       _("Median-leveling..."));
     background = median_background(GWY_ROUND(args.size), dfield);
     gwy_app_wait_finish();
     if (!background)

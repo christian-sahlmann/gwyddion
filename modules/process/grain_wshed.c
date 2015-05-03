@@ -503,19 +503,19 @@ mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args,
                                                  args->wshed_steps,
                                                  args->wshed_dropsize*q,
                                                  FALSE, args->inverted);
-    gwy_app_wait_start(wait_window, _("Initializing"));
+    gwy_app_wait_start(wait_window, _("Initializing..."));
 
     do {
         gwy_data_field_grains_watershed_iteration(state);
         if (oldstate != state->state) {
             if (state->state == GWY_WATERSHED_STATE_MIN)
-                gwy_app_wait_set_message(_("Finding minima"));
+                gwy_app_wait_set_message(_("Finding minima..."));
             else if (state->state == GWY_WATERSHED_STATE_LOCATE)
-                gwy_app_wait_set_message(_("Locating"));
+                gwy_app_wait_set_message(_("Locating..."));
             else if (state->state == GWY_WATERSHED_STATE_WATERSHED)
-                gwy_app_wait_set_message(_("Watershed"));
+                gwy_app_wait_set_message(_("Simulating watershed..."));
             else if (state->state == GWY_WATERSHED_STATE_MARK)
-                gwy_app_wait_set_message(_("Marking boundaries"));
+                gwy_app_wait_set_message(_("Marking boundaries..."));
             oldstate = state->state;
         }
         if (!gwy_app_wait_set_fraction(state->fraction))

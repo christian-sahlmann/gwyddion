@@ -166,7 +166,7 @@ _gwy_morph_lib_idilation(gint **surface, gint surf_xsiz, gint surf_ysiz,
     /* create output array of appropriate size */
     result = _gwy_morph_lib_iallocmatrix(surf_ysiz, surf_xsiz);
     if (set_message)
-        set_message(_("Dilation"));
+        set_message(_("Dilation..."));
     if (set_fraction)
         set_fraction(0.0);
     for (j = 0; j < surf_ysiz; j++) { /* Loop over all points in output array */
@@ -232,7 +232,7 @@ _gwy_morph_lib_ierosion(gint **image, gint im_xsiz, gint im_ysiz,
     /* create output array of appropriate size */
     result = _gwy_morph_lib_iallocmatrix(im_ysiz, im_xsiz);
     if (set_message)
-        set_message(_("Erosion"));
+        set_message(_("Erosion..."));
     if (set_fraction)
         set_fraction(0.0);
 
@@ -302,7 +302,7 @@ _gwy_morph_lib_icmap(gint **image, gint im_xsiz, gint im_ysiz,
     rxc = tip_xsiz - 1 - xc;
     ryc = tip_ysiz - 1 - yc;
     if (set_message)
-        set_message(_("Certainty map"));
+        set_message(_("Certainty map..."));
     if (set_fraction)
         set_fraction(0.0);
     /* create output array of appropriate size */
@@ -458,7 +458,7 @@ _gwy_morph_lib_ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
     /* create output array of appropriate size */
     result = _gwy_morph_lib_dallocmatrix(surf_ysiz, surf_xsiz);
     if (set_message)
-        set_message(_("Dilation"));
+        set_message(_("Dilation..."));
     if (set_fraction)
         set_fraction(0.0);
 
@@ -525,7 +525,7 @@ _gwy_morph_lib_derosion(gdouble **image, gint im_xsiz, gint im_ysiz,
     /* create output array of appropriate size */
     result = _gwy_morph_lib_dallocmatrix(im_ysiz, im_xsiz);
     if (set_message)
-        set_message(_("Erosion"));
+        set_message(_("Erosion..."));
     if (set_fraction)
         set_fraction(0.0);
     for (j = 0; j < im_ysiz; j++) {   /* Loop over all points in output array */
@@ -613,7 +613,7 @@ _gwy_morph_lib_itip_estimate(gint **image, gint im_xsiz, gint im_ysiz,
     str = g_string_new("");
     while (count) {
         iter++;
-        g_string_printf(str, _("Iterating estimate (iteration %d)"), iter);
+        g_string_printf(str, _("Iterating estimate (iteration %d)..."), iter);
         if (set_message && !set_message(str->str))
             return -1;
         count = itip_estimate_iter(image, im_xsiz, im_ysiz,
@@ -722,7 +722,7 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
 
     delta = MAX(MAX(tip_xsiz, tip_ysiz)/10, 1);
 
-    if (set_message && !set_message(_("Searching for local maxima"))) {
+    if (set_message && !set_message(_("Searching for local maxima..."))) {
         g_free(x);
         g_free(y);
         return -1;
@@ -761,7 +761,7 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
     do {
         count = 0;
         iter++;
-        g_string_printf(str, _("Iterating estimate (iteration %d)"), iter);
+        g_string_printf(str, _("Iterating estimate (iteration %d)..."), iter);
         if (set_message && !set_message(str->str)) {
             g_free(x);
             g_free(y);

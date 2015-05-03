@@ -316,7 +316,7 @@ tipops_do(TipOpsArgs *args,
     /* FIXME */
     gwy_app_wait_start(gwy_app_find_window_for_channel(targetdata,
                                                        args->target.id),
-                       _("Initializing"));
+                       _("Initializing..."));
 
     if (op == DILATION || op == EROSION) {
         if (op == DILATION) {

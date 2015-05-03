@@ -624,9 +624,9 @@ get_object_list(GtkWindow *window, GwyDataField *data, GwyDataField *kernel, gdo
     gint i, *grains, *maxpos, ngrains, work, wpi;
     GwyComputationState *state;
 
-    gwy_app_wait_start(window, _("Initializing"));
+    gwy_app_wait_start(window, _("Initializing..."));
     state = gwy_data_field_correlate_init(data, kernel, score);
-    gwy_app_wait_set_message(_("Correlating"));
+    gwy_app_wait_set_message(_("Correlating..."));
     work = 0;
     wpi = gwy_data_field_get_xres(kernel)*gwy_data_field_get_yres(kernel);
     wpi = MIN(wpi, WORK_PER_UPDATE);
