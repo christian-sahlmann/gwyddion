@@ -26,7 +26,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyrandgenset.h>
 #include <libprocess/stats.h>
-#include <libprocess/grains.h>
+#include <libprocess/arithmetic.h>
 #include <libprocess/filters.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
@@ -256,8 +256,6 @@ run_noninteractive(BDepSynthArgs *args,
         return;
     }
 
-    gwy_data_field_multiply(newfield, zscale);
-
     if (replace) {
         gwy_app_undo_qcheckpointv(data, 1, &quark);
         gwy_container_set_object(data, gwy_app_get_data_key_for_id(oldid),
@@ -437,10 +435,10 @@ bdep_synth_dialog(BDepSynthArgs *args,
     row = 0;
 
     controls.coverage = gtk_adjustment_new(args->coverage,
-                                           0.0, 10000.0, 0.01, 1.0, 0);
+                                           0.01, 10000.0, 0.01, 1.0, 0);
     g_object_set_data(G_OBJECT(controls.coverage), "target", &args->coverage);
     gwy_table_attach_hscale(table, row, _("Co_verage:"), NULL,
-                            controls.coverage, GWY_HSCALE_SQRT);
+                            controls.coverage, GWY_HSCALE_LOG);
     g_signal_connect_swapped(controls.coverage, "value-changed",
                              G_CALLBACK(gwy_synth_double_changed), &controls);
     row++;
@@ -600,10 +598,13 @@ static void
 preview(BDepSynthControls *controls)
 {
     BDepSynthArgs *args = controls->args;
+    GwyDimensionArgs *dimsargs = controls->dims->args;
     GwyDataField *dfield;
+    gdouble zscale;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
+    zscale = pow10(dimsargs->zpow10) * args->height;
 
     if (controls->dims->args->add && controls->surface)
         gwy_data_field_copy(controls->surface, dfield, TRUE);
@@ -611,7 +612,7 @@ preview(BDepSynthControls *controls)
         gwy_data_field_clear(dfield);
 
     gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Starting..."));
-    bdep_synth_do(args, dfield, NULL, 1.25, 1.0);
+    bdep_synth_do(args, dfield, NULL, 1.25, zscale);
     gwy_app_wait_finish();
 
     gwy_data_field_data_changed(dfield);
@@ -619,12 +620,13 @@ preview(BDepSynthControls *controls)
 
 static gboolean
 bdep_synth_do(BDepSynthArgs *args,
-              GwyDataField *dfield,
+              GwyDataField *basefield,
               GwyGraphCurveModel **gcmodels,
               gdouble preview_time,
               gdouble zscale)
 {
-    gint xres, yres, n;
+    GwyDataField *dfield;
+    gint xres, yres, xext, yext, n;
     guint i;
     gdouble nextgraphx;
     gdouble lasttime = 0.0, lastpreviewtime = 0.0, currtime;
@@ -637,6 +639,11 @@ bdep_synth_do(BDepSynthArgs *args,
     gdouble *d;
     gboolean any_graphs = FALSE;
     gboolean finished = FALSE;
+
+    xext = gwy_data_field_get_xres(basefield)/12;
+    yext = gwy_data_field_get_yres(basefield)/12;
+    dfield = gwy_data_field_extend(basefield, xext, xext, yext, yext,
+                                   GWY_EXTERIOR_MIRROR_EXTEND, 0.0, FALSE);
 
     timer = g_timer_new();
 
@@ -678,11 +685,11 @@ bdep_synth_do(BDepSynthArgs *args,
                      ? hnoise*g_rand_double(rng_height) + 1.0 - hnoise
                      : 1.0);
         guint ii = (k/xres)*xres, j = k % xres;
-        gdouble h = d[k] + v;
-        guint iim = G_LIKELY(ii) ? ii - xres : n - xres;
-        guint iip = G_LIKELY(ii != n - xres) ? ii + xres : 0;
-        guint jl = G_LIKELY(j) ? j-1 : xres-1;
-        guint jr = G_LIKELY(j != xres-1) ? j+1 : 0;
+        gdouble h = d[k] + v*zscale;
+        guint iim = G_LIKELY(ii) ? ii - xres : 0;
+        guint iip = G_LIKELY(ii != n - xres) ? ii + xres : n - xres;
+        guint jl = G_LIKELY(j) ? j-1 : 0;
+        guint jr = G_LIKELY(j != xres-1) ? j+1 : xres-1;
         gdouble h1 = fmax(d[iim + j], d[ii + jl]);
         gdouble h2 = fmax(d[ii + jr], d[iip + j]);
         d[k] = fmax(h, fmax(h1, h2));
@@ -744,9 +751,12 @@ bdep_synth_do(BDepSynthArgs *args,
 
     gwy_data_field_invalidate(dfield);
     gwy_data_field_data_changed(dfield);
+    gwy_data_field_area_copy(dfield, basefield,
+                             xext, yext, xres - 2*xext, yres - 2*yext, 0, 0);
     finished = TRUE;
 
 fail:
+    g_object_unref(dfield);
     g_timer_destroy(timer);
     gwy_rand_gen_set_free(rngset);
     for (i = 0; i <= GRAPH_NFLAGS; i++) {
@@ -777,8 +787,8 @@ bdep_synth_sanitize_args(BDepSynthArgs *args)
     args->randomize = !!args->randomize;
     args->animated = !!args->animated;
     args->height = CLAMP(args->height, 0.001, 1000.0);
-    args->height_noise = CLAMP(args->height, 0.0, 1.0);
-    args->coverage = CLAMP(args->coverage, 0.0, 10000.0);
+    args->height_noise = CLAMP(args->height_noise, 0.0, 1.0);
+    args->coverage = CLAMP(args->coverage, 0.01, 10000.0);
 }
 
 static void
