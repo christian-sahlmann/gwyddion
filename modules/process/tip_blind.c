@@ -63,8 +63,8 @@ typedef struct {
     gboolean create_images;
     gboolean plot_size_graph;
     guint nstripes;
-    GwyAppDataIdTmp orig;  /* The original source, to filter out incompatible */
-    GwyAppDataIdTmp source;
+    GwyAppDataId orig;  /* The original source, to filter out incompatible */
+    GwyAppDataId source;
     /* Stripe results */
     GwyDataField **stripetips;
     gboolean *goodtip;
@@ -132,7 +132,7 @@ static void           bound_changed           (GtkToggleButton *button,
 static void           same_resolution_changed (GtkToggleButton *button,
                                                TipBlindControls *controls);
 static void           data_changed            (GwyDataChooser *chooser,
-                                               GwyAppDataIdTmp *object);
+                                               GwyAppDataId *object);
 static void           split_to_stripes_changed(GtkToggleButton *toggle,
                                                TipBlindControls *controls);
 static void           nstripes_changed        (GtkAdjustment *adj,
@@ -166,7 +166,7 @@ static GwyGraphModel* size_plot               (TipBlindArgs *args);
 static const TipBlindArgs tip_blind_defaults = {
     10, 10, 1e-10, FALSE, TRUE,
     FALSE, FALSE, TRUE, 16,
-    { NULL, -1, }, { NULL, -1, },
+    GWY_APP_DATA_ID_NONE, GWY_APP_DATA_ID_NONE,
     NULL, NULL,
 };
 
@@ -175,7 +175,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Blind estimation of SPM tip using Villarubia's algorithm."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.8",
+    "1.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -197,15 +197,16 @@ module_register(void)
 }
 
 static void
-tip_blind(GwyContainer *data, GwyRunType run)
+tip_blind(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 {
     TipBlindArgs args;
 
     g_return_if_fail(run & TIP_BLIND_RUN_MODES);
 
     tip_blind_load_args(gwy_app_settings_get(), &args);
-    args.orig.data = data;
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.orig.id, 0);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.orig.id,
+                                     GWY_APP_CONTAINER_ID, &args.orig.datano,
+                                     0);
     args.source = args.orig;
     tip_blind_dialog(&args);
     free_stripe_results(&args);
@@ -220,6 +221,7 @@ tip_blind_dialog(TipBlindArgs *args)
         RESPONSE_FULL
     };
     GtkWidget *dialog, *table, *hbox, *vbox, *label;
+    GwyContainer *data;
     GwyGraphModel *gmodel;
     GwyGraphArea *area;
     TipBlindControls controls;
@@ -255,8 +257,9 @@ tip_blind_dialog(TipBlindArgs *args)
     controls.oldnstripes = args->nstripes;
 
     /* set initial tip properties */
+    data = gwy_app_data_browser_get(args->source.datano);
     quark = gwy_app_get_data_key_for_id(args->source.id);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object(args->source.data, quark));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
     controls.tip = gwy_data_field_new_alike(dfield, TRUE);
     gwy_data_field_resample(controls.tip, args->xres, args->yres,
@@ -265,7 +268,7 @@ tip_blind_dialog(TipBlindArgs *args)
 
     /* set up data of rescaled image of the tip */
     controls.vtip = gwy_container_new();
-    gwy_app_sync_data_items(args->source.data, controls.vtip,
+    gwy_app_sync_data_items(data, controls.vtip,
                             args->source.id, 0, FALSE,
                             GWY_DATA_ITEM_PALETTE,
                             0);
@@ -314,8 +317,8 @@ tip_blind_dialog(TipBlindArgs *args)
     controls.data = gwy_data_chooser_new_channels();
     gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(controls.data),
                                 tip_blind_source_filter, &args->orig, NULL);
-    gwy_data_chooser_set_active(GWY_DATA_CHOOSER(controls.data),
-                                args->source.data, args->source.id);
+    gwy_data_chooser_set_active_id(GWY_DATA_CHOOSER(controls.data),
+                                   &args->source);
     g_signal_connect(controls.data, "changed",
                      G_CALLBACK(data_changed), &args->source);
     gwy_table_attach_hscale(table, row, _("Related _data:"), NULL,
@@ -600,9 +603,9 @@ same_resolution_changed(GtkToggleButton *button,
 
 static void
 data_changed(GwyDataChooser *chooser,
-             GwyAppDataIdTmp *object)
+             GwyAppDataId *object)
 {
-    object->data = gwy_data_chooser_get_active(chooser, &object->id);
+    gwy_data_chooser_get_active_id(chooser, object);
 }
 
 static void
@@ -653,15 +656,16 @@ tip_blind_source_filter(GwyContainer *data,
                         gint id,
                         gpointer user_data)
 {
-    GwyAppDataIdTmp *object = (GwyAppDataIdTmp*)user_data;
+    GwyAppDataId *object = (GwyAppDataId*)user_data;
     GwyDataField *source, *orig;
     GQuark quark;
 
     quark = gwy_app_get_data_key_for_id(id);
     source = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
+    data = gwy_app_data_browser_get(object->datano);
     quark = gwy_app_get_data_key_for_id(object->id);
-    orig = GWY_DATA_FIELD(gwy_container_get_object(object->data, quark));
+    orig = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
     return !gwy_data_field_check_compatibility(source, orig,
                                                GWY_DATA_COMPATIBILITY_MEASURE
@@ -768,14 +772,15 @@ tip_blind_run(TipBlindControls *controls,
                                      GwySetMessageFunc set_message);
     GwyDataField *surface;
     GwyGraphModel *gmodel;
+    GwyContainer *data;
     TipFunc tipfunc;
     GQuark quark;
     gint count;
     gboolean keep;
 
+    data = gwy_app_data_browser_get(args->source.datano);
     quark = gwy_app_get_data_key_for_id(args->source.id);
-    surface = GWY_DATA_FIELD(gwy_container_get_object(args->source.data,
-                                                      quark));
+    surface = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
     gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Initializing"));
 
     /* control tip resolution and real/res ratio*/
@@ -904,16 +909,16 @@ static void
 tip_blind_do_single(TipBlindControls *controls,
                     TipBlindArgs *args)
 {
+    GwyContainer *data;
     gint newid;
 
-    newid = gwy_app_data_browser_add_data_field(controls->tip,
-                                                args->source.data, TRUE);
+    data = gwy_app_data_browser_get(args->source.datano);
+    newid = gwy_app_data_browser_add_data_field(controls->tip, data, TRUE);
     g_object_unref(controls->tip);
-    gwy_app_sync_data_items(args->source.data, args->source.data,
-                            0, newid, FALSE,
+    gwy_app_sync_data_items(data, data, 0, newid, FALSE,
                             GWY_DATA_ITEM_GRADIENT, 0);
-    gwy_app_set_data_field_title(args->source.data, newid, _("Estimated tip"));
-    gwy_app_channel_log_add_proc(args->source.data, -1, newid);
+    gwy_app_set_data_field_title(data, newid, _("Estimated tip"));
+    gwy_app_channel_log_add_proc(data, -1, newid);
     controls->tipdone = TRUE;
 }
 
@@ -921,8 +926,10 @@ static void
 tip_blind_do_images(TipBlindControls *controls,
                     TipBlindArgs *args)
 {
+    GwyContainer *data;
     gint newid, i;
 
+    data = gwy_app_data_browser_get(args->source.datano);
     for (i = 0; i < args->nstripes; i++) {
         gchar *title;
         gchar key[24];
@@ -931,15 +938,14 @@ tip_blind_do_images(TipBlindControls *controls,
             continue;
 
         newid = gwy_app_data_browser_add_data_field(args->stripetips[i],
-                                                    args->source.data, TRUE);
-        gwy_app_sync_data_items(args->source.data, args->source.data,
-                                0, newid, FALSE,
+                                                    data, TRUE);
+        gwy_app_sync_data_items(data, data, 0, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT, 0);
         title = g_strdup_printf("%s %u/%u",
                                 _("Estimated tip"), i+1, args->nstripes);
         g_snprintf(key, sizeof(key), "/%d/data/title", newid);
-        gwy_container_set_string_by_name(args->source.data, key, title);
-        gwy_app_channel_log_add_proc(args->source.data, -1, newid);
+        gwy_container_set_string_by_name(data, key, title);
+        gwy_app_channel_log_add_proc(data, -1, newid);
     }
 
     /* XXX: Have no idea what this means. */
@@ -951,7 +957,10 @@ tip_blind_do_size_plot(TipBlindControls *controls,
                        TipBlindArgs *args)
 {
     GwyGraphModel *gmodel = size_plot(args);
-    gwy_app_data_browser_add_graph_model(gmodel, args->source.data, TRUE);
+    GwyContainer *data;
+
+    data = gwy_app_data_browser_get(args->source.datano);
+    gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
     g_object_unref(gmodel);
 
     /* XXX: Have no idea what this means. */
@@ -1162,14 +1171,15 @@ size_plot(TipBlindArgs *args)
     GwyGraphCurveModel *gcmodel;
     GwySIUnit *unit, *dunit;
     GwyDataField *surface;
+    GwyContainer *data;
     gdouble *xdata, *ydata;
     gint i, ngood = 0;
     guint ns = args->nstripes;
     GQuark quark;
 
+    data = gwy_app_data_browser_get(args->source.datano);
     quark = gwy_app_get_data_key_for_id(args->source.id);
-    surface = GWY_DATA_FIELD(gwy_container_get_object(args->source.data,
-                                                      quark));
+    surface = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
     xdata = g_new(gdouble, ns);
     ydata = g_new(gdouble, ns);
