@@ -36,8 +36,8 @@
 #define XYDENOISE_RUN_MODES GWY_RUN_INTERACTIVE
 
 typedef struct {
-    GwyAppDataIdTmp op1;
-    GwyAppDataIdTmp op2;
+    GwyAppDataId op1;
+    GwyAppDataId op2;
 } XYdenoiseArgs;
 
 static gboolean module_register       (void);
@@ -45,14 +45,14 @@ static void     xydenoise              (GwyContainer *data,
                                        GwyRunType run);
 static gboolean xydenoise_dialog       (XYdenoiseArgs *args);
 static void     xydenoise_data_cb      (GwyDataChooser *chooser,
-                                       GwyAppDataIdTmp *object);
+                                       GwyAppDataId *object);
 static gboolean xydenoise_data_filter(GwyContainer *data,
                                        gint id,
                                        gpointer user_data);
 static gboolean xydenoise_do           (XYdenoiseArgs *args);
 
 static const XYdenoiseArgs xydenoise_defaults = {
-    { NULL, -1 }, { NULL, -1 },
+    GWY_APP_DATA_ID_NONE, GWY_APP_DATA_ID_NONE,
 };
 
 static GwyModuleInfo module_info = {
@@ -60,7 +60,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Denoises measurement on basis of two orthogonal scans."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2012",
 };
@@ -82,15 +82,15 @@ module_register(void)
 }
 
 static void
-xydenoise(GwyContainer *data, GwyRunType run)
+xydenoise(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 {
     XYdenoiseArgs args;
 
     g_return_if_fail(run & XYDENOISE_RUN_MODES);
 
-    args.op1.data = data;
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.op1.id, 0);
-    args.op2.data = NULL;
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.op1.id,
+                                     GWY_APP_CONTAINER_ID, &args.op1.datano,
+                                     0);
 
     if (xydenoise_dialog(&args))
         xydenoise_do(&args);
@@ -159,35 +159,34 @@ xydenoise_dialog(XYdenoiseArgs *args)
 
 static void
 xydenoise_data_cb(GwyDataChooser *chooser,
-                 GwyAppDataIdTmp *object)
+                 GwyAppDataId *object)
 {
     GtkWidget *dialog;
 
-    object->data = gwy_data_chooser_get_active(chooser, &object->id);
-    gwy_debug("data: %p %d", object->data, object->id);
+    gwy_data_chooser_get_active_id(chooser, object);
+    gwy_debug("data: %d %d", object->datano, object->id);
 
     dialog = g_object_get_data(G_OBJECT(chooser), "dialog");
     g_assert(GTK_IS_DIALOG(dialog));
     gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_OK,
-                                      object->data != NULL);
+                                      object->datano);
 }
-
-
 
 static gboolean
 xydenoise_data_filter(GwyContainer *data,
                      gint id,
                      gpointer user_data)
 {
-    GwyAppDataIdTmp *object = (GwyAppDataIdTmp*)user_data;
+    GwyAppDataId *object = (GwyAppDataId*)user_data;
     GwyDataField *op1, *op2;
     GQuark quark;
 
     quark = gwy_app_get_data_key_for_id(id);
     op1 = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
+    data = gwy_app_data_browser_get(object->datano);
     quark = gwy_app_get_data_key_for_id(object->id);
-    op2 = GWY_DATA_FIELD(gwy_container_get_object(object->data, quark));
+    op2 = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
     /* It does not make sense to xydenoiserelate with itself */
     if (op1 == op2)
@@ -213,14 +212,16 @@ xydenoise_do(XYdenoiseArgs *args)
 
     GQuark quark;
 
-    gwy_app_wait_start(gwy_app_find_window_for_channel(args->op1.data, args->op1.id),
+    data = gwy_app_data_browser_get(args->op1.datano);
+    gwy_app_wait_start(gwy_app_find_window_for_channel(data, args->op1.id),
                        _("Starting..."));
 
     quark = gwy_app_get_data_key_for_id(args->op1.id);
-    dfieldx = GWY_DATA_FIELD(gwy_container_get_object(args->op1.data, quark));
+    dfieldx = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
+    data = gwy_app_data_browser_get(args->op2.datano);
     quark = gwy_app_get_data_key_for_id(args->op2.id);
-    dfieldy = GWY_DATA_FIELD(gwy_container_get_object(args->op2.data, quark));
+    dfieldy = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
     xres = gwy_data_field_get_xres(dfieldx);
     yres = gwy_data_field_get_yres(dfieldy);
@@ -267,7 +268,7 @@ xydenoise_do(XYdenoiseArgs *args)
 
     gwy_app_wait_set_fraction(0.9);
 
-    data = args->op1.data;
+    data = gwy_app_data_browser_get(args->op1.datano);
     newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
     gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
                             GWY_DATA_ITEM_GRADIENT, 0);
@@ -278,8 +279,6 @@ xydenoise_do(XYdenoiseArgs *args)
 
     g_object_unref(result);
     g_object_unref(iresult);
-    g_object_unref(dfieldy);
-    g_object_unref(dfieldx);
     g_object_unref(rx);
     g_object_unref(ix);
     g_object_unref(ry);
