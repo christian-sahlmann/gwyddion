@@ -184,7 +184,7 @@ static const ColSynthArgs col_synth_defaults = {
     0.0, 1.0,
     1.0, 0.0,
     RELAX_WEAK,
-    { FALSE, FALSE, },
+    { FALSE, FALSE, FALSE, },
 };
 
 static const GwyDimensionArgs dims_defaults = GWY_DIMENSION_ARGS_INIT;
@@ -342,7 +342,7 @@ run_noninteractive(ColSynthArgs *args,
                      "title", title,
                      "x-logarithmic", TRUE,
                      "y-logarithmic", TRUE,
-                     "axis-label-bottom", _("Mean height"),
+                     "axis-label-bottom", _("Time"),
                      "axis-label-left", _(graph_flags[i]),
                      NULL);
         g_free(title);

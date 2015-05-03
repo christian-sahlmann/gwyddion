@@ -52,6 +52,7 @@ enum {
 enum {
     PAGE_DIMENSIONS = 0,
     PAGE_GENERATOR  = 1,
+    PAGE_GRAPHS     = 2,
     PAGE_NPAGES
 };
 
@@ -213,7 +214,7 @@ static const DiffSynthArgs diff_synth_defaults = {
     42, TRUE, FALSE, TRUE,
     1.0,
     0.25, -10.0, 0.1, 0.01, 0.0,
-    { FALSE, },
+    { FALSE, FALSE, },
 };
 
 static const GwyDimensionArgs dims_defaults = GWY_DIMENSION_ARGS_INIT;
@@ -373,7 +374,7 @@ run_noninteractive(DiffSynthArgs *args,
                      "title", title,
                      "x-logarithmic", TRUE,
                      "y-logarithmic", i != GRAPH_NGRAINS,
-                     "axis-label-bottom", _("Mean height"),
+                     "axis-label-bottom", _("Time"),
                      "axis-label-left", _(graph_flags[i]),
                      NULL);
         g_free(title);
@@ -493,7 +494,7 @@ diff_synth_dialog(DiffSynthArgs *args,
                              gwy_dimensions_get_widget(controls.dims),
                              gtk_label_new(_("Dimensions")));
 
-    table = gtk_table_new(19 + (dfield_template ? 1 : 0), 4, FALSE);
+    table = gtk_table_new(15 + (dfield_template ? 1 : 0), 4, FALSE);
     /* This is used only for synt.h helpers. */
     controls.table = GTK_TABLE(table);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
@@ -569,11 +570,15 @@ diff_synth_dialog(DiffSynthArgs *args,
                              G_CALLBACK(gwy_synth_double_changed), &controls);
     row++;
 
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
-    label = gwy_label_new_header(_("Options"));
-    gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
+    table = gtk_table_new(1 + GRAPH_NFLAGS, 4, FALSE);
+    /* This is used only for synt.h helpers. */
+    controls.table = GTK_TABLE(table);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), table,
+                             gtk_label_new(_("Evolution")));
+    row = 0;
 
     label = gtk_label_new(_("Plot graphs:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
