@@ -307,7 +307,7 @@ run_noninteractive(BDepSynthArgs *args,
                      "title", title,
                      "x-logarithmic", TRUE,
                      "y-logarithmic", TRUE,
-                     "axis-label-bottom", _("Time"),
+                     "axis-label-bottom", _("Mean deposited thickness"),
                      "axis-label-left", _(graph_flags[i]),
                      NULL);
         g_free(title);

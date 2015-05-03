@@ -374,7 +374,7 @@ run_noninteractive(DiffSynthArgs *args,
                      "title", title,
                      "x-logarithmic", TRUE,
                      "y-logarithmic", i != GRAPH_NGRAINS,
-                     "axis-label-bottom", _("Time"),
+                     "axis-label-bottom", _("Mean deposited thickness"),
                      "axis-label-left", _(graph_flags[i]),
                      NULL);
         g_free(title);
