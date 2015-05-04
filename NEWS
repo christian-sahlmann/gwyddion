@@ -19,6 +19,8 @@ Libraries:
   a still existing data object.
 - libgwyapp: New helper function for adding graph curves to another graph or
   creaing a new graph if units are incompatibile.
+- libgwydgets: Graph key frame size should better correspond to the content.
+- libprocess: Functions for various simple distance transforms were added.
 
 Modules:
 - Align graph (new): Aligns horizontally graph curves.
@@ -57,6 +59,10 @@ Modules:
 - Zeiss: RGB images are accepted and the channels are averaged upon import.
 - Color range tool: Fixed color range controls are immediately sensitive when
   this range type is the default.
+- XY denoise: Too many data field dereferencing, causing a crash later, was
+  fixed.
+- Euclidean distance transform: Renamed to Distance transform.  It can
+  perform also various simple distance transforms.
 
 Other:
 - Standalone Python module gwy is now in the gwyddion-devel package instead
