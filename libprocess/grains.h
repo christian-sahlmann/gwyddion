@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2012 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2015 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -146,6 +146,9 @@ void gwy_data_field_grains_splash_water(GwyDataField *data_field,
                                         gdouble locate_dropsize);
 
 void     gwy_data_field_grain_distance_transform(GwyDataField *data_field);
+void     gwy_data_field_grain_simple_dist_trans (GwyDataField *data_field,
+                                                 GwyDistanceTransformType dtype,
+                                                 gboolean from_border);
 gboolean gwy_data_field_fill_voids              (GwyDataField *data_field,
                                                  gboolean nonsimple);
 gint     gwy_data_field_waterpour               (GwyDataField *data_field,

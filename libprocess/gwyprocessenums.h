@@ -233,6 +233,15 @@ typedef enum {
     GWY_EXTERIOR_FIXED_VALUE
 } GwyExteriorType;
 
+typedef enum {
+    GWY_DISTANCE_TRANSFORM_CITYBLOCK   = 0,
+    GWY_DISTANCE_TRANSFORM_CONN4       = 0,
+    GWY_DISTANCE_TRANSFORM_CHESS       = 1,
+    GWY_DISTANCE_TRANSFORM_CONN8       = 1,
+    GWY_DISTANCE_TRANSFORM_OCTAGONAL48 = 2,
+    GWY_DISTANCE_TRANSFORM_OCTAGONAL84 = 3,
+} GwyDistanceTransformType;
+
 const GwyEnum* gwy_merge_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_masking_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_plane_symmetry_get_enum(void) G_GNUC_CONST;

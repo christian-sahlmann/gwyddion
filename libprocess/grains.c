@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2012 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2015 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  Copyright (C) 2013 Brazilian Nanotechnology National Laboratory
@@ -95,6 +95,19 @@ typedef struct {
     GwyDataField *mark_dfield;
 } GwyWatershedState;
 
+typedef gboolean (*ErodeFunc)(guint *grain,
+                              gint width, gint height,
+                              guint id,
+                              const PixelQueue *inqueue,
+                              PixelQueue *outqueue);
+
+static guint    simple_dist_trans            (gint *grain,
+                                              guint width,
+                                              guint height,
+                                              gboolean from_border,
+                                              GwyDistanceTransformType dtype,
+                                              PixelQueue *inqueue,
+                                              PixelQueue *outqueue);
 static gdouble  class_weight                 (GwyDataLine *hist,
                                               gint t,
                                               gint flag);
@@ -1433,23 +1446,60 @@ extract_upsampled_square_pixel_grain(const guint *grains, guint xres, guint gno,
 
 /* Init @queue with all Von Neumann-neighbourhood boundary pixels. */
 static void
-init_erosion(guint *grain,
-             gint width, gint height,
-             PixelQueue *queue)
+init_erosion_4(guint *grain,
+               guint width, guint height,
+               gboolean from_border,
+               PixelQueue *queue)
 {
-    gint i, j, k;
+    guint ifrom = from_border ? 0 : 1;
+    guint iend = from_border ? height : height-1;
+    guint jfrom = from_border ? 0 : 1;
+    guint jend = from_border ? width : width-1;
+    guint i, j, k;
 
     queue->len = 0;
-    k = 0;
-    for (i = 0; i < height; i++) {
-        for (j = 0; j < width; j++, k++) {
+    for (i = ifrom; i < iend; i++) {
+        k = i*width + jfrom;
+        for (j = jfrom; j < jend; j++, k++) {
             if (!grain[k])
                 continue;
 
-            if (!i || !grain[k - width]
-                || !j || !grain[k - 1]
-                || j == width-1 || !grain[k + 1]
-                || i == height-1 || !grain[k + width]) {
+            if (!i || !j || j == width-1 || i == height-1
+                || !grain[k - width] || !grain[k - 1]
+                || !grain[k + 1] || !grain[k + width]) {
+                grain[k] = 1;
+                pixel_queue_add(queue, i, j);
+            }
+        }
+    }
+}
+
+/* Init @queue with all Von Neumann-neighbourhood boundary pixels. */
+static void
+init_erosion_8(guint *grain,
+               gint width, gint height,
+               gboolean from_border,
+               PixelQueue *queue)
+{
+    guint ifrom = from_border ? 0 : 1;
+    guint iend = from_border ? height : height-1;
+    guint jfrom = from_border ? 0 : 1;
+    guint jend = from_border ? width : width-1;
+    guint i, j, k;
+
+    queue->len = 0;
+    for (i = ifrom; i < iend; i++) {
+        k = i*width + jfrom;
+        for (j = jfrom; j < jend; j++, k++) {
+            if (!grain[k])
+                continue;
+
+            if (!i || !j || j == width-1 || i == height-1
+                || !grain[k - width - 1] || !grain[k - width]
+                || !grain[k - width + 1]
+                || !grain[k - 1] || !grain[k + 1]
+                || !grain[k + width - 1] || !grain[k + width]
+                || !grain[k + width + 1]) {
                 grain[k] = 1;
                 pixel_queue_add(queue, i, j);
             }
@@ -2696,18 +2746,11 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
             centrex = (xvalue[gno] + 0.5)*(qh/qgeom);
             centrey = (yvalue[gno] + 0.5)*(qv/qgeom);
 
-            init_erosion(grain, width, height, inqueue);
-            dist = 1;
-            while (TRUE) {
-                if (!erode_8(grain, width, height, dist, inqueue, outqueue))
-                    break;
+            dist = simple_dist_trans(grain, width, height, TRUE,
+                                     GWY_DISTANCE_TRANSFORM_OCTAGONAL48,
+                                     inqueue, outqueue);
+            if (dist % 2 == 0) {
                 GWY_SWAP(PixelQueue*, inqueue, outqueue);
-                dist++;
-
-                if (!erode_4(grain, width, height, dist, inqueue, outqueue))
-                    break;
-                GWY_SWAP(PixelQueue*, inqueue, outqueue);
-                dist++;
             }
 #if 0
             for (i = 0; i < height; i++) {
@@ -4539,6 +4582,9 @@ distance_transform_raw(guint *distances, guint *workspace,
  * Each non-zero value will be replaced with Euclidean distance to the grain
  * boundary, measured in pixels.
  *
+ * See also gwy_data_field_grain_simple_dist_trans() for simple distance
+ * transforms such as city-block or chessboard.
+ *
  * Since: 2.36
  **/
 void
@@ -4575,6 +4621,119 @@ gwy_data_field_grain_distance_transform(GwyDataField *data_field)
 
     g_free(workspace);
     g_free(distances);
+}
+
+/* Perform a cityblock, chessboard or octagonal distance transform of given
+ * type using provided queues. */
+static guint
+simple_dist_trans(gint *grain, guint width, guint height,
+                  gboolean from_border, GwyDistanceTransformType dtype,
+                  PixelQueue *inqueue, PixelQueue *outqueue)
+{
+    ErodeFunc erode = NULL;
+    guint dist = 1;
+
+    inqueue->len = outqueue->len = 0;
+
+    if (dtype == GWY_DISTANCE_TRANSFORM_CONN4
+        || dtype == GWY_DISTANCE_TRANSFORM_OCTAGONAL48)
+        init_erosion_4(grain, width, height, from_border, inqueue);
+    else if (dtype == GWY_DISTANCE_TRANSFORM_CONN8
+             || dtype == GWY_DISTANCE_TRANSFORM_OCTAGONAL84)
+        init_erosion_8(grain, width, height, from_border, inqueue);
+
+    if (dtype == GWY_DISTANCE_TRANSFORM_CONN4
+        || dtype == GWY_DISTANCE_TRANSFORM_OCTAGONAL84)
+        erode = erode_4;
+    else if (dtype == GWY_DISTANCE_TRANSFORM_CONN8
+             || dtype == GWY_DISTANCE_TRANSFORM_OCTAGONAL48)
+        erode = erode_8;
+
+    g_return_val_if_fail(erode, 0);
+
+    while (TRUE) {
+        if (!erode(grain, width, height, dist, inqueue, outqueue))
+            break;
+        GWY_SWAP(PixelQueue*, inqueue, outqueue);
+        dist++;
+
+        if (dtype == GWY_DISTANCE_TRANSFORM_OCTAGONAL48
+            || dtype == GWY_DISTANCE_TRANSFORM_OCTAGONAL84)
+            erode = (erode == erode_4) ? erode_8 : erode_4;
+    }
+
+    if (!from_border) {
+        guint k;
+
+        /* Fix single-pixel grains touching the image borders. */
+        for (k = 0; k < width; k++) {
+            if (grain[k] == G_MAXUINT)
+                grain[k] = 1;
+            if (grain[width*(height-1) + k] == G_MAXUINT)
+                grain[width*(height-1) + k] = 1;
+        }
+
+        for (k = 0; k < height; k++) {
+            if (grain[k*width] == G_MAXUINT)
+                grain[k*width] = 1;
+            if (grain[k*width + width-1] == G_MAXUINT)
+                grain[k*width + width-1] = 1;
+        }
+    }
+
+    return dist;
+}
+
+/**
+ * gwy_data_field_grain_simple_dist_trans:
+ * @data_field: A data field with zeroes in empty space and nonzeroes in
+ *              grains.
+ * @dtype: Type of simple distance to use.
+ * @from_border: %TRUE to consider image edges to begrain boundaries.
+ *
+ * Performs a simple distance transform of a data field with grains.
+ *
+ * Each non-zero value will be replaced with a distance to the grain boundary,
+ * measured in pixels.
+ *
+ * See also gwy_data_field_grain_distance_transform() for Euclidean distance
+ * transform.
+ *
+ * Since: 2.41
+ **/
+void
+gwy_data_field_grain_simple_dist_trans(GwyDataField *data_field,
+                                       GwyDistanceTransformType dtype,
+                                       gboolean from_border)
+{
+    guint *grains = NULL;
+    PixelQueue *inqueue, *outqueue;
+    gdouble *d;
+    guint xres, yres, k;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(dtype <= GWY_DISTANCE_TRANSFORM_OCTAGONAL84);
+
+    xres = data_field->xres;
+    yres = data_field->yres;
+    d = data_field->data;
+    inqueue = g_slice_new0(PixelQueue);
+    outqueue = g_slice_new0(PixelQueue);
+    grains = g_new(guint, xres*yres);
+    for (k = 0; k < xres*yres; k++)
+        grains[k] = (d[k] > 0.0) ? G_MAXUINT : 0;
+
+    simple_dist_trans(grains, xres, yres, from_border, dtype,
+                      inqueue, outqueue);
+
+    for (k = 0; k < xres*yres; k++)
+        d[k] = grains[k];
+
+    g_free(grains);
+    g_free(inqueue->points);
+    g_free(outqueue->points);
+    g_slice_free(PixelQueue, inqueue);
+    g_slice_free(PixelQueue, outqueue);
 }
 
 /**

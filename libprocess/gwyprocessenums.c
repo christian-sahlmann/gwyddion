@@ -554,6 +554,26 @@ gwy_masking_type_get_enum(void)
  **/
 
 /**
+ * GwyDistanceTransformType:
+ * @GWY_DISTANCE_TRANSFORM_CITYBLOCK: City-block distance (sum of horizontal
+ *                                    and vertical distances).
+ * @GWY_DISTANCE_TRANSFORM_CONN4: Four-connectivity distance; another name for
+ *                                city-block distance.
+ * @GWY_DISTANCE_TRANSFORM_CHESS: Chessboard distance (maximum of horizontal
+ *                                and vertical distance).
+ * @GWY_DISTANCE_TRANSFORM_CONN8: Eight-connectivity distance; another name for
+ *                                chessboard distance.
+ * @GWY_DISTANCE_TRANSFORM_OCTAGONAL48: Octagonal distance beginning from
+ *                                      city-block.
+ * @GWY_DISTANCE_TRANSFORM_OCTAGONAL84: Octagonal distance beginning from
+ *                                      chess.
+ *
+ * Type of simple distance transform.
+ *
+ * Since: 2.41
+ **/
+
+/**
  * GwyComputationStateType:
  * @GWY_COMPUTATION_STATE_INIT: Iterator was set up, the next step will
  *                              actually create temporary data structures
