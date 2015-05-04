@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2014 David Necas (Yeti).
+ *  Copyright (C) 2014-2015 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -26,11 +26,23 @@
 #include <libprocess/arithmetic.h>
 #include <libprocess/grains.h>
 #include <libgwydgets/gwyradiobuttons.h>
+#include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
 #define MASKEDT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 #define MASKTHIN_RUN_MODES GWY_RUN_IMMEDIATE
+
+typedef enum {
+    DISTANCE_TRANSFORM_EUCLIDEAN   = 0,
+    DISTANCE_TRANSFORM_CITYBLOCK   = 1,
+    DISTANCE_TRANSFORM_CHESS       = 2,
+    DISTANCE_TRANSFORM_OCTAGONAL48 = 3,
+    DISTANCE_TRANSFORM_OCTAGONAL84 = 4,
+    DISTANCE_TRANSFORM_OCTAGONAL   = 5,
+    DISTANCE_TRANSFORM_NTYPES
+} DistanceTransformType;
 
 typedef enum {
     MASKEDT_INTERIOR = 0,
@@ -45,14 +57,16 @@ typedef struct {
 } ThinCandidate;
 
 typedef struct {
-    MaskEdtType type;
+    MaskEdtType mask_type;
+    DistanceTransformType dist_type;
     gboolean from_border;
 } MaskEdtArgs;
 
 typedef struct {
     MaskEdtArgs *args;
     GtkWidget *dialog;
-    GSList *type;
+    GtkWidget *dist_type;
+    GSList *mask_type;
     GtkWidget *from_border;
 } MaskEdtControls;
 
@@ -63,14 +77,21 @@ static void          thin_mask                    (GwyDataField *mask);
 static void          mask_edt                     (GwyContainer *data,
                                                    GwyRunType run);
 static gboolean      maskedt_dialog               (MaskEdtArgs *args);
-static void          type_changed                 (GtkToggleButton *toggle,
+static void          mask_type_changed            (GtkToggleButton *toggle,
+                                                   MaskEdtControls *controls);
+static void          dist_type_changed            (GtkComboBox *combo,
                                                    MaskEdtControls *controls);
 static void          from_border_changed          (GtkToggleButton *toggle,
                                                    MaskEdtControls *controls);
 static GwyDataField* maskedt_do                   (GwyDataField *mfield,
                                                    GwyDataField *dfield,
                                                    MaskEdtArgs *args);
+static void          distance_transform_one       (GwyDataField *dfield,
+                                                   DistanceTransformType dtype,
+                                                   gboolean from_border);
 static void          borderless_distance_transform(GwyDataField *dfield);
+static void          octagonal_distance_transform (GwyDataField *dfield,
+                                                   gboolean from_border);
 static void          maskedt_sanitize_args        (MaskEdtArgs *args);
 static void          maskedt_load_args            (GwyContainer *settings,
                                                    MaskEdtArgs *args);
@@ -79,15 +100,16 @@ static void          maskedt_save_args            (GwyContainer *settings,
 
 static const MaskEdtArgs maskedt_defaults = {
     MASKEDT_INTERIOR,
+    DISTANCE_TRANSFORM_EUCLIDEAN,
     TRUE,
 };
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Performs Euclidean distance transform of masks."),
+    N_("Performs simple and true Euclidean distance transforms of masks."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "2.0",
     "David Nečas (Yeti)",
     "2014",
 };
@@ -99,11 +121,11 @@ module_register(void)
 {
     gwy_process_func_register("mask_edt",
                               (GwyProcessFunc)&mask_edt,
-                              N_("/_Mask/_Euclidean Distance Transform..."),
+                              N_("/_Mask/Distanc_e Transform..."),
                               NULL,
                               MASKEDT_RUN_MODES,
                               GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
-                              N_("Euclidean distance transform of mask"));
+                              N_("Distance transform of mask"));
     gwy_process_func_register("mask_thin",
                               (GwyProcessFunc)&mask_thin,
                               N_("/_Mask/Thi_n"),
@@ -329,10 +351,18 @@ mask_edt(GwyContainer *data, GwyRunType run)
 static gboolean
 maskedt_dialog(MaskEdtArgs *args)
 {
-    static const GwyEnum types[] = {
+    static const GwyEnum mask_types[] = {
         { N_("Interior"),  MASKEDT_INTERIOR },
         { N_("Exterior"),  MASKEDT_EXTERIOR },
         { N_("Two-sided"), MASKEDT_SIGNED   },
+    };
+    static const GwyEnum dist_types[] = {
+        { N_("distance|Euclidean"),     DISTANCE_TRANSFORM_EUCLIDEAN,   },
+        { N_("distance|City-block"),    DISTANCE_TRANSFORM_CITYBLOCK,   },
+        { N_("distance|Chess"),         DISTANCE_TRANSFORM_CHESS,       },
+        { N_("distance|Octagonal 4,8"), DISTANCE_TRANSFORM_OCTAGONAL48, },
+        { N_("distance|Octagonal 8,4"), DISTANCE_TRANSFORM_OCTAGONAL84, },
+        { N_("distance|Octagonal"),     DISTANCE_TRANSFORM_OCTAGONAL,   },
     };
 
     MaskEdtControls controls;
@@ -353,11 +383,19 @@ maskedt_dialog(MaskEdtArgs *args)
     gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
     controls.dialog = dialog;
 
-    table = gtk_table_new(5, 1, FALSE);
+    table = gtk_table_new(6, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
+
+    controls.dist_type
+        = gwy_enum_combo_box_new(dist_types, G_N_ELEMENTS(dist_types),
+                                 G_CALLBACK(dist_type_changed), &controls,
+                                  args->dist_type, TRUE);
+    gwy_table_attach_hscale(table, row++, _("_Distance type:"), NULL,
+                            GTK_OBJECT(controls.dist_type),
+                            GWY_HSCALE_WIDGET);
 
     label = gtk_label_new(_("Output type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -365,12 +403,14 @@ maskedt_dialog(MaskEdtArgs *args)
                      0, 1, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    controls.type = gwy_radio_buttons_create(types, G_N_ELEMENTS(types),
-                                             G_CALLBACK(type_changed),
-                                             &controls,
-                                             args->type);
-    row = gwy_radio_buttons_attach_to_table(controls.type, GTK_TABLE(table),
-                                            1, row);
+    controls.mask_type = gwy_radio_buttons_create(mask_types,
+                                                  G_N_ELEMENTS(mask_types),
+                                                  G_CALLBACK(mask_type_changed),
+                                                  &controls,
+                                                  args->mask_type);
+    row = gwy_radio_buttons_attach_to_table(controls.mask_type,
+                                            GTK_TABLE(table),
+                                            3, row);
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
     controls.from_border
@@ -378,7 +418,7 @@ maskedt_dialog(MaskEdtArgs *args)
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.from_border),
                                  args->from_border);
     gtk_table_attach(GTK_TABLE(table), controls.from_border,
-                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     g_signal_connect(controls.from_border, "toggled",
                      G_CALLBACK(from_border_changed), &controls);
     row++;
@@ -410,10 +450,18 @@ maskedt_dialog(MaskEdtArgs *args)
 }
 
 static void
-type_changed(G_GNUC_UNUSED GtkToggleButton *toggle,
-             MaskEdtControls *controls)
+mask_type_changed(G_GNUC_UNUSED GtkToggleButton *toggle,
+                  MaskEdtControls *controls)
 {
-    controls->args->type = gwy_radio_buttons_get_current(controls->type);
+    controls->args->mask_type
+        = gwy_radio_buttons_get_current(controls->mask_type);
+}
+
+static void
+dist_type_changed(GtkComboBox *combo,
+                  MaskEdtControls *controls)
+{
+    controls->args->dist_type = gwy_enum_combo_box_get_active(combo);
 }
 
 static void
@@ -428,33 +476,29 @@ maskedt_do(GwyDataField *mfield,
            GwyDataField *dfield,
            MaskEdtArgs *args)
 {
-    void (*edt_func)(GwyDataField *dfield);
+    DistanceTransformType dtype = args->dist_type;
+    gboolean from_border = args->from_border;
     GwySIUnit *unitxy, *unitz;
     gdouble q;
-
-    if (args->from_border)
-        edt_func = gwy_data_field_grain_distance_transform;
-    else
-        edt_func = borderless_distance_transform;
 
     dfield = gwy_data_field_duplicate(dfield);
     gwy_data_field_copy(mfield, dfield, FALSE);
 
-    if (args->type == MASKEDT_INTERIOR) {
-        edt_func(dfield);
+    if (args->mask_type == MASKEDT_INTERIOR) {
+        distance_transform_one(dfield, dtype, from_border);
     }
-    else if (args->type == MASKEDT_EXTERIOR) {
+    else if (args->mask_type == MASKEDT_EXTERIOR) {
         gwy_data_field_multiply(dfield, -1.0);
         gwy_data_field_add(dfield, 1.0);
-        edt_func(dfield);
+        distance_transform_one(dfield, dtype, from_border);
     }
-    else if (args->type == MASKEDT_SIGNED) {
+    else if (args->mask_type == MASKEDT_SIGNED) {
         GwyDataField *tmp = gwy_data_field_duplicate(dfield);
 
-        edt_func(dfield);
+        distance_transform_one(dfield, dtype, from_border);
         gwy_data_field_multiply(tmp, -1.0);
         gwy_data_field_add(tmp, 1.0);
-        edt_func(tmp);
+        distance_transform_one(tmp, dtype, from_border);
         gwy_data_field_subtract_fields(dfield, dfield, tmp);
         g_object_unref(tmp);
     }
@@ -467,6 +511,45 @@ maskedt_do(GwyDataField *mfield,
     gwy_serializable_clone(G_OBJECT(unitxy), G_OBJECT(unitz));
 
     return dfield;
+}
+
+static void
+distance_transform_one(GwyDataField *dfield,
+                       DistanceTransformType dtype,
+                       gboolean from_border)
+{
+    if (dtype == DISTANCE_TRANSFORM_EUCLIDEAN) {
+        if (from_border)
+            gwy_data_field_grain_distance_transform(dfield);
+        else
+            borderless_distance_transform(dfield);
+    }
+    else if (dtype == DISTANCE_TRANSFORM_CITYBLOCK) {
+        gwy_data_field_grain_simple_dist_trans(dfield,
+                                               GWY_DISTANCE_TRANSFORM_CITYBLOCK,
+                                               from_border);
+    }
+    else if (dtype == DISTANCE_TRANSFORM_CHESS) {
+        gwy_data_field_grain_simple_dist_trans(dfield,
+                                               GWY_DISTANCE_TRANSFORM_CHESS,
+                                               from_border);
+    }
+    else if (dtype == DISTANCE_TRANSFORM_OCTAGONAL48) {
+        gwy_data_field_grain_simple_dist_trans(dfield,
+                                               GWY_DISTANCE_TRANSFORM_OCTAGONAL48,
+                                               from_border);
+    }
+    else if (dtype == DISTANCE_TRANSFORM_OCTAGONAL84) {
+        gwy_data_field_grain_simple_dist_trans(dfield,
+                                               GWY_DISTANCE_TRANSFORM_OCTAGONAL84,
+                                               from_border);
+    }
+    else if (dtype == DISTANCE_TRANSFORM_OCTAGONAL) {
+        octagonal_distance_transform(dfield, from_border);
+    }
+    else {
+        g_return_if_reached();
+    }
 }
 
 static void
@@ -484,13 +567,32 @@ borderless_distance_transform(GwyDataField *dfield)
     g_object_unref(extended);
 }
 
-static const gchar type_key[]        = "/module/mask_edt/type";
+static void
+octagonal_distance_transform(GwyDataField *dfield, gboolean from_border)
+{
+    GwyDataField *tmp;
+
+    tmp = gwy_data_field_duplicate(dfield);
+    gwy_data_field_grain_simple_dist_trans(dfield,
+                                           GWY_DISTANCE_TRANSFORM_OCTAGONAL48,
+                                           from_border);
+    gwy_data_field_grain_simple_dist_trans(tmp,
+                                           GWY_DISTANCE_TRANSFORM_OCTAGONAL84,
+                                           from_border);
+    gwy_data_field_sum_fields(dfield, dfield, tmp);
+    gwy_data_field_multiply(dfield, 0.5);
+    g_object_unref(tmp);
+}
+
+static const gchar dist_type_key[]   = "/module/dist_edt/dist_type";
+static const gchar mask_type_key[]   = "/module/mask_edt/mask_type";
 static const gchar from_border_key[] = "/module/mask_edt/from_border";
 
 static void
 maskedt_sanitize_args(MaskEdtArgs *args)
 {
-    args->type = MIN(args->type, MASKEDT_NTYPES-1);
+    args->mask_type = MIN(args->mask_type, MASKEDT_NTYPES-1);
+    args->dist_type = MIN(args->dist_type, DISTANCE_TRANSFORM_NTYPES-1);
     args->from_border = !!args->from_border;
 }
 
@@ -499,7 +601,8 @@ maskedt_load_args(GwyContainer *settings,
                   MaskEdtArgs *args)
 {
     *args = maskedt_defaults;
-    gwy_container_gis_enum_by_name(settings, type_key, &args->type);
+    gwy_container_gis_enum_by_name(settings, mask_type_key, &args->mask_type);
+    gwy_container_gis_enum_by_name(settings, dist_type_key, &args->dist_type);
     gwy_container_gis_boolean_by_name(settings, from_border_key,
                                       &args->from_border);
     maskedt_sanitize_args(args);
@@ -509,7 +612,8 @@ static void
 maskedt_save_args(GwyContainer *settings,
                   MaskEdtArgs *args)
 {
-    gwy_container_set_enum_by_name(settings, type_key, args->type);
+    gwy_container_set_enum_by_name(settings, mask_type_key, args->mask_type);
+    gwy_container_set_enum_by_name(settings, dist_type_key, args->dist_type);
     gwy_container_set_boolean_by_name(settings, from_border_key,
                                       args->from_border);
 }
