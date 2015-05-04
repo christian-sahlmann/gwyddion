@@ -541,15 +541,13 @@ gwy_graph_label_calculate_size(GwyGraphLabel *label)
         pango_layout_get_pixel_extents(layout, NULL, &rect);
 
         if (label->reqwidth < rect.width)
-            label->reqwidth = rect.width + 30 + model->label_frame_thickness;
-        label->reqheight += rect.height + 5 + model->label_frame_thickness;
+            label->reqwidth = rect.width;
+        label->reqheight += rect.height + 5;
 
         g_object_unref(layout);
     }
-    if (label->reqwidth == 0)
-        label->reqwidth = 30;
-    if (label->reqheight == 0)
-        label->reqheight = 30;
+    label->reqwidth += 30 + 2*model->label_frame_thickness;
+    label->reqheight += 2*model->label_frame_thickness;
 }
 
 /**
