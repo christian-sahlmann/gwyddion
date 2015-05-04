@@ -1,4 +1,7 @@
 2.41 (0000-00-00)
+Application:
+- Translations updated: French, Russian.
+
 Libraries:
 - libgwyapp: Undo/redo functions now work with graphs so graph modules can
   save undo information.
