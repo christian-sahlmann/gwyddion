@@ -280,7 +280,7 @@ run_noninteractive(ColSynthArgs *args,
     }
 
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid),
-                       _("Starting..."));
+                       _("Initializing..."));
     scale_to_unit_cubes(newfield, &rx, &ry);
     ok = col_synth_do(args, newfield, gcmodels, HUGE_VAL, 1.0/sqrt(rx*ry));
     scale_from_unit_cubes(newfield, rx, ry);
@@ -720,7 +720,7 @@ preview(ColSynthControls *controls)
 
     scale_to_unit_cubes(dfield, &rx, &ry);
 
-    gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Starting..."));
+    gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Initializing..."));
     col_synth_do(args, dfield, NULL, 1.25, 1.0);
     gwy_app_wait_finish();
 

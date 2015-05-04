@@ -312,7 +312,7 @@ run_noninteractive(DiffSynthArgs *args,
 
     zscale = pow10(dimsargs->zpow10) * args->height;
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid),
-                       _("Starting..."));
+                       _("Initializing..."));
     ok = diff_synth_do(args, newfield, gcmodels, HUGE_VAL, zscale);
     gwy_app_wait_finish();
 
@@ -720,7 +720,7 @@ preview(DiffSynthControls *controls)
     else
         gwy_data_field_clear(dfield);
 
-    gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Starting..."));
+    gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Initializing..."));
     diff_synth_do(args, dfield, NULL, 1.25, 1.0);
     gwy_app_wait_finish();
 

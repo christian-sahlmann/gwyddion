@@ -1292,7 +1292,7 @@ train_network(NeuralTrainControls *controls)
     gchar *s;
     gboolean ok;
 
-    gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Starting..."));
+    gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Initializing..."));
 
     tmodel = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));

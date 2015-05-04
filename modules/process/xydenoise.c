@@ -214,7 +214,7 @@ xydenoise_do(XYdenoiseArgs *args)
 
     data = gwy_app_data_browser_get(args->op1.datano);
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, args->op1.id),
-                       _("Starting..."));
+                       _("Initializing..."));
 
     quark = gwy_app_get_data_key_for_id(args->op1.id);
     dfieldx = GWY_DATA_FIELD(gwy_container_get_object(data, quark));

@@ -335,7 +335,7 @@ run_pid(GwyDataField *dfield, GwyContainer *data, gint id, GwyDataField *fw, Gwy
     GtkWidget *dialog;
 
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, id),
-                       _("Starting..."));
+                       _("Initializing..."));
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);

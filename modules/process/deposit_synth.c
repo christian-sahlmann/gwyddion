@@ -277,7 +277,7 @@ run_noninteractive(DepositSynthArgs *args,
     }
 
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid),
-                       _("Starting..."));
+                       _("Initializing..."));
     ndata = deposit_synth_do(args, out, NULL, &success);
     gwy_app_wait_finish();
 
@@ -876,7 +876,7 @@ preview(DepositSynthControls *controls)
     args->size = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size))*pow10(controls->dims->args->xypow10);
     args->width = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->width))*pow10(controls->dims->args->xypow10);
 
-    gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Starting..."));
+    gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Initializing..."));
     gtk_label_set_text(GTK_LABEL(controls->message), _("Running computation..."));
     ndata = deposit_synth_do(args, controls->out, dfield, &success);
     gwy_app_wait_finish();

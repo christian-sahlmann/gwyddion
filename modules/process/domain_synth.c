@@ -263,7 +263,7 @@ run_noninteractive(DomainSynthArgs *args,
     init_ufield_from_surface(add ? dfield : NULL, ufield, rng);
 
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid),
-                       _("Starting..."));
+                       _("Initializing..."));
     vfield = gwy_data_field_new_alike(ufield, FALSE);
     ok = domain_synth_do(args, ufield, vfield, rng, HUGE_VAL);
     gwy_app_wait_finish();
@@ -760,7 +760,7 @@ preview(DomainSynthControls *controls)
     else
         init_ufield_from_surface(NULL, ufield, rng);
 
-    gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Starting..."));
+    gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Initializing..."));
     domain_synth_do(args, ufield, vfield, rng, 1.25);
     gwy_app_wait_finish();
 

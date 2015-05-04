@@ -465,7 +465,7 @@ run_noninteractive(LatSynthArgs *args,
     }
 
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid),
-                       _("Starting..."));
+                       _("Initializing..."));
     vstate = lat_synth_do(args, dimsargs, NULL, newfield, TRUE);
     gwy_app_wait_finish();
 
