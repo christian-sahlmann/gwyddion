@@ -66,6 +66,7 @@ Modules:
   fixed.
 - Euclidean distance transform: Renamed to Distance transform.  It can
   perform also various simple distance transforms.
+- Renishaw: support for loading some metadata was added.
 
 Other:
 - Standalone Python module gwy is now in the gwyddion-devel package instead
