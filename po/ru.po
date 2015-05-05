@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-05-04 02:58+0200\n"
-"PO-Revision-Date: 2015-05-04 12:49+0300\n"
+"POT-Creation-Date: 2015-05-05 02:58+0200\n"
+"PO-Revision-Date: 2015-05-05 10:34+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -6939,14 +6939,20 @@ msgid "Generate surface by ballistic deposition"
 msgstr "Создать поверхность используя баллистическое осаждение"
 
 #: modules/process/bdep_synth.c:250 modules/process/bdep_synth.c:614
-#: modules/process/col_synth.c:283 modules/process/col_synth.c:723
-#: modules/process/deposit_synth.c:280 modules/process/deposit_synth.c:879
-#: modules/process/diff_synth.c:315 modules/process/diff_synth.c:723
-#: modules/process/domain_synth.c:266 modules/process/domain_synth.c:763
-#: modules/process/lat_synth.c:468 modules/process/neural.c:1295
-#: modules/process/pid.c:338 modules/process/xydenoise.c:217
-msgid "Starting..."
-msgstr "Запускается..."
+#: modules/process/calcoefs_simple.c:627 modules/process/col_synth.c:283
+#: modules/process/col_synth.c:723 modules/process/crosscor.c:588
+#: modules/process/crosscor.c:613 modules/process/deposit_synth.c:280
+#: modules/process/deposit_synth.c:879 modules/process/diff_synth.c:315
+#: modules/process/diff_synth.c:723 modules/process/domain_synth.c:266
+#: modules/process/domain_synth.c:763 modules/process/grain_wshed.c:506
+#: modules/process/lat_synth.c:468 modules/process/maskcor.c:331
+#: modules/process/mcrop.c:324 modules/process/merge.c:1078
+#: modules/process/nanoindent_adjust.c:323 modules/process/neural.c:1295
+#: modules/process/pid.c:338 modules/process/superresolution.c:414
+#: modules/process/superresolution.c:502 modules/process/tip_blind.c:784
+#: modules/process/tipops.c:319 modules/process/xydenoise.c:217
+msgid "Initializing..."
+msgstr "Инициализация..."
 
 #: modules/process/bdep_synth.c:286 modules/process/col_synth.c:321
 #: modules/process/deposit_synth.c:318 modules/process/deposit_synth.c:330
@@ -7232,15 +7238,6 @@ msgstr "Найдено %d объектов"
 #: modules/process/calcoefs_simple.c:605
 msgid "Search cancelled"
 msgstr "Поиск отменён"
-
-#: modules/process/calcoefs_simple.c:627 modules/process/crosscor.c:588
-#: modules/process/crosscor.c:613 modules/process/grain_wshed.c:506
-#: modules/process/maskcor.c:331 modules/process/mcrop.c:324
-#: modules/process/merge.c:1078 modules/process/nanoindent_adjust.c:323
-#: modules/process/superresolution.c:414 modules/process/superresolution.c:502
-#: modules/process/tip_blind.c:784 modules/process/tipops.c:319
-msgid "Initializing..."
-msgstr "Инициализация..."
 
 #: modules/process/calcoefs_simple.c:629 modules/process/maskcor.c:333
 #: modules/process/mcrop.c:326 modules/process/merge.c:1080
@@ -8132,7 +8129,7 @@ msgid "Output Options"
 msgstr "Параметры вывода"
 
 #: modules/process/domain_synth.c:541 modules/process/fft_filter_2d.c:625
-#: modules/process/mask_edt.c:362 modules/process/slope_dist.c:339
+#: modules/process/mask_edt.c:400 modules/process/slope_dist.c:339
 #: modules/volume/volume_slice.c:339
 msgid "Output type:"
 msgstr "Тип вывода:"
@@ -10361,43 +10358,71 @@ msgstr "М_инимум:"
 msgid "M_aximum:"
 msgstr "М_аксимум:"
 
-#: modules/process/mask_edt.c:88
-msgid "Performs Euclidean distance transform of masks."
-msgstr "Преобразует маски в евклидово расстояние."
+#: modules/process/mask_edt.c:110
+msgid "Performs simple and true Euclidean distance transforms of masks."
+msgstr "Преобразует маски в расстояние простых видов и эвклидово."
 
-#: modules/process/mask_edt.c:102
-msgid "/_Mask/_Euclidean Distance Transform..."
-msgstr "/_Маска/Преобразование в эвклидово расстояние..."
+#: modules/process/mask_edt.c:124
+msgid "/_Mask/Distanc_e Transform..."
+msgstr "/_Маска/Преобразование в расстояни_е..."
 
-#: modules/process/mask_edt.c:106
-msgid "Euclidean distance transform of mask"
-msgstr "Преобразование маски в евклидово расстояние"
+#: modules/process/mask_edt.c:128
+msgid "Distance transform of mask"
+msgstr "Преобразование маски в расстояние"
 
-#: modules/process/mask_edt.c:109
+#: modules/process/mask_edt.c:131
 msgid "/_Mask/Thi_n"
 msgstr "/_Маска/_Тоньше"
 
-#: modules/process/mask_edt.c:113
+#: modules/process/mask_edt.c:135
 msgid "Thin mask"
 msgstr "Сделать маску тоньше"
 
-#: modules/process/mask_edt.c:323 modules/process/mask_edt.c:345
+#: modules/process/mask_edt.c:345 modules/process/mask_edt.c:375
 msgid "Distance Transform"
 msgstr "Преобразование расстояния"
 
-#: modules/process/mask_edt.c:333
+#: modules/process/mask_edt.c:355
 msgid "Interior"
 msgstr "Внутреннее"
 
-#: modules/process/mask_edt.c:334
+#: modules/process/mask_edt.c:356
 msgid "Exterior"
 msgstr "Внешнее"
 
-#: modules/process/mask_edt.c:335
+#: modules/process/mask_edt.c:357
 msgid "Two-sided"
 msgstr "Двустороннее"
 
-#: modules/process/mask_edt.c:377 modules/tools/maskedit.c:618
+#: modules/process/mask_edt.c:360
+msgid "distance|Euclidean"
+msgstr "Евклидово"
+
+#: modules/process/mask_edt.c:361
+msgid "distance|City-block"
+msgstr "Кварталы"
+
+#: modules/process/mask_edt.c:362
+msgid "distance|Chess"
+msgstr "Шахматное"
+
+#: modules/process/mask_edt.c:363
+msgid "distance|Octagonal 4,8"
+msgstr "Октагональное 4,8"
+
+#: modules/process/mask_edt.c:364
+msgid "distance|Octagonal 8,4"
+msgstr "Октагональное 8,4"
+
+#: modules/process/mask_edt.c:365
+msgid "distance|Octagonal"
+msgstr "Октагональное"
+
+#: modules/process/mask_edt.c:396
+msgid "_Distance type:"
+msgstr "Тип _расстояния:"
+
+#: modules/process/mask_edt.c:417 modules/tools/maskedit.c:618
 msgid "Shrink from _border"
 msgstr "Ужать от _границы"
 
@@ -13551,6 +13576,9 @@ msgstr "сечение Y при Y = %.*f%s%s (#%d)"
 #, c-format
 msgid "X cross-section at X = %.*f%s%s (#%d)"
 msgstr "сечение X при X = %.*f%s%s (#%d)"
+
+#~ msgid "Starting..."
+#~ msgstr "Запускается..."
 
 #~ msgid "Initializing"
 #~ msgstr "Инициализация"
