@@ -44,7 +44,7 @@ enum {
 };
 
 typedef struct {
-    GwyAppDataIdTmp objects[NARGS];
+    GwyAppDataId objects[NARGS];
     gchar *name[NARGS];
     guint pos[NARGS];
 } StageArgs;
