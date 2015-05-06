@@ -151,7 +151,7 @@ static const SliceArgs slice_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Extracts image planes and line graphsfrom volume data."),
+    N_("Extracts image planes and line graphs from volume data."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti)",
