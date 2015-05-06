@@ -55,7 +55,7 @@ typedef enum {
 } ResponseDuplicate;
 
 typedef struct {
-    GwyAppDataIdTmp objects[NARGS];
+    GwyAppDataId objects[NARGS];
     gchar *name[NARGS];
     guint pos[NARGS];
     gdouble xoffset;
@@ -196,7 +196,7 @@ simple(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
     GQuark mquark;
     G_GNUC_UNUSED gint n;
-    gint id;
+    gint id, datano;
     GwyCalibration *calibration;
     GwyCalData *caldata=NULL;
     gchar *filename;
@@ -211,18 +211,18 @@ simple(GwyContainer *data, GwyRunType run)
 
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &id,
                                      GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_MASK_FIELD, &(args.mask),
+                                     GWY_APP_MASK_FIELD, &args.mask,
                                      GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     GWY_APP_CONTAINER_ID, &datano,
                                      0);
 
     for (i = 0; i < NARGS; i++) {
-        args.objects[i].data = data;
+        args.objects[i].datano = datano;
         args.objects[i].id = id;
     }
 
     if (simple_dialog(&args, dfield)) {
-        if (args.mask == NULL)
-        {
+        if (args.mask == NULL) {
             gwy_app_undo_qcheckpointv(data, 1, &mquark);
             args.mask = gwy_data_field_new_alike(dfield, FALSE);
             gwy_container_set_object(data, mquark, args.mask);
@@ -231,10 +231,12 @@ simple(GwyContainer *data, GwyRunType run)
         simple_do(&args);
         gwy_data_field_data_changed(args.mask);
 
-    } else return;
+    }
+    else
+        return;
 
-    if (!args.caldata) return;
-
+    if (!args.caldata)
+        return;
 
     /*if append requested, copy newly created calibration into old one*/
     if (args.duplicate == DUPLICATE_APPEND && (calibration = gwy_inventory_get_item(gwy_calibrations(), args.calname)))
@@ -344,7 +346,7 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
 
     args->name[0] = g_strdup_printf(_("Grating image"));
     args->name[1] = g_strdup_printf(_("Detail"));
-      for (i = 0; i < NARGS; i++) {
+    for (i = 0; i < NARGS; i++) {
         label = gtk_label_new_with_mnemonic(args->name[i]);
         gwy_strkill(args->name[i], "_");
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -352,8 +354,8 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
                          GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
         chooser = gwy_data_chooser_new_channels();
-        gwy_data_chooser_set_active(GWY_DATA_CHOOSER(chooser),
-                                    args->objects[i].data, args->objects[i].id);
+        gwy_data_chooser_set_active_id(GWY_DATA_CHOOSER(chooser),
+                                       args->objects + i);
         g_signal_connect(chooser, "changed",
                          G_CALLBACK(simple_data_cb), &controls);
         g_object_set_data(G_OBJECT(chooser), "index", GUINT_TO_POINTER(i));
@@ -363,7 +365,7 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
         controls.data[i] = chooser;
 
         row++;
-      }
+    }
     label = gtk_label_new_with_mnemonic(_("_X offset:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -562,22 +564,24 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
 
 static void
 simple_data_cb(GwyDataChooser *chooser,
-                   SimpleControls *controls)
+               SimpleControls *controls)
 {
     SimpleArgs *args;
+    GwyContainer *data;
     guint i;
     gchar message[50];
     GwyDataField *original, *detail;
 
     args = controls->args;
     i = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(chooser), "index"));
-    args->objects[i].data = gwy_data_chooser_get_active(chooser,
-                                                        &args->objects[i].id);
+    gwy_data_chooser_get_active_id(chooser, args->objects + i);
 
-    original = GWY_DATA_FIELD(gwy_container_get_object(controls->args->objects[0].data,
+    data = gwy_app_data_browser_get(args->objects[0].datano);
+    original = GWY_DATA_FIELD(gwy_container_get_object(data,
                                                        gwy_app_get_data_key_for_id(args->objects[0].id)));
-    detail = GWY_DATA_FIELD(gwy_container_get_object(controls->args->objects[1].data,
-                                                       gwy_app_get_data_key_for_id(args->objects[1].id)));
+    data = gwy_app_data_browser_get(args->objects[1].datano);
+    detail = GWY_DATA_FIELD(gwy_container_get_object(data,
+                                                     gwy_app_get_data_key_for_id(args->objects[1].id)));
 
     if (original==detail) {
         gtk_label_set_text(GTK_LABEL(controls->suggestion), _("Data same as detail?"));
@@ -749,11 +753,11 @@ simple_do(SimpleArgs *args)
 
     xxshift = xyshift = yxshift = yyshift =  0;
 
-    data = args->objects[0].data;
+    data = gwy_app_data_browser_get(args->objects[0].datano);
     quark = gwy_app_get_data_key_for_id(args->objects[0].id);
     original = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
-    data = args->objects[1].data;
+    data = gwy_app_data_browser_get(args->objects[1].datano);
     quark = gwy_app_get_data_key_for_id(args->objects[1].id);
     detail = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
