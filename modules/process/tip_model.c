@@ -41,7 +41,7 @@ typedef struct {
     gdouble radius;
     gdouble theta;
     GwyTipType type;
-    GwyAppDataIdTmp object;
+    GwyAppDataId object;
 } TipModelArgs;
 
 typedef struct {
@@ -100,7 +100,7 @@ static void        tip_model_dialog_abandon        (TipModelControls *controls);
 
 static const TipModelArgs tip_model_defaults = {
     4, 54.73561032, 200e-9, 0, 0,
-    { NULL, -1, },
+    GWY_APP_DATA_ID_NONE,
 };
 
 static GwyModuleInfo module_info = {
@@ -108,7 +108,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Models SPM tip."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -131,15 +131,16 @@ module_register(void)
 }
 
 static void
-tip_model(GwyContainer *data, GwyRunType run)
+tip_model(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 {
     TipModelArgs args;
 
     g_return_if_fail(run & TIP_MODEL_RUN_MODES);
 
     tip_model_load_args(gwy_app_settings_get(), &args);
-    args.object.data = data;
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.object.id, 0);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.object.id,
+                                     GWY_APP_CONTAINER_ID, &args.object.datano,
+                                     0);
     tip_model_dialog(&args);
 }
 
@@ -151,6 +152,7 @@ tip_model_dialog(TipModelArgs *args)
         RESPONSE_PREVIEW = 2
     };
     GtkWidget *dialog, *table, *hbox, *spin;
+    GwyContainer *data;
     TipModelControls controls;
     GwyPixmapLayer *layer;
     GwyDataField *dfield;
@@ -180,8 +182,9 @@ tip_model_dialog(TipModelArgs *args)
     controls.vyres = 200;
 
     /* set up initial tip field */
+    data = gwy_app_data_browser_get(args->object.datano);
     quark = gwy_app_get_data_key_for_id(args->object.id);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object(args->object.data, quark));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
     controls.tip = gwy_data_field_new_alike(dfield, TRUE);
     gwy_data_field_resample(controls.tip, controls.vxres, controls.vyres,
@@ -190,7 +193,7 @@ tip_model_dialog(TipModelArgs *args)
 
     /*set up data of rescaled image of the tip*/
     controls.vtip = gwy_container_new();
-    gwy_app_sync_data_items(args->object.data, controls.vtip,
+    gwy_app_sync_data_items(data, controls.vtip,
                             args->object.id, 0, FALSE,
                             GWY_DATA_ITEM_PALETTE, 0);
 
@@ -453,17 +456,16 @@ static void
 tip_model_do(TipModelArgs *args,
              TipModelControls *controls)
 {
+    GwyContainer *data;
     gint newid;
 
-    newid = gwy_app_data_browser_add_data_field(controls->tip,
-                                                args->object.data,
-                                                TRUE);
+    data = gwy_app_data_browser_get(args->object.datano);
+    newid = gwy_app_data_browser_add_data_field(controls->tip, data, TRUE);
     g_object_unref(controls->tip);
-    gwy_app_sync_data_items(args->object.data, args->object.data,
-                            args->object.id, newid, FALSE,
+    gwy_app_sync_data_items(data, data, args->object.id, newid, FALSE,
                             GWY_DATA_ITEM_GRADIENT, 0);
-    gwy_app_set_data_field_title(args->object.data, newid, _("Modelled tip"));
-    gwy_app_channel_log_add_proc(args->object.data, -1, newid);
+    gwy_app_set_data_field_title(data, newid, _("Modelled tip"));
+    gwy_app_channel_log_add_proc(data, -1, newid);
     controls->tipdone = TRUE;
 }
 
@@ -474,6 +476,7 @@ tip_process(TipModelArgs *args,
     const GwyTipModelPreset *preset;
     GwyDataField *dfield;
     GwyDataField *sfield;
+    GwyContainer *data;
     GQuark quark;
     gchar label[64];
     gint xres, yres;
@@ -487,8 +490,9 @@ tip_process(TipModelArgs *args,
 
     /* estimate x and y size */
     dfield = controls->tip;
+    data = gwy_app_data_browser_get(args->object.datano);
     quark = gwy_app_get_data_key_for_id(args->object.id);
-    sfield = GWY_DATA_FIELD(gwy_container_get_object(args->object.data, quark));
+    sfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
     gwy_data_field_set_xreal(dfield,
                              gwy_data_field_get_xmeasure(sfield)
