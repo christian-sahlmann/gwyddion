@@ -46,7 +46,7 @@ enum {
 
 typedef struct {
     guint err;
-    GwyAppDataIdTmp objects[NARGS];
+    GwyAppDataId objects[NARGS];
     gchar *name[NARGS];
     guint pos[NARGS];
 } SupresArgs;
@@ -105,20 +105,21 @@ module_register(void)
 }
 
 void
-supres(GwyContainer *data, GwyRunType run)
+supres(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 {
     SupresArgs args;
     guint i;
     GwyContainer *settings;
-    gint id;
+    gint id, datano;
 
     g_return_if_fail(run & SUPRES_RUN_MODES);
 
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &id, 0);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_CONTAINER_ID, &datano, 0);
 
     settings = gwy_app_settings_get();
     for (i = 0; i < NARGS; i++) {
-        args.objects[i].data = data;
+        args.objects[i].datano = datano;
         args.objects[i].id = id;
     }
     supres_load_args(settings, &args);
@@ -167,8 +168,8 @@ supres_dialog(SupresArgs *args)
                          GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
         chooser = gwy_data_chooser_new_channels();
-        gwy_data_chooser_set_active(GWY_DATA_CHOOSER(chooser),
-                                    args->objects[i].data, args->objects[i].id);
+        gwy_data_chooser_set_active_id(GWY_DATA_CHOOSER(chooser),
+                                       args->objects + i);
         g_signal_connect(chooser, "changed",
                          G_CALLBACK(supres_data_cb), &controls);
         g_object_set_data(G_OBJECT(chooser), "index", GUINT_TO_POINTER(i));
@@ -225,8 +226,7 @@ supres_data_cb(GwyDataChooser *chooser,
 
     args = controls->args;
     i = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(chooser), "index"));
-    args->objects[i].data = gwy_data_chooser_get_active(chooser,
-                                                        &args->objects[i].id);
+    gwy_data_chooser_get_active_id(chooser, args->objects + i);
     if (!(args->err))
         supres_maybe_preview(controls);
 }
@@ -277,14 +277,14 @@ supres_check(SupresArgs *args)
     }
 
     /* each window must match with first, this is transitive */
-    data = args->objects[first].data;
+    data = gwy_app_data_browser_get(args->objects[first].datano);
     quark = gwy_app_get_data_key_for_id(args->objects[first].id);
     dfirst = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
     for (i = first+1; i < NARGS; i++) {
         if (!args->pos[i])
             continue;
 
-        data = args->objects[i].data;
+        data = gwy_app_data_browser_get(args->objects[i].datano);
         quark = gwy_app_get_data_key_for_id(args->objects[i].id);
         dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
@@ -329,7 +329,7 @@ supres_do(SupresArgs *args)
         if (!args->pos[i])
             continue;
 
-        data = args->objects[i].data;
+        data = gwy_app_data_browser_get(args->objects[i].datano);
         quark = gwy_app_get_data_key_for_id(args->objects[i].id);
         dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
         g_ptr_array_add(fields, dfield);
@@ -389,6 +389,7 @@ get_mean_correlation(GwyDataField *dfield,
     GwyDataField *dfield_kernel;
     GwyDataField *score;
     GwyComputationState *state;
+    GwyContainer *data;
 
     newxres = gwy_data_field_get_xres(dfield)/2;
     newyres = gwy_data_field_get_yres(dfield)/2;
@@ -409,7 +410,8 @@ get_mean_correlation(GwyDataField *dfield,
 
     score = gwy_data_field_new(newxres, newyres, newxres, newyres, FALSE);
 
-    gwy_app_wait_start(gwy_app_find_window_for_channel(args->objects[0].data,
+    data = gwy_app_data_browser_get(args->objects[0].datano);
+    gwy_app_wait_start(gwy_app_find_window_for_channel(data,
                                                        args->objects[0].id),
                                                       _("Initializing..."));
 
@@ -465,6 +467,7 @@ make_superresolution(GwyDataField *result, GPtrArray *fields, SupresArgs *args)
     GwyDataField *last, *dfield, *last_shifted, *dfield_shifted;
     GwyDataField *dfieldx, *dfieldy, *score;
     GwyComputationState *state;
+    GwyContainer *data;
     gdouble weight, sum, rdist;
 
     values = g_array_new(FALSE, FALSE, sizeof(SDataPoint));
@@ -496,10 +499,10 @@ TODO: use this when the rest works well.
         
         /*compute detailed correlation of each point*/
         /*compute crosscorelation */
-        
-        gwy_app_wait_start(gwy_app_find_window_for_channel(args->objects[0].data,
-                                                       args->objects[0].id),
-                                                      _("Initializing..."));
+        data = gwy_app_data_browser_get(args->objects[0].datano);
+        gwy_app_wait_start(gwy_app_find_window_for_channel(data,
+                                                           args->objects[0].id),
+                           _("Initializing..."));
 
         state = gwy_data_field_crosscorrelate_init(dfield, last,
                                                dfieldx, dfieldy, score,
@@ -545,7 +548,8 @@ TODO: use this when the rest works well.
     gwy_data_field_resample(result, xres*2, yres*2, GWY_INTERPOLATION_LINEAR);
 
     /*merge values from array into the field*/
-    gwy_app_wait_start(gwy_app_find_window_for_channel(args->objects[0].data,
+    data = gwy_app_data_browser_get(args->objects[0].datano);
+    gwy_app_wait_start(gwy_app_find_window_for_channel(data,
                                                        args->objects[0].id),
                                                       _("Interpolating..."));
 
@@ -603,4 +607,3 @@ TODO: use this when the rest works well.
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
