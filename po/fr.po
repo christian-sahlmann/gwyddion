@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-05-04 02:58+0200\n"
-"PO-Revision-Date: 2015-05-04 20:22+0100\n"
+"POT-Creation-Date: 2015-05-06 02:58+0200\n"
+"PO-Revision-Date: 2015-05-06 21:30+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -2089,11 +2089,11 @@ msgstr "Impossible de créer le répertoire d'interface utilisateur %s : %s"
 msgid "Cannot create user module directory %s: %s"
 msgstr "Impossible de créer le répertoire de modules utilisateur %s : %s"
 
-#: app/splash.c:652
+#: app/splash.c:832
 msgid "Starting "
 msgstr "Démarrage"
 
-#: app/splash.c:698
+#: app/splash.c:878
 msgid " is free software released under GNU GPL."
 msgstr " est un logiciel libre développé sous la licence GNU GPL."
 
@@ -6975,14 +6975,20 @@ msgid "Generate surface by ballistic deposition"
 msgstr "Générer une surface par déposition balistique"
 
 #: modules/process/bdep_synth.c:250 modules/process/bdep_synth.c:614
-#: modules/process/col_synth.c:283 modules/process/col_synth.c:723
-#: modules/process/deposit_synth.c:280 modules/process/deposit_synth.c:879
-#: modules/process/diff_synth.c:315 modules/process/diff_synth.c:723
-#: modules/process/domain_synth.c:266 modules/process/domain_synth.c:763
-#: modules/process/lat_synth.c:468 modules/process/neural.c:1295
-#: modules/process/pid.c:338 modules/process/xydenoise.c:217
-msgid "Starting..."
-msgstr "Démarrage..."
+#: modules/process/calcoefs_simple.c:627 modules/process/col_synth.c:283
+#: modules/process/col_synth.c:723 modules/process/crosscor.c:588
+#: modules/process/crosscor.c:613 modules/process/deposit_synth.c:280
+#: modules/process/deposit_synth.c:879 modules/process/diff_synth.c:315
+#: modules/process/diff_synth.c:723 modules/process/domain_synth.c:266
+#: modules/process/domain_synth.c:763 modules/process/grain_wshed.c:506
+#: modules/process/lat_synth.c:468 modules/process/maskcor.c:331
+#: modules/process/mcrop.c:324 modules/process/merge.c:1078
+#: modules/process/nanoindent_adjust.c:323 modules/process/neural.c:1295
+#: modules/process/pid.c:338 modules/process/superresolution.c:414
+#: modules/process/superresolution.c:502 modules/process/tip_blind.c:784
+#: modules/process/tipops.c:319 modules/process/xydenoise.c:217
+msgid "Initializing..."
+msgstr "Initialisation..."
 
 #: modules/process/bdep_synth.c:286 modules/process/col_synth.c:321
 #: modules/process/deposit_synth.c:318 modules/process/deposit_synth.c:330
@@ -7268,15 +7274,6 @@ msgstr "%d objets ont été trouvés"
 #: modules/process/calcoefs_simple.c:605
 msgid "Search cancelled"
 msgstr "Recherche annulée"
-
-#: modules/process/calcoefs_simple.c:627 modules/process/crosscor.c:588
-#: modules/process/crosscor.c:613 modules/process/grain_wshed.c:506
-#: modules/process/maskcor.c:331 modules/process/mcrop.c:324
-#: modules/process/merge.c:1078 modules/process/nanoindent_adjust.c:323
-#: modules/process/superresolution.c:414 modules/process/superresolution.c:502
-#: modules/process/tip_blind.c:784 modules/process/tipops.c:319
-msgid "Initializing..."
-msgstr "Initialisation..."
 
 #: modules/process/calcoefs_simple.c:629 modules/process/maskcor.c:333
 #: modules/process/mcrop.c:326 modules/process/merge.c:1080
@@ -8171,7 +8168,7 @@ msgid "Output Options"
 msgstr "Options de sortie"
 
 #: modules/process/domain_synth.c:541 modules/process/fft_filter_2d.c:625
-#: modules/process/mask_edt.c:362 modules/process/slope_dist.c:339
+#: modules/process/mask_edt.c:400 modules/process/slope_dist.c:339
 #: modules/volume/volume_slice.c:339
 msgid "Output type:"
 msgstr "Type de sortie :"
@@ -10400,43 +10397,71 @@ msgstr "_Minimum :"
 msgid "M_aximum:"
 msgstr "M_aximum :"
 
-#: modules/process/mask_edt.c:88
-msgid "Performs Euclidean distance transform of masks."
-msgstr "Affiche la carte de distances euclidiennes des masques."
+#: modules/process/mask_edt.c:110
+msgid "Performs simple and true Euclidean distance transforms of masks."
+msgstr "Applique une transformée de distance aux masques."
 
-#: modules/process/mask_edt.c:102
-msgid "/_Mask/_Euclidean Distance Transform..."
-msgstr "/_Masque/Carte de distances _euclidiennes..."
+#: modules/process/mask_edt.c:124
+msgid "/_Mask/Distanc_e Transform..."
+msgstr "/_Masque/Transformé_e de distance..."
 
-#: modules/process/mask_edt.c:106
-msgid "Euclidean distance transform of mask"
-msgstr "Carte de distances euclidiennes du masque"
+#: modules/process/mask_edt.c:128
+msgid "Distance transform of mask"
+msgstr "Transformée de distance du masque"
 
-#: modules/process/mask_edt.c:109
+#: modules/process/mask_edt.c:131
 msgid "/_Mask/Thi_n"
 msgstr "/_Masque/Affiner"
 
-#: modules/process/mask_edt.c:113
+#: modules/process/mask_edt.c:135
 msgid "Thin mask"
 msgstr "Affiner le masque"
 
-#: modules/process/mask_edt.c:323 modules/process/mask_edt.c:345
+#: modules/process/mask_edt.c:345 modules/process/mask_edt.c:375
 msgid "Distance Transform"
 msgstr "Carte de distances"
 
-#: modules/process/mask_edt.c:333
+#: modules/process/mask_edt.c:355
 msgid "Interior"
 msgstr "Intérieur"
 
-#: modules/process/mask_edt.c:334
+#: modules/process/mask_edt.c:356
 msgid "Exterior"
 msgstr "Exterieur"
 
-#: modules/process/mask_edt.c:335
+#: modules/process/mask_edt.c:357
 msgid "Two-sided"
 msgstr "Les deux côtés"
 
-#: modules/process/mask_edt.c:377 modules/tools/maskedit.c:618
+#: modules/process/mask_edt.c:360
+msgid "distance|Euclidean"
+msgstr "Euclidienne"
+
+#: modules/process/mask_edt.c:361
+msgid "distance|City-block"
+msgstr "Manhattan"
+
+#: modules/process/mask_edt.c:362
+msgid "distance|Chess"
+msgstr "Tchebychev"
+
+#: modules/process/mask_edt.c:363
+msgid "distance|Octagonal 4,8"
+msgstr "Octogonale 4,8"
+
+#: modules/process/mask_edt.c:364
+msgid "distance|Octagonal 8,4"
+msgstr "Octogonale 8,4"
+
+#: modules/process/mask_edt.c:365
+msgid "distance|Octagonal"
+msgstr "Octogonale"
+
+#: modules/process/mask_edt.c:396
+msgid "_Distance type:"
+msgstr "Type de _distance :"
+
+#: modules/process/mask_edt.c:417 modules/tools/maskedit.c:618
 msgid "Shrink from _border"
 msgstr "Éroder à partir du _bord"
 
@@ -13596,6 +13621,9 @@ msgstr "Section Z pour Z = %.*f%s%s (#%d)"
 #, c-format
 msgid "X cross-section at X = %.*f%s%s (#%d)"
 msgstr "Section Z pour Z = %.*f%s%s (#%d)"
+
+#~ msgid "Starting..."
+#~ msgstr "Démarrage..."
 
 #~ msgid "Initializing"
 #~ msgstr "Initialisation"
