@@ -1,6 +1,6 @@
 /*
  *  $Id$
- *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2006,2015 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -18,8 +18,6 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  */
-
-/* TODO: metadata */
 
 /**
  * [FILE-MAGIC-FREEDESKTOP]
@@ -96,10 +94,6 @@ typedef struct {
      * files of 3D data.  We cannot trust direction filed then as it's set to
      * `both' although the file contains one direction only. */
     gboolean bogus_scan_time;
-    /* TRUE if we have just read a comment header and its first line.  If the
-     * next line is not tag, do not complain and consider it to be a part of
-     * the comment as they apparently can be mutiline.  This is a kluge. */
-    gboolean in_comment;
 } SXMFile;
 
 static gboolean      module_register(void);
@@ -116,7 +110,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanonis SXM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.11",
+    "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -159,23 +153,6 @@ sxm_detect(const GwyFileDetectInfo *fileinfo,
     return score;
 }
 
-static gchar*
-get_next_line_with_error(gchar **p,
-                         GError **error)
-{
-    gchar *line;
-
-    if (!(line = gwy_str_next_line(p))) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_DATA,
-                    _("File header ended unexpectedly."));
-        return NULL;
-    }
-    g_strstrip(line);
-
-    return line;
-}
-
 static gchar**
 split_line_in_place(gchar *line,
                     gchar delim)
@@ -216,84 +193,115 @@ sxm_free_z_controller(SXMFile *sxmfile)
     sxmfile->z_controller_values = NULL;
 }
 
-static gboolean
+static guint
+sxm_tag_count_lines(GPtrArray *header_lines, guint lineno)
+{
+    guint n = 0;
+
+    while (lineno + n < header_lines->len) {
+        gchar *line = g_ptr_array_index(header_lines, lineno + n);
+        if (line[0] == ':')
+            return n;
+        n++;
+    }
+    return n;
+}
+
+static gchar*
+join_lines(GPtrArray *header_lines, guint lineno, guint n)
+{
+    gchar **lines = g_new(gchar*, n+1);
+    gchar *retval;
+    guint i = 0;
+
+    for (i = 0; i < n; i++)
+        lines[i] = g_ptr_array_index(header_lines, lineno + i);
+    lines[n] = NULL;
+    retval = g_strjoinv(" ", lines);
+    g_free(lines);
+
+    return retval;
+}
+
+static void
+err_HEADER_ENDED(GError **error)
+{
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                _("File header ended unexpectedly."));
+}
+
+static guint
 sxm_read_tag(SXMFile *sxmfile,
-             gchar **p,
+             GPtrArray *header_lines,
+             guint lineno,
              GError **error)
 {
-    gchar *line, *tag;
-    gchar **columns;
-    guint len;
+    gchar *line, *tag, *s;
+    guint len, n;
 
-    if (!(line = get_next_line_with_error(p, error)))
-        return FALSE;
+    if (lineno >= header_lines->len) {
+        err_HEADER_ENDED(error);
+        return 0;
+    }
 
+    line = (gchar*)g_ptr_array_index(header_lines, lineno);
     len = strlen(line);
     if (len < 3 || line[0] != ':' || line[len-1] != ':') {
-        if (sxmfile->in_comment) {
-            /* Add the line to the comment if we are inside a comment. */
-            gchar *comment, *newcomment;
-
-            comment = g_hash_table_lookup(sxmfile->meta, "COMMENT");
-            g_assert(comment);
-
-            newcomment = g_strconcat(comment, " ", line, NULL);
-            g_hash_table_remove(sxmfile->meta, "COMMENT");
-            g_free(comment);
-            g_hash_table_insert(sxmfile->meta, "COMMENT", newcomment);
-            return TRUE;
-        }
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Garbage was found in place of tag header line."));
-        return FALSE;
+        return 0;
     }
+    lineno++;
     tag = line+1;
     line[len-1] = '\0';
-    sxmfile->in_comment = FALSE;
-    gwy_debug("tag: <%s>", tag);
 
     if (gwy_strequal(tag, "SCANIT_END")) {
+        gwy_debug("SCANIT_END");
         sxmfile->ok = TRUE;
-        return TRUE;
+        return lineno;
     }
 
+    n = sxm_tag_count_lines(header_lines, lineno);
+    gwy_debug("tag: <%s> (%u lines)", tag, n);
     if (gwy_strequal(tag, "Z-CONTROLLER")) {
-        /* Headers */
-        if (!(line = get_next_line_with_error(p, error)))
-            return FALSE;
+        if (n < 2) {
+            err_HEADER_ENDED(error);
+            return 0;
+        }
 
+        /* Headers */
         if (sxmfile->z_controller_headers) {
             g_warning("Multiple Z-CONTROLLERs, keeping only the last");
             sxm_free_z_controller(sxmfile);
         }
 
-        /* XXX: Documentation says tabs, but I see spaces in the file. */
+        line = (gchar*)g_ptr_array_index(header_lines, lineno);
+        /* Documentation says tabs, but I see also spaces in the file. */
         g_strdelimit(line, " ", '\t');
-        sxmfile->z_controller_headers =  split_line_in_place(line, '\t');
+        sxmfile->z_controller_headers = split_line_in_place(line, '\t');
 
-        /* Values */
-        if (!(line = get_next_line_with_error(p, error))) {
-            sxm_free_z_controller(sxmfile);
-            return FALSE;
-        }
-
+        line = (gchar*)g_ptr_array_index(header_lines, lineno + 1);
         sxmfile->z_controller_values = split_line_in_place(line, '\t');
         if (g_strv_length(sxmfile->z_controller_headers)
             != g_strv_length(sxmfile->z_controller_values)) {
             g_warning("The numbers of Z-CONTROLLER headers and values differ");
             sxm_free_z_controller(sxmfile);
         }
-        return TRUE;
     }
-
-    if (gwy_strequal(tag, "DATA_INFO")) {
+    else if (gwy_strequal(tag, "DATA_INFO")) {
         SXMDataInfo di;
+        gchar **columns;
         GArray *data_info;
+        guint i;
+
+        if (n < 2) {
+            err_HEADER_ENDED(error);
+            return 0;
+        }
 
         /* Headers */
-        if (!(line = get_next_line_with_error(p, error)))
-            return FALSE;
-        /* XXX: Documentation says tabs, but I see spaces in the file. */
+        line = (gchar*)g_ptr_array_index(header_lines, lineno);
+        /* Documentation says tabs, but I see also spaces in the file. */
         g_strdelimit(line, " ", '\t');
         columns = split_line_in_place(line, '\t');
 
@@ -310,7 +318,7 @@ sxm_read_tag(SXMFile *sxmfile,
                           "columns: %s."),
                         "Channel Name Unit Direction Calibration Offset");
             g_free(columns);
-            return FALSE;
+            return 0;
         }
 
         if (sxmfile->data_info) {
@@ -320,13 +328,10 @@ sxm_read_tag(SXMFile *sxmfile,
         }
 
         data_info = g_array_new(FALSE, FALSE, sizeof(SXMDataInfo));
-        while ((line = get_next_line_with_error(p, error)) && *line) {
-            g_strstrip(line);
-            if (gwy_strequal(line, ":SCANIT_END:")) {
-                sxmfile->ok = TRUE;
-                return TRUE;
-            }
-
+        for (i = 1; i < n; i++) {
+            line = (gchar*)g_ptr_array_index(header_lines, lineno + i);
+            if (!strlen(line))
+                continue;
             columns = split_line_in_place(line, '\t');
             if (g_strv_length(columns) < 6) {
                 g_set_error(error, GWY_MODULE_FILE_ERROR,
@@ -335,7 +340,7 @@ sxm_read_tag(SXMFile *sxmfile,
                             6);
                 g_free(columns);
                 g_array_free(data_info, TRUE);
-                return FALSE;
+                return 0;
             }
 
             di.channel = atoi(columns[0]);
@@ -348,7 +353,7 @@ sxm_read_tag(SXMFile *sxmfile,
                 err_INVALID(error, "Direction");
                 g_free(columns);
                 g_array_free(data_info, TRUE);
-                return FALSE;
+                return 0;
             }
             di.calibration = g_ascii_strtod(columns[4], NULL);
             di.offset = g_ascii_strtod(columns[5], NULL);
@@ -358,56 +363,22 @@ sxm_read_tag(SXMFile *sxmfile,
             columns = NULL;
         }
 
-        if (!line) {
-            g_array_free(data_info, TRUE);
-            return FALSE;
-        }
-
         sxmfile->data_info = (SXMDataInfo*)data_info->data;
         sxmfile->ndata = data_info->len;
         g_array_free(data_info, FALSE);
-        return TRUE;
+    }
+    else if (n) {
+        /* Generic tag.  We replace line ends with spaces since metadata are
+         * single-line strings... */
+        if (n > 1)
+            s = join_lines(header_lines, lineno, n);
+        else
+            s = g_strdup((gchar*)g_ptr_array_index(header_lines, lineno));
+        g_hash_table_insert(sxmfile->meta, tag, s);
+        gwy_debug("value: <%s>", s);
     }
 
-    if (gwy_strequal(tag, "Multipass-Config")) {
-        /* Multipass-Config.  Don't know how to tell the number of lines in the
-         * table :-/  Cross fingers and try to read lines until we hit ':' at
-         * the begining.  We have to look at p as seeing ':' in line would be
-         * too late. */
-        while (*p && **p && **p != ':') {
-            if (!(line = get_next_line_with_error(p, error)))
-                return FALSE;
-        }
-        if (!*p || !**p) {
-            g_set_error(error, GWY_MODULE_FILE_ERROR,
-                        GWY_MODULE_FILE_ERROR_DATA,
-                        _("Header ended within a Multipass-Config table."));
-            return FALSE;
-        }
-        /* Uf. */
-        return TRUE;
-    }
-
-    if (!(line = get_next_line_with_error(p, error)))
-        return FALSE;
-
-    if (gwy_strequal(tag, "COMMENT")) {
-        gchar *comment;
-
-        sxmfile->in_comment = TRUE;
-        if ((comment = g_hash_table_lookup(sxmfile->meta, tag))) {
-            g_hash_table_remove(sxmfile->meta, tag);
-            g_free(comment);
-        }
-        /* XXX: Comments are built per partes and hence we have to allocate
-         * them. */
-        line = g_strdup(line);
-    }
-
-    g_hash_table_insert(sxmfile->meta, tag, line);
-    gwy_debug("value: <%s>", line);
-
-    return TRUE;
+    return lineno + n;
 }
 
 static void
@@ -512,6 +483,7 @@ sxm_load(const gchar *filename,
 {
     SXMFile sxmfile;
     GwyContainer *container = NULL;
+    GPtrArray *header_lines;
     guchar *buffer = NULL;
     gsize size1 = 0, size = 0;
     GError *err = NULL;
@@ -549,7 +521,7 @@ sxm_load(const gchar *filename,
     }
 
     gwy_clear(&sxmfile, 1);
-    sxmfile.meta = g_hash_table_new(g_str_hash, g_str_equal);
+    sxmfile.meta = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
 
     header = g_memdup(buffer, p - buffer + 1);
     header[p - buffer] = '\0';
@@ -557,16 +529,26 @@ sxm_load(const gchar *filename,
     /* Move p to actual data start */
     p += 2;
 
+    header_lines = g_ptr_array_new();
+    while ((s = gwy_str_next_line(&hp))) {
+        g_strstrip(s);
+        g_ptr_array_add(header_lines, s);
+    }
+
     /* Parse header */
+    i = 0;
     do {
-        if (!sxm_read_tag(&sxmfile, &hp, error)) {
+        if (!(i = sxm_read_tag(&sxmfile, header_lines, i, error))) {
             sxm_free_z_controller(&sxmfile);
+            g_ptr_array_free(header_lines, TRUE);
             g_free(sxmfile.data_info);
             g_free(header);
             gwy_file_abandon_contents(buffer, size, NULL);
             return NULL;
         }
     } while (!sxmfile.ok);
+
+    g_ptr_array_free(header_lines, TRUE);
 
     /* Data info */
     if (sxmfile.ok) {
@@ -744,8 +726,6 @@ sxm_load(const gchar *filename,
 
     sxm_free_z_controller(&sxmfile);
     g_free(sxmfile.data_info);
-    if ((s = g_hash_table_lookup(sxmfile.meta, "COMMENT")))
-        g_free(s);
     g_hash_table_destroy(sxmfile.meta);
     g_free(header);
     gwy_file_abandon_contents(buffer, size, NULL);
@@ -761,31 +741,52 @@ reformat_float(const gchar *format,
     return g_strdup_printf(format, v);
 }
 
+static void
+add_metadata(gpointer hkey,
+             gpointer hvalue,
+             gpointer user_data)
+{
+    gchar *key = (gchar*)hkey;
+    gchar *value = (gchar*)hvalue;
+    gchar **t;
+
+    if (!strchr(key, '>'))
+        return;
+
+    t = g_strsplit(key, ">", 0);
+    key = g_strjoinv("::", t);
+    gwy_container_set_const_string_by_name(GWY_CONTAINER(user_data), key,
+                                           value);
+    g_free(key);
+    g_strfreev(t);
+}
+
 static GwyContainer*
 sxm_build_meta(const SXMFile *sxmfile,
                G_GNUC_UNUSED guint id)
 {
     GwyContainer *meta = gwy_container_new();
+    GHashTable *hash = sxmfile->meta;
     const gchar *value;
 
-    if ((value = g_hash_table_lookup(sxmfile->meta, "COMMENT")))
+    if ((value = g_hash_table_lookup(hash, "COMMENT")))
         gwy_container_set_string_by_name(meta, "Comment", g_strdup(value));
-    if ((value = g_hash_table_lookup(sxmfile->meta, "REC_DATE")))
+    if ((value = g_hash_table_lookup(hash, "REC_DATE")))
         gwy_container_set_string_by_name(meta, "Date", g_strdup(value));
-    if ((value = g_hash_table_lookup(sxmfile->meta, "REC_TIME")))
+    if ((value = g_hash_table_lookup(hash, "REC_TIME")))
         gwy_container_set_string_by_name(meta, "Time", g_strdup(value));
-    if ((value = g_hash_table_lookup(sxmfile->meta, "REC_TEMP")))
+    if ((value = g_hash_table_lookup(hash, "REC_TEMP")))
         gwy_container_set_string_by_name(meta, "Temperature",
                                          reformat_float("%g K", value));
-    if ((value = g_hash_table_lookup(sxmfile->meta, "ACQ_TIME")))
+    if ((value = g_hash_table_lookup(hash, "ACQ_TIME")))
         gwy_container_set_string_by_name(meta, "Acquistion time",
                                          reformat_float("%g s", value));
-    if ((value = g_hash_table_lookup(sxmfile->meta, "SCAN_FILE")))
+    if ((value = g_hash_table_lookup(hash, "SCAN_FILE")))
         gwy_container_set_string_by_name(meta, "File name", g_strdup(value));
-    if ((value = g_hash_table_lookup(sxmfile->meta, "BIAS")))
+    if ((value = g_hash_table_lookup(hash, "BIAS")))
         gwy_container_set_string_by_name(meta, "Bias",
                                          reformat_float("%g V", value));
-    if ((value = g_hash_table_lookup(sxmfile->meta, "SCAN_DIR")))
+    if ((value = g_hash_table_lookup(hash, "SCAN_DIR")))
         gwy_container_set_string_by_name(meta, "Direction", g_strdup(value));
 
     if (sxmfile->z_controller_headers && sxmfile->z_controller_values) {
@@ -799,6 +800,8 @@ sxm_build_meta(const SXMFile *sxmfile,
             g_free(key);
         }
     }
+
+    g_hash_table_foreach(hash, add_metadata, meta);
 
     if (gwy_container_get_n_items(meta))
         return meta;
