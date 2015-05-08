@@ -1012,6 +1012,78 @@ parstep_guess(gint n_dat,
     *fres = TRUE;
 }
 
+/******************* smooth edge ********************************/
+static gdouble
+smedge_func(gdouble x,
+            G_GNUC_UNUSED gint n_param,
+            const gdouble *b,
+            G_GNUC_UNUSED gpointer user_data,
+            gboolean *fres)
+{
+    gdouble xc = b[0], yc = b[1], w = b[2], h = b[3], alpha = b[4], beta = b[5];
+    gdouble ax, f;
+
+    *fres = TRUE;
+
+    *fres = TRUE;
+    x -= xc;
+    w = fabs(w);
+    ax = fabs(x);
+    f = yc + alpha*x + 0.5*beta*ax;
+    if (w == 0.0)
+        f += (x > 0.0) ? 0.5*h : -0.5*h;
+    else
+        f += h*atan(x/w)/G_PI + 0.5*beta*w*(exp(-ax/w) - 1);
+
+    return f;
+}
+
+static void
+smedge_guess(gint n_dat,
+             const gdouble *x,
+             const gdouble *y,
+             gdouble *param,
+             gboolean *fres)
+{
+    gint i;
+    gdouble xmin, xmax, ymin, ymax, xymin, xymax;
+
+    xmin = G_MAXDOUBLE;
+    xmax = -G_MAXDOUBLE;
+    ymin = G_MAXDOUBLE;
+    ymax = -G_MAXDOUBLE;
+    xymin = xymax = 0.0;
+    for (i = 0; i < n_dat; i++) {
+        if (ymin > y[i]) {
+            xymin = x[i];
+            ymin = y[i];
+        }
+        if (ymax < y[i]) {
+            ymax = y[i];
+            xymax = x[i];
+        }
+        if (xmin > x[i])
+            xmin = x[i];
+        if (xmax < x[i])
+            xmax = x[i];
+    }
+    param[0] = param[1] = param[4] = param[5] = 0.0;
+    param[2] = param[3] = 1.0;
+    *fres = FALSE;
+
+    if (xmax <= xmin)
+        return;
+
+    param[0] = 0.5*(xmin + xmax);
+    param[1] = 0.5*(ymin + ymax);
+    param[2] = (xmax - xmin)/8.0;
+    param[3] = (xymax > xymin) ? ymax - ymin : ymin - ymax;
+    param[4] = 0.0;
+    param[5] = 0.0;
+
+    *fres = TRUE;
+}
+
 /******************* power function ********************************/
 static gdouble
 power_func(gdouble x,
@@ -1342,6 +1414,15 @@ static const GwyNLFitParam parstep_params[] = {
     { "s", 0, 1, },
 };
 
+static const GwyNLFitParam smedge_params[] = {
+    { "x<sub>0</sub>", 1, 0, },
+    { "y<sub>0</sub>", 0, 1, },
+    { "w", 1, 0, },
+    { "h", 0, 1, },
+    { "α", -1, 1, },
+    { "β", -1, 1, },
+};
+
 static const GwyNLFitParam power_params[] = {
     { "a", 0, 1, },
     { "b", 0, 1, },
@@ -1591,11 +1672,11 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
         N_("Parabolic step"),
         "<i>f</i>(<i>x</i>) "
-            "= y<sub>0</sub> + "
-            "{−<i>s</i>/2 or "
-            "<i>h</i>[1 − (<i>x</i> − <i>x</i><sub>0</sub>)<sup>2</sup>"
-            "/4<i>w</i><sup>2</sup>] or "
-            "<i>s</i>/2}",
+            "= y<sub>0</sub> "
+            "+ {−<i>s</i>/2 "
+            "or <i>h</i>[1 − (<i>x</i> − <i>x</i><sub>0</sub>)<sup>2</sup>"
+            "/4<i>w</i><sup>2</sup>] "
+            "or <i>s</i>/2}",
         &parstep_func,
         NULL,
         &parstep_guess,
@@ -1604,6 +1685,25 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         NULL,
         G_N_ELEMENTS(parstep_params),
         parstep_params,
+    },
+    {
+        N_("Smooth slanted edge"),
+        "<i>f</i>(<i>x</i>) "
+            "= y<sub>0</sub> "
+            "+ <i>h</i>/π atan(<i>ξ</i>/<i>w</i>) "
+            "+ <i>α</i><i>ξ</i> "
+            "+ <i>β</i>/2 [|<i>ξ</i>| "
+            "+ <i>w</i> exp(-|<i>ξ</i>|/<i>w</i>) "
+            "- <i>w</i>], "
+            "<i>ξ</i> = <i>x</i> − <i>x</i><sub>0</sub>",
+        &smedge_func,
+        NULL,
+        &smedge_guess,
+        NULL,
+        NULL,
+        NULL,
+        G_N_ELEMENTS(smedge_params),
+        smedge_params,
     },
     {
         N_("Power"),
@@ -1996,6 +2096,17 @@ gwy_nlfit_presets(void)
  * <member><literal>"Power"</literal></member>
  * <member><literal>"Lorentzian"</literal></member>
  * <member><literal>"Sinc"</literal></member>
+ * </simplelist>
+ *
+ * The following presets are available since version 2.40:
+ * <simplelist type='vert'>
+ * <member><literal>"Parabolic step"</literal></member>
+ * <member><literal>"Two Gaussians (PSDF)"</literal></member>
+ * </simplelist>
+ *
+ * The following presets are available since version 2.41:
+ * <simplelist type='vert'>
+ * <member><literal>"Smooth slanted edge"</literal></member>
  * </simplelist>
  *
  * The result of the fitting is stored in a normal #GwyNLFitter, therefore the
