@@ -24,7 +24,7 @@ Libraries:
   creaing a new graph if units are incompatibile.
 - libgwydgets: Graph key frame size should better correspond to the content.
 - libprocess: Functions for various simple distance transforms were added.
-- libgwyprocess: New fitting preset: Smooth slanted edge.
+- libgwyprocess: New fitting preset: Smooth slanted step.
 
 Modules:
 - Align graph (new): Aligns horizontally graph curves.

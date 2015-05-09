@@ -1014,7 +1014,7 @@ parstep_guess(gint n_dat,
 
 /******************* smooth edge ********************************/
 static gdouble
-smedge_func(gdouble x,
+smstep_func(gdouble x,
             G_GNUC_UNUSED gint n_param,
             const gdouble *b,
             G_GNUC_UNUSED gpointer user_data,
@@ -1039,7 +1039,7 @@ smedge_func(gdouble x,
 }
 
 static void
-smedge_guess(gint n_dat,
+smstep_guess(gint n_dat,
              const gdouble *x,
              const gdouble *y,
              gdouble *param,
@@ -1414,7 +1414,7 @@ static const GwyNLFitParam parstep_params[] = {
     { "s", 0, 1, },
 };
 
-static const GwyNLFitParam smedge_params[] = {
+static const GwyNLFitParam smstep_params[] = {
     { "x<sub>0</sub>", 1, 0, },
     { "y<sub>0</sub>", 0, 1, },
     { "w", 1, 0, },
@@ -1687,7 +1687,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         parstep_params,
     },
     {
-        N_("Smooth slanted edge"),
+        N_("Smooth slanted step"),
         "<i>f</i>(<i>x</i>) "
             "= y<sub>0</sub> "
             "+ <i>h</i>/π atan(<i>ξ</i>/<i>w</i>) "
@@ -1696,14 +1696,14 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
             "+ <i>w</i> exp(-|<i>ξ</i>|/<i>w</i>) "
             "- <i>w</i>], "
             "<i>ξ</i> = <i>x</i> − <i>x</i><sub>0</sub>",
-        &smedge_func,
+        &smstep_func,
         NULL,
-        &smedge_guess,
+        &smstep_guess,
         NULL,
         NULL,
         NULL,
-        G_N_ELEMENTS(smedge_params),
-        smedge_params,
+        G_N_ELEMENTS(smstep_params),
+        smstep_params,
     },
     {
         N_("Power"),
@@ -2106,7 +2106,7 @@ gwy_nlfit_presets(void)
  *
  * The following presets are available since version 2.41:
  * <simplelist type='vert'>
- * <member><literal>"Smooth slanted edge"</literal></member>
+ * <member><literal>"Smooth slanted step"</literal></member>
  * </simplelist>
  *
  * The result of the fitting is stored in a normal #GwyNLFitter, therefore the
