@@ -29,12 +29,6 @@
 
 G_BEGIN_DECLS
 
-/* XXX: Makes partially-updated modules compilable. To be removed in 2.41. */
-typedef struct {
-    GwyContainer *data;
-    gint id;
-} GwyAppDataIdTmp;
-
 typedef gchar* (*GwySaveAuxiliaryCreate)(gpointer user_data,
                                          gssize *data_len);
 typedef void (*GwySaveAuxiliaryDestroy)(gchar *data,
