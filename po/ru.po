@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-05-05 02:58+0200\n"
-"PO-Revision-Date: 2015-05-05 10:34+0300\n"
+"POT-Creation-Date: 2015-05-10 02:58+0200\n"
+"PO-Revision-Date: 2015-05-10 12:03+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -135,83 +135,87 @@ msgstr "контакт: Герц (параболоид)"
 msgid "Untitled"
 msgstr "Безымянный"
 
-#: libgwyddion/gwynlfitpreset.c:1367 libprocess/gwyprocessenums.c:101
+#: libgwyddion/gwynlfitpreset.c:1448 libprocess/gwyprocessenums.c:101
 msgid "Gaussian"
 msgstr "Гауссиана"
 
-#: libgwyddion/gwynlfitpreset.c:1383
+#: libgwyddion/gwynlfitpreset.c:1464
 msgid "Gaussian (PSDF)"
 msgstr "Гауссиана (ФСПМ)"
 
-#: libgwyddion/gwynlfitpreset.c:1397
+#: libgwyddion/gwynlfitpreset.c:1478
 msgid "Gaussian (ACF)"
 msgstr "Гауссиана (ACF)"
 
-#: libgwyddion/gwynlfitpreset.c:1411
+#: libgwyddion/gwynlfitpreset.c:1492
 msgid "Gaussian (HHCF)"
 msgstr "Гауссиана (HHCF)"
 
-#: libgwyddion/gwynlfitpreset.c:1425
+#: libgwyddion/gwynlfitpreset.c:1506
 msgid "Gaussian (RPSDF)"
 msgstr "Гауссиана (RPSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1439
+#: libgwyddion/gwynlfitpreset.c:1520
 msgid "Two Gaussians (PSDF)"
 msgstr "Две гауссианы (ФСПМ)"
 
-#: libgwyddion/gwynlfitpreset.c:1455
+#: libgwyddion/gwynlfitpreset.c:1536
 msgid "Exponential"
 msgstr "Экспоненциальная"
 
-#: libgwyddion/gwynlfitpreset.c:1468
+#: libgwyddion/gwynlfitpreset.c:1549
 msgid "Exponential (PSDF)"
 msgstr "Экспоненциальная (ФСПМ)"
 
-#: libgwyddion/gwynlfitpreset.c:1482
+#: libgwyddion/gwynlfitpreset.c:1563
 msgid "Exponential (ACF)"
 msgstr "Экспоненциальная (АКФ)"
 
-#: libgwyddion/gwynlfitpreset.c:1495
+#: libgwyddion/gwynlfitpreset.c:1576
 msgid "Exponential (HHCF)"
 msgstr "Экспоненциальная (HHCF)"
 
-#: libgwyddion/gwynlfitpreset.c:1509
+#: libgwyddion/gwynlfitpreset.c:1590
 msgid "Exponential (RPSDF)"
 msgstr "Экспоненциальная (RPSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1524
+#: libgwyddion/gwynlfitpreset.c:1605
 msgid "Polynomial (order 0)"
 msgstr "Полиномиальная (порядка 0)"
 
-#: libgwyddion/gwynlfitpreset.c:1536
+#: libgwyddion/gwynlfitpreset.c:1617
 msgid "Polynomial (order 1)"
 msgstr "Полиномиальная (порядка 1)"
 
-#: libgwyddion/gwynlfitpreset.c:1548
+#: libgwyddion/gwynlfitpreset.c:1629
 msgid "Polynomial (order 2)"
 msgstr "Полиномиальная (порядка 2)"
 
-#: libgwyddion/gwynlfitpreset.c:1561
+#: libgwyddion/gwynlfitpreset.c:1642
 msgid "Polynomial (order 3)"
 msgstr "Полиномиальная (порядка 3)"
 
-#: libgwyddion/gwynlfitpreset.c:1575
+#: libgwyddion/gwynlfitpreset.c:1656
 msgid "Square wave"
 msgstr "Прямоугольные импульсы"
 
-#: libgwyddion/gwynlfitpreset.c:1592
+#: libgwyddion/gwynlfitpreset.c:1673
 msgid "Parabolic step"
 msgstr "Параболическая ступень"
 
-#: libgwyddion/gwynlfitpreset.c:1609
+#: libgwyddion/gwynlfitpreset.c:1690
+msgid "Smooth slanted step"
+msgstr "Гладкая наклонная ступень"
+
+#: libgwyddion/gwynlfitpreset.c:1709
 msgid "Power"
 msgstr "Степенная"
 
-#: libgwyddion/gwynlfitpreset.c:1622
+#: libgwyddion/gwynlfitpreset.c:1722
 msgid "Lorentzian"
 msgstr "Лоренцева"
 
-#: libgwyddion/gwynlfitpreset.c:1637
+#: libgwyddion/gwynlfitpreset.c:1737
 msgid "Sinc"
 msgstr "Sinc"
 
@@ -776,8 +780,8 @@ msgstr "φ:"
 #: modules/process/facet_analysis.c:403 modules/process/indent_analyze.c:461
 #: modules/process/rotate.c:286 modules/process/shade.c:245
 #: modules/process/shade.c:253 modules/process/tilt.c:210
-#: modules/process/tilt.c:222 modules/process/tip_model.c:230
-#: modules/process/tip_model.c:236 modules/process/unrotate.c:347
+#: modules/process/tilt.c:222 modules/process/tip_model.c:233
+#: modules/process/tip_model.c:239 modules/process/unrotate.c:347
 msgid "deg"
 msgstr "°"
 
@@ -927,7 +931,7 @@ msgstr "точек"
 #: modules/process/scale.c:196 modules/process/scars.c:477
 #: modules/process/semsim.c:211 modules/process/shade.c:216
 #: modules/process/slope_dist.c:281 modules/process/sphere-revolve.c:218
-#: modules/process/tilt.c:160 modules/process/tip_model.c:166
+#: modules/process/tilt.c:160 modules/process/tip_model.c:168
 #: modules/process/unrotate.c:228 modules/process/volumize_layers.c:213
 #: modules/process/wave_synth.c:361 modules/process/wpour_mark.c:296
 #: modules/volume/volume_calibrate.c:371 modules/volume/volume_extract.c:331
@@ -2096,11 +2100,11 @@ msgstr "Не удаётся создать каталог интерфейса �
 msgid "Cannot create user module directory %s: %s"
 msgstr "Не удаётся создать каталог модулей пользователя %s: %s"
 
-#: app/splash.c:652
+#: app/splash.c:832
 msgid "Starting "
 msgstr "Запускается"
 
-#: app/splash.c:698
+#: app/splash.c:878
 msgid " is free software released under GNU GPL."
 msgstr " – свободное ПО под лицензией GNU GPL."
 
@@ -3703,7 +3707,7 @@ msgstr "_Ширина:"
 #: modules/file/pixmap.c:896 modules/file/pixmap.c:951
 #: modules/file/rawfile.c:659 modules/file/rawfile.c:715
 #: modules/process/calcoefs_new.c:384 modules/process/calcoefs_new.c:451
-#: modules/process/calcoefs_simple.c:387 modules/process/calcoefs_simple.c:454
+#: modules/process/calcoefs_simple.c:389 modules/process/calcoefs_simple.c:456
 #: modules/process/calcoefs_view.c:529 modules/process/calcoefs_view.c:567
 #: modules/process/calibrate.c:467 modules/process/calibrate.c:550
 #: modules/process/dimensions.h:160 modules/volume/volume_calibrate.c:415
@@ -3730,7 +3734,7 @@ msgstr "Масштаб _Z (на единицу дискретизации):"
 
 #: modules/file/hdrimage.cc:2557 modules/file/pixmap.c:1178
 #: modules/file/rawfile.c:1325 modules/process/calcoefs_new.c:776
-#: modules/process/calcoefs_simple.c:1187 modules/process/calcoefs_view.c:1397
+#: modules/process/calcoefs_simple.c:1191 modules/process/calcoefs_view.c:1397
 #: modules/process/calibrate.c:980 modules/process/dimensions.h:194
 #: modules/volume/volume_calibrate.c:1018
 msgid "Change Units"
@@ -3738,7 +3742,7 @@ msgstr "Изменить единицы измерения"
 
 #: modules/file/hdrimage.cc:2571 modules/file/pixmap.c:1192
 #: modules/file/rawfile.c:1339 modules/process/calcoefs_new.c:789
-#: modules/process/calcoefs_simple.c:1200 modules/process/calcoefs_view.c:1410
+#: modules/process/calcoefs_simple.c:1204 modules/process/calcoefs_view.c:1410
 #: modules/process/calibrate.c:994 modules/process/dimensions.h:207
 #: modules/volume/volume_calibrate.c:1032
 msgid "New _units:"
@@ -4559,38 +4563,34 @@ msgstr "HeaderLength %u отличается от реальной длины з
 msgid "Expected header start marker ‘%s’ but found ‘%s’."
 msgstr "Ожидался маркер начала заголовка ‘%s’, но был найден ‘%s’."
 
-#: modules/file/nanonis.c:117
+#: modules/file/nanonis.c:111
 msgid "Imports Nanonis SXM data files."
 msgstr "Импортирует файлы данных Nanonis SXM."
 
-#: modules/file/nanonis.c:137
+#: modules/file/nanonis.c:131
 msgid "Nanonis SXM files (.sxm)"
 msgstr "Файлы Nanonis SXM (.sxm)"
 
-#: modules/file/nanonis.c:171 modules/file/omicron.c:519
+#: modules/file/nanonis.c:230 modules/file/omicron.c:519
 #: modules/file/unisoku.c:278
 msgid "File header ended unexpectedly."
 msgstr "Заголовок файла неожиданно завершился."
 
-#: modules/file/nanonis.c:247
+#: modules/file/nanonis.c:251
 msgid "Garbage was found in place of tag header line."
 msgstr "Вместо строки заголовка тега был найден мусор."
 
-#: modules/file/nanonis.c:309
+#: modules/file/nanonis.c:317
 #, c-format
 msgid "DATA_INFO does not contain the expected columns: %s."
 msgstr "DATA_INFO не содержит ожидаемых столбцов: %s."
 
-#: modules/file/nanonis.c:334
+#: modules/file/nanonis.c:339
 #, c-format
 msgid "DATA_INFO line contains less than %d fields."
 msgstr "Строка DATA_INFO содержит меньше %d полей."
 
-#: modules/file/nanonis.c:384
-msgid "Header ended within a Multipass-Config table."
-msgstr "Заголовок закончился внутри таблицы Multipass-Config."
-
-#: modules/file/nanonis.c:546
+#: modules/file/nanonis.c:518
 msgid "Missing data start marker \\x1a\\x04."
 msgstr "Отсутствует маркер начала данных \\x1a\\x04."
 
@@ -5284,7 +5284,7 @@ msgstr "Формат данных"
 #: modules/process/grain_mark.c:261 modules/process/grain_wshed.c:180
 #: modules/process/mark_with.c:210 modules/process/polydistort.c:213
 #: modules/process/scars.c:474 modules/process/slope_dist.c:278
-#: modules/process/synth.h:508 modules/process/tip_model.c:163
+#: modules/process/synth.h:508 modules/process/tip_model.c:165
 #: modules/process/wpour_mark.c:291 modules/tools/linestats.c:452
 #: modules/tools/sfunctions.c:512 modules/tools/stats.c:441
 #: modules/volume/volume_extract.c:328
@@ -6939,17 +6939,17 @@ msgid "Generate surface by ballistic deposition"
 msgstr "Создать поверхность используя баллистическое осаждение"
 
 #: modules/process/bdep_synth.c:250 modules/process/bdep_synth.c:614
-#: modules/process/calcoefs_simple.c:627 modules/process/col_synth.c:283
+#: modules/process/calcoefs_simple.c:631 modules/process/col_synth.c:283
 #: modules/process/col_synth.c:723 modules/process/crosscor.c:588
 #: modules/process/crosscor.c:613 modules/process/deposit_synth.c:280
 #: modules/process/deposit_synth.c:879 modules/process/diff_synth.c:315
 #: modules/process/diff_synth.c:723 modules/process/domain_synth.c:266
 #: modules/process/domain_synth.c:763 modules/process/grain_wshed.c:506
 #: modules/process/lat_synth.c:468 modules/process/maskcor.c:331
-#: modules/process/mcrop.c:324 modules/process/merge.c:1078
+#: modules/process/mcrop.c:321 modules/process/merge.c:1078
 #: modules/process/nanoindent_adjust.c:323 modules/process/neural.c:1295
-#: modules/process/pid.c:338 modules/process/superresolution.c:414
-#: modules/process/superresolution.c:502 modules/process/tip_blind.c:784
+#: modules/process/pid.c:338 modules/process/superresolution.c:416
+#: modules/process/superresolution.c:505 modules/process/tip_blind.c:784
 #: modules/process/tipops.c:319 modules/process/xydenoise.c:217
 msgid "Initializing..."
 msgstr "Инициализация..."
@@ -7055,7 +7055,7 @@ msgid "Load Calibration Data"
 msgstr "Загрузить данные калибровки"
 
 #: modules/process/calcoefs_load.c:230 modules/process/calcoefs_new.c:566
-#: modules/process/calcoefs_simple.c:471
+#: modules/process/calcoefs_simple.c:473
 msgid "Calibration name:"
 msgstr "Имя калибровки:"
 
@@ -7065,18 +7065,18 @@ msgid "No data loaded"
 msgstr "Данные не загружены"
 
 #: modules/process/calcoefs_load.c:269 modules/process/calcoefs_new.c:635
-#: modules/process/calcoefs_simple.c:535
+#: modules/process/calcoefs_simple.c:537
 #, c-format
 msgid "Calibration '%s' already exists"
 msgstr "Калибровка `%s' уже существует"
 
 #: modules/process/calcoefs_load.c:271 modules/process/calcoefs_new.c:637
-#: modules/process/calcoefs_simple.c:537
+#: modules/process/calcoefs_simple.c:539
 msgid "Overwrite"
 msgstr "Перезаписать"
 
 #: modules/process/calcoefs_load.c:272 modules/process/calcoefs_new.c:638
-#: modules/process/calcoefs_simple.c:538
+#: modules/process/calcoefs_simple.c:540
 msgid "Append"
 msgstr "Добавить"
 
@@ -7174,73 +7174,73 @@ msgstr "/_Калибровка/_Получить простую карту ош�
 msgid "Simple error mapping"
 msgstr "Простое картирование ошибок"
 
-#: modules/process/calcoefs_simple.c:322
+#: modules/process/calcoefs_simple.c:324
 msgid "Simple Error Map"
 msgstr "Простая карта ошибок"
 
-#: modules/process/calcoefs_simple.c:339 modules/process/calcoefs_stage.c:146
-#: modules/process/superresolution.c:155
+#: modules/process/calcoefs_simple.c:341 modules/process/calcoefs_stage.c:146
+#: modules/process/superresolution.c:156
 msgid "Operands:"
 msgstr "Операнды:"
 
-#: modules/process/calcoefs_simple.c:345
+#: modules/process/calcoefs_simple.c:347
 msgid "Grating image"
 msgstr "Изображение решетки"
 
-#: modules/process/calcoefs_simple.c:346 modules/tools/crop.c:389
+#: modules/process/calcoefs_simple.c:348 modules/tools/crop.c:389
 msgid "Detail"
 msgstr "Часть"
 
-#: modules/process/calcoefs_simple.c:367 modules/process/calcoefs_view.c:509
+#: modules/process/calcoefs_simple.c:369 modules/process/calcoefs_view.c:509
 #: modules/process/calibrate.c:497 modules/volume/volume_calibrate.c:479
 msgid "_X offset:"
 msgstr "Смещение по _X:"
 
-#: modules/process/calcoefs_simple.c:394 modules/process/calcoefs_view.c:535
+#: modules/process/calcoefs_simple.c:396 modules/process/calcoefs_view.c:535
 #: modules/process/calibrate.c:510 modules/volume/volume_calibrate.c:492
 msgid "_Y offset:"
 msgstr "Смещение по _Y:"
 
-#: modules/process/calcoefs_simple.c:407
+#: modules/process/calcoefs_simple.c:409
 msgid "X _period:"
 msgstr "П_ериод X:"
 
-#: modules/process/calcoefs_simple.c:420
+#: modules/process/calcoefs_simple.c:422
 msgid "Y p_eriod:"
 msgstr "Пе_риод Y:"
 
-#: modules/process/calcoefs_simple.c:434 modules/process/calcoefs_view.c:547
+#: modules/process/calcoefs_simple.c:436 modules/process/calcoefs_view.c:547
 #: modules/volume/volume_calibrate.c:506
 msgid "_Z offset:"
 msgstr "Смещение по _Z:"
 
-#: modules/process/calcoefs_simple.c:462
+#: modules/process/calcoefs_simple.c:464
 msgid "_Threshold"
 msgstr "_Порог"
 
-#: modules/process/calcoefs_simple.c:483
+#: modules/process/calcoefs_simple.c:485
 msgid "No suggestion\n"
 msgstr "Нет предположений\n"
 
-#: modules/process/calcoefs_simple.c:583
+#: modules/process/calcoefs_simple.c:587
 msgid "Data same as detail?"
 msgstr "Данные одинаковы с фрагментом?"
 
-#: modules/process/calcoefs_simple.c:589
+#: modules/process/calcoefs_simple.c:593
 msgid "Data larger than detail?"
 msgstr "Размер данных больше чем фрагмент?"
 
-#: modules/process/calcoefs_simple.c:603
+#: modules/process/calcoefs_simple.c:607
 #, c-format
 msgid "%d objects found"
 msgstr "Найдено %d объектов"
 
-#: modules/process/calcoefs_simple.c:605
+#: modules/process/calcoefs_simple.c:609
 msgid "Search cancelled"
 msgstr "Поиск отменён"
 
-#: modules/process/calcoefs_simple.c:629 modules/process/maskcor.c:333
-#: modules/process/mcrop.c:326 modules/process/merge.c:1080
+#: modules/process/calcoefs_simple.c:633 modules/process/maskcor.c:333
+#: modules/process/mcrop.c:323 modules/process/merge.c:1080
 msgid "Correlating..."
 msgstr "Поиск корреляции..."
 
@@ -10498,23 +10498,23 @@ msgstr "/Зёрн_а/_Удалить у границы..."
 msgid "Remove grains touching image edges"
 msgstr "Удалить зёрна, касающиеся границ изображения"
 
-#: modules/process/mcrop.c:67
+#: modules/process/mcrop.c:60
 msgid "Crops non-intersecting regions of two images."
 msgstr "Обрезает непересекающиеся области двух изображений"
 
-#: modules/process/mcrop.c:81
+#: modules/process/mcrop.c:74
 msgid "/M_ultidata/Mutual C_rop..."
 msgstr "/М_ножественные данные/Взаимно _кадрировать..."
 
-#: modules/process/mcrop.c:85
+#: modules/process/mcrop.c:78
 msgid "Crop non-intersecting regions of two images"
 msgstr "Обрезать непересекающиеся области двух изображений"
 
-#: modules/process/mcrop.c:158
+#: modules/process/mcrop.c:153
 msgid "Mutual Crop"
 msgstr "Взаимно кадрировать"
 
-#: modules/process/mcrop.c:179
+#: modules/process/mcrop.c:174
 msgid "_Select second argument:"
 msgstr "_Второй аргумент:"
 
@@ -11545,19 +11545,19 @@ msgstr "/М_ножественные данные/_Сверхразрешени�
 msgid "Super resolution of multiple images of same object"
 msgstr "Взаимное наложение нескольких изображений одного объекта"
 
-#: modules/process/superresolution.c:140
+#: modules/process/superresolution.c:141
 msgid "Supres"
 msgstr "Сверхразр."
 
-#: modules/process/superresolution.c:419
+#: modules/process/superresolution.c:421
 msgid "Correlating to determine mean shift..."
 msgstr "Поиск макс. корреляции чтобы определить среднее смещение..."
 
-#: modules/process/superresolution.c:508
+#: modules/process/superresolution.c:511
 msgid "Cross-correlation..."
 msgstr "Взаимная корреляция..."
 
-#: modules/process/superresolution.c:550
+#: modules/process/superresolution.c:554
 msgid "Interpolating..."
 msgstr "Интерполируется..."
 
@@ -11769,35 +11769,35 @@ msgstr "/_Зонд/_Модель зонда..."
 msgid "Model AFM tip"
 msgstr "Модель зонда АСМ"
 
-#: modules/process/tip_model.c:161
+#: modules/process/tip_model.c:163
 msgid "Model Tip"
 msgstr "Модель зонда"
 
-#: modules/process/tip_model.c:220
+#: modules/process/tip_model.c:223
 msgid "Tip _type:"
 msgstr "Тип _зонда:"
 
-#: modules/process/tip_model.c:225
+#: modules/process/tip_model.c:228
 msgid "_Number of sides:"
 msgstr "_Число сторон"
 
-#: modules/process/tip_model.c:230
+#: modules/process/tip_model.c:233
 msgid "Tip _slope:"
 msgstr "_Угол зонда:"
 
-#: modules/process/tip_model.c:236
+#: modules/process/tip_model.c:239
 msgid "Tip _rotation:"
 msgstr "_Поворот зонда:"
 
-#: modules/process/tip_model.c:246
+#: modules/process/tip_model.c:249
 msgid "Tip _apex radius:"
 msgstr "_Радиус острия зонда:"
 
-#: modules/process/tip_model.c:465
+#: modules/process/tip_model.c:467
 msgid "Modelled tip"
 msgstr "Модель зонда"
 
-#: modules/process/tip_model.c:511
+#: modules/process/tip_model.c:515
 #, c-format
 msgid "Tip resolution: %d × %d pixels"
 msgstr "Разрешение зонда: %d × %d пикселей"
@@ -13527,7 +13527,7 @@ msgid "K-medians center %d"
 msgstr "Центр кластера %d"
 
 #: modules/volume/volume_slice.c:154
-msgid "Extracts image planes and line graphsfrom volume data."
+msgid "Extracts image planes and line graphs from volume data."
 msgstr "Извлекает плоскости с изображениями и графики из объёмных данных."
 
 #: modules/volume/volume_slice.c:168
@@ -13576,6 +13576,9 @@ msgstr "сечение Y при Y = %.*f%s%s (#%d)"
 #, c-format
 msgid "X cross-section at X = %.*f%s%s (#%d)"
 msgstr "сечение X при X = %.*f%s%s (#%d)"
+
+#~ msgid "Header ended within a Multipass-Config table."
+#~ msgstr "Заголовок закончился внутри таблицы Multipass-Config."
 
 #~ msgid "Starting..."
 #~ msgstr "Запускается..."
