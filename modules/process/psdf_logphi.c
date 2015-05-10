@@ -138,7 +138,7 @@ psdflp_do(const PSDFLPArgs *args, GwyDataField *dfield, GwyDataField *lpsdf)
     gint i, j, fi, pi;
     gdouble *ldata, *redata, *imdata;
     gdouble *cosphi, *sinphi;
-    gdouble xreal, yreal, f0, fmax, b, p;
+    gdouble xreal, yreal, f0, f_max, b, p;
 
     reout = gwy_data_field_new_alike(dfield, FALSE);
     imout = gwy_data_field_new_alike(dfield, FALSE);
@@ -166,11 +166,11 @@ psdflp_do(const PSDFLPArgs *args, GwyDataField *dfield, GwyDataField *lpsdf)
     xreal = dfield->xreal;
     yreal = dfield->yreal;
     f0 = 2.0/MIN(xreal, yreal);
-    fmax = 0.5*MIN(pxres/xreal, pyres/yreal);
-    if (fmax <= f0) {
+    f_max = 0.5*MIN(pxres/xreal, pyres/yreal);
+    if (f_max <= f0) {
         g_warning("Minimum frequency is not smaller than maximum frequency.");
     }
-    b = log(fmax/f0)/fyres;
+    b = log(f_max/f0)/fyres;
 
     /* Incorporate some prefactors to sinphi[] and cosphi[], knowing that
      * cosine is only ever used for x and sine for y frequencies. */
@@ -228,7 +228,7 @@ psdflp_do(const PSDFLPArgs *args, GwyDataField *dfield, GwyDataField *lpsdf)
 
     gwy_data_field_set_xreal(lpsdf, 2.0*G_PI);
     gwy_data_field_set_xoffset(lpsdf, 0.0);
-    gwy_data_field_set_yreal(lpsdf, log(fmax/f0));
+    gwy_data_field_set_yreal(lpsdf, log(f_max/f0));
     gwy_data_field_set_yoffset(lpsdf, log(f0));
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(lpsdf), "");
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(lpsdf), "");

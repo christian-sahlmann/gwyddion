@@ -2268,7 +2268,7 @@ extract_new_curve (MDTNewSpecFrame *dataframe, guint number)
                     g_object_unref(siunity);
 
                     gwy_data_line_set_offset(dline, pow10(power10x)
-                                           * (fmin(axisInfo->rStartValue, axisInfo->rStopValue)
+                                           * (MIN(axisInfo->rStartValue, axisInfo->rStopValue)
                                            - (measInfo->rAxisOptions[0] & MDT_AXOPT_RELATIVE ? axisInfo->rInitValue : 0)));
                     ydata = gwy_data_line_get_data(dline);
 

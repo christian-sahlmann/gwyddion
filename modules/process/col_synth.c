@@ -900,7 +900,7 @@ col_synth_trace(GwyDataField *dfield,
 
     kx = cos(phi);
     ky = sin(phi);
-    kz = -1.0/tan(fmax(theta, 1e-18));
+    kz = -1.0/tan(MAX(theta, 1e-18));
 
     jnew = jold = (gint)floor(x);
     inew = iold = (gint)floor(y);

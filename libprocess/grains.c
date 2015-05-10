@@ -1796,7 +1796,7 @@ improve_inscribed_disc(InscribedDisc *disc, EdgeQueue *edges, guint dist)
         guint i, nr;
 
         disc->R2 = maximize_disc_radius(disc, edges->edges, edges->len);
-        eps = fmin(eps, 0.5*sqrt(disc->R2));
+        eps = MIN(eps, 0.5*sqrt(disc->R2));
         best = *disc;
         nr = filter_relevant_edges(edges, best.R2, eps);
 

@@ -470,7 +470,7 @@ search(const GridInfo *ginfo, GSList **grid,
     gint xi = (gint)floor(xq*(x - xo)), yi = (gint)floor(yq*(y - yo));
     gint xfrom = MAX(xi - jrange, 0), xto = MIN(xi + jrange, xres-1),
          yfrom = MAX(yi - irange, 0), yto = MIN(yi + irange, yres-1);
-    gdouble safedist = fmin((irange + 0.5)/yq, (jrange + 0.5)/xq),
+    gdouble safedist = MIN((irange + 0.5)/yq, (jrange + 0.5)/xq),
             safedist2 = safedist*safedist;
     gdouble mind2 = G_MAXDOUBLE;
     gint i, j;

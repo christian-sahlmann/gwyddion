@@ -690,9 +690,9 @@ bdep_synth_do(BDepSynthArgs *args,
         guint iip = G_LIKELY(ii != n - xres) ? ii + xres : n - xres;
         guint jl = G_LIKELY(j) ? j-1 : 0;
         guint jr = G_LIKELY(j != xres-1) ? j+1 : xres-1;
-        gdouble h1 = fmax(d[iim + j], d[ii + jl]);
-        gdouble h2 = fmax(d[ii + jr], d[iip + j]);
-        d[k] = fmax(h, fmax(h1, h2));
+        gdouble h1 = MAX(d[iim + j], d[ii + jl]);
+        gdouble h2 = MAX(d[ii + jr], d[iip + j]);
+        d[k] = MAX(h, MAX(h1, h2));
 
         iter++;
         workdone++;
