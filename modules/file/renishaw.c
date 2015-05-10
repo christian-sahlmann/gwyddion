@@ -320,6 +320,12 @@ typedef struct {
 } WdfPsetData;
 
 typedef struct {
+    GwyContainer *pset;
+    guint64 numpoints;
+    gfloat *data;
+} WdfMapData;
+
+typedef struct {
     WdfHeader    *header;
     gfloat       *data;
     gsize        datasize;
@@ -328,6 +334,8 @@ typedef struct {
     gfloat       *xlistdata;
     GdkPixbuf    *whitelight;
     WdfMapArea   *maparea;
+    gint         nummaps;
+    WdfMapData   **maps;
 } WdfFile;
 
 static gboolean       module_register        (void);
@@ -354,7 +362,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Renishaw WiRE data files (WDF)."),
     "Daniil Bratashov <dn2010@gmail.com>",
-    "0.6",
+    "0.8",
     "Daniil Bratashov (dn2010), David Necas (Yeti), Renishaw plc.",
     "2014",
 };
@@ -426,7 +434,7 @@ wdf_load(const gchar *filename,
     GwyGraphCurveModel *gcmodel;
     GwySIUnit *siunitx, *siunity, *siunitz, *siunitw;
     gdouble *ydata, *xdata, *data, *zdata = NULL;
-    gint i, j, k, l, lsize, z;
+    gint i, j, k, l, lsize, z, m;
     gint xres, yres, zres, xstart, xend, xstep, ystart, yend, ystep;
     gint width, height, rowstride, bpp;
     gint xunits = 0, yunits = 0, zunits = 0;
@@ -439,6 +447,7 @@ wdf_load(const gchar *filename,
     GdkPixbuf *pixbuf = NULL;
     guchar *pixels, *pix_p;
     const gchar *unit;
+    const guchar *label;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -462,7 +471,10 @@ wdf_load(const gchar *filename,
     filedata.xlistdata = NULL;
     filedata.xlistunits = WDF_DATAUNITS_ARBITRARY;
     filedata.maparea = NULL;
+    filedata.nummaps = 0;
+    filedata.maps = NULL;
     metadata = gwy_container_new();
+    container = gwy_container_new();
 
     while (size > 0) {
         if ((len = wdf_read_block_header(p, size, &block, error)) == 0)
@@ -497,10 +509,7 @@ wdf_load(const gchar *filename,
             p -= WDF_BLOCK_HEADER_SIZE + 2 * sizeof(guint32);
         }
         else if (block.id == WDF_BLOCKID_ORIGIN) {
-            /* FIXME: nothing to do with it now,
-             * but we can implement data triangulation
-             * for random points somewhere in the future
-             */
+            /* FIXME: we assume regular data patterns */
             p += WDF_BLOCK_HEADER_SIZE;
             norigins = gwy_get_guint32_le(&p);
             gwy_debug("norigins = %d", norigins);
@@ -604,12 +613,31 @@ wdf_load(const gchar *filename,
             }
             p -= WDF_BLOCK_HEADER_SIZE + 2 * sizeof(guint32);
         }
-
+        else if (block.id == WDF_BLOCKID_MAP) {
+            p += WDF_BLOCK_HEADER_SIZE;
+            magic = gwy_get_guint32_le(&p);
+            pset_size = gwy_get_guint32_le(&p);
+            gwy_debug("pset size = %d", pset_size);
+            if (magic != WDF_STREAM_IS_PSET) {
+                gwy_debug("bad magic in pset");
+                goto fail;
+            }
+            filedata.maps = g_realloc(filedata.maps,
+                             (filedata.nummaps + 1) * sizeof(gpointer));
+            filedata.maps[filedata.nummaps] = g_new0(WdfMapData, 1);
+            filedata.maps[filedata.nummaps]->pset
+                                          = wdf_read_pset(p, pset_size);
+            p += pset_size;
+            filedata.maps[filedata.nummaps]->numpoints
+                                               = gwy_get_guint64_le(&p);
+            filedata.maps[filedata.nummaps]->data = (gfloat *)p;
+            filedata.nummaps++;
+            p -= WDF_BLOCK_HEADER_SIZE + 2 * sizeof(guint32)
+                                          + pset_size + sizeof(guint64);
+        }
         p += len;
         size -= len;
     }
-
-    container = gwy_container_new();
 
     xscale = 1.0;
     gwy_debug("x units = %d", xunits);
@@ -999,6 +1027,140 @@ wdf_load(const gchar *filename,
                 break;
             }
         }
+
+        /* Reading maps */
+        for (m = 0; m < filedata.nummaps; m++) {
+            dfield = gwy_data_field_new(xres, yres, xreal, yreal, TRUE);
+            gwy_data_field_set_si_unit_xy(dfield, siunitx);
+            gwy_data_field_set_xoffset(dfield,
+                                filedata.maparea->location[0] * xscale);
+            gwy_data_field_set_yoffset(dfield,
+                                filedata.maparea->location[1] * yscale);
+
+            data = gwy_data_field_get_data(dfield);
+            p = (gchar *)filedata.maps[m]->data;
+
+            if (filedata.maparea->flags & WDF_MAPAREA_COLUMNMAJOR) {
+                /* YX, the most modes use it */
+                if (filedata.maparea->flags & WDF_MAPAREA_ALTERNATING) {
+                    /* Zigzag scanning mode */
+                    for (i = xstart; i != xend; i += xstep) {
+                        for (j = ystart; j != yend; j += ystep)
+                            *(data + i + j * xres)
+                                       = (gdouble)gwy_get_gfloat_le(&p);
+                        if (ystep < 0) {
+                            ystart = 0;
+                            yend = yres;
+                            ystep = 1;
+                        }
+                        else {
+                            ystart = yres - 1;
+                            yend = -1;
+                            ystep = -1;
+                        }
+                    }
+                }
+                else {
+                    for (i = xstart; i != xend; i += xstep)
+                        for (j = ystart; j != yend; j += ystep)
+                            *(data + i + j * xres)
+                                       = (gdouble)gwy_get_gfloat_le(&p);
+               }
+            }
+            else if (filedata.maparea->flags
+                                       & WDF_MAPAREA_LINEFOCUSMAPPING) {
+                /* FIXME: need some example data to test */
+                gwy_debug("linefocus mode");
+                lsize = filedata.maparea->linefocus_size;
+                if (filedata.maparea->flags & WDF_MAPAREA_ALTERNATING) {
+                    for (j = 0; j < yres; j += lsize) {
+                        for (i = xstart; i != xend; i += xstep)
+                            for (l = 0;
+                                 (l < lsize) && (l + j * lsize < yres);
+                                 l++) {
+                                    *(data + i + (j * lsize + l) * xres)
+                                       = (gdouble)gwy_get_gfloat_le(&p);
+
+                            }
+                        if (xstep < 0) {
+                            xstart = 0;
+                            xend = xres;
+                            xstep = 1;
+                        }
+                        else {
+                            xstart = xres - 1;
+                            xend = -1;
+                            xstep = -1;
+                        }
+                    }
+                }
+                else {
+                    for (j = 0; j < yres; j += lsize)
+                        for (i = xstart; i != xend; i += xstep)
+                            for (l = 0;
+                                (l < lsize) && (l + j * lsize < yres);
+                                 l++) {
+                                    *(data + i + (j * lsize + l) * xres)
+                                       = (gdouble)gwy_get_gfloat_le(&p);
+                            }
+                }
+            }
+            else if (filedata.maparea->flags & WDF_MAPAREA_XYLINE) {
+                gwy_debug("XY line");
+                for (j = ystart; j != yend; j += ystep)
+                    for (i = xstart; i != xend; i += xstep)
+                        *(data + i + j * xres)
+                                       = (gdouble)gwy_get_gfloat_le(&p);
+            }
+            else {
+                if (filedata.maparea->flags & WDF_MAPAREA_ALTERNATING) {
+                    for (j = ystart; j != yend; j += ystep) {
+                        for (i = xstart; i != xend; i += xstep)
+                            *(data  + i + j * xres)
+                                       = (gdouble)gwy_get_gfloat_le(&p);
+                        if (xstep < 0) {
+                            xstart = 0;
+                            xend = xres;
+                            xstep = 1;
+                        }
+                        else {
+                            xstart = xres - 1;
+                            xend = -1;
+                            xstep = -1;
+                        }
+                    }
+                }
+                else {
+                    for (j = ystart; j != yend; j += ystep)
+                        for (i = xstart; i != xend; i += xstep)
+                            *(data + i + j * xres)
+                                       = (gdouble)gwy_get_gfloat_le(&p);
+
+                 }
+            }
+
+            key = g_strdup_printf("/%d/data", m + 1);
+            gwy_container_set_object_by_name(container, key, dfield);
+            g_free(key);
+            pset_data = filedata.maps[m]->pset;
+
+            if (gwy_container_gis_string_by_name(pset_data,
+                                                 "/Label", &label)) {
+                key = g_strdup_printf("/%d/data/title", m + 1);
+                gwy_container_set_string_by_name(container, key,
+                                          g_strdup_printf("%s", label));
+                g_free(key);
+            }
+            key = g_strdup_printf("/%d/meta", m + 1);
+            gwy_container_set_object_by_name(container, key, pset_data);
+            g_free(key);
+
+            g_free(filedata.maps[m]);
+        }
+        if (filedata.maps) {
+            g_free(filedata.maps);
+        }
+
         g_object_unref(siunitx);
         g_object_unref(siunity);
         g_object_unref(siunitz);
@@ -1027,11 +1189,14 @@ wdf_load(const gchar *filename,
                                          + 0.0722 * blue) / 255.0;
             }
         }
-        gwy_container_set_object_by_name(container, "/0/data", dfield);
+        key = g_strdup_printf("/0/data");
+        gwy_container_set_object_by_name(container, key, dfield);
+        g_free(key);
         g_object_unref(dfield);
         title = g_strdup_printf("%s (WhiteLight)", fileheader.title);
-        gwy_container_set_string_by_name(container, "/0/data/title",
-                                         title);
+        key = g_strdup_printf("/0/data/title");
+        gwy_container_set_string_by_name(container, key, title);
+        g_free(key);
         gwy_file_channel_import_log_add(container, 1, NULL, filename);
     }
 
@@ -1202,10 +1367,10 @@ wdf_read_pset(const guchar *buffer,
 {
     gint remaining;
     gchar c;
-    gint i;
+    gint i, j;
     gint64 i64;
     gdouble d;
-    gchar *str;
+    gchar *str, *newstr;
     GHashTable *keys, *values;
     WdfPropertySet *pset;
     WdfPsetData *pdata = NULL;
@@ -1225,122 +1390,249 @@ wdf_read_pset(const guchar *buffer,
                   pset->type,
                   pset->flag,
                   pset->key);
-        switch (pset->type) {
-            case WDF_PTYPE_CHAR:
-                c = *(buffer++);
-                gwy_debug("c = %d", c);
-                g_hash_table_replace(values,
-                                     GINT_TO_POINTER (pset->key),
-                                     g_strdup_printf("%d", c));
-                remaining -= 1;
-            break;
-            case WDF_PTYPE_UINT8:
-                c = *(buffer++);
-                gwy_debug("? = %d", c);
-                g_hash_table_replace(values,
-                                     GINT_TO_POINTER (pset->key),
-                                     g_strdup_printf("%d", c));
-                remaining -= 1;
-            break;
-            case WDF_PTYPE_INT16:
-                i = gwy_get_gint16_le(&buffer);
-                gwy_debug("s = %d", i);
-                g_hash_table_replace(values,
-                                     GINT_TO_POINTER (pset->key),
-                                     g_strdup_printf("%d", i));
-                remaining -= 2;
-            break;
-            case WDF_PTYPE_INT32:
-                i = gwy_get_gint32_le(&buffer);
-                gwy_debug("i = %d", i);
-                g_hash_table_replace(values,
-                                     GINT_TO_POINTER (pset->key),
-                                     g_strdup_printf("%d", i));
-                remaining -= 4;
-            break;
-            case WDF_PTYPE_INT64:
-                i64 = gwy_get_gint64_le(&buffer);
-                gwy_debug("w = %" G_GINT64_FORMAT "", i64);
-                g_hash_table_replace(values,
-                          GINT_TO_POINTER (pset->key),
-                          g_strdup_printf("%" G_GINT64_FORMAT "", i64));
-                remaining -= 8;
-            break;
-            case WDF_PTYPE_FLOAT:
-                d = gwy_get_gfloat_le(&buffer);
-                gwy_debug("r = %g", d);
-                g_hash_table_replace(values,
-                                     GINT_TO_POINTER (pset->key),
-                                     g_strdup_printf("%g", d));
-                remaining -= 4;
-            break;
-            case WDF_PTYPE_DOUBLE:
-                d = gwy_get_gdouble_le(&buffer);
-                gwy_debug("q = %g", d);
-                g_hash_table_replace(values,
-                                     GINT_TO_POINTER (pset->key),
-                                     g_strdup_printf("%g", d));
-                remaining -= 8;
-            break;
-            case WDF_PTYPE_TIME:
-                // FIXME: we need to parse this into time
-                i64 = gwy_get_gint64_le(&buffer);
-                gwy_debug("t = %" G_GINT64_FORMAT "", i64);
-                g_hash_table_replace(values,
-                          GINT_TO_POINTER (pset->key),
-                          g_strdup_printf("%" G_GINT64_FORMAT "", i64));
-                remaining -= 8;
-            break;
-            case WDF_PTYPE_STRING:
-                pset->size = gwy_get_guint32_le(&buffer);
-                str = g_malloc(pset->size + 1);
-                for (i = 0; i < pset->size; i++) {
-                    str[i] = *(buffer++);
-                }
-                gwy_debug("u size=%d str=%s", pset->size,
-                          g_strndup(str, pset->size));
-                g_hash_table_replace(values,
-                                     GINT_TO_POINTER (pset->key),
-                                     g_strndup(str, pset->size));
-                g_free(str);
-                remaining -= 4 + pset->size;
-            break;
-            case WDF_PTYPE_BINARY:
-                pset->size = gwy_get_guint32_le(&buffer);
-                remaining -= 4 + pset->size;
-                /*
-                for (i = 0; i < pset->size; i++) {
-                    str[i] = *(buffer++);
-                }
-                */
-                buffer += pset->size;
-                gwy_debug("b size=%d", pset->size);
-            break;
-            case WDF_PTYPE_NESTED:
-                pset->size = gwy_get_guint32_le(&buffer);
-                remaining -= 4;
-                gwy_debug("p size=%d", pset->size);
-
-            break;
-            case WDF_PTYPE_KEY:
-                pset->size = gwy_get_guint32_le(&buffer);
-                str = g_malloc(pset->size + 1);
-                for (i = 0; i < pset->size; i++) {
-                    str[i] = *(buffer++);
-                }
-                gwy_debug("k key=%s", g_strndup(str, pset->size));
-                g_hash_table_replace(keys,
-                                     GINT_TO_POINTER (pset->key),
-                                     g_strdup_printf("/%.*s", pset->size, str));
-                g_free(str);
-                remaining -= 4 + pset->size;
-            break;
-            default:
-                gwy_debug("something wrong");
-                gwy_debug("type = %c, flag = %c, key = %d",
-                          pset->type, pset->flag, pset->key);
-                goto fail;
+        if (pset->flag != 0) {
+            pset->size = gwy_get_guint32_le(&buffer);
+            gwy_debug("flag = %d size = %d", pset->flag, pset->size);
+            remaining -= 4;
         }
+        else {
+            pset->size = 1;
+        }
+        if (!pset->flag) {
+            switch (pset->type) {
+                case WDF_PTYPE_CHAR:
+                    c = *(buffer++);
+                    gwy_debug("c = %d", c);
+                    g_hash_table_replace(values,
+                                        GINT_TO_POINTER (pset->key),
+                                        g_strdup_printf("%d", c));
+                    remaining -= 1;
+                break;
+                case WDF_PTYPE_UINT8:
+                    c = *(buffer++);
+                    gwy_debug("? = %d", c);
+                    g_hash_table_replace(values,
+                                         GINT_TO_POINTER (pset->key),
+                                         g_strdup_printf("%d", c));
+                    remaining -= 1;
+                break;
+                case WDF_PTYPE_INT16:
+                    i = gwy_get_gint16_le(&buffer);
+                    gwy_debug("s = %d", i);
+                    g_hash_table_replace(values,
+                                         GINT_TO_POINTER (pset->key),
+                                         g_strdup_printf("%d", i));
+                    remaining -= 2;
+                break;
+                case WDF_PTYPE_INT32:
+                    i = gwy_get_gint32_le(&buffer);
+                    gwy_debug("i = %d", i);
+                    g_hash_table_replace(values,
+                                         GINT_TO_POINTER (pset->key),
+                                         g_strdup_printf("%d", i));
+                    remaining -= 4;
+                break;
+                case WDF_PTYPE_INT64:
+                    i64 = gwy_get_gint64_le(&buffer);
+                    gwy_debug("w = %" G_GINT64_FORMAT "", i64);
+                    g_hash_table_replace(values,
+                          GINT_TO_POINTER (pset->key),
+                          g_strdup_printf("%" G_GINT64_FORMAT "", i64));
+                    remaining -= 8;
+                break;
+                case WDF_PTYPE_FLOAT:
+                    d = gwy_get_gfloat_le(&buffer);
+                    gwy_debug("r = %g", d);
+                    g_hash_table_replace(values,
+                                         GINT_TO_POINTER (pset->key),
+                                         g_strdup_printf("%g", d));
+                    remaining -= 4;
+                break;
+                case WDF_PTYPE_DOUBLE:
+                    d = gwy_get_gdouble_le(&buffer);
+                    gwy_debug("q = %g", d);
+                    g_hash_table_replace(values,
+                                         GINT_TO_POINTER (pset->key),
+                                         g_strdup_printf("%g", d));
+                    remaining -= 8;
+                break;
+                case WDF_PTYPE_TIME:
+                    // FIXME: we need to parse this into time
+                    i64 = gwy_get_gint64_le(&buffer);
+                    gwy_debug("t = %" G_GINT64_FORMAT "", i64);
+                    g_hash_table_replace(values,
+                          GINT_TO_POINTER (pset->key),
+                          g_strdup_printf("%" G_GINT64_FORMAT "", i64));
+                    remaining -= 8;
+                break;
+                case WDF_PTYPE_STRING:
+                    pset->size = gwy_get_guint32_le(&buffer);
+                    str = g_malloc(pset->size + 1);
+                    for (i = 0; i < pset->size; i++) {
+                        str[i] = *(buffer++);
+                    }
+                    gwy_debug("u size=%d str=%s", pset->size,
+                              g_strndup(str, pset->size));
+                    g_hash_table_replace(values,
+                                         GINT_TO_POINTER (pset->key),
+                                         g_strndup(str, pset->size));
+                    g_free(str);
+                    remaining -= 4 + pset->size;
+                break;
+                case WDF_PTYPE_BINARY:
+                    pset->size = gwy_get_guint32_le(&buffer);
+                    remaining -= 4 + pset->size;
+                    /*
+                    for (i = 0; i < pset->size; i++) {
+                        str[i] = *(buffer++);
+                    }
+                    */
+                    buffer += pset->size;
+                    gwy_debug("b size=%d", pset->size);
+                break;
+                case WDF_PTYPE_NESTED:
+                    pset->size = gwy_get_guint32_le(&buffer);
+                    remaining -= 4;
+                    gwy_debug("p size=%d", pset->size);
+
+                break;
+                case WDF_PTYPE_KEY:
+                    pset->size = gwy_get_guint32_le(&buffer);
+                    str = g_malloc(pset->size + 1);
+                    for (i = 0; i < pset->size; i++) {
+                        str[i] = *(buffer++);
+                    }
+                    gwy_debug("k key=%s", g_strndup(str, pset->size));
+                    g_hash_table_replace(keys,
+                                         GINT_TO_POINTER (pset->key),
+                                         g_strdup_printf("/%.*s",
+                                         pset->size, str));
+                    g_free(str);
+                    remaining -= 4 + pset->size;
+                break;
+                default:
+                    gwy_debug("something wrong");
+                    gwy_debug("type = %c, flag = %c, key = %d",
+                              pset->type, pset->flag, pset->key);
+                    goto fail;
+            } /* switch */
+        } /* if (!pset->flag) */
+        else if (pset->flag == WDF_PFLAG_ARRAY) {
+            switch (pset->type) {
+                case WDF_PTYPE_CHAR:
+                    c = *(buffer++);
+                    str = g_strdup_printf("%d", c);
+                    for (i = 1; i < pset->size; i++) {
+                        c = *(buffer++);
+                        newstr = g_strdup_printf("%s, %d", str, c);
+                        g_free(str);
+                        str = newstr;
+                    }
+                    gwy_debug("c[%d] = %s", pset->size, str);
+                    g_hash_table_replace(values,
+                                        GINT_TO_POINTER (pset->key),
+                                        str);
+                    remaining -= pset->size;
+                break;
+                case WDF_PTYPE_UINT8:
+                    c = *(buffer++);
+                    str = g_strdup_printf("%d", c);
+                    for (i = 1; i < pset->size; i++) {
+                        c = *(buffer++);
+                        newstr = g_strdup_printf("%s, %d", str, c);
+                        g_free(str);
+                        str = newstr;
+                    }
+                    gwy_debug("?[%d] = %s", pset->size, str);
+                    g_hash_table_replace(values,
+                                        GINT_TO_POINTER (pset->key),
+                                        str);
+                    remaining -= pset->size;
+                break;
+                case WDF_PTYPE_INT16:
+                    j = gwy_get_gint16_le(&buffer);
+                    str = g_strdup_printf("%d", j);
+                    for (i = 1; i < pset->size; i++) {
+                        c = gwy_get_gint16_le(&buffer);
+                        newstr = g_strdup_printf("%s, %d", str, j);
+                        g_free(str);
+                        str = newstr;
+                    }
+                    gwy_debug("s[%d] = %s", pset->size, str);
+                    g_hash_table_replace(values,
+                                        GINT_TO_POINTER (pset->key),
+                                        str);
+                    remaining -= pset->size * 2;
+                break;
+                case WDF_PTYPE_INT32:
+                    j = gwy_get_gint32_le(&buffer);
+                    str = g_strdup_printf("%d", j);
+                    for (i = 1; i < pset->size; i++) {
+                        c = gwy_get_gint32_le(&buffer);
+                        newstr = g_strdup_printf("%s, %d", str, j);
+                        g_free(str);
+                        str = newstr;
+                    }
+                    gwy_debug("i[%d] = %s", pset->size, str);
+                    g_hash_table_replace(values,
+                                        GINT_TO_POINTER (pset->key),
+                                        str);
+                    remaining -= pset->size * 4;
+                break;
+                case WDF_PTYPE_INT64:
+                    i64 = gwy_get_gint64_le(&buffer);
+                    str = g_strdup_printf("%" G_GINT64_FORMAT "", i64);
+                    for (i = 1; i < pset->size; i++) {
+                        i64 = gwy_get_gint64_le(&buffer);
+                        newstr = g_strdup_printf(
+                                             "%s, %" G_GINT64_FORMAT "",
+                                             str, i64);
+                        g_free(str);
+                        str = newstr;
+                    }
+                    gwy_debug("w[%d] = %s", pset->size, str);
+                    g_hash_table_replace(values,
+                                        GINT_TO_POINTER (pset->key),
+                                        str);
+                    remaining -= pset->size * 8;
+                break;
+                case WDF_PTYPE_FLOAT:
+                    d = gwy_get_gfloat_le(&buffer);
+                    str = g_strdup_printf("%g", d);
+                    for (i = 1; i < pset->size; i++) {
+                        d = gwy_get_gfloat_le(&buffer);
+                        newstr = g_strdup_printf("%s, %g", str, d);
+                        g_free(str);
+                        str = newstr;
+                    }
+                    gwy_debug("r[%d] = %s", pset->size, str);
+                    g_hash_table_replace(values,
+                                        GINT_TO_POINTER (pset->key),
+                                        str);
+                    remaining -= pset->size * 4;
+                break;
+                case WDF_PTYPE_DOUBLE:
+                    d = gwy_get_gdouble_le(&buffer);
+                    str = g_strdup_printf("%g", d);
+                    for (i = 1; i < pset->size; i++) {
+                        c = gwy_get_gdouble_le(&buffer);
+                        newstr = g_strdup_printf("%s, %g", str, d);
+                        g_free(str);
+                        str = newstr;
+                    }
+                    gwy_debug("q[%d] = %s", pset->size, str);
+                    g_hash_table_replace(values,
+                                        GINT_TO_POINTER (pset->key),
+                                        str);
+                    remaining -= pset->size * 8;
+                break;
+                default:
+                    gwy_debug("something wrong");
+                    gwy_debug("type = %c, flag = %c, key = %d",
+                              pset->type, pset->flag, pset->key);
+                    goto fail;
+            } /* switch */
+        } /* if (pset->flag == WDF_PFLAG_ARRAY) */
     }
 
     data = gwy_container_new();
