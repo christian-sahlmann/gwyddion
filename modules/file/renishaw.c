@@ -1154,6 +1154,8 @@ wdf_load(const gchar *filename,
             key = g_strdup_printf("/%d/meta", m + 1);
             gwy_container_set_object_by_name(container, key, pset_data);
             g_free(key);
+            gwy_file_channel_import_log_add(container,
+                                            m + 1, NULL, filename);
 
             g_free(filedata.maps[m]);
         }
@@ -1197,7 +1199,7 @@ wdf_load(const gchar *filename,
         key = g_strdup_printf("/0/data/title");
         gwy_container_set_string_by_name(container, key, title);
         g_free(key);
-        gwy_file_channel_import_log_add(container, 1, NULL, filename);
+        gwy_file_channel_import_log_add(container, 0, NULL, filename);
     }
 
     fail:
