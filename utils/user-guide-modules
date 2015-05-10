@@ -15,6 +15,7 @@ attocube	managing-files
 axis	selections
 basicops	basic-operations	modules-basic
 bcrfile	managing-files
+bdep_synth	synthetic	ballistic-synthesis
 burleigh_bii	managing-files
 burleigh_exp	managing-files
 burleigh	managing-files
@@ -34,8 +35,8 @@ csmfile	managing-files
 curvature	leveling-and-background	curvature
 cwt	wavelet-transform	cwt
 deposit_synth	synthetic
-distance	basic-operations	distance
 diff_synth	synthetic	diffusion-synthesis
+distance	basic-operations	distance
 dm3file	managing-files
 dmefile	managing-files
 domain_synth	synthetic	domain-synthesis
@@ -75,6 +76,7 @@ grainmeasure	grain-analysis	grain-measure
 grainremover	editing-correction	remove-grains
 grain_stat	grain-analysis
 grain_wshed	grain-analysis	grain-watershed
+graph_align	graph-processing	graph-align
 graph_cd	graph-processing	graph-critical-dimension
 graph_cut	graph-processing
 graph_dos_spectrum	graph-processing	graph-dos-spectrum
@@ -84,7 +86,7 @@ graph_export_vector	graph-processing
 graph_fdfit	graph-processing
 graph_filter	graph-processing
 graph_fit	graph-processing	graph-fit
-graph_level	graph-processing
+graph_level	graph-processing	graph-level
 graph_stats	graph-processing
 gsffile	gsf
 gwyfile	managing-files
@@ -103,8 +105,8 @@ jeol	managing-files
 jpkscan	managing-files
 jspmfile	managing-files
 laplace	editing-correction	remove-data-under-mask
-lattice	selections
 lat_synth	synthetic	lattice-synthesis
+lattice	selections
 level3	leveling-and-background	three-point-level
 level_grains	grain-analysis	grain-level
 level	leveling-and-background	plane-level
@@ -169,6 +171,7 @@ polylevel	leveling-and-background	polynomial-level
 polynom	editing-correction	line-polynomial
 presentationops	presentations	presentationops
 profile	basic-operations	profile
+psdf_logphi	fourier-transform	psdf-log-phi
 psia	managing-files
 pt3file	managing-files
 quesant	managing-files
@@ -225,6 +228,7 @@ volume_calibrate	volume-data
 volume_extract	volume-data
 volume_fdfit	volume-data
 volume_invert	volume-data
+volume_slice	volume-data
 volumize_layers	volume-data
 volumize	volume-data
 vtkfile	managing-files
