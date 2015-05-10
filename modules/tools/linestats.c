@@ -55,7 +55,7 @@ typedef struct {
     gboolean fixres;
     GwyOrientation direction;
     GwyInterpolationType interpolation;
-    GwyAppDataIdTmp target;
+    GwyAppDataId target;
 } ToolArgs;
 
 struct _GwyToolLineStats {
@@ -155,7 +155,7 @@ static const ToolArgs default_args = {
     FALSE,
     GWY_ORIENTATION_HORIZONTAL,
     GWY_INTERPOLATION_LINEAR,
-    { NULL, -1 },
+    GWY_APP_DATA_ID_NONE,
 };
 
 static const GwyEnum sf_types[] =  {
@@ -730,9 +730,7 @@ static void
 gwy_tool_line_stats_target_changed(GwyToolLineStats *tool)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(tool->target_graph);
-    GwyAppDataIdTmp *target = &tool->args.target;
-
-    target->data = gwy_data_chooser_get_active(chooser, &target->id);
+    gwy_data_chooser_get_active_id(chooser, &tool->args.target);
 }
 
 static void
@@ -752,9 +750,10 @@ gwy_tool_line_stats_apply(GwyToolLineStats *tool)
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->selection);
 
-    if (tool->args.target.data) {
+    if (tool->args.target.datano) {
+        GwyContainer *data = gwy_app_data_browser_get(tool->args.target.datano);
         GQuark quark = gwy_app_get_graph_key_for_id(tool->args.target.id);
-        gmodel = gwy_container_get_object(tool->args.target.data, quark);
+        gmodel = gwy_container_get_object(data, quark);
         g_return_if_fail(gmodel);
         gwy_graph_model_append_curves(gmodel, tool->gmodel, 1);
         return;

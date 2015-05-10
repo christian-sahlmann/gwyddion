@@ -59,7 +59,7 @@ typedef struct {
     gboolean options_visible;
     gboolean separate;
     gboolean average;
-    GwyAppDataIdTmp target;
+    GwyAppDataId target;
 } ToolArgs;
 
 struct _GwyToolSpectro {
@@ -163,7 +163,7 @@ static const ToolArgs default_args = {
     FALSE,
     FALSE,
     FALSE,
-    { NULL, -1 },
+    GWY_APP_DATA_ID_NONE,
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -934,9 +934,7 @@ static void
 gwy_tool_spectro_target_changed(GwyToolSpectro *tool)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(tool->target_graph);
-    GwyAppDataIdTmp *target = &tool->args.target;
-
-    target->data = gwy_data_chooser_get_active(chooser, &target->id);
+    gwy_data_chooser_get_active_id(chooser, &tool->args.target);
 }
 
 static void
@@ -954,9 +952,10 @@ gwy_tool_spectro_apply(GwyToolSpectro *tool)
     g_return_if_fail(n);
 
     if (tool->args.average || !tool->args.separate) {
-        if (tool->args.target.data) {
+        if (tool->args.target.datano) {
+            GwyContainer *data = gwy_app_data_browser_get(tool->args.target.datano);
             GQuark quark = gwy_app_get_graph_key_for_id(tool->args.target.id);
-            gmodel = gwy_container_get_object(tool->args.target.data, quark);
+            gmodel = gwy_container_get_object(data, quark);
             g_return_if_fail(gmodel);
             gwy_graph_model_append_curves(gmodel, tool->gmodel, 1);
         }
