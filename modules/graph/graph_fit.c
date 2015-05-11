@@ -150,6 +150,8 @@ static void       fix_changed               (GtkToggleButton *button,
                                              FitControls *controls);
 static void       copy_param                (GObject *button,
                                              FitControls *controls);
+static void       copy_all_params           (FitControls *controls,
+                                             GObject *button);
 static void       fit_plot_curve            (FitArgs *args);
 static void       fit_set_state             (FitControls *controls,
                                              gboolean is_fitted,
@@ -182,7 +184,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Fit graph with function"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.5",
+    "2.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -236,8 +238,10 @@ fit(GwyGraph *graph)
 static void
 fit_dialog(FitArgs *args, GwyContainer *container)
 {
-    GtkWidget *label, *dialog, *hbox, *hbox2, *table, *align, *expander;
+    GtkWidget *label, *dialog, *hbox, *hbox2, *table, *align, *expander,
+              *button;
     GtkTable *table2;
+    GtkTooltips *tooltips;
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *cmodel;
     GwyGraphArea *area;
@@ -251,6 +255,8 @@ fit_dialog(FitArgs *args, GwyContainer *container)
     controls.args = args;
     controls.in_update = TRUE;
     controls.param = g_array_new(FALSE, TRUE, sizeof(FitParamControl));
+
+    tooltips = gwy_app_get_tooltips();
 
     gmodel = gwy_graph_get_model(GWY_GRAPH(args->parent_graph));
     gwy_graph_model_get_x_range(gmodel, &xmin, &xmax);
@@ -374,11 +380,15 @@ fit_dialog(FitArgs *args, GwyContainer *container)
     gtk_table_attach(table2, gwy_label_new_header(_("Initial")),
                      9, 10, 0, 1, GTK_FILL, 0, 0, 0);
 
-    /* Make space for 4 parameters */
-#if 0
-    for (i = 0; i < 4; i++)
-        fit_param_row_create(&controls, i, table2, i+1);
-#endif
+    /* Copy */
+    button = gtk_button_new_with_label("→");
+    gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
+    gtk_table_attach(table2, button, 8, 9, 0, 1, 0, 0, 0, 0);
+    gtk_tooltips_set_tip(tooltips, button, _("Copy all fitted values to "
+                                             "estimates"),
+                         NULL);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(copy_all_params), &controls);
 
     /* Chi^2 */
     label = gtk_label_new(NULL);
@@ -508,7 +518,7 @@ fit_dialog(FitArgs *args, GwyContainer *container)
             break;
 
             case GTK_RESPONSE_OK:
-            if (args->is_fitted && args->fitter->covar) {
+            if (args->is_estimated) {
                 cmodel = gwy_graph_model_get_curve(args->graph_model, 1);
                 gwy_graph_model_add_curve(gmodel, cmodel);
                 if (args->out_diff)
@@ -1250,6 +1260,27 @@ copy_param(GObject *button,
     g_snprintf(buffer, sizeof(buffer), "%.4g", arg->value);
     gtk_entry_set_text(GTK_ENTRY(cntrl->init), buffer);
     gtk_widget_activate(cntrl->init);
+}
+
+static void
+copy_all_params(FitControls *controls, G_GNUC_UNUSED GObject *button)
+{
+    FitParamControl *cntrl;
+    FitArgs *args;
+    FitParamArg *arg;
+    gchar buffer[20];
+    guint nparams, i;
+
+    args = controls->args;
+    nparams = gwy_nlfit_preset_get_nparams(args->fitfunc);
+
+    for (i = 0; i < nparams; i++) {
+        cntrl = &g_array_index(controls->param, FitParamControl, i);
+        arg = &g_array_index(controls->args->param, FitParamArg, i);
+        g_snprintf(buffer, sizeof(buffer), "%.4g", arg->value);
+        gtk_entry_set_text(GTK_ENTRY(cntrl->init), buffer);
+        gtk_widget_activate(cntrl->init);
+    }
 }
 
 static void
