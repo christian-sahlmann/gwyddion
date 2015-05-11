@@ -480,7 +480,7 @@ fit_dialog(FitArgs *args)
             break;
 
             case GTK_RESPONSE_OK:
-            if (args->is_fitted && args->fitter->covar) {
+            if (args->is_estimated) {
                 cmodel = gwy_graph_model_get_curve(args->graph_model, 1);
                 gwy_graph_model_add_curve(gmodel, cmodel);
             }
