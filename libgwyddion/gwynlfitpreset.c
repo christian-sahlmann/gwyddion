@@ -1012,7 +1012,7 @@ parstep_guess(gint n_dat,
     *fres = TRUE;
 }
 
-/******************* smooth edge ********************************/
+/******************* smooth step ********************************/
 static gdouble
 smstep_func(gdouble x,
             G_GNUC_UNUSED gint n_param,
@@ -1033,7 +1033,7 @@ smstep_func(gdouble x,
     if (w == 0.0)
         f += (x > 0.0) ? 0.5*h : -0.5*h;
     else
-        f += h*atan(x/w)/G_PI + 0.5*beta*w*(exp(-ax/w) - 1);
+        f += h*erf(x/w)/G_PI + 0.5*beta*w*(exp(-ax/w) - 1);
 
     return f;
 }
@@ -1045,8 +1045,8 @@ smstep_guess(gint n_dat,
              gdouble *param,
              gboolean *fres)
 {
-    gint i;
-    gdouble xmin, xmax, ymin, ymax, xymin, xymax;
+    gint i, nleft = 0, nright = 0;
+    gdouble xmin, xmax, ymin, ymax, xymin, xymax, yleft, yright;
 
     xmin = G_MAXDOUBLE;
     xmax = -G_MAXDOUBLE;
@@ -1074,14 +1074,55 @@ smstep_guess(gint n_dat,
     if (xmax <= xmin)
         return;
 
+    yleft = yright = 0.0;
+    for (i = 0; i < n_dat; i++) {
+        gdouble q = (x[i] - xmin)/(xmax - xmin);
+        if (q >= 0.2 && q <= 0.42) {
+            yleft += y[i];
+            nleft++;
+        }
+        if (q >= 0.58 && q <= 0.8) {
+            yright += y[i];
+            nright++;
+        }
+    }
+
     param[0] = 0.5*(xmin + xmax);
     param[1] = 0.5*(ymin + ymax);
     param[2] = (xmax - xmin)/8.0;
-    param[3] = (xymax > xymin) ? ymax - ymin : ymin - ymax;
+    if (nleft && nright)
+        param[3] = (yleft/nleft < yright/nright) ? ymax - ymin : ymin - ymax;
+    else
+        param[3] = (xymax > xymin) ? ymax - ymin : ymin - ymax;
     param[4] = 0.0;
     param[5] = 0.0;
 
     *fres = TRUE;
+}
+
+/******************* bent step ********************************/
+static gdouble
+bentstep_func(gdouble x,
+              G_GNUC_UNUSED gint n_param,
+              const gdouble *b,
+              G_GNUC_UNUSED gpointer user_data,
+              gboolean *fres)
+{
+    gdouble xc = b[0], yc = b[1], w = b[2], h = b[3], alpha = b[4], beta = b[5];
+    gdouble f;
+
+    *fres = TRUE;
+
+    *fres = TRUE;
+    x -= xc;
+    w = fabs(w);
+    f = yc + alpha*x + beta*x*x;
+    if (w == 0.0)
+        f += (x > 0.0) ? 0.5*h : -0.5*h;
+    else
+        f += h*erf(x/w)/2.0;
+
+    return f;
 }
 
 /******************* power function ********************************/
@@ -1423,6 +1464,15 @@ static const GwyNLFitParam smstep_params[] = {
     { "β", -1, 1, },
 };
 
+static const GwyNLFitParam bentstep_params[] = {
+    { "x<sub>0</sub>", 1, 0, },
+    { "y<sub>0</sub>", 0, 1, },
+    { "w", 1, 0, },
+    { "h", 0, 1, },
+    { "α", -1, 1, },
+    { "β", -2, 1, },
+};
+
 static const GwyNLFitParam power_params[] = {
     { "a", 0, 1, },
     { "b", 0, 1, },
@@ -1690,7 +1740,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         N_("Smooth slanted step"),
         "<i>f</i>(<i>x</i>) "
             "= y<sub>0</sub> "
-            "+ <i>h</i>/π atan(<i>ξ</i>/<i>w</i>) "
+            "+ <i>h</i>/2 erf(<i>ξ</i>/<i>w</i>) "
             "+ <i>α</i><i>ξ</i> "
             "+ <i>β</i>/2 [|<i>ξ</i>| "
             "+ <i>w</i> exp(-|<i>ξ</i>|/<i>w</i>) "
@@ -1704,6 +1754,23 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         NULL,
         G_N_ELEMENTS(smstep_params),
         smstep_params,
+    },
+    {
+        N_("Smooth bent step"),
+        "<i>f</i>(<i>x</i>) "
+            "= y<sub>0</sub> "
+            "+ <i>h</i>/2 erf(<i>ξ</i>/<i>w</i>) "
+            "+ <i>α</i><i>ξ</i> "
+            "+ <i>β</i><i>ξ</i><sup>2</sup>, "
+            "<i>ξ</i> = <i>x</i> − <i>x</i><sub>0</sub>",
+        &bentstep_func,
+        NULL,
+        &smstep_guess,
+        NULL,
+        NULL,
+        NULL,
+        G_N_ELEMENTS(bentstep_params),
+        bentstep_params,
     },
     {
         N_("Power"),
