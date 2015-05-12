@@ -432,8 +432,8 @@ wdf_load(const gchar *filename,
     GwyDataLine *cal;
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
-    GwySIUnit *siunitx, *siunity, *siunitz, *siunitw;
-    gdouble *ydata, *xdata, *data, *zdata = NULL;
+    GwySIUnit *siunitx, *siunity, *siunitz, *siunitw, *siunitsp;
+    gdouble *ydata, *xdata, *data, *zdata = NULL, *xdatasp, *ydatasp;
     gint i, j, k, l, lsize, z, m;
     gint xres, yres, zres, xstart, xend, xstep, ystart, yend, ystep;
     gint width, height, rowstride, bpp;
@@ -448,6 +448,10 @@ wdf_load(const gchar *filename,
     guchar *pixels, *pix_p;
     const gchar *unit;
     const guchar *label;
+    const guchar *spectrum, *spectrumx, *specxunit, *speclabel;
+    gchar **specvalues, **specp;
+    gint numvalues, mapspectra = 0;
+    gboolean hasspectrum = FALSE;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -1151,6 +1155,97 @@ wdf_load(const gchar *filename,
                                           g_strdup_printf("%s", label));
                 g_free(key);
             }
+
+            hasspectrum = FALSE;
+            ydata = g_malloc(zres * sizeof(gdouble));
+            if (gwy_container_gis_string_by_name(pset_data,
+                                                 "/overlaySpectrum",
+                                                 &spectrum)) {
+                mapspectra++;
+                hasspectrum = TRUE;
+                specvalues = g_strsplit(spectrum, ";", -1);
+                specp = specvalues;
+                numvalues = 0;
+                ydatasp = ydata;
+                while ((*specp) && (numvalues < zres)) {
+                    *(ydatasp++) = g_strtod(*specp, NULL);
+                    numvalues++;
+                    specp++;
+                }
+                g_strfreev(specvalues);
+            }
+
+            siunitsp = NULL;
+            if (gwy_container_gis_string_by_name(pset_data,
+                                                 "/overlayXListUnits",
+                                                 &specxunit)) {
+                xunits = atoi(specxunit);
+                unit = gwy_enum_to_string(xunits, wdf_units, 26);
+                siunitsp = gwy_si_unit_new_parse(unit, &power10x);
+                xscale = pow10(power10x);
+            }
+            if (!siunitsp) {
+                siunitsp = gwy_si_unit_new_parse("", &power10x);
+                xscale = 1.0;
+            }
+
+            xdata = g_malloc(zres * sizeof(gdouble));
+            if (gwy_container_gis_string_by_name(pset_data,
+                                                 "/overlayXList",
+                                                 &spectrumx)) {
+                specvalues = g_strsplit(spectrumx, ";", -1);
+                specp = specvalues;
+                numvalues = 0;
+                xdatasp = xdata;
+                while ((*specp) && (numvalues < zres)) {
+                    *(xdatasp++) = g_strtod(*specp, NULL) * xscale;
+                    numvalues++;
+                    specp++;
+                }
+                g_strfreev(specvalues);
+            }
+            else {
+                hasspectrum = FALSE;
+            }
+
+
+            if (gwy_container_gis_string_by_name(pset_data,
+                                                 "/overlayLabel",
+                                                 &speclabel)) {
+                title = g_strdup_printf("%s", speclabel);
+            }
+            else {
+                title = g_strdup_printf("");
+            }
+
+            if (hasspectrum) {
+                gmodel = g_object_new(GWY_TYPE_GRAPH_MODEL,
+                                      "title", title,
+                                      "si-unit-x", siunitsp,
+                                      NULL);
+                gcmodel = g_object_new(GWY_TYPE_GRAPH_CURVE_MODEL,
+                                       "description", title,
+                                       "mode", GWY_GRAPH_CURVE_LINE,
+                                       "color",
+                                       gwy_graph_get_preset_color(
+                                                        mapspectra + 1),
+                                       NULL);
+                gwy_graph_curve_model_set_data(gcmodel,
+                                               xdata, ydata, zres);
+                gwy_graph_model_add_curve(gmodel, gcmodel);
+                g_object_unref(gcmodel);
+                g_free(title);
+                key = g_strdup_printf("/0/graph/graph/%d",
+                                      mapspectra + 1);
+                gwy_container_set_object_by_name(container,
+                                                 key, gmodel);
+                g_free(key);
+                g_object_unref(gmodel);
+            }
+            g_object_unref(siunitsp);
+            g_free(xdata);
+            g_free(ydata);
+
             key = g_strdup_printf("/%d/meta", m + 1);
             gwy_container_set_object_by_name(container, key, pset_data);
             g_free(key);
@@ -1159,6 +1254,7 @@ wdf_load(const gchar *filename,
 
             g_free(filedata.maps[m]);
         }
+
         if (filedata.maps) {
             g_free(filedata.maps);
         }
@@ -1526,7 +1622,7 @@ wdf_read_pset(const guchar *buffer,
                     str = g_strdup_printf("%d", c);
                     for (i = 1; i < pset->size; i++) {
                         c = *(buffer++);
-                        newstr = g_strdup_printf("%s, %d", str, c);
+                        newstr = g_strdup_printf("%s; %d", str, c);
                         g_free(str);
                         str = newstr;
                     }
@@ -1541,7 +1637,7 @@ wdf_read_pset(const guchar *buffer,
                     str = g_strdup_printf("%d", c);
                     for (i = 1; i < pset->size; i++) {
                         c = *(buffer++);
-                        newstr = g_strdup_printf("%s, %d", str, c);
+                        newstr = g_strdup_printf("%s; %d", str, c);
                         g_free(str);
                         str = newstr;
                     }
@@ -1556,7 +1652,7 @@ wdf_read_pset(const guchar *buffer,
                     str = g_strdup_printf("%d", j);
                     for (i = 1; i < pset->size; i++) {
                         c = gwy_get_gint16_le(&buffer);
-                        newstr = g_strdup_printf("%s, %d", str, j);
+                        newstr = g_strdup_printf("%s; %d", str, j);
                         g_free(str);
                         str = newstr;
                     }
@@ -1571,7 +1667,7 @@ wdf_read_pset(const guchar *buffer,
                     str = g_strdup_printf("%d", j);
                     for (i = 1; i < pset->size; i++) {
                         c = gwy_get_gint32_le(&buffer);
-                        newstr = g_strdup_printf("%s, %d", str, j);
+                        newstr = g_strdup_printf("%s; %d", str, j);
                         g_free(str);
                         str = newstr;
                     }
@@ -1587,7 +1683,7 @@ wdf_read_pset(const guchar *buffer,
                     for (i = 1; i < pset->size; i++) {
                         i64 = gwy_get_gint64_le(&buffer);
                         newstr = g_strdup_printf(
-                                             "%s, %" G_GINT64_FORMAT "",
+                                             "%s; %" G_GINT64_FORMAT "",
                                              str, i64);
                         g_free(str);
                         str = newstr;
@@ -1603,7 +1699,7 @@ wdf_read_pset(const guchar *buffer,
                     str = g_strdup_printf("%g", d);
                     for (i = 1; i < pset->size; i++) {
                         d = gwy_get_gfloat_le(&buffer);
-                        newstr = g_strdup_printf("%s, %g", str, d);
+                        newstr = g_strdup_printf("%s; %g", str, d);
                         g_free(str);
                         str = newstr;
                     }
@@ -1618,7 +1714,7 @@ wdf_read_pset(const guchar *buffer,
                     str = g_strdup_printf("%g", d);
                     for (i = 1; i < pset->size; i++) {
                         c = gwy_get_gdouble_le(&buffer);
-                        newstr = g_strdup_printf("%s, %g", str, d);
+                        newstr = g_strdup_printf("%s; %g", str, d);
                         g_free(str);
                         str = newstr;
                     }
