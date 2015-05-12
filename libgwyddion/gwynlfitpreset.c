@@ -2173,6 +2173,7 @@ gwy_nlfit_presets(void)
  *
  * The following presets are available since version 2.41:
  * <simplelist type='vert'>
+ * <member><literal>"Smooth bent step"</literal></member>
  * <member><literal>"Smooth slanted step"</literal></member>
  * </simplelist>
  *
