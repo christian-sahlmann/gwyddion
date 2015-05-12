@@ -20,7 +20,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -738,6 +738,7 @@ gwy_3d_view_data_field_disconnect(Gwy3DView *gwy3dview)
 static void
 gwy_3d_view_data_field_changed(Gwy3DView *gwy3dview)
 {
+    gwy_debug("");
     gwy3dview->changed |= GWY_3D_DATA_FIELD;
     gwy_3d_view_update_labels(gwy3dview);
     gwy_3d_view_update_lists(gwy3dview);
@@ -761,6 +762,7 @@ gwy_3d_view_set_ovlay(Gwy3DView *gwy3dview,
     gint i = 0;
 
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
+    gwy_debug("");
 
     if (gwy3dview->ovlays) {
         for (i = 0; i < gwy3dview->novlays; i++) {
@@ -1061,6 +1063,7 @@ static void
 gwy_3d_view_gradient_changed(Gwy3DView *gwy3dview)
 {
     Gwy3DVisualization visualization = gwy3dview->setup->visualization;
+    gwy_debug("");
     gwy3dview->changed |= GWY_3D_GRADIENT;
     if (visualization == GWY_3D_VISUALIZATION_GRADIENT
         || visualization == GWY_3D_VISUALIZATION_OVERLAY
@@ -1156,6 +1159,7 @@ gwy_3d_view_material_disconnect(Gwy3DView *gwy3dview)
 static void
 gwy_3d_view_material_changed(Gwy3DView *gwy3dview)
 {
+    gwy_debug("");
     gwy3dview->changed |= GWY_3D_MATERIAL;
     if (gwy3dview->setup->visualization == GWY_3D_VISUALIZATION_LIGHTING)
         gwy_3d_view_update_lists(gwy3dview);
@@ -1171,6 +1175,7 @@ gwy_3d_view_update_lists(Gwy3DView *gwy3dview)
     if (!GTK_WIDGET_REALIZED(gwy3dview))
         return;
 
+    gwy_debug("");
     gwy_3d_view_downsample_data(gwy3dview);
 
     gwy_3d_make_list(gwy3dview, gwy3dview->downsampled,
@@ -2822,9 +2827,9 @@ gwy_gradient_to_cairo_pattern(cairo_pattern_t* pattern, GwyGradient* gradient)
 /* puts string into PangoLayout, printf style */
 static void
 gwy_3d_format_layout(PangoLayout *layout,
-              GString* string,
-              const gchar *format,
-              ...)
+                     GString* string,
+                     const gchar *format,
+                     ...)
 {
     gchar *buffer;
     gint length;
@@ -3286,6 +3291,7 @@ gwy_3d_view_mask_field_disconnect(Gwy3DView *gwy3dview)
 static void
 gwy_3d_view_mask_field_changed(Gwy3DView *gwy3dview)
 {
+    gwy_debug("");
     gwy3dview->changed |= GWY_3D_DATA_FIELD;
     gwy_3d_view_update_labels(gwy3dview);
     gwy_3d_view_update_lists(gwy3dview);
