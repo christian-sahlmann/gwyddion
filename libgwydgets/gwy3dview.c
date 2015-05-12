@@ -1416,6 +1416,7 @@ gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview)
 
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
     g_return_val_if_fail(GTK_WIDGET_REALIZED(gwy3dview), NULL);
+    gwy_debug("");
 
     width  = GTK_WIDGET(gwy3dview)->allocation.width;
     height = GTK_WIDGET(gwy3dview)->allocation.height;
