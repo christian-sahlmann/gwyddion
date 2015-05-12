@@ -1853,6 +1853,7 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
               ex, ey, gwy3dview->shape_current);
 
     if (mods & GDK_BUTTON1_MASK) {
+        gwy_debug("with movement %d", gwy3dview->movement);
         switch (gwy3dview->movement) {
             case GWY_3D_MOVEMENT_NONE:
             break;
