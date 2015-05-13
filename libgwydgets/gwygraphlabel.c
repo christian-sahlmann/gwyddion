@@ -546,6 +546,8 @@ gwy_graph_label_calculate_size(GwyGraphLabel *label)
 
         g_object_unref(layout);
     }
+    label->reqheight = MAX(label->reqheight, 20);
+
     label->reqwidth += 30 + 2*model->label_frame_thickness;
     label->reqheight += 2*model->label_frame_thickness;
 }
