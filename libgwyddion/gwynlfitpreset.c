@@ -1033,7 +1033,7 @@ smstep_func(gdouble x,
     if (w == 0.0)
         f += (x > 0.0) ? 0.5*h : -0.5*h;
     else
-        f += h*erf(x/w)/G_PI + 0.5*beta*w*(exp(-ax/w) - 1);
+        f += h*erf(x/w)/G_PI + 0.5*beta*w*exp(-ax/w);
 
     return f;
 }
@@ -1743,8 +1743,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
             "+ <i>h</i>/2 erf(<i>ξ</i>/<i>w</i>) "
             "+ <i>α</i><i>ξ</i> "
             "+ <i>β</i>/2 [|<i>ξ</i>| "
-            "+ <i>w</i> exp(-|<i>ξ</i>|/<i>w</i>) "
-            "- <i>w</i>], "
+            "+ <i>w</i> exp(-|<i>ξ</i>|/<i>w</i>)], "
             "<i>ξ</i> = <i>x</i> − <i>x</i><sub>0</sub>",
         &smstep_func,
         NULL,
