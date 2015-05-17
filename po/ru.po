@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-05-10 02:58+0200\n"
-"PO-Revision-Date: 2015-05-10 12:03+0300\n"
+"POT-Creation-Date: 2015-05-15 02:59+0200\n"
+"PO-Revision-Date: 2015-05-17 08:58+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -135,87 +135,91 @@ msgstr "контакт: Герц (параболоид)"
 msgid "Untitled"
 msgstr "Безымянный"
 
-#: libgwyddion/gwynlfitpreset.c:1448 libprocess/gwyprocessenums.c:101
+#: libgwyddion/gwynlfitpreset.c:1498 libprocess/gwyprocessenums.c:101
 msgid "Gaussian"
 msgstr "Гауссиана"
 
-#: libgwyddion/gwynlfitpreset.c:1464
+#: libgwyddion/gwynlfitpreset.c:1514
 msgid "Gaussian (PSDF)"
 msgstr "Гауссиана (ФСПМ)"
 
-#: libgwyddion/gwynlfitpreset.c:1478
+#: libgwyddion/gwynlfitpreset.c:1528
 msgid "Gaussian (ACF)"
 msgstr "Гауссиана (ACF)"
 
-#: libgwyddion/gwynlfitpreset.c:1492
+#: libgwyddion/gwynlfitpreset.c:1542
 msgid "Gaussian (HHCF)"
 msgstr "Гауссиана (HHCF)"
 
-#: libgwyddion/gwynlfitpreset.c:1506
+#: libgwyddion/gwynlfitpreset.c:1556
 msgid "Gaussian (RPSDF)"
 msgstr "Гауссиана (RPSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1520
+#: libgwyddion/gwynlfitpreset.c:1570
 msgid "Two Gaussians (PSDF)"
 msgstr "Две гауссианы (ФСПМ)"
 
-#: libgwyddion/gwynlfitpreset.c:1536
+#: libgwyddion/gwynlfitpreset.c:1586
 msgid "Exponential"
 msgstr "Экспоненциальная"
 
-#: libgwyddion/gwynlfitpreset.c:1549
+#: libgwyddion/gwynlfitpreset.c:1599
 msgid "Exponential (PSDF)"
 msgstr "Экспоненциальная (ФСПМ)"
 
-#: libgwyddion/gwynlfitpreset.c:1563
+#: libgwyddion/gwynlfitpreset.c:1613
 msgid "Exponential (ACF)"
 msgstr "Экспоненциальная (АКФ)"
 
-#: libgwyddion/gwynlfitpreset.c:1576
+#: libgwyddion/gwynlfitpreset.c:1626
 msgid "Exponential (HHCF)"
 msgstr "Экспоненциальная (HHCF)"
 
-#: libgwyddion/gwynlfitpreset.c:1590
+#: libgwyddion/gwynlfitpreset.c:1640
 msgid "Exponential (RPSDF)"
 msgstr "Экспоненциальная (RPSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1605
+#: libgwyddion/gwynlfitpreset.c:1655
 msgid "Polynomial (order 0)"
 msgstr "Полиномиальная (порядка 0)"
 
-#: libgwyddion/gwynlfitpreset.c:1617
+#: libgwyddion/gwynlfitpreset.c:1667
 msgid "Polynomial (order 1)"
 msgstr "Полиномиальная (порядка 1)"
 
-#: libgwyddion/gwynlfitpreset.c:1629
+#: libgwyddion/gwynlfitpreset.c:1679
 msgid "Polynomial (order 2)"
 msgstr "Полиномиальная (порядка 2)"
 
-#: libgwyddion/gwynlfitpreset.c:1642
+#: libgwyddion/gwynlfitpreset.c:1692
 msgid "Polynomial (order 3)"
 msgstr "Полиномиальная (порядка 3)"
 
-#: libgwyddion/gwynlfitpreset.c:1656
+#: libgwyddion/gwynlfitpreset.c:1706
 msgid "Square wave"
 msgstr "Прямоугольные импульсы"
 
-#: libgwyddion/gwynlfitpreset.c:1673
+#: libgwyddion/gwynlfitpreset.c:1723
 msgid "Parabolic step"
 msgstr "Параболическая ступень"
 
-#: libgwyddion/gwynlfitpreset.c:1690
+#: libgwyddion/gwynlfitpreset.c:1740
 msgid "Smooth slanted step"
 msgstr "Гладкая наклонная ступень"
 
-#: libgwyddion/gwynlfitpreset.c:1709
+#: libgwyddion/gwynlfitpreset.c:1758
+msgid "Smooth bent step"
+msgstr "Гладкая наклонная ступень"
+
+#: libgwyddion/gwynlfitpreset.c:1775
 msgid "Power"
 msgstr "Степенная"
 
-#: libgwyddion/gwynlfitpreset.c:1722
+#: libgwyddion/gwynlfitpreset.c:1788
 msgid "Lorentzian"
 msgstr "Лоренцева"
 
-#: libgwyddion/gwynlfitpreset.c:1737
+#: libgwyddion/gwynlfitpreset.c:1803
 msgid "Sinc"
 msgstr "Sinc"
 
@@ -4503,7 +4507,7 @@ msgid "Spectra data starts past the end of file."
 msgstr "Данные спектроскопии начинаются после конца файла."
 
 #: modules/file/nanoeducator.c:648 modules/file/opdfile.c:277
-#: modules/file/renishaw.c:1058 modules/file/sensofar.c:257
+#: modules/file/renishaw.c:1321 modules/file/sensofar.c:257
 #: modules/file/witec-asc.c:161
 msgid "File header is truncated"
 msgstr "Заголовок файла усечён"
@@ -5097,7 +5101,7 @@ msgid "Cannot get pixbuf loader: %s."
 msgstr "Не удаётся получить загрузчик pixbuf: %s."
 
 #: modules/file/pixmap.c:521 modules/file/pixmap.c:534
-#: modules/file/renishaw.c:551 modules/file/renishaw.c:561
+#: modules/file/renishaw.c:564 modules/file/renishaw.c:574
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr "Загрузчик pixbuf не принял данные: %s."
@@ -5624,27 +5628,27 @@ msgid "XYZ data regularization failed due to numerical instability."
 msgstr ""
 "Упорядочение XYZ-данных закончилось неудачно из-за численной нестабильности."
 
-#: modules/file/renishaw.c:355
+#: modules/file/renishaw.c:363
 msgid "Imports Renishaw WiRE data files (WDF)."
 msgstr "Импортирует файлы данных Renishaw WiRE (WDF)."
 
-#: modules/file/renishaw.c:368
+#: modules/file/renishaw.c:376
 msgid "Renishaw WiRE data files (.wdf)"
 msgstr "Файлы данных Renishaw WiRE (.wdf)"
 
-#: modules/file/renishaw.c:539
+#: modules/file/renishaw.c:552
 msgid "MapArea block is truncated"
 msgstr "Блок MapArea неполон."
 
-#: modules/file/renishaw.c:751
+#: modules/file/renishaw.c:783
 msgid "Random points order unsupported"
 msgstr "Случайный порядок точек не поддерживается"
 
-#: modules/file/renishaw.c:1129
+#: modules/file/renishaw.c:1392
 msgid "Block header is truncated"
 msgstr "Заголовок блока усечён"
 
-#: modules/file/renishaw.c:1144
+#: modules/file/renishaw.c:1407
 msgid "Data block is truncated"
 msgstr "Блок данных неполон."
 
@@ -6254,47 +6258,47 @@ msgstr "/_Габаритный размер..."
 msgid "Fit critical dimension"
 msgstr "Аппроксимировать габаритный размер"
 
-#: modules/graph/graph_cd.c:213 modules/graph/graph_fit.c:265
+#: modules/graph/graph_cd.c:213 modules/graph/graph_fit.c:271
 msgid "Fit Graph"
 msgstr "Аппроксимировать график"
 
 #: modules/graph/graph_cd.c:216 modules/graph/graph_fdfit.c:255
-#: modules/graph/graph_fit.c:268 modules/process/fit_2d.c:253
+#: modules/graph/graph_fit.c:274 modules/process/fit_2d.c:253
 #: modules/volume/volume_fdfit.c:300
 msgid "verb|_Fit"
 msgstr "_Аппрокс."
 
 #: modules/graph/graph_cd.c:263 modules/graph/graph_cut.c:163
-#: modules/graph/graph_fdfit.c:307 modules/graph/graph_fit.c:320
+#: modules/graph/graph_fdfit.c:307 modules/graph/graph_fit.c:326
 msgid "_Graph curve:"
 msgstr "График:"
 
 #: modules/graph/graph_cd.c:277 modules/graph/graph_fdfit.c:321
-#: modules/graph/graph_fit.c:334 modules/volume/volume_fdfit.c:406
+#: modules/graph/graph_fit.c:340 modules/volume/volume_fdfit.c:406
 msgid "F_unction:"
 msgstr "_Функция:"
 
 #: modules/graph/graph_cd.c:306 modules/graph/graph_fdfit.c:362
-#: modules/graph/graph_fit.c:370 modules/process/curvature.c:769
+#: modules/graph/graph_fit.c:376 modules/process/curvature.c:769
 #: modules/volume/volume_fdfit.c:447
 msgid "Parameter"
 msgstr "Параметр"
 
 #: modules/graph/graph_cd.c:308 modules/graph/graph_fdfit.c:364
-#: modules/graph/graph_fit.c:372 modules/process/fit_2d.c:349
+#: modules/graph/graph_fit.c:378 modules/process/fit_2d.c:349
 #: modules/volume/volume_fdfit.c:449 modules/volume/volume_kmeans.c:475
 #: modules/volume/volume_kmedians.c:462
 msgid "Error"
 msgstr "Ошибка"
 
 #: modules/graph/graph_cd.c:320 modules/graph/graph_cut.c:193
-#: modules/graph/graph_fdfit.c:416 modules/graph/graph_fit.c:424
+#: modules/graph/graph_fdfit.c:416 modules/graph/graph_fit.c:434
 #: modules/volume/volume_fdfit.c:501
 msgid "Range:"
 msgstr "Диапазон:"
 
 #: modules/graph/graph_cd.c:331 modules/graph/graph_cut.c:204
-#: modules/graph/graph_fdfit.c:427 modules/graph/graph_fit.c:435
+#: modules/graph/graph_fdfit.c:427 modules/graph/graph_fit.c:445
 #: modules/volume/volume_fdfit.c:512
 msgid "range|to"
 msgstr "–"
@@ -6304,19 +6308,19 @@ msgid "_Draw whole circle"
 msgstr "_Рисовать полный круг"
 
 #: modules/graph/graph_cd.c:383 modules/graph/graph_fdfit.c:492
-#: modules/graph/graph_fit.c:522 modules/process/fit_2d.c:995
+#: modules/graph/graph_fit.c:532 modules/process/fit_2d.c:995
 #: modules/volume/volume_fdfit.c:574
 msgid "Save Fit Report"
 msgstr "Сохранить отчёт аппроксимации"
 
 #: modules/graph/graph_cd.c:530 modules/graph/graph_cd.c:1134
-#: modules/graph/graph_fdfit.c:710 modules/graph/graph_fit.c:754
+#: modules/graph/graph_fdfit.c:710 modules/graph/graph_fit.c:764
 #: modules/volume/volume_fdfit.c:908
 msgid "Fit"
 msgstr "Аппроксимация"
 
 #: modules/graph/graph_cd.c:556 modules/graph/graph_fdfit.c:750
-#: modules/graph/graph_fit.c:794 modules/volume/volume_fdfit.c:979
+#: modules/graph/graph_fit.c:804 modules/volume/volume_fdfit.c:979
 #: modules/volume/volume_fdfit.c:1086
 msgid "It is necessary to select more data points than free fit parameters"
 msgstr ""
@@ -6324,7 +6328,7 @@ msgstr ""
 "аппроксимации"
 
 #: modules/graph/graph_cd.c:711 modules/graph/graph_fdfit.c:799
-#: modules/graph/graph_fit.c:843 modules/process/fit_2d.c:406
+#: modules/graph/graph_fit.c:853 modules/process/fit_2d.c:406
 #: modules/tools/grainmeasure.c:217 modules/tools/readvalue.c:645
 #: modules/tools/readvalue.c:646 modules/tools/readvalue.c:647
 #: modules/tools/readvalue.c:648 modules/tools/roughness.c:992
@@ -6336,36 +6340,36 @@ msgid "N.A."
 msgstr "недоступно"
 
 #: modules/graph/graph_cd.c:1020 modules/graph/graph_fdfit.c:1384
-#: modules/graph/graph_fit.c:1490 modules/volume/volume_fdfit.c:1721
+#: modules/graph/graph_fit.c:1521 modules/volume/volume_fdfit.c:1721
 msgid "===== Fit Results ====="
 msgstr "===== Результаты аппроксимации ====="
 
 #: modules/graph/graph_cd.c:1024 modules/graph/graph_fdfit.c:1388
-#: modules/graph/graph_fit.c:1494 modules/volume/volume_fdfit.c:1725
+#: modules/graph/graph_fit.c:1525 modules/volume/volume_fdfit.c:1725
 #, c-format
 msgid "Data:             %s\n"
 msgstr "Данные:            %s\n"
 
 #: modules/graph/graph_cd.c:1027 modules/graph/graph_fdfit.c:1391
-#: modules/graph/graph_fit.c:1497 modules/volume/volume_fdfit.c:1728
+#: modules/graph/graph_fit.c:1528 modules/volume/volume_fdfit.c:1728
 #, c-format
 msgid "Number of points: %d of %d\n"
 msgstr "Число точек: %d из %d\n"
 
 #: modules/graph/graph_cd.c:1031 modules/graph/graph_fdfit.c:1395
-#: modules/graph/graph_fit.c:1501 modules/volume/volume_fdfit.c:1732
+#: modules/graph/graph_fit.c:1532 modules/volume/volume_fdfit.c:1732
 #, c-format
 msgid "X range:          %.*f to %.*f %s\n"
 msgstr "Диапазон X:          от %.*f до %.*f %s\n"
 
 #: modules/graph/graph_cd.c:1037 modules/graph/graph_fdfit.c:1401
-#: modules/graph/graph_fit.c:1507 modules/volume/volume_fdfit.c:1738
+#: modules/graph/graph_fit.c:1538 modules/volume/volume_fdfit.c:1738
 #, c-format
 msgid "Fitted function:  %s\n"
 msgstr "Аппроксимирующая функция:  %s\n"
 
 #: modules/graph/graph_cd.c:1040 modules/graph/graph_fdfit.c:1404
-#: modules/graph/graph_fit.c:1510 modules/volume/volume_fdfit.c:1741
+#: modules/graph/graph_fit.c:1541 modules/volume/volume_fdfit.c:1741
 msgid "Results\n"
 msgstr "Результаты\n"
 
@@ -6507,63 +6511,63 @@ msgstr "Аппроксимировать кривую сила-расстоян�
 msgid "Fit FD Curve"
 msgstr "Аппроксимировать кривую сила-расстояние"
 
-#: modules/graph/graph_fdfit.c:259 modules/graph/graph_fit.c:272
+#: modules/graph/graph_fdfit.c:259 modules/graph/graph_fit.c:278
 #: modules/process/fit_2d.c:255 modules/volume/volume_fdfit.c:304
 msgid "verb|_Estimate"
 msgstr "О_ценить"
 
-#: modules/graph/graph_fdfit.c:261 modules/graph/graph_fit.c:274
+#: modules/graph/graph_fdfit.c:261 modules/graph/graph_fit.c:280
 #: modules/process/fit_2d.c:257 modules/volume/volume_fdfit.c:306
 msgid "_Plot Inits"
 msgstr "_Исходный"
 
-#: modules/graph/graph_fdfit.c:360 modules/graph/graph_fit.c:368
+#: modules/graph/graph_fdfit.c:360 modules/graph/graph_fit.c:374
 #: modules/process/fit_2d.c:357 modules/volume/volume_fdfit.c:445
 msgid "Fix"
 msgstr "Править"
 
-#: modules/graph/graph_fdfit.c:366 modules/graph/graph_fit.c:374
+#: modules/graph/graph_fdfit.c:366 modules/graph/graph_fit.c:380
 #: modules/process/fit_2d.c:340 modules/volume/volume_fdfit.c:451
 msgid "Initial"
 msgstr "Исходное"
 
-#: modules/graph/graph_fdfit.c:377 modules/graph/graph_fit.c:385
+#: modules/graph/graph_fdfit.c:377 modules/graph/graph_fit.c:395
 #: modules/process/fit_2d.c:443 modules/volume/volume_fdfit.c:462
 msgid "χ<sup>2</sup> result:"
 msgstr "Результирующее χ<sup>2</sup>:"
 
-#: modules/graph/graph_fdfit.c:393 modules/graph/graph_fit.c:401
+#: modules/graph/graph_fdfit.c:393 modules/graph/graph_fit.c:411
 #: modules/process/fit_2d.c:426 modules/volume/volume_fdfit.c:478
 msgid "Correlation Matrix"
 msgstr "Матрица корреляции"
 
-#: modules/graph/graph_fdfit.c:448 modules/graph/graph_fit.c:476
+#: modules/graph/graph_fdfit.c:448 modules/graph/graph_fit.c:486
 #: modules/process/wpour_mark.c:443 modules/volume/volume_fdfit.c:533
 msgid "Instant:"
 msgstr "Сразу:"
 
-#: modules/graph/graph_fdfit.c:451 modules/graph/graph_fit.c:479
+#: modules/graph/graph_fdfit.c:451 modules/graph/graph_fit.c:489
 #: modules/volume/volume_fdfit.c:536
 msgid "e_stimate"
 msgstr "о_ценивать"
 
-#: modules/graph/graph_fdfit.c:458 modules/graph/graph_fit.c:486
+#: modules/graph/graph_fdfit.c:458 modules/graph/graph_fit.c:496
 #: modules/volume/volume_fdfit.c:543
 msgid "p_lot"
 msgstr "ст_роить"
 
-#: modules/graph/graph_fdfit.c:709 modules/graph/graph_fit.c:753
+#: modules/graph/graph_fdfit.c:709 modules/graph/graph_fit.c:763
 #: modules/volume/volume_fdfit.c:907
 msgid "Estimate"
 msgstr "Оценка"
 
-#: modules/graph/graph_fdfit.c:1431 modules/graph/graph_fit.c:1537
+#: modules/graph/graph_fdfit.c:1431 modules/graph/graph_fit.c:1568
 #: modules/volume/volume_fdfit.c:1768
 #, c-format
 msgid "Residual sum:   %g\n"
 msgstr "Остаточная сумма:   %g\n"
 
-#: modules/graph/graph_fdfit.c:1434 modules/graph/graph_fit.c:1540
+#: modules/graph/graph_fdfit.c:1434 modules/graph/graph_fit.c:1571
 #: modules/volume/volume_fdfit.c:1771
 msgid "Correlation matrix\n"
 msgstr "Матрица корреляции\n"
@@ -6580,23 +6584,27 @@ msgstr "/_Фильтр"
 msgid "Remove noise from graph curves"
 msgstr "Удалить шум с графиков кривых "
 
-#: modules/graph/graph_fit.c:183
+#: modules/graph/graph_fit.c:185
 msgid "Fit graph with function"
 msgstr "Аппроксимирует график функцией"
 
-#: modules/graph/graph_fit.c:197
+#: modules/graph/graph_fit.c:199
 msgid "/_Fit Function..."
 msgstr "/_Аппроксимировать функцией..."
 
-#: modules/graph/graph_fit.c:200
+#: modules/graph/graph_fit.c:202
 msgid "Fit a function on graph data"
 msgstr "Аппроксимировать данные графика функцией"
 
-#: modules/graph/graph_fit.c:451
+#: modules/graph/graph_fit.c:387
+msgid "Copy all fitted values to estimates"
+msgstr "Копировать все аппроксимирующие значения в оценки"
+
+#: modules/graph/graph_fit.c:461
 msgid "Plot full range"
 msgstr "Строить весь диапазон"
 
-#: modules/graph/graph_fit.c:461
+#: modules/graph/graph_fit.c:471
 msgid "Create a difference graph"
 msgstr "Создать график разности"
 
@@ -7367,27 +7375,27 @@ msgstr "Строится сетка..."
 msgid "Triangulating..."
 msgstr "Производится триангуляция..."
 
-#: modules/process/calcoefs_view.c:1137 modules/tools/profile.c:1157
+#: modules/process/calcoefs_view.c:1137 modules/tools/profile.c:1156
 msgid "X correction"
 msgstr "Поправка по X"
 
-#: modules/process/calcoefs_view.c:1138 modules/tools/profile.c:1158
+#: modules/process/calcoefs_view.c:1138 modules/tools/profile.c:1157
 msgid "Y correction"
 msgstr "Поправка по Y"
 
-#: modules/process/calcoefs_view.c:1139 modules/tools/profile.c:1159
+#: modules/process/calcoefs_view.c:1139 modules/tools/profile.c:1158
 msgid "Z correction"
 msgstr "Поправка по Z"
 
-#: modules/process/calcoefs_view.c:1140 modules/tools/profile.c:1160
+#: modules/process/calcoefs_view.c:1140 modules/tools/profile.c:1159
 msgid "X uncertainty"
 msgstr "Погрешность X"
 
-#: modules/process/calcoefs_view.c:1141 modules/tools/profile.c:1161
+#: modules/process/calcoefs_view.c:1141 modules/tools/profile.c:1160
 msgid "Y uncertainty"
 msgstr "Погрешность Y"
 
-#: modules/process/calcoefs_view.c:1142 modules/tools/profile.c:1162
+#: modules/process/calcoefs_view.c:1142 modules/tools/profile.c:1161
 msgid "Z uncertainty"
 msgstr "Погрешность Z"
 
@@ -12727,7 +12735,7 @@ msgstr "Верхняя граница погрешности Z %d"
 msgid "Zunc low bound %d"
 msgstr "Нижняя граница погрешности Z %d"
 
-#: modules/tools/profile.c:1156
+#: modules/tools/profile.c:1155
 msgid "calib-data|None"
 msgstr "Нет"
 
@@ -12862,7 +12870,7 @@ msgid "Calculate surface profile parameters."
 msgstr "Рассчитывает параметры профиля поверхности."
 
 #: modules/tools/roughness.c:662 modules/tools/roughness.c:791
-#: modules/tools/roughness.c:1461
+#: modules/tools/roughness.c:1460
 msgid "Roughness"
 msgstr "Шероховатость"
 
@@ -12870,11 +12878,11 @@ msgstr "Шероховатость"
 msgid "Calculate roughness parameters"
 msgstr "Рассчитать параметры шероховатости"
 
-#: modules/tools/roughness.c:789 modules/tools/roughness.c:1459
+#: modules/tools/roughness.c:789 modules/tools/roughness.c:1458
 msgid "Texture"
 msgstr "Текстура"
 
-#: modules/tools/roughness.c:790 modules/tools/roughness.c:1460
+#: modules/tools/roughness.c:790 modules/tools/roughness.c:1459
 msgid "Waviness"
 msgstr "Волнистость"
 
@@ -12886,7 +12894,7 @@ msgstr "ФРА"
 msgid "BRC"
 msgstr "ООК"
 
-#: modules/tools/roughness.c:794 modules/tools/roughness.c:1464
+#: modules/tools/roughness.c:794 modules/tools/roughness.c:1463
 msgid "Peak Count"
 msgstr "Число пиков"
 
@@ -12898,41 +12906,41 @@ msgstr "_График:"
 msgid "C_ut-off:"
 msgstr "_Порог:"
 
-#: modules/tools/roughness.c:1343
+#: modules/tools/roughness.c:1342
 msgid "No profile selected."
 msgstr "Профилей не выбрано."
 
-#: modules/tools/roughness.c:1462
+#: modules/tools/roughness.c:1461
 msgid "Amplitude Distribution Function"
 msgstr "Функция распределения амплитуды"
 
-#: modules/tools/roughness.c:1463
+#: modules/tools/roughness.c:1462
 msgid "The Bearing Ratio Curve"
 msgstr "Относительная опорная кривая"
 
-#: modules/tools/roughness.c:1498
+#: modules/tools/roughness.c:1497
 msgid "Surface Profiles"
 msgstr "Профили поверхности"
 
-#: modules/tools/roughness.c:2063
+#: modules/tools/roughness.c:2062
 msgid "Save Roughness Parameters"
 msgstr "Сохранить параметры шероховатости"
 
-#: modules/tools/roughness.c:2120
+#: modules/tools/roughness.c:2119
 msgid "Roughness Parameters"
 msgstr "Параметры шероховатости"
 
-#: modules/tools/roughness.c:2126 modules/tools/stats.c:1042
+#: modules/tools/roughness.c:2125 modules/tools/stats.c:1042
 #, c-format
 msgid "File:              %s\n"
 msgstr "Файл:              %s\n"
 
-#: modules/tools/roughness.c:2130 modules/tools/stats.c:1046
+#: modules/tools/roughness.c:2129 modules/tools/stats.c:1046
 #, c-format
 msgid "Data channel:      %s\n"
 msgstr "Канал данных:      %s\n"
 
-#: modules/tools/roughness.c:2161
+#: modules/tools/roughness.c:2160
 #, c-format
 msgid ""
 "Selected line:     (%s, %s) to (%s, %s) px\n"
