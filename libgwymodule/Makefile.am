@@ -54,8 +54,8 @@ MKENUM_HFILES = \
 include $(top_srcdir)/utils/mkenum.mk
 
 libgwymodule2.def: $(libgwymodule2_la_OBJECTS)
-	@echo EXPORTS >libgwymodule2.def
-	@for lo in $(libgwymodule2_la_OBJECTS); do \
+	$(AM_V_GEN)echo EXPORTS >libgwymodule2.def
+	$(AM_V_at)for lo in $(libgwymodule2_la_OBJECTS); do \
 		o=`sed "s/^pic_object='\\(.*\\)'/\\1/;t;d" "$$lo"`; \
 		$(NM) --defined-only --demangle --no-sort "$$o" \
 		| awk -F' ' '($$2=="T" && $$3 ~ /^gwy_/){print "     ",$$3}'; \

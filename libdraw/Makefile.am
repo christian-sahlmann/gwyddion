@@ -33,8 +33,8 @@ noinst_HEADERS = \
 	gwydrawinternal.h
 
 libgwydraw2.def: $(libgwydraw2_la_OBJECTS)
-	@echo EXPORTS >libgwydraw2.def
-	@for lo in $(libgwydraw2_la_OBJECTS); do \
+	$(AM_V_GEN)echo EXPORTS >libgwydraw2.def
+	$(AM_V_at)for lo in $(libgwydraw2_la_OBJECTS); do \
 		o=`sed "s/^pic_object='\\(.*\\)'/\\1/;t;d" "$$lo"`; \
 		$(NM) --defined-only --demangle --no-sort "$$o" \
 		| awk -F' ' '($$2=="T" && $$3 ~ /^gwy_/){print "     ",$$3}'; \

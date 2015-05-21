@@ -90,8 +90,8 @@ darwin_ldflags = -framework AppKit -framework ApplicationServices
 endif
 
 libgwyapp2.def: $(libgwyapp2_la_OBJECTS)
-	$(AM_V_at)echo EXPORTS >libgwyapp2.def
-	$(AM_V_GEN)for lo in $(libgwyapp2_la_OBJECTS); do \
+	$(AM_V_GEN)echo EXPORTS >libgwyapp2.def
+	$(AM_V_at)for lo in $(libgwyapp2_la_OBJECTS); do \
 		o=`sed "s/^pic_object='\\(.*\\)'/\\1/;t;d" "$$lo"`; \
 		$(NM) --defined-only --demangle --no-sort "$$o" \
 		| awk -F' ' '($$2=="T" && $$3 ~ /^gwy_/){print "     ",$$3}'; \
