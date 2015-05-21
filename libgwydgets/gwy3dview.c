@@ -1416,7 +1416,8 @@ gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview)
 
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
     g_return_val_if_fail(GTK_WIDGET_REALIZED(gwy3dview), NULL);
-    gwy_debug("");
+    gwy_debug("timeout: %u, timeout2: %u",
+              gwy3dview->timeout_id, gwy3dview->timeout2_id);
 
     width  = GTK_WIDGET(gwy3dview)->allocation.width;
     height = GTK_WIDGET(gwy3dview)->allocation.height;
@@ -1428,6 +1429,7 @@ gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview)
     pixels = gdk_pixbuf_get_pixels(pixbuf);
 
     glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+    gwy_debug("pixels obtained");
 
     a = pixels;
     b = pixels + (height -1)  * rowstride;
@@ -1724,7 +1726,6 @@ gwy_3d_view_expose(GtkWidget *widget,
     if (!gdk_gl_drawable_gl_begin(gldrawable, glcontext))
         return FALSE;
 
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glViewport(0, 0, w, h);
@@ -1794,7 +1795,6 @@ gwy_3d_view_expose(GtkWidget *widget,
     else {
         glDisable(GL_LIGHTING);
     }
-
 
     glCallList(gwy3dview->shape_list_base + gwy3dview->shape_current);
     if (gwy3dview->setup->axes_visible)
