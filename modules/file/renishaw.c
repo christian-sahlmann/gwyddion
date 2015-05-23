@@ -1444,7 +1444,7 @@ wdf_read_maparea_block(const guchar *buffer,
     gwy_debug("linefocus_length=%d", maparea->linefocus_size);
 }
 
-void
+static void
 extract_metadata_from_values(gpointer key, gpointer value,
                              gpointer user_data)
 {
