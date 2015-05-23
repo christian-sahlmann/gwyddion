@@ -55,7 +55,7 @@ MKENUM_HFILES = \
 include $(top_srcdir)/utils/mkenum.mk
 
 libgwyddion2.def: $(libgwyddion2_la_OBJECTS)
-	$(AM_V_GEN))echo EXPORTS >libgwyddion2.def
+	$(AM_V_GEN)echo EXPORTS >libgwyddion2.def
 	$(AM_V_at)for lo in $(libgwyddion2_la_OBJECTS); do \
 		o=`sed "s/^pic_object='\\(.*\\)'/\\1/;t;d" "$$lo"`; \
 		$(NM) --defined-only --demangle --no-sort "$$o" \
