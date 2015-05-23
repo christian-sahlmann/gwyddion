@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-05-06 02:58+0200\n"
-"PO-Revision-Date: 2015-05-06 23:08+0200\n"
+"POT-Creation-Date: 2015-05-23 02:58+0200\n"
+"PO-Revision-Date: 2015-05-23 23:39+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "Language: cs\n"
@@ -126,83 +126,91 @@ msgstr "kontaktní: Hertz (paraboloid)"
 msgid "Untitled"
 msgstr "Nepojmenovaný"
 
-#: libgwyddion/gwynlfitpreset.c:1367 libprocess/gwyprocessenums.c:101
+#: libgwyddion/gwynlfitpreset.c:1498 libprocess/gwyprocessenums.c:101
 msgid "Gaussian"
 msgstr "Gaussovka"
 
-#: libgwyddion/gwynlfitpreset.c:1383
+#: libgwyddion/gwynlfitpreset.c:1514
 msgid "Gaussian (PSDF)"
 msgstr "Gaussovka (PSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1397
+#: libgwyddion/gwynlfitpreset.c:1528
 msgid "Gaussian (ACF)"
 msgstr "Gaussovka (ACF)"
 
-#: libgwyddion/gwynlfitpreset.c:1411
+#: libgwyddion/gwynlfitpreset.c:1542
 msgid "Gaussian (HHCF)"
 msgstr "Gaussovka (HHCF)"
 
-#: libgwyddion/gwynlfitpreset.c:1425
+#: libgwyddion/gwynlfitpreset.c:1556
 msgid "Gaussian (RPSDF)"
 msgstr "Gaussovka (RPSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1439
+#: libgwyddion/gwynlfitpreset.c:1570
 msgid "Two Gaussians (PSDF)"
 msgstr "Dvě gaussovky (PSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1455
+#: libgwyddion/gwynlfitpreset.c:1586
 msgid "Exponential"
 msgstr "Exponenciála"
 
-#: libgwyddion/gwynlfitpreset.c:1468
+#: libgwyddion/gwynlfitpreset.c:1599
 msgid "Exponential (PSDF)"
 msgstr "Exponenciála (PSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1482
+#: libgwyddion/gwynlfitpreset.c:1613
 msgid "Exponential (ACF)"
 msgstr "Exponenciála (ACF)"
 
-#: libgwyddion/gwynlfitpreset.c:1495
+#: libgwyddion/gwynlfitpreset.c:1626
 msgid "Exponential (HHCF)"
 msgstr "Exponenciála (HHCF)"
 
-#: libgwyddion/gwynlfitpreset.c:1509
+#: libgwyddion/gwynlfitpreset.c:1640
 msgid "Exponential (RPSDF)"
 msgstr "Exponenciála (RPSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1524
+#: libgwyddion/gwynlfitpreset.c:1655
 msgid "Polynomial (order 0)"
 msgstr "Polynom (stupeň 0)"
 
-#: libgwyddion/gwynlfitpreset.c:1536
+#: libgwyddion/gwynlfitpreset.c:1667
 msgid "Polynomial (order 1)"
 msgstr "Polynom (stupeň 1)"
 
-#: libgwyddion/gwynlfitpreset.c:1548
+#: libgwyddion/gwynlfitpreset.c:1679
 msgid "Polynomial (order 2)"
 msgstr "Polynom (stupeň 2)"
 
-#: libgwyddion/gwynlfitpreset.c:1561
+#: libgwyddion/gwynlfitpreset.c:1692
 msgid "Polynomial (order 3)"
 msgstr "Polynom (stupeň 3)"
 
-#: libgwyddion/gwynlfitpreset.c:1575
+#: libgwyddion/gwynlfitpreset.c:1706
 msgid "Square wave"
 msgstr "Obdélníková vlna"
 
-#: libgwyddion/gwynlfitpreset.c:1592
+#: libgwyddion/gwynlfitpreset.c:1723
 msgid "Parabolic step"
 msgstr "Parabolický schod"
 
-#: libgwyddion/gwynlfitpreset.c:1609
+#: libgwyddion/gwynlfitpreset.c:1740
+msgid "Smooth slanted step"
+msgstr "Hladký šikmý schod"
+
+#: libgwyddion/gwynlfitpreset.c:1758
+msgid "Smooth bent step"
+msgstr "Hladký ohnutý schod"
+
+#: libgwyddion/gwynlfitpreset.c:1775
 msgid "Power"
 msgstr "Mocnina"
 
-#: libgwyddion/gwynlfitpreset.c:1622
+#: libgwyddion/gwynlfitpreset.c:1788
 msgid "Lorentzian"
 msgstr "Lorentzovka"
 
-#: libgwyddion/gwynlfitpreset.c:1637
+#: libgwyddion/gwynlfitpreset.c:1803
 msgid "Sinc"
 msgstr "Sinc"
 
@@ -659,6 +667,7 @@ msgid "Certainty map..."
 msgstr "Mapa spolehlivosti..."
 
 #: libprocess/morph_lib.c:616 libprocess/morph_lib.c:764
+#, c-format
 msgid "Iterating estimate (iteration %d)..."
 msgstr "Iteruji odhad (iterace %d)..."
 
@@ -766,8 +775,8 @@ msgstr "φ:"
 #: modules/process/facet_analysis.c:403 modules/process/indent_analyze.c:461
 #: modules/process/rotate.c:286 modules/process/shade.c:245
 #: modules/process/shade.c:253 modules/process/tilt.c:210
-#: modules/process/tilt.c:222 modules/process/tip_model.c:230
-#: modules/process/tip_model.c:236 modules/process/unrotate.c:347
+#: modules/process/tilt.c:222 modules/process/tip_model.c:233
+#: modules/process/tip_model.c:239 modules/process/unrotate.c:347
 msgid "deg"
 msgstr "stupňů"
 
@@ -917,7 +926,7 @@ msgstr "pixelů"
 #: modules/process/scale.c:196 modules/process/scars.c:477
 #: modules/process/semsim.c:211 modules/process/shade.c:216
 #: modules/process/slope_dist.c:281 modules/process/sphere-revolve.c:218
-#: modules/process/tilt.c:160 modules/process/tip_model.c:166
+#: modules/process/tilt.c:160 modules/process/tip_model.c:168
 #: modules/process/unrotate.c:228 modules/process/volumize_layers.c:213
 #: modules/process/wave_synth.c:361 modules/process/wpour_mark.c:296
 #: modules/volume/volume_calibrate.c:371 modules/volume/volume_extract.c:331
@@ -3656,7 +3665,7 @@ msgstr "Šířk_a:"
 #: modules/file/pixmap.c:896 modules/file/pixmap.c:951
 #: modules/file/rawfile.c:659 modules/file/rawfile.c:715
 #: modules/process/calcoefs_new.c:384 modules/process/calcoefs_new.c:451
-#: modules/process/calcoefs_simple.c:387 modules/process/calcoefs_simple.c:454
+#: modules/process/calcoefs_simple.c:389 modules/process/calcoefs_simple.c:456
 #: modules/process/calcoefs_view.c:529 modules/process/calcoefs_view.c:567
 #: modules/process/calibrate.c:467 modules/process/calibrate.c:550
 #: modules/process/dimensions.h:160 modules/volume/volume_calibrate.c:415
@@ -3683,7 +3692,7 @@ msgstr "_Z-škála (na jednotku):"
 
 #: modules/file/hdrimage.cc:2557 modules/file/pixmap.c:1178
 #: modules/file/rawfile.c:1325 modules/process/calcoefs_new.c:776
-#: modules/process/calcoefs_simple.c:1187 modules/process/calcoefs_view.c:1397
+#: modules/process/calcoefs_simple.c:1191 modules/process/calcoefs_view.c:1397
 #: modules/process/calibrate.c:980 modules/process/dimensions.h:194
 #: modules/volume/volume_calibrate.c:1018
 msgid "Change Units"
@@ -3691,7 +3700,7 @@ msgstr "Změnit jednotky"
 
 #: modules/file/hdrimage.cc:2571 modules/file/pixmap.c:1192
 #: modules/file/rawfile.c:1339 modules/process/calcoefs_new.c:789
-#: modules/process/calcoefs_simple.c:1200 modules/process/calcoefs_view.c:1410
+#: modules/process/calcoefs_simple.c:1204 modules/process/calcoefs_view.c:1410
 #: modules/process/calibrate.c:994 modules/process/dimensions.h:207
 #: modules/volume/volume_calibrate.c:1032
 msgid "New _units:"
@@ -4447,7 +4456,7 @@ msgid "Spectra data starts past the end of file."
 msgstr "Data spekter začínají za koncem souboru."
 
 #: modules/file/nanoeducator.c:648 modules/file/opdfile.c:277
-#: modules/file/renishaw.c:1058 modules/file/sensofar.c:257
+#: modules/file/renishaw.c:1321 modules/file/sensofar.c:257
 #: modules/file/witec-asc.c:161
 msgid "File header is truncated"
 msgstr "Hlavička souboru je uříznutá."
@@ -4507,38 +4516,34 @@ msgstr "Hodnota HeaderLength %u se liší od skutečné délky hlavičky %u"
 msgid "Expected header start marker ‘%s’ but found ‘%s’."
 msgstr "Namísto očekávané značky začátku hlavičky ‚%s‘ bylo nalezeno ‚%s‘."
 
-#: modules/file/nanonis.c:117
+#: modules/file/nanonis.c:111
 msgid "Imports Nanonis SXM data files."
 msgstr "Načítá datové soubory SXM Nanonis."
 
-#: modules/file/nanonis.c:137
+#: modules/file/nanonis.c:131
 msgid "Nanonis SXM files (.sxm)"
 msgstr "Nanonis SXM soubory (.sxm)"
 
-#: modules/file/nanonis.c:171 modules/file/omicron.c:519
+#: modules/file/nanonis.c:230 modules/file/omicron.c:519
 #: modules/file/unisoku.c:278
 msgid "File header ended unexpectedly."
 msgstr "Hlavička souboru neočekávaně skončila."
 
-#: modules/file/nanonis.c:247
+#: modules/file/nanonis.c:251
 msgid "Garbage was found in place of tag header line."
 msgstr "Na místě řádku hlavičky se značkou jsou nesmysly."
 
-#: modules/file/nanonis.c:309
+#: modules/file/nanonis.c:317
 #, c-format
 msgid "DATA_INFO does not contain the expected columns: %s."
 msgstr "DATA_INFO neobsahuje očekávané sloupce: %s."
 
-#: modules/file/nanonis.c:334
+#: modules/file/nanonis.c:339
 #, c-format
 msgid "DATA_INFO line contains less than %d fields."
 msgstr "Řádek DATA_INFO obsahuje méně než %d položek."
 
-#: modules/file/nanonis.c:384
-msgid "Header ended within a Multipass-Config table."
-msgstr "Hlavička skončila uvnitř tabulky Multipass-Config."
-
-#: modules/file/nanonis.c:546
+#: modules/file/nanonis.c:518
 msgid "Missing data start marker \\x1a\\x04."
 msgstr "Schází značka začátku dat \\x1a\\x04."
 
@@ -5033,7 +5038,7 @@ msgid "Cannot get pixbuf loader: %s."
 msgstr "Nelze získat pixbuf loader: %s."
 
 #: modules/file/pixmap.c:521 modules/file/pixmap.c:534
-#: modules/file/renishaw.c:551 modules/file/renishaw.c:561
+#: modules/file/renishaw.c:564 modules/file/renishaw.c:574
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr "Pixbuf loader odmítl data: %s."
@@ -5220,7 +5225,7 @@ msgstr "Formát dat"
 #: modules/process/grain_mark.c:261 modules/process/grain_wshed.c:180
 #: modules/process/mark_with.c:210 modules/process/polydistort.c:213
 #: modules/process/scars.c:474 modules/process/slope_dist.c:278
-#: modules/process/synth.h:508 modules/process/tip_model.c:163
+#: modules/process/synth.h:508 modules/process/tip_model.c:165
 #: modules/process/wpour_mark.c:291 modules/tools/linestats.c:452
 #: modules/tools/sfunctions.c:512 modules/tools/stats.c:441
 #: modules/volume/volume_extract.c:328
@@ -5556,27 +5561,27 @@ msgstr ""
 msgid "XYZ data regularization failed due to numerical instability."
 msgstr "Regularizace XYZ dat selhala kvůli numerické nestabilitě."
 
-#: modules/file/renishaw.c:355
+#: modules/file/renishaw.c:363
 msgid "Imports Renishaw WiRE data files (WDF)."
 msgstr "Načítá datové soubory Renishaw WiRE (WDF)."
 
-#: modules/file/renishaw.c:368
+#: modules/file/renishaw.c:376
 msgid "Renishaw WiRE data files (.wdf)"
 msgstr "Renishaw WiRE datové soubory (.wdf)"
 
-#: modules/file/renishaw.c:539
+#: modules/file/renishaw.c:552
 msgid "MapArea block is truncated"
 msgstr "Blok MapArea je předčasně ukončený"
 
-#: modules/file/renishaw.c:751
+#: modules/file/renishaw.c:783
 msgid "Random points order unsupported"
 msgstr "Náhodné pořadí bodů není podporováno."
 
-#: modules/file/renishaw.c:1129
+#: modules/file/renishaw.c:1392
 msgid "Block header is truncated"
 msgstr "Hlavička bloku je předčasně ukončená."
 
-#: modules/file/renishaw.c:1144
+#: modules/file/renishaw.c:1407
 msgid "Data block is truncated"
 msgstr "Blok dat je předčasně ukončený."
 
@@ -6183,47 +6188,47 @@ msgstr "/_Kritická dimenze..."
 msgid "Fit critical dimension"
 msgstr "Proložení kritické dimenze"
 
-#: modules/graph/graph_cd.c:213 modules/graph/graph_fit.c:265
+#: modules/graph/graph_cd.c:213 modules/graph/graph_fit.c:271
 msgid "Fit Graph"
 msgstr "Proložení funkce grafem"
 
 #: modules/graph/graph_cd.c:216 modules/graph/graph_fdfit.c:255
-#: modules/graph/graph_fit.c:268 modules/process/fit_2d.c:253
+#: modules/graph/graph_fit.c:274 modules/process/fit_2d.c:253
 #: modules/volume/volume_fdfit.c:300
 msgid "verb|_Fit"
 msgstr "_Proložit"
 
 #: modules/graph/graph_cd.c:263 modules/graph/graph_cut.c:163
-#: modules/graph/graph_fdfit.c:307 modules/graph/graph_fit.c:320
+#: modules/graph/graph_fdfit.c:307 modules/graph/graph_fit.c:326
 msgid "_Graph curve:"
 msgstr "_Křivka grafu:"
 
 #: modules/graph/graph_cd.c:277 modules/graph/graph_fdfit.c:321
-#: modules/graph/graph_fit.c:334 modules/volume/volume_fdfit.c:406
+#: modules/graph/graph_fit.c:340 modules/volume/volume_fdfit.c:406
 msgid "F_unction:"
 msgstr "_Funkce:"
 
 #: modules/graph/graph_cd.c:306 modules/graph/graph_fdfit.c:362
-#: modules/graph/graph_fit.c:370 modules/process/curvature.c:769
+#: modules/graph/graph_fit.c:376 modules/process/curvature.c:769
 #: modules/volume/volume_fdfit.c:447
 msgid "Parameter"
 msgstr "Parametr"
 
 #: modules/graph/graph_cd.c:308 modules/graph/graph_fdfit.c:364
-#: modules/graph/graph_fit.c:372 modules/process/fit_2d.c:349
+#: modules/graph/graph_fit.c:378 modules/process/fit_2d.c:349
 #: modules/volume/volume_fdfit.c:449 modules/volume/volume_kmeans.c:475
 #: modules/volume/volume_kmedians.c:462
 msgid "Error"
 msgstr "Chyba"
 
 #: modules/graph/graph_cd.c:320 modules/graph/graph_cut.c:193
-#: modules/graph/graph_fdfit.c:416 modules/graph/graph_fit.c:424
+#: modules/graph/graph_fdfit.c:416 modules/graph/graph_fit.c:434
 #: modules/volume/volume_fdfit.c:501
 msgid "Range:"
 msgstr "Rozsah:"
 
 #: modules/graph/graph_cd.c:331 modules/graph/graph_cut.c:204
-#: modules/graph/graph_fdfit.c:427 modules/graph/graph_fit.c:435
+#: modules/graph/graph_fdfit.c:427 modules/graph/graph_fit.c:445
 #: modules/volume/volume_fdfit.c:512
 msgid "range|to"
 msgstr "až"
@@ -6233,25 +6238,25 @@ msgid "_Draw whole circle"
 msgstr "Kreslit _celou kružnici"
 
 #: modules/graph/graph_cd.c:383 modules/graph/graph_fdfit.c:492
-#: modules/graph/graph_fit.c:522 modules/process/fit_2d.c:995
+#: modules/graph/graph_fit.c:532 modules/process/fit_2d.c:995
 #: modules/volume/volume_fdfit.c:574
 msgid "Save Fit Report"
 msgstr "Uložit výsledky"
 
 #: modules/graph/graph_cd.c:530 modules/graph/graph_cd.c:1134
-#: modules/graph/graph_fdfit.c:710 modules/graph/graph_fit.c:754
+#: modules/graph/graph_fdfit.c:710 modules/graph/graph_fit.c:764
 #: modules/volume/volume_fdfit.c:908
 msgid "Fit"
 msgstr "Proložení"
 
 #: modules/graph/graph_cd.c:556 modules/graph/graph_fdfit.c:750
-#: modules/graph/graph_fit.c:794 modules/volume/volume_fdfit.c:979
+#: modules/graph/graph_fit.c:804 modules/volume/volume_fdfit.c:979
 #: modules/volume/volume_fdfit.c:1086
 msgid "It is necessary to select more data points than free fit parameters"
 msgstr "Je třeba vybrat více datových bodů, než je volných parametrů fitu."
 
 #: modules/graph/graph_cd.c:711 modules/graph/graph_fdfit.c:799
-#: modules/graph/graph_fit.c:843 modules/process/fit_2d.c:406
+#: modules/graph/graph_fit.c:853 modules/process/fit_2d.c:406
 #: modules/tools/grainmeasure.c:217 modules/tools/readvalue.c:645
 #: modules/tools/readvalue.c:646 modules/tools/readvalue.c:647
 #: modules/tools/readvalue.c:648 modules/tools/roughness.c:992
@@ -6263,36 +6268,36 @@ msgid "N.A."
 msgstr "nelze použít"
 
 #: modules/graph/graph_cd.c:1020 modules/graph/graph_fdfit.c:1384
-#: modules/graph/graph_fit.c:1490 modules/volume/volume_fdfit.c:1721
+#: modules/graph/graph_fit.c:1521 modules/volume/volume_fdfit.c:1721
 msgid "===== Fit Results ====="
 msgstr "===== Výsledek proložení ====="
 
 #: modules/graph/graph_cd.c:1024 modules/graph/graph_fdfit.c:1388
-#: modules/graph/graph_fit.c:1494 modules/volume/volume_fdfit.c:1725
+#: modules/graph/graph_fit.c:1525 modules/volume/volume_fdfit.c:1725
 #, c-format
 msgid "Data:             %s\n"
 msgstr "Data:             %s\n"
 
 #: modules/graph/graph_cd.c:1027 modules/graph/graph_fdfit.c:1391
-#: modules/graph/graph_fit.c:1497 modules/volume/volume_fdfit.c:1728
+#: modules/graph/graph_fit.c:1528 modules/volume/volume_fdfit.c:1728
 #, c-format
 msgid "Number of points: %d of %d\n"
 msgstr "Počet bodů:       %d z %d\n"
 
 #: modules/graph/graph_cd.c:1031 modules/graph/graph_fdfit.c:1395
-#: modules/graph/graph_fit.c:1501 modules/volume/volume_fdfit.c:1732
+#: modules/graph/graph_fit.c:1532 modules/volume/volume_fdfit.c:1732
 #, c-format
 msgid "X range:          %.*f to %.*f %s\n"
 msgstr "Rozsah x:         %.*f až %.*f %s\n"
 
 #: modules/graph/graph_cd.c:1037 modules/graph/graph_fdfit.c:1401
-#: modules/graph/graph_fit.c:1507 modules/volume/volume_fdfit.c:1738
+#: modules/graph/graph_fit.c:1538 modules/volume/volume_fdfit.c:1738
 #, c-format
 msgid "Fitted function:  %s\n"
 msgstr "Proložená funkce: %s\n"
 
 #: modules/graph/graph_cd.c:1040 modules/graph/graph_fdfit.c:1404
-#: modules/graph/graph_fit.c:1510 modules/volume/volume_fdfit.c:1741
+#: modules/graph/graph_fit.c:1541 modules/volume/volume_fdfit.c:1741
 msgid "Results\n"
 msgstr "Výsledky\n"
 
@@ -6434,63 +6439,63 @@ msgstr "Proložit FD křivku"
 msgid "Fit FD Curve"
 msgstr "Proložení FD křivky"
 
-#: modules/graph/graph_fdfit.c:259 modules/graph/graph_fit.c:272
+#: modules/graph/graph_fdfit.c:259 modules/graph/graph_fit.c:278
 #: modules/process/fit_2d.c:255 modules/volume/volume_fdfit.c:304
 msgid "verb|_Estimate"
 msgstr "Od_hadnout"
 
-#: modules/graph/graph_fdfit.c:261 modules/graph/graph_fit.c:274
+#: modules/graph/graph_fdfit.c:261 modules/graph/graph_fit.c:280
 #: modules/process/fit_2d.c:257 modules/volume/volume_fdfit.c:306
 msgid "_Plot Inits"
 msgstr "Vy_kreslit odhad"
 
-#: modules/graph/graph_fdfit.c:360 modules/graph/graph_fit.c:368
+#: modules/graph/graph_fdfit.c:360 modules/graph/graph_fit.c:374
 #: modules/process/fit_2d.c:357 modules/volume/volume_fdfit.c:445
 msgid "Fix"
 msgstr "Fix."
 
-#: modules/graph/graph_fdfit.c:366 modules/graph/graph_fit.c:374
+#: modules/graph/graph_fdfit.c:366 modules/graph/graph_fit.c:380
 #: modules/process/fit_2d.c:340 modules/volume/volume_fdfit.c:451
 msgid "Initial"
 msgstr "Poč."
 
-#: modules/graph/graph_fdfit.c:377 modules/graph/graph_fit.c:385
+#: modules/graph/graph_fdfit.c:377 modules/graph/graph_fit.c:395
 #: modules/process/fit_2d.c:443 modules/volume/volume_fdfit.c:462
 msgid "χ<sup>2</sup> result:"
 msgstr "Výsledné χ<sup>2</sup>:"
 
-#: modules/graph/graph_fdfit.c:393 modules/graph/graph_fit.c:401
+#: modules/graph/graph_fdfit.c:393 modules/graph/graph_fit.c:411
 #: modules/process/fit_2d.c:426 modules/volume/volume_fdfit.c:478
 msgid "Correlation Matrix"
 msgstr "Korelační matice"
 
-#: modules/graph/graph_fdfit.c:448 modules/graph/graph_fit.c:476
+#: modules/graph/graph_fdfit.c:448 modules/graph/graph_fit.c:486
 #: modules/process/wpour_mark.c:443 modules/volume/volume_fdfit.c:533
 msgid "Instant:"
 msgstr "Okamžitě:"
 
-#: modules/graph/graph_fdfit.c:451 modules/graph/graph_fit.c:479
+#: modules/graph/graph_fdfit.c:451 modules/graph/graph_fit.c:489
 #: modules/volume/volume_fdfit.c:536
 msgid "e_stimate"
 msgstr "od_hadovat"
 
-#: modules/graph/graph_fdfit.c:458 modules/graph/graph_fit.c:486
+#: modules/graph/graph_fdfit.c:458 modules/graph/graph_fit.c:496
 #: modules/volume/volume_fdfit.c:543
 msgid "p_lot"
 msgstr "_kreslit"
 
-#: modules/graph/graph_fdfit.c:709 modules/graph/graph_fit.c:753
+#: modules/graph/graph_fdfit.c:709 modules/graph/graph_fit.c:763
 #: modules/volume/volume_fdfit.c:907
 msgid "Estimate"
 msgstr "Odhad"
 
-#: modules/graph/graph_fdfit.c:1431 modules/graph/graph_fit.c:1537
+#: modules/graph/graph_fdfit.c:1431 modules/graph/graph_fit.c:1568
 #: modules/volume/volume_fdfit.c:1768
 #, c-format
 msgid "Residual sum:   %g\n"
 msgstr "Suma čtverců:   %g\n"
 
-#: modules/graph/graph_fdfit.c:1434 modules/graph/graph_fit.c:1540
+#: modules/graph/graph_fdfit.c:1434 modules/graph/graph_fit.c:1571
 #: modules/volume/volume_fdfit.c:1771
 msgid "Correlation matrix\n"
 msgstr "Korelační matice\n"
@@ -6507,23 +6512,27 @@ msgstr "/_Filtr:"
 msgid "Remove noise from graph curves"
 msgstr "Odstranit šum z křivek grafu"
 
-#: modules/graph/graph_fit.c:183
+#: modules/graph/graph_fit.c:185
 msgid "Fit graph with function"
 msgstr "Proložení funkce grafem"
 
-#: modules/graph/graph_fit.c:197
+#: modules/graph/graph_fit.c:199
 msgid "/_Fit Function..."
 msgstr "/Proložit _funkci..."
 
-#: modules/graph/graph_fit.c:200
+#: modules/graph/graph_fit.c:202
 msgid "Fit a function on graph data"
 msgstr "Proložení funkce daty grafu"
 
-#: modules/graph/graph_fit.c:451
+#: modules/graph/graph_fit.c:387
+msgid "Copy all fitted values to estimates"
+msgstr "Zkopírovat všechy nafitované hodnoty do odhadů"
+
+#: modules/graph/graph_fit.c:461
 msgid "Plot full range"
 msgstr "Kreslit plný rozsah"
 
-#: modules/graph/graph_fit.c:461
+#: modules/graph/graph_fit.c:471
 msgid "Create a difference graph"
 msgstr "Vytvořit graf rozdílu"
 
@@ -6864,17 +6873,17 @@ msgid "Generate surface by ballistic deposition"
 msgstr "Vytvořit povrch balistickou depozicí"
 
 #: modules/process/bdep_synth.c:250 modules/process/bdep_synth.c:614
-#: modules/process/calcoefs_simple.c:627 modules/process/col_synth.c:283
+#: modules/process/calcoefs_simple.c:631 modules/process/col_synth.c:283
 #: modules/process/col_synth.c:723 modules/process/crosscor.c:588
 #: modules/process/crosscor.c:613 modules/process/deposit_synth.c:280
 #: modules/process/deposit_synth.c:879 modules/process/diff_synth.c:315
 #: modules/process/diff_synth.c:723 modules/process/domain_synth.c:266
 #: modules/process/domain_synth.c:763 modules/process/grain_wshed.c:506
 #: modules/process/lat_synth.c:468 modules/process/maskcor.c:331
-#: modules/process/mcrop.c:324 modules/process/merge.c:1078
+#: modules/process/mcrop.c:321 modules/process/merge.c:1078
 #: modules/process/nanoindent_adjust.c:323 modules/process/neural.c:1295
-#: modules/process/pid.c:338 modules/process/superresolution.c:414
-#: modules/process/superresolution.c:502 modules/process/tip_blind.c:784
+#: modules/process/pid.c:338 modules/process/superresolution.c:416
+#: modules/process/superresolution.c:505 modules/process/tip_blind.c:784
 #: modules/process/tipops.c:319 modules/process/xydenoise.c:217
 msgid "Initializing..."
 msgstr "Inicializuje se..."
@@ -6980,7 +6989,7 @@ msgid "Load Calibration Data"
 msgstr "Nahrát kalibrační data"
 
 #: modules/process/calcoefs_load.c:230 modules/process/calcoefs_new.c:566
-#: modules/process/calcoefs_simple.c:471
+#: modules/process/calcoefs_simple.c:473
 msgid "Calibration name:"
 msgstr "Název kalibrace"
 
@@ -6990,18 +6999,18 @@ msgid "No data loaded"
 msgstr "Nebyla vložena žádná data"
 
 #: modules/process/calcoefs_load.c:269 modules/process/calcoefs_new.c:635
-#: modules/process/calcoefs_simple.c:535
+#: modules/process/calcoefs_simple.c:537
 #, c-format
 msgid "Calibration '%s' already exists"
 msgstr "Kalibrace ‚%s‘ již existuje"
 
 #: modules/process/calcoefs_load.c:271 modules/process/calcoefs_new.c:637
-#: modules/process/calcoefs_simple.c:537
+#: modules/process/calcoefs_simple.c:539
 msgid "Overwrite"
 msgstr "Přepsat"
 
 #: modules/process/calcoefs_load.c:272 modules/process/calcoefs_new.c:638
-#: modules/process/calcoefs_simple.c:538
+#: modules/process/calcoefs_simple.c:540
 msgid "Append"
 msgstr "Přidat"
 
@@ -7099,73 +7108,73 @@ msgstr "/Kali_brace/_Vytvořit jednoduchou mapu chyb..."
 msgid "Simple error mapping"
 msgstr "Vytváří jednoduchou mapu chyb"
 
-#: modules/process/calcoefs_simple.c:322
+#: modules/process/calcoefs_simple.c:324
 msgid "Simple Error Map"
 msgstr "Jednoduchá mapa chyb"
 
-#: modules/process/calcoefs_simple.c:339 modules/process/calcoefs_stage.c:146
-#: modules/process/superresolution.c:155
+#: modules/process/calcoefs_simple.c:341 modules/process/calcoefs_stage.c:146
+#: modules/process/superresolution.c:156
 msgid "Operands:"
 msgstr "O_perandy:"
 
-#: modules/process/calcoefs_simple.c:345
+#: modules/process/calcoefs_simple.c:347
 msgid "Grating image"
 msgstr "_Snímek mřížky"
 
-#: modules/process/calcoefs_simple.c:346 modules/tools/crop.c:389
+#: modules/process/calcoefs_simple.c:348 modules/tools/crop.c:389
 msgid "Detail"
 msgstr "Detail"
 
-#: modules/process/calcoefs_simple.c:367 modules/process/calcoefs_view.c:509
+#: modules/process/calcoefs_simple.c:369 modules/process/calcoefs_view.c:509
 #: modules/process/calibrate.c:497 modules/volume/volume_calibrate.c:479
 msgid "_X offset:"
 msgstr "Posun v _X:"
 
-#: modules/process/calcoefs_simple.c:394 modules/process/calcoefs_view.c:535
+#: modules/process/calcoefs_simple.c:396 modules/process/calcoefs_view.c:535
 #: modules/process/calibrate.c:510 modules/volume/volume_calibrate.c:492
 msgid "_Y offset:"
 msgstr "Posun v _Y:"
 
-#: modules/process/calcoefs_simple.c:407
+#: modules/process/calcoefs_simple.c:409
 msgid "X _period:"
 msgstr "_Perioda v X:"
 
-#: modules/process/calcoefs_simple.c:420
+#: modules/process/calcoefs_simple.c:422
 msgid "Y p_eriod:"
 msgstr "P_erioda v Y:"
 
-#: modules/process/calcoefs_simple.c:434 modules/process/calcoefs_view.c:547
+#: modules/process/calcoefs_simple.c:436 modules/process/calcoefs_view.c:547
 #: modules/volume/volume_calibrate.c:506
 msgid "_Z offset:"
 msgstr "Posun v _Z:"
 
-#: modules/process/calcoefs_simple.c:462
+#: modules/process/calcoefs_simple.c:464
 msgid "_Threshold"
 msgstr "_Práh"
 
-#: modules/process/calcoefs_simple.c:483
+#: modules/process/calcoefs_simple.c:485
 msgid "No suggestion\n"
 msgstr " \n"
 
-#: modules/process/calcoefs_simple.c:583
+#: modules/process/calcoefs_simple.c:587
 msgid "Data same as detail?"
 msgstr "Data se shodují s detailem?"
 
-#: modules/process/calcoefs_simple.c:589
+#: modules/process/calcoefs_simple.c:593
 msgid "Data larger than detail?"
 msgstr "Data větší než detail?"
 
-#: modules/process/calcoefs_simple.c:603
+#: modules/process/calcoefs_simple.c:607
 #, c-format
 msgid "%d objects found"
 msgstr "Nalezeno %d objektů"
 
-#: modules/process/calcoefs_simple.c:605
+#: modules/process/calcoefs_simple.c:609
 msgid "Search cancelled"
 msgstr "Hledání zrušeno:"
 
-#: modules/process/calcoefs_simple.c:629 modules/process/maskcor.c:333
-#: modules/process/mcrop.c:326 modules/process/merge.c:1080
+#: modules/process/calcoefs_simple.c:633 modules/process/maskcor.c:333
+#: modules/process/mcrop.c:323 modules/process/merge.c:1080
 msgid "Correlating..."
 msgstr "Koreluji..."
 
@@ -7292,27 +7301,27 @@ msgstr "Vytváření sítě..."
 msgid "Triangulating..."
 msgstr "Trianguluji..."
 
-#: modules/process/calcoefs_view.c:1137 modules/tools/profile.c:1157
+#: modules/process/calcoefs_view.c:1137 modules/tools/profile.c:1156
 msgid "X correction"
 msgstr "X korekce"
 
-#: modules/process/calcoefs_view.c:1138 modules/tools/profile.c:1158
+#: modules/process/calcoefs_view.c:1138 modules/tools/profile.c:1157
 msgid "Y correction"
 msgstr "Y korekce"
 
-#: modules/process/calcoefs_view.c:1139 modules/tools/profile.c:1159
+#: modules/process/calcoefs_view.c:1139 modules/tools/profile.c:1158
 msgid "Z correction"
 msgstr "Z korekce"
 
-#: modules/process/calcoefs_view.c:1140 modules/tools/profile.c:1160
+#: modules/process/calcoefs_view.c:1140 modules/tools/profile.c:1159
 msgid "X uncertainty"
 msgstr "X nejistota"
 
-#: modules/process/calcoefs_view.c:1141 modules/tools/profile.c:1161
+#: modules/process/calcoefs_view.c:1141 modules/tools/profile.c:1160
 msgid "Y uncertainty"
 msgstr "Y nejistota"
 
-#: modules/process/calcoefs_view.c:1142 modules/tools/profile.c:1162
+#: modules/process/calcoefs_view.c:1142 modules/tools/profile.c:1161
 msgid "Z uncertainty"
 msgstr "Z nejistota"
 
@@ -10406,23 +10415,23 @@ msgstr "/_Zrna/Odstranit dotýkající se _hran"
 msgid "Remove grains touching image edges"
 msgstr "Odstranit zrna dotýkající se hran obrázku"
 
-#: modules/process/mcrop.c:67
+#: modules/process/mcrop.c:60
 msgid "Crops non-intersecting regions of two images."
 msgstr "Ořízne neprotínající se oblasti dvou obrázků."
 
-#: modules/process/mcrop.c:81
+#: modules/process/mcrop.c:74
 msgid "/M_ultidata/Mutual C_rop..."
 msgstr "/M_ultidata/_Vzájemné oříznutí..."
 
-#: modules/process/mcrop.c:85
+#: modules/process/mcrop.c:78
 msgid "Crop non-intersecting regions of two images"
 msgstr "Oříznout neprotínající se oblasti dvou obrázků."
 
-#: modules/process/mcrop.c:158
+#: modules/process/mcrop.c:153
 msgid "Mutual Crop"
 msgstr "Vzájemné oříznutí"
 
-#: modules/process/mcrop.c:179
+#: modules/process/mcrop.c:174
 msgid "_Select second argument:"
 msgstr "_Druhý argument:"
 
@@ -11446,19 +11455,19 @@ msgstr "/M_ultidata/_Superrozlišení..."
 msgid "Super resolution of multiple images of same object"
 msgstr ""
 
-#: modules/process/superresolution.c:140
+#: modules/process/superresolution.c:141
 msgid "Supres"
 msgstr ""
 
-#: modules/process/superresolution.c:419
+#: modules/process/superresolution.c:421
 msgid "Correlating to determine mean shift..."
 msgstr "Koreluji k určení středního posunu..."
 
-#: modules/process/superresolution.c:508
+#: modules/process/superresolution.c:511
 msgid "Cross-correlation..."
 msgstr "Počítám křížovou korelaci..."
 
-#: modules/process/superresolution.c:550
+#: modules/process/superresolution.c:554
 msgid "Interpolating..."
 msgstr "Interpoluji..."
 
@@ -11670,35 +11679,35 @@ msgstr "/_Hrot SPM/_Modelovat hrot..."
 msgid "Model AFM tip"
 msgstr "Modelování hrotu AFM"
 
-#: modules/process/tip_model.c:161
+#: modules/process/tip_model.c:163
 msgid "Model Tip"
 msgstr "Modelování hrotu"
 
-#: modules/process/tip_model.c:220
+#: modules/process/tip_model.c:223
 msgid "Tip _type:"
 msgstr "Typ hrotu:"
 
-#: modules/process/tip_model.c:225
+#: modules/process/tip_model.c:228
 msgid "_Number of sides:"
 msgstr "_Počet stran:"
 
-#: modules/process/tip_model.c:230
+#: modules/process/tip_model.c:233
 msgid "Tip _slope:"
 msgstr "_Sklon hrotu:"
 
-#: modules/process/tip_model.c:236
+#: modules/process/tip_model.c:239
 msgid "Tip _rotation:"
 msgstr "_Rotace hrotu:"
 
-#: modules/process/tip_model.c:246
+#: modules/process/tip_model.c:249
 msgid "Tip _apex radius:"
 msgstr "Poloměr _vrcholku:"
 
-#: modules/process/tip_model.c:465
+#: modules/process/tip_model.c:467
 msgid "Modelled tip"
 msgstr "Modelovaný hrot"
 
-#: modules/process/tip_model.c:511
+#: modules/process/tip_model.c:515
 #, c-format
 msgid "Tip resolution: %d × %d pixels"
 msgstr "Rozlišení hrotu: %d × %d pixelů"
@@ -12620,7 +12629,7 @@ msgstr "Nejistota z do %d"
 msgid "Zunc low bound %d"
 msgstr "Nejistota z od %d"
 
-#: modules/tools/profile.c:1156
+#: modules/tools/profile.c:1155
 msgid "calib-data|None"
 msgstr "Žádná"
 
@@ -12753,7 +12762,7 @@ msgid "Calculate surface profile parameters."
 msgstr "Počítá parametry drsnosti profilu."
 
 #: modules/tools/roughness.c:662 modules/tools/roughness.c:791
-#: modules/tools/roughness.c:1461
+#: modules/tools/roughness.c:1460
 msgid "Roughness"
 msgstr "Drsnost"
 
@@ -12761,11 +12770,11 @@ msgstr "Drsnost"
 msgid "Calculate roughness parameters"
 msgstr "Vypočíst parametry drsnosti"
 
-#: modules/tools/roughness.c:789 modules/tools/roughness.c:1459
+#: modules/tools/roughness.c:789 modules/tools/roughness.c:1458
 msgid "Texture"
 msgstr "Textura"
 
-#: modules/tools/roughness.c:790 modules/tools/roughness.c:1460
+#: modules/tools/roughness.c:790 modules/tools/roughness.c:1459
 msgid "Waviness"
 msgstr "Zvlnění"
 
@@ -12777,7 +12786,7 @@ msgstr "ADF"
 msgid "BRC"
 msgstr "BRC"
 
-#: modules/tools/roughness.c:794 modules/tools/roughness.c:1464
+#: modules/tools/roughness.c:794 modules/tools/roughness.c:1463
 msgid "Peak Count"
 msgstr "Počet peaků"
 
@@ -12789,41 +12798,41 @@ msgstr "_Graf:"
 msgid "C_ut-off:"
 msgstr "C_ut-off:"
 
-#: modules/tools/roughness.c:1343
+#: modules/tools/roughness.c:1342
 msgid "No profile selected."
 msgstr "Není vybrán žádný profil."
 
-#: modules/tools/roughness.c:1462
+#: modules/tools/roughness.c:1461
 msgid "Amplitude Distribution Function"
 msgstr "Rozdělení amplitudy"
 
-#: modules/tools/roughness.c:1463
+#: modules/tools/roughness.c:1462
 msgid "The Bearing Ratio Curve"
 msgstr "Bearing ratio"
 
-#: modules/tools/roughness.c:1498
+#: modules/tools/roughness.c:1497
 msgid "Surface Profiles"
 msgstr "Profily"
 
-#: modules/tools/roughness.c:2063
+#: modules/tools/roughness.c:2062
 msgid "Save Roughness Parameters"
 msgstr "Uložit parametry drsnosti"
 
-#: modules/tools/roughness.c:2120
+#: modules/tools/roughness.c:2119
 msgid "Roughness Parameters"
 msgstr "Parametry drsnosti"
 
-#: modules/tools/roughness.c:2126 modules/tools/stats.c:1042
+#: modules/tools/roughness.c:2125 modules/tools/stats.c:1042
 #, c-format
 msgid "File:              %s\n"
 msgstr "Soubor:              %s\n"
 
-#: modules/tools/roughness.c:2130 modules/tools/stats.c:1046
+#: modules/tools/roughness.c:2129 modules/tools/stats.c:1046
 #, c-format
 msgid "Data channel:      %s\n"
 msgstr "Datový kanál:        %s\n"
 
-#: modules/tools/roughness.c:2161
+#: modules/tools/roughness.c:2160
 #, c-format
 msgid ""
 "Selected line:     (%s, %s) to (%s, %s) px\n"
@@ -13455,15 +13464,18 @@ msgstr "_X:"
 
 #: modules/volume/volume_slice.c:807
 msgid "Z cross-section at Z = %.*f%s%s (#%d)"
-msgstr "Z-řez v poloze Z = %g %s (#%d)"
+msgstr "Z-řez v poloze Z = %.*f%s%s (#%d)"
 
 #: modules/volume/volume_slice.c:818
 msgid "Y cross-section at Y = %.*f%s%s (#%d)"
-msgstr "Z-řez v poloze Z = %g %s (#%d)"
+msgstr "Z-řez v poloze Z = %.*f%s%s (#%d)"
 
 #: modules/volume/volume_slice.c:829
 msgid "X cross-section at X = %.*f%s%s (#%d)"
-msgstr "Z-řez v poloze Z = %g %s (#%d)"
+msgstr "Z-řez v poloze Z = %.*f%s%s (#%d)"
+
+#~ msgid "Header ended within a Multipass-Config table."
+#~ msgstr "Hlavička skončila uvnitř tabulky Multipass-Config."
 
 #~ msgid ""
 #~ "Menus can be torn off by clicking the dashed line near the top for quick "
