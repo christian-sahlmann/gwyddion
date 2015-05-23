@@ -24,6 +24,7 @@
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyexpr.h>
+#include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libprocess/gwygrainvalue.h>
 #include "gwyprocessinternal.h"
@@ -520,23 +521,52 @@ gwy_grain_value_finalize(GObject *object)
     G_OBJECT_CLASS(gwy_grain_value_parent_class)->finalize(object);
 }
 
+static guint
+remove_nonidentifier_characters(char *s)
+{
+    gboolean have_letter = FALSE;
+    guint i, j;
+
+    for (i = j = 0; s[i]; i++) {
+        if (have_letter && g_ascii_isalnum(s[i]))
+            s[j++] = s[i];
+        else if (g_ascii_isalpha(s[i])) {
+            s[j++] = s[i];
+            have_letter = TRUE;
+        }
+    }
+    s[j] = '\0';
+
+    return strlen(s);
+}
+
 static void
 gwy_grain_value_data_sanitize(GwyGrainValueData *data)
 {
-    /* TODO:
-    if (!gwy_grain_value_check_size(data->size)) {
-        gwy_grain_value_data_copy(&grainvaluedata_default,
-                                                data);
-        return;
+    if (!gwy_strisident(data->symbol, "_", NULL)) {
+        g_warning("Grain value symbol is not an identifier.");
+        if (!remove_nonidentifier_characters(data->symbol)) {
+            /* Well... */
+            data->symbol[0] = 'v';
+            data->symbol[1] = '\0';
+        }
     }
 
-    if (!data->divisor)
-        data->auto_divisor = TRUE;
+    /* FIXME: Cannot validate symbol markup without Pango. */
+    if (!g_utf8_validate(data->symbol_markup, -1, NULL)) {
+        g_warning("Grain value markup is not valid UTF-8.");
+        g_free(data->symbol_markup);
+        data->symbol_markup = g_strdup(data->symbol);
+    }
 
-    data->auto_divisor = !!data->auto_divisor;
-    if (data->auto_divisor)
-        gwy_grain_value_data_autodiv(data);
-        */
+    if (ABS(data->power_xy) > 12) {
+        g_warning("Too large xy power for grain value.");
+        data->power_xy = CLAMP(data->power_xy, -12, 12);
+    }
+    if (ABS(data->power_z) > 12) {
+        g_warning("Too large z power for grain value.");
+        data->power_z = CLAMP(data->power_z, -12, 12);
+    }
 }
 
 static void
@@ -683,11 +713,11 @@ gwy_grain_value_parse(const gchar *text,
             continue;
         }
 
-        if (gwy_strequal(key, "symbol")) {
+        if (gwy_strequal(key, "symbol") && strlen(value)) {
             g_free(data.symbol);
             data.symbol = g_strdup(value);
         }
-        else if (gwy_strequal(key, "symbol_markup")) {
+        else if (gwy_strequal(key, "symbol_markup") && strlen(value)) {
             g_free(data.symbol_markup);
             data.symbol_markup = g_strdup(value);
         }
