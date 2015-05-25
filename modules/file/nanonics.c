@@ -179,6 +179,16 @@ nanonics_load(const gchar *filename,
     header_size = (s - header) + strlen("-End Header-");
     header[header_size] = '\0';
 
+    s = g_convert(header, header_size, "UTF-8", "ISO-8859-1", NULL, NULL, NULL);
+    if (s) {
+        g_free(header);
+        header = s;
+        /* Do not change header_size, it is the size in the file. */
+    }
+    else {
+        g_warning("Cannot convert header to UTF-8.");
+    }
+
     if (!(nfile.meta = nanonics_read_header(header, "Header", error)))
         goto fail;
 
