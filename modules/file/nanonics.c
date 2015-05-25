@@ -63,6 +63,8 @@
 #define MAGIC      MAGIC_LINE "-Start Header-"
 #define MAGIC_SIZE (sizeof(MAGIC) - 1)
 
+#define END_CHANNEL_MAGIC "-End Channel Header-"
+
 #define EXTENSION ".nan"
 
 #define Micrometer 1e-6
@@ -89,8 +91,8 @@ static GwyContainer* nanonics_load           (const gchar *filename,
 static GHashTable*   nanonics_read_header    (gchar *text,
                                               const gchar *name,
                                               GError **error);
-static void nanonics_parse_comment(GHashTable *hash,
-                       const gchar *comment);
+static void          nanonics_parse_comment  (GHashTable *hash,
+                                              const gchar *comment);
 static GwyDataField* nanonics_read_data_field(const NanonicsFile *nfile,
                                               guint id,
                                               gboolean retrace,
@@ -101,7 +103,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanonics NAN data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -255,7 +257,28 @@ nanonics_load(const gchar *filename,
 
     nfile.page_data_size = sizeof(guint32)*nfile.xres*nfile.yres;
     gwy_debug("page data size: %u", nfile.page_data_size);
-    /* Well, there is probably a stricter page header size lower bound than 4 */
+    /* Well, there is probably a stricter page header size lower bound than 4.
+     * If there is a mismatch it can be an incomplete file.  Try to fix yres
+     * if it looks sane and the data seem to consist of complete lines.  */
+    if (err_SIZE_MISMATCH(NULL, nfile.page_data_size + 4, nfile.page_size,
+                          FALSE)) {
+        void *p = gwy_memmem(buffer + nfile.header_size, nfile.page_size,
+                             END_CHANNEL_MAGIC, strlen(END_CHANNEL_MAGIC));
+        guint data_size = (nfile.page_size 
+                           - ((guchar*)p + strlen(END_CHANNEL_MAGIC)
+                              - (buffer + nfile.header_size)));
+        guint newyres = data_size/(sizeof(guint32)*nfile.xres);
+
+        gwy_debug("true data length is %u, trying to fix yres to %u",
+                  data_size, newyres);
+        if (err_DIMENSION(error, newyres))
+            goto fail;
+
+        nfile.yreal *= (gdouble)newyres/(gdouble)nfile.yres;
+        nfile.yres = newyres;
+        nfile.page_data_size = sizeof(guint32)*nfile.xres*nfile.yres;
+        gwy_debug("fixed page data size: %u", nfile.page_data_size);
+    }
     if (err_SIZE_MISMATCH(error, nfile.page_data_size + 4, nfile.page_size,
                           FALSE))
         goto fail;
