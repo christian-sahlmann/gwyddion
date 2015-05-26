@@ -74,6 +74,7 @@ Modules:
   perform also various simple distance transforms.
 - Renishaw: Support for loading some metadata was added.
 - Nanonis: Files with unknown multiline header blocks are loaded correctly.
+- Nanonics: It should be possible to open incomplete scans.
 
 Other:
 - Standalone Python module gwy is now in the gwyddion-devel package instead
