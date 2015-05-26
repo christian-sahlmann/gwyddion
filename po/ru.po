@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-05-15 02:59+0200\n"
+"POT-Creation-Date: 2015-05-26 15:51+0200\n"
 "PO-Revision-Date: 2015-05-17 08:58+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
@@ -261,228 +261,228 @@ msgstr "Круг"
 msgid "Circle (up)"
 msgstr "Сфера (вверх)"
 
-#: libprocess/gwygrainvalue.c:63
+#: libprocess/gwygrainvalue.c:64
 msgid "Grain number"
 msgstr "Номер зерна"
 
-#: libprocess/gwygrainvalue.c:72 modules/process/curvature.c:134
+#: libprocess/gwygrainvalue.c:73 modules/process/curvature.c:134
 msgid "Center x position"
 msgstr "Положение центра по x"
 
-#: libprocess/gwygrainvalue.c:81 modules/process/curvature.c:135
+#: libprocess/gwygrainvalue.c:82 modules/process/curvature.c:135
 msgid "Center y position"
 msgstr "Положение центра по y"
 
-#: libprocess/gwygrainvalue.c:90
+#: libprocess/gwygrainvalue.c:91
 msgid "Minimum value"
 msgstr "Минимальное значение"
 
-#: libprocess/gwygrainvalue.c:99
+#: libprocess/gwygrainvalue.c:100
 msgid "Maximum value"
 msgstr "Максимальное значение"
 
-#: libprocess/gwygrainvalue.c:108 modules/process/bdep_synth.c:144
+#: libprocess/gwygrainvalue.c:109 modules/process/bdep_synth.c:144
 #: modules/tools/filter.c:208
 msgid "Mean value"
 msgstr "Среднее значение"
 
-#: libprocess/gwygrainvalue.c:117 modules/tools/filter.c:209
+#: libprocess/gwygrainvalue.c:118 modules/tools/filter.c:209
 msgid "Median value"
 msgstr "Срединное значение"
 
-#: libprocess/gwygrainvalue.c:126
+#: libprocess/gwygrainvalue.c:127
 msgid "Minimum value on boundary"
 msgstr "Минимальное значение на границе"
 
-#: libprocess/gwygrainvalue.c:135
+#: libprocess/gwygrainvalue.c:136
 msgid "Maximum value on boundary"
 msgstr "Максимальное значение на границе"
 
-#: libprocess/gwygrainvalue.c:144
+#: libprocess/gwygrainvalue.c:145
 msgid "Pixel area"
 msgstr "Площадь в пикселях"
 
-#: libprocess/gwygrainvalue.c:153
+#: libprocess/gwygrainvalue.c:154
 msgid "Projected area"
 msgstr "Площадь проекции"
 
-#: libprocess/gwygrainvalue.c:162
+#: libprocess/gwygrainvalue.c:163
 msgid "Surface area"
 msgstr "Площадь поверхности"
 
-#: libprocess/gwygrainvalue.c:171
+#: libprocess/gwygrainvalue.c:172
 msgid "Equivalent square side"
 msgstr "Сторона эквивалентного квадрата"
 
-#: libprocess/gwygrainvalue.c:180
+#: libprocess/gwygrainvalue.c:181
 msgid "Equivalent disc radius"
 msgstr "Радиус эквивалентного диска"
 
-#: libprocess/gwygrainvalue.c:189
+#: libprocess/gwygrainvalue.c:190
 msgid "Area above half-height"
 msgstr "Площадь выше половинной высоты"
 
-#: libprocess/gwygrainvalue.c:198
+#: libprocess/gwygrainvalue.c:199
 msgid "Area of convex hull"
 msgstr "Площадь выпуклой оболочки"
 
 #. TRANSLATORS: Grain volume calculated using basis (foot) set to
 #. * zero.
-#: libprocess/gwygrainvalue.c:209
+#: libprocess/gwygrainvalue.c:210
 msgid "Zero basis volume"
 msgstr "Объём между нулевой плоскостью и поверхностью"
 
 #. TRANSLATORS: Grain volume calculated using basis (foot) set to the
 #. * grain minimum.
-#: libprocess/gwygrainvalue.c:220
+#: libprocess/gwygrainvalue.c:221
 msgid "Grain minimum basis volume"
 msgstr "Объём между поверхностью и плоскостью, проходящей через минимум зерна"
 
 #. TRANSLATORS: Grain volume calculated using basis (foot) set to the
 #. * Laplacian background.
-#: libprocess/gwygrainvalue.c:231
+#: libprocess/gwygrainvalue.c:232
 msgid "Laplacian background basis volume"
 msgstr "Объём между поверхностью и фоном, вычисленным по Лапласу"
 
-#: libprocess/gwygrainvalue.c:240
+#: libprocess/gwygrainvalue.c:241
 msgid "Projected boundary length"
 msgstr "Длина границы проекции"
 
-#: libprocess/gwygrainvalue.c:249
+#: libprocess/gwygrainvalue.c:250
 msgid "Minimum bounding size"
 msgstr "Минимальный ограничивающий размер"
 
-#: libprocess/gwygrainvalue.c:258
+#: libprocess/gwygrainvalue.c:259
 msgid "Minimum bounding direction"
 msgstr "Направление минимального ограничивающего размера"
 
-#: libprocess/gwygrainvalue.c:267
+#: libprocess/gwygrainvalue.c:268
 msgid "Maximum bounding size"
 msgstr "Максимальный ограничивающий размер"
 
-#: libprocess/gwygrainvalue.c:276
+#: libprocess/gwygrainvalue.c:277
 msgid "Maximum bounding direction"
 msgstr "Направление максимального ограничивающего размера"
 
-#: libprocess/gwygrainvalue.c:285
+#: libprocess/gwygrainvalue.c:286
 msgid "Maximum inscribed disc radius"
 msgstr "Максимальный радиус вписанного диска"
 
-#: libprocess/gwygrainvalue.c:294
+#: libprocess/gwygrainvalue.c:295
 msgid "Maximum inscribed disc center x position"
 msgstr "Положение центра по x максимального вписанного диска"
 
-#: libprocess/gwygrainvalue.c:303
+#: libprocess/gwygrainvalue.c:304
 msgid "Maximum inscribed disc center y position"
 msgstr "Положение центра по y максимального вписанного диска"
 
-#: libprocess/gwygrainvalue.c:312
+#: libprocess/gwygrainvalue.c:313
 msgid "Minimum circumcircle radius"
 msgstr "Минимальный радиус описанной окружности"
 
-#: libprocess/gwygrainvalue.c:321
+#: libprocess/gwygrainvalue.c:322
 msgid "Minimum circumcircle center x position"
 msgstr "Положение центра по x минимальной описанной окружности"
 
-#: libprocess/gwygrainvalue.c:330
+#: libprocess/gwygrainvalue.c:331
 msgid "Minimum circumcircle center y position"
 msgstr "Положение центра по y минимальной описанной окружности"
 
-#: libprocess/gwygrainvalue.c:339
+#: libprocess/gwygrainvalue.c:340
 msgid "Mean radius"
 msgstr "Средний радиус"
 
-#: libprocess/gwygrainvalue.c:348 modules/tools/readvalue.c:330
+#: libprocess/gwygrainvalue.c:349 modules/tools/readvalue.c:330
 msgid "Inclination θ"
 msgstr "Наклон θ"
 
-#: libprocess/gwygrainvalue.c:357 modules/tools/readvalue.c:340
+#: libprocess/gwygrainvalue.c:358 modules/tools/readvalue.c:340
 msgid "Inclination φ"
 msgstr "Наклон φ"
 
-#: libprocess/gwygrainvalue.c:366
+#: libprocess/gwygrainvalue.c:367
 msgid "Curvature center x position"
 msgstr "Положение центра кривизны по x"
 
-#: libprocess/gwygrainvalue.c:375
+#: libprocess/gwygrainvalue.c:376
 msgid "Curvature center y position"
 msgstr "Положение центра кривизны по y"
 
-#: libprocess/gwygrainvalue.c:384
+#: libprocess/gwygrainvalue.c:385
 msgid "Curvature center z value"
 msgstr "Значение центра кривизны по z"
 
-#: libprocess/gwygrainvalue.c:393 modules/tools/readvalue.c:355
+#: libprocess/gwygrainvalue.c:394 modules/tools/readvalue.c:355
 msgid "Curvature 1"
 msgstr "Кривизна 1"
 
-#: libprocess/gwygrainvalue.c:402 modules/tools/readvalue.c:365
+#: libprocess/gwygrainvalue.c:403 modules/tools/readvalue.c:365
 msgid "Curvature 2"
 msgstr "Кривизна 2"
 
-#: libprocess/gwygrainvalue.c:411
+#: libprocess/gwygrainvalue.c:412
 msgid "Curvature angle 1"
 msgstr "Угол кривизны 1"
 
-#: libprocess/gwygrainvalue.c:420
+#: libprocess/gwygrainvalue.c:421
 msgid "Curvature angle 2"
 msgstr "Угол кривизны 2"
 
-#: libprocess/gwygrainvalue.c:429
+#: libprocess/gwygrainvalue.c:430
 msgid "Major semiaxis of equivalent ellipse"
 msgstr "Большая полуось эквивалентного эллипса"
 
-#: libprocess/gwygrainvalue.c:438
+#: libprocess/gwygrainvalue.c:439
 msgid "Minor semiaxis of equivalent ellipse"
 msgstr "Малая полуось эквивалентного эллипса"
 
-#: libprocess/gwygrainvalue.c:447
+#: libprocess/gwygrainvalue.c:448
 msgid "Orientation of equivalent ellipse"
 msgstr "Ориентация эквивалентного эллипса"
 
-#: libprocess/gwygrainvalue.c:1090
+#: libprocess/gwygrainvalue.c:1120
 msgid "Id"
 msgstr "Идентификатор"
 
-#: libprocess/gwygrainvalue.c:1091 modules/process/wave_synth.c:500
+#: libprocess/gwygrainvalue.c:1121 modules/process/wave_synth.c:500
 #: modules/tools/readvalue.c:262
 msgid "Position"
 msgstr "Позиция"
 
-#: libprocess/gwygrainvalue.c:1092 app/meta.c:384
+#: libprocess/gwygrainvalue.c:1122 app/meta.c:384
 #: modules/file/imgexport.c:4297 modules/process/curvature.c:786
 #: modules/tools/level3.c:457 modules/tools/readvalue.c:297
 msgid "Value"
 msgstr "Значение"
 
-#: libprocess/gwygrainvalue.c:1093
+#: libprocess/gwygrainvalue.c:1123
 msgid "Area"
 msgstr "Площадь"
 
-#: libprocess/gwygrainvalue.c:1094 app/data-browser.c:5110 app/toolbox.c:114
+#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5110 app/toolbox.c:114
 msgid "Volume"
 msgstr "Объём"
 
-#: libprocess/gwygrainvalue.c:1095
+#: libprocess/gwygrainvalue.c:1125
 msgid "Boundary"
 msgstr "Граница"
 
-#: libprocess/gwygrainvalue.c:1096 modules/process/pat_synth.c:848
+#: libprocess/gwygrainvalue.c:1126 modules/process/pat_synth.c:848
 #: modules/process/pat_synth.c:1150 modules/process/pat_synth.c:1485
 #: modules/tools/linestats.c:167
 msgid "Slope"
 msgstr "Уклон"
 
-#: libprocess/gwygrainvalue.c:1097 modules/process/curvature.c:218
+#: libprocess/gwygrainvalue.c:1127 modules/process/curvature.c:218
 #: modules/process/curvature.c:621
 msgid "Curvature"
 msgstr "Кривизна"
 
-#: libprocess/gwygrainvalue.c:1098
+#: libprocess/gwygrainvalue.c:1128
 msgid "Moment"
 msgstr "Момент"
 
-#: libprocess/gwygrainvalue.c:1102
+#: libprocess/gwygrainvalue.c:1132
 msgid "User"
 msgstr "Пользовательские"
 
@@ -2104,11 +2104,11 @@ msgstr "Не удаётся создать каталог интерфейса �
 msgid "Cannot create user module directory %s: %s"
 msgstr "Не удаётся создать каталог модулей пользователя %s: %s"
 
-#: app/splash.c:832
+#: app/splash.c:652
 msgid "Starting "
 msgstr "Запускается"
 
-#: app/splash.c:878
+#: app/splash.c:698
 msgid " is free software released under GNU GPL."
 msgstr " – свободное ПО под лицензией GNU GPL."
 
@@ -4543,26 +4543,26 @@ msgstr "Импортирует формат файлов Nanomagnetics' NMI, в�
 msgid "Nanomagnetics File (.nmi)"
 msgstr "Файлы Nanomagnetics (.nmi)"
 
-#: modules/file/nanonics.c:102
+#: modules/file/nanonics.c:104
 msgid "Imports Nanonics NAN data files."
 msgstr "Импортирует файлы данных Nanoniсs NAN."
 
-#: modules/file/nanonics.c:115
+#: modules/file/nanonics.c:117
 msgid "Nanonics files (.nan)"
 msgstr "Файлы Nanoniсs (.nan)"
 
-#: modules/file/nanonics.c:175 modules/file/nanonics.c:413
+#: modules/file/nanonics.c:177 modules/file/nanonics.c:446
 #: modules/file/wsxmfile.c:211
 #, c-format
 msgid "Expected header end marker ‘%s’ was not found."
 msgstr "Ожидаемый маркер конца заголовка ‘%s’ не был найден."
 
-#: modules/file/nanonics.c:202
+#: modules/file/nanonics.c:214
 #, c-format
 msgid "HeaderLength %u differs from actual header length %u"
 msgstr "HeaderLength %u отличается от реальной длины заголовка %u"
 
-#: modules/file/nanonics.c:338 modules/file/witec-asc.c:167
+#: modules/file/nanonics.c:371 modules/file/witec-asc.c:167
 #, c-format
 msgid "Expected header start marker ‘%s’ but found ‘%s’."
 msgstr "Ожидался маркер начала заголовка ‘%s’, но был найден ‘%s’."

@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-05-23 02:58+0200\n"
+"POT-Creation-Date: 2015-05-26 15:51+0200\n"
 "PO-Revision-Date: 2015-05-23 23:39+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -252,228 +252,228 @@ msgstr "Kružnice"
 msgid "Circle (up)"
 msgstr "Kružnice (horní část)"
 
-#: libprocess/gwygrainvalue.c:63
+#: libprocess/gwygrainvalue.c:64
 msgid "Grain number"
 msgstr "Číslo zrna"
 
-#: libprocess/gwygrainvalue.c:72 modules/process/curvature.c:134
+#: libprocess/gwygrainvalue.c:73 modules/process/curvature.c:134
 msgid "Center x position"
 msgstr "X-ová poloha středu"
 
-#: libprocess/gwygrainvalue.c:81 modules/process/curvature.c:135
+#: libprocess/gwygrainvalue.c:82 modules/process/curvature.c:135
 msgid "Center y position"
 msgstr "Y-ová poloha středu"
 
-#: libprocess/gwygrainvalue.c:90
+#: libprocess/gwygrainvalue.c:91
 msgid "Minimum value"
 msgstr "Nejmenší hodnota"
 
-#: libprocess/gwygrainvalue.c:99
+#: libprocess/gwygrainvalue.c:100
 msgid "Maximum value"
 msgstr "Největší hodnota"
 
-#: libprocess/gwygrainvalue.c:108 modules/process/bdep_synth.c:144
+#: libprocess/gwygrainvalue.c:109 modules/process/bdep_synth.c:144
 #: modules/tools/filter.c:208
 msgid "Mean value"
 msgstr "Střední hodnota"
 
-#: libprocess/gwygrainvalue.c:117 modules/tools/filter.c:209
+#: libprocess/gwygrainvalue.c:118 modules/tools/filter.c:209
 msgid "Median value"
 msgstr "Medián"
 
-#: libprocess/gwygrainvalue.c:126
+#: libprocess/gwygrainvalue.c:127
 msgid "Minimum value on boundary"
 msgstr "Nejmenší hodnota na hranici"
 
-#: libprocess/gwygrainvalue.c:135
+#: libprocess/gwygrainvalue.c:136
 msgid "Maximum value on boundary"
 msgstr "Největší hodnota na hranici"
 
-#: libprocess/gwygrainvalue.c:144
+#: libprocess/gwygrainvalue.c:145
 msgid "Pixel area"
 msgstr "Plocha v pixelech"
 
-#: libprocess/gwygrainvalue.c:153
+#: libprocess/gwygrainvalue.c:154
 msgid "Projected area"
 msgstr "Projektovaná plocha"
 
-#: libprocess/gwygrainvalue.c:162
+#: libprocess/gwygrainvalue.c:163
 msgid "Surface area"
 msgstr "Plocha povrchu"
 
-#: libprocess/gwygrainvalue.c:171
+#: libprocess/gwygrainvalue.c:172
 msgid "Equivalent square side"
 msgstr "Strana ekvivalentního čtverce"
 
-#: libprocess/gwygrainvalue.c:180
+#: libprocess/gwygrainvalue.c:181
 msgid "Equivalent disc radius"
 msgstr "Poloměr ekvivalentního kruhu"
 
-#: libprocess/gwygrainvalue.c:189
+#: libprocess/gwygrainvalue.c:190
 msgid "Area above half-height"
 msgstr "Plocha nad poloviční výškou"
 
-#: libprocess/gwygrainvalue.c:198
+#: libprocess/gwygrainvalue.c:199
 msgid "Area of convex hull"
 msgstr "Plocha konvexního obalu"
 
 #. TRANSLATORS: Grain volume calculated using basis (foot) set to
 #. * zero.
-#: libprocess/gwygrainvalue.c:209
+#: libprocess/gwygrainvalue.c:210
 msgid "Zero basis volume"
 msgstr "Objem – nulová základna"
 
 #. TRANSLATORS: Grain volume calculated using basis (foot) set to the
 #. * grain minimum.
-#: libprocess/gwygrainvalue.c:220
+#: libprocess/gwygrainvalue.c:221
 msgid "Grain minimum basis volume"
 msgstr "Objem – základna minimum zrna"
 
 #. TRANSLATORS: Grain volume calculated using basis (foot) set to the
 #. * Laplacian background.
-#: libprocess/gwygrainvalue.c:231
+#: libprocess/gwygrainvalue.c:232
 msgid "Laplacian background basis volume"
 msgstr "Objem – základna laplaceovské pozadí"
 
-#: libprocess/gwygrainvalue.c:240
+#: libprocess/gwygrainvalue.c:241
 msgid "Projected boundary length"
 msgstr "Délka projektované hranice"
 
-#: libprocess/gwygrainvalue.c:249
+#: libprocess/gwygrainvalue.c:250
 msgid "Minimum bounding size"
 msgstr "Nejmenší omezující rozměr"
 
-#: libprocess/gwygrainvalue.c:258
+#: libprocess/gwygrainvalue.c:259
 msgid "Minimum bounding direction"
 msgstr "Směr největšího rozměru"
 
-#: libprocess/gwygrainvalue.c:267
+#: libprocess/gwygrainvalue.c:268
 msgid "Maximum bounding size"
 msgstr "Největší omezující rozměr"
 
-#: libprocess/gwygrainvalue.c:276
+#: libprocess/gwygrainvalue.c:277
 msgid "Maximum bounding direction"
 msgstr "Směr nejmenšího rozměru"
 
-#: libprocess/gwygrainvalue.c:285
+#: libprocess/gwygrainvalue.c:286
 msgid "Maximum inscribed disc radius"
 msgstr "Poloměr největšího vepsaného disku"
 
-#: libprocess/gwygrainvalue.c:294
+#: libprocess/gwygrainvalue.c:295
 msgid "Maximum inscribed disc center x position"
 msgstr "X-ová poloha středu největšího vepsaného disku"
 
-#: libprocess/gwygrainvalue.c:303
+#: libprocess/gwygrainvalue.c:304
 msgid "Maximum inscribed disc center y position"
 msgstr "Y-ová poloha středu největšího vepsaného disku"
 
-#: libprocess/gwygrainvalue.c:312
+#: libprocess/gwygrainvalue.c:313
 msgid "Minimum circumcircle radius"
 msgstr "Poloměr nejmenší opsané kružnice"
 
-#: libprocess/gwygrainvalue.c:321
+#: libprocess/gwygrainvalue.c:322
 msgid "Minimum circumcircle center x position"
 msgstr "X-ová poloha středu nejmenší opsané kružnice"
 
-#: libprocess/gwygrainvalue.c:330
+#: libprocess/gwygrainvalue.c:331
 msgid "Minimum circumcircle center y position"
 msgstr "Y-ová poloha středu nejmenší opsané kružnice"
 
-#: libprocess/gwygrainvalue.c:339
+#: libprocess/gwygrainvalue.c:340
 msgid "Mean radius"
 msgstr "Střední poloměr"
 
-#: libprocess/gwygrainvalue.c:348 modules/tools/readvalue.c:330
+#: libprocess/gwygrainvalue.c:349 modules/tools/readvalue.c:330
 msgid "Inclination θ"
 msgstr "θ sklonu"
 
-#: libprocess/gwygrainvalue.c:357 modules/tools/readvalue.c:340
+#: libprocess/gwygrainvalue.c:358 modules/tools/readvalue.c:340
 msgid "Inclination φ"
 msgstr "φ sklonu"
 
-#: libprocess/gwygrainvalue.c:366
+#: libprocess/gwygrainvalue.c:367
 msgid "Curvature center x position"
 msgstr "X-ová poloha středu křivosti"
 
-#: libprocess/gwygrainvalue.c:375
+#: libprocess/gwygrainvalue.c:376
 msgid "Curvature center y position"
 msgstr "Y-ová poloha středu křivosti"
 
-#: libprocess/gwygrainvalue.c:384
+#: libprocess/gwygrainvalue.c:385
 msgid "Curvature center z value"
 msgstr "Hodnota ve středu křivosti"
 
-#: libprocess/gwygrainvalue.c:393 modules/tools/readvalue.c:355
+#: libprocess/gwygrainvalue.c:394 modules/tools/readvalue.c:355
 msgid "Curvature 1"
 msgstr "Křivost 1"
 
-#: libprocess/gwygrainvalue.c:402 modules/tools/readvalue.c:365
+#: libprocess/gwygrainvalue.c:403 modules/tools/readvalue.c:365
 msgid "Curvature 2"
 msgstr "Křivost 2"
 
-#: libprocess/gwygrainvalue.c:411
+#: libprocess/gwygrainvalue.c:412
 msgid "Curvature angle 1"
 msgstr "Směr křivosti 1"
 
-#: libprocess/gwygrainvalue.c:420
+#: libprocess/gwygrainvalue.c:421
 msgid "Curvature angle 2"
 msgstr "Směr křivosti 2"
 
-#: libprocess/gwygrainvalue.c:429
+#: libprocess/gwygrainvalue.c:430
 msgid "Major semiaxis of equivalent ellipse"
 msgstr "Hlavní poloosa ekvivaletní elipsy"
 
-#: libprocess/gwygrainvalue.c:438
+#: libprocess/gwygrainvalue.c:439
 msgid "Minor semiaxis of equivalent ellipse"
 msgstr "Vedlejší poloosa ekvivaletní elipsy"
 
-#: libprocess/gwygrainvalue.c:447
+#: libprocess/gwygrainvalue.c:448
 msgid "Orientation of equivalent ellipse"
 msgstr "Orientace ekvivaletní elipsy"
 
-#: libprocess/gwygrainvalue.c:1090
+#: libprocess/gwygrainvalue.c:1120
 msgid "Id"
 msgstr "Id"
 
-#: libprocess/gwygrainvalue.c:1091 modules/process/wave_synth.c:500
+#: libprocess/gwygrainvalue.c:1121 modules/process/wave_synth.c:500
 #: modules/tools/readvalue.c:262
 msgid "Position"
 msgstr "Poloha"
 
-#: libprocess/gwygrainvalue.c:1092 app/meta.c:384
+#: libprocess/gwygrainvalue.c:1122 app/meta.c:384
 #: modules/file/imgexport.c:4297 modules/process/curvature.c:786
 #: modules/tools/level3.c:457 modules/tools/readvalue.c:297
 msgid "Value"
 msgstr "Hodnota"
 
-#: libprocess/gwygrainvalue.c:1093
+#: libprocess/gwygrainvalue.c:1123
 msgid "Area"
 msgstr "Plocha"
 
-#: libprocess/gwygrainvalue.c:1094 app/data-browser.c:5110 app/toolbox.c:114
+#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5110 app/toolbox.c:114
 msgid "Volume"
 msgstr "Objem"
 
-#: libprocess/gwygrainvalue.c:1095
+#: libprocess/gwygrainvalue.c:1125
 msgid "Boundary"
 msgstr "Hranice"
 
-#: libprocess/gwygrainvalue.c:1096 modules/process/pat_synth.c:848
+#: libprocess/gwygrainvalue.c:1126 modules/process/pat_synth.c:848
 #: modules/process/pat_synth.c:1150 modules/process/pat_synth.c:1485
 #: modules/tools/linestats.c:167
 msgid "Slope"
 msgstr "Sklon"
 
-#: libprocess/gwygrainvalue.c:1097 modules/process/curvature.c:218
+#: libprocess/gwygrainvalue.c:1127 modules/process/curvature.c:218
 #: modules/process/curvature.c:621
 msgid "Curvature"
 msgstr "Křivost"
 
-#: libprocess/gwygrainvalue.c:1098
+#: libprocess/gwygrainvalue.c:1128
 msgid "Moment"
 msgstr "Moment"
 
-#: libprocess/gwygrainvalue.c:1102
+#: libprocess/gwygrainvalue.c:1132
 msgid "User"
 msgstr "Uživatel"
 
@@ -2090,11 +2090,11 @@ msgstr "Nelze vytvořit adresář pro uživatelské rozhraní %s: %s"
 msgid "Cannot create user module directory %s: %s"
 msgstr "Nelze vytvořit adresář pro uživatelské moduly %s: %s"
 
-#: app/splash.c:832
+#: app/splash.c:652
 msgid "Starting "
 msgstr "Spouštím "
 
-#: app/splash.c:878
+#: app/splash.c:698
 msgid " is free software released under GNU GPL."
 msgstr " je svobodný software uvolněný pod GNU GPL."
 
@@ -4492,26 +4492,26 @@ msgstr "Načítá soubory Nanomagnetics NMI, formát verze 3 a 5."
 msgid "Nanomagnetics File (.nmi)"
 msgstr "Nanomagnetics soubory (.nmi)"
 
-#: modules/file/nanonics.c:102
+#: modules/file/nanonics.c:104
 msgid "Imports Nanonics NAN data files."
 msgstr "Načítá datové soubory Nanonics NAN."
 
-#: modules/file/nanonics.c:115
+#: modules/file/nanonics.c:117
 msgid "Nanonics files (.nan)"
 msgstr "Nanonics soubory (.nan)"
 
-#: modules/file/nanonics.c:175 modules/file/nanonics.c:413
+#: modules/file/nanonics.c:177 modules/file/nanonics.c:446
 #: modules/file/wsxmfile.c:211
 #, c-format
 msgid "Expected header end marker ‘%s’ was not found."
 msgstr "Nebyl nalezen očekávaný konec hlavičky ‚%s‘."
 
-#: modules/file/nanonics.c:202
+#: modules/file/nanonics.c:214
 #, c-format
 msgid "HeaderLength %u differs from actual header length %u"
 msgstr "Hodnota HeaderLength %u se liší od skutečné délky hlavičky %u"
 
-#: modules/file/nanonics.c:338 modules/file/witec-asc.c:167
+#: modules/file/nanonics.c:371 modules/file/witec-asc.c:167
 #, c-format
 msgid "Expected header start marker ‘%s’ but found ‘%s’."
 msgstr "Namísto očekávané značky začátku hlavičky ‚%s‘ bylo nalezeno ‚%s‘."
@@ -13463,14 +13463,17 @@ msgid "_Z:"
 msgstr "_X:"
 
 #: modules/volume/volume_slice.c:807
+#, c-format
 msgid "Z cross-section at Z = %.*f%s%s (#%d)"
 msgstr "Z-řez v poloze Z = %.*f%s%s (#%d)"
 
 #: modules/volume/volume_slice.c:818
+#, c-format
 msgid "Y cross-section at Y = %.*f%s%s (#%d)"
 msgstr "Z-řez v poloze Z = %.*f%s%s (#%d)"
 
 #: modules/volume/volume_slice.c:829
+#, c-format
 msgid "X cross-section at X = %.*f%s%s (#%d)"
 msgstr "Z-řez v poloze Z = %.*f%s%s (#%d)"
 
