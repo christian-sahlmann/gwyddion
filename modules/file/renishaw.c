@@ -1472,12 +1472,14 @@ wdf_read_pset(const guchar *buffer,
     GHashTable *keys, *values;
     WdfPropertySet *pset;
     WdfPsetData *pdata = NULL;
-    GwyContainer *data = NULL;
+    GwyContainer *data = NULL, *nested;
 
     remaining = size;
     keys = g_hash_table_new(g_direct_hash, g_direct_equal);
     values = g_hash_table_new(g_direct_hash, g_direct_equal);
     pset = g_new(WdfPropertySet, 1);
+
+    data = gwy_container_new();
 
     while (remaining > 0) {
         pset->type = *(buffer++);
@@ -1592,7 +1594,15 @@ wdf_read_pset(const guchar *buffer,
                     pset->size = gwy_get_guint32_le(&buffer);
                     remaining -= 4;
                     gwy_debug("p size=%d", pset->size);
-
+                    nested = NULL;
+                    nested = wdf_read_pset(buffer, pset->size);
+                    if (nested) {
+                        gwy_container_transfer(nested, data,
+                                               "/", "/", FALSE);
+                    }
+                    buffer += pset->size;
+                    remaining -= pset->size;
+                    g_object_unref(nested);
                 break;
                 case WDF_PTYPE_KEY:
                     pset->size = gwy_get_guint32_le(&buffer);
@@ -1733,7 +1743,6 @@ wdf_read_pset(const guchar *buffer,
         } /* if (pset->flag == WDF_PFLAG_ARRAY) */
     }
 
-    data = gwy_container_new();
     pdata = g_new(WdfPsetData, 1);
     pdata->keys = keys;
     pdata->values = values;
