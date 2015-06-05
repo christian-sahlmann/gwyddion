@@ -63,7 +63,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
@@ -73,6 +75,11 @@
 #include <app/gwyapp.h>
 
 #include "err.h"
+
+#ifdef _MSC_VER
+#define swab _swab
+#endif
+
 
 /* in characters, not bytes */
 #define HEADER_SIZE 2048

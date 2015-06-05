@@ -33,10 +33,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 #ifdef _WIN32
 #include <process.h>
+#endif
+
+#ifdef _MSC_VER
+#define getpid _getpid
 #endif
 
 #include <sys/stat.h>

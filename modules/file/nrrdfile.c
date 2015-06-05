@@ -697,9 +697,9 @@ find_gwy_data_type(NRRDDataType datatype, const gchar *endian,
             return FALSE;
         }
 
-        if (strcasecmp(endian, "little") == 0)
+        if (g_ascii_strcasecmp(endian, "little") == 0)
             *byteorder = GWY_BYTE_ORDER_LITTLE_ENDIAN;
-        else if (strcasecmp(endian, "big") == 0)
+        else if (g_ascii_strcasecmp(endian, "big") == 0)
             *byteorder = GWY_BYTE_ORDER_BIG_ENDIAN;
         else {
             err_INVALID(error, "endian");

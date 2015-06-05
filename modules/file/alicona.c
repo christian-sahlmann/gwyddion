@@ -446,7 +446,7 @@ read_depth_image(const Al3DFile *afile,
     guint rowstride = (afile->xres*sizeof(gfloat) + 7)/8*8;
     gdouble *d, *m = NULL;
     guint i, j;
-    gdouble invalid_value = 0.0/0.0;
+    gdouble invalid_value = NAN;
     guint xres = afile->xres, yres = afile->yres;
 
     read_float_tag(afile, "InvalidPixelValue", &invalid_value, NULL);

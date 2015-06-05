@@ -31,7 +31,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+#ifdef _MSC_VER
+#include <time.h>
+#else
 #include <sys/time.h>
+#endif
 
 #include "natural.h"
 #define SQR(x)  (x)*(x)
@@ -1944,14 +1948,14 @@ static voronoiCell* gwy_delaunay_get_voronoi_cell(GwyDelaunayVertex *point, simp
   // Find the Natural Neighbour verticies of this point.
   arrayList *neighbours = findNeighbours(point, s0);
   gint n = arrayListSize(neighbours);
-  simplex  *simps[n];
+  simplex  **simps = (simplex**)g_alloca(sizeof(simplex*)*n);
   voronoiCell *vc;
-  gint i, j = 0, done[3*n];
-  GwyDelaunayVertex      *edges[3*n];
+  gint i, j = 0;
+  gint* done = (gint*)g_alloca(sizeof(gint)*3*n);
+  GwyDelaunayVertex **edges = (GwyDelaunayVertex**)g_alloca(sizeof(GwyDelaunayVertex*)*3*n);
   GwyDelaunayVertex *v1, *v2, *v3;
   gint first, current, lastConsidered;
   gint match;
-
 
   // If no neighbours were found, it could be because we are trying to
   // get a cell outside of the points

@@ -964,7 +964,7 @@ gwy_expr_transform_values(GwyExpr *expr)
         if (i == expr->identifiers->len)
             g_ptr_array_add(expr->identifiers, t->value.v_identifier);
         code = gwy_expr_token_new0(expr);
-        code->token = -i;
+        code->token = -(gint)i;
         t->rpn_block = gwy_expr_token_list_prepend(t->rpn_block, code);
     }
 

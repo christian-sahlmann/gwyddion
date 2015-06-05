@@ -65,6 +65,9 @@
 #include "err.h"
 #include "get.h"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 #define MAGIC "\x01\xb0\x93\xff"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 

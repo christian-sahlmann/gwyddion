@@ -37,6 +37,8 @@
  * </mime-type>
  **/
 
+#ifdef HAVE_MINIZIP
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -891,5 +893,7 @@ x3p_file_get_data_type(const gchar *type,
     err_UNSUPPORTED(error, AXES_PREFIX "/CZ/DataType");
     return FALSE;
 }
+
+#endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
