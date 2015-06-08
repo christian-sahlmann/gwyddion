@@ -65,9 +65,6 @@
 #include "err.h"
 #include "get.h"
 
-#define _USE_MATH_DEFINES
-#include <math.h>
-
 #define MAGIC "\x01\xb0\x93\xff"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 
@@ -3384,7 +3381,7 @@ extract_brick(MDTMDAFrame  *dataframe,
         cal = gwy_data_line_new(zres, zres, FALSE);
         data = gwy_data_line_get_data(cal);
         for (k = 0; k < zres; k++) {
-            *(data++) = zamp * (1 - cos(k * 2 * M_PI / zres));
+            *(data++) = zamp * (1 - cos(k * 2 * G_PI / zres));
         }
 
         if (siunitnl) {
