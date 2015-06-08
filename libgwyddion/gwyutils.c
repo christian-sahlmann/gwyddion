@@ -1352,8 +1352,8 @@ get_half_le(const guchar *p)
 
     if (G_UNLIKELY(exponent == 0x1f)) {
         /* XXX: Gwyddion does not work with NaNs.  Should we produce them?*/
-		if (x)
-			return NAN;
+        if (x)
+            return NAN;
         return (p[1] & 0x80) ? -HUGE_VAL : HUGE_VAL;
     }
 
@@ -1374,7 +1374,7 @@ get_half_be(const guchar *p)
     if (G_UNLIKELY(exponent == 0x1f)) {
         /* XXX: Gwyddion does not work with NaNs.  Should we produce them?*/
         if (x)
-			return NAN;
+            return NAN;
         return (p[0] & 0x80) ? -HUGE_VAL : HUGE_VAL;
     }
 
