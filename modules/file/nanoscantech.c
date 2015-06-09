@@ -48,8 +48,6 @@
  * Read SPS Volume
  **/
 
-#ifdef HAVE_MINIZIP
-
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -901,7 +899,5 @@ nst_get_file_content(unzFile *zipfile, gsize *contentsize, GError **error)
         *contentsize = size;
     return buffer;
 }
-
-#endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
