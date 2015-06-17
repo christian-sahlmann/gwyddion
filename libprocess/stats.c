@@ -4560,6 +4560,263 @@ gwy_data_field_area_get_volume(GwyDataField *data_field,
     return calculate_volume(data_field, basis, mask, col, row, width, height);
 }
 
+static inline gdouble
+xlnx_int(guint x)
+{
+    static const gdouble xlnx_table[] = {
+        0.0,
+        0.0,
+        1.38629436111989061882,
+        3.29583686600432907417,
+        5.54517744447956247532,
+        8.04718956217050187300,
+        10.75055681536833000486,
+        13.62137104338719313570,
+        16.63553233343868742600,
+        19.77502119602597444511,
+        23.02585092994045684010,
+        26.37684800078207598466,
+        29.81887979745600372264,
+        33.34434164699997756865,
+        36.94680261461362060328,
+        40.62075301653315098985,
+        44.36141955583649980256,
+        48.16462684895567336408,
+        52.02669164213096445960,
+        55.94434060416236874000,
+        59.91464547107981986860,
+        63.93497119219188292650,
+        68.00293397388294877634,
+        72.11636696637044288840,
+        76.27329192835069487136,
+        80.47189562170501873000,
+    };
+
+    if (x < G_N_ELEMENTS(xlnx_table))
+        return xlnx_table[x];
+
+    return x*log(x);
+}
+
+static gdouble
+calculate_entropy(GwyDataField *dfield,
+                  GwyDataField *mask,
+                  GwyMaskingType mode,
+                  gint col, gint row,
+                  gint width, gint height)
+{
+    gdouble min, max;
+    gint xres;
+    guint maxdiv, div, size, i, j, n;
+    guint *counts;
+    gdouble *ecurve;
+    const gdouble *base;
+    gdouble S;
+
+    if (mask) {
+        gwy_data_field_area_count_in_range(mask, NULL, col, row, width, height,
+                                           G_MAXDOUBLE, 1.0, NULL, &n);
+    }
+    else
+        n = width*height;
+
+    if (n < 2)
+        return G_MAXDOUBLE;
+
+    gwy_data_field_area_get_min_max_mask(dfield, mask, mode,
+                                         col, row, width, height,
+                                         &min, &max);
+    if (min >= max)
+        return G_MAXDOUBLE;
+    /* Return explicit estimates for n < 4, making maxdiv at least 2. */
+    if (n == 2)
+        return log(max - min);
+    if (n == 3)
+        return log(max - min) + 0.5*log(1.5) - G_LN2/3.0;
+
+    /* XXX: In libgwy4 we get rid of outlies here. */
+
+    xres = dfield->xres;
+    maxdiv = (guint)floor(log2(n) + 1e-12);
+    g_assert(maxdiv >= 2);
+    size = 1 << maxdiv;
+    counts = g_new0(guint, size);
+    ecurve = g_new(gdouble, maxdiv+1);
+    base = dfield->data + row*xres + col;
+
+    // Gather counts at the finest scale.
+    if (mode == GWY_MASK_IGNORE) {
+        for (i = 0; i < height; i++) {
+            const gdouble *d = base + i*xres;
+            for (j = width; j; j--, d++) {
+                gint k = floor((*d - min)/(max - min)*size);
+                k = CLAMP(k, 0, (gint)size-1);
+                counts[k]++;
+            }
+        }
+    }
+    else {
+        const gdouble *mbase = mask->data + row*xres + col;
+        const gboolean invert = (mode == GWY_MASK_EXCLUDE);
+        for (i = 0; i < height; i++) {
+            const gdouble *d = base + i*xres;
+            const gdouble *m = mbase + i*xres;
+            for (j = width; j; j--, d++, m++) {
+                if ((*m < 1.0) == invert) {
+                    gint k = floor((*d - min)/(max - min)*size);
+                    k = CLAMP(k, 0, (gint)size-1);
+                    counts[k]++;
+                }
+            }
+        }
+    }
+
+    // Calculate the entropy for all bin sizes in the logarithmic progression.
+    for (div = 0; div <= maxdiv; div++) {
+        guint *ck, *ck2;
+        ck = counts;
+        S = 0.0;
+        for (i = size; i; i--, ck++)
+            S += xlnx_int(*ck);
+        S = log(n*(max - min)/size) - S/n;
+        ecurve[div] = S;
+        size >>= 1;
+
+        // Make the bins twice as large.
+        ck2 = ck = counts;
+        for (i = size; i; i--, ck2 += 2)
+            *(ck++) = *(ck2) + *(ck2 + 1);
+    }
+
+    g_free(counts);
+
+    // Find the flattest part of the curve and use the value there as the
+    // entropy estimate.  Handle the too-few-pixels cases gracefully.
+    if (maxdiv < 5) {
+        gdouble mindiff = G_MAXDOUBLE;
+        guint imin = 1;
+
+        for (i = 0; i <= maxdiv-2; i++) {
+            gdouble diff = (fabs(ecurve[i] - ecurve[i+1])
+                            + fabs(ecurve[i+1] - ecurve[i+2]));
+            if (diff < mindiff) {
+                mindiff = diff;
+                imin = i+1;
+            }
+        }
+        S = ecurve[imin];
+    }
+    else {
+        gdouble mindiff = G_MAXDOUBLE;
+        guint imin = 2;
+
+        for (i = 0; i <= maxdiv-4; i++) {
+            gdouble diff = (fabs(ecurve[i] - ecurve[i+1])
+                            + fabs(ecurve[i+1] - ecurve[i+2])
+                            + fabs(ecurve[i+2] - ecurve[i+3])
+                            + fabs(ecurve[i+3] - ecurve[i+4]));
+            if (diff < mindiff) {
+                mindiff = diff;
+                imin = i+2;
+            }
+        }
+        S = (ecurve[imin-1] + ecurve[imin] + ecurve[imin+1])/3.0;
+    }
+
+    g_free(ecurve);
+
+    return S;
+}
+
+/**
+ * gwy_data_field_get_entropy:
+ * @data_field: A data field.
+ *
+ * Computes the entropy of a data field.
+ *
+ * See gwy_data_field_area_get_entropy() for the definition.
+ *
+ * This quantity is cached.
+ *
+ * Returns: The value distribution entropy.
+ *
+ * Since: 2.42
+ **/
+gdouble
+gwy_data_field_get_entropy(GwyDataField *data_field)
+{
+    gdouble S = 0.0;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), S);
+
+    gwy_debug("%s", CTEST(data_field, ENT) ? "cache" : "lame");
+    if (CTEST(data_field, ENT))
+        return CVAL(data_field, ENT);
+
+    S = calculate_entropy(data_field, NULL, GWY_MASK_IGNORE,
+                          0, 0, data_field->xres, data_field->yres);
+
+    CVAL(data_field, ENT) = S;
+    data_field->cached |= CBIT(ENT);
+
+    return S;
+}
+
+/**
+ * gwy_data_field_area_get_entropy:
+ * @data_field: A data field.
+ * @mask: Mask specifying which values to take into account/exclude, or %NULL.
+ * @mode: Masking mode to use.  See the introduction for description of
+ *        masking modes.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Estimates the entropy of field data distribution.
+ *
+ * The estimate is calculated as @S = ln(@n Δ) − 1/@n ∑ @n_i ln(@n_i), where
+ * @n is the number of pixels considered, Δ the bin size and @n_i the count in
+ * the @i-th bin.  If @S is plotted as a function of the bin size Δ, it is,
+ * generally, a growing function with a plateau for ‘reasonable’ bin sizes.
+ * The estimate is taken at the plateau.
+ *
+ * It should be noted that this estimate may be biased.
+ *
+ * Returns: The estimated entropy of the data values.  The entropy of no data
+ *          or a single single is returned as %G_MAXDOUBLE.
+ *
+ * Since: 2.42
+ **/
+gdouble
+gwy_data_field_area_get_entropy(GwyDataField *data_field,
+                                GwyDataField *mask,
+                                GwyMaskingType mode,
+                                gint col, gint row,
+                                gint width, gint height)
+{
+    gdouble ent = G_MAXDOUBLE;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), ent);
+    g_return_val_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
+                                   && mask->xres == data_field->xres
+                                   && mask->yres == data_field->yres), ent);
+    g_return_val_if_fail(col >= 0 && row >= 0
+                         && width >= 0 && height >= 0
+                         && col + width <= data_field->xres
+                         && row + height <= data_field->yres,
+                         ent);
+
+    /* The result is the same, but it can be cached. */
+    if ((!mask || mode == GWY_MASK_IGNORE)
+        && row == 0 && col == 0
+        && width == data_field->xres && height == data_field->yres)
+        return gwy_data_field_get_entropy(data_field);
+
+    return calculate_entropy(data_field, mask, mode,
+                             col, row, width, height);
+}
+
 /**
  * gwy_data_field_slope_distribution:
  * @data_field: A data field.
