@@ -66,6 +66,7 @@ typedef struct {
     gdouble area;
     gdouble projarea;
     gdouble var;
+    gdouble entropy;
     /* These two are in degrees as we use need only for the user. */
     gdouble theta;
     gdouble phi;
@@ -118,6 +119,7 @@ struct _GwyToolStats {
     GtkWidget *area;
     GtkWidget *projarea;
     GtkWidget *var;
+    GtkWidget *entropy;
     GtkWidget *theta;
     GtkWidget *phi;
 
@@ -134,7 +136,6 @@ struct _GwyToolStats {
     GwyDataField *yunc;
     GwyDataField *zunc;
 
-
     /* potential class data */
     GwySIValueFormat *angle_format;
     GType layer_type_rect;
@@ -146,45 +147,45 @@ struct _GwyToolStatsClass {
 
 static gboolean module_register(void);
 
-static GType gwy_tool_stats_get_type              (void) G_GNUC_CONST;
-static void  gwy_tool_stats_finalize              (GObject *object);
-static void  gwy_tool_stats_init_dialog           (GwyToolStats *tool);
-static GtkWidget* gwy_tool_stats_add_aux_button   (GwyToolStats *tool,
-                                                   const gchar *stock_id,
-                                                   const gchar *tooltip);
-static void  gwy_tool_stats_data_switched         (GwyTool *gwytool,
-                                                   GwyDataView *data_view);
-static void  gwy_tool_stats_data_changed          (GwyPlainTool *plain_tool);
-static void  gwy_tool_stats_mask_changed          (GwyPlainTool *plain_tool);
-static void  gwy_tool_stats_response              (GwyTool *tool,
-                                                   gint response_id);
-static void  gwy_tool_stats_selection_changed     (GwyPlainTool *plain_tool,
-                                                   gint hint);
-static void  gwy_tool_stats_update_labels         (GwyToolStats *tool);
-static gboolean gwy_tool_stats_calculate          (GwyToolStats *tool);
-static void  gwy_tool_stats_update_units          (GwyToolStats *tool);
-static void  update_label                         (GwySIValueFormat *units,
-                                                   GtkWidget *label,
-                                                   gdouble value);
-static void  update_label_unc                     (GwySIValueFormat *units,
-                                                   GtkWidget *label,
-                                                   gdouble value,
-                                                   gdouble uncertainty);
-static void  gwy_tool_stats_masking_changed       (GtkWidget *button,
-                                                   GwyToolStats *tool);
-static void  gwy_tool_stats_instant_update_changed(GtkToggleButton *check,
-                                                   GwyToolStats *tool);
-static void  gwy_tool_stats_save                  (GwyToolStats *tool);
-static void  gwy_tool_stats_copy                  (GwyToolStats *tool);
-static gchar* gwy_tool_stats_create_report        (gpointer user_data,
-                                                   gssize *data_len);
+static GType      gwy_tool_stats_get_type              (void)                      G_GNUC_CONST;
+static void       gwy_tool_stats_finalize              (GObject *object);
+static void       gwy_tool_stats_init_dialog           (GwyToolStats *tool);
+static GtkWidget* gwy_tool_stats_add_aux_button        (GwyToolStats *tool,
+                                                        const gchar *stock_id,
+                                                        const gchar *tooltip);
+static void       gwy_tool_stats_data_switched         (GwyTool *gwytool,
+                                                        GwyDataView *data_view);
+static void       gwy_tool_stats_data_changed          (GwyPlainTool *plain_tool);
+static void       gwy_tool_stats_mask_changed          (GwyPlainTool *plain_tool);
+static void       gwy_tool_stats_response              (GwyTool *tool,
+                                                        gint response_id);
+static void       gwy_tool_stats_selection_changed     (GwyPlainTool *plain_tool,
+                                                        gint hint);
+static void       gwy_tool_stats_update_labels         (GwyToolStats *tool);
+static gboolean   gwy_tool_stats_calculate             (GwyToolStats *tool);
+static void       gwy_tool_stats_update_units          (GwyToolStats *tool);
+static void       update_label                         (GwySIValueFormat *units,
+                                                        GtkWidget *label,
+                                                        gdouble value);
+static void       update_label_unc                     (GwySIValueFormat *units,
+                                                        GtkWidget *label,
+                                                        gdouble value,
+                                                        gdouble uncertainty);
+static void       gwy_tool_stats_masking_changed       (GtkWidget *button,
+                                                        GwyToolStats *tool);
+static void       gwy_tool_stats_instant_update_changed(GtkToggleButton *check,
+                                                        GwyToolStats *tool);
+static void       gwy_tool_stats_save                  (GwyToolStats *tool);
+static void       gwy_tool_stats_copy                  (GwyToolStats *tool);
+static gchar*     gwy_tool_stats_create_report         (gpointer user_data,
+                                                        gssize *data_len);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Statistics tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.15",
+    "2.16",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -337,6 +338,7 @@ gwy_tool_stats_init_dialog(GwyToolStats *tool)
         { N_("Surface area:"),      G_STRUCT_OFFSET(GwyToolStats, area),     },
         { N_("Projected area:"),    G_STRUCT_OFFSET(GwyToolStats, projarea), },
         { N_("Variation:"),         G_STRUCT_OFFSET(GwyToolStats, var),      },
+        { N_("Entropy:"),           G_STRUCT_OFFSET(GwyToolStats, entropy),  },
         { N_("Inclination θ:"),     G_STRUCT_OFFSET(GwyToolStats, theta),    },
         { N_("Inclination φ:"),     G_STRUCT_OFFSET(GwyToolStats, phi),      },
     };
@@ -634,6 +636,7 @@ gwy_tool_stats_update_labels(GwyToolStats * tool)
         gtk_label_set_text(GTK_LABEL(tool->area), "");
         gtk_label_set_text(GTK_LABEL(tool->projarea), "");
         gtk_label_set_text(GTK_LABEL(tool->var), "");
+        gtk_label_set_text(GTK_LABEL(tool->entropy), "");
         gtk_label_set_text(GTK_LABEL(tool->theta), "");
         gtk_label_set_text(GTK_LABEL(tool->phi), "");
         return;
@@ -687,6 +690,8 @@ gwy_tool_stats_update_labels(GwyToolStats * tool)
     /* This has no calibration yet. */
     update_label(plain_tool->value_format, tool->rms_gw, tool->results.rms_gw);
     update_label(tool->var_format, tool->var, tool->results.var);
+    g_snprintf(buffer, sizeof(buffer), "%.4g", tool->results.entropy);
+    gtk_label_set_text(GTK_LABEL(tool->entropy), buffer);
 
     /* This has no calibration yet. */
     if (tool->same_units)
@@ -797,6 +802,10 @@ gwy_tool_stats_calculate(GwyToolStats * tool)
         = gwy_data_field_area_get_variation(plain_tool->data_field,
                                             mask, masking,
                                             isel[0], isel[1], w, h);
+    tool->results.entropy
+        = gwy_data_field_area_get_entropy(plain_tool->data_field,
+                                          mask, masking,
+                                          isel[0], isel[1], w, h);
     if (tool->same_units)
         tool->results.area
             = gwy_data_field_area_get_surface_area_mask(plain_tool->data_field,
@@ -1026,7 +1035,7 @@ gwy_tool_stats_create_report(gpointer user_data,
     GString *report;
     gchar *ix, *iy, *iw, *ih, *rx, *ry, *rw, *rh, *muse, *uni;
     gchar *avg, *min, *max, *median, *rms, *rms_gw, *ra, *skew, *kurtosis;
-    gchar *area, *projarea, *var, *theta, *phi;
+    gchar *area, *projarea, *var, *entropy, *theta, *phi;
     gchar *key, *retval;
 
     mask_in_use = (report_data->masking != GWY_MASK_IGNORE);
@@ -1077,8 +1086,8 @@ gwy_tool_stats_create_report(gpointer user_data,
     rms = fmt_val(rms);
     rms_gw = fmt_val(rms_gw);
 
-    skew = g_strdup_printf("%2.3g", report_data->results.skew);
-    kurtosis = g_strdup_printf("%2.3g", report_data->results.kurtosis);
+    skew = g_strdup_printf("%3.4g", report_data->results.skew);
+    kurtosis = g_strdup_printf("%3.4g", report_data->results.kurtosis);
 
     siunitxy = gwy_data_field_get_si_unit_xy(report_data->data_field);
     siunitz = gwy_data_field_get_si_unit_z(report_data->data_field);
@@ -1100,10 +1109,11 @@ gwy_tool_stats_create_report(gpointer user_data,
                                             GWY_SI_UNIT_FORMAT_PLAIN,
                                             report_data->results.var, 3, vf);
     var = fmt_val(var);
-
     g_object_unref(siunitvar);
-
     gwy_si_unit_value_format_free(vf);
+
+    entropy = g_strdup_printf("%.5g", report_data->results.entropy);
+
     vf = report_data->angle_format;
 
     theta = ((report_data->same_units && !mask_in_use)
@@ -1128,6 +1138,7 @@ gwy_tool_stats_create_report(gpointer user_data,
                              "Surface area:      %s\n"
                              "Projected area:    %s\n"
                              "Variation:         %s\n"
+                             "Entropy:           %s\n"
                              "Inclination θ:     %s\n"
                              "Inclination φ:     %s\n"),
                            iw, ih, ix, iy,
@@ -1135,7 +1146,7 @@ gwy_tool_stats_create_report(gpointer user_data,
                            muse,
                            avg, min, max, median, ra, rms, rms_gw,
                            skew, kurtosis,
-                           area, projarea, var, theta, phi);
+                           area, projarea, var, entropy, theta, phi);
 
     g_free(ix);
     g_free(iy);
@@ -1157,6 +1168,7 @@ gwy_tool_stats_create_report(gpointer user_data,
     g_free(area);
     g_free(projarea);
     g_free(var);
+    g_free(entropy);
     g_free(theta);
     g_free(phi);
 
