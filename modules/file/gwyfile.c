@@ -104,7 +104,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Loads and saves Gwyddion native data files (serialized objects)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.16",
+    "0.17",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -203,12 +203,7 @@ gwyfile_save(GwyContainer *data,
     FILE *fh;
     gboolean restore_filename, ok = TRUE;
 
-    if (!(fh = g_fopen(filename, "wb"))) {
-        err_OPEN_WRITE(error);
-        return FALSE;
-    }
-
-    /* Assure the saved file contains its own name under "/filename" */
+    /* Ensure the saved file contains its own name under "/filename" */
     restore_filename = TRUE;
     filename_orig_utf8 = NULL;
     gwy_container_gis_string_by_name(data, "/filename",
@@ -227,18 +222,27 @@ gwyfile_save(GwyContainer *data,
         filename_utf8 = NULL;
     }
 
-    /* Serialize */
+    /* Serialize first.  If we get OOM and hard-abort here, at least keep any
+     * existing file intact. */
     buffer = gwy_serializable_serialize(G_OBJECT(data), NULL);
-    if (fwrite(MAGIC2, 1, MAGIC_SIZE, fh) != MAGIC_SIZE
-        || fwrite(buffer->data, 1, buffer->len, fh) != buffer->len) {
-        err_WRITE(error);
+
+    /* Now actually write the file. */
+    if (!(fh = g_fopen(filename, "wb"))) {
+        err_OPEN_WRITE(error);
         ok = FALSE;
-        g_unlink(filename);
     }
-    if (fclose(fh)) {
-        err_WRITE(error);
-        ok = FALSE;
-        g_unlink(filename);
+    else {
+        if (fwrite(MAGIC2, 1, MAGIC_SIZE, fh) != MAGIC_SIZE
+            || fwrite(buffer->data, 1, buffer->len, fh) != buffer->len) {
+            err_WRITE(error);
+            ok = FALSE;
+            g_unlink(filename);
+        }
+        if (fclose(fh)) {
+            err_WRITE(error);
+            ok = FALSE;
+            g_unlink(filename);
+        }
     }
     g_byte_array_free(buffer, TRUE);
 
