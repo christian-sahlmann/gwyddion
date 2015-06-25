@@ -66,7 +66,8 @@ static void      kmedians_dialog_update (KMediansControls *controls,
                                          KMediansArgs *args);
 static void      kmedians_values_update (KMediansControls *controls,
                                          KMediansArgs *args);
-static GwyBrick* normalize_brick        (GwyBrick *brick);
+static GwyBrick* normalize_brick        (GwyBrick *brick,
+                                         GwyDataField *intfield);
 static void      volume_kmedians_do     (GwyContainer *data,
                                          KMediansArgs *args);
 static void      kmedians_load_args     (GwyContainer *container,
@@ -90,7 +91,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Calculates K-medians clustering on volume data."),
     "Daniil Bratashov <dn2010@gmail.com> & Evgeniy Ryabov <k1u2r3ka@mail.ru>",
-    "0.1",
+    "1.0",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov & Evgeniy Ryabov",
     "2014",
 };
@@ -241,13 +242,14 @@ epsilon_changed_cb(GtkAdjustment *adj,
 }
 
 static GwyBrick*
-normalize_brick(GwyBrick *brick)
+normalize_brick(GwyBrick *brick, GwyDataField *intfield)
 {
     GwyBrick *result;
-    gdouble wmin, dataval, integral;
-    gint i, j, l, xres, yres, zres;
+    gdouble wmin, dataval, dataval2, integral;
+    gint i, j, l, k, xres, yres, zres;
+    gint len = 25;
     const gdouble *olddata;
-    gdouble *newdata;
+    gdouble *newdata, *intdata;
 
     result = gwy_brick_new_alike(brick, TRUE);
     wmin = gwy_brick_get_min(brick);
@@ -256,21 +258,48 @@ normalize_brick(GwyBrick *brick)
     zres = gwy_brick_get_zres(brick);
     olddata = gwy_brick_get_data_const(brick);
     newdata = gwy_brick_get_data(result);
+    intdata = gwy_data_field_get_data(intfield);
 
     for (i = 0; i < xres; i++)
         for (j = 0; j < yres; j++) {
             integral = 0;
             for (l = 0; l < zres; l++) {
                 dataval = *(olddata + l * xres * yres + j * xres + i);
+                wmin = dataval;
+                for (k = -len; k < len; k++) {
+                    if (l + k < 0) {
+                        k = -l;
+                        continue;
+                    }
+                    if (l + k >= zres)
+                        break;
+                    dataval2 = *(olddata + (l + k) * xres * yres
+                                                        + j * xres + i);
+                    if (dataval2 < wmin)
+                        wmin = dataval2;
+                }
                 integral += (dataval - wmin);
             }
             for (l = 0; l < zres; l++) {
                 dataval = *(olddata + l * xres * yres + j * xres + i);
+                wmin = dataval;
+                for (k = -len; k < len; k++) {
+                    if (l + k < 0) {
+                        k = -l;
+                        continue;
+                    }
+                    if (l + k >= zres)
+                        break;
+                    dataval2 = *(olddata + (l + k)* xres * yres + j * xres + i);
+                    if (dataval2 < wmin)
+                        wmin = dataval2;
+                }
                 if (integral != 0.0) {
                     *(newdata + l * xres * yres + j * xres + i)
                                    = (dataval - wmin) * zres / integral;
                 }
             }
+            *(intdata + j * xres + i) = integral / zres;
         }
 
     return result;
@@ -322,7 +351,7 @@ static void
 volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
 {
     GwyBrick *brick = NULL, *normalized = NULL;
-    GwyDataField *dfield = NULL, *errormap = NULL;
+    GwyDataField *dfield = NULL, *errormap = NULL, *intmap = NULL;
     GwyGraphCurveModel *gcmodel;
     GwyGraphModel *gmodel;
     GwyDataLine *calibration = NULL;
@@ -359,14 +388,6 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
     yoffset = gwy_brick_get_yoffset(brick);
     zoffset = gwy_brick_get_zoffset(brick);
 
-    if (normalize) {
-        normalized = normalize_brick(brick);
-        data = gwy_brick_get_data_const(normalized);
-    }
-    else {
-        data = gwy_brick_get_data_const(brick);
-    }
-
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, TRUE);
     gwy_data_field_set_xoffset(dfield, xoffset);
     gwy_data_field_set_yoffset(dfield, yoffset);
@@ -375,6 +396,18 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
     gwy_data_field_set_si_unit_xy(dfield, siunit);
     siunit = gwy_si_unit_new(_("Cluster"));
     gwy_data_field_set_si_unit_z(dfield, siunit);
+
+    intmap = gwy_data_field_new_alike(dfield, TRUE);
+    siunit = gwy_brick_get_si_unit_w(brick);
+    gwy_data_field_set_si_unit_z(intmap, siunit);
+
+    if (normalize) {
+        normalized = normalize_brick(brick, intmap);
+        data = gwy_brick_get_data_const(normalized);
+    }
+    else {
+        data = gwy_brick_get_data_const(brick);
+    }
 
     centers = g_malloc(zres * k * sizeof(gdouble));
     oldcenters = g_malloc(zres * k * sizeof(gdouble));
@@ -498,10 +531,26 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
                                              _("K-medians error of %s"),
                                              description)
                                      );
-        g_free(description);
+
         gwy_app_channel_log_add(container, -1, newid,
                                 "volume::kmedians",
                                 NULL);
+
+        if (normalize) {
+            newid = gwy_app_data_browser_add_data_field(intmap,
+                                                        container, TRUE);
+            g_object_unref(intmap);
+            gwy_app_set_data_field_title(container, newid,
+                    g_strdup_printf(
+                                    _("Pre-normalized intensity of %s"),
+                                    description)
+                                    );
+
+            gwy_app_channel_log_add(container, -1, newid,
+                                    "volume::kmeans", NULL);
+        }
+
+        g_free(description);
 
         gmodel = gwy_graph_model_new();
         calibration = gwy_brick_get_zcalibration(brick);
