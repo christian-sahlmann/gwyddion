@@ -1784,13 +1784,13 @@ gwy_3d_view_expose(GtkWidget *widget,
         glPopMatrix();
     }
     else if (gwy3dview->setup->visualization == GWY_3D_VISUALIZATION_OVERLAY) {
-      glEnable(GL_COLOR_MATERIAL);
-      glEnable(GL_LIGHTING);
-      glPushMatrix();
-      glRotatef(gwy3dview->setup->light_theta * RAD_2_DEG, 0.0f, 0.0f, 1.0f);
-      glRotatef(gwy3dview->setup->light_phi * RAD_2_DEG, 0.0f, 1.0f, 0.0f);
-      glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-      glPopMatrix();
+        glEnable(GL_COLOR_MATERIAL);
+        glEnable(GL_LIGHTING);
+        glPushMatrix();
+        glRotatef(gwy3dview->setup->light_theta * RAD_2_DEG, 0.0f, 0.0f, 1.0f);
+        glRotatef(gwy3dview->setup->light_phi * RAD_2_DEG, 0.0f, 1.0f, 0.0f);
+        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+        glPopMatrix();
     }
     else {
         glDisable(GL_LIGHTING);
@@ -1799,6 +1799,11 @@ gwy_3d_view_expose(GtkWidget *widget,
     glCallList(gwy3dview->shape_list_base + gwy3dview->shape_current);
     if (gwy3dview->setup->axes_visible)
         gwy_3d_draw_axes(gwy3dview, w-sw, h);
+    else {
+        /* FIXME: False colour axis area is drawn as big black box without
+         * this.  Have no idea why. */
+        glColor3f(1.0, 1.0, 1.0);
+    }
 
     if (gwy3dview->movement == GWY_3D_MOVEMENT_LIGHT
         && gwy3dview->shape_current == GWY_3D_SHAPE_REDUCED)
@@ -2421,7 +2426,6 @@ gwy_3d_draw_axes(Gwy3DView *widget, gint width, gint height)
         view_size = MIN(width, height);
         size = (gint)(sqrt(view_size)*0.8);
 
-
         gwy_3d_util_get_mpmatrix(mpM);
         glGetDoublev(GL_MODELVIEW_MATRIX, mM);
         glGetDoublev(GL_PROJECTION_MATRIX, pM);
@@ -2453,7 +2457,6 @@ gwy_3d_draw_axes(Gwy3DView *widget, gint width, gint height)
                             Cy - (Ay-By)*0.1,
                             data_max-data_min,
                             mpM, vpM, &vx, &vy, &vz);
-
 
         /* setup 2d */
         glMatrixMode(GL_PROJECTION);
@@ -2502,10 +2505,9 @@ gwy_3d_draw_axes(Gwy3DView *widget, gint width, gint height)
 
         glMatrixMode(GL_MODELVIEW);
         glPopMatrix();
-
     }
 
-   glPopMatrix();
+    glPopMatrix();
 }
 
 static void
@@ -2798,8 +2800,7 @@ gwy_3d_texture_text(Gwy3DView     *gwy3dview,
     text = gwy_3d_label_expand_text(label, gwy3dview->variables);
     size = gwy_3d_label_user_size(label, size);
 
-    img = gwy_3d_view_render_string(size,
-                                    text, &width, &height, &stride);
+    img = gwy_3d_view_render_string(size, text, &width, &height, &stride);
     g_free(text);
 
     gwy_3d_cairo_to_tex(img, width, height, stride);
@@ -2960,10 +2961,10 @@ gwy_3d_fmscaletex(gint height,
     /* prec computation ends here */
 
     gwy_3d_format_layout(layout, s, "%.*f %s",
-                  prec, top/format->magnitude, format->units);
+                         prec, top/format->magnitude, format->units);
     pango_layout_get_pixel_size(layout, &layw1, &layh);
     gwy_3d_format_layout(layout, s, "%.*f %s",
-                  prec, bot/format->magnitude, format->units);
+                         prec, bot/format->magnitude, format->units);
     pango_layout_get_pixel_size(layout, &layw2, &layh);
 
     l = MAX(layw1, layw2);
@@ -3067,52 +3068,43 @@ gwy_3d_fmscaletex(gint height,
 static gint
 gwy_3d_draw_fmscaletex(Gwy3DView *view)
 {
-  gint height = GTK_WIDGET(view)->allocation.height;
-  gint width = GTK_WIDGET(view)->allocation.width;
-  gint size = (gint)(sqrt(MIN(width, height))*0.8);
-  cairo_surface_t* surf;
-  gdouble min, max;
-  gboolean noticks;
-  GwySIUnit *zunit;
-  Gwy3DVisualization visualization = view->setup->visualization;
+    gint height = GTK_WIDGET(view)->allocation.height;
+    gint width = GTK_WIDGET(view)->allocation.width;
+    gint size = (gint)(sqrt(MIN(width, height))*0.8);
+    cairo_surface_t* surf;
+    gdouble min, max;
+    gboolean noticks;
+    GwySIUnit *zunit;
+    GwyLayerBasic *blayer;
 
-  glTranslatef(width, 0, 0);
+    glTranslatef(width, 0, 0);
 
-  if ((visualization == GWY_3D_VISUALIZATION_OVERLAY
-       || visualization == GWY_3D_VISUALIZATION_OVERLAY_NO_LIGHT)
-      && view->ovlays
-      && view->ovlays[0]) {
-      gwy_layer_basic_get_range(GWY_LAYER_BASIC(view->ovlays[0]),
-                                &min, &max);
-      noticks
-          = gwy_layer_basic_get_range_type(GWY_LAYER_BASIC(view->ovlays[0]))
-          == GWY_LAYER_BASIC_RANGE_ADAPT;
-  }
-  else {
-      gwy_data_field_get_min_max(view->data_field, &min, &max);
-      noticks = FALSE;
-  };
+    blayer = GWY_LAYER_BASIC(view->ovlays[0]);
+    gwy_layer_basic_get_range(blayer, &min, &max);
+    noticks = (gwy_layer_basic_get_range_type(blayer)
+               == GWY_LAYER_BASIC_RANGE_ADAPT);
 
-  zunit = gwy_data_field_get_si_unit_z(GWY_DATA_FIELD(view->ovlays[0]->data_field));
-  surf = gwy_3d_fmscaletex(height,
-                           min,
-                           max,
-                           size,
-                           zunit,
-                           view->gradient,
-                           FALSE,
-                           &width, &height, noticks);
+    /* XXX: This requires view->ovlays[0] to be present.  Is is always
+     * satisfied when we can get here?  */
+    zunit = gwy_data_field_get_si_unit_z(GWY_DATA_FIELD(view->ovlays[0]->data_field));
+    surf = gwy_3d_fmscaletex(height,
+                             min,
+                             max,
+                             size,
+                             zunit,
+                             view->gradient,
+                             FALSE,
+                             &width, &height, noticks);
 
-  gwy_3d_cairo_to_tex(cairo_image_surface_get_data(surf),
-                      width,
-                      height,
-                      cairo_image_surface_get_stride(surf));
+    gwy_3d_cairo_to_tex(cairo_image_surface_get_data(surf),
+                        width,
+                        height,
+                        cairo_image_surface_get_stride(surf));
 
+    gwy_3d_draw_ctex(0, 2, 2, width, height);
+    cairo_surface_destroy(surf);
 
-  gwy_3d_draw_ctex(0, 2, 2, width, height);
-  cairo_surface_destroy(surf);
-
-  return width;
+    return width;
 }
 
 /**
