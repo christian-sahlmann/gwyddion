@@ -966,7 +966,7 @@ gwy_3d_view_setup_changed(Gwy3DView *gwy3dview,
     gwy_debug("%p <%s>", gwy3dview, pspec ? pspec->name : "NULL");
     /* TODO: must decide what needs redraw, if anything */
     if (pspec) {
-        if (gwy_3d_visualisation_has_light(gwy3dview->setup->visualization)
+        if (!gwy_3d_visualisation_has_light(gwy3dview->setup->visualization)
             && (gwy_strequal(pspec->name, "light-theta")
                 || gwy_strequal(pspec->name, "light-phi")))
             return;
@@ -2106,12 +2106,11 @@ gwy_3d_make_normals(GwyDataField *dfield,
   glNormal3d(normals[(j)*xres+(i)].x,                \
              normals[(j)*xres+(i)].y,                \
              normals[(j)*xres+(i)].z);               \
-  glColor3d((GLfloat) *(color)/255.,                 \
-            (GLfloat) *(color+1)/255.,               \
-            (GLfloat) *(color+2)/255.);              \
+  glColor3d((GLfloat) *(color)/255.0,                \
+            (GLfloat) *(color+1)/255.0,              \
+            (GLfloat) *(color+2)/255.0);             \
   glVertex3d((i)*dx, (j)*dy, z);                     \
   } while (0)
-
 
 static void
 gwy_3d_make_list(Gwy3DView *gwy3dview,
@@ -2126,12 +2125,9 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
     Gwy3DVector *normals;
     const gdouble *data;
     const gdouble *mask = NULL;
-    GwyGradient *grad;
     GdkPixbuf* pixbuf;
     guchar* colors;
-    gboolean freepixbuf = FALSE;
     gboolean glon;
-    Gwy3DVisualization visualization = gwy3dview->setup->visualization;
 
     if (!dfield && shape == GWY_3D_SHAPE_REDUCED)
         return;
@@ -2141,13 +2137,8 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
     gwy_data_field_get_min_max(dfield, &data_min, &data_max);
 
     data = gwy_data_field_get_data_const(dfield);
-    if (GWY_IS_DATA_FIELD(mask_field)) {
+    if (GWY_IS_DATA_FIELD(mask_field))
         mask = gwy_data_field_get_data_const(mask_field);
-    };
-
-    grad = gwy3dview->gradient;
-    if (!grad)
-        grad = gwy_gradients_get_gradient(NULL);
 
     normals = g_new(Gwy3DVector, xres * yres);
     if (!gwy_3d_make_normals(dfield, normals)) {
@@ -2157,9 +2148,7 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
 
     gwy_3d_calculate_pixel_sizes(dfield, &dx, &dy);
     res = MAX(xres*dx, yres*dy);
-    if ((visualization == GWY_3D_VISUALIZATION_OVERLAY
-         || visualization == GWY_3D_VISUALIZATION_OVERLAY_NO_LIGHT)
-        && gwy3dview->ovlays) {
+    if (gwy3dview->ovlays) {
         gint l;
         GdkPixbuf* lpb;
         pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, 0, 8, xres, yres);
@@ -2177,12 +2166,17 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
                                      GDK_INTERP_TILES, 0xff);
             };
         };
-        freepixbuf = TRUE;
     }
     else {
+        GwyGradient *grad = gwy3dview->gradient;
+
+        if (!grad)
+            grad = gwy_gradients_get_gradient(NULL);
+
+        gwy_resource_use(GWY_RESOURCE(grad));
         pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, 0, 8, xres, yres);
         gwy_pixbuf_draw_data_field(pixbuf, dfield, grad);
-        freepixbuf = TRUE;
+        gwy_resource_release(GWY_RESOURCE(grad));
     };
 
     colors = gdk_pixbuf_get_pixels(pixbuf);
@@ -2195,8 +2189,6 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
     glTranslatef(0.0, 0.0, -data_min);
     /* zdifr = 1.0/(data_max - data_min); */
 
-    /* FIXME: This should be avoided in lighting visualization mode, create
-     * it only upon a switch to gradient mode. */
     for (j = 0; j < yres-1; j++) {
         glBegin(GL_TRIANGLE_STRIP);
         glon = TRUE;
@@ -2241,8 +2233,7 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
     glPopMatrix();
     glEndList();
 
-    if (freepixbuf)
-        g_object_unref(pixbuf);
+    g_object_unref(pixbuf);
 }
 
 /*
