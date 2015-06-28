@@ -944,6 +944,21 @@ gwy_3d_view_setup_disconnect(Gwy3DView *gwy3dview)
     }
 }
 
+static gboolean
+gwy_3d_visualisation_has_light(Gwy3DVisualization visualization)
+{
+    return (visualization == GWY_3D_VISUALIZATION_LIGHTING
+            || visualization == GWY_3D_VISUALIZATION_OVERLAY);
+}
+
+static gboolean
+gwy_3d_visualisation_has_colormap(Gwy3DVisualization visualization)
+{
+    return (visualization == GWY_3D_VISUALIZATION_GRADIENT
+            || visualization == GWY_3D_VISUALIZATION_OVERLAY
+            || visualization == GWY_3D_VISUALIZATION_OVERLAY_NO_LIGHT);
+}
+
 static void
 gwy_3d_view_setup_changed(Gwy3DView *gwy3dview,
                           GParamSpec *pspec)
@@ -951,7 +966,7 @@ gwy_3d_view_setup_changed(Gwy3DView *gwy3dview,
     gwy_debug("%p <%s>", gwy3dview, pspec ? pspec->name : "NULL");
     /* TODO: must decide what needs redraw, if anything */
     if (pspec) {
-        if (gwy3dview->setup->visualization == GWY_3D_VISUALIZATION_GRADIENT
+        if (gwy_3d_visualisation_has_light(gwy3dview->setup->visualization)
             && (gwy_strequal(pspec->name, "light-theta")
                 || gwy_strequal(pspec->name, "light-phi")))
             return;
@@ -1066,9 +1081,7 @@ gwy_3d_view_gradient_changed(Gwy3DView *gwy3dview)
     Gwy3DVisualization visualization = gwy3dview->setup->visualization;
     gwy_debug("");
     gwy3dview->changed |= GWY_3D_GRADIENT;
-    if (visualization == GWY_3D_VISUALIZATION_GRADIENT
-        || visualization == GWY_3D_VISUALIZATION_OVERLAY
-        || visualization == GWY_3D_VISUALIZATION_OVERLAY_NO_LIGHT)
+    if (gwy_3d_visualisation_has_colormap(visualization))
         gwy_3d_view_update_lists(gwy3dview);
 }
 
@@ -1731,7 +1744,7 @@ gwy_3d_view_expose(GtkWidget *widget,
 
     glViewport(0, 0, w, h);
     if (gwy3dview->setup->fmscale_visible
-        && gwy3dview->setup->visualization != GWY_3D_VISUALIZATION_LIGHTING) {
+        && gwy_3d_visualisation_has_colormap(gwy3dview->setup->visualization)) {
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         glOrtho(0, w, 0, h, -1, 1);
