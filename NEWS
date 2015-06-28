@@ -1,6 +1,16 @@
 2.42 (0000-00-00)
+Libraries:
+- libgwydgets: 3D view false colour map rendered as a black box when no axes
+  are drawn was hopefully fixed.
+- libgwydgets: Leaking overlay GwyPixmapLayers in Gwy3DView were fixed.
+
 Modules:
 - Image export: Missing #include <locale.h> was fixed.
+- Gwyfile: If the program aborts to out-of-memory during saving the existing
+  file is kept intact now.
+
+Other:
+- The code has been made MSVC-compatible.
 
 
 2.41 (2015-05-26)
