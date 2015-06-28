@@ -778,6 +778,7 @@ gwy_3d_view_set_ovlay(Gwy3DView *gwy3dview,
     for (i = 0; i < novlays; i++) {
         gwy3dview->ovlays[i] = ovlays[i];
         g_object_ref(gwy3dview->ovlays[i]);
+        gtk_object_sink(GTK_OBJECT(gwy3dview->ovlays[i]));
         gwy3dview->ovlay_updated_id[i]
             = g_signal_connect_swapped(gwy3dview->ovlays[i],
                                        "updated",
