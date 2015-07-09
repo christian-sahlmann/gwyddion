@@ -1,5 +1,7 @@
 2.42 (0000-00-00)
 Libraries:
+- libgwydgets: Gradient visualisation mode uses the same false colour mapping
+  as overlay if overlays are set.
 - libgwydgets: 3D view false colour map rendered as a black box when no axes
   are drawn was hopefully fixed.
 - libgwydgets: Leaking overlay GwyPixmapLayers in Gwy3DView were fixed.
@@ -8,6 +10,7 @@ Modules:
 - Image export: Missing #include <locale.h> was fixed.
 - Gwyfile: If the program aborts to out-of-memory during saving the existing
   file is kept intact now.
+- Raw XYZ: Data values can be separated by commas or semicolons in file lines.
 
 Other:
 - The code has been made MSVC-compatible.
