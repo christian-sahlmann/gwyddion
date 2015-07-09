@@ -1,6 +1,6 @@
 /*
  *  $Id$
- *  Copyright (C) 2009 David Necas (Yeti).
+ *  Copyright (C) 2009-2015 David Necas (Yeti).
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -224,7 +224,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports raw XYZ data files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -269,10 +269,14 @@ rawxyz_detect(const GwyFileDetectInfo *fileinfo,
             goto next_line;
         }
         s = end;
+        while (g_ascii_isspace(*s) || *s == ';' || *s == ',')
+             s++;
         g_ascii_strtod(s, &end);
         if (end == s)
             return 0;
         s = end;
+        while (g_ascii_isspace(*s) || *s == ';' || *s == ',')
+             s++;
         g_ascii_strtod(s, &end);
         if (end == s)
             return 0;
@@ -1056,7 +1060,7 @@ rawxyz_do(RawXYZFile *rfile,
     }
 
     /* Fix the scales according to real units. */
-    g_printerr("%g %g :: %g %g\n", args->xmin, args->xmax, args->ymin, args->ymax);
+    gwy_debug("%g %g :: %g %g", args->xmin, args->xmax, args->ymin, args->ymax);
     gwy_data_field_set_xreal(dfield, mag*(args->xmax - args->xmin));
     gwy_data_field_set_yreal(dfield, mag*(args->ymax - args->ymin));
     gwy_data_field_set_xoffset(dfield, mag*args->xmin);
@@ -1272,9 +1276,13 @@ read_points(gchar *p)
         if (!(pt.x = g_ascii_strtod(line, &end)) && end == line)
             continue;
         line = end;
+        while (g_ascii_isspace(*line) || *line == ';' || *line == ',')
+             line++;
         if (!(pt.y = g_ascii_strtod(line, &end)) && end == line)
             continue;
         line = end;
+        while (g_ascii_isspace(*line) || *line == ';' || *line == ',')
+             line++;
         if (!(pt.z = g_ascii_strtod(line, &end)) && end == line)
             continue;
 
@@ -1482,7 +1490,8 @@ analyse_points(RawXYZFile *rfile,
         else if (pt->z > rfile->zmax)
             rfile->zmax = pt->z;
     }
-    g_printerr("%g %g :: %g %g\n", rfile->xmin, rfile->xmax, rfile->ymin, rfile->ymax);
+    gwy_debug("%g %g :: %g %g",
+              rfile->xmin, rfile->xmax, rfile->ymin, rfile->ymax);
 
     if (check_regular_grid(rfile))
         return;
