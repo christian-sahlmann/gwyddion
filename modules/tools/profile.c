@@ -73,6 +73,7 @@ typedef struct {
     GwyInterpolationType interpolation;
     gboolean separate;
     gboolean both;
+    gboolean number_lines;
     GwyAppDataId target;
 } ToolArgs;
 
@@ -94,6 +95,7 @@ struct _GwyToolProfile {
     GtkObject *resolution;
     GtkWidget *fixres;
     GtkWidget *interpolation;
+    GtkWidget *number_lines;
     GtkWidget *separate;
     GtkWidget *apply;
     GtkWidget *menu_display;
@@ -163,6 +165,8 @@ static void       gwy_tool_profile_resolution_changed   (GwyToolProfile *tool,
                                                          GtkAdjustment *adj);
 static void       gwy_tool_profile_fixres_changed       (GtkToggleButton *check,
                                                          GwyToolProfile *tool);
+static void       gwy_tool_profile_number_lines_changed (GtkToggleButton *check,
+                                                         GwyToolProfile *tool);
 static void       gwy_tool_profile_separate_changed     (GtkToggleButton *check,
                                                          GwyToolProfile *tool);
 static void       gwy_tool_profile_both_changed         (GtkToggleButton *check,
@@ -186,17 +190,18 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Profile tool, creates profile graphs from selected lines."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "3.0",
+    "3.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
 
+static const gchar both_key[]            = "/module/profile/both";
 static const gchar fixres_key[]          = "/module/profile/fixres";
 static const gchar interpolation_key[]   = "/module/profile/interpolation";
+static const gchar number_lines_key[]    = "/module/profile/number_lines";
 static const gchar options_visible_key[] = "/module/profile/options_visible";
 static const gchar resolution_key[]      = "/module/profile/resolution";
 static const gchar separate_key[]        = "/module/profile/separate";
-static const gchar both_key[]            = "/module/profile/both";
 static const gchar thickness_key[]       = "/module/profile/thickness";
 
 static const ToolArgs default_args = {
@@ -206,6 +211,7 @@ static const ToolArgs default_args = {
     FALSE,
     GWY_INTERPOLATION_LINEAR,
     FALSE,
+    TRUE,
     TRUE,
     GWY_APP_DATA_ID_NONE,
 };
@@ -267,6 +273,8 @@ gwy_tool_profile_finalize(GObject *object)
                                       tool->args.separate);
     gwy_container_set_boolean_by_name(settings, both_key,
                                       tool->args.both);
+    gwy_container_set_boolean_by_name(settings, number_lines_key,
+                                      tool->args.number_lines);
 
     gwy_object_unref(tool->line);
     if (tool->model) {
@@ -316,6 +324,8 @@ gwy_tool_profile_init(GwyToolProfile *tool)
                                       &tool->args.separate);
     gwy_container_gis_boolean_by_name(settings, both_key,
                                       &tool->args.both);
+    gwy_container_gis_boolean_by_name(settings, number_lines_key,
+                                      &tool->args.number_lines);
 
     gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
     height |= 1;
@@ -444,6 +454,16 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
     gwy_table_hscale_set_sensitive(tool->resolution, tool->args.fixres);
     row++;
 
+    tool->number_lines
+        = gtk_check_button_new_with_mnemonic(_("_Number profiles"));
+    gtk_table_attach(table, tool->number_lines,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->number_lines),
+                                 tool->args.number_lines);
+    g_signal_connect(tool->number_lines, "toggled",
+                     G_CALLBACK(gwy_tool_profile_number_lines_changed), tool);
+    row++;
+
     tool->separate
         = gtk_check_button_new_with_mnemonic(_("_Separate profiles"));
     gtk_table_attach(table, tool->separate,
@@ -562,6 +582,7 @@ gwy_tool_profile_data_switched(GwyTool *gwytool,
     if (data_view) {
         gwy_object_set_or_reset(plain_tool->layer,
                                 tool->layer_type_line,
+                                "line-numbers", tool->args.number_lines,
                                 "thickness", tool->args.thickness,
                                 "editable", TRUE,
                                 "focus", -1,
@@ -575,15 +596,22 @@ gwy_tool_profile_data_switched(GwyTool *gwytool,
         g_snprintf(yukey, sizeof(yukey), "/%d/data/cal_yunc", plain_tool->id);
         g_snprintf(zukey, sizeof(zukey), "/%d/data/cal_zunc", plain_tool->id);
 
-        if (gwy_container_gis_object_by_name(plain_tool->container, xekey, &(tool->xerr))
-            && gwy_container_gis_object_by_name(plain_tool->container, yekey, &(tool->yerr))
-            && gwy_container_gis_object_by_name(plain_tool->container, zekey, &(tool->zerr))
-            && gwy_container_gis_object_by_name(plain_tool->container, xukey, &(tool->xunc))
-            && gwy_container_gis_object_by_name(plain_tool->container, yukey, &(tool->yunc))
-            && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc))) {
+        if (gwy_container_gis_object_by_name(plain_tool->container, xekey,
+                                             &(tool->xerr))
+            && gwy_container_gis_object_by_name(plain_tool->container, yekey,
+                                                &(tool->yerr))
+            && gwy_container_gis_object_by_name(plain_tool->container, zekey,
+                                                &(tool->zerr))
+            && gwy_container_gis_object_by_name(plain_tool->container, xukey,
+                                                &(tool->xunc))
+            && gwy_container_gis_object_by_name(plain_tool->container, yukey,
+                                                &(tool->yunc))
+            && gwy_container_gis_object_by_name(plain_tool->container, zukey,
+                                                &(tool->zunc))) {
+            gint xres = gwy_data_field_get_xres(plain_tool->data_field);
+            gint xreal = gwy_data_field_get_xreal(plain_tool->data_field);
             tool->has_calibration = TRUE;
-            tool->line_xerr = gwy_data_line_new(gwy_data_field_get_xres(plain_tool->data_field),
-                                                gwy_data_field_get_xreal(plain_tool->data_field), 0);
+            tool->line_xerr = gwy_data_line_new(xres, xreal, FALSE);
             gtk_widget_show(tool->menu_display);
             gtk_widget_show(tool->callabel);
             gtk_widget_show(tool->both);
@@ -978,14 +1006,14 @@ static void
 gwy_tool_profile_thickness_changed(GwyToolProfile *tool,
                                    GtkAdjustment *adj)
 {
-    GwyPlainTool *plain_tool;
+    GwyPlainTool *plain_tool = GWY_PLAIN_TOOL(tool);
 
     tool->args.thickness = gwy_adjustment_get_int(adj);
-    plain_tool = GWY_PLAIN_TOOL(tool);
-    if (plain_tool->layer)
+    if (plain_tool->layer) {
         g_object_set(plain_tool->layer,
                      "thickness", tool->args.thickness,
                      NULL);
+    }
     gwy_tool_profile_update_all_curves(tool);
 }
 
@@ -1004,6 +1032,20 @@ gwy_tool_profile_fixres_changed(GtkToggleButton *check,
 {
     tool->args.fixres = gtk_toggle_button_get_active(check);
     gwy_tool_profile_update_all_curves(tool);
+}
+
+static void
+gwy_tool_profile_number_lines_changed(GtkToggleButton *check,
+                                      GwyToolProfile *tool)
+{
+    GwyPlainTool *plain_tool = GWY_PLAIN_TOOL(tool);
+
+    tool->args.number_lines = gtk_toggle_button_get_active(check);
+    if (plain_tool->layer) {
+        g_object_set(plain_tool->layer,
+                     "line-numbers", tool->args.number_lines,
+                     NULL);
+    }
 }
 
 static void
@@ -1184,25 +1226,28 @@ display_changed(G_GNUC_UNUSED GtkComboBox *combo, GwyToolProfile *tool)
 
     tool->display_type = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(tool->menu_display));
 
-
     /*change the visibility of all the affected curves*/
     for (i = 0; i < n*multpos; i++) {
         gcmodel = gwy_graph_model_get_curve(tool->gmodel, i);
 
-        if (i%multpos==0) {
-            if (tool->args.both) g_object_set(gcmodel, "mode", GWY_GRAPH_CURVE_LINE, NULL);
-            else g_object_set(gcmodel, "mode", GWY_GRAPH_CURVE_HIDDEN, NULL);
+        if (i % multpos == 0) {
+            if (tool->args.both)
+                g_object_set(gcmodel, "mode", GWY_GRAPH_CURVE_LINE, NULL);
+            else
+                g_object_set(gcmodel, "mode", GWY_GRAPH_CURVE_HIDDEN, NULL);
         }
-        else if ((tool->display_type<=5 && (i-(int)tool->display_type)>=0 && (i-(int)tool->display_type)%multpos == 0)
-            || (tool->display_type==6 && ((i-7)%multpos==0 || (i-8)%multpos==0))) {
+        else if ((tool->display_type <= 5
+                  && (i - (int)tool->display_type) >= 0
+                  && (i - (int)tool->display_type) % multpos == 0)
+                 || (tool->display_type == 6
+                     && ((i-7) % multpos == 0
+                         || (i-8) % multpos == 0))) {
             g_object_set(gcmodel, "mode", GWY_GRAPH_CURVE_LINE, NULL);
         }
         else {
             g_object_set(gcmodel, "mode", GWY_GRAPH_CURVE_HIDDEN, NULL);
         }
     }
-
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
