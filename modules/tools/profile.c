@@ -421,7 +421,7 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
                      G_CALLBACK(gwy_tool_profile_options_expanded), tool);
     gtk_box_pack_start(GTK_BOX(vbox), tool->options, FALSE, FALSE, 0);
 
-    table = GTK_TABLE(gtk_table_new(6, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(5, 4, FALSE));
     gtk_table_set_col_spacings(table, 6);
     gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -455,7 +455,7 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
     row++;
 
     tool->number_lines
-        = gtk_check_button_new_with_mnemonic(_("_Number profiles"));
+        = gtk_check_button_new_with_mnemonic(_("_Number lines"));
     gtk_table_attach(table, tool->number_lines,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->number_lines),

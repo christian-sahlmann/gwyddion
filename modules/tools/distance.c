@@ -46,14 +46,21 @@ enum {
 typedef struct _GwyToolDistance      GwyToolDistance;
 typedef struct _GwyToolDistanceClass GwyToolDistanceClass;
 
+typedef struct {
+    gboolean number_lines;
+} ToolArgs;
+
 struct _GwyToolDistance {
     GwyPlainTool parent_instance;
+
+    ToolArgs args;
 
     GtkTreeView *treeview;
     GtkTreeModel *model;
     GtkBox *aux_box;
     GtkWidget *copy;
     GtkWidget *save;
+    GtkWidget *number_lines;
 
     GwyDataField *xerr;
     GwyDataField *yerr;
@@ -75,35 +82,43 @@ struct _GwyToolDistanceClass {
 
 static gboolean module_register(void);
 
-static GType      gwy_tool_distance_get_type         (void) G_GNUC_CONST;
-static void       gwy_tool_distance_finalize         (GObject *object);
-static void       gwy_tool_distance_init_dialog      (GwyToolDistance *tool);
-static void       gwy_tool_distance_data_switched    (GwyTool *gwytool,
-                                                      GwyDataView *data_view);
-static GtkWidget* gwy_tool_distance_add_aux_button   (GwyToolDistance *tool,
-                                                      const gchar *stock_id,
-                                                      const gchar *tooltip);
-static void       gwy_tool_distance_data_changed     (GwyPlainTool *plain_tool);
-static void       gwy_tool_distance_selection_changed(GwyPlainTool *plain_tool,
-                                                      gint hint);
-static void       gwy_tool_distance_update_headers   (GwyToolDistance *tool);
-static void       gwy_tool_distance_render_cell      (GtkCellLayout *layout,
-                                                      GtkCellRenderer *renderer,
-                                                      GtkTreeModel *model,
-                                                      GtkTreeIter *iter,
-                                                      gpointer user_data);
-static void       gwy_tool_distance_save             (GwyToolDistance *tool);
-static void       gwy_tool_distance_copy             (GwyToolDistance *tool);
-static gchar*     gwy_tool_distance_create_report    (GwyToolDistance *tool);
+static GType      gwy_tool_distance_get_type            (void)                      G_GNUC_CONST;
+static void       gwy_tool_distance_finalize            (GObject *object);
+static void       gwy_tool_distance_init_dialog         (GwyToolDistance *tool);
+static void       gwy_tool_distance_data_switched       (GwyTool *gwytool,
+                                                         GwyDataView *data_view);
+static GtkWidget* gwy_tool_distance_add_aux_button      (GwyToolDistance *tool,
+                                                         const gchar *stock_id,
+                                                         const gchar *tooltip);
+static void       gwy_tool_distance_data_changed        (GwyPlainTool *plain_tool);
+static void       gwy_tool_distance_selection_changed   (GwyPlainTool *plain_tool,
+                                                         gint hint);
+static void       gwy_tool_distance_number_lines_changed(GtkToggleButton *check,
+                                                         GwyToolDistance *tool);
+static void       gwy_tool_distance_update_headers      (GwyToolDistance *tool);
+static void       gwy_tool_distance_render_cell         (GtkCellLayout *layout,
+                                                         GtkCellRenderer *renderer,
+                                                         GtkTreeModel *model,
+                                                         GtkTreeIter *iter,
+                                                         gpointer user_data);
+static void       gwy_tool_distance_save                (GwyToolDistance *tool);
+static void       gwy_tool_distance_copy                (GwyToolDistance *tool);
+static gchar*     gwy_tool_distance_create_report       (GwyToolDistance *tool);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Distance measurement tool, measures distances and angles."),
     "Nenad Ocelic <ocelic@biochem.mpg.de>",
-    "2.11",
+    "2.12",
     "Nenad Ocelic & David Nečas (Yeti) & Petr Klapetek",
     "2004",
+};
+
+static const gchar number_lines_key[] = "/module/distance/number_lines";
+
+static const ToolArgs default_args = {
+    TRUE,
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -142,8 +157,13 @@ static void
 gwy_tool_distance_finalize(GObject *object)
 {
     GwyToolDistance *tool;
+    GwyContainer *settings;
 
     tool = GWY_TOOL_DISTANCE(object);
+
+    settings = gwy_app_settings_get();
+    gwy_container_set_boolean_by_name(settings, number_lines_key,
+                                      tool->args.number_lines);
 
     if (tool->model) {
         gtk_tree_view_set_model(tool->treeview, NULL);
@@ -159,6 +179,7 @@ static void
 gwy_tool_distance_init(GwyToolDistance *tool)
 {
     GwyPlainTool *plain_tool;
+    GwyContainer *settings;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     tool->layer_type_line = gwy_plain_tool_check_layer_type(plain_tool,
@@ -168,6 +189,11 @@ gwy_tool_distance_init(GwyToolDistance *tool)
 
     plain_tool->unit_style = GWY_SI_UNIT_FORMAT_MARKUP;
     plain_tool->lazy_updates = TRUE;
+
+    settings = gwy_app_settings_get();
+    tool->args = default_args;
+    gwy_container_gis_boolean_by_name(settings, number_lines_key,
+                                      &tool->args.number_lines);
 
     tool->angle_format = g_new0(GwySIValueFormat, 1);
     tool->angle_format->magnitude = 1.0;
@@ -223,6 +249,15 @@ gwy_tool_distance_init_dialog(GwyToolDistance *tool)
     hbox = gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(dialog->vbox), hbox, FALSE, FALSE, 0);
     tool->aux_box = GTK_BOX(hbox);
+
+    tool->number_lines
+        = gtk_check_button_new_with_mnemonic(_("_Number lines"));
+    gtk_box_pack_start(GTK_BOX(tool->aux_box), tool->number_lines,
+                       FALSE, FALSE, 0);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->number_lines),
+                                 tool->args.number_lines);
+    g_signal_connect(tool->number_lines, "toggled",
+                     G_CALLBACK(gwy_tool_distance_number_lines_changed), tool);
 
     tool->save = gwy_tool_distance_add_aux_button(tool, GTK_STOCK_SAVE,
                                                   _("Save table to a file"));
@@ -290,6 +325,7 @@ gwy_tool_distance_data_switched(GwyTool *gwytool,
     if (data_view) {
         gwy_object_set_or_reset(plain_tool->layer,
                                 tool->layer_type_line,
+                                "line-numbers", tool->args.number_lines,
                                 "thickness", 1,
                                 "editable", TRUE,
                                 "focus", -1,
@@ -299,19 +335,20 @@ gwy_tool_distance_data_switched(GwyTool *gwytool,
         g_snprintf(yukey, sizeof(yukey), "/%d/data/cal_yunc", plain_tool->id);
         g_snprintf(zukey, sizeof(zukey), "/%d/data/cal_zunc", plain_tool->id);
 
-        if (gwy_container_gis_object_by_name(plain_tool->container, xukey, &(tool->xunc))
-            && gwy_container_gis_object_by_name(plain_tool->container, yukey, &(tool->yunc))
-            && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc)))
-        {
+        if (gwy_container_gis_object_by_name(plain_tool->container, xukey,
+                                             &(tool->xunc))
+            && gwy_container_gis_object_by_name(plain_tool->container, yukey,
+                                                &(tool->yunc))
+            && gwy_container_gis_object_by_name(plain_tool->container, zukey,
+                                                &(tool->zunc))) {
             tool->has_calibration = TRUE;
-        } else {
+        }
+        else {
             tool->has_calibration = FALSE;
         }
 
     }
     gwy_tool_distance_update_headers(tool);
-
-
 }
 
 static void
@@ -354,6 +391,20 @@ gwy_tool_distance_selection_changed(GwyPlainTool *plain_tool,
           && gwy_selection_get_data(plain_tool->selection, NULL));
     gtk_widget_set_sensitive(tool->save, ok);
     gtk_widget_set_sensitive(tool->copy, ok);
+}
+
+static void
+gwy_tool_distance_number_lines_changed(GtkToggleButton *check,
+                                       GwyToolDistance *tool)
+{
+    GwyPlainTool *plain_tool = GWY_PLAIN_TOOL(tool);
+
+    tool->args.number_lines = gtk_toggle_button_get_active(check);
+    if (plain_tool->layer) {
+        g_object_set(plain_tool->layer,
+                     "line-numbers", tool->args.number_lines,
+                     NULL);
+    }
 }
 
 static void
