@@ -48,7 +48,7 @@
  * .*_flat
  * Read
  **/
-
+#define DEBUG 1
 #include <stdlib.h>
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
@@ -73,42 +73,6 @@
 
 #define TFF_LINEAR1D_NAME "TFF_Linear1D"
 #define TFF_MULTILINEAR1D_NAME "TFF_MultiLinear1D"
-
-// Image type macros
-#define IS_2DIMAGE \
-    (1 == gwy_container_get_int32_by_name(metainfo, "/channel/dataView/count") \
-     && 3 == gwy_container_get_int32_by_name(metainfo, "/channel/dataView/view/0/type"))
-
-// Even Omicron is ambiguous how they define cits map with dataview type …
-#define IS_CITS \
-    ( ( 2 == gwy_container_get_int32_by_name(metainfo, "/channel/dataView/count") \
-      && \
-       ( \
-        (4 == gwy_container_get_int32_by_name(metainfo, "/channel/dataView/view/0/type") \
-        && 5 == gwy_container_get_int32_by_name(metainfo, "/channel/dataView/view/1/type")) \
-       || \
-        (4 == gwy_container_get_int32_by_name(metainfo, "/channel/dataView/view/1/type") \
-        && 5 == gwy_container_get_int32_by_name(metainfo, "/channel/dataView/view/0/type")) \
-       ) \
-      ) \
-    || \
-      ( 1 == gwy_container_get_int32_by_name(metainfo, "/channel/dataView/count") \
-      && (4 == gwy_container_get_int32_by_name(metainfo, "/channel/dataView/view/0/type")) \
-      )\
-    )
-
-#define IS_SPS \
-    (1 == gwy_container_get_int32_by_name(metainfo, "/channel/dataView/count") \
-     && 5 == gwy_container_get_int32_by_name(metainfo, "/channel/dataView/view/0/type"))
-
-#define IS_FORCE_DIST \
-     (1 == gwy_container_get_int32_by_name(metainfo, "/channel/dataView/count") \
-      && 6 == gwy_container_get_int32_by_name(metainfo, "/channel/dataView/view/0/type"))
-
-#define IS_TIME_VARYING \
-     (1 == gwy_container_get_int32_by_name(metainfo, "/channel/dataView/count")\
-      && 2 == gwy_container_get_int32_by_name(metainfo, "/channel/dataView/view/0/type"))
-
 
 static gboolean      module_register             (void);
 static gint          omicronflat_detect          (const GwyFileDetectInfo *fileinfo,
@@ -158,6 +122,11 @@ static void          omicronflat_readtimevarying (GwyContainer *container,
 static GwyContainer* omicronflat_load            (const gchar *filename,
                                                   GwyRunType mode,
                                                   GError **error);
+static gboolean      omicronflat_is_2dimage      (GwyContainer *metainfo);
+static gboolean      omicronflat_is_cits         (GwyContainer *metainfo);
+static gboolean      omicronflat_is_sps          (GwyContainer *metainfo);
+static gboolean      omicronflat_is_forcedist    (GwyContainer *metainfo);
+static gboolean      omicronflat_is_timevarying  (GwyContainer *metainfo);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -276,7 +245,8 @@ omicronflat_readmetainfo(GwyContainer *metainfo, const guchar** fp,
     for (i = 0; i < max; ++i) {
         g_snprintf(key, sizeof(key), "/axis/%i/name", i);
         gwy_container_set_string_by_name(metainfo, key,
-                                         omicronflat_readstring(fp, fp_end, &tmperr));
+                                         omicronflat_readstring(fp, fp_end,
+                                                                &tmperr));
         if (tmperr != NULL) {
             g_propagate_error(error, tmperr);
             return;
@@ -286,7 +256,8 @@ omicronflat_readmetainfo(GwyContainer *metainfo, const guchar** fp,
 
         g_snprintf(key, sizeof(key), "/axis/%i/trigger", i);
         gwy_container_set_string_by_name(metainfo, key,
-                                         omicronflat_readstring(fp, fp_end, &tmperr));
+                                         omicronflat_readstring(fp, fp_end,
+                                                                &tmperr));
         if (tmperr != NULL) {
             g_propagate_error(error, tmperr);
             return;
@@ -296,7 +267,8 @@ omicronflat_readmetainfo(GwyContainer *metainfo, const guchar** fp,
 
         g_snprintf(key, sizeof(key), "/axis/%i/units", i);
         gwy_container_set_string_by_name(metainfo, key,
-                                         omicronflat_readstring(fp, fp_end, &tmperr));
+                                         omicronflat_readstring(fp, fp_end,
+                                                                &tmperr));
         if (tmperr != NULL) {
             g_propagate_error(error, tmperr);
             return;
@@ -1576,17 +1548,17 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
     // See Omicron Vernissage MATRIX Result File Access and Export manual p.20
 
     // If the file contains "topography images, current images or similar 2D data"
-    if (IS_2DIMAGE)
+    if (omicronflat_is_2dimage(metainfo))
         omicronflat_read2dimage(container, metainfo, &fp, fp_end, filename,
                                 &tmperr);
     // Else if the file contains "planes form a volume CITS data cube"
-    else if (IS_CITS)
+    else if (omicronflat_is_cits(metainfo))
         omicronflat_readcits(container, metainfo, &fp, fp_end, &tmperr);
     // Else if the file contains "spectroscopy curves (SPS)"
-    else if (IS_SPS)
+    else if (omicronflat_is_sps(metainfo))
         omicronflat_readsps(container, metainfo, &fp, fp_end, &tmperr);
     // Else if the file contains "Force/distance curves" (1D data)
-    else if (IS_FORCE_DIST){
+    else if (omicronflat_is_forcedist(metainfo)) {
         // TODO cf. above
         // omicronflat_readforcedist(container, metainfo, &fp, fp_end, &tmperr);
         gwy_debug("File is force/distance curves ");
@@ -1595,7 +1567,7 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
                         "are not supported."));
     }
     // Else if the file contains "Temporally varying signal acquired over time"
-    else if (IS_TIME_VARYING) {
+    else if (omicronflat_is_timevarying(metainfo)) {
         // TODO cf. above
         // omicronflat_readtimevarying(container, metainfo, &fp, fp_end, &tmperr);
         gwy_debug("File is Temporally varying signal acquired over time ");
@@ -1652,6 +1624,65 @@ fail:
     gwy_file_abandon_contents(file_buffer, file_buffer_size, NULL);
 
     return NULL;
+}
+
+static inline gboolean
+container_has_int(GwyContainer *container, const gchar *key, int expected_value)
+{
+    gint value;
+
+    if (!gwy_container_gis_int32_by_name(container, key, &value))
+        return FALSE;
+    return value == expected_value;
+}
+
+static gboolean
+omicronflat_is_2dimage(GwyContainer *metainfo)
+{
+    return (container_has_int(metainfo, "/channel/dataView/count", 1)
+            && container_has_int(metainfo, "/channel/dataView/view/0/type", 3));
+}
+
+/* Even Omicron is ambiguous how they define cits map with dataview type… */
+static gboolean
+omicronflat_is_cits(GwyContainer *metainfo)
+{
+    if (container_has_int(metainfo, "/channel/dataView/count", 1)
+        && container_has_int(metainfo, "/channel/dataView/view/0/type", 4))
+        return TRUE;
+
+    if (container_has_int(metainfo, "/channel/dataView/count", 2)
+        && container_has_int(metainfo, "/channel/dataView/view/0/type", 4)
+        && container_has_int(metainfo, "/channel/dataView/view/1/type", 5))
+        return TRUE;
+
+    if (container_has_int(metainfo, "/channel/dataView/count", 2)
+        && container_has_int(metainfo, "/channel/dataView/view/0/type", 5)
+        && container_has_int(metainfo, "/channel/dataView/view/1/type", 4))
+        return TRUE;
+
+    return FALSE;
+}
+
+static gboolean
+omicronflat_is_sps(GwyContainer *metainfo)
+{
+    return (container_has_int(metainfo, "/channel/dataView/count", 1)
+            && container_has_int(metainfo, "/channel/dataView/view/0/type", 5));
+}
+
+static gboolean
+omicronflat_is_forcedist(GwyContainer *metainfo)
+{
+    return (container_has_int(metainfo, "/channel/dataView/count", 1)
+            && container_has_int(metainfo, "/channel/dataView/view/0/type", 6));
+}
+
+static gboolean
+omicronflat_is_timevarying(GwyContainer *metainfo)
+{
+    return (container_has_int(metainfo, "/channel/dataView/count", 1)
+            && container_has_int(metainfo, "/channel/dataView/view/0/type", 2));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
