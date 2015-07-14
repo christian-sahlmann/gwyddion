@@ -126,6 +126,7 @@ static gboolean      omicronflat_is_2dimage      (GwyContainer *metainfo);
 static gboolean      omicronflat_is_cits         (GwyContainer *metainfo);
 static gboolean      omicronflat_is_sps          (GwyContainer *metainfo);
 static gboolean      omicronflat_is_forcedist    (GwyContainer *metainfo);
+static gboolean      omicronflat_is_atommanip    (GwyContainer *metainfo);
 static gboolean      omicronflat_is_timevarying  (GwyContainer *metainfo);
 
 static GwyModuleInfo module_info = {
@@ -161,7 +162,7 @@ omicronflat_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
 
     if (fileinfo->buffer_len > MAGIC_SIZE
         && 0 == memcmp(fileinfo->head, MAGIC, MAGIC_SIZE))
-         return 100;
+        return 100;
 
     return 0;
 }
@@ -945,6 +946,7 @@ omicronflat_read2dimage(GwyContainer *container, GwyContainer *metainfo,
     return;
 }
 
+/* FIXME FIXME FIXME: Should read it as a brick. */
 /**
  * omicronflat_readcits:
  *
@@ -1357,7 +1359,7 @@ omicronflat_readsps(GwyContainer *container, GwyContainer *metainfo,
                                                    "/axis/0/startValuePhysical");
 
     // check if data shape was understood correctly
-    if (err_SIZE_MISMATCH(error, 4*nexpect, 4*length*(mirrored + 1), TRUE))
+    if (err_SIZE_MISMATCH(error, 4*length*(mirrored + 1), 4*nexpect, TRUE))
         return;
 
     sunit = gwy_container_get_string_by_name(metainfo, "/axis/0/units");
@@ -1498,10 +1500,24 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
         goto fail;
     }
 
-    // Try to figure out the file contents from the dataView value returned
-    // See Omicron Vernissage MATRIX Result File Access and Export manual p.20
+    /* Try to figure out the file contents from the dataView value returned.
+     * See Omicron Vernissage MATRIX Result File Access and Export manual p.20
+     * If the file contains "topography images, current images or similar 2D
+     * data" */
+    {
+        gint type0 = -1, type1 = -1, count = -1;
+        gwy_container_gis_int32_by_name(metainfo,
+                                        "/channel/dataView/count",
+                                        &count);
+        gwy_container_gis_int32_by_name(metainfo,
+                                        "/channel/dataView/view/0/type",
+                                        &type0);
+        gwy_container_gis_int32_by_name(metainfo,
+                                        "/channel/dataView/view/1/type",
+                                        &type1);
+        gwy_debug("count: %d, type0: %d, type1: %d", count, type0, type1);
+    }
 
-    // If the file contains "topography images, current images or similar 2D data"
     if (omicronflat_is_2dimage(metainfo))
         omicronflat_read2dimage(container, metainfo, &fp, fp_end, filename,
                                 &tmperr);
@@ -1515,19 +1531,26 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
     else if (omicronflat_is_forcedist(metainfo)) {
         // TODO cf. above
         // omicronflat_readforcedist(container, metainfo, &fp, fp_end, &tmperr);
-        gwy_debug("File is force/distance curves ");
+        gwy_debug("File is force/distance curves");
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Force-distance curve "
-                        "are not supported."));
+                    _("Force-distance curves are not supported."));
     }
     // Else if the file contains "Temporally varying signal acquired over time"
     else if (omicronflat_is_timevarying(metainfo)) {
         // TODO cf. above
         // omicronflat_readtimevarying(container, metainfo, &fp, fp_end, &tmperr);
-        gwy_debug("File is Temporally varying signal acquired over time ");
+        gwy_debug("File is Temporally varying signal acquired over time");
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Temporally varying signal "
-                        "is not supported."));
+                    _("Temporally varying signal is not supported."));
+        goto fail;
+    }
+    // Else if the file contains "Atom manipulation"(?)
+    else if (omicronflat_is_atommanip(metainfo)) {
+        // TODO cf. above
+        // omicronflat_readatommanip(container, metainfo, &fp, fp_end, &tmperr);
+        gwy_debug("File is Atom manipulation");
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Atom manipulation is not supported."));
         goto fail;
     }
     else {
@@ -1570,7 +1593,9 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
     return container;
 
 fail:
-    gwy_debug("The file is either corrupted, or has an unknown/unhandled format. Module failed to read the file, you can blame the programmer… or help him…");
+    gwy_debug("The file is either corrupted, or has an unknown/unhandled "
+              "format. Module failed to read the file, you can blame the "
+              "programmer… or help him…");
 
     g_object_unref(metainfo);
     g_object_unref(metadata);
@@ -1621,6 +1646,9 @@ omicronflat_is_cits(GwyContainer *metainfo)
 static gboolean
 omicronflat_is_sps(GwyContainer *metainfo)
 {
+    /* XXX: Apparently we can somehow have this for CITS?  Try
+     * default_2014Nov12-102706_STM-STM_Spectroscopy--164_1.Aux1(V)_flat
+     */
     return (container_has_int(metainfo, "/channel/dataView/count", 1)
             && container_has_int(metainfo, "/channel/dataView/view/0/type", 5));
 }
@@ -1632,6 +1660,17 @@ omicronflat_is_forcedist(GwyContainer *metainfo)
             && container_has_int(metainfo, "/channel/dataView/view/0/type", 6));
 }
 
+/* XXX: This may be incorrect, I just have the files in Atom Manipulation
+ * directory... */
+static gboolean
+omicronflat_is_atommanip(GwyContainer *metainfo)
+{
+    return (container_has_int(metainfo, "/channel/dataView/count", 1)
+            && container_has_int(metainfo, "/channel/dataView/view/0/type", 7));
+}
+
+/* XXX: I have some files with type0 == 9 and they seem to be some kind of
+ * time varying stuff. */
 static gboolean
 omicronflat_is_timevarying(GwyContainer *metainfo)
 {
