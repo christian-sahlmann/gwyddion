@@ -209,8 +209,7 @@ static guchar*
 omicronflat_readstring(const guchar** fp, const gsize fp_end, GError **error)
 {
     guchar* str = NULL;
-    // len is the number of characters encoded, each is 16 bits length
-    gsize len;
+    gsize len; /* the number of characters encoded, each is 16 bits length */
     GError* tmperr = NULL;
 
     if (fp_end < (gsize)*fp + 4) {
@@ -220,8 +219,8 @@ omicronflat_readstring(const guchar** fp, const gsize fp_end, GError **error)
 
     len = gwy_get_guint32_le(fp);
 
-    if (len == 0) // empty string
-        return NULL;
+    if (len == 0)
+        return g_strdup("");
 
     if ((gsize)*fp + 2*len > fp_end || len > STRING_MAXLENGTH) {
         gwy_debug("omicronflat::omicronflat_readstring: len > STRING_MAXLENGTH "
@@ -253,10 +252,10 @@ static void
 omicronflat_readmetainfo(GwyContainer *metainfo, const guchar** fp,
                          const gsize fp_end, GError **error)
 {
-    GError* tmperr = NULL;
+    GError *tmperr = NULL;
 
     gchar key[100];
-    guchar* s = NULL;
+    guchar *s = NULL;
 
     time_t timestamp;
     gchar creation_time[40];
