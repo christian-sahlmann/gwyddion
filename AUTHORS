@@ -73,6 +73,8 @@ Christian Bühler <christian.buehler@uni-ulm.de>
     improvements.
 Евгений Рябов <k1u2r3ka@mail.ru>
     K-means and K-medians modules.
+Petr Grolich <pgrolich@cmi.cz>
+    MSVC compatibility and Win32 testing.
 
 
 === Translators ===
