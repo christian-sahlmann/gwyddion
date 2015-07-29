@@ -879,8 +879,6 @@ gwy_app_3d_window_set_data2(Gwy3DWindow *gwy3dwindow,
     GwyDataViewLayer* dvl;
     guchar name[48];
 
-
-
     view = GWY_3D_VIEW(gwy_3d_window_get_3d_view(gwy3dwindow));
 
     key = gwy_app_get_data_key_for_id(id);
