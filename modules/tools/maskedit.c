@@ -165,7 +165,7 @@ static GwyModuleInfo module_info = {
     N_("Mask editor tool, allows interactive modification of parts "
        "of the mask."),
     "Yeti <yeti@gwyddion.net>",
-    "3.5",
+    "3.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1322,7 +1322,7 @@ gwy_tool_mask_editor_selection_finished(GwyPlainTool *plain_tool)
             gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
             mfield = plain_tool->mask_field;
             fill_func(mfield, isel[0], isel[1], isel[2], isel[3], 0.0);
-            if (!gwy_data_field_get_max(mfield) > 0.0) {
+            if (!(gwy_data_field_get_max(mfield) > 0.0)) {
                 gwy_container_remove(plain_tool->container, quark);
                 mfield = NULL;
             }
@@ -1381,7 +1381,7 @@ gwy_tool_mask_editor_selection_finished(GwyPlainTool *plain_tool)
             }
             gwy_data_field_add(mfield, -1.0);
             gwy_data_field_clamp(mfield, 0.0, 1.0);
-            if (!gwy_data_field_get_max(mfield) > 0.0) {
+            if (!(gwy_data_field_get_max(mfield) > 0.0)) {
                 gwy_container_remove(plain_tool->container, quark);
                 mfield = NULL;
             }

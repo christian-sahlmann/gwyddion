@@ -595,7 +595,7 @@ gwy_app_undo_reuse_levels(GwyAppUndoLevel *level,
                 if (!G_VALUE_HOLDS_OBJECT(&jtem->value))
                     continue;
                 jobject = g_value_get_object(&jtem->value);
-                if (!G_TYPE_FROM_INSTANCE(jobject) == type)
+                if (G_TYPE_FROM_INSTANCE(jobject) != type)
                     continue;
 
                 /* we've found a reusable item

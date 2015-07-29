@@ -1559,7 +1559,8 @@ gwy_3d_window_auto_scale_changed(GtkToggleButton *check,
 
     id = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(window->labels_menu));
     label = gwy_3d_view_get_label(GWY_3D_VIEW(window->gwy3dview), id);
-    if (!label->fixed_size != active)
+    /* The check button is for the opposite of "fixed-size". */
+    if (!label->fixed_size == !active)
         g_object_set(label, "fixed-size", !active, NULL);
 }
 

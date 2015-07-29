@@ -326,7 +326,7 @@ gwy_3d_label_clone_real(GObject *source,
     }
 
     g_object_freeze_notify(copy);
-    if (!clone->fixed_size != label->fixed_size) {
+    if (clone->fixed_size != label->fixed_size) {
         clone->fixed_size = !!label->fixed_size;
         g_object_notify(copy, "fixed-size");
     }
