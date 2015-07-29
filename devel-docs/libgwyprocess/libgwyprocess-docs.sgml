@@ -41,11 +41,11 @@
   <xi:include href="xml/gwyprocess.xml"/>
   <xi:include href="xml/gwyprocessenums.xml"/>
   <!-- API INDICES BEGIN -->
-  <index id="api-index-full">
+  <index id="api-index-all">
     <title>Index of all symbols</title>
     <xi:include href="xml/api-index-full.xml"><xi:fallback /></xi:include>
   </index>
-  <index id="api-index-deprecated" role="deprecated">
+  <index id="api-index-deprec" role="deprecated">
     <title>Index of deprecated symbols</title>
     <xi:include href="xml/api-index-deprecated.xml"><xi:fallback /></xi:include>
   </index>
@@ -144,6 +144,10 @@
   <index id="api-index-2-41" role="2.41">
     <title>Index of new symbols in 2.41</title>
     <xi:include href="xml/api-index-2.41.xml"><xi:fallback /></xi:include>
+  </index>
+  <index id="api-index-2-42" role="2.42">
+    <title>Index of new symbols in 2.42</title>
+    <xi:include href="xml/api-index-2.42.xml"><xi:fallback /></xi:include>
   </index>
   <!-- API INDICES END -->
 </book>

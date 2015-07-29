@@ -29,7 +29,7 @@
   <xi:include href="xml/validate.xml"/>
   <xi:include href="xml/wait.xml"/>
   <!-- API INDICES BEGIN -->
-  <index id="api-index-full">
+  <index id="api-index-all">
     <title>Index of all symbols</title>
     <xi:include href="xml/api-index-full.xml"><xi:fallback /></xi:include>
   </index>
