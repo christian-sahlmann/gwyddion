@@ -45,11 +45,13 @@ for subdir in subdirs:
     out = []
     for ind in sorted(indices, key=keyfunc):
         if ind == 'full':
-            xmlid = ind
+            # gtk-doc now defines '-full' ID itself
+            xmlid = 'all'
             name = 'all symbols'
             role = ''
         elif ind == 'deprecated':
-            xmlid = ind
+            # gtk-doc now defines '-deprecated' ID itself
+            xmlid = 'deprec'
             name = 'deprecated symbols'
             role = ' role="%s"' % ind
         else:
