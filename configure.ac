@@ -347,15 +347,18 @@ if test "$GCC" = yes; then
   GWY_PROG_CC_OPTION([FNO_TRAP_MATH],[-fno-trapping-math],,)
   GWY_PROG_CC_OPTION([FNO_MATH_ERRNO],[-fno-math-errno],,)
   GWY_PROG_CC_OPTION([FEXCESS_PRECISION_FAST],[-fexcess-precision=fast],,)
+  # This we need to Python code because macros from Python.h produce lots of
+  # warnings.
+  GWY_PROG_CC_OPTION([FNO_STRICT_ALIASING],[-fno-strict-aliasing],,)
   # Flags we can't use:
   # -Wstrict-protoypes makes gtkitemfactory.h noisy, but they have a
   #    comment there they can't fix it due to compatibility
   # -Wwrite-strings because it makes all struct initializations very noisy
   WARNING_CFLAGS="-Wall -W -Wshadow -Wpointer-arith -Wno-sign-compare -Wundef $PROG_CC_ERR_IFD $PROG_CC_ERR_RET $PROG_CC_WNO_SYS_HEADERS $PROG_CC_WNO_POINTER_SIGN $PROG_CC_WNO_EMPTY_FMT $PROG_CC_WMIXED_DECL $PROG_CC_WREDUNDANT_DECLS $PROG_CC_WUNUSED_TYPEDEF"
-  WARNING_NOUNUSED_PAR="$PROG_CC_WNO_UNUSED_PAR"
+  PYTHON_EXTRA_CFLAGS="$PROG_CC_WNO_UNUSED_PAR $PROG_CC_FNO_STRICT_ALIASING"
   PREMISE_CFLAGS="$PROG_CC_FNO_TRAP_MATH $PROG_CC_FNO_MATH_ERRNO $FEXCESS_PRECISION_FAST"
 fi
-AC_SUBST(WARNING_NOUNUSED_PAR)
+AC_SUBST(PYTHON_EXTRA_CFLAGS)
 
 #############################################################################
 # Base libraries: X, Gtk+.
