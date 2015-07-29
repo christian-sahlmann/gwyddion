@@ -11,6 +11,7 @@ Modules:
 - Gwyfile: If the program aborts to out-of-memory during saving the existing
   file is kept intact now.
 - Raw XYZ: Data values can be separated by commas or semicolons in file lines.
+- Profile and Distance tools: Line numbers can be switched on and off.
 
 Other:
 - The code has been made MSVC-compatible.
