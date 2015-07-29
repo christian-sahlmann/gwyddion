@@ -41,19 +41,25 @@
  * [FILE-MAGIC-USERGUIDE]
  * Nanotec WSxM
  * .tom, .stp
- * Read
+ * Read Export
  **/
 
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyversion.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/stats.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
+#include <app/data-browser.h>
 
 #include "err.h"
 
@@ -71,25 +77,29 @@ typedef enum {
     WSXM_DATA_DOUBLE
 } WSxMDataType;
 
-static gboolean      module_register   (void);
-static gint          wsxmfile_detect   (const GwyFileDetectInfo *fileinfo,
-                                        gboolean only_name);
-static GwyContainer* wsxmfile_load     (const gchar *filename,
-                                        GwyRunType mode,
-                                        GError **error);
-static GwyDataField* read_data_field   (const guchar *buffer,
-                                        gint xres,
-                                        gint yres,
-                                        WSxMDataType type);
-static void          process_metadata  (GHashTable *wsxmmeta,
-                                        GwyContainer *container);
+static gboolean      module_register       (void);
+static gint          wsxmfile_detect       (const GwyFileDetectInfo *fileinfo,
+                                            gboolean only_name);
+static GwyContainer* wsxmfile_load         (const gchar *filename,
+                                            GwyRunType mode,
+                                            GError **error);
+static gboolean      wsxmfile_export_double(GwyContainer *data,
+                                            const gchar *filename,
+                                            GwyRunType mode,
+                                            GError **error);
+static GwyDataField* read_data_field       (const guchar *buffer,
+                                            gint xres,
+                                            gint yres,
+                                            WSxMDataType type);
+static void          process_metadata      (GHashTable *wsxmmeta,
+                                            GwyContainer *container);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Nanotec WSxM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.12",
+    "0.13",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -100,11 +110,11 @@ static gboolean
 module_register(void)
 {
     gwy_file_func_register("wsxmfile",
-                           N_("WSXM files (.tom)"),
+                           N_("WSxM files (.tom, .stp)"),
                            (GwyFileDetectFunc)&wsxmfile_detect,
                            (GwyFileLoadFunc)&wsxmfile_load,
                            NULL,
-                           NULL);
+                           (GwyFileSaveFunc)&wsxmfile_export_double);
 
     return TRUE;
 }
@@ -143,7 +153,9 @@ wsxmfile_detect(const GwyFileDetectInfo *fileinfo,
     gint score = 0;
 
     if (only_name)
-        return g_str_has_suffix(fileinfo->name_lowercase, ".tom") ? 20 : 0;
+        return (g_str_has_suffix(fileinfo->name_lowercase, ".tom")
+                || g_str_has_suffix(fileinfo->name_lowercase, ".stp")
+                ? 20 : 0);
 
     if (fileinfo->buffer_len > MAGIC_SIZE
         && wsxmfile_check_magic(fileinfo->head))
@@ -193,7 +205,7 @@ wsxmfile_load(const gchar *filename,
     if (!(rest = wsxmfile_check_magic(buffer))
         || !memcmp(rest, SIZE_HEADER, sizeof(SIZE_HEADER))
         || (header_size = strtol(rest + sizeof(SIZE_HEADER), &p, 10)) < 1) {
-        err_FILE_TYPE(error, "WSXM");
+        err_FILE_TYPE(error, "WSxM");
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
@@ -407,5 +419,113 @@ read_data_field(const guchar *buffer,
     return dfield;
 }
 
-/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+static gboolean
+wsxmfile_export_double(GwyContainer *data,
+                       const gchar *filename,
+                       G_GNUC_UNUSED GwyRunType mode,
+                       GError **error)
+{
+    static const gchar header_template[] =
+        "WSxM file copyright Nanotec Electronica\r\n"
+        "SxM Image file\r\n"
+        "Image header size: 99999\r\n"
+        "\r\n"
+        "[Control]\r\n"
+        "\r\n"
+        "    X Amplitude: %g %s\r\n"
+        "    Y Amplitude: %g %s\r\n"
+        "\r\n"
+        "[General Info]\r\n"
+        "\r\n"
+        "    Image Data Type: double\r\n"
+        "    Acquisition channel: %s\r\n"
+        "    Number of columns: %u\r\n"
+        "    Number of rows: %u\r\n"
+        "    Z Amplitude: %g %s\r\n"
+        "\r\n"
+        "[Miscellaneous]\r\n"
+        "\r\n"
+        "    Comments: Exported from Gwyddion %s\r\n"
+        "    Version: 1.0 (December 2003)\r\n"
+        "\r\n"
+        "[Header end]\r\n";
 
+    GwyDataField *dfield;
+    const gdouble *d;
+    guint8 *row;
+    gchar *xyunit, *zunit, *title, *header;
+    guint xres, yres, i, hlen;
+    gdouble min, max;
+    gchar buf[6];
+    gint id;
+    FILE *fh;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
+    if (!dfield) {
+        err_NO_CHANNEL_EXPORT(error);
+        return FALSE;
+    }
+
+    if (!(fh = g_fopen(filename, "w"))) {
+        err_OPEN_WRITE(error);
+        return FALSE;
+    }
+
+    d = gwy_data_field_get_data_const(dfield);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    gwy_data_field_get_min_max(dfield, &min, &max);
+
+    xyunit = gwy_si_unit_get_string(gwy_data_field_get_si_unit_xy(dfield),
+                                    GWY_SI_UNIT_FORMAT_PLAIN);
+    zunit = gwy_si_unit_get_string(gwy_data_field_get_si_unit_z(dfield),
+                                   GWY_SI_UNIT_FORMAT_PLAIN);
+    title = gwy_app_get_data_field_title(data, id);
+    header = g_strdup_printf(header_template,
+                             gwy_data_field_get_xreal(dfield), xyunit,
+                             gwy_data_field_get_yreal(dfield), xyunit,
+                             title, xres, yres,
+                             max-min, zunit,
+                             gwy_version_string());
+    g_free(title);
+    g_free(zunit);
+    g_free(xyunit);
+
+    hlen = strlen(header);
+    g_snprintf(buf, sizeof(buf), "%5u", hlen);
+    memcpy(strstr(header, "99999"), buf, 5);
+
+    if (fwrite(header, 1, hlen, fh) != hlen) {
+        err_WRITE(error);
+        fclose(fh);
+        g_unlink(filename);
+        g_free(header);
+        return FALSE;
+    }
+
+    row = g_new(guint8, xres*sizeof(gdouble));
+    for (i = 0; i < yres; i++) {
+        if (G_BYTE_ORDER == G_BIG_ENDIAN)
+            gwy_memcpy_byte_swap((const guint8*)(d + xres*(yres-1 - i)), row,
+                                 sizeof(gdouble), xres, sizeof(gdouble)-1);
+        else
+            memcpy(row, (const guint8*)(d + xres*(yres-1 - i)),
+                   xres*sizeof(gdouble));
+
+        if (fwrite(row, 8, xres, fh) != xres) {
+            err_WRITE(error);
+            fclose(fh);
+            g_unlink(filename);
+            g_free(row);
+            return FALSE;
+        }
+    }
+    fclose(fh);
+    g_free(row);
+
+    return TRUE;
+}
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
