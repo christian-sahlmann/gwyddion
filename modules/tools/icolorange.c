@@ -126,7 +126,7 @@ static GwyModuleInfo module_info = {
        "color scale should map to, either on data or on height distribution "
        "histogram."),
     "Yeti <yeti@gwyddion.net>",
-    "3.14",
+    "3.15",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -488,19 +488,24 @@ gwy_tool_color_range_data_switched(GwyTool *gwytool,
 
     range_type = gwy_tool_color_range_get_range_type(tool);
     if (data_view) {
-        gwy_tool_color_range_type_changed(NULL, tool);
         if (range_type == GWY_LAYER_BASIC_RANGE_FIXED) {
             gdouble sel[2];
 
             gwy_tool_color_range_get_min_max(tool, sel);
+            gwy_debug("[%g, %g]", sel[0], sel[1]);
             gwy_selection_set_data(tool->graph_selection, 1, sel);
         }
         else
             gwy_selection_clear(tool->graph_selection);
+
+        tool->programmatic_update = TRUE;
+        gwy_tool_color_range_type_changed(NULL, tool);
+        tool->programmatic_update = FALSE;
     }
     gwy_radio_buttons_set_current(tool->modelist, range_type);
     gwy_tool_color_range_update_fullrange(tool);
     gwy_tool_color_range_mask_changed(plain_tool);
+    gwy_debug("set min max after data switch");
     gwy_tool_color_range_set_min_max(tool);
 }
 
@@ -581,6 +586,7 @@ gwy_tool_color_range_selection_changed(GwyPlainTool *plain_tool,
     if (!tool->programmatic_update)
         tool->range_source = USE_SELECTION;
 
+    gwy_debug("set min max after area selection");
     gwy_tool_color_range_set_min_max(tool);
     if (!tool->programmatic_update) {
         tool->programmatic_update = TRUE;
@@ -608,6 +614,7 @@ gwy_tool_color_range_xsel_changed(GwySelection *selection,
 
     if (gwy_selection_get_data(selection, NULL)) {
         tool->range_source = USE_HISTOGRAM;
+        gwy_debug("set min max after histogram selection");
         gwy_tool_color_range_set_min_max(tool);
 
         /* when user begins a selection on the histogram, the selection on the
@@ -651,8 +658,10 @@ gwy_tool_color_range_type_changed(GtkWidget *radio,
         gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmax), fixed);
 
         gwy_tool_color_range_set_range_type(tool, range_type);
-        if (fixed && !tool->data_switch)
+        if (fixed && !tool->data_switch) {
+            gwy_debug("set min max after range type change");
             gwy_tool_color_range_set_min_max(tool);
+        }
     }
 
     old_mode = -1;
@@ -764,6 +773,7 @@ gwy_tool_color_range_set_min_max(GwyToolColorRange *tool)
 
     switch (tool->range_source) {
         case USE_SELECTION:
+        gwy_debug("source: area selection");
         if (!plain_tool->selection
             || !gwy_selection_get_object(plain_tool->selection, 0, sel)
             || sel[0] == sel[2] || sel[1] == sel[3]) {
@@ -784,6 +794,7 @@ gwy_tool_color_range_set_min_max(GwyToolColorRange *tool)
         break;
 
         case USE_HISTOGRAM:
+        gwy_debug("source: histogram");
         if (!gwy_selection_get_object(tool->graph_selection, 0, sel)
             || sel[0] == sel[1])
             clear = TRUE;
