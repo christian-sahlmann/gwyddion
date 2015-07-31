@@ -320,6 +320,7 @@ gwy_synth_attach_height(GWY_SYNTH_CONTROLS *controls,
     spin = gwy_table_attach_hscale(GTK_WIDGET(controls->table),
                                    row, name, "", *adj, GWY_HSCALE_LOG);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 4);
+    gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), FALSE);
     if (pspin)
         *pspin = spin;
 
