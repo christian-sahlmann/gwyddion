@@ -153,7 +153,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Extracts image planes and line graphs from volume data."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2015",
 };
@@ -616,6 +616,7 @@ base_plane_changed(GtkComboBox *combo, SliceControls *controls)
 
     controls->args->base_plane = gwy_enum_combo_box_get_active(combo);
     update_selections(controls);
+    gwy_set_data_preview_size(GWY_DATA_VIEW(controls->view), PREVIEW_SIZE);
 
     /* The selection got clipped during the switch.  Restore it. */
     args->xpos = xpos;
