@@ -545,17 +545,29 @@ plane_selection_changed(SliceControls *controls,
                         G_GNUC_UNUSED gint id,
                         GwySelection *selection)
 {
-    gdouble x;
+    SliceArgs *args = controls->args;
+    SliceBasePlane base_plane = args->base_plane;
+    GwyBrick *brick = args->brick;
+    gdouble z;
     gint ix, max;
 
     if (controls->in_update)
         return;
 
-    if (!gwy_selection_get_object(selection, 0, &x))
+    if (!gwy_selection_get_object(selection, 0, &z))
         return;
 
     max = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(selection), "max"));
-    ix = CLAMP(GWY_ROUND(x), 0, max);
+    if (base_plane == PLANE_YZ || base_plane == PLANE_ZY)
+        ix = CLAMP(gwy_brick_rtoj(brick, z), 0, max);
+    else if (base_plane == PLANE_YX || base_plane == PLANE_XY)
+        ix = CLAMP(gwy_brick_rtok(brick, z), 0, max);
+    else if (base_plane == PLANE_XZ || base_plane == PLANE_ZX)
+        ix = CLAMP(gwy_brick_rtoi(brick, z), 0, max);
+    else {
+        g_return_if_reached();
+    }
+
     controls->in_update = TRUE;
     set_graph_coord(controls, ix);
     controls->in_update = FALSE;
@@ -686,37 +698,37 @@ update_selections(SliceControls *controls)
     GtkWidget *area;
     GwySelection *selection;
     GwyBrick *brick = args->brick;
-    gdouble xy[2], x;
+    gdouble xy[2], z;
 
     if (base_plane == PLANE_XY) {
         xy[0] = gwy_brick_jtor(brick, args->xpos);
         xy[1] = gwy_brick_itor(brick, args->ypos);
-        x = gwy_brick_ktor(brick, args->zpos);
+        z = gwy_brick_ktor(brick, args->zpos);
     }
     else if (base_plane == PLANE_YX) {
         xy[0] = gwy_brick_itor(brick, args->ypos);
         xy[1] = gwy_brick_jtor(brick, args->xpos);
-        x = gwy_brick_ktor(brick, args->zpos);
+        z = gwy_brick_ktor(brick, args->zpos);
     }
     else if (base_plane == PLANE_XZ) {
         xy[0] = gwy_brick_jtor(brick, args->xpos);
         xy[1] = gwy_brick_ktor(brick, args->zpos);
-        x = gwy_brick_itor(brick, args->ypos);
+        z = gwy_brick_itor(brick, args->ypos);
     }
     else if (base_plane == PLANE_ZX) {
         xy[0] = gwy_brick_ktor(brick, args->zpos);
         xy[1] = gwy_brick_jtor(brick, args->xpos);
-        x = gwy_brick_itor(brick, args->ypos);
+        z = gwy_brick_itor(brick, args->ypos);
     }
     else if (base_plane == PLANE_YZ) {
         xy[0] = gwy_brick_itor(brick, args->ypos);
         xy[1] = gwy_brick_ktor(brick, args->zpos);
-        x = gwy_brick_jtor(brick, args->xpos);
+        z = gwy_brick_jtor(brick, args->xpos);
     }
     else if (base_plane == PLANE_ZY) {
         xy[0] = gwy_brick_ktor(brick, args->zpos);
         xy[1] = gwy_brick_itor(brick, args->ypos);
-        x = gwy_brick_jtor(brick, args->xpos);
+        z = gwy_brick_jtor(brick, args->xpos);
     }
     else {
         g_return_if_reached();
@@ -728,7 +740,7 @@ update_selections(SliceControls *controls)
     area = gwy_graph_get_area(GWY_GRAPH(controls->graph));
     selection = gwy_graph_area_get_selection(GWY_GRAPH_AREA(area),
                                              GWY_GRAPH_STATUS_XLINES);
-    gwy_selection_set_data(selection, 1, &x);
+    gwy_selection_set_data(selection, 1, &z);
 
     update_labels(controls);
 }
