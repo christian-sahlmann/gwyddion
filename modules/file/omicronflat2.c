@@ -945,7 +945,11 @@ load_as_sps(OmicronFlatFileList *filelist,
         gwy_debug("offset_count %u", fff->offset_count);
         if (fff->offset_count) {
             xoff = fff->offsets[0];
-            yoff = fff->offsets[1];
+            /* FIXME: What is the proper way of correcting the inversion
+             * of vertical coordinate?  We would need to know the centre
+             * of the image data here!  They seem to be typically (0,0)
+             * though.  */
+            yoff = -fff->offsets[1];
         }
         else {
             g_warning("SPS needs an offset to position the curve correctly.");
