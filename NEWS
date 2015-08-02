@@ -12,6 +12,11 @@ Modules:
   file is kept intact now.
 - Raw XYZ: Data values can be separated by commas or semicolons in file lines.
 - Profile and Distance tools: Line numbers can be switched on and off.
+- WSxM: It is possible to export channels to WSxM files (.stp).
+- Color Range tool: Fixed range values are no longer lost upon switching from
+  a non-fixed range data window.
+- Slice volume: Not working graph selection was fixed.  Possibly odd preview
+  sizes upon base plane switch were corrected.
 
 Other:
 - The code has been made MSVC-compatible.
@@ -85,7 +90,7 @@ Modules:
 - Graph FD fit: The theoretical curve and difference curve are created also
   from estimates, not just after final fit.
 - Zeiss: RGB images are accepted and the channels are averaged upon import.
-- Color range tool: Fixed color range controls are immediately sensitive when
+- Color Range tool: Fixed color range controls are immediately sensitive when
   this range type is the default.
 - XY denoise: Too many data field dereferencing, causing a crash later, was
   fixed.
@@ -242,7 +247,7 @@ Modules:
   Brick has a duplicate() method, gwy_app_data_browser_get_current() supports
   brick-related items.  Python error messages are no longer silenced after
   Python modules are run.
-- Color range tool: The range can be set to the range of masked/unmasked
+- Color Range tool: The range can be set to the range of masked/unmasked
   values.
 - HDR image: NaNs and infinites in floating point images are removed and
   masked upon import.
@@ -1010,7 +1015,7 @@ Modules:
   by a multiple of RMS now.
 - BCR: Z-axis scaling for non-topography floating point data was corrected.
 - GDEF: Vertically flipped data was corrected.
-- Color range tool: Critical warning/crash when Fixed mode is set default
+- Color Range tool: Critical warning/crash when Fixed mode is set default
   and the file is closed was fixed.
 - Plug-in proxy: Channel title read from dump files is retained now.
 - Grain distributions: The comment header option is remembered.
@@ -2084,7 +2089,7 @@ Libraries:
 
 Modules:
 - Shade: Crash on Mix checkbutton click was fixed.
-- Color Range: Crash upon tool switch when there was already a selection
+- Color Range tool: Crash upon tool switch when there was already a selection
   was fixed.
 - Assing AFM: Crash on import introduced in 1.99.9 was fixed.
 - Revolve arc, Median background: Bugs causing subsequent application crashes
@@ -2791,7 +2796,8 @@ Modules:
 - Facet Analysis (new): Visualizes, marks and measures facet orientations.
 - Assing AFM: Wrong z scale in import and export was fixed.
 - NT-MDT: Bogus data import when x and y resolution differs was fixed.
-- Color Range: ‘Instant apply’ aggressivity was somewhat reduced (bug #58).
+- Color Range tool: ‘Instant apply’ aggressivity was somewhat reduced (bug
+  #58).
 - Presentation operations: Can attach one data to another as presentation.
 - Points layer: Supports set_selection(), if selection is one point it does
   not have to be dragged, click is enough to move it.
