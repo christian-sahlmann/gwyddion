@@ -147,6 +147,7 @@ file_LTLIBRARIES = \
 	ometiff.la \
 	omicron.la \
 	omicronflat.la \
+	omicronflat2.la \
 	omicronmatrix.la \
 	opdfile.la \
 	$(opengps_module) \
@@ -284,6 +285,7 @@ ols_la_SOURCES           = ols.c gwytiff.h
 ometiff_la_SOURCES       = ometiff.c
 omicron_la_SOURCES       = omicron.c
 omicronflat_la_SOURCES   = omicronflat.c
+omicronflat2_la_SOURCES  = omicronflat2.c
 omicronmatrix_la_SOURCES = omicronmatrix.c
 opdfile_la_SOURCES       = opdfile.c
 pixmap_la_SOURCES        = pixmap.c gwytiff.h image-keys.h
