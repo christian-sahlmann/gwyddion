@@ -105,9 +105,9 @@ static void     poly_level_type_changed       (GtkToggleButton *button,
                                                PolyLevelControls *controls);
 static void     poly_level_same_degree_changed(GtkWidget *button,
                                                PolyLevelControls *controls);
-static void     poly_level_degree_changed     (GtkObject *spin,
+static void     poly_level_degree_changed     (GtkObject *adj,
                                                PolyLevelControls *controls);
-static void     poly_level_max_degree_changed (GtkObject *spin,
+static void     poly_level_max_degree_changed (GtkObject *adj,
                                                PolyLevelControls *controls);
 static void     poly_level_masking_changed    (GtkToggleButton *button,
                                                PolyLevelControls *controls);
@@ -743,7 +743,7 @@ poly_level_same_degree_changed(GtkWidget *button,
 }
 
 static void
-poly_level_degree_changed(GtkObject *spin,
+poly_level_degree_changed(GtkObject *adj,
                           PolyLevelControls *controls)
 {
     PolyLevelArgs *args;
@@ -755,9 +755,9 @@ poly_level_degree_changed(GtkObject *spin,
         return;
 
     args = controls->args;
-    v = gtk_adjustment_get_value(GTK_ADJUSTMENT(spin));
+    v = gtk_adjustment_get_value(GTK_ADJUSTMENT(adj));
     degree = GWY_ROUND(v);
-    if (spin == controls->col_degree) {
+    if (adj == controls->col_degree) {
         update = args->col_degree != degree;
         args->col_degree = degree;
     }
@@ -772,7 +772,7 @@ poly_level_degree_changed(GtkObject *spin,
     }
 
     controls->in_update = TRUE;
-    if (spin == controls->col_degree) {
+    if (adj == controls->col_degree) {
         gwy_debug("syncing row := col");
         gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->row_degree), v);
         args->row_degree = args->col_degree;
@@ -794,7 +794,7 @@ poly_level_degree_changed(GtkObject *spin,
 }
 
 static void
-poly_level_max_degree_changed(GtkObject *spin,
+poly_level_max_degree_changed(GtkObject *adj,
                               PolyLevelControls *controls)
 {
     PolyLevelArgs *args;
@@ -805,7 +805,7 @@ poly_level_max_degree_changed(GtkObject *spin,
         return;
 
     args = controls->args;
-    v = gtk_adjustment_get_value(GTK_ADJUSTMENT(spin));
+    v = gtk_adjustment_get_value(GTK_ADJUSTMENT(adj));
     degree = GWY_ROUND(v);
     if (degree == args->max_degree)
         return;
