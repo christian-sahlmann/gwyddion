@@ -1130,10 +1130,18 @@ load_as_volume(OmicronFlatFileList *filelist,
         d += xres*(brick_specs[bid].mirrory ? yres-1 - i : i);
 
         /* Read one spectrum. */
-        for (k = 0; k < rowlen; k++) {
-            *d = q*GINT32_FROM_LE(d32[k]) + z0;
-            /* FIXME: We should store data backwards for mirrored z! */
-            d += xres*yres;
+        if (mirror_state[0]) {
+            d += xres*yres*(zres - 1);
+            for (k = 0; k < rowlen; k++) {
+                *d = q*GINT32_FROM_LE(d32[k]) + z0;
+                d -= xres*yres;
+            }
+        }
+        else {
+            for (k = 0; k < rowlen; k++) {
+                *d = q*GINT32_FROM_LE(d32[k]) + z0;
+                d += xres*yres;
+            }
         }
 
         /* Advance to the right pixel and right field for the next spectrum. */
