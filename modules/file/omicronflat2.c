@@ -1185,6 +1185,7 @@ load_as_volume(OmicronFlatFileList *filelist,
     for (i = 0; i < 8; i++) {
         GwyBrick *brick = brick_specs[i].brick;
         GwyDataField *dfield;
+        GwyContainer *meta;
         gchar *title;
         gchar key[40];
 
@@ -1208,6 +1209,11 @@ load_as_volume(OmicronFlatFileList *filelist,
         g_snprintf(key, sizeof(key), "/brick/%i/preview", *id);
         gwy_container_set_object_by_name(data, key, dfield);
         g_object_unref(dfield);
+
+        meta = construct_metadata(fff, filelist->ids + fileid);
+        g_snprintf(key, sizeof(key), "/brick/%i/meta", *id);
+        gwy_container_set_object_by_name(data, key, meta);
+        g_object_unref(meta);
 
         gwy_file_volume_import_log_add(data, *id, NULL, fff->filename);
         (*id)++;
@@ -1388,13 +1394,14 @@ static GwyContainer*
 construct_metadata(OmicronFlatFile *fff,
                    OmicronFlatFileId *id)
 {
-    time_t timestamp;
-    gchar creation_time[40];
-    struct tm *t;
-
     GwyContainer *meta = gwy_container_new();
+    OmicronFlatChannel *channel = &fff->channel;
+    OmicronFlatExperiment *experiment = &fff->experiment;
     GString *key = g_string_new(NULL);
     GString *value = g_string_new(NULL);
+    time_t timestamp;
+    gchar creation_time[48];
+    struct tm *t;
     guint i, j;
 
     g_string_printf(value, "%.4s", fff->identification.magic);
@@ -1420,34 +1427,44 @@ construct_metadata(OmicronFlatFile *fff,
                                                    axis->parent_name);
         }
 
+        g_string_printf(key, "Axis %u::Mirrored", i+1);
+        gwy_container_set_const_string_by_name(meta, key->str,
+                                               axis->is_mirrored ? "Yes" : "No");
+
         g_string_printf(key, "Axis %u::Units", i+1);
         gwy_container_set_const_string_by_name(meta, key->str, axis->unit_name);
 
         for (j = 0; j < axis->table_set_count; j++) {
             OmicronFlatTableSet *table_set = axis->table_set_fields + j;
+
             g_string_printf(key, "Axis %u::TableSet %u::Name", i+1, j+1);
             gwy_container_set_const_string_by_name(meta, key->str,
                                                    table_set->name);
+
+            g_string_printf(key, "Axis %u::TableSet %u::Interval count",
+                            i+1, j+1);
+            g_string_printf(value, "%u", table_set->interval_count);
+            gwy_container_set_const_string_by_name(meta, key->str, value->str);
         }
     }
 
     gwy_container_set_const_string_by_name(meta, "Channel::Name",
-                                           fff->channel.name);
+                                           channel->name);
     gwy_container_set_const_string_by_name(meta, "Channel::Transfer function",
-                                           fff->channel.transfer_func_name);
+                                           channel->transfer_func_name);
     gwy_container_set_const_string_by_name(meta, "Channel::Units",
-                                           fff->channel.unit_name);
+                                           channel->unit_name);
 
-    for (i = 0; i < fff->channel.parameter_count; i++) {
-        OmicronFlatTransferParam *param = fff->channel.parameters + i;
+    for (i = 0; i < channel->parameter_count; i++) {
+        OmicronFlatTransferParam *param = channel->parameters + i;
         g_string_printf(key, "Channel::Transfer function::%s", param->name);
         g_string_printf(value, "%g", param->value);
         gwy_container_set_const_string_by_name(meta, key->str, value->str);
     }
 
-    for (i = 0; i < fff->channel.data_view_type_count; i++) {
+    for (i = 0; i < channel->data_view_type_count; i++) {
         g_string_printf(key, "Channel::View type %u", i+1);
-        g_string_printf(value, "%u", fff->channel.view_types[i]);
+        g_string_printf(value, "%u", channel->view_types[i]);
         gwy_container_set_const_string_by_name(meta, key->str, value->str);
     }
 
@@ -1465,17 +1482,32 @@ construct_metadata(OmicronFlatFile *fff,
                                                fff->creation.info);
     }
 
-#if 0
-    g_free(fff->experiment.name);
-    g_free(fff->experiment.version);
-    g_free(fff->experiment.description);
-    g_free(fff->experiment.file_spec);
-    g_free(fff->experiment.file_creator_id);
-    g_free(fff->experiment.result_file_creator_id);
-    g_free(fff->experiment.user_name);
-    g_free(fff->experiment.account_name);
-    g_free(fff->experiment.result_data_file_spec);
-#endif
+    gwy_container_set_const_string_by_name(meta, "Experiment::Name",
+                                           experiment->name);
+    gwy_container_set_const_string_by_name(meta, "Experiment::Version",
+                                           experiment->version);
+    gwy_container_set_const_string_by_name(meta, "Experiment::Description",
+                                           experiment->description);
+    gwy_container_set_const_string_by_name(meta, "Experiment::File specification",
+                                           experiment->file_spec);
+    gwy_container_set_const_string_by_name(meta, "Experiment::File creator ID",
+                                           experiment->file_creator_id);
+    gwy_container_set_const_string_by_name(meta, "Experiment::Result file creator ID",
+                                           experiment->result_file_creator_id);
+    gwy_container_set_const_string_by_name(meta, "Experiment::User name",
+                                           experiment->user_name);
+    gwy_container_set_const_string_by_name(meta, "Experiment::Account name",
+                                           experiment->account_name);
+    gwy_container_set_const_string_by_name(meta, "Experiment::Result data file specification",
+                                           experiment->result_data_file_spec);
+
+    g_string_printf(value, "%u", experiment->run_cycle_id);
+    gwy_container_set_const_string_by_name(meta, "Experiment::Run cycle ID",
+                                           value->str);
+
+    g_string_printf(value, "%u", experiment->scan_cycle_id);
+    gwy_container_set_const_string_by_name(meta, "Experiment::Scan cycle ID",
+                                           value->str);
 
     for (i = 0; i < fff->exp_instance_count; i++) {
         OmicronFlatExperimentParamInstance *instance = fff->exp_instances + i;
