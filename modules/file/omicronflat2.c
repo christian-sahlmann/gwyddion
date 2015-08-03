@@ -49,6 +49,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <time.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-file.h>
@@ -138,7 +139,7 @@ typedef struct {
     OmicronFlatTableSet *table_set_ref;
     guint single_data_len;
     guint mirror_mult;
-    gchar *unq_name;   /* Unquallified name. */
+    const gchar *unq_name;   /* Unquallified name. */
 } OmicronFlatAxis;
 
 typedef struct {
@@ -252,6 +253,8 @@ static void             remove_from_filelist           (OmicronFlatFileList *fil
 static gboolean         find_related_files             (const gchar *filename,
                                                         OmicronFlatFileList *filelist,
                                                         GError **error);
+static GwyContainer*    construct_metadata             (OmicronFlatFile *fff,
+                                                        OmicronFlatFileId *id);
 static gboolean         load_as_channel                (OmicronFlatFileList *filelist,
                                                         guint fileid,
                                                         GwyContainer *data,
@@ -761,6 +764,7 @@ load_as_channel(OmicronFlatFileList *filelist, guint fileid,
 
     for (i = 0; i < nfields; i++) {
         GwyDataField *dfield = field_specs[i].dfield;
+        GwyContainer *meta;
         gchar *title;
         gchar key[40];
 
@@ -783,6 +787,11 @@ load_as_channel(OmicronFlatFileList *filelist, guint fileid,
         title = g_strconcat(fff->channel.name, " ", field_specs[i].title,
                             NULL);
         gwy_container_set_string_by_name(data, key, title);
+
+        meta = construct_metadata(fff, filelist->ids + fileid);
+        g_snprintf(key, sizeof(key), "/%i/meta", *id);
+        gwy_container_set_object_by_name(data, key, meta);
+        g_object_unref(meta);
 
         gwy_file_channel_import_log_add(data, *id, NULL, fff->filename);
         (*id)++;
@@ -1373,6 +1382,128 @@ find_related_files(const gchar *filename,
                 _("File name does not have the expected form "
                   "for Omicron Flat files."));
     return FALSE;
+}
+
+static GwyContainer*
+construct_metadata(OmicronFlatFile *fff,
+                   OmicronFlatFileId *id)
+{
+    time_t timestamp;
+    gchar creation_time[40];
+    struct tm *t;
+
+    GwyContainer *meta = gwy_container_new();
+    GString *key = g_string_new(NULL);
+    GString *value = g_string_new(NULL);
+    guint i, j;
+
+    g_string_printf(value, "%.4s", fff->identification.magic);
+    gwy_container_set_const_string_by_name(meta, "File::Magic", value->str);
+
+    g_string_printf(value, "%.4s", fff->identification.file_structure_level);
+    gwy_container_set_const_string_by_name(meta, "File::Structure level",
+                                           value->str);
+
+    gwy_container_set_const_string_by_name(meta, "File::Base name", id->stem);
+    gwy_container_set_const_string_by_name(meta, "File::Number", id->number);
+    gwy_container_set_const_string_by_name(meta, "File::Extension",
+                                           id->extension);
+
+    for (i = 0; i < fff->axis_count; i++) {
+        OmicronFlatAxis *axis = fff->axis_descriptions + i;
+        g_string_printf(key, "Axis %u::Name", i+1);
+        gwy_container_set_const_string_by_name(meta, key->str, axis->name);
+
+        if (strlen(axis->parent_name)) {
+            g_string_printf(key, "Axis %u::Parent axis", i+1);
+            gwy_container_set_const_string_by_name(meta, key->str,
+                                                   axis->parent_name);
+        }
+
+        g_string_printf(key, "Axis %u::Units", i+1);
+        gwy_container_set_const_string_by_name(meta, key->str, axis->unit_name);
+
+        for (j = 0; j < axis->table_set_count; j++) {
+            OmicronFlatTableSet *table_set = axis->table_set_fields + j;
+            g_string_printf(key, "Axis %u::TableSet %u::Name", i+1, j+1);
+            gwy_container_set_const_string_by_name(meta, key->str,
+                                                   table_set->name);
+        }
+    }
+
+    gwy_container_set_const_string_by_name(meta, "Channel::Name",
+                                           fff->channel.name);
+    gwy_container_set_const_string_by_name(meta, "Channel::Transfer function",
+                                           fff->channel.transfer_func_name);
+    gwy_container_set_const_string_by_name(meta, "Channel::Units",
+                                           fff->channel.unit_name);
+
+    for (i = 0; i < fff->channel.parameter_count; i++) {
+        OmicronFlatTransferParam *param = fff->channel.parameters + i;
+        g_string_printf(key, "Channel::Transfer function::%s", param->name);
+        g_string_printf(value, "%g", param->value);
+        gwy_container_set_const_string_by_name(meta, key->str, value->str);
+    }
+
+    for (i = 0; i < fff->channel.data_view_type_count; i++) {
+        g_string_printf(key, "Channel::View type %u", i+1);
+        g_string_printf(value, "%u", fff->channel.view_types[i]);
+        gwy_container_set_const_string_by_name(meta, key->str, value->str);
+    }
+
+    g_string_printf(value, "%" G_GUINT64_FORMAT,
+                    (guint64)fff->creation.timestamp);
+    gwy_container_set_const_string_by_name(meta, "Creation::Timestamp",
+                                           value->str);
+    t = localtime(&timestamp);
+    strftime(creation_time, sizeof(creation_time), "%Y-%m-%d %H:%M:%S", t);
+    gwy_container_set_const_string_by_name(meta, "Creation::Date and time",
+                                           creation_time);
+
+    if (strlen(fff->creation.info)) {
+        gwy_container_set_const_string_by_name(meta, "Creation::Info",
+                                               fff->creation.info);
+    }
+
+#if 0
+    g_free(fff->experiment.name);
+    g_free(fff->experiment.version);
+    g_free(fff->experiment.description);
+    g_free(fff->experiment.file_spec);
+    g_free(fff->experiment.file_creator_id);
+    g_free(fff->experiment.result_file_creator_id);
+    g_free(fff->experiment.user_name);
+    g_free(fff->experiment.account_name);
+    g_free(fff->experiment.result_data_file_spec);
+#endif
+
+    for (i = 0; i < fff->exp_instance_count; i++) {
+        OmicronFlatExperimentParamInstance *instance = fff->exp_instances + i;
+        g_string_printf(key, "Experiment::Instance %u::Name", i+1);
+        gwy_container_set_const_string_by_name(meta, key->str, instance->name);
+        for (j = 0; j < instance->parameter_count; j++) {
+            OmicronFlatExperimentParam *param = instance->parameters + j;
+            g_string_printf(key, "Experiment::Instance %u::%s",
+                            i+1, param->name);
+            g_string_printf(value, "%s %s", param->value, param->unit);
+            gwy_container_set_const_string_by_name(meta, key->str, value->str);
+        }
+    }
+
+    for (i = 0; i < fff->depl_instance_count; i++) {
+        OmicronFlatDeploymentParamInstance *instance = fff->depl_instances + i;
+        g_string_printf(key, "Deployment::Instance %u::Name", i+1);
+        gwy_container_set_const_string_by_name(meta, key->str, instance->name);
+        for (j = 0; j < instance->parameter_count; j++) {
+            OmicronFlatDeploymentParam *param = instance->parameters + j;
+            g_string_printf(key, "Deployment::Instance %u::%s",
+                            i+1, param->name);
+            gwy_container_set_const_string_by_name(meta, key->str,
+                                                   param->value);
+        }
+    }
+
+    return meta;
 }
 
 /* Construct explicit range and offset for an interval on an axis The range is
