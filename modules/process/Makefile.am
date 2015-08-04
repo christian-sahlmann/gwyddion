@@ -64,7 +64,7 @@ process_LTLIBRARIES = \
 	level.la \
 	level_grains.la \
 	linecorrect.la \
-	linepoly.la \
+	linematch.la \
 	lno_synth.la \
 	local_contrast.la \
 	mark_with.la \
@@ -180,7 +180,7 @@ latsim_la_SOURCES              = latsim.c
 level_la_SOURCES               = level.c
 level_grains_la_SOURCES        = level_grains.c
 linecorrect_la_SOURCES         = linecorrect.c
-linepoly_la_SOURCES            = linepoly.c
+linematch_la_SOURCES           = linematch.c
 lno_synth_la_SOURCES           = lno_synth.c dimensions.h synth.h
 local_contrast_la_SOURCES      = local_contrast.c
 mark_with_la_SOURCES           = mark_with.c
