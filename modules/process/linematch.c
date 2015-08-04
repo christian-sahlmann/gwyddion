@@ -78,40 +78,42 @@ typedef struct {
     gboolean in_update;
 } LineMatchControls;
 
-static gboolean module_register        (void);
-static void     linematch              (GwyContainer *data,
-                                        GwyRunType run);
-static void     linematch_do           (GwyDataField *mask,
-                                        LineMatchArgs *args);
-static void     linematch_do_poly      (GwyDataField *mask,
-                                        const LineMatchArgs *args);
-static void     linematch_do_median    (GwyDataField *mask,
-                                        const LineMatchArgs *args);
-static void     apply_row_shifts       (GwyDataField *dfield,
-                                        GwyDataField *bg,
-                                        GwyDataLine *shifts);
-static gboolean linematch_dialog       (LineMatchArgs *args,
-                                        GwyContainer *data,
-                                        GwyDataField *dfield,
-                                        GwyDataField *mfield,
-                                        gint id);
-static void     linematch_dialog_update(LineMatchControls *controls,
-                                        LineMatchArgs *args);
-static void     degree_changed         (LineMatchControls *controls,
-                                        GtkObject *adj);
-static void     do_extract_changed     (LineMatchControls *controls,
-                                        GtkToggleButton *check);
-static void     masking_changed        (GtkToggleButton *button,
-                                        LineMatchControls *controls);
-static void     method_changed         (GtkToggleButton *button,
-                                        LineMatchControls *controls);
-static void     update_preview         (LineMatchControls *controls,
-                                        LineMatchArgs *args);
-static void     load_args              (GwyContainer *container,
-                                        LineMatchArgs *args);
-static void     save_args              (GwyContainer *container,
-                                        LineMatchArgs *args);
-static void     sanitize_args          (LineMatchArgs *args);
+static gboolean module_register         (void);
+static void     linematch               (GwyContainer *data,
+                                         GwyRunType run);
+static void     linematch_do            (GwyDataField *mask,
+                                         LineMatchArgs *args);
+static void     linematch_do_poly       (GwyDataField *mask,
+                                         const LineMatchArgs *args);
+static void     linematch_do_median     (GwyDataField *mask,
+                                         const LineMatchArgs *args);
+static void     linematch_do_median_diff(GwyDataField *mask,
+                                         const LineMatchArgs *args);
+static void     apply_row_shifts        (GwyDataField *dfield,
+                                         GwyDataField *bg,
+                                         GwyDataLine *shifts);
+static gboolean linematch_dialog        (LineMatchArgs *args,
+                                         GwyContainer *data,
+                                         GwyDataField *dfield,
+                                         GwyDataField *mfield,
+                                         gint id);
+static void     linematch_dialog_update (LineMatchControls *controls,
+                                         LineMatchArgs *args);
+static void     degree_changed          (LineMatchControls *controls,
+                                         GtkObject *adj);
+static void     do_extract_changed      (LineMatchControls *controls,
+                                         GtkToggleButton *check);
+static void     masking_changed         (GtkToggleButton *button,
+                                         LineMatchControls *controls);
+static void     method_changed          (GtkToggleButton *button,
+                                         LineMatchControls *controls);
+static void     update_preview          (LineMatchControls *controls,
+                                         LineMatchArgs *args);
+static void     load_args               (GwyContainer *container,
+                                         LineMatchArgs *args);
+static void     save_args               (GwyContainer *container,
+                                         LineMatchArgs *args);
+static void     sanitize_args           (LineMatchArgs *args);
 
 static const LineMatchArgs linematch_defaults = {
     LINE_LEVEL_MEDIAN,
@@ -214,6 +216,8 @@ linematch_do(GwyDataField *mask,
         linematch_do_poly(mask, args);
     else if (args->method == LINE_LEVEL_MEDIAN)
         linematch_do_median(mask, args);
+    else if (args->method == LINE_LEVEL_MEDIAN_DIFF)
+        linematch_do_median_diff(mask, args);
     else {
         g_warning("Implement me!");
     }
@@ -230,7 +234,7 @@ linematch_do_poly(GwyDataField *mask,
     GwyDataField *dfield, *bg;
     GwyMaskingType masking;
     gdouble *xpowers, *zxpowers, *matrix;
-    gint xres, yres, degree, i, j, k, n;
+    gint xres, yres, degree, i, j, k;
     gdouble xc;
     const gdouble *m;
     gdouble *d, *b;
@@ -255,7 +259,6 @@ linematch_do_poly(GwyDataField *mask,
         gwy_clear(xpowers, 2*degree+1);
         gwy_clear(zxpowers, degree+1);
 
-        n = 0;
         for (j = 0; j < xres; j++) {
             gdouble p = 1.0, x = j - xc;
 
@@ -272,11 +275,10 @@ linematch_do_poly(GwyDataField *mask,
                 xpowers[k] += p;
                 p *= x;
             }
-            n++;
         }
 
         /* Solve polynomial coefficients. */
-        if (n > degree) {
+        if (xpowers[0] > degree) {
             for (j = 0; j <= degree; j++) {
                 for (k = 0; k <= j; k++)
                     SLi(matrix, j, k) = xpowers[j + k];
@@ -315,7 +317,8 @@ linematch_do_median(GwyDataField *mask,
                     const LineMatchArgs *args)
 {
     GwyDataField *dfield, *bg;
-    GwyDataLine *modi, *line;
+    GwyDataLine *medians, *line;
+    GwyMaskingType masking;
     gint xres, yres, i;
     const gdouble *d, *m;
     gdouble median, total_median;
@@ -323,17 +326,17 @@ linematch_do_median(GwyDataField *mask,
 
     dfield = args->result;
     bg = args->bg;
+    masking = args->masking;
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
-    total_median = gwy_data_field_area_get_median_mask(dfield, mask,
-                                                       args->masking,
+    total_median = gwy_data_field_area_get_median_mask(dfield, mask, masking,
                                                        0, 0, xres, yres);
 
     d = gwy_data_field_get_data(dfield);
     m = mask ? gwy_data_field_get_data_const(mask) : NULL;
     line = gwy_data_line_new(xres, 1.0, FALSE);
-    modi = gwy_data_line_new(yres, 1.0, FALSE);
+    medians = gwy_data_line_new(yres, 1.0, FALSE);
     buf = gwy_data_line_get_data(line);
 
     if (mask) {
@@ -341,7 +344,7 @@ linematch_do_median(GwyDataField *mask,
             const gdouble *row = d + i*xres, *mrow = m + i*xres;
             gint count = 0, j;
 
-            if (args->masking == GWY_MASK_INCLUDE) {
+            if (masking == GWY_MASK_INCLUDE) {
                 for (j = 0; j < xres; j++) {
                     if (mrow[j] > 0.0)
                         buf[count++] = row[j];
@@ -355,20 +358,69 @@ linematch_do_median(GwyDataField *mask,
             }
 
             median = count ? gwy_math_median(count, buf) : total_median;
-            gwy_data_line_set_val(modi, i, median);
+            gwy_data_line_set_val(medians, i, median);
         }
     }
     else {
         for (i = 0; i < yres; i++) {
             gwy_data_field_get_row(dfield, line, i);
             median = gwy_math_median(xres, gwy_data_line_get_data(line));
-            gwy_data_line_set_val(modi, i, median);
+            gwy_data_line_set_val(medians, i, median);
         }
     }
 
-    apply_row_shifts(dfield, bg, modi);
+    apply_row_shifts(dfield, bg, medians);
 
-    g_object_unref(modi);
+    g_object_unref(medians);
+    g_object_unref(line);
+}
+
+static void
+linematch_do_median_diff(GwyDataField *mask,
+                         const LineMatchArgs *args)
+{
+    GwyDataField *dfield, *bg;
+    GwyDataLine *medians, *line;
+    GwyMaskingType masking;
+    gint xres, yres, i;
+    const gdouble *d, *m;
+    gdouble median;
+    gdouble *buf;
+
+    dfield = args->result;
+    bg = args->bg;
+    masking = args->masking;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    d = gwy_data_field_get_data(dfield);
+    m = mask ? gwy_data_field_get_data_const(mask) : NULL;
+    line = gwy_data_line_new(xres, 1.0, FALSE);
+    medians = gwy_data_line_new(yres, 1.0, FALSE);
+    buf = gwy_data_line_get_data(line);
+
+    gwy_data_line_set_val(medians, 0, 0.0);
+    for (i = 0; i+1 < yres; i++) {
+        const gdouble *row = d + i*xres, *mrow = m + i*xres;
+        gint count = 0, j;
+
+        for (j = 0; j < xres; j++) {
+            if ((masking == GWY_MASK_INCLUDE && (mrow[j] <= 0.0
+                                                 || mrow[xres + j] <= 0.0))
+                || (masking == GWY_MASK_EXCLUDE && (mrow[j] >= 1.0
+                                                    || mrow[xres + j] >= 1.0)))
+                continue;
+
+            buf[count++] = row[xres + j] - row[j];
+        }
+        median = count ? gwy_math_median(count, buf) : 0.0;
+        gwy_data_line_set_val(medians, i+1,
+                              median + gwy_data_line_get_val(medians, i));
+    }
+
+    apply_row_shifts(dfield, bg, medians);
+
+    g_object_unref(medians);
     g_object_unref(line);
 }
 
