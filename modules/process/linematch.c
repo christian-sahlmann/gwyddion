@@ -143,7 +143,7 @@ module_register(void)
     gwy_process_func_register("align_rows",
                               (GwyProcessFunc)&linematch,
                               N_("/_Correct Data/_Align rows..."),
-                              GWY_STOCK_POLYNOM_LEVEL,
+                              GWY_STOCK_LINE_LEVEL,
                               LINEMATCH_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Align rows using various methods"));
