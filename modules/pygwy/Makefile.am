@@ -243,8 +243,14 @@ gwy_la_LIBADD = \
 	$(top_builddir)/libgwydgets/libgwydgets2.la \
 	$(top_builddir)/libgwymodule/libgwymodule2.la \
 	$(top_builddir)/libprocess/libgwyprocess2.la \
-	$(PYTHON_LIBS) $(PYGTK_LIBS) @GTK_LIBS@ \
+	$(PYGTK_LIBS) @GTK_LIBS@ \
 	@PNG_LIBS@ @ZLIB@ @BZIP2@ @EXR_LIBS@ @XML2_LIBS@ @MINIZIP_LIBS@ @CFITSIO_LIBS@
+
+if OS_DARWIN
+gwy_la_LDFLAGS = -avoid-version -module -undefined dynamic_lookup
+else
+gwy_la_LIBADD += $(PYTHON_LIBS)
+endif
 
 if OS_MSWIN
 install-exec-hook:
