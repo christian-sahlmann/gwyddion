@@ -13,7 +13,7 @@
     <item type='proc' function='arithmetic'/>
     <item type='proc' function='level'/>
     <item type='proc' function='facet-level'/>
-    <item type='proc' function='line_correct_median'/>
+    <item type='proc' function='align_rows'/>
     <item type='proc' function='scars_remove'/>
     <item type='proc' function='grain_mark'/>
     <item type='proc' function='grain_wshed'/>
