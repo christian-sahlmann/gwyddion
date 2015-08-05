@@ -140,7 +140,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
-    gwy_process_func_register("linematch",
+    gwy_process_func_register("align_rows",
                               (GwyProcessFunc)&linematch,
                               N_("/_Correct Data/_Align rows..."),
                               GWY_STOCK_POLYNOM_LEVEL,
