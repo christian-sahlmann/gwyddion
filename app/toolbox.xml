@@ -38,7 +38,6 @@
     <item type='tool' function='GwyToolRoughness'/>
     <item type='tool' function='GwyToolLevel3'/>
     <item type='tool' function='GwyToolPathLevel'/>
-    <item type='tool' function='GwyToolPolynom'/>
     <item type='tool' function='GwyToolCrop'/>
     <item type='tool' function='GwyToolMaskEditor'/>
     <item type='tool' function='GwyToolGrainMeasure'/>

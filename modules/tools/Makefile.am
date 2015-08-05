@@ -13,7 +13,6 @@ tools_LTLIBRARIES = \
 	linestats.la \
 	maskedit.la \
 	pathlevel.la \
-	polynom.la \
 	profile.la \
 	readvalue.la \
 	roughness.la \
@@ -52,7 +51,6 @@ level3_la_SOURCES           = level3.c
 linestats_la_SOURCES        = linestats.c
 maskedit_la_SOURCES         = maskedit.c
 pathlevel_la_SOURCES        = pathlevel.c
-polynom_la_SOURCES          = polynom.c
 profile_la_SOURCES          = profile.c
 readvalue_la_SOURCES        = readvalue.c
 roughness_la_SOURCES        = roughness.c
