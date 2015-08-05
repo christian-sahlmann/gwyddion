@@ -7,6 +7,12 @@ Libraries:
 - libgwydgets: Leaking overlay GwyPixmapLayers in Gwy3DView were fixed.
 
 Modules:
+- Align rows (new): Row alignment by various methods, including polynomial
+  subtraction, with masking support and background extraction.  It replaces
+  the various scattered row correction functions.
+- Polynom tool: It was removed, use Align rows instead.
+- Line correct: Standard methods were removed (being replaced by Align rows),
+  the experimental ones remain in this module.
 - Image export: Missing #include <locale.h> was fixed.
 - Gwyfile: If the program aborts to out-of-memory during saving the existing
   file is kept intact now.
