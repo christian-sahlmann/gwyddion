@@ -51,7 +51,6 @@ typedef enum {
     LINE_LEVEL_MEDIAN = 1,
     LINE_LEVEL_MEDIAN_DIFF = 2,
     LINE_LEVEL_MODUS = 3,
-    LINE_LEVEL_MATCH = 4,
     LINE_LEVEL_NMETHODS
 } LineMatchMethod;
 
@@ -88,6 +87,8 @@ static void     linematch_do_poly       (GwyDataField *mask,
 static void     linematch_do_median     (GwyDataField *mask,
                                          const LineMatchArgs *args);
 static void     linematch_do_median_diff(GwyDataField *mask,
+                                         const LineMatchArgs *args);
+static void     linematch_do_modus      (GwyDataField *mask,
                                          const LineMatchArgs *args);
 static void     apply_row_shifts        (GwyDataField *dfield,
                                          GwyDataField *bg,
@@ -218,8 +219,10 @@ linematch_do(GwyDataField *mask,
         linematch_do_median(mask, args);
     else if (args->method == LINE_LEVEL_MEDIAN_DIFF)
         linematch_do_median_diff(mask, args);
+    else if (args->method == LINE_LEVEL_MODUS)
+        linematch_do_modus(mask, args);
     else {
-        g_warning("Implement me!");
+        g_assert_not_reached();
     }
 
     args->masking = masking;
@@ -425,6 +428,77 @@ linematch_do_median_diff(GwyDataField *mask,
 }
 
 static void
+linematch_do_modus(GwyDataField *mask,
+                   const LineMatchArgs *args)
+{
+    GwyDataField *dfield, *bg;
+    GwyDataLine *modi, *line;
+    GwyMaskingType masking;
+    gint xres, yres, i;
+    const gdouble *d, *m;
+    gdouble modus, total_median;
+    gdouble *buf;
+
+    dfield = args->result;
+    bg = args->bg;
+    masking = args->masking;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    total_median = gwy_data_field_area_get_median_mask(dfield, mask, masking,
+                                                       0, 0, xres, yres);
+
+    d = gwy_data_field_get_data(dfield);
+    m = mask ? gwy_data_field_get_data_const(mask) : NULL;
+    line = gwy_data_line_new(xres, 1.0, FALSE);
+    modi = gwy_data_line_new(yres, 1.0, FALSE);
+    buf = gwy_data_line_get_data(line);
+
+    for (i = 0; i < yres; i++) {
+        const gdouble *row = d + i*xres, *mrow = m + i*xres;
+        gint count = 0, j;
+
+        for (j = 0; j < xres; j++) {
+            if ((masking == GWY_MASK_INCLUDE && mrow[j] <= 0.0)
+                || (masking == GWY_MASK_EXCLUDE && mrow[j] >= 1.0))
+                continue;
+
+            buf[count++] = row[j];
+        }
+
+        if (!count)
+            modus = total_median;
+        else if (count < 9)
+            modus = gwy_math_median(count, buf);
+        else {
+            gint seglen = GWY_ROUND(sqrt(count)), bestj = 0;
+            gdouble diff, bestdiff = G_MAXDOUBLE;
+
+            gwy_math_sort(count, buf);
+            for (j = 0; j + seglen-1 < count; j++) {
+                diff = buf[j + seglen-1] - buf[j];
+                if (diff < bestdiff) {
+                    bestdiff = diff;
+                    bestj = j;
+                }
+            }
+            modus = 0.0;
+            count = 0;
+            for (j = seglen/3; j < seglen - seglen/3; j++, count++)
+                modus += buf[bestj + j];
+            modus /= count;
+        }
+
+        gwy_data_line_set_val(modi, i, modus);
+    }
+
+    apply_row_shifts(dfield, bg, modi);
+
+    g_object_unref(modi);
+    g_object_unref(line);
+}
+
+static void
 apply_row_shifts(GwyDataField *dfield, GwyDataField *bg,
                  GwyDataLine *shifts)
 {
@@ -461,7 +535,6 @@ linematch_dialog(LineMatchArgs *args,
         { "Median", LINE_LEVEL_MEDIAN },
         { "Median difference", LINE_LEVEL_MEDIAN_DIFF },
         { "Modus", LINE_LEVEL_MODUS },
-        { "Matching", LINE_LEVEL_MATCH },
         /* Put polynomial last so that is it followed visally by the degree
          * controls. */
         { "Polynomial", LINE_LEVEL_POLY },
