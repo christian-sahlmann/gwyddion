@@ -51,6 +51,7 @@ typedef enum {
     LINE_LEVEL_MEDIAN = 1,
     LINE_LEVEL_MEDIAN_DIFF = 2,
     LINE_LEVEL_MODUS = 3,
+    LINE_LEVEL_MATCH = 4,
     LINE_LEVEL_NMETHODS
 } LineMatchMethod;
 
@@ -89,6 +90,8 @@ static void     linematch_do_median     (GwyDataField *mask,
 static void     linematch_do_median_diff(GwyDataField *mask,
                                          const LineMatchArgs *args);
 static void     linematch_do_modus      (GwyDataField *mask,
+                                         const LineMatchArgs *args);
+static void     linematch_do_match      (GwyDataField *mask,
                                          const LineMatchArgs *args);
 static void     apply_row_shifts        (GwyDataField *dfield,
                                          GwyDataField *bg,
@@ -221,6 +224,8 @@ linematch_do(GwyDataField *mask,
         linematch_do_median_diff(mask, args);
     else if (args->method == LINE_LEVEL_MODUS)
         linematch_do_modus(mask, args);
+    else if (args->method == LINE_LEVEL_MATCH)
+        linematch_do_match(mask, args);
     else {
         g_assert_not_reached();
     }
@@ -498,6 +503,71 @@ linematch_do_modus(GwyDataField *mask,
     g_object_unref(line);
 }
 
+/* TODO: Implement masking. */
+static void
+linematch_do_match(GwyDataField *mask,
+                   const LineMatchArgs *args)
+{
+    GwyDataField *dfield, *bg;
+    GwyDataLine *shifts;
+    GwyMaskingType masking;
+    gint xres, yres, i, j;
+    gdouble q, wsum, lambda, x;
+    const gdouble *d, *m, *a, *b;
+    gdouble *s, *w;
+
+    dfield = args->result;
+    bg = args->bg;
+    masking = args->masking;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    d = gwy_data_field_get_data(dfield);
+    m = mask ? gwy_data_field_get_data_const(mask) : NULL;
+    shifts = gwy_data_line_new(yres, 1.0, FALSE);
+    s = gwy_data_line_get_data(shifts);
+
+    w = g_new(gdouble, xres-1);
+    s[0] = 0.0;
+    for (i = 1; i < yres; i++) {
+        a = d + xres*(i - 1);
+        b = d + xres*i;
+
+        /* Diffnorm */
+        wsum = 0.0;
+        for (j = 0; j < xres-1; j++) {
+            x = a[j+1] - a[j] - b[j+1] + b[j];
+            wsum += fabs(x);
+        }
+        if (wsum == 0)
+            continue;
+        q = wsum/(xres-1);
+
+        /* Weights */
+        wsum = 0.0;
+        for (j = 0; j < xres-1; j++) {
+            x = a[j+1] - a[j] - b[j+1] + b[j];
+            w[j] = exp(-(x*x/(2.0*q)));
+            wsum += w[j];
+        }
+
+        /* Correction */
+        lambda = (a[0] - b[0])*w[0];
+        for (j = 1; j < xres-1; j++)
+            lambda += (a[j] - b[j])*(w[j-1] + w[j]);
+        lambda += (a[xres-1] - b[xres-1])*w[xres-2];
+        lambda /= 2.0*wsum;
+
+        gwy_debug("%g %g %g", q, wsum, lambda);
+
+        s[i] = -lambda + s[i-1];
+    }
+    apply_row_shifts(dfield, bg, shifts);
+
+    g_object_unref(shifts);
+    g_free(w);
+}
+
 static void
 apply_row_shifts(GwyDataField *dfield, GwyDataField *bg,
                  GwyDataLine *shifts)
@@ -535,6 +605,7 @@ linematch_dialog(LineMatchArgs *args,
         { "Median", LINE_LEVEL_MEDIAN },
         { "Median difference", LINE_LEVEL_MEDIAN_DIFF },
         { "Modus", LINE_LEVEL_MODUS },
+        { "Matching", LINE_LEVEL_MATCH },
         /* Put polynomial last so that is it followed visally by the degree
          * controls. */
         { "Polynomial", LINE_LEVEL_POLY },
