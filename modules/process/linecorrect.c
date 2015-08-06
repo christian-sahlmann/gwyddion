@@ -44,8 +44,6 @@ typedef struct {
 } MedianLineData;
 
 static gboolean module_register                    (void);
-static void     line_correct_match                 (GwyContainer *data,
-                                                    GwyRunType run);
 static void     line_correct_step                  (GwyContainer *data,
                                                     GwyRunType run);
 static void     gwy_data_field_absdiff_line_correct(GwyDataField *dfield);
@@ -65,13 +63,6 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
-    gwy_process_func_register("line_correct_match",
-                              (GwyProcessFunc)&line_correct_match,
-                              N_("/_Correct Data/Ma_tch Line Correction"),
-                              GWY_STOCK_LINE_LEVEL,
-                              LINECORR_RUN_MODES,
-                              GWY_MENU_FLAG_DATA,
-                              N_("Correct lines by matching flat segments"));
     gwy_process_func_register("line_correct_step",
                               (GwyProcessFunc)&line_correct_step,
                               N_("/_Correct Data/Ste_p Line Correction"),
@@ -102,79 +93,6 @@ gwy_data_field_absdiff_line_correct(GwyDataField *dfield)
         shift = gwy_math_median(xres, buf);
         gwy_data_field_area_add(dfield, 0, i, xres, 1, -shift);
     }
-}
-
-static void
-line_correct_match(GwyContainer *data,
-                   GwyRunType run)
-{
-    GwyDataField *dfield;
-    GwyDataLine *shifts;
-    gint xres, yres, i, j;
-    gdouble m, wsum, lambda, x;
-    gdouble *d, *s, *w;
-    const gdouble *a, *b;
-    GQuark dquark;
-    gint id;
-
-    g_return_if_fail(run & LINECORR_RUN_MODES);
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_DATA_FIELD_KEY, &dquark,
-                                     GWY_APP_DATA_FIELD_ID, &id,
-                                     0);
-    g_return_if_fail(dfield && dquark);
-    gwy_app_undo_qcheckpointv(data, 1, &dquark);
-
-    yres = gwy_data_field_get_yres(dfield);
-    xres = gwy_data_field_get_xres(dfield);
-    d = gwy_data_field_get_data(dfield);
-
-    shifts = gwy_data_line_new(yres, 1.0, TRUE);
-    s = gwy_data_line_get_data(shifts);
-
-    w = g_new(gdouble, xres-1);
-    for (i = 1; i < yres; i++) {
-        a = d + xres*(i - 1);
-        b = d + xres*i;
-
-        /* Diffnorm */
-        wsum = 0.0;
-        for (j = 0; j < xres-1; j++) {
-            x = a[j+1] - a[j] - b[j+1] + b[j];
-            wsum += fabs(x);
-        }
-        if (wsum == 0)
-            continue;
-        m = wsum/(xres-1);
-
-        /* Weights */
-        wsum = 0.0;
-        for (j = 0; j < xres-1; j++) {
-            x = a[j+1] - a[j] - b[j+1] + b[j];
-            w[j] = exp(-(x*x/(2.0*m)));
-            wsum += w[j];
-        }
-
-        /* Correction */
-        lambda = (a[0] - b[0])*w[0];
-        for (j = 1; j < xres-1; j++)
-            lambda += (a[j] - b[j])*(w[j-1] + w[j]);
-        lambda += (a[xres-1] - b[xres-1])*w[xres-2];
-        lambda /= 2.0*wsum;
-
-        gwy_debug("%g %g %g", m, wsum, lambda);
-
-        s[i] = lambda;
-    }
-    gwy_data_line_cumulate(shifts);
-    for (i = 1; i < yres; i++)
-        gwy_data_field_area_add(dfield, 0, i, xres, 1, s[i]);
-    gwy_data_field_add(dfield, -s[yres-1]/(xres*yres));
-
-    g_object_unref(shifts);
-    g_free(w);
-    gwy_data_field_data_changed(dfield);
-    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static void
