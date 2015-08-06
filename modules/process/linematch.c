@@ -513,7 +513,7 @@ linematch_do_match(GwyDataField *mask,
     GwyMaskingType masking;
     gint xres, yres, i, j;
     gdouble q, wsum, lambda, x;
-    const gdouble *d, *m, *a, *b;
+    const gdouble *d, *m, *a, *b, *ma, *mb;
     gdouble *s, *w;
 
     dfield = args->result;
@@ -524,28 +524,43 @@ linematch_do_match(GwyDataField *mask,
     yres = gwy_data_field_get_yres(dfield);
     d = gwy_data_field_get_data(dfield);
     m = mask ? gwy_data_field_get_data_const(mask) : NULL;
-    shifts = gwy_data_line_new(yres, 1.0, FALSE);
+    shifts = gwy_data_line_new(yres, 1.0, TRUE);
     s = gwy_data_line_get_data(shifts);
 
     w = g_new(gdouble, xres-1);
-    s[0] = 0.0;
     for (i = 1; i < yres; i++) {
         a = d + xres*(i - 1);
         b = d + xres*i;
+        ma = m + xres*(i - 1);
+        mb = m + xres*i;
 
         /* Diffnorm */
         wsum = 0.0;
         for (j = 0; j < xres-1; j++) {
+            if ((masking == GWY_MASK_INCLUDE && (ma[j] <= 0.0
+                                                 || mb[j] <= 0.0))
+                || (masking == GWY_MASK_EXCLUDE && (ma[j] >= 1.0
+                                                    || mb[j] >= 1.0)))
+                continue;
+
             x = a[j+1] - a[j] - b[j+1] + b[j];
             wsum += fabs(x);
         }
-        if (wsum == 0)
+        if (wsum == 0) {
+            s[i] = s[i-1];
             continue;
+        }
         q = wsum/(xres-1);
 
         /* Weights */
         wsum = 0.0;
         for (j = 0; j < xres-1; j++) {
+            if ((masking == GWY_MASK_INCLUDE && (ma[j] <= 0.0
+                                                 || mb[j] <= 0.0))
+                || (masking == GWY_MASK_EXCLUDE && (ma[j] >= 1.0
+                                                    || mb[j] >= 1.0)))
+                continue;
+
             x = a[j+1] - a[j] - b[j+1] + b[j];
             w[j] = exp(-(x*x/(2.0*q)));
             wsum += w[j];
@@ -553,8 +568,15 @@ linematch_do_match(GwyDataField *mask,
 
         /* Correction */
         lambda = (a[0] - b[0])*w[0];
-        for (j = 1; j < xres-1; j++)
+        for (j = 1; j < xres-1; j++) {
+            if ((masking == GWY_MASK_INCLUDE && (ma[j] <= 0.0
+                                                 || mb[j] <= 0.0))
+                || (masking == GWY_MASK_EXCLUDE && (ma[j] >= 1.0
+                                                    || mb[j] >= 1.0)))
+                continue;
+
             lambda += (a[j] - b[j])*(w[j-1] + w[j]);
+        }
         lambda += (a[xres-1] - b[xres-1])*w[xres-2];
         lambda /= 2.0*wsum;
 
