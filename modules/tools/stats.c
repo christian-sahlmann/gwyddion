@@ -28,6 +28,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-tool.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libprocess/datafield.h>
 #include <libprocess/stats.h>
 #include <libprocess/stats_uncertainty.h>
@@ -274,6 +275,9 @@ gwy_tool_stats_init(GwyToolStats *tool)
     gwy_container_gis_enum_by_name(settings, masking_key, &tool->args.masking);
     gwy_container_gis_boolean_by_name(settings, instant_update_key,
                                       &tool->args.instant_update);
+
+    tool->args.masking
+        = gwy_enum_sanitize_value(tool->args.masking, GWY_TYPE_MASKING_TYPE);
 
     tool->angle_format = g_new0(GwySIValueFormat, 1);
     tool->angle_format->magnitude = 1.0;

@@ -318,6 +318,8 @@ gwy_tool_sfunctions_init(GwyToolSFunctions *tool)
                                    &tool->args.direction);
     tool->args.direction
         = gwy_enum_sanitize_value(tool->args.direction, GWY_TYPE_ORIENTATION);
+    tool->args.masking
+        = gwy_enum_sanitize_value(tool->args.masking, GWY_TYPE_MASKING_TYPE);
 
     tool->line = gwy_data_line_new(4, 1.0, FALSE);
     tool->uline = gwy_data_line_new(4, 1.0, FALSE);
