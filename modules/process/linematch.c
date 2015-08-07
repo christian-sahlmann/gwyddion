@@ -24,12 +24,14 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libprocess/level.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwyradiobuttons.h>
+#include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
@@ -61,6 +63,7 @@ typedef struct {
     gboolean do_extract;
     gboolean do_plot;
     GwyMaskingType masking;
+    GwyOrientation direction;
     /* Runtime state */
     GwyDataField *result;
     GwyDataField *bg;
@@ -76,6 +79,7 @@ typedef struct {
     GtkWidget *do_extract;
     GtkWidget *do_plot;
     GtkWidget *dataview;
+    GtkWidget *direction;
     GwyContainer *data;
     GwyDataField *dfield;
     gboolean in_update;
@@ -99,6 +103,9 @@ static void     linematch_do_match      (GwyDataField *mask,
 static void     apply_row_shifts        (GwyDataField *dfield,
                                          GwyDataField *bg,
                                          GwyDataLine *shifts);
+static void     flip_xy                 (GwyDataField *source,
+                                         GwyDataField *dest,
+                                         gboolean minor);
 static gboolean linematch_dialog        (LineMatchArgs *args,
                                          GwyContainer *data,
                                          GwyDataField *dfield,
@@ -116,6 +123,8 @@ static void     masking_changed         (GtkToggleButton *button,
                                          LineMatchControls *controls);
 static void     method_changed          (GtkToggleButton *button,
                                          LineMatchControls *controls);
+static void     direction_changed       (GtkWidget *combo,
+                                         LineMatchControls *controls);
 static void     update_preview          (LineMatchControls *controls,
                                          LineMatchArgs *args);
 static void     load_args               (GwyContainer *container,
@@ -128,7 +137,7 @@ static const LineMatchArgs linematch_defaults = {
     LINE_LEVEL_MEDIAN,
     1,
     FALSE, FALSE,
-    GWY_MASK_IGNORE,
+    GWY_MASK_IGNORE, GWY_ORIENTATION_HORIZONTAL,
     /* Runtime state */
     NULL, NULL, NULL,
 };
@@ -242,24 +251,54 @@ linematch_do(GwyDataField *mask,
              LineMatchArgs *args)
 {
     GwyMaskingType masking = args->masking;
+    GwyDataField *mymask = mask, *tmpresult = NULL;
 
     if (args->masking == GWY_MASK_IGNORE)
         mask = NULL;
     if (!mask)
         args->masking = GWY_MASK_IGNORE;
 
+    /* Transpose the fields if necessary. */
+    if (args->direction == GWY_ORIENTATION_VERTICAL) {
+        tmpresult = gwy_data_field_new_alike(args->result, FALSE);
+        flip_xy(args->result, tmpresult, FALSE);
+        GWY_SWAP(GwyDataField*, args->result, tmpresult);
+        if (mask) {
+            mymask = gwy_data_field_new_alike(mask, FALSE);
+            flip_xy(mask, mymask, FALSE);
+        }
+    }
+
+    gwy_data_field_resample(args->bg,
+                            args->result->xres, args->result->yres,
+                            GWY_INTERPOLATION_NONE);
+
+    /* Perform the correction. */
     if (args->method == LINE_LEVEL_POLY)
-        linematch_do_poly(mask, args);
+        linematch_do_poly(mymask, args);
     else if (args->method == LINE_LEVEL_MEDIAN)
-        linematch_do_median(mask, args);
+        linematch_do_median(mymask, args);
     else if (args->method == LINE_LEVEL_MEDIAN_DIFF)
-        linematch_do_median_diff(mask, args);
+        linematch_do_median_diff(mymask, args);
     else if (args->method == LINE_LEVEL_MODUS)
-        linematch_do_modus(mask, args);
+        linematch_do_modus(mymask, args);
     else if (args->method == LINE_LEVEL_MATCH)
-        linematch_do_match(mask, args);
+        linematch_do_match(mymask, args);
     else {
         g_assert_not_reached();
+    }
+
+    /* Transpose back if necessary. */
+    if (args->direction == GWY_ORIENTATION_VERTICAL) {
+        gwy_object_unref(mymask);
+        flip_xy(args->result, tmpresult, TRUE);
+        GWY_SWAP(GwyDataField*, args->result, tmpresult);
+        flip_xy(args->bg, tmpresult, TRUE);
+        gwy_data_field_resample(args->bg,
+                                args->result->xres, args->result->yres,
+                                GWY_INTERPOLATION_NONE);
+        gwy_data_field_copy(tmpresult, args->bg, FALSE);
+        g_object_unref(tmpresult);
     }
 
     args->masking = masking;
@@ -644,6 +683,36 @@ apply_row_shifts(GwyDataField *dfield, GwyDataField *bg,
     }
 }
 
+static void
+flip_xy(GwyDataField *source, GwyDataField *dest, gboolean minor)
+{
+    gint xres, yres, i, j;
+    gdouble *dd;
+    const gdouble *sd;
+
+    xres = gwy_data_field_get_xres(source);
+    yres = gwy_data_field_get_yres(source);
+    gwy_data_field_resample(dest, yres, xres, GWY_INTERPOLATION_NONE);
+    sd = gwy_data_field_get_data_const(source);
+    dd = gwy_data_field_get_data(dest);
+    if (minor) {
+        for (i = 0; i < xres; i++) {
+            for (j = 0; j < yres; j++) {
+                dd[i*yres + j] = sd[j*xres + (xres - 1 - i)];
+            }
+        }
+    }
+    else {
+        for (i = 0; i < xres; i++) {
+            for (j = 0; j < yres; j++) {
+                dd[i*yres + (yres - 1 - j)] = sd[j*xres + i];
+            }
+        }
+    }
+    gwy_data_field_set_xreal(dest, gwy_data_field_get_yreal(source));
+    gwy_data_field_set_yreal(dest, gwy_data_field_get_xreal(source));
+}
+
 static gboolean
 linematch_dialog(LineMatchArgs *args,
                  GwyContainer *data,
@@ -663,7 +732,7 @@ linematch_dialog(LineMatchArgs *args,
         { "Polynomial", LINE_LEVEL_POLY },
     };
 
-    GtkWidget *dialog, *table, *label, *hbox;
+    GtkWidget *dialog, *table, *label, *hbox, *alignment;
     GwyPixmapLayer *layer;
     LineMatchControls controls;
     gint response;
@@ -709,9 +778,12 @@ linematch_dialog(LineMatchArgs *args,
     gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.dataview), "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.dataview), layer);
     gwy_set_data_preview_size(GWY_DATA_VIEW(controls.dataview), PREVIEW_SIZE);
-    gtk_box_pack_start(GTK_BOX(hbox), controls.dataview, FALSE, FALSE, 4);
 
-    table = gtk_table_new(5 + LINE_LEVEL_NMETHODS + (mfield ? 4 : 0), 4, FALSE);
+    alignment = GTK_WIDGET(gtk_alignment_new(0.5, 0, 0, 0));
+    gtk_container_add(GTK_CONTAINER(alignment), controls.dataview);
+    gtk_box_pack_start(GTK_BOX(hbox), alignment, FALSE, FALSE, 4);
+
+    table = gtk_table_new(6 + LINE_LEVEL_NMETHODS + (mfield ? 4 : 0), 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -745,6 +817,14 @@ linematch_dialog(LineMatchArgs *args,
     label = gwy_label_new_header(_("Options"));
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls.direction
+        = gwy_enum_combo_box_new(gwy_orientation_get_enum(), -1,
+                                 G_CALLBACK(direction_changed), &controls,
+                                 args->direction, TRUE);
+    gwy_table_attach_row(table, row, _("_Direction:"), NULL,
+                         controls.direction);
     row++;
 
     controls.do_extract
@@ -834,6 +914,10 @@ linematch_dialog_update(LineMatchControls *controls,
                              args->max_degree);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->do_extract),
                                  args->do_extract);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->do_plot),
+                                 args->do_plot);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->direction),
+                                  args->direction);
     if (controls->masking_group)
         gwy_radio_buttons_set_current(controls->masking_group, args->masking);
     controls->in_update = FALSE;
@@ -871,12 +955,11 @@ static void
 masking_changed(GtkToggleButton *button,
                 LineMatchControls *controls)
 {
-    LineMatchArgs *args;
+    LineMatchArgs *args = controls->args;
 
     if (!gtk_toggle_button_get_active(button))
         return;
 
-    args = controls->args;
     args->masking = gwy_radio_buttons_get_current(controls->masking_group);
     if (controls->in_update)
         return;
@@ -888,15 +971,27 @@ static void
 method_changed(GtkToggleButton *button,
                LineMatchControls *controls)
 {
-    LineMatchArgs *args;
+    LineMatchArgs *args = controls->args;
 
     if (!gtk_toggle_button_get_active(button))
         return;
 
-    args = controls->args;
     args->method = gwy_radio_buttons_get_current(controls->method_group);
     gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->max_degree),
                                    args->method == LINE_LEVEL_POLY);
+    if (controls->in_update)
+        return;
+
+    update_preview(controls, args);
+}
+
+static void
+direction_changed(GtkWidget *combo,
+                  LineMatchControls *controls)
+{
+    LineMatchArgs *args = controls->args;
+
+    args->direction = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     if (controls->in_update)
         return;
 
@@ -915,6 +1010,7 @@ update_preview(LineMatchControls *controls, LineMatchArgs *args)
     gwy_data_field_data_changed(args->result);
 }
 
+static const gchar direction_key[]  = "/module/linematch/direction";
 static const gchar do_extract_key[] = "/module/linematch/do_extract";
 static const gchar do_plot_key[]    = "/module/linematch/do_plot";
 static const gchar masking_key[]    = "/module/linematch/masking";
@@ -927,6 +1023,8 @@ sanitize_args(LineMatchArgs *args)
     args->max_degree = CLAMP(args->max_degree, 0, MAX_DEGREE);
     args->masking = MIN(args->masking, GWY_MASK_INCLUDE);
     args->method = MIN(args->method, LINE_LEVEL_NMETHODS-1);
+    args->direction = gwy_enum_sanitize_value(args->direction,
+                                              GWY_TYPE_ORIENTATION);
     args->do_extract = !!args->do_extract;
     args->do_plot = !!args->do_plot;
 }
@@ -941,6 +1039,7 @@ load_args(GwyContainer *container,
                                     &args->max_degree);
     gwy_container_gis_enum_by_name(container, masking_key, &args->masking);
     gwy_container_gis_enum_by_name(container, method_key, &args->method);
+    gwy_container_gis_enum_by_name(container, direction_key, &args->direction);
     gwy_container_gis_boolean_by_name(container, do_extract_key,
                                       &args->do_extract);
     gwy_container_gis_boolean_by_name(container, do_plot_key,
@@ -956,6 +1055,7 @@ save_args(GwyContainer *container,
                                     args->max_degree);
     gwy_container_set_enum_by_name(container, masking_key, args->masking);
     gwy_container_set_enum_by_name(container, method_key, args->method);
+    gwy_container_set_enum_by_name(container, direction_key, args->direction);
     gwy_container_set_boolean_by_name(container, do_extract_key,
                                       args->do_extract);
     gwy_container_set_boolean_by_name(container, do_plot_key, args->do_plot);
