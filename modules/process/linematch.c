@@ -27,6 +27,7 @@
 #include <libprocess/gwyprocesstypes.h>
 #include <libprocess/level.h>
 #include <libprocess/stats.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
@@ -1021,7 +1022,8 @@ static void
 sanitize_args(LineMatchArgs *args)
 {
     args->max_degree = CLAMP(args->max_degree, 0, MAX_DEGREE);
-    args->masking = MIN(args->masking, GWY_MASK_INCLUDE);
+    args->masking = gwy_enum_sanitize_value(args->masking,
+                                            GWY_TYPE_MASKING_TYPE);
     args->method = MIN(args->method, LINE_LEVEL_NMETHODS-1);
     args->direction = gwy_enum_sanitize_value(args->direction,
                                               GWY_TYPE_ORIENTATION);

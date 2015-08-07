@@ -32,6 +32,7 @@
 #include <libprocess/filters.h>
 #include <libprocess/arithmetic.h>
 #include <libprocess/stats.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
@@ -1638,7 +1639,8 @@ static void
 neural_train_sanitize_args(NeuralTrainArgs *args)
 {
     args->trainsteps = MIN(args->trainsteps, 10000);
-    args->masking = MIN(args->masking, GWY_MASK_INCLUDE);
+    args->masking = gwy_enum_sanitize_value(args->masking,
+                                            GWY_TYPE_MASKING_TYPE);
     gwy_app_data_id_verify_channel(&args->tsignal);
 }
 

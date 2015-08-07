@@ -24,6 +24,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/level.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
@@ -1005,7 +1006,8 @@ sanitize_args(PolyLevelArgs *args)
     args->col_degree = CLAMP(args->col_degree, 0, MAX_DEGREE);
     args->row_degree = CLAMP(args->row_degree, 0, MAX_DEGREE);
     args->max_degree = CLAMP(args->max_degree, 0, MAX_DEGREE);
-    args->masking = MIN(args->masking, GWY_MASK_INCLUDE);
+    args->masking = gwy_enum_sanitize_value(args->masking,
+                                            GWY_TYPE_MASKING_TYPE);
     args->do_extract = !!args->do_extract;
     args->independent = !!args->independent;
     args->same_degree = !!args->same_degree;

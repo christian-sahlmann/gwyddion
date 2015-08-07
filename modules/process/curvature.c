@@ -26,6 +26,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/level.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
@@ -1064,7 +1065,8 @@ static const gchar masking_key[]       = "/module/curvature/masking";
 static void
 sanitize_args(CurvatureArgs *args)
 {
-    args->masking = MIN(args->masking, GWY_MASK_INCLUDE);
+    args->masking = gwy_enum_sanitize_value(args->masking,
+                                            GWY_TYPE_MASKING_TYPE);
     args->set_selection = !!args->set_selection;
     args->plot_graph = !!args->plot_graph;
     gwy_app_data_id_verify_graph(&args->target_graph);

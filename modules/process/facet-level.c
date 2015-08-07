@@ -24,6 +24,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/level.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwyradiobuttons.h>
@@ -41,17 +42,17 @@ typedef struct {
     GSList *masking;
 } LevelControls;
 
-static gboolean module_register   (void);
-static void     facet_level       (GwyContainer *data,
-                                   GwyRunType run);
-static gboolean level_dialog      (LevelArgs *args,
-                                   const gchar *title);
-static void     masking_changed   (GtkToggleButton *button,
-                                   LevelControls *controls);
-static void     level_load_args   (GwyContainer *container,
-                                   LevelArgs *args);
-static void     level_save_args   (GwyContainer *container,
-                                   LevelArgs *args);
+static gboolean module_register(void);
+static void     facet_level    (GwyContainer *data,
+                                GwyRunType run);
+static gboolean level_dialog   (LevelArgs *args,
+                                const gchar *title);
+static void     masking_changed(GtkToggleButton *button,
+                                LevelControls *controls);
+static void     load_args      (GwyContainer *container,
+                                LevelArgs *args);
+static void     save_args      (GwyContainer *container,
+                                LevelArgs *args);
 
 static const LevelArgs level_defaults = {
     GWY_MASK_EXCLUDE
@@ -124,10 +125,10 @@ facet_level(GwyContainer *data, GwyRunType run)
     old = dfield;
     dfield = gwy_data_field_duplicate(dfield);
 
-    level_load_args(gwy_app_settings_get(), &args);
+    load_args(gwy_app_settings_get(), &args);
     if (run != GWY_RUN_IMMEDIATE && mfield) {
         ok = level_dialog(&args, _("Facet Level"));
-        level_save_args(gwy_app_settings_get(), &args);
+        save_args(gwy_app_settings_get(), &args);
         if (!ok)
             return;
     }
@@ -256,16 +257,23 @@ masking_changed(GtkToggleButton *button, LevelControls *controls)
 static const gchar masking_key[] = "/module/facet-level/mode";
 
 static void
-level_load_args(GwyContainer *container, LevelArgs *args)
+sanitize_args(LevelArgs *args)
 {
-    *args = level_defaults;
-
-    gwy_container_gis_enum_by_name(container, masking_key,
-                                   &args->masking);
+    args->masking = gwy_enum_sanitize_value(args->masking,
+                                            GWY_TYPE_MASKING_TYPE);
 }
 
 static void
-level_save_args(GwyContainer *container, LevelArgs *args)
+load_args(GwyContainer *container, LevelArgs *args)
+{
+    *args = level_defaults;
+
+    gwy_container_gis_enum_by_name(container, masking_key, &args->masking);
+    sanitize_args(args);
+}
+
+static void
+save_args(GwyContainer *container, LevelArgs *args)
 {
     gwy_container_set_enum_by_name(container, masking_key,
                                    args->masking);

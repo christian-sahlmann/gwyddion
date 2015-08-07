@@ -27,6 +27,7 @@
 #include <libprocess/level.h>
 #include <libprocess/stats.h>
 #include <libprocess/filters.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwydgetutils.h>
@@ -1041,7 +1042,8 @@ sanitize_args(SlopeArgs *args)
     args->logscale = !!args->logscale;
     args->fit_plane = !!args->fit_plane;
     args->update = !!args->update;
-    args->masking = MIN(args->masking, GWY_MASK_IGNORE);
+    args->masking = gwy_enum_sanitize_value(args->masking,
+                                            GWY_TYPE_MASKING_TYPE);
     gwy_app_data_id_verify_graph(&args->target_graph);
 }
 

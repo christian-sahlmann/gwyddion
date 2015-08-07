@@ -25,6 +25,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/level.h>
 #include <libprocess/stats.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwyradiobuttons.h>
@@ -47,27 +48,27 @@ typedef struct {
     GSList *masking;
 } LevelControls;
 
-static gboolean  module_register     (void);
-static void      level               (GwyContainer *data,
-                                      GwyRunType run);
-static void      level_rotate        (GwyContainer *data,
-                                      GwyRunType run);
-static void      do_level            (GwyContainer *data,
-                                      GwyRunType run,
-                                      LevelMethod level_type,
-                                      const gchar *dialog_title);
-
-static void      fix_zero            (GwyContainer *data,
-                                      GwyRunType run);
-static void      zero_mean           (GwyContainer *data,
-                                      GwyRunType run);
-
-static gboolean  level_dialog        (LevelArgs *args,
-                                      const gchar *title);
-static void      masking_changed     (GtkToggleButton *button,
-                                      LevelControls *controls);
-static void      level_load_args     (GwyContainer *container, LevelArgs *args);
-static void      level_save_args     (GwyContainer *container, LevelArgs *args);
+static gboolean module_register(void);
+static void     level          (GwyContainer *data,
+                                GwyRunType run);
+static void     level_rotate   (GwyContainer *data,
+                                GwyRunType run);
+static void     do_level       (GwyContainer *data,
+                                GwyRunType run,
+                                LevelMethod level_type,
+                                const gchar *dialog_title);
+static void     fix_zero       (GwyContainer *data,
+                                GwyRunType run);
+static void     zero_mean      (GwyContainer *data,
+                                GwyRunType run);
+static gboolean level_dialog   (LevelArgs *args,
+                                const gchar *title);
+static void     masking_changed(GtkToggleButton *button,
+                                LevelControls *controls);
+static void     load_args      (GwyContainer *container,
+                                LevelArgs *args);
+static void     save_args      (GwyContainer *container,
+                                LevelArgs *args);
 
 static const LevelArgs level_defaults = {
     GWY_MASK_EXCLUDE
@@ -154,10 +155,10 @@ do_level(GwyContainer *data,
                                      0);
     g_return_if_fail(dfield && quark);
 
-    level_load_args(gwy_app_settings_get(), &args);
+    load_args(gwy_app_settings_get(), &args);
     if (run != GWY_RUN_IMMEDIATE && mfield) {
         gboolean ok = level_dialog(&args, dialog_title);
-        level_save_args(gwy_app_settings_get(), &args);
+        save_args(gwy_app_settings_get(), &args);
         if (!ok)
             return;
     }
@@ -327,16 +328,24 @@ masking_changed(GtkToggleButton *button, LevelControls *controls)
 static const gchar masking_key[] = "/module/level/mode";
 
 static void
-level_load_args(GwyContainer *container, LevelArgs *args)
+sanitize_args(LevelArgs *args)
+{
+    args->masking = gwy_enum_sanitize_value(args->masking,
+                                            GWY_TYPE_MASKING_TYPE);
+}
+
+static void
+load_args(GwyContainer *container, LevelArgs *args)
 {
     *args = level_defaults;
 
     gwy_container_gis_enum_by_name(container, masking_key, &args->masking);
     args->masking = MIN(args->masking, GWY_MASK_INCLUDE);
+    sanitize_args(args);
 }
 
 static void
-level_save_args(GwyContainer *container, LevelArgs *args)
+save_args(GwyContainer *container, LevelArgs *args)
 {
     gwy_container_set_enum_by_name(container, masking_key, args->masking);
 }
