@@ -126,6 +126,7 @@ static void       find_maximum          (GwyDataField *dfield,
                                          gdouble *y,
                                          gint xwinsize,
                                          gint ywinsize);
+static gboolean   transform_selection   (gdouble *xy);
 static void       matrix_vector         (gdouble *dest,
                                          const gdouble *m,
                                          const gdouble *src);
@@ -496,10 +497,13 @@ image_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
     GwyDataView *dataview;
     GwyPixmapLayer *layer;
     ImageMode mode;
+    gboolean transform_sel;
 
     mode = gwy_radio_buttons_get_current(controls->image_mode);
     if (mode == args->image_mode)
         return;
+
+    transform_sel = (mode == IMAGE_PSDF) || (args->image_mode == IMAGE_PSDF);
     args->image_mode = mode;
     dataview = GWY_DATA_VIEW(controls->view);
     layer = gwy_data_view_get_base_layer(dataview);
@@ -523,6 +527,23 @@ image_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
                      "range-type-key", "/1/base/range-type",
                      "min-max-key", "/1/base",
                      NULL);
+    }
+
+    if (transform_sel) {
+        if (gwy_selection_is_full(controls->selection)) {
+            guint n;
+
+            gwy_selection_get_data(controls->selection, controls->xy);
+            if (!transform_selection(controls->xy)) {
+                // XXX: Init selection, transform to frequencies if necessary.
+                g_warning("Selection transformation failed.  FIXME.");
+            }
+            n = 4/gwy_selection_get_object_size(controls->selection);
+            gwy_selection_set_data(controls->selection, n, controls->xy);
+        }
+        else {
+            // XXX: Init selection, transform to frequencies if necessary.
+        }
     }
 
     gwy_set_data_preview_size(dataview, PREVIEW_SIZE);
@@ -633,31 +654,32 @@ calculate_zoomed_field(LatMeasControls *controls)
 static void
 refine(LatMeasControls *controls)
 {
-    GwyDataField *acf;
+    GwyDataField *dfield;
     gint xwinsize, ywinsize;
     gdouble xy[4];
 
-    if (!gwy_selection_get_object(controls->selection, 0, xy))
+    if (!gwy_selection_is_full(controls->selection))
         return;
 
-    acf = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
-                                                          "/1/data"));
+    gwy_selection_get_data(controls->selection, xy);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                             "/1/data"));
     xwinsize = (gint)(0.32*MAX(fabs(xy[0]), fabs(xy[2]))
-                      /gwy_data_field_get_xmeasure(acf) + 0.5);
+                      /gwy_data_field_get_xmeasure(dfield) + 0.5);
     ywinsize = (gint)(0.32*MAX(fabs(xy[1]), fabs(xy[3]))
-                      /gwy_data_field_get_ymeasure(acf) + 0.5);
+                      /gwy_data_field_get_ymeasure(dfield) + 0.5);
     gwy_debug("window size: %dx%d", xwinsize, ywinsize);
 
-    xy[0] = (xy[0] - acf->xoff)/gwy_data_field_get_xmeasure(acf);
-    xy[1] = (xy[1] - acf->yoff)/gwy_data_field_get_ymeasure(acf);
-    xy[2] = (xy[2] - acf->xoff)/gwy_data_field_get_xmeasure(acf);
-    xy[3] = (xy[3] - acf->yoff)/gwy_data_field_get_ymeasure(acf);
-    find_maximum(acf, xy + 0, xy + 1, xwinsize, ywinsize);
-    find_maximum(acf, xy + 2, xy + 3, xwinsize, ywinsize);
-    xy[0] = (xy[0] + 0.5)*gwy_data_field_get_xmeasure(acf) + acf->xoff;
-    xy[1] = (xy[1] + 0.5)*gwy_data_field_get_ymeasure(acf) + acf->yoff;
-    xy[2] = (xy[2] + 0.5)*gwy_data_field_get_xmeasure(acf) + acf->xoff;
-    xy[3] = (xy[3] + 0.5)*gwy_data_field_get_ymeasure(acf) + acf->yoff;
+    xy[0] = (xy[0] - dfield->xoff)/gwy_data_field_get_xmeasure(dfield);
+    xy[1] = (xy[1] - dfield->yoff)/gwy_data_field_get_ymeasure(dfield);
+    xy[2] = (xy[2] - dfield->xoff)/gwy_data_field_get_xmeasure(dfield);
+    xy[3] = (xy[3] - dfield->yoff)/gwy_data_field_get_ymeasure(dfield);
+    find_maximum(dfield, xy + 0, xy + 1, xwinsize, ywinsize);
+    find_maximum(dfield, xy + 2, xy + 3, xwinsize, ywinsize);
+    xy[0] = (xy[0] + 0.5)*gwy_data_field_get_xmeasure(dfield) + dfield->xoff;
+    xy[1] = (xy[1] + 0.5)*gwy_data_field_get_ymeasure(dfield) + dfield->yoff;
+    xy[2] = (xy[2] + 0.5)*gwy_data_field_get_xmeasure(dfield) + dfield->xoff;
+    xy[3] = (xy[3] + 0.5)*gwy_data_field_get_ymeasure(dfield) + dfield->yoff;
     gwy_selection_set_object(controls->selection, 0, xy);
 }
 
@@ -665,19 +687,17 @@ static void
 selection_changed(LatMeasControls *controls)
 {
     GwySIValueFormat *vf;
-    gdouble xy[4];
     gdouble a1, a2, phi1, phi2, phi;
-    guint i;
+    gdouble xy[4];
     GString *str = g_string_new(NULL);
 
-    if (!gwy_selection_get_data(controls->selection, NULL)) {
-        /* TODO */
+    if (!gwy_selection_is_full(controls->selection))
         return;
-    }
 
-    gwy_selection_get_object(controls->selection, 0, xy);
-    for (i = 0; i < 4; i++)
-        controls->xy[i] = xy[i];
+    gwy_selection_get_data(controls->selection, controls->xy);
+    memcpy(xy, controls->xy, 4*sizeof(gdouble));
+    if (controls->args->image_mode == IMAGE_PSDF)
+        transform_selection(xy);
 
     vf = controls->vf;
     g_string_printf(str, "%.*f", vf->precision, xy[0]/vf->magnitude);
@@ -831,6 +851,21 @@ find_maximum(GwyDataField *dfield,
     *y += sy;
 }
 
+static gboolean
+transform_selection(gdouble *xy)
+{
+    gdouble D = matrix_det(xy);
+    gdouble a = fabs(xy[0]*xy[3]) + fabs(xy[1]*xy[2]);
+
+    if (fabs(D)/a < 1e-9)
+        return FALSE;
+
+    invert_matrix(xy, xy);
+    /* Transpose. */
+    GWY_SWAP(gdouble, xy[1], xy[2]);
+    return TRUE;
+}
+
 /* Permit dest = src */
 static void
 matrix_vector(gdouble *dest,
@@ -888,7 +923,6 @@ matrix_det(const gdouble *m)
     return m[0]*m[3] - m[1]*m[2];
 }
 
-static const gchar image_mode_key[]     = "/module/measure_lattice/image_mode";
 static const gchar selection_mode_key[] = "/module/measure_lattice/selection_mode";
 static const gchar zoom_key[]           = "/module/measure_lattice/zoom";
 
@@ -898,7 +932,6 @@ sanitize_args(LatMeasArgs *args)
     if (args->zoom != ZOOM_1 && args->zoom != ZOOM_4 && args->zoom != ZOOM_16)
         args->zoom = lat_meas_defaults.zoom;
     args->selection_mode = MIN(args->selection_mode, SELECTION_NMODES-1);
-    args->image_mode = MIN(args->image_mode, IMAGE_NMODES-1);
 }
 
 static void
@@ -909,8 +942,6 @@ load_args(GwyContainer *container, LatMeasArgs *args)
     gwy_container_gis_enum_by_name(container, zoom_key, &args->zoom);
     gwy_container_gis_enum_by_name(container, selection_mode_key,
                                    &args->selection_mode);
-    gwy_container_gis_enum_by_name(container, image_mode_key,
-                                   &args->image_mode);
     sanitize_args(args);
 }
 
@@ -920,8 +951,6 @@ save_args(GwyContainer *container, LatMeasArgs *args)
     gwy_container_set_enum_by_name(container, zoom_key, args->zoom);
     gwy_container_set_enum_by_name(container, selection_mode_key,
                                    args->selection_mode);
-    gwy_container_set_enum_by_name(container, image_mode_key,
-                                   args->image_mode);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
