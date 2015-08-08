@@ -72,6 +72,7 @@ process_LTLIBRARIES = \
 	mask_edt.la \
 	maskops.la \
 	mcrop.la \
+	measure_lattice.la \
 	median-bg.la \
 	merge.la \
 	neural.la \
@@ -188,6 +189,7 @@ maskcor_la_SOURCES             = maskcor.c
 mask_edt_la_SOURCES            = mask_edt.c
 maskops_la_SOURCES             = maskops.c
 mcrop_la_SOURCES               = mcrop.c
+measure_lattice_la_SOURCES     = measure_lattice.c
 median_bg_la_SOURCES           = median-bg.c
 merge_la_SOURCES               = merge.c
 #nanoindent_adjust_la_SOURCES  = nanoindent_adjust.c
