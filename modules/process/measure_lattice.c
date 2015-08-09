@@ -73,7 +73,8 @@ typedef enum {
 typedef struct {
     ImageMode image_mode;
     SelectionMode selection_mode;
-    ZoomType zoom;
+    ZoomType zoom_acf;
+    ZoomType zoom_psdf;
 } LatMeasArgs;
 
 typedef struct {
@@ -83,6 +84,7 @@ typedef struct {
     GwyVectorLayer *vlayer;
     GwySelection *selection;
     GwyContainer *mydata;
+    GtkWidget *zoom_label;
     GSList *zoom;
     GSList *image_mode;
     GwySIValueFormat *vf;
@@ -109,7 +111,8 @@ static void       lat_meas_dialog       (LatMeasArgs *args,
                                          gint id);
 static GtkWidget* make_lattice_table    (LatMeasControls *controls);
 static void       init_selection        (GwySelection *selection,
-                                         GwyDataField *dfield);
+                                         GwyDataField *dfield,
+                                         ImageMode mode);
 static void       image_mode_changed    (GtkToggleButton *button,
                                          LatMeasControls *controls);
 static void       zoom_changed          (GtkRadioButton *button,
@@ -127,12 +130,6 @@ static void       find_maximum          (GwyDataField *dfield,
                                          gint xwinsize,
                                          gint ywinsize);
 static gboolean   transform_selection   (gdouble *xy);
-static void       matrix_vector         (gdouble *dest,
-                                         const gdouble *m,
-                                         const gdouble *src);
-static void       matrix_matrix         (gdouble *dest,
-                                         const gdouble *m,
-                                         const gdouble *src);
 static void       invert_matrix         (gdouble *dest,
                                          const gdouble *src);
 static gdouble    matrix_det            (const gdouble *m);
@@ -143,7 +140,7 @@ static void       save_args             (GwyContainer *container,
 static void       sanitize_args         (LatMeasArgs *args);
 
 static const LatMeasArgs lat_meas_defaults = {
-    IMAGE_DATA, SELECTION_LATTICE, ZOOM_1,
+    IMAGE_DATA, SELECTION_LATTICE, ZOOM_1, ZOOM_1,
 };
 
 static GwyModuleInfo module_info = {
@@ -295,12 +292,13 @@ lat_meas_dialog(LatMeasArgs *args,
     hbox2 = gtk_hbox_new(FALSE, 8);
     gtk_table_attach(GTK_TABLE(table), hbox2, 0, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    label = gtk_label_new(_("Zoom:"));
+    label = controls.zoom_label = gtk_label_new(_("Zoom:"));
+    gtk_widget_set_sensitive(label, FALSE);
     gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
 
     controls.zoom
         = gwy_radio_buttons_createl(G_CALLBACK(zoom_changed), &controls,
-                                    args->zoom,
+                                    args->zoom_acf,
                                     "1×", ZOOM_1,
                                     "4×", ZOOM_4,
                                     "16×", ZOOM_16,
@@ -308,6 +306,7 @@ lat_meas_dialog(LatMeasArgs *args,
     for (l = controls.zoom; l; l = g_slist_next(l)) {
         GtkWidget *widget = GTK_WIDGET(l->data);
         gtk_box_pack_start(GTK_BOX(hbox2), widget, FALSE, FALSE, 0);
+        gtk_widget_set_sensitive(widget, FALSE);
     }
     row++;
 
@@ -355,7 +354,8 @@ lat_meas_dialog(LatMeasArgs *args,
             break;
 
             case RESPONSE_RESET:
-            init_selection(controls.selection, dfield);
+            /* TODO: Replace with intelligent re-init. */
+            init_selection(controls.selection, dfield, args->image_mode);
             break;
 
             default:
@@ -480,12 +480,16 @@ make_lattice_table(LatMeasControls *controls)
 
 static void
 init_selection(GwySelection *selection,
-               GwyDataField *dfield)
+               GwyDataField *dfield,
+               ImageMode mode)
 {
     gdouble xy[4] = { 0.0, 0.0, 0.0, 0.0 };
 
     xy[0] = dfield->xreal/20;
     xy[3] = -dfield->yreal/20;
+    if (mode == IMAGE_PSDF)
+        transform_selection(xy);
+
     gwy_selection_set_data(selection, 1, xy);
 }
 
@@ -497,7 +501,8 @@ image_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
     GwyDataView *dataview;
     GwyPixmapLayer *layer;
     ImageMode mode;
-    gboolean transform_sel;
+    gboolean transform_sel, zoom_sens;
+    GSList *l;
 
     mode = gwy_radio_buttons_get_current(controls->image_mode);
     if (mode == args->image_mode)
@@ -508,8 +513,12 @@ image_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
     dataview = GWY_DATA_VIEW(controls->view);
     layer = gwy_data_view_get_base_layer(dataview);
 
-    /* TODO: We need to update the selection between real and frequency spaces
-     */
+    if (mode == IMAGE_ACF)
+        gwy_radio_buttons_set_current(controls->zoom, args->zoom_acf);
+    else if (mode == IMAGE_PSDF)
+        gwy_radio_buttons_set_current(controls->zoom, args->zoom_psdf);
+
+    calculate_zoomed_field(controls);
 
     if (args->image_mode == IMAGE_DATA) {
         g_object_set(layer,
@@ -517,9 +526,9 @@ image_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
                      "range-type-key", "/0/base/range-type",
                      "min-max-key", "/0/base",
                      NULL);
+        zoom_sens = FALSE;
     }
     else {
-        calculate_zoomed_field(controls);
         /* There are no range-type and min-max keys, which is the point,
          * because we want full-colour-scale, whatever the image has set. */
         g_object_set(layer,
@@ -527,6 +536,7 @@ image_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
                      "range-type-key", "/1/base/range-type",
                      "min-max-key", "/1/base",
                      NULL);
+        zoom_sens = TRUE;
     }
 
     if (transform_sel) {
@@ -547,6 +557,10 @@ image_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
     }
 
     gwy_set_data_preview_size(dataview, PREVIEW_SIZE);
+
+    gtk_widget_set_sensitive(controls->zoom_label, zoom_sens);
+    for (l = controls->zoom; l; l = g_slist_next(l))
+        gtk_widget_set_sensitive(GTK_WIDGET(l->data), zoom_sens);
 }
 
 static void
@@ -556,12 +570,20 @@ zoom_changed(GtkRadioButton *button,
     LatMeasArgs *args = controls->args;
     ZoomType zoom = gwy_radio_buttons_get_current(controls->zoom);
 
-    if (button && zoom == args->zoom)
+    if (args->image_mode == IMAGE_ACF) {
+        if (button && zoom == args->zoom_acf)
+            return;
+        args->zoom_acf = zoom;
+    }
+    else if (args->image_mode == IMAGE_PSDF) {
+        if (button && zoom == args->zoom_psdf)
+            return;
+        args->zoom_psdf = zoom;
+    }
+    else {
+        g_assert(args->image_mode == IMAGE_DATA);
         return;
-
-    args->zoom = zoom;
-    if (args->image_mode == IMAGE_DATA)
-        return;
+    }
 
     calculate_zoomed_field(controls);
     gwy_set_data_preview_size(GWY_DATA_VIEW(controls->view), PREVIEW_SIZE);
@@ -632,14 +654,18 @@ static void
 calculate_zoomed_field(LatMeasControls *controls)
 {
     LatMeasArgs *args = controls->args;
-    ZoomType zoom = args->zoom;
+    ZoomType zoom;
     GwyDataField *zoomed;
     const gchar *key = NULL;
 
-    if (args->image_mode == IMAGE_ACF)
+    if (args->image_mode == IMAGE_ACF) {
+        zoom = args->zoom_acf;
         key = "/2/data/full";
-    else if (args->image_mode == IMAGE_PSDF)
+    }
+    else if (args->image_mode == IMAGE_PSDF) {
+        zoom = args->zoom_psdf;
         key = "/3/data/full";
+    }
     else
         return;
 
@@ -888,38 +914,6 @@ transform_selection(gdouble *xy)
 
 /* Permit dest = src */
 static void
-matrix_vector(gdouble *dest,
-              const gdouble *m,
-              const gdouble *src)
-{
-    gdouble xy[2];
-
-    xy[0] = m[0]*src[0] + m[1]*src[1];
-    xy[1] = m[2]*src[0] + m[3]*src[1];
-    dest[0] = xy[0];
-    dest[1] = xy[1];
-}
-
-/* Permit dest = src */
-static void
-matrix_matrix(gdouble *dest,
-              const gdouble *m,
-              const gdouble *src)
-{
-    gdouble xy[4];
-
-    xy[0] = m[0]*src[0] + m[1]*src[2];
-    xy[1] = m[0]*src[1] + m[1]*src[3];
-    xy[2] = m[2]*src[0] + m[3]*src[2];
-    xy[3] = m[2]*src[1] + m[3]*src[3];
-    dest[0] = xy[0];
-    dest[1] = xy[1];
-    dest[2] = xy[2];
-    dest[3] = xy[3];
-}
-
-/* Permit dest = src */
-static void
 invert_matrix(gdouble *dest,
               const gdouble *src)
 {
@@ -944,14 +938,21 @@ matrix_det(const gdouble *m)
 }
 
 static const gchar selection_mode_key[] = "/module/measure_lattice/selection_mode";
-static const gchar zoom_key[]           = "/module/measure_lattice/zoom";
+static const gchar zoom_acf_key[]       = "/module/measure_lattice/zoom_acf";
+static const gchar zoom_psdf_key[]      = "/module/measure_lattice/zoom_psdf";
 
 static void
 sanitize_args(LatMeasArgs *args)
 {
-    if (args->zoom != ZOOM_1 && args->zoom != ZOOM_4 && args->zoom != ZOOM_16)
-        args->zoom = lat_meas_defaults.zoom;
     args->selection_mode = MIN(args->selection_mode, SELECTION_NMODES-1);
+    if (args->zoom_acf != ZOOM_1
+        && args->zoom_acf != ZOOM_4
+        && args->zoom_acf != ZOOM_16)
+        args->zoom_acf = lat_meas_defaults.zoom_acf;
+    if (args->zoom_psdf != ZOOM_1
+        && args->zoom_psdf != ZOOM_4
+        && args->zoom_psdf != ZOOM_16)
+        args->zoom_psdf = lat_meas_defaults.zoom_psdf;
 }
 
 static void
@@ -959,18 +960,20 @@ load_args(GwyContainer *container, LatMeasArgs *args)
 {
     *args = lat_meas_defaults;
 
-    gwy_container_gis_enum_by_name(container, zoom_key, &args->zoom);
     gwy_container_gis_enum_by_name(container, selection_mode_key,
                                    &args->selection_mode);
+    gwy_container_gis_enum_by_name(container, zoom_acf_key, &args->zoom_acf);
+    gwy_container_gis_enum_by_name(container, zoom_psdf_key, &args->zoom_psdf);
     sanitize_args(args);
 }
 
 static void
 save_args(GwyContainer *container, LatMeasArgs *args)
 {
-    gwy_container_set_enum_by_name(container, zoom_key, args->zoom);
     gwy_container_set_enum_by_name(container, selection_mode_key,
                                    args->selection_mode);
+    gwy_container_set_enum_by_name(container, zoom_acf_key, args->zoom_acf);
+    gwy_container_set_enum_by_name(container, zoom_psdf_key, args->zoom_psdf);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
