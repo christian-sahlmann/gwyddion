@@ -586,11 +586,22 @@ calculate_acf_full(LatMeasControls *controls,
     g_object_unref(acf);
 }
 
+static gint
+reduce_size(gint n)
+{
+    gint n0 = (n & 1) ? n : n-1;
+    gint nmin = MAX(n0, 65);
+    gint nred = 3*n/4;
+    gint nredodd = (nred & 1) ? nred : nred-1;
+    return MIN(nmin, nredodd);
+}
+
 static void
 calculate_psdf_full(LatMeasControls *controls,
                     GwyDataField *dfield)
 {
-    GwyDataField *reout, *imout;
+    GwyDataField *reout, *imout, *psdf;
+    gint i, j, psdfwidth, psdfheight;
 
     reout = gwy_data_field_new_alike(dfield, FALSE);
     imout = gwy_data_field_new_alike(dfield, FALSE);
@@ -604,8 +615,17 @@ calculate_psdf_full(LatMeasControls *controls,
     /* XXX: We do not fix the value units because they should not leak from the
      * in-module preview. */
     g_object_unref(imout);
-    gwy_container_set_object_by_name(controls->mydata, "/3/data/full", reout);
+
+    psdfwidth = reduce_size(dfield->xres);
+    psdfheight = reduce_size(dfield->yres);
+    i = dfield->yres - psdfheight - (dfield->yres - psdfheight)/2;
+    j = dfield->xres - psdfwidth - (dfield->xres - psdfwidth)/2;
+    psdf = gwy_data_field_area_extract(reout, j, i, psdfwidth, psdfheight);
     g_object_unref(reout);
+    gwy_data_field_set_xoffset(psdf, -0.5*psdf->xreal);
+    gwy_data_field_set_yoffset(psdf, -0.5*psdf->yreal);
+    gwy_container_set_object_by_name(controls->mydata, "/3/data/full", psdf);
+    g_object_unref(psdf);
 }
 
 static void
