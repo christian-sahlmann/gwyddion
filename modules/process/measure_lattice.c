@@ -339,6 +339,8 @@ lat_meas_dialog(LatMeasArgs *args,
     gtk_table_attach(table, label, 0, 5, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
+    init_selection(controls.selection, dfield, args->image_mode);
+
     gtk_widget_show_all(controls.dialog);
     do {
         response = gtk_dialog_run(dialog);
@@ -484,13 +486,15 @@ init_selection(GwySelection *selection,
                ImageMode mode)
 {
     gdouble xy[4] = { 0.0, 0.0, 0.0, 0.0 };
+    guint n;
 
     xy[0] = dfield->xreal/20;
     xy[3] = -dfield->yreal/20;
     if (mode == IMAGE_PSDF)
         transform_selection(xy);
 
-    gwy_selection_set_data(selection, 1, xy);
+    n = 4/gwy_selection_get_object_size(selection);
+    gwy_selection_set_data(selection, n, xy);
 }
 
 static void
@@ -540,19 +544,23 @@ image_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
     }
 
     if (transform_sel) {
+        GwyDataField *dfield;
+
+        dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
         if (gwy_selection_is_full(controls->selection)) {
             guint n;
 
             gwy_selection_get_data(controls->selection, controls->xy);
-            if (!transform_selection(controls->xy)) {
-                // XXX: Init selection, transform to frequencies if necessary.
-                g_warning("Selection transformation failed.  FIXME.");
+            if (transform_selection(controls->xy)) {
+                n = 4/gwy_selection_get_object_size(controls->selection);
+                gwy_selection_set_data(controls->selection, n, controls->xy);
             }
-            n = 4/gwy_selection_get_object_size(controls->selection);
-            gwy_selection_set_data(controls->selection, n, controls->xy);
+            else {
+                init_selection(controls->selection, dfield, args->image_mode);
+            }
         }
         else {
-            // XXX: Init selection, transform to frequencies if necessary.
+            init_selection(controls->selection, dfield, args->image_mode);
         }
     }
 
