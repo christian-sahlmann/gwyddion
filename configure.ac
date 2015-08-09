@@ -232,9 +232,11 @@ fi
 if test "x$enable_pygwy" != xno; then
   GWY_PYTHON_SYSCFG_VAR([BASECFLAGS],,[enable_pygwy=no])
   GWY_PYTHON_SYSCFG_VAR([LDFLAGS],,[enable_pygwy=no])
-  GWY_PYTHON_SYSCFG_VAR([CCSHARED],,[enable_pygwy=no])
-  GWY_PYTHON_SYSCFG_VAR([LINKFORSHARED],,[enable_pygwy=no])
-  GWY_PYTHON_SYSCFG_VAR([LIBDIR],,[enable_pygwy=no])
+  if test "x$os_mswin" != xyes; then
+    GWY_PYTHON_SYSCFG_VAR([CCSHARED],,[enable_pygwy=no])
+    GWY_PYTHON_SYSCFG_VAR([LINKFORSHARED],,[enable_pygwy=no])
+    GWY_PYTHON_SYSCFG_VAR([LIBDIR],,[enable_pygwy=no])
+  fi
   if test "x$enable_pygwy" = xno; then
     PYGWY_WARN=" (failed to obtain Python flags)"
   fi
