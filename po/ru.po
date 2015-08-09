@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-08-02 10:46+0300\n"
-"PO-Revision-Date: 2015-08-02 10:48+0300\n"
+"POT-Creation-Date: 2015-08-09 08:38+0300\n"
+"PO-Revision-Date: 2015-08-09 08:45+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
 "X-Poedit-Basepath: .\n"
-"X-Generator: Poedit 1.8.1\n"
+"X-Generator: Poedit 1.8.3\n"
 "X-Poedit-SearchPath-0: /home/dan/.poedit\n"
 
 #: libgwyddion/gwyexpr.c:765
@@ -265,11 +265,11 @@ msgstr "Сфера (вверх)"
 msgid "Grain number"
 msgstr "Номер зерна"
 
-#: libprocess/gwygrainvalue.c:73 modules/process/curvature.c:134
+#: libprocess/gwygrainvalue.c:73 modules/process/curvature.c:135
 msgid "Center x position"
 msgstr "Положение центра по x"
 
-#: libprocess/gwygrainvalue.c:82 modules/process/curvature.c:135
+#: libprocess/gwygrainvalue.c:82 modules/process/curvature.c:136
 msgid "Center y position"
 msgstr "Положение центра по y"
 
@@ -450,7 +450,7 @@ msgid "Position"
 msgstr "Позиция"
 
 #: libprocess/gwygrainvalue.c:1122 app/meta.c:384
-#: modules/file/imgexport.c:4298 modules/process/curvature.c:786
+#: modules/file/imgexport.c:4298 modules/process/curvature.c:787
 #: modules/tools/level3.c:457 modules/tools/readvalue.c:297
 msgid "Value"
 msgstr "Значение"
@@ -473,8 +473,8 @@ msgstr "Граница"
 msgid "Slope"
 msgstr "Уклон"
 
-#: libprocess/gwygrainvalue.c:1127 modules/process/curvature.c:218
-#: modules/process/curvature.c:621
+#: libprocess/gwygrainvalue.c:1127 modules/process/curvature.c:219
+#: modules/process/curvature.c:622
 msgid "Curvature"
 msgstr "Кривизна"
 
@@ -781,7 +781,7 @@ msgstr "φ:"
 
 #: libgwydgets/gwy3dwindow.c:767 libgwydgets/gwy3dwindow.c:773
 #: libgwydgets/gwy3dwindow.c:960 libgwydgets/gwy3dwindow.c:968
-#: modules/process/facet_analysis.c:403 modules/process/indent_analyze.c:461
+#: modules/process/facet_analysis.c:403 modules/process/indent_analyze.c:462
 #: modules/process/rotate.c:286 modules/process/shade.c:245
 #: modules/process/shade.c:253 modules/process/tilt.c:210
 #: modules/process/tilt.c:222 modules/process/tip_model.c:233
@@ -913,34 +913,34 @@ msgstr "точек"
 #: modules/file/rawfile.c:402 modules/process/angle_dist.c:172
 #: modules/process/bdep_synth.c:353 modules/process/calcoefs_new.c:347
 #: modules/process/calibrate.c:392 modules/process/col_synth.c:387
-#: modules/process/correct_affine.c:310 modules/process/curvature.c:623
+#: modules/process/correct_affine.c:310 modules/process/curvature.c:624
 #: modules/process/cwt.c:135 modules/process/deposit_synth.c:362
 #: modules/process/diff_synth.c:423 modules/process/domain_synth.c:366
 #: modules/process/drift.c:263 modules/process/dwt.c:166
 #: modules/process/dwtanisotropy.c:184 modules/process/edge.c:651
-#: modules/process/extend.c:192 modules/process/facet-level.c:191
+#: modules/process/extend.c:192 modules/process/facet-level.c:192
 #: modules/process/facet_analysis.c:276 modules/process/fbm_synth.c:315
 #: modules/process/fft.c:336 modules/process/fft_filter_2d.c:444
 #: modules/process/fft_synth.c:351 modules/process/fractal.c:235
 #: modules/process/grain_edge.c:218 modules/process/grain_mark.c:264
 #: modules/process/grain_wshed.c:183 modules/process/hough.c:179
 #: modules/process/lat_synth.c:539 modules/process/latsim.c:158
-#: modules/process/level.c:262 modules/process/linecorrect.c:281
+#: modules/process/level.c:263 modules/process/linematch.c:760
 #: modules/process/lno_synth.c:441 modules/process/local_contrast.c:130
-#: modules/process/median-bg.c:179 modules/process/noise_synth.c:348
-#: modules/process/obj_synth.c:427 modules/process/pat_synth.c:397
-#: modules/process/pid.c:199 modules/process/polydistort.c:218
-#: modules/process/polylevel.c:377 modules/process/psdf_logphi.c:249
-#: modules/process/rank.c:132 modules/process/rotate.c:266
-#: modules/process/scale.c:196 modules/process/scars.c:477
-#: modules/process/semsim.c:211 modules/process/shade.c:216
-#: modules/process/slope_dist.c:281 modules/process/sphere-revolve.c:218
-#: modules/process/tilt.c:160 modules/process/tip_model.c:168
-#: modules/process/unrotate.c:228 modules/process/volumize_layers.c:213
-#: modules/process/wave_synth.c:361 modules/process/wpour_mark.c:296
-#: modules/volume/volume_calibrate.c:371 modules/volume/volume_extract.c:331
-#: modules/volume/volume_kmeans.c:143 modules/volume/volume_kmedians.c:148
-#: modules/volume/volume_slice.c:244
+#: modules/process/measure_lattice.c:217 modules/process/median-bg.c:179
+#: modules/process/noise_synth.c:348 modules/process/obj_synth.c:427
+#: modules/process/pat_synth.c:397 modules/process/pid.c:199
+#: modules/process/polydistort.c:218 modules/process/polylevel.c:378
+#: modules/process/psdf_logphi.c:249 modules/process/rank.c:132
+#: modules/process/rotate.c:266 modules/process/scale.c:196
+#: modules/process/scars.c:477 modules/process/semsim.c:211
+#: modules/process/shade.c:216 modules/process/slope_dist.c:282
+#: modules/process/sphere-revolve.c:218 modules/process/tilt.c:160
+#: modules/process/tip_model.c:168 modules/process/unrotate.c:228
+#: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:361
+#: modules/process/wpour_mark.c:296 modules/volume/volume_calibrate.c:371
+#: modules/volume/volume_extract.c:331 modules/volume/volume_kmeans.c:143
+#: modules/volume/volume_kmedians.c:148 modules/volume/volume_slice.c:244
 msgid "_Reset"
 msgstr "_Сброс"
 
@@ -981,7 +981,7 @@ msgstr "Дополнительно..."
 msgid "Choose Color Gradient"
 msgstr "Выбор градиента"
 
-#: libgwydgets/gwydgetenums.c:46 modules/process/neural.c:430
+#: libgwydgets/gwydgetenums.c:46 modules/process/neural.c:431
 msgid "Hidden"
 msgstr "Скрытый"
 
@@ -1003,7 +1003,7 @@ msgid "Quantity"
 msgstr "Количество"
 
 #: libgwydgets/gwygrainvaluemenu.c:194 libgwydgets/gwygrainvaluemenu.c:207
-#: modules/process/curvature.c:777
+#: modules/process/curvature.c:778
 msgid "Symbol"
 msgstr "Символ"
 
@@ -1210,7 +1210,8 @@ msgstr "Измерение расстояний"
 msgid "Curve:"
 msgstr "Кривая:"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:553 modules/process/semsim.c:249
+#: libgwydgets/gwygraphwindowmeasuredialog.c:553
+#: modules/process/linematch.c:794 modules/process/semsim.c:249
 msgid "Method:"
 msgstr "Способ:"
 
@@ -1227,7 +1228,7 @@ msgstr "Предпочтительное"
 #: libgwydgets/gwyoptionmenus.c:470 app/meta.c:383
 #: modules/file/imgexport.c:3854 modules/file/imgexport.c:4280
 #: modules/file/rawfile.c:961 modules/process/convolution_filter.c:553
-#: modules/process/neural.c:428 modules/tools/selectionmanager.c:332
+#: modules/process/neural.c:429 modules/tools/selectionmanager.c:332
 msgid "Name"
 msgstr "Имя"
 
@@ -1914,7 +1915,7 @@ msgstr "Начальная точка"
 
 #: app/gwyplaintool.c:1019 modules/file/rawfile.c:963
 #: modules/process/convolution_filter.c:364
-#: modules/process/convolution_filter.c:568 modules/process/neural.c:429
+#: modules/process/convolution_filter.c:568 modules/process/neural.c:430
 #: modules/process/obj_synth.c:531 modules/process/pat_synth.c:1468
 msgid "Size"
 msgstr "Размер"
@@ -1980,8 +1981,8 @@ msgstr "Тип"
 msgid "Function"
 msgstr "Функция"
 
-#: app/log.c:526 modules/file/imgexport.c:2831 modules/process/neural.c:625
-#: modules/tools/stats.c:409
+#: app/log.c:526 modules/file/imgexport.c:2831 modules/process/neural.c:626
+#: modules/tools/stats.c:413
 msgid "Parameters"
 msgstr "Параметры"
 
@@ -2030,7 +2031,7 @@ msgid "_New"
 msgstr "Новый _элемент"
 
 #: app/meta.c:212 modules/file/imgexport.c:4345 modules/file/rawfile.c:1024
-#: modules/process/neural.c:726
+#: modules/process/neural.c:727
 msgid "_Delete"
 msgstr "_Удалить"
 
@@ -2104,11 +2105,11 @@ msgstr "Не удаётся создать каталог интерфейса �
 msgid "Cannot create user module directory %s: %s"
 msgstr "Не удаётся создать каталог модулей пользователя %s: %s"
 
-#: app/splash.c:652
+#: app/splash.c:832
 msgid "Starting "
 msgstr "Запускается"
 
-#: app/splash.c:698
+#: app/splash.c:878
 msgid " is free software released under GNU GPL."
 msgstr " – свободное ПО под лицензией GNU GPL."
 
@@ -3000,9 +3001,10 @@ msgstr "Экспортировать текст"
 #: modules/process/extend.c:259 modules/process/fft_filter_1d.c:297
 #: modules/process/grain_dist.c:306 modules/process/grain_edge.c:271
 #: modules/process/grain_mark.c:345 modules/process/grain_wshed.c:279
-#: modules/process/slope_dist.c:383 modules/process/tip_blind.c:360
+#: modules/process/linematch.c:818 modules/process/measure_lattice.c:339
+#: modules/process/slope_dist.c:384 modules/process/tip_blind.c:360
 #: modules/process/wpour_mark.c:382 modules/tools/spotremove.c:322
-#: modules/tools/stats.c:386
+#: modules/tools/stats.c:390
 msgid "Options"
 msgstr "Параметры"
 
@@ -3533,7 +3535,8 @@ msgid "Unsupported sample format"
 msgstr "Неподдерживаемый формат отсчёта"
 
 #: modules/file/gwytiff.h:1030 modules/file/matfile.c:276
-#: modules/file/matfile.c:298 modules/file/psia.c:353 modules/file/zemax.c:168
+#: modules/file/matfile.c:298 modules/file/omicronflat2.c:1612
+#: modules/file/psia.c:353 modules/file/zemax.c:168
 msgid "File is truncated."
 msgstr "Файл усечен."
 
@@ -3631,11 +3634,11 @@ msgstr "Масштаб _Z:"
 msgid "Representable"
 msgstr "Представление"
 
-#: modules/file/hdrimage.cc:480 modules/tools/stats.c:330
+#: modules/file/hdrimage.cc:480 modules/tools/stats.c:334
 msgid "Minimum:"
 msgstr "Минимум:"
 
-#: modules/file/hdrimage.cc:496 modules/tools/stats.c:331
+#: modules/file/hdrimage.cc:496 modules/tools/stats.c:335
 msgid "Maximum:"
 msgstr "Максимум:"
 
@@ -4056,7 +4059,7 @@ msgstr "Изображение"
 #: modules/process/polydistort.c:267 modules/process/rotate.c:295
 #: modules/process/scale.c:252 modules/process/unrotate.c:285
 #: modules/tools/linestats.c:411 modules/tools/profile.c:481
-#: modules/tools/roughness.c:882 modules/tools/sfunctions.c:446
+#: modules/tools/roughness.c:882 modules/tools/sfunctions.c:448
 msgid "_Interpolation type:"
 msgstr "Тип _интерполяции:"
 
@@ -4105,17 +4108,17 @@ msgid "Lateral"
 msgstr "Горизонтальные"
 
 #: modules/file/imgexport.c:4327 modules/file/rawfile.c:1006
-#: modules/process/calcoefs_load.c:217 modules/process/neural.c:708
+#: modules/process/calcoefs_load.c:217 modules/process/neural.c:709
 msgid "verb|_Load"
 msgstr "_Загрузить"
 
 #: modules/file/imgexport.c:4333 modules/file/rawfile.c:1012
-#: modules/process/neural.c:714
+#: modules/process/neural.c:715
 msgid "verb|_Store"
 msgstr "Со_хранить"
 
 #: modules/file/imgexport.c:4339 modules/file/rawfile.c:1018
-#: modules/process/neural.c:720
+#: modules/process/neural.c:721
 msgid "_Rename"
 msgstr "_Переименовать"
 
@@ -4517,7 +4520,7 @@ msgstr "Заголовок файла усечён"
 msgid "Parameter header is truncated"
 msgstr "Заголовок параметров усечён"
 
-#: modules/file/nanoeducator.c:932 modules/process/curvature.c:459
+#: modules/file/nanoeducator.c:932 modules/process/curvature.c:460
 #: modules/tools/profile.c:855
 #, c-format
 msgid "Profile %d"
@@ -4955,11 +4958,11 @@ msgstr "Строка заголовка начинается с двоеточи
 msgid "Channel information ended unexpectedly."
 msgstr "Информация о канале неожиданно закончилась."
 
-#: modules/file/omicronflat.c:135
+#: modules/file/omicronflat.c:135 modules/file/omicronflat2.c:344
 msgid "Imports Omicron flat files."
 msgstr "Импортирует плоские файлы Omicron"
 
-#: modules/file/omicronflat.c:148
+#: modules/file/omicronflat.c:148 modules/file/omicronflat2.c:357
 msgid "Omicron flat files (*.*_flat)"
 msgstr "Плоские файлы Omicron (*.*_flat)"
 
@@ -4974,6 +4977,25 @@ msgstr "Меняющийся во времени сигнал не поддер�
 #: modules/file/omicronflat.c:1553
 msgid "Atom manipulation is not supported."
 msgstr "Операции с атомами не поддерживаются."
+
+#: modules/file/omicronflat2.c:1346 modules/file/omicronflat2.c:1388
+msgid "File name does not have the expected form for Omicron Flat files."
+msgstr "Имя файла не соответствует ожидаемому для файлов Omicron Flat."
+
+#: modules/file/omicronflat2.c:1796
+msgid "Cannot understand the axis hierarchy."
+msgstr "Не удаётся понять иерархию осей."
+
+#: modules/file/omicronflat2.c:2169
+#, c-format
+msgid "Cannot convert string from UTF-16: %s"
+msgstr "Не получается сконвертировать строку из UTF-16: %s"
+
+#. TRANSLATORS: %s is replaced with an expression of the data shape.
+#: modules/file/omicronflat2.c:2205
+#, c-format
+msgid "Cannot figure out how to load data in the following form: %s."
+msgstr "Нельзя определить как загрузить данные в следующем виде: %s."
 
 #: modules/file/omicronmatrix.c:196
 msgid "Omicron MATRIX (param.mtrx & data.mtrx)"
@@ -5291,10 +5313,10 @@ msgstr "Формат данных"
 #: modules/process/grain_edge.c:215 modules/process/grain_filter.c:326
 #: modules/process/grain_mark.c:261 modules/process/grain_wshed.c:180
 #: modules/process/mark_with.c:210 modules/process/polydistort.c:213
-#: modules/process/scars.c:474 modules/process/slope_dist.c:278
-#: modules/process/synth.h:508 modules/process/tip_model.c:165
+#: modules/process/scars.c:474 modules/process/slope_dist.c:279
+#: modules/process/synth.h:509 modules/process/tip_model.c:165
 #: modules/process/wpour_mark.c:291 modules/tools/linestats.c:452
-#: modules/tools/sfunctions.c:512 modules/tools/stats.c:443
+#: modules/tools/sfunctions.c:514 modules/tools/stats.c:447
 #: modules/volume/volume_extract.c:328
 msgid "_Update"
 msgstr "О_бновить"
@@ -5455,7 +5477,7 @@ msgstr ""
 "<b>Разбор закончился неудачно</b>\n"
 "Содержимое `%s' не соответствует формату: %s."
 
-#: modules/file/rawfile.c:1616 modules/process/neural.c:1603
+#: modules/file/rawfile.c:1616 modules/process/neural.c:1604
 #, c-format
 msgid "The name `%s' is invalid."
 msgstr "Имя `%s' неверно."
@@ -6200,11 +6222,11 @@ msgstr "Единицы горизонтальных размеров:"
 msgid "Export XYZ"
 msgstr "Экспорт XYZ"
 
-#: modules/file/xyzexport.c:320 modules/process/curvature.c:728
-#: modules/process/facet-level.c:205 modules/process/level.c:276
-#: modules/process/linecorrect.c:295 modules/process/neural.c:608
-#: modules/process/polylevel.c:504 modules/process/slope_dist.c:434
-#: modules/tools/sfunctions.c:494 modules/tools/stats.c:373
+#: modules/file/xyzexport.c:320 modules/process/curvature.c:729
+#: modules/process/facet-level.c:206 modules/process/level.c:277
+#: modules/process/linematch.c:853 modules/process/neural.c:609
+#: modules/process/polylevel.c:505 modules/process/slope_dist.c:435
+#: modules/tools/sfunctions.c:496 modules/tools/stats.c:377
 msgid "Masking Mode"
 msgstr "Режим использования маски"
 
@@ -6283,7 +6305,7 @@ msgid "F_unction:"
 msgstr "_Функция:"
 
 #: modules/graph/graph_cd.c:306 modules/graph/graph_fdfit.c:362
-#: modules/graph/graph_fit.c:376 modules/process/curvature.c:769
+#: modules/graph/graph_fit.c:376 modules/process/curvature.c:770
 #: modules/volume/volume_fdfit.c:447
 msgid "Parameter"
 msgstr "Параметр"
@@ -6336,9 +6358,9 @@ msgstr ""
 #: modules/tools/grainmeasure.c:217 modules/tools/readvalue.c:645
 #: modules/tools/readvalue.c:646 modules/tools/readvalue.c:647
 #: modules/tools/readvalue.c:648 modules/tools/roughness.c:992
-#: modules/tools/stats.c:700 modules/tools/stats.c:713
-#: modules/tools/stats.c:714 modules/tools/stats.c:1105
-#: modules/tools/stats.c:1120 modules/tools/stats.c:1122
+#: modules/tools/stats.c:704 modules/tools/stats.c:717
+#: modules/tools/stats.c:718 modules/tools/stats.c:1109
+#: modules/tools/stats.c:1124 modules/tools/stats.c:1126
 #: modules/volume/volume_fdfit.c:1135
 msgid "N.A."
 msgstr "недоступно"
@@ -6759,7 +6781,7 @@ msgstr "Распределение углов"
 msgid "Angle Distribution"
 msgstr "Распределение углов"
 
-#: modules/process/angle_dist.c:188 modules/process/slope_dist.c:389
+#: modules/process/angle_dist.c:188 modules/process/slope_dist.c:390
 msgid "Output _size:"
 msgstr "_Размер результата:"
 
@@ -6767,15 +6789,15 @@ msgstr "_Размер результата:"
 msgid "_Number of steps:"
 msgstr "_Число шагов:"
 
-#: modules/process/angle_dist.c:198 modules/process/slope_dist.c:396
+#: modules/process/angle_dist.c:198 modules/process/slope_dist.c:397
 msgid "_Logarithmic value scale"
 msgstr "_Логарифмическая шкала"
 
-#: modules/process/angle_dist.c:204 modules/process/slope_dist.c:406
+#: modules/process/angle_dist.c:204 modules/process/slope_dist.c:407
 msgid "Use local plane _fitting"
 msgstr "Использовать _аппроксимацию локальной плоскостью"
 
-#: modules/process/angle_dist.c:213 modules/process/slope_dist.c:417
+#: modules/process/angle_dist.c:213 modules/process/slope_dist.c:418
 msgid "_Plane size:"
 msgstr "Размер _плоскости:"
 
@@ -6959,7 +6981,7 @@ msgstr "Создать поверхность используя баллист�
 #: modules/process/domain_synth.c:763 modules/process/grain_wshed.c:506
 #: modules/process/lat_synth.c:468 modules/process/maskcor.c:331
 #: modules/process/mcrop.c:321 modules/process/merge.c:1078
-#: modules/process/nanoindent_adjust.c:323 modules/process/neural.c:1295
+#: modules/process/nanoindent_adjust.c:323 modules/process/neural.c:1296
 #: modules/process/pid.c:338 modules/process/superresolution.c:416
 #: modules/process/superresolution.c:505 modules/process/tip_blind.c:784
 #: modules/process/tipops.c:319 modules/process/xydenoise.c:217
@@ -7333,7 +7355,7 @@ msgstr "Обрезать до действительных данных"
 #: modules/process/grain_edge.c:287 modules/process/grain_filter.c:375
 #: modules/process/grain_mark.c:378 modules/process/mark_with.c:356
 #: modules/process/polydistort.c:336 modules/process/scars.c:583
-#: modules/process/slope_dist.c:423 modules/process/synth.h:512
+#: modules/process/slope_dist.c:424 modules/process/synth.h:513
 #: modules/volume/volume_extract.c:424 modules/volume/volume_extract.c:504
 msgid "I_nstant updates"
 msgstr "Мгновенное об_новление"
@@ -7632,10 +7654,12 @@ msgid "Preview Options"
 msgstr "Параметры предпросмотра"
 
 #: modules/process/correct_affine.c:378 modules/process/fft_filter_2d.c:569
+#: modules/process/measure_lattice.c:280
 msgid "Display:"
 msgstr "Показать:"
 
-#: modules/process/correct_affine.c:386 modules/tools/grainremover.c:109
+#: modules/process/correct_affine.c:386 modules/process/measure_lattice.c:288
+#: modules/tools/grainremover.c:109
 msgid "_Data"
 msgstr "Да_нные"
 
@@ -7651,7 +7675,7 @@ msgstr "Ис_правленные данные"
 msgid "ACF zoom:"
 msgstr "Увеличение АКФ:"
 
-#: modules/process/correct_affine.c:416
+#: modules/process/correct_affine.c:416 modules/process/measure_lattice.c:315
 msgid "Lattice Vectors"
 msgstr "Векторы решетки"
 
@@ -7692,15 +7716,15 @@ msgstr "Сохранять площадь"
 msgid "Preserve X scale"
 msgstr "Сохранять масштаб X"
 
-#: modules/process/correct_affine.c:639
+#: modules/process/correct_affine.c:639 modules/process/measure_lattice.c:395
 msgid "length"
 msgstr "длина"
 
-#: modules/process/correct_affine.c:646
+#: modules/process/correct_affine.c:646 modules/process/measure_lattice.c:402
 msgid "angle"
 msgstr "угол"
 
-#: modules/process/correct_affine.c:739
+#: modules/process/correct_affine.c:739 modules/process/measure_lattice.c:472
 msgid "Re_fine"
 msgstr "_Уточнить"
 
@@ -7806,39 +7830,39 @@ msgstr "Различие Y"
 msgid "Absolute difference"
 msgstr "Разница по модулю"
 
-#: modules/process/curvature.c:136
+#: modules/process/curvature.c:137
 msgid "Center value"
 msgstr "Значение центра"
 
-#: modules/process/curvature.c:137
+#: modules/process/curvature.c:138
 msgid "Curvature radius 1"
 msgstr "Радиус кривизны 1"
 
-#: modules/process/curvature.c:138
+#: modules/process/curvature.c:139
 msgid "Curvature radius 2"
 msgstr "Радиус кривизны 2"
 
-#: modules/process/curvature.c:139
+#: modules/process/curvature.c:140
 msgid "Direction 1"
 msgstr "Направление 1"
 
-#: modules/process/curvature.c:140
+#: modules/process/curvature.c:141
 msgid "Direction 2"
 msgstr "Направление 2"
 
-#: modules/process/curvature.c:168
+#: modules/process/curvature.c:169
 msgid "Calculates overall curvature."
 msgstr "Рассчитывает общую кривизну."
 
-#: modules/process/curvature.c:182
+#: modules/process/curvature.c:183
 msgid "/_Level/_Curvature..."
 msgstr "/_Выравнивание/_Кривизна..."
 
-#: modules/process/curvature.c:186
+#: modules/process/curvature.c:187
 msgid "Calculate overall curvature"
 msgstr "Рассчитать общую кривизну"
 
-#: modules/process/curvature.c:216 modules/process/facet-level.c:116
+#: modules/process/curvature.c:217 modules/process/facet-level.c:117
 #: modules/process/semsim.c:164
 #, c-format
 msgid "%s: Lateral dimensions and value must be the same physical quantity."
@@ -7846,57 +7870,57 @@ msgstr ""
 "%s: горизонтальные размеры и значения данных должны быть одной физической "
 "величиной."
 
-#: modules/process/curvature.c:450
+#: modules/process/curvature.c:451
 msgid "Curvature Sections"
 msgstr "Сечения кривизны"
 
-#: modules/process/curvature.c:677
+#: modules/process/curvature.c:678
 msgid "Output Type"
 msgstr "Тип вывода"
 
-#: modules/process/curvature.c:684
+#: modules/process/curvature.c:685
 msgid "_Set selection"
 msgstr "_Установить выделение"
 
-#: modules/process/curvature.c:694
+#: modules/process/curvature.c:695
 msgid "_Plot graph"
 msgstr "Строить _график"
 
-#: modules/process/curvature.c:709 modules/process/drift.c:372
+#: modules/process/curvature.c:710 modules/process/drift.c:372
 #: modules/process/fft_profile.c:331 modules/process/fractal.c:332
-#: modules/process/grain_cross.c:253 modules/process/slope_dist.c:365
+#: modules/process/grain_cross.c:253 modules/process/slope_dist.c:366
 #: modules/tools/linestats.c:429 modules/tools/profile.c:498
-#: modules/tools/roughness.c:890 modules/tools/sfunctions.c:464
+#: modules/tools/roughness.c:890 modules/tools/sfunctions.c:466
 #: modules/tools/spectro.c:382
 msgid "Target _graph:"
 msgstr "Добавить к _графику:"
 
-#: modules/process/curvature.c:715 modules/process/drift.c:378
+#: modules/process/curvature.c:716 modules/process/drift.c:378
 #: modules/process/fft_profile.c:337 modules/process/fractal.c:338
-#: modules/process/grain_cross.c:259 modules/process/slope_dist.c:371
+#: modules/process/grain_cross.c:259 modules/process/slope_dist.c:372
 #: modules/tools/linestats.c:435 modules/tools/profile.c:504
-#: modules/tools/roughness.c:896 modules/tools/sfunctions.c:470
+#: modules/tools/roughness.c:896 modules/tools/sfunctions.c:472
 #: modules/tools/spectro.c:388
 msgid "New graph"
 msgstr "Новый график"
 
-#: modules/process/curvature.c:797 modules/process/grain_stat.c:345
-#: modules/process/polylevel.c:620 modules/tools/distance.c:263
-#: modules/tools/roughness.c:836 modules/tools/stats.c:434
+#: modules/process/curvature.c:798 modules/process/grain_stat.c:345
+#: modules/process/polylevel.c:621 modules/tools/distance.c:263
+#: modules/tools/roughness.c:836 modules/tools/stats.c:438
 msgid "Save table to a file"
 msgstr "Сохранить таблицу в файл"
 
-#: modules/process/curvature.c:802 modules/process/grain_stat.c:350
-#: modules/process/polylevel.c:630 modules/tools/distance.c:268
-#: modules/tools/roughness.c:841 modules/tools/stats.c:439
+#: modules/process/curvature.c:803 modules/process/grain_stat.c:350
+#: modules/process/polylevel.c:631 modules/tools/distance.c:268
+#: modules/tools/roughness.c:841 modules/tools/stats.c:443
 msgid "Copy table to clipboard"
 msgstr "Скопировать таблицу в буфер обмена"
 
-#: modules/process/curvature.c:975
+#: modules/process/curvature.c:976
 msgid "Axes are outside the image."
 msgstr "Оси снаружи изображения."
 
-#: modules/process/curvature.c:1042
+#: modules/process/curvature.c:1043
 msgid "Save Curvature"
 msgstr "Сохранить кривизну"
 
@@ -7966,11 +7990,11 @@ msgstr "По_крытие поверхности:"
 msgid "_Relax steps:"
 msgstr "Шагов р_елаксации:"
 
-#: modules/process/deposit_synth.c:679 modules/process/synth.h:547
+#: modules/process/deposit_synth.c:679 modules/process/synth.h:548
 msgid "R_andom seed:"
 msgstr "На_чальное число:"
 
-#: modules/process/deposit_synth.c:685 modules/process/synth.h:553
+#: modules/process/deposit_synth.c:685 modules/process/synth.h:554
 msgid "seed|_New"
 msgstr "Ново_е"
 
@@ -8141,7 +8165,7 @@ msgid "Output Options"
 msgstr "Параметры вывода"
 
 #: modules/process/domain_synth.c:541 modules/process/fft_filter_2d.c:625
-#: modules/process/mask_edt.c:400 modules/process/slope_dist.c:339
+#: modules/process/mask_edt.c:400 modules/process/slope_dist.c:340
 #: modules/volume/volume_slice.c:339
 msgid "Output type:"
 msgstr "Тип вывода:"
@@ -8185,7 +8209,7 @@ msgid "Plot drift _graph"
 msgstr "Строить _график дрейфа"
 
 #: modules/process/drift.c:391 modules/process/fit_2d.c:317
-#: modules/process/neural.c:563 modules/process/polydistort.c:295
+#: modules/process/neural.c:564 modules/process/polydistort.c:295
 msgid "Preview:"
 msgstr "Предпросмотр:"
 
@@ -8486,7 +8510,7 @@ msgstr "Расширить си_мметрично"
 msgid "Keep lateral offsets"
 msgstr "Сохранять пространственные смещения"
 
-#: modules/process/facet-level.c:63
+#: modules/process/facet-level.c:64
 msgid ""
 "Automatic facet-orientation based levelling. Levels data to make facets "
 "point up."
@@ -8494,19 +8518,19 @@ msgstr ""
 "Автоматическое выравнивание основанное на ориентации граней. Выравнивает "
 "данные заставляя грани смотреть вверх."
 
-#: modules/process/facet-level.c:78
+#: modules/process/facet-level.c:79
 msgid "/_Level/_Facet Level"
 msgstr "/_Выравнивание/Выравнивание _граней"
 
-#: modules/process/facet-level.c:82
+#: modules/process/facet-level.c:83
 msgid "Level data to make facets point upward"
 msgstr "Выровнять данные заставив грани смотреть вверх"
 
-#: modules/process/facet-level.c:118 modules/process/facet-level.c:129
+#: modules/process/facet-level.c:119 modules/process/facet-level.c:130
 msgid "Facet Level"
 msgstr "Выравнивание граней"
 
-#: modules/process/facet-level.c:142 modules/process/flatten_base.c:250
+#: modules/process/facet-level.c:143 modules/process/flatten_base.c:250
 msgid "Facet-leveling..."
 msgstr "Выравнивание граней..."
 
@@ -8729,7 +8753,7 @@ msgstr "Выровнять"
 msgid "1D FFT filter"
 msgstr "одномерный фильтр БПФ"
 
-#: modules/process/fft_filter_1d.c:305
+#: modules/process/fft_filter_1d.c:305 modules/process/linematch.c:827
 msgid "_Direction:"
 msgstr "Н_аправление:"
 
@@ -8762,7 +8786,7 @@ msgid "Filtered Data"
 msgstr "Отфильтрованные данные"
 
 #: modules/process/fft_filter_2d.c:317 modules/process/fit_2d.c:743
-#: modules/process/neural.c:575
+#: modules/process/neural.c:576
 msgid "Difference"
 msgstr "Разница"
 
@@ -8830,7 +8854,7 @@ msgstr "_Заполнить"
 msgid "_Snap to origin"
 msgstr "_Прикрепить к началу координат"
 
-#: modules/process/fft_filter_2d.c:599
+#: modules/process/fft_filter_2d.c:599 modules/process/measure_lattice.c:298
 msgid "Zoom:"
 msgstr "Масштаб:"
 
@@ -8890,7 +8914,7 @@ msgstr "Сечение ФСПМ"
 
 #: modules/process/fft_profile.c:287 modules/process/grain_dist.c:336
 #: modules/tools/linestats.c:386 modules/tools/profile.c:443
-#: modules/tools/sfunctions.c:421
+#: modules/tools/sfunctions.c:423
 msgid "_Fix res.:"
 msgstr "_Фикс. разр.:"
 
@@ -8968,7 +8992,7 @@ msgid "Function type:"
 msgstr "Тип функции:"
 
 #: modules/process/fit_2d.c:344 modules/process/fractal.c:312
-#: modules/process/mark_with.c:256 modules/process/neural.c:574
+#: modules/process/mark_with.c:256 modules/process/neural.c:575
 msgid "Result"
 msgstr "Результат"
 
@@ -9730,164 +9754,164 @@ msgstr ""
 msgid "/Indento_r/_Analyze..."
 msgstr "/Инденто_р/_Анализ..."
 
-#: modules/process/indent_analyze.c:440
+#: modules/process/indent_analyze.c:441
 msgid "Marked _areas:"
 msgstr "Помеченные обл_асти:"
 
-#: modules/process/indent_analyze.c:446
+#: modules/process/indent_analyze.c:447
 msgid "_Indentor type:"
 msgstr "Тип _индентора:"
 
-#: modules/process/indent_analyze.c:452
+#: modules/process/indent_analyze.c:453
 msgid "_Mask creation type:"
 msgstr "Тип создания _маски:"
 
-#: modules/process/indent_analyze.c:457
+#: modules/process/indent_analyze.c:458
 msgid "Ref. plane _tolerance:"
 msgstr "_Допуск базовой плоскости:"
 
-#: modules/process/indent_analyze.c:461
+#: modules/process/indent_analyze.c:462
 msgid "Angle _1 tolerance:"
 msgstr "Допуск угла _1:"
 
-#: modules/process/indent_analyze.c:486
+#: modules/process/indent_analyze.c:487
 msgid "Indent centre at"
 msgstr "Центр отпечатка в"
 
-#: modules/process/indent_analyze.c:489
+#: modules/process/indent_analyze.c:490
 msgid "Maximum at"
 msgstr "Максимум в"
 
-#: modules/process/indent_analyze.c:492
+#: modules/process/indent_analyze.c:493
 msgid "Max-min difference"
 msgstr "Разница max-min"
 
-#: modules/process/indent_analyze.c:498
+#: modules/process/indent_analyze.c:499
 msgid "Expected A<sub>d</sub>:"
 msgstr "Ожидаемое A<sub>d</sub>:"
 
-#: modules/process/indent_analyze.c:506
+#: modules/process/indent_analyze.c:507
 msgid "Expected A<sub>p</sub>:"
 msgstr "Ожидаемое A<sub>p</sub>:"
 
-#: modules/process/indent_analyze.c:550
+#: modules/process/indent_analyze.c:551
 msgid "Volume above-below"
 msgstr "Объём выше-ниже"
 
-#: modules/process/indent_analyze.c:559
+#: modules/process/indent_analyze.c:560
 msgid "Indent. volume"
 msgstr "Объём отпечатка"
 
-#: modules/process/indent_analyze.c:565
+#: modules/process/indent_analyze.c:566
 msgid "Indent. A<sub>d</sub>"
 msgstr "A<sub>d</sub> индент."
 
-#: modules/process/indent_analyze.c:574
+#: modules/process/indent_analyze.c:575
 msgid "Indent. A<sub>p</sub>"
 msgstr "A<sub>p</sub> индент."
 
-#: modules/process/indent_analyze.c:588
+#: modules/process/indent_analyze.c:589
 msgid "Inner Pile-Up A<sub>d</sub>"
 msgstr "A<sub>d</sub> внутр. выдавливания"
 
-#: modules/process/indent_analyze.c:597
+#: modules/process/indent_analyze.c:598
 msgid "Inner Pile-Up A<sub>p</sub>"
 msgstr "A<sub>p</sub> внутр. выдавливания"
 
-#: modules/process/indent_analyze.c:606
+#: modules/process/indent_analyze.c:607
 msgid "Outer Pile-Up A<sub>d</sub>"
 msgstr "A<sub>d</sub> внешнего выдавливания"
 
-#: modules/process/indent_analyze.c:615
+#: modules/process/indent_analyze.c:616
 msgid "Outer Pile-Up A<sub>p</sub>"
 msgstr "A<sub>p</sub> внешнего выдавливания"
 
-#: modules/process/indent_analyze.c:649
+#: modules/process/indent_analyze.c:650
 msgid "Indentation statistics"
 msgstr "Статистика индентации"
 
-#: modules/process/indent_analyze.c:650
+#: modules/process/indent_analyze.c:651
 msgid "_Compute & mark"
 msgstr "_Рассчитать и пометить"
 
-#: modules/process/indent_analyze.c:651
+#: modules/process/indent_analyze.c:652
 msgid "_Save statistics"
 msgstr "_Сохранить статистику"
 
-#: modules/process/indent_analyze.c:1576
+#: modules/process/indent_analyze.c:1577
 msgid "No statistics has been computed yet."
 msgstr "Статистика ещё не рассчитывалась."
 
-#: modules/process/indent_analyze.c:1584
+#: modules/process/indent_analyze.c:1585
 msgid "Save Indentation Statistics"
 msgstr "Сохранить статистику индентации"
 
-#: modules/process/indent_analyze.c:1622
+#: modules/process/indent_analyze.c:1623
 #, c-format
 msgid "Indentor:  %s\n"
 msgstr "Индентор:  %s\n"
 
-#: modules/process/indent_analyze.c:1626
+#: modules/process/indent_analyze.c:1627
 #, c-format
 msgid "Length units: %s\n"
 msgstr "Единицы длины: %s\n"
 
-#: modules/process/indent_analyze.c:1628
+#: modules/process/indent_analyze.c:1629
 #, c-format
 msgid "Indentation centre at [%d, %d] px:      %lf\n"
 msgstr "Центр индентации в [%d, %d] пикс.:      %lf\n"
 
-#: modules/process/indent_analyze.c:1630
+#: modules/process/indent_analyze.c:1631
 #, c-format
 msgid "Maximum at [%d, %d] is:                 %lf\n"
 msgstr "Максимум в [%d, %d] равен:                 %lf\n"
 
-#: modules/process/indent_analyze.c:1632
+#: modules/process/indent_analyze.c:1633
 #, c-format
 msgid "Difference max-min:                     %lf\n"
 msgstr "Разница max-min:                      %lf\n"
 
-#: modules/process/indent_analyze.c:1637
+#: modules/process/indent_analyze.c:1638
 #, c-format
 msgid "Area (projected) above plane:             %g (%.1lf %%)\n"
 msgstr "Площадь (проекции) выше плоскости:             %g (%.1lf %%)\n"
 
-#: modules/process/indent_analyze.c:1641
+#: modules/process/indent_analyze.c:1642
 #, c-format
 msgid "Area (projected) below plane:             %g (%.1lf %%)\n"
 msgstr "Площадь (проекции) ниже плоскости:             %g (%.1lf %%)\n"
 
-#: modules/process/indent_analyze.c:1645
+#: modules/process/indent_analyze.c:1646
 #, c-format
 msgid "Area (projected) of    plane:             %g (%.1lf %%)\n"
 msgstr "Площадь (проекции) плоскости:             %g (%.1lf %%)\n"
 
-#: modules/process/indent_analyze.c:1650
+#: modules/process/indent_analyze.c:1651
 #, c-format
 msgid "Area (developed) above %g (+%.1f %%)\n"
 msgstr "Площадь (развернутая) выше %g (+%.1f %%)\n"
 
-#: modules/process/indent_analyze.c:1653
+#: modules/process/indent_analyze.c:1654
 #, c-format
 msgid "Area (developed) below %g (+%.1lf %%)\n"
 msgstr "Площадь (развернутая) ниже %g (+%.1f %%)\n"
 
-#: modules/process/indent_analyze.c:1657
+#: modules/process/indent_analyze.c:1658
 #, c-format
 msgid "Volume above:     %g\n"
 msgstr "Объём выше:     %g\n"
 
-#: modules/process/indent_analyze.c:1659
+#: modules/process/indent_analyze.c:1660
 #, c-format
 msgid "Volume below:     %g\n"
 msgstr "Объём ниже:     %g\n"
 
-#: modules/process/indent_analyze.c:1661
+#: modules/process/indent_analyze.c:1662
 #, c-format
 msgid "Volume difference %g\n"
 msgstr "Разница объёмов %g\n"
 
-#: modules/process/indent_analyze.c:1665
+#: modules/process/indent_analyze.c:1666
 #, c-format
 msgid ""
 "\n"
@@ -9896,12 +9920,12 @@ msgstr ""
 "\n"
 "Индентация\n"
 
-#: modules/process/indent_analyze.c:1666
+#: modules/process/indent_analyze.c:1667
 #, c-format
 msgid "Volume      %g\n"
 msgstr "Объём      %g\n"
 
-#: modules/process/indent_analyze.c:1671
+#: modules/process/indent_analyze.c:1672
 #, c-format
 msgid ""
 "\n"
@@ -9910,7 +9934,7 @@ msgstr ""
 "\n"
 "Индентация - внутреннее выдавливание\n"
 
-#: modules/process/indent_analyze.c:1677
+#: modules/process/indent_analyze.c:1678
 #, c-format
 msgid "Indentation - Outer Pile-Up\n"
 msgstr "Индентация - внешнее выдавливание\n"
@@ -10073,7 +10097,7 @@ msgstr "_Сила вдоль нормали:"
 msgid "_Adhesion force:"
 msgstr "Сила _адгезии:"
 
-#: modules/process/level.c:79
+#: modules/process/level.c:80
 msgid ""
 "Levels data by simple plane subtraction or by rotation, and fixes minimal or "
 "mean value to zero."
@@ -10081,43 +10105,43 @@ msgstr ""
 "Выравнивает данные простым вычетом плоскости или вращением и устанавливает "
 "минимальное или среднее значение в нуль."
 
-#: modules/process/level.c:94
+#: modules/process/level.c:95
 msgid "/_Level/Plane _Level"
 msgstr "/_Выравнивание/Вычесть _плоскость"
 
-#: modules/process/level.c:98
+#: modules/process/level.c:99
 msgid "Level data by mean plane subtraction"
 msgstr "Выровнять данные вычитанием средней плоскости"
 
-#: modules/process/level.c:101
+#: modules/process/level.c:102
 msgid "/_Level/Level _Rotate"
 msgstr "/_Выравнивание/Выровнять пово_ротом"
 
-#: modules/process/level.c:105
+#: modules/process/level.c:106
 msgid "Automatically level data by plane rotation"
 msgstr "Автоматически выровнять данные поворотом плоскости"
 
-#: modules/process/level.c:108
+#: modules/process/level.c:109
 msgid "/_Level/Fix _Zero"
 msgstr "/_Выравнивание/Исправить _нуль"
 
-#: modules/process/level.c:112
+#: modules/process/level.c:113
 msgid "Shift minimum data value to zero"
 msgstr "Сдвинуть минимальное значение данных в ноль"
 
-#: modules/process/level.c:115
+#: modules/process/level.c:116
 msgid "/_Level/Zero _Mean Value"
 msgstr "/_Выравнивание/Обнулить среднее _значение"
 
-#: modules/process/level.c:119
+#: modules/process/level.c:120
 msgid "Shift mean data value to zero"
 msgstr "Сдвигает среднее значение данных в нуль"
 
-#: modules/process/level.c:127
+#: modules/process/level.c:128
 msgid "Plane Level"
 msgstr "Выровнять по плоскости"
 
-#: modules/process/level.c:133
+#: modules/process/level.c:134
 msgid "Level Rotate"
 msgstr "Выравнивание поворотом"
 
@@ -10142,7 +10166,7 @@ msgstr ""
 "интерполяцию Лапласа"
 
 #: modules/process/level_grains.c:226 modules/process/median-bg.c:165
-#: modules/process/polylevel.c:295 modules/process/polylevel.c:430
+#: modules/process/polylevel.c:296 modules/process/polylevel.c:431
 #: modules/process/sphere-revolve.c:199
 msgid "Background"
 msgstr "Фон"
@@ -10155,60 +10179,60 @@ msgstr "Выровнять зёрна"
 msgid "Quantity to level:"
 msgstr "Величина:"
 
-#: modules/process/level_grains.c:271 modules/process/median-bg.c:216
-#: modules/process/polylevel.c:495 modules/process/sphere-revolve.c:263
+#: modules/process/level_grains.c:271 modules/process/linematch.c:832
+#: modules/process/median-bg.c:216 modules/process/polylevel.c:496
+#: modules/process/sphere-revolve.c:263
 msgid "E_xtract background"
 msgstr "_Извлечь фон"
 
-#: modules/process/linecorrect.c:89
+#: modules/process/linecorrect.c:54
 msgid "Corrects line defects (mostly experimental algorithms)."
 msgstr "Исправление дефектов линий (большая часть алгоритмов экспериментальна)"
 
-#: modules/process/linecorrect.c:103
-msgid "/_Correct Data/M_odus Line Correction"
-msgstr "/Исправить _данные/Коррекция линий по м_оде"
-
-#: modules/process/linecorrect.c:107
-msgid "Correct lines by matching height modus"
-msgstr "Исправить линии выравниванием моды высоты"
-
-#: modules/process/linecorrect.c:110
-msgid "/_Correct Data/M_edian Line Correction"
-msgstr "/Исправить _данные/Коррекция линий по ср_единному"
-
-#: modules/process/linecorrect.c:114
-msgid "Correct lines by matching height median"
-msgstr "Корректировать линии выравниванием срединного значения высоты"
-
-#: modules/process/linecorrect.c:117
-msgid "/_Correct Data/Median Di_fference Line Correction"
-msgstr "/Исправить _данные/Коррекция линий по срединному р_азности"
-
-#: modules/process/linecorrect.c:121
-msgid "Correct lines by zeroing median of differences between neighbor lines"
-msgstr ""
-"Исправляет линии путём обнуления срединного значения разности между "
-"соседними линиями"
-
-#: modules/process/linecorrect.c:125
-msgid "/_Correct Data/Ma_tch Line Correction"
-msgstr "/Исправить _данные/Коррекция _линий подбором"
-
-#: modules/process/linecorrect.c:129
-msgid "Correct lines by matching flat segments"
-msgstr "Исправить линии выравниванием плоских сегментов"
-
-#: modules/process/linecorrect.c:132
+#: modules/process/linecorrect.c:68
 msgid "/_Correct Data/Ste_p Line Correction"
 msgstr "/Исправить _данные/Линейная коррекция _ступенек"
 
-#: modules/process/linecorrect.c:136
+#: modules/process/linecorrect.c:72
 msgid "Correct steps in lines"
 msgstr "Исправить ступеньки в линиях"
 
-#: modules/process/linecorrect.c:204
-msgid "Median Line Correction"
-msgstr "Коррекция линий по срединному"
+#: modules/process/linematch.c:149
+msgid "Align rows by various methods."
+msgstr "Выравнивает строки различными методами."
+
+#: modules/process/linematch.c:163
+msgid "/_Correct Data/_Align rows..."
+msgstr "/Исправить _данные/Выровнять _строки..."
+
+#: modules/process/linematch.c:167
+msgid "Align rows using various methods"
+msgstr "Выровнять строки используя различные методы"
+
+#: modules/process/linematch.c:216 modules/process/linematch.c:227
+#: modules/process/linematch.c:235
+msgid "Row background"
+msgstr "Фон строчек"
+
+#: modules/process/linematch.c:236
+msgid "Vertical position"
+msgstr "Положение по вертикали"
+
+#: modules/process/linematch.c:237
+msgid "Corrected offset"
+msgstr "Исправленное смещение"
+
+#: modules/process/linematch.c:758
+msgid "Align Rows"
+msgstr "Выровнять строки"
+
+#: modules/process/linematch.c:810
+msgid "_Polynomial degree:"
+msgstr "Степень _полинома:"
+
+#: modules/process/linematch.c:842
+msgid "Plot background _graph"
+msgstr "Строить график _фона"
 
 #: modules/process/lno_synth.c:269 modules/process/noise_synth.c:199
 msgid "distribution|Triangular"
@@ -10530,6 +10554,30 @@ msgstr "Взаимно кадрировать"
 msgid "_Select second argument:"
 msgstr "_Второй аргумент:"
 
+#: modules/process/measure_lattice.c:152
+msgid "Measures parameters of two-dimensional lattices."
+msgstr "Измеряет параметры двумерных решеток."
+
+#: modules/process/measure_lattice.c:166
+msgid "/_Statistics/Measure _Lattice..."
+msgstr "/_Статистика/Измерить _решетку..."
+
+#: modules/process/measure_lattice.c:170
+msgid "Measure lattice"
+msgstr "Измерить решетку"
+
+#: modules/process/measure_lattice.c:214
+msgid "Measure Lattice"
+msgstr "Измерить решетку"
+
+#: modules/process/measure_lattice.c:289
+msgid "_ACF"
+msgstr "_ФАК"
+
+#: modules/process/measure_lattice.c:290
+msgid "_PSDF"
+msgstr "_ФСПМ"
+
 #: modules/process/median-bg.c:81
 msgid "Subtracts background using a rank-based algorithm."
 msgstr "Вычитает фон используя алгоритм выстраивания в линию."
@@ -10693,153 +10741,153 @@ msgstr ""
 msgid "Immersed detail data"
 msgstr "Данные встроенного изображения с лучшим разрешением"
 
-#: modules/process/neural.c:214
+#: modules/process/neural.c:215
 msgid "Neural network SPM data processing"
 msgstr "Обработка данных СЗМ на основе нейросетей"
 
-#: modules/process/neural.c:240
+#: modules/process/neural.c:241
 msgid "/M_ultidata/Neural Network _Training..."
 msgstr "/М_ножественные данные/О_бучение Нейросети..."
 
-#: modules/process/neural.c:244
+#: modules/process/neural.c:245
 msgid "Train a neural network for image processing"
 msgstr "Обучить нейросеть для обработки изображений"
 
-#: modules/process/neural.c:248
+#: modules/process/neural.c:249
 msgid "/M_ultidata/Apply _Neural Network..."
 msgstr "/М_ножественные данные/Применить _Нейросеть..."
 
-#: modules/process/neural.c:252
+#: modules/process/neural.c:253
 msgid "Process data using a trained neural network"
 msgstr "Обработка данных используя обученную нейросеть"
 
 #. TRANSLATORS: Unnamed neural network that is/was in training.
-#: modules/process/neural.c:401
+#: modules/process/neural.c:402
 msgid "In training"
 msgstr "Обучается"
 
-#: modules/process/neural.c:485
+#: modules/process/neural.c:486
 msgid "Neural Network Training"
 msgstr "Обучение Нейросети"
 
-#: modules/process/neural.c:509
+#: modules/process/neural.c:510
 msgid "Training error"
 msgstr "Ошибка обучения"
 
-#: modules/process/neural.c:510
+#: modules/process/neural.c:511
 msgid "error"
 msgstr "ошибка"
 
-#: modules/process/neural.c:518
+#: modules/process/neural.c:519
 msgid "NN training error"
 msgstr "Ошибка обучения нейросети"
 
-#: modules/process/neural.c:531
+#: modules/process/neural.c:532
 msgid "Training"
 msgstr "Обучение"
 
-#: modules/process/neural.c:535
+#: modules/process/neural.c:536
 msgid "_Model:"
 msgstr "_Модель:"
 
-#: modules/process/neural.c:545
+#: modules/process/neural.c:546
 msgid "_Signal:"
 msgstr "_Сигнал:"
 
-#: modules/process/neural.c:556
+#: modules/process/neural.c:557
 msgid "Training ste_ps:"
 msgstr "Шагов об_учения:"
 
-#: modules/process/neural.c:572
+#: modules/process/neural.c:573
 msgid "Model"
 msgstr "Модель"
 
-#: modules/process/neural.c:573
+#: modules/process/neural.c:574
 msgid "Signal"
 msgstr "Сигнал"
 
-#: modules/process/neural.c:590
+#: modules/process/neural.c:591
 msgid "verb|_Train"
 msgstr "О_бучение"
 
-#: modules/process/neural.c:595
+#: modules/process/neural.c:596
 msgid "Re_initialize"
 msgstr "Пере_инициализация"
 
-#: modules/process/neural.c:628
+#: modules/process/neural.c:629
 msgid "Network"
 msgstr "Сеть"
 
-#: modules/process/neural.c:634
+#: modules/process/neural.c:635
 msgid "Window _width:"
 msgstr "_Ширина окна:"
 
-#: modules/process/neural.c:642
+#: modules/process/neural.c:643
 msgid "Window h_eight:"
 msgstr "_Высота окна:"
 
-#: modules/process/neural.c:650
+#: modules/process/neural.c:651
 msgid "_Hidden nodes:"
 msgstr "Скр_ытые узлы:"
 
-#: modules/process/neural.c:658
+#: modules/process/neural.c:659
 msgid "Result Units"
 msgstr "Единицы результата"
 
-#: modules/process/neural.c:665
+#: modules/process/neural.c:666
 msgid "Power of source _XY:"
 msgstr "Степень _XY источника:"
 
-#: modules/process/neural.c:673
+#: modules/process/neural.c:674
 msgid "Power of source _Z:"
 msgstr "Степень _Z источника:"
 
-#: modules/process/neural.c:681
+#: modules/process/neural.c:682
 msgid "_Fixed units:"
 msgstr "_Заданные единицы:"
 
-#: modules/process/neural.c:691
+#: modules/process/neural.c:692
 msgid "Networks"
 msgstr "Сети"
 
-#: modules/process/neural.c:738
+#: modules/process/neural.c:739
 msgid "Network _name:"
 msgstr "_Название нейросети:"
 
-#: modules/process/neural.c:790
+#: modules/process/neural.c:791
 msgid "Apply Neural Network"
 msgstr "Применить нейросеть"
 
-#: modules/process/neural.c:813
+#: modules/process/neural.c:814
 msgid "_Scale proportionally to input"
 msgstr "_Масштабировать пропорционально входным данным"
 
-#: modules/process/neural.c:942
+#: modules/process/neural.c:943
 msgid "Model and signal are not compatible."
 msgstr "Модель и сигнал несовместимы."
 
-#: modules/process/neural.c:950
+#: modules/process/neural.c:951
 msgid "A field dimension is too small for chosen window size."
 msgstr "Размер поля слишком мал для выбранного размера окна."
 
-#: modules/process/neural.c:1124
+#: modules/process/neural.c:1125
 msgid "Training..."
 msgstr "Обучение..."
 
-#: modules/process/neural.c:1206 modules/process/neural.c:1372
+#: modules/process/neural.c:1207 modules/process/neural.c:1373
 msgid "Evaluating..."
 msgstr "Расчёт..."
 
-#: modules/process/neural.c:1332
+#: modules/process/neural.c:1333
 msgid "Training was canceled."
 msgstr "Обучение было отменено."
 
-#: modules/process/neural.c:1342
+#: modules/process/neural.c:1343
 #, c-format
 msgid "Mean difference: %.*f %s"
 msgstr "Среднее различие: %.*f %s"
 
-#: modules/process/neural.c:1394
+#: modules/process/neural.c:1395
 msgid "Evaluated signal"
 msgstr "Рассчитанный сигнал"
 
@@ -11138,55 +11186,55 @@ msgstr "Коэффициенты Y"
 msgid "Distorted"
 msgstr "Искривлённый"
 
-#: modules/process/polylevel.c:145
+#: modules/process/polylevel.c:146
 msgid "Subtracts polynomial background."
 msgstr "Вычитает полиномиальный фон."
 
-#: modules/process/polylevel.c:159
+#: modules/process/polylevel.c:160
 msgid "/_Level/_Polynomial Background..."
 msgstr "/_Выравнивание/П_олиномиальный фон..."
 
-#: modules/process/polylevel.c:163
+#: modules/process/polylevel.c:164
 msgid "Remove polynomial background"
 msgstr "Убрать полиномиальный фон"
 
-#: modules/process/polylevel.c:361
+#: modules/process/polylevel.c:362
 msgid "Independent degrees"
 msgstr "Независимые степени"
 
-#: modules/process/polylevel.c:362
+#: modules/process/polylevel.c:363
 msgid "Limited total degree"
 msgstr "Ограниченная общая степень"
 
-#: modules/process/polylevel.c:375
+#: modules/process/polylevel.c:376
 msgid "Remove Polynomial Background"
 msgstr "Убрать полиномиальный фон"
 
-#: modules/process/polylevel.c:425
+#: modules/process/polylevel.c:426
 msgid "Leveled data"
 msgstr "Выровненные данные"
 
-#: modules/process/polylevel.c:455
+#: modules/process/polylevel.c:456
 msgid "_Horizontal polynom degree:"
 msgstr "_Горизонтальная степень полинома:"
 
-#: modules/process/polylevel.c:463
+#: modules/process/polylevel.c:464
 msgid "_Vertical polynom degree:"
 msgstr "_Вертикальная степень полинома:"
 
-#: modules/process/polylevel.c:469
+#: modules/process/polylevel.c:470
 msgid "_Same degrees"
 msgstr "_Одинаковые степени"
 
-#: modules/process/polylevel.c:487
+#: modules/process/polylevel.c:488
 msgid "_Maximum polynom degree:"
 msgstr "_Максимальная степень полинома:"
 
-#: modules/process/polylevel.c:574
+#: modules/process/polylevel.c:575
 msgid "Polynomial Coefficients"
 msgstr "Полиномиальные коэффициенты"
 
-#: modules/process/polylevel.c:947 modules/tools/distance.c:572
+#: modules/process/polylevel.c:948 modules/tools/distance.c:572
 msgid "Save Table"
 msgstr "Сохранение таблицы"
 
@@ -11456,7 +11504,7 @@ msgstr "Затенение"
 msgid "_Mix:"
 msgstr "C_мешать:"
 
-#: modules/process/slope_dist.c:164
+#: modules/process/slope_dist.c:165
 msgid ""
 "Calculates one- or two-dimensional distribution of slopes or graph of their "
 "angular distribution."
@@ -11464,51 +11512,51 @@ msgstr ""
 "Рассчитывает одно- или двумерное распределение наклонов или график их "
 "углового распределения."
 
-#: modules/process/slope_dist.c:179
+#: modules/process/slope_dist.c:180
 msgid "/_Statistics/_Slope Distribution..."
 msgstr "/_Статистика/Распределение _наклонов..."
 
-#: modules/process/slope_dist.c:183
+#: modules/process/slope_dist.c:184
 msgid "Calculate angular slope distribution"
 msgstr "Рассчитать угловое распределение наклонов"
 
-#: modules/process/slope_dist.c:224
+#: modules/process/slope_dist.c:225
 msgid "Slope distribution"
 msgstr "Распределение наклона"
 
-#: modules/process/slope_dist.c:256
+#: modules/process/slope_dist.c:257
 msgid "_Two-dimensional distribution"
 msgstr "_Двумерное распределение"
 
-#: modules/process/slope_dist.c:257
+#: modules/process/slope_dist.c:258
 msgid "Directional (φ) _graph"
 msgstr "_График направлений (φ) "
 
-#: modules/process/slope_dist.c:258
+#: modules/process/slope_dist.c:259
 msgid "_Inclination (θ) graph"
 msgstr "График _наклонов (θ)"
 
-#: modules/process/slope_dist.c:259
+#: modules/process/slope_dist.c:260
 msgid "Inclination (gra_dient) graph"
 msgstr "График наклонов (гра_диент)"
 
-#: modules/process/slope_dist.c:275
+#: modules/process/slope_dist.c:276
 msgid "Slope Distribution"
 msgstr "Распределение наклонов"
 
-#: modules/process/slope_dist.c:772
+#: modules/process/slope_dist.c:773
 msgid "Angular Slope Distribution"
 msgstr "Распределение наклонов по углам"
 
-#: modules/process/slope_dist.c:780 modules/process/tilt.c:178
+#: modules/process/slope_dist.c:781 modules/process/tilt.c:178
 msgid "Slopes"
 msgstr "Наклоны"
 
-#: modules/process/slope_dist.c:841 modules/process/slope_dist.c:910
+#: modules/process/slope_dist.c:842 modules/process/slope_dist.c:911
 msgid "Inclination Distribution"
 msgstr "Распределение наклона"
 
-#: modules/process/slope_dist.c:849 modules/process/slope_dist.c:918
+#: modules/process/slope_dist.c:850 modules/process/slope_dist.c:919
 msgid "Inclinations"
 msgstr "Наклоны"
 
@@ -11524,13 +11572,11 @@ msgstr "/_Выравнивание/Вращение _дуги..."
 msgid "Level data by arc revolution"
 msgstr "Выровнять данные вращением дуги"
 
-#: modules/process/sphere-revolve.c:207 modules/tools/polynom.c:199
-#: modules/tools/sfunctions.c:349
+#: modules/process/sphere-revolve.c:207 modules/tools/sfunctions.c:351
 msgid "_Horizontal direction"
 msgstr "_Горизонтальное направление"
 
-#: modules/process/sphere-revolve.c:208 modules/tools/polynom.c:200
-#: modules/tools/sfunctions.c:350
+#: modules/process/sphere-revolve.c:208 modules/tools/sfunctions.c:352
 msgid "_Vertical direction"
 msgstr "_Вертикальное направление"
 
@@ -11573,39 +11619,39 @@ msgstr "Взаимная корреляция..."
 msgid "Interpolating..."
 msgstr "Интерполируется..."
 
-#: modules/process/synth.h:342
+#: modules/process/synth.h:343
 msgid "Roundness"
 msgstr "Округлость"
 
-#: modules/process/synth.h:350
+#: modules/process/synth.h:351
 msgid "Roundn_ess:"
 msgstr "О_круглость:"
 
-#: modules/process/synth.h:398
+#: modules/process/synth.h:399
 msgid "Orientation"
 msgstr "Ориентация"
 
-#: modules/process/synth.h:407
+#: modules/process/synth.h:408
 msgid "Orien_tation:"
 msgstr "Ор_иентация:"
 
-#: modules/process/synth.h:431
+#: modules/process/synth.h:432
 msgid "Variance:"
 msgstr "Разброс:"
 
-#: modules/process/synth.h:455
+#: modules/process/synth.h:456
 msgid "Deformation"
 msgstr "Деформация"
 
-#: modules/process/synth.h:463
+#: modules/process/synth.h:464
 msgid "_Amplitude:"
 msgstr "_Амплитуда:"
 
-#: modules/process/synth.h:471
+#: modules/process/synth.h:472
 msgid "_Lateral scale:"
 msgstr "_Горизонтальный масштаб:"
 
-#: modules/process/synth.h:565
+#: modules/process/synth.h:566
 msgid "Randomi_ze"
 msgstr "Сделать случа_йным"
 
@@ -11981,7 +12027,7 @@ msgid "Waves"
 msgstr "Волны"
 
 #: modules/process/wave_synth.c:440 modules/tools/linestats.c:331
-#: modules/tools/sfunctions.c:379
+#: modules/tools/sfunctions.c:381
 msgid "_Quantity:"
 msgstr "_Величина:"
 
@@ -12274,7 +12320,7 @@ msgstr "Гауссов"
 msgid "Sharpen"
 msgstr "Сделать резким"
 
-#: modules/tools/filter.c:251 modules/tools/polynom.c:235
+#: modules/tools/filter.c:251
 msgid "_Type:"
 msgstr "_Тип:"
 
@@ -12487,12 +12533,12 @@ msgid "Average:"
 msgstr "Среднее:"
 
 #: modules/tools/linestats.c:357 modules/tools/profile.c:416
-#: modules/tools/sfunctions.c:392 modules/tools/spectro.c:343
+#: modules/tools/sfunctions.c:394 modules/tools/spectro.c:343
 msgid "<b>Options</b>"
 msgstr "<b>Параметры</b>"
 
-#: modules/tools/linestats.c:373 modules/tools/sfunctions.c:408
-#: modules/tools/stats.c:392
+#: modules/tools/linestats.c:373 modules/tools/sfunctions.c:410
+#: modules/tools/stats.c:396
 msgid "_Instant updates"
 msgstr "_Обновлять сразу"
 
@@ -12634,50 +12680,6 @@ msgstr "Выровнять строки используя пересечени�
 #: modules/tools/roughness.c:872
 msgid "_Thickness:"
 msgstr "_Толщина:"
-
-#: modules/tools/polynom.c:94
-msgid ""
-"Polynomial line level tool, fits polynomials to X or Y profiles and "
-"subtracts them."
-msgstr ""
-"Инструмент полиномиального выравнивания линий, подгоняет полиномы к профилям "
-"вдоль оси X или Y и вычитает их."
-
-#: modules/tools/polynom.c:130
-msgid "Polynomial"
-msgstr "Полином"
-
-#: modules/tools/polynom.c:131
-msgid "Level X or Y lines with polynomials"
-msgstr "Выровнять линии по X или по Y с помощью полиномов"
-
-#: modules/tools/polynom.c:193
-msgid "Fit height"
-msgstr "Аппроксимировать высоту"
-
-#: modules/tools/polynom.c:194
-msgid "Fit linear"
-msgstr "Аппроксимировать линейной функцией"
-
-#: modules/tools/polynom.c:195
-msgid "Fit quadratic"
-msgstr "Аппроксимировать квадратичной функцией"
-
-#: modules/tools/polynom.c:196
-msgid "Fit cubic"
-msgstr "Аппроксимировать кривой третьего порядка"
-
-#: modules/tools/polynom.c:225
-msgid "Fiting Mode"
-msgstr "Режим аппроксимации"
-
-#: modules/tools/polynom.c:253
-msgid "_Exclude area if selected"
-msgstr "_Исключить область если включено"
-
-#: modules/tools/polynom.c:262
-msgid "(otherwise it will be used for fitting)"
-msgstr "(иначе она будет использована для аппроксимации)"
 
 #: modules/tools/profile.c:191
 msgid "Profile tool, creates profile graphs from selected lines."
@@ -12938,12 +12940,12 @@ msgstr "Сохранить параметры шероховатости"
 msgid "Roughness Parameters"
 msgstr "Параметры шероховатости"
 
-#: modules/tools/roughness.c:2125 modules/tools/stats.c:1051
+#: modules/tools/roughness.c:2125 modules/tools/stats.c:1055
 #, c-format
 msgid "File:              %s\n"
 msgstr "Файл:              %s\n"
 
-#: modules/tools/roughness.c:2129 modules/tools/stats.c:1055
+#: modules/tools/roughness.c:2129 modules/tools/stats.c:1059
 #, c-format
 msgid "Data channel:      %s\n"
 msgstr "Канал данных:      %s\n"
@@ -13039,7 +13041,7 @@ msgstr "Статистические функции"
 msgid "Calculate 1D statistical functions"
 msgstr "Рассчитать одномерные статистические функции"
 
-#: modules/tools/sfunctions.c:482
+#: modules/tools/sfunctions.c:484
 msgid "_Separate uncertainty"
 msgstr "_Разделить погрешности"
 
@@ -13103,83 +13105,83 @@ msgstr "Не выбраны точки на изображении."
 msgid "No area in the zoom selected."
 msgstr "Не выбрана область на увеличенном изображении."
 
-#: modules/tools/stats.c:186
+#: modules/tools/stats.c:187
 msgid "Statistics tool."
 msgstr "Инструмент статистики."
 
-#: modules/tools/stats.c:223 modules/tools/stats.c:1045
+#: modules/tools/stats.c:224 modules/tools/stats.c:1049
 msgid "Statistical Quantities"
 msgstr "Статистические величины"
 
-#: modules/tools/stats.c:224
+#: modules/tools/stats.c:225
 msgid "Statistical quantities"
 msgstr "Статистические величины"
 
-#: modules/tools/stats.c:329
+#: modules/tools/stats.c:333
 msgid "Average value:"
 msgstr "Среднее значение:"
 
-#: modules/tools/stats.c:332
+#: modules/tools/stats.c:336
 msgid "Median:"
 msgstr "Срединное значение:"
 
-#: modules/tools/stats.c:333
+#: modules/tools/stats.c:337
 msgid "Ra (Sa):"
 msgstr "Ra (Sa):"
 
-#: modules/tools/stats.c:334
+#: modules/tools/stats.c:338
 msgid "Rms (Sq):"
 msgstr "Rms (Sq):"
 
-#: modules/tools/stats.c:335
+#: modules/tools/stats.c:339
 msgid "Rms (grain-wise):"
 msgstr "Ср. квадр. зёрен:"
 
-#: modules/tools/stats.c:336
+#: modules/tools/stats.c:340
 msgid "Skew:"
 msgstr "Асимметрия:"
 
-#: modules/tools/stats.c:337
+#: modules/tools/stats.c:341
 msgid "Kurtosis:"
 msgstr "Эксцесс:"
 
-#: modules/tools/stats.c:338
+#: modules/tools/stats.c:342
 msgid "Surface area:"
 msgstr "Площадь поверхности:"
 
-#: modules/tools/stats.c:339
+#: modules/tools/stats.c:343
 msgid "Projected area:"
 msgstr "Площадь проекции:"
 
-#: modules/tools/stats.c:340
+#: modules/tools/stats.c:344
 msgid "Variation:"
 msgstr "Вариация:"
 
-#: modules/tools/stats.c:341
+#: modules/tools/stats.c:345
 msgid "Entropy:"
 msgstr "Энтропия:"
 
-#: modules/tools/stats.c:342
+#: modules/tools/stats.c:346
 msgid "Inclination θ:"
 msgstr "Наклон θ:"
 
-#: modules/tools/stats.c:343
+#: modules/tools/stats.c:347
 msgid "Inclination φ:"
 msgstr "Наклон φ:"
 
-#: modules/tools/stats.c:981
+#: modules/tools/stats.c:985
 msgid "Save Statistical Quantities"
 msgstr "Сохранять статистические величины"
 
-#: modules/tools/stats.c:1077
+#: modules/tools/stats.c:1081
 msgid "Yes"
 msgstr "Да"
 
-#: modules/tools/stats.c:1077
+#: modules/tools/stats.c:1081
 msgid "No"
 msgstr "Нет"
 
-#: modules/tools/stats.c:1125
+#: modules/tools/stats.c:1129
 #, c-format
 msgid ""
 "Selected area:     %s × %s at (%s, %s) px\n"
@@ -13389,17 +13391,17 @@ msgstr "Сечение по Y при y: %d"
 msgid "Z cross-section at Z = %g %s (#%d)"
 msgstr "Сечение Z на величине Z = %g %s (#%d)"
 
-#: modules/volume/volume_extract.c:748 modules/volume/volume_slice.c:931
+#: modules/volume/volume_extract.c:748 modules/volume/volume_slice.c:944
 #, c-format
 msgid "X graph at y: %d z: %d"
 msgstr "График X при y: %d z: %d"
 
-#: modules/volume/volume_extract.c:751 modules/volume/volume_slice.c:945
+#: modules/volume/volume_extract.c:751 modules/volume/volume_slice.c:958
 #, c-format
 msgid "Y graph at x: %d z: %d"
 msgstr "График Y при x: %d z: %d"
 
-#: modules/volume/volume_extract.c:754 modules/volume/volume_slice.c:917
+#: modules/volume/volume_extract.c:754 modules/volume/volume_slice.c:930
 #, c-format
 msgid "Z graph at x: %d y: %d"
 msgstr "График Z при x: %d y: %d"
@@ -13408,7 +13410,7 @@ msgstr "График Z при x: %d y: %d"
 msgid "w"
 msgstr "w"
 
-#: modules/volume/volume_extract.c:775 modules/volume/volume_slice.c:953
+#: modules/volume/volume_extract.c:775 modules/volume/volume_slice.c:966
 msgid "Brick graph"
 msgstr "График сечения блока"
 
@@ -13584,20 +13586,84 @@ msgstr "Положения"
 msgid "_Z:"
 msgstr "_Z:"
 
-#: modules/volume/volume_slice.c:807
+#: modules/volume/volume_slice.c:820
 #, c-format
 msgid "Z cross-section at Z = %.*f%s%s (#%d)"
 msgstr "сечение Z при Z = %.*f%s%s (#%d)"
 
-#: modules/volume/volume_slice.c:818
+#: modules/volume/volume_slice.c:831
 #, c-format
 msgid "Y cross-section at Y = %.*f%s%s (#%d)"
 msgstr "сечение Y при Y = %.*f%s%s (#%d)"
 
-#: modules/volume/volume_slice.c:829
+#: modules/volume/volume_slice.c:842
 #, c-format
 msgid "X cross-section at X = %.*f%s%s (#%d)"
 msgstr "сечение X при X = %.*f%s%s (#%d)"
+
+#~ msgid "/_Correct Data/M_odus Line Correction"
+#~ msgstr "/Исправить _данные/Коррекция линий по м_оде"
+
+#~ msgid "Correct lines by matching height modus"
+#~ msgstr "Исправить линии выравниванием моды высоты"
+
+#~ msgid "/_Correct Data/M_edian Line Correction"
+#~ msgstr "/Исправить _данные/Коррекция линий по ср_единному"
+
+#~ msgid "Correct lines by matching height median"
+#~ msgstr "Корректировать линии выравниванием срединного значения высоты"
+
+#~ msgid "/_Correct Data/Median Di_fference Line Correction"
+#~ msgstr "/Исправить _данные/Коррекция линий по срединному р_азности"
+
+#~ msgid ""
+#~ "Correct lines by zeroing median of differences between neighbor lines"
+#~ msgstr ""
+#~ "Исправляет линии путём обнуления срединного значения разности между "
+#~ "соседними линиями"
+
+#~ msgid "/_Correct Data/Ma_tch Line Correction"
+#~ msgstr "/Исправить _данные/Коррекция _линий подбором"
+
+#~ msgid "Correct lines by matching flat segments"
+#~ msgstr "Исправить линии выравниванием плоских сегментов"
+
+#~ msgid "Median Line Correction"
+#~ msgstr "Коррекция линий по срединному"
+
+#~ msgid ""
+#~ "Polynomial line level tool, fits polynomials to X or Y profiles and "
+#~ "subtracts them."
+#~ msgstr ""
+#~ "Инструмент полиномиального выравнивания линий, подгоняет полиномы к "
+#~ "профилям вдоль оси X или Y и вычитает их."
+
+#~ msgid "Polynomial"
+#~ msgstr "Полином"
+
+#~ msgid "Level X or Y lines with polynomials"
+#~ msgstr "Выровнять линии по X или по Y с помощью полиномов"
+
+#~ msgid "Fit height"
+#~ msgstr "Аппроксимировать высоту"
+
+#~ msgid "Fit linear"
+#~ msgstr "Аппроксимировать линейной функцией"
+
+#~ msgid "Fit quadratic"
+#~ msgstr "Аппроксимировать квадратичной функцией"
+
+#~ msgid "Fit cubic"
+#~ msgstr "Аппроксимировать кривой третьего порядка"
+
+#~ msgid "Fiting Mode"
+#~ msgstr "Режим аппроксимации"
+
+#~ msgid "_Exclude area if selected"
+#~ msgstr "_Исключить область если включено"
+
+#~ msgid "(otherwise it will be used for fitting)"
+#~ msgstr "(иначе она будет использована для аппроксимации)"
 
 #~ msgid ""
 #~ "Selected area:     %s × %s at (%s, %s) px\n"
