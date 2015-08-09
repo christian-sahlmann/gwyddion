@@ -29,6 +29,8 @@
 #include <libprocess/arithmetic.h>
 #include <libprocess/stats.h>
 #include <libprocess/correct.h>
+#include <libprocess/filters.h>
+#include <libprocess/grains.h>
 #include <libprocess/inttrans.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
@@ -71,6 +73,13 @@ typedef enum {
 } ZoomType;
 
 typedef struct {
+    gdouble max;
+    gdouble x;
+    gdouble y;
+    guint basecount;
+} MaximumInfo;
+
+typedef struct {
     ImageMode image_mode;
     SelectionMode selection_mode;
     ZoomType zoom_acf;
@@ -111,6 +120,9 @@ static void       lat_meas_dialog       (LatMeasArgs *args,
                                          gint id);
 static GtkWidget* make_lattice_table    (LatMeasControls *controls);
 static void       init_selection        (GwySelection *selection,
+                                         GwyDataField *dfield,
+                                         ImageMode mode);
+static gboolean   smart_init_selection  (GwySelection *selection,
                                          GwyDataField *dfield,
                                          ImageMode mode);
 static void       image_mode_changed    (GtkToggleButton *button,
@@ -339,7 +351,13 @@ lat_meas_dialog(LatMeasArgs *args,
     gtk_table_attach(table, label, 0, 5, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    init_selection(controls.selection, dfield, args->image_mode);
+    /* TODO: Remember the choice somewhere?  Allow two different smart-inits
+     * based on whether the user has selected ACF or PSDF? */
+    if (!smart_init_selection(controls.selection,
+                              gwy_container_get_object_by_name(controls.mydata,
+                                                               "/2/data/full"),
+                              args->image_mode))
+        init_selection(controls.selection, dfield, args->image_mode);
 
     gtk_widget_show_all(controls.dialog);
     do {
@@ -495,6 +513,145 @@ init_selection(GwySelection *selection,
 
     n = 4/gwy_selection_get_object_size(selection);
     gwy_selection_set_data(selection, n, xy);
+}
+
+static gint
+compare_maxima(gconstpointer pa, gconstpointer pb)
+{
+    const MaximumInfo *a = (const MaximumInfo*)pa;
+    const MaximumInfo *b = (const MaximumInfo*)pb;
+    gdouble da, db;
+
+    if (a->basecount > b->basecount)
+        return -1;
+    if (a->basecount < b->basecount)
+        return 1;
+
+    if (a->max > b->max)
+        return -1;
+    if (a->max < b->max)
+        return 1;
+
+    da = a->x*a->x + a->y*a->y;
+    db = b->x*b->x + b->y*b->y;
+    if (da < db)
+        return -1;
+    if (da > db)
+        return 1;
+
+    if (a->y < b->y)
+        return -1;
+    if (a->y > b->y)
+        return 1;
+    if (a->x < b->x)
+        return -1;
+    if (a->x > b->x)
+        return 1;
+    return 0;
+}
+
+/* Intended for ACF (or PSDF, but that requires transformation), not the
+ * original data. */
+static gboolean
+smart_init_selection(GwySelection *selection,
+                     GwyDataField *dfield,
+                     ImageMode mode)
+{
+    enum { nquantities = 3 };
+    GwyGrainQuantity quantities[nquantities] = {
+        GWY_GRAIN_VALUE_MAXIMUM,
+        GWY_GRAIN_VALUE_CENTER_X,
+        GWY_GRAIN_VALUE_CENTER_Y,
+    };
+    GwyDataField *smoothed = gwy_data_field_duplicate(dfield);
+    GwyDataField *mask = gwy_data_field_new_alike(dfield, FALSE);
+    gdouble *values[nquantities];
+    MaximumInfo *maxima;
+    gint *grains;
+    guint i, j, k, ngrains;
+    gboolean ok = FALSE;
+    gdouble dh;
+
+    /* Mark local maxima. */
+    gwy_data_field_filter_gaussian(smoothed, 1.2);
+    gwy_data_field_mark_extrema(smoothed, mask, TRUE);
+    grains = g_new0(gint, dfield->xres*dfield->yres);
+    ngrains = gwy_data_field_number_grains(mask, grains);
+    gwy_object_unref(mask);
+
+    /* Find the position and value of each. */
+    for (i = 0; i < nquantities; i++)
+        values[i] = g_new(gdouble, ngrains+1);
+
+    gwy_data_field_grains_get_quantities(smoothed, values,
+                                         quantities, nquantities,
+                                         ngrains, grains);
+    gwy_object_unref(smoothed);
+
+    maxima = g_new(MaximumInfo, ngrains);
+    for (i = 0; i < ngrains; i++) {
+        maxima[i].max = values[0][i+1];
+        maxima[i].x = values[1][i+1];
+        maxima[i].y = values[2][i+1];
+        maxima[i].basecount = 0;
+    }
+    for (i = 0; i < nquantities; i++)
+        g_free(values[i]);
+
+    /* Remove anything too close to the centre. */
+    dh = hypot(gwy_data_field_get_xmeasure(dfield),
+               gwy_data_field_get_ymeasure(dfield));
+    i = 0;
+    while (i < ngrains) {
+        gdouble x = maxima[i].x, y = maxima[i].y;
+        gdouble d = hypot(x, y);
+        if (d < 1.8*dh || y < -1e-9*dh || (y < 1e-9*dh && x < 1e-9*dh)) {
+            GWY_SWAP(MaximumInfo, maxima[i], maxima[ngrains-1]);
+            ngrains--;
+        }
+        else
+            i++;
+    }
+
+    /* Locate the most important maxima. */
+    /* FIXME: Not a good criterion; it tends to choose colinear vectors for
+     * square grids. */
+    qsort(maxima, ngrains, sizeof(MaximumInfo), compare_maxima);
+    ngrains = MIN(ngrains, 12);
+    for (i = 0; i < ngrains; i++) {
+        for (j = i+1; j < ngrains; j++) {
+            gdouble x = maxima[i].x + maxima[j].x;
+            gdouble y = maxima[i].y + maxima[j].y;
+            for (k = 0; k < ngrains; k++) {
+                if (fabs(maxima[k].x - x) < dh && fabs(maxima[k].y - y) < dh) {
+                    maxima[i].basecount++;
+                    maxima[j].basecount++;
+                }
+            }
+        }
+    }
+    qsort(maxima, ngrains, sizeof(MaximumInfo), compare_maxima);
+
+    if (ngrains >= 2 && maxima[1].basecount >= 3) {
+        gdouble xy[4];
+
+        xy[0] = maxima[0].x;
+        xy[1] = maxima[0].y;
+        xy[2] = maxima[1].x;
+        xy[3] = maxima[1].y;
+        g_printerr("(%g, %g) %u\n", maxima[0].x, maxima[0].y, maxima[0].basecount);
+        g_printerr("(%g, %g) %u\n", maxima[1].x, maxima[1].y, maxima[0].basecount);
+        if (mode == IMAGE_PSDF)
+            transform_selection(xy);
+
+        k = 4/gwy_selection_get_object_size(selection);
+        gwy_selection_set_data(selection, k, xy);
+        ok = TRUE;
+    }
+
+    g_free(maxima);
+
+    return ok;
 }
 
 static void
