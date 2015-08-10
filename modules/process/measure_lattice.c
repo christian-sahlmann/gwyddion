@@ -129,6 +129,12 @@ static void       lat_meas_dialog       (LatMeasArgs *args,
                                          GwyDataField *dfield,
                                          gint id);
 static GtkWidget* make_lattice_table    (LatMeasControls *controls);
+static GtkWidget* add_aux_button        (GtkWidget *hbox,
+                                         const gchar *stock_id,
+                                         const gchar *tooltip);
+static void       lat_meas_copy         (LatMeasControls *controls);
+static void       lat_meas_save         (LatMeasControls *controls);
+static gchar*     format_report         (LatMeasControls *controls);
 static void       do_estimate           (LatMeasControls *controls);
 static void       init_selection        (LatMeasControls *controls);
 static gboolean   smart_init_selection  (LatMeasControls *controls);
@@ -227,7 +233,7 @@ lat_meas_dialog(LatMeasArgs *args,
                 GwyDataField *dfield,
                 gint id)
 {
-    GtkWidget *hbox, *hbox2, *label, *lattable, *alignment;
+    GtkWidget *hbox, *hbox2, *label, *lattable, *alignment, *button;
     GtkDialog *dialog;
     GtkTable *table;
     GSList *l;
@@ -322,7 +328,7 @@ lat_meas_dialog(LatMeasArgs *args,
 
     label = gtk_label_new(_("Display:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 0, 5, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, label, 0, 4, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     controls.image_mode
@@ -357,8 +363,24 @@ lat_meas_dialog(LatMeasArgs *args,
     row++;
 
     gtk_table_set_row_spacing(table, row-1, 8);
+    label = gtk_label_new(_("Show lattice as:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 4, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls.selection_mode
+        = gwy_radio_buttons_createl(G_CALLBACK(selection_mode_changed),
+                                    &controls,
+                                    args->selection_mode,
+                                    _("_Lattice"), SELECTION_LATTICE,
+                                    _("_Vectors"), SELECTION_POINT,
+                                    NULL);
+    row = gwy_radio_buttons_attach_to_table(controls.selection_mode,
+                                            table, 4, row);
+
+    gtk_table_set_row_spacing(table, row-1, 8);
     label = gwy_label_new_header(_("Lattice Vectors"));
-    gtk_table_attach(table, label, 0, 5, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, label, 0, 4, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     controls.vf
@@ -375,28 +397,19 @@ lat_meas_dialog(LatMeasArgs *args,
 
     lattable = make_lattice_table(&controls);
     gtk_table_attach(table, lattable,
-                     0, 5, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    gtk_table_set_row_spacing(table, row, 8);
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    label = gwy_label_new_header(_("Options"));
-    gtk_table_attach(table, label, 0, 5, row, row+1, GTK_FILL, 0, 0, 0);
-    row++;
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_table_attach(table, hbox, 0, 4, row, row+1, GTK_FILL, 0, 0, 0);
 
-    label = gtk_label_new(_("Show lattice as:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 0, 5, row, row+1, GTK_FILL, 0, 0, 0);
-    row++;
+    button = add_aux_button(hbox, GTK_STOCK_SAVE, _("Save table to a file"));
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(lat_meas_save), &controls);
 
-    controls.selection_mode
-        = gwy_radio_buttons_createl(G_CALLBACK(selection_mode_changed),
-                                    &controls,
-                                    args->selection_mode,
-                                    _("_Lattice"), SELECTION_LATTICE,
-                                    _("_Vectors"), SELECTION_POINT,
-                                    NULL);
-    row = gwy_radio_buttons_attach_to_table(controls.selection_mode,
-                                            table, 4, row);
+    button = add_aux_button(hbox, GTK_STOCK_COPY, _("Copy table to clipboard"));
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(lat_meas_copy), &controls);
 
     /* Restore lattice from data if any is present. */
     g_snprintf(selkey, sizeof(selkey), "/%d/select/lattice", id);
@@ -563,6 +576,135 @@ make_lattice_table(LatMeasControls *controls)
     g_string_free(str, TRUE);
 
     return table;
+}
+
+static GtkWidget*
+add_aux_button(GtkWidget *hbox,
+               const gchar *stock_id,
+               const gchar *tooltip)
+{
+    GtkTooltips *tips;
+    GtkWidget *button;
+
+    tips = gwy_app_get_tooltips();
+    button = gtk_button_new();
+    gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
+    gtk_tooltips_set_tip(tips, button, tooltip, NULL);
+    gtk_container_add(GTK_CONTAINER(button),
+                      gtk_image_new_from_stock(stock_id,
+                                               GTK_ICON_SIZE_SMALL_TOOLBAR));
+    gtk_box_pack_end(GTK_BOX(hbox), button, FALSE, FALSE, 0);
+
+    return button;
+}
+
+static void
+lat_meas_save(LatMeasControls *controls)
+{
+    gchar *text = format_report(controls);
+
+    gwy_save_auxiliary_data(_("Save Lattice Parameters"),
+                            GTK_WINDOW(controls->dialog),
+                            -1, text);
+    g_free(text);
+}
+
+static void
+lat_meas_copy(LatMeasControls *controls)
+{
+    GtkClipboard *clipboard;
+    GdkDisplay *display;
+    gchar *text = format_report(controls);
+
+    display = gtk_widget_get_display(controls->dialog);
+    clipboard = gtk_clipboard_get_for_display(display, GDK_SELECTION_CLIPBOARD);
+    gtk_clipboard_set_text(clipboard, text, -1);
+    g_free(text);
+}
+
+static gchar*
+format_report(LatMeasControls *controls)
+{
+    GPtrArray *report = g_ptr_array_new();
+    GString *str = g_string_new(NULL);
+    GwyDataField *dfield;
+    GwySIValueFormat *vf, *vfphi;
+    gdouble xy[4];
+    gdouble h, phi;
+    guint i, maxlen;
+
+    get_selection(controls, xy);
+    dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
+    vf = gwy_data_field_get_value_format_xy(dfield, GWY_SI_UNIT_FORMAT_PLAIN,
+                                            NULL);
+    vf->precision += 2;
+    vfphi = controls->vfphi;
+
+    for (i = 0; i < 2; i++) {
+        g_string_printf(str, _("Vector %d:"), i+1);
+        g_ptr_array_add(report, g_strdup(str->str));
+        g_string_printf(str, "(%.*f, %.*f) %s",
+                        vf->precision, xy[2*i + 0]/vf->magnitude,
+                        vf->precision, xy[2*i + 1]/vf->magnitude,
+                        vf->units);
+        g_ptr_array_add(report, g_strdup(str->str));
+
+        h = hypot(xy[2*i + 0], xy[2*i + 1]);
+        g_string_printf(str, _("Length %d:"), i+1);
+        g_ptr_array_add(report, g_strdup(str->str));
+        g_string_printf(str, "%.*f %s",
+                        vf->precision, h/vf->magnitude, vf->units);
+        g_ptr_array_add(report, g_strdup(str->str));
+
+        phi = 180.0/G_PI*atan2(-xy[2*i + 1], xy[2*i + 0]);
+        g_string_printf(str, _("Angle %d:"), i+1);
+        g_ptr_array_add(report, g_strdup(str->str));
+        g_string_printf(str, "%.*f %s",
+                        vfphi->precision, phi/vfphi->magnitude, vfphi->units);
+        g_ptr_array_add(report, g_strdup(str->str));
+
+        g_ptr_array_add(report, NULL);
+        g_ptr_array_add(report, NULL);
+    }
+
+    phi = atan2(-xy[3], xy[2]) - atan2(-xy[1], xy[0]);
+    if (phi < 0.0)
+        phi += 2.0*G_PI;
+    phi *= 180.0/G_PI;
+
+    g_string_assign(str, _("Angle:"));
+    g_ptr_array_add(report, g_strdup(str->str));
+    g_string_printf(str, "%.*f %s",
+                    vfphi->precision, phi/vfphi->magnitude, vfphi->units);
+    g_ptr_array_add(report, g_strdup(str->str));
+
+    gwy_si_unit_value_format_free(vf);
+
+    maxlen = 0;
+    for (i = 0; i < report->len/2; i++) {
+        gchar *key = (gchar*)g_ptr_array_index(report, 2*i);
+        if (key)
+            maxlen = MAX(strlen(key), maxlen);
+    }
+
+    g_string_truncate(str, 0);
+    g_string_append(str, _("Lattice Parameters"));
+    g_string_append(str, "\n\n");
+
+    for (i = 0; i < report->len/2; i++) {
+        gchar *key = (gchar*)g_ptr_array_index(report, 2*i);
+        if (key) {
+            gchar *value = (gchar*)g_ptr_array_index(report, 2*i + 1);
+            g_string_append_printf(str, "%-*s %s\n", maxlen+1, key, value);
+            g_free(value);
+        }
+        else
+            g_string_append_c(str, '\n');
+        g_free(key);
+    }
+    g_ptr_array_free(report, TRUE);
+
+    return g_string_free(str, FALSE);
 }
 
 static void
