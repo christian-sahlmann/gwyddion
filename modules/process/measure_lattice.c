@@ -93,12 +93,13 @@ typedef struct {
     LatMeasArgs *args;
     GtkWidget *dialog;
     GtkWidget *view;
-    GwyVectorLayer *vlayer;
     GwySelection *selection;
+    gulong selection_id;
     GwyContainer *mydata;
     GtkWidget *zoom_label;
     GSList *zoom;
     GSList *image_mode;
+    GSList *selection_mode;
     GwySIValueFormat *vf;
     GwySIValueFormat *vfphi;
     GtkWidget *a1_x;
@@ -130,6 +131,8 @@ static gboolean   smart_init_selection  (GwySelection *selection,
 static void       set_selection         (GwySelection *selection,
                                          gdouble *xy);
 static void       image_mode_changed    (GtkToggleButton *button,
+                                         LatMeasControls *controls);
+static void       selection_mode_changed(GtkToggleButton *button,
                                          LatMeasControls *controls);
 static void       zoom_changed          (GtkRadioButton *button,
                                          LatMeasControls *controls);
@@ -216,7 +219,7 @@ lat_meas_dialog(LatMeasArgs *args,
     GtkTable *table;
     GSList *l;
     LatMeasControls controls;
-    gint response, row;
+    gint response, row, maxobjects;
     GwyPixmapLayer *layer;
     GwyVectorLayer *vlayer;
     GwySelection *selection;
@@ -276,20 +279,29 @@ lat_meas_dialog(LatMeasArgs *args,
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
     gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
 
-    vlayer = g_object_new(g_type_from_name("GwyLayerLattice"),
-                          "selection-key", "/0/select/lattice",
-                          NULL);
-    controls.vlayer = g_object_ref(vlayer);
+    if (args->selection_mode == SELECTION_LATTICE) {
+        vlayer = g_object_new(g_type_from_name("GwyLayerLattice"),
+                              "selection-key", "/0/select/lattice",
+                              NULL);
+        maxobjects = 1;
+    }
+    else {
+        vlayer = g_object_new(g_type_from_name("GwyLayerPoint"),
+                              "selection-key", "/0/select/point",
+                              "draw-as-vector", TRUE,
+                              NULL);
+        maxobjects = 2;
+    }
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.view), vlayer);
     controls.selection = gwy_vector_layer_ensure_selection(vlayer);
-    g_object_ref(controls.selection);
-    gwy_selection_set_max_objects(controls.selection, 1);
-    g_signal_connect_swapped(controls.selection, "changed",
-                             G_CALLBACK(selection_changed), &controls);
+    gwy_selection_set_max_objects(controls.selection, maxobjects);
+    controls.selection_id
+        = g_signal_connect_swapped(controls.selection, "changed",
+                                   G_CALLBACK(selection_changed), &controls);
 
     gtk_container_add(GTK_CONTAINER(alignment), controls.view);
 
-    table = GTK_TABLE(gtk_table_new(6, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(10, 4, FALSE));
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -359,6 +371,21 @@ lat_meas_dialog(LatMeasArgs *args,
     gtk_table_attach(table, label, 0, 5, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
+    label = gtk_label_new(_("Show lattice as:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 5, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls.selection_mode
+        = gwy_radio_buttons_createl(G_CALLBACK(selection_mode_changed),
+                                    &controls,
+                                    args->selection_mode,
+                                    _("_Lattice"), SELECTION_LATTICE,
+                                    _("_Vectors"), SELECTION_POINT,
+                                    NULL);
+    row = gwy_radio_buttons_attach_to_table(controls.selection_mode,
+                                            table, 4, row);
+
     /* Restore lattice from data if any is present. */
     g_snprintf(selkey, sizeof(selkey), "/%d/select/lattice", id);
     if (gwy_container_gis_object_by_name(data, selkey, &selection)) {
@@ -425,6 +452,7 @@ lat_meas_dialog(LatMeasArgs *args,
         g_object_unref(selection);
     }
 
+    g_signal_handler_disconnect(controls.selection, controls.selection_id);
     gtk_widget_destroy(controls.dialog);
 }
 
@@ -733,8 +761,11 @@ set_selection(GwySelection *selection, gdouble *xy)
                     g_type_from_name("GwySelectionLattice")))
         gwy_selection_set_data(selection, 1, xy);
     else if (g_type_is_a(G_OBJECT_TYPE(selection),
-                         g_type_from_name("GwySelectionPoint")))
+                         g_type_from_name("GwySelectionPoint"))) {
+        /* XXX XXX XXX: This is wrong because point selections have origin
+         * not in real coordinates but in top left corner!. */
         gwy_selection_set_data(selection, 2, xy);
+    }
     else {
         g_assert_not_reached();
     }
@@ -812,6 +843,48 @@ image_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
     gtk_widget_set_sensitive(controls->zoom_label, zoom_sens);
     for (l = controls->zoom; l; l = g_slist_next(l))
         gtk_widget_set_sensitive(GTK_WIDGET(l->data), zoom_sens);
+}
+
+static void
+selection_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
+                       LatMeasControls *controls)
+{
+    LatMeasArgs *args = controls->args;
+    GwyVectorLayer *vlayer;
+    SelectionMode mode;
+    guint maxobjects;
+
+    mode = gwy_radio_buttons_get_current(controls->selection_mode);
+    if (mode == args->selection_mode)
+        return;
+
+
+    g_signal_handler_disconnect(controls->selection, controls->selection_id);
+    controls->selection_id = 0;
+    gwy_selection_get_data(controls->selection, controls->xy);
+    args->selection_mode = mode;
+
+    if (mode == SELECTION_LATTICE) {
+        vlayer = g_object_new(g_type_from_name("GwyLayerLattice"),
+                              "selection-key", "/0/select/lattice",
+                              NULL);
+        maxobjects = 1;
+    }
+    else {
+        vlayer = g_object_new(g_type_from_name("GwyLayerPoint"),
+                              "selection-key", "/0/select/point",
+                              "draw-as-vector", TRUE,
+                              NULL);
+        maxobjects = 2;
+    }
+
+    gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
+    controls->selection = gwy_vector_layer_ensure_selection(vlayer);
+    gwy_selection_set_max_objects(controls->selection, maxobjects);
+    set_selection(controls->selection, controls->xy);
+    controls->selection_id
+        = g_signal_connect_swapped(controls->selection, "changed",
+                                   G_CALLBACK(selection_changed), controls);
 }
 
 static void
