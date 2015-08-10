@@ -76,6 +76,7 @@ typedef struct {
     gdouble max;
     gdouble x;
     gdouble y;
+    gdouble q;
     guint basecount;
 } MaximumInfo;
 
@@ -520,25 +521,19 @@ compare_maxima(gconstpointer pa, gconstpointer pb)
 {
     const MaximumInfo *a = (const MaximumInfo*)pa;
     const MaximumInfo *b = (const MaximumInfo*)pb;
-    gdouble da, db;
 
     if (a->basecount > b->basecount)
         return -1;
     if (a->basecount < b->basecount)
         return 1;
 
-    if (a->max > b->max)
+    if (a->q > b->q)
         return -1;
-    if (a->max < b->max)
+    if (a->q < b->q)
         return 1;
 
-    da = a->x*a->x + a->y*a->y;
-    db = b->x*b->x + b->y*b->y;
-    if (da < db)
-        return -1;
-    if (da > db)
-        return 1;
-
+    /* Ensure comparison stability.  This should play no role in significance
+     * sorting. */
     if (a->y < b->y)
         return -1;
     if (a->y > b->y)
@@ -589,18 +584,20 @@ smart_init_selection(GwySelection *selection,
     gwy_object_unref(smoothed);
 
     maxima = g_new(MaximumInfo, ngrains);
+    dh = hypot(gwy_data_field_get_xmeasure(dfield),
+               gwy_data_field_get_ymeasure(dfield));
     for (i = 0; i < ngrains; i++) {
         maxima[i].max = values[0][i+1];
         maxima[i].x = values[1][i+1];
         maxima[i].y = values[2][i+1];
+        maxima[i].q = maxima[i].max/(hypot(maxima[i].x, maxima[i].y) + 5.0*dh);
         maxima[i].basecount = 0;
     }
     for (i = 0; i < nquantities; i++)
         g_free(values[i]);
 
-    /* Remove anything too close to the centre. */
-    dh = hypot(gwy_data_field_get_xmeasure(dfield),
-               gwy_data_field_get_ymeasure(dfield));
+    /* Remove anything too close to the centre, also remove the symmetrical
+     * half. */
     i = 0;
     while (i < ngrains) {
         gdouble x = maxima[i].x, y = maxima[i].y;
@@ -613,11 +610,17 @@ smart_init_selection(GwySelection *selection,
             i++;
     }
 
+    if (ngrains < 10) {
+        gwy_debug("Too few maxima: %d.", ngrains);
+        g_free(maxima);
+        return FALSE;
+    }
+
     /* Locate the most important maxima. */
     /* FIXME: Not a good criterion; it tends to choose colinear vectors for
      * square grids. */
     qsort(maxima, ngrains, sizeof(MaximumInfo), compare_maxima);
-    ngrains = MIN(ngrains, 12);
+    ngrains = MIN(ngrains, 10);
     for (i = 0; i < ngrains; i++) {
         for (j = i+1; j < ngrains; j++) {
             gdouble x = maxima[i].x + maxima[j].x;
@@ -631,22 +634,44 @@ smart_init_selection(GwySelection *selection,
         }
     }
     qsort(maxima, ngrains, sizeof(MaximumInfo), compare_maxima);
+#ifdef DEBUG
+    for (i = 0; i < ngrains; i++) {
+        gwy_debug("[%u] (%g, %g) %g #%u",
+                  i, maxima[i].x, maxima[i].y, maxima[i].max,
+                  maxima[i].basecount);
+    }
+#endif
 
-    if (ngrains >= 2 && maxima[1].basecount >= 3) {
+    if (maxima[1].basecount >= 3) {
         gdouble xy[4];
 
         xy[0] = maxima[0].x;
         xy[1] = maxima[0].y;
-        xy[2] = maxima[1].x;
-        xy[3] = maxima[1].y;
-        g_printerr("(%g, %g) %u\n", maxima[0].x, maxima[0].y, maxima[0].basecount);
-        g_printerr("(%g, %g) %u\n", maxima[1].x, maxima[1].y, maxima[0].basecount);
-        if (mode == IMAGE_PSDF)
-            transform_selection(xy);
+        dh = hypot(xy[0], xy[1]);
+        /* Exclude maxima that appear to be collinear with the first one,
+         * otherwise take the next one with the highest basecount. */
+        for (i = 1; i < ngrains; i++) {
+            for (k = 2; k < 5; k++) {
+                if (fabs(maxima[i].x/k - xy[0]) < 0.2*dh
+                    && fabs(maxima[i].y/k - xy[1]) < 0.2*dh) {
+                    gwy_debug("Excluding #%u for collinearity (%u).", i, k);
+                    break;
+                }
+            }
+            if (k == 5) {
+                xy[2] = maxima[i].x;
+                xy[3] = maxima[i].y;
+                ok = TRUE;
+                break;
+            }
+        }
 
-        k = 4/gwy_selection_get_object_size(selection);
-        gwy_selection_set_data(selection, k, xy);
-        ok = TRUE;
+        if (ok) {
+            if (mode == IMAGE_PSDF)
+                transform_selection(xy);
+            k = 4/gwy_selection_get_object_size(selection);
+            gwy_selection_set_data(selection, k, xy);
+        }
     }
 
     g_free(maxima);
@@ -697,6 +722,14 @@ image_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
                      "range-type-key", "/1/base/range-type",
                      "min-max-key", "/1/base",
                      NULL);
+        if (mode == IMAGE_ACF)
+            gwy_container_set_enum_by_name(controls->mydata,
+                                           "/1/base/range-type",
+                                           GWY_LAYER_BASIC_RANGE_FULL);
+        else
+            gwy_container_set_enum_by_name(controls->mydata,
+                                           "/1/base/range-type",
+                                           GWY_LAYER_BASIC_RANGE_ADAPT);
         zoom_sens = TRUE;
     }
 
@@ -764,8 +797,8 @@ calculate_acf_full(LatMeasControls *controls,
     dfield = gwy_data_field_duplicate(dfield);
     gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
     acf = gwy_data_field_new_alike(dfield, FALSE);
-    acfwidth = MIN(MAX(dfield->xres/4, 64), dfield->xres/2);
-    acfheight = MIN(MAX(dfield->yres/4, 64), dfield->yres/2);
+    acfwidth = MIN(MAX(3*dfield->xres/8, 64), dfield->xres/2);
+    acfheight = MIN(MAX(3*dfield->yres/8, 64), dfield->yres/2);
     gwy_data_field_area_2dacf(dfield, acf, 0, 0, dfield->xres, dfield->yres,
                               acfwidth, acfheight);
     g_object_unref(dfield);
