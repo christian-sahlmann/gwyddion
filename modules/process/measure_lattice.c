@@ -78,6 +78,7 @@ typedef struct {
     gdouble max;
     gdouble x;
     gdouble y;
+    gdouble d;
     gdouble q;
     guint basecount;
 } MaximumInfo;
@@ -776,7 +777,7 @@ smart_init_selection(LatMeasControls *controls)
     gint *grains;
     guint i, j, k, ngrains;
     gboolean ok = FALSE;
-    gdouble dh;
+    gdouble dh, cphi, sphi;
 
     dfield = gwy_container_get_object_by_name(controls->mydata, "/2/data/full");
     smoothed = gwy_data_field_duplicate(dfield);
@@ -805,36 +806,63 @@ smart_init_selection(LatMeasControls *controls)
         maxima[i].max = values[0][i+1];
         maxima[i].x = values[1][i+1];
         maxima[i].y = values[2][i+1];
-        maxima[i].q = maxima[i].max/(hypot(maxima[i].x, maxima[i].y) + 5.0*dh);
+        maxima[i].d = hypot(maxima[i].x, maxima[i].y);
+        maxima[i].q = maxima[i].max/(maxima[i].d + 5.0*dh);
         maxima[i].basecount = 0;
     }
     for (i = 0; i < nquantities; i++)
         g_free(values[i]);
 
-    /* Remove anything too close to the centre, also remove the symmetrical
-     * half. */
-    i = 0;
+    /* Remove the central peak, i.e. anything too close to the centre */
+    i = j = 0;
     while (i < ngrains) {
-        gdouble x = maxima[i].x, y = maxima[i].y;
-        gdouble d = hypot(x, y);
-        if (d < 1.8*dh || y < -1e-9*dh || (y < 1e-9*dh && x < 1e-9*dh)) {
-            GWY_SWAP(MaximumInfo, maxima[i], maxima[ngrains-1]);
-            ngrains--;
-        }
-        else
-            i++;
+        gdouble d = maxima[i].d;
+        maxima[j] = maxima[i];
+        if (d >= 1.8*dh)
+            j++;
+        i++;
     }
+    ngrains = j;
 
     if (ngrains < 10) {
-        gwy_debug("Too few maxima: %d.", ngrains);
+        gwy_debug("Too few maxima (after centre removal): %d.", ngrains);
+        g_free(maxima);
+        return FALSE;
+    }
+
+    qsort(maxima, ngrains, sizeof(MaximumInfo), compare_maxima);
+#ifdef DEBUG
+    for (i = 0; i < ngrains; i++) {
+        gwy_debug("[%u] (%g, %g) %g :: %g",
+                  i, maxima[i].x, maxima[i].y, maxima[i].max, maxima[i].q);
+    }
+#endif
+
+    /* Remove anything with direction opposite to the first vector.  But we
+     * must carefully accept ortohogonal vectors.  This is just a half-plane
+     * selection though it influences the preferred vectors, of course. */
+    gwy_debug("Base-plane selector [%u] (%g, %g) %g",
+              0, maxima[0].x, maxima[0].y, maxima[0].max);
+    cphi = maxima[0].x/maxima[0].d;
+    sphi = maxima[0].y/maxima[0].d;
+    i = j = 1;
+    while (i < ngrains) {
+        gdouble x = cphi*maxima[i].x + sphi*maxima[i].y,
+                y = cphi*maxima[i].y - sphi*maxima[i].x;
+        maxima[j] = maxima[i];
+        if (x > 1e-9*dh || (x > -1e-9*dh && y > 1e-9*dh))
+            j++;
+        i++;
+    }
+    ngrains = j;
+
+    if (ngrains < 10) {
+        gwy_debug("Too few maxima (after half-plane removal): %d.", ngrains);
         g_free(maxima);
         return FALSE;
     }
 
     /* Locate the most important maxima. */
-    /* FIXME: Not a good criterion; it tends to choose colinear vectors for
-     * square grids. */
-    qsort(maxima, ngrains, sizeof(MaximumInfo), compare_maxima);
     ngrains = MIN(ngrains, 12);
     for (i = 0; i < ngrains; i++) {
         for (j = i+1; j < ngrains; j++) {
@@ -862,7 +890,7 @@ smart_init_selection(LatMeasControls *controls)
 
         xy[0] = maxima[0].x;
         xy[1] = maxima[0].y;
-        dh = hypot(xy[0], xy[1]);
+        dh = maxima[0].d;
         /* Exclude maxima that appear to be collinear with the first one,
          * otherwise take the next one with the highest basecount. */
         for (i = 1; i < ngrains; i++) {
