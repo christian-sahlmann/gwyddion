@@ -50,6 +50,8 @@ enum {
 
 enum {
     RESPONSE_RESET = 1,
+    RESPONSE_REFINE = 2,
+    RESPONSE_ESTIMATE = 3,
 };
 
 typedef enum {
@@ -108,7 +110,6 @@ typedef struct {
     GtkWidget *a2_len;
     GtkWidget *a2_phi;
     GtkWidget *phi;
-    GtkWidget *refine;
     gdouble xy[4];
 } LatMeasControls;
 
@@ -126,6 +127,8 @@ static void       init_selection        (GwySelection *selection,
 static gboolean   smart_init_selection  (GwySelection *selection,
                                          GwyDataField *dfield,
                                          ImageMode mode);
+static void       set_selection         (GwySelection *selection,
+                                         gdouble *xy);
 static void       image_mode_changed    (GtkToggleButton *button,
                                          LatMeasControls *controls);
 static void       zoom_changed          (GtkRadioButton *button,
@@ -216,7 +219,10 @@ lat_meas_dialog(LatMeasArgs *args,
     gint response, row;
     GwyPixmapLayer *layer;
     GwyVectorLayer *vlayer;
+    GwySelection *selection;
+    GwyDataField *df;
     GwySIUnit *unitphi;
+    gchar selkey[40];
 
     gwy_clear(&controls, 1);
     controls.args = args;
@@ -225,6 +231,9 @@ lat_meas_dialog(LatMeasArgs *args,
                                                   NULL, 0, NULL);
     dialog = GTK_DIALOG(controls.dialog);
     gtk_dialog_add_button(dialog, _("_Reset"), RESPONSE_RESET);
+    gtk_dialog_add_button(dialog, gwy_sgettext("verb|_Estimate"),
+                          RESPONSE_ESTIMATE);
+    gtk_dialog_add_button(dialog, _("_Refine"), RESPONSE_REFINE);
     gtk_dialog_add_button(dialog, GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_OK);
     gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
@@ -343,8 +352,6 @@ lat_meas_dialog(LatMeasArgs *args,
     lattable = make_lattice_table(&controls);
     gtk_table_attach(table, lattable,
                      0, 5, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    g_signal_connect_swapped(controls.refine, "clicked",
-                             G_CALLBACK(refine), &controls);
     gtk_table_set_row_spacing(table, row, 8);
     row++;
 
@@ -352,13 +359,22 @@ lat_meas_dialog(LatMeasArgs *args,
     gtk_table_attach(table, label, 0, 5, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    /* TODO: Remember the choice somewhere?  Allow two different smart-inits
-     * based on whether the user has selected ACF or PSDF? */
-    if (!smart_init_selection(controls.selection,
-                              gwy_container_get_object_by_name(controls.mydata,
-                                                               "/2/data/full"),
-                              args->image_mode))
-        init_selection(controls.selection, dfield, args->image_mode);
+    /* Restore lattice from data if any is present. */
+    g_snprintf(selkey, sizeof(selkey), "/%d/select/lattice", id);
+    if (gwy_container_gis_object_by_name(data, selkey, &selection)) {
+        if (gwy_selection_get_object(selection, 0, controls.xy)) {
+            if (args->image_mode == IMAGE_PSDF)
+                transform_selection(controls.xy);
+            set_selection(controls.selection, controls.xy);
+        }
+    }
+    else {
+        df = gwy_container_get_object_by_name(controls.mydata, "/2/data/full");
+        if (smart_init_selection(controls.selection, df, args->image_mode))
+            refine(&controls);
+        else
+            init_selection(controls.selection, dfield, args->image_mode);
+    }
 
     gtk_widget_show_all(controls.dialog);
     do {
@@ -375,8 +391,20 @@ lat_meas_dialog(LatMeasArgs *args,
             break;
 
             case RESPONSE_RESET:
-            /* TODO: Replace with intelligent re-init. */
             init_selection(controls.selection, dfield, args->image_mode);
+            break;
+
+            case RESPONSE_ESTIMATE:
+            df = gwy_container_get_object_by_name(controls.mydata,
+                                                  "/2/data/full");
+            if (smart_init_selection(controls.selection, df, args->image_mode))
+                refine(&controls);
+            else
+                init_selection(controls.selection, dfield, args->image_mode);
+            break;
+
+            case RESPONSE_REFINE:
+            refine(&controls);
             break;
 
             default:
@@ -385,13 +413,25 @@ lat_meas_dialog(LatMeasArgs *args,
         }
     } while (response != GTK_RESPONSE_OK);
 
+    if (gwy_selection_is_full(controls.selection)) {
+        selection = g_object_new(g_type_from_name("GwySelectionLattice"),
+                                 "max-objects", 1,
+                                 NULL);
+        gwy_selection_get_data(controls.selection, controls.xy);
+        if (args->image_mode == IMAGE_PSDF)
+            transform_selection(controls.xy);
+        set_selection(selection, controls.xy);
+        gwy_container_set_object_by_name(data, selkey, selection);
+        g_object_unref(selection);
+    }
+
     gtk_widget_destroy(controls.dialog);
 }
 
 static GtkWidget*
 make_lattice_table(LatMeasControls *controls)
 {
-    GtkWidget *table, *label, *button;
+    GtkWidget *table, *label;
     GString *str = g_string_new(NULL);
 
     table = gtk_table_new(4, 5, FALSE);
@@ -490,10 +530,6 @@ make_lattice_table(LatMeasControls *controls)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 4, 5, 3, 4, GTK_FILL, 0, 0, 0);
 
-    controls->refine = button = gtk_button_new_with_mnemonic(_("Re_fine"));
-    gtk_table_attach(GTK_TABLE(table), button,
-                     0, 3, 3, 4, GTK_FILL, 0, 0, 0);
-
     g_string_free(str, TRUE);
 
     return table;
@@ -505,15 +541,13 @@ init_selection(GwySelection *selection,
                ImageMode mode)
 {
     gdouble xy[4] = { 0.0, 0.0, 0.0, 0.0 };
-    guint n;
 
     xy[0] = dfield->xreal/20;
     xy[3] = -dfield->yreal/20;
     if (mode == IMAGE_PSDF)
         transform_selection(xy);
 
-    n = 4/gwy_selection_get_object_size(selection);
-    gwy_selection_set_data(selection, n, xy);
+    set_selection(selection, xy);
 }
 
 static gint
@@ -669,14 +703,27 @@ smart_init_selection(GwySelection *selection,
         if (ok) {
             if (mode == IMAGE_PSDF)
                 transform_selection(xy);
-            k = 4/gwy_selection_get_object_size(selection);
-            gwy_selection_set_data(selection, k, xy);
+            set_selection(selection, xy);
         }
     }
 
     g_free(maxima);
 
     return ok;
+}
+
+static void
+set_selection(GwySelection *selection, gdouble *xy)
+{
+    if (g_type_is_a(G_OBJECT_TYPE(selection),
+                    g_type_from_name("GwySelectionLattice")))
+        gwy_selection_set_data(selection, 1, xy);
+    else if (g_type_is_a(G_OBJECT_TYPE(selection),
+                         g_type_from_name("GwySelectionPoint")))
+        gwy_selection_set_data(selection, 2, xy);
+    else {
+        g_assert_not_reached();
+    }
 }
 
 static void
@@ -738,20 +785,12 @@ image_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
 
         dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
         if (gwy_selection_is_full(controls->selection)) {
-            guint n;
-
             gwy_selection_get_data(controls->selection, controls->xy);
-            if (transform_selection(controls->xy)) {
-                n = 4/gwy_selection_get_object_size(controls->selection);
-                gwy_selection_set_data(controls->selection, n, controls->xy);
-            }
-            else {
-                init_selection(controls->selection, dfield, args->image_mode);
-            }
+            transform_selection(controls->xy);
+            set_selection(controls->selection, controls->xy);
         }
-        else {
+        else
             init_selection(controls->selection, dfield, args->image_mode);
-        }
     }
 
     gwy_set_data_preview_size(dataview, PREVIEW_SIZE);
@@ -900,14 +939,20 @@ refine(LatMeasControls *controls)
 {
     GwyDataField *dfield;
     gint xwinsize, ywinsize;
+    const gchar *key = NULL;
     gdouble xy[4];
 
     if (!gwy_selection_is_full(controls->selection))
         return;
 
     gwy_selection_get_data(controls->selection, xy);
+    if (controls->args->image_mode == IMAGE_PSDF)
+        key = "/3/data/full";
+    else
+        key = "/2/data/full";
+
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
-                                                             "/1/data"));
+                                                             key));
     xwinsize = (gint)(0.32*MAX(fabs(xy[0]), fabs(xy[2]))
                       /gwy_data_field_get_xmeasure(dfield) + 0.5);
     ywinsize = (gint)(0.32*MAX(fabs(xy[1]), fabs(xy[3]))
@@ -924,7 +969,8 @@ refine(LatMeasControls *controls)
     xy[1] = (xy[1] + 0.5)*gwy_data_field_get_ymeasure(dfield) + dfield->yoff;
     xy[2] = (xy[2] + 0.5)*gwy_data_field_get_xmeasure(dfield) + dfield->xoff;
     xy[3] = (xy[3] + 0.5)*gwy_data_field_get_ymeasure(dfield) + dfield->yoff;
-    gwy_selection_set_object(controls->selection, 0, xy);
+
+    set_selection(controls->selection, xy);
 }
 
 static void
