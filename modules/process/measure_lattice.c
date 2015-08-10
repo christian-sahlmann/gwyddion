@@ -556,9 +556,9 @@ compare_maxima(gconstpointer pa, gconstpointer pb)
     const MaximumInfo *a = (const MaximumInfo*)pa;
     const MaximumInfo *b = (const MaximumInfo*)pb;
 
-    if (a->basecount > b->basecount)
+    if (a->basecount*a->q > b->basecount*b->q)
         return -1;
-    if (a->basecount < b->basecount)
+    if (a->basecount*a->q < b->basecount*b->q)
         return 1;
 
     if (a->q > b->q)
@@ -654,7 +654,7 @@ smart_init_selection(GwySelection *selection,
     /* FIXME: Not a good criterion; it tends to choose colinear vectors for
      * square grids. */
     qsort(maxima, ngrains, sizeof(MaximumInfo), compare_maxima);
-    ngrains = MIN(ngrains, 10);
+    ngrains = MIN(ngrains, 12);
     for (i = 0; i < ngrains; i++) {
         for (j = i+1; j < ngrains; j++) {
             gdouble x = maxima[i].x + maxima[j].x;
@@ -701,8 +701,22 @@ smart_init_selection(GwySelection *selection,
         }
 
         if (ok) {
+            gdouble phi;
+
             if (mode == IMAGE_PSDF)
                 transform_selection(xy);
+
+            /* Try to choose some sensible vectors among the equivalent
+             * choices. */
+            for (i = 0; i < 4; i++)
+                xy[i] = -xy[i];
+
+            phi = fmod(atan2(xy[1], xy[0]) + 4.0*G_PI - atan2(xy[3], xy[2]),
+                       2.0*G_PI);
+            if (phi > G_PI) {
+                GWY_SWAP(gdouble, xy[0], xy[2]);
+                GWY_SWAP(gdouble, xy[1], xy[3]);
+            }
             set_selection(selection, xy);
         }
     }
