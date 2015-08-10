@@ -87,12 +87,18 @@ typedef struct {
     SelectionMode selection_mode;
     ZoomType zoom_acf;
     ZoomType zoom_psdf;
+    /* Cache */
+    GType lattice_layer;
+    GType point_layer;
+    GType lattice_selection;
+    GType point_selection;
 } LatMeasArgs;
 
 typedef struct {
     LatMeasArgs *args;
     GtkWidget *dialog;
     GtkWidget *view;
+    GwyVectorLayer *vlayer;
     GwySelection *selection;
     gulong selection_id;
     GwyContainer *mydata;
@@ -111,6 +117,7 @@ typedef struct {
     GtkWidget *a2_len;
     GtkWidget *a2_phi;
     GtkWidget *phi;
+    /* We always keep the direct-space selection here. */
     gdouble xy[4];
 } LatMeasControls;
 
@@ -122,13 +129,12 @@ static void       lat_meas_dialog       (LatMeasArgs *args,
                                          GwyDataField *dfield,
                                          gint id);
 static GtkWidget* make_lattice_table    (LatMeasControls *controls);
-static void       init_selection        (GwySelection *selection,
-                                         GwyDataField *dfield,
-                                         ImageMode mode);
-static gboolean   smart_init_selection  (GwySelection *selection,
-                                         GwyDataField *dfield,
-                                         ImageMode mode);
-static void       set_selection         (GwySelection *selection,
+static void       do_estimate           (LatMeasControls *controls);
+static void       init_selection        (LatMeasControls *controls);
+static gboolean   smart_init_selection  (LatMeasControls *controls);
+static void       set_selection         (LatMeasControls *controls,
+                                         const gdouble *xy);
+static gboolean   get_selection         (LatMeasControls *controls,
                                          gdouble *xy);
 static void       image_mode_changed    (GtkToggleButton *button,
                                          LatMeasControls *controls);
@@ -160,6 +166,8 @@ static void       sanitize_args         (LatMeasArgs *args);
 
 static const LatMeasArgs lat_meas_defaults = {
     IMAGE_DATA, SELECTION_LATTICE, ZOOM_1, ZOOM_1,
+    /* Cache */
+    0, 0, 0, 0,
 };
 
 static GwyModuleInfo module_info = {
@@ -196,9 +204,14 @@ measure_lattice(GwyContainer *data, GwyRunType run)
     gint id;
 
     g_return_if_fail(run & LATMEAS_RUN_MODES);
-    g_return_if_fail(g_type_from_name("GwyLayerPoint"));
-    g_return_if_fail(g_type_from_name("GwyLayerLattice"));
     load_args(gwy_app_settings_get(), &args);
+    args.lattice_layer = g_type_from_name("GwyLayerLattice");
+    args.point_layer = g_type_from_name("GwyLayerPoint");
+    args.lattice_selection = g_type_from_name("GwySelectionLattice");
+    args.point_selection = g_type_from_name("GwySelectionPoint");
+    g_assert(args.lattice_layer);
+    g_assert(args.point_layer);
+
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      0);
@@ -219,16 +232,25 @@ lat_meas_dialog(LatMeasArgs *args,
     GtkTable *table;
     GSList *l;
     LatMeasControls controls;
-    gint response, row, maxobjects;
+    ImageMode image_mode;
+    SelectionMode selection_mode;
+    gint response, row;
     GwyPixmapLayer *layer;
     GwyVectorLayer *vlayer;
     GwySelection *selection;
-    GwyDataField *df;
     GwySIUnit *unitphi;
     gchar selkey[40];
 
     gwy_clear(&controls, 1);
     controls.args = args;
+    controls.vlayer = NULL;
+
+    /* Start with ACF and LATTICE selection because that is nice to initialise.
+     * We switch at the end. */
+    image_mode = args->image_mode;
+    selection_mode = args->selection_mode;
+    args->image_mode = IMAGE_ACF;
+    args->selection_mode = SELECTION_LATTICE;
 
     controls.dialog = gtk_dialog_new_with_buttons(_("Measure Lattice"),
                                                   NULL, 0, NULL);
@@ -270,31 +292,21 @@ lat_meas_dialog(LatMeasArgs *args,
     g_object_unref(controls.mydata);
     layer = gwy_layer_basic_new();
     g_object_set(layer,
-                 "data-key", "/0/data",
                  "gradient-key", "/0/base/palette",
-                 "range-type-key", "/0/base/range-type",
-                 "min-max-key", "/0/base",
+                 "data-key", "/1/data",
+                 "range-type-key", "/1/base/range-type",
+                 "min-max-key", "/1/base",
                  NULL);
     gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
     gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
-
-    if (args->selection_mode == SELECTION_LATTICE) {
-        vlayer = g_object_new(g_type_from_name("GwyLayerLattice"),
-                              "selection-key", "/0/select/lattice",
-                              NULL);
-        maxobjects = 1;
-    }
-    else {
-        vlayer = g_object_new(g_type_from_name("GwyLayerPoint"),
-                              "selection-key", "/0/select/point",
-                              "draw-as-vector", TRUE,
-                              NULL);
-        maxobjects = 2;
-    }
+    /* We know we are starting with Lattice. */
+    vlayer = g_object_new(args->lattice_layer,
+                          "selection-key", "/0/select/lattice",
+                          NULL);
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.view), vlayer);
     controls.selection = gwy_vector_layer_ensure_selection(vlayer);
-    gwy_selection_set_max_objects(controls.selection, maxobjects);
+    gwy_selection_set_max_objects(controls.selection, 1);
     controls.selection_id
         = g_signal_connect_swapped(controls.selection, "changed",
                                    G_CALLBACK(selection_changed), &controls);
@@ -389,19 +401,15 @@ lat_meas_dialog(LatMeasArgs *args,
     /* Restore lattice from data if any is present. */
     g_snprintf(selkey, sizeof(selkey), "/%d/select/lattice", id);
     if (gwy_container_gis_object_by_name(data, selkey, &selection)) {
-        if (gwy_selection_get_object(selection, 0, controls.xy)) {
-            if (args->image_mode == IMAGE_PSDF)
-                transform_selection(controls.xy);
-            set_selection(controls.selection, controls.xy);
-        }
+        if (gwy_selection_get_object(selection, 0, controls.xy))
+            set_selection(&controls, controls.xy);
     }
     else {
-        df = gwy_container_get_object_by_name(controls.mydata, "/2/data/full");
-        if (smart_init_selection(controls.selection, df, args->image_mode))
-            refine(&controls);
-        else
-            init_selection(controls.selection, dfield, args->image_mode);
+        do_estimate(&controls);
     }
+
+    gwy_radio_buttons_set_current(controls.selection_mode, selection_mode);
+    gwy_radio_buttons_set_current(controls.image_mode, image_mode);
 
     gtk_widget_show_all(controls.dialog);
     do {
@@ -418,16 +426,11 @@ lat_meas_dialog(LatMeasArgs *args,
             break;
 
             case RESPONSE_RESET:
-            init_selection(controls.selection, dfield, args->image_mode);
+            init_selection(&controls);
             break;
 
             case RESPONSE_ESTIMATE:
-            df = gwy_container_get_object_by_name(controls.mydata,
-                                                  "/2/data/full");
-            if (smart_init_selection(controls.selection, df, args->image_mode))
-                refine(&controls);
-            else
-                init_selection(controls.selection, dfield, args->image_mode);
+            do_estimate(&controls);
             break;
 
             case RESPONSE_REFINE:
@@ -440,19 +443,18 @@ lat_meas_dialog(LatMeasArgs *args,
         }
     } while (response != GTK_RESPONSE_OK);
 
-    if (gwy_selection_is_full(controls.selection)) {
+    if (get_selection(&controls, controls.xy)) {
         selection = g_object_new(g_type_from_name("GwySelectionLattice"),
                                  "max-objects", 1,
                                  NULL);
-        gwy_selection_get_data(controls.selection, controls.xy);
-        if (args->image_mode == IMAGE_PSDF)
-            transform_selection(controls.xy);
-        set_selection(selection, controls.xy);
+        gwy_selection_set_data(selection, 1, controls.xy);
         gwy_container_set_object_by_name(data, selkey, selection);
         g_object_unref(selection);
     }
 
     g_signal_handler_disconnect(controls.selection, controls.selection_id);
+    if (controls.vlayer)
+        gwy_object_unref(controls.vlayer);
     gtk_widget_destroy(controls.dialog);
 }
 
@@ -564,18 +566,26 @@ make_lattice_table(LatMeasControls *controls)
 }
 
 static void
-init_selection(GwySelection *selection,
-               GwyDataField *dfield,
-               ImageMode mode)
+do_estimate(LatMeasControls *controls)
 {
-    gdouble xy[4] = { 0.0, 0.0, 0.0, 0.0 };
+    if (smart_init_selection(controls)) {
+        refine(controls);
+        return;
+    }
+    init_selection(controls);
+}
 
-    xy[0] = dfield->xreal/20;
-    xy[3] = -dfield->yreal/20;
-    if (mode == IMAGE_PSDF)
-        transform_selection(xy);
+static void
+init_selection(LatMeasControls *controls)
+{
+    GwyDataField *dfield;
 
-    set_selection(selection, xy);
+    dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
+    controls->xy[0] = dfield->xreal/20;
+    controls->xy[1] = 0.0;
+    controls->xy[2] = 0.0;
+    controls->xy[3] = -dfield->yreal/20;
+    set_selection(controls, controls->xy);
 }
 
 static gint
@@ -610,9 +620,7 @@ compare_maxima(gconstpointer pa, gconstpointer pb)
 /* Intended for ACF (or PSDF, but that requires transformation), not the
  * original data. */
 static gboolean
-smart_init_selection(GwySelection *selection,
-                     GwyDataField *dfield,
-                     ImageMode mode)
+smart_init_selection(LatMeasControls *controls)
 {
     enum { nquantities = 3 };
     GwyGrainQuantity quantities[nquantities] = {
@@ -620,8 +628,7 @@ smart_init_selection(GwySelection *selection,
         GWY_GRAIN_VALUE_CENTER_X,
         GWY_GRAIN_VALUE_CENTER_Y,
     };
-    GwyDataField *smoothed = gwy_data_field_duplicate(dfield);
-    GwyDataField *mask = gwy_data_field_new_alike(dfield, FALSE);
+    GwyDataField *dfield, *smoothed, *mask;
     gdouble *values[nquantities];
     MaximumInfo *maxima;
     gint *grains;
@@ -629,8 +636,12 @@ smart_init_selection(GwySelection *selection,
     gboolean ok = FALSE;
     gdouble dh;
 
+    dfield = gwy_container_get_object_by_name(controls->mydata, "/2/data/full");
+    smoothed = gwy_data_field_duplicate(dfield);
+    mask = gwy_data_field_new_alike(dfield, FALSE);
+
     /* Mark local maxima. */
-    gwy_data_field_filter_gaussian(smoothed, 1.2);
+    gwy_data_field_filter_gaussian(smoothed, 0.5);
     gwy_data_field_mark_extrema(smoothed, mask, TRUE);
     grains = g_new0(gint, dfield->xres*dfield->yres);
     ngrains = gwy_data_field_number_grains(mask, grains);
@@ -731,9 +742,6 @@ smart_init_selection(GwySelection *selection,
         if (ok) {
             gdouble phi;
 
-            if (mode == IMAGE_PSDF)
-                transform_selection(xy);
-
             /* Try to choose some sensible vectors among the equivalent
              * choices. */
             for (i = 0; i < 4; i++)
@@ -745,7 +753,7 @@ smart_init_selection(GwySelection *selection,
                 GWY_SWAP(gdouble, xy[0], xy[2]);
                 GWY_SWAP(gdouble, xy[1], xy[3]);
             }
-            set_selection(selection, xy);
+            set_selection(controls, xy);
         }
     }
 
@@ -755,20 +763,79 @@ smart_init_selection(GwySelection *selection,
 }
 
 static void
-set_selection(GwySelection *selection, gdouble *xy)
+set_selection(LatMeasControls *controls, const gdouble *xy)
 {
-    if (g_type_is_a(G_OBJECT_TYPE(selection),
-                    g_type_from_name("GwySelectionLattice")))
-        gwy_selection_set_data(selection, 1, xy);
-    else if (g_type_is_a(G_OBJECT_TYPE(selection),
-                         g_type_from_name("GwySelectionPoint"))) {
-        /* XXX XXX XXX: This is wrong because point selections have origin
-         * not in real coordinates but in top left corner!. */
-        gwy_selection_set_data(selection, 2, xy);
+    LatMeasArgs *args = controls->args;
+    GwySelection *selection = controls->selection;
+    GType stype = G_OBJECT_TYPE(selection);
+    GwyDataField *dfield;
+    gdouble xoff, yoff;
+    gdouble tmpxy[4];
+
+    memcpy(tmpxy, xy, sizeof(tmpxy));
+    if (args->image_mode == IMAGE_PSDF)
+        transform_selection(tmpxy);
+
+    if (g_type_is_a(stype, args->lattice_selection)) {
+        gwy_selection_set_data(selection, 1, tmpxy);
+        return;
     }
-    else {
-        g_assert_not_reached();
+
+    /* This is much more convoluted because point selections have origin of
+     * real coordinates in the top left corner. */
+    g_return_if_fail(g_type_is_a(stype, args->point_selection));
+    if (args->image_mode == IMAGE_DATA)
+        dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
+    else
+        dfield = gwy_container_get_object_by_name(controls->mydata, "/1/data");
+
+    xoff = 0.5*dfield->xreal;
+    yoff = 0.5*dfield->yreal;
+    tmpxy[0] += xoff;
+    tmpxy[1] += yoff;
+    tmpxy[2] += xoff;
+    tmpxy[3] += yoff;
+    gwy_selection_set_data(selection, 2, tmpxy);
+}
+
+static gboolean
+get_selection(LatMeasControls *controls, gdouble *xy)
+{
+    GwySelection *selection = controls->selection;
+    LatMeasArgs *args = controls->args;
+    GType stype = G_OBJECT_TYPE(selection);
+    GwyDataField *dfield;
+    gdouble xoff, yoff;
+
+    if (!gwy_selection_is_full(selection))
+        return FALSE;
+
+    gwy_selection_get_data(selection, xy);
+
+    if (g_type_is_a(stype, args->lattice_selection)) {
+        if (args->image_mode == IMAGE_PSDF)
+            transform_selection(xy);
+        return TRUE;
     }
+
+    /* This is much more convoluted because point selections have origin of
+     * real coordinates in the top left corner. */
+    g_return_val_if_fail(g_type_is_a(stype, args->point_selection), FALSE);
+    if (args->image_mode == IMAGE_DATA)
+        dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
+    else
+        dfield = gwy_container_get_object_by_name(controls->mydata, "/1/data");
+
+    xoff = 0.5*dfield->xreal;
+    yoff = 0.5*dfield->yreal;
+    xy[0] -= xoff;
+    xy[1] -= yoff;
+    xy[2] -= xoff;
+    xy[3] -= yoff;
+    if (args->image_mode == IMAGE_PSDF)
+        transform_selection(xy);
+
+    return TRUE;
 }
 
 static void
@@ -779,14 +846,16 @@ image_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
     GwyDataView *dataview;
     GwyPixmapLayer *layer;
     ImageMode mode;
-    gboolean transform_sel, zoom_sens;
+    gboolean zoom_sens;
+    gdouble xy[4];   /* To survive the nested zoom and whatever changes. */
     GSList *l;
 
     mode = gwy_radio_buttons_get_current(controls->image_mode);
+    gwy_debug("current: %u, new: %u", args->image_mode, mode);
     if (mode == args->image_mode)
         return;
 
-    transform_sel = (mode == IMAGE_PSDF) || (args->image_mode == IMAGE_PSDF);
+    get_selection(controls, xy);
     args->image_mode = mode;
     dataview = GWY_DATA_VIEW(controls->view);
     layer = gwy_data_view_get_base_layer(dataview);
@@ -805,6 +874,11 @@ image_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
                      "min-max-key", "/0/base",
                      NULL);
         zoom_sens = FALSE;
+        if (args->selection_mode == SELECTION_POINT) {
+            controls->vlayer = gwy_data_view_get_top_layer(dataview);
+            g_object_ref(controls->vlayer);
+            gwy_data_view_set_top_layer(dataview, NULL);
+        }
     }
     else {
         /* There are no range-type and min-max keys, which is the point,
@@ -823,19 +897,10 @@ image_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
                                            "/1/base/range-type",
                                            GWY_LAYER_BASIC_RANGE_ADAPT);
         zoom_sens = TRUE;
-    }
-
-    if (transform_sel) {
-        GwyDataField *dfield;
-
-        dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
-        if (gwy_selection_is_full(controls->selection)) {
-            gwy_selection_get_data(controls->selection, controls->xy);
-            transform_selection(controls->xy);
-            set_selection(controls->selection, controls->xy);
+        if (controls->vlayer) {
+            gwy_data_view_set_top_layer(dataview, controls->vlayer);
+            gwy_object_unref(controls->vlayer);
         }
-        else
-            init_selection(controls->selection, dfield, args->image_mode);
     }
 
     gwy_set_data_preview_size(dataview, PREVIEW_SIZE);
@@ -843,6 +908,8 @@ image_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
     gtk_widget_set_sensitive(controls->zoom_label, zoom_sens);
     for (l = controls->zoom; l; l = g_slist_next(l))
         gtk_widget_set_sensitive(GTK_WIDGET(l->data), zoom_sens);
+
+    set_selection(controls, xy);
 }
 
 static void
@@ -850,28 +917,35 @@ selection_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
                        LatMeasControls *controls)
 {
     LatMeasArgs *args = controls->args;
+    GwyDataView *dataview;
     GwyVectorLayer *vlayer;
     SelectionMode mode;
     guint maxobjects;
 
     mode = gwy_radio_buttons_get_current(controls->selection_mode);
+    gwy_debug("current: %u, new: %u", args->selection_mode, mode);
     if (mode == args->selection_mode)
         return;
 
-
+    get_selection(controls, controls->xy);
     g_signal_handler_disconnect(controls->selection, controls->selection_id);
     controls->selection_id = 0;
-    gwy_selection_get_data(controls->selection, controls->xy);
     args->selection_mode = mode;
 
+    dataview = GWY_DATA_VIEW(controls->view);
+    if (controls->vlayer) {
+        gwy_data_view_set_top_layer(dataview, controls->vlayer);
+        gwy_object_unref(controls->vlayer);
+    }
+
     if (mode == SELECTION_LATTICE) {
-        vlayer = g_object_new(g_type_from_name("GwyLayerLattice"),
+        vlayer = g_object_new(args->lattice_layer,
                               "selection-key", "/0/select/lattice",
                               NULL);
         maxobjects = 1;
     }
     else {
-        vlayer = g_object_new(g_type_from_name("GwyLayerPoint"),
+        vlayer = g_object_new(args->point_layer,
                               "selection-key", "/0/select/point",
                               "draw-as-vector", TRUE,
                               NULL);
@@ -881,7 +955,11 @@ selection_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
     controls->selection = gwy_vector_layer_ensure_selection(vlayer);
     gwy_selection_set_max_objects(controls->selection, maxobjects);
-    set_selection(controls->selection, controls->xy);
+    set_selection(controls, controls->xy);
+    if (mode == SELECTION_POINT && args->image_mode == IMAGE_DATA) {
+        controls->vlayer = g_object_ref(vlayer);
+        gwy_data_view_set_top_layer(dataview, NULL);
+    }
     controls->selection_id
         = g_signal_connect_swapped(controls->selection, "changed",
                                    G_CALLBACK(selection_changed), controls);
@@ -894,6 +972,7 @@ zoom_changed(GtkRadioButton *button,
     LatMeasArgs *args = controls->args;
     ZoomType zoom = gwy_radio_buttons_get_current(controls->zoom);
 
+    get_selection(controls, controls->xy);
     if (args->image_mode == IMAGE_ACF) {
         if (button && zoom == args->zoom_acf)
             return;
@@ -911,6 +990,7 @@ zoom_changed(GtkRadioButton *button,
 
     calculate_zoomed_field(controls);
     gwy_set_data_preview_size(GWY_DATA_VIEW(controls->view), PREVIEW_SIZE);
+    set_selection(controls, controls->xy);
 }
 
 static void
@@ -1029,12 +1109,15 @@ refine(LatMeasControls *controls)
     const gchar *key = NULL;
     gdouble xy[4];
 
-    if (!gwy_selection_is_full(controls->selection))
+    if (!get_selection(controls, xy))
         return;
 
-    gwy_selection_get_data(controls->selection, xy);
-    if (controls->args->image_mode == IMAGE_PSDF)
+    if (controls->args->image_mode == IMAGE_PSDF) {
+        /* For refine we need selection coordinates for the visible image
+         * which is PSDF, not the real-space lattice. */
+        transform_selection(xy);
         key = "/3/data/full";
+    }
     else
         key = "/2/data/full";
 
@@ -1057,7 +1140,10 @@ refine(LatMeasControls *controls)
     xy[2] = (xy[2] + 0.5)*gwy_data_field_get_xmeasure(dfield) + dfield->xoff;
     xy[3] = (xy[3] + 0.5)*gwy_data_field_get_ymeasure(dfield) + dfield->yoff;
 
-    set_selection(controls->selection, xy);
+    if (controls->args->image_mode == IMAGE_PSDF)
+        transform_selection(xy);
+
+    set_selection(controls, xy);
 }
 
 static void
@@ -1068,13 +1154,8 @@ selection_changed(LatMeasControls *controls)
     gdouble xy[4];
     GString *str = g_string_new(NULL);
 
-    if (!gwy_selection_is_full(controls->selection))
+    if (!get_selection(controls, xy))
         return;
-
-    gwy_selection_get_data(controls->selection, controls->xy);
-    memcpy(xy, controls->xy, 4*sizeof(gdouble));
-    if (controls->args->image_mode == IMAGE_PSDF)
-        transform_selection(xy);
 
     vf = controls->vf;
     g_string_printf(str, "%.*f", vf->precision, xy[0]/vf->magnitude);
@@ -1268,6 +1349,7 @@ matrix_det(const gdouble *m)
     return m[0]*m[3] - m[1]*m[2];
 }
 
+static const gchar image_mode_key[]     = "/module/measure_lattice/image_mode";
 static const gchar selection_mode_key[] = "/module/measure_lattice/selection_mode";
 static const gchar zoom_acf_key[]       = "/module/measure_lattice/zoom_acf";
 static const gchar zoom_psdf_key[]      = "/module/measure_lattice/zoom_psdf";
@@ -1276,6 +1358,7 @@ static void
 sanitize_args(LatMeasArgs *args)
 {
     args->selection_mode = MIN(args->selection_mode, SELECTION_NMODES-1);
+    args->image_mode = MIN(args->image_mode, IMAGE_NMODES-1);
     if (args->zoom_acf != ZOOM_1
         && args->zoom_acf != ZOOM_4
         && args->zoom_acf != ZOOM_16)
@@ -1291,6 +1374,8 @@ load_args(GwyContainer *container, LatMeasArgs *args)
 {
     *args = lat_meas_defaults;
 
+    gwy_container_gis_enum_by_name(container, image_mode_key,
+                                   &args->image_mode);
     gwy_container_gis_enum_by_name(container, selection_mode_key,
                                    &args->selection_mode);
     gwy_container_gis_enum_by_name(container, zoom_acf_key, &args->zoom_acf);
@@ -1301,6 +1386,8 @@ load_args(GwyContainer *container, LatMeasArgs *args)
 static void
 save_args(GwyContainer *container, LatMeasArgs *args)
 {
+    gwy_container_set_enum_by_name(container, image_mode_key,
+                                   args->image_mode);
     gwy_container_set_enum_by_name(container, selection_mode_key,
                                    args->selection_mode);
     gwy_container_set_enum_by_name(container, zoom_acf_key, args->zoom_acf);
