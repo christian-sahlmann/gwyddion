@@ -710,8 +710,18 @@ static void
 do_estimate(LatMeasControls *controls)
 {
     if (smart_init_selection(controls)) {
+        GwyDataField *dfield;
+        gdouble dh;
+
         refine(controls);
-        return;
+        /* Check if refine() did not produce two of the same vector which can
+         * sometime happen with very skewed patterns. */
+        dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
+        dh = hypot(gwy_data_field_get_xmeasure(dfield),
+                   gwy_data_field_get_ymeasure(dfield));
+        if (hypot(controls->xy[0] - controls->xy[2],
+                  controls->xy[1] - controls->xy[3]) > 1.8*dh)
+            return;
     }
     init_selection(controls);
 }
