@@ -346,7 +346,6 @@ lat_meas_dialog(LatMeasArgs *args,
     gtk_table_attach(GTK_TABLE(table), hbox2, 0, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     label = controls.zoom_label = gtk_label_new(_("Zoom:"));
-    gtk_widget_set_sensitive(label, FALSE);
     gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
 
     controls.zoom
@@ -359,7 +358,6 @@ lat_meas_dialog(LatMeasArgs *args,
     for (l = controls.zoom; l; l = g_slist_next(l)) {
         GtkWidget *widget = GTK_WIDGET(l->data);
         gtk_box_pack_start(GTK_BOX(hbox2), widget, FALSE, FALSE, 0);
-        gtk_widget_set_sensitive(widget, FALSE);
     }
     row++;
 
