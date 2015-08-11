@@ -252,7 +252,7 @@ if test "x$enable_pygwy" != xno; then
   AC_CHECK_LIB($libpython, PyRun_String,
                [PYTHON_LIBS="$PYTHON_LIBDIR_FLAG -l$libpython"],
                [enable_pygwy=no; PYGWY_WARN=" (needs lib$libpython)"],
-               [-L$PYTHON_SYSCFG_LIBDIR $PYTHON_SYSCFG_LDFLAGS $PYTHON_SYSCFG_LINKFORSHARED])
+               ["$PYTHON_LIBDIR_FLAG" $PYTHON_SYSCFG_LDFLAGS $PYTHON_SYSCFG_LINKFORSHARED])
   AC_SUBST(PYTHON_LIBS)
 fi
 
