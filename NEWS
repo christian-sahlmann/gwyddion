@@ -1,5 +1,7 @@
 2.42 (0000-00-00)
 Libraries:
+- libprocess: A function for estimation of the entropy data field values was
+  added.
 - libgwydgets: Gradient visualisation mode uses the same false colour mapping
   as overlay if overlays are set.
 - libgwydgets: 3D view false colour map rendered as a black box when no axes
@@ -10,6 +12,8 @@ Modules:
 - Align rows (new): Row alignment by various methods, including polynomial
   subtraction, with masking support and background extraction.  It replaces
   the various scattered row correction functions.
+- Measure lattice (new): Measures vectors of Bravais lattice using either ACF
+  or PSDF image.
 - Polynom tool: It was removed, use Align rows instead.
 - Line correct: Standard methods were removed (being replaced by Align rows),
   the experimental ones remain in this module.
@@ -26,6 +30,7 @@ Modules:
 
 Other:
 - The code has been made MSVC-compatible.
+- Python linking on OS X is no longer tied to a specific library.
 
 
 2.41 (2015-05-26)
