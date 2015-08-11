@@ -236,6 +236,8 @@ if test "x$enable_pygwy" != xno; then
     GWY_PYTHON_SYSCFG_VAR([CCSHARED],,[enable_pygwy=no])
     GWY_PYTHON_SYSCFG_VAR([LINKFORSHARED],,[enable_pygwy=no])
     GWY_PYTHON_SYSCFG_VAR([LIBDIR],,[enable_pygwy=no])
+    # Construct the option including -L, to avoid passing empty -L.
+    PYTHON_LIBDIR_FLAG="-L$PYTHON_SYSCFG_LIBDIR"
   fi
   if test "x$enable_pygwy" = xno; then
     PYGWY_WARN=" (failed to obtain Python flags)"
@@ -248,7 +250,7 @@ if test "x$enable_pygwy" != xno; then
     libpython=`echo $libpython | sed 's%\\.%%'`
   fi
   AC_CHECK_LIB($libpython, PyRun_String,
-               [PYTHON_LIBS="-L$PYTHON_SYSCFG_LIBDIR -l$libpython"],
+               [PYTHON_LIBS="$PYTHON_LIBDIR_FLAG -l$libpython"],
                [enable_pygwy=no; PYGWY_WARN=" (needs lib$libpython)"],
                [-L$PYTHON_SYSCFG_LIBDIR $PYTHON_SYSCFG_LDFLAGS $PYTHON_SYSCFG_LINKFORSHARED])
   AC_SUBST(PYTHON_LIBS)
