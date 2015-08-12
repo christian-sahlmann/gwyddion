@@ -2367,11 +2367,10 @@ gwy_data_field_area_rpsdf(GwyDataField *data_field,
                           gint nstats)
 {
     GwyDataField *re_field, *im_field;
-    GwyDataLine *weight_line;
     GwySIUnit *xyunit, *zunit, *lineunit;
-    gdouble *re, *im, *target, *weight;
-    gint i, j, k, xres, yres, size;
-    gdouble xreal, yreal, v, r;
+    gdouble *re, *im;
+    gint i, j, k, xres, yres;
+    gdouble xreal, yreal, r;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_LINE(target_line));
@@ -2384,19 +2383,10 @@ gwy_data_field_area_rpsdf(GwyDataField *data_field,
     xreal = data_field->xreal;
     yreal = data_field->yreal;
 
-    size = ceil(hypot(width-1, height-1)/2.0);
-    if (nstats < 0)
-        nstats = size-1;
-    gwy_data_line_resample(target_line, size, GWY_INTERPOLATION_NONE);
-    gwy_data_line_clear(target_line);
-    gwy_data_line_set_offset(target_line, 0.0);
-    gwy_data_line_set_real(target_line, G_PI*hypot(xres/xreal, yres/yreal));
-    weight_line = gwy_data_line_duplicate(target_line);
-
-    re_field = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
-    im_field = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
-    target = target_line->data;
-    weight = weight_line->data;
+    re_field = gwy_data_field_new(width, height,
+                                  width*xreal/xres, height*yreal/yres,
+                                  FALSE);
+    im_field = gwy_data_field_new_alike(re_field, FALSE);
     gwy_data_field_area_2dfft(data_field, NULL, re_field, im_field,
                               col, row, width, height,
                               windowing,
@@ -2407,47 +2397,31 @@ gwy_data_field_area_rpsdf(GwyDataField *data_field,
     im = im_field->data;
     for (i = 0; i < height; i++) {
         for (j = 0; j < width; j++) {
-            guint kk = i*width + j;
-
-            v = re[kk]*re[kk] + im[kk]*im[kk];
-            r = 2*G_PI*hypot(MIN(i, height-i)/yreal,
-                             MIN(j, width-j)/xreal)*size/target_line->real;
-            k = floor(r);
-            if (k+1 >= size)
-                continue;
-            r -= k;
-            if (r <= 0.5)
-                r = 2.0*r*r;
-            else
-                r = 1.0 - 2.0*(1.0 - r)*(1.0 - r);
-
-            target[k] += (1.0 - r)*v;
-            target[k+1] += r*v;
-            weight[k] += 1.0 - r;
-            weight[k+1] += r;
+            k = i*width + j;
+            re[k] = re[k]*re[k] + im[k]*im[k];
         }
     }
-    r = xreal*yreal/(4*G_PI*G_PI*width*height);  /* 2D PSDF */
-    r *= target_line->real/size;  /* target_line discretization */
-    r *= 2*G_PI;  /* Circular normalisation */
-    /* Leave out the zeroth item which is always zero and prevents
-     * logarithmization by moving everything one item to the left */
-    for (i = 0; i < size-1; i++) {
-        if (weight[i+1])
-            target[i] = (i+1)*r*target[i+1]/weight[i+1];
-        else
-            target[i] = 0.0;
-    }
-    target_line->off = target_line->real/size;
-    target_line->real *= (size - 1.0)/size;
-    target_line->res--;
-    gwy_data_line_resample(target_line, nstats, interpolation);
-
-    g_object_unref(re_field);
     g_object_unref(im_field);
-    g_object_unref(weight_line);
 
-    /* Set proper units */
+    gwy_data_field_fft_postprocess(re_field, TRUE);
+    r = 0.5*MAX(re_field->xreal, re_field->yreal);
+    gwy_data_field_angular_average(re_field, target_line,
+                                   NULL, GWY_MASK_IGNORE,
+                                   0.0, 0.0, r, nstats ? nstats+1 : 0);
+    g_object_unref(re_field);
+    /* Get rid of the zero first element which is bad for logscale. */
+    nstats = target_line->res-1;
+    gwy_data_line_resize(target_line, 1, nstats+1);
+    target_line->off += target_line->real/nstats;
+
+    /* Postprocess does not use angular coordinates, fix that. */
+    target_line->real *= 2.0*G_PI;
+    target_line->off *= 2.0*G_PI;
+    r = xreal*yreal/(2.0*G_PI*width*height) * target_line->real/nstats;
+    for (k = 0; k < nstats; k++)
+        target_line->data[k] *= r*(k + 1);
+
+    /* Set proper value units */
     xyunit = gwy_data_field_get_si_unit_xy(data_field);
     zunit = gwy_data_field_get_si_unit_z(data_field);
     lineunit = gwy_data_line_get_si_unit_x(target_line);
