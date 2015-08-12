@@ -5919,6 +5919,199 @@ gwy_data_field_count_minima(GwyDataField *data_field)
     return ngrains;
 }
 
+/**
+ * gwy_data_field_angular_average:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to @nstats size.
+ * @mask: Mask of pixels to include from/exclude in the averaging, or %NULL
+ *        for full @data_field.
+ * @masking: Masking mode to use.  See the introduction for description of
+ *           masking modes.
+ * @x: X-coordinate of the averaging disc origin, in real coordinates
+ *     including offsets.
+ * @x: Y-coordinate of the averaging disc origin, in real coordinates
+ *     including offsets.
+ * @r: Radius, in real coordinates.  It determines the real length of the
+ *     resulting line.
+ * @nstats: The number of samples the resulting line should have.  A
+ *          non-positive value means the sampling will be determined
+ *          automatically.
+ *
+ * Performs angular averaging of a part of a data field.
+ *
+ * The result of such averaging is an radial profile, starting from the disc
+ * centre.
+ *
+ * The function does not guarantee that @target_line will have exactly @nstats
+ * samples upon return.  A cmaller number of samples than requested may be
+ * calculated for instance if either central or outer part of the disc is
+ * excluded by masking.
+ *
+ * Since: 2.42
+ **/
+void
+gwy_data_field_angular_average(GwyDataField *data_field,
+                               GwyDataLine *target_line,
+                               GwyDataField *mask,
+                               GwyMaskingType masking,
+                               gdouble x,
+                               gdouble y,
+                               gdouble r,
+                               gint nstats)
+{
+    gint ifrom, ito, jfrom, jto, i, j, k, kfrom, kto, xres, yres;
+    gdouble xreal, yreal, dx, dy, xoff, yoff, h, rr;
+    const gdouble *d, *m;
+    gdouble *target, *weight;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_LINE(target_line));
+    g_return_if_fail(r >= 0.0);
+    xres = data_field->xres;
+    yres = data_field->yres;
+    if (masking == GWY_MASK_IGNORE)
+        mask = NULL;
+    else if (!mask)
+        masking = GWY_MASK_IGNORE;
+
+    if (mask) {
+        g_return_if_fail(GWY_IS_DATA_FIELD(mask));
+        g_return_if_fail(mask->xres == xres);
+        g_return_if_fail(mask->yres == yres);
+    }
+
+    xreal = data_field->xreal;
+    yreal = data_field->yreal;
+    xoff = data_field->xoff;
+    yoff = data_field->yoff;
+    g_return_if_fail(x >= xoff && x <= xoff + xreal);
+    g_return_if_fail(y >= yoff && y <= yoff + yreal);
+    /* Just for integer overflow; we limit i and j ranges explicitly later. */
+    r = MIN(r, hypot(xreal, yreal));
+    x -= xoff;
+    y -= yoff;
+
+    dx = xreal/xres;
+    dy = yreal/yres;
+
+    /* Prefer sampling close to the shorter step. */
+    if (nstats <= 0) {
+        h = 2.0*dx*dy/(dx + dy);
+        nstats = GWY_ROUND(r/h);
+        nstats = MAX(nstats, 1);
+    }
+    h = r/nstats;
+
+    d = data_field->data;
+    m = mask ? mask->data : NULL;
+
+    gwy_data_line_resample(target_line, nstats, GWY_INTERPOLATION_NONE);
+    gwy_data_line_clear(target_line);
+    gwy_data_field_copy_units_to_data_line(data_field, target_line);
+    target_line->real = h*nstats;
+    target_line->off = 0.0;
+    target = target_line->data;
+    /* Just return something for single-point lines. */
+    if (nstats < 2) {
+        /* NB: gwy_data_field_get_dval_real() does not use offsets. */
+        target[0] = gwy_data_field_get_dval_real(data_field, x, y,
+                                                 GWY_INTERPOLATION_ROUND);
+        return;
+    }
+
+    ifrom = (gint)floor(gwy_data_field_rtoi(data_field, y - r));
+    ifrom = MAX(ifrom, 0);
+    ito = (gint)ceil(gwy_data_field_rtoi(data_field, y + r));
+    ito = MIN(ito, yres-1);
+
+    jfrom = (gint)floor(gwy_data_field_rtoj(data_field, x - r));
+    jfrom = MAX(ifrom, 0);
+    jto = (gint)ceil(gwy_data_field_rtoj(data_field, x + r));
+    jto = MIN(ito, xres-1);
+
+    weight = g_new0(gdouble, nstats);
+    for (i = ifrom; i <= ito; i++) {
+        gdouble yy = (i + 0.5)*dy - y;
+        for (j = jfrom; j <= jto; j++) {
+            gdouble xx = (j + 0.5)*dx - x;
+            gdouble v = d[i*xres + j];
+
+            if ((masking == GWY_MASK_INCLUDE && m[i*xres + j] <= 0.0)
+                || (masking == GWY_MASK_EXCLUDE && m[i*xres + j] >= 1.0))
+                continue;
+
+            rr = sqrt(xx*xx + yy*yy)/h;
+            k = floor(rr);
+            if (k+1 >= nstats) {
+                if (k+1 == nstats) {
+                    target[k] += v;
+                    weight[k] += 1.0;
+                }
+                continue;
+            }
+
+            rr -= k;
+            if (rr <= 0.5)
+                rr = 2.0*rr*rr;
+            else
+                rr = 1.0 - 2.0*(1.0 - rr)*(1.0 - rr);
+
+            target[k] += (1.0 - rr)*v;
+            target[k+1] += rr*v;
+            weight[k] += 1.0 - rr;
+            weight[k+1] += rr;
+        }
+    }
+
+    /* Get rid of initial and trailing no-data segment. */
+    for (kfrom = 0; kfrom < nstats; kfrom++) {
+        if (weight[kfrom])
+            break;
+    }
+    for (kto = nstats-1; kto > kfrom; kto--) {
+        if (weight[kto])
+            break;
+    }
+    if (kto - kfrom < 2) {
+        /* XXX: This is not correct.  We do not care. */
+        target_line->real = h;
+        target[0] = gwy_data_field_get_dval_real(data_field, x, y,
+                                                 GWY_INTERPOLATION_ROUND);
+        return;
+    }
+
+    if (kfrom != 0 || kto != nstats-1) {
+        nstats = kto+1 - kfrom;
+        gwy_data_line_resize(target_line, kfrom, kto+1);
+        target = target_line->data;
+        target_line->off = kfrom*h;
+        memmove(weight, weight + kfrom, nstats*sizeof(gdouble));
+    }
+    g_assert(weight[0]);
+    g_assert(weight[nstats-1]);
+
+    /* Fill holes where we have no weight, this can occur near the start if
+     * large nstats is requested. */
+    kfrom = -1;
+    for (k = 0; k < nstats; k++) {
+        if (weight[k]) {
+            target[k] /= weight[k];
+            if (kfrom+1 != k) {
+                gdouble first = target[kfrom];
+                gdouble last = target[k];
+                for (j = kfrom+1; j < k; j++) {
+                    gdouble w = (j - kfrom)/(gdouble)(k - kfrom);
+                    target[j] = w*last + (1.0 - w)*first;
+                }
+            }
+            kfrom = k;
+        }
+    }
+
+    g_free(weight);
+}
+
 /************************** Documentation ****************************/
 
 /**

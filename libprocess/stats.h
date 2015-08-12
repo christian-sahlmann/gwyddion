@@ -402,6 +402,14 @@ void    gwy_data_field_get_line_stats       (GwyDataField *data_field,
                                              GwyOrientation orientation);
 guint   gwy_data_field_count_maxima         (GwyDataField *data_field);
 guint   gwy_data_field_count_minima         (GwyDataField *data_field);
+void    gwy_data_field_angular_average      (GwyDataField *data_field,
+                                             GwyDataLine *target_line,
+                                             GwyDataField *mask,
+                                             GwyMaskingType masking,
+                                             gdouble x,
+                                             gdouble y,
+                                             gdouble r,
+                                             gint nstats);
 
 G_END_DECLS
 
