@@ -125,7 +125,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Calculates cross-correlation of two data fields."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.7",
+    "1.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -542,6 +542,17 @@ crosscor_update_values(CrosscorControls *controls,
         gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->add_ls_mask));
 }
 
+static void
+add_mask(GwyDataField *score, GwyContainer *data, gdouble threshold, gint id)
+{
+    GQuark quark = gwy_app_get_mask_key_for_id(id);
+
+    score = gwy_data_field_duplicate(score);
+    gwy_data_field_threshold(score, threshold, 1.0, 0.0);
+    gwy_container_set_object(data, quark, score);
+    g_object_unref(score);
+}
+
 static gboolean
 crosscor_do(CrosscorArgs * args)
 {
@@ -656,13 +667,8 @@ crosscor_do(CrosscorArgs * args)
         gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT, 0);
         gwy_app_channel_log_add_proc(data, args->op1.id, newid);
-
-        /* create score mask if requested */
-        if (args->add_ls_mask) {
-            quark = gwy_app_get_mask_key_for_id(newid);
-            gwy_data_field_threshold(score, args->threshold, 1.0, 0.0);
-            gwy_container_set_object(data, quark, score);
-        }
+        if (args->add_ls_mask)
+            add_mask(score, data, args->threshold, newid);
 
         gwy_app_set_data_field_title(data, newid, _("X difference"));
     }
@@ -675,13 +681,8 @@ crosscor_do(CrosscorArgs * args)
         gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT, 0);
         gwy_app_channel_log_add_proc(data, args->op1.id, newid);
-
-        /* create score mask if requested */
-        if (args->add_ls_mask) {
-            quark = gwy_app_get_mask_key_for_id(newid);
-            gwy_data_field_threshold(score, args->threshold, 1.0, 0.0);
-            gwy_container_set_object(data, quark, score);
-        }
+        if (args->add_ls_mask)
+            add_mask(score, data, args->threshold, newid);
 
         gwy_app_set_data_field_title(data, newid, _("Y difference"));
     }
@@ -693,13 +694,8 @@ crosscor_do(CrosscorArgs * args)
         gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT, 0);
         gwy_app_channel_log_add_proc(data, args->op1.id, newid);
-
-        /* create score mask if requested */
-        if (args->add_ls_mask) {
-            quark = gwy_app_get_mask_key_for_id(newid);
-            gwy_data_field_threshold(score, args->threshold, 1.0, 0.0);
-            gwy_container_set_object(data, quark, score);
-        }
+        if (args->add_ls_mask)
+            add_mask(score, data, args->threshold, newid);
 
         gwy_app_set_data_field_title(data, newid, _("Absolute difference"));
     }
@@ -711,13 +707,8 @@ crosscor_do(CrosscorArgs * args)
         gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT, 0);
         gwy_app_channel_log_add_proc(data, args->op1.id, newid);
-
-        /* create score mask if requested */
-        if (args->add_ls_mask) {
-            quark = gwy_app_get_mask_key_for_id(newid);
-            gwy_data_field_threshold(score, args->threshold, 1.0, 0.0);
-            gwy_container_set_object(data, quark, score);
-        }
+        if (args->add_ls_mask)
+            add_mask(score, data, args->threshold, newid);
 
         gwy_app_set_data_field_title(data, newid, _("Direction"));
     }
@@ -730,13 +721,8 @@ crosscor_do(CrosscorArgs * args)
         gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT, 0);
         gwy_app_channel_log_add_proc(data, args->op1.id, newid);
-
-        /* create score mask if requested */
-        if (args->add_ls_mask) {
-            quark = gwy_app_get_mask_key_for_id(newid);
-            gwy_data_field_threshold(score, args->threshold, 1.0, 0.0);
-            gwy_container_set_object(data, quark, score);
-        }
+        if (args->add_ls_mask)
+            add_mask(score, data, args->threshold, newid);
 
         gwy_app_set_data_field_title(data, newid, _("Score"));
     }
@@ -744,10 +730,8 @@ crosscor_do(CrosscorArgs * args)
     g_object_unref(score);
     g_object_unref(dfieldy);
     g_object_unref(dfieldx);
-    if (abs)
-        g_object_unref(abs);
-    if (dir)
-        g_object_unref(dir);
+    gwy_object_unref(abs);
+    gwy_object_unref(dir);
 
     return TRUE;
 }
