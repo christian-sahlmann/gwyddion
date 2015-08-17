@@ -481,6 +481,7 @@ extract_dialog(ExtractArgs *args,
     row = 0;
     controls.gmodel = gwy_graph_model_new();
     controls.graph = gwy_graph_new(controls.gmodel);
+    gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
     gtk_widget_set_size_request(controls.graph, 300, 200);
     gtk_table_attach(GTK_TABLE(table), controls.graph,
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
