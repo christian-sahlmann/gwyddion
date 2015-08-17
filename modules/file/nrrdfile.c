@@ -180,7 +180,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports and exports nearly raw raster data (NRRD) files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -389,10 +389,22 @@ nrrdfile_load(const gchar *filename,
         kinds = split_per_axis_field(value, "kinds", dimension, TRUE, NULL);
 
     if (datafile) {
-        if (!(data_buffer = load_detached_file(datafile, &data_size,
-                                               encoding == NRRD_ENCODING_GZIP,
-                                               encoding == NRRD_ENCODING_BZIP2,
-                                               error)))
+        gchar *datafilepath;
+
+        if (g_path_is_absolute(datafile))
+            datafilepath = g_strdup(datafile);
+        else {
+            gchar *dirname = g_path_get_dirname(filename);
+            datafilepath = g_build_filename(dirname, datafile, NULL);
+            g_free(dirname);
+        }
+
+        data_buffer = load_detached_file(datafilepath, &data_size,
+                                         encoding == NRRD_ENCODING_GZIP,
+                                         encoding == NRRD_ENCODING_BZIP2,
+                                         error);
+        g_free(datafilepath);
+        if (!data_buffer)
             goto fail;
 
         buffers_to_free = g_slist_append(buffers_to_free, data_buffer);
