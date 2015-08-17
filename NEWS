@@ -1,6 +1,11 @@
 2.42 (0000-00-00)
+Application:
+- Translations updated: French, Russian.
+
 Libraries:
 - libprocess: A function for estimation of the entropy data field values was
+  added.
+- libprocess: A function for angular averaging of a data field area was
   added.
 - libgwydgets: Gradient visualisation mode uses the same false colour mapping
   as overlay if overlays are set.
@@ -27,6 +32,9 @@ Modules:
   a non-fixed range data window.
 - Slice volume: Not working graph selection was fixed.  Possibly odd preview
   sizes upon base plane switch were corrected.
+- Cross-correlation: Invalid low-correlation mask object sharing was fixed.
+- NRRD: Detached data files are correctly searched in a path relative to the
+  header file now.
 
 Other:
 - The code has been made MSVC-compatible.
