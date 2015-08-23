@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-08-09 08:38+0300\n"
-"PO-Revision-Date: 2015-08-09 08:45+0300\n"
+"POT-Creation-Date: 2015-08-23 16:56+0300\n"
+"PO-Revision-Date: 2015-08-23 16:59+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
 "X-Poedit-Basepath: .\n"
-"X-Generator: Poedit 1.8.3\n"
+"X-Generator: Poedit 1.8.4\n"
 "X-Poedit-SearchPath-0: /home/dan/.poedit\n"
 
 #: libgwyddion/gwyexpr.c:765
@@ -927,7 +927,7 @@ msgstr "точек"
 #: modules/process/lat_synth.c:539 modules/process/latsim.c:158
 #: modules/process/level.c:263 modules/process/linematch.c:760
 #: modules/process/lno_synth.c:441 modules/process/local_contrast.c:130
-#: modules/process/measure_lattice.c:217 modules/process/median-bg.c:179
+#: modules/process/measure_lattice.c:265 modules/process/median-bg.c:179
 #: modules/process/noise_synth.c:348 modules/process/obj_synth.c:427
 #: modules/process/pat_synth.c:397 modules/process/pid.c:199
 #: modules/process/polydistort.c:218 modules/process/polylevel.c:378
@@ -3001,10 +3001,9 @@ msgstr "Экспортировать текст"
 #: modules/process/extend.c:259 modules/process/fft_filter_1d.c:297
 #: modules/process/grain_dist.c:306 modules/process/grain_edge.c:271
 #: modules/process/grain_mark.c:345 modules/process/grain_wshed.c:279
-#: modules/process/linematch.c:818 modules/process/measure_lattice.c:339
-#: modules/process/slope_dist.c:384 modules/process/tip_blind.c:360
-#: modules/process/wpour_mark.c:382 modules/tools/spotremove.c:322
-#: modules/tools/stats.c:390
+#: modules/process/linematch.c:818 modules/process/slope_dist.c:384
+#: modules/process/tip_blind.c:360 modules/process/wpour_mark.c:382
+#: modules/tools/spotremove.c:322 modules/tools/stats.c:390
 msgid "Options"
 msgstr "Параметры"
 
@@ -3237,8 +3236,8 @@ msgstr "Файлы ECS (.img)"
 msgid "Scan size header field overlaps with data."
 msgstr "Поле заголовка \"размер сканирования\" пересекается с данными."
 
-#: modules/file/err.h:48 modules/file/nrrdfile.c:764
-#: modules/file/nrrdfile.c:809
+#: modules/file/err.h:48 modules/file/nrrdfile.c:776
+#: modules/file/nrrdfile.c:821
 #, c-format
 msgid "Cannot read from file: %s."
 msgstr "Невозможно прочесть из файла: %s."
@@ -4687,7 +4686,7 @@ msgstr ""
 msgid "Cannot parse `Scan size' field."
 msgstr "Не удаётся распознать поле `Scan size'."
 
-#: modules/file/nanoscope.c:1437 modules/file/nrrdfile.c:1071
+#: modules/file/nanoscope.c:1437 modules/file/nrrdfile.c:1083
 #, c-format
 msgid "Garbage after data sample #%u."
 msgstr "Мусор после элемента данных #%u."
@@ -4781,64 +4780,64 @@ msgid "Non-zero lineskip is supported only for uncompressed files."
 msgstr ""
 "Ненулевое число пропущенных линий поддерживается только для несжатых файлов."
 
-#: modules/file/nrrdfile.c:406
+#: modules/file/nrrdfile.c:418
 msgid "Compression is supported only for detached files."
 msgstr "Сжатие поддерживается только для открепленных файлов."
 
-#: modules/file/nrrdfile.c:730
+#: modules/file/nrrdfile.c:742
 msgid "Split detached data files are not supported."
 msgstr "Разбитые на тома открепленные файлы данных не поддерживаются."
 
-#: modules/file/nrrdfile.c:776
+#: modules/file/nrrdfile.c:788
 msgid "Cannot decompress gzip-encoded data.  Zlib support was not built in."
 msgstr ""
 "Не удаётся распаковать gzip-кодированные данные. Поддержка Zlib не была "
 "встроена."
 
-#: modules/file/nrrdfile.c:821
+#: modules/file/nrrdfile.c:833
 msgid "Cannot decompress bzip2-encoded data.  Bzip2 support was not built in."
 msgstr ""
 "Не удаётся распаковать bzip2-кодированные данные. Поддержка Bzip2 не была "
 "встроена."
 
-#: modules/file/nrrdfile.c:953
+#: modules/file/nrrdfile.c:965
 #, c-format
 msgid "Hex data contains less values (%u) than corresponds to the sizes (%u)."
 msgstr ""
 "Шестнадцатеричные данные содержат меньше значений (%u) чем нужно в "
 "соответствии с размерами (%u)."
 
-#: modules/file/nrrdfile.c:1066
+#: modules/file/nrrdfile.c:1078
 #, c-format
 msgid "Text data contains less values (%u) than corresponds to the sizes (%u)."
 msgstr ""
 "Текстовые данные содержат меньше значений (%u) чем нужно в соответствии с "
 "размерами (%u)."
 
-#: modules/file/nrrdfile.c:1120
+#: modules/file/nrrdfile.c:1132
 msgid "Field byteskip cannot be -1 for text encodings."
 msgstr ""
 "Число пропущенных байтов поля не может быть -1 для текстовых кодировок."
 
-#: modules/file/nrrdfile.c:1131
+#: modules/file/nrrdfile.c:1143
 msgid "Field lineskip specifies more lines than there are in the file."
 msgstr "Число пропущенных линий поля задаёт больше линий, чем есть в файле."
 
-#: modules/file/nrrdfile.c:1174
+#: modules/file/nrrdfile.c:1186
 msgid "Field byteskip specifies more bytes than there are in the file."
 msgstr "Число пропущенных байтов поля задаёт больше байтов, чем есть в файле."
 
-#: modules/file/nrrdfile.c:1579
+#: modules/file/nrrdfile.c:1591
 #, c-format
 msgid "Items of per-axis header field %s are not quoted."
 msgstr "Элементы поля %s заголовка оси не заключены в кавычки."
 
-#: modules/file/nrrdfile.c:1590
+#: modules/file/nrrdfile.c:1602
 #, c-format
 msgid "Per-axis header field %s contains too many items."
 msgstr "Поле %s заголовка оси содержит слишком много элементов."
 
-#: modules/file/nrrdfile.c:1599
+#: modules/file/nrrdfile.c:1611
 #, c-format
 msgid "Per-axis header field %s contains too few items."
 msgstr "Поле %s заголовка оси содержит слишком мало элементов."
@@ -6538,7 +6537,8 @@ msgid "Fit FD Curve"
 msgstr "Аппроксимировать кривую сила-расстояние"
 
 #: modules/graph/graph_fdfit.c:259 modules/graph/graph_fit.c:278
-#: modules/process/fit_2d.c:255 modules/volume/volume_fdfit.c:304
+#: modules/process/fit_2d.c:255 modules/process/measure_lattice.c:266
+#: modules/volume/volume_fdfit.c:304
 msgid "verb|_Estimate"
 msgstr "О_ценить"
 
@@ -6974,8 +6974,8 @@ msgstr "Создать поверхность используя баллист�
 
 #: modules/process/bdep_synth.c:250 modules/process/bdep_synth.c:614
 #: modules/process/calcoefs_simple.c:631 modules/process/col_synth.c:283
-#: modules/process/col_synth.c:723 modules/process/crosscor.c:588
-#: modules/process/crosscor.c:613 modules/process/deposit_synth.c:280
+#: modules/process/col_synth.c:723 modules/process/crosscor.c:599
+#: modules/process/crosscor.c:624 modules/process/deposit_synth.c:280
 #: modules/process/deposit_synth.c:879 modules/process/diff_synth.c:315
 #: modules/process/diff_synth.c:723 modules/process/domain_synth.c:266
 #: modules/process/domain_synth.c:763 modules/process/grain_wshed.c:506
@@ -7094,7 +7094,7 @@ msgid "Calibration name:"
 msgstr "Имя калибровки:"
 
 #: modules/process/calcoefs_load.c:242 modules/volume/volume_extract.c:433
-#: modules/volume/volume_extract.c:513
+#: modules/volume/volume_extract.c:514
 msgid "No data loaded"
 msgstr "Данные не загружены"
 
@@ -7118,7 +7118,7 @@ msgstr "Добавить"
 msgid "Load calibration data"
 msgstr "Загрузить данные калибровки"
 
-#: modules/process/calcoefs_load.c:333 modules/volume/volume_extract.c:1072
+#: modules/process/calcoefs_load.c:333 modules/volume/volume_extract.c:1073
 #, c-format
 msgid "Error loading file '%s'"
 msgstr "Ошибка загрузки файла '%s'"
@@ -7356,7 +7356,7 @@ msgstr "Обрезать до действительных данных"
 #: modules/process/grain_mark.c:378 modules/process/mark_with.c:356
 #: modules/process/polydistort.c:336 modules/process/scars.c:583
 #: modules/process/slope_dist.c:424 modules/process/synth.h:513
-#: modules/volume/volume_extract.c:424 modules/volume/volume_extract.c:504
+#: modules/volume/volume_extract.c:424 modules/volume/volume_extract.c:505
 msgid "I_nstant updates"
 msgstr "Мгновенное об_новление"
 
@@ -7556,7 +7556,7 @@ msgstr "Угол падения"
 msgid "Inclination"
 msgstr "Наклон"
 
-#: modules/process/col_synth.c:510 modules/process/crosscor.c:722
+#: modules/process/col_synth.c:510 modules/process/crosscor.c:713
 msgid "Direction"
 msgstr "Направление"
 
@@ -7654,11 +7654,11 @@ msgid "Preview Options"
 msgstr "Параметры предпросмотра"
 
 #: modules/process/correct_affine.c:378 modules/process/fft_filter_2d.c:569
-#: modules/process/measure_lattice.c:280
+#: modules/process/measure_lattice.c:330
 msgid "Display:"
 msgstr "Показать:"
 
-#: modules/process/correct_affine.c:386 modules/process/measure_lattice.c:288
+#: modules/process/correct_affine.c:386 modules/process/measure_lattice.c:338
 #: modules/tools/grainremover.c:109
 msgid "_Data"
 msgstr "Да_нные"
@@ -7675,7 +7675,7 @@ msgstr "Ис_правленные данные"
 msgid "ACF zoom:"
 msgstr "Увеличение АКФ:"
 
-#: modules/process/correct_affine.c:416 modules/process/measure_lattice.c:315
+#: modules/process/correct_affine.c:416 modules/process/measure_lattice.c:381
 msgid "Lattice Vectors"
 msgstr "Векторы решетки"
 
@@ -7716,15 +7716,15 @@ msgstr "Сохранять площадь"
 msgid "Preserve X scale"
 msgstr "Сохранять масштаб X"
 
-#: modules/process/correct_affine.c:639 modules/process/measure_lattice.c:395
+#: modules/process/correct_affine.c:639 modules/process/measure_lattice.c:498
 msgid "length"
 msgstr "длина"
 
-#: modules/process/correct_affine.c:646 modules/process/measure_lattice.c:402
+#: modules/process/correct_affine.c:646 modules/process/measure_lattice.c:505
 msgid "angle"
 msgstr "угол"
 
-#: modules/process/correct_affine.c:739 modules/process/measure_lattice.c:472
+#: modules/process/correct_affine.c:739
 msgid "Re_fine"
 msgstr "_Уточнить"
 
@@ -7780,7 +7780,7 @@ msgstr "Расстояние по X"
 msgid "Y Distance"
 msgstr "Расстояние по Y"
 
-#: modules/process/crosscor.c:276 modules/process/crosscor.c:741
+#: modules/process/crosscor.c:276 modules/process/crosscor.c:727
 msgid "Score"
 msgstr "Степень"
 
@@ -7810,23 +7810,23 @@ msgstr "Данные второго _источника:"
 msgid "Correlate with:"
 msgstr "Коррелировать с:"
 
-#: modules/process/crosscor.c:595
+#: modules/process/crosscor.c:606
 msgid "Correlating first set..."
 msgstr "Корреляция первого множества..."
 
-#: modules/process/crosscor.c:621
+#: modules/process/crosscor.c:632
 msgid "Correlating second set..."
 msgstr "Корреляция второго множества..."
 
-#: modules/process/crosscor.c:667
+#: modules/process/crosscor.c:673
 msgid "X difference"
 msgstr "Различие X"
 
-#: modules/process/crosscor.c:686
+#: modules/process/crosscor.c:687
 msgid "Y difference"
 msgstr "Различие Y"
 
-#: modules/process/crosscor.c:704
+#: modules/process/crosscor.c:700
 msgid "Absolute difference"
 msgstr "Разница по модулю"
 
@@ -7905,14 +7905,16 @@ msgid "New graph"
 msgstr "Новый график"
 
 #: modules/process/curvature.c:798 modules/process/grain_stat.c:345
-#: modules/process/polylevel.c:621 modules/tools/distance.c:263
-#: modules/tools/roughness.c:836 modules/tools/stats.c:438
+#: modules/process/measure_lattice.c:405 modules/process/polylevel.c:621
+#: modules/tools/distance.c:263 modules/tools/roughness.c:836
+#: modules/tools/stats.c:438
 msgid "Save table to a file"
 msgstr "Сохранить таблицу в файл"
 
 #: modules/process/curvature.c:803 modules/process/grain_stat.c:350
-#: modules/process/polylevel.c:631 modules/tools/distance.c:268
-#: modules/tools/roughness.c:841 modules/tools/stats.c:443
+#: modules/process/measure_lattice.c:409 modules/process/polylevel.c:631
+#: modules/tools/distance.c:268 modules/tools/roughness.c:841
+#: modules/tools/stats.c:443
 msgid "Copy table to clipboard"
 msgstr "Скопировать таблицу в буфер обмена"
 
@@ -8854,7 +8856,7 @@ msgstr "_Заполнить"
 msgid "_Snap to origin"
 msgstr "_Прикрепить к началу координат"
 
-#: modules/process/fft_filter_2d.c:599 modules/process/measure_lattice.c:298
+#: modules/process/fft_filter_2d.c:599 modules/process/measure_lattice.c:348
 msgid "Zoom:"
 msgstr "Масштаб:"
 
@@ -10554,29 +10556,72 @@ msgstr "Взаимно кадрировать"
 msgid "_Select second argument:"
 msgstr "_Второй аргумент:"
 
-#: modules/process/measure_lattice.c:152
+#: modules/process/measure_lattice.c:183
 msgid "Measures parameters of two-dimensional lattices."
 msgstr "Измеряет параметры двумерных решеток."
 
-#: modules/process/measure_lattice.c:166
+#: modules/process/measure_lattice.c:197
 msgid "/_Statistics/Measure _Lattice..."
 msgstr "/_Статистика/Измерить _решетку..."
 
-#: modules/process/measure_lattice.c:170
+#: modules/process/measure_lattice.c:201
 msgid "Measure lattice"
 msgstr "Измерить решетку"
 
-#: modules/process/measure_lattice.c:214
+#: modules/process/measure_lattice.c:262
 msgid "Measure Lattice"
 msgstr "Измерить решетку"
 
-#: modules/process/measure_lattice.c:289
+#: modules/process/measure_lattice.c:268
+msgid "_Refine"
+msgstr "_Уточнить"
+
+#: modules/process/measure_lattice.c:339
 msgid "_ACF"
 msgstr "_ФАК"
 
-#: modules/process/measure_lattice.c:290
+#: modules/process/measure_lattice.c:340
 msgid "_PSDF"
 msgstr "_ФСПМ"
+
+#: modules/process/measure_lattice.c:365
+msgid "Show lattice as:"
+msgstr "Показать решетку как:"
+
+#: modules/process/measure_lattice.c:374
+msgid "_Lattice"
+msgstr "_Решетку"
+
+#: modules/process/measure_lattice.c:375
+msgid "_Vectors"
+msgstr "_Векторы"
+
+#: modules/process/measure_lattice.c:605
+msgid "Save Lattice Parameters"
+msgstr "Сохранить параметры решетки"
+
+#: modules/process/measure_lattice.c:643
+#, c-format
+msgid "Vector %d:"
+msgstr "Вектор %d:"
+
+#: modules/process/measure_lattice.c:652
+#, c-format
+msgid "Length %d:"
+msgstr "Длина %d:"
+
+#: modules/process/measure_lattice.c:659
+#, c-format
+msgid "Angle %d:"
+msgstr "Угол %d:"
+
+#: modules/process/measure_lattice.c:674
+msgid "Angle:"
+msgstr "Угол:"
+
+#: modules/process/measure_lattice.c:690
+msgid "Lattice Parameters"
+msgstr "Параметры решетки"
 
 #: modules/process/median-bg.c:81
 msgid "Subtracts background using a rank-based algorithm."
@@ -13272,15 +13317,15 @@ msgstr "Сечение по Y"
 msgid "Z cross-section"
 msgstr "Сечение по Z"
 
-#: modules/volume/volume_extract.c:273 modules/volume/volume_extract.c:697
+#: modules/volume/volume_extract.c:273 modules/volume/volume_extract.c:698
 msgid "X direction sum"
 msgstr "Сумма по направлению X"
 
-#: modules/volume/volume_extract.c:274 modules/volume/volume_extract.c:699
+#: modules/volume/volume_extract.c:274 modules/volume/volume_extract.c:700
 msgid "Y direction sum"
 msgstr "Сумма по направлению Y"
 
-#: modules/volume/volume_extract.c:275 modules/volume/volume_extract.c:701
+#: modules/volume/volume_extract.c:275 modules/volume/volume_extract.c:702
 msgid "Z direction sum"
 msgstr "Сумма по направлению Z"
 
@@ -13328,102 +13373,102 @@ msgstr "Положение по Z"
 msgid "Shown cut direction:"
 msgstr "Показано направление разреза:"
 
-#: modules/volume/volume_extract.c:419 modules/volume/volume_extract.c:499
+#: modules/volume/volume_extract.c:419 modules/volume/volume_extract.c:500
 msgid "Show mode:"
 msgstr "Режим отображения:"
 
-#: modules/volume/volume_extract.c:489
+#: modules/volume/volume_extract.c:490
 msgid "Graph cut direction:"
 msgstr "Режим сечения графика:"
 
-#: modules/volume/volume_extract.c:524
+#: modules/volume/volume_extract.c:525
 msgid "3D view"
 msgstr "Просмотр 3D"
 
-#: modules/volume/volume_extract.c:549
+#: modules/volume/volume_extract.c:550
 msgid "Zoom"
 msgstr "Увеличение"
 
-#: modules/volume/volume_extract.c:557
+#: modules/volume/volume_extract.c:558
 msgid "Wireframe threshold"
 msgstr "Порог сетки"
 
-#: modules/volume/volume_extract.c:565
+#: modules/volume/volume_extract.c:566
 msgid "Z scale"
 msgstr "Масштаб по Z"
 
-#: modules/volume/volume_extract.c:573
+#: modules/volume/volume_extract.c:574
 msgid "Opacity scale"
 msgstr "Значение прозрачности"
 
-#: modules/volume/volume_extract.c:579
+#: modules/volume/volume_extract.c:580
 msgid "apply perspective"
 msgstr "добавить перспективу"
 
-#: modules/volume/volume_extract.c:588
+#: modules/volume/volume_extract.c:589
 msgid "instant 3D render"
 msgstr "мгновенный 3D рендер"
 
-#: modules/volume/volume_extract.c:597
+#: modules/volume/volume_extract.c:598
 msgid "X view"
 msgstr "Вид X"
 
-#: modules/volume/volume_extract.c:603
+#: modules/volume/volume_extract.c:604
 msgid "Y view"
 msgstr "Вид Y"
 
-#: modules/volume/volume_extract.c:609
+#: modules/volume/volume_extract.c:610
 msgid "Z view"
 msgstr "Вид Z"
 
-#: modules/volume/volume_extract.c:682
+#: modules/volume/volume_extract.c:683
 #, c-format
 msgid "X cross-section at x: %d"
 msgstr "Сечение по X при x: %d"
 
-#: modules/volume/volume_extract.c:685
+#: modules/volume/volume_extract.c:686
 #, c-format
 msgid "Y cross-section at y: %d"
 msgstr "Сечение по Y при y: %d"
 
-#: modules/volume/volume_extract.c:689
+#: modules/volume/volume_extract.c:690
 #, c-format
 msgid "Z cross-section at Z = %g %s (#%d)"
 msgstr "Сечение Z на величине Z = %g %s (#%d)"
 
-#: modules/volume/volume_extract.c:748 modules/volume/volume_slice.c:944
+#: modules/volume/volume_extract.c:749 modules/volume/volume_slice.c:944
 #, c-format
 msgid "X graph at y: %d z: %d"
 msgstr "График X при y: %d z: %d"
 
-#: modules/volume/volume_extract.c:751 modules/volume/volume_slice.c:958
+#: modules/volume/volume_extract.c:752 modules/volume/volume_slice.c:958
 #, c-format
 msgid "Y graph at x: %d z: %d"
 msgstr "График Y при x: %d z: %d"
 
-#: modules/volume/volume_extract.c:754 modules/volume/volume_slice.c:930
+#: modules/volume/volume_extract.c:755 modules/volume/volume_slice.c:930
 #, c-format
 msgid "Z graph at x: %d y: %d"
 msgstr "График Z при x: %d y: %d"
 
-#: modules/volume/volume_extract.c:759
+#: modules/volume/volume_extract.c:760
 msgid "w"
 msgstr "w"
 
-#: modules/volume/volume_extract.c:775 modules/volume/volume_slice.c:966
+#: modules/volume/volume_extract.c:776 modules/volume/volume_slice.c:966
 msgid "Brick graph"
 msgstr "График сечения блока"
 
-#: modules/volume/volume_extract.c:1055
+#: modules/volume/volume_extract.c:1056
 msgid "Load volume data"
 msgstr "Загрузить объёмные данные"
 
-#: modules/volume/volume_extract.c:1217
+#: modules/volume/volume_extract.c:1218
 #, c-format
 msgid "Shown range %g to %g"
 msgstr "Показан диапазон от %g до %g"
 
-#: modules/volume/volume_extract.c:1910
+#: modules/volume/volume_extract.c:1911
 msgid "Building wireframe model..."
 msgstr "Строится каркасная модель..."
 
