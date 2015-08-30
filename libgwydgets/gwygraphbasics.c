@@ -75,7 +75,7 @@ static gint
 y_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
 {
     if (!specs->log_y)
-        return (specs->ymin + specs->height
+        return (specs->ymin + specs->height-1
                 - GWY_ROUND((data - specs->real_ymin)
                             /(specs->real_height)*(specs->height - 1.0)));
 
@@ -83,7 +83,7 @@ y_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
     if (data == 0.0)
         return G_MAXINT;    /* Force sticking out of the drawable area */
 
-    return (specs->ymin + specs->height
+    return (specs->ymin + specs->height-1
             - GWY_ROUND((log10(fabs(data)) - log10(specs->real_ymin))
                         /((log10(specs->real_ymin + specs->real_height)
                            - log10(specs->real_ymin)))*(specs->height - 1.0)));
@@ -644,8 +644,8 @@ gwy_graph_draw_grid(GdkDrawable *drawable,
             pos = x_data_to_pixel(specs, x_grid_data[i]);
             gwy_debug("x%u %g %d", i, x_grid_data[i], pos);
             gdk_draw_line(drawable, gc,
-                          pos, specs->ymin - 1,
-                          pos, specs->ymin + specs->height + 1);
+                          pos, specs->ymin,
+                          pos, specs->ymin + specs->height);
         }
     }
 
@@ -655,8 +655,8 @@ gwy_graph_draw_grid(GdkDrawable *drawable,
             pos = y_data_to_pixel(specs, y_grid_data[i]);
             gwy_debug("y%u %g %d", i, y_grid_data[i], pos);
             gdk_draw_line(drawable, gc,
-                          specs->xmin - 1, specs->height - pos,
-                          specs->xmin + specs->width + 1, specs->height - pos);
+                          specs->xmin, pos,
+                          specs->xmin + specs->width, pos);
         }
     }
 }
