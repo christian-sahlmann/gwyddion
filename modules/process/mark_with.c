@@ -152,7 +152,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Creates or modifies a mask using other channels."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -679,15 +679,14 @@ update_source_mask(MarkControls *controls)
         quark = gwy_app_get_mask_key_for_id(args->source[MARK_WITH_MASK].id);
         dfield = gwy_container_get_object(data, quark);
         gwy_data_field_copy(dfield, mfield, FALSE);
-        gwy_data_field_data_changed(mfield);
-        return;
     }
-
-    dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
-    d = controls->data_max - controls->data_min;
-    gwy_data_field_threshold_to(dfield, mfield,
-                                controls->data_min + d*args->min,
-                                controls->data_min + d*args->max);
+    else {
+        dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
+        d = controls->data_max - controls->data_min;
+        gwy_data_field_threshold_to(dfield, mfield,
+                                    controls->data_min + d*args->min,
+                                    controls->data_min + d*args->max);
+    }
     gwy_data_field_data_changed(mfield);
     /* FIXME: Does not really belong here... */
     perform_operation(controls);
@@ -699,7 +698,7 @@ create_mask_field(GwyDataField *dfield)
     GwyDataField *mfield;
     GwySIUnit *siunit;
 
-    mfield = gwy_data_field_new_alike(dfield, FALSE);
+    mfield = gwy_data_field_new_alike(dfield, TRUE);
     siunit = gwy_si_unit_new(NULL);
     gwy_data_field_set_si_unit_z(mfield, siunit);
     g_object_unref(siunit);
