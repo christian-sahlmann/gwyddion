@@ -39,7 +39,7 @@ gwy_graph_export_pixmap(GwyGraph *graph,
     GdkPixmap *pixmap;
     PangoLayout *layout;
     PangoContext *context;
-    gint width, height, topheight, bottomheight, leftwidth, rightwidth;
+    gint width, height, topheight, bottomheight, rightwidth, leftwidth;
     gint labelx, labely, labelw, labelh;
 
     width = (GTK_WIDGET(graph))->allocation.width;
@@ -47,10 +47,10 @@ gwy_graph_export_pixmap(GwyGraph *graph,
 
     topheight = (GTK_WIDGET(graph->axis[GTK_POS_TOP]))->allocation.height;
     bottomheight = (GTK_WIDGET(graph->axis[GTK_POS_BOTTOM]))->allocation.height;
-    rightwidth = (GTK_WIDGET(graph->axis[GTK_POS_LEFT]))->allocation.width;
-    leftwidth = (GTK_WIDGET(graph->axis[GTK_POS_RIGHT]))->allocation.width;
+    leftwidth = (GTK_WIDGET(graph->axis[GTK_POS_LEFT]))->allocation.width;
+    rightwidth = (GTK_WIDGET(graph->axis[GTK_POS_RIGHT]))->allocation.width;
 
-    labelx = (GTK_WIDGET(graph->area->lab))->allocation.x + rightwidth;
+    labelx = (GTK_WIDGET(graph->area->lab))->allocation.x + leftwidth;
     labely = (GTK_WIDGET(graph->area->lab))->allocation.y + topheight;
     labelw = (GWY_GRAPH_LABEL(graph->area->lab))->reqwidth;
     labelh = (GWY_GRAPH_LABEL(graph->area->lab))->reqheight;
@@ -68,23 +68,23 @@ gwy_graph_export_pixmap(GwyGraph *graph,
     gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, width, height);
 
     gwy_graph_area_draw_on_drawable(graph->area, pixmap, gc,
-                                    rightwidth, topheight,
-                                    width - rightwidth - leftwidth,
+                                    leftwidth, topheight,
+                                    width - leftwidth - rightwidth,
                                     height - topheight - bottomheight);
 
     /* Draw axes */
     gwy_axis_draw_on_drawable(graph->axis[GTK_POS_TOP], pixmap, gc,
-                              rightwidth, 0,
-                              width - rightwidth - leftwidth, topheight);
+                              leftwidth, 0,
+                              width - leftwidth - rightwidth, topheight);
     gwy_axis_draw_on_drawable(graph->axis[GTK_POS_BOTTOM], pixmap, gc,
-                              rightwidth, height - bottomheight,
-                              width - rightwidth - leftwidth, bottomheight);
+                              leftwidth, height - bottomheight,
+                              width - leftwidth - rightwidth, bottomheight);
     gwy_axis_draw_on_drawable(graph->axis[GTK_POS_LEFT], pixmap, gc,
                               0, topheight,
-                              rightwidth, height - topheight - bottomheight);
-    gwy_axis_draw_on_drawable(graph->axis[GTK_POS_RIGHT], pixmap, gc,
-                              width - leftwidth, topheight,
                               leftwidth, height - topheight - bottomheight);
+    gwy_axis_draw_on_drawable(graph->axis[GTK_POS_RIGHT], pixmap, gc,
+                              width - rightwidth, topheight,
+                              rightwidth, height - topheight - bottomheight);
 
     context = gdk_pango_context_get_for_screen(gdk_screen_get_default());
     pango_context_set_font_description(context, graph->area->lab->font_desc);
@@ -103,7 +103,6 @@ gwy_graph_export_pixmap(GwyGraph *graph,
     g_object_unref(cmap);
 
     return pixbuf;
-
 }
 
 GString*
@@ -263,7 +262,5 @@ gwy_graph_export_postscript(GwyGraph *graph,
     /*save stream*/
     return string;
 }
-
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
