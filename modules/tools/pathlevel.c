@@ -110,7 +110,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Path level tool, performs row leveling along on user-set lines."),
     "Yeti <yeti@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti)",
     "2007",
 };
@@ -336,10 +336,21 @@ gwy_tool_path_level_selection_changed(GwyPlainTool *plain_tool,
         gtk_tree_view_set_model(tool->treeview, tool->model);
     }
     else {
+        GtkTreeSelection *selection;
+        GtkTreePath *path;
+        GtkTreeIter iter;
+
         if (hint < n)
             gwy_null_store_row_changed(store, hint);
         else
             gwy_null_store_set_n_rows(store, n+1);
+
+        gtk_tree_model_iter_nth_child(tool->model, &iter, NULL, hint);
+        path = gtk_tree_model_get_path(tool->model, &iter);
+        selection = gtk_tree_view_get_selection(tool->treeview);
+        gtk_tree_selection_select_iter(selection, &iter);
+        gtk_tree_view_scroll_to_cell(tool->treeview, path, NULL,
+                                     FALSE, 0.0, 0.0);
     }
 
     gtk_widget_set_sensitive(tool->apply, !!gwy_null_store_get_n_rows(store));

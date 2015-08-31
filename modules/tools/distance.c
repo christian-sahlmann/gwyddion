@@ -110,7 +110,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Distance measurement tool, measures distances and angles."),
     "Nenad Ocelic <ocelic@biochem.mpg.de>",
-    "2.12",
+    "2.13",
     "Nenad Ocelic & David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -381,10 +381,21 @@ gwy_tool_distance_selection_changed(GwyPlainTool *plain_tool,
         gtk_tree_view_set_model(tool->treeview, tool->model);
     }
     else {
+        GtkTreeSelection *selection;
+        GtkTreePath *path;
+        GtkTreeIter iter;
+
         if (hint < n)
             gwy_null_store_row_changed(store, hint);
         else
             gwy_null_store_set_n_rows(store, n+1);
+
+        gtk_tree_model_iter_nth_child(tool->model, &iter, NULL, hint);
+        path = gtk_tree_model_get_path(tool->model, &iter);
+        selection = gtk_tree_view_get_selection(tool->treeview);
+        gtk_tree_selection_select_iter(selection, &iter);
+        gtk_tree_view_scroll_to_cell(tool->treeview, path, NULL,
+                                     FALSE, 0.0, 0.0);
     }
 
     ok = (plain_tool->selection
