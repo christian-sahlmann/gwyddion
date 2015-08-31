@@ -5913,7 +5913,7 @@ gwy_data_field_angular_average(GwyDataField *data_field,
     target_line->off = 0.0;
     target = target_line->data;
     /* Just return something for single-point lines. */
-    if (nstats < 2) {
+    if (nstats < 2 || r == 0.0) {
         /* NB: gwy_data_field_get_dval_real() does not use offsets. */
         target[0] = gwy_data_field_get_dval_real(data_field, x, y,
                                                  GWY_INTERPOLATION_ROUND);
