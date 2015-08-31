@@ -12,6 +12,7 @@ Libraries:
 - libgwydgets: 3D view false colour map rendered as a black box when no axes
   are drawn was hopefully fixed.
 - libgwydgets: Leaking overlay GwyPixmapLayers in Gwy3DView were fixed.
+- libgwydgets: Misaligned Y-grids in graphs exported to bitmap were fixed.
 
 Modules:
 - Align rows (new): Row alignment by various methods, including polynomial
@@ -35,6 +36,9 @@ Modules:
 - Cross-correlation: Invalid low-correlation mask object sharing was fixed.
 - NRRD: Detached data files are correctly searched in a path relative to the
   header file now.
+- Mark With: Preview now behaves correctly when using mask as the source.
+- Distance, Profile, Path Level tools: Moved/edited line is selected in the
+  list and the list is scrolled to make it visible.
 
 Other:
 - The code has been made MSVC-compatible.
