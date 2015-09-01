@@ -5926,9 +5926,9 @@ gwy_data_field_angular_average(GwyDataField *data_field,
     ito = MIN(ito, yres-1);
 
     jfrom = (gint)floor(gwy_data_field_rtoj(data_field, x - r));
-    jfrom = MAX(ifrom, 0);
+    jfrom = MAX(jfrom, 0);
     jto = (gint)ceil(gwy_data_field_rtoj(data_field, x + r));
-    jto = MIN(ito, xres-1);
+    jto = MIN(jto, xres-1);
 
     weight = g_new0(gdouble, nstats);
     for (i = ifrom; i <= ito; i++) {
