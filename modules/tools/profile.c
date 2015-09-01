@@ -959,13 +959,11 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
     if (is_rprof) {
         gdouble xc = 0.5*(line[0] + line[2]) + data_field->xoff;
         gdouble yc = 0.5*(line[1] + line[3]) + data_field->yoff;
-        gdouble r = hypot(line[2] - line[0], line[3] - line[1]);
+        gdouble r = 0.5*hypot(line[2] - line[0], line[3] - line[1]);
 
-        /* Just create some compatible line when there is none. */
+        /* Just create some line when there is none. */
         if (!tool->line)
-            tool->line = gwy_data_field_get_profile(data_field, NULL,
-                                                    0, 0, 1, 1, 2, 1,
-                                                    GWY_INTERPOLATION_ROUND);
+            tool->line = gwy_data_line_new(1, 1.0, FALSE);
         r = MAX(r, hypot(gwy_data_field_get_xmeasure(data_field),
                          gwy_data_field_get_ymeasure(data_field)));
         gwy_data_field_angular_average(data_field, tool->line,
@@ -1084,7 +1082,7 @@ estimate_variation(GwyDataField *dfield, GwyDataLine *tmp, const gdouble *line)
     /* Ignore offsets here we do not call any function that uses them. */
     xc = 0.5*(line[0] + line[2]);
     yc = 0.5*(line[1] + line[3]);
-    r = hypot(line[2] - line[0], line[3] - line[1]);
+    r = 0.5*hypot(line[2] - line[0], line[3] - line[1]);
     /* The profile cannot go outside the field anywhere. */
     r = MIN(r, MIN(xc, yc));
     r = MIN(r, MIN(dfield->xreal - xc, dfield->yreal - yc));
@@ -1160,7 +1158,7 @@ gwy_tool_profile_symmetrize_profile(GwyToolProfile *tool,
 
     xc = 0.5*(line[0] + line[2]) + dfield->xoff;
     yc = 0.5*(line[1] + line[3]) + dfield->yoff;
-    r = hypot(line[2] - line[0], line[3] - line[1]);
+    r = 0.5*hypot(line[2] - line[0], line[3] - line[1]);
 
     dx = gwy_data_field_get_xmeasure(dfield);
     dy = gwy_data_field_get_ymeasure(dfield);
