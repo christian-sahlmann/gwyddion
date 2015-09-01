@@ -94,6 +94,8 @@ struct _GwyToolProfile {
 
     GtkWidget *options;
     GtkWidget *radial_profiles;
+    GtkWidget *symmetrize;
+    GtkWidget *symmetrize_all;
     GtkObject *thickness;
     GtkObject *resolution;
     GtkWidget *fixres;
@@ -150,6 +152,10 @@ static void       gwy_tool_profile_selection_changed      (GwyPlainTool *plain_t
 static void       gwy_tool_profile_update_curve           (GwyToolProfile *tool,
                                                            gint i);
 static void       gwy_tool_profile_update_all_curves      (GwyToolProfile *tool);
+static void       gwy_tool_profile_symmetrize_all         (GwyToolProfile *tool);
+static void       gwy_tool_profile_symmetrize             (GwyToolProfile *tool);
+static void       gwy_tool_profile_symmetrize_profile     (GwyToolProfile *tool,
+                                                           gint id);
 static void       gwy_tool_profile_render_cell            (GtkCellLayout *layout,
                                                            GtkCellRenderer *renderer,
                                                            GtkTreeModel *model,
@@ -434,7 +440,7 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
                      G_CALLBACK(gwy_tool_profile_options_expanded), tool);
     gtk_box_pack_start(GTK_BOX(vbox), tool->options, FALSE, FALSE, 0);
 
-    table = GTK_TABLE(gtk_table_new(8, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(9, 4, FALSE));
     gtk_table_set_col_spacings(table, 6);
     gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -450,6 +456,21 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
     g_signal_connect(tool->radial_profiles, "toggled",
                      G_CALLBACK(gwy_tool_profile_radial_profiles_changed),
                      tool);
+    row++;
+
+    hbox2 = gtk_hbox_new(FALSE, 6);
+    gtk_table_attach(table, hbox2,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    tool->symmetrize_all = gtk_button_new_with_mnemonic(_("Symmetrize _All"));
+    gtk_box_pack_end(GTK_BOX(hbox2), tool->symmetrize_all, FALSE, FALSE, 0);
+    g_signal_connect_swapped(tool->symmetrize_all, "clicked",
+                             G_CALLBACK(gwy_tool_profile_symmetrize_all),
+                             tool);
+    tool->symmetrize = gtk_button_new_with_mnemonic(_("S_ymmetrize"));
+    gtk_box_pack_end(GTK_BOX(hbox2), tool->symmetrize, FALSE, FALSE, 0);
+    g_signal_connect_swapped(tool->symmetrize, "clicked",
+                             G_CALLBACK(gwy_tool_profile_symmetrize),
+                             tool);
     row++;
 
     tool->thickness = gtk_adjustment_new(tool->args.thickness,
@@ -566,6 +587,8 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
     gwy_table_hscale_set_sensitive(tool->thickness, !is_rprof);
     gtk_widget_set_sensitive(tool->interpolation, !is_rprof);
     gtk_widget_set_sensitive(tool->interpolation_label, !is_rprof);
+    gtk_widget_set_sensitive(tool->symmetrize, is_rprof);
+    gtk_widget_set_sensitive(tool->symmetrize_all, is_rprof);
 
     tool->gmodel = gwy_graph_model_new();
     g_object_set(tool->gmodel, "title", _("Profiles"), NULL);
@@ -1000,6 +1023,40 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
 }
 
 static void
+gwy_tool_profile_symmetrize(GwyToolProfile *tool)
+{
+    GtkTreeSelection *selection;
+    GtkTreeModel *model;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    const gint *indices;
+
+    selection = gtk_tree_view_get_selection(tool->treeview);
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter))
+        return;
+
+    path = gtk_tree_model_get_path(model, &iter);
+    indices = gtk_tree_path_get_indices(path);
+    gwy_tool_profile_symmetrize_profile(tool, indices[0]);
+    gtk_tree_path_free(path);
+}
+
+static void
+gwy_tool_profile_symmetrize_all(GwyToolProfile *tool)
+{
+    GwyPlainTool *plain_tool;
+    gint n, i;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    if (!plain_tool->selection
+        || !(n = gwy_selection_get_data(plain_tool->selection, NULL)))
+        return;
+
+    for (i = 0; i < n; i++)
+        gwy_tool_profile_symmetrize_profile(tool, i);
+}
+
+static void
 gwy_tool_profile_update_all_curves(GwyToolProfile *tool)
 {
     GwyPlainTool *plain_tool;
@@ -1014,6 +1071,125 @@ gwy_tool_profile_update_all_curves(GwyToolProfile *tool)
 
     for (i = 0; i < n; i++)
         gwy_tool_profile_update_curve(tool, i);
+}
+
+static gdouble
+estimate_variation(GwyDataField *dfield, GwyDataLine *tmp, const gdouble *line)
+{
+    gdouble xc, yc, r, dx, dy, h;
+    gdouble *s, *s2;
+    gdouble variation = 0.0;
+    gint ir, ndirs, res, i, j;
+
+    /* Ignore offsets here we do not call any function that uses them. */
+    xc = 0.5*(line[0] + line[2]);
+    yc = 0.5*(line[1] + line[3]);
+    r = hypot(line[2] - line[0], line[3] - line[1]);
+    /* The profile cannot go outside the field anywhere. */
+    r = MIN(r, MIN(xc, yc));
+    r = MIN(r, MIN(dfield->xreal - xc, dfield->yreal - yc));
+
+    dx = gwy_data_field_get_xmeasure(dfield);
+    dy = gwy_data_field_get_ymeasure(dfield);
+    h = 2.0*dx*dy/(dx + dy);
+    ir = GWY_ROUND(r/h);
+
+    if (ir < 1)
+        return 0.0;
+
+    res = 2*ir + 1;
+    ndirs = 2*(GWY_ROUND(log(ir)) + 1);
+    g_assert(ndirs >= 2);
+
+    s = g_new0(gdouble, res);
+    s2 = g_new0(gdouble, res);
+
+    for (i = 0; i < ndirs; i++) {
+        gdouble si = sin(G_PI*i/ndirs), ci = cos(G_PI*i/ndirs);
+        gint xl1 = floor(gwy_data_field_rtoj(dfield, xc + ci*r));
+        gint yl1 = floor(gwy_data_field_rtoi(dfield, yc + si*r));
+        gint xl2 = floor(gwy_data_field_rtoj(dfield, xc - ci*r));
+        gint yl2 = floor(gwy_data_field_rtoi(dfield, yc - si*r));
+
+        xl1 = CLAMP(xl1, 0, dfield->xres-1);
+        yl1 = CLAMP(yl1, 0, dfield->yres-1);
+        xl2 = CLAMP(xl2, 0, dfield->xres-1);
+        yl2 = CLAMP(yl2, 0, dfield->yres-1);
+        gwy_data_field_get_profile(dfield, tmp, xl1, yl1, xl2, yl2,
+                                   res, 1, GWY_INTERPOLATION_LINEAR);
+        if (tmp->res != res) {
+            g_warning("Cannot get profile of length exactly %d.", res);
+            goto fail;
+        }
+
+        for (j = 0; j < res; j++) {
+            gdouble v = tmp->data[j];
+            s[j] += v;
+            s2[j] += v*v;
+        }
+    }
+
+    for (j = 0; j < res; j++)
+        variation += s2[j]/ndirs - s[j]*s[j]/ndirs/ndirs;
+    variation /= res;
+
+fail:
+    g_free(s2);
+    g_free(s);
+
+    return variation;
+}
+
+static void
+gwy_tool_profile_symmetrize_profile(GwyToolProfile *tool,
+                                    gint id)
+{
+    GwyPlainTool *plain_tool;
+    GwyDataField *dfield;
+    GwyDataLine *tmpline;
+    gdouble line[4];
+    gdouble xc, yc, r, dx, dy;
+    gint i, j, irange, jrange, besti = 0, bestj = 0;
+    gdouble bestvar = G_MAXDOUBLE;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    g_return_if_fail(plain_tool->selection);
+    g_return_if_fail(gwy_selection_get_object(plain_tool->selection, id, line));
+    dfield = plain_tool->data_field;
+    tmpline = gwy_data_line_new(1, 1.0, FALSE);
+
+    xc = 0.5*(line[0] + line[2]) + dfield->xoff;
+    yc = 0.5*(line[1] + line[3]) + dfield->yoff;
+    r = hypot(line[2] - line[0], line[3] - line[1]);
+
+    dx = gwy_data_field_get_xmeasure(dfield);
+    dy = gwy_data_field_get_ymeasure(dfield);
+
+    irange = 30;
+    jrange = 30;
+    for (i = -irange; i <= irange; i++) {
+        for (j = -jrange; j <= jrange; j++) {
+            gdouble offline[4] = {
+                line[0] + j*dx, line[1] + i*dy,
+                line[2] + j*dx, line[3] + i*dy,
+            };
+            gdouble var = estimate_variation(dfield, tmpline, offline);
+
+            if (var < bestvar) {
+                besti = i;
+                bestj = j;
+                bestvar = var;
+            }
+        }
+    }
+
+    line[0] += bestj*dx;
+    line[1] += besti*dy;
+    line[2] += bestj*dx;
+    line[3] += besti*dy;
+    gwy_selection_set_object(plain_tool->selection, id, line);
+
+    g_object_unref(tmpline);
 }
 
 static void
@@ -1115,6 +1291,8 @@ gwy_tool_profile_radial_profiles_changed(GtkToggleButton *check,
     gwy_table_hscale_set_sensitive(tool->thickness, !is_rprof);
     gtk_widget_set_sensitive(tool->interpolation, !is_rprof);
     gtk_widget_set_sensitive(tool->interpolation_label, !is_rprof);
+    gtk_widget_set_sensitive(tool->symmetrize, is_rprof);
+    gtk_widget_set_sensitive(tool->symmetrize_all, is_rprof);
     if (plain_tool->layer) {
         g_object_set(plain_tool->layer,
                      "thickness", is_rprof ? 1 : tool->args.thickness,
