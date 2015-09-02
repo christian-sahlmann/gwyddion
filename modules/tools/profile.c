@@ -1138,6 +1138,91 @@ fail:
     return variation;
 }
 
+static gboolean
+symmetrize_at_scale(GwyDataField *dfield,
+                    GwyDataLine *tmpline,
+                    gdouble r,
+                    gdouble *line)
+{
+    gdouble xreal = dfield->xreal, yreal = dfield->yreal;
+    gdouble dx = gwy_data_field_get_xmeasure(dfield);
+    gdouble dy = gwy_data_field_get_ymeasure(dfield);
+    gint istep = (gint)ceil(r/dy), jstep = (gint)ceil(r/dx);
+    gint i, j, besti = 0, bestj = 0;
+    gdouble allvar[25], z[9];
+    gdouble var, bestvar = G_MAXDOUBLE;
+    gboolean ok;
+
+    for (i = -2; i <= 2; i++) {
+        for (j = -2; j <= 2; j++) {
+            gdouble offline[4] = {
+                line[0] + j*jstep*dx, line[1] + i*istep*dy,
+                line[2] + j*jstep*dx, line[3] + i*istep*dy,
+            };
+
+            allvar[5*(i + 2) + (j + 2)] = G_MAXDOUBLE;
+            if (offline[0] < 0.0 || offline[2] > xreal
+                || offline[1] < 0.0 || offline[3] > yreal)
+                continue;
+
+            var = estimate_variation(dfield, tmpline, offline);
+            allvar[5*(i + 2) + (j + 2)] = var;
+            if (i*j + j*j <= 5 && var < bestvar) {
+                besti = i;
+                bestj = j;
+                bestvar = var;
+            }
+        }
+    }
+
+    line[0] += bestj*jstep*dx;
+    line[1] += besti*istep*dy;
+    line[2] += bestj*jstep*dx;
+    line[3] += besti*istep*dy;
+
+    /* If steps are larger than one pixel, just choose the maximum and
+     * continue. */
+    if (MAX(istep, jstep) > 1) {
+        gwy_debug("symmetrize at scale %g (%d,%d): (%d,%d)",
+                  r, jstep, istep, bestj, besti);
+        return FALSE;
+    }
+
+    /* When we get to the smallest possible discrete scale, attempt subpixel
+     * improvement if the maximum does not lie on a border. */
+    ok = TRUE;
+    for (i = -1; i <= 1; i++) {
+        if (!ok || ABS(besti + i) > 2) {
+            ok = FALSE;
+            break;
+        }
+        for (j = -1; j <= 1; j++) {
+            if (ABS(bestj + j) > 2) {
+                ok = FALSE;
+                break;
+            }
+
+            var = allvar[5*(besti + i + 2) + (bestj + j + 2)];
+            if (var >= G_MAXDOUBLE) {
+                ok = FALSE;
+                break;
+            }
+            z[(i + 1)*3 + (j + 1)] = var;
+        }
+    }
+    if (ok) {
+        gdouble x, y;
+        gwy_math_refine_maximum(z, &x, &y);
+        gwy_debug("subpixel refinement (%g,%g)", x, y);
+        line[0] += x*dx;
+        line[1] += y*dy;
+        line[2] += x*dx;
+        line[3] += y*dy;
+    }
+
+    return TRUE;
+}
+
 static void
 gwy_tool_profile_symmetrize_profile(GwyToolProfile *tool,
                                     gint id)
@@ -1146,45 +1231,24 @@ gwy_tool_profile_symmetrize_profile(GwyToolProfile *tool,
     GwyDataField *dfield;
     GwyDataLine *tmpline;
     gdouble line[4];
-    gdouble xc, yc, r, dx, dy;
-    gint i, j, irange, jrange, besti = 0, bestj = 0;
-    gdouble bestvar = G_MAXDOUBLE;
+    gdouble r, dx, dy;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->selection);
     g_return_if_fail(gwy_selection_get_object(plain_tool->selection, id, line));
     dfield = plain_tool->data_field;
-    tmpline = gwy_data_line_new(1, 1.0, FALSE);
-
-    xc = 0.5*(line[0] + line[2]) + dfield->xoff;
-    yc = 0.5*(line[1] + line[3]) + dfield->yoff;
-    r = 0.5*hypot(line[2] - line[0], line[3] - line[1]);
-
     dx = gwy_data_field_get_xmeasure(dfield);
     dy = gwy_data_field_get_ymeasure(dfield);
 
-    irange = 30;
-    jrange = 30;
-    for (i = -irange; i <= irange; i++) {
-        for (j = -jrange; j <= jrange; j++) {
-            gdouble offline[4] = {
-                line[0] + j*dx, line[1] + i*dy,
-                line[2] + j*dx, line[3] + i*dy,
-            };
-            gdouble var = estimate_variation(dfield, tmpline, offline);
+    /* Don't attempt to optimise very short lines. It would end up in tears. */
+    if (hypot((line[2] - line[0])/dx, (line[3] - line[1])/dy) < 4.0)
+        return;
 
-            if (var < bestvar) {
-                besti = i;
-                bestj = j;
-                bestvar = var;
-            }
-        }
-    }
+    tmpline = gwy_data_line_new(1, 1.0, FALSE);
+    r = 0.07*hypot(line[2] - line[0], line[3] - line[1]);
+    while (!symmetrize_at_scale(dfield, tmpline, r, line))
+        r *= 0.5;
 
-    line[0] += bestj*dx;
-    line[1] += besti*dy;
-    line[2] += bestj*dx;
-    line[3] += besti*dy;
     gwy_selection_set_object(plain_tool->selection, id, line);
 
     g_object_unref(tmpline);
