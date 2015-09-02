@@ -1382,13 +1382,11 @@ find_maximum(GwyDataField *dfield,
              gint xwinsize, gint ywinsize)
 {
     gint xj = (gint)*x, yi = (gint)*y;
-    gdouble max = -G_MAXDOUBLE;
+    gdouble v, max = -G_MAXDOUBLE;
     gint mi = yi, mj = xj, i, j;
     gint xres = dfield->xres, yres = dfield->yres;
     const gdouble *d = dfield->data;
-    gdouble sz, szx, szy, szxx, szxy, szyy;
-    gdouble v, bx, by, cxx, cxy, cyy, D, sx, sy;
-    gdouble m[6], rhs[3];
+    gdouble z[9];
 
     gwy_debug("searching from: %g, %g", *x, *y);
     for (i = -ywinsize; i <= ywinsize; i++) {
@@ -1406,85 +1404,23 @@ find_maximum(GwyDataField *dfield,
             }
         }
     }
-
-    *x = mj;
-    *y = mi;
-    gwy_debug("pixel maximum at: %g, %g", *x, *y);
+    gwy_debug("pixel maximum at: %d, %d", *mj, *mi);
 
     /* Don't try any sub-pixel refinement if it's on the edge. */
-    if (mi < 1 || mi+1 > yres-1 || mj < 1 || mj+1 > xres-1)
-        return;
+    if (mi >= 1 && mi+1 <= yres-1 && mj >= 1 && mj+1 <= xres-1) {
+        for (i = -1; i <= 1; i++) {
+            for (j = -1; j <= 1; j++)
+                z[3*(i + 1) + (j + 1)] = d[(mi + i)*xres + (mj + j)];
+        }
+        gwy_math_refine_maximum(z, x, y);
+        gwy_debug("refinement by (%g, %g)", *x, *y);
+    }
+    else {
+        *x = *y = 0.0;
+    }
 
-    sz = (d[(mi - 1)*xres + (mj - 1)]
-          + d[(mi - 1)*xres + mj]
-          + d[(mi - 1)*xres + (mj + 1)]
-          + d[mi*xres + (mj - 1)]
-          + d[mi*xres + mj]
-          + d[mi*xres + (mj + 1)]
-          + d[(mi + 1)*xres + (mj - 1)]
-          + d[(mi + 1)*xres + mj]
-          + d[(mi + 1)*xres + (mj + 1)]);
-    szx = (-d[(mi - 1)*xres + (mj - 1)]
-           + d[(mi - 1)*xres + (mj + 1)]
-           - d[mi*xres + (mj - 1)]
-           + d[mi*xres + (mj + 1)]
-           - d[(mi + 1)*xres + (mj - 1)]
-           + d[(mi + 1)*xres + (mj + 1)]);
-    szy = (-d[(mi - 1)*xres + (mj - 1)]
-           - d[(mi - 1)*xres + mj]
-           - d[(mi - 1)*xres + (mj + 1)]
-           + d[(mi + 1)*xres + (mj - 1)]
-           + d[(mi + 1)*xres + mj]
-           + d[(mi + 1)*xres + (mj + 1)]);
-    szxx = (d[(mi - 1)*xres + (mj - 1)]
-            + d[(mi - 1)*xres + (mj + 1)]
-            + d[mi*xres + (mj - 1)]
-            + d[mi*xres + (mj + 1)]
-            + d[(mi + 1)*xres + (mj - 1)]
-            + d[(mi + 1)*xres + (mj + 1)]);
-    szxy = (d[(mi - 1)*xres + (mj - 1)]
-            - d[(mi - 1)*xres + (mj + 1)]
-            - d[(mi + 1)*xres + (mj - 1)]
-            + d[(mi + 1)*xres + (mj + 1)]);
-    szyy = (d[(mi - 1)*xres + (mj - 1)]
-            + d[(mi - 1)*xres + mj]
-            + d[(mi - 1)*xres + (mj + 1)]
-            + d[(mi + 1)*xres + (mj - 1)]
-            + d[(mi + 1)*xres + mj]
-            + d[(mi + 1)*xres + (mj + 1)]);
-
-    m[0] = 9.0;
-    m[1] = m[2] = m[3] = m[5] = 6.0;
-    m[4] = 4.0;
-    gwy_math_choleski_decompose(3, m);
-
-    rhs[0] = sz;
-    rhs[1] = szxx;
-    rhs[2] = szyy;
-    gwy_math_choleski_solve(3, m, rhs);
-
-    bx = szx/6.0;
-    by = szy/6.0;
-    cxx = rhs[1];
-    cxy = szxy/4.0;
-    cyy = rhs[2];
-
-    D = 4.0*cxx*cyy - cxy*cxy;
-    /* Don't try the sub-pixel refinement if bad cancellation occurs. */
-    if (fabs(D) < 1e-8*MAX(fabs(4.0*cxx*cyy), fabs(cxy*cxy)))
-        return;
-
-    sx = (by*cxy - 2.0*bx*cyy)/D;
-    sy = (bx*cxy - 2.0*by*cxx)/D;
-
-    /* Don't trust the sub-pixel refinement if it moves the maximum outside
-     * the 3×3 neighbourhood. */
-    gwy_debug("refinements: %g, %g", sx, sy);
-    if (fabs(sx) > 1.5 || fabs(sy) > 1.5)
-        return;
-
-    *x += sx;
-    *y += sy;
+    *x += mj;
+    *y += mi;
 }
 
 static gboolean
