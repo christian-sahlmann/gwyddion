@@ -3,9 +3,9 @@ Application:
 - Translations updated: French, Russian.
 
 Libraries:
-- libprocess: A function for estimation of the entropy data field values was
-  added.
-- libprocess: A function for angular averaging of a data field area was
+- libgwyprocess: A function for estimation of the entropy data field values
+  was added.
+- libgwyprocess: A function for angular averaging of a data field area was
   added.
 - libgwydgets: Gradient visualisation mode uses the same false colour mapping
   as overlay if overlays are set.
@@ -13,6 +13,7 @@ Libraries:
   are drawn was hopefully fixed.
 - libgwydgets: Leaking overlay GwyPixmapLayers in Gwy3DView were fixed.
 - libgwydgets: Misaligned Y-grids in graphs exported to bitmap were fixed.
+- libgwyprocess: A function for subpixel maximum refinement was added.
 
 Modules:
 - Align rows (new): Row alignment by various methods, including polynomial
@@ -23,7 +24,10 @@ Modules:
 - Polynom tool: It was removed, use Align rows instead.
 - Line correct: Standard methods were removed (being replaced by Align rows),
   the experimental ones remain in this module.
-- Image export: Missing #include <locale.h> was fixed.
+- Profile tool: Angularly averaged (radial) profiles can be extracted now,
+  with possible automated symmetrisation.
+- Image export: Missing #include <locale.h> was fixed.  GIF support was
+  disabled as it was available only on Win32 and did not work there anyway.
 - Gwyfile: If the program aborts to out-of-memory during saving the existing
   file is kept intact now.
 - Raw XYZ: Data values can be separated by commas or semicolons in file lines.
@@ -903,7 +907,7 @@ Application:
 - Translations updated: Czech, French, German, Italian, Russian.
 
 Libraries:
-- libprocess: gwy_data_line_new_alike(), gwy_data_line_duplicate() and
+- libgwyprocess: gwy_data_line_new_alike(), gwy_data_line_duplicate() and
   gwy_data_line_clone() keep the offset.
 - libgwydgets: GwyColorAxis is drawn correctly if the z-range is inverted.
 - libgwyapp: Graph windows offer all graph functions in a context menu.
@@ -1310,8 +1314,8 @@ Application:
 
 Libraries:
 - libgwyapp: Data browser displays channel thumbnails.
-- libprocess: Profile extraction auto number of samples always corresponds to
-  the number of pixels for horizontal and vertical lines.
+- libgwyprocess: Profile extraction auto number of samples always corresponds
+  to the number of pixels for horizontal and vertical lines.
 - libgwyapp: A helper function for interpolation of bad pixels upon data import
   was added.
 - libgwydgets: Wrong x-axis value reported for mouse selection in GwyGraph in
@@ -1605,10 +1609,10 @@ Application:
 - Translations updated: German, Italian.
 
 Libraries:
-- libprocess: New GwySpectra object representing single point spectra.
+- libgwyprocess: New GwySpectra object representing single point spectra.
 - libgwyddion: New class of curve fitting presets: GwyFDCurvePreset.
 - libgwyddion: New math function to test whether a point is inside a polygon.
-- libprocess: gwy_fft_simple() FFT backend can handle transform sizes of form
+- libgwyprocess: gwy_fft_simple() FFT backend can handle transform sizes of form
   2^n 3^m 5^k.
 - libgwydgets: 3D view shows value units in z labels (instead of lateral).
 - libgwyprocess: Bogus complex 2D FFT transform in the case of
@@ -1625,7 +1629,7 @@ Libraries:
   drawn the ‘wrong’ direction was fixed.
 - libgwydgets: Invisible graph label (key) getting in the way of selection was
   fixed.
-- libprocess: New grain distribution quantities x and y centre position,
+- libgwyprocess: New grain distribution quantities x and y centre position,
   inclination theta ϑ and φ.
 - libgwydgets: GwyLayerBasic has a new "default-range-type" property for color
   range mapping type used when none is set in the data.
