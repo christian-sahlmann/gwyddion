@@ -149,6 +149,7 @@ static void       gwy_tool_profile_response               (GwyTool *tool,
 static void       gwy_tool_profile_data_changed           (GwyPlainTool *plain_tool);
 static void       gwy_tool_profile_selection_changed      (GwyPlainTool *plain_tool,
                                                            gint hint);
+static void       gwy_tool_profile_update_symm_sensitivty (GwyToolProfile *tool);
 static void       gwy_tool_profile_update_curve           (GwyToolProfile *tool,
                                                            gint i);
 static void       gwy_tool_profile_update_all_curves      (GwyToolProfile *tool);
@@ -372,13 +373,13 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
         "<b>y<sub>2</sub></b>",
     };
     GtkTreeViewColumn *column;
+    GtkTreeSelection *selection;
     GtkCellRenderer *renderer;
     GtkDialog *dialog;
     GtkWidget *scwin, *label, *hbox, *vbox, *hbox2;
     GtkTable *table;
     GwyNullStore *store;
     guint i, row;
-    gboolean is_rprof;
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
 
@@ -394,6 +395,11 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
     tool->model = GTK_TREE_MODEL(store);
     tool->treeview = GTK_TREE_VIEW(gtk_tree_view_new_with_model(tool->model));
     gwy_plain_tool_enable_object_deletion(GWY_PLAIN_TOOL(tool), tool->treeview);
+
+    selection = gtk_tree_view_get_selection(tool->treeview);
+    g_signal_connect_swapped(selection, "changed",
+                             G_CALLBACK(gwy_tool_profile_update_symm_sensitivty),
+                             tool);
 
     for (i = 0; i < NCOLUMNS; i++) {
         column = gtk_tree_view_column_new();
@@ -583,13 +589,6 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
                      G_CALLBACK(gwy_tool_profile_both_changed), tool);
     row++;
 
-    is_rprof = tool->args.radial_profiles;
-    gwy_table_hscale_set_sensitive(tool->thickness, !is_rprof);
-    gtk_widget_set_sensitive(tool->interpolation, !is_rprof);
-    gtk_widget_set_sensitive(tool->interpolation_label, !is_rprof);
-    gtk_widget_set_sensitive(tool->symmetrize, is_rprof);
-    gtk_widget_set_sensitive(tool->symmetrize_all, is_rprof);
-
     tool->gmodel = gwy_graph_model_new();
     g_object_set(tool->gmodel, "title", _("Profiles"), NULL);
 
@@ -604,6 +603,7 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
                                         GTK_RESPONSE_APPLY);
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_APPLY);
     gwy_help_add_to_tool_dialog(dialog, GWY_TOOL(tool), GWY_HELP_NO_BUTTON);
+    gwy_tool_profile_update_symm_sensitivty(tool);
 
     gtk_widget_show_all(dialog->vbox);
 }
@@ -747,6 +747,26 @@ gwy_tool_profile_selection_changed(GwyPlainTool *plain_tool,
 }
 
 static void
+gwy_tool_profile_update_symm_sensitivty(GwyToolProfile *tool)
+{
+    GtkTreeSelection *selection;
+    gboolean is_rprof, is_selected, has_lines;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+
+    selection = gtk_tree_view_get_selection(tool->treeview);
+    is_selected = gtk_tree_selection_get_selected(selection, &model, &iter);
+    has_lines = (model && gtk_tree_model_iter_n_children(model, NULL) > 0);
+    is_rprof = tool->args.radial_profiles;
+
+    gwy_table_hscale_set_sensitive(tool->thickness, !is_rprof);
+    gtk_widget_set_sensitive(tool->interpolation, !is_rprof);
+    gtk_widget_set_sensitive(tool->interpolation_label, !is_rprof);
+    gtk_widget_set_sensitive(tool->symmetrize, is_rprof && is_selected);
+    gtk_widget_set_sensitive(tool->symmetrize_all, is_rprof && has_lines);
+}
+
+static void
 gwy_data_line_sum(GwyDataLine *a, GwyDataLine *b)
 {
     gint i;
@@ -755,8 +775,9 @@ gwy_data_line_sum(GwyDataLine *a, GwyDataLine *b)
     g_return_if_fail(a->res == b->res);
 
     for (i = 0; i < a->res; i++)
-            a->data[i] += b->data[i];
+        a->data[i] += b->data[i];
 }
+
 static void
 gwy_data_line_subtract(GwyDataLine *a, GwyDataLine *b)
 {
@@ -766,7 +787,7 @@ gwy_data_line_subtract(GwyDataLine *a, GwyDataLine *b)
     g_return_if_fail(a->res == b->res);
 
     for (i = 0; i < a->res; i++)
-            a->data[i] -= b->data[i];
+        a->data[i] -= b->data[i];
 }
 
 static void
@@ -1350,11 +1371,7 @@ gwy_tool_profile_radial_profiles_changed(GtkToggleButton *check,
     gboolean is_rprof;
 
     tool->args.radial_profiles = is_rprof = gtk_toggle_button_get_active(check);
-    gwy_table_hscale_set_sensitive(tool->thickness, !is_rprof);
-    gtk_widget_set_sensitive(tool->interpolation, !is_rprof);
-    gtk_widget_set_sensitive(tool->interpolation_label, !is_rprof);
-    gtk_widget_set_sensitive(tool->symmetrize, is_rprof);
-    gtk_widget_set_sensitive(tool->symmetrize_all, is_rprof);
+    gwy_tool_profile_update_symm_sensitivty(tool);
     if (plain_tool->layer) {
         g_object_set(plain_tool->layer,
                      "thickness", is_rprof ? 1 : tool->args.thickness,
