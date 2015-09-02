@@ -107,7 +107,7 @@ gwy_math_humanize_numbers(gdouble unit,
  * <warning> Result can be either TRUE or FALSE if the test point
  * is *exactly* on an edge. </warning>
  *
- * Returns: TRUE if the test point is inside poly and FALSE otherwise.
+ * Returns: %TRUE if the test point is inside poly and %FALSE otherwise.
  *
  * Since: 2.7
  **/
@@ -786,6 +786,79 @@ gwy_math_curvature(const gdouble *coeffs,
     }
 
     return degree;
+}
+
+/**
+ * gwy_math_refine_maximum:
+ * @z: Array of length 9, containing the square 3x3 neighbourhood values in
+ *     matrix order and with the maximum in the centre.
+ * @x: Location to store the refined @x-coordinate.
+ * @y: Location to store the refined @y-coordinate.
+ *
+ * Performs subpixel refinement of parabolic a two-dimensional maximum.
+ *
+ * The central value corresponds to coordinates (0,0), distances between values
+ * are unity.  The refinement is based by fitting a two-dimensional parabola
+ * through the maximum.  If it fails or the calculated maximum lies farther
+ * than the surrounding values the function sets the refined maximum to the
+ * origin and returns %FALSE.
+ *
+ * Returns: %TRUE if the refinement succeeded, %FALSE if it failed.  The values
+ *          of @x and @y are usable regardless of the return value.
+ *
+ * Since: 2.42
+ **/
+gboolean
+gwy_math_refine_maximum(const gdouble *z,
+                        gdouble *x, gdouble *y)
+{
+    gdouble sz, szx, szy, szxx, szxy, szyy;
+    gdouble bx, by, cxx, cxy, cyy, D, sx, sy;
+    gdouble m[6], rhs[3];
+
+    *x = *y = 0;
+
+    sz = z[0] + z[1] + z[2] + z[3] + z[4] + z[5] + z[6] + z[7] + z[8];
+    szx = -z[0] + z[2] - z[3] + z[5] - z[6] + z[8];
+    szy = -z[0] - z[1] - z[2] + z[6] + z[7] + z[8];
+    szxx = z[0] + z[2] + z[3] + z[5] + z[6] + z[8];
+    szxy = z[0] - z[2] - z[6] + z[8];
+    szyy = z[0] + z[1] + z[2] + z[6] + z[7] + z[8];
+
+    m[0] = 9.0;
+    m[1] = m[2] = m[3] = m[5] = 6.0;
+    m[4] = 4.0;
+    gwy_math_choleski_decompose(3, m);
+
+    rhs[0] = sz;
+    rhs[1] = szxx;
+    rhs[2] = szyy;
+    gwy_math_choleski_solve(3, m, rhs);
+
+    bx = szx/6.0;
+    by = szy/6.0;
+    cxx = rhs[1];
+    cxy = szxy/4.0;
+    cyy = rhs[2];
+
+    D = 4.0*cxx*cyy - cxy*cxy;
+    /* Don't try the sub-pixel refinement if bad cancellation occurs.  Zero
+     * D can means a line-like maximum that we could still refine in the
+     * orthogonal direction but that seems a fringe case. */
+    if (fabs(D) < 1e-8*MAX(fabs(4.0*cxx*cyy), fabs(cxy*cxy)))
+        return FALSE;
+
+    sx = (by*cxy - 2.0*bx*cyy)/D;
+    sy = (bx*cxy - 2.0*by*cxx)/D;
+
+    /* Don't trust the sub-pixel refinement if it moves the maximum too far
+     * from the centre. */
+    if (fabs(sx) > 1.0 || fabs(sy) > 1.0)
+        return FALSE;
+
+    *x = sx;
+    *y = sy;
+    return TRUE;
 }
 
 /* Note: The implementation was specialized for doubles and a few things were
