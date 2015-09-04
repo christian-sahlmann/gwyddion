@@ -1100,7 +1100,7 @@ estimate_variation(GwyDataField *dfield, GwyDataLine *tmp, const gdouble *line)
 {
     gdouble xc, yc, r, dx, dy, h;
     gdouble *s, *s2;
-    gdouble variation = 0.0;
+    gdouble n, variation = 0.0;
     gint ir, ndirs, res, i, j;
 
     /* Ignore offsets here we do not call any function that uses them. */
@@ -1145,14 +1145,15 @@ estimate_variation(GwyDataField *dfield, GwyDataLine *tmp, const gdouble *line)
         }
 
         for (j = 0; j < res; j++) {
-            gdouble v = tmp->data[j];
-            s[j] += v;
-            s2[j] += v*v;
+            gdouble v1 = tmp->data[j], v2 = tmp->data[res-1 - j];
+            s[j] += v1 + v2;
+            s2[j] += v1*v1 + v2*v2;
         }
     }
 
+    n = 2.0*ndirs;
     for (j = 0; j < res; j++)
-        variation += s2[j]/ndirs - s[j]*s[j]/ndirs/ndirs;
+        variation += s2[j]/n - s[j]*s[j]/(n*n);
     variation /= res;
 
 fail:
