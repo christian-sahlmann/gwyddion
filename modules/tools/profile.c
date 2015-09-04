@@ -94,11 +94,13 @@ struct _GwyToolProfile {
 
     GtkWidget *options;
     GtkWidget *radial_profiles;
+    GtkWidget *symm_hbox;
     GtkWidget *symmetrize;
     GtkWidget *symmetrize_all;
     GtkObject *thickness;
     GtkObject *resolution;
     GtkWidget *fixres;
+    GtkWidget *interp_hbox;
     GtkWidget *interpolation;
     GtkWidget *interpolation_label;
     GtkWidget *number_lines;
@@ -464,7 +466,7 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
                      tool);
     row++;
 
-    hbox2 = gtk_hbox_new(FALSE, 6);
+    hbox2 = tool->symm_hbox = gtk_hbox_new(FALSE, 6);
     gtk_table_attach(table, hbox2,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     tool->symmetrize_all = gtk_button_new_with_mnemonic(_("Symmetrize _All"));
@@ -525,7 +527,7 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
                      G_CALLBACK(gwy_tool_profile_separate_changed), tool);
     row++;
 
-    hbox2 = gtk_hbox_new(FALSE, 6);
+    hbox2 = tool->interp_hbox = gtk_hbox_new(FALSE, 6);
     gtk_table_attach(table, hbox2,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
@@ -750,6 +752,16 @@ gwy_tool_profile_selection_changed(GwyPlainTool *plain_tool,
 }
 
 static void
+show_hide_widget(GtkWidget *widget, gboolean visible)
+{
+    gtk_widget_set_no_show_all(widget, !visible);
+    if (visible)
+        gtk_widget_show_all(widget);
+    else
+        gtk_widget_hide(widget);
+}
+
+static void
 gwy_tool_profile_update_symm_sensitivty(GwyToolProfile *tool)
 {
     GtkTreeSelection *selection;
@@ -767,6 +779,14 @@ gwy_tool_profile_update_symm_sensitivty(GwyToolProfile *tool)
     gtk_widget_set_sensitive(tool->interpolation_label, !is_rprof);
     gtk_widget_set_sensitive(tool->symmetrize, is_rprof && is_selected);
     gtk_widget_set_sensitive(tool->symmetrize_all, is_rprof && has_lines);
+
+    show_hide_widget(tool->interp_hbox, !is_rprof);
+    show_hide_widget(gwy_table_hscale_get_label(tool->thickness), !is_rprof);
+    show_hide_widget(gwy_table_hscale_get_middle_widget(tool->thickness),
+                     !is_rprof);
+    show_hide_widget(gwy_table_hscale_get_scale(tool->thickness), !is_rprof);
+    show_hide_widget(gwy_table_hscale_get_units(tool->thickness), !is_rprof);
+    show_hide_widget(tool->symm_hbox, is_rprof);
 }
 
 static void
