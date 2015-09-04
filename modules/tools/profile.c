@@ -594,7 +594,10 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
 
     tool->graph = gwy_graph_new(tool->gmodel);
     gwy_graph_enable_user_input(GWY_GRAPH(tool->graph), FALSE);
-    g_object_set(tool->gmodel, "label-visible", FALSE, NULL);
+    g_object_set(tool->gmodel,
+                 "label-visible", FALSE,
+                 "axis-label-bottom", tool->args.radial_profiles ? "r" : "x",
+                 NULL);
     gtk_box_pack_start(GTK_BOX(hbox), tool->graph, TRUE, TRUE, 2);
 
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
@@ -1375,6 +1378,11 @@ gwy_tool_profile_radial_profiles_changed(GtkToggleButton *check,
     if (plain_tool->layer) {
         g_object_set(plain_tool->layer,
                      "thickness", is_rprof ? 1 : tool->args.thickness,
+                     NULL);
+    }
+    if (tool->gmodel) {
+        g_object_set(tool->gmodel,
+                     "axis-label-bottom", is_rprof ? "r" : "x",
                      NULL);
     }
     gwy_tool_profile_update_all_curves(tool);
