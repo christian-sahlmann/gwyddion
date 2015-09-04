@@ -47,7 +47,8 @@ enum {
 enum {
     PROP_0,
     PROP_LINE_NUMBERS,
-    PROP_THICKNESS
+    PROP_THICKNESS,
+    PROP_CENTER_TICK,
 };
 
 typedef struct _GwyLayerLine          GwyLayerLine;
@@ -69,6 +70,7 @@ struct _GwyLayerLine {
 
     /* Properties */
     gboolean line_numbers;
+    gboolean center_tick;
     gint thickness;
 
     /* Dynamic state */
@@ -144,6 +146,8 @@ static gboolean   gwy_layer_line_button_released (GwyVectorLayer *layer,
                                                   GdkEventButton *event);
 static void       gwy_layer_line_set_line_numbers(GwyLayerLine *layer,
                                                   gboolean line_numbers);
+static void       gwy_layer_line_set_center_tick (GwyLayerLine *layer,
+                                                  gboolean center_tick);
 static void       gwy_layer_line_set_thickness   (GwyLayerLine *layer,
                                                   gint thickness);
 static void       gwy_layer_line_realize         (GwyDataViewLayer *dlayer);
@@ -169,7 +173,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of arbitrary straight lines."),
     "Yeti <yeti@gwyddion.net>",
-    "3.4",
+    "3.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -260,6 +264,15 @@ gwy_layer_line_class_init(GwyLayerLineClass *klass)
                           "Thickness marked by end-point markers.",
                           -1, 1024, 1,
                           G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_CENTER_TICK,
+         g_param_spec_boolean("center-tick",
+                              "Center tick",
+                              "Whether to draw a tick in the center.",
+                              FALSE,
+                              G_PARAM_READWRITE));
 }
 
 static void
@@ -273,6 +286,7 @@ static void
 gwy_layer_line_init(GwyLayerLine *layer)
 {
     layer->line_numbers = TRUE;
+    layer->center_tick = FALSE;
     layer->thickness = 1;
 }
 
@@ -291,6 +305,10 @@ gwy_layer_line_set_property(GObject *object,
 
         case PROP_THICKNESS:
         gwy_layer_line_set_thickness(layer, g_value_get_int(value));
+        break;
+
+        case PROP_CENTER_TICK:
+        gwy_layer_line_set_center_tick(layer, g_value_get_boolean(value));
         break;
 
         default:
@@ -314,6 +332,10 @@ gwy_layer_line_get_property(GObject*object,
 
         case PROP_THICKNESS:
         g_value_set_int(value, layer->thickness);
+        break;
+
+        case PROP_CENTER_TICK:
+        g_value_set_boolean(value, layer->center_tick);
         break;
 
         default:
@@ -347,8 +369,32 @@ gwy_layer_line_set_line_numbers(GwyLayerLine *layer,
 }
 
 static void
+gwy_layer_line_set_center_tick(GwyLayerLine *layer,
+                               gboolean center_tick)
+{
+    GwyVectorLayer *vector_layer;
+    GtkWidget *parent;
+
+    g_return_if_fail(GWY_IS_LAYER_LINE(layer));
+    vector_layer = GWY_VECTOR_LAYER(layer);
+    parent = GWY_DATA_VIEW_LAYER(layer)->parent;
+
+    if (center_tick == layer->center_tick)
+        return;
+
+    if (parent && GTK_WIDGET_REALIZED(parent))
+        gwy_layer_line_undraw(vector_layer, parent->window,
+                              GWY_RENDERING_TARGET_SCREEN);
+    layer->center_tick = center_tick;
+    if (parent && GTK_WIDGET_REALIZED(parent))
+        gwy_layer_line_draw(vector_layer, parent->window,
+                            GWY_RENDERING_TARGET_SCREEN);
+    g_object_notify(G_OBJECT(layer), "center-tick");
+}
+
+static void
 gwy_layer_line_set_thickness(GwyLayerLine *layer,
-                         gint thickness)
+                             gint thickness)
 {
     GwyVectorLayer *vector_layer;
     GtkWidget *parent;
@@ -491,29 +537,41 @@ gwy_layer_line_draw_object(GwyVectorLayer *layer,
         gdk_draw_line(drawable, layer->gc, xl0, yl0, xl1, yl1);
     }
 
-    if (!layer_line->line_numbers)
-        return;
+    if (layer_line->line_numbers) {
+        xt = (xi0 + xi1)/2 + 1;
+        yt = (yi0 + yi1)/2;
+        switch (target) {
+            case GWY_RENDERING_TARGET_SCREEN:
+            gwy_layer_line_setup_label(layer_line, drawable, i);
+            gdk_draw_drawable(drawable, layer->gc,
+                              g_ptr_array_index(layer_line->line_labels, i),
+                              0, 0, xt, yt, -1, -1);
+            break;
 
-    xt = (xi0 + xi1)/2 + 1;
-    yt = (yi0 + yi1)/2;
-    switch (target) {
-        case GWY_RENDERING_TARGET_SCREEN:
-        gwy_layer_line_setup_label(layer_line, drawable, i);
-        gdk_draw_drawable(drawable, layer->gc,
-                          g_ptr_array_index(layer_line->line_labels, i),
-                          0, 0, xt, yt, -1, -1);
-        break;
+            case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
+            gwy_data_view_get_pixel_data_sizes(data_view, &xi1, &yi1);
+            zoom = sqrt(((gdouble)(width*height))/(xi1*yi1));
 
-        case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
-        gwy_data_view_get_pixel_data_sizes(data_view, &xi1, &yi1);
-        zoom = sqrt(((gdouble)(width*height))/(xi1*yi1));
+            gwy_layer_line_draw_label(layer, drawable, zoom, i, xt, yt);
+            break;
 
-        gwy_layer_line_draw_label(layer, drawable, zoom, i, xt, yt);
-        break;
+            default:
+            g_return_if_reached();
+            break;
+        }
+    }
 
-        default:
-        g_return_if_reached();
-        break;
+    if (layer_line->center_tick) {
+        gdouble d = hypot(xi1 - xi0, yi1 - yi0);
+        gint xl0, yl0, xl1, yl1;
+
+        xt = (xi0 + xi1)/2;
+        yt = (yi0 + yi1)/2;
+        xl0 = xt + GWY_ROUND((yi0 - yi1)/d*CROSS_SIZE);
+        yl0 = yt - GWY_ROUND((xi0 - xi1)/d*CROSS_SIZE);
+        xl1 = xt - GWY_ROUND((yi0 - yi1)/d*CROSS_SIZE);
+        yl1 = yt + GWY_ROUND((xi0 - xi1)/d*CROSS_SIZE);
+        gdk_draw_line(drawable, layer->gc, xl0, yl0, xl1, yl1);
     }
 }
 
