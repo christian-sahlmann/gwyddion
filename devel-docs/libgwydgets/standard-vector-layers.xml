@@ -154,6 +154,15 @@
             </para>
           </listitem>
         </varlistentry>
+        <varlistentry><term><anchor id="GwyLayerLine--center-tick"/>&quot;<literal>center-tick</literal>&quot; (gboolean : Read / Write)</term>
+          <listitem>
+            <para>
+              Whether an tick is drawn in the line centre.
+              Default is not to drawn the central tick.
+            </para>
+            <para role="since">Since: 2.42</para>
+          </listitem>
+        </varlistentry>
       </variablelist>
     </sect2>
     <sect2>
