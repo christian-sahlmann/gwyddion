@@ -619,7 +619,7 @@ gwy_tool_profile_data_switched(GwyTool *gwytool,
 {
     GwyPlainTool *plain_tool;
     GwyToolProfile *tool;
-    gboolean ignore;
+    gboolean ignore, is_rprof;
     gchar xekey[24];
     gchar yekey[24];
     gchar zekey[24];
@@ -638,10 +638,12 @@ gwy_tool_profile_data_switched(GwyTool *gwytool,
 
     tool = GWY_TOOL_PROFILE(gwytool);
     if (data_view) {
+        is_rprof = tool->args.radial_profiles;
         gwy_object_set_or_reset(plain_tool->layer,
                                 tool->layer_type_line,
                                 "line-numbers", tool->args.number_lines,
-                                "thickness", tool->args.thickness,
+                                "thickness", is_rprof ? 1 : tool->args.thickness,
+                                "center-tick", is_rprof,
                                 "editable", TRUE,
                                 "focus", -1,
                                 NULL);
@@ -1399,6 +1401,7 @@ gwy_tool_profile_radial_profiles_changed(GtkToggleButton *check,
     if (plain_tool->layer) {
         g_object_set(plain_tool->layer,
                      "thickness", is_rprof ? 1 : tool->args.thickness,
+                     "center-tick", is_rprof,
                      NULL);
     }
     if (tool->gmodel) {
