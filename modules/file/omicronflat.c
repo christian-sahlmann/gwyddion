@@ -42,7 +42,6 @@
  * .*_flat
  * Read
  **/
-#define TAKE_OVER 1
 #define FAIL_ALWAYS 0
 
 #define DEBUG 1
@@ -376,11 +375,7 @@ omicronflat_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
         && memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) == 0
         && memcmp(fileinfo->head + MAGIC_SIZE,
                   FLAT_VERSION, FLAT_VERSION_SIZE) == 0)
-#if TAKE_OVER
-        score = 101;
-#else
-        score = 10;
-#endif
+        score = 100;
 
     return score;
 }
