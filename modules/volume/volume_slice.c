@@ -153,7 +153,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Extracts image planes and line graphs from volume data."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2015",
 };
@@ -524,9 +524,9 @@ point_selection_changed(SliceControls *controls,
     if (!gwy_selection_get_object(selection, 0, xy))
         return;
 
-    ixy[0] = CLAMP(gwy_data_field_rtoj(controls->image, xy[0]),
+    ixy[0] = CLAMP(gwy_data_field_rtoi(controls->image, xy[0]),
                    0, controls->image->xres-1);
-    ixy[1] = CLAMP(gwy_data_field_rtoi(controls->image, xy[1]),
+    ixy[1] = CLAMP(gwy_data_field_rtoj(controls->image, xy[1]),
                    0, controls->image->yres-1);
     controls->in_update = TRUE;
     set_image_first_coord(controls, ixy[0]);
@@ -559,11 +559,11 @@ plane_selection_changed(SliceControls *controls,
 
     max = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(selection), "max"));
     if (base_plane == PLANE_YZ || base_plane == PLANE_ZY)
-        ix = CLAMP(gwy_brick_rtoj(brick, z), 0, max);
+        ix = CLAMP(gwy_brick_rtoi(brick, z), 0, max);
     else if (base_plane == PLANE_YX || base_plane == PLANE_XY)
         ix = CLAMP(gwy_brick_rtok(brick, z), 0, max);
     else if (base_plane == PLANE_XZ || base_plane == PLANE_ZX)
-        ix = CLAMP(gwy_brick_rtoi(brick, z), 0, max);
+        ix = CLAMP(gwy_brick_rtoj(brick, z), 0, max);
     else {
         g_return_if_reached();
     }
@@ -615,6 +615,7 @@ base_plane_changed(GtkComboBox *combo, SliceControls *controls)
     gint xpos = args->xpos, ypos = args->ypos, zpos = args->zpos;
 
     controls->args->base_plane = gwy_enum_combo_box_get_active(combo);
+    set_graph_max(controls);
     update_selections(controls);
     gwy_set_data_preview_size(GWY_DATA_VIEW(controls->view), PREVIEW_SIZE);
 
@@ -702,34 +703,34 @@ update_selections(SliceControls *controls)
     gdouble xy[2], z;
 
     if (base_plane == PLANE_XY) {
-        xy[0] = gwy_brick_jtor(brick, args->xpos);
-        xy[1] = gwy_brick_itor(brick, args->ypos);
+        xy[0] = gwy_brick_itor(brick, args->xpos);
+        xy[1] = gwy_brick_jtor(brick, args->ypos);
         z = gwy_brick_ktor(brick, args->zpos);
     }
     else if (base_plane == PLANE_YX) {
-        xy[0] = gwy_brick_itor(brick, args->ypos);
-        xy[1] = gwy_brick_jtor(brick, args->xpos);
+        xy[0] = gwy_brick_jtor(brick, args->ypos);
+        xy[1] = gwy_brick_itor(brick, args->xpos);
         z = gwy_brick_ktor(brick, args->zpos);
     }
     else if (base_plane == PLANE_XZ) {
-        xy[0] = gwy_brick_jtor(brick, args->xpos);
+        xy[0] = gwy_brick_itor(brick, args->xpos);
         xy[1] = gwy_brick_ktor(brick, args->zpos);
-        z = gwy_brick_itor(brick, args->ypos);
+        z = gwy_brick_jtor(brick, args->ypos);
     }
     else if (base_plane == PLANE_ZX) {
         xy[0] = gwy_brick_ktor(brick, args->zpos);
-        xy[1] = gwy_brick_jtor(brick, args->xpos);
-        z = gwy_brick_itor(brick, args->ypos);
+        xy[1] = gwy_brick_itor(brick, args->xpos);
+        z = gwy_brick_jtor(brick, args->ypos);
     }
     else if (base_plane == PLANE_YZ) {
-        xy[0] = gwy_brick_itor(brick, args->ypos);
+        xy[0] = gwy_brick_jtor(brick, args->ypos);
         xy[1] = gwy_brick_ktor(brick, args->zpos);
-        z = gwy_brick_jtor(brick, args->xpos);
+        z = gwy_brick_itor(brick, args->xpos);
     }
     else if (base_plane == PLANE_ZY) {
         xy[0] = gwy_brick_ktor(brick, args->zpos);
-        xy[1] = gwy_brick_itor(brick, args->ypos);
-        z = gwy_brick_jtor(brick, args->xpos);
+        xy[1] = gwy_brick_jtor(brick, args->ypos);
+        z = gwy_brick_itor(brick, args->xpos);
     }
     else {
         g_return_if_reached();
