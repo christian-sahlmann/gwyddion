@@ -21,9 +21,12 @@ Modules:
   the various scattered row correction functions.
 - Measure lattice (new): Measures vectors of Bravais lattice using either ACF
   or PSDF image.
+- Distribute Mask (new): Distributes a channel mask to other channels.
 - Polynom tool: It was removed, use Align rows instead.
 - Line correct: Standard methods were removed (being replaced by Align rows),
   the experimental ones remain in this module.
+- Omicron flat: It was rewritten.  All related data are now loaded together
+  and support for the various non-topography data types was improves.
 - Profile tool: Angularly averaged (radial) profiles can be extracted now,
   with possible automated symmetrisation.
 - Image export: Missing #include <locale.h> was fixed.  GIF support was
@@ -43,6 +46,7 @@ Modules:
 - Mark With: Preview now behaves correctly when using mask as the source.
 - Distance, Profile, Path Level tools: Moved/edited line is selected in the
   list and the list is scrolled to make it visible.
+- Line layer: New property "center-tick" controls drawing of a central tick.
 
 Other:
 - The code has been made MSVC-compatible.
