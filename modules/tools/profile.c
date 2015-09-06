@@ -33,6 +33,7 @@
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwynullstore.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
@@ -72,6 +73,7 @@ typedef struct {
     gint resolution;
     gboolean fixres;
     GwyInterpolationType interpolation;
+    GwyMaskingType masking;
     gboolean separate;
     gboolean both;
     gboolean number_lines;
@@ -111,6 +113,7 @@ struct _GwyToolProfile {
     GtkWidget *both;
     GtkWidget *target_graph;
     GtkWidget *target_hbox;
+    GSList *masking;
 
     GwyDataField *xerr;
     GwyDataField *yerr;
@@ -141,7 +144,7 @@ struct _GwyToolProfileClass {
 
 static gboolean module_register(void);
 
-static GType      gwy_tool_profile_get_type               (void)                      G_GNUC_CONST;
+static GType      gwy_tool_profile_get_type               (void)                                G_GNUC_CONST;
 static void       gwy_tool_profile_finalize               (GObject *object);
 static void       gwy_tool_profile_init_dialog            (GwyToolProfile *tool);
 static void       gwy_tool_profile_data_switched          (GwyTool *gwytool,
@@ -159,6 +162,18 @@ static void       gwy_tool_profile_symmetrize_all         (GwyToolProfile *tool)
 static void       gwy_tool_profile_symmetrize             (GwyToolProfile *tool);
 static void       gwy_tool_profile_symmetrize_profile     (GwyToolProfile *tool,
                                                            gint id);
+static gint       get_profile_with_masking                (GwyDataField *dfield,
+                                                           gdouble **xdata,
+                                                           gdouble **ydata,
+                                                           GwyDataField *mask,
+                                                           GwyMaskingType masking,
+                                                           gdouble xfrom,
+                                                           gdouble yfrom,
+                                                           gdouble xto,
+                                                           gdouble yto,
+                                                           gint res,
+                                                           gint thickness,
+                                                           GwyInterpolationType interpolation);
 static void       gwy_tool_profile_render_cell            (GtkCellLayout *layout,
                                                            GtkCellRenderer *renderer,
                                                            GtkTreeModel *model,
@@ -193,6 +208,8 @@ static gboolean   filter_target_graphs                    (GwyContainer *data,
                                                            gint id,
                                                            gpointer user_data);
 static void       gwy_tool_profile_target_changed         (GwyToolProfile *tool);
+static void       gwy_tool_profile_masking_changed        (GtkWidget *button,
+                                                           GwyToolProfile *tool);
 static void       gwy_tool_profile_apply                  (GwyToolProfile *tool);
 static GtkWidget* menu_display                            (GCallback callback,
                                                            gpointer cbdata,
@@ -213,6 +230,7 @@ static GwyModuleInfo module_info = {
 static const gchar both_key[]            = "/module/profile/both";
 static const gchar fixres_key[]          = "/module/profile/fixres";
 static const gchar interpolation_key[]   = "/module/profile/interpolation";
+static const gchar masking_key[]         = "/module/profile/masking";
 static const gchar number_lines_key[]    = "/module/profile/number_lines";
 static const gchar options_visible_key[] = "/module/profile/options_visible";
 static const gchar radial_profiles_key[] = "/module/profile/radial_profiles";
@@ -226,6 +244,7 @@ static const ToolArgs default_args = {
     120,
     FALSE,
     GWY_INTERPOLATION_LINEAR,
+    GWY_MASK_IGNORE,
     FALSE,
     TRUE,
     TRUE,
@@ -286,6 +305,8 @@ gwy_tool_profile_finalize(GObject *object)
                                       tool->args.fixres);
     gwy_container_set_enum_by_name(settings, interpolation_key,
                                    tool->args.interpolation);
+    gwy_container_set_enum_by_name(settings, masking_key,
+                                   tool->args.masking);
     gwy_container_set_boolean_by_name(settings, separate_key,
                                       tool->args.separate);
     gwy_container_set_boolean_by_name(settings, both_key,
@@ -339,6 +360,11 @@ gwy_tool_profile_init(GwyToolProfile *tool)
     tool->args.interpolation
         = gwy_enum_sanitize_value(tool->args.interpolation,
                                   GWY_TYPE_INTERPOLATION_TYPE);
+    gwy_container_gis_enum_by_name(settings, masking_key,
+                                   &tool->args.masking);
+    tool->args.masking
+        = gwy_enum_sanitize_value(tool->args.masking,
+                                  GWY_TYPE_MASKING_TYPE);
     gwy_container_gis_boolean_by_name(settings, separate_key,
                                       &tool->args.separate);
     gwy_container_gis_boolean_by_name(settings, both_key,
@@ -448,7 +474,7 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
                      G_CALLBACK(gwy_tool_profile_options_expanded), tool);
     gtk_box_pack_start(GTK_BOX(vbox), tool->options, FALSE, FALSE, 0);
 
-    table = GTK_TABLE(gtk_table_new(9, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(11, 4, FALSE));
     gtk_table_set_col_spacings(table, 6);
     gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -565,6 +591,20 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
                              G_CALLBACK(gwy_tool_profile_target_changed),
                              tool);
     row++;
+
+    gtk_table_set_row_spacing(table, row-1, 8);
+    label = gwy_label_new_header(_("Masking Mode"));
+    gtk_table_attach(table, label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    tool->masking
+        = gwy_radio_buttons_create(gwy_masking_type_get_enum(), -1,
+                                   G_CALLBACK(gwy_tool_profile_masking_changed),
+                                   tool,
+                                   tool->args.masking);
+    row = gwy_radio_buttons_attach_to_table(tool->masking, table, 3, row);
+    gtk_table_set_row_spacing(table, row-1, 8);
 
     hbox2 = gtk_hbox_new(FALSE, 6);
     gtk_table_attach(table, hbox2,
@@ -977,7 +1017,8 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
     gint n, lineres, multpos;
     gchar *desc;
     const GwyRGBA *color;
-    gboolean has_calibration, is_rprof;
+    gboolean has_calibration, is_rprof, is_masking;
+    gdouble *xdata = NULL, *ydata = NULL;
     GwyDataField *data_field;
     GwyDataLine *upunc = NULL, *lowunc = NULL;
 
@@ -987,7 +1028,9 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
     data_field = plain_tool->data_field;
 
     is_rprof = tool->args.radial_profiles;
-    has_calibration = tool->has_calibration && !is_rprof;
+    is_masking = (plain_tool->mask_field
+                  && tool->args.masking != GWY_MASK_IGNORE);
+    has_calibration = tool->has_calibration && (!is_rprof && !is_masking);
 
     multpos = has_calibration ? 9 : 1;
     i *= multpos;
@@ -1014,15 +1057,27 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
         r = MAX(r, hypot(gwy_data_field_get_xmeasure(data_field),
                          gwy_data_field_get_ymeasure(data_field)));
         gwy_data_field_angular_average(data_field, tool->line,
-                                       NULL, GWY_MASK_IGNORE,
+                                       plain_tool->mask_field,
+                                       tool->args.masking,
                                        xc, yc, r, lineres);
     }
-    else {
+    else if (has_calibration) {
+        /* Use non-masking profiles with calibration. */
         tool->line = gwy_data_field_get_profile(data_field, tool->line,
                                                 xl1, yl1, xl2, yl2,
                                                 lineres,
                                                 tool->args.thickness,
                                                 tool->args.interpolation);
+    }
+    else {
+        lineres = get_profile_with_masking(data_field,
+                                           &xdata, &ydata,
+                                           plain_tool->mask_field,
+                                           tool->args.masking,
+                                           line[0], line[1], line[2], line[3],
+                                           lineres,
+                                           tool->args.thickness,
+                                           tool->args.interpolation);
     }
 
     if (has_calibration) {
@@ -1040,7 +1095,13 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
     n = gwy_graph_model_get_n_curves(tool->gmodel);
     if (i < n) {
         gcmodel = gwy_graph_model_get_curve(tool->gmodel, i);
-        gwy_graph_curve_model_set_data_from_dataline(gcmodel, tool->line, 0, 0);
+        if (xdata && ydata) {
+            gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, lineres);
+        }
+        else {
+            gwy_graph_curve_model_set_data_from_dataline(gcmodel,
+                                                         tool->line, 0, 0);
+        }
 
         if (has_calibration)
             set_unc_gcmodel_data(tool, i, upunc, lowunc);
@@ -1055,16 +1116,37 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
                      "color", color,
                      NULL);
         g_free(desc);
-        gwy_graph_curve_model_set_data_from_dataline(gcmodel, tool->line, 0, 0);
+        if (xdata && ydata) {
+            gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, lineres);
+        }
+        else {
+            gwy_graph_curve_model_set_data_from_dataline(gcmodel,
+                                                         tool->line, 0, 0);
+        }
         gwy_graph_model_add_curve(tool->gmodel, gcmodel);
         g_object_unref(gcmodel);
 
-        if (i == 0)
-            gwy_graph_model_set_units_from_data_line(tool->gmodel, tool->line);
+        if (i == 0) {
+            GwySIUnit *xunit, *yunit;
+
+            xunit = gwy_data_field_get_si_unit_xy(plain_tool->data_field);
+            xunit = gwy_si_unit_duplicate(xunit);
+            yunit = gwy_data_field_get_si_unit_z(plain_tool->data_field);
+            yunit = gwy_si_unit_duplicate(yunit);
+            g_object_set(tool->gmodel,
+                         "si-unit-x", xunit,
+                         "si-unit-y", yunit,
+                         NULL);
+            g_object_unref(xunit);
+            g_object_unref(yunit);
+        }
 
         if (has_calibration)
             add_hidden_unc_curves(tool, i/multpos+1, color, upunc, lowunc);
     }
+
+    g_free(xdata);
+    g_free(ydata);
 }
 
 static void
@@ -1302,6 +1384,108 @@ gwy_tool_profile_symmetrize_profile(GwyToolProfile *tool,
     g_object_unref(tmpline);
 }
 
+static gint
+get_profile_with_masking(GwyDataField *dfield,
+                         gdouble **xdata, gdouble **ydata,
+                         GwyDataField *mask,
+                         GwyMaskingType masking,
+                         gdouble xfrom, gdouble yfrom,
+                         gdouble xto, gdouble yto,
+                         gint res,
+                         gint thickness,
+                         GwyInterpolationType interpolation)
+{
+    gint k, i, j, kk;
+    gdouble xreal, yreal, dx, dy, xstep, ystep, step, size, tx, ty, h;
+    gint xres, yres, tres, n;
+    const gdouble *m;
+
+    if (masking == GWY_MASK_IGNORE)
+        mask = NULL;
+    else if (!mask)
+        masking = GWY_MASK_IGNORE;
+    m = mask ? mask->data : NULL;
+
+    xres = dfield->xres;
+    yres = dfield->yres;
+    xreal = dfield->xreal;
+    yreal = dfield->yreal;
+    dx = xreal/xres;
+    dy = yreal/yres;
+
+    size = hypot(fabs(xto - xfrom)/dx + 1, fabs(yto - yfrom)/dy + 1);
+    size = MAX(size, 1.0);
+    if (res <= 0)
+        res = GWY_ROUND(size);
+
+    gwy_debug("size: %g, res: %d", size, res);
+    xstep = (xto - xfrom)/(res - 1.0);
+    ystep = (yto - yfrom)/(res - 1.0);
+    step = hypot(xstep, ystep);
+    gwy_debug("step (%g, %g)", xstep, ystep);
+
+    if (thickness <= 1) {
+        tres = 0;
+        tx = ty = 0.0;
+    }
+    else {
+        tres = 2*(thickness - 1);
+        tx = (yto - yfrom)/dy;
+        ty = (xto - xfrom)/dx;
+        h = hypot(tx, ty);
+        tx *= dx/h * 0.5*thickness/tres;
+        ty *= dy/h * 0.5*thickness/tres;
+    }
+    gwy_debug("tres: %d, tstep (%g, %g)", tres, tx, ty);
+
+    *xdata = g_new0(gdouble, res);
+    *ydata = g_new0(gdouble, res);
+
+    n = 0;
+    for (k = 0; k < res; k++) {
+        gdouble xc = xfrom + xstep*k;
+        gdouble yc = yfrom + ystep*k;
+        gdouble z = 0.0;
+        gint w = 0;
+
+        for (kk = -tres; kk <= tres; kk++) {
+            gdouble x = xc + kk*tx;
+            gdouble y = yc + kk*ty;
+
+            x = CLAMP(x, 0.0, 0.999999*xreal);
+            y = CLAMP(y, 0.0, 0.999999*yreal);
+
+            if (masking != GWY_MASK_IGNORE) {
+                i = (gint)floor(y/dy);
+                j = (gint)floor(x/dx);
+                if ((masking == GWY_MASK_INCLUDE && m[i*xres + j] <= 0.0)
+                    || (masking == GWY_MASK_EXCLUDE && m[i*xres + j] >= 1.0))
+                    continue;
+            }
+
+            z += gwy_data_field_get_dval_real(dfield, x, y, interpolation);
+            w++;
+        }
+        gwy_debug("[%d] %d", k, w);
+        if (w) {
+            (*xdata)[n] = step*k;
+            (*ydata)[n] = z/w;
+            n++;
+        }
+    }
+
+    if (!n) {
+        (*xdata)[0] = 0.0;
+        (*ydata)[0] = gwy_data_field_get_dval_real(dfield,
+                                                   0.5*(xfrom + xto),
+                                                   0.5*(yfrom + yto),
+                                                   GWY_INTERPOLATION_ROUND);
+        n = 1;
+    }
+
+    return n;
+}
+
 static void
 gwy_tool_profile_render_cell(GtkCellLayout *layout,
                              GtkCellRenderer *renderer,
@@ -1512,6 +1696,21 @@ gwy_tool_profile_target_changed(GwyToolProfile *tool)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(tool->target_graph);
     gwy_data_chooser_get_active_id(chooser, &tool->args.target);
+}
+
+static void
+gwy_tool_profile_masking_changed(GtkWidget *button,
+                                 GwyToolProfile *tool)
+{
+    GwyPlainTool *plain_tool;
+
+    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
+        return;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    tool->args.masking = gwy_radio_button_get_value(button);
+    if (plain_tool->data_field && plain_tool->mask_field)
+        gwy_tool_profile_update_all_curves(tool);
 }
 
 static void
