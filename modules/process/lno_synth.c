@@ -21,6 +21,7 @@
 
 #include "config.h"
 #include <string.h>
+#include <stdlib.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -99,6 +100,7 @@ typedef enum {
 typedef enum {
     LNO_SYNTH_STEPS = 0,
     LNO_SYNTH_SCARS = 1,
+    LNO_SYNTH_RIDGES = 2,
     LNO_SYNTH_NTYPES
 } LNoSynthNoiseType;
 
@@ -234,6 +236,7 @@ DECLARE_NOISE(triangle);
 
 DECLARE_LNOISE(steps);
 DECLARE_LNOISE(scars);
+DECLARE_LNOISE(ridges);
 
 static const gchar prefix[] = "/module/lno_synth";
 
@@ -272,8 +275,9 @@ static const LNoSynthGenerator generators[] = {
 };
 
 static const LNoSynthNoise noises[] = {
-    { LNO_SYNTH_STEPS, N_("Steps"), LLNO_FUNCS(steps), },
-    { LNO_SYNTH_SCARS, N_("Scars"), LLNO_FUNCS(scars), },
+    { LNO_SYNTH_STEPS,  N_("Steps"),  LLNO_FUNCS(steps),  },
+    { LNO_SYNTH_SCARS,  N_("Scars"),  LLNO_FUNCS(scars),  },
+    { LNO_SYNTH_RIDGES, N_("Ridges"), LLNO_FUNCS(ridges), },
 };
 
 static GwyModuleInfo module_info = {
@@ -281,7 +285,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates various kinds of line noise."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti)",
     "2010",
 };
@@ -1194,6 +1198,216 @@ reset_scars(gpointer p)
                              pargs->length);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->length_noise),
                              pargs->length_noise);
+}
+
+typedef struct {
+    gdouble pos;
+    gdouble dh;
+} LNoSynthRidgeEvent;
+
+typedef struct {
+    gdouble density;
+    gdouble lineprob;
+    gdouble width;
+} LNoSynthArgsRidges;
+
+typedef struct {
+    LNoSynthArgsRidges *args;
+    GtkObject *density;
+    GtkObject *lineprob;
+    GtkObject *width;
+} LNoSynthControlsRidges;
+
+static const LNoSynthArgsRidges lno_synth_defaults_ridges = {
+    0.1, 0.0, 0.01,
+};
+
+static gpointer
+create_gui_ridges(LNoSynthControls *controls)
+{
+    LNoSynthControlsRidges *pcontrols;
+    LNoSynthArgsRidges *pargs;
+    gint row;
+
+    row = gwy_synth_extend_table(controls->table, 4);
+    pcontrols = g_new0(LNoSynthControlsRidges, 1);
+    pargs = pcontrols->args = controls->args->noise_args;
+
+    pcontrols->density = gtk_adjustment_new(pargs->density,
+                                            0.001, 100.0, 0.001, 1.0, 0);
+    g_object_set_data(G_OBJECT(pcontrols->density),
+                      "target", &pargs->density);
+    gwy_table_attach_hscale(GTK_WIDGET(controls->table),
+                            row, _("Densi_ty:"), NULL, pcontrols->density,
+                            GWY_HSCALE_LOG);
+    g_signal_connect_swapped(pcontrols->density, "value-changed",
+                             G_CALLBACK(gwy_synth_double_changed), controls);
+    row++;
+
+    pcontrols->lineprob = gtk_adjustment_new(pargs->lineprob,
+                                             0.0, 1.0, 0.001, 0.1, 0);
+    g_object_set_data(G_OBJECT(pcontrols->lineprob),
+                      "target", &pargs->lineprob);
+    gwy_table_attach_hscale(GTK_WIDGET(controls->table),
+                            row, _("_Within line:"), NULL, pcontrols->lineprob,
+                            GWY_HSCALE_DEFAULT);
+    g_signal_connect_swapped(pcontrols->lineprob, "value-changed",
+                             G_CALLBACK(gwy_synth_double_changed), controls);
+    row++;
+
+    pcontrols->width = gtk_adjustment_new(pargs->width,
+                                          0.0001, 1.0, 0.0001, 0.01, 0);
+    g_object_set_data(G_OBJECT(pcontrols->width), "target", &pargs->width);
+    gwy_table_attach_hscale(GTK_WIDGET(controls->table),
+                            row, _("Wi_dth:"), NULL, pcontrols->width,
+                            GWY_HSCALE_SQRT);
+    g_signal_connect_swapped(pcontrols->width, "value-changed",
+                             G_CALLBACK(gwy_synth_double_changed), controls);
+    row++;
+
+    return pcontrols;
+}
+
+static void
+dimensions_changed_ridges(G_GNUC_UNUSED LNoSynthControls *controls)
+{
+}
+
+static gint
+compare_ridge_events(gconstpointer pa, gconstpointer pb)
+{
+    const LNoSynthRidgeEvent *a = (const LNoSynthRidgeEvent*)pa;
+    const LNoSynthRidgeEvent *b = (const LNoSynthRidgeEvent*)pb;
+
+    if (a->pos < b->pos)
+        return -1;
+    if (a->pos > b->pos)
+        return 1;
+
+    /* Ensure comparison stability. */
+    if (a < b)
+        return -1;
+    if (a > b)
+        return 1;
+
+    return 0;
+}
+
+static void
+make_noise_ridges(const LNoSynthArgs *args,
+                 const GwyDimensionArgs *dimsargs,
+                 GwyDataField *dfield)
+{
+    enum { BATCH_SIZE = 64 };
+
+    const LNoSynthArgsRidges *pargs = args->noise_args;
+    const LNoSynthGenerator *generator;
+    PointNoiseFunc point_noise;
+    LNoSynthRidgeEvent *ridges;
+    gdouble *data;
+    GwyRandGenSet *rngset;
+    guint xres, yres, nridges, i, j, is;
+    gdouble q, h, w;
+
+    rngset = gwy_rand_gen_set_new(1);
+
+    q = args->sigma * pow10(dimsargs->zpow10);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    w = pargs->width;
+
+    nridges = GWY_ROUND(yres*(1.0 + w)*pargs->density);
+    nridges = MAX(nridges, 1);
+    ridges = g_new(LNoSynthRidgeEvent, 2*nridges + 1);
+
+    gwy_rand_gen_set_init(rngset, args->seed);
+    generator = get_point_noise_generator(args->distribution);
+    point_noise = generator->point_noise[args->direction];
+
+    for (i = 0; i < nridges; i++) {
+        gdouble centre = gwy_rand_gen_set_range(rngset, 0, -w, 1.0 + w);
+        gdouble width = noise_exp_up(rngset, w);
+        gdouble dh = point_noise(rngset, q);
+
+        ridges[2*i + 0].pos = centre - width;
+        ridges[2*i + 0].dh = dh;
+        ridges[2*i + 1].pos = centre + width;
+        ridges[2*i + 1].dh = -dh;
+    }
+    qsort(ridges, 2*nridges, sizeof(LNoSynthRidgeEvent), compare_ridge_events);
+
+    /* Ensure sentinel */
+    ridges[2*nridges].pos = 1.01;
+    ridges[2*nridges].dh = 0.0;
+
+    data = gwy_data_field_get_data(dfield);
+    is = 0;
+    h = 0.0;
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            gdouble x = (pargs->lineprob*(j + 0.5)/xres + i)/yres;
+
+            while (x > ridges[is].pos) {
+                h += ridges[is].dh;
+                is++;
+            }
+            data[i*xres + j] += h;
+        }
+    }
+
+    g_free(ridges);
+    gwy_rand_gen_set_free(rngset);
+}
+
+static gpointer
+load_args_ridges(GwyContainer *settings)
+{
+    LNoSynthArgsRidges *pargs;
+    GString *key;
+
+    pargs = g_memdup(&lno_synth_defaults_ridges, sizeof(LNoSynthArgsRidges));
+    key = g_string_new(prefix);
+    g_string_append(key, "/ridges/");
+    gwy_synth_load_arg_double(settings, key, "density", 0.001, 100.0,
+                              &pargs->density);
+    gwy_synth_load_arg_double(settings, key, "lineprob", 0.0, 1.0,
+                              &pargs->lineprob);
+    gwy_synth_load_arg_double(settings, key, "width", 0.0001, 1.0,
+                              &pargs->width);
+    g_string_free(key, TRUE);
+
+    return pargs;
+}
+
+static void
+save_args_ridges(gpointer p,
+                GwyContainer *settings)
+{
+    LNoSynthArgsRidges *pargs = p;
+    GString *key;
+
+    key = g_string_new(prefix);
+    g_string_append(key, "/ridges/");
+    gwy_synth_save_arg_double(settings, key, "density", pargs->density);
+    gwy_synth_save_arg_double(settings, key, "lineprob", pargs->lineprob);
+    gwy_synth_save_arg_double(settings, key, "width", pargs->width);
+    g_string_free(key, TRUE);
+}
+
+static void
+reset_ridges(gpointer p)
+{
+    LNoSynthControlsRidges *pcontrols = p;
+    LNoSynthArgsRidges *pargs = pcontrols->args;
+
+    *pargs = lno_synth_defaults_ridges;
+
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->density),
+                             pargs->density);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->lineprob),
+                             pargs->lineprob);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->width),
+                             pargs->width);
 }
 
 /* XXX: Sometimes the generators seem unnecessarily complicated; this is to
