@@ -46,7 +46,7 @@ enum {
 };
 
 enum {
-    NOBJECTS = 64,
+    MAXOBJECTS = 64,
 };
 
 enum {
@@ -111,6 +111,7 @@ typedef struct {
     GArray *pos;
     GtkWidget *coordlist;
     gboolean in_update;
+    gint current_object;
 } SliceControls;
 
 static gboolean module_register        (void);
@@ -143,6 +144,7 @@ static void     output_type_changed    (GtkWidget *button,
                                         SliceControls *controls);
 static void     multiselect_changed    (SliceControls *controls,
                                         GtkToggleButton *button);
+static void     reduce_selection       (SliceControls *controls);
 static void     set_image_first_coord  (SliceControls *controls,
                                         gint i);
 static void     set_image_second_coord (SliceControls *controls,
@@ -330,7 +332,7 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
     g_signal_connect_swapped(selection, "changed",
                              G_CALLBACK(plane_selection_changed), &controls);
 
-    hbox = gtk_hbox_new(FALSE, 20);
+    hbox = gtk_hbox_new(FALSE, 24);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 4);
 
     table = gtk_table_new(6, 2, FALSE);
@@ -552,6 +554,7 @@ create_coordlist(SliceControls *controls)
     GtkTreeModel *model;
     GtkTreeViewColumn *column;
     GtkCellRenderer *renderer;
+    GtkTreeSelection *selection;
     GtkWidget *label;
     GString *str;
     guint i;
@@ -589,6 +592,9 @@ create_coordlist(SliceControls *controls)
         gtk_label_set_markup(GTK_LABEL(label), str->str);
     }
     g_string_free(str, TRUE);
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->coordlist));
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
 }
 
 static void
@@ -597,13 +603,16 @@ slice_reset(SliceControls *controls)
     SliceArgs *args = controls->args;
     GwyBrick *brick = args->brick;
 
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xpos), brick->xres/2);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ypos), brick->yres/2);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zpos), brick->zres/2);
+    args->pos.x = brick->xres/2;
+    args->pos.y = brick->yres/2;
+    args->pos.z = brick->zres/2;
+    reduce_selection(controls);
+    /* Just reset the selection here?
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->base_plane),
                                   slice_defaults.base_plane);
     gwy_radio_buttons_set_current(controls->output_type,
                                   slice_defaults.output_type);
+                                  */
 }
 
 static void
@@ -630,7 +639,7 @@ set_graph_max(SliceControls *controls)
 
 static void
 point_selection_changed(SliceControls *controls,
-                        G_GNUC_UNUSED gint id,
+                        gint id,
                         GwySelection *selection)
 {
     GwyGraphModel *gmodel;
@@ -638,11 +647,20 @@ point_selection_changed(SliceControls *controls,
     gdouble xy[2];
     gint ixy[2];
 
+    gwy_debug("%d (%d)", controls->in_update, id);
     if (controls->in_update)
         return;
 
-    if (!gwy_selection_get_object(selection, 0, xy))
+    /* What should we do here?  Hope we always get another update with a
+     * specific id afterwards. */
+    if (id < 0)
         return;
+
+    if (!gwy_selection_get_object(selection, id, xy))
+        return;
+
+    if (controls->args->output_type == OUTPUT_GRAPHS)
+        controls->current_object = id;
 
     ixy[0] = CLAMP(gwy_data_field_rtoi(controls->image, xy[0]),
                    0, controls->image->xres-1);
@@ -663,7 +681,7 @@ point_selection_changed(SliceControls *controls,
 
 static void
 plane_selection_changed(SliceControls *controls,
-                        G_GNUC_UNUSED gint id,
+                        gint id,
                         GwySelection *selection)
 {
     SliceArgs *args = controls->args;
@@ -672,11 +690,20 @@ plane_selection_changed(SliceControls *controls,
     gdouble z;
     gint ix, max;
 
+    gwy_debug("%d (%d)", controls->in_update, id);
     if (controls->in_update)
         return;
 
-    if (!gwy_selection_get_object(selection, 0, &z))
+    /* What should we do here?  Hope we always get another update with a
+     * specific id afterwards. */
+    if (id < 0)
         return;
+
+    if (!gwy_selection_get_object(selection, id, &z))
+        return;
+
+    if (controls->args->output_type == OUTPUT_IMAGES)
+        controls->current_object = id;
 
     max = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(selection), "max"));
     if (base_plane == PLANE_YZ || base_plane == PLANE_ZY)
@@ -752,12 +779,18 @@ static void
 output_type_changed(GtkWidget *button, SliceControls *controls)
 {
     controls->args->output_type = gwy_radio_button_get_value(button);
+    /* In multiselection mode it ensures the non-multiple coordinates are
+     * compacted to single one. */
+    reduce_selection(controls);
+    multiselect_changed(controls, GTK_TOGGLE_BUTTON(controls->multiselect));
 }
 
 static void
 multiselect_changed(SliceControls *controls, GtkToggleButton *button)
 {
     SliceArgs *args = controls->args;
+    GtkWidget *area;
+    GwySelection *selection;
 
     args->multiselect = gtk_toggle_button_get_active(button);
     gtk_widget_set_no_show_all(controls->coordlist, !args->multiselect);
@@ -766,7 +799,62 @@ multiselect_changed(SliceControls *controls, GtkToggleButton *button)
     else
         gtk_widget_hide(controls->coordlist);
 
-    /* TODO */
+    area = gwy_graph_get_area(GWY_GRAPH(controls->graph));
+
+    if (args->multiselect) {
+        selection = gwy_vector_layer_ensure_selection(controls->vlayer);
+        gwy_selection_set_max_objects(selection,
+                                      args->output_type == OUTPUT_GRAPHS
+                                      ? MAXOBJECTS
+                                      : 1);
+
+        selection = gwy_graph_area_get_selection(GWY_GRAPH_AREA(area),
+                                                 GWY_GRAPH_STATUS_XLINES);
+        gwy_selection_set_max_objects(selection,
+                                      args->output_type == OUTPUT_IMAGES
+                                      ? MAXOBJECTS
+                                      : 1);
+
+        return;
+    }
+
+    reduce_selection(controls);
+    selection = gwy_vector_layer_ensure_selection(controls->vlayer);
+    gwy_selection_set_max_objects(selection, 1);
+    selection = gwy_graph_area_get_selection(GWY_GRAPH_AREA(area),
+                                             GWY_GRAPH_STATUS_XLINES);
+    gwy_selection_set_max_objects(selection, 1);
+}
+
+static void
+reduce_selection(SliceControls *controls)
+{
+    GwySelection *selection;
+    GtkWidget *area;
+    SlicePos pos = controls->args->pos;
+    gdouble coord[2] = { 0.0, 0.0 };
+
+    controls->current_object = 0;
+    gwy_null_store_set_n_rows(controls->store, 1);
+    g_array_set_size(controls->pos, 1);
+
+    controls->in_update = TRUE;
+    selection = gwy_vector_layer_ensure_selection(controls->vlayer);
+    gwy_selection_set_data(selection, 1, coord);
+
+    area = gwy_graph_get_area(GWY_GRAPH(controls->graph));
+    selection = gwy_graph_area_get_selection(GWY_GRAPH_AREA(area),
+                                             GWY_GRAPH_STATUS_XLINES);
+    gwy_selection_set_data(selection, 1, coord);
+    controls->in_update = FALSE;
+
+    gwy_debug("(%d %d %d)", pos.x, pos.y, pos.z);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xpos), pos.x);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ypos), pos.y);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zpos), pos.z);
+    /* Since we might not emit "value-changed" on the adjustments update
+     * selections explicitly afterwards.*/
+    update_selections(controls);
 }
 
 static void
@@ -874,12 +962,12 @@ update_selections(SliceControls *controls)
     }
 
     selection = gwy_vector_layer_ensure_selection(controls->vlayer);
-    gwy_selection_set_data(selection, 1, xy);
+    gwy_selection_set_object(selection, controls->current_object, xy);
 
     area = gwy_graph_get_area(GWY_GRAPH(controls->graph));
     selection = gwy_graph_area_get_selection(GWY_GRAPH_AREA(area),
                                              GWY_GRAPH_STATUS_XLINES);
-    gwy_selection_set_data(selection, 1, &z);
+    gwy_selection_set_object(selection, controls->current_object, &z);
 
     update_labels(controls);
     update_multiselection(controls);
@@ -888,17 +976,39 @@ update_selections(SliceControls *controls)
 static void
 update_multiselection(SliceControls *controls)
 {
+    GtkTreeSelection *selection;
     SliceArgs *args = controls->args;
+    gint curr = controls->current_object;
+    gint len = controls->pos->len;
+    GtkTreeIter iter;
+    GtkTreePath *path;
 
     /* TODO: */
-    if (!controls->pos->len) {
+    gwy_debug("len: %d, curr: %d", len, curr);
+    if (len == curr) {
         g_array_append_val(controls->pos, args->pos);
-        gwy_null_store_set_n_rows(controls->store, 1);
+        gwy_null_store_set_n_rows(controls->store, curr+1);
+    }
+    else if (len > controls->current_object) {
+        g_array_index(controls->pos, SlicePos, curr) = args->pos;
+        gwy_null_store_row_changed(controls->store, curr);
     }
     else {
-        g_array_index(controls->pos, SlicePos, 0) = args->pos;
-        gwy_null_store_row_changed(controls->store, 0);
+        g_assert_not_reached();
     }
+
+    if (!args->multiselect)
+        return;
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->coordlist));
+    gtk_tree_model_iter_nth_child(GTK_TREE_MODEL(controls->store), &iter,
+                                  NULL, controls->current_object);
+    gtk_tree_selection_select_iter(selection, &iter);
+    path = gtk_tree_model_get_path(GTK_TREE_MODEL(controls->store), &iter);
+    gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(controls->coordlist), path,
+                                 NULL, FALSE, 0.0, 0.0);
+
+    gtk_tree_path_free(path);
 }
 
 static void
@@ -1171,6 +1281,7 @@ flip_xy(GwyDataField *dfield)
 
 
 static const gchar base_plane_key[]  = "/module/volume_slice/base_plane";
+static const gchar multiselect_key[] = "/module/volume_slice/multiselect";
 static const gchar output_type_key[] = "/module/volume_slice/output_type";
 static const gchar xpos_key[]        = "/module/volume_slice/xpos";
 static const gchar ypos_key[]        = "/module/volume_slice/ypos";
@@ -1182,6 +1293,7 @@ slice_sanitize_args(SliceArgs *args)
     /* Positions are validated against the brick. */
     args->base_plane = MIN(args->base_plane, NPLANES-1);
     args->output_type = MIN(args->output_type, NOUTPUTS-1);
+    args->multiselect = !!args->multiselect;
 }
 
 static void
@@ -1197,6 +1309,8 @@ slice_load_args(GwyContainer *container,
     gwy_container_gis_int32_by_name(container, xpos_key, &args->pos.x);
     gwy_container_gis_int32_by_name(container, ypos_key, &args->pos.y);
     gwy_container_gis_int32_by_name(container, zpos_key, &args->pos.z);
+    gwy_container_gis_boolean_by_name(container, multiselect_key,
+                                      &args->multiselect);
     slice_sanitize_args(args);
 }
 
@@ -1205,10 +1319,13 @@ slice_save_args(GwyContainer *container,
                 SliceArgs *args)
 {
     gwy_container_set_enum_by_name(container, base_plane_key, args->base_plane);
-    gwy_container_set_enum_by_name(container, output_type_key, args->output_type);
+    gwy_container_set_enum_by_name(container, output_type_key,
+                                   args->output_type);
     gwy_container_set_int32_by_name(container, xpos_key, args->pos.x);
     gwy_container_set_int32_by_name(container, ypos_key, args->pos.y);
     gwy_container_set_int32_by_name(container, zpos_key, args->pos.z);
+    gwy_container_set_boolean_by_name(container, multiselect_key,
+                                      args->multiselect);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
