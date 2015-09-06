@@ -79,10 +79,11 @@ typedef struct {
 typedef struct {
     SliceBasePlane base_plane;
     SliceOutputType output_type;
-    SlicePos pos;
+    SlicePos currpos;
     gboolean multiselect;
     /* Dynamic state. */
     GwyBrick *brick;
+    GArray *allpos;
 } SliceArgs;
 
 typedef struct {
@@ -108,7 +109,6 @@ typedef struct {
     GtkWidget *zposreal;
     GtkWidget *scwin;
     GwyNullStore *store;
-    GArray *pos;
     GtkWidget *coordlist;
     gboolean in_update;
     gint current_object;
@@ -171,7 +171,7 @@ static const SliceArgs slice_defaults = {
     { -1, -1, -1 },
     FALSE,
     /* Dynamic state. */
-    NULL,
+    NULL, NULL,
 };
 
 static GwyModuleInfo module_info = {
@@ -217,18 +217,19 @@ slice(GwyContainer *data, GwyRunType run)
     g_return_if_fail(GWY_IS_BRICK(brick));
     args.brick = brick;
 
-    if (CLAMP(args.pos.x, 0, brick->xres-1) != args.pos.x)
-        args.pos.x = brick->xres/2;
-    if (CLAMP(args.pos.y, 0, brick->yres-1) != args.pos.y)
-        args.pos.y = brick->yres/2;
-    if (CLAMP(args.pos.z, 0, brick->zres-1) != args.pos.z)
-        args.pos.z = brick->zres/2;
+    if (CLAMP(args.currpos.x, 0, brick->xres-1) != args.currpos.x)
+        args.currpos.x = brick->xres/2;
+    if (CLAMP(args.currpos.y, 0, brick->yres-1) != args.currpos.y)
+        args.currpos.y = brick->yres/2;
+    if (CLAMP(args.currpos.z, 0, brick->zres-1) != args.currpos.z)
+        args.currpos.z = brick->zres/2;
 
-    if (slice_dialog(&args, data, id)) {
+    args.allpos = g_array_new(FALSE, FALSE, sizeof(SlicePos));
+    if (slice_dialog(&args, data, id))
         slice_do(&args, data, id);
-    }
 
     slice_save_args(gwy_app_settings_get(), &args);
+    g_array_free(args.allpos, TRUE);
 }
 
 static gboolean
@@ -264,7 +265,6 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
 
     controls.args = args;
     controls.in_update = TRUE;
-    controls.pos = g_array_new(FALSE, FALSE, sizeof(SlicePos));
 
     dialog = gtk_dialog_new_with_buttons(_("Slice Volume Data"),
                                          NULL, 0,
@@ -399,7 +399,7 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
                      0, 5, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    controls.xpos = gtk_adjustment_new(args->pos.x, 0.0, brick->xres-1.0,
+    controls.xpos = gtk_adjustment_new(args->currpos.x, 0.0, brick->xres-1.0,
                                        1.0, 10.0, 0);
     gwy_table_attach_spinbutton(table, row, _("_X:"), "px", controls.xpos);
     g_signal_connect_swapped(controls.xpos, "value-changed",
@@ -418,7 +418,7 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
                      4, 5, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    controls.ypos = gtk_adjustment_new(args->pos.y, 0.0, brick->yres-1.0,
+    controls.ypos = gtk_adjustment_new(args->currpos.y, 0.0, brick->yres-1.0,
                                        1.0, 10.0, 0);
     gwy_table_attach_spinbutton(table, row, _("_Y:"), "px", controls.ypos);
     g_signal_connect_swapped(controls.ypos, "value-changed",
@@ -437,7 +437,7 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
                      4, 5, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    controls.zpos = gtk_adjustment_new(args->pos.z, 0.0, brick->zres-1.0,
+    controls.zpos = gtk_adjustment_new(args->currpos.z, 0.0, brick->zres-1.0,
                                        1.0, 10.0, 0);
     gwy_table_attach_spinbutton(table, row, _("_Z:"), "px", controls.zpos);
     g_signal_connect_swapped(controls.zpos, "value-changed",
@@ -487,7 +487,6 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
             gwy_si_unit_value_format_free(controls.xvf);
             gwy_si_unit_value_format_free(controls.yvf);
             gwy_si_unit_value_format_free(controls.zvf);
-            g_array_free(controls.pos, TRUE);
             return FALSE;
             break;
 
@@ -509,7 +508,6 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
     gwy_si_unit_value_format_free(controls.xvf);
     gwy_si_unit_value_format_free(controls.yvf);
     gwy_si_unit_value_format_free(controls.zvf);
-    g_array_free(controls.pos, TRUE);
 
     return TRUE;
 }
@@ -532,8 +530,8 @@ render_coord_cell(GtkCellLayout *layout,
     if (id == COLUMN_I)
         g_snprintf(buf, sizeof(buf), "%d", idx + 1);
     else {
-        g_return_if_fail(idx < controls->pos->len);
-        pos = &g_array_index(controls->pos, SlicePos, idx);
+        g_return_if_fail(idx < controls->args->allpos->len);
+        pos = &g_array_index(controls->args->allpos, SlicePos, idx);
         if (id == COLUMN_X)
             g_snprintf(buf, sizeof(buf), "%d", pos->x);
         else if (id == COLUMN_Y)
@@ -603,9 +601,9 @@ slice_reset(SliceControls *controls)
     SliceArgs *args = controls->args;
     GwyBrick *brick = args->brick;
 
-    args->pos.x = brick->xres/2;
-    args->pos.y = brick->yres/2;
-    args->pos.z = brick->zres/2;
+    args->currpos.x = brick->xres/2;
+    args->currpos.y = brick->yres/2;
+    args->currpos.z = brick->zres/2;
     reduce_selection(controls);
     /* Just reset the selection here?
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->base_plane),
@@ -733,7 +731,7 @@ xpos_changed(SliceControls *controls, GtkAdjustment *adj)
     if (controls->in_update)
         return;
 
-    controls->args->pos.x = gwy_adjustment_get_int(adj);
+    controls->args->currpos.x = gwy_adjustment_get_int(adj);
     update_selections(controls);
 }
 
@@ -743,7 +741,7 @@ ypos_changed(SliceControls *controls, GtkAdjustment *adj)
     if (controls->in_update)
         return;
 
-    controls->args->pos.y = gwy_adjustment_get_int(adj);
+    controls->args->currpos.y = gwy_adjustment_get_int(adj);
     update_selections(controls);
 }
 
@@ -753,7 +751,7 @@ zpos_changed(SliceControls *controls, GtkAdjustment *adj)
     if (controls->in_update)
         return;
 
-    controls->args->pos.z = gwy_adjustment_get_int(adj);
+    controls->args->currpos.z = gwy_adjustment_get_int(adj);
     update_selections(controls);
 }
 
@@ -761,7 +759,7 @@ static void
 base_plane_changed(GtkComboBox *combo, SliceControls *controls)
 {
     SliceArgs *args = controls->args;
-    gint xpos = args->pos.x, ypos = args->pos.y, zpos = args->pos.z;
+    gint xpos = args->currpos.x, ypos = args->currpos.y, zpos = args->currpos.z;
 
     controls->args->base_plane = gwy_enum_combo_box_get_active(combo);
     set_graph_max(controls);
@@ -769,9 +767,9 @@ base_plane_changed(GtkComboBox *combo, SliceControls *controls)
     gwy_set_data_preview_size(GWY_DATA_VIEW(controls->view), PREVIEW_SIZE);
 
     /* The selection got clipped during the switch.  Restore it. */
-    args->pos.x = xpos;
-    args->pos.y = ypos;
-    args->pos.z = zpos;
+    args->currpos.x = xpos;
+    args->currpos.y = ypos;
+    args->currpos.z = zpos;
     update_selections(controls);
 }
 
@@ -831,12 +829,12 @@ reduce_selection(SliceControls *controls)
 {
     GwySelection *selection;
     GtkWidget *area;
-    SlicePos pos = controls->args->pos;
+    SlicePos pos = controls->args->currpos;
     gdouble coord[2] = { 0.0, 0.0 };
 
     controls->current_object = 0;
     gwy_null_store_set_n_rows(controls->store, 1);
-    g_array_set_size(controls->pos, 1);
+    g_array_set_size(controls->args->allpos, 1);
 
     controls->in_update = TRUE;
     selection = gwy_vector_layer_ensure_selection(controls->vlayer);
@@ -864,15 +862,15 @@ set_image_first_coord(SliceControls *controls, gint i)
     SliceBasePlane base_plane = args->base_plane;
 
     if (base_plane == PLANE_XY || base_plane == PLANE_XZ) {
-        args->pos.x = i;
+        args->currpos.x = i;
         gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xpos), i);
     }
     else if (base_plane == PLANE_YX || base_plane == PLANE_YZ) {
-        args->pos.y = i;
+        args->currpos.y = i;
         gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ypos), i);
     }
     else if (base_plane == PLANE_ZX || base_plane == PLANE_ZY) {
-        args->pos.z = i;
+        args->currpos.z = i;
         gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zpos), i);
     }
 }
@@ -884,15 +882,15 @@ set_image_second_coord(SliceControls *controls, gint i)
     SliceBasePlane base_plane = args->base_plane;
 
     if (base_plane == PLANE_YX || base_plane == PLANE_ZX) {
-        args->pos.x = i;
+        args->currpos.x = i;
         gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xpos), i);
     }
     else if (base_plane == PLANE_XY || base_plane == PLANE_ZY) {
-        args->pos.y = i;
+        args->currpos.y = i;
         gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ypos), i);
     }
     else if (base_plane == PLANE_XZ || base_plane == PLANE_YZ) {
-        args->pos.z = i;
+        args->currpos.z = i;
         gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zpos), i);
     }
 }
@@ -904,15 +902,15 @@ set_graph_coord(SliceControls *controls, gint i)
     SliceBasePlane base_plane = args->base_plane;
 
     if (base_plane == PLANE_YZ || base_plane == PLANE_ZY) {
-        args->pos.x = i;
+        args->currpos.x = i;
         gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xpos), i);
     }
     else if (base_plane == PLANE_XZ || base_plane == PLANE_ZX) {
-        args->pos.y = i;
+        args->currpos.y = i;
         gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ypos), i);
     }
     else if (base_plane == PLANE_YX || base_plane == PLANE_XY) {
-        args->pos.z = i;
+        args->currpos.z = i;
         gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zpos), i);
     }
 }
@@ -928,34 +926,34 @@ update_selections(SliceControls *controls)
     gdouble xy[2], z;
 
     if (base_plane == PLANE_XY) {
-        xy[0] = gwy_brick_itor(brick, args->pos.x);
-        xy[1] = gwy_brick_jtor(brick, args->pos.y);
-        z = gwy_brick_ktor(brick, args->pos.z);
+        xy[0] = gwy_brick_itor(brick, args->currpos.x);
+        xy[1] = gwy_brick_jtor(brick, args->currpos.y);
+        z = gwy_brick_ktor(brick, args->currpos.z);
     }
     else if (base_plane == PLANE_YX) {
-        xy[0] = gwy_brick_jtor(brick, args->pos.y);
-        xy[1] = gwy_brick_itor(brick, args->pos.x);
-        z = gwy_brick_ktor(brick, args->pos.z);
+        xy[0] = gwy_brick_jtor(brick, args->currpos.y);
+        xy[1] = gwy_brick_itor(brick, args->currpos.x);
+        z = gwy_brick_ktor(brick, args->currpos.z);
     }
     else if (base_plane == PLANE_XZ) {
-        xy[0] = gwy_brick_itor(brick, args->pos.x);
-        xy[1] = gwy_brick_ktor(brick, args->pos.z);
-        z = gwy_brick_jtor(brick, args->pos.y);
+        xy[0] = gwy_brick_itor(brick, args->currpos.x);
+        xy[1] = gwy_brick_ktor(brick, args->currpos.z);
+        z = gwy_brick_jtor(brick, args->currpos.y);
     }
     else if (base_plane == PLANE_ZX) {
-        xy[0] = gwy_brick_ktor(brick, args->pos.z);
-        xy[1] = gwy_brick_itor(brick, args->pos.x);
-        z = gwy_brick_jtor(brick, args->pos.y);
+        xy[0] = gwy_brick_ktor(brick, args->currpos.z);
+        xy[1] = gwy_brick_itor(brick, args->currpos.x);
+        z = gwy_brick_jtor(brick, args->currpos.y);
     }
     else if (base_plane == PLANE_YZ) {
-        xy[0] = gwy_brick_jtor(brick, args->pos.y);
-        xy[1] = gwy_brick_ktor(brick, args->pos.z);
-        z = gwy_brick_itor(brick, args->pos.x);
+        xy[0] = gwy_brick_jtor(brick, args->currpos.y);
+        xy[1] = gwy_brick_ktor(brick, args->currpos.z);
+        z = gwy_brick_itor(brick, args->currpos.x);
     }
     else if (base_plane == PLANE_ZY) {
-        xy[0] = gwy_brick_ktor(brick, args->pos.z);
-        xy[1] = gwy_brick_jtor(brick, args->pos.y);
-        z = gwy_brick_itor(brick, args->pos.x);
+        xy[0] = gwy_brick_ktor(brick, args->currpos.z);
+        xy[1] = gwy_brick_jtor(brick, args->currpos.y);
+        z = gwy_brick_itor(brick, args->currpos.x);
     }
     else {
         g_return_if_reached();
@@ -979,18 +977,18 @@ update_multiselection(SliceControls *controls)
     GtkTreeSelection *selection;
     SliceArgs *args = controls->args;
     gint curr = controls->current_object;
-    gint len = controls->pos->len;
+    gint len = args->allpos->len;
     GtkTreeIter iter;
     GtkTreePath *path;
 
     /* TODO: */
     gwy_debug("len: %d, curr: %d", len, curr);
     if (len == curr) {
-        g_array_append_val(controls->pos, args->pos);
+        g_array_append_val(args->allpos, args->currpos);
         gwy_null_store_set_n_rows(controls->store, curr+1);
     }
     else if (len > controls->current_object) {
-        g_array_index(controls->pos, SlicePos, curr) = args->pos;
+        g_array_index(args->allpos, SlicePos, curr) = args->currpos;
         gwy_null_store_row_changed(controls->store, curr);
     }
     else {
@@ -1020,19 +1018,19 @@ update_labels(SliceControls *controls)
     gdouble x, y, z;
     gchar buf[64];
 
-    x = gwy_brick_itor(brick, args->pos.x);
+    x = gwy_brick_itor(brick, args->currpos.x);
     g_snprintf(buf, sizeof(buf), "%.*f",
                controls->xvf->precision, x/controls->xvf->magnitude);
     gtk_label_set_markup(GTK_LABEL(controls->xposreal), buf);
 
-    y = gwy_brick_jtor(brick, args->pos.y);
+    y = gwy_brick_jtor(brick, args->currpos.y);
     g_snprintf(buf, sizeof(buf), "%.*f",
                controls->xvf->precision, y/controls->yvf->magnitude);
     gtk_label_set_markup(GTK_LABEL(controls->yposreal), buf);
 
-    z = gwy_brick_ktor(brick, args->pos.z);
+    z = gwy_brick_ktor(brick, args->currpos.z);
     if ((calibration = gwy_brick_get_zcalibration(brick)))
-        z = gwy_data_line_get_val(calibration, args->pos.z);
+        z = gwy_data_line_get_val(calibration, args->currpos.z);
     g_snprintf(buf, sizeof(buf), "%.*f",
                controls->zvf->precision, z/controls->zvf->magnitude);
     gtk_label_set_markup(GTK_LABEL(controls->zposreal), buf);
@@ -1069,7 +1067,7 @@ slice_do(SliceArgs *args, GwyContainer *data, gint id)
         }
 
         if (base_plane == PLANE_XY || base_plane == PLANE_YX) {
-            i = args->pos.z;
+            i = args->currpos.z;
             if ((calibration = gwy_brick_get_zcalibration(brick))) {
                 r = gwy_data_line_get_val(calibration, i);
                 vf = gwy_data_line_get_value_format_y(calibration,
@@ -1088,7 +1086,7 @@ slice_do(SliceArgs *args, GwyContainer *data, gint id)
                                     i);
         }
         else if (base_plane == PLANE_XZ || base_plane == PLANE_ZX) {
-            i = args->pos.y;
+            i = args->currpos.y;
             r = gwy_brick_jtor(brick, i);
             vf = gwy_brick_get_value_format_y(brick,
                                               GWY_SI_UNIT_FORMAT_VFMARKUP,
@@ -1099,7 +1097,7 @@ slice_do(SliceArgs *args, GwyContainer *data, gint id)
                                     i);
         }
         else if (base_plane == PLANE_YZ || base_plane == PLANE_ZY) {
-            i = args->pos.x;
+            i = args->currpos.x;
             r = gwy_brick_itor(brick, i);
             vf = gwy_brick_get_value_format_x(brick,
                                               GWY_SI_UNIT_FORMAT_VFMARKUP,
@@ -1139,21 +1137,21 @@ extract_image_plane(const SliceArgs *args, GwyDataField *dfield)
     if (base_plane == PLANE_XY || base_plane == PLANE_YX) {
         do_flip = (base_plane == PLANE_YX);
         gwy_brick_extract_plane(args->brick, dfield,
-                                0, 0, args->pos.z,
+                                0, 0, args->currpos.z,
                                 brick->xres, brick->yres, -1,
                                 FALSE);
     }
     else if (base_plane == PLANE_YZ || base_plane == PLANE_ZY) {
         do_flip = (base_plane == PLANE_ZY);
         gwy_brick_extract_plane(args->brick, dfield,
-                                args->pos.x, 0, 0,
+                                args->currpos.x, 0, 0,
                                 -1, brick->yres, brick->zres,
                                 FALSE);
     }
     else if (base_plane == PLANE_XZ || base_plane == PLANE_ZX) {
         do_flip = (base_plane == PLANE_ZX);
         gwy_brick_extract_plane(args->brick, dfield,
-                                0, args->pos.y, 0,
+                                0, args->currpos.y, 0,
                                 brick->xres, -1, brick->zres,
                                 FALSE);
     }
@@ -1176,8 +1174,8 @@ extract_graph_curve(const SliceArgs *args,
 
     if (base_plane == PLANE_XY || base_plane == PLANE_YX) {
         gwy_brick_extract_line(brick, line,
-                               args->pos.x, args->pos.y, 0,
-                               args->pos.x, args->pos.y, brick->zres,
+                               args->currpos.x, args->currpos.y, 0,
+                               args->currpos.x, args->currpos.y, brick->zres,
                                FALSE);
         /* Try to use the calibration.  Ignore if the dimension does not seem
          * right. */
@@ -1193,12 +1191,12 @@ extract_graph_curve(const SliceArgs *args,
             GWY_SWAP(const gchar*, xlabel, ylabel);
 
         g_snprintf(desc, sizeof(desc), _("Z graph at x: %d y: %d"),
-                   args->pos.x, args->pos.y);
+                   args->currpos.x, args->currpos.y);
     }
     else if (base_plane == PLANE_YZ || base_plane == PLANE_ZY) {
         gwy_brick_extract_line(brick, line,
-                               0, args->pos.y, args->pos.z,
-                               brick->xres-1, args->pos.y, args->pos.z,
+                               0, args->currpos.y, args->currpos.z,
+                               brick->xres-1, args->currpos.y, args->currpos.z,
                                FALSE);
 
         xlabel = "y";
@@ -1207,12 +1205,12 @@ extract_graph_curve(const SliceArgs *args,
             GWY_SWAP(const gchar*, xlabel, ylabel);
 
         g_snprintf(desc, sizeof(desc), _("X graph at y: %d z: %d"),
-                   args->pos.y, args->pos.z);
+                   args->currpos.y, args->currpos.z);
     }
     else if (base_plane == PLANE_XZ || base_plane == PLANE_ZX) {
         gwy_brick_extract_line(brick, line,
-                               args->pos.x, 0, args->pos.z,
-                               args->pos.x, brick->yres-1, args->pos.z,
+                               args->currpos.x, 0, args->currpos.z,
+                               args->currpos.x, brick->yres-1, args->currpos.z,
                                FALSE);
 
         xlabel = "x";
@@ -1221,7 +1219,7 @@ extract_graph_curve(const SliceArgs *args,
             GWY_SWAP(const gchar*, xlabel, ylabel);
 
         g_snprintf(desc, sizeof(desc), _("Y graph at x: %d z: %d"),
-                   args->pos.x, args->pos.z);
+                   args->currpos.x, args->currpos.z);
     }
     else {
         g_return_if_reached();
@@ -1306,9 +1304,9 @@ slice_load_args(GwyContainer *container,
                                    &args->base_plane);
     gwy_container_gis_enum_by_name(container, output_type_key,
                                    &args->output_type);
-    gwy_container_gis_int32_by_name(container, xpos_key, &args->pos.x);
-    gwy_container_gis_int32_by_name(container, ypos_key, &args->pos.y);
-    gwy_container_gis_int32_by_name(container, zpos_key, &args->pos.z);
+    gwy_container_gis_int32_by_name(container, xpos_key, &args->currpos.x);
+    gwy_container_gis_int32_by_name(container, ypos_key, &args->currpos.y);
+    gwy_container_gis_int32_by_name(container, zpos_key, &args->currpos.z);
     gwy_container_gis_boolean_by_name(container, multiselect_key,
                                       &args->multiselect);
     slice_sanitize_args(args);
@@ -1321,9 +1319,9 @@ slice_save_args(GwyContainer *container,
     gwy_container_set_enum_by_name(container, base_plane_key, args->base_plane);
     gwy_container_set_enum_by_name(container, output_type_key,
                                    args->output_type);
-    gwy_container_set_int32_by_name(container, xpos_key, args->pos.x);
-    gwy_container_set_int32_by_name(container, ypos_key, args->pos.y);
-    gwy_container_set_int32_by_name(container, zpos_key, args->pos.z);
+    gwy_container_set_int32_by_name(container, xpos_key, args->currpos.x);
+    gwy_container_set_int32_by_name(container, ypos_key, args->currpos.y);
+    gwy_container_set_int32_by_name(container, zpos_key, args->currpos.z);
     gwy_container_set_boolean_by_name(container, multiselect_key,
                                       args->multiselect);
 }
