@@ -123,6 +123,10 @@ static gboolean slice_dialog           (SliceArgs *args,
 static void     slice_do               (SliceArgs *args,
                                         GwyContainer *data,
                                         gint id);
+static void     extract_one_image      (SliceArgs *args,
+                                        GwyContainer *data,
+                                        gint id,
+                                        gint idx);
 static void     create_coordlist       (SliceControls *controls);
 static void     slice_reset            (SliceControls *controls);
 static void     set_graph_max          (SliceControls *controls);
@@ -157,8 +161,10 @@ static void     update_labels          (SliceControls *controls);
 static void     extract_image_plane    (const SliceArgs *args,
                                         GwyDataField *dfield);
 static void     extract_graph_curve    (const SliceArgs *args,
-                                        GwyGraphModel *gmodel,
-                                        GwyGraphCurveModel *gcmodel);
+                                        GwyGraphCurveModel *gcmodel,
+                                        gint idx);
+static void     extract_gmodel         (const SliceArgs *args,
+                                        GwyGraphModel *gmodel);
 static void     flip_xy                (GwyDataField *dfield);
 static void     slice_sanitize_args    (SliceArgs *args);
 static void     slice_load_args        (GwyContainer *container,
@@ -225,6 +231,8 @@ slice(GwyContainer *data, GwyRunType run)
         args.currpos.z = brick->zres/2;
 
     args.allpos = g_array_new(FALSE, FALSE, sizeof(SlicePos));
+    g_array_append_val(args.allpos, args.currpos);
+
     if (slice_dialog(&args, data, id))
         slice_do(&args, data, id);
 
@@ -265,6 +273,7 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
 
     controls.args = args;
     controls.in_update = TRUE;
+    controls.current_object = 0;
 
     dialog = gtk_dialog_new_with_buttons(_("Slice Volume Data"),
                                          NULL, 0,
@@ -557,7 +566,7 @@ create_coordlist(SliceControls *controls)
     GString *str;
     guint i;
 
-    controls->store = gwy_null_store_new(0);
+    controls->store = gwy_null_store_new(1);
     model = GTK_TREE_MODEL(controls->store);
     controls->coordlist = gtk_tree_view_new_with_model(model);
 
@@ -669,12 +678,14 @@ point_selection_changed(SliceControls *controls,
     set_image_second_coord(controls, ixy[1]);
     controls->in_update = FALSE;
 
-    gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
-    gcmodel = gwy_graph_model_get_curve(gmodel, 0);
-    extract_graph_curve(controls->args, gmodel, gcmodel);
-
     update_labels(controls);
     update_multiselection(controls);
+
+    gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
+    extract_gmodel(controls->args, gmodel);
+
+    gcmodel = gwy_graph_model_get_curve(gmodel, 0);
+    extract_graph_curve(controls->args, gcmodel, controls->current_object);
 }
 
 static void
@@ -718,11 +729,11 @@ plane_selection_changed(SliceControls *controls,
     set_graph_coord(controls, ix);
     controls->in_update = FALSE;
 
-    extract_image_plane(controls->args, controls->image);
-    gwy_data_field_data_changed(controls->image);
-
     update_labels(controls);
     update_multiselection(controls);
+
+    extract_image_plane(controls->args, controls->image);
+    gwy_data_field_data_changed(controls->image);
 }
 
 static void
@@ -1039,92 +1050,107 @@ update_labels(SliceControls *controls)
 static void
 slice_do(SliceArgs *args, GwyContainer *data, gint id)
 {
-    GwyBrick *brick = args->brick;
-    SliceBasePlane base_plane = args->base_plane;
-    SliceOutputType output_type = args->output_type;
-    gint newid;
+    guint idx;
 
-    if (output_type == OUTPUT_IMAGES) {
-        GwyDataField *dfield = gwy_data_field_new(1, 1, 1.0, 1.0, TRUE);
-        GwyDataLine *calibration;
-        GwySIValueFormat *vf;
-        const guchar *gradient;
-        gchar *title = NULL;
-        gchar key[40];
-        gdouble r;
-        gint i;
-
-        extract_image_plane(args, dfield);
-        newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
-        g_object_unref(dfield);
-
-        gwy_app_channel_log_add(data, -1, newid, "volume::volume_slice", NULL);
-
-        g_snprintf(key, sizeof(key), "/brick/%d/preview/palette", id);
-        if (gwy_container_gis_string_by_name(data, key, &gradient)) {
-            g_snprintf(key, sizeof(key), "/%d/base/palette", newid);
-            gwy_container_set_const_string_by_name(data, key, gradient);
-        }
-
-        if (base_plane == PLANE_XY || base_plane == PLANE_YX) {
-            i = args->currpos.z;
-            if ((calibration = gwy_brick_get_zcalibration(brick))) {
-                r = gwy_data_line_get_val(calibration, i);
-                vf = gwy_data_line_get_value_format_y(calibration,
-                                                      GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                      NULL);
-            }
-            else {
-                r = gwy_brick_ktor(brick, i);
-                vf = gwy_brick_get_value_format_z(brick,
-                                                  GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                  NULL);
-            }
-            title = g_strdup_printf(_("Z cross-section at Z = %.*f%s%s (#%d)"),
-                                    vf->precision, r/vf->magnitude,
-                                    strlen(vf->units) ? " " : "", vf->units,
-                                    i);
-        }
-        else if (base_plane == PLANE_XZ || base_plane == PLANE_ZX) {
-            i = args->currpos.y;
-            r = gwy_brick_jtor(brick, i);
-            vf = gwy_brick_get_value_format_y(brick,
-                                              GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                              NULL);
-            title = g_strdup_printf(_("Y cross-section at Y = %.*f%s%s (#%d)"),
-                                    vf->precision, r/vf->magnitude,
-                                    strlen(vf->units) ? " " : "", vf->units,
-                                    i);
-        }
-        else if (base_plane == PLANE_YZ || base_plane == PLANE_ZY) {
-            i = args->currpos.x;
-            r = gwy_brick_itor(brick, i);
-            vf = gwy_brick_get_value_format_x(brick,
-                                              GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                              NULL);
-            title = g_strdup_printf(_("X cross-section at X = %.*f%s%s (#%d)"),
-                                    vf->precision, r/vf->magnitude,
-                                    strlen(vf->units) ? " " : "", vf->units,
-                                    i);
-        }
-        else {
-            g_return_if_reached();
-        }
-        gwy_si_unit_value_format_free(vf);
-        g_snprintf(key, sizeof(key), "/%d/data/title", newid);
-        gwy_container_set_string_by_name(data, key, (const guchar*)title);
+    if (args->output_type == OUTPUT_IMAGES) {
+        for (idx = 0; idx < args->allpos->len; idx++)
+            extract_one_image(args, data, id, idx);
     }
-    else if (output_type == OUTPUT_GRAPHS) {
+    else if (args->output_type == OUTPUT_GRAPHS) {
         GwyGraphModel *gmodel = gwy_graph_model_new();
-        GwyGraphCurveModel *gcmodel = gwy_graph_curve_model_new();
 
-        extract_graph_curve(args, gmodel, gcmodel);
-        gwy_graph_model_add_curve(gmodel, gcmodel);
-        g_object_unref(gcmodel);
+        extract_gmodel(args, gmodel);
+        for (idx = 0; idx < args->allpos->len; idx++) {
+            GwyGraphCurveModel *gcmodel = gwy_graph_curve_model_new();
+
+            extract_graph_curve(args, gcmodel, idx);
+            g_object_set(gcmodel,
+                         "color", gwy_graph_get_preset_color(idx),
+                         NULL);
+            gwy_graph_model_add_curve(gmodel, gcmodel);
+            g_object_unref(gcmodel);
+        }
 
         gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
         g_object_unref(gmodel);
     }
+}
+
+static void
+extract_one_image(SliceArgs *args, GwyContainer *data, gint id, gint idx)
+{
+    GwyDataField *dfield = gwy_data_field_new(1, 1, 1.0, 1.0, TRUE);
+    SliceBasePlane base_plane = args->base_plane;
+    GwyBrick *brick = args->brick;
+    GwyDataLine *calibration;
+    GwySIValueFormat *vf;
+    const guchar *gradient;
+    SlicePos *pos;
+    gchar *title = NULL;
+    gchar key[40];
+    gdouble r;
+    gint i, newid;
+
+    pos = &g_array_index(args->allpos, SlicePos, idx);
+    extract_image_plane(args, dfield);
+    newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
+    g_object_unref(dfield);
+
+    gwy_app_channel_log_add(data, -1, newid, "volume::volume_slice", NULL);
+
+    g_snprintf(key, sizeof(key), "/brick/%d/preview/palette", id);
+    if (gwy_container_gis_string_by_name(data, key, &gradient)) {
+        g_snprintf(key, sizeof(key), "/%d/base/palette", newid);
+        gwy_container_set_const_string_by_name(data, key, gradient);
+    }
+
+    if (base_plane == PLANE_XY || base_plane == PLANE_YX) {
+        i = pos->z;
+        if ((calibration = gwy_brick_get_zcalibration(brick))) {
+            r = gwy_data_line_get_val(calibration, i);
+            vf = gwy_data_line_get_value_format_y(calibration,
+                                                  GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                  NULL);
+        }
+        else {
+            r = gwy_brick_ktor(brick, i);
+            vf = gwy_brick_get_value_format_z(brick,
+                                              GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                              NULL);
+        }
+        title = g_strdup_printf(_("Z slice at %.*f%s%s (#%d)"),
+                                vf->precision, r/vf->magnitude,
+                                strlen(vf->units) ? " " : "", vf->units,
+                                i);
+    }
+    else if (base_plane == PLANE_XZ || base_plane == PLANE_ZX) {
+        i = pos->y;
+        r = gwy_brick_jtor(brick, i);
+        vf = gwy_brick_get_value_format_y(brick,
+                                          GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                          NULL);
+        title = g_strdup_printf(_("Y slice at %.*f%s%s (#%d)"),
+                                vf->precision, r/vf->magnitude,
+                                strlen(vf->units) ? " " : "", vf->units,
+                                i);
+    }
+    else if (base_plane == PLANE_YZ || base_plane == PLANE_ZY) {
+        i = pos->x;
+        r = gwy_brick_itor(brick, i);
+        vf = gwy_brick_get_value_format_x(brick,
+                                          GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                          NULL);
+        title = g_strdup_printf(_("X slice at %.*f%s%s (#%d)"),
+                                vf->precision, r/vf->magnitude,
+                                strlen(vf->units) ? " " : "", vf->units,
+                                i);
+    }
+    else {
+        g_return_if_reached();
+    }
+    gwy_si_unit_value_format_free(vf);
+    g_snprintf(key, sizeof(key), "/%d/data/title", newid);
+    gwy_container_set_string_by_name(data, key, (const guchar*)title);
 }
 
 static void
@@ -1162,20 +1188,23 @@ extract_image_plane(const SliceArgs *args, GwyDataField *dfield)
 
 static void
 extract_graph_curve(const SliceArgs *args,
-                    GwyGraphModel *gmodel,
-                    GwyGraphCurveModel *gcmodel)
+                    GwyGraphCurveModel *gcmodel,
+                    gint idx)
 {
     SliceBasePlane base_plane = args->base_plane;
     GwyDataLine *line = gwy_data_line_new(1, 1.0, FALSE);
     GwyDataLine *calibration = NULL;
     GwyBrick *brick = args->brick;
-    const gchar *xlabel, *ylabel;
+    SlicePos *pos;
     gchar desc[80];
 
+    pos = &g_array_index(args->allpos, SlicePos, idx);
+    gwy_debug("%d (%u)", idx, (guint)args->allpos->len);
+    gwy_debug("(%d, %d, %d)", pos->x, pos->y, pos->z);
     if (base_plane == PLANE_XY || base_plane == PLANE_YX) {
         gwy_brick_extract_line(brick, line,
-                               args->currpos.x, args->currpos.y, 0,
-                               args->currpos.x, args->currpos.y, brick->zres,
+                               pos->x, pos->y, 0,
+                               pos->x, pos->y, brick->zres,
                                FALSE);
         /* Try to use the calibration.  Ignore if the dimension does not seem
          * right. */
@@ -1185,48 +1214,31 @@ extract_graph_curve(const SliceArgs *args,
                 != gwy_data_line_get_res(calibration)))
             calibration = NULL;
 
-        xlabel = "x";
-        ylabel = "y";
-        if (base_plane == PLANE_YX)
-            GWY_SWAP(const gchar*, xlabel, ylabel);
-
         g_snprintf(desc, sizeof(desc), _("Z graph at x: %d y: %d"),
-                   args->currpos.x, args->currpos.y);
+                   pos->x, pos->y);
     }
     else if (base_plane == PLANE_YZ || base_plane == PLANE_ZY) {
         gwy_brick_extract_line(brick, line,
-                               0, args->currpos.y, args->currpos.z,
-                               brick->xres-1, args->currpos.y, args->currpos.z,
+                               0, pos->y, pos->z,
+                               brick->xres-1, pos->y, pos->z,
                                FALSE);
-
-        xlabel = "y";
-        ylabel = "z";
-        if (base_plane == PLANE_ZY)
-            GWY_SWAP(const gchar*, xlabel, ylabel);
-
         g_snprintf(desc, sizeof(desc), _("X graph at y: %d z: %d"),
-                   args->currpos.y, args->currpos.z);
+                   pos->y, pos->z);
     }
     else if (base_plane == PLANE_XZ || base_plane == PLANE_ZX) {
         gwy_brick_extract_line(brick, line,
-                               args->currpos.x, 0, args->currpos.z,
-                               args->currpos.x, brick->yres-1, args->currpos.z,
+                               pos->x, 0, pos->z,
+                               pos->x, brick->yres-1, pos->z,
                                FALSE);
-
-        xlabel = "x";
-        ylabel = "z";
-        if (base_plane == PLANE_ZX)
-            GWY_SWAP(const gchar*, xlabel, ylabel);
-
         g_snprintf(desc, sizeof(desc), _("Y graph at x: %d z: %d"),
-                   args->currpos.x, args->currpos.z);
+                   pos->x, pos->z);
     }
     else {
         g_return_if_reached();
     }
 
     g_object_set(gcmodel,
-                 "description", _("Brick graph"),
+                 "description", desc,
                  "mode", GWY_GRAPH_CURVE_LINE,
                  NULL);
 
@@ -1235,22 +1247,70 @@ extract_graph_curve(const SliceArgs *args,
                                        gwy_data_line_get_data(calibration),
                                        gwy_data_line_get_data(line),
                                        gwy_data_line_get_res(line));
-        /* XXX: This unit object sharing is safe only because we are going to
-         * destroy the data line immediately. */
-        gwy_data_line_set_si_unit_x(line,
-                                    gwy_data_line_get_si_unit_y(calibration));
     }
     else
         gwy_graph_curve_model_set_data_from_dataline(gcmodel, line, 0, 0);
 
-    gwy_graph_model_set_units_from_data_line(gmodel, line);
     g_object_unref(line);
+}
+
+static void
+extract_gmodel(const SliceArgs *args, GwyGraphModel *gmodel)
+{
+    SliceBasePlane base_plane = args->base_plane;
+    GwyBrick *brick = args->brick;
+    GwyDataLine *calibration = NULL;
+    const gchar *xlabel, *ylabel, *gtitle;
+    GwySIUnit *xunit = NULL, *yunit;
+
+    if (base_plane == PLANE_XY || base_plane == PLANE_YX) {
+        gtitle = _("Volume Z graphs");
+        xlabel = "x";
+        ylabel = "y";
+        if (base_plane == PLANE_YX)
+            GWY_SWAP(const gchar*, xlabel, ylabel);
+    }
+    else if (base_plane == PLANE_YZ || base_plane == PLANE_ZY) {
+        gtitle = _("Volume X graphs");
+        xlabel = "y";
+        ylabel = "z";
+        if (base_plane == PLANE_ZY)
+            GWY_SWAP(const gchar*, xlabel, ylabel);
+    }
+    else if (base_plane == PLANE_XZ || base_plane == PLANE_ZX) {
+        gtitle = _("Volume Y graphs");
+        xlabel = "x";
+        ylabel = "z";
+        if (base_plane == PLANE_ZX)
+            GWY_SWAP(const gchar*, xlabel, ylabel);
+    }
+    else {
+        g_return_if_reached();
+    }
+
+    calibration = gwy_brick_get_zcalibration(brick);
+    if (calibration)
+        xunit = gwy_data_line_get_si_unit_x(calibration);
+    else {
+        if (base_plane == PLANE_XY || base_plane == PLANE_XZ)
+            xunit = gwy_brick_get_si_unit_x(brick);
+        else if (base_plane == PLANE_YZ || base_plane == PLANE_YX)
+            xunit = gwy_brick_get_si_unit_y(brick);
+        else if (base_plane == PLANE_ZX || base_plane == PLANE_ZY)
+            xunit = gwy_brick_get_si_unit_z(brick);
+    }
+    xunit = gwy_si_unit_duplicate(xunit);
+    yunit = gwy_si_unit_duplicate(gwy_brick_get_si_unit_w(brick));
 
     g_object_set(gmodel,
-                 "title", desc,
+                 "title", gtitle,
+                 "si-unit-x", xunit,
+                 "si-unit-y", yunit,
                  "axis-label-bottom", xlabel,
                  "axis-label-left", ylabel,
                  NULL);
+    g_object_unref(xunit);
+    g_object_unref(yunit);
 }
 
 static void
