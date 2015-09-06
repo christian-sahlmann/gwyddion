@@ -748,6 +748,7 @@ gwy_tool_profile_selection_changed(GwyPlainTool *plain_tool,
         gtk_tree_selection_select_iter(selection, &iter);
         gtk_tree_view_scroll_to_cell(tool->treeview, path, NULL,
                                      FALSE, 0.0, 0.0);
+        gtk_tree_path_free(path);
     }
 
     gtk_widget_set_sensitive(tool->apply, n > 0);

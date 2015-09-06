@@ -396,6 +396,7 @@ gwy_tool_distance_selection_changed(GwyPlainTool *plain_tool,
         gtk_tree_selection_select_iter(selection, &iter);
         gtk_tree_view_scroll_to_cell(tool->treeview, path, NULL,
                                      FALSE, 0.0, 0.0);
+        gtk_tree_path_free(path);
     }
 
     ok = (plain_tool->selection
