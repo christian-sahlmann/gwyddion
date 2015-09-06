@@ -38,8 +38,9 @@ Modules:
 - WSxM: It is possible to export channels to WSxM files (.stp).
 - Color Range tool: Fixed range values are no longer lost upon switching from
   a non-fixed range data window.
-- Slice volume: Not working graph selection was fixed.  Possibly odd preview
-  sizes upon base plane switch were corrected.
+- Slice volume: It is possible to extract multiple images or curves at once.
+  Not working graph selection was fixed.  Possibly odd preview sizes and
+  graph selection ranges upon base plane switch were corrected.
 - Cross-correlation: Invalid low-correlation mask object sharing was fixed.
 - NRRD: Detached data files are correctly searched in a path relative to the
   header file now.
@@ -47,6 +48,8 @@ Modules:
 - Distance, Profile, Path Level tools: Moved/edited line is selected in the
   list and the list is scrolled to make it visible.
 - Line layer: New property "center-tick" controls drawing of a central tick.
+- Line noise synthesis: New ‘Ridges’ noise type creates locally offset blocks
+  that do not influence the outside values.
 
 Other:
 - The code has been made MSVC-compatible.
