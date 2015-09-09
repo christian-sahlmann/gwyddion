@@ -297,7 +297,7 @@ rawgraph_dialog(RawGraphArgs *args,
     gtk_entry_set_text(GTK_ENTRY(controls.title), args->title);
     gtk_entry_set_text(GTK_ENTRY(controls.x_label), args->x_label);
     gtk_entry_set_text(GTK_ENTRY(controls.y_label), args->y_label);
-    gtk_entry_set_text(GTK_ENTRY(controls.y_units), args->y_units);
+    gtk_entry_set_text(GTK_ENTRY(controls.x_units), args->x_units);
     gtk_entry_set_text(GTK_ENTRY(controls.y_units), args->y_units);
 
     gtk_widget_show_all(dialog);
