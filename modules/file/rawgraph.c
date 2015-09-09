@@ -37,6 +37,9 @@
 #include <libgwymodule/gwymodule-file.h>
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
+#include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwydgettypes.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <app/settings.h>
 #include <app/help.h>
 #include <app/data-browser.h>
@@ -49,6 +52,7 @@ typedef struct {
     gchar *y_label;
     gchar *x_units;
     gchar *y_units;
+    GwyGraphCurveType curvetype;
     /* Interface only */
     guint ncols;
     GArray *data;
@@ -63,6 +67,7 @@ typedef struct {
     GtkWidget *y_label;
     GtkWidget *x_units;
     GtkWidget *y_units;
+    GtkWidget *curvetype;
 } RawGraphControls;
 
 static gboolean       module_register   (void);
@@ -75,12 +80,14 @@ static gboolean       rawgraph_dialog   (RawGraphArgs *args,
                                          GwyGraphModel *gmodel);
 static GtkWidget*     attach_entry      (GtkTable *table,
                                          const gchar *description,
+                                         const gchar *id,
+                                         gchar **arg,
                                          gint *row);
-static void           update_string     (GtkWidget *entry,
-                                         gchar **text);
-static void           update_property   (GtkEntry *entry,
+static void           update_string     (GtkEntry *entry,
                                          GObject *object);
 static void           update_units      (GtkEntry *entry,
+                                         GObject *object);
+static void           update_enum       (GtkComboBox *combo,
                                          GObject *object);
 static GwyGraphModel* rawgraph_parse    (gchar *buffer,
                                          RawGraphArgs *args,
@@ -173,6 +180,7 @@ rawgraph_load(const gchar *filename,
     GwyGraphModel *gmodel = NULL;
     RawGraphArgs args;
     gchar *buffer;
+    gboolean ok;
 
     if (mode != GWY_RUN_INTERACTIVE) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,
@@ -192,11 +200,12 @@ rawgraph_load(const gchar *filename,
 
     rawgraph_load_args(gwy_app_settings_get(), &args);
     fill_data(gmodel, &args);
-    if (!rawgraph_dialog(&args, gmodel)) {
+    ok = rawgraph_dialog(&args, gmodel);
+    rawgraph_save_args(gwy_app_settings_get(), &args);
+    if (!ok) {
         err_CANCELLED(error);
         goto fail;
     }
-    rawgraph_save_args(gwy_app_settings_get(), &args);
 
     container = gwy_container_new();
     gwy_container_set_object(container, gwy_app_get_graph_key_for_id(1),
@@ -249,42 +258,51 @@ rawgraph_dialog(RawGraphArgs *args,
     align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
     gtk_box_pack_start(GTK_BOX(hbox), align, FALSE, FALSE, 0);
 
-    table = GTK_TABLE(gtk_table_new(5, 2, FALSE));
+    table = GTK_TABLE(gtk_table_new(6, 4, FALSE));
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
     gtk_container_add(GTK_CONTAINER(align), GTK_WIDGET(table));
     row = 0;
 
-    controls.title = attach_entry(table, _("_Title:"), &row);
-    g_object_set_data(G_OBJECT(controls.title), "id", "title");
+    controls.title = attach_entry(table, _("_Title:"),
+                                  "title", &args->title, &row);
     g_signal_connect(controls.title, "changed",
-                     G_CALLBACK(update_property), gmodel);
+                     G_CALLBACK(update_string), gmodel);
     g_signal_connect(controls.title, "changed",
-                     G_CALLBACK(update_property), gcmodel);
+                     G_CALLBACK(update_string), gcmodel);
 
-    controls.x_label = attach_entry(table, _("_X label:"), &row);
-    g_object_set_data(G_OBJECT(controls.x_label), "id", "axis-label-bottom");
+    controls.x_label = attach_entry(table, _("_X label:"),
+                                    "axis-label-bottom", &args->x_label, &row);
     g_signal_connect(controls.x_label, "changed",
-                     G_CALLBACK(update_property), gmodel);
+                     G_CALLBACK(update_string), gmodel);
 
-    controls.y_label = attach_entry(table, _("_Y label:"), &row);
-    g_object_set_data(G_OBJECT(controls.y_label), "id", "axis-label-left");
+    controls.y_label = attach_entry(table, _("_Y label:"),
+                                    "axis-label-left", &args->y_label, &row);
     g_signal_connect(controls.y_label, "changed",
-                     G_CALLBACK(update_property), gmodel);
+                     G_CALLBACK(update_string), gmodel);
 
-    controls.x_units = attach_entry(table, _("X _units:"), &row);
-    g_object_set_data(G_OBJECT(controls.x_units), "id", "si-unit-x");
-    g_object_set_data(G_OBJECT(controls.x_units), "string", &args->x_units);
+    controls.x_units = attach_entry(table, _("X _units:"),
+                                    "si-unit-x", &args->x_units, &row);
     g_object_set_data(G_OBJECT(controls.x_units), "args", args);
     g_signal_connect(controls.x_units, "changed",
                      G_CALLBACK(update_units), gmodel);
 
-    controls.y_units = attach_entry(table, _("Y un_its:"), &row);
-    g_object_set_data(G_OBJECT(controls.y_units), "id", "si-unit-y");
-    g_object_set_data(G_OBJECT(controls.y_units), "string", &args->y_units);
+    controls.y_units = attach_entry(table, _("Y un_its:"),
+                                    "si-unit-y", &args->y_units, &row);
     g_object_set_data(G_OBJECT(controls.y_units), "args", args);
     g_signal_connect(controls.y_units, "changed",
                      G_CALLBACK(update_units), gmodel);
+
+    controls.curvetype
+        = gwy_enum_combo_box_new(gwy_graph_curve_type_get_enum(), -1,
+                                 G_CALLBACK(update_enum), gcmodel,
+                                 args->curvetype, TRUE);
+    g_object_set_data(G_OBJECT(controls.curvetype), "id", (gpointer)"mode");
+    g_object_set_data(G_OBJECT(controls.curvetype), "arg", &args->curvetype);
+    gwy_table_attach_hscale(GTK_WIDGET(table), row, _("Plot _style:"), NULL,
+                            GTK_OBJECT(controls.curvetype),
+                            GWY_HSCALE_WIDGET);
+    row++;
 
     /********************************************************************
      * Right column
@@ -299,6 +317,7 @@ rawgraph_dialog(RawGraphArgs *args,
     gtk_entry_set_text(GTK_ENTRY(controls.y_label), args->y_label);
     gtk_entry_set_text(GTK_ENTRY(controls.x_units), args->x_units);
     gtk_entry_set_text(GTK_ENTRY(controls.y_units), args->y_units);
+    update_enum(GTK_COMBO_BOX(controls.curvetype), G_OBJECT(gcmodel));
 
     gtk_widget_show_all(dialog);
     do {
@@ -312,9 +331,6 @@ rawgraph_dialog(RawGraphArgs *args,
             break;
 
             case GTK_RESPONSE_OK:
-            update_string(controls.title, &args->title);
-            update_string(controls.x_label, &args->x_label);
-            update_string(controls.y_label, &args->y_label);
             break;
 
             default:
@@ -331,6 +347,8 @@ rawgraph_dialog(RawGraphArgs *args,
 static GtkWidget*
 attach_entry(GtkTable *table,
              const gchar *description,
+             const gchar *id,
+             gchar **arg,
              gint *row)
 {
     GtkWidget *label, *entry;
@@ -340,7 +358,9 @@ attach_entry(GtkTable *table,
     gtk_table_attach(table, label, 0, 1, *row, *row + 1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     entry = gtk_entry_new();
-    gtk_table_attach(table, entry, 1, 2, *row, *row + 1,
+    g_object_set_data(G_OBJECT(entry), "id", (gpointer)id);
+    g_object_set_data(G_OBJECT(entry), "arg", arg);
+    gtk_table_attach(table, entry, 1, 4, *row, *row + 1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), entry);
 
@@ -350,34 +370,27 @@ attach_entry(GtkTable *table,
 }
 
 static void
-update_string(GtkWidget *entry,
-              gchar **text)
+update_string(GtkEntry *entry,
+              GObject *object)
 {
-    const gchar *s;
+    const gchar *value, *name = g_object_get_data(G_OBJECT(entry), "id");
+    gchar **s;
 
-    s = gtk_entry_get_text(GTK_ENTRY(entry));
-    if (!gwy_strequal(s, *text)) {
-        g_free(*text);
-        *text = g_strdup(s);
-    }
-}
-
-static void
-update_property(GtkEntry *entry,
-                GObject *object)
-{
-    const gchar *name = g_object_get_data(G_OBJECT(entry), "id");
-
+    /* XXX: Special exception.  We have one entry for two properties. */
     if (gwy_strequal(name, "title") && GWY_IS_GRAPH_CURVE_MODEL(object))
         name = "description";
-    g_object_set(object, name, gtk_entry_get_text(entry), NULL);
+
+    value = gtk_entry_get_text(entry);
+    g_object_set(object, name, value, NULL);
+    s = g_object_get_data(G_OBJECT(entry), "arg");
+    g_free(*s);
+    *s = g_strdup(value);
 }
 
 static void
 update_units(GtkEntry *entry,
              GObject *object)
 {
-    RawGraphArgs *args;
     GwySIUnit *unit;
     const gchar *unitstr;
     gchar **s;
@@ -385,13 +398,25 @@ update_units(GtkEntry *entry,
     unitstr = gtk_entry_get_text(entry);
     unit = gwy_si_unit_new(unitstr);
     g_object_set(object, g_object_get_data(G_OBJECT(entry), "id"), unit, NULL);
-    s = g_object_get_data(G_OBJECT(entry), "string");
+    s = g_object_get_data(G_OBJECT(entry), "arg");
     g_free(*s);
     *s = g_strdup(unitstr);
     g_object_unref(unit);
 
-    args = g_object_get_data(G_OBJECT(entry), "args");
-    fill_data(GWY_GRAPH_MODEL(object), args);
+    fill_data(GWY_GRAPH_MODEL(object),
+              g_object_get_data(G_OBJECT(entry), "args"));
+}
+
+static void
+update_enum(GtkComboBox *combo,
+            GObject *object)
+{
+    const gchar *name = g_object_get_data(G_OBJECT(combo), "id");
+    gint *arg = g_object_get_data(G_OBJECT(combo), "arg");
+    gint value = gwy_enum_combo_box_get_active(combo);
+
+    g_object_set(object, name, value, NULL);
+    *arg = value;
 }
 
 static GwyGraphModel*
@@ -521,11 +546,12 @@ compare_double(gconstpointer a, gconstpointer b)
     return 0.0;
 }
 
-static const gchar title_key[]   = "/module/rawgraph/title";
-static const gchar x_label_key[] = "/module/rawgraph/x-label";
-static const gchar y_label_key[] = "/module/rawgraph/y-label";
-static const gchar x_units_key[] = "/module/rawgraph/x-units";
-static const gchar y_units_key[] = "/module/rawgraph/y-units";
+static const gchar curvetype_key[] = "/module/rawgraph/curvetype";
+static const gchar title_key[]     = "/module/rawgraph/title";
+static const gchar x_label_key[]   = "/module/rawgraph/x-label";
+static const gchar x_units_key[]   = "/module/rawgraph/x-units";
+static const gchar y_label_key[]   = "/module/rawgraph/y-label";
+static const gchar y_units_key[]   = "/module/rawgraph/y-units";
 
 static void
 rawgraph_load_args(GwyContainer *container,
@@ -536,6 +562,7 @@ rawgraph_load_args(GwyContainer *container,
     args->y_label = NULL;
     args->x_units = NULL;
     args->y_units = NULL;
+    args->curvetype = GWY_GRAPH_CURVE_LINE_POINTS;
 
     gwy_container_gis_string_by_name(container, title_key,
                                      (const guchar**)&args->title);
@@ -547,12 +574,15 @@ rawgraph_load_args(GwyContainer *container,
                                      (const guchar**)&args->x_units);
     gwy_container_gis_string_by_name(container, y_units_key,
                                      (const guchar**)&args->y_units);
+    gwy_container_gis_enum_by_name(container, curvetype_key, &args->curvetype);
 
     args->title = g_strdup(args->title ? args->title : _("Curve"));
     args->x_label = g_strdup(args->x_label ? args->x_label : "x");
     args->y_label = g_strdup(args->y_label ? args->y_label : "y");
     args->x_units = g_strdup(args->x_units ? args->x_units : "");
     args->y_units = g_strdup(args->y_units ? args->y_units : "");
+    args->curvetype = gwy_enum_sanitize_value(args->curvetype,
+                                              GWY_TYPE_GRAPH_CURVE_TYPE);
 }
 
 static void
@@ -569,6 +599,7 @@ rawgraph_save_args(GwyContainer *container,
                                      (guchar*)args->x_units);
     gwy_container_set_string_by_name(container, y_units_key,
                                      (guchar*)args->y_units);
+    gwy_container_set_enum_by_name(container, curvetype_key, args->curvetype);
 
     args->title = NULL;
     args->x_label = NULL;
