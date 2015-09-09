@@ -106,7 +106,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports simple text files as graph curves."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti)",
     "2009",
 };
