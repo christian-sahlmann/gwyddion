@@ -796,7 +796,10 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
     gtk_entry_set_width_chars(GTK_ENTRY(window->physcale_entry), 8);
     gtk_table_attach(GTK_TABLE(table), window->physcale_entry,
                      1, 2, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), window->physcale_entry);
     update_physcale_entry(window, GTK_ADJUSTMENT(adj));
+    g_signal_connect_swapped(window->physcale_entry, "activate",
+                             G_CALLBACK(gwy_3d_window_set_zscale), window);
 
     button = gtk_button_new_with_mnemonic(gwy_sgettext("verb|Set"));
     gtk_table_attach(GTK_TABLE(table), button,
