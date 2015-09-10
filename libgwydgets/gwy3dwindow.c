@@ -754,7 +754,7 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
 
     vbox = gtk_vbox_new(FALSE, 0);
 
-    table = gtk_table_new(8, 3, FALSE);
+    table = gtk_table_new(11, 3, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -806,9 +806,17 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
                      2, 3, row, row+1, 0, 0, 0, 0);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_3d_window_set_zscale), window);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
+    /* The range and step is what seems typically supported. */
+    adj = gwy_3d_window_make_setup_adj(window, setup, "line-width",
+                                       1.0, 10.0, 0.1, 1.0,
+                                       FALSE);
+    spin = gwy_table_attach_spinbutton(table, row++,
+                                       _("Line _width:"), "px", adj);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 1);
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     check = gtk_check_button_new_with_mnemonic(_("Show _axes"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
                                  setup->axes_visible);
