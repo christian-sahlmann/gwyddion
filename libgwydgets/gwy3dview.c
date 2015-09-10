@@ -981,6 +981,9 @@ gwy_3d_view_setup_changed(Gwy3DView *gwy3dview,
             gwy_3d_view_update_lists(gwy3dview);
             return;
         };
+        if (!gwy3dview->setup->axes_visible
+            && gwy_strequal(pspec->name, "line-width"))
+            return;
     }
 
     gwy_3d_view_timeout_start(gwy3dview, TRUE);
@@ -2355,6 +2358,9 @@ gwy_3d_draw_axes(Gwy3DView *widget, gint width, gint height)
                         gwy_gl_material_get_specular(mat_none));
     glMaterialf(GL_FRONT, GL_SHININESS,
                 (GLfloat)gwy_gl_material_get_shininess(mat_none)*128.0f);
+    /* This is optimistic.  Hope something reasonable happens when the selected
+     * line width is not actually supported. */
+    glLineWidth(widget->setup->line_width);
 
     if (rx >= 0.0 && rx <= 90.0) {
         Ay = dy*yres;

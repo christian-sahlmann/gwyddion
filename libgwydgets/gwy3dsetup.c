@@ -209,7 +209,7 @@ gwy_3d_setup_class_init(Gwy3DSetupClass *klass)
                              "Line width",
                              "Width of axis lines and ticks, in pixels. "
                              "(Since: 2.42)",
-                             0.0, 10.0, 1.0,
+                             1.0, 10.0, 1.0,
                              G_PARAM_READWRITE));
 
 }
