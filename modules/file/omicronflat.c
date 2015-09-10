@@ -352,7 +352,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
-    gwy_file_func_register("omicronflat2",
+    gwy_file_func_register("omicronflat",
                            N_("Omicron flat files (*.*_flat)"),
                            (GwyFileDetectFunc)&omicronflat_detect,
                            (GwyFileLoadFunc)&omicronflat_load,
