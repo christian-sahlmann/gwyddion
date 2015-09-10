@@ -119,6 +119,7 @@ file_LTLIBRARIES = \
 	jeol.la \
 	jpkscan.la \
 	jspmfile.la \
+	keyence.la \
 	lextfile.la \
 	magellan.la \
 	mapvue.la \
@@ -259,6 +260,7 @@ iso28600_la_SOURCES      = iso28600.c
 jeol_la_SOURCES          = jeol.c
 jpkscan_la_SOURCES       = jpkscan.c jpk.h gwytiff.h
 jspmfile_la_SOURCES      = jspmfile.c
+keyence_la_SOURCES       = keyence.c
 lextfile_la_SOURCES      = lextfile.c gwytiff.h
 magellan_la_SOURCES      = magellan.c gwytiff.h
 mapvue_la_SOURCES        = mapvue.c
