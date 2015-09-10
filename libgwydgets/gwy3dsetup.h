@@ -61,7 +61,7 @@ struct _Gwy3DSetup {
     gdouble z_scale;
     gdouble light_phi;
     gdouble light_theta;
-    gdouble d_reserved_1;
+    gdouble line_width;
     gdouble d_reserved_2;
     gdouble d_reserved_3;
     gdouble d_reserved_4;

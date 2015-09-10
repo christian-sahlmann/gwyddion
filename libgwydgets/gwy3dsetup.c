@@ -41,6 +41,7 @@ enum {
     PROP_LIGHT_PHI,
     PROP_LIGHT_THETA,
     PROP_HIDE_MASKED,
+    PROP_LINE_WIDTH,
     PROP_LAST
 };
 
@@ -200,6 +201,17 @@ gwy_3d_setup_class_init(Gwy3DSetupClass *klass)
                               "Hide masked vertices",
                               FALSE,
                               G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_LINE_WIDTH,
+         g_param_spec_double("line-width",
+                             "Line width",
+                             "Width of axis lines and ticks, in pixels. "
+                             "(Since: 2.42)",
+                             0.0, 10.0, 1.0,
+                             G_PARAM_READWRITE));
+
 }
 
 static void
@@ -218,6 +230,7 @@ gwy_3d_setup_init(Gwy3DSetup *setup)
     setup->z_scale = 1.0;
     setup->light_phi = 0.0;
     setup->light_theta = 0.0;
+    setup->line_width = 1.0;
 }
 
 static void
@@ -275,6 +288,10 @@ gwy_3d_setup_set_property(GObject *object,
 
         case PROP_HIDE_MASKED:
         setup->hide_masked = g_value_get_boolean(value);
+        break;
+
+        case PROP_LINE_WIDTH:
+        setup->line_width = g_value_get_double(value);
         break;
 
         default:
@@ -340,6 +357,10 @@ gwy_3d_setup_get_property(GObject *object,
         g_value_set_boolean(value, setup->hide_masked);
         break;
 
+        case PROP_LINE_WIDTH:
+        g_value_set_double(value, setup->line_width);
+        break;
+
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -370,6 +391,7 @@ gwy_3d_setup_serialize(GObject *serializable,
             { 'd', "light-phi", &setup->light_phi, NULL, },
             { 'd', "light-theta", &setup->light_theta, NULL, },
             { 'b', "hide-masked", &setup->hide_masked, NULL, },
+            { 'd', "line-width", &setup->line_width, NULL, },
         };
 
         return gwy_serialize_pack_object_struct(buffer,
@@ -401,6 +423,7 @@ gwy_3d_setup_get_size(GObject *object)
             { 'd', "light-phi", &setup->light_phi, NULL, },
             { 'd', "light-theta", &setup->light_theta, NULL, },
             { 'b', "hide-masked", &setup->hide_masked, NULL, },
+            { 'd', "line-width", &setup->line_width, NULL, },
         };
 
         return gwy_serialize_get_struct_size(GWY_3D_SETUP_TYPE_NAME,
@@ -433,6 +456,7 @@ gwy_3d_setup_deserialize(const guchar *buffer,
             { 'd', "light-phi", &setup->light_phi, NULL, },
             { 'd', "light-theta", &setup->light_theta, NULL, },
             { 'b', "hide-masked", &setup->hide_masked, NULL, },
+            { 'd', "line-width", &setup->line_width, NULL, },
         };
 
         if (!gwy_serialize_unpack_object_struct(buffer, size, position,
@@ -514,6 +538,11 @@ gwy_3d_setup_clone(GObject *source,
         g_object_notify(copy, "hide-masked");
     }
 
+    if (clone->line_width != setup->line_width) {
+        clone->line_width = setup->line_width;
+        g_object_notify(copy, "line-width");
+    }
+
     g_object_thaw_notify(copy);
 }
 
@@ -540,6 +569,8 @@ gwy_3d_setup_duplicate_real(GObject *object)
     duplicate->light_theta = setup->light_theta;
 
     duplicate->hide_masked = setup->hide_masked;
+
+    duplicate->line_width = setup->line_width;
 
     return (GObject*)duplicate;
 }
