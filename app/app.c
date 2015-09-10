@@ -1113,6 +1113,8 @@ gwy_app_3d_window_set_defaults(Gwy3DWindow *window)
                                      setup->light_phi);
     gwy_container_set_double_by_name(settings, "/app/3d/light-theta",
                                      setup->light_theta);
+    gwy_container_set_double_by_name(settings, "/app/3d/line-width",
+                                     setup->line_width);
     gwy_container_set_enum_by_name(settings, "/app/3d/visualization",
                                    setup->visualization);
     gwy_container_set_enum_by_name(settings, "/app/3d/projection",
@@ -1231,6 +1233,9 @@ _gwy_app_3d_view_init_setup(GwyContainer *container,
     if (gwy_container_gis_double_by_name(settings, "/app/3d/light-theta",
                                          &dblvalue))
         g_object_set(setup, "light-theta", dblvalue, NULL);
+    if (gwy_container_gis_double_by_name(settings, "/app/3d/line-width",
+                                         &dblvalue))
+        g_object_set(setup, "line-width", dblvalue, NULL);
     if (gwy_container_gis_enum_by_name(settings, "/app/3d/visualization",
                                        &visualization))
         g_object_set(setup, "visualization", visualization, NULL);
