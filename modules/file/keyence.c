@@ -52,6 +52,7 @@
 enum {
     KEYENCE_HEADER_SIZE = 12,
     KEYENCE_OFFSET_TABLE_SIZE = 72,
+    KEYENCE_MEASUREMENT_CONDITIONS_MIN_SIZE = 304,
 };
 
 typedef struct {
@@ -82,8 +83,83 @@ typedef struct {
 } KeyenceOffsetTable;
 
 typedef struct {
+    guint size;
+    guint year;
+    guint month;
+    guint day;
+    guint hour;
+    guint minute;
+    guint second;
+    guint diff_utc_by_minutes;
+    guint image_attributes;
+    guint user_interface_mode;
+    guint color_composite_mode;
+    guint num_layer;
+    guint run_mode;
+    guint peak_mode;
+    guint sharpening_level;
+    guint speed;
+    guint distance;
+    guint pitch;
+    guint optical_zoom;
+    guint num_line;
+    guint line0_pos;
+    guint reserved1[3];
+    guint lens_mag;
+    guint pmt_gain_mode;
+    guint pmt_gain;
+    guint pmt_offset;
+    guint nd_filter;
+    guint reserved2;
+    guint persist_count;
+    guint shutter_speed_mode;
+    guint shutter_speed;
+    guint white_balance_mode;
+    guint white_balance_red;
+    guint white_balance_blue;
+    guint camera_gain;
+    guint plane_compensation;
+    guint xy_length_unit;
+    guint z_length_unit;
+    guint xy_decimal_place;
+    guint z_decimal_place;
+    guint x_length_per_pixel;
+    guint y_length_per_pixel;
+    guint z_length_per_digit;
+    guint reserved3[5];
+    guint light_filter_type;
+    guint reserved4;
+    guint gamma_reverse;
+    guint gamma;
+    guint offset;
+    guint ccd_bw_offset;
+    guint numerical_aperture;
+    guint head_type;
+    guint pmt_gain2;
+    guint omit_color_image;
+    guint lens_id;
+    guint light_lut_mode;
+    guint light_lut_in0;
+    guint light_lut_out0;
+    guint light_lut_in1;
+    guint light_lut_out1;
+    guint light_lut_in2;
+    guint light_lut_out2;
+    guint light_lut_in3;
+    guint light_lut_out3;
+    guint light_lut_in4;
+    guint light_lut_out4;
+    guint upper_position;
+    guint lower_position;
+    guint light_effective_bit_depth;
+    guint height_effective_bit_depth;
+    /* XXX: There is much more... */
+} KeyenceMeasurementConditions;
+
+typedef struct {
     KeyenceHeader header;
     KeyenceOffsetTable offset_table;
+    KeyenceMeasurementConditions meas_conds;
     /* Raw file contents. */
     guchar *buffer;
     gsize size;
@@ -102,6 +178,10 @@ static gboolean      read_header      (const guchar **p,
 static gboolean      read_offset_table(const guchar **p,
                                        gsize *size,
                                        KeyenceOffsetTable *offsettable,
+                                       GError **error);
+static gboolean      read_meas_conds  (const guchar **p,
+                                       gsize *size,
+                                       KeyenceMeasurementConditions *measconds,
                                        GError **error);
 
 static GwyModuleInfo module_info = {
@@ -166,13 +246,14 @@ keyence_load(const gchar *filename,
     p = buffer;
 
     if (!read_header(&p, &remsize, &kfile.header, error)
-        || !read_offset_table(&p, &remsize, &kfile.offset_table, error))
+        || !read_offset_table(&p, &remsize, &kfile.offset_table, error)
+        || !read_meas_conds(&p, &remsize, &kfile.meas_conds, error))
         goto fail;
 
     err_NO_DATA(error);
 
 fail:
-    //free_file(fff);
+    //free_file(kfile);
     gwy_file_abandon_contents(kfile.buffer, kfile.size, NULL);
     return data;
 }
@@ -239,6 +320,105 @@ read_offset_table(const guchar **p,
     offsettable->reserved = gwy_get_guint32_le(p);
 
     *size -= KEYENCE_OFFSET_TABLE_SIZE;
+    return TRUE;
+}
+
+static gboolean
+read_meas_conds(const guchar **p,
+                gsize *size,
+                KeyenceMeasurementConditions *measconds,
+                GError **error)
+{
+    guint i;
+
+    if (*size < KEYENCE_MEASUREMENT_CONDITIONS_MIN_SIZE) {
+        err_TRUNCATED(error);
+        return FALSE;
+    }
+
+    measconds->size = gwy_get_guint32_le(p);
+    if (*size < measconds->size) {
+        err_TRUNCATED(error);
+        return FALSE;
+    }
+    if (measconds->size < KEYENCE_MEASUREMENT_CONDITIONS_MIN_SIZE) {
+        err_INVALID(error, "MeasurementConditions::Size");
+        return FALSE;
+    }
+
+    measconds->year = gwy_get_guint32_le(p);
+    measconds->month = gwy_get_guint32_le(p);
+    measconds->day = gwy_get_guint32_le(p);
+    measconds->hour = gwy_get_guint32_le(p);
+    measconds->minute = gwy_get_guint32_le(p);
+    measconds->second = gwy_get_guint32_le(p);
+    measconds->diff_utc_by_minutes = gwy_get_guint32_le(p);
+    measconds->image_attributes = gwy_get_guint32_le(p);
+    measconds->user_interface_mode = gwy_get_guint32_le(p);
+    measconds->color_composite_mode = gwy_get_guint32_le(p);
+    measconds->num_layer = gwy_get_guint32_le(p);
+    measconds->run_mode = gwy_get_guint32_le(p);
+    measconds->peak_mode = gwy_get_guint32_le(p);
+    measconds->sharpening_level = gwy_get_guint32_le(p);
+    measconds->speed = gwy_get_guint32_le(p);
+    measconds->distance = gwy_get_guint32_le(p);
+    measconds->pitch = gwy_get_guint32_le(p);
+    measconds->optical_zoom = gwy_get_guint32_le(p);
+    measconds->num_line = gwy_get_guint32_le(p);
+    measconds->line0_pos = gwy_get_guint32_le(p);
+    for (i = 0; i < G_N_ELEMENTS(measconds->reserved1); i++)
+        measconds->reserved1[i] = gwy_get_guint32_le(p);
+    measconds->lens_mag = gwy_get_guint32_le(p);
+    measconds->pmt_gain_mode = gwy_get_guint32_le(p);
+    measconds->pmt_gain = gwy_get_guint32_le(p);
+    measconds->pmt_offset = gwy_get_guint32_le(p);
+    measconds->nd_filter = gwy_get_guint32_le(p);
+    measconds->reserved2 = gwy_get_guint32_le(p);
+    measconds->persist_count = gwy_get_guint32_le(p);
+    measconds->shutter_speed_mode = gwy_get_guint32_le(p);
+    measconds->shutter_speed = gwy_get_guint32_le(p);
+    measconds->white_balance_mode = gwy_get_guint32_le(p);
+    measconds->white_balance_red = gwy_get_guint32_le(p);
+    measconds->white_balance_blue = gwy_get_guint32_le(p);
+    measconds->camera_gain = gwy_get_guint32_le(p);
+    measconds->plane_compensation = gwy_get_guint32_le(p);
+    measconds->xy_length_unit = gwy_get_guint32_le(p);
+    measconds->z_length_unit = gwy_get_guint32_le(p);
+    measconds->xy_decimal_place = gwy_get_guint32_le(p);
+    measconds->z_decimal_place = gwy_get_guint32_le(p);
+    measconds->x_length_per_pixel = gwy_get_guint32_le(p);
+    measconds->y_length_per_pixel = gwy_get_guint32_le(p);
+    measconds->z_length_per_digit = gwy_get_guint32_le(p);
+    for (i = 0; i < G_N_ELEMENTS(measconds->reserved3); i++)
+        measconds->reserved3[i] = gwy_get_guint32_le(p);
+    measconds->light_filter_type = gwy_get_guint32_le(p);
+    measconds->reserved4 = gwy_get_guint32_le(p);
+    measconds->gamma_reverse = gwy_get_guint32_le(p);
+    measconds->gamma = gwy_get_guint32_le(p);
+    measconds->offset = gwy_get_guint32_le(p);
+    measconds->ccd_bw_offset = gwy_get_guint32_le(p);
+    measconds->numerical_aperture = gwy_get_guint32_le(p);
+    measconds->head_type = gwy_get_guint32_le(p);
+    measconds->pmt_gain2 = gwy_get_guint32_le(p);
+    measconds->omit_color_image = gwy_get_guint32_le(p);
+    measconds->lens_id = gwy_get_guint32_le(p);
+    measconds->light_lut_mode = gwy_get_guint32_le(p);
+    measconds->light_lut_in0 = gwy_get_guint32_le(p);
+    measconds->light_lut_out0 = gwy_get_guint32_le(p);
+    measconds->light_lut_in1 = gwy_get_guint32_le(p);
+    measconds->light_lut_out1 = gwy_get_guint32_le(p);
+    measconds->light_lut_in2 = gwy_get_guint32_le(p);
+    measconds->light_lut_out2 = gwy_get_guint32_le(p);
+    measconds->light_lut_in3 = gwy_get_guint32_le(p);
+    measconds->light_lut_out3 = gwy_get_guint32_le(p);
+    measconds->light_lut_in4 = gwy_get_guint32_le(p);
+    measconds->light_lut_out4 = gwy_get_guint32_le(p);
+    measconds->upper_position = gwy_get_guint32_le(p);
+    measconds->lower_position = gwy_get_guint32_le(p);
+    measconds->light_effective_bit_depth = gwy_get_guint32_le(p);
+    measconds->height_effective_bit_depth = gwy_get_guint32_le(p);
+
+    *size -= measconds->size;
     return TRUE;
 }
 
