@@ -302,6 +302,63 @@ gwy_data_line_part_get_tan_beta0(GwyDataLine *a, gint from, gint to)
 }
 
 /**
+ * gwy_data_line_part_get_variation:
+ * @data_line: A data line.
+ * @from: Index the line part starts at.
+ * @to: Index the line part ends at + 1.
+ *
+ * Computes the total variation of a part of a data line.
+ *
+ * The total variation is estimated as the integral of the absolute value of
+ * local gradient.  For one dimensional data, the variation reduces to the
+ * integral of absolute value of the derivative.  Its units are thus the same
+ * as the value units of the line.  See also
+ * gwy_data_field_area_get_variation() for some more discussion.
+ *
+ * Returns: The total variation within a given interval.
+ *
+ * Since: 2.42
+ **/
+gdouble
+gwy_data_line_part_get_variation(GwyDataLine *a, gint from, gint to)
+{
+    gint i;
+    gdouble var = 0.0;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(a), var);
+    if (to < from)
+        GWY_SWAP(gint, from, to);
+
+    g_return_val_if_fail(from >= 0 && to <= a->res, var);
+
+    if (to - from < 2)
+        return var;
+
+    for (i = from + 1; i < to; i++)
+        var += fabs(a->data[i] - a->data[i-1]);
+
+    return var;
+}
+
+/**
+ * gwy_data_line_get_variation:
+ * @data_line: A data line.
+ *
+ * Computes the total variation of a data line.
+ *
+ * See gwy_data_line_part_get_variation() for definition and discussion.
+ *
+ * Returns: The total variation.
+ *
+ * Since: 2.42
+ **/
+gdouble
+gwy_data_line_get_variation(GwyDataLine *a)
+{
+    return gwy_data_line_part_get_variation(a, 0, a->res);
+}
+
+/**
  * gwy_data_line_part_get_sum:
  * @data_line: A data line.
  * @from: Index the line part starts at.
