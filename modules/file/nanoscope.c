@@ -45,6 +45,7 @@
  * Read SPS:Limited[1] Volume
  * [1] Spectra curves are imported as graphs, positional information is lost.
  **/
+
 #include "config.h"
 #include <errno.h>
 #include <string.h>
@@ -1052,6 +1053,10 @@ hash_to_curve(GHashTable *hash,
     gdouble xreal, xoff, q = 1.0;
     gdouble *data;
     gboolean size_ok, use_global, convert_to_force = FALSE;
+    /* Call the curves Trace and Retrace when we do now know (often not
+     * correct).  Replace the titles with something meaningful for specific
+     * types. */
+    const gchar *title0 = "Trace", *title1 = "Retrace";
 
     if (!require_keys(hash, error,
                       "Samps/line", "Data offset", "Data length",
@@ -1148,6 +1153,8 @@ hash_to_curve(GHashTable *hash,
                      NULL);
     }
     else if (convert_to_force) {
+        title0 = "Extend";
+        title1 = "Retract";
         g_object_set(gmodel,
                      "title", "F-Z spectrum",
                      "axis-label-bottom", "Distance",
@@ -1155,6 +1162,8 @@ hash_to_curve(GHashTable *hash,
                      NULL);
     }
     else if (spectype == NANOSCOPE_SPECTRA_FZ) {
+        title0 = "Extend";
+        title1 = "Retract";
         g_object_set(gmodel,
                      "title", "F-Z spectrum",
                      "axis-label-bottom", "Distance",
@@ -1185,7 +1194,7 @@ hash_to_curve(GHashTable *hash,
         g_object_set(gcmodel,
                      "mode", GWY_GRAPH_CURVE_LINE,
                      "color", gwy_graph_get_preset_color(0),
-                     "description", "Trace",
+                     "description", title0,
                      NULL);
         gwy_graph_model_add_curve(gmodel, gcmodel);
         g_object_unref(gcmodel);
@@ -1203,7 +1212,7 @@ hash_to_curve(GHashTable *hash,
         g_object_set(gcmodel,
                      "mode", GWY_GRAPH_CURVE_LINE,
                      "color", gwy_graph_get_preset_color(1),
-                     "description", "Retrace",
+                     "description", title1,
                      NULL);
         gwy_graph_curve_model_set_data_from_dataline(gcmodel, dline, 0, 0);
         gwy_graph_model_add_curve(gmodel, gcmodel);
