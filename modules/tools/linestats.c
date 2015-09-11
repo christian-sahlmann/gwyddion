@@ -167,7 +167,7 @@ static const GwyEnum sf_types[] =  {
     { N_("Length"),             GWY_LINE_STAT_LENGTH,    },
     { N_("Slope"),              GWY_LINE_STAT_SLOPE,     },
     { N_("tan β<sub>0</sub>"),  GWY_LINE_STAT_TAN_BETA0, },
-    { N_("Vatiation"),          GWY_LINE_STAT_VARIATION, },
+    { N_("Variation"),          GWY_LINE_STAT_VARIATION, },
     { N_("Ra"),                 GWY_LINE_STAT_RA,        },
     { N_("Rq (RMS)"),           GWY_LINE_STAT_RMS,       },
     { N_("Rz"),                 GWY_LINE_STAT_RZ,        },
