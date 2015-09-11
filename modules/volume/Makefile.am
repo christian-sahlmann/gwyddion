@@ -14,6 +14,7 @@ volume_LTLIBRARIES = \
 	volume_invert.la \
 	volume_kmeans.la \
 	volume_kmedians.la \
+	volume_linestat.la \
 	volume_slice.la
 
 EXTRA_DIST = \
@@ -44,6 +45,7 @@ volume_fdfit_la_SOURCES     = volume_fdfit.c
 volume_invert_la_SOURCES    = volume_invert.c
 volume_kmeans_la_SOURCES    = volume_kmeans.c
 volume_kmedians_la_SOURCES  = volume_kmedians.c
+volume_linestat_la_SOURCES  = volume_linestat.c
 volume_slice_la_SOURCES     = volume_slice.c
 
 clean-local:

@@ -371,7 +371,7 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
     row++;
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
-    label = gtk_label_new_with_mnemonic(_("Output type:"));
+    label = gtk_label_new(_("Output type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 2, row, row+1, GTK_FILL, 0, 0, 0);
