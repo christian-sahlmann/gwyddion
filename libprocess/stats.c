@@ -4019,6 +4019,15 @@ gwy_data_field_get_variation(GwyDataField *data_field)
  * The total variation is estimated as the integral of the absolute value of
  * local gradient.
  *
+ * This quantity has the somewhat odd units of value unit times lateral unit.
+ * It can be envisioned as follows.  If the surface has just two height levels
+ * (upper and lower planes) then the quantity is the length of the boundary
+ * between the upper and lower part, multiplied by the step height.  If the
+ * surface is piece-wise constant, then the variation is the step height
+ * integrated along the boundaries between the constant parts.  Therefore, for
+ * non-fractal surfaces it scales with the linear dimension of the image, not
+ * with its area, despite being an area integral.
+ *
  * Returns: The variation.
  *
  * Since: 2.38
@@ -5475,6 +5484,28 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                 g_object_unref(buf);
                 break;
 
+                case GWY_LINE_STAT_RANGE:
+                /* FIXME: Optimize for linear memory access. */
+                buf = gwy_data_line_new(height, 1.0, FALSE);
+                for (j = 0; j < width; j++) {
+                    gwy_data_field_get_column_part(data_field, buf,
+                                                   col + j, row, row + height);
+                    ldata[j] = (gwy_data_line_get_max(buf)
+                                - gwy_data_line_get_min(buf));
+                }
+                g_object_unref(buf);
+                break;
+
+                case GWY_LINE_STAT_VARIATION:
+                /* FIXME: Optimize for linear memory access. */
+                buf = gwy_data_line_new(height, 1.0, FALSE);
+                for (j = 0; j < width; j++) {
+                    gwy_data_field_get_column_part(data_field, buf,
+                                                   col + j, row, row + height);
+                    ldata[j] = gwy_data_line_get_variation(buf);
+                }
+                g_object_unref(buf);
+                break;
 
                 default:
                 g_return_if_reached();
@@ -5687,6 +5718,29 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                 g_object_unref(buf);
                 break;
 
+                case GWY_LINE_STAT_RANGE:
+                for (i = 0; i < height; i++) {
+                    gdouble vmin = data[i*xres], vmax = data[i*xres];
+                    for (j = 1; j < width; j++) {
+                        if (data[i*xres + j] < vmin)
+                            vmin = data[i*xres + j];
+                        if (data[i*xres + j] > vmax)
+                            vmax = data[i*xres + j];
+                    }
+                    ldata[i] = vmax - vmin;
+                }
+                break;
+
+                case GWY_LINE_STAT_VARIATION:
+                buf = gwy_data_line_new(width,
+                                        gwy_data_field_jtor(data_field, width),
+                                        FALSE);
+                for (i = 0; i < height; i++) {
+                    memcpy(buf->data, data + i*xres, width*sizeof(gdouble));
+                    ldata[i] = gwy_data_line_get_variation(buf);
+                }
+                g_object_unref(buf);
+                break;
 
                 default:
                 g_return_if_reached();
@@ -5720,6 +5774,8 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
         case GWY_LINE_STAT_RA:
         case GWY_LINE_STAT_RT:
         case GWY_LINE_STAT_RZ:
+        case GWY_LINE_STAT_RANGE:
+        case GWY_LINE_STAT_VARIATION:
         gwy_serializable_clone(G_OBJECT(zunit), G_OBJECT(lunit));
         break;
 

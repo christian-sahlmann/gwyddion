@@ -223,7 +223,9 @@ typedef enum {
     GWY_LINE_STAT_RZ,
     GWY_LINE_STAT_RT,
     GWY_LINE_STAT_SKEW,
-    GWY_LINE_STAT_KURTOSIS
+    GWY_LINE_STAT_KURTOSIS,
+    GWY_LINE_STAT_RANGE,
+    GWY_LINE_STAT_VARIATION,
 } GwyLineStatQuantity;
 
 typedef enum {
