@@ -58,6 +58,8 @@ enum {
     KEYENCE_ASSEMBLY_HEADERS_SIZE = (KEYENCE_ASSEMBLY_INFO_SIZE
                                      + KEYENCE_ASSEMBLY_CONDITIONS_SIZE),
     KEYENCE_ASSEMBLY_FILE_SIZE = 532,
+    KEYENCE_TRUE_COLOR_IMAGE_MIN_SIZE = 20,
+    KEYENCE_FALSE_COLOR_IMAGE_MIN_SIZE = 796,
 };
 
 typedef enum {
@@ -194,13 +196,42 @@ typedef struct {
 } KeyenceAssemblyFile;
 
 typedef struct {
+    guint width;
+    guint height;
+    guint bit_depth;
+    guint compression;
+    guint byte_size;
+    const guchar *data;
+} KeyenceTrueColorImage;
+
+typedef struct {
+    guint width;
+    guint height;
+    guint bit_depth;
+    guint compression;
+    guint byte_size;
+    guint palette_range_min;
+    guint palette_range_max;
+    guchar palette[0x300];
+    const guchar *data;
+} KeyenceFalseColorImage;
+
+typedef struct {
     KeyenceHeader header;
     KeyenceOffsetTable offset_table;
     KeyenceMeasurementConditions meas_conds;
+    /* The rest is optional. */
     KeyenceAssemblyInformation assembly_info;
     KeyenceAssemblyConditions assembly_conds;
     guint assembly_nfiles;
+    guint nimages;
     KeyenceAssemblyFile *assembly_files;
+    KeyenceFalseColorImage light0;
+    KeyenceFalseColorImage light1;
+    KeyenceFalseColorImage light2;
+    KeyenceFalseColorImage height0;
+    KeyenceFalseColorImage height1;
+    KeyenceFalseColorImage height2;
     /* Raw file contents. */
     guchar *buffer;
     gsize size;
@@ -225,9 +256,9 @@ static gboolean      read_meas_conds   (const guchar **p,
                                         gsize *size,
                                         KeyenceMeasurementConditions *measconds,
                                         GError **error);
-static gboolean      read_assembly_info(const guchar *p,
-                                        gsize size,
-                                        KeyenceFile *kfile,
+static gboolean      read_assembly_info(KeyenceFile *kfile,
+                                        GError **error);
+static gboolean      read_data_images  (KeyenceFile *kfile,
                                         GError **error);
 
 static GwyModuleInfo module_info = {
@@ -294,8 +325,14 @@ keyence_load(const gchar *filename,
     if (!read_header(&p, &remsize, &kfile.header, error)
         || !read_offset_table(&p, &remsize, &kfile.offset_table, error)
         || !read_meas_conds(&p, &remsize, &kfile.meas_conds, error)
-        || !read_assembly_info(p, size, &kfile, error))
+        || !read_assembly_info(&kfile, error)
+        || !read_data_images(&kfile, error))
         goto fail;
+
+    if (!kfile.nimages) {
+        err_NO_DATA(error);
+        goto fail;
+    }
 
     err_NO_DATA(error);
 
@@ -476,11 +513,11 @@ read_meas_conds(const guchar **p,
 }
 
 static gboolean
-read_assembly_info(const guchar *p,
-                   gsize size,
-                   KeyenceFile *kfile,
+read_assembly_info(KeyenceFile *kfile,
                    GError **error)
 {
+    const guchar *p = kfile->buffer;
+    gsize size = kfile->size;
     guint off = kfile->offset_table.assemble;
     guint nfiles, i, j;
 
@@ -530,6 +567,75 @@ read_assembly_info(const guchar *p,
     }
 
     return TRUE;
+}
+
+static gboolean
+read_data_image(KeyenceFile *kfile,
+                KeyenceFalseColorImage *image,
+                guint offset,
+                GError **error)
+{
+    const guchar *p = kfile->buffer;
+    gsize size = kfile->size;
+    guint bps;
+
+    if (!offset)
+        return TRUE;
+
+    if (size <= KEYENCE_FALSE_COLOR_IMAGE_MIN_SIZE
+        || offset > size - KEYENCE_FALSE_COLOR_IMAGE_MIN_SIZE) {
+        err_TRUNCATED(error);
+        return FALSE;
+    }
+
+    p += offset;
+    image->width = gwy_get_guint32_le(&p);
+    if (err_DIMENSION(error, image->width))
+        return FALSE;
+    image->height = gwy_get_guint32_le(&p);
+    if (err_DIMENSION(error, image->height))
+        return FALSE;
+
+    image->bit_depth = gwy_get_guint32_le(&p);
+    if (image->bit_depth != 8
+        && image->bit_depth != 16
+        && image->bit_depth != 32) {
+        err_BPP(error, image->bit_depth);
+        return FALSE;
+    }
+    bps = image->bit_depth/8;
+
+    image->compression = gwy_get_guint32_le(&p);
+    image->byte_size = gwy_get_guint32_le(&p);
+    if (err_SIZE_MISMATCH(error,
+                          image->width*image->height*bps,
+                          image->byte_size,
+                          TRUE))
+        return FALSE;
+
+    image->palette_range_min = gwy_get_guint32_le(&p);
+    image->palette_range_max = gwy_get_guint32_le(&p);
+    memcpy(image->palette, p, sizeof(image->palette));
+    p += sizeof(image->palette);
+
+    image->data = p;
+    kfile->nimages++;
+
+    return TRUE;
+}
+
+static gboolean
+read_data_images(KeyenceFile *kfile,
+                 GError **error)
+{
+    const KeyenceOffsetTable *offtable = &kfile->offset_table;
+
+    return (read_data_image(kfile, &kfile->light0, offtable->light0, error)
+            && read_data_image(kfile, &kfile->light1, offtable->light1, error)
+            && read_data_image(kfile, &kfile->light2, offtable->light2, error)
+            && read_data_image(kfile, &kfile->height0, offtable->height0, error)
+            && read_data_image(kfile, &kfile->height1, offtable->height1, error)
+            && read_data_image(kfile, &kfile->height2, offtable->height2, error));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
