@@ -134,7 +134,7 @@ static GwyModuleInfo module_info = {
     N_("Row/column statistical function tool, mean values, medians, maxima, "
        "minima, RMS, ..., of rows or columns."),
     "Yeti <yeti@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -163,9 +163,11 @@ static const GwyEnum sf_types[] =  {
     { N_("Median"),             GWY_LINE_STAT_MEDIAN,    },
     { N_("Minimum"),            GWY_LINE_STAT_MINIMUM,   },
     { N_("Maximum"),            GWY_LINE_STAT_MAXIMUM,   },
+    { N_("Range"),              GWY_LINE_STAT_RANGE,     },
     { N_("Length"),             GWY_LINE_STAT_LENGTH,    },
     { N_("Slope"),              GWY_LINE_STAT_SLOPE,     },
     { N_("tan β<sub>0</sub>"),  GWY_LINE_STAT_TAN_BETA0, },
+    { N_("Vatiation"),          GWY_LINE_STAT_VARIATION, },
     { N_("Ra"),                 GWY_LINE_STAT_RA,        },
     { N_("Rq (RMS)"),           GWY_LINE_STAT_RMS,       },
     { N_("Rz"),                 GWY_LINE_STAT_RZ,        },
