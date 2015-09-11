@@ -1218,18 +1218,15 @@ gwy_app_recent_file_try_load_thumbnail(GwyRecentFile *rf)
 }
 
 static gint
-gwy_recent_file_find_some_channel(GwyContainer *data,
-                                  gint hint)
+find_lowest_id(gint *ids, gint hint)
 {
-    gint *ids;
     gint i, id;
 
-    ids = gwy_app_data_browser_get_data_ids(data);
     for (i = 0, id = G_MAXINT; ids[i] != -1; i++) {
         if (ids[i] >= hint && ids[i] < id)
             id = ids[i];
     }
-    /* On failure simply find the channel with lowest id */
+    /* On failure simply find the data item with the lowest id. */
     if (id == G_MAXINT) {
         for (i = 0, id = G_MAXINT; ids[i] != -1; i++) {
             if (ids[i] < id)
@@ -1239,6 +1236,19 @@ gwy_recent_file_find_some_channel(GwyContainer *data,
     g_free(ids);
 
     return id;
+}
+
+static gint
+gwy_recent_file_find_some_channel(GwyContainer *data,
+                                  gint hint)
+{
+    return find_lowest_id(gwy_app_data_browser_get_data_ids(data), hint);
+}
+
+static gint
+gwy_recent_file_find_some_volume(GwyContainer *data)
+{
+    return find_lowest_id(gwy_app_data_browser_get_volume_ids(data), 0);
 }
 
 static void
@@ -1260,7 +1270,7 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     gchar str_height[22];
     GError *err = NULL;
     GQuark quark;
-    gint id;
+    gint channel_id = G_MAXINT, volume_id = G_MAXINT;
 
     g_return_if_fail(GWY_CONTAINER(data));
 
@@ -1268,19 +1278,22 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
         /* If we are given a pixbuf, hint must be the ultimate channel id.
          * We also ignore the thnumbnail state then. */
         g_return_if_fail(GDK_IS_PIXBUF(use_this_pixbuf));
-        id = hint;
+        channel_id = hint;
         pixbuf = g_object_ref(use_this_pixbuf);
     }
     else {
         pixbuf = NULL;
-        id = gwy_recent_file_find_some_channel(data, hint);
+        channel_id = gwy_recent_file_find_some_channel(data, hint);
+        volume_id = gwy_recent_file_find_some_volume(data);
 
         if (rf->file_state == FILE_STATE_UNKNOWN)
             gwy_app_recent_file_try_load_thumbnail(rf);
     }
+    gwy_debug("hint %d, channel_id %d, volume_id %d",
+              hint, channel_id, volume_id);
 
     /* Find channel with the lowest id not smaller than hint */
-    if (id == G_MAXINT) {
+    if (channel_id == G_MAXINT && volume_id == G_MAXINT) {
         gwy_debug("There is no channel in the file, cannot make thumbnail.");
         return;
     }
@@ -1295,7 +1308,19 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     if ((gulong)rf->file_mtime == (gulong)st.st_mtime)
         return;
 
-    quark = gwy_app_get_data_key_for_id(id);
+    if (channel_id == G_MAXINT) {
+        gchar *s;
+
+        quark = gwy_app_get_brick_key_for_id(volume_id);
+        s = g_strconcat(g_quark_to_string(quark), "/preview", NULL);
+        quark = g_quark_from_string(s);
+        g_free(s);
+    }
+    else
+        quark = gwy_app_get_data_key_for_id(channel_id);
+
+    /* FIXME: We should show incorporate the third dimension somehow when
+     * creating preview from volume data. */
     dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
     rf->file_mtime = st.st_mtime;
@@ -1324,10 +1349,16 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
             return;
     }
 
-    if (!pixbuf)
-        pixbuf = gwy_app_get_channel_thumbnail(data, id,
-                                               TMS_NORMAL_THUMB_SIZE,
-                                               TMS_NORMAL_THUMB_SIZE);
+    if (!pixbuf) {
+        if (channel_id == G_MAXINT)
+            pixbuf = gwy_app_get_volume_thumbnail(data, volume_id,
+                                                  TMS_NORMAL_THUMB_SIZE,
+                                                  TMS_NORMAL_THUMB_SIZE);
+        else
+            pixbuf = gwy_app_get_channel_thumbnail(data, channel_id,
+                                                   TMS_NORMAL_THUMB_SIZE,
+                                                   TMS_NORMAL_THUMB_SIZE);
+    }
 
     g_snprintf(str_mtime, sizeof(str_mtime), "%lu", rf->file_mtime);
     g_snprintf(str_size, sizeof(str_size), "%lu", rf->file_size);
