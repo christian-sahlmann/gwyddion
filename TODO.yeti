@@ -6,7 +6,6 @@
   - polynomial leveling with disjoint z0
   - profiles along arbitrary curves
   - nanoindentation
-- Graph minor and major ticks are misaligned
 - Selection on logarithmic graphs doesn't work
 - Surf file: units and scales are botched
 - 3D:
@@ -19,14 +18,8 @@
 - Check whether we always emit notification when object properties change
 - Invent some initialization for Laplace solver so that it can only converge
   for near final state
-- Write a Postscript export module based on JP's work -- or wait for Cairo?
-- Rawfile presets setable as new filetype -- may need to wait to GtkUIManager,
-  as now the menu updates would be messy
 - Display whether data are unchanged/modified/new somewhere
 - Swap undo levels to disk
-- Make Ctrl-S save data associated with current window of whatever type, not
-  with current data window -- or maybe better, switch data windows when other
-  windows are switched
 - Make keyboard zoom shortcuts work in graphs, 3D
 - Add some guessing to Rawfile
 - Use gtk_paint_* to keep style in widgets.
