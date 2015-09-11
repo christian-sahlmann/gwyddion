@@ -53,7 +53,18 @@ enum {
     KEYENCE_HEADER_SIZE = 12,
     KEYENCE_OFFSET_TABLE_SIZE = 72,
     KEYENCE_MEASUREMENT_CONDITIONS_MIN_SIZE = 304,
+    KEYENCE_ASSEMBLY_INFO_SIZE = 16,
+    KEYENCE_ASSEMBLY_CONDITIONS_SIZE = 8,
+    KEYENCE_ASSEMBLY_HEADERS_SIZE = (KEYENCE_ASSEMBLY_INFO_SIZE
+                                     + KEYENCE_ASSEMBLY_CONDITIONS_SIZE),
+    KEYENCE_ASSEMBLY_FILE_SIZE = 532,
 };
+
+typedef enum {
+    KEYENCE_NORMAL_FILE = 0,
+    KEYENCE_ASSEMBLY_FILE = 1,
+    KEYENCE_ASSEMBLY_FILE_UNICODE = 2,
+} KeyenceFileType;
 
 typedef struct {
     guchar magic[4];
@@ -157,32 +168,67 @@ typedef struct {
 } KeyenceMeasurementConditions;
 
 typedef struct {
+    guint size;   /* The size of *all* assembly-related blocks. */
+    KeyenceFileType file_type;
+    guint stage_type;
+    guint x_position;
+    guint y_position;
+} KeyenceAssemblyInformation;
+
+typedef struct {
+    guint auto_adjustment;
+    guint source;
+    guint thin_out;
+    guint count_x;
+    guint count_y;
+} KeyenceAssemblyConditions;
+
+typedef struct {
+    guint16 source_file[260];   /* This is Microsoft's wchar_t. */
+    guint pos_x;
+    guint pos_y;
+    guint datums_pos;
+    guint fix_distance;
+    guint distance_x;
+    guint distance_y;
+} KeyenceAssemblyFile;
+
+typedef struct {
     KeyenceHeader header;
     KeyenceOffsetTable offset_table;
     KeyenceMeasurementConditions meas_conds;
+    KeyenceAssemblyInformation assembly_info;
+    KeyenceAssemblyConditions assembly_conds;
+    guint assembly_nfiles;
+    KeyenceAssemblyFile *assembly_files;
     /* Raw file contents. */
     guchar *buffer;
     gsize size;
 } KeyenceFile;
 
-static gboolean      module_register  (void);
-static gint          keyence_detect   (const GwyFileDetectInfo *fileinfo,
-                                       gboolean only_name);
-static GwyContainer* keyence_load     (const gchar *filename,
-                                       GwyRunType mode,
-                                       GError **error);
-static gboolean      read_header      (const guchar **p,
-                                       gsize *size,
-                                       KeyenceHeader *header,
-                                       GError **error);
-static gboolean      read_offset_table(const guchar **p,
-                                       gsize *size,
-                                       KeyenceOffsetTable *offsettable,
-                                       GError **error);
-static gboolean      read_meas_conds  (const guchar **p,
-                                       gsize *size,
-                                       KeyenceMeasurementConditions *measconds,
-                                       GError **error);
+static gboolean      module_register   (void);
+static gint          keyence_detect    (const GwyFileDetectInfo *fileinfo,
+                                        gboolean only_name);
+static GwyContainer* keyence_load      (const gchar *filename,
+                                        GwyRunType mode,
+                                        GError **error);
+static void          free_file         (KeyenceFile *kfile);
+static gboolean      read_header       (const guchar **p,
+                                        gsize *size,
+                                        KeyenceHeader *header,
+                                        GError **error);
+static gboolean      read_offset_table (const guchar **p,
+                                        gsize *size,
+                                        KeyenceOffsetTable *offsettable,
+                                        GError **error);
+static gboolean      read_meas_conds   (const guchar **p,
+                                        gsize *size,
+                                        KeyenceMeasurementConditions *measconds,
+                                        GError **error);
+static gboolean      read_assembly_info(const guchar *p,
+                                        gsize size,
+                                        KeyenceFile *kfile,
+                                        GError **error);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -247,15 +293,22 @@ keyence_load(const gchar *filename,
 
     if (!read_header(&p, &remsize, &kfile.header, error)
         || !read_offset_table(&p, &remsize, &kfile.offset_table, error)
-        || !read_meas_conds(&p, &remsize, &kfile.meas_conds, error))
+        || !read_meas_conds(&p, &remsize, &kfile.meas_conds, error)
+        || !read_assembly_info(p, size, &kfile, error))
         goto fail;
 
     err_NO_DATA(error);
 
 fail:
-    //free_file(kfile);
-    gwy_file_abandon_contents(kfile.buffer, kfile.size, NULL);
+    free_file(&kfile);
     return data;
+}
+
+static void
+free_file(KeyenceFile *kfile)
+{
+    g_free(kfile->assembly_files);
+    gwy_file_abandon_contents(kfile->buffer, kfile->size, NULL);
 }
 
 static void
@@ -419,6 +472,63 @@ read_meas_conds(const guchar **p,
     measconds->height_effective_bit_depth = gwy_get_guint32_le(p);
 
     *size -= measconds->size;
+    return TRUE;
+}
+
+static gboolean
+read_assembly_info(const guchar *p,
+                   gsize size,
+                   KeyenceFile *kfile,
+                   GError **error)
+{
+    guint off = kfile->offset_table.assemble;
+    guint nfiles, i, j;
+
+    if (!off)
+        return TRUE;
+
+    if (size <= KEYENCE_ASSEMBLY_HEADERS_SIZE
+        || off > size - KEYENCE_ASSEMBLY_HEADERS_SIZE) {
+        err_TRUNCATED(error);
+        return FALSE;
+    }
+
+    p += off;
+
+    kfile->assembly_info.size = gwy_get_guint32_le(&p);
+    kfile->assembly_info.file_type = gwy_get_guint16_le(&p);
+    kfile->assembly_info.stage_type = gwy_get_guint16_le(&p);
+    kfile->assembly_info.x_position = gwy_get_guint32_le(&p);
+    kfile->assembly_info.y_position = gwy_get_guint32_le(&p);
+
+    kfile->assembly_conds.auto_adjustment = *(p++);
+    kfile->assembly_conds.source = *(p++);
+    kfile->assembly_conds.thin_out = gwy_get_guint16_le(&p);
+    kfile->assembly_conds.count_x = gwy_get_guint16_le(&p);
+    kfile->assembly_conds.count_y = gwy_get_guint16_le(&p);
+
+    nfiles = kfile->assembly_conds.count_x * kfile->assembly_conds.count_y;
+    if ((size - KEYENCE_ASSEMBLY_HEADERS_SIZE - off)/nfiles
+        < KEYENCE_ASSEMBLY_FILE_SIZE) {
+        err_TRUNCATED(error);
+        return FALSE;
+    }
+
+    kfile->assembly_nfiles = nfiles;
+    kfile->assembly_files = g_new(KeyenceAssemblyFile, nfiles);
+    for (i = 0; i < nfiles; i++) {
+        KeyenceAssemblyFile *kafile = kfile->assembly_files + i;
+
+        for (j = 0; j < G_N_ELEMENTS(kafile->source_file); j++)
+            kafile->source_file[j] = gwy_get_guint16_le(&p);
+        kafile->pos_x = *(p++);
+        kafile->pos_y = *(p++);
+        kafile->datums_pos = *(p++);
+        kafile->fix_distance = *(p++);
+        kafile->distance_x = gwy_get_guint32_le(&p);
+        kafile->distance_y = gwy_get_guint32_le(&p);
+    }
+
     return TRUE;
 }
 
