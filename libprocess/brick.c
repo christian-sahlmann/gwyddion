@@ -1519,7 +1519,7 @@ gwy_brick_jtor(GwyBrick *brick, gdouble pixpos)
  * @brick: A data brick.
  * @pixpos: Pixel coordinate.
  *
- * Transforms pixel coordinate to real (physical) coordinate.
+ * Transforms pixel coordinate to real (physical) coordinate in z direction.
  *
  * That is it maps range [0..z resolution] to range [0..z real-size].  It is not
  * suitable for conversion of matrix indices to physical coordinates, you
@@ -1590,6 +1590,105 @@ gdouble
 gwy_brick_rtok(GwyBrick *brick, gdouble realpos)
 {
     return realpos * brick->zres/brick->zreal;
+}
+
+/**
+ * gwy_brick_ktor_cal:
+ * @brick: A data brick.
+ * @pixpos: Pixel coordinate.
+ *
+ * Transforms pixel coordinate to real (physical) coordinate in z direction,
+ * taking into account calibration.
+ *
+ * Unlike gwy_brick_ktor(), this function takes into account the @z
+ * calibration and, if calibration is not present, the @z axis offset.
+ * Since the calibration is available only for discrete pixel coordinates,
+ * the values are interpolated between and clamped if outside the range.
+ *
+ * The values in the calibration are assumed to correspond to pixel centres.
+ * This convention is also kept when no calibration is present.
+ *
+ * Returns: @pixpos in real coordinates.
+ *
+ * Since: 2.42
+ **/
+gdouble
+gwy_brick_ktor_cal(GwyBrick *brick,
+                   gdouble pixpos)
+{
+    GwyBrickPrivate *priv = (GwyBrickPrivate*)brick->priv;
+    GwyDataLine *calibration;
+    const gdouble *cdata;
+    gint i;
+
+    g_return_val_if_fail(GWY_IS_BRICK(brick), 0.0);
+    calibration = priv->ZCalibration;
+
+    if (!calibration)
+        return (pixpos + 0.5)*brick->zreal + brick->zoff;
+
+    i = (gint)floor(pixpos);
+    cdata = calibration->data;
+    if (i < 0)
+        return cdata[0];
+    if (i >= calibration->res-1)
+        return cdata[calibration->res-1];
+
+    pixpos -= i;
+    return cdata[i]*(1.0 - pixpos) + cdata[i+1]*pixpos;
+}
+
+/**
+ * gwy_brick_rtok_cal:
+ * @brick: A data brick.
+ * @realpos: Real coordinate.
+ *
+ * Transforms real (physical) coordinate to pixel coordinate in z axis,
+ * taking into account calibration.
+ *
+ * Unlike gwy_brick_rtok(), this function takes into account the @z
+ * calibration and, if calibration is not present, the @z axis offset.
+ * Since the calibration is available only for discrete pixel coordinates,
+ * the values are interpolated between and clamped if outside the range.
+ *
+ * The values in the calibration are assumed to correspond to pixel centres.
+ * This convention is also kept when no calibration is present.
+ *
+ * Returns: @realpos in pixel coordinates.
+ *
+ * Since: 2.42
+ **/
+gdouble
+gwy_brick_rtok_cal(GwyBrick *brick,
+                   gdouble realpos)
+{
+    GwyBrickPrivate *priv = (GwyBrickPrivate*)brick->priv;
+    GwyDataLine *calibration;
+    const gdouble *cdata;
+    gint i;
+
+    g_return_val_if_fail(GWY_IS_BRICK(brick), 0.0);
+    calibration = priv->ZCalibration;
+
+    if (!calibration)
+        return (realpos - brick->zoff)/brick->zreal - 0.5;
+
+    cdata = calibration->data;
+    if (realpos <= cdata[0])
+        return 0.0;
+    if (realpos >= cdata[calibration->res-1])
+        return brick->zreal - 1;
+
+    /* FIXME: Inefficient. */
+    for (i = 0; i+2 < calibration->res; i++) {
+        if (cdata[i] <= realpos)
+            break;
+    }
+
+    if (G_UNLIKELY(cdata[i+1] <= cdata[i]))
+        return i;
+
+    return i + (realpos - cdata[i])/(cdata[i+1] - cdata[i]);
 }
 
 /**
