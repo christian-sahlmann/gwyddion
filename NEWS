@@ -15,7 +15,10 @@ Libraries:
 - libgwydgets: Misaligned Y-grids in graphs exported to bitmap were fixed.
 - libgwyprocess: A function for subpixel maximum refinement was added.
 - libgwydgets: 3D view axis and tick line width is controllable now.
-- libprocess: New functions to calculate data line total variation.
+- libprocess: New functions to calculate data line total variation, skew,
+  kurtosis and mean absolute deviation of values.
+- libprocess: New functions for obtaining GwyDataLine minimum and maximum
+  values simultaneously.
 - libprocess: Range and total variation can be now calculated by
   gwy_data_field_area_get_line_stats().
 - libgwyapp: File thumbnails (for document history) are create from volume
@@ -28,6 +31,8 @@ Modules:
 - Measure lattice (new): Measures vectors of Bravais lattice using either ACF
   or PSDF image.
 - Distribute Mask (new): Distributes a channel mask to other channels.
+- Summarize Profiles (new): Create an image from statistical characteristics
+  of Z profiles of volume data.
 - Polynom tool: It was removed, use Align rows instead.
 - Line correct: Standard methods were removed (being replaced by Align rows),
   the experimental ones remain in this module.
