@@ -5488,10 +5488,11 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                 /* FIXME: Optimize for linear memory access. */
                 buf = gwy_data_line_new(height, 1.0, FALSE);
                 for (j = 0; j < width; j++) {
+                    gdouble min, max;
                     gwy_data_field_get_column_part(data_field, buf,
                                                    col + j, row, row + height);
-                    ldata[j] = (gwy_data_line_get_max(buf)
-                                - gwy_data_line_get_min(buf));
+                    gwy_data_line_get_min_max(buf, &min, &max);
+                    ldata[j] = max - min;
                 }
                 g_object_unref(buf);
                 break;
