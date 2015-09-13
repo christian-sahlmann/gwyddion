@@ -607,15 +607,6 @@ update_changed(LineStatControls *controls, GtkToggleButton *check)
         extract_summary_image(controls->args, controls->image);
 }
 
-static gdouble
-get_data_line_range(GwyDataLine *dataline)
-{
-    gdouble min, max;
-
-    gwy_data_line_get_min_max(dataline, &min, &max);
-    return max - min;
-}
-
 static void
 line_stat_iter_init(LineStatIter *iter, GwyBrick *brick,
                     gint zfrom, gint zto)
@@ -662,6 +653,161 @@ line_stat_iter_free(LineStatIter *iter)
     gwy_object_unref(iter->dline);
 }
 
+static gint
+get_peaks(GwyDataLine *data_line, gdouble *peaks,
+          gint from, gint to, gdouble threshold, gint k,
+          gboolean symmetrical)
+{
+    gint i, res, c=-1;
+    gdouble val, val_prev;
+    gdouble *p;
+    G_GNUC_UNUSED gboolean under=FALSE;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0);
+
+    res = data_line->res-1;
+
+    if (from < 1) from = 1;
+    if (to>(res+1)) to = res+1;
+
+    val_prev=data_line->data[from-1];
+    if (val_prev > threshold) c++;
+
+    for (i = from; i<to; i++)
+    {
+        val = data_line->data[i];
+        if ((val > threshold) && (val_prev < threshold)) c++;
+        if (symmetrical == TRUE)
+            if ((val < (-1.0)*threshold) && (val_prev > (-1.0)*threshold))
+                under = TRUE;
+        val_prev = val;
+    }
+
+    p = g_new(gdouble, c+1);
+    c = -1;
+    val_prev=data_line->data[from-1];
+    if (val_prev > threshold) {
+        c++;
+        p[c] = val_prev;
+    }
+    for (i = from; i<to; i++)
+    {
+        val = data_line->data[i];
+        if (val > threshold) {
+            if (val_prev < threshold) {
+                c++;
+                p[c] = val;
+            }
+            else {
+                if (c >= 0 && val > p[c])
+                    p[c] = val;
+            }
+        }
+
+        val_prev = val;
+    }
+
+    gwy_math_sort(c+1, p);
+
+    if (k < 0) k = c;
+
+    for (i=0; i<k; i++)
+        if (i <= c)
+            peaks[i] = p[c-i];
+        else
+            peaks[i] = 0;
+
+    g_free(p);
+
+    return c+1;
+}
+
+static gdouble
+get_Xpm(GwyDataLine *data_line, gint m, gint k)
+{
+    gdouble Xpm = 0.0;
+    GwyDataLine *dl;
+    gint i, samp;
+    gdouble *peaks;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), Xpm);
+    g_return_val_if_fail(m >= 1, Xpm);
+    g_return_val_if_fail(k >= 1, Xpm);
+
+    dl = gwy_data_line_new_alike(data_line, FALSE);
+    gwy_data_line_copy(data_line, dl);
+
+    if (m > 1) {
+        samp = dl->res/m;
+        if (samp <= 0) {
+            g_object_unref(dl);
+            return 0;
+        }
+        gwy_data_line_resample(dl, m*samp, GWY_INTERPOLATION_LINEAR);
+    }
+    else
+        samp = dl->res;
+
+    peaks = g_new0(gdouble, k);
+    for (i = 1; i <= m; i++) {
+        get_peaks(dl, peaks, (i-1)*samp+1, i*samp, 0, k, FALSE);
+        Xpm += peaks[k-1];
+    }
+    g_free(peaks);
+
+    g_object_unref(dl);
+
+    return Xpm/m;
+}
+
+static gdouble
+get_Xvm(GwyDataLine *data_line, gint m, gint k)
+{
+    gdouble Xvm = 0.0;
+    GwyDataLine *dl;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), Xvm);
+
+    dl = gwy_data_line_new_alike(data_line, FALSE);
+    gwy_data_line_copy(data_line, dl);
+    gwy_data_line_multiply(dl, -1.0);
+
+    Xvm = get_Xpm(dl, m, k);
+
+    g_object_unref(dl);
+    return Xvm;
+}
+
+static gdouble
+get_Xtm(GwyDataLine *data_line, gint m, gint k)
+{
+    return get_Xpm(data_line, m, k)
+        + get_Xvm(data_line, m, k);
+}
+
+static gdouble
+get_data_line_range(GwyDataLine *dataline)
+{
+    gdouble min, max;
+
+    gwy_data_line_get_min_max(dataline, &min, &max);
+    return max - min;
+}
+
+static gdouble
+get_data_line_Rt(GwyDataLine *dataline)
+{
+    gwy_data_line_add(dataline, -gwy_data_line_get_avg(dataline));
+    return get_Xtm(dataline, 1, 1);
+}
+
+static gdouble
+get_data_line_Rz(GwyDataLine *dataline)
+{
+    gwy_data_line_add(dataline, -gwy_data_line_get_avg(dataline));
+    return get_Xtm(dataline, 5, 1);
+}
+
 static void
 extract_summary_image(const LineStatArgs *args, GwyDataField *dfield)
 {
@@ -679,14 +825,14 @@ extract_summary_image(const LineStatArgs *args, GwyDataField *dfield)
         { GWY_LINE_STAT_TAN_BETA0, gwy_data_line_get_tan_beta0, },
         { GWY_LINE_STAT_VARIATION, gwy_data_line_get_variation, },
         { GWY_LINE_STAT_RMS,       gwy_data_line_get_rms,       },
+        { GWY_LINE_STAT_RZ,        get_data_line_Rz,            },
+        { GWY_LINE_STAT_RT,        get_data_line_Rt,            },
+        { GWY_LINE_STAT_RA,        gwy_data_line_get_ra,        },
+        { GWY_LINE_STAT_SKEW,      gwy_data_line_get_skew,      },
+        { GWY_LINE_STAT_KURTOSIS,  gwy_data_line_get_kurtosis,  },
     };
     /* TODO:
         { GWY_LINE_STAT_SLOPE,    },
-        { GWY_LINE_STAT_RA,        },
-        { GWY_LINE_STAT_RZ,        },
-        { GWY_LINE_STAT_RT,        },
-        { GWY_LINE_STAT_SKEW,      },
-        { GWY_LINE_STAT_KURTOSIS,  },
     */
 
     GwyLineStatQuantity quantity = args->quantity;
