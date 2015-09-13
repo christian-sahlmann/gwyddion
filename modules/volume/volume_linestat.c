@@ -69,6 +69,7 @@ typedef struct {
     /* TODO: We need an instant update option! */
     /* Dynamic state. */
     GwyBrick *brick;
+    GwyDataLine *calibration;
 } LineStatArgs;
 
 typedef struct {
@@ -119,6 +120,10 @@ static void     output_type_changed    (GtkToggleButton *button,
                                         LineStatControls *controls);
 static void     extract_summary_image  (const LineStatArgs *args,
                                         GwyDataField *dfield);
+static void     extract_graph_curve    (const LineStatArgs *args,
+                                        GwyGraphCurveModel *gcmodel);
+static void     extract_gmodel         (const LineStatArgs *args,
+                                        GwyGraphModel *gmodel);
 static void     line_stat_sanitize_args(LineStatArgs *args);
 static void     line_stat_load_args    (GwyContainer *container,
                                         LineStatArgs *args);
@@ -136,7 +141,7 @@ static const LineStatArgs line_stat_defaults = {
     GWY_LINE_STAT_MEAN, OUTPUT_IMAGE,
     -1, -1, -1, -1,
     /* Dynamic state. */
-    NULL,
+    NULL, NULL,
 };
 
 static GwyModuleInfo module_info = {
@@ -181,6 +186,12 @@ line_stat(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(GWY_IS_BRICK(brick));
     args.brick = brick;
+
+    args.calibration = gwy_brick_get_zcalibration(brick);
+    if (args.calibration
+        && (gwy_brick_get_zres(brick)
+            != gwy_data_line_get_res(args.calibration)))
+        args.calibration = NULL;
 
     if (CLAMP(args.x, 0, brick->xres-1) != args.x)
         args.x = brick->xres/2;
@@ -227,7 +238,6 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
     GtkWidget *dialog, *table, *hbox, *label, *area;
     LineStatControls controls;
     GwyDataField *dfield;
-    GwyDataLine *calibration;
     GwyGraphCurveModel *gcmodel;
     GwyGraphModel *gmodel;
     gint response, row;
@@ -236,6 +246,7 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
     GwySelection *selection;
     const guchar *gradient;
     gchar key[40];
+    gdouble xy[2];
 
     controls.args = args;
 
@@ -287,8 +298,10 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
 
     gmodel = gwy_graph_model_new();
     g_object_set(gmodel, "label-visible", FALSE, NULL);
+    extract_gmodel(args, gmodel);
     gcmodel = gwy_graph_curve_model_new();
     gwy_graph_model_add_curve(gmodel, gcmodel);
+    extract_graph_curve(args, gcmodel);
     g_object_unref(gcmodel);
 
     controls.graph = gwy_graph_new(gmodel);
@@ -346,7 +359,27 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
                                             GTK_TABLE(table), 2, row);
 
     /* TODO: Numeric control of the graph selection. */
-    //update_selections(&controls);
+    selection = gwy_vector_layer_ensure_selection(vlayer);
+    xy[0] = gwy_brick_itor(args->brick, args->x);
+    xy[1] = gwy_brick_jtor(args->brick, args->y);
+    gwy_selection_set_object(selection, 0, xy);
+
+    selection = gwy_graph_area_get_selection(GWY_GRAPH_AREA(area),
+                                             GWY_GRAPH_STATUS_XSEL);
+    if (args->zfrom > 0 || args->zto < args->brick->zres-1) {
+        if (args->calibration) {
+            xy[0] = args->calibration->data[args->zfrom];
+            xy[1] = args->calibration->data[MIN(args->zto,
+                                                args->brick->zres-1)];
+        }
+        else {
+            xy[0] = gwy_brick_itor(args->brick, args->zfrom);
+            xy[1] = gwy_brick_itor(args->brick, args->zto);
+        }
+        gwy_selection_set_object(selection, 0, xy);
+    }
+    else
+        gwy_selection_clear(selection);
 
     gtk_widget_show_all(dialog);
     do {
@@ -386,6 +419,8 @@ point_selection_changed(LineStatControls *controls,
                         G_GNUC_UNUSED gint id,
                         GwySelection *selection)
 {
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *gcmodel;
     LineStatArgs *args = controls->args;
     GwyBrick *brick = args->brick;
     gdouble xy[2];
@@ -395,8 +430,10 @@ point_selection_changed(LineStatControls *controls,
 
     args->x = CLAMP(gwy_brick_rtoi(brick, xy[0]), 0, brick->xres-1);
     args->y = CLAMP(gwy_brick_rtoj(brick, xy[1]), 0, brick->yres-1);
-    /* TODO: update graph curve. */
-    //extract_graph_curve(controls->args, gcmodel, controls->current_object);
+
+    gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
+    gcmodel = gwy_graph_model_get_curve(gmodel, 0);
+    extract_graph_curve(args, gcmodel);
 }
 
 static void
@@ -408,11 +445,17 @@ graph_selection_changed(LineStatControls *controls,
     GwyBrick *brick = args->brick;
     gdouble z[2];
 
-    if (!gwy_selection_get_object(selection, 0, z))
-        return;
-
-    args->zfrom = CLAMP(gwy_brick_rtoi(brick, z[0]), 0, brick->zres-1);
-    args->zto = CLAMP(gwy_brick_rtoi(brick, z[1]), 0, brick->zres-1);
+    if (!gwy_selection_get_object(selection, 0, z)) {
+        args->zfrom = args->zto = -1;
+    }
+    else {
+        args->zfrom = CLAMP(gwy_brick_rtoi(brick, z[0]), 0, brick->zres);
+        args->zto = CLAMP(gwy_brick_rtoi(brick, z[1])+1, 0, brick->zres);
+        if (args->zto < args->zfrom)
+            GWY_SWAP(gint, args->zfrom, args->zto);
+        if (args->zto - args->zfrom < 2)
+            args->zfrom = args->zto = -1;
+    }
     extract_summary_image(controls->args, controls->image);
     gwy_data_field_data_changed(controls->image);
 }
@@ -566,8 +609,68 @@ extract_summary_image(const LineStatArgs *args, GwyDataField *dfield)
 }
 
 static void
+extract_graph_curve(const LineStatArgs *args,
+                    GwyGraphCurveModel *gcmodel)
+{
+    GwyDataLine *line = gwy_data_line_new(1, 1.0, FALSE);
+    GwyBrick *brick = args->brick;
+
+    gwy_brick_extract_line(brick, line,
+                           args->x, args->y, 0,
+                           args->x, args->y, brick->zres,
+                           FALSE);
+    g_object_set(gcmodel, "mode", GWY_GRAPH_CURVE_LINE, NULL);
+
+    if (args->calibration) {
+        gwy_graph_curve_model_set_data(gcmodel,
+                                       gwy_data_line_get_data(args->calibration),
+                                       gwy_data_line_get_data(line),
+                                       gwy_data_line_get_res(line));
+    }
+    else
+        gwy_graph_curve_model_set_data_from_dataline(gcmodel, line, 0, 0);
+
+    g_object_unref(line);
+}
+
+static void
+extract_gmodel(const LineStatArgs *args, GwyGraphModel *gmodel)
+{
+    GwyBrick *brick = args->brick;
+    GwySIUnit *xunit = NULL, *yunit;
+
+    if (args->calibration)
+        xunit = gwy_data_line_get_si_unit_x(args->calibration);
+    else
+        xunit = gwy_brick_get_si_unit_z(brick);
+    xunit = gwy_si_unit_duplicate(xunit);
+    yunit = gwy_si_unit_duplicate(gwy_brick_get_si_unit_w(brick));
+
+    g_object_set(gmodel,
+                 "si-unit-x", xunit,
+                 "si-unit-y", yunit,
+                 NULL);
+    g_object_unref(xunit);
+    g_object_unref(yunit);
+}
+
+static void
 line_stat_reset(LineStatControls *controls)
 {
+    GwyBrick *brick = controls->args->brick;
+    GtkWidget *area;
+    GwySelection *selection;
+    gdouble xy[2];
+
+    xy[0] = 0.5*brick->xreal;
+    xy[1] = 0.5*brick->yreal;
+    selection = gwy_vector_layer_ensure_selection(controls->vlayer);
+    gwy_selection_set_object(selection, 0, xy);
+
+    area = gwy_graph_get_area(GWY_GRAPH(controls->graph));
+    selection = gwy_graph_area_get_selection(GWY_GRAPH_AREA(area),
+                                             GWY_GRAPH_STATUS_XSEL);
+    gwy_selection_clear(selection);
 }
 
 static void
