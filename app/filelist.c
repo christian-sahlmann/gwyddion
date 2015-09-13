@@ -69,14 +69,13 @@
 #define KEY_THUMB_MIMETYPE "tEXt::Thumb::Mimetype"
 /* TMS, format specific
  * XXX: we use Image::Width, Image::Height, even tough the data are not images
- * but they are very image-like... */
+ * but they are very image-like.  There is no place to store the third
+ * dimension for volume data because there is no generic key for image stacks,
+ * only specific keys for multipage documents and movies. */
 #define KEY_THUMB_IMAGE_WIDTH "tEXt::Thumb::Image::Width"
 #define KEY_THUMB_IMAGE_HEIGHT "tEXt::Thumb::Image::Height"
 /* Gwyddion specific */
 #define KEY_THUMB_GWY_REAL_SIZE "tEXt::Thumb::X-Gwyddion::RealSize"
-/* Gwyddion specific, unimplemented */
-#define KEY_THUMB_GWY_IMAGES "tEXt::Thumb::X-Gwyddion::Images"
-#define KEY_THUMB_GWY_GRAPHS "tEXt::Thumb::X-Gwyddion::Graphs"
 
 /* Being compatible with various version of GLib requires creativity... */
 #if (!GLIB_CHECK_VERSION(2, 26, 0))
@@ -114,8 +113,6 @@ typedef struct {
     gint image_width;
     gint image_height;
     gchar *image_real_size;
-    gint image_images;
-    gint image_graphs;
 
     FileState thumb_state;
     gchar *thumb_sys;    /* doesn't matter, names are ASCII */
@@ -1192,12 +1189,6 @@ gwy_app_recent_file_try_load_thumbnail(GwyRecentFile *rf)
     if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_GWY_REAL_SIZE)))
         rf->image_real_size = g_strdup(option);
 
-    if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_GWY_IMAGES)))
-        rf->image_images = atoi(option);
-
-    if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_GWY_GRAPHS)))
-        rf->image_graphs = atoi(option);
-
     if (g_stat(rf->file_sys, &st) == 0) {
         rf->file_state = FILE_STATE_OK;
         rf->file_mtime = st.st_mtime;
@@ -1260,7 +1251,7 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     GwyDataField *dfield;
     GdkPixbuf *pixbuf;
     GStatBuf st;
-    gchar *fnm;
+    gchar *fnm, *s;
     GwySIUnit *siunit;
     GwySIValueFormat *vf;
     gdouble xreal, yreal;
@@ -1269,7 +1260,7 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     gchar str_width[22];
     gchar str_height[22];
     GError *err = NULL;
-    GQuark quark;
+    GQuark quark, volquark;
     gint channel_id = G_MAXINT, volume_id = G_MAXINT;
 
     g_return_if_fail(GWY_CONTAINER(data));
@@ -1309,18 +1300,14 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
         return;
 
     if (channel_id == G_MAXINT) {
-        gchar *s;
-
-        quark = gwy_app_get_brick_key_for_id(volume_id);
-        s = g_strconcat(g_quark_to_string(quark), "/preview", NULL);
+        volquark = gwy_app_get_brick_key_for_id(volume_id);
+        s = g_strconcat(g_quark_to_string(volquark), "/preview", NULL);
         quark = g_quark_from_string(s);
         g_free(s);
     }
     else
         quark = gwy_app_get_data_key_for_id(channel_id);
 
-    /* FIXME: We should show incorporate the third dimension somehow when
-     * creating preview from volume data. */
     dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
     rf->file_mtime = st.st_mtime;
@@ -1338,6 +1325,21 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
                           vf->precision, xreal/vf->magnitude,
                           vf->precision, yreal/vf->magnitude,
                           (vf->units && *vf->units) ? " " : "", vf->units);
+    if (channel_id == G_MAXINT) {
+        GwyBrick *brick = gwy_container_get_object(data, volquark);
+        gdouble zreal = gwy_brick_get_zreal(brick);
+        GwySIValueFormat *vf2;
+
+        vf2 = gwy_brick_get_value_format_z(brick, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                           NULL);
+        s = g_strdup_printf("%s × %.*f%s%s",
+                            rf->image_real_size,
+                            vf2->precision, zreal/vf->magnitude,
+                            (vf2->units && *vf2->units) ? " " : "", vf2->units);
+        g_free(rf->image_real_size);
+        rf->image_real_size = s;
+        gwy_si_unit_value_format_free(vf2);
+    }
     rf->file_state = FILE_STATE_OK;
     gwy_si_unit_value_format_free(vf);
 
