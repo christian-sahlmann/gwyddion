@@ -1625,7 +1625,7 @@ gwy_brick_ktor_cal(GwyBrick *brick,
     calibration = priv->zcalibration;
 
     if (!calibration)
-        return (pixpos + 0.5)*brick->zreal + brick->zoff;
+        return (pixpos + 0.5)*brick->zreal/brick->zres + brick->zoff;
 
     i = (gint)floor(pixpos);
     cdata = calibration->data;
@@ -1671,7 +1671,7 @@ gwy_brick_rtok_cal(GwyBrick *brick,
     calibration = priv->zcalibration;
 
     if (!calibration)
-        return (realpos - brick->zoff)/brick->zreal - 0.5;
+        return (realpos - brick->zoff)/brick->zreal*brick->zres - 0.5;
 
     cdata = calibration->data;
     if (realpos <= cdata[0])
