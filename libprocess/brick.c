@@ -1797,17 +1797,23 @@ gwy_brick_multiply(GwyBrick *brick,
 /**
  * gwy_brick_extract_plane:
  * @brick: A data brick.
- * @target: Datafield to be filled by extracted plane. It will be resampled if necessary.
- * @istart: column where to start (pixel coordinates).
- * @jstart: row where to start (pixel coordinates).
- * @kstart: level where to start (pixel coordinates).
- * @width: pixel width of extracted plane. If @width is -1, the yz plane will be extracted.
- * @height: pixel height of extracted plane.  If @height is -1, the xz plane will be extracted
- * @depth: pixel depth of extacted plane. If @depth is -1, the xy plane will be extracted
- * @keep_offsets: keep the physical offsets in extracted field.
+ * @target: Datafield to be filled by extracted plane. It will be resized if
+ *          necessary.
+ * @istart: Column where to start (pixel coordinates).
+ * @jstart: Row where to start (pixel coordinates).
+ * @kstart: Level where to start (pixel coordinates).
+ * @width: Pixel width of extracted plane. If @width is -1, the yz plane will
+ *         be extracted.
+ * @height: Pixel height of extracted plane.  If @height is -1, the xz plane
+ *          will be extracted
+ * @depth: Pixel depth of extracted plane. If @depth is -1, the xy plane will
+ *         be extracted
+ * @keep_offsets: Keep the physical offsets in extracted field.
  *
- * Extract a plane (GwyDataField) from the brick. One value of set (@width, @height, @depth) needs
- * to be -1, determining the plane orientation.
+ * Extract a plane (GwyDataField) from the brick.
+ *
+ * One value of set (@width, @height, @depth) needs to be -1, determining the
+ * plane orientation.
  *
  * Since: 2.31
  **/
@@ -1911,18 +1917,18 @@ gwy_brick_extract_plane(const GwyBrick *brick,
 /**
  * gwy_brick_sum_plane:
  * @brick: A data brick.
- * @target: Datafield to be filled by summed plane. It will be resampled if
+ * @target: Datafield to be filled by summed plane. It will be resized if
  *          necessary.
- * @istart: column where to start (pixel coordinates).
- * @jstart: row where to start (pixel coordinates).
- * @kstart: level where to start (pixel coordinates).
- * @width: pixel width of summed plane. If @width is -1, the yz planes will be
+ * @istart: Column where to start (pixel coordinates).
+ * @jstart: Row where to start (pixel coordinates).
+ * @kstart: Level where to start (pixel coordinates).
+ * @width: Pixel width of summed plane. If @width is -1, the yz planes will be
  *         summed.
- * @height: pixel height of summed plane.  If @height is -1, the xz planes will
+ * @height: Pixel height of summed plane.  If @height is -1, the xz planes will
  *          be summed
- * @depth: pixel depth of extacted plane. If @depth is -1, the xy planes will
+ * @depth: Pixel depth of summed plane. If @depth is -1, the xy planes will
  *         be summed
- * @keep_offsets: keep the physical offsets in extracted field.  Not
+ * @keep_offsets: Keep the physical offsets in extracted field.  Not
  *                implemented.
  *
  * Sums planes in certain direction and extract the result (GwyDataField). One
@@ -2034,18 +2040,18 @@ gwy_brick_sum_plane(const GwyBrick *brick,
 /**
  * gwy_brick_min_plane:
  * @brick: A data brick.
- * @target: Datafield to be filled by the minima plane. It will be resampled if
+ * @target: Datafield to be filled by the minima plane. It will be resized if
  *          necessary.
- * @istart: column where to start (pixel coordinates).
- * @jstart: row where to start (pixel coordinates).
- * @kstart: level where to start (pixel coordinates).
- * @width: pixel width of summed plane. If @width is -1, the yz planes will be
- *         summed.
- * @height: pixel height of summed plane.  If @height is -1, the xz planes will
- *          be summed
- * @depth: pixel depth of extacted plane. If @depth is -1, the xy planes will
- *         be summed
- * @keep_offsets: keep the physical offsets in extracted field.  Not
+ * @istart: Column where to start (pixel coordinates).
+ * @jstart: Row where to start (pixel coordinates).
+ * @kstart: Level where to start (pixel coordinates).
+ * @width: Pixel width of summarized plane. If @width is -1, the yz planes will
+ *         be summarized.
+ * @height: Pixel height of summarized plane.  If @height is -1, the xz planes
+ *          will be summarized.
+ * @depth: Pixel depth of summarized plane. If @depth is -1, the xy planes will
+ *         be summarized
+ * @keep_offsets: Keep the physical offsets in extracted field.  Not
  *                implemented.
  *
  * Finds minima of planes in certain direction and extract the result
@@ -2161,18 +2167,18 @@ gwy_brick_min_plane(const GwyBrick *brick,
 /**
  * gwy_brick_max_plane:
  * @brick: A data brick.
- * @target: Datafield to be filled by the maxima plane. It will be resampled if
+ * @target: Datafield to be filled by the maxima plane. It will be resized if
  *          necessary.
- * @istart: column where to start (pixel coordinates).
- * @jstart: row where to start (pixel coordinates).
- * @kstart: level where to start (pixel coordinates).
- * @width: pixel width of summed plane. If @width is -1, the yz planes will be
- *         summed.
- * @height: pixel height of summed plane.  If @height is -1, the xz planes will
- *          be summed
- * @depth: pixel depth of extacted plane. If @depth is -1, the xy planes will
- *         be summed
- * @keep_offsets: keep the physical offsets in extracted field.  Not
+ * @istart: Column where to start (pixel coordinates).
+ * @jstart: Row where to start (pixel coordinates).
+ * @kstart: Level where to start (pixel coordinates).
+ * @width: Pixel width of summarized plane. If @width is -1, the yz planes will
+ *         be summarized.
+ * @height: Pixel height of summarized plane.  If @height is -1, the xz planes
+ *          will be summarized.
+ * @depth: Pixel depth of extracted plane. If @depth is -1, the xy planes will
+ *         be summarized
+ * @keep_offsets: Keep the physical offsets in extracted field.  Not
  *                implemented.
  *
  * Finds minima of planes in certain direction and extract the result
@@ -2289,17 +2295,17 @@ gwy_brick_max_plane(const GwyBrick *brick,
  * gwy_brick_minpos_plane:
  * @brick: A data brick.
  * @target: Datafield to be filled by the minima positions plane.
- *          It will be resampled if necessary.
- * @istart: column where to start (pixel coordinates).
- * @jstart: row where to start (pixel coordinates).
- * @kstart: level where to start (pixel coordinates).
- * @width: pixel width of summed plane. If @width is -1, the yz planes will be
- *         summed.
- * @height: pixel height of summed plane.  If @height is -1, the xz planes will
- *          be summed
- * @depth: pixel depth of extacted plane. If @depth is -1, the xy planes will
- *         be summed
- * @keep_offsets: keep the physical offsets in extracted field.  Not
+ *          It will be resized if necessary.
+ * @istart: Column where to start (pixel coordinates).
+ * @jstart: Row where to start (pixel coordinates).
+ * @kstart: Level where to start (pixel coordinates).
+ * @width: Pixel width of summarized plane. If @width is -1, the yz planes will
+ *         be summarized.
+ * @height: Pixel height of summarized plane.  If @height is -1, the xz planes
+ *          will be summarized.
+ * @depth: Pixel depth of summarized plane. If @depth is -1, the xy planes will
+ *         be summarized
+ * @keep_offsets: Keep the physical offsets in summarized field.  Not
  *                implemented.
  *
  * Finds minima positions of planes in certain direction and extract the result
@@ -2444,17 +2450,17 @@ gwy_brick_minpos_plane(const GwyBrick *brick,
  * gwy_brick_maxpos_plane:
  * @brick: A data brick.
  * @target: Datafield to be filled by the maxima positions plane.
- *          It will be resampled if necessary.
- * @istart: column where to start (pixel coordinates).
- * @jstart: row where to start (pixel coordinates).
- * @kstart: level where to start (pixel coordinates).
- * @width: pixel width of summed plane. If @width is -1, the yz planes will be
- *         summed.
- * @height: pixel height of summed plane.  If @height is -1, the xz planes will
- *          be summed
- * @depth: pixel depth of extacted plane. If @depth is -1, the xy planes will
- *         be summed
- * @keep_offsets: keep the physical offsets in extracted field.  Not
+ *          It will be resized if necessary.
+ * @istart: Column where to start (pixel coordinates).
+ * @jstart: Row where to start (pixel coordinates).
+ * @kstart: Level where to start (pixel coordinates).
+ * @width: Pixel width of summarized plane. If @width is -1, the yz planes will
+ *         be summarized.
+ * @height: Pixel height of summarized plane.  If @height is -1, the xz planes
+ *          will be summarized
+ * @depth: Pixel depth of summarized plane. If @depth is -1, the xy planes will
+ *         be summarized
+ * @keep_offsets: Keep the physical offsets in summarized field.  Not
  *                implemented.
  *
  * Finds maxima positions of planes in certain direction and extract the result
@@ -2598,18 +2604,18 @@ gwy_brick_maxpos_plane(const GwyBrick *brick,
 /**
  * gwy_brick_mean_plane:
  * @brick: A data brick.
- * @target: Datafield to be filled by the mean plane. It will be resampled if
+ * @target: Datafield to be filled by the mean plane. It will be resized if
  *          necessary.
- * @istart: column where to start (pixel coordinates).
- * @jstart: row where to start (pixel coordinates).
- * @kstart: level where to start (pixel coordinates).
- * @width: pixel width of summed plane. If @width is -1, the yz planes will be
- *         summed.
- * @height: pixel height of summed plane.  If @height is -1, the xz planes will
- *          be summed
- * @depth: pixel depth of extacted plane. If @depth is -1, the xy planes will
- *         be summed
- * @keep_offsets: keep the physical offsets in extracted field.  Not
+ * @istart: Column where to start (pixel coordinates).
+ * @jstart: Row where to start (pixel coordinates).
+ * @kstart: Level where to start (pixel coordinates).
+ * @width: Pixel width of summarized plane. If @width is -1, the yz planes will
+ *         be summarized.
+ * @height: Pixel height of summarized plane.  If @height is -1, the xz planes
+ *          will be summarized.
+ * @depth: Pixel depth of summarized plane. If @depth is -1, the xy planes will
+ *         be summarized.
+ * @keep_offsets: Keep the physical offsets in summarized field.  Not
  *                implemented.
  *
  * Finds mean of planes in certain direction and extract the result
@@ -2696,18 +2702,18 @@ gwy_brick_mean_plane(const GwyBrick *brick,
 /**
  * gwy_brick_rms_plane:
  * @brick: A data brick.
- * @target: Datafield to be filled by the rms plane. It will be resampled if
+ * @target: Datafield to be filled by the rms plane. It will be resized if
  *          necessary.
- * @istart: column where to start (pixel coordinates).
- * @jstart: row where to start (pixel coordinates).
- * @kstart: level where to start (pixel coordinates).
- * @width: pixel width of summed plane. If @width is -1, the yz planes will be
- *         summed.
- * @height: pixel height of summed plane.  If @height is -1, the xz planes will
- *          be summed
- * @depth: pixel depth of extacted plane. If @depth is -1, the xy planes will
- *         be summed
- * @keep_offsets: keep the physical offsets in extracted field.  Not
+ * @istart: Column where to start (pixel coordinates).
+ * @jstart: Row where to start (pixel coordinates).
+ * @kstart: Level where to start (pixel coordinates).
+ * @width: Pixel width of summarized plane. If @width is -1, the yz planes will
+ *         be summarized.
+ * @height: Pixel height of summarized plane.  If @height is -1, the xz planes
+ *          will be summarized.
+ * @depth: Pixel depth of summarized plane. If @depth is -1, the xy planes will
+ *         be summarized.
+ * @keep_offsets: Keep the physical offsets in extracted field.  Not
  *                implemented.
  *
  * Finds rms of planes in certain direction and extract the result
@@ -2854,21 +2860,23 @@ gwy_brick_rms_plane(const GwyBrick *brick,
 /**
  * gwy_brick_extract_line:
  * @brick: A data brick.
- * @target: Dataline to be filled by extracted line. It will be resampled if necessary.
- * @istart: column where to start (pixel coordinates).
- * @jstart: row where to start (pixel coordinates).
- * @kstart: level where to start (pixel coordinates).
- * @iend: column where to start (pixel coordinates).
- * @jend: row where to start (pixel coordinates).
- * @kend: level where to start (pixel coordinates).
- * @keep_offsets: keep physical offsets in extracted line
+ * @target: Dataline to be filled by extracted line. It will be resized if
+ *          necessary.
+ * @istart: Column where to start (pixel coordinates).
+ * @jstart: Row where to start (pixel coordinates).
+ * @kstart: Level where to start (pixel coordinates).
+ * @iend: Column where to start (pixel coordinates).
+ * @jend: Row where to start (pixel coordinates).
+ * @kend: Level where to start (pixel coordinates).
+ * @keep_offsets: Keep physical offsets in extracted line.
  *
- * Extract a line (GwyDataField) from the brick. Only line orientations parallel to coordinate
- * axes are supported now, i.e. two of the start coordinates need to be same as end ones.
+ * Extract a line (GwyDataLine) from the brick.
+ *
+ * Only line orientations parallel to coordinate axes are supported now, i.e.
+ * two of the start coordinates need to be same as end ones.
  *
  * Since: 2.31
  **/
-
 void
 gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
                        gint istart, gint jstart, gint kstart,
@@ -3005,7 +3013,6 @@ void gwy_brick_set_zcalibration(const GwyBrick *brick, GwyDataLine *calibration)
     g_object_ref(calibration);
     priv->ZCalibration = calibration;
 }
-
 
 /************************** Documentation ****************************/
 
