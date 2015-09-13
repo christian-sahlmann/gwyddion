@@ -312,6 +312,157 @@ gwy_data_line_part_get_rms(GwyDataLine *a, gint from, gint to)
 }
 
 /**
+ * gwy_data_line_get_ra:
+ * @data_line: A data line.
+ *
+ * Computes the mean absolute deviation of a data line.
+ *
+ * Returns: The mean absolute deviation of height values.
+ *
+ * Since: 2.42
+ **/
+gdouble
+gwy_data_line_get_ra(GwyDataLine *a)
+{
+    return gwy_data_line_part_get_ra(a, 0, a->res);
+}
+
+/**
+ * gwy_data_line_get_skew:
+ * @data_line: A data line.
+ *
+ * Computes the skew of a data line.
+ *
+ * Returns: The skew of height values.
+ *
+ * Since: 2.42
+ **/
+gdouble
+gwy_data_line_get_skew(GwyDataLine *a)
+{
+    return gwy_data_line_part_get_skew(a, 0, a->res);
+}
+
+/**
+ * gwy_data_line_get_kurtosis:
+ * @data_line: A data line.
+ *
+ * Computes the kurtosis of a data line.
+ *
+ * Returns: The kurtosis of height values.
+ *
+ * Since: 2.42
+ **/
+gdouble
+gwy_data_line_get_kurtosis(GwyDataLine *a)
+{
+    return gwy_data_line_part_get_kurtosis(a, 0, a->res);
+}
+
+/**
+ * gwy_data_line_part_get_ra:
+ * @data_line: A data line.
+ * @from: Index the line part starts at.
+ * @to: Index the line part ends at + 1.
+ *
+ * Computes mean absolute deviation value of a part of a data line.
+ *
+ * Returns: Mean absolute deviation of heights within a given interval.
+ **/
+gdouble
+gwy_data_line_part_get_ra(GwyDataLine *a, gint from, gint to)
+{
+    gint i;
+    gdouble ra = 0.0;
+    gdouble avg;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(a), ra);
+    if (to < from)
+        GWY_SWAP(gint, from, to);
+
+    g_return_val_if_fail(from >= 0 && to <= a->res, ra);
+
+    avg = gwy_data_line_part_get_avg(a, from, to);
+    for (i = from; i < to; i++)
+        ra += fabs(a->data[i] - avg);
+
+    return ra/(to - from);
+}
+
+/**
+ * gwy_data_line_part_get_skew:
+ * @data_line: A data line.
+ * @from: Index the line part starts at.
+ * @to: Index the line part ends at + 1.
+ *
+ * Computes skew value of a part of a data line.
+ *
+ * Returns: Skew of heights within a given interval.
+ **/
+gdouble
+gwy_data_line_part_get_skew(GwyDataLine *a, gint from, gint to)
+{
+    gint i;
+    gdouble rms = 0.0, skew = 0.0;
+    gdouble avg;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(a), skew);
+    if (to < from)
+        GWY_SWAP(gint, from, to);
+
+    g_return_val_if_fail(from >= 0 && to <= a->res, skew);
+
+    avg = gwy_data_line_part_get_avg(a, from, to);
+    for (i = from; i < to; i++) {
+        gdouble d = a->data[i] - avg;
+        rms += d*d;
+        skew += d*d*d;
+    }
+
+    if (!rms)
+        return 0.0;
+
+    return skew/pow(rms, 1.5);
+}
+
+/**
+ * gwy_data_line_part_get_kurtosis:
+ * @data_line: A data line.
+ * @from: Index the line part starts at.
+ * @to: Index the line part ends at + 1.
+ *
+ * Computes kurtosis value of a part of a data line.
+ *
+ * Returns: Kurtosis of heights within a given interval.
+ **/
+gdouble
+gwy_data_line_part_get_kurtosis(GwyDataLine *a, gint from, gint to)
+{
+    gint i;
+    gdouble rms = 0.0, kurtosis = 0.0;
+    gdouble avg;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(a), kurtosis);
+    if (to < from)
+        GWY_SWAP(gint, from, to);
+
+    g_return_val_if_fail(from >= 0 && to <= a->res, kurtosis);
+
+    avg = gwy_data_line_part_get_avg(a, from, to);
+    for (i = from; i < to; i++) {
+        gdouble d = a->data[i] - avg;
+        d *= d;
+        rms += d;
+        kurtosis += d*d;
+    }
+
+    if (!rms)
+        return 0.0;
+
+    return kurtosis/(rms*rms) - 3.0;
+}
+
+/**
  * gwy_data_line_get_tan_beta0:
  * @data_line: A data line.
  *

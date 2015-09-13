@@ -36,6 +36,9 @@ gdouble gwy_data_line_get_rms           (GwyDataLine *data_line);
 gdouble gwy_data_line_get_tan_beta0     (GwyDataLine *data_line);
 gdouble gwy_data_line_get_variation     (GwyDataLine *data_line);
 gdouble gwy_data_line_get_sum           (GwyDataLine *data_line);
+gdouble gwy_data_line_get_ra            (GwyDataLine *data_line);
+gdouble gwy_data_line_get_skew          (GwyDataLine *data_line);
+gdouble gwy_data_line_get_kurtosis      (GwyDataLine *data_line);
 gdouble gwy_data_line_part_get_max      (GwyDataLine *data_line,
                                          gint from,
                                          gint to);
@@ -60,6 +63,15 @@ gdouble gwy_data_line_part_get_variation(GwyDataLine *data_line,
                                          gint from,
                                          gint to);
 gdouble gwy_data_line_part_get_sum      (GwyDataLine *data_line,
+                                         gint from,
+                                         gint to);
+gdouble gwy_data_line_part_get_ra       (GwyDataLine *data_line,
+                                         gint from,
+                                         gint to);
+gdouble gwy_data_line_part_get_skew     (GwyDataLine *data_line,
+                                         gint from,
+                                         gint to);
+gdouble gwy_data_line_part_get_kurtosis (GwyDataLine *data_line,
                                          gint from,
                                          gint to);
 gdouble gwy_data_line_get_modus         (GwyDataLine *data_line,
