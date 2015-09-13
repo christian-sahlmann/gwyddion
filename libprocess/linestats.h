@@ -28,6 +28,9 @@ G_BEGIN_DECLS
 
 gdouble gwy_data_line_get_max           (GwyDataLine *data_line);
 gdouble gwy_data_line_get_min           (GwyDataLine *data_line);
+void    gwy_data_line_get_min_max       (GwyDataLine *data_line,
+                                         gdouble *min,
+                                         gdouble *max);
 gdouble gwy_data_line_get_avg           (GwyDataLine *data_line);
 gdouble gwy_data_line_get_rms           (GwyDataLine *data_line);
 gdouble gwy_data_line_get_tan_beta0     (GwyDataLine *data_line);
@@ -39,6 +42,11 @@ gdouble gwy_data_line_part_get_max      (GwyDataLine *data_line,
 gdouble gwy_data_line_part_get_min      (GwyDataLine *data_line,
                                          gint from,
                                          gint to);
+void    gwy_data_line_part_get_min_max  (GwyDataLine *data_line,
+                                         gint from,
+                                         gint to,
+                                         gdouble *min,
+                                         gdouble *max);
 gdouble gwy_data_line_part_get_avg      (GwyDataLine *data_line,
                                          gint from,
                                          gint to);

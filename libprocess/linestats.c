@@ -204,6 +204,68 @@ gwy_data_line_part_get_min(GwyDataLine *a,
 }
 
 /**
+ * gwy_data_line_part_get_min_max:
+ * @data_line: A data line.
+ * @from: Index the line part starts at.
+ * @to: Index the line part ends at + 1.
+ * @min: Location to store minimum to.
+ * @max: Location to store maximum to.
+ *
+ * Finds the minimum and maximum values of a part of a data line.
+ *
+ * Since 2.42
+ **/
+void
+gwy_data_line_part_get_min_max(GwyDataLine *a,
+                               gint from, gint to,
+                               gdouble *min, gdouble *max)
+{
+    gint i;
+    gdouble min1 = G_MAXDOUBLE, max1 = -G_MAXDOUBLE;
+
+    g_return_if_fail(GWY_IS_DATA_LINE(a));
+    g_return_if_fail(from >= 0 && to <= a->res);
+    /* If both are not requested do not bother finding them. */
+    if (!max && min)
+        *min = gwy_data_line_part_get_min(a, from, to);
+    if (max && !min)
+        *max = gwy_data_line_part_get_max(a, from, to);
+    if (!max || !min)
+        return;
+
+    if (to < from)
+        GWY_SWAP(gint, from, to);
+
+    for (i = from; i < to; i++) {
+        if (min1 > a->data[i])
+            min1 = a->data[i];
+        if (max1 < a->data[i])
+            max1 = a->data[i];
+    }
+
+    *min = min1;
+    *max = max1;
+}
+
+/**
+ * gwy_data_line_get_min_max:
+ * @data_line: A data line.
+ * @min: Location to store minimum to.
+ * @max: Location to store maximum to.
+ *
+ * Finds the minimum and maximum values of a data line.
+ *
+ * Since 2.42
+ **/
+void
+gwy_data_line_get_min_max(GwyDataLine *a,
+                          gdouble *min, gdouble *max)
+{
+    g_return_if_fail(GWY_IS_DATA_LINE(a));
+    gwy_data_line_part_get_min_max(a, 0, a->res, min, max);
+}
+
+/**
  * gwy_data_line_part_get_avg:
  * @data_line: A data line.
  * @from: Index the line part starts at.
