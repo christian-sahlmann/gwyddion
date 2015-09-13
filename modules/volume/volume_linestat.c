@@ -42,6 +42,9 @@
 
 enum {
     PREVIEW_SIZE = 360,
+    /* 16 is good for current processors; increasing it to 32 might not
+     * hurt in the future. */
+    BLOCK_SIZE = 16,
 };
 
 enum {
@@ -83,6 +86,16 @@ typedef struct {
     GtkWidget *zto;
     GwySIValueFormat *zvf;
 } LineStatControls;
+
+typedef struct {
+    GwyBrick *brick;
+    const gdouble *db;
+    GwyDataLine *dline;
+    gdouble *buf;
+    guint npts;
+    guint npixels;
+    guint k;
+} LineStatIter;
 
 static gboolean module_register        (void);
 static void     line_stat              (GwyContainer *data,
@@ -435,6 +448,52 @@ get_data_line_range(GwyDataLine *dataline)
 }
 
 static void
+line_stat_iter_init(LineStatIter *iter, GwyBrick *brick,
+                    gint zfrom, gint zto)
+{
+    gwy_clear(iter, 1);
+    iter->brick = brick;
+    iter->npts = zto - zfrom;
+    iter->npixels = brick->xres * brick->yres;
+    iter->db = gwy_brick_get_data_const(brick) + zfrom*iter->npixels;
+    iter->buf = g_new(gdouble, iter->npixels * iter->npts);
+    iter->dline = gwy_data_line_new(1, 1.0, FALSE);
+    iter->k = (guint)(-1);
+    /* Sets up line properties. */
+    gwy_brick_extract_line(brick, iter->dline, 0, 0, zfrom, 0, 0, zto, TRUE);
+}
+
+static void
+line_stat_iter_next(LineStatIter *iter)
+{
+    guint blocksize, npts, npixels, kk, m;
+
+    npts = iter->npts;
+    npixels = iter->npixels;
+    iter->k++;
+    g_return_if_fail(iter->k < npixels);
+
+    kk = iter->k % BLOCK_SIZE;
+    if (!kk) {
+        blocksize = MIN(BLOCK_SIZE, npixels - iter->k);
+        for (m = 0; m < npts; m++) {
+            const gdouble *db = iter->db + m*npixels + iter->k;
+            for (kk = 0; kk < blocksize; kk++)
+                iter->buf[kk*npts + m] = db[kk];
+        }
+        kk = 0;
+    }
+    memcpy(iter->dline->data, iter->buf + kk*npts, npts * sizeof(gdouble));
+}
+
+static void
+line_stat_iter_free(LineStatIter *iter)
+{
+    g_free(iter->buf);
+    gwy_object_unref(iter->dline);
+}
+
+static void
 extract_summary_image(const LineStatArgs *args, GwyDataField *dfield)
 {
     static const struct {
@@ -465,8 +524,9 @@ extract_summary_image(const LineStatArgs *args, GwyDataField *dfield)
     GwyBrick *brick = args->brick;
     gint xres = brick->xres, yres = brick->yres;
     gint zfrom = args->zfrom, zto = args->zto;
+    LineStatIter iter;
     LineStatFunc lsfunc = NULL;
-    gint i, j;
+    gint i;
     guint k;
 
     if (zfrom == -1 && zto == -1) {
@@ -484,36 +544,25 @@ extract_summary_image(const LineStatArgs *args, GwyDataField *dfield)
     }
 
     gwy_brick_extract_plane(brick, dfield, 0, 0, 0, xres, yres, -1, FALSE);
-    if (lsfunc) {
-        GwyDataLine *tmpline = gwy_data_line_new(brick->zres, 1.0, TRUE);
-        gdouble *dl;
-        const gdouble *db = gwy_brick_get_data_const(brick);
-
-        gwy_brick_extract_line(brick, tmpline,
-                               0, 0, zfrom, 0, 0, zto, TRUE);
-        dl = gwy_data_line_get_data(tmpline);
-
-        for (i = 0; i < yres; i++) {
-            for (j = 0; j < xres; j++) {
-                const gdouble *d = db + (zfrom*yres + i)*xres + j;
-
-                for (k = 0; k < (guint)(zto - zfrom); k++) {
-                    dl[k] = *d;
-                    d += xres*yres;
-                }
-                dfield->data[i*xres + j] = lsfunc(tmpline);
-            }
-        }
-        g_object_unref(tmpline);
-        gwy_data_field_invalidate(dfield);
-        /* TODO: Fix value units that are not set up correctly by the initial
-         * gwy_brick_extract_plane(). */
-
+    if (!lsfunc) {
+        g_warning("Quantity %u is still unimplemented.", quantity);
+        gwy_data_field_clear(dfield);
         return;
     }
 
-    g_warning("Quantity %u is still unimplemented.", quantity);
-    gwy_data_field_clear(dfield);
+    /* Use an iterator interface to formally process data profile by profle,
+     * but physically extract them from the brick by larger blocks, gaining a
+     * speedup about 3 from the much improved memory access pattern. */
+    line_stat_iter_init(&iter, brick, zfrom, zto);
+    for (i = 0; i < xres*yres; i++) {
+        line_stat_iter_next(&iter);
+        dfield->data[i] = lsfunc(iter.dline);
+    }
+    line_stat_iter_free(&iter);
+
+    gwy_data_field_invalidate(dfield);
+    /* TODO: Fix value units that are not set up correctly by the initial
+     * gwy_brick_extract_plane(). */
 }
 
 static void
