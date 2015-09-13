@@ -1289,14 +1289,14 @@ extract_gmodel(const SliceArgs *args, GwyGraphModel *gmodel)
     }
 
     calibration = gwy_brick_get_zcalibration(brick);
-    if (calibration)
-        xunit = gwy_data_line_get_si_unit_x(calibration);
-    else {
-        if (base_plane == PLANE_XY || base_plane == PLANE_XZ)
-            xunit = gwy_brick_get_si_unit_x(brick);
-        else if (base_plane == PLANE_YZ || base_plane == PLANE_YX)
-            xunit = gwy_brick_get_si_unit_y(brick);
-        else if (base_plane == PLANE_ZX || base_plane == PLANE_ZY)
+    if (base_plane == PLANE_XY || base_plane == PLANE_XZ)
+        xunit = gwy_brick_get_si_unit_x(brick);
+    else if (base_plane == PLANE_YZ || base_plane == PLANE_YX)
+        xunit = gwy_brick_get_si_unit_y(brick);
+    else if (base_plane == PLANE_ZX || base_plane == PLANE_ZY) {
+        if (calibration)
+            xunit = gwy_data_line_get_si_unit_x(calibration);
+        else
             xunit = gwy_brick_get_si_unit_z(brick);
     }
     xunit = gwy_si_unit_duplicate(xunit);
