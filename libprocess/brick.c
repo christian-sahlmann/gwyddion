@@ -3086,7 +3086,7 @@ gwy_brick_get_zcalibration(const GwyBrick *brick)
 
     g_return_val_if_fail(GWY_IS_BRICK(brick), NULL);
 
-    priv = (GwyBrickPrivate *)brick->priv;
+    priv = (GwyBrickPrivate*)brick->priv;
 
     return priv->zcalibration;
 }
@@ -3095,22 +3095,32 @@ gwy_brick_get_zcalibration(const GwyBrick *brick)
  * gwy_brick_set_zcalibration:
  * @brick: A data brick.
  * @calibration: GwyDataLine pointer with z-axis non-linear calibration
- *               of a data brick (values are stored as ordinates).
+ *               of a data brick (values are stored as ordinates).  It can also
+ *               be %NULL to unset the calibration.
  *
  * Sets the z-axis non-linear calibration of a data brick.
  *
  * Since: 2.32
  **/
-void gwy_brick_set_zcalibration(const GwyBrick *brick, GwyDataLine *calibration) {
+void
+gwy_brick_set_zcalibration(const GwyBrick *brick, GwyDataLine *calibration)
+{
+    GwyDataLine *oldcal;
     GwyBrickPrivate *priv;
 
     g_return_if_fail(GWY_IS_BRICK(brick));
-    g_return_if_fail(GWY_IS_DATA_LINE(calibration));
+    g_return_if_fail(!calibration || GWY_IS_DATA_LINE(calibration));
 
-    priv = (GwyBrickPrivate *)brick->priv;
-    gwy_object_unref(priv->zcalibration);
-    g_object_ref(calibration);
+    priv = (GwyBrickPrivate*)brick->priv;
+    oldcal = priv->zcalibration;
+    if (oldcal == calibration)
+        return;
+
+    if (calibration)
+        g_object_ref(calibration);
+
     priv->zcalibration = calibration;
+    gwy_object_unref(oldcal);
 }
 
 /************************** Documentation ****************************/
