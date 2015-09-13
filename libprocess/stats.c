@@ -5481,6 +5481,7 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                     ldata[j] /= rms*rms*rms*rms;
                 }
                 gwy_data_line_multiply(target_line, 1.0/height);
+                gwy_data_line_add(target_line, -3.0);
                 g_object_unref(buf);
                 break;
 
@@ -5716,6 +5717,7 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                     ldata[i] /= rms*rms*rms*rms;
                 }
                 gwy_data_line_multiply(target_line, 1.0/width);
+                gwy_data_line_add(target_line, -3.0);
                 g_object_unref(buf);
                 break;
 
