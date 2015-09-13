@@ -35,7 +35,7 @@
 #define GWY_BRICK_TYPE_NAME "GwyBrick"
 
 typedef struct {
-    GwyDataLine *ZCalibration;
+    GwyDataLine *zcalibration;
 } GwyBrickPrivate;
 
 enum {
@@ -108,7 +108,7 @@ gwy_brick_init(GwyBrick *brick)
     priv = brick->priv = G_TYPE_INSTANCE_GET_PRIVATE(brick,
                                                      GWY_TYPE_BRICK,
                                                      GwyBrickPrivate);
-    priv->ZCalibration = NULL;
+    priv->zcalibration = NULL;
 }
 
 static void
@@ -213,9 +213,9 @@ gwy_brick_new_alike(GwyBrick *model,
 
     priv = model->priv;
     new_priv = brick->priv;
-    if (priv->ZCalibration)
-        new_priv->ZCalibration
-                          = gwy_data_line_duplicate(priv->ZCalibration);
+    if (priv->zcalibration)
+        new_priv->zcalibration
+                          = gwy_data_line_duplicate(priv->zcalibration);
 
     return brick;
 }
@@ -288,10 +288,10 @@ gwy_brick_new_part(const GwyBrick *brick,
         part->si_unit_w = gwy_si_unit_duplicate(brick->si_unit_w);
 
     priv = brick->priv;
-    if (priv->ZCalibration) {
+    if (priv->zcalibration) {
         new_priv = part->priv;
-        new_priv->ZCalibration
-                        = gwy_data_line_part_extract(priv->ZCalibration,
+        new_priv->zcalibration
+                        = gwy_data_line_part_extract(priv->zcalibration,
                                                      zpos, zres);
     }
 
@@ -337,13 +337,13 @@ gwy_brick_serialize(GObject *obj,
     datasize = brick->xres * brick->yres * brick->zres;
     priv = (GwyBrickPrivate *)brick->priv;
 
-    g_return_val_if_fail(!priv->ZCalibration
-                         || GWY_IS_DATA_LINE(priv->ZCalibration), NULL);
-    if (!priv->ZCalibration)
+    g_return_val_if_fail(!priv->zcalibration
+                         || GWY_IS_DATA_LINE(priv->zcalibration), NULL);
+    if (!priv->zcalibration)
         num_items = 0;
     else {
         calibrations = g_new(gpointer, 1);
-        *calibrations = priv->ZCalibration;
+        *calibrations = priv->zcalibration;
     }
 
     {
@@ -402,11 +402,11 @@ gwy_brick_get_size(GObject *obj)
     datasize = brick->xres * brick->yres * brick->zres;
     priv = (GwyBrickPrivate *)brick->priv;
 
-    if (!priv->ZCalibration)
+    if (!priv->zcalibration)
         num_items = 0;
     else {
         calibrations = g_new(gpointer, 1);
-        *calibrations = priv->ZCalibration;
+        *calibrations = priv->zcalibration;
     }
 
     {
@@ -532,8 +532,8 @@ gwy_brick_deserialize(const guchar *buffer,
     }
     if (num_items > 0) {
         priv = (GwyBrickPrivate *)brick->priv;
-        priv->ZCalibration = calibrations[0];
-        g_object_ref(priv->ZCalibration);
+        priv->zcalibration = calibrations[0];
+        g_object_ref(priv->zcalibration);
     }
 
     for (i = 0; i < num_items; i++)
@@ -619,14 +619,14 @@ gwy_brick_clone_real(GObject *source, GObject *copy)
 
     priv = brick->priv;
     clone_priv = clone->priv;
-    if (priv->ZCalibration && clone_priv->ZCalibration)
-        gwy_serializable_clone(G_OBJECT(priv->ZCalibration),
-                               G_OBJECT(clone_priv->ZCalibration));
-    else if (priv->ZCalibration && !clone_priv->ZCalibration)
-        clone_priv->ZCalibration
-                          = gwy_data_line_duplicate(priv->ZCalibration);
-    else if (!priv->ZCalibration && clone_priv->ZCalibration)
-        gwy_object_unref(clone_priv->ZCalibration);
+    if (priv->zcalibration && clone_priv->zcalibration)
+        gwy_serializable_clone(G_OBJECT(priv->zcalibration),
+                               G_OBJECT(clone_priv->zcalibration));
+    else if (priv->zcalibration && !clone_priv->zcalibration)
+        clone_priv->zcalibration
+                          = gwy_data_line_duplicate(priv->zcalibration);
+    else if (!priv->zcalibration && clone_priv->zcalibration)
+        gwy_object_unref(clone_priv->zcalibration);
 }
 
 /**
@@ -1622,7 +1622,7 @@ gwy_brick_ktor_cal(GwyBrick *brick,
     gint i;
 
     g_return_val_if_fail(GWY_IS_BRICK(brick), 0.0);
-    calibration = priv->ZCalibration;
+    calibration = priv->zcalibration;
 
     if (!calibration)
         return (pixpos + 0.5)*brick->zreal + brick->zoff;
@@ -1668,7 +1668,7 @@ gwy_brick_rtok_cal(GwyBrick *brick,
     gint i;
 
     g_return_val_if_fail(GWY_IS_BRICK(brick), 0.0);
-    calibration = priv->ZCalibration;
+    calibration = priv->zcalibration;
 
     if (!calibration)
         return (realpos - brick->zoff)/brick->zreal - 0.5;
@@ -3088,7 +3088,7 @@ gwy_brick_get_zcalibration(const GwyBrick *brick)
 
     priv = (GwyBrickPrivate *)brick->priv;
 
-    return priv->ZCalibration;
+    return priv->zcalibration;
 }
 
 /**
@@ -3108,9 +3108,9 @@ void gwy_brick_set_zcalibration(const GwyBrick *brick, GwyDataLine *calibration)
     g_return_if_fail(GWY_IS_DATA_LINE(calibration));
 
     priv = (GwyBrickPrivate *)brick->priv;
-    gwy_object_unref(priv->ZCalibration);
+    gwy_object_unref(priv->zcalibration);
     g_object_ref(calibration);
-    priv->ZCalibration = calibration;
+    priv->zcalibration = calibration;
 }
 
 /************************** Documentation ****************************/
