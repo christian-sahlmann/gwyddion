@@ -118,6 +118,8 @@ static void     graph_selection_changed(LineStatControls *controls,
                                         GwySelection *selection);
 static void     quantity_changed       (GtkComboBox *combo,
                                         LineStatControls *controls);
+static void     range_changed          (GtkWidget *entry,
+                                        LineStatControls *controls);
 static void     output_type_changed    (GtkToggleButton *button,
                                         LineStatControls *controls);
 static void     update_changed         (LineStatControls *controls,
@@ -133,13 +135,6 @@ static void     line_stat_load_args    (GwyContainer *container,
                                         LineStatArgs *args);
 static void     line_stat_save_args    (GwyContainer *container,
                                         LineStatArgs *args);
-
-/*
-static void     zfrom_changed          (LineStatControls *controls,
-                                        GtkWidget *entry);
-static void     zto_changed            (LineStatControls *controls,
-                                        GtkWidget *entry);
-                                        */
 
 static const LineStatArgs line_stat_defaults = {
     GWY_LINE_STAT_MEAN, OUTPUT_IMAGE,
@@ -240,7 +235,7 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
         { N_("Set _preview"),   OUTPUT_PREVIEW, },
     };
 
-    GtkWidget *dialog, *table, *hbox, *label, *area;
+    GtkWidget *dialog, *table, *hbox, *label, *area, *hbox2;
     LineStatControls controls;
     GwyDataField *dfield;
     GwyGraphCurveModel *gcmodel;
@@ -249,11 +244,26 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
     GwyPixmapLayer *layer;
     GwyVectorLayer *vlayer = NULL;
     GwySelection *selection;
+    GwyBrick *brick;
     const guchar *gradient;
     gchar key[40];
     gdouble xy[2];
 
     controls.args = args;
+
+    brick = args->brick;
+    if (args->calibration) {
+        controls.zvf
+            = gwy_data_line_get_value_format_x(args->calibration,
+                                               GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                               NULL);
+    }
+    else {
+        controls.zvf
+            = gwy_brick_get_value_format_z(brick,
+                                           GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                           NULL);
+    }
 
     dialog = gtk_dialog_new_with_buttons(_("Summarize Volume Profiles"),
                                          NULL, 0, NULL);
@@ -356,6 +366,37 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.quantity);
     row++;
 
+    hbox2 = gtk_hbox_new(FALSE, 6);
+    gtk_table_attach(GTK_TABLE(table), hbox2,
+                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new(_("Range:"));
+    gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
+
+    controls.zfrom = gtk_entry_new();
+    g_object_set_data(G_OBJECT(controls.zfrom), "id", (gpointer)"from");
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.zfrom), 8);
+    gtk_box_pack_start(GTK_BOX(hbox2), controls.zfrom, FALSE, FALSE, 0);
+    g_signal_connect(controls.zfrom, "activate",
+                     G_CALLBACK(range_changed), &controls);
+    gwy_widget_set_activate_on_unfocus(controls.zfrom, TRUE);
+
+    label = gtk_label_new(gwy_sgettext("range|to"));
+    gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
+
+    controls.zto = gtk_entry_new();
+    g_object_set_data(G_OBJECT(controls.zto), "id", (gpointer)"to");
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.zto), 8);
+    gtk_box_pack_start(GTK_BOX(hbox2), controls.zto, FALSE, FALSE, 0);
+    g_signal_connect(controls.zto, "activate",
+                     G_CALLBACK(range_changed), &controls);
+    gwy_widget_set_activate_on_unfocus(controls.zto, TRUE);
+
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), controls.zvf->units);
+    gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
+
     table = gtk_table_new(4, 2, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -372,13 +413,13 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
                              G_CALLBACK(update_changed), &controls);
     row++;
 
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     label = gtk_label_new(_("Output type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     controls.output_type
         = gwy_radio_buttons_create(output_types, G_N_ELEMENTS(output_types),
                                    G_CALLBACK(output_type_changed), &controls,
@@ -388,22 +429,15 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
 
     /* TODO: Numeric control of the graph selection. */
     selection = gwy_vector_layer_ensure_selection(vlayer);
-    xy[0] = gwy_brick_itor(args->brick, args->x);
-    xy[1] = gwy_brick_jtor(args->brick, args->y);
+    xy[0] = gwy_brick_itor(brick, args->x);
+    xy[1] = gwy_brick_jtor(brick, args->y);
     gwy_selection_set_object(selection, 0, xy);
 
     selection = gwy_graph_area_get_selection(GWY_GRAPH_AREA(area),
                                              GWY_GRAPH_STATUS_XSEL);
-    if (args->zfrom > 0 || args->zto < args->brick->zres-1) {
-        if (args->calibration) {
-            xy[0] = args->calibration->data[args->zfrom];
-            xy[1] = args->calibration->data[MIN(args->zto,
-                                                args->brick->zres-1)];
-        }
-        else {
-            xy[0] = gwy_brick_itor(args->brick, args->zfrom);
-            xy[1] = gwy_brick_itor(args->brick, args->zto);
-        }
+    if (args->zfrom > 0 || args->zto < brick->zres-1) {
+        xy[0] = gwy_brick_ktor(brick, args->zfrom);
+        xy[1] = gwy_brick_ktor(brick, args->zto);
         gwy_selection_set_object(selection, 0, xy);
     }
     else
@@ -418,7 +452,7 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             g_object_unref(controls.mydata);
-            //gwy_si_unit_value_format_free(controls.zvf);
+            gwy_si_unit_value_format_free(controls.zvf);
             return FALSE;
             break;
 
@@ -441,7 +475,7 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
 
     gtk_widget_destroy(dialog);
     g_object_unref(controls.mydata);
-    //gwy_si_unit_value_format_free(controls.zvf);
+    gwy_si_unit_value_format_free(controls.zvf);
 
     return TRUE;
 }
@@ -475,19 +509,41 @@ graph_selection_changed(LineStatControls *controls,
 {
     LineStatArgs *args = controls->args;
     GwyBrick *brick = args->brick;
+    GwySIValueFormat *zvf = controls->zvf;
+    gchar buf[32];
     gdouble z[2];
 
     if (!gwy_selection_get_object(selection, 0, z)) {
         args->zfrom = args->zto = -1;
     }
     else {
-        args->zfrom = CLAMP(gwy_brick_rtoi(brick, z[0]), 0, brick->zres);
-        args->zto = CLAMP(gwy_brick_rtoi(brick, z[1])+1, 0, brick->zres);
+        args->zfrom = CLAMP(gwy_brick_rtok_cal(brick, z[0]), 0, brick->zres);
+        args->zto = CLAMP(gwy_brick_rtok_cal(brick, z[1])+0.5, 0, brick->zres);
         if (args->zto < args->zfrom)
             GWY_SWAP(gint, args->zfrom, args->zto);
         if (args->zto - args->zfrom < 2)
             args->zfrom = args->zto = -1;
     }
+
+    if (args->zfrom == -1) {
+        z[0] = 0.0;
+        z[1] = brick->zres-1;
+    }
+    else {
+        z[0] = args->zfrom;
+        z[1] = args->zto;
+    }
+
+    g_snprintf(buf, sizeof(buf), "%.*f",
+               zvf->precision,
+               gwy_brick_ktor_cal(brick, z[0])/zvf->magnitude);
+    gtk_entry_set_text(GTK_ENTRY(controls->zfrom), buf);
+
+    g_snprintf(buf, sizeof(buf), "%.*f",
+               zvf->precision,
+               gwy_brick_ktor_cal(brick, z[1])/zvf->magnitude);
+    gtk_entry_set_text(GTK_ENTRY(controls->zto), buf);
+
     if (args->update)
         extract_summary_image(controls->args, controls->image);
 }
@@ -499,6 +555,33 @@ quantity_changed(GtkComboBox *combo, LineStatControls *controls)
 
     args->quantity = gwy_enum_combo_box_get_active(combo);
     extract_summary_image(controls->args, controls->image);
+}
+
+static void
+range_changed(GtkWidget *entry,
+              LineStatControls *controls)
+{
+    LineStatArgs *args = controls->args;
+    GwySelection *selection;
+    GtkWidget *area;
+    const gchar *id = g_object_get_data(G_OBJECT(entry), "id");
+    gdouble z = g_strtod(gtk_entry_get_text(GTK_ENTRY(entry)), NULL);
+    gdouble xy[2];
+
+    z *= controls->zvf->magnitude;
+    area = gwy_graph_get_area(GWY_GRAPH(controls->graph));
+    selection = gwy_graph_area_get_selection(GWY_GRAPH_AREA(area),
+                                             GWY_GRAPH_STATUS_XSEL);
+    if (!gwy_selection_get_object(selection, 0, xy)) {
+        xy[0] = gwy_brick_rtok_cal(args->brick, 0.0);
+        xy[1] = gwy_brick_rtok_cal(args->brick, args->brick->zres-1);
+    }
+    if (gwy_strequal(id, "from"))
+        xy[0] = z;
+    else
+        xy[1] = z;
+
+    gwy_selection_set_object(selection, 0, xy);
 }
 
 static void
@@ -665,16 +748,8 @@ extract_graph_curve(const LineStatArgs *args,
                            args->x, args->y, brick->zres,
                            FALSE);
     g_object_set(gcmodel, "mode", GWY_GRAPH_CURVE_LINE, NULL);
-
-    if (args->calibration) {
-        gwy_graph_curve_model_set_data(gcmodel,
-                                       gwy_data_line_get_data(args->calibration),
-                                       gwy_data_line_get_data(line),
-                                       gwy_data_line_get_res(line));
-    }
-    else
-        gwy_graph_curve_model_set_data_from_dataline(gcmodel, line, 0, 0);
-
+    /* Plot graphs with pixel-wise, uncalibrated abscissa. */
+    gwy_graph_curve_model_set_data_from_dataline(gcmodel, line, 0, 0);
     g_object_unref(line);
 }
 
