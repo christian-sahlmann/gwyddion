@@ -49,6 +49,7 @@ enum {
 
 enum {
     RESPONSE_RESET = 1,
+    RESPONSE_PREVIEW = 2,
 };
 
 typedef enum {
@@ -66,7 +67,7 @@ typedef struct {
     gint y;
     gint zfrom;
     gint zto;
-    /* TODO: We need an instant update option! */
+    gboolean update;
     /* Dynamic state. */
     GwyBrick *brick;
     GwyDataLine *calibration;
@@ -82,6 +83,7 @@ typedef struct {
     GwyVectorLayer *vlayer;
     GtkWidget *graph;
     GtkWidget *quantity;
+    GtkWidget *update;
     GSList *output_type;
     GtkWidget *zfrom;
     GtkWidget *zto;
@@ -118,6 +120,8 @@ static void     quantity_changed       (GtkComboBox *combo,
                                         LineStatControls *controls);
 static void     output_type_changed    (GtkToggleButton *button,
                                         LineStatControls *controls);
+static void     update_changed         (LineStatControls *controls,
+                                        GtkToggleButton *check);
 static void     extract_summary_image  (const LineStatArgs *args,
                                         GwyDataField *dfield);
 static void     extract_graph_curve    (const LineStatArgs *args,
@@ -140,6 +144,7 @@ static void     zto_changed            (LineStatControls *controls,
 static const LineStatArgs line_stat_defaults = {
     GWY_LINE_STAT_MEAN, OUTPUT_IMAGE,
     -1, -1, -1, -1,
+    TRUE,
     /* Dynamic state. */
     NULL, NULL,
 };
@@ -251,11 +256,18 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
     controls.args = args;
 
     dialog = gtk_dialog_new_with_buttons(_("Summarize Volume Profiles"),
-                                         NULL, 0,
-                                         _("_Reset"), RESPONSE_RESET,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
-                                         NULL);
+                                         NULL, 0, NULL);
+    gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
+                                 gwy_stock_like_button_new(_("_Update"),
+                                                           GTK_STOCK_EXECUTE),
+                                 RESPONSE_PREVIEW);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
+                                      RESPONSE_PREVIEW, !args->update);
+    gtk_dialog_add_button(GTK_DIALOG(dialog), _("_Reset"), RESPONSE_RESET);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     gwy_help_add_to_volume_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
     controls.dialog = dialog;
@@ -323,7 +335,7 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
     hbox = gtk_hbox_new(FALSE, 24);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 4);
 
-    table = gtk_table_new(4, 2, FALSE);
+    table = gtk_table_new(2, 2, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
@@ -344,13 +356,29 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.quantity);
     row++;
 
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    table = gtk_table_new(4, 2, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
+    row = 0;
+
+    controls.update = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.update),
+                                 args->update);
+    gtk_table_attach(GTK_TABLE(table), controls.update,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls.update, "toggled",
+                             G_CALLBACK(update_changed), &controls);
+    row++;
+
     label = gtk_label_new(_("Output type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     controls.output_type
         = gwy_radio_buttons_create(output_types, G_N_ELEMENTS(output_types),
                                    G_CALLBACK(output_type_changed), &controls,
@@ -399,6 +427,10 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
 
             case RESPONSE_RESET:
             line_stat_reset(&controls);
+            break;
+
+            case RESPONSE_PREVIEW:
+            extract_summary_image(args, controls.image);
             break;
 
             default:
@@ -456,8 +488,8 @@ graph_selection_changed(LineStatControls *controls,
         if (args->zto - args->zfrom < 2)
             args->zfrom = args->zto = -1;
     }
-    extract_summary_image(controls->args, controls->image);
-    gwy_data_field_data_changed(controls->image);
+    if (args->update)
+        extract_summary_image(controls->args, controls->image);
 }
 
 static void
@@ -467,7 +499,6 @@ quantity_changed(GtkComboBox *combo, LineStatControls *controls)
 
     args->quantity = gwy_enum_combo_box_get_active(combo);
     extract_summary_image(controls->args, controls->image);
-    gwy_data_field_data_changed(controls->image);
 }
 
 static void
@@ -479,6 +510,18 @@ output_type_changed(GtkToggleButton *button, LineStatControls *controls)
         return;
 
     args->output_type = gwy_radio_buttons_get_current(controls->output_type);
+}
+
+static void
+update_changed(LineStatControls *controls, GtkToggleButton *check)
+{
+    LineStatArgs *args = controls->args;
+
+    args->update = gtk_toggle_button_get_active(check);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      RESPONSE_PREVIEW, !args->update);
+    if (args->update)
+        extract_summary_image(controls->args, controls->image);
 }
 
 static gdouble
@@ -590,6 +633,7 @@ extract_summary_image(const LineStatArgs *args, GwyDataField *dfield)
     if (!lsfunc) {
         g_warning("Quantity %u is still unimplemented.", quantity);
         gwy_data_field_clear(dfield);
+        gwy_data_field_data_changed(dfield);
         return;
     }
 
@@ -604,6 +648,7 @@ extract_summary_image(const LineStatArgs *args, GwyDataField *dfield)
     line_stat_iter_free(&iter);
 
     gwy_data_field_invalidate(dfield);
+    gwy_data_field_data_changed(dfield);
     /* TODO: Fix value units that are not set up correctly by the initial
      * gwy_brick_extract_plane(). */
 }
@@ -682,6 +727,7 @@ line_stat_do(LineStatArgs *args,
 
 static const gchar output_type_key[] = "/module/volume_line_stat/output_type";
 static const gchar quantity_key[]    = "/module/volume_line_stat/quantity";
+static const gchar update_key[]      = "/module/volume_line_stat/update";
 static const gchar xpos_key[]        = "/module/volume_line_stat/xpos";
 static const gchar ypos_key[]        = "/module/volume_line_stat/ypos";
 static const gchar zfrom_key[]       = "/module/volume_line_stat/zfrom";
@@ -694,6 +740,7 @@ line_stat_sanitize_args(LineStatArgs *args)
     args->quantity = gwy_enum_sanitize_value(args->quantity,
                                              GWY_TYPE_LINE_STAT_QUANTITY);
     args->output_type = MIN(args->output_type, NOUTPUTS-1);
+    args->update = !!args->update;
 }
 
 static void
@@ -709,6 +756,7 @@ line_stat_load_args(GwyContainer *container,
     gwy_container_gis_int32_by_name(container, ypos_key, &args->y);
     gwy_container_gis_int32_by_name(container, zfrom_key, &args->zfrom);
     gwy_container_gis_int32_by_name(container, zto_key, &args->zto);
+    gwy_container_gis_boolean_by_name(container, update_key, &args->update);
     line_stat_sanitize_args(args);
 }
 
@@ -723,6 +771,7 @@ line_stat_save_args(GwyContainer *container,
     gwy_container_set_int32_by_name(container, ypos_key, args->y);
     gwy_container_set_int32_by_name(container, zfrom_key, args->zfrom);
     gwy_container_set_int32_by_name(container, zto_key, args->zto);
+    gwy_container_set_boolean_by_name(container, update_key, args->update);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
