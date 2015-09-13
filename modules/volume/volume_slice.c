@@ -162,7 +162,8 @@ static void     extract_image_plane    (const SliceArgs *args,
                                         GwyDataField *dfield);
 static void     extract_graph_curve    (const SliceArgs *args,
                                         GwyGraphCurveModel *gcmodel,
-                                        gint idx);
+                                        gint idx,
+                                        gboolean use_calibration);
 static void     extract_gmodel         (const SliceArgs *args,
                                         GwyGraphModel *gmodel);
 static void     flip_xy                (GwyDataField *dfield);
@@ -685,7 +686,9 @@ point_selection_changed(SliceControls *controls,
     extract_gmodel(controls->args, gmodel);
 
     gcmodel = gwy_graph_model_get_curve(gmodel, 0);
-    extract_graph_curve(controls->args, gcmodel, controls->current_object);
+    /* Plot graphs with pixel-wise, uncalibrated abscissa. */
+    extract_graph_curve(controls->args, gcmodel, controls->current_object,
+                        FALSE);
 }
 
 static void
@@ -1063,7 +1066,7 @@ slice_do(SliceArgs *args, GwyContainer *data, gint id)
         for (idx = 0; idx < args->allpos->len; idx++) {
             GwyGraphCurveModel *gcmodel = gwy_graph_curve_model_new();
 
-            extract_graph_curve(args, gcmodel, idx);
+            extract_graph_curve(args, gcmodel, idx, TRUE);
             g_object_set(gcmodel,
                          "color", gwy_graph_get_preset_color(idx),
                          NULL);
@@ -1189,7 +1192,8 @@ extract_image_plane(const SliceArgs *args, GwyDataField *dfield)
 static void
 extract_graph_curve(const SliceArgs *args,
                     GwyGraphCurveModel *gcmodel,
-                    gint idx)
+                    gint idx,
+                    gboolean use_calibration)
 {
     SliceBasePlane base_plane = args->base_plane;
     GwyDataLine *line = gwy_data_line_new(1, 1.0, FALSE);
@@ -1209,8 +1213,9 @@ extract_graph_curve(const SliceArgs *args,
         /* Try to use the calibration.  Ignore if the dimension does not seem
          * right. */
         calibration = gwy_brick_get_zcalibration(brick);
-        if (calibration
-            && (gwy_data_line_get_res(line)
+        if (!use_calibration
+            || !calibration
+            || (gwy_data_line_get_res(line)
                 != gwy_data_line_get_res(calibration)))
             calibration = NULL;
 
