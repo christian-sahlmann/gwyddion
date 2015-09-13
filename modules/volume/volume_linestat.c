@@ -25,6 +25,8 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/brick.h>
+#include <libprocess/arithmetic.h>
+#include <libprocess/linestats.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
@@ -52,6 +54,8 @@ typedef enum {
     NOUTPUTS
 } LineStatOutput;
 
+typedef gdouble (*LineStatFunc)(GwyDataLine *dataline);
+
 typedef struct {
     GwyLineStatQuantity quantity;
     LineStatOutput output_type;
@@ -59,6 +63,7 @@ typedef struct {
     gint y;
     gint zfrom;
     gint zto;
+    /* TODO: We need an instant update option! */
     /* Dynamic state. */
     GwyBrick *brick;
 } LineStatArgs;
@@ -95,21 +100,24 @@ static void     point_selection_changed(LineStatControls *controls,
 static void     graph_selection_changed(LineStatControls *controls,
                                         gint id,
                                         GwySelection *selection);
+static void     quantity_changed       (GtkComboBox *combo,
+                                        LineStatControls *controls);
+static void     output_type_changed    (GtkToggleButton *button,
+                                        LineStatControls *controls);
+static void     extract_summary_image  (const LineStatArgs *args,
+                                        GwyDataField *dfield);
+static void     line_stat_sanitize_args(LineStatArgs *args);
+static void     line_stat_load_args    (GwyContainer *container,
+                                        LineStatArgs *args);
+static void     line_stat_save_args    (GwyContainer *container,
+                                        LineStatArgs *args);
+
 /*
 static void     zfrom_changed          (LineStatControls *controls,
                                         GtkWidget *entry);
 static void     zto_changed            (LineStatControls *controls,
                                         GtkWidget *entry);
                                         */
-static void     quantity_changed       (GtkComboBox *combo,
-                                        LineStatControls *controls);
-static void output_type_changed        (GtkToggleButton *button,
-                                        LineStatControls *controls);
-static void     line_stat_sanitize_args(LineStatArgs *args);
-static void     line_stat_load_args    (GwyContainer *container,
-                                        LineStatArgs *args);
-static void     line_stat_save_args    (GwyContainer *container,
-                                        LineStatArgs *args);
 
 static const LineStatArgs line_stat_defaults = {
     GWY_LINE_STAT_MEAN, OUTPUT_IMAGE,
@@ -168,7 +176,7 @@ line_stat(GwyContainer *data, GwyRunType run)
     if (CLAMP(args.zfrom, 0, brick->zres-1) != args.zfrom)
         args.zfrom = 0;
     if (CLAMP(args.zto, 0, brick->zres-1) != args.zto)
-        args.zto = brick->zres-1;
+        args.zto = brick->zres;
 
     if (line_stat_dialog(&args, data, id))
         line_stat_do(&args, data, id);
@@ -234,7 +242,7 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
 
     controls.mydata = gwy_container_new();
     controls.image = dfield = gwy_data_field_new(1, 1, 1.0, 1.0, TRUE);
-    // TODO extract_image_plane(args, dfield);
+    extract_summary_image(args, dfield);
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
     g_object_unref(dfield);
 
@@ -392,8 +400,8 @@ graph_selection_changed(LineStatControls *controls,
 
     args->zfrom = CLAMP(gwy_brick_rtoi(brick, z[0]), 0, brick->zres-1);
     args->zto = CLAMP(gwy_brick_rtoi(brick, z[1]), 0, brick->zres-1);
-    /* TODO: update preview */
-    //extract_image_plane(controls->args, controls->image);
+    extract_summary_image(controls->args, controls->image);
+    gwy_data_field_data_changed(controls->image);
 }
 
 static void
@@ -402,8 +410,8 @@ quantity_changed(GtkComboBox *combo, LineStatControls *controls)
     LineStatArgs *args = controls->args;
 
     args->quantity = gwy_enum_combo_box_get_active(combo);
-    /* TODO: update preview */
-    //extract_image_plane(controls->args, controls->image);
+    extract_summary_image(controls->args, controls->image);
+    gwy_data_field_data_changed(controls->image);
 }
 
 static void
@@ -415,6 +423,97 @@ output_type_changed(GtkToggleButton *button, LineStatControls *controls)
         return;
 
     args->output_type = gwy_radio_buttons_get_current(controls->output_type);
+}
+
+static gdouble
+get_data_line_range(GwyDataLine *dataline)
+{
+    gdouble min, max;
+
+    gwy_data_line_get_min_max(dataline, &min, &max);
+    return max - min;
+}
+
+static void
+extract_summary_image(const LineStatArgs *args, GwyDataField *dfield)
+{
+    static const struct {
+        GwyLineStatQuantity quantity;
+        LineStatFunc func;
+    }
+    line_stat_funcs[] = {
+        { GWY_LINE_STAT_MEAN,      gwy_data_line_get_avg,       },
+        { GWY_LINE_STAT_MEDIAN,    gwy_data_line_get_median,    },
+        { GWY_LINE_STAT_MINIMUM,   gwy_data_line_get_min,       },
+        { GWY_LINE_STAT_MAXIMUM,   gwy_data_line_get_max,       },
+        { GWY_LINE_STAT_RANGE,     get_data_line_range,         },
+        { GWY_LINE_STAT_LENGTH,    gwy_data_line_get_length,    },
+        { GWY_LINE_STAT_TAN_BETA0, gwy_data_line_get_tan_beta0, },
+        { GWY_LINE_STAT_VARIATION, gwy_data_line_get_variation, },
+        { GWY_LINE_STAT_RMS,       gwy_data_line_get_rms,       },
+    };
+    /* TODO:
+        { GWY_LINE_STAT_SLOPE,    },
+        { GWY_LINE_STAT_RA,        },
+        { GWY_LINE_STAT_RZ,        },
+        { GWY_LINE_STAT_RT,        },
+        { GWY_LINE_STAT_SKEW,      },
+        { GWY_LINE_STAT_KURTOSIS,  },
+    */
+
+    GwyLineStatQuantity quantity = args->quantity;
+    GwyBrick *brick = args->brick;
+    gint xres = brick->xres, yres = brick->yres;
+    gint zfrom = args->zfrom, zto = args->zto;
+    LineStatFunc lsfunc = NULL;
+    gint i, j;
+    guint k;
+
+    if (zfrom == -1 && zto == -1) {
+        zfrom = 0;
+        zto = brick->zres;
+    }
+
+    /* Quantities we handle (somewhat inefficiently) by using DataLine
+     * statistics. */
+    for (k = 0; k < G_N_ELEMENTS(line_stat_funcs); k++) {
+        if (quantity == line_stat_funcs[k].quantity) {
+            lsfunc = line_stat_funcs[k].func;
+            break;
+        }
+    }
+
+    gwy_brick_extract_plane(brick, dfield, 0, 0, 0, xres, yres, -1, FALSE);
+    if (lsfunc) {
+        GwyDataLine *tmpline = gwy_data_line_new(brick->zres, 1.0, TRUE);
+        gdouble *dl;
+        const gdouble *db = gwy_brick_get_data_const(brick);
+
+        gwy_brick_extract_line(brick, tmpline,
+                               0, 0, zfrom, 0, 0, zto, TRUE);
+        dl = gwy_data_line_get_data(tmpline);
+
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++) {
+                const gdouble *d = db + (zfrom*yres + i)*xres + j;
+
+                for (k = 0; k < (guint)(zto - zfrom); k++) {
+                    dl[k] = *d;
+                    d += xres*yres;
+                }
+                dfield->data[i*xres + j] = lsfunc(tmpline);
+            }
+        }
+        g_object_unref(tmpline);
+        gwy_data_field_invalidate(dfield);
+        /* TODO: Fix value units that are not set up correctly by the initial
+         * gwy_brick_extract_plane(). */
+
+        return;
+    }
+
+    g_warning("Quantity %u is still unimplemented.", quantity);
+    gwy_data_field_clear(dfield);
 }
 
 static void
