@@ -831,7 +831,8 @@ line_stat_do(LineStatArgs *args,
                                                 quantities,
                                                 G_N_ELEMENTS(quantities)));
         gwy_app_set_data_field_title(data, newid, title);
-        gwy_app_channel_log_add_proc(data, -1, newid);
+        gwy_app_channel_log_add(data, -1, newid,
+                                "volume::volume_linestat", NULL);
     }
     else if (args->output_type == OUTPUT_PREVIEW) {
         gchar key[32];
