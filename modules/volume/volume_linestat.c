@@ -136,6 +136,25 @@ static void     line_stat_load_args    (GwyContainer *container,
 static void     line_stat_save_args    (GwyContainer *container,
                                         LineStatArgs *args);
 
+/* XXX: This is identical to tools/linestat.c. */
+static const GwyEnum quantities[] =  {
+    { N_("Mean"),               GWY_LINE_STAT_MEAN,      },
+    { N_("Median"),             GWY_LINE_STAT_MEDIAN,    },
+    { N_("Minimum"),            GWY_LINE_STAT_MINIMUM,   },
+    { N_("Maximum"),            GWY_LINE_STAT_MAXIMUM,   },
+    { N_("Range"),              GWY_LINE_STAT_RANGE,     },
+    { N_("Length"),             GWY_LINE_STAT_LENGTH,    },
+    { N_("Slope"),              GWY_LINE_STAT_SLOPE,     },
+    { N_("tan β<sub>0</sub>"),  GWY_LINE_STAT_TAN_BETA0, },
+    { N_("Variation"),          GWY_LINE_STAT_VARIATION, },
+    { N_("Ra"),                 GWY_LINE_STAT_RA,        },
+    { N_("Rq (RMS)"),           GWY_LINE_STAT_RMS,       },
+    { N_("Rz"),                 GWY_LINE_STAT_RZ,        },
+    { N_("Rt"),                 GWY_LINE_STAT_RT,        },
+    { N_("Skew"),               GWY_LINE_STAT_SKEW,      },
+    { N_("Kurtosis"),           GWY_LINE_STAT_KURTOSIS,  },
+};
+
 static const LineStatArgs line_stat_defaults = {
     GWY_LINE_STAT_MEAN, OUTPUT_IMAGE,
     -1, -1, -1, -1,
@@ -211,27 +230,8 @@ line_stat(GwyContainer *data, GwyRunType run)
 static gboolean
 line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
 {
-    /* XXX: This is identical to tools/linestat.c. */
-    static const GwyEnum quantities[] =  {
-        { N_("Mean"),               GWY_LINE_STAT_MEAN,      },
-        { N_("Median"),             GWY_LINE_STAT_MEDIAN,    },
-        { N_("Minimum"),            GWY_LINE_STAT_MINIMUM,   },
-        { N_("Maximum"),            GWY_LINE_STAT_MAXIMUM,   },
-        { N_("Range"),              GWY_LINE_STAT_RANGE,     },
-        { N_("Length"),             GWY_LINE_STAT_LENGTH,    },
-        { N_("Slope"),              GWY_LINE_STAT_SLOPE,     },
-        { N_("tan β<sub>0</sub>"),  GWY_LINE_STAT_TAN_BETA0, },
-        { N_("Variation"),          GWY_LINE_STAT_VARIATION, },
-        { N_("Ra"),                 GWY_LINE_STAT_RA,        },
-        { N_("Rq (RMS)"),           GWY_LINE_STAT_RMS,       },
-        { N_("Rz"),                 GWY_LINE_STAT_RZ,        },
-        { N_("Rt"),                 GWY_LINE_STAT_RT,        },
-        { N_("Skew"),               GWY_LINE_STAT_SKEW,      },
-        { N_("Kurtosis"),           GWY_LINE_STAT_KURTOSIS,  },
-    };
-
     static const GwyEnum output_types[] = {
-        { N_("_Extract image"), OUTPUT_IMAGE, },
+        { N_("_Extract image"), OUTPUT_IMAGE,   },
         { N_("Set _preview"),   OUTPUT_PREVIEW, },
     };
 
@@ -676,6 +676,14 @@ get_data_line_Rz(GwyDataLine *dataline)
     return gwy_data_line_get_xtm(dataline, 5, 1);
 }
 
+static gdouble
+get_data_line_slope(GwyDataLine *dataline)
+{
+    gdouble b;
+    gwy_data_line_get_line_coeffs(dataline, NULL, &b);
+    return b*gwy_data_line_get_res(dataline)/gwy_data_line_get_real(dataline);
+}
+
 static void
 extract_summary_image(const LineStatArgs *args, GwyDataField *dfield)
 {
@@ -698,10 +706,8 @@ extract_summary_image(const LineStatArgs *args, GwyDataField *dfield)
         { GWY_LINE_STAT_RA,        gwy_data_line_get_ra,        },
         { GWY_LINE_STAT_SKEW,      gwy_data_line_get_skew,      },
         { GWY_LINE_STAT_KURTOSIS,  gwy_data_line_get_kurtosis,  },
+        { GWY_LINE_STAT_SLOPE,     get_data_line_slope,         },
     };
-    /* TODO:
-        { GWY_LINE_STAT_SLOPE,    },
-    */
 
     GwyLineStatQuantity quantity = args->quantity;
     GwyBrick *brick = args->brick;
@@ -812,6 +818,31 @@ line_stat_do(LineStatArgs *args,
              GwyContainer *data,
              gint id)
 {
+    GwyDataField *dfield;
+
+    dfield = gwy_data_field_new(1, 1, 1.0, 1.0, TRUE);
+    extract_summary_image(args, dfield);
+    if (args->output_type == OUTPUT_IMAGE) {
+        const gchar *title;
+        gint newid;
+
+        newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
+        title = gwy_sgettext(gwy_enum_to_string(args->quantity,
+                                                quantities,
+                                                G_N_ELEMENTS(quantities)));
+        gwy_app_set_data_field_title(data, newid, title);
+        gwy_app_channel_log_add_proc(data, -1, newid);
+    }
+    else if (args->output_type == OUTPUT_PREVIEW) {
+        gchar key[32];
+
+        g_snprintf(key, sizeof(key), "/brick/%d/preview", id);
+        gwy_container_set_object_by_name(data, key, dfield);
+    }
+    else {
+        g_assert_not_reached();
+    }
+    g_object_unref(dfield);
 }
 
 static const gchar output_type_key[] = "/module/volume_line_stat/output_type";
