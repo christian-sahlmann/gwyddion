@@ -69,6 +69,7 @@ typedef struct {
     gint zto;
     gboolean update;
     /* Dynamic state. */
+    gboolean units_equal;
     GwyBrick *brick;
     GwyDataLine *calibration;
 } LineStatArgs;
@@ -143,7 +144,6 @@ static const GwyEnum quantities[] =  {
     { N_("Minimum"),            GWY_LINE_STAT_MINIMUM,   },
     { N_("Maximum"),            GWY_LINE_STAT_MAXIMUM,   },
     { N_("Range"),              GWY_LINE_STAT_RANGE,     },
-    { N_("Length"),             GWY_LINE_STAT_LENGTH,    },
     { N_("Slope"),              GWY_LINE_STAT_SLOPE,     },
     { N_("tan β<sub>0</sub>"),  GWY_LINE_STAT_TAN_BETA0, },
     { N_("Variation"),          GWY_LINE_STAT_VARIATION, },
@@ -153,6 +153,8 @@ static const GwyEnum quantities[] =  {
     { N_("Rt"),                 GWY_LINE_STAT_RT,        },
     { N_("Skew"),               GWY_LINE_STAT_SKEW,      },
     { N_("Kurtosis"),           GWY_LINE_STAT_KURTOSIS,  },
+    /* This requires identical units. */
+    { N_("Length"),             GWY_LINE_STAT_LENGTH,    },
 };
 
 static const LineStatArgs line_stat_defaults = {
@@ -160,7 +162,7 @@ static const LineStatArgs line_stat_defaults = {
     -1, -1, -1, -1,
     TRUE,
     /* Dynamic state. */
-    NULL, NULL,
+    TRUE, NULL, NULL,
 };
 
 static GwyModuleInfo module_info = {
@@ -194,6 +196,7 @@ line_stat(GwyContainer *data, GwyRunType run)
 {
     LineStatArgs args;
     GwyBrick *brick = NULL;
+    GwySIUnit *zunit, *wunit;
     gint id;
 
     g_return_if_fail(run & LINE_STAT_RUN_MODES);
@@ -211,6 +214,18 @@ line_stat(GwyContainer *data, GwyRunType run)
         && (gwy_brick_get_zres(brick)
             != gwy_data_line_get_res(args.calibration)))
         args.calibration = NULL;
+
+    wunit = gwy_brick_get_si_unit_z(brick);
+    if (args.calibration)
+        zunit = gwy_data_line_get_si_unit_x(args.calibration);
+    else
+        zunit = gwy_brick_get_si_unit_z(brick);
+    args.units_equal = gwy_si_unit_equal(wunit, zunit);
+
+    if (!args.units_equal) {
+        if (args.quantity == GWY_LINE_STAT_LENGTH)
+            args.quantity = GWY_LINE_STAT_TAN_BETA0;
+    }
 
     if (CLAMP(args.x, 0, brick->xres-1) != args.x)
         args.x = brick->xres/2;
@@ -248,6 +263,7 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
     const guchar *gradient;
     gchar key[40];
     gdouble xy[2];
+    guint nquantities;
 
     controls.args = args;
 
@@ -357,8 +373,9 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
+    nquantities = G_N_ELEMENTS(quantities) - (args->units_equal ? 0 : 1);
     controls.quantity
-        = gwy_enum_combo_box_new(quantities, G_N_ELEMENTS(quantities),
+        = gwy_enum_combo_box_new(quantities, nquantities,
                                  G_CALLBACK(quantity_changed), &controls,
                                  args->quantity, TRUE);
     gtk_table_attach(GTK_TABLE(table), controls.quantity,
@@ -427,7 +444,6 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
     row = gwy_radio_buttons_attach_to_table(controls.output_type,
                                             GTK_TABLE(table), 2, row);
 
-    /* TODO: Numeric control of the graph selection. */
     selection = gwy_vector_layer_ensure_selection(vlayer);
     xy[0] = gwy_brick_itor(brick, args->x);
     xy[1] = gwy_brick_jtor(brick, args->y);
@@ -711,6 +727,7 @@ extract_summary_image(const LineStatArgs *args, GwyDataField *dfield)
 
     GwyLineStatQuantity quantity = args->quantity;
     GwyBrick *brick = args->brick;
+    GwySIUnit *imgunit, *zunit, *wunit;
     gint xres = brick->xres, yres = brick->yres;
     gint zfrom = args->zfrom, zto = args->zto;
     LineStatIter iter;
@@ -750,10 +767,25 @@ extract_summary_image(const LineStatArgs *args, GwyDataField *dfield)
     }
     line_stat_iter_free(&iter);
 
+    imgunit = gwy_data_field_get_si_unit_z(dfield);
+    wunit = gwy_brick_get_si_unit_z(brick);
+    if (args->calibration)
+        zunit = gwy_data_line_get_si_unit_x(args->calibration);
+    else
+        zunit = gwy_brick_get_si_unit_z(brick);
+
+    if (quantity == GWY_LINE_STAT_TAN_BETA0
+        || quantity == GWY_LINE_STAT_SLOPE)
+        gwy_si_unit_divide(wunit, zunit, imgunit);
+    else if (quantity == GWY_LINE_STAT_SKEW
+             || quantity == GWY_LINE_STAT_KURTOSIS)
+        gwy_si_unit_set_from_string(imgunit, NULL);
+    else if (quantity == GWY_LINE_STAT_VARIATION)
+        gwy_si_unit_multiply(wunit, zunit, imgunit);
+
     gwy_data_field_invalidate(dfield);
     gwy_data_field_data_changed(dfield);
-    /* TODO: Fix value units that are not set up correctly by the initial
-     * gwy_brick_extract_plane(). */
+
 }
 
 static void
