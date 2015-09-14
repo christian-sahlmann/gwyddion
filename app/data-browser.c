@@ -1834,6 +1834,8 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             gwy_app_data_proxy_reconnect_preview(proxy, id, object);
         if (!found || !object)
             pageno = -1;
+        if (!gwy_app_data_proxy_find_object(list->store, id, &iter))
+            pageno = -1;
         break;
 
         case KEY_IS_BRICK_PREVIEW_PALETTE:
