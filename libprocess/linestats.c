@@ -422,7 +422,7 @@ gwy_data_line_part_get_skew(GwyDataLine *a, gint from, gint to)
     if (!rms)
         return 0.0;
 
-    return skew/pow(rms, 1.5);
+    return skew*sqrt(to+1 - from)/pow(rms, 1.5);
 }
 
 /**
@@ -432,6 +432,9 @@ gwy_data_line_part_get_skew(GwyDataLine *a, gint from, gint to)
  * @to: Index the line part ends at + 1.
  *
  * Computes kurtosis value of a part of a data line.
+ *
+ * Note this function returns, similary to data field statistics, kurtosis that
+ * is zero for the Gaussian distribution (not 3).
  *
  * Returns: Kurtosis of heights within a given interval.
  **/
@@ -459,7 +462,7 @@ gwy_data_line_part_get_kurtosis(GwyDataLine *a, gint from, gint to)
     if (!rms)
         return 0.0;
 
-    return kurtosis/(rms*rms) - 3.0;
+    return kurtosis*(to+1 - from)/(rms*rms) - 3.0;
 }
 
 /**
@@ -1202,6 +1205,187 @@ gwy_data_line_get_median(GwyDataLine *data_line)
     g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0);
 
     return gwy_data_line_part_get_median(data_line, 0, data_line->res);
+}
+
+static gint
+get_peaks(GwyDataLine *data_line, gdouble *peaks,
+          gint from, gint to, gdouble threshold, gint k,
+          gboolean symmetrical)
+{
+    gint i, res, c = -1;
+    gdouble val, val_prev;
+    gdouble *p;
+    const gdouble *d;
+    G_GNUC_UNUSED gboolean under=FALSE;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0);
+
+    res = data_line->res-1;
+    d = data_line->data;
+
+    if (from < 1)
+        from = 1;
+    if (to > res+1)
+        to = res+1;
+
+    val_prev = d[from-1];
+    if (val_prev > threshold)
+        c++;
+
+    for (i = from; i < to; i++) {
+        val = d[i];
+        if ((val > threshold) && (val_prev < threshold))
+            c++;
+        if (symmetrical == TRUE) {
+            if ((val < (-1.0)*threshold) && (val_prev > (-1.0)*threshold))
+                under = TRUE;
+        }
+        val_prev = val;
+    }
+
+    p = g_new(gdouble, c+1);
+    c = -1;
+    val_prev = d[from-1];
+    if (val_prev > threshold) {
+        c++;
+        p[c] = val_prev;
+    }
+    for (i = from; i < to; i++) {
+        val = d[i];
+        if (val > threshold) {
+            if (val_prev < threshold) {
+                c++;
+                p[c] = val;
+            }
+            else {
+                if (c >= 0 && val > p[c])
+                    p[c] = val;
+            }
+        }
+        val_prev = val;
+    }
+
+    gwy_math_sort(c+1, p);
+
+    if (k < 0)
+        k = c;
+
+    for (i = 0; i < k; i++) {
+        if (i <= c)
+            peaks[i] = p[c-i];
+        else
+            peaks[i] = 0;
+    }
+
+    g_free(p);
+
+    return c+1;
+}
+
+/**
+ * gwy_data_line_get_xpm:
+ * @data_line: A data line.
+ * @m: Number of sampling lengths.
+ * @k: Number of peaks to consider.
+ *
+ * Calculates a peak roughness quantity for a data line.
+ *
+ * Depending on @m and @k, the function can calculate
+ * Average Maximum Profile Peak Height @Rpm
+ * or Maximum Profile Peak Height @Rp, @Pp, @Wp.
+ *
+ * Returns: The peak roughness quantity defined by @m and @k.
+ *
+ * Since: 2.42
+ **/
+gdouble
+gwy_data_line_get_xpm(GwyDataLine *data_line, gint m, gint k)
+{
+    gdouble Xpm = 0.0;
+    GwyDataLine *dl = NULL;
+    gint i, samp;
+    gdouble *peaks;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), Xpm);
+    g_return_val_if_fail(m >= 1, Xpm);
+    g_return_val_if_fail(k >= 1, Xpm);
+
+    if (m > 1) {
+        samp = data_line->res/m;
+        if (samp <= 0)
+            return 0;
+
+        dl = gwy_data_line_new_resampled(data_line,
+                                         m*samp, GWY_INTERPOLATION_LINEAR);
+        data_line = dl;
+    }
+    else
+        samp = data_line->res;
+
+    peaks = g_new0(gdouble, k);
+    for (i = 1; i <= m; i++) {
+        get_peaks(data_line, peaks, (i-1)*samp+1, i*samp, 0, k, FALSE);
+        Xpm += peaks[k-1];
+    }
+    g_free(peaks);
+
+    gwy_object_unref(dl);
+
+    return Xpm/m;
+}
+
+/**
+ * gwy_data_line_get_xvm:
+ * @data_line: A data line.
+ * @m: Number of sampling lengths.
+ * @k: Number of valleys to consider.
+ *
+ * Calculates a valley roughness quantity for a data line.
+ *
+ * Depending on @m and @k, the function can calculate
+ * Average Maximum Profile Valley Depth @Rvm
+ * or Maximum Profile Peak Depth @Rv, @Pv, @Wv.
+ *
+ * Returns: The valley roughness quantity defined by @m and @k.
+ *
+ * Since: 2.42
+ **/
+gdouble
+gwy_data_line_get_xvm(GwyDataLine *data_line, gint m, gint k)
+{
+    gdouble Xvm = 0.0;
+    GwyDataLine *dl;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), Xvm);
+
+    dl = gwy_data_line_duplicate(data_line);
+    gwy_data_line_multiply(dl, -1.0);
+    Xvm = gwy_data_line_get_xpm(dl, m, k);
+    g_object_unref(dl);
+
+    return Xvm;
+}
+
+/**
+ * gwy_data_line_get_xvm:
+ * @data_line: A data line.
+ * @m: Number of sampling lengths.
+ * @k: Number of peaks and valleys to consider.
+ *
+ * Calculates a total roughness quantity for a data line.
+ *
+ * The total quantity is just the sum of the corresponding quantities obtained
+ * by gwy_data_line_get_xpm() and gwy_data_line_get_xvm().
+ *
+ * Returns: The total roughness quantity defined by @m and @k.
+ *
+ * Since: 2.42
+ **/
+gdouble
+gwy_data_line_get_xtm(GwyDataLine *data_line, gint m, gint k)
+{
+    return (gwy_data_line_get_xpm(data_line, m, k)
+            + gwy_data_line_get_xvm(data_line, m, k));
 }
 
 /************************** Documentation ****************************/

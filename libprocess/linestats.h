@@ -85,6 +85,15 @@ gdouble gwy_data_line_part_get_median   (GwyDataLine *data_line,
                                          gint from,
                                          gint to);
 gdouble gwy_data_line_get_length        (GwyDataLine *data_line);
+gdouble gwy_data_line_get_xpm           (GwyDataLine *data_line,
+                                         gint m,
+                                         gint k);
+gdouble gwy_data_line_get_xvm           (GwyDataLine *data_line,
+                                         gint m,
+                                         gint k);
+gdouble gwy_data_line_get_xtm           (GwyDataLine *data_line,
+                                         gint m,
+                                         gint k);
 void    gwy_data_line_distribution      (GwyDataLine *data_line,
                                          GwyDataLine *distribution,
                                          gdouble ymin,
