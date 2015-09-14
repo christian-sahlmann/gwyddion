@@ -984,6 +984,7 @@ free_stripe_results(TipBlindArgs *args)
     }
 }
 
+/* XXX: Duplicate with tip_blind (all 3 functions) */
 static gdouble
 standardize_direction(gdouble phi)
 {

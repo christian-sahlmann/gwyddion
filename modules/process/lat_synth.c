@@ -1614,6 +1614,7 @@ growing_iter_next(GrowingIter *giter)
 
 /* Fill a data field with uncorrelated random numbers in a growing fashion to
  * preserve the character of the noise even if the dimensions change */
+/* XXX: Duplicate with pat_synth */
 static void
 fill_displacement_map(GwyDataField *dfield,
                       GRand *rng,

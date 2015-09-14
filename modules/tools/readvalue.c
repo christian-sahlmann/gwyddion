@@ -736,6 +736,7 @@ gwy_tool_read_value_set_zero(GwyToolReadValue *tool)
     gwy_data_field_data_changed(plain_tool->data_field);
 }
 
+/* XXX: Duplicate with tip_blind (all 3 functions) */
 static gdouble
 standardize_direction(gdouble phi)
 {

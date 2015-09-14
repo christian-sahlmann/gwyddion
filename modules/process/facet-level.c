@@ -177,6 +177,7 @@ facet_level(GwyContainer *data, GwyRunType run)
     g_object_unref(dfield);
 }
 
+/* XXX: Duplicate with level.c. Merge modules? */
 static gboolean
 level_dialog(LevelArgs *args,
              const gchar *title)

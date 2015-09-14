@@ -241,6 +241,7 @@ epsilon_changed_cb(GtkAdjustment *adj,
     kmedians_dialog_update(controls, args);
 }
 
+/* XXX: Duplicate with volume_kmeans.c */
 static GwyBrick*
 normalize_brick(GwyBrick *brick, GwyDataField *intfield)
 {

@@ -637,6 +637,7 @@ gwy_layer_line_draw_label(GwyVectorLayer *layer,
     g_object_unref(pixbuf);
 }
 
+/* XXX: Duplicate between text-drawing layers. */
 static GdkPixbuf*
 gwy_layer_line_render_string_bw(GwyLayerLine *layer,
                                 gdouble zoom,

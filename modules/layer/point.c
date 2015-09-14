@@ -582,6 +582,7 @@ gwy_layer_point_draw_label(GwyVectorLayer *layer,
     g_object_unref(pixbuf);
 }
 
+/* XXX: Duplicate between text-drawing layers. */
 static GdkPixbuf*
 gwy_layer_point_render_string_bw(GwyLayerPoint *layer,
                                  gdouble zoom,

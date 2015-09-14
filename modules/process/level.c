@@ -248,6 +248,7 @@ zero_mean(GwyContainer *data, GwyRunType run)
     gwy_data_field_data_changed(dfield);
 }
 
+/* XXX: Duplicate with level.c. Merge modules? */
 static gboolean
 level_dialog(LevelArgs *args,
              const gchar *title)

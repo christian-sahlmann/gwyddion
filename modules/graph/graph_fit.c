@@ -1482,6 +1482,7 @@ save_args(GwyContainer *container,
 }
 
 /************************* fit report *****************************/
+/* XXX: Duplicate with graph_fit. */
 static gint
 count_really_fitted_points(FitArgs *args)
 {
