@@ -254,7 +254,6 @@ static gdouble    gwy_tool_roughness_Xz                   (GwyDataLine *data_lin
 static gdouble    gwy_tool_roughness_Pc                   (GwyDataLine *data_line,
                                                            gdouble threshold);
 static gdouble    gwy_tool_roughness_Da                   (GwyDataLine *data_line);
-static gdouble    gwy_tool_roughness_Dq                   (GwyDataLine *data_line);
 static gdouble    gwy_tool_roughness_l0                   (GwyDataLine *data_line);
 static gdouble    gwy_tool_roughness_lr                   (GwyDataLine *data_line);
 static void       gwy_tool_roughness_distribution         (GwyDataLine *data_line,
@@ -1423,7 +1422,7 @@ gwy_tool_roughness_update_parameters(GwyToolRoughness *tool)
     params[PARAM_WY]      = gwy_data_line_get_xtm(waviness, 1, 1);
     params[PARAM_PT]      = gwy_data_line_get_xtm(texture, 1, 1);
     params[PARAM_DA]      = gwy_tool_roughness_Da(roughness);
-    params[PARAM_DQ]      = gwy_tool_roughness_Dq(roughness);
+    params[PARAM_DQ]      = gwy_data_line_get_tan_beta0(roughness);
     params[PARAM_LA]      = 2*G_PI*params[PARAM_RA]/params[PARAM_DA];
     params[PARAM_LQ]      = 2*G_PI*params[PARAM_RQ]/params[PARAM_DQ];
     params[PARAM_L0]      = gwy_tool_roughness_l0(roughness);
@@ -1773,24 +1772,6 @@ static gdouble
 gwy_tool_roughness_Da(GwyDataLine *dline)
 {
     return gwy_data_line_get_variation(dline)/gwy_data_line_get_real(dline);
-}
-
-static gdouble
-gwy_tool_roughness_Dq(GwyDataLine *data_line)
-{
-    gdouble Dq = 0.0;
-    const gdouble *data;
-    gint i, res;
-
-    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), Dq);
-
-    data = gwy_data_line_get_data_const(data_line);
-    res = gwy_data_line_get_res(data_line);
-
-    for (i = 1; i < res; i++)
-        Dq += (data[i] - data[i-1])*(data[i] - data[i-1]);
-
-    return sqrt(Dq/(res - 1.0))*res/gwy_data_line_get_real(data_line);
 }
 
 static gdouble
