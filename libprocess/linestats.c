@@ -492,6 +492,8 @@ gwy_data_line_get_tan_beta0(GwyDataLine *a)
  * This is the root mean square of value derivatives, it is also proportional
  * to the second derivative of both HHCF and ACF at zero.
  *
+ * This roughness quantity is also known as Dq.
+ *
  * Returns: Root mean square slope within a given interval.
  *
  * Since: 2.2
