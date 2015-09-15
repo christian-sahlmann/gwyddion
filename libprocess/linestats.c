@@ -514,7 +514,7 @@ gwy_data_line_part_get_tan_beta0(GwyDataLine *a, gint from, gint to)
     for (i = from + 1; i < to; i++)
         rms += (a->data[i] - a->data[i-1])*(a->data[i] - a->data[i-1]);
 
-    return sqrt(rms)/gwy_data_line_itor(a, to-from - 1);
+    return sqrt(rms/(to-from - 1)) * a->res/a->real;
 }
 
 /**
