@@ -103,7 +103,7 @@ typedef struct {
     guint hour;
     guint minute;
     guint second;
-    guint diff_utc_by_minutes;
+    gint diff_utc_by_minutes;
     guint image_attributes;
     guint user_interface_mode;
     guint color_composite_mode;
@@ -277,6 +277,7 @@ static gboolean      read_character_strs(KeyenceFile *kfile,
 static GwyDataField* create_data_field  (const KeyenceFalseColorImage *image,
                                          const KeyenceMeasurementConditions *measconds,
                                          gboolean is_height);
+static GwyContainer* create_meta        (const KeyenceFile *kfile);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -325,7 +326,7 @@ keyence_load(const gchar *filename,
 {
     KeyenceFile *kfile;
     GwyDataField *dfield;
-    GwyContainer *data = NULL;
+    GwyContainer *data = NULL, *meta = NULL, *tmpmeta;
     const guchar *p;
     gsize remsize;
     GError *err = NULL;
@@ -359,6 +360,7 @@ keyence_load(const gchar *filename,
     }
 
     data = gwy_container_new();
+    meta = create_meta(kfile);
     id = 0;
 
     for (i = 0; i < G_N_ELEMENTS(kfile->light); i++) {
@@ -373,6 +375,11 @@ keyence_load(const gchar *filename,
         title = g_strdup_printf("Intensity %u", i);
         g_snprintf(key, sizeof(key), "%s/title", g_quark_to_string(quark));
         gwy_container_set_string_by_name(data, key, title);
+
+        g_snprintf(key, sizeof(key), "/%u/meta", id);
+        tmpmeta = gwy_container_duplicate(meta);
+        gwy_container_set_object_by_name(data, key, tmpmeta);
+        g_object_unref(tmpmeta);
 
         id++;
     }
@@ -390,8 +397,15 @@ keyence_load(const gchar *filename,
         g_snprintf(key, sizeof(key), "%s/title", g_quark_to_string(quark));
         gwy_container_set_string_by_name(data, key, title);
 
+        g_snprintf(key, sizeof(key), "/%u/meta", id);
+        tmpmeta = gwy_container_duplicate(meta);
+        gwy_container_set_object_by_name(data, key, tmpmeta);
+        g_object_unref(tmpmeta);
+
         id++;
     }
+
+    g_object_unref(meta);
 
 fail:
     free_file(kfile);
@@ -505,7 +519,7 @@ read_meas_conds(const guchar **p,
     measconds->hour = gwy_get_guint32_le(p);
     measconds->minute = gwy_get_guint32_le(p);
     measconds->second = gwy_get_guint32_le(p);
-    measconds->diff_utc_by_minutes = gwy_get_guint32_le(p);
+    measconds->diff_utc_by_minutes = gwy_get_gint32_le(p);
     measconds->image_attributes = gwy_get_guint32_le(p);
     measconds->user_interface_mode = gwy_get_guint32_le(p);
     measconds->color_composite_mode = gwy_get_guint32_le(p);
@@ -863,6 +877,72 @@ create_data_field(const KeyenceFalseColorImage *image,
         gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), "m");
 
     return dfield;
+}
+
+#define store_int(c,n,i) \
+    g_snprintf(buf, sizeof(buf), "%d", (i)); \
+    gwy_container_set_const_string_by_name((c), (n), buf);
+
+#define store_uint(c,n,i) \
+    g_snprintf(buf, sizeof(buf), "%u", (i)); \
+    gwy_container_set_const_string_by_name((c), (n), buf);
+
+#define store_int2(c,n,i,u) \
+    g_snprintf(buf, sizeof(buf), "%d %s", (i), (u)); \
+    gwy_container_set_const_string_by_name((c), (n), buf);
+
+#define store_uint2(c,n,i,u) \
+    g_snprintf(buf, sizeof(buf), "%u %s", (i), (u)); \
+    gwy_container_set_const_string_by_name((c), (n), buf);
+
+static GwyContainer*
+create_meta(const KeyenceFile *kfile)
+{
+    const KeyenceMeasurementConditions *measconds = &kfile->meas_conds;
+    GwyContainer *meta = gwy_container_new();
+    gchar buf[48];
+
+    g_snprintf(buf, sizeof(buf), "%u.%u.%u.%u",
+               kfile->header.dll_version[3], kfile->header.dll_version[2],
+               kfile->header.dll_version[1], kfile->header.dll_version[0]);
+    gwy_container_set_const_string_by_name(meta, "DLL version", buf);
+
+    g_snprintf(buf, sizeof(buf), "%04u-%02u-%02u %02u:%02u:%02u",
+               measconds->year, measconds->month, measconds->day,
+               measconds->hour, measconds->minute, measconds->second);
+    gwy_container_set_const_string_by_name(meta, "Date", buf);
+
+    g_snprintf(buf, sizeof(buf), "%d.%d",
+               measconds->optical_zoom/10, measconds->optical_zoom % 10);
+    gwy_container_set_const_string_by_name(meta, "Optical zoom", buf);
+
+    g_snprintf(buf, sizeof(buf), "%d.%d",
+               measconds->lens_mag/10, measconds->lens_mag % 10);
+    gwy_container_set_const_string_by_name(meta, "Lens magnification", buf);
+
+    store_int2(meta, "Time difference to UTC", measconds->diff_utc_by_minutes,
+               "min");
+    store_uint(meta, "Image attributes", measconds->image_attributes);
+    store_uint(meta, "User interface mode", measconds->user_interface_mode);
+    store_uint(meta, "Color composition mode", measconds->color_composite_mode);
+    store_uint(meta, "Image layer number", measconds->num_layer);
+    store_uint(meta, "Run mode", measconds->run_mode);
+    store_uint(meta, "Peak mode", measconds->peak_mode);
+    store_uint(meta, "Sharpening level", measconds->sharpening_level);
+    store_uint(meta, "Speed", measconds->speed);
+    store_uint2(meta, "Distance", measconds->distance, "nm");
+    store_uint2(meta, "Pitch", measconds->pitch, "nm");
+    store_uint(meta, "Number of lines", measconds->num_line);
+    store_uint(meta, "First line position", measconds->line0_pos);
+    store_uint(meta, "PMT gain mode", measconds->pmt_gain_mode);
+    store_uint(meta, "PMT gain", measconds->pmt_gain);
+    store_uint(meta, "PMT offset", measconds->pmt_offset);
+    store_uint(meta, "ND filter", measconds->nd_filter);
+    store_uint(meta, "Image average frequency", measconds->persist_count);
+    store_uint(meta, "Shutter speed mode", measconds->shutter_speed_mode);
+    store_uint(meta, "Shutter speed", measconds->shutter_speed);
+
+    return meta;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
