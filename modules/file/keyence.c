@@ -403,6 +403,8 @@ free_file(KeyenceFile *kfile)
 {
     g_free(kfile->assembly_files);
     gwy_file_abandon_contents(kfile->buffer, kfile->size, NULL);
+    g_free(kfile->char_strs.title);
+    g_free(kfile->char_strs.lens_name);
     g_free(kfile);
 }
 
