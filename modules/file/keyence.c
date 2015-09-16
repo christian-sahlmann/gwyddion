@@ -62,6 +62,8 @@ enum {
     KEYENCE_ASSEMBLY_FILE_SIZE = 532,
     KEYENCE_TRUE_COLOR_IMAGE_MIN_SIZE = 20,
     KEYENCE_FALSE_COLOR_IMAGE_MIN_SIZE = 796,
+    KEYENCE_LINE_MEASUREMENT_LEN = 1024,
+    KEYENCE_LINE_MEASUREMENT_SIZE = 18440,
 };
 
 typedef enum {
@@ -215,6 +217,13 @@ typedef struct {
 } KeyenceFalseColorImage;
 
 typedef struct {
+    guint size;
+    guint line_width;
+    const guchar *light[3];
+    const guchar *height[3];
+} KeyenceLineMeasurement;
+
+typedef struct {
     KeyenceHeader header;
     KeyenceOffsetTable offset_table;
     KeyenceMeasurementConditions meas_conds;
@@ -226,37 +235,40 @@ typedef struct {
     KeyenceAssemblyFile *assembly_files;
     KeyenceFalseColorImage light[3];
     KeyenceFalseColorImage height[3];
+    KeyenceLineMeasurement line_measure;
     /* Raw file contents. */
     guchar *buffer;
     gsize size;
 } KeyenceFile;
 
-static gboolean      module_register   (void);
-static gint          keyence_detect    (const GwyFileDetectInfo *fileinfo,
-                                        gboolean only_name);
-static GwyContainer* keyence_load      (const gchar *filename,
-                                        GwyRunType mode,
-                                        GError **error);
-static void          free_file         (KeyenceFile *kfile);
-static gboolean      read_header       (const guchar **p,
-                                        gsize *size,
-                                        KeyenceHeader *header,
-                                        GError **error);
-static gboolean      read_offset_table (const guchar **p,
-                                        gsize *size,
-                                        KeyenceOffsetTable *offsettable,
-                                        GError **error);
-static gboolean      read_meas_conds   (const guchar **p,
-                                        gsize *size,
-                                        KeyenceMeasurementConditions *measconds,
-                                        GError **error);
-static gboolean      read_assembly_info(KeyenceFile *kfile,
-                                        GError **error);
-static gboolean      read_data_images  (KeyenceFile *kfile,
-                                        GError **error);
-static GwyDataField* create_data_field (const KeyenceFalseColorImage *image,
-                                        const KeyenceMeasurementConditions *measconds,
-                                        gboolean is_height);
+static gboolean      module_register      (void);
+static gint          keyence_detect       (const GwyFileDetectInfo *fileinfo,
+                                           gboolean only_name);
+static GwyContainer* keyence_load         (const gchar *filename,
+                                           GwyRunType mode,
+                                           GError **error);
+static void          free_file            (KeyenceFile *kfile);
+static gboolean      read_header          (const guchar **p,
+                                           gsize *size,
+                                           KeyenceHeader *header,
+                                           GError **error);
+static gboolean      read_offset_table    (const guchar **p,
+                                           gsize *size,
+                                           KeyenceOffsetTable *offsettable,
+                                           GError **error);
+static gboolean      read_meas_conds      (const guchar **p,
+                                           gsize *size,
+                                           KeyenceMeasurementConditions *measconds,
+                                           GError **error);
+static gboolean      read_assembly_info   (KeyenceFile *kfile,
+                                           GError **error);
+static gboolean      read_data_images     (KeyenceFile *kfile,
+                                           GError **error);
+static gboolean      read_line_measurement(KeyenceFile *kfile,
+                                           GError **error);
+static GwyDataField* create_data_field    (const KeyenceFalseColorImage *image,
+                                           const KeyenceMeasurementConditions *measconds,
+                                           gboolean is_height);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -327,7 +339,8 @@ keyence_load(const gchar *filename,
         || !read_offset_table(&p, &remsize, &kfile.offset_table, error)
         || !read_meas_conds(&p, &remsize, &kfile.meas_conds, error)
         || !read_assembly_info(&kfile, error)
-        || !read_data_images(&kfile, error))
+        || !read_data_images(&kfile, error)
+        || !read_line_measurement(&kfile, error))
         goto fail;
 
     if (!kfile.nimages) {
@@ -660,7 +673,10 @@ read_data_image(KeyenceFile *kfile,
     memcpy(image->palette, p, sizeof(image->palette));
     p += sizeof(image->palette);
 
-    /* TODO: Check that the image data fit into the file! */
+    if (size - offset - KEYENCE_FALSE_COLOR_IMAGE_MIN_SIZE < image->byte_size) {
+        err_TRUNCATED(error);
+        return FALSE;
+    }
     image->data = p;
     kfile->nimages++;
 
@@ -684,6 +700,50 @@ read_data_images(KeyenceFile *kfile,
                              error))
             return FALSE;
     }
+    return TRUE;
+}
+
+static gboolean
+read_line_measurement(KeyenceFile *kfile,
+                      GError **error)
+{
+    KeyenceLineMeasurement *linemeas;
+    const guchar *p = kfile->buffer;
+    gsize size = kfile->size;
+    guint off = kfile->offset_table.line_measure;
+    guint i;
+
+    gwy_debug("0x%08x", off);
+    if (!off)
+        return TRUE;
+
+    if (size <= KEYENCE_LINE_MEASUREMENT_SIZE
+        || off > size - KEYENCE_LINE_MEASUREMENT_SIZE) {
+        err_TRUNCATED(error);
+        return FALSE;
+    }
+
+    p += off;
+    linemeas = &kfile->line_measure;
+
+    linemeas->size = gwy_get_guint32_le(&p);
+    if (size < KEYENCE_LINE_MEASUREMENT_SIZE) {
+        err_TRUNCATED(error);
+        return FALSE;
+    }
+    linemeas->line_width = gwy_get_guint32_le(&p);
+    /* XXX: We should use the real length even though the format description
+     * seems to specify a fixed length.  Also note that only the first data
+     * block is supposed to be used; the rest it reserved. */
+    for (i = 0; i < G_N_ELEMENTS(linemeas->light); i++) {
+        linemeas->light[i] = p;
+        p += KEYENCE_LINE_MEASUREMENT_LEN*sizeof(guint16);
+    }
+    for (i = 0; i < G_N_ELEMENTS(linemeas->height); i++) {
+        linemeas->height[i] = p;
+        p += KEYENCE_LINE_MEASUREMENT_LEN*sizeof(guint32);
+    }
+
     return TRUE;
 }
 
