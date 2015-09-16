@@ -308,9 +308,8 @@ keyence_load(const gchar *filename,
 {
     KeyenceFile kfile;
     GwyContainer *data = NULL;
-    guchar* buffer = NULL;
     const guchar *p;
-    gsize size = 0, remsize;
+    gsize remsize;
     GError *err = NULL;
 
     gwy_clear(&kfile, 1);
@@ -319,8 +318,8 @@ keyence_load(const gchar *filename,
         return NULL;
     }
 
-    remsize = size;
-    p = buffer;
+    remsize = kfile.size;
+    p = kfile.buffer;
 
     if (!read_header(&p, &remsize, &kfile.header, error)
         || !read_offset_table(&p, &remsize, &kfile.offset_table, error)
@@ -361,6 +360,7 @@ read_header(const guchar **p,
             KeyenceHeader *header,
             GError **error)
 {
+    gwy_debug("remaining size 0x%08lx", (gulong)*size);
     if (*size < KEYENCE_HEADER_SIZE) {
         err_TRUNCATED(error);
         return FALSE;
@@ -385,6 +385,7 @@ read_offset_table(const guchar **p,
                   KeyenceOffsetTable *offsettable,
                   GError **error)
 {
+    gwy_debug("remaining size 0x%08lx", (gulong)*size);
     if (*size < KEYENCE_OFFSET_TABLE_SIZE) {
         err_TRUNCATED(error);
         return FALSE;
@@ -421,6 +422,7 @@ read_meas_conds(const guchar **p,
 {
     guint i;
 
+    gwy_debug("remaining size 0x%08lx", (gulong)*size);
     if (*size < KEYENCE_MEASUREMENT_CONDITIONS_MIN_SIZE) {
         err_TRUNCATED(error);
         return FALSE;
@@ -521,6 +523,7 @@ read_assembly_info(KeyenceFile *kfile,
     guint off = kfile->offset_table.assemble;
     guint nfiles, i, j;
 
+    gwy_debug("0x%08x", off);
     if (!off)
         return TRUE;
 
@@ -545,6 +548,9 @@ read_assembly_info(KeyenceFile *kfile,
     kfile->assembly_conds.count_y = gwy_get_guint16_le(&p);
 
     nfiles = kfile->assembly_conds.count_x * kfile->assembly_conds.count_y;
+    if (!nfiles)
+        return TRUE;
+
     if ((size - KEYENCE_ASSEMBLY_HEADERS_SIZE - off)/nfiles
         < KEYENCE_ASSEMBLY_FILE_SIZE) {
         err_TRUNCATED(error);
@@ -579,6 +585,7 @@ read_data_image(KeyenceFile *kfile,
     gsize size = kfile->size;
     guint bps;
 
+    gwy_debug("0x%08x", offset);
     if (!offset)
         return TRUE;
 
