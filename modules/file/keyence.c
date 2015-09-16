@@ -49,6 +49,8 @@
 
 #define EXTENSION ".vk4"
 
+#define Picometre (1e-12)
+
 enum {
     KEYENCE_HEADER_SIZE = 12,
     KEYENCE_OFFSET_TABLE_SIZE = 72,
@@ -78,12 +80,8 @@ typedef struct {
     guint setting;
     guint color_peak;
     guint color_light;
-    guint light0;
-    guint light1;
-    guint light2;
-    guint height0;
-    guint height1;
-    guint height2;
+    guint light[3];
+    guint height[3];
     guint color_peak_thumbnail;
     guint color_thumbnail;
     guint light_thumbnail;
@@ -226,12 +224,8 @@ typedef struct {
     guint assembly_nfiles;
     guint nimages;
     KeyenceAssemblyFile *assembly_files;
-    KeyenceFalseColorImage light0;
-    KeyenceFalseColorImage light1;
-    KeyenceFalseColorImage light2;
-    KeyenceFalseColorImage height0;
-    KeyenceFalseColorImage height1;
-    KeyenceFalseColorImage height2;
+    KeyenceFalseColorImage light[3];
+    KeyenceFalseColorImage height[3];
     /* Raw file contents. */
     guchar *buffer;
     gsize size;
@@ -260,6 +254,9 @@ static gboolean      read_assembly_info(KeyenceFile *kfile,
                                         GError **error);
 static gboolean      read_data_images  (KeyenceFile *kfile,
                                         GError **error);
+static GwyDataField* create_data_field (const KeyenceFalseColorImage *image,
+                                        const KeyenceMeasurementConditions *measconds,
+                                        gboolean is_height);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -307,10 +304,15 @@ keyence_load(const gchar *filename,
              GError **error)
 {
     KeyenceFile kfile;
+    GwyDataField *dfield;
     GwyContainer *data = NULL;
     const guchar *p;
     gsize remsize;
     GError *err = NULL;
+    GQuark quark;
+    guint i, id;
+    char *title;
+    gchar key[48];
 
     gwy_clear(&kfile, 1);
     if (!gwy_file_get_contents(filename, &kfile.buffer, &kfile.size, &err)) {
@@ -333,7 +335,40 @@ keyence_load(const gchar *filename,
         goto fail;
     }
 
-    err_NO_DATA(error);
+    data = gwy_container_new();
+    id = 0;
+
+    for (i = 0; i < G_N_ELEMENTS(kfile.light); i++) {
+        if (!kfile.light[i].data)
+            continue;
+
+        dfield = create_data_field(&kfile.light[i], &kfile.meas_conds, FALSE);
+        quark = gwy_app_get_data_key_for_id(id);
+        gwy_container_set_object(data, quark, dfield);
+        g_object_unref(dfield);
+
+        title = g_strdup_printf("Intensity %u", i);
+        g_snprintf(key, sizeof(key), "%s/title", g_quark_to_string(quark));
+        gwy_container_set_string_by_name(data, key, title);
+
+        id++;
+    }
+
+    for (i = 0; i < G_N_ELEMENTS(kfile.height); i++) {
+        if (!kfile.height[i].data)
+            continue;
+
+        dfield = create_data_field(&kfile.height[i], &kfile.meas_conds, TRUE);
+        quark = gwy_app_get_data_key_for_id(id);
+        gwy_container_set_object(data, quark, dfield);
+        g_object_unref(dfield);
+
+        title = g_strdup_printf("Height %u", i);
+        g_snprintf(key, sizeof(key), "%s/title", g_quark_to_string(quark));
+        gwy_container_set_string_by_name(data, key, title);
+
+        id++;
+    }
 
 fail:
     free_file(&kfile);
@@ -385,6 +420,8 @@ read_offset_table(const guchar **p,
                   KeyenceOffsetTable *offsettable,
                   GError **error)
 {
+    guint i;
+
     gwy_debug("remaining size 0x%08lx", (gulong)*size);
     if (*size < KEYENCE_OFFSET_TABLE_SIZE) {
         err_TRUNCATED(error);
@@ -394,12 +431,10 @@ read_offset_table(const guchar **p,
     offsettable->setting = gwy_get_guint32_le(p);
     offsettable->color_peak = gwy_get_guint32_le(p);
     offsettable->color_light = gwy_get_guint32_le(p);
-    offsettable->light0 = gwy_get_guint32_le(p);
-    offsettable->light1 = gwy_get_guint32_le(p);
-    offsettable->light2 = gwy_get_guint32_le(p);
-    offsettable->height0 = gwy_get_guint32_le(p);
-    offsettable->height1 = gwy_get_guint32_le(p);
-    offsettable->height2 = gwy_get_guint32_le(p);
+    for (i = 0; i < G_N_ELEMENTS(offsettable->light); i++)
+        offsettable->light[i] = gwy_get_guint32_le(p);
+    for (i = 0; i < G_N_ELEMENTS(offsettable->height); i++)
+        offsettable->height[i] = gwy_get_guint32_le(p);
     offsettable->color_peak_thumbnail = gwy_get_guint32_le(p);
     offsettable->color_thumbnail = gwy_get_guint32_le(p);
     offsettable->light_thumbnail = gwy_get_guint32_le(p);
@@ -625,6 +660,7 @@ read_data_image(KeyenceFile *kfile,
     memcpy(image->palette, p, sizeof(image->palette));
     p += sizeof(image->palette);
 
+    /* TODO: Check that the image data fit into the file! */
     image->data = p;
     kfile->nimages++;
 
@@ -636,13 +672,55 @@ read_data_images(KeyenceFile *kfile,
                  GError **error)
 {
     const KeyenceOffsetTable *offtable = &kfile->offset_table;
+    guint i;
 
-    return (read_data_image(kfile, &kfile->light0, offtable->light0, error)
-            && read_data_image(kfile, &kfile->light1, offtable->light1, error)
-            && read_data_image(kfile, &kfile->light2, offtable->light2, error)
-            && read_data_image(kfile, &kfile->height0, offtable->height0, error)
-            && read_data_image(kfile, &kfile->height1, offtable->height1, error)
-            && read_data_image(kfile, &kfile->height2, offtable->height2, error));
+    for (i = 0; i < G_N_ELEMENTS(kfile->light); i++) {
+        if (!read_data_image(kfile, &kfile->light[i], offtable->light[i],
+                             error))
+            return FALSE;
+    }
+    for (i = 0; i < G_N_ELEMENTS(kfile->height); i++) {
+        if (!read_data_image(kfile, &kfile->height[i], offtable->height[i],
+                             error))
+            return FALSE;
+    }
+    return TRUE;
+}
+
+static GwyDataField*
+create_data_field(const KeyenceFalseColorImage *image,
+                  const KeyenceMeasurementConditions *measconds,
+                  gboolean is_height)
+{
+    guint w = image->width, h = image->height;
+    gdouble dx = measconds->x_length_per_pixel * Picometre;
+    gdouble dy = measconds->y_length_per_pixel * Picometre;
+    GwyRawDataType datatype = GWY_RAW_DATA_UINT8;
+    GwyDataField *dfield;
+    gdouble *data;
+    gdouble q;
+
+    /* The -1 is from comparison with original software. */
+    dfield = gwy_data_field_new(w, h, dx*(w - 1.0), dy*(h - 1.0), FALSE);
+    if (image->bit_depth == 16)
+        datatype = GWY_RAW_DATA_UINT16;
+    else if (image->bit_depth == 32)
+        datatype = GWY_RAW_DATA_UINT32;
+
+    q = (is_height
+         ? measconds->z_length_per_digit * Picometre
+         : pow(0.5, image->bit_depth));
+
+    data = gwy_data_field_get_data(dfield);
+    gwy_convert_raw_data(image->data, w*h, 1,
+                         datatype, GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                         data, q, 0.0);
+
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
+    if (is_height)
+        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), "m");
+
+    return dfield;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
