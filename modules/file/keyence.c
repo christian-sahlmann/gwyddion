@@ -224,6 +224,11 @@ typedef struct {
 } KeyenceLineMeasurement;
 
 typedef struct {
+    gchar *title;
+    gchar *lens_name;
+} KeyenceCharacterStrings;
+
+typedef struct {
     KeyenceHeader header;
     KeyenceOffsetTable offset_table;
     KeyenceMeasurementConditions meas_conds;
@@ -236,39 +241,42 @@ typedef struct {
     KeyenceFalseColorImage light[3];
     KeyenceFalseColorImage height[3];
     KeyenceLineMeasurement line_measure;
+    KeyenceCharacterStrings char_strs;
     /* Raw file contents. */
     guchar *buffer;
     gsize size;
 } KeyenceFile;
 
-static gboolean      module_register      (void);
-static gint          keyence_detect       (const GwyFileDetectInfo *fileinfo,
-                                           gboolean only_name);
-static GwyContainer* keyence_load         (const gchar *filename,
-                                           GwyRunType mode,
-                                           GError **error);
-static void          free_file            (KeyenceFile *kfile);
-static gboolean      read_header          (const guchar **p,
-                                           gsize *size,
-                                           KeyenceHeader *header,
-                                           GError **error);
-static gboolean      read_offset_table    (const guchar **p,
-                                           gsize *size,
-                                           KeyenceOffsetTable *offsettable,
-                                           GError **error);
-static gboolean      read_meas_conds      (const guchar **p,
-                                           gsize *size,
-                                           KeyenceMeasurementConditions *measconds,
-                                           GError **error);
-static gboolean      read_assembly_info   (KeyenceFile *kfile,
-                                           GError **error);
-static gboolean      read_data_images     (KeyenceFile *kfile,
-                                           GError **error);
-static gboolean      read_line_measurement(KeyenceFile *kfile,
-                                           GError **error);
-static GwyDataField* create_data_field    (const KeyenceFalseColorImage *image,
-                                           const KeyenceMeasurementConditions *measconds,
-                                           gboolean is_height);
+static gboolean      module_register    (void);
+static gint          keyence_detect     (const GwyFileDetectInfo *fileinfo,
+                                         gboolean only_name);
+static GwyContainer* keyence_load       (const gchar *filename,
+                                         GwyRunType mode,
+                                         GError **error);
+static void          free_file          (KeyenceFile *kfile);
+static gboolean      read_header        (const guchar **p,
+                                         gsize *size,
+                                         KeyenceHeader *header,
+                                         GError **error);
+static gboolean      read_offset_table  (const guchar **p,
+                                         gsize *size,
+                                         KeyenceOffsetTable *offsettable,
+                                         GError **error);
+static gboolean      read_meas_conds    (const guchar **p,
+                                         gsize *size,
+                                         KeyenceMeasurementConditions *measconds,
+                                         GError **error);
+static gboolean      read_assembly_info (KeyenceFile *kfile,
+                                         GError **error);
+static gboolean      read_data_images   (KeyenceFile *kfile,
+                                         GError **error);
+static gboolean      read_line_meas     (KeyenceFile *kfile,
+                                         GError **error);
+static gboolean      read_character_strs(KeyenceFile *kfile,
+                                         GError **error);
+static GwyDataField* create_data_field  (const KeyenceFalseColorImage *image,
+                                         const KeyenceMeasurementConditions *measconds,
+                                         gboolean is_height);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -341,7 +349,8 @@ keyence_load(const gchar *filename,
         || !read_meas_conds(&p, &remsize, &kfile->meas_conds, error)
         || !read_assembly_info(kfile, error)
         || !read_data_images(kfile, error)
-        || !read_line_measurement(kfile, error))
+        || !read_line_meas(kfile, error)
+        || !read_character_strs(kfile, error))
         goto fail;
 
     if (!kfile->nimages) {
@@ -706,8 +715,8 @@ read_data_images(KeyenceFile *kfile,
 }
 
 static gboolean
-read_line_measurement(KeyenceFile *kfile,
-                      GError **error)
+read_line_meas(KeyenceFile *kfile,
+               GError **error)
 {
     KeyenceLineMeasurement *linemeas;
     const guchar *p = kfile->buffer;
@@ -745,6 +754,75 @@ read_line_measurement(KeyenceFile *kfile,
         linemeas->height[i] = p;
         p += KEYENCE_LINE_MEASUREMENT_LEN*sizeof(guint32);
     }
+
+    return TRUE;
+}
+
+static gchar*
+read_character_str(const guchar **p,
+                   gsize *remsize,
+                   GError **error)
+{
+    GError *err = NULL;
+    gchar *s;
+    guint len;
+
+    if (*remsize < sizeof(guint32)) {
+        err_TRUNCATED(error);
+        return NULL;
+    }
+
+    len = gwy_get_guint32_le(p);
+    gwy_debug("%u", len);
+    *remsize -= sizeof(guint32);
+
+    if (!len)
+        return g_strdup("");
+
+    if (*remsize/2 < len) {
+        err_TRUNCATED(error);
+        return NULL;
+    }
+
+    s = g_utf16_to_utf8((const gunichar2*)*p, len, NULL, NULL, &err);
+    if (!s) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Cannot convert string from UTF-16: %s"),
+                    err->message);
+        g_clear_error(&err);
+        return FALSE;
+    }
+    gwy_debug("%s", s);
+
+    *remsize -= 2*len;
+    *p += 2*len;
+    return s;
+}
+
+static gboolean
+read_character_strs(KeyenceFile *kfile,
+                    GError **error)
+{
+    KeyenceCharacterStrings *charstrs;
+    const guchar *p = kfile->buffer;
+    gsize remsize = kfile->size;
+    guint off = kfile->offset_table.string_data;
+
+    gwy_debug("0x%08x", off);
+    if (!off)
+        return TRUE;
+
+    if (remsize < off) {
+        err_TRUNCATED(error);
+        return FALSE;
+    }
+
+    p += off;
+    remsize -= off;
+    charstrs = &kfile->char_strs;
+    if (!(charstrs->title = read_character_str(&p, &remsize, error))
+        || !(charstrs->lens_name = read_character_str(&p, &remsize, error)))
+        return FALSE;
 
     return TRUE;
 }
