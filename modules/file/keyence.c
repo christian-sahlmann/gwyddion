@@ -315,7 +315,7 @@ keyence_load(const gchar *filename,
              G_GNUC_UNUSED GwyRunType mode,
              GError **error)
 {
-    KeyenceFile kfile;
+    KeyenceFile *kfile;
     GwyDataField *dfield;
     GwyContainer *data = NULL;
     const guchar *p;
@@ -326,24 +326,25 @@ keyence_load(const gchar *filename,
     char *title;
     gchar key[48];
 
-    gwy_clear(&kfile, 1);
-    if (!gwy_file_get_contents(filename, &kfile.buffer, &kfile.size, &err)) {
+    kfile = g_new0(KeyenceFile, 1);
+    if (!gwy_file_get_contents(filename, &kfile->buffer, &kfile->size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
+        g_free(kfile);
         return NULL;
     }
 
-    remsize = kfile.size;
-    p = kfile.buffer;
+    remsize = kfile->size;
+    p = kfile->buffer;
 
-    if (!read_header(&p, &remsize, &kfile.header, error)
-        || !read_offset_table(&p, &remsize, &kfile.offset_table, error)
-        || !read_meas_conds(&p, &remsize, &kfile.meas_conds, error)
-        || !read_assembly_info(&kfile, error)
-        || !read_data_images(&kfile, error)
-        || !read_line_measurement(&kfile, error))
+    if (!read_header(&p, &remsize, &kfile->header, error)
+        || !read_offset_table(&p, &remsize, &kfile->offset_table, error)
+        || !read_meas_conds(&p, &remsize, &kfile->meas_conds, error)
+        || !read_assembly_info(kfile, error)
+        || !read_data_images(kfile, error)
+        || !read_line_measurement(kfile, error))
         goto fail;
 
-    if (!kfile.nimages) {
+    if (!kfile->nimages) {
         err_NO_DATA(error);
         goto fail;
     }
@@ -351,11 +352,11 @@ keyence_load(const gchar *filename,
     data = gwy_container_new();
     id = 0;
 
-    for (i = 0; i < G_N_ELEMENTS(kfile.light); i++) {
-        if (!kfile.light[i].data)
+    for (i = 0; i < G_N_ELEMENTS(kfile->light); i++) {
+        if (!kfile->light[i].data)
             continue;
 
-        dfield = create_data_field(&kfile.light[i], &kfile.meas_conds, FALSE);
+        dfield = create_data_field(&kfile->light[i], &kfile->meas_conds, FALSE);
         quark = gwy_app_get_data_key_for_id(id);
         gwy_container_set_object(data, quark, dfield);
         g_object_unref(dfield);
@@ -367,11 +368,11 @@ keyence_load(const gchar *filename,
         id++;
     }
 
-    for (i = 0; i < G_N_ELEMENTS(kfile.height); i++) {
-        if (!kfile.height[i].data)
+    for (i = 0; i < G_N_ELEMENTS(kfile->height); i++) {
+        if (!kfile->height[i].data)
             continue;
 
-        dfield = create_data_field(&kfile.height[i], &kfile.meas_conds, TRUE);
+        dfield = create_data_field(&kfile->height[i], &kfile->meas_conds, TRUE);
         quark = gwy_app_get_data_key_for_id(id);
         gwy_container_set_object(data, quark, dfield);
         g_object_unref(dfield);
@@ -384,7 +385,7 @@ keyence_load(const gchar *filename,
     }
 
 fail:
-    free_file(&kfile);
+    free_file(kfile);
     return data;
 }
 
@@ -393,6 +394,7 @@ free_file(KeyenceFile *kfile)
 {
     g_free(kfile->assembly_files);
     gwy_file_abandon_contents(kfile->buffer, kfile->size, NULL);
+    g_free(kfile);
 }
 
 static void
