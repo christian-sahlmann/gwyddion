@@ -7862,7 +7862,6 @@ create_simple_brick_preview_field(GwyBrick *brick)
 {
     gint xres = gwy_brick_get_xres(brick);
     gint yres = gwy_brick_get_yres(brick);
-    gint zres = gwy_brick_get_zres(brick);
     gdouble xreal = gwy_brick_get_xreal(brick);
     gdouble yreal = gwy_brick_get_yreal(brick);
     GwyDataField *preview = gwy_data_field_new(xres, yres, xreal, yreal,
