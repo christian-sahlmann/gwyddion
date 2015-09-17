@@ -273,6 +273,9 @@ linematch_do(GwyDataField *mask,
     gwy_data_field_resample(args->bg,
                             args->result->xres, args->result->yres,
                             GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(args->shifts, args->result->yres,
+                           GWY_INTERPOLATION_NONE);
+    gwy_data_line_set_real(args->shifts, args->result->yreal);
 
     /* Perform the correction. */
     if (args->method == LINE_LEVEL_POLY)
