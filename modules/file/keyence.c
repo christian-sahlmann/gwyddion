@@ -19,12 +19,28 @@
  */
 
 /**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-keyence-vk4">
+ *   <comment>Keyence VK4 profilometry data</comment>
+ *   <magic priority="80">
+ *     <match type="string" offset="0" value="VK4_"/>
+ *   </magic>
+ * </mime-type>
+ **/
+
+/**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Keyence VK4.
+ * 0 string VK4_ Keyence profilometry VK4 data
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
- * Keyence microscope VK
+ * Keyence profilometry VK4
  * *.vk4
  * Read
  **/
-#define DEBUG 1
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
@@ -144,7 +160,7 @@ typedef struct {
     guint reserved4;
     guint gamma_reverse;
     guint gamma;
-    guint offset;
+    guint gamma_offset;
     guint ccd_bw_offset;
     guint numerical_aperture;
     guint head_type;
@@ -562,7 +578,7 @@ read_meas_conds(const guchar **p,
     measconds->reserved4 = gwy_get_guint32_le(p);
     measconds->gamma_reverse = gwy_get_guint32_le(p);
     measconds->gamma = gwy_get_guint32_le(p);
-    measconds->offset = gwy_get_guint32_le(p);
+    measconds->gamma_offset = gwy_get_guint32_le(p);
     measconds->ccd_bw_offset = gwy_get_guint32_le(p);
     measconds->numerical_aperture = gwy_get_guint32_le(p);
     measconds->head_type = gwy_get_guint32_le(p);
@@ -895,10 +911,15 @@ create_data_field(const KeyenceFalseColorImage *image,
     g_snprintf(buf, sizeof(buf), "%u %s", (i), (u)); \
     gwy_container_set_const_string_by_name((c), (n), buf);
 
+#define store_float(c,n,v) \
+    g_snprintf(buf, sizeof(buf), "%g", (v)); \
+    gwy_container_set_const_string_by_name((c), (n), buf);
+
 static GwyContainer*
 create_meta(const KeyenceFile *kfile)
 {
     const KeyenceMeasurementConditions *measconds = &kfile->meas_conds;
+    const KeyenceCharacterStrings *charstrs = &kfile->char_strs;
     GwyContainer *meta = gwy_container_new();
     gchar buf[48];
 
@@ -912,14 +933,6 @@ create_meta(const KeyenceFile *kfile)
                measconds->hour, measconds->minute, measconds->second);
     gwy_container_set_const_string_by_name(meta, "Date", buf);
 
-    g_snprintf(buf, sizeof(buf), "%d.%d",
-               measconds->optical_zoom/10, measconds->optical_zoom % 10);
-    gwy_container_set_const_string_by_name(meta, "Optical zoom", buf);
-
-    g_snprintf(buf, sizeof(buf), "%d.%d",
-               measconds->lens_mag/10, measconds->lens_mag % 10);
-    gwy_container_set_const_string_by_name(meta, "Lens magnification", buf);
-
     store_int2(meta, "Time difference to UTC", measconds->diff_utc_by_minutes,
                "min");
     store_uint(meta, "Image attributes", measconds->image_attributes);
@@ -932,8 +945,10 @@ create_meta(const KeyenceFile *kfile)
     store_uint(meta, "Speed", measconds->speed);
     store_uint2(meta, "Distance", measconds->distance, "nm");
     store_uint2(meta, "Pitch", measconds->pitch, "nm");
+    store_float(meta, "Optical zoom", measconds->optical_zoom/10.0);
     store_uint(meta, "Number of lines", measconds->num_line);
     store_uint(meta, "First line position", measconds->line0_pos);
+    store_float(meta, "Lens magnification", measconds->lens_mag/10.0);
     store_uint(meta, "PMT gain mode", measconds->pmt_gain_mode);
     store_uint(meta, "PMT gain", measconds->pmt_gain);
     store_uint(meta, "PMT offset", measconds->pmt_offset);
@@ -941,6 +956,46 @@ create_meta(const KeyenceFile *kfile)
     store_uint(meta, "Image average frequency", measconds->persist_count);
     store_uint(meta, "Shutter speed mode", measconds->shutter_speed_mode);
     store_uint(meta, "Shutter speed", measconds->shutter_speed);
+    store_uint(meta, "White balance mode", measconds->white_balance_mode);
+    store_uint(meta, "White balance red", measconds->white_balance_red);
+    store_uint(meta, "White balance blue", measconds->white_balance_blue);
+    store_uint2(meta, "Camera gain", 6*measconds->camera_gain, "dB");
+    store_uint(meta, "Plane compensation", measconds->plane_compensation);
+    store_uint(meta, "Light filter type", measconds->light_filter_type);
+    store_uint(meta, "Gamma reverse", measconds->gamma_reverse);
+    store_float(meta, "Gamma", measconds->gamma/100.0);
+    store_float(meta, "Gamma correction offset",
+                measconds->gamma_offset/65536.0);
+    store_float(meta, "CCD BW offset", measconds->ccd_bw_offset/100.0);
+    store_float(meta, "Numerical aperture",
+                measconds->numerical_aperture/1000.0);
+    store_uint(meta, "Head type", measconds->head_type);
+    store_uint(meta, "PMT gain 2", measconds->pmt_gain2);
+    store_uint(meta, "Omit color image", measconds->omit_color_image);
+    store_uint(meta, "Lens ID", measconds->lens_id);
+    store_uint(meta, "Light LUT mode", measconds->light_lut_mode);
+    store_uint(meta, "Light LUT input 0", measconds->light_lut_in0);
+    store_uint(meta, "Light LUT output 0", measconds->light_lut_out0);
+    store_uint(meta, "Light LUT input 1", measconds->light_lut_in1);
+    store_uint(meta, "Light LUT output 1", measconds->light_lut_out1);
+    store_uint(meta, "Light LUT input 2", measconds->light_lut_in2);
+    store_uint(meta, "Light LUT output 2", measconds->light_lut_out2);
+    store_uint(meta, "Light LUT input 3", measconds->light_lut_in3);
+    store_uint(meta, "Light LUT output 3", measconds->light_lut_out3);
+    store_uint(meta, "Light LUT input 4", measconds->light_lut_in4);
+    store_uint(meta, "Light LUT output 4", measconds->light_lut_out4);
+    store_uint2(meta, "Upper position", measconds->upper_position, "nm");
+    store_uint2(meta, "Lower position", measconds->lower_position, "nm");
+    store_uint(meta, "Light effective bit depth",
+               measconds->light_effective_bit_depth);
+    store_uint(meta, "Height effective bit depth",
+               measconds->height_effective_bit_depth);
+
+    if (charstrs->title && strlen(charstrs->title))
+        gwy_container_set_const_string_by_name(meta, "Title", charstrs->title);
+    if (charstrs->lens_name && strlen(charstrs->lens_name))
+        gwy_container_set_const_string_by_name(meta, "Lens name",
+                                               charstrs->lens_name);
 
     return meta;
 }
