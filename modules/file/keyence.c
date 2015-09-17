@@ -254,6 +254,8 @@ typedef struct {
     guint assembly_nfiles;
     guint nimages;
     KeyenceAssemblyFile *assembly_files;
+    KeyenceTrueColorImage color_peak;
+    KeyenceTrueColorImage color_light;
     KeyenceFalseColorImage light[3];
     KeyenceFalseColorImage height[3];
     KeyenceLineMeasurement line_measure;
@@ -286,6 +288,8 @@ static gboolean      read_assembly_info (KeyenceFile *kfile,
                                          GError **error);
 static gboolean      read_data_images   (KeyenceFile *kfile,
                                          GError **error);
+static gboolean      read_color_images  (KeyenceFile *kfile,
+                                         GError **error);
 static gboolean      read_line_meas     (KeyenceFile *kfile,
                                          GError **error);
 static gboolean      read_character_strs(KeyenceFile *kfile,
@@ -293,7 +297,17 @@ static gboolean      read_character_strs(KeyenceFile *kfile,
 static GwyDataField* create_data_field  (const KeyenceFalseColorImage *image,
                                          const KeyenceMeasurementConditions *measconds,
                                          gboolean is_height);
+static GwyDataField* create_color_field (const KeyenceTrueColorImage *image,
+                                         const KeyenceMeasurementConditions *measconds,
+                                         gint channelid);
 static GwyContainer* create_meta        (const KeyenceFile *kfile);
+static void          add_data_field     (GwyContainer *data,
+                                         gint *id,
+                                         GwyDataField *dfield,
+                                         GwyContainer *meta,
+                                         const gchar *title,
+                                         gint i,
+                                         const gchar *gradient);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -342,14 +356,11 @@ keyence_load(const gchar *filename,
 {
     KeyenceFile *kfile;
     GwyDataField *dfield;
-    GwyContainer *data = NULL, *meta = NULL, *tmpmeta;
+    GwyContainer *data = NULL, *meta = NULL;
     const guchar *p;
     gsize remsize;
     GError *err = NULL;
-    GQuark quark;
     guint i, id;
-    char *title;
-    gchar key[48];
 
     kfile = g_new0(KeyenceFile, 1);
     if (!gwy_file_get_contents(filename, &kfile->buffer, &kfile->size, &err)) {
@@ -366,6 +377,7 @@ keyence_load(const gchar *filename,
         || !read_meas_conds(&p, &remsize, &kfile->meas_conds, error)
         || !read_assembly_info(kfile, error)
         || !read_data_images(kfile, error)
+        || !read_color_images(kfile, error)
         || !read_line_meas(kfile, error)
         || !read_character_strs(kfile, error))
         goto fail;
@@ -379,46 +391,38 @@ keyence_load(const gchar *filename,
     meta = create_meta(kfile);
     id = 0;
 
-    for (i = 0; i < G_N_ELEMENTS(kfile->light); i++) {
-        if (!kfile->light[i].data)
-            continue;
-
-        dfield = create_data_field(&kfile->light[i], &kfile->meas_conds, FALSE);
-        quark = gwy_app_get_data_key_for_id(id);
-        gwy_container_set_object(data, quark, dfield);
-        g_object_unref(dfield);
-
-        title = g_strdup_printf("Intensity %u", i);
-        g_snprintf(key, sizeof(key), "%s/title", g_quark_to_string(quark));
-        gwy_container_set_string_by_name(data, key, title);
-
-        g_snprintf(key, sizeof(key), "/%u/meta", id);
-        tmpmeta = gwy_container_duplicate(meta);
-        gwy_container_set_object_by_name(data, key, tmpmeta);
-        g_object_unref(tmpmeta);
-
-        id++;
+    for (i = 0; i < G_N_ELEMENTS(kfile->height); i++) {
+        if (kfile->height[i].data) {
+            dfield = create_data_field(&kfile->height[i], &kfile->meas_conds,
+                                       TRUE);
+            add_data_field(data, &id, dfield, meta, "Height", i, NULL);
+        }
     }
 
-    for (i = 0; i < G_N_ELEMENTS(kfile->height); i++) {
-        if (!kfile->height[i].data)
-            continue;
+    for (i = 0; i < G_N_ELEMENTS(kfile->light); i++) {
+        if (kfile->light[i].data) {
+            dfield = create_data_field(&kfile->light[i], &kfile->meas_conds,
+                                       FALSE);
+            add_data_field(data, &id, dfield, meta, "Light", i, NULL);
+        }
+    }
 
-        dfield = create_data_field(&kfile->height[i], &kfile->meas_conds, TRUE);
-        quark = gwy_app_get_data_key_for_id(id);
-        gwy_container_set_object(data, quark, dfield);
-        g_object_unref(dfield);
+    if (kfile->color_peak.data) {
+        dfield = create_color_field(&kfile->color_peak, &kfile->meas_conds, 0);
+        add_data_field(data, &id, dfield, meta, "Peak Red", -1, "RGB-Red");
+        dfield = create_color_field(&kfile->color_peak, &kfile->meas_conds, 1);
+        add_data_field(data, &id, dfield, meta, "Peak Green", -1, "RGB-Green");
+        dfield = create_color_field(&kfile->color_peak, &kfile->meas_conds, 2);
+        add_data_field(data, &id, dfield, meta, "Peak Blue", -1, "RGB-Blue");
+    }
 
-        title = g_strdup_printf("Height %u", i);
-        g_snprintf(key, sizeof(key), "%s/title", g_quark_to_string(quark));
-        gwy_container_set_string_by_name(data, key, title);
-
-        g_snprintf(key, sizeof(key), "/%u/meta", id);
-        tmpmeta = gwy_container_duplicate(meta);
-        gwy_container_set_object_by_name(data, key, tmpmeta);
-        g_object_unref(tmpmeta);
-
-        id++;
+    if (kfile->color_light.data) {
+        dfield = create_color_field(&kfile->color_light, &kfile->meas_conds, 0);
+        add_data_field(data, &id, dfield, meta, "Light Red", -1, "RGB-Red");
+        dfield = create_color_field(&kfile->color_light, &kfile->meas_conds, 1);
+        add_data_field(data, &id, dfield, meta, "Light Green", -1, "RGB-Green");
+        dfield = create_color_field(&kfile->color_light, &kfile->meas_conds, 2);
+        add_data_field(data, &id, dfield, meta, "Light Blue", -1, "RGB-Blue");
     }
 
     g_object_unref(meta);
@@ -747,6 +751,58 @@ read_data_images(KeyenceFile *kfile,
 }
 
 static gboolean
+read_color_image(KeyenceFile *kfile,
+                 KeyenceTrueColorImage *image,
+                 guint offset,
+                 GError **error)
+{
+    const guchar *p = kfile->buffer;
+    gsize size = kfile->size;
+    guint bps;
+
+    gwy_debug("0x%08x", offset);
+    if (!offset)
+        return TRUE;
+
+    if (size <= KEYENCE_TRUE_COLOR_IMAGE_MIN_SIZE
+        || offset > size - KEYENCE_TRUE_COLOR_IMAGE_MIN_SIZE) {
+        err_TRUNCATED(error);
+        return FALSE;
+    }
+
+    p += offset;
+    image->width = gwy_get_guint32_le(&p);
+    if (err_DIMENSION(error, image->width))
+        return FALSE;
+    image->height = gwy_get_guint32_le(&p);
+    if (err_DIMENSION(error, image->height))
+        return FALSE;
+
+    image->bit_depth = gwy_get_guint32_le(&p);
+    if (image->bit_depth != 24) {
+        err_BPP(error, image->bit_depth);
+        return FALSE;
+    }
+    bps = image->bit_depth/8;
+
+    image->compression = gwy_get_guint32_le(&p);
+    image->byte_size = gwy_get_guint32_le(&p);
+    if (err_SIZE_MISMATCH(error,
+                          image->width*image->height*bps,
+                          image->byte_size,
+                          TRUE))
+        return FALSE;
+
+    if (size - offset - KEYENCE_TRUE_COLOR_IMAGE_MIN_SIZE < image->byte_size) {
+        err_TRUNCATED(error);
+        return FALSE;
+    }
+    image->data = p;
+
+    return TRUE;
+}
+
+static gboolean
 read_line_meas(KeyenceFile *kfile,
                GError **error)
 {
@@ -786,6 +842,22 @@ read_line_meas(KeyenceFile *kfile,
         linemeas->height[i] = p;
         p += KEYENCE_LINE_MEASUREMENT_LEN*sizeof(guint32);
     }
+
+    return TRUE;
+}
+
+static gboolean
+read_color_images(KeyenceFile *kfile,
+                  GError **error)
+{
+    const KeyenceOffsetTable *offtable = &kfile->offset_table;
+
+    if (!read_color_image(kfile, &kfile->color_peak, offtable->color_peak,
+                          error))
+        return FALSE;
+    if (!read_color_image(kfile, &kfile->color_light, offtable->color_light,
+                          error))
+        return FALSE;
 
     return TRUE;
 }
@@ -895,6 +967,28 @@ create_data_field(const KeyenceFalseColorImage *image,
     return dfield;
 }
 
+static GwyDataField*
+create_color_field(const KeyenceTrueColorImage *image,
+                   const KeyenceMeasurementConditions *measconds,
+                   gint channelid)
+{
+    guint w = image->width, h = image->height;
+    gdouble dx = measconds->x_length_per_pixel * Picometre;
+    gdouble dy = measconds->y_length_per_pixel * Picometre;
+    GwyDataField *dfield;
+    gdouble *data;
+
+    /* The -1 is from comparison with original software. */
+    dfield = gwy_data_field_new(w, h, dx*(w - 1.0), dy*(h - 1.0), FALSE);
+    data = gwy_data_field_get_data(dfield);
+    gwy_convert_raw_data(image->data + channelid, w*h, 3,
+                         GWY_RAW_DATA_UINT8, GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                         data, 1.0/255.0, 0.0);
+
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
+    return dfield;
+}
+
 #define store_int(c,n,i) \
     g_snprintf(buf, sizeof(buf), "%d", (i)); \
     gwy_container_set_const_string_by_name((c), (n), buf);
@@ -998,6 +1092,40 @@ create_meta(const KeyenceFile *kfile)
                                                charstrs->lens_name);
 
     return meta;
+}
+
+static void
+add_data_field(GwyContainer *data, gint *id,
+               GwyDataField *dfield, GwyContainer *meta,
+               const gchar *title, gint i, const gchar *gradient)
+{
+    GwyContainer *tmpmeta;
+    GQuark quark;
+    gchar key[48];
+
+    quark = gwy_app_get_data_key_for_id(*id);
+    gwy_container_set_object(data, quark, dfield);
+    g_object_unref(dfield);
+
+    g_snprintf(key, sizeof(key), "/%u/data/title", *id);
+    if (i >= 0) {
+        gchar *t = g_strdup_printf("%s %u", title, i);
+        gwy_container_set_string_by_name(data, key, t);
+    }
+    else
+        gwy_container_set_const_string_by_name(data, key, title);
+
+    g_snprintf(key, sizeof(key), "/%u/meta", *id);
+    tmpmeta = gwy_container_duplicate(meta);
+    gwy_container_set_object_by_name(data, key, tmpmeta);
+    g_object_unref(tmpmeta);
+
+    if (gradient) {
+        g_snprintf(key, sizeof(key), "/%u/base/palette", *id);
+        gwy_container_set_const_string_by_name(data, key, gradient);
+    }
+
+    (*id)++;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
