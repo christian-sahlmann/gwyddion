@@ -727,13 +727,13 @@ linematch_dialog(LineMatchArgs *args,
     enum { RESPONSE_RESET = 1 };
 
     static const GwyEnum methods[] = {
-        { "Median", LINE_LEVEL_MEDIAN },
-        { "Median difference", LINE_LEVEL_MEDIAN_DIFF },
-        { "Modus", LINE_LEVEL_MODUS },
-        { "Matching", LINE_LEVEL_MATCH },
+        { N_("Median"), LINE_LEVEL_MEDIAN },
+        { N_("Median difference"), LINE_LEVEL_MEDIAN_DIFF },
+        { N_("Modus"), LINE_LEVEL_MODUS },
+        { N_("linematch|Matching"), LINE_LEVEL_MATCH },
         /* Put polynomial last so that is it followed visally by the degree
          * controls. */
-        { "Polynomial", LINE_LEVEL_POLY },
+        { N_("linematch|Polynomial"), LINE_LEVEL_POLY },
     };
 
     GtkWidget *dialog, *table, *label, *hbox, *alignment;
