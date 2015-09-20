@@ -4215,7 +4215,9 @@ gwy_app_data_browser_brick_render_nlevels(G_GNUC_UNUSED GtkTreeViewColumn *colum
     gchar buf[20];
 
     gtk_tree_model_get(model, iter, MODEL_OBJECT, &brick, -1);
-    g_snprintf(buf, sizeof(buf), "%d", gwy_brick_get_zres(brick));
+    g_snprintf(buf, sizeof(buf), "%d %s",
+               gwy_brick_get_zres(brick),
+               gwy_brick_get_zcalibration(brick) ? "Z" : "");
     g_object_set(renderer, "text", buf, NULL);
     g_object_unref(brick);
 }
