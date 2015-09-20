@@ -16,13 +16,15 @@ Libraries:
 - libgwyprocess: A function for subpixel maximum refinement was added.
 - libgwydgets: 3D view axis and tick line width is controllable now.
 - libprocess: New functions to calculate data line total variation, skew,
-  kurtosis and mean absolute deviation of values.
+  kurtosis, mean absolute deviation of values and peak statisics.
+- libprocess: Normalisation of tan β₀ data line statistics was corrected.
 - libprocess: New functions for obtaining GwyDataLine minimum and maximum
   values simultaneously.
 - libprocess: Range and total variation can be now calculated by
   gwy_data_field_area_get_line_stats().
 - libgwyapp: File thumbnails (for document history) are create from volume
   data when the file does not contain any channels.
+- libgwyapp: Data browser displays ‘Z’ for volume data with z-calibration.
 
 Modules:
 - Align rows (new): Row alignment by various methods, including polynomial
@@ -64,7 +66,9 @@ Modules:
 - Raw graph import: Curve type can be chosen directly in the dialogue.  A few
   settings remembering problems were fixed.
 - Row/column statistics tool: Range and total variation quantities were
-  added.
+  added.  All parameters are calculated for mean value-corrected profiles.
+- Roughness tool: Wavines and texture parameters are actually calculated from
+  zero-mean profiles.
 
 Other:
 - The code has been made MSVC-compatible.
