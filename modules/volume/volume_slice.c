@@ -328,6 +328,7 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
     g_object_unref(gcmodel);
 
     controls.graph = gwy_graph_new(gmodel);
+    g_object_unref(gmodel);
     gwy_graph_set_axis_visible(GWY_GRAPH(controls.graph), GTK_POS_LEFT,
                                FALSE);
     gwy_graph_set_axis_visible(GWY_GRAPH(controls.graph), GTK_POS_BOTTOM,
