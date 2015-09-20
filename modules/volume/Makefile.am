@@ -15,7 +15,8 @@ volume_LTLIBRARIES = \
 	volume_kmeans.la \
 	volume_kmedians.la \
 	volume_linestat.la \
-	volume_slice.la
+	volume_slice.la \
+	volume_zcal.la
 
 EXTRA_DIST = \
 	$(disabled_sources)
@@ -47,6 +48,7 @@ volume_kmeans_la_SOURCES    = volume_kmeans.c
 volume_kmedians_la_SOURCES  = volume_kmedians.c
 volume_linestat_la_SOURCES  = volume_linestat.c
 volume_slice_la_SOURCES     = volume_slice.c
+volume_zcal_la_SOURCES      = volume_zcal.c
 
 clean-local:
 	rm -f core.* *~
