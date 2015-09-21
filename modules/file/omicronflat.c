@@ -71,6 +71,10 @@
 
 #define STRING_MAXLENGTH 10000
 
+#ifndef NAN
+#define NAN (0.0/0.0)
+#endif
+
 typedef enum {
     OMICRON_VALUE_32BIT = 1,
     OMICRON_VALUE_DOUBLE = 2,
@@ -720,7 +724,8 @@ load_as_channel(OmicronFlatFileList *filelist, guint fileid,
     dy = axisy->physical_increment;
     for (i = 0; i < nfields; i++) {
         field_specs[i].dfield = gwy_data_field_new(xres, yres, xres*dx, yres*dy,
-                                                   TRUE);
+                                                   FALSE);
+        gwy_data_field_fill(field_specs[i].dfield, NAN);
         gwy_data_field_invalidate(field_specs[i].dfield);
         gwy_debug("%u (%s)", i, field_specs[i].title);
     }
@@ -758,7 +763,7 @@ load_as_channel(OmicronFlatFileList *filelist, guint fileid,
     }
 
     for (i = 0; i < nfields; i++) {
-        GwyDataField *dfield = field_specs[i].dfield;
+        GwyDataField *dfield = field_specs[i].dfield, *mask;
         GwyContainer *meta;
         gchar *title;
         gchar key[40];
@@ -787,6 +792,13 @@ load_as_channel(OmicronFlatFileList *filelist, guint fileid,
         g_snprintf(key, sizeof(key), "/%i/meta", *id);
         gwy_container_set_object_by_name(data, key, meta);
         g_object_unref(meta);
+
+        if ((mask = gwy_app_channel_mask_of_nans(dfield, TRUE))) {
+            GQuark quark = gwy_app_get_mask_key_for_id(*id);
+
+            gwy_container_set_object(data, quark, mask);
+            g_object_unref(mask);
+        }
 
         gwy_file_channel_import_log_add(data, *id, NULL, fff->filename);
         (*id)++;
