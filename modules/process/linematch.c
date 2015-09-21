@@ -146,7 +146,7 @@ static const LineMatchArgs linematch_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Align rows by various methods."),
+    N_("Aligns rows by various methods."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti)",
@@ -727,13 +727,13 @@ linematch_dialog(LineMatchArgs *args,
     enum { RESPONSE_RESET = 1 };
 
     static const GwyEnum methods[] = {
-        { N_("Median"), LINE_LEVEL_MEDIAN },
-        { N_("Median difference"), LINE_LEVEL_MEDIAN_DIFF },
-        { N_("Modus"), LINE_LEVEL_MODUS },
-        { N_("linematch|Matching"), LINE_LEVEL_MATCH },
         /* Put polynomial last so that is it followed visally by the degree
          * controls. */
-        { N_("linematch|Polynomial"), LINE_LEVEL_POLY },
+        { N_("Median"),                LINE_LEVEL_MEDIAN,      },
+        { N_("Median of differences"), LINE_LEVEL_MEDIAN_DIFF, },
+        { N_("Modus"),                 LINE_LEVEL_MODUS,       },
+        { N_("linematch|Matching"),    LINE_LEVEL_MATCH,       },
+        { N_("linematch|Polynomial"),  LINE_LEVEL_POLY,        },
     };
 
     GtkWidget *dialog, *table, *label, *hbox, *alignment;
