@@ -77,7 +77,11 @@ static void         file_selected               (GtkFileChooser *chooser,
 static void         update_file_calibration     (ZCalControls *controls);
 static void         switch_calibration          (ZCalControls *controls);
 static void         setup_graph_from_calibration(ZCalControls *controls);
-static void         zcal_do                     (ZCalArgs *args);
+static void         setup_graph_do              (GwyGraphModel *gmodel,
+                                                 GwyDataLine *calibration,
+                                                 const gchar *title);
+static void         zcal_do                     (GwyContainer *data,
+                                                 ZCalArgs *args);
 static GwyDataLine* load_calibration_from_file  (const gchar *filename,
                                                  GwyBrick *brick,
                                                  gchar **errmessage);
@@ -120,7 +124,7 @@ module_register(void)
 }
 
 static void
-zcal(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
+zcal(GwyContainer *data, GwyRunType run)
 {
     ZCalArgs args;
     GwyBrick *brick = NULL;
@@ -149,13 +153,14 @@ zcal(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
         if (mode_needs_zcal && !args.calibration)
             ok = FALSE;
     }
+    gwy_object_unref(args.calibration);
 
     /* For ZCAL_ATTACH, this can still fail if the file is not available or
      * compatible with the brick: zcal_do() must deal with it. */
     if (ok)
-        zcal_do(&args);
+        zcal_do(data, &args);
 
-    gwy_object_unref(args.calibration);
+    /* Needed in zcal_do(). */
     g_free(args.filename);
 }
 
@@ -233,10 +238,6 @@ zcal_dialog(ZCalArgs *args)
                      1, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
     gmodel = gwy_graph_model_new();
-    g_object_set(gmodel,
-                 "axis-label-bottom", _("Index"),
-                 "axis-label-left", _("Z axis value"),
-                 NULL);
     controls.graph = gwy_graph_new(gmodel);
     g_object_unref(gmodel);
     gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
@@ -343,16 +344,32 @@ switch_calibration(ZCalControls *controls)
 static void
 setup_graph_from_calibration(ZCalControls *controls)
 {
+    ZCalArgs *args = controls->args;
     GwyDataLine *calibration;
     GwyGraphModel *gmodel;
+    const gchar *title;
+
+    gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
+    calibration = controls->args->calibration;
+
+    if (args->mode == ZCAL_ATTACH)
+        title = _("Calibration from file");
+    else
+        title = _("Z-calibration curve");
+
+    setup_graph_do(gmodel, calibration, title);
+}
+
+static void
+setup_graph_do(GwyGraphModel *gmodel,
+               GwyDataLine *calibration,
+               const gchar *title)
+{
     GwyGraphCurveModel *gcmodel;
     const gdouble *ydata;
     GwySIUnit *zunit;
     gdouble *xdata;
     gint res, i;
-
-    gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
-    calibration = controls->args->calibration;
 
     if (!calibration) {
         gwy_graph_model_remove_all_curves(gmodel);
@@ -370,16 +387,7 @@ setup_graph_from_calibration(ZCalControls *controls)
     else
         gcmodel = gwy_graph_model_get_curve(gmodel, 0);
 
-    if (controls->args->mode == ZCAL_ATTACH) {
-        g_object_set(gcmodel,
-                     "description", _("Calibration from file"),
-                     NULL);
-    }
-    else {
-        g_object_set(gcmodel,
-                     "description", _("Current calibration curve"),
-                     NULL);
-    }
+    g_object_set(gcmodel, "description", title, NULL);
 
     res = gwy_data_line_get_res(calibration);
     ydata = gwy_data_line_get_data_const(calibration);
@@ -391,12 +399,17 @@ setup_graph_from_calibration(ZCalControls *controls)
 
     zunit = gwy_data_line_get_si_unit_y(calibration);
     zunit = gwy_si_unit_duplicate(zunit);
-    g_object_set(gmodel, "si-unit-x", zunit, NULL);
+    g_object_set(gmodel,
+                 "axis-label-bottom", _("Index"),
+                 "axis-label-left", _("Z axis value"),
+                 "si-unit-y", zunit,
+                 "title", title,
+                 NULL);
     g_object_unref(zunit);
 }
 
 static void
-zcal_do(ZCalArgs *args)
+zcal_do(GwyContainer *data, ZCalArgs *args)
 {
     if (args->mode == ZCAL_ATTACH) {
         if (args->filename) {
@@ -418,8 +431,18 @@ zcal_do(ZCalArgs *args)
         gwy_brick_set_zcalibration(args->brick, NULL);
         gwy_brick_data_changed(args->brick);
     }
+    else if (args->mode == ZCAL_EXTRACT) {
+        GwyDataLine *calibration = gwy_brick_get_zcalibration(args->brick);
+
+        if (calibration) {
+            GwyGraphModel *gmodel = gwy_graph_model_new();
+            setup_graph_do(gmodel, calibration, _("Z-calibration curve"));
+            gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+            g_object_unref(gmodel);
+        }
+    }
     else {
-        g_warning("Implement me!");
+        g_assert_not_reached();
     }
 }
 
