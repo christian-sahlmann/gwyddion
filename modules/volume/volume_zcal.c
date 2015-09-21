@@ -58,26 +58,34 @@ typedef struct {
 
 typedef struct {
     ZCalArgs *args;
+    GwyDataLine *filecalibration;
     GtkWidget *dialog;
     GSList *mode;
     GtkWidget *filebutton;
+    GtkWidget *errmessage;
     GtkWidget *graph;
 } ZCalControls;
 
-static gboolean module_register             (void);
-static void     zcal                        (GwyContainer *data,
-                                             GwyRunType run);
-static gboolean zcal_dialog                 (ZCalArgs *args);
-static void     mode_changed                (GtkWidget *button,
-                                             ZCalControls *controls);
-static void     setup_graph_from_calibration(GwyGraphModel *gmodel,
-                                             GwyDataLine *calibration);
-static void     zcal_do                     (ZCalArgs *args);
-static void     zcal_sanitize_args          (ZCalArgs *args);
-static void     zcal_load_args              (GwyContainer *container,
-                                             ZCalArgs *args);
-static void     zcal_save_args              (GwyContainer *container,
-                                             ZCalArgs *args);
+static gboolean     module_register             (void);
+static void         zcal                        (GwyContainer *data,
+                                                 GwyRunType run);
+static gboolean     zcal_dialog                 (ZCalArgs *args);
+static void         mode_changed                (GtkWidget *button,
+                                                 ZCalControls *controls);
+static void         file_selected               (GtkFileChooser *chooser,
+                                                 ZCalControls *controls);
+static void         update_file_calibration     (ZCalControls *controls);
+static void         switch_calibration          (ZCalControls *controls);
+static void         setup_graph_from_calibration(ZCalControls *controls);
+static void         zcal_do                     (ZCalArgs *args);
+static GwyDataLine* load_calibration_from_file  (const gchar *filename,
+                                                 GwyBrick *brick,
+                                                 gchar **errmessage);
+static void         zcal_sanitize_args          (ZCalArgs *args);
+static void         zcal_load_args              (GwyContainer *container,
+                                                 ZCalArgs *args);
+static void         zcal_save_args              (GwyContainer *container,
+                                                 ZCalArgs *args);
 
 static const ZCalArgs zcal_defaults = {
     ZCAL_ATTACH, NULL,
@@ -125,6 +133,8 @@ zcal(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     g_return_if_fail(GWY_IS_BRICK(brick));
     args.brick = brick;
     args.calibration = gwy_brick_get_zcalibration(brick);
+    if (args.calibration)
+        g_object_ref(args.calibration);
 
     mode_needs_zcal = (args.mode == ZCAL_REMOVE || args.mode == ZCAL_EXTRACT);
 
@@ -145,6 +155,7 @@ zcal(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     if (ok)
         zcal_do(&args);
 
+    gwy_object_unref(args.calibration);
     g_free(args.filename);
 }
 
@@ -156,12 +167,14 @@ zcal_dialog(ZCalArgs *args)
         { N_("_Remove"),             ZCAL_REMOVE,  },
         { N_("_Attach from file"),   ZCAL_ATTACH,  },
     };
+    GdkColor gdkcolor = { 0, 51118, 0, 0 };
 
     GtkWidget *dialog, *table, *hbox, *label;
     ZCalControls controls;
     GwyGraphModel *gmodel;
     gint response, row;
 
+    gwy_clear(&controls, 1);
     controls.args = args;
 
     dialog = gtk_dialog_new_with_buttons(_("Volume Z Calibration"),
@@ -174,10 +187,9 @@ zcal_dialog(ZCalArgs *args)
     controls.dialog = dialog;
 
     hbox = gtk_hbox_new(FALSE, 20);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
-                       FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 4);
 
-    table = gtk_table_new(5, 2, FALSE);
+    table = gtk_table_new(6, 2, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
@@ -206,7 +218,18 @@ zcal_dialog(ZCalArgs *args)
     controls.filebutton
         = gtk_file_chooser_button_new(_("Volume Z Calibration"),
                                       GTK_FILE_CHOOSER_ACTION_OPEN);
+    gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(controls.filebutton),
+                                    TRUE);
+    g_signal_connect(controls.filebutton, "file-set",
+                     G_CALLBACK(file_selected), &controls);
     gtk_table_attach(GTK_TABLE(table), controls.filebutton,
+                     1, 2, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = controls.errmessage = gtk_label_new(NULL);
+    gtk_widget_modify_fg(controls.errmessage, GTK_STATE_NORMAL, &gdkcolor);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
                      1, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
     gmodel = gwy_graph_model_new();
@@ -214,14 +237,22 @@ zcal_dialog(ZCalArgs *args)
                  "axis-label-bottom", _("Index"),
                  "axis-label-left", _("Z axis value"),
                  NULL);
-    setup_graph_from_calibration(gmodel, args->calibration);
     controls.graph = gwy_graph_new(gmodel);
     g_object_unref(gmodel);
     gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
-    gtk_widget_set_size_request(controls.graph, PREVIEW_SIZE, PREVIEW_SIZE);
+    gtk_widget_set_size_request(controls.graph, 3*PREVIEW_SIZE/2, PREVIEW_SIZE);
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph, TRUE, TRUE, 0);
 
     gtk_widget_show_all(dialog);
+
+    if (args->filename) {
+        gtk_file_chooser_select_filename(GTK_FILE_CHOOSER(controls.filebutton),
+                                         args->filename);
+        update_file_calibration(&controls);
+    }
+    else
+        setup_graph_from_calibration(&controls);
+
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
         switch (response) {
@@ -229,6 +260,7 @@ zcal_dialog(ZCalArgs *args)
             case GTK_RESPONSE_DELETE_EVENT:
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
+            gwy_object_unref(controls.filecalibration);
             return FALSE;
             break;
 
@@ -242,6 +274,7 @@ zcal_dialog(ZCalArgs *args)
     } while (response != GTK_RESPONSE_OK);
 
     gtk_widget_destroy(dialog);
+    gwy_object_unref(controls.filecalibration);
 
     return TRUE;
 }
@@ -249,19 +282,77 @@ zcal_dialog(ZCalArgs *args)
 static void
 mode_changed(GtkWidget *button, ZCalControls *controls)
 {
-    controls->args->mode = gwy_radio_button_get_value(button);
-    /* TODO: We might want to manage the file chooser sensitivity? */
+    ZCalArgs *args = controls->args;
+    gboolean is_attach;
+
+    args->mode = gwy_radio_button_get_value(button);
+    is_attach = (args->mode == ZCAL_ATTACH);
+    gtk_widget_set_sensitive(controls->filebutton, is_attach);
+    gtk_widget_set_sensitive(controls->errmessage, is_attach);
+    switch_calibration(controls);
 }
 
 static void
-setup_graph_from_calibration(GwyGraphModel *gmodel,
-                             GwyDataLine *calibration)
+file_selected(GtkFileChooser *chooser, ZCalControls *controls)
 {
+    ZCalArgs *args = controls->args;
+
+    g_free(args->filename);
+    args->filename = gtk_file_chooser_get_filename(chooser);
+    update_file_calibration(controls);
+}
+
+static void
+update_file_calibration(ZCalControls *controls)
+{
+    ZCalArgs *args = controls->args;
+    gchar *errmessage = NULL;
+
+    gwy_object_unref(controls->filecalibration);
+    controls->filecalibration
+        = load_calibration_from_file(args->filename, args->brick, &errmessage);
+
+    if (controls->filecalibration)
+        gtk_label_set_text(GTK_LABEL(controls->errmessage), "");
+    else {
+        gtk_label_set_text(GTK_LABEL(controls->errmessage), errmessage);
+        g_free(errmessage);
+    }
+
+    switch_calibration(controls);
+}
+
+static void
+switch_calibration(ZCalControls *controls)
+{
+    ZCalArgs *args = controls->args;
+
+    gwy_object_unref(args->calibration);
+
+    if (args->mode == ZCAL_ATTACH)
+        args->calibration = controls->filecalibration;
+    else
+        args->calibration = gwy_brick_get_zcalibration(args->brick);
+
+    if (args->calibration)
+        g_object_ref(args->calibration);
+
+    setup_graph_from_calibration(controls);
+}
+
+static void
+setup_graph_from_calibration(ZCalControls *controls)
+{
+    GwyDataLine *calibration;
+    GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
     const gdouble *ydata;
     GwySIUnit *zunit;
     gdouble *xdata;
     gint res, i;
+
+    gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
+    calibration = controls->args->calibration;
 
     if (!calibration) {
         gwy_graph_model_remove_all_curves(gmodel);
@@ -270,11 +361,25 @@ setup_graph_from_calibration(GwyGraphModel *gmodel,
 
     if (!gwy_graph_model_get_n_curves(gmodel)) {
         gcmodel = gwy_graph_curve_model_new();
+        g_object_set(gcmodel,
+                     "mode", GWY_GRAPH_CURVE_LINE,
+                     NULL);
         gwy_graph_model_add_curve(gmodel, gcmodel);
         g_object_unref(gcmodel);
     }
     else
         gcmodel = gwy_graph_model_get_curve(gmodel, 0);
+
+    if (controls->args->mode == ZCAL_ATTACH) {
+        g_object_set(gcmodel,
+                     "description", _("Calibration from file"),
+                     NULL);
+    }
+    else {
+        g_object_set(gcmodel,
+                     "description", _("Current calibration curve"),
+                     NULL);
+    }
 
     res = gwy_data_line_get_res(calibration);
     ydata = gwy_data_line_get_data_const(calibration);
@@ -293,7 +398,125 @@ setup_graph_from_calibration(GwyGraphModel *gmodel,
 static void
 zcal_do(ZCalArgs *args)
 {
-    /* Run gwy_brick_data_changed() when we attach the calibration. */
+    if (args->mode == ZCAL_ATTACH) {
+        if (args->filename) {
+            gchar *errmessage = NULL;
+            GwyDataLine *dline;
+
+            dline = load_calibration_from_file(args->filename, args->brick,
+                                               &errmessage);
+            if (dline) {
+                gwy_brick_set_zcalibration(args->brick, dline);
+                gwy_brick_data_changed(args->brick);
+                g_object_unref(dline);
+            }
+            else
+                g_free(errmessage);
+        }
+    }
+    else if (args->mode == ZCAL_REMOVE) {
+        gwy_brick_set_zcalibration(args->brick, NULL);
+        gwy_brick_data_changed(args->brick);
+    }
+    else {
+        g_warning("Implement me!");
+    }
+}
+
+static GwyDataLine*
+load_calibration_from_file(const gchar *filename, GwyBrick *brick,
+                           gchar **errmessage)
+{
+    GwyDataLine *dline, *calibration;
+    GError *err = NULL;
+    GArray *data = NULL;
+    guint ncols = 0;
+    gsize size;
+    gchar *line, *end, *buffer, *p;
+    GwySIUnit *unit;
+
+    if (!g_file_get_contents(filename, &buffer, &size, &err)) {
+        *errmessage = g_strdup(err->message);
+        g_clear_error(&err);
+        return NULL;
+    }
+
+    p = buffer;
+    for (line = gwy_str_next_line(&p); line; line = gwy_str_next_line(&p)) {
+        gdouble dd;
+        g_strstrip(line);
+
+        if (!line[0] || line[0] == '#')
+            continue;
+
+        if (!ncols) {
+            gchar *orig_line = line;
+
+            while (g_ascii_strtod(line, &end) || end > line) {
+                line = end;
+                ncols++;
+            }
+
+            /* Skip arbitrary rubbish at the begining */
+            if (!ncols) {
+                continue;
+            }
+
+            if (ncols != 1) {
+                *errmessage = g_strdup(_("Calibration data file must have\n"
+                                         "exactly one column."));
+                g_free(buffer);
+                return NULL;
+            }
+
+            data = g_array_new(FALSE, FALSE, sizeof(gdouble));
+            line = orig_line;
+        }
+
+        /* FIXME: Check whether we actually read data and abort on rubbish. */
+        dd = g_ascii_strtod(line, &end);
+        g_array_append_val(data, dd);
+        line = end;
+    }
+    g_free(buffer);
+
+    if (!data || !data->len) {
+        *errmessage = g_strdup(_("File does not contain any\n"
+                                 "readable data."));
+        if (data)
+            g_array_free(data, TRUE);
+        return NULL;
+    }
+
+    if (data->len != brick->zres) {
+        *errmessage = g_strdup_printf(_("The number of data file values %d\n"
+                                        "differs from the number "
+                                        "of planes %d."),
+                                      data->len, brick->zres);
+        g_array_free(data, TRUE);
+        return NULL;
+    }
+
+    gwy_math_sort(data->len, (gdouble*)data->data);
+    dline = gwy_data_line_new(brick->zres, brick->zreal, FALSE);
+    memcpy(dline->data, data->data, data->len*sizeof(gdouble));
+    g_array_free(data, TRUE);
+
+    unit = gwy_brick_get_si_unit_z(brick);
+    unit = gwy_si_unit_duplicate(unit);
+    gwy_data_line_set_si_unit_x(dline, unit);
+    g_object_unref(unit);
+
+    /* Set the value unit either to the unit of existing calibration or again
+     * the same as the z-unit of the brick. */
+    calibration = gwy_brick_get_zcalibration(brick);
+    if (calibration)
+        unit = gwy_data_line_get_si_unit_y(calibration);
+    unit = gwy_si_unit_duplicate(unit);
+    gwy_data_line_set_si_unit_y(dline, unit);
+    g_object_unref(unit);
+
+    return dline;
 }
 
 static const gchar filename_key[] = "/module/volume_zcal/filename";
