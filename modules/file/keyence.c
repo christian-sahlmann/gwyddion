@@ -325,7 +325,7 @@ static gboolean
 module_register(void)
 {
     gwy_file_func_register("keyence",
-                           N_("Omicron flat files "),
+                           N_("Keyence VK4 data files (.vk4)"),
                            (GwyFileDetectFunc)&keyence_detect,
                            (GwyFileLoadFunc)&keyence_load,
                            NULL,
