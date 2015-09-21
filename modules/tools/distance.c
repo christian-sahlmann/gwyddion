@@ -251,6 +251,7 @@ gwy_tool_distance_init_dialog(GwyToolDistance *tool)
     tool->aux_box = GTK_BOX(hbox);
 
     tool->number_lines
+    /* TRANSLATORS: Number is verb here. */
         = gtk_check_button_new_with_mnemonic(_("_Number lines"));
     gtk_box_pack_start(GTK_BOX(tool->aux_box), tool->number_lines,
                        FALSE, FALSE, 0);
