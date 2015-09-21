@@ -1,6 +1,6 @@
 2.42 (0000-00-00)
 Application:
-- Translations updated: French, Russian.
+- Translations updated: Czech, French, Russian.
 
 Libraries:
 - libgwyprocess: A function for estimation of the entropy data field values
@@ -35,6 +35,8 @@ Modules:
 - Distribute Mask (new): Distributes a channel mask to other channels.
 - Summarize Profiles (new): Create an image from statistical characteristics
   of Z profiles of volume data.
+- Z calibration (new): Manages z axis calibration of volume data.
+- Keyence (new): Imports Keyence VK4 profilometry images.
 - Polynom tool: It was removed, use Align rows instead.
 - Line correct: Standard methods were removed (being replaced by Align rows),
   the experimental ones remain in this module.
