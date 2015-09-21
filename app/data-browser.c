@@ -4549,7 +4549,7 @@ gwy_app_data_browser_construct_bricks(GwyAppDataBrowser *browser)
     gtk_tree_view_append_column(treeview, column);
 
     renderer = gtk_cell_renderer_text_new();
-    g_object_set(renderer, "width-chars", 5, NULL);
+    g_object_set(renderer, "width-chars", 7, NULL);
     column = gtk_tree_view_column_new_with_attributes("Levels", renderer,
                                                       NULL);
     gtk_tree_view_column_set_cell_data_func
