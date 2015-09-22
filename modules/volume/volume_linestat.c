@@ -449,8 +449,8 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
     selection = gwy_graph_area_get_selection(GWY_GRAPH_AREA(area),
                                              GWY_GRAPH_STATUS_XSEL);
     if (args->zfrom > 0 || args->zto < brick->zres-1) {
-        xy[0] = gwy_brick_ktor(brick, args->zfrom);
-        xy[1] = gwy_brick_ktor(brick, args->zto);
+        xy[0] = gwy_brick_ktor_cal(brick, args->zfrom);
+        xy[1] = gwy_brick_ktor_cal(brick, args->zto);
         gwy_selection_set_object(selection, 0, xy);
     }
     else
@@ -530,7 +530,7 @@ graph_selection_changed(LineStatControls *controls,
         args->zfrom = args->zto = -1;
     }
     else {
-        args->zfrom = CLAMP(gwy_brick_rtok_cal(brick, z[0]), 0, brick->zres);
+        args->zfrom = CLAMP(gwy_brick_rtok_cal(brick, z[0])+0.49, 0, brick->zres);
         args->zto = CLAMP(gwy_brick_rtok_cal(brick, z[1])+0.5, 0, brick->zres);
         if (args->zto < args->zfrom)
             GWY_SWAP(gint, args->zfrom, args->zto);
@@ -796,6 +796,7 @@ extract_graph_curve(const LineStatArgs *args,
                            args->x, args->y, 0,
                            args->x, args->y, brick->zres,
                            FALSE);
+    gwy_data_line_set_offset(line, brick->zoff);
     g_object_set(gcmodel, "mode", GWY_GRAPH_CURVE_LINE, NULL);
     /* Plot graphs with pixel-wise, uncalibrated abscissa. */
     gwy_graph_curve_model_set_data_from_dataline(gcmodel, line, 0, 0);
@@ -895,7 +896,7 @@ line_stat_sanitize_args(LineStatArgs *args)
 
 static void
 line_stat_load_args(GwyContainer *container,
-                LineStatArgs *args)
+                    LineStatArgs *args)
 {
     *args = line_stat_defaults;
 
@@ -912,7 +913,7 @@ line_stat_load_args(GwyContainer *container,
 
 static void
 line_stat_save_args(GwyContainer *container,
-                LineStatArgs *args)
+                    LineStatArgs *args)
 {
     gwy_container_set_enum_by_name(container, quantity_key, args->quantity);
     gwy_container_set_enum_by_name(container, output_type_key,
