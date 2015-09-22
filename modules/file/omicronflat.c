@@ -1559,6 +1559,7 @@ construct_axis_range(const OmicronFlatAxis *axis, guint interval_id,
         OmicronFlatTableSet *table_set = axis->table_set_ref;
         OmicronFlatInterval *interval = table_set->intervals + interval_id;
 
+        gwy_debug("%s has table set", axis->name);
         g_return_if_fail(interval_id < table_set->interval_count);
         /* Subtract 1 to ensure first value == axis->physical_start_value
          * when start_clock == 1.  FIXME: Correct? */
@@ -1568,13 +1569,15 @@ construct_axis_range(const OmicronFlatAxis *axis, guint interval_id,
     }
     else {
         g_return_if_fail(interval_id < axis->mirror_mult);
+        gwy_debug("%s has no table set", axis->name);
         start = 0;
         stop = axis->clock_count/axis->mirror_mult - 1;
         step = 1;
     }
+    gwy_debug("start %u, stop %u, step %u", start, stop, step);
     ndata = *n = (stop - start)/step + 1;
     *offset = phys_start - 0.5*phys_step;
-    *real = ndata*phys_step;
+    *real = ndata*step*phys_step;
 }
 
 /* Construct explicit list of abscissa values for an interval on an axis.
