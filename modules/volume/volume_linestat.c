@@ -344,10 +344,6 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
 
     controls.graph = gwy_graph_new(gmodel);
     g_object_unref(gmodel);
-    gwy_graph_set_axis_visible(GWY_GRAPH(controls.graph), GTK_POS_LEFT,
-                               FALSE);
-    gwy_graph_set_axis_visible(GWY_GRAPH(controls.graph), GTK_POS_BOTTOM,
-                               FALSE);
     gtk_widget_set_size_request(controls.graph, PREVIEW_SIZE, PREVIEW_SIZE);
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph, TRUE, TRUE, 0);
 

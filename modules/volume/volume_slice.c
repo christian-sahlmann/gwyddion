@@ -329,10 +329,6 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
 
     controls.graph = gwy_graph_new(gmodel);
     g_object_unref(gmodel);
-    gwy_graph_set_axis_visible(GWY_GRAPH(controls.graph), GTK_POS_LEFT,
-                               FALSE);
-    gwy_graph_set_axis_visible(GWY_GRAPH(controls.graph), GTK_POS_BOTTOM,
-                               FALSE);
     gtk_widget_set_size_request(controls.graph, PREVIEW_SIZE, PREVIEW_SIZE);
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph, TRUE, TRUE, 0);
 
@@ -1345,7 +1341,6 @@ flip_xy(GwyDataField *dfield)
     gwy_data_field_set_yreal(dfield, gwy_data_field_get_xreal(tmp));
     g_object_unref(tmp);
 }
-
 
 static const gchar base_plane_key[]  = "/module/volume_slice/base_plane";
 static const gchar multiselect_key[] = "/module/volume_slice/multiselect";
