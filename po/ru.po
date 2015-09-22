@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-09-14 08:08+0300\n"
-"PO-Revision-Date: 2015-09-14 08:25+0300\n"
+"POT-Creation-Date: 2015-09-22 06:49+0300\n"
+"PO-Revision-Date: 2015-09-22 06:55+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -128,9 +128,9 @@ msgid "contact: Hertz (paraboloid)"
 msgstr "контакт: Герц (параболоид)"
 
 #: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:665
-#: app/data-browser.c:2118 app/data-browser.c:2887 app/data-browser.c:3747
-#: app/data-browser.c:3906 app/data-browser.c:4192 app/data-browser.c:4606
-#: app/data-browser.c:6659 app/data-browser.c:6741 app/resource-editor.c:367
+#: app/data-browser.c:2120 app/data-browser.c:2889 app/data-browser.c:3749
+#: app/data-browser.c:3908 app/data-browser.c:4194 app/data-browser.c:4610
+#: app/data-browser.c:6663 app/data-browser.c:6745 app/resource-editor.c:367
 #: modules/process/convolution_filter.c:706
 msgid "Untitled"
 msgstr "Безымянный"
@@ -459,7 +459,7 @@ msgstr "Значение"
 msgid "Area"
 msgstr "Площадь"
 
-#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5110 app/toolbox.c:114
+#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5114 app/toolbox.c:114
 msgid "Volume"
 msgstr "Объём"
 
@@ -469,7 +469,7 @@ msgstr "Граница"
 
 #: libprocess/gwygrainvalue.c:1126 modules/process/pat_synth.c:848
 #: modules/process/pat_synth.c:1150 modules/process/pat_synth.c:1485
-#: modules/tools/linestats.c:168 modules/volume/volume_linestat.c:222
+#: modules/tools/linestats.c:168 modules/volume/volume_linestat.c:147
 msgid "Slope"
 msgstr "Уклон"
 
@@ -922,14 +922,14 @@ msgstr "точек"
 #: modules/process/diff_synth.c:423 modules/process/domain_synth.c:366
 #: modules/process/drift.c:263 modules/process/dwt.c:166
 #: modules/process/dwtanisotropy.c:184 modules/process/edge.c:651
-#: modules/process/extend.c:192 modules/process/facet-level.c:192
+#: modules/process/extend.c:192 modules/process/facet-level.c:193
 #: modules/process/facet_analysis.c:276 modules/process/fbm_synth.c:315
 #: modules/process/fft.c:336 modules/process/fft_filter_2d.c:444
 #: modules/process/fft_synth.c:351 modules/process/fractal.c:235
 #: modules/process/grain_edge.c:218 modules/process/grain_mark.c:264
 #: modules/process/grain_wshed.c:183 modules/process/hough.c:179
 #: modules/process/lat_synth.c:539 modules/process/latsim.c:158
-#: modules/process/level.c:263 modules/process/linematch.c:760
+#: modules/process/level.c:264 modules/process/linematch.c:763
 #: modules/process/lno_synth.c:445 modules/process/local_contrast.c:130
 #: modules/process/mask_distribute.c:152 modules/process/measure_lattice.c:265
 #: modules/process/median-bg.c:179 modules/process/noise_synth.c:348
@@ -945,7 +945,7 @@ msgstr "точек"
 #: modules/process/wave_synth.c:361 modules/process/wpour_mark.c:296
 #: modules/volume/volume_calibrate.c:371 modules/volume/volume_extract.c:331
 #: modules/volume/volume_kmeans.c:143 modules/volume/volume_kmedians.c:148
-#: modules/volume/volume_linestat.c:276 modules/volume/volume_slice.c:281
+#: modules/volume/volume_linestat.c:292 modules/volume/volume_slice.c:281
 msgid "_Reset"
 msgstr "_Сброс"
 
@@ -1195,7 +1195,7 @@ msgstr "Точки в любом  месте"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:394
 #: libgwydgets/gwygraphwindowmeasuredialog.c:580 modules/tools/linestats.c:167
-#: modules/tools/roughness.c:530 modules/volume/volume_linestat.c:221
+#: modules/tools/roughness.c:516 modules/volume/volume_linestat.c:157
 msgid "Length"
 msgstr "Длина"
 
@@ -1216,7 +1216,7 @@ msgid "Curve:"
 msgstr "Кривая:"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:553
-#: modules/process/linematch.c:794 modules/process/semsim.c:249
+#: modules/process/linematch.c:797 modules/process/semsim.c:249
 msgid "Method:"
 msgstr "Способ:"
 
@@ -1513,19 +1513,19 @@ msgid "Preview quantity:"
 msgstr "Величина для предпросмотра:"
 
 #: app/app.c:1486 modules/process/extend.c:267 modules/tools/linestats.c:162
-#: modules/volume/volume_linestat.c:216
+#: modules/volume/volume_linestat.c:142
 msgid "Mean"
 msgstr "Среднее"
 
 #: app/app.c:1487 modules/process/polydistort.c:275 modules/tools/filter.c:211
 #: modules/tools/icolorange.c:401 modules/tools/linestats.c:164
-#: modules/volume/volume_linestat.c:218
+#: modules/volume/volume_linestat.c:144
 msgid "Minimum"
 msgstr "Минимум"
 
 #: app/app.c:1488 modules/process/col_synth.c:174 modules/tools/filter.c:212
 #: modules/tools/icolorange.c:412 modules/tools/linestats.c:165
-#: modules/volume/volume_linestat.c:219
+#: modules/volume/volume_linestat.c:145
 msgid "Maximum"
 msgstr "Максимум"
 
@@ -1551,44 +1551,44 @@ msgstr "Канал:"
 msgid "Section:"
 msgstr "Сечение:"
 
-#: app/data-browser.c:4983
+#: app/data-browser.c:4987
 msgid "Extract to a new file"
 msgstr "Извлечь в новый файл"
 
-#: app/data-browser.c:4984
+#: app/data-browser.c:4988
 msgid "Duplicate"
 msgstr "Сделать копию"
 
-#: app/data-browser.c:4985
+#: app/data-browser.c:4989
 msgid "Delete"
 msgstr "Удалить"
 
-#: app/data-browser.c:5030
+#: app/data-browser.c:5034
 msgid "Data Browser"
 msgstr "Браузер данных"
 
-#: app/data-browser.c:5055
+#: app/data-browser.c:5059
 msgid "Close file"
 msgstr "Закрыть файл"
 
-#: app/data-browser.c:5068
+#: app/data-browser.c:5072
 msgid "Channels"
 msgstr "Каналы"
 
-#: app/data-browser.c:5082 modules/volume/volume_extract.c:444
+#: app/data-browser.c:5086 modules/volume/volume_extract.c:444
 msgid "Graphs"
 msgstr "Графики"
 
-#: app/data-browser.c:5096
+#: app/data-browser.c:5100
 msgid "Spectra"
 msgstr "Спектры"
 
-#: app/data-browser.c:6697
+#: app/data-browser.c:6701
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Неизвестный канал %d"
 
-#: app/data-browser.c:6783
+#: app/data-browser.c:6787
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Неизвестный объём %d"
@@ -3009,7 +3009,7 @@ msgstr "Экспортировать текст"
 #: modules/process/extend.c:259 modules/process/fft_filter_1d.c:297
 #: modules/process/grain_dist.c:306 modules/process/grain_edge.c:271
 #: modules/process/grain_mark.c:345 modules/process/grain_wshed.c:279
-#: modules/process/linematch.c:818 modules/process/slope_dist.c:384
+#: modules/process/linematch.c:821 modules/process/slope_dist.c:384
 #: modules/process/tip_blind.c:360 modules/process/wpour_mark.c:382
 #: modules/tools/spotremove.c:322 modules/tools/stats.c:390
 msgid "Options"
@@ -3381,21 +3381,21 @@ msgstr "Файлы FemtoScan SPM"
 msgid "Image data are outside the file."
 msgstr "Данные изображения не помещаются в файл."
 
-#: modules/file/fitsfile.c:77
+#: modules/file/fitsfile.c:76
 msgid "Reads Flexible Image Transport System (FITS) files."
 msgstr "Читает файлы Flexible Image Transport System (FITS)."
 
-#: modules/file/fitsfile.c:90
+#: modules/file/fitsfile.c:89
 msgid "Flexible Image Transport System FITS (.fits)"
 msgstr "Flexible Image Transport System FITS (.fits)"
 
-#: modules/file/fitsfile.c:129
+#: modules/file/fitsfile.c:128
 #, c-format
 msgid "CFITSIO error while reading the FITS file: %s."
 msgstr "Ошибка CFITSIO при чтении файла FITS: %s."
 
-#: modules/file/fitsfile.c:161 modules/file/fitsfile.c:173
-#: modules/file/fitsfile.c:184 modules/file/spmxfile.c:397
+#: modules/file/fitsfile.c:160 modules/file/fitsfile.c:172
+#: modules/file/fitsfile.c:183 modules/file/spmxfile.c:397
 msgid "Only two-dimensional images are supported."
 msgstr "Поддерживаются только двумерные изображения."
 
@@ -3541,9 +3541,9 @@ msgstr "Двумерная конфигурация %u не поддержива
 msgid "Unsupported sample format"
 msgstr "Неподдерживаемый формат отсчёта"
 
-#: modules/file/gwytiff.h:1030 modules/file/keyence.c:355
+#: modules/file/gwytiff.h:1030 modules/file/keyence.c:449
 #: modules/file/matfile.c:276 modules/file/matfile.c:298
-#: modules/file/omicronflat.c:1607 modules/file/psia.c:353
+#: modules/file/omicronflat.c:1619 modules/file/psia.c:353
 #: modules/file/zemax.c:168
 msgid "File is truncated."
 msgstr "Файл усечен."
@@ -4067,7 +4067,7 @@ msgstr "Изображение"
 #: modules/process/polydistort.c:267 modules/process/rotate.c:295
 #: modules/process/scale.c:252 modules/process/unrotate.c:285
 #: modules/tools/linestats.c:413 modules/tools/profile.c:560
-#: modules/tools/roughness.c:882 modules/tools/sfunctions.c:448
+#: modules/tools/roughness.c:868 modules/tools/sfunctions.c:448
 msgid "_Interpolation type:"
 msgstr "Тип _интерполяции:"
 
@@ -4298,13 +4298,18 @@ msgstr "Не удаётся найти блок заголовка изобра�
 msgid "Cannot find piezo header block."
 msgstr "Не удаётся найти блок заголовка piezo."
 
-#: modules/file/keyence.c:267
+#: modules/file/keyence.c:315
 msgid "Imports Keyence VK4 files."
 msgstr "Импортирует файлы Keyence VK4."
 
-#: modules/file/keyence.c:280
-msgid "Omicron flat files "
-msgstr "Файлы Omicron flat"
+#: modules/file/keyence.c:328
+msgid "Keyence VK4 data files (.vk4)"
+msgstr "Файлы данных Keyence VK4 (.vk4)"
+
+#: modules/file/keyence.c:894 modules/file/omicronflat.c:2176
+#, c-format
+msgid "Cannot convert string from UTF-16: %s"
+msgstr "Не получается сконвертировать строку из UTF-16: %s"
 
 #: modules/file/lextfile.c:80
 msgid "Imports LEXT data files."
@@ -4974,29 +4979,24 @@ msgstr "Строка заголовка начинается с двоеточи
 msgid "Channel information ended unexpectedly."
 msgstr "Информация о канале неожиданно закончилась."
 
-#: modules/file/omicronflat.c:343
+#: modules/file/omicronflat.c:347
 msgid "Imports Omicron flat files."
 msgstr "Импортирует плоские файлы Omicron"
 
-#: modules/file/omicronflat.c:356
+#: modules/file/omicronflat.c:360
 msgid "Omicron flat files (*.*_flat)"
 msgstr "Плоские файлы Omicron (*.*_flat)"
 
-#: modules/file/omicronflat.c:1341 modules/file/omicronflat.c:1383
+#: modules/file/omicronflat.c:1353 modules/file/omicronflat.c:1395
 msgid "File name does not have the expected form for Omicron Flat files."
 msgstr "Имя файла не соответствует ожидаемому для файлов Omicron Flat."
 
-#: modules/file/omicronflat.c:1791
+#: modules/file/omicronflat.c:1803
 msgid "Cannot understand the axis hierarchy."
 msgstr "Не удаётся понять иерархию осей."
 
-#: modules/file/omicronflat.c:2164
-#, c-format
-msgid "Cannot convert string from UTF-16: %s"
-msgstr "Не получается сконвертировать строку из UTF-16: %s"
-
 #. TRANSLATORS: %s is replaced with an expression of the data shape.
-#: modules/file/omicronflat.c:2200
+#: modules/file/omicronflat.c:2212
 #, c-format
 msgid "Cannot figure out how to load data in the following form: %s."
 msgstr "Нельзя определить как загрузить данные в следующем виде: %s."
@@ -5321,7 +5321,7 @@ msgstr "Формат данных"
 #: modules/process/synth.h:509 modules/process/tip_model.c:165
 #: modules/process/wpour_mark.c:291 modules/tools/linestats.c:454
 #: modules/tools/sfunctions.c:514 modules/tools/stats.c:447
-#: modules/volume/volume_extract.c:328 modules/volume/volume_linestat.c:271
+#: modules/volume/volume_extract.c:328 modules/volume/volume_linestat.c:287
 msgid "_Update"
 msgstr "О_бновить"
 
@@ -6227,8 +6227,8 @@ msgid "Export XYZ"
 msgstr "Экспорт XYZ"
 
 #: modules/file/xyzexport.c:320 modules/process/curvature.c:729
-#: modules/process/facet-level.c:206 modules/process/level.c:277
-#: modules/process/linematch.c:853 modules/process/neural.c:609
+#: modules/process/facet-level.c:207 modules/process/level.c:278
+#: modules/process/linematch.c:856 modules/process/neural.c:609
 #: modules/process/polylevel.c:505 modules/process/slope_dist.c:435
 #: modules/tools/profile.c:596 modules/tools/sfunctions.c:496
 #: modules/tools/stats.c:377
@@ -6317,20 +6317,20 @@ msgstr "Параметр"
 
 #: modules/graph/graph_cd.c:308 modules/graph/graph_fdfit.c:364
 #: modules/graph/graph_fit.c:378 modules/process/fit_2d.c:349
-#: modules/volume/volume_fdfit.c:449 modules/volume/volume_kmeans.c:475
-#: modules/volume/volume_kmedians.c:495
+#: modules/volume/volume_fdfit.c:449 modules/volume/volume_kmeans.c:476
+#: modules/volume/volume_kmedians.c:496
 msgid "Error"
 msgstr "Ошибка"
 
 #: modules/graph/graph_cd.c:320 modules/graph/graph_cut.c:193
 #: modules/graph/graph_fdfit.c:416 modules/graph/graph_fit.c:434
-#: modules/volume/volume_fdfit.c:501 modules/volume/volume_linestat.c:374
+#: modules/volume/volume_fdfit.c:501 modules/volume/volume_linestat.c:392
 msgid "Range:"
 msgstr "Диапазон:"
 
 #: modules/graph/graph_cd.c:331 modules/graph/graph_cut.c:204
 #: modules/graph/graph_fdfit.c:427 modules/graph/graph_fit.c:445
-#: modules/volume/volume_fdfit.c:512 modules/volume/volume_linestat.c:385
+#: modules/volume/volume_fdfit.c:512 modules/volume/volume_linestat.c:403
 msgid "range|to"
 msgstr "–"
 
@@ -6362,7 +6362,7 @@ msgstr ""
 #: modules/graph/graph_fit.c:853 modules/process/fit_2d.c:406
 #: modules/tools/grainmeasure.c:217 modules/tools/readvalue.c:645
 #: modules/tools/readvalue.c:646 modules/tools/readvalue.c:647
-#: modules/tools/readvalue.c:648 modules/tools/roughness.c:992
+#: modules/tools/readvalue.c:648 modules/tools/roughness.c:978
 #: modules/tools/stats.c:704 modules/tools/stats.c:717
 #: modules/tools/stats.c:718 modules/tools/stats.c:1109
 #: modules/tools/stats.c:1124 modules/tools/stats.c:1126
@@ -6370,37 +6370,37 @@ msgstr ""
 msgid "N.A."
 msgstr "недоступно"
 
-#: modules/graph/graph_cd.c:1020 modules/graph/graph_fdfit.c:1384
-#: modules/graph/graph_fit.c:1521 modules/volume/volume_fdfit.c:1721
+#: modules/graph/graph_cd.c:1020 modules/graph/graph_fdfit.c:1385
+#: modules/graph/graph_fit.c:1522 modules/volume/volume_fdfit.c:1721
 msgid "===== Fit Results ====="
 msgstr "===== Результаты аппроксимации ====="
 
-#: modules/graph/graph_cd.c:1024 modules/graph/graph_fdfit.c:1388
-#: modules/graph/graph_fit.c:1525 modules/volume/volume_fdfit.c:1725
+#: modules/graph/graph_cd.c:1024 modules/graph/graph_fdfit.c:1389
+#: modules/graph/graph_fit.c:1526 modules/volume/volume_fdfit.c:1725
 #, c-format
 msgid "Data:             %s\n"
 msgstr "Данные:            %s\n"
 
-#: modules/graph/graph_cd.c:1027 modules/graph/graph_fdfit.c:1391
-#: modules/graph/graph_fit.c:1528 modules/volume/volume_fdfit.c:1728
+#: modules/graph/graph_cd.c:1027 modules/graph/graph_fdfit.c:1392
+#: modules/graph/graph_fit.c:1529 modules/volume/volume_fdfit.c:1728
 #, c-format
 msgid "Number of points: %d of %d\n"
 msgstr "Число точек: %d из %d\n"
 
-#: modules/graph/graph_cd.c:1031 modules/graph/graph_fdfit.c:1395
-#: modules/graph/graph_fit.c:1532 modules/volume/volume_fdfit.c:1732
+#: modules/graph/graph_cd.c:1031 modules/graph/graph_fdfit.c:1396
+#: modules/graph/graph_fit.c:1533 modules/volume/volume_fdfit.c:1732
 #, c-format
 msgid "X range:          %.*f to %.*f %s\n"
 msgstr "Диапазон X:          от %.*f до %.*f %s\n"
 
-#: modules/graph/graph_cd.c:1037 modules/graph/graph_fdfit.c:1401
-#: modules/graph/graph_fit.c:1538 modules/volume/volume_fdfit.c:1738
+#: modules/graph/graph_cd.c:1037 modules/graph/graph_fdfit.c:1402
+#: modules/graph/graph_fit.c:1539 modules/volume/volume_fdfit.c:1738
 #, c-format
 msgid "Fitted function:  %s\n"
 msgstr "Аппроксимирующая функция:  %s\n"
 
-#: modules/graph/graph_cd.c:1040 modules/graph/graph_fdfit.c:1404
-#: modules/graph/graph_fit.c:1541 modules/volume/volume_fdfit.c:1741
+#: modules/graph/graph_cd.c:1040 modules/graph/graph_fdfit.c:1405
+#: modules/graph/graph_fit.c:1542 modules/volume/volume_fdfit.c:1741
 msgid "Results\n"
 msgstr "Результаты\n"
 
@@ -6593,13 +6593,13 @@ msgstr "ст_роить"
 msgid "Estimate"
 msgstr "Оценка"
 
-#: modules/graph/graph_fdfit.c:1431 modules/graph/graph_fit.c:1568
+#: modules/graph/graph_fdfit.c:1432 modules/graph/graph_fit.c:1569
 #: modules/volume/volume_fdfit.c:1768
 #, c-format
 msgid "Residual sum:   %g\n"
 msgstr "Остаточная сумма:   %g\n"
 
-#: modules/graph/graph_fdfit.c:1434 modules/graph/graph_fit.c:1571
+#: modules/graph/graph_fdfit.c:1435 modules/graph/graph_fit.c:1572
 #: modules/volume/volume_fdfit.c:1771
 msgid "Correlation matrix\n"
 msgstr "Матрица корреляции\n"
@@ -7363,7 +7363,7 @@ msgstr "Обрезать до действительных данных"
 #: modules/process/polydistort.c:336 modules/process/scars.c:583
 #: modules/process/slope_dist.c:424 modules/process/synth.h:513
 #: modules/volume/volume_extract.c:424 modules/volume/volume_extract.c:505
-#: modules/volume/volume_linestat.c:407
+#: modules/volume/volume_linestat.c:425
 msgid "I_nstant updates"
 msgstr "Мгновенное об_новление"
 
@@ -7897,7 +7897,7 @@ msgstr "Строить _график"
 #: modules/process/fft_profile.c:331 modules/process/fractal.c:332
 #: modules/process/grain_cross.c:253 modules/process/slope_dist.c:366
 #: modules/tools/linestats.c:431 modules/tools/profile.c:578
-#: modules/tools/roughness.c:890 modules/tools/sfunctions.c:466
+#: modules/tools/roughness.c:876 modules/tools/sfunctions.c:466
 #: modules/tools/spectro.c:382
 msgid "Target _graph:"
 msgstr "Добавить к _графику:"
@@ -7906,21 +7906,21 @@ msgstr "Добавить к _графику:"
 #: modules/process/fft_profile.c:337 modules/process/fractal.c:338
 #: modules/process/grain_cross.c:259 modules/process/slope_dist.c:372
 #: modules/tools/linestats.c:437 modules/tools/profile.c:584
-#: modules/tools/roughness.c:896 modules/tools/sfunctions.c:472
+#: modules/tools/roughness.c:882 modules/tools/sfunctions.c:472
 #: modules/tools/spectro.c:388
 msgid "New graph"
 msgstr "Новый график"
 
 #: modules/process/curvature.c:798 modules/process/grain_stat.c:345
 #: modules/process/measure_lattice.c:405 modules/process/polylevel.c:621
-#: modules/tools/distance.c:263 modules/tools/roughness.c:836
+#: modules/tools/distance.c:264 modules/tools/roughness.c:822
 #: modules/tools/stats.c:438
 msgid "Save table to a file"
 msgstr "Сохранить таблицу в файл"
 
 #: modules/process/curvature.c:803 modules/process/grain_stat.c:350
 #: modules/process/measure_lattice.c:409 modules/process/polylevel.c:631
-#: modules/tools/distance.c:268 modules/tools/roughness.c:841
+#: modules/tools/distance.c:269 modules/tools/roughness.c:827
 #: modules/tools/stats.c:443
 msgid "Copy table to clipboard"
 msgstr "Скопировать таблицу в буфер обмена"
@@ -8045,7 +8045,7 @@ msgid "Error: particles too small."
 msgstr "Ошибка: частицы слишком маленькие."
 
 #: modules/process/diff_synth.c:208 modules/tools/linestats.c:170
-#: modules/volume/volume_linestat.c:224
+#: modules/volume/volume_linestat.c:149
 msgid "Variation"
 msgstr "Вариация"
 
@@ -8170,13 +8170,13 @@ msgid "_Monte Carlo time step:"
 msgstr "Временной шаг метода _Монте-Карло:"
 
 #: modules/process/domain_synth.c:522 modules/process/fft_filter_2d.c:620
-#: modules/volume/volume_slice.c:355
+#: modules/volume/volume_slice.c:356
 msgid "Output Options"
 msgstr "Параметры вывода"
 
 #: modules/process/domain_synth.c:541 modules/process/fft_filter_2d.c:625
 #: modules/process/mask_edt.c:400 modules/process/slope_dist.c:340
-#: modules/volume/volume_linestat.c:417 modules/volume/volume_slice.c:375
+#: modules/volume/volume_linestat.c:435 modules/volume/volume_slice.c:376
 msgid "Output type:"
 msgstr "Тип вывода:"
 
@@ -8763,7 +8763,7 @@ msgstr "Выровнять"
 msgid "1D FFT filter"
 msgstr "одномерный фильтр БПФ"
 
-#: modules/process/fft_filter_1d.c:305 modules/process/linematch.c:827
+#: modules/process/fft_filter_1d.c:305 modules/process/linematch.c:830
 msgid "_Direction:"
 msgstr "Н_аправление:"
 
@@ -8853,6 +8853,7 @@ msgid "_Undo"
 msgstr "_Отменить"
 
 #: modules/process/fft_filter_2d.c:533 modules/tools/maskedit.c:536
+#: modules/volume/volume_zcal.c:172
 msgid "_Remove"
 msgstr "_Удалить"
 
@@ -10189,7 +10190,7 @@ msgstr "Выровнять зёрна"
 msgid "Quantity to level:"
 msgstr "Величина:"
 
-#: modules/process/level_grains.c:271 modules/process/linematch.c:832
+#: modules/process/level_grains.c:271 modules/process/linematch.c:835
 #: modules/process/median-bg.c:216 modules/process/polylevel.c:496
 #: modules/process/sphere-revolve.c:263
 msgid "E_xtract background"
@@ -10208,8 +10209,8 @@ msgid "Correct steps in lines"
 msgstr "Исправить ступеньки в линиях"
 
 #: modules/process/linematch.c:149
-msgid "Align rows by various methods."
-msgstr "Выравнивает строки различными методами."
+msgid "Aligns rows by various methods."
+msgstr "Выравнивает строки различными методами"
 
 #: modules/process/linematch.c:163
 msgid "/_Correct Data/_Align rows..."
@@ -10232,15 +10233,36 @@ msgstr "Положение по вертикали"
 msgid "Corrected offset"
 msgstr "Исправленное смещение"
 
-#: modules/process/linematch.c:758
+#: modules/process/linematch.c:732 modules/tools/linestats.c:163
+#: modules/volume/volume_linestat.c:143
+msgid "Median"
+msgstr "Срединное"
+
+#: modules/process/linematch.c:733
+msgid "Median of differences"
+msgstr "Срединное разности"
+
+#: modules/process/linematch.c:734
+msgid "Modus"
+msgstr "Мода высоты"
+
+#: modules/process/linematch.c:735
+msgid "linematch|Matching"
+msgstr "Соответствие"
+
+#: modules/process/linematch.c:736
+msgid "linematch|Polynomial"
+msgstr "Полиномиальное"
+
+#: modules/process/linematch.c:761
 msgid "Align Rows"
 msgstr "Выровнять строки"
 
-#: modules/process/linematch.c:810
+#: modules/process/linematch.c:813
 msgid "_Polynomial degree:"
 msgstr "Степень _полинома:"
 
-#: modules/process/linematch.c:842
+#: modules/process/linematch.c:845
 msgid "Plot background _graph"
 msgstr "Строить график _фона"
 
@@ -11323,7 +11345,7 @@ msgstr "_Максимальная степень полинома:"
 msgid "Polynomial Coefficients"
 msgstr "Полиномиальные коэффициенты"
 
-#: modules/process/polylevel.c:948 modules/tools/distance.c:584
+#: modules/process/polylevel.c:948 modules/tools/distance.c:585
 msgid "Save Table"
 msgstr "Сохранение таблицы"
 
@@ -11810,11 +11832,11 @@ msgstr "Наклонить на заданную величину"
 msgid "Tilt"
 msgstr "Н_аклон"
 
-#: modules/process/tilt.c:184 modules/volume/volume_slice.c:414
+#: modules/process/tilt.c:184 modules/volume/volume_slice.c:415
 msgid "_X:"
 msgstr "_X:"
 
-#: modules/process/tilt.c:193 modules/volume/volume_slice.c:433
+#: modules/process/tilt.c:193 modules/volume/volume_slice.c:434
 msgid "_Y:"
 msgstr "_Y:"
 
@@ -11900,7 +11922,7 @@ msgstr "Полоска %u: "
 msgid "Estimated tip"
 msgstr "Предполагаемый зонд"
 
-#: modules/process/tip_blind.c:1209 modules/process/tip_blind.c:1218
+#: modules/process/tip_blind.c:1210 modules/process/tip_blind.c:1219
 msgid "Tip radius evolution"
 msgstr "Изменение радиуса зонда"
 
@@ -12116,7 +12138,7 @@ msgid "Waves"
 msgstr "Волны"
 
 #: modules/process/wave_synth.c:440 modules/tools/linestats.c:333
-#: modules/tools/sfunctions.c:381 modules/volume/volume_linestat.c:355
+#: modules/tools/sfunctions.c:381 modules/volume/volume_linestat.c:372
 msgid "_Quantity:"
 msgstr "_Величина:"
 
@@ -12125,7 +12147,7 @@ msgid "_Number of waves:"
 msgstr "_Число волн:"
 
 #: modules/process/wave_synth.c:454 modules/process/wave_synth.c:600
-#: modules/tools/roughness.c:288
+#: modules/tools/roughness.c:274
 msgid "Amplitude"
 msgstr "Амплитуда"
 
@@ -12373,7 +12395,8 @@ msgstr "Инструмент измерения расстояний, измер
 msgid "Measure distances and directions between points"
 msgstr "Измерить расстояния и углы между точками"
 
-#: modules/tools/distance.c:254 modules/tools/profile.c:537
+#. TRANSLATORS: Number is verb here.
+#: modules/tools/distance.c:255 modules/tools/profile.c:537
 msgid "_Number lines"
 msgstr "_Нумеровать линии"
 
@@ -12510,7 +12533,7 @@ msgid "Height histogram"
 msgstr "Гистограмма высот"
 
 #: modules/tools/icolorange.c:325 modules/tools/linestats.c:166
-#: modules/volume/volume_linestat.c:220
+#: modules/volume/volume_linestat.c:146
 msgid "Range"
 msgstr "Диапазон"
 
@@ -12570,36 +12593,32 @@ msgstr ""
 "Функция статистики по строке/столбцу, средние, срединные, максимумы, "
 "минимумы. среднеквадратичные, и т.п., строк и столбцов."
 
-#: modules/tools/linestats.c:163 modules/volume/volume_linestat.c:217
-msgid "Median"
-msgstr "Срединное"
-
-#: modules/tools/linestats.c:169 modules/volume/volume_linestat.c:223
+#: modules/tools/linestats.c:169 modules/volume/volume_linestat.c:148
 msgid "tan β<sub>0</sub>"
 msgstr "tan β<sub>0</sub>"
 
-#: modules/tools/linestats.c:171 modules/volume/volume_linestat.c:225
+#: modules/tools/linestats.c:171 modules/volume/volume_linestat.c:150
 msgid "Ra"
 msgstr "Ra"
 
-#: modules/tools/linestats.c:172 modules/volume/volume_linestat.c:226
+#: modules/tools/linestats.c:172 modules/volume/volume_linestat.c:151
 msgid "Rq (RMS)"
 msgstr "Rq (Ср. квадр.)"
 
-#: modules/tools/linestats.c:173 modules/volume/volume_linestat.c:227
+#: modules/tools/linestats.c:173 modules/volume/volume_linestat.c:152
 msgid "Rz"
 msgstr "Rz"
 
-#: modules/tools/linestats.c:174 modules/volume/volume_linestat.c:228
+#: modules/tools/linestats.c:174 modules/volume/volume_linestat.c:153
 msgid "Rt"
 msgstr "Rt"
 
-#: modules/tools/linestats.c:175 modules/volume/volume_linestat.c:229
+#: modules/tools/linestats.c:175 modules/volume/volume_linestat.c:154
 msgid "Skew"
 msgstr "Асимметрия"
 
-#: modules/tools/linestats.c:176 modules/tools/roughness.c:400
-#: modules/volume/volume_linestat.c:230
+#: modules/tools/linestats.c:176 modules/tools/roughness.c:386
+#: modules/volume/volume_linestat.c:155
 msgid "Kurtosis"
 msgstr "Эксцесс"
 
@@ -12768,7 +12787,7 @@ msgid "Level rows using intersections with given lines"
 msgstr "Выровнять строки используя пересечения с заданными линиями"
 
 #: modules/tools/pathlevel.c:256 modules/tools/profile.c:512
-#: modules/tools/roughness.c:872
+#: modules/tools/roughness.c:858
 msgid "_Thickness:"
 msgstr "_Толщина:"
 
@@ -12884,176 +12903,176 @@ msgstr "Кривизна"
 msgid "Show _selection"
 msgstr "Показать _выбор"
 
-#: modules/tools/roughness.c:296
+#: modules/tools/roughness.c:282
 msgid "Roughness average"
 msgstr "Средняя шероховатость"
 
-#: modules/tools/roughness.c:304
+#: modules/tools/roughness.c:290
 msgid "Root mean square roughness"
 msgstr "Среднеквадратичная шероховатость"
 
-#: modules/tools/roughness.c:312
+#: modules/tools/roughness.c:298
 msgid "Maximum height of the roughness"
 msgstr "Максимальная высота шероховатости"
 
-#: modules/tools/roughness.c:320
+#: modules/tools/roughness.c:306
 msgid "Maximum roughness valley depth"
 msgstr "Максимальная глубина впадины шероховатости"
 
-#: modules/tools/roughness.c:328
+#: modules/tools/roughness.c:314
 msgid "Maximum roughness peak height"
 msgstr "Максимальная высота пика шероховатости"
 
-#: modules/tools/roughness.c:336 modules/tools/roughness.c:384
+#: modules/tools/roughness.c:322 modules/tools/roughness.c:370
 msgid "Average maximum height of the roughness"
 msgstr "Средняя максимальная высота шероховатости"
 
-#: modules/tools/roughness.c:344
+#: modules/tools/roughness.c:330
 msgid "Average maximum roughness valley depth"
 msgstr "Средняя максимальная глубина долины шероховатости"
 
-#: modules/tools/roughness.c:352
+#: modules/tools/roughness.c:338
 msgid "Average maximum roughness peak height"
 msgstr "Средняя максимальная высота пика шероховатости"
 
-#: modules/tools/roughness.c:360 modules/tools/roughness.c:368
+#: modules/tools/roughness.c:346 modules/tools/roughness.c:354
 msgid "Average third highest peak to third lowest valley height"
 msgstr ""
 "Среднее отношение высоты третьего по высоте пика к глубине третьей по "
 "глубине впадины"
 
-#: modules/tools/roughness.c:376
+#: modules/tools/roughness.c:362
 msgid "Average maximum height of the profile"
 msgstr "Средняя максимальная высота профиля"
 
-#: modules/tools/roughness.c:392
+#: modules/tools/roughness.c:378
 msgid "Skewness"
 msgstr "Коэффициент асимметрии"
 
-#: modules/tools/roughness.c:408
+#: modules/tools/roughness.c:394
 msgid "Waviness average"
 msgstr "Средняя волнистость"
 
-#: modules/tools/roughness.c:416
+#: modules/tools/roughness.c:402
 msgid "Root mean square waviness"
 msgstr "Среднеквадратичная волнистость"
 
-#: modules/tools/roughness.c:424
+#: modules/tools/roughness.c:410
 msgid "Waviness maximum height"
 msgstr "Максимальная высота волнистости"
 
-#: modules/tools/roughness.c:432
+#: modules/tools/roughness.c:418
 msgid "Maximum height of the profile"
 msgstr "Максимальная высота профиля"
 
-#: modules/tools/roughness.c:440
+#: modules/tools/roughness.c:426
 msgid "Spatial"
 msgstr "Пространственные"
 
-#: modules/tools/roughness.c:490
+#: modules/tools/roughness.c:476
 msgid "Average wavelength of the profile"
 msgstr "Средняя длина волны профиля"
 
-#: modules/tools/roughness.c:498
+#: modules/tools/roughness.c:484
 msgid "Root mean square (RMS) wavelength of the profile"
 msgstr "Среднеквадратичная длина волны профиля"
 
-#: modules/tools/roughness.c:506
+#: modules/tools/roughness.c:492
 msgid "Hybrid"
 msgstr "Гибридные"
 
-#: modules/tools/roughness.c:514
+#: modules/tools/roughness.c:500
 msgid "Average absolute slope"
 msgstr "Средний по модулю наклон"
 
-#: modules/tools/roughness.c:522
+#: modules/tools/roughness.c:508
 msgid "Root mean square (RMS) slope"
 msgstr "Среднеквадратичный наклон"
 
-#: modules/tools/roughness.c:538
+#: modules/tools/roughness.c:524
 msgid "Developed profile length"
 msgstr "Длина растянутого профиля"
 
-#: modules/tools/roughness.c:546
+#: modules/tools/roughness.c:532
 msgid "Profile length ratio"
 msgstr "Относительная длина профиля"
 
-#: modules/tools/roughness.c:629
+#: modules/tools/roughness.c:615
 msgid "Calculate surface profile parameters."
 msgstr "Рассчитывает параметры профиля поверхности."
 
-#: modules/tools/roughness.c:662 modules/tools/roughness.c:791
-#: modules/tools/roughness.c:1460
+#: modules/tools/roughness.c:648 modules/tools/roughness.c:777
+#: modules/tools/roughness.c:1456
 msgid "Roughness"
 msgstr "Шероховатость"
 
-#: modules/tools/roughness.c:663
+#: modules/tools/roughness.c:649
 msgid "Calculate roughness parameters"
 msgstr "Рассчитать параметры шероховатости"
 
-#: modules/tools/roughness.c:789 modules/tools/roughness.c:1458
+#: modules/tools/roughness.c:775 modules/tools/roughness.c:1454
 msgid "Texture"
 msgstr "Текстура"
 
-#: modules/tools/roughness.c:790 modules/tools/roughness.c:1459
+#: modules/tools/roughness.c:776 modules/tools/roughness.c:1455
 msgid "Waviness"
 msgstr "Волнистость"
 
-#: modules/tools/roughness.c:792
+#: modules/tools/roughness.c:778
 msgid "ADF"
 msgstr "ФРА"
 
-#: modules/tools/roughness.c:793
+#: modules/tools/roughness.c:779
 msgid "BRC"
 msgstr "ООК"
 
-#: modules/tools/roughness.c:794 modules/tools/roughness.c:1463
+#: modules/tools/roughness.c:780 modules/tools/roughness.c:1459
 msgid "Peak Count"
 msgstr "Число пиков"
 
-#: modules/tools/roughness.c:856
+#: modules/tools/roughness.c:842
 msgid "_Graph:"
 msgstr "_График:"
 
-#: modules/tools/roughness.c:863
+#: modules/tools/roughness.c:849
 msgid "C_ut-off:"
 msgstr "_Порог:"
 
-#: modules/tools/roughness.c:1342
+#: modules/tools/roughness.c:1328
 msgid "No profile selected."
 msgstr "Профилей не выбрано."
 
-#: modules/tools/roughness.c:1461
+#: modules/tools/roughness.c:1457
 msgid "Amplitude Distribution Function"
 msgstr "Функция распределения амплитуды"
 
-#: modules/tools/roughness.c:1462
+#: modules/tools/roughness.c:1458
 msgid "The Bearing Ratio Curve"
 msgstr "Относительная опорная кривая"
 
-#: modules/tools/roughness.c:1497
+#: modules/tools/roughness.c:1493
 msgid "Surface Profiles"
 msgstr "Профили поверхности"
 
-#: modules/tools/roughness.c:2062
+#: modules/tools/roughness.c:1881
 msgid "Save Roughness Parameters"
 msgstr "Сохранить параметры шероховатости"
 
-#: modules/tools/roughness.c:2119
+#: modules/tools/roughness.c:1938
 msgid "Roughness Parameters"
 msgstr "Параметры шероховатости"
 
-#: modules/tools/roughness.c:2125 modules/tools/stats.c:1055
+#: modules/tools/roughness.c:1944 modules/tools/stats.c:1055
 #, c-format
 msgid "File:              %s\n"
 msgstr "Файл:              %s\n"
 
-#: modules/tools/roughness.c:2129 modules/tools/stats.c:1059
+#: modules/tools/roughness.c:1948 modules/tools/stats.c:1059
 #, c-format
 msgid "Data channel:      %s\n"
 msgstr "Канал данных:      %s\n"
 
-#: modules/tools/roughness.c:2160
+#: modules/tools/roughness.c:1979
 #, c-format
 msgid ""
 "Selected line:     (%s, %s) to (%s, %s) px\n"
@@ -13494,17 +13513,17 @@ msgstr "Сечение по Y при y: %d"
 msgid "Z cross-section at Z = %g %s (#%d)"
 msgstr "Сечение Z на величине Z = %g %s (#%d)"
 
-#: modules/volume/volume_extract.c:749 modules/volume/volume_slice.c:1230
+#: modules/volume/volume_extract.c:749 modules/volume/volume_slice.c:1231
 #, c-format
 msgid "X graph at y: %d z: %d"
 msgstr "График X при y: %d z: %d"
 
-#: modules/volume/volume_extract.c:752 modules/volume/volume_slice.c:1238
+#: modules/volume/volume_extract.c:752 modules/volume/volume_slice.c:1239
 #, c-format
 msgid "Y graph at x: %d z: %d"
 msgstr "График Y при x: %d z: %d"
 
-#: modules/volume/volume_extract.c:755 modules/volume/volume_slice.c:1222
+#: modules/volume/volume_extract.c:755 modules/volume/volume_slice.c:1223
 #, c-format
 msgid "Z graph at x: %d y: %d"
 msgstr "График Z при x: %d y: %d"
@@ -13598,26 +13617,26 @@ msgstr "_Макс. число шагов:"
 msgid "_Normalize"
 msgstr "_Нормализовать"
 
-#: modules/volume/volume_kmeans.c:380 modules/volume/volume_kmedians.c:397
+#: modules/volume/volume_kmeans.c:381 modules/volume/volume_kmedians.c:398
 msgid "Cluster"
 msgstr "Кластер"
 
-#: modules/volume/volume_kmeans.c:498
+#: modules/volume/volume_kmeans.c:499
 #, c-format
 msgid "K-means of %s"
 msgstr "K-средних для %s"
 
-#: modules/volume/volume_kmeans.c:509
+#: modules/volume/volume_kmeans.c:510
 #, c-format
 msgid "K-means error of %s"
 msgstr "Ошибка K-средних для %s"
 
-#: modules/volume/volume_kmeans.c:521 modules/volume/volume_kmedians.c:545
+#: modules/volume/volume_kmeans.c:522 modules/volume/volume_kmedians.c:546
 #, c-format
 msgid "Pre-normalized intensity of %s"
 msgstr "Интенсивность до нормализации %s"
 
-#: modules/volume/volume_kmeans.c:552
+#: modules/volume/volume_kmeans.c:553
 #, c-format
 msgid "K-means center %d"
 msgstr "Центр кластера %d"
@@ -13638,44 +13657,44 @@ msgstr "Рассчитать кластеризацию K-срединных д�
 msgid "K-medians"
 msgstr "K-срединных"
 
-#: modules/volume/volume_kmedians.c:519
+#: modules/volume/volume_kmedians.c:520
 #, c-format
 msgid "K-medians of %s"
 msgstr "K-срединных для %s"
 
-#: modules/volume/volume_kmedians.c:531
+#: modules/volume/volume_kmedians.c:532
 #, c-format
 msgid "K-medians error of %s"
 msgstr "Ошибка K-срединных для %s"
 
-#: modules/volume/volume_kmedians.c:576
+#: modules/volume/volume_kmedians.c:577
 #, c-format
 msgid "K-medians center %d"
 msgstr "Центр кластера %d"
 
-#: modules/volume/volume_linestat.c:150
+#: modules/volume/volume_linestat.c:171
 msgid "Summarizes profiles of volume data to a channel."
 msgstr ""
 "Строит сводку каждого профиля (характеризует) и выводит как значения в "
 "канале."
 
-#: modules/volume/volume_linestat.c:164
+#: modules/volume/volume_linestat.c:185
 msgid "/Summarize _Profiles..."
 msgstr "/Характеризовать _профили..."
 
-#: modules/volume/volume_linestat.c:168
+#: modules/volume/volume_linestat.c:189
 msgid "Summarize profiles"
 msgstr "Характеризовать профили"
 
-#: modules/volume/volume_linestat.c:234
+#: modules/volume/volume_linestat.c:249
 msgid "_Extract image"
 msgstr "_Извлечь изображение"
 
-#: modules/volume/volume_linestat.c:235
+#: modules/volume/volume_linestat.c:250
 msgid "Set _preview"
 msgstr "Установить _предпросмотр"
 
-#: modules/volume/volume_linestat.c:268
+#: modules/volume/volume_linestat.c:284
 msgid "Summarize Volume Profiles"
 msgstr "Характеризовать профили объёмных данных"
 
@@ -13703,48 +13722,124 @@ msgstr "Линию как график"
 msgid "Slice Volume Data"
 msgstr "Вырезать из объёмных данных"
 
-#: modules/volume/volume_slice.c:360
+#: modules/volume/volume_slice.c:361
 msgid "_Base plane:"
 msgstr "_Основная плоскость:"
 
-#: modules/volume/volume_slice.c:390
+#: modules/volume/volume_slice.c:391
 msgid "Extract _multiple items"
 msgstr "Извлечь _несколько элементов"
 
-#: modules/volume/volume_slice.c:407
+#: modules/volume/volume_slice.c:408
 msgid "Positions"
 msgstr "Положения"
 
-#: modules/volume/volume_slice.c:452
+#: modules/volume/volume_slice.c:453
 msgid "_Z:"
 msgstr "_Z:"
 
-#: modules/volume/volume_slice.c:1124
+#: modules/volume/volume_slice.c:1125
 #, c-format
 msgid "Z slice at %.*f%s%s (#%d)"
 msgstr "Срез Z на %.*f%s%s (#%d)"
 
-#: modules/volume/volume_slice.c:1135
+#: modules/volume/volume_slice.c:1136
 #, c-format
 msgid "Y slice at %.*f%s%s (#%d)"
 msgstr "Срез Y на %.*f%s%s (#%d)"
 
-#: modules/volume/volume_slice.c:1146
+#: modules/volume/volume_slice.c:1147
 #, c-format
 msgid "X slice at %.*f%s%s (#%d)"
 msgstr "Срез X на %.*f%s%s (#%d)"
 
-#: modules/volume/volume_slice.c:1272
+#: modules/volume/volume_slice.c:1273
 msgid "Volume Z graphs"
 msgstr "Графики Z объёма"
 
-#: modules/volume/volume_slice.c:1279
+#: modules/volume/volume_slice.c:1280
 msgid "Volume X graphs"
 msgstr "Графики X объёма"
 
-#: modules/volume/volume_slice.c:1286
+#: modules/volume/volume_slice.c:1287
 msgid "Volume Y graphs"
 msgstr "Графики Y объёма"
+
+#: modules/volume/volume_zcal.c:103
+msgid "Attaches, extracts and removes volume data z-axis calibration."
+msgstr ""
+"Присоединяет, извлекает и удаляет калибровку оси Z для объёмных данных."
+
+#: modules/volume/volume_zcal.c:117
+msgid "/_Z-Calibration..."
+msgstr "/Калибровка _Z..."
+
+#: modules/volume/volume_zcal.c:121
+msgid "Manage z-axis calibration"
+msgstr "Работа с калибровкой оси Z"
+
+#: modules/volume/volume_zcal.c:171
+msgid "_Extract to a graph"
+msgstr "_Извлечь в виде графика"
+
+#: modules/volume/volume_zcal.c:173
+msgid "_Attach from file"
+msgstr "_Присоединить из файла"
+
+#: modules/volume/volume_zcal.c:185 modules/volume/volume_zcal.c:224
+msgid "Volume Z Calibration"
+msgstr "Калибровка Z объёмных данных"
+
+#: modules/volume/volume_zcal.c:204
+msgid "Z-calibration action:"
+msgstr "Действие с калибровкой Z:"
+
+#: modules/volume/volume_zcal.c:356
+msgid "Calibration from file"
+msgstr "Калибровка из файла"
+
+#: modules/volume/volume_zcal.c:358 modules/volume/volume_zcal.c:439
+msgid "Z-calibration curve"
+msgstr "Кривая калибровки Z"
+
+#: modules/volume/volume_zcal.c:403
+msgid "Index"
+msgstr "Номер"
+
+#: modules/volume/volume_zcal.c:404
+msgid "Z axis value"
+msgstr "Значение оси Z"
+
+#: modules/volume/volume_zcal.c:489
+msgid ""
+"Calibration data file must have\n"
+"exactly one column."
+msgstr ""
+"Данные калибровки должны содержать\n"
+"ровно один столбец."
+
+#: modules/volume/volume_zcal.c:507
+msgid ""
+"File does not contain any\n"
+"readable data."
+msgstr ""
+"Файл не содержит\n"
+"читаемых данных."
+
+#: modules/volume/volume_zcal.c:515
+#, c-format
+msgid ""
+"The number of data file values %d\n"
+"differs from the number of planes %d."
+msgstr ""
+"Количество значений в файле данных %d\n"
+"отличается от числа плоскостей %d."
+
+#~ msgid "Omicron flat files "
+#~ msgstr "Файлы Omicron flat"
+
+#~ msgid "Align rows by various methods."
+#~ msgstr "Выравнивает строки различными методами."
 
 #~ msgid "Force-distance curves are not supported."
 #~ msgstr "Кривые сила-расстояние не поддерживаются."
