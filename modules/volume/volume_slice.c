@@ -1211,6 +1211,7 @@ extract_graph_curve(const SliceArgs *args,
                                pos->x, pos->y, 0,
                                pos->x, pos->y, brick->zres,
                                FALSE);
+        gwy_data_line_set_offset(line, brick->zoff);
         /* Try to use the calibration.  Ignore if the dimension does not seem
          * right. */
         calibration = gwy_brick_get_zcalibration(brick);
@@ -1228,6 +1229,7 @@ extract_graph_curve(const SliceArgs *args,
                                0, pos->y, pos->z,
                                brick->xres-1, pos->y, pos->z,
                                FALSE);
+        gwy_data_line_set_offset(line, brick->xoff);
         g_snprintf(desc, sizeof(desc), _("X graph at y: %d z: %d"),
                    pos->y, pos->z);
     }
@@ -1236,6 +1238,7 @@ extract_graph_curve(const SliceArgs *args,
                                pos->x, 0, pos->z,
                                pos->x, brick->yres-1, pos->z,
                                FALSE);
+        gwy_data_line_set_offset(line, brick->yoff);
         g_snprintf(desc, sizeof(desc), _("Y graph at x: %d z: %d"),
                    pos->x, pos->z);
     }
@@ -1295,16 +1298,16 @@ extract_gmodel(const SliceArgs *args, GwyGraphModel *gmodel)
     }
 
     calibration = gwy_brick_get_zcalibration(brick);
-    if (base_plane == PLANE_XY || base_plane == PLANE_XZ)
-        xunit = gwy_brick_get_si_unit_x(brick);
-    else if (base_plane == PLANE_YZ || base_plane == PLANE_YX)
-        xunit = gwy_brick_get_si_unit_y(brick);
-    else if (base_plane == PLANE_ZX || base_plane == PLANE_ZY) {
+    if (base_plane == PLANE_XY || base_plane == PLANE_YX) {
         if (calibration)
             xunit = gwy_data_line_get_si_unit_x(calibration);
         else
             xunit = gwy_brick_get_si_unit_z(brick);
     }
+    else if (base_plane == PLANE_YZ || base_plane == PLANE_ZY)
+        xunit = gwy_brick_get_si_unit_x(brick);
+    else if (base_plane == PLANE_ZX || base_plane == PLANE_XZ)
+        xunit = gwy_brick_get_si_unit_y(brick);
     xunit = gwy_si_unit_duplicate(xunit);
     yunit = gwy_si_unit_duplicate(gwy_brick_get_si_unit_w(brick));
 
