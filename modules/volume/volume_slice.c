@@ -716,11 +716,11 @@ plane_selection_changed(SliceControls *controls,
 
     max = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(selection), "max"));
     if (base_plane == PLANE_YZ || base_plane == PLANE_ZY)
-        ix = CLAMP(gwy_brick_rtoi(brick, z), 0, max);
+        ix = CLAMP(gwy_brick_rtoi(brick, z - brick->xoff), 0, max);
     else if (base_plane == PLANE_YX || base_plane == PLANE_XY)
-        ix = CLAMP(gwy_brick_rtok(brick, z), 0, max);
+        ix = CLAMP(gwy_brick_rtok(brick, z - brick->zoff), 0, max);
     else if (base_plane == PLANE_XZ || base_plane == PLANE_ZX)
-        ix = CLAMP(gwy_brick_rtoj(brick, z), 0, max);
+        ix = CLAMP(gwy_brick_rtoj(brick, z - brick->yoff), 0, max);
     else {
         g_return_if_reached();
     }
@@ -939,32 +939,32 @@ update_selections(SliceControls *controls)
     if (base_plane == PLANE_XY) {
         xy[0] = gwy_brick_itor(brick, args->currpos.x);
         xy[1] = gwy_brick_jtor(brick, args->currpos.y);
-        z = gwy_brick_ktor(brick, args->currpos.z);
+        z = gwy_brick_ktor(brick, args->currpos.z) + brick->zoff;
     }
     else if (base_plane == PLANE_YX) {
         xy[0] = gwy_brick_jtor(brick, args->currpos.y);
         xy[1] = gwy_brick_itor(brick, args->currpos.x);
-        z = gwy_brick_ktor(brick, args->currpos.z);
+        z = gwy_brick_ktor(brick, args->currpos.z) + brick->zoff;
     }
     else if (base_plane == PLANE_XZ) {
         xy[0] = gwy_brick_itor(brick, args->currpos.x);
         xy[1] = gwy_brick_ktor(brick, args->currpos.z);
-        z = gwy_brick_jtor(brick, args->currpos.y);
+        z = gwy_brick_jtor(brick, args->currpos.y) + brick->yoff;
     }
     else if (base_plane == PLANE_ZX) {
         xy[0] = gwy_brick_ktor(brick, args->currpos.z);
         xy[1] = gwy_brick_itor(brick, args->currpos.x);
-        z = gwy_brick_jtor(brick, args->currpos.y);
+        z = gwy_brick_jtor(brick, args->currpos.y) + brick->yoff;
     }
     else if (base_plane == PLANE_YZ) {
         xy[0] = gwy_brick_jtor(brick, args->currpos.y);
         xy[1] = gwy_brick_ktor(brick, args->currpos.z);
-        z = gwy_brick_itor(brick, args->currpos.x);
+        z = gwy_brick_itor(brick, args->currpos.x) + brick->xoff;
     }
     else if (base_plane == PLANE_ZY) {
         xy[0] = gwy_brick_ktor(brick, args->currpos.z);
         xy[1] = gwy_brick_jtor(brick, args->currpos.y);
-        z = gwy_brick_itor(brick, args->currpos.x);
+        z = gwy_brick_itor(brick, args->currpos.x) + brick->xoff;
     }
     else {
         g_return_if_reached();
