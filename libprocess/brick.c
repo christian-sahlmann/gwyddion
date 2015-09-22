@@ -1933,84 +1933,85 @@ gwy_brick_extract_plane(const GwyBrick *brick,
 
     g_return_if_fail(GWY_IS_BRICK(brick));
 
-    g_return_if_fail((width==-1 && height>0 && depth>0) ||
-                     (width>0 && height==-1 && depth>0) ||
-                     (width>0 && height>0 && depth==-1));
+    g_return_if_fail((width == -1 && height > 0 && depth > 0)
+                     || (width > 0 && height == -1 && depth > 0)
+                     || (width > 0 && height > 0 && depth == -1));
 
-    g_return_if_fail(istart>=0 && istart<brick->xres &&
-                     jstart>=0 && jstart<brick->yres &&
-                     kstart>=0 && kstart<brick->zres);
+    g_return_if_fail(istart >= 0 && istart < brick->xres &&
+                     jstart >= 0 && jstart < brick->yres &&
+                     kstart >= 0 && kstart < brick->zres);
 
     bdata = brick->data;
 
-
-    if (width==-1 && height>0 && depth>0)
-    {
-        g_return_if_fail((jstart+height) <= brick->yres);
-        g_return_if_fail((kstart+depth) <= brick->zres);
+    if (width == -1 && height > 0 && depth > 0) {
+        g_return_if_fail((jstart + height) <= brick->yres);
+        g_return_if_fail((kstart + depth) <= brick->zres);
 
         gwy_data_field_resample(target, height, depth, GWY_INTERPOLATION_NONE);
         ddata = gwy_data_field_get_data(target);
         gwy_data_field_set_xreal(target, brick->yreal);
         gwy_data_field_set_yreal(target, brick->zreal);
-
+        si_unit = gwy_brick_get_si_unit_y((GwyBrick *) brick);
 
         col = istart;
-        for (row = 0; row<height; row++)
-        {
-            for (lev = 0; lev<depth; lev++)
-            {
-                ddata[row + lev*height] = bdata[col + brick->xres*(row + jstart) + brick->xres*brick->yres*(lev + kstart)];
+        for (row = 0; row < height; row++) {
+            for (lev = 0; lev < depth; lev++) {
+                ddata[row + lev * height] =
+                    bdata[col + brick->xres * (row + jstart) +
+                          brick->xres * brick->yres * (lev + kstart)];
             }
         }
     }
-
-    if (width>0 && height==-1 && depth>0)
-    {
-        g_return_if_fail((istart+width) <= brick->xres);
-        g_return_if_fail((kstart+depth) <= brick->zres);
+    else if (width > 0 && height == -1 && depth > 0) {
+        g_return_if_fail((istart + width) <= brick->xres);
+        g_return_if_fail((kstart + depth) <= brick->zres);
 
         gwy_data_field_resample(target, width, depth, GWY_INTERPOLATION_NONE);
         ddata = gwy_data_field_get_data(target);
         gwy_data_field_set_xreal(target, brick->xreal);
         gwy_data_field_set_yreal(target, brick->zreal);
+        si_unit = gwy_brick_get_si_unit_x((GwyBrick *) brick);
 
         row = jstart;
-        for (col = 0; col<width; col++)
-        {
-            for (lev = 0; lev<depth; lev++)
-            {
-                ddata[col + lev*width] = bdata[col + istart + brick->xres*row + brick->xres*brick->yres*(lev + kstart)];
+        for (col = 0; col < width; col++) {
+            for (lev = 0; lev < depth; lev++) {
+                ddata[col + lev * width] =
+                    bdata[col + istart + brick->xres * row +
+                          brick->xres * brick->yres * (lev + kstart)];
             }
         }
     }
-
-    if (width>0 && height>0 && depth==-1)
-    {
-        g_return_if_fail((istart+width) <= brick->xres);
-        g_return_if_fail((jstart+height) <= brick->yres);
+    else if (width > 0 && height > 0 && depth == -1) {
+        g_return_if_fail((istart + width) <= brick->xres);
+        g_return_if_fail((jstart + height) <= brick->yres);
 
         gwy_data_field_resample(target, width, height, GWY_INTERPOLATION_NONE);
         ddata = gwy_data_field_get_data(target);
         gwy_data_field_set_xreal(target, brick->xreal);
         gwy_data_field_set_yreal(target, brick->yreal);
-
+        si_unit = gwy_brick_get_si_unit_x((GwyBrick *) brick);
 
         lev = kstart;
-        for (col = 0; col<width; col++)
-        {
-            for (row = 0; row<height; row++)
-            {
-                ddata[col + row*width] = bdata[col + istart + brick->xres*(row + jstart) + brick->xres*brick->yres*(lev)];
+        for (col = 0; col < width; col++) {
+            for (row = 0; row < height; row++) {
+                ddata[col + row * width] =
+                    bdata[col + istart + brick->xres * (row + jstart) +
+                          brick->xres * brick->yres * (lev)];
             }
         }
     }
+    else {
+        g_return_if_reached();
+    }
 
-    si_unit = gwy_brick_get_si_unit_x((GwyBrick *)brick);
+    si_unit = gwy_si_unit_duplicate(si_unit);
     gwy_data_field_set_si_unit_xy(target, si_unit);
+    g_object_unref(si_unit);
 
-    si_unit = gwy_brick_get_si_unit_w((GwyBrick *)brick);
+    si_unit = gwy_brick_get_si_unit_w((GwyBrick *) brick);
+    si_unit = gwy_si_unit_duplicate(si_unit);
     gwy_data_field_set_si_unit_z(target, si_unit);
+    g_object_unref(si_unit);
 }
 
 /**
@@ -2989,84 +2990,114 @@ gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
     g_return_if_fail(GWY_IS_BRICK(brick));
 
 
-    g_return_if_fail(istart>=0 && istart<=brick->xres &&
-                     jstart>=0 && jstart<=brick->yres &&
-                     kstart>=0 && kstart<=brick->zres &&
-                     iend>=0 && iend<=brick->xres &&
-                     jend>=0 && jend<=brick->yres &&
-                     kend>=0 && kend<=brick->zres);
+    g_return_if_fail(istart >= 0 && istart <= brick->xres
+                     && jstart >= 0 && jstart <= brick->yres
+                     && kstart >= 0 && kstart <= brick->zres
+                     && iend >= 0 && iend <= brick->xres
+                     && jend >= 0 && jend <= brick->yres
+                     && kend >= 0 && kend <= brick->zres);
 
     bdata = brick->data;
 
-
-    if ((jstart == jend) && (kstart == kend))
-    {
-        gwy_data_line_resample(target, abs(iend-istart), GWY_INTERPOLATION_NONE);
+    if ((jstart == jend) && (kstart == kend)) {
+        gwy_data_line_resample(target, abs(iend - istart),
+                               GWY_INTERPOLATION_NONE);
         ddata = gwy_data_line_get_data(target);
+        si_unit = gwy_brick_get_si_unit_x((GwyBrick *) brick);
 
         row = jstart;
         lev = kstart;
-        if (iend>=istart)
-            for (col = 0; col<(iend-istart); col++)
-            {
-                ddata[col] = bdata[col + istart + brick->xres*(row) + brick->xres*brick->yres*(lev)];
+        if (iend >= istart)
+            for (col = 0; col < (iend - istart); col++) {
+                ddata[col] =
+                    bdata[col + istart + brick->xres * (row) +
+                          brick->xres * brick->yres * (lev)];
             }
         else
-            for (col = 0; col<(istart-iend); col++)
-            {
-                ddata[col] = bdata[iend - col - 1 + brick->xres*(row) + brick->xres*brick->yres*(lev)];
+            for (col = 0; col < (istart - iend); col++) {
+                ddata[col] =
+                    bdata[iend - col - 1 + brick->xres * (row) +
+                          brick->xres * brick->yres * (lev)];
             }
-        gwy_data_line_set_offset(target, MIN(istart,iend)*brick->xreal/(gdouble)brick->xres);
-        gwy_data_line_set_real(target, (gdouble)abs(iend-istart)*brick->xreal/(gdouble)brick->xres);
+        gwy_data_line_set_offset(target,
+                                 MIN(istart,
+                                     iend) * brick->xreal /
+                                 (gdouble)brick->xres);
+        gwy_data_line_set_real(target,
+                               (gdouble)abs(iend -
+                                            istart) * brick->xreal /
+                               (gdouble)brick->xres);
     }
-
-    if ((istart == iend) && (kstart == kend))
-    {
-        gwy_data_line_resample(target, abs(jend-jstart), GWY_INTERPOLATION_NONE);
+    else if ((istart == iend) && (kstart == kend)) {
+        gwy_data_line_resample(target, abs(jend - jstart),
+                               GWY_INTERPOLATION_NONE);
         ddata = gwy_data_line_get_data(target);
+        si_unit = gwy_brick_get_si_unit_y((GwyBrick *) brick);
 
         col = istart;
         lev = kstart;
-        if (jend>=jstart)
-            for (row = 0; row<(jend-jstart); row++)
-            {
-                ddata[row] = bdata[col + brick->xres*(row + jstart) + brick->xres*brick->yres*(lev)];
+        if (jend >= jstart)
+            for (row = 0; row < (jend - jstart); row++) {
+                ddata[row] =
+                    bdata[col + brick->xres * (row + jstart) +
+                          brick->xres * brick->yres * (lev)];
             }
         else
-            for (row = 0; row<(jstart-jend); row++)
-            {
-                ddata[row] = bdata[col + brick->xres*(jstart - row - 1) + brick->xres*brick->yres*(lev)];
+            for (row = 0; row < (jstart - jend); row++) {
+                ddata[row] =
+                    bdata[col + brick->xres * (jstart - row - 1) +
+                          brick->xres * brick->yres * (lev)];
             }
-        gwy_data_line_set_offset(target, MIN(jstart,jend)*brick->yreal/(gdouble)brick->yres);
-        gwy_data_line_set_real(target, (gdouble)abs(jend-jstart)*brick->yreal/(gdouble)brick->yres);
+        gwy_data_line_set_offset(target,
+                                 MIN(jstart,
+                                     jend) * brick->yreal /
+                                 (gdouble)brick->yres);
+        gwy_data_line_set_real(target,
+                               (gdouble)abs(jend -
+                                            jstart) * brick->yreal /
+                               (gdouble)brick->yres);
     }
-
-    if ((istart == iend) && (jstart == jend))
-    {
-        gwy_data_line_resample(target, abs(kend-kstart), GWY_INTERPOLATION_NONE);
+    else if ((istart == iend) && (jstart == jend)) {
+        gwy_data_line_resample(target, abs(kend - kstart),
+                               GWY_INTERPOLATION_NONE);
         ddata = gwy_data_line_get_data(target);
+        si_unit = gwy_brick_get_si_unit_z((GwyBrick *) brick);
 
         col = istart;
         row = jstart;
-        if (kend>=kstart)
-            for (lev = 0; lev<(kend-kstart); lev++)
-            {
-                ddata[lev] = bdata[col + brick->xres*(row) + brick->xres*brick->yres*(lev + kstart)];
+        if (kend >= kstart)
+            for (lev = 0; lev < (kend - kstart); lev++) {
+                ddata[lev] =
+                    bdata[col + brick->xres * (row) +
+                          brick->xres * brick->yres * (lev + kstart)];
             }
         else
-            for (lev = 0; lev<(kstart-kend); lev++)
-            {
-                ddata[lev] = bdata[col + brick->xres*(row) + brick->xres*brick->yres*(kend - lev - 1)];
+            for (lev = 0; lev < (kstart - kend); lev++) {
+                ddata[lev] =
+                    bdata[col + brick->xres * (row) +
+                          brick->xres * brick->yres * (kend - lev - 1)];
             }
-        gwy_data_line_set_offset(target, MIN(kstart, kend)*brick->zreal/(gdouble)brick->zres);
-        gwy_data_line_set_real(target, (gdouble)abs(kend-kstart)*brick->zreal/(gdouble)brick->zres);
+        gwy_data_line_set_offset(target,
+                                 MIN(kstart,
+                                     kend) * brick->zreal /
+                                 (gdouble)brick->zres);
+        gwy_data_line_set_real(target,
+                               (gdouble)abs(kend -
+                                            kstart) * brick->zreal /
+                               (gdouble)brick->zres);
+    }
+    else {
+        g_return_if_reached();
     }
 
-    si_unit = gwy_brick_get_si_unit_z((GwyBrick *)brick);
+    si_unit = gwy_si_unit_duplicate(si_unit);
     gwy_data_line_set_si_unit_x(target, si_unit);
+    g_object_unref(si_unit);
 
-    si_unit = gwy_brick_get_si_unit_w((GwyBrick *)brick);
+    si_unit = gwy_brick_get_si_unit_w((GwyBrick *) brick);
+    si_unit = gwy_si_unit_duplicate(si_unit);
     gwy_data_line_set_si_unit_y(target, si_unit);
+    g_object_unref(si_unit);
 }
 
 /**
