@@ -1416,31 +1416,29 @@ construct_metadata(OmicronFlatFile *fff,
 
     for (i = 0; i < fff->axis_count; i++) {
         OmicronFlatAxis *axis = fff->axis_descriptions + i;
-        g_string_printf(key, "Axis %u::Name", i+1);
-        gwy_container_set_const_string_by_name(meta, key->str, axis->name);
-
         if (strlen(axis->parent_name)) {
-            g_string_printf(key, "Axis %u::Parent axis", i+1);
+            g_string_printf(key, "Axis::%s::Parent axis", axis->name);
             gwy_container_set_const_string_by_name(meta, key->str,
                                                    axis->parent_name);
         }
 
-        g_string_printf(key, "Axis %u::Mirrored", i+1);
+        g_string_printf(key, "Axis::%s::Mirrored", axis->name);
         gwy_container_set_const_string_by_name(meta, key->str,
                                                axis->is_mirrored ? "Yes" : "No");
 
-        g_string_printf(key, "Axis %u::Units", i+1);
+        g_string_printf(key, "Axis::%s::Units", axis->name);
         gwy_container_set_const_string_by_name(meta, key->str, axis->unit_name);
 
         for (j = 0; j < axis->table_set_count; j++) {
             OmicronFlatTableSet *table_set = axis->table_set_fields + j;
 
-            g_string_printf(key, "Axis %u::TableSet %u::Name", i+1, j+1);
+            g_string_printf(key, "Axis::%s::TableSet %u::Name",
+                            axis->name, j+1);
             gwy_container_set_const_string_by_name(meta, key->str,
                                                    table_set->name);
 
-            g_string_printf(key, "Axis %u::TableSet %u::Interval count",
-                            i+1, j+1);
+            g_string_printf(key, "Axis::%s::TableSet %u::Interval count",
+                            axis->name, j+1);
             g_string_printf(value, "%u", table_set->interval_count);
             gwy_container_set_const_string_by_name(meta, key->str, value->str);
         }
@@ -1509,12 +1507,10 @@ construct_metadata(OmicronFlatFile *fff,
 
     for (i = 0; i < fff->exp_instance_count; i++) {
         OmicronFlatExperimentParamInstance *instance = fff->exp_instances + i;
-        g_string_printf(key, "Experiment::Instance %u::Name", i+1);
-        gwy_container_set_const_string_by_name(meta, key->str, instance->name);
         for (j = 0; j < instance->parameter_count; j++) {
             OmicronFlatExperimentParam *param = instance->parameters + j;
-            g_string_printf(key, "Experiment::Instance %u::%s",
-                            i+1, param->name);
+            g_string_printf(key, "Experiment::%s::%s",
+                            instance->name, param->name);
             g_string_printf(value, "%s %s", param->value, param->unit);
             gwy_container_set_const_string_by_name(meta, key->str, value->str);
         }
@@ -1522,12 +1518,10 @@ construct_metadata(OmicronFlatFile *fff,
 
     for (i = 0; i < fff->depl_instance_count; i++) {
         OmicronFlatDeploymentParamInstance *instance = fff->depl_instances + i;
-        g_string_printf(key, "Deployment::Instance %u::Name", i+1);
-        gwy_container_set_const_string_by_name(meta, key->str, instance->name);
         for (j = 0; j < instance->parameter_count; j++) {
             OmicronFlatDeploymentParam *param = instance->parameters + j;
-            g_string_printf(key, "Deployment::Instance %u::%s",
-                            i+1, param->name);
+            g_string_printf(key, "Deployment::%s::%s",
+                            instance->name, param->name);
             gwy_container_set_const_string_by_name(meta, key->str,
                                                    param->value);
         }
