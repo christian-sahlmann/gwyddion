@@ -42,9 +42,7 @@
  * .*_flat
  * Read
  **/
-#define FAIL_ALWAYS 0
 
-#define DEBUG 1
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
@@ -482,14 +480,6 @@ omicronflat_load(const gchar *filename,
             goto fail;
         }
     }
-
-
-#if FAIL_ALWAYS
-    if (data) {
-        gwy_object_unref(data);
-        err_NO_DATA(error);
-    }
-#endif
 
 fail:
     while (filelist.nfiles)
@@ -1101,6 +1091,7 @@ load_as_volume(OmicronFlatFileList *filelist,
                                                        xreal, yreal, zreal,
                                                        TRUE);
         gwy_debug("xreal %g, yreal %g, zreal %g", xreal, yreal, zreal);
+        gwy_debug("xoff %g, yoff %g, zoff %g", xoff, yoff, zoff);
         gwy_brick_set_xoffset(brick_specs[bid].brick, xoff);
         gwy_brick_set_yoffset(brick_specs[bid].brick, yoff);
         gwy_brick_set_zoffset(brick_specs[bid].brick, zoff);
@@ -1575,6 +1566,7 @@ construct_axis_range(const OmicronFlatAxis *axis, guint interval_id,
         step = 1;
     }
     gwy_debug("start %u, stop %u, step %u", start, stop, step);
+    gwy_debug("phys_start %g, phys_step %g", phys_start, phys_step);
     ndata = *n = (stop - start)/step + 1;
     *offset = phys_start - 0.5*phys_step;
     *real = ndata*step*phys_step;
