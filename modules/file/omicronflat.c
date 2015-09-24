@@ -733,10 +733,11 @@ load_as_channel(OmicronFlatFileList *filelist, guint fileid,
         { NULL, TRUE, FALSE, "reTrace Down" },
     };
 
+    GType gtype = g_type_from_name("GwySelectionLine");
     OmicronFlatFile *fff = filelist->files[fileid];
     OmicronFlatAxis *axisx, *axisy;
     guint idx, idy, xres, yres, i, nitems, fid, nfields = 1;
-    gdouble dx, dy;
+    gdouble dx, dy, xoff, yoff;
     const gint32 *d32;
 
     /* There must be two axes, X and Y.   At this moment we require X to be
@@ -765,6 +766,8 @@ load_as_channel(OmicronFlatFileList *filelist, guint fileid,
 
     xres = axisx->clock_count/axisx->mirror_mult;
     yres = axisy->clock_count/axisy->mirror_mult;
+    xoff = axisx->physical_start_value;
+    yoff = axisy->physical_start_value;
     dx = axisx->physical_increment;
     dy = axisy->physical_increment;
     for (i = 0; i < nfields; i++) {
@@ -817,8 +820,8 @@ load_as_channel(OmicronFlatFileList *filelist, guint fileid,
         gwy_data_field_invert(dfield,
                               field_specs[i].mirrory, field_specs[i].mirrorx,
                               FALSE);
-        gwy_data_field_set_xoffset(dfield, axisx->physical_start_value);
-        gwy_data_field_set_yoffset(dfield, axisy->physical_start_value);
+        gwy_data_field_set_xoffset(dfield, xoff);
+        gwy_data_field_set_yoffset(dfield, yoff);
         gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield),
                                     axisx->unit_name);
         gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield),
@@ -845,11 +848,21 @@ load_as_channel(OmicronFlatFileList *filelist, guint fileid,
             g_object_unref(mask);
         }
 
-        if (filelist->offsets->len) {
-            GType gtype = g_type_from_name("GwySelectionLine");
-            GwySelection *selection;
+        if (gtype && filelist->offsets->len) {
+            GwySelection *selection = g_object_newv(gtype, 0, NULL);
+            const gdouble *offdata = (const gdouble*)filelist->offsets->data;
+            gdouble *seldata = g_new(gdouble, 4*filelist->offsets->len);
+            guint n = filelist->offsets->len, j;
 
-            /* TODO: Create line selection from offsets. */
+            for (j = 0; j < 2*n; j++) {
+                seldata[2*j + 0] = offdata[2*j + 0] - xoff;
+                seldata[2*j + 1] = -offdata[2*j + 1] - yoff;
+            }
+            gwy_selection_set_data(selection, n, seldata);
+            g_free(seldata);
+            g_snprintf(key, sizeof(key), "/%d/select/line", *id);
+            gwy_container_set_object_by_name(data, key, selection);
+            g_object_unref(selection);
         }
 
         gwy_file_channel_import_log_add(data, *id, NULL, fff->filename);
