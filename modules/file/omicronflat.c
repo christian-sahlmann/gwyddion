@@ -237,6 +237,8 @@ typedef struct {
     guint nfiles;
     OmicronFlatFileId *ids;
     OmicronFlatFile **files;
+    /* Kluge for atom manipulation path. */
+    GArray *offsets;
 } OmicronFlatFileList;
 
 static gboolean         module_register                (void);
@@ -247,6 +249,8 @@ static GwyContainer*    omicronflat_load               (const gchar *filename,
                                                         GError **error);
 static OmicronFlatFile* omicronflat_load_single        (const gchar *filename,
                                                         GError **error);
+static void             gather_offsets                 (GArray *offsets,
+                                                        OmicronFlatFile *fff);
 static void             free_file                      (OmicronFlatFile *fff);
 static void             free_file_id                   (OmicronFlatFileId *id);
 static void             remove_from_filelist           (OmicronFlatFileList *filelist,
@@ -402,7 +406,7 @@ omicronflat_load(const gchar *filename,
                  G_GNUC_UNUSED GwyRunType mode,
                  GError **error)
 {
-    OmicronFlatFileList filelist = { 0, NULL, NULL };
+    OmicronFlatFileList filelist = { 0, NULL, NULL, NULL };
     GwyContainer *data = NULL;
     guint i, id;
 
@@ -437,6 +441,11 @@ omicronflat_load(const gchar *filename,
     }
     /* We must have loaded at least the requested file. */
     g_assert(filelist.nfiles);
+
+    /* Gather offsets to create selections for atom manipulation paths. */
+    filelist.offsets = g_array_new(FALSE, FALSE, 4*sizeof(gdouble));
+    for (i = 0; i < filelist.nfiles; i++)
+        gather_offsets(filelist.offsets, filelist.files[i]);
 
     /* Try to acually load the data. */
     data = gwy_container_new();
@@ -486,6 +495,8 @@ fail:
         remove_from_filelist(&filelist, filelist.nfiles-1);
     g_free(filelist.files);
     g_free(filelist.ids);
+    if (filelist.offsets)
+        g_array_free(filelist.offsets, TRUE);
 
     return data;
 }
@@ -661,6 +672,50 @@ has_axes(const OmicronFlatFile *fff, guint naxes, ...)
     return TRUE;
 }
 
+static void
+gather_offsets(GArray *offsets, OmicronFlatFile *fff)
+{
+    gdouble *myoff;
+    guint i, j;
+    gdouble off[4];
+
+    /* There must be one axis. */
+    if (fff->axis_count != 1)
+        return;
+
+    /* The view type should be some of the plain graph curve types. */
+    if (!has_view(fff, OMICRON_VIEW_CONTINUOUS_CURVE)
+        && !has_view(fff, OMICRON_VIEW_1D_PROFILE)
+        && !has_view(fff, OMICRON_VIEW_INTERFEROMETER)
+        && !has_view(fff, OMICRON_VIEW_FORCE_CURVE))
+        return;
+
+    if (fff->offset_count % 2)
+        return;
+
+    myoff = (gdouble*)offsets->data;
+    for (j = 0; j < fff->offset_count/2; j++) {
+        gboolean already_have = FALSE;
+
+        off[0] = fff->offsets[4*j + 0];
+        off[1] = fff->offsets[4*j + 1];
+        off[2] = fff->offsets[4*j + 2];
+        off[3] = fff->offsets[4*j + 3];
+
+        for (i = 0; i < offsets->len; i++) {
+            if (off[0] == myoff[4*i + 0] && off[1] == myoff[4*i + 1]
+                && off[2] == myoff[4*i + 2] && off[3] == myoff[4*i + 3]) {
+                already_have = TRUE;
+                break;
+            }
+        }
+        if (!already_have) {
+            g_array_append_val(offsets, off);
+            myoff = (gdouble*)offsets->data;
+        }
+    }
+}
+
 static gboolean
 load_as_channel(OmicronFlatFileList *filelist, guint fileid,
                 GwyContainer *data, gint *id)
@@ -788,6 +843,13 @@ load_as_channel(OmicronFlatFileList *filelist, guint fileid,
 
             gwy_container_set_object(data, quark, mask);
             g_object_unref(mask);
+        }
+
+        if (filelist->offsets->len) {
+            GType gtype = g_type_from_name("GwySelectionLine");
+            GwySelection *selection;
+
+            /* TODO: Create line selection from offsets. */
         }
 
         gwy_file_channel_import_log_add(data, *id, NULL, fff->filename);
