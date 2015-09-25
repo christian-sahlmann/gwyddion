@@ -72,7 +72,7 @@ Modules:
   added.  All parameters are calculated for mean value-corrected profiles.
 - Roughness tool: Wavines and texture parameters are actually calculated from
   zero-mean profiles.
-- K-means: It now has a progress bar and is cancellable.
+- K-means, K-medians: They now have progress bars and are cancellable.
 
 Other:
 - The code has been made MSVC-compatible.
