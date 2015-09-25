@@ -91,7 +91,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Calculates K-medians clustering on volume data."),
     "Daniil Bratashov <dn2010@gmail.com> & Evgeniy Ryabov <k1u2r3ka@mail.ru>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov & Evgeniy Ryabov",
     "2014",
 };
@@ -203,24 +203,22 @@ kmedians_dialog (GwyContainer *data, KMediansArgs *args)
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-                kmedians_values_update(&controls, args);
-                gtk_widget_destroy(dialog);
+            kmedians_values_update(&controls, args);
+            gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return;
             break;
 
             case GTK_RESPONSE_OK:
-                kmedians_values_update(&controls, args);
-                volume_kmedians_do(data, args);
             break;
 
             case RESPONSE_RESET:
-                *args = kmedians_defaults;
-                kmedians_dialog_update(&controls, args);
+            *args = kmedians_defaults;
+            kmedians_dialog_update(&controls, args);
             break;
 
             default:
-                g_assert_not_reached();
+            g_assert_not_reached();
             break;
         }
     } while (response != GTK_RESPONSE_OK);
@@ -228,6 +226,7 @@ kmedians_dialog (GwyContainer *data, KMediansArgs *args)
     kmedians_values_update(&controls, args);
     kmedians_save_args(gwy_app_settings_get(), args);
     gtk_widget_destroy(dialog);
+    volume_kmedians_do(data, args);
 }
 
 static void
@@ -371,7 +370,7 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
     gint k = args->k;
     gint iterations = 0;
     gint max_iterations = args->max_iterations;
-    gboolean converged = FALSE;
+    gboolean converged = FALSE, cancelled = FALSE;
     gboolean normalize = args->normalize;
 
     gwy_app_data_browser_get_current(GWY_APP_BRICK, &brick,
@@ -402,6 +401,9 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
     siunit = gwy_brick_get_si_unit_w(brick);
     gwy_data_field_set_si_unit_z(intmap, siunit);
 
+    gwy_app_wait_start(gwy_app_find_window_for_volume(container, id),
+                       _("Initializing..."));
+
     if (normalize) {
         normalized = normalize_brick(brick, intmap);
         data = gwy_brick_get_data_const(normalized);
@@ -427,7 +429,15 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
     };
     g_rand_free(rand);
 
-    while (!converged) {
+    if (!gwy_app_wait_set_message(_("K-medians iteration...")))
+        cancelled = TRUE;
+
+    while (!converged && !cancelled) {
+        if (!gwy_app_wait_set_fraction((gdouble)iterations/max_iterations)) {
+            cancelled = TRUE;
+            break;
+        }
+
         /* pixels belong to cluster with min distance */
         for (j = 0; j < yres; j++)
             for (i = 0; i < xres; i++) {
@@ -478,18 +488,23 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
         }
 
         converged = TRUE;
-        for (c = 0; c < k; c++)
+        for (c = 0; c < k; c++) {
             for (l = 0; l < zres; l++)
                 if (fabs(*(oldcenters + c * zres + l)
                                - *(centers + c * zres + l)) > epsilon) {
                     converged = FALSE;
                     break;
                 }
+        }
         if (iterations == max_iterations) {
             converged = TRUE;
         }
         iterations++;
     }
+
+    gwy_app_wait_finish();
+    if (cancelled)
+        goto fail;
 
     if (container) {
         errormap = gwy_data_field_new_alike(dfield, TRUE);
@@ -513,7 +528,7 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
         gwy_data_field_add(dfield, 1.0);
         newid = gwy_app_data_browser_add_data_field(dfield,
                                                     container, TRUE);
-        g_object_unref(dfield);
+        gwy_object_unref(dfield);
         description = gwy_app_get_brick_title(container, id);
         gwy_app_set_data_field_title(container, newid,
                                      g_strdup_printf(
@@ -526,7 +541,7 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
 
         newid = gwy_app_data_browser_add_data_field(errormap,
                                                     container, TRUE);
-        g_object_unref(errormap);
+        gwy_object_unref(errormap);
         gwy_app_set_data_field_title(container, newid,
                                      g_strdup_printf(
                                              _("K-medians error of %s"),
@@ -540,7 +555,7 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
         if (normalize) {
             newid = gwy_app_data_browser_add_data_field(intmap,
                                                         container, TRUE);
-            g_object_unref(intmap);
+            gwy_object_unref(intmap);
             gwy_app_set_data_field_title(container, newid,
                     g_strdup_printf(
                                     _("Pre-normalized intensity of %s"),
@@ -591,15 +606,17 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
         g_object_unref(gmodel);
     }
 
-    if (normalized) {
-        g_object_unref(normalized);
-    }
+    gwy_app_volume_log_add_volume(container, id, id);
+
+fail:
+    gwy_object_unref(errormap);
+    gwy_object_unref(intmap);
+    gwy_object_unref(dfield);
+    gwy_object_unref(normalized);
     g_free(npix);
     g_free(plane);
     g_free(oldcenters);
     g_free(centers);
-
-    gwy_app_volume_log_add_volume(container, id, id);
 }
 
 static const gchar kmedians_k_key[]     = "/module/kmedians/k";
