@@ -21,6 +21,7 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/arithmetic.h>
@@ -255,7 +256,7 @@ normalize_brick(GwyBrick *brick, GwyDataField *intfield)
     newdata = gwy_brick_get_data(result);
     intdata = gwy_data_field_get_data(intfield);
 
-    for (i = 0; i < xres; i++)
+    for (i = 0; i < xres; i++) {
         for (j = 0; j < yres; j++) {
             integral = 0;
             for (l = 0; l < zres; l++) {
@@ -296,6 +297,7 @@ normalize_brick(GwyBrick *brick, GwyDataField *intfield)
             }
             *(intdata + j * xres + i) = integral / zres;
         }
+    }
 
     return result;
 }
@@ -395,13 +397,13 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
         data = gwy_brick_get_data_const(brick);
     }
 
-    centers = g_malloc(zres*k*sizeof(gdouble));
-    oldcenters = g_malloc (zres*k*sizeof(gdouble));
-    sum = g_malloc(zres*k*sizeof(gdouble));
-    npix = g_malloc(k*sizeof(gint));
+    centers = g_new(gdouble, zres*k);
+    oldcenters = g_new(gdouble, zres*k);
+    sum = g_new(gdouble, zres*k);
+    npix = g_new(gint, k);
     data1 = gwy_data_field_get_data(dfield);
 
-    rand=g_rand_new();
+    rand = g_rand_new();
     for (c = 0; c < k; c++) {
         i = g_rand_int_range(rand, 0, xres);
         j = g_rand_int_range(rand, 0, yres);
@@ -546,19 +548,20 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
 
         gmodel = gwy_graph_model_new();
         calibration = gwy_brick_get_zcalibration(brick);
+        xdata = g_new(gdouble, zres);
+        ydata = g_new(gdouble, zres);
         if (calibration) {
-            xdata = gwy_data_line_get_data(calibration);
+            memcpy(xdata, gwy_data_line_get_data(calibration),
+                   zres*sizeof(gdouble));
             siunit = gwy_data_line_get_si_unit_y(calibration);
         }
         else {
-            xdata = g_malloc(zres * sizeof(gdouble));
             for (i = 0; i < zres; i++)
                 *(xdata + i) = zreal * i / zres + zoffset;
             siunit = gwy_brick_get_si_unit_z(brick);
         }
         for (c = 0; c < k; c++) {
-            ydata = g_memdup(centers + c * zres,
-                             zres * sizeof(gdouble));
+            memcpy(ydata, centers + c * zres, zres * sizeof(gdouble));
             gcmodel = gwy_graph_curve_model_new();
             gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, zres);
             rgba = gwy_graph_get_preset_color(c);
@@ -571,6 +574,8 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
             gwy_graph_model_add_curve(gmodel, gcmodel);
             g_object_unref(gcmodel);
         }
+        g_free(xdata);
+        g_free(ydata);
         g_object_set(gmodel,
                      "si-unit-x", siunit,
                      "si-unit-y", gwy_brick_get_si_unit_w(brick),
