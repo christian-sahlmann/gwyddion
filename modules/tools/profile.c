@@ -1139,6 +1139,8 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
                          NULL);
             g_object_unref(xunit);
             g_object_unref(yunit);
+
+            gwy_tool_profile_update_target_graphs(tool);
         }
 
         if (has_calibration)

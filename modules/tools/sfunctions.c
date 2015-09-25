@@ -989,6 +989,7 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                  NULL);
 
     gwy_graph_model_set_units_from_data_line(tool->gmodel, tool->line);
+    gwy_tool_sfunctions_update_target_graphs(tool);
 
 }
 

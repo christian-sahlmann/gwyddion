@@ -495,7 +495,6 @@ gwy_tool_line_stats_data_switched(GwyTool *gwytool,
     }
 
     gwy_tool_line_stats_update_curve(tool);
-    gwy_tool_line_stats_update_target_graphs(tool);
 }
 
 static void
@@ -516,7 +515,6 @@ gwy_tool_line_stats_data_changed(GwyPlainTool *plain_tool)
 {
     GwyToolLineStats *tool = GWY_TOOL_LINE_STATS(plain_tool);
     gwy_tool_line_stats_update_curve(tool);
-    gwy_tool_line_stats_update_target_graphs(tool);
 }
 
 static void
@@ -644,6 +642,7 @@ gwy_tool_line_stats_update_curve(GwyToolLineStats *tool)
     g_object_set(gcmodel, "description", title, NULL);
     g_object_set(tool->gmodel, "title", title, NULL);
     gwy_graph_model_set_units_from_data_line(tool->gmodel, tool->line);
+    gwy_tool_line_stats_update_target_graphs(tool);
 
     siunit = gwy_data_line_get_si_unit_y(tool->line);
     format = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_MARKUP,
@@ -690,7 +689,6 @@ gwy_tool_line_stats_output_type_changed(GtkComboBox *combo,
     tool->args.output_type = gwy_enum_combo_box_get_active(combo);
     gwy_tool_line_stats_update_sensitivity(tool);
     gwy_tool_line_stats_update_curve(tool);
-    gwy_tool_line_stats_update_target_graphs(tool);
 }
 
 static void
