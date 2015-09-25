@@ -92,6 +92,7 @@ static void
 _gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
 {
     GtkWidget *table, *label, *hbox;
+    GwySciText *scitext;
     gint row;
 
     gtk_window_set_title(GTK_WINDOW(dialog), _("Curve Properties"));
@@ -170,11 +171,17 @@ _gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
                      G_CALLBACK(thickness_changed_cb), dialog);
     row++;
 
-    gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Label Text")),
+    label = gtk_label_new_with_mnemonic(_("<b>Label Te_xt</b>"));
+    gtk_label_set_use_markup(GTK_LABEL(label), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     dialog->sci_text = gwy_sci_text_new();
+    scitext = GWY_SCI_TEXT(dialog->sci_text);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label),
+                                  gwy_sci_text_get_entry(scitext));
     gtk_container_set_border_width(GTK_CONTAINER(dialog->sci_text), 4);
     g_signal_connect(dialog->sci_text, "edited",
                      G_CALLBACK(label_change_cb), dialog);
