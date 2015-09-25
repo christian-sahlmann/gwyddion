@@ -7227,20 +7227,10 @@ gwy_app_data_browser_get_volume_ids(GwyContainer *data)
     return gwy_app_data_list_get_object_ids(data, PAGE_VOLUMES, NULL);
 }
 
-/**
- * gwy_app_find_window_for_channel:
- * @data: A data container to find window for.
- * @id: Data channel id.  It can be -1 to find any data window displaying
- *      a channel from @data.
- *
- * Finds the window displaying a data channel.
- *
- * Returns: The window if found, %NULL if no data window displays the
- *          requested channel.
- **/
-GtkWindow*
-gwy_app_find_window_for_channel(GwyContainer *data,
-                                gint id)
+static GtkWindow*
+find_window_for_id(GwyContainer *data,
+                   guint pageno,
+                   gint id)
 {
     GtkWidget *data_view = NULL, *data_window;
     GwyAppDataBrowser *browser;
@@ -7257,7 +7247,7 @@ gwy_app_find_window_for_channel(GwyContainer *data,
     if (!proxy)
         return NULL;
 
-    list = &proxy->lists[PAGE_CHANNELS];
+    list = &proxy->lists[pageno];
     model = GTK_TREE_MODEL(list->store);
     if (id >= 0) {
         if (!gwy_app_data_proxy_find_object(list->store, id, &iter))
@@ -7283,6 +7273,45 @@ gwy_app_find_window_for_channel(GwyContainer *data,
     g_object_unref(data_view);
 
     return data_window ? GTK_WINDOW(data_window) : NULL;
+}
+
+
+/**
+ * gwy_app_find_window_for_channel:
+ * @data: A data container to find window for.
+ * @id: Data channel id.  It can be -1 to find any data window displaying
+ *      a channel from @data.
+ *
+ * Finds the window displaying a data channel.
+ *
+ * Returns: The window if found, %NULL if no data window displays the
+ *          requested channel.
+ **/
+GtkWindow*
+gwy_app_find_window_for_channel(GwyContainer *data,
+                                gint id)
+{
+    return find_window_for_id(data, PAGE_CHANNELS, id);
+}
+
+/**
+ * gwy_app_find_window_for_volume:
+ * @data: A data container to find window for.
+ * @id: Volume data id.  It can be -1 to find any data window displaying
+ *      volume data from @data.
+ *
+ * Finds the window displaying given volume data.
+ *
+ * Returns: The window if found, %NULL if no data window displays the
+ *          requested volume data.
+ *
+ * Since: 2.42
+ **/
+GtkWindow*
+gwy_app_find_window_for_volume(GwyContainer *data,
+                               gint id)
+{
+    return find_window_for_id(data, PAGE_VOLUMES, id);
 }
 
 static void
