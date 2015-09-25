@@ -25,6 +25,7 @@ Libraries:
 - libgwyapp: File thumbnails (for document history) are create from volume
   data when the file does not contain any channels.
 - libgwyapp: Data browser displays ‘Z’ for volume data with z-calibration.
+- libgwyapp: New function to find window for volume data by id was added.
 
 Modules:
 - Align rows (new): Row alignment by various methods, including polynomial
@@ -71,6 +72,7 @@ Modules:
   added.  All parameters are calculated for mean value-corrected profiles.
 - Roughness tool: Wavines and texture parameters are actually calculated from
   zero-mean profiles.
+- K-means: It now has a progress bar and is cancellable.
 
 Other:
 - The code has been made MSVC-compatible.
