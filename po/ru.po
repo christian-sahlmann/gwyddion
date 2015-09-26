@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-09-22 06:49+0300\n"
-"PO-Revision-Date: 2015-09-22 06:55+0300\n"
+"POT-Creation-Date: 2015-09-26 09:32+0300\n"
+"PO-Revision-Date: 2015-09-26 09:33+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -253,7 +253,7 @@ msgid "Circle (down)"
 msgstr "Сфера (вниз)"
 
 #: libprocess/cdline.c:575 libprocess/cdline.c:584
-#: libgwydgets/gwygraphareadialog.c:531 modules/process/hough.c:171
+#: libgwydgets/gwygraphareadialog.c:538 modules/process/hough.c:171
 msgid "Circle"
 msgstr "Круг"
 
@@ -944,7 +944,7 @@ msgstr "точек"
 #: modules/process/unrotate.c:228 modules/process/volumize_layers.c:213
 #: modules/process/wave_synth.c:361 modules/process/wpour_mark.c:296
 #: modules/volume/volume_calibrate.c:371 modules/volume/volume_extract.c:331
-#: modules/volume/volume_kmeans.c:143 modules/volume/volume_kmedians.c:148
+#: modules/volume/volume_kmeans.c:144 modules/volume/volume_kmedians.c:149
 #: modules/volume/volume_linestat.c:292 modules/volume/volume_slice.c:281
 msgid "_Reset"
 msgstr "_Сброс"
@@ -973,7 +973,7 @@ msgstr "Свойства оси"
 msgid "Label Properties"
 msgstr "Свойства метки"
 
-#: libgwydgets/gwyaxisdialog.c:184 libgwydgets/gwygraphareadialog.c:173
+#: libgwydgets/gwyaxisdialog.c:184
 msgid "Label Text"
 msgstr "Текст надписи"
 
@@ -1016,111 +1016,115 @@ msgstr "Символ"
 msgid "Enabled"
 msgstr "Включено"
 
-#: libgwydgets/gwygraphareadialog.c:97
+#: libgwydgets/gwygraphareadialog.c:98
 msgid "Curve Properties"
 msgstr "Свойства кривой"
 
-#: libgwydgets/gwygraphareadialog.c:113 modules/file/rawgraph.c:302
+#: libgwydgets/gwygraphareadialog.c:114 modules/file/rawgraph.c:302
 msgid "Plot _style:"
 msgstr "_Стиль графика:"
 
-#: libgwydgets/gwygraphareadialog.c:134
+#: libgwydgets/gwygraphareadialog.c:135
 msgid "Pl_ot color:"
 msgstr "_Цвет графика:"
 
-#: libgwydgets/gwygraphareadialog.c:145
+#: libgwydgets/gwygraphareadialog.c:146
 msgid "Point _type:"
 msgstr "_Тип точки:"
 
-#: libgwydgets/gwygraphareadialog.c:151
+#: libgwydgets/gwygraphareadialog.c:152
 msgid "_Point size:"
 msgstr "Размер то_чки:"
 
-#: libgwydgets/gwygraphareadialog.c:161
+#: libgwydgets/gwygraphareadialog.c:162
 msgid "_Line type:"
 msgstr "Тип _линии:"
 
-#: libgwydgets/gwygraphareadialog.c:167 modules/file/imgexport.c:2866
+#: libgwydgets/gwygraphareadialog.c:168 modules/file/imgexport.c:2866
 msgid "Line t_hickness:"
 msgstr "Тол_щина линии:"
 
-#: libgwydgets/gwygraphareadialog.c:383
+#: libgwydgets/gwygraphareadialog.c:174
+msgid "<b>Label Te_xt</b>"
+msgstr "<b>Те_кст метки</b>"
+
+#: libgwydgets/gwygraphareadialog.c:390
 msgid "Set Curve Color"
 msgstr "Установить цвет кривой"
 
-#: libgwydgets/gwygraphareadialog.c:530
+#: libgwydgets/gwygraphareadialog.c:537
 msgid "Square"
 msgstr "Квадратная"
 
-#: libgwydgets/gwygraphareadialog.c:532
+#: libgwydgets/gwygraphareadialog.c:539
 msgid "Diamond"
 msgstr "Ромб"
 
-#: libgwydgets/gwygraphareadialog.c:533
+#: libgwydgets/gwygraphareadialog.c:540
 msgid "Cross"
 msgstr "Крест"
 
-#: libgwydgets/gwygraphareadialog.c:534
+#: libgwydgets/gwygraphareadialog.c:541
 msgid "Diagonal cross"
 msgstr "Диагональный крест"
 
-#: libgwydgets/gwygraphareadialog.c:535
+#: libgwydgets/gwygraphareadialog.c:542
 msgid "Asterisk"
 msgstr "Шестилучевая звезда"
 
-#: libgwydgets/gwygraphareadialog.c:536
+#: libgwydgets/gwygraphareadialog.c:543
 msgid "Star"
 msgstr "Восьмилучевая звезда"
 
-#: libgwydgets/gwygraphareadialog.c:537
+#: libgwydgets/gwygraphareadialog.c:544
 msgid "Triangle up"
 msgstr "Треугольник вверх"
 
-#: libgwydgets/gwygraphareadialog.c:538
+#: libgwydgets/gwygraphareadialog.c:545
 msgid "Triangle down"
 msgstr "Треугольник вниз"
 
-#: libgwydgets/gwygraphareadialog.c:539
+#: libgwydgets/gwygraphareadialog.c:546
 msgid "Triangle left"
 msgstr "Треугольник налево"
 
-#: libgwydgets/gwygraphareadialog.c:540
+#: libgwydgets/gwygraphareadialog.c:547
 msgid "Triangle right"
 msgstr "Треугольник направо"
 
-#: libgwydgets/gwygraphareadialog.c:541
+#: libgwydgets/gwygraphareadialog.c:548
 msgid "Full square"
 msgstr "Заполненный квадрат"
 
-#: libgwydgets/gwygraphareadialog.c:542
+#: libgwydgets/gwygraphareadialog.c:549
 msgid "Disc"
 msgstr "Диск"
 
-#: libgwydgets/gwygraphareadialog.c:543
+#: libgwydgets/gwygraphareadialog.c:550
 msgid "Full diamond"
 msgstr "Заполненный ромб"
 
-#: libgwydgets/gwygraphareadialog.c:544
+#: libgwydgets/gwygraphareadialog.c:551
 msgid "Full triangle up"
 msgstr "Заполненный треугольник вверх"
 
-#: libgwydgets/gwygraphareadialog.c:545
+#: libgwydgets/gwygraphareadialog.c:552
 msgid "Full triangle down"
 msgstr "Заполненный треугольник вниз"
 
-#: libgwydgets/gwygraphareadialog.c:546
+#: libgwydgets/gwygraphareadialog.c:553
 msgid "Full triangle left"
 msgstr "Заполненный треугольник влево"
 
-#: libgwydgets/gwygraphareadialog.c:547
+#: libgwydgets/gwygraphareadialog.c:554
 msgid "Full triangle right"
 msgstr "Заполненный треугольник вправо"
 
-#: libgwydgets/gwygraphareadialog.c:609
+#: libgwydgets/gwygraphareadialog.c:616
 msgid "line-style|Solid"
 msgstr "Сплошная"
 
-#: libgwydgets/gwygraphareadialog.c:610
+#: libgwydgets/gwygraphareadialog.c:617
 msgid "line-style|Dash"
 msgstr "Штриховая"
 
@@ -3543,7 +3547,7 @@ msgstr "Неподдерживаемый формат отсчёта"
 
 #: modules/file/gwytiff.h:1030 modules/file/keyence.c:449
 #: modules/file/matfile.c:276 modules/file/matfile.c:298
-#: modules/file/omicronflat.c:1619 modules/file/psia.c:353
+#: modules/file/omicronflat.c:1683 modules/file/psia.c:353
 #: modules/file/zemax.c:168
 msgid "File is truncated."
 msgstr "Файл усечен."
@@ -4306,7 +4310,7 @@ msgstr "Импортирует файлы Keyence VK4."
 msgid "Keyence VK4 data files (.vk4)"
 msgstr "Файлы данных Keyence VK4 (.vk4)"
 
-#: modules/file/keyence.c:894 modules/file/omicronflat.c:2176
+#: modules/file/keyence.c:894 modules/file/omicronflat.c:2240
 #, c-format
 msgid "Cannot convert string from UTF-16: %s"
 msgstr "Не получается сконвертировать строку из UTF-16: %s"
@@ -4979,24 +4983,24 @@ msgstr "Строка заголовка начинается с двоеточи
 msgid "Channel information ended unexpectedly."
 msgstr "Информация о канале неожиданно закончилась."
 
-#: modules/file/omicronflat.c:347
+#: modules/file/omicronflat.c:349
 msgid "Imports Omicron flat files."
 msgstr "Импортирует плоские файлы Omicron"
 
-#: modules/file/omicronflat.c:360
+#: modules/file/omicronflat.c:362
 msgid "Omicron flat files (*.*_flat)"
 msgstr "Плоские файлы Omicron (*.*_flat)"
 
-#: modules/file/omicronflat.c:1353 modules/file/omicronflat.c:1395
+#: modules/file/omicronflat.c:1419 modules/file/omicronflat.c:1461
 msgid "File name does not have the expected form for Omicron Flat files."
 msgstr "Имя файла не соответствует ожидаемому для файлов Omicron Flat."
 
-#: modules/file/omicronflat.c:1803
+#: modules/file/omicronflat.c:1867
 msgid "Cannot understand the axis hierarchy."
 msgstr "Не удаётся понять иерархию осей."
 
 #. TRANSLATORS: %s is replaced with an expression of the data shape.
-#: modules/file/omicronflat.c:2212
+#: modules/file/omicronflat.c:2276
 #, c-format
 msgid "Cannot figure out how to load data in the following form: %s."
 msgstr "Нельзя определить как загрузить данные в следующем виде: %s."
@@ -6317,20 +6321,20 @@ msgstr "Параметр"
 
 #: modules/graph/graph_cd.c:308 modules/graph/graph_fdfit.c:364
 #: modules/graph/graph_fit.c:378 modules/process/fit_2d.c:349
-#: modules/volume/volume_fdfit.c:449 modules/volume/volume_kmeans.c:476
-#: modules/volume/volume_kmedians.c:496
+#: modules/volume/volume_fdfit.c:449 modules/volume/volume_kmeans.c:493
+#: modules/volume/volume_kmedians.c:511
 msgid "Error"
 msgstr "Ошибка"
 
 #: modules/graph/graph_cd.c:320 modules/graph/graph_cut.c:193
 #: modules/graph/graph_fdfit.c:416 modules/graph/graph_fit.c:434
-#: modules/volume/volume_fdfit.c:501 modules/volume/volume_linestat.c:392
+#: modules/volume/volume_fdfit.c:501 modules/volume/volume_linestat.c:388
 msgid "Range:"
 msgstr "Диапазон:"
 
 #: modules/graph/graph_cd.c:331 modules/graph/graph_cut.c:204
 #: modules/graph/graph_fdfit.c:427 modules/graph/graph_fit.c:445
-#: modules/volume/volume_fdfit.c:512 modules/volume/volume_linestat.c:403
+#: modules/volume/volume_fdfit.c:512 modules/volume/volume_linestat.c:399
 msgid "range|to"
 msgstr "–"
 
@@ -6991,6 +6995,7 @@ msgstr "Создать поверхность используя баллист�
 #: modules/process/pid.c:338 modules/process/superresolution.c:416
 #: modules/process/superresolution.c:505 modules/process/tip_blind.c:784
 #: modules/process/tipops.c:319 modules/process/xydenoise.c:217
+#: modules/volume/volume_kmeans.c:390 modules/volume/volume_kmedians.c:405
 msgid "Initializing..."
 msgstr "Инициализация..."
 
@@ -7363,7 +7368,7 @@ msgstr "Обрезать до действительных данных"
 #: modules/process/polydistort.c:336 modules/process/scars.c:583
 #: modules/process/slope_dist.c:424 modules/process/synth.h:513
 #: modules/volume/volume_extract.c:424 modules/volume/volume_extract.c:505
-#: modules/volume/volume_linestat.c:425
+#: modules/volume/volume_linestat.c:421
 msgid "I_nstant updates"
 msgstr "Мгновенное об_новление"
 
@@ -7408,27 +7413,27 @@ msgstr "Строится сетка..."
 msgid "Triangulating..."
 msgstr "Производится триангуляция..."
 
-#: modules/process/calcoefs_view.c:1137 modules/tools/profile.c:1814
+#: modules/process/calcoefs_view.c:1137 modules/tools/profile.c:1816
 msgid "X correction"
 msgstr "Поправка по X"
 
-#: modules/process/calcoefs_view.c:1138 modules/tools/profile.c:1815
+#: modules/process/calcoefs_view.c:1138 modules/tools/profile.c:1817
 msgid "Y correction"
 msgstr "Поправка по Y"
 
-#: modules/process/calcoefs_view.c:1139 modules/tools/profile.c:1816
+#: modules/process/calcoefs_view.c:1139 modules/tools/profile.c:1818
 msgid "Z correction"
 msgstr "Поправка по Z"
 
-#: modules/process/calcoefs_view.c:1140 modules/tools/profile.c:1817
+#: modules/process/calcoefs_view.c:1140 modules/tools/profile.c:1819
 msgid "X uncertainty"
 msgstr "Погрешность X"
 
-#: modules/process/calcoefs_view.c:1141 modules/tools/profile.c:1818
+#: modules/process/calcoefs_view.c:1141 modules/tools/profile.c:1820
 msgid "Y uncertainty"
 msgstr "Погрешность Y"
 
-#: modules/process/calcoefs_view.c:1142 modules/tools/profile.c:1819
+#: modules/process/calcoefs_view.c:1142 modules/tools/profile.c:1821
 msgid "Z uncertainty"
 msgstr "Погрешность Z"
 
@@ -8170,13 +8175,13 @@ msgid "_Monte Carlo time step:"
 msgstr "Временной шаг метода _Монте-Карло:"
 
 #: modules/process/domain_synth.c:522 modules/process/fft_filter_2d.c:620
-#: modules/volume/volume_slice.c:356
+#: modules/volume/volume_slice.c:352
 msgid "Output Options"
 msgstr "Параметры вывода"
 
 #: modules/process/domain_synth.c:541 modules/process/fft_filter_2d.c:625
 #: modules/process/mask_edt.c:400 modules/process/slope_dist.c:340
-#: modules/volume/volume_linestat.c:435 modules/volume/volume_slice.c:376
+#: modules/volume/volume_linestat.c:431 modules/volume/volume_slice.c:372
 msgid "Output type:"
 msgstr "Тип вывода:"
 
@@ -11832,11 +11837,11 @@ msgstr "Наклонить на заданную величину"
 msgid "Tilt"
 msgstr "Н_аклон"
 
-#: modules/process/tilt.c:184 modules/volume/volume_slice.c:415
+#: modules/process/tilt.c:184 modules/volume/volume_slice.c:411
 msgid "_X:"
 msgstr "_X:"
 
-#: modules/process/tilt.c:193 modules/volume/volume_slice.c:434
+#: modules/process/tilt.c:193 modules/volume/volume_slice.c:430
 msgid "_Y:"
 msgstr "_Y:"
 
@@ -12138,7 +12143,7 @@ msgid "Waves"
 msgstr "Волны"
 
 #: modules/process/wave_synth.c:440 modules/tools/linestats.c:333
-#: modules/tools/sfunctions.c:381 modules/volume/volume_linestat.c:372
+#: modules/tools/sfunctions.c:381 modules/volume/volume_linestat.c:368
 msgid "_Quantity:"
 msgstr "_Величина:"
 
@@ -12867,7 +12872,7 @@ msgstr "Верхняя граница погрешности Z %d"
 msgid "Zunc low bound %d"
 msgstr "Нижняя граница погрешности Z %d"
 
-#: modules/tools/profile.c:1813
+#: modules/tools/profile.c:1815
 msgid "calib-data|None"
 msgstr "Нет"
 
@@ -13513,17 +13518,17 @@ msgstr "Сечение по Y при y: %d"
 msgid "Z cross-section at Z = %g %s (#%d)"
 msgstr "Сечение Z на величине Z = %g %s (#%d)"
 
-#: modules/volume/volume_extract.c:749 modules/volume/volume_slice.c:1231
+#: modules/volume/volume_extract.c:749 modules/volume/volume_slice.c:1229
 #, c-format
 msgid "X graph at y: %d z: %d"
 msgstr "График X при y: %d z: %d"
 
-#: modules/volume/volume_extract.c:752 modules/volume/volume_slice.c:1239
+#: modules/volume/volume_extract.c:752 modules/volume/volume_slice.c:1238
 #, c-format
 msgid "Y graph at x: %d z: %d"
 msgstr "График Y при x: %d z: %d"
 
-#: modules/volume/volume_extract.c:755 modules/volume/volume_slice.c:1223
+#: modules/volume/volume_extract.c:755 modules/volume/volume_slice.c:1220
 #, c-format
 msgid "Z graph at x: %d y: %d"
 msgstr "График Z при x: %d y: %d"
@@ -13581,93 +13586,101 @@ msgstr "/_Инвертировать значение"
 msgid "Invert value in volume data"
 msgstr "Инвертирует значения в объёмных данных"
 
-#: modules/volume/volume_kmeans.c:87
+#: modules/volume/volume_kmeans.c:88
 msgid "Calculates K-means clustering on volume data."
 msgstr "Рассчитывает кластеризацию K-средних для объёмных данных."
 
-#: modules/volume/volume_kmeans.c:101
+#: modules/volume/volume_kmeans.c:102
 msgid "/_K-means clustering..."
 msgstr "/_Кластеризация K-средних..."
 
-#: modules/volume/volume_kmeans.c:105
+#: modules/volume/volume_kmeans.c:106
 msgid "Calculate K-means clustering on volume data"
 msgstr "Рассчитать кластеризацию K-средних для объёмных данных"
 
-#: modules/volume/volume_kmeans.c:140
+#: modules/volume/volume_kmeans.c:141
 msgid "K-means"
 msgstr "K-средних"
 
-#: modules/volume/volume_kmeans.c:147 modules/volume/volume_kmedians.c:152
+#: modules/volume/volume_kmeans.c:148 modules/volume/volume_kmedians.c:153
 msgid "_Run"
 msgstr "_Выполнить"
 
-#: modules/volume/volume_kmeans.c:163 modules/volume/volume_kmedians.c:168
+#: modules/volume/volume_kmeans.c:164 modules/volume/volume_kmedians.c:169
 msgid "_Number of clusters:"
 msgstr "_Количество кластеров:"
 
-#: modules/volume/volume_kmeans.c:171 modules/volume/volume_kmedians.c:176
+#: modules/volume/volume_kmeans.c:172 modules/volume/volume_kmedians.c:177
 msgid "Convergence _Precision:"
 msgstr "_Точность сходимости:"
 
-#: modules/volume/volume_kmeans.c:183 modules/volume/volume_kmedians.c:188
+#: modules/volume/volume_kmeans.c:184 modules/volume/volume_kmedians.c:189
 msgid "_Max. iterations:"
 msgstr "_Макс. число шагов:"
 
-#: modules/volume/volume_kmeans.c:189 modules/volume/volume_kmedians.c:194
+#: modules/volume/volume_kmeans.c:190 modules/volume/volume_kmedians.c:195
 msgid "_Normalize"
 msgstr "_Нормализовать"
 
-#: modules/volume/volume_kmeans.c:381 modules/volume/volume_kmedians.c:398
+#: modules/volume/volume_kmeans.c:382 modules/volume/volume_kmedians.c:397
 msgid "Cluster"
 msgstr "Кластер"
 
-#: modules/volume/volume_kmeans.c:499
+#: modules/volume/volume_kmeans.c:417
+msgid "K-means iteration..."
+msgstr "Итерация K-средних..."
+
+#: modules/volume/volume_kmeans.c:516
 #, c-format
 msgid "K-means of %s"
 msgstr "K-средних для %s"
 
-#: modules/volume/volume_kmeans.c:510
+#: modules/volume/volume_kmeans.c:527
 #, c-format
 msgid "K-means error of %s"
 msgstr "Ошибка K-средних для %s"
 
-#: modules/volume/volume_kmeans.c:522 modules/volume/volume_kmedians.c:546
+#: modules/volume/volume_kmeans.c:539 modules/volume/volume_kmedians.c:561
 #, c-format
 msgid "Pre-normalized intensity of %s"
 msgstr "Интенсивность до нормализации %s"
 
-#: modules/volume/volume_kmeans.c:553
+#: modules/volume/volume_kmeans.c:571
 #, c-format
 msgid "K-means center %d"
 msgstr "Центр кластера %d"
 
-#: modules/volume/volume_kmedians.c:92
+#: modules/volume/volume_kmedians.c:93
 msgid "Calculates K-medians clustering on volume data."
 msgstr "Рассчитывает кластеризацию K-срединных для объёмных данных."
 
-#: modules/volume/volume_kmedians.c:106
+#: modules/volume/volume_kmedians.c:107
 msgid "/_K-medians clustering..."
 msgstr "/_Кластеризация K-срединных..."
 
-#: modules/volume/volume_kmedians.c:110
+#: modules/volume/volume_kmedians.c:111
 msgid "Calculate K-medians clustering on volume data"
 msgstr "Рассчитать кластеризацию K-срединных для объёмных данных"
 
-#: modules/volume/volume_kmedians.c:145
+#: modules/volume/volume_kmedians.c:146
 msgid "K-medians"
 msgstr "K-срединных"
 
-#: modules/volume/volume_kmedians.c:520
+#: modules/volume/volume_kmedians.c:432
+msgid "K-medians iteration..."
+msgstr "Итерация k-срединных..."
+
+#: modules/volume/volume_kmedians.c:535
 #, c-format
 msgid "K-medians of %s"
 msgstr "K-срединных для %s"
 
-#: modules/volume/volume_kmedians.c:532
+#: modules/volume/volume_kmedians.c:547
 #, c-format
 msgid "K-medians error of %s"
 msgstr "Ошибка K-срединных для %s"
 
-#: modules/volume/volume_kmedians.c:577
+#: modules/volume/volume_kmedians.c:593
 #, c-format
 msgid "K-medians center %d"
 msgstr "Центр кластера %d"
@@ -13722,46 +13735,46 @@ msgstr "Линию как график"
 msgid "Slice Volume Data"
 msgstr "Вырезать из объёмных данных"
 
-#: modules/volume/volume_slice.c:361
+#: modules/volume/volume_slice.c:357
 msgid "_Base plane:"
 msgstr "_Основная плоскость:"
 
-#: modules/volume/volume_slice.c:391
+#: modules/volume/volume_slice.c:387
 msgid "Extract _multiple items"
 msgstr "Извлечь _несколько элементов"
 
-#: modules/volume/volume_slice.c:408
+#: modules/volume/volume_slice.c:404
 msgid "Positions"
 msgstr "Положения"
 
-#: modules/volume/volume_slice.c:453
+#: modules/volume/volume_slice.c:449
 msgid "_Z:"
 msgstr "_Z:"
 
-#: modules/volume/volume_slice.c:1125
+#: modules/volume/volume_slice.c:1121
 #, c-format
 msgid "Z slice at %.*f%s%s (#%d)"
 msgstr "Срез Z на %.*f%s%s (#%d)"
 
-#: modules/volume/volume_slice.c:1136
+#: modules/volume/volume_slice.c:1132
 #, c-format
 msgid "Y slice at %.*f%s%s (#%d)"
 msgstr "Срез Y на %.*f%s%s (#%d)"
 
-#: modules/volume/volume_slice.c:1147
+#: modules/volume/volume_slice.c:1143
 #, c-format
 msgid "X slice at %.*f%s%s (#%d)"
 msgstr "Срез X на %.*f%s%s (#%d)"
 
-#: modules/volume/volume_slice.c:1273
+#: modules/volume/volume_slice.c:1272
 msgid "Volume Z graphs"
 msgstr "Графики Z объёма"
 
-#: modules/volume/volume_slice.c:1280
+#: modules/volume/volume_slice.c:1279
 msgid "Volume X graphs"
 msgstr "Графики X объёма"
 
-#: modules/volume/volume_slice.c:1287
+#: modules/volume/volume_slice.c:1286
 msgid "Volume Y graphs"
 msgstr "Графики Y объёма"
 
