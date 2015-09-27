@@ -91,7 +91,7 @@ typedef enum {
     OMICRON_VIEW_FORCE_CURVE = 6,
     OMICRON_VIEW_1D_PROFILE = 7,            /* Also atom manipulation path */
     OMICRON_VIEW_INTERFEROMETER = 8,
-    OMICRON_VIEW_CONTINUOUS_CURVE = 9,      /* Seems often time dependency */
+    OMICRON_VIEW_CONTINUOUS_CURVE = 9,      /* To be merged to single curve */
     OMICRON_VIEW_PHASE_AMPLITUDE_CURVE = 10,
     OMICRON_VIEW_CURVE_SET = 11,
     OMICRON_VIEW_PARAMETERISED_CURVE_SET = 12,
@@ -103,7 +103,8 @@ typedef enum {
 typedef struct {
     gchar *filename;    /* Full file name, useful for actualy loading. */
     gchar *stem;        /* The common part up to "--". */
-    gchar *number;      /* The 123_4 part between "--" and the first dot. */
+    guint run_cycle;    /* The 123 part between "--" and underscore. */
+    guint scan_cycle;   /* The 4 part between underscore and the first dot. */
     gchar *extension;   /* The extension part between dot and "_flat" */
 } OmicronFlatFileId;
 
@@ -429,6 +430,21 @@ omicronflat_load(const gchar *filename,
             }
             g_clear_error(&err);
         }
+
+        if (filelist.files[i]->experiment.run_cycle_id
+            != filelist.ids[i].run_cycle) {
+            g_warning("Run cycle ID mismatch between file (%d) name "
+                      "and channel (%d).",
+                      filelist.files[i]->experiment.run_cycle_id,
+                      filelist.ids[i].run_cycle);
+        }
+        if (filelist.files[i]->experiment.scan_cycle_id
+            != filelist.ids[i].scan_cycle) {
+            g_warning("Scan cycle ID mismatch between file (%d) name "
+                      "and channel (%d).",
+                      filelist.files[i]->experiment.scan_cycle_id,
+                      filelist.ids[i].scan_cycle);
+        }
     }
 
     /* Discard any other files we could not load physically. */
@@ -457,9 +473,21 @@ omicronflat_load(const gchar *filename,
             i++;
     }
 
-    /* Curves (graphs). They go by a single filelist entry. */
+    /* Connected curves (graphs). They consume multiple filelist entries and
+     * are formed by sequence of graphs with identical run_cycle and
+     * consecutive scan_cycles. */
     i = 0;
     id = 1;    /* Graphs start from 1. */
+#if 0
+    while (i < filelist.nfiles) {
+        if (!load_as_continuous_curve(&filelist, i, data, &id))
+            i++;
+    }
+#endif
+
+    /* Curves (graphs). They go by a single filelist entry. */
+    i = 0;
+    /* Keep incrementing the graph id. */
     while (i < filelist.nfiles) {
         if (!load_as_curve(&filelist, i, data, &id))
             i++;
@@ -1320,7 +1348,6 @@ free_file_id(OmicronFlatFileId *id)
 {
     g_free(id->filename);
     g_free(id->stem);
-    g_free(id->number);
     g_free(id->extension);
 }
 
@@ -1334,7 +1361,17 @@ compare_file_ids(gconstpointer pa, gconstpointer pb)
     if ((r = strcmp(a->extension, b->extension)))
         return r;
 
-    return strcmp(a->number, b->number);
+    if (a->run_cycle < b->run_cycle)
+        return -1;
+    if (a->run_cycle > b->run_cycle)
+        return 1;
+
+    if (a->scan_cycle < b->scan_cycle)
+        return -1;
+    if (a->scan_cycle > b->scan_cycle)
+        return 1;
+
+    return 0;
 }
 
 /* Given filename Foobar--123_45.I(V)_flat remove the 123_45 part. */
@@ -1343,7 +1380,7 @@ parse_filename(const gchar *filename,
                OmicronFlatFileId *id,
                const gchar *dirname)
 {
-    gchar *fnm, *ddash, *num, *dot, *ext, *flat;
+    gchar *fnm, *ddash, *num1, *underscore, *num2, *dot, *ext, *flat;
     gboolean ok = FALSE;
     guint len;
 
@@ -1355,22 +1392,23 @@ parse_filename(const gchar *filename,
         goto fail;
 
     /* The next part has the form [0-9]+_[0-9]+. */
-    num = ddash+2;
-    dot = num;
-    if (!g_ascii_isdigit(*dot))
+    num1 = ddash+2;
+    underscore = num1;
+    if (!g_ascii_isdigit(*underscore))
         goto fail;
 
     do {
-       dot++;
-    } while (g_ascii_isdigit(*dot));
+       underscore++;
+    } while (g_ascii_isdigit(*underscore));
 
-    if (*dot != '_')
+    if (*underscore != '_')
         goto fail;
-    dot++;
+    num2 = underscore+1;
 
-    if (!g_ascii_isdigit(*dot))
+    if (!g_ascii_isdigit(*num2))
         goto fail;
 
+    dot = num2;
     do {
        dot++;
     } while (g_ascii_isdigit(*dot));
@@ -1391,12 +1429,14 @@ parse_filename(const gchar *filename,
     /* Now we know the file name contains all the expected parts, so create
      * the parsed record. */
     ok = TRUE;
+    *underscore = *dot = '\0';
     id->filename = g_build_filename(dirname, filename, NULL);
     id->stem = g_strndup(fnm, ddash-fnm);
-    id->number = g_strndup(num, dot-num);
+    id->run_cycle = strtol(num1, NULL, 10);
+    id->scan_cycle = strtol(num2, NULL, 10);
     id->extension = g_strndup(ext, flat-ext);
-    gwy_debug("Parsed %s into <%s> <%s> <%s>",
-              fnm, id->stem, id->number, id->extension);
+    gwy_debug("Parsed %s into <%s> <%d> <%d> <%s>",
+              fnm, id->stem, id->run_cycle, id->scan_cycle, id->extension);
 
 fail:
     g_free(fnm);
@@ -1485,7 +1525,11 @@ construct_metadata(OmicronFlatFile *fff,
                                            value->str);
 
     gwy_container_set_const_string_by_name(meta, "File::Base name", id->stem);
-    gwy_container_set_const_string_by_name(meta, "File::Number", id->number);
+    g_string_printf(value, "%u", id->run_cycle);
+    gwy_container_set_const_string_by_name(meta, "File::Run cycle", value->str);
+    g_string_printf(value, "%u", id->scan_cycle);
+    gwy_container_set_const_string_by_name(meta, "File::Scan cycle",
+                                           value->str);
     gwy_container_set_const_string_by_name(meta, "File::Extension",
                                            id->extension);
 
@@ -1939,6 +1983,12 @@ read_channel_description(const guchar **p, gsize *size,
             if (!read_uint32(p, size, channel->view_types + i, error))
                 return FALSE;
         }
+        /* XXX: GCC miscompiles this when we print the array items inside the
+         * cycle that reads , apparently moving the printing before the
+         * assignment. */
+        for (i = 0; i < channel->data_view_type_count; i++) {
+            gwy_debug("view_type%u: %u", i, channel->view_types[i]);
+        }
     }
 
     /* Figure out scaling factors and offsets. */
@@ -2073,6 +2123,9 @@ read_experiment_information(const guchar **p, gsize *size,
         || !read_uint32(p, size, &experiment->run_cycle_id, error)
         || !read_uint32(p, size, &experiment->scan_cycle_id, error))
         return FALSE;
+
+    gwy_debug("run_cycle %u, scan_cycle %u",
+              experiment->run_cycle_id, experiment->scan_cycle_id);
 
     return TRUE;
 }
