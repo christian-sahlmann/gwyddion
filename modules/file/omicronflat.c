@@ -242,107 +242,110 @@ typedef struct {
     GArray *offsets;
 } OmicronFlatFileList;
 
-static gboolean         module_register                (void);
-static gint             omicronflat_detect             (const GwyFileDetectInfo *fileinfo,
-                                                        gboolean only_name);
-static GwyContainer*    omicronflat_load               (const gchar *filename,
-                                                        GwyRunType mode,
-                                                        GError **error);
-static OmicronFlatFile* omicronflat_load_single        (const gchar *filename,
-                                                        GError **error);
-static void             gather_offsets                 (GArray *offsets,
-                                                        OmicronFlatFile *fff);
-static void             free_file                      (OmicronFlatFile *fff);
-static void             free_file_id                   (OmicronFlatFileId *id);
-static void             remove_from_filelist           (OmicronFlatFileList *filelist,
-                                                        guint fileid);
-static gboolean         find_related_files             (const gchar *filename,
-                                                        OmicronFlatFileList *filelist,
-                                                        GError **error);
-static GwyContainer*    construct_metadata             (OmicronFlatFile *fff,
-                                                        OmicronFlatFileId *id);
-static gboolean         load_as_channel                (OmicronFlatFileList *filelist,
-                                                        guint fileid,
-                                                        GwyContainer *data,
-                                                        gint *id);
-static gboolean         load_as_curve                  (OmicronFlatFileList *filelist,
-                                                        guint fileid,
-                                                        GwyContainer *data,
-                                                        gint *id);
-static gboolean         load_as_sps                    (OmicronFlatFileList *filelist,
-                                                        guint fileid,
-                                                        GwyContainer *data,
-                                                        gint *id);
-static gboolean         load_as_volume                 (OmicronFlatFileList *filelist,
-                                                        guint fileid,
-                                                        GwyContainer *data,
-                                                        gint *id);
-static void             construct_axis_range           (const OmicronFlatAxis *axis,
-                                                        guint interval_id,
-                                                        gdouble *real,
-                                                        gdouble *offset,
-                                                        guint *n);
-static gdouble*         construct_axis_xdata           (const OmicronFlatAxis *axis,
-                                                        guint interval_id,
-                                                        guint *n);
-static gboolean         read_identification            (const guchar **p,
-                                                        gsize *size,
-                                                        OmicronFlatIdentification *identification,
-                                                        GError **error);
-static gboolean         read_axis_hierarchy_description(const guchar **p,
-                                                        gsize *size,
-                                                        OmicronFlatFile *fff,
-                                                        GError **error);
-static gboolean         read_channel_description       (const guchar **p,
-                                                        gsize *size,
-                                                        OmicronFlatChannel *channel,
-                                                        GError **error);
-static gboolean         read_creation_information      (const guchar **p,
-                                                        gsize *size,
-                                                        OmicronFlatCreation *creation,
-                                                        GError **error);
-static gboolean         read_raw_data                  (const guchar **p,
-                                                        gsize *size,
-                                                        OmicronFlatRawData *raw_data,
-                                                        GError **error);
-static gboolean         read_offsets                   (const guchar **p,
-                                                        gsize *size,
-                                                        OmicronFlatFile *fff,
-                                                        GError **error);
-static gboolean         read_experiment_information    (const guchar **p,
-                                                        gsize *size,
-                                                        OmicronFlatExperiment *experiment,
-                                                        GError **error);
-static gboolean         read_experiment_parameters     (const guchar **p,
-                                                        gsize *size,
-                                                        OmicronFlatFile *fff,
-                                                        GError **error);
-static gboolean         read_deployment_parameters     (const guchar **p,
-                                                        gsize *size,
-                                                        OmicronFlatFile *fff,
-                                                        GError **error);
-static gboolean         read_uint32                    (const guchar **p,
-                                                        gsize *size,
-                                                        guint *v,
-                                                        GError **error);
-static gboolean         read_sint32                    (const guchar **p,
-                                                        gsize *size,
-                                                        gint *v,
-                                                        GError **error);
-static gboolean         read_uint64                    (const guchar **p,
-                                                        gsize *size,
-                                                        guint64 *v,
-                                                        GError **error);
-static gboolean         read_double                    (const guchar **p,
-                                                        gsize *size,
-                                                        gdouble *v,
-                                                        GError **error);
-static gboolean         read_string                    (const guchar **p,
-                                                        gsize *size,
-                                                        gchar **v,
-                                                        GError **error);
-static void             err_UNKNOWN_DATA_TYPE          (GError **error,
-                                                        const OmicronFlatFile *fff);
+static gboolean           module_register                (void);
+static gint               omicronflat_detect             (const GwyFileDetectInfo *fileinfo,
+                                                          gboolean only_name);
+static GwyContainer*      omicronflat_load               (const gchar *filename,
+                                                          GwyRunType mode,
+                                                          GError **error);
+static OmicronFlatFile*   omicronflat_load_single        (const gchar *filename,
+                                                          GError **error);
+static void               gather_offsets                 (GArray *offsets,
+                                                          OmicronFlatFile *fff);
+static void               free_file                      (OmicronFlatFile *fff);
+static void               free_file_id                   (OmicronFlatFileId *id);
+static OmicronFlatFileId* copy_file_id                   (const OmicronFlatFileId *id);
+static void               remove_from_filelist           (OmicronFlatFileList *filelist,
+                                                          guint fileid);
+static gboolean           find_related_files             (const gchar *filename,
+                                                          OmicronFlatFileList *filelist,
+                                                          GError **error);
+static GwyContainer*      construct_metadata             (OmicronFlatFile *fff,
+                                                          OmicronFlatFileId *id);
+static gboolean           load_as_channel                (OmicronFlatFileList *filelist,
+                                                          guint fileid,
+                                                          GwyContainer *data,
+                                                          gint *id);
+static gboolean           load_as_curve                  (OmicronFlatFileList *filelist,
+                                                          guint fileid,
+                                                          GwyContainer *data,
+                                                          gint *id);
+static void               merge_continuous_curves        (GwyContainer *data,
+                                                          gint ngraphs);
+static gboolean           load_as_sps                    (OmicronFlatFileList *filelist,
+                                                          guint fileid,
+                                                          GwyContainer *data,
+                                                          gint *id);
+static gboolean           load_as_volume                 (OmicronFlatFileList *filelist,
+                                                          guint fileid,
+                                                          GwyContainer *data,
+                                                          gint *id);
+static void               construct_axis_range           (const OmicronFlatAxis *axis,
+                                                          guint interval_id,
+                                                          gdouble *real,
+                                                          gdouble *offset,
+                                                          guint *n);
+static gdouble*           construct_axis_xdata           (const OmicronFlatAxis *axis,
+                                                          guint interval_id,
+                                                          guint *n);
+static gboolean           read_identification            (const guchar **p,
+                                                          gsize *size,
+                                                          OmicronFlatIdentification *identification,
+                                                          GError **error);
+static gboolean           read_axis_hierarchy_description(const guchar **p,
+                                                          gsize *size,
+                                                          OmicronFlatFile *fff,
+                                                          GError **error);
+static gboolean           read_channel_description       (const guchar **p,
+                                                          gsize *size,
+                                                          OmicronFlatChannel *channel,
+                                                          GError **error);
+static gboolean           read_creation_information      (const guchar **p,
+                                                          gsize *size,
+                                                          OmicronFlatCreation *creation,
+                                                          GError **error);
+static gboolean           read_raw_data                  (const guchar **p,
+                                                          gsize *size,
+                                                          OmicronFlatRawData *raw_data,
+                                                          GError **error);
+static gboolean           read_offsets                   (const guchar **p,
+                                                          gsize *size,
+                                                          OmicronFlatFile *fff,
+                                                          GError **error);
+static gboolean           read_experiment_information    (const guchar **p,
+                                                          gsize *size,
+                                                          OmicronFlatExperiment *experiment,
+                                                          GError **error);
+static gboolean           read_experiment_parameters     (const guchar **p,
+                                                          gsize *size,
+                                                          OmicronFlatFile *fff,
+                                                          GError **error);
+static gboolean           read_deployment_parameters     (const guchar **p,
+                                                          gsize *size,
+                                                          OmicronFlatFile *fff,
+                                                          GError **error);
+static gboolean           read_uint32                    (const guchar **p,
+                                                          gsize *size,
+                                                          guint *v,
+                                                          GError **error);
+static gboolean           read_sint32                    (const guchar **p,
+                                                          gsize *size,
+                                                          gint *v,
+                                                          GError **error);
+static gboolean           read_uint64                    (const guchar **p,
+                                                          gsize *size,
+                                                          guint64 *v,
+                                                          GError **error);
+static gboolean           read_double                    (const guchar **p,
+                                                          gsize *size,
+                                                          gdouble *v,
+                                                          GError **error);
+static gboolean           read_string                    (const guchar **p,
+                                                          gsize *size,
+                                                          gchar **v,
+                                                          GError **error);
+static void               err_UNKNOWN_DATA_TYPE          (GError **error,
+                                                          const OmicronFlatFile *fff);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -473,25 +476,15 @@ omicronflat_load(const gchar *filename,
             i++;
     }
 
-    /* Connected curves (graphs). They consume multiple filelist entries and
-     * are formed by sequence of graphs with identical run_cycle and
-     * consecutive scan_cycles. */
-    i = 0;
-    id = 1;    /* Graphs start from 1. */
-#if 0
-    while (i < filelist.nfiles) {
-        if (!load_as_continuous_curve(&filelist, i, data, &id))
-            i++;
-    }
-#endif
-
     /* Curves (graphs). They go by a single filelist entry. */
     i = 0;
+    id = 1;    /* Graphs start from 1. */
     /* Keep incrementing the graph id. */
     while (i < filelist.nfiles) {
         if (!load_as_curve(&filelist, i, data, &id))
             i++;
     }
+    merge_continuous_curves(data, id-1);
 
     /* SPS. They can consume multiple filelist entries. */
     i = id = 0;
@@ -933,6 +926,12 @@ load_as_curve(OmicronFlatFileList *filelist, guint fileid,
                : axis->mirror_mult);
 
     gmodel = gwy_graph_model_new();
+    /* Remember id for future concatenation. */
+    if (has_view(fff, OMICRON_VIEW_CONTINUOUS_CURVE)) {
+        g_object_set_data(G_OBJECT(gmodel), "fff-id",
+                          copy_file_id(filelist->ids + fileid));
+    }
+
     res = axis->clock_count/axis->mirror_mult;
     d32 = (const gint32*)fff->raw_data.data;
     nitems = fff->raw_data.actual_item_count;
@@ -993,6 +992,40 @@ load_as_curve(OmicronFlatFileList *filelist, guint fileid,
     (*id)++;
 
     return TRUE;
+}
+
+static void
+merge_continuous_curves(GwyContainer *data, gint ngraphs)
+{
+    GwyGraphModel **gmodels;
+    OmicronFlatFileId **ids;
+    gint i;
+
+    if (!ngraphs)
+        return;
+
+    gmodels = g_new0(GwyGraphModel*, ngraphs);
+    ids = g_new0(OmicronFlatFileId*, ngraphs);
+    for (i = 0; i < ngraphs; i++) {
+        GQuark quark = gwy_app_get_graph_key_for_id(i+1);
+        gmodels[i] = gwy_container_get_object(data, quark);
+        g_assert(gmodels[i]);
+        ids[i] = g_object_get_data(G_OBJECT(gmodels[i]), "fff-id");
+        if (ids[i]) {
+            g_object_set_data(G_OBJECT(gmodels[i]), "fff-id", NULL);
+            gwy_debug("concatenable graph %d_%d",
+                      ids[i]->run_cycle, ids[i]->scan_cycle);
+        }
+    }
+
+    g_free(gmodels);
+    for (i = 0; i < ngraphs; i++) {
+        if (ids[i]) {
+            free_file_id(ids[i]);
+            g_free(ids[i]);
+        }
+    }
+    g_free(ids);
 }
 
 /* XXX: I do not have any file with mirrored axis. */
@@ -1349,6 +1382,16 @@ free_file_id(OmicronFlatFileId *id)
     g_free(id->filename);
     g_free(id->stem);
     g_free(id->extension);
+}
+
+static OmicronFlatFileId*
+copy_file_id(const OmicronFlatFileId *id)
+{
+    OmicronFlatFileId *newid = g_memdup(id, sizeof(OmicronFlatFileId));
+    newid->filename = g_strdup(id->filename);
+    newid->stem = g_strdup(id->stem);
+    newid->extension = g_strdup(id->extension);
+    return newid;
 }
 
 static gint
