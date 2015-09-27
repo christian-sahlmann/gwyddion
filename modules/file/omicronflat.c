@@ -994,12 +994,62 @@ load_as_curve(OmicronFlatFileList *filelist, guint fileid,
     return TRUE;
 }
 
+/* Concatenate curves #cid from a block of graph models and put the result to
+ * the first graph model.  Keep the other curves intact (to be dealt with
+ * later). */
+static void
+concatenate_graph_curves(GwyGraphModel **gmodels, guint ngraphs, guint cid)
+{
+    GwyGraphCurveModel *gcmodel;
+    guint i, j, n, ndata;
+    const gdouble *cxdata, *cydata;
+    gdouble *xdata, *ydata;
+    gdouble xpos;
+
+    if (ngraphs == 1)
+        return;
+
+    ndata = 0;
+    for (i = 0; i < ngraphs; i++) {
+        gcmodel = gwy_graph_model_get_curve(gmodels[i], cid);
+        g_assert(gcmodel);
+        ndata += gwy_graph_curve_model_get_ndata(gcmodel);
+    }
+
+    xdata = g_new(gdouble, ndata);
+    ydata = g_new(gdouble, ndata);
+
+    ndata = 0;
+    /* XXX: We treat all the curves as with abscissa beginning from 0.0.
+     * Concatenation of curves with arbitrary offsets is ill-defined. */
+    xpos = 0.0;
+    for (i = 0; i < ngraphs; i++) {
+        gcmodel = gwy_graph_model_get_curve(gmodels[i], cid);
+        cxdata = gwy_graph_curve_model_get_xdata(gcmodel);
+        cydata = gwy_graph_curve_model_get_ydata(gcmodel);
+        n = gwy_graph_curve_model_get_ndata(gcmodel);
+        memcpy(ydata + ndata, cydata, n*sizeof(gdouble));
+        for (j = 0; j < n; j++)
+            xdata[ndata + j] = cxdata[j] + xpos;
+        ndata += n;
+        /* If the curves have just a single point we cannot merge them
+         * meaningfully so fuck it. */
+        if (n > 1)
+            xpos += cxdata[n-1]*n/(n - 1.0);
+    }
+
+    gcmodel = gwy_graph_model_get_curve(gmodels[0], cid);
+    gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, ndata);
+    g_free(xdata);
+    g_free(ydata);
+}
+
 static void
 merge_continuous_curves(GwyContainer *data, gint ngraphs)
 {
     GwyGraphModel **gmodels;
     OmicronFlatFileId **ids;
-    gint i;
+    gint i, j, k, ncurves;
 
     if (!ngraphs)
         return;
@@ -1011,11 +1061,42 @@ merge_continuous_curves(GwyContainer *data, gint ngraphs)
         gmodels[i] = gwy_container_get_object(data, quark);
         g_assert(gmodels[i]);
         ids[i] = g_object_get_data(G_OBJECT(gmodels[i]), "fff-id");
-        if (ids[i]) {
+        if (ids[i])
             g_object_set_data(G_OBJECT(gmodels[i]), "fff-id", NULL);
-            gwy_debug("concatenable graph %d_%d",
-                      ids[i]->run_cycle, ids[i]->scan_cycle);
+    }
+
+    i = 0;
+    while (i < ngraphs) {
+        if (!ids[i]) {
+            i++;
+            continue;
         }
+
+        ncurves = gwy_graph_model_get_n_curves(gmodels[i]);
+        for (j = i+1; j < ngraphs; j++) {
+            if (!ids[j]
+                || !gwy_strequal(ids[j]->extension, ids[i]->extension)
+                || ids[j]->run_cycle != ids[i]->run_cycle
+                || gwy_graph_model_get_n_curves(gmodels[j]) != ncurves)
+                break;
+        }
+        gwy_debug("concatenable block of %d graphs %d_%d",
+                  j-i, ids[i]->run_cycle, ids[i]->scan_cycle);
+
+        if (j == i+1) {
+            i++;
+            continue;
+        }
+
+        /* Now we indeed have a block of consecutive mergeable curves. */
+        for (k = 0; k < ncurves; k++)
+            concatenate_graph_curves(gmodels + i, j - i, k);
+        for (k = i+1; k < j; k++) {
+            GQuark quark = gwy_app_get_graph_key_for_id(k+1);
+            gwy_container_remove(data, quark);
+            gmodels[k] = NULL;
+        }
+        i = j;
     }
 
     g_free(gmodels);
