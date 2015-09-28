@@ -50,39 +50,39 @@ typedef struct {
 } KMediansArgs;
 
 typedef struct {
+    KMediansArgs *args;
+    GwySIValueFormat *wvf;
     GtkObject *k;
     GtkObject *epsilon;
     GtkObject *max_iterations;
     GtkWidget *normalize;
 } KMediansControls;
 
-static gboolean  module_register        (void);
-static void      volume_kmedians        (GwyContainer *data,
-                                         GwyRunType run);
-static void      kmedians_dialog        (GwyContainer *data,
-                                         KMediansArgs *args);
-static void      epsilon_changed_cb     (GtkAdjustment *adj,
-                                         KMediansArgs *args);
-static void      kmedians_dialog_update (KMediansControls *controls,
-                                         KMediansArgs *args);
-static void      kmedians_values_update (KMediansControls *controls,
-                                         KMediansArgs *args);
-static GwyBrick* normalize_brick        (GwyBrick *brick,
-                                         GwyDataField *intfield);
-static void      volume_kmedians_do     (GwyContainer *data,
-                                         KMediansArgs *args);
-static void      kmedians_load_args     (GwyContainer *container,
-                                         KMediansArgs *args);
-static void      kmedians_save_args     (GwyContainer *container,
-                                         KMediansArgs *args);
-static gint      compare_func           (gconstpointer a,
-                                         gconstpointer b,
-                                         gpointer user_data);
-
+static gboolean  module_register       (void);
+static void      volume_kmedians       (GwyContainer *data,
+                                        GwyRunType run);
+static void      kmedians_dialog       (GwyContainer *data,
+                                        GwyBrick *brick,
+                                        KMediansArgs *args);
+static void      kmedians_dialog_update(KMediansControls *controls,
+                                        KMediansArgs *args);
+static void      kmedians_values_update(KMediansControls *controls,
+                                        KMediansArgs *args);
+static GwyBrick* normalize_brick       (GwyBrick *brick,
+                                        GwyDataField *intfield);
+static void      volume_kmedians_do    (GwyContainer *data,
+                                        KMediansArgs *args);
+static void      kmedians_load_args    (GwyContainer *container,
+                                        KMediansArgs *args);
+static void      kmedians_save_args    (GwyContainer *container,
+                                        KMediansArgs *args);
+static gint      compare_func          (gconstpointer a,
+                                        gconstpointer b,
+                                        gpointer user_data);
 
 static const KMediansArgs kmedians_defaults = {
     10,
-    1.0e-12,
+    1e-12,
     100,
     FALSE,
 };
@@ -129,7 +129,8 @@ volume_kmedians(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(GWY_IS_BRICK(brick));
     if (run == GWY_RUN_INTERACTIVE) {
-        kmedians_dialog(data, &args);
+        kmedians_dialog(data, brick, &args);
+        kmedians_save_args(gwy_app_settings_get(), &args);
     }
     else if (run == GWY_RUN_IMMEDIATE) {
         volume_kmedians_do(data, &args);
@@ -137,25 +138,26 @@ volume_kmedians(GwyContainer *data, GwyRunType run)
 }
 
 static void
-kmedians_dialog (GwyContainer *data, KMediansArgs *args)
+kmedians_dialog(GwyContainer *data, GwyBrick *brick, KMediansArgs *args)
 {
-    GtkWidget *dialog, *table, *spin;
+    GtkWidget *dialog, *table;
     gint response;
     KMediansControls controls;
     gint row = 0;
 
-    dialog = gtk_dialog_new_with_buttons(_("K-medians"),
-                                         NULL, 0, NULL);
+    controls.args = args;
+    controls.wvf = gwy_brick_get_value_format_w(brick,
+                                                GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                NULL);
+
+    dialog = gtk_dialog_new_with_buttons(_("K-Medians"), NULL, 0, NULL);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           _("_Reset"), RESPONSE_RESET);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
-                                 gwy_stock_like_button_new(_("_Run"),
-                                                          GTK_STOCK_OK),
-                                 GTK_RESPONSE_OK);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog),
-                                    GTK_RESPONSE_CANCEL);
+                                 GTK_STOCK_OK, GTK_RESPONSE_OK);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     gwy_help_add_to_volume_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
 
     table = gtk_table_new(4, 4, FALSE);
@@ -166,30 +168,23 @@ kmedians_dialog (GwyContainer *data, KMediansArgs *args)
                        TRUE, TRUE, 4);
 
     controls.k = gtk_adjustment_new(args->k, 2, 100, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row,
-                                       _("_Number of clusters:"), "",
-                                       controls.k);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    gwy_table_attach_hscale(table, row,
+                            _("_Number of clusters:"), NULL,
+                            controls.k, GWY_HSCALE_SQRT);
     row++;
 
-    controls.epsilon = gtk_adjustment_new(args->epsilon,
-                                          1e-20, 0.1, 1, 10, 0);
-    spin = gwy_table_attach_hscale(table, row,
-                                   _("Convergence _Precision:"), NULL,
-                                   controls.epsilon, GWY_HSCALE_LOG);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 20);
-    g_object_set_data(G_OBJECT(controls.epsilon),
-                      "controls", &controls);
-    g_signal_connect(controls.epsilon, "value-changed",
-                     G_CALLBACK(epsilon_changed_cb), args);
+    controls.epsilon = gtk_adjustment_new(-log10(args->epsilon),
+                                          1.0, 20.0, 0.01, 1.0, 0);
+    gwy_table_attach_hscale(table, row,
+                            _("Convergence _precision digits:"), NULL,
+                            controls.epsilon, GWY_HSCALE_DEFAULT);
     row++;
 
     controls.max_iterations = gtk_adjustment_new(args->max_iterations,
                                                  1, 10000, 1, 1, 0);
-    spin = gwy_table_attach_spinbutton(table, row,
-                                       _("_Max. iterations:"), "",
-                                       controls.max_iterations);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    gwy_table_attach_hscale(table, row,
+                            _("_Max. iterations:"), NULL,
+                            controls.max_iterations, GWY_HSCALE_LOG);
     row++;
 
     controls.normalize
@@ -208,6 +203,7 @@ kmedians_dialog (GwyContainer *data, KMediansArgs *args)
             kmedians_values_update(&controls, args);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
+            gwy_si_unit_value_format_free(controls.wvf);
             return;
             break;
 
@@ -226,20 +222,9 @@ kmedians_dialog (GwyContainer *data, KMediansArgs *args)
     } while (response != GTK_RESPONSE_OK);
 
     kmedians_values_update(&controls, args);
-    kmedians_save_args(gwy_app_settings_get(), args);
     gtk_widget_destroy(dialog);
+    gwy_si_unit_value_format_free(controls.wvf);
     volume_kmedians_do(data, args);
-}
-
-static void
-epsilon_changed_cb(GtkAdjustment *adj,
-                   KMediansArgs *args)
-{
-    KMediansControls *controls;
-
-    controls = g_object_get_data(G_OBJECT(adj), "controls");
-    args->epsilon = gtk_adjustment_get_value(adj);
-    kmedians_dialog_update(controls, args);
 }
 
 /* XXX: Duplicate with volume_kmeans.c */
@@ -312,16 +297,13 @@ static void
 kmedians_values_update(KMediansControls *controls,
                      KMediansArgs *args)
 {
-    args->k
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->k));
-    args->epsilon
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->epsilon));
+    args->k = gwy_adjustment_get_int(GTK_ADJUSTMENT(controls->k));
+    args->epsilon = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->epsilon));
+    args->epsilon = pow(0.1, args->epsilon);
     args->max_iterations
-        = gtk_adjustment_get_value(
-                              GTK_ADJUSTMENT(controls->max_iterations));
+        = gwy_adjustment_get_int(GTK_ADJUSTMENT(controls->max_iterations));
     args->normalize
-        = gtk_toggle_button_get_active(
-                                GTK_TOGGLE_BUTTON(controls->normalize));
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->normalize));
 }
 
 static gint
@@ -336,12 +318,11 @@ compare_func (gconstpointer a, gconstpointer b,
 
 static void
 kmedians_dialog_update(KMediansControls *controls,
-                     KMediansArgs *args)
+                       KMediansArgs *args)
 {
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->k),
-                             args->k);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->k), args->k);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->epsilon),
-                             args->epsilon);
+                             -log10(args->epsilon));
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->max_iterations),
                              args->max_iterations);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->normalize),
@@ -508,7 +489,7 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
     errormap = gwy_data_field_new_alike(dfield, TRUE);
     if (!normalize) {
         siunit = gwy_brick_get_si_unit_w(brick);
-        siunit = gwy_si_unit_duplicate(brick);
+        siunit = gwy_si_unit_duplicate(siunit);
         gwy_data_field_set_si_unit_z(errormap, siunit);
         g_object_unref(siunit);
     }
@@ -633,33 +614,30 @@ kmedians_sanitize_args(KMediansArgs *args)
 
 static void
 kmedians_load_args(GwyContainer *container,
-                 KMediansArgs *args)
+                   KMediansArgs *args)
 {
     *args = kmedians_defaults;
 
-    gwy_container_gis_int32_by_name(container, kmedians_k_key,
-                                                              &args->k);
-    gwy_container_gis_double_by_name(container, epsilon_key,
-                                                        &args->epsilon);
+    gwy_container_gis_int32_by_name(container, kmedians_k_key, &args->k);
+    gwy_container_gis_double_by_name(container, epsilon_key, &args->epsilon);
     gwy_container_gis_int32_by_name(container, max_iterations_key,
-                                                 &args->max_iterations);
+                                    &args->max_iterations);
     gwy_container_gis_boolean_by_name(container, normalize_key,
-                                                      &args->normalize);
+                                      &args->normalize);
 
     kmedians_sanitize_args(args);
 }
 
 static void
 kmedians_save_args(GwyContainer *container,
-                 KMediansArgs *args)
+                   KMediansArgs *args)
 {
     gwy_container_set_int32_by_name(container, kmedians_k_key, args->k);
-    gwy_container_set_double_by_name(container, epsilon_key,
-                                                         args->epsilon);
+    gwy_container_set_double_by_name(container, epsilon_key, args->epsilon);
     gwy_container_set_int32_by_name(container, max_iterations_key,
-                                                  args->max_iterations);
+                                    args->max_iterations);
     gwy_container_set_boolean_by_name(container, normalize_key,
-                                                       args->normalize);
+                                      args->normalize);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
