@@ -40,6 +40,11 @@ G_BEGIN_DECLS
 typedef struct _GwyGraphAreaDialog      GwyGraphAreaDialog;
 typedef struct _GwyGraphAreaDialogClass GwyGraphAreaDialogClass;
 
+typedef enum {
+    GWY_GRAPH_AREA_DIALOG_RESPONSE_PREV = 1,
+    GWY_GRAPH_AREA_DIALOG_RESPONSE_NEXT = 2,
+} GwyGraphAreaDialogResponse;
+
 struct _GwyGraphAreaDialog {
     GtkDialog dialog;
 
@@ -55,6 +60,11 @@ struct _GwyGraphAreaDialog {
     GtkWidget *color_dialog;
     GtkWidget *color_selector;
     GwyRGBA old_color;
+
+    GtkWidget *prev;
+    GtkWidget *next;
+    gboolean prev_possible;
+    gboolean next_possible;
 
     GwyGraphCurveModel *curve_model;
 };
@@ -72,6 +82,11 @@ GtkWidget*  _gwy_graph_area_dialog_new     (void);
 G_GNUC_INTERNAL
 void        _gwy_graph_area_dialog_set_curve_data(GtkWidget *dialog,
                                                   GwyGraphCurveModel *cmodel);
+
+G_GNUC_INTERNAL
+void        _gwy_graph_area_dialog_set_switching(GtkWidget *dialog,
+                                                 gboolean prev_possible,
+                                                 gboolean next_possible);
 
 /* Helpers */
 G_GNUC_INTERNAL

@@ -23,6 +23,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwyoptionmenus.h>
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwyscitext.h>
@@ -40,39 +41,40 @@ enum {
     COLUMN_PIXBUF
 };
 
-static void       gwy_graph_area_dialog_destroy    (GtkObject *object);
-static gboolean   gwy_graph_area_dialog_delete     (GtkWidget *widget,
-                                                    GdkEventAny *event);
-static void       gwy_graph_area_dialog_response   (GtkDialog *gtkdialog,
-                                                    gint response_id);
-static GtkWidget* gwy_graph_combo_box_new          (GwyGraphAreaDialog *dialog,
-                                                    const gchar *property,
-                                                    gboolean labels,
-                                                    GCallback model_creator,
-                                                    gint current);
-static void       color_change_cb                  (GtkWidget *color_button,
-                                                    GwyGraphAreaDialog *dialog);
-static void       colorsel_response_cb             (GtkWidget *selector,
-                                                    gint response,
-                                                    GwyGraphAreaDialog *dialog);
-static void       colorsel_changed_cb              (GtkColorSelection *colorsel,
-                                                    GwyGraphAreaDialog *dialog);
-static void       color_selected_cb                (GtkComboBox *combo,
-                                                    GwyGraphAreaDialog *dialog);
-static void       label_change_cb                  (GwySciText *sci_text,
-                                                    GwyGraphAreaDialog *dialog);
-static void       combo_realized                   (GtkWidget *parent,
-                                                    GtkWidget *combo);
-static void       refresh                          (GwyGraphAreaDialog *dialog);
-static void       curvetype_changed_cb             (GtkWidget *combo,
-                                                    GwyGraphAreaDialog *dialog);
-static void       thickness_changed_cb              (GtkAdjustment *adj,
-                                                    GwyGraphAreaDialog *dialog);
-static void       pointsize_changed_cb             (GtkAdjustment *adj,
-                                                    GwyGraphAreaDialog *dialog);
-static GtkWidget* gwy_graph_color_combo_new        (void);
-static void       gwy_graph_color_combo_select     (GtkComboBox *combo,
-                                                    const GwyRGBA *color);
+static void       gwy_graph_area_dialog_destroy (GtkObject *object);
+static gboolean   gwy_graph_area_dialog_delete  (GtkWidget *widget,
+                                                 GdkEventAny *event);
+static void       gwy_graph_area_dialog_response(GtkDialog *gtkdialog,
+                                                 gint response_id);
+static GtkWidget* gwy_graph_combo_box_new       (GwyGraphAreaDialog *dialog,
+                                                 const gchar *property,
+                                                 gboolean labels,
+                                                 GCallback model_creator,
+                                                 gint current);
+static void       color_change                  (GtkWidget *color_button,
+                                                 GwyGraphAreaDialog *dialog);
+static void       colorsel_response             (GtkWidget *selector,
+                                                 gint response,
+                                                 GwyGraphAreaDialog *dialog);
+static void       colorsel_changed              (GtkColorSelection *colorsel,
+                                                 GwyGraphAreaDialog *dialog);
+static void       color_selected                (GtkComboBox *combo,
+                                                 GwyGraphAreaDialog *dialog);
+static void       label_change                  (GwySciText *sci_text,
+                                                 GwyGraphAreaDialog *dialog);
+static void       combo_realized                (GtkWidget *parent,
+                                                 GtkWidget *combo);
+static void       refresh                       (GwyGraphAreaDialog *dialog);
+static void       curvetype_changed             (GtkWidget *combo,
+                                                 GwyGraphAreaDialog *dialog);
+static void       thickness_changed             (GtkAdjustment *adj,
+                                                 GwyGraphAreaDialog *dialog);
+static void       pointsize_changed             (GtkAdjustment *adj,
+                                                 GwyGraphAreaDialog *dialog);
+static GtkWidget* gwy_graph_color_combo_new     (void);
+static void       gwy_graph_color_combo_select  (GtkComboBox *combo,
+                                                 const GwyRGBA *color);
+static void       update_switcher_sensitivity   (GwyGraphAreaDialog *dialog);
 
 G_DEFINE_TYPE(GwyGraphAreaDialog, _gwy_graph_area_dialog, GTK_TYPE_DIALOG)
 
@@ -96,9 +98,16 @@ _gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
     gint row;
 
     gtk_window_set_title(GTK_WINDOW(dialog), _("Curve Properties"));
+    dialog->prev = gwy_stock_like_button_new(_("Pre_v"), GWY_STOCK_LESS);
+    gtk_dialog_add_action_widget(GTK_DIALOG(dialog), dialog->prev,
+                                 GWY_GRAPH_AREA_DIALOG_RESPONSE_PREV);
+    dialog->next = gwy_stock_like_button_new(_("_Next"), GWY_STOCK_MORE);
+    gtk_dialog_add_action_widget(GTK_DIALOG(dialog), dialog->next,
+                                 GWY_GRAPH_AREA_DIALOG_RESPONSE_NEXT);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_CLOSE);
+    update_switcher_sensitivity(dialog);
 
     table = gtk_table_new(7, 4, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -107,9 +116,13 @@ _gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
     row = 0;
 
+    hbox = gtk_hbox_new(FALSE, 6);
+    gtk_table_attach(GTK_TABLE(table), hbox,
+                     0, 4, row, row+1, GTK_FILL, 0, 0, 0);
+
     dialog->curvetype_menu
         = gwy_enum_combo_box_new(gwy_graph_curve_type_get_enum(), -1,
-                                 G_CALLBACK(curvetype_changed_cb), dialog,
+                                 G_CALLBACK(curvetype_changed), dialog,
                                  0, TRUE);
     gwy_table_attach_hscale(table, row, _("Plot _style:"), NULL,
                             GTK_OBJECT(dialog->curvetype_menu),
@@ -125,12 +138,12 @@ _gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
                                    FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), dialog->color_button, FALSE, FALSE, 0);
     g_signal_connect(dialog->color_button, "clicked",
-                     G_CALLBACK(color_change_cb), dialog);
+                     G_CALLBACK(color_change), dialog);
 
     dialog->color_selector = gwy_graph_color_combo_new();
     gtk_box_pack_start(GTK_BOX(hbox), dialog->color_selector, FALSE, FALSE, 0);
     g_signal_connect(dialog->color_selector, "changed",
-                     G_CALLBACK(color_selected_cb), dialog);
+                     G_CALLBACK(color_selected), dialog);
 
     label = gtk_label_new_with_mnemonic(_("Pl_ot color:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -152,7 +165,7 @@ _gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
     gwy_table_attach_hscale(table, row, _("_Point size:"), "px",
                             dialog->pointsize, 0);
     g_signal_connect(dialog->pointsize, "value-changed",
-                     G_CALLBACK(pointsize_changed_cb), dialog);
+                     G_CALLBACK(pointsize_changed), dialog);
     row++;
 
     dialog->linestyle_menu
@@ -168,7 +181,7 @@ _gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
     gwy_table_attach_hscale(table, row, _("Line t_hickness:"), "px",
                             dialog->thickness, 0);
     g_signal_connect(dialog->thickness, "value-changed",
-                     G_CALLBACK(thickness_changed_cb), dialog);
+                     G_CALLBACK(thickness_changed), dialog);
     row++;
 
     label = gtk_label_new_with_mnemonic(_("<b>Label Te_xt</b>"));
@@ -184,7 +197,7 @@ _gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
                                   gwy_sci_text_get_entry(scitext));
     gtk_container_set_border_width(GTK_CONTAINER(dialog->sci_text), 4);
     g_signal_connect(dialog->sci_text, "edited",
-                     G_CALLBACK(label_change_cb), dialog);
+                     G_CALLBACK(label_change), dialog);
 
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
                       dialog->sci_text);
@@ -344,6 +357,7 @@ refresh(GwyGraphAreaDialog *dialog)
     model = gtk_combo_box_get_model(GTK_COMBO_BOX(dialog->color_selector));
     gwy_null_store_set_model(GWY_NULL_STORE(model), dialog->curve_model, NULL);
     gwy_null_store_row_changed(GWY_NULL_STORE(model), 0);
+    update_switcher_sensitivity(dialog);
 
     if (dialog->curve_model == NULL)
         return;
@@ -371,8 +385,8 @@ refresh(GwyGraphAreaDialog *dialog)
 }
 
 static void
-color_change_cb(G_GNUC_UNUSED GtkWidget *color_button,
-                GwyGraphAreaDialog *dialog)
+color_change(G_GNUC_UNUSED GtkWidget *color_button,
+             GwyGraphAreaDialog *dialog)
 {
     GdkColor gcl;
     GwyGraphCurveModel *cmodel;
@@ -393,22 +407,27 @@ color_change_cb(G_GNUC_UNUSED GtkWidget *color_button,
 
     colorsel = GTK_COLOR_SELECTION_DIALOG(selector)->colorsel;
     g_signal_connect(selector, "response",
-                     G_CALLBACK(colorsel_response_cb), dialog);
+                     G_CALLBACK(colorsel_response), dialog);
     g_signal_connect(colorsel, "color-changed",
-                     G_CALLBACK(colorsel_changed_cb), dialog);
+                     G_CALLBACK(colorsel_changed), dialog);
     gwy_rgba_to_gdk_color(&cmodel->color, &gcl);
     gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(colorsel), &gcl);
     gtk_widget_show(selector);
 }
 
 static void
-colorsel_response_cb(GtkWidget *selector,
-                     gint response,
-                     GwyGraphAreaDialog *dialog)
+colorsel_response(GtkWidget *selector,
+                  gint response,
+                  GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
 
     if (!dialog->curve_model)
+        return;
+
+    /* The parent graph area will handle this. */
+    if (response == GWY_GRAPH_AREA_DIALOG_RESPONSE_PREV
+        || response == GWY_GRAPH_AREA_DIALOG_RESPONSE_NEXT)
         return;
 
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
@@ -421,8 +440,8 @@ colorsel_response_cb(GtkWidget *selector,
 }
 
 static void
-colorsel_changed_cb(GtkColorSelection *colorsel,
-                    GwyGraphAreaDialog *dialog)
+colorsel_changed(GtkColorSelection *colorsel,
+                 GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
     GwyRGBA rgba;
@@ -440,7 +459,7 @@ colorsel_changed_cb(GtkColorSelection *colorsel,
 }
 
 static void
-color_selected_cb(GtkComboBox *combo,
+color_selected(GtkComboBox *combo,
                   GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
@@ -458,7 +477,7 @@ color_selected_cb(GtkComboBox *combo,
 }
 
 static void
-label_change_cb(GwySciText *sci_text, GwyGraphAreaDialog *dialog)
+label_change(GwySciText *sci_text, GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
 
@@ -493,7 +512,7 @@ _gwy_graph_area_dialog_set_curve_data(GtkWidget *dialog,
 }
 
 static void
-curvetype_changed_cb(GtkWidget *combo, GwyGraphAreaDialog *dialog)
+curvetype_changed(GtkWidget *combo, GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
     GwyGraphCurveType ctype;
@@ -507,7 +526,7 @@ curvetype_changed_cb(GtkWidget *combo, GwyGraphAreaDialog *dialog)
 }
 
 static void
-thickness_changed_cb(GtkAdjustment *adj, GwyGraphAreaDialog *dialog)
+thickness_changed(GtkAdjustment *adj, GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
 
@@ -519,7 +538,7 @@ thickness_changed_cb(GtkAdjustment *adj, GwyGraphAreaDialog *dialog)
 }
 
 static void
-pointsize_changed_cb(GtkAdjustment *adj, GwyGraphAreaDialog *dialog)
+pointsize_changed(GtkAdjustment *adj, GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
 
@@ -752,6 +771,35 @@ gwy_graph_color_combo_select(GtkComboBox *combo,
         gtk_combo_box_set_active(combo, i+1);
     else
         gtk_combo_box_set_active(combo, 0);
+}
+
+void
+_gwy_graph_area_dialog_set_switching(GtkWidget *dialog,
+                                     gboolean prev_possible,
+                                     gboolean next_possible)
+{
+    GwyGraphAreaDialog *gadialog = GWY_GRAPH_AREA_DIALOG(dialog);
+
+    gadialog->prev_possible = prev_possible;
+    gadialog->next_possible = next_possible;
+    update_switcher_sensitivity(gadialog);
+}
+
+static void
+update_switcher_sensitivity(GwyGraphAreaDialog *dialog)
+{
+    gboolean prev_sens = dialog->prev_possible;
+    gboolean next_sens = dialog->next_possible;
+
+    if (dialog->curve_model == NULL)
+        prev_sens = next_sens = FALSE;
+
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
+                                      GWY_GRAPH_AREA_DIALOG_RESPONSE_PREV,
+                                      prev_sens);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
+                                      GWY_GRAPH_AREA_DIALOG_RESPONSE_NEXT,
+                                      next_sens);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
