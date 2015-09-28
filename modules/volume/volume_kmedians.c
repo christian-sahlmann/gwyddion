@@ -372,8 +372,8 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
         data = gwy_brick_get_data_const(brick);
     }
 
-    centers = g_new(gdouble, zres * k);
-    oldcenters = g_new(gdouble, zres * k);
+    centers = g_new(gdouble, zres*k);
+    oldcenters = g_new(gdouble, zres*k);
     plane = g_new(gdouble, xres * yres * k);
     npix = g_new(gint, k);
     data1 = gwy_data_field_get_data(dfield);
@@ -429,13 +429,14 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
                 *(npix + c) = 0;
             }
 
-            for (j = 0; j < yres; j++)
+            for (j = 0; j < yres; j++) {
                 for (i = 0; i < xres; i++) {
                     c = (gint)(*(data1 + j * xres + i));
                     (*(npix + c))++;
                     *(plane + c * xres * yres + *(npix + c) - 1)
                              = *(data + l * xres * yres + j * xres + i);
                 }
+            }
             for (c = 0; c < k; c++) {
                 gwy_math_sort(*(npix + c), plane + c * xres * yres);
                 *(centers + c * zres + l)
@@ -493,8 +494,7 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
     gwy_app_set_data_field_title(container, newid,
                                  g_strdup_printf(_("K-medians cluster of %s"),
                                                  description));
-    gwy_app_channel_log_add(container, -1, newid,
-                            "volume::kmedians",
+    gwy_app_channel_log_add(container, -1, newid, "volume::kmedians",
                             NULL);
 
     newid = gwy_app_data_browser_add_data_field(errormap,
@@ -503,9 +503,7 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
     gwy_app_set_data_field_title(container, newid,
                                  g_strdup_printf(_("K-medians error of %s"),
                                                  description));
-
-    gwy_app_channel_log_add(container, -1, newid,
-                            "volume::kmedians",
+    gwy_app_channel_log_add(container, -1, newid, "volume::kmedians",
                             NULL);
 
     if (normalize) {
@@ -518,15 +516,15 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
                                                      description));
 
         gwy_app_channel_log_add(container, -1, newid,
-                                "volume::kmeans", NULL);
+                                "volume::kmedians", NULL);
     }
 
     g_free(description);
 
     gmodel = gwy_graph_model_new();
     calibration = gwy_brick_get_zcalibration(brick);
-    ydata = g_new(gdouble, zres);
     xdata = g_new(gdouble, zres);
+    ydata = g_new(gdouble, zres);
     if (calibration) {
         memcpy(xdata, gwy_data_line_get_data(calibration),
                zres*sizeof(gdouble));
@@ -552,6 +550,7 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
         g_object_unref(gcmodel);
     }
     g_free(xdata);
+    g_free(ydata);
     g_object_set(gmodel,
                  "si-unit-x", siunit,
                  "si-unit-y", gwy_brick_get_si_unit_w(brick),
