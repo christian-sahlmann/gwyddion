@@ -51,7 +51,6 @@ typedef struct {
 
 typedef struct {
     KMediansArgs *args;
-    GwySIValueFormat *wvf;
     GtkObject *k;
     GtkObject *epsilon;
     GtkObject *max_iterations;
@@ -62,7 +61,6 @@ static gboolean  module_register       (void);
 static void      volume_kmedians       (GwyContainer *data,
                                         GwyRunType run);
 static void      kmedians_dialog       (GwyContainer *data,
-                                        GwyBrick *brick,
                                         KMediansArgs *args);
 static void      kmedians_dialog_update(KMediansControls *controls,
                                         KMediansArgs *args);
@@ -126,7 +124,7 @@ volume_kmedians(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(GWY_IS_BRICK(brick));
     if (run == GWY_RUN_INTERACTIVE) {
-        kmedians_dialog(data, brick, &args);
+        kmedians_dialog(data, &args);
         kmedians_save_args(gwy_app_settings_get(), &args);
     }
     else if (run == GWY_RUN_IMMEDIATE) {
@@ -135,7 +133,7 @@ volume_kmedians(GwyContainer *data, GwyRunType run)
 }
 
 static void
-kmedians_dialog(GwyContainer *data, GwyBrick *brick, KMediansArgs *args)
+kmedians_dialog(GwyContainer *data, KMediansArgs *args)
 {
     GtkWidget *dialog, *table;
     gint response;
@@ -143,9 +141,6 @@ kmedians_dialog(GwyContainer *data, GwyBrick *brick, KMediansArgs *args)
     gint row = 0;
 
     controls.args = args;
-    controls.wvf = gwy_brick_get_value_format_w(brick,
-                                                GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                NULL);
 
     dialog = gtk_dialog_new_with_buttons(_("K-Medians"), NULL, 0, NULL);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
@@ -200,7 +195,6 @@ kmedians_dialog(GwyContainer *data, GwyBrick *brick, KMediansArgs *args)
             kmedians_values_update(&controls, args);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
-            gwy_si_unit_value_format_free(controls.wvf);
             return;
             break;
 
@@ -220,7 +214,6 @@ kmedians_dialog(GwyContainer *data, GwyBrick *brick, KMediansArgs *args)
 
     kmedians_values_update(&controls, args);
     gtk_widget_destroy(dialog);
-    gwy_si_unit_value_format_free(controls.wvf);
     volume_kmedians_do(data, args);
 }
 
@@ -341,7 +334,6 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
     gint max_iterations = args->max_iterations;
     gboolean converged = FALSE, cancelled = FALSE;
     gboolean normalize = args->normalize;
-    GTimer *timer = g_timer_new();
 
     gwy_app_data_browser_get_current(GWY_APP_BRICK, &brick,
                                      GWY_APP_BRICK_ID, &id,
