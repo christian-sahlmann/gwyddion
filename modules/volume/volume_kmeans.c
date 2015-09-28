@@ -49,6 +49,7 @@ typedef struct {
 } KMeansArgs;
 
 typedef struct {
+    KMeansArgs *args;
     GtkObject *k;
     GtkObject *epsilon;
     GtkObject *max_iterations;
@@ -59,8 +60,6 @@ static gboolean  module_register     (void);
 static void      volume_kmeans       (GwyContainer *data,
                                       GwyRunType run);
 static void      kmeans_dialog       (GwyContainer *data,
-                                      KMeansArgs *args);
-static void      epsilon_changed_cb  (GtkAdjustment *adj,
                                       KMeansArgs *args);
 static void      kmeans_dialog_update(KMeansControls *controls,
                                       KMeansArgs *args);
@@ -125,6 +124,7 @@ volume_kmeans(GwyContainer *data, GwyRunType run)
     g_return_if_fail(GWY_IS_BRICK(brick));
     if (run == GWY_RUN_INTERACTIVE) {
         kmeans_dialog(data, &args);
+        kmeans_save_args(gwy_app_settings_get(), &args);
     }
     else if (run == GWY_RUN_IMMEDIATE) {
         volume_kmeans_do(data, &args);
@@ -132,25 +132,23 @@ volume_kmeans(GwyContainer *data, GwyRunType run)
 }
 
 static void
-kmeans_dialog (GwyContainer *data, KMeansArgs *args)
+kmeans_dialog(GwyContainer *data, KMeansArgs *args)
 {
-    GtkWidget *dialog, *table, *spin;
+    GtkWidget *dialog, *table;
     gint response;
     KMeansControls controls;
     gint row = 0;
 
-    dialog = gtk_dialog_new_with_buttons(_("K-means"),
-                                         NULL, 0, NULL);
+    controls.args = args;
+
+    dialog = gtk_dialog_new_with_buttons(_("K-means"), NULL, 0, NULL);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           _("_Reset"), RESPONSE_RESET);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
-    gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
-                                 gwy_stock_like_button_new(_("_Run"),
-                                                          GTK_STOCK_OK),
-                                 GTK_RESPONSE_OK);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog),
-                                    GTK_RESPONSE_CANCEL);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_OK, GTK_RESPONSE_OK);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     gwy_help_add_to_volume_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
 
     table = gtk_table_new(4, 4, FALSE);
@@ -161,30 +159,23 @@ kmeans_dialog (GwyContainer *data, KMeansArgs *args)
                        TRUE, TRUE, 4);
 
     controls.k = gtk_adjustment_new(args->k, 2, 100, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row,
-                                       _("_Number of clusters:"), "",
-                                       controls.k);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    gwy_table_attach_hscale(table, row,
+                            _("_Number of clusters:"), NULL,
+                            controls.k, GWY_HSCALE_SQRT);
     row++;
 
-    controls.epsilon = gtk_adjustment_new(args->epsilon,
-                                          1e-20, 0.1, 1, 10, 0);
-    spin = gwy_table_attach_hscale(table, row,
-                                   _("Convergence _Precision:"), NULL,
-                                   controls.epsilon, GWY_HSCALE_LOG);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 20);
-    g_object_set_data(G_OBJECT(controls.epsilon),
-                      "controls", &controls);
-    g_signal_connect(controls.epsilon, "value-changed",
-                     G_CALLBACK(epsilon_changed_cb), args);
+    controls.epsilon = gtk_adjustment_new(-log10(args->epsilon),
+                                          1.0, 20.0, 0.01, 1.0, 0);
+    gwy_table_attach_hscale(table, row,
+                            _("Convergence _precision digits:"), NULL,
+                            controls.epsilon, GWY_HSCALE_DEFAULT);
     row++;
 
     controls.max_iterations = gtk_adjustment_new(args->max_iterations,
                                                  1, 10000, 1, 1, 0);
-    spin = gwy_table_attach_spinbutton(table, row,
-                                       _("_Max. iterations:"), "",
-                                       controls.max_iterations);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    gwy_table_attach_hscale(table, row,
+                            _("_Max. iterations:"), NULL,
+                            controls.max_iterations, GWY_HSCALE_LOG);
     row++;
 
     controls.normalize
@@ -221,20 +212,8 @@ kmeans_dialog (GwyContainer *data, KMeansArgs *args)
     } while (response != GTK_RESPONSE_OK);
 
     kmeans_values_update(&controls, args);
-    kmeans_save_args(gwy_app_settings_get(), args);
     gtk_widget_destroy(dialog);
     volume_kmeans_do(data, args);
-}
-
-static void
-epsilon_changed_cb(GtkAdjustment *adj,
-                   KMeansArgs *args)
-{
-    KMeansControls *controls;
-
-    controls = g_object_get_data(G_OBJECT(adj), "controls");
-    args->epsilon = gtk_adjustment_get_value(adj);
-    kmeans_dialog_update(controls, args);
 }
 
 /* XXX: Duplicate with volume_kmedians.c */
@@ -307,26 +286,22 @@ static void
 kmeans_values_update(KMeansControls *controls,
                      KMeansArgs *args)
 {
-    args->k
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->k));
-    args->epsilon
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->epsilon));
+    args->k = gwy_adjustment_get_int(GTK_ADJUSTMENT(controls->k));
+    args->epsilon = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->epsilon));
+    args->epsilon = pow(0.1, args->epsilon);
     args->max_iterations
-        = gtk_adjustment_get_value(
-                              GTK_ADJUSTMENT(controls->max_iterations));
+        = gwy_adjustment_get_int(GTK_ADJUSTMENT(controls->max_iterations));
     args->normalize
-        = gtk_toggle_button_get_active(
-                                GTK_TOGGLE_BUTTON(controls->normalize));
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->normalize));
 }
 
 static void
 kmeans_dialog_update(KMeansControls *controls,
                      KMeansArgs *args)
 {
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->k),
-                             args->k);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->k), args->k);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->epsilon),
-                             args->epsilon);
+                             -log10(args->epsilon));
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->max_iterations),
                              args->max_iterations);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->normalize),
@@ -452,7 +427,7 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
                 *(sum + c * zres + l) = 0;
             }
         }
-        for (i = 0; i < xres; i++)
+        for (i = 0; i < xres; i++) {
             for (j = 0; j < yres; j++) {
                 c = (gint)(*(data1 + j * xres + i));
                 *(npix + c) += 1;
@@ -461,11 +436,11 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
                             += *(data + l * xres * yres + j * xres + i);
                 }
             }
-
+        }
         for (c = 0; c < k; c++)
-            for (l =0; l < zres; l++) {
+            for (l = 0; l < zres; l++) {
                 *(centers + c * zres + l) = (*(npix + c) > 0) ?
-                     *(sum + c * zres + l) / (gdouble)(*(npix + c)) : 0;
+                     *(sum + c * zres + l)/(gdouble)(*(npix + c)) : 0.0;
         }
 
         converged = TRUE;
@@ -490,13 +465,13 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
     errormap = gwy_data_field_new_alike(dfield, TRUE);
     if (!normalize) {
         siunit = gwy_brick_get_si_unit_w(brick);
-        siunit = gwy_si_unit_duplicate(brick);
+        siunit = gwy_si_unit_duplicate(siunit);
         gwy_data_field_set_si_unit_z(errormap, siunit);
         g_object_unref(siunit);
     }
     errordata = gwy_data_field_get_data(errormap);
 
-    for (i = 0; i < xres; i++)
+    for (i = 0; i < xres; i++) {
         for (j = 0; j < yres; j++) {
             dist = 0.0;
             c = (gint)(*(data1 + j * xres + i));
@@ -508,6 +483,7 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
             }
             *(errordata + j * xres + i) = sqrt(dist);
         }
+    }
 
     gwy_data_field_add(dfield, 1.0);
     newid = gwy_app_data_browser_add_data_field(dfield,
@@ -617,8 +593,7 @@ kmeans_load_args(GwyContainer *container,
     *args = kmeans_defaults;
 
     gwy_container_gis_int32_by_name(container, kmeans_k_key, &args->k);
-    gwy_container_gis_double_by_name(container, epsilon_key,
-                                                        &args->epsilon);
+    gwy_container_gis_double_by_name(container, epsilon_key, &args->epsilon);
     gwy_container_gis_int32_by_name(container, max_iterations_key,
                                                  &args->max_iterations);
     gwy_container_gis_boolean_by_name(container, normalize_key,
@@ -632,8 +607,7 @@ kmeans_save_args(GwyContainer *container,
                  KMeansArgs *args)
 {
     gwy_container_set_int32_by_name(container, kmeans_k_key, args->k);
-    gwy_container_set_double_by_name(container, epsilon_key,
-                                                         args->epsilon);
+    gwy_container_set_double_by_name(container, epsilon_key, args->epsilon);
     gwy_container_set_int32_by_name(container, max_iterations_key,
                                                   args->max_iterations);
     gwy_container_set_boolean_by_name(container, normalize_key,
