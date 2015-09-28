@@ -395,8 +395,6 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
 
     siunit = gwy_brick_get_si_unit_x(brick);
     gwy_data_field_set_si_unit_xy(dfield, siunit);
-    siunit = gwy_si_unit_new(_("Cluster"));
-    gwy_data_field_set_si_unit_z(dfield, siunit);
 
     intmap = gwy_data_field_new_alike(dfield, TRUE);
     siunit = gwy_brick_get_si_unit_w(brick);
@@ -508,11 +506,15 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
         goto fail;
 
     errormap = gwy_data_field_new_alike(dfield, TRUE);
-    siunit = gwy_si_unit_new(_("Error"));
-    gwy_data_field_set_si_unit_z(errormap, siunit);
+    if (!normalize) {
+        siunit = gwy_brick_get_si_unit_w(brick);
+        siunit = gwy_si_unit_duplicate(brick);
+        gwy_data_field_set_si_unit_z(errormap, siunit);
+        g_object_unref(siunit);
+    }
     errordata = gwy_data_field_get_data(errormap);
 
-    for (i = 0; i < xres; i++)
+    for (i = 0; i < xres; i++) {
         for (j = 0; j < yres; j++) {
             dist = 0.0;
             c = (gint)(*(data1 + j * xres + i));
@@ -524,6 +526,7 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
             }
             *(errordata + j * xres + i) = sqrt(dist);
         }
+    }
 
     gwy_data_field_add(dfield, 1.0);
     newid = gwy_app_data_browser_add_data_field(dfield,
@@ -531,10 +534,8 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
     gwy_object_unref(dfield);
     description = gwy_app_get_brick_title(container, id);
     gwy_app_set_data_field_title(container, newid,
-                                 g_strdup_printf(
-                                                 _("K-medians of %s"),
-                                                 description)
-                                );
+                                 g_strdup_printf(_("K-medians cluster of %s"),
+                                                 description));
     gwy_app_channel_log_add(container, -1, newid,
                             "volume::kmedians",
                             NULL);
@@ -543,10 +544,8 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
                                                 container, TRUE);
     gwy_object_unref(errormap);
     gwy_app_set_data_field_title(container, newid,
-                                 g_strdup_printf(
-                                                 _("K-medians error of %s"),
-                                                 description)
-                                );
+                                 g_strdup_printf(_("K-medians error of %s"),
+                                                 description));
 
     gwy_app_channel_log_add(container, -1, newid,
                             "volume::kmedians",
@@ -557,10 +556,9 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
                                                     container, TRUE);
         gwy_object_unref(intmap);
         gwy_app_set_data_field_title(container, newid,
-                                     g_strdup_printf(
-                                                     _("Pre-normalized intensity of %s"),
-                                                     description)
-                                    );
+                                     g_strdup_printf(_("Pre-normalized "
+                                                       "intensity of %s"),
+                                                     description));
 
         gwy_app_channel_log_add(container, -1, newid,
                                 "volume::kmeans", NULL);
@@ -590,8 +588,7 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
         g_object_set(gcmodel,
                      "mode", GWY_GRAPH_CURVE_LINE,
                      "description",
-                     g_strdup_printf(_("K-medians center %d"),
-                                     c + 1),
+                     g_strdup_printf(_("K-medians center %d"), c + 1),
                      "color", rgba,
                      NULL);
         gwy_graph_model_add_curve(gmodel, gcmodel);
@@ -620,10 +617,9 @@ fail:
     g_free(centers);
 }
 
-static const gchar kmedians_k_key[]     = "/module/kmedians/k";
 static const gchar epsilon_key[]        = "/module/kmedians/epsilon";
-static const gchar max_iterations_key[]
-                                    = "/module/kmedians/max_iterations";
+static const gchar kmedians_k_key[]     = "/module/kmedians/k";
+static const gchar max_iterations_key[] = "/module/kmedians/max_iterations";
 static const gchar normalize_key[]      = "/module/kmedians/normalize";
 
 static void
@@ -633,7 +629,6 @@ kmedians_sanitize_args(KMediansArgs *args)
     args->epsilon = CLAMP(args->epsilon, 1e-20, 0.1);
     args->max_iterations = CLAMP(args->max_iterations, 0, 10000);
     args->normalize = !!args->normalize;
-
 }
 
 static void
@@ -666,5 +661,5 @@ kmedians_save_args(GwyContainer *container,
     gwy_container_set_boolean_by_name(container, normalize_key,
                                                        args->normalize);
 }
-/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

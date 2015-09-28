@@ -380,8 +380,6 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
 
     siunit = gwy_brick_get_si_unit_x(brick);
     gwy_data_field_set_si_unit_xy(dfield, siunit);
-    siunit = gwy_si_unit_new(_("Cluster"));
-    gwy_data_field_set_si_unit_z(dfield, siunit);
 
     intmap = gwy_data_field_new_alike(dfield, TRUE);
     siunit = gwy_brick_get_si_unit_w(brick);
@@ -490,8 +488,12 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
         goto fail;
 
     errormap = gwy_data_field_new_alike(dfield, TRUE);
-    siunit = gwy_si_unit_new(_("Error"));
-    gwy_data_field_set_si_unit_z(errormap, siunit);
+    if (!normalize) {
+        siunit = gwy_brick_get_si_unit_w(brick);
+        siunit = gwy_si_unit_duplicate(brick);
+        gwy_data_field_set_si_unit_z(errormap, siunit);
+        g_object_unref(siunit);
+    }
     errordata = gwy_data_field_get_data(errormap);
 
     for (i = 0; i < xres; i++)
@@ -513,9 +515,8 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
     gwy_object_unref(dfield);
     description = gwy_app_get_brick_title(container, id);
     gwy_app_set_data_field_title(container, newid,
-                                 g_strdup_printf(_("K-means of %s"),
-                                                 description)
-                                );
+                                 g_strdup_printf(_("K-means cluster of %s"),
+                                                 description));
     gwy_app_channel_log_add(container, -1, newid, "volume::kmeans",
                             NULL);
 
@@ -523,10 +524,8 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
                                                 container, TRUE);
     gwy_object_unref(errormap);
     gwy_app_set_data_field_title(container, newid,
-                                 g_strdup_printf(
-                                                 _("K-means error of %s"),
-                                                 description)
-                                );
+                                 g_strdup_printf(_("K-means error of %s"),
+                                                 description));
     gwy_app_channel_log_add(container, -1, newid, "volume::kmeans",
                             NULL);
 
@@ -535,10 +534,9 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
                                                     container, TRUE);
         gwy_object_unref(intmap);
         gwy_app_set_data_field_title(container, newid,
-                                     g_strdup_printf(
-                                                     _("Pre-normalized intensity of %s"),
-                                                     description)
-                                    );
+                                     g_strdup_printf(_("Pre-normalized "
+                                                       "intensity of %s"),
+                                                     description));
 
         gwy_app_channel_log_add(container, -1, newid,
                                 "volume::kmeans", NULL);
@@ -598,10 +596,9 @@ fail:
     g_free(centers);
 }
 
-static const gchar kmeans_k_key[]       = "/module/kmeans/k";
 static const gchar epsilon_key[]        = "/module/kmeans/epsilon";
-static const gchar max_iterations_key[]
-                                      = "/module/kmeans/max_iterations";
+static const gchar kmeans_k_key[]       = "/module/kmeans/k";
+static const gchar max_iterations_key[] = "/module/kmeans/max_iterations";
 static const gchar normalize_key[]      = "/module/kmeans/normalize";
 
 static void
@@ -611,7 +608,6 @@ kmeans_sanitize_args(KMeansArgs *args)
     args->epsilon = CLAMP(args->epsilon, 1e-20, 0.1);
     args->max_iterations = CLAMP(args->max_iterations, 0, 10000);
     args->normalize = !!args->normalize;
-
 }
 
 static void
@@ -643,5 +639,5 @@ kmeans_save_args(GwyContainer *container,
     gwy_container_set_boolean_by_name(container, normalize_key,
                                                        args->normalize);
 }
-/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
