@@ -76,9 +76,6 @@ static void      kmedians_load_args    (GwyContainer *container,
                                         KMediansArgs *args);
 static void      kmedians_save_args    (GwyContainer *container,
                                         KMediansArgs *args);
-static gint      compare_func          (gconstpointer a,
-                                        gconstpointer b,
-                                        gpointer user_data);
 
 static const KMediansArgs kmedians_defaults = {
     10,
@@ -155,8 +152,8 @@ kmedians_dialog(GwyContainer *data, GwyBrick *brick, KMediansArgs *args)
                           _("_Reset"), RESPONSE_RESET);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
-    gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
-                                 GTK_STOCK_OK, GTK_RESPONSE_OK);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     gwy_help_add_to_volume_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
 
@@ -306,16 +303,6 @@ kmedians_values_update(KMediansControls *controls,
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->normalize));
 }
 
-static gint
-compare_func (gconstpointer a, gconstpointer b,
-              G_GNUC_UNUSED gpointer user_data)
-{
-    const gdouble *aa = a;
-    const gdouble *bb = b;
-
-    return *aa - *bb;
-}
-
 static void
 kmedians_dialog_update(KMediansControls *controls,
                        KMediansArgs *args)
@@ -354,6 +341,7 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
     gint max_iterations = args->max_iterations;
     gboolean converged = FALSE, cancelled = FALSE;
     gboolean normalize = args->normalize;
+    GTimer *timer = g_timer_new();
 
     gwy_app_data_browser_get_current(GWY_APP_BRICK, &brick,
                                      GWY_APP_BRICK_ID, &id,
@@ -457,11 +445,7 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
                              = *(data + l * xres * yres + j * xres + i);
                 }
             for (c = 0; c < k; c++) {
-                g_qsort_with_data (plane + c * xres * yres,
-                                   *(npix + c),
-                                   sizeof(gdouble),
-                                   compare_func,
-                                   NULL);
+                gwy_math_sort(*(npix + c), plane + c * xres * yres);
                 *(centers + c * zres + l)
                          = *(plane + c * xres * yres + *(npix + c) / 2);
             }
