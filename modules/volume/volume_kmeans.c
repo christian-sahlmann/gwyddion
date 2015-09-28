@@ -116,6 +116,7 @@ volume_kmeans(GwyContainer *data, GwyRunType run)
     gint id;
 
     g_return_if_fail(run & KMEANS_RUN_MODES);
+    g_return_if_fail(data);
 
     kmeans_load_args(gwy_app_settings_get(), &args);
     gwy_app_data_browser_get_current(GWY_APP_BRICK, &brick,
@@ -488,103 +489,101 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
     if (cancelled)
         goto fail;
 
-    if (container) {
-        errormap = gwy_data_field_new_alike(dfield, TRUE);
-        siunit = gwy_si_unit_new(_("Error"));
-        gwy_data_field_set_si_unit_z(errormap, siunit);
-        errordata = gwy_data_field_get_data(errormap);
+    errormap = gwy_data_field_new_alike(dfield, TRUE);
+    siunit = gwy_si_unit_new(_("Error"));
+    gwy_data_field_set_si_unit_z(errormap, siunit);
+    errordata = gwy_data_field_get_data(errormap);
 
-        for (i = 0; i < xres; i++)
-            for (j = 0; j < yres; j++) {
-                dist = 0.0;
-                c = (gint)(*(data1 + j * xres + i));
-                for (l = 0; l < zres; l++) {
-                    dist += (*(data + l * xres * yres + j * xres + i)
-                           - *(centers + c * zres + l))
-                          * (*(data + l * xres * yres + j * xres + i)
-                           - *(centers + c * zres + l));
-                }
-                *(errordata + j * xres + i) = sqrt(dist);
+    for (i = 0; i < xres; i++)
+        for (j = 0; j < yres; j++) {
+            dist = 0.0;
+            c = (gint)(*(data1 + j * xres + i));
+            for (l = 0; l < zres; l++) {
+                dist += (*(data + l * xres * yres + j * xres + i)
+                         - *(centers + c * zres + l))
+                    * (*(data + l * xres * yres + j * xres + i)
+                       - *(centers + c * zres + l));
             }
+            *(errordata + j * xres + i) = sqrt(dist);
+        }
 
-        gwy_data_field_add(dfield, 1.0);
-        newid = gwy_app_data_browser_add_data_field(dfield,
-                                                    container, TRUE);
-        gwy_object_unref(dfield);
-        description = gwy_app_get_brick_title(container, id);
-        gwy_app_set_data_field_title(container, newid,
-                                     g_strdup_printf(_("K-means of %s"),
-                                                     description)
-                                     );
-        gwy_app_channel_log_add(container, -1, newid, "volume::kmeans",
-                                NULL);
+    gwy_data_field_add(dfield, 1.0);
+    newid = gwy_app_data_browser_add_data_field(dfield,
+                                                container, TRUE);
+    gwy_object_unref(dfield);
+    description = gwy_app_get_brick_title(container, id);
+    gwy_app_set_data_field_title(container, newid,
+                                 g_strdup_printf(_("K-means of %s"),
+                                                 description)
+                                );
+    gwy_app_channel_log_add(container, -1, newid, "volume::kmeans",
+                            NULL);
 
-        newid = gwy_app_data_browser_add_data_field(errormap,
+    newid = gwy_app_data_browser_add_data_field(errormap,
+                                                container, TRUE);
+    gwy_object_unref(errormap);
+    gwy_app_set_data_field_title(container, newid,
+                                 g_strdup_printf(
+                                                 _("K-means error of %s"),
+                                                 description)
+                                );
+    gwy_app_channel_log_add(container, -1, newid, "volume::kmeans",
+                            NULL);
+
+    if (normalize) {
+        newid = gwy_app_data_browser_add_data_field(intmap,
                                                     container, TRUE);
-        gwy_object_unref(errormap);
+        gwy_object_unref(intmap);
         gwy_app_set_data_field_title(container, newid,
                                      g_strdup_printf(
-                                               _("K-means error of %s"),
-                                               description)
-                                     );
-        gwy_app_channel_log_add(container, -1, newid, "volume::kmeans",
-                                NULL);
-
-        if (normalize) {
-            newid = gwy_app_data_browser_add_data_field(intmap,
-                                                        container, TRUE);
-            gwy_object_unref(intmap);
-            gwy_app_set_data_field_title(container, newid,
-                    g_strdup_printf(
-                                    _("Pre-normalized intensity of %s"),
-                                    description)
+                                                     _("Pre-normalized intensity of %s"),
+                                                     description)
                                     );
 
-            gwy_app_channel_log_add(container, -1, newid,
-                                    "volume::kmeans", NULL);
-        }
-
-        g_free(description);
-
-        gmodel = gwy_graph_model_new();
-        calibration = gwy_brick_get_zcalibration(brick);
-        xdata = g_new(gdouble, zres);
-        ydata = g_new(gdouble, zres);
-        if (calibration) {
-            memcpy(xdata, gwy_data_line_get_data(calibration),
-                   zres*sizeof(gdouble));
-            siunit = gwy_data_line_get_si_unit_y(calibration);
-        }
-        else {
-            for (i = 0; i < zres; i++)
-                *(xdata + i) = zreal * i / zres + zoffset;
-            siunit = gwy_brick_get_si_unit_z(brick);
-        }
-        for (c = 0; c < k; c++) {
-            memcpy(ydata, centers + c * zres, zres * sizeof(gdouble));
-            gcmodel = gwy_graph_curve_model_new();
-            gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, zres);
-            rgba = gwy_graph_get_preset_color(c);
-            g_object_set(gcmodel,
-                         "mode", GWY_GRAPH_CURVE_LINE,
-                         "description",
-                         g_strdup_printf(_("K-means center %d"), c + 1),
-                         "color", rgba,
-                         NULL);
-            gwy_graph_model_add_curve(gmodel, gcmodel);
-            g_object_unref(gcmodel);
-        }
-        g_free(xdata);
-        g_free(ydata);
-        g_object_set(gmodel,
-                     "si-unit-x", siunit,
-                     "si-unit-y", gwy_brick_get_si_unit_w(brick),
-                     "axis-label-bottom", "x",
-                     "axis-label-left", "y",
-                     NULL);
-        gwy_app_data_browser_add_graph_model(gmodel, container, TRUE);
-        g_object_unref(gmodel);
+        gwy_app_channel_log_add(container, -1, newid,
+                                "volume::kmeans", NULL);
     }
+
+    g_free(description);
+
+    gmodel = gwy_graph_model_new();
+    calibration = gwy_brick_get_zcalibration(brick);
+    xdata = g_new(gdouble, zres);
+    ydata = g_new(gdouble, zres);
+    if (calibration) {
+        memcpy(xdata, gwy_data_line_get_data(calibration),
+               zres*sizeof(gdouble));
+        siunit = gwy_data_line_get_si_unit_y(calibration);
+    }
+    else {
+        for (i = 0; i < zres; i++)
+            *(xdata + i) = zreal * i / zres + zoffset;
+        siunit = gwy_brick_get_si_unit_z(brick);
+    }
+    for (c = 0; c < k; c++) {
+        memcpy(ydata, centers + c * zres, zres * sizeof(gdouble));
+        gcmodel = gwy_graph_curve_model_new();
+        gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, zres);
+        rgba = gwy_graph_get_preset_color(c);
+        g_object_set(gcmodel,
+                     "mode", GWY_GRAPH_CURVE_LINE,
+                     "description",
+                     g_strdup_printf(_("K-means center %d"), c + 1),
+                     "color", rgba,
+                     NULL);
+        gwy_graph_model_add_curve(gmodel, gcmodel);
+        g_object_unref(gcmodel);
+    }
+    g_free(xdata);
+    g_free(ydata);
+    g_object_set(gmodel,
+                 "si-unit-x", siunit,
+                 "si-unit-y", gwy_brick_get_si_unit_w(brick),
+                 "axis-label-bottom", "x",
+                 "axis-label-left", "y",
+                 NULL);
+    gwy_app_data_browser_add_graph_model(gmodel, container, TRUE);
+    g_object_unref(gmodel);
 
     gwy_app_volume_log_add_volume(container, id, id);
 
