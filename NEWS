@@ -26,6 +26,8 @@ Libraries:
   data when the file does not contain any channels.
 - libgwyapp: Data browser displays ‘Z’ for volume data with z-calibration.
 - libgwyapp: New function to find window for volume data by id was added.
+- libgwydgets: Graph curve properties dialogue has buttons for switching to
+  the next and previous curve in the graph.
 
 Modules:
 - Align rows (new): Row alignment by various methods, including polynomial
