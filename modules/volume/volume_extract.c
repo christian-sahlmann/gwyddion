@@ -757,7 +757,7 @@ extract_dialog(ExtractArgs *args,
 
             g_object_set(gmodel,
                          "title", description,
-                         "axis-label-left", _("w"),
+                         "axis-label-left", "w",
                          "axis-label-bottom", "x",
                          NULL);
 
