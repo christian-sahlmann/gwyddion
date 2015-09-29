@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-09-26 09:32+0300\n"
-"PO-Revision-Date: 2015-09-26 09:33+0300\n"
+"POT-Creation-Date: 2015-09-29 08:07+0300\n"
+"PO-Revision-Date: 2015-09-29 08:09+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -253,7 +253,7 @@ msgid "Circle (down)"
 msgstr "Сфера (вниз)"
 
 #: libprocess/cdline.c:575 libprocess/cdline.c:584
-#: libgwydgets/gwygraphareadialog.c:538 modules/process/hough.c:171
+#: libgwydgets/gwygraphareadialog.c:557 modules/process/hough.c:171
 msgid "Circle"
 msgstr "Круг"
 
@@ -944,7 +944,7 @@ msgstr "точек"
 #: modules/process/unrotate.c:228 modules/process/volumize_layers.c:213
 #: modules/process/wave_synth.c:361 modules/process/wpour_mark.c:296
 #: modules/volume/volume_calibrate.c:371 modules/volume/volume_extract.c:331
-#: modules/volume/volume_kmeans.c:144 modules/volume/volume_kmedians.c:149
+#: modules/volume/volume_kmeans.c:146 modules/volume/volume_kmedians.c:147
 #: modules/volume/volume_linestat.c:292 modules/volume/volume_slice.c:281
 msgid "_Reset"
 msgstr "_Сброс"
@@ -1016,115 +1016,123 @@ msgstr "Символ"
 msgid "Enabled"
 msgstr "Включено"
 
-#: libgwydgets/gwygraphareadialog.c:98
+#: libgwydgets/gwygraphareadialog.c:100
 msgid "Curve Properties"
 msgstr "Свойства кривой"
 
-#: libgwydgets/gwygraphareadialog.c:114 modules/file/rawgraph.c:302
+#: libgwydgets/gwygraphareadialog.c:101
+msgid "Pre_v"
+msgstr "Пре_д."
+
+#: libgwydgets/gwygraphareadialog.c:104
+msgid "_Next"
+msgstr "С_лед."
+
+#: libgwydgets/gwygraphareadialog.c:127 modules/file/rawgraph.c:302
 msgid "Plot _style:"
 msgstr "_Стиль графика:"
 
-#: libgwydgets/gwygraphareadialog.c:135
+#: libgwydgets/gwygraphareadialog.c:148
 msgid "Pl_ot color:"
 msgstr "_Цвет графика:"
 
-#: libgwydgets/gwygraphareadialog.c:146
+#: libgwydgets/gwygraphareadialog.c:159
 msgid "Point _type:"
 msgstr "_Тип точки:"
 
-#: libgwydgets/gwygraphareadialog.c:152
+#: libgwydgets/gwygraphareadialog.c:165
 msgid "_Point size:"
 msgstr "Размер то_чки:"
 
-#: libgwydgets/gwygraphareadialog.c:162
+#: libgwydgets/gwygraphareadialog.c:175
 msgid "_Line type:"
 msgstr "Тип _линии:"
 
-#: libgwydgets/gwygraphareadialog.c:168 modules/file/imgexport.c:2866
+#: libgwydgets/gwygraphareadialog.c:181 modules/file/imgexport.c:2866
 msgid "Line t_hickness:"
 msgstr "Тол_щина линии:"
 
-#: libgwydgets/gwygraphareadialog.c:174
+#: libgwydgets/gwygraphareadialog.c:187
 msgid "<b>Label Te_xt</b>"
 msgstr "<b>Те_кст метки</b>"
 
-#: libgwydgets/gwygraphareadialog.c:390
+#: libgwydgets/gwygraphareadialog.c:404
 msgid "Set Curve Color"
 msgstr "Установить цвет кривой"
 
-#: libgwydgets/gwygraphareadialog.c:537
+#: libgwydgets/gwygraphareadialog.c:556
 msgid "Square"
 msgstr "Квадратная"
 
-#: libgwydgets/gwygraphareadialog.c:539
+#: libgwydgets/gwygraphareadialog.c:558
 msgid "Diamond"
 msgstr "Ромб"
 
-#: libgwydgets/gwygraphareadialog.c:540
+#: libgwydgets/gwygraphareadialog.c:559
 msgid "Cross"
 msgstr "Крест"
 
-#: libgwydgets/gwygraphareadialog.c:541
+#: libgwydgets/gwygraphareadialog.c:560
 msgid "Diagonal cross"
 msgstr "Диагональный крест"
 
-#: libgwydgets/gwygraphareadialog.c:542
+#: libgwydgets/gwygraphareadialog.c:561
 msgid "Asterisk"
 msgstr "Шестилучевая звезда"
 
-#: libgwydgets/gwygraphareadialog.c:543
+#: libgwydgets/gwygraphareadialog.c:562
 msgid "Star"
 msgstr "Восьмилучевая звезда"
 
-#: libgwydgets/gwygraphareadialog.c:544
+#: libgwydgets/gwygraphareadialog.c:563
 msgid "Triangle up"
 msgstr "Треугольник вверх"
 
-#: libgwydgets/gwygraphareadialog.c:545
+#: libgwydgets/gwygraphareadialog.c:564
 msgid "Triangle down"
 msgstr "Треугольник вниз"
 
-#: libgwydgets/gwygraphareadialog.c:546
+#: libgwydgets/gwygraphareadialog.c:565
 msgid "Triangle left"
 msgstr "Треугольник налево"
 
-#: libgwydgets/gwygraphareadialog.c:547
+#: libgwydgets/gwygraphareadialog.c:566
 msgid "Triangle right"
 msgstr "Треугольник направо"
 
-#: libgwydgets/gwygraphareadialog.c:548
+#: libgwydgets/gwygraphareadialog.c:567
 msgid "Full square"
 msgstr "Заполненный квадрат"
 
-#: libgwydgets/gwygraphareadialog.c:549
+#: libgwydgets/gwygraphareadialog.c:568
 msgid "Disc"
 msgstr "Диск"
 
-#: libgwydgets/gwygraphareadialog.c:550
+#: libgwydgets/gwygraphareadialog.c:569
 msgid "Full diamond"
 msgstr "Заполненный ромб"
 
-#: libgwydgets/gwygraphareadialog.c:551
+#: libgwydgets/gwygraphareadialog.c:570
 msgid "Full triangle up"
 msgstr "Заполненный треугольник вверх"
 
-#: libgwydgets/gwygraphareadialog.c:552
+#: libgwydgets/gwygraphareadialog.c:571
 msgid "Full triangle down"
 msgstr "Заполненный треугольник вниз"
 
-#: libgwydgets/gwygraphareadialog.c:553
+#: libgwydgets/gwygraphareadialog.c:572
 msgid "Full triangle left"
 msgstr "Заполненный треугольник влево"
 
-#: libgwydgets/gwygraphareadialog.c:554
+#: libgwydgets/gwygraphareadialog.c:573
 msgid "Full triangle right"
 msgstr "Заполненный треугольник вправо"
 
-#: libgwydgets/gwygraphareadialog.c:616
+#: libgwydgets/gwygraphareadialog.c:635
 msgid "line-style|Solid"
 msgstr "Сплошная"
 
-#: libgwydgets/gwygraphareadialog.c:617
+#: libgwydgets/gwygraphareadialog.c:636
 msgid "line-style|Dash"
 msgstr "Штриховая"
 
@@ -3547,7 +3555,7 @@ msgstr "Неподдерживаемый формат отсчёта"
 
 #: modules/file/gwytiff.h:1030 modules/file/keyence.c:449
 #: modules/file/matfile.c:276 modules/file/matfile.c:298
-#: modules/file/omicronflat.c:1683 modules/file/psia.c:353
+#: modules/file/omicronflat.c:1851 modules/file/psia.c:353
 #: modules/file/zemax.c:168
 msgid "File is truncated."
 msgstr "Файл усечен."
@@ -4310,7 +4318,7 @@ msgstr "Импортирует файлы Keyence VK4."
 msgid "Keyence VK4 data files (.vk4)"
 msgstr "Файлы данных Keyence VK4 (.vk4)"
 
-#: modules/file/keyence.c:894 modules/file/omicronflat.c:2240
+#: modules/file/keyence.c:894 modules/file/omicronflat.c:2417
 #, c-format
 msgid "Cannot convert string from UTF-16: %s"
 msgstr "Не получается сконвертировать строку из UTF-16: %s"
@@ -4983,24 +4991,24 @@ msgstr "Строка заголовка начинается с двоеточи
 msgid "Channel information ended unexpectedly."
 msgstr "Информация о канале неожиданно закончилась."
 
-#: modules/file/omicronflat.c:349
+#: modules/file/omicronflat.c:353
 msgid "Imports Omicron flat files."
 msgstr "Импортирует плоские файлы Omicron"
 
-#: modules/file/omicronflat.c:362
+#: modules/file/omicronflat.c:366
 msgid "Omicron flat files (*.*_flat)"
 msgstr "Плоские файлы Omicron (*.*_flat)"
 
-#: modules/file/omicronflat.c:1419 modules/file/omicronflat.c:1461
+#: modules/file/omicronflat.c:1583 modules/file/omicronflat.c:1625
 msgid "File name does not have the expected form for Omicron Flat files."
 msgstr "Имя файла не соответствует ожидаемому для файлов Omicron Flat."
 
-#: modules/file/omicronflat.c:1867
+#: modules/file/omicronflat.c:2035
 msgid "Cannot understand the axis hierarchy."
 msgstr "Не удаётся понять иерархию осей."
 
 #. TRANSLATORS: %s is replaced with an expression of the data shape.
-#: modules/file/omicronflat.c:2276
+#: modules/file/omicronflat.c:2453
 #, c-format
 msgid "Cannot figure out how to load data in the following form: %s."
 msgstr "Нельзя определить как загрузить данные в следующем виде: %s."
@@ -6321,8 +6329,7 @@ msgstr "Параметр"
 
 #: modules/graph/graph_cd.c:308 modules/graph/graph_fdfit.c:364
 #: modules/graph/graph_fit.c:378 modules/process/fit_2d.c:349
-#: modules/volume/volume_fdfit.c:449 modules/volume/volume_kmeans.c:493
-#: modules/volume/volume_kmedians.c:511
+#: modules/volume/volume_fdfit.c:449
 msgid "Error"
 msgstr "Ошибка"
 
@@ -6995,7 +7002,7 @@ msgstr "Создать поверхность используя баллист�
 #: modules/process/pid.c:338 modules/process/superresolution.c:416
 #: modules/process/superresolution.c:505 modules/process/tip_blind.c:784
 #: modules/process/tipops.c:319 modules/process/xydenoise.c:217
-#: modules/volume/volume_kmeans.c:390 modules/volume/volume_kmedians.c:405
+#: modules/volume/volume_kmeans.c:364 modules/volume/volume_kmedians.c:365
 msgid "Initializing..."
 msgstr "Инициализация..."
 
@@ -13586,101 +13593,93 @@ msgstr "/_Инвертировать значение"
 msgid "Invert value in volume data"
 msgstr "Инвертирует значения в объёмных данных"
 
-#: modules/volume/volume_kmeans.c:88
+#: modules/volume/volume_kmeans.c:87
 msgid "Calculates K-means clustering on volume data."
 msgstr "Рассчитывает кластеризацию K-средних для объёмных данных."
 
-#: modules/volume/volume_kmeans.c:102
+#: modules/volume/volume_kmeans.c:101
 msgid "/_K-means clustering..."
 msgstr "/_Кластеризация K-средних..."
 
-#: modules/volume/volume_kmeans.c:106
+#: modules/volume/volume_kmeans.c:105
 msgid "Calculate K-means clustering on volume data"
 msgstr "Рассчитать кластеризацию K-средних для объёмных данных"
 
-#: modules/volume/volume_kmeans.c:141
+#: modules/volume/volume_kmeans.c:144
 msgid "K-means"
 msgstr "K-средних"
 
-#: modules/volume/volume_kmeans.c:148 modules/volume/volume_kmedians.c:153
-msgid "_Run"
-msgstr "_Выполнить"
-
-#: modules/volume/volume_kmeans.c:164 modules/volume/volume_kmedians.c:169
+#: modules/volume/volume_kmeans.c:163 modules/volume/volume_kmedians.c:164
 msgid "_Number of clusters:"
 msgstr "_Количество кластеров:"
 
-#: modules/volume/volume_kmeans.c:172 modules/volume/volume_kmedians.c:177
-msgid "Convergence _Precision:"
-msgstr "_Точность сходимости:"
+#: modules/volume/volume_kmeans.c:170 modules/volume/volume_kmedians.c:171
+msgid "Convergence _precision digits:"
+msgstr "Знаков _точности сходимости:"
 
-#: modules/volume/volume_kmeans.c:184 modules/volume/volume_kmedians.c:189
+#: modules/volume/volume_kmeans.c:177 modules/volume/volume_kmedians.c:178
 msgid "_Max. iterations:"
 msgstr "_Макс. число шагов:"
 
-#: modules/volume/volume_kmeans.c:190 modules/volume/volume_kmedians.c:195
+#: modules/volume/volume_kmeans.c:182 modules/volume/volume_kmedians.c:183
 msgid "_Normalize"
 msgstr "_Нормализовать"
 
-#: modules/volume/volume_kmeans.c:382 modules/volume/volume_kmedians.c:397
-msgid "Cluster"
-msgstr "Кластер"
-
-#: modules/volume/volume_kmeans.c:417
+#: modules/volume/volume_kmeans.c:391
 msgid "K-means iteration..."
 msgstr "Итерация K-средних..."
 
-#: modules/volume/volume_kmeans.c:516
+#: modules/volume/volume_kmeans.c:494
 #, c-format
-msgid "K-means of %s"
-msgstr "K-средних для %s"
+msgid "K-means cluster of %s"
+msgstr "Кластер К-средних %s"
 
-#: modules/volume/volume_kmeans.c:527
+#: modules/volume/volume_kmeans.c:503
 #, c-format
 msgid "K-means error of %s"
 msgstr "Ошибка K-средних для %s"
 
-#: modules/volume/volume_kmeans.c:539 modules/volume/volume_kmedians.c:561
+#: modules/volume/volume_kmeans.c:513 modules/volume/volume_kmedians.c:514
 #, c-format
 msgid "Pre-normalized intensity of %s"
 msgstr "Интенсивность до нормализации %s"
 
-#: modules/volume/volume_kmeans.c:571
+#: modules/volume/volume_kmeans.c:545
 #, c-format
 msgid "K-means center %d"
 msgstr "Центр кластера %d"
 
-#: modules/volume/volume_kmedians.c:93
+#: modules/volume/volume_kmedians.c:88
 msgid "Calculates K-medians clustering on volume data."
 msgstr "Рассчитывает кластеризацию K-срединных для объёмных данных."
 
-#: modules/volume/volume_kmedians.c:107
+#: modules/volume/volume_kmedians.c:102
 msgid "/_K-medians clustering..."
 msgstr "/_Кластеризация K-срединных..."
 
-#: modules/volume/volume_kmedians.c:111
+#: modules/volume/volume_kmedians.c:106
 msgid "Calculate K-medians clustering on volume data"
 msgstr "Рассчитать кластеризацию K-срединных для объёмных данных"
 
-#: modules/volume/volume_kmedians.c:146
-msgid "K-medians"
+#: modules/volume/volume_kmedians.c:145
+msgid "K-Medians"
 msgstr "K-срединных"
 
-#: modules/volume/volume_kmedians.c:432
+#: modules/volume/volume_kmedians.c:392
 msgid "K-medians iteration..."
 msgstr "Итерация k-срединных..."
 
-#: modules/volume/volume_kmedians.c:535
+#: modules/volume/volume_kmedians.c:495
 #, c-format
-msgid "K-medians of %s"
-msgstr "K-срединных для %s"
+msgid "K-medians cluster of %s"
+msgstr "Кластер K-срединных %s"
 
-#: modules/volume/volume_kmedians.c:547
+#: modules/volume/volume_kmedians.c:504
 #, c-format
 msgid "K-medians error of %s"
 msgstr "Ошибка K-срединных для %s"
 
-#: modules/volume/volume_kmedians.c:593
+#: modules/volume/volume_kmedians.c:546
 #, c-format
 msgid "K-medians center %d"
 msgstr "Центр кластера %d"
@@ -13847,6 +13846,24 @@ msgid ""
 msgstr ""
 "Количество значений в файле данных %d\n"
 "отличается от числа плоскостей %d."
+
+#~ msgid "_Run"
+#~ msgstr "_Выполнить"
+
+#~ msgid "Convergence _Precision:"
+#~ msgstr "_Точность сходимости:"
+
+#~ msgid "Cluster"
+#~ msgstr "Кластер"
+
+#~ msgid "K-means of %s"
+#~ msgstr "K-средних для %s"
+
+#~ msgid "K-medians"
+#~ msgstr "K-срединных"
+
+#~ msgid "K-medians of %s"
+#~ msgstr "K-срединных для %s"
 
 #~ msgid "Omicron flat files "
 #~ msgstr "Файлы Omicron flat"
