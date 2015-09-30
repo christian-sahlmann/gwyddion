@@ -422,7 +422,7 @@ linematch_do_median(GwyDataField *mask,
 
     d = gwy_data_field_get_data(dfield);
     m = mask ? gwy_data_field_get_data_const(mask) : NULL;
-    line = gwy_data_line_new(yres, 1.0, FALSE);
+    line = gwy_data_line_new(xres, 1.0, FALSE);
     buf = gwy_data_line_get_data(line);
 
     if (mask) {
@@ -481,7 +481,7 @@ linematch_do_median_diff(GwyDataField *mask,
     yres = gwy_data_field_get_yres(dfield);
     d = gwy_data_field_get_data(dfield);
     m = mask ? gwy_data_field_get_data_const(mask) : NULL;
-    line = gwy_data_line_new(yres, 1.0, FALSE);
+    line = gwy_data_line_new(xres, 1.0, FALSE);
     buf = gwy_data_line_get_data(line);
 
     gwy_data_line_set_val(medians, 0, 0.0);
@@ -532,7 +532,7 @@ linematch_do_modus(GwyDataField *mask,
 
     d = gwy_data_field_get_data(dfield);
     m = mask ? gwy_data_field_get_data_const(mask) : NULL;
-    line = gwy_data_line_new(yres, 1.0, FALSE);
+    line = gwy_data_line_new(xres, 1.0, FALSE);
     buf = gwy_data_line_get_data(line);
 
     for (i = 0; i < yres; i++) {
