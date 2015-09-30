@@ -1711,6 +1711,7 @@ construct_metadata(OmicronFlatFile *fff,
                     (guint64)fff->creation.timestamp);
     gwy_container_set_const_string_by_name(meta, "Creation::Timestamp",
                                            value->str);
+    timestamp = fff->creation.timestamp;
     t = localtime(&timestamp);
     strftime(creation_time, sizeof(creation_time), "%Y-%m-%d %H:%M:%S", t);
     gwy_container_set_const_string_by_name(meta, "Creation::Date and time",
