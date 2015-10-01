@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-09-27 02:11+0200\n"
-"PO-Revision-Date: 2015-09-27 16:41+0100\n"
+"POT-Creation-Date: 2015-10-01 02:12+0200\n"
+"PO-Revision-Date: 2015-10-01 18:40+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -250,7 +250,7 @@ msgid "Circle (down)"
 msgstr "Cercle (bas)"
 
 #: libprocess/cdline.c:575 libprocess/cdline.c:584
-#: libgwydgets/gwygraphareadialog.c:538 modules/process/hough.c:171
+#: libgwydgets/gwygraphareadialog.c:557 modules/process/hough.c:171
 msgid "Circle"
 msgstr "Cercle"
 
@@ -939,7 +939,7 @@ msgstr "pixels"
 #: modules/process/unrotate.c:228 modules/process/volumize_layers.c:213
 #: modules/process/wave_synth.c:361 modules/process/wpour_mark.c:296
 #: modules/volume/volume_calibrate.c:371 modules/volume/volume_extract.c:331
-#: modules/volume/volume_kmeans.c:144 modules/volume/volume_kmedians.c:149
+#: modules/volume/volume_kmeans.c:146 modules/volume/volume_kmedians.c:147
 #: modules/volume/volume_linestat.c:292 modules/volume/volume_slice.c:281
 msgid "_Reset"
 msgstr "_Remise à zéro"
@@ -1011,115 +1011,123 @@ msgstr "Symbole"
 msgid "Enabled"
 msgstr "Activé"
 
-#: libgwydgets/gwygraphareadialog.c:98
+#: libgwydgets/gwygraphareadialog.c:100
 msgid "Curve Properties"
 msgstr "Propriétés de la courbe"
 
-#: libgwydgets/gwygraphareadialog.c:114 modules/file/rawgraph.c:302
+#: libgwydgets/gwygraphareadialog.c:101
+msgid "Pre_v"
+msgstr "Précédent"
+
+#: libgwydgets/gwygraphareadialog.c:104
+msgid "_Next"
+msgstr "Suiva_nt"
+
+#: libgwydgets/gwygraphareadialog.c:127 modules/file/rawgraph.c:302
 msgid "Plot _style:"
 msgstr "_Style de graphe :"
 
-#: libgwydgets/gwygraphareadialog.c:135
+#: libgwydgets/gwygraphareadialog.c:148
 msgid "Pl_ot color:"
 msgstr "C_ouleur du graphe"
 
-#: libgwydgets/gwygraphareadialog.c:146
+#: libgwydgets/gwygraphareadialog.c:159
 msgid "Point _type:"
 msgstr "_Type de point :"
 
-#: libgwydgets/gwygraphareadialog.c:152
+#: libgwydgets/gwygraphareadialog.c:165
 msgid "_Point size:"
 msgstr "Taille de _point :"
 
-#: libgwydgets/gwygraphareadialog.c:162
+#: libgwydgets/gwygraphareadialog.c:175
 msgid "_Line type:"
 msgstr "Type de _ligne :"
 
-#: libgwydgets/gwygraphareadialog.c:168 modules/file/imgexport.c:2866
+#: libgwydgets/gwygraphareadialog.c:181 modules/file/imgexport.c:2866
 msgid "Line t_hickness:"
 msgstr "Épaisseur de ligne :"
 
-#: libgwydgets/gwygraphareadialog.c:174
+#: libgwydgets/gwygraphareadialog.c:187
 msgid "<b>Label Te_xt</b>"
 msgstr "<b>Te_xte du label</b>"
 
-#: libgwydgets/gwygraphareadialog.c:390
+#: libgwydgets/gwygraphareadialog.c:404
 msgid "Set Curve Color"
 msgstr "Régler la couleur de courbe"
 
-#: libgwydgets/gwygraphareadialog.c:537
+#: libgwydgets/gwygraphareadialog.c:556
 msgid "Square"
 msgstr "Carré"
 
-#: libgwydgets/gwygraphareadialog.c:539
+#: libgwydgets/gwygraphareadialog.c:558
 msgid "Diamond"
 msgstr "Losange"
 
-#: libgwydgets/gwygraphareadialog.c:540
+#: libgwydgets/gwygraphareadialog.c:559
 msgid "Cross"
 msgstr "Croix"
 
-#: libgwydgets/gwygraphareadialog.c:541
+#: libgwydgets/gwygraphareadialog.c:560
 msgid "Diagonal cross"
 msgstr "Croix diagonale"
 
-#: libgwydgets/gwygraphareadialog.c:542
+#: libgwydgets/gwygraphareadialog.c:561
 msgid "Asterisk"
 msgstr "Astérisque"
 
-#: libgwydgets/gwygraphareadialog.c:543
+#: libgwydgets/gwygraphareadialog.c:562
 msgid "Star"
 msgstr "Étoile"
 
-#: libgwydgets/gwygraphareadialog.c:544
+#: libgwydgets/gwygraphareadialog.c:563
 msgid "Triangle up"
 msgstr "Triangle haut"
 
-#: libgwydgets/gwygraphareadialog.c:545
+#: libgwydgets/gwygraphareadialog.c:564
 msgid "Triangle down"
 msgstr "Triangle bas"
 
-#: libgwydgets/gwygraphareadialog.c:546
+#: libgwydgets/gwygraphareadialog.c:565
 msgid "Triangle left"
 msgstr "Triangle gauche"
 
-#: libgwydgets/gwygraphareadialog.c:547
+#: libgwydgets/gwygraphareadialog.c:566
 msgid "Triangle right"
 msgstr "Triangle droite"
 
-#: libgwydgets/gwygraphareadialog.c:548
+#: libgwydgets/gwygraphareadialog.c:567
 msgid "Full square"
 msgstr "Carré plein"
 
-#: libgwydgets/gwygraphareadialog.c:549
+#: libgwydgets/gwygraphareadialog.c:568
 msgid "Disc"
 msgstr "Disque"
 
-#: libgwydgets/gwygraphareadialog.c:550
+#: libgwydgets/gwygraphareadialog.c:569
 msgid "Full diamond"
 msgstr "Losange plein"
 
-#: libgwydgets/gwygraphareadialog.c:551
+#: libgwydgets/gwygraphareadialog.c:570
 msgid "Full triangle up"
 msgstr "Triangle haut plein"
 
-#: libgwydgets/gwygraphareadialog.c:552
+#: libgwydgets/gwygraphareadialog.c:571
 msgid "Full triangle down"
 msgstr "Triangle bas plein"
 
-#: libgwydgets/gwygraphareadialog.c:553
+#: libgwydgets/gwygraphareadialog.c:572
 msgid "Full triangle left"
 msgstr "Triangle gauche plein"
 
-#: libgwydgets/gwygraphareadialog.c:554
+#: libgwydgets/gwygraphareadialog.c:573
 msgid "Full triangle right"
 msgstr "Triangle droite plein"
 
-#: libgwydgets/gwygraphareadialog.c:616
+#: libgwydgets/gwygraphareadialog.c:635
 msgid "line-style|Solid"
 msgstr "Solide"
 
-#: libgwydgets/gwygraphareadialog.c:617
+#: libgwydgets/gwygraphareadialog.c:636
 msgid "line-style|Dash"
 msgstr "Pointillé"
 
@@ -3547,7 +3555,7 @@ msgstr "Format non supporté"
 
 #: modules/file/gwytiff.h:1030 modules/file/keyence.c:449
 #: modules/file/matfile.c:276 modules/file/matfile.c:298
-#: modules/file/omicronflat.c:1683 modules/file/psia.c:353
+#: modules/file/omicronflat.c:1852 modules/file/psia.c:353
 #: modules/file/zemax.c:168
 msgid "File is truncated."
 msgstr "Le fichier est tronqué."
@@ -4322,7 +4330,7 @@ msgstr "Importe les fichiers Keyence VK4."
 msgid "Keyence VK4 data files (.vk4)"
 msgstr "Fichiers Keyence VK4 (.vk4)"
 
-#: modules/file/keyence.c:894 modules/file/omicronflat.c:2240
+#: modules/file/keyence.c:894 modules/file/omicronflat.c:2418
 #, c-format
 msgid "Cannot convert string from UTF-16: %s"
 msgstr "Impossible de convertir la chaîne de caractères depuis UTF-16 : %s"
@@ -5013,25 +5021,25 @@ msgstr "La ligne d'en-tête commence par un double point."
 msgid "Channel information ended unexpectedly."
 msgstr "Les informations sur le canal s'arrêtent de manière inattendue."
 
-#: modules/file/omicronflat.c:349
+#: modules/file/omicronflat.c:353
 msgid "Imports Omicron flat files."
 msgstr "Importe les fichiers Omicron flat."
 
-#: modules/file/omicronflat.c:362
+#: modules/file/omicronflat.c:366
 msgid "Omicron flat files (*.*_flat)"
 msgstr "Omicron flat (*.*_flat)"
 
-#: modules/file/omicronflat.c:1419 modules/file/omicronflat.c:1461
+#: modules/file/omicronflat.c:1583 modules/file/omicronflat.c:1625
 msgid "File name does not have the expected form for Omicron Flat files."
 msgstr ""
 "Le nom de fichier n'a pas la forme attendue pour les fichiers Omicron Flat."
 
-#: modules/file/omicronflat.c:1867
+#: modules/file/omicronflat.c:2036
 msgid "Cannot understand the axis hierarchy."
 msgstr "Impossible de déterminer la hiérarchie des axes."
 
 #. TRANSLATORS: %s is replaced with an expression of the data shape.
-#: modules/file/omicronflat.c:2276
+#: modules/file/omicronflat.c:2454
 #, c-format
 msgid "Cannot figure out how to load data in the following form: %s."
 msgstr ""
@@ -6359,8 +6367,7 @@ msgstr "Paramètre"
 
 #: modules/graph/graph_cd.c:308 modules/graph/graph_fdfit.c:364
 #: modules/graph/graph_fit.c:378 modules/process/fit_2d.c:349
-#: modules/volume/volume_fdfit.c:449 modules/volume/volume_kmeans.c:493
-#: modules/volume/volume_kmedians.c:511
+#: modules/volume/volume_fdfit.c:449
 msgid "Error"
 msgstr "Erreur"
 
@@ -7034,7 +7041,7 @@ msgstr "Générer une surface par déposition balistique"
 #: modules/process/pid.c:338 modules/process/superresolution.c:416
 #: modules/process/superresolution.c:505 modules/process/tip_blind.c:784
 #: modules/process/tipops.c:319 modules/process/xydenoise.c:217
-#: modules/volume/volume_kmeans.c:390 modules/volume/volume_kmedians.c:405
+#: modules/volume/volume_kmeans.c:364 modules/volume/volume_kmedians.c:365
 msgid "Initializing..."
 msgstr "Initialisation..."
 
@@ -13579,10 +13586,6 @@ msgstr "Graphe Y pour x : %d z : %d"
 msgid "Z graph at x: %d y: %d"
 msgstr "Graphe Z pour x : %d y : %d"
 
-#: modules/volume/volume_extract.c:760
-msgid "w"
-msgstr "w"
-
 #: modules/volume/volume_extract.c:776
 msgid "Brick graph"
 msgstr "Graphe d'un cube de données"
@@ -13632,101 +13635,93 @@ msgstr "/_Inverser les valeurs"
 msgid "Invert value in volume data"
 msgstr "Inverser les valeurs dans les données volumiques"
 
-#: modules/volume/volume_kmeans.c:88
+#: modules/volume/volume_kmeans.c:87
 msgid "Calculates K-means clustering on volume data."
 msgstr "Calcule le partitionnement par k-moyennes de données volumiques."
 
-#: modules/volume/volume_kmeans.c:102
+#: modules/volume/volume_kmeans.c:101
 msgid "/_K-means clustering..."
 msgstr "/Partitionnement par _k-moyennes..."
 
-#: modules/volume/volume_kmeans.c:106
+#: modules/volume/volume_kmeans.c:105
 msgid "Calculate K-means clustering on volume data"
 msgstr "Calculer le partitionnement par k-moyennes de données volumiques"
 
-#: modules/volume/volume_kmeans.c:141
+#: modules/volume/volume_kmeans.c:144
 msgid "K-means"
 msgstr "k-moyennes"
 
-#: modules/volume/volume_kmeans.c:148 modules/volume/volume_kmedians.c:153
-msgid "_Run"
-msgstr "Lance_r"
-
-#: modules/volume/volume_kmeans.c:164 modules/volume/volume_kmedians.c:169
+#: modules/volume/volume_kmeans.c:163 modules/volume/volume_kmedians.c:164
 msgid "_Number of clusters:"
 msgstr "_Nombre de partitions :"
 
-#: modules/volume/volume_kmeans.c:172 modules/volume/volume_kmedians.c:177
-msgid "Convergence _Precision:"
-msgstr "_Précision de convergence :"
+#: modules/volume/volume_kmeans.c:170 modules/volume/volume_kmedians.c:171
+msgid "Convergence _precision digits:"
+msgstr "Décimanes de convergence :"
 
-#: modules/volume/volume_kmeans.c:184 modules/volume/volume_kmedians.c:189
+#: modules/volume/volume_kmeans.c:177 modules/volume/volume_kmedians.c:178
 msgid "_Max. iterations:"
 msgstr "Nombre d'itérations _max :"
 
-#: modules/volume/volume_kmeans.c:190 modules/volume/volume_kmedians.c:195
+#: modules/volume/volume_kmeans.c:182 modules/volume/volume_kmedians.c:183
 msgid "_Normalize"
 msgstr "_Normaliser"
 
-#: modules/volume/volume_kmeans.c:382 modules/volume/volume_kmedians.c:397
-msgid "Cluster"
-msgstr "Partition"
-
-#: modules/volume/volume_kmeans.c:417
+#: modules/volume/volume_kmeans.c:391
 msgid "K-means iteration..."
 msgstr "Itération du calcul de k-moyennes..."
 
-#: modules/volume/volume_kmeans.c:516
+#: modules/volume/volume_kmeans.c:494
 #, c-format
-msgid "K-means of %s"
-msgstr "k-moyennes de %s"
+msgid "K-means cluster of %s"
+msgstr "Groupe des k-moyennes de %s"
 
-#: modules/volume/volume_kmeans.c:527
+#: modules/volume/volume_kmeans.c:503
 #, c-format
 msgid "K-means error of %s"
 msgstr "Erreur des k-moyennes de %s"
 
-#: modules/volume/volume_kmeans.c:539 modules/volume/volume_kmedians.c:561
+#: modules/volume/volume_kmeans.c:513 modules/volume/volume_kmedians.c:514
 #, c-format
 msgid "Pre-normalized intensity of %s"
 msgstr "Intensité pré-normalisée de %s"
 
-#: modules/volume/volume_kmeans.c:571
+#: modules/volume/volume_kmeans.c:545
 #, c-format
 msgid "K-means center %d"
 msgstr "Centre %d des k-moyennes"
 
-#: modules/volume/volume_kmedians.c:93
+#: modules/volume/volume_kmedians.c:88
 msgid "Calculates K-medians clustering on volume data."
 msgstr "Calcule le partitionnement par k-médianes de données volumiques."
 
-#: modules/volume/volume_kmedians.c:107
+#: modules/volume/volume_kmedians.c:102
 msgid "/_K-medians clustering..."
 msgstr "/Partitionnement par _k-médianes..."
 
-#: modules/volume/volume_kmedians.c:111
+#: modules/volume/volume_kmedians.c:106
 msgid "Calculate K-medians clustering on volume data"
 msgstr "Calculer le partitionnement par k-médianes de données volumiques"
 
-#: modules/volume/volume_kmedians.c:146
-msgid "K-medians"
+#: modules/volume/volume_kmedians.c:145
+msgid "K-Medians"
 msgstr "k-médianes"
 
-#: modules/volume/volume_kmedians.c:432
+#: modules/volume/volume_kmedians.c:392
 msgid "K-medians iteration..."
 msgstr "Itération du calcul de k-médianes..."
 
-#: modules/volume/volume_kmedians.c:535
+#: modules/volume/volume_kmedians.c:495
 #, c-format
-msgid "K-medians of %s"
-msgstr "k-médianes de %s"
+msgid "K-medians cluster of %s"
+msgstr "Groupe des k-médianes de %s"
 
-#: modules/volume/volume_kmedians.c:547
+#: modules/volume/volume_kmedians.c:504
 #, c-format
 msgid "K-medians error of %s"
 msgstr "Erreur des k-médianes de %s"
 
-#: modules/volume/volume_kmedians.c:593
+#: modules/volume/volume_kmedians.c:546
 #, c-format
 msgid "K-medians center %d"
 msgstr "Centre %d des k-médianes"
@@ -13892,6 +13887,21 @@ msgid ""
 msgstr ""
 "Le nombre de valeurs du fichier de données %d\n"
 "diffère du nombre de plans %d."
+
+#~ msgid "w"
+#~ msgstr "w"
+
+#~ msgid "_Run"
+#~ msgstr "Lance_r"
+
+#~ msgid "Cluster"
+#~ msgstr "Partition"
+
+#~ msgid "K-means of %s"
+#~ msgstr "k-moyennes de %s"
+
+#~ msgid "K-medians of %s"
+#~ msgstr "k-médianes de %s"
 
 #~ msgid "Omicron flat files "
 #~ msgstr "Fichiers Omicron flat"
