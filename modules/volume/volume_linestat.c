@@ -217,7 +217,7 @@ line_stat(GwyContainer *data, GwyRunType run)
 
     wunit = gwy_brick_get_si_unit_z(brick);
     if (args.calibration)
-        zunit = gwy_data_line_get_si_unit_x(args.calibration);
+        zunit = gwy_data_line_get_si_unit_y(args.calibration);
     else
         zunit = gwy_brick_get_si_unit_z(brick);
     args.units_equal = gwy_si_unit_equal(wunit, zunit);
@@ -270,7 +270,7 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
     brick = args->brick;
     if (args->calibration) {
         controls.zvf
-            = gwy_data_line_get_value_format_x(args->calibration,
+            = gwy_data_line_get_value_format_y(args->calibration,
                                                GWY_SI_UNIT_FORMAT_VFMARKUP,
                                                NULL);
     }
@@ -767,7 +767,7 @@ extract_summary_image(const LineStatArgs *args, GwyDataField *dfield)
     imgunit = gwy_data_field_get_si_unit_z(dfield);
     wunit = gwy_brick_get_si_unit_z(brick);
     if (args->calibration)
-        zunit = gwy_data_line_get_si_unit_x(args->calibration);
+        zunit = gwy_data_line_get_si_unit_y(args->calibration);
     else
         zunit = gwy_brick_get_si_unit_z(brick);
 
