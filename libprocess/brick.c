@@ -1674,19 +1674,32 @@ gwy_brick_rtok_cal(GwyBrick *brick,
         return (realpos - brick->zoff)/brick->zreal*brick->zres - 0.5;
 
     cdata = calibration->data;
-    if (realpos <= cdata[0])
-        return 0.0;
-    if (realpos >= cdata[calibration->res-1])
-        return brick->zreal - 1;
 
-    /* FIXME: Inefficient. */
-    for (i = 0; i+2 < calibration->res; i++) {
-        if (cdata[i] <= realpos)
-            break;
+    /* FIXME: We still consider calibration changing monotonously. */
+    if (cdata[0] < cdata[calibration->res-1]) {
+        if (realpos <= cdata[0])
+            return 0.0;
+        if (realpos >= cdata[calibration->res-1])
+            return brick->zreal - 1;
+
+        /* FIXME: Inefficient. */
+        for (i = 0; i+2 < calibration->res; i++) {
+            if (cdata[i] >= realpos)
+                break;
+        }
     }
+    else {
+        if (realpos >= cdata[0])
+            return 0.0;
+        if (realpos < cdata[calibration->res-1])
+            return brick->zreal - 1;
 
-    if (G_UNLIKELY(cdata[i+1] <= cdata[i]))
-        return i;
+        /* FIXME: Inefficient. */
+        for (i = 0; i+2 < calibration->res; i++) {
+            if (cdata[i] <= realpos)
+                break;
+        }
+    }
 
     return i + (realpos - cdata[i])/(cdata[i+1] - cdata[i]);
 }
