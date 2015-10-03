@@ -791,6 +791,8 @@ extract_graph_curve(const LineStatArgs *args,
 {
     GwyDataLine *line = gwy_data_line_new(1, 1.0, FALSE);
     GwyBrick *brick = args->brick;
+    gdouble *xdata, *ydata;
+    guint n;
 
     gwy_brick_extract_line(brick, line,
                            args->x, args->y, 0,
@@ -798,8 +800,18 @@ extract_graph_curve(const LineStatArgs *args,
                            FALSE);
     gwy_data_line_set_offset(line, brick->zoff);
     g_object_set(gcmodel, "mode", GWY_GRAPH_CURVE_LINE, NULL);
-    /* Plot graphs with pixel-wise, uncalibrated abscissa. */
-    gwy_graph_curve_model_set_data_from_dataline(gcmodel, line, 0, 0);
+
+    if (args->calibration) {
+        xdata = gwy_data_line_get_data(args->calibration);
+        ydata = gwy_data_line_get_data(line);
+        n = MIN(gwy_data_line_get_res(args->calibration),
+                gwy_data_line_get_res(line));
+        gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, n);
+    }
+    else {
+        gwy_graph_curve_model_set_data_from_dataline(gcmodel, line,
+                                                     0, 0);
+    }
     g_object_unref(line);
 }
 
@@ -810,7 +822,7 @@ extract_gmodel(const LineStatArgs *args, GwyGraphModel *gmodel)
     GwySIUnit *xunit = NULL, *yunit;
 
     if (args->calibration)
-        xunit = gwy_data_line_get_si_unit_x(args->calibration);
+        xunit = gwy_data_line_get_si_unit_y(args->calibration);
     else
         xunit = gwy_brick_get_si_unit_z(brick);
     xunit = gwy_si_unit_duplicate(xunit);
