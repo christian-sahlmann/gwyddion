@@ -104,6 +104,7 @@ iso28600	managing-files
 jeol	managing-files
 jpkscan	managing-files
 jspmfile	managing-files
+keyence	managing-files
 laplace	editing-correction	remove-data-under-mask
 lat_synth	synthetic	lattice-synthesis
 lattice	selections
@@ -112,19 +113,22 @@ level_grains	grain-analysis	grain-level
 level	leveling-and-background	plane-level
 lextfile	managing-files
 linecorrect	editing-correction	line-correction
+linematch	editing-correction	line-correction
 line	selections
 linestats	statistical-analysis	line-stats
 lno_synth	synthetic	line-noise-synthesis
 local_contrast	presentations	local-contrast
 magellan	managing-files
 mapvue	managing-files
-mark_with	presentations-masks
+mark_with	presentations-masks	masks
 maskcor	multidata	mask-by-correlation
+mask_distribute	presentations-masks	masks
 maskedit	presentations-masks	mask-editor
 mask_edt	grain-analysis	grain-edt
-maskops	presentations-masks
+maskops	presentations-masks	masks
 matfile	managing-files
 mcrop	multidata	mutual-crop
+measure_lattice	statistical-analysis	measure-lattice
 median-bg	leveling-and-background	median-level
 merge	multidata	merge
 metropro	managing-files
@@ -168,7 +172,6 @@ pnifile	managing-files
 point	selections
 polydistort	edit-extended	polynomial-distort
 polylevel	leveling-and-background	polynomial-level
-polynom	editing-correction	line-polynomial
 presentationops	presentations	presentationops
 profile	basic-operations	profile
 psdf_logphi	fourier-transform	psdf-log-phi
@@ -224,11 +227,15 @@ tip_model	tip-convolution-artefacts	tip-model
 tipops	tip-convolution-artefacts	tip-operations
 unisoku	managing-files
 unrotate	editing-correction	unrotate
-volume_calibrate	volume-data
-volume_extract	volume-data
-volume_fdfit	volume-data
-volume_invert	volume-data
-volume_slice	volume-data
+volume_calibrate	volume-data-processing	volume-calibrate
+volume_extract	volume-data-processing
+volume_fdfit	volume-data-processing
+volume_invert	volume-data-processing	volume-invert
+volume_kmeans	volume-data-processing
+volume_kmedians	volume-data-processing
+volume_linestat	volume-data-processing	volume-linestat
+volume_slice	volume-data-processing	volume-slice
+volume_zcal	volume-data-processing	volume-zcalibration
 volumize_layers	volume-data
 volumize	volume-data
 vtkfile	managing-files
