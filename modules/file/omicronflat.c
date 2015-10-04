@@ -853,8 +853,11 @@ load_as_channel(OmicronFlatFileList *filelist, guint fileid,
         g_object_unref(dfield);
 
         g_snprintf(key, sizeof(key), "/%i/data/title", *id);
-        title = g_strconcat(fff->channel.name, " ", field_specs[i].title,
-                            NULL);
+        title = g_strdup_printf("%s %u_%u %s",
+                                fff->channel.name,
+                                fff->experiment.run_cycle_id,
+                                fff->experiment.scan_cycle_id,
+                                field_specs[i].title);
         gwy_container_set_string_by_name(data, key, title);
 
         meta = construct_metadata(fff, filelist->ids + fileid);
@@ -907,6 +910,7 @@ load_as_curve(OmicronFlatFileList *filelist, guint fileid,
     GwySIUnit *xunit, *yunit;
     guint res, i, j, nitems, ncurves;
     const gint32 *d32;
+    gchar *title;
 
     /* There must be one axis. */
     if (fff->axis_count != 1)
@@ -963,11 +967,16 @@ load_as_curve(OmicronFlatFileList *filelist, guint fileid,
         g_free(xdata);
         g_free(ydata);
 
+        title = g_strdup_printf("%u_%u %s",
+                                fff->experiment.run_cycle_id,
+                                fff->experiment.scan_cycle_id,
+                                titles[MIN(i, G_N_ELEMENTS(titles)-1)]);
         g_object_set(gcmodel,
                      "mode", GWY_GRAPH_CURVE_LINE,
                      "color", gwy_graph_get_preset_color(i),
-                     "description", titles[MIN(i, G_N_ELEMENTS(titles))],
+                     "description", title,
                      NULL);
+        g_free(title);
         gwy_graph_model_add_curve(gmodel, gcmodel);
         g_object_unref(gcmodel);
     }
@@ -1190,11 +1199,18 @@ load_as_sps(OmicronFlatFileList *filelist,
             GwyDataLine *dline = gwy_data_line_new(rowlen, rowlen*step, FALSE);
 
             if (!allspectra[i]) {
+                gchar *title;
+
                 spectra = allspectra[i] = gwy_spectra_new();
 
                 gwy_si_unit_set_from_string(gwy_spectra_get_si_unit_xy(spectra),
                                             "m");
-                gwy_spectra_set_title(spectra, fff->channel.name);
+                title = g_strdup_printf("%u_%u %s",
+                                        fff->experiment.run_cycle_id,
+                                        fff->experiment.scan_cycle_id,
+                                        fff->channel.name);
+                gwy_spectra_set_title(spectra, title);
+                g_free(title);
                 gwy_spectra_set_spectrum_x_label(spectra, axis->unq_name);
                 gwy_spectra_set_spectrum_y_label(spectra, fff->channel.name);
             }
@@ -1412,8 +1428,11 @@ load_as_volume(OmicronFlatFileList *filelist,
         g_object_unref(brick);
 
         g_snprintf(key, sizeof(key), "/brick/%i/title", *id);
-        title = g_strconcat(fff->channel.name, " ", brick_specs[i].title,
-                            NULL);
+        title = g_strdup_printf("%s %u_%u %s",
+                                fff->channel.name,
+                                fff->experiment.run_cycle_id,
+                                fff->experiment.scan_cycle_id,
+                                brick_specs[i].title);
         gwy_container_set_string_by_name(data, key, title);
 
         dfield = gwy_data_field_new(brick->xres, brick->yres,
