@@ -167,6 +167,8 @@ static void     slice_load_args        (GwyContainer *container,
 static void     slice_save_args        (GwyContainer *container,
                                         SliceArgs *args);
 
+static const SlicePos nullpos = { -1, -1, -1 };
+
 static const SliceArgs slice_defaults = {
     PLANE_XY, OUTPUT_IMAGES,
     { -1, -1, -1 },
@@ -263,6 +265,7 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
     GwyPixmapLayer *layer;
     GwyVectorLayer *vlayer = NULL;
     GwySelection *selection;
+    SlicePos pos;
     const guchar *gradient;
     gchar key[40];
 
@@ -322,6 +325,7 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
     g_object_unref(gcmodel);
 
     controls.graph = gwy_graph_new(gmodel);
+    gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
     g_object_unref(gmodel);
     gtk_widget_set_size_request(controls.graph, PREVIEW_SIZE, PREVIEW_SIZE);
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph, TRUE, TRUE, 0);
@@ -470,10 +474,11 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
     label = gtk_label_new(NULL);
     gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
 
-    update_position(&controls, &controls.args->currpos);
+    pos = args->currpos;
+    args->currpos = nullpos;
+    update_position(&controls, &pos);
     controls.in_update = FALSE;
-
-    //multiselect_changed(&controls, GTK_TOGGLE_BUTTON(controls.multiselect));
+    multiselect_changed(&controls, GTK_TOGGLE_BUTTON(controls.multiselect));
 
     gtk_widget_show_all(dialog);
     do {
@@ -605,12 +610,6 @@ slice_reset(SliceControls *controls)
     args->currpos.y = brick->yres/2;
     args->currpos.z = brick->zres/2;
     reduce_selection(controls);
-    /* Just reset the selection here?
-    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->base_plane),
-                                  slice_defaults.base_plane);
-    gwy_radio_buttons_set_current(controls->output_type,
-                                  slice_defaults.output_type);
-                                  */
 }
 
 static void
@@ -750,7 +749,6 @@ static void
 base_plane_changed(GtkComboBox *combo, SliceControls *controls)
 {
     SliceArgs *args = controls->args;
-    static const SlicePos nullpos = { -1, -1, -1 };
     SlicePos pos;
 
     g_assert(!controls->in_update);
@@ -821,6 +819,9 @@ static void
 reduce_selection(SliceControls *controls)
 {
     SlicePos pos = controls->args->currpos;
+    GwySelection *selection;
+    GtkWidget *area;
+    gdouble xyz[2] = { 0.0, 0.0 };
 
     g_assert(!controls->in_update);
 
@@ -829,6 +830,15 @@ reduce_selection(SliceControls *controls)
     g_array_set_size(controls->args->allpos, 1);
 
     controls->in_update = TRUE;
+    selection = gwy_vector_layer_ensure_selection(controls->vlayer);
+    gwy_selection_set_data(selection, 1, xyz);
+
+    area = gwy_graph_get_area(GWY_GRAPH(controls->graph));
+    selection = gwy_graph_area_get_selection(GWY_GRAPH_AREA(area),
+                                             GWY_GRAPH_STATUS_XLINES);
+    gwy_selection_set_data(selection, 1, xyz);
+
+    controls->args->currpos = nullpos;
     update_position(controls, &pos);
     controls->in_update = FALSE;
 }
@@ -856,6 +866,7 @@ update_position(SliceControls *controls,
     GwyBrick *brick = args->brick;
     gdouble xy[2], z;
     gboolean plane_changed = FALSE, point_changed = FALSE;
+    gint id;
 
     g_assert(controls->in_update);
 
@@ -898,30 +909,37 @@ update_position(SliceControls *controls,
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ypos), pos->y);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zpos), pos->z);
 
+    update_labels(controls);
+    update_multiselection(controls);
+
     if (point_changed) {
+        id = (args->output_type == OUTPUT_GRAPHS
+              ? controls->current_object
+              : 0);
+
         selection = gwy_vector_layer_ensure_selection(controls->vlayer);
-        gwy_selection_set_object(selection, controls->current_object, xy);
+        gwy_selection_set_object(selection, id, xy);
 
         gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
         extract_gmodel(args, gmodel);
 
         gcmodel = gwy_graph_model_get_curve(gmodel, 0);
-        /* Plot graphs with pixel-wise, uncalibrated abscissa. */
-        extract_graph_curve(args, gcmodel, controls->current_object,
-                            FALSE);
+        extract_graph_curve(args, gcmodel, controls->current_object, FALSE);
     }
+
     if (plane_changed) {
+        id = (args->output_type == OUTPUT_IMAGES
+              ? controls->current_object
+              : 0);
+
         area = gwy_graph_get_area(GWY_GRAPH(controls->graph));
         selection = gwy_graph_area_get_selection(GWY_GRAPH_AREA(area),
                                                  GWY_GRAPH_STATUS_XLINES);
-        gwy_selection_set_object(selection, controls->current_object, &z);
+        gwy_selection_set_object(selection, id, &z);
 
         extract_image_plane(args, controls->image);
         gwy_data_field_data_changed(controls->image);
     }
-
-    update_labels(controls);
-    update_multiselection(controls);
 }
 
 static void
@@ -934,7 +952,6 @@ update_multiselection(SliceControls *controls)
     GtkTreeIter iter;
     GtkTreePath *path;
 
-    /* TODO: */
     gwy_debug("len: %d, curr: %d", len, curr);
     if (len == curr) {
         g_array_append_val(args->allpos, args->currpos);
