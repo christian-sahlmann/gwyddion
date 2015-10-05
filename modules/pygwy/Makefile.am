@@ -246,7 +246,7 @@ gwy_la_LIBADD = \
 	$(PYGTK_LIBS) @GTK_LIBS@ \
 	@PNG_LIBS@ @ZLIB@ @BZIP2@ @EXR_LIBS@ @XML2_LIBS@ @MINIZIP_LIBS@ @CFITSIO_LIBS@
 
-gwy_la_LDFLAGS = -avoid-version -module
+gwy_la_LDFLAGS = -avoid-version -module $(no_undefined)
 if OS_DARWIN
 gwy_la_LDFLAGS += -undefined dynamic_lookup
 else
