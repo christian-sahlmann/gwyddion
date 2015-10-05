@@ -218,6 +218,13 @@ GWY_WITH([python],,[Install Python modules and plug-ins])
 AM_PATH_PYTHON(2.2,,:)
 AM_CONDITIONAL([HAVE_PYTHON],[test "$PYTHON" != : -a "$enable_python" != no])
 
+# Change backward slashes in paths to forwards slashes to avoid mixed-slash
+# paths in MS Windows (forwards works just fine in MinGW).
+pyexecdir=$(echo "$pyexecdir" | sed 's:\\:/:g')
+am_cv_python_pyexecdir=$(echo "$am_cv_python_pyexecdir" | sed 's:\\:/:g')
+pythondir=$(echo "$pythondir" | sed 's:\\:/:g')
+am_cv_python_pythondir=$(echo "$am_cv_python_pythondir" | sed 's:\\:/:g')
+
 AC_ARG_ENABLE(pygwy, AC_HELP_STRING([--enable-pygwy],
                                     [Build Python wrapper to Gwyddion]),[],
                                     [enable_pygwy=yes])
