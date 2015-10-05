@@ -343,6 +343,7 @@ line_stat_dialog(LineStatArgs *args, GwyContainer *data, gint id)
     g_object_unref(gcmodel);
 
     controls.graph = gwy_graph_new(gmodel);
+    gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
     g_object_unref(gmodel);
     gtk_widget_set_size_request(controls.graph, PREVIEW_SIZE, PREVIEW_SIZE);
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph, TRUE, TRUE, 0);
