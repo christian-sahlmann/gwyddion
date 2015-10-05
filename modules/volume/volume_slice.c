@@ -129,7 +129,6 @@ static void     extract_one_image      (SliceArgs *args,
                                         gint idx);
 static void     create_coordlist       (SliceControls *controls);
 static void     slice_reset            (SliceControls *controls);
-static void     set_graph_max          (SliceControls *controls);
 static void     point_selection_changed(SliceControls *controls,
                                         gint id,
                                         GwySelection *selection);
@@ -149,13 +148,8 @@ static void     output_type_changed    (GtkWidget *button,
 static void     multiselect_changed    (SliceControls *controls,
                                         GtkToggleButton *button);
 static void     reduce_selection       (SliceControls *controls);
-static void     set_image_first_coord  (SliceControls *controls,
-                                        gint i);
-static void     set_image_second_coord (SliceControls *controls,
-                                        gint i);
-static void     set_graph_coord        (SliceControls *controls,
-                                        gint i);
-static void     update_selections      (SliceControls *controls);
+static void     update_position        (SliceControls *controls,
+                                        const SlicePos *pos);
 static void     update_multiselection  (SliceControls *controls);
 static void     update_labels          (SliceControls *controls);
 static void     extract_image_plane    (const SliceArgs *args,
@@ -476,11 +470,10 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
     label = gtk_label_new(NULL);
     gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
 
-    set_graph_max(&controls);
+    update_position(&controls, &controls.args->currpos);
     controls.in_update = FALSE;
 
-    multiselect_changed(&controls, GTK_TOGGLE_BUTTON(controls.multiselect));
-    update_selections(&controls);
+    //multiselect_changed(&controls, GTK_TOGGLE_BUTTON(controls.multiselect));
 
     gtk_widget_show_all(dialog);
     do {
@@ -621,36 +614,15 @@ slice_reset(SliceControls *controls)
 }
 
 static void
-set_graph_max(SliceControls *controls)
-{
-    SliceBasePlane base_plane = controls->args->base_plane;
-    GtkWidget *area;
-    GwySelection *selection;
-    gint max = 0;
-
-    area = gwy_graph_get_area(GWY_GRAPH(controls->graph));
-    selection = gwy_graph_area_get_selection(GWY_GRAPH_AREA(area),
-                                             GWY_GRAPH_STATUS_XLINES);
-
-    if (base_plane == PLANE_YZ || base_plane == PLANE_ZY)
-        max = controls->args->brick->xres-1;
-    else if (base_plane == PLANE_XZ || base_plane == PLANE_ZX)
-        max = controls->args->brick->yres-1;
-    else if (base_plane == PLANE_YX || base_plane == PLANE_XY)
-        max = controls->args->brick->zres-1;
-
-    g_object_set_data(G_OBJECT(selection), "max", GINT_TO_POINTER(max));
-}
-
-static void
 point_selection_changed(SliceControls *controls,
                         gint id,
                         GwySelection *selection)
 {
-    GwyGraphModel *gmodel;
-    GwyGraphCurveModel *gcmodel;
+    SliceArgs *args = controls->args;
+    SliceBasePlane base_plane = args->base_plane;
+    SlicePos pos = args->currpos;
     gdouble xy[2];
-    gint ixy[2];
+    gint i, j;
 
     gwy_debug("%d (%d)", controls->in_update, id);
     if (controls->in_update)
@@ -667,25 +639,28 @@ point_selection_changed(SliceControls *controls,
     if (controls->args->output_type == OUTPUT_GRAPHS)
         controls->current_object = id;
 
-    ixy[0] = CLAMP(gwy_data_field_rtoi(controls->image, xy[0]),
-                   0, controls->image->xres-1);
-    ixy[1] = CLAMP(gwy_data_field_rtoj(controls->image, xy[1]),
-                   0, controls->image->yres-1);
+    j = CLAMP(gwy_data_field_rtoj(controls->image, xy[0]),
+              0, controls->image->xres-1);
+    i = CLAMP(gwy_data_field_rtoi(controls->image, xy[1]),
+              0, controls->image->yres-1);
+
+    if (base_plane == PLANE_XY || base_plane == PLANE_XZ)
+        pos.x = j;
+    if (base_plane == PLANE_YZ || base_plane == PLANE_YX)
+        pos.y = j;
+    if (base_plane == PLANE_ZX || base_plane == PLANE_ZY)
+        pos.z = j;
+
+    if (base_plane == PLANE_YX || base_plane == PLANE_ZX)
+        pos.x = i;
+    if (base_plane == PLANE_ZY || base_plane == PLANE_XY)
+        pos.y = i;
+    if (base_plane == PLANE_XZ || base_plane == PLANE_YZ)
+        pos.z = i;
+
     controls->in_update = TRUE;
-    set_image_first_coord(controls, ixy[0]);
-    set_image_second_coord(controls, ixy[1]);
+    update_position(controls, &pos);
     controls->in_update = FALSE;
-
-    update_labels(controls);
-    update_multiselection(controls);
-
-    gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
-    extract_gmodel(controls->args, gmodel);
-
-    gcmodel = gwy_graph_model_get_curve(gmodel, 0);
-    /* Plot graphs with pixel-wise, uncalibrated abscissa. */
-    extract_graph_curve(controls->args, gcmodel, controls->current_object,
-                        FALSE);
 }
 
 static void
@@ -695,9 +670,9 @@ plane_selection_changed(SliceControls *controls,
 {
     SliceArgs *args = controls->args;
     SliceBasePlane base_plane = args->base_plane;
+    SlicePos pos = args->currpos;
     GwyBrick *brick = args->brick;
-    gdouble z;
-    gint ix, max;
+    gdouble r;
 
     gwy_debug("%d (%d)", controls->in_update, id);
     if (controls->in_update)
@@ -708,80 +683,87 @@ plane_selection_changed(SliceControls *controls,
     if (id < 0)
         return;
 
-    if (!gwy_selection_get_object(selection, id, &z))
+    if (!gwy_selection_get_object(selection, id, &r))
         return;
 
     if (controls->args->output_type == OUTPUT_IMAGES)
         controls->current_object = id;
 
-    max = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(selection), "max"));
     if (base_plane == PLANE_YZ || base_plane == PLANE_ZY)
-        ix = CLAMP(gwy_brick_rtoi(brick, z - brick->xoff), 0, max);
+        pos.x = CLAMP(gwy_brick_rtoi(brick, r - brick->xoff), 0, brick->xres-1);
     else if (base_plane == PLANE_YX || base_plane == PLANE_XY)
-        ix = CLAMP(gwy_brick_rtok(brick, z - brick->zoff), 0, max);
+        pos.z = CLAMP(gwy_brick_rtok(brick, r - brick->zoff), 0, brick->zres-1);
     else if (base_plane == PLANE_XZ || base_plane == PLANE_ZX)
-        ix = CLAMP(gwy_brick_rtoj(brick, z - brick->yoff), 0, max);
+        pos.y = CLAMP(gwy_brick_rtoj(brick, r - brick->yoff), 0, brick->yres-1);
     else {
         g_return_if_reached();
     }
 
     controls->in_update = TRUE;
-    set_graph_coord(controls, ix);
+    update_position(controls, &pos);
     controls->in_update = FALSE;
-
-    update_labels(controls);
-    update_multiselection(controls);
-
-    extract_image_plane(controls->args, controls->image);
-    gwy_data_field_data_changed(controls->image);
 }
 
 static void
 xpos_changed(SliceControls *controls, GtkAdjustment *adj)
 {
+    SlicePos pos = controls->args->currpos;
+
     if (controls->in_update)
         return;
 
-    controls->args->currpos.x = gwy_adjustment_get_int(adj);
-    update_selections(controls);
+    controls->in_update = TRUE;
+    pos.x = gwy_adjustment_get_int(adj);
+    update_position(controls, &pos);
+    controls->in_update = FALSE;
 }
 
 static void
 ypos_changed(SliceControls *controls, GtkAdjustment *adj)
 {
+    SlicePos pos = controls->args->currpos;
+
     if (controls->in_update)
         return;
 
-    controls->args->currpos.y = gwy_adjustment_get_int(adj);
-    update_selections(controls);
+    controls->in_update = TRUE;
+    pos.y = gwy_adjustment_get_int(adj);
+    update_position(controls, &pos);
+    controls->in_update = FALSE;
 }
 
 static void
 zpos_changed(SliceControls *controls, GtkAdjustment *adj)
 {
+    SlicePos pos = controls->args->currpos;
+
     if (controls->in_update)
         return;
 
-    controls->args->currpos.z = gwy_adjustment_get_int(adj);
-    update_selections(controls);
+    controls->in_update = TRUE;
+    pos.z = gwy_adjustment_get_int(adj);
+    update_position(controls, &pos);
+    controls->in_update = FALSE;
 }
 
 static void
 base_plane_changed(GtkComboBox *combo, SliceControls *controls)
 {
     SliceArgs *args = controls->args;
-    gint xpos = args->currpos.x, ypos = args->currpos.y, zpos = args->currpos.z;
+    static const SlicePos nullpos = { -1, -1, -1 };
+    SlicePos pos;
 
-    controls->args->base_plane = gwy_enum_combo_box_get_active(combo);
-    set_graph_max(controls);
-    update_selections(controls);
+    g_assert(!controls->in_update);
+
+    reduce_selection(controls);
+    pos = args->currpos;
+
+    args->base_plane = gwy_enum_combo_box_get_active(combo);
+    controls->in_update = TRUE;
+    args->currpos = nullpos;
+    update_position(controls, &pos);
     gwy_set_data_preview_size(GWY_DATA_VIEW(controls->view), PREVIEW_SIZE);
-
-    /* The selection got clipped during the switch.  Restore it. */
-    args->currpos.x = xpos;
-    args->currpos.y = ypos;
-    args->currpos.z = zpos;
-    update_selections(controls);
+    controls->in_update = FALSE;
 }
 
 static void
@@ -838,145 +820,105 @@ multiselect_changed(SliceControls *controls, GtkToggleButton *button)
 static void
 reduce_selection(SliceControls *controls)
 {
-    GwySelection *selection;
-    GtkWidget *area;
     SlicePos pos = controls->args->currpos;
-    gdouble coord[2] = { 0.0, 0.0 };
+
+    g_assert(!controls->in_update);
 
     controls->current_object = 0;
     gwy_null_store_set_n_rows(controls->store, 1);
     g_array_set_size(controls->args->allpos, 1);
 
     controls->in_update = TRUE;
-    selection = gwy_vector_layer_ensure_selection(controls->vlayer);
-    gwy_selection_set_data(selection, 1, coord);
-
-    area = gwy_graph_get_area(GWY_GRAPH(controls->graph));
-    selection = gwy_graph_area_get_selection(GWY_GRAPH_AREA(area),
-                                             GWY_GRAPH_STATUS_XLINES);
-    gwy_selection_set_data(selection, 1, coord);
+    update_position(controls, &pos);
     controls->in_update = FALSE;
-
-    gwy_debug("(%d %d %d)", pos.x, pos.y, pos.z);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xpos), pos.x);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ypos), pos.y);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zpos), pos.z);
-    /* Since we might not emit "value-changed" on the adjustments update
-     * selections explicitly afterwards.*/
-    update_selections(controls);
 }
 
+/*
+ * All signal handlers must
+ * - do nothing in update
+ * - calculate the integer coordinate
+ * - enter in-update
+ * - call this function
+ * - leave in-update
+ * This way there are no circular dependencies, we always completely update
+ * anything that has changed here.
+ */
 static void
-set_image_first_coord(SliceControls *controls, gint i)
+update_position(SliceControls *controls,
+                const SlicePos *pos)
 {
     SliceArgs *args = controls->args;
     SliceBasePlane base_plane = args->base_plane;
-
-    if (base_plane == PLANE_XY || base_plane == PLANE_XZ) {
-        args->currpos.x = i;
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xpos), i);
-    }
-    else if (base_plane == PLANE_YX || base_plane == PLANE_YZ) {
-        args->currpos.y = i;
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ypos), i);
-    }
-    else if (base_plane == PLANE_ZX || base_plane == PLANE_ZY) {
-        args->currpos.z = i;
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zpos), i);
-    }
-}
-
-static void
-set_image_second_coord(SliceControls *controls, gint i)
-{
-    SliceArgs *args = controls->args;
-    SliceBasePlane base_plane = args->base_plane;
-
-    if (base_plane == PLANE_YX || base_plane == PLANE_ZX) {
-        args->currpos.x = i;
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xpos), i);
-    }
-    else if (base_plane == PLANE_XY || base_plane == PLANE_ZY) {
-        args->currpos.y = i;
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ypos), i);
-    }
-    else if (base_plane == PLANE_XZ || base_plane == PLANE_YZ) {
-        args->currpos.z = i;
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zpos), i);
-    }
-}
-
-static void
-set_graph_coord(SliceControls *controls, gint i)
-{
-    SliceArgs *args = controls->args;
-    SliceBasePlane base_plane = args->base_plane;
-
-    if (base_plane == PLANE_YZ || base_plane == PLANE_ZY) {
-        args->currpos.x = i;
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xpos), i);
-    }
-    else if (base_plane == PLANE_XZ || base_plane == PLANE_ZX) {
-        args->currpos.y = i;
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ypos), i);
-    }
-    else if (base_plane == PLANE_YX || base_plane == PLANE_XY) {
-        args->currpos.z = i;
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zpos), i);
-    }
-}
-
-static void
-update_selections(SliceControls *controls)
-{
-    SliceArgs *args = controls->args;
-    SliceBasePlane base_plane = args->base_plane;
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *gcmodel;
     GtkWidget *area;
     GwySelection *selection;
     GwyBrick *brick = args->brick;
     gdouble xy[2], z;
+    gboolean plane_changed = FALSE, point_changed = FALSE;
 
-    if (base_plane == PLANE_XY) {
-        xy[0] = gwy_brick_itor(brick, args->currpos.x);
-        xy[1] = gwy_brick_jtor(brick, args->currpos.y);
-        z = gwy_brick_ktor(brick, args->currpos.z) + brick->zoff;
+    g_assert(controls->in_update);
+
+    if (base_plane == PLANE_XY || base_plane == PLANE_YX) {
+        xy[0] = gwy_brick_itor(brick, pos->x);
+        xy[1] = gwy_brick_jtor(brick, pos->y);
+        if (base_plane != PLANE_XY)
+            GWY_SWAP(gdouble, xy[0], xy[1]);
+        z = gwy_brick_ktor(brick, pos->z) + brick->zoff;
+        point_changed = (pos->x != args->currpos.x
+                         || pos->y != args->currpos.y);
+        plane_changed = (pos->z != args->currpos.z);
     }
-    else if (base_plane == PLANE_YX) {
-        xy[0] = gwy_brick_jtor(brick, args->currpos.y);
-        xy[1] = gwy_brick_itor(brick, args->currpos.x);
-        z = gwy_brick_ktor(brick, args->currpos.z) + brick->zoff;
+    else if (base_plane == PLANE_XZ || base_plane == PLANE_ZX) {
+        xy[0] = gwy_brick_itor(brick, pos->x);
+        xy[1] = gwy_brick_ktor(brick, pos->z);
+        if (base_plane != PLANE_XZ)
+            GWY_SWAP(gdouble, xy[0], xy[1]);
+        z = gwy_brick_jtor(brick, pos->y) + brick->yoff;
+        point_changed = (pos->x != args->currpos.x
+                         || pos->z != args->currpos.z);
+        plane_changed = (pos->y != args->currpos.y);
     }
-    else if (base_plane == PLANE_XZ) {
-        xy[0] = gwy_brick_itor(brick, args->currpos.x);
-        xy[1] = gwy_brick_ktor(brick, args->currpos.z);
-        z = gwy_brick_jtor(brick, args->currpos.y) + brick->yoff;
-    }
-    else if (base_plane == PLANE_ZX) {
-        xy[0] = gwy_brick_ktor(brick, args->currpos.z);
-        xy[1] = gwy_brick_itor(brick, args->currpos.x);
-        z = gwy_brick_jtor(brick, args->currpos.y) + brick->yoff;
-    }
-    else if (base_plane == PLANE_YZ) {
-        xy[0] = gwy_brick_jtor(brick, args->currpos.y);
-        xy[1] = gwy_brick_ktor(brick, args->currpos.z);
-        z = gwy_brick_itor(brick, args->currpos.x) + brick->xoff;
-    }
-    else if (base_plane == PLANE_ZY) {
-        xy[0] = gwy_brick_ktor(brick, args->currpos.z);
-        xy[1] = gwy_brick_jtor(brick, args->currpos.y);
-        z = gwy_brick_itor(brick, args->currpos.x) + brick->xoff;
+    else if (base_plane == PLANE_YZ || base_plane == PLANE_ZY) {
+        xy[0] = gwy_brick_jtor(brick, pos->y);
+        xy[1] = gwy_brick_ktor(brick, pos->z);
+        if (base_plane != PLANE_YZ)
+            GWY_SWAP(gdouble, xy[0], xy[1]);
+        z = gwy_brick_itor(brick, pos->x) + brick->xoff;
+        point_changed = (pos->y != args->currpos.y
+                         || pos->z != args->currpos.z);
+        plane_changed = (pos->x != args->currpos.x);
     }
     else {
         g_return_if_reached();
     }
 
-    selection = gwy_vector_layer_ensure_selection(controls->vlayer);
-    gwy_selection_set_object(selection, controls->current_object, xy);
+    args->currpos = *pos;
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xpos), pos->x);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ypos), pos->y);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zpos), pos->z);
 
-    area = gwy_graph_get_area(GWY_GRAPH(controls->graph));
-    selection = gwy_graph_area_get_selection(GWY_GRAPH_AREA(area),
-                                             GWY_GRAPH_STATUS_XLINES);
-    gwy_selection_set_object(selection, controls->current_object, &z);
+    if (point_changed) {
+        selection = gwy_vector_layer_ensure_selection(controls->vlayer);
+        gwy_selection_set_object(selection, controls->current_object, xy);
+
+        gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
+        extract_gmodel(args, gmodel);
+
+        gcmodel = gwy_graph_model_get_curve(gmodel, 0);
+        /* Plot graphs with pixel-wise, uncalibrated abscissa. */
+        extract_graph_curve(args, gcmodel, controls->current_object,
+                            FALSE);
+    }
+    if (plane_changed) {
+        area = gwy_graph_get_area(GWY_GRAPH(controls->graph));
+        selection = gwy_graph_area_get_selection(GWY_GRAPH_AREA(area),
+                                                 GWY_GRAPH_STATUS_XLINES);
+        gwy_selection_set_object(selection, controls->current_object, &z);
+
+        extract_image_plane(args, controls->image);
+        gwy_data_field_data_changed(controls->image);
+    }
 
     update_labels(controls);
     update_multiselection(controls);
