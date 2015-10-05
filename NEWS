@@ -75,6 +75,7 @@ Modules:
 - Roughness tool: Wavines and texture parameters are actually calculated from
   zero-mean profiles.
 - K-means, K-medians: They now have progress bars and are cancellable.
+- Grain distributions: Field separator in the header was fixed to tab.
 
 Other:
 - The code has been made MSVC-compatible.
