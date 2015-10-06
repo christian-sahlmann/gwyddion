@@ -90,7 +90,7 @@ Function DetectPrevInstallation
 
     MessageBox MB_YESNOCANCEL|MB_ICONQUESTION \
         "${PRODUCT_NAME} $R1 is already installed in $R2.$\n$\n\
-        Do you want to replace it?$\n$\n\
+        Do you want to replace it with ${PRODUCT_NAME} ${PRODUCT_VERSION}?$\n$\n\
         Click Yes to upgrade the previous version, \
         No to ignore the previous version and proceed, \
         Cancel to abort the installation." \
