@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-09-29 08:07+0300\n"
+"POT-Creation-Date: 2015-10-07 09:11+0200\n"
 "PO-Revision-Date: 2015-09-29 08:09+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
@@ -945,7 +945,7 @@ msgstr "точек"
 #: modules/process/wave_synth.c:361 modules/process/wpour_mark.c:296
 #: modules/volume/volume_calibrate.c:371 modules/volume/volume_extract.c:331
 #: modules/volume/volume_kmeans.c:146 modules/volume/volume_kmedians.c:147
-#: modules/volume/volume_linestat.c:292 modules/volume/volume_slice.c:281
+#: modules/volume/volume_linestat.c:292 modules/volume/volume_slice.c:278
 msgid "_Reset"
 msgstr "_Сброс"
 
@@ -3555,7 +3555,7 @@ msgstr "Неподдерживаемый формат отсчёта"
 
 #: modules/file/gwytiff.h:1030 modules/file/keyence.c:449
 #: modules/file/matfile.c:276 modules/file/matfile.c:298
-#: modules/file/omicronflat.c:1851 modules/file/psia.c:353
+#: modules/file/omicronflat.c:1871 modules/file/psia.c:353
 #: modules/file/zemax.c:168
 msgid "File is truncated."
 msgstr "Файл усечен."
@@ -4318,7 +4318,7 @@ msgstr "Импортирует файлы Keyence VK4."
 msgid "Keyence VK4 data files (.vk4)"
 msgstr "Файлы данных Keyence VK4 (.vk4)"
 
-#: modules/file/keyence.c:894 modules/file/omicronflat.c:2417
+#: modules/file/keyence.c:894 modules/file/omicronflat.c:2437
 #, c-format
 msgid "Cannot convert string from UTF-16: %s"
 msgstr "Не получается сконвертировать строку из UTF-16: %s"
@@ -4634,20 +4634,20 @@ msgstr "Строка DATA_INFO содержит меньше %d полей."
 msgid "Missing data start marker \\x1a\\x04."
 msgstr "Отсутствует маркер начала данных \\x1a\\x04."
 
-#: modules/file/nanoobserver.c:119
+#: modules/file/nanoobserver.c:127
 msgid "Reads NanoObserver .nao files."
 msgstr "Читает файлы NanoObserver .nao."
 
-#: modules/file/nanoobserver.c:132
+#: modules/file/nanoobserver.c:140
 msgid "NanoObserver data (.nao)"
 msgstr "Данные NanoObserver (.nao)"
 
-#: modules/file/nanoobserver.c:198 modules/file/nanoscantech.c:205
+#: modules/file/nanoobserver.c:206 modules/file/nanoscantech.c:213
 #: modules/file/opengps.c:216 modules/file/spmxfile.c:173
 msgid "Minizip cannot open the file as a ZIP file."
 msgstr "Minizip не может открыть файл как архив ZIP."
 
-#: modules/file/nanoobserver.c:473 modules/file/opengps.c:505
+#: modules/file/nanoobserver.c:481 modules/file/opengps.c:505
 #: modules/file/opengps.c:705 modules/file/opengps.c:741
 #: modules/file/spmxfile.c:217 modules/file/spmxfile.c:525
 #, c-format
@@ -4666,11 +4666,11 @@ msgstr "Файлы NanoScan XML (.xml)"
 msgid "Wrong size of Base64 encoded data."
 msgstr "Неправильный размер данных, кодированных Base64."
 
-#: modules/file/nanoscantech.c:130
+#: modules/file/nanoscantech.c:138
 msgid "Imports NanoScanTech .nstdat files."
 msgstr "Импортирует файлы NanoScanTech .nstdat"
 
-#: modules/file/nanoscantech.c:143
+#: modules/file/nanoscantech.c:151
 msgid "NanoScanTech data (.nstdat)"
 msgstr "Данные NanoScanTech (.nstdat)"
 
@@ -4999,16 +4999,16 @@ msgstr "Импортирует плоские файлы Omicron"
 msgid "Omicron flat files (*.*_flat)"
 msgstr "Плоские файлы Omicron (*.*_flat)"
 
-#: modules/file/omicronflat.c:1583 modules/file/omicronflat.c:1625
+#: modules/file/omicronflat.c:1602 modules/file/omicronflat.c:1644
 msgid "File name does not have the expected form for Omicron Flat files."
 msgstr "Имя файла не соответствует ожидаемому для файлов Omicron Flat."
 
-#: modules/file/omicronflat.c:2035
+#: modules/file/omicronflat.c:2055
 msgid "Cannot understand the axis hierarchy."
 msgstr "Не удаётся понять иерархию осей."
 
 #. TRANSLATORS: %s is replaced with an expression of the data shape.
-#: modules/file/omicronflat.c:2453
+#: modules/file/omicronflat.c:2473
 #, c-format
 msgid "Cannot figure out how to load data in the following form: %s."
 msgstr "Нельзя определить как загрузить данные в следующем виде: %s."
@@ -6335,13 +6335,13 @@ msgstr "Ошибка"
 
 #: modules/graph/graph_cd.c:320 modules/graph/graph_cut.c:193
 #: modules/graph/graph_fdfit.c:416 modules/graph/graph_fit.c:434
-#: modules/volume/volume_fdfit.c:501 modules/volume/volume_linestat.c:388
+#: modules/volume/volume_fdfit.c:501 modules/volume/volume_linestat.c:389
 msgid "Range:"
 msgstr "Диапазон:"
 
 #: modules/graph/graph_cd.c:331 modules/graph/graph_cut.c:204
 #: modules/graph/graph_fdfit.c:427 modules/graph/graph_fit.c:445
-#: modules/volume/volume_fdfit.c:512 modules/volume/volume_linestat.c:399
+#: modules/volume/volume_fdfit.c:512 modules/volume/volume_linestat.c:400
 msgid "range|to"
 msgstr "–"
 
@@ -7375,7 +7375,7 @@ msgstr "Обрезать до действительных данных"
 #: modules/process/polydistort.c:336 modules/process/scars.c:583
 #: modules/process/slope_dist.c:424 modules/process/synth.h:513
 #: modules/volume/volume_extract.c:424 modules/volume/volume_extract.c:505
-#: modules/volume/volume_linestat.c:421
+#: modules/volume/volume_linestat.c:422
 msgid "I_nstant updates"
 msgstr "Мгновенное об_новление"
 
@@ -8182,13 +8182,13 @@ msgid "_Monte Carlo time step:"
 msgstr "Временной шаг метода _Монте-Карло:"
 
 #: modules/process/domain_synth.c:522 modules/process/fft_filter_2d.c:620
-#: modules/volume/volume_slice.c:352
+#: modules/volume/volume_slice.c:350
 msgid "Output Options"
 msgstr "Параметры вывода"
 
 #: modules/process/domain_synth.c:541 modules/process/fft_filter_2d.c:625
 #: modules/process/mask_edt.c:400 modules/process/slope_dist.c:340
-#: modules/volume/volume_linestat.c:431 modules/volume/volume_slice.c:372
+#: modules/volume/volume_linestat.c:432 modules/volume/volume_slice.c:370
 msgid "Output type:"
 msgstr "Тип вывода:"
 
@@ -11844,11 +11844,11 @@ msgstr "Наклонить на заданную величину"
 msgid "Tilt"
 msgstr "Н_аклон"
 
-#: modules/process/tilt.c:184 modules/volume/volume_slice.c:411
+#: modules/process/tilt.c:184 modules/volume/volume_slice.c:409
 msgid "_X:"
 msgstr "_X:"
 
-#: modules/process/tilt.c:193 modules/volume/volume_slice.c:430
+#: modules/process/tilt.c:193 modules/volume/volume_slice.c:428
 msgid "_Y:"
 msgstr "_Y:"
 
@@ -12150,7 +12150,7 @@ msgid "Waves"
 msgstr "Волны"
 
 #: modules/process/wave_synth.c:440 modules/tools/linestats.c:333
-#: modules/tools/sfunctions.c:381 modules/volume/volume_linestat.c:368
+#: modules/tools/sfunctions.c:381 modules/volume/volume_linestat.c:369
 msgid "_Quantity:"
 msgstr "_Величина:"
 
@@ -13525,24 +13525,20 @@ msgstr "Сечение по Y при y: %d"
 msgid "Z cross-section at Z = %g %s (#%d)"
 msgstr "Сечение Z на величине Z = %g %s (#%d)"
 
-#: modules/volume/volume_extract.c:749 modules/volume/volume_slice.c:1229
+#: modules/volume/volume_extract.c:749 modules/volume/volume_slice.c:1188
 #, c-format
 msgid "X graph at y: %d z: %d"
 msgstr "График X при y: %d z: %d"
 
-#: modules/volume/volume_extract.c:752 modules/volume/volume_slice.c:1238
+#: modules/volume/volume_extract.c:752 modules/volume/volume_slice.c:1197
 #, c-format
 msgid "Y graph at x: %d z: %d"
 msgstr "График Y при x: %d z: %d"
 
-#: modules/volume/volume_extract.c:755 modules/volume/volume_slice.c:1220
+#: modules/volume/volume_extract.c:755 modules/volume/volume_slice.c:1179
 #, c-format
 msgid "Z graph at x: %d y: %d"
 msgstr "График Z при x: %d y: %d"
-
-#: modules/volume/volume_extract.c:760
-msgid "w"
-msgstr "w"
 
 #: modules/volume/volume_extract.c:776
 msgid "Brick graph"
@@ -13710,70 +13706,70 @@ msgstr "Установить _предпросмотр"
 msgid "Summarize Volume Profiles"
 msgstr "Характеризовать профили объёмных данных"
 
-#: modules/volume/volume_slice.c:187
+#: modules/volume/volume_slice.c:183
 msgid "Extracts image planes and line graphs from volume data."
 msgstr "Извлекает плоскости с изображениями и графики из объёмных данных."
 
-#: modules/volume/volume_slice.c:201
+#: modules/volume/volume_slice.c:197
 msgid "/Cut and _Slice..."
 msgstr "/Вырезать..."
 
-#: modules/volume/volume_slice.c:205
+#: modules/volume/volume_slice.c:201
 msgid "Extract image planes and line graphs"
 msgstr "Извлечь плоскости изображения и линии графиков"
 
-#: modules/volume/volume_slice.c:257
+#: modules/volume/volume_slice.c:253
 msgid "Image slice"
 msgstr "Плоскость как изображение"
 
-#: modules/volume/volume_slice.c:258
+#: modules/volume/volume_slice.c:254
 msgid "Line graph"
 msgstr "Линию как график"
 
-#: modules/volume/volume_slice.c:279
+#: modules/volume/volume_slice.c:276
 msgid "Slice Volume Data"
 msgstr "Вырезать из объёмных данных"
 
-#: modules/volume/volume_slice.c:357
+#: modules/volume/volume_slice.c:355
 msgid "_Base plane:"
 msgstr "_Основная плоскость:"
 
-#: modules/volume/volume_slice.c:387
+#: modules/volume/volume_slice.c:385
 msgid "Extract _multiple items"
 msgstr "Извлечь _несколько элементов"
 
-#: modules/volume/volume_slice.c:404
+#: modules/volume/volume_slice.c:402
 msgid "Positions"
 msgstr "Положения"
 
-#: modules/volume/volume_slice.c:449
+#: modules/volume/volume_slice.c:447
 msgid "_Z:"
 msgstr "_Z:"
 
-#: modules/volume/volume_slice.c:1121
+#: modules/volume/volume_slice.c:1080
 #, c-format
 msgid "Z slice at %.*f%s%s (#%d)"
 msgstr "Срез Z на %.*f%s%s (#%d)"
 
-#: modules/volume/volume_slice.c:1132
+#: modules/volume/volume_slice.c:1091
 #, c-format
 msgid "Y slice at %.*f%s%s (#%d)"
 msgstr "Срез Y на %.*f%s%s (#%d)"
 
-#: modules/volume/volume_slice.c:1143
+#: modules/volume/volume_slice.c:1102
 #, c-format
 msgid "X slice at %.*f%s%s (#%d)"
 msgstr "Срез X на %.*f%s%s (#%d)"
 
-#: modules/volume/volume_slice.c:1272
+#: modules/volume/volume_slice.c:1231
 msgid "Volume Z graphs"
 msgstr "Графики Z объёма"
 
-#: modules/volume/volume_slice.c:1279
+#: modules/volume/volume_slice.c:1238
 msgid "Volume X graphs"
 msgstr "Графики X объёма"
 
-#: modules/volume/volume_slice.c:1286
+#: modules/volume/volume_slice.c:1245
 msgid "Volume Y graphs"
 msgstr "Графики Y объёма"
 
@@ -13846,6 +13842,9 @@ msgid ""
 msgstr ""
 "Количество значений в файле данных %d\n"
 "отличается от числа плоскостей %d."
+
+#~ msgid "w"
+#~ msgstr "w"
 
 #~ msgid "_Run"
 #~ msgstr "_Выполнить"
