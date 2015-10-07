@@ -1,4 +1,4 @@
-2.42 (0000-00-00)
+2.42 (2015-10-06)
 Application:
 - Translations updated: Czech, French, Russian.
 
@@ -22,7 +22,7 @@ Libraries:
   values simultaneously.
 - libprocess: Range and total variation can be now calculated by
   gwy_data_field_area_get_line_stats().
-- libgwyapp: File thumbnails (for document history) are create from volume
+- libgwyapp: File thumbnails (for document history) are created from volume
   data when the file does not contain any channels.
 - libgwyapp: Data browser displays ‘Z’ for volume data with z-calibration.
 - libgwyapp: New function to find window for volume data by id was added.
