@@ -39,6 +39,8 @@ typedef enum {
     RAW_IEEE_DOUBLE,
     RAW_SIGNED_WORD64,
     RAW_UNSIGNED_WORD64,
+    RAW_IEEE_HALF,
+    RAW_PASCAL_REAL,
     RAW_LAST
 } RawFileBuiltin;
 
@@ -123,8 +125,8 @@ static const GwyRawFilePresetData rawfilepresetdata_default = {
 };
 
 /* sizes of RawFile built-in types */
-static const guint BUILTIN_SIZE[] = {
-    0, 8, 8, 16, 16, 32, 32, 32, 64,
+static const guint BUILTIN_SIZE[RAW_LAST] = {
+    0, 8, 8, 16, 16, 32, 32, 32, 64, 64, 64, 16, 48,
 };
 
 G_DEFINE_TYPE(GwyRawFilePreset, gwy_raw_file_preset, GWY_TYPE_RESOURCE)

@@ -269,6 +269,8 @@ static const GwyEnum builtin_menu[] = {
     { N_("Unsigned 64bit word"),  RAW_UNSIGNED_WORD64 },
     { N_("IEEE single"),          RAW_IEEE_FLOAT      },
     { N_("IEEE double"),          RAW_IEEE_DOUBLE     },
+    { N_("IEEE half"),            RAW_IEEE_HALF       },
+    { N_("Pascal real"),          RAW_PASCAL_REAL     },
 };
 
 static const gchar builtin_key[]     = "/module/rawfile/builtin";
@@ -868,7 +870,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->offset), 0);
     row++;
 
-    adj = gtk_adjustment_new(args->p.size, 1, 24, 1, 8, 0);
+    adj = gtk_adjustment_new(args->p.size, 1, 64, 1, 8, 0);
     controls->size = gwy_table_attach_spinbutton(table, row,
                                                  _("_Sample size:"),
                                                  _("bits"), adj);
@@ -1729,8 +1731,6 @@ update_dialog_controls(RawFileControls *controls)
 
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->offset));
     gtk_adjustment_set_value(adj, args->p.offset);
-    adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->size));
-    gtk_adjustment_set_value(adj, args->p.size);
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->skip));
     gtk_adjustment_set_value(adj, args->p.skip);
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->rowskip));
@@ -1765,6 +1765,12 @@ update_dialog_controls(RawFileControls *controls)
 
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->builtin),
                                   args->p.builtin);
+    /* Must do this after setting bultin because it changes permitted size
+     * adjustment range which is only up to 24 for user-defined. */
+    if (args->p.builtin)
+        args->p.size = BUILTIN_SIZE[args->p.builtin];
+    adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->size));
+    gtk_adjustment_set_value(adj, args->p.size);
 
     model = gtk_tree_view_get_model(GTK_TREE_VIEW(controls->presetlist));
     tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presetlist));
@@ -2035,6 +2041,107 @@ rawfile_read_bits(RawFileArgs *args,
     g_free(rtable);
 }
 
+#ifdef __GNUC__
+#  define gwy_powi __builtin_powi
+#else
+static inline double
+gwy_powi(double x, int i)
+{
+    gdouble r = 1.0;
+    if (!i)
+        return 1.0;
+    gboolean negative = FALSE;
+    if (i < 0) {
+        negative = TRUE;
+        i = -i;
+    }
+    for ( ; ; ) {
+        if (i & 1)
+            r *= x;
+        if (!(i >>= 1))
+            break;
+        x *= x;
+    }
+    return negative ? 1.0/r : r;
+}
+#endif
+
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+static inline gdouble
+get_pascal_real_native(const guchar *p)
+{
+    gdouble x;
+
+    if (!p[0])
+        return 0.0;
+
+    x = 1.0 + ((((p[1]/256.0 + p[2])/256.0 + p[3])/256.0 + p[4])/256.0
+               + (p[5] & 0x7f))/128.0;
+    if (p[5] & 0x80)
+        x = -x;
+
+    return x*gwy_powi(2.0, (gint)p[0] - 129);
+}
+
+static inline gdouble
+get_half_native(const guchar *p)
+{
+    gdouble x = p[0]/1024.0 + (p[1] & 0x03)/4.0;
+    gint exponent = (p[1] >> 2) & 0x1f;
+
+    if (G_UNLIKELY(exponent == 0x1f)) {
+        if (x)
+            return NAN;
+        return (p[1] & 0x80) ? -HUGE_VAL : HUGE_VAL;
+    }
+
+    if (exponent)
+        x = (1.0 + x)*gwy_powi(2.0, exponent - 15);
+    else
+        x = x/16384.0;
+
+    return (p[1] & 0x80) ? -x : x;
+}
+#endif
+
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+static inline gdouble
+get_pascal_real_native(const guchar *p)
+{
+    gdouble x;
+
+    if (!p[5])
+        return 0.0;
+
+    x = 1.0 + ((((p[4]/256.0 + p[3])/256.0 + p[2])/256.0 + p[1])/256.0
+               + (p[0] & 0x7f))/128.0;
+    if (p[0] & 0x80)
+        x = -x;
+
+    return x*gwy_powi(2.0, (gint)p[5] - 129);
+}
+
+static inline gdouble
+get_half_native(const guchar *p)
+{
+    gdouble x = p[1]/1024.0 + (p[0] & 0x03)/4.0;
+    gint exponent = (p[0] >> 2) & 0x1f;
+
+    if (G_UNLIKELY(exponent == 0x1f)) {
+        if (x)
+            return NAN;
+        return (p[0] & 0x80) ? -HUGE_VAL : HUGE_VAL;
+    }
+
+    if (exponent)
+        x = (1.0 + x)*gwy_powi(2.0, exponent - 15);
+    else
+        x = x/16384.0;
+
+    return (p[0] & 0x80) ? -x : x;
+}
+#endif
+
 static void
 rawfile_read_builtin(RawFileArgs *args,
                      guchar *buffer,
@@ -2121,6 +2228,14 @@ rawfile_read_builtin(RawFileArgs *args,
 
                 case RAW_UNSIGNED_WORD64:
                 *(data++) = (gdouble)good_alignment.u64;
+                break;
+
+                case RAW_IEEE_HALF:
+                *(data++) = (gdouble)get_half_native(b);
+                break;
+
+                case RAW_PASCAL_REAL:
+                *(data++) = (gdouble)get_pascal_real_native(b);
                 break;
 
                 default:
