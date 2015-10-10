@@ -140,7 +140,7 @@ spmx_detect(const GwyFileDetectInfo *fileinfo,
     /* We have to realy look inside.  And since main.xml is a popular name
      * for the main XML document within such files, we also have to see if
      * we find "SPMxFormat" somewehre near the begining of the file. */
-    if ((zipfile = gwyminizip_unzOpen(fileinfo->name))) {
+    if ((zipfile = gwyminizip_open(fileinfo->name))) {
         if (gwyminizip_locate_file(zipfile, "main.xml", 1, NULL)
             && (content = gwyminizip_get_file_content(zipfile, NULL, NULL))) {
             if (g_strstr_len(content, 4096, "SPMxFormat"))
@@ -162,7 +162,7 @@ spmx_load(const gchar *filename,
     SPMXFile spmxfile;
     unzFile zipfile;
 
-    zipfile = gwyminizip_unzOpen(filename);
+    zipfile = gwyminizip_open(filename);
     if (!zipfile) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_SPECIFIC,

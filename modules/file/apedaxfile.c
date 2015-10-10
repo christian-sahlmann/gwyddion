@@ -257,7 +257,7 @@ apedax_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     gwy_debug("Opening the file with MiniZIP");
-    uFile = gwyminizip_unzOpen(fileinfo->name);
+    uFile = gwyminizip_open(fileinfo->name);
 
     if (uFile == NULL) {
         unzClose(uFile);
@@ -300,7 +300,7 @@ apedax_load(const gchar *filename,
     g_free(lowercaseFilename);
 
     gwy_debug("Opening the file with MiniZIP");
-    uFile = gwyminizip_unzOpen(filename);
+    uFile = gwyminizip_open(filename);
 
     if (uFile == NULL) {
         if (apdt_flag) {

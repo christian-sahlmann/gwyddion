@@ -93,7 +93,7 @@ gwyminizip_seek_file_func(G_GNUC_UNUSED voidpf opaque,
 
 G_GNUC_UNUSED
 static unzFile
-gwyminizip_unzOpen(const gchar *path)
+gwyminizip_open(const gchar *path)
 {
     static zlib_filefunc_def ffdef = {
         gwyminizip_open_file_func,
@@ -109,7 +109,7 @@ gwyminizip_unzOpen(const gchar *path)
     return unzOpen2(path, &ffdef);
 }
 #else
-#define gwyminizip_unzOpen unzOpen
+#define gwyminizip_open unzOpen
 #endif
 
 G_GNUC_UNUSED
