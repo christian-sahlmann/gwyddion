@@ -49,13 +49,15 @@ if HAVE_MINIZIP
 nanoobserver_module = nanoobserver.la
 nanoscantech_module = nanoscantech.la
 opengps_module = opengps.la
+sensofarx_module = sensofarx.la
 spmxfile_module = spmxfile.la
 else
 nanoobserver_module =
 nanoscantech_module =
 opengps_module =
+sensofarx_module =
 spmxfile_module =
-disabled_sources += nanoobserver.c nanoscantech.c opengps.c spmxfile.c
+disabled_sources += nanoobserver.c nanoscantech.c opengps.c sensofarx.c spmxfile.c
 endif
 
 # If cfitsio is disabled, put the dependent sources to EXTRA_DIST to include
@@ -169,6 +171,7 @@ file_LTLIBRARIES = \
 	sdfile.la \
 	seiko.la \
 	sensofar.la \
+	$(sensofarx_module) \
 	sensolytics.la \
 	shimadzu.la \
 	sicmfile.la \
@@ -297,7 +300,7 @@ quesant_la_SOURCES       = quesant.c
 rawfile_la_SOURCES       = rawfile.c rawfilepreset.h
 rawgraph_la_SOURCES      = rawgraph.c
 rawxyz_la_SOURCES        = rawxyz.c
-renishaw_la_SOUCES       = renishaw.c
+renishaw_la_SOURCES      = renishaw.c
 rhk_sm3_la_SOURCES       = rhk-sm3.c
 rhk_sm4_la_SOURCES       = rhk-sm4.c
 rhk_spm32_la_SOURCES     = rhk-spm32.c
@@ -365,21 +368,25 @@ if HAVE_ZLIB
 endif
 
 if HAVE_MINIZIP
-nanoobserver_la_SOURCES  = nanoobserver.c gwyminizip.h
-nanoobserver_la_CFLAGS   = $(AM_CFLAGS) @MINIZIP_CFLAGS@
-nanoobserver_la_LIBADD   = @MINIZIP_LIBS@
+nanoobserver_la_SOURCES = nanoobserver.c gwyminizip.h
+nanoobserver_la_CFLAGS  = $(AM_CFLAGS) @MINIZIP_CFLAGS@
+nanoobserver_la_LIBADD  = @MINIZIP_LIBS@
 
-nanoscantech_la_SOURCES  = nanoscantech.c gwyminizip.h
-nanoscantech_la_CFLAGS   = $(AM_CFLAGS) @MINIZIP_CFLAGS@
-nanoscantech_la_LIBADD   = @MINIZIP_LIBS@
+nanoscantech_la_SOURCES = nanoscantech.c gwyminizip.h
+nanoscantech_la_CFLAGS  = $(AM_CFLAGS) @MINIZIP_CFLAGS@
+nanoscantech_la_LIBADD  = @MINIZIP_LIBS@
 
-opengps_la_SOURCES  = opengps.c gwyminizip.h
-opengps_la_CFLAGS   = $(AM_CFLAGS) @MINIZIP_CFLAGS@
-opengps_la_LIBADD   = @MINIZIP_LIBS@
+opengps_la_SOURCES = opengps.c gwyminizip.h
+opengps_la_CFLAGS  = $(AM_CFLAGS) @MINIZIP_CFLAGS@
+opengps_la_LIBADD  = @MINIZIP_LIBS@
 
-spmxfile_la_SOURCES  = spmxfile.c gwyminizip.h
-spmxfile_la_CFLAGS   = $(AM_CFLAGS) @MINIZIP_CFLAGS@
-spmxfile_la_LIBADD   = @MINIZIP_LIBS@
+spmxfile_la_SOURCES = spmxfile.c gwyminizip.h
+spmxfile_la_CFLAGS  = $(AM_CFLAGS) @MINIZIP_CFLAGS@
+spmxfile_la_LIBADD  = @MINIZIP_LIBS@
+
+sensofarx_la_SOURCES = sensofarx.c
+sensofarx_la_CFLAGS  = $(AM_CFLAGS) @MINIZIP_CFLAGS@
+sensofarx_la_LIBADD  = @MINIZIP_LIBS@
 endif
 
 if HAVE_CFITSIO
