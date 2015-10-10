@@ -60,6 +60,10 @@
 
 #define EPS 1e-6
 
+#ifndef NAN
+#define NAN (0.0/0.0)
+#endif
+
 /* Special-cased text data delimiters */
 enum {
     RAW_DELIM_WHITESPACE = -1,
@@ -137,6 +141,8 @@ typedef struct {
     GtkWidget *zscale;
     GtkWidget *zexponent;
     GtkWidget *zunits;
+    GtkWidget *havemissing;
+    GtkWidget *missingvalue;
     GtkWidget *presetlist;
     GtkWidget *presetname;
     GtkWidget *preview;
@@ -190,6 +196,8 @@ static void          set_combo_from_unit           (GtkWidget *combo,
                                                     const gchar *str);
 static void          units_change_cb               (GtkWidget *button,
                                                     RawFileControls *controls);
+static void          have_missing_changed          (GtkToggleButton *button,
+                                                    RawFileControls *controls);
 static void          bintext_changed_cb            (GtkWidget *button,
                                                     RawFileControls *controls);
 static void          preview_cb                    (RawFileControls *controls);
@@ -232,7 +240,7 @@ static GwyModuleInfo module_info = {
     N_("Imports raw data files, both ASCII and binary, according to "
        "user-specified format."),
     "Yeti <yeti@gwyddion.net>",
-    "2.8",
+    "2.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -574,7 +582,7 @@ rawfile_dialog_info_page(RawFileArgs *args,
     /* To vertically align units Change buttons */
     sizegroup = gtk_size_group_new(GTK_SIZE_GROUP_HORIZONTAL);
 
-    table = gtk_table_new(16, 3, FALSE);
+    table = gtk_table_new(17, 3, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -721,10 +729,22 @@ rawfile_dialog_info_page(RawFileArgs *args,
     g_signal_connect(controls->zunits, "clicked",
                      G_CALLBACK(units_change_cb), controls);
     gtk_box_pack_end(GTK_BOX(hbox), controls->zunits, FALSE, FALSE, 0);
-
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
+    controls->havemissing
+        = gtk_check_button_new_with_mnemonic(_("Missin_g value substitute:"));
+    g_signal_connect(controls->havemissing, "toggled",
+                     G_CALLBACK(have_missing_changed), controls);
+    gtk_table_attach(GTK_TABLE(table), controls->havemissing, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    controls->missingvalue = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(controls->missingvalue), 7);
+    gtk_table_attach(GTK_TABLE(table), controls->missingvalue, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     table_attach_heading(table, _("Options"), row);
     row++;
 
@@ -1111,6 +1131,20 @@ rawfile_read_data_field(RawFileControls *controls,
         break;
     }
 
+    if (args->p.havemissing) {
+        guint i, n = args->p.xres * args->p.yres;
+        gdouble *d = gwy_data_field_get_data(dfield);
+        gdouble mv = args->p.missingvalue;
+
+        /* This works for integral missingvalue, which is the most useful case.
+         * Floating point data can use actual NaNs and do not need replacement
+         * of special values. */
+        for (i = 0; i < n; i++) {
+            if (d[i] == mv)
+                d[i] = NAN;
+        }
+    }
+
     gwy_data_field_multiply(dfield, pow10(args->p.zexponent)*args->p.zscale);
     return dfield;
 }
@@ -1374,6 +1408,15 @@ units_change_cb(GtkWidget *button,
     }
 
     gtk_widget_destroy(dialog);
+}
+
+static void
+have_missing_changed(GtkToggleButton *button,
+                     RawFileControls *controls)
+{
+    gboolean enabled = gtk_toggle_button_get_active(button);
+    controls->args->p.havemissing = enabled;
+    gtk_widget_set_sensitive(controls->missingvalue, enabled);
 }
 
 static void
@@ -1672,6 +1715,13 @@ update_dialog_controls(RawFileControls *controls)
                                   args->p.zexponent);
     set_combo_from_unit(controls->zexponent, args->p.zunit);
 
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->havemissing),
+                                 args->p.havemissing);
+
+    g_snprintf(buf, sizeof(buf), "%.8g", args->p.missingvalue);
+    gtk_entry_set_text(GTK_ENTRY(controls->missingvalue), buf);
+    gtk_widget_set_sensitive(controls->missingvalue, args->p.havemissing);
+
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->takeover),
                                  args->takeover);
 
@@ -1800,6 +1850,12 @@ update_dialog_values(RawFileControls *controls)
         = gtk_spin_button_get_value(GTK_SPIN_BUTTON(controls->zscale));
     args->p.zexponent
         = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->zexponent));
+
+    args->p.havemissing
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->havemissing));
+    args->p.missingvalue
+        = g_strtod(gtk_entry_get_text(GTK_ENTRY((controls->missingvalue))),
+                   NULL);
 
     args->p.offset
         = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(controls->offset));
