@@ -348,7 +348,7 @@ rawfile_load(const gchar *filename,
     RawFileArgs args;
     RawFileFile file;
     GwyContainer *settings, *data;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *mask;
     GError *err = NULL;
     gsize size = 0;
 
@@ -373,6 +373,10 @@ rawfile_load(const gchar *filename,
     if ((dfield = rawfile_dialog(&args, &file))) {
         data = gwy_container_new();
         gwy_container_set_object_by_name(data, "/0/data", dfield);
+        if ((mask = gwy_app_channel_mask_of_nans(dfield, TRUE))) {
+            gwy_container_set_object_by_name(data, "/0/mask", mask);
+            g_object_unref(mask);
+        }
         g_object_unref(dfield);
         gwy_file_channel_import_log_add(data, 0, NULL, filename);
     }
@@ -1386,7 +1390,7 @@ bintext_changed_cb(G_GNUC_UNUSED GtkWidget *button,
 static void
 preview_cb(RawFileControls *controls)
 {
-    GwyDataField *dfield;
+    GwyDataField *dfield, *mask;
     GdkPixbuf *pixbuf, *pixbuf2;
     GtkWidget *entry;
     gint xres, yres;
@@ -1407,6 +1411,10 @@ preview_cb(RawFileControls *controls)
         gtk_widget_queue_draw(controls->preview);
         return;
     }
+
+    /* Fix any NaNs in the data for preview. */
+    if ((mask = gwy_app_channel_mask_of_nans(dfield, TRUE)))
+        g_object_unref(mask);
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
