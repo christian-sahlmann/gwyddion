@@ -1,3 +1,10 @@
+2.43 (0000-00-00)
+Modules:
+- Sensofarx (new): Imports Sensofar PLUx data files.
+- Rawfile: NaN in floating point data are handled by masking and replacement.
+  It is possible to specify a raw value representing missing data.
+
+
 2.42 (2015-10-06)
 Application:
 - Translations updated: Czech, French, Russian.
