@@ -66,6 +66,10 @@ typedef struct {
     gchar *xyunit;
     gchar *zunit;
 
+    /* Missing values. */
+    gboolean havemissing;
+    gdouble missingvalue;
+
     /* Binary */
     RawFileBuiltin builtin;
     guint32 offset;  /* offset from file start, in bytes */
@@ -112,6 +116,7 @@ static const GwyRawFilePresetData rawfilepresetdata_default = {
     100.0, 100.0, -6,               /* physical dimensions */
     1.0, -6,                        /* z-scale */
     NULL, NULL,                     /* units */
+    FALSE, -32767.0,                /* missing values */
     RAW_UNSIGNED_BYTE, 0, 8, 0, 0,  /* binary parameters */
     FALSE, FALSE, FALSE, 0,         /* binary options */
     0, NULL, 0, FALSE,              /* text parameters */
@@ -176,6 +181,8 @@ gwy_raw_file_preset_data_sanitize(GwyRawFilePresetData *data)
         data->zscale = rawfilepresetdata_default.zscale;
     data->xyexponent = CLAMP(data->xyexponent, -12, 3);
     data->zexponent = CLAMP(data->zexponent, -12, 3);
+
+    data->havemissing = !!data->havemissing;
 
     if (!data->delimiter)
         data->delimiter = g_strdup("");
@@ -281,6 +288,16 @@ gwy_raw_file_preset_dump(GwyResource *resource,
         g_free(s);
     }
 
+    if (data->havemissing) {
+        /* Recycle the zscale string. */
+        g_ascii_dtostr(zscale, sizeof(zscale), data->missingvalue);
+        g_string_append_printf(str,
+                               "havemissing %d\n"
+                               "missingvalue %s\n",
+                               data->havemissing,
+                               zscale);
+    }
+
     /* Binary */
     g_string_append_printf(str,
                            "builtin %u\n"
@@ -384,6 +401,11 @@ gwy_raw_file_preset_parse(const gchar *text,
                 data.zunit = g_strcompress(value);
             }
         }
+        /* Missing values. */
+        else if (gwy_strequal(key, "havemissing"))
+            data.havemissing = atoi(value);
+        else if (gwy_strequal(key, "missingvalue"))
+            data.missingvalue = g_ascii_strtod(value, NULL);
         /* Binary */
         else if (gwy_strequal(key, "builtin"))
             data.builtin = atoi(value);
