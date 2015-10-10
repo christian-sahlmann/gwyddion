@@ -352,7 +352,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Omicron flat files."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti)",
     "2015",
 };
@@ -1014,6 +1014,7 @@ concatenate_graph_curves(GwyGraphModel **gmodels, guint ngraphs, guint cid)
     const gdouble *cxdata, *cydata;
     gdouble *xdata, *ydata;
     gdouble xpos;
+    gchar *title, *underscore, *space;
 
     if (ngraphs == 1)
         return;
@@ -1045,6 +1046,16 @@ concatenate_graph_curves(GwyGraphModel **gmodels, guint ngraphs, guint cid)
          * meaningfully so fuck it. */
         if (n > 1)
             xpos += cxdata[n-1]*n/(n - 1.0);
+
+        /* Remove the scan cycle from the title after merging. */
+        g_object_get(gcmodel, "description", &title, NULL);
+        underscore = strchr(title, '_');
+        space = strchr(title, ' ');
+        if (underscore && space && underscore < space) {
+            memmove(underscore, space, strlen(space)+1);
+            g_object_set(gcmodel, "description", title, NULL);
+        }
+        g_free(title);
     }
 
     gcmodel = gwy_graph_model_get_curve(gmodels[0], cid);
