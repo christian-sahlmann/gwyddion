@@ -187,10 +187,6 @@ static GwyContainer* apedax_get_meta               (guchar *scanXmlContent,
                                                     gsize contentSize,
                                                     APEScanSize *scanSize,
                                                     gboolean apdtFile);
-static guchar*       apedax_get_file_content       (unzFile uFile,
-                                                    unz_file_info *uFileInfo,
-                                                    gsize *size,
-                                                    GError **error);
 static gchar*        apedax_get_xml_field_as_string(xmlDocPtr doc,
                                                     const gchar *fieldXPath);
 static gboolean      apedax_set_meta_field         (GwyContainer *meta,
@@ -219,7 +215,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports A.P.E. Research DAX data files."),
     "Andrea Cervesato <infos@aperesearch.com>, Gianfranco Gallizia <infos@aperesearch.com>",
-    "0.5",
+    "0.6",
     "A.P.E. Research srl",
     "2015"
 };
@@ -289,7 +285,6 @@ apedax_load(const gchar *filename,
     GwyContainer *container = NULL;
     GwyContainer *meta = NULL;
     unzFile uFile;
-    unz_file_info uFileInfo;
     guchar *buffer;
     gsize size = 0;
     gboolean apdt_flag = FALSE;
@@ -335,29 +330,15 @@ apedax_load(const gchar *filename,
         return NULL;
     }
 
-    gwy_debug("Getting the XML file info");
-    if (unzGetCurrentFileInfo(uFile,
-                              &uFileInfo,
-                              NULL,
-                              0L,
-                              NULL,
-                              0L,
-                              NULL,
-                              0L) != UNZ_OK) {
-        err_OPEN_READ(error);
-        unzClose(uFile);
-        return NULL;
+    buffer = gwyminizip_get_file_content(uFile, &size, error);
+    if (buffer) {
+        container = gwy_container_new();
+        meta = apedax_get_meta(buffer, size, &scanSize, apdt_flag);
     }
-
-    buffer = apedax_get_file_content(uFile, &uFileInfo, &size, error);
-
-    container = gwy_container_new();
-
-    meta = apedax_get_meta(buffer, size, &scanSize, apdt_flag);
 
     if (meta == NULL) {
         gwy_debug("Metadata Container is NULL");
-        g_object_unref(container);
+        gwy_object_unref(container);
         g_free(buffer);
         err_FILE_TYPE(error, FILE_TYPE);
         unzClose(uFile);
@@ -379,36 +360,6 @@ apedax_load(const gchar *filename,
     unzClose(uFile);
 
     return container;
-}
-
-/*Gets the binary content of a file within a ZIP file*/
-
-static guchar*
-apedax_get_file_content(unzFile uFile,
-                        unz_file_info *uFileInfo,
-                        gsize *size,
-                        GError **error)
-{
-    guchar *buffer = NULL;
-
-    gwy_debug("Reading binary data");
-    if (uFile == NULL || uFileInfo == NULL) {
-        err_OPEN_READ(error);
-        return NULL;
-    }
-
-    *size = (gsize)(uFileInfo->uncompressed_size);
-
-    buffer = g_new(guchar, *size + 1);
-    buffer[*size] = '\0';
-
-    if (buffer && unzOpenCurrentFile(uFile) == UNZ_OK) {
-        gint readsize = 0;
-        readsize = unzReadCurrentFile(uFile, buffer, *size);
-        *size = readsize;
-    }
-
-    return buffer;
 }
 
 /*Sets the field into the metadata container*/
@@ -678,7 +629,6 @@ apedax_get_data_field(unzFile uFile,
     gdouble *data;
     guchar *buffer;
     gsize size, expectedSize;
-    unz_file_info uFileInfo;
 
     /*Checking the dimensions*/
     if (err_DIMENSION(error, scanSize->XRes)) {
@@ -711,19 +661,7 @@ apedax_get_data_field(unzFile uFile,
         return NULL;
     }
 
-    if (unzGetCurrentFileInfo(uFile,
-                              &uFileInfo,
-                              NULL,
-                              0L,
-                              NULL,
-                              0L,
-                              NULL,
-                              0L) != UNZ_OK) {
-        err_NO_DATA(error);
-        return NULL;
-    }
-
-    buffer = apedax_get_file_content(uFile, &uFileInfo, &size, error);
+    buffer = gwyminizip_get_file_content(uFile, &size, error);
 
     if (buffer == NULL) {
         err_NO_DATA(error);

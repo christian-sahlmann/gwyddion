@@ -126,9 +126,6 @@ static GwyContainer* get_meta              (const X3PFile *x3pfile);
 static void          add_meta_record       (gpointer hkey,
                                             gpointer hvalue,
                                             gpointer user_data);
-static guchar*       x3p_get_file_content  (unzFile *zipfile,
-                                            gsize *contentsize,
-                                            GError **error);
 static void          x3p_file_free         (X3PFile *x3pfile);
 static gboolean      x3p_file_get_data_type(const gchar *type,
                                             GwyRawDataType *rawtype,
@@ -139,7 +136,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Reads ISO 5436-2 OpenGPS .x3p files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti)",
     "2014",
 };
@@ -188,7 +185,7 @@ x3p_detect(const GwyFileDetectInfo *fileinfo,
      * we find "ISO5436_2" somewehre near the begining of the file. */
     if ((zipfile = gwyminizip_unzOpen(fileinfo->name))) {
         if (unzLocateFile(zipfile, "main.xml", 1) == UNZ_OK) {
-            if ((content = x3p_get_file_content(zipfile, NULL, NULL))) {
+            if ((content = gwyminizip_get_file_content(zipfile, NULL, NULL))) {
                 if (g_strstr_len(content, 4096, "ISO5436_2"))
                     score = 100;
                 g_free(content);
@@ -506,7 +503,7 @@ x3p_parse_main(unzFile *zipfile,
         return FALSE;
     }
 
-    if (!(content = x3p_get_file_content(zipfile, NULL, error)))
+    if (!(content = gwyminizip_get_file_content(zipfile, NULL, error)))
         return FALSE;
 
     gwy_strkill(content, "\r");
@@ -715,7 +712,7 @@ read_binary_data(X3PFile *x3pfile, unzFile *zipfile, GError **error)
     if (!x3p_file_get_data_type(s, &rawtype, error))
         return FALSE;
 
-    if (!(bindata = x3p_get_file_content(zipfile, &size, error)))
+    if (!(bindata = gwyminizip_get_file_content(zipfile, &size, error)))
         return FALSE;
 
     if (err_SIZE_MISMATCH(error, x3pfile->ndata * gwy_raw_data_size(rawtype),
@@ -742,7 +739,7 @@ read_binary_data(X3PFile *x3pfile, unzFile *zipfile, GError **error)
         return FALSE;
     }
 
-    if (!(bindata = x3p_get_file_content(zipfile, &size, error)))
+    if (!(bindata = gwyminizip_get_file_content(zipfile, &size, error)))
         return FALSE;
 
     if (err_SIZE_MISMATCH(error, (x3pfile->ndata + 7)/8, size, TRUE)) {
@@ -802,51 +799,6 @@ add_meta_record(gpointer hkey, gpointer hvalue, gpointer user_data)
     g_return_if_fail(key);
     key++;
     gwy_container_set_string_by_name(meta, key, (const guchar*)g_strdup(value));
-}
-
-static guchar*
-x3p_get_file_content(unzFile *zipfile, gsize *contentsize, GError **error)
-{
-    unz_file_info fileinfo;
-    guchar *buffer;
-    gulong size;
-    glong readbytes;
-    gint status;
-
-    gwy_debug("calling unzGetCurrentFileInfo() to figure out buffer size");
-    status = unzGetCurrentFileInfo(zipfile, &fileinfo,
-                                   NULL, 0,
-                                   NULL, 0,
-                                   NULL, 0);
-    if (status != UNZ_OK) {
-        err_MINIZIP(status, error);
-        return NULL;
-    }
-
-    gwy_debug("calling unzGetCurrentFileInfo()");
-    status = unzOpenCurrentFile(zipfile);
-    if (status != UNZ_OK) {
-        err_MINIZIP(status, error);
-        return NULL;
-    }
-
-    size = fileinfo.uncompressed_size;
-    buffer = g_new(guchar, size + 1);
-    gwy_debug("calling unzReadCurrentFile()");
-    readbytes = unzReadCurrentFile(zipfile, buffer, size);
-    if (readbytes != size) {
-        err_MINIZIP(status, error);
-        unzCloseCurrentFile(zipfile);
-        g_free(buffer);
-        return NULL;
-    }
-    gwy_debug("calling unzCloseCurrentFile()");
-    unzCloseCurrentFile(zipfile);
-
-    buffer[size] = '\0';
-    if (contentsize)
-        *contentsize = size;
-    return buffer;
 }
 
 static void

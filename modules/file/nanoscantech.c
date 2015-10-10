@@ -128,16 +128,13 @@ static GwyBrick*      nst_read_4d         (const gchar *buffer,
                                            gsize datasize,
                                            GwyContainer **metadata,
                                            gchar **title);
-static guchar*        nst_get_file_content(unzFile *zipfile,
-                                           gsize *contentsize,
-                                           GError **error);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports NanoScanTech .nstdat files."),
     "Daniil Bratashov (dn2010@gmail.com)",
-    "0.8",
+    "0.9",
     "David Nečas (Yeti), Daniil Bratashov (dn2010)",
     "2012",
 };
@@ -226,7 +223,7 @@ nst_load(const gchar *filename,
         }
         if (g_str_has_suffix(filename_buf, ".lsdlsd")) {
             gwy_debug("channel %d: %s\n", channelno, filename_buf);
-            buffer = nst_get_file_content(zipfile, &size, NULL);
+            buffer = gwyminizip_get_file_content(zipfile, &size, NULL);
             p = buffer;
             line = gwy_str_next_line(&p);
             g_strstrip(line);
@@ -860,52 +857,6 @@ exit:
     g_free(header);
 
     return brick;
-}
-
-
-static guchar*
-nst_get_file_content(unzFile *zipfile, gsize *contentsize, GError **error)
-{
-    unz_file_info fileinfo;
-    guchar *buffer;
-    gulong size;
-    glong readbytes;
-    gint status;
-
-    gwy_debug("calling unzGetCurrentFileInfo() to figure out buffer size");
-    status = unzGetCurrentFileInfo(zipfile, &fileinfo,
-                                   NULL, 0,
-                                   NULL, 0,
-                                   NULL, 0);
-    if (status != UNZ_OK) {
-        err_MINIZIP(status, error);
-        return NULL;
-    }
-
-    gwy_debug("calling unzGetCurrentFileInfo()");
-    status = unzOpenCurrentFile(zipfile);
-    if (status != UNZ_OK) {
-        err_MINIZIP(status, error);
-        return NULL;
-    }
-
-    size = fileinfo.uncompressed_size;
-    buffer = g_new(guchar, size + 1);
-    gwy_debug("calling unzReadCurrentFile()");
-    readbytes = unzReadCurrentFile(zipfile, buffer, size);
-    if (readbytes != size) {
-        err_MINIZIP(status, error);
-        unzCloseCurrentFile(zipfile);
-        g_free(buffer);
-        return NULL;
-    }
-    gwy_debug("calling unzCloseCurrentFile()");
-    unzCloseCurrentFile(zipfile);
-
-    buffer[size] = '\0';
-    if (contentsize)
-        *contentsize = size;
-    return buffer;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -86,9 +86,6 @@ static gboolean      read_binary_data     (const SPMXFile *spmxfile,
                                            unzFile *zipfile,
                                            GwyContainer *container,
                                            GError **error);
-static guchar*       spmx_get_file_content(unzFile *zipfile,
-                                           gsize *contentsize,
-                                           GError **error);
 static void          spmx_file_free       (SPMXFile *spmxfile);
 
 static GwyModuleInfo module_info = {
@@ -145,7 +142,7 @@ spmx_detect(const GwyFileDetectInfo *fileinfo,
      * we find "SPMxFormat" somewehre near the begining of the file. */
     if ((zipfile = gwyminizip_unzOpen(fileinfo->name))) {
         if (unzLocateFile(zipfile, "main.xml", 1) == UNZ_OK) {
-            if ((content = spmx_get_file_content(zipfile, NULL, NULL))) {
+            if ((content = gwyminizip_get_file_content(zipfile, NULL, NULL))) {
                 if (g_strstr_len(content, 4096, "SPMxFormat"))
                     score = 100;
                 g_free(content);
@@ -219,7 +216,8 @@ read_binary_data(const SPMXFile *spmxfile,
             return FALSE;
         }
 
-        if (!(content = spmx_get_file_content(zipfile, &contentsize, error)))
+        if (!(content = gwyminizip_get_file_content(zipfile, &contentsize,
+                                                    error)))
             return FALSE;
 
         n = stream->xyres[0]*stream->xyres[1];
@@ -526,7 +524,7 @@ spmx_parse_main(unzFile *zipfile,
         return FALSE;
     }
 
-    if (!(content = spmx_get_file_content(zipfile, NULL, error)))
+    if (!(content = gwyminizip_get_file_content(zipfile, NULL, error)))
         return FALSE;
 
     gwy_strkill(content, "\r");
@@ -558,51 +556,6 @@ fail:
     g_free(content);
 
     return ok;
-}
-
-static guchar*
-spmx_get_file_content(unzFile *zipfile, gsize *contentsize, GError **error)
-{
-    unz_file_info fileinfo;
-    guchar *buffer;
-    gulong size;
-    glong readbytes;
-    gint status;
-
-    gwy_debug("calling unzGetCurrentFileInfo() to figure out buffer size");
-    status = unzGetCurrentFileInfo(zipfile, &fileinfo,
-                                   NULL, 0,
-                                   NULL, 0,
-                                   NULL, 0);
-    if (status != UNZ_OK) {
-        err_MINIZIP(status, error);
-        return NULL;
-    }
-
-    gwy_debug("calling unzGetCurrentFileInfo()");
-    status = unzOpenCurrentFile(zipfile);
-    if (status != UNZ_OK) {
-        err_MINIZIP(status, error);
-        return NULL;
-    }
-
-    size = fileinfo.uncompressed_size;
-    buffer = g_new(guchar, size + 1);
-    gwy_debug("calling unzReadCurrentFile()");
-    readbytes = unzReadCurrentFile(zipfile, buffer, size);
-    if (readbytes != size) {
-        err_MINIZIP(status, error);
-        unzCloseCurrentFile(zipfile);
-        g_free(buffer);
-        return NULL;
-    }
-    gwy_debug("calling unzCloseCurrentFile()");
-    unzCloseCurrentFile(zipfile);
-
-    buffer[size] = '\0';
-    if (contentsize)
-        *contentsize = size;
-    return buffer;
 }
 
 static void

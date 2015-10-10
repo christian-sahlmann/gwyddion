@@ -116,9 +116,6 @@ static GwyDataField* nao_read_field      (unzFile *zipfile,
 static gboolean      nao_parse_measure   (unzFile *zipfile,
                                           NAOFile *naofile,
                                           GError **error);
-static guchar*       nao_get_file_content(unzFile *zipfile,
-                                          gsize *contentsize,
-                                          GError **error);
 static void          nao_file_free       (NAOFile *naofile);
 
 static GwyModuleInfo module_info = {
@@ -126,7 +123,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Reads NanoObserver .nao files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti)",
     "2012",
 };
@@ -313,7 +310,7 @@ nao_read_field(unzFile *zipfile, NAOFile *naofile, guint id)
 {
     gsize size, expected_size;
     guint width, G_GNUC_UNUSED height, nscanlines, i, j;
-    guchar *buffer = nao_get_file_content(zipfile, &size, NULL);
+    guchar *buffer = gwyminizip_get_file_content(zipfile, &size, NULL);
     const guchar *p = buffer;
     GwyDataField *field;
     gdouble *data;
@@ -483,7 +480,7 @@ nao_parse_measure(unzFile *zipfile,
         return FALSE;
     }
 
-    content = nao_get_file_content(zipfile, NULL, error);
+    content = gwyminizip_get_file_content(zipfile, NULL, error);
     if (!content)
         return FALSE;
 
@@ -524,51 +521,6 @@ fail:
     g_free(content);
 
     return ok;
-}
-
-static guchar*
-nao_get_file_content(unzFile *zipfile, gsize *contentsize, GError **error)
-{
-    unz_file_info fileinfo;
-    guchar *buffer;
-    gulong size;
-    glong readbytes;
-    gint status;
-
-    gwy_debug("calling unzGetCurrentFileInfo() to figure out buffer size");
-    status = unzGetCurrentFileInfo(zipfile, &fileinfo,
-                                   NULL, 0,
-                                   NULL, 0,
-                                   NULL, 0);
-    if (status != UNZ_OK) {
-        err_MINIZIP(status, error);
-        return NULL;
-    }
-
-    gwy_debug("calling unzGetCurrentFileInfo()");
-    status = unzOpenCurrentFile(zipfile);
-    if (status != UNZ_OK) {
-        err_MINIZIP(status, error);
-        return NULL;
-    }
-
-    size = fileinfo.uncompressed_size;
-    buffer = g_new(guchar, size + 1);
-    gwy_debug("calling unzReadCurrentFile()");
-    readbytes = unzReadCurrentFile(zipfile, buffer, size);
-    if (readbytes != size) {
-        err_MINIZIP(status, error);
-        unzCloseCurrentFile(zipfile);
-        g_free(buffer);
-        return NULL;
-    }
-    gwy_debug("calling unzCloseCurrentFile()");
-    unzCloseCurrentFile(zipfile);
-
-    buffer[size] = '\0';
-    if (contentsize)
-        *contentsize = size;
-    return buffer;
 }
 
 static void
