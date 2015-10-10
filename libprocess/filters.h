@@ -167,6 +167,13 @@ void gwy_data_field_area_filter_maximum               (GwyDataField *data_field,
                                                        gint row,
                                                        gint width,
                                                        gint height);
+void gwy_data_field_area_filter_min_max               (GwyDataField *data_field,
+                                                       GwyDataField *kernel,
+                                                       GwyMinMaxFilterType filtertype,
+                                                       gint col,
+                                                       gint row,
+                                                       gint width,
+                                                       gint height);
 void gwy_data_field_filter_rms                        (GwyDataField *data_field,
                                                        gint size);
 void gwy_data_field_area_filter_rms                   (GwyDataField *data_field,

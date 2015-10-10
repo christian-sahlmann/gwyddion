@@ -21,6 +21,7 @@
 
 #include "config.h"
 #include <string.h>
+#include <stdlib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/filters.h>
@@ -28,6 +29,65 @@
 #include <libprocess/linestats.h>
 #include <libprocess/arithmetic.h>
 #include "gwyprocessinternal.h"
+
+#define gwy_assign(dest, source, n) \
+    memcpy((dest), (source), (n)*sizeof((dest)[0]))
+
+/* Data for one row.  To be used in conjuction with MinMaxPrecomputedReq. */
+typedef struct {
+    gdouble *storage;
+    gdouble **each;
+    gdouble **even;
+} MinMaxPrecomputedRow;
+
+typedef struct {
+    guint sublen1;   /* Even length for the even-odd scheme. */
+    guint sublen2;
+    gboolean needed;
+    gboolean even_even : 1;
+    gboolean even_odd : 1;
+} MinMaxPrecomputedLen;
+
+/* Resolved set of required block lengths and the rules how to compute them. */
+typedef struct {
+    /* NB: The array sizes are maxlen_even+1 and maxlen_each+1 because maxlen
+     * is really the maximum length, inclusive. */
+    MinMaxPrecomputedLen *each;
+    MinMaxPrecomputedLen *even;
+    guint maxlen_each;
+    guint maxlen_even;
+    guint nbuffers;   /* The actual number of row buffers (for storage size) */
+} MinMaxPrecomputedReq;
+
+typedef struct {
+    guint row;
+    guint col;
+    guint len;
+} MaskSegment;
+
+typedef struct {
+    MaskSegment *segments;
+    guint nsegments;
+} MaskRLE;
+
+typedef struct {
+    MaskRLE *mrle;
+    MinMaxPrecomputedReq *req;
+    MinMaxPrecomputedRow **prows;
+    gdouble *extrowbuf;
+    guint rowbuflen;
+    guint kxres;
+    guint kyres;
+} MinMaxPrecomputed;
+
+typedef void (*MinMaxPrecomputedRowFill)(const MinMaxPrecomputedReq *req,
+                                         MinMaxPrecomputedRow *prow,
+                                         const gdouble *x,
+                                         guint rowlen);
+
+static void find_required_lengths_recursive(MinMaxPrecomputedReq *req,
+                                            guint blocklen,
+                                            gboolean is_even);
 
 static gint thin_data_field(GwyDataField *data_field);
 
@@ -2190,6 +2250,953 @@ gwy_data_field_filter_maximum(GwyDataField *data_field,
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     gwy_data_field_area_filter_maximum(data_field, size, 0, 0,
                                        data_field->xres, data_field->yres);
+}
+
+static inline gboolean
+maybe_set_req(MinMaxPrecomputedLen *precomp)
+{
+    if (precomp->needed)
+        return TRUE;
+
+    precomp->needed = TRUE;
+    return FALSE;
+}
+
+static inline void
+fill_req_subs(MinMaxPrecomputedLen *precomp,
+              guint sublen1, guint sublen2,
+              gboolean even_odd, gboolean even_even)
+{
+    precomp->sublen1 = sublen1;
+    precomp->sublen2 = sublen2;
+    precomp->even_even = even_even;
+    precomp->even_odd = even_odd;
+    g_assert(!even_odd || !even_even);
+    g_assert(!even_odd || sublen1 % 2 == 0);
+    g_assert(!even_even || (sublen1 % 2 == 0 && sublen2 % 2 == 0));
+}
+
+static void
+find_required_lengths_recursive(MinMaxPrecomputedReq *req,
+                                guint blocklen, gboolean is_even)
+{
+    MinMaxPrecomputedLen *precomp;
+    guint i, j, any = 0;
+
+    g_assert(blocklen);
+
+    if (is_even) {
+        g_assert(blocklen % 2 == 0);
+
+        precomp = req->even + blocklen;
+        if (maybe_set_req(precomp))
+            return;
+
+        if (blocklen == 2) {
+            /* Even(2) = Each(1) + Each(1) */
+            fill_req_subs(precomp, 1, 1, FALSE, FALSE);
+            find_required_lengths_recursive(req, 1, FALSE);
+        }
+        else if (blocklen % 4 == 0) {
+            /* Even(4m) = Even(2m) + Even(2m) */
+            fill_req_subs(precomp, blocklen/2, blocklen/2, FALSE, TRUE);
+            find_required_lengths_recursive(req, blocklen/2, TRUE);
+        }
+        else if (blocklen % 4 == 2) {
+            /* Even(4m+2) = Even(2m+2) + Even(2m) */
+            fill_req_subs(precomp, blocklen/2 - 1, blocklen/2 + 1, FALSE, TRUE);
+            find_required_lengths_recursive(req, blocklen/2 - 1, TRUE);
+            find_required_lengths_recursive(req, blocklen/2 + 1, TRUE);
+        }
+        else {
+            g_assert_not_reached();
+        }
+    }
+    else {
+        precomp = req->each + blocklen;
+        if (maybe_set_req(precomp))
+            return;
+
+        if (blocklen == 1) {
+            /* Even(1), this is always required.  There is no construction
+             * rule, of course.*/
+            req->each[1].needed = TRUE;
+        }
+        else if (blocklen % 2 == 0) {
+            /* Try to find a split into two existing lengths. */
+            for (i = 1, j = blocklen-1; i < (blocklen + 1)/2; i++, j--) {
+                if (req->each[i].needed && req->each[j].needed) {
+                    fill_req_subs(precomp, i, j, FALSE, FALSE);
+                    return;
+                }
+            }
+
+            /* Each(2m) = Each(m) + Each(m) */
+            fill_req_subs(precomp, blocklen/2, blocklen/2, FALSE, FALSE);
+            find_required_lengths_recursive(req, blocklen/2, FALSE);
+        }
+        else if (blocklen % 2 == 1) {
+            /* Try to find a split into two existing lengths. */
+            for (i = 1, j = blocklen-1; i < (blocklen + 1)/2; i++, j--) {
+                if (req->each[i].needed && req->each[j].needed) {
+                    fill_req_subs(precomp, i, j, FALSE, FALSE);
+                    return;
+                }
+                if (req->even[i].needed && req->each[j].needed) {
+                    fill_req_subs(precomp, i, j, TRUE, FALSE);
+                    return;
+                }
+                if (req->each[i].needed && req->even[j].needed) {
+                    fill_req_subs(precomp, j, i, TRUE, FALSE);
+                    return;
+                }
+                if (req->each[i].needed)
+                    any = i;
+            }
+            /* Or split to one existing and one new. */
+            if (any) {
+                fill_req_subs(precomp, any, blocklen - any, FALSE, FALSE);
+                find_required_lengths_recursive(req, blocklen - any, FALSE);
+                return;
+            }
+
+            if (blocklen % 4 == 1) {
+                /* Each(4m+1) = Even(2m) + Each(2m+1), Each(2m+1) + Even(2m) */
+                fill_req_subs(precomp, blocklen/2, blocklen/2 + 1, TRUE, FALSE);
+                find_required_lengths_recursive(req, blocklen/2, TRUE);
+                find_required_lengths_recursive(req, blocklen/2 + 1, FALSE);
+            }
+            else if (blocklen % 4 == 3) {
+                /* Each(4m+3) = Even(2m+2) + Each(2m+1), Each(2m+1) + Even(2m+2) */
+                fill_req_subs(precomp, blocklen/2 + 1, blocklen/2, TRUE, FALSE);
+                find_required_lengths_recursive(req, blocklen/2 + 1, TRUE);
+                find_required_lengths_recursive(req, blocklen/2, FALSE);
+            }
+            else {
+                g_assert_not_reached();
+            }
+        }
+        else {
+            g_assert_not_reached();
+        }
+    }
+}
+
+static int
+compare_guint(const void *pa, const void *pb)
+{
+    guint a = *(const guint*)pa, b = *(const guint*)pb;
+
+    if (a < b)
+        return -1;
+    if (a > b)
+        return 1;
+    return 0;
+}
+
+static MinMaxPrecomputedReq*
+find_required_lengths_for_set(const guint *blocklens, guint nlens)
+{
+    MinMaxPrecomputedReq *req = g_new(MinMaxPrecomputedReq, 1);
+    guint *blens = g_new(guint, 2*nlens);
+    guint i, n, maxlen;
+
+    /* Find unique lengths and sort them in ascending order to blens[],
+     * starting ar position nlens. */
+    gwy_assign(blens, blocklens, nlens);
+    qsort(blens, nlens, sizeof(guint), compare_guint);
+
+    blens[nlens] = blens[0];
+    for (i = n = 1; i < nlens; i++) {
+        if (blens[i] > blens[i-1])
+            blens[nlens + n++] = blens[i];
+    }
+
+    maxlen = blens[nlens + n-1];
+    req->maxlen_each = maxlen;
+    req->maxlen_even = maxlen;
+    req->each = g_new0(MinMaxPrecomputedLen, maxlen+1);
+    req->even = g_new0(MinMaxPrecomputedLen, maxlen+1);
+    for (i = 0; i < n; i++)
+        find_required_lengths_recursive(req, blens[nlens + i], FALSE);
+
+    g_free(blens);
+
+    for (i = maxlen; i; i--) {
+        if (req->even[i].needed)
+            break;
+    }
+    req->maxlen_even = i;
+
+    req->nbuffers = 0;
+    for (i = 2; i <= req->maxlen_each; i++) {
+        if (req->each[i].needed)
+            req->nbuffers++;
+    }
+    for (i = 2; i <= req->maxlen_even; i++) {
+        if (req->even[i].needed)
+            req->nbuffers++;
+    }
+
+    return req;
+}
+
+static void
+min_max_precomputed_req_free(MinMaxPrecomputedReq *req)
+{
+    g_free(req->each);
+    g_free(req->even);
+    g_free(req);
+}
+
+/* Allocate data buffers for all lengths.  Do not allocate the Each(1) buffer,
+ * we use a direct pointer to the data row for that. */
+static MinMaxPrecomputedRow*
+min_max_precomputed_row_alloc(const MinMaxPrecomputedReq *req,
+                              guint rowlen)
+{
+    MinMaxPrecomputedRow *prow = g_new0(MinMaxPrecomputedRow, 1);
+    gdouble *p;
+    guint i;
+
+    prow->storage = p = g_new(gdouble, rowlen*req->nbuffers);
+    prow->each = g_new0(gdouble*, req->maxlen_each + 1);
+    if (req->maxlen_even)
+        prow->even = g_new0(gdouble*, req->maxlen_even + 1);
+
+    for (i = 2; i <= req->maxlen_each; i++) {
+        if (req->each[i].needed) {
+            prow->each[i] = p;
+            p += rowlen;
+        }
+    }
+    for (i = 2; i <= req->maxlen_even; i++) {
+        if (req->even[i].needed) {
+            prow->even[i] = p;
+            p += rowlen;
+        }
+    }
+
+    return prow;
+}
+
+static void
+compose_max_row_data_each(gdouble *target,
+                          const gdouble *sub1,
+                          guint sublen1,
+                          const gdouble *sub2,
+                          guint sublen2,
+                          guint rowlen)
+{
+    guint i, n;
+
+    g_return_if_fail(sublen1 + sublen2 <= rowlen);
+    g_return_if_fail(target);
+    g_return_if_fail(sub1);
+    g_return_if_fail(sub2);
+
+    sub2 += sublen1;
+    n = rowlen - (sublen1 + sublen2);
+    i = 0;
+    while (i <= n) {
+        target[i] = (*sub1 < *sub2) ? *sub2 : *sub1;
+        i++;
+        sub1++;
+        sub2++;
+    }
+}
+
+static void
+compose_max_row_data_even_odd(gdouble *target,
+                              const gdouble *even,
+                              guint evenlen,
+                              const gdouble *odd,
+                              guint oddlen,
+                              guint rowlen)
+{
+    const gdouble *even2, *odd2;
+    guint i, n;
+
+    g_return_if_fail(evenlen + oddlen <= rowlen);
+    g_return_if_fail(evenlen % 2 == 0);
+    g_return_if_fail(target);
+    g_return_if_fail(even);
+    g_return_if_fail(odd);
+
+    odd2 = odd + 1;
+    even2 = even + oddlen + 1;
+    odd += evenlen;
+    n = rowlen - (evenlen + oddlen);
+    i = 0;
+    while (i+1 <= n) {
+        /* Now even points to an even position. */
+        target[i] = (*even < *odd) ? *odd : *even;
+        i++;
+        even += 2;
+        odd += 2;
+
+        /* Now even2 points to an even position. */
+        target[i] = (*even2 < *odd2) ? *odd2 : *even2;
+        i++;
+        even2 += 2;
+        odd2 += 2;
+    }
+
+    if (i <= n) {
+        /* Now even points to an even position. */
+        target[i] = (*even < *odd) ? *odd : *even;
+        i++;
+    }
+    if (i <= n) {
+        /* Now even2 points to an even position. */
+        target[i] = (*even2 < *odd2) ? *odd2 : *even2;
+    }
+}
+
+static void
+compose_max_row_data_even(gdouble *target,
+                          const gdouble *sub1,
+                          guint sublen1,
+                          const gdouble *sub2,
+                          guint sublen2,
+                          guint rowlen)
+{
+    guint i, n;
+
+    g_return_if_fail(sublen1 + sublen2 <= rowlen);
+    g_return_if_fail(sublen1 % 2 == 0);
+    g_return_if_fail(sublen2 % 2 == 0);
+    g_return_if_fail(target);
+    g_return_if_fail(sub1);
+    g_return_if_fail(sub2);
+
+    sub2 += sublen1;
+    n = rowlen - (sublen1 + sublen2);
+    i = 0;
+    while (i <= n) {
+        target[i] = (*sub1 < *sub2) ? *sub2 : *sub1;
+        i += 2;
+        sub1 += 2;
+        sub2 += 2;
+    }
+}
+
+static void
+compose_max_row_data_two(gdouble *target,
+                         const gdouble *one,
+                         guint rowlen)
+{
+    guint i, n;
+
+    g_return_if_fail(2 <= rowlen);
+    g_return_if_fail(target);
+    g_return_if_fail(one);
+
+    n = rowlen - 2;
+    i = 0;
+    while (i <= n) {
+        target[i] = (*one < *(one + 1)) ? *(one + 1) : *one;
+        i += 2;
+        one += 2;
+    }
+}
+
+/* Precomputes maxima for row.  Minimum is always computed from given index
+ * blocklen values *forwards*, i.e. the block is not symmetrical it starts at
+ * the given index. */
+static void
+max_precomputed_row_fill(const MinMaxPrecomputedReq *req,
+                         MinMaxPrecomputedRow *prow,
+                         const gdouble *x,
+                         guint rowlen)
+{
+    guint blen;
+
+    /* The row itself, AKA Each(1). */
+    prow->each[1] = (gdouble*)x;
+
+    for (blen = 2; blen <= req->maxlen_each; blen++) {
+        const MinMaxPrecomputedLen *precomp;
+
+        precomp = req->each + blen;
+        if (precomp->needed) {
+            g_assert(!precomp->even_even);
+            if (precomp->even_odd) {
+                compose_max_row_data_even_odd(prow->each[blen],
+                                              prow->even[precomp->sublen1],
+                                              precomp->sublen1,
+                                              prow->each[precomp->sublen2],
+                                              precomp->sublen2,
+                                              rowlen);
+            }
+            else {
+                compose_max_row_data_each(prow->each[blen],
+                                          prow->each[precomp->sublen1],
+                                          precomp->sublen1,
+                                          prow->each[precomp->sublen2],
+                                          precomp->sublen2,
+                                          rowlen);
+            }
+        }
+
+        if (blen > req->maxlen_even)
+            continue;
+
+        precomp = req->even + blen;
+        if (precomp->needed) {
+            g_assert(!precomp->even_odd);
+            if (precomp->even_even) {
+                compose_max_row_data_even(prow->even[blen],
+                                          prow->even[precomp->sublen1],
+                                          precomp->sublen1,
+                                          prow->even[precomp->sublen2],
+                                          precomp->sublen2,
+                                          rowlen);
+            }
+            else {
+                g_assert(blen == 2);
+                g_assert(precomp->sublen1 == 1);
+                compose_max_row_data_two(prow->even[blen],
+                                         prow->each[precomp->sublen1],
+                                         rowlen);
+            }
+        }
+    }
+}
+
+static void
+compose_min_row_data_each(gdouble *target,
+                          const gdouble *sub1,
+                          guint sublen1,
+                          const gdouble *sub2,
+                          guint sublen2,
+                          guint rowlen)
+{
+    guint i, n;
+
+    g_return_if_fail(sublen1 + sublen2 <= rowlen);
+    g_return_if_fail(target);
+    g_return_if_fail(sub1);
+    g_return_if_fail(sub2);
+
+    sub2 += sublen1;
+    n = rowlen - (sublen1 + sublen2);
+    i = 0;
+    while (i <= n) {
+        target[i] = (*sub1 > *sub2) ? *sub2 : *sub1;
+        i++;
+        sub1++;
+        sub2++;
+    }
+}
+
+static void
+compose_min_row_data_even_odd(gdouble *target,
+                              const gdouble *even,
+                              guint evenlen,
+                              const gdouble *odd,
+                              guint oddlen,
+                              guint rowlen)
+{
+    const gdouble *even2, *odd2;
+    guint i, n;
+
+    g_return_if_fail(evenlen + oddlen <= rowlen);
+    g_return_if_fail(evenlen % 2 == 0);
+    g_return_if_fail(target);
+    g_return_if_fail(even);
+    g_return_if_fail(odd);
+
+    odd2 = odd + 1;
+    even2 = even + oddlen + 1;
+    odd += evenlen;
+    n = rowlen - (evenlen + oddlen);
+    i = 0;
+    while (i+1 <= n) {
+        /* Now even points to an even position. */
+        target[i] = (*even > *odd) ? *odd : *even;
+        i++;
+        even += 2;
+        odd += 2;
+
+        /* Now even2 points to an even position. */
+        target[i] = (*even2 > *odd2) ? *odd2 : *even2;
+        i++;
+        even2 += 2;
+        odd2 += 2;
+    }
+
+    if (i <= n) {
+        /* Now even points to an even position. */
+        target[i] = (*even > *odd) ? *odd : *even;
+        i++;
+    }
+    if (i <= n) {
+        /* Now even2 points to an even position. */
+        target[i] = (*even2 > *odd2) ? *odd2 : *even2;
+    }
+}
+
+static void
+compose_min_row_data_even(gdouble *target,
+                          const gdouble *sub1,
+                          guint sublen1,
+                          const gdouble *sub2,
+                          guint sublen2,
+                          guint rowlen)
+{
+    guint i, n;
+
+    g_return_if_fail(sublen1 + sublen2 <= rowlen);
+    g_return_if_fail(sublen1 % 2 == 0);
+    g_return_if_fail(sublen2 % 2 == 0);
+    g_return_if_fail(target);
+    g_return_if_fail(sub1);
+    g_return_if_fail(sub2);
+
+    sub2 += sublen1;
+    n = rowlen - (sublen1 + sublen2);
+    i = 0;
+    while (i <= n) {
+        target[i] = (*sub1 > *sub2) ? *sub2 : *sub1;
+        i += 2;
+        sub1 += 2;
+        sub2 += 2;
+    }
+}
+
+static void
+compose_min_row_data_two(gdouble *target,
+                         const gdouble *one,
+                         guint rowlen)
+{
+    guint i, n;
+
+    g_return_if_fail(2 <= rowlen);
+    g_return_if_fail(target);
+    g_return_if_fail(one);
+
+    n = rowlen - 2;
+    i = 0;
+    while (i <= n) {
+        target[i] = (*one > *(one + 1)) ? *(one + 1) : *one;
+        i += 2;
+        one += 2;
+    }
+}
+
+/* Precomputes minima for row.  Minimum is always computed from given index
+ * blocklen values *forwards*, i.e. the block is not symmetrical it starts at
+ * the given index. */
+static void
+min_precomputed_row_fill(const MinMaxPrecomputedReq *req,
+                         MinMaxPrecomputedRow *prow,
+                         const gdouble *x,
+                         guint rowlen)
+{
+    guint blen;
+
+    /* The row itself, AKA Each(1). */
+    prow->each[1] = (gdouble*)x;
+
+    for (blen = 2; blen <= req->maxlen_each; blen++) {
+        const MinMaxPrecomputedLen *precomp;
+
+        precomp = req->each + blen;
+        if (precomp->needed) {
+            g_assert(!precomp->even_even);
+            if (precomp->even_odd) {
+                compose_min_row_data_even_odd(prow->each[blen],
+                                              prow->even[precomp->sublen1],
+                                              precomp->sublen1,
+                                              prow->each[precomp->sublen2],
+                                              precomp->sublen2,
+                                              rowlen);
+            }
+            else {
+                compose_min_row_data_each(prow->each[blen],
+                                          prow->each[precomp->sublen1],
+                                          precomp->sublen1,
+                                          prow->each[precomp->sublen2],
+                                          precomp->sublen2,
+                                          rowlen);
+            }
+        }
+
+        if (blen > req->maxlen_even)
+            continue;
+
+        precomp = req->even + blen;
+        if (precomp->needed) {
+            g_assert(!precomp->even_odd);
+            if (precomp->even_even) {
+                compose_min_row_data_even(prow->even[blen],
+                                          prow->even[precomp->sublen1],
+                                          precomp->sublen1,
+                                          prow->even[precomp->sublen2],
+                                          precomp->sublen2,
+                                          rowlen);
+            }
+            else {
+                g_assert(blen == 2);
+                compose_min_row_data_two(prow->even[blen],
+                                         prow->each[precomp->sublen1],
+                                         rowlen);
+            }
+        }
+    }
+}
+
+static void
+min_max_precomputed_row_copy(MinMaxPrecomputedRow *target,
+                             const MinMaxPrecomputedRow *source,
+                             const MinMaxPrecomputedReq *req,
+                             guint rowlen)
+{
+    gwy_assign(target->storage, source->storage, rowlen*req->nbuffers);
+    /* The single-pixel values are not physically stored, so we must replicate
+     * the reference. */
+    target->each[0] = source->each[0];
+}
+
+static void
+min_max_precomputed_row_free(MinMaxPrecomputedRow *prow)
+{
+    g_free(prow->each);
+    g_free(prow->even);
+    g_free(prow->storage);
+    g_free(prow);
+}
+
+static MaskRLE*
+run_length_encode_mask(GwyDataField *mask)
+{
+    GArray *segments = g_array_new(FALSE, FALSE, sizeof(MaskSegment));
+    MaskRLE *mrle = g_new0(MaskRLE, 1);
+    const gdouble *data = mask->data;
+    guint xres = mask->xres, yres = mask->yres;
+    guint i, j, l;
+
+    for (i = 0; i < yres; i++) {
+        j = l = 0;
+        while (j + l < xres) {
+            if (*(data++))
+                l++;
+            else {
+                if (l) {
+                    MaskSegment seg = { i, j, l };
+                    g_array_append_val(segments, seg);
+                    j += l;
+                    l = 0;
+                }
+                j++;
+            }
+        }
+        if (l) {
+            MaskSegment seg = { i, j, l };
+            g_array_append_val(segments, seg);
+        }
+    }
+
+    mrle->nsegments = segments->len;
+    mrle->segments = (MaskSegment*)g_array_free(segments, FALSE);
+    return mrle;
+}
+
+static void
+mask_rle_free(MaskRLE *mrle)
+{
+    g_free(mrle->segments);
+    g_free(mrle);
+}
+
+/* Analyse the set of segments and make a composition plan. */
+static MinMaxPrecomputedReq*
+find_required_lengths_for_rle(const MaskRLE *mrle)
+{
+    MinMaxPrecomputedReq *req;
+    guint *lengths = g_new(guint, mrle->nsegments);
+    guint i;
+
+    for (i = 0; i < mrle->nsegments; i++)
+        lengths[i] = mrle->segments[i].len;
+    req = find_required_lengths_for_set(lengths, mrle->nsegments);
+    g_free(lengths);
+
+    return req;
+}
+
+static inline void
+fill_block(gdouble *data, guint len, gdouble value)
+{
+    while (len--)
+        *(data++) = value;
+}
+
+static inline void
+row_extend_base(const gdouble *in, gdouble *out,
+                guint *pos, guint *width, guint res,
+                guint *extend_left, guint *extend_right)
+{
+    guint e2r, e2l;
+
+    /* Expand the ROI to the right as far as possible */
+    e2r = MIN(*extend_right, res - (*pos + *width));
+    *width += e2r;
+    *extend_right -= e2r;
+
+    /* Expand the ROI to the left as far as possible */
+    e2l = MIN(*extend_left, *pos);
+    *width += e2l;
+    *extend_left -= e2l;
+    *pos -= e2l;
+
+    /* Direct copy of the ROI */
+    gwy_assign(out + *extend_left, in + *pos, *width);
+}
+
+static void
+row_extend_border(const gdouble *in, gdouble *out,
+                  guint pos, guint width, guint res,
+                  guint extend_left, guint extend_right,
+                  G_GNUC_UNUSED gdouble value)
+{
+    row_extend_base(in, out, &pos, &width, res, &extend_left, &extend_right);
+    /* Forward-extend */
+    fill_block(out + extend_left + width, extend_right, in[res-1]);
+    /* Backward-extend */
+    fill_block(out, extend_left, in[0]);
+}
+
+static void
+mask_rle_execute_min_max(const MaskRLE *mrle, MinMaxPrecomputedRow **prows,
+                         gdouble *outbuf, guint width, gboolean maximum)
+{
+    const MaskSegment *seg = mrle->segments;
+    guint n = mrle->nsegments, i, j;
+    const gdouble *segdata = prows[seg->row]->each[seg->len] + seg->col;
+
+    gwy_assign(outbuf, segdata, width);
+    seg++;
+    for (i = n-1; i; i--, seg++) {
+        segdata = prows[seg->row]->each[seg->len] + seg->col;
+        if (maximum) {
+            for (j = 0; j < width; j++) {
+                if (outbuf[j] < segdata[j])
+                    outbuf[j] = segdata[j];
+            }
+        }
+        else {
+            for (j = 0; j < width; j++) {
+                if (outbuf[j] > segdata[j])
+                    outbuf[j] = segdata[j];
+            }
+        }
+    }
+}
+
+static gboolean
+gwy_data_field_area_rle_analyse(GwyDataField *kernel,
+                                gint width,
+                                MinMaxPrecomputed *mmp)
+{
+    guint kxres, kyres, i;
+
+    kxres = kernel->xres;
+    kyres = kernel->yres;
+    mmp->rowbuflen = width + kxres-1;
+    mmp->kxres = kxres;
+    mmp->kyres = kyres;
+
+    /* Run-length encode the mask, i.e. transform it to a set of segments
+     * and their positions. */
+    mmp->mrle = run_length_encode_mask(kernel);
+    if (!mmp->mrle->nsegments) {
+        mask_rle_free(mmp->mrle);
+        return FALSE;
+    }
+
+    mmp->req = find_required_lengths_for_rle(mmp->mrle);
+
+    /* Create the row buffers for running extrema of various lengths. */
+    mmp->prows = g_new(MinMaxPrecomputedRow*, kyres);
+    for (i = 0; i < kyres; i++)
+        mmp->prows[i] = min_max_precomputed_row_alloc(mmp->req, mmp->rowbuflen);
+
+    mmp->extrowbuf = g_new(gdouble, mmp->rowbuflen);
+
+    return TRUE;
+}
+
+static void
+gwy_data_field_area_rle_free(MinMaxPrecomputed *mmp)
+{
+    guint i;
+
+    g_free(mmp->extrowbuf);
+    for (i = 0; i < mmp->kyres; i++)
+        min_max_precomputed_row_free(mmp->prows[i]);
+    g_free(mmp->prows);
+    min_max_precomputed_req_free(mmp->req);
+    mask_rle_free(mmp->mrle);
+}
+
+static void
+gwy_data_field_area_min_max_execute(GwyDataField *dfield,
+                                    gdouble *outbuf,
+                                    MinMaxPrecomputed *mmp,
+                                    gboolean maximum,
+                                    gint col, gint row,
+                                    gint width, gint height)
+{
+    MaskRLE *mrle = mmp->mrle;
+    MinMaxPrecomputedReq *req = mmp->req;
+    MinMaxPrecomputedRow **prows = mmp->prows, *prow;
+    MinMaxPrecomputedRowFill precomp_row_fill;
+    guint xres, yres, i, ii;
+    guint extend_up, extend_down, extend_left, extend_right;
+    gdouble *d, *extrowbuf = mmp->extrowbuf;
+    guint rowbuflen = mmp->rowbuflen;
+
+    xres = dfield->xres;
+    yres = dfield->yres;
+    d = dfield->data;
+    precomp_row_fill = (maximum
+                        ? max_precomputed_row_fill
+                        : min_precomputed_row_fill);
+
+    /* Initialise the buffers for the zeroth row of the area. */
+    extend_up = (mmp->kyres - 1)/2;
+    extend_down = mmp->kyres/2;
+    extend_left = (mmp->kxres - 1)/2;
+    extend_right = mmp->kxres/2;
+    for (i = 0; i <= extend_down; i++) {
+        if (row + i < yres) {
+            row_extend_border(d + xres*(row + i) + col, extrowbuf,
+                              col, width, xres,
+                              extend_left, extend_right,
+                              0.0);
+            precomp_row_fill(req, prows[i + extend_up], extrowbuf, rowbuflen);
+        }
+        else
+            min_max_precomputed_row_copy(prows[i], prows[i-1], req, rowbuflen);
+    }
+    for (i = 1; i <= extend_up; i++) {
+        ii = extend_up - i;
+        if (i <= (guint)row) {
+            row_extend_border(d + xres*(row - i) + col, extrowbuf,
+                              col, width, xres,
+                              extend_left, extend_right,
+                              0.0);
+            precomp_row_fill(req, prows[ii], extrowbuf, rowbuflen);
+        }
+        else
+            min_max_precomputed_row_copy(prows[ii],
+                                         prows[(ii + 1) % mmp->kyres],
+                                         req, rowbuflen);
+    }
+
+    /* Go through the rows and extract the minima or maxima from the
+     * precomputed segment data. */
+    i = 0;
+    while (TRUE) {
+        mask_rle_execute_min_max(mrle, prows, outbuf + i*width, width, maximum);
+        i++;
+        if (i == (guint)height)
+            break;
+
+        /* Rotate physically prows[] so that the current row is at the zeroth
+         * position.  We could use cyclic buffers but then all subordinate
+         * functions would know how to handle them and calculating mod() for
+         * all indexing is inefficient anyway. */
+        prow = prows[0];
+        for (ii = 0; ii < mmp->kyres-1; ii++)
+            prows[ii] = prows[ii+1];
+        prows[mmp->kyres-1] = prow;
+
+        /* Precompute the new row at the bottom. */
+        ii = row + i + extend_down;
+        if (ii < yres) {
+            row_extend_border(d + xres*ii + col, extrowbuf,
+                              col, width, xres,
+                              extend_left, extend_right,
+                              0.0);
+            precomp_row_fill(req, prow, extrowbuf, rowbuflen);
+        }
+        else
+            min_max_precomputed_row_copy(prow, prows[mmp->kyres-2],
+                                         req, rowbuflen);
+    }
+}
+
+/**
+ * gwy_data_field_area_filter_min_max:
+ * @data_field: A data field to apply the filter to.
+ * @kernel: Data field defining the flat structuring element.
+ * @filtertype: The type of filter to apply.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Applies a morphological operation with a flat structuring element to a
+ * part of a data field.
+ *
+ * Morphological operations with flat structuring elements can be expressed
+ * using minimum (erosion) and maximum (dilation) filters that are the basic
+ * operations this function can perform.  The kernel field is a mask that
+ * defines the shape of the flat structuring element.
+ *
+ * The operation is linear-time in kernel size for any convex kernel.  You can
+ * use gwy_data_field_elliptic_area_fill() to create a true circular (or
+ * elliptical) kernel.
+ *
+ * The exterior is always handled as %GWY_EXTERIOR_BORDER_EXTEND.
+ *
+ * Since: 2.43
+ **/
+void
+gwy_data_field_area_filter_min_max(GwyDataField *data_field,
+                                   GwyDataField *kernel,
+                                   GwyMinMaxFilterType filtertype,
+                                   gint col, gint row,
+                                   gint width, gint height)
+{
+    MinMaxPrecomputed mmp;
+    gdouble *outbuf, *d;
+    gint i, xres;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_FIELD(kernel));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width > 0 && height > 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
+
+    xres = data_field->xres;
+    d = data_field->data;
+
+    if (!gwy_data_field_area_rle_analyse(kernel, width, &mmp))
+        return;
+
+    outbuf = g_new(gdouble, width*height);
+
+    if (filtertype == GWY_MIN_MAX_FILTER_MINIMUM)
+        gwy_data_field_area_min_max_execute(data_field, outbuf, &mmp, FALSE,
+                                            col, row, width, height);
+    else if (filtertype == GWY_MIN_MAX_FILTER_MAXIMUM)
+        gwy_data_field_area_min_max_execute(data_field, outbuf, &mmp, TRUE,
+                                            col, row, width, height);
+    else {
+        g_assert_not_reached();
+    }
+
+    for (i = 0; i < height; i++)
+        gwy_assign(d + (row + i)*xres + col, outbuf + i*width, width);
+    gwy_data_field_invalidate(data_field);
+
+    g_free(outbuf);
+    gwy_data_field_area_rle_free(&mmp);
 }
 
 /**

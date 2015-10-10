@@ -578,6 +578,7 @@ row_extend_fill(const gdouble *in, gdouble *out,
     // Backward-extend
     fill_block(out, extend_left, value);
 }
+
 static inline void
 rect_extend_base(const gdouble *in, guint inrowstride,
                  gdouble *out, guint outrowstride,

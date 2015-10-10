@@ -245,6 +245,13 @@ typedef enum {
     GWY_DISTANCE_TRANSFORM_OCTAGONAL84 = 3,
 } GwyDistanceTransformType;
 
+typedef enum {
+    GWY_MIN_MAX_FILTER_MINIMUM = 0,
+    GWY_MIN_MAX_FILTER_EROSION = 0,
+    GWY_MIN_MAX_FILTER_MAXIMUM = 1,
+    GWY_MIN_MAX_FILTER_DILATION = 1,
+} GwyMinMaxFilterType;
+
 const GwyEnum* gwy_merge_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_masking_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_plane_symmetry_get_enum(void) G_GNUC_CONST;
