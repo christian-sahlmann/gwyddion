@@ -138,6 +138,53 @@ err_MINIZIP(gint status, GError **error)
                 errstr);
     return FALSE;
 }
+
+G_GNUC_UNUSED
+static guchar*
+gwyminizip_get_file_content(unzFile *zipfile, gsize *contentsize,
+                            GError **error)
+{
+    unz_file_info fileinfo;
+    guchar *buffer;
+    gulong size;
+    glong readbytes;
+    gint status;
+
+    gwy_debug("calling unzGetCurrentFileInfo() to figure out buffer size");
+    status = unzGetCurrentFileInfo(zipfile, &fileinfo,
+                                   NULL, 0,
+                                   NULL, 0,
+                                   NULL, 0);
+    if (status != UNZ_OK) {
+        err_MINIZIP(status, error);
+        return NULL;
+    }
+
+    gwy_debug("calling unzGetCurrentFileInfo()");
+    status = unzOpenCurrentFile(zipfile);
+    if (status != UNZ_OK) {
+        err_MINIZIP(status, error);
+        return NULL;
+    }
+
+    size = fileinfo.uncompressed_size;
+    buffer = g_new(guchar, size + 1);
+    gwy_debug("calling unzReadCurrentFile()");
+    readbytes = unzReadCurrentFile(zipfile, buffer, size);
+    if (readbytes != size) {
+        err_MINIZIP(status, error);
+        unzCloseCurrentFile(zipfile);
+        g_free(buffer);
+        return NULL;
+    }
+    gwy_debug("calling unzCloseCurrentFile()");
+    unzCloseCurrentFile(zipfile);
+
+    buffer[size] = '\0';
+    if (contentsize)
+        *contentsize = size;
+    return buffer;
+}
 #endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
