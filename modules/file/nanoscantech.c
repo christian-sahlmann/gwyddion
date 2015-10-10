@@ -177,7 +177,7 @@ nst_detect(const GwyFileDetectInfo *fileinfo,
     if (!(zipfile = gwyminizip_unzOpen(fileinfo->name)))
         return 0;
 
-    if (unzLocateFile(zipfile, "0.lsdlsd", 1) != UNZ_OK) {
+    if (!gwyminizip_locate_file(zipfile, "0.lsdlsd", 1, NULL)) {
         unzClose(zipfile);
         return 0;
     }

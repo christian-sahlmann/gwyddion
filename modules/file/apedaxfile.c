@@ -264,11 +264,10 @@ apedax_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
     }
 
-    if (unzLocateFile(uFile, "scan.xml", 0) == UNZ_OK) {
+    if (gwyminizip_locate_file(uFile, "scan.xml", 0, NULL))
         score += 30;
-    } else {
+    else
         score = 0;
-    }
 
     unzClose(uFile);
 
@@ -297,11 +296,7 @@ apedax_load(const gchar *filename,
     scanSize.YReal = 0.0;
 
     lowercaseFilename = g_ascii_strdown(filename, -1);
-
-    if (g_str_has_suffix(filename, APDT_EXTENSION)) {
-        apdt_flag = TRUE;
-    }
-
+    apdt_flag = g_str_has_suffix(filename, APDT_EXTENSION);
     g_free(lowercaseFilename);
 
     gwy_debug("Opening the file with MiniZIP");
@@ -319,7 +314,7 @@ apedax_load(const gchar *filename,
     }
 
     gwy_debug("Locating the XML file");
-    if (unzLocateFile(uFile, "scan.xml", 0) != UNZ_OK) {
+    if (!gwyminizip_locate_file(uFile, "scan.xml", 0, NULL)) {
         if (apdt_flag) {
             err_FILE_TYPE(error, APDT_FILE_TYPE);
         }
@@ -655,18 +650,9 @@ apedax_get_data_field(unzFile uFile,
 
     unzGoToFirstFile(uFile);
 
-    if (unzLocateFile(uFile, chFileName, 0) != UNZ_OK) {
-        gwy_debug("Binary file not found");
-        err_NO_DATA(error);
+    if (!gwyminizip_locate_file(uFile, chFileName, 0, error)
+        || !(buffer = gwyminizip_get_file_content(uFile, &size, error)))
         return NULL;
-    }
-
-    buffer = gwyminizip_get_file_content(uFile, &size, error);
-
-    if (buffer == NULL) {
-        err_NO_DATA(error);
-        return NULL;
-    }
 
     if (err_SIZE_MISMATCH(error, expectedSize, size, FALSE)) {
        return NULL;

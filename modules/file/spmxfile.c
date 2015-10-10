@@ -141,12 +141,11 @@ spmx_detect(const GwyFileDetectInfo *fileinfo,
      * for the main XML document within such files, we also have to see if
      * we find "SPMxFormat" somewehre near the begining of the file. */
     if ((zipfile = gwyminizip_unzOpen(fileinfo->name))) {
-        if (unzLocateFile(zipfile, "main.xml", 1) == UNZ_OK) {
-            if ((content = gwyminizip_get_file_content(zipfile, NULL, NULL))) {
-                if (g_strstr_len(content, 4096, "SPMxFormat"))
-                    score = 100;
-                g_free(content);
-            }
+        if (gwyminizip_locate_file(zipfile, "main.xml", 1, NULL)
+            && (content = gwyminizip_get_file_content(zipfile, NULL, NULL))) {
+            if (g_strstr_len(content, 4096, "SPMxFormat"))
+                score = 100;
+            g_free(content);
         }
         unzClose(zipfile);
     }
@@ -209,15 +208,9 @@ read_binary_data(const SPMXFile *spmxfile,
     for (i = 0; i < streams->len; i++) {
         SPMXStream *stream = &g_array_index(streams, SPMXStream, i);
 
-        if (unzLocateFile(zipfile, stream->filename, 1) != UNZ_OK) {
-            g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                        _("File %s is missing in the zip file."),
-                        stream->filename);
-            return FALSE;
-        }
-
-        if (!(content = gwyminizip_get_file_content(zipfile, &contentsize,
-                                                    error)))
+        if (!gwyminizip_locate_file(zipfile, stream->filename, 1, error)
+            || !(content = gwyminizip_get_file_content(zipfile, &contentsize,
+                                                       error)))
             return FALSE;
 
         n = stream->xyres[0]*stream->xyres[1];
@@ -517,14 +510,8 @@ spmx_parse_main(unzFile *zipfile,
     guchar *content = NULL, *s;
     gboolean ok = FALSE;
 
-    gwy_debug("calling unzLocateFile() to find main.xml");
-    if (unzLocateFile(zipfile, "main.xml", 1) != UNZ_OK) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    _("File %s is missing in the zip file."), "main.xml");
-        return FALSE;
-    }
-
-    if (!(content = gwyminizip_get_file_content(zipfile, NULL, error)))
+    if (!gwyminizip_locate_file(zipfile, "main.xml", 1, error)
+        || !(content = gwyminizip_get_file_content(zipfile, NULL, error)))
         return FALSE;
 
     gwy_strkill(content, "\r");

@@ -184,12 +184,11 @@ x3p_detect(const GwyFileDetectInfo *fileinfo,
      * for the main XML document within such files, we also have to see if
      * we find "ISO5436_2" somewehre near the begining of the file. */
     if ((zipfile = gwyminizip_unzOpen(fileinfo->name))) {
-        if (unzLocateFile(zipfile, "main.xml", 1) == UNZ_OK) {
-            if ((content = gwyminizip_get_file_content(zipfile, NULL, NULL))) {
-                if (g_strstr_len(content, 4096, "ISO5436_2"))
-                    score = 100;
-                g_free(content);
-            }
+        if (gwyminizip_locate_file(zipfile, "main.xml", 1, NULL)
+            && (content = gwyminizip_get_file_content(zipfile, NULL, NULL))) {
+            if (g_strstr_len(content, 4096, "ISO5436_2"))
+                score = 100;
+            g_free(content);
         }
         unzClose(zipfile);
     }
@@ -496,14 +495,8 @@ x3p_parse_main(unzFile *zipfile,
     guchar *content = NULL, *s;
     gboolean ok = FALSE;
 
-    gwy_debug("calling unzLocateFile() to find main.xml");
-    if (unzLocateFile(zipfile, "main.xml", 1) != UNZ_OK) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    _("File %s is missing in the zip file."), "main.xml");
-        return FALSE;
-    }
-
-    if (!(content = gwyminizip_get_file_content(zipfile, NULL, error)))
+    if (!gwyminizip_locate_file(zipfile, "main.xml", 1, error)
+        || !(content = gwyminizip_get_file_content(zipfile, NULL, error)))
         return FALSE;
 
     gwy_strkill(content, "\r");
@@ -697,11 +690,8 @@ read_binary_data(X3PFile *x3pfile, unzFile *zipfile, GError **error)
     }
     gwy_debug("binary data file %s", s);
 
-    if (unzLocateFile(zipfile, s, 1) != UNZ_OK) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    _("File %s is missing in the zip file."), s);
+    if (!gwyminizip_locate_file(zipfile, s, 1, error))
         return FALSE;
-    }
 
     s = g_hash_table_lookup(x3pfile->hash, AXES_PREFIX "/CZ/DataType");
     if (!s) {
@@ -733,13 +723,8 @@ read_binary_data(X3PFile *x3pfile, unzFile *zipfile, GError **error)
     if (!s)
         return TRUE;
 
-    if (unzLocateFile(zipfile, s, 1) != UNZ_OK) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    _("File %s is missing in the zip file."), s);
-        return FALSE;
-    }
-
-    if (!(bindata = gwyminizip_get_file_content(zipfile, &size, error)))
+    if (!gwyminizip_locate_file(zipfile, s, 1, error)
+        || !(bindata = gwyminizip_get_file_content(zipfile, &size, error)))
         return FALSE;
 
     if (err_SIZE_MISMATCH(error, (x3pfile->ndata + 7)/8, size, TRUE)) {

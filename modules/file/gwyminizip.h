@@ -140,6 +140,20 @@ err_MINIZIP(gint status, GError **error)
 }
 
 G_GNUC_UNUSED
+static gboolean
+gwyminizip_locate_file(unzFile *zipfile, const gchar *filename, gint casesens,
+                       GError **error)
+{
+    gwy_debug("calling unzLocateFile() to find %s", filename);
+    if (unzLocateFile(zipfile, filename, casesens) != UNZ_OK) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    _("File %s is missing in the zip file."), filename);
+        return FALSE;
+    }
+    return TRUE;
+}
+
+G_GNUC_UNUSED
 static guchar*
 gwyminizip_get_file_content(unzFile *zipfile, gsize *contentsize,
                             GError **error)

@@ -174,7 +174,7 @@ nao_detect(const GwyFileDetectInfo *fileinfo,
     if (!(zipfile = gwyminizip_unzOpen(fileinfo->name)))
         return 0;
 
-    if (unzLocateFile(zipfile, "Scan/Measure.xml", 1) != UNZ_OK) {
+    if (!gwyminizip_locate_file(zipfile, "Scan/Measure.xml", 1, NULL)) {
         unzClose(zipfile);
         return 0;
     }
@@ -472,16 +472,8 @@ nao_parse_measure(unzFile *zipfile,
     guchar *content = NULL, *s;
     gboolean ok = FALSE;
 
-    gwy_debug("calling unzLocateFile() to find Scan/Measure.xml");
-    if (unzLocateFile(zipfile, "Scan/Measure.xml", 1) != UNZ_OK) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    _("File %s is missing in the zip file."),
-                    "Scan/Measure.xml");
-        return FALSE;
-    }
-
-    content = gwyminizip_get_file_content(zipfile, NULL, error);
-    if (!content)
+    if (!gwyminizip_locate_file(zipfile, "Scan/Measure.xml", 1, error)
+        || !(content = gwyminizip_get_file_content(zipfile, NULL, error)))
         return FALSE;
 
     gwy_strkill(content, "\r");
