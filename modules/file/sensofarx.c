@@ -261,7 +261,7 @@ read_binary_data(const PLUxFile *pluxfile,
         }
 
         dfield = gwy_data_field_new(xres, yres,
-                                    xres*xreal*1e-6, xres*yreal*1e-6,
+                                    xres*xreal*1e-6, yres*yreal*1e-6,
                                     FALSE);
         gwy_convert_raw_data(content, xres*yres, 1,
                              GWY_RAW_DATA_FLOAT,
