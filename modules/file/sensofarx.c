@@ -70,11 +70,13 @@ static gboolean      read_binary_data           (const PLUxFile *pluxfile,
                                                  GwyContainer *container,
                                                  GError **error);
 static void          sensofarx_file_free        (PLUxFile *pluxfile);
+static GwyContainer* get_metadata               (const PLUxFile *pluxfile,
+                                                 guint id);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Reads ATC SPMxFormat files."),
+    N_("Reads Sensofar PLUx files."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti)",
@@ -201,6 +203,7 @@ read_binary_data(const PLUxFile *pluxfile,
     GHashTable *hash = pluxfile->hash;
     GString *str = pluxfile->str;
     GwyDataField *dfield, *mask;
+    GwyContainer *meta;
     guchar *content;
     gchar *filename, *title;
     gsize contentsize, expected_size;
@@ -285,6 +288,12 @@ read_binary_data(const PLUxFile *pluxfile,
         g_string_printf(str, "/%d/data/title", id);
         title = g_strdup("Z");
         gwy_container_set_string_by_name(container, str->str, title);
+
+        if ((meta = get_metadata(pluxfile, id))) {
+            g_string_printf(str, "/%d/meta", id);
+            gwy_container_set_object_by_name(container, str->str, meta);
+            g_object_unref(meta);
+        }
 
         id++;
     }
@@ -426,6 +435,51 @@ sensofarx_file_free(PLUxFile *pluxfile)
         g_string_free(pluxfile->str, TRUE);
     if (pluxfile->layers)
         g_array_free(pluxfile->layers, TRUE);
+}
+
+static GwyContainer*
+get_metadata(const PLUxFile *pluxfile, guint id)
+{
+    GHashTable *hash = pluxfile->hash;
+    GwyContainer *meta = gwy_container_new();
+    gchar *name, *value;
+    gchar buf[40], c;
+    guint n, i;
+
+    if ((value = g_hash_table_lookup(hash, "/xml/GENERAL/AUTHOR")))
+        gwy_container_set_const_string_by_name(meta, "General::Author", value);
+    if ((value = g_hash_table_lookup(hash, "/xml/GENERAL/DATE")))
+        gwy_container_set_const_string_by_name(meta, "General::Date", value);
+
+    if ((value = g_hash_table_lookup(hash, "/xml/INFO/SIZE"))
+        && (n = atoi(value))) {
+        for (i = 0; i < n; i++) {
+            g_snprintf(buf, sizeof(buf), "/xml/INFO/ITEM_%u/NAME", i);
+            name = g_hash_table_lookup(hash, buf);
+            g_snprintf(buf, sizeof(buf), "/xml/INFO/ITEM_%u/VALUE", i);
+            value = g_hash_table_lookup(hash, buf);
+            if (name && value && strlen(name) && strlen(value)) {
+                name = g_strconcat("Info::", name, NULL);
+                gwy_container_set_const_string_by_name(meta, name, value);
+                g_free(name);
+            }
+        }
+    }
+
+    for (c = 'X'; c <= 'Z'; c++) {
+        g_snprintf(buf, sizeof(buf), "/xml/LAYER_%u/POSITION_%c", id, c);
+        if ((value = g_hash_table_lookup(hash, buf))) {
+            value = g_strconcat(value, " µm", NULL);
+            g_snprintf(buf, sizeof(buf), "Layer::Position %c", c);
+            gwy_container_set_const_string_by_name(meta, buf, value);
+        }
+    }
+
+    if (gwy_container_get_n_items(meta))
+        return meta;
+
+    g_object_unref(meta);
+    return NULL;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
