@@ -3117,7 +3117,7 @@ gwy_data_field_area_min_max_execute(GwyDataField *dfield,
 
     for (i = 0; i <= extend_down; i++) {
         if (row + i < yres) {
-            row_extend_border(d + xres*(row + i) + col, extrowbuf,
+            row_extend_border(d + xres*(row + i), extrowbuf,
                               col, width, xres,
                               extend_left, extend_right,
                               0.0);
@@ -3129,7 +3129,7 @@ gwy_data_field_area_min_max_execute(GwyDataField *dfield,
     for (i = 1; i <= extend_up; i++) {
         ii = extend_up - i;
         if (i <= (guint)row) {
-            row_extend_border(d + xres*(row - i) + col, extrowbuf,
+            row_extend_border(d + xres*(row - i), extrowbuf,
                               col, width, xres,
                               extend_left, extend_right,
                               0.0);
@@ -3162,7 +3162,7 @@ gwy_data_field_area_min_max_execute(GwyDataField *dfield,
         /* Precompute the new row at the bottom. */
         ii = row + i + extend_down;
         if (ii < yres) {
-            row_extend_border(d + xres*ii + col, extrowbuf,
+            row_extend_border(d + xres*ii, extrowbuf,
                               col, width, xres,
                               extend_left, extend_right,
                               0.0);
