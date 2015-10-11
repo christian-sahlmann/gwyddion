@@ -246,10 +246,14 @@ typedef enum {
 } GwyDistanceTransformType;
 
 typedef enum {
-    GWY_MIN_MAX_FILTER_MINIMUM = 0,
-    GWY_MIN_MAX_FILTER_EROSION = 0,
-    GWY_MIN_MAX_FILTER_MAXIMUM = 1,
-    GWY_MIN_MAX_FILTER_DILATION = 1,
+    GWY_MIN_MAX_FILTER_MINIMUM       = 0,
+    GWY_MIN_MAX_FILTER_EROSION       = 0,
+    GWY_MIN_MAX_FILTER_MAXIMUM       = 1,
+    GWY_MIN_MAX_FILTER_DILATION      = 1,
+    GWY_MIN_MAX_FILTER_OPENING       = 2,
+    GWY_MIN_MAX_FILTER_CLOSING       = 3,
+    GWY_MIN_MAX_FILTER_RANGE         = 4,
+    GWY_MIN_MAX_FILTER_NORMALIZATION = 5,
 } GwyMinMaxFilterType;
 
 const GwyEnum* gwy_merge_type_get_enum(void) G_GNUC_CONST;

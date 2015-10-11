@@ -3147,9 +3147,11 @@ gwy_data_field_area_min_max_execute(GwyDataField *dfield,
  * operations this function can perform.  The kernel field is a mask that
  * defines the shape of the flat structuring element.
  *
- * The operation is linear-time in kernel size for any convex kernel.  You can
- * use gwy_data_field_elliptic_area_fill() to create a true circular (or
- * elliptical) kernel.
+ * You can use gwy_data_field_elliptic_area_fill() to create a true circular
+ * (or elliptical) kernel.  The operation is linear-time in kernel size for any
+ * convex kernel.  Note gwy_data_field_area_filter_minimum() and
+ * gwy_data_field_area_filter_maximum(), that are limited to square structuring
+ * elements, are much faster for large sizes of the squares.
  *
  * The exterior is always handled as %GWY_EXTERIOR_BORDER_EXTEND.
  *
@@ -3164,7 +3166,7 @@ gwy_data_field_area_filter_min_max(GwyDataField *data_field,
 {
     MinMaxPrecomputed mmp;
     gdouble *outbuf, *d;
-    gint i, xres;
+    gint i, j, xres, yres;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_FIELD(kernel));
@@ -3174,29 +3176,109 @@ gwy_data_field_area_filter_min_max(GwyDataField *data_field,
                      && row + height <= data_field->yres);
 
     xres = data_field->xres;
+    yres = data_field->yres;
     d = data_field->data;
 
-    if (!gwy_data_field_area_rle_analyse(kernel, width, &mmp))
-        return;
+    if (filtertype == GWY_MIN_MAX_FILTER_MINIMUM
+        || filtertype == GWY_MIN_MAX_FILTER_MAXIMUM) {
+        gboolean is_max = (filtertype == GWY_MIN_MAX_FILTER_MAXIMUM);
 
-    outbuf = g_new(gdouble, width*height);
+        if (!gwy_data_field_area_rle_analyse(kernel, width, &mmp))
+            return;
 
-    if (filtertype == GWY_MIN_MAX_FILTER_MINIMUM)
+        outbuf = g_new(gdouble, width*height);
+        gwy_data_field_area_min_max_execute(data_field, outbuf, &mmp, is_max,
+                                            col, row, width, height);
+
+        d += row*xres + col;
+        for (i = 0; i < height; i++)
+            gwy_assign(d + i*xres, outbuf + i*width, width);
+        gwy_data_field_invalidate(data_field);
+        g_free(outbuf);
+        gwy_data_field_area_rle_free(&mmp);
+    }
+    else if (filtertype == GWY_MIN_MAX_FILTER_RANGE
+             || filtertype == GWY_MIN_MAX_FILTER_NORMALIZATION) {
+        gdouble *outbuf2;
+
+        if (!gwy_data_field_area_rle_analyse(kernel, width, &mmp))
+            return;
+
+        outbuf = g_new(gdouble, width*height);
+        outbuf2 = g_new(gdouble, width*height);
         gwy_data_field_area_min_max_execute(data_field, outbuf, &mmp, FALSE,
                                             col, row, width, height);
-    else if (filtertype == GWY_MIN_MAX_FILTER_MAXIMUM)
-        gwy_data_field_area_min_max_execute(data_field, outbuf, &mmp, TRUE,
+        gwy_data_field_area_min_max_execute(data_field, outbuf2, &mmp, TRUE,
                                             col, row, width, height);
-    else {
-        g_assert_not_reached();
+
+        d += row*xres + col;
+        if (filtertype == GWY_MIN_MAX_FILTER_RANGE) {
+            for (i = 0; i < height; i++) {
+                for (j = 0; j < width; j++)
+                    d[i*xres + j] = outbuf2[i*width + j] - outbuf[i*width + j];
+            }
+        }
+        else {
+            for (i = 0; i < height; i++) {
+                for (j = 0; j < width; j++) {
+                    gdouble min = outbuf[i*width + j];
+                    gdouble max = outbuf2[i*width + j];
+
+                    if (G_UNLIKELY(!(min < max)))
+                        d[i*xres + j] = 0.5;
+                    else
+                        d[i*xres + j] = (d[i*xres + j] - min)/(max - min);
+                }
+            }
+        }
+        gwy_data_field_invalidate(data_field);
+        g_free(outbuf2);
+        g_free(outbuf);
+        gwy_data_field_area_rle_free(&mmp);
     }
+    else if (filtertype == GWY_MIN_MAX_FILTER_OPENING
+             || filtertype == GWY_MIN_MAX_FILTER_CLOSING) {
+        gboolean is_closing = (filtertype == GWY_MIN_MAX_FILTER_CLOSING);
+        /* To limit the area of application but keep the influence of
+         * surrouding pixels as if we did erosion and dilation on the entire
+         * field, we must perform the first operation in an extended area. */
+        gint kxres = kernel->xres, kyres = kernel->yres;
+        gint extcol = MAX(0, col - kxres/2);
+        gint extrow = MAX(0, row - kyres/2);
+        gint extwidth = MIN(xres, col + width + kxres/2) - extcol;
+        gint extheight = MIN(yres, row + height + kyres/2) - extrow;
+        GwyDataField *tmpfield;
 
-    for (i = 0; i < height; i++)
-        gwy_assign(d + (row + i)*xres + col, outbuf + i*width, width);
-    gwy_data_field_invalidate(data_field);
+        if (!gwy_data_field_area_rle_analyse(kernel, extwidth, &mmp))
+            return;
 
-    g_free(outbuf);
-    gwy_data_field_area_rle_free(&mmp);
+        tmpfield = gwy_data_field_new(extwidth, extheight, extwidth, extheight,
+                                      FALSE);
+        gwy_data_field_area_min_max_execute(data_field, tmpfield->data, &mmp,
+                                            is_closing,
+                                            extcol, extrow,
+                                            extwidth, extheight);
+        gwy_data_field_area_rle_free(&mmp);
+
+        gwy_data_field_area_rle_analyse(kernel, width, &mmp);
+        outbuf = g_new(gdouble, width*height);
+        gwy_data_field_area_min_max_execute(tmpfield, outbuf, &mmp,
+                                            !is_closing,
+                                            col - extcol, row - extrow,
+                                            width, height);
+
+        d += row*xres + col;
+        for (i = 0; i < height; i++)
+            gwy_assign(d + i*xres, outbuf + i*width, width);
+        gwy_data_field_invalidate(data_field);
+
+        g_free(outbuf);
+        g_object_unref(tmpfield);
+        gwy_data_field_area_rle_free(&mmp);
+    }
+    else {
+        g_return_if_reached();
+    }
 }
 
 /**
