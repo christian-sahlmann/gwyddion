@@ -24,6 +24,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-tool.h>
+#include <libprocess/elliptic.h>
 #include <libprocess/filters.h>
 #include <libprocess/linestats.h>
 #include <libgwydgets/gwystock.h>
@@ -40,22 +41,22 @@
 
 /* Keep numbering for settings */
 typedef enum {
-    GWY_FILTER_MEAN          = 0,
-    GWY_FILTER_MEDIAN        = 1,
-    GWY_FILTER_CONSERVATIVE  = 2,
-    GWY_FILTER_MINIMUM       = 3,
-    GWY_FILTER_MAXIMUM       = 4,
-    GWY_FILTER_KUWAHARA      = 5,
-    GWY_FILTER_DECHECKER     = 6,
-    GWY_FILTER_GAUSSIAN      = 7,
-    GWY_FILTER_SHARPEN       = 8
-} GwyFilterType;
+    FILTER_MEAN          = 0,
+    FILTER_MEDIAN        = 1,
+    FILTER_CONSERVATIVE  = 2,
+    FILTER_MINIMUM       = 3,
+    FILTER_MAXIMUM       = 4,
+    FILTER_KUWAHARA      = 5,
+    FILTER_DECHECKER     = 6,
+    FILTER_GAUSSIAN      = 7,
+    FILTER_SHARPEN       = 8
+} FilterType;
 
 typedef struct _GwyToolFilter      GwyToolFilter;
 typedef struct _GwyToolFilterClass GwyToolFilterClass;
 
 typedef struct {
-    GwyFilterType filter_type;
+    FilterType filter_type;
     gint size;
     gdouble gauss_size;
 } ToolArgs;
@@ -95,8 +96,8 @@ static void     gwy_tool_filter_size_changed     (GwyToolFilter *tool,
                                                   GtkAdjustment *adj);
 static void     gwy_tool_filter_type_changed     (GtkComboBox *combo,
                                                   GwyToolFilter *tool);
-static gboolean gwy_tool_filter_is_sized         (GwyFilterType type);
-static gboolean gwy_tool_filter_is_float_sized   (GwyFilterType type);
+static gboolean gwy_tool_filter_is_sized         (FilterType type);
+static gboolean gwy_tool_filter_is_float_sized   (FilterType type);
 static void     setup_size_adjustment            (GwyToolFilter *tool);
 static void     gwy_tool_filter_apply            (GwyToolFilter *tool);
 static void     gwy_tool_filter_save_args        (GwyToolFilter *tool);
@@ -107,7 +108,7 @@ static GwyModuleInfo module_info = {
     N_("Filter tool, processes selected part of data with a filter "
        "(conservative denoise, mean, median. Kuwahara, minimum, maximum)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "3.9",
+    "3.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -117,7 +118,7 @@ static const gchar size_key[]        = "/module/filter/size";
 static const gchar gauss_size_key[]  = "/module/filter/gauss_size";
 
 static const ToolArgs default_args = {
-    GWY_FILTER_MEAN,
+    FILTER_MEAN,
     5,
     5.0,
 };
@@ -205,15 +206,15 @@ static void
 gwy_tool_filter_init_dialog(GwyToolFilter *tool)
 {
     static const GwyEnum filters[] = {
-        { N_("Mean value"),           GWY_FILTER_MEAN,         },
-        { N_("Median value"),         GWY_FILTER_MEDIAN,       },
-        { N_("Conservative denoise"), GWY_FILTER_CONSERVATIVE, },
-        { N_("Minimum"),              GWY_FILTER_MINIMUM,      },
-        { N_("Maximum"),              GWY_FILTER_MAXIMUM,      },
-        { N_("Kuwahara"),             GWY_FILTER_KUWAHARA,     },
-        { N_("Dechecker"),            GWY_FILTER_DECHECKER,    },
-        { N_("filter|Gaussian"),      GWY_FILTER_GAUSSIAN,     },
-        { N_("Sharpen"),              GWY_FILTER_SHARPEN,      },
+        { N_("Mean value"),           FILTER_MEAN,         },
+        { N_("Median value"),         FILTER_MEDIAN,       },
+        { N_("Conservative denoise"), FILTER_CONSERVATIVE, },
+        { N_("Minimum"),              FILTER_MINIMUM,      },
+        { N_("Maximum"),              FILTER_MAXIMUM,      },
+        { N_("Kuwahara"),             FILTER_KUWAHARA,     },
+        { N_("Dechecker"),            FILTER_DECHECKER,    },
+        { N_("filter|Gaussian"),      FILTER_GAUSSIAN,     },
+        { N_("Sharpen"),              FILTER_SHARPEN,      },
     };
     GtkDialog *dialog;
     GtkTable *table;
@@ -359,7 +360,7 @@ static void
 gwy_tool_filter_type_changed(GtkComboBox *combo,
                              GwyToolFilter *tool)
 {
-    GwyFilterType prevtype, newtype;
+    FilterType prevtype, newtype;
     gboolean sensitive, prevfloat, newfloat;
 
     prevtype = tool->args.filter_type;
@@ -374,17 +375,24 @@ gwy_tool_filter_type_changed(GtkComboBox *combo,
 }
 
 static gboolean
-gwy_tool_filter_is_float_sized(GwyFilterType type)
+gwy_tool_filter_is_float_sized(FilterType type)
 {
-    return (type == GWY_FILTER_GAUSSIAN
-            || type == GWY_FILTER_SHARPEN);
+    return (type == FILTER_GAUSSIAN
+            || type == FILTER_SHARPEN);
 }
 
 static gboolean
-gwy_tool_filter_is_sized(GwyFilterType type)
+gwy_tool_filter_is_sized(FilterType type)
 {
-    return (type != GWY_FILTER_KUWAHARA
-            && type != GWY_FILTER_DECHECKER);
+    return (type != FILTER_KUWAHARA
+            && type != FILTER_DECHECKER);
+}
+
+static gboolean
+gwy_tool_filter_needs_kernel(FilterType type)
+{
+    return (type == FILTER_MINIMUM
+            || type == FILTER_MAXIMUM);
 }
 
 static void
@@ -397,7 +405,7 @@ setup_size_adjustment(GwyToolFilter *tool)
         gtk_spin_button_set_digits(GTK_SPIN_BUTTON(tool->size_spin), 2);
     }
     else {
-        gtk_adjustment_configure(adj, tool->args.size, 2, 20, 1, 5, 0);
+        gtk_adjustment_configure(adj, tool->args.size, 2, 31, 1, 5, 0);
         gtk_spin_button_set_digits(GTK_SPIN_BUTTON(tool->size_spin), 0);
     }
 }
@@ -429,18 +437,24 @@ static void
 gwy_tool_filter_apply(GwyToolFilter *tool)
 {
     GwyPlainTool *plain_tool;
+    GwyDataField *dfield, *kernel = NULL;
     gdouble sel[4];
     gint isel[4];
+    gdouble sigma;
+    gint size;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
-    g_return_if_fail(plain_tool->id >= 0 && plain_tool->data_field != NULL);
+    size = tool->args.size;
+    sigma = tool->args.gauss_size*FWHM2SIGMA;
+    dfield = plain_tool->data_field;
+    g_return_if_fail(plain_tool->id >= 0 && dfield != NULL);
     gwy_tool_filter_save_args(tool);
 
     if (gwy_selection_get_object(plain_tool->selection, 0, sel)) {
-        isel[0] = floor(gwy_data_field_rtoj(plain_tool->data_field, sel[0]));
-        isel[1] = floor(gwy_data_field_rtoi(plain_tool->data_field, sel[1]));
-        isel[2] = floor(gwy_data_field_rtoj(plain_tool->data_field, sel[2]));
-        isel[3] = floor(gwy_data_field_rtoi(plain_tool->data_field, sel[3]));
+        isel[0] = floor(gwy_data_field_rtoj(dfield, sel[0]));
+        isel[1] = floor(gwy_data_field_rtoi(dfield, sel[1]));
+        isel[2] = floor(gwy_data_field_rtoj(dfield, sel[2]));
+        isel[3] = floor(gwy_data_field_rtoi(dfield, sel[3]));
 
         if (sel[0] > sel[2])
             GWY_SWAP(gdouble, sel[0], sel[2]);
@@ -451,73 +465,71 @@ gwy_tool_filter_apply(GwyToolFilter *tool)
     }
     else {
         isel[0] = isel[1] = 0;
-        isel[2] = gwy_data_field_get_xres(plain_tool->data_field);
-        isel[3] = gwy_data_field_get_yres(plain_tool->data_field);
+        isel[2] = gwy_data_field_get_xres(dfield);
+        isel[3] = gwy_data_field_get_yres(dfield);
     }
 
     gwy_app_undo_qcheckpoint(plain_tool->container,
                              gwy_app_get_data_key_for_id(plain_tool->id), 0);
 
+    if (gwy_tool_filter_needs_kernel(tool->args.filter_type)) {
+        kernel = gwy_data_field_new(size, size, size, size, TRUE);
+        gwy_data_field_elliptic_area_fill(kernel, 0, 0, size, size, 1.0);
+    }
+
     switch (tool->args.filter_type) {
-        case GWY_FILTER_MEAN:
-        gwy_data_field_area_filter_mean(plain_tool->data_field,
-                                        tool->args.size,
+        case FILTER_MEAN:
+        gwy_data_field_area_filter_mean(dfield, size,
                                         isel[0], isel[1],
                                         isel[2], isel[3]);
         break;
 
-        case GWY_FILTER_MEDIAN:
-        gwy_data_field_area_filter_median(plain_tool->data_field,
-                                          tool->args.size,
+        case FILTER_MEDIAN:
+        gwy_data_field_area_filter_median(dfield, size,
                                           isel[0], isel[1],
                                           isel[2], isel[3]);
         break;
 
-        case GWY_FILTER_MINIMUM:
-        gwy_data_field_area_filter_minimum(plain_tool->data_field,
-                                           tool->args.size,
+        case FILTER_MINIMUM:
+        gwy_data_field_area_filter_min_max(dfield, kernel,
+                                           GWY_MIN_MAX_FILTER_MINIMUM,
                                            isel[0], isel[1],
                                            isel[2], isel[3]);
         break;
 
-        case GWY_FILTER_MAXIMUM:
-        gwy_data_field_area_filter_maximum(plain_tool->data_field,
-                                           tool->args.size,
+        case FILTER_MAXIMUM:
+        gwy_data_field_area_filter_min_max(dfield, kernel,
+                                           GWY_MIN_MAX_FILTER_MAXIMUM,
                                            isel[0], isel[1],
                                            isel[2], isel[3]);
         break;
 
-        case GWY_FILTER_CONSERVATIVE:
-        gwy_data_field_area_filter_conservative(plain_tool->data_field,
-                                                tool->args.size,
+        case FILTER_CONSERVATIVE:
+        gwy_data_field_area_filter_conservative(dfield, size,
                                                 isel[0], isel[1],
                                                 isel[2], isel[3]);
         break;
 
-        case GWY_FILTER_KUWAHARA:
-        gwy_data_field_area_filter_kuwahara(plain_tool->data_field,
+        case FILTER_KUWAHARA:
+        gwy_data_field_area_filter_kuwahara(dfield,
                                             isel[0], isel[1],
                                             isel[2], isel[3]);
         break;
 
-        case GWY_FILTER_DECHECKER:
-        gwy_data_field_area_filter_dechecker(plain_tool->data_field,
+        case FILTER_DECHECKER:
+        gwy_data_field_area_filter_dechecker(dfield,
                                              isel[0], isel[1],
                                              isel[2], isel[3]);
         break;
 
-        case GWY_FILTER_GAUSSIAN:
-        gwy_data_field_area_filter_gaussian(plain_tool->data_field,
-                                            tool->args.gauss_size*FWHM2SIGMA,
+        case FILTER_GAUSSIAN:
+        gwy_data_field_area_filter_gaussian(dfield, sigma,
                                             isel[0], isel[1],
                                             isel[2], isel[3]);
         break;
 
-        case GWY_FILTER_SHARPEN:
-        filter_area_sharpen(plain_tool->data_field,
-                            tool->args.gauss_size*FWHM2SIGMA,
-                            isel[0], isel[1],
-                            isel[2], isel[3]);
+        case FILTER_SHARPEN:
+        filter_area_sharpen(dfield, sigma, isel[0], isel[1], isel[2], isel[3]);
         break;
 
         default:
@@ -525,7 +537,8 @@ gwy_tool_filter_apply(GwyToolFilter *tool)
         break;
     }
 
-    gwy_data_field_data_changed(plain_tool->data_field);
+    gwy_object_unref(kernel);
+    gwy_data_field_data_changed(dfield);
     gwy_plain_tool_log_add(plain_tool);
 }
 
