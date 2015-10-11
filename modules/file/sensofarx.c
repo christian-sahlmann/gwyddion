@@ -24,7 +24,7 @@
  * .plux
  * Read
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -49,9 +49,11 @@
 
 typedef struct {
     GHashTable *hash;
+    GHashTable *recipe_hash;
     GArray *layers;
     GString *path;
     GString *str;
+    gboolean parsing_recipe;
 } PLUxFile;
 
 static gboolean      module_register            (void);
@@ -65,6 +67,8 @@ static GwyContainer* sensofarx_load             (const gchar *filename,
 static gboolean      sensofarx_parse_index      (unzFile *zipfile,
                                                  PLUxFile *pluxfile,
                                                  GError **error);
+static void          sensofarx_parse_recipe     (unzFile *zipfile,
+                                                 PLUxFile *pluxfile);
 static gboolean      read_binary_data           (const PLUxFile *pluxfile,
                                                  unzFile *zipfile,
                                                  GwyContainer *container,
@@ -181,6 +185,8 @@ sensofarx_load(const gchar *filename,
         err_NO_DATA(error);
         goto fail;
     }
+
+    sensofarx_parse_recipe(zipfile, &pluxfile);
 
     container = gwy_container_new();
     if (!read_binary_data(&pluxfile, zipfile, container, error))
@@ -318,7 +324,7 @@ sensofarx_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
     path = pluxfile->path->str;
     gwy_debug("%s", path);
 
-    if (g_str_has_prefix(path, "/xml/LAYER_")) {
+    if (!pluxfile->parsing_recipe && g_str_has_prefix(path, "/xml/LAYER_")) {
         s = path + strlen("/xml/LAYER_");
         if (!strchr(s, '/')) {
             i = strtol(s, &end, 10);
@@ -358,6 +364,7 @@ sensofarx_text(G_GNUC_UNUSED GMarkupParseContext *context,
                G_GNUC_UNUSED GError **error)
 {
     PLUxFile *pluxfile = (PLUxFile*)user_data;
+    GHashTable *hash;
     gchar *path = pluxfile->path->str;
     GString *str = pluxfile->str;
 
@@ -370,8 +377,8 @@ sensofarx_text(G_GNUC_UNUSED GMarkupParseContext *context,
         return;
 
     gwy_debug("%s <%s>", path, str->str);
-    g_hash_table_insert(pluxfile->hash,
-                        g_strdup(path), g_strdup(str->str));
+    hash = (pluxfile->parsing_recipe ? pluxfile->recipe_hash : pluxfile->hash);
+    g_hash_table_insert(hash, g_strdup(path), g_strdup(str->str));
 }
 
 static gboolean
@@ -425,16 +432,91 @@ fail:
 }
 
 static void
+sensofarx_parse_recipe(unzFile *zipfile,
+                       PLUxFile *pluxfile)
+{
+    GMarkupParser parser = {
+        &sensofarx_start_element,
+        &sensofarx_end_element,
+        &sensofarx_text,
+        NULL,
+        NULL,
+    };
+    GMarkupParseContext *context = NULL;
+    guchar *content = NULL, *s;
+
+    /* XXX: for some reason the file tends to be named ‘./recipe.txt’ in the
+     * archive. */
+    if ((!gwyminizip_locate_file(zipfile, "recipe.txt", 1, NULL)
+         && !gwyminizip_locate_file(zipfile, "./recipe.txt", 1, NULL))
+        || !(content = gwyminizip_get_file_content(zipfile, NULL, NULL)))
+        return;
+
+    gwy_strkill(content, "\r");
+    s = content;
+    /* Not seen in the wild but the XML people tend to use BOM in UTF-8... */
+    if (g_str_has_prefix(s, BLOODY_UTF8_BOM))
+        s += strlen(BLOODY_UTF8_BOM);
+
+    pluxfile->recipe_hash = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                                  g_free, g_free);
+    pluxfile->parsing_recipe = TRUE;
+    context = g_markup_parse_context_new(&parser, 0, pluxfile, NULL);
+    if (!g_markup_parse_context_parse(context, s, -1, NULL)
+        || !g_markup_parse_context_end_parse(context, NULL)) {
+        g_hash_table_destroy(pluxfile->recipe_hash);
+        pluxfile->recipe_hash = NULL;
+    }
+    pluxfile->parsing_recipe = FALSE;
+
+    if (context)
+        g_markup_parse_context_free(context);
+    g_free(content);
+}
+
+static void
 sensofarx_file_free(PLUxFile *pluxfile)
 {
     if (pluxfile->hash)
         g_hash_table_destroy(pluxfile->hash);
+    if (pluxfile->recipe_hash)
+        g_hash_table_destroy(pluxfile->recipe_hash);
     if (pluxfile->path)
         g_string_free(pluxfile->path, TRUE);
     if (pluxfile->str)
         g_string_free(pluxfile->str, TRUE);
     if (pluxfile->layers)
         g_array_free(pluxfile->layers, TRUE);
+}
+
+static void
+add_recipe_meta(gpointer hkey, gpointer hvalue, gpointer user_data)
+{
+    const gchar *path = (const gchar*)hkey;
+    gchar *name, *p;
+    gboolean keepcap = TRUE;
+
+    if (!g_str_has_prefix(path, "/xml/")
+        || g_str_has_suffix(path, "/FOVINBLACK"))
+        return;
+
+    name = gwy_strreplace(path + strlen("/xml/"), "/", "::", (gsize)-1);
+    for (p = name; *p; p++) {
+        if (*p == '_') {
+            *p = ' ';
+            keepcap = TRUE;
+        }
+        else if (*p == ':')
+            keepcap = TRUE;
+        else if (keepcap)
+            keepcap = FALSE;
+        else
+            *p = g_ascii_tolower(*p);
+    }
+
+    gwy_container_set_const_string_by_name((GwyContainer*)user_data,
+                                           name, (const gchar*)hvalue);
+    g_free(name);
 }
 
 static GwyContainer*
@@ -474,6 +556,9 @@ get_metadata(const PLUxFile *pluxfile, guint id)
             gwy_container_set_const_string_by_name(meta, buf, value);
         }
     }
+
+    if (pluxfile->recipe_hash)
+        g_hash_table_foreach(pluxfile->recipe_hash, add_recipe_meta, meta);
 
     if (gwy_container_get_n_items(meta))
         return meta;
