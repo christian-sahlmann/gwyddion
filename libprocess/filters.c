@@ -3028,6 +3028,40 @@ gwy_data_field_area_rle_analyse(GwyDataField *kernel,
     return TRUE;
 }
 
+static int
+compare_segment(const void *pa, const void *pb)
+{
+    const MaskSegment *a = (const MaskSegment*)pa, *b = (const MaskSegment*)pb;
+
+    if (a->row < b->row)
+        return -1;
+    if (a->row > b->row)
+        return 1;
+    if (a->col < b->col)
+        return -1;
+    if (a->col > b->col)
+        return 1;
+    return 0;
+}
+
+/* Rotate the RLE data by pi.  The set of block lengths does not change.
+ * Therefore, the decompositions do not change either.  The only thing that
+ * changes is the positions of the RLE segments. */
+static void
+gwy_data_field_area_rle_flip(MaskRLE *mrle, guint kxres, guint kyres)
+{
+    guint i;
+
+    for (i = 0; i < mrle->nsegments; i++) {
+        MaskSegment *seg = mrle->segments + i;
+        seg->col = kxres - seg->col - seg->len;
+        seg->row = kyres-1 - seg->row;
+    }
+
+    qsort(mrle->segments, mrle->nsegments, sizeof(MaskSegment),
+          compare_segment);
+}
+
 static void
 gwy_data_field_area_rle_free(MinMaxPrecomputed *mmp)
 {
@@ -3065,11 +3099,22 @@ gwy_data_field_area_min_max_execute(GwyDataField *dfield,
                         ? max_precomputed_row_fill
                         : min_precomputed_row_fill);
 
-    /* Initialise the buffers for the zeroth row of the area. */
-    extend_up = (mmp->kyres - 1)/2;
-    extend_down = mmp->kyres/2;
-    extend_left = (mmp->kxres - 1)/2;
-    extend_right = mmp->kxres/2;
+    /* Initialise the buffers for the zeroth row of the area.  For the maximum
+     * operation we even-sized kernels to the other direction to obtain
+     * morphological operation according to definitions. */
+    if (maximum) {
+        extend_up = mmp->kyres/2;
+        extend_down = (mmp->kyres - 1)/2;
+        extend_left = mmp->kxres/2;
+        extend_right = (mmp->kxres - 1)/2;
+    }
+    else {
+        extend_up = (mmp->kyres - 1)/2;
+        extend_down = mmp->kyres/2;
+        extend_left = (mmp->kxres - 1)/2;
+        extend_right = mmp->kxres/2;
+    }
+
     for (i = 0; i <= extend_down; i++) {
         if (row + i < yres) {
             row_extend_border(d + xres*(row + i) + col, extrowbuf,
@@ -3123,10 +3168,25 @@ gwy_data_field_area_min_max_execute(GwyDataField *dfield,
                               0.0);
             precomp_row_fill(req, prow, extrowbuf, rowbuflen);
         }
-        else
+        else {
+            g_assert(mmp->kyres >= 2);
             min_max_precomputed_row_copy(prow, prows[mmp->kyres-2],
                                          req, rowbuflen);
+        }
     }
+}
+
+static gboolean
+kernel_is_nonempty(GwyDataField *dfield)
+{
+    guint i, n = dfield->xres * dfield->yres;
+    gdouble *d = dfield->data;
+
+    for (i = 0; i < n; i++, d++) {
+        if (*d)
+            return TRUE;
+    }
+    return FALSE;
 }
 
 /**
@@ -3144,14 +3204,26 @@ gwy_data_field_area_min_max_execute(GwyDataField *dfield,
  *
  * Morphological operations with flat structuring elements can be expressed
  * using minimum (erosion) and maximum (dilation) filters that are the basic
- * operations this function can perform.  The kernel field is a mask that
- * defines the shape of the flat structuring element.
+ * operations this function can perform.
  *
- * You can use gwy_data_field_elliptic_area_fill() to create a true circular
- * (or elliptical) kernel.  The operation is linear-time in kernel size for any
- * convex kernel.  Note gwy_data_field_area_filter_minimum() and
- * gwy_data_field_area_filter_maximum(), that are limited to square structuring
- * elements, are much faster for large sizes of the squares.
+ * The kernel field is a mask that defines the shape of the flat structuring
+ * element.  It is reflected for all maximum operations (dilation).  For
+ * symmetrical kernels this does not matter.  You can use
+ * gwy_data_field_elliptic_area_fill() to create a true circular (or
+ * elliptical) kernel.
+ *
+ * The kernel is implicitly centered, i.e. it will be applied symmetrically to
+ * avoid unexpected data movement.  Even-sized kernels (generally not
+ * recommended) will extend farther towards the top left image corner for
+ * minimum (erosion) and towards the bottom right corner for maximum (dilation)
+ * operations due to the reflection.  If you need off-center structuring
+ * elements you can add empty rows or columns to one side of the kernel to
+ * counteract the symmetrisation.
+ *
+ * The operation is linear-time in kernel size for any convex kernel.  Note
+ * gwy_data_field_area_filter_minimum() and
+ * gwy_data_field_area_filter_maximum(), which are limited to square
+ * structuring elements, are much faster for large sizes of the squares.
  *
  * The exterior is always handled as %GWY_EXTERIOR_BORDER_EXTEND.
  *
@@ -3166,7 +3238,7 @@ gwy_data_field_area_filter_min_max(GwyDataField *data_field,
 {
     MinMaxPrecomputed mmp;
     gdouble *outbuf, *d;
-    gint i, j, xres, yres;
+    gint i, j, xres, yres, kxres, kyres;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_FIELD(kernel));
@@ -3175,41 +3247,47 @@ gwy_data_field_area_filter_min_max(GwyDataField *data_field,
                      && col + width <= data_field->xres
                      && row + height <= data_field->yres);
 
+    if (!kernel_is_nonempty(kernel))
+        return;
+
     xres = data_field->xres;
     yres = data_field->yres;
+    kxres = kernel->xres;
+    kyres = kernel->yres;
     d = data_field->data;
 
     if (filtertype == GWY_MIN_MAX_FILTER_MINIMUM
         || filtertype == GWY_MIN_MAX_FILTER_MAXIMUM) {
         gboolean is_max = (filtertype == GWY_MIN_MAX_FILTER_MAXIMUM);
 
-        if (!gwy_data_field_area_rle_analyse(kernel, width, &mmp))
-            return;
-
+        gwy_data_field_area_rle_analyse(kernel, width, &mmp);
+        if (is_max)
+            gwy_data_field_area_rle_flip(mmp.mrle, kxres, kyres);
         outbuf = g_new(gdouble, width*height);
         gwy_data_field_area_min_max_execute(data_field, outbuf, &mmp, is_max,
                                             col, row, width, height);
+        gwy_data_field_area_rle_free(&mmp);
 
         d += row*xres + col;
         for (i = 0; i < height; i++)
             gwy_assign(d + i*xres, outbuf + i*width, width);
         gwy_data_field_invalidate(data_field);
         g_free(outbuf);
-        gwy_data_field_area_rle_free(&mmp);
     }
     else if (filtertype == GWY_MIN_MAX_FILTER_RANGE
              || filtertype == GWY_MIN_MAX_FILTER_NORMALIZATION) {
         gdouble *outbuf2;
 
-        if (!gwy_data_field_area_rle_analyse(kernel, width, &mmp))
-            return;
-
+        gwy_data_field_area_rle_analyse(kernel, width, &mmp);
         outbuf = g_new(gdouble, width*height);
-        outbuf2 = g_new(gdouble, width*height);
         gwy_data_field_area_min_max_execute(data_field, outbuf, &mmp, FALSE,
                                             col, row, width, height);
+
+        gwy_data_field_area_rle_flip(mmp.mrle, kxres, kyres);
+        outbuf2 = g_new(gdouble, width*height);
         gwy_data_field_area_min_max_execute(data_field, outbuf2, &mmp, TRUE,
                                             col, row, width, height);
+        gwy_data_field_area_rle_free(&mmp);
 
         d += row*xres + col;
         if (filtertype == GWY_MIN_MAX_FILTER_RANGE) {
@@ -3224,7 +3302,7 @@ gwy_data_field_area_filter_min_max(GwyDataField *data_field,
                     gdouble min = outbuf[i*width + j];
                     gdouble max = outbuf2[i*width + j];
 
-                    if (G_UNLIKELY(!(min < max)))
+                    if (G_UNLIKELY(min == max))
                         d[i*xres + j] = 0.5;
                     else
                         d[i*xres + j] = (d[i*xres + j] - min)/(max - min);
@@ -3234,7 +3312,6 @@ gwy_data_field_area_filter_min_max(GwyDataField *data_field,
         gwy_data_field_invalidate(data_field);
         g_free(outbuf2);
         g_free(outbuf);
-        gwy_data_field_area_rle_free(&mmp);
     }
     else if (filtertype == GWY_MIN_MAX_FILTER_OPENING
              || filtertype == GWY_MIN_MAX_FILTER_CLOSING) {
@@ -3242,30 +3319,40 @@ gwy_data_field_area_filter_min_max(GwyDataField *data_field,
         /* To limit the area of application but keep the influence of
          * surrouding pixels as if we did erosion and dilation on the entire
          * field, we must perform the first operation in an extended area. */
-        gint kxres = kernel->xres, kyres = kernel->yres;
         gint extcol = MAX(0, col - kxres/2);
         gint extrow = MAX(0, row - kyres/2);
         gint extwidth = MIN(xres, col + width + kxres/2) - extcol;
         gint extheight = MIN(yres, row + height + kyres/2) - extrow;
         GwyDataField *tmpfield;
 
-        if (!gwy_data_field_area_rle_analyse(kernel, extwidth, &mmp))
-            return;
-
+        gwy_data_field_area_rle_analyse(kernel, extwidth, &mmp);
+        if (is_closing)
+            gwy_data_field_area_rle_flip(mmp.mrle, kxres, kyres);
         tmpfield = gwy_data_field_new(extwidth, extheight, extwidth, extheight,
                                       FALSE);
         gwy_data_field_area_min_max_execute(data_field, tmpfield->data, &mmp,
                                             is_closing,
                                             extcol, extrow,
                                             extwidth, extheight);
-        gwy_data_field_area_rle_free(&mmp);
 
-        gwy_data_field_area_rle_analyse(kernel, width, &mmp);
+        if (extcol == col && extrow == row
+            && extwidth == width && extheight == height) {
+            /* Avoid repeating the analysis for full-field application. */
+            gwy_data_field_area_rle_flip(mmp.mrle, kxres, kyres);
+        }
+        else {
+            gwy_data_field_area_rle_free(&mmp);
+            gwy_data_field_area_rle_analyse(kernel, width, &mmp);
+            if (!is_closing)
+                gwy_data_field_area_rle_flip(mmp.mrle, kxres, kyres);
+        }
         outbuf = g_new(gdouble, width*height);
         gwy_data_field_area_min_max_execute(tmpfield, outbuf, &mmp,
                                             !is_closing,
                                             col - extcol, row - extrow,
                                             width, height);
+        gwy_data_field_area_rle_free(&mmp);
+        g_object_unref(tmpfield);
 
         d += row*xres + col;
         for (i = 0; i < height; i++)
@@ -3273,8 +3360,6 @@ gwy_data_field_area_filter_min_max(GwyDataField *data_field,
         gwy_data_field_invalidate(data_field);
 
         g_free(outbuf);
-        g_object_unref(tmpfield);
-        gwy_data_field_area_rle_free(&mmp);
     }
     else {
         g_return_if_reached();
