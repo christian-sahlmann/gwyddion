@@ -49,7 +49,10 @@ typedef enum {
     FILTER_KUWAHARA      = 5,
     FILTER_DECHECKER     = 6,
     FILTER_GAUSSIAN      = 7,
-    FILTER_SHARPEN       = 8
+    FILTER_SHARPEN       = 8,
+    FILTER_OPENING       = 9,
+    FILTER_CLOSING       = 10,
+    FILTER_NFILTERS
 } FilterType;
 
 typedef struct _GwyToolFilter      GwyToolFilter;
@@ -185,6 +188,8 @@ gwy_tool_filter_init(GwyToolFilter *tool)
     gwy_container_gis_double_by_name(settings, gauss_size_key,
                                      &tool->args.gauss_size);
 
+    tool->args.filter_type = MIN(tool->args.filter_type, FILTER_NFILTERS-1);
+
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_rect,
                                      "rectangle");
 
@@ -211,6 +216,8 @@ gwy_tool_filter_init_dialog(GwyToolFilter *tool)
         { N_("Conservative denoise"), FILTER_CONSERVATIVE, },
         { N_("Minimum"),              FILTER_MINIMUM,      },
         { N_("Maximum"),              FILTER_MAXIMUM,      },
+        { N_("filter|Opening"),       FILTER_OPENING,      },
+        { N_("filter|Closing"),       FILTER_CLOSING,      },
         { N_("Kuwahara"),             FILTER_KUWAHARA,     },
         { N_("Dechecker"),            FILTER_DECHECKER,    },
         { N_("filter|Gaussian"),      FILTER_GAUSSIAN,     },
@@ -392,7 +399,9 @@ static gboolean
 gwy_tool_filter_needs_kernel(FilterType type)
 {
     return (type == FILTER_MINIMUM
-            || type == FILTER_MAXIMUM);
+            || type == FILTER_MAXIMUM
+            || type == FILTER_OPENING
+            || type == FILTER_CLOSING);
 }
 
 static void
@@ -530,6 +539,20 @@ gwy_tool_filter_apply(GwyToolFilter *tool)
 
         case FILTER_SHARPEN:
         filter_area_sharpen(dfield, sigma, isel[0], isel[1], isel[2], isel[3]);
+        break;
+
+        case FILTER_OPENING:
+        gwy_data_field_area_filter_min_max(dfield, kernel,
+                                           GWY_MIN_MAX_FILTER_OPENING,
+                                           isel[0], isel[1],
+                                           isel[2], isel[3]);
+        break;
+
+        case FILTER_CLOSING:
+        gwy_data_field_area_filter_min_max(dfield, kernel,
+                                           GWY_MIN_MAX_FILTER_CLOSING,
+                                           isel[0], isel[1],
+                                           isel[2], isel[3]);
         break;
 
         default:
