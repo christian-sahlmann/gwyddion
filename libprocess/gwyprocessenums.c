@@ -578,6 +578,26 @@ gwy_masking_type_get_enum(void)
  **/
 
 /**
+ * GwyMinMaxFilterType:
+ * @GWY_MIN_MAX_FILTER_MINIMUM: Minimum filter, i.e. minimum of the surrounding
+ *                              values.
+ * @GWY_MIN_MAX_FILTER_EROSION: Another name for the minimum filter.
+ * @GWY_MIN_MAX_FILTER_MAXIMUM: Maximum filter, i.e. maximum of the surrounding
+ *                              values.
+ * @GWY_MIN_MAX_FILTER_DILATION: Another name for the maximum filter.
+ * @GWY_MIN_MAX_FILTER_OPENING: Morphological opening filter.
+ * @GWY_MIN_MAX_FILTER_CLOSING: Morphological closing filter.
+ * @GWY_MIN_MAX_FILTER_RANGE: Difference between maximum and minimum.
+ * @GWY_MIN_MAX_FILTER_NORMALIZATION: Data value rescaled to the range between
+ *                                    minimum and maximum.
+ *
+ * Type of operation based on morphological filters with flat structuring
+ * elements.
+ *
+ * Since: 2.43
+ **/
+
+/**
  * GwyComputationStateType:
  * @GWY_COMPUTATION_STATE_INIT: Iterator was set up, the next step will
  *                              actually create temporary data structures
