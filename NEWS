@@ -1,7 +1,8 @@
 2.43 (0000-00-00)
 Libraries:
-- libgwyprocess: Functions for minimum and maximum filters with arbitrarily
-  shaped structuring elements were added.
+- libgwyprocess: Functions for erosion, dilation, opening and closing
+  morphological operations with arbitrarily shaped flat structuring elements
+  were added.
 
 Modules:
 - Sensofarx (new): Imports Sensofar PLUx data files.
@@ -9,6 +10,8 @@ Modules:
   It is possible to specify a raw value representing missing data.  Support
   for two-byte half and six-byte Pascal floating point formats was added.
   Reading of 64bit integer formats was fixed.
+- Filters tool: Minimum and maximum filters now use circular neighbourhoods.
+  Opening and closing filters with flat discs were added.
 
 
 2.42 (2015-10-06)
