@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2014 David Necas (Yeti).
+ *  Copyright (C) 2014-2015 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -26,6 +26,8 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/stats.h>
 #include <libprocess/filters.h>
+#include <libprocess/elliptic.h>
+#include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
@@ -33,41 +35,54 @@
 #define RANK_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
-    MAX_SIZE = 100,
+    MAX_SIZE = 129,
     BLOCK_SIZE = 200,
 };
 
+typedef enum {
+    FILTER_RANK          = 0,
+    FILTER_NORMALIZATION = 1,
+    FILTER_RANGE         = 2,
+    FILTER_NFILTERS,
+} FilterType;
+
 typedef struct {
+    FilterType type;
     guint size;
 } RankArgs;
 
 typedef struct {
     RankArgs *args;
+    GSList *type;
     GtkObject *size;
 } RankControls;
 
-static gboolean module_register  (void);
-static void     rank             (GwyContainer *data,
-                                  GwyRunType run);
-static gboolean rank_dialog      (RankArgs *args);
-static void     rank_dialog_reset(RankControls *controls);
-static void     size_changed     (RankControls *controls,
-                                  GtkAdjustment *adj);
-static void     rank_do          (GwyContainer *data,
-                                  RankArgs *args);
-static gdouble  local_rank       (GwyDataField *data_field,
-                                  gint size,
-                                  const gint *xsize,
-                                  gint col,
-                                  gint row);
-static void     load_args        (GwyContainer *container,
-                                  RankArgs *args);
-static void     save_args        (GwyContainer *container,
-                                  RankArgs *args);
-static void     sanitize_args    (RankArgs *args);
+static gboolean module_register    (void);
+static void     rank               (GwyContainer *data,
+                                    GwyRunType run);
+static gboolean rank_dialog        (RankArgs *args);
+static void     rank_dialog_reset  (RankControls *controls);
+static void     size_changed       (RankControls *controls,
+                                    GtkAdjustment *adj);
+static void     filter_type_changed(GtkToggleButton *button,
+                                    RankControls *controls);
+static void     rank_do            (GwyContainer *data,
+                                    RankArgs *args);
+static gdouble  local_rank         (GwyDataField *data_field,
+                                    gint size,
+                                    const gint *xsize,
+                                    gint col,
+                                    gint row);
+static void     minmax_do          (GwyContainer *data,
+                                    RankArgs *args);
+static void     load_args          (GwyContainer *container,
+                                    RankArgs *args);
+static void     save_args          (GwyContainer *container,
+                                    RankArgs *args);
+static void     sanitize_args      (RankArgs *args);
 
 static const RankArgs rank_defaults = {
-    15,
+    FILTER_RANK, 15,
 };
 
 static GwyModuleInfo module_info = {
@@ -75,7 +90,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Enhances local contrast using a rank transform."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2014",
 };
@@ -112,7 +127,12 @@ rank(GwyContainer *data, GwyRunType run)
         if (!ok)
             return;
     }
-    rank_do(data, &args);
+
+    if (args.type == FILTER_RANK)
+        rank_do(data, &args);
+    else
+        minmax_do(data, &args);
+
     gwy_app_channel_log_add_proc(data, id, id);
 }
 
@@ -120,7 +140,14 @@ static gboolean
 rank_dialog(RankArgs *args)
 {
     enum { RESPONSE_RESET = 1 };
-    GtkWidget *dialog, *table;
+
+    static const GwyEnum types[] = {
+        { N_("Rank transform"),      FILTER_RANK,          },
+        { N_("Local normalization"), FILTER_NORMALIZATION, },
+        { N_("Value range"),         FILTER_RANGE,         },
+    };
+
+    GtkWidget *dialog, *table, *label;
     RankControls controls;
     gint response;
     gint row;
@@ -136,7 +163,7 @@ rank_dialog(RankArgs *args)
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
 
-    table = gtk_table_new(1, 4, FALSE);
+    table = gtk_table_new(2 + G_N_ELEMENTS(types), 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -144,6 +171,20 @@ rank_dialog(RankArgs *args)
                        FALSE, FALSE, 4);
     row = 0;
 
+    label = gtk_label_new(_("Filter type:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
+                     GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls.type = gwy_radio_buttons_create(types, G_N_ELEMENTS(types),
+                                             G_CALLBACK(filter_type_changed),
+                                             &controls,
+                                             args->type);
+    row = gwy_radio_buttons_attach_to_table(controls.type, GTK_TABLE(table),
+                                            3, row);
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     controls.size = gtk_adjustment_new(args->size, 1, MAX_SIZE, 1, 10, 0);
     gwy_table_attach_hscale(table, row++, _("Kernel _size:"), "px",
                             controls.size, 0);
@@ -190,6 +231,16 @@ static void
 size_changed(RankControls *controls, GtkAdjustment *adj)
 {
     controls->args->size = gwy_adjustment_get_int(adj);
+}
+
+static void
+filter_type_changed(GtkToggleButton *button,
+                    RankControls *controls)
+{
+    if (!gtk_toggle_button_get_active(button))
+        return;
+
+    controls->args->type = gwy_radio_buttons_get_current(controls->type);
 }
 
 static void
@@ -295,12 +346,50 @@ local_rank(GwyDataField *data_field,
     return (r - 0.5*hr)/t;
 }
 
+static void
+minmax_do(GwyContainer *data, RankArgs *args)
+{
+    GwyDataField *dfield, *showfield, *kernel;
+    GwyMinMaxFilterType filtertype;
+    GQuark dquark, squark;
+    gint size, id;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_SHOW_FIELD_KEY, &squark,
+                                     GWY_APP_SHOW_FIELD, &showfield,
+                                     0);
+    g_return_if_fail(dfield && dquark && squark);
+
+    size = 2*args->size + 1;
+    filtertype = (args->type == FILTER_NORMALIZATION
+                  ? GWY_MIN_MAX_FILTER_NORMALIZATION
+                  : GWY_MIN_MAX_FILTER_RANGE);
+    kernel = gwy_data_field_new(size, size, size, size, TRUE);
+    gwy_data_field_elliptic_area_fill(kernel, 0, 0, size, size, 1.0);
+
+    showfield = gwy_data_field_duplicate(dfield);
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(showfield), "");
+    gwy_data_field_area_filter_min_max(showfield, kernel, filtertype,
+                                       0, 0, showfield->xres, showfield->yres);
+
+    gwy_app_undo_qcheckpointv(data, 1, &squark);
+    gwy_container_set_object(data, squark, showfield);
+    gwy_data_field_data_changed(showfield);
+
+    g_object_unref(kernel);
+    g_object_unref(showfield);
+}
+
 static const gchar size_key[] = "/module/rank/size";
+static const gchar type_key[] = "/module/rank/type";
 
 static void
 sanitize_args(RankArgs *args)
 {
     args->size = CLAMP(args->size, 1, MAX_SIZE);
+    args->type = CLAMP(args->type, 0, FILTER_NFILTERS-1);
 }
 
 static void
@@ -310,6 +399,7 @@ load_args(GwyContainer *container,
     *args = rank_defaults;
 
     gwy_container_gis_int32_by_name(container, size_key, &args->size);
+    gwy_container_gis_enum_by_name(container, type_key, &args->type);
     sanitize_args(args);
 }
 
@@ -318,6 +408,7 @@ save_args(GwyContainer *container,
           RankArgs *args)
 {
     gwy_container_set_int32_by_name(container, size_key, args->size);
+    gwy_container_set_enum_by_name(container, type_key, args->type);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
