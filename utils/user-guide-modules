@@ -231,8 +231,8 @@ volume_calibrate	volume-data-processing	volume-calibrate
 volume_extract	volume-data-processing
 volume_fdfit	volume-data-processing
 volume_invert	volume-data-processing	volume-invert
-volume_kmeans	volume-data-processing
-volume_kmedians	volume-data-processing
+volume_kmeans	volume-data-processing	volume-clustering
+volume_kmedians	volume-data-processing	volume-clustering
 volume_linestat	volume-data-processing	volume-linestat
 volume_slice	volume-data-processing	volume-slice
 volume_zcal	volume-data-processing	volume-zcalibration
