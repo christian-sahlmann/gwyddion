@@ -156,6 +156,7 @@ file_LTLIBRARIES = \
 	pixmap.la \
 	pnifile.la \
 	pltfile.la \
+	princetonspe.la \
 	psia.la \
 	pt3file.la \
 	quesant.la \
@@ -294,6 +295,7 @@ opdfile_la_SOURCES       = opdfile.c
 pixmap_la_SOURCES        = pixmap.c gwytiff.h image-keys.h
 pnifile_la_SOURCES       = pnifile.c
 pltfile_la_SOURCES       = pltfile.c
+princetonspe_la_SOURCES  = princetonspe.c
 psia_la_SOURCES          = psia.c gwytiff.h
 pt3file_la_SOURCES       = pt3file.c
 quesant_la_SOURCES       = quesant.c
