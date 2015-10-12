@@ -1,6 +1,6 @@
 /*
  *  $Id$
- *  Copyright (C) 2014 David Necas (Yeti).
+ *  Copyright (C) 2015 David Necas (Yeti).
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,6 +23,15 @@
  * Senofar PLUx data
  * .plux
  * Read
+ **/
+
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-sensofar-spm">
+ *   <comment>Sensofar PLUx data</comment>
+ *   <glob pattern="*.plux"/>
+ *   <glob pattern="*.PLUX"/>
+ * </mime-type>
  **/
 
 #include "config.h"
