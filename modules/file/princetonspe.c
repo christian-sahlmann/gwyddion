@@ -37,6 +37,9 @@
 
 #include "err.h"
 
+#define TAIL_MAGIC "</SpeFormat>"
+#define TAIL_MAGIC_SIZE (sizeof(TAIL_MAGIC)-1)
+#define BLOODY_UTF8_BOM "\xef\xbb\xbf"
 #define EXTENSION ".spe"
 
 /* The only fields where anything at all seems to be present in newer files. */
@@ -49,7 +52,9 @@ enum {
     YRES_OFFSET      = 0x290,
     SCRAMBLE_OFFSET  = 0x292,
     LNOSCAN_OFFSET   = 0x298,
+    FOOTER_OFFSET    = 0x2a6,
     NUMFRAMES_OFFSET = 0x5a6,
+    VERSION_OFFSET   = 0x7c8,
     HEADER_SIZE      = 0x1004,
 };
 
@@ -62,6 +67,8 @@ typedef enum {
 } PSPEDataType;
 
 typedef struct {
+    gsize size;
+    guchar *buffer;
     guint xres_ccd;
     guint yres_ccd;
     guint xres;
@@ -71,6 +78,12 @@ typedef struct {
     guint num_frames;
     guint noscan;
     guint lnoscan;
+    guint footer_offset;
+    gdouble version;
+    /* Derived data. */
+    GString *str;
+    GString *path;
+    GHashTable *hash;
 } PSPEFile;
 
 static gboolean      module_register (void);
@@ -81,6 +94,9 @@ static GwyContainer* pspe_load       (const gchar *filename,
                                       GError **error);
 static gboolean      pspe_read_header(PSPEFile *pspefile,
                                       const guchar *buffer);
+static gboolean      pspe_check_size (PSPEFile *pspefile,
+                                      GError **error);
+static void          parse_xml_footer(PSPEFile *pspefile);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -117,15 +133,19 @@ pspe_detect(const GwyFileDetectInfo *fileinfo,
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 10 : 0;
 
-    /* XXX: We should perform a size check as the dimensions and num_frames
-     * must be non-zero and when multiplied give together size smaller than the
-     * file. */
+    gwy_clear(&pspefile, 1);
+    pspefile.size = fileinfo->file_size;
     if (fileinfo->file_size > HEADER_SIZE
         && fileinfo->buffer_len >= NUMFRAMES_OFFSET + sizeof(guint32)
-        && pspe_read_header(&pspefile, fileinfo->head))
-        score = 80;
-    /* XXX: New files (3.0) have some XML at the end.  Check that for surer
-     * identification. */
+        && pspe_read_header(&pspefile, fileinfo->head)
+        && pspe_check_size(&pspefile, NULL)) {
+        score = 90;
+        /* New files (3.0) have some XML at the end.  Check that for surer
+         * identification. */
+        if (gwy_memmem(fileinfo->tail, fileinfo->buffer_len,
+                       TAIL_MAGIC, TAIL_MAGIC_SIZE))
+            score = 100;
+    }
 
     return score;
 }
@@ -137,21 +157,22 @@ pspe_load(const gchar *filename,
 {
     PSPEFile pspefile;
     GwyContainer *container = NULL;
-    guchar *buffer = NULL;
-    gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
     gchar *title = NULL;
 
-    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
+    gwy_clear(&pspefile, 1);
+
+    if (!gwy_file_get_contents(filename, &pspefile.buffer, &pspefile.size,
+                               &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
-    if (size < HEADER_SIZE) {
+    if (pspefile.size < HEADER_SIZE) {
         err_TOO_SHORT(error);
         goto fail;
     }
-    if (!pspe_read_header(&pspefile, buffer)) {
+    if (!pspe_read_header(&pspefile, pspefile.buffer)) {
         err_FILE_TYPE(error, "Princeton Instruments SPE");
         goto fail;
     }
@@ -159,12 +180,23 @@ pspe_load(const gchar *filename,
     gwy_debug("res %u x %u", pspefile.xres, pspefile.yres);
     gwy_debug("num frames %u", pspefile.num_frames);
     gwy_debug("data type %u", pspefile.data_type);
+    gwy_debug("version %g", pspefile.version);
+    gwy_debug("footer offset %u", pspefile.footer_offset);
+
+    if (!pspe_check_size(&pspefile, error))
+        goto fail;
+
+    parse_xml_footer(&pspefile);
 
     err_NO_DATA(error);
     //gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
 fail:
-    gwy_file_abandon_contents(buffer, size, NULL);
+    gwy_file_abandon_contents(pspefile.buffer, pspefile.size, NULL);
+    if (pspefile.hash)
+        g_hash_table_destroy(pspefile.hash);
+    if (pspefile.str)
+        g_string_free(pspefile.str, TRUE);
 
     return container;
 }
@@ -196,12 +228,167 @@ pspe_read_header(PSPEFile *pspefile, const guchar *buffer)
     p = buffer + LNOSCAN_OFFSET;
     pspefile->lnoscan = gwy_get_guint32_le(&p);
 
+    p = buffer + VERSION_OFFSET;
+    pspefile->version = gwy_get_gfloat_le(&p);
+    if (pspefile->version >= 3.0) {
+        p = buffer + FOOTER_OFFSET;
+        pspefile->footer_offset = gwy_get_guint32_le(&p);
+    }
+
     /* The noscan and lnoscan fields must be filled with one-bits, apparently.
      * The rest is more difficult. */
     return (pspefile->noscan == 0xffff
             && pspefile->lnoscan == 0xffffffff
             && pspefile->scramble == 1
             && pspefile->data_type < PSPE_DATA_NTYPES);
+}
+
+static gboolean
+pspe_check_size(PSPEFile *pspefile, GError **error)
+{
+    guint typesize, xres, yres, nframes, size = pspefile->size;
+
+    if (err_DIMENSION(error, pspefile->xres))
+        return FALSE;
+    if (err_DIMENSION(error, pspefile->yres))
+        return FALSE;
+    if (!pspefile->num_frames) {
+        err_NO_DATA(error);
+        return FALSE;
+    }
+
+    if (pspefile->data_type == PSPE_DATA_FLOAT
+        || pspefile->data_type == PSPE_DATA_LONG)
+        typesize = 4;
+    else if (pspefile->data_type == PSPE_DATA_SHORT
+        || pspefile->data_type == PSPE_DATA_USHORT)
+        typesize = 2;
+    else {
+        err_DATA_TYPE(error, pspefile->data_type);
+        return FALSE;
+    }
+
+    xres = pspefile->xres;
+    yres = pspefile->yres;
+    nframes = pspefile->num_frames;
+    /* Check the size safely with respect to integer overflows.  But do not
+     * bother for the error message: the thing may need 128bit numbers to
+     * format properly.  XXX: We may return FALSE with no error set with
+     * unlucky numbers. */
+    if ((size - HEADER_SIZE)/xres/yres/typesize < nframes) {
+        err_SIZE_MISMATCH(error,
+                          size - HEADER_SIZE, xres*yres*typesize*nframes,
+                          TRUE);
+        return FALSE;
+    }
+
+    if (pspefile->footer_offset > pspefile->size) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("File is truncated."));
+        return FALSE;
+    }
+    return TRUE;
+}
+
+static void
+pspe_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
+                   const gchar *element_name,
+                   const gchar **attribute_names,
+                   const gchar **attribute_values,
+                   gpointer user_data,
+                   GError **error)
+{
+    PSPEFile *pspefile = (PSPEFile*)user_data;
+    gchar *path;
+
+    g_string_append_c(pspefile->path, '/');
+    g_string_append(pspefile->path, element_name);
+    path = pspefile->path->str;
+    gwy_debug("%s", path);
+}
+
+static void
+pspe_end_element(G_GNUC_UNUSED GMarkupParseContext *context,
+                 const gchar *element_name,
+                 gpointer user_data,
+                 G_GNUC_UNUSED GError **error)
+{
+    PSPEFile *pspefile = (PSPEFile*)user_data;
+    guint n, len = pspefile->path->len;
+    gchar *path = pspefile->path->str;
+
+    n = strlen(element_name);
+    g_return_if_fail(g_str_has_suffix(path, element_name));
+    g_return_if_fail(len > n);
+    g_return_if_fail(path[len-1 - n] == '/');
+    gwy_debug("%s", path);
+    g_string_set_size(pspefile->path, len-1 - n);
+}
+
+static void
+pspe_text(G_GNUC_UNUSED GMarkupParseContext *context,
+          const gchar *text,
+          G_GNUC_UNUSED gsize text_len,
+          gpointer user_data,
+          G_GNUC_UNUSED GError **error)
+{
+    PSPEFile *pspefile = (PSPEFile*)user_data;
+    gchar *path = pspefile->path->str;
+    GString *str = pspefile->str;
+
+    if (!strlen(text))
+        return;
+
+    g_string_assign(str, text);
+    g_strstrip(str->str);
+    if (!strlen(str->str))
+        return;
+
+    gwy_debug("%s <%s>", path, str->str);
+}
+
+static void
+parse_xml_footer(PSPEFile *pspefile)
+{
+    GMarkupParser parser = {
+        &pspe_start_element,
+        &pspe_end_element,
+        &pspe_text,
+        NULL,
+        NULL,
+    };
+    GMarkupParseContext *context = NULL;
+    gchar *xmldata, *s;
+    guint xmlsize = pspefile->size - pspefile->footer_offset;
+
+    if (!xmlsize)
+        return;
+
+    xmldata = g_new(gchar, xmlsize + 1);
+    memcpy(xmldata, pspefile->buffer + pspefile->footer_offset, xmlsize);
+    xmldata[xmlsize] = '\0';
+
+    gwy_strkill(xmldata, "\r");
+    s = xmldata;
+    /* Not seen in the wild but the XML people tend to use BOM in UTF-8... */
+    if (g_str_has_prefix(s, BLOODY_UTF8_BOM))
+        s += strlen(BLOODY_UTF8_BOM);
+
+    pspefile->hash = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                           g_free, g_free);
+    pspefile->path = g_string_new(NULL);
+    pspefile->str = g_string_new(NULL);
+    context = g_markup_parse_context_new(&parser, 0, pspefile, NULL);
+    if (!g_markup_parse_context_parse(context, s, -1, NULL)
+        || !g_markup_parse_context_end_parse(context, NULL)) {
+        g_hash_table_destroy(pspefile->hash);
+        pspefile->hash = NULL;
+    }
+
+    g_string_free(pspefile->path, TRUE);
+    if (context)
+        g_markup_parse_context_free(context);
+    g_free(xmldata);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
