@@ -330,7 +330,6 @@ pspe_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
     g_string_append_c(pspefile->path, '/');
     g_string_append(pspefile->path, element_name);
     path = pspefile->path->str;
-    gwy_debug("%s", path);
 
     g_string_assign(str, path);
     g_string_append(str, "::");
@@ -360,7 +359,6 @@ pspe_end_element(G_GNUC_UNUSED GMarkupParseContext *context,
     g_return_if_fail(g_str_has_suffix(path, element_name));
     g_return_if_fail(len > n);
     g_return_if_fail(path[len-1 - n] == '/');
-    gwy_debug("%s", path);
     g_string_set_size(pspefile->path, len-1 - n);
 }
 
