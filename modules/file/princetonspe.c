@@ -165,7 +165,7 @@ pspe_load(const gchar *filename,
     GwyContainer *container = NULL;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
-    gchar *value, *title = NULL;
+    gchar *value;
     GQuark quark;
     guint i, typesize, imagelen, len, nframes, data_size;
 
@@ -201,6 +201,8 @@ pspe_load(const gchar *filename,
     parse_xml_footer(&pspefile);
     if (pspefile.hash
         && (value = g_hash_table_lookup(pspefile.hash, STRIDE_KEY))) {
+        /* Not sure what is stored between images.  I have seen 8 bytes with
+         * one double precision number there. */
         data_size = pspefile.footer_offset - HEADER_SIZE;
         len = atoi(value);
         if (len < imagelen) {
@@ -227,6 +229,7 @@ pspe_load(const gchar *filename,
         gwy_container_set_object(container, quark, dfield);
         g_object_unref(dfield);
 
+        gwy_app_set_data_field_title(container, i, "Intensity");
         gwy_file_channel_import_log_add(container, i, NULL, filename);
     }
 
