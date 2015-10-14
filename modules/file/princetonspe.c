@@ -28,6 +28,7 @@
 #define DEBUG 1
 #include "config.h"
 #include <string.h>
+#include <stdlib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
@@ -42,6 +43,8 @@
 #define TAIL_MAGIC_SIZE (sizeof(TAIL_MAGIC)-1)
 #define BLOODY_UTF8_BOM "\xef\xbb\xbf"
 #define EXTENSION ".spe"
+
+#define STRIDE_KEY "/SpeFormat/DataFormat/DataBlock::stride"
 
 /* The only fields where anything at all seems to be present in newer files. */
 enum {
@@ -82,6 +85,7 @@ typedef struct {
     guint footer_offset;
     gdouble version;
     /* Derived data. */
+    guint stride;
     GwyRawDataType rawtype;
     GString *str;
     GString *path;
@@ -161,9 +165,9 @@ pspe_load(const gchar *filename,
     GwyContainer *container = NULL;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
-    gchar *title = NULL;
+    gchar *value, *title = NULL;
     GQuark quark;
-    guint i, typesize, imagelen;
+    guint i, typesize, imagelen, len, nframes, data_size;
 
     gwy_clear(&pspefile, 1);
 
@@ -190,17 +194,31 @@ pspe_load(const gchar *filename,
     if (!pspe_check_size(&pspefile, error))
         goto fail;
 
-    parse_xml_footer(&pspefile);
-
     typesize = gwy_raw_data_size(pspefile.rawtype);
     imagelen = typesize * pspefile.xres * pspefile.yres;
+    nframes = pspefile.num_frames;
+
+    parse_xml_footer(&pspefile);
+    if (pspefile.hash
+        && (value = g_hash_table_lookup(pspefile.hash, STRIDE_KEY))) {
+        data_size = pspefile.footer_offset - HEADER_SIZE;
+        len = atoi(value);
+        if (len < imagelen) {
+            err_INVALID(error, "DataBlock::stride");
+            goto fail;
+        }
+        if (!len || data_size/len != nframes) {
+            err_SIZE_MISMATCH(error, data_size, len*nframes, TRUE);
+            goto fail;
+        }
+        imagelen = len;
+    }
 
     container = gwy_container_new();
-    for (i = 0; i < pspefile.num_frames; i++) {
+    for (i = 0; i < nframes; i++) {
         dfield = gwy_data_field_new(pspefile.xres, pspefile.yres,
                                     pspefile.xres, pspefile.yres,
                                     FALSE);
-
         gwy_convert_raw_data(pspefile.buffer + HEADER_SIZE + imagelen*i,
                              pspefile.xres * pspefile.yres, 1,
                              pspefile.rawtype, GWY_BYTE_ORDER_LITTLE_ENDIAN,
@@ -303,6 +321,13 @@ pspe_check_size(PSPEFile *pspefile, GError **error)
         err_SIZE_MISMATCH(error,
                           size - HEADER_SIZE, xres*yres*typesize*nframes,
                           TRUE);
+        return FALSE;
+    }
+
+    if (pspefile->footer_offset < HEADER_SIZE
+        || pspefile->footer_offset < HEADER_SIZE + xres*yres*typesize*nframes) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("XML footer overlaps with data."));
         return FALSE;
     }
 
