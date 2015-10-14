@@ -6,12 +6,14 @@ Libraries:
 
 Modules:
 - Sensofarx (new): Imports Sensofar PLUx data files.
+- Princeton SPE (new): Imports Princeton Instruments camera SPE files.
 - Rawfile: NaN in floating point data are handled by masking and replacement.
   It is possible to specify a raw value representing missing data.  Support
   for two-byte half and six-byte Pascal floating point formats was added.
   Reading of 64bit integer formats was fixed.
 - Filters tool: Minimum and maximum filters now use circular neighbourhoods.
   Opening and closing filters with flat discs were added.
+- Rank: Local normalisation and value range filter options were added.
 
 
 2.42 (2015-10-06)
