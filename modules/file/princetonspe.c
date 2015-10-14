@@ -33,6 +33,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule-file.h>
+#include <app/data-browser.h>
 #include <app/gwymoduleutils-file.h>
 
 #include "err.h"
@@ -81,6 +82,7 @@ typedef struct {
     guint footer_offset;
     gdouble version;
     /* Derived data. */
+    GwyRawDataType rawtype;
     GString *str;
     GString *path;
     GHashTable *hash;
@@ -160,6 +162,8 @@ pspe_load(const gchar *filename,
     GError *err = NULL;
     GwyDataField *dfield = NULL;
     gchar *title = NULL;
+    GQuark quark;
+    guint i, typesize, imagelen;
 
     gwy_clear(&pspefile, 1);
 
@@ -188,8 +192,25 @@ pspe_load(const gchar *filename,
 
     parse_xml_footer(&pspefile);
 
-    err_NO_DATA(error);
-    //gwy_file_channel_import_log_add(container, 0, NULL, filename);
+    typesize = gwy_raw_data_size(pspefile.rawtype);
+    imagelen = typesize * pspefile.xres * pspefile.yres;
+
+    container = gwy_container_new();
+    for (i = 0; i < pspefile.num_frames; i++) {
+        dfield = gwy_data_field_new(pspefile.xres, pspefile.yres,
+                                    pspefile.xres, pspefile.yres,
+                                    FALSE);
+
+        gwy_convert_raw_data(pspefile.buffer + HEADER_SIZE + imagelen*i,
+                             pspefile.xres * pspefile.yres, 1,
+                             pspefile.rawtype, GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                             gwy_data_field_get_data(dfield), 1.0, 0.0);
+        quark = gwy_app_get_data_key_for_id(i);
+        gwy_container_set_object(container, quark, dfield);
+        g_object_unref(dfield);
+
+        gwy_file_channel_import_log_add(container, i, NULL, filename);
+    }
 
 fail:
     gwy_file_abandon_contents(pspefile.buffer, pspefile.size, NULL);
@@ -257,17 +278,20 @@ pspe_check_size(PSPEFile *pspefile, GError **error)
         return FALSE;
     }
 
-    if (pspefile->data_type == PSPE_DATA_FLOAT
-        || pspefile->data_type == PSPE_DATA_LONG)
-        typesize = 4;
-    else if (pspefile->data_type == PSPE_DATA_SHORT
-        || pspefile->data_type == PSPE_DATA_USHORT)
-        typesize = 2;
+    if (pspefile->data_type == PSPE_DATA_FLOAT)
+        pspefile->rawtype = GWY_RAW_DATA_FLOAT;
+    else if (pspefile->data_type == PSPE_DATA_LONG)
+        pspefile->rawtype = GWY_RAW_DATA_SINT32;
+    else if (pspefile->data_type == PSPE_DATA_SHORT)
+        pspefile->rawtype = GWY_RAW_DATA_SINT16;
+    else if (pspefile->data_type == PSPE_DATA_USHORT)
+        pspefile->rawtype = GWY_RAW_DATA_UINT16;
     else {
         err_DATA_TYPE(error, pspefile->data_type);
         return FALSE;
     }
 
+    typesize = gwy_raw_data_size(pspefile->rawtype);
     xres = pspefile->xres;
     yres = pspefile->yres;
     nframes = pspefile->num_frames;
@@ -296,15 +320,30 @@ pspe_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
                    const gchar **attribute_names,
                    const gchar **attribute_values,
                    gpointer user_data,
-                   GError **error)
+                   G_GNUC_UNUSED GError **error)
 {
     PSPEFile *pspefile = (PSPEFile*)user_data;
+    GString *str = pspefile->str;
     gchar *path;
+    guint i, len;
 
     g_string_append_c(pspefile->path, '/');
     g_string_append(pspefile->path, element_name);
     path = pspefile->path->str;
     gwy_debug("%s", path);
+
+    g_string_assign(str, path);
+    g_string_append(str, "::");
+    len = str->len;
+    for (i = 0; attribute_names[i]; i++) {
+        if (!strlen(attribute_names[i]) || !strlen(attribute_values[i]))
+            continue;
+        g_string_append(str, attribute_names[i]);
+        gwy_debug("%s <%s>", str->str, attribute_values[i]);
+        g_hash_table_insert(pspefile->hash,
+                            g_strdup(str->str), g_strdup(attribute_values[i]));
+        g_string_truncate(str, len);
+    }
 }
 
 static void
@@ -345,6 +384,7 @@ pspe_text(G_GNUC_UNUSED GMarkupParseContext *context,
         return;
 
     gwy_debug("%s <%s>", path, str->str);
+    g_hash_table_insert(pspefile->hash, g_strdup(path), g_strdup(str->str));
 }
 
 static void
