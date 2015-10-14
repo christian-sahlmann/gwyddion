@@ -80,6 +80,7 @@ static void          sensofarx_parse_recipe     (unzFile *zipfile,
                                                  PLUxFile *pluxfile);
 static gboolean      read_binary_data           (const PLUxFile *pluxfile,
                                                  unzFile *zipfile,
+                                                 const gchar *filename,
                                                  GwyContainer *container,
                                                  GError **error);
 static void          sensofarx_file_free        (PLUxFile *pluxfile);
@@ -198,7 +199,7 @@ sensofarx_load(const gchar *filename,
     sensofarx_parse_recipe(zipfile, &pluxfile);
 
     container = gwy_container_new();
-    if (!read_binary_data(&pluxfile, zipfile, container, error))
+    if (!read_binary_data(&pluxfile, zipfile, filename, container, error))
         gwy_object_unref(container);
 
 fail:
@@ -211,6 +212,7 @@ fail:
 static gboolean
 read_binary_data(const PLUxFile *pluxfile,
                  unzFile *zipfile,
+                 const gchar *filename,
                  GwyContainer *container,
                  GError **error)
 {
@@ -220,7 +222,7 @@ read_binary_data(const PLUxFile *pluxfile,
     GwyDataField *dfield, *mask;
     GwyContainer *meta;
     guchar *content;
-    gchar *filename, *title;
+    gchar *datafilename, *title;
     gsize contentsize, expected_size;
     guint xres, yres;
     gdouble xreal, yreal;
@@ -259,14 +261,14 @@ read_binary_data(const PLUxFile *pluxfile,
     for (i = 0; i < layers->len; i++) {
         id = g_array_index(layers, gint, i);
         g_string_printf(str, "/xml/LAYER_%d/FILENAME_Z", id);
-        filename = g_hash_table_lookup(hash, str->str);
-        if (!filename) {
+        datafilename = g_hash_table_lookup(hash, str->str);
+        if (!datafilename) {
             gwy_debug("Did not find FILENAME_Z for %s", str->str);
             continue;
         }
-        gwy_debug("FILENAME_Z %s: %s", str->str, filename);
+        gwy_debug("FILENAME_Z %s: %s", str->str, datafilename);
 
-        if (!gwyminizip_locate_file(zipfile, filename, 1, error)
+        if (!gwyminizip_locate_file(zipfile, datafilename, 1, error)
             || !(content = gwyminizip_get_file_content(zipfile, &contentsize,
                                                        error))) {
             return FALSE;
@@ -309,6 +311,8 @@ read_binary_data(const PLUxFile *pluxfile,
             gwy_container_set_object_by_name(container, str->str, meta);
             g_object_unref(meta);
         }
+
+        gwy_file_channel_import_log_add(container, id, NULL, filename);
 
         id++;
     }
