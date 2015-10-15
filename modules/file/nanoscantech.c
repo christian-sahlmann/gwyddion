@@ -20,7 +20,8 @@
 
 /*
  * TODO: assuming cp1251 as 8bit encoding,
- *       use Attributes field to load parameters
+ *       use Attributes field to load 3d xyz labels,
+ *       4d xy ranges/units/labels;
  *       4d data loading improvements for jumping mode
  */
 
@@ -134,8 +135,8 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NanoScanTech .nstdat files."),
     "Daniil Bratashov (dn2010@gmail.com)",
-    "0.9",
-    "David Nečas (Yeti), Daniil Bratashov (dn2010)",
+    "0.10",
+    "David Nečas (Yeti), Daniil Bratashov (dn2010), Antony Kikaxa",
     "2012",
 };
 
@@ -168,8 +169,8 @@ nst_detect(const GwyFileDetectInfo *fileinfo,
         || memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) != 0)
         return 0;
 
-    /* It contains directory Scan so this should be somewhere near the begining
-     * of the file. */
+    /* It contains directory Scan so this should be somewhere near
+     * the begining of the file. */
     if (!gwy_memmem(fileinfo->head, fileinfo->buffer_len, MAGIC1, MAGIC1_SIZE))
         return 0;
 
@@ -218,7 +219,7 @@ nst_load(const gchar *filename,
         gchar filename_buf[PATH_MAX+1];
 
         if (unzGetCurrentFileInfo(zipfile, &fileinfo, filename_buf,
-                                  PATH_MAX, NULL, 0, NULL, 0) != UNZ_OK) {
+                                PATH_MAX, NULL, 0, NULL, 0) != UNZ_OK) {
             goto fail;
         }
         if (g_str_has_suffix(filename_buf, ".lsdlsd")) {
@@ -450,6 +451,51 @@ nst_read_3d(const gchar *buffer, GwyContainer **metadata, gchar **title)
                                            -1, "UTF-8", "cp1251",
                                            NULL, NULL, NULL);
                 }
+                else if (g_str_has_prefix(lineparts[linecur],
+                                                            "XYUnit")) {
+                    if ((!siunitxy) && (lineparts[linecur+1])) {
+                        unit = g_convert(lineparts[linecur+1], -1,
+                                         "UTF-8", "cp1251",
+                                         NULL, NULL, NULL);
+                        siunitxy = gwy_si_unit_new_parse(unit,
+                                                         &power10xy);
+                        g_free(unit);
+                    }
+                }
+                else if (g_str_has_prefix(lineparts[linecur],
+                                                            "ZUnit")) {
+                    if ((!siunitz) && (lineparts[linecur+1])) {
+                        unit = g_convert(lineparts[linecur+1], -1,
+                                         "UTF-8", "cp1251",
+                                         NULL, NULL, NULL);
+                        siunitz = gwy_si_unit_new_parse(unit, &power10z);
+                        g_free(unit);
+                    }
+                }
+                else if (g_str_has_prefix(lineparts[linecur],
+                                                            "XMin")) {
+                    if (lineparts[linecur+1])
+                        xoffset = g_ascii_strtod(lineparts[linecur+1],
+                                                 FALSE);
+                }
+                else if (g_str_has_prefix(lineparts[linecur],
+                                                            "XMax")) {
+                    if (lineparts[linecur+1])
+                        xscale = g_ascii_strtod(lineparts[linecur+1],
+                                                FALSE) - xoffset;
+                }
+                else if (g_str_has_prefix(lineparts[linecur],
+                                                            "YMin")) {
+                    if (lineparts[linecur+1])
+                        yoffset = g_ascii_strtod(lineparts[linecur+1],
+                                                 FALSE);
+                }
+                else if (g_str_has_prefix(lineparts[linecur],
+                                                            "YMax")) {
+                    if (lineparts[linecur+1])
+                        yscale = g_ascii_strtod(lineparts[linecur+1],
+                                                FALSE) - yoffset;
+                }
                 linecur++;
             }
             g_strfreev(lineparts);
@@ -506,13 +552,16 @@ static GwyGraphModel* nst_read_2d(const gchar *buffer, guint channel)
     p = (gchar *)buffer;
     gmodel = gwy_graph_model_new();
     while ((line = gwy_str_next_line(&p))) {
-        if (g_str_has_prefix(line, "Loved")) {
+        if (g_str_has_prefix(line, "[BeginOfItem]")) {
+            line = gwy_str_next_line(&p);
+            /* deprecated field check */
+            if (line && g_str_has_prefix(line, "Loved"))
+                line = gwy_str_next_line(&p);
+
             numpoints = 0;
             xarray = g_array_new(FALSE, TRUE, sizeof(gdouble));
             yarray = g_array_new(FALSE, TRUE, sizeof(gdouble));
-            while ((line = gwy_str_next_line(&p))
-                && (!gwy_strequal(line, "[EndOfItem]"))) {
-                                  lineparts = g_strsplit(line, " ", 3);
+            while (line && !gwy_strequal(line, "[EndOfItem]")) {
                 lineparts = g_strsplit(line, " ", 2);
                 x = g_ascii_strtod(lineparts[0], NULL);
                 g_array_append_val(xarray, x);
@@ -520,6 +569,8 @@ static GwyGraphModel* nst_read_2d(const gchar *buffer, guint channel)
                 g_array_append_val(yarray, y);
                 g_strfreev(lineparts);
                 numpoints++;
+
+                line = gwy_str_next_line(&p);
             }
 
             if (numpoints) {
@@ -609,6 +660,28 @@ static GwyGraphModel* nst_read_2d(const gchar *buffer, guint channel)
                         ylabel = g_convert(lineparts[linecur+1],
                                            -1, "UTF-8", "cp1251",
                                            NULL, NULL, NULL);
+                }
+                else if (g_str_has_prefix(lineparts[linecur],
+                                                            "XUnit")) {
+                    if ((!siunitx) && (lineparts[linecur+1])) {
+                        unit = g_convert(lineparts[linecur+1], -1,
+                                         "UTF-8", "cp1251",
+                                         NULL, NULL, NULL);
+                        siunitx = gwy_si_unit_new_parse(unit,
+                                                        &power10x);
+                        g_free(unit);
+                    }
+                }
+                else if (g_str_has_prefix(lineparts[linecur],
+                                                            "YUnit")) {
+                    if ((!siunity) && (lineparts[linecur+1])) {
+                        unit = g_convert(lineparts[linecur+1], -1,
+                                         "UTF-8", "cp1251",
+                                         NULL, NULL, NULL);
+                        siunity = gwy_si_unit_new_parse(unit,
+                                                        &power10y);
+                        g_free(unit);
+                    }
                 }
 
                 linecur++;
