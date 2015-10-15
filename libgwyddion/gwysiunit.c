@@ -999,6 +999,9 @@ gwy_si_unit_parse(GwySIUnit *siunit,
             pfpower -= 2;
             g_string_assign(buf, "");
         }
+        else if (gwy_strequal(buf->str, "м")) {
+            g_string_assign(buf, "m");
+        }
 
         /* elementary sanity */
         if (!g_utf8_validate(buf->str, -1, (const gchar**)&p)) {
