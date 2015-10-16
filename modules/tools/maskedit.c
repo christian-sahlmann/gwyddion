@@ -31,6 +31,7 @@
 #include <libprocess/grains.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwyradiobuttons.h>
+#include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
 
@@ -83,6 +84,7 @@ typedef struct {
     MaskEditMode mode;
     MaskEditShape shape;
     MaskEditTool tool;
+    GwyDistanceTransformType dist_type;
     gint32 gsamount;
     gint32 radius;
     gboolean from_border;
@@ -103,6 +105,7 @@ struct _GwyToolMaskEditor {
 
     GtkObject *radius;
     GtkObject *gsamount;
+    GtkWidget *dist_type;
     GtkWidget *from_border;
     GtkWidget *prevent_merge;
     GtkWidget *fill_nonsimple;
@@ -139,6 +142,8 @@ static void  gwy_tool_mask_editor_radius_changed        (GtkAdjustment *adj,
                                                          GwyToolMaskEditor *tool);
 static void  gwy_tool_mask_editor_gsamount_changed      (GtkAdjustment *adj,
                                                          GwyToolMaskEditor *tool);
+static void  gwy_tool_mask_editor_dist_type_changed     (GtkComboBox *combo,
+                                                         GwyToolMaskEditor *tool);
 static void  gwy_tool_mask_editor_from_border_changed   (GtkToggleButton *toggle,
                                                          GwyToolMaskEditor *tool);
 static void  gwy_tool_mask_editor_prevent_merge_changed (GtkToggleButton *toggle,
@@ -174,21 +179,23 @@ static const gchar *const shape_selection_names[MASK_NSHAPES] = {
     "rectangle", "ellipse", "line"
 };
 
-static const gchar style_key[]          = "/module/maskeditor/style";
-static const gchar mode_key[]           = "/module/maskeditor/mode";
-static const gchar shape_key[]          = "/module/maskeditor/shape";
-static const gchar tool_key[]           = "/module/maskeditor/tool";
-static const gchar radius_key[]         = "/module/maskeditor/radius";
-static const gchar gsamount_key[]       = "/module/maskeditor/gsamount";
-static const gchar from_border_key[]    = "/module/maskeditor/from_border";
-static const gchar prevent_merge_key[]  = "/module/maskeditor/prevent_merge";
+static const gchar dist_type_key[]      = "/module/maskeditor/dist_type";
 static const gchar fill_nonsimple_key[] = "/module/maskeditor/fill_nonsimple";
+static const gchar from_border_key[]    = "/module/maskeditor/from_border";
+static const gchar gsamount_key[]       = "/module/maskeditor/gsamount";
+static const gchar mode_key[]           = "/module/maskeditor/mode";
+static const gchar prevent_merge_key[]  = "/module/maskeditor/prevent_merge";
+static const gchar radius_key[]         = "/module/maskeditor/radius";
+static const gchar shape_key[]          = "/module/maskeditor/shape";
+static const gchar style_key[]          = "/module/maskeditor/style";
+static const gchar tool_key[]           = "/module/maskeditor/tool";
 
 static const ToolArgs default_args = {
     MASK_EDIT_STYLE_SHAPES,
     MASK_EDIT_SET,
     MASK_SHAPE_RECTANGLE,
     MASK_TOOL_PAINT_DRAW,
+    GWY_DISTANCE_TRANSFORM_EUCLIDEAN,
     5,
     1,
     FALSE,
@@ -271,6 +278,8 @@ gwy_tool_mask_editor_init(GwyToolMaskEditor *tool)
                                    &tool->args.shape);
     gwy_container_gis_enum_by_name(settings, tool_key,
                                    &tool->args.tool);
+    gwy_container_gis_enum_by_name(settings, dist_type_key,
+                                   &tool->args.dist_type);
     gwy_container_gis_int32_by_name(settings, radius_key,
                                     &tool->args.radius);
     gwy_container_gis_int32_by_name(settings, gsamount_key,
@@ -286,6 +295,9 @@ gwy_tool_mask_editor_init(GwyToolMaskEditor *tool)
     tool->args.mode = MIN(tool->args.mode, MASK_NMODES-1);
     tool->args.shape = MIN(tool->args.shape, MASK_NSHAPES-1);
     tool->args.tool = MIN(tool->args.tool, MASK_NTOOLS-1);
+    tool->args.dist_type
+        = gwy_enum_sanitize_value(tool->args.dist_type,
+                                  GWY_TYPE_DISTANCE_TRANSFORM_TYPE);
 
     if (tool->args.style == MASK_EDIT_STYLE_SHAPES)
         gwy_plain_tool_connect_selection(plain_tool,
@@ -384,7 +396,7 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
     sizegroup = gtk_size_group_new(GTK_SIZE_GROUP_BOTH);
     tool->sensgroup = gwy_sensitivity_group_new();
 
-    table = GTK_TABLE(gtk_table_new(14, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(15, 4, FALSE));
     gtk_table_set_col_spacings(table, 6);
     gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -614,6 +626,16 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
                      G_CALLBACK(gwy_tool_mask_editor_gsamount_changed), tool);
     row++;
 
+    tool->dist_type = gwy_enum_combo_box_new
+                           (gwy_distance_transform_type_get_enum(), -1,
+                            G_CALLBACK(gwy_tool_mask_editor_dist_type_changed),
+                            tool, tool->args.dist_type, TRUE);
+    gwy_table_attach_hscale(GTK_WIDGET(table), row++,
+                            _("_Distance type:"), NULL,
+                            GTK_OBJECT(tool->dist_type),
+                            GWY_HSCALE_WIDGET);
+    row++;
+
     tool->from_border
         = gtk_check_button_new_with_mnemonic(_("Shrink from _border"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->from_border),
@@ -812,6 +834,13 @@ gwy_tool_mask_editor_gsamount_changed(GtkAdjustment *adj,
 }
 
 static void
+gwy_tool_mask_editor_dist_type_changed(GtkComboBox *combo,
+                                       GwyToolMaskEditor *tool)
+{
+    tool->args.dist_type = gwy_enum_combo_box_get_active(combo);
+}
+
+static void
 gwy_tool_mask_editor_from_border_changed(GtkToggleButton *toggle,
                                          GwyToolMaskEditor *tool)
 {
@@ -910,8 +939,7 @@ gwy_tool_mask_editor_grow(GwyToolMaskEditor *tool)
     quark = gwy_app_get_mask_key_for_id(plain_tool->id);
     gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
     gwy_data_field_grains_grow(plain_tool->mask_field, tool->args.gsamount,
-                               GWY_DISTANCE_TRANSFORM_EUCLIDEAN,
-                               tool->args.prevent_merge);
+                               tool->args.dist_type, tool->args.prevent_merge);
     gwy_data_field_data_changed(plain_tool->mask_field);
     gwy_tool_mask_editor_save_args(tool);
     gwy_plain_tool_log_add(plain_tool);
@@ -929,8 +957,7 @@ gwy_tool_mask_editor_shrink(GwyToolMaskEditor *tool)
     quark = gwy_app_get_mask_key_for_id(plain_tool->id);
     gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
     gwy_data_field_grains_shrink(plain_tool->mask_field, tool->args.gsamount,
-                                 GWY_DISTANCE_TRANSFORM_EUCLIDEAN,
-                                 tool->args.from_border);
+                                 tool->args.dist_type, tool->args.from_border);
     gwy_data_field_data_changed(plain_tool->mask_field);
     gwy_tool_mask_editor_save_args(tool);
     gwy_plain_tool_log_add(plain_tool);
@@ -1412,6 +1439,8 @@ gwy_tool_mask_editor_save_args(GwyToolMaskEditor *tool)
                                    tool->args.shape);
     gwy_container_set_enum_by_name(settings, tool_key,
                                    tool->args.tool);
+    gwy_container_set_enum_by_name(settings, dist_type_key,
+                                   tool->args.dist_type);
     gwy_container_set_int32_by_name(settings, radius_key,
                                     tool->args.radius);
     gwy_container_set_int32_by_name(settings, gsamount_key,
