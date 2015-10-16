@@ -857,8 +857,7 @@ gwy_tool_mask_editor_invert(GwyToolMaskEditor *tool)
 
     quark = gwy_app_get_mask_key_for_id(plain_tool->id);
     gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
-    gwy_data_field_multiply(plain_tool->mask_field, -1.0);
-    gwy_data_field_add(plain_tool->mask_field, 1.0);
+    gwy_data_field_grains_invert(plain_tool->mask_field);
     gwy_data_field_data_changed(plain_tool->mask_field);
     gwy_tool_mask_editor_save_args(tool);
     gwy_plain_tool_log_add(plain_tool);
@@ -904,107 +903,15 @@ gwy_tool_mask_editor_grow(GwyToolMaskEditor *tool)
 {
     GwyPlainTool *plain_tool;
     GQuark quark;
-    gdouble *data, *buffer, *prow;
-    gdouble min, max, q1, q2;
-    gint xres, yres, rowstride;
-    gint i, j, iter;
-    gint *grains = NULL;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->mask_field);
 
     quark = gwy_app_get_mask_key_for_id(plain_tool->id);
     gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
-
-    if (tool->args.gsamount > 1)
-        max = gwy_data_field_get_max(plain_tool->mask_field);
-    else
-        max = 1.0;
-    xres = gwy_data_field_get_xres(plain_tool->mask_field);
-    yres = gwy_data_field_get_yres(plain_tool->mask_field);
-    data = gwy_data_field_get_data(plain_tool->mask_field);
-
-    if (tool->args.prevent_merge) {
-        grains = g_new0(gint, xres*yres);
-        gwy_data_field_number_grains(plain_tool->mask_field, grains);
-    }
-
-    buffer = g_new(gdouble, xres);
-    prow = g_new(gdouble, xres);
-    for (iter = 0; iter < tool->args.gsamount; iter++) {
-        rowstride = xres;
-        min = G_MAXDOUBLE;
-        for (j = 0; j < xres; j++)
-            prow[j] = -G_MAXDOUBLE;
-        memcpy(buffer, data, xres*sizeof(gdouble));
-        for (i = 0; i < yres; i++) {
-            gdouble *row = data + i*xres;
-
-            if (i == yres-1)
-                rowstride = 0;
-
-            j = 0;
-            q2 = MAX(buffer[j], buffer[j+1]);
-            q1 = MAX(prow[j], row[j+rowstride]);
-            row[j] = MAX(q1, q2);
-            min = MIN(min, row[j]);
-            for (j = 1; j < xres-1; j++) {
-                q1 = MAX(prow[j], buffer[j-1]);
-                q2 = MAX(buffer[j], buffer[j+1]);
-                q2 = MAX(q2, row[j+rowstride]);
-                row[j] = MAX(q1, q2);
-                min = MIN(min, row[j]);
-            }
-            j = xres-1;
-            q2 = MAX(buffer[j-1], buffer[j]);
-            q1 = MAX(prow[j], row[j+rowstride]);
-            row[j] = MAX(q1, q2);
-            min = MIN(min, row[j]);
-
-            GWY_SWAP(gdouble*, prow, buffer);
-            if (i < yres-1)
-                memcpy(buffer, data + (i+1)*xres, xres*sizeof(gdouble));
-        }
-        if (tool->args.prevent_merge) {
-            /* We know in the last iteration the grains did not touch.
-             * Therefore we examine pixels that are in mask now but were not
-             * in the last iteration, i.e. grains[k] == 0 but mask[k] != 0 */
-            for (i = 0; i < yres; i++) {
-                for (j = 0; j < xres; j++) {
-                    gint g1, g2, g3, g4, gno;
-                    gint k = i*xres + j;
-
-                    if (grains[k] || data[k] <= 0.0)
-                        continue;
-
-                    g1 = i > 0      ? grains[k-xres] : 0;
-                    g2 = j > 0      ? grains[k-1]    : 0;
-                    g3 = j < xres-1 ? grains[k+1]    : 0;
-                    g4 = i < yres-1 ? grains[k+xres] : 0;
-                    /* If all are equal or zeroes bitwise or
-                     * gives us the nonzero value sought. */
-                    gno = g1 | g2 | g3 | g4;
-                    if ((!g1 || g1 == gno)
-                        && (!g2 || g2 == gno)
-                        && (!g3 || g3 == gno)
-                        && (!g4 || g4 == gno)) {
-                        grains[k] = gno;
-                    }
-                    else {
-                        /* Now we have a conflict and it has to be resolved.
-                         * We just get rid of this pixel. */
-                        data[k] = 0.0;
-                    }
-                }
-            }
-        }
-        if (min == max)
-            break;
-    }
-    g_free(buffer);
-    g_free(prow);
-    g_free(grains);
-
+    gwy_data_field_grains_grow(plain_tool->mask_field, tool->args.gsamount,
+                               GWY_DISTANCE_TRANSFORM_EUCLIDEAN,
+                               tool->args.prevent_merge);
     gwy_data_field_data_changed(plain_tool->mask_field);
     gwy_tool_mask_editor_save_args(tool);
     gwy_plain_tool_log_add(plain_tool);
@@ -1015,81 +922,15 @@ gwy_tool_mask_editor_shrink(GwyToolMaskEditor *tool)
 {
     GwyPlainTool *plain_tool;
     GQuark quark;
-    gdouble *data, *buffer, *prow;
-    gdouble min, max, q1, q2;
-    gint xres, yres, rowstride;
-    gint i, j, iter;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->mask_field);
 
     quark = gwy_app_get_mask_key_for_id(plain_tool->id);
     gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
-
-    if (tool->args.gsamount > 1)
-        min = gwy_data_field_get_min(plain_tool->mask_field);
-    else
-        min = 0.0;
-    xres = gwy_data_field_get_xres(plain_tool->mask_field);
-    yres = gwy_data_field_get_yres(plain_tool->mask_field);
-    data = gwy_data_field_get_data(plain_tool->mask_field);
-
-    buffer = g_new(gdouble, xres);
-    prow = g_new(gdouble, xres);
-    for (iter = 0; iter < tool->args.gsamount; iter++) {
-        rowstride = xres;
-        max = -G_MAXDOUBLE;
-        for (j = 0; j < xres; j++)
-            prow[j] = G_MAXDOUBLE;
-        memcpy(buffer, data, xres*sizeof(gdouble));
-        for (i = 0; i < yres; i++) {
-            gdouble *row = data + i*xres;
-
-            if (i == yres-1)
-                rowstride = 0;
-
-            j = 0;
-            q2 = MIN(buffer[j], buffer[j+1]);
-            q1 = MIN(prow[j], row[j+rowstride]);
-            row[j] = MIN(q1, q2);
-            max = MAX(max, row[j]);
-            for (j = 1; j < xres-1; j++) {
-                q1 = MIN(prow[j], buffer[j-1]);
-                q2 = MIN(buffer[j], buffer[j+1]);
-                q2 = MIN(q2, row[j+rowstride]);
-                row[j] = MIN(q1, q2);
-                max = MAX(max, row[j]);
-            }
-            j = xres-1;
-            q2 = MIN(buffer[j-1], buffer[j]);
-            q1 = MIN(prow[j], row[j+rowstride]);
-            row[j] = MIN(q1, q2);
-            max = MAX(max, row[j]);
-
-            GWY_SWAP(gdouble*, prow, buffer);
-            if (i < yres-1)
-                memcpy(buffer, data + (i+1)*xres, xres*sizeof(gdouble));
-        }
-
-        /* To shrink from borders we only have to clear boundary pixels in
-         * the first iteration, then it goes on itself */
-        if (iter == 0 && tool->args.from_border) {
-            gwy_data_field_area_clear(plain_tool->mask_field,
-                                      0, 0, xres, 1);
-            gwy_data_field_area_clear(plain_tool->mask_field,
-                                      0, 0, 1, yres);
-            gwy_data_field_area_clear(plain_tool->mask_field,
-                                      xres-1, 0, 1, yres);
-            gwy_data_field_area_clear(plain_tool->mask_field,
-                                      0, yres-1, xres, 1);
-        }
-
-        if (max == min)
-            break;
-    }
-    g_free(buffer);
-    g_free(prow);
-
+    gwy_data_field_grains_shrink(plain_tool->mask_field, tool->args.gsamount,
+                                 GWY_DISTANCE_TRANSFORM_EUCLIDEAN,
+                                 tool->args.from_border);
     gwy_data_field_data_changed(plain_tool->mask_field);
     gwy_tool_mask_editor_save_args(tool);
     gwy_plain_tool_log_add(plain_tool);
@@ -1434,10 +1275,8 @@ gwy_tool_mask_editor_bucket_fill(GwyToolMaskEditor *tool,
     gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
 
     g = grains = g_new0(gint, xres*yres);
-    if (draw) {
-        gwy_data_field_multiply(mfield, -1.0);
-        gwy_data_field_add(mfield, 1.0);
-    }
+    if (draw)
+        gwy_data_field_grains_invert(mfield);
     gwy_data_field_number_grains(mfield, grains);
     gno = grains[i*xres + j];
 
@@ -1445,10 +1284,8 @@ gwy_tool_mask_editor_bucket_fill(GwyToolMaskEditor *tool,
         if (*g == gno)
             *data = 0.0;
     }
-    if (draw) {
-        gwy_data_field_multiply(mfield, -1.0);
-        gwy_data_field_add(mfield, 1.0);
-    }
+    if (draw)
+        gwy_data_field_grains_invert(mfield);
 
     g_free(grains);
 }
