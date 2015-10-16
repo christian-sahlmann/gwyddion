@@ -430,6 +430,7 @@ class_mean(GwyDataField *dfield,
 
     return mean;
 }
+
 /**
  * gwy_data_field_grains_mark_watershed:
  * @data_field: Data to be used for marking.
@@ -5036,8 +5037,7 @@ gwy_data_field_fill_voids(GwyDataField *data_field,
     data = gwy_data_field_get_data(data_field);
 
     voids = gwy_data_field_duplicate(data_field);
-    gwy_data_field_multiply(voids, -1.0);
-    gwy_data_field_add(voids, 1.0);
+    gwy_data_field_grains_invert(voids);
     vgrains = g_new0(gint, xres*yres);
     nvgrains = gwy_data_field_number_grains(voids, vgrains);
     g_object_unref(voids);

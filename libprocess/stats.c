@@ -975,8 +975,7 @@ gwy_data_field_area_get_grainwise_rms(GwyDataField *dfield,
     }
     else {
         grainmask = gwy_data_field_area_extract(mask, col, row, width, height);
-        gwy_data_field_multiply(grainmask, -1.0);
-        gwy_data_field_add(grainmask, 1.0);
+        gwy_data_field_grains_invert(grainmask);
     }
 
     grains = g_new0(gint, width*height);
