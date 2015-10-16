@@ -165,7 +165,7 @@ static GwyModuleInfo module_info = {
     N_("Mask editor tool, allows interactive modification of parts "
        "of the mask."),
     "Yeti <yeti@gwyddion.net>",
-    "3.6",
+    "3.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
