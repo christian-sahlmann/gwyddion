@@ -102,8 +102,7 @@ mask_invert(GwyContainer *data, GwyRunType run)
     g_return_if_fail(mfield && mquark);
 
     gwy_app_undo_qcheckpointv(data, 1, &mquark);
-    gwy_data_field_multiply(mfield, -1.0);
-    gwy_data_field_add(mfield, 1.0);
+    gwy_data_field_grains_invert(mfield);
     gwy_data_field_data_changed(mfield);
     gwy_app_channel_log_add_proc(data, id, id);
 }

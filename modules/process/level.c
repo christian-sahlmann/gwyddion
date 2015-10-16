@@ -24,6 +24,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/level.h>
+#include <libprocess/grains.h>
 #include <libprocess/stats.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwystock.h>
@@ -168,8 +169,7 @@ do_level(GwyContainer *data,
     if (mfield) {
         if (args.masking == GWY_MASK_EXCLUDE) {
             mfield = gwy_data_field_duplicate(mfield);
-            gwy_data_field_multiply(mfield, -1.0);
-            gwy_data_field_add(mfield, 1.0);
+            gwy_data_field_grains_invert(mfield);
         }
         else
             g_object_ref(mfield);

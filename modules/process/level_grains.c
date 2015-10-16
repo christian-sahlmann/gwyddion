@@ -171,8 +171,7 @@ level_grains_do(const LevelGrainsArgs *args,
         bgdata[i] = -heights[grains[i]];
 
     invmask = gwy_data_field_duplicate(mfield);
-    gwy_data_field_multiply(invmask, -1.0);
-    gwy_data_field_add(invmask, 1.0);
+    gwy_data_field_grains_invert(invmask);
 
     maxerr = gwy_data_field_get_rms(dfield)/1.0e4;
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, id),
