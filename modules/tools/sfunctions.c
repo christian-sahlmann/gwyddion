@@ -25,6 +25,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-tool.h>
 #include <libprocess/gwyprocesstypes.h>
+#include <libprocess/grains.h>
 #include <libprocess/stats.h>
 #include <libprocess/stats_uncertainty.h>
 #include <libgwydgets/gwystock.h>
@@ -765,8 +766,7 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
         if (tool->args.masking == GWY_MASK_EXCLUDE
             && plain_tool->mask_field) {
             mask_field = gwy_data_field_duplicate(plain_tool->mask_field);
-            gwy_data_field_multiply(mask_field, -1.0);
-            gwy_data_field_add(mask_field, 1.0);
+            gwy_data_field_grains_invert(mask_field);
         }
         else if (tool->args.masking == GWY_MASK_INCLUDE
                  && plain_tool->mask_field)
