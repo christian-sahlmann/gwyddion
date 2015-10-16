@@ -77,6 +77,12 @@ typedef struct {
     guint size;   /* For candidate sorting. */
 } InscribedDisc;
 
+typedef struct {
+    gdouble distance;
+    guint i;
+    guint j;
+} DistantPoint;
+
 /* Watershed iterator */
 typedef struct {
     GwyComputationState cs;
@@ -3240,8 +3246,9 @@ gwy_grain_quantity_get_units(GwyGrainQuantity quantity,
  * Adds @add_field grains to @grain_field.
  *
  * Note: This function is equivalent to
- * <literal>gwy_data_field_max_of_fields(grain_field, grain_field, add_field);</literal>
- * and it will be probably removed someday.
+ * |[
+ * gwy_data_field_max_of_fields(grain_field, grain_field, add_field);
+ * ]|
  **/
 void
 gwy_data_field_grains_add(GwyDataField *grain_field, GwyDataField *add_field)
@@ -3251,21 +3258,49 @@ gwy_data_field_grains_add(GwyDataField *grain_field, GwyDataField *add_field)
 
 /**
  * gwy_data_field_grains_intersect:
- * @grain_field:  field of marked grains (mask).
+ * @grain_field: Field of marked grains (mask).
  * @intersect_field: Field of marked grains (mask).
  *
  * Performs intersection betweet two grain fields,
  * result is stored in @grain_field.
  *
  * Note: This function is equivalent to
- * <literal>gwy_data_field_min_of_fields(grain_field, grain_field, intersect_field);</literal>
- * and it will be probably removed someday.
+ * |[
+ * gwy_data_field_min_of_fields(grain_field, grain_field, add_field);
+ * ]|
  **/
 void
 gwy_data_field_grains_intersect(GwyDataField *grain_field,
                                 GwyDataField *intersect_field)
 {
     gwy_data_field_min_of_fields(grain_field, grain_field, intersect_field);
+}
+
+/**
+ * gwy_data_field_grains_invert:
+ * @grain_field: Data field (mask) of marked grains.
+ *
+ * Inverts a data field representing a mask.
+ *
+ * All non-positive values are transformed to 1.0.  All positive values are
+ * transformed to 0.0
+ *
+ * Since: 2.43
+ **/
+void
+gwy_data_field_grains_invert(GwyDataField *grain_field)
+{
+    guint xres, yres, k;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(grain_field));
+    xres = grain_field->xres;
+    yres = grain_field->yres;
+    for (k = 0; k < xres*yres; k++) {
+        if (grain_field->data[k] > 0.0)
+            grain_field->data[k] = 0.0;
+        else
+            grain_field->data[k] = 1.0;
+    }
 }
 
 void
@@ -4781,6 +4816,182 @@ gwy_data_field_grain_simple_dist_trans(GwyDataField *data_field,
     g_free(outqueue->points);
     g_slice_free(PixelQueue, inqueue);
     g_slice_free(PixelQueue, outqueue);
+}
+
+/**
+ * gwy_data_field_grains_shrink:
+ * @data_field: A data field with zeroes in empty space and nonzeroes in
+ *              grains.
+ * @amount: How much the grains should be reduced, in pixels.  It is inclusive,
+ *          i.e. pixels that are @amount far from the border will be removed.
+ * @dtype: Type of simple distance to use.
+ * @from_border: %TRUE to consider image edges to be grain boundaries.
+ *               %FALSE to reduce grains touching field boundaries only along
+ *               the boundaries.
+ *
+ * Erodes a data field containing mask by specified amount using a distance
+ * measure.
+ *
+ * Non-zero pixels in @data_field will be replaced with zeroes if they are not
+ * farther than @amount from the grain boundary as defined by @dtype.
+ *
+ * Since: 2.43
+ **/
+void
+gwy_data_field_grains_shrink(GwyDataField *data_field,
+                             gdouble amount,
+                             GwyDistanceTransformType dtype,
+                             gboolean from_border)
+{
+    GwyDataField *edt;
+    guint xres, yres, k;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(dtype <= GWY_DISTANCE_TRANSFORM_EUCLIDEAN);
+
+    if (amount < 0.5)
+        return;
+
+    xres = data_field->xres;
+    yres = data_field->yres;
+    edt = gwy_data_field_duplicate(data_field);
+    gwy_data_field_grain_simple_dist_trans(edt, dtype, from_border);
+    for (k = 0; k < xres*yres; k++) {
+        if (edt->data[k] <= amount + 1e-9)
+            data_field->data[k] = 0.0;
+    }
+
+    g_object_unref(edt);
+    gwy_data_field_invalidate(data_field);
+}
+
+static gint
+compare_distant_points(gconstpointer pa, gconstpointer pb)
+{
+    const DistantPoint *a = (const DistantPoint*)pa;
+    const DistantPoint *b = (const DistantPoint*)pb;
+
+    if (a->distance < b->distance)
+        return -1;
+    if (a->distance > b->distance)
+        return 1;
+    if (a->i < b->i)
+        return -1;
+    if (a->i > b->i)
+        return 1;
+    if (a->j < b->j)
+        return -1;
+    if (a->j > b->j)
+        return 1;
+    return 0;
+}
+
+static void
+grow_without_merging(GwyDataField *dfield, GwyDataField *edt, gdouble amount)
+{
+    GArray *array;
+    guint xres, yres, i, j, k, m;
+    gdouble *d, *e;
+    gint *grains;
+
+    xres = dfield->xres;
+    yres = dfield->yres;
+    d = dfield->data;
+    e = edt->data;
+    grains = g_new0(gint, xres*yres);
+    if (!gwy_data_field_number_grains(dfield, grains)) {
+        g_free(grains);
+        return;
+    }
+
+    array = g_array_sized_new(FALSE, FALSE, sizeof(DistantPoint), 1000);
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            gdouble eij = e[i*xres + j];
+            if (eij > 0.0 && eij <= amount) {
+                DistantPoint dp = { eij, i, j };
+                g_array_append_val(array, dp);
+            }
+        }
+    }
+    g_array_sort(array, compare_distant_points);
+
+    for (m = 0; m < array->len; m++) {
+        const DistantPoint *dp = &g_array_index(array, DistantPoint, m);
+        gint g1, g2, g3, g4, gno;
+
+        k = dp->i*xres + dp->j;
+        g1 = dp->i > 0      ? grains[k-xres] : 0;
+        g2 = dp->j > 0      ? grains[k-1]    : 0;
+        g3 = dp->j < xres-1 ? grains[k+1]    : 0;
+        g4 = dp->i < yres-1 ? grains[k+xres] : 0;
+        /* If all are equal or zeroes then bitwise or gives us the nonzero
+         * value sought. */
+        gno = g1 | g2 | g3 | g4;
+        if ((!g1 || g1 == gno)
+            && (!g2 || g2 == gno)
+            && (!g3 || g3 == gno)
+            && (!g4 || g4 == gno)) {
+            grains[k] = gno;
+            d[k] = 1.0;
+        }
+    }
+
+    g_array_free(array, TRUE);
+    g_free(grains);
+}
+
+/**
+ * gwy_data_field_grains_grow:
+ * @data_field: A data field with zeroes in empty space and nonzeroes in
+ *              grains.
+ * @amount: How much the grains should be expanded, in pixels.  It is
+ *          inclusive, i.e. exterior pixels that are @amount far from the
+ *          border will be filled.
+ * @dtype: Type of simple distance to use.
+ * @prevent_merging: %TRUE to prevent grain merging, i.e. the growth stops
+ *                   where two grains would merge.  %FALSE to simply expand the
+ *                   grains, without regard to grain connectivity.
+ *
+ * Dilates a data field containing mask by specified amount using a distance
+ * measure.
+ *
+ * Non-positive pixels in @data_field will be replaced with ones if they are
+ * not farther than @amount from the grain boundary as defined by @dtype.
+ *
+ * Since: 2.43
+ **/
+void
+gwy_data_field_grains_grow(GwyDataField *data_field,
+                           gdouble amount,
+                           GwyDistanceTransformType dtype,
+                           gboolean prevent_merging)
+{
+    GwyDataField *edt;
+    guint xres, yres, k;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(dtype <= GWY_DISTANCE_TRANSFORM_EUCLIDEAN);
+
+    if (amount < 0.5)
+        return;
+
+    amount += 1e-9;
+    xres = data_field->xres;
+    yres = data_field->yres;
+    edt = gwy_data_field_duplicate(data_field);
+    gwy_data_field_grains_invert(edt);
+    gwy_data_field_grain_simple_dist_trans(edt, dtype, FALSE);
+    if (prevent_merging)
+        grow_without_merging(data_field, edt, amount);
+    else {
+        for (k = 0; k < xres*yres; k++) {
+            if (edt->data[k] <= amount)
+                data_field->data[k] = 1.0;
+        }
+    }
+    g_object_unref(edt);
+    gwy_data_field_invalidate(data_field);
 }
 
 /**
