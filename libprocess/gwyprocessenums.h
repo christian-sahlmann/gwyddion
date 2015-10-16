@@ -268,6 +268,7 @@ const GwyEnum* gwy_dwt_denoise_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_interpolation_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_windowing_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_correlation_type_get_enum(void) G_GNUC_CONST;
+const GwyEnum* gwy_distance_transform_type_get_enum(void) G_GNUC_CONST;
 
 /* Well, this is not exactly an enum... */
 typedef struct {
