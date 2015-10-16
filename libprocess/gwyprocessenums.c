@@ -585,6 +585,8 @@ gwy_masking_type_get_enum(void)
  * Returns #GwyEnum for #GwyDistanceTransformType enum type.
  *
  * Returns: %NULL-terminated #GwyEnum which must not be modified nor freed.
+ *
+ * Since: 2.43
  **/
 const GwyEnum*
 gwy_distance_transform_type_get_enum(void)
