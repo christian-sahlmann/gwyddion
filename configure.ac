@@ -92,7 +92,7 @@ AC_PROG_LIBTOOL
 AC_PROG_INSTALL
 AC_CHECK_PROGS([XSLTPROC],[xsltproc],[:])
 AC_CHECK_PROGS([EPYDOC],[epydoc],[:])
-GTK_DOC_CHECK(1.8)
+GTK_DOC_CHECK(1.9)
 
 #############################################################################
 # 64bit (for FFTW 3.0 warning)

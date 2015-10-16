@@ -45,10 +45,8 @@ EXTRA_DIST = \
 
 DOC_STAMPS = \
 	scan-build.stamp \
-	tmpl-build.stamp \
 	sgml-build.stamp \
 	html-build.stamp \
-	tmpl.stamp \
 	sgml.stamp \
 	html.stamp
 
@@ -108,26 +106,16 @@ scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB) $(ADD_OBJECTS)
 $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES): scan-build.stamp
 	@true
 
-#### templates ####
-
-tmpl-build.stamp: $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-overrides.txt
-	@echo 'gtk-doc: Rebuilding template files'
-	gtkdoc-mktmpl --module=$(DOC_MODULE) --output-dir=template $(MKTMPL_OPTIONS)
-	touch tmpl-build.stamp
-
-tmpl.stamp: tmpl-build.stamp
-	@true
-
 #### xml ####
 
-sgml-build.stamp: tmpl.stamp $(CFILE_GLOB) $(expand_content_files)
+sgml-build.stamp: $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-overrides.txt $(CFILE_GLOB) $(expand_content_files)
 	@echo 'gtk-doc: Building XML'
 	if test -f Makefile.am; then \
 		x=; \
 	else \
 		x=--source-dir=$(top_builddir)/$(DOC_SOURCE_DIR); \
 	fi; \
-	gtkdoc-mkdb --module=$(DOC_MODULE) --tmpl-dir=template \
+	gtkdoc-mkdb --module=$(DOC_MODULE) \
 	            --source-dir=$(top_srcdir)/$(DOC_SOURCE_DIR) $x \
 	            --sgml-mode --output-format=xml \
 	            --expand-content-files="$(expand_content_files)" \

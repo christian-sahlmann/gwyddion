@@ -21,6 +21,10 @@ Modules:
 - Rank: Local normalisation and value range filter options were added.
 - Nanoscantech: Unit and scale reading was updated.
 
+Other:
+- Configure check for gtk-doc at least 1.9, required to build the
+  documentation (older versions were actually insufficient even before).
+
 
 2.42 (2015-10-06)
 Application:
