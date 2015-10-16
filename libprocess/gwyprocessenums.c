@@ -571,12 +571,35 @@ gwy_masking_type_get_enum(void)
  *                                      city-block.
  * @GWY_DISTANCE_TRANSFORM_OCTAGONAL84: Octagonal distance beginning from
  *                                      chess.
+ * @GWY_DISTANCE_TRANSFORM_OCTAGONAL: Average octagonal distance, i.e. the mean
+ *                                    of the 48 and 84 distances (Since 2.43).
  * @GWY_DISTANCE_TRANSFORM_EUCLIDEAN: True Euclidean distance (Since 2.43).
  *
  * Type of distance transform.
  *
  * Since: 2.41
  **/
+/**
+ * gwy_distance_transform_type_get_enum:
+ *
+ * Returns #GwyEnum for #GwyDistanceTransformType enum type.
+ *
+ * Returns: %NULL-terminated #GwyEnum which must not be modified nor freed.
+ **/
+const GwyEnum*
+gwy_distance_transform_type_get_enum(void)
+{
+    static const GwyEnum entries[] = {
+        { N_("distance|City-block"),    GWY_DISTANCE_TRANSFORM_CITYBLOCK,   },
+        { N_("distance|Chess"),         GWY_DISTANCE_TRANSFORM_CHESS,       },
+        { N_("distance|Octagonal 4,8"), GWY_DISTANCE_TRANSFORM_OCTAGONAL48, },
+        { N_("distance|Octagonal 8,4"), GWY_DISTANCE_TRANSFORM_OCTAGONAL84, },
+        { N_("distance|Octagonal"),     GWY_DISTANCE_TRANSFORM_OCTAGONAL,   },
+        { N_("distance|Euclidean"),     GWY_DISTANCE_TRANSFORM_EUCLIDEAN,   },
+        { NULL,                         0,                                  },
+    };
+    return entries;
+}
 
 /**
  * GwyMinMaxFilterType:

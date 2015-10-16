@@ -4699,6 +4699,23 @@ borderless_edt(GwyDataField *dfield)
     g_object_unref(extended);
 }
 
+static void
+average_octagonal_dt(GwyDataField *dfield, gboolean from_border)
+{
+    GwyDataField *tmp;
+
+    tmp = gwy_data_field_duplicate(dfield);
+    gwy_data_field_grain_simple_dist_trans(dfield,
+                                           GWY_DISTANCE_TRANSFORM_OCTAGONAL48,
+                                           from_border);
+    gwy_data_field_grain_simple_dist_trans(tmp,
+                                           GWY_DISTANCE_TRANSFORM_OCTAGONAL84,
+                                           from_border);
+    gwy_data_field_sum_fields(dfield, dfield, tmp);
+    gwy_data_field_multiply(dfield, 0.5);
+    g_object_unref(tmp);
+}
+
 /**
  * gwy_data_field_grain_simple_dist_trans:
  * @data_field: A data field with zeroes in empty space and nonzeroes in
@@ -4711,7 +4728,7 @@ borderless_edt(GwyDataField *dfield)
  * Each non-zero value will be replaced with a distance to the grain boundary,
  * measured in pixels.
  *
- * Note this function can calcualte the Euclidean distance transform only since
+ * Note this function can calculate the Euclidean distance transform only since
  * 2.43.  Use gwy_data_field_grain_distance_transform() for the EDT if you need
  * compatibility with older versions.
  *
@@ -4735,6 +4752,10 @@ gwy_data_field_grain_simple_dist_trans(GwyDataField *data_field,
         else
             borderless_edt(data_field);
 
+        return;
+    }
+    if (dtype == GWY_DISTANCE_TRANSFORM_OCTAGONAL) {
+        average_octagonal_dt(data_field, from_border);
         return;
     }
 
