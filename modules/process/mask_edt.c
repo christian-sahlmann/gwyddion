@@ -35,16 +35,6 @@
 #define MASKTHIN_RUN_MODES GWY_RUN_IMMEDIATE
 
 typedef enum {
-    DISTANCE_TRANSFORM_EUCLIDEAN   = 0,
-    DISTANCE_TRANSFORM_CITYBLOCK   = 1,
-    DISTANCE_TRANSFORM_CHESS       = 2,
-    DISTANCE_TRANSFORM_OCTAGONAL48 = 3,
-    DISTANCE_TRANSFORM_OCTAGONAL84 = 4,
-    DISTANCE_TRANSFORM_OCTAGONAL   = 5,
-    DISTANCE_TRANSFORM_NTYPES
-} DistanceTransformType;
-
-typedef enum {
     MASKEDT_INTERIOR = 0,
     MASKEDT_EXTERIOR = 1,
     MASKEDT_SIGNED   = 2,
@@ -58,7 +48,7 @@ typedef struct {
 
 typedef struct {
     MaskEdtType mask_type;
-    DistanceTransformType dist_type;
+    GwyDistanceTransformType dist_type;
     gboolean from_border;
 } MaskEdtArgs;
 
@@ -86,12 +76,6 @@ static void          from_border_changed          (GtkToggleButton *toggle,
 static GwyDataField* maskedt_do                   (GwyDataField *mfield,
                                                    GwyDataField *dfield,
                                                    MaskEdtArgs *args);
-static void          distance_transform_one       (GwyDataField *dfield,
-                                                   DistanceTransformType dtype,
-                                                   gboolean from_border);
-static void          borderless_distance_transform(GwyDataField *dfield);
-static void          octagonal_distance_transform (GwyDataField *dfield,
-                                                   gboolean from_border);
 static void          maskedt_sanitize_args        (MaskEdtArgs *args);
 static void          maskedt_load_args            (GwyContainer *settings,
                                                    MaskEdtArgs *args);
@@ -100,7 +84,7 @@ static void          maskedt_save_args            (GwyContainer *settings,
 
 static const MaskEdtArgs maskedt_defaults = {
     MASKEDT_INTERIOR,
-    DISTANCE_TRANSFORM_EUCLIDEAN,
+    GWY_DISTANCE_TRANSFORM_EUCLIDEAN,
     TRUE,
 };
 
@@ -109,7 +93,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Performs simple and true Euclidean distance transforms of masks."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti)",
     "2014",
 };
@@ -356,14 +340,6 @@ maskedt_dialog(MaskEdtArgs *args)
         { N_("Exterior"),  MASKEDT_EXTERIOR },
         { N_("Two-sided"), MASKEDT_SIGNED   },
     };
-    static const GwyEnum dist_types[] = {
-        { N_("distance|Euclidean"),     DISTANCE_TRANSFORM_EUCLIDEAN,   },
-        { N_("distance|City-block"),    DISTANCE_TRANSFORM_CITYBLOCK,   },
-        { N_("distance|Chess"),         DISTANCE_TRANSFORM_CHESS,       },
-        { N_("distance|Octagonal 4,8"), DISTANCE_TRANSFORM_OCTAGONAL48, },
-        { N_("distance|Octagonal 8,4"), DISTANCE_TRANSFORM_OCTAGONAL84, },
-        { N_("distance|Octagonal"),     DISTANCE_TRANSFORM_OCTAGONAL,   },
-    };
 
     MaskEdtControls controls;
     GtkWidget *dialog;
@@ -390,7 +366,7 @@ maskedt_dialog(MaskEdtArgs *args)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
 
     controls.dist_type
-        = gwy_enum_combo_box_new(dist_types, G_N_ELEMENTS(dist_types),
+        = gwy_enum_combo_box_new(gwy_distance_transform_type_get_enum(), -1,
                                  G_CALLBACK(dist_type_changed), &controls,
                                   args->dist_type, TRUE);
     gwy_table_attach_hscale(table, row++, _("_Distance type:"), NULL,
@@ -476,7 +452,7 @@ maskedt_do(GwyDataField *mfield,
            GwyDataField *dfield,
            MaskEdtArgs *args)
 {
-    DistanceTransformType dtype = args->dist_type;
+    GwyDistanceTransformType dtype = args->dist_type;
     gboolean from_border = args->from_border;
     GwySIUnit *unitxy, *unitz;
     gdouble q;
@@ -485,20 +461,20 @@ maskedt_do(GwyDataField *mfield,
     gwy_data_field_copy(mfield, dfield, FALSE);
 
     if (args->mask_type == MASKEDT_INTERIOR) {
-        distance_transform_one(dfield, dtype, from_border);
+        gwy_data_field_grain_simple_dist_trans(dfield, dtype, from_border);
     }
     else if (args->mask_type == MASKEDT_EXTERIOR) {
         gwy_data_field_multiply(dfield, -1.0);
         gwy_data_field_add(dfield, 1.0);
-        distance_transform_one(dfield, dtype, from_border);
+        gwy_data_field_grain_simple_dist_trans(dfield, dtype, from_border);
     }
     else if (args->mask_type == MASKEDT_SIGNED) {
         GwyDataField *tmp = gwy_data_field_duplicate(dfield);
 
-        distance_transform_one(dfield, dtype, from_border);
+        gwy_data_field_grain_simple_dist_trans(dfield, dtype, from_border);
         gwy_data_field_multiply(tmp, -1.0);
         gwy_data_field_add(tmp, 1.0);
-        distance_transform_one(tmp, dtype, from_border);
+        gwy_data_field_grain_simple_dist_trans(tmp, dtype, from_border);
         gwy_data_field_subtract_fields(dfield, dfield, tmp);
         g_object_unref(tmp);
     }
@@ -513,77 +489,6 @@ maskedt_do(GwyDataField *mfield,
     return dfield;
 }
 
-static void
-distance_transform_one(GwyDataField *dfield,
-                       DistanceTransformType dtype,
-                       gboolean from_border)
-{
-    if (dtype == DISTANCE_TRANSFORM_EUCLIDEAN) {
-        if (from_border)
-            gwy_data_field_grain_distance_transform(dfield);
-        else
-            borderless_distance_transform(dfield);
-    }
-    else if (dtype == DISTANCE_TRANSFORM_CITYBLOCK) {
-        gwy_data_field_grain_simple_dist_trans(dfield,
-                                               GWY_DISTANCE_TRANSFORM_CITYBLOCK,
-                                               from_border);
-    }
-    else if (dtype == DISTANCE_TRANSFORM_CHESS) {
-        gwy_data_field_grain_simple_dist_trans(dfield,
-                                               GWY_DISTANCE_TRANSFORM_CHESS,
-                                               from_border);
-    }
-    else if (dtype == DISTANCE_TRANSFORM_OCTAGONAL48) {
-        gwy_data_field_grain_simple_dist_trans(dfield,
-                                               GWY_DISTANCE_TRANSFORM_OCTAGONAL48,
-                                               from_border);
-    }
-    else if (dtype == DISTANCE_TRANSFORM_OCTAGONAL84) {
-        gwy_data_field_grain_simple_dist_trans(dfield,
-                                               GWY_DISTANCE_TRANSFORM_OCTAGONAL84,
-                                               from_border);
-    }
-    else if (dtype == DISTANCE_TRANSFORM_OCTAGONAL) {
-        octagonal_distance_transform(dfield, from_border);
-    }
-    else {
-        g_return_if_reached();
-    }
-}
-
-static void
-borderless_distance_transform(GwyDataField *dfield)
-{
-    guint xres = dfield->xres, yres = dfield->yres;
-    GwyDataField *extended;
-
-    extended = gwy_data_field_extend(dfield,
-                                     xres/2, xres/2, yres/2, yres/2,
-                                     GWY_EXTERIOR_BORDER_EXTEND, 0.0, FALSE);
-    gwy_data_field_grain_distance_transform(extended);
-    gwy_data_field_area_copy(extended, dfield,
-                             xres/2, yres/2, xres, yres, 0, 0);
-    g_object_unref(extended);
-}
-
-static void
-octagonal_distance_transform(GwyDataField *dfield, gboolean from_border)
-{
-    GwyDataField *tmp;
-
-    tmp = gwy_data_field_duplicate(dfield);
-    gwy_data_field_grain_simple_dist_trans(dfield,
-                                           GWY_DISTANCE_TRANSFORM_OCTAGONAL48,
-                                           from_border);
-    gwy_data_field_grain_simple_dist_trans(tmp,
-                                           GWY_DISTANCE_TRANSFORM_OCTAGONAL84,
-                                           from_border);
-    gwy_data_field_sum_fields(dfield, dfield, tmp);
-    gwy_data_field_multiply(dfield, 0.5);
-    g_object_unref(tmp);
-}
-
 static const gchar dist_type_key[]   = "/module/dist_edt/dist_type";
 static const gchar mask_type_key[]   = "/module/mask_edt/mask_type";
 static const gchar from_border_key[] = "/module/mask_edt/from_border";
@@ -592,7 +497,8 @@ static void
 maskedt_sanitize_args(MaskEdtArgs *args)
 {
     args->mask_type = MIN(args->mask_type, MASKEDT_NTYPES-1);
-    args->dist_type = MIN(args->dist_type, DISTANCE_TRANSFORM_NTYPES-1);
+    args->dist_type = gwy_enum_sanitize_value(args->dist_type,
+                                              GWY_TYPE_DISTANCE_TRANSFORM_TYPE);
     args->from_border = !!args->from_border;
 }
 
