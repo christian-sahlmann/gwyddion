@@ -571,8 +571,9 @@ gwy_masking_type_get_enum(void)
  *                                      city-block.
  * @GWY_DISTANCE_TRANSFORM_OCTAGONAL84: Octagonal distance beginning from
  *                                      chess.
+ * @GWY_DISTANCE_TRANSFORM_EUCLIDEAN: True Euclidean distance (Since 2.43).
  *
- * Type of simple distance transform.
+ * Type of distance transform.
  *
  * Since: 2.41
  **/

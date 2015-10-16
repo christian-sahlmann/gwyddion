@@ -4684,20 +4684,36 @@ simple_dist_trans(gint *grain, guint width, guint height,
     return dist;
 }
 
+static void
+borderless_edt(GwyDataField *dfield)
+{
+    guint xres = dfield->xres, yres = dfield->yres;
+    GwyDataField *extended;
+
+    extended = gwy_data_field_extend(dfield,
+                                     xres/2, xres/2, yres/2, yres/2,
+                                     GWY_EXTERIOR_BORDER_EXTEND, 0.0, FALSE);
+    gwy_data_field_grain_distance_transform(extended);
+    gwy_data_field_area_copy(extended, dfield,
+                             xres/2, yres/2, xres, yres, 0, 0);
+    g_object_unref(extended);
+}
+
 /**
  * gwy_data_field_grain_simple_dist_trans:
  * @data_field: A data field with zeroes in empty space and nonzeroes in
  *              grains.
  * @dtype: Type of simple distance to use.
- * @from_border: %TRUE to consider image edges to begrain boundaries.
+ * @from_border: %TRUE to consider image edges to be grain boundaries.
  *
- * Performs a simple distance transform of a data field with grains.
+ * Performs a distance transform of a data field with grains.
  *
  * Each non-zero value will be replaced with a distance to the grain boundary,
  * measured in pixels.
  *
- * See also gwy_data_field_grain_distance_transform() for Euclidean distance
- * transform.
+ * Note this function can calcualte the Euclidean distance transform only since
+ * 2.43.  Use gwy_data_field_grain_distance_transform() for the EDT if you need
+ * compatibility with older versions.
  *
  * Since: 2.41
  **/
@@ -4712,6 +4728,16 @@ gwy_data_field_grain_simple_dist_trans(GwyDataField *data_field,
     guint xres, yres, k;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+
+    if (dtype == GWY_DISTANCE_TRANSFORM_EUCLIDEAN) {
+        if (from_border)
+            gwy_data_field_grain_distance_transform(data_field);
+        else
+            borderless_edt(data_field);
+
+        return;
+    }
+
     g_return_if_fail(dtype <= GWY_DISTANCE_TRANSFORM_OCTAGONAL84);
 
     xres = data_field->xres;
