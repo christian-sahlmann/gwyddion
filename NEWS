@@ -3,6 +3,11 @@ Libraries:
 - libgwyprocess: Functions for erosion, dilation, opening and closing
   morphological operations with arbitrarily shaped flat structuring elements
   were added.
+- libgwyprocess: gwy_data_field_grain_simple_dist_trans() can perform all
+  types of distance transforms now, including true Euclidean.
+- libgwyprocess: Functions for mask growing and shrinking using any available
+  distance measure were added.
+- libgwyprocess: A function for mask inversion was added.
 
 Modules:
 - Sensofarx (new): Imports Sensofar PLUx data files.
@@ -14,6 +19,7 @@ Modules:
 - Filters tool: Minimum and maximum filters now use circular neighbourhoods.
   Opening and closing filters with flat discs were added.
 - Rank: Local normalisation and value range filter options were added.
+- Nanoscantech: Unit and scale reading was updated.
 
 
 2.42 (2015-10-06)
