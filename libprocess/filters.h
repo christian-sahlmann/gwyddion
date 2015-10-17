@@ -174,6 +174,13 @@ void gwy_data_field_area_filter_min_max               (GwyDataField *data_field,
                                                        gint row,
                                                        gint width,
                                                        gint height);
+void gwy_data_field_area_filter_disc_asf              (GwyDataField *data_field,
+                                                       gint radius,
+                                                       gboolean closing,
+                                                       gint col,
+                                                       gint row,
+                                                       gint width,
+                                                       gint height);
 void gwy_data_field_filter_rms                        (GwyDataField *data_field,
                                                        gint size);
 void gwy_data_field_area_filter_rms                   (GwyDataField *data_field,
@@ -203,3 +210,5 @@ void gwy_data_field_filter_harris                     (GwyDataField *x_gradient,
 G_END_DECLS
 
 #endif /* __GWY_PROCESS_FILTERS__ */
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

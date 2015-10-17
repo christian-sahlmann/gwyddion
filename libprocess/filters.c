@@ -25,6 +25,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/filters.h>
+#include <libprocess/elliptic.h>
 #include <libprocess/stats.h>
 #include <libprocess/linestats.h>
 #include <libprocess/arithmetic.h>
@@ -3363,6 +3364,68 @@ gwy_data_field_area_filter_min_max(GwyDataField *data_field,
     }
     else {
         g_return_if_reached();
+    }
+}
+
+/**
+ * gwy_data_field_area_filter_circular_asf:
+ * @data_field: A data field to apply the filter to.
+ * @radius: Maximum radius of the circular structuring element, in pixels.
+ *          For radius 1 and smaller the filter is no-op.
+ * @closing: %TRUE requests an opening-closing filter (i.e. ending with
+ *           closing), %FALSE requests a closing-opening filter (i.e. ending
+ *           with opening).
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Applies an alternating sequential morphological filter with a flat disc
+ * structuring element to a part of a data field.
+ *
+ * Alternating sequential filter is a filter consisting of repeated opening and
+ * closing (or closing and opening) with progressively larger structuring
+ * elements.  This function performs such filtering for sequence of structuring
+ * elements consisting of true Euclidean discs with increasing radii.
+ *
+ * Since: 2.43
+ **/
+void
+gwy_data_field_area_filter_disc_asf(GwyDataField *data_field,
+                                    gint radius,
+                                    gboolean closing,
+                                    gint col,
+                                    gint row,
+                                    gint width,
+                                    gint height)
+{
+    GwyMinMaxFilterType filtertype1, filtertype2;
+    gint r;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width > 0 && height > 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
+
+    if (closing) {
+        filtertype1 = GWY_MIN_MAX_FILTER_OPENING;
+        filtertype2 = GWY_MIN_MAX_FILTER_CLOSING;
+    }
+    else {
+        filtertype1 = GWY_MIN_MAX_FILTER_CLOSING;
+        filtertype2 = GWY_MIN_MAX_FILTER_OPENING;
+    }
+
+    for (r = 2; r <= radius; r++) {
+        gint size = 2*r + 1;
+        GwyDataField *kernel = gwy_data_field_new(size, size, size, size, TRUE);
+        gwy_data_field_elliptic_area_fill(kernel, 0, 0, size, size, 1.0);
+        gwy_data_field_area_filter_min_max(data_field, kernel, filtertype1,
+                                           col, row, width, height);
+        gwy_data_field_area_filter_min_max(data_field, kernel, filtertype2,
+                                           col, row, width, height);
+        g_object_unref(kernel);
     }
 }
 
