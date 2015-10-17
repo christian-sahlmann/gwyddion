@@ -487,7 +487,7 @@ maskedt_do(GwyDataField *mfield,
     return dfield;
 }
 
-static const gchar dist_type_key[]   = "/module/dist_edt/dist_type";
+static const gchar dist_type_key[]   = "/module/mask_edt/dist_type";
 static const gchar mask_type_key[]   = "/module/mask_edt/mask_type";
 static const gchar from_border_key[] = "/module/mask_edt/from_border";
 
