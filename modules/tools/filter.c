@@ -560,13 +560,13 @@ gwy_tool_filter_apply(GwyToolFilter *tool)
         break;
 
         case FILTER_ASF_OPENING:
-        gwy_data_field_area_filter_disc_asf(dfield, (size + 1)/2, FALSE,
+        gwy_data_field_area_filter_disc_asf(dfield, size/2, FALSE,
                                             isel[0], isel[1],
                                             isel[2], isel[3]);
         break;
 
         case FILTER_ASF_CLOSING:
-        gwy_data_field_area_filter_disc_asf(dfield, (size + 1)/2, TRUE,
+        gwy_data_field_area_filter_disc_asf(dfield, size/2, TRUE,
                                             isel[0], isel[1],
                                             isel[2], isel[3]);
         break;
