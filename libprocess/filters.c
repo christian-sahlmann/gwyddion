@@ -3371,7 +3371,7 @@ gwy_data_field_area_filter_min_max(GwyDataField *data_field,
  * gwy_data_field_area_filter_circular_asf:
  * @data_field: A data field to apply the filter to.
  * @radius: Maximum radius of the circular structuring element, in pixels.
- *          For radius 1 and smaller the filter is no-op.
+ *          For radius 0 and smaller the filter is no-op.
  * @closing: %TRUE requests an opening-closing filter (i.e. ending with
  *           closing), %FALSE requests a closing-opening filter (i.e. ending
  *           with opening).
@@ -3386,7 +3386,8 @@ gwy_data_field_area_filter_min_max(GwyDataField *data_field,
  * Alternating sequential filter is a filter consisting of repeated opening and
  * closing (or closing and opening) with progressively larger structuring
  * elements.  This function performs such filtering for sequence of structuring
- * elements consisting of true Euclidean discs with increasing radii.
+ * elements consisting of true Euclidean discs with increasing radii.  The
+ * largest disc in the sequence fits into a (2@size + 1) × (2@size + 1) square.
  *
  * Since: 2.43
  **/
@@ -3417,7 +3418,7 @@ gwy_data_field_area_filter_disc_asf(GwyDataField *data_field,
         filtertype2 = GWY_MIN_MAX_FILTER_OPENING;
     }
 
-    for (r = 2; r <= radius; r++) {
+    for (r = 1; r <= radius; r++) {
         gint size = 2*r + 1;
         GwyDataField *kernel = gwy_data_field_new(size, size, size, size, TRUE);
         gwy_data_field_elliptic_area_fill(kernel, 0, 0, size, size, 1.0);
