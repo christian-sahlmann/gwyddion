@@ -127,7 +127,7 @@ SI_prefixes[] = {
 
 /* Units that can conflict with prefixes */
 static const gchar *known_units[] = {
-    "deg", "Pa", "cd", "mol", "cal", "px", "pt", "cps",
+    "deg", "Pa", "cd", "mol", "cal", "px", "pt", "cps", "cts",
 };
 
 /* Long names.  Keep the list sorted by length so that we can give up quickly
