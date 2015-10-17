@@ -52,6 +52,8 @@ typedef enum {
     FILTER_SHARPEN       = 8,
     FILTER_OPENING       = 9,
     FILTER_CLOSING       = 10,
+    FILTER_ASF_OPENING   = 11,
+    FILTER_ASF_CLOSING   = 12,
     FILTER_NFILTERS
 } FilterType;
 
@@ -218,6 +220,8 @@ gwy_tool_filter_init_dialog(GwyToolFilter *tool)
         { N_("Maximum"),              FILTER_MAXIMUM,      },
         { N_("filter|Opening"),       FILTER_OPENING,      },
         { N_("filter|Closing"),       FILTER_CLOSING,      },
+        { N_("ASF Opening"),          FILTER_ASF_OPENING,  },
+        { N_("ASF Closing"),          FILTER_ASF_CLOSING,  },
         { N_("Kuwahara"),             FILTER_KUWAHARA,     },
         { N_("Dechecker"),            FILTER_DECHECKER,    },
         { N_("filter|Gaussian"),      FILTER_GAUSSIAN,     },
@@ -553,6 +557,18 @@ gwy_tool_filter_apply(GwyToolFilter *tool)
                                            GWY_MIN_MAX_FILTER_CLOSING,
                                            isel[0], isel[1],
                                            isel[2], isel[3]);
+        break;
+
+        case FILTER_ASF_OPENING:
+        gwy_data_field_area_filter_disc_asf(dfield, (size + 1)/2, FALSE,
+                                            isel[0], isel[1],
+                                            isel[2], isel[3]);
+        break;
+
+        case FILTER_ASF_CLOSING:
+        gwy_data_field_area_filter_disc_asf(dfield, (size + 1)/2, TRUE,
+                                            isel[0], isel[1],
+                                            isel[2], isel[3]);
         break;
 
         default:
