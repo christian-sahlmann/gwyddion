@@ -647,8 +647,6 @@ apedax_get_data_field(GwyZipFile uFile,
 
     expectedSize = scanSize->XRes * scanSize->YRes * sizeof(gdouble);
 
-    unzGoToFirstFile(uFile);
-
     if (!gwyzip_locate_file(uFile, chFileName, 0, error)
         || !(buffer = gwyzip_get_file_content(uFile, &size, error)))
         return NULL;

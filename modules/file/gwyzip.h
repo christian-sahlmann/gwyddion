@@ -26,7 +26,13 @@
 
 #ifdef HAVE_MINIZIP
 #include <unzip.h>
-#define GwyZipFile unzFile
+
+struct _GwyZipFile {
+    unzFile *unzfile;
+    guint index;
+};
+
+typedef struct _GwyZipFile *GwyZipFile;
 
 #ifdef G_OS_WIN32
 G_GNUC_UNUSED
@@ -109,12 +115,75 @@ gwyzip_open(const gchar *path)
         gwyzip_testerror_file_func,
         NULL,
     };
+    struct _GwyZipFile *zipfile;
 
-    return unzOpen2(path, &ffdef);
+    zipfile = g_new0(struct _GwyZipFile, 1);
+    zipfile->unzfile = unzOpen2(path, &ffdef);
+    return zipfile;
 }
 #else
-#define gwyzip_open unzOpen
+G_GNUC_UNUSED
+static GwyZipFile
+gwyzip_open(const gchar *path)
+{
+    struct _GwyZipFile *zipfile;
+
+    zipfile = g_new0(struct _GwyZipFile, 1);
+    zipfile->unzfile = unzOpen(path);
+    return zipfile;
+}
 #endif
+
+G_GNUC_UNUSED
+static void
+gwyzip_close(GwyZipFile zipfile)
+{
+    unzClose(zipfile->unzfile);
+    g_free(zipfile);
+}
+
+G_GNUC_UNUSED
+static int
+gwyzip_next_file(GwyZipFile zipfile)
+{
+    gint status;
+    if ((status = unzGoToNextFile(zipfile->unzfile)) == UNZ_OK) {
+        zipfile->index++;
+    }
+    return status;
+}
+
+G_GNUC_UNUSED
+static int
+gwyzip_first_file(GwyZipFile zipfile)
+{
+    gint status;
+    if ((status = unzGoToFirstFile(zipfile->unzfile)) == UNZ_OK) {
+        zipfile->index = 0;
+    }
+    return status;
+}
+
+G_GNUC_UNUSED
+static int
+gwyzip_get_current_filename(GwyZipFile zipfile, gchar **filename)
+{
+    unz_file_info fileinfo;
+    gint status;
+    gchar *filename_buf;
+    filename_buf = g_new(gchar, PATH_MAX + 1);
+
+    status = unzGetCurrentFileInfo(zipfile->unzfile, &fileinfo,
+                                   filename_buf, PATH_MAX,
+                                   NULL, 0, NULL, 0);
+    if (status != UNZ_OK) {
+        g_free(filename_buf);
+        *filename = NULL;
+        return status;
+    }
+    *filename = filename_buf;
+    return status;
+}
 
 G_GNUC_UNUSED
 static gboolean
@@ -145,11 +214,11 @@ err_MINIZIP(gint status, GError **error)
 
 G_GNUC_UNUSED
 static gboolean
-gwyzip_locate_file(GwyZipFile *zipfile, const gchar *filename, gint casesens,
+gwyzip_locate_file(GwyZipFile zipfile, const gchar *filename, gint casesens,
                    GError **error)
 {
     gwy_debug("calling unzLocateFile() to find %s", filename);
-    if (unzLocateFile(zipfile, filename, casesens) != UNZ_OK) {
+    if (unzLocateFile(zipfile->unzfile, filename, casesens) != UNZ_OK) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
                     _("File %s is missing in the zip file."), filename);
         return FALSE;
@@ -159,7 +228,7 @@ gwyzip_locate_file(GwyZipFile *zipfile, const gchar *filename, gint casesens,
 
 G_GNUC_UNUSED
 static guchar*
-gwyzip_get_file_content(GwyZipFile *zipfile, gsize *contentsize,
+gwyzip_get_file_content(GwyZipFile zipfile, gsize *contentsize,
                         GError **error)
 {
     unz_file_info fileinfo;
@@ -169,7 +238,7 @@ gwyzip_get_file_content(GwyZipFile *zipfile, gsize *contentsize,
     gint status;
 
     gwy_debug("calling unzGetCurrentFileInfo() to figure out buffer size");
-    status = unzGetCurrentFileInfo(zipfile, &fileinfo,
+    status = unzGetCurrentFileInfo(zipfile->unzfile, &fileinfo,
                                    NULL, 0,
                                    NULL, 0,
                                    NULL, 0);
@@ -179,7 +248,7 @@ gwyzip_get_file_content(GwyZipFile *zipfile, gsize *contentsize,
     }
 
     gwy_debug("calling unzGetCurrentFileInfo()");
-    status = unzOpenCurrentFile(zipfile);
+    status = unzOpenCurrentFile(zipfile->unzfile);
     if (status != UNZ_OK) {
         err_MINIZIP(status, error);
         return NULL;
@@ -188,15 +257,15 @@ gwyzip_get_file_content(GwyZipFile *zipfile, gsize *contentsize,
     size = fileinfo.uncompressed_size;
     buffer = g_new(guchar, size + 1);
     gwy_debug("calling unzReadCurrentFile()");
-    readbytes = unzReadCurrentFile(zipfile, buffer, size);
+    readbytes = unzReadCurrentFile(zipfile->unzfile, buffer, size);
     if (readbytes != size) {
         err_MINIZIP(status, error);
-        unzCloseCurrentFile(zipfile);
+        unzCloseCurrentFile(zipfile->unzfile);
         g_free(buffer);
         return NULL;
     }
     gwy_debug("calling unzCloseCurrentFile()");
-    unzCloseCurrentFile(zipfile);
+    unzCloseCurrentFile(zipfile->unzfile);
 
     buffer[size] = '\0';
     if (contentsize)
@@ -204,7 +273,6 @@ gwyzip_get_file_content(GwyZipFile *zipfile, gsize *contentsize,
     return buffer;
 }
 
-#define gwyzip_close unzClose
 #endif
 #else
 #warning "gwyzip.h included without any ZIP library"

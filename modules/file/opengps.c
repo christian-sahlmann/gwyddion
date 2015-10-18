@@ -113,13 +113,13 @@ static void          create_images         (const X3PFile *x3pfile,
                                             GwyContainer *container);
 static void          create_profiles       (const X3PFile *x3pfile,
                                             GwyContainer *container);
-static gboolean      x3p_parse_main        (GwyZipFile *zipfile,
+static gboolean      x3p_parse_main        (GwyZipFile zipfile,
                                             X3PFile *x3pfile,
                                             GError **error);
 static gboolean      data_start            (X3PFile *x3pfile,
                                             GError **error);
 static gboolean      read_binary_data      (X3PFile *x3pfile,
-                                            GwyZipFile *zipfile,
+                                            GwyZipFile zipfile,
                                             GError **error);
 static GwyContainer* get_meta              (const X3PFile *x3pfile);
 static void          add_meta_record       (gpointer hkey,
@@ -479,7 +479,7 @@ x3p_text(G_GNUC_UNUSED GMarkupParseContext *context,
 }
 
 static gboolean
-x3p_parse_main(GwyZipFile *zipfile,
+x3p_parse_main(GwyZipFile zipfile,
                X3PFile *x3pfile,
                GError **error)
 {
@@ -674,7 +674,7 @@ data_start(X3PFile *x3pfile, GError **error)
 }
 
 static gboolean
-read_binary_data(X3PFile *x3pfile, GwyZipFile *zipfile, GError **error)
+read_binary_data(X3PFile *x3pfile, GwyZipFile zipfile, GError **error)
 {
     GwyRawDataType rawtype;
     gsize size;

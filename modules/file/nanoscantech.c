@@ -199,7 +199,7 @@ nst_load(const gchar *filename,
     GwyZipFile zipfile;
     guint channelno = 0;
     gint status, xres, yres;
-    gchar *buffer, *line, *p, *title, *strkey;
+    gchar *buffer, *line, *p, *title, *strkey, *filename_curr;
     gchar *titlestr = NULL;
     gsize size = 0;
 
@@ -212,17 +212,12 @@ nst_load(const gchar *filename,
     }
 
     container = gwy_container_new();
-    status = unzGoToFirstFile(zipfile);
+    status = gwyzip_first_file(zipfile);
     while (status == UNZ_OK) {
-        unz_file_info fileinfo;
-        gchar filename_buf[PATH_MAX+1];
-
-        if (unzGetCurrentFileInfo(zipfile, &fileinfo, filename_buf,
-                                PATH_MAX, NULL, 0, NULL, 0) != UNZ_OK) {
+        if (gwyzip_get_current_filename(zipfile, &filename_curr) != UNZ_OK)
             goto fail;
-        }
-        if (g_str_has_suffix(filename_buf, ".lsdlsd")) {
-            gwy_debug("channel %d: %s\n", channelno, filename_buf);
+        if (g_str_has_suffix(filename_curr, ".lsdlsd")) {
+            gwy_debug("channel %d: %s\n", channelno, filename_curr);
             buffer = gwyzip_get_file_content(zipfile, &size, NULL);
             p = buffer;
             line = gwy_str_next_line(&p);
@@ -337,7 +332,8 @@ nst_load(const gchar *filename,
             g_free(buffer);
             channelno++;
         }
-        status = unzGoToNextFile(zipfile);
+        status = gwyzip_next_file(zipfile);
+        g_free(filename_curr);
     }
 
 fail:

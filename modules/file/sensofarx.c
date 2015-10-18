@@ -72,13 +72,13 @@ static gboolean      sensofarx_is_plausible_file(const guchar *filehead,
 static GwyContainer* sensofarx_load             (const gchar *filename,
                                                  GwyRunType mode,
                                                  GError **error);
-static gboolean      sensofarx_parse_index      (GwyZipFile *zipfile,
+static gboolean      sensofarx_parse_index      (GwyZipFile zipfile,
                                                  PLUxFile *pluxfile,
                                                  GError **error);
-static void          sensofarx_parse_recipe     (GwyZipFile *zipfile,
+static void          sensofarx_parse_recipe     (GwyZipFile zipfile,
                                                  PLUxFile *pluxfile);
 static gboolean      read_binary_data           (const PLUxFile *pluxfile,
-                                                 GwyZipFile *zipfile,
+                                                 GwyZipFile zipfile,
                                                  const gchar *filename,
                                                  GwyContainer *container,
                                                  GError **error);
@@ -137,7 +137,7 @@ sensofarx_detect(const GwyFileDetectInfo *fileinfo,
      * for the main XML document within such files, we also have to see if
      * we find "<IMAGE_SIZE_X>" somewehre near the begining of the file. */
     if ((zipfile = gwyzip_open(fileinfo->name))) {
-        if (gwyzip_locate_file(zipfile, "index.xml", 1, NULL) == UNZ_OK) {
+        if (gwyzip_locate_file(zipfile, "index.xml", 1, NULL)) {
             if ((content = gwyzip_get_file_content(zipfile, NULL, NULL))) {
                 if (g_strstr_len(content, 4096, "<IMAGE_SIZE_X>"))
                     score = 100;
@@ -210,7 +210,7 @@ fail:
 
 static gboolean
 read_binary_data(const PLUxFile *pluxfile,
-                 GwyZipFile *zipfile,
+                 GwyZipFile zipfile,
                  const gchar *filename,
                  GwyContainer *container,
                  GError **error)
@@ -394,7 +394,7 @@ sensofarx_text(G_GNUC_UNUSED GMarkupParseContext *context,
 }
 
 static gboolean
-sensofarx_parse_index(GwyZipFile *zipfile,
+sensofarx_parse_index(GwyZipFile zipfile,
                       PLUxFile *pluxfile,
                       GError **error)
 {
@@ -444,7 +444,7 @@ fail:
 }
 
 static void
-sensofarx_parse_recipe(GwyZipFile *zipfile,
+sensofarx_parse_recipe(GwyZipFile zipfile,
                        PLUxFile *pluxfile)
 {
     GMarkupParser parser = {

@@ -109,10 +109,10 @@ static GwyContainer* nao_load            (const gchar *filename,
 static void          add_meta            (gpointer hkey,
                                           gpointer hvalue,
                                           gpointer user_data);
-static GwyDataField* nao_read_field      (GwyZipFile *zipfile,
+static GwyDataField* nao_read_field      (GwyZipFile zipfile,
                                           NAOFile *naofile,
                                           guint id);
-static gboolean      nao_parse_measure   (GwyZipFile *zipfile,
+static gboolean      nao_parse_measure   (GwyZipFile zipfile,
                                           NAOFile *naofile,
                                           GError **error);
 static void          nao_file_free       (NAOFile *naofile);
@@ -189,6 +189,7 @@ nao_load(const gchar *filename,
          GError **error)
 {
     GwyContainer *container = NULL, *meta = NULL;
+    gchar *filename_curr;
     NAOFile naofile;
     GwyZipFile zipfile;
     NAODirection dir;
@@ -213,23 +214,15 @@ nao_load(const gchar *filename,
         g_hash_table_foreach(naofile.hash, &add_meta, meta);
     }
 
-    gwy_debug("calling unzGoToFirstFile()");
-    status = unzGoToFirstFile(zipfile);
+    status = gwyzip_first_file(zipfile);
     while (status == UNZ_OK) {
-        unz_file_info fileinfo;
-        gchar filename_buf[PATH_MAX+1];
-
-        /* NB: We do not need @fileinfo for anything but at least some versions
-         * of minizip seem to require it whatever the other arguments are. */
-        gwy_debug("calling unzGetCurrentFileInfo()");
-        if ((status = unzGetCurrentFileInfo(zipfile, &fileinfo,
-                                            filename_buf, PATH_MAX,
-                                            NULL, 0, NULL, 0)) != UNZ_OK) {
+        if ((status = gwyzip_get_current_filename(zipfile,
+                                                  &filename_curr)) != UNZ_OK) {
             err_MINIZIP(status, error);
             goto fail;
         }
-        if (g_str_has_prefix(filename_buf, "Scan/Data/")) {
-            const gchar *dataname = filename_buf + strlen("Scan/Data/");
+        if (g_str_has_prefix(filename_curr, "Scan/Data/")) {
+            const gchar *dataname = filename_curr + strlen("Scan/Data/");
             dir = DIR_BAD;
 
             gwy_debug("dataname <%s>", dataname);
@@ -279,12 +272,11 @@ nao_load(const gchar *filename,
             }
 
         }
-        gwy_debug("calling unzGoToFirstFile()");
-        status = unzGoToNextFile(zipfile);
+        g_free(filename_curr);
+        status = gwyzip_next_file(zipfile);
     }
 
 fail:
-    gwy_debug("calling gwyzip_close()");
     gwyzip_close(zipfile);
     nao_file_free(&naofile);
     gwy_object_unref(meta);
@@ -305,7 +297,7 @@ add_meta(gpointer hkey, gpointer hvalue, gpointer user_data)
 }
 
 static GwyDataField*
-nao_read_field(GwyZipFile *zipfile, NAOFile *naofile, guint id)
+nao_read_field(GwyZipFile zipfile, NAOFile *naofile, guint id)
 {
     gsize size, expected_size;
     guint width, G_GNUC_UNUSED height, nscanlines, i, j;
@@ -456,7 +448,7 @@ nao_streams_text(G_GNUC_UNUSED GMarkupParseContext *context,
 }
 
 static gboolean
-nao_parse_measure(GwyZipFile *zipfile,
+nao_parse_measure(GwyZipFile zipfile,
                   NAOFile *naofile,
                   GError **error)
 {
