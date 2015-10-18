@@ -65,7 +65,7 @@ typedef struct {
     MaskMorphArgs *args;
     GtkWidget *dialog;
     GSList *mode;
-    GtkWidget *shape;
+    GSList *shape;
     GtkObject *radius;
     GtkWidget *kernel;
 } MaskMorphControls;
@@ -77,12 +77,13 @@ static gboolean maskmorph_dialog       (MaskMorphArgs *args,
                                         GwyDataField *mask);
 static void     mode_changed           (GtkToggleButton *toggle,
                                         MaskMorphControls *controls);
-static void     shape_changed          (GtkComboBox *combo,
+static void     shape_changed          (GtkToggleButton *toggle,
                                         MaskMorphControls *controls);
 static void     radius_changed         (GtkAdjustment *adj,
                                         MaskMorphControls *controls);
 static void     kernel_changed         (GwyDataChooser *chooser,
                                         MaskMorphControls *controls);
+static void     update_sensitivity     (MaskMorphControls *controls);
 static gboolean kernel_filter          (GwyContainer *data,
                                         gint id,
                                         gpointer user_data);
@@ -191,7 +192,8 @@ maskmorph_dialog(MaskMorphArgs *args, GwyDataField *mask)
     gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
     controls.dialog = dialog;
 
-    table = gtk_table_new(MASKMORPH_NOPERATIONS + 6, 4, FALSE);
+    table = gtk_table_new(MASKMORPH_NOPERATIONS + MASKMORPH_NSHAPES + 4,
+                          4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -210,14 +212,19 @@ maskmorph_dialog(MaskMorphArgs *args, GwyDataField *mask)
     row = gwy_radio_buttons_attach_to_table(controls.mode, GTK_TABLE(table),
                                             3, row);
 
-    controls.shape
-        = gwy_enum_combo_box_new(shapes, G_N_ELEMENTS(shapes),
-                                 G_CALLBACK(shape_changed), &controls,
-                                  args->shape, TRUE);
-    gwy_table_attach_hscale(table, row, _("Structuring _element:"), NULL,
-                            GTK_OBJECT(controls.shape),
-                            GWY_HSCALE_WIDGET);
+    label = gtk_label_new(_("Structuring element:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    controls.shape
+        = gwy_radio_buttons_create(shapes, G_N_ELEMENTS(shapes),
+                                   G_CALLBACK(shape_changed), &controls,
+                                   args->shape);
+    row = gwy_radio_buttons_attach_to_table(controls.shape, GTK_TABLE(table),
+                                            3, row);
 
     controls.radius = gtk_adjustment_new(args->radius, 1, 1025, 1, 10, 0);
     gwy_table_attach_hscale(table, row, _("_Radius:"), "px", controls.radius,
@@ -238,6 +245,8 @@ maskmorph_dialog(MaskMorphArgs *args, GwyDataField *mask)
     g_signal_connect(controls.kernel, "changed",
                      G_CALLBACK(kernel_changed), &controls);
     row++;
+
+    update_sensitivity(&controls);
 
     gtk_widget_show_all(dialog);
 
@@ -266,7 +275,7 @@ maskmorph_dialog(MaskMorphArgs *args, GwyDataField *mask)
 }
 
 static void
-mode_changed(G_GNUC_UNUSED GtkToggleButton *toggle,
+mode_changed(GtkToggleButton *toggle,
              MaskMorphControls *controls)
 {
     MaskMorphArgs *args = controls->args;
@@ -275,15 +284,20 @@ mode_changed(G_GNUC_UNUSED GtkToggleButton *toggle,
         return;
 
     args->mode = gwy_radio_buttons_get_current(controls->mode);
+    update_sensitivity(controls);
 }
 
 static void
-shape_changed(GtkComboBox *combo,
+shape_changed(GtkToggleButton *toggle,
               MaskMorphControls *controls)
 {
     MaskMorphArgs *args = controls->args;
 
-    args->shape = gwy_enum_combo_box_get_active(combo);
+    if (!gtk_toggle_button_get_active(toggle))
+        return;
+
+    args->shape = gwy_radio_buttons_get_current(controls->shape);
+    update_sensitivity(controls);
 }
 
 static void
@@ -293,6 +307,7 @@ radius_changed(GtkAdjustment *adj,
     MaskMorphArgs *args = controls->args;
 
     args->radius = gwy_adjustment_get_int(adj);
+    update_sensitivity(controls);
 }
 
 static void
@@ -302,6 +317,35 @@ kernel_changed(GwyDataChooser *chooser,
     MaskMorphArgs *args = controls->args;
 
     gwy_data_chooser_get_active_id(chooser, &args->kernel);
+}
+
+static void
+update_sensitivity(MaskMorphControls *controls)
+{
+    MaskMorphArgs *args = controls->args;
+    gboolean is_user_kernel = (args->shape == MASKMORPH_USER_KERNEL);
+    gboolean needs_builtin = (args->mode == MASKMORPH_ASF_OPENING
+                              || args->mode == MASKMORPH_ASF_CLOSING);
+    gboolean has_kernel;
+
+    if (needs_builtin && is_user_kernel) {
+        gwy_radio_buttons_set_current(controls->shape, MASKMORPH_DISC);
+        return;
+    }
+    gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->radius),
+                                   !is_user_kernel);
+    gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->kernel),
+                                   !needs_builtin);
+    gtk_widget_set_sensitive(gwy_radio_buttons_find(controls->shape,
+                                                    MASKMORPH_USER_KERNEL),
+                             !needs_builtin);
+
+    has_kernel
+        = !!gwy_data_chooser_get_active(GWY_DATA_CHOOSER(controls->kernel),
+                                        NULL);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      GTK_RESPONSE_OK,
+                                      !is_user_kernel || has_kernel);
 }
 
 static GwyDataField*
