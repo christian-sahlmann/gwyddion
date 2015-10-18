@@ -2857,7 +2857,7 @@ min_max_precomputed_row_copy(MinMaxPrecomputedRow *target,
     gwy_assign(target->storage, source->storage, rowlen*req->nbuffers);
     /* The single-pixel values are not physically stored, so we must replicate
      * the reference. */
-    target->each[0] = source->each[0];
+    target->each[1] = source->each[1];
 }
 
 static void
