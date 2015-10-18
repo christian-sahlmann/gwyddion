@@ -23,8 +23,8 @@
 #include <stdlib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libprocess/arithmetic.h>
-#include <libprocess/grains.h>
+#include <libprocess/elliptic.h>
+#include <libprocess/filters.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydgetutils.h>
@@ -148,6 +148,7 @@ mask_morph(GwyContainer *data, GwyRunType run)
     if (run == GWY_RUN_IMMEDIATE || maskmorph_dialog(&args, mfield)) {
         gwy_app_undo_qcheckpointv(data, 1, &quark);
         maskmorph_do(mfield, &args);
+        gwy_data_field_data_changed(mfield);
         gwy_app_channel_log_add_proc(data, id, id);
     }
     maskmorph_save_args(gwy_app_settings_get(), &args);
@@ -303,9 +304,112 @@ kernel_changed(GwyDataChooser *chooser,
     gwy_data_chooser_get_active_id(chooser, &args->kernel);
 }
 
+static GwyDataField*
+create_kernel(MaskMorphShapeType shape, gint radius)
+{
+    GwyDataField *kernel;
+    gint i, j, res;
+    gdouble *d;
+
+    res = 2*radius + 1;
+    kernel = gwy_data_field_new(res, res, res, res, TRUE);
+    if (shape == MASKMORPH_DISC)
+        gwy_data_field_elliptic_area_fill(kernel, 0, 0, res, res, 1.0);
+    else if (shape == MASKMORPH_OCTAGON || shape == MASKMORPH_DIAMOND) {
+        gint rlim = (shape == MASKMORPH_OCTAGON
+                     ? GWY_ROUND(res/G_SQRT2)
+                     : radius);
+        d = gwy_data_field_get_data(kernel);
+        for (i = 0; i < res; i++) {
+            gint ii = ABS(i - radius);
+            for (j = 0; j < res; j++) {
+                gint jj = ABS(j - radius);
+                if (ii + jj <= rlim)
+                    d[i*res + j] = 1.0;
+            }
+        }
+    }
+    else if (shape == MASKMORPH_SQUARE)
+        gwy_data_field_fill(kernel, 1.0);
+    else {
+        g_assert_not_reached();
+    }
+
+    return kernel;
+}
+
 static void
 maskmorph_do(GwyDataField *mask, MaskMorphArgs *args)
 {
+    static struct {
+        GwyMinMaxFilterType filtertype;
+        MaskMorphOperation mode;
+    }
+    operation_map[] = {
+        { GWY_MIN_MAX_FILTER_EROSION,  MASKMORPH_EROSION,  },
+        { GWY_MIN_MAX_FILTER_DILATION, MASKMORPH_DILATION, },
+        { GWY_MIN_MAX_FILTER_OPENING,  MASKMORPH_OPENING,  },
+        { GWY_MIN_MAX_FILTER_CLOSING,  MASKMORPH_CLOSING,  },
+    };
+
+    gint xres = gwy_data_field_get_xres(mask);
+    gint yres = gwy_data_field_get_yres(mask);
+    MaskMorphOperation mode = args->mode;
+    GwyMinMaxFilterType filtertype1, filtertype2;
+    GwyDataField *kernel;
+    guint i, radius = args->radius;
+
+    for (i = 0; i < G_N_ELEMENTS(operation_map); i++) {
+        if (operation_map[i].mode != mode)
+            continue;
+
+        if (args->shape == MASKMORPH_USER_KERNEL) {
+            // TODO.
+            // If user kernel is not actually available, just silently do
+            // nothing.
+            kernel = gwy_data_field_new(1, 1, 1.0, 1.0, TRUE);
+        }
+        else
+            kernel = create_kernel(args->shape, radius);
+
+        gwy_data_field_area_filter_min_max(mask, kernel,
+                                           operation_map[i].filtertype,
+                                           0, 0, xres, yres);
+        g_object_unref(kernel);
+        return;
+    }
+
+    g_return_if_fail(mode == MASKMORPH_ASF_OPENING
+                     || mode == MASKMORPH_ASF_CLOSING);
+
+    /* We can get here by repeating the operation or module call. */
+    if (args->shape == MASKMORPH_USER_KERNEL)
+        return;
+
+    if (args->shape == MASKMORPH_DISC) {
+        gwy_data_field_area_filter_disc_asf(mask, radius,
+                                            mode == MASKMORPH_ASF_CLOSING,
+                                            0, 0, xres, yres);
+        return;
+    }
+
+    if (mode == MASKMORPH_ASF_CLOSING) {
+        filtertype1 = GWY_MIN_MAX_FILTER_OPENING;
+        filtertype2 = GWY_MIN_MAX_FILTER_CLOSING;
+    }
+    else {
+        filtertype1 = GWY_MIN_MAX_FILTER_CLOSING;
+        filtertype2 = GWY_MIN_MAX_FILTER_OPENING;
+    }
+
+    for (i = 1; i <= radius; i++) {
+        kernel = create_kernel(args->shape, i);
+        gwy_data_field_area_filter_min_max(mask, kernel, filtertype1,
+                                           0, 0, xres, yres);
+        gwy_data_field_area_filter_min_max(mask, kernel, filtertype2,
+                                           0, 0, xres, yres);
+        g_object_unref(kernel);
+    }
 }
 
 static gboolean
