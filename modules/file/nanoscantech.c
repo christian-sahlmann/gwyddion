@@ -54,7 +54,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <limits.h>
-#include <unzip.h>
 #include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>

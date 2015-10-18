@@ -65,7 +65,6 @@
 #endif
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
-#include <unzip.h>
 
 #include "err.h"
 #include "gwyzip.h"

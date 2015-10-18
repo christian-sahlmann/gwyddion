@@ -25,6 +25,7 @@
 #include <glib/gstdio.h>
 
 #ifdef HAVE_MINIZIP
+#include <unzip.h>
 #define GwyZipFile unzFile
 
 #ifdef G_OS_WIN32
