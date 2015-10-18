@@ -144,7 +144,7 @@ sensofarx_detect(const GwyFileDetectInfo *fileinfo,
                 g_free(content);
             }
         }
-        unzClose(zipfile);
+        gwyzip_close(zipfile);
     }
 
     return score;
@@ -202,7 +202,7 @@ sensofarx_load(const gchar *filename,
         gwy_object_unref(container);
 
 fail:
-    unzClose(zipfile);
+    gwyzip_close(zipfile);
     sensofarx_file_free(&pluxfile);
 
     return container;

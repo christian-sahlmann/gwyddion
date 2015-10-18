@@ -174,11 +174,11 @@ nao_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     if (!gwyzip_locate_file(zipfile, "Scan/Measure.xml", 1, NULL)) {
-        unzClose(zipfile);
+        gwyzip_close(zipfile);
         return 0;
     }
 
-    unzClose(zipfile);
+    gwyzip_close(zipfile);
 
     return 100;
 }
@@ -284,8 +284,8 @@ nao_load(const gchar *filename,
     }
 
 fail:
-    gwy_debug("calling unzClose()");
-    unzClose(zipfile);
+    gwy_debug("calling gwyzip_close()");
+    gwyzip_close(zipfile);
     nao_file_free(&naofile);
     gwy_object_unref(meta);
     if (!channelno) {

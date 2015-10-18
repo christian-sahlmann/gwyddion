@@ -203,6 +203,8 @@ gwyzip_get_file_content(GwyZipFile *zipfile, gsize *contentsize,
         *contentsize = size;
     return buffer;
 }
+
+#define gwyzip_close unzClose
 #endif
 #else
 #warning "gwyzip.h included without any ZIP library"

@@ -259,7 +259,7 @@ apedax_detect(const GwyFileDetectInfo *fileinfo,
     uFile = gwyzip_open(fileinfo->name);
 
     if (uFile == NULL) {
-        unzClose(uFile);
+        gwyzip_close(uFile);
         return 0;
     }
 
@@ -268,7 +268,7 @@ apedax_detect(const GwyFileDetectInfo *fileinfo,
     else
         score = 0;
 
-    unzClose(uFile);
+    gwyzip_close(uFile);
 
     return score;
 }
@@ -308,7 +308,7 @@ apedax_load(const gchar *filename,
         else {
             err_FILE_TYPE(error, FILE_TYPE);
         }
-        unzClose(uFile);
+        gwyzip_close(uFile);
         return NULL;
     }
 
@@ -320,7 +320,7 @@ apedax_load(const gchar *filename,
         else {
             err_FILE_TYPE(error, FILE_TYPE);
         }
-        unzClose(uFile);
+        gwyzip_close(uFile);
         return NULL;
     }
 
@@ -335,7 +335,7 @@ apedax_load(const gchar *filename,
         gwy_object_unref(container);
         g_free(buffer);
         err_FILE_TYPE(error, FILE_TYPE);
-        unzClose(uFile);
+        gwyzip_close(uFile);
         return NULL;
     }
 
@@ -351,7 +351,7 @@ apedax_load(const gchar *filename,
     g_free(buffer);
     g_object_unref(meta);
 
-    unzClose(uFile);
+    gwyzip_close(uFile);
 
     return container;
 }

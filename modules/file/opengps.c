@@ -189,7 +189,7 @@ x3p_detect(const GwyFileDetectInfo *fileinfo,
                 score = 100;
             g_free(content);
         }
-        unzClose(zipfile);
+        gwyzip_close(zipfile);
     }
 
     return score;
@@ -236,8 +236,8 @@ x3p_load(const gchar *filename,
     }
 
 fail:
-    gwy_debug("calling unzClose()");
-    unzClose(zipfile);
+    gwy_debug("calling gwyzip_close()");
+    gwyzip_close(zipfile);
     x3p_file_free(&x3pfile);
 
     return container;

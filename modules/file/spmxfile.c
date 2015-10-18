@@ -146,7 +146,7 @@ spmx_detect(const GwyFileDetectInfo *fileinfo,
                 score = 100;
             g_free(content);
         }
-        unzClose(zipfile);
+        gwyzip_close(zipfile);
     }
 
     return score;
@@ -183,7 +183,7 @@ spmx_load(const gchar *filename,
         gwy_object_unref(container);
 
 fail:
-    unzClose(zipfile);
+    gwyzip_close(zipfile);
     spmx_file_free(&spmxfile);
 
     return container;

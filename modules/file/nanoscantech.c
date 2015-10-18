@@ -178,11 +178,11 @@ nst_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     if (!gwyzip_locate_file(zipfile, "0.lsdlsd", 1, NULL)) {
-        unzClose(zipfile);
+        gwyzip_close(zipfile);
         return 0;
     }
 
-    unzClose(zipfile);
+    gwyzip_close(zipfile);
 
     return 100;
 }
@@ -341,7 +341,7 @@ nst_load(const gchar *filename,
     }
 
 fail:
-    unzClose(zipfile);
+    gwyzip_close(zipfile);
     if (!channelno) {
         gwy_object_unref(container);
         err_NO_DATA(error);
