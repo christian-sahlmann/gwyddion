@@ -843,14 +843,14 @@ enabled_formats=
 disabled_formats=
 
 if test "x$enable_minizip" != xno; then
-  enabled_formats="$enabled_formats, NanoObserver, NanoScanTech, OpenGPS"
+  enabled_formats="$enabled_formats, NanoObserver, NanoScanTech, OpenGPS, PLUX"
   if test "x$enable_libxml2" != xno; then
     enabled_formats="$enabled_formats, APE DAX"
   else
     disabled_formats="$disabled_formats, APE DAX"
   fi
 else
-  disabled_formats="$disabled_formats, NanoObserver, NanoScanTech, OpenGPS, APE DAX"
+  disabled_formats="$disabled_formats, NanoObserver, NanoScanTech, OpenGPS, APE DAX, PLUX"
 fi
 
 if test "x$enable_exr" != xno; then
