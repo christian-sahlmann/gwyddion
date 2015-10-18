@@ -25,6 +25,8 @@
 #include <glib/gstdio.h>
 
 #ifdef HAVE_MINIZIP
+#define GwyZipFile unzFile
+
 #ifdef G_OS_WIN32
 G_GNUC_UNUSED
 static voidpf
@@ -93,7 +95,7 @@ gwyzip_seek_file_func(G_GNUC_UNUSED voidpf opaque,
 }
 
 G_GNUC_UNUSED
-static unzFile
+static GwyZipFile
 gwyzip_open(const gchar *path)
 {
     static zlib_filefunc_def ffdef = {
@@ -142,7 +144,7 @@ err_MINIZIP(gint status, GError **error)
 
 G_GNUC_UNUSED
 static gboolean
-gwyzip_locate_file(unzFile *zipfile, const gchar *filename, gint casesens,
+gwyzip_locate_file(GwyZipFile *zipfile, const gchar *filename, gint casesens,
                    GError **error)
 {
     gwy_debug("calling unzLocateFile() to find %s", filename);
@@ -156,7 +158,7 @@ gwyzip_locate_file(unzFile *zipfile, const gchar *filename, gint casesens,
 
 G_GNUC_UNUSED
 static guchar*
-gwyzip_get_file_content(unzFile *zipfile, gsize *contentsize,
+gwyzip_get_file_content(GwyZipFile *zipfile, gsize *contentsize,
                         GError **error)
 {
     unz_file_info fileinfo;
@@ -201,6 +203,8 @@ gwyzip_get_file_content(unzFile *zipfile, gsize *contentsize,
     return buffer;
 }
 #endif
+#else
+#warning "gwyzip.h included without any ZIP library"
 #endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

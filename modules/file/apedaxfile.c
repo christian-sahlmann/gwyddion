@@ -192,13 +192,13 @@ static gchar*        apedax_get_xml_field_as_string(xmlDocPtr doc,
 static gboolean      apedax_set_meta_field         (GwyContainer *meta,
                                                     xmlDocPtr doc,
                                                     APEXmlField data);
-static GwyDataField* apedax_get_data_field         (unzFile uFile,
+static GwyDataField* apedax_get_data_field         (GwyZipFile uFile,
                                                     const gchar *chFileName,
                                                     const APEScanSize *scanSize,
                                                     gchar *zUnit,
                                                     gdouble scale,
                                                     GError **error);
-static void          apedax_get_channels_data      (unzFile uFile,
+static void          apedax_get_channels_data      (GwyZipFile uFile,
                                                     guchar *scanXmlContent,
                                                     gsize contentSize,
                                                     const gchar *filename,
@@ -242,7 +242,7 @@ apedax_detect(const GwyFileDetectInfo *fileinfo,
               gboolean only_name)
 {
     gint score = 0;
-    unzFile uFile;
+    GwyZipFile uFile;
 
     score += (g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 10 : 0);
     score += (g_str_has_suffix(fileinfo->name_lowercase, APDT_EXTENSION) ? 10 : 0);
@@ -283,7 +283,7 @@ apedax_load(const gchar *filename,
 {
     GwyContainer *container = NULL;
     GwyContainer *meta = NULL;
-    unzFile uFile;
+    GwyZipFile uFile;
     guchar *buffer;
     gsize size = 0;
     gboolean apdt_flag = FALSE;
@@ -611,7 +611,7 @@ apedax_get_xml_field_as_string(xmlDocPtr doc, const gchar *fieldXPath)
 }
 
 static GwyDataField*
-apedax_get_data_field(unzFile uFile,
+apedax_get_data_field(GwyZipFile uFile,
                       const gchar *chFileName,
                       const APEScanSize *scanSize,
                       gchar *zUnit,
@@ -685,7 +685,7 @@ apedax_get_data_field(unzFile uFile,
 }
 
 static void
-apedax_get_channels_data(unzFile uFile,
+apedax_get_channels_data(GwyZipFile uFile,
                          guchar *scanXmlContent,
                          gsize contentSize,
                          const gchar *filename,

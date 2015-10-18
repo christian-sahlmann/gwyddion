@@ -159,7 +159,7 @@ static gint
 nst_detect(const GwyFileDetectInfo *fileinfo,
            gboolean only_name)
 {
-    unzFile zipfile;
+    GwyZipFile zipfile;
 
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 15 : 0;
@@ -197,7 +197,7 @@ nst_load(const gchar *filename,
     GwyDataField *dfield;
     GwyGraphModel *gmodel;
     GwyBrick *brick;
-    unzFile zipfile;
+    GwyZipFile zipfile;
     guint channelno = 0;
     gint status, xres, yres;
     gchar *buffer, *line, *p, *title, *strkey;

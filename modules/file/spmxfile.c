@@ -79,11 +79,11 @@ static gint          spmx_detect          (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* spmx_load            (const gchar *filename,
                                            GwyRunType mode,
                                            GError **error);
-static gboolean      spmx_parse_main      (unzFile *zipfile,
+static gboolean      spmx_parse_main      (GwyZipFile *zipfile,
                                            SPMXFile *spmxfile,
                                            GError **error);
 static gboolean      read_binary_data     (const SPMXFile *spmxfile,
-                                           unzFile *zipfile,
+                                           GwyZipFile *zipfile,
                                            GwyContainer *container,
                                            GError **error);
 static void          spmx_file_free       (SPMXFile *spmxfile);
@@ -117,7 +117,7 @@ static gint
 spmx_detect(const GwyFileDetectInfo *fileinfo,
            gboolean only_name)
 {
-    unzFile zipfile;
+    GwyZipFile zipfile;
     guchar *content;
     gint score = 0;
 
@@ -160,7 +160,7 @@ spmx_load(const gchar *filename,
 {
     GwyContainer *container = NULL;
     SPMXFile spmxfile;
-    unzFile zipfile;
+    GwyZipFile zipfile;
 
     zipfile = gwyzip_open(filename);
     if (!zipfile) {
@@ -192,7 +192,7 @@ fail:
 
 static gboolean
 read_binary_data(const SPMXFile *spmxfile,
-                 unzFile *zipfile,
+                 GwyZipFile *zipfile,
                  GwyContainer *container,
                  GError **error)
 {
@@ -495,7 +495,7 @@ spmx_text(G_GNUC_UNUSED GMarkupParseContext *context,
 }
 
 static gboolean
-spmx_parse_main(unzFile *zipfile,
+spmx_parse_main(GwyZipFile *zipfile,
                 SPMXFile *spmxfile,
                 GError **error)
 {

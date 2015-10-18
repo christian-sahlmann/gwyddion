@@ -110,10 +110,10 @@ static GwyContainer* nao_load            (const gchar *filename,
 static void          add_meta            (gpointer hkey,
                                           gpointer hvalue,
                                           gpointer user_data);
-static GwyDataField* nao_read_field      (unzFile *zipfile,
+static GwyDataField* nao_read_field      (GwyZipFile *zipfile,
                                           NAOFile *naofile,
                                           guint id);
-static gboolean      nao_parse_measure   (unzFile *zipfile,
+static gboolean      nao_parse_measure   (GwyZipFile *zipfile,
                                           NAOFile *naofile,
                                           GError **error);
 static void          nao_file_free       (NAOFile *naofile);
@@ -147,7 +147,7 @@ static gint
 nao_detect(const GwyFileDetectInfo *fileinfo,
            gboolean only_name)
 {
-    unzFile zipfile;
+    GwyZipFile zipfile;
 
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 15 : 0;
@@ -191,7 +191,7 @@ nao_load(const gchar *filename,
 {
     GwyContainer *container = NULL, *meta = NULL;
     NAOFile naofile;
-    unzFile zipfile;
+    GwyZipFile zipfile;
     NAODirection dir;
     guint id, channelno = 0;
     gint status;
@@ -306,7 +306,7 @@ add_meta(gpointer hkey, gpointer hvalue, gpointer user_data)
 }
 
 static GwyDataField*
-nao_read_field(unzFile *zipfile, NAOFile *naofile, guint id)
+nao_read_field(GwyZipFile *zipfile, NAOFile *naofile, guint id)
 {
     gsize size, expected_size;
     guint width, G_GNUC_UNUSED height, nscanlines, i, j;
@@ -457,7 +457,7 @@ nao_streams_text(G_GNUC_UNUSED GMarkupParseContext *context,
 }
 
 static gboolean
-nao_parse_measure(unzFile *zipfile,
+nao_parse_measure(GwyZipFile *zipfile,
                   NAOFile *naofile,
                   GError **error)
 {
