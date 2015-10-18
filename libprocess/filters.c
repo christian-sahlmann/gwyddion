@@ -2430,7 +2430,7 @@ find_required_lengths_for_set(const guint *blocklens, guint nlens)
     req->maxlen_even = i;
 
     req->nbuffers = 0;
-    for (i = 2; i <= req->maxlen_each; i++) {
+    for (i = 1; i <= req->maxlen_each; i++) {
         if (req->each[i].needed)
             req->nbuffers++;
     }
@@ -2465,7 +2465,7 @@ min_max_precomputed_row_alloc(const MinMaxPrecomputedReq *req,
     if (req->maxlen_even)
         prow->even = g_new0(gdouble*, req->maxlen_even + 1);
 
-    for (i = 2; i <= req->maxlen_each; i++) {
+    for (i = 1; i <= req->maxlen_each; i++) {
         if (req->each[i].needed) {
             prow->each[i] = p;
             p += rowlen;
@@ -2614,7 +2614,7 @@ max_precomputed_row_fill(const MinMaxPrecomputedReq *req,
     guint blen;
 
     /* The row itself, AKA Each(1). */
-    prow->each[1] = (gdouble*)x;
+    gwy_assign(prow->each[1], x, rowlen);
 
     for (blen = 2; blen <= req->maxlen_each; blen++) {
         const MinMaxPrecomputedLen *precomp;
@@ -2798,7 +2798,7 @@ min_precomputed_row_fill(const MinMaxPrecomputedReq *req,
     guint blen;
 
     /* The row itself, AKA Each(1). */
-    prow->each[1] = (gdouble*)x;
+    gwy_assign(prow->each[1], x, rowlen);
 
     for (blen = 2; blen <= req->maxlen_each; blen++) {
         const MinMaxPrecomputedLen *precomp;
@@ -2855,9 +2855,6 @@ min_max_precomputed_row_copy(MinMaxPrecomputedRow *target,
                              guint rowlen)
 {
     gwy_assign(target->storage, source->storage, rowlen*req->nbuffers);
-    /* The single-pixel values are not physically stored, so we must replicate
-     * the reference. */
-    target->each[1] = source->each[1];
 }
 
 static void
