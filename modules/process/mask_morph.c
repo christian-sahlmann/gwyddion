@@ -178,6 +178,7 @@ maskmorph_dialog(MaskMorphArgs *args, GwyDataField *mask)
     GtkWidget *dialog;
     GtkWidget *table, *label;
     gint response, row = 0;
+    gboolean has_kernel;
 
     controls.args = args;
 
@@ -212,13 +213,13 @@ maskmorph_dialog(MaskMorphArgs *args, GwyDataField *mask)
     row = gwy_radio_buttons_attach_to_table(controls.mode, GTK_TABLE(table),
                                             3, row);
 
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     label = gtk_label_new(_("Structuring element:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     controls.shape
         = gwy_radio_buttons_create(shapes, G_N_ELEMENTS(shapes),
                                    G_CALLBACK(shape_changed), &controls,
@@ -240,12 +241,14 @@ maskmorph_dialog(MaskMorphArgs *args, GwyDataField *mask)
                                 &kernel_filter, mask, NULL);
     gwy_table_attach_hscale(table, row, _("_Mask:"), NULL,
                             GTK_OBJECT(controls.kernel), GWY_HSCALE_WIDGET);
-    gwy_data_chooser_get_active_id(GWY_DATA_CHOOSER(controls.kernel),
-                                   &args->kernel);
+    has_kernel = gwy_data_chooser_get_active_id(GWY_DATA_CHOOSER(controls.kernel),
+                                                &args->kernel);
     g_signal_connect(controls.kernel, "changed",
                      G_CALLBACK(kernel_changed), &controls);
     row++;
 
+    if (!has_kernel && args->shape == MASKMORPH_USER_KERNEL)
+        gwy_radio_buttons_set_current(controls.shape, MASKMORPH_DISC);
     update_sensitivity(&controls);
 
     gtk_widget_show_all(dialog);
@@ -335,7 +338,7 @@ update_sensitivity(MaskMorphControls *controls)
     gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->radius),
                                    !is_user_kernel);
     gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->kernel),
-                                   !needs_builtin);
+                                   is_user_kernel);
     gtk_widget_set_sensitive(gwy_radio_buttons_find(controls->shape,
                                                     MASKMORPH_USER_KERNEL),
                              !needs_builtin);
@@ -402,16 +405,23 @@ maskmorph_do(GwyDataField *mask, MaskMorphArgs *args)
     GwyMinMaxFilterType filtertype1, filtertype2;
     GwyDataField *kernel;
     guint i, radius = args->radius;
+    GwyContainer *kdata;
+    GQuark quark;
 
     for (i = 0; i < G_N_ELEMENTS(operation_map); i++) {
         if (operation_map[i].mode != mode)
             continue;
 
         if (args->shape == MASKMORPH_USER_KERNEL) {
-            // TODO.
-            // If user kernel is not actually available, just silently do
-            // nothing.
-            kernel = gwy_data_field_new(1, 1, 1.0, 1.0, TRUE);
+            if (!args->kernel.datano)
+                return;
+
+            kdata = gwy_app_data_browser_get(args->kernel.datano);
+            g_return_if_fail(kdata);
+            quark = gwy_app_get_mask_key_for_id(args->kernel.id);
+            if (!gwy_container_gis_object(kdata, quark, (GObject**)&kernel))
+                return;
+            g_object_ref(kernel);
         }
         else
             kernel = create_kernel(args->shape, radius);
