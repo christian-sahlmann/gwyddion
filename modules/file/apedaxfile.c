@@ -68,7 +68,7 @@
 #include <unzip.h>
 
 #include "err.h"
-#include "gwyminizip.h"
+#include "gwyzip.h"
 
 /*Macros*/
 #define FILE_TYPE "DAX"
@@ -257,14 +257,14 @@ apedax_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     gwy_debug("Opening the file with MiniZIP");
-    uFile = gwyminizip_open(fileinfo->name);
+    uFile = gwyzip_open(fileinfo->name);
 
     if (uFile == NULL) {
         unzClose(uFile);
         return 0;
     }
 
-    if (gwyminizip_locate_file(uFile, "scan.xml", 0, NULL))
+    if (gwyzip_locate_file(uFile, "scan.xml", 0, NULL))
         score += 30;
     else
         score = 0;
@@ -300,7 +300,7 @@ apedax_load(const gchar *filename,
     g_free(lowercaseFilename);
 
     gwy_debug("Opening the file with MiniZIP");
-    uFile = gwyminizip_open(filename);
+    uFile = gwyzip_open(filename);
 
     if (uFile == NULL) {
         if (apdt_flag) {
@@ -314,7 +314,7 @@ apedax_load(const gchar *filename,
     }
 
     gwy_debug("Locating the XML file");
-    if (!gwyminizip_locate_file(uFile, "scan.xml", 0, NULL)) {
+    if (!gwyzip_locate_file(uFile, "scan.xml", 0, NULL)) {
         if (apdt_flag) {
             err_FILE_TYPE(error, APDT_FILE_TYPE);
         }
@@ -325,7 +325,7 @@ apedax_load(const gchar *filename,
         return NULL;
     }
 
-    buffer = gwyminizip_get_file_content(uFile, &size, error);
+    buffer = gwyzip_get_file_content(uFile, &size, error);
     if (buffer) {
         container = gwy_container_new();
         meta = apedax_get_meta(buffer, size, &scanSize, apdt_flag);
@@ -650,8 +650,8 @@ apedax_get_data_field(unzFile uFile,
 
     unzGoToFirstFile(uFile);
 
-    if (!gwyminizip_locate_file(uFile, chFileName, 0, error)
-        || !(buffer = gwyminizip_get_file_content(uFile, &size, error)))
+    if (!gwyzip_locate_file(uFile, chFileName, 0, error)
+        || !(buffer = gwyzip_get_file_content(uFile, &size, error)))
         return NULL;
 
     if (err_SIZE_MISMATCH(error, expectedSize, size, FALSE)) {

@@ -64,7 +64,7 @@
 #include <app/data-browser.h>
 
 #include "err.h"
-#include "gwyminizip.h"
+#include "gwyzip.h"
 
 #ifdef _MSC_VER
     #include <windows.h>
@@ -175,10 +175,10 @@ nst_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     /* We have to realy look inside. */
-    if (!(zipfile = gwyminizip_open(fileinfo->name)))
+    if (!(zipfile = gwyzip_open(fileinfo->name)))
         return 0;
 
-    if (!gwyminizip_locate_file(zipfile, "0.lsdlsd", 1, NULL)) {
+    if (!gwyzip_locate_file(zipfile, "0.lsdlsd", 1, NULL)) {
         unzClose(zipfile);
         return 0;
     }
@@ -204,7 +204,7 @@ nst_load(const gchar *filename,
     gchar *titlestr = NULL;
     gsize size = 0;
 
-    zipfile = gwyminizip_open(filename);
+    zipfile = gwyzip_open(filename);
     if (!zipfile) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_SPECIFIC,
@@ -224,7 +224,7 @@ nst_load(const gchar *filename,
         }
         if (g_str_has_suffix(filename_buf, ".lsdlsd")) {
             gwy_debug("channel %d: %s\n", channelno, filename_buf);
-            buffer = gwyminizip_get_file_content(zipfile, &size, NULL);
+            buffer = gwyzip_get_file_content(zipfile, &size, NULL);
             p = buffer;
             line = gwy_str_next_line(&p);
             g_strstrip(line);

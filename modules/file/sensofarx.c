@@ -49,7 +49,7 @@
 #include <app/data-browser.h>
 
 #include "err.h"
-#include "gwyminizip.h"
+#include "gwyzip.h"
 
 #define MAGIC "PK\x03\x04"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
@@ -137,9 +137,9 @@ sensofarx_detect(const GwyFileDetectInfo *fileinfo,
     /* We have to realy look inside.  And since index.xml is a popular name
      * for the main XML document within such files, we also have to see if
      * we find "<IMAGE_SIZE_X>" somewehre near the begining of the file. */
-    if ((zipfile = gwyminizip_open(fileinfo->name))) {
-        if (unzLocateFile(zipfile, "index.xml", 1) == UNZ_OK) {
-            if ((content = gwyminizip_get_file_content(zipfile, NULL, NULL))) {
+    if ((zipfile = gwyzip_open(fileinfo->name))) {
+        if (gwyzip_locate_file(zipfile, "index.xml", 1, NULL) == UNZ_OK) {
+            if ((content = gwyzip_get_file_content(zipfile, NULL, NULL))) {
                 if (g_strstr_len(content, 4096, "<IMAGE_SIZE_X>"))
                     score = 100;
                 g_free(content);
@@ -179,7 +179,7 @@ sensofarx_load(const gchar *filename,
     PLUxFile pluxfile;
     unzFile zipfile;
 
-    zipfile = gwyminizip_open(filename);
+    zipfile = gwyzip_open(filename);
     if (!zipfile) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_SPECIFIC,
@@ -268,8 +268,8 @@ read_binary_data(const PLUxFile *pluxfile,
         }
         gwy_debug("FILENAME_Z %s: %s", str->str, datafilename);
 
-        if (!gwyminizip_locate_file(zipfile, datafilename, 1, error)
-            || !(content = gwyminizip_get_file_content(zipfile, &contentsize,
+        if (!gwyzip_locate_file(zipfile, datafilename, 1, error)
+            || !(content = gwyzip_get_file_content(zipfile, &contentsize,
                                                        error))) {
             return FALSE;
         }
@@ -410,8 +410,8 @@ sensofarx_parse_index(unzFile *zipfile,
     guchar *content = NULL, *s;
     gboolean ok = FALSE;
 
-    if (!gwyminizip_locate_file(zipfile, "index.xml", 1, error)
-        || !(content = gwyminizip_get_file_content(zipfile, NULL, error)))
+    if (!gwyzip_locate_file(zipfile, "index.xml", 1, error)
+        || !(content = gwyzip_get_file_content(zipfile, NULL, error)))
         return FALSE;
 
     gwy_strkill(content, "\r");
@@ -460,9 +460,9 @@ sensofarx_parse_recipe(unzFile *zipfile,
 
     /* XXX: for some reason the file tends to be named ‘./recipe.txt’ in the
      * archive. */
-    if ((!gwyminizip_locate_file(zipfile, "recipe.txt", 1, NULL)
-         && !gwyminizip_locate_file(zipfile, "./recipe.txt", 1, NULL))
-        || !(content = gwyminizip_get_file_content(zipfile, NULL, NULL)))
+    if ((!gwyzip_locate_file(zipfile, "recipe.txt", 1, NULL)
+         && !gwyzip_locate_file(zipfile, "./recipe.txt", 1, NULL))
+        || !(content = gwyzip_get_file_content(zipfile, NULL, NULL)))
         return;
 
     gwy_strkill(content, "\r");

@@ -27,9 +27,9 @@
 #ifdef G_OS_WIN32
 G_GNUC_UNUSED
 static voidpf
-gwyminizip_open_file_func(G_GNUC_UNUSED voidpf opaque,
-                          const char* filename,
-                          G_GNUC_UNUSED int mode)
+gwyzip_open_file_func(G_GNUC_UNUSED voidpf opaque,
+                      const char* filename,
+                      G_GNUC_UNUSED int mode)
 {
     /* Don't implement other modes.  We never write ZIP files with minizip. */
     return (voidpf)g_fopen(filename, "rb");
@@ -37,20 +37,20 @@ gwyminizip_open_file_func(G_GNUC_UNUSED voidpf opaque,
 
 G_GNUC_UNUSED
 static uLong
-gwyminizip_read_file_func(G_GNUC_UNUSED voidpf opaque,
-                          voidpf stream,
-                          void* buf,
-                          uLong size)
+gwyzip_read_file_func(G_GNUC_UNUSED voidpf opaque,
+                      voidpf stream,
+                      void* buf,
+                      uLong size)
 {
     return fread(buf, 1, size, (FILE*)stream);
 }
 
 G_GNUC_UNUSED
 static uLong
-gwyminizip_write_file_func(G_GNUC_UNUSED voidpf opaque,
-                           G_GNUC_UNUSED voidpf stream,
-                           G_GNUC_UNUSED const void* buf,
-                           G_GNUC_UNUSED uLong size)
+gwyzip_write_file_func(G_GNUC_UNUSED voidpf opaque,
+                       G_GNUC_UNUSED voidpf stream,
+                       G_GNUC_UNUSED const void* buf,
+                       G_GNUC_UNUSED uLong size)
 {
     /* Don't implement writing.  We never write ZIP files with minizip. */
     errno = ENOSYS;
@@ -59,57 +59,57 @@ gwyminizip_write_file_func(G_GNUC_UNUSED voidpf opaque,
 
 G_GNUC_UNUSED
 static int
-gwyminizip_close_file_func(G_GNUC_UNUSED voidpf opaque,
-                           voidpf stream)
+gwyzip_close_file_func(G_GNUC_UNUSED voidpf opaque,
+                       voidpf stream)
 {
     return fclose((FILE*)stream);
 }
 
 G_GNUC_UNUSED
 static int
-gwyminizip_testerror_file_func(G_GNUC_UNUSED voidpf opaque,
-                               voidpf stream)
+gwyzip_testerror_file_func(G_GNUC_UNUSED voidpf opaque,
+                           voidpf stream)
 {
     return ferror((FILE*)stream);
 }
 
 G_GNUC_UNUSED
 static long
-gwyminizip_tell_file_func(G_GNUC_UNUSED voidpf opaque,
-                          voidpf stream)
+gwyzip_tell_file_func(G_GNUC_UNUSED voidpf opaque,
+                      voidpf stream)
 {
     return ftell((FILE*)stream);
 }
 
 G_GNUC_UNUSED
 static long
-gwyminizip_seek_file_func(G_GNUC_UNUSED voidpf opaque,
-                          voidpf stream,
-                          uLong offset,
-                          int origin)
+gwyzip_seek_file_func(G_GNUC_UNUSED voidpf opaque,
+                      voidpf stream,
+                      uLong offset,
+                      int origin)
 {
     return fseek((FILE*)stream, offset, origin);
 }
 
 G_GNUC_UNUSED
 static unzFile
-gwyminizip_open(const gchar *path)
+gwyzip_open(const gchar *path)
 {
     static zlib_filefunc_def ffdef = {
-        gwyminizip_open_file_func,
-        gwyminizip_read_file_func,
-        gwyminizip_write_file_func,
-        gwyminizip_tell_file_func,
-        gwyminizip_seek_file_func,
-        gwyminizip_close_file_func,
-        gwyminizip_testerror_file_func,
+        gwyzip_open_file_func,
+        gwyzip_read_file_func,
+        gwyzip_write_file_func,
+        gwyzip_tell_file_func,
+        gwyzip_seek_file_func,
+        gwyzip_close_file_func,
+        gwyzip_testerror_file_func,
         NULL,
     };
 
     return unzOpen2(path, &ffdef);
 }
 #else
-#define gwyminizip_open unzOpen
+#define gwyzip_open unzOpen
 #endif
 
 G_GNUC_UNUSED
@@ -141,8 +141,8 @@ err_MINIZIP(gint status, GError **error)
 
 G_GNUC_UNUSED
 static gboolean
-gwyminizip_locate_file(unzFile *zipfile, const gchar *filename, gint casesens,
-                       GError **error)
+gwyzip_locate_file(unzFile *zipfile, const gchar *filename, gint casesens,
+                   GError **error)
 {
     gwy_debug("calling unzLocateFile() to find %s", filename);
     if (unzLocateFile(zipfile, filename, casesens) != UNZ_OK) {
@@ -155,8 +155,8 @@ gwyminizip_locate_file(unzFile *zipfile, const gchar *filename, gint casesens,
 
 G_GNUC_UNUSED
 static guchar*
-gwyminizip_get_file_content(unzFile *zipfile, gsize *contentsize,
-                            GError **error)
+gwyzip_get_file_content(unzFile *zipfile, gsize *contentsize,
+                        GError **error)
 {
     unz_file_info fileinfo;
     guchar *buffer;

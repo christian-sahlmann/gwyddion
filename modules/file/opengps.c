@@ -53,7 +53,7 @@
 #include <app/data-browser.h>
 
 #include "err.h"
-#include "gwyminizip.h"
+#include "gwyzip.h"
 
 #ifdef HAVE_MEMRCHR
 #define strlenrchr(s,c,len) (gchar*)memrchr((s),(c),(len))
@@ -183,9 +183,9 @@ x3p_detect(const GwyFileDetectInfo *fileinfo,
     /* We have to realy look inside.  And since main.xml is a popular name
      * for the main XML document within such files, we also have to see if
      * we find "ISO5436_2" somewehre near the begining of the file. */
-    if ((zipfile = gwyminizip_open(fileinfo->name))) {
-        if (gwyminizip_locate_file(zipfile, "main.xml", 1, NULL)
-            && (content = gwyminizip_get_file_content(zipfile, NULL, NULL))) {
+    if ((zipfile = gwyzip_open(fileinfo->name))) {
+        if (gwyzip_locate_file(zipfile, "main.xml", 1, NULL)
+            && (content = gwyzip_get_file_content(zipfile, NULL, NULL))) {
             if (g_strstr_len(content, 4096, "ISO5436_2"))
                 score = 100;
             g_free(content);
@@ -205,7 +205,7 @@ x3p_load(const gchar *filename,
     X3PFile x3pfile;
     unzFile zipfile;
 
-    zipfile = gwyminizip_open(filename);
+    zipfile = gwyzip_open(filename);
     if (!zipfile) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_SPECIFIC,
@@ -495,8 +495,8 @@ x3p_parse_main(unzFile *zipfile,
     guchar *content = NULL, *s;
     gboolean ok = FALSE;
 
-    if (!gwyminizip_locate_file(zipfile, "main.xml", 1, error)
-        || !(content = gwyminizip_get_file_content(zipfile, NULL, error)))
+    if (!gwyzip_locate_file(zipfile, "main.xml", 1, error)
+        || !(content = gwyzip_get_file_content(zipfile, NULL, error)))
         return FALSE;
 
     gwy_strkill(content, "\r");
@@ -690,7 +690,7 @@ read_binary_data(X3PFile *x3pfile, unzFile *zipfile, GError **error)
     }
     gwy_debug("binary data file %s", s);
 
-    if (!gwyminizip_locate_file(zipfile, s, 1, error))
+    if (!gwyzip_locate_file(zipfile, s, 1, error))
         return FALSE;
 
     s = g_hash_table_lookup(x3pfile->hash, AXES_PREFIX "/CZ/DataType");
@@ -702,7 +702,7 @@ read_binary_data(X3PFile *x3pfile, unzFile *zipfile, GError **error)
     if (!x3p_file_get_data_type(s, &rawtype, error))
         return FALSE;
 
-    if (!(bindata = gwyminizip_get_file_content(zipfile, &size, error)))
+    if (!(bindata = gwyzip_get_file_content(zipfile, &size, error)))
         return FALSE;
 
     if (err_SIZE_MISMATCH(error, x3pfile->ndata * gwy_raw_data_size(rawtype),
@@ -723,8 +723,8 @@ read_binary_data(X3PFile *x3pfile, unzFile *zipfile, GError **error)
     if (!s)
         return TRUE;
 
-    if (!gwyminizip_locate_file(zipfile, s, 1, error)
-        || !(bindata = gwyminizip_get_file_content(zipfile, &size, error)))
+    if (!gwyzip_locate_file(zipfile, s, 1, error)
+        || !(bindata = gwyzip_get_file_content(zipfile, &size, error)))
         return FALSE;
 
     if (err_SIZE_MISMATCH(error, (x3pfile->ndata + 7)/8, size, TRUE)) {

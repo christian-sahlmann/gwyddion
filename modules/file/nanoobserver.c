@@ -57,7 +57,7 @@
 #include <app/data-browser.h>
 
 #include "err.h"
-#include "gwyminizip.h"
+#include "gwyzip.h"
 
 #ifdef _MSC_VER
     #include <windows.h>
@@ -171,10 +171,10 @@ nao_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     /* We have to realy look inside. */
-    if (!(zipfile = gwyminizip_open(fileinfo->name)))
+    if (!(zipfile = gwyzip_open(fileinfo->name)))
         return 0;
 
-    if (!gwyminizip_locate_file(zipfile, "Scan/Measure.xml", 1, NULL)) {
+    if (!gwyzip_locate_file(zipfile, "Scan/Measure.xml", 1, NULL)) {
         unzClose(zipfile);
         return 0;
     }
@@ -196,7 +196,7 @@ nao_load(const gchar *filename,
     guint id, channelno = 0;
     gint status;
 
-    zipfile = gwyminizip_open(filename);
+    zipfile = gwyzip_open(filename);
     if (!zipfile) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_SPECIFIC,
@@ -310,7 +310,7 @@ nao_read_field(unzFile *zipfile, NAOFile *naofile, guint id)
 {
     gsize size, expected_size;
     guint width, G_GNUC_UNUSED height, nscanlines, i, j;
-    guchar *buffer = gwyminizip_get_file_content(zipfile, &size, NULL);
+    guchar *buffer = gwyzip_get_file_content(zipfile, &size, NULL);
     const guchar *p = buffer;
     GwyDataField *field;
     gdouble *data;
@@ -472,8 +472,8 @@ nao_parse_measure(unzFile *zipfile,
     guchar *content = NULL, *s;
     gboolean ok = FALSE;
 
-    if (!gwyminizip_locate_file(zipfile, "Scan/Measure.xml", 1, error)
-        || !(content = gwyminizip_get_file_content(zipfile, NULL, error)))
+    if (!gwyzip_locate_file(zipfile, "Scan/Measure.xml", 1, error)
+        || !(content = gwyzip_get_file_content(zipfile, NULL, error)))
         return FALSE;
 
     gwy_strkill(content, "\r");
