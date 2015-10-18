@@ -478,9 +478,9 @@ gwy_graph_curve_model_deserialize(const guchar *buffer,
                                   gsize *position)
 {
     GwyGraphCurveModel *gcmodel;
-    gdouble *xerr, *yerr, *zerr, *xunc, *yunc, *zunc;
-    gint nxerr, nyerr, nzerr, nxunc, nyunc, nzunc;
-    xerr = yerr = zerr = xunc = yunc = zunc = NULL;
+    gdouble *xerr = NULL, *yerr = NULL, *zerr = NULL,
+            *xunc = NULL, *yunc = NULL, *zunc = NULL;
+    gint nxerr = 0, nyerr = 0, nzerr = 0, nxunc = 0, nyunc = 0, nzunc = 0;
 
     gwy_debug("");
     g_return_val_if_fail(buffer, NULL);
