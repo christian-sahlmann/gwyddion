@@ -71,6 +71,7 @@ process_LTLIBRARIES = \
 	maskcor.la \
 	mask_distribute.la \
 	mask_edt.la \
+	mask_morph.la \
 	maskops.la \
 	mcrop.la \
 	measure_lattice.la \
@@ -187,8 +188,9 @@ lno_synth_la_SOURCES           = lno_synth.c dimensions.h synth.h
 local_contrast_la_SOURCES      = local_contrast.c
 mark_with_la_SOURCES           = mark_with.c
 maskcor_la_SOURCES             = maskcor.c
-mask_edt_la_SOURCES            = mask_edt.c
 mask_distribute_la_SOURCES     = mask_distribute.c
+mask_edt_la_SOURCES            = mask_edt.c
+mask_morph_la_SOURCES          = mask_morph.c
 maskops_la_SOURCES             = maskops.c
 mcrop_la_SOURCES               = mcrop.c
 measure_lattice_la_SOURCES     = measure_lattice.c
