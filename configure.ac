@@ -567,6 +567,14 @@ fi
 AM_CONDITIONAL([HAVE_LIBZIP],[test x$enable_libzip != xno])
 
 #############################################################################
+# So, at the end, do we have any zip file backend?
+have_any_zip=no
+if test x$enable_minizip != xno || test x$enable_libzip != xno; then
+  have_any_zip=yes
+fi
+AM_CONDITIONAL([HAVE_ANY_ZIP],[test x$have_any_zip != xno])
+
+#############################################################################
 # PNG
 # Optional.  Only directly used for 16bit greyscale PNG pixmap import/export.
 enable_png=yes
@@ -858,7 +866,7 @@ AC_OUTPUT
 enabled_formats=
 disabled_formats=
 
-if test "x$enable_minizip" != xno || test "x$enable_libzip" != xno; then
+if test "x$have_any_zip" != xno; then
   enabled_formats="$enabled_formats, NanoObserver, NanoScanTech, OpenGPS, PLUX"
   if test "x$enable_libxml2" != xno; then
     enabled_formats="$enabled_formats, APE DAX"
