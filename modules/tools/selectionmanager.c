@@ -61,6 +61,7 @@ typedef struct {
     GwySelection *selection;
     const gchar *name;
     GwySIUnit *xyunit;
+    gdouble origin[2];
 } DistributeData;
 
 typedef struct {
@@ -117,7 +118,7 @@ static GwyModuleInfo module_info = {
     N_("Grain removal tool, removes continuous parts of mask and/or "
        "underlying data."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -540,6 +541,7 @@ gwy_tool_selection_manager_distribute(GwyToolSelectionManager *tool)
 {
     GwyPlainTool *plain_tool;
     GtkTreeSelection *treesel;
+    GwyDataField *dfield;
     DistributeData distdata;
     GtkTreeIter iter;
     GQuark quark;
@@ -559,8 +561,11 @@ gwy_tool_selection_manager_distribute(GwyToolSelectionManager *tool)
     g_return_if_fail(distdata.name);
 
     plain_tool = GWY_PLAIN_TOOL(tool);
-    distdata.xyunit = gwy_data_field_get_si_unit_xy(plain_tool->data_field);
-    gwy_debug("source: %p %s", plain_tool->data_field, s);
+    dfield = plain_tool->data_field;
+    distdata.xyunit = gwy_data_field_get_si_unit_xy(dfield);
+    distdata.origin[0] = gwy_data_field_get_xoffset(dfield);
+    distdata.origin[1] = gwy_data_field_get_yoffset(dfield);
+    gwy_debug("source: %p %s", dfield, s);
 
     if (tool->args.allfiles)
         gwy_app_data_browser_foreach((GwyAppDataForeachFunc)gwy_tool_selection_manager_distribute_one,
@@ -575,6 +580,7 @@ gwy_tool_selection_manager_distribute_one(GwyContainer *container,
                                           DistributeData *distdata)
 {
     GObject *object, *selobject;
+    GwySelection *selection;
     GwyDataField *dfield;
     GString *str;
     GQuark quark;
@@ -586,7 +592,7 @@ gwy_tool_selection_manager_distribute_one(GwyContainer *container,
     str = g_string_new(NULL);
     selobject = G_OBJECT(distdata->selection);
     for (i = 0; ids[i] >= 0; i++) {
-        gdouble xmin, xmax, ymin, ymax;
+        gdouble xoff, yoff, xreal, yreal;
 
         g_string_printf(str, "/%d/select%s", ids[i], distdata->name);
         gwy_debug("%p %s", container, str->str);
@@ -613,13 +619,18 @@ gwy_tool_selection_manager_distribute_one(GwyContainer *container,
             continue;
         }
 
-        xmin = xmax = gwy_data_field_get_xoffset(dfield);
-        ymin = ymax = gwy_data_field_get_yoffset(dfield);
-        xmax += gwy_data_field_get_xreal(dfield);
-        ymax += gwy_data_field_get_yreal(dfield);
+        xoff = gwy_data_field_get_xoffset(dfield);
+        yoff = gwy_data_field_get_yoffset(dfield);
+        xreal = gwy_data_field_get_xreal(dfield);
+        yreal = gwy_data_field_get_yreal(dfield);
         object = gwy_serializable_duplicate(selobject);
-        gwy_selection_crop(GWY_SELECTION(object), xmin, ymin, xmax, ymax);
-        if (gwy_selection_get_data(GWY_SELECTION(object), NULL))
+        selection = GWY_SELECTION(object);
+        /* Crop the selection, taking into account that the coordinates do not
+         * include field offset, and move it relative to the new origin. */
+        gwy_selection_move(selection, distdata->origin[0], distdata->origin[1]);
+        gwy_selection_crop(selection, xoff, yoff, xoff + xreal, yoff + yreal);
+        gwy_selection_move(selection, -xoff, -yoff);
+        if (gwy_selection_get_data(selection, NULL))
             gwy_container_set_object(container, quark, object);
         else {
             gwy_debug("selection empty after cropping");
