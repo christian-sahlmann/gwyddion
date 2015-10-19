@@ -58,14 +58,6 @@
 #include "err.h"
 #include "gwyzip.h"
 
-#ifdef _MSC_VER
-    #include <windows.h>
-    #ifdef PATH_MAX
-    #undef PATH_MAX
-    #endif
-    #define PATH_MAX MAX_PATH
-#endif
-
 #define MAGIC "PK\x03\x04"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 #define MAGIC0 "Scan"

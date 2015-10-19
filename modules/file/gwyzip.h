@@ -30,6 +30,14 @@
 #ifdef HAVE_MINIZIP
 #include <unzip.h>
 
+#ifdef _MSC_VER
+    #include <windows.h>
+    #ifdef PATH_MAX
+    #undef PATH_MAX
+    #endif
+    #define PATH_MAX MAX_PATH
+#endif
+
 struct _GwyZipFile {
     unzFile *unzfile;
     guint index;
@@ -219,6 +227,7 @@ gwyzip_get_current_filename(GwyZipFile zipfile, gchar **filename,
     status = unzGetCurrentFileInfo(zipfile->unzfile, &fileinfo,
                                    filename_buf, PATH_MAX,
                                    NULL, 0, NULL, 0);
+    filename_buf[PATH_MAX] = '\0';
     if (status != UNZ_OK) {
         g_free(filename_buf);
         *filename = NULL;
@@ -298,8 +307,14 @@ gwyzip_get_file_content(GwyZipFile zipfile, gsize *contentsize,
 #ifdef HAVE_LIBZIP
 #include <zip.h>
 
+/* This is not defined in 0.11 yet (1.0 is required) but we can live without
+ * it. */
+#ifndef ZIP_RDONLY
+#define ZIP_RDONLY 0
+#endif
+
 struct _GwyZipFile {
-    zip_t *archive;
+    struct zip *archive;
     guint index;
     guint nentries;
 };
@@ -311,7 +326,7 @@ static GwyZipFile
 gwyzip_open(const char *path)
 {
     struct _GwyZipFile *zipfile;
-    zip_t *archive;
+    struct zip *archive;
 
     if (!(archive = zip_open(path, ZIP_RDONLY, NULL)))
         return NULL;
@@ -332,32 +347,42 @@ gwyzip_close(GwyZipFile zipfile)
 
 G_GNUC_UNUSED
 static gboolean
-gwyzip_next_file(GwyZipFile zipfile, GError **error)
+err_ZIP_NOFILE(GwyZipFile zipfile, GError **error)
 {
     if (zipfile->index >= zipfile->nentries) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
                     _("Libzip error while reading the zip file: %s."),
                     _("End of list of files"));
-        return FALSE;
+        return TRUE;
     }
+    return FALSE;
+}
 
+G_GNUC_UNUSED
+static void
+err_ZIP(GwyZipFile zipfile, GError **error)
+{
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                _("Libzip error while reading the zip file: %s."),
+                zip_strerror(zipfile->archive));
+}
+
+G_GNUC_UNUSED
+static gboolean
+gwyzip_next_file(GwyZipFile zipfile, GError **error)
+{
+    if (err_ZIP_NOFILE(zipfile, error))
+        return FALSE;
     zipfile->index++;
-    return TRUE;
+    return !err_ZIP_NOFILE(zipfile, error);
 }
 
 G_GNUC_UNUSED
 static gboolean
 gwyzip_first_file(GwyZipFile zipfile, GError **error)
 {
-    if (!zipfile->nentries) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    _("Libzip error while reading the zip file: %s."),
-                    _("End of list of files"));
-        return FALSE;
-    }
-
     zipfile->index = 0;
-    return TRUE;
+    return !err_ZIP_NOFILE(zipfile, error);
 }
 
 G_GNUC_UNUSED
@@ -367,6 +392,11 @@ gwyzip_get_current_filename(GwyZipFile zipfile, gchar **filename,
 {
     const char *filename_buf;
 
+    if (err_ZIP_NOFILE(zipfile, error)) {
+        *filename = NULL;
+        return FALSE;
+    }
+
     filename_buf = zip_get_name(zipfile->archive, zipfile->index,
                                 ZIP_FL_ENC_GUESS);
     if (filename_buf) {
@@ -374,9 +404,7 @@ gwyzip_get_current_filename(GwyZipFile zipfile, gchar **filename,
         return TRUE;
     }
 
-    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                _("Libzip error while reading the zip file: %s."),
-                zip_strerror(zipfile->archive));
+    err_ZIP(zipfile, error);
     *filename = NULL;
     return FALSE;
 }
@@ -392,9 +420,7 @@ gwyzip_locate_file(GwyZipFile zipfile, const gchar *filename, gint casesens,
                         ZIP_FL_ENC_GUESS
                         | (casesens ? 0 : ZIP_FL_NOCASE));
     if (i == -1) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    _("Libzip error while reading the zip file: %s."),
-                    zip_strerror(zipfile->archive));
+        err_ZIP(zipfile, error);
         return FALSE;
     }
     zipfile->index = i;
@@ -406,7 +432,45 @@ static guchar*
 gwyzip_get_file_content(GwyZipFile zipfile, gsize *contentsize,
                         GError **error)
 {
-    /* TODO */
+    struct zip_file *file;
+    struct zip_stat zst;
+    guchar *buffer;
+
+    if (err_ZIP_NOFILE(zipfile, error))
+        return NULL;
+
+    zip_stat_init(&zst);
+    if (zip_stat_index(zipfile->archive, zipfile->index, 0, &zst) == -1) {
+        err_ZIP(zipfile, error);
+        return NULL;
+    }
+
+    if (!(zst.valid & ZIP_STAT_SIZE)) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    _("Cannot obtain the uncompressed file size."));
+        return NULL;
+    }
+
+    file = zip_fopen_index(zipfile->archive, zipfile->index, 0);
+    if (!file) {
+        err_ZIP(zipfile, error);
+        return NULL;
+    }
+
+    buffer = g_new(guchar, zst.size + 1);
+    if (zip_fread(file, buffer, zst.size) != zst.size) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    _("Cannot read file contents."));
+        zip_fclose(file);
+        g_free(buffer);
+        return NULL;
+    }
+    zip_fclose(file);
+
+    buffer[zst.size] = '\0';
+    if (contentsize)
+        *contentsize = zst.size;
+    return buffer;
 }
 #endif
 
