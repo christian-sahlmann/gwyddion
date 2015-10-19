@@ -28,7 +28,9 @@ BuildRequires: gtkglext-devel
 BuildRequires: libxml2-devel
 BuildRequires: zlib-devel
 BuildRequires: ruby >= 1.8
+%if %{distro_is_redhat}
 BuildRequires: rubypick
+%endif
 BuildRequires: gettext
 BuildRequires: desktop-file-utils >= 0.9
 BuildRequires: pkgconfig
