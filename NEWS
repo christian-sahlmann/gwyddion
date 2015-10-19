@@ -3,6 +3,8 @@ Libraries:
 - libgwyprocess: Functions for erosion, dilation, opening and closing
   morphological operations with arbitrarily shaped flat structuring elements
   were added.
+- libgwyprocess: A function for alternating sequential filters with flat
+  discs was added.
 - libgwyprocess: gwy_data_field_grain_simple_dist_trans() can perform all
   types of distance transforms now, including true Euclidean.
 - libgwyprocess: Functions for mask growing and shrinking using any available
@@ -12,14 +14,21 @@ Libraries:
 Modules:
 - Sensofarx (new): Imports Sensofar PLUx data files.
 - Princeton SPE (new): Imports Princeton Instruments camera SPE files.
+- Mask morph (new): Elementary mophological operations with masks, possibly
+  using another mask as the structuring elements.
 - Rawfile: NaN in floating point data are handled by masking and replacement.
   It is possible to specify a raw value representing missing data.  Support
   for two-byte half and six-byte Pascal floating point formats was added.
   Reading of 64bit integer formats was fixed.
 - Filters tool: Minimum and maximum filters now use circular neighbourhoods.
-  Opening and closing filters with flat discs were added.
+  Opening and closing filters and alternating sequential filters with flat
+  discs were added.
 - Rank: Local normalisation and value range filter options were added.
 - Nanoscantech: Unit and scale reading was updated.
+- Mask editor tool: The distance type used for Grow and Shrink is
+  controllable now, with true Euclidean distance being the default.
+- Profile tool: Possible crash when starting to take a profile with masking
+  was fixed.
 
 Other:
 - Configure check for gtk-doc at least 1.10, required to build the
