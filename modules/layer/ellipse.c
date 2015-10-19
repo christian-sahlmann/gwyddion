@@ -90,6 +90,9 @@ static void     gwy_selection_ellipse_crop       (GwySelection *selection,
                                                   gdouble ymin,
                                                   gdouble xmax,
                                                   gdouble ymax);
+static void     gwy_selection_ellipse_move       (GwySelection *selection,
+                                                  gdouble vx,
+                                                  gdouble vy);
 static void     gwy_layer_ellipse_set_property   (GObject *object,
                                                   guint prop_id,
                                                   const GValue *value,
@@ -139,7 +142,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of elliptic areas."),
     "Yeti <yeti@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -165,6 +168,7 @@ gwy_selection_ellipse_class_init(GwySelectionEllipseClass *klass)
 
     sel_class->object_size = OBJECT_SIZE;
     sel_class->crop = gwy_selection_ellipse_crop;
+    sel_class->move = gwy_selection_ellipse_move;
 }
 
 static void
@@ -240,6 +244,22 @@ gwy_selection_ellipse_crop(GwySelection *selection,
     gdouble minmax[4] = { xmin, ymin, xmax, ymax };
 
     gwy_selection_filter(selection, gwy_selection_ellipse_crop_object, minmax);
+}
+
+static void
+gwy_selection_ellipse_move(GwySelection *selection,
+                           gdouble vx,
+                           gdouble vy)
+{
+    gdouble *data = (gdouble*)selection->objects->data;
+    guint i, n = selection->objects->len/OBJECT_SIZE;
+
+    for (i = 0; i < n; i++) {
+        data[OBJECT_SIZE*i + 0] += vx;
+        data[OBJECT_SIZE*i + 1] += vy;
+        data[OBJECT_SIZE*i + 2] += vx;
+        data[OBJECT_SIZE*i + 3] += vy;
+    }
 }
 
 static void

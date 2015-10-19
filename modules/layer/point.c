@@ -99,6 +99,9 @@ static void       gwy_selection_point_crop          (GwySelection *selection,
                                                      gdouble ymin,
                                                      gdouble xmax,
                                                      gdouble ymax);
+static void       gwy_selection_point_move          (GwySelection *selection,
+                                                     gdouble vx,
+                                                     gdouble vy);
 static void       gwy_layer_point_set_property      (GObject *object,
                                                      guint prop_id,
                                                      const GValue *value,
@@ -166,7 +169,7 @@ static GwyModuleInfo module_info = {
     N_("Layer allowing selection of several points, displayed as crosses "
        "or inivisible."),
     "Yeti <yeti@gwyddion.net>",
-    "3.1",
+    "3.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -190,6 +193,7 @@ gwy_selection_point_class_init(GwySelectionPointClass *klass)
 
     sel_class->object_size = OBJECT_SIZE;
     sel_class->crop = gwy_selection_point_crop;
+    sel_class->move = gwy_selection_point_move;
 }
 
 static void
@@ -281,6 +285,20 @@ gwy_selection_point_crop(GwySelection *selection,
     gdouble minmax[4] = { xmin, ymin, xmax, ymax };
 
     gwy_selection_filter(selection, gwy_selection_point_crop_object, minmax);
+}
+
+static void
+gwy_selection_point_move(GwySelection *selection,
+                         gdouble vx,
+                         gdouble vy)
+{
+    gdouble *data = (gdouble*)selection->objects->data;
+    guint i, n = selection->objects->len/OBJECT_SIZE;
+
+    for (i = 0; i < n; i++) {
+        data[OBJECT_SIZE*i + 0] += vx;
+        data[OBJECT_SIZE*i + 1] += vy;
+    }
 }
 
 static void

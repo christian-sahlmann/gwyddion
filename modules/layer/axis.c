@@ -99,6 +99,9 @@ static void     gwy_selection_axis_crop           (GwySelection *selection,
                                                    gdouble ymin,
                                                    gdouble xmax,
                                                    gdouble ymax);
+static void     gwy_selection_axis_move           (GwySelection *selection,
+                                                   gdouble vx,
+                                                   gdouble vy);
 static GByteArray* gwy_selection_axis_serialize   (GObject *serializable,
                                                    GByteArray *buffer);
 static GObject* gwy_selection_axis_deserialize    (const guchar *buffer,
@@ -139,7 +142,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of horizontal or vertical lines."),
     "Yeti <yeti@gwyddion.net>",
-    "2.6",
+    "2.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -169,6 +172,7 @@ gwy_selection_axis_class_init(GwySelectionAxisClass *klass)
 
     sel_class->object_size = OBJECT_SIZE;
     sel_class->crop = gwy_selection_axis_crop;
+    sel_class->move = gwy_selection_axis_move;
 
     g_object_class_install_property
         (gobject_class,
@@ -288,6 +292,25 @@ gwy_selection_axis_crop(GwySelection *selection,
     gdouble minmax[4] = { xmin, ymin, xmax, ymax };
 
     gwy_selection_filter(selection, gwy_selection_axis_crop_object, minmax);
+}
+
+static void
+gwy_selection_axis_move(GwySelection *selection,
+                        gdouble vx,
+                        gdouble vy)
+{
+    GwySelectionAxis *selection_axis = GWY_SELECTION_AXIS(selection);
+    gdouble *data = (gdouble*)selection->objects->data;
+    guint i, n = selection->objects->len/OBJECT_SIZE;
+
+    if (selection_axis->orientation == GWY_ORIENTATION_VERTICAL) {
+        for (i = 0; i < n; i++)
+            data[OBJECT_SIZE*i] += vy;
+    }
+    else {
+        for (i = 0; i < n; i++)
+            data[OBJECT_SIZE*i] += vx;
+    }
 }
 
 static GByteArray*

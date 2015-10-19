@@ -93,6 +93,9 @@ static void     gwy_selection_rectangle_crop       (GwySelection *selection,
                                                     gdouble ymin,
                                                     gdouble xmax,
                                                     gdouble ymax);
+static void     gwy_selection_rectangle_move       (GwySelection *selection,
+                                                    gdouble vx,
+                                                    gdouble by);
 static void     gwy_layer_rectangle_set_property   (GObject *object,
                                                     guint prop_id,
                                                     const GValue *value,
@@ -143,7 +146,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of rectangular areas."),
     "Yeti <yeti@gwyddion.net>",
-    "2.8",
+    "2.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -169,6 +172,7 @@ gwy_selection_rectangle_class_init(GwySelectionRectangleClass *klass)
 
     sel_class->object_size = OBJECT_SIZE;
     sel_class->crop = gwy_selection_rectangle_crop;
+    sel_class->move = gwy_selection_rectangle_move;
 }
 
 static gboolean
@@ -196,6 +200,22 @@ gwy_selection_rectangle_crop(GwySelection *selection,
     gdouble minmax[4] = { xmin, ymin, xmax, ymax };
 
     gwy_selection_filter(selection, gwy_selection_rectangle_crop_object, minmax);
+}
+
+static void
+gwy_selection_rectangle_move(GwySelection *selection,
+                             gdouble vx,
+                             gdouble vy)
+{
+    gdouble *data = (gdouble*)selection->objects->data;
+    guint i, n = selection->objects->len/OBJECT_SIZE;
+
+    for (i = 0; i < n; i++) {
+        data[OBJECT_SIZE*i + 0] += vx;
+        data[OBJECT_SIZE*i + 1] += vy;
+        data[OBJECT_SIZE*i + 2] += vx;
+        data[OBJECT_SIZE*i + 3] += vy;
+    }
 }
 
 static void
