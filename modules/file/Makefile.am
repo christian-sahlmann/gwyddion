@@ -22,7 +22,7 @@ endif
 # If libXML2 is disabled, put the dependent sources to EXTRA_DIST to include
 # them in make dist.
 if HAVE_XML2
-if HAVE_MINIZIP
+if HAVE_ANY_ZIP
 apedaxfile_module = apedaxfile.la
 else
 apedaxfile_module =
@@ -45,7 +45,7 @@ disabled_sources += matfile.c
 
 # If minizip is disabled, put the dependent sources to EXTRA_DIST to include
 # them in make dist.
-if HAVE_MINIZIP
+if HAVE_ANY_ZIP
 nanoobserver_module = nanoobserver.la
 nanoscantech_module = nanoscantech.la
 opengps_module = opengps.la
@@ -335,6 +335,16 @@ xyzexport_la_SOURCES     = xyzexport.c
 zeiss_la_SOURCES         = zeiss.c
 zemax_la_SOURCES         = zemax.c
 
+if HAVE_LIBZIP
+zip_cflags = @LIBZIP_CFLAGS@
+zip_libs = @LIBZIP_LIBS@
+endif
+
+if HAVE_MINIZIP
+zip_cflags = @MINIZIP_CFLAGS@
+zip_libs = @MINIZIP_LIBS@
+endif
+
 # These compile also without.
 createc_la_LIBADD        = @ZLIB@
 nrrdfile_la_LIBADD       = @ZLIB@ @BZIP2@
@@ -357,10 +367,10 @@ endif
 
 # These require the respective libraries.
 if HAVE_XML2
-if HAVE_MINIZIP
+if HAVE_ANY_ZIP
 apedaxfile_la_SOURCES    = apedaxfile.c gwyzip.h
-apedaxfile_la_CFLAGS     = $(AM_CFLAGS) @XML2_CFLAGS@ @MINIZIP_CFLAGS@
-apedaxfile_la_LIBADD     = @XML2_LIBS@ @MINIZIP_LIBS@
+apedaxfile_la_CFLAGS     = $(AM_CFLAGS) @XML2_CFLAGS@ $(zip_cflags)
+apedaxfile_la_LIBADD     = @XML2_LIBS@ $(zip_libs)
 endif
 endif
 
@@ -369,26 +379,26 @@ if HAVE_ZLIB
 #matfile_la_LIBADD        = @ZLIB@
 endif
 
-if HAVE_MINIZIP
+if HAVE_ANY_ZIP
 nanoobserver_la_SOURCES = nanoobserver.c gwyzip.h
-nanoobserver_la_CFLAGS  = $(AM_CFLAGS) @MINIZIP_CFLAGS@
-nanoobserver_la_LIBADD  = @MINIZIP_LIBS@
+nanoobserver_la_CFLAGS  = $(AM_CFLAGS) $(zip_cflags)
+nanoobserver_la_LIBADD  = $(zip_libs)
 
 nanoscantech_la_SOURCES = nanoscantech.c gwyzip.h
-nanoscantech_la_CFLAGS  = $(AM_CFLAGS) @MINIZIP_CFLAGS@
-nanoscantech_la_LIBADD  = @MINIZIP_LIBS@
+nanoscantech_la_CFLAGS  = $(AM_CFLAGS) $(zip_cflags)
+nanoscantech_la_LIBADD  = $(zip_libs)
 
 opengps_la_SOURCES = opengps.c gwyzip.h
-opengps_la_CFLAGS  = $(AM_CFLAGS) @MINIZIP_CFLAGS@
-opengps_la_LIBADD  = @MINIZIP_LIBS@
+opengps_la_CFLAGS  = $(AM_CFLAGS) $(zip_cflags)
+opengps_la_LIBADD  = $(zip_libs)
 
 spmxfile_la_SOURCES = spmxfile.c gwyzip.h
-spmxfile_la_CFLAGS  = $(AM_CFLAGS) @MINIZIP_CFLAGS@
-spmxfile_la_LIBADD  = @MINIZIP_LIBS@
+spmxfile_la_CFLAGS  = $(AM_CFLAGS) $(zip_cflags)
+spmxfile_la_LIBADD  = $(zip_libs)
 
 sensofarx_la_SOURCES = sensofarx.c
-sensofarx_la_CFLAGS  = $(AM_CFLAGS) @MINIZIP_CFLAGS@
-sensofarx_la_LIBADD  = @MINIZIP_LIBS@
+sensofarx_la_CFLAGS  = $(AM_CFLAGS) $(zip_cflags)
+sensofarx_la_LIBADD  = $(zip_libs)
 endif
 
 if HAVE_CFITSIO
