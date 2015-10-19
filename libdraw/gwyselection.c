@@ -39,46 +39,49 @@ enum {
     LAST_SIGNAL
 };
 
-static void      gwy_selection_finalize           (GObject *object);
-static void      gwy_selection_set_property       (GObject *object,
-                                                   guint prop_id,
-                                                   const GValue *value,
-                                                   GParamSpec *pspec);
-static void      gwy_selection_get_property       (GObject*object,
-                                                   guint prop_id,
-                                                   GValue *value,
-                                                   GParamSpec *pspec);
-static void      gwy_selection_serializable_init  (GwySerializableIface *iface);
-static void      gwy_selection_clear_default      (GwySelection *selection);
-static gboolean  gwy_selection_get_object_default (GwySelection *selection,
-                                                   gint i,
-                                                   gdouble *data);
-static gint      gwy_selection_set_object_default (GwySelection *selection,
-                                                   gint i,
-                                                   const gdouble *data);
-static void    gwy_selection_delete_object_default(GwySelection *selection,
-                                                   gint i);
-static gint      gwy_selection_get_data_default   (GwySelection *selection,
-                                                   gdouble *data);
-static void      gwy_selection_set_data_default   (GwySelection *selection,
-                                                   gint nselected,
-                                                   const gdouble *data);
-static void  gwy_selection_set_max_objects_default(GwySelection *selection,
-                                                   guint max_objects);
-static void      gwy_selection_crop_default       (GwySelection *selection,
-                                                   gdouble xmin,
-                                                   gdouble ymin,
-                                                   gdouble xmax,
-                                                   gdouble ymax);
-static GByteArray* gwy_selection_serialize_default(GObject *obj,
-                                                   GByteArray *buffer);
-static gsize     gwy_selection_get_size_default   (GObject *obj);
-static GObject*  gwy_selection_deserialize_default(const guchar *buffer,
-                                                   gsize size,
-                                                   gsize *position);
-static GObject*  gwy_selection_duplicate_default  (GObject *object);
-static void      gwy_selection_clone_default      (GObject *source,
-                                                   GObject *copy);
+static void        gwy_selection_finalize               (GObject *object);
+static void        gwy_selection_set_property           (GObject *object,
+                                                         guint prop_id,
+                                                         const GValue *value,
+                                                         GParamSpec *pspec);
+static void        gwy_selection_get_property           (GObject*object,
+                                                         guint prop_id,
+                                                         GValue *value,
+                                                         GParamSpec *pspec);
+static void        gwy_selection_serializable_init      (GwySerializableIface *iface);
+static void        gwy_selection_clear_default          (GwySelection *selection);
+static gboolean    gwy_selection_get_object_default     (GwySelection *selection,
+                                                         gint i,
+                                                         gdouble *data);
+static gint        gwy_selection_set_object_default     (GwySelection *selection,
+                                                         gint i,
+                                                         const gdouble *data);
+static void        gwy_selection_delete_object_default  (GwySelection *selection,
+                                                         gint i);
+static gint        gwy_selection_get_data_default       (GwySelection *selection,
+                                                         gdouble *data);
+static void        gwy_selection_set_data_default       (GwySelection *selection,
+                                                         gint nselected,
+                                                         const gdouble *data);
+static void        gwy_selection_set_max_objects_default(GwySelection *selection,
+                                                         guint max_objects);
+static void        gwy_selection_crop_default           (GwySelection *selection,
+                                                         gdouble xmin,
+                                                         gdouble ymin,
+                                                         gdouble xmax,
+                                                         gdouble ymax);
+static void        gwy_selection_move_default           (GwySelection *selection,
+                                                         gdouble vx,
+                                                         gdouble vy);
+static GByteArray* gwy_selection_serialize_default      (GObject *obj,
+                                                         GByteArray *buffer);
+static gsize       gwy_selection_get_size_default       (GObject *obj);
+static GObject*    gwy_selection_deserialize_default    (const guchar *buffer,
+                                                         gsize size,
+                                                         gsize *position);
+static GObject*    gwy_selection_duplicate_default      (GObject *object);
+static void        gwy_selection_clone_default          (GObject *source,
+                                                         GObject *copy);
 
 static guint selection_signals[LAST_SIGNAL] = { 0 };
 
@@ -103,6 +106,7 @@ gwy_selection_class_init(GwySelectionClass *klass)
     klass->set_data = gwy_selection_set_data_default;
     klass->set_max_objects = gwy_selection_set_max_objects_default;
     klass->crop = gwy_selection_crop_default;
+    klass->move = gwy_selection_move_default;
 
     g_object_class_install_property
         (gobject_class,
@@ -280,6 +284,30 @@ gwy_selection_crop(GwySelection *selection,
 {
     g_return_if_fail(GWY_IS_SELECTION(selection));
     GWY_SELECTION_GET_CLASS(selection)->crop(selection, xmin, ymin, xmax, ymax);
+}
+
+/**
+ * gwy_selection_move:
+ * @selection: A selection.
+ * @vx: Value to add to all x-coordinates.
+ * @vy: Value to add to all y-coordinates.
+ *
+ * Moves entire selection in plane by given vector.
+ *
+ * If a selection class does not implement this operation the selection remains
+ * unchanged.  Bult-in selection classes generally implement this operation if
+ * it is meaningful.  For some, such as GwySelectionLattice, it is not
+ * meaningful and moving GwySelectionLattice thus does not do anything.
+ *
+ * Since: 2.43
+ **/
+void
+gwy_selection_move(GwySelection *selection,
+                   gdouble vx,
+                   gdouble vy)
+{
+    g_return_if_fail(GWY_IS_SELECTION(selection));
+    GWY_SELECTION_GET_CLASS(selection)->move(selection, vx, vy);
 }
 
 /**
@@ -651,6 +679,14 @@ gwy_selection_crop_default(GwySelection *selection,
     /* If the selection class does not implement crop, we have to remove all
      * objects. */
     gwy_selection_clear(selection);
+}
+
+static void
+gwy_selection_move_default(G_GNUC_UNUSED GwySelection *selection,
+                           G_GNUC_UNUSED gdouble vx,
+                           G_GNUC_UNUSED gdouble vy)
+{
+    /* If the selection class does not implement move we do nothing. */
 }
 
 static GByteArray*

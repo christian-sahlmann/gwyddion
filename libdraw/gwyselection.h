@@ -69,11 +69,12 @@ struct _GwySelectionClass {
                      const gdouble *data);
     void (*set_max_objects)(GwySelection *selection,
                             guint max_objects);
-    /* TODO: maybe geometrical methods: clamp, move, scale */
+    /* TODO: maybe geometrical methods: clamp, scale */
     void (*crop)(GwySelection *selection,
                  gdouble xmin, gdouble ymin,
                  gdouble xmax, gdouble ymax);
-    void (*reserved2)(void);
+    void (*move)(GwySelection *selection,
+                 gdouble xv, gdouble vy);
     void (*reserved3)(void);
     void (*reserved4)(void);
     void (*reserved5)(void);
@@ -117,6 +118,9 @@ void     gwy_selection_crop           (GwySelection *selection,
                                        gdouble ymin,
                                        gdouble xmax,
                                        gdouble ymax);
+void     gwy_selection_move           (GwySelection *selection,
+                                       gdouble vx,
+                                       gdouble vy);
 void     gwy_selection_filter         (GwySelection *selection,
                                        GwySelectionFilterFunc filter,
                                        gpointer data);
