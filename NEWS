@@ -10,6 +10,10 @@ Libraries:
 - libgwyprocess: Functions for mask growing and shrinking using any available
   distance measure were added.
 - libgwyprocess: A function for mask inversion was added.
+- libdraw: GwySelection has a method for moving it in the plane (may not be
+  meaningful or supported for all subclasses).
+- libgwydgets: GwySelectionGraphArea and GwySelectionGraphPoint support crop
+  and move methods now.
 
 Modules:
 - Sensofarx (new): Imports Sensofar PLUx data files.
@@ -29,10 +33,15 @@ Modules:
   controllable now, with true Euclidean distance being the default.
 - Profile tool: Possible crash when starting to take a profile with masking
   was fixed.
+- Axis, Ellipse, Line, Point and Rectangle layers: Support for the move
+  peration was added.
+- Selection manager tool: Selections are distributed correctly from and to
+  images with offset top-left corner.
 
 Other:
 - Configure check for gtk-doc at least 1.10, required to build the
   documentation (older versions were actually insufficient even before).
+- RPM requires rubypick only on RedHat-based distros.
 
 
 2.42 (2015-10-06)
