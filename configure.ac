@@ -559,7 +559,7 @@ if test x$enable_minizip != xno; then
   enable_libzip=no
 else
   enable_libzip=yes
-  PKG_CHECK_MODULES(LIBZIP, [libzip],
+  PKG_CHECK_MODULES(LIBZIP, [libzip >= 0.11],
                     [AC_DEFINE(HAVE_LIBZIP,1,
                               [Define if we have the libzip package.])],
                     [enable_libzip=no])
