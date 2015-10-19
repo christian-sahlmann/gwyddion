@@ -27,6 +27,16 @@ enum {
     OBJECT_SIZE = 4
 };
 
+
+static void gwy_selection_graph_area_crop(GwySelection *selection,
+                                          gdouble xmin,
+                                          gdouble ymin,
+                                          gdouble xmax,
+                                          gdouble ymax);
+static void gwy_selection_graph_area_move(GwySelection *selection,
+                                          gdouble vx,
+                                          gdouble vy);
+
 G_DEFINE_TYPE(GwySelectionGraphArea, gwy_selection_graph_area,
               GWY_TYPE_SELECTION)
 
@@ -36,6 +46,8 @@ gwy_selection_graph_area_class_init(GwySelectionGraphAreaClass *klass)
     GwySelectionClass *sel_class = GWY_SELECTION_CLASS(klass);
 
     sel_class->object_size = OBJECT_SIZE;
+    sel_class->crop = gwy_selection_graph_area_crop;
+    sel_class->move = gwy_selection_graph_area_move;
 }
 
 static void
@@ -43,6 +55,50 @@ gwy_selection_graph_area_init(GwySelectionGraphArea *selection)
 {
     /* Set max. number of objects to one */
     g_array_set_size(GWY_SELECTION(selection)->objects, OBJECT_SIZE);
+}
+
+static gboolean
+gwy_selection_graph_area_crop_object(GwySelection *selection,
+                                     gint i,
+                                     gpointer user_data)
+{
+    const gdouble *minmax = (const gdouble*)user_data;
+    gdouble xy[OBJECT_SIZE];
+
+    gwy_selection_get_object(selection, i, xy);
+    return (MIN(xy[0], xy[2]) >= minmax[0]
+            && MIN(xy[1], xy[3]) >= minmax[1]
+            && MAX(xy[0], xy[2]) <= minmax[2]
+            && MAX(xy[1], xy[3]) <= minmax[3]);
+}
+
+static void
+gwy_selection_graph_area_crop(GwySelection *selection,
+                              gdouble xmin,
+                              gdouble ymin,
+                              gdouble xmax,
+                              gdouble ymax)
+{
+    gdouble minmax[4] = { xmin, ymin, xmax, ymax };
+
+    gwy_selection_filter(selection, gwy_selection_graph_area_crop_object,
+                         minmax);
+}
+
+static void
+gwy_selection_graph_area_move(GwySelection *selection,
+                              gdouble vx,
+                              gdouble vy)
+{
+    gdouble *data = (gdouble*)selection->objects->data;
+    guint i, n = selection->objects->len/OBJECT_SIZE;
+
+    for (i = 0; i < n; i++) {
+        data[OBJECT_SIZE*i + 0] += vx;
+        data[OBJECT_SIZE*i + 1] += vy;
+        data[OBJECT_SIZE*i + 2] += vx;
+        data[OBJECT_SIZE*i + 3] += vy;
+    }
 }
 
 /**

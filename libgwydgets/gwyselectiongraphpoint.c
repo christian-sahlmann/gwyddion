@@ -27,6 +27,15 @@ enum {
     OBJECT_SIZE = 2,
 };
 
+static void gwy_selection_graph_point_crop(GwySelection *selection,
+                                           gdouble xmin,
+                                           gdouble ymin,
+                                           gdouble xmax,
+                                           gdouble ymax);
+static void gwy_selection_graph_point_move(GwySelection *selection,
+                                           gdouble vx,
+                                           gdouble vy);
+
 G_DEFINE_TYPE(GwySelectionGraphPoint, gwy_selection_graph_point,
               GWY_TYPE_SELECTION)
 
@@ -36,6 +45,8 @@ gwy_selection_graph_point_class_init(GwySelectionGraphPointClass *klass)
     GwySelectionClass *sel_class = GWY_SELECTION_CLASS(klass);
 
     sel_class->object_size = OBJECT_SIZE;
+    sel_class->crop = gwy_selection_graph_point_crop;
+    sel_class->move = gwy_selection_graph_point_move;
 }
 
 static void
@@ -43,6 +54,48 @@ gwy_selection_graph_point_init(GwySelectionGraphPoint *selection)
 {
     /* Set max. number of objects to one */
     g_array_set_size(GWY_SELECTION(selection)->objects, OBJECT_SIZE);
+}
+
+static gboolean
+gwy_selection_graph_point_crop_object(GwySelection *selection,
+                                      gint i,
+                                      gpointer user_data)
+{
+    const gdouble *minmax = (const gdouble*)user_data;
+    gdouble xy[OBJECT_SIZE];
+
+    gwy_selection_get_object(selection, i, xy);
+    return (xy[0] >= minmax[0]
+            && xy[1] >= minmax[1]
+            && xy[0] <= minmax[2]
+            && xy[1] <= minmax[3]);
+}
+
+static void
+gwy_selection_graph_point_crop(GwySelection *selection,
+                               gdouble xmin,
+                               gdouble ymin,
+                               gdouble xmax,
+                               gdouble ymax)
+{
+    gdouble minmax[4] = { xmin, ymin, xmax, ymax };
+
+    gwy_selection_filter(selection, gwy_selection_graph_point_crop_object,
+                         minmax);
+}
+
+static void
+gwy_selection_graph_point_move(GwySelection *selection,
+                               gdouble vx,
+                               gdouble vy)
+{
+    gdouble *data = (gdouble*)selection->objects->data;
+    guint i, n = selection->objects->len/OBJECT_SIZE;
+
+    for (i = 0; i < n; i++) {
+        data[OBJECT_SIZE*i + 0] += vx;
+        data[OBJECT_SIZE*i + 1] += vy;
+    }
 }
 
 /**
