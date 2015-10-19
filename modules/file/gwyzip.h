@@ -24,6 +24,9 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 
+/****************************************************************************
+ * Minizip wrapper
+ ****************************************************************************/
 #ifdef HAVE_MINIZIP
 #include <unzip.h>
 
@@ -119,7 +122,7 @@ gwyzip_open(const gchar *path)
     unzFile *unzfile;
 
     if (!(unzfile = unzOpen2(path, &ffdef)))
-        return FALSE;
+        return NULL;
 
     zipfile = g_new0(struct _GwyZipFile, 1);
     zipfile->unzfile = unzfile;
@@ -134,7 +137,7 @@ gwyzip_open(const gchar *path)
     unzFile *unzfile;
 
     if (!(unzfile = unzOpen(path)))
-        return FALSE;
+        return NULL;
 
     zipfile = g_new0(struct _GwyZipFile, 1);
     zipfile->unzfile = unzfile;
@@ -288,8 +291,125 @@ gwyzip_get_file_content(GwyZipFile zipfile, gsize *contentsize,
 }
 
 #endif
-#else
-#warning "gwyzip.h included without any ZIP library"
+
+/****************************************************************************
+ * Libzip wrapper
+ ****************************************************************************/
+#ifdef HAVE_LIBZIP
+#include <zip.h>
+
+struct _GwyZipFile {
+    zip_t *archive;
+    guint index;
+    guint nentries;
+};
+
+typedef struct _GwyZipFile *GwyZipFile;
+
+G_GNUC_UNUSED
+static GwyZipFile
+gwyzip_open(const char *path)
+{
+    struct _GwyZipFile *zipfile;
+    zip_t *archive;
+
+    if (!(archive = zip_open(path, ZIP_RDONLY, NULL)))
+        return NULL;
+
+    zipfile = g_new0(struct _GwyZipFile, 1);
+    zipfile->archive = archive;
+    zipfile->nentries = zip_get_num_entries(archive, 0);
+    return zipfile;
+}
+
+G_GNUC_UNUSED
+static void
+gwyzip_close(GwyZipFile zipfile)
+{
+    zip_close(zipfile->archive);
+    g_free(zipfile);
+}
+
+G_GNUC_UNUSED
+static gboolean
+gwyzip_next_file(GwyZipFile zipfile, GError **error)
+{
+    if (zipfile->index >= zipfile->nentries) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    _("Libzip error while reading the zip file: %s."),
+                    _("End of list of files"));
+        return FALSE;
+    }
+
+    zipfile->index++;
+    return TRUE;
+}
+
+G_GNUC_UNUSED
+static gboolean
+gwyzip_first_file(GwyZipFile zipfile, GError **error)
+{
+    if (!zipfile->nentries) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    _("Libzip error while reading the zip file: %s."),
+                    _("End of list of files"));
+        return FALSE;
+    }
+
+    zipfile->index = 0;
+    return TRUE;
+}
+
+G_GNUC_UNUSED
+static gboolean
+gwyzip_get_current_filename(GwyZipFile zipfile, gchar **filename,
+                            GError **error)
+{
+    const char *filename_buf;
+
+    filename_buf = zip_get_name(zipfile->archive, zipfile->index,
+                                ZIP_FL_ENC_GUESS);
+    if (filename_buf) {
+        *filename = g_strdup(filename_buf);
+        return TRUE;
+    }
+
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                _("Libzip error while reading the zip file: %s."),
+                zip_strerror(zipfile->archive));
+    *filename = NULL;
+    return FALSE;
+}
+
+G_GNUC_UNUSED
+static gboolean
+gwyzip_locate_file(GwyZipFile zipfile, const gchar *filename, gint casesens,
+                   GError **error)
+{
+    zip_int64_t i;
+
+    i = zip_name_locate(zipfile->archive, filename,
+                        ZIP_FL_ENC_GUESS
+                        | (casesens ? 0 : ZIP_FL_NOCASE));
+    if (i == -1) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    _("Libzip error while reading the zip file: %s."),
+                    zip_strerror(zipfile->archive));
+        return FALSE;
+    }
+    zipfile->index = i;
+    return TRUE;
+}
+
+G_GNUC_UNUSED
+static guchar*
+gwyzip_get_file_content(GwyZipFile zipfile, gsize *contentsize,
+                        GError **error)
+{
+    /* TODO */
+}
+#endif
+
 #endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
