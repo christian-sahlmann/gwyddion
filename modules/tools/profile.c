@@ -222,7 +222,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Profile tool, creates profile graphs from selected lines."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "3.2",
+    "3.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1421,6 +1421,12 @@ get_profile_with_masking(GwyDataField *dfield,
         res = GWY_ROUND(size);
 
     gwy_debug("size: %g, res: %d", size, res);
+    if (xto == xfrom && yto == yfrom) {
+        xto += 0.2*dx;
+        yto += 0.2*dy;
+        xfrom -= 0.2*dx;
+        yfrom -= 0.2*dy;
+    }
     xstep = (xto - xfrom)/(res - 1.0);
     ystep = (yto - yfrom)/(res - 1.0);
     step = hypot(xstep, ystep);
