@@ -543,12 +543,28 @@ AC_SUBST(BZIP2)
 #############################################################################
 # minizip
 # Optional.  Used to load the crazy zip-compressed-bunch-of-XML formats.
+# Preferred over libzip, if available.
 enable_minizip=yes
 PKG_CHECK_MODULES(MINIZIP, [minizip],
                   [AC_DEFINE(HAVE_MINIZIP,1,
                             [Define if we have the minizip package.])],
                   [enable_minizip=no])
 AM_CONDITIONAL([HAVE_MINIZIP],[test x$enable_minizip != xno])
+
+#############################################################################
+# libzip
+# Optional.  Used to load the crazy zip-compressed-bunch-of-XML formats.
+# Alternative to minizip (which is normally preferred).
+if test x$enable_minizip != xno; then
+  enable_libzip=no
+else
+  enable_libzip=yes
+  PKG_CHECK_MODULES(LIBZIP, [libzip],
+                    [AC_DEFINE(HAVE_LIBZIP,1,
+                              [Define if we have the libzip package.])],
+                    [enable_libzip=no])
+fi
+AM_CONDITIONAL([HAVE_LIBZIP],[test x$enable_libzip != xno])
 
 #############################################################################
 # PNG
@@ -842,7 +858,7 @@ AC_OUTPUT
 enabled_formats=
 disabled_formats=
 
-if test "x$enable_minizip" != xno; then
+if test "x$enable_minizip" != xno || test "x$enable_libzip" != xno; then
   enabled_formats="$enabled_formats, NanoObserver, NanoScanTech, OpenGPS, PLUX"
   if test "x$enable_libxml2" != xno; then
     enabled_formats="$enabled_formats, APE DAX"
