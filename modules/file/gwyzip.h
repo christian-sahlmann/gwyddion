@@ -116,9 +116,13 @@ gwyzip_open(const gchar *path)
         NULL,
     };
     struct _GwyZipFile *zipfile;
+    unzFile *unzfile;
+
+    if (!(unzfile = unzOpen2(path, &ffdef)))
+        return FALSE;
 
     zipfile = g_new0(struct _GwyZipFile, 1);
-    zipfile->unzfile = unzOpen2(path, &ffdef);
+    zipfile->unzfile = unzfile;
     return zipfile;
 }
 #else
@@ -127,63 +131,16 @@ static GwyZipFile
 gwyzip_open(const gchar *path)
 {
     struct _GwyZipFile *zipfile;
+    unzFile *unzfile;
+
+    if (!(unzfile = unzOpen(path)))
+        return FALSE;
 
     zipfile = g_new0(struct _GwyZipFile, 1);
-    zipfile->unzfile = unzOpen(path);
+    zipfile->unzfile = unzfile;
     return zipfile;
 }
 #endif
-
-G_GNUC_UNUSED
-static void
-gwyzip_close(GwyZipFile zipfile)
-{
-    unzClose(zipfile->unzfile);
-    g_free(zipfile);
-}
-
-G_GNUC_UNUSED
-static int
-gwyzip_next_file(GwyZipFile zipfile)
-{
-    gint status;
-    if ((status = unzGoToNextFile(zipfile->unzfile)) == UNZ_OK) {
-        zipfile->index++;
-    }
-    return status;
-}
-
-G_GNUC_UNUSED
-static int
-gwyzip_first_file(GwyZipFile zipfile)
-{
-    gint status;
-    if ((status = unzGoToFirstFile(zipfile->unzfile)) == UNZ_OK) {
-        zipfile->index = 0;
-    }
-    return status;
-}
-
-G_GNUC_UNUSED
-static int
-gwyzip_get_current_filename(GwyZipFile zipfile, gchar **filename)
-{
-    unz_file_info fileinfo;
-    gint status;
-    gchar *filename_buf;
-    filename_buf = g_new(gchar, PATH_MAX + 1);
-
-    status = unzGetCurrentFileInfo(zipfile->unzfile, &fileinfo,
-                                   filename_buf, PATH_MAX,
-                                   NULL, 0, NULL, 0);
-    if (status != UNZ_OK) {
-        g_free(filename_buf);
-        *filename = NULL;
-        return status;
-    }
-    *filename = filename_buf;
-    return status;
-}
 
 G_GNUC_UNUSED
 static gboolean
@@ -207,9 +164,66 @@ err_MINIZIP(gint status, GError **error)
         errstr = _("CRC error");
 
     g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                _("Minizip error while reading the zip file: %s."),
-                errstr);
+                _("Minizip error while reading the zip file: %s (%d)."),
+                errstr, status);
     return FALSE;
+}
+
+G_GNUC_UNUSED
+static void
+gwyzip_close(GwyZipFile zipfile)
+{
+    unzClose(zipfile->unzfile);
+    g_free(zipfile);
+}
+
+G_GNUC_UNUSED
+static gboolean
+gwyzip_next_file(GwyZipFile zipfile, GError **error)
+{
+    gint status;
+    if ((status = unzGoToNextFile(zipfile->unzfile)) == UNZ_OK) {
+        zipfile->index++;
+        return TRUE;
+    }
+    err_MINIZIP(status, error);
+    return FALSE;
+}
+
+G_GNUC_UNUSED
+static gboolean
+gwyzip_first_file(GwyZipFile zipfile, GError **error)
+{
+    gint status;
+    if ((status = unzGoToFirstFile(zipfile->unzfile)) == UNZ_OK) {
+        zipfile->index = 0;
+        return TRUE;
+    }
+    err_MINIZIP(status, error);
+    return FALSE;
+}
+
+G_GNUC_UNUSED
+static gboolean
+gwyzip_get_current_filename(GwyZipFile zipfile, gchar **filename,
+                            GError **error)
+{
+    unz_file_info fileinfo;
+    gint status;
+    gchar *filename_buf;
+    filename_buf = g_new(gchar, PATH_MAX + 1);
+
+    status = unzGetCurrentFileInfo(zipfile->unzfile, &fileinfo,
+                                   filename_buf, PATH_MAX,
+                                   NULL, 0, NULL, 0);
+    if (status != UNZ_OK) {
+        g_free(filename_buf);
+        *filename = NULL;
+        err_MINIZIP(status, error);
+        return FALSE;
+    }
+    *filename = filename_buf;
+    return TRUE;
 }
 
 G_GNUC_UNUSED

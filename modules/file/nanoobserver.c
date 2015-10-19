@@ -194,7 +194,7 @@ nao_load(const gchar *filename,
     GwyZipFile zipfile;
     NAODirection dir;
     guint id, channelno = 0;
-    gint status;
+    gboolean status;
 
     zipfile = gwyzip_open(filename);
     if (!zipfile) {
@@ -208,19 +208,18 @@ nao_load(const gchar *filename,
     if (!nao_parse_measure(zipfile, &naofile, error))
         goto fail;
 
+    status = gwyzip_first_file(zipfile, error);
+    if (!status)
+        goto fail;
+
     container = gwy_container_new();
     if (g_hash_table_size(naofile.hash)) {
         meta = gwy_container_new();
         g_hash_table_foreach(naofile.hash, &add_meta, meta);
     }
 
-    status = gwyzip_first_file(zipfile);
-    while (status == UNZ_OK) {
-        if ((status = gwyzip_get_current_filename(zipfile,
-                                                  &filename_curr)) != UNZ_OK) {
-            err_MINIZIP(status, error);
-            goto fail;
-        }
+    while (status && gwyzip_get_current_filename(zipfile, &filename_curr,
+                                                 NULL)) {
         if (g_str_has_prefix(filename_curr, "Scan/Data/")) {
             const gchar *dataname = filename_curr + strlen("Scan/Data/");
             dir = DIR_BAD;
@@ -273,7 +272,7 @@ nao_load(const gchar *filename,
 
         }
         g_free(filename_curr);
-        status = gwyzip_next_file(zipfile);
+        status = gwyzip_next_file(zipfile, NULL);
     }
 
 fail:

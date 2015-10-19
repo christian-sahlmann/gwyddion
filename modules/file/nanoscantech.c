@@ -198,7 +198,8 @@ nst_load(const gchar *filename,
     GwyBrick *brick;
     GwyZipFile zipfile;
     guint channelno = 0;
-    gint status, xres, yres;
+    gint xres, yres;
+    gboolean status;
     gchar *buffer, *line, *p, *title, *strkey, *filename_curr;
     gchar *titlestr = NULL;
     gsize size = 0;
@@ -211,14 +212,20 @@ nst_load(const gchar *filename,
         return NULL;
     }
 
+    status = gwyzip_first_file(zipfile, error);
+    if (!status)
+        goto fail;
+
     container = gwy_container_new();
-    status = gwyzip_first_file(zipfile);
-    while (status == UNZ_OK) {
-        if (gwyzip_get_current_filename(zipfile, &filename_curr) != UNZ_OK)
-            goto fail;
+    while (status && gwyzip_get_current_filename(zipfile, &filename_curr,
+                                                 NULL)) {
         if (g_str_has_suffix(filename_curr, ".lsdlsd")) {
             gwy_debug("channel %d: %s\n", channelno, filename_curr);
-            buffer = gwyzip_get_file_content(zipfile, &size, NULL);
+            buffer = gwyzip_get_file_content(zipfile, &size, error);
+            if (!buffer) {
+                g_free(filename_curr);
+                goto fail;
+            }
             p = buffer;
             line = gwy_str_next_line(&p);
             g_strstrip(line);
@@ -332,7 +339,7 @@ nst_load(const gchar *filename,
             g_free(buffer);
             channelno++;
         }
-        status = gwyzip_next_file(zipfile);
+        status = gwyzip_next_file(zipfile, NULL);
         g_free(filename_curr);
     }
 
@@ -340,7 +347,8 @@ fail:
     gwyzip_close(zipfile);
     if (!channelno) {
         gwy_object_unref(container);
-        err_NO_DATA(error);
+        if (error && !*error)
+            err_NO_DATA(error);
     }
 
     return container;
