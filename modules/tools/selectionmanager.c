@@ -625,11 +625,23 @@ gwy_tool_selection_manager_distribute_one(GwyContainer *container,
         yreal = gwy_data_field_get_yreal(dfield);
         object = gwy_serializable_duplicate(selobject);
         selection = GWY_SELECTION(object);
+
         /* Crop the selection, taking into account that the coordinates do not
-         * include field offset, and move it relative to the new origin. */
-        gwy_selection_move(selection, distdata->origin[0], distdata->origin[1]);
-        gwy_selection_crop(selection, xoff, yoff, xoff + xreal, yoff + yreal);
-        gwy_selection_move(selection, -xoff, -yoff);
+         * include field offset, and move it relative to the new origin.
+         * But for Lattice, which is origin-free, just limit it so that it
+         * fits inside. */
+        if (gwy_strequal(G_OBJECT_TYPE_NAME(object), "GwySelectionLattice")) {
+            gwy_selection_crop(selection,
+                               -0.5*xreal, -0.5*yreal, 0.5*xreal, 0.5*yreal);
+        }
+        else {
+            gwy_selection_move(selection,
+                               distdata->origin[0], distdata->origin[1]);
+            gwy_selection_crop(selection,
+                               xoff, yoff, xoff + xreal, yoff + yreal);
+            gwy_selection_move(selection, -xoff, -yoff);
+        }
+
         if (gwy_selection_get_data(selection, NULL))
             gwy_container_set_object(container, quark, object);
         else {
