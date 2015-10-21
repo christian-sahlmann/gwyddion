@@ -33,6 +33,7 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwyddion/gwydebugobjects.h>
+#include <libprocess/arithmetic.h>
 #include <libprocess/stats.h>
 #include <libdraw/gwypixfield.h>
 #include <libgwydgets/gwydatawindow.h>
@@ -4820,15 +4821,18 @@ gwy_app_data_browser_copy_other(GtkTreeModel *model,
                                 GtkWidget *window,
                                 GwyContainer *container)
 {
+    GwyContainer *srccontainer;
     GwyDataView *data_view;
     GwyPixmapLayer *layer;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *srcfield;
     GQuark srcquark, targetquark, destquark;
     GObject *object, *destobject;
+    GwySelection *selection;
     const gchar *srckey, *targetkey;
     GwyAppKeyType type;
     gint id;
-    gchar *destkey;
+    gchar *destkey, *srcfieldkey;
+    gdouble originx = 0.0, originy = 0.;
     guint len;
 
     /* XXX: At this moment, the copying possibilities are fairly limited. */
@@ -4857,6 +4861,18 @@ gwy_app_data_browser_copy_other(GtkTreeModel *model,
         return;
     }
 
+    /* This is set by SelectionManager, the only drag source for selections. */
+    srccontainer = g_object_get_qdata(object, container_quark);
+    gwy_debug("source container: %p", srccontainer);
+    srcfieldkey = g_strdup_printf("/%d/data", id);
+    if (gwy_container_gis_object_by_name(srccontainer, srcfieldkey,
+                                         (GObject**)&srcfield)
+        && GWY_IS_DATA_FIELD(srcfield)) {
+        originx = gwy_data_field_get_xoffset(srcfield);
+        originy = gwy_data_field_get_yoffset(srcfield);
+    }
+    g_free(srcfieldkey);
+
     /* Target */
     data_view  = gwy_data_window_get_data_view(GWY_DATA_WINDOW(window));
     layer = gwy_data_view_get_base_layer(data_view);
@@ -4868,6 +4884,12 @@ gwy_app_data_browser_copy_other(GtkTreeModel *model,
     dfield = gwy_container_get_object(container, targetquark);
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
 
+    if (gwy_data_field_check_compatibility(dfield, srcfield,
+                                           GWY_DATA_COMPATIBILITY_LATERAL)) {
+        g_object_unref(object);
+        return;
+    }
+
     /* Destination */
     destkey = g_strdup_printf("/%d/select%s", id, srckey+len);
     destquark = g_quark_from_string(destkey);
@@ -4876,17 +4898,31 @@ gwy_app_data_browser_copy_other(GtkTreeModel *model,
     /* Avoid copies if source is the same as the target */
     if (!gwy_container_gis_object(container, destquark, &destobject)
         || destobject != object) {
-        gdouble xmin, xmax, ymin, ymax;
+        gdouble xoff, yoff, xreal, yreal;
 
-        /* FIXME: It would be nice to check compatibility of units, but we have
-         * no idea where the selection come from. */
-        xmin = xmax = gwy_data_field_get_xoffset(dfield);
-        ymin = ymax = gwy_data_field_get_yoffset(dfield);
-        xmax += gwy_data_field_get_xreal(dfield);
-        ymax += gwy_data_field_get_yreal(dfield);
+        xoff = gwy_data_field_get_xoffset(dfield);
+        yoff = gwy_data_field_get_yoffset(dfield);
+        xreal = gwy_data_field_get_xreal(dfield);
+        yreal = gwy_data_field_get_yreal(dfield);
         destobject = gwy_serializable_duplicate(G_OBJECT(object));
-        gwy_selection_crop(GWY_SELECTION(destobject), xmin, ymin, xmax, ymax);
-        if (gwy_selection_get_data(GWY_SELECTION(destobject), NULL))
+        selection = GWY_SELECTION(object);
+
+        /* Crop the selection, taking into account that the coordinates do not
+         * include field offset, and move it relative to the new origin.
+         * But for Lattice, which is origin-free, just limit it so that it
+         * fits inside. */
+        if (gwy_strequal(G_OBJECT_TYPE_NAME(destobject),
+                         "GwySelectionLattice")) {
+            gwy_selection_crop(selection,
+                               -0.5*xreal, -0.5*yreal, 0.5*xreal, 0.5*yreal);
+        }
+        else {
+            gwy_selection_move(selection, originx, originy);
+            gwy_selection_crop(selection,
+                               xoff, yoff, xoff + xreal, yoff + yreal);
+            gwy_selection_move(selection, -xoff, -yoff);
+        }
+        if (gwy_selection_get_data(selection, NULL))
             gwy_container_set_object(container, destquark, destobject);
         g_object_unref(destobject);
     }
