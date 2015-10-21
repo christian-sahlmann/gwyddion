@@ -28,6 +28,7 @@
 #include <libprocess/elliptic.h>
 #include <libprocess/stats.h>
 #include <libprocess/linestats.h>
+#include <libprocess/grains.h>
 #include <libprocess/arithmetic.h>
 #include "gwyprocessinternal.h"
 
@@ -3234,6 +3235,7 @@ gwy_data_field_area_filter_min_max(GwyDataField *data_field,
                                    gint col, gint row,
                                    gint width, gint height)
 {
+    GwyDataField *redkernel;
     MinMaxPrecomputed mmp;
     gdouble *outbuf, *d;
     gint i, j, xres, yres, kxres, kyres;
@@ -3245,20 +3247,24 @@ gwy_data_field_area_filter_min_max(GwyDataField *data_field,
                      && col + width <= data_field->xres
                      && row + height <= data_field->yres);
 
-    if (!kernel_is_nonempty(kernel))
+    redkernel = gwy_data_field_duplicate(kernel);
+    gwy_data_field_grains_autocrop(redkernel, TRUE, NULL, NULL, NULL, NULL);
+    if (!kernel_is_nonempty(redkernel)) {
+        g_object_unref(redkernel);
         return;
+    }
 
     xres = data_field->xres;
     yres = data_field->yres;
-    kxres = kernel->xres;
-    kyres = kernel->yres;
+    kxres = redkernel->xres;
+    kyres = redkernel->yres;
     d = data_field->data;
 
     if (filtertype == GWY_MIN_MAX_FILTER_MINIMUM
         || filtertype == GWY_MIN_MAX_FILTER_MAXIMUM) {
         gboolean is_max = (filtertype == GWY_MIN_MAX_FILTER_MAXIMUM);
 
-        gwy_data_field_area_rle_analyse(kernel, width, &mmp);
+        gwy_data_field_area_rle_analyse(redkernel, width, &mmp);
         if (is_max)
             gwy_data_field_area_rle_flip(mmp.mrle, kxres, kyres);
         outbuf = g_new(gdouble, width*height);
@@ -3276,7 +3282,7 @@ gwy_data_field_area_filter_min_max(GwyDataField *data_field,
              || filtertype == GWY_MIN_MAX_FILTER_NORMALIZATION) {
         gdouble *outbuf2;
 
-        gwy_data_field_area_rle_analyse(kernel, width, &mmp);
+        gwy_data_field_area_rle_analyse(redkernel, width, &mmp);
         outbuf = g_new(gdouble, width*height);
         gwy_data_field_area_min_max_execute(data_field, outbuf, &mmp, FALSE,
                                             col, row, width, height);
@@ -3323,7 +3329,7 @@ gwy_data_field_area_filter_min_max(GwyDataField *data_field,
         gint extheight = MIN(yres, row + height + kyres/2) - extrow;
         GwyDataField *tmpfield;
 
-        gwy_data_field_area_rle_analyse(kernel, extwidth, &mmp);
+        gwy_data_field_area_rle_analyse(redkernel, extwidth, &mmp);
         if (is_closing)
             gwy_data_field_area_rle_flip(mmp.mrle, kxres, kyres);
         tmpfield = gwy_data_field_new(extwidth, extheight, extwidth, extheight,
@@ -3340,7 +3346,7 @@ gwy_data_field_area_filter_min_max(GwyDataField *data_field,
         }
         else {
             gwy_data_field_area_rle_free(&mmp);
-            gwy_data_field_area_rle_analyse(kernel, width, &mmp);
+            gwy_data_field_area_rle_analyse(redkernel, width, &mmp);
             if (!is_closing)
                 gwy_data_field_area_rle_flip(mmp.mrle, kxres, kyres);
         }
@@ -3362,6 +3368,8 @@ gwy_data_field_area_filter_min_max(GwyDataField *data_field,
     else {
         g_return_if_reached();
     }
+
+    g_object_unref(redkernel);
 }
 
 /**
