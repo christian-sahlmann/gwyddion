@@ -3336,7 +3336,7 @@ gwy_data_field_grains_invert(GwyDataField *grain_field)
  * Since: 2.43
  **/
 gboolean
-gwy_mask_field_grains_autocrop(GwyDataField *mask_field,
+gwy_data_field_grains_autocrop(GwyDataField *mask_field,
                                gboolean symmetrically,
                                guint *left,
                                guint *right,
