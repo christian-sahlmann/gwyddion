@@ -85,11 +85,17 @@ void gwy_data_field_grains_mark_slope(GwyDataField *data_field,
 
 gdouble gwy_data_field_otsu_threshold(GwyDataField *data_field);
 
-void gwy_data_field_grains_add      (GwyDataField *grain_field,
-                                     GwyDataField *add_field);
-void gwy_data_field_grains_intersect(GwyDataField *grain_field,
-                                     GwyDataField *intersect_field);
-void gwy_data_field_grains_invert   (GwyDataField *grain_field);
+void     gwy_data_field_grains_add      (GwyDataField *grain_field,
+                                         GwyDataField *add_field);
+void     gwy_data_field_grains_intersect(GwyDataField *grain_field,
+                                         GwyDataField *intersect_field);
+void     gwy_data_field_grains_invert   (GwyDataField *grain_field);
+gboolean gwy_data_field_grains_autocrop (GwyDataField *mask_field,
+                                         gboolean symmetrically,
+                                         guint *left,
+                                         guint *right,
+                                         guint *up,
+                                         guint *down);
 
 gint gwy_data_field_number_grains(GwyDataField *mask_field,
                                   gint *grains);

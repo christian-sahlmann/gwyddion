@@ -3304,6 +3304,102 @@ gwy_data_field_grains_invert(GwyDataField *grain_field)
     }
 }
 
+/**
+ * gwy_data_field_grains_autocrop:
+ * @mask_field: Data field representing a mask.
+ * @symmetrically: %TRUE to remove borders symmetrically, i.e the same number
+ *                 of pixels from left and right, and also top and bottom.
+ *                 %FALSE to remove as many empty rows and columns as possible.
+ * @left: Location to store how many column were removed from the left, or
+ *        %NULL.
+ * @right: Location to store how many column were removed from the right, or
+ *         %NULL.
+ * @up: Location to store how many row were removed from the top, or %NULL.
+ * @down: Location to store how many row were removed from the bottom, or
+ *        %NULL.
+ *
+ * Removes empty border rows and columns from a data field representing a mask.
+ *
+ * If there are border rows and columns filled completely with non-positive
+ * values the size of the data field is reduced, removing these rows.  The
+ * parameter @symmetrically controls whether the size reduction is maximum
+ * possible or symmetrical.
+ *
+ * When there is no positive value in the field the field size is reduced to
+ * the smallest possible.  This means 1x1 for @symmetrical being %FALSE and
+ * even original dimensions to 2 for @symmetrical being %TRUE.
+ *
+ * Returns: %TRUE if the field size was reduced at all.  Detailed information
+ *          about the reduction can be obtained from @left, @right, @up and
+ *          @down.
+ *
+ * Since: 2.43
+ **/
+gboolean
+gwy_mask_field_grains_autocrop(GwyDataField *mask_field,
+                               gboolean symmetrically,
+                               guint *left,
+                               guint *right,
+                               guint *up,
+                               guint *down)
+{
+    gint xres, yres, i, j, firstcol, firstrow, lastcol, lastrow;
+    const gdouble *d;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(mask_field), FALSE);
+    xres = mask_field->xres;
+    yres = mask_field->yres;
+    firstcol = xres;
+    firstrow = yres;
+    lastcol = lastrow = -1;
+    d = mask_field->data;
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++, d++) {
+            if (*d > 0.0) {
+                if (G_UNLIKELY(i < firstrow))
+                    firstrow = i;
+                if (G_UNLIKELY(j < firstcol))
+                    firstcol = j;
+                if (G_UNLIKELY(i > lastrow))
+                    lastrow = i;
+                if (G_UNLIKELY(j > lastcol))
+                    lastcol = j;
+            }
+        }
+    }
+    if (firstcol > lastcol) {
+        g_assert(firstrow > lastrow);
+        /* Anticipate the reduction to 2 for even-sized dimensions. */
+        lastcol = (xres - 1)/2;
+        firstcol = xres - lastcol;
+        lastrow = (yres - 1)/2;
+        firstrow = yres - lastrow;
+    }
+    if (symmetrically) {
+        firstcol = MIN(firstcol, xres-1 - lastcol);
+        lastcol = xres-1 - firstcol;
+        firstrow = MIN(firstrow, yres-1 - lastrow);
+        lastrow = yres-1 - firstrow;
+    }
+    lastcol++;
+    lastrow++;
+
+    if (*left)
+        *left = firstcol;
+    if (*right)
+        *right = xres - lastcol;
+    if (*up)
+        *up = firstrow;
+    if (*down)
+        *down = yres - lastrow;
+
+    if (firstcol == 0 && firstrow == 0 && lastcol == xres && lastrow == yres)
+        return FALSE;
+
+    gwy_data_field_resize(mask_field, firstcol, firstrow, lastcol, lastrow);
+    return TRUE;
+}
+
 void
 gwy_data_field_grains_splash_water(GwyDataField *data_field,
                                    GwyDataField *water,
