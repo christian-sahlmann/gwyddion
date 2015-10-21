@@ -3367,6 +3367,8 @@ gwy_data_field_grains_autocrop(GwyDataField *mask_field,
             }
         }
     }
+    gwy_debug("first (%d,%d) last (%d,%d)",
+              firstcol, firstrow, lastcol, lastrow);
     if (firstcol > lastcol) {
         g_assert(firstrow > lastrow);
         /* Anticipate the reduction to 2 for even-sized dimensions. */
@@ -3393,6 +3395,9 @@ gwy_data_field_grains_autocrop(GwyDataField *mask_field,
     if (down)
         *down = yres - lastrow;
 
+    gwy_debug("%dx%d at (%d,%d) of %dx%d",
+              lastcol-firstcol, lastrow-firstrow, firstcol, firstrow,
+              xres, yres);
     if (firstcol == 0 && firstrow == 0 && lastcol == xres && lastrow == yres)
         return FALSE;
 
