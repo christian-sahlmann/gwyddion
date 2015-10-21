@@ -3384,13 +3384,13 @@ gwy_data_field_grains_autocrop(GwyDataField *mask_field,
     lastcol++;
     lastrow++;
 
-    if (*left)
+    if (left)
         *left = firstcol;
-    if (*right)
+    if (right)
         *right = xres - lastcol;
-    if (*up)
+    if (up)
         *up = firstrow;
-    if (*down)
+    if (down)
         *down = yres - lastrow;
 
     if (firstcol == 0 && firstrow == 0 && lastcol == xres && lastrow == yres)
