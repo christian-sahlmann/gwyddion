@@ -35,6 +35,7 @@
 
 /* XXX: Copied from data browser. */
 #define page_id_key "gwy-app-data-browser-page-id"
+#define container_key "gwy-app-data-browser-container"
 enum {
     PAGE_NOPAGE = G_MAXINT-1
 };
@@ -387,9 +388,11 @@ add_selection(gpointer hkey, gpointer hvalue, gpointer data)
     GQuark quark = GPOINTER_TO_UINT(hkey);
     GValue *value = (GValue*)hvalue;
     GwyToolSelectionManager *tool = (GwyToolSelectionManager*)data;
+    GwyPlainTool *plain_tool = GWY_PLAIN_TOOL(tool);
     GwySelection *sel = g_value_get_object(value);
     GtkTreeIter iter;
 
+    g_object_set_data(G_OBJECT(sel), container_key, plain_tool->container);
     gtk_list_store_insert_with_values(tool->model, &iter, G_MAXINT,
                                       MODEL_ID, quark,
                                       MODEL_OBJECT, sel,
