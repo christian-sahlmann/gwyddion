@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2014-2015 David Necas (Yeti).
+ *  Copyright (C) 2015 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -25,6 +25,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/elliptic.h>
 #include <libprocess/filters.h>
+#include <libprocess/grains.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydgetutils.h>
@@ -58,6 +59,7 @@ typedef struct {
     MaskMorphOperation mode;
     MaskMorphShapeType shape;
     gint radius;
+    gboolean crop_kernel;
     GwyAppDataId kernel;
 } MaskMorphArgs;
 
@@ -68,6 +70,7 @@ typedef struct {
     GSList *shape;
     GtkObject *radius;
     GtkWidget *kernel;
+    GtkWidget *crop_kernel;
 } MaskMorphControls;
 
 static gboolean module_register        (void);
@@ -82,6 +85,8 @@ static void     shape_changed          (GtkToggleButton *toggle,
 static void     radius_changed         (GtkAdjustment *adj,
                                         MaskMorphControls *controls);
 static void     kernel_changed         (GwyDataChooser *chooser,
+                                        MaskMorphControls *controls);
+static void     crop_kernel_changed    (GtkToggleButton *toggle,
                                         MaskMorphControls *controls);
 static void     update_sensitivity     (MaskMorphControls *controls);
 static gboolean kernel_filter          (GwyContainer *data,
@@ -99,6 +104,7 @@ static const MaskMorphArgs maskmorph_defaults = {
     MASKMORPH_OPENING,
     MASKMORPH_DISC,
     5,
+    TRUE,
     GWY_APP_DATA_ID_NONE,
 };
 
@@ -193,7 +199,7 @@ maskmorph_dialog(MaskMorphArgs *args, GwyDataField *mask)
     gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
     controls.dialog = dialog;
 
-    table = gtk_table_new(MASKMORPH_NOPERATIONS + MASKMORPH_NSHAPES + 4,
+    table = gtk_table_new(MASKMORPH_NOPERATIONS + MASKMORPH_NSHAPES + 5,
                           4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -246,6 +252,15 @@ maskmorph_dialog(MaskMorphArgs *args, GwyDataField *mask)
     g_signal_connect(controls.kernel, "changed",
                      G_CALLBACK(kernel_changed), &controls);
     row++;
+
+    controls.crop_kernel
+        = gtk_check_button_new_with_mnemonic(_("_Trim empty borders"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.crop_kernel),
+                                 args->crop_kernel);
+    gtk_table_attach(GTK_TABLE(table), controls.crop_kernel,
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect(controls.crop_kernel, "toggled",
+                     G_CALLBACK(crop_kernel_changed), &controls);
 
     if (!has_kernel && args->shape == MASKMORPH_USER_KERNEL)
         gwy_radio_buttons_set_current(controls.shape, MASKMORPH_DISC);
@@ -323,6 +338,14 @@ kernel_changed(GwyDataChooser *chooser,
 }
 
 static void
+crop_kernel_changed(GtkToggleButton *toggle,
+                    MaskMorphControls *controls)
+{
+    MaskMorphArgs *args = controls->args;
+    args->crop_kernel = gtk_toggle_button_get_active(toggle);
+}
+
+static void
 update_sensitivity(MaskMorphControls *controls)
 {
     MaskMorphArgs *args = controls->args;
@@ -339,6 +362,7 @@ update_sensitivity(MaskMorphControls *controls)
                                    !is_user_kernel);
     gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->kernel),
                                    is_user_kernel);
+    gtk_widget_set_sensitive(controls->crop_kernel, is_user_kernel);
     gtk_widget_set_sensitive(gwy_radio_buttons_find(controls->shape,
                                                     MASKMORPH_USER_KERNEL),
                              !needs_builtin);
@@ -421,7 +445,10 @@ maskmorph_do(GwyDataField *mask, MaskMorphArgs *args)
             quark = gwy_app_get_mask_key_for_id(args->kernel.id);
             if (!gwy_container_gis_object(kdata, quark, (GObject**)&kernel))
                 return;
-            g_object_ref(kernel);
+            kernel = gwy_data_field_duplicate(kernel);
+            if (args->crop_kernel)
+                gwy_data_field_grains_autocrop(kernel, FALSE,
+                                               NULL, NULL, NULL, NULL);
         }
         else
             kernel = create_kernel(args->shape, radius);
@@ -485,9 +512,10 @@ kernel_filter(GwyContainer *data,
     return TRUE;
 }
 
-static const gchar mode_key[]   = "/module/mask_morph/mode";
-static const gchar shape_key[]  = "/module/mask_morph/shape";
-static const gchar radius_key[] = "/module/mask_morph/radius";
+static const gchar crop_kernel_key[] = "/module/mask_morph/crop_kernel";
+static const gchar mode_key[]        = "/module/mask_morph/mode";
+static const gchar radius_key[]      = "/module/mask_morph/radius";
+static const gchar shape_key[]       = "/module/mask_morph/shape";
 
 static void
 maskmorph_sanitize_args(MaskMorphArgs *args)
@@ -495,6 +523,7 @@ maskmorph_sanitize_args(MaskMorphArgs *args)
     args->mode = MIN(args->mode, MASKMORPH_NOPERATIONS-1);
     args->shape = MIN(args->shape, MASKMORPH_NSHAPES-1);
     args->radius = CLAMP(args->radius, 1, 1025);
+    args->crop_kernel = !!args->crop_kernel;
     gwy_app_data_id_verify_channel(&args->kernel);
 }
 
@@ -506,18 +535,22 @@ maskmorph_load_args(GwyContainer *settings,
     gwy_container_gis_enum_by_name(settings, mode_key, &args->mode);
     gwy_container_gis_enum_by_name(settings, shape_key, &args->shape);
     gwy_container_gis_int32_by_name(settings, radius_key, &args->radius);
+    gwy_container_gis_boolean_by_name(settings, crop_kernel_key,
+                                      &args->crop_kernel);
     args->kernel = kernel_id;
     maskmorph_sanitize_args(args);
 }
 
 static void
 maskmorph_save_args(GwyContainer *settings,
-                  MaskMorphArgs *args)
+                    MaskMorphArgs *args)
 {
     kernel_id = args->kernel;
     gwy_container_set_enum_by_name(settings, mode_key, args->mode);
     gwy_container_set_enum_by_name(settings, shape_key, args->shape);
     gwy_container_set_int32_by_name(settings, radius_key, args->radius);
+    gwy_container_set_boolean_by_name(settings, crop_kernel_key,
+                                      args->crop_kernel);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
