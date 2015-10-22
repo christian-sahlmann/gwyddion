@@ -194,7 +194,7 @@ median_dialog(MedianBgArgs *args)
 
     q = args->pixelsize/args->valform->magnitude;
     gwy_debug("q = %f", q);
-    controls.radius = gtk_adjustment_new(q*args->size, q, 16384*q, q, 10*q, 0);
+    controls.radius = gtk_adjustment_new(q*args->size, q, 1024*q, q, 10*q, 0);
     spin = gwy_table_attach_hscale(table, row, _("Real _radius:"),
                                    args->valform->units,
                                    controls.radius, GWY_HSCALE_SQRT);
@@ -204,7 +204,7 @@ median_dialog(MedianBgArgs *args)
                      G_CALLBACK(radius_changed_cb), args);
     row++;
 
-    controls.size = gtk_adjustment_new(args->size, 1, 16384, 1, 10, 0);
+    controls.size = gtk_adjustment_new(args->size, 1, 1024, 1, 10, 0);
     spin = gwy_table_attach_hscale(table, row, _("_Pixel radius:"), "px",
                                    controls.size, GWY_HSCALE_SQRT);
     g_object_set_data(G_OBJECT(controls.size), "controls", &controls);
@@ -385,7 +385,7 @@ static const gchar do_extract_key[] = "/module/median-bg/do_extract";
 static void
 median_sanitize_args(MedianBgArgs *args)
 {
-    args->size = CLAMP(args->size, 1, 16384);
+    args->size = CLAMP(args->size, 1, 1024);
     args->do_extract = !!args->do_extract;
 }
 

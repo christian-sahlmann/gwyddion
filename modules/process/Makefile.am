@@ -67,6 +67,7 @@ process_LTLIBRARIES = \
 	linematch.la \
 	lno_synth.la \
 	local_contrast.la \
+	mark_disconn.la \
 	mark_with.la \
 	maskcor.la \
 	mask_distribute.la \
@@ -186,6 +187,7 @@ linecorrect_la_SOURCES         = linecorrect.c
 linematch_la_SOURCES           = linematch.c
 lno_synth_la_SOURCES           = lno_synth.c dimensions.h synth.h
 local_contrast_la_SOURCES      = local_contrast.c
+mark_disconn_la_SOURCES        = mark_disconn.c
 mark_with_la_SOURCES           = mark_with.c
 maskcor_la_SOURCES             = maskcor.c
 mask_distribute_la_SOURCES     = mask_distribute.c
