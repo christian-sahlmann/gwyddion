@@ -1,4 +1,7 @@
 2.43 (0000-00-00)
+Application:
+- Translations updated: French, Russian.
+
 Libraries:
 - libgwyprocess: Functions for erosion, dilation, opening and closing
   morphological operations with arbitrarily shaped flat structuring elements
@@ -14,6 +17,10 @@ Libraries:
   meaningful or supported for all subclasses).
 - libgwydgets: GwySelectionGraphArea and GwySelectionGraphPoint support crop
   and move methods now.
+- libgwyapp: Drag'n'drop of selections from Selection Manager tool to
+  channels works for images with offset top-left corner.
+- libprocess: A function for trimming empty border rows and columns from
+  a mask data field was added.
 
 Modules:
 - Sensofarx (new): Imports Sensofar PLUx data files.
@@ -39,7 +46,9 @@ Modules:
   images with offset top-left corner.
 
 Other:
-- Configure check for gtk-doc at least 1.10, required to build the
+- Gwyddion can use either minizip or libzip for opening of ZIP-compressed
+  file formats.  The former is used if both are found.
+- Configure checks for gtk-doc at least 1.10, required to build the
   documentation (older versions were actually insufficient even before).
 - RPM requires rubypick only on RedHat-based distros.
 
