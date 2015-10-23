@@ -25,7 +25,7 @@
  * .spe
  * Read
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
