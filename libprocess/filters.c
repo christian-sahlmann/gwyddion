@@ -3189,7 +3189,7 @@ kernel_is_nonempty(GwyDataField *dfield)
 }
 
 /* NB: The kernel passed to this function should be non-empty. */
-void
+static void
 gwy_data_field_area_filter_min_max_real(GwyDataField *data_field,
                                         GwyDataField *kernel,
                                         GwyMinMaxFilterType filtertype,
