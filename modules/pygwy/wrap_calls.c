@@ -1,4 +1,5 @@
 /*
+ *  $Id$
  *  Copyright (C) 2008 Jan Horak
  *  E-mail: xhorak@gmail.com
  *
@@ -17,7 +18,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  *
- *  Description: This file contains custom fuctions for automatically 
+ *  Description: This file contains custom fuctions for automatically
  *  generated wrapping by using pygwy-codegen.
  */
 
@@ -66,16 +67,18 @@ create_array(gpointer data, guint len, guint type_size, gboolean free_data)
  * Returns: @data_line itself if it was not %NULL, otherwise a newly created
  *          data line.
  **/
-GwyDataLine* gwy_data_field_get_profile_wrap    (GwyDataField *data_field,
-                                            gint scol,
-                                            gint srow,
-                                            gint ecol,
-                                            gint erow,
-                                            gint res,
-                                            gint thickness,
-                                            GwyInterpolationType interpolation)
+GwyDataLine*
+gwy_data_field_get_profile_wrap(GwyDataField *data_field,
+                                gint scol,
+                                gint srow,
+                                gint ecol,
+                                gint erow,
+                                gint res,
+                                gint thickness,
+                                GwyInterpolationType interpolation)
 {
-   return gwy_data_field_get_profile(data_field, NULL, scol, srow, ecol, erow, res, thickness, interpolation);
+    return gwy_data_field_get_profile(data_field, NULL, scol, srow, ecol, erow,
+                                      res, thickness, interpolation);
 }
 
 /**
@@ -86,16 +89,17 @@ GwyDataLine* gwy_data_field_get_profile_wrap    (GwyDataField *data_field,
  * Returns: a list of selected data
 **/
 GArray*
-gwy_selection_get_data_wrap(GwySelection *selection) {
-   gdouble *data;
-   gint len;
+gwy_selection_get_data_wrap(GwySelection *selection)
+{
+    gdouble *data;
+    gint len;
 
-   len = gwy_selection_get_data(selection, NULL);
-   len *= gwy_selection_get_object_size(selection);
-   data = g_malloc(sizeof(gdouble) * len);
-   gwy_selection_get_data(selection, data);
+    len = gwy_selection_get_data(selection, NULL);
+    len *= gwy_selection_get_object_size(selection);
+    data = g_new(gdouble, len);
+    gwy_selection_get_data(selection, data);
 
-   return create_array(data, len, sizeof(gdouble), TRUE);
+    return create_array(data, len, sizeof(gdouble), TRUE);
 }
 
 /**
@@ -111,12 +115,13 @@ gwy_selection_get_data_wrap(GwySelection *selection) {
 GArray*
 gwy_data_field_fit_polynom_wrap(GwyDataField *data_field,
                                 gint col_degree,
-                                gint row_degree) 
+                                gint row_degree)
 {
-   gdouble* coeffs;
+    gdouble* coeffs;
 
-   coeffs = gwy_data_field_fit_polynom(data_field, col_degree, row_degree, NULL);
-   return create_array(coeffs, (col_degree+1)*(row_degree+1), sizeof(gdouble), TRUE);
+    coeffs = gwy_data_field_fit_polynom(data_field, col_degree, row_degree, NULL);
+    return create_array(coeffs, (col_degree+1)*(row_degree+1), sizeof(gdouble),
+                        TRUE);
 }
 
 /**
@@ -141,20 +146,20 @@ gwy_data_field_fit_polynom_wrap(GwyDataField *data_field,
  *
  **/
 GArray*
-gwy_data_field_area_fit_polynom_wrap(GwyDataField *data_field, 
-      gint col, 
-      gint row, 
-      gint width, 
-      gint height, 
-      gint col_degree,
-      gint row_degree
-      )
+gwy_data_field_area_fit_polynom_wrap(GwyDataField *data_field,
+                                     gint col,
+                                     gint row,
+                                     gint width,
+                                     gint height,
+                                     gint col_degree, gint row_degree)
 {
-   gdouble* coeffs;
+    gdouble *coeffs;
 
-   coeffs = gwy_data_field_area_fit_polynom(data_field, col, row, width, height, col_degree, row_degree, NULL);
-   return create_array(coeffs, (col_degree+1)*(row_degree+1), sizeof(gdouble), TRUE);
-
+    coeffs = gwy_data_field_area_fit_polynom(data_field,
+                                             col, row, width, height,
+                                        col_degree, row_degree, NULL);
+    return create_array(coeffs, (col_degree + 1) * (row_degree + 1),
+                        sizeof(gdouble), TRUE);
 }
 
 /**
@@ -172,20 +177,21 @@ gwy_data_field_area_fit_polynom_wrap(GwyDataField *data_field,
  *
  * Returns: The number of extracted values.
  **/
-GArray* 
-gwy_data_field_elliptic_area_extract_wrap(
-      GwyDataField *data_field,
-      gint col,
-      gint row,
-      gint width,
-      gint height)
+GArray*
+gwy_data_field_elliptic_area_extract_wrap(GwyDataField *data_field,
+                                          gint col,
+                                          gint row,
+                                          gint width,
+                                          gint height)
 {
    gdouble *data;
+   guint n = gwy_data_field_get_elliptic_area_size(width, height);
 
-   data = g_malloc(sizeof(gdouble)*gwy_data_field_get_elliptic_area_size(width, height));
-   gwy_data_field_elliptic_area_extract(data_field, col, row, width, height, data);
+   data = g_new(gdouble, n);
+   gwy_data_field_elliptic_area_extract(data_field,
+                                        col, row, width, height, data);
 
-   return create_array(data, gwy_data_field_get_elliptic_area_size(width, height), sizeof(gdouble), TRUE);
+   return create_array(data, n, sizeof(gdouble), TRUE);
 }
 
 /**
@@ -201,18 +207,18 @@ gwy_data_field_elliptic_area_extract_wrap(
  * Returns: Array of values.
  **/
 GArray*
-gwy_data_field_circular_area_extract_wrap(
-      GwyDataField *data_field,
-      gint col,
-      gint row,
-      gdouble radius)
+gwy_data_field_circular_area_extract_wrap(GwyDataField *data_field,
+                                          gint col,
+                                          gint row,
+                                          gdouble radius)
 {
-   gdouble *data;
-   
-   data = g_malloc(sizeof(gdouble)*gwy_data_field_get_circular_area_size(radius));
-   gwy_data_field_circular_area_extract(data_field, col, row, radius, data);
+    gdouble *data;
 
-   return create_array(data, gwy_data_field_get_circular_area_size(radius), sizeof(gdouble), TRUE);
+    data = g_new(gdouble, gwy_data_field_get_circular_area_size(radius));
+    gwy_data_field_circular_area_extract(data_field, col, row, radius, data);
+
+    return create_array(data, gwy_data_field_get_circular_area_size(radius),
+                        sizeof(gdouble), TRUE);
 }
 
 /**
@@ -225,17 +231,17 @@ gwy_data_field_circular_area_extract_wrap(
  *
  * Returns: A newly allocated array with channel ids.
  **/
-GArrayInt* 
+GArrayInt*
 gwy_app_data_browser_get_data_ids_wrap(GwyContainer *data)
 {
-   gint *ids, *id_p, c = 0;
+    gint *ids, *id_p, c = 0;
 
-   ids = gwy_app_data_browser_get_data_ids(data);
-   id_p = ids;
-   while (*(id_p++) != -1)
-      c++;
+    ids = gwy_app_data_browser_get_data_ids(data);
+    id_p = ids;
+    while (*(id_p++) != -1)
+        c++;
 
-   return create_array(ids, c, sizeof(gint), TRUE);
+    return create_array(ids, c, sizeof(gint), TRUE);
 }
 
 /**
@@ -249,68 +255,111 @@ gwy_app_data_browser_get_data_ids_wrap(GwyContainer *data)
 gint
 gwy_get_key_from_name(const gchar *name)
 {
-   return g_quark_from_string(name);
+    return g_quark_from_string(name);
 }
 
-GwyDataField* 
+GwyDataField*
 gwy_tip_dilation_wrap(GwyDataField *tip, GwyDataField *surface)
 {
-   GwyDataField *r = gwy_data_field_new_alike(surface, FALSE);
+    GwyDataField *r = gwy_data_field_new_alike(surface, FALSE);
 
-   if (!gwy_tip_dilation(tip, surface, r, NULL, NULL)) {
-      g_object_unref(r);
-      return NULL;
-   }
-   return r;
+    if (!gwy_tip_dilation(tip, surface, r, NULL, NULL)) {
+        g_object_unref(r);
+        return NULL;
+    }
+    return r;
 }
 
-GwyDataField* 
+GwyDataField*
 gwy_tip_erosion_wrap(GwyDataField *tip, GwyDataField *surface)
 {
-   GwyDataField *r = gwy_data_field_new_alike(surface, FALSE);
+    GwyDataField *r = gwy_data_field_new_alike(surface, FALSE);
 
-   if (!gwy_tip_erosion(tip, surface, r, NULL, NULL)) {
-      g_object_unref(r);
-      return NULL;
-   }
-   return r;
+    if (!gwy_tip_erosion(tip, surface, r, NULL, NULL)) {
+        g_object_unref(r);
+        return NULL;
+    }
+    return r;
 }
 
-GwyDataField* 
+GwyDataField*
 gwy_tip_cmap_wrap(GwyDataField *tip, GwyDataField *surface)
 {
-   GwyDataField *r = gwy_data_field_new_alike(surface, FALSE);
+    GwyDataField *r = gwy_data_field_new_alike(surface, FALSE);
 
-   if (!gwy_tip_cmap(tip, surface, r, NULL, NULL)) {
-      g_object_unref(r);
-      return NULL;      
-   }
-   return r;
+    if (!gwy_tip_cmap(tip, surface, r, NULL, NULL)) {
+        g_object_unref(r);
+        return NULL;
+    }
+    return r;
 }
 
-GwyDataField* 
-gwy_tip_estimate_partial_wrap(GwyDataField *tip, GwyDataField *surface, 
+GwyDataField*
+gwy_tip_estimate_partial_wrap(GwyDataField *tip, GwyDataField *surface,
                               gdouble threshold, gboolean use_edges)
 {
-   gint v;
+    gint v;
 
-   return gwy_tip_estimate_partial(tip, surface, threshold, use_edges, &v, NULL, NULL);
+    return gwy_tip_estimate_partial(tip, surface, threshold, use_edges, &v,
+                                    NULL, NULL);
 }
 
-GwyDataField* 
-gwy_tip_estimate_full_wrap(GwyDataField *tip, GwyDataField *surface, 
-                              gdouble threshold, gboolean use_edges)
+GwyDataField*
+gwy_tip_estimate_full_wrap(GwyDataField *tip, GwyDataField *surface,
+                           gdouble threshold, gboolean use_edges)
 {
-   gint v;
+    gint v;
 
-   return gwy_tip_estimate_full(tip, surface, threshold, use_edges, &v, NULL, NULL);
+    return gwy_tip_estimate_full(tip, surface, threshold, use_edges, &v,
+                                 NULL, NULL);
 }
 
 GwyDataField*
 gwy_data_field_create_full_mask(GwyDataField *d)
 {
-   GwyDataField *m;
-   m = gwy_data_field_new_alike(d, TRUE);
-   gwy_data_field_add(m, 1.0);
-   return m;
+    GwyDataField *m;
+    m = gwy_data_field_new_alike(d, TRUE);
+    gwy_data_field_add(m, 1.0);
+    return m;
 }
+
+/**
+ * gwy_data_field_number_grains_wrap:
+ * @mask_field: A data field representing a mask.
+ *
+ * Constructs an array with grain numbers from a mask data field.
+ *
+ * Returns: An array of integers, containing 0 outside grains and the grain
+ *          number inside a grain.
+ **/
+GArrayInt*
+gwy_data_field_number_grains_wrap(GwyDataField *mask_field)
+{
+    gint xres = gwy_data_field_get_xres(mask_field);
+    gint yres = gwy_data_field_get_yres(mask_field);
+    gint *grains = g_new0(gint, xres*yres);
+    gwy_data_field_number_grains(mask_field, grains);
+    return create_array(grains, xres*yres, sizeof(gint), TRUE);
+}
+
+/**
+ * gwy_data_field_number_grains_periodic_wrap:
+ * @mask_field: A data field representing a mask.
+ *
+ * Constructs an array with grain numbers from a mask data field treated as
+ * periodic.
+ *
+ * Returns: An array of integers, containing 0 outside grains and the grain
+ *          number inside a grain.
+ **/
+GArrayInt*
+gwy_data_field_number_grains_periodic_wrap(GwyDataField *mask_field)
+{
+    gint xres = gwy_data_field_get_xres(mask_field);
+    gint yres = gwy_data_field_get_yres(mask_field);
+    gint *grains = g_new0(gint, xres*yres);
+    gwy_data_field_number_grains_periodic(mask_field, grains);
+    return create_array(grains, xres*yres, sizeof(gint), TRUE);
+}
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

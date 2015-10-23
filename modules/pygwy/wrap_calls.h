@@ -1,6 +1,5 @@
-#ifndef _WRAP_CALLS_H
-#define _WRAP_CALLS_H
 /*
+ *  $Id$
  *  Copyright (C) 2008 Jan Horak
  *  E-mail: xhorak@gmail.com
  *
@@ -23,61 +22,64 @@
  *  generated wrapping by using pygwy-codegen.
  */
 
+#ifndef _WRAP_CALLS_H
+#define _WRAP_CALLS_H
+
 #include <libprocess/gwyprocess.h>
 #include <libdraw/gwyselection.h>
 #include <libgwyddion/gwyddion.h>
 #include <app/data-browser.h>
 
-
-
 typedef GArray GArrayInt;
 
+GwyDataLine*  gwy_data_field_get_profile_wrap           (GwyDataField *data_field,
+                                                         gint scol,
+                                                         gint srow,
+                                                         gint ecol,
+                                                         gint erow,
+                                                         gint res,
+                                                         gint thickness,
+                                                         GwyInterpolationType interpolation);
+GArray*       gwy_selection_get_data_wrap               (GwySelection *selection);
+GArray*       gwy_data_field_fit_polynom_wrap           (GwyDataField *data_field,
+                                                         gint col_degree,
+                                                         gint row_degree);
+GArray*       gwy_data_field_area_fit_polynom_wrap      (GwyDataField *data_field,
+                                                         gint col,
+                                                         gint row,
+                                                         gint width,
+                                                         gint height,
+                                                         gint col_degree,
+                                                         gint row_degree);
+GArray*       gwy_data_field_elliptic_area_extract_wrap (GwyDataField *data_field,
+                                                         gint col,
+                                                         gint row,
+                                                         gint width,
+                                                         gint height);
+GArray*       gwy_data_field_circular_area_extract_wrap (GwyDataField *data_field,
+                                                         gint col,
+                                                         gint row,
+                                                         gdouble radius);
+GArrayInt*    gwy_app_data_browser_get_data_ids_wrap    (GwyContainer *data);
+gint          gwy_get_key_from_name                     (const gchar *name);
+GwyDataField* gwy_tip_dilation_wrap                     (GwyDataField *tip,
+                                                         GwyDataField *surface);
+GwyDataField* gwy_tip_erosion_wrap                      (GwyDataField *tip,
+                                                         GwyDataField *surface);
+GwyDataField* gwy_tip_cmap_wrap                         (GwyDataField *tip,
+                                                         GwyDataField *surface);
+GwyDataField* gwy_tip_estimate_partial_wrap             (GwyDataField *tip,
+                                                         GwyDataField *surface,
+                                                         gdouble threshold,
+                                                         gboolean use_edges);
+GwyDataField* gwy_tip_estimate_full_wrap                (GwyDataField *tip,
+                                                         GwyDataField *surface,
+                                                         gdouble threshold,
+                                                         gboolean use_edges);
+GwyDataField* gwy_data_field_create_full_mask           (GwyDataField *d);
+GArrayInt*    gwy_data_field_number_grains_wrap         (GwyDataField *mask_field);
+GArrayInt*    gwy_data_field_number_grains_periodic_wrap(GwyDataField *mask_field);
 
-GwyDataLine* gwy_data_field_get_profile_wrap    (GwyDataField *data_field,
-                                            gint scol,
-                                            gint srow,
-                                            gint ecol,
-                                            gint erow,
-                                            gint res,
-                                            gint thickness,
-                                            GwyInterpolationType interpolation);
-
-GArray* gwy_selection_get_data_wrap(GwySelection *selection);
-GArray* gwy_data_field_fit_polynom_wrap(GwyDataField *data_field, gint col_degree, gint row_degree);
-GArray* gwy_data_field_area_fit_polynom_wrap(GwyDataField *data_field, gint col, gint row, gint width, gint height, 
-      gint col_degree, gint row_degree);
-
-GArray* gwy_data_field_elliptic_area_extract_wrap(
-      GwyDataField *data_field,
-      gint col,
-      gint row,
-      gint width,
-      gint height);
-
-GArray* gwy_data_field_circular_area_extract_wrap(
-      GwyDataField *data_field,
-      gint col,
-      gint row,
-      gdouble radius);
-
-GArrayInt* gwy_app_data_browser_get_data_ids_wrap(GwyContainer *data);
-
-/* XXX: no implementation yet???
-void gwy_file_save_png(
-      GwyContainer *data, 
-      gchar *filename, 
-      double zoom,
-      double scale
-      );
-*/
-gint          gwy_get_key_from_name        (const gchar *name);
-GwyDataField* gwy_tip_dilation_wrap        (GwyDataField *tip, GwyDataField *surface);
-GwyDataField* gwy_tip_erosion_wrap         (GwyDataField *tip, GwyDataField *surface);
-GwyDataField* gwy_tip_cmap_wrap            (GwyDataField *tip, GwyDataField *surface);
-GwyDataField* gwy_tip_estimate_partial_wrap(GwyDataField *tip, GwyDataField *surface, 
-                                            gdouble threshold, gboolean use_edges);
-GwyDataField* gwy_tip_estimate_full_wrap   (GwyDataField *tip, GwyDataField *surface, 
-                                            gdouble threshold, gboolean use_edges);
-GwyDataField* gwy_data_field_create_full_mask     (GwyDataField *d);
 #endif
 
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
