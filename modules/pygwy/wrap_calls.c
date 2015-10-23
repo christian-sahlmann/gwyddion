@@ -1,7 +1,7 @@
 /*
  *  $Id$
- *  Copyright (C) 2008 Jan Horak
- *  E-mail: xhorak@gmail.com
+ *  Copyright (C) 2008 Jan Horak, 2015 David Necas (Yeti)
+ *  E-mail: xhorak@gmail.com, yeti@gwyddio.net.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -360,6 +360,89 @@ gwy_data_field_number_grains_periodic_wrap(GwyDataField *mask_field)
     gint *grains = g_new0(gint, xres*yres);
     gwy_data_field_number_grains_periodic(mask_field, grains);
     return create_array(grains, xres*yres, sizeof(gint), TRUE);
+}
+
+static gint
+find_ngrains(const GArrayInt *grains)
+{
+    gint ngrains = 0;
+    const gint *g = (const gint*)grains->data;
+    guint i, len = grains->len;
+
+    for (i = 0; i < len; i++) {
+        if (g[i] > ngrains)
+            ngrains = g[i];
+    }
+    return ngrains;
+}
+
+/**
+ * gwy_data_field_get_grain_bounding_boxes_wrap:
+ * @mask_field: A data field representing a mask.
+ * @grains: Array of grain numbers.
+ *
+ * Finds bounding boxes of all grains in a mask data field.
+ *
+ * The array @grains must have the same number of elements as @mask_field.
+ * Normally it is obtained from a function such as
+ * gwy_data_field_number_grains().
+ *
+ * Returns: An array of quadruples of integers, each representing the bounding
+ *          box of the corresponding grain (the zeroth item does not correspond
+ *          to any as grain numbers start from 1).
+ **/
+GArrayInt*
+gwy_data_field_get_grain_bounding_boxes_wrap(GwyDataField *mask_field,
+                                             const GArrayInt *grains)
+{
+    gint xres = gwy_data_field_get_xres(mask_field);
+    gint yres = gwy_data_field_get_yres(mask_field);
+    const gint *g = (const gint*)grains->data;
+    GArrayInt *bboxes;
+    gint ngrains, *bbdata;
+
+    g_return_val_if_fail(grains->len == xres*yres, NULL);
+    ngrains = find_ngrains(grains);
+    bboxes = g_array_sized_new(FALSE, FALSE, sizeof(gint), 4*(ngrains + 1));
+    bbdata = (gint*)bboxes->data;
+    gwy_data_field_get_grain_bounding_boxes(mask_field, ngrains, g, bbdata);
+    return bboxes;
+}
+
+/**
+ * gwy_data_field_grains_get_values_wrap:
+ * @data_field: A data field representing a surface.
+ * @grains: Array of grain numbers.
+ * @quantity: The quantity to calculate, identified by GwyGrainQuantity.
+ *
+ * Finds a speficied quantity for all grains in a data field.
+ *
+ * The array @grains must have the same number of elements as @data_field.
+ * Normally it is obtained from a function such as
+ * gwy_data_field_number_grains() for the corresponding mask.
+ *
+ * Returns: An array of floating point values, each representing the requested
+ *          quantity for corresponding grain (the zeroth item does not
+ *          correspond to any as grain numbers start from 1).
+ **/
+GArrayDouble*
+gwy_data_field_grains_get_values_wrap(GwyDataField *data_field,
+                                      const GArrayInt *grains,
+                                      GwyGrainQuantity quantity)
+{
+    gint xres = gwy_data_field_get_xres(data_field);
+    gint yres = gwy_data_field_get_yres(data_field);
+    const gint *g = (const gint*)grains->data;
+    GArrayDouble *values;
+    gint ngrains;
+    gdouble *vdata;
+
+    g_return_val_if_fail(grains->len == xres*yres, NULL);
+    ngrains = find_ngrains(grains);
+    values = g_array_sized_new(FALSE, FALSE, sizeof(gdouble), ngrains + 1);
+    vdata = (gdouble*)values->data;
+    gwy_data_field_grains_get_values(data_field, vdata, ngrains, g, quantity);
+    return values;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
