@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-10-19 02:12+0200\n"
-"PO-Revision-Date: 2015-10-19 21:24+0100\n"
+"POT-Creation-Date: 2015-10-24 02:12+0200\n"
+"PO-Revision-Date: 2015-10-24 13:44+0100\n"
 "Last-Translator: François Riguet <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -125,9 +125,9 @@ msgid "contact: Hertz (paraboloid)"
 msgstr "contact : Hertz (paraboloïde)"
 
 #: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:665
-#: app/data-browser.c:2120 app/data-browser.c:2889 app/data-browser.c:3749
-#: app/data-browser.c:3908 app/data-browser.c:4194 app/data-browser.c:4610
-#: app/data-browser.c:6663 app/data-browser.c:6745 app/resource-editor.c:367
+#: app/data-browser.c:2121 app/data-browser.c:2890 app/data-browser.c:3750
+#: app/data-browser.c:3909 app/data-browser.c:4195 app/data-browser.c:4611
+#: app/data-browser.c:6699 app/data-browser.c:6781 app/resource-editor.c:367
 #: modules/process/convolution_filter.c:706
 msgid "Untitled"
 msgstr "Sans titre"
@@ -456,7 +456,7 @@ msgstr "Valeur"
 msgid "Area"
 msgstr "Surface"
 
-#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5114 app/toolbox.c:114
+#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5150 app/toolbox.c:114
 msgid "Volume"
 msgstr "Volume"
 
@@ -950,21 +950,22 @@ msgstr "pixels"
 #: modules/process/lat_synth.c:539 modules/process/latsim.c:158
 #: modules/process/level.c:264 modules/process/linematch.c:763
 #: modules/process/lno_synth.c:445 modules/process/local_contrast.c:130
-#: modules/process/mask_distribute.c:152 modules/process/measure_lattice.c:265
-#: modules/process/median-bg.c:179 modules/process/noise_synth.c:348
-#: modules/process/obj_synth.c:427 modules/process/pat_synth.c:397
-#: modules/process/pid.c:199 modules/process/polydistort.c:218
-#: modules/process/polylevel.c:378 modules/process/psdf_logphi.c:249
-#: modules/process/rank.c:159 modules/process/rotate.c:266
-#: modules/process/scale.c:196 modules/process/scars.c:477
-#: modules/process/semsim.c:211 modules/process/shade.c:216
-#: modules/process/slope_dist.c:282 modules/process/sphere-revolve.c:218
-#: modules/process/tilt.c:160 modules/process/tip_model.c:168
-#: modules/process/unrotate.c:228 modules/process/volumize_layers.c:213
-#: modules/process/wave_synth.c:361 modules/process/wpour_mark.c:296
-#: modules/volume/volume_calibrate.c:371 modules/volume/volume_extract.c:331
-#: modules/volume/volume_kmeans.c:146 modules/volume/volume_kmedians.c:147
-#: modules/volume/volume_linestat.c:292 modules/volume/volume_slice.c:278
+#: modules/process/mark_disconn.c:179 modules/process/mask_distribute.c:152
+#: modules/process/measure_lattice.c:265 modules/process/median-bg.c:179
+#: modules/process/noise_synth.c:348 modules/process/obj_synth.c:427
+#: modules/process/pat_synth.c:397 modules/process/pid.c:199
+#: modules/process/polydistort.c:218 modules/process/polylevel.c:378
+#: modules/process/psdf_logphi.c:249 modules/process/rank.c:159
+#: modules/process/rotate.c:266 modules/process/scale.c:196
+#: modules/process/scars.c:477 modules/process/semsim.c:211
+#: modules/process/shade.c:216 modules/process/slope_dist.c:282
+#: modules/process/sphere-revolve.c:218 modules/process/tilt.c:160
+#: modules/process/tip_model.c:168 modules/process/unrotate.c:228
+#: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:361
+#: modules/process/wpour_mark.c:296 modules/volume/volume_calibrate.c:371
+#: modules/volume/volume_extract.c:331 modules/volume/volume_kmeans.c:146
+#: modules/volume/volume_kmedians.c:147 modules/volume/volume_linestat.c:292
+#: modules/volume/volume_slice.c:278
 msgid "_Reset"
 msgstr "_Remise à zéro"
 
@@ -1010,7 +1011,7 @@ msgid "Hidden"
 msgstr "Caché"
 
 #: libgwydgets/gwydgetenums.c:47 libgwydgets/gwygraphwindowmeasuredialog.c:572
-#: modules/file/imgexport.c:484 modules/tools/selectionmanager.c:260
+#: modules/file/imgexport.c:484 modules/tools/selectionmanager.c:262
 msgid "Points"
 msgstr "Points"
 
@@ -1079,11 +1080,11 @@ msgstr "<b>Te_xte du label</b>"
 msgid "Set Curve Color"
 msgstr "Régler la couleur de courbe"
 
-#: libgwydgets/gwygraphareadialog.c:556 modules/process/mask_morph.c:172
+#: libgwydgets/gwygraphareadialog.c:556 modules/process/mask_morph.c:178
 msgid "Square"
 msgstr "Carré"
 
-#: libgwydgets/gwygraphareadialog.c:558 modules/process/mask_morph.c:173
+#: libgwydgets/gwygraphareadialog.c:558 modules/process/mask_morph.c:179
 msgid "Diamond"
 msgstr "Losange"
 
@@ -1123,7 +1124,7 @@ msgstr "Triangle droite"
 msgid "Full square"
 msgstr "Carré plein"
 
-#: libgwydgets/gwygraphareadialog.c:568 modules/process/mask_morph.c:170
+#: libgwydgets/gwygraphareadialog.c:568 modules/process/mask_morph.c:176
 msgid "Disc"
 msgstr "Disque"
 
@@ -1264,7 +1265,7 @@ msgstr "Préféré"
 #: libgwydgets/gwyoptionmenus.c:470 app/meta.c:383
 #: modules/file/imgexport.c:3856 modules/file/imgexport.c:4282
 #: modules/file/rawfile.c:987 modules/process/convolution_filter.c:553
-#: modules/process/neural.c:429 modules/tools/selectionmanager.c:332
+#: modules/process/neural.c:429 modules/tools/selectionmanager.c:334
 msgid "Name"
 msgstr "Nom"
 
@@ -1581,44 +1582,44 @@ msgstr "Canal :"
 msgid "Section:"
 msgstr "Section :"
 
-#: app/data-browser.c:4987
+#: app/data-browser.c:5023
 msgid "Extract to a new file"
 msgstr "Extraire en tant que nouveau fichier"
 
-#: app/data-browser.c:4988
+#: app/data-browser.c:5024
 msgid "Duplicate"
 msgstr "Dupliquer"
 
-#: app/data-browser.c:4989
+#: app/data-browser.c:5025
 msgid "Delete"
 msgstr "Supprimer"
 
-#: app/data-browser.c:5034
+#: app/data-browser.c:5070
 msgid "Data Browser"
 msgstr "Navigateur de données"
 
-#: app/data-browser.c:5059
+#: app/data-browser.c:5095
 msgid "Close file"
 msgstr "Fermer le fichier"
 
-#: app/data-browser.c:5072
+#: app/data-browser.c:5108
 msgid "Channels"
 msgstr "Canaux"
 
-#: app/data-browser.c:5086 modules/volume/volume_extract.c:444
+#: app/data-browser.c:5122 modules/volume/volume_extract.c:444
 msgid "Graphs"
 msgstr "Graphes"
 
-#: app/data-browser.c:5100
+#: app/data-browser.c:5136
 msgid "Spectra"
 msgstr "Spectres"
 
-#: app/data-browser.c:6701
+#: app/data-browser.c:6737
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Canal inconnu %d"
 
-#: app/data-browser.c:6787
+#: app/data-browser.c:6823
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Volume %d inconnu"
@@ -3551,43 +3552,56 @@ msgstr "Format non supporté"
 msgid "File is truncated."
 msgstr "Le fichier est tronqué."
 
-#: modules/file/gwyzip.h:192
+#: modules/file/gwyzip.h:160
 msgid "Unknown error"
 msgstr "Erreur inconnue"
 
-#: modules/file/gwyzip.h:197
+#: modules/file/gwyzip.h:165
 msgid "End of file"
 msgstr "Fin de fichier"
 
-#: modules/file/gwyzip.h:199
+#: modules/file/gwyzip.h:167 modules/file/gwyzip.h:355
 msgid "End of list of files"
 msgstr "Fin de la liste des fichiers"
 
-#: modules/file/gwyzip.h:201
+#: modules/file/gwyzip.h:169
 msgid "Parameter error"
 msgstr "Erreur de paramètre"
 
-#: modules/file/gwyzip.h:203
+#: modules/file/gwyzip.h:171
 msgid "Bad zip file"
 msgstr "Fichier zip erroné"
 
-#: modules/file/gwyzip.h:205
+#: modules/file/gwyzip.h:173
 msgid "Internal error"
 msgstr "Erreur interne"
 
-#: modules/file/gwyzip.h:207
+#: modules/file/gwyzip.h:175
 msgid "CRC error"
 msgstr "Erreur CRC"
 
-#: modules/file/gwyzip.h:210
+#: modules/file/gwyzip.h:178
 #, c-format
-msgid "Minizip error while reading the zip file: %s."
-msgstr "Erreur de Minizip lors de la lecture du fichier zip : %s."
+msgid "Minizip error while reading the zip file: %s (%d)."
+msgstr "Erreur de Minizip lors de la lecture du fichier zip : %s (%d)."
 
-#: modules/file/gwyzip.h:223
+#: modules/file/gwyzip.h:249
 #, c-format
 msgid "File %s is missing in the zip file."
 msgstr "Le fichier %s est absent du fichier zip."
+
+#: modules/file/gwyzip.h:354 modules/file/gwyzip.h:366
+#, c-format
+msgid "Libzip error while reading the zip file: %s."
+msgstr "Erreur de Libzip lors de la lecture du fichier zip : %s."
+
+#: modules/file/gwyzip.h:450
+msgid "Cannot obtain the uncompressed file size."
+msgstr "Impossible d'obtenir la taille du fichier décompressé."
+
+#: modules/file/gwyzip.h:463
+msgid "Cannot read file contents."
+msgstr "Impossible de lire le contenu du fichier."
 
 #: modules/file/gxyzffile.c:112
 msgid "Imports Gwyddion XYZ field files."
@@ -3922,24 +3936,24 @@ msgstr "Document PostScript encapsulé (.eps)"
 msgid "Scalable Vector Graphics (.svg)"
 msgstr "Image vectorielle SVG (.svg)"
 
-#: modules/file/imgexport.c:472 modules/tools/selectionmanager.c:257
+#: modules/file/imgexport.c:472 modules/tools/selectionmanager.c:259
 msgid "Horiz./vert. lines"
 msgstr "Lignes horiz./vert."
 
-#: modules/file/imgexport.c:476 modules/tools/selectionmanager.c:258
+#: modules/file/imgexport.c:476 modules/tools/selectionmanager.c:260
 msgid "Ellipses"
 msgstr "Ellipses"
 
-#: modules/file/imgexport.c:480 modules/tools/selectionmanager.c:259
+#: modules/file/imgexport.c:480 modules/tools/selectionmanager.c:261
 msgid "Lines"
 msgstr "Lignes"
 
-#: modules/file/imgexport.c:488 modules/tools/selectionmanager.c:261
+#: modules/file/imgexport.c:488 modules/tools/selectionmanager.c:263
 msgid "Rectangles"
 msgstr "Rectangles"
 
 #: modules/file/imgexport.c:492 modules/process/lat_synth.c:537
-#: modules/process/lat_synth.c:616 modules/tools/selectionmanager.c:262
+#: modules/process/lat_synth.c:616 modules/tools/selectionmanager.c:264
 msgid "Lattice"
 msgstr "Maillage"
 
@@ -4154,7 +4168,7 @@ msgstr "Ajouter les _unités dans le titre"
 msgid "Draw _selection"
 msgstr "Dessiner les _sélections"
 
-#: modules/file/imgexport.c:3872 modules/tools/selectionmanager.c:348
+#: modules/file/imgexport.c:3872 modules/tools/selectionmanager.c:350
 msgid "Objects"
 msgstr "Objets"
 
@@ -4685,15 +4699,15 @@ msgstr "La ligne DATA_INFO contient moins de %d champs."
 msgid "Missing data start marker \\x1a\\x04."
 msgstr "Marqueur de début de données \\x1a\\x04 absent."
 
-#: modules/file/nanoobserver.c:123
+#: modules/file/nanoobserver.c:115
 msgid "Reads NanoObserver .nao files."
 msgstr "Importe les fichiers NanoObserver (.nao)"
 
-#: modules/file/nanoobserver.c:136
+#: modules/file/nanoobserver.c:128
 msgid "NanoObserver data (.nao)"
 msgstr "NanoObserver (.nao)"
 
-#: modules/file/nanoobserver.c:203 modules/file/nanoscantech.c:210
+#: modules/file/nanoobserver.c:195 modules/file/nanoscantech.c:203
 #: modules/file/opengps.c:211 modules/file/sensofarx.c:185
 #: modules/file/spmxfile.c:168
 msgid "Minizip cannot open the file as a ZIP file."
@@ -4711,11 +4725,11 @@ msgstr "NanoScan XML (.xml)"
 msgid "Wrong size of Base64 encoded data."
 msgstr "Les données codées en base 64 n'ont pas la bonne dimension."
 
-#: modules/file/nanoscantech.c:135
+#: modules/file/nanoscantech.c:127
 msgid "Imports NanoScanTech .nstdat files."
 msgstr "Importe les fichiers NanoScanTech"
 
-#: modules/file/nanoscantech.c:148
+#: modules/file/nanoscantech.c:140
 msgid "NanoScanTech data (.nstdat)"
 msgstr "NanoScanTech (.nstdat)"
 
@@ -6754,12 +6768,12 @@ msgstr "/Niveau"
 msgid "Level graph curves"
 msgstr "Ajustement de graphes"
 
-#: modules/layer/axis.c:140
+#: modules/layer/axis.c:143
 msgid "Layer allowing selection of horizontal or vertical lines."
 msgstr ""
 "Couche permettant de sélectionner des lignes horizontales ou verticales."
 
-#: modules/layer/ellipse.c:140
+#: modules/layer/ellipse.c:143
 msgid "Layer allowing selection of elliptic areas."
 msgstr "Couche permettant de sélectionner des zones elliptiques."
 
@@ -6767,11 +6781,11 @@ msgstr "Couche permettant de sélectionner des zones elliptiques."
 msgid "Layer allowing selection of a two-dimensional lattice."
 msgstr "Couche permettant de sélectionner un réseau bi-dimensionnel."
 
-#: modules/layer/line.c:174
+#: modules/layer/line.c:177
 msgid "Layer allowing selection of arbitrary straight lines."
 msgstr "Couche permettant de sélectionner des lignes droites."
 
-#: modules/layer/point.c:166
+#: modules/layer/point.c:169
 msgid ""
 "Layer allowing selection of several points, displayed as crosses or "
 "inivisible."
@@ -6779,7 +6793,7 @@ msgstr ""
 "Couche permettant de sélectionner plusieurs points, sous forme de croix ou "
 "invisibles."
 
-#: modules/layer/rectangle.c:144
+#: modules/layer/rectangle.c:147
 msgid "Layer allowing selection of rectangular areas."
 msgstr "Couche permettant de sélectionner des zones rectangulaires."
 
@@ -7090,13 +7104,14 @@ msgstr "Générer une surface par déposition balistique"
 #: modules/process/deposit_synth.c:879 modules/process/diff_synth.c:315
 #: modules/process/diff_synth.c:723 modules/process/domain_synth.c:266
 #: modules/process/domain_synth.c:763 modules/process/grain_wshed.c:506
-#: modules/process/lat_synth.c:468 modules/process/maskcor.c:331
-#: modules/process/mcrop.c:321 modules/process/merge.c:1078
-#: modules/process/nanoindent_adjust.c:323 modules/process/neural.c:1296
-#: modules/process/pid.c:338 modules/process/superresolution.c:416
-#: modules/process/superresolution.c:505 modules/process/tip_blind.c:784
-#: modules/process/tipops.c:319 modules/process/xydenoise.c:217
-#: modules/volume/volume_kmeans.c:364 modules/volume/volume_kmedians.c:365
+#: modules/process/lat_synth.c:468 modules/process/mark_disconn.c:406
+#: modules/process/maskcor.c:331 modules/process/mcrop.c:321
+#: modules/process/merge.c:1078 modules/process/nanoindent_adjust.c:323
+#: modules/process/neural.c:1296 modules/process/pid.c:338
+#: modules/process/superresolution.c:416 modules/process/superresolution.c:505
+#: modules/process/tip_blind.c:784 modules/process/tipops.c:319
+#: modules/process/xydenoise.c:217 modules/volume/volume_kmeans.c:364
+#: modules/volume/volume_kmedians.c:365
 msgid "Initializing..."
 msgstr "Initialisation..."
 
@@ -7515,27 +7530,27 @@ msgstr "Maillage en cours..."
 msgid "Triangulating..."
 msgstr "Triangulation..."
 
-#: modules/process/calcoefs_view.c:1137 modules/tools/profile.c:1816
+#: modules/process/calcoefs_view.c:1137 modules/tools/profile.c:1822
 msgid "X correction"
 msgstr "Correction X"
 
-#: modules/process/calcoefs_view.c:1138 modules/tools/profile.c:1817
+#: modules/process/calcoefs_view.c:1138 modules/tools/profile.c:1823
 msgid "Y correction"
 msgstr "Correction Y"
 
-#: modules/process/calcoefs_view.c:1139 modules/tools/profile.c:1818
+#: modules/process/calcoefs_view.c:1139 modules/tools/profile.c:1824
 msgid "Z correction"
 msgstr "Correction Z"
 
-#: modules/process/calcoefs_view.c:1140 modules/tools/profile.c:1819
+#: modules/process/calcoefs_view.c:1140 modules/tools/profile.c:1825
 msgid "X uncertainty"
 msgstr "Incertitude X"
 
-#: modules/process/calcoefs_view.c:1141 modules/tools/profile.c:1820
+#: modules/process/calcoefs_view.c:1141 modules/tools/profile.c:1826
 msgid "Y uncertainty"
 msgstr "Incertitude Y"
 
-#: modules/process/calcoefs_view.c:1142 modules/tools/profile.c:1821
+#: modules/process/calcoefs_view.c:1142 modules/tools/profile.c:1827
 msgid "Z uncertainty"
 msgstr "Incertitude X"
 
@@ -10474,6 +10489,50 @@ msgstr "Dimension du noyau :"
 msgid "Blending _depth:"
 msgstr "Profondeur _de mélange :"
 
+#: modules/process/mark_disconn.c:83
+msgid "Creates mask of values disconnected to the rest."
+msgstr "Crée un masque pour les valeurs déconnectées du reste des données."
+
+#: modules/process/mark_disconn.c:97
+msgid "/_Correct Data/Mask of _Disconnected..."
+msgstr "/_Correction des données/Marquer les points déconnectés..."
+
+#: modules/process/mark_disconn.c:101
+msgid "Mark data disconnected from other values"
+msgstr "Marque les données éloignées des autres valeurs"
+
+#: modules/process/mark_disconn.c:166 modules/process/scars.c:456
+msgid "Positive"
+msgstr "Positif"
+
+#: modules/process/mark_disconn.c:167 modules/process/scars.c:457
+msgid "Negative"
+msgstr "Négatif"
+
+#: modules/process/mark_disconn.c:168 modules/process/scars.c:458
+msgid "Both"
+msgstr "Les deux"
+
+#: modules/process/mark_disconn.c:178
+msgid "Mark Disconnected"
+msgstr "Marquer les points déconnecter"
+
+#: modules/process/mark_disconn.c:194
+msgid "Defect type:"
+msgstr "Type de défaut :"
+
+#: modules/process/mark_disconn.c:208
+msgid "_Maximum outlier radius:"
+msgstr "Rayon _maximal des points aberrants :"
+
+#: modules/process/mark_disconn.c:411
+msgid "Filtering..."
+msgstr "Filtrage..."
+
+#: modules/process/mark_disconn.c:438
+msgid "Marking outliers..."
+msgstr "Marquer les points aberrants..."
+
 #: modules/process/mark_with.c:153
 msgid "Creates or modifies a mask using other channels."
 msgstr "Crée et modifie un masque en utilisant d'autres canaux."
@@ -10494,7 +10553,7 @@ msgstr "Marquer avec"
 msgid "Operand"
 msgstr "Opérande"
 
-#: modules/process/mark_with.c:268 modules/process/mask_morph.c:203
+#: modules/process/mark_with.c:268 modules/process/mask_morph.c:209
 msgid "Operation:"
 msgstr "Opération :"
 
@@ -10618,67 +10677,70 @@ msgstr "Type de _distance :"
 msgid "Shrink from _border"
 msgstr "Éroder à partir du _bord"
 
-#: modules/process/mask_morph.c:110
+#: modules/process/mask_morph.c:116
 msgid "Performs basic morphological operations with masks."
 msgstr "Applique des opérations morphologiques basiques avec les masques."
 
-#: modules/process/mask_morph.c:124
+#: modules/process/mask_morph.c:130
 msgid "/_Mask/Morphological Operation..."
 msgstr "/_Masque/Opération morphologique..."
 
-#: modules/process/mask_morph.c:128
+#: modules/process/mask_morph.c:134
 msgid "Morphological operation with mask"
 msgstr "Opération morphologique avec un masque"
 
-#: modules/process/mask_morph.c:162
+#: modules/process/mask_morph.c:168
 msgid "Erosion"
 msgstr "Érosion"
 
-#: modules/process/mask_morph.c:163
+#: modules/process/mask_morph.c:169
 msgid "Dilation"
 msgstr "Dilatation"
 
-#: modules/process/mask_morph.c:164 modules/tools/filter.c:221
+#: modules/process/mask_morph.c:170 modules/tools/filter.c:221
 msgid "filter|Opening"
 msgstr "Ouverture"
 
-#: modules/process/mask_morph.c:165 modules/tools/filter.c:222
+#: modules/process/mask_morph.c:171 modules/tools/filter.c:222
 msgid "filter|Closing"
 msgstr "Fermeture"
 
-#: modules/process/mask_morph.c:166 modules/tools/filter.c:223
+#: modules/process/mask_morph.c:172 modules/tools/filter.c:223
 msgid "ASF Opening"
 msgstr "Ouverture ASF"
 
-#: modules/process/mask_morph.c:167 modules/tools/filter.c:224
+#: modules/process/mask_morph.c:173 modules/tools/filter.c:224
 msgid "ASF Closing"
 msgstr "Fermeture ASF"
 
-#: modules/process/mask_morph.c:171
+#: modules/process/mask_morph.c:177
 msgid "Octagon"
 msgstr "Octogone"
 
-#: modules/process/mask_morph.c:174
+#: modules/process/mask_morph.c:180
 #, fuzzy
 msgid "Another mask"
 msgstr "Autre masque"
 
-#: modules/process/mask_morph.c:185
+#: modules/process/mask_morph.c:191
 msgid "Morphological Operation"
 msgstr "Opération morphologique"
 
-#: modules/process/mask_morph.c:217
-#, fuzzy
+#: modules/process/mask_morph.c:223
 msgid "Structuring element:"
-msgstr "Élément structurant"
+msgstr "Élément structurant : "
 
-#: modules/process/mask_morph.c:231 modules/tools/maskedit.c:524
+#: modules/process/mask_morph.c:237 modules/tools/maskedit.c:524
 msgid "_Radius:"
 msgstr "_Rayon :"
 
-#: modules/process/mask_morph.c:242
+#: modules/process/mask_morph.c:248
 msgid "_Mask:"
 msgstr "_Masque : "
+
+#: modules/process/mask_morph.c:257
+msgid "_Trim empty borders"
+msgstr "_Tronquer les bords vides"
 
 #: modules/process/maskcor.c:86
 msgid "Creates mask by correlation with another data."
@@ -11270,7 +11332,7 @@ msgstr "Crée un masque des points aberrants."
 
 #: modules/process/outliers.c:53
 msgid "/_Correct Data/Mask of _Outliers"
-msgstr "/_Correction des données/Masquer les p_oints aberrants"
+msgstr "/_Correction des données/Marquer les p_oints aberrants"
 
 #: modules/process/outliers.c:57
 msgid "Mark data farther than 3σ from mean value"
@@ -11686,18 +11748,6 @@ msgstr "/_Correction des données/_Supprimer les défauts linéaires"
 #: modules/process/scars.c:150
 msgid "Correct horizontal scars (strokes)"
 msgstr "Corriger les marques horizontales (traits)"
-
-#: modules/process/scars.c:456
-msgid "Positive"
-msgstr "Positif"
-
-#: modules/process/scars.c:457
-msgid "Negative"
-msgstr "Négatif"
-
-#: modules/process/scars.c:458
-msgid "Both"
-msgstr "Les deux"
 
 #: modules/process/scars.c:472
 msgid "Mark Scars"
@@ -12615,7 +12665,7 @@ msgstr "Mesure de grain"
 msgid "Measure individual grains (continuous parts of mask)"
 msgstr "Mesure de grains individuels (parties continues d'un masque)"
 
-#: modules/tools/grainremover.c:99 modules/tools/selectionmanager.c:117
+#: modules/tools/grainremover.c:99 modules/tools/selectionmanager.c:119
 msgid ""
 "Grain removal tool, removes continuous parts of mask and/or underlying data."
 msgstr ""
@@ -13031,7 +13081,7 @@ msgstr "Z inc. limite haute %d"
 msgid "Zunc low bound %d"
 msgstr "Z inc. limite basse %d"
 
-#: modules/tools/profile.c:1815
+#: modules/tools/profile.c:1821
 msgid "calib-data|None"
 msgstr "Aucune"
 
@@ -13243,19 +13293,19 @@ msgstr ""
 "Ligne sélectionnée :     (%s, %s) à (%s, %s) px\n"
 "                   (%s, %s) à (%s, %s) %s\n"
 
-#: modules/tools/selectionmanager.c:162
+#: modules/tools/selectionmanager.c:164
 msgid "Selection Manager"
 msgstr "Gestionnaire de sélection"
 
-#: modules/tools/selectionmanager.c:163
+#: modules/tools/selectionmanager.c:165
 msgid "Display and copy selections"
 msgstr "Afficher et copier les sélections"
 
-#: modules/tools/selectionmanager.c:358
+#: modules/tools/selectionmanager.c:360
 msgid "_Distribute"
 msgstr "_Distribuer"
 
-#: modules/tools/selectionmanager.c:367
+#: modules/tools/selectionmanager.c:369
 msgid "to _all files"
 msgstr "vers tous les fichiers"
 
