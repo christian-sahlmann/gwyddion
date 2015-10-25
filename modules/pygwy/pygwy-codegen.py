@@ -38,7 +38,7 @@ class RetTupleHandler():
         info.varlist.add("int", 'py_tuple_index')
         info.codebefore.append('\n');
         info.codeafter.append('\n');
-        if ptype==None or ptype=="none":
+        if ptype == None or ptype == "none":
             info.codebefore.append('    py_tuple_ret = PyTuple_New(%d);\n' % (self.returns))
             info.codebefore.append('    py_tuple_index = 0;\n')
         else:
@@ -158,7 +158,8 @@ class GwyRGBAArg(argtypes.ArgType):
     PyTuple_SetItem(color_tuple, 1, PyFloat_FromDouble(ret.g));
     PyTuple_SetItem(color_tuple, 2, PyFloat_FromDouble(ret.b));
     PyTuple_SetItem(color_tuple, 3, PyFloat_FromDouble(ret.a));
-    return color_tuple;'''
+    return color_tuple;
+'''
         info.codeafter.append(codeafter_template)
 
 class GwyRGBAArgPtr(argtypes.ArgType):
@@ -179,7 +180,8 @@ class GwyRGBAArgPtr(argtypes.ArgType):
     PyTuple_SetItem(color_tuple, 1, PyFloat_FromDouble(ret->g));
     PyTuple_SetItem(color_tuple, 2, PyFloat_FromDouble(ret->b));
     PyTuple_SetItem(color_tuple, 3, PyFloat_FromDouble(ret->a));
-    return color_tuple;'''
+    return color_tuple;
+'''
         info.codeafter.append(codeafter_template)
 
 class GDoubleValue(argtypes.ArgType):
@@ -203,6 +205,7 @@ class GConstDoubleArray(argtypes.ArgType):
         pdict = {'name': pname, 'type': ptype}
         info.varlist.add(ptype, '*'+pname);
         info.varlist.add('int', 'i_'+pname);
+        info.varlist.add('int', 'n_'+pname);
         info.varlist.add('PyObject', '*'+pname+'_pyobj')
         info.add_parselist("O", ['&'+pname+'_pyobj'], [pname])
         info.arglist.append(pname)
@@ -211,8 +214,9 @@ class GConstDoubleArray(argtypes.ArgType):
         PyErr_SetString(PyExc_TypeError, "Parameter \'${name}\' must be a list of floats");
         return NULL;
     }
-    ${name} = g_new(${type}, PyList_Size(${name}_pyobj));
-    for (i_${name} = 0; i_${name} < PyList_Size(${name}_pyobj); i_${name}++) {
+    n_${name} = PyList_Size(${name}_pyobj);
+    ${name} = g_new(${type}, n_${name});
+    for (i_${name} = 0; i_${name} < n_${name}; i_${name}++) {
         if (!PyFloat_Check(PyList_GetItem(${name}_pyobj, i_${name}))) {
             g_free(${name});
             PyErr_SetString(PyExc_TypeError, "Parameter \'${name}\' must be a list of floats");
@@ -221,9 +225,7 @@ class GConstDoubleArray(argtypes.ArgType):
         ${name}[i_${name}] = PyFloat_AsDouble(PyList_GetItem(${name}_pyobj, i_${name}));
     }
 ''')
-        codeafter_template = string.Template('''\
-    g_free(${name});
-''')
+        codeafter_template = string.Template('    g_free(${name});\n')
         info.codebefore.append(codebefore_template.substitute(pdict))
         info.codeafter.append(codeafter_template.substitute(pdict))
     def write_return(self, ptype, ownsreturn, info):
@@ -281,7 +283,7 @@ class GArrayInt(argtypes.ArgType):
         return NULL;
     }
     n_${name} = PyList_Size(${name}_pyobj);
-    ${name} = g_array_sized_new(FALSE, FALSE, sizeof(${type}), n_${name});
+    ${name} = g_array_sized_new(FALSE, FALSE, sizeof(gint), n_${name});
     for (i_${name} = 0; i_${name} < n_${name}; i_${name}++) {
         if (!PyInt_Check(PyList_GetItem(${name}_pyobj, i_${name}))) {
             g_array_free(${name},TRUE);
@@ -289,12 +291,10 @@ class GArrayInt(argtypes.ArgType):
             return NULL;
         }
         ${name}_value = PyInt_AsLong(PyList_GetItem(${name}_pyobj, i_${name}));
-        g_array_append_val(${name},${name}_value);
+        g_array_append_val(${name}, ${name}_value);
     }
 ''')
-        codeafter_template = string.Template('''\
-    g_array_free(${name},TRUE);
-''')
+        codeafter_template = string.Template('    g_array_free(${name}, TRUE);\n')
         info.codebefore.append(codebefore_template.substitute(pdict))
         info.codeafter.append(codeafter_template.substitute(pdict))
 
@@ -333,15 +333,14 @@ class StringPassArg(argtypes.ArgType):
 
 
 
-
 # Extend argtypes
-arg = GArrayDouble()
-argtypes.matcher.register('GArray*', arg)
-del arg
-
 arg = GArrayInt()
 argtypes.matcher.register('GArrayInt*', arg)
 argtypes.matcher.register('const-GArrayInt*', arg)
+del arg
+
+arg = GArrayDouble()
+argtypes.matcher.register('GArrayDouble*', arg)
 del arg
 
 arg = argtypes.IntArg()

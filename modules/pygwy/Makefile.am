@@ -221,7 +221,7 @@ pygwy.lang: pygwy.defs
 # functions, and standardized `generated' line for automated exclusions of
 # generated files.
 # Keep the `GENERATED' string quoted to prevent match here
-pygwywrap.c: $(srcdir)/pygwy-codegen.py pygwy.defs $(srcdir)/pygwy.override
+pygwywrap.c: $(srcdir)/pygwy-codegen.py pygwy.defs $(srcdir)/pygwy.override wrap_calls.c
 	$(PYTHON) $(srcdir)/pygwy-codegen.py --codegendir $(PYGTK_CODEGENDIR) \
 	  --override $(srcdir)/pygwy.override --prefix pygwy pygwy.defs \
 	  | sed -e 's/^void$$/static void/' -e 's/pygwy\.c/pygwywrap\.c/' \

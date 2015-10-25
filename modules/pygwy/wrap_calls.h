@@ -41,23 +41,23 @@ GwyDataLine*  gwy_data_field_get_profile_wrap             (GwyDataField *data_fi
                                                            gint res,
                                                            gint thickness,
                                                            GwyInterpolationType interpolation);
-GArray*       gwy_selection_get_data_wrap                 (GwySelection *selection);
-GArray*       gwy_data_field_fit_polynom_wrap             (GwyDataField *data_field,
+GArrayDouble* gwy_selection_get_data_wrap                 (GwySelection *selection);
+GArrayDouble* gwy_data_field_fit_polynom_wrap             (GwyDataField *data_field,
                                                            gint col_degree,
                                                            gint row_degree);
-GArray*       gwy_data_field_area_fit_polynom_wrap        (GwyDataField *data_field,
+GArrayDouble* gwy_data_field_area_fit_polynom_wrap        (GwyDataField *data_field,
                                                            gint col,
                                                            gint row,
                                                            gint width,
                                                            gint height,
                                                            gint col_degree,
                                                            gint row_degree);
-GArray*       gwy_data_field_elliptic_area_extract_wrap   (GwyDataField *data_field,
+GArrayDouble* gwy_data_field_elliptic_area_extract_wrap   (GwyDataField *data_field,
                                                            gint col,
                                                            gint row,
                                                            gint width,
                                                            gint height);
-GArray*       gwy_data_field_circular_area_extract_wrap   (GwyDataField *data_field,
+GArrayDouble* gwy_data_field_circular_area_extract_wrap   (GwyDataField *data_field,
                                                            gint col,
                                                            gint row,
                                                            gdouble radius);
@@ -80,7 +80,7 @@ GwyDataField* gwy_tip_estimate_full_wrap                  (GwyDataField *tip,
 GwyDataField* gwy_data_field_create_full_mask             (GwyDataField *d);
 GArrayInt*    gwy_data_field_number_grains_wrap           (GwyDataField *mask_field);
 GArrayInt*    gwy_data_field_number_grains_periodic_wrap  (GwyDataField *mask_field);
-GArrayInt*    gwy_data_field_get_grain_bounding_boxes_wrap(GwyDataField *mask_field,
+GArrayInt*    gwy_data_field_get_grain_bounding_boxes_wrap(GwyDataField *data_field,
                                                            const GArrayInt *grains);
 GArrayDouble* gwy_data_field_grains_get_values_wrap       (GwyDataField *data_field,
                                                            const GArrayInt *grains,

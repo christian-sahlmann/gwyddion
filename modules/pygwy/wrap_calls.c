@@ -88,7 +88,7 @@ gwy_data_field_get_profile_wrap(GwyDataField *data_field,
  *
  * Returns: a list of selected data
 **/
-GArray*
+GArrayDouble*
 gwy_selection_get_data_wrap(GwySelection *selection)
 {
     gdouble *data;
@@ -112,7 +112,7 @@ gwy_selection_get_data_wrap(GwySelection *selection)
  *
  * Returns: a newly allocated array with coefficients.
  **/
-GArray*
+GArrayDouble*
 gwy_data_field_fit_polynom_wrap(GwyDataField *data_field,
                                 gint col_degree,
                                 gint row_degree)
@@ -145,7 +145,7 @@ gwy_data_field_fit_polynom_wrap(GwyDataField *data_field,
  * Returns: a newly allocated array with coefficients.
  *
  **/
-GArray*
+GArrayDouble*
 gwy_data_field_area_fit_polynom_wrap(GwyDataField *data_field,
                                      gint col,
                                      gint row,
@@ -177,7 +177,7 @@ gwy_data_field_area_fit_polynom_wrap(GwyDataField *data_field,
  *
  * Returns: The number of extracted values.
  **/
-GArray*
+GArrayDouble*
 gwy_data_field_elliptic_area_extract_wrap(GwyDataField *data_field,
                                           gint col,
                                           gint row,
@@ -206,7 +206,7 @@ gwy_data_field_elliptic_area_extract_wrap(GwyDataField *data_field,
  *
  * Returns: Array of values.
  **/
-GArray*
+GArrayDouble*
 gwy_data_field_circular_area_extract_wrap(GwyDataField *data_field,
                                           gint col,
                                           gint row,
@@ -378,7 +378,7 @@ find_ngrains(const GArrayInt *grains)
 
 /**
  * gwy_data_field_get_grain_bounding_boxes_wrap:
- * @mask_field: A data field representing a mask.
+ * @data_field: A data field representing a mask.
  * @grains: Array of grain numbers.
  *
  * Finds bounding boxes of all grains in a mask data field.
@@ -388,15 +388,15 @@ find_ngrains(const GArrayInt *grains)
  * gwy_data_field_number_grains().
  *
  * Returns: An array of quadruples of integers, each representing the bounding
- *          box of the corresponding grain (the zeroth item does not correspond
- *          to any as grain numbers start from 1).
+ *          box of the corresponding grain (the zeroth quadrupe does not
+ *          correspond to any as grain numbers start from 1).
  **/
 GArrayInt*
-gwy_data_field_get_grain_bounding_boxes_wrap(GwyDataField *mask_field,
+gwy_data_field_get_grain_bounding_boxes_wrap(GwyDataField *data_field,
                                              const GArrayInt *grains)
 {
-    gint xres = gwy_data_field_get_xres(mask_field);
-    gint yres = gwy_data_field_get_yres(mask_field);
+    gint xres = gwy_data_field_get_xres(data_field);
+    gint yres = gwy_data_field_get_yres(data_field);
     const gint *g = (const gint*)grains->data;
     GArrayInt *bboxes;
     gint ngrains, *bbdata;
@@ -404,8 +404,9 @@ gwy_data_field_get_grain_bounding_boxes_wrap(GwyDataField *mask_field,
     g_return_val_if_fail(grains->len == xres*yres, NULL);
     ngrains = find_ngrains(grains);
     bboxes = g_array_sized_new(FALSE, FALSE, sizeof(gint), 4*(ngrains + 1));
+    g_array_set_size(bboxes, 4*(ngrains+1));
     bbdata = (gint*)bboxes->data;
-    gwy_data_field_get_grain_bounding_boxes(mask_field, ngrains, g, bbdata);
+    gwy_data_field_get_grain_bounding_boxes(data_field, ngrains, g, bbdata);
     return bboxes;
 }
 
@@ -440,6 +441,7 @@ gwy_data_field_grains_get_values_wrap(GwyDataField *data_field,
     g_return_val_if_fail(grains->len == xres*yres, NULL);
     ngrains = find_ngrains(grains);
     values = g_array_sized_new(FALSE, FALSE, sizeof(gdouble), ngrains + 1);
+    g_array_set_size(values, ngrains+1);
     vdata = (gdouble*)values->data;
     gwy_data_field_grains_get_values(data_field, vdata, ngrains, g, quantity);
     return values;
