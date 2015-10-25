@@ -461,4 +461,43 @@ gwy_data_field_grains_get_values_wrap(GwyDataField *data_field,
     return values;
 }
 
+/**
+ * gwy_data_field_grains_get_distribution_wrap:
+ * @data_field: A data field representing a surface.
+ * @grain_field: A data field representing the mask.  It must have the same
+ *               dimensions as the data field.
+ * @grains: Array of grain numbers.
+ * @quantity: The quantity to calculate, identified by GwyGrainQuantity.
+ * @nstats: The number of bins in the histogram.  Pass a non-positive value to
+ *          determine the number of bins automatically.
+ *
+ * Calculates the distribution of a speficied grain quantity.
+ *
+ * The array @grains must have the same number of elements as @data_field.
+ * Normally it is obtained from a function such as
+ * gwy_data_field_number_grains() for the corresponding mask.
+ *
+ * Returns: The distribution as a data line.
+ **/
+GwyDataLine*
+gwy_data_field_grains_get_distribution_wrap(GwyDataField *data_field,
+                                            GwyDataField *grain_field,
+                                            const GArrayInt *grains,
+                                            GwyGrainQuantity quantity,
+                                            gint nstats)
+{
+    gint xres = gwy_data_field_get_xres(data_field);
+    gint yres = gwy_data_field_get_yres(data_field);
+    const gint *g = (const gint*)grains->data;
+    gint ngrains;
+
+    g_return_val_if_fail(grains->len == xres*yres, NULL);
+    g_return_val_if_fail(grain_field->xres == xres, NULL);
+    g_return_val_if_fail(grain_field->yres == yres, NULL);
+    ngrains = find_ngrains(grains);
+    return gwy_data_field_grains_get_distribution(data_field, grain_field,
+                                                  NULL, ngrains, g,
+                                                  quantity, nstats);
+}
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

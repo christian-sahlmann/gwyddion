@@ -89,6 +89,11 @@ gboolean      gwy_get_grain_quantity_needs_same_units_wrap(GwyGrainQuantity quan
 GwySIUnit*    gwy_construct_grain_quantity_units          (GwyGrainQuantity quantity,
                                                            GwySIUnit *siunitxy,
                                                            GwySIUnit *siunitz);
+GwyDataLine*  gwy_data_field_grains_get_distribution_wrap (GwyDataField *data_field,
+                                                           GwyDataField *grain_field,
+                                                           const GArrayInt *grains,
+                                                           GwyGrainQuantity quantity,
+                                                           gint nstats);
 
 #endif
 
