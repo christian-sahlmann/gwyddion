@@ -204,10 +204,7 @@ class GConstDoubleArray(argtypes.ArgType):
       info.codebefore.append('        PyErr_SetString(PyExc_TypeError, "Parameter \''+pname+'\' must be a list of floats");\n')
       info.codebefore.append('        return NULL;\n')
       info.codebefore.append('    }\n')
-      info.codebefore.append('    '+pname+' =  g_malloc(sizeof('+ptype+')*PyList_Size('+pname+'_pyobj));\n')
-      info.codebefore.append('    if ('+pname+' == NULL) {\n')
-      info.codebefore.append('        return PyErr_NoMemory();\n')
-      info.codebefore.append('    }\n')
+      info.codebefore.append('    '+pname+' = g_new('+ptype+', PyList_Size('+pname+'_pyobj));\n')
       info.codebefore.append('    for (i_'+pname+' = 0; i_'+pname+' < PyList_Size('+pname+'_pyobj); i_'+pname+'++) {\n')
       info.codebefore.append('        if (!PyFloat_Check(PyList_GetItem('+pname+'_pyobj, i_'+pname+'))) {\n')
       info.codebefore.append('            g_free('+pname+');\n')
@@ -249,6 +246,30 @@ class GArrayInt(argtypes.ArgType):
       info.codeafter.append('    }\n')
       info.codeafter.append('    g_array_free(ret, TRUE);\n')
       info.codeafter.append('    return py_ret;\n')
+   def write_param(self, ptype, pname, pdflt, pnull, info):
+      ptype = ptype.replace('*', '')
+      ptype = ptype.replace('const-', '')
+      info.varlist.add(ptype, '*'+pname);
+      info.varlist.add('int', 'i_'+pname);
+      info.varlist.add('gint', pname+'_value')
+      info.varlist.add('PyObject', '*'+pname+'_pyobj')
+      info.add_parselist("O", ['&'+pname+'_pyobj'], [pname])
+      info.arglist.append(pname)
+      info.codebefore.append('    if (!PyList_Check('+pname+'_pyobj)) {\n')
+      info.codebefore.append('        PyErr_SetString(PyExc_TypeError, "Parameter \''+pname+'\' must be a list of integers");\n')
+      info.codebefore.append('        return NULL;\n')
+      info.codebefore.append('    }\n')
+      info.codebefore.append('    '+pname+' = g_array_sized_new(FALSE,FALSE,sizeof('+ptype+'),PyList_Size('+pname+'_pyobj));\n')
+      info.codebefore.append('    for (i_'+pname+' = 0; i_'+pname+' < PyList_Size('+pname+'_pyobj); i_'+pname+'++) {\n')
+      info.codebefore.append('        if (!PyInt_Check(PyList_GetItem('+pname+'_pyobj, i_'+pname+'))) {\n')
+      info.codebefore.append('            g_array_free('+pname+',TRUE);\n')
+      info.codebefore.append('            PyErr_SetString(PyExc_TypeError, "Parameter \''+pname+'\' must be a list of integers");\n')
+      info.codebefore.append('            return NULL;\n')
+      info.codebefore.append('        }\n')
+      info.codebefore.append('        '+pname+'_value = PyInt_AsLong(PyList_GetItem('+pname+'_pyobj, i_'+pname+'));\n')
+      info.codebefore.append('        g_array_append_val('+pname+','+pname+'_value);\n')
+      info.codebefore.append('    }\n')
+      info.codeafter.append('    g_array_free('+pname+',TRUE);\n')
 
 class StringPassArg(argtypes.ArgType):
     def write_param(self, ptype, pname, pdflt, pnull, info):
@@ -293,6 +314,7 @@ del arg
 
 arg = GArrayInt()
 argtypes.matcher.register('GArrayInt*', arg)
+argtypes.matcher.register('const-GArrayInt*', arg)
 del arg
 
 arg = argtypes.IntArg()
