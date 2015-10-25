@@ -281,7 +281,7 @@ class GArrayInt(argtypes.ArgType):
         return NULL;
     }
     n_${name} = PyList_Size(${name}_pyobj);
-    ${name} = g_array_sized_new(FALSE, FALSE, sizeof(${type}), n);
+    ${name} = g_array_sized_new(FALSE, FALSE, sizeof(${type}), n_${name});
     for (i_${name} = 0; i_${name} < n_${name}; i_${name}++) {
         if (!PyInt_Check(PyList_GetItem(${name}_pyobj, i_${name}))) {
             g_array_free(${name},TRUE);
