@@ -27,6 +27,8 @@ Modules:
 - Princeton SPE (new): Imports Princeton Instruments camera SPE files.
 - Mask morph (new): Elementary mophological operations with masks, possibly
   using another mask as the structuring elements.
+- Mask of Disconnected (new): Mark local outliers with values disconnected
+  to the distribution of other values.
 - Rawfile: NaN in floating point data are handled by masking and replacement.
   It is possible to specify a raw value representing missing data.  Support
   for two-byte half and six-byte Pascal floating point formats was added.
@@ -44,6 +46,8 @@ Modules:
   peration was added.
 - Selection manager tool: Selections are distributed correctly from and to
   images with offset top-left corner.
+- Pygwy: Python 2.4 is now required.  New wrappers for grain numbering and
+  grain quantity calculation were added.
 
 Other:
 - Gwyddion can use either minizip or libzip for opening of ZIP-compressed
