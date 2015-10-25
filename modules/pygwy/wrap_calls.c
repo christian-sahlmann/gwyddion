@@ -323,6 +323,20 @@ gwy_data_field_create_full_mask(GwyDataField *d)
     return m;
 }
 
+gboolean
+gwy_get_grain_quantity_needs_same_units_wrap(GwyGrainQuantity quantity)
+{
+    return gwy_grain_quantity_needs_same_units(quantity);
+}
+
+GwySIUnit*
+gwy_construct_grain_quantity_units(GwyGrainQuantity quantity,
+                                   GwySIUnit *siunitxy,
+                                   GwySIUnit *siunitz)
+{
+    return gwy_grain_quantity_get_units(quantity, siunitxy, siunitz, NULL);
+}
+
 /**
  * gwy_data_field_number_grains_wrap:
  * @mask_field: A data field representing a mask.

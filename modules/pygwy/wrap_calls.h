@@ -85,6 +85,10 @@ GArrayInt*    gwy_data_field_get_grain_bounding_boxes_wrap(GwyDataField *data_fi
 GArrayDouble* gwy_data_field_grains_get_values_wrap       (GwyDataField *data_field,
                                                            const GArrayInt *grains,
                                                            GwyGrainQuantity quantity);
+gboolean      gwy_get_grain_quantity_needs_same_units_wrap(GwyGrainQuantity quantity);
+GwySIUnit*    gwy_construct_grain_quantity_units          (GwyGrainQuantity quantity,
+                                                           GwySIUnit *siunitxy,
+                                                           GwySIUnit *siunitz);
 
 #endif
 
