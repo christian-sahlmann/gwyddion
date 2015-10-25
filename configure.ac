@@ -215,7 +215,7 @@ fi
 #############################################################################
 # Python
 GWY_WITH([python],,[Install Python modules and plug-ins])
-AM_PATH_PYTHON(2.2,,:)
+AM_PATH_PYTHON(2.4,,:)
 AM_CONDITIONAL([HAVE_PYTHON],[test "$PYTHON" != : -a "$enable_python" != no])
 
 # Change backward slashes in paths to forwards slashes to avoid mixed-slash
