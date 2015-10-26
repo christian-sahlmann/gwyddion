@@ -87,6 +87,13 @@ cat >check_symbols.ignore <<':'
 ^Evil symbol (pygwy): gwy_data_field_elliptic_area_extract_wrap$
 ^Evil symbol (pygwy): gwy_data_field_fit_polynom_wrap$
 ^Evil symbol (pygwy): gwy_data_field_get_profile_wrap$
+^Evil symbol (pygwy): gwy_construct_grain_quantity_units$
+^Evil symbol (pygwy): gwy_data_field_get_grain_bounding_boxes_wrap$
+^Evil symbol (pygwy): gwy_data_field_grains_get_distribution_wrap$
+^Evil symbol (pygwy): gwy_data_field_grains_get_values_wrap$
+^Evil symbol (pygwy): gwy_data_field_number_grains_periodic_wrap$
+^Evil symbol (pygwy): gwy_data_field_number_grains_wrap$
+^Evil symbol (pygwy): gwy_get_grain_quantity_needs_same_units_wrap$
 ^Evil symbol (pygwy): gwy_get_key_from_name$
 ^Evil symbol (pygwy): gwy_selection_get_data_wrap$
 ^Evil symbol (pygwy): gwy_tip_cmap_wrap$
