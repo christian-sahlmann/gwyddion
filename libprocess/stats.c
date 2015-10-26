@@ -287,7 +287,7 @@ gwy_data_field_get_min_max(GwyDataField *data_field,
             need_max = TRUE;
     }
 
-    if (!need_max && !need_max)
+    if (!need_min && !need_max)
         return;
     else if (!need_min) {
         *max = gwy_data_field_get_max(data_field);
