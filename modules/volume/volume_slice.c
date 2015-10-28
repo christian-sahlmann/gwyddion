@@ -81,6 +81,7 @@ typedef struct {
     SliceOutputType output_type;
     SlicePos currpos;
     gboolean multiselect;
+    GwyAppDataId target_graph;
     /* Dynamic state. */
     GwyBrick *brick;
     GArray *allpos;
@@ -97,6 +98,8 @@ typedef struct {
     GtkWidget *graph;
     GtkWidget *base_plane;
     GSList *output_type;
+    GtkWidget *target_graph;
+    GtkWidget *target_graph_label;
     GtkWidget *multiselect;
     GtkObject *xpos;
     GtkObject *ypos;
@@ -145,6 +148,7 @@ static void     base_plane_changed     (GtkComboBox *combo,
                                         SliceControls *controls);
 static void     output_type_changed    (GtkWidget *button,
                                         SliceControls *controls);
+static void update_sensitivity(SliceControls *controls);
 static void     multiselect_changed    (SliceControls *controls,
                                         GtkToggleButton *button);
 static void     reduce_selection       (SliceControls *controls);
@@ -152,6 +156,11 @@ static void     update_position        (SliceControls *controls,
                                         const SlicePos *pos);
 static void     update_multiselection  (SliceControls *controls);
 static void     update_labels          (SliceControls *controls);
+static void     update_target_graphs   (SliceControls *controls);
+static gboolean filter_target_graphs   (GwyContainer *data,
+                                        gint id,
+                                        gpointer user_data);
+static void     target_graph_changed   (SliceControls *controls);
 static void     extract_image_plane    (const SliceArgs *args,
                                         GwyDataField *dfield);
 static void     extract_graph_curve    (const SliceArgs *args,
@@ -173,16 +182,19 @@ static const SliceArgs slice_defaults = {
     PLANE_XY, OUTPUT_IMAGES,
     { -1, -1, -1 },
     FALSE,
+    GWY_APP_DATA_ID_NONE,
     /* Dynamic state. */
     NULL, NULL,
 };
+
+static GwyAppDataId target_graph_id = GWY_APP_DATA_ID_NONE;
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Extracts image planes and line graphs from volume data."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti)",
     "2015",
 };
@@ -255,6 +267,7 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
     };
 
     GtkWidget *dialog, *table, *hbox, *label, *area;
+    GwyDataChooser *chooser;
     SliceControls controls;
     GwyBrick *brick = args->brick;
     GwyDataField *dfield;
@@ -340,7 +353,7 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
     hbox = gtk_hbox_new(FALSE, 24);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 4);
 
-    table = gtk_table_new(6, 2, FALSE);
+    table = gtk_table_new(7, 2, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
@@ -379,6 +392,27 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
                                    args->output_type);
     row = gwy_radio_buttons_attach_to_table(controls.output_type,
                                             GTK_TABLE(table), 2, row);
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    label = gtk_label_new_with_mnemonic(_("Target _graph:"));
+    controls.target_graph_label = label;
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+    controls.target_graph = gwy_data_chooser_new_graphs();
+    chooser = GWY_DATA_CHOOSER(controls.target_graph);
+    gwy_data_chooser_set_none(chooser, _("New graph"));
+    gwy_data_chooser_set_active(chooser, NULL, -1);
+    gwy_data_chooser_set_filter(chooser, filter_target_graphs, &controls, NULL);
+    gwy_data_chooser_set_active_id(chooser, &args->target_graph);
+    gwy_data_chooser_get_active_id(chooser, &args->target_graph);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.target_graph);
+    gtk_table_attach(GTK_TABLE(table), controls.target_graph,
+                     1, 2, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls.target_graph, "changed",
+                             G_CALLBACK(target_graph_changed), &controls);
+    row++;
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     controls.multiselect
@@ -761,6 +795,7 @@ base_plane_changed(GtkComboBox *combo, SliceControls *controls)
     args->currpos = nullpos;
     update_position(controls, &pos);
     gwy_set_data_preview_size(GWY_DATA_VIEW(controls->view), PREVIEW_SIZE);
+    update_target_graphs(controls);
     controls->in_update = FALSE;
 }
 
@@ -772,6 +807,15 @@ output_type_changed(GtkWidget *button, SliceControls *controls)
      * compacted to single one. */
     reduce_selection(controls);
     multiselect_changed(controls, GTK_TOGGLE_BUTTON(controls->multiselect));
+    update_sensitivity(controls);
+}
+
+static void
+update_sensitivity(SliceControls *controls)
+{
+    gboolean sens = (controls->args->output_type == OUTPUT_GRAPHS);
+    gtk_widget_set_sensitive(controls->target_graph, sens);
+    gtk_widget_set_sensitive(controls->target_graph_label, sens);
 }
 
 static void
@@ -1007,6 +1051,33 @@ update_labels(SliceControls *controls)
 }
 
 static void
+update_target_graphs(SliceControls *controls)
+{
+    GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
+    gwy_data_chooser_refilter(chooser);
+}
+
+static gboolean
+filter_target_graphs(GwyContainer *data, gint id, gpointer user_data)
+{
+    SliceControls *controls = (SliceControls*)user_data;
+    GwyGraphModel *gmodel, *targetgmodel;
+    GQuark quark = gwy_app_get_graph_key_for_id(id);
+
+    gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
+    g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), FALSE);
+    return (gwy_container_gis_object(data, quark, (GObject**)&targetgmodel)
+            && gwy_graph_model_units_are_compatible(gmodel, targetgmodel));
+}
+
+static void
+target_graph_changed(SliceControls *controls)
+{
+    GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
+    gwy_data_chooser_get_active_id(chooser, &controls->args->target_graph);
+}
+
+static void
 slice_do(SliceArgs *args, GwyContainer *data, gint id)
 {
     guint idx;
@@ -1030,7 +1101,7 @@ slice_do(SliceArgs *args, GwyContainer *data, gint id)
             g_object_unref(gcmodel);
         }
 
-        gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+        gwy_app_add_graph_or_curves(gmodel, data, &args->target_graph, 1);
         g_object_unref(gmodel);
     }
 }
@@ -1315,6 +1386,7 @@ slice_sanitize_args(SliceArgs *args)
     args->base_plane = MIN(args->base_plane, NPLANES-1);
     args->output_type = MIN(args->output_type, NOUTPUTS-1);
     args->multiselect = !!args->multiselect;
+    gwy_app_data_id_verify_graph(&args->target_graph);
 }
 
 static void
@@ -1332,6 +1404,7 @@ slice_load_args(GwyContainer *container,
     gwy_container_gis_int32_by_name(container, zpos_key, &args->currpos.z);
     gwy_container_gis_boolean_by_name(container, multiselect_key,
                                       &args->multiselect);
+    args->target_graph = target_graph_id;
     slice_sanitize_args(args);
 }
 
@@ -1339,6 +1412,7 @@ static void
 slice_save_args(GwyContainer *container,
                 SliceArgs *args)
 {
+    target_graph_id = args->target_graph;
     gwy_container_set_enum_by_name(container, base_plane_key, args->base_plane);
     gwy_container_set_enum_by_name(container, output_type_key,
                                    args->output_type);
