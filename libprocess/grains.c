@@ -3267,7 +3267,7 @@ gwy_data_field_grains_add(GwyDataField *grain_field, GwyDataField *add_field)
  *
  * Note: This function is equivalent to
  * |[
- * gwy_data_field_min_of_fields(grain_field, grain_field, add_field);
+ * gwy_data_field_min_of_fields(grain_field, grain_field, intersect_field);
  * ]|
  **/
 void
