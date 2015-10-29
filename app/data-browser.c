@@ -66,7 +66,8 @@
 
 enum {
     THUMB_TIMEOUT = 100,
-    THUMB_SIZE = 60
+    THUMB_SIZE = 60,
+    CACHED_IDS = 24,
 };
 
 /* Notebook pages */
@@ -6571,16 +6572,16 @@ gwy_app_get_any_key_for_id(gint id,
 
 /**
  * gwy_app_get_data_key_for_id:
- * @id: Data number in container.
+ * @id: Numerical id of a channel in file (container).
  *
  * Calculates data field quark identifier from its id.
  *
- * Returns: The quark key identifying mask number @id.
+ * Returns: The quark key identifying channel data field with number @id.
  **/
 GQuark
 gwy_app_get_data_key_for_id(gint id)
 {
-    static GQuark quarks[16] = { 0, };
+    static GQuark quarks[CACHED_IDS] = { 0, };
 
     return gwy_app_get_any_key_for_id(id, "/%d/data",
                                       G_N_ELEMENTS(quarks), quarks);
@@ -6588,16 +6589,16 @@ gwy_app_get_data_key_for_id(gint id)
 
 /**
  * gwy_app_get_mask_key_for_id:
- * @id: Data number in container.
+ * @id: Numerical id of a channel in file (container).
  *
  * Calculates mask field quark identifier from its id.
  *
- * Returns: The quark key identifying mask number @id.
+ * Returns: The quark key identifying mask data field with number @id.
  **/
 GQuark
 gwy_app_get_mask_key_for_id(gint id)
 {
-    static GQuark quarks[16] = { 0, };
+    static GQuark quarks[CACHED_IDS] = { 0, };
 
     return gwy_app_get_any_key_for_id(id, "/%d/mask",
                                       G_N_ELEMENTS(quarks), quarks);
@@ -6605,16 +6606,16 @@ gwy_app_get_mask_key_for_id(gint id)
 
 /**
  * gwy_app_get_show_key_for_id:
- * @id: Data number in container.
+ * @id: Numerical id of a channel in file (container).
  *
  * Calculates presentation field quark identifier from its id.
  *
- * Returns: The quark key identifying presentation number @id.
+ * Returns: The quark key identifying presentation data field with number @id.
  **/
 GQuark
 gwy_app_get_show_key_for_id(gint id)
 {
-    static GQuark quarks[16] = { 0, };
+    static GQuark quarks[CACHED_IDS] = { 0, };
 
     return gwy_app_get_any_key_for_id(id, "/%d/show",
                                       G_N_ELEMENTS(quarks), quarks);
@@ -6622,18 +6623,18 @@ gwy_app_get_show_key_for_id(gint id)
 
 /**
  * gwy_app_get_graph_key_for_id:
- * @id: Graph number in container.
+ * @id: Numerical id of a graph in file (container).
  *
  * Calculates graph model quark identifier from its id.
  *
- * Returns: The quark key identifying graph model number @id.
+ * Returns: The quark key identifying graph model with number @id.
  *
  * Since: 2.7
  **/
 GQuark
 gwy_app_get_graph_key_for_id(gint id)
 {
-    static GQuark quarks[16] = { 0, };
+    static GQuark quarks[CACHED_IDS] = { 0, };
 
     return gwy_app_get_any_key_for_id(id, GRAPH_PREFIX "/%d",
                                       G_N_ELEMENTS(quarks), quarks);
@@ -6641,18 +6642,18 @@ gwy_app_get_graph_key_for_id(gint id)
 
 /**
  * gwy_app_get_spectra_key_for_id:
- * @id: Spectra number in container.
+ * @id: Numerical id of a spectra set in file (container).
  *
  * Calculates spectra quark identifier from its id.
  *
- * Returns: The quark key identifying spectra number @id.
+ * Returns: The quark key identifying spectra with number @id.
  *
  * Since: 2.7
  **/
 GQuark
 gwy_app_get_spectra_key_for_id(gint id)
 {
-    static GQuark quarks[16] = { 0, };
+    static GQuark quarks[CACHED_IDS] = { 0, };
 
     return gwy_app_get_any_key_for_id(id, SPECTRA_PREFIX "/%d",
                                       G_N_ELEMENTS(quarks), quarks);
@@ -6660,20 +6661,219 @@ gwy_app_get_spectra_key_for_id(gint id)
 
 /**
  * gwy_app_get_brick_key_for_id:
- * @id: Data brick number in container.
+ * @id: Numerical id of a data brick in file (container).
  *
  * Calculates data brick quark identifier from its id.
  *
- * Returns: The quark key identifying data brick number @id.
+ * Returns: The quark key identifying data brick with number @id.
  *
  * Since: 2.32
  **/
 GQuark
 gwy_app_get_brick_key_for_id(gint id)
 {
-    static GQuark quarks[16] = { 0, };
+    static GQuark quarks[CACHED_IDS] = { 0, };
 
     return gwy_app_get_any_key_for_id(id, BRICK_PREFIX "/%d",
+                                      G_N_ELEMENTS(quarks), quarks);
+}
+
+/**
+ * gwy_app_get_data_title_key_for_id:
+ * @id: Numerical id of a channel in file (container).
+ *
+ * Calculates data field title quark identifier from its id.
+ *
+ * Returns: The quark key identifying string title of channel with number @id.
+ *
+ * Since: 2.43
+ **/
+GQuark
+gwy_app_get_data_title_key_for_id(gint id)
+{
+    static GQuark quarks[CACHED_IDS] = { 0, };
+
+    return gwy_app_get_any_key_for_id(id, "/%d/data/title",
+                                      G_N_ELEMENTS(quarks), quarks);
+}
+
+/**
+ * gwy_app_get_data_range_type_key_for_id:
+ * @id: Numerical id of a channel in file (container).
+ *
+ * Calculates data field range type quark identifier from its id.
+ *
+ * Returns: The quark key identifying #GwyLayerBasicRangeType false colour
+ *          mapping type of channel with number @id.
+ *
+ * Since: 2.43
+ **/
+GQuark
+gwy_app_get_data_range_type_key_for_id(gint id)
+{
+    static GQuark quarks[CACHED_IDS] = { 0, };
+
+    return gwy_app_get_any_key_for_id(id, "/%d/base/range-type",
+                                      G_N_ELEMENTS(quarks), quarks);
+}
+
+/**
+ * gwy_app_get_data_range_min_key_for_id:
+ * @id: Numerical id of a channel in file (container).
+ *
+ * Calculates data field fixed range minimum quark identifier from its id.
+ *
+ * Returns: The quark key identifying floating fixed false colour range minimum
+ *          of channel with number @id.
+ *
+ * Since: 2.43
+ **/
+GQuark
+gwy_app_get_data_range_min_key_for_id(gint id)
+{
+    static GQuark quarks[CACHED_IDS] = { 0, };
+
+    return gwy_app_get_any_key_for_id(id, "/%d/base/min",
+                                      G_N_ELEMENTS(quarks), quarks);
+}
+
+/**
+ * gwy_app_get_data_range_max_key_for_id:
+ * @id: Numerical id of a channel in file (container).
+ *
+ * Calculates data field fixed range maximum quark identifier from its id.
+ *
+ * Returns: The quark key identifying floating fixed false colour range maximum
+ *          of channel with number @id.
+ *
+ * Since: 2.43
+ **/
+GQuark
+gwy_app_get_data_range_max_key_for_id(gint id)
+{
+    static GQuark quarks[CACHED_IDS] = { 0, };
+
+    return gwy_app_get_any_key_for_id(id, "/%d/base/max",
+                                      G_N_ELEMENTS(quarks), quarks);
+}
+
+/**
+ * gwy_app_get_data_meta_key_for_id:
+ * @id: Numerical id of a channel in file (container).
+ *
+ * Calculates data field metadata quark identifier from its id.
+ *
+ * Returns: The quark key identifying metadata container of channel with number
+ *          @id.
+ *
+ * Since: 2.43
+ **/
+GQuark
+gwy_app_get_data_meta_key_for_id(gint id)
+{
+    static GQuark quarks[CACHED_IDS] = { 0, };
+
+    return gwy_app_get_any_key_for_id(id, "/%d/meta",
+                                      G_N_ELEMENTS(quarks), quarks);
+}
+
+/**
+ * gwy_app_get_data_palette_key_for_id:
+ * @id: Numerical id of a channel in file (container).
+ *
+ * Calculates data field palette quark identifier from its id.
+ *
+ * Returns: The quark key identifying string name palette of channel with
+ *          number @id.
+ *
+ * Since: 2.43
+ **/
+GQuark
+gwy_app_get_data_palette_key_for_id(gint id)
+{
+    static GQuark quarks[CACHED_IDS] = { 0, };
+
+    return gwy_app_get_any_key_for_id(id, "/%d/base/palette",
+                                      G_N_ELEMENTS(quarks), quarks);
+}
+
+/**
+ * gwy_app_get_brick_title_key_for_id:
+ * @id: Numerical id of a data brick in file (container).
+ *
+ * Calculates data brick title quark identifier from its id.
+ *
+ * Returns: The quark key identifying string title of data brick with number
+ *          @id.
+ *
+ * Since: 2.43
+ **/
+GQuark
+gwy_app_get_brick_title_key_for_id(gint id)
+{
+    static GQuark quarks[CACHED_IDS] = { 0, };
+
+    return gwy_app_get_any_key_for_id(id, BRICK_PREFIX "/%d/title",
+                                      G_N_ELEMENTS(quarks), quarks);
+}
+
+/**
+ * gwy_app_get_brick_preview_key_for_id:
+ * @id: Numerical id of a data brick in file (container).
+ *
+ * Calculates data brick preview quark identifier from its id.
+ *
+ * Returns: The quark key identifying preview data field of data brick with
+ *          number @id.
+ *
+ * Since: 2.43
+ **/
+GQuark
+gwy_app_get_brick_preview_key_for_id(gint id)
+{
+    static GQuark quarks[CACHED_IDS] = { 0, };
+
+    return gwy_app_get_any_key_for_id(id, BRICK_PREFIX "/%d/preview",
+                                      G_N_ELEMENTS(quarks), quarks);
+}
+
+/**
+ * gwy_app_get_brick_palette_key_for_id:
+ * @id: Numerical id of a data brick in file (container).
+ *
+ * Calculates data brick palette quark identifier from its id.
+ *
+ * Returns: The quark key identifying string name palette of data brick with
+ *          number @id.
+ *
+ * Since: 2.43
+ **/
+GQuark
+gwy_app_get_brick_palette_key_for_id(gint id)
+{
+    static GQuark quarks[CACHED_IDS] = { 0, };
+
+    return gwy_app_get_any_key_for_id(id, BRICK_PREFIX "/%d/preview/palette",
+                                      G_N_ELEMENTS(quarks), quarks);
+}
+
+/**
+ * gwy_app_get_brick_meta_key_for_id:
+ * @id: Numerical id of a data brick in file (container).
+ *
+ * Calculates data brick title quark identifier from its id.
+ *
+ * Returns: The quark key identifying metadata container of data brick with
+ *          number @id.
+ *
+ * Since: 2.43
+ **/
+GQuark
+gwy_app_get_brick_meta_key_for_id(gint id)
+{
+    static GQuark quarks[CACHED_IDS] = { 0, };
+
+    return gwy_app_get_any_key_for_id(id, BRICK_PREFIX "/%d/meta",
                                       G_N_ELEMENTS(quarks), quarks);
 }
 
