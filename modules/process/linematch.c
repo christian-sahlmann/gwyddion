@@ -900,12 +900,6 @@ linematch_dialog(LineMatchArgs *args,
                              G_CALLBACK(target_graph_changed), &controls);
     row++;
 
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
-    label = gwy_label_new_header(_("Options"));
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
-
     if (mfield) {
         gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
         label = gwy_label_new_header(_("Masking Mode"));
