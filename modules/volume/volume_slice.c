@@ -510,6 +510,7 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
 
     pos = args->currpos;
     args->currpos = nullpos;
+    update_sensitivity(&controls);
     update_position(&controls, &pos);
     controls.in_update = FALSE;
     multiselect_changed(&controls, GTK_TOGGLE_BUTTON(controls.multiselect));
