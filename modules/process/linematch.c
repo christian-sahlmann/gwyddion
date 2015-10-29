@@ -27,6 +27,7 @@
 #include <libprocess/gwyprocesstypes.h>
 #include <libprocess/level.h>
 #include <libprocess/stats.h>
+#include <libprocess/linestats.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydataview.h>
@@ -328,7 +329,7 @@ linematch_do_poly(GwyDataField *mask,
     GwyMaskingType masking;
     gdouble *xpowers, *zxpowers, *matrix;
     gint xres, yres, degree, i, j, k;
-    gdouble xc;
+    gdouble xc, avg;
     const gdouble *m;
     gdouble *d, *b;
 
@@ -341,6 +342,7 @@ linematch_do_poly(GwyDataField *mask,
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     xc = 0.5*(xres - 1);
+    avg = gwy_data_field_get_avg(dfield);
     d = gwy_data_field_get_data(dfield);
 
     m = mask ? gwy_data_field_get_data_const(mask) : NULL;
@@ -384,6 +386,7 @@ linematch_do_poly(GwyDataField *mask,
             gwy_clear(zxpowers, degree+1);
 
         /* Subtract. */
+        zxpowers[0] -= avg;
         gwy_data_line_set_val(means, i, zxpowers[0]);
         for (j = 0; j < xres; j++) {
             gdouble p = 1.0, x = j - xc, z = 0.0;
@@ -673,12 +676,20 @@ linematch_do_match(GwyDataField *mask,
 }
 
 static void
+level_row_shifts(GwyDataLine *shifts)
+{
+    gwy_data_line_add(shifts, -gwy_data_line_get_avg(shifts));
+}
+
+static void
 apply_row_shifts(GwyDataField *dfield, GwyDataField *bg,
                  GwyDataLine *shifts)
 {
     gint xres, yres, i, j;
     const gdouble *s;
     gdouble *d, *b;
+
+    level_row_shifts(shifts);
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
