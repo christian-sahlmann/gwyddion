@@ -621,7 +621,6 @@ static void
 target_graph_changed(SlopeControls *controls)
 {
     GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
-
     gwy_data_chooser_get_active_id(chooser, &controls->args->target_graph);
 }
 

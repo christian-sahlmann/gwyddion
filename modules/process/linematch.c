@@ -65,6 +65,7 @@ typedef struct {
     gboolean do_plot;
     GwyMaskingType masking;
     GwyOrientation direction;
+    GwyAppDataId target_graph;
     /* Runtime state */
     GwyDataField *result;
     GwyDataField *bg;
@@ -79,6 +80,7 @@ typedef struct {
     GSList *method_group;
     GtkWidget *do_extract;
     GtkWidget *do_plot;
+    GtkWidget *target_graph;
     GtkWidget *dataview;
     GtkWidget *direction;
     GwyContainer *data;
@@ -126,6 +128,10 @@ static void     method_changed          (GtkToggleButton *button,
                                          LineMatchControls *controls);
 static void     direction_changed       (GtkWidget *combo,
                                          LineMatchControls *controls);
+static gboolean filter_target_graphs    (GwyContainer *data,
+                                         gint id,
+                                         gpointer user_data);
+static void     target_graph_changed    (LineMatchControls *controls);
 static void     update_preview          (LineMatchControls *controls,
                                          LineMatchArgs *args);
 static void     load_args               (GwyContainer *container,
@@ -139,16 +145,19 @@ static const LineMatchArgs linematch_defaults = {
     1,
     FALSE, FALSE,
     GWY_MASK_IGNORE, GWY_ORIENTATION_HORIZONTAL,
+    GWY_APP_DATA_ID_NONE,
     /* Runtime state */
     NULL, NULL, NULL,
 };
+
+static GwyAppDataId target_id = GWY_APP_DATA_ID_NONE;
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Aligns rows by various methods."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2015",
 };
@@ -237,7 +246,7 @@ linematch(GwyContainer *data, GwyRunType run)
                      "axis-label-left", _("Corrected offset"),
                      NULL);
         gwy_graph_model_set_units_from_data_line(gmodel, args.shifts);
-        gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+        gwy_app_add_graph_or_curves(gmodel, data, &args.target_graph, 1);
         g_object_unref(gmodel);
     }
 
@@ -737,6 +746,7 @@ linematch_dialog(LineMatchArgs *args,
     };
 
     GtkWidget *dialog, *table, *label, *hbox, *alignment;
+    GwyDataChooser *chooser;
     GwyPixmapLayer *layer;
     LineMatchControls controls;
     gint response;
@@ -787,7 +797,7 @@ linematch_dialog(LineMatchArgs *args,
     gtk_container_add(GTK_CONTAINER(alignment), controls.dataview);
     gtk_box_pack_start(GTK_BOX(hbox), alignment, FALSE, FALSE, 4);
 
-    table = gtk_table_new(6 + LINE_LEVEL_NMETHODS + (mfield ? 4 : 0), 4, FALSE);
+    table = gtk_table_new(7 + LINE_LEVEL_NMETHODS + (mfield ? 4 : 0), 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -849,6 +859,31 @@ linematch_dialog(LineMatchArgs *args,
                                  args->do_plot);
     g_signal_connect_swapped(controls.do_plot, "toggled",
                              G_CALLBACK(do_plot_changed), &controls);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("Target _graph:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+    controls.target_graph = gwy_data_chooser_new_graphs();
+    chooser = GWY_DATA_CHOOSER(controls.target_graph);
+    gwy_data_chooser_set_none(chooser, _("New graph"));
+    gwy_data_chooser_set_active(chooser, NULL, -1);
+    gwy_data_chooser_set_filter(chooser, filter_target_graphs, &controls, NULL);
+    gwy_data_chooser_set_active_id(chooser, &args->target_graph);
+    gwy_data_chooser_get_active_id(chooser, &args->target_graph);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.target_graph);
+    gtk_table_attach(GTK_TABLE(table), controls.target_graph,
+                     1, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls.target_graph, "changed",
+                             G_CALLBACK(target_graph_changed), &controls);
+    row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    label = gwy_label_new_header(_("Options"));
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     if (mfield) {
@@ -1002,6 +1037,35 @@ direction_changed(GtkWidget *combo,
     update_preview(controls, args);
 }
 
+static gboolean
+filter_target_graphs(GwyContainer *data, gint id, gpointer user_data)
+{
+    LineMatchControls *controls = (LineMatchControls*)user_data;
+    GwyGraphModel *targetgmodel;
+    GQuark quark = gwy_app_get_graph_key_for_id(id);
+    GwyDataField *dfield = controls->args->bg;
+    GwySIUnit *unitx, *unity;
+    gboolean ok;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
+    if (!gwy_container_gis_object(data, quark, (GObject**)&targetgmodel))
+        return FALSE;
+
+    g_object_get(targetgmodel, "si-unit-x", &unitx, "si-unit-y", &unity, NULL);
+    ok = (gwy_si_unit_equal(unitx, gwy_data_field_get_si_unit_xy(dfield))
+          && gwy_si_unit_equal(unity, gwy_data_field_get_si_unit_z(dfield)));
+    g_object_unref(unitx);
+    g_object_unref(unity);
+    return ok;
+}
+
+static void
+target_graph_changed(LineMatchControls *controls)
+{
+    GwyDataChooser *chooser = GWY_DATA_CHOOSER(controls->target_graph);
+    gwy_data_chooser_get_active_id(chooser, &controls->args->target_graph);
+}
+
 static void
 update_preview(LineMatchControls *controls, LineMatchArgs *args)
 {
@@ -1032,6 +1096,7 @@ sanitize_args(LineMatchArgs *args)
                                               GWY_TYPE_ORIENTATION);
     args->do_extract = !!args->do_extract;
     args->do_plot = !!args->do_plot;
+    gwy_app_data_id_verify_graph(&args->target_graph);
 }
 
 static void
@@ -1049,6 +1114,7 @@ load_args(GwyContainer *container,
                                       &args->do_extract);
     gwy_container_gis_boolean_by_name(container, do_plot_key,
                                       &args->do_plot);
+    args->target_graph = target_id;
     sanitize_args(args);
 }
 
@@ -1056,6 +1122,7 @@ static void
 save_args(GwyContainer *container,
           LineMatchArgs *args)
 {
+    target_id = args->target_graph;
     gwy_container_set_int32_by_name(container, max_degree_key,
                                     args->max_degree);
     gwy_container_set_enum_by_name(container, masking_key, args->masking);
