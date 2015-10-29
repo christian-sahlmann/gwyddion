@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004-2015 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -20,6 +20,7 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -60,8 +61,10 @@ typedef struct {
     gboolean is_height;
     gboolean is_slope;
     gboolean is_lap;
+    gboolean combine;
     gboolean update;
     GwyMergeType merge_type;
+    GwyMergeType combine_type;
 
     /* interface only */
     gboolean computed;
@@ -80,6 +83,8 @@ typedef struct {
     GtkObject *threshold_slope;
     GtkObject *threshold_lap;
     GtkWidget *merge;
+    GtkWidget *combine;
+    GtkWidget *combine_type;
     GtkWidget *color_button;
     GtkWidget *update;
     GwyContainer *mydata;
@@ -95,10 +100,12 @@ static void        grain_mark                 (GwyContainer *data,
 static void        run_noninteractive         (MarkArgs *args,
                                                GwyContainer *data,
                                                GwyDataField *dfield,
+                                               GwyDataField *existing_mask,
                                                GQuark mquark);
 static void        mark_dialog                (MarkArgs *args,
                                                GwyContainer *data,
                                                GwyDataField *dfield,
+                                               GwyDataField *existing_mask,
                                                gint id,
                                                GQuark mquark);
 static void        mask_color_change_cb       (GtkWidget *color_button,
@@ -117,6 +124,7 @@ static void        mark_invalidate2           (gpointer whatever,
 static void        preview                    (MarkControls *controls,
                                                MarkArgs *args);
 static void        mask_process               (GwyDataField *dfield,
+                                               GwyDataField *existing_mask,
                                                GwyDataField *maskfield,
                                                MarkArgs *args);
 static void        mark_load_args             (GwyContainer *container,
@@ -134,7 +142,9 @@ static const MarkArgs mark_defaults = {
     TRUE,
     FALSE,
     FALSE,
+    FALSE,
     TRUE,
+    GWY_MERGE_UNION,
     GWY_MERGE_UNION,
     FALSE,
 };
@@ -144,7 +154,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks grains by thresholding (height, slope, curvature)."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.17",
+    "1.18",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -169,7 +179,7 @@ static void
 grain_mark(GwyContainer *data, GwyRunType run)
 {
     MarkArgs args;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *mask;
     GQuark mquark;
     gint id;
 
@@ -178,15 +188,16 @@ grain_mark(GwyContainer *data, GwyRunType run)
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     GWY_APP_MASK_FIELD, &mask,
                                      0);
     g_return_if_fail(dfield && mquark);
 
     if (run == GWY_RUN_IMMEDIATE) {
-        run_noninteractive(&args, data, dfield, mquark);
+        run_noninteractive(&args, data, dfield, mask, mquark);
         gwy_app_channel_log_add_proc(data, id, id);
     }
     else {
-        mark_dialog(&args, data, dfield, id, mquark);
+        mark_dialog(&args, data, dfield, mask, id, mquark);
     }
 }
 
@@ -224,13 +235,14 @@ static void
 run_noninteractive(MarkArgs *args,
                    GwyContainer *data,
                    GwyDataField *dfield,
+                   GwyDataField *existing_mask,
                    GQuark mquark)
 {
     GwyDataField *mfield;
 
     gwy_app_undo_qcheckpointv(data, 1, &mquark);
     mfield = create_mask_field(dfield);
-    mask_process(dfield, mfield, args);
+    mask_process(dfield, existing_mask, mfield, args);
     gwy_container_set_object(data, mquark, mfield);
     g_object_unref(mfield);
 }
@@ -239,6 +251,7 @@ static void
 mark_dialog(MarkArgs *args,
             GwyContainer *data,
             GwyDataField *dfield,
+            GwyDataField *existing_mask,
             gint id,
             GQuark mquark)
 {
@@ -250,6 +263,7 @@ mark_dialog(MarkArgs *args,
     gint row;
     gboolean temp;
 
+    gwy_clear(&controls, 1);
     controls.args = args;
     controls.in_init = TRUE;
     gwy_data_field_get_min_max(dfield,
@@ -276,6 +290,9 @@ mark_dialog(MarkArgs *args,
 
     controls.mydata = gwy_container_new();
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
+    if (existing_mask)
+        gwy_container_set_object_by_name(controls.mydata, "/1/mask",
+                                         existing_mask);
     gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
                             GWY_DATA_ITEM_PALETTE,
                             GWY_DATA_ITEM_MASK_COLOR,
@@ -296,7 +313,7 @@ mark_dialog(MarkArgs *args,
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
-    table = gtk_table_new(10, 4, FALSE);
+    table = gtk_table_new(10 + 2*(!!existing_mask), 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -342,8 +359,12 @@ mark_dialog(MarkArgs *args,
                            &controls.is_lap, &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
-    gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Options")),
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls.merge
+        = gwy_enum_combo_box_new(gwy_merge_type_get_enum(), -1,
+                                 G_CALLBACK(mark_invalidate2), &controls,
+                                 args->merge_type, TRUE);
+    gwy_table_attach_hscale(table, row, _("Criteria combination:"), NULL,
+                            GTK_OBJECT(controls.merge), GWY_HSCALE_WIDGET);
     row++;
 
     controls.inverted = gtk_check_button_new_with_mnemonic(_("_Invert height"));
@@ -355,14 +376,34 @@ mark_dialog(MarkArgs *args,
                              G_CALLBACK(mark_invalidate), &controls);
     row++;
 
-    controls.merge
-        = gwy_enum_combo_box_new(gwy_merge_type_get_enum(), -1,
-                                 G_CALLBACK(mark_invalidate2), &controls,
-                                 args->merge_type, TRUE);
-    gwy_table_attach_hscale(table, row, _("Mer_ge mode:"), NULL,
-                            GTK_OBJECT(controls.merge), GWY_HSCALE_WIDGET);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Options")),
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
+    if (existing_mask) {
+        controls.combine
+            = gtk_check_button_new_with_mnemonic(_("Com_bine with "
+                                                   "existing mask"));
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.combine),
+                                     args->combine);
+        gtk_table_attach(GTK_TABLE(table), controls.combine,
+                         0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        g_signal_connect_swapped(controls.combine, "toggled",
+                                 G_CALLBACK(mark_invalidate), &controls);
+        row++;
+
+        controls.combine_type
+            = gwy_enum_combo_box_new(gwy_merge_type_get_enum(), -1,
+                                     G_CALLBACK(mark_invalidate2), &controls,
+                                     args->combine_type, TRUE);
+        gwy_table_attach_hscale(table, row, _("Operation:"), NULL,
+                                GTK_OBJECT(controls.combine_type),
+                                GWY_HSCALE_WIDGET);
+    }
+    row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     controls.color_button = gwy_color_button_new();
     gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
                                    TRUE);
@@ -464,7 +505,7 @@ mark_dialog(MarkArgs *args,
     }
     else {
         g_object_unref(controls.mydata);
-        run_noninteractive(args, data, dfield, mquark);
+        run_noninteractive(args, data, dfield, existing_mask, mquark);
     }
 
     mark_save_args(gwy_app_settings_get(), args);
@@ -493,6 +534,12 @@ mark_dialog_update_controls(MarkControls *controls,
                                  args->update);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->merge),
                                   args->merge_type);
+    if (controls->combine) {
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->combine),
+                                     args->combine);
+        gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->combine_type),
+                                      args->combine_type);
+    }
 }
 
 static void
@@ -517,6 +564,12 @@ mark_dialog_update_values(MarkControls *controls,
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->update));
     args->merge_type
         = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->merge));
+    if (controls->combine) {
+        args->combine = gtk_toggle_button_get_active
+                                       (GTK_TOGGLE_BUTTON(controls->combine));
+        args->combine_type = gwy_enum_combo_box_get_active
+                                      (GTK_COMBO_BOX(controls->combine_type));
+    }
 }
 
 static void
@@ -596,11 +649,13 @@ static void
 preview(MarkControls *controls,
         MarkArgs *args)
 {
-    GwyDataField *mask, *dfield;
+    GwyDataField *mask, *dfield, *existing_mask = NULL;
     GwyPixmapLayer *layer;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
+    gwy_container_gis_object_by_name(controls->mydata, "/1/mask",
+                                     (GObject**)&existing_mask);
 
     /* Set up the mask */
     if (!gwy_container_gis_object_by_name(controls->mydata, "/0/mask", &mask)) {
@@ -614,7 +669,7 @@ preview(MarkControls *controls,
         gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), layer);
     }
     gwy_data_field_copy(dfield, mask, FALSE);
-    mask_process(dfield, mask, args);
+    mask_process(dfield, existing_mask, mask, args);
     gwy_data_field_data_changed(mask);
 
     args->computed = TRUE;
@@ -622,6 +677,7 @@ preview(MarkControls *controls,
 
 static void
 mask_process(GwyDataField *dfield,
+             GwyDataField *existing_mask,
              GwyDataField *maskfield,
              MarkArgs *args)
 {
@@ -660,20 +716,28 @@ mask_process(GwyDataField *dfield,
         }
         else
             gwy_data_field_copy(output_field, maskfield, FALSE);
-     }
+    }
+    if (existing_mask && args->combine) {
+        if (args->combine_type == GWY_MERGE_UNION)
+            gwy_data_field_grains_add(maskfield, existing_mask);
+        else if (args->combine_type == GWY_MERGE_INTERSECTION)
+            gwy_data_field_grains_intersect(maskfield, existing_mask);
+    }
 
     g_object_unref(output_field);
 }
 
-static const gchar inverted_key[]  = "/module/grain_mark/inverted";
-static const gchar isheight_key[]  = "/module/grain_mark/isheight";
-static const gchar isslope_key[]   = "/module/grain_mark/isslope";
-static const gchar islap_key[]     = "/module/grain_mark/islap";
-static const gchar update_key[]    = "/module/grain_mark/update";
-static const gchar height_key[]    = "/module/grain_mark/height";
-static const gchar slope_key[]     = "/module/grain_mark/slope";
-static const gchar lap_key[]       = "/module/grain_mark/lap";
-static const gchar mergetype_key[] = "/module/grain_mark/merge_type";
+static const gchar combine_key[]      = "/module/grain_mark/combine";
+static const gchar combine_type_key[] = "/module/grain_mark/combine_type";
+static const gchar height_key[]       = "/module/grain_mark/height";
+static const gchar inverted_key[]     = "/module/grain_mark/inverted";
+static const gchar isheight_key[]     = "/module/grain_mark/isheight";
+static const gchar islap_key[]        = "/module/grain_mark/islap";
+static const gchar isslope_key[]      = "/module/grain_mark/isslope";
+static const gchar lap_key[]          = "/module/grain_mark/lap";
+static const gchar merge_type_key[]   = "/module/grain_mark/merge_type";
+static const gchar slope_key[]        = "/module/grain_mark/slope";
+static const gchar update_key[]       = "/module/grain_mark/update";
 
 static void
 mark_sanitize_args(MarkArgs *args)
@@ -682,11 +746,13 @@ mark_sanitize_args(MarkArgs *args)
     args->is_slope = !!args->is_slope;
     args->is_height = !!args->is_height;
     args->is_lap = !!args->is_lap;
+    args->combine = !!args->combine;
     args->update = !!args->update;
     args->height = CLAMP(args->height, 0.0, 100.0);
     args->slope = CLAMP(args->slope, 0.0, 100.0);
     args->lap = CLAMP(args->lap, 0.0, 100.0);
     args->merge_type = MIN(args->merge_type, GWY_MERGE_INTERSECTION);
+    args->combine_type = MIN(args->combine_type, GWY_MERGE_INTERSECTION);
 }
 
 static void
@@ -700,12 +766,15 @@ mark_load_args(GwyContainer *container,
                                       &args->is_height);
     gwy_container_gis_boolean_by_name(container, isslope_key, &args->is_slope);
     gwy_container_gis_boolean_by_name(container, islap_key, &args->is_lap);
+    gwy_container_gis_boolean_by_name(container, combine_key, &args->combine);
     gwy_container_gis_boolean_by_name(container, update_key, &args->update);
     gwy_container_gis_double_by_name(container, height_key, &args->height);
     gwy_container_gis_double_by_name(container, slope_key, &args->slope);
     gwy_container_gis_double_by_name(container, lap_key, &args->lap);
-    gwy_container_gis_enum_by_name(container, mergetype_key,
+    gwy_container_gis_enum_by_name(container, merge_type_key,
                                    &args->merge_type);
+    gwy_container_gis_enum_by_name(container, combine_type_key,
+                                   &args->combine_type);
     mark_sanitize_args(args);
 }
 
@@ -717,11 +786,14 @@ mark_save_args(GwyContainer *container,
     gwy_container_set_boolean_by_name(container, isheight_key, args->is_height);
     gwy_container_set_boolean_by_name(container, isslope_key, args->is_slope);
     gwy_container_set_boolean_by_name(container, islap_key, args->is_lap);
+    gwy_container_set_boolean_by_name(container, combine_key, args->combine);
     gwy_container_set_boolean_by_name(container, update_key, args->update);
     gwy_container_set_double_by_name(container, height_key, args->height);
     gwy_container_set_double_by_name(container, slope_key, args->slope);
     gwy_container_set_double_by_name(container, lap_key, args->lap);
-    gwy_container_set_enum_by_name(container, mergetype_key, args->merge_type);
+    gwy_container_set_enum_by_name(container, merge_type_key, args->merge_type);
+    gwy_container_set_enum_by_name(container, combine_type_key,
+                                   args->combine_type);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
