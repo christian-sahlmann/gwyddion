@@ -153,6 +153,16 @@ static const LineMatchArgs linematch_defaults = {
 
 static GwyAppDataId target_id = GWY_APP_DATA_ID_NONE;
 
+static const GwyEnum methods[] = {
+    /* Put polynomial last so that is it followed visally by the degree
+     * controls. */
+    { N_("Median"),                LINE_LEVEL_MEDIAN,      },
+    { N_("Median of differences"), LINE_LEVEL_MEDIAN_DIFF, },
+    { N_("Modus"),                 LINE_LEVEL_MODUS,       },
+    { N_("linematch|Matching"),    LINE_LEVEL_MATCH,       },
+    { N_("linematch|Polynomial"),  LINE_LEVEL_POLY,        },
+};
+
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -187,6 +197,8 @@ linematch(GwyContainer *data, GwyRunType run)
     LineMatchArgs args;
     gboolean ok;
     gint id, newid;
+    const gchar *methodname;
+    gchar *title;
 
     g_return_if_fail(run & LINEMATCH_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &quark,
@@ -218,12 +230,17 @@ linematch(GwyContainer *data, GwyRunType run)
     gwy_data_field_data_changed(dfield);
     gwy_app_channel_log_add_proc(data, id, id);
 
+    methodname = gwy_enum_to_string(args.method,
+                                    methods, G_N_ELEMENTS(methods));
+    methodname = gwy_sgettext(methodname);
+    title = g_strdup_printf("%s (%s)", _("Row background"), methodname);
+
     if (args.do_extract) {
         newid = gwy_app_data_browser_add_data_field(args.bg, data, TRUE);
         gwy_app_sync_data_items(data, data, id, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT,
                                 0);
-        gwy_app_set_data_field_title(data, newid, _("Row background"));
+        gwy_app_set_data_field_title(data, newid, title);
         gwy_app_channel_log_add(data, id, newid, NULL, NULL);
     }
 
@@ -234,7 +251,7 @@ linematch(GwyContainer *data, GwyRunType run)
         gwy_graph_curve_model_set_data_from_dataline(gcmodel, args.shifts,
                                                      0, 0);
         g_object_set(gcmodel,
-                     "description", _("Row background"),
+                     "description", title,
                      "mode", GWY_GRAPH_CURVE_LINE,
                      "color", gwy_graph_get_preset_color(0),
                      NULL);
@@ -250,6 +267,8 @@ linematch(GwyContainer *data, GwyRunType run)
         gwy_app_add_graph_or_curves(gmodel, data, &args.target_graph, 1);
         g_object_unref(gmodel);
     }
+
+    g_free(title);
 
 end:
     gwy_object_unref(args.result);
@@ -745,16 +764,6 @@ linematch_dialog(LineMatchArgs *args,
                  gint id)
 {
     enum { RESPONSE_RESET = 1 };
-
-    static const GwyEnum methods[] = {
-        /* Put polynomial last so that is it followed visally by the degree
-         * controls. */
-        { N_("Median"),                LINE_LEVEL_MEDIAN,      },
-        { N_("Median of differences"), LINE_LEVEL_MEDIAN_DIFF, },
-        { N_("Modus"),                 LINE_LEVEL_MODUS,       },
-        { N_("linematch|Matching"),    LINE_LEVEL_MATCH,       },
-        { N_("linematch|Polynomial"),  LINE_LEVEL_POLY,        },
-    };
 
     GtkWidget *dialog, *table, *label, *hbox, *alignment;
     GwyDataChooser *chooser;
