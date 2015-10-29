@@ -48,6 +48,10 @@ Modules:
   images with offset top-left corner.
 - Pygwy: Python 2.4 is now required.  New wrappers for grain numbering and
   grain quantity calculation were added.
+- Slice volume, Align rows: It is possible to select a target graph for
+  extracted curves.
+- Align rows: All the methods consistently keep the mean correction to zero,
+  preserving absolute data values.
 
 Other:
 - Gwyddion can use either minizip or libzip for opening of ZIP-compressed
