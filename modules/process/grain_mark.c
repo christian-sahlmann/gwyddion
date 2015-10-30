@@ -136,9 +136,9 @@ static void        mark_sanitize_args         (MarkArgs *args);
 
 static const MarkArgs mark_defaults = {
     FALSE,
-    100,
-    100,
-    100,
+    50,
+    50,
+    50,
     TRUE,
     FALSE,
     FALSE,
@@ -473,8 +473,8 @@ mark_dialog(MarkArgs *args,
             temp = args->update;
             *args = mark_defaults;
             args->update = temp;
-            mark_dialog_update_controls(&controls, args);
             controls.in_init = TRUE;
+            mark_dialog_update_controls(&controls, args);
             preview(&controls, args);
             controls.in_init = FALSE;
             break;
