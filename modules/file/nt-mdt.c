@@ -558,10 +558,9 @@ static GwySpectra*    extract_new_curve(MDTNewSpecFrame *dataframe,
 static GwyDataField*  extract_mda_data      (MDTMDAFrame  *dataframe);
 static GwyGraphModel* extract_mda_spectrum  (MDTMDAFrame  *dataframe,
                                              guint number);
-static GwyBrick *     extract_brick         (MDTMDAFrame  *dataframe,
-                                             GwyContainer **metadata,
-                                             GwyDataField ***scanData,
-                                             gchar        ***scanNames,
+static GwyContainer*  extract_brick         (MDTMDAFrame  *dataframe,
+                                             guint framenum,
+                                             guint *numdata,
                                              const gchar  *filename);
 static void           start_element    (GMarkupParseContext *context,
                                         const gchar *element_name,
@@ -908,14 +907,11 @@ mdt_load(const gchar *filename,
     gsize size;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
-    GwyBrick *brick = NULL;
+    GwyContainer *brick = NULL;
     GwyContainer *meta, *data = NULL;
     MDTFile mdtfile;
     GString *key;
-    guint n, i, j, xres, yres;
-    GwyDataField **scanData;
-    gchar **scanNames;
-    const gchar *lTitle;
+    guint n, i, j;
 
     gwy_debug("");
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -1004,76 +1000,8 @@ mdt_load(const gchar *filename,
             }
             else if (mdaframe->nDimensions == 3 && mdaframe->nMesurands >= 1) {
                 /* raman images */
-                scanData = NULL;
-                scanNames = NULL;
-                meta = NULL;
-                if ((brick = extract_brick(mdaframe, &meta, &scanData, &scanNames, filename))) {
-                    g_string_printf(key, "/brick/%d", n);
-                    gwy_container_set_object_by_name(data,
-                                                     key->str,
-                                                     brick);
-
-                    g_string_append(key, "/title");
-
-                    if (mdaframe->title) {
-                        gwy_container_set_string_by_name(data, key->str,
-                                            g_strdup_printf("%s (%u)",
-                                            mdaframe->title, i+1));
-                        g_free((gpointer)mdaframe->title);
-                    }
-                    else
-                        gwy_app_channel_title_fall_back(data, n);
-
-                    lTitle = gwy_container_get_string_by_name(data, key->str);
-
-                    if (meta) {
-                        g_string_printf(key, "/brick/%d/meta", n);
-                        gwy_container_set_object_by_name(data,
-                                                         key->str,
-                                                         meta);
-                        g_object_unref(meta);
-                    }
-
-                    xres = gwy_brick_get_xres(brick);
-                    yres = gwy_brick_get_yres(brick);
-                    dfield = gwy_data_field_new(xres, yres,
-                                                1.0, 1.0, FALSE);
-                    gwy_brick_mean_plane(brick, dfield,
-                                         0, 0, 0,
-                                         xres, yres, -1, FALSE);
-                    g_string_printf(key, "/brick/%d/preview", n);
-                    gwy_container_set_object_by_name(data,
-                                                     key->str,
-                                                     dfield);
-                    g_object_unref(brick);
-                    g_object_unref(dfield);
-
-                    gwy_file_volume_import_log_add(data, n, NULL, filename);
-
-                    n++;
-
-                    if (scanData) {
-                        for (j = 0; scanData[j]; j++, n++) {
-                            g_string_printf(key, "/%d/data", n);
-                            gwy_container_set_object_by_name(data, key->str, scanData[j]);
-                            g_object_unref(scanData[j]);
-                            g_string_append(key, "/title");
-                            if (scanNames && scanNames[j]) {
-                                gwy_container_set_string_by_name(data, key->str, scanNames[j]);
-                            }
-                            else
-                                gwy_app_channel_title_fall_back(data, n);
-
-                            gwy_container_set_string_by_name(data, key->str,
-                                                             g_strdup_printf("%s, %s", gwy_container_get_string_by_name(data, key->str), lTitle));
-
-                            gwy_file_channel_import_log_add(data, n, NULL, filename);
-                        }
-                        g_free(scanData);
-                    }
-                    if (scanNames) {
-                        g_free(scanNames);
-                    }
+                if ((brick = extract_brick(mdaframe, i+1, &n, filename))) {
+                    gwy_container_transfer(brick, data, "/", "/", FALSE);
                 }
             }
             else {
@@ -3059,14 +2987,15 @@ mdt_find_data_name(const gchar *headername, const gchar *dataname)
     return NULL;
 }
 
-static GwyBrick *
-extract_brick(MDTMDAFrame  *dataframe,
-              GwyContainer **metadata,
-              GwyDataField ***scanData,
-              gchar        ***scanNames,
-              const gchar  *filename)
+static GwyContainer *
+extract_brick(MDTMDAFrame *dataframe,
+              guint framenum,
+              guint *numdata,
+              const gchar *filename)
 {
-    GwyBrick *brick = NULL;
+    GwyContainer *container = NULL, *metadata = NULL;
+    GwyBrick *brick = NULL, *brick2 = NULL;
+    GwyDataField *scandata = NULL, *preview;
     gint scanlocation = MDT_HLB;
     gint xyoffset, xstep, ystep;
     gint power10x, power10y, power10z, power10w, power10t;
@@ -3075,15 +3004,16 @@ extract_brick(MDTMDAFrame  *dataframe,
     GwySIUnit *siunitt, *siunitnl = NULL;
     const guchar *p, *px, *base;
     const gchar *cunit;
-    gchar *unit, *pos, *name, *value, *dname, *dataname;
+    gchar *unit, *pos, *name, *value, *dname, *dataname, *scanname;
     gchar *buffer2 = NULL;
     gsize size2;
     gchar *ext_name = NULL, *axes_order = NULL, *frame_type = NULL;
+    gchar *strkey, *title;
     gint xres, yres, zres;
     gint i, j, k, nmes;
     gdouble xreal, yreal, zscale, wscale, w, zamp = 1;
-    gdouble *data, **sdata = NULL, *tscale = NULL;
-    GwyDataLine *cal;
+    gdouble *data, *data2, **sdata = NULL, *tscale = NULL;
+    GwyDataLine *cal, *cal2;
     MDTMDACalibration *xAxis, *yAxis, *zAxis, *wAxis, *tAxis;
     MDTXMLComment comment;
     MDTXMLCommentEntry *entry;
@@ -3113,7 +3043,8 @@ extract_brick(MDTMDAFrame  *dataframe,
     g_markup_parse_context_free(context);
     g_string_free(comment.path, TRUE);
 
-    *metadata = gwy_container_new();
+    container = gwy_container_new();
+    metadata = gwy_container_new();
     for (i = 0; i < comment.entries->len; i++) {
         entry = g_array_index(comment.entries, MDTXMLCommentEntry*, i);
         if (entry->name && gwy_strequal(entry->name,
@@ -3148,7 +3079,7 @@ extract_brick(MDTMDAFrame  *dataframe,
             name = g_strdup(pos + 1);
             value = g_strdup(entry->value);
             gwy_debug("%s = %s\n", name, value);
-            gwy_container_set_string_by_name(*metadata, name, value);
+            gwy_container_set_string_by_name(metadata, name, value);
             g_free(name);
         }
     }
@@ -3317,44 +3248,68 @@ extract_brick(MDTMDAFrame  *dataframe,
         }
     }
 
-    brick = gwy_brick_new(xres, yres, zres,
-                          xreal * xres,
-                          yreal * yres,
-                          zscale * zres,
-                          TRUE);
-
-    data = gwy_brick_get_data(brick);
-
     nmes = dataframe->nMesurands;
     if (frame_type
         && g_str_has_prefix(frame_type, "HybridForceVolume")) {
+        brick = gwy_brick_new(xres, yres, zres / 2,
+                              xreal * xres,
+                              yreal * yres,
+                              zscale * zres / 2,
+                              TRUE);
+        data = gwy_brick_get_data(brick);
+
+        brick2 = gwy_brick_new(xres, yres, (zres - zres / 2),
+                               xreal * xres,
+                               yreal * yres,
+                               zscale * (zres - zres / 2),
+                               TRUE);
+        data2 = gwy_brick_get_data(brick2);
+
         p = base;
         if (nmes > 1) {
             sdata = g_malloc((nmes - 1) * sizeof(gdouble*));
             tscale = g_malloc((nmes - 1) * sizeof(gdouble));
-            *scanData = g_malloc(nmes * sizeof(**scanData));
-            *scanNames = g_malloc(nmes * sizeof(gchar*));
             for (i = 0; i < nmes - 1; i++) {
-                (*scanData)[i] = gwy_data_field_new(xres, yres,
-                                                    xres *xreal, yres *yreal,
-                                                    FALSE);
-                gwy_data_field_set_si_unit_xy((*scanData)[i], siunitx);
+                scandata = gwy_data_field_new(xres, yres,
+                                              xres * xreal,
+                                              yres * yreal,
+                                              FALSE);
+                gwy_data_field_set_si_unit_xy(scandata, siunitx);
 
                 tAxis = &dataframe->mesurands[i];
-                (*scanNames)[i] = tAxis->name && tAxis->nameLen ? g_strndup(tAxis->name, tAxis->nameLen) : NULL;
+                scanname = tAxis->name && tAxis->nameLen ?
+                          g_strndup(tAxis->name, tAxis->nameLen) : NULL;
                 if (tAxis->unit && tAxis->unitLen) {
                     unit = g_strndup(tAxis->unit, tAxis->unitLen);
                     siunitt = gwy_si_unit_new_parse(unit, &power10t);
                     tscale[i] = pow10(power10t) * tAxis->scale;
                     g_free(unit);
-                    gwy_data_field_set_si_unit_z((*scanData)[i], siunitt);
+                    gwy_data_field_set_si_unit_z(scandata, siunitt);
                 }
                 else
                     tscale[i] = 1;
 
-                sdata[i] = gwy_data_field_get_data((*scanData)[i]);
+                sdata[i] = gwy_data_field_get_data(scandata);
+                strkey = g_strdup_printf("/%d/data", *numdata);
+                gwy_container_set_object_by_name(container, strkey,
+                                                 scandata);
+                g_object_unref(scandata);
+                g_free(strkey);
+                strkey = g_strdup_printf("/%d/data/title", *numdata);
+                gwy_container_set_string_by_name(container, strkey,
+                                            g_strdup_printf("%s (%u)",
+                                                            scanname,
+                                                            framenum));
+                g_free(scanname);
+                g_free(strkey);
+                strkey = g_strdup_printf("/%d/meta", *numdata);
+                gwy_container_set_object_by_name(container, strkey,
+                                                 metadata);
+                g_free(strkey);
+                gwy_file_channel_import_log_add(container, *numdata,
+                                                NULL, filename);
+                (*numdata)++;
             }
-            (*scanData)[nmes - 1] = NULL;
         }
         for (i = 0; i < yres; i++)
             for (j = 0; j < xres; j++) {
@@ -3363,27 +3318,38 @@ extract_brick(MDTMDAFrame  *dataframe,
                         sdata[k][xyoffset + j * xstep + i * ystep]
                            = (gdouble)gwy_get_gfloat_le(&p) * tscale[k];
                 }
-                for (k = 0; k < zres; k++) {
+                for (k = 0; k < zres / 2; k++) {
                     if ((!ext_name) || (p - base <= size2)) {
                         w = (gdouble)gwy_get_gfloat_le(&p);
-                        *(data + k * xres * yres + xyoffset + i * ystep + j * xstep) = w * wscale;
+                        *(data + k * xres * yres
+                                     + xyoffset + i * ystep + j * xstep)
+                        = w * wscale;
                     }
                 }
+                for (; k < zres; k++) {
+                    if ((!ext_name) || (p - base <= size2)) {
+                        w = (gdouble)gwy_get_gfloat_le(&p);
+                        *(data2 + (k - zres / 2) * xres * yres
+                                     + xyoffset + i * ystep + j * xstep)
+                        = w * wscale;
+                    }
+                }
+
             }
 
         if (sdata) {
             g_free(sdata);
         }
+
         if (tscale) {
             g_free(tscale);
         }
 
-        cal = gwy_data_line_new(zres, zres, FALSE);
+        cal = gwy_data_line_new(zres / 2, zres / 2, FALSE);
         data = gwy_data_line_get_data(cal);
-        for (k = 0; k < zres; k++) {
+        for (k = 0; k < zres / 2; k++) {
             *(data++) = zamp * (1 - cos(k * 2 * G_PI / zres));
         }
-
         if (siunitnl) {
             gwy_data_line_set_si_unit_y(cal, siunitnl);
         }
@@ -3391,11 +3357,81 @@ extract_brick(MDTMDAFrame  *dataframe,
             gwy_data_line_set_si_unit_y(cal, siunitz);
         }
         gwy_brick_set_zcalibration(brick, cal);
-
         g_object_unref(cal);
 
+        cal2 = gwy_data_line_new(zres - zres / 2,
+                                 zres - zres / 2, FALSE);
+        data2 = gwy_data_line_get_data(cal2);
+        for (; k < zres; k++) {
+            *(data2++) = zamp * (1 - cos(k * 2 * G_PI / zres));
+        }
+        if (siunitnl) {
+            gwy_data_line_set_si_unit_y(cal2, siunitnl);
+        }
+        else {
+            gwy_data_line_set_si_unit_y(cal2, siunitz);
+        }
+        gwy_brick_set_zcalibration(brick2, cal2);
+        g_object_unref(cal2);
+
+        if (dataframe->title) {
+            title = g_strdup_printf("%s (%u)", dataframe->title,
+                                    framenum);
+        }
+        else
+            title = g_strdup_printf("HybridForceVolume (%u)", framenum);
+
+        strkey = g_strdup_printf("/brick/%d", *numdata);
+        gwy_container_set_object_by_name(container, strkey, brick);
+        g_free(strkey);
+        strkey = g_strdup_printf("/brick/%d/title", *numdata);
+        gwy_container_set_string_by_name(container, strkey,
+                                         g_strdup(title));
+        g_free(strkey);
+        strkey = g_strdup_printf("/brick/%d/meta", *numdata);
+        gwy_container_set_object_by_name(container, strkey, metadata);
+        g_free(strkey);
+        preview = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
+        gwy_brick_mean_plane(brick, preview, 0, 0, 0,
+                             xres, yres, -1, FALSE);
+        strkey = g_strdup_printf("/brick/%d/preview", *numdata);
+        gwy_container_set_object_by_name(container, strkey, preview);
+        g_object_unref(preview);
+        g_object_unref(brick);
+        g_free(strkey);
+        gwy_file_volume_import_log_add(container, *numdata,
+                                       NULL, filename);
+        (*numdata)++;
+
+        strkey = g_strdup_printf("/brick/%d", *numdata);
+        gwy_container_set_object_by_name(container, strkey, brick2);
+        g_free(strkey);
+        strkey = g_strdup_printf("/brick/%d/title", *numdata);
+        gwy_container_set_string_by_name(container, strkey, title);
+        g_free(strkey);
+        strkey = g_strdup_printf("/brick/%d/meta", *numdata);
+        gwy_container_set_object_by_name(container, strkey, metadata);
+        g_free(strkey);
+        preview = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
+        gwy_brick_mean_plane(brick2, preview, 0, 0, 0,
+                             xres, yres, -1, FALSE);
+        strkey = g_strdup_printf("/brick/%d/preview", *numdata);
+        gwy_container_set_object_by_name(container, strkey, preview);
+        g_object_unref(brick2);
+        g_object_unref(preview);
+        g_free(strkey);
+        gwy_file_volume_import_log_add(container, *numdata,
+                                       NULL, filename);
+        (*numdata)++;
     }
     else {
+        brick = gwy_brick_new(xres, yres, zres,
+                              xreal * xres,
+                              yreal * yres,
+                              zscale * zres,
+                              TRUE);
+
+        data = gwy_brick_get_data(brick);
         p = base;
         for (i = 0; i < yres; i++)
             for (j = 0; j < xres; j++) {
@@ -3406,6 +3442,33 @@ extract_brick(MDTMDAFrame  *dataframe,
                     }
                 }
             }
+
+        strkey = g_strdup_printf("/brick/%d", *numdata);
+        gwy_container_set_object_by_name(container, strkey, brick);
+        g_free(strkey);
+        if (dataframe->title) {
+            title = g_strdup_printf("%s (%u)", dataframe->title,
+                                    framenum);
+        }
+        else
+            title = g_strdup_printf("Brick (%u)", framenum);
+        strkey = g_strdup_printf("/brick/%d/title", *numdata);
+        gwy_container_set_string_by_name(container, strkey, title);
+        g_free(strkey);
+        strkey = g_strdup_printf("/brick/%d/meta", *numdata);
+        gwy_container_set_object_by_name(container, strkey, metadata);
+        g_free(strkey);
+        preview = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
+        gwy_brick_mean_plane(brick, preview, 0, 0, 0,
+                             xres, yres, -1, FALSE);
+        strkey = g_strdup_printf("/brick/%d/preview", *numdata);
+        gwy_container_set_object_by_name(container, strkey, preview);
+        g_object_unref(preview);
+        g_object_unref(brick);
+        g_free(strkey);
+        gwy_file_volume_import_log_add(container, *numdata,
+                                       NULL, filename);
+        (*numdata)++;
     }
 
     if (((!frame_type)
@@ -3471,7 +3534,7 @@ extract_brick(MDTMDAFrame  *dataframe,
     if (axes_order)
         g_free(axes_order);
 
-    return brick;
+    return container;
 }
 
 static void
