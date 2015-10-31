@@ -451,8 +451,8 @@ finish:
     return ok;
 }
 
-static const gchar radius_key[] = "/module/median-bg/radius";
-static const gchar type_key[]   = "/module/median-bg/type";
+static const gchar radius_key[] = "/module/mark_disconn/radius";
+static const gchar type_key[]   = "/module/mark_disconn/type";
 
 static void
 disconn_sanitize_args(DisconnArgs *args)
