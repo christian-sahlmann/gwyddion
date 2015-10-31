@@ -150,7 +150,6 @@ static void           wpour_update_double         (WPourControls *controls,
                                                    GtkAdjustment *adj);
 static void           wpour_invalidate            (WPourControls *controls);
 static gboolean       preview_gsource             (gpointer user_data);
-static GwyDataField*  create_mask_field           (GwyDataField *dfield);
 static void           preview                     (WPourControls *controls,
                                                    WPourArgs *args);
 static void           set_visible_images          (WPourControls *controls);
@@ -564,17 +563,6 @@ wpour_update_double(WPourControls *controls, GtkAdjustment *adj)
 
     *value = gtk_adjustment_get_value(adj);
     wpour_invalidate(controls);
-}
-
-static GwyDataField*
-create_mask_field(GwyDataField *dfield)
-{
-    GwyDataField *mfield;
-
-    mfield = gwy_data_field_new_alike(dfield, FALSE);
-    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(mfield), NULL);
-
-    return mfield;
 }
 
 static void

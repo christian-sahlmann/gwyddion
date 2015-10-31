@@ -25,13 +25,12 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/filters.h>
 #include <libprocess/stats.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define THRESHOLD_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -237,7 +236,6 @@ threshold_dialog(ThresholdArgs *args,
     GtkTable *table;
     ThresholdControls controls;
     gint response;
-    GwyPixmapLayer *layer;
     gchar *s;
     gint row;
 
@@ -272,18 +270,7 @@ threshold_dialog(ThresholdArgs *args,
                             GWY_DATA_ITEM_RANGE,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
-    controls.view = gwy_data_view_new(controls.mydata);
-    layer = gwy_layer_basic_new();
-    g_object_set(layer,
-                 "data-key", "/0/data",
-                 "gradient-key", "/0/base/palette",
-                 "range-type-key", "/0/base/range-type",
-                 "min-max-key", "/0/base",
-                 NULL);
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
-
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
     table = GTK_TABLE(gtk_table_new(5, 4, FALSE));

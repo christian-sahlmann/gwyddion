@@ -117,7 +117,6 @@ static void          setup_source_view_data     (MarkControls *controls);
 static void          ensure_mask_color          (GwyContainer *container,
                                                  const gchar *prefix);
 static void          update_source_mask         (MarkControls *controls);
-static GwyDataField* create_mask_field          (GwyDataField *dfield);
 static void          gwy_data_field_threshold_to(GwyDataField *source,
                                                  GwyDataField *dest,
                                                  gdouble min,
@@ -662,20 +661,6 @@ update_source_mask(MarkControls *controls)
     gwy_data_field_data_changed(mfield);
     /* FIXME: Does not really belong here... */
     perform_operation(controls);
-}
-
-static GwyDataField*
-create_mask_field(GwyDataField *dfield)
-{
-    GwyDataField *mfield;
-    GwySIUnit *siunit;
-
-    mfield = gwy_data_field_new_alike(dfield, TRUE);
-    siunit = gwy_si_unit_new(NULL);
-    gwy_data_field_set_si_unit_z(mfield, siunit);
-    g_object_unref(siunit);
-
-    return mfield;
 }
 
 static void

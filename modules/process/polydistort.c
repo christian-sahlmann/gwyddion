@@ -30,11 +30,10 @@
 #include <libprocess/correct.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwyradiobuttons.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwycombobox.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define DISTORT_RUN_MODES (GWY_RUN_INTERACTIVE | GWY_RUN_IMMEDIATE)
 
@@ -200,7 +199,6 @@ distort_dialog(DistortArgs *args,
     GtkWidget *dialog, *table, *hbox, *label;
     DistortControls controls;
     gint response;
-    GwyPixmapLayer *layer;
     GSList *l;
     gint row;
 
@@ -237,20 +235,8 @@ distort_dialog(DistortArgs *args,
                             GWY_DATA_ITEM_RANGE,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
-    controls.view = gwy_data_view_new(controls.mydata);
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, FALSE);
     g_object_unref(controls.mydata);
-
-    layer = gwy_layer_basic_new();
-    g_object_set(layer,
-                 "data-key", "/0/data",
-                 "gradient-key", "/0/base/palette",
-                 "range-type-key", "/0/base/range-type",
-                 "min-max-key", "/0/base",
-                 NULL);
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
-
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
     table = gtk_table_new(7, 4, FALSE);

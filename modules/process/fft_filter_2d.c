@@ -29,9 +29,6 @@
 #include <libprocess/elliptic.h>
 #include <libprocess/inttrans.h>
 #include <libprocess/stats.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
-#include <libgwydgets/gwylayer-mask.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwyradiobuttons.h>
@@ -39,6 +36,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define FFTF_2D_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -140,7 +138,6 @@ static void        out_mode_changed      (GtkToggleButton *check,
 
 /* Helper Functions */
 static gboolean        run_dialog        (ControlsType *controls);
-static GwyDataField*   create_mask_field (GwyDataField *dfield);
 static GwyVectorLayer* create_vlayer     (guint new_mode);
 static void            switch_layer      (guint new_mode,
                                           ControlsType *controls);
@@ -339,20 +336,6 @@ run_main(GwyContainer *data, GwyRunType run)
     g_object_unref(controls.mydata);
 }
 
-static GwyDataField*
-create_mask_field(GwyDataField *dfield)
-{
-    GwyDataField *mfield;
-    GwySIUnit *siunit;
-
-    mfield = gwy_data_field_new_alike(dfield, TRUE);
-    siunit = gwy_si_unit_new("");
-    gwy_data_field_set_si_unit_z(mfield, siunit);
-    g_object_unref(siunit);
-
-    return mfield;
-}
-
 static gboolean
 run_dialog(ControlsType *controls)
 {
@@ -435,7 +418,6 @@ run_dialog(ControlsType *controls)
     GtkRadioButton *group;
     GtkTooltips *tips;
     GHashTable *hash_tips;
-    GwyPixmapLayer *layer, *mlayer;
     GSList *l;
     gint i, row, response;
 
@@ -460,23 +442,16 @@ run_dialog(ControlsType *controls)
     hbox = gtk_hbox_new(FALSE, 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 4);
 
-    /* Setup the GwyDataView and base layer */
-    controls->view = gwy_data_view_new(controls->mydata);
-    layer = controls->view_layer = gwy_layer_basic_new();
-    set_layer_channel(layer, 0);
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls->view), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls->view), layer);
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls->view), PREVIEW_SIZE);
+    /* Setup the GwyDataView, base and mask layers */
+    controls->view = create_preview(controls->mydata, 0, PREVIEW_SIZE, TRUE);
+    controls->view_layer
+        = gwy_data_view_get_base_layer(GWY_DATA_VIEW(controls->view));
+    controls->mask_layer
+        = gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(controls->view));
     gtk_box_pack_start(GTK_BOX(hbox), controls->view, FALSE, FALSE, 4);
 
     /* setup vector layer */
     switch_layer(controls->edit_mode, controls);
-
-    /* setup mask layer */
-    mlayer = controls->mask_layer = gwy_layer_mask_new();
-    gwy_pixmap_layer_set_data_key(mlayer, "/0/mask");
-    gwy_layer_mask_set_color_key(GWY_LAYER_MASK(mlayer), "/0/mask");
-    gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), mlayer);
 
     /* Setup the control panel */
     table = gtk_table_new(16, 2, FALSE);

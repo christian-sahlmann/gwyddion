@@ -28,13 +28,12 @@
 #include <libprocess/stats.h>
 #include <libprocess/filters.h>
 #include <libprocess/gwyprocesstypes.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 #include <app/gwymoduleutils.h>
+#include "preview.h"
 
 #define SLOPE_DIST_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -262,7 +261,6 @@ slope_dialog(SlopeArgs *args, gboolean same_units,
     GtkWidget *dialog, *table, *label, *hbox, *hbox2, *vbox, *button;
     GwyDataChooser *chooser;
     GwyGraphModel *gmodel;
-    GwyPixmapLayer *layer;
     SlopeControls controls;
     enum { RESPONSE_RESET = 1 };
     gint response;
@@ -305,18 +303,7 @@ slope_dialog(SlopeArgs *args, gboolean same_units,
                             GWY_DATA_ITEM_RANGE,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
-    controls.view = gwy_data_view_new(controls.mydata);
-    layer = gwy_layer_basic_new();
-    g_object_set(layer,
-                 "data-key", "/0/data",
-                 "gradient-key", "/0/base/palette",
-                 "range-type-key", "/0/base/range-type",
-                 "min-max-key", "/0/base",
-                 NULL);
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
-
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, FALSE);
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
     if (args->output_type != SLOPE_DIST_2D_DIST)
         gtk_widget_set_no_show_all(controls.view, TRUE);

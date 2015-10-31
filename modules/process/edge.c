@@ -631,7 +631,6 @@ zero_crossing_dialog(ZeroCrossingArgs *args,
     GtkObject *adj;
     ZeroCrossingControls controls;
     gint response;
-    gdouble zoomval;
     GwyDataField *sfield;
     gint row;
     gboolean temp;

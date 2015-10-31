@@ -104,7 +104,6 @@ static void          run_noninteractive           (DriftArgs *args,
                                                    GwyDataField *result,
                                                    GwyDataLine *drift,
                                                    gint id);
-static GwyDataField* create_mask_field            (GwyDataField *dfield);
 static void          drift_dialog_update_controls (DriftControls *controls,
                                                    DriftArgs *args);
 static void          range_changed                (DriftControls *controls,
@@ -774,20 +773,6 @@ static void
 drift_invalidate(DriftControls *controls)
 {
     controls->computed = FALSE;
-}
-
-static GwyDataField*
-create_mask_field(GwyDataField *dfield)
-{
-    GwyDataField *mfield;
-    GwySIUnit *siunit;
-
-    mfield = gwy_data_field_new_alike(dfield, TRUE);
-    siunit = gwy_si_unit_new(NULL);
-    gwy_data_field_set_si_unit_z(mfield, siunit);
-    g_object_unref(siunit);
-
-    return mfield;
 }
 
 static void

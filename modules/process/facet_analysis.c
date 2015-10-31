@@ -34,14 +34,12 @@
 #include <libprocess/level.h>
 #include <libprocess/filters.h>
 #include <libprocess/grains.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
-#include <libgwydgets/gwylayer-mask.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define FACETS_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -87,8 +85,6 @@ typedef struct {
 static gboolean module_register                  (void);
 static void     facets_analyse                   (GwyContainer *data,
                                                   GwyRunType run);
-static void     load_mask_color                  (GtkWidget *color_button,
-                                                  GwyContainer *data);
 static void     facets_dialog                    (FacetsArgs *args,
                                                   GwyContainer *data,
                                                   GwyContainer *fdata,
@@ -122,8 +118,6 @@ static void     combine_changed                  (GtkToggleButton *toggle,
                                                   FacetsControls *controls);
 static void     combine_type_changed             (GtkComboBox *combo,
                                                   FacetsControls *controls);
-static void     mask_color_changed               (GtkWidget *color_button,
-                                                  FacetsControls *controls);
 static void     gwy_data_field_mark_facets       (GwyDataField *dtheta,
                                                   GwyDataField *dphi,
                                                   gdouble theta0,
@@ -146,7 +140,7 @@ static void     facets_tolerance_changed         (GtkAdjustment *adj,
                                                   FacetsControls *controls);
 static void     preview                          (FacetsControls *controls,
                                                   FacetsArgs *args);
-static void     add_mask_layer                   (GwyDataView *view,
+static void     add_mask_field                   (GwyDataView *view,
                                                   const GwyRGBA *color);
 static void     facets_mark_fdata                (FacetsArgs *args,
                                                   GwyContainer *fdata);
@@ -262,16 +256,14 @@ facets_dialog(FacetsArgs *args,
               gint id,
               GQuark mquark)
 {
-    GtkWidget *dialog, *table, *hbox, *hbox2, *vbox, *label, *scale, *button;
-    GtkWidget *spin;
-    FacetsControls controls;
     enum {
         RESPONSE_RESET = 1,
         RESPONSE_PREVIEW = 2
     };
+    GtkWidget *dialog, *table, *hbox, *hbox2, *vbox, *label, *scale, *button;
+    GtkWidget *spin;
+    FacetsControls controls;
     gint response;
-    GwyPixmapLayer *layer;
-    GwyVectorLayer *vlayer;
     GwySelection *selection;
     gint row;
 
@@ -305,26 +297,12 @@ facets_dialog(FacetsArgs *args,
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
-    controls.view = gwy_data_view_new(controls.mydata);
-    layer = gwy_layer_basic_new();
-    g_object_set(layer,
-                 "data-key", "/0/data",
-                 "gradient-key", "/0/base/palette",
-                 "range-type-key", "/0/base/range-type",
-                 "min-max-key", "/0/base",
-                 NULL);
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
-
-    vlayer = g_object_new(g_type_from_name("GwyLayerPoint"), NULL);
-    gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
-    gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.view), vlayer);
-    selection = gwy_vector_layer_ensure_selection(vlayer);
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, TRUE);
+    gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
+    selection = create_vector_layer(GWY_DATA_VIEW(controls.view), 0, "Point",
+                                    TRUE);
     g_signal_connect(selection, "changed",
                      G_CALLBACK(preview_selection_updated), &controls);
-
-    gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 0);
@@ -333,22 +311,13 @@ facets_dialog(FacetsArgs *args,
     gtk_box_pack_start(GTK_BOX(vbox), hbox2, FALSE, FALSE, 0);
 
     /* Slope view */
-    controls.fview = gwy_data_view_new(controls.fdata);
+    controls.fview = create_preview(controls.fdata, 0, FDATA_RES, TRUE);
     gtk_box_pack_start(GTK_BOX(hbox2), controls.fview, FALSE, FALSE, 0);
-
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "/0/data");
-    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.fview),
-                                 layer);
-
-    vlayer = g_object_new(g_type_from_name("GwyLayerPoint"), NULL);
-    gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
-    gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.fview),
-                                GWY_VECTOR_LAYER(vlayer));
-    selection = gwy_vector_layer_ensure_selection(vlayer);
+    selection = create_vector_layer(GWY_DATA_VIEW(controls.fview), 0, "Point",
+                                    TRUE);
     g_signal_connect(selection, "changed",
                      G_CALLBACK(facet_view_selection_updated), &controls);
+
 
     /* Info table */
     table = gtk_table_new(7, 2, FALSE);
@@ -439,16 +408,11 @@ facets_dialog(FacetsArgs *args,
         row++;
     }
 
-    controls.color_button = gwy_color_button_new();
-    gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
-                                   TRUE);
-    load_mask_color(controls.color_button,
-                    gwy_data_view_get_data(GWY_DATA_VIEW(controls.view)));
+    controls.color_button = create_mask_color_button(controls.mydata, dialog,
+                                                     0);
     gwy_table_attach_hscale(table, row, _("_Mask color:"), NULL,
                             GTK_OBJECT(controls.color_button),
                             GWY_HSCALE_WIDGET_NO_EXPAND);
-    g_signal_connect(controls.color_button, "clicked",
-                     G_CALLBACK(mask_color_changed), &controls);
     row++;
 
     if (!gwy_si_unit_equal(gwy_data_field_get_si_unit_xy(dfield),
@@ -688,20 +652,6 @@ preview_selection_updated(GwySelection *selection,
                                                              "/phi"));
     phi = gwy_data_field_get_val(dfield, j, i);
     facet_view_select_angle(controls, theta, phi);
-}
-
-static GwyDataField*
-create_mask_field(GwyDataField *dfield)
-{
-    GwyDataField *mfield;
-    GwySIUnit *siunit;
-
-    mfield = gwy_data_field_new_alike(dfield, FALSE);
-    siunit = gwy_si_unit_new("");
-    gwy_data_field_set_si_unit_z(mfield, siunit);
-    g_object_unref(siunit);
-
-    return mfield;
 }
 
 static void
@@ -989,30 +939,6 @@ combine_type_changed(GtkComboBox *combo, FacetsControls *controls)
 }
 
 static void
-mask_color_changed(GtkWidget *color_button,
-                   FacetsControls *controls)
-{
-    gwy_mask_color_selector_run(NULL, GTK_WINDOW(controls->dialog),
-                                GWY_COLOR_BUTTON(color_button),
-                                controls->mydata, "/0/mask");
-    load_mask_color(color_button,
-                    gwy_data_view_get_data(GWY_DATA_VIEW(controls->view)));
-}
-
-static void
-load_mask_color(GtkWidget *color_button,
-                GwyContainer *data)
-{
-    GwyRGBA rgba;
-
-    if (!gwy_rgba_get_from_container(&rgba, data, "/0/mask")) {
-        gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
-        gwy_rgba_store_to_container(&rgba, data, "/0/mask");
-    }
-    gwy_color_button_set_color(GWY_COLOR_BUTTON(color_button), &rgba);
-}
-
-static void
 preview(FacetsControls *controls,
         FacetsArgs *args)
 {
@@ -1022,8 +948,8 @@ preview(FacetsControls *controls,
     data = controls->mydata;
     fdata = controls->fdata;
 
-    add_mask_layer(GWY_DATA_VIEW(controls->view), NULL);
-    add_mask_layer(GWY_DATA_VIEW(controls->fview), &mask_color);
+    add_mask_field(GWY_DATA_VIEW(controls->view), NULL);
+    add_mask_field(GWY_DATA_VIEW(controls->fview), &mask_color);
 
     mask = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
     dtheta = GWY_DATA_FIELD(gwy_container_get_object_by_name(fdata, "/theta"));
@@ -1043,28 +969,22 @@ preview(FacetsControls *controls,
 }
 
 static void
-add_mask_layer(GwyDataView *view,
+add_mask_field(GwyDataView *view,
                const GwyRGBA *color)
 {
     GwyContainer *data;
     GwyDataField *mfield, *dfield;
-    GwyPixmapLayer *layer;
 
     data = gwy_data_view_get_data(view);
-    if (!gwy_container_gis_object_by_name(data, "/0/mask", &mfield)) {
-        gwy_container_gis_object_by_name(data, "/0/data", &dfield);
-        mfield = create_mask_field(dfield);
-        gwy_container_set_object_by_name(data, "/0/mask", mfield);
-        g_object_unref(mfield);
+    if (gwy_container_gis_object_by_name(data, "/0/mask", &mfield))
+        return;
 
-        layer = gwy_layer_mask_new();
-        gwy_pixmap_layer_set_data_key(layer, "/0/mask");
-        gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
-        gwy_data_view_set_alpha_layer(view, layer);
-
-        if (color)
-            gwy_rgba_store_to_container(color, data, "/0/mask");
-    }
+    gwy_container_gis_object_by_name(data, "/0/data", &dfield);
+    mfield = create_mask_field(dfield);
+    gwy_container_set_object_by_name(data, "/0/mask", mfield);
+    g_object_unref(mfield);
+    if (color)
+        gwy_rgba_store_to_container(color, data, "/0/mask");
 }
 
 static void

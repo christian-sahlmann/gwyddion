@@ -30,14 +30,13 @@
 #include <libprocess/linestats.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwystock.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define LINEMATCH_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -767,7 +766,6 @@ linematch_dialog(LineMatchArgs *args,
 
     GtkWidget *dialog, *table, *label, *hbox, *alignment;
     GwyDataChooser *chooser;
-    GwyPixmapLayer *layer;
     LineMatchControls controls;
     gint response;
     gint row;
@@ -802,17 +800,7 @@ linematch_dialog(LineMatchArgs *args,
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 0);
 
-    controls.dataview = gwy_data_view_new(controls.data);
-    layer = gwy_layer_basic_new();
-    g_object_set(layer,
-                 "data-key", "/0/data",
-                 "gradient-key", "/0/base/palette",
-                 "range-type-key", "/0/base/range-type",
-                 NULL);
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.dataview), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.dataview), layer);
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.dataview), PREVIEW_SIZE);
-
+    controls.dataview = create_preview(controls.data, 0, PREVIEW_SIZE, FALSE);
     alignment = GTK_WIDGET(gtk_alignment_new(0.5, 0, 0, 0));
     gtk_container_add(GTK_CONTAINER(alignment), controls.dataview);
     gtk_box_pack_start(GTK_BOX(hbox), alignment, FALSE, FALSE, 4);
