@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2015 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -33,9 +33,11 @@
 #include <libprocess/stats.h>
 #include <libprocess/level.h>
 #include <libprocess/filters.h>
+#include <libprocess/grains.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-mask.h>
+#include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
@@ -55,6 +57,8 @@ enum {
 typedef struct {
     gdouble tolerance;
     gint kernel_size;
+    gboolean combine;
+    GwyMergeType combine_type;
     /* Interface only */
     gdouble theta0;
     gdouble phi0;
@@ -72,11 +76,12 @@ typedef struct {
     GtkWidget *mphi_label;
     GtkObject *tolerance;
     GtkObject *kernel_size;
+    GtkWidget *combine;
+    GtkWidget *combine_type;
     GtkWidget *color_button;
     GwyContainer *mydata;
     GwyContainer *fdata;
     gboolean in_update;
-    gboolean computed;
 } FacetsControls;
 
 static gboolean module_register                  (void);
@@ -113,7 +118,11 @@ static void     update_average_angle             (FacetsControls *controls,
 static void     preview_selection_updated        (GwySelection *selection,
                                                   gint id,
                                                   FacetsControls *controls);
-static void     mask_color_change_cb             (GtkWidget *color_button,
+static void     combine_changed                  (GtkToggleButton *toggle,
+                                                  FacetsControls *controls);
+static void     combine_type_changed             (GtkComboBox *combo,
+                                                  FacetsControls *controls);
+static void     mask_color_changed               (GtkWidget *color_button,
                                                   FacetsControls *controls);
 static void     gwy_data_field_mark_facets       (GwyDataField *dtheta,
                                                   GwyDataField *dphi,
@@ -133,7 +142,6 @@ static void     compute_slopes                   (GwyDataField *dfield,
                                                   gint kernel_size,
                                                   GwyDataField *xder,
                                                   GwyDataField *yder);
-static void     facets_invalidate                (FacetsControls *controls);
 static void     facets_tolerance_changed         (GtkAdjustment *adj,
                                                   FacetsControls *controls);
 static void     preview                          (FacetsControls *controls,
@@ -150,6 +158,7 @@ static void     facets_save_args                 (GwyContainer *container,
 static const FacetsArgs facets_defaults = {
     3.0*G_PI/180.0,
     3,
+    FALSE, GWY_MERGE_UNION,
     /* Interface only */
     0.0,
     0.0,
@@ -266,7 +275,7 @@ facets_dialog(FacetsArgs *args,
     GwySelection *selection;
     gint row;
 
-    memset(&controls, 0, sizeof(FacetsControls));
+    gwy_clear(&controls, 1);
     controls.args = args;
     dialog = gtk_dialog_new_with_buttons(_("Mark Facets"),
                                          NULL,
@@ -391,7 +400,7 @@ facets_dialog(FacetsArgs *args,
                      G_CALLBACK(facet_view_recompute), &controls);
     row++;
 
-    table = gtk_table_new(9, 4, FALSE);
+    table = gtk_table_new(4 + 2*(!!mfield), 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -406,6 +415,30 @@ facets_dialog(FacetsArgs *args,
     g_signal_connect(controls.tolerance, "value-changed",
                      G_CALLBACK(facets_tolerance_changed), &controls);
 
+    if (mfield) {
+        gwy_container_set_object_by_name(controls.fdata, "/1/mask", mfield);
+        controls.combine
+            = gtk_check_button_new_with_mnemonic(_("Com_bine with "
+                                                   "existing mask"));
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.combine),
+                                     args->combine);
+        gtk_table_attach(GTK_TABLE(table), controls.combine,
+                         0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        g_signal_connect(controls.combine, "toggled",
+                         G_CALLBACK(combine_changed), &controls);
+        row++;
+
+        controls.combine_type
+            = gwy_enum_combo_box_new(gwy_merge_type_get_enum(), -1,
+                                     G_CALLBACK(combine_type_changed), &controls,
+                                     args->combine_type, TRUE);
+        gwy_table_attach_hscale(table, row, _("Operation:"), NULL,
+                                GTK_OBJECT(controls.combine_type),
+                                GWY_HSCALE_WIDGET);
+        gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+        row++;
+    }
+
     controls.color_button = gwy_color_button_new();
     gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
                                    TRUE);
@@ -415,7 +448,7 @@ facets_dialog(FacetsArgs *args,
                             GTK_OBJECT(controls.color_button),
                             GWY_HSCALE_WIDGET_NO_EXPAND);
     g_signal_connect(controls.color_button, "clicked",
-                     G_CALLBACK(mask_color_change_cb), &controls);
+                     G_CALLBACK(mask_color_changed), &controls);
 
     if (!gwy_si_unit_equal(gwy_data_field_get_si_unit_xy(dfield),
                            gwy_data_field_get_si_unit_z(dfield))) {
@@ -429,7 +462,6 @@ facets_dialog(FacetsArgs *args,
         row++;
     }
 
-    facets_invalidate(&controls);
     gtk_widget_show_all(dialog);
     facet_view_select_angle(&controls, args->theta0, args->phi0);
 
@@ -470,17 +502,8 @@ facets_dialog(FacetsArgs *args,
                             0);
     gtk_widget_destroy(dialog);
 
-    if (controls.computed) {
-        mfield = gwy_container_get_object_by_name(controls.mydata, "/0/mask");
-        gwy_app_undo_qcheckpointv(data, 1, &mquark);
-        gwy_container_set_object(data, mquark, mfield);
-        g_object_unref(controls.mydata);
-    }
-    else {
-        g_object_unref(controls.mydata);
-        run_noninteractive(args, data, fdata, dfield, mfield, mquark);
-    }
-
+    g_object_unref(controls.mydata);
+    run_noninteractive(args, data, fdata, dfield, mfield, mquark);
     facets_save_args(gwy_app_settings_get(), args);
     gwy_app_channel_log_add_proc(data, id, id);
 }
@@ -538,7 +561,6 @@ facet_view_recompute(GtkAdjustment *adj,
     selection = gwy_container_get_object_by_name(controls->fdata, key);
     gwy_selection_clear(selection);
     gwy_app_wait_cursor_finish(GTK_WINDOW(controls->dialog));
-    facets_invalidate(controls);
 }
 
 static void
@@ -560,7 +582,6 @@ facet_view_reset_maximum(FacetsControls *controls)
         gwy_data_field_clear(mask);
         gwy_data_field_data_changed(mask);
     }
-    facets_invalidate(controls);
 }
 
 static void
@@ -616,8 +637,6 @@ facet_view_selection_updated(GwySelection *selection,
         if (gwy_selection_get_data(selection, NULL))
             gwy_selection_clear(selection);
     }
-
-    controls->computed = FALSE;
 }
 
 static void
@@ -692,20 +711,30 @@ run_noninteractive(FacetsArgs *args,
                    GwyDataField *mfield,
                    GQuark mquark)
 {
-    GwyDataField *dtheta, *dphi;
+    GwyDataField *dtheta, *dphi, *mask;
 
     gwy_app_undo_qcheckpointv(data, 1, &mquark);
-    if (!mfield) {
-        mfield = create_mask_field(dfield);
-        gwy_container_set_object(data, mquark, mfield);
-        g_object_unref(mfield);
-    }
+    mask = create_mask_field(dfield);
 
     dtheta = GWY_DATA_FIELD(gwy_container_get_object_by_name(fdata, "/theta"));
     dphi = GWY_DATA_FIELD(gwy_container_get_object_by_name(fdata, "/phi"));
     gwy_data_field_mark_facets(dtheta, dphi, args->theta0, args->phi0,
-                               args->tolerance, mfield);
-    gwy_data_field_data_changed(mfield);
+                               args->tolerance, mask);
+    if (mfield && args->combine) {
+        if (args->combine_type == GWY_MERGE_UNION)
+            gwy_data_field_grains_add(mfield, mask);
+        else if (args->combine_type == GWY_MERGE_INTERSECTION)
+            gwy_data_field_grains_intersect(mfield, mask);
+        gwy_data_field_data_changed(mfield);
+    }
+    else if (mfield) {
+        gwy_data_field_copy(mask, mfield, FALSE);
+        gwy_data_field_data_changed(mfield);
+    }
+    else {
+        gwy_container_set_object(data, mquark, mask);
+    }
+    g_object_unref(mask);
 }
 
 static void
@@ -930,12 +959,12 @@ facets_dialog_update_controls(FacetsControls *controls,
 {
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->tolerance),
                              args->tolerance*180.0/G_PI);
-}
-
-static void
-facets_invalidate(FacetsControls *controls)
-{
-    controls->computed = FALSE;
+    if (controls->combine) {
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->combine),
+                                     args->combine);
+        gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->combine_type),
+                                      args->combine_type);
+    }
 }
 
 static void
@@ -944,12 +973,23 @@ facets_tolerance_changed(GtkAdjustment *adj,
 {
     controls->args->tolerance = gtk_adjustment_get_value(adj);
     controls->args->tolerance *= G_PI/180.0;
-    facets_invalidate(controls);
 }
 
 static void
-mask_color_change_cb(GtkWidget *color_button,
-                     FacetsControls *controls)
+combine_changed(GtkToggleButton *toggle, FacetsControls *controls)
+{
+    controls->args->combine = gtk_toggle_button_get_active(toggle);
+}
+
+static void
+combine_type_changed(GtkComboBox *combo, FacetsControls *controls)
+{
+    controls->args->combine_type = gwy_enum_combo_box_get_active(combo);
+}
+
+static void
+mask_color_changed(GtkWidget *color_button,
+                   FacetsControls *controls)
 {
     gwy_mask_color_selector_run(NULL, GTK_WINDOW(controls->dialog),
                                 GWY_COLOR_BUTTON(color_button),
@@ -975,7 +1015,7 @@ static void
 preview(FacetsControls *controls,
         FacetsArgs *args)
 {
-    GwyDataField *dtheta, *dphi, *mfield;
+    GwyDataField *dtheta, *dphi, *mask, *mfield = NULL;
     GwyContainer *data, *fdata;
 
     data = controls->mydata;
@@ -984,15 +1024,21 @@ preview(FacetsControls *controls,
     add_mask_layer(GWY_DATA_VIEW(controls->view), NULL);
     add_mask_layer(GWY_DATA_VIEW(controls->fview), &mask_color);
 
-    mfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
+    mask = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
     dtheta = GWY_DATA_FIELD(gwy_container_get_object_by_name(fdata, "/theta"));
     dphi = GWY_DATA_FIELD(gwy_container_get_object_by_name(fdata, "/phi"));
+    gwy_container_gis_object_by_name(fdata, "/1/mask", (GObject**)&mfield);
 
     gwy_data_field_mark_facets(dtheta, dphi, args->theta0, args->phi0,
-                               args->tolerance, mfield);
-    gwy_data_field_data_changed(mfield);
+                               args->tolerance, mask);
+    if (mfield && args->combine) {
+        if (args->combine_type == GWY_MERGE_UNION)
+            gwy_data_field_grains_add(mask, mfield);
+        else if (args->combine_type == GWY_MERGE_INTERSECTION)
+            gwy_data_field_grains_intersect(mask, mfield);
+    }
+    gwy_data_field_data_changed(mask);
     facets_mark_fdata(args, fdata);
-    facets_invalidate(controls);
 }
 
 static void
@@ -1062,37 +1108,45 @@ facets_mark_fdata(FacetsArgs *args,
     gwy_data_field_data_changed(mask);
 }
 
-static const gchar kernel_size_key[] = "/module/facet_analysis/kernel-size";
-static const gchar tolerance_key[]   = "/module/facet_analysis/tolerance";
+static const gchar combine_key[]      = "/module/facet_analysis/combine";
+static const gchar combine_type_key[] = "/module/facet_analysis/combine_type";
+static const gchar kernel_size_key[]  = "/module/facet_analysis/kernel-size";
+static const gchar tolerance_key[]    = "/module/facet_analysis/tolerance";
 
 static void
 facets_sanitize_args(FacetsArgs *args)
 {
+    args->combine = !!args->combine;
     args->tolerance = CLAMP(args->tolerance, 0.0, 15.0*G_PI/180.0);
     args->kernel_size = CLAMP(args->kernel_size, 0, MAX_PLANE_SIZE);
+    args->combine_type = MIN(args->combine_type, GWY_MERGE_INTERSECTION);
 }
 
 static void
-facets_load_args(GwyContainer *container,
-                     FacetsArgs *args)
+facets_load_args(GwyContainer *container, FacetsArgs *args)
 {
     *args = facets_defaults;
 
+    gwy_container_gis_boolean_by_name(container, combine_key, &args->combine);
     gwy_container_gis_double_by_name(container, tolerance_key,
                                      &args->tolerance);
     gwy_container_gis_int32_by_name(container, kernel_size_key,
                                     &args->kernel_size);
+    gwy_container_gis_enum_by_name(container, combine_type_key,
+                                   &args->combine_type);
     facets_sanitize_args(args);
 }
 
 static void
-facets_save_args(GwyContainer *container,
-                      FacetsArgs *args)
+facets_save_args(GwyContainer *container, FacetsArgs *args)
 {
+    gwy_container_set_boolean_by_name(container, combine_key, args->combine);
     gwy_container_set_double_by_name(container, tolerance_key,
                                      args->tolerance);
     gwy_container_set_int32_by_name(container, kernel_size_key,
                                     args->kernel_size);
+    gwy_container_set_enum_by_name(container, combine_type_key,
+                                   args->combine_type);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
