@@ -268,10 +268,10 @@ run_noninteractive(WPourArgs *args,
 
 static void
 wpour_dialog(WPourArgs *args,
-            GwyContainer *data,
-            GwyDataField *dfield,
-            gint id,
-            GQuark mquark)
+             GwyContainer *data,
+             GwyDataField *dfield,
+             gint id,
+             GQuark mquark)
 {
     GtkWidget *dialog, *table, *hbox;
     GtkObject *gtkobj;

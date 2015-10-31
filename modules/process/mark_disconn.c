@@ -29,12 +29,24 @@
 #include <libprocess/grains.h>
 #include <libprocess/stats.h>
 #include <libprocess/linestats.h>
+#include <libgwydgets/gwydataview.h>
+#include <libgwydgets/gwylayer-basic.h>
+#include <libgwydgets/gwylayer-mask.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define DISCONN_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
+
+enum {
+    PREVIEW_SIZE = 400
+};
+
+enum {
+    RESPONSE_PREVIEW = 2,
+};
 
 typedef enum {
     FEATURES_POSITIVE = 1 << 0,
@@ -49,21 +61,30 @@ typedef struct {
 
 typedef struct {
     DisconnArgs *args;
+    GtkWidget *dialog;
     GSList *type;
     GtkObject *size;
+    GwyContainer *mydata;
+    GtkWidget *view;
+    GtkWidget *color_button;
 } DisconnControls;
 
 static gboolean module_register      (void);
 static void     mark_disconn         (GwyContainer *data,
                                       GwyRunType run);
-static gboolean disconn_dialog       (DisconnArgs *args);
-static void     disconn_dialog_update(DisconnControls *controls,
-                                      DisconnArgs *args);
-static gboolean disconn_do           (GwyDataField *dfield,
-                                      GwyDataField *mask,
-                                      const DisconnArgs *args,
+static gboolean disconn_dialog       (DisconnArgs *args,
                                       GwyContainer *data,
                                       gint id);
+static void     disconn_dialog_update(DisconnControls *controls,
+                                      DisconnArgs *args);
+static void     mask_color_changed   (GtkWidget *color_button,
+                                      DisconnControls *controls);
+static void     load_mask_color      (GtkWidget *color_button,
+                                      GwyContainer *data);
+static void     preview              (DisconnControls *controls);
+static gboolean disconn_do           (GwyDataField *dfield,
+                                      GwyDataField *mask,
+                                      const DisconnArgs *args);
 static void     type_changed         (GtkToggleButton *toggle,
                                       DisconnControls *controls);
 static void     size_changed         (GtkAdjustment *adj,
@@ -126,9 +147,11 @@ mark_disconn(GwyContainer *data,
 
     disconn_load_args(gwy_app_settings_get(), &args);
     maskfield = NULL;
-    if (run == GWY_RUN_IMMEDIATE || disconn_dialog(&args)) {
+    if (run == GWY_RUN_IMMEDIATE || disconn_dialog(&args, data, id)) {
         maskfield = gwy_data_field_new_alike(dfield, FALSE);
-        if (!disconn_do(dfield, maskfield, &args, data, id))
+        gwy_app_wait_start(gwy_app_find_window_for_channel(data, id),
+                           _("Initializing..."));
+        if (!disconn_do(dfield, maskfield, &args))
             gwy_object_unref(maskfield);
     }
 
@@ -158,8 +181,22 @@ mark_disconn(GwyContainer *data,
     g_object_unref(maskfield);
 }
 
+static GwyDataField*
+create_mask_field(GwyDataField *dfield)
+{
+    GwyDataField *mfield;
+    GwySIUnit *siunit;
+
+    mfield = gwy_data_field_new_alike(dfield, FALSE);
+    siunit = gwy_si_unit_new("");
+    gwy_data_field_set_si_unit_z(mfield, siunit);
+    g_object_unref(siunit);
+
+    return mfield;
+}
+
 static gboolean
-disconn_dialog(DisconnArgs *args)
+disconn_dialog(DisconnArgs *args, GwyContainer *data, gint id)
 {
     enum { RESPONSE_RESET = 1 };
 
@@ -169,7 +206,9 @@ disconn_dialog(DisconnArgs *args)
         { N_("Both"),     FEATURES_BOTH,     },
     };
 
-    GtkWidget *dialog, *table, *label;
+    GtkWidget *dialog, *table, *label, *hbox;
+    GwyDataField *dfield;
+    GwyPixmapLayer *layer;
     DisconnControls controls;
     GSList *group;
     gint response, row;
@@ -177,19 +216,68 @@ disconn_dialog(DisconnArgs *args)
     controls.args = args;
 
     dialog = gtk_dialog_new_with_buttons(_("Mark Disconnected"), NULL, 0,
-                                         _("_Reset"), RESPONSE_RESET,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    controls.dialog = dialog;
+    gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
+                                 gwy_stock_like_button_new(_("_Update"),
+                                                           GTK_STOCK_EXECUTE),
+                                 RESPONSE_PREVIEW);
+    gtk_dialog_add_button(GTK_DIALOG(dialog), _("_Reset"), RESPONSE_RESET);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
 
-    table = gtk_table_new(5, 4, FALSE);
+    hbox = gtk_hbox_new(FALSE, 2);
+
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
+                       FALSE, FALSE, 4);
+
+    controls.mydata = gwy_container_new();
+    dfield = gwy_container_get_object(data, gwy_app_get_data_key_for_id(id));
+    gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
+    dfield = create_mask_field(dfield);
+    gwy_container_set_object_by_name(controls.mydata, "/0/mask", dfield);
+    g_object_unref(dfield);
+    if (gwy_container_gis_object(data, gwy_app_get_mask_key_for_id(id),
+                                 (GObject**)&dfield)) {
+        gwy_container_set_object_by_name(controls.mydata, "/1/mask", dfield);
+    }
+
+    gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
+                            GWY_DATA_ITEM_PALETTE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_REAL_SQUARE,
+                            0);
+    controls.view = gwy_data_view_new(controls.mydata);
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
+
+    layer = gwy_layer_basic_new();
+    g_object_set(layer,
+                 "data-key", "/0/data",
+                 "gradient-key", "/0/base/palette",
+                 "range-type-key", "/0/base/range-type",
+                 "min-max-key", "/0/base",
+                 NULL);
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
+
+    layer = gwy_layer_mask_new();
+    gwy_pixmap_layer_set_data_key(layer, "/0/mask");
+    gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
+    gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls.view), layer);
+
+    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
+
+    gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
+
+    table = gtk_table_new(6, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
-                       FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
     row = 0;
 
     label = gtk_label_new(_("Defect type:"));
@@ -212,6 +300,18 @@ disconn_dialog(DisconnArgs *args)
                      G_CALLBACK(size_changed), &controls);
     row++;
 
+    controls.color_button = gwy_color_button_new();
+    gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
+                                   TRUE);
+    load_mask_color(controls.color_button,
+                    gwy_data_view_get_data(GWY_DATA_VIEW(controls.view)));
+    gwy_table_attach_hscale(table, row++, _("_Mask color:"), NULL,
+                            GTK_OBJECT(controls.color_button),
+                            GWY_HSCALE_WIDGET_NO_EXPAND);
+    g_signal_connect(controls.color_button, "clicked",
+                     G_CALLBACK(mask_color_changed), &controls);
+    row++;
+
     gtk_widget_show_all(dialog);
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
@@ -226,6 +326,10 @@ disconn_dialog(DisconnArgs *args)
             case GTK_RESPONSE_OK:
             break;
 
+            case RESPONSE_PREVIEW:
+            preview(&controls);
+            break;
+
             case RESPONSE_RESET:
             *args = disconn_defaults;
             disconn_dialog_update(&controls, args);
@@ -237,6 +341,9 @@ disconn_dialog(DisconnArgs *args)
         }
     } while (response != GTK_RESPONSE_OK);
 
+    gwy_app_sync_data_items(controls.mydata, data, 0, id, FALSE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
     gtk_widget_destroy(dialog);
 
     return TRUE;
@@ -248,6 +355,44 @@ disconn_dialog_update(DisconnControls *controls,
 {
     gwy_radio_buttons_set_current(controls->type, args->type);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size), args->size);
+}
+
+static void
+preview(DisconnControls *controls)
+{
+    GwyDataField *dfield, *mask;
+
+    gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Initializing..."));
+    dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
+    mask = gwy_container_get_object_by_name(controls->mydata, "/0/mask");
+    if (disconn_do(dfield, mask, controls->args))
+        gwy_data_field_data_changed(mask);
+}
+
+static void
+mask_color_changed(GtkWidget *color_button,
+                   DisconnControls *controls)
+{
+    GwyContainer *data;
+
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
+    gwy_mask_color_selector_run(NULL, GTK_WINDOW(controls->dialog),
+                                GWY_COLOR_BUTTON(color_button), data,
+                                "/0/mask");
+    load_mask_color(color_button, data);
+}
+
+static void
+load_mask_color(GtkWidget *color_button,
+                GwyContainer *data)
+{
+    GwyRGBA rgba;
+
+    if (!gwy_rgba_get_from_container(&rgba, data, "/0/mask")) {
+        gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
+        gwy_rgba_store_to_container(&rgba, data, "/0/mask");
+    }
+    gwy_color_button_set_color(GWY_COLOR_BUTTON(color_button), &rgba);
 }
 
 static void
@@ -394,18 +539,13 @@ median_background(gint size,
 static gboolean
 disconn_do(GwyDataField *dfield,
            GwyDataField *mask,
-           const DisconnArgs *args,
-           GwyContainer *data,
-           gint id)
+           const DisconnArgs *args)
 {
     GwyDataField *difffield = NULL;
     gint xres = gwy_data_field_get_xres(dfield);
     gint yres = gwy_data_field_get_yres(dfield);
     guint n, nn;
     gboolean ok = FALSE;
-
-    gwy_app_wait_start(gwy_app_find_window_for_channel(data, id),
-                       _("Initializing..."));
 
     /* Remove the positive, negative (or both) defects using a filter.  This
      * produces a non-defect field. */
