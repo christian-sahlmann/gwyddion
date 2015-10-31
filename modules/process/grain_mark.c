@@ -108,7 +108,7 @@ static void        mark_dialog                (MarkArgs *args,
                                                GwyDataField *existing_mask,
                                                gint id,
                                                GQuark mquark);
-static void        mask_color_change_cb       (GtkWidget *color_button,
+static void        mask_color_changed         (GtkWidget *color_button,
                                                MarkControls *controls);
 static void        load_mask_color            (GtkWidget *color_button,
                                                GwyContainer *data);
@@ -400,10 +400,10 @@ mark_dialog(MarkArgs *args,
         gwy_table_attach_hscale(table, row, _("Operation:"), NULL,
                                 GTK_OBJECT(controls.combine_type),
                                 GWY_HSCALE_WIDGET);
+        gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+        row++;
     }
-    row++;
 
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     controls.color_button = gwy_color_button_new();
     gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
                                    TRUE);
@@ -413,7 +413,7 @@ mark_dialog(MarkArgs *args,
                             GTK_OBJECT(controls.color_button),
                             GWY_HSCALE_WIDGET_NO_EXPAND);
     g_signal_connect(controls.color_button, "clicked",
-                     G_CALLBACK(mask_color_change_cb), &controls);
+                     G_CALLBACK(mask_color_changed), &controls);
     row++;
 
     controls.update = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
@@ -620,8 +620,8 @@ mark_invalidate2(G_GNUC_UNUSED gpointer whatever, MarkControls *controls)
 }
 
 static void
-mask_color_change_cb(GtkWidget *color_button,
-                     MarkControls *controls)
+mask_color_changed(GtkWidget *color_button,
+                   MarkControls *controls)
 {
     GwyContainer *data;
 
