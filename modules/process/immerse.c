@@ -28,14 +28,13 @@
 #include <libprocess/arithmetic.h>
 #include <libprocess/correlation.h>
 #include <libdraw/gwypixfield.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define IMMERSE_RUN_MODES GWY_RUN_INTERACTIVE
 
@@ -221,10 +220,8 @@ immerse_dialog(ImmerseArgs *args)
     GtkWidget *table, *chooser, *hbox, *alignment, *label, *button, *vbox;
     GtkTooltips *tooltips;
     GdkDisplay *display;
-    GwyPixmapLayer *layer;
     GwyDataField *dfield;
     gint response, row, id;
-    gdouble zoomval;
     gboolean ok;
 
     memset(&controls, 0, sizeof(ImmerseControls));
@@ -270,20 +267,7 @@ immerse_dialog(ImmerseArgs *args)
                             0);
     gwy_container_set_boolean_by_name(controls.mydata, "/0/data/realsquare",
                                       TRUE);
-    controls.view = gwy_data_view_new(controls.mydata);
-    layer = gwy_layer_basic_new();
-    g_object_set(layer,
-                 "data-key", "/0/data",
-                 "gradient-key", "/0/base/palette",
-                 "range-type-key", "/0/base/range-type",
-                 "min-max-key", "/0/base",
-                 NULL);
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-    /* XXX: This is wrong with realsquare=TRUE */
-    zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
-                                        gwy_data_field_get_yres(dfield));
-    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
-
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, FALSE);
     alignment = GTK_WIDGET(gtk_alignment_new(0.5, 0, 0, 0));
     gtk_container_add(GTK_CONTAINER(alignment), controls.view);
     gtk_box_pack_start(GTK_BOX(hbox), alignment, FALSE, FALSE, 4);

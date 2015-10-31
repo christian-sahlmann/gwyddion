@@ -34,8 +34,6 @@
 #include <libprocess/stats.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwystock.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
@@ -44,8 +42,8 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 #include <app/gwymoduleutils.h>
-
 #include "neuraldata.h"
+#include "preview.h"
 
 #define NEURAL_TRAIN_RUN_MODES GWY_RUN_INTERACTIVE
 #define NEURAL_APPLY_RUN_MODES GWY_RUN_INTERACTIVE
@@ -85,7 +83,6 @@ typedef struct {
     GwyContainer *mydata;
     GtkWidget *dialog;
     GtkWidget *view;
-    GwyPixmapLayer *layer;
     GtkWidget *errgraph;
     GwyGraphModel *gmodel;
     /* Training */
@@ -497,12 +494,7 @@ neural_train_dialog(NeuralTrainArgs *args)
     vbox = gtk_vbox_new(FALSE, 4);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 4);
 
-    controls.view = gwy_data_view_new(mydata);
-    controls.layer = gwy_layer_basic_new();
-    set_layer_channel(controls.layer, 0);
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), controls.layer);
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
+    controls.view = create_preview(mydata, 0, PREVIEW_SIZE, FALSE);
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
 
     controls.gmodel = gwy_graph_model_new();
@@ -903,10 +895,12 @@ static void
 preview_type_changed(G_GNUC_UNUSED GtkToggleButton *button,
                      NeuralTrainControls *controls)
 {
+    GwyPixmapLayer *layer;
     GSList *group;
 
     group = controls->preview_group;
-    set_layer_channel(controls->layer, gwy_radio_buttons_get_current(group));
+    layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(controls->view));
+    set_layer_channel(layer, gwy_radio_buttons_get_current(group));
 }
 
 static void

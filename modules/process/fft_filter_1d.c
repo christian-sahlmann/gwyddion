@@ -29,13 +29,12 @@
 #include <libprocess/linestats.h>
 #include <libprocess/arithmetic.h>
 #include <libgwydgets/gwygraph.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define FFTF_1D_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -187,10 +186,7 @@ fftf_1d_dialog(Fftf1dArgs *args,
     GwyDataField *result_field;
     GwyGraphArea *area;
     GwySelection *selection;
-    GwyPixmapLayer *layer;
-    GQuark quark;
     gint response, row;
-    gchar *key;
 
     dialog = gtk_dialog_new_with_buttons(_("1D FFT filter"), NULL, 0, NULL);
     controls.dialog = dialog;
@@ -233,33 +229,13 @@ fftf_1d_dialog(Fftf1dArgs *args,
 
     vbox = gtk_vbox_new(FALSE, 4);
     /*set up rescaled image of the surface*/
-    controls.view_original = gwy_data_view_new(controls.original_data);
-    layer = gwy_layer_basic_new();
-    quark = gwy_app_get_data_key_for_id(id);
-    gwy_pixmap_layer_set_data_key(layer, g_quark_to_string(quark));
-    key = g_strdup_printf("/%d/base/palette", id);
-    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), key);
-    g_free(key);
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view_original),
-                                  g_quark_to_string(quark));
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view_original), layer);
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view_original),
-                              PREVIEW_SIZE);
-
-    /*set up fit controls*/
+    controls.view_original = create_preview(controls.original_data,
+                                            id, PREVIEW_SIZE, FALSE);
     gtk_box_pack_start(GTK_BOX(vbox), controls.view_original, FALSE, FALSE, 4);
 
     /*set up rescaled image of the result*/
-    controls.view_result = gwy_data_view_new(controls.result_data);
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "/0/data");
-    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view_result),
-                                  "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view_result), layer);
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view_result),
-                              PREVIEW_SIZE);
-
+    controls.view_result = create_preview(controls.result_data,
+                                          0, PREVIEW_SIZE, FALSE);
     gtk_box_pack_start(GTK_BOX(vbox), controls.view_result, FALSE, FALSE, 4);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
 

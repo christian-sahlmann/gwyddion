@@ -32,11 +32,10 @@
 #include <libprocess/arithmetic.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydgetutils.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define FIT_2D_RUN_MODES GWY_RUN_INTERACTIVE
 
@@ -241,7 +240,6 @@ fit_2d_dialog(Fit2DArgs *args,
         RESPONSE_GUESS = 3
     };
     gint response, i, j;
-    GwyPixmapLayer *layer;
     GtkWidget *label;
 
     controls.fitter = NULL;
@@ -273,21 +271,15 @@ fit_2d_dialog(Fit2DArgs *args,
     /*set up data of rescaled image of the surface*/
     controls.data = data;
     controls.mydata = gwy_container_new();
-    gwy_container_set_object_by_name(controls.mydata, "/0/data",
-                                     gwy_data_field_duplicate(dfield));
+    dfield = gwy_data_field_duplicate(dfield);
+    gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
+    g_object_unref(dfield);
     gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
                             GWY_DATA_ITEM_PALETTE,
                             GWY_DATA_ITEM_MASK_COLOR,
                             GWY_DATA_ITEM_RANGE,
                             0);
-    controls.view = gwy_data_view_new(controls.mydata);
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "/0/data");
-    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
-
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, FALSE);
     alignment = GTK_WIDGET(gtk_alignment_new(0.5, 0, 0, 0));
     gtk_container_add(GTK_CONTAINER(alignment), controls.view);
     gtk_box_pack_start(GTK_BOX(hbox), alignment, FALSE, FALSE, 4);
