@@ -32,7 +32,6 @@
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
-
 #include "preview.h"
 #include "dimensions.h"
 

@@ -22,6 +22,7 @@
 #ifndef __GWY_PROCESS_PREVIEW_H__
 #define __GWY_PROCESS_PREVIEW_H__
 
+#include <string.h>
 #include <libgwydgets/gwycolorbutton.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
@@ -63,6 +64,33 @@ create_mask_layer(GwyDataView *dataview, gint id)
     gwy_data_view_set_alpha_layer(dataview, layer);
 
     return layer;
+}
+
+G_GNUC_UNUSED
+static GwySelection*
+create_vector_layer(GwyDataView *dataview, gint id, const gchar *name,
+                    gboolean editable)
+{
+    GwyVectorLayer *layer;
+    GType type;
+    gchar *s, *t;
+
+    s = g_strconcat("GwyLayer", name, NULL);
+    type = g_type_from_name(s);
+    g_free(s);
+    g_return_val_if_fail(type, NULL);
+    g_return_val_if_fail(g_type_is_a(type, GWY_TYPE_VECTOR_LAYER), NULL);
+
+    layer = GWY_VECTOR_LAYER(g_object_newv(type, 0, NULL));
+    s = g_strdup_printf("/%d/select/%s", id, name);
+    t = strrchr(s, '/');
+    *t = g_ascii_tolower(*t);
+    gwy_vector_layer_set_selection_key(layer, s);
+    g_free(s);
+    gwy_vector_layer_set_editable(layer, editable);
+    gwy_data_view_set_top_layer(dataview, layer);
+
+    return gwy_vector_layer_ensure_selection(layer);
 }
 
 G_GNUC_UNUSED

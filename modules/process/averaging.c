@@ -28,11 +28,10 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
 #include <libgwymodule/gwymodule-tool.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define AVERAGING_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -121,8 +120,6 @@ averaging_dialog(GwyContainer *data)
 {
     GtkWidget *dialog;
     GtkWidget *hbox, *vbox, *label;
-    GwyPixmapLayer *layer;
-    GwyVectorLayer *vlayer;
     GtkWidget *view;
     GwySelection *zselection;
     GwyDataField *score;
@@ -149,23 +146,9 @@ averaging_dialog(GwyContainer *data)
     label = gtk_label_new(_("Select the sample area below"));
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
-    view = gwy_data_view_new(data);
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "/0/data");
-    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer),
-                                     "/0/base/palette");
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(view), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(view), layer);
-    gwy_set_data_preview_size(GWY_DATA_VIEW(view), PREVIEW_SIZE);
-
-    vlayer = GWY_VECTOR_LAYER(
-                g_object_new(g_type_from_name("GwyLayerRectangle"),
-                NULL));
-    gwy_vector_layer_set_selection_key(vlayer, "/0/select/rect");
-    gwy_data_view_set_top_layer(GWY_DATA_VIEW(view), vlayer);
-    zselection = gwy_vector_layer_ensure_selection(vlayer);
+    view = create_preview(data, 0, PREVIEW_SIZE, FALSE);
+    zselection = create_vector_layer(GWY_DATA_VIEW(view), 0, "Rectangle", TRUE);
     gwy_selection_set_max_objects(zselection, 1);
-
     gtk_box_pack_start(GTK_BOX(vbox), view, FALSE, FALSE, 0);
 
     gtk_widget_show_all(dialog);
@@ -174,12 +157,12 @@ averaging_dialog(GwyContainer *data)
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-                gtk_widget_destroy(dialog);
+            gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return NULL;
             break;
             case GTK_RESPONSE_OK:
-                score = averaging_do(data, zselection);
+            score = averaging_do(data, zselection);
             break;
             default:
             g_assert_not_reached();

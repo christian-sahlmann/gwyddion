@@ -31,14 +31,13 @@
 #include <libprocess/filters.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwyinventorystore.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 #include "convolutionfilterpreset.h"
+#include "preview.h"
 
 #define CONVOLUTION_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -230,7 +229,6 @@ convolution_filter_dialog(ConvolutionArgs *args,
     enum { RESPONSE_PREVIEW = 1 };
 
     ConvolutionControls controls;
-    GwyPixmapLayer *layer;
     GtkWidget *dialog, *hbox, *vbox, *notebook, *label;
     GtkWidget *align;
     gint response;
@@ -267,13 +265,7 @@ convolution_filter_dialog(ConvolutionArgs *args,
                             GWY_DATA_ITEM_PALETTE,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
-    controls.view = gwy_data_view_new(controls.mydata);
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "/0/data");
-    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, FALSE);
     gtk_container_add(GTK_CONTAINER(align), controls.view);
 
     notebook = gtk_notebook_new();

@@ -30,14 +30,13 @@
 #include <libprocess/stats.h>
 #include <libprocess/filters.h>
 #include <libprocess/arithmetic.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 #include <app/gwymoduleutils.h>
+#include "preview.h"
 
 #define ARITH_RUN_MODES GWY_RUN_INTERACTIVE
 
@@ -226,7 +225,6 @@ arithmetic_dialog(GwyContainer *data,
               *label, *button;
     GtkTooltips *tooltips;
     ArithmeticControls controls;
-    GwyPixmapLayer *layer;
     GwyDataField *dfield;
     guint i, row, response;
     gchar *s;
@@ -263,15 +261,7 @@ arithmetic_dialog(GwyContainer *data,
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
-    controls.view = gwy_data_view_new(controls.mydata);
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
-    layer = gwy_layer_basic_new();
-    g_object_set(layer,
-                 "data-key", "/0/data",
-                 "gradient-key", "/0/base/palette",
-                 NULL);
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, FALSE);
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
 
     table = gtk_table_new(5 + NARGS, 3, FALSE);

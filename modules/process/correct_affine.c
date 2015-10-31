@@ -29,8 +29,6 @@
 #include <libprocess/arithmetic.h>
 #include <libprocess/stats.h>
 #include <libprocess/correct.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwycombobox.h>
@@ -38,6 +36,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define AFFINE_RUN_MODES (GWY_RUN_INTERACTIVE)
 
@@ -293,8 +292,6 @@ affcor_dialog(AffcorArgs *args,
     GwyDataField *corrected;
     AffcorControls controls;
     gint response, row, newid = -1;
-    GwyPixmapLayer *layer;
-    GwyVectorLayer *vlayer;
     GObject *selection;
     gchar selkey[40];
     GwySIUnit *unitphi;
@@ -338,26 +335,13 @@ affcor_dialog(AffcorArgs *args,
     alignment = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
     gtk_box_pack_start(GTK_BOX(hbox), alignment, FALSE, FALSE, 4);
 
-    controls.view = gwy_data_view_new(controls.mydata);
-    layer = gwy_layer_basic_new();
-    g_object_set(layer,
-                 "data-key", "/0/data",
-                 "gradient-key", "/0/base/palette",
-                 "range-type-key", "/0/base/range-type",
-                 "min-max-key", "/0/base",
-                 NULL);
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
-
-    vlayer = g_object_new(g_type_from_name("GwyLayerLattice"),
-                          "selection-key", "/0/select/lattice",
-                          NULL);
-    controls.vlayer = g_object_ref(vlayer);
-    gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.view), vlayer);
-    controls.selection = gwy_vector_layer_ensure_selection(vlayer);
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, FALSE);
+    controls.selection = create_vector_layer(GWY_DATA_VIEW(controls.view),
+                                             0, "Lattice", TRUE);
     g_object_ref(controls.selection);
     gwy_selection_set_max_objects(controls.selection, 1);
+    controls.vlayer = gwy_data_view_get_top_layer(GWY_DATA_VIEW(controls.view));
+    g_object_ref(controls.vlayer);
     g_signal_connect_swapped(controls.selection, "changed",
                              G_CALLBACK(selection_changed), &controls);
 

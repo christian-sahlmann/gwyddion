@@ -30,7 +30,6 @@
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
-
 #include "dimensions.h"
 #include "preview.h"
 

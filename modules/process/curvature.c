@@ -28,13 +28,12 @@
 #include <libprocess/level.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwydgetutils.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwynullstore.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define CURVATURE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -606,8 +605,6 @@ curvature_dialog(CurvatureArgs *args,
     GtkTreeSelection *selection;
     GtkTreeViewColumn *column;
     GtkCellRenderer *renderer;
-    GwyPixmapLayer *player;
-    GwyVectorLayer *vlayer;
     CurvatureControls controls;
     gint response;
     gint row;
@@ -647,26 +644,10 @@ curvature_dialog(CurvatureArgs *args,
                             GWY_DATA_ITEM_RANGE,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
-    controls.view = gwy_data_view_new(controls.data);
-    player = gwy_layer_basic_new();
-    g_object_set(player,
-                 "data-key", "/0/data",
-                 "gradient-key", "/0/base/palette",
-                 "range-type-key", "/0/base/range-type",
-                 "min-max-key", "/0/base",
-                 NULL);
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), player);
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
-
-    vlayer = g_object_new(g_type_from_name("GwyLayerLine"), NULL);
-    gwy_vector_layer_set_selection_key(vlayer, "/0/select/line");
-    gwy_vector_layer_set_editable(vlayer, FALSE);
-    gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.view),
-                                GWY_VECTOR_LAYER(vlayer));
-    controls.selection = gwy_vector_layer_ensure_selection(vlayer);
+    controls.view = create_preview(controls.data, 0, PREVIEW_SIZE, FALSE);
+    controls.selection = create_vector_layer(GWY_DATA_VIEW(controls.view),
+                                             0, "Line", FALSE);
     g_object_set(controls.selection, "max-objects", 2, NULL);
-
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 4);
 
     table = gtk_table_new(5 + (mfield ? 4 : 0), 4, FALSE);
