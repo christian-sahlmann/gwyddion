@@ -555,7 +555,8 @@ obj_synth_dialog(ObjSynthArgs *args,
     row++;
 
     row = gwy_synth_attach_variance(&controls, row,
-                          &controls.aspect_noise, &args->aspect_noise);
+                                    &controls.aspect_noise,
+                                    &args->aspect_noise);
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Height")),
@@ -895,6 +896,7 @@ object_synth_iter(GwyDataField *surface,
 {
     gint xres, yres, ncells, k, l;
     const ObjSynthFeature *feature;
+    gdouble height_base = args->height * pow10(dimsargs->zpow10);
     GRand *rngid;
 
     g_return_if_fail(nobjects <= nxcells*nycells);
@@ -928,7 +930,7 @@ object_synth_iter(GwyDataField *surface,
             aspect *= exp(gwy_rand_gen_set_gaussian(rngset, RNG_ASPECT,
                                                     args->aspect_noise));
 
-        height = args->height * pow10(dimsargs->zpow10);
+        height = height_base;
         if (args->height_bound)
             height *= size/args->size;
         if (args->height_noise)
