@@ -26,9 +26,6 @@
 #include <libprocess/gwyprocesstypes.h>
 #include <libprocess/stats.h>
 #include <libprocess/arithmetic.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
-#include <libgwydgets/gwylayer-mask.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwyradiobuttons.h>
@@ -36,6 +33,8 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+
+#include "preview.h"
 
 #define MARK_RUN_MODES GWY_RUN_INTERACTIVE
 
@@ -199,7 +198,6 @@ mark_dialog(MarkArgs *args,
     MarkControls controls;
     GwyContainer *data;
     GwyDataField *dfield;
-    GwyPixmapLayer *layer;
     GSList *l;
     gint response, row;
     guint i;
@@ -233,29 +231,6 @@ mark_dialog(MarkArgs *args,
 
     vbox = gtk_vbox_new(FALSE, 8);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
-
-    /* Source mask preview */
-    /* Silly, boxes do not have spacing *between* items... */
-    vbox2 = gtk_vbox_new(FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(vbox), vbox2, FALSE, FALSE, 0);
-
-    controls.view_source = gwy_data_view_new(controls.mydata);
-    gtk_box_pack_start(GTK_BOX(vbox2), controls.view_source, FALSE, FALSE, 0);
-
-    label = gtk_label_new(_("Operand"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox2), label, FALSE, FALSE, 0);
-
-    /* Result preview */
-    vbox2 = gtk_vbox_new(FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(vbox), vbox2, FALSE, FALSE, 0);
-
-    controls.view_result = gwy_data_view_new(controls.mydata);
-    gtk_box_pack_start(GTK_BOX(vbox2), controls.view_result, FALSE, FALSE, 0);
-
-    label = gtk_label_new(_("Result"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox2), label, FALSE, FALSE, 0);
 
     /* Controls */
     table = GTK_TABLE(gtk_table_new(13, 4, FALSE));
@@ -403,33 +378,31 @@ mark_dialog(MarkArgs *args,
     g_object_unref(dfield);
     ensure_mask_color(controls.mydata, "/1/mask");
 
-    /* Source mask preview */
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "/0/data");
-    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view_source), layer);
-    layer = gwy_layer_mask_new();
-    gwy_pixmap_layer_set_data_key(layer, "/0/mask");
-    gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
-    gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls.view_source), layer);
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view_source),
-                                  "/0/data");
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view_source),
-                              PREVIEW_SIZE);
+    /* Source mask preview, must be done when we have some data field in the
+     * container.*/
+    /* Silly, boxes do not have spacing *between* items... */
+    vbox2 = gtk_vbox_new(FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(vbox), vbox2, FALSE, FALSE, 0);
+
+    controls.view_source = create_preview(controls.mydata, 0, PREVIEW_SIZE,
+                                          TRUE);
+    gtk_box_pack_start(GTK_BOX(vbox2), controls.view_source, FALSE, FALSE, 0);
+
+    label = gtk_label_new(_("Operand"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(vbox2), label, FALSE, FALSE, 0);
 
     /* Result preview */
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "/1/data");
-    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/1/base/palette");
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view_result),
-                                  "/1/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view_result), layer);
-    layer = gwy_layer_mask_new();
-    gwy_pixmap_layer_set_data_key(layer, "/1/mask");
-    gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/1/mask");
-    gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls.view_result), layer);
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view_result),
-                              PREVIEW_SIZE);
+    vbox2 = gtk_vbox_new(FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(vbox), vbox2, FALSE, FALSE, 0);
+
+    controls.view_result = create_preview(controls.mydata, 1, PREVIEW_SIZE,
+                                          TRUE);
+    gtk_box_pack_start(GTK_BOX(vbox2), controls.view_result, FALSE, FALSE, 0);
+
+    label = gtk_label_new(_("Result"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(vbox2), label, FALSE, FALSE, 0);
 
     controls.in_construction = FALSE;
     mark_with_changed(gwy_radio_buttons_find(controls.mark_with,

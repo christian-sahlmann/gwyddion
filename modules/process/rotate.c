@@ -26,12 +26,12 @@
 #include <libprocess/gwyprocesstypes.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwystock.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+
+#include "preview.h"
 
 #define ROTATE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -237,9 +237,9 @@ create_preview_data(GwyContainer *data)
                             GWY_INTERPOLATION_LINEAR);
     dfield_show = gwy_data_field_duplicate(dfield);
 
-    gwy_container_set_object_by_name(preview, "/0/data", dfield);
+    gwy_container_set_object_by_name(preview, "/1/data", dfield);
     g_object_unref(dfield);
-    gwy_container_set_object_by_name(preview, "/0/show", dfield_show);
+    gwy_container_set_object_by_name(preview, "/0/data", dfield_show);
     g_object_unref(dfield_show);
 
     gwy_app_sync_data_items(data, preview, oldid, 0, FALSE,
@@ -255,7 +255,6 @@ rotate_dialog(RotateArgs *args,
               GwyContainer *data)
 {
     GtkWidget *dialog, *table, *hbox;
-    GwyPixmapLayer *layer;
     RotateControls controls;
     enum { RESPONSE_RESET = 1 };
     gint response;
@@ -307,12 +306,8 @@ rotate_dialog(RotateArgs *args,
                      G_CALLBACK(expand_changed_cb), &controls);
 
     controls.data = create_preview_data(data);
-    controls.data_view = gwy_data_view_new(controls.data);
+    controls.data_view = create_preview(controls.data, 0, PREVIEW_SIZE, FALSE);
     g_object_unref(controls.data);
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "/0/show");
-    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view), layer);
     gtk_box_pack_start(GTK_BOX(hbox), controls.data_view, FALSE, FALSE, 8);
 
     rotate_dialog_update(&controls, args);
@@ -431,8 +426,8 @@ rotate_preview_draw(RotateControls *controls,
     GwyContainer *data;
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(controls->data_view));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    rfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/show"));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/1/data"));
+    rfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_data_field_copy(dfield, rfield, FALSE);
     gwy_data_field_rotate(rfield, args->angle, args->interp);
     gwy_data_field_data_changed(rfield);

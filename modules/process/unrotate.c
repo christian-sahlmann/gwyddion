@@ -27,12 +27,12 @@
 #include <libprocess/correct.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwystock.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+
+#include "preview.h"
 
 #define UNROTATE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -192,10 +192,10 @@ create_preview_data(GwyContainer *data,
     yres = MAX(yres*zoomval, 3);
     pfield = gwy_data_field_new_resampled(dfield, xres, yres,
                                           GWY_INTERPOLATION_ROUND);
-    gwy_container_set_object_by_name(pdata, "/0/data", pfield);
+    gwy_container_set_object_by_name(pdata, "/1/data", pfield);
     g_object_unref(pfield);
     pfield = gwy_data_field_new_alike(pfield, FALSE);
-    gwy_container_set_object_by_name(pdata, "/0/show", pfield);
+    gwy_container_set_object_by_name(pdata, "/0/data", pfield);
     g_object_unref(pfield);
     gwy_app_sync_data_items(data, pdata, id, 0, FALSE,
                             GWY_DATA_ITEM_GRADIENT,
@@ -214,7 +214,6 @@ unrotate_dialog(UnrotateArgs *args,
 {
     enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *table, *label, *hbox;
-    GwyPixmapLayer *layer;
     UnrotateControls controls;
     const gchar *s;
     gint response;
@@ -286,13 +285,8 @@ unrotate_dialog(UnrotateArgs *args,
                          controls.interp);
 
     controls.data = create_preview_data(data, dfield, id);
-    controls.data_view = gwy_data_view_new(controls.data);
+    controls.data_view = create_preview(controls.data, 0, PREVIEW_SIZE, FALSE);
     g_object_unref(controls.data);
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "/0/show");
-    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.data_view), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view), layer);
     gtk_box_pack_start(GTK_BOX(hbox), controls.data_view, FALSE, FALSE, 8);
 
     unrotate_dialog_update(&controls, args);
@@ -349,8 +343,8 @@ unrotate_dialog_update(UnrotateControls *controls,
     g_free(lab);
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(controls->data_view));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    rfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/show"));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/1/data"));
+    rfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_data_field_copy(dfield, rfield, FALSE);
     gwy_data_field_rotate(rfield, phi, args->interp);
     gwy_data_field_data_changed(rfield);
