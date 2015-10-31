@@ -28,6 +28,7 @@
 #include <libprocess/filters.h>
 #include <libprocess/grains.h>
 #include <libprocess/stats.h>
+#include <libprocess/linestats.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
@@ -273,20 +274,21 @@ unmark_disconnected_values(GwyDataField *dfield, GwyDataField *inclmask,
 {
     guint xres = gwy_data_field_get_xres(dfield);
     guint yres = gwy_data_field_get_yres(dfield);
-    guint lineres = (guint)floor(cbrt(xres*yres - n) + 0.5);
+    guint lineres = (guint)floor(1.5*cbrt(xres*yres - n) + 0.5);
     GwyDataLine *dline = gwy_data_line_new(lineres, lineres, FALSE);
     const gdouble *d;
     gdouble *m;
     guint nn, i, blockstart = 0, bestblockstart = 0, bestblocklen = 0;
     gdouble blocksum = 0.0, bestblocksum = 0.0;
-    gdouble real, off, min, max;
+    gdouble real, off, min, max, rho_zero;
 
     gwy_data_field_area_dh(dfield, inclmask, dline, 0, 0, xres, yres, lineres);
+    rho_zero = gwy_data_line_get_max(dline)/sqrt(xres*yres - n)/4.0;
     d = gwy_data_line_get_data_const(dline);
     lineres = gwy_data_line_get_res(dline);
 
     for (i = 0; i <= lineres; i++) {
-        if (i == lineres || d[i] == 0.0) {
+        if (i == lineres || d[i] < rho_zero) {
             if (blocksum > bestblocksum) {
                 bestblocksum = blocksum;
                 bestblockstart = blockstart;
