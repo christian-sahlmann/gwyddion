@@ -21,6 +21,8 @@ Libraries:
   channels works for images with offset top-left corner.
 - libprocess: A function for trimming empty border rows and columns from
   a mask data field was added.
+- libgwyapp: Functions for obtaining quark keys of various common items
+  (range, palette, title, meta, ...) in the file were added.
 
 Modules:
 - Sensofarx (new): Imports Sensofar PLUx data files.
@@ -52,6 +54,9 @@ Modules:
   extracted curves.
 - Align rows: All the methods consistently keep the mean correction to zero,
   preserving absolute data values.
+- Mark by threshold, Facet analysis: The mask can be combined with mask
+  already present on the image using union or intersection.
+- Mark by threshold: Reset button now really resets all the settings.
 
 Other:
 - Gwyddion can use either minizip or libzip for opening of ZIP-compressed
