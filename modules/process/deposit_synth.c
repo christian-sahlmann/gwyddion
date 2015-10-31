@@ -29,17 +29,15 @@
 #include <libprocess/stats.h>
 #include <libprocess/arithmetic.h>
 #include <libprocess/inttrans.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
 #include "dimensions.h"
+#include "preview.h"
 
 #define DEPOSIT_SYNTH_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
-
 
 // 1. store link to original data
 // 2. create result field
@@ -348,7 +346,6 @@ deposit_synth_dialog(DepositSynthArgs *args,
     DepositSynthControls controls;
     GwyContainer *newdata;
     GwyDataField *dfield;
-    GwyPixmapLayer *layer;
     gboolean finished;
     gint response;
     gint row, newid;
@@ -392,14 +389,7 @@ deposit_synth_dialog(DepositSynthArgs *args,
     }
 
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
-    controls.view = gwy_data_view_new(controls.mydata);
-    layer = gwy_layer_basic_new();
-    g_object_set(layer,
-                 "data-key", "/0/data",
-                 "gradient-key", "/0/base/palette",
-                 NULL);
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, FALSE);
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
 
     gtk_box_pack_start(GTK_BOX(vbox),

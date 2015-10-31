@@ -26,6 +26,7 @@
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-mask.h>
+#include <app/gwymoduleutils.h>
 #include <app/data-browser.h>
 
 G_GNUC_UNUSED

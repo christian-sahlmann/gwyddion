@@ -27,14 +27,13 @@
 #include <libgwyddion/gwyrandgenset.h>
 #include <libprocess/stats.h>
 #include <libprocess/filters.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
 #include "dimensions.h"
+#include "preview.h"
 
 #define COL_SYNTH_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -373,7 +372,6 @@ col_synth_dialog(ColSynthArgs *args,
     GtkWidget *dialog, *table, *vbox, *hbox, *notebook, *hbox2, *check, *label;
     ColSynthControls controls;
     GwyDataField *dfield;
-    GwyPixmapLayer *layer;
     gboolean finished;
     gint response;
     gint row, i;
@@ -413,14 +411,7 @@ col_synth_dialog(ColSynthArgs *args,
                                                          PREVIEW_SIZE);
         controls.zscale = 3.0*gwy_data_field_get_rms(dfield_template);
     }
-    controls.view = gwy_data_view_new(controls.mydata);
-    layer = gwy_layer_basic_new();
-    g_object_set(layer,
-                 "data-key", "/0/data",
-                 "gradient-key", "/0/base/palette",
-                 NULL);
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, FALSE);
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
 
     hbox2 = gwy_synth_instant_updates_new(&controls,
