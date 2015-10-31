@@ -27,8 +27,6 @@
 #include <libprocess/inttrans.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libprocess/linestats.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
@@ -36,6 +34,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define PROF_RUN_MODES (GWY_RUN_INTERACTIVE)
 
@@ -186,8 +185,6 @@ prof_dialog(ProfArgs *args,
     GwyGraphArea *area;
     ProfControls controls;
     gint response;
-    GwyPixmapLayer *layer;
-    GwyVectorLayer *vlayer;
     gint row;
 
     controls.args = args;
@@ -226,25 +223,13 @@ prof_dialog(ProfArgs *args,
     gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
-    controls.view = gwy_data_view_new(controls.mydata);
-    layer = gwy_layer_basic_new();
-    g_object_set(layer,
-                 "data-key", "/0/data",
-                 "gradient-key", "/0/base/palette",
-                 "range-type-key", "/0/base/range-type",
-                 "min-max-key", "/0/base",
-                 NULL);
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
-
-    vlayer = g_object_new(g_type_from_name("GwyLayerPoint"),
-                          "draw-as-vector", TRUE,
-                          "selection-key", "/0/select/vector",
-                          NULL);
-    gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.view), vlayer);
-    controls.selection = gwy_vector_layer_ensure_selection(vlayer);
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, FALSE);
+    controls.selection = create_vector_layer(GWY_DATA_VIEW(controls.view), 0,
+                                             "Point", TRUE);
     gwy_selection_set_max_objects(controls.selection, NLINES);
+    g_object_set(gwy_data_view_get_top_layer(GWY_DATA_VIEW(controls.view)),
+                 "draw-as-vector", TRUE,
+                 NULL);
     g_signal_connect_swapped(controls.selection, "changed",
                              G_CALLBACK(prof_selection_changed), &controls);
 

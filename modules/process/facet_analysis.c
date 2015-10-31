@@ -444,11 +444,12 @@ facets_dialog(FacetsArgs *args,
                                    TRUE);
     load_mask_color(controls.color_button,
                     gwy_data_view_get_data(GWY_DATA_VIEW(controls.view)));
-    gwy_table_attach_hscale(table, row++, _("_Mask color:"), NULL,
+    gwy_table_attach_hscale(table, row, _("_Mask color:"), NULL,
                             GTK_OBJECT(controls.color_button),
                             GWY_HSCALE_WIDGET_NO_EXPAND);
     g_signal_connect(controls.color_button, "clicked",
                      G_CALLBACK(mask_color_changed), &controls);
+    row++;
 
     if (!gwy_si_unit_equal(gwy_data_field_get_si_unit_xy(dfield),
                            gwy_data_field_get_si_unit_z(dfield))) {

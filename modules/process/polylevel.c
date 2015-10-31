@@ -26,13 +26,12 @@
 #include <libprocess/level.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwystock.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define POLYLEVEL_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -363,7 +362,6 @@ poly_level_dialog(PolyLevelArgs *args,
         { N_("Limited total degree"), FALSE, },
     };
     GtkWidget *dialog, *table, *label, *hbox, *vbox;
-    GwyPixmapLayer *layer;
     PolyLevelControls controls;
     gint response;
     gint row;
@@ -401,22 +399,12 @@ poly_level_dialog(PolyLevelArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
     row = 0;
 
-    controls.leveled_view = gwy_data_view_new(controls.data);
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "/0/data");
-    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.leveled_view),
-                                  "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.leveled_view), layer);
+    controls.leveled_view = create_preview(controls.data, 0, PREVIEW_SIZE,
+                                           FALSE);
     gtk_table_attach(GTK_TABLE(table), controls.leveled_view,
                      0, 1, row, row+1, 0, 0, 0, 0);
 
-    controls.bg_view = gwy_data_view_new(controls.data);
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "/1/data");
-    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/1/base/palette");
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.bg_view), "/1/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.bg_view), layer);
+    controls.bg_view = create_preview(controls.data, 1, PREVIEW_SIZE, FALSE);
     gtk_table_attach(GTK_TABLE(table), controls.bg_view,
                      1, 2, row, row+1, 0, 0, 0, 0);
 

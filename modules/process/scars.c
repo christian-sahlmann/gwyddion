@@ -25,13 +25,11 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/arithmetic.h>
 #include <libgwydgets/gwystock.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
-#include <libgwydgets/gwylayer-mask.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define SCARS_MARK_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 #define SCARS_REMOVE_RUN_MODES GWY_RUN_IMMEDIATE
@@ -91,8 +89,6 @@ static void     scars_mark_dialog                  (ScarsArgs *args,
                                                     GwyDataField *dfield,
                                                     gint id,
                                                     GQuark mquark);
-static void     load_mask_color                    (GtkWidget *color_button,
-                                                    GwyContainer *data);
 static void     scars_mark_dialog_update_controls  (ScarsControls *controls,
                                                     ScarsArgs *args);
 static void     scars_mark_dialog_update_values    (ScarsControls *controls,
@@ -101,8 +97,6 @@ static void     scars_mark_dialog_update_thresholds(GtkObject *adj,
                                                     ScarsControls *controls);
 static void     scars_invalidate                   (ScarsControls *controls);
 static void     update_change_cb                   (ScarsControls *controls);
-static void     mask_color_change_cb               (GtkWidget *color_button,
-                                                    ScarsControls *controls);
 static void     preview                            (ScarsControls *controls,
                                                     ScarsArgs *args);
 static void     scars_mark_load_args               (GwyContainer *container,
@@ -461,8 +455,6 @@ scars_mark_dialog(ScarsArgs *args,
     GwyDataField *mfield;
     ScarsControls controls;
     gint response;
-    gdouble zoomval;
-    GwyPixmapLayer *layer;
     GSList *group;
     gboolean temp;
     gint row;
@@ -495,20 +487,7 @@ scars_mark_dialog(ScarsArgs *args,
                             GWY_DATA_ITEM_RANGE,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
-    controls.view = gwy_data_view_new(controls.mydata);
-    layer = gwy_layer_basic_new();
-    g_object_set(layer,
-                 "data-key", "/0/data",
-                 "gradient-key", "/0/base/palette",
-                 "range-type-key", "/0/base/range-type",
-                 "min-max-key", "/0/base",
-                 NULL);
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-    zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
-                                        gwy_data_field_get_yres(dfield));
-    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
-
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, TRUE);
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
     table = gtk_table_new(11, 4, FALSE);
@@ -568,16 +547,11 @@ scars_mark_dialog(ScarsArgs *args,
         row++;
     }
 
-    controls.color_button = gwy_color_button_new();
-    gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
-                                   TRUE);
-    load_mask_color(controls.color_button,
-                    gwy_data_view_get_data(GWY_DATA_VIEW(controls.view)));
-    gwy_table_attach_hscale(table, row++, _("_Mask color:"), NULL,
+    controls.color_button = create_mask_color_button(controls.mydata, dialog,
+                                                     0);
+    gwy_table_attach_hscale(table, row, _("_Mask color:"), NULL,
                             GTK_OBJECT(controls.color_button),
                             GWY_HSCALE_WIDGET_NO_EXPAND);
-    g_signal_connect(controls.color_button, "clicked",
-                     G_CALLBACK(mask_color_change_cb), &controls);
     row++;
 
     controls.update = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
@@ -751,37 +725,10 @@ update_change_cb(ScarsControls *controls)
 }
 
 static void
-mask_color_change_cb(GtkWidget *color_button,
-                     ScarsControls *controls)
-{
-    GwyContainer *data;
-
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
-    gwy_mask_color_selector_run(NULL, GTK_WINDOW(controls->dialog),
-                                GWY_COLOR_BUTTON(color_button), data,
-                                "/0/mask");
-    load_mask_color(color_button, data);
-}
-
-static void
-load_mask_color(GtkWidget *color_button,
-                GwyContainer *data)
-{
-    GwyRGBA rgba;
-
-    if (!gwy_rgba_get_from_container(&rgba, data, "/0/mask")) {
-        gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
-        gwy_rgba_store_to_container(&rgba, data, "/0/mask");
-    }
-    gwy_color_button_set_color(GWY_COLOR_BUTTON(color_button), &rgba);
-}
-
-static void
 preview(ScarsControls *controls,
         ScarsArgs *args)
 {
     GwyDataField *mask, *dfield;
-    GwyPixmapLayer *layer;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
@@ -791,11 +738,6 @@ preview(ScarsControls *controls,
         mask = create_mask_field(dfield);
         gwy_container_set_object_by_name(controls->mydata, "/0/mask", mask);
         g_object_unref(mask);
-
-        layer = gwy_layer_mask_new();
-        gwy_pixmap_layer_set_data_key(layer, "/0/mask");
-        gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
-        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), layer);
     }
     gwy_data_field_copy(dfield, mask, FALSE);
     mark_scars(dfield, mask, args);

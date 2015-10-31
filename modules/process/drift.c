@@ -382,7 +382,7 @@ drift_dialog(DriftArgs *args,
 
     controls.color_button = create_mask_color_button(controls.mydata, dialog,
                                                      0);
-    gwy_table_attach_hscale(table, row++, _("_Mask color:"), NULL,
+    gwy_table_attach_hscale(table, row, _("_Mask color:"), NULL,
                             GTK_OBJECT(controls.color_button),
                             GWY_HSCALE_WIDGET_NO_EXPAND);
     row++;

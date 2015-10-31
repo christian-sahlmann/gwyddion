@@ -31,13 +31,12 @@
 #include <libprocess/grains.h>
 #include <libprocess/elliptic.h>
 #include <libprocess/arithmetic.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define EDGE_RUN_MODES GWY_RUN_IMMEDIATE
 #define EDGE_UI_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
@@ -66,7 +65,6 @@ typedef struct {
 typedef struct {
     GtkWidget *dialog;
     GtkWidget *view;
-    GwyPixmapLayer *layer;
     GtkObject *gaussian_fwhm;
     GtkObject *threshold;
     GSList *display_group;
@@ -670,18 +668,7 @@ zero_crossing_dialog(ZeroCrossingArgs *args,
                             GWY_DATA_ITEM_RANGE,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
-    controls.view = gwy_data_view_new(controls.mydata);
-    controls.layer = gwy_layer_basic_new();
-    g_object_set(controls.layer,
-                 "data-key", "/0/data",
-                 "gradient-key", "/0/base/palette",
-                 NULL);
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), controls.layer);
-    zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
-                                        gwy_data_field_get_yres(dfield));
-    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
-
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
     table = gtk_table_new(7, 4, FALSE);
@@ -812,22 +799,25 @@ static void
 zero_crossing_display_changed(GtkToggleButton *radio,
                               ZeroCrossingControls *controls)
 {
+    GwyPixmapLayer *layer;
+
     if (!gtk_toggle_button_get_active(radio))
         return;
 
+    layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(controls->view));
     controls->display = gwy_radio_buttons_get_current(controls->display_group);
     zero_crossing_preview(controls, controls->args);
     switch (controls->display) {
         case DISPLAY_DATA:
-        gwy_pixmap_layer_set_data_key(controls->layer, "/0/data");
+        gwy_pixmap_layer_set_data_key(layer, "/0/data");
         break;
 
         case DISPLAY_LOG:
-        gwy_pixmap_layer_set_data_key(controls->layer, "/0/gauss");
+        gwy_pixmap_layer_set_data_key(layer, "/0/gauss");
         break;
 
         case DISPLAY_SHOW:
-        gwy_pixmap_layer_set_data_key(controls->layer, "/0/show");
+        gwy_pixmap_layer_set_data_key(layer, "/0/show");
         break;
 
         default:

@@ -28,9 +28,6 @@
 #include <libprocess/stats.h>
 #include <libprocess/arithmetic.h>
 #include <libprocess/filters.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
-#include <libgwydgets/gwylayer-mask.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
@@ -38,6 +35,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define WPOUR_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -133,10 +131,6 @@ static void           wpour_dialog                (WPourArgs *args,
                                                    GwyDataField *dfield,
                                                    gint id,
                                                    GQuark mquark);
-static void           mask_color_changed          (GtkWidget *color_button,
-                                                   WPourControls *controls);
-static void           load_mask_color             (GtkWidget *color_button,
-                                                   GwyContainer *data);
 static void           wpour_dialog_update_controls(WPourControls *controls,
                                                    WPourArgs *args);
 static void           inverted_changed            (WPourControls *controls,
@@ -277,7 +271,6 @@ wpour_dialog(WPourArgs *args,
     GtkObject *gtkobj;
     WPourControls controls;
     gint response;
-    GwyPixmapLayer *layer;
     gint row;
     UpdateType temp;
 
@@ -315,19 +308,9 @@ wpour_dialog(WPourArgs *args,
                             GWY_DATA_ITEM_RANGE,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
-    controls.view = gwy_data_view_new(controls.mydata);
-    layer = gwy_layer_basic_new();
-    controls.player = layer;
-    g_object_set(layer,
-                 "data-key", "/0/data",
-                 "gradient-key", "/0/base/palette",
-                 "range-type-key", "/0/base/range-type",
-                 "min-max-key", "/0/base",
-                 NULL);
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
-
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, TRUE);
+    controls.player = gwy_data_view_get_base_layer(GWY_DATA_VIEW(controls.view));
+    controls.mlayer = gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(controls.view));
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
     table = gtk_table_new(10, 4, FALSE);
@@ -392,16 +375,11 @@ wpour_dialog(WPourArgs *args,
                              G_CALLBACK(inverted_changed), &controls);
     row++;
 
-    controls.color_button = gwy_color_button_new();
-    gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
-                                   TRUE);
-    load_mask_color(controls.color_button,
-                    gwy_data_view_get_data(GWY_DATA_VIEW(controls.view)));
-    gwy_table_attach_hscale(table, row++, _("_Mask color:"), NULL,
+    controls.color_button = create_mask_color_button(controls.mydata, dialog,
+                                                     0);
+    gwy_table_attach_hscale(table, row, _("_Mask color:"), NULL,
                             GTK_OBJECT(controls.color_button),
                             GWY_HSCALE_WIDGET_NO_EXPAND);
-    g_signal_connect(controls.color_button, "clicked",
-                     G_CALLBACK(mask_color_changed), &controls);
     row++;
 
     controls.image_preview
@@ -588,32 +566,6 @@ wpour_update_double(WPourControls *controls, GtkAdjustment *adj)
     wpour_invalidate(controls);
 }
 
-static void
-mask_color_changed(GtkWidget *color_button,
-                   WPourControls *controls)
-{
-    GwyContainer *data;
-
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
-    gwy_mask_color_selector_run(NULL, GTK_WINDOW(controls->dialog),
-                                GWY_COLOR_BUTTON(color_button), data,
-                                "/0/mask");
-    load_mask_color(color_button, data);
-}
-
-static void
-load_mask_color(GtkWidget *color_button,
-                GwyContainer *data)
-{
-    GwyRGBA rgba;
-
-    if (!gwy_rgba_get_from_container(&rgba, data, "/0/mask")) {
-        gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
-        gwy_rgba_store_to_container(&rgba, data, "/0/mask");
-    }
-    gwy_color_button_set_color(GWY_COLOR_BUTTON(color_button), &rgba);
-}
-
 static GwyDataField*
 create_mask_field(GwyDataField *dfield)
 {
@@ -674,7 +626,6 @@ set_visible_images(WPourControls *controls)
 {
     GwyDataField *dfield, *preproc, *mask;
     WPourArgs *args = controls->args;
-    GwyPixmapLayer *layer;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
@@ -696,12 +647,6 @@ set_visible_images(WPourControls *controls)
         mask = create_mask_field(dfield);
         gwy_container_set_object_by_name(controls->mydata, "/0/mask", mask);
         g_object_unref(mask);
-
-        layer = gwy_layer_mask_new();
-        controls->mlayer = layer;
-        gwy_pixmap_layer_set_data_key(layer, "/0/mask");
-        gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
-        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), layer);
     }
 
     if (args->mask_preview == MASK_PREVIEW_NONE)

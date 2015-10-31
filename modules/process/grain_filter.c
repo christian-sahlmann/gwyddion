@@ -27,9 +27,6 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyexpr.h>
 #include <libprocess/grains.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
-#include <libgwydgets/gwylayer-mask.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
@@ -37,6 +34,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define GFILTER_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -130,10 +128,6 @@ static void       gfilter_dialog               (GFilterArgs *args,
                                                 GwyDataField *mfield,
                                                 gint id,
                                                 GQuark mquark);
-static void       mask_color_changed           (GtkWidget *color_button,
-                                                GFilterControls *controls);
-static void       load_mask_color              (GtkWidget *color_button,
-                                                GwyContainer *data);
 static void       gfilter_invalidate           (GFilterControls *controls);
 static void       preview                      (GFilterControls *controls);
 static void       update_changed               (GFilterControls *controls,
@@ -304,7 +298,6 @@ gfilter_dialog(GFilterArgs *args,
     GFilterControls controls;
     gint response, row, i;
     GwySIUnit *siunit;
-    GwyPixmapLayer *layer;
 
     controls.args = args;
     controls.mask = mfield;
@@ -354,22 +347,7 @@ gfilter_dialog(GFilterArgs *args,
                             GWY_DATA_ITEM_RANGE,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
-    controls.view = gwy_data_view_new(controls.mydata);
-    layer = gwy_layer_basic_new();
-    g_object_set(layer,
-                 "data-key", "/0/data",
-                 "gradient-key", "/0/base/palette",
-                 "range-type-key", "/0/base/range-type",
-                 "min-max-key", "/0/base",
-                 NULL);
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-    layer = gwy_layer_mask_new();
-    gwy_pixmap_layer_set_data_key(layer, "/0/mask");
-    gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
-    gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls.view), layer);
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
-
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, TRUE);
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
 
     controls.update = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
@@ -385,15 +363,10 @@ gfilter_dialog(GFilterArgs *args,
     label = gtk_label_new_with_mnemonic(_("_Mask color:"));
     gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
 
-    controls.color_button = gwy_color_button_new();
-    gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
-                                   TRUE);
-    load_mask_color(controls.color_button,
-                    gwy_data_view_get_data(GWY_DATA_VIEW(controls.view)));
+    controls.color_button = create_mask_color_button(controls.mydata, dialog,
+                                                     0);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.color_button);
     gtk_box_pack_start(GTK_BOX(hbox2), controls.color_button, FALSE, FALSE, 0);
-    g_signal_connect(controls.color_button, "clicked",
-                     G_CALLBACK(mask_color_changed), &controls);
 
     table = gtk_table_new(10, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
@@ -624,32 +597,6 @@ preview(GFilterControls *controls)
     gfilter_process(mfield, controls->args);
     gwy_data_field_data_changed(mfield);
     controls->computed = TRUE;
-}
-
-static void
-mask_color_changed(GtkWidget *color_button,
-                   GFilterControls *controls)
-{
-    GwyContainer *data;
-
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
-    gwy_mask_color_selector_run(NULL, GTK_WINDOW(controls->dialog),
-                                GWY_COLOR_BUTTON(color_button), data,
-                                "/0/mask");
-    load_mask_color(color_button, data);
-}
-
-static void
-load_mask_color(GtkWidget *color_button,
-                GwyContainer *data)
-{
-    GwyRGBA rgba;
-
-    if (!gwy_rgba_get_from_container(&rgba, data, "/0/mask")) {
-        gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
-        gwy_rgba_store_to_container(&rgba, data, "/0/mask");
-    }
-    gwy_color_button_set_color(GWY_COLOR_BUTTON(color_button), &rgba);
 }
 
 static void
