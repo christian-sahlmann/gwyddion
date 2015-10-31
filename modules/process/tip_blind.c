@@ -932,7 +932,6 @@ tip_blind_do_images(TipBlindControls *controls,
     data = gwy_app_data_browser_get(args->source.datano);
     for (i = 0; i < args->nstripes; i++) {
         gchar *title;
-        gchar key[24];
 
         if (!args->goodtip[i] || !args->stripetips[i])
             continue;
@@ -943,8 +942,9 @@ tip_blind_do_images(TipBlindControls *controls,
                                 GWY_DATA_ITEM_GRADIENT, 0);
         title = g_strdup_printf("%s %u/%u",
                                 _("Estimated tip"), i+1, args->nstripes);
-        g_snprintf(key, sizeof(key), "/%d/data/title", newid);
-        gwy_container_set_string_by_name(data, key, title);
+        gwy_container_set_string(data,
+                                 gwy_app_get_data_title_key_for_id(newid),
+                                 title);
         gwy_app_channel_log_add_proc(data, -1, newid);
     }
 

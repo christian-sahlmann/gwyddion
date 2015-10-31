@@ -401,10 +401,10 @@ threshold_get_display_range(GwyContainer *container,
                             gdouble *disp_max)
 {
     GwyLayerBasicRangeType range_type = GWY_LAYER_BASIC_RANGE_FULL;
-    gchar key[64];
 
-    g_snprintf(key, sizeof(key), "/%d/base/range-type", id);
-    gwy_container_gis_enum_by_name(container, key, &range_type);
+    gwy_container_gis_enum(container,
+                           gwy_app_get_data_range_type_key_for_id(id),
+                           &range_type);
 
     switch (range_type) {
         case GWY_LAYER_BASIC_RANGE_FULL:
@@ -414,10 +414,12 @@ threshold_get_display_range(GwyContainer *container,
 
         case GWY_LAYER_BASIC_RANGE_FIXED:
         gwy_data_field_get_min_max(data_field, disp_min, disp_max);
-        g_snprintf(key, sizeof(key), "/%d/base/min", id);
-        gwy_container_gis_double_by_name(container, key, disp_min);
-        g_snprintf(key, sizeof(key), "/%d/base/max", id);
-        gwy_container_gis_double_by_name(container, key, disp_max);
+        gwy_container_gis_double(container,
+                                 gwy_app_get_data_range_min_key_for_id(id),
+                                 disp_min);
+        gwy_container_gis_double(container,
+                                 gwy_app_get_data_range_min_key_for_id(id),
+                                 disp_max);
         break;
 
         case GWY_LAYER_BASIC_RANGE_AUTO:
