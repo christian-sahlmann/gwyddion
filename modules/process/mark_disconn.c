@@ -29,14 +29,13 @@
 #include <libprocess/grains.h>
 #include <libprocess/stats.h>
 #include <libprocess/linestats.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
-#include <libgwydgets/gwylayer-mask.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+
+#include "preview.h"
 
 #define DISCONN_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -77,10 +76,6 @@ static gboolean disconn_dialog       (DisconnArgs *args,
                                       gint id);
 static void     disconn_dialog_update(DisconnControls *controls,
                                       DisconnArgs *args);
-static void     mask_color_changed   (GtkWidget *color_button,
-                                      DisconnControls *controls);
-static void     load_mask_color      (GtkWidget *color_button,
-                                      GwyContainer *data);
 static void     preview              (DisconnControls *controls);
 static gboolean disconn_do           (GwyDataField *dfield,
                                       GwyDataField *mask,
@@ -208,7 +203,6 @@ disconn_dialog(DisconnArgs *args, GwyContainer *data, gint id)
 
     GtkWidget *dialog, *table, *label, *hbox;
     GwyDataField *dfield;
-    GwyPixmapLayer *layer;
     DisconnControls controls;
     GSList *group;
     gint response, row;
@@ -252,25 +246,7 @@ disconn_dialog(DisconnArgs *args, GwyContainer *data, gint id)
                             GWY_DATA_ITEM_RANGE,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
-    controls.view = gwy_data_view_new(controls.mydata);
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
-
-    layer = gwy_layer_basic_new();
-    g_object_set(layer,
-                 "data-key", "/0/data",
-                 "gradient-key", "/0/base/palette",
-                 "range-type-key", "/0/base/range-type",
-                 "min-max-key", "/0/base",
-                 NULL);
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-
-    layer = gwy_layer_mask_new();
-    gwy_pixmap_layer_set_data_key(layer, "/0/mask");
-    gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
-    gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls.view), layer);
-
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
-
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, TRUE);
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
     table = gtk_table_new(6, 4, FALSE);
@@ -300,16 +276,11 @@ disconn_dialog(DisconnArgs *args, GwyContainer *data, gint id)
                      G_CALLBACK(size_changed), &controls);
     row++;
 
-    controls.color_button = gwy_color_button_new();
-    gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
-                                   TRUE);
-    load_mask_color(controls.color_button,
-                    gwy_data_view_get_data(GWY_DATA_VIEW(controls.view)));
-    gwy_table_attach_hscale(table, row++, _("_Mask color:"), NULL,
+    controls.color_button = create_mask_color_button(controls.mydata, dialog,
+                                                     0);
+    gwy_table_attach_hscale(table, row, _("_Mask color:"), NULL,
                             GTK_OBJECT(controls.color_button),
                             GWY_HSCALE_WIDGET_NO_EXPAND);
-    g_signal_connect(controls.color_button, "clicked",
-                     G_CALLBACK(mask_color_changed), &controls);
     row++;
 
     gtk_widget_show_all(dialog);
@@ -367,32 +338,6 @@ preview(DisconnControls *controls)
     mask = gwy_container_get_object_by_name(controls->mydata, "/0/mask");
     if (disconn_do(dfield, mask, controls->args))
         gwy_data_field_data_changed(mask);
-}
-
-static void
-mask_color_changed(GtkWidget *color_button,
-                   DisconnControls *controls)
-{
-    GwyContainer *data;
-
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
-    gwy_mask_color_selector_run(NULL, GTK_WINDOW(controls->dialog),
-                                GWY_COLOR_BUTTON(color_button), data,
-                                "/0/mask");
-    load_mask_color(color_button, data);
-}
-
-static void
-load_mask_color(GtkWidget *color_button,
-                GwyContainer *data)
-{
-    GwyRGBA rgba;
-
-    if (!gwy_rgba_get_from_container(&rgba, data, "/0/mask")) {
-        gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
-        gwy_rgba_store_to_container(&rgba, data, "/0/mask");
-    }
-    gwy_color_button_set_color(GWY_COLOR_BUTTON(color_button), &rgba);
 }
 
 static void
