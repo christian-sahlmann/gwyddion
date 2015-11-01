@@ -55,6 +55,7 @@ typedef enum {
 typedef struct {
     GwyFeaturesType type;
     gint size;
+    gdouble threshold;
     gboolean combine;
     GwyMergeType combine_type;
 } DisconnArgs;
@@ -64,6 +65,7 @@ typedef struct {
     GtkWidget *dialog;
     GSList *type;
     GtkObject *size;
+    GtkObject *threshold;
     GwyContainer *mydata;
     GtkWidget *view;
     GtkWidget *color_button;
@@ -87,6 +89,8 @@ static void     type_changed         (GtkToggleButton *toggle,
                                       DisconnControls *controls);
 static void     size_changed         (GtkAdjustment *adj,
                                       DisconnControls *controls);
+static void     threshold_changed    (GtkAdjustment *adj,
+                                      DisconnControls *controls);
 static void     combine_changed      (GtkToggleButton *toggle,
                                       DisconnControls *controls);
 static void     combine_type_changed (GtkComboBox *combo,
@@ -98,6 +102,7 @@ static void     disconn_save_args    (GwyContainer *container,
 
 static const DisconnArgs disconn_defaults = {
     FEATURES_BOTH, 5,
+    0.1,
     FALSE, GWY_MERGE_UNION,
 };
 
@@ -192,7 +197,7 @@ disconn_dialog(DisconnArgs *args, GwyContainer *data, gint id)
         { N_("Both"),     FEATURES_BOTH,     },
     };
 
-    GtkWidget *dialog, *table, *label, *hbox;
+    GtkWidget *dialog, *table, *label, *hbox, *spin;
     GwyDataField *dfield, *existing_mask = NULL;
     DisconnControls controls;
     GSList *group;
@@ -242,7 +247,7 @@ disconn_dialog(DisconnArgs *args, GwyContainer *data, gint id)
     controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, TRUE);
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
-    table = gtk_table_new(7 + 2*(!!existing_mask), 4, FALSE);
+    table = gtk_table_new(8 + 2*(!!existing_mask), 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -263,12 +268,22 @@ disconn_dialog(DisconnArgs *args, GwyContainer *data, gint id)
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     controls.size = gtk_adjustment_new(args->size, 1, 256, 1, 10, 0);
-    gwy_table_attach_hscale(table, row, _("_Maximum outlier radius:"), "px",
+    gwy_table_attach_hscale(table, row, _("Defect _radius:"), "px",
                             controls.size, GWY_HSCALE_SQRT);
     g_signal_connect(controls.size, "value-changed",
                      G_CALLBACK(size_changed), &controls);
     row++;
 
+    controls.threshold = gtk_adjustment_new(args->threshold,
+                                            0.0, 1.0, 0.001, 0.1, 0);
+    spin = gwy_table_attach_hscale(table, row, _("_Threshold:"), NULL,
+                                   controls.threshold, GWY_HSCALE_SQRT);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 4);
+    g_signal_connect(controls.threshold, "value-changed",
+                     G_CALLBACK(threshold_changed), &controls);
+    row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     label = gwy_label_new_header(_("Options"));
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -396,6 +411,12 @@ size_changed(GtkAdjustment *adj, DisconnControls *controls)
 }
 
 static void
+threshold_changed(GtkAdjustment *adj, DisconnControls *controls)
+{
+    controls->args->threshold = gtk_adjustment_get_value(adj);
+}
+
+static void
 combine_changed(GtkToggleButton *toggle, DisconnControls *controls)
 {
     controls->args->combine = gtk_toggle_button_get_active(toggle);
@@ -411,11 +432,11 @@ combine_type_changed(GtkComboBox *combo, DisconnControls *controls)
  * contiguous block of values in the height distribution. */
 static guint
 unmark_disconnected_values(GwyDataField *dfield, GwyDataField *inclmask,
-                           guint n)
+                           guint n, gdouble threshold)
 {
     guint xres = gwy_data_field_get_xres(dfield);
     guint yres = gwy_data_field_get_yres(dfield);
-    guint lineres = (guint)floor(1.5*cbrt(xres*yres - n) + 0.5);
+    guint lineres = (guint)floor(2.5*cbrt(xres*yres - n) + 0.5);
     GwyDataLine *dline = gwy_data_line_new(lineres, lineres, FALSE);
     const gdouble *d;
     gdouble *m;
@@ -424,12 +445,12 @@ unmark_disconnected_values(GwyDataField *dfield, GwyDataField *inclmask,
     gdouble real, off, min, max, rho_zero;
 
     gwy_data_field_area_dh(dfield, inclmask, dline, 0, 0, xres, yres, lineres);
-    rho_zero = gwy_data_line_get_max(dline)/sqrt(xres*yres - n)/4.0;
+    rho_zero = gwy_data_line_get_max(dline)/sqrt(xres*yres - n)*threshold;
     d = gwy_data_line_get_data_const(dline);
     lineres = gwy_data_line_get_res(dline);
 
     for (i = 0; i <= lineres; i++) {
-        if (i == lineres || d[i] < rho_zero) {
+        if (i == lineres || (i && d[i] + d[i-1] < rho_zero)) {
             if (blocksum > bestblocksum) {
                 bestblocksum = blocksum;
                 bestblockstart = blockstart;
@@ -577,8 +598,10 @@ disconn_do(GwyDataField *dfield,
         goto finish;
 
     n = 0;
-    while ((nn = unmark_disconnected_values(difffield, mask, n)))
+    while ((nn = unmark_disconnected_values(difffield, mask,
+                                            n, 4.0*args->threshold))) {
         n += nn;
+    }
 
     gwy_data_field_grains_invert(mask);
     ok = TRUE;
@@ -592,6 +615,7 @@ finish:
 static const gchar combine_key[]      = "/module/mark_disconn/combine";
 static const gchar combine_type_key[] = "/module/mark_disconn/combine_type";
 static const gchar radius_key[]       = "/module/mark_disconn/radius";
+static const gchar threshold_key[]    = "/module/mark_disconn/threshold";
 static const gchar type_key[]         = "/module/mark_disconn/type";
 
 static void
@@ -601,6 +625,7 @@ disconn_sanitize_args(DisconnArgs *args)
         && args->type != FEATURES_NEGATIVE)
         args->type = FEATURES_BOTH;
     args->size = CLAMP(args->size, 1, 256);
+    args->threshold = CLAMP(args->threshold, 0.0, 1.0);
     args->combine = !!args->combine;
     args->combine_type = MIN(args->combine_type, GWY_MERGE_INTERSECTION);
 }
@@ -613,6 +638,8 @@ disconn_load_args(GwyContainer *container,
 
     gwy_container_gis_enum_by_name(container, type_key, &args->type);
     gwy_container_gis_int32_by_name(container, radius_key, &args->size);
+    gwy_container_gis_double_by_name(container, threshold_key,
+                                     &args->threshold);
     gwy_container_gis_boolean_by_name(container, combine_key, &args->combine);
     gwy_container_gis_enum_by_name(container, combine_type_key,
                                    &args->combine_type);
@@ -625,6 +652,7 @@ disconn_save_args(GwyContainer *container,
 {
     gwy_container_set_int32_by_name(container, type_key, args->type);
     gwy_container_set_int32_by_name(container, radius_key, args->size);
+    gwy_container_set_double_by_name(container, threshold_key, args->threshold);
     gwy_container_set_boolean_by_name(container, combine_key, args->combine);
     gwy_container_set_enum_by_name(container, combine_type_key,
                                    args->combine_type);
