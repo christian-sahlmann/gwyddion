@@ -61,8 +61,16 @@ typedef enum {
     RNG_HEIGHT,
     RNG_ANGLE,
     RNG_HTRUNC,
+    RNG_SCULPT,
     RNG_NRNGS
 } ObjSynthRng;
+
+typedef enum {
+    SCULPT_UP       = 0,
+    SCULPT_DOWN     = 1,
+    SCULPT_RANDOMLY = 2,
+    SCULPT_NTYPES
+} SculptType;
 
 typedef enum {
     OBJ_SYNTH_SPHERE   = 0,
@@ -118,6 +126,7 @@ typedef struct {
     gdouble height;
     gboolean height_bound;
     gdouble height_noise;
+    SculptType sculpt;
     gdouble angle;
     gdouble angle_noise;
     gdouble htrunc;
@@ -152,6 +161,7 @@ struct _ObjSynthControls {
     GtkObject *angle_noise;
     GtkObject *htrunc;
     GtkObject *htrunc_noise;
+    GtkWidget *sculpt;
     GtkObject *coverage;
     GtkWidget *coverage_value;
     GtkWidget *coverage_units;
@@ -163,68 +173,74 @@ struct _ObjSynthControls {
     gulong sid;
 };
 
-static gboolean    module_register      (void);
-static void        obj_synth            (GwyContainer *data,
-                                         GwyRunType run);
-static void        run_noninteractive   (ObjSynthArgs *args,
-                                         const GwyDimensionArgs *dimsargs,
-                                         GwyRandGenSet *rngset,
-                                         GwyContainer *data,
-                                         GwyDataField *dfield,
-                                         gint oldid,
-                                         GQuark quark);
-static gboolean    obj_synth_dialog     (ObjSynthArgs *args,
-                                         GwyDimensionArgs *dimsargs,
-                                         GwyRandGenSet *rngset,
-                                         GwyContainer *data,
-                                         GwyDataField *dfield,
-                                         gint id);
-static GtkWidget*  feature_selector_new (ObjSynthControls *controls);
-static void        update_controls      (ObjSynthControls *controls,
-                                         ObjSynthArgs *args);
-static void        page_switched        (ObjSynthControls *controls,
-                                         GtkNotebookPage *page,
-                                         gint pagenum);
-static void        update_values        (ObjSynthControls *controls);
-static void        feature_type_selected(GtkComboBox *combo,
-                                         ObjSynthControls *controls);
-static void        height_init_clicked  (ObjSynthControls *controls);
-static gint        attach_truncation    (ObjSynthControls *controls,
-                                         gint row,
-                                         GtkObject **adj,
-                                         gdouble *target);
-static void        update_coverage_value(ObjSynthControls *controls);
-static void        obj_synth_invalidate (ObjSynthControls *controls);
-static gboolean    preview_gsource      (gpointer user_data);
-static void        preview              (ObjSynthControls *controls);
-static void        obj_synth_do         (const ObjSynthArgs *args,
-                                         const GwyDimensionArgs *dimsargs,
-                                         GwyRandGenSet *rngset,
-                                         GwyDataField *dfield);
-static void        object_synth_iter    (GwyDataField *surface,
-                                         ObjSynthObject *object,
-                                         const ObjSynthArgs *args,
-                                         const GwyDimensionArgs *dimsargs,
-                                         GwyRandGenSet *rngset,
-                                         gint nxcells,
-                                         gint nycells,
-                                         gint xoff,
-                                         gint yoff,
-                                         gint nobjects,
-                                         gint *indices);
-static void        place_add_min        (GwyDataField *surface,
-                                         ObjSynthObject *object,
-                                         gint col,
-                                         gint row);
-static glong       calculate_n_objects  (const ObjSynthArgs *args,
-                                         guint xres,
-                                         guint yres);
-static void        obj_synth_load_args  (GwyContainer *container,
-                                         ObjSynthArgs *args,
-                                         GwyDimensionArgs *dimsargs);
-static void        obj_synth_save_args  (GwyContainer *container,
-                                         const ObjSynthArgs *args,
-                                         const GwyDimensionArgs *dimsargs);
+static gboolean   module_register      (void);
+static void       obj_synth            (GwyContainer *data,
+                                        GwyRunType run);
+static void       run_noninteractive   (ObjSynthArgs *args,
+                                        const GwyDimensionArgs *dimsargs,
+                                        GwyRandGenSet *rngset,
+                                        GwyContainer *data,
+                                        GwyDataField *dfield,
+                                        gint oldid,
+                                        GQuark quark);
+static gboolean   obj_synth_dialog     (ObjSynthArgs *args,
+                                        GwyDimensionArgs *dimsargs,
+                                        GwyRandGenSet *rngset,
+                                        GwyContainer *data,
+                                        GwyDataField *dfield,
+                                        gint id);
+static GtkWidget* shape_selector_new   (ObjSynthControls *controls);
+static void       update_controls      (ObjSynthControls *controls,
+                                        ObjSynthArgs *args);
+static void       page_switched        (ObjSynthControls *controls,
+                                        GtkNotebookPage *page,
+                                        gint pagenum);
+static void       update_values        (ObjSynthControls *controls);
+static void       shape_selected       (GtkComboBox *combo,
+                                        ObjSynthControls *controls);
+static void       sculpt_type_changed  (GtkComboBox *combo,
+                                        ObjSynthControls *controls);
+static void       height_init_clicked  (ObjSynthControls *controls);
+static gint       attach_truncation    (ObjSynthControls *controls,
+                                        gint row,
+                                        GtkObject **adj,
+                                        gdouble *target);
+static void       update_coverage_value(ObjSynthControls *controls);
+static void       obj_synth_invalidate (ObjSynthControls *controls);
+static gboolean   preview_gsource      (gpointer user_data);
+static void       preview              (ObjSynthControls *controls);
+static void       obj_synth_do         (const ObjSynthArgs *args,
+                                        const GwyDimensionArgs *dimsargs,
+                                        GwyRandGenSet *rngset,
+                                        GwyDataField *dfield);
+static void       object_synth_iter    (GwyDataField *surface,
+                                        ObjSynthObject *object,
+                                        const ObjSynthArgs *args,
+                                        const GwyDimensionArgs *dimsargs,
+                                        GwyRandGenSet *rngset,
+                                        gint nxcells,
+                                        gint nycells,
+                                        gint xoff,
+                                        gint yoff,
+                                        gint nobjects,
+                                        gint *indices);
+static void       place_add_min        (GwyDataField *surface,
+                                        ObjSynthObject *object,
+                                        gint col,
+                                        gint row);
+static void       place_add_max        (GwyDataField *surface,
+                                        ObjSynthObject *object,
+                                        gint col,
+                                        gint row);
+static glong      calculate_n_objects  (const ObjSynthArgs *args,
+                                        guint xres,
+                                        guint yres);
+static void       obj_synth_load_args  (GwyContainer *container,
+                                        ObjSynthArgs *args,
+                                        GwyDimensionArgs *dimsargs);
+static void       obj_synth_save_args  (GwyContainer *container,
+                                        const ObjSynthArgs *args,
+                                        const GwyDimensionArgs *dimsargs);
 
 #define GWY_SYNTH_CONTROLS ObjSynthControls
 #define GWY_SYNTH_INVALIDATE(controls) \
@@ -252,6 +268,7 @@ static const ObjSynthArgs obj_synth_defaults = {
     20.0, 0.0,
     1.0, 0.0,
     1.0, TRUE, 0.0,
+    SCULPT_UP,
     0.0, 0.0,
     1.0, 0.0,
     1.0,
@@ -406,6 +423,12 @@ obj_synth_dialog(ObjSynthArgs *args,
                  GwyDataField *dfield_template,
                  gint id)
 {
+    static const GwyEnum sculpt_types[] = {
+        { N_("Positive"),      SCULPT_UP,       },
+        { N_("Negative"),      SCULPT_DOWN,     },
+        { N_("Both (random)"), SCULPT_RANDOMLY, },
+    };
+
     GtkWidget *dialog, *table, *vbox, *hbox, *notebook;
     ObjSynthControls controls;
     GwyDataField *dfield;
@@ -491,7 +514,7 @@ obj_synth_dialog(ObjSynthArgs *args,
                              gtk_label_new(_("Generator")));
     row = 0;
 
-    controls.type = feature_selector_new(&controls);
+    controls.type = shape_selector_new(&controls);
     gwy_table_attach_hscale(table, row, _("_Shape:"), NULL,
                             GTK_OBJECT(controls.type), GWY_HSCALE_WIDGET);
     row++;
@@ -587,6 +610,14 @@ obj_synth_dialog(ObjSynthArgs *args,
                                     &controls.htrunc_noise,
                                     &args->htrunc_noise);
 
+    controls.sculpt
+        = gwy_enum_combo_box_new(sculpt_types, G_N_ELEMENTS(sculpt_types),
+                                 G_CALLBACK(sculpt_type_changed), &controls,
+                                 args->sculpt, TRUE);
+    gwy_table_attach_hscale(table, row, _("_Feature type:"), NULL,
+                            GTK_OBJECT(controls.sculpt), GWY_HSCALE_WIDGET);
+    row++;
+
     row = gwy_synth_attach_orientation(&controls, row,
                                        &controls.angle, &args->angle);
     row = gwy_synth_attach_variance(&controls, row,
@@ -658,7 +689,7 @@ get_feature(guint type)
 }
 
 static GtkWidget*
-feature_selector_new(ObjSynthControls *controls)
+shape_selector_new(ObjSynthControls *controls)
 {
     GtkWidget *combo;
     GwyEnum *model;
@@ -672,7 +703,7 @@ feature_selector_new(ObjSynthControls *controls)
     }
 
     combo = gwy_enum_combo_box_new(model, n,
-                                   G_CALLBACK(feature_type_selected), controls,
+                                   G_CALLBACK(shape_selected), controls,
                                    controls->args->type, TRUE);
     g_object_weak_ref(G_OBJECT(combo), (GWeakNotify)g_free, model);
 
@@ -740,11 +771,19 @@ update_values(ObjSynthControls *controls)
 }
 
 static void
-feature_type_selected(GtkComboBox *combo,
-                      ObjSynthControls *controls)
+shape_selected(GtkComboBox *combo,
+               ObjSynthControls *controls)
 {
     controls->args->type = gwy_enum_combo_box_get_active(combo);
     update_coverage_value(controls);
+    obj_synth_invalidate(controls);
+}
+
+static void
+sculpt_type_changed(GtkComboBox *combo,
+                    ObjSynthControls *controls)
+{
+    controls->args->sculpt = gwy_enum_combo_box_get_active(combo);
     obj_synth_invalidate(controls);
 }
 
@@ -886,7 +925,7 @@ object_synth_iter(GwyDataField *surface,
     gint xres, yres, ncells, k, l;
     const ObjSynthFeature *feature;
     gdouble height_base = args->height * pow10(dimsargs->zpow10);
-    GRand *rngid;
+    GRand *rngid, *rngsculpt;
 
     g_return_if_fail(nobjects <= nxcells*nycells);
 
@@ -899,6 +938,7 @@ object_synth_iter(GwyDataField *surface,
         indices[k] = k;
 
     rngid = gwy_rand_gen_set_rng(rngset, RNG_ID);
+    rngsculpt = gwy_rand_gen_set_rng(rngset, RNG_SCULPT);
     for (k = 0; k < nobjects; k++) {
         gdouble size, aspect, height, angle, htrunc;
         gint id, i, j, from, to;
@@ -962,7 +1002,11 @@ object_synth_iter(GwyDataField *surface,
         to = MIN(to, yres);
         i = from + yoff + g_rand_int_range(rngid, 0, to - from);
 
-        place_add_min(surface, object, j, i);
+        if (args->sculpt == SCULPT_UP
+            || (args->sculpt == SCULPT_RANDOMLY && g_rand_boolean(rngsculpt)))
+            place_add_min(surface, object, j, i);
+        else
+            place_add_max(surface, object, j, i);
     }
 }
 
@@ -1404,6 +1448,56 @@ place_add_min(GwyDataField *surface,
     }
 }
 
+static void
+place_add_max(GwyDataField *surface,
+              ObjSynthObject *object,
+              gint col,
+              gint row)
+{
+    gint xres, yres, kxres, kyres;
+    gint ioff, joff;
+    gint i, j, l;
+    gdouble max;
+    const gdouble *z;
+    gdouble *d, *drow;
+
+    xres = gwy_data_field_get_xres(surface);
+    yres = gwy_data_field_get_yres(surface);
+    kxres = object->xres;
+    kyres = object->yres;
+
+    joff = (col - kxres/2 + 16384*xres) % xres;
+    ioff = (row - kyres/2 + 16384*yres) % yres;
+    g_return_if_fail(joff >= 0);
+    g_return_if_fail(ioff >= 0);
+
+    d = gwy_data_field_get_data(surface);
+
+    max = -G_MAXDOUBLE;
+    z = object->data;
+    for (i = 0; i < kyres; i++) {
+        drow = d + ((ioff + i) % yres)*xres;
+        for (j = 0; j < kxres; j++, z++) {
+            if (*z) {
+                l = (joff + j) % xres;
+                if (drow[l] > max)
+                    max = drow[l];
+            }
+        }
+    }
+
+    z = object->data;
+    for (i = 0; i < kyres; i++) {
+        drow = d + ((ioff + i) % yres)*xres;
+        for (j = 0; j < kxres; j++, z++) {
+            if (*z) {
+                l = (joff + j) % xres;
+                drow[l] = MIN(drow[l], max - *z);
+            }
+        }
+    }
+}
+
 static glong
 calculate_n_objects(const ObjSynthArgs *args,
                     guint xres, guint yres)
@@ -1487,22 +1581,23 @@ getcov_thedron(G_GNUC_UNUSED gdouble aspect)
 
 static const gchar prefix[]           = "/module/obj_synth";
 static const gchar active_page_key[]  = "/module/obj_synth/active_page";
-static const gchar update_key[]       = "/module/obj_synth/update";
-static const gchar randomize_key[]    = "/module/obj_synth/randomize";
-static const gchar seed_key[]         = "/module/obj_synth/seed";
-static const gchar type_key[]         = "/module/obj_synth/type";
-static const gchar size_key[]         = "/module/obj_synth/size";
-static const gchar size_noise_key[]   = "/module/obj_synth/size_noise";
-static const gchar aspect_key[]       = "/module/obj_synth/aspect";
-static const gchar aspect_noise_key[] = "/module/obj_synth/aspect_noise";
-static const gchar height_key[]       = "/module/obj_synth/height";
-static const gchar height_noise_key[] = "/module/obj_synth/height_noise";
-static const gchar height_bound_key[] = "/module/obj_synth/height_bound";
-static const gchar htrunc_key[]       = "/module/obj_synth/htrunc";
-static const gchar htrunc_noise_key[] = "/module/obj_synth/htrunc_noise";
 static const gchar angle_key[]        = "/module/obj_synth/angle";
 static const gchar angle_noise_key[]  = "/module/obj_synth/angle_noise";
+static const gchar aspect_key[]       = "/module/obj_synth/aspect";
+static const gchar aspect_noise_key[] = "/module/obj_synth/aspect_noise";
 static const gchar coverage_key[]     = "/module/obj_synth/coverage";
+static const gchar height_bound_key[] = "/module/obj_synth/height_bound";
+static const gchar height_key[]       = "/module/obj_synth/height";
+static const gchar height_noise_key[] = "/module/obj_synth/height_noise";
+static const gchar htrunc_key[]       = "/module/obj_synth/htrunc";
+static const gchar htrunc_noise_key[] = "/module/obj_synth/htrunc_noise";
+static const gchar randomize_key[]    = "/module/obj_synth/randomize";
+static const gchar sculpt_key[]       = "/module/obj_synth/sculpt";
+static const gchar seed_key[]         = "/module/obj_synth/seed";
+static const gchar size_key[]         = "/module/obj_synth/size";
+static const gchar size_noise_key[]   = "/module/obj_synth/size_noise";
+static const gchar type_key[]         = "/module/obj_synth/type";
+static const gchar update_key[]       = "/module/obj_synth/update";
 
 static void
 obj_synth_sanitize_args(ObjSynthArgs *args)
@@ -1522,6 +1617,7 @@ obj_synth_sanitize_args(ObjSynthArgs *args)
     args->height_bound = !!args->height_bound;
     args->htrunc = CLAMP(args->htrunc, 0.001, 1.0);
     args->htrunc_noise = CLAMP(args->htrunc_noise, 0.0, 1.0);
+    args->sculpt = MIN(args->sculpt, SCULPT_NTYPES-1);
     args->angle = CLAMP(args->angle, -G_PI, G_PI);
     args->angle_noise = CLAMP(args->angle_noise, 0.0, 1.0);
     args->coverage = CLAMP(args->coverage, 0.001, 12.0);
@@ -1552,6 +1648,7 @@ obj_synth_load_args(GwyContainer *container,
                                      &args->height_noise);
     gwy_container_gis_boolean_by_name(container, height_bound_key,
                                       &args->height_bound);
+    gwy_container_gis_enum_by_name(container, sculpt_key, &args->sculpt);
     gwy_container_gis_double_by_name(container, htrunc_key, &args->htrunc);
     gwy_container_gis_double_by_name(container, htrunc_noise_key,
                                      &args->htrunc_noise);
@@ -1589,6 +1686,7 @@ obj_synth_save_args(GwyContainer *container,
                                      args->height_noise);
     gwy_container_set_boolean_by_name(container, height_bound_key,
                                       args->height_bound);
+    gwy_container_set_enum_by_name(container, sculpt_key, args->sculpt);
     gwy_container_set_double_by_name(container, htrunc_key, args->htrunc);
     gwy_container_set_double_by_name(container, htrunc_noise_key,
                                      args->htrunc_noise);
