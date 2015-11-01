@@ -69,7 +69,9 @@ struct _GwyToolColorRange {
     GtkLabel *max;
     GtkLabel *datamin;
     GtkLabel *datamax;
-    GtkWidget *mask_hbox;
+    GtkWidget *set_to_masked;
+    GtkWidget *set_to_unmasked;
+    GtkWidget *invert;
 
     ColorRangeSource range_source;
     gboolean programmatic_update;
@@ -118,6 +120,7 @@ static void   gwy_tool_color_range_update_histogram (GwyToolColorRange *tool);
 static void   gwy_tool_color_range_spin_changed     (GwyToolColorRange *tool);
 static void   set_range_to_masked                   (GwyToolColorRange *tool);
 static void   set_range_to_unmasked                 (GwyToolColorRange *tool);
+static void   invert_mapping                        (GwyToolColorRange *tool);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -126,7 +129,7 @@ static GwyModuleInfo module_info = {
        "color scale should map to, either on data or on height distribution "
        "histogram."),
     "Yeti <yeti@gwyddion.net>",
-    "3.15",
+    "3.16",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -377,19 +380,27 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    tool->mask_hbox = gtk_hbox_new(FALSE, 0);
-    gtk_table_attach(table, tool->mask_hbox,
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_table_attach(table, hbox,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     button = gtk_button_new_with_mnemonic(_("Set to _Unmasked"));
-    gtk_box_pack_end(GTK_BOX(tool->mask_hbox), button, FALSE, TRUE, 0);
+    tool->set_to_unmasked = button;
+    gtk_box_pack_end(GTK_BOX(hbox), button, FALSE, TRUE, 0);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(set_range_to_unmasked), tool);
 
     button = gtk_button_new_with_mnemonic(_("Set to _Masked"));
-    gtk_box_pack_end(GTK_BOX(tool->mask_hbox), button, FALSE, TRUE, 0);
+    tool->set_to_masked = button;
+    gtk_box_pack_end(GTK_BOX(hbox), button, FALSE, TRUE, 0);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(set_range_to_masked), tool);
+
+    button = gtk_button_new_with_mnemonic(_("_Invert Mapping"));
+    tool->invert = button;
+    gtk_box_pack_end(GTK_BOX(hbox), button, FALSE, TRUE, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(invert_mapping), tool);
     row++;
 
     gtk_table_set_row_spacing(table, row-1, 8);
@@ -552,9 +563,9 @@ gwy_tool_color_range_mask_changed(GwyPlainTool *plain_tool)
     GwyToolColorRange *tool = GWY_TOOL_COLOR_RANGE(plain_tool);
     gboolean have_mask = !!plain_tool->mask_field;
     gboolean range_type = gwy_tool_color_range_get_range_type(tool);
-    gtk_widget_set_sensitive(tool->mask_hbox,
-                             have_mask
-                             && range_type == GWY_LAYER_BASIC_RANGE_FIXED);
+    gboolean msens = (have_mask && range_type == GWY_LAYER_BASIC_RANGE_FIXED);
+    gtk_widget_set_sensitive(tool->set_to_masked, msens);
+    gtk_widget_set_sensitive(tool->set_to_unmasked, msens);
 }
 
 static void
@@ -656,6 +667,7 @@ gwy_tool_color_range_type_changed(GtkWidget *radio,
         gtk_widget_set_sensitive(GTK_WIDGET(tool->histogram), fixed);
         gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmin), fixed);
         gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmax), fixed);
+        gtk_widget_set_sensitive(GTK_WIDGET(tool->invert), fixed);
 
         gwy_tool_color_range_set_range_type(tool, range_type);
         if (fixed && !tool->data_switch) {
@@ -949,6 +961,25 @@ static void
 set_range_to_unmasked(GwyToolColorRange *tool)
 {
     set_range_using_mask(tool, GWY_MASK_EXCLUDE);
+}
+
+static void
+invert_mapping(GwyToolColorRange *tool)
+{
+    gdouble min, max;
+
+    if (!GWY_PLAIN_TOOL(tool)->data_field)
+        return;
+
+    min = gtk_spin_button_get_value(GTK_SPIN_BUTTON(tool->spinmin));
+    max = gtk_spin_button_get_value(GTK_SPIN_BUTTON(tool->spinmax));
+
+    tool->programmatic_update = TRUE;
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(tool->spinmin), max);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(tool->spinmax), min);
+    tool->programmatic_update = FALSE;
+
+    gwy_tool_color_range_spin_changed(tool);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
