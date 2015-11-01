@@ -80,7 +80,7 @@ static gboolean disconn_dialog       (DisconnArgs *args,
                                       GwyContainer *data,
                                       gint id);
 static void     disconn_dialog_update(DisconnControls *controls,
-                                      DisconnArgs *args);
+                                      const DisconnArgs *args);
 static void     preview              (DisconnControls *controls);
 static gboolean disconn_do           (GwyDataField *dfield,
                                       GwyDataField *mask,
@@ -339,8 +339,7 @@ disconn_dialog(DisconnArgs *args, GwyContainer *data, gint id)
             break;
 
             case RESPONSE_RESET:
-            *args = disconn_defaults;
-            disconn_dialog_update(&controls, args);
+            disconn_dialog_update(&controls, &disconn_defaults);
             break;
 
             default:
@@ -359,10 +358,12 @@ disconn_dialog(DisconnArgs *args, GwyContainer *data, gint id)
 
 static void
 disconn_dialog_update(DisconnControls *controls,
-                      DisconnArgs *args)
+                      const DisconnArgs *args)
 {
     gwy_radio_buttons_set_current(controls->type, args->type);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size), args->size);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->threshold),
+                             args->threshold);
     if (controls->combine) {
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->combine),
                                      args->combine);
