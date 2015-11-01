@@ -16,11 +16,13 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "config.h"
 #include <libgwyddion/gwymath.h>
 #include <libprocess/grains.h>
 #include <libprocess/filters.h>
 #include <libgwymodule/gwymodule.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 /* Running mode */
 #define OTSU_RUN_MODES GWY_RUN_IMMEDIATE
@@ -66,15 +68,12 @@ module_register(void)
  * @run: #GwyRunType
  *
  * Does an automated thresholding of a data field using Otsu's method.
- *
- * Since: 2.26
  **/
 static void
 otsu_threshold(GwyContainer *data,
                GwyRunType run)
 {
     GwyDataField *dfield, *mfield;
-    GwySIUnit *siunit;
     GQuark dquark, mquark;
     gdouble thresh;
     gint id;
@@ -95,11 +94,8 @@ otsu_threshold(GwyContainer *data,
 
     /* Checking for mask and creating a new one */
     if (!mfield) {
-        mfield = gwy_data_field_new_alike(dfield, TRUE);
-        siunit = gwy_si_unit_new(NULL);
-        gwy_data_field_set_si_unit_z(mfield, siunit);
+        mfield = create_mask_field(dfield);
         gwy_container_set_object(data, mquark, mfield);
-        g_object_unref(siunit);
         g_object_unref(mfield);
     }
 

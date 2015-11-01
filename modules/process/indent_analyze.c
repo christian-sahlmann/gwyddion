@@ -36,6 +36,7 @@ controls_changed => computed = FALSE
 #include <app/app.h>
 #include <app/gwyapp.h>
 #include <gtk/gtk.h>
+#include "preview.h"
 
 #define  SURE_IMPRESSION_COEFF   0.3
 
@@ -383,7 +384,8 @@ create_preview_data(IndentAnalyzeControls *controls)
 
 
       gwy_container_set_object_by_name(preview_container, "/0/data", dfield);
-      mask = gwy_data_field_new_alike(dfield, TRUE);
+      mask = create_mask_field(dfield);
+      gwy_data_field_clear(mask);
       g_object_unref(dfield);
       gwy_container_set_object_by_name(preview_container, "/0/mask", mask);
       g_object_unref(mask);

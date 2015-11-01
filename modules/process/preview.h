@@ -27,6 +27,7 @@
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-mask.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <app/gwymoduleutils.h>
 #include <app/data-browser.h>
 

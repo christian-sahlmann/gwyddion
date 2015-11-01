@@ -32,7 +32,6 @@
 #include <libprocess/elliptic.h>
 #include <libprocess/arithmetic.h>
 #include <libgwydgets/gwyradiobuttons.h>
-#include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
@@ -855,20 +854,6 @@ zero_crossing_update_controls(ZeroCrossingControls *controls,
                              args->threshold);
 }
 
-static GwyDataField*
-create_show_field(GwyDataField *dfield)
-{
-    GwyDataField *mfield;
-    GwySIUnit *siunit;
-
-    mfield = gwy_data_field_new_alike(dfield, FALSE);
-    siunit = gwy_si_unit_new(NULL);
-    gwy_data_field_set_si_unit_z(mfield, siunit);
-    g_object_unref(siunit);
-
-    return mfield;
-}
-
 static void
 zero_crossing_preview(ZeroCrossingControls *controls,
                       ZeroCrossingArgs *args)
@@ -884,7 +869,7 @@ zero_crossing_preview(ZeroCrossingControls *controls,
 
     /* Set up the show */
     if (!gwy_container_gis_object_by_name(controls->mydata, "/0/show", &show)) {
-        show = create_show_field(dfield);
+        show = create_mask_field(dfield);
         gwy_container_set_object_by_name(controls->mydata, "/0/show", show);
         g_object_unref(show);
 
@@ -918,7 +903,7 @@ zero_crossing_run(const ZeroCrossingArgs *args,
     gdouble nrms;
 
     gwy_app_undo_qcheckpointv(data, 1, &squark);
-    show = create_show_field(dfield);
+    show = create_mask_field(dfield);
     gauss = gwy_data_field_new_alike(show, FALSE);
     nrms = zero_crossing_do_log(dfield, gauss, args->gaussian_fwhm);
     zero_crossing_do_edge(show, gauss, nrms*args->threshold);

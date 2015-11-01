@@ -35,7 +35,6 @@
 #include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwyradiobuttons.h>
-#include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwyinventorystore.h>

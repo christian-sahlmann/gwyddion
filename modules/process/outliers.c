@@ -26,6 +26,7 @@
 #include <libprocess/stats.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define OUTLIERS_RUN_MODES GWY_RUN_IMMEDIATE
 
@@ -82,7 +83,7 @@ outliers(GwyContainer *data, GwyRunType run)
     if (has_mask)
         g_object_ref(maskfield);
     else
-        maskfield = gwy_data_field_new_alike(dfield, FALSE);
+        maskfield = create_mask_field(dfield);
 
     gwy_data_field_mask_outliers(dfield, maskfield, thresh);
 

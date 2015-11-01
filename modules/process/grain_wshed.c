@@ -26,7 +26,6 @@
 #include <libprocess/stats.h>
 #include <libprocess/grains.h>
 #include <libgwydgets/gwystock.h>
-#include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>

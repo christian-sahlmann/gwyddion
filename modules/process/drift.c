@@ -32,7 +32,6 @@
 #include <libprocess/gwyprocess.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libprocess/interpolation.h>
-#include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwystock.h>

@@ -28,7 +28,6 @@
 #include <libprocess/gwyprocesstypes.h>
 #include <libprocess/stats.h>
 #include <libprocess/correct.h>
-#include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwycombobox.h>
 #include <app/gwymoduleutils.h>

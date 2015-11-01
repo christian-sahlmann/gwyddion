@@ -35,6 +35,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define SIMPLE_RUN_MODES GWY_RUN_INTERACTIVE
 
@@ -224,8 +225,9 @@ simple(GwyContainer *data, GwyRunType run)
     if (simple_dialog(&args, dfield)) {
         if (args.mask == NULL) {
             gwy_app_undo_qcheckpointv(data, 1, &mquark);
-            args.mask = gwy_data_field_new_alike(dfield, FALSE);
+            args.mask = create_mask_field(dfield);
             gwy_container_set_object(data, mquark, args.mask);
+            g_object_unref(args.mask);
         }
 
         simple_do(&args);

@@ -27,7 +27,6 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/level.h>
 #include <libprocess/gwyprocesstypes.h>
-#include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwynullstore.h>
 #include <libgwymodule/gwymodule-process.h>

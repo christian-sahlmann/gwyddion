@@ -30,7 +30,6 @@
 #include <libprocess/arithmetic.h>
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwycombobox.h>
-#include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>

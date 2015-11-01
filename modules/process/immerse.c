@@ -29,7 +29,6 @@
 #include <libprocess/correlation.h>
 #include <libdraw/gwypixfield.h>
 #include <libgwydgets/gwyradiobuttons.h>
-#include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>

@@ -27,7 +27,6 @@
 #include <libprocess/stats.h>
 #include <libprocess/arithmetic.h>
 #include <libgwydgets/gwycombobox.h>
-#include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>

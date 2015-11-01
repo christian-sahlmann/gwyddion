@@ -23,6 +23,7 @@
 #define __GWY_DIMENSIONS_H__ 1
 
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwydgetutils.h>
 
 enum {
     GWY_DIMENSIONS_SENS = 1

@@ -26,7 +26,6 @@
 #include <libprocess/arithmetic.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwyradiobuttons.h>
-#include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 #include "preview.h"
@@ -350,7 +349,7 @@ scars_remove(GwyContainer *data, GwyRunType run)
     yres = gwy_data_field_get_yres(dfield);
     d = gwy_data_field_get_data(dfield);
 
-    mfield = gwy_data_field_new_alike(dfield, FALSE);
+    mfield = create_mask_field(dfield);
     mark_scars(dfield, mfield, &args);
     m = gwy_data_field_get_data(mfield);
 

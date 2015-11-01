@@ -32,6 +32,7 @@
 #include <libgwydgets/gwycombobox.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define DWT_ANISOTROPY_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -151,7 +152,7 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
 
     gwy_app_undo_qcheckpoint(data, dquark, mquark, 0);
     if (!mask) {
-        mask = gwy_data_field_new_alike(dfield, FALSE);
+        mask = create_mask_field(dfield);
         gwy_container_set_object(data, mquark, mask);
         g_object_unref(mask);
     }

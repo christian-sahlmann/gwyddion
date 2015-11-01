@@ -27,7 +27,6 @@
 #include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwyradiobuttons.h>
-#include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>

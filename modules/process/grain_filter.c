@@ -28,7 +28,6 @@
 #include <libgwyddion/gwyexpr.h>
 #include <libprocess/grains.h>
 #include <libgwydgets/gwystock.h>
-#include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwygrainvaluemenu.h>
 #include <libgwymodule/gwymodule-process.h>

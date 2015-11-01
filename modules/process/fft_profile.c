@@ -28,7 +28,6 @@
 #include <libprocess/gwyprocesstypes.h>
 #include <libprocess/linestats.h>
 #include <libgwydgets/gwygraph.h>
-#include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>

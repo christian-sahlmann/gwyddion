@@ -27,7 +27,6 @@
 #include <libprocess/gwyprocess.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <libgwydgets/gwystock.h>
-#include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-tool.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
