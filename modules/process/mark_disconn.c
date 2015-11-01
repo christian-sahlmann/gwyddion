@@ -30,7 +30,7 @@
 #include <libprocess/stats.h>
 #include <libprocess/linestats.h>
 #include <libgwydgets/gwyradiobuttons.h>
-#include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwycombobox.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
@@ -55,6 +55,8 @@ typedef enum {
 typedef struct {
     GwyFeaturesType type;
     gint size;
+    gboolean combine;
+    GwyMergeType combine_type;
 } DisconnArgs;
 
 typedef struct {
@@ -65,6 +67,8 @@ typedef struct {
     GwyContainer *mydata;
     GtkWidget *view;
     GtkWidget *color_button;
+    GtkWidget *combine;
+    GtkWidget *combine_type;
 } DisconnControls;
 
 static gboolean module_register      (void);
@@ -83,14 +87,18 @@ static void     type_changed         (GtkToggleButton *toggle,
                                       DisconnControls *controls);
 static void     size_changed         (GtkAdjustment *adj,
                                       DisconnControls *controls);
+static void     combine_changed      (GtkToggleButton *toggle,
+                                      DisconnControls *controls);
+static void     combine_type_changed (GtkComboBox *combo,
+                                      DisconnControls *controls);
 static void     disconn_load_args    (GwyContainer *container,
                                       DisconnArgs *args);
 static void     disconn_save_args    (GwyContainer *container,
                                       DisconnArgs *args);
 
 static const DisconnArgs disconn_defaults = {
-    FEATURES_BOTH,
-    5,
+    FEATURES_BOTH, 5,
+    FALSE, GWY_MERGE_UNION,
 };
 
 static GwyModuleInfo module_info = {
@@ -124,55 +132,53 @@ mark_disconn(GwyContainer *data,
              GwyRunType run)
 {
     DisconnArgs args;
-    GwyDataField *dfield, *maskfield;
-    GQuark dquark, mquark;
-    gboolean has_mask;
-    gint xres, yres, count, id;
+    GwyDataField *dfield, *maskfield = NULL, *existing_mask;
+    GQuark mquark;
+    gint id;
 
     g_return_if_fail(run & DISCONN_RUN_MODES);
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
-                                     GWY_APP_DATA_FIELD, &dfield,
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_MASK_FIELD_KEY, &mquark,
-                                     GWY_APP_MASK_FIELD, &maskfield,
+                                     GWY_APP_MASK_FIELD, &existing_mask,
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      0);
-    g_return_if_fail(dfield && dquark);
-    has_mask = !!maskfield;
+    g_return_if_fail(dfield && mquark);
 
     disconn_load_args(gwy_app_settings_get(), &args);
-    maskfield = NULL;
     if (run == GWY_RUN_IMMEDIATE || disconn_dialog(&args, data, id)) {
-        maskfield = gwy_data_field_new_alike(dfield, FALSE);
+        maskfield = create_mask_field(dfield);
         gwy_app_wait_start(gwy_app_find_window_for_channel(data, id),
                            _("Initializing..."));
         if (!disconn_do(dfield, maskfield, &args))
             gwy_object_unref(maskfield);
+        disconn_save_args(gwy_app_settings_get(), &args);
     }
 
-    disconn_save_args(gwy_app_settings_get(), &args);
     if (!maskfield)
         return;
 
-    /* Do not create useless undo levels if there was no mask and the new
-     * mask would be empty.  And do not create empty masks at all, just
-     * remove the mask instead.  */
-    xres = gwy_data_field_get_xres(maskfield);
-    yres = gwy_data_field_get_yres(maskfield);
-    gwy_data_field_area_count_in_range(maskfield, NULL, 0, 0, xres, yres,
-                                       0.0, 0.0, &count, NULL);
-    count = xres*yres - count;
+    if (!existing_mask && gwy_data_field_get_max(maskfield) <= 0.0) {
+        g_object_unref(maskfield);
+        return;
+    }
 
-    if (count || has_mask)
-        gwy_app_undo_qcheckpointv(data, 1, &mquark);
-
-    if (count)
+    if (existing_mask && args.combine) {
+        if (args.combine_type == GWY_MERGE_UNION)
+            gwy_data_field_grains_add(existing_mask, maskfield);
+        else if (args.combine_type == GWY_MERGE_INTERSECTION)
+            gwy_data_field_grains_intersect(existing_mask, maskfield);
+        gwy_data_field_data_changed(existing_mask);
+    }
+    else if (existing_mask) {
+        gwy_data_field_copy(maskfield, existing_mask, FALSE);
+        gwy_data_field_data_changed(existing_mask);
+    }
+    else {
         gwy_container_set_object(data, mquark, maskfield);
-    else if (has_mask)
-        gwy_container_remove(data, mquark);
+    }
+    g_object_unref(maskfield);
 
     gwy_app_channel_log_add_proc(data, id, id);
-
-    g_object_unref(maskfield);
 }
 
 static gboolean
@@ -187,11 +193,12 @@ disconn_dialog(DisconnArgs *args, GwyContainer *data, gint id)
     };
 
     GtkWidget *dialog, *table, *label, *hbox;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *existing_mask = NULL;
     DisconnControls controls;
     GSList *group;
     gint response, row;
 
+    gwy_clear(&controls, 1);
     controls.args = args;
 
     dialog = gtk_dialog_new_with_buttons(_("Mark Disconnected"), NULL, 0,
@@ -221,8 +228,9 @@ disconn_dialog(DisconnArgs *args, GwyContainer *data, gint id)
     gwy_container_set_object_by_name(controls.mydata, "/0/mask", dfield);
     g_object_unref(dfield);
     if (gwy_container_gis_object(data, gwy_app_get_mask_key_for_id(id),
-                                 (GObject**)&dfield)) {
-        gwy_container_set_object_by_name(controls.mydata, "/1/mask", dfield);
+                                 (GObject**)&existing_mask)) {
+        gwy_container_set_object_by_name(controls.mydata, "/1/mask",
+                                         existing_mask);
     }
 
     gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
@@ -234,7 +242,7 @@ disconn_dialog(DisconnArgs *args, GwyContainer *data, gint id)
     controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, TRUE);
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
-    table = gtk_table_new(6, 4, FALSE);
+    table = gtk_table_new(7 + 2*(!!existing_mask), 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -260,6 +268,35 @@ disconn_dialog(DisconnArgs *args, GwyContainer *data, gint id)
     g_signal_connect(controls.size, "value-changed",
                      G_CALLBACK(size_changed), &controls);
     row++;
+
+    label = gwy_label_new_header(_("Options"));
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    if (existing_mask) {
+        controls.combine
+            = gtk_check_button_new_with_mnemonic(_("Com_bine with "
+                                                   "existing mask"));
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.combine),
+                                     args->combine);
+        gtk_table_attach(GTK_TABLE(table), controls.combine,
+                         0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        g_signal_connect(controls.combine, "toggled",
+                         G_CALLBACK(combine_changed), &controls);
+        row++;
+
+        controls.combine_type
+            = gwy_enum_combo_box_new(gwy_merge_type_get_enum(), -1,
+                                     G_CALLBACK(combine_type_changed),
+                                     &controls,
+                                     args->combine_type, TRUE);
+        gwy_table_attach_hscale(table, row, _("Operation:"), NULL,
+                                GTK_OBJECT(controls.combine_type),
+                                GWY_HSCALE_WIDGET);
+        gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+        row++;
+    }
 
     controls.color_button = create_mask_color_button(controls.mydata, dialog,
                                                      0);
@@ -311,18 +348,35 @@ disconn_dialog_update(DisconnControls *controls,
 {
     gwy_radio_buttons_set_current(controls->type, args->type);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size), args->size);
+    if (controls->combine) {
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->combine),
+                                     args->combine);
+        gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->combine_type),
+                                      args->combine_type);
+    }
 }
 
 static void
 preview(DisconnControls *controls)
 {
-    GwyDataField *dfield, *mask;
+    DisconnArgs *args = controls->args;
+    GwyDataField *dfield, *mask, *existing_mask = NULL;
 
     gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Initializing..."));
     dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
     mask = gwy_container_get_object_by_name(controls->mydata, "/0/mask");
-    if (disconn_do(dfield, mask, controls->args))
-        gwy_data_field_data_changed(mask);
+    if (!disconn_do(dfield, mask, controls->args))
+        return;
+
+    if (args->combine
+        && gwy_container_gis_object_by_name(controls->mydata, "/1/mask",
+                                            (GObject**)&existing_mask)) {
+        if (args->combine_type == GWY_MERGE_UNION)
+            gwy_data_field_grains_add(mask, existing_mask);
+        else if (args->combine_type == GWY_MERGE_INTERSECTION)
+            gwy_data_field_grains_intersect(mask, existing_mask);
+    }
+    gwy_data_field_data_changed(mask);
 }
 
 static void
@@ -339,6 +393,18 @@ static void
 size_changed(GtkAdjustment *adj, DisconnControls *controls)
 {
     controls->args->size = gwy_adjustment_get_int(adj);
+}
+
+static void
+combine_changed(GtkToggleButton *toggle, DisconnControls *controls)
+{
+    controls->args->combine = gtk_toggle_button_get_active(toggle);
+}
+
+static void
+combine_type_changed(GtkComboBox *combo, DisconnControls *controls)
+{
+    controls->args->combine_type = gwy_enum_combo_box_get_active(combo);
 }
 
 /* Remove from mask pixels with values that do not belong to the largest
@@ -523,8 +589,10 @@ finish:
     return ok;
 }
 
-static const gchar radius_key[] = "/module/mark_disconn/radius";
-static const gchar type_key[]   = "/module/mark_disconn/type";
+static const gchar combine_key[]      = "/module/mark_disconn/combine";
+static const gchar combine_type_key[] = "/module/mark_disconn/combine_type";
+static const gchar radius_key[]       = "/module/mark_disconn/radius";
+static const gchar type_key[]         = "/module/mark_disconn/type";
 
 static void
 disconn_sanitize_args(DisconnArgs *args)
@@ -533,6 +601,8 @@ disconn_sanitize_args(DisconnArgs *args)
         && args->type != FEATURES_NEGATIVE)
         args->type = FEATURES_BOTH;
     args->size = CLAMP(args->size, 1, 256);
+    args->combine = !!args->combine;
+    args->combine_type = MIN(args->combine_type, GWY_MERGE_INTERSECTION);
 }
 
 static void
@@ -543,6 +613,9 @@ disconn_load_args(GwyContainer *container,
 
     gwy_container_gis_enum_by_name(container, type_key, &args->type);
     gwy_container_gis_int32_by_name(container, radius_key, &args->size);
+    gwy_container_gis_boolean_by_name(container, combine_key, &args->combine);
+    gwy_container_gis_enum_by_name(container, combine_type_key,
+                                   &args->combine_type);
     disconn_sanitize_args(args);
 }
 
@@ -552,6 +625,9 @@ disconn_save_args(GwyContainer *container,
 {
     gwy_container_set_int32_by_name(container, type_key, args->type);
     gwy_container_set_int32_by_name(container, radius_key, args->size);
+    gwy_container_set_boolean_by_name(container, combine_key, args->combine);
+    gwy_container_set_enum_by_name(container, combine_type_key,
+                                   args->combine_type);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
