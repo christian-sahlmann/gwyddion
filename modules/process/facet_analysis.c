@@ -164,7 +164,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Visualizes, marks and measures facet orientation."),
     "Yeti <yeti@gwyddion.net>",
-    "1.8",
+    "1.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
