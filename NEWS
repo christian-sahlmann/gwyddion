@@ -57,6 +57,9 @@ Modules:
 - Mark by threshold, Facet analysis: The mask can be combined with mask
   already present on the image using union or intersection.
 - Mark by threshold: Reset button now really resets all the settings.
+- Color range tool: Can reverse the mapping for fixed ranges.
+- Object synthesis: Features created on the surface can be positive, negative
+  or randomly ehtier now.
 
 Other:
 - Gwyddion can use either minizip or libzip for opening of ZIP-compressed
