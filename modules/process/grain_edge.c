@@ -47,6 +47,8 @@ enum {
 typedef struct {
     gdouble threshold_laplasian;
     gboolean update;
+    gboolean combine;
+    GwyMergeType combine_type;
 } GEdgeArgs;
 
 typedef struct {
@@ -54,44 +56,51 @@ typedef struct {
     GtkWidget *view;
     GwyContainer *mydata;
     GtkObject *threshold_laplasian;
+    GtkWidget *combine;
+    GtkWidget *combine_type;
     GtkWidget *color_button;
     GtkWidget *update;
     GEdgeArgs *args;
     gboolean in_init;
 } GEdgeControls;
 
-static gboolean    module_register              (void);
-static void        grain_edge                   (GwyContainer *data,
-                                                 GwyRunType run);
-static void        run_noninteractive           (GEdgeArgs *args,
-                                                 GwyContainer *data,
-                                                 GwyDataField *dfield,
-                                                 GQuark mquark);
-static void        gedge_dialog                 (GEdgeArgs *args,
-                                                 GwyContainer *data,
-                                                 GwyDataField *dfield,
-                                                 gint id,
-                                                 GQuark mquark);
-static void        gedge_dialog_update_controls (GEdgeControls *controls,
-                                                 GEdgeArgs *args);
-static void        gedge_dialog_update_values   (GEdgeControls *controls,
-                                                 GEdgeArgs *args);
-static void        update_change_cb             (GEdgeControls *controls);
-static void        gedge_invalidate             (GEdgeControls *controls);
-static void        preview                      (GEdgeControls *controls,
-                                                 GEdgeArgs *args);
-static void        gedge_process                (GwyDataField *dfield,
-                                                 GwyDataField *maskfield,
-                                                 GEdgeArgs *args);
-static void        gedge_load_args              (GwyContainer *container,
-                                                 GEdgeArgs *args);
-static void        gedge_save_args              (GwyContainer *container,
-                                                 GEdgeArgs *args);
-static void        gedge_sanitize_args          (GEdgeArgs *args);
+static gboolean module_register             (void);
+static void     grain_edge                  (GwyContainer *data,
+                                             GwyRunType run);
+static void     run_noninteractive          (GEdgeArgs *args,
+                                             GwyContainer *data,
+                                             GwyDataField *dfield,
+                                             GwyDataField *existing_mask,
+                                             GQuark mquark);
+static void     gedge_dialog                (GEdgeArgs *args,
+                                             GwyContainer *data,
+                                             GwyDataField *dfield,
+                                             GwyDataField *mfield,
+                                             gint id,
+                                             GQuark mquark);
+static void     gedge_dialog_update_controls(GEdgeControls *controls,
+                                             const GEdgeArgs *args);
+static void     gedge_dialog_update_values  (GEdgeControls *controls,
+                                             GEdgeArgs *args);
+static void     update_changed              (GEdgeControls *controls);
+static void     gedge_invalidate            (GEdgeControls *controls);
+static void     gedge_invalidate2           (gpointer instance,
+                                             GEdgeControls *controls);
+static void     preview                     (GEdgeControls *controls,
+                                             GEdgeArgs *args);
+static void     gedge_process               (GwyDataField *dfield,
+                                             GwyDataField *maskfield,
+                                             GEdgeArgs *args);
+static void     gedge_load_args             (GwyContainer *container,
+                                             GEdgeArgs *args);
+static void     gedge_save_args             (GwyContainer *container,
+                                             GEdgeArgs *args);
+static void     gedge_sanitize_args         (GEdgeArgs *args);
 
 static const GEdgeArgs gedge_defaults = {
     50.0,
     TRUE,
+    FALSE, GWY_MERGE_UNION,
 };
 
 static GwyModuleInfo module_info = {
@@ -99,7 +108,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks grains by edge detection method."),
     "Daniil Bratashov <dn2010@gmail.com>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov",
     "2011",
 };
@@ -124,7 +133,7 @@ static void
 grain_edge(GwyContainer *data, GwyRunType run)
 {
     GEdgeArgs args;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *mfield;
     GQuark mquark;
     gint id;
 
@@ -132,16 +141,17 @@ grain_edge(GwyContainer *data, GwyRunType run)
     gedge_load_args(gwy_app_settings_get(), &args);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_MASK_FIELD, &mfield,
                                      GWY_APP_MASK_FIELD_KEY, &mquark,
                                      0);
     g_return_if_fail(dfield && mquark);
 
     if (run == GWY_RUN_IMMEDIATE) {
-        run_noninteractive(&args, data, dfield, mquark);
+        run_noninteractive(&args, data, dfield, mfield, mquark);
         gwy_app_channel_log_add_proc(data, id, id);
     }
     else
-        gedge_dialog(&args, data, dfield, id, mquark);
+        gedge_dialog(&args, data, dfield, mfield, id, mquark);
 }
 
 static void
@@ -160,6 +170,7 @@ static void
 run_noninteractive(GEdgeArgs *args,
                    GwyContainer *data,
                    GwyDataField *dfield,
+                   GwyDataField *existing_mask,
                    GQuark mquark)
 {
     GwyDataField *mfield;
@@ -167,7 +178,20 @@ run_noninteractive(GEdgeArgs *args,
     gwy_app_undo_qcheckpointv(data, 1, &mquark);
     mfield = create_mask_field(dfield);
     gedge_process(dfield, mfield, args);
-    gwy_container_set_object(data, mquark, mfield);
+    if (existing_mask && args->combine) {
+        if (args->combine_type == GWY_MERGE_UNION)
+            gwy_data_field_grains_add(existing_mask, mfield);
+        else if (args->combine_type == GWY_MERGE_INTERSECTION)
+            gwy_data_field_grains_intersect(existing_mask, mfield);
+        gwy_data_field_data_changed(existing_mask);
+    }
+    else if (mfield) {
+        gwy_data_field_copy(mfield, existing_mask, FALSE);
+        gwy_data_field_data_changed(existing_mask);
+    }
+    else {
+        gwy_container_set_object(data, mquark, mfield);
+    }
     g_object_unref(mfield);
 }
 
@@ -175,6 +199,7 @@ static void
 gedge_dialog(GEdgeArgs *args,
              GwyContainer *data,
              GwyDataField *dfield,
+             GwyDataField *mfield,
              gint id,
              GQuark mquark)
 {
@@ -184,6 +209,7 @@ gedge_dialog(GEdgeArgs *args,
     gint response;
     gboolean temp;
 
+    gwy_clear(&controls, 1);
     controls.in_init = TRUE;
     controls.args = args;
 
@@ -239,6 +265,30 @@ gedge_dialog(GEdgeArgs *args,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
+    if (mfield) {
+        gwy_container_set_object_by_name(controls.mydata, "/1/mask", mfield);
+        controls.combine
+            = gtk_check_button_new_with_mnemonic(_("Com_bine with "
+                                                   "existing mask"));
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.combine),
+                                     args->combine);
+        gtk_table_attach(GTK_TABLE(table), controls.combine,
+                         0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        g_signal_connect_swapped(controls.combine, "toggled",
+                                 G_CALLBACK(gedge_invalidate), &controls);
+        row++;
+
+        controls.combine_type
+            = gwy_enum_combo_box_new(gwy_merge_type_get_enum(), -1,
+                                     G_CALLBACK(gedge_invalidate2), &controls,
+                                     args->combine_type, TRUE);
+        gwy_table_attach_hscale(table, row, _("Operation:"), NULL,
+                                GTK_OBJECT(controls.combine_type),
+                                GWY_HSCALE_WIDGET);
+        gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+        row++;
+    }
+
     controls.color_button = create_mask_color_button(controls.mydata, dialog,
                                                      0);
     gwy_table_attach_hscale(table, row, _("_Mask color:"), NULL,
@@ -252,7 +302,7 @@ gedge_dialog(GEdgeArgs *args,
     gtk_table_attach(GTK_TABLE(table), controls.update,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(controls.update, "toggled",
-                             G_CALLBACK(update_change_cb), &controls);
+                             G_CALLBACK(update_changed), &controls);
 
     gedge_invalidate(&controls);
 
@@ -287,7 +337,7 @@ gedge_dialog(GEdgeArgs *args,
             temp = args->update;
             *args = gedge_defaults;
             args->update = temp;
-            gedge_dialog_update_controls(&controls, args);
+            gedge_dialog_update_controls(&controls, &gedge_defaults);
             controls.in_init = TRUE;
             preview(&controls, args);
             controls.in_init = FALSE;
@@ -314,17 +364,25 @@ gedge_dialog(GEdgeArgs *args,
     gwy_app_channel_log_add_proc(data, id, id);
 
     g_object_unref(controls.mydata);
-    run_noninteractive(args, data, dfield, mquark);
+    run_noninteractive(args, data, dfield, mfield, mquark);
 }
 
 static void
 gedge_dialog_update_controls(GEdgeControls *controls,
-                             GEdgeArgs *args)
+                             const GEdgeArgs *args)
 {
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->threshold_laplasian),
                              args->threshold_laplasian);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update),
                                  args->update);
+
+    if (!controls->combine)
+        return;
+
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->combine),
+                                 args->combine);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->combine_type),
+                                  args->combine_type);
 }
 
 static void
@@ -335,6 +393,14 @@ gedge_dialog_update_values(GEdgeControls *controls,
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_laplasian));
     args->update
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->update));
+
+    if (!controls->combine)
+        return;
+
+    args->combine
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->combine));
+    args->combine_type
+        = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->combine_type));
 }
 
 static void
@@ -348,13 +414,22 @@ gedge_invalidate(GEdgeControls *controls)
 }
 
 static void
+gedge_invalidate2(G_GNUC_UNUSED gpointer instance,
+                  GEdgeControls *controls)
+{
+    gedge_invalidate(controls);
+}
+
+static void
 preview(GEdgeControls *controls,
         GEdgeArgs *args)
 {
-    GwyDataField *mask, *dfield;
+    GwyDataField *mask, *dfield, *existing_mask = NULL;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
+    gwy_container_gis_object_by_name(controls->mydata, "/1/mask",
+                                     (GObject**)&existing_mask);
 
     /* Set up the mask */
     if (!gwy_container_gis_object_by_name(controls->mydata, "/0/mask", &mask)) {
@@ -364,11 +439,17 @@ preview(GEdgeControls *controls,
     }
     gwy_data_field_copy(dfield, mask, FALSE);
     gedge_process(dfield, mask, args);
+    if (existing_mask && args->combine) {
+        if (args->combine_type == GWY_MERGE_UNION)
+            gwy_data_field_grains_add(mask, existing_mask);
+        else if (args->combine_type == GWY_MERGE_INTERSECTION)
+            gwy_data_field_grains_intersect(mask, existing_mask);
+    }
     gwy_data_field_data_changed(mask);
 }
 
 static void
-update_change_cb(GEdgeControls *controls)
+update_changed(GEdgeControls *controls)
 {
     controls->args->update
             = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->update));
@@ -397,16 +478,18 @@ gedge_process(GwyDataField *dfield,
     g_object_unref(temp_field);
 }
 
-static const gchar threshold_laplasian_key[]
-    = "/module/grain_edge/threshold_laplasian";
-static const gchar update_key[] = "/module/grain_edge/update";
+static const gchar combine_key[]             = "/module/grain_edge/combine";
+static const gchar combine_type_key[]        = "/module/grain_edge/combine_type";
+static const gchar threshold_laplasian_key[] = "/module/grain_edge/threshold_laplasian";
+static const gchar update_key[]              = "/module/grain_edge/update";
 
 static void
 gedge_sanitize_args(GEdgeArgs *args)
 {
-    args->threshold_laplasian
-        = CLAMP(args->threshold_laplasian, 0.0, 100.0);
+    args->threshold_laplasian = CLAMP(args->threshold_laplasian, 0.0, 100.0);
     args->update = !!args->update;
+    args->combine = !!args->combine;
+    args->combine_type = MIN(args->combine_type, GWY_MERGE_INTERSECTION);
 }
 
 static void
@@ -417,8 +500,10 @@ gedge_load_args(GwyContainer *container,
 
     gwy_container_gis_double_by_name(container, threshold_laplasian_key,
                                      &args->threshold_laplasian);
-    gwy_container_gis_boolean_by_name(container, update_key,
-                                     &args->update);
+    gwy_container_gis_boolean_by_name(container, update_key, &args->update);
+    gwy_container_gis_boolean_by_name(container, combine_key, &args->combine);
+    gwy_container_gis_enum_by_name(container, combine_type_key,
+                                   &args->combine_type);
 
     gedge_sanitize_args(args);
 }
@@ -429,8 +514,10 @@ gedge_save_args(GwyContainer *container,
 {
     gwy_container_set_double_by_name(container, threshold_laplasian_key,
                                      args->threshold_laplasian);
-    gwy_container_set_boolean_by_name(container, update_key,
-                                      args->update);
+    gwy_container_set_boolean_by_name(container, update_key, args->update);
+    gwy_container_set_boolean_by_name(container, combine_key, args->combine);
+    gwy_container_set_enum_by_name(container, combine_type_key,
+                                   args->combine_type);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
