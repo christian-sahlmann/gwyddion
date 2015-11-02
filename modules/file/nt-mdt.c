@@ -844,7 +844,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NT-MDT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.21",
+    "0.22",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

@@ -60,6 +60,7 @@ Modules:
 - Color range tool: Can reverse the mapping for fixed ranges.
 - Object synthesis: Features created on the surface can be positive, negative
   or randomly ehtier now.
+- NT-MDT: Hybrid mode data are split to upward and downward movement.
 
 Other:
 - Gwyddion can use either minizip or libzip for opening of ZIP-compressed
