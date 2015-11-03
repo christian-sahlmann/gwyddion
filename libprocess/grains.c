@@ -3284,7 +3284,7 @@ gwy_data_field_grains_intersect(GwyDataField *grain_field,
  * Inverts a data field representing a mask.
  *
  * All non-positive values are transformed to 1.0.  All positive values are
- * transformed to 0.0
+ * transformed to 0.0.
  *
  * Since: 2.43
  **/
