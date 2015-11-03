@@ -276,8 +276,8 @@ gwy_tool_stats_init(GwyToolStats *tool)
     gwy_container_gis_boolean_by_name(settings, instant_update_key,
                                       &tool->args.instant_update);
 
-    tool->args.masking
-        = gwy_enum_sanitize_value(tool->args.masking, GWY_TYPE_MASKING_TYPE);
+    tool->args.masking = gwy_enum_sanitize_value(tool->args.masking,
+                                                 GWY_TYPE_MASKING_TYPE);
 
     tool->angle_format = g_new0(GwySIValueFormat, 1);
     tool->angle_format->magnitude = 1.0;
