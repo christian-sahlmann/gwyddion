@@ -24,11 +24,13 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-tool.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libprocess/elliptic.h>
 #include <libprocess/filters.h>
 #include <libprocess/linestats.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
 
@@ -62,6 +64,7 @@ typedef struct _GwyToolFilterClass GwyToolFilterClass;
 
 typedef struct {
     FilterType filter_type;
+    GwyMaskingType masking;
     gint size;
     gdouble gauss_size;
 } ToolArgs;
@@ -75,6 +78,7 @@ struct _GwyToolFilter {
     GtkWidget *filter_type;
     GtkObject *size;
     GtkWidget *size_spin;
+    GSList *masking;
     GtkWidget *apply;
 
     /* potential class data */
@@ -85,8 +89,7 @@ struct _GwyToolFilterClass {
     GwyPlainToolClass parent_class;
 };
 
-static gboolean module_register(void);
-
+static gboolean module_register                  (void);
 static GType    gwy_tool_filter_get_type         (void)                      G_GNUC_CONST;
 static void     gwy_tool_filter_finalize         (GObject *object);
 static void     gwy_tool_filter_init_dialog      (GwyToolFilter *tool);
@@ -101,10 +104,22 @@ static void     gwy_tool_filter_size_changed     (GwyToolFilter *tool,
                                                   GtkAdjustment *adj);
 static void     gwy_tool_filter_type_changed     (GtkComboBox *combo,
                                                   GwyToolFilter *tool);
+static void     gwy_tool_filter_masking_changed  (GtkWidget *button,
+                                                  GwyToolFilter *tool);
 static gboolean gwy_tool_filter_is_sized         (FilterType type);
 static gboolean gwy_tool_filter_is_float_sized   (FilterType type);
 static void     setup_size_adjustment            (GwyToolFilter *tool);
 static void     gwy_tool_filter_apply            (GwyToolFilter *tool);
+static void     filter_area_sharpen              (GwyDataField *dfield,
+                                                  gdouble sigma,
+                                                  gint col,
+                                                  gint row,
+                                                  gint width,
+                                                  gint height);
+static void     apply_masking                    (GwyDataField *dfield,
+                                                  GwyDataField *orig,
+                                                  GwyDataField *mask,
+                                                  GwyMaskingType masking);
 static void     gwy_tool_filter_save_args        (GwyToolFilter *tool);
 
 static GwyModuleInfo module_info = {
@@ -113,17 +128,19 @@ static GwyModuleInfo module_info = {
     N_("Filter tool, processes selected part of data with a filter "
        "(conservative denoise, mean, median. Kuwahara, minimum, maximum)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "3.10",
+    "3.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
 
 static const gchar filter_type_key[] = "/module/filter/filter_type";
-static const gchar size_key[]        = "/module/filter/size";
 static const gchar gauss_size_key[]  = "/module/filter/gauss_size";
+static const gchar masking_key[]     = "/module/filter/masking";
+static const gchar size_key[]        = "/module/filter/size";
 
 static const ToolArgs default_args = {
     FILTER_MEAN,
+    GWY_MASK_IGNORE,
     5,
     5.0,
 };
@@ -185,12 +202,16 @@ gwy_tool_filter_init(GwyToolFilter *tool)
     tool->args = default_args;
     gwy_container_gis_enum_by_name(settings, filter_type_key,
                                    &tool->args.filter_type);
+    gwy_container_gis_enum_by_name(settings, masking_key,
+                                   &tool->args.masking);
     gwy_container_gis_int32_by_name(settings, size_key,
                                     &tool->args.size);
     gwy_container_gis_double_by_name(settings, gauss_size_key,
                                      &tool->args.gauss_size);
 
     tool->args.filter_type = MIN(tool->args.filter_type, FILTER_NFILTERS-1);
+    tool->args.masking = gwy_enum_sanitize_value(tool->args.masking,
+                                                 GWY_TYPE_MASKING_TYPE);
 
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_rect,
                                      "rectangle");
@@ -274,6 +295,19 @@ gwy_tool_filter_init_dialog(GwyToolFilter *tool)
     g_signal_connect_swapped(tool->size, "value-changed",
                              G_CALLBACK(gwy_tool_filter_size_changed), tool);
     row++;
+
+    gtk_table_set_row_spacing(table, row-1, 8);
+    label = gwy_label_new_header(_("Masking Mode"));
+    gtk_table_attach(table, label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    tool->masking
+        = gwy_radio_buttons_create(gwy_masking_type_get_enum(), -1,
+                                   G_CALLBACK(gwy_tool_filter_masking_changed),
+                                   tool,
+                                   tool->args.masking);
+    row = gwy_radio_buttons_attach_to_table(tool->masking, table, 3, row);
 
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
     gwy_tool_add_hide_button(GWY_TOOL(tool), FALSE);
@@ -385,6 +419,16 @@ gwy_tool_filter_type_changed(GtkComboBox *combo,
         setup_size_adjustment(tool);
 }
 
+static void
+gwy_tool_filter_masking_changed(GtkWidget *button,
+                                GwyToolFilter *tool)
+{
+    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
+        return;
+
+    tool->args.masking = gwy_radio_button_get_value(button);
+}
+
 static gboolean
 gwy_tool_filter_is_float_sized(FilterType type)
 {
@@ -424,33 +468,10 @@ setup_size_adjustment(GwyToolFilter *tool)
 }
 
 static void
-filter_area_sharpen(GwyDataField *dfield, gdouble sigma,
-                    gint col, gint row, gint width, gint height)
-{
-    GwyDataField *origpart;
-    gint xres, i, j;
-    gdouble *d, *p;
-
-    origpart = gwy_data_field_area_extract(dfield, col, row, width, height);
-    gwy_data_field_area_filter_gaussian(dfield, sigma, col, row, width, height);
-
-    xres = dfield->xres;
-
-    for (i = 0; i < height; i++) {
-        d = dfield->data + (i + row)*xres + col;
-        p = origpart->data + i*width;
-        for (j = 0; j < width; j++)
-            d[j] = 2*p[j] - d[j];
-    }
-
-    g_object_unref(origpart);
-}
-
-static void
 gwy_tool_filter_apply(GwyToolFilter *tool)
 {
     GwyPlainTool *plain_tool;
-    GwyDataField *dfield, *kernel = NULL;
+    GwyDataField *dfield, *origfield = NULL, *kernel = NULL;
     gdouble sel[4];
     gint isel[4];
     gdouble sigma;
@@ -489,6 +510,20 @@ gwy_tool_filter_apply(GwyToolFilter *tool)
         kernel = gwy_data_field_new(size, size, size, size, TRUE);
         gwy_data_field_elliptic_area_fill(kernel, 0, 0, size, size, 1.0);
     }
+
+    /*
+     * Remember the original for merging when masking is used.
+     * XXX: This is inefficient when the area to actually modify is small.
+     * However, linear operations are implemented using FFT and most
+     * morphological operations are implemented using some moving window
+     * algorithms.  For these we would have to switch to an idependent
+     * pixel-by-pixel evaluation method (based on some ad-hoc threshold).
+     * Kuwahara, dechecker, conservative denoising and (currently) median
+     * are evaluated pixel-by-pixel anyway so native masking would not be
+     * difficult, but apart from median probably also not worth it.
+     */
+    if (tool->args.masking != GWY_MASK_IGNORE && plain_tool->mask_field)
+        origfield = gwy_data_field_duplicate(dfield);
 
     switch (tool->args.filter_type) {
         case FILTER_MEAN:
@@ -576,9 +611,65 @@ gwy_tool_filter_apply(GwyToolFilter *tool)
         break;
     }
 
+    if (origfield) {
+        apply_masking(dfield, origfield,
+                      plain_tool->mask_field, tool->args.masking);
+        gwy_object_unref(origfield);
+    }
+
     gwy_object_unref(kernel);
     gwy_data_field_data_changed(dfield);
     gwy_plain_tool_log_add(plain_tool);
+}
+
+static void
+filter_area_sharpen(GwyDataField *dfield, gdouble sigma,
+                    gint col, gint row, gint width, gint height)
+{
+    GwyDataField *origpart;
+    gint xres, i, j;
+    gdouble *d, *p;
+
+    origpart = gwy_data_field_area_extract(dfield, col, row, width, height);
+    gwy_data_field_area_filter_gaussian(dfield, sigma, col, row, width, height);
+
+    xres = dfield->xres;
+
+    for (i = 0; i < height; i++) {
+        d = dfield->data + (i + row)*xres + col;
+        p = origpart->data + i*width;
+        for (j = 0; j < width; j++)
+            d[j] = 2*p[j] - d[j];
+    }
+
+    g_object_unref(origpart);
+}
+
+static void
+apply_masking(GwyDataField *dfield, GwyDataField *orig, GwyDataField *mask,
+              GwyMaskingType masking)
+{
+    const gdouble *r = gwy_data_field_get_data_const(orig);
+    const gdouble *m = gwy_data_field_get_data_const(mask);
+    gdouble *d = gwy_data_field_get_data(dfield);
+    gint xres = gwy_data_field_get_xres(dfield);
+    gint yres = gwy_data_field_get_yres(dfield);
+    gint k;
+
+    if (masking == GWY_MASK_INCLUDE) {
+        for (k = 0; k < xres*yres; k++) {
+            if (m[k] <= 0.0)
+                d[k] = r[k];
+        }
+    }
+    else {
+        for (k = 0; k < xres*yres; k++) {
+            if (m[k] > 0.0)
+                d[k] = r[k];
+        }
+    }
+
+    gwy_data_field_invalidate(dfield);
 }
 
 static void
@@ -589,6 +680,7 @@ gwy_tool_filter_save_args(GwyToolFilter *tool)
     settings = gwy_app_settings_get();
     gwy_container_set_enum_by_name(settings, filter_type_key,
                                    tool->args.filter_type);
+    gwy_container_set_enum_by_name(settings, masking_key, tool->args.masking);
     gwy_container_set_int32_by_name(settings, size_key,
                                     tool->args.size);
     gwy_container_set_double_by_name(settings, gauss_size_key,
