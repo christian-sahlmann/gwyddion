@@ -3381,6 +3381,15 @@ extract_brick(MDTMDAFrame *dataframe,
         else
             title = g_strdup_printf("HybridForceVolume (%u)", framenum);
 
+        gwy_brick_set_si_unit_x(brick, siunitx);
+        gwy_brick_set_si_unit_y(brick, siunity);
+        gwy_brick_set_si_unit_z(brick, siunitz);
+        gwy_brick_set_si_unit_w(brick, siunitw);
+        gwy_brick_set_si_unit_x(brick2, siunitx);
+        gwy_brick_set_si_unit_y(brick2, siunity);
+        gwy_brick_set_si_unit_z(brick2, siunitz);
+        gwy_brick_set_si_unit_w(brick2, siunitw);
+
         strkey = g_strdup_printf("/brick/%d", *numdata);
         gwy_container_set_object_by_name(container, strkey, brick);
         g_free(strkey);
@@ -3442,6 +3451,11 @@ extract_brick(MDTMDAFrame *dataframe,
                     }
                 }
             }
+
+        gwy_brick_set_si_unit_x(brick, siunitx);
+        gwy_brick_set_si_unit_y(brick, siunity);
+        gwy_brick_set_si_unit_z(brick, siunitz);
+        gwy_brick_set_si_unit_w(brick, siunitw);
 
         strkey = g_strdup_printf("/brick/%d", *numdata);
         gwy_container_set_object_by_name(container, strkey, brick);
@@ -3510,11 +3524,6 @@ extract_brick(MDTMDAFrame *dataframe,
 
         g_object_unref(cal);
     }
-
-    gwy_brick_set_si_unit_x(brick, siunitx);
-    gwy_brick_set_si_unit_y(brick, siunity);
-    gwy_brick_set_si_unit_z(brick, siunitz);
-    gwy_brick_set_si_unit_w(brick, siunitw);
 
     g_object_unref(siunitx);
     g_object_unref(siunity);
