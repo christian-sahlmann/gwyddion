@@ -235,7 +235,7 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->title_type = MIN(args->title_type, IMGEXPORT_TITLE_NTYPES-1);
     /* handle inset_length later, its usability depends on the data field. */
     args->zoom = CLAMP(args->zoom, 0.06, 16.0);
-    args->pxwidth = CLAMP(args->pxwidth, 0.01, 25.4);
+    args->pxwidth = CLAMP(args->pxwidth, 0.01, 254.0);
     args->draw_mask = !!args->draw_mask;
     args->draw_frame = !!args->draw_frame;
     args->draw_selection = !!args->draw_selection;

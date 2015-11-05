@@ -519,7 +519,7 @@ static GwyModuleInfo module_info = {
        "Export to some formats relies on GDK and other libraries thus may "
        "be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti)",
     "2014",
 };
@@ -2766,18 +2766,20 @@ create_basic_controls(ImgExportControls *controls)
         gdouble pxwidth = args->pxwidth;
         gdouble ppi = pxwidth_to_ppi(args->pxwidth);
 
-        controls->pxwidth = gtk_adjustment_new(args->pxwidth, 0.01, 25.4,
+        controls->pxwidth = gtk_adjustment_new(args->pxwidth, 0.01, 254.0,
                                                0.001, 0.1, 0);
         spin = gwy_table_attach_spinbutton(table, row, _("Pi_xel size:"), "mm",
-                                    controls->pxwidth);
+                                           controls->pxwidth);
         gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
         g_signal_connect_swapped(controls->pxwidth, "value-changed",
                                  G_CALLBACK(pxwidth_changed), controls);
         row++;
 
-        controls->ppi = gtk_adjustment_new(ppi, 1.0, 2540.0, 1.0, 100.0, 0);
-        gwy_table_attach_spinbutton(table, row, _("Pixels per _inch:"), NULL,
-                                    controls->ppi);
+        controls->ppi = gtk_adjustment_new(ppi, 0.1, 2540.0, 0.01, 100.0, 0);
+        spin = gwy_table_attach_spinbutton(table, row,
+                                           _("Pixels per _inch:"), NULL,
+                                           controls->ppi);
+        gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
         g_signal_connect_swapped(controls->ppi, "value-changed",
                                  G_CALLBACK(ppi_changed), controls);
         row++;
