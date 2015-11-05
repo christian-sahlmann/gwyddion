@@ -21,7 +21,7 @@
 
 /* XXX: The file looks like Windows bitmap until you look beyond the nominal
  * file end.  And the type of data inside is not what the BMP header says at
- * all.  => Epic FAIL. */
+ * all.  And the dimensions in the added footer are wrong.  => Epic FAIL. */
 
 /**
  * [FILE-MAGIC-FREEDESKTOP]
@@ -82,7 +82,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Benyuan CSM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -141,7 +141,7 @@ csmfile_load(const gchar *filename,
     gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
-    guint xres, yres, hxres, hyres, bmpsize, header_size, maxval, i, j;
+    guint xres, yres, bmpsize, header_size, maxval, i, j;
     gdouble real, zmin, zmax, q, z0;
     GwyTextHeaderParser parser;
     GwySIUnit *unit = NULL;
@@ -173,29 +173,12 @@ csmfile_load(const gchar *filename,
     parser.key_value_separator = "=";
     hash = gwy_text_header_parse(header, &parser, NULL, NULL);
 
-    if (!(value = g_hash_table_lookup(hash, "Image width"))) {
-        err_MISSING_FIELD(error, "Image width");
-        goto fail;
-    }
-    hxres = atoi(value);
-    if (hxres != xres) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Header image width field does not match BMP width."));
-        goto fail;
-    }
+    /* Do NOT use the fields Image width, Image height from the added footer.
+     * Even though it is specifically added by Benyuan it can disagree with the
+     * BMP diemsions and when they disagree the BMP diemsions are apparently
+     * right. */
     if (err_DIMENSION(error, xres))
         goto fail;
-
-    if (!(value = g_hash_table_lookup(hash, "Image height"))) {
-        err_MISSING_FIELD(error, "Image height");
-        goto fail;
-    }
-    hyres = atoi(value);
-    if (hyres != yres) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Header image height field does not match BMP height."));
-        goto fail;
-    }
     if (err_DIMENSION(error, yres))
         goto fail;
 
