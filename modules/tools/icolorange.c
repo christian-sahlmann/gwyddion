@@ -554,7 +554,6 @@ gwy_tool_color_range_data_changed(GwyPlainTool *plain_tool)
                                    plain_tool->data_field,
                                    NULL, NULL);
     gwy_tool_color_range_update_histogram(GWY_TOOL_COLOR_RANGE(plain_tool));
-    gwy_tool_color_range_selection_changed(plain_tool, 0);
 }
 
 static void
