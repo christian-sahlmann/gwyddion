@@ -250,6 +250,7 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     GtkDialog *dialog;
     GwyGraphCurveModel *cmodel;
     GwyGraphArea *garea;
+    GtkSizeGroup *sizegroup;
     GwyLayerBasicRangeType range_type = GWY_LAYER_BASIC_RANGE_FULL;
     GtkTooltips *tips;
     gint row, i;
@@ -317,7 +318,7 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
                        TRUE, TRUE, 2);
 
     /* Data ranges */
-    table = GTK_TABLE(gtk_table_new(7, 3, FALSE));
+    table = GTK_TABLE(gtk_table_new(8, 3, FALSE));
     gtk_table_set_col_spacings(table, 6);
     gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -384,23 +385,34 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     gtk_table_attach(table, hbox,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
+    sizegroup = gtk_size_group_new(GTK_SIZE_GROUP_HORIZONTAL);
+
     button = gtk_button_new_with_mnemonic(_("Set to _Unmasked"));
     tool->set_to_unmasked = button;
     gtk_box_pack_end(GTK_BOX(hbox), button, FALSE, TRUE, 0);
+    gtk_size_group_add_widget(sizegroup, button);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(set_range_to_unmasked), tool);
 
     button = gtk_button_new_with_mnemonic(_("Set to _Masked"));
     tool->set_to_masked = button;
     gtk_box_pack_end(GTK_BOX(hbox), button, FALSE, TRUE, 0);
+    gtk_size_group_add_widget(sizegroup, button);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(set_range_to_masked), tool);
+    row++;
+
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_table_attach(table, hbox,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     button = gtk_button_new_with_mnemonic(_("_Invert Mapping"));
     tool->invert = button;
     gtk_box_pack_end(GTK_BOX(hbox), button, FALSE, TRUE, 0);
+    gtk_size_group_add_widget(sizegroup, button);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(invert_mapping), tool);
+    g_object_unref(sizegroup);
     row++;
 
     gtk_table_set_row_spacing(table, row-1, 8);
