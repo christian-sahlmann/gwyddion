@@ -136,6 +136,7 @@ static GwyDataField*   hash_to_data_field     (GHashTable *hash,
                                                gchar *buffer,
                                                gint gxres,
                                                gint gyres,
+                                               gboolean gnonsquare_aspect,
                                                gchar **p,
                                                GError **error);
 static GwyGraphModel*  hash_to_curve          (GHashTable *hash,
@@ -171,6 +172,7 @@ static GHashTable*     read_hash              (gchar **buffer,
 static void            get_scan_list_res      (GHashTable *hash,
                                                gint *xres,
                                                gint *yres);
+static gboolean        has_nonsquare_aspect   (GHashTable *hash);
 static GwySIUnit*      get_physical_scale     (GHashTable *hash,
                                                GHashTable *scannerlist,
                                                GHashTable *scanlist,
@@ -202,7 +204,7 @@ static GwyModuleInfo module_info = {
     N_("Imports Veeco (Digital Instruments) Nanoscope data files, "
        "version 3 or newer."),
     "Yeti <yeti@gwyddion.net>",
-    "0.32",
+    "0.33",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -258,7 +260,7 @@ nanoscope_load(const gchar *filename,
                *contrlist = NULL, *equipmentlist = NULL;
     GList *l, *list = NULL;
     gint i, xres = 0, yres = 0;
-    gboolean ok;
+    gboolean nonsquare_aspect = FALSE, ok;
     GwyDataField *preview;
     gchar *prevkey, *titlekey;
 
@@ -347,10 +349,12 @@ nanoscope_load(const gchar *filename,
         if (gwy_stramong(self, "Ciao scan list", "Afm list", "Stm list",
                          "NC Afm list", NULL)) {
             get_scan_list_res(hash, &xres, &yres);
+            nonsquare_aspect = has_nonsquare_aspect(hash);
             scanlist = hash;
         }
          if (gwy_stramong(self, "Ciao force list", NULL)) {
             get_scan_list_res(hash, &xres, &yres);
+            nonsquare_aspect = has_nonsquare_aspect(hash);
             forcelist = hash;
         }
         if (!gwy_stramong(self, "AFM image list", "Ciao image list",
@@ -384,7 +388,7 @@ nanoscope_load(const gchar *filename,
                                                    contrlist,
                                                    file_type,
                                                    size, buffer,
-                                                   xres, yres,
+                                                   xres, yres, nonsquare_aspect,
                                                    &p, error);
             ok = ok && ndata->data_field;
         }
@@ -499,6 +503,21 @@ get_scan_list_res(GHashTable *hash,
     gwy_debug("Global xres, yres = %d, %d", *xres, *yres);
 }
 
+static gboolean
+has_nonsquare_aspect(GHashTable *hash)
+{
+    NanoscopeValue *val;
+    gdouble ar;
+
+    val = g_hash_table_lookup(hash, "Aspect ratio");
+    if (!val || gwy_strequal(val->hard_value_str, "1:1"))
+        return FALSE;
+
+    ar = g_ascii_strtod(val->hard_value_str, NULL);
+    if (ar > 0.0 && ar != 1.0)
+        return TRUE;
+    return FALSE;
+}
 
 static void
 add_metadata(gpointer hkey,
@@ -568,6 +587,7 @@ hash_to_data_field(GHashTable *hash,
                    gchar *buffer,
                    gint gxres,
                    gint gyres,
+                   gboolean gnonsquare_aspect,
                    gchar **p,
                    GError **error)
 {
@@ -594,8 +614,9 @@ hash_to_data_field(GHashTable *hash,
     val = g_hash_table_lookup(hash, "Bytes/pixel");
     bpp = val ? GWY_ROUND(val->hard_value) : 2;
 
-    val = g_hash_table_lookup(hash, "Aspect ratio");
-    nonsquare_aspect = val && !gwy_strequal(val->hard_value_str, "1:1");
+    nonsquare_aspect = has_nonsquare_aspect(hash);
+    gwy_debug("xres %d, yres %d", xres, yres);
+    gwy_debug("gxres %d, gyres %d", gxres, gyres);
 
     /* scan size */
     val = g_hash_table_lookup(hash, "Scan size");
@@ -626,6 +647,13 @@ hash_to_data_field(GHashTable *hash,
     q = pow10(power10);
     xreal *= q;
     yreal *= q;
+
+    /* Prevents possible division by 0 when gxres and gyres are not set for
+     * whatever reason. */
+    if (!gxres)
+        gxres = xres;
+    if (!gyres)
+        gyres = xres;
 
     offset = size = 0;
     if (file_type == NANOSCOPE_FILE_TYPE_BIN) {
@@ -674,10 +702,19 @@ hash_to_data_field(GHashTable *hash,
             }
         }
         else if (nonsquare_aspect) {
-            /* Reported by Peter Eaton.  No test case that would contradict
-             * this known. */
-            yreal *= yres;
-            yreal /= xres;
+            gwy_debug("nonsquare_aspect");
+            if (gnonsquare_aspect) {
+                gwy_debug("gnonsquare_aspect");
+                /* Reported by Peter Eaton.  Not sure if we detect it
+                 * correctly. */
+                yreal *= yres;
+                yreal /= xres;
+            }
+            else {
+                /* This seems to be the common case. */
+                yreal *= yres;
+                yreal /= gyres;
+            }
         }
 
         if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
