@@ -1693,6 +1693,155 @@ gwy_object_set_or_reset(gpointer object,
     g_object_thaw_notify(object);
 }
 
+#ifdef G_OS_WIN32
+/**
+* gwy_fopen:
+* @filename: a pathname in the GLib file name encoding (UTF-8 on Windows)
+* @mode: a string describing the mode in which the file should be opened
+*
+* A wrapper for the stdio fopen() function. The fopen() function
+* opens a file and associates a new stream with it.
+*
+* Because file descriptors are specific to the C library on Windows,
+* and a file descriptor is part of the FILE struct, the FILE* returned
+* by this function makes sense only to functions in the same C library.
+* Thus if the GLib-using code uses a different C library than GLib does,
+* the FILE* returned by this function cannot be passed to C library
+* functions like fprintf() or fread().
+*
+* See your C library manual for more details about fopen().
+*
+* Returns: A FILE* if the file was successfully opened, or %NULL if
+*     an error occurred
+*
+* Since: 2.43
+*/
+FILE *
+gwy_fopen(const gchar *filename,
+    const gchar *mode)
+{
+    wchar_t *wfilename = g_utf8_to_utf16(filename, -1, NULL, NULL, NULL);
+    wchar_t *wmode;
+    FILE *retval;
+    int save_errno;
+
+    if (wfilename == NULL)
+    {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    wmode = g_utf8_to_utf16(mode, -1, NULL, NULL, NULL);
+
+    if (wmode == NULL)
+    {
+        g_free(wfilename);
+        errno = EINVAL;
+        return NULL;
+    }
+
+    retval = _wfopen(wfilename, wmode);
+    save_errno = errno;
+
+    g_free(wfilename);
+    g_free(wmode);
+
+    errno = save_errno;
+    return retval;
+}
+
+/**
+* gwy_fprintf:
+* @file: the stream to write to.
+* @format: a standard printf() format string, but notice
+*          [string precision pitfalls][string-precision]
+* @...: the arguments to insert in the output.
+*
+* An implementation of the standard fprintf() function which supports
+* positional parameters, as specified in the Single Unix Specification.
+*
+* Returns: the number of bytes printed.
+*
+* Since: 2.43
+**/
+gint
+gwy_fprintf(FILE        *file,
+    gchar const *format,
+    ...)
+{
+    va_list args;
+    gint retval;
+    gchar* string;
+
+    va_start(args, format);
+    retval = g_vasprintf(&string, format, args);
+    va_end(args);
+    fputs(string, file);
+    return retval;
+}
+#else
+#undef gwy_fopen
+#undef gwy_fprintf
+
+/**
+* gwy_fopen:
+* @filename: a pathname in the GLib file name encoding (UTF-8 on Windows)
+* @mode: a string describing the mode in which the file should be opened
+*
+* A wrapper for the stdio fopen() function. The fopen() function
+* opens a file and associates a new stream with it.
+*
+* Because file descriptors are specific to the C library on Windows,
+* and a file descriptor is part of the FILE struct, the FILE* returned
+* by this function makes sense only to functions in the same C library.
+* Thus if the GLib-using code uses a different C library than GLib does,
+* the FILE* returned by this function cannot be passed to C library
+* functions like fprintf() or fread().
+*
+* See your C library manual for more details about fopen().
+*
+* Returns: A FILE* if the file was successfully opened, or %NULL if
+*     an error occurred
+*
+* Since: 2.43
+*/
+FILE *
+gwy_fopen(const gchar *filename,
+    const gchar *mode)
+{
+    return fopen(filename, mode);
+}
+
+/**
+* gwy_fprintf:
+* @file: the stream to write to.
+* @format: a standard printf() format string, but notice
+*          [string precision pitfalls][string-precision]
+* @...: the arguments to insert in the output.
+*
+* An implementation of the standard fprintf() function which supports
+* positional parameters, as specified in the Single Unix Specification.
+*
+* Returns: the number of bytes printed.
+*
+* Since: 2.43
+**/
+gint
+gwy_fprintf(FILE        *file,
+    gchar const *format,
+    ...)
+{
+    va_list args;
+    gint retval;
+
+    va_start(args, format);
+    retval = vfprintf(file, format, args);
+    va_end(args);
+
+    return retval;
+}
+#endif
+
 /************************** Documentation ****************************/
 /* Note: gwymacros.h documentation is also here. */
 

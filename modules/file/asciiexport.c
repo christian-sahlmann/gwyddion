@@ -169,7 +169,7 @@ asciiexport_export(G_GNUC_UNUSED GwyContainer *data,
         }
     }
 
-    if (!(fh = g_fopen(filename, "w"))) {
+    if (!(fh = gwy_fopen(filename, "w"))) {
         err_OPEN_WRITE(error);
         return FALSE;
     }
@@ -185,32 +185,32 @@ asciiexport_export(G_GNUC_UNUSED GwyContainer *data,
 
         g_snprintf(buf, sizeof(buf), "/%d/data/title", id);
         gwy_container_gis_string_by_name(data, buf, &title);
-        fprintf(fh, "# %s %s\n", _("Channel:"), title);
+        gwy_fprintf(fh, "# %s %s\n", _("Channel:"), title);
 
         vf = gwy_data_field_get_value_format_xy(dfield,
                                                 GWY_SI_UNIT_FORMAT_VFMARKUP,
                                                 vf);
         if (needs_decimal_dot && args.decimal_dot) {
-            fprintf(fh, "# %s ", _("Width:"));
+            gwy_fprintf(fh, "# %s ", _("Width:"));
             g_snprintf(buf, sizeof(buf), "%.*f",
                        vf->precision,
                        gwy_data_field_get_xreal(dfield)/vf->magnitude);
             print_with_decimal_dot(fh, buf, decimal_dot, decimal_dot_len);
-            fprintf(fh, " %s\n", vf->units);
+            gwy_fprintf(fh, " %s\n", vf->units);
 
-            fprintf(fh, "# %s ", _("Height:"));
+            gwy_fprintf(fh, "# %s ", _("Height:"));
             g_snprintf(buf, sizeof(buf), "%.*f",
                        vf->precision,
                        gwy_data_field_get_yreal(dfield)/vf->magnitude);
             print_with_decimal_dot(fh, buf, decimal_dot, decimal_dot_len);
-            fprintf(fh, " %s\n", vf->units);
+            gwy_fprintf(fh, " %s\n", vf->units);
         }
         else {
-            fprintf(fh, "# %s %.*f %s\n", _("Width:"),
+            gwy_fprintf(fh, "# %s %.*f %s\n", _("Width:"),
                     vf->precision,
                     gwy_data_field_get_xreal(dfield)/vf->magnitude,
                     vf->units);
-            fprintf(fh, "# %s %.*f %s\n", _("Height:"),
+            gwy_fprintf(fh, "# %s %.*f %s\n", _("Height:"),
                     vf->precision,
                     gwy_data_field_get_yreal(dfield)/vf->magnitude,
                     vf->units);
@@ -218,7 +218,7 @@ asciiexport_export(G_GNUC_UNUSED GwyContainer *data,
 
         units = gwy_data_field_get_si_unit_z(dfield);
         s = gwy_si_unit_get_string(units, GWY_SI_UNIT_FORMAT_VFMARKUP);
-        fprintf(fh, "# %s %s\n", _("Value units:"), s);
+        gwy_fprintf(fh, "# %s %s\n", _("Value units:"), s);
         g_free(s);
 
         gwy_si_unit_value_format_free(vf);
@@ -236,7 +236,7 @@ asciiexport_export(G_GNUC_UNUSED GwyContainer *data,
     }
     else {
         for (i = 0; i < xres*yres; i++) {
-            if (fprintf(fh, "%.*g%c", precision, d[i],
+            if (gwy_fprintf(fh, "%.*g%c", precision, d[i],
                         (i + 1) % xres ? '\t' : '\n') < 2) {
                 goto fail;
             }

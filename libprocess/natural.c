@@ -187,7 +187,7 @@ static gint addToArrayList(arrayList *l, void* element)
       // check that we haven't run out of memory
       if (l->arr == NULL)
       {
-         //fprintf(stderr, "Error: Out of Memory.\n");
+         //gwy_fprintf(stderr, "Error: Out of Memory.\n");
          return -1;
       }
    }
@@ -344,7 +344,7 @@ static listNode *topOfLinkedList(linkedList *l)
 static void removeFromLinkedList(linkedList *l, listNode *ln)
 {
   if (!ln){
-//    fprintf(stderr, "Error: Tried to remove null element from linkedList.\n");
+//    gwy_fprintf(stderr, "Error: Tried to remove null element from linkedList.\n");
     return;
   }
   // This could be the top of the linkedList: if it is: make sure we change the
@@ -435,7 +435,7 @@ static void  push(stack *s, void*e)
       // check that we haven't run out of memory
       if (s->arr == NULL)
       {
-//         fprintf(stderr, "Error: Out of Memory.\n");
+//         gwy_fprintf(stderr, "Error: Out of Memory.\n");
           return;
       }
    }
@@ -1962,10 +1962,10 @@ static voronoiCell* gwy_delaunay_get_voronoi_cell(GwyDelaunayVertex *point, simp
   if (n==0)
   {
  //   if (!simplexContainsPoint(m->super, point))
- //     fprintf(stderr,"Error: point outside of delaunay triangulation. - "
+ //     gwy_fprintf(stderr,"Error: point outside of delaunay triangulation. - "
  //                    "try extending the super-simplex and re-starting.\n");
  //   else
- //    fprintf(stderr, "Error: No neighbours found for point! - mesh appears "
+ //    gwy_fprintf(stderr, "Error: No neighbours found for point! - mesh appears "
  //                    "to be degenerate.\n");
  //   exit(1);
       return NULL;
@@ -2557,8 +2557,8 @@ void _gwy_delaunay_mesh_interpolate3_3(GwyDelaunayMesh *m, gdouble  x, gdouble  
   // We tolerate up to 0.1 here.
   if (sum <= 0 || sum > 1.1)
   {
-    //fprintf(stderr, "Error: sum value: %lf, expected range (0,1].\n",sum);
-    //fprintf(stderr, "There could be a degenerecy in the mesh, either retry "
+    //gwy_fprintf(stderr, "Error: sum value: %lf, expected range (0,1].\n",sum);
+    //gwy_fprintf(stderr, "There could be a degenerecy in the mesh, either retry "
     //                "(since input is randomised this may resolve the problem), "
     //                "or try adding a random peterbation to every point.\n");
    // exit(1);

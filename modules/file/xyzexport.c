@@ -170,7 +170,7 @@ xyzexport_export(G_GNUC_UNUSED GwyContainer *data,
         }
     }
 
-    if (!(fh = g_fopen(filename, "w"))) {
+    if (!(fh = gwy_fopen(filename, "w"))) {
         err_OPEN_WRITE(error);
         return FALSE;
     }
@@ -188,16 +188,16 @@ xyzexport_export(G_GNUC_UNUSED GwyContainer *data,
 
         g_snprintf(buf, sizeof(buf), "/%d/data/title", id);
         gwy_container_gis_string_by_name(data, buf, &title);
-        fprintf(fh, "# %s %s\n", _("Channel:"), title);
+        gwy_fprintf(fh, "# %s %s\n", _("Channel:"), title);
 
         units = gwy_data_field_get_si_unit_xy(dfield);
         s = gwy_si_unit_get_string(units, GWY_SI_UNIT_FORMAT_VFMARKUP);
-        fprintf(fh, "# %s %s\n", _("Lateral units:"), s);
+        gwy_fprintf(fh, "# %s %s\n", _("Lateral units:"), s);
         g_free(s);
 
         units = gwy_data_field_get_si_unit_z(dfield);
         s = gwy_si_unit_get_string(units, GWY_SI_UNIT_FORMAT_VFMARKUP);
-        fprintf(fh, "# %s %s\n", _("Value units:"), s);
+        gwy_fprintf(fh, "# %s %s\n", _("Value units:"), s);
         g_free(s);
     }
 
@@ -247,7 +247,7 @@ xyzexport_export(G_GNUC_UNUSED GwyContainer *data,
                         continue;
                 }
 
-                if (fprintf(fh, "%.*g\t%.*g\t%.*g\n",
+                if (gwy_fprintf(fh, "%.*g\t%.*g\t%.*g\n",
                             precision, x,
                             precision, y,
                             precision, d[i*xres + j]) < 3)

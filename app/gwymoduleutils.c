@@ -149,7 +149,7 @@ gwy_save_auxiliary_with_callback(const gchar *title,
     data = create(user_data, &data_len);
     g_return_val_if_fail(data, FALSE);
 
-    if ((fh = g_fopen(filename_sys, "wb"))) {
+    if ((fh = gwy_fopen(filename_sys, "wb"))) {
         gchar *mydata = NULL;
 
         /* Write everything in binary and just convert the EOLs by manually.

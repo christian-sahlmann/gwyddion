@@ -376,7 +376,7 @@ gxyzf_export(GwyContainer *container,
         return FALSE;
     }
 
-    if (!(fh = g_fopen(filename, "wb"))) {
+    if (!(fh = gwy_fopen(filename, "wb"))) {
         err_OPEN_WRITE(error);
         return FALSE;
     }

@@ -227,7 +227,7 @@ gwyfile_save(GwyContainer *data,
     buffer = gwy_serializable_serialize(G_OBJECT(data), NULL);
 
     /* Now actually write the file. */
-    if (!(fh = g_fopen(filename, "wb"))) {
+    if (!(fh = gwy_fopen(filename, "wb"))) {
         err_OPEN_WRITE(error);
         ok = FALSE;
     }

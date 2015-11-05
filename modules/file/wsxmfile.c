@@ -468,7 +468,7 @@ wsxmfile_export_double(GwyContainer *data,
         return FALSE;
     }
 
-    if (!(fh = g_fopen(filename, "w"))) {
+    if (!(fh = gwy_fopen(filename, "w"))) {
         err_OPEN_WRITE(error);
         return FALSE;
     }

@@ -279,7 +279,7 @@ gwy_func_use_save(GwyFunctionUse *functions,
     guint i;
     FILE *fh;
 
-    fh = g_fopen(filename, "w");
+    fh = gwy_fopen(filename, "w");
     if (!fh)
         return;
 
@@ -289,7 +289,7 @@ gwy_func_use_save(GwyFunctionUse *functions,
 
         info = &g_array_index(funcs, GwyFunctionUseInfo, i);
         g_ascii_dtostr(buf, sizeof(buf), info->global);
-        fprintf(fh, "%s %s\n", g_quark_to_string(info->quark), buf);
+        gwy_fprintf(fh, "%s %s\n", g_quark_to_string(info->quark), buf);
     }
 
     fclose(fh);

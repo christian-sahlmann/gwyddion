@@ -255,7 +255,7 @@ pygwy_console_save_file(GtkToolButton *btn, gpointer user_data)
         buf = gtk_text_view_get_buffer(textview);
         gtk_text_buffer_get_bounds(buf, &start_iter, &end_iter);
         script = gtk_text_buffer_get_text(buf, &start_iter, &end_iter, FALSE);
-        f = g_fopen(console_setup->script_filename, "wb");
+        f = gwy_fopen(console_setup->script_filename, "wb");
         if (f) {
             fwrite(script, 1, strlen(script), f);
             fclose(f);

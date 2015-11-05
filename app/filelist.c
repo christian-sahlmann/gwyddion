@@ -796,7 +796,7 @@ gwy_app_recent_file_list_save(const gchar *filename)
     FILE *fh;
 
     g_return_val_if_fail(gcontrols.store, FALSE);
-    fh = g_fopen(filename, "w");
+    fh = gwy_fopen(filename, "w");
     if (!fh)
         return FALSE;
 

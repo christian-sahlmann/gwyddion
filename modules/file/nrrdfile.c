@@ -1660,7 +1660,7 @@ nrrdfile_export(G_GNUC_UNUSED GwyContainer *data,
 
     /* The specification says both kind of EOLs are fine so write Unix EOLs
      * everywhere. */
-    if (!(fh = g_fopen(filename, "wb"))) {
+    if (!(fh = gwy_fopen(filename, "wb"))) {
         err_OPEN_WRITE(error);
         return FALSE;
     }
@@ -1683,7 +1683,7 @@ nrrdfile_export(G_GNUC_UNUSED GwyContainer *data,
     g_ascii_formatd(buf[3], sizeof(buf[3]), "%.8g", yreal + yoff);
 
     /* Write in native endian. */
-    fprintf(fh, header_format,
+    gwy_fprintf(fh, header_format,
             G_BYTE_ORDER == G_LITTLE_ENDIAN ? "little" : "big",
             xres, yres,
             buf[0], buf[1], buf[2], buf[3],

@@ -275,7 +275,7 @@ simple(GwyContainer *data, GwyRunType run)
         g_mkdir(g_build_filename(gwy_get_user_dir(), "calibrations", NULL), 0700);
     }
 
-    fh = g_fopen(filename, "w");
+    fh = gwy_fopen(filename, "w");
     if (!fh) {
         g_warning("Cannot save preset: %s", filename);
         g_free(filename);

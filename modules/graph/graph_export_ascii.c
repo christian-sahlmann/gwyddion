@@ -219,7 +219,7 @@ export_dialog_choose_file(GwyGraph *graph,
                                            NULL);
 
         /* FIXME: Must check success */
-        fw = g_fopen(filename, "w");
+        fw = gwy_fopen(filename, "w");
         fwrite(str->str, str->len, 1, fw);
         fclose(fw);
         g_string_free(str, TRUE);

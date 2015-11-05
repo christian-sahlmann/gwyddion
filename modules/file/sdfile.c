@@ -438,7 +438,7 @@ sdfile_export_text(G_GNUC_UNUSED GwyContainer *data,
         return FALSE;
     }
 
-    if (!(fh = g_fopen(filename, "w"))) {
+    if (!(fh = gwy_fopen(filename, "w"))) {
         err_OPEN_WRITE(error);
         return FALSE;
     }
@@ -450,7 +450,7 @@ sdfile_export_text(G_GNUC_UNUSED GwyContainer *data,
     /* We do not keep date information, just use the current time */
     time(&t);
     ttm = localtime(&t);
-    fprintf(fh, header_format,
+    gwy_fprintf(fh, header_format,
             ttm->tm_mday, ttm->tm_mon, ttm->tm_year, ttm->tm_hour, ttm->tm_min,
             ttm->tm_mday, ttm->tm_mon, ttm->tm_year, ttm->tm_hour, ttm->tm_min,
             xres, yres,

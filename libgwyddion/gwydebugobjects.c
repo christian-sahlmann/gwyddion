@@ -132,14 +132,14 @@ gwy_debug_objects_dump_to_file(FILE *filehandle,
             && info->destroy_time >= 0.0)
             continue;
 
-        fprintf(filehandle, "%s %p ", g_type_name(info->type), info->address);
+        gwy_fprintf(filehandle, "%s %p ", g_type_name(info->type), info->address);
         if (info->details)
-            fprintf(filehandle, "(%s) ", info->details);
-        fprintf(filehandle, "%.3f ", info->create_time);
+            gwy_fprintf(filehandle, "(%s) ", info->details);
+        gwy_fprintf(filehandle, "%.3f ", info->create_time);
         if (info->destroy_time > 0)
-            fprintf(filehandle, "%.3f\n", info->destroy_time);
+            gwy_fprintf(filehandle, "%.3f\n", info->destroy_time);
         else
-            fprintf(filehandle, "ALIVE(%d)!\n",
+            gwy_fprintf(filehandle, "ALIVE(%d)!\n",
                     G_OBJECT(info->address)->ref_count);
     }
 }

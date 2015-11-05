@@ -683,7 +683,7 @@ surffile_save(GwyContainer *data,
     surf.ZOffset = 0.0;
     strncpy(surf.reservedzone, " ", 34);
 
-    if (!(fh = g_fopen( filename, "wb"))) {
+    if (!(fh = gwy_fopen( filename, "wb"))) {
         err_OPEN_WRITE(error);
         return FALSE;
     }

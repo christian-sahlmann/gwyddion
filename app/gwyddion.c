@@ -445,7 +445,7 @@ setup_logging(void)
     FILE *logfile;
 
     log_filename = gwy_app_settings_get_log_filename();
-    logfile = g_fopen(log_filename, "w");
+    logfile = gwy_fopen(log_filename, "w");
     for (i = 0; i < G_N_ELEMENTS(domains); i++)
         g_log_set_handler(domains[i],
                           G_LOG_LEVEL_DEBUG | G_LOG_LEVEL_MESSAGE
@@ -475,11 +475,11 @@ logger(const gchar *log_domain,
     }
 
     if (count)
-        fprintf(logfile, "Last message repeated %u times\n", count);
+        gwy_fprintf(logfile, "Last message repeated %u times\n", count);
     g_string_assign(last, message);
     count = 0;
 
-    fprintf(logfile, "%s%s%s\n",
+    gwy_fprintf(logfile, "%s%s%s\n",
             log_domain ? log_domain : "",
             log_domain ? ": " : "",
             message);

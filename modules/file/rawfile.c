@@ -1564,7 +1564,7 @@ preset_store_cb(RawFileControls *controls)
     }
 
     filename = gwy_resource_build_filename(GWY_RESOURCE(preset));
-    fh = g_fopen(filename, "w");
+    fh = gwy_fopen(filename, "w");
     if (!fh) {
         g_warning("Cannot save preset: %s", filename);
         g_free(filename);
@@ -2749,7 +2749,7 @@ rawfile_import_1x_presets(GwyContainer *settings)
         g_free(args.p.zunit);
 
         filename = gwy_resource_build_filename(GWY_RESOURCE(preset));
-        fh = g_fopen(filename, "w");
+        fh = gwy_fopen(filename, "w");
         if (!fh) {
             g_warning("Cannot save preset: %s", filename);
             g_free(filename);

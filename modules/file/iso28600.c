@@ -1409,7 +1409,7 @@ iso28600_export(GwyContainer *container,
     }
 
     /* Both kind of EOLs are fine so write Unix EOLs everywhere. */
-    if (!(fh = g_fopen(filename, "wb"))) {
+    if (!(fh = gwy_fopen(filename, "wb"))) {
         err_OPEN_WRITE(error);
         return FALSE;
     }
@@ -1441,7 +1441,7 @@ iso28600_export(GwyContainer *container,
     g_ascii_formatd(yoff, sizeof(yoff), "%.8g",
                     gwy_data_field_get_yoffset(dfield));
 
-    if (fprintf(fh, header_template,
+    if (gwy_fprintf(fh, header_template,
                 xres, yres,
                 unitxy, unitxy, xreal, yreal,
                 unitxy, unitxy, xoff, yoff,
@@ -1465,7 +1465,7 @@ iso28600_export(GwyContainer *container,
         }
     }
 
-    if (fprintf(fh, "end of experiment\n") < 0) {
+    if (gwy_fprintf(fh, "end of experiment\n") < 0) {
         err_WRITE(error);
         goto fail;
     }

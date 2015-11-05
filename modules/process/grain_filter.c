@@ -1162,7 +1162,7 @@ save_range(G_GNUC_UNUSED gpointer key, gpointer data, gpointer user_data)
 
     g_ascii_dtostr(buf_lower, G_ASCII_DTOSTR_BUF_SIZE, rr->lower);
     g_ascii_dtostr(buf_upper, G_ASCII_DTOSTR_BUF_SIZE, rr->upper);
-    fprintf(fh, "%s %s %s\n", buf_lower, buf_upper, rr->quantity);
+    gwy_fprintf(fh, "%s %s %s\n", buf_lower, buf_upper, rr->quantity);
 }
 
 static void
@@ -1192,7 +1192,7 @@ gfilter_save_args(GwyContainer *container,
 
     filename = g_build_filename(gwy_get_user_dir(), "grain_filter", "ranges",
                                 NULL);
-    if ((fh = g_fopen(filename, "w"))) {
+    if ((fh = gwy_fopen(filename, "w"))) {
         g_hash_table_foreach(args->ranges_history, save_range, fh);
         fclose(fh);
     }

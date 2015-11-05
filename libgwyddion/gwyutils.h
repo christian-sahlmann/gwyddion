@@ -23,6 +23,7 @@
 #define __GWY_UTILS_H__
 
 #include <glib-object.h>
+#include <stdio.h>
 
 G_BEGIN_DECLS
 
@@ -109,6 +110,16 @@ guint        gwy_raw_data_size         (GwyRawDataType datatype);
 void         gwy_object_set_or_reset   (gpointer object,
                                         GType type,
                                         ...);
+#ifdef G_OS_WIN32
+FILE*        gwy_fopen                 (const gchar *filename, 
+                                        const gchar *mode);
+gint         gwy_fprintf               (FILE *file,
+                                        gchar const *format,
+                                        ...);
+#else
+#define gwy_fopen fopen
+#define gwy_fprintf fprintf
+#endif
 
 G_END_DECLS
 

@@ -79,7 +79,7 @@ export(GwyGraph *graph)
             str = gwy_graph_export_postscript(graph, TRUE, TRUE, TRUE, NULL);
 
             /* FIXME: Must check success */
-            fw = g_fopen(filename, "w");
+            fw = gwy_fopen(filename, "w");
             fwrite(str->str, str->len, 1, fw);
             fclose(fw);
             g_string_free(str, TRUE);

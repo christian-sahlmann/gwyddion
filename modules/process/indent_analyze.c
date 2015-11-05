@@ -863,8 +863,8 @@ set_mask_at(GwyDataField *mask, gint x, gint y, gdouble m, gint how)
         case GWY_HOW_MARK_OR:
             act_mask = (act_mask || im);
             /*    if(act_mask){
-               FILE* fl = fopen ("setmask.txt","a");
-               fprintf(fl, "[%d %d]%d %d %lf\n", x,y,act_mask, im, (double)(act_mask || im));
+               FILE* fl = gwy_fopen ("setmask.txt","a");
+               gwy_fprintf(fl, "[%d %d]%d %d %lf\n", x,y,act_mask, im, (double)(act_mask || im));
                fclose(fl);
                }
                gwy_data_field_area_fill(mask,10,10,20,20,(double)act_mask);
@@ -1615,72 +1615,72 @@ save_statistics_dialog(IndentAnalyzeControls *c,
     */
     mag = vf->magnitude;
 
-    out = fopen(filename_sys, "w");
+    out = gwy_fopen(filename_sys, "w");
     if (out) {
         /* FIXME: this is wrong, we whould construct area and volume units
          * properly, but in GWYDDION-1 it's impossible to get plain-text value
          * formats */
-        fprintf(out, "%s\n", filename_sys);
+        gwy_fprintf(out, "%s\n", filename_sys);
 
-        fprintf(out, _("Indentor:  %s\n"),
+        gwy_fprintf(out, _("Indentor:  %s\n"),
                 _(gwy_enum_to_string(args->indentor,
                                      indentor_enum,
                                      G_N_ELEMENTS(indentor_enum))));
-        fprintf(out, _("Length units: %s\n"), vf->units);
+        gwy_fprintf(out, _("Length units: %s\n"), vf->units);
 
-        fprintf(out, _("Indentation centre at [%d, %d] px:      %lf\n"),
+        gwy_fprintf(out, _("Indentation centre at [%d, %d] px:      %lf\n"),
                 args->minx, args->miny, args->min_val/mag);
-        fprintf(out, _("Maximum at [%d, %d] is:                 %lf\n"),
+        gwy_fprintf(out, _("Maximum at [%d, %d] is:                 %lf\n"),
                 args->maxx, args->maxy, args->max_val/mag);
-        fprintf(out, _("Difference max-min:                     %lf\n"),
+        gwy_fprintf(out, _("Difference max-min:                     %lf\n"),
                 (args->max_val - args->min_val)/mag);
-        fprintf(out, "\n");
+        gwy_fprintf(out, "\n");
 
-        fprintf(out,
+        gwy_fprintf(out,
                 _("Area (projected) above plane:             %g (%.1lf %%)\n"),
                 args->area_above/mag/mag,
                 100. * (args->area_above/sxy));
-        fprintf(out,
+        gwy_fprintf(out,
                 _("Area (projected) below plane:             %g (%.1lf %%)\n"),
                 args->area_below/mag/mag,
                 100. * (args->area_below/sxy));
-        fprintf(out,
+        gwy_fprintf(out,
                 _("Area (projected) of    plane:             %g (%.1lf %%)\n"),
                 args->area_plane/mag/mag,
                 100. * (args->area_plane/sxy));
-        fprintf(out, "\n");
+        gwy_fprintf(out, "\n");
 
-        fprintf(out, _("Area (developed) above %g (+%.1f %%)\n"),
+        gwy_fprintf(out, _("Area (developed) above %g (+%.1f %%)\n"),
                 args->surface_above/mag/mag,
                 100. * args->surface_above/sxy);
-        fprintf(out, _("Area (developed) below %g (+%.1lf %%)\n"),
+        gwy_fprintf(out, _("Area (developed) below %g (+%.1lf %%)\n"),
                 args->surface_below/mag/mag,
                 100. * args->surface_below/sxy);
 
-        fprintf(out, _("Volume above:     %g\n"),
+        gwy_fprintf(out, _("Volume above:     %g\n"),
                 args->volume_above/mag/mag/mag);
-        fprintf(out, _("Volume below:     %g\n"),
+        gwy_fprintf(out, _("Volume below:     %g\n"),
                 args->volume_below/mag/mag/mag);
-        fprintf(out, _("Volume difference %g\n"),
+        gwy_fprintf(out, _("Volume difference %g\n"),
                 (args->volume_above -
                  args->volume_below)/mag/mag/mag);
 
-        fprintf(out, _("\nIndentation\n"));
-        fprintf(out, _("Volume      %g\n"),
+        gwy_fprintf(out, _("\nIndentation\n"));
+        gwy_fprintf(out, _("Volume      %g\n"),
                 args->volume_indent/mag/mag/mag);
-        fprintf(out, "A_P         %g\n", args->surface_indent/mag/mag);
-        fprintf(out, "A_D         %g\n", (args->area_indent)/mag/mag);
+        gwy_fprintf(out, "A_P         %g\n", args->surface_indent/mag/mag);
+        gwy_fprintf(out, "A_D         %g\n", (args->area_indent)/mag/mag);
 
-        fprintf(out, _("\nIndentation - Inner Pile-Up\n"));
-        fprintf(out, "A_P         %g\n",
+        gwy_fprintf(out, _("\nIndentation - Inner Pile-Up\n"));
+        gwy_fprintf(out, "A_P         %g\n",
                 args->surface_innerpileup/mag/mag);
-        fprintf(out, "A_D         %g\n",
+        gwy_fprintf(out, "A_D         %g\n",
                 (args->area_innerpileup)/mag/mag);
 
-        fprintf(out, _("Indentation - Outer Pile-Up\n"));
-        fprintf(out, "A_P         %g\n",
+        gwy_fprintf(out, _("Indentation - Outer Pile-Up\n"));
+        gwy_fprintf(out, "A_P         %g\n",
                 args->surface_outerpileup/mag/mag);
-        fprintf(out, "A_D         %g\n",
+        gwy_fprintf(out, "A_D         %g\n",
                 (args->area_outerpileup)/mag/mag);
     }
     fclose(out);

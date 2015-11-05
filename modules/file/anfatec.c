@@ -127,7 +127,7 @@ anfatec_detect(const GwyFileDetectInfo *fileinfo,
     if (!(parameterfile = anfatec_find_parameterfile(fileinfo->name)))
         return 0;
 
-    fh = g_fopen(parameterfile, "r");
+    fh = gwy_fopen(parameterfile, "r");
     if (!fh) {
         g_free(parameterfile);
         return 0;
@@ -471,9 +471,9 @@ anfatec_try_to_find_data(const gchar *dirname_glib,
     /* Fingers crossed... */
     fullname_asis = g_build_filename(dirname_glib, basename_sys, NULL);
     gwy_debug("Trying as-is: <%s>", fullname_asis);
-    fh = g_fopen(fullname_asis, "rb");
+    fh = gwy_fopen(fullname_asis, "rb");
     if (!fh)
-        fh = fopen(fullname_asis, "rb");
+        fh = gwy_fopen(fullname_asis, "rb");
     g_free(fullname_asis);
     if (fh)
         return fh;
@@ -487,7 +487,7 @@ anfatec_try_to_find_data(const gchar *dirname_glib,
 
         g_free(dirname_locale);
         gwy_debug("Trying locale: <%s>", fullname_locale);
-        fh = fopen(fullname_locale, "rb");
+        fh = gwy_fopen(fullname_locale, "rb");
         g_free(fullname_locale);
         if (fh)
             return fh;
@@ -510,7 +510,7 @@ anfatec_try_to_find_data(const gchar *dirname_glib,
 
                 g_free(filename_glib);
                 gwy_debug("Trying encoding %s: <%s>", encodings[i], fullname_glib);
-                fh = g_fopen(fullname_glib, "rb");
+                fh = gwy_fopen(fullname_glib, "rb");
                 g_free(fullname_glib);
 
                 if (fh)

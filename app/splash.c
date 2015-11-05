@@ -637,13 +637,13 @@ sanity_check(const gchar *filename)
     fileok &= ok = g_file_test(filename, G_FILE_TEST_IS_REGULAR);
     g_printerr("Is it a regular file: %s\n", ok ? "YES" : "NO");
 
-    fh = fopen(filename, "rb");
+    fh = gwy_fopen(filename, "rb");
     fileok &= ok = !!fh;
     g_printerr("Can we open it for reading: %s\n", ok ? "YES" : "NO");
     if (fh)
         fclose(fh);
     else
-        g_printerr("fopen() fails with: %s\n", g_strerror(errno));
+        g_printerr("gwy_fopen() fails with: %s\n", g_strerror(errno));
 
     fileok &= ok = g_file_get_contents(filename, &buf, &size, &err);
     g_printerr("Can we use g_file_get_contents(): %s\n", ok ? "YES" : "NO");

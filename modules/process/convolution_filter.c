@@ -743,7 +743,7 @@ convolution_filter_preset_save(GwyConvolutionFilterPreset *preset)
     }
 
     filename = gwy_resource_build_filename(resource);
-    fh = g_fopen(filename, "w");
+    fh = gwy_fopen(filename, "w");
     if (!fh) {
         /* FIXME: GUIze this */
         g_warning("Cannot save resource file: %s", filename);

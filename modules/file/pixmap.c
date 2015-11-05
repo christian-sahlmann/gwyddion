@@ -494,7 +494,7 @@ pixmap_load(const gchar *filename,
         return NULL;
     }
 
-    if (!(fh = g_fopen(filename, "rb"))) {
+    if (!(fh = gwy_fopen(filename, "rb"))) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
                     _("Cannot open file for reading: %s."), g_strerror(errno));
         return NULL;

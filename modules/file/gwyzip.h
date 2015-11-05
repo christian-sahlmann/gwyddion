@@ -53,7 +53,7 @@ gwyzip_open_file_func(G_GNUC_UNUSED voidpf opaque,
                       G_GNUC_UNUSED int mode)
 {
     /* Don't implement other modes.  We never write ZIP files with minizip. */
-    return (voidpf)g_fopen(filename, "rb");
+    return (voidpf)gwy_fopen(filename, "rb");
 }
 
 G_GNUC_UNUSED

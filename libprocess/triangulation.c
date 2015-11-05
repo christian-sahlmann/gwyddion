@@ -2618,14 +2618,14 @@ dump_points_(const Triangulator *triangulator,
     const guint *neighbours;
     FILE *fh;
 
-    fh = fopen("points.dat", "w");
+    fh = gwy_fopen("points.dat", "w");
     for (i = 0; i < npoints; i++) {
         const Point *pt = get_point(points, point_size, i);
-        fprintf(fh, "%u %g %g\n", i, pt->x, pt->y);
+        gwy_fprintf(fh, "%u %g %g\n", i, pt->x, pt->y);
     }
     fclose(fh);
 
-    fh = fopen("arrows.gpi", "w");
+    fh = gwy_fopen("arrows.gpi", "w");
     for (i = 0; i < triangulator->npoints; i++) {
         nb = triangulator->blocks + i;
         neighbours = triangulator->neighbours + nb->pos;
@@ -2634,7 +2634,7 @@ dump_points_(const Triangulator *triangulator,
             if (ni > i) {
                 const Point *pt1 = get_point(points, point_size, i);
                 const Point *pt2 = get_point(points, point_size, ni);
-                fprintf(fh, "set arrow from %g,%g to %g,%g nohead ls 2\n",
+                gwy_fprintf(fh, "set arrow from %g,%g to %g,%g nohead ls 2\n",
                         pt1->x, pt1->y, pt2->x, pt2->y);
             }
         }
@@ -2651,14 +2651,14 @@ dump_points(const Triangulation *triangulation,
     const guint *neighbours;
     FILE *fh;
 
-    fh = fopen("points.dat", "w");
+    fh = gwy_fopen("points.dat", "w");
     for (i = 0; i < triangulation->npoints; i++) {
         const Point *pt = get_point(points, point_size, i);
-        fprintf(fh, "%u %g %g\n", i, pt->x, pt->y);
+        gwy_fprintf(fh, "%u %g %g\n", i, pt->x, pt->y);
     }
     fclose(fh);
 
-    fh = fopen("arrows.gpi", "w");
+    fh = gwy_fopen("arrows.gpi", "w");
     for (i = 0; i < triangulation->npoints; i++) {
         pos = triangulation->index[i];
         len = triangulation->index[i+1] - pos;
@@ -2668,7 +2668,7 @@ dump_points(const Triangulation *triangulation,
             if (ni > i) {
                 const Point *pt1 = get_point(points, point_size, i);
                 const Point *pt2 = get_point(points, point_size, ni);
-                fprintf(fh, "set arrow from %g,%g to %g,%g nohead ls 2\n",
+                gwy_fprintf(fh, "set arrow from %g,%g to %g,%g nohead ls 2\n",
                         pt1->x, pt1->y, pt2->x, pt2->y);
             }
         }
@@ -2679,7 +2679,7 @@ dump_points(const Triangulation *triangulation,
         {
             const Point *pt1 = get_point(points, point_size, i);
             const Point *pt2 = get_point(points, point_size, ni);
-            fprintf(fh, "set arrow from %g,%g to %g,%g nohead ls 6\n",
+            gwy_fprintf(fh, "set arrow from %g,%g to %g,%g nohead ls 6\n",
                     pt1->x, pt1->y, pt2->x, pt2->y);
         }
     }
@@ -2697,14 +2697,14 @@ dump_voronoi(const Triangulation *triangulation,
 
     npts = triangulation->npoints;
 
-    fh = fopen("vpoints.dat", "w");
+    fh = gwy_fopen("vpoints.dat", "w");
     for (i = 0; i < triangulation->nvpoints; i++) {
         const Point *pt = triangulation->vpoints + i;
-        fprintf(fh, "%u %g %g\n", i, pt->x, pt->y);
+        gwy_fprintf(fh, "%u %g %g\n", i, pt->x, pt->y);
     }
     fclose(fh);
 
-    fh = fopen("varrows.gpi", "w");
+    fh = gwy_fopen("varrows.gpi", "w");
     for (i = 0; i < triangulation->nvpoints; i++) {
         pos = triangulation->vindex[i + npts];
         len = triangulation->vindex[i+1 + npts] - pos;
@@ -2714,7 +2714,7 @@ dump_voronoi(const Triangulation *triangulation,
             if (ni < npts) {
                 const Point *pt1 = triangulation->vpoints + i;
                 const Point *pt2 = get_point(points, point_size, ni);
-                fprintf(fh, "set arrow from %g,%g to %g,%g nohead ls 5\n",
+                gwy_fprintf(fh, "set arrow from %g,%g to %g,%g nohead ls 5\n",
                         pt1->x, pt1->y, pt2->x, pt2->y);
             }
             else {
@@ -2722,7 +2722,7 @@ dump_voronoi(const Triangulation *triangulation,
                 if (ni > i) {
                     const Point *pt1 = triangulation->vpoints + i;
                     const Point *pt2 = triangulation->vpoints + ni;
-                    fprintf(fh, "set arrow from %g,%g to %g,%g nohead ls 4\n",
+                    gwy_fprintf(fh, "set arrow from %g,%g to %g,%g nohead ls 4\n",
                             pt1->x, pt1->y, pt2->x, pt2->y);
                 }
             }

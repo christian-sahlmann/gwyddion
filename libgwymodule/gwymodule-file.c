@@ -461,7 +461,7 @@ gwy_file_detect_fill_info(GwyFileDetectInfo *fileinfo,
         return FALSE;
     }
 
-    if (!(fh = g_fopen(fileinfo->name, "rb"))) {
+    if (!(fh = gwy_fopen(fileinfo->name, "rb"))) {
         gwy_file_detect_free_info(fileinfo);
         return FALSE;
     }
@@ -545,7 +545,7 @@ gwy_file_load_with_func(const gchar *filename,
 
     /* When the file does not exist (for instance), we would get a correct but
      * very unheplful message that no module can load such a file. */
-    if (!(fh = g_fopen(filename, "rb"))) {
+    if (!(fh = gwy_fopen(filename, "rb"))) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
                     _("Cannot open file for reading: %s."), g_strerror(errno));
         return NULL;

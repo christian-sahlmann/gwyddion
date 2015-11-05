@@ -139,7 +139,7 @@ vtk_export(G_GNUC_UNUSED GwyContainer *data,
     decimal_dot_len = strlen(decimal_dot);
     g_return_val_if_fail(decimal_dot_len, FALSE);
 
-    if (!(fh = g_fopen(filename, "w"))) {
+    if (!(fh = gwy_fopen(filename, "w"))) {
         err_OPEN_WRITE(error);
         return FALSE;
     }
@@ -149,14 +149,14 @@ vtk_export(G_GNUC_UNUSED GwyContainer *data,
 
     // Do not bother checking errors here.  If some write fails we will get
     // more errors below.
-    fprintf(fh, "# vtk DataFile Version 2.0\n");
+    gwy_fprintf(fh, "# vtk DataFile Version 2.0\n");
     g_snprintf(buf, sizeof(buf), "/%d/data/title", id);
     gwy_container_gis_string_by_name(data, buf, &title);
-    fprintf(fh, "%s\n", title);
-    fprintf(fh, "ASCII\n");
-    fprintf(fh, "DATASET STRUCTURED_GRID\n");
-    fprintf(fh, "DIMENSIONS %u %u 1\n", xres, yres);
-    fprintf(fh, "POINTS %u float\n", xres*yres);
+    gwy_fprintf(fh, "%s\n", title);
+    gwy_fprintf(fh, "ASCII\n");
+    gwy_fprintf(fh, "DATASET STRUCTURED_GRID\n");
+    gwy_fprintf(fh, "DIMENSIONS %u %u 1\n", xres, yres);
+    gwy_fprintf(fh, "POINTS %u float\n", xres*yres);
 
     d = gwy_data_field_get_data(dfield);
     gwy_data_field_get_min_max(dfield, &min, &max);

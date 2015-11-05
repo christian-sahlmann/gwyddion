@@ -1006,7 +1006,7 @@ arithmetic_save_args(GwyContainer *settings,
 
     filename = g_build_filename(gwy_get_user_dir(), "arithmetic", "history",
                                 NULL);
-    if ((fh = g_fopen(filename, "w"))) {
+    if ((fh = gwy_fopen(filename, "w"))) {
         GtkTreeIter iter;
         guint i = 0;
         gchar *s;

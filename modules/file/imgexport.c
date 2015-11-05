@@ -4172,7 +4172,7 @@ store_preset(ImgExportControls *controls)
     }
 
     filename = gwy_resource_build_filename(GWY_RESOURCE(preset));
-    fh = g_fopen(filename, "w");
+    fh = gwy_fopen(filename, "w");
     if (!fh) {
         g_warning("Cannot save preset: %s", filename);
         g_free(filename);
@@ -4897,7 +4897,7 @@ write_image_png16(ImgExportArgs *args,
 
     g_return_val_if_fail(gwy_strequal(name, "png"), FALSE);
 
-    if (!(fh = g_fopen(filename, "wb"))) {
+    if (!(fh = gwy_fopen(filename, "wb"))) {
         err_OPEN_WRITE(error);
         return FALSE;
     }
@@ -5068,7 +5068,7 @@ write_image_tiff16(ImgExportArgs *args,
 
     g_return_val_if_fail(gwy_strequal(name, "tiff"), FALSE);
 
-    if (!(fh = g_fopen(filename, "wb"))) {
+    if (!(fh = gwy_fopen(filename, "wb"))) {
         err_OPEN_WRITE(error);
         return FALSE;
     }
@@ -5145,7 +5145,7 @@ write_image_pgm16(ImgExportArgs *args,
 
     g_return_val_if_fail(gwy_strequal(name, "pnm"), FALSE);
 
-    if (!(fh = g_fopen(filename, "wb"))) {
+    if (!(fh = gwy_fopen(filename, "wb"))) {
         err_OPEN_WRITE(error);
         return FALSE;
     }
@@ -5329,7 +5329,7 @@ write_pixbuf_tiff(GdkPixbuf *pixbuf,
     nchannels = gdk_pixbuf_get_n_channels(pixbuf);
     g_return_val_if_fail(nchannels == 3, FALSE);
 
-    if (!(fh = g_fopen(filename, "wb"))) {
+    if (!(fh = gwy_fopen(filename, "wb"))) {
         err_OPEN_WRITE(error);
         return FALSE;
     }
@@ -5385,7 +5385,7 @@ write_pixbuf_ppm(GdkPixbuf *pixbuf,
     nchannels = gdk_pixbuf_get_n_channels(pixbuf);
     g_return_val_if_fail(nchannels == 3, FALSE);
 
-    if (!(fh = g_fopen(filename, "wb"))) {
+    if (!(fh = gwy_fopen(filename, "wb"))) {
         err_OPEN_WRITE(error);
         return FALSE;
     }
@@ -5463,7 +5463,7 @@ write_pixbuf_bmp(GdkPixbuf *pixbuf,
     *(guint32*)(bmp_head + 22) = GUINT32_TO_LE(yres);
     *(guint32*)(bmp_head + 34) = GUINT32_TO_LE(yres*bmprowstride);
 
-    if (!(fh = g_fopen(filename, "wb"))) {
+    if (!(fh = gwy_fopen(filename, "wb"))) {
         err_OPEN_WRITE(error);
         return FALSE;
     }
@@ -5542,7 +5542,7 @@ write_pixbuf_targa(GdkPixbuf *pixbuf,
     *(guint16*)(targa_head + 12) = GUINT16_TO_LE((guint16)xres);
     *(guint16*)(targa_head + 14) = GUINT16_TO_LE((guint16)yres);
 
-    if (!(fh = g_fopen(filename, "wb"))) {
+    if (!(fh = gwy_fopen(filename, "wb"))) {
         err_OPEN_WRITE(error);
         return FALSE;
     }

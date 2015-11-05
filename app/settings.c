@@ -118,7 +118,7 @@ gwy_app_settings_save(const gchar *filename,
     settings = gwy_app_settings_get();
     gwy_app_settings_gather(settings);
     g_return_val_if_fail(GWY_IS_CONTAINER(settings), FALSE);
-    fh = g_fopen(filename, "w");
+    fh = gwy_fopen(filename, "w");
     if (!fh) {
         g_set_error(error,
                     GWY_APP_SETTINGS_ERROR, GWY_APP_SETTINGS_ERROR_FILE,
