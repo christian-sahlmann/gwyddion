@@ -174,7 +174,7 @@ G_GNUC_UNUSED
 static GwyDataField*
 create_mask_field(GwyDataField *dfield)
 {
-    dfield = gwy_data_field_new_alike(dfield, FALSE);
+    dfield = gwy_data_field_new_alike(dfield, TRUE);
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), NULL);
     return dfield;
 }
