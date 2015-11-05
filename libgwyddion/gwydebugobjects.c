@@ -21,6 +21,7 @@
 
 #include "config.h"
 #include <stdio.h>
+#include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwydebugobjects.h>
 
