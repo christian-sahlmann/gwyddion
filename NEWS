@@ -23,6 +23,10 @@ Libraries:
   a mask data field was added.
 - libgwyapp: Functions for obtaining quark keys of various common items
   (range, palette, title, meta, ...) in the file were added.
+- libgwyddion: New functions gwy_fopen() and gwy_fprintf() were added,
+  wrapping the C library functions.  As they reside within Gwyddion they are
+  always compiled with the same C library on MS Windows (unlike g_fopen()),
+  making FILE pointer passing possible.
 
 Modules:
 - Sensofarx (new): Imports Sensofar PLUx data files.
@@ -58,10 +62,13 @@ Modules:
 - Mark by threshold, Mark by edge detection, Facet analysis: The mask can be
   combined with mask already present on the image using union or intersection.
 - Mark by threshold: Reset button now really resets all the settings.
-- Color range tool: Can reverse the mapping for fixed ranges.
+- Color range tool: Can reverse the mapping for fixed ranges.  Mapping range
+  is no longer reset to full upon data change.
 - Object synthesis: Features created on the surface can be positive, negative
   or randomly ehtier now.
 - NT-MDT: Hybrid mode data are split to upward and downward movement.
+- CSM: Image dimensions from Benyuan header are ignored now and BMP
+  dimensions are always used.
 
 Other:
 - Gwyddion can use either minizip or libzip for opening of ZIP-compressed
