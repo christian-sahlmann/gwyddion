@@ -24,6 +24,8 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <errno.h>
+#include <glib/gprintf.h>
 #include <gobject/gvaluecollector.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwymacros.h>
