@@ -21,7 +21,6 @@
 
 #include "config.h"
 #include <string.h>
-#include <stdio.h>
 
 #ifdef HAVE_FFTW3
 #include <fftw3.h>

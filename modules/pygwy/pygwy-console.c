@@ -24,7 +24,6 @@
 #include "config.h"
 #include "pygwy-console.h"
 #include "pygwy.h"
-#include <glib/gstdio.h>
 #include <gdk/gdkkeysyms.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwydgets/gwystock.h>

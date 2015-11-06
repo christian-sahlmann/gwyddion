@@ -37,7 +37,6 @@
  **/
 
 #include "config.h"
-#include <stdio.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/stats.h>
 #include <app/gwymoduleutils-file.h>

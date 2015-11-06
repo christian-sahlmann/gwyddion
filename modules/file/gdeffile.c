@@ -43,7 +43,6 @@
  **/
 
 #include "config.h"
-#include <stdio.h>
 #include <time.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>

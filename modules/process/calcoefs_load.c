@@ -21,7 +21,6 @@
 #include "config.h"
 #include <string.h>
 #include <gtk/gtk.h>
-#include <glib/gstdio.h>
 #include <glib/gprintf.h>
 #include <math.h>
 #include <libgwyddion/gwymacros.h>

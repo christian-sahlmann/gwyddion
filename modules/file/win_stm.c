@@ -36,9 +36,7 @@
  * Read
  **/
 
-#include <stdio.h>
 #include <string.h>
-#include <glib/gstdio.h>
 #include <app/gwyapp.h>
 #include <app/gwymoduleutils-file.h>
 #include <libgwyddion/gwymacros.h>

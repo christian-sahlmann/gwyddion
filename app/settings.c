@@ -21,11 +21,9 @@
 
 #include "config.h"
 #include <string.h>
-#include <stdio.h>
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <glib/gstdio.h>
 
 #ifdef HAVE_GTKGLEXT
 #include <gtk/gtkglinit.h>

@@ -46,7 +46,6 @@
  **/
 
 #include <string.h>
-#include <stdio.h>
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>

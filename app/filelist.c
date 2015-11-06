@@ -31,7 +31,6 @@
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <errno.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>

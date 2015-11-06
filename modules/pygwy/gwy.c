@@ -24,7 +24,6 @@
 #include <pygtk-2.0/pygobject.h>
 #include <app/gwyapp.h>
 #include "wrap_calls.h"
-#include <glib/gstdio.h>
 #include "pygwy.h"
 
 /* function to fill list of containers, for gwy_app_data_browser_get_containers

@@ -20,7 +20,6 @@
  */
 
 #include "config.h"
-#include <glib/gstdio.h>
 #include <pango/pango.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwydgets/gwygraph.h>

@@ -56,7 +56,6 @@
  **/
 
 #include "config.h"
-#include <stdio.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <app/data-browser.h>

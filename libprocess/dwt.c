@@ -25,7 +25,6 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/dwt.h>
 #include <libprocess/stats.h>
-#include <stdio.h>
 
 typedef struct {
     gint ncof;

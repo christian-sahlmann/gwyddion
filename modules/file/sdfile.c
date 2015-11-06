@@ -55,8 +55,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-#include <stdio.h>
-#include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>

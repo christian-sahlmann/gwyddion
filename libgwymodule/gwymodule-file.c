@@ -21,11 +21,9 @@
 
 #include "config.h"
 #include <string.h>
-#include <stdio.h>
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwycontainer.h>

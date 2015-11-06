@@ -33,9 +33,7 @@
 #include <string.h>
 #include <errno.h>
 #include <math.h>
-#include <stdio.h>
 #include <stdarg.h>
-#include <glib/gstdio.h>
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>

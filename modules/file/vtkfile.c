@@ -28,10 +28,8 @@
 
 #include "config.h"
 #include <math.h>
-#include <stdio.h>
 #include <locale.h>
 #include <string.h>
-#include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libprocess/stats.h>

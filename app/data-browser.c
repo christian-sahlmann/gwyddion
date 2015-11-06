@@ -21,8 +21,6 @@
 
 /* XXX: The purpose of this file is to contain all ugliness from the rest of
  * source files.  And indeed it has managed to gather lots of it. */
-#include <stdio.h>
-
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>

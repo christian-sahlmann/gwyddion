@@ -53,7 +53,6 @@
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <stdarg.h>
 
 #ifdef HAVE_ZLIB
@@ -64,7 +63,6 @@
 #include <bzlib.h>
 #endif
 
-#include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>

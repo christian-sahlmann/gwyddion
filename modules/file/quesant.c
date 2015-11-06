@@ -45,7 +45,6 @@
 // TODO: not sure about picture orientation
 
 #include "config.h"
-#include <stdio.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <app/gwymoduleutils-file.h>

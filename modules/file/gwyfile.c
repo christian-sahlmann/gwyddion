@@ -51,12 +51,10 @@
 #include "config.h"
 #include <string.h>
 #include <errno.h>
-#include <stdio.h>
 #include <stdlib.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>

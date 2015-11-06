@@ -70,7 +70,6 @@
  **/
 
 #include "config.h"
-#include <stdio.h>
 #include <string.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>

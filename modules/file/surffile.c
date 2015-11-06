@@ -50,7 +50,6 @@
 #include <libprocess/stats.h>
 #include <app/gwymoduleutils-file.h>
 #include <app/gwyapp.h>
-#include <glib/gstdio.h>
 #include <stdlib.h>
 
 

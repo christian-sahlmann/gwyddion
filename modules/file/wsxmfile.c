@@ -47,11 +47,9 @@
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyversion.h>
 #include <libgwyddion/gwymath.h>

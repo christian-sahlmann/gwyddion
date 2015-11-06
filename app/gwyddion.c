@@ -20,11 +20,9 @@
  */
 
 #include "config.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
-#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyversion.h>

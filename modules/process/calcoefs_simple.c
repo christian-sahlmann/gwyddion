@@ -23,7 +23,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <gtk/gtk.h>
-#include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyexpr.h>

@@ -27,13 +27,11 @@
  **/
 
 #include "config.h"
-#include <stdio.h>
 #include <locale.h>
 #include <string.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>

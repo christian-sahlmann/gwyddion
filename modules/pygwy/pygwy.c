@@ -32,7 +32,6 @@
 #include <pygtk-2.0/pygobject.h>
 #include <app/gwyapp.h>
 #include "wrap_calls.h"
-#include <glib/gstdio.h>
 #include "pygwy.h"
 
 

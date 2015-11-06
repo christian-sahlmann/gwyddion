@@ -24,7 +24,6 @@
 #include <string.h>
 #include <errno.h>
 #include <math.h>
-#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>

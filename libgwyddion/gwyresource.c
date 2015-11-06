@@ -21,14 +21,12 @@
 
 #include "config.h"
 #include <string.h>
-#include <stdio.h>
 #include <errno.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyenum.h>
 #include <libgwyddion/gwyinventory.h>

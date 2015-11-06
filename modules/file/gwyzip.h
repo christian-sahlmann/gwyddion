@@ -22,7 +22,6 @@
 #define __GWY_FILE_MINIZIP_H__
 
 #include <glib.h>
-#include <glib/gstdio.h>
 
 /****************************************************************************
  * Minizip wrapper

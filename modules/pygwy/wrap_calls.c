@@ -25,7 +25,6 @@
 #include "wrap_calls.h"
 #include <libgwymodule/gwymodule-file.h>
 #include <app/settings.h>
-#include <stdio.h>
 #include <libprocess/tip.h>
 
 /* What is present on the exported image */
