@@ -27,6 +27,7 @@
 #endif
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyenum.h>
 #include <libgwyddion/gwyinventory.h>
