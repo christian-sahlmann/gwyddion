@@ -224,25 +224,42 @@ gwy_graph_area_make_selection(GwyGraphArea *area, GType type)
     return selection;
 }
 
+static GwySelection*
+gwy_graph_area_make_selection2(GwyGraphArea *area, GType type,
+                               GwyOrientation orientation)
+{
+    GwySelection *selection;
+
+    selection = GWY_SELECTION(g_object_new(type, NULL));
+    gwy_selection_set_max_objects(selection, 1);
+    g_object_set(selection, "orientation", orientation, NULL);
+    g_signal_connect_swapped(selection, "changed",
+                             G_CALLBACK(selection_changed), area);
+
+    return selection;
+}
+
 static void
 gwy_graph_area_init(GwyGraphArea *area)
 {
-    gwy_debug("");
-    area->gc = NULL;
-
-    area->selecting = FALSE;
-    area->mouse_present = FALSE;
-
     area->pointsdata
         = gwy_graph_area_make_selection(area, GWY_TYPE_SELECTION_GRAPH_POINT);
     area->xseldata
-        = gwy_graph_area_make_selection(area, GWY_TYPE_SELECTION_GRAPH_1DAREA);
+        = gwy_graph_area_make_selection2(area,
+                                         GWY_TYPE_SELECTION_GRAPH_1DAREA,
+                                         GWY_ORIENTATION_HORIZONTAL);
     area->yseldata
-        = gwy_graph_area_make_selection(area, GWY_TYPE_SELECTION_GRAPH_1DAREA);
+        = gwy_graph_area_make_selection2(area,
+                                         GWY_TYPE_SELECTION_GRAPH_1DAREA,
+                                         GWY_ORIENTATION_VERTICAL);
     area->xlinesdata
-        = gwy_graph_area_make_selection(area, GWY_TYPE_SELECTION_GRAPH_LINE);
+        = gwy_graph_area_make_selection2(area,
+                                         GWY_TYPE_SELECTION_GRAPH_LINE,
+                                         GWY_ORIENTATION_HORIZONTAL);
     area->ylinesdata
-        = gwy_graph_area_make_selection(area, GWY_TYPE_SELECTION_GRAPH_LINE);
+        = gwy_graph_area_make_selection2(area,
+                                         GWY_TYPE_SELECTION_GRAPH_LINE,
+                                         GWY_ORIENTATION_VERTICAL);
     area->zoomdata
         = gwy_graph_area_make_selection(area, GWY_TYPE_SELECTION_GRAPH_ZOOM);
 
