@@ -27,6 +27,8 @@ Libraries:
   wrapping the C library functions.  As they reside within Gwyddion they are
   always compiled with the same C library on MS Windows (unlike g_fopen()),
   making FILE pointer passing possible.
+- libgwydgets: Graph selections that are either along x or y have now an
+  "orientation" property, similar to GwySelectionAxis.
 
 Modules:
 - Sensofarx (new): Imports Sensofar PLUx data files.
@@ -69,6 +71,10 @@ Modules:
 - NT-MDT: Hybrid mode data are split to upward and downward movement.
 - CSM: Image dimensions from Benyuan header are ignored now and BMP
   dimensions are always used.
+- Nanoscope: Calculation of dimensions of non-square images was improved
+  (hopefully).
+- Image export: Smaller pixel-per-inch values are possible for vector formats
+  and the values are also no longer rounded to integers.
 
 Other:
 - Gwyddion can use either minizip or libzip for opening of ZIP-compressed
