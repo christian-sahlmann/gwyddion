@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2006-2015 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -96,7 +96,7 @@ gwy_selection_graph_1darea_class_init(GwySelectionGraph1DAreaClass *klass)
      * GwySelectionGraph1DAreaPriv:
      *
      * The :orientation property represents the orientation of the selected
-     * lines.
+     * area.
      *
      * The orientation is %GWY_ORIENTATION_HORIZONTAL for selections along the
      * @x-axis, and %GWY_ORIENTATION_VERTICAL for selections along the
@@ -109,7 +109,7 @@ gwy_selection_graph_1darea_class_init(GwySelectionGraph1DAreaClass *klass)
          PROP_ORIENTATION,
          g_param_spec_enum("orientation",
                            "Orientation",
-                           "Orientation of selected lines",
+                           "Orientation of selected areas",
                            GWY_TYPE_ORIENTATION,
                            GWY_ORIENTATION_HORIZONTAL,
                            G_PARAM_READABLE | G_PARAM_WRITABLE));
