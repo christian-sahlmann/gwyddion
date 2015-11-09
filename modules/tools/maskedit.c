@@ -170,7 +170,7 @@ static GwyModuleInfo module_info = {
     N_("Mask editor tool, allows interactive modification of parts "
        "of the mask."),
     "Yeti <yeti@gwyddion.net>",
-    "3.7",
+    "3.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1281,6 +1281,12 @@ gwy_tool_mask_editor_bucket_fill(GwyToolMaskEditor *tool,
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     mfield = plain_tool->mask_field;
+    if (!mfield) {
+        if (tool->args.tool == MASK_TOOL_FILL_DRAW)
+            gwy_tool_mask_editor_fill(tool);
+        return;
+    }
+
     xres = gwy_data_field_get_xres(mfield);
     yres = gwy_data_field_get_yres(mfield);
     if (i < 0 || i >= yres || j < 0 || j >= xres)
