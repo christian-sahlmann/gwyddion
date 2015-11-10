@@ -45,7 +45,7 @@
  * [FILE-MAGIC-USERGUIDE]
  * Nearly raw raster data (NRRD)
  * .nrrd
- * Read[1] Export[2]
+ * Read[1] Export[2] Volume
  * [1] Not all variants are implemented.
  * [2] Data are exported in a fixed attached native-endian float point format.
  **/
