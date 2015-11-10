@@ -98,7 +98,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanotec WSxM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.13",
+    "0.14",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -450,13 +450,16 @@ wsxmfile_export_double(GwyContainer *data,
         "[Header end]\r\n";
 
     GwyDataField *dfield;
-    const gdouble *d;
-    guint8 *row;
+    const gdouble *d, *r;
+    guint8 *bytes = NULL;
+    gdouble *dbuf = NULL, *drow;
     gchar *xyunit, *zunit, *title, *header;
-    guint xres, yres, i, hlen;
+    guint xres, yres, i, j, hlen;
     gdouble min, max;
+    size_t written;
     gchar buf[6];
     gint id;
+    gboolean ok = FALSE;
     FILE *fh;
 
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
@@ -498,33 +501,43 @@ wsxmfile_export_double(GwyContainer *data,
 
     if (fwrite(header, 1, hlen, fh) != hlen) {
         err_WRITE(error);
-        fclose(fh);
-        g_unlink(filename);
-        g_free(header);
-        return FALSE;
+        goto fail;
     }
 
-    row = g_new(guint8, xres*sizeof(gdouble));
-    for (i = 0; i < yres; i++) {
-        if (G_BYTE_ORDER == G_BIG_ENDIAN)
-            gwy_memcpy_byte_swap((const guint8*)(d + xres*(yres-1 - i)), row,
-                                 sizeof(gdouble), xres, sizeof(gdouble)-1);
-        else
-            memcpy(row, (const guint8*)(d + xres*(yres-1 - i)),
-                   xres*sizeof(gdouble));
+    dbuf = g_new(gdouble, xres);
+    if (G_BYTE_ORDER == G_BIG_ENDIAN)
+        bytes = g_new(guint8, xres*sizeof(gdouble));
 
-        if (fwrite(row, 8, xres, fh) != xres) {
+    for (i = 0; i < yres; i++) {
+        r = d + xres*(yres-1 - i);
+        drow = dbuf + xres-1;
+        for (j = xres; j; j--, r++, drow--)
+            *drow = *r;
+
+        if (G_BYTE_ORDER == G_BIG_ENDIAN) {
+            gwy_memcpy_byte_swap((const guint8*)dbuf, bytes,
+                                 sizeof(gdouble), xres, sizeof(gdouble)-1);
+            written = fwrite(bytes, 8, xres, fh);
+        }
+        else
+            written = fwrite(dbuf, 8, xres, fh);
+
+        if (written != xres) {
             err_WRITE(error);
-            fclose(fh);
-            g_unlink(filename);
-            g_free(row);
-            return FALSE;
+            goto fail;
         }
     }
-    fclose(fh);
-    g_free(row);
+    ok = TRUE;
 
-    return TRUE;
+fail:
+    fclose(fh);
+    g_free(bytes);
+    g_free(dbuf);
+    g_free(header);
+    if (!ok)
+        g_unlink(filename);
+
+    return ok;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
