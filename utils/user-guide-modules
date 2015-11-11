@@ -120,12 +120,12 @@ lno_synth	synthetic	line-noise-synthesis
 local_contrast	presentations	local-contrast
 magellan	managing-files
 mapvue	managing-files
-mark_with	presentations-masks	masks
+mark_with	masks	mark-with
 maskcor	multidata	mask-by-correlation
-mask_distribute	presentations-masks	masks
-maskedit	presentations-masks	mask-editor
-mask_edt	grain-analysis	grain-edt
-maskops	presentations-masks	masks
+mask_distribute	masks	mask-distribute
+maskedit	masks	mask-editor
+mask_edt	masks	grain-edt
+maskops	masks	maskops
 matfile	managing-files
 mcrop	multidata	mutual-crop
 measure_lattice	statistical-analysis	measure-lattice
