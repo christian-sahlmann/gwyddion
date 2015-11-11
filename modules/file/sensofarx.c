@@ -20,7 +20,7 @@
 
 /**
  * [FILE-MAGIC-USERGUIDE]
- * Senofar PLUx data
+ * Sensofar PLUx data
  * .plux
  * Read
  **/
