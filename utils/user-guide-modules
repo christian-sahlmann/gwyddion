@@ -124,7 +124,7 @@ mark_with	masks	mark-with
 maskcor	multidata	mask-by-correlation
 mask_distribute	masks	mask-distribute
 maskedit	masks	mask-editor
-mask_edt	masks	grain-edt
+mask_edt	masks	mask-edt
 maskops	masks	maskops
 matfile	managing-files
 mcrop	multidata	mutual-crop
