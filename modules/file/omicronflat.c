@@ -432,6 +432,7 @@ omicronflat_load(const gchar *filename,
                 goto fail;
             }
             g_clear_error(&err);
+            continue;
         }
 
         if (filelist.files[i]->experiment.run_cycle_id
@@ -458,7 +459,8 @@ omicronflat_load(const gchar *filename,
         else
             remove_from_filelist(&filelist, i);
     }
-    /* We must have loaded at least the requested file. */
+    /* We must have either loaded at least the requested file, or failed to
+     * load it and skipped this via "goto fail" above. */
     g_assert(filelist.nfiles);
 
     /* Gather offsets to create selections for atom manipulation paths. */
@@ -1584,7 +1586,10 @@ parse_filename(const gchar *filename,
      * the parsed record. */
     ok = TRUE;
     *underscore = *dot = '\0';
-    id->filename = g_build_filename(dirname, filename, NULL);
+    if (g_path_is_absolute(filename))
+        id->filename = g_strdup(filename);
+    else
+        id->filename = g_build_filename(dirname, filename, NULL);
     id->stem = g_strndup(fnm, ddash-fnm);
     id->run_cycle = strtol(num1, NULL, 10);
     id->scan_cycle = strtol(num2, NULL, 10);
@@ -1597,36 +1602,52 @@ fail:
     return ok;
 }
 
+static void
+fill_id_with_fallback(const gchar *filename,
+                      OmicronFlatFileId *id)
+{
+    if (g_path_is_absolute(filename))
+        id->filename = g_strdup(filename);
+    else
+        id->filename = g_build_filename(".", filename, NULL);
+
+    id->stem = g_path_get_basename(filename);
+    id->run_cycle = 0;
+    id->scan_cycle = 0;
+    id->extension = g_strdup("");
+}
+
 static gboolean
 find_related_files(const gchar *filename,
                    OmicronFlatFileList *filelist,
                    GError **error)
 {
-    OmicronFlatFileId origid;
+    OmicronFlatFileId origid, id;
     GDir *dir;
     gchar *dirname;
     GArray *filenames;
 
+    /* When we cannot parse the filename or cannot scan the directory, return
+     * at least the file itself.  This may cause further warnings down the road
+     * but if the file is otherwise loadable we will still load it. */
+    filenames = g_array_new(FALSE, FALSE, sizeof(OmicronFlatFileId));
     if (!parse_filename(filename, &origid, ".")) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_SPECIFIC,
-                    _("File name does not have the expected form "
-                      "for Omicron Flat files."));
-        return FALSE;
+        g_warning("File name %s does not have the expected form "
+                  "for Omicron Flat files.", filename);
+        fill_id_with_fallback(filename, &id);
+        g_array_append_val(filenames, id);
+        goto fail;
     }
 
     dirname = g_path_get_dirname(filename);
     gwy_debug("scanning directory %s", dirname);
     if (!(dir = g_dir_open(dirname, 0, error))) {
-        free_file_id(&origid);
+        g_array_append_val(filenames, origid);
         g_free(dirname);
-        return FALSE;
+        goto fail;
     }
 
-    filenames = g_array_new(FALSE, FALSE, sizeof(OmicronFlatFileId));
     while ((filename = g_dir_read_name(dir))) {
-        OmicronFlatFileId id;
-
         gwy_debug("found %s", filename);
         if (parse_filename(filename, &id, dirname)) {
             if (gwy_strequal(id.stem, origid.stem)) {
@@ -1641,6 +1662,7 @@ find_related_files(const gchar *filename,
     g_dir_close(dir);
     free_file_id(&origid);
 
+fail:
     if (filenames->len) {
         filelist->nfiles = filenames->len;
         filelist->ids = (OmicronFlatFileId*)g_array_free(filenames, FALSE);
