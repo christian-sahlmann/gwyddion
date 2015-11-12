@@ -447,7 +447,8 @@ setup_logging(void)
     for (i = 0; i < G_N_ELEMENTS(domains); i++)
         g_log_set_handler(domains[i],
                           G_LOG_LEVEL_DEBUG | G_LOG_LEVEL_MESSAGE
-                          | G_LOG_LEVEL_INFO | G_LOG_LEVEL_WARNING,
+                          | G_LOG_LEVEL_INFO | G_LOG_LEVEL_WARNING
+                          | G_LOG_LEVEL_CRITICAL,
                           logger, logfile);
 }
 
