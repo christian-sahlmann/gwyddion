@@ -1,6 +1,6 @@
 2.43 (0000-00-00)
 Application:
-- Translations updated: French, Italian, Russian.
+- Translations updated: Czech, French, Italian, Russian.
 
 Libraries:
 - libgwyprocess: Functions for erosion, dilation, opening and closing
@@ -48,7 +48,8 @@ Modules:
 - Rank: Local normalisation and value range filter options were added.
 - Nanoscantech: Unit and scale reading was updated.
 - Mask editor tool: The distance type used for Grow and Shrink is
-  controllable now, with true Euclidean distance being the default.
+  controllable now, with true Euclidean distance being the default.  Using
+  bucket fill on an image with no mask creates a mask and fills it entirely.
 - Profile tool: Possible crash when starting to take a profile with masking
   was fixed.
 - Axis, Ellipse, Line, Point and Rectangle layers: Support for the move
@@ -75,6 +76,7 @@ Modules:
   (hopefully).
 - Image export: Smaller pixel-per-inch values are possible for vector formats
   and the values are also no longer rounded to integers.
+- WSxM: Horizontally flipped exported channels were fixed.
 
 Other:
 - Gwyddion can use either minizip or libzip for opening of ZIP-compressed
