@@ -1026,13 +1026,17 @@ load_as_curve(OmicronFlatFileList *filelist, guint fileid,
 
     xunit = gwy_si_unit_new(axis->unit_name);
     yunit = gwy_si_unit_new(fff->channel.unit_name);
+    title = g_strdup_printf("%u %s",
+                            fff->experiment.run_cycle_id,
+                            fff->channel.name);
     g_object_set(gmodel,
                  "axis-label-left", fff->channel.name,
                  "axis-label-bottom", axis->unq_name,
-                 "title", fff->channel.name,
+                 "title", title,
                  "si-unit-x", xunit,
                  "si-unit-y", yunit,
                  NULL);
+    g_free(title);
     g_object_unref(xunit);
     g_object_unref(yunit);
 
