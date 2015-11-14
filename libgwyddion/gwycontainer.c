@@ -1835,6 +1835,24 @@ gwy_container_set_object(GwyContainer *container,
     g_object_unref(value);
 }
 
+static int
+compare_items(const void *pa, const void *pb)
+{
+    const GwySerializeItem *a = (const GwySerializeItem*)pa;
+    const GwySerializeItem *b = (const GwySerializeItem*)pb;
+    int i;
+
+    if (G_LIKELY((i = strcmp(a->name, b->name))))
+        return i;
+
+    /* The container should not contain same-named items.  But handle them. */
+    if (a < b)
+        return -1;
+    if (a > b)
+        return 1;
+    return 0;
+}
+
 static GByteArray*
 gwy_container_serialize(GObject *object,
                         GByteArray *buffer)
@@ -1851,6 +1869,7 @@ gwy_container_serialize(GObject *object,
     sdata.items = g_new0(GwySerializeItem, nitems);
     sdata.i = 0;
     g_hash_table_foreach(container->values, hash_serialize_func, &sdata);
+    qsort(sdata.items, sdata.i, sizeof(GwySerializeItem), compare_items);
     buffer = gwy_serialize_object_items(buffer, GWY_CONTAINER_TYPE_NAME,
                                         sdata.i, sdata.items);
     g_free(sdata.items);
