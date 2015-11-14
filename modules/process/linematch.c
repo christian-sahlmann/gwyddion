@@ -166,7 +166,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Aligns rows by various methods."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2015",
 };
@@ -279,7 +279,7 @@ linematch_do(GwyDataField *mask,
              LineMatchArgs *args)
 {
     GwyMaskingType masking = args->masking;
-    GwyDataField *mymask = mask, *tmpresult = NULL;
+    GwyDataField *mymask, *tmpresult = NULL;
 
     if (args->masking == GWY_MASK_IGNORE)
         mask = NULL;
@@ -287,6 +287,7 @@ linematch_do(GwyDataField *mask,
         args->masking = GWY_MASK_IGNORE;
 
     /* Transpose the fields if necessary. */
+    mymask = mask;
     if (args->direction == GWY_ORIENTATION_VERTICAL) {
         tmpresult = gwy_data_field_new_alike(args->result, FALSE);
         flip_xy(args->result, tmpresult, FALSE);
