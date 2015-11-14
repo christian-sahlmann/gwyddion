@@ -252,11 +252,16 @@ static OmicronFlatFile*   omicronflat_load_single        (const gchar *filename,
                                                           GError **error);
 static void               gather_offsets                 (GArray *offsets,
                                                           OmicronFlatFile *fff);
+static void               add_filename                   (GwyContainer *data,
+                                                          OmicronFlatFile *fff);
 static void               free_file                      (OmicronFlatFile *fff);
 static void               free_file_id                   (OmicronFlatFileId *id);
 static OmicronFlatFileId* copy_file_id                   (const OmicronFlatFileId *id);
 static void               remove_from_filelist           (OmicronFlatFileList *filelist,
                                                           guint fileid);
+static gboolean           parse_filename                 (const gchar *filename,
+                                                          OmicronFlatFileId *id,
+                                                          const gchar *dirname);
 static gboolean           find_related_files             (const gchar *filename,
                                                           OmicronFlatFileList *filelist,
                                                           GError **error);
@@ -352,7 +357,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Omicron flat files."),
     "Yeti <yeti@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti)",
     "2015",
 };
@@ -470,6 +475,7 @@ omicronflat_load(const gchar *filename,
 
     /* Try to acually load the data. */
     data = gwy_container_new();
+    add_filename(data, filelist.files[0]);
 
     /* Channels. They go by a single filelist entry. */
     i = id = 0;
@@ -649,6 +655,41 @@ free_file(OmicronFlatFile *fff)
         gwy_file_abandon_contents(fff->buffer, fff->size, NULL);
 
     g_free(fff);
+}
+
+static void
+add_filename(GwyContainer *data, OmicronFlatFile *fff)
+{
+    OmicronFlatExperiment *experiment = &fff->experiment;
+    const gchar *filename = experiment->result_data_file_spec;
+    const gchar *s, *t;
+
+    if (!filename)
+        return;
+
+    /* Obtain the stem from an absolute MS Windows path.  Just fail when we do
+     * not understand the name.  The program will supply the actual filename
+     * in that case. */
+    if (!g_ascii_isalpha(filename[0])
+        || filename[1] != ':'
+        || filename[2] != '\\')
+        return;
+
+    s = strrchr(filename, '\\');
+    g_assert(s);
+    s++;
+
+    t = strrchr(s, '.');
+    if (!t)
+        return;
+
+    while (t > s && (*t == '.' || g_ascii_isdigit(*t) || *t == '_'))
+        t--;
+
+    if (t == s)
+        return;
+
+    gwy_container_set_string_by_name(data, "/filename", g_strndup(s, (t-s)+1));
 }
 
 /* Checks if the specified view is present. */
@@ -1606,12 +1647,17 @@ static void
 fill_id_with_fallback(const gchar *filename,
                       OmicronFlatFileId *id)
 {
+    gchar *s;
+
     if (g_path_is_absolute(filename))
         id->filename = g_strdup(filename);
     else
         id->filename = g_build_filename(".", filename, NULL);
 
     id->stem = g_path_get_basename(filename);
+    if ((s = strrchr(id->stem, '.')))
+        *s = '\0';
+
     id->run_cycle = 0;
     id->scan_cycle = 0;
     id->extension = g_strdup("");
