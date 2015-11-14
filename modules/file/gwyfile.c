@@ -103,7 +103,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Loads and saves Gwyddion native data files (serialized objects)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.17",
+    "0.18",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -145,6 +145,7 @@ gwyfile_load(const gchar *filename,
              G_GNUC_UNUSED GwyRunType mode,
              GError **error)
 {
+    GwyContainer *container;
     GObject *object;
     GError *err = NULL;
     guchar *buffer = NULL;
@@ -186,9 +187,13 @@ gwyfile_load(const gchar *filename,
         g_object_unref(object);
         return NULL;
     }
-    gwyfile_pack_metadata(GWY_CONTAINER(object));
+    container = GWY_CONTAINER(object);
+    gwyfile_pack_metadata(container);
 
-    return GWY_CONTAINER(object);
+    /* Make sure that if there is "/filename" it is set by the app. */
+    gwy_container_remove_by_name(container, "/filename");
+
+    return container;
 }
 
 static gboolean
