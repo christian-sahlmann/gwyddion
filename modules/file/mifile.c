@@ -172,7 +172,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Molecular Imaging MI data files."),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "0.14",
+    "0.15",
     "Chris Anderson, Molecular Imaging Corp.",
     "2006",
 };
@@ -785,7 +785,7 @@ process_metadata(MIFile *mifile,
     guint i;
     gdouble xLength, yLength;
     gchar *channel_key = NULL;
-    gchar *channel_title = NULL;
+    const gchar *channel_title = NULL;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(container,
                                                              container_key));
@@ -798,20 +798,13 @@ process_metadata(MIFile *mifile,
 
     /* Set the container's title to whatever the buffer mode is */
     if (mode)
-        channel_title = g_strdup(mode);
+        channel_title = mode;
     else
-        channel_title = g_strdup("Unknown Channel");
+        channel_title = "Unknown Channel";
     channel_key = g_strdup_printf("%s/title", container_key);
-    gwy_container_set_string_by_name(container, channel_key,
-                                     g_strdup(channel_title));
-
-    /* If this is the first channel, store the title under /filename/title as
-    well for compatability with 1.x. */
-    if (id == 0)
-        gwy_container_set_string_by_name(container, "/filename/title",
-                                         g_strdup(channel_title));
+    gwy_container_set_const_string_by_name(container, channel_key,
+                                           g_strdup(channel_title));
     g_free(channel_key);
-    g_free(channel_title);
 
     /* Fix z-value scale */
     bufferUnit = NULL;
