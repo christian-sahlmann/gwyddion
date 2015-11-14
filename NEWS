@@ -29,6 +29,8 @@ Libraries:
   making FILE pointer passing possible.
 - libgwydgets: Graph selections that are either along x or y have now an
   "orientation" property, similar to GwySelectionAxis.
+- libgwyddion: GwyContainer items are serialised in lexical order (this is
+  not a functional change; the order is still not guaranteed by the format).
 
 Modules:
 - Sensofarx (new): Imports Sensofar PLUx data files.
@@ -61,7 +63,8 @@ Modules:
 - Slice volume, Align rows: It is possible to select a target graph for
   extracted curves.
 - Align rows: All the methods consistently keep the mean correction to zero,
-  preserving absolute data values.
+  preserving absolute data values.  A Critical warning message in column
+  aligment of non-square images when mask was present but ignored was fixed.
 - Mark by threshold, Mark by edge detection, Facet analysis: The mask can be
   combined with mask already present on the image using union or intersection.
 - Mark by threshold: Reset button now really resets all the settings.
@@ -77,6 +80,9 @@ Modules:
 - Image export: Smaller pixel-per-inch values are possible for vector formats
   and the values are also no longer rounded to integers.
 - WSxM: Horizontally flipped exported channels were fixed.
+- Omicron flat: Files with non-standard names are loaded now, with no related
+  data loaded alongside.  The original result filename is displayed as the
+  filename when possible.
 
 Other:
 - Gwyddion can use either minizip or libzip for opening of ZIP-compressed
