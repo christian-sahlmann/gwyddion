@@ -136,7 +136,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Pointer tool, reads value under pointer."),
     "Yeti <yeti@gwyddion.net>",
-    "2.11",
+    "2.12",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -787,7 +787,7 @@ calc_quadratic_curvatue(GwyCurvatureParams *curvature,
     curvature->yc = xc*sin(phi) + yc*cos(phi);
     curvature->zc = a + xc*bx1 + yc*by1 + 0.5*(xc*xc*cx + yc*yc*cy);
 
-    if (cx > cy) {
+    if (fabs(cx) < fabs(cy)) {
         GWY_SWAP(gdouble, cx, cy);
         phi += G_PI/2.0;
     }
