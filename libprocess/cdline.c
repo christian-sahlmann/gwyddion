@@ -72,26 +72,79 @@ get_linestatpars(const gdouble *y, gint ndat,
 {
     gint i, n;
 
+    from = CLAMP(from, 0, ndat);
+    to = CLAMP(to, 0, ndat);
+
     if (from > to)
         GWY_SWAP(gint, from, to);
 
     *avg = 0;
     *sigma = 0;
 
-    from = CLAMP(from, 0, ndat);
-    to = CLAMP(to, 0, ndat);
-
     n = to - from;
     if (n <= 0)
         return;
 
-    for (i = from; i < to; i++) {
+    for (i = from; i < to; i++)
         *avg += y[i];
-        *sigma += y[i] * y[i];
+    *avg /= n;
+
+    for (i = from; i < to; i++)
+        *sigma += (y[i] - *avg)*(y[i] - *avg);
+    *sigma = sqrt(*sigma/n);
+}
+
+static void
+get_linestatpars2(const gdouble *y, gint ndat,
+                  gint from1, gint to1,
+                  gint from2, gint to2,
+                  gdouble *avg, gdouble *sigma)
+{
+    gint i, n;
+
+    from1 = CLAMP(from1, 0, ndat);
+    to1 = CLAMP(to1, 0, ndat);
+
+    from2 = CLAMP(from2, 0, ndat);
+    to2 = CLAMP(to2, 0, ndat);
+
+    if (from1 > to1)
+        GWY_SWAP(gint, from1, to1);
+    if (from2 > to2)
+        GWY_SWAP(gint, from2, to2);
+    if (from1 > from2) {
+        GWY_SWAP(gint, from1, from2);
+        GWY_SWAP(gint, to1, to2);
+    }
+    /* Merge overlapping intervals to one. */
+    if (from2 <= to1) {
+        get_linestatpars(y, ndat, from1, MAX(to1, to2), avg, sigma);
+        return;
     }
 
-    *sigma = sqrt(fabs(*sigma - (*avg) * (*avg)/n)/n);
+    if (to1 == from1 && from1 == 0)
+        to1++;
+    if (to2 == from2 && to2 == ndat)
+        from2--;
+
+    *avg = 0;
+    *sigma = 0;
+
+    n = to1 - from1 + to2 - from2;
+    if (n <= 0)
+        return;
+
+    for (i = from1; i < to1; i++)
+        *avg += y[i];
+    for (i = from2; i < to2; i++)
+        *avg += y[i];
     *avg /= n;
+
+    for (i = from1; i < to1; i++)
+        *sigma += (y[i] - *avg)*(y[i] - *avg);
+    for (i = from2; i < to2; i++)
+        *sigma += (y[i] - *avg)*(y[i] - *avg);
+    *sigma = sqrt(*sigma/n);
 }
 
 static void
@@ -201,8 +254,6 @@ cd_rstepheight(const gdouble *x,
     gint nstep;
     gdouble max, min, val;
     gint imax, imin, iwidth;
-    gint nout;
-
 
     nstep = n_dat/20;
     if (nstep < 1)
@@ -232,23 +283,13 @@ cd_rstepheight(const gdouble *x,
     iwidth = imax - imin;
 
     /*FIXME modidfied now (imin+iwidth/3, imax-iwidth/3) */
-    get_linestatpars(y, n_dat, imin + iwidth/3, imax - iwidth/3, param + 2,
-                     err + 2);
-
-    param[1] = err[1] = 0;
-    nout = 0;
-    for (i = 0; i < n_dat; i++) {
-        if ((i < (imin - iwidth/3) && i > (imin - iwidth))    /* /3 */
-            || (i > (imax + iwidth/3) && i < (imax + iwidth))) {       /* /3 */
-            param[1] += y[i];
-            err[1] += y[i] * y[i];
-            nout++;
-        }
-    }
-
-    err[1] = sqrt(fabs(err[1] - param[1] * param[1]/nout)/nout);
-    param[1] /= (gdouble)nout;
-
+    get_linestatpars(y, n_dat, imin + iwidth/3, imax - iwidth/3,
+                     param+2, err+2);
+    /* XXX: The +1s correspond to sharp inequalities in original code. */
+    get_linestatpars2(y, n_dat,
+                      imin - iwidth + 1, imin - iwidth/3,
+                      imax + iwidth/3 + 1, imax + iwidth,
+                      param+1, err+1);
     param[0] = param[2] - param[1];
 
     err[0] = hypot(err[2], err[1]);
@@ -269,7 +310,6 @@ cd_stepheight(const gdouble *x,
     gint nstep;
     gdouble max, min, val;
     gint imax, imin, iwidth;
-    gint nout;
 
     nstep = n_dat/20;
     if (nstep < 1)
@@ -302,19 +342,12 @@ cd_stepheight(const gdouble *x,
    // if (!cdata) {
     get_linestatpars(y, n_dat, imax + iwidth/3, imin - iwidth/3, param + 2,
                      err + 2);
+    /* XXX: The +1s correspond to sharp inequalities in original code. */
+    get_linestatpars2(y, n_dat,
+                      imax - iwidth + 1, imax - iwidth/3,
+                      imin + iwidth/3 + 1, imin + iwidth,
+                      param+1, err+1);
 
-    param[1] = err[1] = 0;
-    nout = 0;
-    for (i = 0; i < n_dat; i++) {
-        if ((i < (imax - iwidth/3) && i > (imax - iwidth))    // /3
-            || (i > (imin + iwidth/3) && i < (imin + iwidth))) {       // /3
-            param[1] += y[i];
-            err[1] += y[i] * y[i];
-            nout++;
-        }
-    }
-    err[1] = sqrt(fabs(err[1] - param[1] * param[1]/nout)/nout);
-    param[1] /= (gdouble)nout;
     err[3] = err[4] = -1;
     /* } else {
         param[1] = 0;
@@ -445,11 +478,11 @@ cd_circle_down(const gdouble *x,
 }
 
 static gdouble
-    func_circle_up(gdouble x,
-                   G_GNUC_UNUSED gint n_param,
-                   const gdouble *param,
-                   G_GNUC_UNUSED gpointer user_data,
-                   G_GNUC_UNUSED gboolean *fres)
+func_circle_up(gdouble x,
+               G_GNUC_UNUSED gint n_param,
+               const gdouble *param,
+               G_GNUC_UNUSED gpointer user_data,
+               G_GNUC_UNUSED gboolean *fres)
 {
   if ( (param[0]*param[0] - (x-param[1])*(x-param[1])) > 0.0)
     return param[2] + sqrt(param[0]*param[0] - (x-param[1])*(x-param[1]));
