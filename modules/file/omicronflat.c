@@ -1910,6 +1910,14 @@ construct_axis_range(const OmicronFlatAxis *axis, guint interval_id,
     ndata = *n = (stop - start)/step + 1;
     *offset = phys_start - 0.5*phys_step;
     *real = ndata*step*phys_step;
+
+    /* This is only expected to happen for Z, but if it happens for X or Y
+     * enforce the handedness change anyway because we need positive
+     * dimensions. */
+    if (*real < 0.0) {
+        *offset += *real;
+        *real = -*real;
+    }
 }
 
 /* Construct explicit list of abscissa values for an interval on an axis.
