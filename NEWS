@@ -31,6 +31,7 @@ Libraries:
   "orientation" property, similar to GwySelectionAxis.
 - libgwyddion: GwyContainer items are serialised in lexical order (this is
   not a functional change; the order is still not guaranteed by the format).
+- libgwydgets: GwyColorAxis updates properly after exact range inversion.
 
 Modules:
 - Sensofarx (new): Imports Sensofar PLUx data files.
@@ -83,6 +84,8 @@ Modules:
 - Omicron flat: Files with non-standard names are loaded now, with no related
   data loaded alongside.  The original result filename is displayed as the
   filename when possible.
+- Critical dimensions: No longer crashes or produces NaNs when the profile
+  does not conform to Step profile according to the norm.
 
 Other:
 - Gwyddion can use either minizip or libzip for opening of ZIP-compressed
