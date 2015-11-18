@@ -911,7 +911,8 @@ gwy_color_axis_set_range(GwyColorAxis *axis,
 
     g_return_if_fail(GWY_IS_COLOR_AXIS(axis));
 
-    if (axis->min == min && axis->max == max)
+    if ((!axis->inverted && axis->min == min && axis->max == max)
+        || (axis->inverted && axis->min == max && axis->max == min))
         return;
 
     axis->min = MIN(min, max);
