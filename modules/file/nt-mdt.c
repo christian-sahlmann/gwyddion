@@ -19,8 +19,6 @@
  *  Boston, MA 02110-1301, USA.
  */
 
-/* TODO: some metadata ... */
-
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-nt-mdt-spm">
@@ -3452,6 +3450,46 @@ extract_brick(MDTMDAFrame *dataframe,
                 }
             }
 
+        if (((!frame_type)
+            || g_str_has_prefix(frame_type, "Spectra2DFullSpectrum"))
+            && (dataframe->nMesurands > 1)) {
+            /* Read nm scale as calibration for Raman images */
+
+            g_object_unref(siunitz);
+            zAxis = &dataframe->mesurands[1];
+            if (zAxis->unit && zAxis->unitLen) {
+                unit = g_strndup(zAxis->unit, zAxis->unitLen);
+                siunitz = gwy_si_unit_new_parse(unit, &power10z);
+                g_free(unit);
+            }
+            else {
+                cunit = gwy_flat_enum_to_string(unitCodeForSiCode(zAxis->siUnit),
+                                                G_N_ELEMENTS(mdt_units),
+                                                mdt_units, mdt_units_name);
+                siunitz = gwy_si_unit_new_parse(cunit, &power10z);
+            }
+            gwy_debug("zcal unit power %d", power10z);
+            zscale = pow10(power10z) * zAxis->scale;
+
+            if (ext_name) {
+                px = dataframe->image;
+            }
+            else {
+                px = dataframe->image + xres * yres * zres * sizeof(gfloat);
+            }
+
+            cal = gwy_data_line_new(zres, zres, FALSE);
+            data = gwy_data_line_get_data(cal);
+            for (k = 0; k < zres; k++) {
+                *(data++) = zscale * (gdouble)gwy_get_gfloat_le(&px);
+            }
+
+            gwy_data_line_set_si_unit_y(cal, siunitz);
+            gwy_brick_set_zcalibration(brick, cal);
+
+            g_object_unref(cal);
+        }
+
         gwy_brick_set_si_unit_x(brick, siunitx);
         gwy_brick_set_si_unit_y(brick, siunity);
         gwy_brick_set_si_unit_z(brick, siunitz);
@@ -3483,46 +3521,6 @@ extract_brick(MDTMDAFrame *dataframe,
         gwy_file_volume_import_log_add(container, *numdata,
                                        NULL, filename);
         (*numdata)++;
-    }
-
-    if (((!frame_type)
-        || g_str_has_prefix(frame_type, "Spectra2DFullSpectrum"))
-        && (dataframe->nMesurands > 1)) {
-        /* Read nm scale as calibration for Raman images */
-
-        g_object_unref(siunitz);
-        zAxis = &dataframe->mesurands[1];
-        if (zAxis->unit && zAxis->unitLen) {
-            unit = g_strndup(zAxis->unit, zAxis->unitLen);
-            siunitz = gwy_si_unit_new_parse(unit, &power10z);
-            g_free(unit);
-        }
-        else {
-            cunit = gwy_flat_enum_to_string(unitCodeForSiCode(zAxis->siUnit),
-                                            G_N_ELEMENTS(mdt_units),
-                                            mdt_units, mdt_units_name);
-            siunitz = gwy_si_unit_new_parse(cunit, &power10z);
-        }
-        gwy_debug("zcal unit power %d", power10z);
-        zscale = pow10(power10z) * zAxis->scale;
-
-        if (ext_name) {
-            px = dataframe->image;
-        }
-        else {
-            px = dataframe->image + xres * yres * zres * sizeof(gfloat);
-        }
-
-        cal = gwy_data_line_new(zres, zres, FALSE);
-        data = gwy_data_line_get_data(cal);
-        for (k = 0; k < zres; k++) {
-            *(data++) = zscale * (gdouble)gwy_get_gfloat_le(&px);
-        }
-
-        gwy_data_line_set_si_unit_y(cal, siunitz);
-        gwy_brick_set_zcalibration(brick, cal);
-
-        g_object_unref(cal);
     }
 
     g_object_unref(siunitx);
