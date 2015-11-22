@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-11-07 02:12+0100\n"
-"PO-Revision-Date: 2015-11-08 15:51+0100\n"
+"POT-Creation-Date: 2015-11-22 02:12+0100\n"
+"PO-Revision-Date: 2015-11-22 17:27+0100\n"
 "Last-Translator: François Riguet <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -220,41 +220,41 @@ msgstr "Lorentzienne"
 msgid "Sinc"
 msgstr "Sinus cardinal"
 
-#: libprocess/cdline.c:538
+#: libprocess/cdline.c:571
 msgid "Edge height (right)"
 msgstr "Hauteur de marche (droite)"
 
-#: libprocess/cdline.c:539 libprocess/cdline.c:548
+#: libprocess/cdline.c:572 libprocess/cdline.c:581
 msgid "Edge"
 msgstr "Marche"
 
-#: libprocess/cdline.c:547
+#: libprocess/cdline.c:580
 msgid "Edge height (left)"
 msgstr "Hauteur de marche (gauche)"
 
-#: libprocess/cdline.c:556
+#: libprocess/cdline.c:589
 msgid "Step height (positive)"
 msgstr "Hauteur de porte (positive)"
 
-#: libprocess/cdline.c:557 libprocess/cdline.c:566
+#: libprocess/cdline.c:590 libprocess/cdline.c:599
 #: libgwydgets/gwydgetenums.c:48 modules/process/hough.c:170
 msgid "Line"
 msgstr "Ligne"
 
-#: libprocess/cdline.c:565
+#: libprocess/cdline.c:598
 msgid "Step height (negative)"
 msgstr "Hauteur de porte (négative)"
 
-#: libprocess/cdline.c:574
+#: libprocess/cdline.c:607
 msgid "Circle (down)"
 msgstr "Cercle (bas)"
 
-#: libprocess/cdline.c:575 libprocess/cdline.c:584
+#: libprocess/cdline.c:608 libprocess/cdline.c:617
 #: libgwydgets/gwygraphareadialog.c:557 modules/process/hough.c:171
 msgid "Circle"
 msgstr "Cercle"
 
-#: libprocess/cdline.c:583
+#: libprocess/cdline.c:616
 msgid "Circle (up)"
 msgstr "Cercle (haut)"
 
@@ -948,7 +948,7 @@ msgstr "pixels"
 #: modules/process/grain_edge.c:222 modules/process/grain_mark.c:256
 #: modules/process/grain_wshed.c:175 modules/process/hough.c:179
 #: modules/process/lat_synth.c:535 modules/process/latsim.c:158
-#: modules/process/level.c:264 modules/process/linematch.c:790
+#: modules/process/level.c:264 modules/process/linematch.c:791
 #: modules/process/lno_synth.c:441 modules/process/local_contrast.c:130
 #: modules/process/mark_disconn.c:216 modules/process/mask_distribute.c:152
 #: modules/process/measure_lattice.c:265 modules/process/median-bg.c:179
@@ -1248,7 +1248,7 @@ msgid "Curve:"
 msgstr "Courbe :"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:553
-#: modules/process/linematch.c:814 modules/process/semsim.c:249
+#: modules/process/linematch.c:815 modules/process/semsim.c:249
 msgid "Method:"
 msgstr "Méthode :"
 
@@ -1664,7 +1664,7 @@ msgstr ""
 msgid "Opening of `%s' failed"
 msgstr "L'ouverture de `%s' a échoué"
 
-#: app/file.c:286 app/file.c:506
+#: app/file.c:286 app/file.c:521
 #, c-format
 msgid "Full file path: %s."
 msgstr "Chemin complet : %s."
@@ -1674,37 +1674,37 @@ msgstr "Chemin complet : %s."
 msgid "Loaded using: %s."
 msgstr "Chargé en utilisant : %s."
 
-#: app/file.c:363
+#: app/file.c:379
 msgid "Merge File"
 msgstr "Fusionner un fichier"
 
-#: app/file.c:365 app/gwyappfilechooser.c:223
+#: app/file.c:381 app/gwyappfilechooser.c:223
 msgid "Open File"
 msgstr "Ouvrir un fichier"
 
-#: app/file.c:500 app/gwymoduleutils.c:193
+#: app/file.c:515 app/gwymoduleutils.c:193
 #, c-format
 msgid "Saving of `%s' failed"
 msgstr "L'enregistrement de `%s' a échoué"
 
-#: app/file.c:509
+#: app/file.c:524
 #, c-format
 msgid "Saved using: %s."
 msgstr "Sauvegardé en utilisant : %s."
 
-#: app/file.c:650
+#: app/file.c:665
 #, c-format
 msgid "File `%s' already exists.  Replace?"
 msgstr "Le fichier `%s' existe déjà.  Remplacer ?"
 
-#: app/file.c:654
+#: app/file.c:669
 #, c-format
 msgid ""
 "The file already exists in `%s'.  Replacing it will overwrite its contents."
 msgstr ""
 "Ce fichier existe déjà dans `%s'.  Le remplacement écrasera son contenu."
 
-#: app/file.c:657
+#: app/file.c:672
 msgid "Replace File?"
 msgstr "Remplacer le fichier ?"
 
@@ -3038,7 +3038,7 @@ msgstr "Exporter au format texte"
 #: modules/process/extend.c:259 modules/process/fft_filter_1d.c:272
 #: modules/process/grain_dist.c:306 modules/process/grain_edge.c:264
 #: modules/process/grain_mark.c:347 modules/process/grain_wshed.c:260
-#: modules/process/linematch.c:838 modules/process/mark_disconn.c:287
+#: modules/process/linematch.c:839 modules/process/mark_disconn.c:287
 #: modules/process/slope_dist.c:370 modules/process/tip_blind.c:360
 #: modules/process/wpour_mark.c:363 modules/tools/spotremove.c:322
 #: modules/tools/stats.c:388
@@ -3477,11 +3477,11 @@ msgstr "Charge et sauve les fichiers Gwyddion natifs (objets sérialisés)."
 msgid "Gwyddion native format (.gwy)"
 msgstr "Gwyddion natif (.gwy)"
 
-#: modules/file/gwyfile.c:178
+#: modules/file/gwyfile.c:179
 msgid "Data deserialization failed."
 msgstr "La désérialisation des données à échoué."
 
-#: modules/file/gwyfile.c:183
+#: modules/file/gwyfile.c:184
 #, c-format
 msgid ""
 "Data deserialization succeeded, but resulted in an unexpected object %s."
@@ -3536,7 +3536,7 @@ msgstr "Format non supporté"
 
 #: modules/file/gwytiff.h:1030 modules/file/keyence.c:449
 #: modules/file/matfile.c:276 modules/file/matfile.c:298
-#: modules/file/omicronflat.c:1882 modules/file/princetonspe.c:339
+#: modules/file/omicronflat.c:1962 modules/file/princetonspe.c:339
 #: modules/file/psia.c:352 modules/file/zemax.c:168
 msgid "File is truncated."
 msgstr "Le fichier est tronqué."
@@ -4362,7 +4362,7 @@ msgstr "Importe les fichiers Keyence VK4."
 msgid "Keyence VK4 data files (.vk4)"
 msgstr "Fichiers Keyence VK4 (.vk4)"
 
-#: modules/file/keyence.c:894 modules/file/omicronflat.c:2448
+#: modules/file/keyence.c:894 modules/file/omicronflat.c:2528
 #, c-format
 msgid "Cannot convert string from UTF-16: %s"
 msgstr "Impossible de convertir la chaîne de caractères depuis UTF-16 : %s"
@@ -4928,38 +4928,38 @@ msgstr "Le champ d'en-tête d'axe %s contient trop d'éléments."
 msgid "Per-axis header field %s contains too few items."
 msgstr "Le champ d'en-tête d'axe %s ne contient pas assez d'éléments."
 
-#: modules/file/nt-mdt.c:845
+#: modules/file/nt-mdt.c:843
 msgid "Imports NT-MDT data files."
 msgstr "Importe les fichiers NT-MDT."
 
-#: modules/file/nt-mdt.c:858
+#: modules/file/nt-mdt.c:856
 msgid "NT-MDT files (.mdt)"
 msgstr "NT-MDT (.mdt)"
 
-#: modules/file/nt-mdt.c:1493 modules/file/nt-mdt.c:1601
+#: modules/file/nt-mdt.c:1491 modules/file/nt-mdt.c:1599
 msgid "Frame is too short for Frame Mode."
 msgstr "la trame est trop courte pour le mode trame."
 
-#: modules/file/nt-mdt.c:1508 modules/file/nt-mdt.c:1616
+#: modules/file/nt-mdt.c:1506 modules/file/nt-mdt.c:1614
 msgid "Frame is too short for dots or data."
 msgstr "la trame est trop courte pour des points ou des données."
 
-#: modules/file/nt-mdt.c:1871
+#: modules/file/nt-mdt.c:1869
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Fin du fichier atteinte dans l'en-tête #%u."
 
-#: modules/file/nt-mdt.c:1879
+#: modules/file/nt-mdt.c:1877
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Fin du fichier atteinte dans les données #%u."
 
-#: modules/file/nt-mdt.c:1912
+#: modules/file/nt-mdt.c:1910
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "La trame #%u est trop courte pour l'en-tête des données scannées."
 
-#: modules/file/nt-mdt.c:1929
+#: modules/file/nt-mdt.c:1927
 #, c-format
 msgid "Frame #%u is too short for spectroscopy data header."
 msgstr ""
@@ -5047,25 +5047,25 @@ msgstr "La ligne d'en-tête commence par un double point."
 msgid "Channel information ended unexpectedly."
 msgstr "Les informations sur le canal s'arrêtent de manière inattendue."
 
-#: modules/file/omicronflat.c:353
+#: modules/file/omicronflat.c:358
 msgid "Imports Omicron flat files."
 msgstr "Importe les fichiers Omicron flat."
 
-#: modules/file/omicronflat.c:366
+#: modules/file/omicronflat.c:371
 msgid "Omicron flat files (*.*_flat)"
 msgstr "Omicron flat (*.*_flat)"
 
-#: modules/file/omicronflat.c:1613 modules/file/omicronflat.c:1655
+#: modules/file/omicronflat.c:1727
 msgid "File name does not have the expected form for Omicron Flat files."
 msgstr ""
 "Le nom de fichier n'a pas la forme attendue pour les fichiers Omicron Flat."
 
-#: modules/file/omicronflat.c:2066
+#: modules/file/omicronflat.c:2146
 msgid "Cannot understand the axis hierarchy."
 msgstr "Impossible de déterminer la hiérarchie des axes."
 
 #. TRANSLATORS: %s is replaced with an expression of the data shape.
-#: modules/file/omicronflat.c:2484
+#: modules/file/omicronflat.c:2564
 #, c-format
 msgid "Cannot figure out how to load data in the following form: %s."
 msgstr ""
@@ -5447,7 +5447,7 @@ msgstr "Échantillon carré"
 
 #: modules/file/rawfile.c:736
 msgid "Missin_g value substitute:"
-msgstr "Texte de remplacement pour les valeurs manquantes"
+msgstr "Valeur des pixels invalides"
 
 #: modules/file/rawfile.c:752
 msgid "_Automatically offer raw data import of unknown files"
@@ -6337,12 +6337,12 @@ msgstr "Exporter au format XYZ"
 
 #: modules/file/xyzexport.c:319 modules/process/curvature.c:709
 #: modules/process/facet-level.c:207 modules/process/level.c:278
-#: modules/process/linematch.c:892 modules/process/neural.c:600
+#: modules/process/linematch.c:893 modules/process/neural.c:600
 #: modules/process/polylevel.c:492 modules/process/slope_dist.c:421
 #: modules/tools/filter.c:300 modules/tools/profile.c:595
 #: modules/tools/sfunctions.c:497 modules/tools/stats.c:375
 msgid "Masking Mode"
-msgstr "Mode Masque"
+msgstr "Utilisation du masque"
 
 #: modules/file/zeiss.c:61
 msgid "Imports Carl Zeiss SEM images."
@@ -8007,7 +8007,7 @@ msgstr "Afficher le graphe"
 
 #: modules/process/curvature.c:690 modules/process/drift.c:346
 #: modules/process/fft_profile.c:315 modules/process/fractal.c:332
-#: modules/process/grain_cross.c:253 modules/process/linematch.c:871
+#: modules/process/grain_cross.c:253 modules/process/linematch.c:872
 #: modules/process/slope_dist.c:352 modules/tools/linestats.c:431
 #: modules/tools/profile.c:577 modules/tools/roughness.c:876
 #: modules/tools/sfunctions.c:467 modules/tools/spectro.c:382
@@ -8017,7 +8017,7 @@ msgstr "_Graphe cible :"
 
 #: modules/process/curvature.c:696 modules/process/drift.c:352
 #: modules/process/fft_profile.c:321 modules/process/fractal.c:338
-#: modules/process/grain_cross.c:259 modules/process/linematch.c:878
+#: modules/process/grain_cross.c:259 modules/process/linematch.c:879
 #: modules/process/slope_dist.c:358 modules/tools/linestats.c:437
 #: modules/tools/profile.c:583 modules/tools/roughness.c:882
 #: modules/tools/sfunctions.c:473 modules/tools/spectro.c:388
@@ -8884,7 +8884,7 @@ msgstr "Supprimer"
 msgid "1D FFT filter"
 msgstr "Filtre FFT 1D"
 
-#: modules/process/fft_filter_1d.c:280 modules/process/linematch.c:847
+#: modules/process/fft_filter_1d.c:280 modules/process/linematch.c:848
 msgid "_Direction:"
 msgstr "_Direction :"
 
@@ -10314,7 +10314,7 @@ msgstr "Mise à niveau des grains"
 msgid "Quantity to level:"
 msgstr "Quantité à mettre à niveau :"
 
-#: modules/process/level_grains.c:270 modules/process/linematch.c:852
+#: modules/process/level_grains.c:270 modules/process/linematch.c:853
 #: modules/process/median-bg.c:216 modules/process/polylevel.c:483
 #: modules/process/sphere-revolve.c:263
 msgid "E_xtract background"
@@ -10377,15 +10377,15 @@ msgstr "Position verticale"
 msgid "Corrected offset"
 msgstr "Décalage corrigé"
 
-#: modules/process/linematch.c:788
+#: modules/process/linematch.c:789
 msgid "Align Rows"
 msgstr "Aligner les lignes"
 
-#: modules/process/linematch.c:830
+#: modules/process/linematch.c:831
 msgid "_Polynomial degree:"
 msgstr "Degré du _polynôme :"
 
-#: modules/process/linematch.c:862
+#: modules/process/linematch.c:863
 msgid "Plot background _graph"
 msgstr "Afficher le graphe de l'arrière-plan"
 
@@ -10716,7 +10716,6 @@ msgid "Octagon"
 msgstr "Octogone"
 
 #: modules/process/mask_morph.c:180
-#, fuzzy
 msgid "Another mask"
 msgstr "Autre masque"
 
@@ -12972,7 +12971,7 @@ msgstr "Remplir les _vides"
 
 #: modules/tools/maskedit.c:580
 msgid "Fill non-simple-connected"
-msgstr "Remplir les vides à connections multiples"
+msgstr "Remplir les vides à connexions multiples"
 
 #: modules/tools/maskedit.c:591
 msgid "Grow/Shrink"
