@@ -325,7 +325,7 @@ fail:
         g_free(dfields);
     }
     if (grid) {
-        for (i = 0; i < npoints; i++)
+        for (i = 0; i < ginfo.xres*ginfo.yres; i++)
             g_slist_free(grid[i]);
         g_free(grid);
     }
