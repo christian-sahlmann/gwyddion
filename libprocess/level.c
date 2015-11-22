@@ -245,6 +245,8 @@ gwy_data_field_fit_facet_plane(GwyDataField *data_field,
                                GwyMaskingType masking,
                                gdouble *pa, gdouble *pbx, gdouble *pby)
 {
+    const gdouble c = 1.0/20.0;
+
     gdouble *data, *row, *newrow;
     const gdouble *mdata, *mrow, *newmrow;
     gdouble vx, vy, q, sumvx, sumvy, sumvz, xr, yr, sigma2;
@@ -299,7 +301,7 @@ gwy_data_field_fit_facet_plane(GwyDataField *data_field,
     if (n < 4)
         return FALSE;
 
-    sigma2 = 0.05*sigma2/n;
+    sigma2 = c*sigma2/n;
 
     sumvx = sumvy = sumvz = 0.0;
     newrow = data;
@@ -333,8 +335,8 @@ gwy_data_field_fit_facet_plane(GwyDataField *data_field,
     q = sumvz;
     *pbx = sumvx/q * xr;
     *pby = sumvy/q * yr;
-    gwy_debug("sigma=%g sum=(%g, %g, %g) q=%g b=(%g, %g)",
-              sqrt(sigma2), sumvx, sumvy, sumvz, q, *pbx, *pby);
+    gwy_debug("beta=%g, sigma=%g sum=(%g, %g) q=%g b=(%g, %g)",
+              sqrt(sigma2/c), sqrt(sigma2), sumvx, sumvy, q, *pbx, *pby);
 
     if (pa)
         *pa = -0.5*((*pbx)*xres + (*pby)*yres);
