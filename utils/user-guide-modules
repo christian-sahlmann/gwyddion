@@ -120,11 +120,13 @@ lno_synth	synthetic	line-noise-synthesis
 local_contrast	presentations	local-contrast
 magellan	managing-files
 mapvue	managing-files
+mark_disconn	editing-correction	mark-disconnected
 mark_with	masks	mark-with
 maskcor	multidata	mask-by-correlation
 mask_distribute	masks	mask-distribute
 maskedit	masks	mask-editor
 mask_edt	masks	mask-edt
+mask_morph	masks	maskmorph
 maskops	masks	maskops
 matfile	managing-files
 mcrop	multidata	mutual-crop
@@ -175,6 +177,7 @@ polylevel	leveling-and-background	polynomial-level
 presentationops	presentations	presentationops
 profile	basic-operations	profile
 psdf_logphi	fourier-transform	psdf-log-phi
+princetonspe	managing-files
 psia	managing-files
 pt3file	managing-files
 quesant	managing-files
@@ -199,6 +202,7 @@ seiko	managing-files
 selectionmanager	selections	selection-manager
 semsim	presentations	semsim
 sensofar	managing-files
+sensofarx	managing-files
 sensolytics	managing-files
 sfunctions	statistical-analysis	sfunctions
 shade	presentations	shade
