@@ -110,7 +110,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Gwyddion XYZ field files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti)",
     "2013",
 };

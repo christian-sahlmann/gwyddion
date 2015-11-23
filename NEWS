@@ -86,6 +86,8 @@ Modules:
   filename when possible.
 - Critical dimensions: No longer crashes or produces NaNs when the profile
   does not conform to Step profile according to the norm.
+- GWYXYZF: Incorrect memory freeing, possibly causing leaks or crashes, was
+  fixed.
 
 Other:
 - Gwyddion can use either minizip or libzip for opening of ZIP-compressed
