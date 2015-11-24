@@ -93,7 +93,7 @@ gwy_selection_graph_1darea_class_init(GwySelectionGraph1DAreaClass *klass)
     g_type_class_add_private(klass, sizeof(GwySelectionGraph1DAreaPriv));
 
     /**
-     * GwySelectionGraph1DAreaPriv:
+     * GwySelectionGraph1DArea:orientation:
      *
      * The :orientation property represents the orientation of the selected
      * area.

@@ -93,7 +93,7 @@ gwy_selection_graph_line_class_init(GwySelectionGraphLineClass *klass)
     g_type_class_add_private(klass, sizeof(GwySelectionGraphLinePriv));
 
     /**
-     * GwySelectionGraphLinePriv:
+     * GwySelectionGraphLine:orientation:
      *
      * The :orientation property represents the orientation of the selected
      * lines.
