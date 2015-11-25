@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-11-12 02:12+0100\n"
+"POT-Creation-Date: 2015-11-25 17:03+0100\n"
 "PO-Revision-Date: 2015-11-12 08:41+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -214,41 +214,41 @@ msgstr "Lorentzovka"
 msgid "Sinc"
 msgstr "Sinc"
 
-#: libprocess/cdline.c:538
+#: libprocess/cdline.c:571
 msgid "Edge height (right)"
 msgstr "Výška hrany (pravé)"
 
-#: libprocess/cdline.c:539 libprocess/cdline.c:548
+#: libprocess/cdline.c:572 libprocess/cdline.c:581
 msgid "Edge"
 msgstr "Hrana"
 
-#: libprocess/cdline.c:547
+#: libprocess/cdline.c:580
 msgid "Edge height (left)"
 msgstr "Výška hrany (levé)"
 
-#: libprocess/cdline.c:556
+#: libprocess/cdline.c:589
 msgid "Step height (positive)"
 msgstr "Výška schodu (kladného)"
 
-#: libprocess/cdline.c:557 libprocess/cdline.c:566
+#: libprocess/cdline.c:590 libprocess/cdline.c:599
 #: libgwydgets/gwydgetenums.c:48 modules/process/hough.c:170
 msgid "Line"
 msgstr "Čára"
 
-#: libprocess/cdline.c:565
+#: libprocess/cdline.c:598
 msgid "Step height (negative)"
 msgstr "Výška schodu (záporného)"
 
-#: libprocess/cdline.c:574
+#: libprocess/cdline.c:607
 msgid "Circle (down)"
 msgstr "Kružnice (dolní část)"
 
-#: libprocess/cdline.c:575 libprocess/cdline.c:584
+#: libprocess/cdline.c:608 libprocess/cdline.c:617
 #: libgwydgets/gwygraphareadialog.c:557 modules/process/hough.c:171
 msgid "Circle"
 msgstr "Kružnice"
 
-#: libprocess/cdline.c:583
+#: libprocess/cdline.c:616
 msgid "Circle (up)"
 msgstr "Kružnice (horní část)"
 
@@ -944,7 +944,7 @@ msgstr "pixelů"
 #: modules/process/grain_edge.c:222 modules/process/grain_mark.c:256
 #: modules/process/grain_wshed.c:175 modules/process/hough.c:179
 #: modules/process/lat_synth.c:535 modules/process/latsim.c:158
-#: modules/process/level.c:264 modules/process/linematch.c:790
+#: modules/process/level.c:264 modules/process/linematch.c:791
 #: modules/process/lno_synth.c:441 modules/process/local_contrast.c:130
 #: modules/process/mark_disconn.c:216 modules/process/mask_distribute.c:152
 #: modules/process/measure_lattice.c:265 modules/process/median-bg.c:179
@@ -1244,7 +1244,7 @@ msgid "Curve:"
 msgstr "Křivka:"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:553
-#: modules/process/linematch.c:814 modules/process/semsim.c:249
+#: modules/process/linematch.c:815 modules/process/semsim.c:249
 msgid "Method:"
 msgstr "Metoda:"
 
@@ -1659,7 +1659,7 @@ msgstr ""
 msgid "Opening of `%s' failed"
 msgstr "Načtení ‚%s‘ se nezdařilo"
 
-#: app/file.c:286 app/file.c:506
+#: app/file.c:286 app/file.c:521
 #, c-format
 msgid "Full file path: %s."
 msgstr "Plná cesta souboru: %s."
@@ -1669,36 +1669,36 @@ msgstr "Plná cesta souboru: %s."
 msgid "Loaded using: %s."
 msgstr "Načítán pomocí: %s."
 
-#: app/file.c:363
+#: app/file.c:379
 msgid "Merge File"
 msgstr "Sloučení souboru"
 
-#: app/file.c:365 app/gwyappfilechooser.c:223
+#: app/file.c:381 app/gwyappfilechooser.c:223
 msgid "Open File"
 msgstr "Otevření souboru"
 
-#: app/file.c:500 app/gwymoduleutils.c:193
+#: app/file.c:515 app/gwymoduleutils.c:193
 #, c-format
 msgid "Saving of `%s' failed"
 msgstr "Zapsání ‚%s‘ se nezdařilo"
 
-#: app/file.c:509
+#: app/file.c:524
 #, c-format
 msgid "Saved using: %s."
 msgstr "Ukládán pomocí: %s."
 
-#: app/file.c:650
+#: app/file.c:665
 #, c-format
 msgid "File `%s' already exists.  Replace?"
 msgstr "Soubor ‚%s‘ již existuje. Přepsat?"
 
-#: app/file.c:654
+#: app/file.c:669
 #, c-format
 msgid ""
 "The file already exists in `%s'.  Replacing it will overwrite its contents."
 msgstr "Takový soubor již v ‚%s‘ existuje. Přepsání nahradí jeho obsah."
 
-#: app/file.c:657
+#: app/file.c:672
 msgid "Replace File?"
 msgstr "Přepsat soubor?"
 
@@ -3004,7 +3004,7 @@ msgstr "Export jako text"
 #: modules/process/extend.c:259 modules/process/fft_filter_1d.c:272
 #: modules/process/grain_dist.c:306 modules/process/grain_edge.c:264
 #: modules/process/grain_mark.c:347 modules/process/grain_wshed.c:260
-#: modules/process/linematch.c:838 modules/process/mark_disconn.c:287
+#: modules/process/linematch.c:839 modules/process/mark_disconn.c:287
 #: modules/process/slope_dist.c:370 modules/process/tip_blind.c:360
 #: modules/process/wpour_mark.c:363 modules/tools/spotremove.c:322
 #: modules/tools/stats.c:388
@@ -3439,11 +3439,11 @@ msgstr ""
 msgid "Gwyddion native format (.gwy)"
 msgstr "Přirozený formát Gwyddionu (.gwy) "
 
-#: modules/file/gwyfile.c:178
+#: modules/file/gwyfile.c:179
 msgid "Data deserialization failed."
 msgstr "Deserializace dat se nezdařila."
 
-#: modules/file/gwyfile.c:183
+#: modules/file/gwyfile.c:184
 #, c-format
 msgid ""
 "Data deserialization succeeded, but resulted in an unexpected object %s."
@@ -3494,7 +3494,7 @@ msgstr "Nepodporovaný formát vzorku"
 
 #: modules/file/gwytiff.h:1030 modules/file/keyence.c:449
 #: modules/file/matfile.c:276 modules/file/matfile.c:298
-#: modules/file/omicronflat.c:1882 modules/file/princetonspe.c:339
+#: modules/file/omicronflat.c:1962 modules/file/princetonspe.c:339
 #: modules/file/psia.c:352 modules/file/zemax.c:168
 msgid "File is truncated."
 msgstr "Soubor je uříznutý."
@@ -3528,6 +3528,7 @@ msgid "CRC error"
 msgstr "Chyba CRC"
 
 #: modules/file/gwyzip.h:177
+#, c-format
 msgid "Minizip error while reading the zip file: %s (%d)."
 msgstr "Chyba minizipu při načítání zip souboru: %s (%d)."
 
@@ -3537,6 +3538,7 @@ msgid "File %s is missing in the zip file."
 msgstr "V zip souboru schází soubor %s."
 
 #: modules/file/gwyzip.h:353 modules/file/gwyzip.h:365
+#, c-format
 msgid "Libzip error while reading the zip file: %s."
 msgstr "Chyba libzip při načítání zip souboru: %s."
 
@@ -4304,7 +4306,7 @@ msgstr "Načítá datové soubory Keyence VK4."
 msgid "Keyence VK4 data files (.vk4)"
 msgstr "Keyence VK4 datové soubory (.vk4)."
 
-#: modules/file/keyence.c:894 modules/file/omicronflat.c:2448
+#: modules/file/keyence.c:894 modules/file/omicronflat.c:2528
 #, c-format
 msgid "Cannot convert string from UTF-16: %s"
 msgstr "Nelze převést řetězec z UTF-16: %s"
@@ -4842,38 +4844,38 @@ msgstr "Položka hlavičky %s pro jednotlivé osy má příliš mnoho částí."
 msgid "Per-axis header field %s contains too few items."
 msgstr "Položka hlavičky %s pro jednotlivé osy má příliš málo částí."
 
-#: modules/file/nt-mdt.c:845
+#: modules/file/nt-mdt.c:843
 msgid "Imports NT-MDT data files."
 msgstr "Načítá datové soubory NT-MDT."
 
-#: modules/file/nt-mdt.c:858
+#: modules/file/nt-mdt.c:856
 msgid "NT-MDT files (.mdt)"
 msgstr "NT-MDT soubory (.mdt)"
 
-#: modules/file/nt-mdt.c:1493 modules/file/nt-mdt.c:1601
+#: modules/file/nt-mdt.c:1491 modules/file/nt-mdt.c:1599
 msgid "Frame is too short for Frame Mode."
 msgstr "Rám je příliš krátký pro daný Frame Mode."
 
-#: modules/file/nt-mdt.c:1508 modules/file/nt-mdt.c:1616
+#: modules/file/nt-mdt.c:1506 modules/file/nt-mdt.c:1614
 msgid "Frame is too short for dots or data."
 msgstr "Rám je příliš krátký pro body či data."
 
-#: modules/file/nt-mdt.c:1871
+#: modules/file/nt-mdt.c:1869
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Soubor skončil v hlavičce rámu č. %u."
 
-#: modules/file/nt-mdt.c:1879
+#: modules/file/nt-mdt.c:1877
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Soubor skončil v datech rámu č. %u."
 
-#: modules/file/nt-mdt.c:1912
+#: modules/file/nt-mdt.c:1910
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "Rám č. %u je příliš krátký pro hlavičku dat skenu."
 
-#: modules/file/nt-mdt.c:1929
+#: modules/file/nt-mdt.c:1927
 #, c-format
 msgid "Frame #%u is too short for spectroscopy data header."
 msgstr "Rám č. %u je příliš krátký pro hlavičku spektroskopických dat."
@@ -4957,24 +4959,24 @@ msgstr "Řádek hlavičky začíná dvojtečkou."
 msgid "Channel information ended unexpectedly."
 msgstr "Informace o kanálu neočekávaně skončily."
 
-#: modules/file/omicronflat.c:353
+#: modules/file/omicronflat.c:358
 msgid "Imports Omicron flat files."
 msgstr "Načítá ploché datové soubory Omicron."
 
-#: modules/file/omicronflat.c:366
+#: modules/file/omicronflat.c:371
 msgid "Omicron flat files (*.*_flat)"
 msgstr "Omicron ploché soubory (*.*_flat)"
 
-#: modules/file/omicronflat.c:1613 modules/file/omicronflat.c:1655
+#: modules/file/omicronflat.c:1727
 msgid "File name does not have the expected form for Omicron Flat files."
 msgstr "Jméno souboru nemá tvar očekávaný pro soubory Omicron Flat."
 
-#: modules/file/omicronflat.c:2066
+#: modules/file/omicronflat.c:2146
 msgid "Cannot understand the axis hierarchy."
 msgstr "Nejde se vyznat v hierarchii os."
 
 #. TRANSLATORS: %s is replaced with an expression of the data shape.
-#: modules/file/omicronflat.c:2484
+#: modules/file/omicronflat.c:2564
 #, c-format
 msgid "Cannot figure out how to load data in the following form: %s."
 msgstr "Nedokážu zjistit, jak načíst data v následujícím tvaru: %s."
@@ -6231,7 +6233,7 @@ msgstr "Export jako XYZ"
 
 #: modules/file/xyzexport.c:319 modules/process/curvature.c:709
 #: modules/process/facet-level.c:207 modules/process/level.c:278
-#: modules/process/linematch.c:892 modules/process/neural.c:600
+#: modules/process/linematch.c:893 modules/process/neural.c:600
 #: modules/process/polylevel.c:492 modules/process/slope_dist.c:421
 #: modules/tools/filter.c:300 modules/tools/profile.c:595
 #: modules/tools/sfunctions.c:497 modules/tools/stats.c:375
@@ -7891,7 +7893,7 @@ msgstr "Vykreslit _graf"
 
 #: modules/process/curvature.c:690 modules/process/drift.c:346
 #: modules/process/fft_profile.c:315 modules/process/fractal.c:332
-#: modules/process/grain_cross.c:253 modules/process/linematch.c:871
+#: modules/process/grain_cross.c:253 modules/process/linematch.c:872
 #: modules/process/slope_dist.c:352 modules/tools/linestats.c:431
 #: modules/tools/profile.c:577 modules/tools/roughness.c:876
 #: modules/tools/sfunctions.c:467 modules/tools/spectro.c:382
@@ -7901,7 +7903,7 @@ msgstr "Cílový _graf:"
 
 #: modules/process/curvature.c:696 modules/process/drift.c:352
 #: modules/process/fft_profile.c:321 modules/process/fractal.c:338
-#: modules/process/grain_cross.c:259 modules/process/linematch.c:878
+#: modules/process/grain_cross.c:259 modules/process/linematch.c:879
 #: modules/process/slope_dist.c:358 modules/tools/linestats.c:437
 #: modules/tools/profile.c:583 modules/tools/roughness.c:882
 #: modules/tools/sfunctions.c:473 modules/tools/spectro.c:388
@@ -8767,7 +8769,7 @@ msgstr "Potlačit"
 msgid "1D FFT filter"
 msgstr "1D FFT filtr"
 
-#: modules/process/fft_filter_1d.c:280 modules/process/linematch.c:847
+#: modules/process/fft_filter_1d.c:280 modules/process/linematch.c:848
 msgid "_Direction:"
 msgstr "S_měr:"
 
@@ -10184,7 +10186,7 @@ msgstr "Vyrovnat zrna"
 msgid "Quantity to level:"
 msgstr "Vyrovnat podle:"
 
-#: modules/process/level_grains.c:270 modules/process/linematch.c:852
+#: modules/process/level_grains.c:270 modules/process/linematch.c:853
 #: modules/process/median-bg.c:216 modules/process/polylevel.c:483
 #: modules/process/sphere-revolve.c:263
 msgid "E_xtract background"
@@ -10247,15 +10249,15 @@ msgstr "Svislá poloha"
 msgid "Corrected offset"
 msgstr "Opravený posun"
 
-#: modules/process/linematch.c:788
+#: modules/process/linematch.c:789
 msgid "Align Rows"
 msgstr "Srovnání řádků"
 
-#: modules/process/linematch.c:830
+#: modules/process/linematch.c:831
 msgid "_Polynomial degree:"
 msgstr "_Stupeň polynomu:"
 
-#: modules/process/linematch.c:862
+#: modules/process/linematch.c:863
 msgid "Plot background _graph"
 msgstr "Nakreslit _graf pozadí"
 
