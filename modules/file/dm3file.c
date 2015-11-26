@@ -258,6 +258,9 @@ dm3_detect(const GwyFileDetectInfo *fileinfo,
     if (fileinfo->file_size < MIN_FILE_SIZE)
         return 0;
 
+    if (!gwy_memmem(fileinfo->head, fileinfo->buffer_len, "%%%%", 4))
+        return 0;
+
     version = gwy_get_guint32_be(&p);
     size = gwy_get_guint32_be(&p);
     ordering = gwy_get_guint32_be(&p);
