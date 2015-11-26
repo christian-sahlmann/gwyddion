@@ -44,7 +44,7 @@ def format_userguide(module, body):
                 return yes
         return '—'
 
-    module = re.sub(r'\.c$', '', module)
+    module = re.sub(r'\.cc?$', '', module)
     out = ['<row>']
     lines = body.split('\n')[:NOTES]
     noterefs = {}
