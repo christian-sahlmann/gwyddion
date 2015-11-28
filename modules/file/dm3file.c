@@ -28,9 +28,25 @@
  **/
 
 /**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-dm4-tem">
+ *   <comment>Digital Micrograph DM4 TEM data</comment>
+ *   <glob pattern="*.dm4"/>
+ *   <glob pattern="*.DM4"/>
+ * </mime-type>
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Digital Micrograph DM3 TEM data
  * .dm3
+ * Read
+ **/
+
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Digital Micrograph DM4 TEM data
+ * .dm4
  * Read
  **/
 
@@ -47,14 +63,19 @@
 
 #include "err.h"
 
-#define EXTENSION ".dm3"
+#define EXTENSION3 ".dm3"
+#define EXTENSION4 ".dm4"
 
 enum {
     REPORTED_FILE_SIZE_OFF = 16,
-    MIN_FILE_SIZE = 3*4 + 1 + 1 + 4,
-    TAG_GROUP_MIN_SIZE = 1 + 1 + 4,
-    TAG_ENTRY_MIN_SIZE = 1 + 2,
-    TAG_TYPE_MIN_SIZE = 4 + 4,
+    MIN_FILE_SIZE3 = 3*4 + 1 + 1 + 4,
+    MIN_FILE_SIZE4 = 2*4 + 8 + 1 + 1 + 4,
+    TAG_GROUP_MIN_SIZE3 = 1 + 1 + 4,
+    TAG_GROUP_MIN_SIZE4 = 1 + 1 + 8,
+    TAG_ENTRY_MIN_SIZE3 = 1 + 2,
+    TAG_ENTRY_MIN_SIZE4 = 1 + 8 + 2,
+    TAG_TYPE_MIN_SIZE3 = 4 + 4,
+    TAG_TYPE_MIN_SIZE4 = 4 + 8,
     TAG_TYPE_MARKER = 0x25252525u,
 };
 
@@ -128,14 +149,15 @@ typedef struct _DM3File DM3File;
 
 struct _DM3TagType {
     guint ntypes;
-    guint typesize;
-    guint *types;
+    guint64 typesize;   /* 64bit in DM4 */
+    guint64 *types;   /* 64bit in DM4 */
     gconstpointer data;
 };
 
 struct _DM3TagEntry {
     gboolean is_group;
     gchar *label;
+    guint64 dm4_tag_data_size;  /* Only in DM4 for skipping of unknown tags. */
     DM3TagGroup *group;
     DM3TagType *type;
     DM3TagEntry *parent;
@@ -144,13 +166,13 @@ struct _DM3TagEntry {
 struct _DM3TagGroup {
     gboolean is_sorted;
     gboolean is_open;
-    guint ntags;
+    guint64 ntags;   /* 64bit in DM4 */
     DM3TagEntry *entries;
 };
 
 struct _DM3File {
     guint version;
-    guint size;
+    guint64 size;    /* 64bit in DM4 */
     gboolean little_endian;
     DM3TagEntry root_entry;
     GHashTable *hash;
@@ -160,7 +182,12 @@ struct _DM3File {
 static gboolean      module_register       (void);
 static gint          dm3_detect            (const GwyFileDetectInfo *fileinfo,
                                             gboolean only_name);
+static gint          dm4_detect            (const GwyFileDetectInfo *fileinfo,
+                                            gboolean only_name);
 static GwyContainer* dm3_load              (const gchar *filename,
+                                            GwyRunType mode,
+                                            GError **error);
+static GwyContainer* dm4_load              (const gchar *filename,
                                             GwyRunType mode,
                                             GError **error);
 static DM3ImgResult  dm3_read_image        (DM3File *dm3file,
@@ -197,9 +224,17 @@ static gboolean      dm3_read_header       (DM3File *dm3file,
                                             const guchar **p,
                                             gsize *size,
                                             GError **error);
+static gboolean      dm4_read_header       (DM3File *dm4file,
+                                            const guchar **p,
+                                            gsize *size,
+                                            GError **error);
 static void          dm3_build_hash        (GHashTable *hash,
                                             const DM3TagEntry *entry);
 static DM3TagGroup*  dm3_read_group        (DM3TagEntry *parent,
+                                            const guchar **p,
+                                            gsize *size,
+                                            GError **error);
+static DM3TagGroup*  dm4_read_group        (DM3TagEntry *parent,
                                             const guchar **p,
                                             gsize *size,
                                             GError **error);
@@ -209,12 +244,22 @@ static gboolean      dm3_read_entry        (DM3TagEntry *parent,
                                             const guchar **p,
                                             gsize *size,
                                             GError **error);
+static gboolean      dm4_read_entry        (DM3TagEntry *parent,
+                                            DM3TagEntry *entry,
+                                            guint idx,
+                                            const guchar **p,
+                                            gsize *size,
+                                            GError **error);
 static DM3TagType*   dm3_read_type         (DM3TagEntry *parent,
                                             const guchar **p,
                                             gsize *size,
                                             GError **error);
+static DM3TagType*   dm4_read_type         (DM3TagEntry *parent,
+                                            const guchar **p,
+                                            gsize *size,
+                                            GError **error);
 static guint         dm3_type_size         (DM3TagEntry *parent,
-                                            const guint *types,
+                                            const guint64 *types,
                                             guint *n,
                                             guint level,
                                             GError **error);
@@ -223,9 +268,9 @@ static void          dm3_free_group        (DM3TagGroup *group);
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Reads Digital Micrograph DM3 files."),
+    N_("Reads Digital Micrograph DM3 and DM4 files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "2.0",
     "David Nečas (Yeti)",
     "2012",
 };
@@ -241,6 +286,12 @@ module_register(void)
                            (GwyFileLoadFunc)&dm3_load,
                            NULL,
                            NULL);
+    gwy_file_func_register("dm4file",
+                           N_("Digital Micrograph DM4 TEM data (.dm4)"),
+                           (GwyFileDetectFunc)&dm4_detect,
+                           (GwyFileLoadFunc)&dm4_load,
+                           NULL,
+                           NULL);
 
     return TRUE;
 }
@@ -253,9 +304,9 @@ dm3_detect(const GwyFileDetectInfo *fileinfo,
     guint version, size, ordering, is_sorted, is_open;
 
     if (only_name)
-        return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 15 : 0;
+        return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION3) ? 15 : 0;
 
-    if (fileinfo->file_size < MIN_FILE_SIZE)
+    if (fileinfo->file_size < MIN_FILE_SIZE3)
         return 0;
 
     if (!gwy_memmem(fileinfo->head, fileinfo->buffer_len, "%%%%", 4))
@@ -268,6 +319,41 @@ dm3_detect(const GwyFileDetectInfo *fileinfo,
     is_open = *(p++);
     gwy_debug("%u %u %u %u %u", version, size, ordering, is_sorted, is_open);
     if (version != 3
+        || size + REPORTED_FILE_SIZE_OFF != fileinfo->file_size
+        || ordering > 1
+        || is_sorted > 1
+        || is_open > 1)
+        return 0;
+
+    return 100;
+}
+
+static gint
+dm4_detect(const GwyFileDetectInfo *fileinfo,
+           gboolean only_name)
+{
+    const guchar *p = fileinfo->head;
+    guint version, ordering, is_sorted, is_open;
+    gsize size;
+
+    if (only_name)
+        return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION4) ? 15 : 0;
+
+    if (fileinfo->file_size < MIN_FILE_SIZE4)
+        return 0;
+
+    if (!gwy_memmem(fileinfo->head, fileinfo->buffer_len, "%%%%", 4))
+        return 0;
+
+    version = gwy_get_guint32_be(&p);
+    size = gwy_get_guint64_be(&p);
+    ordering = gwy_get_guint32_be(&p);
+    is_sorted = *(p++);
+    is_open = *(p++);
+    gwy_debug("%u %lu %u %u %u", version, (gulong)size,
+              ordering, is_sorted, is_open);
+    /* XXX: This fails if the file is larger than 4GB anyway. */
+    if (version != 4
         || size + REPORTED_FILE_SIZE_OFF != fileinfo->file_size
         || ordering > 1
         || is_sorted > 1
@@ -331,6 +417,66 @@ fail:
     if (dm3file.hash) {
         g_hash_table_destroy(dm3file.hash);
         dm3file.hash = NULL;
+    }
+    gwy_file_abandon_contents(buffer, size, NULL);
+
+    return container;
+}
+
+static GwyContainer*
+dm4_load(const gchar *filename,
+         G_GNUC_UNUSED GwyRunType mode,
+         GError **error)
+{
+    GwyContainer *container = NULL;
+    DM3File dm4file;
+    DM3ImgResult status;
+    guchar *buffer = NULL;
+    const guchar *p;
+    gsize remaining, size = 0;
+    GError *err = NULL;
+    guint i = 0, id = 0;
+
+    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
+        err_GET_FILE_CONTENTS(error, &err);
+        return NULL;
+    }
+    gwy_clear(&dm4file, 1);
+    p = buffer;
+    remaining = size;
+
+    if (!dm4_read_header(&dm4file, &p, &remaining, error))
+        goto fail;
+
+    dm4file.filename = filename;
+    dm4file.root_entry.is_group = TRUE;
+    dm4file.root_entry.label = (gchar*)"";
+    if (!(dm4file.root_entry.group
+          = dm4_read_group(&dm4file.root_entry, &p, &remaining, error)))
+        goto fail;
+
+    dm4file.hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+    dm3_build_hash(dm4file.hash, &dm4file.root_entry);
+
+    container = gwy_container_new();
+    do {
+        status = dm3_read_image(&dm4file, container, i, &id, error);
+        i++;
+    } while (status == DM3_IMG_OK || status == DM3_IMG_SKIP);
+
+    if (status == DM3_IMG_NOT_FOUND && !id) {
+        gwy_object_unref(container);
+        err_NO_DATA(error);
+    }
+    else if (status == DM3_IMG_ERROR) {
+        gwy_object_unref(container);
+    }
+
+fail:
+    dm3_free_group(dm4file.root_entry.group);
+    if (dm4file.hash) {
+        g_hash_table_destroy(dm4file.hash);
+        dm4file.hash = NULL;
     }
     gwy_file_abandon_contents(buffer, size, NULL);
 
@@ -749,7 +895,7 @@ dm3_read_header(DM3File *dm3file,
                 const guchar **p, gsize *size,
                 GError **error)
 {
-    if (*size < MIN_FILE_SIZE) {
+    if (*size < MIN_FILE_SIZE3) {
         err_TOO_SHORT(error);
         return FALSE;
     }
@@ -768,6 +914,33 @@ dm3_read_header(DM3File *dm3file,
         return FALSE;
 
     *size -= 3*4;
+    return TRUE;
+}
+
+static gboolean
+dm4_read_header(DM3File *dm4file,
+                const guchar **p, gsize *size,
+                GError **error)
+{
+    if (*size < MIN_FILE_SIZE4) {
+        err_TOO_SHORT(error);
+        return FALSE;
+    }
+
+    dm4file->version = gwy_get_guint32_be(p);
+    dm4file->size = gwy_get_guint64_be(p);
+    dm4file->little_endian = gwy_get_guint32_be(p);
+
+    if (dm4file->version != 4 || dm4file->little_endian > 1) {
+        err_FILE_TYPE(error, "DM4");
+        return FALSE;
+    }
+
+    if (err_SIZE_MISMATCH(error, dm4file->size + REPORTED_FILE_SIZE_OFF, *size,
+                          TRUE))
+        return FALSE;
+
+    *size -= 2*4 + 8;
     return TRUE;
 }
 
@@ -861,14 +1034,14 @@ dm3_read_group(DM3TagEntry *parent,
     DM3TagGroup *group = NULL;
     guint i;
 
-    if (*size < TAG_GROUP_MIN_SIZE)
+    if (*size < TAG_GROUP_MIN_SIZE3)
         return err_TRUNCATED(parent, error);
 
-    group = g_new(DM3TagGroup, 1);
+    group = g_new0(DM3TagGroup, 1);
     group->is_sorted = *((*p)++);
     group->is_open = *((*p)++);
     group->ntags = gwy_get_guint32_be(p);
-    *size -= TAG_GROUP_MIN_SIZE;
+    *size -= TAG_GROUP_MIN_SIZE3;
     gwy_debug("[%u] Entering a group of %u tags (%u, %u)",
               dm3_entry_depth(parent),
               group->ntags, group->is_sorted, group->is_open);
@@ -877,6 +1050,41 @@ dm3_read_group(DM3TagEntry *parent,
     for (i = 0; i < group->ntags; i++) {
         gwy_debug("[%u] Reading entry #%u", dm3_entry_depth(parent), i);
         if (!dm3_read_entry(parent, group->entries + i, i, p, size, error)) {
+            dm3_free_group(group);
+            return NULL;
+        }
+    }
+
+    gwy_debug("[%u] Leaving group of %u tags read",
+              dm3_entry_depth(parent), group->ntags);
+
+    return group;
+}
+
+static DM3TagGroup*
+dm4_read_group(DM3TagEntry *parent,
+               const guchar **p, gsize *size,
+               GError **error)
+{
+    DM3TagGroup *group = NULL;
+    guint i;
+
+    if (*size < TAG_GROUP_MIN_SIZE3)
+        return err_TRUNCATED(parent, error);
+
+    group = g_new0(DM3TagGroup, 1);
+    group->is_sorted = *((*p)++);
+    group->is_open = *((*p)++);
+    group->ntags = gwy_get_guint64_be(p);
+    *size -= TAG_GROUP_MIN_SIZE4;
+    gwy_debug("[%u] Entering a group of %u tags (%u, %u)",
+              dm3_entry_depth(parent),
+              group->ntags, group->is_sorted, group->is_open);
+
+    group->entries = g_new0(DM3TagEntry, group->ntags);
+    for (i = 0; i < group->ntags; i++) {
+        gwy_debug("[%u] Reading entry #%u", dm3_entry_depth(parent), i);
+        if (!dm4_read_entry(parent, group->entries + i, i, p, size, error)) {
             dm3_free_group(group);
             return NULL;
         }
@@ -897,7 +1105,7 @@ dm3_read_entry(DM3TagEntry *parent,
 {
     guint kind, lab_len;
 
-    if (*size < TAG_ENTRY_MIN_SIZE) {
+    if (*size < TAG_ENTRY_MIN_SIZE3) {
         err_TRUNCATED(entry, error);
         return FALSE;
     }
@@ -912,7 +1120,7 @@ dm3_read_entry(DM3TagEntry *parent,
     entry->parent = parent;
     entry->is_group = (kind == 20);
     lab_len = gwy_get_guint16_be(p);
-    *size -= TAG_ENTRY_MIN_SIZE;
+    *size -= TAG_ENTRY_MIN_SIZE3;
     gwy_debug("[%u] Entry is %s",
               dm3_entry_depth(entry), entry->is_group ? "group" : "type");
 
@@ -948,6 +1156,69 @@ dm3_read_entry(DM3TagEntry *parent,
     return TRUE;
 }
 
+static gboolean
+dm4_read_entry(DM3TagEntry *parent,
+               DM3TagEntry *entry,
+               guint idx,
+               const guchar **p, gsize *size,
+               GError **error)
+{
+    guint kind, lab_len;
+
+    if (*size < TAG_ENTRY_MIN_SIZE4) {
+        err_TRUNCATED(entry, error);
+        return FALSE;
+    }
+
+    kind = *((*p)++);
+    if (kind != 20 && kind != 21) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Tag entry type is neither group nor data."));
+        return FALSE;
+    }
+
+    entry->parent = parent;
+    entry->is_group = (kind == 20);
+    lab_len = gwy_get_guint16_be(p);
+    *size -= TAG_ENTRY_MIN_SIZE4;
+    gwy_debug("[%u] Entry is %s",
+              dm3_entry_depth(entry), entry->is_group ? "group" : "type");
+
+    if (*size < lab_len) {
+        err_TRUNCATED(entry, error);
+        return FALSE;
+    }
+
+    if (lab_len)
+        entry->label = g_strndup(*p, lab_len);
+    else
+        entry->label = g_strdup_printf("#%u", idx);
+    gwy_debug("[%u] Entry label <%s>", dm3_entry_depth(entry), entry->label);
+#ifdef DEBUG
+    {
+        gchar *path = format_path(entry);
+        gwy_debug("[%u] Full path <%s>", dm3_entry_depth(entry), path);
+        g_free(path);
+    }
+#endif
+    *p += lab_len;
+    *size -= lab_len;
+
+    entry->dm4_tag_data_size = gwy_get_guint64_be(p);
+    /* Size update is included in TAG_ENTRY_MIN_SIZE4 above. */
+
+    if (entry->is_group) {
+        if (!(entry->group = dm4_read_group(entry, p, size, error)))
+            return FALSE;
+    }
+    else {
+        if (!(entry->type = dm4_read_type(entry, p, size, error)))
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
 static DM3TagType*
 dm3_read_type(DM3TagEntry *parent,
               const guchar **p, gsize *size,
@@ -956,7 +1227,7 @@ dm3_read_type(DM3TagEntry *parent,
     DM3TagType *type = NULL;
     guint i, marker, consumed_ntypes;
 
-    if (*size < TAG_TYPE_MIN_SIZE)
+    if (*size < TAG_TYPE_MIN_SIZE3)
         return err_TRUNCATED(parent, error);
 
     marker = gwy_get_guint32_be(p);
@@ -966,9 +1237,9 @@ dm3_read_type(DM3TagEntry *parent,
         return NULL;
     }
 
-    type = g_new(DM3TagType, 1);
+    type = g_new0(DM3TagType, 1);
     type->ntypes = gwy_get_guint32_be(p);
-    *size -= TAG_TYPE_MIN_SIZE;
+    *size -= TAG_TYPE_MIN_SIZE3;
     gwy_debug("[%u] Entering a typespec of %u items",
               dm3_entry_depth(parent), type->ntypes);
 
@@ -977,7 +1248,7 @@ dm3_read_type(DM3TagEntry *parent,
         return err_TRUNCATED(parent, error);
     }
 
-    type->types = g_new0(guint, type->ntypes);
+    type->types = g_new0(guint64, type->ntypes);
     for (i = 0; i < type->ntypes; i++) {
         type->types[i] = gwy_get_guint32_be(p);
         *size -= sizeof(guint32);
@@ -1012,9 +1283,74 @@ fail:
     return NULL;
 }
 
+static DM3TagType*
+dm4_read_type(DM3TagEntry *parent,
+              const guchar **p, gsize *size,
+              GError **error)
+{
+    DM3TagType *type = NULL;
+    guint i, marker, consumed_ntypes;
+
+    if (*size < TAG_TYPE_MIN_SIZE4)
+        return err_TRUNCATED(parent, error);
+
+    marker = gwy_get_guint32_be(p);
+    if (marker != TAG_TYPE_MARKER) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Tag type does not start with marker ‘%s’."), "%%%%");
+        return NULL;
+    }
+
+    type = g_new0(DM3TagType, 1);
+    type->ntypes = gwy_get_guint64_be(p);
+    *size -= TAG_TYPE_MIN_SIZE4;
+    gwy_debug("[%u] Entering a typespec of %u items",
+              dm3_entry_depth(parent), type->ntypes);
+
+    if (*size < sizeof(guint64)*type->ntypes) {
+        g_free(type);
+        return err_TRUNCATED(parent, error);
+    }
+
+    type->types = g_new0(guint64, type->ntypes);
+    for (i = 0; i < type->ntypes; i++) {
+        type->types[i] = gwy_get_guint32_be(p);
+        *size -= sizeof(guint64);
+        gwy_debug("[%u] Typespec #%u is %u",
+                  dm3_entry_depth(parent), i, type->types[i]);
+    }
+    gwy_debug("[%u] Leaving a typespec of %u items",
+              dm3_entry_depth(parent), type->ntypes);
+
+    consumed_ntypes = type->ntypes;
+    /* TODO: Can do this generically in DM4 as a fallback. */
+    if ((type->typesize = dm3_type_size(parent, type->types, &consumed_ntypes,
+                                        0, error)) == G_MAXUINT)
+        goto fail;
+    if (consumed_ntypes != 0) {
+        err_INVALID_TAG(parent, error);
+        goto fail;
+    }
+
+    gwy_debug("[%u] Type size: %u", dm3_entry_depth(parent), type->typesize);
+    if (*size < type->typesize) {
+        err_TRUNCATED(parent, error);
+        goto fail;
+    }
+    type->data = *p;
+    *p += type->typesize;
+
+    return type;
+
+fail:
+    g_free(type->types);
+    g_free(type);
+    return NULL;
+}
+
 static guint
 dm3_type_size(DM3TagEntry *parent,
-              const guint *types, guint *n,
+              const guint64 *types, guint *n,
               guint level,
               GError **error)
 {
