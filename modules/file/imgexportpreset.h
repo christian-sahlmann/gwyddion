@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2014 David Necas (Yeti).
+ *  Copyright (C) 2014-2015 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -107,6 +107,8 @@ typedef struct {
     gdouble inset_ygap;
     gdouble title_gap;
     gdouble maskkey_gap;
+    gboolean fix_fmscale_precision;
+    gint fmscale_precision;
     gchar *inset_length;
     gchar *mask_key;
     GwyInterpolationType interpolation;
@@ -155,7 +157,9 @@ static const ImgExportArgs img_export_defaults = {
     TRUE, TRUE, FALSE, TRUE,
     "Helvetica", TRUE,
     FALSE, TRUE, TRUE,
-    1.0, 1.0, 1.0, 0.0, 1.0, "", N_("Mask"),
+    1.0, 1.0, 1.0, 0.0, 1.0,
+    FALSE, 2,
+    "", N_("Mask"),
     GWY_INTERPOLATION_ROUND,
     IMGEXPORT_TITLE_NONE, FALSE,
     "line", GWYRGBA_WHITE, GWYRGBA_WHITE,
@@ -254,6 +258,8 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->inset_xgap = CLAMP(args->inset_xgap, 0.0, 4.0);
     args->inset_ygap = CLAMP(args->inset_ygap, 0.0, 2.0);
     args->title_gap = CLAMP(args->title_gap, -1.0, 1.0);
+    args->fix_fmscale_precision = !!args->fix_fmscale_precision;
+    args->fmscale_precision = CLAMP(args->fmscale_precision, 0, 16);
     args->inset_outline_color.a = args->inset_color.a;
     args->sel_outline_color.a = args->sel_color.a;
     args->sel_number_objects = !!args->sel_number_objects;
@@ -382,9 +388,13 @@ gwy_img_export_preset_dump(GwyResource *resource,
                            "inset_xgap %s\n"
                            "inset_ygap %s\n"
                            "title_gap %s\n"
+                           "fix_fmscale_precision %d\n"
+                           "fmscale_precision %d\n"
                            "maskkey_gap %s\n"
                            "mask_key \"%s\"\n",
-                           d1, d2, d3, d4, d5, s);
+                           d1, d2, d3, d4,
+                           data->fix_fmscale_precision, data->fmscale_precision,
+                           d5, s);
     g_free(s);
 
     s = g_strescape(data->inset_length, NULL);
@@ -528,6 +538,10 @@ gwy_img_export_preset_parse(const gchar *text,
             data.inset_ygap = g_ascii_strtod(value, NULL);
         else if (gwy_strequal(key, "title_gap"))
             data.title_gap = g_ascii_strtod(value, NULL);
+        else if (gwy_strequal(key, "fix_fmscale_precision"))
+            data.fix_fmscale_precision = atoi(value);
+        else if (gwy_strequal(key, "fmscale_precision"))
+            data.fmscale_precision = atoi(value);
         else if (gwy_strequal(key, "maskkey_gap"))
             data.maskkey_gap = g_ascii_strtod(value, NULL);
         else if (gwy_strequal(key, "sel_line_thickness"))
