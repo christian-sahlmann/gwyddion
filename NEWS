@@ -1,3 +1,11 @@
+2.44 (0000-00-00)
+Modules:
+- DM3: Support for Digital Micrograph DM4 files was added.
+- Image export: The number of digits in false colour axis ticks can be
+  controlled explicitly.  Very small negative values are displayed as ‘0.0’,
+  never the odd ‘-0.0’.
+
+
 2.43 (2015-11-25)
 Application:
 - Translations updated: Czech, French, Italian, Russian.
