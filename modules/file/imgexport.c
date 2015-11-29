@@ -216,6 +216,8 @@ typedef struct {
     GtkWidget *interpolation;
     GSList *ztype;
     GtkObject *fmscale_gap;
+    GtkWidget *fix_fmscale_precision;
+    GtkObject *fmscale_precision;
     GtkWidget *title_type;
     GtkObject *title_gap;
     GtkWidget *units_in_title;
@@ -3416,6 +3418,24 @@ fmscale_gap_changed(ImgExportControls *controls,
 }
 
 static void
+fmscale_precision_changed(ImgExportControls *controls,
+                          GtkAdjustment *adj)
+{
+    controls->args->fmscale_precision = gwy_adjustment_get_int(adj);
+    update_preview(controls);
+}
+
+static void
+fix_fmscale_precision_changed(ImgExportControls *controls,
+                              GtkToggleButton *toggle)
+{
+    ImgExportArgs *args = controls->args;
+
+    args->fix_fmscale_precision = gtk_toggle_button_get_active(toggle);
+    update_preview(controls);
+}
+
+static void
 ztype_changed(G_GNUC_UNUSED GtkToggleButton *toggle,
               ImgExportControls *controls)
 {
@@ -3509,7 +3529,7 @@ create_value_controls(ImgExportControls *controls)
     GtkWidget *table, *label, *check;
     gint row = 0;
 
-    table = controls->table_value = gtk_table_new(14, 3, FALSE);
+    table = controls->table_value = gtk_table_new(15, 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -3619,6 +3639,20 @@ create_value_controls(ImgExportControls *controls)
                             controls->fmscale_gap, GWY_HSCALE_DEFAULT);
     g_signal_connect_swapped(controls->fmscale_gap, "value-changed",
                              G_CALLBACK(fmscale_gap_changed), controls);
+    row++;
+
+    controls->fmscale_precision = gtk_adjustment_new(args->fmscale_precision,
+                                                     0.0, 16.0, 1.0, 5.0, 0);
+    gwy_table_attach_hscale(table, row, _("Fi_xed precision:"), NULL,
+                            controls->fmscale_precision, GWY_HSCALE_CHECK);
+    controls->fix_fmscale_precision
+        = gwy_table_hscale_get_check(controls->fmscale_precision);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->fix_fmscale_precision),
+                                 args->fix_fmscale_precision);
+    g_signal_connect_swapped(controls->fmscale_precision, "value-changed",
+                             G_CALLBACK(fmscale_precision_changed), controls);
+    g_signal_connect_swapped(controls->fix_fmscale_precision, "toggled",
+                             G_CALLBACK(fix_fmscale_precision_changed), controls);
     row++;
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
