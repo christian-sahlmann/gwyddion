@@ -791,6 +791,13 @@ format_layout_numeric(const ImgExportArgs *args,
     g_string_append_len(string, buffer, length);
     g_free(buffer);
 
+    /* Avoid negative zero, i.e. strings that start like negative
+     * zero-something but parse back as zero. */
+    if (string->str[0] == '-'
+        && string->str[1] == '0'
+        && strtod(string->str, NULL) == 0.0)
+        g_string_erase(string, 0, 1);
+
     /* Replace ASCII with proper minus */
     if (string->str[0] == '-') {
         g_string_erase(string, 0, 1);
