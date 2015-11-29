@@ -67,7 +67,8 @@
 #define EXTENSION4 ".dm4"
 
 enum {
-    REPORTED_FILE_SIZE_OFF = 16,
+    REPORTED_FILE_SIZE_OFF3 = 16,
+    REPORTED_FILE_SIZE_OFF4 = 24,
     MIN_FILE_SIZE3 = 3*4 + 1 + 1 + 4,
     MIN_FILE_SIZE4 = 2*4 + 8 + 1 + 1 + 4,
     TAG_GROUP_MIN_SIZE3 = 1 + 1 + 4,
@@ -96,6 +97,8 @@ enum {
     DM3_BOOLEAN = 8,
     DM3_CHAR    = 9,
     DM3_OCTET   = 10,
+    DM3_QUAD    = 11,   /* DM4 only. */
+    DM3_UQUAD   = 12,   /* DM4 only. */
     DM3_STRUCT  = 15,
     DM3_STRING  = 18,
     DM3_ARRAY   = 20
@@ -260,7 +263,7 @@ static DM3TagType*   dm4_read_type         (DM3TagEntry *parent,
                                             GError **error);
 static guint         dm3_type_size         (DM3TagEntry *parent,
                                             const guint64 *types,
-                                            guint *n,
+                                            guint64 *n,
                                             guint level,
                                             GError **error);
 static void          dm3_free_group        (DM3TagGroup *group);
@@ -319,7 +322,7 @@ dm3_detect(const GwyFileDetectInfo *fileinfo,
     is_open = *(p++);
     gwy_debug("%u %u %u %u %u", version, size, ordering, is_sorted, is_open);
     if (version != 3
-        || size + REPORTED_FILE_SIZE_OFF != fileinfo->file_size
+        || size + REPORTED_FILE_SIZE_OFF3 != fileinfo->file_size
         || ordering > 1
         || is_sorted > 1
         || is_open > 1)
@@ -354,7 +357,7 @@ dm4_detect(const GwyFileDetectInfo *fileinfo,
               ordering, is_sorted, is_open);
     /* XXX: This fails if the file is larger than 4GB anyway. */
     if (version != 4
-        || size + REPORTED_FILE_SIZE_OFF != fileinfo->file_size
+        || size + REPORTED_FILE_SIZE_OFF4 != fileinfo->file_size
         || ordering > 1
         || is_sorted > 1
         || is_open > 1)
@@ -909,7 +912,7 @@ dm3_read_header(DM3File *dm3file,
         return FALSE;
     }
 
-    if (err_SIZE_MISMATCH(error, dm3file->size + REPORTED_FILE_SIZE_OFF, *size,
+    if (err_SIZE_MISMATCH(error, dm3file->size + REPORTED_FILE_SIZE_OFF3, *size,
                           TRUE))
         return FALSE;
 
@@ -936,7 +939,7 @@ dm4_read_header(DM3File *dm4file,
         return FALSE;
     }
 
-    if (err_SIZE_MISMATCH(error, dm4file->size + REPORTED_FILE_SIZE_OFF, *size,
+    if (err_SIZE_MISMATCH(error, dm4file->size + REPORTED_FILE_SIZE_OFF4, *size,
                           TRUE))
         return FALSE;
 
@@ -1042,9 +1045,9 @@ dm3_read_group(DM3TagEntry *parent,
     group->is_open = *((*p)++);
     group->ntags = gwy_get_guint32_be(p);
     *size -= TAG_GROUP_MIN_SIZE3;
-    gwy_debug("[%u] Entering a group of %u tags (%u, %u)",
+    gwy_debug("[%u] Entering a group of %lu tags (%u, %u)",
               dm3_entry_depth(parent),
-              group->ntags, group->is_sorted, group->is_open);
+              (gulong)group->ntags, group->is_sorted, group->is_open);
 
     group->entries = g_new0(DM3TagEntry, group->ntags);
     for (i = 0; i < group->ntags; i++) {
@@ -1055,8 +1058,8 @@ dm3_read_group(DM3TagEntry *parent,
         }
     }
 
-    gwy_debug("[%u] Leaving group of %u tags read",
-              dm3_entry_depth(parent), group->ntags);
+    gwy_debug("[%u] Leaving group of %lu tags read",
+              dm3_entry_depth(parent), (gulong)group->ntags);
 
     return group;
 }
@@ -1077,9 +1080,9 @@ dm4_read_group(DM3TagEntry *parent,
     group->is_open = *((*p)++);
     group->ntags = gwy_get_guint64_be(p);
     *size -= TAG_GROUP_MIN_SIZE4;
-    gwy_debug("[%u] Entering a group of %u tags (%u, %u)",
+    gwy_debug("[%u] Entering a group of %lu tags (%u, %u)",
               dm3_entry_depth(parent),
-              group->ntags, group->is_sorted, group->is_open);
+              (gulong)group->ntags, group->is_sorted, group->is_open);
 
     group->entries = g_new0(DM3TagEntry, group->ntags);
     for (i = 0; i < group->ntags; i++) {
@@ -1090,8 +1093,8 @@ dm4_read_group(DM3TagEntry *parent,
         }
     }
 
-    gwy_debug("[%u] Leaving group of %u tags read",
-              dm3_entry_depth(parent), group->ntags);
+    gwy_debug("[%u] Leaving group of %lu tags read",
+              dm3_entry_depth(parent), (gulong)group->ntags);
 
     return group;
 }
@@ -1225,7 +1228,7 @@ dm3_read_type(DM3TagEntry *parent,
               GError **error)
 {
     DM3TagType *type = NULL;
-    guint i, marker, consumed_ntypes;
+    guint64 i, marker, consumed_ntypes;
 
     if (*size < TAG_TYPE_MIN_SIZE3)
         return err_TRUNCATED(parent, error);
@@ -1240,8 +1243,8 @@ dm3_read_type(DM3TagEntry *parent,
     type = g_new0(DM3TagType, 1);
     type->ntypes = gwy_get_guint32_be(p);
     *size -= TAG_TYPE_MIN_SIZE3;
-    gwy_debug("[%u] Entering a typespec of %u items",
-              dm3_entry_depth(parent), type->ntypes);
+    gwy_debug("[%u] Entering a typespec of %lu items",
+              dm3_entry_depth(parent), (gulong)type->ntypes);
 
     if (*size < sizeof(guint32)*type->ntypes) {
         g_free(type);
@@ -1252,11 +1255,11 @@ dm3_read_type(DM3TagEntry *parent,
     for (i = 0; i < type->ntypes; i++) {
         type->types[i] = gwy_get_guint32_be(p);
         *size -= sizeof(guint32);
-        gwy_debug("[%u] Typespec #%u is %u",
-                  dm3_entry_depth(parent), i, type->types[i]);
+        gwy_debug("[%u] Typespec #%lu is %lu",
+                  dm3_entry_depth(parent), (gulong)i, (gulong)type->types[i]);
     }
-    gwy_debug("[%u] Leaving a typespec of %u items",
-              dm3_entry_depth(parent), type->ntypes);
+    gwy_debug("[%u] Leaving a typespec of %lu items",
+              dm3_entry_depth(parent), (gulong)type->ntypes);
 
     consumed_ntypes = type->ntypes;
     if ((type->typesize = dm3_type_size(parent, type->types, &consumed_ntypes,
@@ -1267,7 +1270,8 @@ dm3_read_type(DM3TagEntry *parent,
         goto fail;
     }
 
-    gwy_debug("[%u] Type size: %u", dm3_entry_depth(parent), type->typesize);
+    gwy_debug("[%u] Type size: %lu",
+              dm3_entry_depth(parent), (gulong)type->typesize);
     if (*size < type->typesize) {
         err_TRUNCATED(parent, error);
         goto fail;
@@ -1289,7 +1293,7 @@ dm4_read_type(DM3TagEntry *parent,
               GError **error)
 {
     DM3TagType *type = NULL;
-    guint i, marker, consumed_ntypes;
+    guint64 i, marker, consumed_ntypes;
 
     if (*size < TAG_TYPE_MIN_SIZE4)
         return err_TRUNCATED(parent, error);
@@ -1304,8 +1308,8 @@ dm4_read_type(DM3TagEntry *parent,
     type = g_new0(DM3TagType, 1);
     type->ntypes = gwy_get_guint64_be(p);
     *size -= TAG_TYPE_MIN_SIZE4;
-    gwy_debug("[%u] Entering a typespec of %u items",
-              dm3_entry_depth(parent), type->ntypes);
+    gwy_debug("[%u] Entering a typespec of %lu items",
+              dm3_entry_depth(parent), (gulong)type->ntypes);
 
     if (*size < sizeof(guint64)*type->ntypes) {
         g_free(type);
@@ -1314,13 +1318,13 @@ dm4_read_type(DM3TagEntry *parent,
 
     type->types = g_new0(guint64, type->ntypes);
     for (i = 0; i < type->ntypes; i++) {
-        type->types[i] = gwy_get_guint32_be(p);
+        type->types[i] = gwy_get_guint64_be(p);
         *size -= sizeof(guint64);
-        gwy_debug("[%u] Typespec #%u is %u",
-                  dm3_entry_depth(parent), i, type->types[i]);
+        gwy_debug("[%u] Typespec #%lu is %lu",
+                  dm3_entry_depth(parent), (gulong)i, (gulong)type->types[i]);
     }
-    gwy_debug("[%u] Leaving a typespec of %u items",
-              dm3_entry_depth(parent), type->ntypes);
+    gwy_debug("[%u] Leaving a typespec of %lu items",
+              dm3_entry_depth(parent), (gulong)type->ntypes);
 
     consumed_ntypes = type->ntypes;
     /* TODO: Can do this generically in DM4 as a fallback. */
@@ -1332,7 +1336,8 @@ dm4_read_type(DM3TagEntry *parent,
         goto fail;
     }
 
-    gwy_debug("[%u] Type size: %u", dm3_entry_depth(parent), type->typesize);
+    gwy_debug("[%u] Type size: %lu",
+              dm3_entry_depth(parent), (gulong)type->typesize);
     if (*size < type->typesize) {
         err_TRUNCATED(parent, error);
         goto fail;
@@ -1350,12 +1355,12 @@ fail:
 
 static guint
 dm3_type_size(DM3TagEntry *parent,
-              const guint64 *types, guint *n,
+              const guint64 *types, guint64 *n,
               guint level,
               GError **error)
 {
     static const guint atomic_type_sizes[] = {
-        0, 0, 2, 4, 2, 4, 4, 8, 1, 1, 1,
+        0, 0, 2, 4, 2, 4, 4, 8, 1, 1, 1, 8, 8,
     };
     guint primary_type;
 
@@ -1380,8 +1385,8 @@ dm3_type_size(DM3TagEntry *parent,
             return err_INVALID_TAG(parent, error);
         *n -= 2;
         /* The second item is the length, presumably in characters (2byte) */
-        gwy_debug("<%u> string length %u",
-                  level, types[1]);
+        gwy_debug("<%u> string length %lu",
+                  level, (gulong)types[1]);
         return 2*types[1];
     }
 
@@ -1403,8 +1408,8 @@ dm3_type_size(DM3TagEntry *parent,
         types += oldn - *n;
         if (*n < 1)
             return err_INVALID_TAG(parent, error);
-        gwy_debug("<%u> array length %u",
-                  level, types[0]);
+        gwy_debug("<%u> array length %lu",
+                  level, (gulong)types[0]);
         *n -= 1;
         return types[0]*item_size;
     }
