@@ -283,31 +283,6 @@ gxyzf_load(const gchar *filename,
         gwy_file_channel_import_log_add(container, id, NULL, filename);
     }
 
-    /* Visualise the raw data.
-     * XXX: Crashes if xres and yres do not match raw data! */
-    for (id = 0; id < pointlen; id++) {
-        GwyDataField *dfield = gwy_data_field_new(ginfo.xres, ginfo.yres,
-                                                  1.0, 1.0, FALSE);
-        gchar buf[32];
-        guint k;
-
-        for (k = 0; k < ginfo.xres*ginfo.yres; k++)
-            dfield->data[k] = points[k*pointlen + id];
-        gwy_container_set_object(container,
-                                 gwy_app_get_data_key_for_id(nchan+id),
-                                 dfield);
-        g_object_unref(dfield);
-
-        g_snprintf(buf, sizeof(buf), "/%d/data/title", nchan+id);
-        if (id == 0)
-            gwy_container_set_string_by_name(container, buf, g_strdup("X"));
-        else if (id == 1)
-            gwy_container_set_string_by_name(container, buf, g_strdup("Y"));
-        else
-            gwy_container_set_string_by_name(container, buf,
-                                             g_strdup_printf("Raw %u", id-1));
-    }
-
 fail:
     g_free(buffer);
     if (hash)
