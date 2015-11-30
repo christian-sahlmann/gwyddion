@@ -1352,6 +1352,8 @@ gwy_3d_view_downsample_data(Gwy3DView *gwy3dview)
         return;
     }
 
+    /* XXX: this is just for testing! */
+#if 0
     if (rx > ry) {
         ry = (guint)(rs*ry/rx);
         rx = rs;
@@ -1360,6 +1362,7 @@ gwy_3d_view_downsample_data(Gwy3DView *gwy3dview)
         rx = (guint)(rs*rx/ry);
         ry = rs;
     }
+#endif
 
     gwy_debug("%p downsampling to %dx%d", gwy3dview, rx, ry);
     gwy3dview->downsampled
