@@ -137,7 +137,7 @@ typedef enum {
 
 typedef enum {
     RHK_PAGE_UNDEFINED                   = 0,
-    RHK_PAGE_TOPOGAPHIC                  = 1,
+    RHK_PAGE_TOPOGRAPHIC                 = 1,
     RHK_PAGE_CURRENT                     = 2,
     RHK_PAGE_AUX                         = 3,
     RHK_PAGE_FORCE                       = 4,
@@ -577,6 +577,14 @@ rhk_sm4_load(const gchar *filename,
                     title = g_strdup(name);
                 gwy_container_set_string_by_name(container, key->str, title);
             }
+            /* XXX: Maybe we should preferably show topograhical images?
+             * Suggested by Andrés Muñiz Piniella.
+            if (page->page_type == RHK_PAGE_TOPOGRAPHIC) {
+                g_string_assign(key, g_quark_to_string(quark));
+                g_string_append(key, "/visible");
+                gwy_container_set_boolean_by_name(container, key->str, TRUE);
+            }
+            */
 
             meta = rhk_sm4_get_metadata(pi, page, prmmeta);
             g_string_printf(key, "/%u/meta", imageid);
@@ -1169,7 +1177,7 @@ rhk_sm4_get_metadata(const RHKPageIndex *pi,
         meta = gwy_container_new();
 
     s = gwy_enuml_to_string(page->page_type,
-                            "Topographic", RHK_PAGE_TOPOGAPHIC,
+                            "Topographic", RHK_PAGE_TOPOGRAPHIC,
                             "Current", RHK_PAGE_CURRENT,
                             "Aux", RHK_PAGE_AUX,
                             "Force", RHK_PAGE_FORCE,

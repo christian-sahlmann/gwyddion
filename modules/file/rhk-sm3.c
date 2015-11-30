@@ -85,7 +85,7 @@ typedef enum {
 
 typedef enum {
     RHK_PAGE_UNDEFINED                = 0,
-    RHK_PAGE_TOPOGAPHIC               = 1,
+    RHK_PAGE_TOPOGRAPHIC              = 1,
     RHK_PAGE_CURRENT                  = 2,
     RHK_PAGE_AUX                      = 3,
     RHK_PAGE_FORCE                    = 4,
@@ -751,7 +751,7 @@ rhk_sm3_get_metadata(RHKPage *rhkpage)
     meta = gwy_container_new();
 
     s = gwy_enuml_to_string(rhkpage->page_type,
-                            "Topographic", RHK_PAGE_TOPOGAPHIC,
+                            "Topographic", RHK_PAGE_TOPOGRAPHIC,
                             "Current", RHK_PAGE_CURRENT,
                             "Aux", RHK_PAGE_AUX,
                             "Force", RHK_PAGE_FORCE,

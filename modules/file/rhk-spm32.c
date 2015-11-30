@@ -90,7 +90,7 @@ typedef enum {
 
 typedef enum {
     RHK_IMAGE_UNDEFINED                = 0,
-    RHK_IMAGE_TOPOGAPHIC               = 1,
+    RHK_IMAGE_TOPOGRAPHIC              = 1,
     RHK_IMAGE_CURRENT                  = 2,
     RHK_IMAGE_AUX                      = 3,
     RHK_IMAGE_FORCE                    = 4,
