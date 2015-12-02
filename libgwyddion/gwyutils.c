@@ -731,19 +731,19 @@ gwy_find_self_dir(const gchar *dirname)
             "modules",
             "GWYDDION_LIBDIR",
             "lib",
-            "gwyddion/modules"
+            "gwyddion\\modules"
         },
         {
             "plugins",
             "GWYDDION_LIBEXECDIR",
             "libexec",
-            "gwyddion/plugins"
+            "gwyddion\\plugins"
         },
         {
             "pixmaps",
             "GWYDDION_DATADIR",
             "share",
-            "gwyddion/pixmaps",
+            "gwyddion\\pixmaps",
         },
         {
             "data",
