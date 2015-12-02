@@ -355,6 +355,8 @@ imgexport_la_CFLAGS      = $(AM_CFLAGS) @PNG_CFLAGS@
 rhk_sm4_la_LIBADD        = @ZLIB@
 hdrimage_la_LIBADD       = @EXR_LIBS@ @PNG_LIBS@
 hdrimage_la_CXXFLAGS     = $(AM_CXXFLAGS) @PNG_CFLAGS@ @EXR_CFLAGS@
+jpkscan_la_CFLAGS        = $(AM_CFLAGS) $(zip_cflags)
+jpkscan_la_LIBADD        = $(zip_libs)
 
 # These require the respective libraries.
 if HAVE_XML2

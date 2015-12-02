@@ -4,7 +4,8 @@
  *  Copyright (C) 2005  JPK Instruments AG.
  *  Written by Sven Neumann <neumann@jpk.com>.
  *
- *  Rewritten to use GwyTIFF by Yeti <yeti@gwyddion.net>.
+ *  Rewritten to use GwyTIFF and spectra added by Yeti <yeti@gwyddion.net>.
+ *  Copyright (C) 2009-2015 David Necas (Yeti).
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,7 +22,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  */
-
+#define DEBUG 1
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-jpk-image-scan">
@@ -31,13 +32,15 @@
  *   </magic>
  *   <glob pattern="*.jpk"/>
  *   <glob pattern="*.JPK"/>
+ *   <glob pattern="*.jpk-qi-image"/>
+ *   <glob pattern="*.JPK-QI-IMAGE"/>
  * </mime-type>
  **/
 
 /**
  * [FILE-MAGIC-USERGUIDE]
  * JPK Instruments
- * .jpk
+ * .jpk, .jpk-qi-image
  * Read
  **/
 
@@ -53,6 +56,26 @@
 #include "err.h"
 #include "jpk.h"
 #include "gwytiff.h"
+
+#if defined(HAVE_MINIZIP) || defined(HAVE_LIBZIP)
+#define HAVE_GWYZIP 1
+#include "gwyzip.h"
+#else
+#undef HAVE_GWYZIP
+#endif
+
+#define MAGIC "PK\x03\x04"
+#define MAGIC_SIZE (sizeof(MAGIC)-1)
+#define MAGIC_FORCE1 "segments/0"
+#define MAGIC_FORCE1_SIZE (sizeof(MAGIC_FORCE1)-1)
+#define MAGIC_FORCE2 "header.properties"
+#define MAGIC_FORCE2_SIZE (sizeof(MAGIC_FORCE2)-1)
+
+typedef struct {
+    GHashTable *header_properties;
+    /* The backend storage for all the hash tables. */
+    GSList *buffers;
+} JPKForceFile;
 
 static gboolean      module_register     (void);
 static gint          jpkscan_detect      (const GwyFileDetectInfo *fileinfo,
@@ -84,14 +107,25 @@ static void          meta_store_double   (GwyContainer *container,
                                           gdouble value,
                                           const gchar *unit);
 
+#ifdef HAVE_GWYZIP
+static gint          jpkforce_detect            (const GwyFileDetectInfo *fileinfo,
+                                                 gboolean only_name);
+static GwyContainer* jpkforce_load              (const gchar *filename,
+                                                 GwyRunType mode,
+                                                 GError **error);
+static GHashTable*   jpk_parse_header_properties(GwyZipFile zipfile,
+                                                 JPKForceFile *jpkfile,
+                                                 const gchar *path,
+                                                 GError **error);
+#endif
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     module_register,
     N_("Imports JPK image scans."),
     "Sven Neumann <neumann@jpk.com>, Yeti <yeti@gwyddion.net>",
-    "0.9",
-    "JPK Instruments AG",
+    "0.10",
+    "JPK Instruments AG, David Nečas (Yeti)",
     "2005-2007",
 };
 
@@ -101,11 +135,20 @@ static gboolean
 module_register(void)
 {
     gwy_file_func_register("jpkscan",
-                           N_("JPK image scans (.jpk)"),
+                           N_("JPK image scans (.jpk, .jpk-qi-image)"),
                            (GwyFileDetectFunc)&jpkscan_detect,
                            (GwyFileLoadFunc)&jpkscan_load,
                            NULL,
                            NULL);
+#ifdef HAVE_GWYZIP
+    gwy_file_func_register("jpkforce",
+                           N_("JPK force curves "
+                              "(.jpk-force, .jpk-force-map, .jpk-qi-data)"),
+                           (GwyFileDetectFunc)&jpkforce_detect,
+                           (GwyFileLoadFunc)&jpkforce_load,
+                           NULL,
+                           NULL);
+#endif
 
     return TRUE;
 }
@@ -457,5 +500,123 @@ meta_store_double(GwyContainer *container,
     g_object_unref(siunit);
     gwy_si_unit_value_format_free(format);
 }
+
+#ifdef HAVE_GWYZIP
+static gint
+jpkforce_detect(const GwyFileDetectInfo *fileinfo,
+                gboolean only_name)
+{
+    GwyZipFile zipfile;
+    guchar *content;
+    gint score = 0;
+
+    if (only_name)
+        return 0;
+
+    /* Generic ZIP file. */
+    if (fileinfo->file_size < MAGIC_SIZE
+        || memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) != 0)
+        return 0;
+
+    /* It contains segments/0 (possibly under index) and header.properties
+     * (possibly also inside something). */
+    if (!gwy_memmem(fileinfo->head, fileinfo->buffer_len,
+                    MAGIC_FORCE1, MAGIC_FORCE1_SIZE)
+        || !gwy_memmem(fileinfo->head, fileinfo->buffer_len,
+                       MAGIC_FORCE2, MAGIC_FORCE2_SIZE))
+        return 0;
+
+    /* Look inside if there is header.properties in the main directory. */
+    if ((zipfile = gwyzip_open(fileinfo->name))) {
+        if (gwyzip_locate_file(zipfile, "header.properties", 1, NULL)
+            && (content = gwyzip_get_file_content(zipfile, NULL, NULL))) {
+            if (g_strstr_len(content, 4096, "jpk-data-file"))
+                score = 100;
+            g_free(content);
+        }
+        gwyzip_close(zipfile);
+    }
+
+    return score;
+}
+
+static void
+jpk_force_file_free(JPKForceFile *jpkfile)
+{
+    if (jpkfile->header_properties)
+        g_hash_table_destroy(jpkfile->header_properties);
+
+    g_slist_free_full(jpkfile->buffers, g_free);
+}
+
+static GwyContainer*
+jpkforce_load(const gchar *filename,
+              G_GNUC_UNUSED GwyRunType mode,
+              GError **error)
+{
+    GwyContainer *container = NULL;
+    JPKForceFile jpkfile;
+    GwyZipFile zipfile;
+
+    zipfile = gwyzip_open(filename);
+    if (!zipfile) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("Minizip cannot open the file as a ZIP file."));
+        return NULL;
+    }
+
+    gwy_clear(&jpkfile, 1);
+    if (!(jpkfile.header_properties
+          = jpk_parse_header_properties(zipfile, &jpkfile, "", error)))
+        goto fail;
+
+    err_NO_DATA(error);
+
+fail:
+    gwyzip_close(zipfile);
+    jpk_force_file_free(&jpkfile);
+
+    return container;
+}
+
+static GHashTable*
+jpk_parse_header_properties(GwyZipFile zipfile, JPKForceFile *jpkfile,
+                            const gchar *path, GError **error)
+{
+    GwyTextHeaderParser parser;
+    GHashTable *hash;
+    gchar *filename;
+    guchar *contents;
+    gsize size;
+
+    if (strlen(path))
+        filename = g_strconcat(path, "/", "header.properties", NULL);
+    else
+        filename = g_strdup_printf("header.properties");
+
+    gwy_debug("trying to load %s", filename);
+    if (!gwyzip_locate_file(zipfile, filename, TRUE, error)) {
+        g_free(filename);
+        return NULL;
+    }
+    g_free(filename);
+    if (!(contents = gwyzip_get_file_content(zipfile, &size, error)))
+        return NULL;
+
+    jpkfile->buffers = g_slist_prepend(jpkfile->buffers, contents);
+    hash = g_hash_table_new(g_str_hash, g_str_equal);
+
+    gwy_clear(&parser, 1);
+    parser.comment_prefix = "#";
+    parser.key_value_separator = "=";
+    hash = gwy_text_header_parse((gchar*)contents, &parser, NULL, error);
+    if (hash) {
+        gwy_debug("header.properties has %u entries", g_hash_table_size(hash));
+    }
+
+    return hash;
+}
+#endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
