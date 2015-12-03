@@ -60,7 +60,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports FEI Magellan SEM images."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2013",
 };
@@ -142,7 +142,7 @@ mgl_load_tiff(const GwyTIFF *tiff, const gchar *filename, GError **error)
     GError *err = NULL;
     guint dir_num = 0;
     gdouble *data;
-    gdouble xstep, ystep;
+    gdouble xstep, ystep, q;
     GQuark quark;
     GString *key = NULL;
 
@@ -191,12 +191,13 @@ mgl_load_tiff(const GwyTIFF *tiff, const gchar *filename, GError **error)
 
         reader = gwy_tiff_image_reader_free(reader);
         /* Request a reader, this ensures dimensions and stuff are defined. */
-        reader = gwy_tiff_get_image_reader(tiff, dir_num, 1, &err);
+        reader = gwy_tiff_get_image_reader(tiff, dir_num, 3, &err);
         if (!reader) {
             g_warning("Ignoring directory %u: %s", dir_num, err->message);
             g_clear_error(&err);
             continue;
         }
+        q = 1.0/((1 << reader->bits_per_sample) - 1);
         name = g_hash_table_lookup(hash, "Detectors::Name");
         mode = g_hash_table_lookup(hash, "Detectors::Mode");
 
@@ -208,10 +209,8 @@ mgl_load_tiff(const GwyTIFF *tiff, const gchar *filename, GError **error)
 
         data = gwy_data_field_get_data(dfield);
         for (i = 0; i < reader->height; i++)
-            gwy_tiff_read_image_row(tiff, reader, 0, i,
-                                    1.0/((1 << reader->bits_per_sample) - 1),
-                                    0.0,
-                                    data + i*reader->width);
+            gwy_tiff_read_image_row_averaged(tiff, reader, i, q, 0.0,
+                                             data + i*reader->width);
 
         if (!container)
             container = gwy_container_new();
