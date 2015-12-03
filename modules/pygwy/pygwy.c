@@ -96,7 +96,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Pygwy, the Gwyddion Python wrapper."),
     "Jan Hořák <xhorak@gmail.com>",
-    "0.6",
+    "0.7",
     "Jan Hořák",
     "2007"
 };
@@ -451,10 +451,8 @@ pygwy_get_plugin_metadata(const gchar *filename,
     suffix = g_strrstr(*name, ".");
     suffix[0] = '\0';
     gwy_debug("plugin name: %s", *name);
-    *desc = pygwy_read_val_from_dict(plugin_dict, "plugin_desc", filename);
-    *menu_path = pygwy_read_val_from_dict(plugin_dict, "plugin_menu", filename);
     type_str = pygwy_read_val_from_dict(plugin_dict, "plugin_type", filename);
-    gwy_debug("read values: %s %s %s %p %p %p", *desc, *menu_path, type_str, *desc, *menu_path, type_str);
+    gwy_debug("read values: %s %p", *type_str, type_str);
     if (!type_str) {
        g_warning("Undefined plugin type, cannot load.");
        *type = PYGWY_UNDEFINED;
@@ -462,22 +460,27 @@ pygwy_get_plugin_metadata(const gchar *filename,
        goto error;
     }
     /* FIXME: move string somewhere else */
-    if (g_ascii_strcasecmp ("PROCESS", type_str) == 0) {
+    if (g_ascii_strcasecmp("PROCESS", type_str) == 0) {
         *type = PYGWY_PROCESS;
-    } else if (g_ascii_strcasecmp ("FILE", type_str) == 0) {
+    } else if (g_ascii_strcasecmp("FILE", type_str) == 0) {
         *type = PYGWY_FILE;
-    } else if (g_ascii_strcasecmp ("GRAPH", type_str) == 0) {
+    } else if (g_ascii_strcasecmp("GRAPH", type_str) == 0) {
         *type = PYGWY_GRAPH;
-    } else if (g_ascii_strcasecmp ("LAYER", type_str) == 0) {
+    } else if (g_ascii_strcasecmp("LAYER", type_str) == 0) {
         *type = PYGWY_LAYER;
-    } else if (g_ascii_strcasecmp ("TOOL", type_str) == 0) {
+    } else if (g_ascii_strcasecmp("TOOL", type_str) == 0) {
         *type = PYGWY_TOOL;
-    } else if (g_ascii_strcasecmp ("VOLUME", type_str) == 0) {
+    } else if (g_ascii_strcasecmp("VOLUME", type_str) == 0) {
         *type = PYGWY_VOLUME;
     } else {
         g_warning("Unknown type '%s' in '%s'", type_str, filename);
         *type = PYGWY_UNDEFINED;
     }
+    *desc = pygwy_read_val_from_dict(plugin_dict, "plugin_desc", filename);
+    if (*type == PYGWY_PROCESS || *type == PYGWY_GRAPH || *type == PYGWY_VOLUME)
+        *menu_path = pygwy_read_val_from_dict(plugin_dict, "plugin_menu",
+                                              filename);
+    gwy_debug("read values: %s %s %p %p", *desc, *menu_path, *desc, *menu_path);
 
 error:
     if (error) {
