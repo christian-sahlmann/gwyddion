@@ -188,6 +188,7 @@ typedef struct {
     /* private */
     guint64 rowstride;
     guint64 *offsets;
+    gdouble *rowbuf;
     guint sample_format;
 } GwyTIFFImageReader;
 
@@ -857,6 +858,7 @@ gwy_tiff_get_image_reader(const GwyTIFF *tiff,
     guint *bps;
 
     reader.dirno = dirno;
+    reader.rowbuf = NULL;
 
     /* Required integer fields */
     if (!gwy_tiff_get_size(tiff, dirno, GWY_TIFFTAG_IMAGE_WIDTH,
@@ -1121,12 +1123,43 @@ gwy_tiff_read_image_row(const GwyTIFF *tiff,
     }
 }
 
+G_GNUC_UNUSED static inline void
+gwy_tiff_read_image_row_averaged(const GwyTIFF *tiff,
+                                 GwyTIFFImageReader *reader,
+                                 guint rowno,
+                                 gdouble q,
+                                 gdouble z0,
+                                 gdouble *dest)
+{
+    gint ch, j, width, spp = reader->samples_per_pixel;
+    gdouble *rowbuf;
+
+    g_return_if_fail(spp >= 1);
+
+    q /= spp;
+    gwy_tiff_read_image_row(tiff, reader, 0, rowno, q, z0, dest);
+    if (spp == 1)
+        return;
+
+    width = reader->width;
+    if (!reader->rowbuf)
+        reader->rowbuf = g_new(gdouble, width);
+
+    rowbuf = reader->rowbuf;
+    for (ch = 1; ch < spp; ch++) {
+        gwy_tiff_read_image_row(tiff, reader, ch, rowno, q, 0.0, rowbuf);
+        for (j = 0; j < width; j++)
+            dest[j] += rowbuf[j];
+    }
+}
+
 /* Idempotent, use: reader = gwy_tiff_image_reader_free(reader); */
 G_GNUC_UNUSED static inline GwyTIFFImageReader*
 gwy_tiff_image_reader_free(GwyTIFFImageReader *reader)
 {
     if (reader) {
         g_free(reader->offsets);
+        g_free(reader->rowbuf);
         g_free(reader);
     }
     return NULL;
