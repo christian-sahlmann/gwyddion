@@ -310,20 +310,14 @@ gwy_app_file_load_real(const gchar *filename_utf8,
 }
 
 static void
-set_filename(GwyContainer *data, const gchar *filename, gboolean take)
+set_filename(GwyContainer *data, const gchar *filename)
 {
     GQuark quark = g_quark_from_string("/filename");
 
-    if (gwy_container_contains(data, quark)) {
-        if (take)
-            g_free((gpointer)filename);
+    if (gwy_container_contains(data, quark))
         return;
-    }
 
-    if (take)
-        gwy_container_set_string(data, quark, (const guchar*)filename);
-    else
-        gwy_container_set_const_string(data, quark, (const guchar*)filename);
+    gwy_container_set_const_string(data, quark, (const guchar*)filename);
 }
 
 static void
@@ -332,7 +326,7 @@ gwy_app_file_add_loaded(GwyContainer *data,
                         const gchar *filename_sys)
 {
     if (filename_utf8)
-        set_filename(data, filename_utf8, FALSE);
+        set_filename(data, filename_utf8);
 
     gwy_app_data_browser_add(data);
     gwy_app_data_browser_reset_visibility(data,
@@ -489,13 +483,8 @@ gwy_app_file_write(GwyContainer *data,
 
     switch (saveok) {
         case GWY_FILE_OPERATION_SAVE:
-        if (free_utf8) {
-            gwy_undo_container_set_unmodified(data);
-            set_filename(data, filename_utf8, TRUE);
-            free_utf8 = FALSE;
-        }
-        else
-            set_filename(data, filename_utf8, FALSE);
+        gwy_undo_container_set_unmodified(data);
+        set_filename(data, filename_utf8);
         gwy_app_recent_file_list_update(data, filename_utf8, filename_sys, id);
 
         case GWY_FILE_OPERATION_EXPORT:
