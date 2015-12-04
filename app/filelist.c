@@ -757,7 +757,7 @@ gwy_app_recent_file_list_load(const gchar *filename)
 
     nrecent = _gwy_app_get_n_recent_files();
     for (n = 0; files[n]; n++) {
-        if (*files[n]) {
+        if (*files[n] && g_utf8_validate(files[n], -1, NULL)) {
             GwyRecentFile *rf;
 
             gwy_debug("%s", files[n]);
