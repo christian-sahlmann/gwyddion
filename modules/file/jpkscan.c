@@ -543,10 +543,15 @@ jpkforce_detect(const GwyFileDetectInfo *fileinfo,
 static void
 jpk_force_file_free(JPKForceFile *jpkfile)
 {
+    GSList *l;
+
     if (jpkfile->header_properties)
         g_hash_table_destroy(jpkfile->header_properties);
 
-    g_slist_free_full(jpkfile->buffers, g_free);
+    while ((l = jpkfile->buffers)) {
+        jpkfile->buffers = g_slist_next(l);
+        g_slist_free_1(l);
+    }
 }
 
 static GwyContainer*
