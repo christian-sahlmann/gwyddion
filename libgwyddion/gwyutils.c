@@ -528,9 +528,18 @@ gwy_debug_gnu(const gchar *domain,
               const gchar *format,
               ...)
 {
-    gchar *fmt2 = g_strconcat(fileline, ": ", funcname, ": ", format, NULL);
+    static GTimer *timer = NULL;
+    gchar *fmt2;
     va_list args;
+    gchar tbuf[24];
+
     va_start(args, format);
+    if (!timer)
+        timer = g_timer_new();
+
+    g_snprintf(tbuf, sizeof(tbuf), "%.6f", g_timer_elapsed(timer, NULL));
+    fmt2 = g_strconcat(fileline, ": ", funcname, ": (", tbuf, ") ", format,
+                       NULL);
     g_logv(domain, G_LOG_LEVEL_DEBUG, fmt2, args);
     va_end(args);
     g_free(fmt2);
