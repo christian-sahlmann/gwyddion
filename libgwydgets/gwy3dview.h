@@ -56,7 +56,9 @@ struct _Gwy3DView {
 
     GwyContainer *data;           /* Container with data */
     guint reduced_size;
-    GwyDataField *downsampled;    /* Downsampled data for faster rendering */
+    /* Downsampled data for faster rendering.  Unset when the full-size field
+     * is sufficiently small, which is now always. */
+    GwyDataField *downsampled;
     GwyDataField *downsampled2;
 
     Gwy3DSetup *setup;
