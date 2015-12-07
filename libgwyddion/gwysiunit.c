@@ -140,6 +140,7 @@ static const GwyUnitLongName long_names[] = {
     { 5, "J", "Joule", },
     { 5, "m", "meter", },
     { 5, "m", "metre", },
+    { 5, "px", "pixel", },
     { 6, "A", "Ampere", },
     { 6, "deg", "degree", },
     { 6, "K", "Kelvin", },
