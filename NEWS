@@ -2,6 +2,10 @@
 Libraries:
 - libgwyapp: Potential corruption of recent file list by Save As introduced in
   2.43 was fixed.
+- libgwydgets: Gwy3DView no longer downsamples data during changes, all
+  operations are done with full-resolution surfaces.  Its "reduced-size"
+  property was deprecated and it has no effect.
+- libgwyddion: gwy_debug() adds timestamp to the messages (where available).
 
 Modules:
 - DM3: Support for Digital Micrograph DM4 files was added.
