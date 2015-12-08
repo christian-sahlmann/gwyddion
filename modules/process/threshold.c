@@ -121,7 +121,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Limit the data range using a lower/upper threshold."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti)",
     "2010",
 };
@@ -404,7 +404,7 @@ threshold_get_display_range(GwyContainer *container,
                                  gwy_app_get_data_range_min_key_for_id(id),
                                  disp_min);
         gwy_container_gis_double(container,
-                                 gwy_app_get_data_range_min_key_for_id(id),
+                                 gwy_app_get_data_range_max_key_for_id(id),
                                  disp_max);
         break;
 
