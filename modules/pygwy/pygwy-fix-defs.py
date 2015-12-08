@@ -113,7 +113,7 @@ for f in parser.functions:
    if f.name.endswith("_wrap"):
       f.name = f.name.replace("_wrap", "")
    #function name cannot start by number in Python
-   if f.name[0] in ['0', '1','2', '3', '4', '5', '6', '7', '8', '9']:
+   if f.name[0] in '0123456789':
       f.name = "a_"+f.name
    if extra_method_type.has_key(f.c_name):
       for p in f.params:
