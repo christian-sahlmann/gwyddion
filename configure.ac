@@ -256,10 +256,13 @@ if test "x$enable_pygwy" != xno; then
   if test "x$os_mswin" = xyes; then
     libpython=`echo $libpython | sed 's%\\.%%'`
   fi
+  LIBPYTHON_ORIG_CFLAGS="$CFLAGS"
+  CFLAGS="$CFLAGS $PYTHON_SYSCFG_CCSHARED"
   AC_CHECK_LIB($libpython, PyRun_String,
                [PYTHON_LIBS="$PYTHON_LIBDIR_FLAG -l$libpython"],
                [enable_pygwy=no; PYGWY_WARN=" (needs lib$libpython)"],
                ["$PYTHON_LIBDIR_FLAG" $PYTHON_SYSCFG_LDFLAGS $PYTHON_SYSCFG_LINKFORSHARED])
+  CFLAGS="$LIBPYTHON_ORIG_CFLAGS"
   AC_SUBST(PYTHON_LIBS)
 fi
 
