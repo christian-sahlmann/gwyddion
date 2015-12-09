@@ -13,6 +13,13 @@ Modules:
   controlled explicitly.  Very small negative values are displayed as ‘0.0’,
   never the odd ‘-0.0’.
 - Magellan: RGB images are accepted and the channels are averaged upon import.
+- APE file: Crash when loading files with fewer actual data than reported by
+  the channels bit mask was fixed.
+- Limit Range: Setting range from fixed colour mapping range was fixed.
+
+Other:
+- Broken configure detection of libpython on Fedora 23 (and possibly elsewhere)
+  was fixed.
 
 
 2.43 (2015-11-25)
