@@ -195,7 +195,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports APE (Applied Physics and Engineering) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.11",
+    "0.12",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -380,6 +380,8 @@ apefile_load(const gchar *filename,
     if (size - (p - buffer) != n*apefile.ndata) {
         g_warning("Expected data size %u, but it's %u.",
                   n*apefile.ndata, (guint)(size - (p - buffer)));
+        gwy_debug("original ndata %u, corrected ndata %u (n = %u)",
+                  apefile.ndata, (guint)(size - (p - buffer))/n, n);
         apefile.ndata = MIN(apefile.ndata, (size - (p - buffer))/n);
     }
     if (!apefile.ndata) {
@@ -400,6 +402,8 @@ apefile_load(const gchar *filename,
 
         if (!(b & 1))
             continue;
+        if (n == apefile.ndata)
+            break;
 
         g_snprintf(key, sizeof(key), "/%d/data", n);
         dfield = apefile.data[n];
@@ -499,7 +503,10 @@ fill_data_fields(APEFile *apefile,
     for (b = apefile->channels, n = 0, k = 0; b; b = b >> 1, k++) {
         if (!(b & 1))
             continue;
+        if (n == apefile->ndata)
+            break;
 
+        gwy_debug("reading field %u (bit 0x%08x)", n, (1 << k));
         dfield = gwy_data_field_new(apefile->res, apefile->res,
                                     apefile->xreal, apefile->yreal, FALSE);
         unit = gwy_data_field_get_si_unit_xy(dfield);
