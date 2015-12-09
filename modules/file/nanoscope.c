@@ -1504,7 +1504,7 @@ read_binary_data(gint n, gdouble *data,
     }
     gwy_convert_raw_data(buffer, n, 1,
                          rawtypes[bpp], GWY_BYTE_ORDER_LITTLE_ENDIAN,
-                         data, 1.0/65536.0, 0.0);
+                         data, pow(1.0/256.0, bpp), 0.0);
     return TRUE;
 }
 
