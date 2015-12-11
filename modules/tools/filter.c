@@ -128,7 +128,7 @@ static GwyModuleInfo module_info = {
     N_("Filter tool, processes selected part of data with a filter "
        "(conservative denoise, mean, median. Kuwahara, minimum, maximum)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "3.11",
+    "3.12",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -314,6 +314,7 @@ gwy_tool_filter_init_dialog(GwyToolFilter *tool)
     tool->apply = gtk_dialog_add_button(dialog, GTK_STOCK_APPLY,
                                         GTK_RESPONSE_APPLY);
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_APPLY);
+    gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_APPLY, FALSE);
     gwy_help_add_to_tool_dialog(dialog, GWY_TOOL(tool), GWY_HELP_NO_BUTTON);
 
     gtk_widget_show_all(dialog->vbox);

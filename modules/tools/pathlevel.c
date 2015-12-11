@@ -110,7 +110,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Path level tool, performs row leveling along on user-set lines."),
     "Yeti <yeti@gwyddion.net>",
-    "1.7",
+    "1.8",
     "David Nečas (Yeti)",
     "2007",
 };
@@ -264,7 +264,7 @@ gwy_tool_path_level_init_dialog(GwyToolPathLevel *tool)
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
     tool->apply = gtk_dialog_add_button(dialog, GTK_STOCK_APPLY,
                                         GTK_RESPONSE_APPLY);
-    gtk_widget_set_sensitive(tool->apply, FALSE);
+    gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_APPLY, FALSE);
     gwy_help_add_to_tool_dialog(dialog, GWY_TOOL(tool), GWY_HELP_NO_BUTTON);
 
     gtk_widget_show_all(dialog->vbox);

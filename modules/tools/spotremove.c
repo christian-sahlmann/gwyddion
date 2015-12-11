@@ -158,7 +158,7 @@ static GwyModuleInfo module_info = {
     N_("Spot removal tool, interpolates small parts of data (displayed on "
        "a zoomed view) using selected algorithm."),
     "Yeti <yeti@gwyddion.net>",
-    "2.6",
+    "2.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -352,9 +352,9 @@ gwy_tool_spot_remover_init_dialog(GwyToolSpotRemover *tool)
     tool->apply = gtk_dialog_add_button(dialog, GTK_STOCK_APPLY,
                                         GTK_RESPONSE_APPLY);
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_APPLY);
+    gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_APPLY, FALSE);
     gwy_help_add_to_tool_dialog(dialog, GWY_TOOL(tool), GWY_HELP_NO_BUTTON);
 
-    gtk_widget_set_sensitive(tool->apply, FALSE);
     gtk_widget_set_sensitive(tool->clear, FALSE);
 
     gtk_widget_show_all(dialog->vbox);

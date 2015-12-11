@@ -150,7 +150,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Point Spectrum, extracts point spectra to a graph."),
     "Owain Davies <owain.davies@blueyonder.co.uk>",
-    "0.9",
+    "0.10",
     "Owain Davies, David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -408,6 +408,7 @@ gwy_tool_spectro_init_dialog(GwyToolSpectro *tool)
     tool->apply = gtk_dialog_add_button(dialog, GTK_STOCK_APPLY,
                                         GTK_RESPONSE_APPLY);
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_APPLY);
+    gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_APPLY, FALSE);
     gwy_help_add_to_tool_dialog(dialog, GWY_TOOL(tool), GWY_HELP_NO_BUTTON);
 
     gtk_widget_show_all(dialog->vbox);
