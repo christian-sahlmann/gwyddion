@@ -129,7 +129,7 @@ static GwyModuleInfo module_info = {
        "color scale should map to, either on data or on height distribution "
        "histogram."),
     "Yeti <yeti@gwyddion.net>",
-    "3.16",
+    "3.17",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -500,6 +500,7 @@ gwy_tool_color_range_data_switched(GwyTool *gwytool,
         gtk_widget_set_sensitive(GTK_WIDGET(tool->histogram), FALSE);
         gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmin), FALSE);
         gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmax), FALSE);
+        gtk_widget_set_sensitive(GTK_WIDGET(tool->invert), FALSE);
         gwy_selection_clear(tool->graph_selection);
     }
 
@@ -661,7 +662,7 @@ gwy_tool_color_range_type_changed(GtkWidget *radio,
 {
     GwyLayerBasicRangeType range_type, old_mode;
     GwyPlainTool *plain_tool;
-    gboolean fixed;
+    gboolean fixed_sens = FALSE;
 
     old_mode = gwy_tool_color_range_get_range_type(tool);
     if (radio) {
@@ -674,18 +675,17 @@ gwy_tool_color_range_type_changed(GtkWidget *radio,
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     if (plain_tool->container) {
-        fixed = (range_type == GWY_LAYER_BASIC_RANGE_FIXED);
-        gtk_widget_set_sensitive(GTK_WIDGET(tool->histogram), fixed);
-        gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmin), fixed);
-        gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmax), fixed);
-        gtk_widget_set_sensitive(GTK_WIDGET(tool->invert), fixed);
-
+        fixed_sens = (range_type == GWY_LAYER_BASIC_RANGE_FIXED);
         gwy_tool_color_range_set_range_type(tool, range_type);
-        if (fixed && !tool->data_switch) {
+        if (fixed_sens && !tool->data_switch) {
             gwy_debug("set min max after range type change");
             gwy_tool_color_range_set_min_max(tool);
         }
     }
+    gtk_widget_set_sensitive(GTK_WIDGET(tool->histogram), fixed_sens);
+    gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmin), fixed_sens);
+    gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmax), fixed_sens);
+    gtk_widget_set_sensitive(GTK_WIDGET(tool->invert), fixed_sens);
 
     old_mode = -1;
     gwy_container_gis_enum_by_name(gwy_app_settings_get(),

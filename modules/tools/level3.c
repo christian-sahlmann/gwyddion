@@ -400,12 +400,14 @@ gwy_tool_level3_instant_apply_changed(GtkToggleButton *check,
     gint n = 0;
 
     tool->args.instant_apply = gtk_toggle_button_get_active(check);
+    if (!tool->args.instant_apply)
+        return;
 
     if (plain_tool->selection)
         n = gwy_selection_get_data(plain_tool->selection, NULL);
     gtk_widget_set_sensitive(tool->apply, n == 3 && !tool->args.instant_apply);
 
-    if (tool->args.instant_apply)
+    if (tool->args.instant_apply && n == 3)
         gwy_tool_level3_apply(tool);
 }
 
@@ -413,8 +415,16 @@ static void
 gwy_tool_level3_set_zero_changed(GtkToggleButton *check,
                                  GwyToolLevel3 *tool)
 {
+    GwyPlainTool *plain_tool = GWY_PLAIN_TOOL(tool);
+    gint n = 0;
+
     tool->args.set_zero = gtk_toggle_button_get_active(check);
-    if (tool->args.instant_apply)
+    if (!tool->args.instant_apply)
+        return;
+
+    if (plain_tool->selection)
+        n = gwy_selection_get_data(plain_tool->selection, NULL);
+    if (tool->args.instant_apply && n == 3)
         gwy_tool_level3_apply(tool);
 }
 

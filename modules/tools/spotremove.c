@@ -505,6 +505,12 @@ gwy_tool_spot_remover_zselection_changed(GwySelection *selection,
 
     g_return_if_fail(hint <= 0);
 
+    data_field = GWY_PLAIN_TOOL(tool)->data_field;
+    if (!data_field) {
+        gtk_widget_set_sensitive(tool->apply, FALSE);
+        return;
+    }
+
     if (tool->xr.from >= 0 && tool->yr.from >= 0
         && gwy_selection_get_object(selection, 0, sel)) {
         if (sel[0] > sel[2])
@@ -517,7 +523,6 @@ gwy_tool_spot_remover_zselection_changed(GwySelection *selection,
         tool->zisel[1] = (gint)floor(sel[1]) + tool->yr.from - tool->yr.dest;
         tool->zisel[2] = (gint)ceil(sel[2]) + tool->xr.from - tool->xr.dest;
         tool->zisel[3] = (gint)ceil(sel[3]) + tool->yr.from - tool->yr.dest;
-        data_field = GWY_PLAIN_TOOL(tool)->data_field;
         is_ok = (tool->zisel[0] > 0
                  && tool->zisel[1] > 0
                  && tool->zisel[2] < gwy_data_field_get_xres(data_field)
