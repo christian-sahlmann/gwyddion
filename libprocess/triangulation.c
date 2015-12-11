@@ -413,12 +413,16 @@ get_workspace_point(WorkSpacePoint *wpt,
 
 static inline void
 work_space_ensure_size(WorkSpace *wspace,
-                      guint len)
+                       guint len)
 {
-    if (G_UNLIKELY(len > wspace->size)) {
+    if (G_LIKELY(len <= wspace->size))
+        return;
+
+    do {
         wspace->size *= 2;
-        wspace->data = g_renew(WorkSpacePoint, wspace->data, wspace->size);
-    }
+    } while (wspace->size < len);
+
+    wspace->data = g_renew(WorkSpacePoint, wspace->data, wspace->size);
 }
 
 static inline void
