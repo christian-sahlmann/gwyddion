@@ -85,6 +85,8 @@ create_vector_layer(GwyDataView *dataview, gint id, const gchar *name,
     layer = GWY_VECTOR_LAYER(g_object_newv(type, 0, NULL));
     s = g_strdup_printf("/%d/select/%s", id, name);
     t = strrchr(s, '/');
+    g_assert(t);
+    t++;
     *t = g_ascii_tolower(*t);
     gwy_vector_layer_set_selection_key(layer, s);
     g_free(s);
