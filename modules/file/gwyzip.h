@@ -280,6 +280,7 @@ gwyzip_get_file_content(GwyZipFile zipfile, gsize *contentsize,
     }
 
     size = fileinfo.uncompressed_size;
+    gwy_debug("uncompressed_size: %lu", size);
     buffer = g_new(guchar, size + 1);
     gwy_debug("calling unzReadCurrentFile()");
     readbytes = unzReadCurrentFile(zipfile->unzfile, buffer, size);
@@ -450,6 +451,7 @@ gwyzip_get_file_content(GwyZipFile zipfile, gsize *contentsize,
         return NULL;
     }
 
+    gwy_debug("uncompressed_size: %lu", (gulong)zst.size);
     file = zip_fopen_index(zipfile->archive, zipfile->index, 0);
     if (!file) {
         err_ZIP(zipfile, error);
