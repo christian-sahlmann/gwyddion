@@ -357,14 +357,20 @@ split_to_nparts(const gchar *str, const gchar *sep, guint n)
     return parts;
 }
 
+static inline gchar*
+decode_string(const gchar *s)
+{
+    return g_convert(s, -1, "UTF-8", "cp1251", NULL, NULL, NULL);
+}
+
 static GwyDataField *
 nst_read_3d(const gchar *buffer, GwyContainer **metadata, gchar **title)
 {
     GwyDataField *dfield = NULL;
     GwyContainer *meta = NULL;
     GwySIUnit *siunitxy = NULL, *siunitz = NULL;
-    gchar *p, *line, *attributes, *unit, *key, *value;
-    gchar **lineparts;
+    gchar *p, *line, *unit, *key, *value;
+    gchar **lineparts, **attributes;
     gint x, y, xmax = 0, ymax = 0, i, j;
     gint power10xy = 1, power10z = 1;
     gdouble *data, z;
@@ -397,8 +403,7 @@ nst_read_3d(const gchar *buffer, GwyContainer **metadata, gchar **title)
         else if (g_str_has_prefix(line, "XCUnit")) {
             if (!(lineparts = split_to_nparts(line, " ", 3)))
                 goto fail;
-            unit = g_convert(lineparts[1], -1, "UTF-8", "cp1251",
-                             NULL, NULL, NULL);
+            unit = decode_string(lineparts[1]);
             siunitxy = gwy_si_unit_new_parse(unit, &power10xy);
             g_free(unit);
             x = atoi(lineparts[2]);
@@ -409,8 +414,7 @@ nst_read_3d(const gchar *buffer, GwyContainer **metadata, gchar **title)
         else if (g_str_has_prefix(line, "ZCUnit")) {
             if (!(lineparts = split_to_nparts(line, " ", 3)))
                 goto fail;
-            unit = g_convert(lineparts[1], -1, "UTF-8", "cp1251",
-                             NULL, NULL, NULL);
+            unit = decode_string(lineparts[1]);
             siunitz = gwy_si_unit_new_parse(unit, &power10z);
             g_free(unit);
             z = atoi(lineparts[2]);
@@ -421,97 +425,66 @@ nst_read_3d(const gchar *buffer, GwyContainer **metadata, gchar **title)
         else if (g_str_has_prefix(line, "PlotsXLimits")) {
             if (!(lineparts = split_to_nparts(line, " ", 3)))
                 goto fail;
-            xoffset = g_ascii_strtod(lineparts[1], FALSE);
-            xscale = g_ascii_strtod(lineparts[2], FALSE) - xoffset;
+            xoffset = g_ascii_strtod(lineparts[1], NULL);
+            xscale = g_ascii_strtod(lineparts[2], NULL) - xoffset;
             g_strfreev(lineparts);
         }
         else if (g_str_has_prefix(line, "PlotsYLimits")) {
             if (!(lineparts = split_to_nparts(line, " ", 3)))
                 goto fail;
-            yoffset = g_ascii_strtod(lineparts[1], FALSE);
-            yscale = g_ascii_strtod(lineparts[2], FALSE) - yoffset;
+            yoffset = g_ascii_strtod(lineparts[1], NULL);
+            yscale = g_ascii_strtod(lineparts[2], NULL) - yoffset;
             g_strfreev(lineparts);
         }
         else if (g_str_has_prefix(line, "Name")) {
             if (!(lineparts = split_to_nparts(line, " ", 2)))
                 goto fail;
-            *title = g_convert(lineparts[1], -1, "UTF-8", "cp1251",
-                               NULL, NULL, NULL);
+            *title = decode_string(lineparts[1]);
             g_strfreev(lineparts);
         }
         else if (g_str_has_prefix(line, "Attributes")) {
             if (!(lineparts = split_to_nparts(line, " ", 2)))
                 goto fail;
-            attributes = g_strdup(lineparts[1]);
+            attributes = g_strsplit(lineparts[1], "*_*|^_^", 1024);
             g_strfreev(lineparts);
-            lineparts = g_strsplit(attributes, "*_*|^_^", 1024);
-            g_free(attributes);
             linecur = 0;
-            while (lineparts[linecur]) {
-                if (((linecur % 2) == 0) && (lineparts[linecur+1])) {
-                    key = g_convert(lineparts[linecur], -1,
-                                    "UTF-8", "cp1251",
-                                    NULL, NULL, NULL);
-                    value = g_convert(lineparts[linecur + 1], -1,
-                                      "UTF-8", "cp1251",
-                                      NULL, NULL, NULL);
-                    gwy_container_set_string_by_name(meta, key, value);
-                    g_free(key);
+            while ((key = attributes[linecur])
+                   && (value = attributes[linecur+1])) {
+                key = decode_string(key);
+                value = decode_string(value);
+                gwy_debug("%s: %s", key, value);
+                gwy_container_set_const_string_by_name(meta, key, value);
+
+                if (g_str_has_prefix(key, "Name")) {
+                    if (!*title)
+                        *title = g_strdup(value);
                 }
-                if (g_str_has_prefix(lineparts[linecur], "Name")) {
-                    if (((*title) == NULL) && (lineparts[linecur+1]))
-                        *title = g_convert(lineparts[linecur+1],
-                                           -1, "UTF-8", "cp1251",
-                                           NULL, NULL, NULL);
+                else if (g_str_has_prefix(key, "XYUnit")) {
+                    if (!siunitxy)
+                        siunitxy = gwy_si_unit_new_parse(value, &power10xy);
                 }
-                else if (g_str_has_prefix(lineparts[linecur],
-                                                            "XYUnit")) {
-                    if ((!siunitxy) && (lineparts[linecur+1])) {
-                        unit = g_convert(lineparts[linecur+1], -1,
-                                         "UTF-8", "cp1251",
-                                         NULL, NULL, NULL);
-                        siunitxy = gwy_si_unit_new_parse(unit,
-                                                         &power10xy);
-                        g_free(unit);
-                    }
+                else if (g_str_has_prefix(key, "ZUnit")) {
+                    if (!siunitz)
+                        siunitz = gwy_si_unit_new_parse(value, &power10z);
                 }
-                else if (g_str_has_prefix(lineparts[linecur],
-                                                            "ZUnit")) {
-                    if ((!siunitz) && (lineparts[linecur+1])) {
-                        unit = g_convert(lineparts[linecur+1], -1,
-                                         "UTF-8", "cp1251",
-                                         NULL, NULL, NULL);
-                        siunitz = gwy_si_unit_new_parse(unit, &power10z);
-                        g_free(unit);
-                    }
+                else if (g_str_has_prefix(key, "XMin")) {
+                    xoffset = g_ascii_strtod(value, NULL);
                 }
-                else if (g_str_has_prefix(lineparts[linecur],
-                                                            "XMin")) {
-                    if (lineparts[linecur+1])
-                        xoffset = g_ascii_strtod(lineparts[linecur+1],
-                                                 FALSE);
+                else if (g_str_has_prefix(key, "XMax")) {
+                    xscale = g_ascii_strtod(value, NULL) - xoffset;
                 }
-                else if (g_str_has_prefix(lineparts[linecur],
-                                                            "XMax")) {
-                    if (lineparts[linecur+1])
-                        xscale = g_ascii_strtod(lineparts[linecur+1],
-                                                FALSE) - xoffset;
+                else if (g_str_has_prefix(key, "YMin")) {
+                    yoffset = g_ascii_strtod(value, NULL);
                 }
-                else if (g_str_has_prefix(lineparts[linecur],
-                                                            "YMin")) {
-                    if (lineparts[linecur+1])
-                        yoffset = g_ascii_strtod(lineparts[linecur+1],
-                                                 FALSE);
+                else if (g_str_has_prefix(key, "YMax")) {
+                    yscale = g_ascii_strtod(value, NULL) - yoffset;
                 }
-                else if (g_str_has_prefix(lineparts[linecur],
-                                                            "YMax")) {
-                    if (lineparts[linecur+1])
-                        yscale = g_ascii_strtod(lineparts[linecur+1],
-                                                FALSE) - yoffset;
-                }
-                linecur++;
+
+                g_free(key);
+                g_free(value);
+                linecur += 2;
             }
-            g_strfreev(lineparts);
+            g_strfreev(attributes);
         }
     }
 
@@ -556,15 +529,16 @@ nst_read_2d(const gchar *buffer, guint channel)
     GwyGraphCurveModel *spectra;
     GwyGraphModel *gmodel;
     GwySIUnit *siunitx = NULL, *siunity = NULL;
-    gchar *p, *line, *unit, *xlabel = NULL, *ylabel = NULL;
-    gchar **lineparts;
+    gchar *p, *line, *unit, *key, *value, *xlabel = NULL, *ylabel = NULL;
+    gchar **lineparts, **attributes;
     gint linecur;
     gdouble *xdata, *ydata, x, y;
     GArray *xarray, *yarray;
     guint i, numpoints = 0, power10x = 1, power10y = 1;
-    gchar *framename = NULL, *title = NULL, *attributes = NULL;
+    gchar *framename = NULL, *title = NULL;
+    gboolean is_binary = FALSE, ok = FALSE;
 
-    p = (gchar *)buffer;
+    p = (gchar*)buffer;
     gmodel = gwy_graph_model_new();
     while ((line = gwy_str_next_line(&p))) {
         if (g_str_has_prefix(line, "[BeginOfItem]")) {
@@ -577,7 +551,8 @@ nst_read_2d(const gchar *buffer, guint channel)
             xarray = g_array_new(FALSE, TRUE, sizeof(gdouble));
             yarray = g_array_new(FALSE, TRUE, sizeof(gdouble));
             while (line && !gwy_strequal(line, "[EndOfItem]")) {
-                lineparts = g_strsplit(line, " ", 2);
+                if (!(lineparts = split_to_nparts(line, " ", 2)))
+                    goto fail;
                 x = g_ascii_strtod(lineparts[0], NULL);
                 g_array_append_val(xarray, x);
                 y = g_ascii_strtod(lineparts[1], NULL);
@@ -589,8 +564,8 @@ nst_read_2d(const gchar *buffer, guint channel)
             }
 
             if (numpoints) {
-                xdata = (gdouble *)g_malloc(numpoints * sizeof(gdouble));
-                ydata = (gdouble *)g_malloc(numpoints * sizeof(gdouble));
+                xdata = g_new(gdouble, numpoints);
+                ydata = g_new(gdouble, numpoints);
 
                 for (i = 0; i < numpoints; i++) {
                     xdata[i] = g_array_index(xarray, gdouble, i)
@@ -619,17 +594,17 @@ nst_read_2d(const gchar *buffer, guint channel)
             g_array_free(yarray, TRUE);
         }
         else if (g_str_has_prefix(line, "Name")) {
-            lineparts = g_strsplit(line, " ", 2);
+            if (!(lineparts = split_to_nparts(line, " ", 2)))
+                goto fail;
             if (framename)
                 g_free(framename);
-            framename = g_convert(lineparts[1], -1, "UTF-8", "cp1251",
-                                  NULL, NULL, NULL);
+            framename = decode_string(lineparts[1]);
             g_strfreev(lineparts);
         }
         else if (g_str_has_prefix(line, "XCUnit")) {
-            lineparts = g_strsplit(line, " ", 3);
-            unit = g_convert(lineparts[1], -1, "UTF-8", "cp1251",
-                             NULL, NULL, NULL);
+            if (!(lineparts = split_to_nparts(line, " ", 3)))
+                goto fail;
+            unit = decode_string(lineparts[1]);
             siunitx = gwy_si_unit_new_parse(unit, &power10x);
             g_free(unit);
             x = atoi(lineparts[2]);
@@ -638,9 +613,9 @@ nst_read_2d(const gchar *buffer, guint channel)
             g_strfreev(lineparts);
         }
         else if (g_str_has_prefix(line, "YCUnit")) {
-            lineparts = g_strsplit(line, " ", 3);
-            unit = g_convert(lineparts[1], -1, "UTF-8", "cp1251",
-                             NULL, NULL, NULL);
+            if (!(lineparts = split_to_nparts(line, " ", 3)))
+                goto fail;
+            unit = decode_string(lineparts[1]);
             siunity = gwy_si_unit_new_parse(unit, &power10y);
             g_free(unit);
             y = atoi(lineparts[2]);
@@ -649,58 +624,50 @@ nst_read_2d(const gchar *buffer, guint channel)
             g_strfreev(lineparts);
         }
         else if (g_str_has_prefix(line, "Attributes")) {
-            lineparts = g_strsplit(line, " ", 2);
-            attributes = g_strdup(lineparts[1]);
+            if (!(lineparts = split_to_nparts(line, " ", 2)))
+                goto fail;
+            attributes = g_strsplit(lineparts[1], "*_*|^_^", 1024);
             g_strfreev(lineparts);
-            lineparts = g_strsplit(attributes, "*_*|^_^", 1024);
-            g_free(attributes);
             linecur = 0;
-            while (lineparts[linecur]) {
-                if (g_str_has_prefix(lineparts[linecur], "Name")) {
-                    if ((!framename) && (lineparts[linecur+1]))
-                        framename = g_convert(lineparts[linecur+1],
-                                              -1, "UTF-8", "cp1251",
-                                              NULL, NULL, NULL);
+            while ((key = lineparts[linecur])
+                   && (value = lineparts[linecur+1])) {
+                key = decode_string(key);
+                value = decode_string(value);
+                gwy_debug("%s: %s", key, value);
+
+                if (g_str_has_prefix(key, "Name")) {
+                    if (!framename)
+                        framename = g_strdup(value);
                 }
-                else if (g_str_has_prefix(lineparts[linecur], "XLabel")) {
-                    if ((!xlabel) && (lineparts[linecur+1]))
-                        xlabel = g_convert(lineparts[linecur+1],
-                                           -1, "UTF-8", "cp1251",
-                                           NULL, NULL, NULL);
+                else if (g_str_has_prefix(key, "XLabel")) {
+                    if (!xlabel)
+                        xlabel = g_strdup(value);
                 }
-                else if (g_str_has_prefix(lineparts[linecur], "YLabel")) {
-                    if ((!ylabel) && (lineparts[linecur+1]))
-                        ylabel = g_convert(lineparts[linecur+1],
-                                           -1, "UTF-8", "cp1251",
-                                           NULL, NULL, NULL);
+                else if (g_str_has_prefix(key, "YLabel")) {
+                    if (!ylabel)
+                        ylabel = g_strdup(value);
                 }
-                else if (g_str_has_prefix(lineparts[linecur], "XUnit")) {
-                    if ((!siunitx) && (lineparts[linecur+1])) {
-                        unit = g_convert(lineparts[linecur+1], -1,
-                                         "UTF-8", "cp1251",
-                                         NULL, NULL, NULL);
-                        siunitx = gwy_si_unit_new_parse(unit,
-                                                        &power10x);
-                        g_free(unit);
-                    }
+                else if (g_str_has_prefix(key, "XUnit")) {
+                    if (!siunitx)
+                        siunitx = gwy_si_unit_new_parse(value, &power10x);
                 }
-                else if (g_str_has_prefix(lineparts[linecur], "YUnit")) {
-                    if ((!siunity) && (lineparts[linecur+1])) {
-                        unit = g_convert(lineparts[linecur+1], -1,
-                                         "UTF-8", "cp1251",
-                                         NULL, NULL, NULL);
-                        siunity = gwy_si_unit_new_parse(unit,
-                                                        &power10y);
-                        g_free(unit);
-                    }
+                else if (g_str_has_prefix(key, "YUnit")) {
+                    if (!siunity)
+                        siunity = gwy_si_unit_new_parse(value, &power10y);
+                }
+                else if (g_str_has_prefix(key, "RawBinData")) {
+                    is_binary = g_ascii_strcasecmp(value, "true");
                 }
 
-                linecur++;
+                g_free(key);
+                g_free(value);
+                linecur += 2;
             }
-            g_strfreev(lineparts);
+            g_strfreev(attributes);
         }
     }
 
+    ok = TRUE;
     if (!framename)
         title = g_strdup_printf("Graph %u", channel);
     else {
@@ -708,27 +675,28 @@ nst_read_2d(const gchar *buffer, guint channel)
         g_free(framename);
     }
     g_object_set(gmodel, "title", title, NULL);
-    g_free(title);
 
-    if (siunitx) {
+    if (siunitx)
         g_object_set(gmodel, "si-unit-x", siunitx, NULL);
-        g_object_unref(siunitx);
-    }
 
-    if (siunity) {
+    if (siunity)
         g_object_set(gmodel, "si-unit-y", siunity, NULL);
-        g_object_unref(siunity);
-    }
 
-    if (xlabel) {
+    if (xlabel)
         gwy_graph_model_set_axis_label(gmodel, GTK_POS_BOTTOM, xlabel);
-        g_free(xlabel);
-    }
 
-    if (ylabel) {
+    if (ylabel)
         gwy_graph_model_set_axis_label(gmodel, GTK_POS_LEFT, ylabel);
-        g_free(ylabel);
-    }
+
+fail:
+    g_free(title);
+    g_free(ylabel);
+    g_free(xlabel);
+    gwy_object_unref(siunitx);
+    gwy_object_unref(siunity);
+
+    if (!ok)
+        gwy_object_unref(gmodel);
 
     return gmodel;
 }
@@ -737,7 +705,7 @@ static GwyBrick*
 nst_read_4d(const gchar *buffer, gsize datasize,
             GwyContainer **metadata, gchar **title)
 {
-    GwyBrick *brick =  NULL, *brick_cropped = NULL;
+    GwyBrick *brick = NULL, *brick_cropped = NULL;
     GwyContainer *meta = NULL;
     GwyDataLine *calibration = NULL;
     NST4DHeader *header = NULL;
@@ -748,8 +716,8 @@ nst_read_4d(const gchar *buffer, gsize datasize,
     GwySIUnit *siunit;
     const guchar *p;
     gchar *pl;
-    gchar *line, *attributes, *key, *value;
-    gchar **lineparts;
+    gchar *line, *key, *value;
+    gchar **lineparts, **attributes;
     gint linecur;
 
     pl = (gchar *)buffer;
@@ -797,23 +765,39 @@ nst_read_4d(const gchar *buffer, gsize datasize,
 
             if (TopLeft == header->startpoint) {
                 gwy_debug("Top Left");
-                x0 = 0; xn = xres; dx = 1;
-                y0 = 0; yn = yres; dy = 1;
+                x0 = 0;
+                xn = xres;
+                dx = 1;
+                y0 = 0;
+                yn = yres;
+                dy = 1;
             }
             else if (TopRight == header->startpoint) {
                 gwy_debug("Top Right");
-                x0 = xres-1; xn = 0; dx = -1;
-                y0 = 0; yn = yres; dy = 1;
+                x0 = xres-1;
+                xn = 0;
+                dx = -1;
+                y0 = 0;
+                yn = yres;
+                dy = 1;
             }
             else if (BottomLeft == header->startpoint) {
                 gwy_debug("Bottom Left");
-                x0 = 0; xn = xres; dx = 1;
-                y0 = yres-1; yn = 0; dy = -1;
+                x0 = 0;
+                xn = xres;
+                dx = 1;
+                y0 = yres-1;
+                yn = 0;
+                dy = -1;
             }
             else if (BottomRight == header->startpoint) {
                 gwy_debug("Bottom Right");
-                x0 = xres-1; xn = 0; dx = -1;
-                y0 = yres-1; yn = 0; dy = -1;
+                x0 = xres-1;
+                xn = 0;
+                dx = -1;
+                y0 = yres-1;
+                yn = 0;
+                dy = -1;
             }
             else {
                 gwy_debug("Wrong startpoint");
@@ -836,8 +820,8 @@ nst_read_4d(const gchar *buffer, gsize datasize,
                             zcrop = npoints;
                         }
                         for (k = 0; k < MIN(zres, npoints); k++) {
-                            *(data + k * xres * yres + i * xres + j)
-                                               = gwy_get_gdouble_le(&p);
+                            data[k*xres*yres + i*xres + j]
+                                = gwy_get_gdouble_le(&p);
                         }
                         dataleft -= 8 * MIN(zres, npoints) + 4;
                     }
@@ -855,8 +839,8 @@ nst_read_4d(const gchar *buffer, gsize datasize,
                             zcrop = npoints;
                         }
                         for (k = 0; k < MIN(zres, npoints); k++) {
-                            *(data + k * xres * yres + j * xres + i)
-                                               = gwy_get_gdouble_le(&p);
+                            data[k*xres*yres + j*xres + i]
+                                = gwy_get_gdouble_le(&p);
                         }
                         dataleft -= 8 * MIN(zres, npoints) + 4;
                     }
@@ -869,32 +853,28 @@ nst_read_4d(const gchar *buffer, gsize datasize,
         }
         else if (g_str_has_prefix(line, "Attributes")) {
             meta = gwy_container_new();
-            lineparts = g_strsplit(line, " ", 2);
-            attributes = g_strdup(lineparts[1]);
+            if (!(lineparts = split_to_nparts(line, " ", 2)))
+                goto exit;
+            attributes = g_strsplit(lineparts[1], "*_*|^_^", 1024);
             g_strfreev(lineparts);
-            lineparts = g_strsplit(attributes, "*_*|^_^", 1024);
-            g_free(attributes);
             linecur = 0;
-            while (lineparts[linecur]) {
-                if (((linecur % 2) == 0) && (lineparts[linecur+1])) {
-                    key = g_convert(lineparts[linecur], -1,
-                                    "UTF-8", "cp1251",
-                                    NULL, NULL, NULL);
-                    value = g_convert(lineparts[linecur + 1], -1,
-                                      "UTF-8", "cp1251",
-                                      NULL, NULL, NULL);
-                    gwy_container_set_string_by_name(meta, key, value);
-                    g_free(key);
+            while ((key = lineparts[linecur])
+                   && (value = lineparts[linecur+1])) {
+                key = decode_string(key);
+                value = decode_string(value);
+                gwy_debug("%s: %s", key, value);
+                gwy_container_set_const_string_by_name(meta, key, value);
+
+                if (g_str_has_prefix(key, "Name")) {
+                    if (!*title)
+                        *title = g_strdup(value);
                 }
-                if (g_str_has_prefix(lineparts[linecur], "Name")) {
-                    if (((*title) == NULL) && (lineparts[linecur+1]))
-                        *title = g_convert(lineparts[linecur+1],
-                                           -1, "UTF-8", "cp1251",
-                                           NULL, NULL, NULL);
-                }
-                linecur++;
+
+                g_free(key);
+                g_free(value);
+                linecur += 2;
             }
-            g_strfreev(lineparts);
+            g_strfreev(attributes);
         }
     }
 
