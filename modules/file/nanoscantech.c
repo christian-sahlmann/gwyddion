@@ -351,6 +351,7 @@ nst_read_3d(const gchar *buffer, GwyContainer **metadata, gchar **title)
     GwyContainer *meta = NULL;
     GwySIUnit *siunitxy = NULL, *siunitz = NULL;
     gchar *p, *line, *attributes, *unit, *key, *value;
+    const guchar *pb;
     gchar **lineparts;
     gint x, y, xmax = 0, ymax = 0, i, j, xres = 0, yres = 0;
     gint power10xy = 1, power10z = 1;
@@ -384,14 +385,16 @@ nst_read_3d(const gchar *buffer, GwyContainer **metadata, gchar **title)
                 yres = ymax + 1;
             }
             else {
-                yres = gwy_get_guint32_le(&p);
+                pb = p;
+                yres = gwy_get_guint32_le(&pb);
                 for (i = 0; i < yres; i++) {
-                    xres = gwy_get_guint32_le(&p);
+                    xres = gwy_get_guint32_le(&pb);
                     for (j = 0; j < xres; j++) {
-                        z = gwy_get_gdouble_le(&p);
+                        z = gwy_get_gdouble_le(&pb);
                         g_array_append_val(dataarray, z);
                     }
                 }
+                p = (gchar *)pb;
             }
             gwy_debug("xres = %d, yres =  %d\n", xres, yres);
             break;
