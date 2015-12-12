@@ -110,6 +110,7 @@ static GwyContainer*  nst_load            (const gchar *filename,
                                            GwyRunType mode,
                                            GError **error);
 static GwyDataField*  nst_read_3d         (const gchar *buffer,
+                                           gsize size,
                                            GwyContainer **metadata,
                                            gchar **title);
 static GwyGraphModel* nst_read_2d         (const gchar *buffer,
@@ -124,7 +125,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NanoScanTech .nstdat files."),
     "Daniil Bratashov (dn2010@gmail.com)",
-    "0.10",
+    "0.11",
     "David Nečas (Yeti), Daniil Bratashov (dn2010), Antony Kikaxa",
     "2012",
 };
@@ -222,7 +223,7 @@ nst_load(const gchar *filename,
             if (gwy_strequal(line, "3d")) {
                 gwy_debug("3d: %u", channelno);
                 titlestr = NULL;
-                dfield = nst_read_3d(p, &metadata, &titlestr);
+                dfield = nst_read_3d(p, size, &metadata, &titlestr);
                 if (dfield) {
                     strkey = g_strdup_printf("/%d/data",
                                              channelno);
@@ -364,40 +365,72 @@ decode_string(const gchar *s)
 }
 
 static GwyDataField *
-nst_read_3d(const gchar *buffer, GwyContainer **metadata, gchar **title)
+nst_read_3d(const gchar *buffer, gsize size,
+            GwyContainer **metadata, gchar **title)
 {
     GwyDataField *dfield = NULL;
     GwyContainer *meta = NULL;
     GwySIUnit *siunitxy = NULL, *siunitz = NULL;
     gchar *p, *line, *unit, *key, *value;
     gchar **lineparts, **attributes;
-    gint x, y, xmax = 0, ymax = 0, i, j;
+    gint x, y, xmax = 0, ymax = 0, xres = 1, yres = 1, i, j;
     gint power10xy = 1, power10z = 1;
-    gdouble *data, z;
+    gdouble z;
     gdouble xscale = 1.0, yscale = 1.0;
     gdouble xoffset = 0.0, yoffset = 0.0;
     GArray *dataarray;
     gint linecur;
+    gboolean is_binary = FALSE;
+    const guchar *pb;
 
     p = (gchar*)buffer;
     dataarray = g_array_new(FALSE, TRUE, sizeof(gdouble));
     meta = gwy_container_new();
     while ((line = gwy_str_next_line(&p))) {
         if (gwy_strequal(line, "[BeginOfItem]")) {
-            while ((line = gwy_str_next_line(&p))) {
-                if (!(lineparts = split_to_nparts(line, " ", 3)))
+            if (is_binary) {
+                gwy_debug("reading as binary");
+                pb = p;
+
+                if (size - (pb - (const guchar*)buffer) < sizeof(gint32))
                     goto fail;
-                x = atoi(lineparts[0]);
-                y = atoi(lineparts[1]);
-                z = g_ascii_strtod(lineparts[2], NULL);
-                g_array_append_val(dataarray, z);
-                if (x > xmax)
-                    xmax = x;
-                if (y > ymax)
-                    ymax = y;
-                g_strfreev(lineparts);
+                yres = gwy_get_guint32_le(&pb);
+
+                for (i = 0; i < yres; i++) {
+                    if (size - (pb - (const guchar*)buffer) < sizeof(gint32))
+                        goto fail;
+                    xres = gwy_get_guint32_le(&pb);
+
+                    if (size - (pb - (const guchar*)buffer)
+                        < xres*sizeof(gdouble))
+                        goto fail;
+
+                    for (j = 0; j < xres; j++) {
+                        z = gwy_get_gdouble_le(&pb);
+                        g_array_append_val(dataarray, z);
+                    }
+                }
+                p = (gchar*)pb;
             }
-            gwy_debug("xmax = %d, ymax =  %d", xmax+1, ymax+1);
+            else {
+                gwy_debug("reading as text");
+                while ((line = gwy_str_next_line(&p))) {
+                    if (!(lineparts = split_to_nparts(line, " ", 3)))
+                        goto fail;
+                    x = atoi(lineparts[0]);
+                    y = atoi(lineparts[1]);
+                    z = g_ascii_strtod(lineparts[2], NULL);
+                    g_array_append_val(dataarray, z);
+                    if (x > xmax)
+                        xmax = x;
+                    if (y > ymax)
+                        ymax = y;
+                    g_strfreev(lineparts);
+                }
+                xres = xmax+1;
+                yres = ymax+1;
+            }
+            gwy_debug("xres = %d, yres =  %d", xres, yres);
             break;
         }
         else if (g_str_has_prefix(line, "XCUnit")) {
@@ -479,6 +512,9 @@ nst_read_3d(const gchar *buffer, GwyContainer **metadata, gchar **title)
                 else if (g_str_has_prefix(key, "YMax")) {
                     yscale = g_ascii_strtod(value, NULL) - yoffset;
                 }
+                else if (g_str_has_prefix(key, "RawBinData")) {
+                    is_binary = !g_ascii_strcasecmp(value, "true");
+                }
 
                 g_free(key);
                 g_free(value);
@@ -488,24 +524,21 @@ nst_read_3d(const gchar *buffer, GwyContainer **metadata, gchar **title)
         }
     }
 
+    if (dataarray->len != xres*yres)
+        goto fail;
+
     if (xscale <= 0.0)
         xscale = 1.0;
     if (yscale <= 0.0)
         yscale = 1.0;
-    dfield = gwy_data_field_new(xmax+1, ymax+1,
+    dfield = gwy_data_field_new(xres, yres,
                                 xscale*pow10(power10xy),
                                 yscale*pow10(power10xy), TRUE);
     gwy_data_field_set_xoffset(dfield, xoffset*pow10(power10xy));
     gwy_data_field_set_yoffset(dfield, yoffset*pow10(power10xy));
 
-    if ((dfield) && (dataarray->len == (xmax+1)*(ymax+1))) {
-        data = gwy_data_field_get_data(dfield);
-        for (j = 0; j <= ymax; j++)
-            for (i = 0; i <= xmax; i++)
-                *(data++) = g_array_index(dataarray,
-                                          gdouble, j*(xmax+1)+i)
-                                        * pow10(power10z);
-    }
+    memcpy(gwy_data_field_get_data(dfield), dataarray->data,
+           xres*yres*sizeof(gdouble));
 
     if (siunitxy)
         gwy_data_field_set_si_unit_xy(dfield, siunitxy);
@@ -536,7 +569,7 @@ nst_read_2d(const gchar *buffer, guint channel)
     GArray *xarray, *yarray;
     guint i, numpoints = 0, power10x = 1, power10y = 1;
     gchar *framename = NULL, *title = NULL;
-    gboolean is_binary = FALSE, ok = FALSE;
+    gboolean ok = FALSE;
 
     p = (gchar*)buffer;
     gmodel = gwy_graph_model_new();
@@ -654,9 +687,6 @@ nst_read_2d(const gchar *buffer, guint channel)
                 else if (g_str_has_prefix(key, "YUnit")) {
                     if (!siunity)
                         siunity = gwy_si_unit_new_parse(value, &power10y);
-                }
-                else if (g_str_has_prefix(key, "RawBinData")) {
-                    is_binary = g_ascii_strcasecmp(value, "true");
                 }
 
                 g_free(key);
