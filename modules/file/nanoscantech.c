@@ -575,9 +575,16 @@ nst_read_2d(const gchar *buffer, guint channel)
     while ((line = gwy_str_next_line(&p))) {
         if (g_str_has_prefix(line, "[BeginOfItem]")) {
             line = gwy_str_next_line(&p);
-            /* deprecated field check */
-            if (line && g_str_has_prefix(line, "Loved"))
+            /* deprecated fields check */
+            while (line && g_ascii_isalpha(line[0])) {
+                if (g_str_has_prefix(line, "Name") && !(framename)) {
+                    if ((lineparts = split_to_nparts(line, " ", 2))) {
+                        framename = g_strdup(lineparts[1]);
+                        g_strfreev(lineparts);
+                    }
+                }
                 line = gwy_str_next_line(&p);
+            }
 
             numpoints = 0;
             xarray = g_array_new(FALSE, TRUE, sizeof(gdouble));
