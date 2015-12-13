@@ -436,9 +436,9 @@ static void
 free_file(KeyenceFile *kfile)
 {
     g_free(kfile->assembly_files);
-    gwy_file_abandon_contents(kfile->buffer, kfile->size, NULL);
     g_free(kfile->char_strs.title);
     g_free(kfile->char_strs.lens_name);
+    gwy_file_abandon_contents(kfile->buffer, kfile->size, NULL);
     g_free(kfile);
 }
 
@@ -616,7 +616,7 @@ read_assembly_info(KeyenceFile *kfile,
     const guchar *p = kfile->buffer;
     gsize size = kfile->size;
     guint off = kfile->offset_table.assemble;
-    guint nfiles, i, j;
+    guint remsize, nfiles, i, j;
 
     gwy_debug("0x%08x", off);
     if (!off)
@@ -631,6 +631,7 @@ read_assembly_info(KeyenceFile *kfile,
     p += off;
 
     kfile->assembly_info.size = gwy_get_guint32_le(&p);
+    gwy_debug("assembly_info.size %u", kfile->assembly_info.size);
     kfile->assembly_info.file_type = gwy_get_guint16_le(&p);
     kfile->assembly_info.stage_type = gwy_get_guint16_le(&p);
     kfile->assembly_info.x_position = gwy_get_guint32_le(&p);
@@ -641,15 +642,23 @@ read_assembly_info(KeyenceFile *kfile,
     kfile->assembly_conds.thin_out = gwy_get_guint16_le(&p);
     kfile->assembly_conds.count_x = gwy_get_guint16_le(&p);
     kfile->assembly_conds.count_y = gwy_get_guint16_le(&p);
+    gwy_debug("assembly counts %u, %u",
+              kfile->assembly_conds.count_x, kfile->assembly_conds.count_y);
 
     nfiles = kfile->assembly_conds.count_x * kfile->assembly_conds.count_y;
     if (!nfiles)
         return TRUE;
 
-    if ((size - KEYENCE_ASSEMBLY_HEADERS_SIZE - off)/nfiles
-        < KEYENCE_ASSEMBLY_FILE_SIZE) {
-        err_TRUNCATED(error);
-        return FALSE;
+    remsize = size - KEYENCE_ASSEMBLY_HEADERS_SIZE - off;
+    gwy_debug("remaining size %u", remsize);
+    if (remsize/nfiles < KEYENCE_ASSEMBLY_FILE_SIZE) {
+        /* Apparently there can be large counts but no actual assembly data.
+         * I do not understand but we to not use the infomation for anything
+         * anyway. */
+        kfile->assembly_conds.count_x = 0;
+        kfile->assembly_conds.count_y = 0;
+        kfile->assembly_nfiles = 0;
+        return TRUE;
     }
 
     kfile->assembly_nfiles = nfiles;
