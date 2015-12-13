@@ -661,8 +661,8 @@ nst_read_2d(const gchar *buffer, guint channel)
             attributes = g_strsplit(lineparts[1], "*_*|^_^", 1024);
             g_strfreev(lineparts);
             linecur = 0;
-            while ((key = lineparts[linecur])
-                   && (value = lineparts[linecur+1])) {
+            while ((key = attributes[linecur])
+                   && (value = attributes[linecur+1])) {
                 key = decode_string(key);
                 value = decode_string(value);
                 gwy_debug("%s: %s", key, value);
