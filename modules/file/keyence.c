@@ -314,7 +314,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Keyence VK4 files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2015",
 };

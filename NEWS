@@ -6,6 +6,8 @@ Libraries:
   operations are done with full-resolution surfaces.  Its "reduced-size"
   property was deprecated and it has no effect.
 - libgwyddion: gwy_debug() adds timestamp to the messages (where available).
+- libprocess: Rare incorrect memory reallocation in Delaunay triangulation was
+  fixed.
 
 Modules:
 - DM3: Support for Digital Micrograph DM4 files was added.
@@ -17,6 +19,8 @@ Modules:
   the channels bit mask was fixed.
 - Limit Range: Setting range from fixed colour mapping range was fixed.
 - NanoScanTech: Loading from raw binary data blocks was implemented.
+- Keyence: File loading no longer fails when assembly information seems
+  missing or too short as the module does not actually need it.
 - All tools: Sensitivity of Apply buttons and auxiliary controls was corrected
   so that can be activated only when there is actually an active image.
 - Processing modules with selections in the dialogue: Critical messages when
