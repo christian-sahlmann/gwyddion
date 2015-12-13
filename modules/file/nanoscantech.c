@@ -20,7 +20,6 @@
 
 /*
  * TODO: assuming cp1251 as 8bit encoding,
- *       use Attributes field to load 3d xyz labels,
  *       4d xy ranges/units/labels;
  *       4d data loading improvements for jumping mode
  */
@@ -888,8 +887,8 @@ nst_read_4d(const gchar *buffer, gsize datasize,
             attributes = g_strsplit(lineparts[1], "*_*|^_^", 1024);
             g_strfreev(lineparts);
             linecur = 0;
-            while ((key = lineparts[linecur])
-                   && (value = lineparts[linecur+1])) {
+            while ((key = attributes[linecur])
+                   && (value = attributes[linecur+1])) {
                 key = decode_string(key);
                 value = decode_string(value);
                 gwy_debug("%s: %s", key, value);
