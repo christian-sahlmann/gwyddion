@@ -91,7 +91,9 @@ enum {
     RAW_ASCII_PARSE_ERROR = 1,
 };
 
-typedef gdouble (*RawStrtodFunc)(const gchar *nptr, gchar **endptr);
+typedef gdouble (*RawStrtodFunc)(const gchar *nptr,
+                                 const gchar *missingval,
+                                 gchar **endptr);
 
 typedef struct {
     gboolean takeover;
@@ -223,7 +225,11 @@ static gboolean      rawfile_read_ascii            (RawFileArgs *args,
                                                     guchar *buffer,
                                                     gdouble *data,
                                                     GError **error);
+static gdouble       gwy_ascii_strtod              (const gchar *nptr,
+                                                    const gchar *missingval,
+                                                    gchar **endptr);
 static gdouble       gwy_comma_strtod              (const gchar *nptr,
+                                                    const gchar *missingval,
                                                     gchar **endptr);
 static void          rawfile_sanitize_args         (RawFileArgs *args);
 static void          rawfile_load_args             (GwyContainer *settings,
@@ -239,7 +245,7 @@ static GwyModuleInfo module_info = {
     N_("Imports raw data files, both ASCII and binary, according to "
        "user-specified format."),
     "Yeti <yeti@gwyddion.net>",
-    "2.9",
+    "2.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -277,7 +283,9 @@ static const gchar byteswap_key[]    = "/module/rawfile/byteswap";
 static const gchar decomma_key[]     = "/module/rawfile/decomma";
 static const gchar delimiter_key[]   = "/module/rawfile/delimiter";
 static const gchar format_key[]      = "/module/rawfile/format";
+static const gchar havemissing_key[] = "/module/rawfile/havemissing";
 static const gchar lineoffset_key[]  = "/module/rawfile/lineoffset";
+static const gchar missingval_key[]  = "/module/rawfile/missingval";
 static const gchar offset_key[]      = "/module/rawfile/offset";
 static const gchar preset_key[]      = "/module/rawfile/preset";
 static const gchar revbyte_key[]     = "/module/rawfile/revbyte";
@@ -285,8 +293,8 @@ static const gchar revsample_key[]   = "/module/rawfile/revsample";
 static const gchar rowskip_key[]     = "/module/rawfile/rowskip";
 static const gchar sign_key[]        = "/module/rawfile/sign";
 static const gchar size_key[]        = "/module/rawfile/size";
-static const gchar skip_key[]        = "/module/rawfile/skip";
 static const gchar skipfields_key[]  = "/module/rawfile/skipfields";
+static const gchar skip_key[]        = "/module/rawfile/skip";
 static const gchar takeover_key[]    = "/module/rawfile/takeover";
 static const gchar xreal_key[]       = "/module/rawfile/xreal";
 static const gchar xres_key[]        = "/module/rawfile/xres";
@@ -397,6 +405,7 @@ rawfile_load(const gchar *filename,
     g_free(args.p.delimiter);
     g_free(args.p.xyunit);
     g_free(args.p.zunit);
+    g_free(args.p.missingvalue);
 
     return data;
 }
@@ -1079,6 +1088,18 @@ rawfile_dialog_preset_page(RawFileArgs *args,
     return vbox;
 }
 
+static gboolean
+missingval_is_number(const gchar *missingval)
+{
+    gchar *end;
+
+    g_strtod(missingval, &end);
+    if (end == missingval)
+        return FALSE;
+
+    return TRUE;
+}
+
 static GwyDataField*
 rawfile_read_data_field(RawFileControls *controls,
                         RawFileArgs *args,
@@ -1132,16 +1153,17 @@ rawfile_read_data_field(RawFileControls *controls,
         break;
     }
 
-    if (args->p.havemissing) {
+    if (args->p.havemissing && missingval_is_number(args->p.missingvalue)) {
         guint i, n = args->p.xres * args->p.yres;
         gdouble *d = gwy_data_field_get_data(dfield);
-        gdouble mv = args->p.missingvalue;
+        gdouble mv = g_strtod(args->p.missingvalue, NULL);
 
         /* This works for integral missingvalue, which is the most useful case.
          * Floating point data can use actual NaNs and do not need replacement
-         * of special values. */
+         * of special values.  Use double-negation in case someone explicitly
+         * specifies NaN as the missing value. */
         for (i = 0; i < n; i++) {
-            if (d[i] == mv)
+            if (!(d[i] != mv))
                 d[i] = NAN;
         }
     }
@@ -1719,8 +1741,7 @@ update_dialog_controls(RawFileControls *controls)
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->havemissing),
                                  args->p.havemissing);
 
-    g_snprintf(buf, sizeof(buf), "%.8g", args->p.missingvalue);
-    gtk_entry_set_text(GTK_ENTRY(controls->missingvalue), buf);
+    gtk_entry_set_text(GTK_ENTRY(controls->missingvalue), args->p.missingvalue);
     gtk_widget_set_sensitive(controls->missingvalue, args->p.havemissing);
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->takeover),
@@ -1835,6 +1856,7 @@ update_dialog_values(RawFileControls *controls)
     gwy_debug("controls %p", controls);
     args = controls->args;
     g_free(args->p.delimiter);
+    g_free(args->p.missingvalue);
 
     args->p.xres
         = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(controls->xres));
@@ -1859,8 +1881,7 @@ update_dialog_values(RawFileControls *controls)
     args->p.havemissing
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->havemissing));
     args->p.missingvalue
-        = g_strtod(gtk_entry_get_text(GTK_ENTRY((controls->missingvalue))),
-                   NULL);
+        = g_strdup(gtk_entry_get_text(GTK_ENTRY((controls->missingvalue))));
 
     args->p.offset
         = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(controls->offset));
@@ -2255,6 +2276,7 @@ rawfile_read_ascii(RawFileArgs *args,
                    GError **error)
 {
     RawStrtodFunc strtod_func;
+    const gchar *mv = args->p.missingvalue;
     guint i, j, n;
     gint cdelim = '\0';
     gint delimtype;
@@ -2267,7 +2289,10 @@ rawfile_read_ascii(RawFileArgs *args,
     if (args->p.decomma)
         strtod_func = &gwy_comma_strtod;
     else
-        strtod_func = &g_ascii_strtod;
+        strtod_func = &gwy_ascii_strtod;
+
+    if (!args->p.havemissing || missingval_is_number(mv))
+        mv = NULL;
 
     /* skip lines */
     for (i = 0; i < args->p.lineoffset; i++) {
@@ -2341,7 +2366,7 @@ rawfile_read_ascii(RawFileArgs *args,
         switch (delimtype) {
             case 0:
             for (i = 0; i < args->p.xres; i++) {
-                x = strtod_func(buffer, (char**)&end);
+                x = strtod_func(buffer, mv, (char**)&end);
                 if (end == buffer) {
                     g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
                                 _("Garbage `%.16s' in row %u, column %u"),
@@ -2355,7 +2380,7 @@ rawfile_read_ascii(RawFileArgs *args,
 
             case 1:
             for (i = 0; i < args->p.xres; i++) {
-                x = strtod_func(buffer, (char**)&end);
+                x = strtod_func(buffer, mv, (char**)&end);
                 if (end == buffer) {
                     g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
                                 _("Garbage `%.16s' in row %u, column %u"),
@@ -2381,7 +2406,7 @@ rawfile_read_ascii(RawFileArgs *args,
 
             default:
             for (i = 0; i < args->p.xres; i++) {
-                x = strtod_func(buffer, (char**)&end);
+                x = strtod_func(buffer, mv, (char**)&end);
                 if (end == buffer) {
                     g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
                                 _("Garbage `%.16s' in row %u, column %u"),
@@ -2411,17 +2436,51 @@ rawfile_read_ascii(RawFileArgs *args,
 }
 
 static gdouble
-gwy_comma_strtod(const gchar *nptr, gchar **endptr)
+gwy_ascii_strtod(const gchar *nptr, const gchar *missingval, gchar **endptr)
+{
+    if (missingval) {
+        gint len = strlen(missingval);
+        const gchar *p = nptr;
+
+        while (g_ascii_isspace(*p))
+            p++;
+
+        if (strncmp(p, missingval, len) == 0) {
+            if (endptr)
+                *endptr = (gchar*)p + len;
+            return NAN;
+        }
+    }
+
+    return g_ascii_strtod(nptr, endptr);
+}
+
+static gdouble
+gwy_comma_strtod(const gchar *nptr, const gchar *missingval, gchar **endptr)
 {
     gchar *fail_pos;
     gdouble val;
     struct lconv *locale_data;
     const char *decimal_point;
-    int decimal_point_len;
+    gint decimal_point_len;
     const char *p, *decimal_point_pos;
     const char *end = NULL;     /* Silence gcc */
 
     g_return_val_if_fail(nptr != NULL, 0);
+
+    if (missingval) {
+        gint len = strlen(missingval);
+
+        p = nptr;
+        while (g_ascii_isspace(*p))
+            p++;
+
+        if (strncmp(p, missingval, len) == 0) {
+            if (endptr)
+                *endptr = (gchar*)p + len;
+            return NAN;
+        }
+    }
 
     fail_pos = NULL;
 
@@ -2617,6 +2676,10 @@ rawfile_load_args(GwyContainer *settings,
                                      (const guchar**)&data->xyunit);
     gwy_container_gis_string_by_name(settings, zunit_key,
                                      (const guchar**)&data->zunit);
+    gwy_container_gis_boolean_by_name(settings, havemissing_key,
+                                      &data->havemissing);
+    gwy_container_gis_string_by_name(settings, missingval_key,
+                                     (const guchar**)&data->missingvalue);
 
     data->xyunit = g_strdup(data->xyunit);
     data->zunit = g_strdup(data->zunit);
@@ -2643,6 +2706,7 @@ rawfile_load_args(GwyContainer *settings,
                                     (const guchar**)&data->delimiter);
 
     data->delimiter = g_strdup(data->delimiter);
+    data->missingvalue = g_strdup(data->missingvalue);
 
     rawfile_sanitize_args(args);
 }
@@ -2657,8 +2721,8 @@ rawfile_save_args(GwyContainer *settings,
     gwy_container_set_boolean_by_name(settings, xyreseq_key, args->xyreseq);
     gwy_container_set_boolean_by_name(settings, xymeasureeq_key,
                                       args->xymeasureeq);
-    gwy_container_set_string_by_name(settings, preset_key,
-                                     g_strdup(args->preset->str));
+    gwy_container_set_const_string_by_name(settings, preset_key,
+                                           args->preset->str);
 
     gwy_container_set_enum_by_name(settings, format_key, data->format);
 
@@ -2670,10 +2734,12 @@ rawfile_save_args(GwyContainer *settings,
     gwy_container_set_double_by_name(settings, xreal_key, data->xreal);
     gwy_container_set_double_by_name(settings, yreal_key, data->yreal);
     gwy_container_set_double_by_name(settings, zscale_key, data->zscale);
-    gwy_container_set_string_by_name(settings, xyunit_key,
-                                     g_strdup(data->xyunit));
-    gwy_container_set_string_by_name(settings, zunit_key,
-                                     g_strdup(data->zunit));
+    gwy_container_set_const_string_by_name(settings, xyunit_key, data->xyunit);
+    gwy_container_set_const_string_by_name(settings, zunit_key, data->zunit);
+    gwy_container_set_boolean_by_name(settings, havemissing_key,
+                                      data->havemissing);
+    gwy_container_set_const_string_by_name(settings, missingval_key,
+                                           data->missingvalue);
 
     /* Binary */
     gwy_container_set_enum_by_name(settings, builtin_key, data->builtin);
@@ -2690,8 +2756,8 @@ rawfile_save_args(GwyContainer *settings,
     gwy_container_set_boolean_by_name(settings, decomma_key, data->decomma);
     gwy_container_set_int32_by_name(settings, lineoffset_key, data->lineoffset);
     gwy_container_set_int32_by_name(settings, skipfields_key, data->skipfields);
-    gwy_container_set_string_by_name(settings, delimiter_key,
-                                     g_strdup(data->delimiter));
+    gwy_container_set_const_string_by_name(settings, delimiter_key,
+                                           data->delimiter);
 }
 
 static void
@@ -2746,6 +2812,7 @@ rawfile_import_1x_presets(GwyContainer *settings)
         g_free(args.p.delimiter);
         g_free(args.p.xyunit);
         g_free(args.p.zunit);
+        g_free(args.p.missingvalue);
 
         filename = gwy_resource_build_filename(GWY_RESOURCE(preset));
         fh = gwy_fopen(filename, "w");

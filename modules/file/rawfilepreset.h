@@ -26,6 +26,8 @@
 #define GWY_IS_RAW_FILE_PRESET_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_RAW_FILE_PRESET))
 #define GWY_RAW_FILE_PRESET_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_RAW_FILE_PRESET, GwyRawFilePresetClass))
 
+#define DEFAULT_MISSINGVALUE "-32768.0"
+
 /* Predefined common binary formats */
 typedef enum {
     RAW_NONE = 0,
@@ -70,7 +72,7 @@ typedef struct {
 
     /* Missing values. */
     gboolean havemissing;
-    gdouble missingvalue;
+    gchar *missingvalue;
 
     /* Binary */
     RawFileBuiltin builtin;
@@ -118,7 +120,7 @@ static const GwyRawFilePresetData rawfilepresetdata_default = {
     100.0, 100.0, -6,               /* physical dimensions */
     1.0, -6,                        /* z-scale */
     NULL, NULL,                     /* units */
-    FALSE, -32767.0,                /* missing values */
+    FALSE, NULL,                    /* missing values */
     RAW_UNSIGNED_BYTE, 0, 8, 0, 0,  /* binary parameters */
     FALSE, FALSE, FALSE, 0,         /* binary options */
     0, NULL, 0, FALSE,              /* text parameters */
@@ -166,6 +168,7 @@ gwy_raw_file_preset_finalize(GObject *object)
     g_free(preset->data.delimiter);
     g_free(preset->data.xyunit);
     g_free(preset->data.zunit);
+    g_free(preset->data.missingvalue);
 
     G_OBJECT_CLASS(gwy_raw_file_preset_parent_class)->finalize(object);
 }
@@ -192,6 +195,9 @@ gwy_raw_file_preset_data_sanitize(GwyRawFilePresetData *data)
         data->xyunit = g_strdup("");
     if (!data->zunit)
         data->zunit = g_strdup("");
+    if (!data->missingvalue)
+        data->missingvalue = g_strdup(DEFAULT_MISSINGVALUE);
+
     data->decomma = !!data->decomma;
     data->builtin = MIN(data->builtin, RAW_LAST-1);
     if (data->builtin) {
@@ -218,12 +224,16 @@ gwy_raw_file_preset_data_copy(const GwyRawFilePresetData *src,
     g_free(dest->delimiter);
     g_free(dest->xyunit);
     g_free(dest->zunit);
+    g_free(dest->missingvalue);
     *dest = *src;
     dest->delimiter = g_strdup(dest->delimiter
                                ? dest->delimiter
                                : (const guchar*)"");
     dest->xyunit = g_strdup(dest->xyunit ? dest->xyunit : "");
     dest->zunit = g_strdup(dest->zunit ? dest->zunit : "");
+    dest->missingvalue = g_strdup(dest->missingvalue
+                                  ? dest->missingvalue
+                                  : DEFAULT_MISSINGVALUE);
 }
 
 static GwyRawFilePreset*
@@ -290,15 +300,13 @@ gwy_raw_file_preset_dump(GwyResource *resource,
         g_free(s);
     }
 
-    if (data->havemissing) {
-        /* Recycle the zscale string. */
-        g_ascii_dtostr(zscale, sizeof(zscale), data->missingvalue);
-        g_string_append_printf(str,
-                               "havemissing %d\n"
-                               "missingvalue %s\n",
-                               data->havemissing,
-                               zscale);
-    }
+    s = g_strescape(data->missingvalue, NULL);
+    g_string_append_printf(str,
+                           "havemissing %d\n"
+                           "missingvalue \"%s\"\n",
+                           data->havemissing,
+                           s);
+    g_free(s);
 
     /* Binary */
     g_string_append_printf(str,
@@ -336,6 +344,21 @@ gwy_raw_file_preset_dump(GwyResource *resource,
     }
 }
 
+static void
+unquote_string(gchar *quoted, gchar **s)
+{
+    guint len;
+
+    len = strlen(quoted);
+    if (len < 2 || quoted[0] != '"' || quoted[len-1] != '"')
+        return;
+
+    quoted[len-1] = '\0';
+    quoted++;
+    g_free(*s);
+    *s = g_strcompress(quoted);
+}
+
 static GwyResource*
 gwy_raw_file_preset_parse(const gchar *text,
                           gboolean is_const)
@@ -344,7 +367,6 @@ gwy_raw_file_preset_parse(const gchar *text,
     GwyRawFilePreset *preset = NULL;
     GwyRawFilePresetClass *klass;
     gchar *str, *p, *line, *key, *value;
-    guint len;
 
     g_return_val_if_fail(text, NULL);
     klass = g_type_class_peek(GWY_TYPE_RAW_FILE_PRESET);
@@ -385,29 +407,15 @@ gwy_raw_file_preset_parse(const gchar *text,
             data.yreal = g_ascii_strtod(value, NULL);
         else if (gwy_strequal(key, "zscale"))
             data.zscale = g_ascii_strtod(value, NULL);
-        else if (gwy_strequal(key, "xyunit")) {
-            len = strlen(value);
-            if (value[0] == '"' && len >= 2 && value[len-1] == '"') {
-                value[len-1] = '\0';
-                value++;
-                g_free(data.xyunit);
-                data.xyunit = g_strcompress(value);
-            }
-        }
-        else if (gwy_strequal(key, "zunit")) {
-            len = strlen(value);
-            if (value[0] == '"' && len >= 2 && value[len-1] == '"') {
-                value[len-1] = '\0';
-                value++;
-                g_free(data.zunit);
-                data.zunit = g_strcompress(value);
-            }
-        }
+        else if (gwy_strequal(key, "xyunit"))
+            unquote_string(value, &data.xyunit);
+        else if (gwy_strequal(key, "zunit"))
+            unquote_string(value, &data.zunit);
         /* Missing values. */
         else if (gwy_strequal(key, "havemissing"))
             data.havemissing = atoi(value);
         else if (gwy_strequal(key, "missingvalue"))
-            data.missingvalue = g_ascii_strtod(value, NULL);
+            unquote_string(value, &data.missingvalue);
         /* Binary */
         else if (gwy_strequal(key, "builtin"))
             data.builtin = atoi(value);
@@ -434,15 +442,8 @@ gwy_raw_file_preset_parse(const gchar *text,
             data.skipfields = atoi(value);
         else if (gwy_strequal(key, "decomma"))
             data.decomma = atoi(value);
-        else if (gwy_strequal(key, "delimiter")) {
-            len = strlen(value);
-            if (value[0] == '"' && len >= 2 && value[len-1] == '"') {
-                value[len-1] = '\0';
-                value++;
-                g_free(data.delimiter);
-                data.delimiter = g_strcompress(value);
-            }
-        }
+        else if (gwy_strequal(key, "delimiter"))
+            unquote_string(value, (gchar**)&data.delimiter);
         else
             g_warning("Unknown field `%s'.", key);
     }
