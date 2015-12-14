@@ -193,6 +193,7 @@ gwy_app_channel_title_fall_back(GwyContainer *data,
 guint
 gwy_app_channel_remove_bad_data(GwyDataField *dfield, GwyDataField *mfield)
 {
+    GwySIUnit *funit, *munit;
     gdouble *data = gwy_data_field_get_data(dfield);
     gdouble *mdata = gwy_data_field_get_data(mfield);
     gdouble *drow, *mrow;
@@ -214,6 +215,12 @@ gwy_app_channel_remove_bad_data(GwyDataField *dfield, GwyDataField *mfield)
             mrow[j] = 1.0 - mrow[j];
         }
     }
+
+    gwy_data_field_set_xreal(mfield, gwy_data_field_get_xreal(dfield));
+    gwy_data_field_set_yreal(mfield, gwy_data_field_get_yreal(dfield));
+    funit = gwy_data_field_get_si_unit_xy(dfield);
+    munit = gwy_data_field_get_si_unit_xy(mfield);
+    gwy_serializable_clone(G_OBJECT(funit), G_OBJECT(munit));
 
     gwy_debug("mcount = %u", mcount);
 
