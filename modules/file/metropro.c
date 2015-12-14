@@ -864,6 +864,7 @@ fill_data_fields(MProFile *mprofile,
                                         mprofile->ac_height,
                                         xreal, yreal,
                                         FALSE);
+            set_units(dfield, mprofile, "");
             vpmask = gwy_data_field_new_alike(dfield, FALSE);
             gwy_data_field_fill(vpmask, 1.0);
             data = gwy_data_field_get_data(dfield);
@@ -882,7 +883,6 @@ fill_data_fields(MProFile *mprofile,
                 }
             }
 
-            set_units(dfield, mprofile, "");
             if (!gwy_app_channel_remove_bad_data(dfield, vpmask))
                 gwy_object_unref(vpmask);
 
