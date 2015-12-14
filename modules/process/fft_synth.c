@@ -185,7 +185,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates random surfaces using spectral synthesis."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -302,9 +302,10 @@ run_noninteractive(FFTSynthArgs *args,
 
         if (data) {
             newid = gwy_app_data_browser_add_data_field(out_re, data, TRUE);
-            gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
-                                    GWY_DATA_ITEM_GRADIENT,
-                                    0);
+            if (oldid != -1)
+                gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
+                                        GWY_DATA_ITEM_GRADIENT,
+                                        0);
         }
         else {
             newid = 0;
