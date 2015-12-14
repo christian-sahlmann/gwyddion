@@ -8,6 +8,8 @@ Libraries:
 - libgwyddion: gwy_debug() adds timestamp to the messages (where available).
 - libprocess: Rare incorrect memory reallocation in Delaunay triangulation was
   fixed.
+- libgwyapp: gwy_app_channel_remove_bad_data() now ensures the mask field has
+  the same lateral dimensions and units as the data field.
 
 Modules:
 - DM3: Support for Digital Micrograph DM4 files was added.
@@ -25,6 +27,10 @@ Modules:
   so that can be activated only when there is actually an active image.
 - Processing modules with selections in the dialogue: Critical messages when
   the dialogues were displayed were fixed.
+- Spectral synthesis: Possible critical message when re-running the function
+  after deleting a channel was fixed.
+- Rawfile: Replacement value for missing data can be given as text for text
+  formats, e.g. ‘BAD’ or ‘NODATA’.
 
 Other:
 - Broken configure detection of libpython on Fedora 23 (and possibly elsewhere)
