@@ -31,10 +31,13 @@ Modules:
   after deleting a channel was fixed.
 - Rawfile: Replacement value for missing data can be given as text for text
   formats, e.g. ‘BAD’ or ‘NODATA’.
+- Nanoscope: Support for 32bit raw data format used since 9.2 was added.
 
 Other:
 - Broken configure detection of libpython on Fedora 23 (and possibly elsewhere)
   was fixed.
+- A script generating MS Visual Studio solution files (and other files) was
+  added as utils/gen-gwyddion-vs-sln.py.
 
 
 2.43 (2015-11-25)
