@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004-2012 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004-2015 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -75,9 +75,12 @@
 typedef enum {
     NANOSCOPE_FILE_TYPE_NONE = 0,
     NANOSCOPE_FILE_TYPE_BIN,
+    NANOSCOPE_FILE_TYPE_BIN32,
     NANOSCOPE_FILE_TYPE_TXT,
     NANOSCOPE_FILE_TYPE_FORCE_BIN,
+    NANOSCOPE_FILE_TYPE_FORCE_BIN32,
     NANOSCOPE_FILE_TYPE_FORCE_VOLUME,
+    NANOSCOPE_FILE_TYPE_FORCE_VOLUME32,
     NANOSCOPE_FILE_TYPE_BROKEN
 } NanoscopeFileType;
 
@@ -165,6 +168,7 @@ static gboolean        read_binary_data       (gint n,
                                                gdouble *data,
                                                gchar *buffer,
                                                gint bpp,
+                                               gint qbpp,
                                                GError **error);
 static GHashTable*     read_hash              (gchar **buffer,
                                                GError **error);
@@ -203,7 +207,7 @@ static GwyModuleInfo module_info = {
     N_("Imports Veeco (Digital Instruments) Nanoscope data files, "
        "version 3 or newer."),
     "Yeti <yeti@gwyddion.net>",
-    "0.33",
+    "0.34",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -314,6 +318,23 @@ nanoscope_load(const gchar *filename,
         val = g_hash_table_lookup(hash, "Start context");
         if (val && gwy_strequal(val->hard_value_str, "FVOL"))
             file_type = NANOSCOPE_FILE_TYPE_FORCE_VOLUME;
+
+        /* In version 9.2 all data magically became 32bit. */
+        self = g_hash_table_lookup(hash, "#self");
+        if (self
+            && gwy_strequal(self, "File list")
+            && (val = g_hash_table_lookup(hash, "Version"))) {
+            gulong version = strtol(val->hard_value_str, NULL, 16);
+            if (version >= 0x09200000) {
+                gwy_debug("version is 0x%lx, assuming 32bit data", version);
+                if (file_type == NANOSCOPE_FILE_TYPE_BIN)
+                    file_type = NANOSCOPE_FILE_TYPE_BIN32;
+                else if (file_type == NANOSCOPE_FILE_TYPE_FORCE_BIN)
+                    file_type = NANOSCOPE_FILE_TYPE_FORCE_BIN32;
+                else if (file_type == NANOSCOPE_FILE_TYPE_FORCE_VOLUME)
+                    file_type = NANOSCOPE_FILE_TYPE_FORCE_VOLUME32;
+            }
+        }
     }
 
     if (err) {
@@ -375,7 +396,8 @@ nanoscope_load(const gchar *filename,
             if (!gwy_strequal(self, "Ciao force image list"))
                 continue;
 
-            ndata->brick = hash_to_brick(hash, forcelist, scanlist, equipmentlist,
+            ndata->brick = hash_to_brick(hash, forcelist, scanlist,
+                                         equipmentlist,
                                          file_type,
                                          size, buffer,
                                          &ndata->second_brick,
@@ -595,7 +617,7 @@ hash_to_data_field(GHashTable *hash,
     GwySIUnit *unitz, *unitxy;
     gchar *s, *end;
     gchar un[5];
-    gint xres, yres, bpp, offset, size, power10;
+    gint xres, yres, bpp, qbpp, offset, size, power10;
     gdouble xreal, yreal, q;
     gdouble *data;
     gboolean size_ok, use_global, nonsquare_aspect;
@@ -610,8 +632,14 @@ hash_to_data_field(GHashTable *hash,
     val = g_hash_table_lookup(hash, "Number of lines");
     yres = GWY_ROUND(val->hard_value);
 
+    /* Bytes/pixel determines the scaling factor, not actual raw data type.
+     * This is what Bruker people say. */
     val = g_hash_table_lookup(hash, "Bytes/pixel");
-    bpp = val ? GWY_ROUND(val->hard_value) : 2;
+    qbpp = val ? GWY_ROUND(val->hard_value) : 2;
+
+    bpp = 2;
+    if (file_type == NANOSCOPE_FILE_TYPE_BIN32)
+        bpp = 4;
 
     nonsquare_aspect = has_nonsquare_aspect(hash);
     gwy_debug("xres %d, yres %d", xres, yres);
@@ -655,7 +683,8 @@ hash_to_data_field(GHashTable *hash,
         gyres = xres;
 
     offset = size = 0;
-    if (file_type == NANOSCOPE_FILE_TYPE_BIN) {
+    if (file_type == NANOSCOPE_FILE_TYPE_BIN
+        || file_type == NANOSCOPE_FILE_TYPE_BIN32) {
         val = g_hash_table_lookup(hash, "Data offset");
         offset = GWY_ROUND(val->hard_value);
 
@@ -742,14 +771,16 @@ hash_to_data_field(GHashTable *hash,
     data = gwy_data_field_get_data(dfield);
     switch (file_type) {
         case NANOSCOPE_FILE_TYPE_TXT:
-        if (!read_text_data(xres*yres, data, p, bpp, error)) {
+        if (!read_text_data(xres*yres, data, p, qbpp, error)) {
             g_object_unref(dfield);
             return NULL;
         }
         break;
 
         case NANOSCOPE_FILE_TYPE_BIN:
-        if (!read_binary_data(xres*yres, data, buffer + offset, bpp, error)) {
+        case NANOSCOPE_FILE_TYPE_BIN32:
+        if (!read_binary_data(xres*yres, data, buffer + offset, bpp, qbpp,
+                              error)) {
             g_object_unref(dfield);
             return NULL;
         }
@@ -775,7 +806,7 @@ hash_to_brick(GHashTable *hash,
               GHashTable *forcelist,
               GHashTable *scanlist,
               G_GNUC_UNUSED GHashTable *scannerlist,
-              G_GNUC_UNUSED NanoscopeFileType file_type,
+              NanoscopeFileType file_type,
               guint bufsize,
               gchar *buffer,
               GwyBrick **second_brick,
@@ -784,8 +815,7 @@ hash_to_brick(GHashTable *hash,
     GwyBrick *brick;
     NanoscopeValue *val;
     gdouble *adata, *rdata;
-    guint xres, yres, zres, offset, length, bpp, i, j, l, st;
-    gint16 *d;
+    guint xres, yres, zres, offset, length, bpp, qbpp, i, j, l, st;
     gdouble q;
     gdouble *storage;
     gdouble newl;
@@ -827,12 +857,14 @@ hash_to_brick(GHashTable *hash,
     xres = GWY_ROUND(val->hard_value);
     gwy_debug("force curves per line %u", xres);
 
+    /* Bytes/pixel determines the scaling factor, not actual raw data type.
+     * This is what Bruker people say. */
     val = g_hash_table_lookup(hash, "Bytes/pixel");
-    bpp = val ? GWY_ROUND(val->hard_value) : 2;
-    if (bpp != 2) {
-        err_UNSUPPORTED(error, "Bytes/pixel");
-        return NULL;
-    }
+    qbpp = val ? GWY_ROUND(val->hard_value) : 2;
+
+    bpp = 2;
+    if (file_type == NANOSCOPE_FILE_TYPE_FORCE_VOLUME32)
+        bpp = 4;
 
     /* FIXME: It is not clear how we should get yres.  Just divide the total
      * data size with all the known sizes and hope for the best. */
@@ -846,7 +878,6 @@ hash_to_brick(GHashTable *hash,
     if (err_SIZE_MISMATCH(error, offset + length, bufsize, FALSE))
         return NULL;
 
-
     brick = gwy_brick_new(xres, yres, zres, xres, yres, zres, 0);
     adata = gwy_brick_get_data(brick);
 
@@ -855,45 +886,64 @@ hash_to_brick(GHashTable *hash,
     *second_brick = gwy_brick_new(xres, yres, zres, xres, yres, zres, 0);
     rdata = gwy_brick_get_data(*second_brick);
 
-
     //gwy_debug("brick size expected to be %dx%dx%d (two bricks loaded), data length %d, expected %d", xres, yres, zres, length, xres*yres*zres*bpp*2);
 
-    q = pow(1.0/256.0, bpp);
-    d = (gint16*)(buffer + offset);
+    q = pow(1.0/256.0, qbpp);
 
     storage = (gdouble*) malloc((xres*yres*zres*2 + 100) * sizeof(gdouble));
     st = 0;
 
-    for (i = 0; i < yres; i++) {
-        for (j = 0; j < xres; j++) {
-            /* Approach curves */
-            for (l = 0; l < zres; l++) {
-                storage[st++] = q*GINT16_FROM_LE(*d);
-                d++;
+    if (bpp == 4) {
+        gint32 *d = (gint32*)(buffer + offset);
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++) {
+                /* Approach curves */
+                for (l = 0; l < zres; l++) {
+                    storage[st++] = q*GINT32_FROM_LE(*d);
+                    d++;
+                }
+                /* Retract curves */
+                for (l = 0; l < zres; l++) {
+                    storage[st + zres-l-1] = q*GINT32_FROM_LE(*d);
+                    d++;
+                }
+                st += zres;
             }
-            /* Retract curves */
-            for (l = 0; l < zres; l++) {
-                storage[st + zres-l-1] = q*GINT16_FROM_LE(*d);
-                d++;
+        }
+    }
+    else {
+        gint16 *d = (gint16*)(buffer + offset);
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++) {
+                /* Approach curves */
+                for (l = 0; l < zres; l++) {
+                    storage[st++] = q*GINT16_FROM_LE(*d);
+                    d++;
+                }
+                /* Retract curves */
+                for (l = 0; l < zres; l++) {
+                    storage[st + zres-l-1] = q*GINT16_FROM_LE(*d);
+                    d++;
+                }
+                st += zres;
             }
-            st += zres;
         }
     }
 
-
     if (continuous) {
         st = 47; //ad hoc fix, this should be detected automaticallz
-    } else st = 0;
-   
-    /*split data again with this strange shift*/ 
+    } else
+        st = 0;
+
+    /*split data again with this strange shift*/
     for (i = 0; i < yres; i++) {
         for (j = 0; j < xres; j++) {
-            // Approach curves 
+            // Approach curves
             for (l = 0; l < zres; l++) {
                 adata[(l*yres + i)*xres + j] = storage[st++];
                 if (adata[(l*yres + i)*xres + j]<-0.45) adata[(l*yres + i)*xres + j] = storage[st-2]; //strange PF/QNM value?
             }
-            // Retract curves 
+            // Retract curves
             for (l = 0; l < zres; l++) {
                 rdata[((zres-l-1)*yres + i)*xres + j] = storage[st++];
             }
@@ -902,8 +952,8 @@ hash_to_brick(GHashTable *hash,
 
     if (continuous) {
         /*remove sine distortion from the data*/
-        abuf = (gdouble *)g_malloc(zres*sizeof(gdouble));
-        rbuf = (gdouble *)g_malloc(zres*sizeof(gdouble));
+        abuf = g_new(gdouble, zres);
+        rbuf = g_new(gdouble, zres);
 
         for (i = 0; i < yres; i++) {
             for (j = 0; j < xres; j++) {
@@ -1085,7 +1135,7 @@ hash_to_curve(GHashTable *hash,
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
     GwySIUnit *unitz, *unitx;
-    gint xres, bpp, offset, size;
+    gint xres, bpp, qbpp, offset, size;
     gdouble xreal, xoff, q = 1.0;
     gdouble *data;
     gboolean size_ok, use_global, convert_to_force = FALSE;
@@ -1112,8 +1162,14 @@ hash_to_curve(GHashTable *hash,
     val = g_hash_table_lookup(hash, "Samps/line");
     xres = GWY_ROUND(val->hard_value);
 
+    /* Bytes/pixel determines the scaling factor, not actual raw data type.
+     * This is what Bruker people say. */
     val = g_hash_table_lookup(hash, "Bytes/pixel");
-    bpp = val ? GWY_ROUND(val->hard_value) : 2;
+    qbpp = val ? GWY_ROUND(val->hard_value) : 2;
+
+    bpp = 2;
+    if (file_type == NANOSCOPE_FILE_TYPE_BIN32)
+        bpp = 4;
 
     /* scan size */
     offset = size = 0;
@@ -1136,7 +1192,8 @@ hash_to_curve(GHashTable *hash,
             use_global = TRUE;
         }
 
-        gwy_debug("size=%u, xres=%u, gxres=%u, bpp=%u", (guint)size, xres, gxres, bpp);
+        gwy_debug("size=%u, xres=%u, gxres=%u, bpp=%u",
+                  (guint)size, xres, gxres, bpp);
 
         /* If they don't match exactly, try whether they at least fit inside */
         if (!size_ok && size > bpp*MAX(2*xres, 2*gxres)) {
@@ -1217,7 +1274,7 @@ hash_to_curve(GHashTable *hash,
     data = gwy_data_line_get_data(dline);
     switch (file_type) {
         case NANOSCOPE_FILE_TYPE_FORCE_BIN:
-        if (!read_binary_data(xres, data, buffer + offset, bpp, error)) {
+        if (!read_binary_data(xres, data, buffer + offset, bpp, qbpp, error)) {
             g_object_unref(dline);
             g_object_unref(gmodel);
             return NULL;
@@ -1235,7 +1292,7 @@ hash_to_curve(GHashTable *hash,
         gwy_graph_model_add_curve(gmodel, gcmodel);
         g_object_unref(gcmodel);
 
-        if (!read_binary_data(xres, data, buffer + offset + bpp*xres, bpp,
+        if (!read_binary_data(xres, data, buffer + offset + bpp*xres, bpp, qbpp,
                               error)) {
             g_object_unref(dline);
             g_object_unref(gmodel);
@@ -1491,7 +1548,8 @@ read_text_data(guint n, gdouble *data,
 static gboolean
 read_binary_data(gint n, gdouble *data,
                  gchar *buffer,
-                 gint bpp,
+                 gint bpp,   /* actual type */
+                 gint qbpp,  /* type determining the factor, may be different */
                  GError **error)
 {
     static const GwyRawDataType rawtypes[] = {
@@ -1504,7 +1562,7 @@ read_binary_data(gint n, gdouble *data,
     }
     gwy_convert_raw_data(buffer, n, 1,
                          rawtypes[bpp], GWY_BYTE_ORDER_LITTLE_ENDIAN,
-                         data, pow(1.0/256.0, bpp), 0.0);
+                         data, pow(1.0/256.0, qbpp), 0.0);
     return TRUE;
 }
 
