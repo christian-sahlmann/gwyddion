@@ -1,6 +1,9 @@
 #!/usr/bin/python
 #coding: utf-8
 
+# Generate Gwyddion Visual Studio Solution 
+# Created for Visual Studio 2015
+
 from __future__ import division
 import sys, glob, os, time, xml.dom.minidom, subprocess, platform, uuid, shutil, string, argparse
 from xml.etree.ElementTree import Element, SubElement
@@ -237,7 +240,7 @@ def parse_makefile(root, fullpath):
                     for item in items:
                         projname = item.replace('.la','')
                         projname = projname.replace('-', '_')
-                        
+                                                  
                         projname = expand_variable(projname, content)                           
                         if (projname == ''): continue                                                
                                 
@@ -565,12 +568,12 @@ def save_xml(element, filename):
 # path          - file path i.e. './gwyddion/libgwyddion'
 # project_name  - project name i.e. 'libgwyddion2'
 # returns adapted project path
-# output example: ./vs2015/gwyddion/libgwyddion 
-#                 ./vs2015/gwyddion/app/gwyddion
-#                 ./vs2015/gwyddion/modules/file                   
+# output example: ./msvc2015/gwyddion/libgwyddion 
+#                 ./msvc2015/gwyddion/app/gwyddion
+#                 ./msvc2015/gwyddion/modules/file                   
 
 def get_project_path(path, project_name):
-    result = os.path.join('vs2015', path)    
+    result = os.path.join('msvc2015', path)    
     if(   project_name == 'libgwymodule2' or project_name == 'libgwydgets2'
        or project_name == 'libgwydraw2'   or project_name == 'libgwyprocess2'
        or project_name == 'libgwyddion2'):
@@ -586,7 +589,7 @@ def get_project_path(path, project_name):
 # sources       - list of .c files
 # headers       - list of .h files
 # definitions   - list of .def files (generally only one file) 
-# output example: ./vs2015/gwyddion/libgwyddion/libgwyddion2.vcxproj
+# output example: ./msvc2015/gwyddion/libgwyddion/libgwyddion2.vcxproj
 
 def create_vcxproj(path, name, sources, headers, definitions, configuration_type): 
     newpath = os.path.join('$(SolutionDir)../../', path)
@@ -877,9 +880,9 @@ def create_vcxproj(path, name, sources, headers, definitions, configuration_type
     Import = SubElement(Project, "Import", Project="$(VCTargetsPath)\Microsoft.Cpp.targets")
     ImportGroup = SubElement(Project, "ImportGroup", Label="ExtensionTargets")
     
-    #filename = os.getcwd() + '//vs2015//' + path + '//' + name + '.vcxproj'    
-    #filename = 'vs2015/' + path + '/' + name + '.vcxproj'
-    #filename = os.path.join('vs2015', path, name + '.vcxproj')
+    #filename = os.getcwd() + '//msvc2015//' + path + '//' + name + '.vcxproj'    
+    #filename = 'msvc2015/' + path + '/' + name + '.vcxproj'
+    #filename = os.path.join('msvc2015', path, name + '.vcxproj')
     filename = get_project_path(path, name)
     filename = os.path.join(filename, name + '.vcxproj')
     filename = os.path.abspath(filename)
@@ -899,7 +902,7 @@ def create_vcxproj(path, name, sources, headers, definitions, configuration_type
 # sources       - list of .c files
 # headers       - list of .h files
 # definitions   - list of .def files (generally only one file) 
-# output example: ./vs2015/gwyddion/libgwyddion/libgwyddion2.vcxproj.filters 
+# output example: ./msvc2015/gwyddion/libgwyddion/libgwyddion2.vcxproj.filters 
 
 def create_vcxproj_filters(path, name, sources, headers, definitions):
     # add Project
@@ -939,9 +942,9 @@ def create_vcxproj_filters(path, name, sources, headers, definitions):
         Filter.text = "Source Files"
     ItemGroup = SubElement(Project, "ItemGroup");
         
-    #filename = os.getcwd() + '//vs2015//' + path + '//' + name + '.vcxproj.filters'
-    #filename = 'vs2015/' + path + '/' + name + '.vcxproj.filters'
-    #filename = os.path.join('vs2015', path, name + '.vcxproj.filters')
+    #filename = os.getcwd() + '//msvc2015//' + path + '//' + name + '.vcxproj.filters'
+    #filename = 'msvc2015/' + path + '/' + name + '.vcxproj.filters'
+    #filename = os.path.join('msvc2015', path, name + '.vcxproj.filters')
     filename = get_project_path(path, name)
     filename = os.path.join(filename, name + '.vcxproj.filters')
     filename = os.path.abspath(filename)
@@ -1049,7 +1052,7 @@ def copy_def_files():
         src_filename = os.path.abspath(src_filename)
         
         if(os.path.exists(src_filename) == True):
-            #dst_filename1 = os.path.join('vs2015', path)
+            #dst_filename1 = os.path.join('msvc2015', path)
             #dst_filename1 = os.path.join(dst_filename1, definition_name)
             #dst_filename1 = os.path.abspath(dst_filename1)        
         
@@ -1105,8 +1108,8 @@ def create_sln(gwyddion_root_folder):
     #indent_string = '    '    
     nested_projects_block = ''        
     
-    #filename = os.path.join('vs2015', 'gwyddion', 'gwyddion.sln')
-    filename = os.path.join('vs2015', gwyddion_root_folder, gwyddion_root_folder + '.sln')
+    #filename = os.path.join('msvc2015', 'gwyddion', 'gwyddion.sln')
+    filename = os.path.join('msvc2015', gwyddion_root_folder, gwyddion_root_folder + '.sln')
     filename = os.path.abspath(filename)
     create_path(filename)
     fh = file(filename, 'w')            
@@ -1139,7 +1142,7 @@ def create_sln(gwyddion_root_folder):
         filename_rel = get_project_path(path, name)
         filename_rel = os.path.join(filename_rel, name + '.vcxproj')
         filename_rel = os.path.normpath(filename_rel)  
-        filename_rel = filename_rel.lstrip('vs2015')
+        filename_rel = filename_rel.lstrip('msvc2015')
         filename_rel = filename_rel.lstrip(os.path.sep) 
         #filename_rel = filename_rel.lstrip('gwyddion')
         filename_rel = filename_rel.lstrip(gwyddion_root_folder)
@@ -1372,13 +1375,13 @@ epilog = "This script implements 5 steps:\n\
 Step 1: Create project (.vcxproj) and filters (.vcxproj.filters) files.\n\
 Step 2: Create solution (.sln).\n\
 Step 3: Create definition (.def) files.\n\
-        Linux machines only.\n\
+        Linux machine only.\n\
 Step 4: Copy definition (.def) files to 'generated-files-def' folder.\n\
-        Linux machines only.\n\
+        Linux machine only.\n\
 Step 5: Copy generated (.c, .h) files to 'generated-files-ch' folder.\n\
-        Linux machines only.\n\
-Steps 3, 4, 5: Compile Gwyddion first on Linux machine to generate .c .h files (run './autogen.sh' and 'make').\n")
-arg_parser.add_argument('gwyddion_root_folder', metavar='folder', help="name of 'gwyddion' root folder containing 'Makefile.am' files. Root folder must be in the same folder as this script.",
+        Linux machine only.\n\
+Steps 3, 4, 5: Compile Gwyddion on Linux machine first to generate .c .h files (run './autogen.sh' and 'make').\n")
+arg_parser.add_argument('gwyddion_root_folder', metavar='folder', help="name of 'gwyddion' source code root folder containing 'Makefile.am' files. 'gwyddion' folder must be in the same folder as this script.",
 )
 args = arg_parser.parse_args()
 
