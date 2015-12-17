@@ -32,6 +32,7 @@ Modules:
 - Rawfile: Replacement value for missing data can be given as text for text
   formats, e.g. ‘BAD’ or ‘NODATA’.
 - Nanoscope: Support for 32bit raw data format used since 9.2 was added.
+- JEOL: Support for Phase channels was added.
 
 Other:
 - Broken configure detection of libpython on Fedora 23 (and possibly elsewhere)

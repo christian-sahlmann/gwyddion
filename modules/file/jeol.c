@@ -536,7 +536,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports JEOL data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.7",
+    "0.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -881,6 +881,12 @@ jeol_read_data_field(const guchar *buffer,
         z0 = Nanoampere*header->z0;
         q = (header->z255 - header->z0)/65535.0*Nanoampere;
         unitstr = "A";
+        break;
+
+        case JEOL_MEASUREMENT_SIGNAL_PHASE:
+        z0 = header->z0;
+        q = (header->z255 - header->z0)/65535.0;
+        unitstr = "deg";
         break;
 
         /* We just guess it's always voltage.  At least sometimes it is. */
