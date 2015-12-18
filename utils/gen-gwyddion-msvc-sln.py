@@ -604,6 +604,7 @@ def create_vcxproj(path, name, sources, headers, definitions, configuration_type
     if(name == 'gwy' or name == 'pygwy'):        
         path_yeti = path_yeti.rstrip(os.path.sep + path_yeti.split(os.path.sep)[-1])    
     post_build_event_modules_run_dir = os.path.join('lib', path_yeti) + os.path.sep
+    post_build_event_modules_run_dir = post_build_event_modules_run_dir.replace(os.path.sep, '\\')   
        
     # define include directories
     #IncludeDirs = r"$(SolutionDir)gwyddion\..\..\..\gwyddion;$(GTK_DIR)include;$(GTK_DIR)include\atk-1.0;$(GTK_DIR)include\cairo;$(GTK_DIR)include\freetype2;$(GTK_DIR)include\gdk-pixbuf-2.0;$(GTK_DIR)include\glib-2.0;$(GTK_DIR)include\gtk-2.0;$(GTK_DIR)\lib\gtk-2.0\include;$(GTK_DIR)include\gtkglext-1.0;$(GTK_DIR)lib\glib-2.0\include;$(GTK_DIR)include\pango-1.0;$(GTKGLEXT_DIR)gtkglext-1.0\include;$(IncludePath)"
@@ -769,10 +770,10 @@ def create_vcxproj(path, name, sources, headers, definitions, configuration_type
         #Command.text = modules_copy_command_string.format(modules_run_subdirs[modules_name_list.index(name)][1])
         # produce non-consistency in source and install paths due yetti
         # 1. 'tools' -> 'tool'
-        path_yeti = path.replace('tools', 'tool')
+        #path_yeti = path.replace('tools', 'tool')
         # 2. strip last subfolder from path
-        if(name == 'gwy' or name == 'pygwy'):        
-            path_yeti = path_yeti.rstrip(os.path.sep + path_yeti.split(os.path.sep)[-1])
+        #if(name == 'gwy' or name == 'pygwy'):        
+        #    path_yeti = path_yeti.rstrip(os.path.sep + path_yeti.split(os.path.sep)[-1])
         Command.text = modules_copy_command_string.format(post_build_event_modules_run_dir)
         
     ItemDefinitionGroup = SubElement(Project, "ItemDefinitionGroup", Condition="'$(Configuration)|$(Platform)'=='Debug|x64'")
