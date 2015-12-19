@@ -197,7 +197,7 @@ function make_dists() {
   make dist
   if test -s $pkgname-$version.tar.xz; then
     if which rpmbuild >&/dev/null; then
-      TAR_OPTIONS=--wildcards CCACHE_DISABLE=1\
+      TAR_OPTIONS=--wildcards CCACHE_DISABLE=1 \
           rpmbuild -ta --with kde4-thumbnailer --clean $pkgname-$version.tar.xz \
         && touch .releaseme
     else
