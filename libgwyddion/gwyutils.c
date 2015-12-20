@@ -56,7 +56,7 @@ static HMODULE dll_handle;
 BOOL WINAPI
 DllMain (HINSTANCE hinstDLL,
          DWORD     fdwReason,
-         LPVOID    lpvReserved)
+         G_GNUC_UNUSED LPVOID    lpvReserved)
 {
     if (fdwReason == DLL_PROCESS_ATTACH)
         dll_handle = (HMODULE)hinstDLL;
