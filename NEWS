@@ -35,6 +35,7 @@ Modules:
 - JEOL: Support for Phase channels was added.
 
 Other:
+- MS Windows packages include OpenEXR support now.
 - Broken configure detection of libpython on Fedora 23 (and possibly elsewhere)
   was fixed.
 - A script generating MS Visual Studio solution files (and other files) was
