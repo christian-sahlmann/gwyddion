@@ -11,7 +11,8 @@ gtkdocdirs=(/usr /usr/local /opt/gnome $installprefix $HOME)
 
 source $HOME/.bashrc
 export LC_ALL=C
-export CFLAGS="-ggdb -O2"
+unset CFLAGS
+unset LDFLAGS
 PATH="$HOME/bin:$PATH"
 
 # =====[ subroutines ]=======================================================
@@ -197,8 +198,6 @@ function make_dists() {
   make dist
   if test -s $pkgname-$version.tar.xz; then
     if which rpmbuild >&/dev/null; then
-      unset CFLAGS
-      unset LDFLAGS
       TAR_OPTIONS=--wildcards CCACHE_DISABLE=1 \
           rpmbuild -ta --with kde4-thumbnailer --clean $pkgname-$version.tar.xz \
         && touch .releaseme
