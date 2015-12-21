@@ -224,7 +224,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports raw XYZ data files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -572,6 +572,13 @@ construct_physical_dims(RawXYZControls *controls,
 {
     RawXYZArgs *args = controls->args;
     GtkWidget *spin, *label, *button;
+    GwySIUnit *unit;
+    gint xypow10;
+    gdouble q;
+
+    unit = gwy_si_unit_new_parse(controls->args->xy_units, &xypow10);
+    g_object_unref(unit);
+    q = pow10(xypow10);
 
     gtk_table_attach(table, gwy_label_new_header(_("Physical Dimensions")),
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -581,13 +588,15 @@ construct_physical_dims(RawXYZControls *controls,
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    controls->xmin = gtk_adjustment_new(args->xmin, -1000.0, 1000.0, 1, 10, 0);
+    controls->xmin = gtk_adjustment_new(args->xmin/q,
+                                        -1000.0, 1000.0, 1, 10, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->xmin), 0, 3);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
     gtk_table_attach(table, spin, 1, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_table_attach(table, gtk_label_new("–"), 2, 3, row, row+1, 0, 0, 0, 0);
-    controls->xmax = gtk_adjustment_new(args->xmax, -1000.0, 1000.0, 1, 10, 0);
+    controls->xmax = gtk_adjustment_new(args->xmax/q,
+                                        -1000.0, 1000.0, 1, 10, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->xmax), 0, 3);
     gtk_table_attach(table, spin, 3, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -597,13 +606,15 @@ construct_physical_dims(RawXYZControls *controls,
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    controls->ymin = gtk_adjustment_new(args->ymin, -1000.0, 1000.0, 1, 10, 0);
+    controls->ymin = gtk_adjustment_new(args->ymin/q,
+                                        -1000.0, 1000.0, 1, 10, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->ymin), 0, 3);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
     gtk_table_attach(table, spin, 1, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_table_attach(table, gtk_label_new("–"), 2, 3, row, row+1, 0, 0, 0, 0);
-    controls->ymax = gtk_adjustment_new(args->ymax, -1000.0, 1000.0, 1, 10, 0);
+    controls->ymax = gtk_adjustment_new(args->ymax/q,
+                                        -1000.0, 1000.0, 1, 10, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->ymax), 0, 3);
     gtk_table_attach(table, spin, 3, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -1352,12 +1363,12 @@ coords_to_grid_index(guint xres,
 {
     guint ix, iy;
 
-    ix = (gint)floor(x/step);
-    if (G_UNLIKELY(ix == xres))
+    ix = (guint)floor(x/step);
+    if (G_UNLIKELY(ix >= xres))
         ix--;
 
-    iy = (gint)floor(y/step);
-    if (G_UNLIKELY(iy == yres))
+    iy = (guint)floor(y/step);
+    if (G_UNLIKELY(iy >= yres))
         iy--;
 
     return iy*xres + ix;
@@ -1490,8 +1501,6 @@ analyse_points(RawXYZFile *rfile,
         else if (pt->z > rfile->zmax)
             rfile->zmax = pt->z;
     }
-    gwy_debug("%g %g :: %g %g",
-              rfile->xmin, rfile->xmax, rfile->ymin, rfile->ymax);
 
     if (check_regular_grid(rfile))
         return;
@@ -1532,6 +1541,7 @@ analyse_points(RawXYZFile *rfile,
     }
 
     index_accumulate(cell_index, xres*yres);
+    g_assert(cell_index[xres*yres] == npoints);
     index_rewind(cell_index, xres*yres);
     newpoints = g_new(GwyTriangulationPointXYZ, npoints);
 
@@ -1543,6 +1553,8 @@ analyse_points(RawXYZFile *rfile,
         newpoints[cell_index[ig]] = *pt;
         cell_index[ig]++;
     }
+    g_assert(cell_index[xres*yres] == npoints);
+    index_rewind(cell_index, xres*yres);
 
     /* Find groups of identical (i.e. closer than epsrel) points we need to
      * merge.  We collapse all merged points to that with the lowest id.
@@ -1568,14 +1580,14 @@ analyse_points(RawXYZFile *rfile,
              * no-op. */
             while (oldpos < pointqueue.pos) {
                 gdouble x, y;
-                guint ix, iy;
+                gint ix, iy;
 
                 pt = newpoints + pointqueue.id[oldpos];
                 x = (pt->x - rfile->xmin)/step;
-                ix = (guint)floor(x);
+                ix = (gint)floor(x);
                 x -= ix;
                 y = (pt->y - rfile->ymin)/step;
-                iy = (guint)floor(y);
+                iy = (gint)floor(y);
                 y -= iy;
 
                 if (ix < xres && iy < yres)
@@ -1601,7 +1613,7 @@ analyse_points(RawXYZFile *rfile,
             while (cellqueue.pos < cellqueue.len) {
                 j = cellqueue.id[cellqueue.pos];
                 for (ii = cell_index[j]; ii < cell_index[j+1]; ii++) {
-                    if (newpoints[ii].z != G_MAXDOUBLE)
+                    if (ii != i && newpoints[ii].z != G_MAXDOUBLE)
                         work_queue_add(&pointqueue, ii);
                 }
                 cellqueue.pos++;
@@ -1624,6 +1636,7 @@ analyse_points(RawXYZFile *rfile,
                 avg.z += pt->z;
                 pt->z = G_MAXDOUBLE;
             }
+
             avg.x /= pointqueue.pos;
             avg.y /= pointqueue.pos;
             avg.z /= pointqueue.pos;
