@@ -19,7 +19,7 @@ projs = {}
 # value = UUID
 solution_folders = {} 
 
-include_dirs_win32 = ['$(SolutionDir)..\\..\\$(GwyddionFolder)',
+include_dirs_win32 = ['$(SolutionDir)..\\',
 '$(GTK_DIR)Win32\\include', '$(GTK_DIR)Win32\\include\\atk-1.0', '$(GTK_DIR)Win32\\include\\cairo', 
 '$(GTK_DIR)Win32\\include\\freetype2', '$(GTK_DIR)Win32\\include\\gdk-pixbuf-2.0',
 '$(GTK_DIR)Win32\\include\\glib-2.0', '$(GTK_DIR)Win32\\include\\gtk-2.0', 
@@ -28,7 +28,7 @@ include_dirs_win32 = ['$(SolutionDir)..\\..\\$(GwyddionFolder)',
 '$(CFITSIO_DIR)Win32', '$(LIBXML_DIR)include', '$(LIBICONV_DIR)include',
 '$(PYTHON_DIR)Win32\\include', '$(PYTHON_DIR)Win32\\include\\pygtk-2.0', '$(ZLIB_DIR)contrib\\minizip', '$(IncludePath)']
 
-include_dirs_x64 = ['$(SolutionDir)..\\..\\$(GwyddionFolder)',
+include_dirs_x64 = ['$(SolutionDir)..\\',
 '$(GTK_DIR)x64\\include', '$(GTK_DIR)x64\\include\\atk-1.0', '$(GTK_DIR)x64\\include\\cairo', 
 '$(GTK_DIR)x64\\include\\freetype2', '$(GTK_DIR)x64\\include\\gdk-pixbuf-2.0',
 '$(GTK_DIR)x64\\include\\glib-2.0', '$(GTK_DIR)x64\\include\\gtk-2.0', 
@@ -58,14 +58,14 @@ libs_x64 = ['cairo.lib', 'cfitsio.lib', 'gdk-win32-2.0.lib', 'gdk_pixbuf-2.0.lib
 'pangoft2-1.0.lib', 'python27.lib', 'zlibwapi.lib', '%(AdditionalDependencies)']
 
 generated_files_by_autotools = [
-'gwyddion//config.h', 'gwyddion//gwyconfig.h', 
-'gwyddion//app//gwyapptypes.h', 'gwyddion//app//gwyapptypes.c', 'gwyddion//app//authors.h', 
-'gwyddion//libgwyddion//gwyddiontypes.h', 'gwyddion//libgwyddion//gwyddiontypes.c', 'gwyddion//libgwyddion//gwyversion.h', 
-'gwyddion//libgwydgets//gwydgettypes.h', 'gwyddion//libgwydgets//gwydgettypes.c', 
-'gwyddion//libgwydgets//gwydgetmarshals.h', 'gwyddion//libgwydgets//gwydgetmarshals.c', 
-'gwyddion//libgwymodule//gwymoduletypes.h', 'gwyddion//libgwymodule//gwymoduletypes.c', 
-'gwyddion//libprocess//gwyprocesstypes.h', 'gwyddion//libprocess//gwyprocesstypes.c',
-'gwyddion//modules//pygwy//pygwywrap.c']
+'config.h', 'gwyconfig.h', 
+'app//gwyapptypes.h', 'app//gwyapptypes.c', 'app//authors.h', 
+'libgwyddion//gwyddiontypes.h', 'libgwyddion//gwyddiontypes.c', 'libgwyddion//gwyversion.h', 
+'libgwydgets//gwydgettypes.h', 'libgwydgets//gwydgettypes.c', 
+'libgwydgets//gwydgetmarshals.h', 'libgwydgets//gwydgetmarshals.c', 
+'libgwymodule//gwymoduletypes.h', 'libgwymodule//gwymoduletypes.c', 
+'libprocess//gwyprocesstypes.h', 'libprocess//gwyprocesstypes.c',
+'modules//pygwy//pygwywrap.c']
 
 # exclude conditional compilation projects
 excluded_projects_win32 = ['apedaxfile', 'hdrimage', 'nanoobserver', 'nanoscantech', 'opengps', 'sensofarx', 'spmxfile']
@@ -98,13 +98,13 @@ post_build_event_files_to_copy_win32 = [
 'xcopy /y /d "$(LIBXML_DIR)bin\\libxml2.dll" "$(OutDir)"',
 'xcopy /y /d "$(GTKGLEXT_DIR)Win32\\bin\\libgtkglext-win32-1.0.dll" "$(OutDir)"',
 'xcopy /y /d "$(GTKGLEXT_DIR)Win32\\bin\\libgdkglext-win32-1.0.dll" "$(OutDir)"',
-'xcopy /y /d "$(SolutionDir)..\\..\\$(GwyddionFolder)\\data\\glmaterials\\*." "$(OutDir)share\\gwyddion\\glmaterials\\"',
-'xcopy /y /d "$(SolutionDir)..\\..\\$(GwyddionFolder)\\data\\gradients\\*." "$(OutDir)share\\gwyddion\\gradients\\"',
-'xcopy /y /d "$(SolutionDir)..\\..\\$(GwyddionFolder)\\data\\gradients\\Gwyddion.net" "$(OutDir)share\\gwyddion\\gradients\\"',
-'xcopy /y /d "$(SolutionDir)..\\..\\$(GwyddionFolder)\\pixmaps\\*.ico" "$(OutDir)share\\gwyddion\\pixmaps\\"',
-'xcopy /y /d "$(SolutionDir)..\\..\\$(GwyddionFolder)\\pixmaps\\*.png" "$(OutDir)share\\gwyddion\\pixmaps\\"',
-'xcopy /y /d "$(SolutionDir)..\\..\\$(GwyddionFolder)\\app\\toolbox.xml" "$(OutDir)share\\gwyddion\\ui\\"',
-'xcopy /y /d "$(SolutionDir)..\\..\\$(GwyddionFolder)\\utils\\user-guide-modules" "$(OutDir)share\\gwyddion\\"'
+'xcopy /y /d "$(SolutionDir)..\\data\\glmaterials\\*." "$(OutDir)share\\gwyddion\\glmaterials\\"',
+'xcopy /y /d "$(SolutionDir)..\\data\\gradients\\*." "$(OutDir)share\\gwyddion\\gradients\\"',
+'xcopy /y /d "$(SolutionDir)..\\data\\gradients\\Gwyddion.net" "$(OutDir)share\\gwyddion\\gradients\\"',
+'xcopy /y /d "$(SolutionDir)..\\pixmaps\\*.ico" "$(OutDir)share\\gwyddion\\pixmaps\\"',
+'xcopy /y /d "$(SolutionDir)..\\pixmaps\\*.png" "$(OutDir)share\\gwyddion\\pixmaps\\"',
+'xcopy /y /d "$(SolutionDir)..\\app\\toolbox.xml" "$(OutDir)share\\gwyddion\\ui\\"',
+'xcopy /y /d "$(SolutionDir)..\\utils\\user-guide-modules" "$(OutDir)share\\gwyddion\\"'
 ]
 
 post_build_event_files_to_copy_x64 = [
@@ -136,17 +136,14 @@ post_build_event_files_to_copy_x64 = [
 'xcopy /y /d "$(GTKGLEXT_DIR)x64\\bin\\libgtkglext-win32-1.0.dll" "$(OutDir)"',
 'xcopy /y /d "$(GTKGLEXT_DIR)x64\\bin\\libgdkglext-win32-1.0.dll" "$(OutDir)"',
 'xcopy /y /d "$(ZLIB_DIR)x64\\bin\\zlibwapi.dll" "$(OutDir)"',
-'xcopy /y /d "$(SolutionDir)..\\..\\$(GwyddionFolder)\\data\\glmaterials\\*." "$(OutDir)share\\gwyddion\\glmaterials\\"',
-'xcopy /y /d "$(SolutionDir)..\\..\\$(GwyddionFolder)\\data\\gradients\\*." "$(OutDir)share\\gwyddion\\gradients\\"',
-'xcopy /y /d "$(SolutionDir)..\\..\\$(GwyddionFolder)\\data\\gradients\\Gwyddion.net" "$(OutDir)share\\gwyddion\\gradients\\"',
-'xcopy /y /d "$(SolutionDir)..\\..\\$(GwyddionFolder)\\pixmaps\\*.ico" "$(OutDir)share\\gwyddion\\pixmaps\\"',
-'xcopy /y /d "$(SolutionDir)..\\..\\$(GwyddionFolder)\\pixmaps\\*.png" "$(OutDir)share\\gwyddion\\pixmaps\\"',
-'xcopy /y /d "$(SolutionDir)..\\..\\$(GwyddionFolder)\\app\\toolbox.xml" "$(OutDir)share\\gwyddion\\ui\\"',
-'xcopy /y /d "$(SolutionDir)..\\..\\$(GwyddionFolder)\\utils\\user-guide-modules" "$(OutDir)share\\gwyddion\\"'
+'xcopy /y /d "$(SolutionDir)..\\data\\glmaterials\\*." "$(OutDir)share\\gwyddion\\glmaterials\\"',
+'xcopy /y /d "$(SolutionDir)..\\data\\gradients\\*." "$(OutDir)share\\gwyddion\\gradients\\"',
+'xcopy /y /d "$(SolutionDir)..\\data\\gradients\\Gwyddion.net" "$(OutDir)share\\gwyddion\\gradients\\"',
+'xcopy /y /d "$(SolutionDir)..\\pixmaps\\*.ico" "$(OutDir)share\\gwyddion\\pixmaps\\"',
+'xcopy /y /d "$(SolutionDir)..\\pixmaps\\*.png" "$(OutDir)share\\gwyddion\\pixmaps\\"',
+'xcopy /y /d "$(SolutionDir)..\\app\\toolbox.xml" "$(OutDir)share\\gwyddion\\ui\\"',
+'xcopy /y /d "$(SolutionDir)..\\utils\\user-guide-modules" "$(OutDir)share\\gwyddion\\"'
 ]
-
-modules_run_subdirs = [
-('accurexii-txt', 'gwyddion\\modules\\file')]
 
 modules_copy_command_string = 'xcopy /y /d "$(OutDir)$(ProjectName).dll" "$(OutDir){0}"'
 
@@ -347,7 +344,12 @@ def parse_makefile(root, fullpath):
                     #print 'variable: ', v
                     #projname = spl[0]
                     id = str(uuid.uuid4()).upper()
-                    key = (root, k, id)   # (path, projname, id)
+                    path_prefix = '.' +  os.path.sep
+                    path = root.lstrip(path_prefix)   # remove damned './' from path once forever
+                    ############################################################
+                    ### assemble key ! ###                    
+                    key = (path, k, id)   # (path, projname, id)
+                    ############################################################
                     #print 'spl[0]: ', spl[0]
                     #print 'spl[1]: ', spl[1]
                     items = spl[1].replace('=', '')
@@ -355,7 +357,7 @@ def parse_makefile(root, fullpath):
                     items = items.split()
                     key_found = False 
                     for k_for in sorted(projs.keys()):
-                        if(k_for[0] == root and k_for[1] == k): # root is path, k is projname
+                        if(k_for[0] == path and k_for[1] == k): # path is path, k is projname
                             projs[k_for][0].extend(items)       # items are .c .h files
                             key_found = True
                     if (key_found == False):
@@ -471,17 +473,11 @@ def get_project_dependency_libs_x64(project_name):
 ################################################################################
 # Parse all makefiles in all subfolders of .\gwyddion folder     
 # gwyddion_root_folder - 'gwyddion' project root folder           
-def parse_makefiles(gwyddion_root_folder):
-#    gwyddion_path = os.path.join(os.getcwd(), 'gwyddion')
-    if(os.path.exists(gwyddion_root_folder) == False):
-        print "Error: '%s' folder does not exist." % gwyddion_root_folder
-        exit()
-        
+def parse_makefiles():        
     # replace minidom's function with ours
     xml.dom.minidom.Element.writexml = fixed_writexml
     
-    #for root, dirs, files in os.walk('gwyddion'):
-    for root, dirs, files in os.walk(gwyddion_root_folder):
+    for root, dirs, files in os.walk('.'):
         for name in files:
             if name == 'Makefile.am':
                 fullpath = os.path.join(root, name)                                 
@@ -574,11 +570,11 @@ def save_xml(element, filename):
 
 def get_project_path(path, project_name):
     result = os.path.join('msvc2015', path)    
-    if(   project_name == 'libgwymodule2' or project_name == 'libgwydgets2'
-       or project_name == 'libgwydraw2'   or project_name == 'libgwyprocess2'
-       or project_name == 'libgwyddion2'):
+    if(   project_name == 'libgwymodule2' 
+       or project_name == 'libgwydgets2'   or project_name == 'libgwydraw2'   
+       or project_name == 'libgwyprocess2' or project_name == 'libgwyddion2'):
        return result 
-       
+           
     return os.path.join(result, project_name)
       
         
@@ -591,8 +587,8 @@ def get_project_path(path, project_name):
 # definitions   - list of .def files (generally only one file) 
 # output example: ./msvc2015/gwyddion/libgwyddion/libgwyddion2.vcxproj
 
-def create_vcxproj(path, name, sources, headers, definitions, configuration_type): 
-    newpath = os.path.join('$(SolutionDir)../../', path)
+def create_vcxproj(path, name, sources, headers, definitions, configuration_type):
+    newpath = os.path.join('$(SolutionDir)..\\', path)
     
     post_build_event_files_to_copy_win32_string = ' \n'.join(post_build_event_files_to_copy_win32)
     post_build_event_files_to_copy_x64_string = ' \n'.join(post_build_event_files_to_copy_x64)
@@ -603,7 +599,7 @@ def create_vcxproj(path, name, sources, headers, definitions, configuration_type
     # 2. strip last subfolder from path
     if(name == 'gwy' or name == 'pygwy'):        
         path_yeti = path_yeti.rstrip(os.path.sep + path_yeti.split(os.path.sep)[-1])    
-    post_build_event_modules_run_dir = os.path.join('lib', path_yeti) + os.path.sep
+    post_build_event_modules_run_dir = os.path.join('lib', 'gwyddion', path_yeti) + os.path.sep
     post_build_event_modules_run_dir = post_build_event_modules_run_dir.replace(os.path.sep, '\\')   
        
     # define include directories
@@ -759,21 +755,12 @@ def create_vcxproj(path, name, sources, headers, definitions, configuration_type
         PostBuildEvent = SubElement(ItemDefinitionGroup, "PostBuildEvent")
         Command = SubElement(PostBuildEvent, "Command")
         Command.text = post_build_event_files_to_copy_win32_string
-    #modules_name_list = [x[0] for x in modules_run_subdirs]    # create list of first items
-    #if(name in modules_name_list):
-    #if(name in ['file', 'graph', 'layer', 'process', 'tools', 'volume']):
-    module_path = os.path.join('gwyddion', 'modules')
-    if(path.startswith(module_path) and (name not in excluded_projects_win32)):
+    #module_path = os.path.join('gwyddion', 'modules')
+    #module_path = os.path.join('.', 'modules')
+    if(path.startswith('modules') and (name not in excluded_projects_win32)):
         PostBuildEvent = SubElement(ItemDefinitionGroup, "PostBuildEvent")
         Command = SubElement(PostBuildEvent, "Command")
         # example: Command.text = 'xcopy /y /d "$(OutDir)$(ProjectName).dll" "$(OutDir)'lib\\gwyddion\\modules\\file\\"' 
-        #Command.text = modules_copy_command_string.format(modules_run_subdirs[modules_name_list.index(name)][1])
-        # produce non-consistency in source and install paths due yetti
-        # 1. 'tools' -> 'tool'
-        #path_yeti = path.replace('tools', 'tool')
-        # 2. strip last subfolder from path
-        #if(name == 'gwy' or name == 'pygwy'):        
-        #    path_yeti = path_yeti.rstrip(os.path.sep + path_yeti.split(os.path.sep)[-1])
         Command.text = modules_copy_command_string.format(post_build_event_modules_run_dir)
         
     ItemDefinitionGroup = SubElement(Project, "ItemDefinitionGroup", Condition="'$(Configuration)|$(Platform)'=='Debug|x64'")
@@ -849,8 +836,8 @@ def create_vcxproj(path, name, sources, headers, definitions, configuration_type
         Command.text = modules_copy_command_string.format(post_build_event_modules_run_dir)
         
     # add .c and .h and .def files
-    #newpath = '$(SolutionDir)../../' + path
-    #newpath = os.path.join('$(SolutionDir)../../', path)
+    #newpath = '$(SolutionDir)..\\..\\' + path
+    #newpath = os.path.join('$(SolutionDir)..\\..\\', path)
     
     ItemGroup = SubElement(Project, "ItemGroup");
     for v in headers:
@@ -925,8 +912,8 @@ def create_vcxproj_filters(path, name, sources, headers, definitions):
     Extensions.text = "h;hh;hpp;hxx;hm;inl;inc;xsd"
     
     # add .c and .h and .def files
-    newpath = path.replace('./', '$(SolutionDir)../../', 1)
-    newpath = newpath.replace('.\\', '$(SolutionDir)../../', 1)
+    newpath = path.replace('./', '$(SolutionDir)..\\', 1)
+    newpath = newpath.replace('.\\', '$(SolutionDir)..\\', 1)
     ItemGroup = SubElement(Project, "ItemGroup");
     for v in headers:
         ClInclude = SubElement(ItemGroup, "ClInclude", Include=(newpath + '/' + v));
@@ -1057,7 +1044,7 @@ def copy_def_files():
             #dst_filename1 = os.path.join(dst_filename1, definition_name)
             #dst_filename1 = os.path.abspath(dst_filename1)        
         
-            dst_filename2 = os.path.join('generated-files-def', path)
+            dst_filename2 = os.path.join('msvc2015', 'generated-files-def', path)
             dst_filename2 = os.path.join(dst_filename2, definition_name)                
             dst_filename2 = os.path.abspath(dst_filename2)
                 
@@ -1074,30 +1061,32 @@ def copy_def_files():
 # Copy Files Generated by './autogen.sh' and 'make' command on Linux machine
 # Check all subfolders of gwyddion_root_folder folder; i.e. './gwyddion'
         
-def copy_gen_files(gwyddion_root_folder):
+def copy_gen_files():
     n = 0
+    solution_dir = os.path.join('.', 'msvc2015') 
     #for root, dirs, files in os.walk('gwyddion'):
-    for root, dirs, files in os.walk(gwyddion_root_folder):
+    for root, dirs, files in os.walk('.'):
         for name in files:
-            full_path = os.path.join(root, name)
-            full_path = os.path.normpath(full_path)
-            for v in generated_files_by_autotools: 
-                gen_file = os.path.normpath(v)
-                #print "full_path", full_path
-                #print "gen_file", gen_file
-                if(full_path.endswith(gen_file) == True):                    
-                    src_filename = full_path
-                    src_filename = os.path.abspath(src_filename)
-                    
-                    dst_filename = os.path.join('generated-files-ch', gen_file)
-                    dst_filename = os.path.abspath(dst_filename)
-                                                             
-                    n = n + 1 
-                    create_path(dst_filename)
-                    shutil.copy(src_filename, dst_filename)
-                    
-                    print "from:", src_filename
-                    print "to  :", dst_filename                                                                                      
+            if(root.startswith(solution_dir) == False):
+              full_path = os.path.join(root, name)
+              full_path = os.path.normpath(full_path)            
+              for v in generated_files_by_autotools: 
+                  gen_file = os.path.normpath(v)
+                  #print "full_path", full_path
+                  #print "gen_file", gen_file
+                  if(full_path.endswith(gen_file) == True):                    
+                      src_filename = full_path
+                      src_filename = os.path.abspath(src_filename)
+                      
+                      dst_filename = os.path.join('msvc2015','generated-files-ch', gen_file)
+                      dst_filename = os.path.abspath(dst_filename)
+                                                               
+                      n = n + 1 
+                      create_path(dst_filename)
+                      shutil.copy(src_filename, dst_filename)
+                      
+                      print "from:", src_filename
+                      print "to  :", dst_filename                                                                                      
 
     print "Total number of copied files:", n        
         
@@ -1105,12 +1094,12 @@ def copy_gen_files(gwyddion_root_folder):
 # Create Solution file (.sln)
 # gwyddion_root_folder - 'gwyddion' project root folder
 
-def create_sln(gwyddion_root_folder):
+def create_sln():
     #indent_string = '    '    
     nested_projects_block = ''        
     
     #filename = os.path.join('msvc2015', 'gwyddion', 'gwyddion.sln')
-    filename = os.path.join('msvc2015', gwyddion_root_folder, gwyddion_root_folder + '.sln')
+    filename = os.path.join('msvc2015', 'gwyddion.sln')
     filename = os.path.abspath(filename)
     create_path(filename)
     fh = file(filename, 'w')            
@@ -1146,7 +1135,7 @@ def create_sln(gwyddion_root_folder):
         filename_rel = filename_rel.lstrip('msvc2015')
         filename_rel = filename_rel.lstrip(os.path.sep) 
         #filename_rel = filename_rel.lstrip('gwyddion')
-        filename_rel = filename_rel.lstrip(gwyddion_root_folder)
+        #filename_rel = filename_rel.lstrip(gwyddion_root_folder)
         folder_list = []
         filename_rel = filename_rel.lstrip(os.path.sep)
         folder_list = filename_rel.split(os.path.sep)                
@@ -1382,13 +1371,12 @@ Step 4: Copy definition (.def) files to 'generated-files-def' folder.\n\
 Step 5: Copy generated (.c, .h) files to 'generated-files-ch' folder.\n\
         Linux machine only.\n\
 Steps 3, 4, 5: Compile Gwyddion on Linux machine first to generate .c .h files (run './autogen.sh' and 'make').\n")
-arg_parser.add_argument('gwyddion_root_folder', metavar='folder', help="name of 'gwyddion' source code root folder containing 'Makefile.am' files. 'gwyddion' folder must be in the same folder as this script.",
-)
-args = arg_parser.parse_args()
+#arg_parser.add_argument('gwyddion_root_folder', metavar='folder', help="name of 'gwyddion' source code root folder containing 'Makefile.am' files. 'gwyddion' folder must be in the same folder as this script.",)
+#args = arg_parser.parse_args()
 
-set_gwyddion_root_folder_to_global_lists(args.gwyddion_root_folder)
+#set_gwyddion_root_folder_to_global_lists(args.gwyddion_root_folder)
                        
-parse_makefiles(args.gwyddion_root_folder)           
+parse_makefiles()           
 
 print "Step 1 of 5"
 print "Creating project (.vcxproj) and filters (.vcxproj.filters) files:"
@@ -1396,7 +1384,7 @@ create_project_and_filters_files()
 
 print "\nStep 2 of 5"
 print "Creating solution (.sln):"
-create_sln(args.gwyddion_root_folder)
+create_sln()
 
 print "\nStep 3 of 5"
 print "Creating definition (.def) files:"
@@ -1409,4 +1397,12 @@ copy_def_files()
 print "\nStep 5 of 5"
 print "Copying generated (.c, .h) files:"
 print "Note: compile 'gwyddion' to create .c, .h files (run './autogen.sh' and 'make')"
-copy_gen_files(args.gwyddion_root_folder)
+copy_gen_files()
+
+
+#config_h = '''
+#'''
+#gwyconfig_h = '''
+#'''
+#file('config.h', 'w').write(config_h)
+#file('gwyconfig.h', 'w').write(gwyconfig_h)
