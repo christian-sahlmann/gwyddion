@@ -36,6 +36,8 @@
 #include <app/gwyapp.h>
 #include <app/gwymoduleutils.h>
 
+#define ENTROPY_NORMAL 1.41893853320467274178l
+
 #define GWY_TYPE_TOOL_STATS            (gwy_tool_stats_get_type())
 #define GWY_TOOL_STATS(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_TOOL_STATS, GwyToolStats))
 #define GWY_IS_TOOL_STATS(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_TOOL_STATS))
@@ -66,6 +68,7 @@ typedef struct {
     gdouble projarea;
     gdouble var;
     gdouble entropy;
+    gdouble entropydef;
     /* These two are in degrees as we use need only for the user. */
     gdouble theta;
     gdouble phi;
@@ -119,6 +122,7 @@ struct _GwyToolStats {
     GtkWidget *projarea;
     GtkWidget *var;
     GtkWidget *entropy;
+    GtkWidget *entropydef;
     GtkWidget *theta;
     GtkWidget *phi;
 
@@ -328,21 +332,22 @@ gwy_tool_stats_init_dialog(GwyToolStats *tool)
         gsize offset;
     }
     const values[] = {
-        { N_("Average value:"),     G_STRUCT_OFFSET(GwyToolStats, avg),      },
-        { N_("Minimum:"),           G_STRUCT_OFFSET(GwyToolStats, min),      },
-        { N_("Maximum:"),           G_STRUCT_OFFSET(GwyToolStats, max),      },
-        { N_("Median:"),            G_STRUCT_OFFSET(GwyToolStats, median),   },
-        { N_("Ra (Sa):"),           G_STRUCT_OFFSET(GwyToolStats, ra),       },
-        { N_("Rms (Sq):"),          G_STRUCT_OFFSET(GwyToolStats, rms),      },
-        { N_("Rms (grain-wise):"),  G_STRUCT_OFFSET(GwyToolStats, rms_gw),   },
-        { N_("Skew:"),              G_STRUCT_OFFSET(GwyToolStats, skew),     },
-        { N_("Kurtosis:"),          G_STRUCT_OFFSET(GwyToolStats, kurtosis), },
-        { N_("Surface area:"),      G_STRUCT_OFFSET(GwyToolStats, area),     },
-        { N_("Projected area:"),    G_STRUCT_OFFSET(GwyToolStats, projarea), },
-        { N_("Variation:"),         G_STRUCT_OFFSET(GwyToolStats, var),      },
-        { N_("Entropy:"),           G_STRUCT_OFFSET(GwyToolStats, entropy),  },
-        { N_("Inclination θ:"),     G_STRUCT_OFFSET(GwyToolStats, theta),    },
-        { N_("Inclination φ:"),     G_STRUCT_OFFSET(GwyToolStats, phi),      },
+        { N_("Average value:"),    G_STRUCT_OFFSET(GwyToolStats, avg),        },
+        { N_("Minimum:"),          G_STRUCT_OFFSET(GwyToolStats, min),        },
+        { N_("Maximum:"),          G_STRUCT_OFFSET(GwyToolStats, max),        },
+        { N_("Median:"),           G_STRUCT_OFFSET(GwyToolStats, median),     },
+        { N_("Ra (Sa):"),          G_STRUCT_OFFSET(GwyToolStats, ra),         },
+        { N_("Rms (Sq):"),         G_STRUCT_OFFSET(GwyToolStats, rms),        },
+        { N_("Rms (grain-wise):"), G_STRUCT_OFFSET(GwyToolStats, rms_gw),     },
+        { N_("Skew:"),             G_STRUCT_OFFSET(GwyToolStats, skew),       },
+        { N_("Kurtosis:"),         G_STRUCT_OFFSET(GwyToolStats, kurtosis),   },
+        { N_("Surface area:"),     G_STRUCT_OFFSET(GwyToolStats, area),       },
+        { N_("Projected area:"),   G_STRUCT_OFFSET(GwyToolStats, projarea),   },
+        { N_("Variation:"),        G_STRUCT_OFFSET(GwyToolStats, var),        },
+        { N_("Entropy:"),          G_STRUCT_OFFSET(GwyToolStats, entropy),    },
+        { N_("Entropy deficit:"),  G_STRUCT_OFFSET(GwyToolStats, entropydef), },
+        { N_("Inclination θ:"),    G_STRUCT_OFFSET(GwyToolStats, theta),      },
+        { N_("Inclination φ:"),    G_STRUCT_OFFSET(GwyToolStats, phi),        },
     };
     GtkDialog *dialog;
     GtkWidget *hbox, *vbox, *image, *label, **plabel;
@@ -639,6 +644,7 @@ gwy_tool_stats_update_labels(GwyToolStats * tool)
         gtk_label_set_text(GTK_LABEL(tool->projarea), "");
         gtk_label_set_text(GTK_LABEL(tool->var), "");
         gtk_label_set_text(GTK_LABEL(tool->entropy), "");
+        gtk_label_set_text(GTK_LABEL(tool->entropydef), "");
         gtk_label_set_text(GTK_LABEL(tool->theta), "");
         gtk_label_set_text(GTK_LABEL(tool->phi), "");
         return;
@@ -694,6 +700,8 @@ gwy_tool_stats_update_labels(GwyToolStats * tool)
     update_label(tool->var_format, tool->var, tool->results.var);
     g_snprintf(buffer, sizeof(buffer), "%.4g", tool->results.entropy);
     gtk_label_set_text(GTK_LABEL(tool->entropy), buffer);
+    g_snprintf(buffer, sizeof(buffer), "%.4g", tool->results.entropydef);
+    gtk_label_set_text(GTK_LABEL(tool->entropydef), buffer);
 
     /* This has no calibration yet. */
     if (tool->same_units)
@@ -808,6 +816,14 @@ gwy_tool_stats_calculate(GwyToolStats * tool)
         = gwy_data_field_area_get_entropy(plain_tool->data_field,
                                           mask, masking,
                                           isel[0], isel[1], w, h);
+    /* Consider δ-function a limit of Gaussian and report deficit of zero. */
+    if (tool->results.rms > 0.0 && tool->results.entropy < 0.1*G_MAXDOUBLE) {
+        tool->results.entropydef = (ENTROPY_NORMAL + log(tool->results.rms)
+                                    - tool->results.entropy);
+    }
+    else
+        tool->results.entropydef = 0.0;
+
     if (tool->same_units)
         tool->results.area
             = gwy_data_field_area_get_surface_area_mask(plain_tool->data_field,
@@ -822,8 +838,8 @@ gwy_tool_stats_calculate(GwyToolStats * tool)
         tool->results.theta *= 180.0/G_PI;
         tool->results.phi *= 180.0/G_PI;
     }
-    if (tool->has_calibration) {
 
+    if (tool->has_calibration) {
         oldx = gwy_data_field_get_xres(tool->xunc);
         oldy = gwy_data_field_get_yres(tool->xunc);
         //FIXME, functions should work with data of any size
@@ -852,8 +868,7 @@ gwy_tool_stats_calculate(GwyToolStats * tool)
                                                          &tool->results.ura,
                                                          &tool->results.urms,
                                                          &tool->results.uskew,
-                                                         &tool->results.
-                                                         ukurtosis);
+                                                         &tool->results.ukurtosis);
 
         gwy_data_field_area_get_min_max_uncertainty_mask(plain_tool->data_field,
                                                          tool->zunc, mask,
@@ -1037,7 +1052,7 @@ gwy_tool_stats_create_report(gpointer user_data,
     GString *report;
     gchar *ix, *iy, *iw, *ih, *rx, *ry, *rw, *rh, *muse, *uni;
     gchar *avg, *min, *max, *median, *rms, *rms_gw, *ra, *skew, *kurtosis;
-    gchar *area, *projarea, *var, *entropy, *theta, *phi;
+    gchar *area, *projarea, *var, *entropy, *entropydef, *theta, *phi;
     gchar *key, *retval;
 
     mask_in_use = (report_data->masking != GWY_MASK_IGNORE);
@@ -1115,6 +1130,7 @@ gwy_tool_stats_create_report(gpointer user_data,
     gwy_si_unit_value_format_free(vf);
 
     entropy = g_strdup_printf("%.5g", report_data->results.entropy);
+    entropydef = g_strdup_printf("%.5g", report_data->results.entropydef);
 
     vf = report_data->angle_format;
 
@@ -1141,6 +1157,7 @@ gwy_tool_stats_create_report(gpointer user_data,
                              "Projected area:    %s\n"
                              "Variation:         %s\n"
                              "Entropy:           %s\n"
+                             "Entropy deficit:   %s\n"
                              "Inclination θ:     %s\n"
                              "Inclination φ:     %s\n"),
                            iw, ih, ix, iy,
@@ -1148,7 +1165,8 @@ gwy_tool_stats_create_report(gpointer user_data,
                            muse,
                            avg, min, max, median, ra, rms, rms_gw,
                            skew, kurtosis,
-                           area, projarea, var, entropy, theta, phi);
+                           area, projarea, var, entropy, entropydef,
+                           theta, phi);
 
     g_free(ix);
     g_free(iy);
@@ -1171,6 +1189,7 @@ gwy_tool_stats_create_report(gpointer user_data,
     g_free(projarea);
     g_free(var);
     g_free(entropy);
+    g_free(entropydef);
     g_free(theta);
     g_free(phi);
 
