@@ -4524,6 +4524,8 @@ calculate_entropy(GwyDataField *dfield,
     if (mask) {
         gwy_data_field_area_count_in_range(mask, NULL, col, row, width, height,
                                            G_MAXDOUBLE, 1.0, NULL, &n);
+        if (mode == GWY_MASK_EXCLUDE)
+            n = width*height - n;
     }
     else
         n = width*height;
