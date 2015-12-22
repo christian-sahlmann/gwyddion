@@ -22,7 +22,7 @@ cat >autostuff.ignore <<':'
 cat >build_project.ignore <<':'
 ^TRANSLATION [a-z]
 ^[0-9]+ translated messages
-^\.+ done$
+^\.+ done\.$
 ^/usr/bin/glib-mkenums: ./.*\.h:[0-9]*: lowercase_name is deprecated, use underscore_name
 ^[ ^]*$
 ':'
@@ -44,15 +44,15 @@ cat >make_dists.ignore <<':'
 ^libtool:( install:)? warning: relinking [`'].*\.la'
 ^libtool:( install:)? warning: [`'].*\.la' has not been installed in [`']/usr/lib(64)?
 ^libtool:( install:)? warning: remember to run [`']libtool --finish /usr/lib(64)?
-^\.+ done$
+^\.+ done\.$
 ^[0-9]+ blocks
 ^[0-9]+ translated message
 ':'
 :
 
 cat >install_to_tmp.ignore <<':'
-^libtool: install: warning: relinking [`'].*\.la'
-^libtool: install: warning: remember to run [`']libtool --finish /usr/lib
+^libtool:( install:)? warning: relinking [`'].*\.la'
+^libtool:( install:)? warning: remember to run [`']libtool --finish /usr/lib(64)?
 ':'
 :
 
