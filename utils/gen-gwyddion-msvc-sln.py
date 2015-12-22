@@ -3,6 +3,7 @@
 
 # Generate Gwyddion Visual Studio Solution 
 # Created for Visual Studio 2015
+# Copyright (C) 2015 Petr Grolich
 
 from __future__ import division
 import sys, glob, os, time, xml.dom.minidom, subprocess, platform, uuid, shutil, string, argparse
@@ -10,13 +11,14 @@ from xml.etree.ElementTree import Element, SubElement
 
 indent_string = '\t'
 
-# projects
+# projs structure
 # key = (path, projname, uuid)  i.e. ('.\\gwyddion\\modules\\file', 'accurexii-txt', '5D8DCF07-3F84-4443-B5D8-306650040B10')
 # value = [list]                list of .c, .h, .def files 
 projs = {}
 
-# key = (path)
-# value = UUID
+# solution_folders structure
+# key = (path)                  i.e. ('.\\gwyddion\\modules\\file')
+# value = UUID                  i.e. '5D8DCF07-3F84-4443-B5D8-306650040B10'
 solution_folders = {} 
 
 include_dirs_win32 = ['$(SolutionDir)..\\',
@@ -58,7 +60,6 @@ libs_x64 = ['cairo.lib', 'cfitsio.lib', 'gdk-win32-2.0.lib', 'gdk_pixbuf-2.0.lib
 'pangoft2-1.0.lib', 'python27.lib', 'zlibwapi.lib', '%(AdditionalDependencies)']
 
 generated_files_by_autotools = [
-'config.h', 'gwyconfig.h', 
 'app//gwyapptypes.h', 'app//gwyapptypes.c', 'app//authors.h', 
 'libgwyddion//gwyddiontypes.h', 'libgwyddion//gwyddiontypes.c', 'libgwyddion//gwyversion.h', 
 'libgwydgets//gwydgettypes.h', 'libgwydgets//gwydgettypes.c', 
@@ -146,6 +147,237 @@ post_build_event_files_to_copy_x64 = [
 ]
 
 modules_copy_command_string = 'xcopy /y /d "$(OutDir)$(ProjectName).dll" "$(OutDir){0}"'
+
+config_h = '''
+/* config.h.  Generated from config.h.in by configure.  */
+/* config.h.in.  Generated from configure.ac by autoheader.  */
+
+/* Define to 1 if translation of program messages to the user's native
+   language is requested. */
+#define ENABLE_NLS 1
+
+/* Gettext package name */
+#define GETTEXT_PACKAGE "gwyddion"
+
+/* Define if we have the BZIP2 library. */
+/* #undef HAVE_BZIP2 */
+
+/* Define if we have the cfitsio package. */
+/* #undef HAVE_CFITSIO */
+
+/* Define to 1 if you have the MacOS X function CFLocaleCopyCurrent in the
+   CoreFoundation framework. */
+/* #undef HAVE_CFLOCALECOPYCURRENT */
+
+/* Define to 1 if you have the MacOS X function CFPreferencesCopyAppValue in
+   the CoreFoundation framework. */
+/* #undef HAVE_CFPREFERENCESCOPYAPPVALUE */
+
+/* Define if the GNU dcgettext() function is already present or preinstalled.
+   */
+#define HAVE_DCGETTEXT 1
+
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#define HAVE_DLFCN_H 1
+
+/* Define if we have the OpenEXR package. */
+/* #undef HAVE_EXR */
+
+/* Define if we have the FFTW3 package. */
+//#define HAVE_FFTW3 1
+
+/* Define if the GNU gettext() function is already present or preinstalled. */
+#define HAVE_GETTEXT 1
+
+/* Define to 1 if you have the <GL/glext.h> header file. */
+//#define HAVE_GL_GLEXT_H 1
+
+/* Define if we have the GtkGLExt package. */
+#define HAVE_GTKGLEXT 1
+
+/* Define if we have the GtkSourceView package. */
+//#define HAVE_GTKSOURCEVIEW 1
+
+/* Define if we have the gtk-mac-integration library. */
+/* #undef HAVE_GTK_MAC_INTEGRATION */
+
+/* Define if you have the iconv() function. */
+/* #undef HAVE_ICONV */
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#define HAVE_INTTYPES_H 1
+
+/* Define if we have the libzip package. */
+/* #undef HAVE_LIBZIP */
+
+/* Define if we have working memmem() */
+//#define HAVE_MEMMEM 1
+
+/* Define to 1 if you have the <memory.h> header file. */
+#define HAVE_MEMORY_H 1
+
+/* Define to 1 if you have the `memrchr' function. */
+//#define HAVE_MEMRCHR 1
+
+/* Define if we have the minizip package. */
+/* #undef HAVE_MINIZIP */
+
+/* Define if we have the libpng package. */
+#define HAVE_PNG 1
+
+/* Define to 1 if you have the `sincos' function. */
+//#define HAVE_SINCOS 1
+
+/* Define to 1 if you have the <stdbool.h> header file. */
+#define HAVE_STDBOOL_H 1
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#define HAVE_STDINT_H 1
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#define HAVE_STDLIB_H 1
+
+/* Define to 1 if you have the <strings.h> header file. */
+#define HAVE_STRINGS_H 1
+
+/* Define to 1 if you have the <string.h> header file. */
+#define HAVE_STRING_H 1
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#define HAVE_SYS_STAT_H 1
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#define HAVE_SYS_TYPES_H 1
+
+/* Define if we have the unique package. */
+/* #undef HAVE_UNIQUE */
+
+/* Define to 1 if you have the <unistd.h> header file. */
+//#define HAVE_UNISTD_H 1
+
+/* Define if we have the libxml2 package. */
+#define HAVE_XML2 1
+
+/* Define if we have the ZLIB library. */
+#define HAVE_ZLIB 1
+
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#define LT_OBJDIR ".libs/"
+
+/* Name of package */
+#define PACKAGE "gwyddion"
+
+/* Define to the address where bug reports for this package should be sent. */
+#define PACKAGE_BUGREPORT "klapetek@gwyddion.net"
+
+/* Define to the full name of this package. */
+#define PACKAGE_NAME "Gwyddion"
+
+/* Define to the full name and version of this package. */
+#define PACKAGE_STRING "Gwyddion 2.42"
+
+/* Define to the one symbol short name of this package. */
+#define PACKAGE_TARNAME "gwyddion"
+
+/* Define to package home page, as a string. */
+#define PACKAGE_URL "http://gwyddion.net/"
+
+/* Define to the version of this package. */
+#define PACKAGE_VERSION "2.42"
+
+/* Define to the remote control backend. */
+#define REMOTE_BACKEND REMOTE_WIN32
+
+/* The size of `void*', as computed by sizeof. */
+#define SIZEOF_VOIDP 8
+
+/* Define to 1 if you have the ANSI C header files. */
+#define STDC_HEADERS 1
+
+/* Enable extensions on AIX 3, Interix.  */
+#ifndef _ALL_SOURCE
+# define _ALL_SOURCE 1
+#endif
+/* Enable GNU extensions on systems that have them.  */
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE 1
+#endif
+/* Enable threading extensions on Solaris.  */
+#ifndef _POSIX_PTHREAD_SEMANTICS
+# define _POSIX_PTHREAD_SEMANTICS 1
+#endif
+/* Enable extensions on HP NonStop.  */
+#ifndef _TANDEM_SOURCE
+# define _TANDEM_SOURCE 1
+#endif
+/* Enable general extensions on Solaris.  */
+#ifndef __EXTENSIONS__
+# define __EXTENSIONS__ 1
+#endif
+
+
+/* Version number of package */
+#define VERSION "2.43"
+
+/* Define to 1 if the X Window System is missing or not being used. */
+/* #undef X_DISPLAY_MISSING */
+
+/* Define to 1 if on MINIX. */
+/* #undef _MINIX */
+
+/* Define to 2 if the system does not provide POSIX.1 features except with
+   this defined. */
+/* #undef _POSIX_1_SOURCE */
+
+/* Define to 1 if you need to in order for `stat' and other things to work. */
+/* #undef _POSIX_SOURCE */
+'''
+
+gwyconfig_h = '''
+/*
+ * gwyconfig.h
+ *
+ * This is a generated file.  Please modify 'configure.ac'.
+ */
+
+#ifndef __GWY_CONFIG_H__
+#define __GWY_CONFIG_H__
+
+#define GWYDDION_HAS_OPENGL 1
+
+#define GWY_SHARED_LIBRARY_EXTENSION "so"
+
+/* Math functions become available when gwymathfallback.h is included. */
+/* In 2.x also when gwymath.h is included. */
+
+/* Define to 1 if you have the cbrt() function. */
+#define GWY_HAVE_CBRT 1
+
+/* Define to 1 if you have the hypot() function. */
+#define GWY_HAVE_HYPOT 1
+
+/* Define to 1 if you have the pow10() function. */
+//#define GWY_HAVE_POW10 1
+
+/* Define to 1 if you have the acosh() function. */
+#define GWY_HAVE_ACOSH 1
+
+/* Define to 1 if you have the asinh() function. */
+#define GWY_HAVE_ASINH 1
+
+/* Define to 1 if you have the atanh() function. */
+#define GWY_HAVE_ATANH 1
+
+/* Define to 1 if you have the isinf() function. */
+#define GWY_HAVE_ISINF 1
+
+/* Define to 1 if you have the isnan() function. */
+#define GWY_HAVE_ISNAN 1
+
+#endif /* __GWY_CONFIG_H__ */
+
+'''
 
 
 ################################################################################
@@ -1044,7 +1276,7 @@ def copy_def_files():
             #dst_filename1 = os.path.join(dst_filename1, definition_name)
             #dst_filename1 = os.path.abspath(dst_filename1)        
         
-            dst_filename2 = os.path.join('msvc2015', 'generated-files-def', path)
+            dst_filename2 = os.path.join('msvc2015', 'generated-files', path)
             dst_filename2 = os.path.join(dst_filename2, definition_name)                
             dst_filename2 = os.path.abspath(dst_filename2)
                 
@@ -1063,7 +1295,21 @@ def copy_def_files():
         
 def copy_gen_files():
     n = 0
-    solution_dir = os.path.join('.', 'msvc2015') 
+    solution_dir = os.path.join('.', 'msvc2015')
+    dst_dir = os.path.join('msvc2015','generated-files')  
+    dst_dir = os.path.abspath(dst_dir)        
+    
+    filename_config_h = os.path.join(dst_dir, 'config.h')
+    create_path(filename_config_h)     
+    file(filename_config_h, 'w').write(config_h)
+    print "from: gen-gwyddion-msvc-sln.py"
+    print "to  :", filename_config_h
+    
+    gwyfilename_config_h = os.path.join(dst_dir, 'gwyconfig.h')     
+    file(gwyfilename_config_h, 'w').write(gwyconfig_h)
+    print "from: gen-gwyddion-msvc-sln.py"
+    print "to  :", gwyfilename_config_h
+    
     #for root, dirs, files in os.walk('gwyddion'):
     for root, dirs, files in os.walk('.'):
         for name in files:
@@ -1078,17 +1324,17 @@ def copy_gen_files():
                       src_filename = full_path
                       src_filename = os.path.abspath(src_filename)
                       
-                      dst_filename = os.path.join('msvc2015','generated-files-ch', gen_file)
-                      dst_filename = os.path.abspath(dst_filename)
+                      dst_filename = os.path.join(dst_dir, gen_file)
+                      #dst_filename = os.path.abspath(dst_filename)
                                                                
                       n = n + 1 
                       create_path(dst_filename)
                       shutil.copy(src_filename, dst_filename)
                       
                       print "from:", src_filename
-                      print "to  :", dst_filename                                                                                      
+                      print "to  :", dst_filename                                                                                                                                  
 
-    print "Total number of copied files:", n        
+    print "Total number of copied files:", n+2       
         
 ################################################################################
 # Create Solution file (.sln)
@@ -1361,18 +1607,19 @@ def create_sln():
 ################################################################################
 
 arg_parser = argparse.ArgumentParser(description="Generate Gwyddion Visual Studio Solution.", formatter_class=argparse.RawDescriptionHelpFormatter,
-epilog = "This script implements 5 steps:\n\
+epilog = "Run script in 'gwyddion' source code root folder.\n\n\
+Script implements 5 steps:\n\
 Step 1: Create project (.vcxproj) and filters (.vcxproj.filters) files.\n\
 Step 2: Create solution (.sln).\n\
 Step 3: Create definition (.def) files.\n\
         Linux machine only.\n\
-Step 4: Copy definition (.def) files to 'generated-files-def' folder.\n\
+Step 4: Copy definition (.def) files to 'generated-files' folder.\n\
         Linux machine only.\n\
-Step 5: Copy generated (.c, .h) files to 'generated-files-ch' folder.\n\
+Step 5: Copy generated (.c, .h) files to 'generated-files' folder.\n\
         Linux machine only.\n\
 Steps 3, 4, 5: Compile Gwyddion on Linux machine first to generate .c .h files (run './autogen.sh' and 'make').\n")
 #arg_parser.add_argument('gwyddion_root_folder', metavar='folder', help="name of 'gwyddion' source code root folder containing 'Makefile.am' files. 'gwyddion' folder must be in the same folder as this script.",)
-#args = arg_parser.parse_args()
+args = arg_parser.parse_args()
 
 #set_gwyddion_root_folder_to_global_lists(args.gwyddion_root_folder)
                        
@@ -1398,11 +1645,3 @@ print "\nStep 5 of 5"
 print "Copying generated (.c, .h) files:"
 print "Note: compile 'gwyddion' to create .c, .h files (run './autogen.sh' and 'make')"
 copy_gen_files()
-
-
-#config_h = '''
-#'''
-#gwyconfig_h = '''
-#'''
-#file('config.h', 'w').write(config_h)
-#file('gwyconfig.h', 'w').write(gwyconfig_h)
