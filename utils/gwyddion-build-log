@@ -9,89 +9,86 @@ source $HOME/.bashrc
 cd $logdir
 
 cat >autostuff.ignore <<':'
-^configure.ac[:0-9]* installing ['`]\./missing'
-^configure.ac[:0-9]* installing ['`]\./install-sh'
-^configure.ac[:0-9]* installing ['`]\./config.guess'
-^configure.ac[:0-9]* installing ['`]\./config.sub'
-^configure.ac[:0-9]* installing ['`]\./compile'
-^app/Makefile.am[:0-9]* installing [`']\./depcomp'
-^python/Makefile.am[:0-9]* installing ['`]\./py-compile'
+^configure\.ac[:0-9]* installing ['`]\./missing'
+^configure\.ac[:0-9]* installing ['`]\./install-sh'
+^configure\.ac[:0-9]* installing ['`]\./config.guess'
+^configure\.ac[:0-9]* installing ['`]\./config.sub'
+^configure\.ac[:0-9]* installing ['`]\./compile'
+^app/Makefile\.am[:0-9]* installing [`']\./depcomp'
+^python/Makefile\.am[:0-9]* installing ['`]\./py-compile'
 ':'
 :
 
 cat >build_project.ignore <<':'
 ^TRANSLATION [a-z]
-^[0-9]\+ translated messages
+^[0-9]+ translated messages
 ^\.+ done$
-^/usr/bin/glib-mkenums: ./.*.h:[0-9]*: lowercase_name is deprecated, use underscore_name
+^/usr/bin/glib-mkenums: ./.*\.h:[0-9]*: lowercase_name is deprecated, use underscore_name
 ^[ ^]*$
 ':'
 :
 
 cat >build_documentation.ignore <<':'
-^Writing .* for [^ ]\+(.*)
+^Writing .* for [^ ]+\(.*\)
 ^lib.*-scan\.c: In function
 ^lib.*-scan\.c:[0-9]*: warning: unused parameter
 ^lib.*-scan\.c:[0-9]*:[0-9]*: warning: unused parameter 'arg[vc]'
 ^Computing chunks\.\.\.
-^ *main *(int argc, char \*argv\[\])$
+^ *main *\(int argc, char \*argv\[\]\)$
 ^[ ^]*$
 ':'
 :
 
 cat >make_dists.ignore <<':'
-^+
-^libtool: install: warning: relinking `.*.la'
-^libtool: install: warning: `.*\.la' has not been installed in `/usr/lib
-^libtool: install: warning: remember to run `libtool --finish /usr/lib
-^libtool: install: warning: `.*\.la' has not been installed in `/usr/lib64
-^libtool: install: warning: remember to run `libtool --finish /usr/lib64
-\.\{6,\}
-^[0-9]\+ blocks
-^[0-9]\+ translated message
+^\+
+^libtool: install: warning: relinking [`'].*\.la'
+^libtool: install: warning: [`'].*\.la' has not been installed in [`']/usr/lib(64)?
+^libtool: install: warning: remember to run [`']libtool --finish /usr/lib(64)?
+^\.+ done$
+^[0-9]+ blocks
+^[0-9]+ translated message
 ':'
 :
 
 cat >install_to_tmp.ignore <<':'
-^libtool: install: warning: relinking `.*.la'
-^libtool: install: warning: remember to run `libtool --finish /usr/lib
+^libtool: install: warning: relinking [`'].*\.la'
+^libtool: install: warning: remember to run [`']libtool --finish /usr/lib
 ':'
 :
 
 cat >check_deps_versions.ignore <<':'
-^WARNING: Malformed symbol name: "The Poke() method" (type=method) in gio.
-^libgwyddion/gwyutils.c:[0-9]*: glib-2.16 required for g_win32_get_package_installation_directory_of_module
-^modules/file/renishaw.c:345: glib-2.16 required for g_strcmp0
+^libgwyddion/gwyutils\.c:[0-9]+: glib-2\.16 required for g_win32_get_package_installation_directory_of_module
+^modules/file/renishaw\.c:345: glib-2\.16 required for g_strcmp0
 ':'
 :
 
 cat >check_symbols.ignore <<':'
-^Exported undeclared symbol (libgwyapp): gwy_app_main_window_set$
-^Evil symbol (pygwy): gwy_app_data_browser_get_data_ids_wrap$
-^Evil symbol (pygwy): gwy_data_field_area_fit_polynom_wrap$
-^Evil symbol (pygwy): gwy_data_field_circular_area_extract_wrap$
-^Evil symbol (pygwy): gwy_data_field_create_full_mask$
-^Evil symbol (pygwy): gwy_data_field_elliptic_area_extract_wrap$
-^Evil symbol (pygwy): gwy_data_field_fit_polynom_wrap$
-^Evil symbol (pygwy): gwy_data_field_get_profile_wrap$
-^Evil symbol (pygwy): gwy_construct_grain_quantity_units$
-^Evil symbol (pygwy): gwy_data_field_get_grain_bounding_boxes_wrap$
-^Evil symbol (pygwy): gwy_data_field_grains_get_distribution_wrap$
-^Evil symbol (pygwy): gwy_data_field_grains_get_values_wrap$
-^Evil symbol (pygwy): gwy_data_field_number_grains_periodic_wrap$
-^Evil symbol (pygwy): gwy_data_field_number_grains_wrap$
-^Evil symbol (pygwy): gwy_get_grain_quantity_needs_same_units_wrap$
-^Evil symbol (pygwy): gwy_get_key_from_name$
-^Evil symbol (pygwy): gwy_selection_get_data_wrap$
-^Evil symbol (pygwy): gwy_tip_cmap_wrap$
-^Evil symbol (pygwy): gwy_tip_dilation_wrap$
-^Evil symbol (pygwy): gwy_tip_erosion_wrap$
-^Evil symbol (pygwy): gwy_tip_estimate_full_wrap$
-^Evil symbol (pygwy): gwy_tip_estimate_partial_wrap$
-^Evil symbol (pygwy): pygwy_create_environment$
-^Evil symbol (pygwy): pygwy_initialize$
-^Evil symbol (pygwy): pygwy_register_console$
-^Evil symbol (pygwy): pygwy_run_string$
+^Exported undeclared symbol \(libgwyapp\): gwy_app_main_window_set$
+^Evil symbol \(pygwy\): gwy_app_data_browser_get_data_ids_wrap$
+^Evil symbol \(pygwy\): gwy_data_field_area_fit_polynom_wrap$
+^Evil symbol \(pygwy\): gwy_data_field_circular_area_extract_wrap$
+^Evil symbol \(pygwy\): gwy_data_field_create_full_mask$
+^Evil symbol \(pygwy\): gwy_data_field_elliptic_area_extract_wrap$
+^Evil symbol \(pygwy\): gwy_data_field_fit_polynom_wrap$
+^Evil symbol \(pygwy\): gwy_data_field_get_profile_wrap$
+^Evil symbol \(pygwy\): gwy_construct_grain_quantity_units$
+^Evil symbol \(pygwy\): gwy_data_field_get_grain_bounding_boxes_wrap$
+^Evil symbol \(pygwy\): gwy_data_field_grains_get_distribution_wrap$
+^Evil symbol \(pygwy\): gwy_data_field_grains_get_values_wrap$
+^Evil symbol \(pygwy\): gwy_data_field_number_grains_periodic_wrap$
+^Evil symbol \(pygwy\): gwy_data_field_number_grains_wrap$
+^Evil symbol \(pygwy\): gwy_get_grain_quantity_needs_same_units_wrap$
+^Evil symbol \(pygwy\): gwy_get_key_from_name$
+^Evil symbol \(pygwy\): gwy_selection_get_data_wrap$
+^Evil symbol \(pygwy\): gwy_tip_cmap_wrap$
+^Evil symbol \(pygwy\): gwy_tip_dilation_wrap$
+^Evil symbol \(pygwy\): gwy_tip_erosion_wrap$
+^Evil symbol \(pygwy\): gwy_tip_estimate_full_wrap$
+^Evil symbol \(pygwy\): gwy_tip_estimate_partial_wrap$
+^Evil symbol \(pygwy\): pygwy_create_environment$
+^Evil symbol \(pygwy\): pygwy_initialize$
+^Evil symbol \(pygwy\): pygwy_register_console$
+^Evil symbol \(pygwy\): pygwy_run_string$
 ':'
 :
 
@@ -100,14 +97,14 @@ cat >check_symbols.ignore <<':'
 # Export-only modules (no magic to install):
 #     imgexport, vtk, xyzexport
 cat >check_desktop.ignore <<':'
-Module fitsfile.c contains no magic.
-Module hdf4file.c contains no magic.
-Module imgexport.c contains no magic.
-Module matfile.c contains no magic.
-Module netcdf.c contains no magic.
-Module vtkfile.c contains no magic.
-Module xyzexport.c contains no magic.
-Module hdrimage.cc contains no magic.
+Module fitsfile\.c contains no magic\.
+Module hdf4file\.c contains no magic\.
+Module imgexport\.c contains no magic\.
+Module matfile\.c contains no magic\.
+Module netcdf\.c contains no magic\.
+Module vtkfile\.c contains no magic\.
+Module xyzexport\.c contains no magic\.
+Module hdrimage\.cc contains no magic\.
 ':'
 :
 
@@ -119,7 +116,7 @@ function printerr() {
   cat --squeeze-blank $f.err \
   | {
     if test -s $f.ignore; then
-      grep -v -f $f.ignore
+      grep -E -v -f $f.ignore
     else
       cat
     fi
