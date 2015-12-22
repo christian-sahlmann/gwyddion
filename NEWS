@@ -10,6 +10,8 @@ Libraries:
   fixed.
 - libgwyapp: gwy_app_channel_remove_bad_data() now ensures the mask field has
   the same lateral dimensions and units as the data field.
+- libgwyprocess: Bogus value returned by gwy_data_field_area_get_entropy() with
+  mask exclusion mode was fixed.
 
 Modules:
 - DM3: Support for Digital Micrograph DM4 files was added.
@@ -31,8 +33,14 @@ Modules:
   after deleting a channel was fixed.
 - Rawfile: Replacement value for missing data can be given as text for text
   formats, e.g. ‘BAD’ or ‘NODATA’.
+- Raw XYZ: Estimated data range is scaled by the lateral units.  A bug in
+  point merging was fixed that sometimes caused infinities to appear in the
+  data.
 - Nanoscope: Support for 32bit raw data format used since 9.2 was added.
 - JEOL: Support for Phase channels was added.
+- Statistical quantities: Deficit of entropy to Gaussian distribution with the
+  same dispersion was added as a new quantity.  Unavailable quantities are no
+  longer printed to reports.
 
 Other:
 - MS Windows packages include OpenEXR support now.
