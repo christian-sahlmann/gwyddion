@@ -55,9 +55,9 @@ typedef struct {
     gdouble sel[4];
     gint isel[4];
 
-    gdouble avg;
     gdouble min;
     gdouble max;
+    gdouble avg;
     gdouble median;
     gdouble ra;
     gdouble rms;
@@ -73,9 +73,9 @@ typedef struct {
     gdouble theta;
     gdouble phi;
 
-    gdouble uavg;
     gdouble umin;
     gdouble umax;
+    gdouble uavg;
     gdouble umedian;
     gdouble ura;
     gdouble urms;
@@ -109,9 +109,9 @@ struct _GwyToolStats {
     GtkWidget *copy;
     GtkWidget *save;
 
-    GtkWidget *avg;
     GtkWidget *min;
     GtkWidget *max;
+    GtkWidget *avg;
     GtkWidget *median;
     GtkWidget *ra;
     GtkWidget *rms;
@@ -191,12 +191,36 @@ static void       gwy_tool_stats_copy                  (GwyToolStats *tool);
 static gchar*     gwy_tool_stats_create_report         (gpointer user_data,
                                                         gssize *data_len);
 
+/* NB: The order of the values is important for create_report()! */
+static struct {
+    const gchar *name;
+    gsize offset;
+}
+const values[] = {
+    { N_("Minimum:"),          G_STRUCT_OFFSET(GwyToolStats, min),        },
+    { N_("Maximum:"),          G_STRUCT_OFFSET(GwyToolStats, max),        },
+    { N_("Average value:"),    G_STRUCT_OFFSET(GwyToolStats, avg),        },
+    { N_("Median:"),           G_STRUCT_OFFSET(GwyToolStats, median),     },
+    { N_("Ra (Sa):"),          G_STRUCT_OFFSET(GwyToolStats, ra),         },
+    { N_("Rms (Sq):"),         G_STRUCT_OFFSET(GwyToolStats, rms),        },
+    { N_("Rms (grain-wise):"), G_STRUCT_OFFSET(GwyToolStats, rms_gw),     },
+    { N_("Skew:"),             G_STRUCT_OFFSET(GwyToolStats, skew),       },
+    { N_("Kurtosis:"),         G_STRUCT_OFFSET(GwyToolStats, kurtosis),   },
+    { N_("Surface area:"),     G_STRUCT_OFFSET(GwyToolStats, area),       },
+    { N_("Projected area:"),   G_STRUCT_OFFSET(GwyToolStats, projarea),   },
+    { N_("Variation:"),        G_STRUCT_OFFSET(GwyToolStats, var),        },
+    { N_("Entropy:"),          G_STRUCT_OFFSET(GwyToolStats, entropy),    },
+    { N_("Entropy deficit:"),  G_STRUCT_OFFSET(GwyToolStats, entropydef), },
+    { N_("Inclination θ:"),    G_STRUCT_OFFSET(GwyToolStats, theta),      },
+    { N_("Inclination φ:"),    G_STRUCT_OFFSET(GwyToolStats, phi),        },
+};
+
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Statistics tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.16",
+    "2.17",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -335,28 +359,6 @@ gwy_tool_stats_rect_updated(GwyToolStats *tool)
 static void
 gwy_tool_stats_init_dialog(GwyToolStats *tool)
 {
-    static struct {
-        const gchar *name;
-        gsize offset;
-    }
-    const values[] = {
-        { N_("Average value:"),    G_STRUCT_OFFSET(GwyToolStats, avg),        },
-        { N_("Minimum:"),          G_STRUCT_OFFSET(GwyToolStats, min),        },
-        { N_("Maximum:"),          G_STRUCT_OFFSET(GwyToolStats, max),        },
-        { N_("Median:"),           G_STRUCT_OFFSET(GwyToolStats, median),     },
-        { N_("Ra (Sa):"),          G_STRUCT_OFFSET(GwyToolStats, ra),         },
-        { N_("Rms (Sq):"),         G_STRUCT_OFFSET(GwyToolStats, rms),        },
-        { N_("Rms (grain-wise):"), G_STRUCT_OFFSET(GwyToolStats, rms_gw),     },
-        { N_("Skew:"),             G_STRUCT_OFFSET(GwyToolStats, skew),       },
-        { N_("Kurtosis:"),         G_STRUCT_OFFSET(GwyToolStats, kurtosis),   },
-        { N_("Surface area:"),     G_STRUCT_OFFSET(GwyToolStats, area),       },
-        { N_("Projected area:"),   G_STRUCT_OFFSET(GwyToolStats, projarea),   },
-        { N_("Variation:"),        G_STRUCT_OFFSET(GwyToolStats, var),        },
-        { N_("Entropy:"),          G_STRUCT_OFFSET(GwyToolStats, entropy),    },
-        { N_("Entropy deficit:"),  G_STRUCT_OFFSET(GwyToolStats, entropydef), },
-        { N_("Inclination θ:"),    G_STRUCT_OFFSET(GwyToolStats, theta),      },
-        { N_("Inclination φ:"),    G_STRUCT_OFFSET(GwyToolStats, phi),        },
-    };
     GtkDialog *dialog;
     GtkWidget *hbox, *vbox, *image, *label, **plabel;
     GtkTable *table;
@@ -636,15 +638,15 @@ gwy_tool_stats_update_labels(GwyToolStats *tool)
     plain_tool = GWY_PLAIN_TOOL(tool);
 
     if (!plain_tool->data_field) {
+        gtk_label_set_text(GTK_LABEL(tool->min), "");
+        gtk_label_set_text(GTK_LABEL(tool->max), "");
+        gtk_label_set_text(GTK_LABEL(tool->avg), "");
+        gtk_label_set_text(GTK_LABEL(tool->median), "");
         gtk_label_set_text(GTK_LABEL(tool->ra), "");
         gtk_label_set_text(GTK_LABEL(tool->rms), "");
         gtk_label_set_text(GTK_LABEL(tool->rms_gw), "");
         gtk_label_set_text(GTK_LABEL(tool->skew), "");
         gtk_label_set_text(GTK_LABEL(tool->kurtosis), "");
-        gtk_label_set_text(GTK_LABEL(tool->avg), "");
-        gtk_label_set_text(GTK_LABEL(tool->min), "");
-        gtk_label_set_text(GTK_LABEL(tool->max), "");
-        gtk_label_set_text(GTK_LABEL(tool->median), "");
         gtk_label_set_text(GTK_LABEL(tool->area), "");
         gtk_label_set_text(GTK_LABEL(tool->projarea), "");
         gtk_label_set_text(GTK_LABEL(tool->var), "");
@@ -665,15 +667,15 @@ gwy_tool_stats_update_labels(GwyToolStats *tool)
     if (tool->has_calibration) {
         update_label_unc(vf, tool->ra, results->ra, results->ura);
         update_label_unc(vf, tool->rms, results->rms, results->urms);
-        g_snprintf(buffer, sizeof(buffer), "%2.3g±%2.3g", results->skew,
+        g_snprintf(buffer, sizeof(buffer), "%.3g±%.3g", results->skew,
                    results->uskew);
         gtk_label_set_text(GTK_LABEL(tool->skew), buffer);
-        g_snprintf(buffer, sizeof(buffer), "%2.3g±%2.3g",
+        g_snprintf(buffer, sizeof(buffer), "%.3g±%.3g",
                    results->kurtosis, results->ukurtosis);
         gtk_label_set_text(GTK_LABEL(tool->kurtosis), buffer);
-        update_label_unc(vf, tool->avg, results->avg, results->uavg);
         update_label_unc(vf, tool->min, results->min, results->umin);
         update_label_unc(vf, tool->max, results->max, results->umax);
+        update_label_unc(vf, tool->avg, results->avg, results->uavg);
         update_label_unc(vf, tool->median, results->median, results->umedian);
         update_label_unc(tool->area_format, tool->projarea,
                          results->projarea, results->uprojarea);
@@ -681,13 +683,13 @@ gwy_tool_stats_update_labels(GwyToolStats *tool)
     else {
         update_label(vf, tool->ra, results->ra);
         update_label(vf, tool->rms, results->rms);
-        g_snprintf(buffer, sizeof(buffer), "%2.3g", results->skew);
+        g_snprintf(buffer, sizeof(buffer), "%.3g", results->skew);
         gtk_label_set_text(GTK_LABEL(tool->skew), buffer);
-        g_snprintf(buffer, sizeof(buffer), "%2.3g", results->kurtosis);
+        g_snprintf(buffer, sizeof(buffer), "%.3g", results->kurtosis);
         gtk_label_set_text(GTK_LABEL(tool->kurtosis), buffer);
-        update_label(vf, tool->avg, results->avg);
         update_label(vf, tool->min, results->min);
         update_label(vf, tool->max, results->max);
+        update_label(vf, tool->avg, results->avg);
         update_label(vf, tool->median, results->median);
         update_label(tool->area_format, tool->projarea, results->projarea);
     }
@@ -786,14 +788,14 @@ gwy_tool_stats_calculate(GwyToolStats * tool)
     results->projarea = nn * q;
     /* TODO: do something more reasonable when nn == 0 */
 
+    gwy_data_field_area_get_min_max_mask(field, mask, masking,
+                                         isel[0], isel[1], w, h,
+                                         &results->min, &results->max);
     gwy_data_field_area_get_stats_mask(field, mask, masking,
                                        isel[0], isel[1], w, h,
                                        &results->avg,
                                        &results->ra, &results->rms,
                                        &results->skew, &results->kurtosis);
-    gwy_data_field_area_get_min_max_mask(field, mask, masking,
-                                         isel[0], isel[1], w, h,
-                                         &results->min, &results->max);
     results->rms_gw
         = gwy_data_field_area_get_grainwise_rms(field, mask, masking,
                                                 isel[0], isel[1], w, h);
@@ -862,6 +864,11 @@ calculate_uncertainties(GwyToolStats *tool,
         = gwy_data_field_area_get_projected_area_uncertainty(nn, tool->xunc,
                                                              tool->yunc);
 
+    gwy_data_field_area_get_min_max_uncertainty_mask(field, tool->zunc,
+                                                     mask, masking,
+                                                     isel[0], isel[1], w, h,
+                                                     &results->umin,
+                                                     &results->umax);
     gwy_data_field_area_get_stats_uncertainties_mask(field, tool->zunc,
                                                      mask, masking,
                                                      isel[0], isel[1], w, h,
@@ -871,11 +878,6 @@ calculate_uncertainties(GwyToolStats *tool,
                                                      &results->uskew,
                                                      &results->ukurtosis);
 
-    gwy_data_field_area_get_min_max_uncertainty_mask(field, tool->zunc,
-                                                     mask, masking,
-                                                     isel[0], isel[1], w, h,
-                                                     &results->umin,
-                                                     &results->umax);
     results->umedian
         = gwy_data_field_area_get_median_uncertainty_mask(field, tool->zunc,
                                                           mask, masking,
@@ -1018,26 +1020,59 @@ gwy_tool_stats_copy(GwyToolStats *tool)
     g_free(text);
 }
 
-#define fmt_val(v) \
-    g_strdup_printf("%.*f%s%s", \
-                    vf->precision + 1, report_data->results.v/vf->magnitude, \
-                    *vf->units ? " " : "", vf->units)
+static void
+append_report_line_label(GString *report, guint labelid, guint width)
+{
+    const gchar *label = _(values[labelid].name);
+    guint len = g_utf8_strlen(label, -1);
+
+    g_string_append(report, label);
+    while (len++ < width)
+        g_string_append_c(report, ' ');
+}
+
+static void
+append_report_line_vf(GString *report, guint labelid, gdouble value,
+                      GwySIValueFormat *vf, guint width)
+{
+    append_report_line_label(report, labelid, width);
+    g_string_append_printf(report, "%.*f%s%s\n",
+                           vf->precision + 1, value/vf->magnitude,
+                           *vf->units ? " " : "", vf->units);
+}
+
+static void
+append_report_line_plain(GString *report, guint labelid, gdouble value,
+                         const gchar *format, guint width)
+{
+    append_report_line_label(report, labelid, width);
+    g_string_append_printf(report, format, value);
+    g_string_append_c(report, '\n');
+}
 
 static gchar*
 gwy_tool_stats_create_report(gpointer user_data,
                              gssize *data_len)
 {
     const ToolReportData *report_data = (const ToolReportData*)user_data;
+    const ToolResults *results = &report_data->results;
+    GwyDataField *field = report_data->data_field;
+    GwyContainer *container = report_data->container;
     GwySIUnit *siunitxy, *siunitz, *siunitarea, *siunitvar;
     gdouble xreal, yreal, q;
     GwySIValueFormat *vf = NULL;
     const guchar *title;
-    gboolean mask_in_use;
+    gboolean mask_in_use, same_units = report_data->same_units;
     GString *report;
     gchar *ix, *iy, *iw, *ih, *rx, *ry, *rw, *rh, *muse, *uni;
-    gchar *avg, *min, *max, *median, *rms, *rms_gw, *ra, *skew, *kurtosis;
-    gchar *area, *projarea, *var, *entropy, *entropydef, *theta, *phi;
     gchar *key, *retval;
+    guint i, maxw;
+
+    xreal = gwy_data_field_get_xreal(field);
+    yreal = gwy_data_field_get_xreal(field);
+
+    siunitxy = gwy_data_field_get_si_unit_xy(field);
+    siunitz = gwy_data_field_get_si_unit_z(field);
 
     mask_in_use = (report_data->masking != GWY_MASK_IGNORE);
     *data_len = -1;
@@ -1047,110 +1082,85 @@ gwy_tool_stats_create_report(gpointer user_data,
     g_string_append(report, "\n\n");
 
     /* Channel information */
-    if (gwy_container_gis_string_by_name(report_data->container,
-                                         "/filename", &title))
-        g_string_append_printf(report, _("File:              %s\n"), title);
+    if (gwy_container_gis_string_by_name(container, "/filename", &title))
+        g_string_append_printf(report, _("File:         %s\n"), title);
 
     key = g_strdup_printf("/%d/data/title", report_data->id);
-    if (gwy_container_gis_string_by_name(report_data->container, key, &title))
-        g_string_append_printf(report, _("Data channel:      %s\n"), title);
+    if (gwy_container_gis_string_by_name(container, key, &title))
+        g_string_append_printf(report, _("Data channel: %s\n"), title);
     g_free(key);
 
     g_string_append_c(report, '\n');
 
-    iw = g_strdup_printf("%d", report_data->results.isel[2]);
-    ih = g_strdup_printf("%d", report_data->results.isel[3]);
-    ix = g_strdup_printf("%d", report_data->results.isel[0]);
-    iy = g_strdup_printf("%d", report_data->results.isel[1]);
+    iw = g_strdup_printf("%d", results->isel[2]);
+    ih = g_strdup_printf("%d", results->isel[3]);
+    ix = g_strdup_printf("%d", results->isel[0]);
+    iy = g_strdup_printf("%d", results->isel[1]);
 
-    vf = gwy_data_field_get_value_format_xy(report_data->data_field,
+    vf = gwy_data_field_get_value_format_xy(field,
                                             GWY_SI_UNIT_FORMAT_PLAIN, vf);
-    rw = g_strdup_printf("%.*f", vf->precision,
-                         report_data->results.sel[2]/vf->magnitude);
-    rh = g_strdup_printf("%.*f", vf->precision,
-                         report_data->results.sel[3]/vf->magnitude);
-    rx = g_strdup_printf("%.*f", vf->precision,
-                         report_data->results.sel[0]/vf->magnitude);
-    ry = g_strdup_printf("%.*f", vf->precision,
-                         report_data->results.sel[1]/vf->magnitude);
+    rw = g_strdup_printf("%.*f", vf->precision, results->sel[2]/vf->magnitude);
+    rh = g_strdup_printf("%.*f", vf->precision, results->sel[3]/vf->magnitude);
+    rx = g_strdup_printf("%.*f", vf->precision, results->sel[0]/vf->magnitude);
+    ry = g_strdup_printf("%.*f", vf->precision, results->sel[1]/vf->magnitude);
     uni = g_strdup(vf->units);
 
     muse = g_strdup(mask_in_use ? _("Yes") : _("No"));
 
-    vf = gwy_data_field_get_value_format_z(report_data->data_field,
-                                           GWY_SI_UNIT_FORMAT_PLAIN, vf);
-    avg = fmt_val(avg);
-    min = fmt_val(min);
-    max = fmt_val(max);
-    median = fmt_val(median);
-    ra = fmt_val(ra);
-    rms = fmt_val(rms);
-    rms_gw = fmt_val(rms_gw);
+    maxw = 0;
+    for (i = 0; i < G_N_ELEMENTS(values); i++) {
+        guint len = g_utf8_strlen(_(values[i].name), -1);
+        maxw = MAX(maxw, len);
+    }
+    maxw++;
 
-    skew = g_strdup_printf("%3.4g", report_data->results.skew);
-    kurtosis = g_strdup_printf("%3.4g", report_data->results.kurtosis);
+    g_string_append_printf(report,
+                           _("Selected area: %s × %s at (%s, %s) px\n"
+                             "               %s × %s at (%s, %s) %s\n"
+                             "Mask in use:   %s\n"),
+                           iw, ih, ix, iy,
+                           rw, rh, rx, ry, uni,
+                           muse);
+    g_string_append_c(report, '\n');
 
-    siunitxy = gwy_data_field_get_si_unit_xy(report_data->data_field);
-    siunitz = gwy_data_field_get_si_unit_z(report_data->data_field);
+    vf = gwy_data_field_get_value_format_z(field, GWY_SI_UNIT_FORMAT_PLAIN, vf);
+    append_report_line_vf(report, 0, results->min, vf, maxw);
+    append_report_line_vf(report, 1, results->max, vf, maxw);
+    append_report_line_vf(report, 2, results->avg, vf, maxw);
+    append_report_line_vf(report, 3, results->median, vf, maxw);
+    append_report_line_vf(report, 4, results->ra, vf, maxw);
+    append_report_line_vf(report, 5, results->rms, vf, maxw);
+    append_report_line_vf(report, 6, results->rms_gw, vf, maxw);
+
+    append_report_line_plain(report, 7, results->skew, "%.4g", maxw);
+    append_report_line_plain(report, 8, results->kurtosis, "%.4g", maxw);
+
     siunitarea = gwy_si_unit_power(siunitxy, 2, NULL);
-    siunitvar = gwy_si_unit_multiply(siunitxy, siunitz, NULL);
-    xreal = gwy_data_field_get_xreal(report_data->data_field);
-    yreal = gwy_data_field_get_xreal(report_data->data_field);
-    q = xreal/gwy_data_field_get_xres(report_data->data_field)
-        *yreal/gwy_data_field_get_yres(report_data->data_field);
+    q = gwy_data_field_get_xmeasure(field) * gwy_data_field_get_ymeasure(field);
     vf = gwy_si_unit_get_format_with_resolution(siunitarea,
                                                 GWY_SI_UNIT_FORMAT_PLAIN,
                                                 xreal*yreal, q, vf);
+    if (same_units)
+        append_report_line_vf(report, 9, results->area, vf, maxw);
+    append_report_line_vf(report, 10, results->projarea, vf, maxw);
     g_object_unref(siunitarea);
 
-    area = report_data->same_units ? fmt_val(area) : g_strdup(_("N.A."));
-    projarea = fmt_val(projarea);
-
-    vf = gwy_si_unit_get_format_with_digits(siunitvar,
-                                            GWY_SI_UNIT_FORMAT_PLAIN,
-                                            report_data->results.var, 3, vf);
-    var = fmt_val(var);
+    siunitvar = gwy_si_unit_multiply(siunitxy, siunitz, NULL);
+    vf = gwy_si_unit_get_format_with_digits(siunitvar, GWY_SI_UNIT_FORMAT_PLAIN,
+                                            results->var, 3, vf);
+    append_report_line_vf(report, 11, results->var, vf, maxw);
     g_object_unref(siunitvar);
     gwy_si_unit_value_format_free(vf);
+    vf = NULL;
 
-    entropy = g_strdup_printf("%.5g", report_data->results.entropy);
-    entropydef = g_strdup_printf("%.5g", report_data->results.entropydef);
+    append_report_line_plain(report, 12, results->entropy, "%.5g", maxw);
+    append_report_line_plain(report, 13, results->entropydef, "%.5g", maxw);
 
-    vf = report_data->angle_format;
-
-    theta = ((report_data->same_units && !mask_in_use)
-             ? fmt_val(theta) : g_strdup(_("N.A.")));
-    phi = ((report_data->same_units && !mask_in_use)
-           ? fmt_val(phi) : g_strdup(_("N.A.")));
-
-    g_string_append_printf(report,
-                           _("Selected area:     %s × %s at (%s, %s) px\n"
-                             "                   %s × %s at (%s, %s) %s\n"
-                             "Mask in use:       %s\n"
-                             "\n"
-                             "Average value:     %s\n"
-                             "Minimum:           %s\n"
-                             "Maximum:           %s\n"
-                             "Median:            %s\n"
-                             "Ra:                %s\n"
-                             "Rms:               %s\n"
-                             "Rms (grain-wise):  %s\n"
-                             "Skew:              %s\n"
-                             "Kurtosis:          %s\n"
-                             "Surface area:      %s\n"
-                             "Projected area:    %s\n"
-                             "Variation:         %s\n"
-                             "Entropy:           %s\n"
-                             "Entropy deficit:   %s\n"
-                             "Inclination θ:     %s\n"
-                             "Inclination φ:     %s\n"),
-                           iw, ih, ix, iy,
-                           rw, rh, rx, ry, uni,
-                           muse,
-                           avg, min, max, median, ra, rms, rms_gw,
-                           skew, kurtosis,
-                           area, projarea, var, entropy, entropydef,
-                           theta, phi);
+    if (same_units && !mask_in_use) {
+        vf = report_data->angle_format;
+        append_report_line_vf(report, 14, results->theta, vf, maxw);
+        append_report_line_vf(report, 15, results->phi, vf, maxw);
+    }
 
     g_free(ix);
     g_free(iy);
@@ -1160,22 +1170,6 @@ gwy_tool_stats_create_report(gpointer user_data,
     g_free(ry);
     g_free(rw);
     g_free(rh);
-    g_free(avg);
-    g_free(min);
-    g_free(max);
-    g_free(median);
-    g_free(ra);
-    g_free(rms);
-    g_free(rms_gw);
-    g_free(skew);
-    g_free(kurtosis);
-    g_free(area);
-    g_free(projarea);
-    g_free(var);
-    g_free(entropy);
-    g_free(entropydef);
-    g_free(theta);
-    g_free(phi);
 
     retval = report->str;
     g_string_free(report, FALSE);
