@@ -41,9 +41,9 @@ cat >build_documentation.ignore <<':'
 
 cat >make_dists.ignore <<':'
 ^\+
-^libtool: install: warning: relinking [`'].*\.la'
-^libtool: install: warning: [`'].*\.la' has not been installed in [`']/usr/lib(64)?
-^libtool: install: warning: remember to run [`']libtool --finish /usr/lib(64)?
+^libtool:( install:)? warning: relinking [`'].*\.la'
+^libtool:( install:)? warning: [`'].*\.la' has not been installed in [`']/usr/lib(64)?
+^libtool:( install:)? warning: remember to run [`']libtool --finish /usr/lib(64)?
 ^\.+ done$
 ^[0-9]+ blocks
 ^[0-9]+ translated message
