@@ -4551,7 +4551,7 @@ calculate_entropy(GwyDataField *dfield,
         for (i = size; i; i--, ck++)
             S += gwy_xlnx_int(*ck);
         S = log(n*(max - min)/size) - S/n;
-        ecurve[div] = S;
+        ecurve[maxdiv - div] = S;
         size >>= 1;
 
         // Make the bins twice as large.
