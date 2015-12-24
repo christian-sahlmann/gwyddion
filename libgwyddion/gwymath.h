@@ -102,6 +102,7 @@ void     gwy_math_sort                 (gsize n,
 gdouble  gwy_math_median_uncertainty   (gsize n,
                                         gdouble *array,
                                         gdouble *uarray);
+gdouble  gwy_xlnx_int                  (guint x)                G_GNUC_CONST;
 
 G_END_DECLS
 
