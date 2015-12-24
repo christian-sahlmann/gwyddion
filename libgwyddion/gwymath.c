@@ -875,6 +875,8 @@ gwy_math_refine_maximum(const gdouble *z,
  * standard log() function which is of course slower.
  *
  * Returns: Value of @x*log(@x).
+ *
+ * Since: 2.44
  **/
 gdouble
 gwy_xlnx_int(guint x)
