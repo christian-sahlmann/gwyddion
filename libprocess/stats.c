@@ -4468,6 +4468,49 @@ gwy_data_field_area_get_volume(GwyDataField *data_field,
     return calculate_volume(data_field, basis, mask, col, row, width, height);
 }
 
+/* Find the flattest part of the curve representing scaling histogram-based
+ * entropy on scale and use the value there as the entropy estimate.  Handle
+ * the too-few-pixels cases gracefully.
+ *
+ * NB: We assume ecurve beings from large scales.  This is important only when
+ * it has lots of points because we may skip a few at the beginning then to
+ * avoid mistaking the flat part of the curve there for the inflexion point. */
+static gdouble
+calculate_entropy_from_scaling(const gdouble *ecurve, guint maxdiv)
+{
+    gdouble mindiff = G_MAXDOUBLE;
+    guint from = maxdiv/12;
+    guint i, imin = from + 2;
+
+    if (maxdiv < 1)
+        return ecurve[0];
+
+    if (maxdiv < 5) {
+        imin = 1;
+        for (i = from; i <= maxdiv-2; i++) {
+            gdouble diff = (fabs(ecurve[i] - ecurve[i+1])
+                            + fabs(ecurve[i+1] - ecurve[i+2]));
+            if (diff < mindiff) {
+                mindiff = diff;
+                imin = i+1;
+            }
+        }
+        return ecurve[imin];
+    }
+
+    for (i = from; i <= maxdiv-4; i++) {
+        gdouble diff = (fabs(ecurve[i] - ecurve[i+1])
+                        + fabs(ecurve[i+1] - ecurve[i+2])
+                        + fabs(ecurve[i+2] - ecurve[i+3])
+                        + fabs(ecurve[i+3] - ecurve[i+4]));
+        if (diff < mindiff) {
+            mindiff = diff;
+            imin = i+2;
+        }
+    }
+    return (ecurve[imin-1] + ecurve[imin] + ecurve[imin+1])/3.0;
+}
+
 static gdouble
 calculate_entropy(GwyDataField *dfield,
                   GwyDataField *mask,
@@ -4562,39 +4605,7 @@ calculate_entropy(GwyDataField *dfield,
 
     g_free(counts);
 
-    // Find the flattest part of the curve and use the value there as the
-    // entropy estimate.  Handle the too-few-pixels cases gracefully.
-    if (maxdiv < 5) {
-        gdouble mindiff = G_MAXDOUBLE;
-        guint imin = 1;
-
-        for (i = 0; i <= maxdiv-2; i++) {
-            gdouble diff = (fabs(ecurve[i] - ecurve[i+1])
-                            + fabs(ecurve[i+1] - ecurve[i+2]));
-            if (diff < mindiff) {
-                mindiff = diff;
-                imin = i+1;
-            }
-        }
-        S = ecurve[imin];
-    }
-    else {
-        gdouble mindiff = G_MAXDOUBLE;
-        guint imin = 2;
-
-        for (i = 0; i <= maxdiv-4; i++) {
-            gdouble diff = (fabs(ecurve[i] - ecurve[i+1])
-                            + fabs(ecurve[i+1] - ecurve[i+2])
-                            + fabs(ecurve[i+2] - ecurve[i+3])
-                            + fabs(ecurve[i+3] - ecurve[i+4]));
-            if (diff < mindiff) {
-                mindiff = diff;
-                imin = i+2;
-            }
-        }
-        S = (ecurve[imin-1] + ecurve[imin] + ecurve[imin+1])/3.0;
-    }
-
+    S = calculate_entropy_from_scaling(ecurve, maxdiv);
     g_free(ecurve);
 
     return S;
