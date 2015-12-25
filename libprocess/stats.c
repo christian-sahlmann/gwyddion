@@ -38,6 +38,38 @@
 #include "gwyprocessinternal.h"
 #include "wrappers.h"
 
+typedef struct _QuadTreeNode QuadTreeNode;
+
+typedef struct {
+    gdouble x;
+    gdouble y;
+} GwyXY;
+
+struct _QuadTreeNode {
+    /* This optimally uses memory on 64bit architectures where pt and
+     * children have the same size (32 bytes). */
+    union {
+        /* The at most two points inside for non-max-depth leaves. */
+        struct {
+            GwyXY a;
+            GwyXY b;
+        } pt;
+        /* Children for non-max-depth non-leaves. */
+        QuadTreeNode *children[4];
+    } u;
+    /* Always set; for max-depth leaves it is the only meaningful field. */
+    guint count;
+};
+
+typedef struct {
+    GwyXY min;
+    GwyXY max;
+    QuadTreeNode *root;
+    guint maxdepth;
+    gboolean degenerated;
+    gdouble degeneratedS;
+} QuadTree;
+
 /**
  * gwy_data_field_get_max:
  * @data_field: A data field.
@@ -4552,7 +4584,7 @@ calculate_entropy(GwyDataField *dfield,
     /* XXX: In libgwy4 we get rid of outlies here. */
 
     xres = dfield->xres;
-    maxdiv = (guint)floor(log2(n) + 1e-12);
+    maxdiv = (guint)floor(log(n)/G_LN2 + 1e-12);
     g_assert(maxdiv >= 2);
     size = 1 << maxdiv;
     counts = g_new0(guint, size);
@@ -4698,6 +4730,355 @@ gwy_data_field_area_get_entropy(GwyDataField *data_field,
 
     return calculate_entropy(data_field, mask, mode,
                              col, row, width, height);
+}
+
+static QuadTreeNode*
+quad_tree_node_new(const GwyXY *pt)
+{
+    QuadTreeNode *qtnode = g_slice_new(QuadTreeNode);
+    qtnode->u.pt.a = *pt;
+    qtnode->count = 1;
+    return qtnode;
+}
+
+static void
+quad_tree_add_node(QuadTreeNode *qtnode, const GwyXY *pt,
+                   GwyXY min, GwyXY max, guint maxdepth)
+{
+    QuadTreeNode *child;
+    GwyXY centre;
+    guint i;
+
+    /* We reached maximum allowed subdivision.  Just increase the count. */
+    if (!maxdepth) {
+        if (qtnode->count <= 2)
+            gwy_clear(&qtnode->u, 1);
+        qtnode->count++;
+        return;
+    }
+
+    /* We will descend into subtrees. */
+    centre.x = 0.5*(min.x + max.x);
+    centre.y = 0.5*(min.y + max.y);
+
+    /* If this node has just one point add the other there and we are done. */
+    if (qtnode->count == 1) {
+        qtnode->u.pt.b = *pt;
+        qtnode->count++;
+        return;
+    }
+
+    /* We will be recursing.  So if this node is a leaf start by making it
+     * non-leaf. */
+    if (qtnode->count == 2) {
+        GwyXY pta = qtnode->u.pt.a;
+        GwyXY ptb = qtnode->u.pt.b;
+        guint ia = (pta.x > centre.x) + 2*(pta.y > centre.y);
+        guint ib = (ptb.x > centre.x) + 2*(ptb.y > centre.y);
+
+        gwy_clear(&qtnode->u, 1);
+        child = qtnode->u.children[ia] = quad_tree_node_new(&pta);
+        /* Must distinguish between creating two child nodes and creating one
+         * two-point child node. */
+        if (ia == ib) {
+            child->u.pt.b = ptb;
+            child->count = 2;
+        }
+        else
+            qtnode->u.children[ib] = quad_tree_node_new(&ptb);
+    }
+
+    /* Add the new point to the appropriate child. */
+    i = (pt->x > centre.x) + 2*(pt->y > centre.y);
+    maxdepth--;
+    qtnode->count++;
+
+    if ((child = qtnode->u.children[i])) {
+        /* Recurse.  This will end either by reaching maxdepth=0 or by
+         * successful separation in the other branch of this conditon. */
+        if (i == 0)
+            quad_tree_add_node(child, pt, min, centre, maxdepth);
+        else if (i == 1) {
+            min.x = centre.x;
+            max.y = centre.y;
+            quad_tree_add_node(child, pt, min, max, maxdepth);
+        }
+        else if (i == 2) {
+            max.x = centre.x;
+            min.y = centre.y;
+            quad_tree_add_node(child, pt, min, max, maxdepth);
+        }
+        else
+            quad_tree_add_node(child, pt, centre, max, maxdepth);
+    }
+    else {
+        /* There is nothing here yet.  Add the point as a new leaf. */
+        qtnode->u.children[i] = quad_tree_node_new(pt);
+    }
+}
+
+static void
+quad_tree_add(QuadTree *qtree, const GwyXY *pt)
+{
+    if (G_LIKELY(qtree->root)) {
+        quad_tree_add_node(qtree->root, pt,
+                           qtree->min, qtree->max, qtree->maxdepth);
+    }
+    else
+        qtree->root = quad_tree_node_new(pt);
+}
+
+static void
+quad_tree_find_range(QuadTree *qtree,
+                     const gdouble *xdata, const gdouble *ydata, guint n)
+{
+    GwyXY min = { G_MAXDOUBLE, G_MAXDOUBLE };
+    GwyXY max = { -G_MAXDOUBLE, -G_MAXDOUBLE };
+    guint i;
+
+    for (i = 0; i < n; i++) {
+        gdouble x = xdata[i];
+        gdouble y = ydata[i];
+
+        if (x < min.x)
+            min.x = x;
+        if (x > max.x)
+            max.x = x;
+        if (y < min.y)
+            min.y = y;
+        if (y > max.y)
+            max.y = y;
+    }
+
+    qtree->min = min;
+    qtree->max = max;
+}
+
+static void
+quad_tree_node_free(QuadTreeNode *qtnode)
+{
+    guint i;
+
+    if (qtnode->count > 2) {
+        for (i = 0; i < 4; i++) {
+            if (qtnode->u.children[i])
+                quad_tree_node_free(qtnode->u.children[i]);
+        }
+    }
+    g_slice_free(QuadTreeNode, qtnode);
+}
+
+static void
+quad_tree_free(QuadTree *qtree)
+{
+    quad_tree_node_free(qtree->root);
+    g_free(qtree);
+}
+
+static QuadTree*
+quad_tree_new(const gdouble *xdata, const gdouble *ydata, guint n,
+              guint maxdepth)
+{
+    QuadTree *qtree;
+    guint i;
+
+    qtree = g_new0(QuadTree, 1);
+
+    if (!maxdepth)
+        maxdepth = 16;
+    qtree->maxdepth = maxdepth;
+
+    quad_tree_find_range(qtree, xdata, ydata, n);
+    if (!(qtree->min.x < qtree->max.x) || !(qtree->min.y < qtree->max.y)) {
+        qtree->degenerated = TRUE;
+        qtree->degeneratedS = G_MAXDOUBLE;
+        return qtree;
+    }
+
+    /* Return explicit estimates for n < 4, making maxdiv at least 1 (with
+     * half-scales included, ecurve will have at least 3 points then). */
+    if (n == 2) {
+        qtree->degenerated = TRUE;
+        qtree->degeneratedS = (log(qtree->max.x - qtree->min.x)
+                               + log(qtree->max.y - qtree->min.y));
+        return qtree;
+    }
+    if (n == 3) {
+        qtree->degenerated = TRUE;
+        /* FIXME: This may not the best estimate in 2D.  Do we care? */
+        qtree->degeneratedS = (log(qtree->max.x - qtree->min.x)
+                               + log(qtree->max.y - qtree->min.y)
+                               + 0.5*log(1.5) - G_LN2/3.0);
+        return qtree;
+    }
+
+    for (i = 0; i < n; i++) {
+        GwyXY pt = { xdata[i], ydata[i] };
+        quad_tree_add(qtree, &pt);
+    }
+
+    return qtree;
+}
+
+static gdouble
+quad_tree_node_half_scale_entropy(QuadTreeNode *qtnode)
+{
+    QuadTreeNode *child;
+    guint cnt[4] = { 0, 0, 0, 0 };
+    guint i;
+
+    for (i = 0; i < 4; i++) {
+        if ((child = qtnode->u.children[i]))
+            cnt[i] = child->count;
+    }
+    return 0.5*(gwy_xlnx_int(cnt[0] + cnt[1])
+                + gwy_xlnx_int(cnt[2] + cnt[3])
+                + gwy_xlnx_int(cnt[0] + cnt[2])
+                + gwy_xlnx_int(cnt[1] + cnt[3]));
+}
+
+/* This is what we get on average from all possible two-point configurations if
+ * they are randomly distributed.  A fairly good estimate that in practice
+ * seems to result in some deviation on the 5th significant digit, which is
+ * hardly significant at all. */
+static void
+add_estimated_unsplit_node_entropy(gdouble *S, guint maxdepth, gdouble w)
+{
+    gdouble q = 2.0*G_LN2*w;
+
+    while (maxdepth) {
+        S[0] += q;
+        q *= 0.5;
+        S++;
+
+        S[0] += q;
+        q *= 0.5;
+        S++;
+
+        maxdepth--;
+    }
+}
+
+static void
+quad_tree_node_entropies_at_scales(QuadTreeNode *qtnode, guint maxdepth,
+                                   gdouble *S, guint *unsplit)
+{
+    QuadTreeNode *child;
+    guint i;
+
+    /* Singular points contribute to p*ln(p) always with zero.  So we can stop
+     * recursion to finer subdivisions when count == 1. */
+    if (qtnode->count <= 1)
+        return;
+
+    if (!maxdepth) {
+        S[0] += gwy_xlnx_int(qtnode->count);
+        return;
+    }
+
+    if (qtnode->count == 2) {
+        unsplit[0]++;
+        return;
+    }
+
+    S[0] += gwy_xlnx_int(qtnode->count);
+    S++;
+
+    // Half-scale entropies we estimate as averages of horizontal and vertical
+    // binning.
+    S[0] += quad_tree_node_half_scale_entropy(qtnode);
+    S++;
+
+    maxdepth--;
+    unsplit++;
+    for (i = 0; i < 4; i++) {
+        if ((child = qtnode->u.children[i]))
+            quad_tree_node_entropies_at_scales(child, maxdepth, S, unsplit);
+    }
+}
+
+static gdouble*
+quad_tree_entropies_at_scales(QuadTree *qtree, guint maxdepth)
+{
+    gdouble *S;
+    guint *unsplit;
+    guint i, n, npts;
+    gdouble dxy;
+
+    if (!maxdepth)
+        maxdepth = qtree->maxdepth;
+
+    n = 2*maxdepth + 1;
+    S = g_new0(gdouble, n);
+    unsplit = g_new0(guint, maxdepth);
+    quad_tree_node_entropies_at_scales(qtree->root,
+                                       MIN(maxdepth, qtree->maxdepth),
+                                       S, unsplit);
+
+    for (i = 0; i < maxdepth; i++) {
+        if (unsplit[i])
+            add_estimated_unsplit_node_entropy(S + 2*i, maxdepth-i, unsplit[i]);
+    }
+    g_free(unsplit);
+
+    npts = qtree->root->count;
+    dxy = (qtree->max.x - qtree->min.x)*(qtree->max.y - qtree->min.y);
+    for (i = 0; i < n; i++) {
+        S[i] = log(npts*dxy) - S[i]/npts;
+        dxy *= 0.5;
+    }
+
+    return S;
+}
+
+/**
+ * gwy_data_field_get_entropy_2d:
+ * @xfield: A data field containing the @x-coordinates.
+ * @yfield: A data field containing the @y-coordinates.
+ *
+ * Computes the entropy of a two-dimensional point cloud.
+ *
+ * Each pair of corresponding @xfield and @yfield pixels is assumed to
+ * represent the coordinates (@x,@y) of a point in plane.  Hence they must have
+ * the same dimensions.
+ *
+ * Returns: The two-dimensional distribution entropy.
+ *
+ * Since: 2.44
+ **/
+gdouble
+gwy_data_field_get_entropy_2d(GwyDataField *xfield,
+                              GwyDataField *yfield)
+{
+    guint xres, yres, n, maxdiv;
+    QuadTree *qtree;
+    gdouble S = 0.0;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(xfield), S);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(yfield), S);
+    g_return_val_if_fail(xfield->xres == yfield->xres, S);
+    g_return_val_if_fail(xfield->yres == yfield->yres, S);
+
+    xres = xfield->xres;
+    yres = xfield->yres;
+    n = xres*yres;
+
+    if (n < 2)
+        return G_MAXDOUBLE;
+
+    maxdiv = (guint)floor(0.5*log(n)/G_LN2 + 1e-12);
+    qtree = quad_tree_new(xfield->data, yfield->data, n, maxdiv);
+
+    if (qtree->degenerated)
+        S = qtree->degeneratedS;
+    else {
+        gdouble *ecurve = quad_tree_entropies_at_scales(qtree, maxdiv);
+        S = calculate_entropy_from_scaling(ecurve, 2*maxdiv);
+        g_free(ecurve);
+    }
+    quad_tree_free(qtree);
+
+    return S;
 }
 
 /**
