@@ -23,7 +23,6 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libgwyddion/gwymath.h>
 #include <libprocess/level.h>
 #include <libprocess/stats.h>
 #include <libprocess/filters.h>
