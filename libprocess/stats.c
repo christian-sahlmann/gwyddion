@@ -4504,43 +4504,51 @@ gwy_data_field_area_get_volume(GwyDataField *data_field,
  * entropy on scale and use the value there as the entropy estimate.  Handle
  * the too-few-pixels cases gracefully.
  *
- * NB: We assume ecurve beings from large scales.  This is important only when
- * it has lots of points because we may skip a few at the beginning then to
- * avoid mistaking the flat part of the curve there for the inflexion point. */
+ * NB: We assume
+ * (1) ecurve beings from large scales.  This is important only when it has
+ * lots of points because we may skip a few at the beginning then to avoid
+ * mistaking the flat part of the curve there for the inflexion point.
+ * (2) ecurve goes by powers of 2 scales, this is for the mindiff filtering.
+ */
 static gdouble
 calculate_entropy_from_scaling(const gdouble *ecurve, guint maxdiv)
 {
-    gdouble mindiff = G_MAXDOUBLE;
-    guint from = maxdiv/12;
-    guint i, imin = from + 2;
+    /* Initialise S to the δ-function entropy and mindiff to the half of the
+     * asymptotic value for distribution that is sum of δ-functions.
+     * This means only if the differences drops substantially from this
+     * asymptotic value we will consider is as potential inflexion point.
+     * If we get ecurve[] essentially corresponding to a set of δ-functions
+     * then we return -G_MAXDOUBLE. */
+    gdouble S = -G_MAXDOUBLE, mindiff = 0.5*G_LN2;
+    guint i, from = maxdiv/12;
 
     if (maxdiv < 1)
         return ecurve[0];
 
     if (maxdiv < 5) {
-        imin = 1;
         for (i = from; i <= maxdiv-2; i++) {
-            gdouble diff = (fabs(ecurve[i] - ecurve[i+1])
-                            + fabs(ecurve[i+1] - ecurve[i+2]));
+            gdouble diff = 0.5*(fabs(ecurve[i+1] - ecurve[i])
+                                + fabs(ecurve[i+2] - ecurve[i+1]));
             if (diff < mindiff) {
+                S = ecurve[i+1];
                 mindiff = diff;
-                imin = i+1;
             }
         }
-        return ecurve[imin];
     }
-
-    for (i = from; i <= maxdiv-4; i++) {
-        gdouble diff = (fabs(ecurve[i] - ecurve[i+1])
-                        + fabs(ecurve[i+1] - ecurve[i+2])
-                        + fabs(ecurve[i+2] - ecurve[i+3])
-                        + fabs(ecurve[i+3] - ecurve[i+4]));
-        if (diff < mindiff) {
-            mindiff = diff;
-            imin = i+2;
+    else {
+        for (i = from; i <= maxdiv-4; i++) {
+            gdouble diff = 0.25*(fabs(ecurve[i+1] - ecurve[i])
+                                 + fabs(ecurve[i+2] - ecurve[i+1])
+                                 + fabs(ecurve[i+3] - ecurve[i+2])
+                                 + fabs(ecurve[i+4] - ecurve[i+3]));
+            if (diff < mindiff) {
+                S = (ecurve[i+1] + ecurve[i+2] + ecurve[i+3])/3.0;
+                mindiff = diff;
+            }
         }
     }
-    return (ecurve[imin-1] + ecurve[imin] + ecurve[imin+1])/3.0;
+
+    return S;
 }
 
 static gdouble
@@ -4568,13 +4576,13 @@ calculate_entropy(GwyDataField *dfield,
         n = width*height;
 
     if (n < 2)
-        return G_MAXDOUBLE;
+        return -G_MAXDOUBLE;
 
     gwy_data_field_area_get_min_max_mask(dfield, mask, mode,
                                          col, row, width, height,
                                          &min, &max);
     if (min >= max)
-        return G_MAXDOUBLE;
+        return -G_MAXDOUBLE;
     /* Return explicit estimates for n < 4, making maxdiv at least 2. */
     if (n == 2)
         return log(max - min);
@@ -5064,9 +5072,9 @@ gwy_data_field_get_entropy_2d(GwyDataField *xfield,
     n = xres*yres;
 
     if (n < 2)
-        return G_MAXDOUBLE;
+        return -G_MAXDOUBLE;
 
-    maxdiv = (guint)floor(0.5*log(n)/G_LN2 + 1e-12);
+    maxdiv = (guint)floor(log(n)/G_LN2 + 1e-12);
     qtree = quad_tree_new(xfield->data, yfield->data, n, maxdiv);
 
     if (qtree->degenerated)
