@@ -202,32 +202,32 @@ typedef enum {
 } WdfPropertyFlag;
 
 static const GwyEnum wdf_units[] = {
-    {"",          WDF_DATAUNITS_ARBITRARY },
-    {"1/cm",      WDF_DATAUNITS_RAMANSHIFT },
-    {"nm",        WDF_DATAUNITS_WAVENUMBER },
-    {"nm",        WDF_DATAUNITS_NANOMETRE },
-    {"eV",        WDF_DATAUNITS_ELECTRONVOLT },
-    {"µm",        WDF_DATAUNITS_MICRON },
-    {"Counts",    WDF_DATAUNITS_COUNTS },
-    {"electrons", WDF_DATAUNITS_ELECTRONS },
-    {"mm",        WDF_DATAUNITS_MILLIMETRES },
-    {"m",         WDF_DATAUNITS_METRES },
-    {"K",         WDF_DATAUNITS_KELVIN },
-    {"Pa",        WDF_DATAUNITS_PASCAL },
-    {"s",         WDF_DATAUNITS_SECONDS },
-    {"ms",        WDF_DATAUNITS_MILLISECONDS },
-    {"hours",     WDF_DATAUNITS_HOURS },
-    {"days",      WDF_DATAUNITS_DAYS },
-    {"px",        WDF_DATAUNITS_PIXELS },
-    {"",          WDF_DATAUNITS_INTENSITY },
-    {"",          WDF_DATAUNITS_RELATIVEINTENSITY },
-    {"deg",       WDF_DATAUNITS_DEGREES },
-    {"rads",      WDF_DATAUNITS_RADIANS },
-    {"°C",        WDF_DATAUNITS_CELCIUS },
-    {"°F",        WDF_DATAUNITS_FARENHEIT },
-    {"K/min",     WDF_DATAUNITS_KELVINPERMINUTE },
-    {"",          WDF_DATAUNITS_FILETIME },
-    {"",          WDF_DATAUNITS_ENDMARKER }
+    { "",          WDF_DATAUNITS_ARBITRARY },
+    { "1/cm",      WDF_DATAUNITS_RAMANSHIFT },
+    { "nm",        WDF_DATAUNITS_WAVENUMBER },
+    { "nm",        WDF_DATAUNITS_NANOMETRE },
+    { "eV",        WDF_DATAUNITS_ELECTRONVOLT },
+    { "µm",        WDF_DATAUNITS_MICRON },
+    { "Counts",    WDF_DATAUNITS_COUNTS },
+    { "electrons", WDF_DATAUNITS_ELECTRONS },
+    { "mm",        WDF_DATAUNITS_MILLIMETRES },
+    { "m",         WDF_DATAUNITS_METRES },
+    { "K",         WDF_DATAUNITS_KELVIN },
+    { "Pa",        WDF_DATAUNITS_PASCAL },
+    { "s",         WDF_DATAUNITS_SECONDS },
+    { "ms",        WDF_DATAUNITS_MILLISECONDS },
+    { "hours",     WDF_DATAUNITS_HOURS },
+    { "days",      WDF_DATAUNITS_DAYS },
+    { "px",        WDF_DATAUNITS_PIXELS },
+    { "",          WDF_DATAUNITS_INTENSITY },
+    { "",          WDF_DATAUNITS_RELATIVEINTENSITY },
+    { "deg",       WDF_DATAUNITS_DEGREES },
+    { "rads",      WDF_DATAUNITS_RADIANS },
+    { "°C",        WDF_DATAUNITS_CELCIUS },
+    { "°F",        WDF_DATAUNITS_FARENHEIT },
+    { "K/min",     WDF_DATAUNITS_KELVINPERMINUTE },
+    { "",          WDF_DATAUNITS_FILETIME },
+    { "",          WDF_DATAUNITS_ENDMARKER }
 };
 
 typedef enum {
@@ -655,7 +655,7 @@ wdf_load(const gchar *filename,
     yscale = 1.0;
     gwy_debug("y units = %d", yunits);
     unit = gwy_enum_to_string(yunits, wdf_units, 26);
-    siunity= gwy_si_unit_new_parse(unit, &power10y);
+    siunity = gwy_si_unit_new_parse(unit, &power10y);
     yscale = pow10(power10y);
     if (yscale == 0.0) {
         yscale = 1.0;
@@ -793,7 +793,7 @@ wdf_load(const gchar *filename,
             yscale = 1.0;
             gwy_debug("y units = %d", yunits);
             unit = gwy_enum_to_string(zunits, wdf_units, 26);
-            siunity= gwy_si_unit_new_parse(unit, &power10y);
+            siunity = gwy_si_unit_new_parse(unit, &power10y);
             yscale = pow10(power10y);
             if (yscale == 0.0) {
                 yscale = 1.0;
@@ -1227,8 +1227,7 @@ wdf_load(const gchar *filename,
                                        "description", title,
                                        "mode", GWY_GRAPH_CURVE_LINE,
                                        "color",
-                                       gwy_graph_get_preset_color(
-                                                        mapspectra + 1),
+                                       gwy_graph_get_preset_color(mapspectra + 1),
                                        NULL);
                 gwy_graph_curve_model_set_data(gcmodel,
                                                xdata, ydata, zres);
@@ -1504,7 +1503,7 @@ wdf_read_pset(const guchar *buffer,
                     c = *(buffer++);
                     gwy_debug("c = %d", c);
                     g_hash_table_replace(values,
-                                        GINT_TO_POINTER (pset->key),
+                                        GINT_TO_POINTER(pset->key),
                                         g_strdup_printf("%d", c));
                     remaining -= 1;
                 break;
@@ -1512,7 +1511,7 @@ wdf_read_pset(const guchar *buffer,
                     c = *(buffer++);
                     gwy_debug("? = %d", c);
                     g_hash_table_replace(values,
-                                         GINT_TO_POINTER (pset->key),
+                                         GINT_TO_POINTER(pset->key),
                                          g_strdup_printf("%d", c));
                     remaining -= 1;
                 break;
@@ -1520,7 +1519,7 @@ wdf_read_pset(const guchar *buffer,
                     i = gwy_get_gint16_le(&buffer);
                     gwy_debug("s = %d", i);
                     g_hash_table_replace(values,
-                                         GINT_TO_POINTER (pset->key),
+                                         GINT_TO_POINTER(pset->key),
                                          g_strdup_printf("%d", i));
                     remaining -= 2;
                 break;
@@ -1528,7 +1527,7 @@ wdf_read_pset(const guchar *buffer,
                     i = gwy_get_gint32_le(&buffer);
                     gwy_debug("i = %d", i);
                     g_hash_table_replace(values,
-                                         GINT_TO_POINTER (pset->key),
+                                         GINT_TO_POINTER(pset->key),
                                          g_strdup_printf("%d", i));
                     remaining -= 4;
                 break;
@@ -1536,7 +1535,7 @@ wdf_read_pset(const guchar *buffer,
                     i64 = gwy_get_gint64_le(&buffer);
                     gwy_debug("w = %" G_GINT64_FORMAT "", i64);
                     g_hash_table_replace(values,
-                          GINT_TO_POINTER (pset->key),
+                          GINT_TO_POINTER(pset->key),
                           g_strdup_printf("%" G_GINT64_FORMAT "", i64));
                     remaining -= 8;
                 break;
@@ -1544,7 +1543,7 @@ wdf_read_pset(const guchar *buffer,
                     d = gwy_get_gfloat_le(&buffer);
                     gwy_debug("r = %g", d);
                     g_hash_table_replace(values,
-                                         GINT_TO_POINTER (pset->key),
+                                         GINT_TO_POINTER(pset->key),
                                          g_strdup_printf("%g", d));
                     remaining -= 4;
                 break;
@@ -1552,7 +1551,7 @@ wdf_read_pset(const guchar *buffer,
                     d = gwy_get_gdouble_le(&buffer);
                     gwy_debug("q = %g", d);
                     g_hash_table_replace(values,
-                                         GINT_TO_POINTER (pset->key),
+                                         GINT_TO_POINTER(pset->key),
                                          g_strdup_printf("%g", d));
                     remaining -= 8;
                 break;
@@ -1561,7 +1560,7 @@ wdf_read_pset(const guchar *buffer,
                     i64 = gwy_get_gint64_le(&buffer);
                     gwy_debug("t = %" G_GINT64_FORMAT "", i64);
                     g_hash_table_replace(values,
-                          GINT_TO_POINTER (pset->key),
+                          GINT_TO_POINTER(pset->key),
                           g_strdup_printf("%" G_GINT64_FORMAT "", i64));
                     remaining -= 8;
                 break;
@@ -1574,7 +1573,7 @@ wdf_read_pset(const guchar *buffer,
                     gwy_debug("u size=%d str=%s", pset->size,
                               g_strndup(str, pset->size));
                     g_hash_table_replace(values,
-                                         GINT_TO_POINTER (pset->key),
+                                         GINT_TO_POINTER(pset->key),
                                          g_strndup(str, pset->size));
                     g_free(str);
                     remaining -= 4 + pset->size;
@@ -1612,7 +1611,7 @@ wdf_read_pset(const guchar *buffer,
                     }
                     gwy_debug("k key=%s", g_strndup(str, pset->size));
                     g_hash_table_replace(keys,
-                                         GINT_TO_POINTER (pset->key),
+                                         GINT_TO_POINTER(pset->key),
                                          g_strdup_printf("/%.*s",
                                          pset->size, str));
                     g_free(str);
@@ -1638,7 +1637,7 @@ wdf_read_pset(const guchar *buffer,
                     }
                     gwy_debug("c[%d] = %s", pset->size, str);
                     g_hash_table_replace(values,
-                                        GINT_TO_POINTER (pset->key),
+                                        GINT_TO_POINTER(pset->key),
                                         str);
                     remaining -= pset->size;
                 break;
@@ -1653,7 +1652,7 @@ wdf_read_pset(const guchar *buffer,
                     }
                     gwy_debug("?[%d] = %s", pset->size, str);
                     g_hash_table_replace(values,
-                                        GINT_TO_POINTER (pset->key),
+                                        GINT_TO_POINTER(pset->key),
                                         str);
                     remaining -= pset->size;
                 break;
@@ -1668,7 +1667,7 @@ wdf_read_pset(const guchar *buffer,
                     }
                     gwy_debug("s[%d] = %s", pset->size, str);
                     g_hash_table_replace(values,
-                                        GINT_TO_POINTER (pset->key),
+                                        GINT_TO_POINTER(pset->key),
                                         str);
                     remaining -= pset->size * 2;
                 break;
@@ -1683,7 +1682,7 @@ wdf_read_pset(const guchar *buffer,
                     }
                     gwy_debug("i[%d] = %s", pset->size, str);
                     g_hash_table_replace(values,
-                                        GINT_TO_POINTER (pset->key),
+                                        GINT_TO_POINTER(pset->key),
                                         str);
                     remaining -= pset->size * 4;
                 break;
@@ -1700,7 +1699,7 @@ wdf_read_pset(const guchar *buffer,
                     }
                     gwy_debug("w[%d] = %s", pset->size, str);
                     g_hash_table_replace(values,
-                                        GINT_TO_POINTER (pset->key),
+                                        GINT_TO_POINTER(pset->key),
                                         str);
                     remaining -= pset->size * 8;
                 break;
@@ -1715,7 +1714,7 @@ wdf_read_pset(const guchar *buffer,
                     }
                     gwy_debug("r[%d] = %s", pset->size, str);
                     g_hash_table_replace(values,
-                                        GINT_TO_POINTER (pset->key),
+                                        GINT_TO_POINTER(pset->key),
                                         str);
                     remaining -= pset->size * 4;
                 break;
@@ -1730,7 +1729,7 @@ wdf_read_pset(const guchar *buffer,
                     }
                     gwy_debug("q[%d] = %s", pset->size, str);
                     g_hash_table_replace(values,
-                                        GINT_TO_POINTER (pset->key),
+                                        GINT_TO_POINTER(pset->key),
                                         str);
                     remaining -= pset->size * 8;
                 break;
