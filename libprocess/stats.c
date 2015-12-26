@@ -66,8 +66,8 @@ typedef struct {
     GwyXY max;
     QuadTreeNode *root;
     guint maxdepth;
-    gboolean degenerated;
-    gdouble degeneratedS;
+    gboolean degenerate;
+    gdouble degenerateS;
 } QuadTree;
 
 /**
@@ -4898,23 +4898,23 @@ quad_tree_new(const gdouble *xdata, const gdouble *ydata, guint n,
 
     quad_tree_find_range(qtree, xdata, ydata, n);
     if (!(qtree->min.x < qtree->max.x) || !(qtree->min.y < qtree->max.y)) {
-        qtree->degenerated = TRUE;
-        qtree->degeneratedS = G_MAXDOUBLE;
+        qtree->degenerate = TRUE;
+        qtree->degenerateS = G_MAXDOUBLE;
         return qtree;
     }
 
     /* Return explicit estimates for n < 4, making maxdiv at least 1 (with
      * half-scales included, ecurve will have at least 3 points then). */
     if (n == 2) {
-        qtree->degenerated = TRUE;
-        qtree->degeneratedS = (log(qtree->max.x - qtree->min.x)
+        qtree->degenerate = TRUE;
+        qtree->degenerateS = (log(qtree->max.x - qtree->min.x)
                                + log(qtree->max.y - qtree->min.y));
         return qtree;
     }
     if (n == 3) {
-        qtree->degenerated = TRUE;
+        qtree->degenerate = TRUE;
         /* FIXME: This may not the best estimate in 2D.  Do we care? */
-        qtree->degeneratedS = (log(qtree->max.x - qtree->min.x)
+        qtree->degenerateS = (log(qtree->max.x - qtree->min.x)
                                + log(qtree->max.y - qtree->min.y)
                                + 0.5*log(1.5) - G_LN2/3.0);
         return qtree;
@@ -5077,8 +5077,8 @@ gwy_data_field_get_entropy_2d(GwyDataField *xfield,
     maxdiv = (guint)floor(log(n)/G_LN2 + 1e-12);
     qtree = quad_tree_new(xfield->data, yfield->data, n, maxdiv);
 
-    if (qtree->degenerated)
-        S = qtree->degeneratedS;
+    if (qtree->degenerate)
+        S = qtree->degenerateS;
     else {
         gdouble *ecurve = quad_tree_entropies_at_scales(qtree, maxdiv);
         S = calculate_entropy_from_scaling(ecurve, 2*maxdiv);
