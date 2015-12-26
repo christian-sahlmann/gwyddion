@@ -38,12 +38,38 @@
 #include "gwyprocessinternal.h"
 #include "wrappers.h"
 
+typedef struct _BinTreeNode BinTreeNode;
 typedef struct _QuadTreeNode QuadTreeNode;
 
 typedef struct {
     gdouble x;
     gdouble y;
 } GwyXY;
+
+struct _BinTreeNode {
+    /* This optimally uses memory on 64bit architectures where pt and
+     * children have the same size (16 bytes). */
+    union {
+        /* The at most two points inside for non-max-depth leaves. */
+        struct {
+            gdouble a;
+            gdouble b;
+        } pt;
+        /* Children for non-max-depth non-leaves. */
+        BinTreeNode *children[2];
+    } u;
+    /* Always set; for max-depth leaves it is the only meaningful field. */
+    guint count;
+};
+
+typedef struct {
+    gdouble min;
+    gdouble max;
+    BinTreeNode *root;
+    guint maxdepth;
+    gboolean degenerate;
+    gdouble degenerateS;
+} BinTree;
 
 struct _QuadTreeNode {
     /* This optimally uses memory on 64bit architectures where pt and
@@ -4551,6 +4577,254 @@ calculate_entropy_from_scaling(const gdouble *ecurve, guint maxdiv)
     return S;
 }
 
+/* This is what we get on average from all possible two-point configurations if
+ * they are randomly distributed.  A fairly good estimate that in practice
+ * seems to result in some deviation on the 5th significant digit, which is
+ * hardly significant at all.  The contribution is the same in 1D and 2D. */
+static void
+add_estimated_unsplit_node_entropy(gdouble *S, guint maxdepth, gdouble w)
+{
+    gdouble q = 2.0*G_LN2*w;
+    guint i;
+
+    for (i = 0; i <= maxdepth; i++, S++) {
+        S[0] += q;
+        q *= 0.5;
+    }
+}
+
+static BinTreeNode*
+bin_tree_node_new(const gdouble pt)
+{
+    BinTreeNode *btnode = g_slice_new(BinTreeNode);
+    btnode->u.pt.a = pt;
+    btnode->count = 1;
+    return btnode;
+}
+
+static void
+bin_tree_add_node(BinTreeNode *btnode, const gdouble pt,
+                  gdouble min, gdouble max, guint maxdepth)
+{
+    BinTreeNode *child;
+    gdouble centre;
+    guint i;
+
+    /* We reached maximum allowed subdivision.  Just increase the count. */
+    if (!maxdepth) {
+        if (btnode->count <= 2)
+            gwy_clear(&btnode->u, 1);
+        btnode->count++;
+        return;
+    }
+
+    /* We will descend into subtrees. */
+    centre = 0.5*(min + max);
+
+    /* If this node has just one point add the other there and we are done. */
+    if (btnode->count == 1) {
+        btnode->u.pt.b = pt;
+        btnode->count++;
+        return;
+    }
+
+    /* We will be recursing.  So if this node is a leaf start by making it
+     * non-leaf. */
+    if (btnode->count == 2) {
+        gdouble pta = btnode->u.pt.a;
+        gdouble ptb = btnode->u.pt.b;
+        guint ia = (pta > centre);
+        guint ib = (ptb > centre);
+
+        gwy_clear(&btnode->u, 1);
+        child = btnode->u.children[ia] = bin_tree_node_new(pta);
+        /* Must distinguish between creating two child nodes and creating one
+         * two-point child node. */
+        if (ia == ib) {
+            child->u.pt.b = ptb;
+            child->count = 2;
+        }
+        else
+            btnode->u.children[ib] = bin_tree_node_new(ptb);
+    }
+
+    /* Add the new point to the appropriate child. */
+    i = (pt > centre);
+    maxdepth--;
+    btnode->count++;
+
+    if ((child = btnode->u.children[i])) {
+        /* Recurse.  This will end either by reaching maxdepth=0 or by
+         * successful separation in the other branch of this conditon. */
+        if (i == 0)
+            bin_tree_add_node(child, pt, min, centre, maxdepth);
+        else
+            bin_tree_add_node(child, pt, centre, max, maxdepth);
+    }
+    else {
+        /* There is nothing here yet.  Add the point as a new leaf. */
+        btnode->u.children[i] = bin_tree_node_new(pt);
+    }
+}
+
+static void
+bin_tree_add(BinTree *btree, const gdouble pt)
+{
+    if (G_LIKELY(btree->root)) {
+        bin_tree_add_node(btree->root, pt,
+                          btree->min, btree->max, btree->maxdepth);
+    }
+    else
+        btree->root = bin_tree_node_new(pt);
+}
+
+static void
+bin_tree_find_range(BinTree *btree, const gdouble *xdata, guint n)
+{
+    gdouble min = G_MAXDOUBLE;
+    gdouble max = -G_MAXDOUBLE;
+    guint i;
+
+    for (i = 0; i < n; i++) {
+        gdouble x = xdata[i];
+
+        if (x < min)
+            min = x;
+        if (x > max)
+            max = x;
+    }
+
+    btree->min = min;
+    btree->max = max;
+}
+
+static void
+bin_tree_node_free(BinTreeNode *btnode)
+{
+    guint i;
+
+    if (btnode->count > 2) {
+        for (i = 0; i < G_N_ELEMENTS(btnode->u.children); i++) {
+            if (btnode->u.children[i])
+                bin_tree_node_free(btnode->u.children[i]);
+        }
+    }
+    g_slice_free(BinTreeNode, btnode);
+}
+
+static void
+bin_tree_free(BinTree *btree)
+{
+    bin_tree_node_free(btree->root);
+    g_free(btree);
+}
+
+static BinTree*
+bin_tree_new(const gdouble *xdata, guint n, guint maxdepth)
+{
+    BinTree *btree;
+    guint i;
+
+    btree = g_new0(BinTree, 1);
+
+    if (!maxdepth)
+        maxdepth = 24;
+    btree->maxdepth = maxdepth;
+
+    bin_tree_find_range(btree, xdata, n);
+    if (!(btree->min < btree->max)) {
+        btree->degenerate = TRUE;
+        btree->degenerateS = G_MAXDOUBLE;
+        return btree;
+    }
+
+    /* Return explicit estimates for n < 4, making maxdiv at least 1 (with
+     * half-scales included, ecurve will have at least 3 points then). */
+    if (n == 2) {
+        btree->degenerate = TRUE;
+        btree->degenerateS = log(btree->max - btree->min);
+        return btree;
+    }
+    if (n == 3) {
+        btree->degenerate = TRUE;
+        btree->degenerateS = (log(btree->max - btree->min)
+                              + 0.5*log(1.5) - G_LN2/3.0);
+        return btree;
+    }
+
+    for (i = 0; i < n; i++) {
+        gdouble pt = xdata[i];
+        bin_tree_add(btree, pt);
+    }
+
+    return btree;
+}
+
+static void
+bin_tree_node_entropies_at_scales(BinTreeNode *btnode, guint maxdepth,
+                                  gdouble *S, guint *unsplit)
+{
+    BinTreeNode *child;
+    guint i;
+
+    /* Singular points contribute to p*ln(p) always with zero.  So we can stop
+     * recursion to finer subdivisions when count == 1. */
+    if (btnode->count <= 1)
+        return;
+
+    if (!maxdepth) {
+        S[0] += gwy_xlnx_int(btnode->count);
+        return;
+    }
+
+    if (btnode->count == 2) {
+        unsplit[0]++;
+        return;
+    }
+
+    S[0] += gwy_xlnx_int(btnode->count);
+    S++;
+
+    maxdepth--;
+    unsplit++;
+    for (i = 0; i < G_N_ELEMENTS(btnode->u.children); i++) {
+        if ((child = btnode->u.children[i]))
+            bin_tree_node_entropies_at_scales(child, maxdepth, S, unsplit);
+    }
+}
+
+static gdouble*
+bin_tree_entropies_at_scales(BinTree *btree, guint maxdepth)
+{
+    gdouble *S;
+    guint *unsplit;
+    guint i, n, npts;
+    gdouble Sscale;
+
+    if (!maxdepth)
+        maxdepth = btree->maxdepth;
+
+    n = maxdepth + 1;
+    S = g_new0(gdouble, n);
+    unsplit = g_new0(guint, maxdepth);
+    bin_tree_node_entropies_at_scales(btree->root,
+                                      MIN(maxdepth, btree->maxdepth),
+                                      S, unsplit);
+
+    for (i = 0; i < maxdepth; i++) {
+        if (unsplit[i])
+            add_estimated_unsplit_node_entropy(S + i, maxdepth - i, unsplit[i]);
+    }
+    g_free(unsplit);
+
+    npts = btree->root->count;
+    Sscale = log(npts*(btree->max - btree->min));
+    for (i = 0; i < n; i++)
+        S[i] = Sscale - i*G_LN2 - S[i]/npts;
+
+    return S;
+}
+
 static gdouble
 calculate_entropy(GwyDataField *dfield,
                   GwyDataField *mask,
@@ -4558,12 +4832,12 @@ calculate_entropy(GwyDataField *dfield,
                   gint col, gint row,
                   gint width, gint height)
 {
-    gdouble min, max;
     gint xres;
-    guint maxdiv, div, size, i, j, n;
-    guint *counts;
-    gdouble *ecurve;
+    guint maxdiv, i, j, n;
+    gdouble *xdata;
     const gdouble *base;
+    gboolean must_free_xdata = TRUE;
+    BinTree *btree;
     gdouble S;
 
     if (mask) {
@@ -4578,75 +4852,49 @@ calculate_entropy(GwyDataField *dfield,
     if (n < 2)
         return -G_MAXDOUBLE;
 
-    gwy_data_field_area_get_min_max_mask(dfield, mask, mode,
-                                         col, row, width, height,
-                                         &min, &max);
-    if (min >= max)
-        return -G_MAXDOUBLE;
-    /* Return explicit estimates for n < 4, making maxdiv at least 2. */
-    if (n == 2)
-        return log(max - min);
-    if (n == 3)
-        return log(max - min) + 0.5*log(1.5) - G_LN2/3.0;
-
-    /* XXX: In libgwy4 we get rid of outlies here. */
-
     xres = dfield->xres;
-    maxdiv = (guint)floor(log(n)/G_LN2 + 1e-12);
-    g_assert(maxdiv >= 2);
-    size = 1 << maxdiv;
-    counts = g_new0(guint, size);
-    ecurve = g_new(gdouble, maxdiv+1);
     base = dfield->data + row*xres + col;
-
-    // Gather counts at the finest scale.
-    if (mode == GWY_MASK_IGNORE) {
-        for (i = 0; i < height; i++) {
-            const gdouble *d = base + i*xres;
-            for (j = width; j; j--, d++) {
-                gint k = floor((*d - min)/(max - min)*size);
-                k = CLAMP(k, 0, (gint)size-1);
-                counts[k]++;
-            }
-        }
+    if (n == xres*dfield->yres) {
+        /* Handle the full-field case without allocating anything. */
+        xdata = dfield->data;
+        must_free_xdata = FALSE;
     }
     else {
-        const gdouble *mbase = mask->data + row*xres + col;
-        const gboolean invert = (mode == GWY_MASK_EXCLUDE);
-        for (i = 0; i < height; i++) {
-            const gdouble *d = base + i*xres;
-            const gdouble *m = mbase + i*xres;
-            for (j = width; j; j--, d++, m++) {
-                if ((*m < 1.0) == invert) {
-                    gint k = floor((*d - min)/(max - min)*size);
-                    k = CLAMP(k, 0, (gint)size-1);
-                    counts[k]++;
+        xdata = g_new(gdouble, n);
+        if (mask) {
+            const gdouble *mbase = mask->data + row*xres + col;
+            const gboolean invert = (mode == GWY_MASK_EXCLUDE);
+            guint k = 0;
+
+            for (i = 0; i < height; i++) {
+                const gdouble *d = base + i*xres;
+                const gdouble *m = mbase + i*xres;
+                for (j = width; j; j--, d++, m++) {
+                    if ((*m < 1.0) == invert)
+                        xdata[k++] = *d;
                 }
             }
+            g_assert(k == n);
+        }
+        else {
+            for (i = 0; i < height; i++)
+                memcpy(xdata + i*width, base + i*xres, width*sizeof(gdouble));
         }
     }
 
-    // Calculate the entropy for all bin sizes in the logarithmic progression.
-    for (div = 0; div <= maxdiv; div++) {
-        guint *ck, *ck2;
-        ck = counts;
-        S = 0.0;
-        for (i = size; i; i--, ck++)
-            S += gwy_xlnx_int(*ck);
-        S = log(n*(max - min)/size) - S/n;
-        ecurve[maxdiv - div] = S;
-        size >>= 1;
+    maxdiv = (guint)floor(2.0*log(n)/G_LN2 + 1e-12);
+    btree = bin_tree_new(xdata, n, maxdiv);
+    if (must_free_xdata)
+        g_free(xdata);
 
-        // Make the bins twice as large.
-        ck2 = ck = counts;
-        for (i = size; i; i--, ck2 += 2)
-            *(ck++) = *(ck2) + *(ck2 + 1);
+    if (btree->degenerate)
+        S = btree->degenerateS;
+    else {
+        gdouble *ecurve = bin_tree_entropies_at_scales(btree, maxdiv);
+        S = calculate_entropy_from_scaling(ecurve, maxdiv);
+        g_free(ecurve);
     }
-
-    g_free(counts);
-
-    S = calculate_entropy_from_scaling(ecurve, maxdiv);
-    g_free(ecurve);
+    bin_tree_free(btree);
 
     return S;
 }
@@ -4868,7 +5116,7 @@ quad_tree_node_free(QuadTreeNode *qtnode)
     guint i;
 
     if (qtnode->count > 2) {
-        for (i = 0; i < 4; i++) {
+        for (i = 0; i < G_N_ELEMENTS(qtnode->u.children); i++) {
             if (qtnode->u.children[i])
                 quad_tree_node_free(qtnode->u.children[i]);
         }
@@ -4913,10 +5161,9 @@ quad_tree_new(const gdouble *xdata, const gdouble *ydata, guint n,
     }
     if (n == 3) {
         qtree->degenerate = TRUE;
-        /* FIXME: This may not the best estimate in 2D.  Do we care? */
         qtree->degenerateS = (log(qtree->max.x - qtree->min.x)
                                + log(qtree->max.y - qtree->min.y)
-                               + 0.5*log(1.5) - G_LN2/3.0);
+                               + 0.5*log(1.5) - 2.0*G_LN2/3.0);
         return qtree;
     }
 
@@ -4932,10 +5179,10 @@ static gdouble
 quad_tree_node_half_scale_entropy(QuadTreeNode *qtnode)
 {
     QuadTreeNode *child;
-    guint cnt[4] = { 0, 0, 0, 0 };
+    guint cnt[G_N_ELEMENTS(qtnode->u.children)] = { 0, 0, 0, 0 };
     guint i;
 
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < G_N_ELEMENTS(qtnode->u.children); i++) {
         if ((child = qtnode->u.children[i]))
             cnt[i] = child->count;
     }
@@ -4943,28 +5190,6 @@ quad_tree_node_half_scale_entropy(QuadTreeNode *qtnode)
                 + gwy_xlnx_int(cnt[2] + cnt[3])
                 + gwy_xlnx_int(cnt[0] + cnt[2])
                 + gwy_xlnx_int(cnt[1] + cnt[3]));
-}
-
-/* This is what we get on average from all possible two-point configurations if
- * they are randomly distributed.  A fairly good estimate that in practice
- * seems to result in some deviation on the 5th significant digit, which is
- * hardly significant at all. */
-static void
-add_estimated_unsplit_node_entropy(gdouble *S, guint maxdepth, gdouble w)
-{
-    gdouble q = 2.0*G_LN2*w;
-
-    while (maxdepth) {
-        S[0] += q;
-        q *= 0.5;
-        S++;
-
-        S[0] += q;
-        q *= 0.5;
-        S++;
-
-        maxdepth--;
-    }
 }
 
 static void
@@ -4999,7 +5224,7 @@ quad_tree_node_entropies_at_scales(QuadTreeNode *qtnode, guint maxdepth,
 
     maxdepth--;
     unsplit++;
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < G_N_ELEMENTS(qtnode->u.children); i++) {
         if ((child = qtnode->u.children[i]))
             quad_tree_node_entropies_at_scales(child, maxdepth, S, unsplit);
     }
@@ -5011,7 +5236,7 @@ quad_tree_entropies_at_scales(QuadTree *qtree, guint maxdepth)
     gdouble *S;
     guint *unsplit;
     guint i, n, npts;
-    gdouble dxy;
+    gdouble Sscale;
 
     if (!maxdepth)
         maxdepth = qtree->maxdepth;
@@ -5025,16 +5250,16 @@ quad_tree_entropies_at_scales(QuadTree *qtree, guint maxdepth)
 
     for (i = 0; i < maxdepth; i++) {
         if (unsplit[i])
-            add_estimated_unsplit_node_entropy(S + 2*i, maxdepth-i, unsplit[i]);
+            add_estimated_unsplit_node_entropy(S + 2*i, 2*(maxdepth - i),
+                                               unsplit[i]);
     }
     g_free(unsplit);
 
     npts = qtree->root->count;
-    dxy = (qtree->max.x - qtree->min.x)*(qtree->max.y - qtree->min.y);
-    for (i = 0; i < n; i++) {
-        S[i] = log(npts*dxy) - S[i]/npts;
-        dxy *= 0.5;
-    }
+    Sscale = log(npts
+                 *(qtree->max.x - qtree->min.x)*(qtree->max.y - qtree->min.y));
+    for (i = 0; i < n; i++)
+        S[i] = Sscale - i*G_LN2 - S[i]/npts;
 
     return S;
 }
