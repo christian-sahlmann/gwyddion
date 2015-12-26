@@ -34,6 +34,7 @@ process_LTLIBRARIES = \
 	dwt.la \
 	dwtanisotropy.la \
 	edge.la \
+	entropy.la \
 	extend.la \
 	facet-level.la \
 	facet_analysis.la \
@@ -154,6 +155,7 @@ drift_la_SOURCES               = drift.c preview.h
 dwt_la_SOURCES                 = dwt.c
 dwtanisotropy_la_SOURCES       = dwtanisotropy.c
 edge_la_SOURCES                = edge.c preview.h
+entropy_la_SOURCES             = entropy.c
 extend_la_SOURCES              = extend.c
 facet_analysis_la_SOURCES      = facet_analysis.c preview.h
 facet_level_la_SOURCES         = facet-level.c
