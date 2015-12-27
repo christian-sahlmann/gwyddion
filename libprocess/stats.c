@@ -4806,6 +4806,14 @@ bin_tree_entropies_at_scales(BinTree *btree, guint maxdepth)
 
     n = maxdepth + 1;
     S = g_new0(gdouble, n);
+
+    if (btree->degenerate) {
+        S[0] = btree->degenerateS;
+        for (i = 1; i < n; i++)
+            S[i] = S[i-1] - G_LN2;
+        return S;
+    }
+
     unsplit = g_new0(guint, maxdepth);
     bin_tree_node_entropies_at_scales(btree->root,
                                       MIN(maxdepth, btree->maxdepth),
@@ -4825,20 +4833,22 @@ bin_tree_entropies_at_scales(BinTree *btree, guint maxdepth)
     return S;
 }
 
-static gdouble
-calculate_entropy(GwyDataField *dfield,
-                  GwyDataField *mask,
-                  GwyMaskingType mode,
-                  gint col, gint row,
-                  gint width, gint height)
+static gdouble*
+calculate_entropy_at_scales(GwyDataField *dfield,
+                            GwyDataField *mask,
+                            GwyMaskingType mode,
+                            gint col, gint row,
+                            gint width, gint height,
+                            guint *maxdiv,
+                            gdouble *S)
 {
     gint xres;
-    guint maxdiv, i, j, n;
+    guint i, j, n;
     gdouble *xdata;
     const gdouble *base;
     gboolean must_free_xdata = TRUE;
+    gdouble *ecurve;
     BinTree *btree;
-    gdouble S;
 
     if (mask) {
         gwy_data_field_area_count_in_range(mask, NULL, col, row, width, height,
@@ -4849,8 +4859,21 @@ calculate_entropy(GwyDataField *dfield,
     else
         n = width*height;
 
-    if (n < 2)
-        return -G_MAXDOUBLE;
+    if (!*maxdiv) {
+        if (n >= 2)
+            *maxdiv = (guint)floor(2.0*log(n)/G_LN2 + 1e-12);
+        else
+            *maxdiv = 2;
+    }
+
+    if (n < 2) {
+        ecurve = g_new(gdouble, *maxdiv+1);
+        for (i = 0; i <= *maxdiv; i++)
+            ecurve[i] = -G_MAXDOUBLE;
+        if (S)
+            *S = -G_MAXDOUBLE;
+        return ecurve;
+    }
 
     xres = dfield->xres;
     base = dfield->data + row*xres + col;
@@ -4882,21 +4905,86 @@ calculate_entropy(GwyDataField *dfield,
         }
     }
 
-    maxdiv = (guint)floor(2.0*log(n)/G_LN2 + 1e-12);
-    btree = bin_tree_new(xdata, n, maxdiv);
+    btree = bin_tree_new(xdata, n, *maxdiv);
     if (must_free_xdata)
         g_free(xdata);
 
-    if (btree->degenerate)
-        S = btree->degenerateS;
-    else {
-        gdouble *ecurve = bin_tree_entropies_at_scales(btree, maxdiv);
-        S = calculate_entropy_from_scaling(ecurve, maxdiv);
-        g_free(ecurve);
+    ecurve = bin_tree_entropies_at_scales(btree, *maxdiv);
+    if (S) {
+        if (btree->degenerate)
+            *S = btree->degenerateS;
+        else
+            *S = calculate_entropy_from_scaling(ecurve, *maxdiv);
     }
     bin_tree_free(btree);
 
-    return S;
+    return ecurve;
+}
+
+/**
+ * gwy_data_field_area_get_entropy_at_scales:
+ * @data_field: A data field.
+ * @target_line: A data line to store the result to.  It will be resampled to
+ *               @maxdiv+1 items.
+ * @mask: Mask specifying which values to take into account/exclude, or %NULL.
+ * @mode: Masking mode to use.  See the introduction for description of
+ *        masking modes.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @maxdiv: Maximum number of divisions of the value range.  Pass zero to
+ *          choose it automatically.
+ *
+ * Calculates estimates of value distribution entropy at various scales.
+ *
+ * Since: 2.44
+ **/
+void
+gwy_data_field_area_get_entropy_at_scales(GwyDataField *data_field,
+                                          GwyDataLine *target_line,
+                                          GwyDataField *mask,
+                                          GwyMaskingType mode,
+                                          gint col, gint row,
+                                          gint width, gint height,
+                                          gint maxdiv)
+{
+    GwySIUnit *lineunit;
+    guint umaxdiv = (maxdiv > 0 ? maxdiv : 0);
+    gdouble *ecurve;
+    gdouble min, max;
+    gint i;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_LINE(target_line));
+    g_return_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
+                               && mask->xres == data_field->xres
+                               && mask->yres == data_field->yres));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 0 && height >= 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
+
+    ecurve = calculate_entropy_at_scales(data_field, mask, mode,
+                                         col, row, width, height,
+                                         &umaxdiv, NULL);
+    maxdiv = maxdiv ? maxdiv : umaxdiv + 1;
+    gwy_data_line_resample(target_line, maxdiv, GWY_INTERPOLATION_NONE);
+    target_line->real = maxdiv*G_LN2;
+    for (i = 0; i < maxdiv; i++)
+        target_line->data[maxdiv-1 - i] = ecurve[i];
+    g_free(ecurve);
+
+    gwy_data_field_area_get_min_max_mask(data_field, mask, mode,
+                                         col, row, width, height,
+                                         &min, &max);
+    if (max > min)
+        target_line->off = log(max - min) - 0.5*G_LN2;
+
+    lineunit = gwy_data_line_get_si_unit_x(target_line);
+    gwy_si_unit_set_from_string(lineunit, NULL);
+    lineunit = gwy_data_line_get_si_unit_y(target_line);
+    gwy_si_unit_set_from_string(lineunit, NULL);
 }
 
 /**
@@ -4916,7 +5004,9 @@ calculate_entropy(GwyDataField *dfield,
 gdouble
 gwy_data_field_get_entropy(GwyDataField *data_field)
 {
-    gdouble S = 0.0;
+    gdouble S = -G_MAXDOUBLE;
+    gdouble *ecurve;
+    guint maxdiv = 0;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), S);
 
@@ -4924,8 +5014,11 @@ gwy_data_field_get_entropy(GwyDataField *data_field)
     if (CTEST(data_field, ENT))
         return CVAL(data_field, ENT);
 
-    S = calculate_entropy(data_field, NULL, GWY_MASK_IGNORE,
-                          0, 0, data_field->xres, data_field->yres);
+    ecurve = calculate_entropy_at_scales(data_field, NULL, GWY_MASK_IGNORE,
+                                         0, 0,
+                                         data_field->xres, data_field->yres,
+                                         &maxdiv, &S);
+    g_free(ecurve);
 
     CVAL(data_field, ENT) = S;
     data_field->cached |= CBIT(ENT);
@@ -4966,17 +5059,19 @@ gwy_data_field_area_get_entropy(GwyDataField *data_field,
                                 gint col, gint row,
                                 gint width, gint height)
 {
-    gdouble ent = G_MAXDOUBLE;
+    gdouble S = -G_MAXDOUBLE;
+    gdouble *ecurve;
+    guint maxdiv = 0;
 
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), ent);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), S);
     g_return_val_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
                                    && mask->xres == data_field->xres
-                                   && mask->yres == data_field->yres), ent);
+                                   && mask->yres == data_field->yres), S);
     g_return_val_if_fail(col >= 0 && row >= 0
                          && width >= 0 && height >= 0
                          && col + width <= data_field->xres
                          && row + height <= data_field->yres,
-                         ent);
+                         S);
 
     /* The result is the same, but it can be cached. */
     if ((!mask || mode == GWY_MASK_IGNORE)
@@ -4984,8 +5079,11 @@ gwy_data_field_area_get_entropy(GwyDataField *data_field,
         && width == data_field->xres && height == data_field->yres)
         return gwy_data_field_get_entropy(data_field);
 
-    return calculate_entropy(data_field, mask, mode,
-                             col, row, width, height);
+    ecurve = calculate_entropy_at_scales(data_field, mask, mode,
+                                         col, row, width, height,
+                                         &maxdiv, &S);
+    g_free(ecurve);
+    return S;
 }
 
 static QuadTreeNode*
@@ -5264,6 +5362,100 @@ quad_tree_entropies_at_scales(QuadTree *qtree, guint maxdepth)
     return S;
 }
 
+static gdouble*
+calculate_entropy_2d_at_scales(GwyDataField *xfield,
+                               GwyDataField *yfield,
+                               guint *maxdiv,
+                               gdouble *S)
+{
+    guint xres, yres, n, i;
+    gdouble *ecurve;
+    QuadTree *qtree;
+
+    xres = xfield->xres;
+    yres = xfield->yres;
+    n = xres*yres;
+
+    if (!*maxdiv) {
+        if (n >= 2)
+            *maxdiv = (guint)floor(log(n)/G_LN2 + 1e-12);
+        else
+            *maxdiv = 1;
+    }
+
+    if (n < 2) {
+        ecurve = g_new(gdouble, *maxdiv+1);
+        for (i = 0; i <= *maxdiv; i++)
+            ecurve[i] = -G_MAXDOUBLE;
+        if (S)
+            *S = -G_MAXDOUBLE;
+        return ecurve;
+    }
+
+    qtree = quad_tree_new(xfield->data, yfield->data, n, *maxdiv);
+    ecurve = quad_tree_entropies_at_scales(qtree, *maxdiv);
+    if (S) {
+        if (qtree->degenerate)
+            *S = qtree->degenerateS;
+        else
+            *S = calculate_entropy_from_scaling(ecurve, 2*(*maxdiv));
+    }
+    quad_tree_free(qtree);
+
+    return ecurve;
+}
+
+/**
+ * gwy_data_field_get_entropy_2d_at_scales:
+ * @xfield: A data field containing the @x-coordinates.
+ * @yfield: A data field containing the @y-coordinates.
+ * @target_line: A data line to store the result to.  It will be resampled to
+ *               @maxdiv+1 items.
+ * @maxdiv: Maximum number of divisions of the value range.  Pass zero to
+ *          choose it automatically.
+ *
+ * Calculates estimates of entropy of two-dimensional point cloud at various
+ * scales.
+ *
+ * Since: 2.44
+ **/
+void
+gwy_data_field_get_entropy_2d_at_scales(GwyDataField *xfield,
+                                        GwyDataField *yfield,
+                                        GwyDataLine *target_line,
+                                        gint maxdiv)
+{
+    GwySIUnit *lineunit;
+    guint umaxdiv = (maxdiv > 0 ? maxdiv/2 : 0);
+    gdouble *ecurve;
+    gdouble xmin, xmax, ymin, ymax;
+    gint i;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(xfield));
+    g_return_if_fail(GWY_IS_DATA_FIELD(yfield));
+    g_return_if_fail(GWY_IS_DATA_LINE(target_line));
+    g_return_if_fail(xfield->xres == yfield->xres);
+    g_return_if_fail(xfield->yres == yfield->yres);
+
+    ecurve = calculate_entropy_2d_at_scales(xfield, yfield, &umaxdiv, NULL);
+    maxdiv = maxdiv ? maxdiv : 2*umaxdiv + 1;
+    gwy_data_line_resample(target_line, maxdiv, GWY_INTERPOLATION_NONE);
+    target_line->real = maxdiv*G_LN2;
+    for (i = 0; i < maxdiv; i++)
+        target_line->data[maxdiv-1 - i] = ecurve[i];
+    g_free(ecurve);
+
+    gwy_data_field_get_min_max(xfield, &xmin, &xmax);
+    gwy_data_field_get_min_max(xfield, &ymin, &ymax);
+    if ((xmax > xmin) && (ymax > ymin))
+        target_line->off = log((xmax - xmin)*(ymax - ymin)) - 0.5*G_LN2;
+
+    lineunit = gwy_data_line_get_si_unit_x(target_line);
+    gwy_si_unit_set_from_string(lineunit, NULL);
+    lineunit = gwy_data_line_get_si_unit_y(target_line);
+    gwy_si_unit_set_from_string(lineunit, NULL);
+}
+
 /**
  * gwy_data_field_get_entropy_2d:
  * @xfield: A data field containing the @x-coordinates.
@@ -5283,33 +5475,17 @@ gdouble
 gwy_data_field_get_entropy_2d(GwyDataField *xfield,
                               GwyDataField *yfield)
 {
-    guint xres, yres, n, maxdiv;
-    QuadTree *qtree;
-    gdouble S = 0.0;
+    gdouble *ecurve;
+    guint maxdiv = 0;
+    gdouble S = -G_MAXDOUBLE;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(xfield), S);
     g_return_val_if_fail(GWY_IS_DATA_FIELD(yfield), S);
     g_return_val_if_fail(xfield->xres == yfield->xres, S);
     g_return_val_if_fail(xfield->yres == yfield->yres, S);
 
-    xres = xfield->xres;
-    yres = xfield->yres;
-    n = xres*yres;
-
-    if (n < 2)
-        return -G_MAXDOUBLE;
-
-    maxdiv = (guint)floor(log(n)/G_LN2 + 1e-12);
-    qtree = quad_tree_new(xfield->data, yfield->data, n, maxdiv);
-
-    if (qtree->degenerate)
-        S = qtree->degenerateS;
-    else {
-        gdouble *ecurve = quad_tree_entropies_at_scales(qtree, maxdiv);
-        S = calculate_entropy_from_scaling(ecurve, 2*maxdiv);
-        g_free(ecurve);
-    }
-    quad_tree_free(qtree);
+    ecurve = calculate_entropy_2d_at_scales(xfield, yfield, &maxdiv, &S);
+    g_free(ecurve);
 
     return S;
 }
