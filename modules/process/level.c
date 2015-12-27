@@ -341,7 +341,6 @@ load_args(GwyContainer *container, LevelArgs *args)
     *args = level_defaults;
 
     gwy_container_gis_enum_by_name(container, masking_key, &args->masking);
-    args->masking = MIN(args->masking, GWY_MASK_INCLUDE);
     sanitize_args(args);
 }
 
