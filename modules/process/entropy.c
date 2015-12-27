@@ -24,8 +24,9 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/level.h>
-#include <libprocess/stats.h>
 #include <libprocess/filters.h>
+#include <libprocess/stats.h>
+#include <libprocess/linestats.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
@@ -54,6 +55,7 @@ typedef struct {
     GtkWidget *fit_plane;
     GtkObject *kernel_size;
     GtkWidget *entropy;
+    GtkWidget *entropydef;
 
     GwyDataField *dfield;
 } EntropyControls;
@@ -142,6 +144,7 @@ static gboolean
 entropy_dialog(EntropyArgs *args, gboolean same_units, GwyDataField *dfield)
 {
     GtkWidget *dialog, *table, *label, *hbox;
+    GwyGraphModel *gmodel;
     EntropyControls controls;
     gint response;
     gint row;
@@ -165,13 +168,13 @@ entropy_dialog(EntropyArgs *args, gboolean same_units, GwyDataField *dfield)
 
     hbox = gtk_hbox_new(FALSE, 12);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
-                       FALSE, FALSE, 4);
+                       TRUE, TRUE, 0);
 
-    table = gtk_table_new(4, 4, FALSE);
+    table = gtk_table_new(5, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
     row = 0;
 
     controls.on_sphere
@@ -215,6 +218,24 @@ entropy_dialog(EntropyArgs *args, gboolean same_units, GwyDataField *dfield)
     gtk_table_attach(GTK_TABLE(table), label,
                      2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls.entropy = label;
+    row++;
+
+    label = gtk_label_new(_("Entropy deficit:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    label = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls.entropydef = label;
+    row++;
+
+    gmodel = gwy_graph_model_new();
+    controls.graph = gwy_graph_new(gmodel);
+    g_object_unref(gmodel);
+    gtk_widget_set_size_request(controls.graph, 400, 320);
+    gtk_box_pack_start(GTK_BOX(hbox), controls.graph, TRUE, TRUE, 0);
 
     gtk_widget_show_all(dialog);
     do {
@@ -257,7 +278,6 @@ static void
 on_sphere_changed(EntropyControls *controls, GtkToggleButton *check)
 {
     controls->args->on_sphere = gtk_toggle_button_get_active(check);
-    /* TODO: forget all already calculated values. */
 }
 
 static void
@@ -288,6 +308,23 @@ transform_to_sphere(GwyDataField *xder, GwyDataField *yder)
     }
 }
 
+static gdouble
+calculate_sigma2_2d(GwyDataField *xfield, GwyDataField *yfield)
+{
+    gdouble xc = gwy_data_field_get_avg(xfield);
+    gdouble yc = gwy_data_field_get_avg(yfield);
+    const gdouble *xdata = gwy_data_field_get_data(xfield);
+    const gdouble *ydata = gwy_data_field_get_data(yfield);
+    gdouble s2 = 0.0;
+    guint n, i;
+
+    n = gwy_data_field_get_xres(xfield)*gwy_data_field_get_yres(xfield);
+    for (i = 0; i < n; i++)
+        s2 += (xdata[i] - xc)*(xdata[i] - xc) + (ydata[i] - yc)*(ydata[i] - yc);
+
+    return s2/n;
+}
+
 static void
 preview(EntropyControls *controls)
 {
@@ -295,20 +332,74 @@ preview(EntropyControls *controls)
     GwyDataField *dfield = controls->dfield;
     GwyDataField *xder = gwy_data_field_new_alike(dfield, FALSE);
     GwyDataField *yder = gwy_data_field_new_alike(dfield, FALSE);
-    gdouble S;
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *gcmodel;
+    GwyDataLine *ecurve;
     gchar buf[24];
+    gdouble S, sigma2 = 0.0;
 
     compute_slopes(controls->dfield,
                    args->fit_plane ? args->kernel_size : 0, xder, yder);
     if (args->on_sphere)
         transform_to_sphere(xder, yder);
-    S = gwy_data_field_get_entropy_2d(xder, yder);
+
+    ecurve = gwy_data_line_new(1, 1.0, FALSE);
+    S = gwy_data_field_get_entropy_2d_at_scales(xder, yder, ecurve, 0);
+    if (!args->on_sphere)
+        sigma2 = calculate_sigma2_2d(xder, yder);
+
+    g_object_unref(xder);
+    g_object_unref(yder);
 
     g_snprintf(buf, sizeof(buf), "%g", S);
     gtk_label_set_text(GTK_LABEL(controls->entropy), buf);
 
-    g_object_unref(xder);
-    g_object_unref(yder);
+    if (!args->on_sphere) {
+        /* NB: This is for 2D Gaussian. */
+        g_snprintf(buf, sizeof(buf), "%g", log(G_PI*sigma2) + 1.0 - S);
+        gtk_label_set_text(GTK_LABEL(controls->entropydef), buf);
+    }
+    else
+        gtk_label_set_text(GTK_LABEL(controls->entropydef), _("N.A."));
+
+    gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
+    gwy_graph_model_remove_all_curves(gmodel);
+    g_object_set(gmodel,
+                 "axis-label-bottom", "log h",
+                 "axis-label-left", "S",
+                 "label-position", GWY_GRAPH_LABEL_NORTHWEST,
+                 NULL);
+
+    if (gwy_data_line_get_min(ecurve) > -0.5*G_MAXDOUBLE) {
+        gcmodel = gwy_graph_curve_model_new();
+        g_object_set(gcmodel,
+                     "description", _("Entropy at scales"),
+                     "mode", GWY_GRAPH_CURVE_LINE_POINTS,
+                     "color", gwy_graph_get_preset_color(0),
+                     NULL);
+        gwy_graph_curve_model_set_data_from_dataline(gcmodel, ecurve, 0, 0);
+        gwy_graph_model_add_curve(gmodel, gcmodel);
+        g_object_unref(gcmodel);
+    }
+
+    if (S > -0.5*G_MAXDOUBLE) {
+        gdouble xdata[2], ydata[2];
+
+        gcmodel = gwy_graph_curve_model_new();
+        g_object_set(gcmodel,
+                     "description", _("Best estimate"),
+                     "mode", GWY_GRAPH_CURVE_LINE,
+                     "color", gwy_graph_get_preset_color(1),
+                     NULL);
+        xdata[0] = gwy_data_line_get_offset(ecurve);
+        xdata[1] = xdata[0] + gwy_data_line_get_real(ecurve);
+        ydata[0] = ydata[1] = S;
+        gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, 2);
+        gwy_graph_model_add_curve(gmodel, gcmodel);
+        g_object_unref(gcmodel);
+    }
+
+    g_object_unref(ecurve);
 }
 
 static void
