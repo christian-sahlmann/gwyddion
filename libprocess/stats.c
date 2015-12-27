@@ -4938,9 +4938,11 @@ calculate_entropy_at_scales(GwyDataField *dfield,
  *
  * Calculates estimates of value distribution entropy at various scales.
  *
+ * Returns: The best estimate, as gwy_data_field_area_get_entropy().
+ *
  * Since: 2.44
  **/
-void
+gdouble
 gwy_data_field_area_get_entropy_at_scales(GwyDataField *data_field,
                                           GwyDataLine *target_line,
                                           GwyDataField *mask,
@@ -4952,22 +4954,22 @@ gwy_data_field_area_get_entropy_at_scales(GwyDataField *data_field,
     GwySIUnit *lineunit;
     guint umaxdiv = (maxdiv > 0 ? maxdiv : 0);
     gdouble *ecurve;
-    gdouble min, max;
+    gdouble min, max, S = -G_MAXDOUBLE;
     gint i;
 
-    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    g_return_if_fail(GWY_IS_DATA_LINE(target_line));
-    g_return_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
-                               && mask->xres == data_field->xres
-                               && mask->yres == data_field->yres));
-    g_return_if_fail(col >= 0 && row >= 0
-                     && width >= 0 && height >= 0
-                     && col + width <= data_field->xres
-                     && row + height <= data_field->yres);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), S);
+    g_return_val_if_fail(GWY_IS_DATA_LINE(target_line), S);
+    g_return_val_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
+                                   && mask->xres == data_field->xres
+                                   && mask->yres == data_field->yres), S);
+    g_return_val_if_fail(col >= 0 && row >= 0
+                         && width >= 0 && height >= 0
+                         && col + width <= data_field->xres
+                         && row + height <= data_field->yres, S);
 
     ecurve = calculate_entropy_at_scales(data_field, mask, mode,
                                          col, row, width, height,
-                                         &umaxdiv, NULL);
+                                         &umaxdiv, &S);
     maxdiv = maxdiv ? maxdiv : umaxdiv + 1;
     gwy_data_line_resample(target_line, maxdiv, GWY_INTERPOLATION_NONE);
     target_line->real = maxdiv*G_LN2;
@@ -4985,6 +4987,8 @@ gwy_data_field_area_get_entropy_at_scales(GwyDataField *data_field,
     gwy_si_unit_set_from_string(lineunit, NULL);
     lineunit = gwy_data_line_get_si_unit_y(target_line);
     gwy_si_unit_set_from_string(lineunit, NULL);
+
+    return S;
 }
 
 /**
@@ -5043,12 +5047,14 @@ gwy_data_field_get_entropy(GwyDataField *data_field)
  * @n is the number of pixels considered, Δ the bin size and @n_i the count in
  * the @i-th bin.  If @S is plotted as a function of the bin size Δ, it is,
  * generally, a growing function with a plateau for ‘reasonable’ bin sizes.
- * The estimate is taken at the plateau.
+ * The estimate is taken at the plateau.  If no plateau is found, which means
+ * the distribution is effectively a sum of δ-functions, -%G_MAXDOUBLE is
+ * returned.
  *
  * It should be noted that this estimate may be biased.
  *
  * Returns: The estimated entropy of the data values.  The entropy of no data
- *          or a single single is returned as %G_MAXDOUBLE.
+ *          or a single single is returned as -%G_MAXDOUBLE.
  *
  * Since: 2.42
  **/
@@ -5417,9 +5423,11 @@ calculate_entropy_2d_at_scales(GwyDataField *xfield,
  * Calculates estimates of entropy of two-dimensional point cloud at various
  * scales.
  *
+ * Returns: The best estimate, as gwy_data_field_get_entropy_2d().
+ *
  * Since: 2.44
  **/
-void
+gdouble
 gwy_data_field_get_entropy_2d_at_scales(GwyDataField *xfield,
                                         GwyDataField *yfield,
                                         GwyDataLine *target_line,
@@ -5428,16 +5436,16 @@ gwy_data_field_get_entropy_2d_at_scales(GwyDataField *xfield,
     GwySIUnit *lineunit;
     guint umaxdiv = (maxdiv > 0 ? maxdiv/2 : 0);
     gdouble *ecurve;
-    gdouble xmin, xmax, ymin, ymax;
+    gdouble xmin, xmax, ymin, ymax, S = -G_MAXDOUBLE;
     gint i;
 
-    g_return_if_fail(GWY_IS_DATA_FIELD(xfield));
-    g_return_if_fail(GWY_IS_DATA_FIELD(yfield));
-    g_return_if_fail(GWY_IS_DATA_LINE(target_line));
-    g_return_if_fail(xfield->xres == yfield->xres);
-    g_return_if_fail(xfield->yres == yfield->yres);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(xfield), S);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(yfield), S);
+    g_return_val_if_fail(GWY_IS_DATA_LINE(target_line), S);
+    g_return_val_if_fail(xfield->xres == yfield->xres, S);
+    g_return_val_if_fail(xfield->yres == yfield->yres, S);
 
-    ecurve = calculate_entropy_2d_at_scales(xfield, yfield, &umaxdiv, NULL);
+    ecurve = calculate_entropy_2d_at_scales(xfield, yfield, &umaxdiv, &S);
     maxdiv = maxdiv ? maxdiv : 2*umaxdiv + 1;
     gwy_data_line_resample(target_line, maxdiv, GWY_INTERPOLATION_NONE);
     target_line->real = maxdiv*G_LN2;
@@ -5454,6 +5462,8 @@ gwy_data_field_get_entropy_2d_at_scales(GwyDataField *xfield,
     gwy_si_unit_set_from_string(lineunit, NULL);
     lineunit = gwy_data_line_get_si_unit_y(target_line);
     gwy_si_unit_set_from_string(lineunit, NULL);
+
+    return S;
 }
 
 /**

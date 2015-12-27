@@ -153,7 +153,7 @@ gdouble gwy_data_field_area_get_surface_area_mask(GwyDataField *data_field,
                                                   gint row,
                                                   gint width,
                                                   gint height);
-void    gwy_data_field_area_get_entropy_at_scales(GwyDataField *data_field,
+gdouble gwy_data_field_area_get_entropy_at_scales(GwyDataField *data_field,
                                                   GwyDataLine *target_line,
                                                   GwyDataField *mask,
                                                   GwyMaskingType mode,
@@ -162,7 +162,7 @@ void    gwy_data_field_area_get_entropy_at_scales(GwyDataField *data_field,
                                                   gint width,
                                                   gint height,
                                                   gint maxdiv);
-void    gwy_data_field_get_entropy_2d_at_scales  (GwyDataField *xfield,
+gdouble gwy_data_field_get_entropy_2d_at_scales  (GwyDataField *xfield,
                                                   GwyDataField *yfield,
                                                   GwyDataLine *target_line,
                                                   gint maxdiv);
