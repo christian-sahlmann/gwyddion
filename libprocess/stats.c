@@ -4545,7 +4545,7 @@ calculate_entropy_from_scaling(const gdouble *ecurve, guint maxdiv)
      * asymptotic value we will consider is as potential inflexion point.
      * If we get ecurve[] essentially corresponding to a set of δ-functions
      * then we return -G_MAXDOUBLE. */
-    gdouble S = -G_MAXDOUBLE, mindiff = 0.5*G_LN2;
+    gdouble S = -G_MAXDOUBLE, mindiff = 0.7*G_LN2;
     guint i, from = maxdiv/12;
 
     if (maxdiv < 1)
@@ -4861,7 +4861,7 @@ calculate_entropy_at_scales(GwyDataField *dfield,
 
     if (!*maxdiv) {
         if (n >= 2)
-            *maxdiv = (guint)floor(2.0*log(n)/G_LN2 + 1e-12);
+            *maxdiv = (guint)floor(3.0*log(n)/G_LN2 + 1e-12);
         else
             *maxdiv = 2;
     }
@@ -4981,7 +4981,7 @@ gwy_data_field_area_get_entropy_at_scales(GwyDataField *data_field,
                                          col, row, width, height,
                                          &min, &max);
     if (max > min)
-        target_line->off = log(max - min) - 0.5*G_LN2;
+        target_line->off = log(max - min) - (maxdiv - 0.5)*G_LN2;
 
     lineunit = gwy_data_line_get_si_unit_x(target_line);
     gwy_si_unit_set_from_string(lineunit, NULL);
@@ -5384,7 +5384,7 @@ calculate_entropy_2d_at_scales(GwyDataField *xfield,
 
     if (!*maxdiv) {
         if (n >= 2)
-            *maxdiv = (guint)floor(log(n)/G_LN2 + 1e-12);
+            *maxdiv = (guint)floor(1.5*log(n)/G_LN2 + 1e-12);
         else
             *maxdiv = 1;
     }
@@ -5456,7 +5456,8 @@ gwy_data_field_get_entropy_2d_at_scales(GwyDataField *xfield,
     gwy_data_field_get_min_max(xfield, &xmin, &xmax);
     gwy_data_field_get_min_max(xfield, &ymin, &ymax);
     if ((xmax > xmin) && (ymax > ymin))
-        target_line->off = log((xmax - xmin)*(ymax - ymin)) - 0.5*G_LN2;
+        target_line->off = (log((xmax - xmin)*(ymax - ymin))
+                            - (maxdiv - 0.5)*G_LN2);
 
     lineunit = gwy_data_line_get_si_unit_x(target_line);
     gwy_si_unit_set_from_string(lineunit, NULL);
