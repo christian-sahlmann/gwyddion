@@ -34,7 +34,7 @@
 #include <app/gwyapp.h>
 #include <app/gwymoduleutils.h>
 
-#define ENTROPY_ENT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
+#define ENTROPY_RUN_MODES (GWY_RUN_INTERACTIVE)
 
 #define ENTROPY_NORMAL 1.41893853320467274178l
 #define ENTROPY_NORMAL_2D 2.144729885849400174l
@@ -127,7 +127,7 @@ module_register(void)
                               (GwyProcessFunc)&entropy,
                               N_("/_Statistics/_Entropy..."),
                               NULL,
-                              ENTROPY_ENT_RUN_MODES,
+                              ENTROPY_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Calculate entropy of value and "
                                  "slope distributions"));
@@ -142,7 +142,7 @@ entropy(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     EntropyArgs args;
     gboolean ok, same_units;
 
-    g_return_if_fail(run & ENTROPY_ENT_RUN_MODES);
+    g_return_if_fail(run & ENTROPY_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_MASK_FIELD, &mfield,
                                      0);
