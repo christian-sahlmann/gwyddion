@@ -12,8 +12,14 @@ Libraries:
   the same lateral dimensions and units as the data field.
 - libgwyprocess: Bogus value returned by gwy_data_field_area_get_entropy() with
   mask exclusion mode was fixed.
+- libgwyprocess: Functions for estimation of the entropy of two-dimensional
+  point cloud, and for entropy-from-histogram-at-scale curves were added.
+- libgwydgets: Graph labels respond to "label-property" changes.  The property
+  is also meaningfully updated when user moves the label around.
 
 Modules:
+- Entropy (new): Visualises entropy calculation for distributions of values
+  and slopes.
 - DM3: Support for Digital Micrograph DM4 files was added.
 - Image export: The number of digits in false colour axis ticks can be
   controlled explicitly.  Very small negative values are displayed as ‘0.0’,
