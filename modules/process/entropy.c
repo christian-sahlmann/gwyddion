@@ -28,6 +28,7 @@
 #include <libprocess/stats.h>
 #include <libprocess/linestats.h>
 #include <libprocess/gwyprocesstypes.h>
+#include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
@@ -35,12 +36,24 @@
 
 #define ENTROPY_ENT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
+#define ENTROPY_NORMAL 1.41893853320467274178l
+#define ENTROPY_NORMAL_2D 2.144729885849400174l
+
 enum {
     RESPONSE_PREVIEW = 2,
 };
 
+typedef enum {
+    ENTROPY_VALUES = 0,
+    ENTROPY_SLOPES = 1,
+    ENTROPY_ANGLES = 2,
+    ENTROPY_NMODES
+} EntropyMode;
+
 typedef struct {
-    gboolean on_sphere;
+    EntropyMode mode;
+    GwyMaskingType masking;
+    gboolean zoom_in;
     gboolean fit_plane;
     gint kernel_size;
 } EntropyArgs;
@@ -51,24 +64,32 @@ typedef struct {
     GtkWidget *dialog;
     GtkWidget *view;
     GtkWidget *graph;
-    GtkWidget *on_sphere;
+    GSList *mode;
+    GSList *masking;
     GtkWidget *fit_plane;
     GtkObject *kernel_size;
+    GtkWidget *zoom_in;
     GtkWidget *entropy;
     GtkWidget *entropydef;
 
     GwyDataField *dfield;
+    GwyDataField *mfield;
 } EntropyControls;
 
 static gboolean module_register    (void);
 static void     entropy            (GwyContainer *data,
                                     GwyRunType run);
 static gboolean entropy_dialog     (EntropyArgs *args,
-                                    gboolean same_units,
-                                    GwyDataField *dfield);
-static void     on_sphere_changed  (EntropyControls *controls,
-                                    GtkToggleButton *check);
+                                    GwyDataField *dfield,
+                                    GwyDataField *mfield);
+static void     update_sensitivity (EntropyControls *controls);
+static void     mode_changed       (GtkToggleButton *check,
+                                    EntropyControls *controls);
+static void     masking_changed    (GtkToggleButton *toggle,
+                                    EntropyControls *controls);
 static void     fit_plane_changed  (EntropyControls *controls,
+                                    GtkToggleButton *check);
+static void     zoom_in_changed    (EntropyControls *controls,
                                     GtkToggleButton *check);
 static void     kernel_size_changed(EntropyControls *controls,
                                     GtkAdjustment *adj);
@@ -84,13 +105,13 @@ static void     save_args          (GwyContainer *container,
 static void     sanitize_args      (EntropyArgs *args);
 
 static const EntropyArgs slope_defaults = {
-    TRUE, TRUE, 5,
+    ENTROPY_VALUES, GWY_MASK_IGNORE, FALSE, TRUE, 3,
 };
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Calculates entropy of two-dimensional distribution of slopes."),
+    N_("Visualises entropy calculation for value and slope distribution."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti)",
@@ -108,16 +129,16 @@ module_register(void)
                               NULL,
                               ENTROPY_ENT_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Calculate entropy of slope distribution"));
+                              N_("Calculate entropy of value and "
+                                 "slope distributions"));
 
     return TRUE;
 }
 
 static void
-entropy(GwyContainer *data, GwyRunType run)
+entropy(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *mfield;
-    //GwyGraphModel *gmodel;
     EntropyArgs args;
     gboolean ok, same_units;
 
@@ -131,9 +152,9 @@ entropy(GwyContainer *data, GwyRunType run)
                                    gwy_data_field_get_si_unit_z(dfield));
 
     if (run == GWY_RUN_INTERACTIVE) {
-        if (!same_units)
-           args.on_sphere = FALSE;
-        ok = entropy_dialog(&args, same_units, dfield);
+        if (!same_units && args.mode == ENTROPY_ANGLES)
+           args.mode = ENTROPY_SLOPES;
+        ok = entropy_dialog(&args, dfield, mfield);
         save_args(gwy_app_settings_get(), &args);
         if (!ok)
             return;
@@ -141,7 +162,7 @@ entropy(GwyContainer *data, GwyRunType run)
 }
 
 static gboolean
-entropy_dialog(EntropyArgs *args, gboolean same_units, GwyDataField *dfield)
+entropy_dialog(EntropyArgs *args, GwyDataField *dfield, GwyDataField *mfield)
 {
     GtkWidget *dialog, *table, *label, *hbox;
     GwyGraphModel *gmodel;
@@ -151,6 +172,7 @@ entropy_dialog(EntropyArgs *args, gboolean same_units, GwyDataField *dfield)
 
     controls.args = args;
     controls.dfield = dfield;
+    controls.mfield = mfield;
 
     dialog = gtk_dialog_new_with_buttons(_("Entropy"), NULL, 0,
                                          NULL);
@@ -170,26 +192,43 @@ entropy_dialog(EntropyArgs *args, gboolean same_units, GwyDataField *dfield)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        TRUE, TRUE, 0);
 
-    table = gtk_table_new(5, 4, FALSE);
+    table = gtk_table_new(8 + 4*(!!mfield), 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
     row = 0;
 
-    controls.on_sphere
-        = gtk_check_button_new_with_mnemonic(_("Angular distribution on sphere"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.on_sphere),
-                                 args->on_sphere);
-    gtk_table_attach(GTK_TABLE(table), controls.on_sphere,
-                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    if (same_units)
-        g_signal_connect_swapped(controls.on_sphere, "toggled",
-                                 G_CALLBACK(on_sphere_changed), &controls);
-    else
-        gtk_widget_set_sensitive(controls.on_sphere, FALSE);
-    row++;
+    controls.mode
+        = gwy_radio_buttons_createl(G_CALLBACK(mode_changed), &controls,
+                                    args->mode,
+                                    _("Value distribution"),
+                                    ENTROPY_VALUES,
+                                    _("Slope derivative distribution"),
+                                    ENTROPY_SLOPES,
+                                    _("Slope angle distribution"),
+                                    ENTROPY_ANGLES,
+                                    NULL);
+    row = gwy_radio_buttons_attach_to_table(controls.mode,
+                                            GTK_TABLE(table), 3, row);
+    if (mfield) {
+        gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+        label = gwy_label_new_header(_("Masking Mode"));
+        gtk_table_attach(GTK_TABLE(table), label,
+                        0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        row++;
 
+        controls.masking
+            = gwy_radio_buttons_create(gwy_masking_type_get_enum(), -1,
+                                       G_CALLBACK(masking_changed), &controls,
+                                       args->masking);
+        row = gwy_radio_buttons_attach_to_table(controls.masking,
+                                                GTK_TABLE(table), 3, row);
+    }
+    else
+        controls.masking = NULL;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     controls.fit_plane
         = gtk_check_button_new_with_mnemonic(_("Use local plane _fitting"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.fit_plane),
@@ -209,6 +248,16 @@ entropy_dialog(EntropyArgs *args, gboolean same_units, GwyDataField *dfield)
     row++;
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    controls.zoom_in
+        = gtk_check_button_new_with_mnemonic(_("_Zoom graph around estimate"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.zoom_in),
+                                 args->zoom_in);
+    gtk_table_attach(GTK_TABLE(table), controls.zoom_in,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls.zoom_in, "toggled",
+                             G_CALLBACK(zoom_in_changed), &controls);
+    row++;
+
     label = gtk_label_new(_("Entropy:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -230,6 +279,8 @@ entropy_dialog(EntropyArgs *args, gboolean same_units, GwyDataField *dfield)
                      2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls.entropydef = label;
     row++;
+
+    update_sensitivity(&controls);
 
     gmodel = gwy_graph_model_new();
     controls.graph = gwy_graph_new(gmodel);
@@ -267,17 +318,103 @@ entropy_dialog(EntropyArgs *args, gboolean same_units, GwyDataField *dfield)
 }
 
 static void
-fit_plane_changed(EntropyControls *controls, GtkToggleButton *check)
+update_sensitivity(EntropyControls *controls)
 {
-    controls->args->fit_plane = gtk_toggle_button_get_active(check);
+    GwyDataField *dfield = controls->dfield;
+    gboolean is_slope = (controls->args->mode != ENTROPY_VALUES);
+
+    if (!gwy_si_unit_equal(gwy_data_field_get_si_unit_xy(dfield),
+                          gwy_data_field_get_si_unit_z(dfield))) {
+        GtkWidget *button = gwy_radio_buttons_find(controls->mode,
+                                                   ENTROPY_ANGLES);
+        gtk_widget_set_sensitive(button, FALSE);
+    }
+
+    gtk_widget_set_sensitive(controls->fit_plane, is_slope);
     gwy_table_hscale_set_sensitive(controls->kernel_size,
-                                   controls->args->fit_plane);
+                                   is_slope && controls->args->fit_plane);
 }
 
 static void
-on_sphere_changed(EntropyControls *controls, GtkToggleButton *check)
+mode_changed(GtkToggleButton *toggle, EntropyControls *controls)
 {
-    controls->args->on_sphere = gtk_toggle_button_get_active(check);
+    if (!gtk_toggle_button_get_active(toggle))
+        return;
+
+    controls->args->mode = gwy_radio_buttons_get_current(controls->mode);
+    update_sensitivity(controls);
+}
+
+static void
+masking_changed(GtkToggleButton *toggle, EntropyControls *controls)
+{
+    if (!gtk_toggle_button_get_active(toggle))
+        return;
+
+    controls->args->masking = gwy_radio_buttons_get_current(controls->masking);
+}
+
+static void
+fit_plane_changed(EntropyControls *controls, GtkToggleButton *check)
+{
+    controls->args->fit_plane = gtk_toggle_button_get_active(check);
+    update_sensitivity(controls);
+}
+
+static void
+zoom_in_changed(EntropyControls *controls, GtkToggleButton *check)
+{
+    GwyGraphModel *gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
+    GwyGraphCurveModel *gcmodel;
+    const gdouble *xdata, *ydata;
+    gdouble S;
+    guint ndata, i;
+
+    g_object_set(gmodel,
+                 "x-min-set", FALSE,
+                 "x-max-set", FALSE,
+                 "y-min-set", FALSE,
+                 "y-max-set", FALSE,
+                 NULL);
+
+    if (!(controls->args->zoom_in = gtk_toggle_button_get_active(check))
+        || (gwy_graph_model_get_n_curves(gmodel) < 2)) {
+        return;
+    }
+
+    gcmodel = gwy_graph_model_get_curve(gmodel, 1);
+    ydata = gwy_graph_curve_model_get_ydata(gcmodel);
+    S = ydata[0];
+
+    gcmodel = gwy_graph_model_get_curve(gmodel, 0);
+    ndata = gwy_graph_curve_model_get_ndata(gcmodel);
+    if (ndata < 5)
+        return;
+
+    xdata = gwy_graph_curve_model_get_xdata(gcmodel);
+    ydata = gwy_graph_curve_model_get_ydata(gcmodel);
+    for (i = 1; i+1 < ndata; i++) {
+        if (ydata[i] > S - G_LN2) {
+            g_object_set(gmodel,
+                         "x-min", xdata[i-1],
+                         "x-min-set", TRUE,
+                         "y-min", ydata[i-1],
+                         "y-min-set", TRUE,
+                         NULL);
+            break;
+        }
+    }
+    for (i = ndata-2; i; i--) {
+        if (ydata[i] < S + G_LN2) {
+            g_object_set(gmodel,
+                         "x-max", xdata[i+1],
+                         "x-max-set", TRUE,
+                         "y-max", ydata[i+1],
+                         "y-max-set", TRUE,
+                         NULL);
+            break;
+        }
+    }
 }
 
 static void
@@ -325,38 +462,94 @@ calculate_sigma2_2d(GwyDataField *xfield, GwyDataField *yfield)
     return s2/n;
 }
 
+static GwyDataField*
+fake_mask(GwyDataField *dfield, GwyDataField *mask, GwyMaskingType masking)
+{
+    GwyDataField *masked;
+    gint xres = gwy_data_field_get_xres(dfield);
+    gint yres = gwy_data_field_get_yres(dfield);
+    const gdouble *d, *m;
+    gdouble *md;
+    gint i, n;
+
+    if (!mask || masking == GWY_MASK_IGNORE)
+        return dfield;
+
+    gwy_data_field_area_count_in_range(mask, NULL, 0, 0, xres, yres,
+                                       G_MAXDOUBLE, 1.0, NULL, &n);
+    if (masking == GWY_MASK_EXCLUDE)
+        n = xres*yres - n;
+
+    if (n == xres*yres)
+        return dfield;
+
+    masked = gwy_data_field_new(n, 1, n, 1.0, FALSE);
+    md = gwy_data_field_get_data(masked);
+    d = gwy_data_field_get_data_const(dfield);
+    m = gwy_data_field_get_data_const(mask);
+    n = 0;
+    for (i = 0; i < xres*yres; i++) {
+        gboolean mi = (m[i] >= 1.0);
+        if ((mi && masking == GWY_MASK_INCLUDE)
+            || (!mi && masking == GWY_MASK_EXCLUDE))
+            md[n++] = d[i];
+    }
+    g_object_unref(dfield);
+
+    return masked;
+}
+
 static void
 preview(EntropyControls *controls)
 {
     EntropyArgs *args = controls->args;
     GwyDataField *dfield = controls->dfield;
-    GwyDataField *xder = gwy_data_field_new_alike(dfield, FALSE);
-    GwyDataField *yder = gwy_data_field_new_alike(dfield, FALSE);
+    GwyDataField *mfield = controls->mfield;
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
     GwyDataLine *ecurve;
     gchar buf[24];
-    gdouble S, sigma2 = 0.0;
-
-    compute_slopes(controls->dfield,
-                   args->fit_plane ? args->kernel_size : 0, xder, yder);
-    if (args->on_sphere)
-        transform_to_sphere(xder, yder);
+    gdouble S, s, Smax = 0.0;
 
     ecurve = gwy_data_line_new(1, 1.0, FALSE);
-    S = gwy_data_field_get_entropy_2d_at_scales(xder, yder, ecurve, 0);
-    if (!args->on_sphere)
-        sigma2 = calculate_sigma2_2d(xder, yder);
+    if (args->mode == ENTROPY_VALUES) {
+        S = gwy_data_field_area_get_entropy_at_scales(dfield, ecurve,
+                                                      mfield, args->masking,
+                                                      0, 0,
+                                                      dfield->xres,
+                                                      dfield->yres,
+                                                      0);
+        s = gwy_data_field_area_get_rms_mask(dfield,
+                                             mfield, args->masking,
+                                             0, 0, dfield->xres, dfield->yres);
+        Smax = ENTROPY_NORMAL + log(s);
+    }
+    else {
+        GwyDataField *xder = gwy_data_field_new_alike(dfield, FALSE);
+        GwyDataField *yder = gwy_data_field_new_alike(dfield, FALSE);
 
-    g_object_unref(xder);
-    g_object_unref(yder);
+        compute_slopes(controls->dfield,
+                       args->fit_plane ? args->kernel_size : 0, xder, yder);
+        xder = fake_mask(xder, mfield, args->masking);
+        yder = fake_mask(yder, mfield, args->masking);
+        if (args->mode == ENTROPY_ANGLES)
+            transform_to_sphere(xder, yder);
+
+        S = gwy_data_field_get_entropy_2d_at_scales(xder, yder, ecurve, 0);
+        if (args->mode == ENTROPY_SLOPES) {
+            s = calculate_sigma2_2d(xder, yder);
+            Smax = ENTROPY_NORMAL_2D + log(s);
+        }
+
+        g_object_unref(xder);
+        g_object_unref(yder);
+    }
 
     g_snprintf(buf, sizeof(buf), "%g", S);
     gtk_label_set_text(GTK_LABEL(controls->entropy), buf);
 
-    if (!args->on_sphere) {
-        /* NB: This is for 2D Gaussian. */
-        g_snprintf(buf, sizeof(buf), "%g", log(G_PI*sigma2) + 1.0 - S);
+    if (args->mode != ENTROPY_ANGLES) {
+        g_snprintf(buf, sizeof(buf), "%g", Smax - S);
         gtk_label_set_text(GTK_LABEL(controls->entropydef), buf);
     }
     else
@@ -383,7 +576,12 @@ preview(EntropyControls *controls)
     }
 
     if (S > -0.5*G_MAXDOUBLE) {
-        gdouble xdata[2], ydata[2];
+        GwyDataLine *best = gwy_data_line_duplicate(ecurve);
+        gdouble *ydata = gwy_data_line_get_data(best);
+        guint i, res = gwy_data_line_get_res(best);
+
+        for (i = 0; i < res; i++)
+            ydata[i] = S;
 
         gcmodel = gwy_graph_curve_model_new();
         g_object_set(gcmodel,
@@ -391,15 +589,15 @@ preview(EntropyControls *controls)
                      "mode", GWY_GRAPH_CURVE_LINE,
                      "color", gwy_graph_get_preset_color(1),
                      NULL);
-        xdata[0] = gwy_data_line_get_offset(ecurve);
-        xdata[1] = xdata[0] + gwy_data_line_get_real(ecurve);
-        ydata[0] = ydata[1] = S;
-        gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, 2);
+        gwy_graph_curve_model_set_data_from_dataline(gcmodel, best, 0, 0);
         gwy_graph_model_add_curve(gmodel, gcmodel);
         g_object_unref(gcmodel);
+        g_object_unref(best);
     }
 
     g_object_unref(ecurve);
+
+    zoom_in_changed(controls, GTK_TOGGLE_BUTTON(controls->zoom_in));
 }
 
 static void
@@ -429,16 +627,21 @@ compute_slopes(GwyDataField *dfield,
         gwy_data_field_filter_slope(dfield, xder, yder);
 }
 
-static const gchar fit_plane_key[]   = "/module/slope_ent/fit_plane";
-static const gchar kernel_size_key[] = "/module/slope_ent/kernel_size";
-static const gchar on_sphere_key[]   = "/module/slope_ent/on_sphere";
+static const gchar fit_plane_key[]   = "/module/entropy/fit_plane";
+static const gchar kernel_size_key[] = "/module/entropy/kernel_size";
+static const gchar masking_key[]     = "/module/entropy/masking";
+static const gchar mode_key[]        = "/module/entropy/mode";
+static const gchar zoom_in_key[]     = "/module/entropy/zoom_in";
 
 static void
 sanitize_args(EntropyArgs *args)
 {
-    args->on_sphere = !!args->on_sphere;
+    args->mode = MIN(args->mode, ENTROPY_NMODES-1);
+    args->zoom_in = !!args->zoom_in;
     args->fit_plane = !!args->fit_plane;
     args->kernel_size = CLAMP(args->kernel_size, 2, 16);
+    args->masking = gwy_enum_sanitize_value(args->masking,
+                                            GWY_TYPE_MASKING_TYPE);
 }
 
 static void
@@ -447,8 +650,9 @@ load_args(GwyContainer *container,
 {
     *args = slope_defaults;
 
-    gwy_container_gis_boolean_by_name(container, on_sphere_key,
-                                      &args->on_sphere);
+    gwy_container_gis_enum_by_name(container, mode_key, &args->mode);
+    gwy_container_gis_enum_by_name(container, masking_key, &args->masking);
+    gwy_container_gis_boolean_by_name(container, zoom_in_key, &args->zoom_in);
     gwy_container_gis_boolean_by_name(container, fit_plane_key,
                                       &args->fit_plane);
     gwy_container_gis_int32_by_name(container, kernel_size_key,
@@ -460,8 +664,9 @@ static void
 save_args(GwyContainer *container,
           EntropyArgs *args)
 {
-    gwy_container_set_boolean_by_name(container, on_sphere_key,
-                                      args->on_sphere);
+    gwy_container_set_enum_by_name(container, mode_key, args->mode);
+    gwy_container_set_enum_by_name(container, masking_key, args->masking);
+    gwy_container_set_boolean_by_name(container, zoom_in_key, args->zoom_in);
     gwy_container_set_boolean_by_name(container, fit_plane_key,
                                       args->fit_plane);
     gwy_container_set_int32_by_name(container, kernel_size_key,
