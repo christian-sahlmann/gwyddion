@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006,2015 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -468,7 +468,8 @@ gwy_graph_area_repos_label(GwyGraphArea *area,
                            GtkAllocation *label_allocation)
 {
 
-    gint posx, posy;
+    gint posx, posy, oldposx, oldposy;
+
     posx = (gint)(area->rx0*area_allocation->width);
     posy = (gint)(area->ry0*area_allocation->height);
     posx = CLAMP(posx,
@@ -476,10 +477,17 @@ gwy_graph_area_repos_label(GwyGraphArea *area,
     posy = CLAMP(posy,
                  5, area_allocation->height - label_allocation->height - 5);
 
+    gtk_container_child_get(GTK_CONTAINER(area), GTK_WIDGET(area->lab),
+                            "x", &oldposx,
+                            "y", &oldposy,
+                            NULL);
+
     if (area->old_width != area_allocation->width
         || area->old_height != area_allocation->height
         || area->label_old_width != label_allocation->width
-        || area->label_old_height != label_allocation->height) {
+        || area->label_old_height != label_allocation->height
+        || posx != oldposx
+        || posy != oldposy) {
         gtk_layout_move(GTK_LAYOUT(area), GTK_WIDGET(area->lab), posx, posy);
     }
 }
@@ -1045,6 +1053,9 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
     }
 
     if (area->active) {
+        GwyGraphModel *gmodel = area->graph_model;
+        GwyGraphLabelPosition pos, newpos;
+
         gwy_graph_area_draw_child_rectangle(area);
 
         if (!ispos) {
@@ -1060,8 +1071,21 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
         }
         area->rx0 = ((gdouble)event->x - area->rxoff)/(gdouble)area->old_width;
         area->ry0 = ((gdouble)event->y - area->ryoff)/(gdouble)area->old_height;
+        g_object_get(gmodel, "label-position", &pos, NULL);
+        if (area->rx0 < 0.01 && area->ry0 < 0.01)
+            newpos = GWY_GRAPH_LABEL_NORTHWEST;
+        else if (area->rx0 > 0.99 && area->ry0 < 0.01)
+            newpos = GWY_GRAPH_LABEL_NORTHEAST;
+        else if (area->rx0 > 0.99 && area->ry0 > 0.99)
+            newpos = GWY_GRAPH_LABEL_SOUTHEAST;
+        else if (area->rx0 < 0.01 && area->ry0 > 0.99)
+            newpos = GWY_GRAPH_LABEL_SOUTHWEST;
+        else
+            newpos = GWY_GRAPH_LABEL_USER;
 
         area->active = NULL;
+        if (newpos != pos)
+            g_object_set(gmodel, "label-position", newpos, NULL);
     }
     return FALSE;
 }
@@ -1543,7 +1567,7 @@ scr_to_data_x(GtkWidget *widget, gint scr)
 static void
 gwy_graph_area_model_notify(GwyGraphArea *area,
                             GParamSpec *pspec,
-                            G_GNUC_UNUSED GwyGraphModel *gmodel)
+                            GwyGraphModel *gmodel)
 {
     if (gwy_strequal(pspec->name, "n-curves")) {
         gwy_graph_area_n_curves_changed(area);
@@ -1556,7 +1580,29 @@ gwy_graph_area_model_notify(GwyGraphArea *area,
     }
 
     if (gwy_strequal(pspec->name, "label-position")) {
-        g_warning("Want to change label position, but don't know how.");
+        GwyGraphLabelPosition pos;
+        g_object_get(gmodel, "label-position", &pos, NULL);
+        if (pos == GWY_GRAPH_LABEL_USER)
+            return;
+
+        if (pos == GWY_GRAPH_LABEL_NORTHWEST) {
+            area->rx0 = 0.0;
+            area->ry0 = 0.0;
+        }
+        else if (pos == GWY_GRAPH_LABEL_NORTHEAST) {
+            area->rx0 = 1.0;
+            area->ry0 = 0.0;
+        }
+        else if (pos == GWY_GRAPH_LABEL_SOUTHWEST) {
+            area->rx0 = 0.0;
+            area->ry0 = 1.0;
+        }
+        else if (pos == GWY_GRAPH_LABEL_SOUTHEAST) {
+            area->rx0 = 1.0;
+            area->ry0 = 1.0;
+        }
+        if (GTK_WIDGET_DRAWABLE(area))
+            gtk_widget_queue_draw(GTK_WIDGET(area));
         return;
     }
 }
