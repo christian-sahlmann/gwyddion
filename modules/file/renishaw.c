@@ -20,6 +20,10 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  */
+ 
+ /*
+  *  TODO: Read whitelight calibrations and metadata from EXIF tags
+  */
 
  /**
  * [FILE-MAGIC-FREEDESKTOP]
@@ -356,13 +360,14 @@ static void           wdf_read_maparea_block (const guchar *buffer,
                                               WdfMapArea *maparea);
 static GwyContainer*  wdf_read_pset          (const guchar *buffer,
                                               gsize size);
+static gchar*         wdf_read_datetime      (gint64 ticks);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Renishaw WiRE data files (WDF)."),
     "Daniil Bratashov <dn2010@gmail.com>",
-    "0.8",
+    "0.9",
     "Daniil Bratashov (dn2010), David Necas (Yeti), Renishaw plc.",
     "2014",
 };
@@ -1556,12 +1561,11 @@ wdf_read_pset(const guchar *buffer,
                     remaining -= 8;
                 break;
                 case WDF_PTYPE_TIME:
-                    // FIXME: we need to parse this into time
                     i64 = gwy_get_gint64_le(&buffer);
                     gwy_debug("t = %" G_GINT64_FORMAT "", i64);
                     g_hash_table_replace(values,
-                          GINT_TO_POINTER(pset->key),
-                          g_strdup_printf("%" G_GINT64_FORMAT "", i64));
+                                         GINT_TO_POINTER(pset->key),
+                                         wdf_read_datetime(i64));
                     remaining -= 8;
                 break;
                 case WDF_PTYPE_STRING:
@@ -1758,6 +1762,29 @@ wdf_read_pset(const guchar *buffer,
     gwy_debug("remaining = %d", remaining);
 
     return data;
+}
+
+static gchar *
+wdf_read_datetime(gint64 ticks)
+{
+    gint64 time;
+    gint hour, min, sec;
+    GDate *date;
+    gchar *s, *result;
+
+    s = g_malloc(32);
+    time = (ticks / 10000000LL) - 11644473600LL;
+    date = g_date_new();
+    g_date_set_time_t(date, time);
+    g_date_strftime(s, 32, "%x", date);
+    g_date_free(date);
+    hour = (time % 86400LL) / 3600;
+    min = (time % 3600LL) / 60;
+    sec = time % 60LL;
+    result = g_strdup_printf("%s %02d:%02d:%02d", s, hour, min, sec);
+    g_free(s);
+
+    return result;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

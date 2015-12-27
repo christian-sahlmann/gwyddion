@@ -403,7 +403,7 @@ volume_kmedians_do(GwyContainer *container, KMediansArgs *args)
             for (i = 0; i < xres; i++) {
                 *(data1 + j * xres + i) = 0;
                 min = G_MAXDOUBLE;
-                for (c = 0; c < k; c++ ) {
+                for (c = 0; c < k; c++) {
                     dist = 0;
                     for (l = 0; l < zres; l++) {
                         *(oldcenters + c * zres + l)
