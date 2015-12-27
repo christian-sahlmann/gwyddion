@@ -4545,8 +4545,8 @@ calculate_entropy_from_scaling(const gdouble *ecurve, guint maxdiv)
      * asymptotic value we will consider is as potential inflexion point.
      * If we get ecurve[] essentially corresponding to a set of δ-functions
      * then we return -G_MAXDOUBLE. */
-    gdouble S = -G_MAXDOUBLE, mindiff = 0.7*G_LN2;
-    guint i, from = maxdiv/12;
+    gdouble S = -G_MAXDOUBLE, mindiff = 0.6*G_LN2;
+    guint i, from = (maxdiv >= 12) + (maxdiv >= 48);
 
     if (maxdiv < 1)
         return ecurve[0];
@@ -4554,10 +4554,12 @@ calculate_entropy_from_scaling(const gdouble *ecurve, guint maxdiv)
     if (maxdiv < 5) {
         for (i = from; i <= maxdiv-2; i++) {
             gdouble diff = 0.5*(fabs(ecurve[i+1] - ecurve[i])
-                                + fabs(ecurve[i+2] - ecurve[i+1]));
-            if (diff < mindiff) {
+                                + fabs(ecurve[i+2] - ecurve[i+1]))/G_LN2;
+            gdouble diff2 = 0.5*(fabs(ecurve[i] + ecurve[i+2]
+                                      - 2.0*ecurve[i+1]))/(G_LN2*G_LN2);
+            if (diff + diff2 < mindiff) {
                 S = ecurve[i+1];
-                mindiff = diff;
+                mindiff = diff + diff2;
             }
         }
     }
@@ -4567,9 +4569,11 @@ calculate_entropy_from_scaling(const gdouble *ecurve, guint maxdiv)
                                  + fabs(ecurve[i+2] - ecurve[i+1])
                                  + fabs(ecurve[i+3] - ecurve[i+2])
                                  + fabs(ecurve[i+4] - ecurve[i+3]));
-            if (diff < mindiff) {
+            gdouble diff2 = 0.5*(fabs(ecurve[i+1] + ecurve[i+4]
+                                      - 2.0*ecurve[i+2]))/(G_LN2*G_LN2);
+            if (diff + diff2 < mindiff) {
                 S = (ecurve[i+1] + ecurve[i+2] + ecurve[i+3])/3.0;
-                mindiff = diff;
+                mindiff = diff + diff2;
             }
         }
     }
