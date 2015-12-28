@@ -111,7 +111,7 @@ function check_deps_versions() {
   # Keep the `GENERATED' string quoted to prevent match here
   grep -r --include '*.[ch]' -L ' This is a 'GENERATED' file\>' \
     libgwyddion libprocess libdraw libgwydgets libgwymodule app modules thumbnailer plugins \
-    | xargs gtkdoc-depscan \
+    | xargs gtkdoc-depscan --book={cairo,gdk2,gdk-pixbuf,gio,glib,gobject,gtk2,gtksourceview-2.0,pango} \
     | ./utils/check-dep-versions.py
 }
 
