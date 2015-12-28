@@ -4546,7 +4546,7 @@ calculate_entropy_from_scaling(const gdouble *ecurve, guint maxdiv)
      * If we get ecurve[] essentially corresponding to a set of δ-functions
      * then we return -G_MAXDOUBLE. */
     gdouble S = -G_MAXDOUBLE, mindiff = 0.6*G_LN2;
-    guint i, from = (maxdiv >= 12) + (maxdiv >= 48);
+    guint i, from = (maxdiv >= 12) + (maxdiv >= 36);
 
     if (maxdiv < 1)
         return ecurve[0];
@@ -4868,6 +4868,9 @@ calculate_entropy_at_scales(GwyDataField *dfield,
             *maxdiv = (guint)floor(3.0*log(n)/G_LN2 + 1e-12);
         else
             *maxdiv = 2;
+
+        /* We will run out of significant digits in coordinates after that. */
+        *maxdiv = MIN(*maxdiv, 50);
     }
 
     if (n < 2) {
@@ -5391,6 +5394,9 @@ calculate_entropy_2d_at_scales(GwyDataField *xfield,
             *maxdiv = (guint)floor(1.5*log(n)/G_LN2 + 1e-12);
         else
             *maxdiv = 1;
+
+        /* We will run out of significant digits in coordinates after that. */
+        *maxdiv = MIN(*maxdiv, 50);
     }
 
     if (n < 2) {
