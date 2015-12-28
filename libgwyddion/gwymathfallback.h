@@ -38,8 +38,8 @@ _GWY_STATIC_INLINE double gwy_math_fallback_hypot(double x, double y);
 _GWY_STATIC_INLINE double gwy_math_fallback_acosh(double x);
 _GWY_STATIC_INLINE double gwy_math_fallback_asinh(double x);
 _GWY_STATIC_INLINE double gwy_math_fallback_atanh(double x);
-_GWY_STATIC_INLINE double gwy_math_fallback_isinf(double x);
-_GWY_STATIC_INLINE double gwy_math_fallback_isnan(double x);
+_GWY_STATIC_INLINE int gwy_math_fallback_isinf(double x);
+_GWY_STATIC_INLINE int gwy_math_fallback_isnan(double x);
 
 #undef _GWY_STATIC_INLINE
 
@@ -82,7 +82,7 @@ gwy_math_fallback_atanh(double x)
     return /**/ log((1.0 + x)/(1.0 - x));
 }
 
-static inline double
+static inline int
 gwy_math_fallback_isinf(double x)
 {
     GDoubleIEEE754 /**/ dbl;
@@ -91,7 +91,7 @@ gwy_math_fallback_isinf(double x)
                  && !dbl.mpn.mantissa_high && !dbl.mpn.mantissa_low);
 }
 
-static inline double
+static inline int
 gwy_math_fallback_isnan(double x)
 {
     GDoubleIEEE754 /**/ dbl;
