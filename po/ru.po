@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-12-26 09:11+0300\n"
-"PO-Revision-Date: 2015-12-26 09:34+0300\n"
+"POT-Creation-Date: 2015-12-28 09:18+0300\n"
+"PO-Revision-Date: 2015-12-28 09:21+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -963,7 +963,7 @@ msgstr "точек"
 #: modules/process/psdf_logphi.c:249 modules/process/rank.c:159
 #: modules/process/rotate.c:263 modules/process/scale.c:196
 #: modules/process/scars.c:454 modules/process/semsim.c:211
-#: modules/process/shade.c:213 modules/process/slope_dist.c:279
+#: modules/process/shade.c:213 modules/process/slope_dist.c:278
 #: modules/process/sphere-revolve.c:218 modules/process/tilt.c:160
 #: modules/process/tip_model.c:168 modules/process/unrotate.c:225
 #: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:357
@@ -3046,7 +3046,7 @@ msgstr "Экспортировать текст"
 #: modules/process/grain_dist.c:306 modules/process/grain_edge.c:264
 #: modules/process/grain_mark.c:347 modules/process/grain_wshed.c:260
 #: modules/process/linematch.c:839 modules/process/mark_disconn.c:287
-#: modules/process/slope_dist.c:370 modules/process/tip_blind.c:360
+#: modules/process/slope_dist.c:369 modules/process/tip_blind.c:360
 #: modules/process/wpour_mark.c:363 modules/tools/spotremove.c:322
 #: modules/tools/stats.c:403
 msgid "Options"
@@ -4595,7 +4595,7 @@ msgid "Spectra data starts past the end of file."
 msgstr "Данные спектроскопии начинаются после конца файла."
 
 #: modules/file/nanoeducator.c:648 modules/file/opdfile.c:276
-#: modules/file/renishaw.c:1321 modules/file/sensofar.c:256
+#: modules/file/renishaw.c:1325 modules/file/sensofar.c:256
 #: modules/file/witec-asc.c:161
 msgid "File header is truncated"
 msgstr "Заголовок файла усечён"
@@ -5183,7 +5183,7 @@ msgid "Cannot get pixbuf loader: %s."
 msgstr "Не удаётся получить загрузчик pixbuf: %s."
 
 #: modules/file/pixmap.c:519 modules/file/pixmap.c:532
-#: modules/file/renishaw.c:564 modules/file/renishaw.c:574
+#: modules/file/renishaw.c:569 modules/file/renishaw.c:579
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr "Загрузчик pixbuf не принял данные: %s."
@@ -5385,15 +5385,16 @@ msgstr "Формат данных"
 #: modules/process/arithmetic.c:236 modules/process/calcoefs_view.c:327
 #: modules/process/convolution_filter.c:241 modules/process/deposit_synth.c:645
 #: modules/process/drift.c:251 modules/process/edge.c:644
-#: modules/process/fft_filter_1d.c:193 modules/process/grain_edge.c:219
-#: modules/process/grain_filter.c:318 modules/process/grain_mark.c:253
-#: modules/process/grain_wshed.c:172 modules/process/mark_disconn.c:213
-#: modules/process/mark_with.c:205 modules/process/polydistort.c:210
-#: modules/process/scars.c:451 modules/process/slope_dist.c:276
-#: modules/process/synth.h:509 modules/process/tip_model.c:165
-#: modules/process/wpour_mark.c:282 modules/tools/linestats.c:454
-#: modules/tools/sfunctions.c:515 modules/tools/stats.c:460
-#: modules/volume/volume_extract.c:328 modules/volume/volume_linestat.c:287
+#: modules/process/entropy.c:180 modules/process/fft_filter_1d.c:193
+#: modules/process/grain_edge.c:219 modules/process/grain_filter.c:318
+#: modules/process/grain_mark.c:253 modules/process/grain_wshed.c:172
+#: modules/process/mark_disconn.c:213 modules/process/mark_with.c:205
+#: modules/process/polydistort.c:210 modules/process/scars.c:451
+#: modules/process/slope_dist.c:275 modules/process/synth.h:509
+#: modules/process/tip_model.c:165 modules/process/wpour_mark.c:282
+#: modules/tools/linestats.c:454 modules/tools/sfunctions.c:515
+#: modules/tools/stats.c:460 modules/volume/volume_extract.c:328
+#: modules/volume/volume_linestat.c:287
 msgid "_Update"
 msgstr "О_бновить"
 
@@ -5734,27 +5735,27 @@ msgid "XYZ data regularization failed due to numerical instability."
 msgstr ""
 "Упорядочение XYZ-данных закончилось неудачно из-за численной нестабильности."
 
-#: modules/file/renishaw.c:363
+#: modules/file/renishaw.c:368
 msgid "Imports Renishaw WiRE data files (WDF)."
 msgstr "Импортирует файлы данных Renishaw WiRE (WDF)."
 
-#: modules/file/renishaw.c:376
+#: modules/file/renishaw.c:381
 msgid "Renishaw WiRE data files (.wdf)"
 msgstr "Файлы данных Renishaw WiRE (.wdf)"
 
-#: modules/file/renishaw.c:552
+#: modules/file/renishaw.c:557
 msgid "MapArea block is truncated"
 msgstr "Блок MapArea неполон."
 
-#: modules/file/renishaw.c:783
+#: modules/file/renishaw.c:788
 msgid "Random points order unsupported"
 msgstr "Случайный порядок точек не поддерживается"
 
-#: modules/file/renishaw.c:1392
+#: modules/file/renishaw.c:1396
 msgid "Block header is truncated"
 msgstr "Заголовок блока усечён"
 
-#: modules/file/renishaw.c:1407
+#: modules/file/renishaw.c:1411
 msgid "Data block is truncated"
 msgstr "Блок данных неполон."
 
@@ -6311,11 +6312,12 @@ msgid "Export XYZ"
 msgstr "Экспорт XYZ"
 
 #: modules/file/xyzexport.c:319 modules/process/curvature.c:709
-#: modules/process/facet-level.c:207 modules/process/level.c:278
-#: modules/process/linematch.c:893 modules/process/neural.c:600
-#: modules/process/polylevel.c:492 modules/process/slope_dist.c:421
-#: modules/tools/filter.c:300 modules/tools/profile.c:595
-#: modules/tools/sfunctions.c:497 modules/tools/stats.c:390
+#: modules/process/entropy.c:216 modules/process/facet-level.c:207
+#: modules/process/level.c:278 modules/process/linematch.c:893
+#: modules/process/neural.c:600 modules/process/polylevel.c:492
+#: modules/process/slope_dist.c:420 modules/tools/filter.c:300
+#: modules/tools/profile.c:595 modules/tools/sfunctions.c:497
+#: modules/tools/stats.c:390
 msgid "Masking Mode"
 msgstr "Режим использования маски"
 
@@ -6442,12 +6444,13 @@ msgstr ""
 "аппроксимации"
 
 #: modules/graph/graph_cd.c:711 modules/graph/graph_fdfit.c:799
-#: modules/graph/graph_fit.c:853 modules/process/fit_2d.c:396
-#: modules/tools/grainmeasure.c:217 modules/tools/readvalue.c:645
-#: modules/tools/readvalue.c:646 modules/tools/readvalue.c:647
-#: modules/tools/readvalue.c:648 modules/tools/roughness.c:979
-#: modules/tools/stats.c:709 modules/tools/stats.c:722
-#: modules/tools/stats.c:723 modules/volume/volume_fdfit.c:1135
+#: modules/graph/graph_fit.c:853 modules/process/entropy.c:556
+#: modules/process/fit_2d.c:396 modules/tools/grainmeasure.c:217
+#: modules/tools/readvalue.c:645 modules/tools/readvalue.c:646
+#: modules/tools/readvalue.c:647 modules/tools/readvalue.c:648
+#: modules/tools/roughness.c:979 modules/tools/stats.c:709
+#: modules/tools/stats.c:722 modules/tools/stats.c:723
+#: modules/volume/volume_fdfit.c:1135
 msgid "N.A."
 msgstr "недоступно"
 
@@ -6868,7 +6871,7 @@ msgstr "Распределение углов"
 msgid "Angle Distribution"
 msgstr "Распределение углов"
 
-#: modules/process/angle_dist.c:188 modules/process/slope_dist.c:376
+#: modules/process/angle_dist.c:188 modules/process/slope_dist.c:375
 msgid "Output _size:"
 msgstr "_Размер результата:"
 
@@ -6876,15 +6879,17 @@ msgstr "_Размер результата:"
 msgid "_Number of steps:"
 msgstr "_Число шагов:"
 
-#: modules/process/angle_dist.c:198 modules/process/slope_dist.c:383
+#: modules/process/angle_dist.c:198 modules/process/slope_dist.c:382
 msgid "_Logarithmic value scale"
 msgstr "_Логарифмическая шкала"
 
-#: modules/process/angle_dist.c:204 modules/process/slope_dist.c:393
+#: modules/process/angle_dist.c:204 modules/process/entropy.c:233
+#: modules/process/slope_dist.c:392
 msgid "Use local plane _fitting"
 msgstr "Использовать _аппроксимацию локальной плоскостью"
 
-#: modules/process/angle_dist.c:213 modules/process/slope_dist.c:404
+#: modules/process/angle_dist.c:213 modules/process/entropy.c:244
+#: modules/process/slope_dist.c:403
 msgid "_Plane size:"
 msgstr "Размер _плоскости:"
 
@@ -7444,7 +7449,7 @@ msgstr "Обрезать до действительных данных"
 #: modules/process/grain_edge.c:299 modules/process/grain_filter.c:352
 #: modules/process/grain_mark.c:381 modules/process/mark_with.c:328
 #: modules/process/polydistort.c:321 modules/process/scars.c:542
-#: modules/process/slope_dist.c:410 modules/process/synth.h:513
+#: modules/process/slope_dist.c:409 modules/process/synth.h:513
 #: modules/volume/volume_extract.c:424 modules/volume/volume_extract.c:505
 #: modules/volume/volume_linestat.c:422
 msgid "I_nstant updates"
@@ -7979,7 +7984,7 @@ msgstr "Строить _график"
 #: modules/process/curvature.c:690 modules/process/drift.c:346
 #: modules/process/fft_profile.c:315 modules/process/fractal.c:332
 #: modules/process/grain_cross.c:253 modules/process/linematch.c:872
-#: modules/process/slope_dist.c:352 modules/tools/linestats.c:431
+#: modules/process/slope_dist.c:351 modules/tools/linestats.c:431
 #: modules/tools/profile.c:577 modules/tools/roughness.c:876
 #: modules/tools/sfunctions.c:467 modules/tools/spectro.c:382
 #: modules/volume/volume_slice.c:397
@@ -7989,7 +7994,7 @@ msgstr "Добавить к _графику:"
 #: modules/process/curvature.c:696 modules/process/drift.c:352
 #: modules/process/fft_profile.c:321 modules/process/fractal.c:338
 #: modules/process/grain_cross.c:259 modules/process/linematch.c:879
-#: modules/process/slope_dist.c:358 modules/tools/linestats.c:437
+#: modules/process/slope_dist.c:357 modules/tools/linestats.c:437
 #: modules/tools/profile.c:583 modules/tools/roughness.c:882
 #: modules/tools/sfunctions.c:473 modules/tools/spectro.c:388
 #: modules/volume/volume_slice.c:405
@@ -8260,7 +8265,7 @@ msgid "Output Options"
 msgstr "Параметры вывода"
 
 #: modules/process/domain_synth.c:530 modules/process/fft_filter_2d.c:599
-#: modules/process/mask_edt.c:376 modules/process/slope_dist.c:326
+#: modules/process/mask_edt.c:376 modules/process/slope_dist.c:325
 #: modules/volume/volume_linestat.c:432 modules/volume/volume_slice.c:383
 msgid "Output type:"
 msgstr "Тип вывода:"
@@ -8557,6 +8562,54 @@ msgstr "_ЛГ после свёртки"
 #: modules/process/edge.c:708
 msgid "Detected st_ep"
 msgstr "Найденная с_тупень"
+
+#: modules/process/entropy.c:114
+msgid "Visualises entropy calculation for value and slope distribution."
+msgstr "Демонстрирует расчёт энтропии для распределения значений и уклонов."
+
+#: modules/process/entropy.c:128
+msgid "/_Statistics/_Entropy..."
+msgstr "/_Статистика/_Энтропия..."
+
+#: modules/process/entropy.c:132
+msgid "Calculate entropy of value and slope distributions"
+msgstr "Расчитать энтропию распределений значений и уклонов"
+
+#: modules/process/entropy.c:177
+msgid "Entropy"
+msgstr "Энтропия"
+
+#: modules/process/entropy.c:205
+msgid "Value distribution"
+msgstr "Распределение значений"
+
+#: modules/process/entropy.c:207
+msgid "Slope derivative distribution"
+msgstr "Распределение уклонов (производные)"
+
+#: modules/process/entropy.c:209
+msgid "Slope angle distribution"
+msgstr "Распрделение уклонов (угловое)"
+
+#: modules/process/entropy.c:252
+msgid "_Zoom graph around estimate"
+msgstr "_Увеличить график возле оценки"
+
+#: modules/process/entropy.c:261 modules/tools/stats.c:212
+msgid "Entropy:"
+msgstr "Энтропия:"
+
+#: modules/process/entropy.c:272 modules/tools/stats.c:213
+msgid "Entropy deficit:"
+msgstr "Дефицит энтропии:"
+
+#: modules/process/entropy.c:569
+msgid "Entropy at scales"
+msgstr "Энтропия при разных масштабах"
+
+#: modules/process/entropy.c:588
+msgid "Best estimate"
+msgstr "Лучшая оценка"
 
 #: modules/process/extend.c:106
 msgid "Extends image by adding borders."
@@ -11802,7 +11855,7 @@ msgstr "Затенение"
 msgid "_Mix:"
 msgstr "C_мешать:"
 
-#: modules/process/slope_dist.c:163
+#: modules/process/slope_dist.c:162
 msgid ""
 "Calculates one- or two-dimensional distribution of slopes or graph of their "
 "angular distribution."
@@ -11810,51 +11863,51 @@ msgstr ""
 "Рассчитывает одно- или двумерное распределение наклонов или график их "
 "углового распределения."
 
-#: modules/process/slope_dist.c:178
+#: modules/process/slope_dist.c:177
 msgid "/_Statistics/_Slope Distribution..."
 msgstr "/_Статистика/Распределение _наклонов..."
 
-#: modules/process/slope_dist.c:182
+#: modules/process/slope_dist.c:181
 msgid "Calculate angular slope distribution"
 msgstr "Рассчитать угловое распределение наклонов"
 
-#: modules/process/slope_dist.c:223
+#: modules/process/slope_dist.c:222
 msgid "Slope distribution"
 msgstr "Распределение наклона"
 
-#: modules/process/slope_dist.c:255
+#: modules/process/slope_dist.c:254
 msgid "_Two-dimensional distribution"
 msgstr "_Двумерное распределение"
 
-#: modules/process/slope_dist.c:256
+#: modules/process/slope_dist.c:255
 msgid "Directional (φ) _graph"
 msgstr "_График направлений (φ) "
 
-#: modules/process/slope_dist.c:257
+#: modules/process/slope_dist.c:256
 msgid "_Inclination (θ) graph"
 msgstr "График _наклонов (θ)"
 
-#: modules/process/slope_dist.c:258
+#: modules/process/slope_dist.c:257
 msgid "Inclination (gra_dient) graph"
 msgstr "График наклонов (гра_диент)"
 
-#: modules/process/slope_dist.c:273
+#: modules/process/slope_dist.c:272
 msgid "Slope Distribution"
 msgstr "Распределение наклонов"
 
-#: modules/process/slope_dist.c:758
+#: modules/process/slope_dist.c:757
 msgid "Angular Slope Distribution"
 msgstr "Распределение наклонов по углам"
 
-#: modules/process/slope_dist.c:766 modules/process/tilt.c:178
+#: modules/process/slope_dist.c:765 modules/process/tilt.c:178
 msgid "Slopes"
 msgstr "Наклоны"
 
-#: modules/process/slope_dist.c:827 modules/process/slope_dist.c:896
+#: modules/process/slope_dist.c:826 modules/process/slope_dist.c:895
 msgid "Inclination Distribution"
 msgstr "Распределение наклона"
 
-#: modules/process/slope_dist.c:835 modules/process/slope_dist.c:904
+#: modules/process/slope_dist.c:834 modules/process/slope_dist.c:903
 msgid "Inclinations"
 msgstr "Наклоны"
 
@@ -13454,14 +13507,6 @@ msgstr "Площадь проекции:"
 msgid "Variation:"
 msgstr "Вариация:"
 
-#: modules/tools/stats.c:212
-msgid "Entropy:"
-msgstr "Энтропия:"
-
-#: modules/tools/stats.c:213
-msgid "Entropy deficit:"
-msgstr "Дефицит энтропии:"
-
 #: modules/tools/stats.c:214
 msgid "Inclination θ:"
 msgstr "Наклон θ:"
@@ -14000,6 +14045,15 @@ msgid ""
 msgstr ""
 "Количество значений в файле данных %d\n"
 "отличается от числа плоскостей %d."
+
+#~ msgid "Calculates entropy of two-dimensional distribution of slopes."
+#~ msgstr "Рассчитывает энтропию двумерного распределения уклонов."
+
+#~ msgid "Calculate entropy of slope distribution"
+#~ msgstr "Рассчитать энтропию распределения уклонов"
+
+#~ msgid "Angular distribution on sphere"
+#~ msgstr "Угловое распределение на сфере"
 
 #~ msgid ""
 #~ "Selected area:     %s × %s at (%s, %s) px\n"
