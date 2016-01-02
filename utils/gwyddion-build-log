@@ -56,9 +56,13 @@ cat >install_to_tmp.ignore <<':'
 ':'
 :
 
+# Put things that are properly guarded by #ifdefs to this ignore list.
 cat >check_deps_versions.ignore <<':'
-^libgwyddion/gwyutils\.c:[0-9]+: glib-2\.16 required for g_win32_get_package_installation_directory_of_module
-^modules/file/renishaw\.c:348: glib-2\.16 required for g_strcmp0
+^libgwyddion/gwyutils\.c:[0-9]+: glib-2\.16 required for g_win32_get_package_installation_directory_of_module$
+^modules/file/renishaw\.c:348: glib-2\.16 required for g_strcmp0$
+^app/help\.c:[0-9]+: gtk2-2\.14 required for gtk_show_uri$
+libgwydgets/gwy3dview\.c:[0-9]+: cairo-1\.6 required for cairo_format_stride_for_width$
+^modules/file/imgexport\.c:[0-9]+: cairo-1\.6 required for cairo_ps_surface_set_eps$
 ^WARNING: Malformed symbol name: "The Poke\(\) method" \(type=method\) in gio\.$
 ':'
 :
