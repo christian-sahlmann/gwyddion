@@ -40,10 +40,8 @@
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwymodule/gwymodule-file.h>
+#include <app/gwyapp.h>
 #include <app/gwymoduleutils-file.h>
-#include <app/settings.h>
-#include <app/help.h>
-#include <app/data-browser.h>
 
 #include "err.h"
 
@@ -190,6 +188,7 @@ static void          preview                (RawXYZControls *controls);
 static void          triangulation_info     (RawXYZControls *controls);
 static GwyDataField* rawxyz_do              (RawXYZFile *rfile,
                                              const RawXYZArgs *args,
+                                             GtkWindow *dialog,
                                              GError **error);
 static void          fill_field_x           (const XYZPt *points,
                                              GwyDataField *dfield);
@@ -347,7 +346,7 @@ rawxyz_load(const gchar *filename,
         goto fail;
     }
 
-    dfield = rawxyz_do(&rfile, &args, error);
+    dfield = rawxyz_do(&rfile, &args, NULL, error);
     if (dfield) {
         container = gwy_container_new();
         gwy_container_set_object_by_name(container, "/0/data", dfield);
@@ -964,7 +963,8 @@ preview(RawXYZControls *controls)
     yres = args->yres;
     args->xres = PREVIEW_SIZE*xres/MAX(xres, yres);
     args->yres = PREVIEW_SIZE*yres/MAX(xres, yres);
-    dfield = rawxyz_do(controls->rfile, args, &error);
+    dfield = rawxyz_do(controls->rfile, args, GTK_WINDOW(controls->dialog),
+                       &error);
     /* Regular grids are always created at full size. */
     if (dfield)
         gwy_data_field_resample(dfield, args->xres, args->yres,
@@ -1015,6 +1015,7 @@ triangulation_info(RawXYZControls *controls)
 static GwyDataField*
 rawxyz_do(RawXYZFile *rfile,
           const RawXYZArgs *args,
+          GtkWindow *dialog,
           GError **error)
 {
     GArray *points = rfile->points;
@@ -1053,7 +1054,15 @@ rawxyz_do(RawXYZFile *rfile,
     }
     else {
         GwyTriangulation *triangulation = rfile->triangulation;
+        GwySetMessageFunc set_message = (dialog
+                                         ? gwy_app_wait_set_message
+                                         : NULL);
+        GwySetFractionFunc set_fraction = (dialog
+                                           ? gwy_app_wait_set_fraction
+                                           : NULL);
 
+        if (dialog)
+            gwy_app_wait_start(dialog, _("Initializing..."));
         /* [Try to] perform triangulation if either there is none yet or
          * extend_borders() reports the points have changed. */
         gwy_debug("have triangulation: %d", !!triangulation);
@@ -1061,18 +1070,26 @@ rawxyz_do(RawXYZFile *rfile,
             gwy_debug("must triangulate");
             gwy_object_unref(rfile->triangulation);
             rfile->triangulation = triangulation = gwy_triangulation_new();
-            ok = gwy_triangulation_triangulate(triangulation,
-                                               points->len, points->data,
-                                               sizeof(XYZPt));
+            ok = gwy_triangulation_triangulate_iterative(triangulation,
+                                                         points->len,
+                                                         points->data,
+                                                         sizeof(XYZPt),
+                                                         set_fraction,
+                                                         set_message);
         }
         else {
             gwy_debug("points did not change, recycling triangulation");
         }
 
         if (triangulation && ok) {
-            ok = gwy_triangulation_interpolate(triangulation,
-                                               args->interpolation, dfield);
+            if (dialog)
+                ok = set_message(_("Interpolating..."));
+            if (ok)
+                ok = gwy_triangulation_interpolate(triangulation,
+                                                   args->interpolation, dfield);
         }
+        if (dialog)
+            gwy_app_wait_finish();
     }
 
     if (!ok) {
