@@ -1476,7 +1476,7 @@ triangulator_free(Triangulator *triangulator)
 }
 
 static Triangulator*
-triangulate(const PointList *pointlist)
+triangulate(const PointList *pointlist, GwySetFractionFunc set_fraction)
 {
     Triangulator *triangulator;
     WorkSpaceCache *wscache;
@@ -1497,6 +1497,11 @@ triangulate(const PointList *pointlist)
     for (i = 3; i < pointlist->npoints; i++) {
         NeighbourBlock *nb;
         gboolean in;
+
+        if (i % 200 == 0
+            && set_fraction
+            && !set_fraction(0.9*i/pointlist->npoints))
+            goto fail;
 
         /* Make a valid triangle.  The neighbour updates might turn a
          * previously valid triangle to an invalid one. */
@@ -2023,10 +2028,53 @@ gwy_triangulation_triangulate(GwyTriangulation *object,
                               gconstpointer points,
                               gsize point_size)
 {
+    return gwy_triangulation_triangulate_iterative(object,
+                                                   npoints, points, point_size,
+                                                   NULL, NULL);
+}
+
+/**
+ * gwy_triangulation_triangulate_iterative:
+ * @triangulation: Triangulation.
+ * @npoints: Number of points.
+ * @points: Array of points.  They must be typecastable to
+ *          #GwyTriangulationPointXY for triangulation and to
+ *          #GwyTriangulationPointXYZ for interpolation.  However, they can be
+ *          larger than that.  The actual struct size is indicated by
+ *          @point_size.
+ * @point_size: Size of point struct, in bytes.
+ * @set_fraction: Function that sets fraction to output (or %NULL).
+ * @set_message: Function that sets message to output (or %NULL).
+ *
+ * Finds Delaunay and Voronoi triangulations for a set of points in plane.
+ *
+ * See gwy_triangulation_triangulate() for discussion.  This function differs
+ * only by the optional @set_fraction and @set_message arguments that permit
+ * providing user feedback for large triangulations and cancelling the
+ * procedure upon request.
+ *
+ * Returns: %TRUE on success, %FALSE on failure.  On failure the triangulation
+ *          is empty.  Cancellation via @set_fraction or @set_message
+ *          callback also counts as failure.
+ *
+ * Since: 2.44
+ **/
+gboolean
+gwy_triangulation_triangulate_iterative(GwyTriangulation *object,
+                                        guint npoints,
+                                        gconstpointer points,
+                                        gsize point_size,
+                                        GwySetFractionFunc set_fraction,
+                                        GwySetMessageFunc set_message)
+{
     Triangulation *triangulation;
-    Triangulator *triangulator;
+    Triangulator *triangulator = NULL;
     PointList pointlist;
-    gboolean ok;
+    gboolean ok = FALSE;
+
+    gwy_clear(&pointlist, 1);
+    if (set_fraction)
+        set_fraction(0.0);
 
     g_return_val_if_fail(GWY_IS_TRIANGULATION(object), FALSE);
     triangulation = GWY_TRIANGULATION_GET_PRIVATE(object);
@@ -2036,11 +2084,32 @@ gwy_triangulation_triangulate(GwyTriangulation *object,
     triangulation->point_size = point_size;
     triangulation->points = points;
     build_compact_point_list(&pointlist, npoints, points, point_size);
-    ok = ((triangulator = triangulate(&pointlist))
-          && compactify(triangulator, &pointlist, triangulation)
-          && find_boundary(triangulation, points, point_size)
-          && delaunay_to_voronoi(triangulation, points, point_size));
+    if (set_message && !set_message(_("Triangulating...")))
+        goto fail;
 
+    if (!(triangulator = triangulate(&pointlist, set_fraction)))
+        goto fail;
+    if (set_fraction && !set_fraction(0.9))
+        goto fail;
+
+    if (!compactify(triangulator, &pointlist, triangulation))
+        goto fail;
+    if (set_fraction && !set_fraction(0.93))
+        goto fail;
+
+    if (!find_boundary(triangulation, points, point_size))
+        goto fail;
+    if (set_fraction && !set_fraction(0.95))
+        goto fail;
+
+    if (!delaunay_to_voronoi(triangulation, points, point_size))
+        goto fail;
+    if (set_fraction && !set_fraction(1.0))
+        goto fail;
+
+    ok = TRUE;
+
+fail:
     triangulator_free(triangulator);
     free_point_list(&pointlist);
     if (!ok)

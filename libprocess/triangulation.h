@@ -23,6 +23,7 @@
 #define __GWY_PROCESS_TRIANGULATION_H__ 1
 
 #include <libprocess/datafield.h>
+#include <libprocess/gwyprocesstypes.h>
 
 G_BEGIN_DECLS
 
@@ -64,21 +65,27 @@ struct _GwyTriangulationClass {
     GObjectClass parent_class;
 };
 
-GType                 gwy_triangulation_get_type   (void)                                      G_GNUC_CONST;
-GwyTriangulation*     gwy_triangulation_new        (void);
-gboolean              gwy_triangulation_triangulate(GwyTriangulation *triangulation,
-                                                    guint npoints,
-                                                    gconstpointer points,
-                                                    gsize point_size);
-gboolean              gwy_triangulation_interpolate(GwyTriangulation *triangulation,
-                                                    GwyInterpolationType interpolation,
-                                                    GwyDataField *dfield);
-void                  gwy_triangulation_data_free  (GwyTriangulationData *triangulation_data);
-GwyTriangulationData* gwy_triangulation_delaunay   (GwyTriangulation *triangulation);
-GwyTriangulationData* gwy_triangulation_boundary   (GwyTriangulation *triangulation);
-GwyTriangulationData* gwy_triangulation_voronoi    (GwyTriangulation *triangulation,
-                                                    guint *nvpoints,
-                                                    const GwyTriangulationPointXY **vpoints);
+GType                 gwy_triangulation_get_type             (void)                                      G_GNUC_CONST;
+GwyTriangulation*     gwy_triangulation_new                  (void);
+gboolean              gwy_triangulation_triangulate          (GwyTriangulation *triangulation,
+                                                              guint npoints,
+                                                              gconstpointer points,
+                                                              gsize point_size);
+gboolean              gwy_triangulation_triangulate_iterative(GwyTriangulation *triangulation,
+                                                              guint npoints,
+                                                              gconstpointer points,
+                                                              gsize point_size,
+                                                              GwySetFractionFunc set_fraction,
+                                                              GwySetMessageFunc set_message);
+gboolean              gwy_triangulation_interpolate          (GwyTriangulation *triangulation,
+                                                              GwyInterpolationType interpolation,
+                                                              GwyDataField *dfield);
+void                  gwy_triangulation_data_free            (GwyTriangulationData *triangulation_data);
+GwyTriangulationData* gwy_triangulation_delaunay             (GwyTriangulation *triangulation);
+GwyTriangulationData* gwy_triangulation_boundary             (GwyTriangulation *triangulation);
+GwyTriangulationData* gwy_triangulation_voronoi              (GwyTriangulation *triangulation,
+                                                              guint *nvpoints,
+                                                              const GwyTriangulationPointXY **vpoints);
 
 G_END_DECLS
 
