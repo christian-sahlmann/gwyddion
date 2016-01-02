@@ -80,9 +80,6 @@
 #define  GWY_3D_Z_DISPLACEMENT   -0.2
 #define  GWY_3D_TICK_LENGTH 10
 
-
-#define GWY_3D_TIMEOUT_DELAY      1000
-
 #define connect_swapped_after(obj, signal, cb, data) \
     g_signal_connect_object(obj, signal, G_CALLBACK(cb), data, \
                             G_CONNECT_SWAPPED | G_CONNECT_AFTER)
@@ -1233,9 +1230,9 @@ gwy_3d_view_set_movement_type(Gwy3DView *gwy3dview,
  *
  * Sets the reduced data size of a 3D view.
  *
- * Data larger than reduced size are show downsampled during transforms and
- * other changes to speed up the rendering.  Final, full-size rendering is
- * then performed after a timeout.
+ * Data larger than reduced size may be shown downsampled during transforms and
+ * other changes to speed up the rendering.  Final, full-size rendering is then
+ * performed after a timeout.
  *
  * In case of the original data are not square, the @reduced_size is the
  * greater size of the downsampled data, the other dimension is proportional
@@ -2586,7 +2583,11 @@ gwy_3d_view_render_string(gdouble size,
     cairo_surface_t *surface;
     guchar *alpha;
 
+#if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1, 6, 0)
     wstride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, 1);
+#else
+    wstride = sizeof(guint32);
+#endif
     alpha = g_new(guchar, wstride);
     surface = cairo_image_surface_create_for_data(alpha, CAIRO_FORMAT_ARGB32,
                                                   1, 1, wstride);
@@ -2604,7 +2605,11 @@ gwy_3d_view_render_string(gdouble size,
     g_free(alpha);
     cairo_destroy(cr);
 
+#if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1, 6, 0)
     wstride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, px);
+#else
+    wstride = ((4*px + sizeof(guint32)-1)/sizeof(guint32))*sizeof(guint32);
+#endif
     alpha = g_new0(guchar, wstride*py);
     surface = cairo_image_surface_create_for_data(alpha, CAIRO_FORMAT_ARGB32,
                                                   px, py, wstride);
