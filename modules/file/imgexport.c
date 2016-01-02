@@ -34,7 +34,7 @@
 
 /* We want cairo_ps_surface_set_eps().  So if we don't get it we just pretend
  * cairo doesn't have the PS surface at all. */
-#if (CAIRO_VERSION_MAJOR < 1 || (CAIRO_VERSION_MAJOR == 1 && CAIRO_VERSION_MINOR < 6))
+#if CAIRO_VERSION < CAIRO_VERSION_ENCODE(1, 6, 0)
 #undef CAIRO_HAS_PS_SURFACE
 #endif
 
