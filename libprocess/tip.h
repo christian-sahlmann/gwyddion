@@ -23,11 +23,9 @@
 #define __GWY_PROCESS_TIP_H__
 
 #include <libprocess/datafield.h>
+#include <libprocess/gwyprocesstypes.h>
 
 G_BEGIN_DECLS
-
-typedef gboolean (*GwySetFractionFunc)(gdouble fraction);
-typedef gboolean (*GwySetMessageFunc)(const gchar *message);
 
 typedef void (*GwyTipModelFunc)(GwyDataField *tip,
                                 gdouble height,

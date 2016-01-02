@@ -276,6 +276,9 @@ typedef struct {
     gdouble fraction;
 } GwyComputationState;
 
+typedef gboolean (*GwySetFractionFunc)(gdouble fraction);
+typedef gboolean (*GwySetMessageFunc)(const gchar *message);
+
 G_END_DECLS
 
 #endif /* __GWY_PROCESS_ENUMS_H__ */
