@@ -1,4 +1,7 @@
 2.44 (0000-00-00)
+Application:
+- Translations updated: French, Russian.
+
 Libraries:
 - libgwyapp: Potential corruption of recent file list by Save As introduced in
   2.43 was fixed.
@@ -16,6 +19,8 @@ Libraries:
   point cloud, and for entropy-from-histogram-at-scale curves were added.
 - libgwydgets: Graph labels respond to "label-property" changes.  The property
   is also meaningfully updated when user moves the label around.
+- libgwyprocess: An iterative cancellable version of function
+  gwy_triangulation_triangulate() was added.
 
 Modules:
 - Entropy (new): Visualises entropy calculation for distributions of values
@@ -41,7 +46,9 @@ Modules:
   formats, e.g. ‘BAD’ or ‘NODATA’.
 - Raw XYZ: Estimated data range is scaled by the lateral units.  A bug in
   point merging was fixed that sometimes caused infinities to appear in the
-  data.
+  data.  The triangulation is remembered and not recomputed when it is not
+  necessary.  A progress bar is shown for the trianguation process and it is
+  possible to cancel it.
 - Nanoscope: Support for 32bit raw data format used since 9.2 was added.
 - JEOL: Support for Phase channels was added.
 - Statistical quantities: Deficit of entropy to Gaussian distribution with the
