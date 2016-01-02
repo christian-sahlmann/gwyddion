@@ -346,6 +346,7 @@ static gboolean            rhk_sm4_read_page_index       (RHKPageIndex *header,
                                                           GError **error);
 static gboolean            rhk_sm4_read_page_header      (RHKPage *page,
                                                           const RHKObject *obj,
+                                                          RHKDataType data_type,
                                                           const guchar *buffer,
                                                           gsize size,
                                                           GError **error);
@@ -395,7 +396,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports RHK Technology SM4 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -537,7 +538,8 @@ rhk_sm4_load(const gchar *filename,
         if (!(obj = rhk_sm4_find_object(pi->objects, pi->object_count,
                                         RHK_OBJECT_PAGE_HEADER,
                                         RHK_OBJECT_PAGE_INDEX, error))
-            || !rhk_sm4_read_page_header(page, obj, buffer, size, error))
+            || !rhk_sm4_read_page_header(page, obj, pi->data_type,
+                                         buffer, size, error))
             goto fail;
 
         /* Page must contain data */
@@ -720,6 +722,7 @@ rhk_sm4_read_page_index(RHKPageIndex *header,
 static gboolean
 rhk_sm4_read_page_header(RHKPage *page,
                          const RHKObject *obj,
+                         RHKDataType data_type,
                          const guchar *buffer,
                          gsize size,
                          GError **error)
@@ -751,10 +754,18 @@ rhk_sm4_read_page_header(RHKPage *page,
     page->x_size = gwy_get_guint32_le(&p);
     page->y_size = gwy_get_guint32_le(&p);
     gwy_debug("x_size = %u, y_size = %u", page->x_size, page->y_size);
-    if (err_DIMENSION(error, page->x_size)
-        || err_DIMENSION(error, page->y_size))
+    /* Non-image data can have y_size=1 and huge x_size.  This prevents using
+     * err_DIMENSION() and we must check the actual size for sanity. */
+    if (data_type == RHK_DATA_IMAGE
+        && (err_DIMENSION(error, page->x_size)
+            || err_DIMENSION(error, page->y_size)))
         return FALSE;
-
+    if (page->x_size > 0x80000000u/page->y_size) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Invalid field dimension: %d."),
+                    MAX((gint)page->x_size, (gint)page->y_size));
+        return FALSE;
+    }
     page->image_type = gwy_get_guint32_le(&p);
     gwy_debug("image_type = %u", page->image_type);
     page->scan_dir = gwy_get_guint32_le(&p);
