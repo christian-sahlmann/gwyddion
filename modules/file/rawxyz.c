@@ -47,6 +47,8 @@
 
 #include "err.h"
 
+#define XYZPt GwyTriangulationPointXYZ
+
 #define EPSREL 1e-7
 
 /* Use smaller cell sides than the triangulation algorithm as we only need them
@@ -88,6 +90,7 @@ typedef struct {
 } RawXYZArgs;
 
 typedef struct {
+    GwyTriangulation *triangulation;
     GArray *points;
     guint norigpoints;
     guint nbasepoints;
@@ -188,15 +191,16 @@ static void          triangulation_info     (RawXYZControls *controls);
 static GwyDataField* rawxyz_do              (RawXYZFile *rfile,
                                              const RawXYZArgs *args,
                                              GError **error);
-static void          fill_field_x           (const GwyTriangulationPointXYZ *points,
+static void          fill_field_x           (const XYZPt *points,
                                              GwyDataField *dfield);
-static void          fill_field_y           (const GwyTriangulationPointXYZ *points,
+static void          fill_field_y           (const XYZPt *points,
                                              GwyDataField *dfield);
 static void          interpolate_field      (guint npoints,
-                                             const GwyTriangulationPointXYZ *points,
+                                             const XYZPt *points,
                                              GwyDataField *dfield);
-static void          extend_borders         (RawXYZFile *rfile,
+static gboolean      extend_borders         (RawXYZFile *rfile,
                                              const RawXYZArgs *args,
+                                             gboolean check_for_changes,
                                              gdouble epsrel);
 static void          rawxyz_free            (RawXYZFile *rfile);
 static GArray*       read_points            (gchar *p);
@@ -224,7 +228,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports raw XYZ data files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -1040,25 +1044,35 @@ rawxyz_do(RawXYZFile *rfile,
     g_object_unref(unitz);
 
     if (rfile->regular == RAW_XYZ_REGULAR_X)
-        fill_field_x((const GwyTriangulationPointXYZ*)points->data, dfield);
+        fill_field_x((const XYZPt*)points->data, dfield);
     else if (rfile->regular == RAW_XYZ_REGULAR_Y)
-        fill_field_y((const GwyTriangulationPointXYZ*)points->data, dfield);
+        fill_field_y((const XYZPt*)points->data, dfield);
     else if ((gint)args->interpolation == GWY_INTERPOLATION_FIELD) {
-        extend_borders(rfile, args, EPSREL);
-        interpolate_field(points->len,
-                          (const GwyTriangulationPointXYZ*)points->data,
-                          dfield);
+        extend_borders(rfile, args, FALSE, EPSREL);
+        interpolate_field(points->len, (const XYZPt*)points->data, dfield);
     }
     else {
-        GwyTriangulation *triangulation = gwy_triangulation_new();
+        GwyTriangulation *triangulation = rfile->triangulation;
 
-        extend_borders(rfile, args, EPSREL);
-        ok = (gwy_triangulation_triangulate(triangulation,
-                                            points->len, points->data,
-                                            sizeof(GwyTriangulationPointXYZ))
-              && gwy_triangulation_interpolate(triangulation,
-                                               args->interpolation, dfield));
-        g_object_unref(triangulation);
+        /* [Try to] perform triangulation if either there is none yet or
+         * extend_borders() reports the points have changed. */
+        gwy_debug("have triangulation: %d", !!triangulation);
+        if (!triangulation || extend_borders(rfile, args, TRUE, EPSREL)) {
+            gwy_debug("must triangulate");
+            gwy_object_unref(rfile->triangulation);
+            rfile->triangulation = triangulation = gwy_triangulation_new();
+            ok = gwy_triangulation_triangulate(triangulation,
+                                               points->len, points->data,
+                                               sizeof(XYZPt));
+        }
+        else {
+            gwy_debug("points did not change, recycling triangulation");
+        }
+
+        if (triangulation && ok) {
+            ok = gwy_triangulation_interpolate(triangulation,
+                                               args->interpolation, dfield);
+        }
     }
 
     if (!ok) {
@@ -1082,7 +1096,7 @@ rawxyz_do(RawXYZFile *rfile,
 }
 
 static void
-fill_field_x(const GwyTriangulationPointXYZ *points,
+fill_field_x(const XYZPt *points,
              GwyDataField *dfield)
 {
     gint xres = gwy_data_field_get_xres(dfield);
@@ -1095,7 +1109,7 @@ fill_field_x(const GwyTriangulationPointXYZ *points,
 }
 
 static void
-fill_field_y(const GwyTriangulationPointXYZ *points,
+fill_field_y(const XYZPt *points,
              GwyDataField *dfield)
 {
     gint xres = gwy_data_field_get_xres(dfield);
@@ -1112,7 +1126,7 @@ fill_field_y(const GwyTriangulationPointXYZ *points,
 
 static void
 interpolate_field(guint npoints,
-                  const GwyTriangulationPointXYZ *points,
+                  const XYZPt *points,
                   GwyDataField *dfield)
 {
     gdouble xoff, yoff, qx, qy;
@@ -1136,7 +1150,7 @@ interpolate_field(guint npoints,
             gdouble s = 0.0;
 
             for (k = 0; k < npoints; k++) {
-                const GwyTriangulationPointXYZ *pt = points + k;
+                const XYZPt *pt = points + k;
                 gdouble dx = x - pt->x;
                 gdouble dy = y - pt->y;
                 gdouble r2 = dx*dx + dy*dy;
@@ -1157,18 +1171,32 @@ interpolate_field(guint npoints,
     }
 }
 
-static void
+/* Return TRUE if extpoints have changed. */
+static gboolean
 extend_borders(RawXYZFile *rfile,
                const RawXYZArgs *args,
+               gboolean check_for_changes,
                gdouble epsrel)
 {
     gdouble xmin, xmax, ymin, ymax, xreal, yreal, eps;
-    guint i;
+    gdouble *oldextpoints = NULL;
+    guint i, nbase, noldext;
+    gboolean extchanged;
 
-    g_array_set_size(rfile->points, rfile->nbasepoints);
+    /* Remember previous extpoints.  If they do not change we do not need to
+     * repeat the triangulation. */
+    nbase = rfile->nbasepoints;
+    noldext = rfile->points->len - nbase;
+    if (check_for_changes) {
+        oldextpoints = g_memdup(&g_array_index(rfile->points, XYZPt, nbase),
+                                noldext*sizeof(XYZPt));
+    }
+    g_array_set_size(rfile->points, nbase);
 
-    if (args->exterior == GWY_EXTERIOR_BORDER_EXTEND)
-        return;
+    if (args->exterior == GWY_EXTERIOR_BORDER_EXTEND) {
+        g_free(oldextpoints);
+        return FALSE;
+    }
 
     xreal = rfile->xmax - rfile->xmin;
     yreal = rfile->ymax - rfile->ymin;
@@ -1181,10 +1209,9 @@ extend_borders(RawXYZFile *rfile,
     /* Extend the field according to requester boder extension, however,
      * create at most 3 full copies (4 halves and 4 quarters) of the base set.
      * Anyone asking for more is either clueless or malicious. */
-    for (i = 0; i < rfile->nbasepoints; i++) {
-        const GwyTriangulationPointXYZ *pt
-            = &g_array_index(rfile->points, GwyTriangulationPointXYZ, i);
-        GwyTriangulationPointXYZ pt2;
+    for (i = 0; i < nbase; i++) {
+        const XYZPt *pt = &g_array_index(rfile->points, XYZPt, i);
+        XYZPt pt2;
         gdouble txl, txr, tyt, tyb;
         gboolean txlok, txrok, tytok, tybok;
 
@@ -1263,11 +1290,21 @@ extend_borders(RawXYZFile *rfile,
             g_array_append_val(rfile->points, pt2);
         }
     }
+
+    if (!check_for_changes)
+        return TRUE;
+
+    extchanged = memcmp(&g_array_index(rfile->points, XYZPt, nbase),
+                        oldextpoints,
+                        noldext*sizeof(XYZPt));
+    g_free(oldextpoints);
+    return extchanged;
 }
 
 static void
 rawxyz_free(RawXYZFile *rfile)
 {
+    gwy_object_unref(rfile->triangulation);
     g_array_free(rfile->points, TRUE);
 }
 
@@ -1277,9 +1314,9 @@ read_points(gchar *p)
     GArray *points;
     gchar *line, *end;
 
-    points = g_array_new(FALSE, FALSE, sizeof(GwyTriangulationPointXYZ));
+    points = g_array_new(FALSE, FALSE, sizeof(XYZPt));
     for (line = gwy_str_next_line(&p); line; line = gwy_str_next_line(&p)) {
-        GwyTriangulationPointXYZ pt;
+        XYZPt pt;
 
         if (!line[0] || line[0] == '#')
             continue;
@@ -1435,8 +1472,8 @@ work_queue_ensure(WorkQueue *queue,
 }
 
 static inline gdouble
-point_dist2(const GwyTriangulationPointXYZ *p,
-            const GwyTriangulationPointXYZ *q)
+point_dist2(const XYZPt *p,
+            const XYZPt *q)
 {
     gdouble dx = p->x - q->x;
     gdouble dy = p->y - q->y;
@@ -1446,11 +1483,11 @@ point_dist2(const GwyTriangulationPointXYZ *p,
 
 static gboolean
 maybe_add_point(WorkQueue *pointqueue,
-                const GwyTriangulationPointXYZ *newpoints,
+                const XYZPt *newpoints,
                 guint ii,
                 gdouble eps2)
 {
-    const GwyTriangulationPointXYZ *pt;
+    const XYZPt *pt;
     guint i;
 
     pt = newpoints + pointqueue->id[ii];
@@ -1472,14 +1509,14 @@ analyse_points(RawXYZFile *rfile,
                double epsrel)
 {
     WorkQueue cellqueue, pointqueue;
-    GwyTriangulationPointXYZ *points, *newpoints, *pt;
+    XYZPt *points, *newpoints, *pt;
     gdouble xreal, yreal, eps, eps2, xr, yr, step;
     guint npoints, i, ii, j, ig, xres, yres, ncells, oldpos;
     guint *cell_index;
 
     /* Calculate data ranges */
     npoints = rfile->norigpoints = rfile->points->len;
-    points = (GwyTriangulationPointXYZ*)rfile->points->data;
+    points = (XYZPt*)rfile->points->data;
     rfile->xmin = rfile->xmax = points[0].x;
     rfile->ymin = rfile->ymax = points[0].y;
     rfile->zmin = rfile->zmax = points[0].z;
@@ -1543,7 +1580,7 @@ analyse_points(RawXYZFile *rfile,
     index_accumulate(cell_index, xres*yres);
     g_assert(cell_index[xres*yres] == npoints);
     index_rewind(cell_index, xres*yres);
-    newpoints = g_new(GwyTriangulationPointXYZ, npoints);
+    newpoints = g_new(XYZPt, npoints);
 
     /* Sort points by cell */
     for (i = 0; i < npoints; i++) {
@@ -1627,7 +1664,7 @@ analyse_points(RawXYZFile *rfile,
 
         /* Calculate the representant of all contributing points. */
         {
-            GwyTriangulationPointXYZ avg = { 0.0, 0.0, 0.0 };
+            XYZPt avg = { 0.0, 0.0, 0.0 };
 
             for (ii = 0; ii < pointqueue.pos; ii++) {
                 pt = newpoints + pointqueue.id[ii];
@@ -1655,7 +1692,7 @@ analyse_points(RawXYZFile *rfile,
 static gboolean
 check_regular_grid(RawXYZFile *rfile)
 {
-    GwyTriangulationPointXYZ *pt1, *pt2;
+    XYZPt *pt1, *pt2;
     gdouble xstep, ystep, xeps, yeps;
     guint xres, yres, i, j;
 
@@ -1664,11 +1701,11 @@ check_regular_grid(RawXYZFile *rfile)
     if (rfile->points->len < 4)
         return FALSE;
 
-    pt1 = &g_array_index(rfile->points, GwyTriangulationPointXYZ, 0);
-    pt2 = &g_array_index(rfile->points, GwyTriangulationPointXYZ, 1);
+    pt1 = &g_array_index(rfile->points, XYZPt, 0);
+    pt2 = &g_array_index(rfile->points, XYZPt, 1);
     if (pt1->x == pt2->x) {
         for (i = 2; i < rfile->points->len; i++) {
-            pt2 = &g_array_index(rfile->points, GwyTriangulationPointXYZ, i);
+            pt2 = &g_array_index(rfile->points, XYZPt, i);
             if (pt2->x != pt1->x)
                 break;
         }
@@ -1678,7 +1715,7 @@ check_regular_grid(RawXYZFile *rfile)
     }
     else if (pt1->y == pt2->y) {
         for (j = 2; j < rfile->points->len; j++) {
-            pt2 = &g_array_index(rfile->points, GwyTriangulationPointXYZ, j);
+            pt2 = &g_array_index(rfile->points, XYZPt, j);
             if (pt2->y != pt1->y)
                 break;
         }
@@ -1697,8 +1734,7 @@ check_regular_grid(RawXYZFile *rfile)
         return FALSE;
     }
 
-    pt2 = &g_array_index(rfile->points, GwyTriangulationPointXYZ,
-                         rfile->points->len-1);
+    pt2 = &g_array_index(rfile->points, XYZPt, rfile->points->len-1);
     xstep = rfile->xstep = (pt2->x - pt1->x)/(xres - 1);
     ystep = rfile->ystep = (pt2->y - pt1->y)/(yres - 1);
     xeps = 0.05*fabs(xstep);
@@ -1707,8 +1743,7 @@ check_regular_grid(RawXYZFile *rfile)
     if (rfile->regular == RAW_XYZ_REGULAR_X) {
         for (i = 0; i < yres; i++) {
             for (j = 0; j < xres; j++) {
-                pt2 = &g_array_index(rfile->points, GwyTriangulationPointXYZ,
-                                     i*xres + j);
+                pt2 = &g_array_index(rfile->points, XYZPt, i*xres + j);
                 if (fabs(pt2->x - pt1->x - j*xstep) > xeps
                     || fabs(pt2->y - pt1->y - i*ystep) > yeps) {
                     rfile->regular = RAW_XYZ_IRREGULAR;
@@ -1720,8 +1755,7 @@ check_regular_grid(RawXYZFile *rfile)
     else {
         for (j = 0; j < xres; j++) {
             for (i = 0; i < yres; i++) {
-                pt2 = &g_array_index(rfile->points, GwyTriangulationPointXYZ,
-                                     j*yres + i);
+                pt2 = &g_array_index(rfile->points, XYZPt, j*yres + i);
                 if (fabs(pt2->x - pt1->x - j*xstep) > xeps
                     || fabs(pt2->y - pt1->y - i*ystep) > yeps) {
                     rfile->regular = RAW_XYZ_IRREGULAR;
