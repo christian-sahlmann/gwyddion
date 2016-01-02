@@ -790,7 +790,7 @@ tip_blind_run(TipBlindControls *controls,
         GtkAdjustment *stripenoadj = GTK_ADJUSTMENT(controls->stripeno);
         gint stripeno;
 
-        gtk_adjustment_set_upper(stripenoadj, args->nstripes);
+        g_object_set(stripenoadj, "upper", (gdouble)args->nstripes, NULL);
         stripeno = gwy_adjustment_get_int(stripenoadj);
         if (stripeno > args->nstripes)
             gtk_adjustment_set_value(stripenoadj, stripeno);

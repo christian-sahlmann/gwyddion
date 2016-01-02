@@ -667,8 +667,8 @@ set_up_quantity(GFilterControls *controls, GwyGrainValue *gvalue, guint id)
     lower = CLAMP(lower, vmin, vmax);
     upper = CLAMP(upper, vmin, vmax);
 
-    gtk_adjustment_set_upper(GTK_ADJUSTMENT(controls->lower[id]), nuniq-1);
-    gtk_adjustment_set_upper(GTK_ADJUSTMENT(controls->upper[id]), nuniq-1);
+    g_object_set(controls->lower[id], "upper", nuniq-1.0, NULL);
+    g_object_set(controls->upper[id], "upper", nuniq-1.0, NULL);
 
     dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
     siunitxy = gwy_data_field_get_si_unit_xy(dfield);

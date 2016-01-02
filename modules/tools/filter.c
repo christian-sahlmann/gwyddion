@@ -458,12 +458,24 @@ setup_size_adjustment(GwyToolFilter *tool)
 {
     GtkAdjustment *adj = GTK_ADJUSTMENT(tool->size);
     if (gwy_tool_filter_is_float_sized(tool->args.filter_type)) {
-        gtk_adjustment_configure(adj, tool->args.gauss_size,
-                                 0.01, 40.0, 0.01, 1.0, 0);
+        g_object_set(adj,
+                     "lower", 0.01,
+                     "upper", 40.0,
+                     "step-increment", 0.01,
+                     "page-increment", 1.0,
+                     "value", tool->args.gauss_size,
+                     NULL);
         gtk_spin_button_set_digits(GTK_SPIN_BUTTON(tool->size_spin), 2);
     }
     else {
         gtk_adjustment_configure(adj, tool->args.size, 2, 31, 1, 5, 0);
+        g_object_set(adj,
+                     "lower", 2.0,
+                     "upper", 31.0,
+                     "step-increment", 1.0,
+                     "page-increment", 5.0,
+                     "value", (gdouble)tool->args.size,
+                     NULL);
         gtk_spin_button_set_digits(GTK_SPIN_BUTTON(tool->size_spin), 0);
     }
 }
