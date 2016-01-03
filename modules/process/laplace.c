@@ -87,7 +87,7 @@ laplace(GwyContainer *data, GwyRunType run)
 
     dfield = gwy_data_field_duplicate(dfield);
     buffer = gwy_data_field_new_alike(dfield, TRUE);
-    gwy_data_field_correct_average(dfield, mfield);
+    gwy_data_field_correct_average_unmasked(dfield, mfield);
 
     cor = 0.2;
     error = 0.0;

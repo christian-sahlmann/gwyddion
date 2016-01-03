@@ -181,7 +181,7 @@ level_grains_do(const LevelGrainsArgs *args,
     g_free(grains);
 
     buffer = gwy_data_field_new_alike(background, TRUE);
-    gwy_data_field_correct_average(background, invmask);
+    gwy_data_field_correct_average_unmasked(background, invmask);
 
     cor = 0.2;
     error = 0.0;
