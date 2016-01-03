@@ -468,7 +468,6 @@ setup_size_adjustment(GwyToolFilter *tool)
         gtk_spin_button_set_digits(GTK_SPIN_BUTTON(tool->size_spin), 2);
     }
     else {
-        gtk_adjustment_configure(adj, tool->args.size, 2, 31, 1, 5, 0);
         g_object_set(adj,
                      "lower", 2.0,
                      "upper", 31.0,
