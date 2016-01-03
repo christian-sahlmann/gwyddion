@@ -45,7 +45,7 @@
 
 #include "err.h"
 
-#define XYZPt GwyTriangulationPointXYZ
+#define PointXYZ GwyTriangulationPointXYZ
 
 #define EPSREL 1e-7
 
@@ -190,12 +190,12 @@ static GwyDataField* rawxyz_do              (RawXYZFile *rfile,
                                              const RawXYZArgs *args,
                                              GtkWindow *dialog,
                                              GError **error);
-static void          fill_field_x           (const XYZPt *points,
+static void          fill_field_x           (const PointXYZ *points,
                                              GwyDataField *dfield);
-static void          fill_field_y           (const XYZPt *points,
+static void          fill_field_y           (const PointXYZ *points,
                                              GwyDataField *dfield);
 static void          interpolate_field      (guint npoints,
-                                             const XYZPt *points,
+                                             const PointXYZ *points,
                                              GwyDataField *dfield);
 static gboolean      extend_borders         (RawXYZFile *rfile,
                                              const RawXYZArgs *args,
@@ -1045,12 +1045,12 @@ rawxyz_do(RawXYZFile *rfile,
     g_object_unref(unitz);
 
     if (rfile->regular == RAW_XYZ_REGULAR_X)
-        fill_field_x((const XYZPt*)points->data, dfield);
+        fill_field_x((const PointXYZ*)points->data, dfield);
     else if (rfile->regular == RAW_XYZ_REGULAR_Y)
-        fill_field_y((const XYZPt*)points->data, dfield);
+        fill_field_y((const PointXYZ*)points->data, dfield);
     else if ((gint)args->interpolation == GWY_INTERPOLATION_FIELD) {
         extend_borders(rfile, args, FALSE, EPSREL);
-        interpolate_field(points->len, (const XYZPt*)points->data, dfield);
+        interpolate_field(points->len, (const PointXYZ*)points->data, dfield);
     }
     else {
         GwyTriangulation *triangulation = rfile->triangulation;
@@ -1073,7 +1073,7 @@ rawxyz_do(RawXYZFile *rfile,
             ok = gwy_triangulation_triangulate_iterative(triangulation,
                                                          points->len,
                                                          points->data,
-                                                         sizeof(XYZPt),
+                                                         sizeof(PointXYZ),
                                                          set_fraction,
                                                          set_message);
         }
@@ -1113,7 +1113,7 @@ rawxyz_do(RawXYZFile *rfile,
 }
 
 static void
-fill_field_x(const XYZPt *points,
+fill_field_x(const PointXYZ *points,
              GwyDataField *dfield)
 {
     gint xres = gwy_data_field_get_xres(dfield);
@@ -1126,7 +1126,7 @@ fill_field_x(const XYZPt *points,
 }
 
 static void
-fill_field_y(const XYZPt *points,
+fill_field_y(const PointXYZ *points,
              GwyDataField *dfield)
 {
     gint xres = gwy_data_field_get_xres(dfield);
@@ -1143,7 +1143,7 @@ fill_field_y(const XYZPt *points,
 
 static void
 interpolate_field(guint npoints,
-                  const XYZPt *points,
+                  const PointXYZ *points,
                   GwyDataField *dfield)
 {
     gdouble xoff, yoff, qx, qy;
@@ -1167,7 +1167,7 @@ interpolate_field(guint npoints,
             gdouble s = 0.0;
 
             for (k = 0; k < npoints; k++) {
-                const XYZPt *pt = points + k;
+                const PointXYZ *pt = points + k;
                 gdouble dx = x - pt->x;
                 gdouble dy = y - pt->y;
                 gdouble r2 = dx*dx + dy*dy;
@@ -1205,8 +1205,8 @@ extend_borders(RawXYZFile *rfile,
     nbase = rfile->nbasepoints;
     noldext = rfile->points->len - nbase;
     if (check_for_changes) {
-        oldextpoints = g_memdup(&g_array_index(rfile->points, XYZPt, nbase),
-                                noldext*sizeof(XYZPt));
+        oldextpoints = g_memdup(&g_array_index(rfile->points, PointXYZ, nbase),
+                                noldext*sizeof(PointXYZ));
     }
     g_array_set_size(rfile->points, nbase);
 
@@ -1227,8 +1227,8 @@ extend_borders(RawXYZFile *rfile,
      * create at most 3 full copies (4 halves and 4 quarters) of the base set.
      * Anyone asking for more is either clueless or malicious. */
     for (i = 0; i < nbase; i++) {
-        const XYZPt *pt = &g_array_index(rfile->points, XYZPt, i);
-        XYZPt pt2;
+        const PointXYZ *pt = &g_array_index(rfile->points, PointXYZ, i);
+        PointXYZ pt2;
         gdouble txl, txr, tyt, tyb;
         gboolean txlok, txrok, tytok, tybok;
 
@@ -1311,9 +1311,9 @@ extend_borders(RawXYZFile *rfile,
     if (!check_for_changes)
         return TRUE;
 
-    extchanged = memcmp(&g_array_index(rfile->points, XYZPt, nbase),
+    extchanged = memcmp(&g_array_index(rfile->points, PointXYZ, nbase),
                         oldextpoints,
-                        noldext*sizeof(XYZPt));
+                        noldext*sizeof(PointXYZ));
     g_free(oldextpoints);
     return extchanged;
 }
@@ -1331,9 +1331,9 @@ read_points(gchar *p)
     GArray *points;
     gchar *line, *end;
 
-    points = g_array_new(FALSE, FALSE, sizeof(XYZPt));
+    points = g_array_new(FALSE, FALSE, sizeof(PointXYZ));
     for (line = gwy_str_next_line(&p); line; line = gwy_str_next_line(&p)) {
-        XYZPt pt;
+        PointXYZ pt;
 
         if (!line[0] || line[0] == '#')
             continue;
@@ -1489,8 +1489,8 @@ work_queue_ensure(WorkQueue *queue,
 }
 
 static inline gdouble
-point_dist2(const XYZPt *p,
-            const XYZPt *q)
+point_dist2(const PointXYZ *p,
+            const PointXYZ *q)
 {
     gdouble dx = p->x - q->x;
     gdouble dy = p->y - q->y;
@@ -1500,11 +1500,11 @@ point_dist2(const XYZPt *p,
 
 static gboolean
 maybe_add_point(WorkQueue *pointqueue,
-                const XYZPt *newpoints,
+                const PointXYZ *newpoints,
                 guint ii,
                 gdouble eps2)
 {
-    const XYZPt *pt;
+    const PointXYZ *pt;
     guint i;
 
     pt = newpoints + pointqueue->id[ii];
@@ -1526,14 +1526,14 @@ analyse_points(RawXYZFile *rfile,
                double epsrel)
 {
     WorkQueue cellqueue, pointqueue;
-    XYZPt *points, *newpoints, *pt;
+    PointXYZ *points, *newpoints, *pt;
     gdouble xreal, yreal, eps, eps2, xr, yr, step;
     guint npoints, i, ii, j, ig, xres, yres, ncells, oldpos;
     guint *cell_index;
 
     /* Calculate data ranges */
     npoints = rfile->norigpoints = rfile->points->len;
-    points = (XYZPt*)rfile->points->data;
+    points = (PointXYZ*)rfile->points->data;
     rfile->xmin = rfile->xmax = points[0].x;
     rfile->ymin = rfile->ymax = points[0].y;
     rfile->zmin = rfile->zmax = points[0].z;
@@ -1597,7 +1597,7 @@ analyse_points(RawXYZFile *rfile,
     index_accumulate(cell_index, xres*yres);
     g_assert(cell_index[xres*yres] == npoints);
     index_rewind(cell_index, xres*yres);
-    newpoints = g_new(XYZPt, npoints);
+    newpoints = g_new(PointXYZ, npoints);
 
     /* Sort points by cell */
     for (i = 0; i < npoints; i++) {
@@ -1681,7 +1681,7 @@ analyse_points(RawXYZFile *rfile,
 
         /* Calculate the representant of all contributing points. */
         {
-            XYZPt avg = { 0.0, 0.0, 0.0 };
+            PointXYZ avg = { 0.0, 0.0, 0.0 };
 
             for (ii = 0; ii < pointqueue.pos; ii++) {
                 pt = newpoints + pointqueue.id[ii];
@@ -1709,7 +1709,7 @@ analyse_points(RawXYZFile *rfile,
 static gboolean
 check_regular_grid(RawXYZFile *rfile)
 {
-    XYZPt *pt1, *pt2;
+    PointXYZ *pt1, *pt2;
     gdouble xstep, ystep, xeps, yeps;
     guint xres, yres, i, j;
 
@@ -1718,11 +1718,11 @@ check_regular_grid(RawXYZFile *rfile)
     if (rfile->points->len < 4)
         return FALSE;
 
-    pt1 = &g_array_index(rfile->points, XYZPt, 0);
-    pt2 = &g_array_index(rfile->points, XYZPt, 1);
+    pt1 = &g_array_index(rfile->points, PointXYZ, 0);
+    pt2 = &g_array_index(rfile->points, PointXYZ, 1);
     if (pt1->x == pt2->x) {
         for (i = 2; i < rfile->points->len; i++) {
-            pt2 = &g_array_index(rfile->points, XYZPt, i);
+            pt2 = &g_array_index(rfile->points, PointXYZ, i);
             if (pt2->x != pt1->x)
                 break;
         }
@@ -1732,7 +1732,7 @@ check_regular_grid(RawXYZFile *rfile)
     }
     else if (pt1->y == pt2->y) {
         for (j = 2; j < rfile->points->len; j++) {
-            pt2 = &g_array_index(rfile->points, XYZPt, j);
+            pt2 = &g_array_index(rfile->points, PointXYZ, j);
             if (pt2->y != pt1->y)
                 break;
         }
@@ -1751,7 +1751,7 @@ check_regular_grid(RawXYZFile *rfile)
         return FALSE;
     }
 
-    pt2 = &g_array_index(rfile->points, XYZPt, rfile->points->len-1);
+    pt2 = &g_array_index(rfile->points, PointXYZ, rfile->points->len-1);
     xstep = rfile->xstep = (pt2->x - pt1->x)/(xres - 1);
     ystep = rfile->ystep = (pt2->y - pt1->y)/(yres - 1);
     xeps = 0.05*fabs(xstep);
@@ -1760,7 +1760,7 @@ check_regular_grid(RawXYZFile *rfile)
     if (rfile->regular == RAW_XYZ_REGULAR_X) {
         for (i = 0; i < yres; i++) {
             for (j = 0; j < xres; j++) {
-                pt2 = &g_array_index(rfile->points, XYZPt, i*xres + j);
+                pt2 = &g_array_index(rfile->points, PointXYZ, i*xres + j);
                 if (fabs(pt2->x - pt1->x - j*xstep) > xeps
                     || fabs(pt2->y - pt1->y - i*ystep) > yeps) {
                     rfile->regular = RAW_XYZ_IRREGULAR;
@@ -1772,7 +1772,7 @@ check_regular_grid(RawXYZFile *rfile)
     else {
         for (j = 0; j < xres; j++) {
             for (i = 0; i < yres; i++) {
-                pt2 = &g_array_index(rfile->points, XYZPt, j*yres + i);
+                pt2 = &g_array_index(rfile->points, PointXYZ, j*yres + i);
                 if (fabs(pt2->x - pt1->x - j*xstep) > xeps
                     || fabs(pt2->y - pt1->y - i*ystep) > yeps) {
                     rfile->regular = RAW_XYZ_IRREGULAR;
