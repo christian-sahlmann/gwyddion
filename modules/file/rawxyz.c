@@ -1311,9 +1311,10 @@ extend_borders(RawXYZFile *rfile,
     if (!check_for_changes)
         return TRUE;
 
-    extchanged = memcmp(&g_array_index(rfile->points, PointXYZ, nbase),
-                        oldextpoints,
-                        noldext*sizeof(PointXYZ));
+    extchanged = (noldext != rfile->points->len - nbase
+                  || memcmp(&g_array_index(rfile->points, PointXYZ, nbase),
+                            oldextpoints,
+                            noldext*sizeof(PointXYZ)));
     g_free(oldextpoints);
     return extchanged;
 }
