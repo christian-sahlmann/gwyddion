@@ -21,6 +21,8 @@ Libraries:
   is also meaningfully updated when user moves the label around.
 - libgwyprocess: An iterative cancellable version of function
   gwy_triangulation_triangulate() was added.
+- libgwyprocess: Functions for filling area under mask with a value and
+  simple data-average correction using unmasked data were added.
 
 Modules:
 - Entropy (new): Visualises entropy calculation for distributions of values
@@ -48,7 +50,10 @@ Modules:
   point merging was fixed that sometimes caused infinities to appear in the
   data.  The triangulation is remembered and not recomputed when it is not
   necessary.  A progress bar is shown for the trianguation process and it is
-  possible to cancel it.
+  possible to cancel it.  New interpolation type ‘Preview’ was added, which
+  is always fast and produces a result similar to a bit fuzzier ‘Round’
+  interpolation.  Button ‘Reset Ranges’ permits resetting the data ranges to
+  the initial values obtained from the file data ranges.
 - Nanoscope: Support for 32bit raw data format used since 9.2 was added.
 - JEOL: Support for Phase channels was added.
 - Statistical quantities: Deficit of entropy to Gaussian distribution with the
@@ -56,6 +61,9 @@ Modules:
   longer printed to reports.
 - MI file: Loading of ASCII graphs was fixed.
 - RHK SM4: Loading of graph data with Y size of 1 works now.
+- Raw graph: Curve data are sorted upon import.
+- Grain filter: Options for unused quantities (B or C) are now hidden instead
+  of insensitivised to reduce visual clutter.
 
 Other:
 - MS Windows packages include OpenEXR support now.
