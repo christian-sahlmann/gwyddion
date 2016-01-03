@@ -34,6 +34,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/stats.h>
+#include <libprocess/grains.h>
 #include <libprocess/triangulation.h>
 #include <libdraw/gwypixfield.h>
 #include <libdraw/gwygradient.h>
@@ -62,6 +63,7 @@ enum {
 
 enum {
     GWY_INTERPOLATION_FIELD = -1,
+    GWY_INTERPOLATION_PREVIEW = -2,
 };
 
 typedef enum {
@@ -69,6 +71,12 @@ typedef enum {
     RAW_XYZ_REGULAR_X = 1,   /* X is fast axis */
     RAW_XYZ_REGULAR_Y = 2,   /* Y is fast axis */
 } RawXYZRegularType;
+
+typedef struct {
+    gdouble dist;
+    gint i;
+    gint j;
+} MaskedPoint;
 
 typedef struct {
     /* XXX: Not all values of interpolation and exterior are possible. */
@@ -81,6 +89,7 @@ typedef struct {
     gboolean xydimeq;
     gboolean xymeasureeq;
     /* Interface only */
+    gdouble mag;
     gdouble xmin;
     gdouble xmax;
     gdouble ymin;
@@ -184,6 +193,7 @@ static void          interpolation_changed  (RawXYZControls *controls,
                                              GtkComboBox *combo);
 static void          exterior_changed       (RawXYZControls *controls,
                                              GtkComboBox *combo);
+static void          reset_ranges           (RawXYZControls *controls);
 static void          preview                (RawXYZControls *controls);
 static void          triangulation_info     (RawXYZControls *controls);
 static GwyDataField* rawxyz_do              (RawXYZFile *rfile,
@@ -195,6 +205,9 @@ static void          fill_field_x           (const PointXYZ *points,
 static void          fill_field_y           (const PointXYZ *points,
                                              GwyDataField *dfield);
 static void          interpolate_field      (guint npoints,
+                                             const PointXYZ *points,
+                                             GwyDataField *dfield);
+static void          interpolate_rough      (guint npoints,
                                              const PointXYZ *points,
                                              GwyDataField *dfield);
 static gboolean      extend_borders         (RawXYZFile *rfile,
@@ -219,7 +232,7 @@ static const RawXYZArgs rawxyz_defaults = {
     500, 500,
     TRUE, TRUE,
     /* Interface only */
-    0.0, 0.0, 0.0, 0.0
+    1.0, 0.0, 0.0, 0.0, 0.0
 };
 
 static GwyModuleInfo module_info = {
@@ -227,7 +240,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports raw XYZ data files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -365,7 +378,7 @@ static gboolean
 rawxyz_dialog(RawXYZArgs *args,
               RawXYZFile *rfile)
 {
-    GtkWidget *dialog, *vbox, *align, *label, *hbox;
+    GtkWidget *dialog, *vbox, *align, *label, *hbox, *button;
     GtkTable *table;
     RawXYZControls controls;
     gint row, response;
@@ -409,7 +422,7 @@ rawxyz_dialog(RawXYZArgs *args,
     align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
     gtk_box_pack_start(GTK_BOX(hbox), align, FALSE, FALSE, 0);
 
-    table = GTK_TABLE(gtk_table_new(12, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(13, 4, FALSE));
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
     gtk_container_add(GTK_CONTAINER(align), GTK_WIDGET(table));
@@ -418,7 +431,16 @@ rawxyz_dialog(RawXYZArgs *args,
     if (rfile->regular == RAW_XYZ_IRREGULAR) {
         row = construct_resolutions(&controls, table, row);
         row = construct_physical_dims(&controls, table, row);
+
+        button = gtk_button_new_with_mnemonic(_("Reset Ran_ges"));
+        gtk_table_attach(table, button, 1, 4, row, row+1,
+                         GTK_FILL, 0, 0, 0);
+        g_signal_connect_swapped(button, "clicked",
+                                 G_CALLBACK(reset_ranges), &controls);
+        gtk_table_set_row_spacing(table, row, 8);
+        row++;
     }
+
     row = construct_units(&controls, table, row);
     update_unit_label(GTK_LABEL(controls.xy_units_parsed), args->xy_units);
     update_unit_label(GTK_LABEL(controls.z_units_parsed), args->z_units);
@@ -484,6 +506,7 @@ rawxyz_dialog(RawXYZArgs *args,
                                  G_CALLBACK(interpolation_changed), &controls);
         g_signal_connect_swapped(controls.exterior, "changed",
                                  G_CALLBACK(exterior_changed), &controls);
+        reset_ranges(&controls);
     }
     controls.in_update = FALSE;
 
@@ -703,6 +726,7 @@ construct_options(RawXYZControls *controls,
                                   _("Round"), GWY_INTERPOLATION_ROUND,
                                   _("Linear"), GWY_INTERPOLATION_LINEAR,
                                   _("Field"), GWY_INTERPOLATION_FIELD,
+                                  _("Preview"), GWY_INTERPOLATION_PREVIEW,
                                   NULL);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->interpolation);
     gtk_table_attach(table, controls->interpolation, 1, 4, row, row+1,
@@ -752,10 +776,17 @@ xyunits_changed(RawXYZControls *controls,
                 GtkEntry *entry)
 {
     RawXYZArgs *args = controls->args;
+    GwySIUnit *unitxy;
+    gint xypow10;
 
     g_free(args->xy_units);
     args->xy_units = gtk_editable_get_chars(GTK_EDITABLE(entry), 0, G_MAXINT);
+    gwy_debug("xy_units %s", args->xy_units);
     update_unit_label(GTK_LABEL(controls->xy_units_parsed), args->xy_units);
+
+    unitxy = gwy_si_unit_new_parse(args->xy_units, &xypow10);
+    args->mag = pow10(xypow10);
+    g_object_unref(unitxy);
 }
 
 static void
@@ -946,6 +977,18 @@ exterior_changed(RawXYZControls *controls,
 }
 
 static void
+reset_ranges(RawXYZControls *controls)
+{
+    RawXYZArgs myargs = *controls->args;
+
+    initialize_ranges(controls->rfile, &myargs);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ymax), myargs.ymax);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xmax), myargs.xmax);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ymin), myargs.ymin);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xmin), myargs.xmin);
+}
+
+static void
 preview(RawXYZControls *controls)
 {
     RawXYZArgs *args = controls->args;
@@ -1021,7 +1064,7 @@ rawxyz_do(RawXYZFile *rfile,
     GArray *points = rfile->points;
     GwySIUnit *unitxy, *unitz;
     GwyDataField *dfield;
-    gint xypow10, zpow10, xres, yres;
+    gint zpow10, xres, yres;
     gboolean ok = TRUE;
     gdouble mag;
 
@@ -1030,17 +1073,18 @@ rawxyz_do(RawXYZFile *rfile,
     yres = ((rfile->regular == RAW_XYZ_IRREGULAR)
             ? args->yres : rfile->regular_yres);
 
-    unitxy = gwy_si_unit_new_parse(args->xy_units, &xypow10);
-    mag = pow10(xypow10);
+    gwy_debug("%g %g :: %g %g", args->xmin, args->xmax, args->ymin, args->ymax);
+    unitxy = gwy_si_unit_new(args->xy_units);
+    mag = args->mag;
     unitz = gwy_si_unit_new_parse(args->z_units, &zpow10);
     dfield = gwy_data_field_new(xres, yres,
-                                args->xmax - args->xmin,
-                                args->ymax - args->ymin,
+                                mag*(args->xmax - args->xmin),
+                                mag*(args->ymax - args->ymin),
                                 FALSE);
     gwy_data_field_set_si_unit_xy(dfield, unitxy);
     gwy_data_field_set_si_unit_z(dfield, unitz);
-    gwy_data_field_set_xoffset(dfield, args->xmin);
-    gwy_data_field_set_yoffset(dfield, args->ymin);
+    gwy_data_field_set_xoffset(dfield, mag*args->xmin);
+    gwy_data_field_set_yoffset(dfield, mag*args->ymin);
     g_object_unref(unitxy);
     g_object_unref(unitz);
 
@@ -1051,6 +1095,10 @@ rawxyz_do(RawXYZFile *rfile,
     else if ((gint)args->interpolation == GWY_INTERPOLATION_FIELD) {
         extend_borders(rfile, args, FALSE, EPSREL);
         interpolate_field(points->len, (const PointXYZ*)points->data, dfield);
+    }
+    else if ((gint)args->interpolation == GWY_INTERPOLATION_PREVIEW) {
+        extend_borders(rfile, args, FALSE, EPSREL);
+        interpolate_rough(points->len, (const PointXYZ*)points->data, dfield);
     }
     else {
         GwyTriangulation *triangulation = rfile->triangulation;
@@ -1102,11 +1150,6 @@ rawxyz_do(RawXYZFile *rfile,
     }
 
     /* Fix the scales according to real units. */
-    gwy_debug("%g %g :: %g %g", args->xmin, args->xmax, args->ymin, args->ymax);
-    gwy_data_field_set_xreal(dfield, mag*(args->xmax - args->xmin));
-    gwy_data_field_set_yreal(dfield, mag*(args->ymax - args->ymin));
-    gwy_data_field_set_xoffset(dfield, mag*args->xmin);
-    gwy_data_field_set_yoffset(dfield, mag*args->ymin);
     gwy_data_field_multiply(dfield, pow10(zpow10));
 
     return dfield;
@@ -1186,6 +1229,196 @@ interpolate_field(guint npoints,
             *(d++) = s/w;
         }
     }
+}
+
+static int
+compare_double(gconstpointer a, gconstpointer b)
+{
+    const double da = *(const double*)a;
+    const double db = *(const double*)b;
+
+    if (da < db)
+        return -1;
+    if (da > db)
+        return 1;
+    return 0;
+}
+
+static void
+interpolate_rough(guint npoints,
+                  const PointXYZ *points,
+                  GwyDataField *dfield)
+{
+    GwyDataField *extfield, *extweights;
+    gdouble xoff, yoff, qx, qy;
+    gint extxres, extyres, xres, yres, k, kk, i, j;
+    gint imin = G_MAXINT, imax = G_MININT, jmin = G_MAXINT, jmax = G_MININT;
+    gint nmissing = 0;
+    gdouble *d, *w;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    xoff = gwy_data_field_get_xoffset(dfield);
+    yoff = gwy_data_field_get_yoffset(dfield);
+    qx = gwy_data_field_get_xreal(dfield)/xres;
+    qy = gwy_data_field_get_yreal(dfield)/yres;
+    gwy_debug("dfield %dx%d", xres, yres);
+
+    for (k = 0; k < npoints; k++) {
+        const PointXYZ *pt = points + k;
+        gdouble x = (pt->x - xoff)/qx;
+        gdouble y = (pt->y - yoff)/qy;
+
+        j = (gint)floor(x);
+        i = (gint)floor(y);
+
+        if (j < jmin)
+            jmin = j;
+        if (j > jmax)
+            jmax = j;
+
+        if (i < imin)
+            imin = i;
+        if (i > imax)
+            imax = i;
+    }
+
+    /* Honour exterior if it is not too far away.  We do not want to construct
+     * useless huge data fields for zoom-in scenarios. */
+    gwy_debug("true extrange [%d,%d)x[%d,%d)", jmin, jmax, imin, imax);
+    imin = CLAMP(imin, -(yres/2 + 16), 0);
+    imax = CLAMP(imax, yres-1, yres + yres/2 + 15);
+    jmin = CLAMP(jmin, -(xres/2 + 16), 0);
+    jmax = CLAMP(jmax, xres-1, xres + xres/2 + 15);
+    gwy_debug("extrange [%d,%d)x[%d,%d)", jmin, jmax, imin, imax);
+
+    extxres = jmax+1 - jmin;
+    extyres = imax+1 - imin;
+    gwy_debug("extfield %dx%d", extxres, extyres);
+    extfield = gwy_data_field_new(extxres, extyres, qx*extxres, qy*extyres,
+                                  TRUE);
+    extweights = gwy_data_field_new(extxres, extyres, qx*extxres, qy*extyres,
+                                    TRUE);
+    d = gwy_data_field_get_data(extfield);
+    w = gwy_data_field_get_data(extweights);
+
+    for (k = 0; k < npoints; k++) {
+        const PointXYZ *pt = points + k;
+        gdouble x = (pt->x - xoff)/qx - jmin;
+        gdouble y = (pt->y - yoff)/qy - imin;
+        gdouble z = pt->z;
+        gdouble xx, yy, ww;
+
+        j = (gint)floor(x);
+        i = (gint)floor(y);
+        xx = x - j;
+        yy = y - i;
+
+        /* Ensure we are always working in (j,j+1) x (i,i+1) rectangle. */
+        if (xx < 0.5) {
+            xx += 1.0;
+            j--;
+        }
+        xx -= 0.5;
+        if (yy < 0.5) {
+            yy += 1.0;
+            i--;
+        }
+        yy -= 0.5;
+
+        kk = i*extxres + j;
+        if (j >= 0 && j < extxres && i >= 0 && i < extyres) {
+            ww = (1.0 - xx)*(1.0 - yy);
+            d[kk] += ww*z;
+            w[kk] += ww;
+        }
+        if (j+1 >= 0 && j+1 < extxres && i >= 0 && i < extyres) {
+            ww = xx*(1.0 - yy);
+            d[kk+1] += ww*z;
+            w[kk+1] += ww;
+        }
+        if (j >= 0 && j < extxres && i+1 >= 0 && i+1 < extyres) {
+            ww = (1.0 - xx)*yy;
+            d[kk + extxres] += ww*z;
+            w[kk + extxres] += ww;
+        }
+        if (j+1 >= 0 && j+1 < extxres && i+1 >= 0 && i+1 < extyres) {
+            ww = xx*yy;
+            d[kk + extxres+1] += ww*z;
+            w[kk + extxres+1] += ww;
+        }
+    }
+
+    for (i = 0; i < extyres; i++) {
+        for (j = 0; j < extxres; j++) {
+            kk = i*extxres + j;
+            if (w[kk]) {
+                d[kk] = d[kk]/w[kk];
+                w[kk] = 0.0;
+            }
+            else {
+                d[kk] = 1e38;
+                w[kk] = 1.0;
+                nmissing++;
+            }
+        }
+    }
+    gwy_debug("nmissing %d", nmissing);
+
+    if (nmissing) {
+        MaskedPoint *mpts = g_new(MaskedPoint, nmissing);
+
+        gwy_data_field_grain_simple_dist_trans(extweights,
+                                               GWY_DISTANCE_TRANSFORM_EUCLIDEAN,
+                                               FALSE);
+        k = 0;
+        for (kk = 0; kk < extxres*extyres; kk++) {
+            if (w[kk]) {
+                g_assert(k < nmissing);
+                g_assert(d[kk] == 1e38);
+                mpts[k].dist = w[kk];
+                mpts[k].i = kk/extxres;
+                mpts[k].j = kk % extxres;
+                k++;
+            }
+        }
+        g_assert(k == nmissing);
+        qsort(mpts, nmissing, sizeof(MaskedPoint), compare_double);
+
+        for (k = 0; k < nmissing; k++) {
+            gdouble z = 0.0, dist = mpts[k].dist;
+            gint n = 0;
+
+            i = mpts[k].i;
+            j = mpts[k].j;
+            kk = i*extxres + j;
+            if (i > 0 && w[kk - extxres] < dist) {
+                z += d[kk - extxres];
+                n++;
+            }
+            if (j > 0 && w[kk-1] < dist) {
+                z += d[kk-1];
+                n++;
+            }
+            if (j < extxres-1 && w[kk+1] < dist) {
+                z += d[kk+1];
+                n++;
+            }
+            if (i < extyres-1 && w[kk + extxres] < dist) {
+                z += d[kk + extxres];
+                n++;
+            }
+            g_assert(n);
+            d[kk] = z/n;
+        }
+
+        g_free(mpts);
+    }
+
+
+    gwy_data_field_area_copy(extfield, dfield, -jmin, -imin, xres, yres, 0, 0);
+    g_object_unref(extfield);
+    g_object_unref(extweights);
 }
 
 /* Return TRUE if extpoints have changed. */
@@ -1379,7 +1612,7 @@ static void
 round_to_nice(gdouble *minval, gdouble *maxval)
 {
     gdouble range = *maxval - *minval;
-    gdouble base = pow10(floor(log10(range)));
+    gdouble base = pow10(floor(log10(range) - 1.0));
 
     *minval = round_with_base(*minval, base);
     *maxval = round_with_base(*maxval, base);
@@ -1389,11 +1622,25 @@ static void
 initialize_ranges(const RawXYZFile *rfile,
                   RawXYZArgs *args)
 {
-    args->xmin = rfile->xmin;
-    args->xmax = rfile->xmax;
-    args->ymin = rfile->ymin;
-    args->ymax = rfile->ymax;
+    GwySIUnit *unitxy;
+    gint xypow10;
+
+    gwy_debug("xy_units %s", args->xy_units);
+    unitxy = gwy_si_unit_new_parse(args->xy_units, &xypow10);
+    args->mag = pow10(xypow10);
+    g_object_unref(unitxy);
+
+    gwy_debug("mag %g", args->mag);
+    args->xmin = rfile->xmin/args->mag;
+    args->xmax = rfile->xmax/args->mag;
+    args->ymin = rfile->ymin/args->mag;
+    args->ymax = rfile->ymax/args->mag;
+    gwy_debug("%g %g :: %g %g", args->xmin, args->xmax, args->ymin, args->ymax);
     if (rfile->regular == RAW_XYZ_IRREGULAR) {
+        gdouble dx = (args->xmax - args->xmin);
+        gdouble dy = (args->ymax - args->ymin);
+
+        args->xydimeq = (fabs(dx - dy) <= 0.05*(fabs(dx) + fabs(dy)));
         round_to_nice(&args->xmin, &args->xmax);
         round_to_nice(&args->ymin, &args->ymax);
     }
@@ -1407,6 +1654,7 @@ initialize_ranges(const RawXYZFile *rfile,
         args->ymax += 0.5*dy;
         args->ymin -= 0.5*dy;
     }
+    gwy_debug("%g %g :: %g %g", args->xmin, args->xmax, args->ymin, args->ymax);
 }
 
 static inline guint
@@ -1797,7 +2045,8 @@ static void
 rawxyz_sanitize_args(RawXYZArgs *args)
 {
     if (args->interpolation != GWY_INTERPOLATION_ROUND
-        && (gint)args->interpolation != GWY_INTERPOLATION_FIELD)
+        && (gint)args->interpolation != GWY_INTERPOLATION_FIELD
+        && (gint)args->interpolation != GWY_INTERPOLATION_PREVIEW)
         args->interpolation = GWY_INTERPOLATION_LINEAR;
     if (args->exterior != GWY_EXTERIOR_MIRROR_EXTEND
         && args->exterior != GWY_EXTERIOR_PERIODIC)
