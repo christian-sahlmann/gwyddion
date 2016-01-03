@@ -200,7 +200,7 @@ static GwyModuleInfo module_info = {
     N_("Filters grains by their properties, using logical expressions "
        "and thresholds."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2014",
 };
@@ -515,13 +515,14 @@ gfilter_dialog(GFilterArgs *args,
         gvalue = gwy_inventory_get_item(inventory, args->ranges[i].quantity);
         set_up_quantity(&controls, gvalue, i);
     }
+
+    gtk_widget_show_all(dialog);
     logical_op_changed(GTK_COMBO_BOX(controls.logical_op), &controls);
 
     /* finished initializing, allow instant updates */
     controls.in_init = FALSE;
     gfilter_invalidate(&controls);
 
-    gtk_widget_show_all(dialog);
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
         switch (response) {
@@ -776,16 +777,30 @@ logical_op_changed(GtkComboBox *combo, GFilterControls *controls)
     for (i = 0; i < NQUANTITIES; i++) {
         gboolean sens = (logical >= logical_limits[i]);
 
-        gtk_widget_set_sensitive(controls->set_as[i], sens);
-        gtk_widget_set_sensitive(controls->header[i], sens);
-        gtk_widget_set_sensitive(controls->lower_label[i], sens);
-        gtk_widget_set_sensitive(controls->lower_scale[i], sens);
-        gtk_widget_set_sensitive(controls->lower_entry[i], sens);
-        gtk_widget_set_sensitive(controls->lower_units[i], sens);
-        gtk_widget_set_sensitive(controls->upper_label[i], sens);
-        gtk_widget_set_sensitive(controls->upper_scale[i], sens);
-        gtk_widget_set_sensitive(controls->upper_entry[i], sens);
-        gtk_widget_set_sensitive(controls->upper_units[i], sens);
+        if (sens) {
+            gtk_widget_show(controls->set_as[i]);
+            gtk_widget_show(controls->header[i]);
+            gtk_widget_show(controls->lower_label[i]);
+            gtk_widget_show(controls->lower_scale[i]);
+            gtk_widget_show(controls->lower_entry[i]);
+            gtk_widget_show(controls->lower_units[i]);
+            gtk_widget_show(controls->upper_label[i]);
+            gtk_widget_show(controls->upper_scale[i]);
+            gtk_widget_show(controls->upper_entry[i]);
+            gtk_widget_show(controls->upper_units[i]);
+        }
+        else {
+            gtk_widget_hide(controls->set_as[i]);
+            gtk_widget_hide(controls->header[i]);
+            gtk_widget_hide(controls->lower_label[i]);
+            gtk_widget_hide(controls->lower_scale[i]);
+            gtk_widget_hide(controls->lower_entry[i]);
+            gtk_widget_hide(controls->lower_units[i]);
+            gtk_widget_hide(controls->upper_label[i]);
+            gtk_widget_hide(controls->upper_scale[i]);
+            gtk_widget_hide(controls->upper_entry[i]);
+            gtk_widget_hide(controls->upper_units[i]);
+        }
     }
     gfilter_invalidate(controls);
 }
