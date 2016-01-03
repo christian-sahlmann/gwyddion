@@ -192,11 +192,14 @@ gwy_data_field_mask_outliers2(GwyDataField *data_field,
  * @data_field: A data field.
  * @mask_field: Mask of places to be corrected.
  *
- * Fills data under mask with average value.
+ * Fills data under mask with the average value.
  *
- * Simply puts average value of all the @data_field values into
- * points in @data_field lying under points where @mask_field values
- * are nonzero.
+ * This function simply puts average value of all the @data_field values (both
+ * masked and unmasked) into points in @data_field lying under points where
+ * @mask_field values are nonzero.
+ *
+ * In most cases you probably want to use
+ * gwy_data_field_correct_average_unmasked() instead.
  **/
 void
 gwy_data_field_correct_average(GwyDataField *data_field,
@@ -205,6 +208,10 @@ gwy_data_field_correct_average(GwyDataField *data_field,
     gdouble avg;
     gint i;
 
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(!mask_field || (GWY_IS_DATA_FIELD(mask_field)
+                                     && mask_field->xres == data_field->xres
+                                     && mask_field->yres == data_field->yres));
     avg = gwy_data_field_get_avg(data_field);
 
     for (i = 0; i < (data_field->xres * data_field->yres); i++) {
@@ -213,6 +220,45 @@ gwy_data_field_correct_average(GwyDataField *data_field,
     }
 
     gwy_data_field_invalidate(mask_field);
+}
+
+/**
+ * gwy_data_field_correct_average_unmasked:
+ * @data_field: A data field.
+ * @mask_field: Mask of places to be corrected.
+ *
+ * Fills data under mask with the average value of unmasked data.
+ *
+ * This function calculates the average value of all unmasked pixels in
+ * @data_field and then fills all the masked pixels with this average value.
+ * It is useful as the first rough step of correction of data under the mask.
+ *
+ * If all data are masked the field is filled with zeroes.
+ *
+ * Since: 2.44
+ **/
+void
+gwy_data_field_correct_average_unmasked(GwyDataField *data_field,
+                                        GwyDataField *mask_field)
+{
+    gdouble avg;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(!mask_field || (GWY_IS_DATA_FIELD(mask_field)
+                               && mask_field->xres == data_field->xres
+                               && mask_field->yres == data_field->yres));
+
+    avg = gwy_data_field_area_get_avg_mask(data_field, mask_field,
+                                           GWY_MASK_EXCLUDE,
+                                           0, 0,
+                                           data_field->xres, data_field->yres);
+    if (gwy_isnan(avg) || gwy_isinf(avg)) {
+        gwy_data_field_clear(data_field);
+        return;
+    }
+    gwy_data_field_area_fill_mask(data_field, mask_field, GWY_MASK_INCLUDE,
+                                  0, 0, data_field->xres, data_field->yres,
+                                  avg);
 }
 
 /**

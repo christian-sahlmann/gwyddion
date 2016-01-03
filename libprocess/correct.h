@@ -39,6 +39,8 @@ void gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
                                               gdouble *error);
 void gwy_data_field_correct_average          (GwyDataField *data_field,
                                               GwyDataField *mask_field);
+void gwy_data_field_correct_average_unmasked (GwyDataField *data_field,
+                                              GwyDataField *mask_field);
 void gwy_data_field_mask_outliers            (GwyDataField *data_field,
                                               GwyDataField *mask_field,
                                               gdouble thresh);

@@ -1597,6 +1597,61 @@ gwy_data_field_area_fill(GwyDataField *data_field,
 }
 
 /**
+ * gwy_data_field_area_fill_mask:
+ * @data_field: A data field.
+ * @mask: Mask specifying which values to take into account/exclude, or %NULL.
+ * @mode: Masking mode to use.  See the introduction for description of
+ *        masking modes.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @value: Value to be entered
+ *
+ * Fills a masked rectangular part of a data field with given value.
+ *
+ * Since: 2.44
+ **/
+void
+gwy_data_field_area_fill_mask(GwyDataField *data_field,
+                              GwyDataField *mask,
+                              GwyMaskingType mode,
+                              gint col, gint row, gint width, gint height,
+                              gdouble value)
+{
+    gint i, j;
+    gdouble *drow;
+    const gdouble *mrow;
+
+    if (!mask || mode == GWY_MASK_IGNORE) {
+        gwy_data_field_area_fill(data_field, col, row, width, height, value);
+        return;
+    }
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
+                               && mask->xres == data_field->xres
+                               && mask->yres == data_field->yres));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 0 && height >= 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
+
+    for (i = 0; i < height; i++) {
+        drow = data_field->data + (row + i)*data_field->xres + col;
+        mrow = mask->data + (row + i)*mask->xres + col;
+
+        for (j = 0; j < width; j++) {
+            if ((mode == GWY_MASK_INCLUDE && *mrow > 0.0)
+                || (mode == GWY_MASK_EXCLUDE && *mrow < 1.0))
+            *(drow++) = value;
+            mrow++;
+        }
+    }
+    gwy_data_field_invalidate(data_field);
+}
+
+/**
  * gwy_data_field_clear:
  * @data_field: A data field.
  *
