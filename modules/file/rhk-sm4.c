@@ -785,12 +785,13 @@ rhk_sm4_read_page_header(RHKPage *page,
     /* Use negated positive conditions to catch NaNs */
     /* Must not take the absolute value here, spectra may have valid negative
      * scales. */
-    if (!(page->x_scale != 0)) {
+    if (!(page->x_scale != 0.0)) {
         g_warning("Real x scale is 0.0, fixing to 1.0");
         page->x_scale = 1.0;
     }
-    if (!(page->y_scale != 0)) {
-        g_warning("Real y scale is 0.0, fixing to 1.0");
+    if (!(page->y_scale != 0.0)) {
+        if (data_type == RHK_DATA_IMAGE)
+            g_warning("Real y scale is 0.0, fixing to 1.0");
         page->y_scale = 1.0;
     }
     page->xy_scale = gwy_get_gfloat_le(&p);
