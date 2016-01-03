@@ -106,7 +106,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports simple text files as graph curves."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -536,14 +536,14 @@ fill_data(GwyGraphModel *gmodel,
 static int
 compare_double(gconstpointer a, gconstpointer b)
 {
-    const double *da = (const double*)a;
-    const double *db = (const double*)b;
+    const double da = *(const double*)a;
+    const double db = *(const double*)b;
 
     if (da < db)
         return -1;
     if (da > db)
         return 1;
-    return 0.0;
+    return 0;
 }
 
 static const gchar curvetype_key[] = "/module/rawgraph/curvetype";
