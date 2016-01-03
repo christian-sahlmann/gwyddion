@@ -22,8 +22,6 @@
  *  Boston, MA 02110-1301, USA.
  */
 
-#define DEBUG
-
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-mi-spm">
@@ -60,6 +58,7 @@
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwygraphmodel.h>
+#include <libgwydgets/gwygraphbasics.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
 
@@ -116,7 +115,7 @@ typedef struct {
 
     gint num_points;
     const gfloat *data;
-
+    GArray *chunks;
     GHashTable *meta;
 } MISpectFile;
 
@@ -228,8 +227,8 @@ mifile_load(const gchar *filename,
     GwyDataField *dfield = NULL;
     GwyGraphCurveModel *cmodel;
     GwyGraphModel *gmodel;
-    gdouble *xdata, *ydata;
-    guint header_size;
+    gdouble *xdata, *ydata, *xchunk, *ychunk;
+    gsize header_size, offset, len;
     gchar *p, *data, *line, **lineparts;
     gboolean ok = TRUE;
     MIDataType data_type = MI_BINARY;
@@ -363,20 +362,45 @@ mifile_load(const gchar *filename,
 
             /* create graph model and curve model */
             gmodel = gwy_graph_model_new();
-            cmodel = gwy_graph_curve_model_new();
-            gwy_graph_model_add_curve(gmodel, cmodel);
-            g_object_unref(cmodel);
-
             g_object_set(gmodel,
                          "title", _("Spectroscopy Graph"), NULL);
             /* XXX: SET UNITS HERE gwy_graph_model_set_si_unit_x */
-            g_object_set(cmodel,
-                         "description", "Curve 1",
-                         "mode", GWY_GRAPH_CURVE_POINTS,
-                         NULL);
-            gwy_graph_curve_model_set_data(cmodel, xdata, ydata,
-                                           mifile_spect->num_points);
-
+            if (!mifile_spect->chunks) {
+                cmodel = gwy_graph_curve_model_new();
+                gwy_graph_model_add_curve(gmodel, cmodel);
+                g_object_unref(cmodel);
+                g_object_set(cmodel,
+                             "description", "Curve 1",
+                             "mode", GWY_GRAPH_CURVE_POINTS,
+                             NULL);
+                gwy_graph_curve_model_set_data(cmodel, xdata, ydata,
+                                              mifile_spect->num_points);
+            }
+            else {
+                offset = 0;
+                for (j = 0; j < mifile_spect->chunks->len; j++) {
+                    len = g_array_index (mifile_spect->chunks, gint, j);
+                    xchunk = g_memdup(xdata + offset,
+                                      len * sizeof(gdouble));
+                    ychunk = g_memdup(ydata + offset,
+                                      len * sizeof(gdouble));
+                    offset += len;
+                    cmodel = gwy_graph_curve_model_new();
+                    gwy_graph_model_add_curve(gmodel, cmodel);
+                    g_object_unref(cmodel);
+                    g_object_set(cmodel,
+                                 "description",
+                                       g_strdup_printf("Curve %d", j+1),
+                                 "mode", GWY_GRAPH_CURVE_POINTS,
+                                 "color", gwy_graph_get_preset_color(j),
+                                 NULL);
+                    gwy_graph_curve_model_set_data(cmodel,
+                                                   xchunk, ychunk,
+                                                   len);
+                    g_free(xchunk);
+                    g_free(ychunk);
+                }
+            }
 
             /* add gmodel to container */
             container_key = g_strdup_printf("/0/graph/graph/1");
@@ -534,10 +558,14 @@ spect_file_read_header(MISpectFile *mifile, gchar *buffer, GError **error)
     MISpectData *data = NULL;
     GHashTable *meta;
     gchar *line, *key, *value = NULL;
+    gchar **parts;
+    gint sum = 0, chunklen;
 
     mifile->meta = g_hash_table_new_full(g_str_hash, g_str_equal,
                                          g_free, g_free);
     meta = mifile->meta;
+
+    mifile->chunks = g_array_new (FALSE, TRUE, sizeof (gint));
 
     while ((line = gwy_str_next_line(&buffer))) {
         if (!strncmp(line, "bufferLabel   ", KEY_LEN)) {
@@ -576,10 +604,23 @@ spect_file_read_header(MISpectFile *mifile, gchar *buffer, GError **error)
 
         if (!strcmp(key, "DataPoints"))
             mifile->num_points = atol(value);
+
+        if (!strcmp(key, "chunk")) {
+            parts = g_strsplit_set(value," \t", 3);
+            chunklen = atol(parts[1]);
+            g_strfreev(parts);
+            sum += chunklen;
+            g_array_append_val(mifile->chunks, chunklen);
+        }
     }
 
     if (!mifile->num_buffers)
         err_NO_DATA(error);
+
+    if (sum != mifile->num_points) {
+        g_array_free (mifile->chunks, TRUE);
+        mifile->chunks = NULL;
+    }
 
     return mifile->num_buffers;
 }
@@ -668,6 +709,8 @@ spect_file_free(MISpectFile *mifile)
     }
     g_free(mifile->buffers);
     g_hash_table_destroy(mifile->meta);
+    if (mifile->chunks)
+        g_array_free (mifile->chunks, TRUE);
     g_free(mifile);
 }
 
