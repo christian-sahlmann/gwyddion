@@ -1644,7 +1644,8 @@ gwy_data_field_area_fill_mask(GwyDataField *data_field,
         for (j = 0; j < width; j++) {
             if ((mode == GWY_MASK_INCLUDE && *mrow > 0.0)
                 || (mode == GWY_MASK_EXCLUDE && *mrow < 1.0))
-            *(drow++) = value;
+                *drow = value;
+            drow++;
             mrow++;
         }
     }
