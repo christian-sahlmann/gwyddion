@@ -646,7 +646,7 @@ set_up_quantity(GFilterControls *controls, GwyGrainValue *gvalue, guint id)
     name = gwy_resource_get_name(GWY_RESOURCE(gvalue));
     args->ranges[id].quantity = name;
     /* TRANSLATORS: %c is replaced with quantity label A, B or C. */
-    s = g_strdup_printf(_("Condition %c: %s"), 'A' + id, name);
+    s = g_strdup_printf(_("Condition %c: %s"), 'A' + id, _(name));
     t = g_strconcat("<b>", s, "</b>", NULL);
     gtk_label_set_markup(GTK_LABEL(controls->header[id]), t);
     g_free(t);
