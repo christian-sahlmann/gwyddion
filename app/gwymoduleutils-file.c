@@ -25,6 +25,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/stats.h>
+#include <libprocess/correct.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/data-browser.h>
 #include <app/settings.h>
@@ -254,33 +255,24 @@ gwy_app_channel_mask_of_nans(GwyDataField *dfield,
 {
     GwyDataField *mask = NULL;
     guint k, n = dfield->xres*dfield->yres;
-    gdouble *d = dfield->data, *m;
-    gdouble avg;
+    gdouble *d = dfield->data, *m = NULL;
 
     for (k = 0; k < n; k++) {
         if (gwy_isnan(d[k]) || gwy_isinf(d[k])) {
             if (G_UNLIKELY(!mask)) {
                 mask = gwy_data_field_new_alike(dfield, TRUE);
+                m = gwy_data_field_get_data(mask);
                 gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(mask),
                                             NULL);
             }
-            mask->data[k] = 1.0;
+            m[k] = 1.0;
         }
     }
 
     if (!mask || !removebad)
         return mask;
 
-    avg = gwy_data_field_area_get_avg_mask(dfield, mask, GWY_MASK_EXCLUDE,
-                                           0, 0, dfield->xres, dfield->yres);
-    if (gwy_isnan(avg) || gwy_isinf(avg))
-        avg = 0.0;
-
-    m = mask->data;
-    for (k = 0; k < n; k++) {
-        if (m[k])
-            d[k] = avg;
-    }
+    gwy_data_field_correct_average_unmasked(dfield, mask);
 
     return mask;
 }
