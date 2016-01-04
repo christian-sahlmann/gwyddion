@@ -26,6 +26,10 @@ Var Dialog
 Var Label
 Var RadioButton
 
+; XXX Temporary page for user influence study reminder
+; XXX To be removed after 2.44 release
+Var Link
+
 ;----------------------------------------------------------------------------
 
 RequestExecutionLevel admin
@@ -55,6 +59,10 @@ Page custom ChooseLocale
 
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
+
+; XXX Temporary page for user influence study reminder
+; XXX To be removed after 2.44 release
+Page custom UserInfluenceStudyReminder
 
 !insertmacro MUI_LANGUAGE "English"
 
@@ -153,6 +161,47 @@ Function LocaleOnClick
     Pop $1
     nsDialogs::GetUserData $1
     Pop $Locale
+FunctionEnd
+
+;----------------------------------------------------------------------------
+
+; XXX Temporary page for user influence study reminder
+; XXX To be removed after 2.44 release
+Function UserInfluenceStudyReminder
+    nsDialogs::Create 1018
+    Pop $Dialog
+
+    ${If} $Dialog == error
+    Abort
+    ${EndIf}
+
+    !insertmacro MUI_HEADER_TEXT "User Influence Study" "Please help us in our user influence study."
+
+    ${NSD_CreateLabel} 0u 0u 100% 12u "We are currently trying to characterise the influence of users on quantitative AFM results."
+    Pop $Label
+
+    ${NSD_CreateLabel} 0u 12u 100% 12u "It would help us if you participated in the study at"
+    Pop $Label
+
+    ${NSD_CreateLink} 8u 30u 100% 12u "http://gwyddion.net/survey2/"
+    Pop $Link
+    ${NSD_OnClick} $link UserInfluenceStudyLinkClick
+
+    ${NSD_CreateLabel} 0u 48u 100% 36u "The survey should be fun because it consists of actual data processing (as opposed to just filling some boring forms) and it should not take more than several minutes of your time."
+    Pop $Label
+
+    ${NSD_CreateLabel} 0u 72u 100% 12u "Thank you!"
+    Pop $Label
+
+    ${NSD_CreateLabel} 0u 84u 100% 12u "Petr && Yeti"
+    Pop $Label
+
+    nsDialogs::Show
+FunctionEnd
+
+Function UserInfluenceStudyLinkClick
+    Pop $1
+    ExecShell "open" "http://gwyddion.net/survey2/"
 FunctionEnd
 
 ;----------------------------------------------------------------------------
