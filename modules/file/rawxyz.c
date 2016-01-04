@@ -1393,6 +1393,8 @@ interpolate_rough(guint npoints,
             i = mpts[k].i;
             j = mpts[k].j;
             kk = i*extxres + j;
+
+            /* Cardinal. */
             if (i > 0 && w[kk - extxres] < dist) {
                 z += d[kk - extxres];
                 n++;
@@ -1409,6 +1411,27 @@ interpolate_rough(guint npoints,
                 z += d[kk + extxres];
                 n++;
             }
+            z *= 2.0;
+            n *= 2;
+
+            /* Diagonal, half weight. */
+            if (i > 0 && j > 0 && w[kk-1 - extxres] < dist) {
+                z += d[kk-1 - extxres];
+                n++;
+            }
+            if (i > 0 && j < extxres-1 && w[kk+1 - extxres] < dist) {
+                z += d[kk+1 - extxres];
+                n++;
+            }
+            if (i < extyres-1 && j > 0 && w[kk-1 + extxres] < dist) {
+                z += d[kk-1 + extxres];
+                n++;
+            }
+            if (i < extyres-1 && j < extxres-1 && w[kk+1 + extxres] < dist) {
+                z += d[kk+1 + extxres];
+                n++;
+            }
+
             g_assert(n);
             d[kk] = z/n;
         }
