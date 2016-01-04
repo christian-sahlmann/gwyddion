@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-12-28 09:18+0300\n"
-"PO-Revision-Date: 2015-12-28 09:21+0300\n"
+"POT-Creation-Date: 2016-01-04 08:43+0300\n"
+"PO-Revision-Date: 2016-01-04 08:44+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -570,12 +570,12 @@ msgstr "Адаптивный по масштабу и пространству"
 
 #. TRANSLATORS: Interpolation type (AKA nearest neighbour)
 #: libprocess/gwyprocessenums.c:207 modules/file/imgexport.c:3555
-#: modules/file/rawxyz.c:700
+#: modules/file/rawxyz.c:726
 msgid "Round"
 msgstr "Округление"
 
 #: libprocess/gwyprocessenums.c:208 modules/file/imgexport.c:3556
-#: modules/file/rawxyz.c:701
+#: modules/file/rawxyz.c:727
 msgid "Linear"
 msgstr "Линейная"
 
@@ -760,6 +760,11 @@ msgstr "Запускается частичная оценка"
 #: libprocess/tip.c:861
 msgid "Starting full estimation"
 msgstr "Запускается полная оценка"
+
+#: libprocess/triangulation.c:2087 modules/process/calcoefs_view.c:799
+#: modules/process/lat_synth.c:1146
+msgid "Triangulating..."
+msgstr "Производится триангуляция..."
 
 #: libgwydgets/gwy3dwindow.c:504
 msgid "Rotate view (R)"
@@ -1306,7 +1311,7 @@ msgid "A_dd symbol"
 msgstr "_Добавить символ"
 
 #: libgwydgets/gwyscitext.c:274 modules/file/rawfile.c:553
-#: modules/file/rawxyz.c:429
+#: modules/file/rawxyz.c:454 modules/file/rawxyz.c:729
 msgid "Preview"
 msgstr "Предпросмотр"
 
@@ -1887,42 +1892,42 @@ msgstr ""
 "Чтобы избежать потери сохранённых настроек попыток обновить его делаться не "
 "будет до тех пор, пока он не будет исправлен или удалён."
 
-#: app/gwymoduleutils-file.c:506
+#: app/gwymoduleutils-file.c:498
 #, c-format
 msgid "Section %s ended at line %u but it has never started."
 msgstr "Секция %s закончилась в строке %u, но никогда не начиналась."
 
-#: app/gwymoduleutils-file.c:514
+#: app/gwymoduleutils-file.c:506
 #, c-format
 msgid "Section %s ended at line %u instead of %s."
 msgstr "Секция %s закончилась в строке %u вместо %s."
 
-#: app/gwymoduleutils-file.c:551
+#: app/gwymoduleutils-file.c:543
 #, c-format
 msgid "Section %s started at line %u before %s ended."
 msgstr "Секция %s закончилась в строке %u до того, как %s закончилась."
 
-#: app/gwymoduleutils-file.c:557
+#: app/gwymoduleutils-file.c:549
 #, c-format
 msgid "Empty section name at header line %u."
 msgstr "Пустое название секции в строке заголовка %u."
 
-#: app/gwymoduleutils-file.c:592
+#: app/gwymoduleutils-file.c:584
 #, c-format
 msgid "Header line %u lacks prefix %s."
 msgstr "В строке заголовка %u отсутствует префикс %s."
 
-#: app/gwymoduleutils-file.c:617
+#: app/gwymoduleutils-file.c:609
 #, c-format
 msgid "Header line %u lacks key-value separator."
 msgstr "В строке заголовка %u отсутствует разделитель ключ-значение."
 
-#: app/gwymoduleutils-file.c:625
+#: app/gwymoduleutils-file.c:617
 #, c-format
 msgid "Key at header line %u is empty."
 msgstr "Ключ в строке заголовка %u пустой."
 
-#: app/gwymoduleutils-file.c:652
+#: app/gwymoduleutils-file.c:644
 #, c-format
 msgid "Header suddenly ended at line %u; end of header marker is missing"
 msgstr ""
@@ -3039,7 +3044,7 @@ msgid "Export Text"
 msgstr "Экспортировать текст"
 
 #: modules/file/asciiexport.c:275 modules/file/imgexport.c:3948
-#: modules/file/rawfile.c:758 modules/file/rawxyz.c:688
+#: modules/file/rawfile.c:758 modules/file/rawxyz.c:714
 #: modules/file/xyzexport.c:290 modules/process/calibrate.c:607
 #: modules/process/col_synth.c:506 modules/process/correct_affine.c:475
 #: modules/process/extend.c:259 modules/process/fft_filter_1d.c:272
@@ -3156,18 +3161,18 @@ msgid "Neither `%s' nor `%s' header field found."
 msgstr "Не найдено ни `%s', ни `%s' поля заголовка."
 
 #: modules/file/createc.c:771 modules/file/matfile.c:600
-#: modules/file/rhk-sm4.c:1457
+#: modules/file/rhk-sm4.c:1469
 #, c-format
 msgid "zlib initialization failed with error %d, cannot decompress data."
 msgstr ""
 "Инициализация zlib закончилась с ошибкой %d, не удалось распаковать данные."
 
-#: modules/file/createc.c:785 modules/file/rhk-sm4.c:1471
+#: modules/file/createc.c:785 modules/file/rhk-sm4.c:1483
 #, c-format
 msgid "Decompression of compressed data failed with error %d."
 msgstr "Распаковка сжатых данных закончилась с ошибкой %d."
 
-#: modules/file/createc.c:830 modules/file/rhk-sm4.c:1514
+#: modules/file/createc.c:830 modules/file/rhk-sm4.c:1526
 msgid "Cannot decompress compressed data.  Zlib support was not built in."
 msgstr "Не удаётся распаковать сжатые данные. Поддержка zlib не была встроена."
 
@@ -3310,7 +3315,7 @@ msgstr ""
 "Ожидаемый размер данных, рассчитанный из данных заголовка, должен быть %u "
 "байт, но реальный размер %u байт."
 
-#: modules/file/err.h:109
+#: modules/file/err.h:109 modules/file/rhk-sm4.c:765
 #, c-format
 msgid "Invalid field dimension: %d."
 msgstr "Неверная размерность поля: %d."
@@ -3757,7 +3762,7 @@ msgstr "Страницы:"
 
 #: modules/file/hdrimage.cc:2290 modules/file/imgexport.c:2776
 #: modules/file/pixmap.c:862 modules/file/rawfile.c:649
-#: modules/file/rawxyz.c:583 modules/process/dimensions.h:467
+#: modules/file/rawxyz.c:609 modules/process/dimensions.h:467
 msgid "Physical Dimensions"
 msgstr "Физические размеры"
 
@@ -3788,7 +3793,7 @@ msgid "H_eight:"
 msgstr "_Высота:"
 
 #: modules/file/hdrimage.cc:2354 modules/file/pixmap.c:914
-#: modules/file/rawfile.c:701 modules/file/rawxyz.c:557
+#: modules/file/rawfile.c:701 modules/file/rawxyz.c:583
 msgid "Identical _measures"
 msgstr "Одинаковый _масштаб"
 
@@ -4109,7 +4114,7 @@ msgstr "Рисовать подпис_ь"
 msgid "Image"
 msgstr "Изображение"
 
-#: modules/file/imgexport.c:3541 modules/file/rawxyz.c:692
+#: modules/file/imgexport.c:3541 modules/file/rawxyz.c:718
 #: modules/process/correct_affine.c:493 modules/process/drift.c:306
 #: modules/process/dwt.c:206 modules/process/dwtanisotropy.c:203
 #: modules/process/fft_filter_1d.c:305 modules/process/fft_profile.c:297
@@ -4542,15 +4547,15 @@ msgstr "Размер блока информации о файле невере�
 msgid "Unique id record is too short."
 msgstr "Уникальный идентификатор слишком короткий."
 
-#: modules/file/mifile.c:173
+#: modules/file/mifile.c:177
 msgid "Imports Molecular Imaging MI data files."
 msgstr "Импортирует файлы данных Molecular Imaging MI."
 
-#: modules/file/mifile.c:186
+#: modules/file/mifile.c:190
 msgid "PicoView Data Files (.mi)"
 msgstr "Файлы данных PicoView (.mi)"
 
-#: modules/file/mifile.c:383
+#: modules/file/mifile.c:366 modules/file/mifile.c:453
 msgid "Spectroscopy Graph"
 msgstr "График спектроскопии"
 
@@ -5381,7 +5386,7 @@ msgstr "Информация"
 msgid "Data Format"
 msgstr "Формат данных"
 
-#: modules/file/rawfile.c:567 modules/file/rawxyz.c:443
+#: modules/file/rawfile.c:567 modules/file/rawxyz.c:468
 #: modules/process/arithmetic.c:236 modules/process/calcoefs_view.c:327
 #: modules/process/convolution_filter.c:241 modules/process/deposit_synth.c:645
 #: modules/process/drift.c:251 modules/process/edge.c:644
@@ -5402,22 +5407,22 @@ msgstr "О_бновить"
 msgid "<b>File</b>"
 msgstr "<b>Файл</b>"
 
-#: modules/file/rawfile.c:626 modules/file/rawxyz.c:523
+#: modules/file/rawfile.c:626 modules/file/rawxyz.c:549
 #: modules/process/dimensions.h:445
 msgid "Resolution"
 msgstr "Разрешение"
 
-#: modules/file/rawfile.c:631 modules/file/rawxyz.c:527
+#: modules/file/rawfile.c:631 modules/file/rawxyz.c:553
 #: modules/process/dimensions.h:451
 msgid "_Horizontal size:"
 msgstr "_Горизонтальный размер:"
 
-#: modules/file/rawfile.c:638 modules/file/rawxyz.c:542
+#: modules/file/rawfile.c:638 modules/file/rawxyz.c:568
 #: modules/process/dimensions.h:454
 msgid "_Vertical size:"
 msgstr "Вертика_льный размер:"
 
-#: modules/file/rawfile.c:643 modules/file/rawxyz.c:623
+#: modules/file/rawfile.c:643 modules/file/rawxyz.c:649
 msgid "S_quare sample"
 msgstr "_Квадратный сэмпл"
 
@@ -5652,65 +5657,69 @@ msgstr "Могут быть импортированы только файлы �
 msgid "Curve"
 msgstr "Кривая"
 
-#: modules/file/rawxyz.c:225
+#: modules/file/rawxyz.c:241
 msgid "Imports raw XYZ data files."
 msgstr "Импортирует неформатированные файлы XYZ."
 
-#: modules/file/rawxyz.c:238
+#: modules/file/rawxyz.c:254
 msgid "XYZ data files"
 msgstr "Импорт файлов данных XYZ"
 
-#: modules/file/rawxyz.c:317
+#: modules/file/rawxyz.c:333
 msgid "Raw XYZ data import must be run as interactive."
 msgstr ""
 "импорт неформатированных данных XYZ должен быть запущен в интерактивном "
 "режиме."
 
-#: modules/file/rawxyz.c:393
+#: modules/file/rawxyz.c:409
 msgid "Import XYZ Data"
 msgstr "Импорт данных XYZ"
 
-#: modules/file/rawxyz.c:587
+#: modules/file/rawxyz.c:435
+msgid "Reset Ran_ges"
+msgstr "Сбросить _Диапазоны"
+
+#: modules/file/rawxyz.c:613
 msgid "_X-range:"
 msgstr "Диапазон _X:"
 
-#: modules/file/rawxyz.c:605
+#: modules/file/rawxyz.c:631
 msgid "_Y-range:"
 msgstr "Диапазон _Y:"
 
-#: modules/file/rawxyz.c:642
+#: modules/file/rawxyz.c:668
 msgid "_Lateral units:"
 msgstr "Единицы _размера:"
 
-#: modules/file/rawxyz.c:659 modules/process/dimensions.h:494
+#: modules/file/rawxyz.c:685 modules/process/dimensions.h:494
 msgid "_Value units:"
 msgstr "Единицы измерения _значения:"
 
-#: modules/file/rawxyz.c:702
+#: modules/file/rawxyz.c:728
 msgid "Field"
 msgstr "Поле"
 
-#: modules/file/rawxyz.c:709 modules/process/extend.c:275
+#: modules/file/rawxyz.c:736 modules/process/extend.c:275
 #: modules/process/polydistort.c:268
 msgid "_Exterior type:"
 msgstr "Тип _внешней части:"
 
-#: modules/file/rawxyz.c:717 modules/process/extend.c:268
+#: modules/file/rawxyz.c:744 modules/process/extend.c:268
 #: modules/process/polydistort.c:261
 msgid "exterior|Border"
 msgstr "Граница"
 
-#: modules/file/rawxyz.c:719 modules/process/extend.c:270
+#: modules/file/rawxyz.c:746 modules/process/extend.c:270
 #: modules/process/polydistort.c:263
 msgid "exterior|Mirror"
 msgstr "Зеркальная"
 
-#: modules/file/rawxyz.c:721 modules/process/extend.c:272
+#: modules/file/rawxyz.c:748 modules/process/extend.c:272
 #: modules/process/polydistort.c:265
 msgid "exterior|Periodic"
 msgstr "Периодический"
 
-#: modules/file/rawxyz.c:994
+#: modules/file/rawxyz.c:1041
 #, c-format
 msgid ""
 "Points read from file: %u\n"
@@ -5721,7 +5730,7 @@ msgstr ""
 "Объединено как слишком близких: %u\n"
 "Добавлено на границе: %u"
 
-#: modules/file/rawxyz.c:1002
+#: modules/file/rawxyz.c:1049
 #, c-format
 msgid ""
 "Points read from file: %u\n"
@@ -5730,7 +5739,30 @@ msgstr ""
 "Точек считано из файла: %u\n"
 "Точки формируют правильную сетку: %u×%u"
 
-#: modules/file/rawxyz.c:1067
+#: modules/file/rawxyz.c:1113 modules/process/bdep_synth.c:247
+#: modules/process/bdep_synth.c:603 modules/process/calcoefs_simple.c:633
+#: modules/process/col_synth.c:280 modules/process/col_synth.c:712
+#: modules/process/crosscor.c:599 modules/process/crosscor.c:624
+#: modules/process/deposit_synth.c:276 modules/process/deposit_synth.c:867
+#: modules/process/diff_synth.c:312 modules/process/diff_synth.c:712
+#: modules/process/domain_synth.c:263 modules/process/domain_synth.c:752
+#: modules/process/grain_wshed.c:437 modules/process/lat_synth.c:465
+#: modules/process/mark_disconn.c:156 modules/process/mark_disconn.c:381
+#: modules/process/maskcor.c:331 modules/process/mcrop.c:321
+#: modules/process/merge.c:1078 modules/process/nanoindent_adjust.c:323
+#: modules/process/neural.c:1289 modules/process/pid.c:338
+#: modules/process/superresolution.c:416 modules/process/superresolution.c:505
+#: modules/process/tip_blind.c:784 modules/process/tipops.c:319
+#: modules/process/xydenoise.c:217 modules/volume/volume_kmeans.c:364
+#: modules/volume/volume_kmedians.c:365
+msgid "Initializing..."
+msgstr "Инициализация..."
+
+#: modules/file/rawxyz.c:1134 modules/process/superresolution.c:554
+msgid "Interpolating..."
+msgstr "Интерполяция..."
+
+#: modules/file/rawxyz.c:1146
 msgid "XYZ data regularization failed due to numerical instability."
 msgstr ""
 "Упорядочение XYZ-данных закончилось неудачно из-за численной нестабильности."
@@ -5793,30 +5825,30 @@ msgstr "Достигнут конец файла в цветовых данны�
 msgid "Unknown line %d"
 msgstr "Неизвестная строка %d"
 
-#: modules/file/rhk-sm4.c:396
+#: modules/file/rhk-sm4.c:397
 msgid "Imports RHK Technology SM4 data files."
 msgstr "Импортирует файлы данных RHK Technology SM4."
 
-#: modules/file/rhk-sm4.c:416
+#: modules/file/rhk-sm4.c:417
 msgid "RHK SM4 files (.sm4)"
 msgstr "Файлы RHK SM4 (.sm4)"
 
-#: modules/file/rhk-sm4.c:651
+#: modules/file/rhk-sm4.c:653
 #, c-format
 msgid "Object %s is truncated."
 msgstr "Объект %s усечён."
 
-#: modules/file/rhk-sm4.c:934
+#: modules/file/rhk-sm4.c:946
 #, c-format
 msgid "Object list in %s is truncated."
 msgstr "Список объектов в %s усечён."
 
-#: modules/file/rhk-sm4.c:951
+#: modules/file/rhk-sm4.c:963
 #, c-format
 msgid "Object of type %s is truncated."
 msgstr "Объект типа %s усечён."
 
-#: modules/file/rhk-sm4.c:976
+#: modules/file/rhk-sm4.c:988
 #, c-format
 msgid "Cannot find object %s in %s."
 msgstr "Невозможно найти объект %s в %s."
@@ -7064,24 +7096,6 @@ msgstr "/Син_тез/_Баллистический..."
 msgid "Generate surface by ballistic deposition"
 msgstr "Создать поверхность используя баллистическое осаждение"
 
-#: modules/process/bdep_synth.c:247 modules/process/bdep_synth.c:603
-#: modules/process/calcoefs_simple.c:633 modules/process/col_synth.c:280
-#: modules/process/col_synth.c:712 modules/process/crosscor.c:599
-#: modules/process/crosscor.c:624 modules/process/deposit_synth.c:276
-#: modules/process/deposit_synth.c:867 modules/process/diff_synth.c:312
-#: modules/process/diff_synth.c:712 modules/process/domain_synth.c:263
-#: modules/process/domain_synth.c:752 modules/process/grain_wshed.c:437
-#: modules/process/lat_synth.c:465 modules/process/mark_disconn.c:156
-#: modules/process/mark_disconn.c:381 modules/process/maskcor.c:331
-#: modules/process/mcrop.c:321 modules/process/merge.c:1078
-#: modules/process/nanoindent_adjust.c:323 modules/process/neural.c:1289
-#: modules/process/pid.c:338 modules/process/superresolution.c:416
-#: modules/process/superresolution.c:505 modules/process/tip_blind.c:784
-#: modules/process/tipops.c:319 modules/process/xydenoise.c:217
-#: modules/volume/volume_kmeans.c:364 modules/volume/volume_kmedians.c:365
-msgid "Initializing..."
-msgstr "Инициализация..."
-
 #: modules/process/bdep_synth.c:283 modules/process/col_synth.c:318
 #: modules/process/deposit_synth.c:314 modules/process/deposit_synth.c:326
 #: modules/process/deposit_synth.c:539 modules/process/deposit_synth.c:552
@@ -7491,10 +7505,6 @@ msgstr "Ошибка: вне диапазона."
 #: modules/process/calcoefs_view.c:793
 msgid "Building mesh..."
 msgstr "Строится сетка..."
-
-#: modules/process/calcoefs_view.c:799 modules/process/lat_synth.c:1146
-msgid "Triangulating..."
-msgstr "Производится триангуляция..."
 
 #: modules/process/calcoefs_view.c:1126 modules/tools/profile.c:1822
 msgid "X correction"
@@ -9542,7 +9552,7 @@ msgid "Upper threshold:"
 msgstr "Верхний порог:"
 
 #. TRANSLATORS: %c is replaced with quantity label A, B or C.
-#: modules/process/grain_filter.c:649
+#: modules/process/grain_filter.c:650
 #, c-format
 msgid "Condition %c: %s"
 msgstr "Условие %c: %s"
@@ -11965,10 +11975,6 @@ msgstr "Поиск макс. корреляции чтобы определит�
 #: modules/process/superresolution.c:511
 msgid "Cross-correlation..."
 msgstr "Взаимная корреляция..."
-
-#: modules/process/superresolution.c:554
-msgid "Interpolating..."
-msgstr "Интерполируется..."
 
 #: modules/process/synth.h:343
 msgid "Roundness"
