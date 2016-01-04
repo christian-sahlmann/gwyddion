@@ -30,12 +30,14 @@ Var RadioButton
 ; XXX Temporary page for user influence study reminder
 ; XXX To be removed after 2.44 release
 Var Link
+Var Image
+Var ImageHandle
 
 ;----------------------------------------------------------------------------
 
 RequestExecutionLevel admin
-SetCompressor /SOLID lzma
-;SetCompressor /SOLID zlib
+;SetCompressor /SOLID lzma
+SetCompressor /SOLID zlib
 CRCCheck On
 Name "${PRODUCT_NAME}"
 OutFile "${PRODUCT_NAME}-${PRODUCT_VERSION}.exe"
@@ -49,6 +51,7 @@ XPStyle On
 !define MUI_UNICON "${ICON_FILE}"
 
 !include "LogicLib.nsh"
+!include "FileFunc.nsh"
 !include "MUI2.nsh"
 
 !define MUI_ABORTWARNING
@@ -77,6 +80,11 @@ Function .onInit
     StrCpy $Locale "en_US.UTF-8"
     NoError:
     Call DetectPrevInstallation
+
+    ; XXX Temporary page for user influence study reminder
+    ; XXX To be removed after 2.44 release
+    InitPluginsDir
+    File /oname=$PLUGINSDIR\survey-icons.bmp "survey-icons.bmp"
 FunctionEnd
 
 ;----------------------------------------------------------------------------
@@ -169,6 +177,13 @@ FunctionEnd
 ; XXX Temporary page for user influence study reminder
 ; XXX To be removed after 2.44 release
 Function UserInfluenceStudyReminder
+    ; This should only show the extra page in January and February
+    ${GetTime} "" "L" $0 $1 $2 $3 $3 $5 $6
+    ${If} $2 <> 2016
+    ${OrIf} $1 > 2
+    Abort
+    ${EndIf}
+
     nsDialogs::Create 1018
     Pop $Dialog
 
@@ -197,7 +212,13 @@ Function UserInfluenceStudyReminder
     ${NSD_CreateLabel} 0u 84u 100% 12u "Petr && Yeti"
     Pop $Label
 
+    ${NSD_CreateBitmap} 0u 100u 100% 100% ""
+    Pop $Image
+    ${NSD_SetImage} $Image $PLUGINSDIR\survey-icons.bmp $ImageHandle
+
     nsDialogs::Show
+
+    ${NSD_FreeImage} $ImageHandle
 FunctionEnd
 
 Function UserInfluenceStudyLinkClick

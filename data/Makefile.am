@@ -51,6 +51,10 @@ EXTRA_DIST = \
 	thumbnailer-schemas.xsl \
 	$(gwyddionmime_DATA)
 
+# XXX Temporary user influence study reminder
+# XXX To be removed after 2.44 release
+EXTRA_DIST += survey-icons.bmp
+
 # gwyddion.vim generation
 gwyddion_vim_sources = \
 	$(docsrc)/libgwyapp/libgwyapp-decl.txt \
@@ -147,6 +151,11 @@ if GCONF_SCHEMAS_INSTALL
 	    $(GCONFTOOL) --makefile-install-rule $(schema_DATA); \
 	fi
 endif
+if OS_MSWIN
+	# XXX Temporary user influence study reminder
+	# XXX To be removed after 2.44 release
+	$(install_sh_DATA) $(srcdir)/survey-icons.bmp $(pkgdatadir)
+endif
 
 uninstall-hook:
 if DESKTOP_FILE_UPDATE
@@ -160,4 +169,9 @@ if GCONF_SCHEMAS_INSTALL
 	  GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE_REAL) \
 	    $(GCONFTOOL) --makefile-uninstall-rule $(schema_DATA); \
 	fi
+endif
+if OS_MSWIN
+	# XXX Temporary user influence study reminder
+	# XXX To be removed after 2.44 release
+	rm -f $(pkgdatadir)/survey-icons.bmp
 endif
