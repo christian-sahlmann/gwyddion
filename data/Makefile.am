@@ -152,8 +152,6 @@ if GCONF_SCHEMAS_INSTALL
 	fi
 endif
 if OS_MSWIN
-	# XXX Temporary user influence study reminder
-	# XXX To be removed after 2.44 release
 	$(install_sh_DATA) $(srcdir)/survey-icons.bmp $(pkgdatadir)
 endif
 
@@ -171,7 +169,5 @@ if GCONF_SCHEMAS_INSTALL
 	fi
 endif
 if OS_MSWIN
-	# XXX Temporary user influence study reminder
-	# XXX To be removed after 2.44 release
 	rm -f $(pkgdatadir)/survey-icons.bmp
 endif

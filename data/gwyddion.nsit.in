@@ -36,8 +36,8 @@ Var ImageHandle
 ;----------------------------------------------------------------------------
 
 RequestExecutionLevel admin
-;SetCompressor /SOLID lzma
-SetCompressor /SOLID zlib
+SetCompressor /SOLID lzma
+;SetCompressor /SOLID zlib
 CRCCheck On
 Name "${PRODUCT_NAME}"
 OutFile "${PRODUCT_NAME}-${PRODUCT_VERSION}.exe"
@@ -84,7 +84,7 @@ Function .onInit
     ; XXX Temporary page for user influence study reminder
     ; XXX To be removed after 2.44 release
     InitPluginsDir
-    File /oname=$PLUGINSDIR\survey-icons.bmp "survey-icons.bmp"
+    File /oname=$PLUGINSDIR\survey-icons.bmp "share\gwyddion\survey-icons.bmp"
 FunctionEnd
 
 ;----------------------------------------------------------------------------
