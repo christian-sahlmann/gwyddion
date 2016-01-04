@@ -1065,7 +1065,6 @@ rawxyz_do(RawXYZFile *rfile,
     GwySIUnit *unitxy, *unitz;
     GwyDataField *dfield;
     gint zpow10, xres, yres;
-    gboolean ok = TRUE;
     gdouble mag;
 
     xres = ((rfile->regular == RAW_XYZ_IRREGULAR)
@@ -1108,6 +1107,7 @@ rawxyz_do(RawXYZFile *rfile,
         GwySetFractionFunc set_fraction = (dialog
                                            ? gwy_app_wait_set_fraction
                                            : NULL);
+        gboolean ok = TRUE;
 
         if (dialog)
             gwy_app_wait_start(dialog, _("Initializing..."));
@@ -1138,15 +1138,16 @@ rawxyz_do(RawXYZFile *rfile,
         }
         if (dialog)
             gwy_app_wait_finish();
-    }
 
-    if (!ok) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_SPECIFIC,
-                    _("XYZ data regularization failed due to numerical "
-                      "instability."));
-        g_object_unref(dfield);
-        return NULL;
+        if (!ok) {
+            gwy_object_unref(rfile->triangulation);
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_SPECIFIC,
+                        _("XYZ data regularization failed due to numerical "
+                          "instability or was interrupted."));
+            g_object_unref(dfield);
+            return NULL;
+        }
     }
 
     /* Fix the scales according to real units. */
