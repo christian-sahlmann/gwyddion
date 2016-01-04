@@ -3,6 +3,7 @@
 ; Delete and RMDir commands (that's why the extension is nsit, not nsi).  It
 ; also expands ARCH to either win32 or win64.
 ; Written by Yeti.  Public domain.
+; Revision $Id$
 
 !define GTK_BIN_VERSION "2.10.0"
 !define PANGO_BIN_VERSION "1.8.0"
