@@ -8,6 +8,8 @@ Libraries:
 - libgwydgets: Gwy3DView no longer downsamples data during changes, all
   operations are done with full-resolution surfaces.  Its "reduced-size"
   property was deprecated and it has no effect.
+- libgwydgets: Gwy3DView light source distance from the surface no longer
+  scales with Value scale, improving views with small Value scale a lot.
 - libgwyddion: gwy_debug() adds timestamp to the messages (where available).
 - libprocess: Rare incorrect memory reallocation in Delaunay triangulation was
   fixed.
