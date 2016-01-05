@@ -86,8 +86,10 @@ filter(GwyGraph *graph)
         filter_do(ydata, newydata, ndata);
         gwy_graph_curve_model_set_data(cmodelnew, xdata,
                                        newydata, ndata);
+        g_free(newydata);
         gwy_graph_model_remove_curve(gwy_graph_get_model(graph), i);
         gwy_graph_model_add_curve(model, cmodelnew);
+        g_object_unref(cmodelnew);
     }
 }
 
