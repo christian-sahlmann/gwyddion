@@ -70,6 +70,8 @@ static GObject* gwy_graph_curve_model_deserialize      (const guchar *buffer,
                                                         gsize size,
                                                         gsize *position);
 static GObject* gwy_graph_curve_model_duplicate_real   (GObject *object);
+static void     gwy_graph_curve_model_clone_real       (GObject *source,
+                                                        GObject *copy);
 static void     gwy_graph_curve_model_set_property     (GObject *object,
                                                         guint prop_id,
                                                         const GValue *value,
@@ -110,6 +112,7 @@ gwy_graph_curve_model_serializable_init(GwySerializableIface *iface)
     iface->deserialize = gwy_graph_curve_model_deserialize;
     iface->get_size = gwy_graph_curve_model_get_size;
     iface->duplicate = gwy_graph_curve_model_duplicate_real;
+    iface->clone = gwy_graph_curve_model_clone_real;
 }
 
 static void
@@ -573,6 +576,67 @@ gwy_graph_curve_model_duplicate_real(GObject *object)
     }
 
     return (GObject*)duplicate;
+}
+
+static void
+gwy_graph_curve_model_clone_real(GObject *source,
+                                 GObject *copy)
+{
+    GwyGraphCurveModel *gcmodel, *clone;
+
+    g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(source));
+    g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(copy));
+
+    gcmodel = GWY_GRAPH_CURVE_MODEL(source);
+    clone = GWY_GRAPH_CURVE_MODEL(copy);
+
+    g_object_freeze_notify(copy);
+
+    if (!gwy_strequal(clone->description->str, gcmodel->description->str)) {
+        g_string_assign(clone->description, gcmodel->description->str);
+        g_object_notify(copy, "description");
+    }
+
+    if (clone->mode != gcmodel->mode) {
+        clone->mode = gcmodel->mode;
+        g_object_notify(copy, "mode");
+    }
+
+    if (clone->point_type != gcmodel->point_type) {
+        clone->point_type = gcmodel->point_type;
+        g_object_notify(copy, "point-type");
+    }
+
+    if (clone->line_style != gcmodel->line_style) {
+        clone->line_style = gcmodel->line_style;
+        g_object_notify(copy, "line-style");
+    }
+
+    if (clone->point_size != gcmodel->point_size) {
+        clone->point_size = gcmodel->point_size;
+        g_object_notify(copy, "point-size");
+    }
+
+    if (clone->line_width != gcmodel->line_width) {
+        clone->line_width = gcmodel->line_width;
+        g_object_notify(copy, "line-width");
+    }
+
+    if (memcmp(&clone->color, &gcmodel->color, sizeof(GwyRGBA)) != 0) {
+        clone->color = gcmodel->color;
+        g_object_notify(copy, "color");
+    }
+
+    if (clone->n != gcmodel->n) {
+        clone->xdata = g_renew(gdouble, clone->xdata, gcmodel->n);
+        clone->ydata = g_renew(gdouble, clone->ydata, gcmodel->n);
+        clone->n = gcmodel->n;
+    }
+    memcpy(clone->xdata, gcmodel->xdata, gcmodel->n);
+    memcpy(clone->ydata, gcmodel->ydata, gcmodel->n);
+
+    g_object_thaw_notify(copy);
+    gwy_graph_curve_model_data_changed(clone);
 }
 
 /**
