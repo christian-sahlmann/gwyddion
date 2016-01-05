@@ -877,8 +877,9 @@ xmin_changed(RawXYZControls *controls,
 
     args->xmin = val;
     if (args->xydimeq && !controls->in_update) {
+        args->xmax = args->xmin + (args->ymax - args->ymin);
         set_physical_dimension(controls, GTK_ENTRY(controls->xmax),
-                               args->xmin + (args->ymax - args->ymin), TRUE);
+                               args->xmax, TRUE);
     }
     recalculate_xres(controls);
 }
@@ -892,8 +893,9 @@ xmax_changed(RawXYZControls *controls,
 
     args->xmax = val;
     if (args->xydimeq && !controls->in_update) {
+        args->ymax = args->ymin + (args->xmax - args->xmin);
         set_physical_dimension(controls, GTK_ENTRY(controls->ymax),
-                               args->ymin + (args->xmax - args->xmin), TRUE);
+                               args->ymax, TRUE);
     }
     recalculate_xres(controls);
 }
@@ -907,8 +909,9 @@ ymin_changed(RawXYZControls *controls,
 
     args->ymin = val;
     if (args->xydimeq && !controls->in_update) {
+        args->ymax = args->ymin + (args->xmax - args->xmin);
         set_physical_dimension(controls, GTK_ENTRY(controls->ymax),
-                               args->ymin + (args->xmax - args->xmin), TRUE);
+                               args->ymax, TRUE);
     }
     recalculate_yres(controls);
 }
@@ -922,8 +925,9 @@ ymax_changed(RawXYZControls *controls,
 
     args->ymax = val;
     if (args->xydimeq && !controls->in_update) {
+        args->xmax = args->xmin + (args->ymax - args->ymin);
         set_physical_dimension(controls, GTK_ENTRY(controls->xmax),
-                               args->xmin + (args->ymax - args->ymin), TRUE);
+                               args->xmax, TRUE);
     }
     recalculate_xres(controls);
 }
@@ -1073,6 +1077,12 @@ rawxyz_do(RawXYZFile *rfile,
             ? args->yres : rfile->regular_yres);
 
     gwy_debug("%g %g :: %g %g", args->xmin, args->xmax, args->ymin, args->ymax);
+    if (!(args->xmax > args->xmin) || !(args->ymax > args->ymin)) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("Physical dimensions are invalid."));
+        return NULL;
+    }
     unitxy = gwy_si_unit_new_parse(args->xy_units, &xypow10);
     mag = pow10(xypow10);
     unitz = gwy_si_unit_new_parse(args->z_units, &zpow10);
