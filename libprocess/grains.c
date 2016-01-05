@@ -4825,14 +4825,15 @@ static void
 borderless_edt(GwyDataField *dfield)
 {
     guint xres = dfield->xres, yres = dfield->yres;
+    guint extdim = MAX(xres/2, yres/2);
     GwyDataField *extended;
 
     extended = gwy_data_field_extend(dfield,
-                                     xres/2, xres/2, yres/2, yres/2,
+                                     extdim, extdim, extdim, extdim,
                                      GWY_EXTERIOR_BORDER_EXTEND, 0.0, FALSE);
     gwy_data_field_grain_distance_transform(extended);
     gwy_data_field_area_copy(extended, dfield,
-                             xres/2, yres/2, xres, yres, 0, 0);
+                             extdim, extdim, xres, yres, 0, 0);
     g_object_unref(extended);
 }
 
