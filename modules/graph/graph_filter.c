@@ -103,7 +103,7 @@ filter_do(const gdouble *yold, gdouble *y, gdouble n)
         nelem = 0;
         y[i] = 0;
         min = i - num < 0 ? 0 : i - num;
-        max = i + num > n ? n : i + num;
+        max = i + num + 1 > n ? n : i + num + 1;
         for (j = min; j < max; j++) {
             nelem++;
             y[i] += yold[j];
