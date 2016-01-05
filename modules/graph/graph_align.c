@@ -20,11 +20,17 @@
  */
 
 #include "config.h"
+#include <stdlib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwymodule/gwymodule-graph.h>
 #include <app/gwyapp.h>
+
+typedef struct {
+    gdouble x;
+    gdouble y;
+} PointXY;
 
 static gboolean module_register (void);
 static void     graph_align     (GwyGraph *graph);
@@ -34,8 +40,7 @@ static gdouble  find_best_offset(const gdouble *a,
                                  gint na,
                                  const gdouble *b,
                                  gint nb);
-static gdouble* regularise      (const gdouble *xdata,
-                                 const gdouble *ydata,
+static gdouble* regularise      (const PointXY *xydata,
                                  gint ndata,
                                  gdouble dx,
                                  gint *pn);
@@ -50,7 +55,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Aligns graph curves."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2015",
 };
@@ -123,53 +128,85 @@ graph_align(GwyGraph *graph)
     }
 }
 
+static int
+compare_double(gconstpointer a, gconstpointer b)
+{
+    const double da = *(const double*)a;
+    const double db = *(const double*)b;
+
+    if (da < db)
+        return -1;
+    if (da > db)
+        return 1;
+    return 0;
+}
+
+static PointXY*
+extract_xy_data(GwyGraphCurveModel *gcmodel)
+{
+    guint i, ndata = gwy_graph_curve_model_get_ndata(gcmodel);
+    const gdouble *xdata = gwy_graph_curve_model_get_xdata(gcmodel);
+    const gdouble *ydata = gwy_graph_curve_model_get_ydata(gcmodel);
+    PointXY *pts = g_new(PointXY, ndata);
+
+    for (i = 0; i < ndata; i++) {
+        pts[i].x = xdata[i];
+        pts[i].y = ydata[i];
+    }
+    qsort(pts, ndata, sizeof(PointXY), compare_double);
+
+    return pts;
+}
+
 static void
 align_two_curves(GwyGraphCurveModel *base,
                  GwyGraphCurveModel *cmodel)
 {
-    const gdouble *cxdata, *cydata, *bxdata, *bydata;
+    PointXY *cxydata, *bxydata;
     gdouble *cline, *bline, *newcxdata, *newcydata;
     gint cndata, bndata, cn, bn, i;
     gdouble clen, dx, blen, off;
 
     bndata = gwy_graph_curve_model_get_ndata(base);
-    bxdata = gwy_graph_curve_model_get_xdata(base);
-    bydata = gwy_graph_curve_model_get_ydata(base);
+    bxydata = extract_xy_data(base);
 
     cndata = gwy_graph_curve_model_get_ndata(cmodel);
-    cxdata = gwy_graph_curve_model_get_xdata(cmodel);
-    cydata = gwy_graph_curve_model_get_ydata(cmodel);
+    cxydata = extract_xy_data(cmodel);
 
     if (cndata < 6)
         return;
 
-    blen = bxdata[bndata-1] - bxdata[0];
-    clen = cxdata[cndata-1] - cxdata[0];
+    blen = bxydata[bndata-1].x - bxydata[0].x;
+    clen = cxydata[cndata-1].x - cxydata[0].x;
     /* Check if we are able to resample both curves to a common regular grid
      * without going insane. */
     dx = clen/120.0;
-    if ((bxdata[bndata-1] - bxdata[0])/dx > 1e5) {
+    if ((bxydata[bndata-1].x - bxydata[0].x)/dx > 1e5) {
         dx = 1e5/blen;
         if (clen/dx < cndata)
             return;
     }
 
-    bline = regularise(bxdata, bydata, bndata, dx, &bn);
-    cline = regularise(cxdata, cydata, cndata, dx, &cn);
+    bline = regularise(bxydata, bndata, dx, &bn);
+    cline = regularise(cxydata, cndata, dx, &cn);
     off = find_best_offset(cline, cn, bline, bn);
 
     g_free(bline);
     g_free(cline);
 
-    off = dx*off + (cxdata[0] - bxdata[0]);
+    off = dx*off + (cxydata[0].x - bxydata[0].x);
     newcxdata = g_new(gdouble, cndata);
-    newcydata = (gdouble*)g_memdup(cydata, cndata*sizeof(gdouble));
-    for (i = 0; i < cndata; i++)
-        newcxdata[i] = cxdata[i] - off;
+    newcydata = g_new(gdouble, cndata);
+    for (i = 0; i < cndata; i++) {
+        newcxdata[i] = cxydata[i].x - off;
+        newcydata[i] = cxydata[i].y;
+    }
 
     gwy_graph_curve_model_set_data(cmodel, newcxdata, newcydata, cndata);
     g_free(newcydata);
     g_free(newcxdata);
+    g_free(cxydata);
+    g_free(bxydata);
 }
 
 static gdouble
@@ -250,10 +287,9 @@ difference_score(const gdouble *a, gint na,
 }
 
 static gdouble*
-regularise(const gdouble *xdata, const gdouble *ydata, gint ndata,
-           gdouble dx, gint *pn)
+regularise(const PointXY *xydata, gint ndata, gdouble dx, gint *pn)
 {
-    gint n = floor((xdata[ndata-1] - xdata[0])/dx) + 1;
+    gint n = floor((xydata[ndata-1].x - xydata[0].x)/dx) + 1;
     gint i, j, k, ic;
     gdouble *data, *weight;
 
@@ -262,10 +298,10 @@ regularise(const gdouble *xdata, const gdouble *ydata, gint ndata,
     *pn = n;
 
     for (ic = 0; ic < ndata; ic++) {
-        gdouble x = xdata[ic];
-        i = (gint)floor((x - xdata[0])/dx);
+        gdouble x = xydata[ic].x;
+        i = (gint)floor((x - xydata[0].x)/dx);
         i = CLAMP(i, 0, n-1);
-        data[i] += ydata[ic];
+        data[i] += xydata[ic].y;
         weight[i] += 1.0;
     }
 
@@ -274,11 +310,11 @@ regularise(const gdouble *xdata, const gdouble *ydata, gint ndata,
             data[i] /= weight[i];
     }
     if (!weight[0]) {
-        data[0] = ydata[0];
+        data[0] = xydata[0].y;
         weight[0] = 1.0;
     }
     if (!weight[n-1]) {
-        data[n-1] = ydata[ndata-1];
+        data[n-1] = xydata[ndata-1].y;
         weight[n-1] = 1.0;
     }
 
@@ -295,8 +331,8 @@ regularise(const gdouble *xdata, const gdouble *ydata, gint ndata,
             ;
 
         i--;
-        yf = ydata[i];
-        yt = ydata[j];
+        yf = xydata[i].y;
+        yt = xydata[j].y;
         for (k = i; k < j; k++) {
             data[k] = (yf*(j - k) + yt*(k - i))/(j - i);
         }
