@@ -184,7 +184,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Fit graph with function"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.6",
+    "2.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1510,10 +1510,13 @@ static GString*
 create_fit_report(FitArgs *args)
 {
     GString *report;
+    GwyNLFitPreset *fitfunc;
     GwyGraphCurveModel *gcmodel;
     GwySIUnit *unitx, *unity, *unitp;
     gchar *s, *unitstr;
     gint i, j, n;
+
+    fitfunc = args->fitfunc;
 
     report = g_string_new(NULL);
     g_return_val_if_fail(args->fitter->covar, report);
@@ -1537,10 +1540,10 @@ create_fit_report(FitArgs *args)
                            args->to/args->abscissa_vf->magnitude,
                            args->abscissa_vf->units);
     g_string_append_printf(report, _("Fitted function:  %s\n"),
-                           gwy_resource_get_name(GWY_RESOURCE(args->fitfunc)));
+                           _(gwy_resource_get_name(GWY_RESOURCE(fitfunc))));
     g_string_append_c(report, '\n');
     g_string_append_printf(report, _("Results\n"));
-    n = gwy_nlfit_preset_get_nparams(args->fitfunc);
+    n = gwy_nlfit_preset_get_nparams(fitfunc);
     g_object_get(args->graph_model,
                  "si-unit-x", &unitx,
                  "si-unit-y", &unity,
@@ -1550,13 +1553,12 @@ create_fit_report(FitArgs *args)
         const gchar *name;
 
         arg = &g_array_index(args->param, FitParamArg, i);
-        name = gwy_nlfit_preset_get_param_name(args->fitfunc, i);
+        name = gwy_nlfit_preset_get_param_name(fitfunc, i);
         if (!pango_parse_markup(name, -1, 0, NULL, &s, NULL, NULL)) {
             g_warning("Parameter name is not valid Pango markup");
             s = g_strdup(name);
         }
-        unitp = gwy_nlfit_preset_get_param_units(args->fitfunc, i,
-                                                 unitx, unity);
+        unitp = gwy_nlfit_preset_get_param_units(fitfunc, i, unitx, unity);
         unitstr = gwy_si_unit_get_string(unitp, GWY_SI_UNIT_FORMAT_PLAIN);
         g_object_unref(unitp);
         g_string_append_printf(report, "%4s = %g ± %g %s\n",
