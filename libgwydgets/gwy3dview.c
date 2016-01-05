@@ -1670,6 +1670,9 @@ gwy_3d_view_expose(GtkWidget *widget,
         glMaterialf(GL_FRONT, GL_SHININESS,
                     (GLfloat)gwy_gl_material_get_shininess(material)*128.0f);
         glPushMatrix();
+        /* Scale-out the light source so that it does not come close to the
+         * surface for small z_scale. */
+        glScalef(1.0f, 1.0f, 1.0/gwy3dview->setup->z_scale);
         glRotatef(gwy3dview->setup->light_theta * RAD_2_DEG, 0.0f, 0.0f, 1.0f);
         glRotatef(gwy3dview->setup->light_phi * RAD_2_DEG, 0.0f, 1.0f, 0.0f);
         glLightfv(GL_LIGHT0, GL_POSITION, light_position);
@@ -1679,6 +1682,9 @@ gwy_3d_view_expose(GtkWidget *widget,
         glEnable(GL_COLOR_MATERIAL);
         glEnable(GL_LIGHTING);
         glPushMatrix();
+        /* Scale-out the light source so that it does not come close to the
+         * surface for small z_scale. */
+        glScalef(1.0f, 1.0f, 1.0/gwy3dview->setup->z_scale);
         glRotatef(gwy3dview->setup->light_theta * RAD_2_DEG, 0.0f, 0.0f, 1.0f);
         glRotatef(gwy3dview->setup->light_phi * RAD_2_DEG, 0.0f, 1.0f, 0.0f);
         glLightfv(GL_LIGHT0, GL_POSITION, light_position);
