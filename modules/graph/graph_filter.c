@@ -94,13 +94,19 @@ filter(GwyGraph *graph)
 static void
 filter_do(const gdouble *yold, gdouble *y, gdouble n)
 {
-    gint i, j;
+    gint i, j, min, max, nelem;
     gint num = 5;
 
-    for (i = num; i < n-num; i++) {
-        for (j = 1; j < num; j++)
-            y[i] += yold[i+j] + yold[i-j];
-        y[i] /= 2*num - 1;
+    for (i = 0; i < n; i++) {
+        nelem = 0;
+        y[i] = 0;
+        min = i - num < 0 ? 0 : i - num;
+        max = i + num > n ? n : i + num;
+        for (j = min; j < max; j++) {
+            nelem++;
+            y[i] += yold[j];
+        }
+        y[i] /= nelem;
     }
 }
 
