@@ -89,7 +89,6 @@ typedef struct {
     gboolean xydimeq;
     gboolean xymeasureeq;
     /* Interface only */
-    gdouble mag;
     gdouble xmin;
     gdouble xmax;
     gdouble ymin;
@@ -120,10 +119,10 @@ typedef struct {
     RawXYZFile *rfile;
     GtkWidget *dialog;
     GwyGradient *gradient;
-    GtkObject *xmin;
-    GtkObject *xmax;
-    GtkObject *ymin;
-    GtkObject *ymax;
+    GtkWidget *xmin;
+    GtkWidget *xmax;
+    GtkWidget *ymin;
+    GtkWidget *ymax;
     GtkWidget *xydimeq;
     GtkWidget *xymeasureeq;
     GtkObject *xres;
@@ -178,13 +177,13 @@ static void          xres_changed           (RawXYZControls *controls,
 static void          yres_changed           (RawXYZControls *controls,
                                              GtkAdjustment *adj);
 static void          xmin_changed           (RawXYZControls *controls,
-                                             GtkAdjustment *adj);
+                                             GtkEntry *entry);
 static void          xmax_changed           (RawXYZControls *controls,
-                                             GtkAdjustment *adj);
+                                             GtkEntry *entry);
 static void          ymin_changed           (RawXYZControls *controls,
-                                             GtkAdjustment *adj);
+                                             GtkEntry *entry);
 static void          ymax_changed           (RawXYZControls *controls,
-                                             GtkAdjustment *adj);
+                                             GtkEntry *entry);
 static void          xydimeq_changed        (RawXYZControls *controls,
                                              GtkToggleButton *button);
 static void          xymeasureeq_changed    (RawXYZControls *controls,
@@ -232,7 +231,7 @@ static const RawXYZArgs rawxyz_defaults = {
     500, 500,
     TRUE, TRUE,
     /* Interface only */
-    1.0, 0.0, 0.0, 0.0, 0.0
+    0.0, 0.0, 0.0, 0.0
 };
 
 static GwyModuleInfo module_info = {
@@ -240,7 +239,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports raw XYZ data files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.7",
+    "2.0",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -490,13 +489,13 @@ rawxyz_dialog(RawXYZArgs *args,
                                  G_CALLBACK(xres_changed), &controls);
         g_signal_connect_swapped(controls.yres, "value-changed",
                                  G_CALLBACK(yres_changed), &controls);
-        g_signal_connect_swapped(controls.xmin, "value-changed",
+        g_signal_connect_swapped(controls.xmin, "activate",
                                  G_CALLBACK(xmin_changed), &controls);
-        g_signal_connect_swapped(controls.xmax, "value-changed",
+        g_signal_connect_swapped(controls.xmax, "activate",
                                  G_CALLBACK(xmax_changed), &controls);
-        g_signal_connect_swapped(controls.ymin, "value-changed",
+        g_signal_connect_swapped(controls.ymin, "activate",
                                  G_CALLBACK(ymin_changed), &controls);
-        g_signal_connect_swapped(controls.ymax, "value-changed",
+        g_signal_connect_swapped(controls.ymax, "activate",
                                  G_CALLBACK(ymax_changed), &controls);
         g_signal_connect_swapped(controls.xydimeq, "toggled",
                                  G_CALLBACK(xydimeq_changed), &controls);
@@ -506,9 +505,11 @@ rawxyz_dialog(RawXYZArgs *args,
                                  G_CALLBACK(interpolation_changed), &controls);
         g_signal_connect_swapped(controls.exterior, "changed",
                                  G_CALLBACK(exterior_changed), &controls);
-        reset_ranges(&controls);
     }
     controls.in_update = FALSE;
+
+    if (rfile->regular == RAW_XYZ_IRREGULAR)
+        reset_ranges(&controls);
 
     gtk_widget_show_all(dialog);
 
@@ -597,14 +598,7 @@ construct_physical_dims(RawXYZControls *controls,
                         gint row)
 {
     RawXYZArgs *args = controls->args;
-    GtkWidget *spin, *label, *button;
-    GwySIUnit *unit;
-    gint xypow10;
-    gdouble q;
-
-    unit = gwy_si_unit_new_parse(controls->args->xy_units, &xypow10);
-    g_object_unref(unit);
-    q = pow10(xypow10);
+    GtkWidget *label, *button;
 
     gtk_table_attach(table, gwy_label_new_header(_("Physical Dimensions")),
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -614,17 +608,17 @@ construct_physical_dims(RawXYZControls *controls,
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    controls->xmin = gtk_adjustment_new(args->xmin/q,
-                                        -1000.0, 1000.0, 1, 10, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->xmin), 0, 3);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
-    gtk_table_attach(table, spin, 1, 2, row, row+1,
+    controls->xmin = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(controls->xmin), 7);
+    gwy_widget_set_activate_on_unfocus(controls->xmin, TRUE);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->xmin);
+    gtk_table_attach(table, controls->xmin, 1, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_table_attach(table, gtk_label_new("–"), 2, 3, row, row+1, 0, 0, 0, 0);
-    controls->xmax = gtk_adjustment_new(args->xmax/q,
-                                        -1000.0, 1000.0, 1, 10, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->xmax), 0, 3);
-    gtk_table_attach(table, spin, 3, 4, row, row+1,
+    controls->xmax = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(controls->xmax), 7);
+    gwy_widget_set_activate_on_unfocus(controls->xmax, TRUE);
+    gtk_table_attach(table, controls->xmax, 3, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
@@ -632,17 +626,17 @@ construct_physical_dims(RawXYZControls *controls,
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    controls->ymin = gtk_adjustment_new(args->ymin/q,
-                                        -1000.0, 1000.0, 1, 10, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->ymin), 0, 3);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
-    gtk_table_attach(table, spin, 1, 2, row, row+1,
+    controls->ymin = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(controls->ymin), 7);
+    gwy_widget_set_activate_on_unfocus(controls->ymin, TRUE);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->ymin);
+    gtk_table_attach(table, controls->ymin, 1, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_table_attach(table, gtk_label_new("–"), 2, 3, row, row+1, 0, 0, 0, 0);
-    controls->ymax = gtk_adjustment_new(args->ymax/q,
-                                        -1000.0, 1000.0, 1, 10, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->ymax), 0, 3);
-    gtk_table_attach(table, spin, 3, 4, row, row+1,
+    controls->ymax = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(controls->ymax), 7);
+    gwy_widget_set_activate_on_unfocus(controls->ymax, TRUE);
+    gtk_table_attach(table, controls->ymax, 3, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
@@ -776,17 +770,11 @@ xyunits_changed(RawXYZControls *controls,
                 GtkEntry *entry)
 {
     RawXYZArgs *args = controls->args;
-    GwySIUnit *unitxy;
-    gint xypow10;
 
     g_free(args->xy_units);
     args->xy_units = gtk_editable_get_chars(GTK_EDITABLE(entry), 0, G_MAXINT);
     gwy_debug("xy_units %s", args->xy_units);
     update_unit_label(GTK_LABEL(controls->xy_units_parsed), args->xy_units);
-
-    unitxy = gwy_si_unit_new_parse(args->xy_units, &xypow10);
-    args->mag = pow10(xypow10);
-    g_object_unref(unitxy);
 }
 
 static void
@@ -808,6 +796,26 @@ set_adjustment_in_update(RawXYZControls *controls,
     controls->in_update = TRUE;
     gtk_adjustment_set_value(adj, value);
     controls->in_update = FALSE;
+}
+
+static void
+set_physical_dimension(RawXYZControls *controls,
+                       GtkEntry *entry,
+                       gdouble value,
+                       gboolean in_update)
+{
+    gchar buf[24];
+
+    if (in_update) {
+        g_assert(!controls->in_update);
+        controls->in_update = TRUE;
+    }
+
+    g_snprintf(buf, sizeof(buf), "%g", value);
+    gtk_entry_set_text(entry, buf);
+
+    if (in_update)
+        controls->in_update = FALSE;
 }
 
 static void
@@ -862,74 +870,62 @@ yres_changed(RawXYZControls *controls,
 
 static void
 xmin_changed(RawXYZControls *controls,
-             GtkAdjustment *adj)
+             GtkEntry *entry)
 {
     RawXYZArgs *args = controls->args;
-    gdouble val = gtk_adjustment_get_value(adj);
+    gdouble val = g_strtod(gtk_entry_get_text(entry), NULL);
 
-    if (val >= args->xmax && !args->xydimeq)
-        set_adjustment_in_update(controls, adj, args->xmin);
-    else {
-        args->xmin = val;
-        if (args->xydimeq && !controls->in_update)
-            set_adjustment_in_update(controls, GTK_ADJUSTMENT(controls->xmax),
-                                     args->xmin + (args->ymax - args->ymin));
-        recalculate_xres(controls);
+    args->xmin = val;
+    if (args->xydimeq && !controls->in_update) {
+        set_physical_dimension(controls, GTK_ENTRY(controls->xmax),
+                               args->xmin + (args->ymax - args->ymin), TRUE);
     }
+    recalculate_xres(controls);
 }
 
 static void
 xmax_changed(RawXYZControls *controls,
-             GtkAdjustment *adj)
+             GtkEntry *entry)
 {
     RawXYZArgs *args = controls->args;
-    gdouble val = gtk_adjustment_get_value(adj);
+    gdouble val = g_strtod(gtk_entry_get_text(entry), NULL);
 
-    if (val <= args->xmin)
-        set_adjustment_in_update(controls, adj, args->xmax);
-    else {
-        args->xmax = val;
-        if (args->xydimeq && !controls->in_update)
-            set_adjustment_in_update(controls, GTK_ADJUSTMENT(controls->ymax),
-                                     args->ymin + (args->xmax - args->xmin));
-        recalculate_xres(controls);
+    args->xmax = val;
+    if (args->xydimeq && !controls->in_update) {
+        set_physical_dimension(controls, GTK_ENTRY(controls->ymax),
+                               args->ymin + (args->xmax - args->xmin), TRUE);
     }
+    recalculate_xres(controls);
 }
 
 static void
 ymin_changed(RawXYZControls *controls,
-             GtkAdjustment *adj)
+             GtkEntry *entry)
 {
     RawXYZArgs *args = controls->args;
-    gdouble val = gtk_adjustment_get_value(adj);
+    gdouble val = g_strtod(gtk_entry_get_text(entry), NULL);
 
-    if (val >= args->ymax && !args->xydimeq)
-        set_adjustment_in_update(controls, adj, args->ymin);
-    else {
-        args->ymin = val;
-        if (args->xydimeq && !controls->in_update)
-            set_adjustment_in_update(controls, GTK_ADJUSTMENT(controls->ymax),
-                                     args->ymin + (args->xmax - args->xmin));
-        recalculate_yres(controls);
+    args->ymin = val;
+    if (args->xydimeq && !controls->in_update) {
+        set_physical_dimension(controls, GTK_ENTRY(controls->ymax),
+                               args->ymin + (args->xmax - args->xmin), TRUE);
     }
+    recalculate_yres(controls);
 }
 
 static void
 ymax_changed(RawXYZControls *controls,
-             GtkAdjustment *adj)
+             GtkEntry *entry)
 {
     RawXYZArgs *args = controls->args;
-    gdouble val = gtk_adjustment_get_value(adj);
+    gdouble val = g_strtod(gtk_entry_get_text(entry), NULL);
 
-    if (val <= args->ymin)
-        set_adjustment_in_update(controls, adj, args->ymax);
-    else {
-        args->ymax = val;
-        if (args->xydimeq && !controls->in_update)
-            set_adjustment_in_update(controls, GTK_ADJUSTMENT(controls->xmax),
-                                     args->xmin + (args->ymax - args->ymin));
-        recalculate_xres(controls);
+    args->ymax = val;
+    if (args->xydimeq && !controls->in_update) {
+        set_physical_dimension(controls, GTK_ENTRY(controls->xmax),
+                               args->xmin + (args->ymax - args->ymin), TRUE);
     }
+    recalculate_xres(controls);
 }
 
 static void
@@ -941,7 +937,7 @@ xydimeq_changed(RawXYZControls *controls,
     args->xydimeq = gtk_toggle_button_get_active(button);
     if (args->xydimeq) {
         /* Force ymax update. */
-        gtk_adjustment_value_changed(GTK_ADJUSTMENT(controls->xmax));
+        gtk_widget_activate(controls->xmax);
     }
 }
 
@@ -953,7 +949,7 @@ xymeasureeq_changed(RawXYZControls *controls,
 
     args->xymeasureeq = gtk_toggle_button_get_active(button);
     if (args->xymeasureeq) {
-        /* Force yres. update */
+        /* Force yres update */
         gtk_adjustment_value_changed(GTK_ADJUSTMENT(controls->xres));
     }
 }
@@ -982,10 +978,14 @@ reset_ranges(RawXYZControls *controls)
     RawXYZArgs myargs = *controls->args;
 
     initialize_ranges(controls->rfile, &myargs);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ymax), myargs.ymax);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xmax), myargs.xmax);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ymin), myargs.ymin);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xmin), myargs.xmin);
+    set_physical_dimension(controls, GTK_ENTRY(controls->ymin), myargs.ymin,
+                           TRUE);
+    set_physical_dimension(controls, GTK_ENTRY(controls->ymax), myargs.ymax,
+                           TRUE);
+    set_physical_dimension(controls, GTK_ENTRY(controls->xmin), myargs.xmin,
+                           TRUE);
+    set_physical_dimension(controls, GTK_ENTRY(controls->xmax), myargs.xmax,
+                           TRUE);
 }
 
 static void
@@ -1064,7 +1064,7 @@ rawxyz_do(RawXYZFile *rfile,
     GArray *points = rfile->points;
     GwySIUnit *unitxy, *unitz;
     GwyDataField *dfield;
-    gint zpow10, xres, yres;
+    gint xypow10, zpow10, xres, yres;
     gdouble mag;
 
     xres = ((rfile->regular == RAW_XYZ_IRREGULAR)
@@ -1073,17 +1073,17 @@ rawxyz_do(RawXYZFile *rfile,
             ? args->yres : rfile->regular_yres);
 
     gwy_debug("%g %g :: %g %g", args->xmin, args->xmax, args->ymin, args->ymax);
-    unitxy = gwy_si_unit_new(args->xy_units);
-    mag = args->mag;
+    unitxy = gwy_si_unit_new_parse(args->xy_units, &xypow10);
+    mag = pow10(xypow10);
     unitz = gwy_si_unit_new_parse(args->z_units, &zpow10);
     dfield = gwy_data_field_new(xres, yres,
-                                mag*(args->xmax - args->xmin),
-                                mag*(args->ymax - args->ymin),
+                                args->xmax - args->xmin,
+                                args->ymax - args->ymin,
                                 FALSE);
     gwy_data_field_set_si_unit_xy(dfield, unitxy);
     gwy_data_field_set_si_unit_z(dfield, unitz);
-    gwy_data_field_set_xoffset(dfield, mag*args->xmin);
-    gwy_data_field_set_yoffset(dfield, mag*args->ymin);
+    gwy_data_field_set_xoffset(dfield, args->xmin);
+    gwy_data_field_set_yoffset(dfield, args->ymin);
     g_object_unref(unitxy);
     g_object_unref(unitz);
 
@@ -1152,6 +1152,10 @@ rawxyz_do(RawXYZFile *rfile,
 
     /* Fix the scales according to real units. */
     gwy_data_field_multiply(dfield, pow10(zpow10));
+    gwy_data_field_set_xreal(dfield, mag*gwy_data_field_get_xreal(dfield));
+    gwy_data_field_set_yreal(dfield, mag*gwy_data_field_get_yreal(dfield));
+    gwy_data_field_set_xoffset(dfield, mag*gwy_data_field_get_xoffset(dfield));
+    gwy_data_field_set_yoffset(dfield, mag*gwy_data_field_get_yoffset(dfield));
 
     return dfield;
 }
@@ -1358,7 +1362,6 @@ interpolate_rough(guint npoints,
                 w[kk] = 0.0;
             }
             else {
-                d[kk] = 1e38;
                 w[kk] = 1.0;
                 nmissing++;
             }
@@ -1376,7 +1379,6 @@ interpolate_rough(guint npoints,
         for (kk = 0; kk < extxres*extyres; kk++) {
             if (w[kk]) {
                 g_assert(k < nmissing);
-                g_assert(d[kk] == 1e38);
                 mpts[k].dist = w[kk];
                 mpts[k].i = kk/extxres;
                 mpts[k].j = kk % extxres;
@@ -1646,19 +1648,10 @@ static void
 initialize_ranges(const RawXYZFile *rfile,
                   RawXYZArgs *args)
 {
-    GwySIUnit *unitxy;
-    gint xypow10;
-
-    gwy_debug("xy_units %s", args->xy_units);
-    unitxy = gwy_si_unit_new_parse(args->xy_units, &xypow10);
-    args->mag = pow10(xypow10);
-    g_object_unref(unitxy);
-
-    gwy_debug("mag %g", args->mag);
-    args->xmin = rfile->xmin/args->mag;
-    args->xmax = rfile->xmax/args->mag;
-    args->ymin = rfile->ymin/args->mag;
-    args->ymax = rfile->ymax/args->mag;
+    args->xmin = rfile->xmin;
+    args->xmax = rfile->xmax;
+    args->ymin = rfile->ymin;
+    args->ymax = rfile->ymax;
     gwy_debug("%g %g :: %g %g", args->xmin, args->xmax, args->ymin, args->ymax);
     if (rfile->regular == RAW_XYZ_IRREGULAR) {
         gdouble dx = (args->xmax - args->xmin);
