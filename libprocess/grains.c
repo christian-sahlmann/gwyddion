@@ -4825,7 +4825,10 @@ static void
 borderless_edt(GwyDataField *dfield)
 {
     guint xres = dfield->xres, yres = dfield->yres;
-    guint extdim = MAX(xres/2, yres/2);
+    /* FIXME: This is extremely pessimistic.  The extension should be the
+     * minimum of this and the length of longest masked segment along the edge,
+     * or something like that. */
+    guint extdim = (guint)floor(sqrt(xres*xres + yres*yres));
     GwyDataField *extended;
 
     extended = gwy_data_field_extend(dfield,
