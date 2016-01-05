@@ -157,7 +157,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates surfaces by ballistic deposition."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2015",
 };
@@ -695,8 +695,11 @@ bdep_synth_do(BDepSynthArgs *args,
 
                 if (args->animated
                     && currtime - lastpreviewtime >= preview_time) {
-                    gwy_data_field_invalidate(dfield);
-                    gwy_data_field_data_changed(dfield);
+                    gwy_data_field_area_copy(dfield, basefield,
+                                             xext, yext,
+                                             xres - 2*xext, yres - 2*yext,
+                                             0, 0);
+                    gwy_data_field_data_changed(basefield);
                     lastpreviewtime = lasttime;
                 }
             }
@@ -738,10 +741,9 @@ bdep_synth_do(BDepSynthArgs *args,
         }
     }
 
-    gwy_data_field_invalidate(dfield);
-    gwy_data_field_data_changed(dfield);
     gwy_data_field_area_copy(dfield, basefield,
                              xext, yext, xres - 2*xext, yres - 2*yext, 0, 0);
+    gwy_data_field_data_changed(basefield);
     finished = TRUE;
 
 fail:
