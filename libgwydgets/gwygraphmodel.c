@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004-2007,2014 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -81,6 +81,8 @@ static GObject*    gwy_graph_model_deserialize       (const guchar *buffer,
                                                       gsize size,
                                                       gsize *position);
 static GObject*    gwy_graph_model_duplicate_real    (GObject *object);
+static void        gwy_graph_model_clone_real        (GObject *source,
+                                                      GObject *copy);
 static void        gwy_graph_model_set_property      (GObject *object,
                                                       guint prop_id,
                                                       const GValue *value,
@@ -112,6 +114,7 @@ gwy_graph_model_serializable_init(GwySerializableIface *iface)
     iface->deserialize = gwy_graph_model_deserialize;
     iface->get_size = gwy_graph_model_get_size;
     iface->duplicate = gwy_graph_model_duplicate_real;
+    iface->clone = gwy_graph_model_clone_real;
 }
 
 static void
@@ -667,6 +670,151 @@ gwy_graph_model_duplicate_real(GObject *object)
     }
 
     return (GObject*)duplicate;
+}
+
+static void
+gwy_graph_model_clone_real(GObject *source,
+                           GObject *copy)
+{
+    GwyGraphModel *gmodel, *clone;
+    guint i;
+
+    g_return_if_fail(GWY_IS_GRAPH_MODEL(source));
+    g_return_if_fail(GWY_IS_GRAPH_MODEL(copy));
+
+    gmodel = GWY_GRAPH_MODEL(source);
+    clone = GWY_GRAPH_MODEL(copy);
+
+    g_object_freeze_notify(copy);
+
+    if (!gwy_strequal(clone->title->str, gmodel->title->str)) {
+        g_string_assign(clone->title, gmodel->title->str);
+        g_object_notify(copy, "title");
+    }
+
+    if (clone->x_min != gmodel->x_min) {
+        clone->x_min = gmodel->x_min;
+        g_object_notify(copy, "x-min");
+    }
+
+    if (clone->x_max != gmodel->x_max) {
+        clone->x_max = gmodel->x_max;
+        g_object_notify(copy, "x-max");
+    }
+
+    if (clone->y_min != gmodel->y_min) {
+        clone->y_min = gmodel->y_min;
+        g_object_notify(copy, "y-min");
+    }
+
+    if (clone->y_max != gmodel->y_max) {
+        clone->y_max = gmodel->y_max;
+        g_object_notify(copy, "y-max");
+    }
+
+    if (clone->x_min_set != gmodel->x_min_set) {
+        clone->x_min_set = gmodel->x_min_set;
+        g_object_notify(copy, "x-min-set");
+    }
+
+    if (clone->x_max_set != gmodel->x_max_set) {
+        clone->x_max_set = gmodel->x_max_set;
+        g_object_notify(copy, "x-max-set");
+    }
+
+    if (clone->y_min_set != gmodel->y_min_set) {
+        clone->y_min_set = gmodel->y_min_set;
+        g_object_notify(copy, "y-min-set");
+    }
+
+    if (clone->y_max_set != gmodel->y_max_set) {
+        clone->y_max_set = gmodel->y_max_set;
+        g_object_notify(copy, "y-max-set");
+    }
+
+    if (!gwy_strequal(clone->bottom_label->str, gmodel->bottom_label->str)) {
+        g_string_assign(clone->bottom_label, gmodel->bottom_label->str);
+        g_object_notify(copy, "axis-label-bottom");
+    }
+
+    if (!gwy_strequal(clone->left_label->str, gmodel->left_label->str)) {
+        g_string_assign(clone->left_label, gmodel->left_label->str);
+        g_object_notify(copy, "axis-label-left");
+    }
+
+    if (!gwy_strequal(clone->top_label->str, gmodel->top_label->str)) {
+        g_string_assign(clone->top_label, gmodel->top_label->str);
+        g_object_notify(copy, "axis-label-top");
+    }
+
+    if (!gwy_strequal(clone->right_label->str, gmodel->right_label->str)) {
+        g_string_assign(clone->right_label, gmodel->right_label->str);
+        g_object_notify(copy, "axis-label-right");
+    }
+
+    if (!gwy_si_unit_equal(clone->x_unit, gmodel->x_unit)) {
+        gwy_serializable_clone(G_OBJECT(gmodel->x_unit),
+                               G_OBJECT(clone->x_unit));
+        g_object_notify(copy, "si-unit-x");
+    }
+
+    if (!gwy_si_unit_equal(clone->y_unit, gmodel->y_unit)) {
+        gwy_serializable_clone(G_OBJECT(gmodel->y_unit),
+                               G_OBJECT(clone->y_unit));
+        g_object_notify(copy, "si-unit-y");
+    }
+
+    if (clone->x_is_logarithmic != gmodel->x_is_logarithmic) {
+        clone->x_is_logarithmic = gmodel->x_is_logarithmic;
+        g_object_notify(copy, "x-logarithimic");
+    }
+
+    if (clone->y_is_logarithmic != gmodel->y_is_logarithmic) {
+        clone->y_is_logarithmic = gmodel->y_is_logarithmic;
+        g_object_notify(copy, "y-logarithimic");
+    }
+
+    if (clone->label_frame_thickness != gmodel->label_frame_thickness) {
+        clone->label_frame_thickness = gmodel->label_frame_thickness;
+        g_object_notify(copy, "label-frame-thickness");
+    }
+
+    if (clone->label_visible != gmodel->label_visible) {
+        clone->label_visible = gmodel->label_visible;
+        g_object_notify(copy, "label-visible");
+    }
+
+    if (clone->label_reverse != gmodel->label_reverse) {
+        clone->label_reverse = gmodel->label_reverse;
+        g_object_notify(copy, "label-reverse");
+    }
+
+    if (clone->label_has_frame != gmodel->label_has_frame) {
+        clone->label_has_frame = gmodel->label_has_frame;
+        g_object_notify(copy, "label-has-frame");
+    }
+
+    if (clone->label_position != gmodel->label_position) {
+        clone->label_position = gmodel->label_position;
+        g_object_notify(copy, "label-position");
+    }
+
+    if (clone->grid_type != gmodel->grid_type) {
+        clone->grid_type = gmodel->grid_type;
+        g_object_notify(copy, "grid-type");
+    }
+
+    /* There is no promise of keeping the identity of member objects in
+     * clone().  So do the simple thing and reconstruct the graph fully. */
+    gwy_graph_model_remove_all_curves(clone);
+    for (i = 0; i < gmodel->curves->len; i++) {
+        GwyGraphCurveModel *gcmodel = g_ptr_array_index(gmodel->curves, i);
+        gcmodel = gwy_graph_curve_model_duplicate(gcmodel);
+        gwy_graph_model_add_curve(clone, gcmodel);
+        g_object_unref(gcmodel);
+    }
+
+    g_object_thaw_notify(copy);
 }
 
 static void
