@@ -66,6 +66,9 @@ Modules:
 - Raw graph: Curve data are sorted upon import.
 - Grain filter: Options for unused quantities (B or C) are now hidden instead
   of insensitivised to reduce visual clutter.
+- Graph function fit, FD curve fit, critical dimension: Function names are
+  translated also in reports.
+- Ballistic deposition synthesis: Progressive preview works now.
 
 Other:
 - MS Windows packages include OpenEXR support now.
