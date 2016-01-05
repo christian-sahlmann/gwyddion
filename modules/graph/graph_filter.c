@@ -38,7 +38,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Remove graph noise by filtering."),
     "Daniil Bratashov <dn2010@gmail.com>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov (dn2010)",
     "2012",
 };
@@ -62,9 +62,10 @@ static void
 filter(GwyGraph *graph)
 {
     GwyContainer *data;
-    GwyGraphCurveModel *cmodel;
+    GwyGraphCurveModel *cmodel, *cmodelnew;
+    GwyGraphModel *model;
     const gdouble *xdata, *ydata;
-    GArray *newydata;
+    gdouble *newydata;
     gint i, ncurves, ndata;
     GQuark quark;
 
@@ -73,27 +74,21 @@ filter(GwyGraph *graph)
                                      0);
     gwy_app_undo_qcheckpointv(data, 1, &quark);
 
-    ncurves = gwy_graph_model_get_n_curves(gwy_graph_get_model(graph));
-    newydata = g_array_new(FALSE, FALSE, sizeof(gdouble));
+    model = gwy_graph_get_model(graph);
+    ncurves = gwy_graph_model_get_n_curves(model);
     for (i = 0; i < ncurves; i++) {
-        cmodel = gwy_graph_model_get_curve(gwy_graph_get_model(graph),
-                                           i);
+        cmodel = gwy_graph_model_get_curve(model, i);
+        cmodelnew = gwy_graph_curve_model_new_alike(cmodel);
         xdata = gwy_graph_curve_model_get_xdata(cmodel);
         ydata = gwy_graph_curve_model_get_ydata(cmodel);
         ndata = gwy_graph_curve_model_get_ndata(cmodel);
-        g_array_set_size(newydata, 0);
-        g_array_append_vals(newydata, ydata, ndata);
-        filter_do(ydata, (gdouble*)newydata->data, ndata);
-        gwy_graph_curve_model_set_data(cmodel, xdata,
-                                      (gdouble*)newydata->data,
-                                       ndata);
+        newydata = g_malloc(ndata * sizeof(gdouble));
+        filter_do(ydata, newydata, ndata);
+        gwy_graph_curve_model_set_data(cmodelnew, xdata,
+                                       newydata, ndata);
+        gwy_graph_model_remove_curve(gwy_graph_get_model(graph), i);
+        gwy_graph_model_add_curve(model, cmodelnew);
     }
-    for (i = 0; i < ncurves; i++) {
-        cmodel = gwy_graph_model_get_curve(gwy_graph_get_model(graph),
-                                           i);
-        g_signal_emit_by_name(cmodel, "data-changed");
-    }
-    g_array_free(newydata, TRUE);
 }
 
 static void
